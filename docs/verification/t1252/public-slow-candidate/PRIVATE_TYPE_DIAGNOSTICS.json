@@ -1,0 +1,4 @@
+{
+  "scope": "read-only in-memory candidate at original source path; not standard whole frontend types, no tests/PG/native/HTTP",
+  "diagnostics": []
+}

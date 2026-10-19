@@ -1,3 +1,7 @@
+import {materializeSettledReconstructionRows} from './artifacts.repository';
+import {readReconstructionSettlement,type ReconstructionTransaction,type ReconstructionSettlement} from './reconstructed-artifact.service';
+import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
+import {decodeScriptTable, syncScriptTableTranscript} from "./script-table-protocol";
 import {extractLegacyScriptText, applyLegacyScriptRange, LEGACY_SCRIPT_RANGE_PREFIX} from "./legacy-script-patch";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
@@ -10,7 +14,7 @@ import {
   type ScriptSectionRow,
   type StructuredContent,
 } from "./artifacts.repository";
-import { ConflictError, ValidationError } from "./artifacts.errors";
+import { OwnershipError, ConflictError, ValidationError } from "./artifacts.errors";
 import {
   canonicalizeScriptContentData,
   canonicalizeScriptSectionRecords,
@@ -88,7 +92,7 @@ export interface ArtifactsService {
     ctx: RequestContext,
     projectId: string,
   ): Promise<ArtifactRow[]>;
-  getArtifact(ctx: RequestContext, artifactId: string): Promise<ArtifactRow>;
+  getArtifact(ctx: RequestContext, artifactId: string, forUpdate?: boolean): Promise<ArtifactRow>;
   createArtifact(
     ctx: RequestContext,
     input: {
@@ -97,11 +101,15 @@ export interface ArtifactsService {
       artifactType: string;
       stage: string;
       contentOutputId?: string | null;
+      initialContentData?: Record<string, unknown>;
+      initialContentText?: string;
       // F1 (T-030-D4, SPEC §4.5): provenance. Default 'user' (null); auto-fill
       // (reconstruct.project) MUST pass 'reconstructed'.
       origin?: "user" | "reconstructed";
     },
   ): Promise<ArtifactRow>;
+  /** 只供整稿目标服务在原事务新建空 v1；不是公开请求字段。 */
+  createReservedScriptDraftTarget(ctx:RequestContext,input:{projectId:string;contentOutputId?:string|null}):Promise<ArtifactRow>;
   createVersion(
     ctx: RequestContext,
     artifactId: string,
@@ -141,6 +149,14 @@ export interface ArtifactsService {
     ctx: RequestContext,
     artifactId: string,
   ): Promise<ArtifactVersionRow[]>;
+  /** Account-scoped idempotency receipt for callers that must replay before revalidating mutable sources. */
+  getVersionByAdoptionReceipt(
+    ctx: RequestContext,
+    artifactId: string,
+    adoptionKey: string,
+    adoptionSourceDigest: string,
+    expectedAiTaskId?: string | null,
+  ): Promise<ArtifactVersionRow | null>;
   restoreVersion(
     ctx: RequestContext,
     artifactId: string,
@@ -177,20 +193,13 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(workspaceKey(ctx)),
     });
   }
 
-  const service: ArtifactsService = {
-    async listProjectArtifacts(ctx, projectId) {
-      return repoFor(ctx, "artifacts.listProjectArtifacts").listByProject(projectId);
-    },
-
-    async getArtifact(ctx, artifactId) {
-      return repoFor(ctx, "artifacts.getArtifact").requireArtifact(artifactId);
-    },
-
-    async createArtifact(ctx, input) {
+  async function createArtifact(ctx:RequestContext,input:Parameters<ArtifactsService["createArtifact"]>[1],reserved=false):Promise<ArtifactRow> {
+      await assertWritableWorkspace(deps.db,ctx);
+      if(ctx.groupId&&!deps.assertProjectOwned)throw new OwnershipError("项目归属校验不可用");
       // Artifact owns its content/version lifecycle, while Projects owns the
       // project/output relationship. Validate through injected public-service
       // ports before persisting so CLI/API callers cannot create orphan scripts.
@@ -210,8 +219,20 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       }
       // origin threads straight to the repo (default null ≡ 'user'; auto-fill
       // passes 'reconstructed' — F1, SPEC §4.5).
-      return repoFor(ctx, "artifacts.createArtifact").create(input);
+      return repoFor(ctx, "artifacts.createArtifact").create(input,reserved?{reserveScriptDraftInitialVersion:true}:undefined);
+      }
+
+  const service: ArtifactsService = {
+    async listProjectArtifacts(ctx, projectId) {
+      return repoFor(ctx, "artifacts.listProjectArtifacts").listByProject(projectId);
     },
+
+    async getArtifact(ctx, artifactId, forUpdate = false) {
+      return repoFor(ctx, "artifacts.getArtifact").requireArtifact(artifactId, forUpdate);
+    },
+
+    createArtifact:(ctx,input)=>createArtifact(ctx,input),
+    createReservedScriptDraftTarget:(ctx,input)=>createArtifact(ctx,{...input,title:"分镜脚本",artifactType:"output_script",stage:"script"},true),
 
     async createVersion(ctx, artifactId, input) {
       const repo = repoFor(ctx, "artifacts.createVersion");
@@ -219,13 +240,16 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       const isScriptArtifact =
         artifactForWrite.artifactType === "output_script" ||
         artifactForWrite.artifactType === "master_script";
+      const derived = artifactForWrite.artifactType === "output_script" && input.contentData === undefined && typeof input.contentText === "string"
+        ? decodeScriptTable(input.contentText) : null;
+      const structuredInput = derived ? {...input, contentData: derived} : input;
       const versionInput =
-        isScriptArtifact && input.contentData
+        isScriptArtifact && structuredInput.contentData
           ? {
-              ...input,
-              contentData: canonicalizeScriptContentData(input.contentData),
+              ...structuredInput,
+              contentData: canonicalizeScriptContentData(structuredInput.contentData),
             }
-          : input;
+          : structuredInput;
       // [T-183] 改稿 delta 捕捉:在 append 重指针「前」先抓「前一版 = 当前版」快照(内容 +
       // createdByType),用于判定「AI 产出 → 用户手改」并算 before→after 差异。best-effort:
       // 仅在 recordEditDelta seam 已接线时才读,失败不影响主流程。
@@ -293,6 +317,15 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
 
     async listVersions(ctx, artifactId) {
       return repoFor(ctx, "artifacts.listVersions").listVersions(artifactId);
+    },
+
+    async getVersionByAdoptionReceipt(ctx, artifactId, adoptionKey, adoptionSourceDigest, expectedAiTaskId = null) {
+      const receipt = await repoFor(ctx, "artifacts.getVersionByAdoptionReceipt").getVersionByAdoptionKey(artifactId, adoptionKey);
+      if (!receipt) return null;
+      if (receipt.adoptionSourceDigest !== adoptionSourceDigest || receipt.aiTaskId !== expectedAiTaskId) {
+        throw new ConflictError("采纳来源与原请求不一致");
+      }
+      return receipt;
     },
 
     async restoreVersion(ctx, artifactId, versionId, expectedCurrentVersionId) {
@@ -376,10 +409,10 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
           ? { ...section, body: replacementText }
           : section,
       );
-      const nextContentData: Record<string, unknown> = {
+      const nextContentData: Record<string, unknown> = syncScriptTableTranscript({
         ...data,
         sections: nextSections,
-      };
+      }, input.sectionId);
       // html 是旧版派生展示，不得跨版本携带，否则会覆盖 sections 的当前真值。
       delete nextContentData.html;
       const contentText = nextSections
@@ -434,4 +467,10 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     },
   };
   return service;
+}
+
+/** 仅当前事务已验证原generation结算的命名端口；公开create/append权限门保持原样。 */
+export async function materializeSettledReconstructionArtifact(tx:ReconstructionTransaction,proof:ReconstructionSettlement,deps:{now:()=>string;nextId:(prefix:string)=>string}){
+ readReconstructionSettlement(proof,tx);
+ return materializeSettledReconstructionRows(tx,proof,deps);
 }

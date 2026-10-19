@@ -14,6 +14,8 @@
  */
 
 import * as React from "react";
+import type {PublicationVisualNote} from "@creatoros/contract";
+import {VisualPublicationMedia} from "./visual-publication-media";
 import { Eye, Megaphone } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
@@ -36,6 +38,8 @@ type Phase = "idle" | "opening" | "error";
 
 export interface PublishPackageViewData {
   readonly publicationId: string;
+  readonly revisionId?: string;
+  readonly visualNote?: PublicationVisualNote | null;
   readonly platform: string;
   readonly status: string;
   readonly publishedAt: string | null;
@@ -83,6 +87,7 @@ function PublishPackageViewer({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 text-[13px]">
+          <VisualPublicationMedia publicationId={publishPack.publicationId} revisionId={publishPack.revisionId} visualNote={publishPack.visualNote} coverAssetId={publishPack.coverAssetId} title={publishPack.title}/>
           <div className="flex items-center gap-2">
             <span className="rounded-md bg-surface-subtle px-2 py-0.5 text-[11px] text-text-subtle">
               {platformName(publishPack.platform)}

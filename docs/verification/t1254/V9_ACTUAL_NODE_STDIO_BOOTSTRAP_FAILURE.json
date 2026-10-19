@@ -1,0 +1,506 @@
+{
+  "task": "T-1254",
+  "actualSummary": {
+    "task": "T-1254",
+    "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+    "exitCode": 1,
+    "startedAt": "2026-10-12T03:17:34.202Z",
+    "elapsedMs": 58346.031624999996,
+    "totalBudgetMs": 109260000,
+    "stepComplete": 0,
+    "stepTotal": 25,
+    "signals": [],
+    "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-b559d0cf89accea8faf82f2c00370e9f-ZKkNkg",
+    "rootRetained": true,
+    "appliedToPrivateOnly": false,
+    "records": [
+      {
+        "name": "owned-network-boundary",
+        "code": null,
+        "elapsedMs": 274,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": []
+      }
+    ],
+    "noProductCopy": true,
+    "noApp": true
+  },
+  "rawEvidence": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/summary.json",
+      "size": 726,
+      "sha256": "b9db5642028db4cd98fe69d8e3715437c8f891fe27b1501d50c346973185c687"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/source-after.json",
+      "size": 56320095,
+      "sha256": "ad5e055e1a728b215011ddf22afef0eda80e23fe72968a62da3dcec4311d184f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-network-boundary-exit.json",
+      "size": 1465,
+      "sha256": "cc30e93b0db5e727dabb852b35c6e79641cae67394b6d16d7bc14d49cd5b05b4"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-network-boundary.log",
+      "size": 926,
+      "sha256": "37fb35212da0ce6a6c0c006bdefeb1d1fafc147d4c4fd64da8ad4765e8273204"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/runner-error.json",
+      "size": 452,
+      "sha256": "9b79682e82c26a18d24e80888332f06b3f44d77418cd72134cc4c8df892b906c"
+    }
+  ],
+  "sourceAfter": {
+    "boundInputsUnchanged": true,
+    "approvedPrivateConsumerChange": false,
+    "sourceSnapshotDigest": "405ba19e2bdff70a84ac91a6842878dd1b114a322eca6fda98b8c32526a6d279",
+    "toolDigest": "0e00dc6da2640c46e03f3ac9723fcaa8d056a0048d99657d22ff00851c4e43fd"
+  },
+  "crashReport": {
+    "file": "/Users/zyongzhu/Library/Logs/DiagnosticReports/node-2026-10-12-111836.ips",
+    "sha256": "6371883296c6f2dd967ffe5fe355dc4c4d884772e0f6d2f9223f56691b7a367a",
+    "size": 12276,
+    "scopedProjection": {
+      "pid": 89663,
+      "captureTime": "2026-10-12 11:18:12.9223 +0800",
+      "exception": {
+        "codes": "0x0000000000000000, 0x0000000000000000",
+        "rawCodes": [
+          0,
+          0
+        ],
+        "type": "EXC_CRASH",
+        "signal": "SIGABRT"
+      },
+      "frames": [
+        {
+          "imageOffset": 38320,
+          "symbol": "__pthread_kill",
+          "symbolLocation": 8,
+          "imageIndex": 25
+        },
+        {
+          "imageOffset": 26760,
+          "symbol": "pthread_kill",
+          "symbolLocation": 296,
+          "imageIndex": 26
+        },
+        {
+          "imageOffset": 497744,
+          "symbol": "abort",
+          "symbolLocation": 124,
+          "imageIndex": 27
+        },
+        {
+          "imageOffset": 18961716,
+          "symbol": "<deduplicated_symbol>",
+          "symbolLocation": 36,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 2542972,
+          "symbol": "node::InitializeOncePerProcessInternal(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>>> const&, node::ProcessInitializationFlags::Flags)",
+          "symbolLocation": 4352,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 2546000,
+          "symbol": "node::Start(int, char**)",
+          "symbolLocation": 92,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 36180,
+          "symbol": "start",
+          "symbolLocation": 7184,
+          "imageIndex": 28
+        }
+      ],
+      "usedImages": [
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4371972096,
+          "size": 32768,
+          "uuid": "ed8994ab-e473-395e-aa5f-2ca06bb902f2",
+          "path": "/opt/homebrew/*/node",
+          "name": "node"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4439359488,
+          "size": 33079296,
+          "uuid": "d8006fe9-cd87-3eef-bd46-b24c722a5083",
+          "path": "/opt/homebrew/*/libnode.141.dylib",
+          "name": "libnode.141.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372152320,
+          "size": 49152,
+          "uuid": "6b21e033-85cc-3218-a376-0f20ce653cb4",
+          "path": "/opt/homebrew/*/libllhttp.9.3.1.dylib",
+          "name": "libllhttp.9.3.1.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372463616,
+          "size": 114688,
+          "uuid": "5579643f-8ed3-3065-bfa1-04a4363e1fe7",
+          "path": "/opt/homebrew/*/libuv.1.0.0.dylib",
+          "name": "libuv.1.0.0.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4374085632,
+          "size": 491520,
+          "uuid": "b6e7017c-1d12-3aa8-9194-b4bfbceec265",
+          "path": "/opt/homebrew/*/libada.3.4.4.dylib",
+          "name": "libada.3.4.4.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372676608,
+          "size": 65536,
+          "uuid": "2a46fdba-e518-3790-9302-d101b5d4022a",
+          "path": "/opt/homebrew/*/libsimdjson.33.0.0.dylib",
+          "name": "libsimdjson.33.0.0.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372250624,
+          "size": 49152,
+          "uuid": "c7d658ec-f84b-33a4-9ad7-b31c103fb593",
+          "path": "/opt/homebrew/*/libbrotlidec.1.2.0.dylib",
+          "name": "libbrotlidec.1.2.0.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4375363584,
+          "size": 589824,
+          "uuid": "bb363b90-4c6f-321c-8afc-2c860ca5cea7",
+          "path": "/opt/homebrew/*/libbrotlienc.1.2.0.dylib",
+          "name": "libbrotlienc.1.2.0.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4373463040,
+          "size": 147456,
+          "uuid": "d1383c2a-4fb0-3c3c-8694-d08ebaa244cf",
+          "path": "/opt/homebrew/*/libcares.2.19.5.dylib",
+          "name": "libcares.2.19.5.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372348928,
+          "size": 32768,
+          "uuid": "3b214916-eed0-32b1-9fa0-02b980391396",
+          "path": "/opt/homebrew/*/libhdr_histogram.6.2.3.dylib",
+          "name": "libhdr_histogram.6.2.3.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372807680,
+          "size": 32768,
+          "uuid": "c9d72c6f-4e08-30c4-9a10-51c5128d3c2e",
+          "path": "/opt/homebrew/*/libmerve.1.2.2.dylib",
+          "name": "libmerve.1.2.2.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372905984,
+          "size": 16384,
+          "uuid": "3e112435-9384-3680-92b5-33add83d3d76",
+          "path": "/opt/homebrew/*/libnbytes.dylib",
+          "name": "libnbytes.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4374708224,
+          "size": 114688,
+          "uuid": "37cdbe10-a6e2-33b5-8acb-0103488c3269",
+          "path": "/opt/homebrew/*/libnghttp2.14.dylib",
+          "name": "libnghttp2.14.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4374921216,
+          "size": 114688,
+          "uuid": "a72e0ac6-8956-31ac-a340-2c51b164c6b2",
+          "path": "/opt/homebrew/*/libnghttp3.9.7.0.dylib",
+          "name": "libnghttp3.9.7.0.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4376018944,
+          "size": 245760,
+          "uuid": "b25c1f65-2fbb-37ea-bd8c-c2ecaee30e98",
+          "path": "/opt/homebrew/*/libngtcp2.16.dylib",
+          "name": "libngtcp2.16.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4377673728,
+          "size": 1081344,
+          "uuid": "8aa837c4-528d-30bb-83e8-fbefa03fe4bd",
+          "path": "/opt/homebrew/*/libsqlite3.3.53.2.dylib",
+          "name": "libsqlite3.3.53.2.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4372971520,
+          "size": 32768,
+          "uuid": "f7310178-3128-369e-9369-6bf39dfd4990",
+          "path": "/opt/homebrew/*/libuvwasi.dylib",
+          "name": "libuvwasi.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4378951680,
+          "size": 557056,
+          "uuid": "1ce1197a-4a2b-3036-984e-95599210332b",
+          "path": "/opt/homebrew/*/libzstd.1.5.7.dylib",
+          "name": "libzstd.1.5.7.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4384489472,
+          "size": 3407872,
+          "uuid": "536fff50-1802-319a-af00-2b227b1855de",
+          "path": "/opt/homebrew/*/libcrypto.3.dylib",
+          "name": "libcrypto.3.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4379623424,
+          "size": 589824,
+          "uuid": "7860c2a2-633c-31bf-baca-bcc36ca7b5d4",
+          "path": "/opt/homebrew/*/libssl.3.dylib",
+          "name": "libssl.3.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4389355520,
+          "size": 1785856,
+          "uuid": "6d9abf1a-5e38-3103-a0ec-f1c0868f6fca",
+          "path": "/opt/homebrew/*/libicui18n.78.3.dylib",
+          "name": "libicui18n.78.3.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4382392320,
+          "size": 1310720,
+          "uuid": "ec934797-eff8-36ba-ba4d-a1efd318018a",
+          "path": "/opt/homebrew/*/libicuuc.78.3.dylib",
+          "name": "libicuuc.78.3.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4373889024,
+          "size": 131072,
+          "uuid": "ebf79aec-78a4-3105-884d-0a459c69a38c",
+          "path": "/opt/homebrew/*/libbrotlicommon.1.2.0.dylib",
+          "name": "libbrotlicommon.1.2.0.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4376641536,
+          "size": 147456,
+          "uuid": "76d3e686-28ec-3ce7-9f11-8a79a658516f",
+          "path": "/opt/homebrew/*/libsimdutf.34.0.0.dylib",
+          "name": "libsimdutf.34.0.0.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64",
+          "base": 4505452544,
+          "size": 33112064,
+          "uuid": "405a29e4-230e-3e63-8ca7-2f482d507e59",
+          "path": "/opt/homebrew/*/libicudata.78.3.dylib",
+          "name": "libicudata.78.3.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64e",
+          "base": 6780657664,
+          "size": 246944,
+          "uuid": "548c45c8-9733-3f0d-8ef4-c06df1df2ad0",
+          "path": "/usr/lib/system/libsystem_kernel.dylib",
+          "name": "libsystem_kernel.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64e",
+          "base": 6780907520,
+          "size": 51900,
+          "uuid": "527c4ba0-91a5-378b-b3e2-d38269ca5a66",
+          "path": "/usr/lib/system/libsystem_pthread.dylib",
+          "name": "libsystem_pthread.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64e",
+          "base": 6779408384,
+          "size": 532552,
+          "uuid": "fb5569a9-cb26-36c2-aa05-e99243692b60",
+          "path": "/usr/lib/system/libsystem_c.dylib",
+          "name": "libsystem_c.dylib"
+        },
+        {
+          "source": "P",
+          "arch": "arm64e",
+          "base": 6776934400,
+          "size": 651204,
+          "uuid": "0975afba-c46b-364c-bd84-a75daa9e455a",
+          "path": "/usr/lib/dyld",
+          "name": "dyld"
+        },
+        {
+          "size": 0,
+          "source": "A",
+          "base": 0,
+          "uuid": "00000000-0000-0000-0000-000000000000"
+        }
+      ],
+      "threadState": {
+        "x": [
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 6779918856,
+            "symbolLocation": 0,
+            "symbol": "__vfprintf.xdigs_lower"
+          },
+          {
+            "value": 6094905952
+          },
+          {
+            "value": 10
+          },
+          {
+            "value": 6776077799
+          },
+          {
+            "value": 1017673182652623914
+          },
+          {
+            "value": 1017673174045524074
+          },
+          {
+            "value": 2
+          },
+          {
+            "value": 1099511627776
+          },
+          {
+            "value": 4294967293
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 328
+          },
+          {
+            "value": 8631536016
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 6
+          },
+          {
+            "value": 259
+          },
+          {
+            "value": 8608738592,
+            "symbolLocation": 224,
+            "symbol": "_main_thread"
+          },
+          {
+            "value": 4460522695
+          },
+          {
+            "value": 1
+          },
+          {
+            "value": 1
+          },
+          {
+            "value": 4473538928,
+            "symbolLocation": 0,
+            "symbol": "node::stdio"
+          },
+          {
+            "value": 4473539152,
+            "symbolLocation": 224,
+            "symbol": "node::stdio"
+          },
+          {
+            "value": 6094908816
+          },
+          {
+            "value": 0
+          }
+        ],
+        "flavor": "ARM_THREAD_STATE64",
+        "lr": {
+          "value": 6780934280
+        },
+        "pc": {
+          "value": 6780695984,
+          "matchesCrashFrame": 1
+        }
+      }
+    }
+  },
+  "proven": "owned PID 89663 crashed in InitializeOnce return offset 0x26cd7c; actual binary branch _fstat errno != EBADF(9) calls ABORT; helper opens child stdout/stderr log under HOME denied by child profile",
+  "inference": "HOME-located log FD causes fstat denial; actual errno value not captured, V10 private log execution will validate",
+  "noNetworkProbeJS": true,
+  "noRED": true,
+  "noSourceApplied": true,
+  "noBuild": true,
+  "noProductCopy": true
+}

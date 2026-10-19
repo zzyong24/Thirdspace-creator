@@ -83,4 +83,19 @@ export {
 
 export {createWebDocumentCacheService,type WebDocumentCachePreparation} from "./web-document-cache.service";
 
-export {discardGeneratedAssetCandidate,activateGeneratedAssetCandidate,verifyGeneratedAssetCandidate} from "./generated-asset-candidate.service";
+export {readCommittedGeneratedAssetFile,discardGeneratedAssetCandidate,activateGeneratedAssetCandidate,verifyGeneratedAssetCandidate} from "./generated-asset-candidate.service";
+
+export {createWorkspaceBlobService} from "./workspace-blob.service";
+export {encodeWorkspaceBlobScope,decodeWorkspaceBlobScope,signWorkspaceBlobToken,verifyWorkspaceBlobToken,type WorkspaceBlobScope} from "./blob-security";
+export {createVisualTemplateService,type VisualTemplateService,type VisualTemplateServiceDeps,type VisualTemplateReference} from "./visual-template.service";
+export {createVisualTemplateTransport,VISUAL_TEMPLATE_OP_IDS} from "./visual-template.transport";
+
+export {
+  createWorkbenchBlobService,
+  WORKBENCH_BLOB_MAX_BYTES,
+  type WorkbenchBlobService,
+  type WorkbenchBlobMime,
+  type WorkbenchBlobInput,
+  type WorkbenchBlobRef,
+  type WorkbenchBlobReceipt,
+} from "./workbench-blob.service";

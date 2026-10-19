@@ -1,0 +1,124 @@
+{
+  "sourcePath": "docs/verification/t1307/acceptance/candidate/runs/owned-fe90d20b0f57ec60/sidecar.log",
+  "rows": [
+    {
+      "sourceLine": 83,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_d1b4e54c-85bb-44ec-8c8d-52ef064b9a0c",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "observedAt": "2026-10-16T05:12:23.879Z",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 84,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_d1b4e54c-85bb-44ec-8c8d-52ef064b9a0c",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "observedAt": "2026-10-16T05:12:23.916Z",
+      "inputSchemaBytes": 887,
+      "projectionTiming": "before_finish",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 87,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_1bb196d3-9eaa-440f-86b2-4dfd9896132f",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "observedAt": "2026-10-16T05:12:26.744Z",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 88,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_1bb196d3-9eaa-440f-86b2-4dfd9896132f",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "observedAt": "2026-10-16T05:12:26.777Z",
+      "inputSchemaBytes": 282,
+      "projectionTiming": "before_finish",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 90,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_7ea04fde-d5a6-45e7-8e6a-dcc593f3c848",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "observedAt": "2026-10-16T05:12:28.699Z",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 91,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_7ea04fde-d5a6-45e7-8e6a-dcc593f3c848",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "observedAt": "2026-10-16T05:12:28.734Z",
+      "inputSchemaBytes": 166,
+      "projectionTiming": "before_finish",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 93,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_92176b7b-5c5a-4f0b-a8f6-7e6c7e1cca4f",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "observedAt": "2026-10-16T05:12:48.525Z",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 94,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_d1b4e54c-85bb-44ec-8c8d-52ef064b9a0c",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "observedAt": "2026-10-16T05:12:52.131Z",
+      "projectionTiming": "before_finish",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 95,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_1bb196d3-9eaa-440f-86b2-4dfd9896132f",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "observedAt": "2026-10-16T05:12:52.131Z",
+      "projectionTiming": "before_finish",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 96,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_7ea04fde-d5a6-45e7-8e6a-dcc593f3c848",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "observedAt": "2026-10-16T05:12:52.131Z",
+      "projectionTiming": "before_finish",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 97,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_92176b7b-5c5a-4f0b-a8f6-7e6c7e1cca4f",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "observedAt": "2026-10-16T05:12:52.131Z",
+      "projectionTiming": "deferred_proposal",
+      "result": "ok"
+    },
+    {
+      "sourceLine": 98,
+      "executionTaskId": "execution-task-2f467331-807a-4e55-b143-af94d458f840",
+      "callId": "call_1bfeac62-33bd-443e-9a2c-ea40bb854ac1",
+      "attempt": 1,
+      "phase": "turn_finished",
+      "observedAt": "2026-10-16T05:12:52.131Z",
+      "result": "ok"
+    }
+  ],
+  "rawLogCopied": false
+}

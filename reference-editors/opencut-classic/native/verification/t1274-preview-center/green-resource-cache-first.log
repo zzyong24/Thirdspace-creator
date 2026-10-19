@@ -1,0 +1,34 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-resources.test.ts:
+(pass) 慢图片解码取消释放临时Image与BlobURL，寿命排空后不能返回素材 [2.23ms]
+(pass) 换稿后迟到素材上传回执不注册到当前编辑器 [0.15ms]
+(pass) 上传提示等待绘制时换稿会取消RAF且不启动旧导入 [0.36ms]
+(pass) T1062 实际range实现逐样本裁剪连续块并echo完整本地身份，decode不等于已听/采纳 [1.18ms]
+(pass) T1062 合成负音频PTS不是视频zero；相邻解码重叠去重但不补零 [0.12ms]
+(pass) T1062 nonzero video仅该范围manual且Input释放，不伪造音频 [0.11ms]
+(pass) T1062 missing first coverage仅该范围manual且Input释放，不伪造音频 [0.04ms]
+(pass) T1062 hole仅该范围manual且Input释放，不伪造音频 [0.03ms]
+(pass) T1062 sample-rate change仅该范围manual且Input释放，不伪造音频 [0.02ms]
+(pass) T1062 request cancel取消真实range实现；迟到块不得返回decoded/假完成 [0.29ms]
+(pass) T1062 context seek取消真实range实现；迟到块不得返回decoded/假完成 [0.13ms]
+(pass) T1062 owner dispose取消真实range实现；迟到块不得返回decoded/假完成 [0.11ms]
+(pass) T1062 foreign本地owner或当前真实scene/clip proof失败在读取Input之前拒绝 [0.12ms]
+(pass) T1062 纯组NULLaccount原声读取保持同group owner，平台账号筛选不改实际本地root [0.10ms]
+(pass) T1069 第一份已完成素材立即交给编辑器，不等待第二份上传且取消不撤销已接管URL [2.59ms]
+(pass) T1069 原导入取消实际传递到宿主上传请求 [0.11ms]
+(pass) T1274 private exact cache等待prefetch按actual next PTS处理24fps double边界，无重复前帧 [3.52ms]
+(pass) T1274 默认interactive暖cache保持旧快路径，prefetch ready帧仍按PTS晋升 [2.69ms]
+(pass) T1274 private exact cache保留declared duration gap，不把next PTS之前空隙延长成内容 [0.10ms]
+Prefetch failed: warn: Input has been disposed.
+      at dispose (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-resources.test.ts:26:146)
+      at clearVideo (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/services/video-cache/service.ts:334:19)
+      at clearAll (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/services/video-cache/service.ts:346:9)
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-resources.test.ts:104:195)
+
+(pass) T1274 private exact cache清理取消pending prefetch，不返回迟到帧且Input释放 [1.62ms]
+
+ 20 pass
+ 0 fail
+ 79 expect() calls
+Ran 20 tests across 1 file. [70.00ms]

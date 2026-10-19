@@ -1,0 +1,330 @@
+{
+  "task": "T-1246",
+  "originalCandidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "createdAt": "2026-10-11T18:46:26.562Z",
+  "scope": "27测试旧guard+owned测试helper+运行工具+2固定SHA历史fixture；原业务expect/seed/body不改",
+  "requiredToolReview": true,
+  "actualPgStarted": false,
+  "freshLifecycleRequired": true,
+  "old50028MarkerForbidden": true,
+  "inputs": [
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942"
+    },
+    {
+      "file": "backend/src/group-upgrade-postgres.integration.test.ts",
+      "sha256": "6a5634b52e33c8c5cd11b90e849f10f9e3f9a3341921bb10c7207f82fc64b67e"
+    },
+    {
+      "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "sha256": "2d753d3c618e755c46f2e3c6412b739c34e2fbd5d92a40e0e6cf261559d76bf3"
+    },
+    {
+      "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "sha256": "57225946617f8be00e92da307e124dfb5b7c05af091e9c900512c45822754e20"
+    },
+    {
+      "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "sha256": "e84b238e9bd0a2443eedfa063137a173509eac82b383c02b0504edd5665aabbf"
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "sha256": "20a2346544e12720bfde861ea1a8d0289deffc41f5d371b877fb83fad102a285"
+    },
+    {
+      "file": "backend/src/integration/intelligence-source-workspace.test.ts",
+      "sha256": "03fbc52fcf1b539dec4bcc106486ef3f9993df8f54cd04db23e05300cbac908a"
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "sha256": "51eca6a190f6efc5b878cdc631b068d5a5750d987c947cb2d213e3067a297961"
+    },
+    {
+      "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "sha256": "52b67c629623c290c0c56ab68aef164ba99ae093df602e2cb47ea406507cf406"
+    },
+    {
+      "file": "backend/src/integration/scheduled-export-progress.test.ts",
+      "sha256": "4e77a9b2a4a7a6344dd3c635391e3501a2b954b9acc36a7977b8b056dcc78ec8"
+    },
+    {
+      "file": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "sha256": "ef9e1c06ba12cf72742a4841b757594a227503b05549952bfec7fdd97d584a07"
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "sha256": "5a4360548e8d02e579bf182e77331a9629f86331d09fd9eda529be0a69a0f30a"
+    },
+    {
+      "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "sha256": "4b9f70a77d7e95794fbeb12cf6c6b90fb372f690e8af04c0cf20e79a2eebe1c0"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "sha256": "b97f1c572f8c6d19c10e50f9b571df862c0ca79e62ae27322328bb05b223e907"
+    },
+    {
+      "file": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "sha256": "ef7c8ccf66a4bc2af2392285c0893417e5f0007e65c0211c7f41dcba3a6a8b7e"
+    },
+    {
+      "file": "backend/src/legacy-source-migration.test.ts",
+      "sha256": "b69dbf18a00ffc901517278f2efba0558f8cdddcb039139302e267208843d7b7"
+    },
+    {
+      "file": "backend/src/migration-convergence.test.ts",
+      "sha256": "45c599da1b93d8d29eeea786facbc097a32c274a2be3930a9cc72dddc62ec892"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "sha256": "65141a81311cb6abeaf552946c91e8a4ecac3c4bcc69dec97a7bd0db38a0520e"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "sha256": "2d88d7f9a5df207857df5ccbb4f8ad3b9dfa6570a8211c8486e8fc5561439836"
+    },
+    {
+      "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "sha256": "fffd326d4e3354f9ebf40e5362f360975347bb988fb3c5d40d290d43ba83649a"
+    },
+    {
+      "file": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "sha256": "b948930b951f589fdc2db12e58ef3b3984a4820bd41d0e7948b67d24ea791f54"
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "sha256": "162f8e98671af1181e95113b666fcb2fa0ccd64689d5c3c631475b8fc82cba68"
+    },
+    {
+      "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "sha256": "146e102747dde9e431776466be029f8a8938b7e073ddf6aa3c2521950ad099b4"
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "sha256": "7be0e3a2a1b3a4a153eec40ece44d3bdde5714c83539470b6d4377d1e9f114ae"
+    },
+    {
+      "file": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "sha256": "539c0723b9c15408e62a6ca399e3c4902ccf5fa138d8cd62149486507528ac78"
+    },
+    {
+      "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "sha256": "7dbd2bf4cb5d494bad9d38054828011925b74e4336cbdbc4c6e7d09eb9173a7e"
+    },
+    {
+      "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "sha256": "823785749f614ba085ea262354b2c25f89e45cf43d733f109b1d7da97b64e922"
+    },
+    {
+      "file": "backend/src/test-fixtures/owned-postgres.ts",
+      "sha256": "4eb42679bdaf9cef93957472d91a69471f42ac6de57e32a81901d28e3fe61ad0"
+    },
+    {
+      "file": "backend/src/test-fixtures/owned-postgres.test.ts",
+      "sha256": "fb34705959fbf9c6760bdcd853ddc28a0f05b25b907b6ac8b76b9fe9aecf6aff"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/run-unit.cjs",
+      "sha256": "edb31e992af5a04b7b8f7c344692bbb9dd39b22fa6dbb6269ed7165d2ce9cdef"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/verify-source.cjs",
+      "sha256": "a4c947694d0de80518b9ce30bd7cc49516064e1957c276a8fe2de591dcee5bc5"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/budget-consumers.json",
+      "sha256": "f1bda677687a93a8fb78c00faa9aff98240de9a2b461b83bb832096b81320d6d"
+    },
+    {
+      "file": "docs/verification/t1217/fixtures/historical-intelligence.service.ts",
+      "sha256": "aba25b0714313c0e22c5c21a59223a3262e0620c21b2193f1a8f3e8290cebd6c"
+    },
+    {
+      "file": "docs/verification/t1229/historical-generation-bridge.ts",
+      "sha256": "702df82aa972de2ce65dd0886934ebfd8adc520bc82ecb0e1c29ef4fa0f411da"
+    }
+  ],
+  "originalConsumers": [
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "frozenSha256": "cf7347cb43e7127c05e2197ade1e67e9d5b878754293f163dfe6b7bf72790026",
+      "beforeSha256": "cf7347cb43e7127c05e2197ade1e67e9d5b878754293f163dfe6b7bf72790026",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/group-upgrade-postgres.integration.test.ts",
+      "frozenSha256": "21e7611fde3d4df4bbe0b6d3592ae374e1879497fd7fb31783beda3821dd5013",
+      "beforeSha256": "21e7611fde3d4df4bbe0b6d3592ae374e1879497fd7fb31783beda3821dd5013",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "frozenSha256": "61e2bc9b394f12618922fc180ea232a4a5d3a80e272c1d935fa6873c988d7645",
+      "beforeSha256": "61e2bc9b394f12618922fc180ea232a4a5d3a80e272c1d935fa6873c988d7645",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "frozenSha256": "cd55d1cede15641e1b668cfecc10763d63944b4c310e2f49aa6a367524681ffc",
+      "beforeSha256": "cd55d1cede15641e1b668cfecc10763d63944b4c310e2f49aa6a367524681ffc",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "frozenSha256": "86da1c83a1a3c9f92278c703bea301290f472f0d46458aae1e29ff881544b8a3",
+      "beforeSha256": "86da1c83a1a3c9f92278c703bea301290f472f0d46458aae1e29ff881544b8a3",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "frozenSha256": "131ffdfdb6952a4e888224fc210e2c3c8df196f0661440402f993ed19dadbc00",
+      "beforeSha256": "131ffdfdb6952a4e888224fc210e2c3c8df196f0661440402f993ed19dadbc00",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/intelligence-source-workspace.test.ts",
+      "frozenSha256": "0769e7f8de6f73e7a68c71057fcf126aca184a722d915011f0efeead821a3a7b",
+      "beforeSha256": "0769e7f8de6f73e7a68c71057fcf126aca184a722d915011f0efeead821a3a7b",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "frozenSha256": "f5beea0e13df190139ecf4666e086bb17695640325c156f2ccd118faaf61d7d4",
+      "beforeSha256": "f5beea0e13df190139ecf4666e086bb17695640325c156f2ccd118faaf61d7d4",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "frozenSha256": "84dda08648a2de8b0f098bc21352ab20de4cb512e662785874fa146acf051ed9",
+      "beforeSha256": "84dda08648a2de8b0f098bc21352ab20de4cb512e662785874fa146acf051ed9",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/scheduled-export-progress.test.ts",
+      "frozenSha256": "3265af8ce246585d6a45db95f47f3e18bf8311e38ea321c5a6103bdf38f4655d",
+      "beforeSha256": "3265af8ce246585d6a45db95f47f3e18bf8311e38ea321c5a6103bdf38f4655d",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "frozenSha256": "43128c2d8b74baf6786350e87542aa18f7b658ace868a9ee31f1d17760df1f82",
+      "beforeSha256": "43128c2d8b74baf6786350e87542aa18f7b658ace868a9ee31f1d17760df1f82",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "frozenSha256": "a0af88f4cd72f2968703d0e7044182ada4f5607f61bf43ae8d70c0034cc511ff",
+      "beforeSha256": "a0af88f4cd72f2968703d0e7044182ada4f5607f61bf43ae8d70c0034cc511ff",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "frozenSha256": "969c43578cc96a84ac8714c194443efa24fce531c73203f0c3bf2b8706a544e3",
+      "beforeSha256": "969c43578cc96a84ac8714c194443efa24fce531c73203f0c3bf2b8706a544e3",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "frozenSha256": "e94d5210c11df4883d455c954ab16418bf6d4dd7916b6422ff6cca15da6ad60f",
+      "beforeSha256": "e94d5210c11df4883d455c954ab16418bf6d4dd7916b6422ff6cca15da6ad60f",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "frozenSha256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "beforeSha256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/legacy-source-migration.test.ts",
+      "frozenSha256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "beforeSha256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/migration-convergence.test.ts",
+      "frozenSha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "beforeSha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "frozenSha256": "9e1df5f7d667165a0a7cd97baf56ee30c716cb53e872197b8ee1039a5fd6ba49",
+      "beforeSha256": "9e1df5f7d667165a0a7cd97baf56ee30c716cb53e872197b8ee1039a5fd6ba49",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "frozenSha256": "eacc71df7b216f528ad6db72c124c48c038c82350ca5c2c9242e63aff612ad46",
+      "beforeSha256": "eacc71df7b216f528ad6db72c124c48c038c82350ca5c2c9242e63aff612ad46",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "frozenSha256": "d3bf2d4da45460d02ff5a8f137d13abb819967c1a36c133a5000aa1094d70e58",
+      "beforeSha256": "d3bf2d4da45460d02ff5a8f137d13abb819967c1a36c133a5000aa1094d70e58",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "frozenSha256": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+      "beforeSha256": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "frozenSha256": "14761851e1ca3d6c45575e86ff22fa2769f452e5e07571b7498b054861eec51a",
+      "beforeSha256": "14761851e1ca3d6c45575e86ff22fa2769f452e5e07571b7498b054861eec51a",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "frozenSha256": "40f269b1026c9cfbbe4625c0473327be9f86564fc749a136f24d542567932983",
+      "beforeSha256": "40f269b1026c9cfbbe4625c0473327be9f86564fc749a136f24d542567932983",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "frozenSha256": "0619b3f891485d73839c55ff1a6571492bfe561f15c6446d4ac1abde361b610a",
+      "beforeSha256": "0619b3f891485d73839c55ff1a6571492bfe561f15c6446d4ac1abde361b610a",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "frozenSha256": "3fd93ea3546080fd6190a535a6647dd5fb4271cb71c993234799dc48f6648fee",
+      "beforeSha256": "3fd93ea3546080fd6190a535a6647dd5fb4271cb71c993234799dc48f6648fee",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "frozenSha256": "3eddedaedaeed193144ab360ab4417d8de8313072276ff3015a33b51abef5b01",
+      "beforeSha256": "3eddedaedaeed193144ab360ab4417d8de8313072276ff3015a33b51abef5b01",
+      "beforeMatchesFrozen": true
+    },
+    {
+      "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "frozenSha256": "08e34f1297a06785bc7ce1e67529f13c98ce9ae2810197301865b46393d0e724",
+      "beforeSha256": "08e34f1297a06785bc7ce1e67529f13c98ce9ae2810197301865b46393d0e724",
+      "beforeMatchesFrozen": true
+    }
+  ],
+  "firstRoundEvidenceNeverOverwritten": true,
+  "negativeReceipts": [
+    "owned-helper-negative.json",
+    "owned-helper-negative-final.json",
+    "owned-helper-negative-repaired.json",
+    "owned-tools-negative-proof.json"
+  ],
+  "limitations": [
+    "真实PG并发/迁移/备份/恢复尚未执行",
+    "原public/App/官方账户验收不在这些negative tests内",
+    "helper首次类型错误及ESM spy setup失败原日志保留",
+    "拒绝保障是明确Node/CLI消费者护栏，非系统防火墙",
+    "业务deadline/真实锁观察循环未改，须逐消费者预算复核"
+  ]
+}

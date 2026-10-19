@@ -1,0 +1,17 @@
+{
+  "ownedPgPid": 24400,
+  "rootUidVerified": true,
+  "ownerMetadataVerified": true,
+  "originalPrimaryFailure": "sandbox fixture ownedPg /bin/ps spawn EPERM",
+  "startedAtUnix": 1792392052.034667,
+  "outsideProcessOwnershipVerified": true,
+  "pgStopExitCode": 0,
+  "pgStopDurationMs": 142.422,
+  "stdoutBytes": 56,
+  "stderrBytes": 0,
+  "listenersAfterOwnedPgStop": {
+    "41387": [],
+    "41388": [],
+    "41389": []
+  }
+}

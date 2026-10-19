@@ -1,23 +1,6 @@
 /**
- * `projects/[projectId]` segment layout (T-039b item②) —— the ONE place in the project
- * route subtree that can read the `[projectId]` param on the server AND wraps every
- * project page (稿面 + review 复盘页;[T-076] 其余阶段子路由为 301 遗留壳)。It reads
- * the REAL project identity ({id, title}) and lifts it to a
- * client context (CurrentProjectProvider) so the shell's ShellRouter (a client island whose
- * `resolveRoute` only knows the fixture dataset) can show the REAL project title in the top
- * header + the left-bottom sidebar indicator instead of the neutral「当前项目」.
- *
- * Why here (not the (creator) layout): Next.js nested layouts do NOT receive child dynamic
- * segments, so `(creator)/layout.tsx` cannot read `projectId`. This nested layout DOES get
- * it (`params.projectId`). It reads the real title via the SAME read path the page uses
- * (projects.list, for canonical-id OR title-slug resolution) — reusing an existing read op,
- * no new repo method.
- *
- * Honesty / resilience: no session (SSR fallback / tests), an unknown project, or any read
- * failure → the provider value is `null` → the shell degrades to its fixture / neutral
- * 「当前项目」 state (never a fabricated title). This layout NEVER 404s or blocks render — the
- * page itself owns the ownership 404 (its own `projects.get` read); the layout is best-effort
- * chrome only.
+ * 项目嵌套 layout 按真实 ID 读取项目及作品列表，将最小导航切片发布给外层 shell。
+ * 旧标题 slug 使用分页兼容；任何读失败仅降级导航，页面仍负责内容与归属错误。
  */
 
 import * as React from "react";
@@ -45,43 +28,44 @@ function slugifyTitle(title: string): string {
 }
 
 // Resolve the URL [projectId] segment to the REAL {id, title} against the persisted project
-// list (projects.list, user-scoped via the session ctx). Matches by canonical id first, then
+// record (projects.get; title slug compatibility uses projects.list, scoped via the session ctx). Matches by canonical id first, then
 // by title-slug. Returns null when nothing matches or the read fails (honest → neutral shell).
 // [FE-M07] 也读 currentStage / progressPct:shell 的 fixture 里查不到真项目时,靠这两个真值
 // 显示正确阶段与进度(否则 shell 恒退回 research/0%,把制作/复盘项目误显为脚本阶段)。
 async function resolveRealProject(
   projectId: string,
-): Promise<{ id: string; title: string; stage: string; progressPct: number } | null> {
+): Promise<{ id: string; title: string; stage: string; progressPct: number; workOutputs: readonly import("@/features/projects/project-workspaces").WorkspaceOutput[] | null } | null> {
   if (!projectId) return null;
   const session = await resolveSession();
   if (!session) return null;
   try {
-    const projects = (await createServerClient(session.ctx).listProjects({
-      params: undefined,
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<{
+    const scoped = createServerClient(session.ctx);
+    type ProjectIdentity = {id: string; title: string; currentStage: string; progressPct: number};
+    const pick = async (p: {
       id: string;
       title: string;
       currentStage: string;
       progressPct: number;
-    }>;
-    const pick = (p: {
-      id: string;
-      title: string;
-      currentStage: string;
-      progressPct: number;
-    }) => ({
-      id: p.id,
-      title: p.title,
-      stage: p.currentStage,
-      progressPct: p.progressPct,
-    });
-    const byId = projects.find((p) => p.id === projectId);
-    if (byId) return pick(byId);
+    }) => {
+      let workOutputs: readonly import("@/features/projects/project-workspaces").WorkspaceOutput[] | null = null;
+      try {
+        workOutputs = await scoped.listOutputs({params: {projectId: p.id}, query: undefined, body: undefined}) as unknown as readonly import("@/features/projects/project-workspaces").WorkspaceOutput[];
+      } catch { /* 只降级导航，不冒充已有作品，也不阻断当前页面。 */ }
+      return {id: p.id, title: p.title, stage: p.currentStage, progressPct: p.progressPct, workOutputs};
+    };
+    // canonical ID 不依赖项目列表页，避免第 101 条以后的项目丢失真实导航。
+    try {
+      const project = await scoped.getProject({params: {projectId}, query: undefined, body: undefined}) as unknown as ProjectIdentity;
+      return await pick(project);
+    } catch { /* 旧标题 slug 只在真实 ID 未解析时使用完整分页兼容路径。 */ }
     const slug = projectId.toLowerCase();
-    const bySlug = projects.find((p) => slugifyTitle(p.title) === slug);
-    return bySlug ? pick(bySlug) : null;
+    for (let page = 1; ; page += 1) {
+      const projects = await scoped.listProjects({params: undefined, query: {page, pageSize: 100}, body: undefined}) as unknown as readonly ProjectIdentity[];
+      const project = projects.find(item => item.id === projectId || slugifyTitle(item.title) === slug);
+      if (project) return await pick(project);
+      if (projects.length < 100) return null;
+    }
+
   } catch {
     return null;
   }
@@ -105,6 +89,7 @@ export default async function ProjectIdLayout({
               // [FE-M07] 灌真实阶段/进度,shell header 的阶段条与进度不再恒退回 research/0%。
               stage: real.stage,
               progressPct: real.progressPct,
+              workOutputs: real.workOutputs,
             }
           : null
       }

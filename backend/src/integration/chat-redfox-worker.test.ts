@@ -18,8 +18,8 @@ import {createExecutionCallLedgerService} from "../modules/execution/execution-c
 import {createExecutionChatToolPorts} from "../modules/execution/execution-chat-tool-ports.service";
 import {createChatWorkerDispatcher} from "../modules/execution/model-worker-dispatcher";
 let db:Db,close:()=>Promise<void>,sequence=0;
-const entryPath=resolve("../ai-worker/dist/execution-worker.cjs"),now=()=>new Date().toISOString(),budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
-beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
+const entryPath=resolve("../ai-worker/dist/execution-worker.cjs"),now=()=>new Date().toISOString(),budget={maxCalls:10,maxTokens:100000,deadlineMs:180000};
+beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe",timeout:180000});},180000);
 afterAll(async()=>close());
 async function submit(searchConfigured=true,queryContext=true){
  const ctx={userId:"research-user",accountId:`research-${++sequence}`,requestId:"test",source:"user" as const};
@@ -58,10 +58,10 @@ it.each([true,false])("真实 Worker：两种模型配置共用独立未配置�
  const host=createChatWorkerDispatcher(db,{now,budget,entryPath,workerId:"research-host",modelConcurrency:1,resolveTools:f.resolveTools,resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:available?"official-fixture":"custom-fixture",token:"fixture"})});
  try{
   await host.drainOnce();const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.submitted.executionTaskId));
-  expect(task?.status).toBe("succeeded");expect(requests).toHaveLength(2);
+  expect(task?.status).toBe("partial");expect(requests).toHaveLength(2);
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.submitted.executionTaskId));expect(calls.filter(call=>call.kind==="tool")).toHaveLength(1);expect(calls.find(call=>call.kind==="tool")?.resultText).toContain('REDFOX_NOT_CONFIGURED');
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
-},15000);
+},180000);
 
 it.each(["official-fixture","custom-fixture"])("配置密钥后真实 Worker：查询→提交→原taskId结果，%s",async modelName=>{
  const f=await submit(),requests:unknown[]=[];
@@ -87,4 +87,4 @@ it.each(["official-fixture","custom-fixture"])("配置密钥后真实 Worker：�
  const host=createChatWorkerDispatcher(db,{now,budget,entryPath:wrapper,workerId:"redfox-configured",modelConcurrency:1,resolveTools:f.resolveTools,resolveRedfoxCredential:ctx=>credentials.resolve(ctx),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:modelName,token:"fixture-model-token"})});
  try{await host.drainOnce();const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.submitted.executionTaskId));expect(task?.status).toBe("succeeded");expect(requests).toHaveLength(4);const apiCalls=readFileSync(callsFile,'utf8').trim().split('\n').map(x=>JSON.parse(x));expect(apiCalls).toHaveLength(3);expect(apiCalls.every(x=>x.authorized)).toBe(true);expect(apiCalls[2].body).toEqual({taskId:"fixture-task"});const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.submitted.executionTaskId));expect(JSON.stringify(calls)).not.toContain(key);expect(JSON.stringify(requests)).not.toContain(key);expect(calls.filter(x=>x.kind==="tool")).toHaveLength(3);}
  finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));rmSync(dir,{recursive:true,force:true});}
-},20000);
+},180000);

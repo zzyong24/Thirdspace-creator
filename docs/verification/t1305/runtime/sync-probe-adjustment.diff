@@ -1,0 +1,2 @@
+- const probe=await screen.findByTestId('source-failure-probe');
++ const probe=screen.getByTestId('source-failure-probe');

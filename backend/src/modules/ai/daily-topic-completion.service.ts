@@ -1,3 +1,8 @@
+import {workspaceFilter} from "../../workspace-scope";
+import {isDeepStrictEqual} from 'node:util';
+import {assertExecutionTaskWorkspaceAdmission} from '../scheduling';
+import { assessAudienceTask } from "../candidate";
+import { topicSourceRead } from "@creatoros/contract";
 import { z } from 'zod';
 import { and, eq, asc, aiTasks, aiTaskResults, executionTasks, executionCalls, type Db } from '@creatoros/backend';
 import type { RequestContext } from '@creatoros/contract';
@@ -35,16 +40,34 @@ export function createDailyTopicCompletionService(db: Db, deps: {
     now?: () => string;
     ports: DailyTopicCompletionPorts;
 }) {
-    const now = deps.now ?? (() => new Date().toISOString()), leases = createExecutionLeaseService(db, { now }), p = deps.ports;
+    const now = deps.now ?? (() => new Date().toISOString()), p = deps.ports;
     async function complete(ref: ExecutionRef, raw?: unknown) {
         const commit = raw === undefined ? undefined : commitSchema.parse(raw);
-        return leases.withLease(ref, 'settlement', async ({ tx, task, context }) => {
+        return db.transaction(async outerTx => {
+            const [snapshot] = await outerTx.select().from(executionTasks).where(eq(executionTasks.id, ref.executionTaskId));
+            if (!snapshot) throw new ConflictError('执行凭证已失效');
+            const replayOnly = snapshot.status === 'succeeded';
+            // 与认领保持 account→member→group→execution；结算持有execution后不再新取工作区锁。
+            if (!replayOnly) await assertExecutionTaskWorkspaceAdmission(outerTx, snapshot);
+            // 必须复用outerTx的session/savepoint，不能以root db开启第二连接等待自己。
+            return createExecutionLeaseService(outerTx as unknown as Db, { now }).withLease(ref, 'settlement', async ({ tx, task, context }) => {
+            const identity = (row: typeof executionTasks.$inferSelect) => ({
+                id: row.id, userId: row.userId, groupId: row.groupId, accountId: row.accountId,
+                groupVersion: row.groupVersion, membershipVersion: row.membershipVersion,
+                kind: row.kind, ownerType: row.ownerType, ownerId: row.ownerId,
+                attempt: row.attempt, fenceToken: row.fenceToken, payload: row.payload,
+            });
+            if (!isDeepStrictEqual(identity(snapshot), identity(task)))
+                throw new ConflictError('每日选题冻结执行归属已改变');
+            if (replayOnly && task.status !== 'succeeded')
+                throw new ConflictError('每日选题历史完成事实已改变');
             if (task.kind !== 'ai_task' || task.ownerType !== 'ai_task')
                 throw new ConflictError('每日选题执行归属无效');
-            const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!))).for('update');
+            const businessQuery = tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context)));
+            const [business] = await (replayOnly ? businessQuery : businessQuery.for('update'));
             if (!business || business.taskType !== 'scheduled.topic.daily' || (task.payload as {
                 aiTaskId?: unknown;
-            }).aiTaskId !== business.id)
+            }).aiTaskId !== business.id || business.groupId !== task.groupId || business.accountId !== task.accountId || business.groupVersion !== task.groupVersion || business.membershipVersion !== task.membershipVersion)
                 throw new ConflictError('每日选题任务映射无效');
             const model = modelSchema.parse((task.payload as {
                 modelInput?: unknown;
@@ -59,10 +82,11 @@ export function createDailyTopicCompletionService(db: Db, deps: {
             const resultId = commit ? `daily-topic:${commit.callId}` : `daily-topic-skip:${task.id}`;
             const [existing] = await tx.select().from(aiTaskResults).where(eq(aiTaskResults.id, resultId));
             if (existing) {
-                if (existing.aiTaskId !== business.id || existing.resultType !== 'daily_topic_completion' || task.status !== 'succeeded' || business.status !== 'succeeded' || (commit && (!call || call.resultRef !== resultId || call.resultText !== commit.text)))
+                if (existing.aiTaskId !== business.id || existing.resultType !== 'daily_topic_completion' || task.status !== 'succeeded' || business.status !== 'succeeded' || (commit && (!call || call !== calls.at(-1) || call.kind !== 'model' || call.status !== 'settled' || !call.providerResult || existing.executionCallId !== call.id || call.resultRef !== resultId || call.resultText !== commit.text)) || (!commit && (calls.length || !frozen.skipReason || existing.executionCallId !== null)))
                     throw new ConflictError('每日选题完成回执不一致');
                 return { resultId, aiTaskId: business.id };
             }
+            if (replayOnly) throw new ConflictError('每日选题历史完成回执缺失');
             const stamp = now();
             if (task.status !== 'running' || !task.leaseOwner || !task.leaseExpiresAt || Date.parse(task.leaseExpiresAt) <= Date.parse(stamp) || (task.deadlineAt && Date.parse(task.deadlineAt) <= Date.parse(stamp)) || !['queued', 'running'].includes(business.status))
                 throw new ConflictError('每日选题当前不可提交');
@@ -95,11 +119,12 @@ export function createDailyTopicCompletionService(db: Db, deps: {
                 const structured = workerStructuredResultSchema.parse(JSON.parse(call.resultText));
                 if (structured.validation?.status === 'partial')
                     throw new ConflictError('每日选题结果尚未完整');
-                const topics = normalizeTopics(topicArraySchema.parse(structured.object).topics);
+                const topicFrozen=topicGenerateFrozenSchema.parse(JSON.parse(model.facets.__topicGenerate??'null'));
+                const topics = normalizeTopics(topicArraySchema.parse(structured.object).topics).map((topic,index)=>({...topic,index,audienceAssessment:topicFrozen.audienceTaskContext?assessAudienceTask(topic.audienceTask??{},topicFrozen.audienceTaskContext,stamp,z.array(topicSourceRead).parse((structured.object as {sourceReads?:unknown}).sourceReads??[])):undefined})).filter(t=>t.audienceAssessment?.route!=="unsuitable");
                 const scored = topics.map((topic, index) => { const baseScore = clamp(topic.predictedScore ?? 50); return { id: String(index), baseScore, adjustedScore: clamp(baseScore + computePreferenceAdjustment(`${topic.title} ${topic.angle}`, frozen.preferences, frozen.rankingNow)), topic }; });
                 const ranked = rankWithExploration(scored, { limit: Math.max(0, frozen.dailyLimit - count), explorationSlots: 1 });
                 for (const item of ranked) {
-                    const value = await p.createCandidate(context, { aiTaskId: `${business.id}#${item.id}`, resultType: 'candidate', resultData: { title: item.topic.title, angle: item.topic.angle, source: item.topic.source === 'benchmark' || item.topic.source === 'demand' ? item.topic.source : 'trend', predictedScore: item.adjustedScore } }, tx);
+                    const value = await p.createCandidate(context, { aiTaskId: `${business.id}#${item.id}`, resultType: 'candidate', resultData: { title: item.topic.title, angle: item.topic.angle, source: item.topic.source === 'benchmark' || item.topic.source === 'demand' ? item.topic.source : 'trend', predictedScore: item.adjustedScore,card:item.topic.audienceAssessment?{audienceTask:item.topic.audienceAssessment,oneLiner:item.topic.audienceAssessment.job,targetAudience:item.topic.audienceAssessment.audience}:undefined } }, tx);
                     ids.push(value.id);
                 }
                 usage = { totalTokens: calls.some(c => c.status === 'settled' && c.totalTokens === null) ? null : calls.reduce((n, c) => n + (c.totalTokens ?? 0), 0) };
@@ -114,6 +139,7 @@ export function createDailyTopicCompletionService(db: Db, deps: {
             await tx.update(aiTasks).set({ status: 'succeeded', completedAt: stamp, errorMessage: null, leaseOwner: null, leaseToken: null, leaseExpiresAt: null }).where(eq(aiTasks.id, business.id));
             await tx.update(executionTasks).set({ status: 'succeeded', leaseOwner: null, leaseExpiresAt: null, heartbeatAt: null, retryAt: null, lastErrorCode: null, lastErrorMessage: null, updatedAt: stamp }).where(eq(executionTasks.id, task.id));
             return { resultId, aiTaskId: business.id };
+            });
         });
     }
     return { commitResult: (ref: ExecutionRef, input: unknown) => complete(ref, input), completeDailyTopicSkip: (ref: ExecutionRef) => complete(ref) };

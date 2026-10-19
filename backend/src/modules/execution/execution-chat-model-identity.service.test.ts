@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { beforeAll, afterAll, it, expect } from "vitest";
 import { z } from "zod";
 import { createDb, executionTasks, eq, type Db } from "@creatoros/backend";
-import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
+import { chatWorkerInputSchema,codexExecutionSpec } from "@creatoros/contract/execution-worker";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createAgenticToolBinding } from "./agentic-tool-binding";
@@ -55,4 +55,10 @@ it("跨任务父调用及已取消租约不能取得凭据",async()=>{
 });
 it("冻结声明不允许任意工具冒充结构化子节点",()=>{
  expect(chatWorkerInputSchema.safeParse({kind:"chat.run",operationKey:"x",capability:"copilot.assist",userId:"u",accountId:"a",conversationId:"c",sourceMessageId:"m",system:"",messages:[{role:"user",content:"x"}],maxSteps:2,maxOutputTokens:100,tools:[{name:"arbitrary.tool",version:"1",description:"",parameters:{},effect:"proposal",execution:"worker.structured-node"}]}).success).toBe(false);
+});
+
+it("原Pi任务遇到当前Codex凭据仍拒绝切换，原API身份可继续冻结",async()=>{
+ const f=await fixture();await expect(f.service.pin(f.ref,f.parent.id,codexExecutionSpec())).rejects.toThrow();
+ expect(await f.service.pin(f.ref,f.parent.id,credential)).toMatchObject({model:'child-model'});
+ expect(await f.service.read(f.ref,f.parent.id)).not.toMatchObject({engine:'codex'});
 });

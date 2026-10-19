@@ -8,8 +8,15 @@
 // 仍完整实现以对齐鉴权语义。
 
 import { randomUUID } from "node:crypto";
+import { Agent, type Dispatcher } from "undici";
+
+/** 仅可信CLI/MCP宿主的本地观察控制，不进入公开input或工具参数。 */
+export interface DispatchControl { signal?: AbortSignal; observationMs?: number; }
 
 export interface DispatchClientOptions {
+  /** 私有CLI装配控制；既有API参数与公开flags不变。 */
+  control?: DispatchControl;
+  cancelOnProcessSignal?: boolean;
   /** 运行中 CreatorOS 根地址。正式模式由 connection descriptor 提供。 */
   baseUrl: string;
   /** 登录邮箱(缺省 = 免登录模式,不带 cookie 裸调 dispatch) */
@@ -37,21 +44,52 @@ export interface DispatchInput {
 }
 
 export interface DispatchCallOptions {
+  groupId?: string;
   accountId?: string;
   idempotencyKey?: string;
   apply?: boolean;
   confirmImpact?: string;
 }
 
+// SEMANTIC_BOUNDARY_ALLOW: 仅校验并投影既有公开幂等回执字段，不推断业务结果、权限或创作选择。
+export function invocationReceipt(envelope: unknown) {
+  if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) return undefined;
+  const value = (envelope as { receipt?: unknown }).receipt;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const receipt = value as Record<string, unknown>;
+  if (receipt.duplicate !== true || typeof receipt.requestId !== "string" || typeof receipt.status !== "string"
+    || !(receipt.taskId === null || typeof receipt.taskId === "string")
+    || !Array.isArray(receipt.targetRefs) || !receipt.targetRefs.every((ref) => typeof ref === "string")
+    || typeof receipt.resultExpired !== "boolean" || typeof receipt.outcomeUnknown !== "boolean"
+    || typeof receipt.manualReconcileRequired !== "boolean") return undefined;
+  return {
+    duplicate: true as const,
+    requestId: receipt.requestId,
+    status: receipt.status,
+    taskId: receipt.taskId,
+    targetRefs: receipt.targetRefs.filter((ref): ref is string => typeof ref === "string"),
+    resultExpired: receipt.resultExpired,
+    outcomeUnknown: receipt.outcomeUnknown,
+    manualReconcileRequired: receipt.manualReconcileRequired,
+  };
+}
+
 /** dispatch 失败时抛出,携带 HTTP status + 服务端错误信息(结构化或纯串)。 */
 export class DispatchError extends Error {
+  declare readonly receipt?: NonNullable<ReturnType<typeof invocationReceipt>>;
+  declare readonly requestId?: string;
   constructor(
     public readonly status: number,
     public readonly opId: string,
     message: string,
+    receipt?: NonNullable<ReturnType<typeof invocationReceipt>>,
   ) {
     super(`dispatch ${opId} failed (${status}): ${message}`);
     this.name = "DispatchError";
+    if (receipt) {
+      this.receipt = receipt;
+      this.requestId = receipt.requestId;
+    }
   }
 }
 
@@ -85,6 +123,44 @@ function extractErrorMessage(body: unknown): string {
   return "unknown error";
 }
 
+// SEMANTIC_BOUNDARY_ALLOW: 仅合成已批准的HTTP观察槽；不判断业务语义、不续原任务期限。
+const POST_WAIT_MS = 8_100_000;
+const LOGIN_WAIT_MS = 780_000;
+const CLEANUP_WAIT_MS = 120_000;
+const FINAL_MARGIN_MS = 60_000;
+const MAX_TIMER_MS = 2_147_483_647;
+export function dispatchObservationMs(hasCredentials: boolean): number {
+  return (hasCredentials ? 2 * POST_WAIT_MS + 2 * LOGIN_WAIT_MS : POST_WAIT_MS)
+    + CLEANUP_WAIT_MS + FINAL_MARGIN_MS;
+}
+
+export class DispatchObservationError extends Error {
+  readonly code = "CLI_HTTP_OBSERVATION_FAILED";
+  constructor(readonly opId: string, readonly phase: "before_request" | "request_sent" | "body_read",
+    readonly outcomeUnknown: boolean) {
+    super(outcomeUnknown ? `调用 ${opId} 的回执尚未确认；请核对原调用，不要重新发送。`
+      : `调用 ${opId} 的本地观察已停止；没有新的业务回执。`);
+    this.name = "DispatchObservationError";
+  }
+}
+
+type Scope = {
+  agent: Agent;
+  controller: AbortController;
+  deadline: number;
+  postMs: number;
+  phase: "before_request" | "request_sent" | "body_read";
+  businessState: "not_sent" | "sent" | "known_response";
+};
+type HttpReply = { status: number; ok: boolean; headers: Headers; body: unknown };
+function bounded<T>(promise: Promise<T>, milliseconds: number): Promise<T> {
+  if (milliseconds <= 0) return Promise.reject(Error("HTTP_PHASE_EXHAUSTED"));
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([promise, new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(Error("HTTP_PHASE_EXHAUSTED")), milliseconds);
+  })]).finally(() => clearTimeout(timer));
+}
+
 export class DispatchClient {
   private readonly baseUrl: string;
   private readonly email: string | undefined;
@@ -96,6 +172,8 @@ export class DispatchClient {
   private readonly productId: string | undefined;
   private readonly packageId: string | undefined;
   private readonly launchNonce: string | undefined;
+  private readonly control: DispatchControl;
+  private readonly cancelOnProcessSignal: boolean;
   private sessionCookie: string | null = null;
   private loggedIn = false;
 
@@ -110,99 +188,178 @@ export class DispatchClient {
     this.productId = options.productId;
     this.packageId = options.packageId;
     this.launchNonce = options.launchNonce;
+    this.control = options.control ?? {};
+    this.cancelOnProcessSignal = options.cancelOnProcessSignal === true;
   }
 
-  /** 是否配置了登录凭据(否则走 T-046 免登录裸调)。 */
-  get hasCredentials(): boolean {
-    return Boolean(this.email && this.password);
+  get hasCredentials(): boolean { return Boolean(this.email && this.password); }
+
+  private async observe<T>(opId: string, control: DispatchControl, work: (scope: Scope) => Promise<T>): Promise<T> {
+    const baseline = dispatchObservationMs(this.hasCredentials);
+    // per-call SDK signal不得丢失原constructor可信较长观察，也不替换原父signal。
+    const supplied = [this.control.observationMs, control.observationMs].filter((value): value is number => value !== undefined);
+    if (supplied.some(value => !Number.isSafeInteger(value) || value < baseline || value > MAX_TIMER_MS))
+      throw new RangeError("CLI_HTTP_OBSERVATION_BUDGET_INVALID");
+    const observationMs = Math.max(baseline, ...supplied);
+    const signals = [this.control.signal, control.signal].filter((value): value is AbortSignal => value !== undefined);
+    const originalSignal = signals.length > 1 ? AbortSignal.any(signals) : signals[0];
+    if (originalSignal?.aborted) throw new DispatchObservationError(opId, "before_request", false);
+    const entered = performance.now();
+    const controller = new AbortController();
+    // 原60秒余量属于正序列衔接/JSON/装配；只保留完整cleanup120秒。
+    const workMs = observationMs - CLEANUP_WAIT_MS;
+    const postMs = POST_WAIT_MS + Math.floor((observationMs - baseline) / (this.hasCredentials ? 2 : 1));
+    const agent = new Agent({ connect: { timeout: 120_000 }, headersTimeout: postMs,
+      bodyTimeout: postMs, pipelining: 0 });
+    const scope: Scope = { agent, controller, deadline: entered + workMs, postMs,
+      phase: "before_request", businessState: "not_sent" };
+    const abort = () => controller.abort(originalSignal?.reason ?? Error("LOCAL_HTTP_OBSERVATION_CANCELLED"));
+    const processAbort = () => controller.abort(Error("LOCAL_CLI_SIGNAL"));
+    originalSignal?.addEventListener("abort", abort, { once: true });
+    if (originalSignal?.aborted) abort();
+    if (this.cancelOnProcessSignal) {
+      process.once("SIGINT", processAbort); process.once("SIGTERM", processAbort);
+    }
+    const timer = setTimeout(() => controller.abort(Error("COMPLETE_HTTP_OBSERVATION_EXHAUSTED")), workMs);
+    try {
+      return await work(scope);
+    } catch (error) {
+      if (error instanceof DispatchError) throw error;
+      throw new DispatchObservationError(opId, scope.phase, scope.businessState === "sent");
+    } finally {
+      clearTimeout(timer);
+      originalSignal?.removeEventListener("abort", abort);
+      if (this.cancelOnProcessSignal) {
+        process.removeListener("SIGINT", processAbort); process.removeListener("SIGTERM", processAbort);
+      }
+      // 业务成功/错误已经决定。cleanup不可从finally抛出、覆写回执或暗示重发。
+      const cleanupDeadline = performance.now() + CLEANUP_WAIT_MS;
+      let confirmed = false;
+      try {
+        await bounded(agent.close(), cleanupDeadline - performance.now()); confirmed = true;
+      } catch {
+        try {
+          const destroying = agent.destroy();
+          try { await bounded(destroying, cleanupDeadline - performance.now()); confirmed = true; }
+          catch { void destroying.catch(() => undefined); }
+        } catch { /* 清理同步异常也不能覆盖可信业务结果。 */ }
+      }
+      if (!confirmed) try { console.error("CREATOROS_HTTP_CLEANUP_UNCONFIRMED", { opId, phase: "cleanup", code: "OWN_AGENT_CLOSE_UNCONFIRMED" }); }
+      catch { /* 诊断观察者不能更改业务交付。 */ }
+    }
   }
 
-  /** POST /api/v1/auth/login 拿 session cookie。凭据缺失时为 no-op。 */
-  async login(): Promise<void> {
+  private async http(scope: Scope, opId: string, endpoint: "login" | "dispatch", init: RequestInit): Promise<HttpReply> {
+    scope.controller.signal.throwIfAborted();
+    const remaining = scope.deadline - performance.now();
+    const phaseMs = endpoint === "login" ? LOGIN_WAIT_MS : scope.postMs;
+    if (remaining < phaseMs) {
+      scope.phase = "before_request";
+      throw Error("COMPLETE_HTTP_SLOT_UNAVAILABLE");
+    }
+    const phaseController = new AbortController();
+    const abort = () => phaseController.abort(scope.controller.signal.reason);
+    scope.controller.signal.addEventListener("abort", abort, { once: true });
+    if (scope.controller.signal.aborted) abort();
+    const phaseDeadline = performance.now() + phaseMs;
+    const check = () => {
+      phaseController.signal.throwIfAborted();
+      if (performance.now() >= phaseDeadline || performance.now() >= scope.deadline) {
+        phaseController.abort(Error("COMPLETE_HTTP_PHASE_EXHAUSTED"));
+        phaseController.signal.throwIfAborted();
+      }
+    };
+    const timer = setTimeout(() => phaseController.abort(Error("COMPLETE_HTTP_PHASE_EXHAUSTED")), phaseMs);
+    let rejectAborted!: (reason: unknown) => void;
+    const aborted = new Promise<never>((_resolve, reject) => { rejectAborted = reject; });
+    const onAbort = () => rejectAborted(phaseController.signal.reason);
+    phaseController.signal.addEventListener("abort", onAbort, { once: true });
+    try {
+      check();
+      scope.phase = endpoint === "dispatch" ? "request_sent" : "before_request";
+      if (endpoint === "dispatch") scope.businessState = "sent";
+      const url = `${this.baseUrl}/api/v1/${endpoint === "login" ? "auth/login" : "dispatch"}`;
+      const complete = (async () => {
+        const response = await this.fetchImpl(url, { ...init, signal: phaseController.signal,
+          dispatcher: scope.agent } as RequestInit & { dispatcher: Dispatcher });
+        check();
+        if (endpoint === "dispatch") scope.phase = "body_read";
+        let body: unknown;
+        if (endpoint === "login") {
+          // 原合法auth允许raw/empty：只读完body EOF，不新增JSON质量门。
+          const text = await response.text();
+          check();
+          try { body = JSON.parse(text); } catch { body = null; }
+        } else {
+          // 保原Response.json单次消费者；流失败不等于完整非JSON错误正文。
+          try { body = await response.json(); }
+          catch (error) { if (!response.ok && error instanceof SyntaxError) body = null; else throw error; }
+        }
+        check();
+        if (endpoint === "dispatch") scope.businessState = "known_response";
+        return { status: response.status, ok: response.ok, headers: response.headers, body };
+      })();
+      return await Promise.race([complete, aborted]);
+    } finally {
+      clearTimeout(timer);
+      scope.controller.signal.removeEventListener("abort", abort);
+      phaseController.signal.removeEventListener("abort", onAbort);
+    }
+  }
+
+  private async loginWithin(scope: Scope): Promise<void> {
     if (!this.hasCredentials) return;
-    const res = await this.fetchImpl(`${this.baseUrl}/api/v1/auth/login`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+    const reply = await this.http(scope, "auth.login", "login", {
+      method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ email: this.email, password: this.password }),
     });
-    if (!res.ok) {
-      let message = "unknown error";
-      try {
-        message = extractErrorMessage(await res.json());
-      } catch {
-        /* 非 JSON body,忽略 */
-      }
-      throw new DispatchError(res.status, "auth.login", message);
-    }
-    this.sessionCookie = parseSessionCookie(res.headers.get("set-cookie"));
+    if (!reply.ok) throw new DispatchError(reply.status, "auth.login", extractErrorMessage(reply.body));
+    this.sessionCookie = parseSessionCookie(reply.headers.get("set-cookie"));
     this.loggedIn = true;
   }
 
-  /**
-   * 调用一个 contract op。失败时抛 DispatchError;401 且配了凭据时自动重登一次再重试
-   * (session 失效自愈)。返回 contract envelope 原样({ data, meta } 或 list 形)。
-   */
-  async dispatch(
-    opId: string,
-    input: DispatchInput = {},
-    callOptions: DispatchCallOptions = {},
-  ): Promise<unknown> {
-    // 懒登录:首次调用先 login(免登录模式下是 no-op)。
-    if (!this.loggedIn && this.hasCredentials) {
-      await this.login();
-    }
-    const res = await this.post(opId, input, callOptions);
-    if (res.status === 401 && this.hasCredentials) {
-      // session 失效 → 重登一次再试。
-      await this.login();
-      const retry = await this.post(opId, input, callOptions);
-      return this.unwrap(retry, opId);
-    }
-    return this.unwrap(res, opId);
+  async login(control: DispatchControl = this.control): Promise<void> {
+    if (!this.hasCredentials) return;
+    await this.observe("auth.login", control, scope => this.loginWithin(scope));
   }
 
-  private async post(
-    opId: string,
-    input: DispatchInput,
-    callOptions: DispatchCallOptions,
-  ): Promise<Response> {
-    const headers: Record<string, string> = {
-      "content-type": "application/json",
-    };
-    if (this.sessionCookie) {
-      headers.cookie = `${SESSION_COOKIE}=${encodeURIComponent(this.sessionCookie)}`;
-    }
+  async dispatch(opId: string, input: DispatchInput = {}, callOptions: DispatchCallOptions = {},
+    control: DispatchControl = this.control): Promise<unknown> {
+    return this.observe(opId, control, async scope => {
+      if (!this.loggedIn && this.hasCredentials) await this.loginWithin(scope);
+      const reply = await this.post(scope, opId, input, callOptions);
+      if (reply.status === 401 && this.hasCredentials) {
+        await this.loginWithin(scope);
+        return this.unwrap(await this.post(scope, opId, input, callOptions), opId);
+      }
+      return this.unwrap(reply, opId);
+    });
+  }
+
+  private post(scope: Scope, opId: string, input: DispatchInput, callOptions: DispatchCallOptions): Promise<HttpReply> {
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (this.sessionCookie) headers.cookie = `${SESSION_COOKIE}=${encodeURIComponent(this.sessionCookie)}`;
     if (this.handshakeToken) headers["x-creatoros-handshake"] = this.handshakeToken;
     if (this.cliAccessToken) headers["x-creatoros-cli-access"] = this.cliAccessToken;
     if (this.cliAccessToken) headers["x-creatoros-cli-client-id"] = this.clientId;
     if (this.productId) headers["x-creatoros-cli-product-id"] = this.productId;
     if (this.packageId) headers["x-creatoros-cli-package-id"] = this.packageId;
     if (this.launchNonce) headers["x-creatoros-cli-launch-nonce"] = this.launchNonce;
+    if (callOptions.groupId) headers["x-group-id"] = callOptions.groupId;
     if (callOptions.accountId) headers["x-account-id"] = callOptions.accountId;
-    if (callOptions.idempotencyKey) {
-      headers["x-idempotency-key"] = callOptions.idempotencyKey;
-    }
+    if (callOptions.idempotencyKey) headers["x-idempotency-key"] = callOptions.idempotencyKey;
     if (callOptions.apply) headers["x-creatoros-cli-apply"] = "1";
-    if (callOptions.confirmImpact) {
-      headers["x-creatoros-cli-confirm-impact"] = callOptions.confirmImpact;
-    }
-    return this.fetchImpl(`${this.baseUrl}/api/v1/dispatch`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ id: opId, input }),
-    });
+    if (callOptions.confirmImpact) headers["x-creatoros-cli-confirm-impact"] = callOptions.confirmImpact;
+    return this.http(scope, opId, "dispatch", { method: "POST", headers, body: JSON.stringify({ id: opId, input }) });
   }
 
-  private async unwrap(res: Response, opId: string): Promise<unknown> {
-    if (!res.ok) {
-      let message = "unknown error";
-      try {
-        message = extractErrorMessage(await res.json());
-      } catch {
-        /* 非 JSON body,忽略 */
-      }
-      throw new DispatchError(res.status, opId, message);
+  private unwrap(reply: HttpReply, opId: string): unknown {
+    if (!reply.ok) {
+      const receipt = invocationReceipt(reply.body);
+      let message = extractErrorMessage(reply.body);
+      if (receipt && message === "unknown error") message = `原调用状态为 ${receipt.status}，请求编号 ${receipt.requestId}。`;
+      throw new DispatchError(reply.status, opId, message, receipt);
     }
-    return res.json();
+    return reply.body;
   }
 }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, eq, aiTasks, executionCalls, executionTasks, scriptReviewReports, type Db } from "@creatoros/backend";
+import { and, eq, isNull, aiTasks, executionCalls, executionTasks, scriptReviewReports, type Db } from "@creatoros/backend";
 import { workerPortInputSchemas, workerStructuredResultSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError } from "../execution/execution.errors";
@@ -27,7 +27,7 @@ export function createExecutionReviewReportService(db: Db, deps: { now?: () => s
       if (input.outcome !== "succeeded") throw new ConflictError("审核失败必须经执行状态端口");
       return leases.withLease(ref, "settlement", async ({ tx, task, context }) => {
         if (task.kind !== "ai_task" || task.ownerType !== "ai_task") throw new ConflictError("当前执行没有AI业务任务");
-        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!))).for("update");
+        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), context.groupId == null ? isNull(aiTasks.groupId) : eq(aiTasks.groupId, context.groupId), context.accountId == null ? isNull(aiTasks.accountId) : eq(aiTasks.accountId, context.accountId))).for("update");
         if (!business || business.taskType !== "script.review") throw new ConflictError("审核任务映射或归属不一致");
         const model = z.object({ kind: z.literal("model.structured"), skillId: z.literal("script.review"), facets: z.object({ __reviewSnapshot: z.string() }) }).parse((task.payload as Record<string, unknown>).modelInput);
         const snapshot = snapshotSchema.parse(JSON.parse(model.facets.__reviewSnapshot));

@@ -23,11 +23,15 @@ import { ErrorState } from "@/components/state/page-state";
 import { resolveSession } from "@/lib/session.server";
 import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
 import { getPublishingScheduleProjection } from "@/server/persistence-client";
+import {createServerClient} from "@/lib/contract-client.server";
+import {GroupWorkspaceFilters} from "@/features/group-workspace/group-workspace-filters";
+import {workspaceQueryFromSearch} from "@/features/group-workspace/workspace-query";
+import {scopeGroupPublishingProjection} from "@/features/publishing-center/publishing-group-scope";
 
 export default async function PublishingCenterRoutePage({
   searchParams,
 }: {
-  searchParams: Promise<{ hidden?: string; month?: string }>;
+  searchParams: Promise<Record<string,string|string[]|undefined>>;
 }) {
   const session = await resolveSession();
   // T-595：旧 hidden URL 参数只做兼容吞掉，不参与下游筛选。
@@ -41,17 +45,18 @@ export default async function PublishingCenterRoutePage({
   // [T-353] 未选号(含 0 号)= 引导态(T-332 §4.2):本页 per-account 读会撞 S2 strict 门
   // (AccountRequiredError → 整页错误边界)。layout 的零账号守卫只在首次渲染判定(App Router
   // 客户端导航不重渲 layout),故页面自兜:ctx 无选中号 → 渲绑定引导,不发注定失败的读。
-  if (!session.ctx.accountId) {
+  if (!session.ctx.groupId && !session.ctx.accountId) {
     return <ZeroAccountGuidance />;
   }
 
-  const projection = await getPublishingScheduleProjection(
-    session.ctx,
-    params.month,
-  );
+  const [baseProjection, groupData] = await Promise.all([
+    getPublishingScheduleProjection(session.ctx, typeof params.month === "string" ? params.month : undefined),
+    session.ctx.groupId ? createServerClient(session.ctx).getGroupOverview({params:{groupId:session.ctx.groupId},query:workspaceQueryFromSearch(params),body:undefined}) : Promise.resolve(null),
+  ]);
+  const projection = groupData ? scopeGroupPublishingProjection(baseProjection,groupData) : baseProjection;
   const calendar =
     projection.calendar.state === "ready" ? (
-      <ContentCalendarView viewModel={projection.calendar.viewModel} />
+      <ContentCalendarView key={session.ctx.groupId ?? session.ctx.accountId} viewModel={projection.calendar.viewModel} navigationQuery={new URLSearchParams(Object.entries(params).flatMap(([key,value])=>typeof value==="string"?[[key,value]]:[])).toString()} />
     ) : (
       <ErrorState
         error={{
@@ -64,6 +69,9 @@ export default async function PublishingCenterRoutePage({
     <PublishingCenterPage
       viewModel={projection.performance}
       calendar={calendar}
+      filters={groupData ? <GroupWorkspaceFilters workspace={groupData.workspace}/> : undefined}
+      groupMode={Boolean(groupData)}
+      navigationQuery={groupData?new URLSearchParams({startDate:groupData.workspace.startDate,endDate:groupData.workspace.endDate,...(groupData.workspace.platform?{platform:groupData.workspace.platform}:{}),...(groupData.workspace.accountId?{accountId:groupData.workspace.accountId}:{})}).toString():undefined}
     />
   );
 }

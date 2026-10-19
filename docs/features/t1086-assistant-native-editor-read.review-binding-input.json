@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS：新增任务包绑定补充只修复 T1086 缺 modules/progress binding 的控制面前置条件，不改变已评审的 5 条产品路径、5 条测试路径或验收语义。可在 modules.config.json 新增单一 T-1086 implementation 绑定，并以断言式 JSON 变换向 progress.json 追加一个 pending vertical、重算汇总为 94/62/196/134/18；既有 93 个 vertical、4 个 lease 及其状态、commit、blocked_reason、e2e/data 字段逐对象保持。因 T1083 旧 glob 会使全量 progress generate exit2，本次不得迁移旧 glob或放宽校验；应保留该失败，执行定向初始化后再实际运行 context-compile 并核 packet。",
+  "findings": []
+}

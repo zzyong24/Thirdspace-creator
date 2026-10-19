@@ -3,6 +3,7 @@ import { ErrorCode, type RequestContext } from "@creatoros/contract";
 import {
   getIdentityService,
   getPlatformAccountService,
+  getAccountGroupService,
 } from "@/server/persistence-client";
 import {
   AuthenticationError,
@@ -39,6 +40,8 @@ export function isOwnershipError(err: unknown): boolean {
 //   仍走 T-046 单机免登录直通,避免锁死装机版(它常态不发 session cookie)。读类路由不传此项,保持宽松。
 export interface ResolveContextOptions {
   rejectInvalidToken?: boolean;
+  groupId?:string|null;
+  groupSelectionMode?:InvalidAccountMode;
 }
 
 /**
@@ -101,7 +104,8 @@ export async function resolveRequestContext(
   opts?: ResolveContextOptions,
 ): Promise<RequestContext> {
   const base = await resolveBaseContext(rawToken, opts);
-  return verifyAccountSelection(base, accountId, "reject");
+  const selected=await verifyAccountSelection(base, accountId, "reject");
+  return verifyGroupSelection(selected,opts?.groupId,opts?.groupSelectionMode??"reject");
 }
 
 // 先解析出「本次请求是谁」(userId 维度)——与 accountId 无关的既有逻辑(T-046/T-142)。
@@ -197,4 +201,21 @@ export async function verifyAccountSelection(
   }
 
   return { ...base, accountId };
+}
+
+export function readRequestGroupId(req:Request):string|null{
+ const header=req.headers.get("x-group-id")?.trim();if(header)return header;
+ const match=/(?:^|;\s*)creatoros_current_group=([^;]+)/.exec(req.headers.get("cookie")??"");
+ if(!match)return null;try{return decodeURIComponent(match[1]).trim()||null;}catch{return match[1].trim()||null;}
+}
+export async function verifyGroupSelection(base:RequestContext,groupId:string|null|undefined,mode:InvalidAccountMode):Promise<RequestContext>{
+ if(!groupId)return base;
+ try{
+  const groups=await getAccountGroupService();const group=await groups.get(base,groupId);
+  if(base.accountId){const member=await groups.forAccount(base,base.accountId);if(member.groupId!==group.id)throw new OwnershipError("账号不在当前组，请重新选择");return {...base,groupId:group.id,groupVersion:group.version,membershipVersion:member.version};}
+  return {...base,groupId:group.id,groupVersion:group.version};
+ }catch(err){if(!isOwnershipError(err)||mode==="reject")throw err;return {...base,groupId:null,accountId:null};}
+}
+export async function resolveRequestWorkspaceContext(rawToken:string|null|undefined,req:Request,opts?:ResolveContextOptions):Promise<RequestContext>{
+ return resolveRequestContext(rawToken,readRequestAccountId(req),{...opts,groupId:readRequestGroupId(req)});
 }

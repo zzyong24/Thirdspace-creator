@@ -7,10 +7,12 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { buildTools, type McpToolDef } from "./tools";
+import { buildTools,endpointInputSchema,schemaToJson,type McpToolDef } from "./tools";
+import {operationCatalog,describeOperation,operationDescribeInput} from "./operation-catalog";
 import {
   DispatchClient,
   DispatchError,
+  DispatchObservationError,
   type DispatchCallOptions,
   type DispatchInput,
 } from "./dispatch";
@@ -18,6 +20,9 @@ import { getCliOperationPolicy } from "@creatoros/contract";
 
 export interface CreatorOsMcpServerOptions {
   dispatchClient: DispatchClient;
+  /** 仅由 serve 的显式参数固定范围；工具可显式覆盖。 */
+  defaultGroupId?: string;
+  defaultAccountId?: string;
 }
 
 /** 装配一个 CreatorOS MCP Server(未连 transport;index.ts 负责接 stdio)。 */
@@ -42,7 +47,7 @@ export function createCreatorOsMcpServer(
     })),
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const tool = toolsByName.get(request.params.name);
     if (!tool) {
       return {
@@ -57,6 +62,10 @@ export function createCreatorOsMcpServer(
     };
     const { _creatoros, ...input } = args;
     try {
+      if(tool.opId==="creatoros.operations.list"||tool.opId==="creatoros.operations.describe"){
+        const result=tool.opId==="creatoros.operations.list"?operationCatalog(args):describeOperation(operationDescribeInput.parse(args).operation,endpointInputSchema,schemaToJson);
+        return {content:[{type:"text" as const,text:JSON.stringify(result)}]};
+      }
       const policy = getCliOperationPolicy(tool.opId);
       if (!policy) throw new Error(`operation 缺 CLI policy: ${tool.opId}`);
       if (policy.effect !== "read") {
@@ -68,7 +77,10 @@ export function createCreatorOsMcpServer(
           throw new Error(`${tool.opId} 必须提供 confirmImpact。`);
         }
       }
-      const envelope = await dispatchClient.dispatch(tool.opId, input, _creatoros);
+      const groupId=_creatoros?.groupId ?? options.defaultGroupId;
+      // 显式切组时不把启动时原组的真实平台目标带过去。
+      const accountId=_creatoros?.accountId ?? (_creatoros?.groupId && _creatoros.groupId!==options.defaultGroupId ? undefined : options.defaultAccountId);
+      const envelope = await dispatchClient.dispatch(tool.opId, input, {..._creatoros,groupId,accountId}, {signal:extra.signal});
       return {
         content: [
           { type: "text" as const, text: JSON.stringify(envelope, null, 2) },
@@ -78,7 +90,7 @@ export function createCreatorOsMcpServer(
       // dispatch 层错误(4xx/5xx/网络)转成 MCP tool error,而非协议级异常 ——
       // 让调用方 AI 拿到可读的失败原因继续推理。
       const message =
-        err instanceof DispatchError
+        err instanceof DispatchError || err instanceof DispatchObservationError
           ? err.message
           : err instanceof Error
             ? `dispatch ${tool.opId} 失败:${err.message}(dev server 是否在运行?CREATOROS_BASE_URL 是否正确?)`

@@ -1,0 +1,372 @@
+{
+  "schema": "t1062-one-capture-offline-replay-result/v1",
+  "status": "bounded_mechanism_confirmed_research_criteria_verified_not_product_acceptance",
+  "counts": {
+    "newPipelineCalls": 1,
+    "newModelGenerateCalls": 1,
+    "autoregressiveForwardSteps": 86,
+    "newDecodeSubprocessCalls": 0,
+    "networkAttempts": 0,
+    "repositoryWrites": 0,
+    "captureBytes": 76459164,
+    "captureMaxBytes": 134217728
+  },
+  "featureDims": [
+    1,
+    80,
+    3000
+  ],
+  "encoderDims": [
+    1,
+    1500,
+    768
+  ],
+  "attentionDims": [
+    1,
+    12,
+    1,
+    1500
+  ],
+  "strideWitness": {
+    "featureFrames": 3000,
+    "encoderFrames": 1500,
+    "attentionFrames": 1500,
+    "measuredEncoderStride": 2,
+    "featureHopSamples": 160,
+    "timePrecision": 0.02,
+    "legacyCropRequested": 1916,
+    "legacyCropEffective": 1500,
+    "actualStrideCrop": 958,
+    "derivation": "floor(validSampleCount * actualEncoderFrames / (hop_length * actualFeatureFrames)); no guessed divide-by-two"
+  },
+  "originalProviderTail": {
+    "text": "大家。",
+    "timestamp": [
+      18.36,
+      19.4
+    ]
+  },
+  "originalDriverTimingAccepted": false,
+  "legacyFunctionIdentityVerified": true,
+  "legacyTimestampBytesEqual": true,
+  "legacyRawExactEqual": true,
+  "sameTranscriptPreserved": true,
+  "candidateStrictTimingAccepted": true,
+  "candidateRangeCount": 65,
+  "candidateLastRange": {
+    "id": "provider-unit-64",
+    "text": "大家。",
+    "startSample": 293760,
+    "endSample": 306240
+  },
+  "sourceAndIndependentCacheSHAUnchanged": true,
+  "initialHarnessFailure": "two exit1 ReferenceError: internal ESM entrypoint initialization cycle before DTW; logs preserved",
+  "harnessRevision": "standard transformers.js module awaited before sequential internal module imports; original source/cjs byte-restored and r2 paths separate",
+  "observationsKeptNegative": [
+    {
+      "path": "/tmp/creatoros-t1062-asr-preflight/segment-result.json",
+      "sha256": "f364e6fb5cd0ba4d525099094f3a18e9a79d055b84f083608b1ac582e1d9e699",
+      "bytes": 966,
+      "unchangedFromReadonlyDiagnosis": true
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-preflight/word-result.json",
+      "sha256": "0af1d30589779bc8e4cb98a98d6aea928be051a2fb33ea3a3eb4bade1aafbfbe",
+      "bytes": 5828,
+      "unchangedFromReadonlyDiagnosis": true
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-result.json",
+      "sha256": "4f0c79eed7b62b4ec18a8e0678d2f48708c85f7a877f2cdd75dd21d6a43634aa",
+      "bytes": 3434,
+      "unchangedFromReadonlyDiagnosis": true
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-result.json",
+      "sha256": "37a8031436109396494df19ad02fed789ccc97bf17b298b58449c0051e5a712c",
+      "bytes": 23059,
+      "unchangedFromReadonlyDiagnosis": true
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-raw-provider.json",
+      "sha256": "35a8f63e8fba7b7f914f8db19bd0b1f92bd664f53786f1ff6e9422ce6bd25099",
+      "bytes": 585,
+      "unchangedFromReadonlyDiagnosis": true
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-raw-provider.json",
+      "sha256": "95c84e54199db8e8df63ec35409981dce0bcd92d769487792454e487a5edc44d",
+      "bytes": 2880,
+      "unchangedFromReadonlyDiagnosis": true
+    }
+  ],
+  "commands": [
+    {
+      "command": "build",
+      "exit": 0,
+      "argv": [
+        "node",
+        "/tmp/t1062-asr-timing-observation/build.mjs"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/build.stdout.log",
+        "sha256": "1bf5f35bbe09aad9ed01be313c82d7dd4122058a2de5d5079c6445e0c54ca01c",
+        "bytes": 61
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/build.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "command": "observe",
+      "exit": 0,
+      "argv": [
+        "node",
+        "--max-old-space-size=2048",
+        "/tmp/t1062-asr-timing-observation/observe.cjs",
+        "/tmp/t1062-asr-timing-observation/capture-one"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/observe.stdout.log",
+        "sha256": "c5407d21c39ff164e38abc2d6944352b611cfb5365715d959a1728184edac215",
+        "bytes": 620
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/observe.stderr.log",
+        "sha256": "ee433f5b78105d5a70db523caf2322088ffe85c715c77d73fbddeb056c4f7ad1",
+        "bytes": 65809
+      }
+    },
+    {
+      "command": "initial-evidence",
+      "exit": 1,
+      "argv": [
+        "node",
+        "--max-old-space-size=512",
+        "/tmp/t1062-asr-timing-observation/verify.cjs",
+        "evidence",
+        "/tmp/t1062-asr-timing-observation/capture-one"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/evidence.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/evidence.stderr.log",
+        "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+        "bytes": 557
+      }
+    },
+    {
+      "command": "initial-timing",
+      "exit": 1,
+      "argv": [
+        "node",
+        "--max-old-space-size=512",
+        "/tmp/t1062-asr-timing-observation/verify.cjs",
+        "timing",
+        "/tmp/t1062-asr-timing-observation/capture-one"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/timing.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/timing.stderr.log",
+        "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+        "bytes": 557
+      }
+    },
+    {
+      "command": "temporary-r2-build",
+      "exit": 0,
+      "argv": [
+        "node",
+        "/tmp/t1062-asr-timing-observation/build.mjs"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/build-revision2.stdout.log",
+        "sha256": "1bf5f35bbe09aad9ed01be313c82d7dd4122058a2de5d5079c6445e0c54ca01c",
+        "bytes": 61
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/build-revision2.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "command": "temporary-r2-evidence",
+      "exit": 0,
+      "argv": [
+        "node",
+        "--max-old-space-size=512",
+        "/tmp/t1062-asr-timing-observation/verify.cjs",
+        "evidence",
+        "/tmp/t1062-asr-timing-observation/capture-one"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/evidence-revision2.stdout.log",
+        "sha256": "400731ea0d9371c0fc4421e26ea83bf2cf4df232e010a9d7e59473b5d7fbb464",
+        "bytes": 5818
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/evidence-revision2.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "command": "restore-original-build",
+      "exit": 0,
+      "argv": [
+        "node",
+        "/tmp/t1062-asr-timing-observation/build.mjs"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/restore-original-build.stdout.log",
+        "sha256": "1bf5f35bbe09aad9ed01be313c82d7dd4122058a2de5d5079c6445e0c54ca01c",
+        "bytes": 61
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/restore-original-build.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "command": "separate-r2-build",
+      "exit": 0,
+      "argv": [
+        "node",
+        "/tmp/t1062-asr-timing-observation/build-r2.mjs"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/build-r2.stdout.log",
+        "sha256": "1bf5f35bbe09aad9ed01be313c82d7dd4122058a2de5d5079c6445e0c54ca01c",
+        "bytes": 61
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/build-r2.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "command": "r2-evidence",
+      "exit": 0,
+      "argv": [
+        "node",
+        "--max-old-space-size=512",
+        "/tmp/t1062-asr-timing-observation/verify-r2.cjs",
+        "evidence",
+        "/tmp/t1062-asr-timing-observation/capture-one"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/evidence-r2.stdout.log",
+        "sha256": "400731ea0d9371c0fc4421e26ea83bf2cf4df232e010a9d7e59473b5d7fbb464",
+        "bytes": 5818
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/evidence-r2.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "command": "r2-timing",
+      "exit": 0,
+      "argv": [
+        "node",
+        "--max-old-space-size=512",
+        "/tmp/t1062-asr-timing-observation/verify-r2.cjs",
+        "timing",
+        "/tmp/t1062-asr-timing-observation/capture-one"
+      ],
+      "stdout": {
+        "path": "/tmp/t1062-asr-timing-observation/timing-r2.stdout.log",
+        "sha256": "9d5d8b985a0bd22b0bb92961dd83e20679e2e329b2f46192d783acf5d9b63d14",
+        "bytes": 5816
+      },
+      "stderr": {
+        "path": "/tmp/t1062-asr-timing-observation/timing-r2.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/tmp/t1062-asr-timing-observation/registry.json",
+      "sha256": "63d10d75ac2d33239806ba5ab9105786b1ae6c1fea21efea3e1f0c8cd82f394f",
+      "bytes": 3924
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/common.mjs",
+      "sha256": "9a4540ee768bd67b070a5cc885df12b03312ec46815c96e1830dff583f35e311",
+      "bytes": 4038
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/observe.mjs",
+      "sha256": "e252ca1e341481966572e657c9cf6f20a4d90ce45142b8a1ca6d69fd6babcfeb",
+      "bytes": 9879
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify.mjs",
+      "sha256": "0312653b0ba75040f815ffe9382b521fd8709bef0068c431e0d88688b0c28abc",
+      "bytes": 5799
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify.original.mjs",
+      "sha256": "0312653b0ba75040f815ffe9382b521fd8709bef0068c431e0d88688b0c28abc",
+      "bytes": 5799
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify-r2.mjs",
+      "sha256": "f643602e3fb18006220e8a2401551d5cf66245a42f428f263001421c1e69fe3c",
+      "bytes": 6065
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/build.mjs",
+      "sha256": "0514a4b483b2136cacb36a4394997fd8660a61704d789757aad2f477739956d1",
+      "bytes": 1061
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/build-r2.mjs",
+      "sha256": "283d9895a9b2264e3cbcd104a041eb1108efdfd603b610fb4763f9b6007c92f4",
+      "bytes": 1054
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/prepared-manifest.json",
+      "sha256": "2c1e87a10570958f8327ed1c1a880ad645b48a82dfa3f8ba73df9abb5dc48546",
+      "bytes": 1452
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/initial-execution-result.json",
+      "sha256": "d221de236b1facc3b1e7b1446a5aa22cd6bc06589a6df8842a3028054d26dda1",
+      "bytes": 3409
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/capture-one/capture.json",
+      "sha256": "68e088a43661cc543edba4ed7d685f9e479da04eafd5d1ea1e29a592fbe94dd0",
+      "bytes": 652753
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/capture-one/capture.bin",
+      "sha256": "75811d3b3e16662ced7ff8484a8d7d0c8ed6e6a623c24df96e2236d379823655",
+      "bytes": 76459164
+    }
+  ],
+  "acceptanceLimits": [
+    "one same-source frozen-attention crop mechanism proof, not current driver verified timing",
+    "no original segment or first-source word negative resolved or removed",
+    "direct actual pipeline is not packaged worker acceptance",
+    "no public group/execution/call receipt/source/native editor chain",
+    "bounds/order/identity pass does not independently establish acoustic word correctness",
+    "research resume is not installed-client or complete word rough-cut success"
+  ]
+}

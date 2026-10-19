@@ -1,0 +1,17 @@
+
+    // T1246 standalone diagnostic observation only; original assertions below unchanged.
+    await context.exposeBinding("__t1246HistoryEvidence", (_source, event) => {
+      appendFileSync(resolve(process.env.CREATOROS_T1246_RUN_DIR!, "history-events.jsonl"), JSON.stringify({at:new Date().toISOString(),kind:"history",...event})+"\n");
+    });
+    await context.addInitScript(() => {
+      function snapshot() { const s=history.state;return {url:location.href,length:history.length,stateKeys:s&&typeof s==="object"?Object.keys(s):[],next:s?.__NA===true,idx:typeof s?.idx==="number"?s.idx:null}; }
+      function emit(event:unknown) { try { const pending=(window as any).__t1246HistoryEvidence(event);pending?.catch(()=>{}); } catch {} }
+      for(const name of ["pushState","replaceState","back","forward","go"] as const) {
+        const original=history[name];
+        (history as any)[name]=function(...args:unknown[]) { emit({phase:"before",method:name,...snapshot(),requestedUrl:typeof args[2]==="string"?args[2]:null,delta:name==="go"?args[0]:null});const value=Reflect.apply(original,this,args);emit({phase:"after",method:name,...snapshot()});return value; };
+      }
+      addEventListener("popstate",()=>emit({phase:"event",method:"popstate",...snapshot()}));
+      emit({phase:"init",method:"document",...snapshot()});
+    });
+    context.on("page", page => page.on("framenavigated", frame => {if(frame===page.mainFrame())appendFileSync(resolve(process.env.CREATOROS_T1246_RUN_DIR!,"history-events.jsonl"),JSON.stringify({at:new Date().toISOString(),kind:"navigation",url:frame.url()})+"\n");}));
+

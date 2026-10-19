@@ -158,3 +158,9 @@ describe("ContentCalendarView T-599 只读排期", () => {
     expect(screen.queryByTestId("calendar-day-drawer")).toBeNull();
   });
 });
+it('T1022 切月只替换月份，保留平台、实际账号和数据日期窗口',()=>{
+ render(<ContentCalendarView viewModel={vm({groupId:'g',accountId:null})} navigationQuery="platform=douyin&accountId=a2&startDate=2026-09-28&endDate=2026-10-04&month=2026-08"/>);
+ fireEvent.click(screen.getByTestId('calendar-prev-month'));
+ const previous=new URL(routerPush.mock.calls.at(-1)![0],'http://localhost');expect(previous.searchParams.get('month')).toBe('2026-07');expect(previous.searchParams.get('platform')).toBe('douyin');expect(previous.searchParams.get('accountId')).toBe('a2');expect(previous.searchParams.get('startDate')).toBe('2026-09-28');expect(previous.searchParams.get('endDate')).toBe('2026-10-04');
+ fireEvent.click(screen.getByTestId('calendar-next-month'));expect(new URL(routerPush.mock.calls.at(-1)![0],'http://localhost').searchParams.get('month')).toBe('2026-09');
+});

@@ -1,0 +1,115 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 保持已销账；本轮 changed_line_refs 引入 1 个 major 与 1 个 minor：AC-21 无条件要求所有定位读取产品人群 snapshot，与纯人设不适用边界冲突；无 session 生成虽声明幂等复用，但操作契约和验收未定义生成幂等键。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "已确认决策-10",
+        "quote": "用户任何时候要求“直接生成新版本定位卡”都先产候选"
+      },
+      "acceptance_anchor": {
+        "id": "AC-18",
+        "quote": "用户在任意阶段要求生成时，由当前 Copilot 直接调用 positioning.generate"
+      },
+      "where": "第 4.3 节“确定性场景路由算法”的固定路由顺序",
+      "failure_mode": "固定顺序把“没有可用逐字稿 -> 准备证据”置于“用户要求生成 -> 立即生成候选”之前。零逐字稿时，合理实现可能持续返回 PREPARE_EVIDENCE，而不进入 DRAFT_NOW，导致用户明确要求生成仍被证据准备拦截。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md#43-确定性场景路由算法",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确用户生成意图在所有非安全硬门下优先于证据准备，并规定零逐字稿时也必须进入 DRAFT_NOW；证据准备只能作为并行或可跳过建议。",
+      "resolution_evidence": "SPEC-LINE:181:6b1067364cfeb4c0 明确生成意图是覆盖后续创作质量分支的最高优先级短路规则；零逐字稿时也必须进入 DRAFT_NOW，PREPARE_EVIDENCE 仅为可跳过或并行增强。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "产品原则-10",
+        "quote": "系统不得强迫纯人设补产品"
+      },
+      "acceptance_anchor": {
+        "id": "AC-20",
+        "quote": "至少形成一个核心人群和最多两个高潜人群；每个人群包含真实场景、问题、当前替代、未满足原因和期望结果"
+      },
+      "where": "第 4.5、8、12 节关于产品与人群字段、候选内容和采纳条件的组合规则",
+      "failure_mode": "第 4.5 节允许人群字段缺失时标记为待验证并先生成、采纳，第 8 节却要求每张方向卡都包含产品/服务及核心、高潜人群，第 12 节 AC-20 又要求至少形成完整核心人群。合理实现可能因此拒绝采纳信息不完整或纯人设候选，或者为通过验收而编造产品、高潜人群及未确认的场景字段；另一实现则允许空值，却无法满足 AC-20。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md#45-产品与人群独立模块对话采集结构化沉淀",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "统一候选与采纳验收：明确 AC-20 仅在用户已确认存在产品/服务或获客/成交目标时适用，并允许未确认字段保持空或待验证；纯人设候选不得为满足卡片结构而生成虚构产品或高潜人群。",
+      "resolution_evidence": "SPEC-LINE:232:b82eb423bb059fc7 明确产品与人群结构仅适用于产品/服务型账号；方向卡与 AC-20 同步限定适用条件，允许未确认字段为空或标待验证，并明确纯人设账号不适用且不得虚构。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "产品原则-10",
+        "quote": "系统不得强迫纯人设补产品"
+      },
+      "acceptance_anchor": {
+        "id": "AC-21",
+        "quote": "采纳定位后，选题、写稿、审核、项目 Copilot 均按同一 statementId 读取不可变 PositioningProductAudienceSnapshot 中的产品、人群、痛点、顾虑和证明"
+      },
+      "where": "第 10.1 节产品场景 snapshot 事务条件与第 12 节 AC-21",
+      "failure_mode": "新增事务规则只在适用产品/服务场景时创建 PositioningProductAudienceSnapshot，AC-21 却无条件要求所有已采纳定位及全部下游读取该 snapshot 的产品、人群、痛点、顾虑和证明。纯人设、个人表达、作品集或纯影响力定位按 AC-20 不适用产品结构，合理实现若不创建 snapshot 就无法通过 AC-21；若为通过验收创建并填充这些字段，又会重新引入虚构产品或人群。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md 第 10.1 节与 AC-20/AC-21",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:455:c99b2fc51c67efb6",
+      "suggestion": "把 AC-21 明确限定为适用产品/服务或获客/成交场景；纯人设等不适用场景应继续只按 statement/master snapshot 工作，并验证不会创建或填充虚构的产品人群字段。若产品 snapshot 设计为所有 statement 都存在，则须明确其可为空的 schema、创建事务与下游可选读取语义，并与 AC-20 一致。",
+      "resolution_evidence": "",
+      "parent_id": "REV-002"
+    },
+    {
+      "id": "REV-004",
+      "status": "open",
+      "severity": "minor",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "OP-positioning.generate",
+        "quote": "相同生成幂等键复用同一候选"
+      },
+      "acceptance_anchor": {
+        "id": "AC-18",
+        "quote": "验收覆盖无 session 生成后采纳、重复确认、并发 statement 冲突和跨账号候选拒绝"
+      },
+      "where": "第 10 节无 session positioning.generate 契约与第 12 节 AC-18",
+      "failure_mode": "新增规则要求相同生成幂等键复用同一候选，但 positioning.generate 的操作说明没有把 idempotencyKey 列为输入，也未定义键的 user/account 作用域、同键不同输入的冲突语义或响应未知后的回读；AC-18 只覆盖重复确认，没有覆盖重复生成。实现可以每次重试生成新键、新 session revision、新候选并重复调用模型，同时仍通过当前验收。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md 第 10 节 positioning.generate 与 AC-18",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:394:c23339a56ff1bcb1",
+      "suggestion": "在 positioning.generate 契约中显式加入稳定 idempotencyKey，按 user/account + key 约束并绑定输入指纹；同键同输入返回同一 sessionId/candidateId/revision，同键不同输入明确冲突。AC-18 增加双击、超时重试和响应未知用例，断言只创建一个最小 session revision、一个候选并只调用一次模型。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-052",
+      "what": "归档组的执行豁免被账号ID存在条件扩大到普通生成和同步任务",
+      "check": "node docs/verification/t1022/run-archive-guard.mjs",
+      "onFail": "归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。"
+    },
+    {
       "led": "LED-045",
       "what": "官方受管生图提交瞬时断连再次被立即取消，或未知中转站/视频被盲目重放",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts",
@@ -72,12 +78,6 @@
       "what": "授权放行被误当成渠道作用域完整，缺 identity 时静默回退或继续出网",
       "check": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/components/shell/channel-config-bootstrap.test.tsx src/features/settings/settings-page.test.tsx",
       "onFail": "渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。"
-    },
-    {
-      "led": "LED-009",
-      "what": "用写死词表、关键词分数或字符串相似度替代 Skill 做创作语义判断",
-      "check": "node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
-      "onFail": "语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。"
     },
     {
       "led": "LED-010",
@@ -278,10 +278,76 @@
       "onFail": "检查实际子进程预算传播；禁止关闭类型检查、无限加内存或污染安装后运行时。"
     },
     {
-      "led": "LED-052",
+      "led": "LED-056",
+      "what": "宿主支持新工具版本，但真实内置目录筛选或新任务冻结丢掉该能力",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-builtin-manifest.test.ts src/server/prepare-chat-reply.test.ts src/server/workbench-artifact-register.integration.test.ts --retry=0",
+      "onFail": "必须经正式selector、公开capabilities、prepareChatReply冻结与真实工具端口验收；精确声明各工具当前版本，保留旧任务冻结定义，不用直接注入host目录代替生产装配。"
+    },
+    {
+      "led": "LED-055",
+      "what": "历史stop续行读取当前计划，导致模型请求重放指纹变化或原任务再次阻断",
+      "check": "pnpm --dir backend exec vitest run src/modules/execution/workbench-plan-history.test.ts src/modules/execution/chat-model-retry-anchor.test.ts src/modules/execution/chat-model-pause-recovery.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/execution/durable-stream-model.test.ts src/execution/worker-runtime.test.ts src/execution/chat-plan-history-replay.test.ts --retry=0",
+      "onFail": "恢复按原模型调用锚点读取已证明历史计划，保留严格请求摘要/原账本费用，不以最新状态替代历史或宽松忽略mismatch。"
+    },
+    {
+      "led": "LED-054",
+      "what": "外部 I/O 或产物存储设置读取再次占住 PGlite 事务，或完成对账后原任务仍永久阻断",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
+      "onFail": "恢复短事务读取可信身份→事务外 I/O→短事务复核租约；对象存储回读必须在租约事务外完成；外部副作用按原键对账后自动续跑同一任务。"
+    },
+    {
+      "led": "LED-059",
+      "what": "内置工具约束再次阻断整轮聊天装配，或前端在没有任务回执和进展时无限自动恢复",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tool-parameters.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/features/copilot/chat-task-control.test.ts src/features/copilot/ai-copilot-interactions.test.tsx --retry=0",
+      "onFail": "恢复真实内置工具装配回归与有限恢复预算：已支持约束必须实际校验，未知约束 fail-closed；没有持久任务时连续三次无进展即停止自动请求并保留同轮继续入口。"
+    },
+    {
+      "led": "LED-058",
+      "what": "模型断流、超时或候选不完整再次变成用户手动重试终态，或外部副作用被盲目重放",
+      "check": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
+      "onFail": "恢复模型候选的 superseded→retry_wait→同任务重试链；保留预算、检查点和原对话。只有无模型配置进入设置引导；用户取消与外部副作用 unknown 继续禁止自动重放。"
+    },
+    {
+      "led": "LED-009",
+      "what": "用写死词表、关键词分数或字符串相似度替代 Skill 做创作语义判断",
+      "check": "node --test orchestrator/process/semantic-boundary-scan.test.mjs && node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "onFail": "语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。"
+    },
+    {
+      "led": "LED-057",
       "what": "Windows 干净安装验证遗漏保留 AppData 时运行环境目录切换拒绝访问",
       "check": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features",
       "onFail": "保留完整性校验并修复已完成隔离目录的安全复用；禁止清空用户 AppData、放宽入口校验或无依据重试。"
+    },
+    {
+      "led": "LED-061",
+      "what": "线程/回执/响应流/闲置会话泄漏，慢轮询与后台调度叠加，等待或显式停止会话归属错误",
+      "check": "node docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "onFail": "资源生命周期回归：修复实际消费者的释放、背压、单在途和停止屏障；保留原任务/attempt/fence/deadline、审批、完整历史与合法大输出。等待状态按真实任务ID保护；取消接受仅释放原turn本地关联，最终终态由原租约确认。禁止删历史、重发任务或伪造释放/成功。"
+    },
+    {
+      "led": "LED-053",
+      "what": "固定30秒宿主端口先于合法转录准备中止，观察到期误报失败，SDK隐式等待与首次预算未归一",
+      "check": "node tools/timeout-policy/verify.mjs",
+      "onFail": "超时预算回归：正执行最低两分钟；独立外层覆盖完整内部预算；原绝对期限/continuous/即时取消保持；前端保留原任务ID；HyperFrames同版本补丁与实际CLI配置必须一致。公共链回归失败不能用词法扫描替代。"
+    },
+    {
+      "led": "LED-060",
+      "what": "完整JSON被流式误判未知或转录共享schema缺validator阻断真实保存链",
+      "check": "pnpm --dir ai-worker run build && pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0",
+      "onFail": "核对同一次完整响应的结束事实、无损映射与真实usage，补共享validator并验证实际后端回放/工件；保留真实断流未知和原任务，不重复付费调用。"
+    },
+    {
+      "led": "LED-062",
+      "what": "主动关闭浏览器时close事件早于完整close等待而提前释放登录档案",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/browser/chromium-guard-close-order.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+      "onFail": "主动close之前置在途标记，完整close成功后才释放原宿主租约和队列；早到事件和close失败不能假称停止，保留外部关闭、取消和同租约清理重试。"
+    },
+    {
+      "led": "LED-063",
+      "what": "Windows配置持久化无条件同步只读目录导致已保存配置仍报失败并遮盖安全结果",
+      "check": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+      "onFail": "按平台能力处理目录fsync，文件sync、原子rename与加密认证读回不可跳过；POSIX目录同步及实际文件错误继续传播；公共refresh成功、304与安全隔离均须实际回归。"
     }
   ],
   "program_completion_required": false,
@@ -311,12 +377,66 @@
     "content-radar-one-click-project:e2e": "CREATOROS_TEST_PORT=3439 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/content-radar-one-click-project.spec.ts --project=e2e",
     "navigation-account-performance:test": "pnpm --dir frontend exec vitest run src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/shell.test.tsx src/lib/session.server.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/positioning/positioning.service.test.ts --retry=0",
     "navigation-account-smoothness:test": "pnpm --dir frontend exec vitest run src/components/shell/shell.test.tsx src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/account-switcher-logic.test.ts --retry=0",
-    "ai-recovery-guidance:e2e": "CREATOROS_TEST_PORT=3441 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-recovery-guidance.spec.ts --project=e2e"
+    "ai-recovery-guidance:e2e": "CREATOROS_TEST_PORT=3441 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-recovery-guidance.spec.ts --project=e2e",
+    "audience-task-topics:e2e": "CREATOROS_TEST_PORT=3448 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/audience-task-topics.spec.ts --project=e2e",
+    "account-group-workspace:e2e": "node docs/verification/t1022/run-journey.mjs",
+    "ai-nonblocking-recovery:e2e": "CREATOROS_TEST_PORT=3442 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-nonblocking-recovery.spec.ts --project=e2e",
+    "canvas-binding-collection:e2e": "node docs/verification/t1101/run-journey.mjs",
+    "shared-resource-lifecycle:e2e": "node docs/verification/t1105/run-journey.mjs",
+    "calendar-dialog-layout:e2e": "node docs/verification/t1136/run-layout-journey.mjs",
+    "picker-low-height:e2e": "node docs/verification/t1140/run-picker-journey.mjs",
+    "cover-group-aspect:e2e": "node docs/verification/t1149/run-aspect-journey.mjs",
+    "wechat-native-report:e2e": "node docs/verification/t1159/run-report-journey.mjs",
+    "canvas-upload-navigation:e2e": "node docs/verification/t1220/verify.mjs",
+    "codex-engine-settings:e2e": "node docs/verification/t1238/run-ui-journey.cjs",
+    "model-settings-codex-current:e2e": "node docs/verification/t1294/run-journey.cjs",
+    "desktop-csp-native-current:e2e": "node docs/verification/t1295/run-strict-csp.cjs . docs/verification/t1295/browser/v3-native-ui-candidate/owned-normal-binding.json",
+    "script-first-workspaces:e2e": "CREATOROS_TEST_PORT=3196 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome T1296_EVIDENCE_RUN=t1298-revalidation pnpm --dir frontend exec playwright test tests/e2e/t1296-script-first-workspaces.spec.ts --project=e2e --workers=1 --retries=0",
+    "script-first-live:e2e": "node docs/verification/t1298/run-journey.cjs",
+    "t1307-final-live:e2e": "python3 docs/verification/t1338/final-package/formal-v2/command.py T-1307 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/BOOTSTRAP_BINDING.json",
+    "t1340-final-live:e2e": "python3 docs/verification/t1338/final-package/formal-v2/command.py T-1340 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/BOOTSTRAP_BINDING.json",
+    "t1338-final-live:e2e": "python3 docs/verification/t1338/final-package/formal-v2/command.py T-1338 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/BOOTSTRAP_BINDING.json",
+    "t1339-final-live:e2e": "python3 docs/verification/t1338/final-package/formal-v2/command.py T-1339 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/BOOTSTRAP_BINDING.json",
+    "t1341-final-live:e2e": "python3 docs/verification/t1341/runtime/final-ui/command.py docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/T1341_BINDING.json",
+    "t1338-final-0953:e2e": "python3 docs/verification/t1338/final-package/final-0953/command.py T-1338 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/T1338_0953_BOOTSTRAP.json",
+    "t1302-final-candidate:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/candidate-formal-five/runner/command.py T-1302 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/FIVE_CANDIDATE_BOOTSTRAP.json",
+    "t1303-final-candidate:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/candidate-formal-five/runner/command.py T-1303 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/FIVE_CANDIDATE_BOOTSTRAP.json",
+    "t1304-final-candidate:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/candidate-formal-five/runner/command.py T-1304 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/FIVE_CANDIDATE_BOOTSTRAP.json",
+    "t1305-final-candidate:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/candidate-formal-five/runtime/t1305-v6/runner/command.py T-1305 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/T1305_V6_BOOTSTRAP.json",
+    "t1308-final-candidate:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/candidate-formal-five/runner/command.py T-1308 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/FIVE_CANDIDATE_BOOTSTRAP.json",
+    "t1324-final-media:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/media-final-two/runner/command.py T-1324 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/MEDIA_BOOTSTRAP.json",
+    "t1330-final-media:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/media-final-two/runtime/t1330-onboarding-v7/runner/command.py T-1330 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/T1330_V7_BOOTSTRAP.json",
+    "t1328-final-lock-ui:e2e": "python3 docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/runner/command.py docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/bindings/T1328_FINAL_UI_BINDING_74b.json",
+    "t1342-final-local-entry:e2e": "python3 docs/verification/t1342/runtime/final-ui/command.py T-1342 docs/verification/t1342/control/actual-bindings-74b/T1342_BOOTSTRAP_V3.json",
+    "t1343-final-bare-continuation:e2e": "python3 docs/verification/t1343/runtime/final-ui/runner/command.py T-1343 docs/verification/t1342/control/actual-bindings-74b/T1343_BOOTSTRAP_V3.json",
+    "t1345-account-binding:e2e": "node docs/verification/t1345/control/run-frozen-ui.mjs T-1345",
+    "t1346-group-switch:e2e": "node docs/verification/t1345/control/run-frozen-ui.mjs T-1346",
+    "t1348-script-leave:e2e": "node docs/verification/t1345/control/run-frozen-ui.mjs T-1348",
+    "t1347-native-trend:e2e": "node docs/verification/t1345/control/run-frozen-ui.mjs T-1347",
+    "t1350-canvas-owner:e2e": "node docs/verification/t1345/control/run-frozen-ui.mjs T-1350",
+    "t1354-official-binding:e2e": "node docs/verification/t1355/control/run-frozen-ui.mjs T-1354",
+    "t1355-binding-completion:e2e": "node docs/verification/t1355/control/run-frozen-ui.mjs T-1355",
+    "t1356-collected-dashboard:e2e": "node docs/verification/t1355/control/run-frozen-ui.mjs T-1356",
+    "t1361-pending-navigation:e2e": "node docs/verification/t1355/control/run-frozen-ui.mjs T-1361",
+    "t1362-collected-work-entry:e2e": "node docs/verification/t1355/control/run-frozen-ui.mjs T-1362",
+    "t1370-inline-binding:e2e": "node docs/verification/t1370/control/run-frozen-ui.mjs T-1370",
+    "t1371-unknown-summary:e2e": "node docs/verification/t1370/control/run-frozen-ui.mjs T-1371"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",
     "t987-baseline-scope": "node docs/research/t987/verify-baseline.mjs scope",
     "t915-resource-guardian-probe": "node -e \"if(process.platform!=='darwin')process.exit(1)\" && pnpm --filter @creatoros/backend test src/modules/execution/browser-resource-guardian.probe.test.ts",
-    "t988-baseline": "node docs/research/t988/verify-baseline.mjs"
-  }
+    "t988-baseline": "node docs/research/t988/verify-baseline.mjs",
+    "t1062-index-catalog": "node orchestrator/research/t1062-index-catalog/probe.cjs",
+    "t1062-asr-tail-clock-evidence": "node --max-old-space-size=512 /tmp/t1062-asr-timing-observation/verify-r2.cjs evidence /tmp/t1062-asr-timing-observation/capture-one",
+    "t1062-asr-tail-clock-timing": "node --max-old-space-size=512 /tmp/t1062-asr-timing-observation/verify-r2.cjs timing /tmp/t1062-asr-timing-observation/capture-one",
+    "t1062-aac-delivery-cause": "node docs/research/t1062-local-word-timing/verify-evidence.mjs cause",
+    "t1062-aac-delivery-physics": "node docs/research/t1062-local-word-timing/verify-evidence.mjs physics",
+    "t1062-installed-history-cause": "node docs/research/t1062-installed-migration-history/verify-cause.mjs",
+    "t1070-warm-decoder": "node --input-type=commonjs -e \"const a=require('node:assert/strict'),r=require('./docs/verification/t1070/native-warm-root-cause.json'),e=Object.fromEntries(r.exactEvents.map(x=>[x.n,x]));a.equal(e[3].time,0);a.equal(e[16].time,1);a.equal(e[16].timestamp,1);a.notEqual(e[16].pixels,e[3].pixels);\"",
+    "t1070-warm-gpu-cache": "node --input-type=commonjs -e \"const a=require('node:assert/strict'),r=require('./docs/verification/t1070/native-warm-root-cause.json'),e=Object.fromEntries(r.exactEvents.map(x=>[x.n,x]));a.equal(e[18].identityHit,true);a.notEqual(e[18].pixels,e[18].lastUploadedPixels);a.equal(e[24].identityHit,false);a.equal(e[25].type,'texture-upload');\"",
+    "t1298-lifecycle": "pnpm -C frontend exec vitest run src/features/copilot/t1298-lifecycle-research.test.tsx --retry=0"
+  },
+  "execution_mode": "interactive",
+  "autonomy_level": "interactive"
 }

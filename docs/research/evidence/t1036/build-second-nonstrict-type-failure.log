@@ -1,0 +1,20 @@
+▲ Next.js 16.2.9 (webpack)
+- Experiments (use with caution):
+  ✓ externalDir
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1649ms
+  Running TypeScript ...
+Failed to type check.
+
+../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/resources/platform-capabilities.ts:277:23
+Type error: Property 'externalId' does not exist on type 'unknown'.
+
+  [90m275 |[0m   [36mconst[0m seen = [36mnew[0m [33mSet[0m<string>();
+  [90m276 |[0m   [36mfor[0m ([36mconst[0m [index, work] [36mof[0m page.works.entries()) {
+[31m[1m>[0m [90m277 |[0m     [36mif[0m (seen.has(work.externalId)) {
+  [90m    |[0m                       [31m[1m^[0m
+  [90m278 |[0m       ctx.addIssue({ code: [32m"custom"[0m, path: [[32m"works"[0m, index], message: [32m"Duplicate external...[0m
+  [90m279 |[0m     }
+  [90m280 |[0m     seen.add(work.externalId);
+Next.js build worker exited with code: 1 and signal: null

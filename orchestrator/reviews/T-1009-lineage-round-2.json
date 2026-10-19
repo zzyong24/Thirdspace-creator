@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "用户确认与 DEC-AW-1009 状态变更已独立只读复审；标题和状态准确引用实施授权，正文技术契约未变，未引入新的 blocker 或 major。",
+  "findings": []
+}

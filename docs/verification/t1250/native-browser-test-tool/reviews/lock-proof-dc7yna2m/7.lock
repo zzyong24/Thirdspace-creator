@@ -1,0 +1,22 @@
+version = 4
+
+[[package]]
+name = "creatoros-workbench-test"
+version = "0.0.0"
+source = "registry+https://example.invalid/test"
+
+[[package]]
+name = "same-name"
+version = "1.0.0"
+source = "registry+https://example.invalid/test"
+checksum = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+[[package]]
+name = "same-name"
+version = "2.0.0"
+source = "registry+https://example.invalid/test"
+checksum = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+[[package]]
+name = "vendor"
+version = "0.7.2"

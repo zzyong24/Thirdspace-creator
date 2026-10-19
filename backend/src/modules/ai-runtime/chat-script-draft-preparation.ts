@@ -1,5 +1,6 @@
 import {buildScriptDraftInstruction,clampExtraBrief,resolveScriptDraftSourceSnapshots,resolveVerbatimSource,type VerbatimSource,type ScriptDraftSourceSnapshot} from "./chat-tools";
 import {prepareScriptImportAuthorization,parseSemanticVerbatimSelection} from "./chat-script-import-authorization";
+import {ChatToolUserError} from "./chat-tool-errors";
 
 export interface ScriptDraftGenerateInput {
  topic?:string;angle?:string;targetDurationSeconds?:number;extraBrief?:string;
@@ -19,7 +20,7 @@ export function prepareScriptDraftInput(args:Record<string,unknown>,sources:read
  if(mode==="verbatim"){
   const selectedRef=typeof sourceRef==="string"?sourceRef.trim():"";
   const selected=sources.find(item=>item.ref===selectedRef);
-  if(!selected)throw new Error(selectedRef?"原稿引用已失效，请在当前对话中重新选择或粘贴原文。":"原文保真需要选择一条受信来源，请重新指定原稿。");
+  if(!selected)throw new ChatToolUserError(selectedRef?"原稿引用已失效，请在当前对话中重新选择或粘贴原文。":"原文保真需要选择一条受信来源，请重新指定原稿。");
   const source=structuredClone(selected);
   return {mode:"verbatim",source,authorization:prepareScriptImportAuthorization({source,latestUserInstruction,
    ...(typeof startAnchor==="string" && startAnchor?{suggestedStartAnchor:startAnchor}:{}),
@@ -41,8 +42,8 @@ export function prepareScriptDraftInput(args:Record<string,unknown>,sources:read
 /** prepared 必须由宿主冻结准备恢复；rawModelText 必须来自宿主确认的模型回执。 */
 export function finalizeScriptDraftImport(prepared:Extract<PreparedScriptDraftInput,{mode:"verbatim"}>,rawModelText:string):ScriptDraftVerbatimInput {
  const decision=parseSemanticVerbatimSelection(rawModelText);
- if(!decision)throw new Error("AI 没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。");
- if(!decision.authorized)throw new Error(decision.reason?.trim() || "这轮只收到了稿件，还没有明确要求写入稿面；请确认后再生成候选。");
+ if(!decision)throw new ChatToolUserError("没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。");
+ if(!decision.authorized)throw new ChatToolUserError("这轮只收到了稿件，还没有明确要求写入稿面；请确认后再生成候选。");
  const resolved=resolveVerbatimSource([prepared.source],{sourceRef:prepared.source.ref,startAnchor:decision.startAnchor,endAnchor:decision.endAnchor});
  return {draftMode:"verbatim",verbatimSourceRef:resolved.ref,verbatimSourceText:resolved.text,verbatimSourceLength:resolved.length,verbatimSourceSha256:resolved.sha256};
 }

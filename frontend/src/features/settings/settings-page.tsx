@@ -275,6 +275,8 @@ export interface ModelState {
 }
 
 export interface ModelAuthorityState {
+  /** 只来自已验证官方钱包响应；省略为旧调用兼容，不从目录或 hasSecret 推导。 */
+  readonly managedAccountStatus?: "ready" | "not_configured" | "unverified";
   readonly authority: "channel" | "local";
   readonly outcome:
     | "configured"
@@ -295,7 +297,10 @@ export type ModelAuthorityCapability =
   | "default"
   | "transcribe.audio"
   | "image.generate"
-  | "video.generate";
+  | "video.generate"
+  | "image.edit"
+  | "asset.classify"
+  | "knowledge.search.embed";
 
 export interface ModelCapabilityAuthorityState {
   readonly capability: ModelAuthorityCapability;
@@ -337,6 +342,9 @@ export function sanitizeModelAuthorityForClient(
 ): ModelAuthorityState | undefined {
   if (!state) return undefined;
 
+  const publicServiceIds=new Set(state.services
+    ?.filter(service=>service.credentialSource!=="activation_managed")
+    .map(service=>service.serviceId)??[]);
   const capabilities = state.capabilities
     ? Object.fromEntries(
         Object.entries(state.capabilities).map(([capability, item]) => [
@@ -344,7 +352,7 @@ export function sanitizeModelAuthorityForClient(
           item
             ? {
                 ...item,
-                serviceId: null,
+                serviceId: item.serviceId&&publicServiceIds.has(item.serviceId)?item.serviceId:null,
                 serviceName: null,
                 provider: null,
                 baseUrl: null,
@@ -413,6 +421,7 @@ export interface MultimodalModelState {
   /** The bound capability ("image.generate" | "video.generate" | "transcribe.audio"). */
   readonly capability:
     | "image.generate"
+    | "image.edit"
     | "video.generate"
     | "transcribe.audio"
     | "asset.classify"
@@ -441,6 +450,7 @@ export interface MultimodalModelState {
 export interface MultimodalModelsState {
   /** 文生图 — capability "image.generate". */
   readonly image: MultimodalModelState;
+  readonly imageEdit?: MultimodalModelState;
   /** 文生视频 — capability "video.generate". */
   readonly video: MultimodalModelState;
   /**

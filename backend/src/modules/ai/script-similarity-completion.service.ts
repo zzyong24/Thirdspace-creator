@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {z} from "zod";
 import {and,eq,asc,aiTasks,aiTaskResults,executionTasks,executionCalls,type Db} from '@creatoros/backend';
 import {structuredGenerationInputSchema,workerStructuredResultSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
@@ -11,13 +12,13 @@ export function createScriptSimilarityCompletionService(db:Db,deps:{now?:()=>str
  return {async commitResult(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
   const input=workerPortInputSchemas.commitResult.parse(raw);if(input.outcome!=='succeeded')throw new ConflictError('相似度评估失败须经执行状态端口');
   return leases.withLease(ref,'settlement',async({tx,task,context})=>{
-   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for('update');
+   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for('update');
    if(task.kind!=='ai_task'||task.ownerType!=='ai_task'||!business||business.taskType!=='script.source_similarity'||(task.payload as {aiTaskId?:unknown}).aiTaskId!==business.id)throw new ConflictError('相似度评估任务归属不符');
    const frozen=structuredGenerationInputSchema.parse((task.payload as {modelInput?:unknown}).modelInput);
    const target=scriptSimilarityInputSchema.extend({referenceIds:z.array(z.string().min(1)).min(1)}).parse(JSON.parse(frozen.facets.__scriptSimilarity??'null'));
    const {referenceIds,...boundInput}=target;
    if(frozen.skillId!=="script.source_similarity"||frozen.capability!=="default"||JSON.stringify(scriptSimilarityInputSchema.parse(boundInput))!==JSON.stringify(scriptSimilarityInputSchema.parse(business.inputData))||business.projectId!==target.projectId)throw new ConflictError("相似度冻结来源不符");
-   const [parent]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,target.sourceTaskId),eq(executionTasks.userId,context.userId),eq(executionTasks.accountId,context.accountId!)));
+   const [parent]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,target.sourceTaskId),eq(executionTasks.userId,context.userId),workspaceFilter(executionTasks,context)));
    if(!parent||parent.kind!=="script_candidate"||parent.ownerType!=="project"||parent.ownerId!==target.projectId||parent.status!=="succeeded"||JSON.stringify((parent.checkpoint as {referenceIds?:unknown})?.referenceIds)!==JSON.stringify(target.referenceIds))throw new ConflictError("相似度来源任务归属或回执不符");
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence)),call=calls.find(c=>c.id===input.callId);
    if(!call||call.kind!=='model'||call.parentCallId||call.status!=='settled'||!call.providerResult||call.resultText!==input.text)throw new ConflictError('相似度评估缺少真实模型回执');

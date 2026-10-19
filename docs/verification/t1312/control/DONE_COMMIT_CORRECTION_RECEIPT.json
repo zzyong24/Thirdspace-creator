@@ -1,0 +1,248 @@
+{
+  "schema": "task-commit-anchor-correction/v1",
+  "task": "T-1312:implementation",
+  "originalDoneStoredCommit": "cd348b7ab7d72087488122881f2e98444e796320",
+  "originalAnchorLimitation": "仅847项证据与精确baseline收据提交，未含实际生产/test路径；旧done锚不足，原事件/字段保留，不声称原来含代码",
+  "actualProductCommit": "4e73d0f59be2bd44eaace8b2be9253106480b326",
+  "sourceTestGitBlobBindings": [
+    {
+      "path": "backend/src/application/chat/performance-readers.ts",
+      "gitBlob": "9f75c75e78b62fb49272356d1cfdb680e2d2be9d",
+      "bytes": 17881,
+      "sha256": "b6d37b9f9433df435229e3edec446f7504432657250e13562094b0bd3f5024da",
+      "verifiedExpectedSha256": "b6d37b9f9433df435229e3edec446f7504432657250e13562094b0bd3f5024da",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/core-v1-snapshots/backend__src__application__chat__performance-readers.ts",
+        "docs/verification/t1312/runtime/core-v2-snapshots/backend__src__application__chat__performance-readers.ts",
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__application__chat__performance-readers.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__application__chat__performance-readers.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__application__chat__performance-readers.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/application/context/calibration-diagnose.test.ts",
+      "gitBlob": "67cff68dcbd56a015cf04860b3fef501361bcdc1",
+      "bytes": 3142,
+      "sha256": "508d55d55a73bd3c5c9b366ccb2c63343b9ef9a2bd715730c300a98d54d5fe43",
+      "verifiedExpectedSha256": "508d55d55a73bd3c5c9b366ccb2c63343b9ef9a2bd715730c300a98d54d5fe43",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__application__context__calibration-diagnose.test.ts",
+        "docs/verification/t1312/runtime/null-scope-green-v9-snapshots/backend__src__application__context__calibration-diagnose.test.ts",
+        "docs/verification/t1312/runtime/null-scope-red-v6-snapshots/backend__src__application__context__calibration-diagnose.test.ts",
+        "docs/verification/t1312/runtime/null-scope-red-v7-snapshots/backend__src__application__context__calibration-diagnose.test.ts",
+        "docs/verification/t1312/runtime/null-scope-red-v8-snapshots/backend__src__application__context__calibration-diagnose.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/application/context/calibration-diagnose.ts",
+      "gitBlob": "46e73ba1b0de548dd7ed37e12efbd3da843400a0",
+      "bytes": 3105,
+      "sha256": "b9fc6295d7f59176f4f76cb2e834fa5892d57a47f4ec428e5ee946075736c87d",
+      "verifiedExpectedSha256": "b9fc6295d7f59176f4f76cb2e834fa5892d57a47f4ec428e5ee946075736c87d",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/core-v1-snapshots/backend__src__application__context__calibration-diagnose.ts",
+        "docs/verification/t1312/runtime/core-v2-snapshots/backend__src__application__context__calibration-diagnose.ts",
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__application__context__calibration-diagnose.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__application__context__calibration-diagnose.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__application__context__calibration-diagnose.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/application/scheduling/controls.test.ts",
+      "gitBlob": "4f6731547c1a510a0864ef91c48cfe7c7f27eddc",
+      "bytes": 13754,
+      "sha256": "1c4adac505906af0d92e6d303a179ae955eadc117366996d744a476f056e6702",
+      "verifiedExpectedSha256": "1c4adac505906af0d92e6d303a179ae955eadc117366996d744a476f056e6702",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__application__scheduling__controls.test.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__application__scheduling__controls.test.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__application__scheduling__controls.test.ts",
+        "docs/verification/t1312/runtime/null-scope-green-v9-snapshots/backend__src__application__scheduling__controls.test.ts",
+        "docs/verification/t1312/runtime/null-scope-red-v6-snapshots/backend__src__application__scheduling__controls.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/application/scheduling/controls.ts",
+      "gitBlob": "9d58416246e036caf2ab8a9f2a357312e883fdd7",
+      "bytes": 13561,
+      "sha256": "84937173927ce25bbf78ab29a41a4c34b01b83e42d29a58ffa1655b0e859bfbf",
+      "verifiedExpectedSha256": "84937173927ce25bbf78ab29a41a4c34b01b83e42d29a58ffa1655b0e859bfbf",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/core-v1-snapshots/backend__src__application__scheduling__controls.ts",
+        "docs/verification/t1312/runtime/core-v2-snapshots/backend__src__application__scheduling__controls.ts",
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__application__scheduling__controls.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__application__scheduling__controls.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__application__scheduling__controls.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/integration/group-default-rubric.integration.test.ts",
+      "gitBlob": "64bd2e26137a4d0e0a92987592a1fe83a259c1c0",
+      "bytes": 22730,
+      "sha256": "a1f9751f102d05cf0a94f350f40d79ec969dcbf78258574d8f103213ffeed7d3",
+      "verifiedExpectedSha256": "a1f9751f102d05cf0a94f350f40d79ec969dcbf78258574d8f103213ffeed7d3",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__integration__group-default-rubric.integration.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/integration/scheduled-export-progress.test.ts",
+      "gitBlob": "a95e1fd9dceba7b7ba48b8c2ffc8ceb4215c34e2",
+      "bytes": 15098,
+      "sha256": "df088d2e34af73c2ac690d8a86c4ce2c61c2db7369280c074b10a4a8977b1e27",
+      "verifiedExpectedSha256": "df088d2e34af73c2ac690d8a86c4ce2c61c2db7369280c074b10a4a8977b1e27",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__integration__scheduled-export-progress.test.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__integration__scheduled-export-progress.test.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__integration__scheduled-export-progress.test.ts",
+        "docs/verification/t1312/runtime/legacy-v3-snapshots/backend__src__integration__scheduled-export-progress.test.ts",
+        "docs/verification/t1312/runtime/null-scope-green-v9-snapshots/backend__src__integration__scheduled-export-progress.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "gitBlob": "242e4e233c37c896c76c17ff7fa15c7a40751fa2",
+      "bytes": 20205,
+      "sha256": "46fda84fe512beef7518e2f7cf9b59a2887e010e569ed0d878aeb33ca546cc2a",
+      "verifiedExpectedSha256": "46fda84fe512beef7518e2f7cf9b59a2887e010e569ed0d878aeb33ca546cc2a",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__integration__scheduled-flywheel-consumption.test.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__integration__scheduled-flywheel-consumption.test.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__integration__scheduled-flywheel-consumption.test.ts",
+        "docs/verification/t1312/runtime/legacy-v3-snapshots/backend__src__integration__scheduled-flywheel-consumption.test.ts",
+        "docs/verification/t1312/runtime/null-scope-green-v9-snapshots/backend__src__integration__scheduled-flywheel-consumption.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "gitBlob": "3ca5ca8edfde4411833a155254145d34a9f6dda1",
+      "bytes": 19528,
+      "sha256": "8ebf492627d1cc35e84a6f3d7d0072879b8a88acaf85f09bdc1d40dae54c323d",
+      "verifiedExpectedSha256": "8ebf492627d1cc35e84a6f3d7d0072879b8a88acaf85f09bdc1d40dae54c323d",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__legacy-scheduled-job-migration.test.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__legacy-scheduled-job-migration.test.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__legacy-scheduled-job-migration.test.ts",
+        "docs/verification/t1312/runtime/legacy-v3-snapshots/backend__src__legacy-scheduled-job-migration.test.ts",
+        "docs/verification/t1312/runtime/null-scope-green-v9-snapshots/backend__src__legacy-scheduled-job-migration.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/modules/ai/calibration-positioning-adoption.service.ts",
+      "gitBlob": "5669a63d67a6e8e11a18e97b8c05bc3a5bd0ad74",
+      "bytes": 9603,
+      "sha256": "06daee04f86dff76afb01152239ef20df68e8d50e51d85545202416c027d72b9",
+      "verifiedExpectedSha256": "06daee04f86dff76afb01152239ef20df68e8d50e51d85545202416c027d72b9",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__modules__ai__calibration-positioning-adoption.service.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.repository.ts",
+      "gitBlob": "e1748d992ff2d764366d3732f669f0e2d8fca082",
+      "bytes": 40731,
+      "sha256": "29c360a540fc09da89fbf00ee6409f12f61234f6565f7717c1d0ececf394fa2a",
+      "verifiedExpectedSha256": "29c360a540fc09da89fbf00ee6409f12f61234f6565f7717c1d0ececf394fa2a",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__modules__calibration__calibration.repository.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.service.ts",
+      "gitBlob": "46382497fbc2d2a7cd320b21a8e01e5497b64463",
+      "bytes": 42815,
+      "sha256": "1b8552867b15067bd3c4729e141938cba6110633e95a8389589a6ca9a64380ee",
+      "verifiedExpectedSha256": "1b8552867b15067bd3c4729e141938cba6110633e95a8389589a6ca9a64380ee",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__modules__calibration__calibration.service.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/modules/calibration/default-rubric.test.ts",
+      "gitBlob": "ae6bdfafea641435b9be3e8039b94a3c88142153",
+      "bytes": 1377,
+      "sha256": "8daa1af01f1e3767799e8c9772ad637cf2ee35471a6b0c9a8059f16c9f21731d",
+      "verifiedExpectedSha256": "8daa1af01f1e3767799e8c9772ad637cf2ee35471a6b0c9a8059f16c9f21731d",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/core-v2-snapshots/backend__src__modules__calibration__default-rubric.test.ts",
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__modules__calibration__default-rubric.test.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__modules__calibration__default-rubric.test.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__modules__calibration__default-rubric.test.ts",
+        "docs/verification/t1312/runtime/legacy-v3-snapshots/backend__src__modules__calibration__default-rubric.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/modules/calibration/default-rubric.ts",
+      "gitBlob": "fe0c9240a04e566c79fd379123dc90e5d7bf2764",
+      "bytes": 2726,
+      "sha256": "52f25957b6502de1160530daff1618a9475b86c35e3de6d40b08239df9837af7",
+      "verifiedExpectedSha256": "52f25957b6502de1160530daff1618a9475b86c35e3de6d40b08239df9837af7",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__modules__calibration__default-rubric.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "backend/src/modules/calibration/index.ts",
+      "gitBlob": "109aab4ba27738e973761adf90a01cb30f042fd9",
+      "bytes": 2829,
+      "sha256": "4cdc3efb2b10a4a6c341af96aef39a878c2be41e71e92ecfe018c0d314ea404e",
+      "verifiedExpectedSha256": "4cdc3efb2b10a4a6c341af96aef39a878c2be41e71e92ecfe018c0d314ea404e",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/core-v1-snapshots/backend__src__modules__calibration__index.ts",
+        "docs/verification/t1312/runtime/core-v2-snapshots/backend__src__modules__calibration__index.ts",
+        "docs/verification/t1312/runtime/final-v4-snapshots/backend__src__modules__calibration__index.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/backend__src__modules__calibration__index.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/backend__src__modules__calibration__index.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/group-default-rubric.persistence-client.test.ts",
+      "gitBlob": "812fe627b73f025932ebb3f566dc5bdceb4984c3",
+      "bytes": 21950,
+      "sha256": "54aeab860d40732cc34bcc751542ba6aa01957792aea8d0f7eeeee33af7e0ddf",
+      "verifiedExpectedSha256": "54aeab860d40732cc34bcc751542ba6aa01957792aea8d0f7eeeee33af7e0ddf",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/frontend__src__server____module_integration____group-default-rubric.persistence-client.test.ts",
+        "docs/verification/t1312/runtime/null-scope-green-v9-snapshots/frontend__src__server____module_integration____group-default-rubric.persistence-client.test.ts",
+        "docs/verification/t1312/runtime/null-scope-red-v6-snapshots/frontend__src__server____module_integration____group-default-rubric.persistence-client.test.ts",
+        "docs/verification/t1312/runtime/null-scope-red-v7-snapshots/frontend__src__server____module_integration____group-default-rubric.persistence-client.test.ts",
+        "docs/verification/t1312/runtime/null-scope-red-v8-snapshots/frontend__src__server____module_integration____group-default-rubric.persistence-client.test.ts"
+      ],
+      "equal": true
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "gitBlob": "f4bebc85c0e6aae0a4a36473d35b473cc9322981",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de",
+      "verifiedExpectedSha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de",
+      "verifiedEvidenceMatches": [
+        "docs/verification/t1312/runtime/core-v1-snapshots/frontend__src__server__persistence-client.ts",
+        "docs/verification/t1312/runtime/core-v2-snapshots/frontend__src__server__persistence-client.ts",
+        "docs/verification/t1312/runtime/final-v4-snapshots/frontend__src__server__persistence-client.ts",
+        "docs/verification/t1312/runtime/final-v5-snapshots/frontend__src__server__persistence-client.ts",
+        "docs/verification/t1312/runtime/formatted-v10-snapshots/frontend__src__server__persistence-client.ts"
+      ],
+      "equal": true
+    }
+  ],
+  "procedure": "Root实核无amend/reopen支持；不手改progress/重置状态/改工具。追加此纠正，未来交接/新包/taskctl完成统一引用实际产品commit+本收据。",
+  "sourceBytesChangedByCorrection": false,
+  "canonicalTaskComplete": false,
+  "newPackagePending": true
+}

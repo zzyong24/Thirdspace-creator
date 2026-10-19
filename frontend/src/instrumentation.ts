@@ -30,6 +30,12 @@ export async function register(): Promise<void> {
   //   dynamic import → Next 只把此模块编译进 node runtime chunk,edge chunk 天然不见 node:*。
   const { verifyVerdictTokenOrExit } = await import("@/server/verdict-token-gate");
   verifyVerdictTokenOrExit();
+  const { installNodeExceptionMonitor, captureNodeFatalContext } = await import("@/server/observability-host.server");
+  installNodeExceptionMonitor(process, (event) => {
+    captureNodeFatalContext(event);
+    const sink = (globalThis as { __creatorosCaptureException?: (event: unknown) => void }).__creatorosCaptureException;
+    if (sink) sink(event);
+  });
 
   // [T-365/T-362] 桌面态装 sidecar 生命周期守护:SIGTERM 优雅退出(flush PGlite)+ 孤儿自检
   //   (ppid==1 自杀,盖壳崩溃/强退)。dev(next dev)不装——ppid 是终端 shell,SIGINT 归 next 管。

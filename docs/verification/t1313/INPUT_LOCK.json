@@ -1,0 +1,200 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1313",
+  "baseHead": "cd348b7ab7d72087488122881f2e98444e796320",
+  "frozenAt": "2026-10-16T10:15:09.599475+00:00",
+  "inputs": [
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 15949,
+      "sha256": "3852abe7044a1cb2532974b1cbd4cc9c3568465e14ee4e21e196e84c6c91dfcc"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 1943,
+      "sha256": "f05f3eab6686639e039011b804df7bd50105ae512f32323b1ffd57f2ba74eff0"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.ts",
+      "bytes": 3471,
+      "sha256": "ec3c0c7600b07886b5eafbc14b9867b2cca2cbe6b01d7bec0f19658f3799c8d1"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 29715,
+      "sha256": "40ea42975d0d28e8e9221ae78dc7ac19c2d3e5a08681a16a4339a13e08feb061"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 23857,
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    }
+  ],
+  "newAllowedTest": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+  "execution": "尚未RED/实现，正式initial前实际冻结"
+}

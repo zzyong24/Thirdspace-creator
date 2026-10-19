@@ -1,0 +1,73 @@
+{
+  "schema": "t1328-formal-ui-plan/v1",
+  "state": "NOT_RUN_PREPARATION",
+  "repo": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "contract": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/T-1328.md",
+  "contractHelper": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/final-package-combined/runner/contract.cjs",
+  "registrar": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/runtime/implementation/working/final-u08-u10/runner/register-owned.cjs",
+  "viewports": [
+    {
+      "width": 1366,
+      "height": 900
+    },
+    {
+      "width": 1024,
+      "height": 680
+    }
+  ],
+  "checkIds": [
+    "two_sources_bound",
+    "locked_after_history_refresh",
+    "normal_minimum_back",
+    "read_only_unchanged"
+  ],
+  "conditions": [
+    "back",
+    "refresh",
+    "repeat"
+  ],
+  "budgets": {
+    "executionSeconds": 6000,
+    "setupMs": 600000,
+    "viewportMs": 1800000,
+    "requestMs": 180000,
+    "childSeconds": 6600,
+    "outerSeconds": 8400,
+    "cleanupReserveSeconds": 600,
+    "independentOuterWithFallbackSeconds": 9600,
+    "outerCalculation": "wrapper child6600 + hash/setup/cleanup余量至8400；command 8400等待+600finally保留+120kill/reap+300setup/report<=9600，inner仍6000不续窗。"
+  },
+  "maximumModelRoots": 0,
+  "maximumBusinessWrites": 0,
+  "bindingContract": {
+    "schema": "t1328-final-ui/v1",
+    "required": [
+      "controlHead",
+      "candidate",
+      "runtime",
+      "scope",
+      "routing",
+      "handoff",
+      "sources",
+      "inputLock",
+      "contract"
+    ],
+    "sources": "恰2条，source完整三元组/project/output/master/version/prediction/diagnoseTask取HANDOFF原值；不接受最近预测代替。",
+    "handoff": "原seed-v3 HANDOFF只读path+SHA，confirmed=true，source controlled且0supplier；不读取fixture key。"
+  },
+  "failureRule": "任一禁止请求attempt即失败，即使被abort且持久写0；不假绿/不拦合法读取；系统初始化两POST原样透传并单独记录。",
+  "actualConditions": "每viewport先实际脚本页原图/入口可见性独立观察，再正常顶栏复盘链接进入同project review工作面；正常编导历史source1/刷新、source2/刷新、回source1；正常项目导航离开/back及原历史重选。最小脚本缺入口独列限制，review空态不冒业务复盘。",
+  "versionCopy": "保当前真实确认稿版本原文和PNG，正式copy guard照实际执行；不把artifactversion先判为流程ID命中。",
+  "systemInitializationException": {
+    "id": "settings.onboarding.group.patch",
+    "scope": "仅当前owned group/account null，params/header group逐值全等且无account header",
+    "body": {
+      "completedSteps": [
+        "first-project"
+      ],
+      "origin": null
+    },
+    "record": "实际请求body/两scope headers/status单列systemWrites/systemResponses；onboarding BEFORE/AFTER仅completedSteps与updatedAt可变，其余字段全等，业务baseline完全不变。",
+    "unverifiedBeforeExecution": "准确body为真实源码推导，仅执行原wire后才签实际。"
+  }
+}

@@ -11,6 +11,7 @@ import {
   FolderKanban,
   Funnel,
   Images,
+  Workflow,
   LayoutDashboard,
   Lightbulb,
   ListTodo,
@@ -34,6 +35,7 @@ export type CreatorIconKey =
   | "projects"
   | "knowledge"
   | "assets"
+  | "canvas"
   | "publishing"
   | "operations"
   | "automations"
@@ -60,6 +62,7 @@ export const creatorIcons = Object.freeze({
   projects: FolderKanban,
   knowledge: BookOpen,
   assets: Images,
+  canvas: Workflow,
   publishing: Send,
   operations: ChartNoAxesCombined,
   automations: CalendarClock,

@@ -1,0 +1,16 @@
+{
+  "observedAt": 1792388411.016945,
+  "queryExitCode": 0,
+  "privateNonce": "9c86ce4d-121a-4124-9775-70b4f8a03cd4",
+  "activity": [
+    {
+      "state": "idle",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "count": 11,
+      "max_query_age_seconds": 0.949225
+    }
+  ],
+  "errorCode": null,
+  "boundary": "同一次诊断原私有PG只读等待状态，不读SQL正文/用户库，不新发产品请求。"
+}

@@ -1,0 +1,54 @@
+{
+  "state": "NOT_RUN_SOURCE_PREPARATION_NOT_FINAL_BINDING",
+  "confirmed": false,
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/runner/observe.cjs",
+      "bytes": 21391,
+      "sha256": "0e1f3538be035b7d615dfef4fb8cc07c85b6deb8b08d436e11a7a05c9642a3ab"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/runner/command.py",
+      "bytes": 4461,
+      "sha256": "7f95a84e21a74533189bcca160c377673ca7166f44c547a1be5b31aebaf9acd0"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/runner/run.py",
+      "bytes": 7801,
+      "sha256": "f3a6fe697640414ec96c836ef23a4db6f082f042062a9ade433b08c4d38f4d94"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/runner/PLAN.json",
+      "bytes": 3217,
+      "sha256": "ef00229458abc668754e29d31203abf0482e5462e082ca4794e6613d677a5a04"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/final-package-combined/runner/contract.cjs",
+      "bytes": 1133,
+      "sha256": "df2d0dc9755b12a7ddecad92894a1390a1b66b06244e20860b3ffe6b6130873c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/runtime/implementation/working/final-u08-u10/runner/register-owned.cjs",
+      "bytes": 810,
+      "sha256": "c2c15db52dc6b52c5546b5dd3a1b2f9cc8c7f44af2e15144567645d6b2956ca1"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/T-1328.md",
+      "bytes": 4402,
+      "sha256": "3f96b39db8f6d67b6b05063287b5668d88b87ba80191936554c11080bc5beed6"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/prediction-lock-seed/runtime/final-ui-readonly/preparation/ENTRYPOINTS_AND_DRAFT.json",
+      "bytes": 5241,
+      "sha256": "f3b6ee44841498b8bb9bf1082fa8875c135808f1084e41950b36ce28d4580443"
+    }
+  ],
+  "links": [],
+  "absentPaths": [],
+  "limit": "不读取session/key/DB；C真实candidate/runtime/scope/closed-copy/HANDOFF/HEAD/13launch+SDK实际锁后才执行。",
+  "priorIndexBeforeContractWatchAddition": {
+    "sha256": "c206118647111d10e90ddf062c82f06dd16fb988a6061f1dfa3014069f0f2490",
+    "bytes": 2681,
+    "base64": "ewogICJzdGF0ZSI6ICJOT1RfUlVOX1NPVVJDRV9QUkVQQVJBVElPTl9OT1RfRklOQUxfQklORElORyIsCiAgImNvbmZpcm1lZCI6IGZhbHNlLAogICJmaWxlcyI6IFsKICAgIHsKICAgICAgInBhdGgiOiAiL1VzZXJzL3p5b25nemh1L1dvcmtiYXNlL1RoaXJkc3BhY2UtY3JlYXRvci9kb2NzL3ZlcmlmaWNhdGlvbi90MTMyOC9maW5hbC1pbnRlZ3JhdGlvbi9ydW50aW1lL2Zvcm1hbC11aS1hY2NlcHRhbmNlL3ByZWRpY3Rpb24tbG9jay1zZWVkL3J1bnRpbWUvZmluYWwtdWktcmVhZG9ubHkvcnVubmVyL29ic2VydmUuY2pzIiwKICAgICAgImJ5dGVzIjogMTc5MDQsCiAgICAgICJzaGEyNTYiOiAiZGJhOTM5MGRkYjlmNzJmZTc1NTNkOWMxNWIwMmViOTU3NWNmYWFhOGQ0MGNlY2EwZGJkNzdlM2M3YjBkYzc3MCIKICAgIH0sCiAgICB7CiAgICAgICJwYXRoIjogIi9Vc2Vycy96eW9uZ3podS9Xb3JrYmFzZS9UaGlyZHNwYWNlLWNyZWF0b3IvZG9jcy92ZXJpZmljYXRpb24vdDEzMjgvZmluYWwtaW50ZWdyYXRpb24vcnVudGltZS9mb3JtYWwtdWktYWNjZXB0YW5jZS9wcmVkaWN0aW9uLWxvY2stc2VlZC9ydW50aW1lL2ZpbmFsLXVpLXJlYWRvbmx5L3J1bm5lci9jb21tYW5kLnB5IiwKICAgICAgImJ5dGVzIjogNDQ2MSwKICAgICAgInNoYTI1NiI6ICI3Zjk1YTg0ZTIxYTc0NTMzMTg5YmNjYTE2MGMzNzc2NzNjYTcxNjZmNDRjNTQ3YTFiZTViMzFhZWJhZjlhY2QwIgogICAgfSwKICAgIHsKICAgICAgInBhdGgiOiAiL1VzZXJzL3p5b25nemh1L1dvcmtiYXNlL1RoaXJkc3BhY2UtY3JlYXRvci9kb2NzL3ZlcmlmaWNhdGlvbi90MTMyOC9maW5hbC1pbnRlZ3JhdGlvbi9ydW50aW1lL2Zvcm1hbC11aS1hY2NlcHRhbmNlL3ByZWRpY3Rpb24tbG9jay1zZWVkL3J1bnRpbWUvZmluYWwtdWktcmVhZG9ubHkvcnVubmVyL3J1bi5weSIsCiAgICAgICJieXRlcyI6IDc4MDEsCiAgICAgICJzaGEyNTYiOiAiZjNhNmZlNjk3NjQwNDE0ZWM5NmM4MzZlZjIzYTRkYjZmMDgyZjA0MjA2MmE5YWRlNDMzYjA4YzRkMzhmNGQ5NCIKICAgIH0sCiAgICB7CiAgICAgICJwYXRoIjogIi9Vc2Vycy96eW9uZ3podS9Xb3JrYmFzZS9UaGlyZHNwYWNlLWNyZWF0b3IvZG9jcy92ZXJpZmljYXRpb24vdDEzMjgvZmluYWwtaW50ZWdyYXRpb24vcnVudGltZS9mb3JtYWwtdWktYWNjZXB0YW5jZS9wcmVkaWN0aW9uLWxvY2stc2VlZC9ydW50aW1lL2ZpbmFsLXVpLXJlYWRvbmx5L3J1bm5lci9QTEFOLmpzb24iLAogICAgICAiYnl0ZXMiOiAyNTUxLAogICAgICAic2hhMjU2IjogIjVmZmUwYmY2MjhjNDZiMTFjMTMwMjliOWZhYWFmZmJkOWUzNzYwMzk3YmQ4ZTgwN2I1Njg0MTVlZDk3ZjMxOWUiCiAgICB9LAogICAgewogICAgICAicGF0aCI6ICIvVXNlcnMvenlvbmd6aHUvV29ya2Jhc2UvVGhpcmRzcGFjZS1jcmVhdG9yL2RvY3MvdmVyaWZpY2F0aW9uL3QxMzEzL2ZpbmFsLXBhY2thZ2UtY29tYmluZWQvcnVubmVyL2NvbnRyYWN0LmNqcyIsCiAgICAgICJieXRlcyI6IDExMzMsCiAgICAgICJzaGEyNTYiOiAiZGYyZDBkYzk3NTViMTJhN2RkZWNhZDkyODk0YTEzOTBhMWI2NmIwNjI0NGUyMDg2MGIzZmZlNmI2MTMwODczYyIKICAgIH0sCiAgICB7CiAgICAgICJwYXRoIjogIi9Vc2Vycy96eW9uZ3podS9Xb3JrYmFzZS9UaGlyZHNwYWNlLWNyZWF0b3IvZG9jcy92ZXJpZmljYXRpb24vdDEzMjgvcnVudGltZS9pbXBsZW1lbnRhdGlvbi93b3JraW5nL2ZpbmFsLXUwOC11MTAvcnVubmVyL3JlZ2lzdGVyLW93bmVkLmNqcyIsCiAgICAgICJieXRlcyI6IDgxMCwKICAgICAgInNoYTI1NiI6ICJjMmMxNWRiNTJkYzZiNTJjNTU0NmI1ZGQzYTFiMmY5Y2M4YzdmNDRhZjJlMTUxNDQ1Njc2NDVkNmIyOTU2Y2ExIgogICAgfSwKICAgIHsKICAgICAgInBhdGgiOiAiL1VzZXJzL3p5b25nemh1L1dvcmtiYXNlL1RoaXJkc3BhY2UtY3JlYXRvci9kb2NzL3ZlcmlmaWNhdGlvbi90MTMyOC9maW5hbC1pbnRlZ3JhdGlvbi9ydW50aW1lL2Zvcm1hbC11aS1hY2NlcHRhbmNlL3ByZWRpY3Rpb24tbG9jay1zZWVkL3J1bnRpbWUvZmluYWwtdWktcmVhZG9ubHkvVC0xMzI4Lm1kIiwKICAgICAgImJ5dGVzIjogMzQyNSwKICAgICAgInNoYTI1NiI6ICI5ODBmZTZmZGIxMzk1Njg2OTU1ZWY5MjM3MjQyNjMxZjczZGNhNzA0NzBiYmE0Yzc2OGRkNDI0ZDY3ZWQzZjU1IgogICAgfSwKICAgIHsKICAgICAgInBhdGgiOiAiL1VzZXJzL3p5b25nemh1L1dvcmtiYXNlL1RoaXJkc3BhY2UtY3JlYXRvci9kb2NzL3ZlcmlmaWNhdGlvbi90MTMyOC9maW5hbC1pbnRlZ3JhdGlvbi9ydW50aW1lL2Zvcm1hbC11aS1hY2NlcHRhbmNlL3ByZWRpY3Rpb24tbG9jay1zZWVkL3J1bnRpbWUvZmluYWwtdWktcmVhZG9ubHkvcHJlcGFyYXRpb24vRU5UUllQT0lOVFNfQU5EX0RSQUZULmpzb24iLAogICAgICAiYnl0ZXMiOiA1MjQxLAogICAgICAic2hhMjU2IjogImYzYjZlZTQ0ODQxNDk4YjhiYjliZjEwODJmYTg4NzVjMTM1ODA4ZjEwODRlNDE5NTBiMzZjZTI4ZDQ1ODA0NDMiCiAgICB9CiAgXSwKICAibGlua3MiOiBbXSwKICAiYWJzZW50UGF0aHMiOiBbXSwKICAibGltaXQiOiAi5LiN6K+75Y+Wc2Vzc2lvbi9rZXkvRELvvJtD55yf5a6eY2FuZGlkYXRlL3J1bnRpbWUvc2NvcGUvY2xvc2VkLWNvcHkvSEFORE9GRi9IRUFELzEzbGF1bmNoK1NES+WunumZhemUgeWQjuaJjeaJp+ihjOOAgiIKfQo="
+  }
+}

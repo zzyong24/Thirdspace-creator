@@ -1,0 +1,10 @@
+{
+  "frontend/src/features/projects/graphic-post-workbench.tsx": "8f3d9a87e8d29d76d4155dfac91d429fea296818ead367d595b2d1c0d97c1d46",
+  "frontend/src/features/projects/graphic-post-workbench.test.tsx": "15db5bddb13d980dad615d18829c96086ccf96df4ec629a64c931d89c03e695c",
+  "frontend/src/features/projects/graphic-post-results.tsx": "de28ef350eaabb5806210c6ae32d2c2a1cd4cf279135ebf9f5fd626ace784b07",
+  "frontend/src/features/projects/graphic-post-results.test.tsx": "68938391e44a5242ee09df235e2b6c9d4690404421d1709e7d488483f7b9243a",
+  "frontend/src/features/projects/graphic-series-panel.tsx": "7cc8fe64fbc67bee489b90d6aebca74b9001bbcddbc74a9fbe5eebe2854102b5",
+  "frontend/src/features/projects/graphic-series-panel.test.tsx": "847595ae93f76ec66dfd1be41eaadb8804ff3ed36a4042a6c40c41f1aa61ca0c",
+  "frontend/src/features/projects/graphic-series-document.ts": "9e2c60e01c608099d5bd82711634190bbed28d0651eb3153ed342b1cf90b774c",
+  "frontend/src/features/projects/graphic-series-document.test.ts": "1c7472a99f1d5a3c965e0b262316226c7b821e381a1722c5114be5a62305210c"
+}

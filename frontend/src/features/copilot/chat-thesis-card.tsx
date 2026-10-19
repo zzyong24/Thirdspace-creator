@@ -17,6 +17,8 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -24,7 +26,7 @@ import { client } from "@/lib/contract-client";
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 90; // ~6 分钟 —— 论点树生成可达分钟级(弱模型更慢)
 
-type Phase = "running" | "review" | "done" | "error";
+type Phase = "running" | "review" | "done" | "error" | "partial";
 
 // 论点树列(与 thesis-skeleton-panel / planning-runner 的 writer↔reader 契约一致)。
 type ThesisColumn = "core" | "support" | "evidence" | "counter";
@@ -84,6 +86,8 @@ export function ChatThesisCard({
   pollIntervalMs?: number;
 }) {
   const router = useRouter();
+  const observation = useTaskObservation(taskId);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<Phase>(
     error || !taskId ? "error" : "running",
   );
@@ -97,10 +101,12 @@ export function ChatThesisCard({
     if (!taskId || error) return;
     let abandoned = false;
     void (async () => {
-      for (let i = 0; i < MAX_POLLS; i++) {
-        if (abandoned) return;
+      const isCurrent = captureObservation();
+      for (let i = 0; ; i++) {
+        if (i > 0 && i % MAX_POLLS === 0 && !await pauseObservation()) return;
+        if (abandoned || !isCurrent()) return;
         await new Promise((r) => setTimeout(r, pollIntervalMs));
-        if (abandoned) return;
+        if (abandoned || !isCurrent()) return;
         let status: string;
         try {
           const t = (await client.getTask({
@@ -108,10 +114,13 @@ export function ChatThesisCard({
             query: undefined,
             body: undefined,
           })) as { status: string };
+          if (abandoned || !isCurrent()) return;
           status = t.status;
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if (status === "partial") { setPhase("partial"); return; }
+        if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
             const results = (await client.listTaskResults({
@@ -121,7 +130,7 @@ export function ChatThesisCard({
             })) as unknown as Array<{ resultData: Record<string, unknown> }>;
             const last = results[results.length - 1];
             const got = last ? parseNodes(last.resultData) : [];
-            if (abandoned) return;
+            if (abandoned || !isCurrent()) return;
             if (got.length > 0) {
               setNodes(got);
               setPhase("review");
@@ -129,22 +138,21 @@ export function ChatThesisCard({
               setPhase("error");
             }
           } catch {
-            if (!abandoned) setPhase("error");
+            if (!abandoned && isCurrent()) setPhase("error");
           }
           return;
         }
         if (status === "cancelled" || status === "failed") {
-          if (!abandoned) setPhase("error");
+          if (!abandoned && isCurrent()) setPhase("error");
           return;
         }
       }
-      if (!abandoned) setPhase("error"); // 轮询预算耗尽
     })();
     return () => {
       abandoned = true;
     };
     // taskId 稳定;错误态不轮询。
-  }, [taskId, error, pollIntervalMs]);
+  }, [taskId, error, pollIntervalMs, pauseObservation, captureObservation]);
 
   const adopt = React.useCallback(async () => {
     if (!taskId) return;
@@ -174,7 +182,9 @@ export function ChatThesisCard({
         可选论点骨架 · 确认采用后才影响生成式写稿
       </span>
 
-      {phase === "running" ? (
+      <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
+      {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-thesis-running"
           className="flex items-center gap-2 text-[12px] text-muted-foreground"

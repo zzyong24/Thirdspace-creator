@@ -1,0 +1,83 @@
+{
+  "state": "NOT_RUN_EMPTY_ASIDE_FIX_PREPARATION_READY",
+  "checks": [
+    {
+      "command": [
+        "node",
+        "--check",
+        "docs/verification/t1341/runtime/final-ui/observe.cjs"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "docs/verification/t1341/runtime/final-ui/observe.cjs",
+        "--collect"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"state\":\"NOT_RUN\",\"viewports\":[{\"width\":1366,\"height\":900},{\"width\":1024,\"height\":680}],\"checks\":[\"collection\",\"selection\",\"detail\",\"tag_search\",\"empty_next\",\"unchanged_resource\"],\"conditions\":[\"empty\",\"back\",\"refresh\",\"repeat\"],\"modelRoots\":0,\"businessWrites\":0,\"sessionRead\":false,\"network\":0}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "docs/verification/t1341/runtime/final-ui/run.py",
+        "--collect"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"state\": \"NOT_RUN\", \"viewports\": [{\"width\": 1366, \"height\": 900}, {\"width\": 1024, \"height\": 680}], \"newModels\": 0, \"businessMutations\": 0, \"sessionRead\": false, \"network\": 0, \"outerSeconds\": 8400}\n",
+      "stderr": ""
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/observe.cjs",
+      "bytes": 16235,
+      "sha256": "69547938d094c06a5309456ed7494f9dea92aa4340198cf5ab418033df5965fd"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/run.py",
+      "bytes": 7795,
+      "sha256": "c0eab60d7ce161669870a1b5442beebeb1d68163e55877871ee482bf26a829f6"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/command.py",
+      "bytes": 4461,
+      "sha256": "572aa38f88a0a993b332d8ae88e667649e5e035c2c43087c0094f98f70ff6533"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/PLAN.json",
+      "bytes": 2409,
+      "sha256": "a0836ccd5600156bf538bb1ddf48580272e789b6c98401a716e9457e494f2743"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/INPUT_LOCK.json",
+      "bytes": 1745,
+      "sha256": "6d214b666e2bf50615a604ace795ea338cc6e3703a2c7f48aca3b940c2a13e9d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/final-package-combined/runner/contract.cjs",
+      "bytes": 1133,
+      "sha256": "df2d0dc9755b12a7ddecad92894a1390a1b66b06244e20860b3ffe6b6130873c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/runtime/implementation/working/final-u08-u10/runner/register-owned.cjs",
+      "bytes": 810,
+      "sha256": "c2c15db52dc6b52c5546b5dd3a1b2f9cc8c7f44af2e15144567645d6b2956ca1"
+    }
+  ],
+  "contractReadForOfflineCheck": {
+    "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/contracts/T-1341.md",
+    "bytes": 4282,
+    "sha256": "323cdffbc0dc6826548b77f1f5299013158eb63aa51653d587ebf4bf68d3f67b"
+  },
+  "initialFailure": "runs/20261017T144309Z-e965bcfbe87e46a6b411ba763e002e15/OUTPUT_INDEX.json",
+  "exactDelta": "runs/20261017T144309Z-e965bcfbe87e46a6b411ba763e002e15/EMPTY_ASIDE_EXACT_DELTA.diff",
+  "sessionRead": false,
+  "newBrowserRuns": 0,
+  "newModels": 0,
+  "newBusinessWrites": 0
+}

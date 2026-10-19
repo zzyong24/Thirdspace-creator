@@ -1,0 +1,137 @@
+{
+  "schema": "t1292-eight-existing-command-diagnostic-preparation/v1",
+  "state": "PREPARED_NOT_RUN",
+  "recordedAt": "2026-10-17T08:32:32.142680+00:00",
+  "sourceHead": "7f1d4ec9ec9f5dcb7f898e12408206ef41bac3c9",
+  "sourceRoot": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/source",
+  "sourceCheckoutClean": true,
+  "candidateRuntimeUntouched": true,
+  "rawOriginalReconcile": "docs/verification/t1328/final-integration/runtime/final-global-reconcile-t1335/reconcile.log",
+  "commands": [
+    {
+      "id": "LED-052",
+      "command": "node docs/verification/t1022/run-archive-guard.mjs",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": true,
+      "cpuMemoryImpact": "low"
+    },
+    {
+      "id": "LED-006",
+      "command": "pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": false,
+      "cpuMemoryImpact": "medium_or_high; 多Vitest fork/可能cargo编译或原脚手架子build"
+    },
+    {
+      "id": "LED-018",
+      "command": "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": false,
+      "cpuMemoryImpact": "medium_or_high; 多Vitest fork/可能cargo编译或原脚手架子build"
+    },
+    {
+      "id": "LED-031",
+      "command": "pnpm --dir backend exec vitest run src/modules/execution/video-render/executor.test.ts src/modules/execution/child-env.test.ts && node --test tools/windows-closure-rat/*.test.mjs",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": false,
+      "cpuMemoryImpact": "medium_or_high; 多Vitest fork/可能cargo编译或原脚手架子build"
+    },
+    {
+      "id": "LED-041",
+      "command": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts && pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts && node --test tools/windows-closure-rat/build-production-closure.test.mjs",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": false,
+      "cpuMemoryImpact": "medium_or_high; 多Vitest fork/可能cargo编译或原脚手架子build"
+    },
+    {
+      "id": "LED-046",
+      "command": "node --test tools/windows-closure-rat/*.test.mjs && pnpm --dir ai-worker exec vitest run src/runtime/agentic/pi-packaged-runtime.test.ts && pnpm --dir frontend exec vitest run scripts/desktop/execution-worker-runtime.test.mjs",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": false,
+      "cpuMemoryImpact": "medium_or_high; 多Vitest fork/可能cargo编译或原脚手架子build"
+    },
+    {
+      "id": "LED-051",
+      "command": "node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": false,
+      "cpuMemoryImpact": "low"
+    },
+    {
+      "id": "LED-058",
+      "command": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
+      "originalCommandUntouched": true,
+      "stdoutStderr": "同一原命令完整捕获到本轮单独log，原失败/原reconcile日志不改",
+      "commandOuterSeconds": 32400,
+      "cleanupSeconds": 120,
+      "retryByObserver": 0,
+      "nativeTestRetries": "保持原命令/原config（frontend与worker默认retry2，LED058原有--retry0不变）；这是原门诊断，不新验收策略",
+      "missingEnvironmentFirst": false,
+      "cpuMemoryImpact": "medium_or_high; 多Vitest fork/可能cargo编译或原脚手架子build"
+    }
+  ],
+  "plannedOwnedRoot": "/Volumes/T7-MacData/CodexBuilds/t1292-eight-lessons-7f1d4ec9-20261017",
+  "repoOutputPointerRoot": "docs/verification/t1292/diagnostic-eight-7f1",
+  "writeBoundary": {
+    "sourceCodeAndTrackedTests": "0写；before/after SHA+git tracked状态核，变化保原件不回滚他人",
+    "temporary": "新owned TMPDIR/TMP/TEMP，原tests自建随机临时目录保原finally",
+    "vite": "只clean外盘checkout自身node_modules/.vite派生缓存（不是shared repo也不是候选sidecar deps）；不改原config/添加cache CLI参数去冒原命令",
+    "cargo": "原manifest默认clean checkout frontend/src-tauri/target/debug派生，非candidate App/sidecar；不设臆造CARGO变量",
+    "fixtureBuilds": "原命令可能触发真实scripts/build.mjs写clean checkout ai-worker/dist；执行前逐对应beforeAll/脚本确认并留before/after，0shared-dist/0candidate bundle写",
+    "logs": "新外盘0700原日志/退出/进程与输入锁，repo仅小型安全摘要+path/SHA指针；如原raw出现敏感串仅私有保留不stage"
+  },
+  "environmentReadiness": {
+    "CREATOROS_TEST_POSTGRES_URL_present": false,
+    "CREATOROS_ISOLATED_PG_URL_present": false,
+    "actualArchiveGuard": "检查缺键立即throw，且只允许127.0.0.1:55422；本准备不新建PG/不接已有用户PG/不打印URL或secret。原命令实际是否在此退出必须留本次run原结果后再判，不能将计划当FAIL原件。"
+  },
+  "budget": {
+    "eachCommandOuterSeconds": 32400,
+    "singleCleanupSeconds": 120,
+    "maximumSerialOuterSeconds": 260760,
+    "basis": "8×(32400+120)+600启动/索引余量；独立observer不重试，各原内部预算/重试不变。超过原已完成reconcile30m34s只是保守观察上限，非预定时耗",
+    "estimatedWallClockMinutes": [
+      20,
+      40
+    ],
+    "estimateLimit": "前完整reconcile1834s含8lesson；clean source的cargo首次debug编译/磁盘swap可能延长，无保证ETA"
+  },
+  "resourceScheduling": "只准备不执行。R当前真实model/UI与B3RPC共用宿主，8命令fork/编译可能争CPU/内存/交换区；建议先只readiness/原LED052（无PG预期快速失败）及Node-only LED051轻量，真正Vitest/Cargo串行诊断等R模型+浏览器RELEASE；若Root要求同时跑，先实测空闲RAM/CPU并将并发作为诊断边界，性能全程不开。",
+  "semanticScope": "尤其LED058直接包含ai-copilot-interactions与1308交叉、LED046涉及worker路径与1301交叉；没有内部stderr不能说全为scope外。同ID/同错误模板不是同根因。本次只按原命令暴露精确子检查，不改生产/foreign/阈值/旧FAIL/用户业务。",
+  "authorizationStatus": "Root允许按T1292准备精确8命令诊断；实际执行待本PLAN范围/预算/资源安排实读，不先跑。"
+}

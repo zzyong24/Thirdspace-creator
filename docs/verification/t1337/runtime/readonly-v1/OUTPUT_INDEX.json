@@ -1,0 +1,20 @@
+{
+  "state": "READONLY_ORIGINAL_FACTS_NOT_OLD_TURN_PROOF",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/readonly-v1/PLAN.json",
+      "bytes": 5261,
+      "sha256": "32e14798cfe4d1bcdb33fd4bbe3e0f368a97d6432632eed94ef88c3836082626"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/readonly-v1/observe.cjs",
+      "bytes": 12340,
+      "sha256": "86d053c7d2847dacfc8644338913c4e83684d4ddb6701f1fed1d880aced140d4"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/readonly-v1/RESULT.json",
+      "bytes": 4617,
+      "sha256": "454ad28c226c850021dfb958dc2e856cb05ea3156e86ca5b53e19d917b824210"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48  backend/src/modules/ai/ai.repository.ts
+91cd9a9eae3d9def01dc7ae086f717186cb75d034c3b3da693bf79fc5260e03e  backend/src/modules/ai/ai.service.ts
+33b151be2d88bfed4563a6b30975bec42191bf43676d65176ffe74b7daec40fb  backend/src/modules/execution/persistent-task.service.ts
+3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0  backend/src/modules/execution/execution-lease.service.ts
+89f0d5bfdac9f21a8ba54396ce9ce05ee963cf7694b04b3e2d98203babd14551  backend/src/modules/scheduling/private-collector-admission.service.ts
+6fe1d021089ec6326e1cd82add89fdb0f3244beb661818350917c782f0996cae  backend/src/modules/scheduling/index.ts
+b581901b2debd5b29cf0e903b8691e40d3492f727b1e980b43d59e674da5e712  backend/src/integration/startup-group-collectors.postgres.integration.test.ts

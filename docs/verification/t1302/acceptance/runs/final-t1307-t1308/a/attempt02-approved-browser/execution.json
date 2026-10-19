@@ -1,0 +1,21 @@
+{
+  "command": [
+    "node",
+    "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/cli.js",
+    "test",
+    "--config",
+    "docs/verification/t1302/acceptance/public/a/final-t1307-t1308/playwright.config.cjs",
+    "presentation.spec.cjs",
+    "--workers=1",
+    "--retries=0"
+  ],
+  "startedAt": 1792125571.9830458,
+  "outerTimeoutSeconds": 86400,
+  "caseTimeoutMs": 1800000,
+  "hookLaunchMs": 180000,
+  "actionExpectScreenshotMs": 120000,
+  "navigationMs": 300000,
+  "rpcMs": 900000,
+  "workers": 1,
+  "retries": 0
+}

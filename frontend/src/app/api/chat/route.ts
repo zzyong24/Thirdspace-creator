@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import type { UIMessage } from "ai";
 import {chatExecutionResponse} from "@/server/chat-execution-stream";
 import type { RequestContext } from "@creatoros/contract";
+import {workEditorTarget,workCreationTarget} from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
 import {
   getChatRuntime,
@@ -21,6 +22,7 @@ import {
 import { readSessionCookie } from "../v1/auth/_session";
 import {
   resolveRequestContext,
+  readRequestGroupId,
   isAuthError,
   isOwnershipError,
   readRequestAccountSelection,
@@ -44,6 +46,7 @@ export const dynamic = "force-dynamic";
 //   scope 比对,不一致按 OwnershipError 语义 4xx 拒绝 —— 隔离锁在服务端,前端 bug/手工
 //   请求都穿不透(SPEC 2026-07-03 §1.3-3)。
 interface ChatRequestBody {
+  executionEngine?:"pi"|"codex";
   messages?: UIMessage[];
   chatContext?: Partial<ChatContext> & { scope?: string };
   conversationId?: string;
@@ -125,6 +128,8 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
 
+  if(body.executionEngine!==undefined&&body.executionEngine!=="pi"&&body.executionEngine!=="codex")return NextResponse.json({code:"CHAT_ENGINE_INVALID",error:"请选择可用的编导引擎。"},{status:400});
+
   // 鉴权:同 dispatch —— [T-046 单机免登录] 有 cookie 验 token,无/失效 cookie 以本机
   // 主用户直通;401 仅剩「库中无任何用户」的异常态兜底。
   const rawToken = readSessionCookie(req);
@@ -149,7 +154,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     // 对话恒为状态变更类(落库 + 触发工具任务)→ present-but-invalid cookie 明确拒(401),不静默降级主用户。
     ctx = await resolveRequestContext(rawToken, accountId, {
-      rejectInvalidToken: true,
+      rejectInvalidToken: true,groupId:readRequestGroupId(req),
     });
   } catch (err) {
     // 结构化识别鉴权错误(跨 bundle instanceof 不可靠)。
@@ -210,6 +215,10 @@ export async function POST(req: Request): Promise<Response> {
       { status: 400 },
     );
   }
+  const editorTarget=body.chatContext?.editorTarget===undefined?undefined:workEditorTarget.safeParse(body.chatContext.editorTarget);
+  const creationTarget=body.chatContext?.creationTarget===undefined?undefined:workCreationTarget.safeParse(body.chatContext.creationTarget);
+  if((editorTarget&&!editorTarget.success)||(creationTarget&&!creationTarget.success))return NextResponse.json({code:"WORK_TARGET_INVALID",error:"当前作品或确认脚本定位无效，请回到稿面重新操作。"},{status:400});
+  if(editorTarget&&creationTarget)return NextResponse.json({code:"WORK_TARGET_INVALID",error:"一次请求只能选择当前精调或联合生成。"},{status:400});
   const chatContext: ChatContext = {
     surface:
       typeof body.chatContext?.surface === "string"
@@ -221,7 +230,11 @@ export async function POST(req: Request): Promise<Response> {
     selection: body.chatContext?.selection,
     assetAliases,
     diagnosticRef,
+    ...(editorTarget?.success?{editorTarget:editorTarget.data}:{}),
+    ...(creationTarget?.success?{creationTarget:creationTarget.data}:{}),
   };
+  const workTarget=chatContext.editorTarget??chatContext.creationTarget;
+  if(workTarget&&(chatContext.surface!=="project"||chatContext.projectId!==workTarget.projectId))return NextResponse.json({code:"WORK_TARGET_MISMATCH",error:"当前作品不属于这个项目对话，请重新打开编导。"},{status:409});
 
   const hasCompleteScriptSelection =
     chatContext.selection?.kind === "script_section" &&
@@ -482,7 +495,34 @@ export async function POST(req: Request): Promise<Response> {
       //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
       const approvalContinuation=messages.at(-1)?.role==="assistant" && messages.at(-1)!.parts.some(part=>typeof part==="object" && part!==null && "state" in part && part.state==="approval-responded");
       let skipInsert = approvalContinuation;
-      if (!skipInsert && isExistingConversation && body.trigger!=="regenerate-message") {
+      // 新编导重接原服务器 source ID；不能把同文、不同稿面误当一次请求。
+      if(workTarget&&body.trigger==="regenerate-message"){
+        const history=await runtime.ai.listMessages(ctx,conversationId);
+        const saved=history.find(message=>message.id===body.messageId&&message.role==="user");
+        if(!saved||saved.content!==userText||JSON.stringify(saved.attachments??[])!==JSON.stringify(attachmentIds))return NextResponse.json({code:"WORK_SOURCE_MESSAGE_INVALID",error:"找不到这次原请求，输入已保留。请先恢复当前对话的任务。"},{status:409});
+        skipInsert=true;persistedUserMessageId=saved.id;
+      }
+      if (!skipInsert && !workTarget && isExistingConversation && body.trigger === "regenerate-message") {
+        // S6：这是已保存原输入的恢复，不把客户端消息ID或同文本新行当作新执行意图。
+        const history = await runtime.ai.listMessages(ctx, conversationId);
+        const source = [...history].reverse().find(message => message.role === "user");
+        const sourceAttachments = Array.isArray(source?.attachments) ? source.attachments : [];
+        if (!source) {
+          return NextResponse.json(
+            { error: "本轮请求准备或提交未完成，输入已保留。请重试；仍失败时请提供诊断日志。" },
+            { status: 400, headers: { "x-conversation-id": conversationId } },
+          );
+        }
+        if (source.content !== userText || JSON.stringify(sourceAttachments) !== JSON.stringify(attachmentIds)) {
+          return NextResponse.json(
+            { error: "原消息已变化或无法找到，请重新打开当前对话后再继续。", code: "CHAT_RETRY_SOURCE_MISMATCH" },
+            { status: 409 },
+          );
+        }
+        persistedUserMessageId = source.id;
+        skipInsert = true;
+      }
+      if (!skipInsert && !workTarget && isExistingConversation && body.trigger!=="regenerate-message") {
         try {
           const history = await runtime.ai.listMessages(ctx, conversationId);
           const last = history[history.length - 1];
@@ -507,7 +547,7 @@ export async function POST(req: Request): Promise<Response> {
           ...(attachmentIds.length > 0 ? { attachments: attachmentIds } : {}),
         });
         persistedUserMessageId = persisted.id;
-      } else {
+      } else if(!persistedUserMessageId) {
         const history = await runtime.ai.listMessages(ctx, conversationId);
         const last = [...history].reverse().find(message=>message.role==="user");
         if (last?.role === "user" && last.content === userText) {
@@ -576,7 +616,7 @@ export async function POST(req: Request): Promise<Response> {
     submissionPhase = "runtime_access";
     const durable = runtime.durable;
     submissionPhase = "task_submission";
-    const submitted=await durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId},async(owner,snapshot)=>{
+    const submitted=await durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId,executionEngine:body.executionEngine},async(owner,snapshot,options)=>{
       // 历史只取后端已保存的消息。附件只替换本轮已验归属的用户输入副本。
       const trustedMessages: UIMessage[]=snapshot.messages.map(message=>({
         id:message.id,role:message.role as UIMessage["role"],
@@ -590,7 +630,7 @@ export async function POST(req: Request): Promise<Response> {
         ...trustedScriptSources.filter(source=>source.sourceType==="attachment"),
       ];
       submissionPhase = "context_preparation";
-      return prepareChatReply(runtime,owner,snapshot,{messages:trustedMessages,chatContext,trustedScriptSources:boundSources,abortSignal:req.signal});
+      return prepareChatReply(runtime,owner,snapshot,{messages:trustedMessages,chatContext,trustedScriptSources:boundSources,abortSignal:req.signal,executionEngine:options.executionEngine});
     });
     submissionPhase = "stream_subscription";
     // 授权按钮只续接执行；真实权限仍由宿主 approve 重新检查。
@@ -598,10 +638,16 @@ export async function POST(req: Request): Promise<Response> {
       const task=await runtime.durable.get(ctx,submitted.executionTaskId);
       if((task.runtimeStatus??task.status)==='waiting_user')await runtime.durable.command(ctx,submitted.executionTaskId,'resume');
     }
-    return chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
+    const response=chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
+    response.headers.set("x-source-message-id",submitted.sourceMessageId);
+    response.headers.set("x-ai-task-id",submitted.taskId);
+    return response;
   } catch (err) {
     if (err instanceof OwnershipError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
+    }
+    if(err && typeof err==="object" && "code" in err && err.code==="MODEL_BENEFIT_REFRESH_PENDING"){
+      return NextResponse.json({code:"MODEL_BENEFIT_REFRESH_PENDING",error:"官方模型暂未核对完成，输入已保留。请核对原任务后再继续，或切换自配模型。"},{status:503,headers:conversationId?{"x-conversation-id":conversationId}:undefined});
     }
     // 没配 model key(LlmCredentialError)等装配期错误 → 诚实 4xx(不假绿、不静默)。
     // [T-094] 平台类错误(内容审核/限流/配额)先过人话映射,用户拿到能行动的说明。

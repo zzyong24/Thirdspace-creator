@@ -1,0 +1,62 @@
+{
+  "schema": "t1302-current-candidate-ui-handoff/v1",
+  "agent": "/root/sol_frontend_acceptance",
+  "sourceHead": "dc46cfa700ec9c9cbada47fb76237d0b50d10a67",
+  "candidateBinding": "docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+  "driver": "docs/verification/t1307/acceptance/candidate/driver",
+  "ready": "docs/verification/t1307/acceptance/candidate/runs/owned-fe90d20b0f57ec60/ready.json",
+  "privateSessionPath": "/private/tmp/t1300-candidate-MhP4pW/session.json",
+  "baseURL": "http://127.0.0.1:65353",
+  "ownedRoot": "/private/tmp/t1300-candidate-MhP4pW",
+  "controllerToolSession": 94030,
+  "businessHandoff": "docs/verification/t1307/acceptance/runs/final-t1307-t1308/b/HANDOFF.json",
+  "businessHandoffSha256": "ec80c73261c08f9362d77fabd3e508cab5879f050f29e0425a32974361513e15",
+  "writeSet": [
+    "docs/verification/t1302/acceptance/public/a/final-t1307-t1308/**",
+    "docs/verification/t1302/acceptance/runs/final-t1307-t1308/a/**"
+  ],
+  "environment": {
+    "T1300_ACCEPTANCE_TASK": "T-1302",
+    "T1300_MODULE": "a",
+    "T1300_RUN_NAME": "final-t1307-t1308",
+    "T1300_SESSION": "/private/tmp/t1300-candidate-MhP4pW/session.json"
+  },
+  "scope": [
+    "三类真实候选：joint article、joint graphic、article editor；新包普通与窄窗整viewport真实图，保当前整体上下文",
+    "文章/图文当前真实editor scope的chips隐藏与对应placeholder；全局/脚本/video保原不扩测；原人可读来源/合法空值/ref族按真实样本与受控证据分列",
+    "就绪选择区默认折叠，真实click/Enter展开；原loading/error/必要锁定原因在modal内可见，不改字段/默认/事实/body-key",
+    "两个真实article source全文/有序段落/四行______分别对native preview与原MoreExport实际HTML；graphic无HTML入口，不伪造",
+    "三候选可用原真实history导航，无新增模型或成稿保存；完整双方DTO、script artifacts.get metadata与按total的全部分页versions前后相等",
+    "普通/窄屏键盘与未发送输入保持；引用既有同字节真实浏览器200%与嵌套键盘受控/公共证据时明确来源，不冒本轮重验"
+  ],
+  "stateBoundary": "新browser context不复制B业务sessionStorage；服务端已采纳不必然呈本地locked/confirmed。按实际自然状态检查：仅存在原绑定FrozenAdoption才核锁定；fresh无原记录则核正常预览/默认选择/键盘，不强求enabled或disabled，不注入B存储/不重复采纳。B同context自然reload确认可精确引用，A不冒新验。",
+  "reuse": [
+    "旧受控explicitlayout/default/body-key按逐文件同字节准确引用；不能代新source/真实侧栏/历史/焦点",
+    "B两真实source/三候选已采纳、真实source到HTML保真和隔离可引用；A新图避免长元素顶端空白误判",
+    "本冻结源码B本轮timeout exit0可复用，新增runner预算自身核；不无理由重跑大suite"
+  ],
+  "prohibitions": [
+    "0新模型、0成稿或脚本save、0预保存换base",
+    "不复制业务storage/伪ID或source/receipt，不解锁confirmed，不改产品/tests/旧报告",
+    "同包同root不重启、不得停止controller94030，不touch现用App/userDB/Keychain",
+    "不claim父T1300/不taskcomplete/不写全部FEEDBACK PASS"
+  ],
+  "budgets": {
+    "caseMs": 1800000,
+    "actionExpectScreenshotMs": 120000,
+    "navigationMs": 300000,
+    "hookLaunchMs": 180000,
+    "outerSeconds": 86400,
+    "retries": 0,
+    "workers": 1
+  },
+  "secrets": "session只路径；不得打印handshake，HTTP错误安全脱敏，收尾精确secret scan0",
+  "ordinaryWriter": "A唯一普通repo/browser writer；C同活跃turn仅controller观察不并写",
+  "startCondition": "真实claim/最终packet/clean控制HEAD、C RELEASE后Root正式放行",
+  "handoffCorrection": {
+    "priorAgent": "/root/sol_ui_acceptance",
+    "priorHandoffSha256": "5503005cc6f1657a1f4611e690c0c2b9938c456f7764d3884b090adfc6571070",
+    "priorControlCommit": "df4156941fa6df4396f270d81b01e6169aee9350",
+    "reason": "Root确认实际执行代理为sol_frontend_acceptance；保原claim/旧版本，受支持release/reclaim，未执行UI"
+  }
+}

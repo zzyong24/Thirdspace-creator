@@ -1,0 +1,168 @@
+{
+  "checkedAt": "2026-10-16T10:07:58.904455+00:00",
+  "scope": "仅实际wrapper记录的owned PGID、已记录T1312临时根及精确前缀盘点；不声明全系统临时文件清零",
+  "ownedGroups": [
+    47005,
+    47629,
+    50218,
+    50280,
+    52432,
+    57598,
+    57619,
+    63110,
+    63165,
+    63201,
+    63230,
+    63704,
+    63705,
+    63706,
+    63708,
+    70974,
+    71696,
+    72472,
+    75135,
+    75678,
+    75679,
+    75680,
+    75745,
+    79859,
+    79860,
+    79861,
+    79862,
+    79863,
+    79864
+  ],
+  "incompleteRuns": [],
+  "remainingRecordedGroupProcesses": [],
+  "recordedTemporaryRoots": [
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-1mmqXx",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-3yPMzI",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-7XcpfK",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-81sH1G",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-9shFIV",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-Ag0Y2t",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-Bf9lJh",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-E1iLhB",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-O1AJZR",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-PvevCd",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-SKgjr4",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-X2Ggbf",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-YrXBWI",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-a9HNv7",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-cmzqLG",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-gL18Mp",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-gOR10r",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-lNjAou",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-q2nRSC",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-qg01hG",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-sb3GNO",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1312-owned-default-zlwfNO",
+      "exists": false
+    }
+  ],
+  "remainingExactPrefixDirectories": [],
+  "workerBinding": {
+    "path": "/private/tmp/t1300-artifact-bcz9nlt5/sidecar/frontend/runtime/execution-worker.cjs",
+    "bytes": 5618216,
+    "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+    "unchanged": true
+  },
+  "timeoutGateOriginalCacheFootprint": [
+    {
+      "path": "contract/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 7090,
+      "sha256": "a2e1bcccdf5b4c040a5f6a77e55f03b389a854739928bca0d18897fdcf73f41f",
+      "mtimeNs": 1792145076107224837
+    },
+    {
+      "path": "ai-worker/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 13128,
+      "sha256": "880abf3eccd82cd71646d58a48667c8e7fcb7e41e6cbb3bce8c28a5f89d0c9b8",
+      "mtimeNs": 1792145083562058087
+    },
+    {
+      "path": "backend/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 59502,
+      "sha256": "227a2066834446284a715c649d115339d00d6405da556d65f91795d39edceb88",
+      "mtimeNs": 1792145152277983770
+    },
+    {
+      "path": "frontend/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 21426,
+      "sha256": "8141624816850229cabc3abbb7a2bb458bfe453db47bab66049d7e971fab2c9e",
+      "mtimeNs": 1792145166584287692
+    },
+    {
+      "path": "mcp-server/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 648,
+      "sha256": "7c6f45fce40c8e8e23ed5194e22843d47738783aeeeb40d4bf531fec64d9b8dd",
+      "mtimeNs": 1792145177725146942
+    }
+  ],
+  "cacheInterpretation": "原verify命令五包固有当前足迹，未删缓存；非本任务全工作区新建文件因果清单",
+  "controlledServerLifecycle": "frontend afterEach实际closeAllConnections+await close；dispatcher.stop+dispose persistence+rm自有根；进程退出后以上PGID查询再次核验"
+}

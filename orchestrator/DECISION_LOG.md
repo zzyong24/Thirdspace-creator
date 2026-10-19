@@ -2,6 +2,42 @@
 
 Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages so future agents do not need chat history.
 
+## DEC-GROUP-1022（2026-10-04）：账号组统一多平台工作区与页面设计方法
+
+**Owner**：user。**Status**：方向与执行已Confirmed；正式验收阻塞。后续执行授权见本节2026-10-04记录，无需再次确认视觉方向或实施。
+
+**用户已明确**：以账号组承接同一创作者在多平台的账号与内容，全局切换改成切组，组内可查看总览、作品和数据，组管理在绑定账号入口；全面重构首页、运营分析与复盘。页面设计、重构和规范统一使用用户提供的oil-ui-pro 0.10.0，项目Skill已纳入`.agents/skills/oil-ui-pro/`并写入AGENTS.md。
+
+**历史方案及后续授权**：[T-1022 SPEC](../docs/features/t1022-account-group-workspace.md)7节：每个旧账号先独立建组，用户再显式归组并选择主定位；历史资料按完整项目依赖闭包预览选入，共享文件保持原storageKey，通过明确资源引用授权组内读取；开放升级后写入后不自动降回旧schema。用户已明确不喜欢A/B新风格，认为原版更丰富；选择保留原版丰富工作台，只补账号组总览和多平台切换。A/B退出当前方向，原问候、五指标卡、三列六卡与侧栏底部账号入口保留。该视觉选择已Confirmed，不再询问A/B；用户进一步回复“认可，可视化的图需要设计的更好看一些”，确认原版增补并要求局部图表精修；随后明确指出图表连坐标都没有，要求可准确读数的坐标、刻度与单位。历史明细缺失时用已知范围或空态，不能用轮廓加数字轴假装日数据，不改变第7节历史迁移仍待确认的边界。
+
+**依据与边界**：当前切换器与绑定入口仍为抖音，快手/公众号契约和公众号映射存在缺口。三轮独立SPEC评审已完成，四项归属/闭包/并发/回退缺口在方案层解决；第3轮绑定原版增补约束PASS[REV:2f179f8d9380]；评审PASS不替代用户迁移确认，也不证明生产实现、五平台登录采集发布或真实数据迁移已完成。当前只修改调研设计与流程工件，未执行真实库操作。现有全局reconcile失败沿T-1015/T-1018/T-916跟踪，新任务绑定工具glob问题登记T-1023。
+
+**2026-10-04执行授权**：用户回复“ok 开始执行”，授权按已评审方案正式实现与验证。沿用第7节非自动合并默认：旧账号一对一初始组，主定位与历史资料在管理页由用户显式预览选择；原ID、storageKey与现有历史保留。此授权允许代码与隔离测试库迁移，不视为自动合并现有真实账号/资料或不备份就升级真实库。实施时将能力来源与未提供凭据的真机链路如实区分。
+
+**2026-10-05实施记录**：沿用上述用户授权和已评审数据归属。正式页面组合实际 `pages.groupOverview.get`、`pages.dailyReport.get` 及原发布/项目服务，不另建SPEC候选表中的四个planned页面操作；最终公开调用链与机器旅程契约写入PAGE_SPEC。调度补齐按真实平台能力和成功绑定回执准入，转组只更新后续私有采集任务，历史run保持冻结组；归档组仅保留服务内可核验的既有私有采集权，不开放通用写入或外部allowArchived参数。新绑定提交后的任务初始化失败不撤销成功身份绑定。真实页面核心旅程已执行，正式frontend receipt仍因混合工作树无法绑定HEAD未放行；真实平台/安装版/原生200%继续待验，没有新增accepted-risk或自动真实库迁移授权。
+
+
+**2026-10-05收尾状态**：启动/归档执行增量已独立复核关闭；后台合并362条及真实浏览器18检查点通过。pmem同步通过，全局reconcile保留33项旧漂移，沿T-916/T-1018/T-1015；正式提交绑定与真实平台、安装版、原生200%仍待验。taskctl已登记T-1022验收阻塞，未标完成、未提交混合工作树，未变更真实库授权边界。
+---
+
+## DEC-TEMPLATE-1021 (2026-10-04) — CreatorOS封面与小红书图文双模板库
+
+**来源**：用户明确宿主为CreatorOS封面编辑区，指定`/Users/zyongzhu/Workbase/moonlit-skills/`为Skill源码，要求真人出镜与纯AI等多种封面、小红书图文两个模板库、行业分类、收藏提示词与风格，并授权浏览公开优秀作品及生成样例。
+
+**已确认方向**：双库分别服务单封面与完整笔记；行业分类与画面类型独立。本人身份照片、风格参考和本期内容分别使用；公共库不得固化本人的照片。浏览研究只提炼方法，首批公共样图为原创AI示例，照片质感不冒充实拍证据。
+
+**本轮明确纠偏**：用户补充画幅比例与统一oil-ui-pro 0.10.0后，进一步明确「结合我们的系统的发布功能去改」，拒绝独立系统式UI。复用现有项目稿面PublishPackSection/PublishPackageCta、右侧编导、原发布草稿Revision、素材中心和排期/登记链。独立HTML与UI生成图只留作研究，停止作为实施方向；无需再让用户挑全局布局。
+
+**可评审接入方案**：[T-1021 SPEC](../docs/features/t1021-cover-template-library.md)。封面复用原任务/采纳链；图文候选及页恢复仍沿原ai/execution账本，最终正文、封面和页序归现有PublicationRevision，撤回另建Assets图文交付物服务。比例进入实际任务，模型身份与能力冻结共用原配置/凭据端口。真人身份失败不能生成陌生人替代。旧receipt `PASS[REV:8618b59024af]`只覆盖先前方案；本轮发布接入与比例合同已独立复核，第三轮`PASS[REV:f0f3fa0ff91b]`，仅为SPEC结论。
+
+**无限画布补充**：用户认可原发布链接入方向，并明确当前系统是无限画布。创作空间沿既有画布，封面为画板、图文为页组，模板/素材/收藏为画布缩放层外的局部面板；比例是输出属性，不能与视口缩放混淆。正式正文、封面和页序仍归Publishing版本。见同任务[integration.md](../docs/features/t1021-cover-template-library/integration.md)补充。当前分支未定位该宿主，已向用户询问入口或代码位置，未自行新增画布引擎。`PASS[REV:f0f3fa0ff91b]`只证明此前发布合同复核，不覆盖此画布补充。
+
+**待确认项**：私人收藏按当前创作账号隔离跨项目复用，还是本人所有账号共享，原问题仍待回复；本轮发布功能纠偏没有回答此数据范围。既有发布物料归属不再另开选择，遵守现有Publishing。
+
+**验证边界**：14张封面/图文素材真实存在并已查看（12公共、2私人）；公共包排除私人图。原HTML本地收藏不证明CreatorOS接入。生成的两张工作区图已被本轮纠偏取代，不能做当前产品设计证据。未改生产代码、未完成正式链路验收、未发布或推送。
+
+**Status**：结合现有发布功能的方向Confirmed；私人收藏范围待确认；更新合同独立复核通过，生产未实现。
+
 ---
 
 ## DEC-MODEL-057 (2026-08-20) — 官方受管生图提交断连以同一幂等号有界恢复
@@ -1196,7 +1232,7 @@ surface 全量只读审计(6 并行 agent),逐元素定死 动作→数据来源
 ## DEC-015 (2026-06-24) — P1 持久化底座:内存 pglite → 真 Postgres + 版本化迁移
 
 **背景**:用户指出整套被当成"假的"——根因之一是 DB 是内存 pglite(`new PGlite()`),重启即回 seed,无真持久化。产品化第一阶段(P1)。
-**决策**(用户批准 L2 门控自治产物):运行时切到真 Postgres(`drizzle-orm/node-postgres` + `pg.Pool`,读 `DATABASE_URL`),本地用 docker-compose 起库;引入 drizzle migrator 应用版本化迁移。**Pattern-Ref: PAT-002**(REAL-FORCE 命中:用户数据留存 + 唯一约束 + 将来部署)。
+**决策**(用户当时批准门控自治产物，历史等级为 L2；不是当前开发模式):运行时切到真 Postgres(`drizzle-orm/node-postgres` + `pg.Pool`,读 `DATABASE_URL`),本地用 docker-compose 起库;引入 drizzle migrator 应用版本化迁移。**Pattern-Ref: PAT-002**(REAL-FORCE 命中:用户数据留存 + 唯一约束 + 将来部署)。
 **验收实证**:杀进程重启哨兵行幸存(数据持久);db:migrate 建 72 表 + `__drizzle_migrations` 追踪 + 幂等;backend 9/3skip + 真PG集成 3/3 + frontend 1335 零回归;reconcile exit 0。
 **Owner**:agent(用户 /goal + 批准)。**Status**:active。**Invalidates**:none(运行时底座替换,契约/服务/UI 不变)。
 
@@ -3342,6 +3378,9 @@ DEC-T965追加（用户2026-09-13明确）：运营报表支持单天/周/月/�
 
 ## DEC-T968 · 日报 CSV 保存与日期空值
 用户要求桌面端导出由用户选择目录，且格式改为 CSV。采用 Tauri 原生保存面板和受限单一导出命令：前端不获得任意路径写入权限，命令仅在用户刚选择的 `.csv` 路径写入，取消不落盘；远程 sidecar 仅获该命令权限。网页运行时无法使用系统保存面板，安全降级为浏览器下载。项目排期的空字符串统一视为未选择日期，用北京时间当天作为日历锚点。
+## DEC-T969 · 聊天凭据与 RedFox 额度的可恢复状态
+
+用户反馈 RedFox 热点请求被显示为“结果尚待核对”。公共 CLI 证明原任务没有模型调用、工具步骤或结果，因此不得把没有外部调用事实的配置失败伪装为未知结果。Worker 在模型凭据端口遇到 `LlmCredentialError` 时统一返回 `waiting_user`，不启动供应商调用；RedFox 官方业务码 3201 映射为额度不足，模型须提示用户补充或更换 RedFox 密钥额度。未知结果仍只保留给账本已有 started/unknown 调用的场景；原任务不自动重提。
 
 ## DEC-T974：容量观察与运行验收分离
 
@@ -3356,3 +3395,2416 @@ DEC-T965追加（用户2026-09-13明确）：运营报表支持单天/周/月/�
 用户当前明确要求：流量详情超时继续修复；两小时任务错峰；有活跃任务查看原运行，否则启动一次并查看。接受范围落实为默认00/15/30/45分钟，保留用户自定义非默认计划和关闭状态；服务端核对活跃运行，前端详情走本地打开并遵守LED-047。授权本地验证，未授权公开发布。
 
 T983来源状态补充：真实页面对照证明部分旧作品只有正常指标卡且无来源组件。以unavailable明确表达平台未提供，而不是伪造比例或标为采集失败；保留历史来源和原采集时间，不按年龄猜测。独立审查确认登录/加载/未知结构不得降级，用户本轮修复授权覆盖此必要契约表达。
+
+## DEC-T1000 · 周期运营方向的可选结构化扩展
+
+用户明确要求周/月运营分析提供更多建议和战略方向。保留原有日报协议版本及缓存键，增加可选 `directions` 字段，旧缓存无需迁移；模型根据所选周期真实作品决定条数与内容，证据不足不凑数。页面将阶段内容取舍与单条实验分开展示；仅内部复盘使用，不进入分享战报或数据导出。实现和验收见 `docs/features/t1000-operations-strategy.md`。
+
+## DEC-AW-1003 — 多步 Agent 与 NomiFun 能力迁移规格
+
+用户明确确认 CreatorOS 应接受目标后连续执行，不需逐步“继续”，并要求参考自己参与开发的 NomiFun 工具及 browser_use。本轮只编写规格、拆任务与评审。保留 Pi core 与 execution_tasks；新增通用工具适配和产物链路，复用版本化 NomiFun 浏览器实现，账号隔离与 profile 唯一所有者不可绕过。具体实施选择及验证触发见 docs/features/t1003-agent-workbench.md；未批准发布或修改 NomiFun 源仓。
+
+## DEC-T957-02 · Agent 对用户的失败表达与提示词收口（2026-09-25）
+
+用户要求全面验收 AI 场景，并改进各 Agent 的系统提示词，避免助手把内部配置、错误和系统规则讲给用户。按本轮用户确认扩展 T-957：对话及直接面向用户的生成 Agent 采用共享的简洁表达规则，Agent 专属方法仍独立；未知原因保持未知，已确认的权限/配置/执行失败照实说明；内部异常不直接进入用户可见工具结果。以运行状态和可执行下一步替代自我诊断与提示词条款引用。Codex/Claude Code 只作清晰直达的风格参照，不复制非公开提示词。测试不得宣称未运行的模型/供应商或安装版场景通过。
+
+## DEC-TRIAGE-1014 — 历史治理告警按真实适用范围销账
+
+用户要求核对233项历史失败并关闭有证据的过期项。本轮明确DEC-015描述的是历史门控等级，当前开发仍为interactive（不改变产品Agent自主执行能力）。使用官方归档命令迁移98条已完成看板行，补78条搁置行的验收列为待验，并恢复评审回执绑定的SPEC链接。历史回执不重签、不降低receipt_policy、不修改有效教训命令、不扩大架构违规基线。当前仍失败的规格和测试分别沿T-916/T-1015追踪；完整清单见docs/verification/t1014-triage.csv。
+
+
+## DEC-T957-03（2026-09-26）：连接续期与真实网页读取恢复
+
+用户明确长期授权、CLI 自动启动，并要求继续执行；连接异常由源码与两天以上进程寿命证实为24小时租期未续期。恢复方式为正常重启；修复在原壳层身份校验与关闭偏好下自动续期，不改变 CLI 消费端的过期拒绝和账号边界。
+
+用户追加“如果工具读取失败，应该修复工具的问题”。回读历史任务并用同一 Google 链接复现旧迁移页只抽896字，采用标准 meta refresh 的有界跟随，每跳保持 URL/权限/HTTP/登录检查。新增可选 `web.read.refresh` 供显式重新读取旧缓存，默认行为兼容，翻窗不重新抓取，历史素材和回执不删除。该扩展不改变领域数据归属或模型采纳权限。真机旧版本与源码工具探针分开记录；不把本地源码修复描述成已安装生效。
+
+## DEC-T957-04（2026-09-26）：固定分页证据与实际登录域提示
+
+用户继续要求深度优化和全面验证，并已明确工具失败应修工具。独立审查 review_read_recovery 确认同 URL 分页会切到全账号最新缓存、重复消耗全文额度，以及跳转登录墙丢失实际域名。分页沿既有任务账本引用原不可变证据，验证更早调用序号、归属、摘要与正文 hash 后切窗，不新增副作用和公开参数。私有 needs_login 契约添加可选 domain，宿主校验后仅用于显示，未授予读取或写入目标域会话的权限；旧载荷兼容原域。方案和实现经独立审查通过，补并发顺序、篡改、跨账号、九页预算、ACK 丢失及非法域名测试。跨域登录后的真实恢复、安装版新代码与模型质量验收仍未完成。
+
+
+## DEC-T957-05 · 安装验收后的回复边界与最终来源展示（2026-09-27）
+用户授权全面验收、发现工具问题继续修复。本轮真实模型显示纯文字请求被强制候选化、固定6–8条覆盖明确数量、无依据评级和内部工具名外露。修正模板职责与共享表达规则，意图判断仍由模型完成，不引入词表路由或输出删词。web.read 新增可选 asset.finalUrl，真实浏览器观察经URL与不可变摘要验证后透传；旧缓存缺省；原sourceUrl继续用于缓存、分页和素材采纳。read-only reviewer review_read_recovery 条件接受并复核；展示不授予会话/网络权限，非法最终地址省略但保留合法正文。用户已授权本地重新打包安装验收；无发布/真实稿件采纳。
+
+
+## DEC-T957-06 · 按HTTP事实提示恢复方式（2026-09-27）
+用户明确继续测试验证并已授权修复工具失败。安装版真实404回执携带loginSuggested=true，原错误串夹带工具指令。保持公开字段形状、替代来源与归属不变，仅401/403给可选登录建议；404/429/5xx不建议登录，确认needsLogin仍独立优先。前端按有效整数400–599翻译HTTP错误，并兼容旧true回执，避免展示旧内部恢复文字；无HTTP输入错误保持原文。不是按关键词裁剪模型回答，不改变任何会话权限。独立只读review_read_recovery审查，状态矩阵/公共宿主结算与重放/旧卡片均覆盖。真实模型的数量、计算和表达问题仍单独保留。
+
+
+## DEC-T957-07：对话网页等待真实网站资源释放（2026-09-27）
+
+- 依据：第四次安装双账号同站点实测失败，正式诊断为网站被另一任务使用；串行重试成功。用户已授权发现工具读取故障应修复并继续测试。
+- 决定：仅对话readChatWebReadSession获取profile时，BrowserProfileBusyError在事务外最多等待60秒、250ms轮询；保留原acquire每轮归属/fence/deadline检查、成功后取消检查与第二次会话读取。其他错误不上重试，超时保留原transient回执。原持有者必须真实停止后才释放，不抢占、不TTL解锁。
+- IPC：仅该端口使用现有任务deadline等待，不增加请求重投；否则原30秒超时会早于宿主等待而产生未知结果。取消/停机仍中断pending，原停止证明后释放路径不变。
+- 独立只读评审review_read_recovery通过；要求覆盖获取后取消的释放断言，已补。真实双任务同域读取成功仍须第五安装包验证，不能由单测替代；不同域相互等待仍可能有界退出，不宣称无等待环。
+
+- 停止竞争补充：扩展回归一次报告WORKER_TREE_OWNER_UNVERIFIED；确定性注入确认两处发送回调可在stop已开始后重复forceStop。独立审查同意仅增加!stopping，保留既有stop/grace/整树停止证明与失败传播。2红/3绿的复现后修复，既有归属核验未改。
+
+## DEC-T1017 · 2026-09-30 · 内容雷达优先产出可用改写稿
+
+用户明确反馈生成选题卡的步骤多、输出要求苛刻，核心价值是“按自己的定位快速改写别人的文案”，且首要关注可用性。产品主结果调整为基于真实对标文案和当前账号定位直接生成可编辑纯文本；来源拆解、改写策略和选题卡结构化字段降为可选补充，不得阻断首稿可见、编辑和复制。日志只证实 `topic_preview` 以 `output_invalid` 失败，未记录足够信息确认具体模型/供应商原因。
+
+保持账号/来源归属、事实真实性、隐私安全、幂等冲突及现有相似性采纳规则；本决策不自动发布、不覆盖已采纳稿件，也不以低质量格式校验替代用户判断。`previewTopic.positioningVersionId` 改为可选且向后兼容：每次新任务由服务端解析并冻结当前完整定位母版；没有定位时使用通用改写并如实记录未应用定位，不伪造版本。为使简化后的首稿继续进入既有创作链，新写入允许使用 `rewrite_only` evidence：保存真实来源引用、快照/逐字稿哈希、定位是否应用/可用版本、改写稿 seed、模板版本和模型运行回执引用；拆解、策略及其 hash 仅为可选补充，不能用空壳伪造。主改写只有一个模型任务；选题卡不再自动生成第二个模型任务。Candidate、Project parser、seed reader 和 `script.draft` 必须识别该新变体，并在无策略时基于真实来源与已确认改写稿继续，显示证据缺项但不因缺少可选策略而整单失败；旧的完整 evidence 继续原样读取。新稿正文在生成时持久化，用户页面修改在显式采纳/创建 Project 时持久化。该变体不绕过现有事实、隐私或相似性采纳规则。
+
+详细页面与服务行为以 `docs/features/t1017-content-radar-rewrite-first.md` 为准，须独立评审通过后实现。T-1017 对 T-642 / DEC-RADAR-048 的局部覆盖仅限新 `rewrite_only` 主链及其最小 evidence、当前定位解析和无策略 Project 写稿行为；旧 strategy-backed 记录、普通项目和 T-642 其余来源/采纳/Project 一致性要求继续有效。T-633 中的扫码恢复保留，雷达改写由 T-1017 承接。
+
+T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯文本、无定位、冻结输入、未知请求恢复、采纳响应丢失/并发、重试旧稿保留及 Project seed，上述处理落实既有可用性与幂等范围；来源标题只作为参考名称，不伪造 Project 核心信息。真实供应商和最终桌面旅程仍待验；全局旧测试/边界失败登记 T-1018，常规 script.draft 相似度缺项继续归既有 T-642；没有记录 accepted-risk。实测证据见 docs/verification/t1017-rewrite-first.md。
+
+## DEC-T1019-DEFAULT-20261002
+
+用户后续明确认可v02八格和方法并要求普通选题默认集成；配置editorialPolicy保留user_approved、认可来源及selection_method。原普通对话选题与持久/每日选题同读当前账号配置，模型返回当前gridVersion、两侧真实格子及gridRelationReason；缺失配对保留研究而不假称已审读推荐。策略认可不升级问题假设、作者测试、入口核验或候选接受状态。新增运营可视化需求完整登记T-1020，依赖T-1019先验收；已有四个本地heartbeat不得报告成系统UI完成。
+
+## DEC-T1062-INTEGRATION-20261005：跨会话合同的整合依据
+
+用户2026-10-05授权汇总CreatorOS相关会话、统一提交、本地打包并逐功能验证。T-1062第三轮独立规格复审PASS[REV:fd99fea0bb12]；未授权push、公开发布或自动合并真实账号资料。各来源的任务编号与事件分叉按来源归档，当前BACKLOG和审计链保留，不把原分支完成记录代签本包。
+
+整合沿root:T-1022共享创作归group、平台事实冻结到真实account与group，空组可创作、归档只读、账号转组不搬旧内容。diagnostics:T-1020已评审发布外部锚采用user+account+platform+externalId；与root组权限共同生效，组读多匹配不得任取首行，真实唯一键和旧资料保留须在新收敛迁移实测。不依据标题/名字猜平台或合并记录。root已有快手手工登记只保留未验证目标身份，不创建核验凭证，采集/发布继续真实verified binding。公众号root规范wechatOfficial与diagnostics历史wechatOfficialAccount保留原事实/冻结输入，明确协议兼容；不把wechatVideo自动猜成公众号。
+
+原生成请求落库丢回执沿真实旧attempt/task与冻结输入恢复；未落库新提交仍要求当前revision，不重写历史digest。三源migration SQL/tag/when原文保留，新增收敛使用真实新receipt和版本物理检查，首次建组与已有转组库分开；不得重播旧membership初始INSERT或伪造旧125receipt。四谱系公共启动与原ID/行数/storageKey/历史回执/二次启动均需当场证据。目前隔离原SQL已复现root与canvas跳过建表，仍为待修真红，不是验收PASS。
+
+本条记录既有确认范围的冲突落实及来源追溯，不声称用户对代码逐项新签字。具体裁决及未验边界见docs/verification/t1062/merge-decisions.md、migration-red-evidence.md；最终安装验收由当场结果和用户实际确认决定。
+
+## DEC-T1062-ROUGH-20261005：停顿候选的精确范围与听审采用
+
+用户本轮明确要求像 ChatCut 一样支持粗剪及 Skill；既有 T-1062 有限范围已包含停顿处理。对照现有实现确认真实词句删留已存在，但相邻停顿缩短缺合同。新增 `docs/features/t1062-rough-cut-contract.md`（SHA256:460a5ff4a5718f6ac567eb06f2dc106f1e06125e7db6e69ffea17d943adc0665）经两轮独立静态合同评审，首次 CONCERNS 保留，源有理 timebase、组/父范围冻结及无音轨降级三项修订后 PASS，见 `docs/verification/t1062/rough-cut-contract-review.json`。
+
+协议 3 只补后端冻结的相邻真实 timed-token gap，不开放模型任意时间范围；沿原候选/结算/原生工程采用、完整影响确认与单 Command 撤销。模型仅提待听审候选，真实播放与用户声明后才可缩短，gap 不是静音证明；不引入停顿阈值或词表替代 Skill。原协议 2 冻结字节、digest 与回执保持，不替历史证据改签。缺时码、变速、丰富效果及无可播放音轨保留手工路径。合同 PASS 不是实现、ASR、并发、播放器或安装版 PASS。
+
+安装验证环境确认：用户2026-10-05答复“有专用测试用户，可以用于安装版验收”。后续核对该 macOS 登录用户和本次包内运行证据；不清现用用户资料、激活，不以开发服务冒充安装版，不代签用户验收。
+
+安装环境更正（同日后续答复，覆盖上项）：用户明确“没有测试用户，就是当前登录的用户、当前安装的app，直接拿去测试就行”。本次安装版采用当前 macOS 用户及现装官方客户端环境；无需专用用户。切换候选包之前完整备份数据库、媒体引用与必要授权状态，保留激活和原资料；实际安装/启动/升级验收按本次包取证。该授权不扩大为对外发布或自动合并真实资料。
+
+## DEC-T1062-MIGRATION-CLOSURE-20261005：迁移候选绑定与后续验收边界
+
+最终迁移候选 `f8ce322d63e1844e6eff8595af85813e50d7d79d` 已通过隔离候选校验并由主会话 fast-forward 整合。独立最终复核 PASS，371/371 文件哈希匹配，354 个冻结 lineage SQL 和三个 journal 无漂移；独立提交副本重新生成的新增 DDL/catalog 与提交逐字一致。最终新增 SQL bytes 的六文件 43 项回归通过，包括 PGlite/PostgreSQL 四种基线、原安装包 0101 前缀、原数据核对、备份恢复、二次启动、转组及孤立资料保持。全部结果见 `docs/verification/t1062/preflight/migration-independent-review-final.json` 与 `migration-convergence-final-candidate.json`。
+
+保留两次 FK 索引发现失败、Research Gate 实验及恢复、中间自有 WIP 提交/soft reset、暂存内容格式检查遗漏与最终重验，不把旧失败改写成历史 PASS。迁移租约已释放，T-1062 仍进行中；新增域服务组归属、粗剪协议 3、真实模型/原生操作及安装版逐项验收未通过。当前仅创建私有备份目录，未停止/替换现装客户端，未操作真实数据库。
+
+## DEC-T1062-BACKEND-REUSE-BUDGET-20261005：新增域适配的精确复用边界
+
+迁移整合后，后端、合同及既有 Worker 适配写集限定为 120 条必要/新路径、23 条条件路径及一个结果工件，不新增 SQL/journal，不修改前端页面或原生归档。已存在的 CLI 组参数和 projects 的事务锁读取继续复用；服务仍需落实空组、跨组、只读/归档、原父归属和冻结回执。粗剪只实现已独立评审的协议 3，协议 2 原冻结字节和摘要保持。准确路径和迁移 DDL 对照见 `docs/verification/t1062/backend-adaptation-scope.json`。
+
+两个装配文件的四个复杂度标记经独立逐项复核，可在既有机制内接线：Worker IPC、凭据 resolver、既有语言工具链装配及 native dispatcher。预算精确绑定当前文件 SHA，不授权新 port、凭据保管/迁移/加密、运行时安装探测、二进制下载或进程拓扑；writer 改字节后须按真实 diff 和最终 SHA 再复核。该记录不是功能、测试或安装验收 PASS。
+
+验证入口从候选自己的根目录执行声明的类型与公共链测试，使用独立临时目录、内存测试库、mock storage及限定 55422 的随机 PG 库；local storage fixture须自行使用临时根，环境变量不冒充覆盖用户自定义存储。所有失败保留，不使用旧日志代签新字节。此前归档原始输出时六个末尾空行触发格式告警，原始字节和告警均保留；Git自动hook因lefthook不在PATH未运行，后续必须显式执行实际Gate，不声称hook通过。
+
+## DEC-T1062-ROOT-CLOSURE-20261005：补全已确认组域的实际公开根依赖
+
+真实模板/CLI红测试后，调用图发现组合和转换依赖的projects创建回执及文章、图文、朋友圈根仍要求account；原moments模型结算还使用eq(accountId,NULL)。同一个T-1062范围补全这些实际依赖，不新建创作域/账本/SQL或改变归属方向。先暂停writer，保存20个WIP的base/current哈希，release lease，再按独立19路径审查补18条精确写集并重编译；不在活跃lease上扩大配置。独立报告首轮1条手抄摘要遗漏已保留并经19/19 git-show重采纠正。
+
+新output group只从锁定父project派生；新共享创建account=NULL，旧账号行/唯一键/原digest与费用freeze保持。同组平台筛选不改owner，不同组隔离，旧同key多账号不能隐式首行。归档合法历史读与不可变候选投影不等同新写授权。此次只确认必要依赖闭包，产品实现/23组测试/真实ASR/安装版仍待验。第二份独立真实ASR音频也保留正文成功但末尾时码越界的负例，不裁剪、补写或认作词句成功。
+
+
+## DEC-T1062-TRANSCRIBE-RECEIPT-20261005：回执键序不构成正文变化
+
+沿用户2026-10-05授权的汇总、实现及逐功能验证范围，真实durable转写服务11项回归发生7失败/4通过。数据库JSONB回读与严格协议解析仅对象键顺序不同，却被原JSON.stringify判为不同，合法识别原文无法保存。独立只读审查后，scope173窄增execution-transcribe-workflow.service.ts一条成为174；原27验证组合和11项断言不缩减。
+
+只在既有回执优先之后、实际工件保存之前校验原strict result schema并做结构值比较。原正文/原因/布尔值/额外字段拒绝、原账本、父归属、租约及取消均保持；不新增API/模型选择/DDL/自动采纳。真实红日志、源码及WIP摘要绑定见docs/verification/t1062/preflight/transcribe-workflow-structural-receipt-scope-review.json。该修复落实既有协议，不改变产品方向；用户安装验收和完整Gate仍待发生，不补造历史证据。
+
+
+## DEC-T1062-RECONSTRUCT-SETTLEMENT-20261005：原调用结算不能被归档误拒
+
+沿用户授权的整合、修复、提交、打包和逐功能验证范围，真实原任务完成闭包在模型账本已结算后被账号组归档门拒绝；实际AiService及structured准备还支持group任务accountNULL，而重建父锁仍要求平台账号。独立只读调用链及原源码摘要复核后，174窄增4个精确源成为178，不改变共享资料与平台事实归属，不新增API/SQL/WorkerSDK/账本/通用权限helper。
+
+只对原ref、原冻结任务/业务/Skill身份和版本、真实model/N账本与已知usage、原group及imported父项目建立当前事务内的命名结算能力。普通用户create/append、foreign/搬组/取消/租约失效/未决调用仍拒绝；原成功回执重放不创建新产物或重计费用。当前红2是真可用性失败，但直接ledger.reserve并非完整generation协议；完整generation公共链与PG锁序须当场验，不回填历史PASS。精确独立报告及原失败见docs/verification/t1062/preflight/reconstruct-settlement-root-scope-review.json。
+
+102条WIP已逐字节保护，原lease释放后重编译再恢复。此修订落实既有任务收口和组归属合同，不授权新的模型请求、外部发布或自动归组真实资料。当前客户端与用户数据未替换；本次scope准入不代表全27组合或安装验收通过。
+
+## DEC-T1062-TEST-HARNESS-20261005：有限测试执行预算与原断言保留
+
+真实原27第7次执行有六项PGlite冷迁移/服务组合达到默认5秒；独立范围评审同意统一backend Vitest case预算30秒，精确新增config为179条。技术补充见docs/features/t1062-backend-test-harness.md，原产品SPEC和三轮PASS receipt不变，不创建Owner=user的新review-cycle capability。此为已授权验收中的实现选择，不声称用户逐项批准该数值或功能已通过。原27 argv/顺序/命令20分钟、PG观察6秒、产品/模型deadline、所有断言和失败证据保留，无retry或skip新增。主控制面metadata提交和新隔离lease之后才允许config唯一修改，必须重新完整运行原27。用户最后确认当前登录用户与现装App用于验收，备份和当前数据保留仍为安装前置。
+
+
+## DEC-T1062-PRODUCTION-PARENT-20261006：首载工程沿真实锁定父组创建
+
+用户已授权本地候选整合、修复、提交、打包与逐功能验收。本次公开浏览器发现 production 首载遗漏父 groupId；增加两个精确后端路径落实既有共享组域及父归属合同，不改变产品方向、服务协议、SQL、归属规则或发布范围。独立候选审查后，先保存前端 WIP 全部字节，释放旧 lease，再提交控制面范围补充、同步隔离工作树并重新 claim；禁止在活跃 lease 上漂移 modules.config。
+
+修复新 production 只承接已锁定真实父项目 groupId；旧 nullable 及错误行拒绝保留。候选有真实公共接口红/绿 7 项回归，完整 18 检查与安装版仍待发生。旧单账号浏览器夹具更新为公开真实组归属，不修改跨组、保存、刷新或媒体解码断言；旧孤立资料使用既有显式迁移，不隐式归组。此条记录授权范围内的实现依赖调整，不声称用户对代码另签确认。
+
+素材预览同范围补充：追加唯一 `frontend/src/features/creative-canvas/canvas-asset-picker.tsx`，将已有真实 `currentFileId` 交给 exact 文件预览，不新增 API/owner 或媒体副本。真实组件 RED/GREEN 已保留，原图片 naturalWidth/视频 readyState 及跨组断言继续通过实际浏览器验证；当前无 active lease，补充独评后再提交该控制面增量与同步 writer，避免模块边界漂移。
+
+## DEC-T1062-FIRST-ROOT-READY-20261006：初次根确认与合法任务可用性
+
+用户已授权整合、修复与逐功能验收。真实trace显示组初始化归一取消正在创建的文章；本次7条精确前端路径补全既有根选择的初始化闭包，包含统一context、layout外modal与Copilot、真正可取消的公共contract请求、真实恢复和测试。初次根未确定时避免开放写入；已有合法原根遇列表错误/超时不被新门反杀，后续重试仅菜单回读不自动换根，同组dirty/native不卸载，显式跨组原确认/abort保持。原账号/组权限及旧nullable路径不变，不新增session/归属算法/业务协议或自动重发。
+
+公众号夹具读取公开真实唯一active成员组并保两个原用例全部断言；新增首载真实延迟回归，原18命令与6native旅程保留。原native标题漏dirty同步只重建现有owned源及输出，不手补生成JS。静态独评通过后先保护全部WIP、释放租约、提交控制增量、同步writer，再干净workspace claim后逐字节恢复并应用已评审候选。先前仅Wechat一条TMP控制增量未应用、保留历史，现以本7条完整闭包替代。该记录落实授权范围内的可用性，不声称用户另签了代码或功能验收通过。
+
+
+## DEC-T1062-PUBLIC-PORT-WIRING-20261006：实际组内保存与冻结传输兼容
+
+沿用户已授权的整合、修复与逐功能验收，Attempt10 的真实 native 媒体初存公开响应揭示同事务 materialLinks 组合根遗漏项目 owner；另既有 http-transport 原17测试揭示用户级管理分支及空 frozenScope 兼容缺口。本次仅准入 `frontend/src/server/persistence-client.ts` 和 `frontend/src/lib/http-transport.ts` 两条生产读者的命名装配修复，并仅准入 `frontend/src/components/overlays/overlay-routing.test.tsx` 一条既有受保护测试的真实unit port proxy兼容。原LED-047实际162项中161通过、1失败，候选保全部原主体/断言和真实factory/signal/epoch/abort，其它LED0477文件不改，不新建产品或权限算法、不放宽组域、平台账号事实、精确文件、取消、epoch、lease或SQL。
+
+项目 owner 只由同一 transaction 的公开 projects service 返回真实父行，素材仍由真实 assets 与 materialLinks 服务校验；HTTP 只恢复既有 user-scope/forceNewDouyin 与显式冻结空 scope，不从当前根补身份。生产各候选及 SPEC/DEC/module 由其他 Agent 独审；保全 WIP后释放租约、提交三路径控制增量、FF同步并干净 claim 后才允许应用。控制3路径使 module586/owned580+conditional1=effective581，snapshot795保持；protected214、explicitreadonly8仅对应上述三保护移出及HTTP唯一readonly移出，HTTP原测试仍只读。
+
+保留实际两ASR首次save404、原17两红和所有原18失败。TMP公开调用集成红/绿仅证明真实service/transport及命名事务装配，不称浏览器、词级ASR、安装或听感通过。本记录落实已确认服务归属和可用性，不声称用户对这两行代码另签确认；完整原18及用户安装验收仍待发生。
+
+
+## DEC-T1062-AAC-TIMING-20261006：原 AAC 可验证时间映射与完整手工降级
+
+沿用户已经授权的ChatCut式Skill粗剪、整合修复和逐功能验收，Attempt13真实全文成功而词级失败。Research定位前置PCM-only/AAC→MP3 unverified，两个有界证据与只读校验闭合；新增独立内部v2标准零起点AAC物理receipt与显式strict union，旧v1及真实父/文件/组、请求/CAS/取消/账本保留。支持族由实际每文件packet/edit/decoder/resampler/WAV与实际工具链身份证明，参数化D/S/N，完整N输出不裁切、不pin端点；词边界精确换算且音频与视频双域拒绝，任一失败保全文，不做剪辑语义选择。无新公开API、IA、归属、SQL、模型配置或费用选择。
+
+偏移Original22旅程按原安全降级合同仍请求word，取得真实text/无tokens/手工提示，零粗剪模型候选或自动采用；显式保存全文与真实手工修改，保存刷新核完整工程、revision/mediaRefs/source/exact摘要。普通AAC原word/真实gap/原声20采用旅程仍严格，Original18 argv与预算不变。精确6路径、module592/owned586+conditional1=587/source801等边界见SPEC；完整实现独评/TDD/公开链/安装听审待发生，不把Research恢复或静态评审称功能PASS。本条落实既有用户授权，后续一次性评审周期另需真实用户流程授权，不虚签Owner=user。
+
+
+## DEC-106201 — 用户批准 T-1062 一次新规格复审（2026-10-06）
+
+```text
+ID: DEC-106201
+Authorization-Kind: process-review-cycle
+Task-ID: T-1062
+Previous-Spec-SHA256: 00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: T1062-PARENT-MEDIA-PUBLIC-COMPAT, T1062-FIRST-ROOT-READY, T1062-PUBLIC-PORT-FREEZE, T1062-AAC-INTERNAL-V2, T1062-OFFSET-MANUAL-JOURNEY
+Max-Cycles: 1
+Nonce: 0d2280dc-a611-4158-91b4-e9c3548119ee
+Owner: user
+Status: active
+Pattern-Ref: product-to-code-orchestrator/templates/DECISION_LOG_TEMPLATE.md
+```
+
+用户在本会话对“是否同意我开启这次复审并继续执行？”实际回复“同意”。本授权仅绑定上述五项已有产品范围内的补充与一次复审，继续修复、提交、本地打包及安装后逐项验证；不替代实际测试，不授权 Windows 分支推送或公开发布。授权原文见 `docs/verification/t1062/review-cycle-user-authorization.json`。原三轮及已销账问题保留。
+
+
+## DEC-T1062-AAC-DUAL-DOMAIN-20261006：完整解码与可呈现音轨分别校验
+
+本轮沿用户实际“同意”的 DEC-106201 复审及已授权六条实现范围继续，不新增授权用途或复审周期。安装包既有 b6.0 实测保留末帧完整1024样本而不返回 discard sideData，R5 按严格证据正常降为全文。保留该真实失败，新增严格独立 v2 证据族，记录真实缺失字段；可呈现音轨 S、完整已解码 D_dec 与实际全部输出 N 分别闭合，不把呈现域外407样本称静音或工具已报告padding。完整音频不裁切，每词按精确整数换算同时守真实 S 与视频边界；旧 v1/R5 schema 和六路径、原声20、正常word、偏移全文手工与原18不减。实际 N 尚待实现实测，不追溯签通过。
+
+完整 SPEC 候选 0862053580d275458d434265e950d097332a894509af3c290d97fb6cdc5fed38、技术提案 8a1a8bc0657f93fc65116639ca30e19f25a672ffdade269ba897647ec6abe2ac 已由现有团队另一 Agent 独立静态复审，真实报告 a29b69619408937916896393892a2f1a0e1c4476dd882fe42c3ff2fcc5649da2，cycle2 round2 packet 保留。旧 TMP 五份权威缺失明确保留，CURRENT 四源真实复建、web lock 和 ASR 只准新当场证据及独评后重绑，不能重签历史或缩减验收。模块592不变；实现、完整浏览器、统一产品提交、安装及用户听审仍待验。
+
+
+## DEC-T1062-AAC-OBSERVED-COUNT-20261006：按完整实际输出验证整数计数
+
+沿 DEC-106201 用户实际“同意”的同一次 cycle2，round3 仅修正同六源内计数验证，不新启周期或扩用途。实际 b6 完整无补裁输出 N238933、D_dec716800、S716393，原唯一 ceil238934 的两项失败及原日志保留。完整原点、帧连续、实际flush、WAV/PCM与工具摘要闭合后，以精确 BigInt floor..ceil 最多两个相邻整数核对实际 N；不生成、不补、不裁样本。词级精确3n与整数时基仍同时守 S 和视频范围，未知或越域整份全文降级，旧v1/R5不变。
+
+完整 SPEC cfbaf9e80e6c8b005899c9be2f06d080e66cc119a14be381b721850a4fd36a1c 已由另一 Agent 独立复核，报告8019a65cd05d18c7375dc392c561c13deb391ae55248892f8592effee006338e，合法空 finding recheck packet168c0b4a93a7ec89f9464484ff7a1fbb10ad8d9a9127bcd32d6b53b34f975a2e。592/587/801/214/8/31/414/12、Original18、22cases与原声20均不减；目前只允许实现和必须实际验证，未签真实模型、浏览器、出包、安装与听审。
+
+
+## DEC-T1062-INSTALLED-HISTORY-IMPLEMENTATION-20261006：落实已有旧库兼容要求
+
+Owner=agent 的机械实现选择，非用户typed capability，也不重置规格复审轮次。原批准SPEC cfbaf9不变：当前用户旧库保留与真实历史核验已在范围内。安装失败发现4个已执行旧身份，精确SQL和实际clone结构共同证明来源；新增archive-only，不引入历史业务代码。采用原三canonical加实际账本supplemental subset的参考catalog，原0128与fresh凭证行为不变，unknown/前缀/结构拒绝保持。完整105项单源不存在；两份非祖先来源如实标注为实际账本对应SQL。独立实现/scope评审不作为第四规格轮次，旧评审/研究事件不删除。公共工厂RED/GREEN及21回归实际发生，安装全功能仍待验。
+
+
+## DEC-T1062-INSTALLED-CONTRACT-BOOTSTRAP-20261006：消除原合同初始化循环
+
+Owner=agent 的机械实现选择，非用户typed capability或新规格复审。原已批准SPEC cfbaf9的真实安装和逐功能可用性覆盖本次修复。当前真实包账号/组成功但页面报creativeCanvasOperations初始化TDZ；独立Agent确认原源码直接操作入口亦实际exit1，不依赖混淆。原注册表与定义反向边移为叶子定义，原定义字节、公共重导出、操作schema/ID/注册顺序（含原重复展开）保留；40操作仅改定义import。43精确产品路径独立substep，不改原integration592、迁移283、原18或历史receipt，不放宽打包/安全/凭据。独评前不写产品；新回归、全合同与新包真实入口仍须现场验证。
+
+
+同一DEC-T1062-INSTALLED-CONTRACT-BOOTSTRAP的测试发现校正：Node ESM新回归改为mjs后，旧Vitest仅匹配.ts，实际61/325不覆盖新42。独立复核准入既有config只追加精确mjs路径；当前44产品/45step，所有原测试/合同/范围保持，须重新实际62/367和3/49。Owner仍agent的机械测试装配，无新用户capability/规格周期。
+
+
+## DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006：已有整合字节的机械预算重绑
+
+Owner=agent 的机械控制记录，非用户 typed capability，不开启规格新周期。用户既有整合、修复、提交、本地打包及当前 App 逐功能验证授权、原 SPEC cfbaf9、原 integration592/801 和原18均不变。正常 claim 的11项拒绝已保留；7个当前文件全与既有67b4a27f整合提交相同，后续本地打包/历史兼容/合同 bootstrap 并未改变它们，复杂度账本旧SHA未同步。
+
+独立只读报告 `/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json`，SHA256 `cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f`。本次只追加7文件的11既有类别当前SHA预算；原entries、历史baseline、SPEC、任务、scope、guard、markers和产品字节均原样保留。不扩大Rust/Bun工具链、凭据存储、二进制或进程权限；persistence-client仅为原PUBLIC-PORT-WIRING准入的同transaction公开父项目归属接线。
+
+本条不把此前claim失败改签成功，不签Owner=user或新能力许可。ROOT独占控制面正常应用候选、前置校验及提交后才能正常claim原integration；仅治理记录变更无需重包，实际228安装包与后续控制HEAD身份区分。原18历史成功、missing/FAIL和当前安装验收仍按真实证据，不代签全局Gate、安装功能、模型、听审或用户验收。
+
+
+## DEC-T1062-INSTALLED-CLI-RECEIPT-20261006：保留同一失败终态的公开回执
+
+Owner=agent 的既有合同落实候选。当前为静态设计与精确准入候选，未应用、未 claim、未实现、未跑新测试；根会话复核并按正常控制提交和租约准入后才允许改产品。原批准 SPEC cfbaf9 不变，不消费 DEC-106201 或开启新规格周期。原 CLI FR-CLI-05、FR-CLI-06 与 API-CLI-002 已要求真实失败、原 requestId、失败不自动重试以及非零失败退出；T1062 的真实安装与逐功能验收覆盖本次装配修复。
+
+真实安装记录显示：第一次业务拒绝 HTTP409，随后素材关联已完成，再查同一 key/input 的失败 invocation 却被 gateway 映为 HTTP200，CLI 丢失已有 receipt 后输出 ok:true/data:null，source 回读仍404。服务端原状态机不重执是正确的，保留全部旧失败原始证据。只准入三个生产文件和三个既有测试文件，共六条精确路径；gateway 将 failed receipt 映为非2xx，DispatchClient 与 CLI 只保留已有公开 receipt 的原 status、requestId、taskId/targetRefs 与既有布尔状态及 meta.requestId。失败不重执，running、未知结果、成功缓存和结果过期语义不改；不投影数据库 errorCode，不新增 DTO、SQL、operation、身份或权限机制。
+
+原 integration592、installed-compatibility283、installed-contract-bootstrap45 路径与原验证命令逐项保持。六路径使用独立 installed-cli-receipt step，原 integration801 快照中两个 MCP 文件的旧记录保留为历史，不能签成新字节通过。预览/渲染问题不进入本候选。要求先取得真实公共调用链 RED，再执行最小修复与 GREEN、类型、旧安全/幂等回归和重新打包安装实测；本条不预签任何实际测试、安装或用户功能验收。
+
+
+## DEC-T1062-INSTALLED-OVERLAY-CAPTURE-20261006：落实纯组剪辑叠层证明
+
+Owner=agent 的既有行为实现选择；原SPEC cfbaf9、用户空组共享创作/本地安装验收授权与原592/283/45、801及Original18不变，不新开规格周期或用户typed capability。实际228包纯组手工save/get3成功，preview/render真实428未创建render任务；捕获仍requireAccountId是直接原因。新增独立3路径step（1生产、1既有测试、1说明），复用workspaceFilter与真实getEditor父授权，捕获/明细group取真实production并精确匹配，即便空明细亦不豁免。legacy仅保原无group+真实账号null/初始组边界，显式组没有null/账号兜底。可空版本metadata缺已验证值时保NULL，不能声称withWorkspaceWrite核验ctx epoch或据此授权。原v1摘要、exact文件、lineage、保存可选失败安全行为均保留。独立静态审查与实际RED/GREEN、公共调用、新包仍需分别记录；不改变旧数据库或平台账号操作。
+
+
+## DEC-T1062-INSTALLED-RENDER-OWNER-20261006：按真实任务冻结归属执行合法渲染
+
+用户既有整合、修复、提交、本地打包与当前App逐项验收授权继续有效。原SPEC cfbaf9字节不改。独立补充 `docs/features/t1062-installed-render-skill-owner.md` 的候选5648039c/独评262b7ccb静态GO；仅server-only sibling与确定性exec落实既有空组共享创作，没有新公开操作/DTO/角色/SQL、资料转归或新用户capability。实现与新包尚未通过。
+
+同一次真实requireTask先授权后返回row owner/runtime；旧getTaskRuntimeData扁平值保持。Skill核真实owner/own stamp有效shape；执行、claim、物化和失败结算共用原归属，旧collection ctx/闭包成对保持。legacy缺stamp仅原服务范围兼容读取，初始组membershipVersion NULL原admission仍拒绝，普通/显式group不补版本或别名。公共跨filter回放只读原task，无重新dispatch入口保待验，不新入口/不删fingerprint，不阻断本次空组render修复。
+
+独立step exact4、freshpacket/正常隔离writer claim、公共组合根实际RED后修复GREEN、原回归及独立实现审查后正常提交整合。root测试独立tmp workspaces/隔离DB，不触用户默认工作目录；原18/801/全局红/失败task111保留。新增ai.service现有daemon注释精确预算3d9a5e，独评f445d4e不授权未来机制；实现后仅ROOT据真实独评追加新hash。重新包安装成片按fresh真实计划/版本核验，历史7.5不作新成片预期。
+
+## DEC-T1068-LOOPBACK-PROXY — 本地启动探测直连（2026-10-06）
+
+用户要求修复已安装包启动超时并尽快交付可测试客户端。同一实际服务原reqwest builder返回代理502，no_proxy返回正常HTML；完成哨兵已在真实日志出现。仅在固定127.0.0.1启动探测client禁用代理，保留全部启动完成、页面、verdict与退出检查和超时常量。其他网络遵循原代理设置。正常评审和夹具回归后再冻结打包、备份及安装。原生窗口此前失败，不由公开CLI/HTTP成功覆盖。
+
+### DEC-T1068-LOOPBACK-PROXY 收尾路由澄清
+
+独立host分类报告efe4acc8确认本任务无UI页面设计或journey contract；初始验收待验误选UI路径，纠正单行非UI验收—，仍以两次真实HTTP原生窗口完成事件及用户已显示正常首页为收尾证据。ROOT是唯一实际writer，正式工具release原并行lease再普通claim/done记录实际集成；不更改门卫或全局mode，不伪造历史准入。固定打包入口实际自动安装，之前已备份；私有planned installer未执行，事实另列。完整T1062和原T734/全局红仍保留。
+
+
+## DEC-T1069-INSTALLED-MEDIA-AND-BINDING（2026-10-06）
+
+用户当前安装版明确要求视频导入慢/切Tab丢失修复、同类素材选择器重设计（追加模板本人照片截图）、当前组增加小红书等已装配平台账号。Owner=agent的机械实现选择落实该用户范围：保留原丰富紫色布局，共用图库Dialog/精确文件/全库字面搜索；项目内唯一活剪辑会话与人工CAS保存、隐藏暂停、原未知回执不重签；既有持久accounts.bind与原profile/collection事务接入真实local stage，目标组冻结，不自动转组，不造平台能力。对应用户请求即服务契约增量与组归属修复授权，不消费或制造新的Owner=user typed capability/规格周期。
+
+SPEC 1e26068675610acbb86b212b2b4fd5c6ce7da3008d2821cdfb5e73e9f67ad41e 经独立同家族子代理只读完整评审，真实宪法86bc2c8a，formal initial PASS[REV:b3c513a0c65c]。此前record使用不存在的PRODUCT_SPEC.md失败，start仍待审拒绝，无产品开工；改用真实docs/产品定位.md并补核后才正常record/start。112路径精确闭包，无数据库迁移/新任务权/新媒体服务；主会话单写共享产品，辅助不推进控制面。现App保持运行；新包先SKIP_INSTALL=1，真实视觉/公共旅程/视频分段性能/扫码和安装验收均尚未完成，不把静态审核当PASS。
+
+T-1069 开工机械核对：正常 claim 命中四个冻结文件的六类既有机制标记；独立逐字节核对与 5f6ab1bb 基点一致，只追加当前精确 SHA 的任务预算。旧条目保留，未修改门卫，未来生成物或源码哈希变化仍须独立最终 diff 复核；证据 docs/verification/t1069/mechanical-budget-review.json。
+
+DEC-T1069 公共搜索注册补充：实际类型检查发现workspace-operation-scope穷尽表缺新ID，已独立复核SPEC补充236691550961；新增操作与assets.list同属group，保留原CLI归属校验和registry穷尽断言。无需新增用户方向确认。
+
+
+## DEC-106901：切换页面保持剪辑宿主的两文件补充
+
+用户在明确问题“是否同意新增一个评审周期，扩充 AppShell 及其回归测试两个文件”的紧邻回复为“继续”。本次记录仅落实该具体问答：一周期、两个精确路径，固定页面容器并通过真实视频切 Tab/保存/刷新验证；不授予未来通用继续权限，不改变产品方向、数据归属或原全部验收范围。
+
+```text
+ID: DEC-106901
+Authorization-Kind: process-review-cycle
+Task-ID: T-1069
+Previous-Spec-SHA256: 75f01c51f9abb387f876b7cb7b785993e9d9f6dca6c99010443359bd766f6107
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: T1069-STABLE-SHELL-HOST
+Max-Cycles: 1
+Nonce: 376c98a7-c028-4c25-9488-0eeaf6abc17c
+Owner: user
+Status: active
+```
+
+
+## DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW（2026-10-07）
+
+用户实际验收明确授权修复Codex并把脚本→文章/图文/视频→右侧编导精调作为主流程，移除快剪/转换旁路。保留原丰富紫色方向、已有资料与合法保存导出；不授权发布、push或强制关闭未保存客户端。当前已确证外部聊天纯组读取错误和工具ID错配，精确三路径先独评、隔离RED/GREEN再实现；尚未补全的编导/三产物契约无写准入。本条记录用户产品请求与agent机械选择，不制造Owner=user的通用流程许可；原失败任务与历史验收证据保持，不代签真实Codex/新工作流完成。
+
+## DEC-T1070-EXCLUDE-AUTO-VIDEO（2026-10-07）
+
+用户当场回复：“视频初稿这个初不了 这个不做 也不能自动生成 做个按钮吧 除视频外的一键生成 这个是没问题的 然后再去微调”。当前完整范围因此改为确认脚本后按钮一键生成文章和图文；视频保留真实素材导入、原生时间线手动调整与右侧编导自然语言精剪。取消自动视频初稿、TTS、新视频生成任务及其配置/渲染扩展；不是拆分已确认需求。既有 Codex 纯组执行修复不变。该决策记录实际产品授权，不是 review-cycle/process capability，不消费或重置评审预算。
+
+## DEC-T1070-STRUCTURED-SCRIPT-CONSUMER（2026-10-07）
+
+原用户要求确认脚本后一键生成文章和图文，当前实际默认分镜视图会卸载唯一严格确认端口。独立范围复核准入原组件和测试两路径，技术补充见docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md，独评SHA49710fd73cf3448abf50252b65927a0f85a62153b525ddccb6307593feccf173。这是原授权的必要消费者正确性闭包，无新公共合同/表/owner/权限/任务/能力；原93合同及三轮PASS不修改、不reset、不新造Owner=user capability。实现沿同一token/save/current/read/UNKNOWN/generation约束，未知不盲目再append。未代签默认视图模型或安装验收。
+
+
+## DEC-T1070-NOTE-PREVIEW-CONSUMER（2026-10-07）
+
+用户原要求文章/图文候选可预览再采纳。独立实际视觉审读发现全文纵向与整卡横向被裁切；原通用挂载inline hidden覆盖NoteRelay原auto。原生排版挂载及测试两路径已独立范围复核准入，见docs/features/t1070-director-script-workflow/NOTE_PREVIEW_INTEGRATION.md，独评SHA534decbf7326bdcf3b49d6084a9bc01cbfada6695641c246fcd67fa7fbe37d0e。只恢复已存在的滚动策略；既有候选卡内有界宽屏只读预览沿原实例/分页/导出/CAS/UNKNOWN，不增加公共合同/表/owner/权限/任务/runtime/IPC，不修改原93合同和三轮PASS、不另造process capability或重开轮次。实现步骤97路径，模块保留原外部引擎路径。实际可读性与200%仍须实测，单测ready不能代签。
+
+
+## DEC-T1070-CODEX-TOOL-HISTORY（2026-10-07）
+
+原连续创作请求ai-msg-143a8c85-166在既有成功工具回执后被text-only prompt误拒，真实SDK转换和原waiting_user/CODEX_INPUT_MODALITY_UNSUPPORTED已独立核实。两原prompt消费者路径按必要闭包准入，补充CODEX_TOOL_HISTORY_INTEGRATION.md及独评5e415a9e552dba4c123bb657e6abaa41e20fed3d7774379cb8ca1d8ae8e8d781；原实现97变99，无新API/工具授权/runtime/多模态/评审周期。保历史角色/顺序/完整数据，不能当新授权；直接或结果中的多媒体仍unsupported。原任务与deadline保留，不续期、不靠清会话洗绿。
+
+## DEC-T1070-NATIVE-PIXEL-VERSION
+
+用户已要求真实自然语言剪辑并逐功能验证；原warm首帧仍0，已通过一次有界原事件证明decoded1但identity-only GPU缓存仍0。采用真实decoded timestamp的内部texture版本透传，保同帧/静态缓存并覆盖blur，不改公共合同、owner、runtime、依赖或CAS。七archive精确成员独评78c934b5...准入（PIXEL_VERSION_INTEGRATION.md）。机制选择已闭合，真实修复/采纳/导出与安装不代签。原研究一次实验、两具体trace验收0；按用户AGENTS只用taskctl恢复原任务（受支持resume子命令），不让研究工具另写看板。
+
+
+## DEC-AI-1074（2026-10-08）：全系统编导工具与候选采纳闭环
+
+**Owner**：user。**Status**：需求及执行授权Confirmed；精确SPEC真实独立初审CONCERNS后复核PASS[REV:19441710ae43]，同模型弱门，功能待验。
+
+**来源**：用户要求全面测试优化AI助手的各功能操作，补缺口，参考Coze等优秀开源工具与提示词实践，明确必须支持画布创建、生图、自然语言剪辑，并继续执行。沿用用户此前当前安装App中性验收、本地打包、原版丰富紫色UI和oil-ui-pro、只一键生成文章图文而不自动视频初稿的授权。
+
+**落实**：按T1074 SPEC在既有contract/原owner/execution账本上增加短发现、有限读取及单个严格操作候选；用户采纳只给来源摘要，原owner同事务写入并用原aiTaskResults唯一call回执读回。Canvas新建一次保存完整文档；生图沿原node预约/精确文件证明与冻结有限期限；Codex仅审计开放pure tools，提示词按真实目录装配。失败保真实outcome，避免空库/绿色成功假象。
+
+**边界**：不任意RPC、不AI直写正式对象、不新增任务系统或候选表；删除、迁移、真发布、密钥仍由原功能具体授权；不push/tag/发布。开源参考是官方公开Codex/Coze Studio/Claude材料，Coze X/Code对应未确认，不声称隐藏提示词。独评原REV-001自动化已有任务语义已补正并复核关闭；未据调研或源码签安装版PASS。
+
+
+### DEC-AI-1074-COMPATIBLE-OUTCOME（2026-10-08）
+
+原用户要求真实全功能回执与持续使用，具体检查确认Pi流/完成和ACP终态必须同源且旧严格作品卡仍有效。必要消费者闭包增加原chat-worker可选展示版本、execution原投影及ACP原终态与两原公共测试五路径；无新业务权限、owner、任务、表或引擎。新任务冻toolOutcomeProjectionVersion=1，旧缺省原字节；不删除旧deepEqual，不回写已存事件。需实际独评复核新增精确路径后实施；现有初审REV-001保持关闭。
+
+
+## DEC-106902：T-1074 精确9文件的一次补充独立复核
+
+用户本轮明确回复：“同意这9个文件补一次独立复核”。沿用当前已审SPEC，补齐4项必要接入/保护措施；不新增用户功能、AI权限、发布授权或整个目录写集。本次授权只消费一次，原3轮及历史证据保留。精确范围见SPEC第8.1节。
+
+```text
+ID: DEC-106902
+Authorization-Kind: process-review-cycle
+Task-ID: T-1074
+Previous-Spec-SHA256: a0ab7c395b59112819340eadf09a7b4aca142fed6733fb40621ff4bbd0f01b4b
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: T1074-CONSUMER-SCOPE,T1074-EDITOR-ADOPTION,T1074-CANDIDATE-LOCK,T1074-RADAR-PURE-READ
+Max-Cycles: 1
+Nonce: 0173eddf-4313-46d0-bda5-c0819d7ba8d1
+Owner: user
+Status: active
+```
+
+## DEC-AI-1075（2026-10-08）：安装全功能验收发现的两项原观察缺口
+
+- 用户依据：用户要求“全面测试和优化AI助手…有gap及时支持”及本轮“全功能可用性稳定性验证”；沿既有当前用户/安装版中性验收授权执行。
+- 精确范围：[T-1075 SPEC](../docs/features/t1075-installed-ai-observation-gaps.md)，独立前置PASS[REV:73a6052db08f]，仅8路径。原401生图任务保持pending与原task/attempt/link，不重新付费生成；原391标签版本猜测失败保留。
+- 选择：system.read的assets.get补原owner真实tagTarget并前后DTO核一致；原生成证明查询纠正NULL账号并保留组/user/account及所有来源/文件验证。原public assets.get合同、工具schema/版本、凭据、原生执行及调度不改。
+- 执行：主root串行；与T1074同文件的目录/方法变更分开记录，不增加独立writer。原persistence-client既有credential_store/language_toolchain/native_executable只复用，不扩凭据/宿主机制，按当前源SHA记录预算并在实现后独评重绑。
+- 验收：真实RED/GREEN、公有owner/selector与标签回读，独立实施复核；新包前原备份/签名/镜像守卫。SOURCE通过不代签安装或全功能，全局旧红如实保留。
+
+DEC-AI-1075 实施证据补充（2026-10-08）：独立源码PASS报告f4d108eb3cf9b9a64442035ac67406cac8965c764719b8a5b893f43801090b4b，8精确路径实际SHA复核；原私有PG全链87通过无跳过。仅原标签owner prepare注入，persistence当前SHA fd77fece7398b7c6318c7b8275c57c3cc6966c802dbd86440f25a158ff628c6d，原复杂度项重绑且历史条目保留。当前安装仍74883948，原401恢复/标签真实Pi/原生与两引擎未签，任务不完成。
+
+## DEC-AI-1077 — 验收暴露的项目返回值修复
+
+用户2026-10-08继续全功能验收，原401保留404的公开失败与原项目可读均已实际记录。独立前置PASS[REV:a36209c19783]准入T1077三个精确产品/测试路径，只将同事务原Projects.getProject返回给MaterialLinks；原公共签名、权限、数据归属、UI和生成预算保持。原文件凭据/Rust/进程marker是既有复杂度，沿原结构化账本绑定当前基点，不是新增这些能力。原401、原link、文件字节与失败记录保留，不重发生图，不push发布，不代签全功能。
+
+DEC-AI-1077 实施补记：实际独立限定复核PASS（报告4404ad4e...），三个真实返回值与同事务归属不变；group共享任务不叠账号筛选、legacy仍叠account，前置泛称account拒绝已纠正。实际公共6/后端隔离PG18与最终类型通过；原全局红和安装/原401/全功能待验边界保留。
+# DEC-T1080 · 2026-10-08 · 统一本地主分支和清理工作树
+
+用户明确要求“把不用的worktree全部清理掉，代码都合并到主分支，然后再做构建，构建的时候不需要备份”。本轮先保存项目源码的Git来源和真实改动，再整合本地main及闲置目录；该授权覆盖原T1062封闭来源限制，不含推送/tag/公开发布。构建不创建当前应用/数据备份，不自动安装；既有备份和真实素材仍保留。活跃会话占用目录保留，不用删除目录中止会话；来源与冲突逐项记录，不能把旧候选或缺失验收洗成完成。
+
+<!-- T1080：下列为本地main独有原记录，来源main12288cef；重复教训编号见整合报告 -->
+## DEC-AI-037 (2026-09-21) — 模型生成超时与不完整输出必须由原 Agent loop 恢复
+
+**来源**：用户提供内容雷达与 AI 助手真机截图并明确确认：除当前账号没有可用模型配置时直接提示并引导配置外，模型超时、输出不完整和临时服务故障不得成为用户手动重试的阻断终态，应在 Agent loop 内解决。
+
+**决定**：
+
+1. 用户提交一次生成后，timeout、network、明确可重试 HTTP 拒绝和结构化输出不完整统一沿原任务、原幂等标识、调用账本与检查点恢复；页面只展示自动恢复进度。
+2. 单次调用保留安全超时，但持续生成任务不设会把任务直接变成 `failed` 的总截止时间。退避必须持久化且单飞，页面关闭或应用重启后继续原任务。
+3. 当前账号不存在任何可用文本模型时进入 `waiting_user`，保留输入并直达模型设置；配置恢复后继续原任务。
+4. 用户取消、输入损坏、权限/归属错误及有副作用外部操作的未知结果继续遵守既有安全边界，不伪造成功、不盲目重复提交。
+5. 内容雷达和 AI 助手是本轮真机验收入口；同一防复发门覆盖后续模型生成入口。
+
+**状态**：confirmed（用户 2026-09-21 明确要求立即落实）。
+
+```text
+ID: DEC-AI-727
+Date: 2026-08-08
+Stage: T-727 BUILD
+Type: contract-and-execution-shape
+Decision: `script.draft` 保留现有异步任务与候选确认链，但增加 `verbatim` 模式。模型只从本轮
+          受信用户消息/文本附件清单选择 `sourceRef` 与可选精确锚点；服务端恢复原字符、计算
+          hash 并写入 task input，runner 直接产 artifact_version 候选，不装配创作上下文、
+          不调用写稿模型。普通 generate 模式零行为变化。
+Rationale: PAT-004 CF-001/CF-004 命中：工具→组合根→任务 runner 是跨包、需端到端可追溯的协议，
+           因此先在工具 schema 和任务输入形状中明确模式/引用/hash，不能仅加提示词。PAT-003
+           AF-003 命中：保真导入也需要刷新可恢复、执行审计和统一确认门，继续复用持久异步任务，
+           不另造同步写稿旁路。MOD-002 已核对但不借入保真路径：它适合普通非工具 LLM 调用，
+           本需求恰恰要在 `verbatim` 模式彻底绕开 LLM；既有 generate 路径继续复用现有 provider。
+Pattern-Ref: PAT-003, PAT-004
+Asset-Ref: MOD-002（已评估；仅保留既有 generate 使用，verbatim 明确不使用）
+Affected Artifacts: T-727 SPEC、chat-runner/chat-tools、script-runner、persistence-client、原文候选卡与测试。
+Explicit Limits: 代码不用关键词/相似度猜创作语义，语义分界只由配置模型完成；不直接写稿面；不覆盖历史版本；
+                 来源不唯一或已截断时 fail-closed，不退回模型重写。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-WEB-672
+Date: 2026-08-03
+Stage: T-672 PLAN
+Type: user-confirmed-public-commercial-boundary
+Decision: CreatorOS 官网撤下全部公开价格、代理利润与作者个人联系方式。官网不再提供直营购买
+          入口；价格、购买、代理和联系问题统一引导访问者联系向其推荐 CreatorOS 的授权合作
+          伙伴，以保护代理的客户线索与利润空间。
+Rationale: 公开零售价、进货价、利润和作者联系方式会让终端客户绕开代理，削弱代理推广意愿与
+           成交空间。官网应成为代理可安全转发的产品说明页，而不是官方直销页。
+Source: 用户 2026-08-03 明确要求“官网的价格下掉吧，包括我的联系方式，保护代理的利润”。
+Affected Artifacts: T-668/T-671 公开范围、website/index.html、官网 FAQ、二维码静态资源与部署读回。
+Explicit Limits: 内部代理价盘、Growth 商品、Activity 激活和既有代理身份不因官网下架而自动
+                 变更；官网仍可公开产品能力、设备支持、一机一码和更新日志。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-AGENT-671
+Date: 2026-08-02
+Stage: T-671 PLAN
+Type: user-confirmed-channel-pricing
+Decision: 用户以 599 元首购 CreatorOS 内测版后自动成为代理，不需要提交申请，不设置人工审核、
+          加盟费或其他附加门槛。成为代理后进货价为 399 元/个，对外指导价为 899 元/个，
+          代理首年每单账面价差 500 元；代理合作口径不提续费、续费分成或续费抽成。成为代理
+          后进入“内测代理股东群”，并取得 CreatorOS 体系后续智能体产品的合作资格；各新智能
+          体的具体价盘和交付规则在产品发布时另定。
+Rationale: 用户希望代理收益简单、可直接解释，只赚首次销售价差，同时以长期产品合作资格增强
+           内测代理的参与感，不在当前招商中引入续费结算复杂度。
+Source: 用户 2026-08-02 最终纠正确认“没有提交申请一说，不要人为制造门槛”；首购 599 元后
+        自动成为代理，进货价 399、指导价 899、进入内测代理股东群、后续所有智能体都有合作
+        资格，并要求不要提续费。
+Affected Artifacts: T-671 代理合作 SPEC；后续官网、代理招商物料、Growth 渠道商品与协议。
+Explicit Limits: 399 元只适用于完成 599 元首购、自动成为代理后的后续进货；不得另设申请、审核、
+                 加盟费或其他未确认门槛。
+                 “代理股东群”当前是合作社群称谓，不构成工商股权承诺；未确认代理层级、最低
+                 进货量、退换、官方直营、价格约束与售后责任前，不进入实现或公开承诺。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-PRICE-668
+Date: 2026-08-02
+Stage: T-668 BUILD
+Type: user-confirmed-public-pricing
+Decision: CreatorOS 官网公开口径改为：内测群用户在 2026-08-10 前可按 599 元一次买断参与共创；
+          内测结束后正式版为 899 元/年、次年续费 199 元/年，且不再提供永久买断。
+          通用设备规则置于价格之前：一机一码，每个激活码仅绑定 1 台设备；当前支持 Apple
+          芯片 Mac 和 Windows；Intel Mac 只能显示“适配推进中”。页面不展示基础版、Plus、
+          Pro 或其他版本分级。购买意向通过现有联系方式私聊，确认后进入单独内测共创群。
+Rationale: 现官网 1499 元永久买断、永久免费更新和笼统 Mac 支持已经与用户确认的商业规则冲突，
+           继续公开会造成错误购买预期；静态官网应直接表达当前唯一价格真相。
+Source: 用户 2026-08-02 连续确认价格海报、微信群通知及官网同步要求。
+Affected Artifacts: website/index.html、T-668 SPEC、官网静态校验与部署读回。
+Explicit Limits: 不修改支付、Growth 商品、Activity 激活、续费执行或换机契约；不承诺 Intel Mac
+                 日期、免费更新、退款或多设备权益。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-RADAR-642
+Date: 2026-08-01
+Stage: T-642 BUILD
+Type: user-confirmed-creative-handoff
+Decision: 仅内容雷达转出的选题携带“左侧对标逐字稿 + 右侧本账号改写初稿”；直接新建、
+          常规 AI、评论/需求等正常选题链保持单稿流程。雷达改写初稿随 Candidate 和 Project
+          作为 adaptedDraftSeed 传递，Project 首开直接显示；用户首次保存才物化为正式
+          output_script 版本，之后共用既有编辑器、版本链和 script.draft，不创建第二套稿件状态机。
+Rationale: 用户需要从雷达、选题到作品持续看到同一份对标与改写稿，但普通创作没有真实来源稿，
+           强行套双栏会伪造依据并破坏原流程。seed 方案同时避免 promotion 跨模块创建 artifact
+           产生半成功，销账复审 REV-002 的数据完整性风险。
+Source: 用户 2026-08-01 明确提出左右对照并追问“直接创建选题也这样做吗？不是吧”。
+Affected Artifacts: T-642 SPEC、雷达 transform/candidate/project brief 契约、选题详情、Project 稿面。
+Explicit Limits: 普通选题不生成改写稿；左稿只读且不复制为正式稿；未采纳/未立项不写 Project；
+                 首次保存失败保留 seed 并允许幂等重试。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-ONB-637
+Date: 2026-07-31
+Stage: T-637 BUILD
+Type: user-confirmed-information-architecture
+Decision: 新手引导不再暴露文本模型配置和自动化任务。主线统一为绑定账号→确认账号情况→
+          （已有作品账号）等待并查看历史项目→确定定位→监控对标→从对标创建选题→进入项目；
+          新号跳过历史项目。设置页“重新打开”必须强制展示完整引导，即使全部步骤已完成。
+Rationale: 自动化是后台基础设施，不是用户目标；用户需要围绕作品、定位、对标、选题和项目
+           建立第一次成功体验。旧重新打开只清 hidden、又被 complete 自动隐藏，属于假按钮。
+Source: 用户 2026-07-31 明确确认的引导顺序与“自动化用户完全不需要感知”。
+Affected Artifacts: onboarding SPEC/状态机/数据装配/首页卡片、设置页重新打开入口与测试。
+Explicit Limits: 不新增第二套自动化或后端持久化；不把 imported 历史项目算作用户新建项目；
+                 历史项目确认按当前账号本地隔离。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-POS-623
+Date: 2026-07-29
+Stage: T-623 PLAN / CONTRACT
+Type: user-confirmed-product-semantics
+Decision: 定位中心右上角统一为“新建定位母版”。确认后清空当前账号 profile 的画像、
+          facets 与 downstreamRules，并以 statement_version_floor 建立新的当前母版边界；
+          positioning_statements 继续不可变保留，边界之前的历史不再成为 currentStatement。
+          随后只打开既有定位 AI 对话并预填从头访谈，不自动发送、不由 AI 直接写库。
+          复盘页“帮我复盘”不再打开全局 Copilot，而是预填既有项目编导右栏，用户发送后
+          复用 review.analyze。定位编辑点击外部不得关闭。
+Rationale: 现有重新定位只清前端表单，旧规则仍会进入 AI 上下文；物理删除定位陈述又破坏
+           不可变审计。复盘页已有右栏却再弹全局面板，造成双入口和会话混淆。
+Source: 用户 2026-07-29 截图与明确指令。
+Affected Artifacts: positioning contract/service/repository/schema、定位中心交互、项目阶段
+                    DraftChatRequestProvider、复盘入口、相关测试与追溯。
+Explicit Limits: 不删除历史定位陈述；不新增第二套 Copilot 或 review 工具；不自动发送
+                 预填话术；AI 候选仍须用户采纳后通过 backend service 落库。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-POS-632
+Date: 2026-07-31
+Stage: T-632 BUILD remediation
+Type: user-confirmed-data-semantics-correction
+Decision: “定位版本”必须可恢复完整母版，不再把只有一句话/关键词/产品锚的
+          positioning_statements 冒充完整历史。新增只写一次的 masterSnapshot；重置前保存当前
+          画像、facets、五类规则与陈述；恢复通过 backend 事务回写 profile 并追加新陈述版本，
+          不修改旧历史。旧版确实没有快照的记录只提供“复制定位陈述”并明确缺失边界。
+Rationale: 当前 reset 会物理清空唯一可变 creator_profiles，而历史行没有画像/规则，导致用户
+           点击旧版本后表单仍为空，属于写真读空和潜在数据丢失。用户明确要求旧版本可恢复。
+Pattern-Ref: PAT-002（RF-001 跨 profile/statement 原子恢复；RF-002 用户定位需重启留存；
+             RF-004 正规 migration）。
+Affected Artifacts: positioning resource/operation、0065 migration、positioning repository/service/
+                    transport、定位中心历史交互、T-632 SPEC/Gate/测试。
+Explicit Limits: 不覆盖或删除历史陈述；不伪造旧版缺失的画像/规则；不新增第二套定位模块；
+                 AI 仍不直接写库。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-LEARNING-001
+Date: 2026-07-29
+Stage: T-610 BUILD
+Type: user-confirmed-product-semantics
+Decision: 对话/复盘里由用户点击“采纳”或“存为经验”的内容，按当前用户与账号内的
+          title+insight 稳定指纹去重，并直接成为 validated Learning，由知识库现有
+          validated 投影立即展示；不再进入第二次裁决队列。AI 未经用户确认产生的候选
+          仍保持 candidate。内容雷达保留跨轮次来源快照用于审计，但详情只按唯一 source
+          展示，并回显最近采集时间与累计次数。
+Rationale: 旧实现把已经经过用户确认的采纳再次降成 candidate，造成“已沉淀”但知识库
+           不可见；刷新后还可重复插入。雷达详情把一个来源的三次历史快照误画成三条来源，
+           与作品卡“1 个来源”的真实口径矛盾。
+Source: 用户 2026-07-29 明确要求“经验需要去重，然后直接进知识库即可”，并要求核对采集
+        是否去重。
+Affected Artifacts: learnings.create 既有 operation 语义、Learnings service/repository、
+                    learning migration、知识库 validated 投影、内容雷达详情来源证据。
+Explicit Limits: 不新建第二套知识库表；不物理删除历史重复经验或跨轮次来源快照；不同账号
+                 不互相去重；不同 source 发现同一作品时仍分别展示。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-MODEL-619
+Date: 2026-07-29
+Stage: T-619 REMEDIATION / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: Activity 的 config.pull ticket/introspection 只证明 projectKey/channelRef 与授权事实，
+          不再提供权威 clientId。Creator 请求 Activity 时不得把自报 clientId 当授权依据；
+          旧 ticket 响应若仍带 clientId 只兼容忽略。Creator 仅向 Growth 声明接受的
+          extension/protocol，由 Growth registry 解析并签入最终 clientId；Creator 验签
+          bundle 时继续强校验 Growth 签入的 creatoros.desktop 和协议。
+Rationale: 应用/客户端目录唯一归 Growth，Activity 不拥有客户端目录，不能反向授权 clientId。
+Affected Artifacts: T-606 Creator contract、creator-client-config-consumer-v1、Creator
+                    config.pull request/parser/tests、T-619 validation、CHANGE_IMPACT。
+Compatibility: 在 Growth/Activity 最终字段契约落定前，Creator parser 兼容旧响应字段但不信任；
+               该兼容不允许恢复 request clientId，也不允许跨 locator 比较版本或 ETag。
+Status: active（整改代码已验证；正式三端联调与独立复审前 release NO-GO）
+```
+
+```text
+ID: DEC-MODEL-606
+Date: 2026-07-29
+Stage: T-606 PLAN / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: CreatorOS 继续使用既有 config.pull ticket 和当前激活 locator。verified configured
+          渠道 JSON 是当前模型配置权威，即使 Key/URL/model/provider 错误或模型调用失败也
+          不回退本地；明确未配置、不可达且本次未取得 JSON、或安全校验失败时才使用本地。
+          用户本地配置始终允许编辑并作为 inactive 备用。
+Rationale: Growth T-086 最终契约与 2026-07-29 用户确认明确取代旧 T-575/T-604 设计。
+Supersedes: T-575 的三键 parser/长期 Key 禁止/24h 远端 LKG；T-604 的 Gateway、短 bearer、
+            introspection、alias routing、managed_locked 与远端 LKG 优先。
+Invariant: Activity 只证明 projectKey/channelRef 授权；Growth-signed clientId 与其二者共同
+           组成配置版本 locator。渠道 JSON/Key 不进入 URL、日志、错误、审计摘要或 Web 响应。
+Authority: Growth docs/contracts/T-086-creatoros-managed-model-service.md
+           SHA-256 be1d4546b080e8b30144e31dd20d2e094d82b66d3c57d0f6116782fb89650182；
+           T-086-review-concern-resolution.md
+           SHA-256 68bd438f9893a7c4508cff396274e893cb630d7ad488109e6b91430f18cdbc0f。
+Status: active（独立评审通过前不得 BUILD）
+```
+
+```text
+ID: DEC-PKG565-002
+Date: 2026-07-27
+Stage: T-565 PLAN / RAT
+Type: user-confirmed-external-execution
+Decision: 授权 agent 创建、推送并操作 T-565 的原生 Windows RAT 工作流；GitHub Actions
+          费用不设上限，由 agent 根据验证需要持续运行和修复，直到 Product Gate 所需的
+          Burn payload/cache/代理/中断、Win32 current/journal kill recovery 与 reparse
+          containment 证据形成。
+Rationale: T-565 重写 SPEC 的 cross-family Round 1 唯一未闭环 blocker 是原生 Windows
+           可行性证据；本机没有 Windows/Wine/VM，私有仓 GitHub-hosted Windows runner
+           是当前可执行的真实 Win32/NTFS 环境。用户明确回复“授权运行windows rat
+           没有费用上限 你来操作”。
+Pattern-Ref: PAT-001
+Pattern Tier: T1（WiX Burn 直接采用 + CreatorOS 窄事务 worker；命中 BG-003 官方方案、
+              BG-005 覆盖 acquisition/trust，worker 只补产品事务缺口）
+Affected Artifacts: T-565 SPEC/review、Windows RAT workflow、RAT evidence、BACKLOG。
+Explicit Limits: 仅授权验证和为验证所需的 branch/workflow push；不创建或发布 GitHub
+                 Release，不对用户分发安装包，不将 RAT spike 冒充生产实现。
+Supersedes: DEC-PKG565-001 的“不得触发付费 Windows runner”限制；其他限制继续有效。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-PKG565-001
+Date: 2026-07-27
+Stage: T-565 PLAN
+Type: user-confirmed-architecture-direction
+Decision: 重选 CreatorOS Windows Runtime 交付架构。默认发布小型 Web Installer，同时保留
+          完整 Offline Installer；两者使用同一签名分层 Runtime Image 与安装事务。setup
+          必须完成全部必需 runtime 的下载/读取、校验、物化和 smoke；正式应用首启完整
+          runtime 解压次数恒为 0。必须实质减少 node_modules/JS 散文件，不能只把原 tar
+          改成联网下载。Windows 正式安装树不得保留通用 node_modules/源码项目结构；纯
+          JS/JSON 优先 bundle，只有 Chromium、媒体工具、WASM、native addon、migrations
+          等有真实路径要求的资产可进入签名 allowlist。安装失败不得显示成功或转移给首启修复。
+Rationale: Windows 0.2.0 真机在安装后白屏约 30 分钟，已确认是在处理大量小文件。现有
+           NSIS POSTINSTALL 失败后保留 tar、首启 AppData 兼容解压的 fail-forward 破坏
+           “安装完成即可使用”与诚实失败边界；当前 runtime 26,381 个文件中 24,756 个来自
+           node_modules，在线下载本身不能消除 NTFS/Defender 小文件成本。RAT-565-01 已证明
+           高置信 prune 可把普通文件减至 16,381（-37.91%）且真实能力 smoke 通过，但距离
+           ≤5,000 仍必须进行 production closure bundle；`pnpm deploy`/Next standalone/压缩
+           容器都不能单独成为最终解法。
+Architecture Refinement: 实际 Tauri 壳与四层 runtime 组成不可变、版本化 compatibility set；
+                         固定 shortcut 只启动稳定 launcher，installer 在 pending set 真 smoke
+                         后以单一 `current` 指针同时切换壳与 runtime。0.2.0 首迁移不信任旧 tar
+                         为新 layer，必须全量取得新签名 layers，并在提交前保留 legacy fallback。
+                         默认 Web 发布阈值：首装 ≤500 MiB、core-only 更新 ≤100 MiB、每成功
+                         安装 CDN 成本 ≤US$0.10；超限阻断或另开 DEC。
+Source: 用户 2026-07-27 明确要求“必须得 setup 阶段完成小文件的解压缩，并且必须合理的减少
+        小文件”；在收到“默认 Web Installer + 保留 Offline Installer”的推荐与确认请求后
+        回复“启动”。
+Affected Artifacts: T-565、Windows runtime packaging、installer、updater、release workflow、
+                    desktop startup resolver；替代 T-487 的 Windows 交付条款。
+Invalidates: T-487/T-493 中“NSIS hook 失败后首启兼容解压可作为发布兜底”以及 T-487 已完成的
+             Windows 零解压验收结论；macOS 交付条款不受影响。
+Explicit Limits: 不触发付费 Windows runner、不发布安装包、不改变领域数据存储、不把必需
+                 runtime 改成应用首启/功能首次使用时按需下载。
+Owner: user+agent
+Revisit Trigger: Windows 原生 RAT 证明 WiX Burn/少文件方案不可行，或用户改变在线/离线分发取舍。
+Status: active
+```
+
+```text
+ID: DEC-MC-002
+Date: 2026-07-26
+Stage: T-501 4-build
+Type: user-confirmed-scope-reduction
+Decision: T-501 只做现有模型设置页的轻量优化：减少普通用户配置项；“保存并测试”复用正式
+          modelFor + streamText 并验证非空文本；补官方预设、New API/中转站、Responses、
+          Kimi 开放平台与 Kimi Code 教程。
+Rationale: 用户明确指出模型配置需求没有原方案复杂。当前 Settings、T-471 Responses 和
+           settings.models.put/test 已经存在，继续建设八槽总览、向导、能力平台和付费探测
+           会扩大范围、增加配置负担并偏离真实问题。
+Source: 用户会话“优化一下就行了……减轻用户配置负担，优化配置测试通路，补充教程文档即可”，
+        2026-07-26。
+Affected Artifacts: T-501 BACKLOG/任务详情、替代范围、应用内手册、模型预设、连接测试组合层。
+Invalidates: 旧 T-501 PRODUCT SPEC/CONTRACT/PAGE SPEC 中的八槽总览、配置向导、能力平台、
+             费用与付费 effect 均不进入 BUILD；旧文档只作为历史审计材料。
+Explicit Limits: 不新增页面/公开 operation/数据模型；不依赖 T-517；不触发图片或视频付费调用；
+                 轻量测试只承诺基础流式文本，不冒充复杂工具调用全兼容认证。
+Owner: user+agent
+Revisit Trigger: 用户明确要求新增模型管理页面、能力平台、计费或付费 provider 验证。
+Status: active
+```
+
+```text
+ID: DEC-001
+Date: 2026-06-20
+Stage: 00-intake (orchestrator initialization)
+Type: default-assumption
+Decision: Initialize product-to-code-orchestrator as a MID-PROJECT TAKEOVER rather than from scratch.
+         Existing markdown specs and the implemented frontend are mapped onto stages in
+         ARTIFACT_MANIFEST.yaml instead of being regenerated.
+Rationale: The repo already contains product docs, frontend/backend specs, a fully implemented
+          frontend (127 files, passing lint/typecheck/tests), and 17 imported UI screens.
+          Re-running stages 00-11 from zero would discard working artifacts.
+Source: Repo scan on 2026-06-20 (docs/, frontend/, backend/, ui/, branch feat/frontend-implementation).
+Affected Artifacts: orchestrator/ARTIFACT_MANIFEST.yaml and all stage rows.
+Invalidates: none.
+Owner: agent
+Revisit Trigger: If the user wants a clean-room re-derivation with full traceability.
+Status: active
+```
+
+```text
+ID: DEC-002
+Date: 2026-06-20
+Stage: 00-14 (all pre-existing stages)
+Type: default-assumption
+Decision: Mark all pre-existing artifacts as `draft` (not `passed`), because none were produced under
+         this orchestrator and none carry stable IDs or have had their stage gate run.
+Rationale: State-machine rule: a stage may move to `passed` only when its gate has been run and
+          confirmations recorded. That has not happened yet for any stage.
+Source: rules/orchestrator-state-machine.md, transition rule 1.
+Affected Artifacts: stages 00-14 in ARTIFACT_MANIFEST.yaml.
+Invalidates: none.
+Owner: agent
+Revisit Trigger: Ratification pass — run each stage gate to promote draft -> passed.
+Status: active
+```
+
+```text
+ID: DEC-003
+Date: 2026-06-20
+Stage: 11-frontend-implementation
+Type: tradeoff
+Decision: Treat frontend implementation as verified-green on static checks (eslint 0, tsc 0, vitest
+         all-green) but NOT release-verified, because `next build` and the full vitest/visual suite
+         could not complete inside the sandbox (45s command limit; npm registry blocked).
+Rationale: Static analysis passed cleanly; build/visual confirmation must run on the host.
+Source: Sandbox verification run 2026-06-20.
+Affected Artifacts: stage 11 + OPEN-002.
+Invalidates: none.
+Owner: user
+Revisit Trigger: Host run of `pnpm verify`.
+Status: active
+```
+
+```text
+ID: DEC-004
+Date: 2026-06-20
+Stage: 00-14 (ratification pass, option A)
+Type: scope-change
+Decision: Ran the ratification pass. Extracted and assigned stable IDs from existing docs
+         (68 FR, 24 NFR, 22 FLOW, 58 ENT, 9 IA, 18 PAGE, 42 COMP) into ID_REGISTRY.md and built
+         TRACEABILITY_MATRIX.md. Ran each stage gate 00-14. Documentation stages pass on completeness;
+         those requiring confirmation are set to `needs-user-confirmation` pending one batch sign-off.
+Rationale: User chose option A to firm up the foundation with traceability before backend work.
+Source: Repo docs + subagent ID extraction, 2026-06-20.
+Affected Artifacts: ID_REGISTRY.md, TRACEABILITY_MATRIX.md, ARTIFACT_MANIFEST.yaml (stages 00-14).
+Invalidates: none.
+Owner: agent
+Revisit Trigger: User confirms the extracted IDs/specs -> promote stages to `passed`.
+Status: active
+```
+
+```text
+ID: DEC-005
+Date: 2026-06-20
+Stage: consistency-gates (cross-artifact)
+Type: accepted-risk
+Decision: Cross-artifact consistency gate returns FAIL on the upstream->downstream orphan scan: every
+         backend-bearing FR currently lacks an API operation and a backend test, because the service
+         contract (stage 15) and backend implementation (stage 16) do not exist yet.
+Rationale: Expected for a frontend-first project mid-build; not a defect, but it blocks any claim of
+          end-to-end completeness. Recorded so it is not mistaken for done.
+Source: TRACEABILITY_MATRIX.md > Orphan Scan; consistency-gates.md.
+Affected Artifacts: TRACEABILITY_MATRIX.md (GAP-002, GAP-003), manifest consistency_gate.status.
+Invalidates: blocks stage 17 (integration-release) until chains close.
+Owner: user+agent
+Revisit Trigger: After service contract (15) + backend TDD (16) close the broken chains.
+Status: active
+```
+
+```text
+ID: DEC-006
+Date: 2026-06-20
+Stage: 11-frontend-implementation (remediation)
+Type: user-confirmation
+Decision: FULL ALIGNMENT — the existing specs are authoritative; the implementation will be changed to
+         match them. All P0 decision points resolve in favor of the spec:
+         (R0-1) migrate UI primitives from @base-ui/react back to shadcn/ui on Radix (locked baseline);
+         (R0-4) add all 13 missing domain entities to types + fixtures;
+         (R0-6) align field/enum types to the data model (Learning.confidenceScore int; relationType free string);
+         (R2-7) create the mandated directory structure (public/fixtures/, features/<page>/{components,tests}).
+         Execute the full P0+P1+P2 backlog in REMEDIATION_BACKLOG.md.
+Rationale: User chose "需要全量对齐" (full spec conformance) over amending specs to accept current code.
+Source: User instruction 2026-06-20.
+Affected Artifacts: entire frontend; REMEDIATION_BACKLOG.md; manifest stages 06-12.
+Invalidates: current frontend visual baselines (must re-baseline after fixes, R2-9).
+Owner: user
+Revisit Trigger: If scope/effort (≈5-8 wks) forces a phased cut.
+Status: active
+```
+
+```text
+ID: DEC-007
+Date: 2026-06-21
+Stage: 11-frontend-implementation (remediation execution, host)
+Type: scope-change / gate-result
+Decision: Executed the DEC-006 remediation backlog on the host and re-ran the stage-09
+         frontend-implementation gate. Result: PASS (with one documented residual). Stage 11 promoted
+         draft/fail -> passed/pass; implementation_gate fail -> pass.
+Work done:
+  - INC-3 (host-only): migrated all 18 ui/* primitives @base-ui/react -> shadcn/ui on Radix
+    (radix-ui 1.6.0); removed @base-ui/react; components.json new-york. 0 @base-ui imports remain.
+  - INC-5 milestones A-D: de-dup ProjectStageStepper; extract analytics layer
+    (AudienceBreakdown/RetentionChart/HorizontalBarsChart/InsightCard), resource layer
+    (AssetCard/MediaPreview/AssetDetailPanel), SearchField; move Pagination/ViewModeToggle/SortSelect to
+    components/navigation; rename to spec (PlatformIcon/InsightCard/RetentionChart/AudienceBreakdown);
+    public/fixtures/ + canonical.json generator; pin Node 24 LTS. Shared components ~10 -> 20.
+  - INC-1/INC-2/INC-4 (prior sandbox work) re-verified GREEN under full host build.
+Verification: `cd frontend && pnpm verify` GREEN — ESLint 0, tsc 0, 398 tests (38 files), next build OK.
+Residual (non-blocking, recorded in STAGE-09-GATE-RERUN.md): RISK-007 tail — single-use content
+  components (ArtifactListItem/KnowledgeListItem/EvidenceCard/FileThumbnail/VersionCard) left inline per
+  SPEC §8; FilterBar + per-page search unification (R2-3); ui/* sweep (R2-6); test-dir relocation (R2-7);
+  stage-12 visual re-validation (R2-9, design-locked references).
+Rationale: User chose full INC-5 scope; highest-value/lowest-risk component work executed in committed,
+          individually-verified milestones. Visual re-validation is stage-12 and excluded from `pnpm verify`.
+Source: Host execution 2026-06-21 on branch remediation/frontend-spec-alignment.
+Affected Artifacts: ARTIFACT_MANIFEST.yaml (stages 11/12, increments, implementation_gate),
+          STAGE-09-GATE-RERUN.md, entire frontend ui/components layers.
+Invalidates: CODE_RECONCILIATION.md FAIL verdict (superseded by STAGE-09-GATE-RERUN.md PASS).
+Owner: agent (DEC-006 user-authorized)
+Revisit Trigger: Stage-12 visual validation; or if the user wants the R2 tail completed.
+Status: active
+```
+
+```text
+ID: DEC-008
+Date: 2026-06-21
+Stage: 15-service-contract (15a)
+Type: scope-change / build
+Decision: Advanced the pipeline (user chose "build the backend") by executing stage 15a — the
+         FE↔BE service contract — as the foundation that unblocks all parallel module verticals.
+Approach: Zod-first shared package `@creatoros/contract` (approach C), pure TS, transport-agnostic.
+Work done (TDD, on branch feat/service-contract off remediation/frontend-spec-alignment):
+  - Framework: envelope (SPEC §14) + primitives + defineEndpoint registry + typed client + Transport iface.
+  - 15 modules (projects exemplar + 13 fanned out via a 14-agent workflow) of resource DTOs + operations,
+    translated field-by-field from types/domain.ts; 4 page composition DTOs.
+  - registry.test asserts the surface == SPEC §13 exactly (76 routes, each once, unique ids) — caught +
+    fixed an ai/projects key collision and a GET /search duplicate (page layer owns it).
+  - traceability.test: every endpoint traced; each GAP-002 named backend-bearing FR covered.
+Verification: contract gate typecheck 0, 20 files / 60 tests green; frontend untouched (398 tests pass).
+Result: stage 15 -> draft/gate-pass (15a); frontier -> 16-backend-tdd. Closes the CONTRACT half of GAP-002.
+Not done (separate specs/plans): 15b (FE MockTransport + read migration + mutation wiring — makes the
+  buttons real), stage 16 (backend TDD against these schemas), stage 17 (MockTransport->HttpTransport swap).
+Source: User instruction 2026-06-21 ("选择2" — build the backend).
+Affected Artifacts: contract/ package; ARTIFACT_MANIFEST stage 15/frontier; TRACEABILITY_MATRIX GAP-002.
+Owner: agent (user-directed)
+Revisit Trigger: Start 15b or stage-16; or reconcile fine-grained per-operation FR ids.
+Status: active
+```
+
+```text
+ID: DEC-009
+Date: 2026-06-21
+Stage: 15b (FE mock-backend) + AI-orchestration design/foundation + contract seam fix
+Type: scope-change / build / gate-result
+Decision: Under the /goal "启动workflow开发前后端程序 以及联调" directive, advanced the pipeline in
+         workflow mode (sequential TDD pipelines, one agent per plan task, verify+commit, halt-on-fail).
+Work done (branch feat/service-contract, worktree frontend-implementation):
+  - AI EXECUTION LAYER (new): designed + built. Spec 2026-06-21-ai-orchestration-agent-sdk-design.md
+    (unified Claude Agent SDK substrate; AITask=query() on a worker; in-process creatoros MCP tools;
+    submit_candidate is the SOLE write boundary; confirmResult is AI-free; awaiting_confirmation added
+    to AITaskStatus). Plan 2026-06-21-ai-orchestration-foundation.md executed Tasks 1-10 (Wave 1):
+    new @creatoros/ai-worker package (state machine, candidate schemas, ports, context tools,
+    config resolver, fake runner, orchestrator, confirm) — SDK-free, 27 tests green. Task 11 (real
+    SDK query() runner + script-rewrite Skill + manual smoke) deferred (needs binary + API key).
+  - 15b (Wave 2): executed plan Tasks 1-8 — MockBackend store (deterministic clone + seeded ids),
+    MockTransport + lib/contract-client (composition root), Dashboard read seam + loop, Projects
+    read+write handlers (§12), Projects page async reads, and the Projects buttons wired
+    (createProject/transitionProjectStage/patch/archive + refresh). viewModel? seam + isActiveRoute
+    gate preserved; no assertions weakened.
+  - CONTRACT SEAM FIX: @creatoros/contract switched NodeNext .js specifiers -> bundler resolution
+    (module:esnext/moduleResolution:bundler, extensionless across 36 files). NodeNext .js barrels were
+    unresolvable by Next 16/Turbopack (dropped ENDPOINTS/createClient at build); the whole consuming
+    stack is bundlers (FE Turbopack, stage-16 BE = Next.js, vitest). Supersedes DEC-008's
+    "exports ./src/index.ts" packaging note (still source-direct; just bundler-resolved).
+  - AITaskStatus: added awaiting_confirmation in contract primitives + frontend domain.ts.
+Verification: frontend `pnpm verify` GREEN (lint 0, tsc 0, 420 tests + 1 todo, Turbopack build OK,
+  all 18 routes); contract typecheck 0 / 61 tests; ai-worker typecheck 0 / 27 tests.
+Result: FE now consumes the contract via MockTransport with real Projects mutations; the FE↔BE seam
+  builds clean. Closes the FE half of GAP-002 for the Projects vertical. Frontier -> 16-backend-tdd.
+Not done: 15b Task 9 manifest promote (this entry stands in); other FE verticals (reuse 15b foundation);
+  AI worker Task 11; stage 16 backend; stage 17 MockTransport->HttpTransport 联调.
+Source: /goal workflow execution 2026-06-21 (Waves 1-2).
+Affected Artifacts: ai-worker/ (new), frontend/ (mock-backend + projects), contract/ (seam + status),
+  docs/superpowers/{specs,plans}/2026-06-21-*; ARTIFACT_MANIFEST stage 15b/AI/frontier.
+Owner: agent (user-directed)
+Revisit Trigger: Start stage-16 backend TDD; or wire AI worker Task 11.
+Status: active
+```
+
+```text
+ID: DEC-010
+Date: 2026-06-21
+Stage: 17-integration (FE↔BE 联调 seam, thin slice over the 15b mock store)
+Type: scope-change / build / gate-result
+Decision: Brought the FE↔BE integration (联调) forward over the 15b mock store, ahead of full
+         persistence, because a runtime gap demanded it: 15b client islands imported the
+         MockTransport-bound client, which in the browser mutates a browser-LOCAL store the server
+         never sees (and bundles the mock backend into the client). So island buttons did not truly
+         persist across router.refresh(). The fix IS the integration.
+Work done (branch feat/service-contract):
+  - HttpTransport (lib/http-transport.ts): client-safe; POSTs {id,input} to /api/v1/dispatch.
+  - Composition split: lib/contract-client.ts -> HttpTransport (browser islands; no server imports
+    -> mock backend stays out of the client bundle); lib/contract-client.server.ts (server-only
+    guard) re-exports an in-process MockTransport client (server pages/route);
+    server/mock-backend/in-process-client.ts is the guard-free variant for in-process tests.
+  - Route app/api/v1/dispatch/route.ts: RPC dispatch by endpoint id -> mockTransport over the SERVER
+    store -> contract envelope. STAGE-16 SWAP POINT: replace the transport behind this route with a
+    persistence-backed one; HttpTransport + contract + pages are unchanged.
+  - Tests: route.test proves the create->persist->list round-trip; http-transport.test the fetch
+    shape; vitest stubs server-only/client-only (guards stay live in the Turbopack build).
+Verification: frontend `pnpm verify` GREEN (lint 0, tsc 0, 426 tests +1 todo, Turbopack build OK, 18
+  routes); client-bundle audit: getStore/handlers NOT in client chunks (only a pre-existing
+  shell-router->canonicalDataset import remains, out of scope).
+Result: real HTTP FE↔BE round-trip over the contract for the Projects vertical; island mutations now
+  persist server-side. The "swap a line at stage 17" promise is realized as "swap the transport behind
+  one route." Frontier -> 16-backend-tdd (real persistence behind the dispatch route).
+Not done: stage-16 real persistence (Drizzle/Postgres; the TDD-PLAN uses Testcontainers — a
+  Docker-vs-pglite test-infra decision is pending before that wave); other FE verticals (reuse this
+  seam + 15b foundation); AI worker Task 11.
+Source: /goal workflow execution 2026-06-21 (Wave 3, done inline for RSC-boundary safety).
+Affected Artifacts: frontend/ (lib/*, app/api/v1, mock-backend, pages, vitest.config, server-only dep).
+Owner: agent (user-directed)
+Revisit Trigger: Stage-16 persistence behind /api/v1/dispatch; or fan out the remaining verticals.
+Status: active
+```
+
+```text
+ID: DEC-011
+Date: 2026-06-21
+Stage: 16-backend-tdd (Projects persistence slice) + 17 live cutover
+Type: scope-change / build / gate-result
+Decision: Executed a real-persistence slice and cut the live app over to it, so the FE↔BE 联调 round
+         -trip is durable SQL, not the in-memory mock (closing the gap the Stop-hook flagged).
+Infra decision: pglite (pure-WASM Postgres) instead of the TDD-PLAN's Testcontainers — runs in vitest
+         AND the Next server with no Docker; Drizzle schema/queries identical to a real Postgres.
+Work done (branch feat/service-contract):
+  - NEW @creatoros/backend package: Drizzle schema (projects, project_activities) + pglite db factory
+    (in-memory for tests / dataDir-capable) + ProjectRepository (list/get/create/patch/archive/
+    stage.transition/activity, replicating the mock §12 semantics, injected clock+id for determinism)
+    + createPersistenceTransport (contract Transport; UnsupportedOperationError -> caller falls back).
+    typecheck 0, 8 pglite-backed tests.
+  - LIVE CUTOVER: frontend compositeTransport (server/persistence-client.ts) = persistence for the 7
+    project-entity ops + mock for the rest, used by BOTH server pages (contract-client.server) and the
+    /api/v1/dispatch route -> server reads and island writes share ONE pglite store -> a created
+    project persists in SQL and survives router.refresh(). An ownership set keeps pglite out of the
+    static build; next.config serverExternalPackages externalizes the WASM. Deterministic seed
+    (canonical) + clock/ids keep test/visual parity.
+Verification: frontend `pnpm verify` GREEN (lint 0, tsc 0, 427 tests +1 todo, Next build OK WITH pglite,
+  /api/v1/dispatch route live); backend typecheck 0 / 8 tests; route.test proves create->persist(SQL)->
+  list + mock fallback.
+Result: a COMPLETE vertical slice through the whole stack now exists and is proven —
+  contract -> FE (HttpTransport) -> /api/v1/dispatch -> compositeTransport -> pglite SQL -> envelope ->
+  render, durable. The "swap the transport behind one route" promise is realized with real persistence.
+Not done (now pure fan-out of a proven path): the other 6 project ops' outputs/tasks persistence + the
+  other module verticals (Knowledge/Assets/Artifacts/Publishing/Analytics/Reviews/Learnings/AI/
+  Notifications) — each = a Drizzle schema + repository + add ids to PERSISTED_OPS, reusing this slice;
+  dataDir for cross-restart durability; AI worker Task 11 (real SDK runner); extract /api/v1 into a REST
+  surface if a standalone backend service is wanted.
+Source: /goal workflow execution 2026-06-21 (Wave 4, inline for DB+RSC-boundary safety).
+Affected Artifacts: backend/ (new pkg), frontend/ (persistence-client, contract-client.server, route,
+  next.config), pnpm-lock; ARTIFACT_MANIFEST stage 16/17/frontier.
+Owner: agent (user-directed)
+Revisit Trigger: Fan out remaining verticals/ops; add dataDir durability; AI worker Task 11.
+Status: active
+```
+
+```text
+ID: DEC-012
+Date: 2026-06-21
+Stage: program scope (七步整合设计 adoption)
+Type: scope-change / user-confirmation
+Decision: ADOPT docs/CreatorOS-七步整合设计.md (Seven-Step Integration Design) into the program.
+         It extends (does NOT refactor) the 6-stage trunk: adds a positioning gate, a monetization
+         loop, a Candidate/AudienceSignal topic-intel layer, a Prediction/Rubric calibration loop, and
+         cross-cutting PlatformAccount/ContentCalendar/StageTemplate/AI-relay. Its hard constraints
+         C-2/C-3/C-4 ARE our proven patterns (DEC-011 persistence path / DEC-009 AI candidate-confirm /
+         Ingestion idempotency), so the new modules slot into the same foundation/module-template/
+         contract-op/pglite fan-out with zero architectural conflict.
+User decisions (2026-06-21):
+  1. Adopt, phased per spec §8.
+  2. The "monetization-weighted" directional change (§2.0/§4.4/§6.2) is BAKED INTO the base-module
+     plans BEFORE Wave 2/3 launch (no retrofit): ContentOutput.content_role (traffic/trust/conversion);
+     MetricValue.metric_key extension (profile_visit/lead/inquiry/conversion/revenue…);
+     AudienceSnapshot.dimension_type += intent/paying; Learning.learning_type += conversion types;
+     Dashboard/Publishing surface conversion/lead as first-class metric columns. Touches the Projects/
+     Analytics/Reviews/Learnings/Publishing/Dashboard module plans (+ a small contract v0.3 for
+     content_role on contentOutputResource & any enum/key additions that cross the wire).
+  3. The 6 NEW modules (positioning, monetization, candidate+audience-signal, calibration,
+     platform-account, content-calendar) are appended as Waves 5-7 AFTER the base 16 (Waves 1-4),
+     in spec §8 priority order (P0: monetization+candidate+calibration → P1: positioning+
+     platform-account+content-calendar → P2: stage-templating+AI-relay+eng-debt). Each gets a
+     modules/<n>-<module>.md plan via the same generation+fan-out; needs a contract v0.3 op/DTO pass.
+  4. ID governance: PRAGMATIC continuation (append new FR/ENT/etc. as new segments) — NOT the spec's
+     formal C-1 freeze ceremony, consistent with how this build has proceeded.
+Execution timing: edits to base-module plans (#2) happen AFTER the running Wave 1 (Taxonomy/
+  Notifications/Search/Settings) completes and BEFORE Wave 2 launch, to avoid worktree contention.
+Source: user instruction 2026-06-21 (pointed at the new spec, "看能怎么落地" + 3 confirming answers).
+Affected Artifacts: docs/CreatorOS-七步整合设计.md (status→adopted); upcoming contract v0.3; base-module
+  plans (Projects/Analytics/Reviews/Learnings/Publishing/Dashboard); new module plans (6); program waves.
+Owner: agent (user-directed)
+Revisit Trigger: Wave 1 done → bake the directional change into Wave 2/3 plans; after base waves →
+  generate the 6 new-module plans + contract v0.3.
+Status: active
+```
+
+```text
+ID: DEC-013
+Date: 2026-06-22
+Stage: process (orchestrator workflow hardening + manifest reconciliation)
+Type: scope-change / process-improvement
+Decision: (A) Reconcile ARTIFACT_MANIFEST.yaml to repo reality, and (B) add an in-repo executable process
+         layer so the manifest can never silently go stale again, modeled on industry practice.
+Problem found (audit 2026-06-22): the manifest's `stages:` block was a frozen 2026-06-20 snapshot that its
+         own DECISION_LOG (DEC-008..012) contradicted — it claimed backend "not-started / no code" while a
+         real @creatoros/backend persistence slice, @creatoros/contract v0.4.0, an ai-worker, and a live
+         FE↔BE↔SQL Projects round-trip already existed on feat/service-contract (317 commits ahead of main).
+         Required artifact CHANGE_IMPACT.md was missing; API/TEST/MOCK/ASM IDs referenced but never
+         instantiated; consistency_gate=fail was non-blocking; failing gate verdicts were "invalidated"
+         rather than retained; the workflow definition lived only in an external, unpinned skill install.
+Work done:
+  (A) Manifest reconciled: header + project block (work_branch, topology, honest notes); stages 13/15/16/17
+      corrected to match DEC-008..012; consistency_gate reason updated + marked blocking for stage 17;
+      added reconciliation + reference blocks; OPEN-003 resolved, OPEN-004 (ID governance accepted-risk) and
+      OPEN-005 (untracked control artifacts on wrong branch) added.
+  (B) New orchestrator/process/ layer (in-repo, version-pinned — fixes "definition lives external/unpinned"):
+      - reconcile.mjs: drift detector / executable gate. Validates manifest against JSON Schema, checks
+        each build-claim against git+filesystem reality on the work branch, enforces the blocking-consistency
+        rule (no `passed` downstream of a failing release-critical chain unless `accepted-risk`), and flags
+        manifest staleness vs the latest DEC. Exits non-zero on drift (CI-as-gate).
+      - manifest.schema.json: structural + enum validation for the manifest.
+      - rules/orchestrator-state-machine.md: pinned copy of the external skill rule (reproducible audits).
+      - README.md: best-practice mapping (CI-as-gate, Terraform/GitOps drift, policy-as-code, DO-178C
+        bidirectional traceability, ADR immutable history).
+  (C) Created CHANGE_IMPACT.md back-filling CI-006/009/012 (the previously-missing required artifact).
+Policy set:
+  - FAIL HISTORY IS RETAINED: a failed gate verdict superseded by a later pass keeps its record + a delta;
+    it is NOT marked `invalidated`. (Corrects the DEC-007 pattern; anti snapshot-laundering, ADR-style.)
+  - DRIFT IS CHECKED: trust the manifest only after `node orchestrator/process/reconcile.mjs` passes.
+Rationale: User /goal — "参照业界优秀实现解决 orchestrator 工程问题，并修复 manifest 等问题."
+Source: Two-agent audit (artifacts + repo reality) 2026-06-22; skill rules at
+        ~/.skills-manager/skills/product-to-code-orchestrator/.
+Affected Artifacts: ARTIFACT_MANIFEST.yaml, DECISION_LOG.md, CHANGE_IMPACT.md (new), orchestrator/process/* (new).
+Invalidates: none (corrects bookkeeping; no code/spec change). Does NOT alter any DEC-001..012 verdict.
+Owner: agent (user-directed via /goal)
+Revisit Trigger: Backport the executable-gate + retained-history changes into the external skill; or commit
+        the control artifacts onto feat/service-contract (OPEN-005).
+Status: active
+```
+
+```text
+ID: DEC-014
+Date: 2026-06-22
+Stage: process (long-running autonomous harness)
+Type: scope-change / process-improvement
+Decision: Add a long-running autonomous harness so the orchestrator can run UNATTENDED for hours/days to
+         implement the remaining verticals, following Anthropic's official "Effective harnesses for
+         long-running agents" (three-agent initializer/coding/evaluator + progress checklist + commit-per-step).
+Work done:
+  - progress.json — feature-grained task queue, DERIVED from work-branch reality via process/progress.mjs
+    (not hand-written). 21 verticals; honest status: only `projects` persisted, 20 scaffolded, 0 e2e_verified
+    (matches the ~30% maturity note). `e2e_verified` is human/evaluator-set, never inferred.
+  - process/progress.mjs — generate (from git reality) / status / next (the loop's task picker).
+  - process/harness/ — README (3-agent model + run via /goal, headless loop, or GitHub Action), init.sh
+    (initializer), coding-agent.md, evaluator.md, settings.autonomous.json (permission allowlist +
+    Stop-hook = reconcile.mjs, for unattended runs only — NOT always-on project settings).
+  - rules §"Autonomous Mode": scope-envelope pre-authorization replaces synchronous per-stage gates; an async
+    decision queue lets the loop continue on unblocked verticals while a human answers asynchronously.
+  - Backported to the skill (both copies) so future projects inherit the harness.
+Rationale: User asked to research Anthropic's official long-running-agent practice and make the skill support
+         it. Research confirmed the three-agent harness + /goal + self-verification + fresh-context-per-step.
+Source: anthropic.com/engineering/effective-harnesses-for-long-running-agents; Claude Code /goal; Agent SDK.
+Affected Artifacts: progress.json, process/harness/*, process/progress.mjs, rules (updated), skill copies; a
+         detailed KB doc written to ThirdSpace (03-知识).
+Invalidates: none (additive process layer; no code/spec change).
+Owner: agent (user-directed via /goal)
+Revisit Trigger: Run init.sh and drive the loop; or wire the GitHub Action on feat/service-contract.
+Status: active
+```
+
+
+## DEC-AW-1004 — 多步 Agent 实施授权与依赖边界
+
+用户在 T-1003 独立评审 PASS 后明确授权于同一任务会话连续实施 T-1004～T-1013。以 `docs/features/t1003-agent-workbench.md` 为完整验收范围；保留 Pi core、`execution_tasks`、账号隔离和旧采集。NomiFun 只读参考提交 `e27bd5de9a58ce444032ef4e63bb753992555c4c`，在 CreatorOS 锁定来源与依赖，不修改参考仓。实施授权不包括推送、发布或外部系统改动。Windows 原生安装与升级证据仍须由 T-1013 当场取得；本机交叉编译失败不能冒充产品缺陷或验收通过。
+
+
+## DEC-AW-1009 — 同一对话跨回合产物版本谱系
+
+用户在补充规格独立评审 `PASS[REV:825f3a6d65da]` 后明确“都确认”，批准按 `docs/features/t1009-artifact-lineage-proposal.md` 实施同一对话跨回合修订。产物谱系归属用户、账号和对话；每个版本继续绑定真实任务、原工具调用和 Blob，旧版本保留。新增后端唯一谱系索引、原调用同事务结算、未知 Blob 持久对账、旧任务保守迁移、HTML 精确图片版本清单以及新旧协议排他切换。不同对话或账号不得串联；迁移受阻时旧版只读且不伪造新版本。该确认授权实现与本地验收，不包含公开发布、生产放量或修改外部仓库。
+
+
+
+## T-916 历史规格回执复核授权（2026-09-21）
+
+用户要求继续修复当前 reconcile 暴露的问题。以下一次性能力仅允许对绑定任务的当前 SPEC 与当前宪法执行独立复核；不得改写历史事件、跳过审查或冒充既有 PASS。
+
+```text
+ID: DEC-015
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-915
+Previous-Spec-SHA256: b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce
+Previous-Constitution-SHA256: ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ff11bd90-4588-44ed-85e4-498b9f5f1121
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-016
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-859
+Previous-Spec-SHA256: e6fe3ad73fa90859a3850b09e4ffd11fd82efdc1da7e1ee27899839d045981c5
+Previous-Constitution-SHA256: e84f83b7e65a415ba7a2a4639188bc2fd2d682f42d3220107a119abdc39d2a77
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 03366bd3-4852-44ba-9e39-a33c08dfa26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-017
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-858
+Previous-Spec-SHA256: ab768b979e62ab63199ee8d1014c993dcac7f51dfa92f15e627dacb33b2ceed1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: e7266c6d-fe58-4215-9a56-d1c82be92e71
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-018
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-824
+Previous-Spec-SHA256: 58355a1e3ae9f12a57279dfb67ba05d7e950b2aec1f3284aecaf8764339950c6
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: c2d657d0-27b9-4fb8-97fc-6e3ee65ea71b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-019
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-819
+Previous-Spec-SHA256: d89d457083d1d2d0dd132429b3f65b8a8470f3feca2f44284080833b4754eecb
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ca9488d5-e93a-4c60-9f58-f9812be0bb00
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-020
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-816
+Previous-Spec-SHA256: b9490f4fac3f5f00ff1c32d26609e48d82b94b615ab3580f0b0d2a5df955548d
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 10f7f1c9-b65d-4c68-bf59-cff752140c5d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-021
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-768
+Previous-Spec-SHA256: f0771cc886f5f56646b8431bf2e939952ecaa7297a05c0b888e23f7ffdb4fec2
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 7ae1d4fe-b06e-497d-8f2c-7e531e85087d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-022
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-726
+Previous-Spec-SHA256: 7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 35a3a05d-46f1-456d-bf72-025205408349
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-023
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 70e49d3ae5a3e418fad77e80fa0a61054c42de5c0634cc20881cfd7a4f005320
+Previous-Constitution-SHA256: 2afb9684d1ef531f56c5def2185c6cc7086c00aa3105bff0ce87fc5c81fc5fad
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2adcb180-5753-4ea0-a0c7-90fe3a81e26a
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-024
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: 6a04d0b0fa6c123f7990f02685afeed38858494cc2501ec4bfbc742050ab97fd
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ac8673b6-158e-4b68-9431-6ec807c855d5
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-025
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: ca037dafc7b21ab04ce3ffe20502e7cc8862f14dc342a1e3db2437a67887f40e
+Previous-Constitution-SHA256: d01469220b22455024bd58473a6ca9f307162b1317ba0fa5fe036b148f90362a
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: fabb442c-61e4-4776-b796-dfdc6fceac56
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-026
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b
+Previous-Constitution-SHA256: 76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2564bde3-ee0e-4e82-b317-a784d856ceb2
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-027
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-642
+Previous-Spec-SHA256: e8c4568adfcd8dcf82c91468cd1dfde4c46899e128d1388c00001eddcb9b1442
+Previous-Constitution-SHA256: 07c9b61b58ca970feff57f1647c30a32c4af4fc92063c9a87952771403376950
+Allowed-Change-IDs: REV-002,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: e9eec361-0bb6-41fb-aee9-1e0ebdd4b713
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-028
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: f00d4d7c0ecf1f7821fd336ce9278a12a168e1593417b1630527d458bcc929a3
+Previous-Constitution-SHA256: 89a36038833bdaed0d6de3ca353725643aff8aa53e6e0c53933b7ebdf4b1ad9b
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 29cc5a99-7d6d-4301-bb87-c33c1124d26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-029
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-652
+Previous-Spec-SHA256: 381393efb2d2f63029b4d6df27522836b5bcbb7205429b9df13ccbd6d96f513e
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-004,REV-005,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 21ee04c8-f878-41cb-9555-69ebd0454f44
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-030
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-694
+Previous-Spec-SHA256: 6ea31e784c68e7498c99f4bfd89f8231d3d4e545c345127acd6eeee961a3192b
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: SPEC-DRIFT,THREAT-MODEL-BINDING
+Max-Cycles: 1
+Nonce: d4f103ce-f2e9-4f0e-9f08-e599a5dca694
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-031
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-707
+Previous-Spec-SHA256: 274348c049ec609de8c6fd85ff5e1c35ccd888c4d3862a744e0167f8270d3c98
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-003,REV-004,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 653e2dc9-8565-443c-8e94-d4a39c653707
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-032
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: a6a56eb9bdb5c7b19e59fee6bef2c8f8fdbca2d4276f1b49d7a9c7ea049bc1ac
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 9135a313-e798-4475-b983-f80300305656
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-033
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: 5849ba840ce1352b97eb47a8d72b77397737242621d7e32170e2cd9e2a8d9402
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 439e493a-98a7-42a6-8d4c-adc7b2fa0635
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-034
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 1624f50bb9f70d475bec8c633a7cc6f46d0d94f8fe4e01ecf6abfced36420460
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 51b2872d-f6c4-43df-b41a-c1a6f8741703
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-035
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: e7356b91-2d2f-477f-a909-bf225c156691
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-036
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: d2e9fbef2dcb8228b3652d5f269024eada6cafbf62c03ec61ba26ad6e4418fd1
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: ef51bc98-82f0-463f-b6bb-ecde96654645
+Owner: user
+Status: active
+```
+
+
+## DEC-T1026-CLI（2026-09-21）公开验收入口
+
+用户明确要求所有新增功能可通过 CLI 验证，授权补齐缺失入口、修复问题和本机覆盖安装。增加 `workbench.tasks.inspect/events`、`workbench.capabilities.list`、`workbench.artifacts.list/read/render/reconcile`；CLI 导出仅写用户指定本地路径并校验 SHA-256。复用现有账号鉴权、持久任务、产物服务及预览渲染，不增加执行权或数据库归属。
+
+独立审查（Wegener，本轮实际发生）认可方向，指出读取隐式迁移、对账重试/跨任务回收、锁顺序和计划产物校验死锁；本任务修复并验证这些合入条件。只读入口不迁移账本，原操作对账可重复回读，恢复只限定目标任务。HTML 诊断报告实际降级，登记成功不等于图表完整。历史未验收项目继续保留缺口，Windows 无实机不得记 PASS。
+
+
+## DEC-T1026-ANONYMOUS-ACT（2026-09-21）
+
+用户要求新增浏览器能力全部可用并通过CLI验收；实际合法匿名scroll/click被底层crawl身份策略拒绝。沿原T1008受控工作台边界，仅由可信宿主为当前任务独占anonymous Hub启用已声明的七种交互。开关默认false、不可由序列化/模型输入开启；普通采集Hub、authenticated-replica、Debug、domain/epoch/ref/租约与外部操作授权均不扩大。Rust独立复核指出Act+evaluate需在Hub自身拒绝，已纳入修复与回归。此决定落实用户已授权功能与安全边界，不将“禁止阻断”解释为绕过授权或重复未知动作。
+
+
+## DEC-T1027-CLI-RETRY（2026-09-21）
+
+用户已明确授权新增功能缺少CLI入口时补齐。安装实测确认评论失败项没有公开重试入口，runNow无法解除作品级backoff。增加账号限定、有界IDs、基线CAS和幂等的失败清单/重试时间调整操作，复用原调度入口；保留历史与成功水位，不解除平台冷却。不读取或直接修写用户私有数据库，独立评审与正式契约回归先行。
+
+同项实现发现仅提前少量作品的 retryAt 无法限制随后 runNow 的范围，其他作品可能同时到期。为可靠验收和用户真实选择，扩展现有 runNow 可选 publicationIds（仅评论，1–20、真实归属、每次任务固定选择），不改变定时作业配置；不同选择与已运行作业冲突，禁止悄悄复用为本次结果。该细案按既有用户授权落实，经独立评审后实现，未发生新的用户确认消息。
+
+
+## DEC-T1026-FILE-RECEIPT（2026-09-21）
+
+沿用户要求补公开 `workbench.files.reconcile`（taskId、原operationId；write/apply/gateway幂等），只用可信Native持久committed记录结算原文件调用，保留旧unknown快照、原键和费用。独审Wegener已放行协议A及生产自动恢复：复用已有单在途recoveryWake lane，有界轮转，停止时等待并拒绝迟到回写，只定点恢复该unknown_result任务，paused保持暂停。缺记录/prepared不伪报成功；观察协议B未实现、未通过，原99不解锁。新同会话后续修订可在独立task目录读取不可变v1并登记v2，不能作为99恢复通过的证据。Windows实机与断电持久性仍无实证。
+
+
+## DEC-T1026-EXACT-ARTIFACT-COPY（2026-09-22）
+
+按用户“所有新增功能通过CLI验收，缺入口补齐，生成问题继续修复”的既有授权，补现有`artifact.copy`对已登记HTML/Markdown/CSV/PDF的精确字节复制；沿同会话/账号、真实源版本、租约和原调用身份创建独立新artifact@1，原lineage与源任务文件不动。真实子任务242/261已证明让模型转写18KB报告会超时或抄错，不能把这种搬运当可靠恢复手段。此为确定性协议能力，不替模型做内容创作或替用户挑选源版本。
+
+Socrates独立方案审查有条件通过：PNG既有2MiB守卫保留，其余支持格式沿登记20MiB；HTML必须冻结并逐项校验源依赖闭包及宿主生成的原相对路径基准，嵌套copy保留原基准。渲染不得扩大图片归属、网络或脚本权限。旧冻结工具目录不回写，新任务才采用扩展。真实红绿及完整公共调用链验收仍待完成；这不是已发布或已通过的记录。未发生额外用户确认消息，不伪造确认。
+
+
+## DEC-T1027-CONTROLLED-DIAGNOSIS（2026-09-22）
+
+真实七包仍无评论响应，现有公开入口无法在同一个采集身份页面核验导航契约；用户已要求CLI缺口补齐并持续修复。采用新增`analytics.comments.diagnose`窄领域入口，单真实publication、同账号原采集profile/lease、固定主页及有界导航候选观察/选择/关闭。不开放任意URL、selector、JS或私有CDP；先看真实DOM证据，再由Agent判断并选择真实引用，代码仅守身份、生命周期、范围与幂等。
+
+Socrates已实际独审通过完整方案：close只依session归属、不被作品状态变化挡住；诊断只获取平台准入、不把观察成功report为采集成功或清退避；持久CLI gateway的pending/unknown重放不重新派发；observe原子换generation、旧ref拒绝。自然网络仅有界白名单协议证据，不返回凭据/评论正文/未知字段值；无法硬限读取的body明确unavailable。TTL本身不释放未确认停止资源，不把诊断可用等同平台采集通过。具体约束和红绿门在T1027 SPEC，未新增application空转发层。无额外用户确认消息，不冒称完成。
+
+### DEC-T1027-DIAGNOSIS-ROOT-COVERAGE
+
+第八安装CLI诊断只能观察首个顶部nav，不能据此判断评论入口不存在。沿用户既有全功能测试与修复授权，增加有界多语义root与覆盖事实；不增加任意动作或正文读取权限。具体预算/旧ref约束见T1027 SPEC追加段，经Wegener前置独审PASS后实现、Carver做最终复核。未收到新的用户确认消息，不把实现裁决写成新确认。
+
+### DEC-T1027-OBSERVATION-FAILURE（2026-09-22）
+
+第九安装原诊断catch丢失阶段，实际构建模块隔离Chromium未复现该故障。落实用户持续修复与CLI验收授权，增加可选固定observationFailure四值，按阶段和自有timer来源分类，成功省略，禁止公开raw异常；保持原deadline/权限/平台预算。Carver前置条件PASS，具体约束与红测见T1027 SPEC。此为现有授权内的可观测性补齐，无额外用户确认消息，当前并未证明安装版失败根因或采集成功。
+
+### DEC-T1026-TERMINAL-FAILURE-FINALIZATION（2026-09-23）
+
+第九安装task256公开CLI真实453call快照显示：正常安全retry修复已创建准确284→retryOf283；随后plan已无pending/running，模型stop后因Pi将failed计划步骤纳入unfinished而继续自动loop，反复重试持久回执为额度耗尽的外部调用并重写报告。模型通常进展改变revision，旧相同progressToken停滞守卫未触发。主线已从正式CLI pause，未知453与全部既有费用/回执保留。原提案为增加一次工具禁用模型收尾调用；Hypatia独立复审指出其可能遗漏已有正文、不能跨重启持久化、摘要/历史可能不全且与强制工具序列冲突，故该提案废弃。
+
+修订方案不增加模型调用：Pi loop 在失败步骤已终态且无 pending/running/waiting_user 时仅返回失败 step IDs；后端在现有聊天完成事务中重验当前计划与账本，按固定可信标题写入持久 partial 回复。execution 模块通过纯校验端口拥有计划语义；新任务冻结策略版本，符合终态失败却漏传 IDs 必须拒绝。历史 stop 是否有后继按所有后续聊天 root 状态判断，以保留 rejected/superseded 的历史续行提示；提交资格要求候选是最新 settled root stop，任意后继都阻止部分提交。消息、completion、两个 task 状态、text-start/delta/end 流事件与 finish metadata 原子一致，重复提交幂等；没有模型正文时仍能由宿主说明完成。缺策略版本的旧任务保持legacy v0、不回填；公开CLI已确认task256仍paused，453 unknown，所以不迁移、不绕过checkpoint，以新隔离任务验收v1。Hypatia与Ptolemy独立复审均认可这些边界。具体验收见 T1026 SPEC。
+
+<!-- T1080：下面保留workbase6b1322af独有决定/教训；撞号映射见resource-control-resolution。 -->
+## DEC-T1066 — 两分钟下限与由内向外的超时预算（2026-10-06）
+
+用户明确授权将全系统超时最短设为两分钟、全部调整并沉淀Skill。为实现“避免外层先中止”的目标，技术关系采用外层等待大于内层全部预算并留结算余量，已在聊天解释；不把用户原句“内层大于外层”伪称正确设计或另一次用户确认。单次正执行/结果等待默认及覆盖值最低120秒，保留更长已有预算；退出资源回收若是有限执行等待同样逐项落实下限，主动取消signal仍即时生效。间隔、租约、TTL及输入时长不属于执行超时。原持久绝对deadline不因下限重置，continuous由原信号、归属、心跳监督。长转录端口继承任务执行预算；前端超时只结束观察，不伪造后台失败或重建任务。独立SPEC已真实复审通过，未授权push、发布或安装版覆盖。
+
+主树125bc864完整产品功能作为代码基线，与T-1063-release-pipeline远端1.2.0流水线分支分开；不以旧发布代码覆盖主树新功能。更新Skill支持版本3.27.3，旧T-1003和T-1019非terminal glob分别按实际匹配文件收窄为明确路径，以运行现有调度器，不扩大写权限。更新后reconcile实测62项失败/1告警（含既有边界、过期回执、历史LED欠债），记录原始日志；不把本任务聚焦通过写成全局全绿。
+
+T-1066-timeout-policy集成补充：独立复审回执REV:13310516269c通过后关闭全部并行lease，扩充精确pnpm-workspace.yaml、pnpm-lock.yaml、patches/**写集再生成Packet。HyperFrames 0.7.54以既有patchedDependencies持久修复，没有换版本；锁文件排除无关eslint peer重算。保留零值、授权TTL、秒单位上界及取消后500ms强杀宽限，正常关闭外层覆盖原protocol预算并加10秒。真实公共CLI隔离渲染与补丁应用检查均有当场日志。
+
+正式持久新任务创建/首次绑定使用新预算归一，历史deadline和缺deadlineAt的旧预算回推不变；新worker/agentic默认30分钟覆盖素材准备组合，原30分钟和continuous不缩短/续期。已授权T-1063-release-pipeline五个人为desktop-release job上限兼容移除，平台限制保留。分区tooling原Node/Vitest入口错误如实保留失败，并校准为实际89项通过的Vitest入口，不删除旧startup断言。通用Skill本地提交4b5406d7/3.27.4，项目支持update已复制3.27.4；旧看板双活动表导致strict receipt migration阻断记录，不伪称更新收尾全绿。
+
+
+## DEC-T1069-1070 · 2026-10-07 · 修复完整模型回执兼容与转录整理可靠性
+
+用户在T-1068-radar-transcription隔离复现后明确「修复根治一下」，授权本轮两项源码修复与隔离回归、本地提交；不要求指定真实账号。沿用Pi 0.80.7既有依赖补丁，在同一次HTTP响应内兼容完整Chat Completion JSON，不增加请求、不改变模型选择、数据归属或外部付费副作用。共享转录节点补validator，保留原schema/template摘要与后端回执回放；已确认的拒绝和坏输出沿既有原文降级路径，未知/在途回执仍守原状态且不自动重发。当前服务与错误码形状不变，不新增公开端口/表/角色；不自动改用户已暂停任务、安装或发布。具体规格须独立评审，机器回归确认后才记录修复完成。
+
+
+## DEC-T1072 — 本地授权与归属
+
+用户在 Growth 会话中已采纳产品低摩擦手机号登录和双设备，并要求与重构合并实施；最新回复“认可，我授权”确认 Activity 精确本地范围。CreatorOS 本地配套属于已采纳范围，无需重问；仅隔离候选及测试，不含生产、公开包发布或真实授权写入。先完成可执行 SPEC 独立评审，保留既有账号页方向与 oil-ui-pro，功能文字至少16px。
+
+
+## DEC-T1073 · 2026-10-07 · 已复现资源缺陷同轮修复
+
+用户在全面排查后明确要求“修复”，授权T-1073规格中8处源码缺陷、隔离测试及本地提交。内部消费确认与单调水位收敛回执，背压只限制传输缓冲，缓存仅回收闲置完成会话，后台与页面读取共享在途并真实停止。保留原任务ID、账号/scope/fence归属、幂等与收费、跨页回复、完整历史、审批和合法大输入；不新增公共服务契约或运行时，不安装、访问真实账号/库/媒体、推送或发布。独立评审REV:3b0b0c1dc9ce已通过；当前开发为Worker、前端、后台隔离写分区和主会话响应流整合，不是范围分期。历史全局门债保持原归属，不能把本轮聚焦通过记为全绿。
+
+T-1073门适用性补充（2026-10-08）：独立只读复核确认本已审源码/隔离修复规格没有正式frontend-journey-contract，父行误登记的待验更正为—。不新增页面/主要流程，不安装或读取真实账号/模型，合成组件/HTTP浏览器证据只证明隔离层级；不是正式UI旅程PASS，且AC-001..009、实际消费者、全部适用门仍须执行。
+
+T-1073会话归属补充（2026-10-08）：无审批卡的等待状态经SDK既有message-metadata通道传递真实executionTaskId/status，前端只信与本轮响应头回执匹配的状态。用户明确停止且服务端接受取消后，释放对应本轮的本地会话控制关联；这不是持久任务cancelled断言，cancel_requested仍保留原任务真实状态。失败保留原关联，迟到旧停止回执不能中断新回合或新scope。此为既有取消/资源归属兼容修复，不新增公共读取、操作或后台轮询。
+
+T-1073收尾补充（2026-10-08）：全部隔离lease已关闭后，父写集收窄为本轮实际44个源码/测试文件及规格/证据路径，不覆盖其它运行时或Copilot文件；主响应流整合测试新增实际消费者读集。按用户AGENTS.md明确要求将8处资源生命周期教训登记LED-061及reconcile可执行检查，只约束源码回归，不新增运行时质量门、公共服务契约或发布标准。精确哈希预算只覆盖已审规格实际清理/私有确认及合成证据，不扩大历史基线。
+
+<!-- T1080 device原独有决定；源审计原字节另档。 -->
+## DEC-T1069-1070 · 2026-10-07 · 修复完整模型回执兼容与转录整理可靠性
+
+用户在T-1068-radar-transcription隔离复现后明确「修复根治一下」，授权本轮两项源码修复与隔离回归、本地提交；不要求指定真实账号。沿用Pi 0.80.7既有依赖补丁，在同一次HTTP响应内兼容完整Chat Completion JSON，不增加请求、不改变模型选择、数据归属或外部付费副作用。共享转录节点补validator，保留原schema/template摘要与后端回执回放；已确认的拒绝和坏输出沿既有原文降级路径，未知/在途回执仍守原状态且不自动重发。当前服务与错误码形状不变，不新增公开端口/表/角色；不自动改用户已暂停任务、安装或发布。具体规格须独立评审，机器回归确认后才记录修复完成。
+
+<!-- T1080 pipeline原独有决定；源审计原字节另档。 -->
+## DEC-T983-20260914 — 采集错峰与运行入口
+
+用户当前明确要求：流量详情超时继续修复；两小时任务错峰；有活跃任务查看原运行，否则启动一次并查看。接受范围落实为默认00/15/30/45分钟，保留用户自定义非默认计划和关闭状态；服务端核对活跃运行，前端详情走本地打开并遵守LED-047。授权本地验证，未授权公开发布。
+
+T983来源状态补充：真实页面对照证明部分旧作品只有正常指标卡且无来源组件。以unavailable明确表达平台未提供，而不是伪造比例或标为采集失败；保留历史来源和原采集时间，不按年龄猜测。独立审查确认登录/加载/未知结构不得降级，用户本轮修复授权覆盖此必要契约表达。
+
+
+
+## DEC-T1063 — 安装制品生成与额外验收分离（2026-10-06）
+
+用户本轮明确要求取消Windows和Mac出包人为超时及阻断检查，并重跑Windows；随后澄清所指版本就是1.2.0。此确认覆盖DEC-T974中的旧发布硬门及packaging技能默认冻结限制：制品路径保留真实编译、资源组装与实际签名/公证；额外类型、课程、运行时、渲染、安装、启动、卸载、清单验收默认不运行，安装包生成后先上传，可显式选运行额外验收且失败仅留报告。没有执行的验收记not-run，不伪报PASS。项目不设置出包job timeout或自动取消在途构建；GitHub平台自身硬上限仍存在。
+
+改动只在codex/t1063-release-pipeline隔离树，基于远端已发布1.2.0代码，不纳入T-1062候选，不触碰真实账号、激活、用户媒体或安装的CreatorOS.app。远端推送新分支和workflow_dispatch须明确授权；不推main，不新增版本/tag/Release、不更新生产下载。
+
+
+
+## DEC-T1063-RESUME — 回读既有人类授权后继续Windows制品构建（2026-10-06）
+
+T-1063-release-pipeline前段已经修改并提交出包链，但没有实际新的Windows run。现在回读源会话的人类原始请求及精确turn，确认其明确要求改完后重跑Windows；必要候选分支推送和workflow_dispatch按已有授权执行，原始证据见docs/verification/t1063/authorization.json。仅codex/t1063-release-pipeline候选、only=windows与默认关闭额外安装验收；main、版本、tag、Release及真实用户放量不变。原技能双平台main发布路径按用户Windows专门任务收窄，运行与制品日志如实保留，失败仍按T-1063-release-pipeline已授权出包链范围处理；产品逻辑、签名与权限规则不作为出包修复范围。未把T-1066-timeout-policy运行时修复并入或宣称安装生效。
+
+
+T-1063-release-pipeline验收分类复核：独立review_spec只读确认它是workflow/构建脚本任务，无页面交互与frontend-journey-contract；按BACKLOG_TEMPLATE“非UI任务为—”仅纠正该行验收元数据，状态仍由taskctl按实际run/制品证据完成。此纠正不免除SPEC的非空setup、精确SHA、版本/体积/hash、检查与失败记录；未执行的Windows安装/GUI/卸载、Mac实跑仍明确未执行。此规则不应用于实际更改UI观察行为的T-1066-timeout-policy。证据见docs/verification/t1063/acceptance-classification.json。
+
+## DEC-T1086/T1087/T1088 — 本地验收缺口的原服务与账本修复（2026-10-09）
+
+用户已要求全面验证和及时补齐 AI 系统操作缺口、持续修复启动卡顿，并将审计过的代码本地整合 main 后无备份构建。该授权覆盖本轮实际确认的普通消息准备顺序、项目现有原生剪辑工程只读发现、密钥 FD 真 EOF 错等与终态同参失败账本校验。T1086扩展固定新版只读目录，旧冻结V1完整定义和功能目录沿原权限恢复；新工程分页按当前真实revision继续，读取不解锁写工具。T1087只区分EOF和EAGAIN，不缩短执行预算或修改用户密钥。T1088保持每条调用原完整digest校验，使用原宿主binding参数判断同参，不信任Worker自报。方案分别已登记SPEC并走真实独评/测试，未取得实施或安装证据的状态保留待验；该记录不授权push、Release或公开发布，也不授权采纳待确认图像401。
+
+
+## DEC-T1089 — 真实初始账号组三来源归属修复（2026-10-09）
+
+用户持续授权全功能可用性验证与及时修复、main整合和无备份本地构建。真实resolver/正式transport诊断证明已登记账号只选账号的合法入口遗漏会话/文章/图文归属；独立SPEC初审REV:ecf84d18be49确认仅0130版本三来源trigger与可证明旧NULL的精确回填，不新增authority或改旧任务/payload/digest/消息/账本/状态。正常版本与实际PG NOWAIT整轮回滚/锁后重采验收保持严格边界；原T1086测试不改。非UI分类独评确认仅更正验收元数据为—，不代签父T1062UI/Codex/全部功能。context-compile缺绑定，按已审SPEC只追加T1089精确pending项；原T1083不兼容glob不迁移，不重写旧状态。本记录不授权发布或图401采纳。
+
+## DEC-T1090 — 按原冻结历史恢复完成与候选来源（2026-10-09）
+
+用户持续授权全面可用性/稳定性验证和及时修复缺口、本地main提交、无备份出包；原T1090诊断实际确认同时间消息排序导致原回执replay来源冲突。正式SPEC仅恢复可信业务task的原historyMessageIds顺序，保留当前owner、全部历史内容摘要、冻结execution映射、lease/fence和原账本，不改变contract/schema、原任务输入或权限，不以任意ID排序重写旧冻结历史。任务沿原T1090进入精确修复与独评，新增绑定只记pending，不改变旧模块状态或glob。此记录不授权图401采纳、发布、私有cookie旁路或更改用户稿件。
+
+## DEC-T1091 — 公开编导的显式引擎与已保存目标（2026-10-09）
+
+用户继续验证并已授权全面补齐AI各功能、Codex与自然语言精剪、文章图文联合创作、本地main及无备份出包。本轮公开describe和原owner确认固定Pi且没有目标参数；沿同一已授权入口补可选engine/严格目标，不绕过本地页面来源保护或增加保存权限。公开联合生成目标由原owner标记实际public-request来源，不伪称页面current-click；原UI/旧冻结均保持。候选仍须明确采用，图401、真实稿件、平台登录/采集/发布、凭据不动。SPEC独评后才改产品，当前只建立候选与精确pending绑定。
+
+## DEC-T1093 — 按真实失败校准编导功能方法（2026-10-09）
+
+用户持续授权全面可用性稳定性验证、缺口修复、本地main及无备份出包。T1091新包实际Codex四类候选与Pi文章图文成功；Pi原生与联合失败均保留真实原任务、参数和严格回执。新任务只校准原功能方法prompt的数字类型、首次读取及同任务改参纠错与诚实状态，不改变工具schema/description/version/hash、Worker循环、owner、执行预算或采纳权限。当前仅登记SPEC与精确pending绑定，独立初审/真实RED后才实施；旧失败不抹除，unknown/running不新键重发，未采用候选、图401、原生UI及平台凭据/发布保持原界限。
+
+### DEC-T1093-CONTEXT — 串行交互式实施与既有Task Packet阻断
+
+2026-10-09：实际编译缺progress绑定、官方generate因T1026旧glob exit2，已登记T1083。遵循3.29 v3-4-build的单人交互不生成包；root串行产品/测试，独评只读辅助，以显式implementation context-plan、精确写集和正式评审守边界。保留原失败，未手改progress/旧glob、未改产品范围或减少实际安装验收。
+
+
+## DEC-T1094 — 真实部分完成读合同与消费者收口（2026-10-09）
+
+用户持续要求全功能稳定性验证、缺口及时修复、main整合和无备份本地构建，当前再次要求继续验证。实际原Pi200已可信partial，公开六态合同拒绝而消息/结果可读；独立盘点确认不能把partial冒称成功或失败以触发重发。新增公共partial并收口旧观察消费者属于既有授权的必要修复，不改变原completion/owner/任务/账本/写权限。候选与原数据保留，无自动重发/采用；正式SPEC独评后串行实施与真实安装原任务回读，父全功能验收仍据实保留。
+
+## DEC-T1095-A — 发现问题及时建任务并修复（2026-10-09）
+
+用户原话“有问题的创建 task 及时修复”，承接本轮全功能验证。当前已登记 T1095（Pi联合候选缺口）、T1096（旧文章/任务归属回归）、T1092及T1081/1082/1083等既有根因；继续沿独立SPEC/评审、真实修复与原链路验收推进，不把登记问题当作修复完成。原task200已有限partial，不重写其回执或用新的键重放未知任务。对已知终态缺陷，修后可在同一已选中性组/项目用明确区分的修复验收意图产生候选，仍不自动采用；未成功不能签PASS。
+
+## DEC-T1099-A — 新任务安全错误与未交付末次失败如实结束（2026-10-09）
+
+用户要求“有问题的创建 task 及时修复”，已有全面AI可用性验证、本地main整合、无备份出包及当前App验收授权。T1095真实Pi task222参数纠正后因文章共同脚本来源缺失被拒，宿主吞掉明确原因且零候选被记成功。T1099只冻结新任务安全业务错误格式，指导模型复制实际read来源并保真实末次失败；旧任务、来源/权限/版本守卫、采纳规则及工具定义保持。独立SPEC通过后串行实施/真实公共Worker回归，再新包中性组明确修复验收意图；无成功候选不能完成T1095，不用新键重发旧/未知任务。不自动采用、不生成视频、不push/tag/发布或操作凭据。
+
+## DEC-T1100 — 原completion测试显式声明旧格式（2026-10-09）
+
+用户要求问题建任务及时修复。T1099实际扩大回归发现两个旧兼容场景未声明旧任务格式，不能以改产品partial规则或删断言通过。仅隔离fixture显式删除新外层标记并追加当前partial回放验收，原断言/预算和用户任务保持，独评后串行实施。既有main/无备份本地包授权不变，不扩产品或采纳权限。
+
+
+## DEC-T1104 — 运行时展开诊断忠实性（2026-10-09）
+
+用户明确要求“有问题的创建 task 及时修复”，已有全功能稳定性验证、本地main及无备份构建授权。T1102同包已恢复首页，但首次底层原因UNKNOWN；T1104只修tar错误链被转String丢失和清理Result被忽略的确定性诊断缺口。唯一Rust文件，不增加重试、删除对象、质量门、超时或公共契约，不触碰当前运行App/用户数据/凭据。先独立SPEC和真实tar错误RED，再修复及原路径回归；本任务源码完成不代签首次根因、Pi联合创作或安装生效。T1103两次隔离研究已用尽，截断保真仍真实FAIL，继续最小兼容设计而不盲改parser或第三次实验。
+
+## DEC-T1101 — 画布生成与三平台绑定采集局部修复（2026-10-09）
+
+用户本轮四张截图明确授权素材缩略图、在途防重/重生成确认、连线填默认参考、平台表内扫码、删除刷新与重复框、各平台错峰自动化。沿原界面、公开服务与数据归属；候选只引用原file，不自动采纳。基于main 68dfffb3隔离工作区实施，不改其他活跃会话或真实profile/数据，不推送、出包、安装或发布。SPEC已独立只读复核PASS；root串行写，辅助Agent仅只读评审/分析，非并行产品writer。平台错峰采用原两小时频率内不同分钟，既有用户关闭与自定义计划保留。
+
+- DEC-T1101-RECOVERY（2026-10-09）：独立复核证实预约已存/task未创建的真实失败窗口。明确继续原提交复用持久冻结输入与原attempt，不用当前编辑替换它；仍守原owner/版本/引用和当前写权限。失败采集owner仅释放queued/running为partial并使旧租约失效；真实cancelled才取消，保留公开原execution retry。属于用户生成防重复与平台独立采集授权范围的恢复闭合，不扩公开契约。
+
+## DEC-T1101-MAIN — 已授权来源并入 main 与独立再验
+
+用户已明确全部本地代码合并到main、清理闲置worktree、无备份构建并逐功能验收。T1101来源f97a80da已独立完成，产品19/测试13路径与当前main无交集；root按T1080独立来源复核有限GO合并。来源✅/PASS只归原树，原events/review-events逐字节外部归档并保留Git祖先；不拼接或重哈希主链。main新增T1101待验记录，正式initial→start→实际组合验收，原失败另列。T1104源码诊断已验收，首次启动根因UNKNOWN与Pi漏参T1103仍保留；当前App和真实Cookie/媒体不变。
+
+## DEC-T1105 — 当前组共享资源读取生命周期修复
+
+用户“有问题的创建 task 及时修复”及全功能验证授权适用本项已复现缺陷。只修UI读取epoch/单在途/加载终态，原服务/权限/归属/写操作/历史保持；页面布局沿用既有oil规范。当前main实际6PASS/1FAIL诊断，前两个0test外部加载失败保留。先独评SPEC，再正式start和实际公共页面RED/GREEN；与当前T1101码面没有产品路径交集，不代签安装/真实库或全局旧债。
+
+## DEC-T1107 · 平台公共回归遵循现已确认的账号事实锚
+
+用户2026-10-09要求问题及时建task并修。沿T1062既有DEC的user+account+platform+externalId，不新增归属变更。实际公共探针A完整DTO不变、B新记录归属B；独立诊断错误结论已撤回，原报告/勘误保留。不据旧C09user级假设改产品或放宽权限；只校准六ID目录和不同账号同ID合法/同账号跨项目409，保原跨账号404。
+
+## DEC-T1105-EVIDENCE · 如实区分公共基线和组件红测
+
+正式浏览器实现前实际exit0、基线PASS，未复现spinner；已发生StrictMode与延迟切组组件4FAIL作为有效前置RED。仅校准验收证据叙述，不减功能要求、权限、写集、观察预算或旅程覆盖；原browser-red命名/回执仍保留且明确非RED。独立复核后重新record，不伪造页面失败。
+
+## DEC-T1108 · 保存成功后记录连线参考，未知旧选择保留
+
+用户要求全功能验收发现问题及时建task修复，适用于实际中断save却提前记已处理的缺陷。仅UI生命周期/保存回执后标记及原T1101公共回归预算；新标记核对正式保存内容，旧未分类标记不猜用户意图，不删旧key。既有详情连线区加真实次要恢复操作，明确点击才用原连线参考，手选/清空、候选确认、原任务与权限保持。oil原规范与页结构不变，不扩合同/数据归属/自动生成，不接真实模型或用户库。根串行产品写，先独评SPEC，后真实RED/GREEN与独立实现/操作复核；完成源码提交后沿父任务授权main无备份统一出包。
+
+## DEC-T1112 — 纯账号组读取已有 AI 工作台能力目录（2026-10-09）
+
+确认来源：用户明确以账号组为共享创作工作区，要求“全面测试和优化 AI 助手对于系统各个功能的操作”“有 gap 或者有欠缺的及时支持”，并再次要求“有问题的创建 task 及时修复”。879646 新安装版真实公共读取暴露能力目录错误要求平台账号。只调整该已有只读操作的 group 声明及 transport 入口，落实既有纯组权限；保留原真实 user/group 校验、归档读取、CLI 审计与其它七项工作台账号门。无新增 operation、响应字段、数据存储、写权限、模型费用或原参数公开读取合同；T1103 不因此恢复或完成。独评后真实 RED/GREEN，main 无备份新包安装沿父授权验收，不 push/tag/发布。
+
+## DEC-READ-T1114：原任务已结算模型调用的最小只读摘要（2026-10-09）
+
+确认来源为本会话用户“全面测试和优化 AI 助手对于系统各个功能的操作…有gap及时支持”“全功能可用性稳定性验证”“有问题的创建task及时修复”，及main无备份构建安装授权。新独立GET仅按原workspace owner与AI/会话/源消息/摘要闭包读取已结算调用，公开长度/段数/严格JSON与等价结论，不公开正文、字段名、digest或密钥，不取得租约、模型调用或业务写。落实既有诊断目标而非新执行策略；先正式SPEC独评、真实RED/GREEN、独立实现复核、main包对原task272读取。供应商原wire仍UNKNOWN，研究卡两实验上限保留，不改parser、不重发、不声称候选修好。无页面变化，不push/tag/发布。
+
+## DEC-T1115：原归档验收入口的真实默认预算（2026-10-09）
+
+沿用户“全功能可用性稳定性验证”“有问题的创建task及时修复”和既有两分钟执行规范授权。T1114完整对账后原入口复现lease beforeAll默认10秒失败，四例未执行。只把backend Vitest默认test/hook与同入口两个显式it预算提高至120秒，保已有更长预算、PG隔离、权限和所有断言/退出语义。先独立SPEC审核，实际原命令59例及共享CAS回归、规范检查和完整对账后独立最终复核；不修改产品任务deadline或用户数据，不重新打包仅配置变更，不代签T1116根因或全功能。
+
+## DEC-T1117 — 按既定素材预览与中文反馈要求修正画布两处遗漏
+
+用户持续授权全功能验证、发现问题创建task及时修复，既定素材选择以预览为主、页面统一oil-ui-pro。当前实际截图发现保存异常英文直出及参考field展示flag遗漏；范围只复用原中文收口、传递/闭合既有showIdentity，不变业务/归属/schema/数据。精确SPEC独评先于实施；没有新视觉方向或新的付费执行。不得把当前2PASS或后续UI修复代签T1103原wire/两稿候选。
+
+## DEC-T1119/T1120 — 修复验收派生产物与错误观察时机
+
+用户持续授权发现问题登记并及时修复；当前真实失败已独立保留。仅处理本机两份损坏派生dev类型并原生产/开发消费者重建，及一次已有浏览器reload的DOM就绪时机。无产品方向/归属/schema变化，不需要用户重新确认素材/模型动作。先独评精确SPEC再实施，不删原失败或断言，不改TS/Gate/budget，不与dev消费者并行执行类型生成。没有新视觉方向或App/DB备份。
+
+## DEC-T1127-01 当前分析功能来源整合
+
+2026-10-09，用户授权代码合主分支、全功能验证并发现问题立即建task修复。T1124独立审计发现来源T1106分析/cron/图表12路径增量未入main；仅按T1127当前SPEC独评后移植并重验，不继承来源状态，不补历史，不随整branch覆盖封面/日历/微信功能。现有App保持d712已交付包，后续源码稳定提交后重新冻结构建，无备份与公开发布。
+
+## DEC-T1130-01：验收适用性记录与已审局部图表范围一致
+
+T1127登记时误标待验，实际任务只要求局部组件的合成五日Chrome回放而无journey contract。独立当前审查明确路径B可行：仅校正为—，不虚构non-fixture/refresh/back，不删任何原组件、像素、视觉、公共后端、类型、LED047、static、timeout或完整对账要求。不改任务状态、SPEC、验证器、业务契约、源码或已安装包。本记录是调用元数据修正；T1127完整对账当前43失败/两新增仍需诊断，不代签完成。详见T1130与独立review。
+
+
+## DEC-T1133-01 制作验证协议校准
+
+- 时间：2026-10-09T14:18:14.104453+00:00
+- 授权：用户已要求全功能验证及“有问题的创建 task 及时修复”；保持现有缩略图选择、账号/资产归属和导出规则。
+- 结论：只修改 T1133 SPEC 明确的两个测试文件，保原业务断言并加强独立契约集合、真实同owner结果资产、越权拒绝、保存读回和完成幂等。无产品/契约/数据归属/UI变更。
+- 准入：独立初审 REV-001 正式保留；模块绑定补齐后真实 recheck PASS，再由 reviewctl 和 taskctl 留事件。不能以校准冒签模型、安装、全局失败或新包。
+
+
+## DEC-T1136-01 · 当前main排期布局整合
+
+用户既有整合/全功能验证/有问题建task及时修复授权，仅共享Dialog单列收缩和排期断点/必要select收缩；不改IA/服务/归属/发布标准，不签来源PASS。独评后原当前Chrome尺寸RED与正式保存回读；UI沿oil-ui-pro0.10.0。产品尚未修改。
+
+## DEC-T1159-001 当前微信来源整合与真人执行边界（2026-10-10）
+
+用户已授权汇总会话代码到main并继续全功能验证、发现问题及时建task。本次依T1158独立准入整合source293d冻结56路径，不搬控制记录、不重置wechat-statistics-visible-section两实验预算。保原0报告/未知导航，独立隔离契约、归属、页面、调度与离线包验证可继续；真人binding/同步/真实scheduler及安装触发等原研究resume。当前浏览器交回问题尚无答复，不从等待推断授权。本文记录既有方向与范围，不增加审批点；源码移植仍先当前SPEC独评。
+
+## DEC-T1165-001 既有平台身份拒绝恢复（2026-10-10）
+
+用户已授权全功能验证及有问题立即建task修复。原T1020明确SCOPE_MISSING拒绝并引导重连；当前正式dispatch将该码丢为string，扫码恢复未显示。本次只补固定既有码映射原400，沿用既有页面与后端权限，无新IA/归属/HTTP状态或发布标准，独评后原公共错误链与完整Chrome复验。原真人微信研究预算与暂停不改变。
+
+## DEC-T1168-1169-001 已授权验收缺陷恢复（2026-10-10）
+
+用户“有问题的创建task及时修复”与持续全功能验收授权适用：T1168仅修当前身份恢复文案/主动作与已有24px token；T1169仅修转组浮层回焦。独立视觉与Cua原报告/原图保留。两项先独立SPEC及真实RED，现成执行/归属/任务/能力均不扩展；不新增扫码、采集、模型调用或用户数据写入，原真人微信研究暂停保持。
+
+
+## DEC-T1194-001 安装当前新包与清理旧测试制品（2026-10-10）
+
+用户本轮明确要求安装当前新包并删除旧测试安装包，继续使用当前登录用户，无需备份。该明确授权覆盖T1191产包时暂不安装/启动的边界：仅替换并启动核验过的d91079d6本地1.2.0包，按实际清单删除旧客户端制品和空包装目录；不删账号/项目/素材/激活/诊断/失败证据，不改变微信或上传研究暂停，不做正式公开分发。产品代码与现有构建保持冻结。
+
+## DEC-T1199-001 账号组定时任务真实范围与只读计划资格（2026-10-10）
+
+用户本轮要求查清并修复其它已绑定媒体任务不可见。独立SPEC复评PASS 5c94501638b4eb12c77402c5600d81ddb13c16e02e86c318f9694d7bf3da8415。采用账号组全量任务与明确本地平台/账号筛选；新增只读accounts.collectionPlanReadiness，沿现有启动证据合同且不宣称当前登录。已有任务原ID、scope、排期及历史不变，新的共享去重包含旧nonnull行；普通创建原白名单不扩大，不在真实组自动补齐/启用/运行。实现/真机尚待验，不以SPEC通过代签。
+
+## DEC-T1199-002 / T1200-001 实现闭包与实际验收边界（2026-10-10）
+
+沿本轮明确修复/整页重设计以及既有 main 合并、本地无备份构建安装授权。T1199 的目标资格读取使用实际成员上下文；仅归档账号历史走纯组读取，写操作保原账号拒绝，错误及迟到状态隔离经独评后实际回归。T1200 统一资料库、经验与关联、IP实战课，不改变知识归属、AI候选采纳或原功能合同；独立任务走查与三轮视觉评审实际发生。真实账号未自动创建/启用/运行；归档历史为明确隔离夹具。实际200%缩放及新安装版功能尚未覆盖，不改变验收标准、不完成父任务。只提交已审源码及真实证据后冻结本地构建，不推送、打tag或公开分发。
+
+## DEC-T1201/T1202-001 非UI测试合同的适用性校准（2026-10-10）
+
+两任务只校准既有测试文案且保留完整错误/保存控制断言，产品行为文件没有对应修改，SPEC未含frontend journey contract。独立只读适用性复核PASS后仅把初建时误填的验收待验校准为—，状态仍走taskctl及真实148/160例与全局失败证据；T1199/T1200产品任务仍待验。T1199后端类型检查新增TS2345缺query/body，原失败保留，独评后仅补测试实际EndpointInput必填空键，不改断言/产品/schema。
+
+## DEC-T1212-T1214-001 自动化故障诊断与安装见证（2026-10-11）
+
+用户已授权发现bug建task修复、全功能逐项验收、本地当前用户新包装安装无备份。固定export_*只细化既有字符串progress的机械阶段，不增公开端点/schema/默认权限/超时/重试或数据归属；阶段消息/日志为白名单，通知不能反杀合法导出，原fence事务保护progress-only。平台只关闭可见弹窗的显式关闭控件，保我知道了原路径，不能猜授权/删遮罩/force。原月明失败真实modal遮挡与系统下一次成功86均保留。先前pending诊断禁止人为重发；在原run均终态且新包已安装后，已有全功能验收授权支持一次正常公共runNow新验收，明确新ID、无pending冲突并保存真实结果。新操作不冒称旧任务恢复或全功能已通过；私有DB/CDP/凭据、外部发布和暂停平台研究不扩开。
+
+## DEC-T1210-T1214-002 非产品UI任务验收列适用性校准（2026-10-11）
+
+T1210/12/13/14初建误填验收待验，taskctl实拒绝普通evidence说明并试读为frontend report；失败原样保留。独立适用性审PASS核四SPEC均无frontend-journey-contract、精确产品写集只在backend和frontend/src/server，没有改变本应用页面/组件/布局或UI consumer。平台静态Chromium为外部自动化夹具，不冒充产品UI两viewport；真实公共链/安装、隔离PG、原回归证据全部仍适用。参照DEC-T1201/T1202-001仅四行验收列校准—，状态继续taskctl及审计事件，不修改Gate/断言或补造UI报告；全局27FAIL/T1204、T1215/16/1196仍保留。
+
+
+## DEC-T1217-001 初始工作区的有界兼容与原执行收口（2026-10-11）
+
+用户已授权全功能稳定性验证、发现 bug 建 task 及时修复，并持续要求继续。选定 T1217 修订候选作为该既有故障修复的实现解释，当前独立 SPEC 复评 PASS 前不编辑产品。真实初始成员证明下 NULL 根与 canonical 初始组表示同一既有逻辑工作区；普通组权限、数据归属、公开契约和 schema 不改，旧 ID/hash/时间不迁移。无账号 RSS/web 不借历史平台账号要求新绑定；历史读取和执行准入分开。五个 intelligence 内部产品文件按修订操作/父关系矩阵闭合，原 fence 和当前成员守写入，同组锁保障两表示幂等；确定拒绝只收口当前原 execution，share_import 两段合同保留。范围与 A–H 实测要求见 SPEC 和修订候选/DEC 草案，旧候选 FAIL、两条 RED 保留。若要迁移所有权、普通组接任意 NULL、强绑平台、重发/续期则超出本决策，不沿用该授权；本决策不预签功能通过。
+
+
+DEC-T1217-001 收口补充：独评发现 source_sync 的 finish(failed) 控制特例，前置读不能保证控制优先。选既有 finish(blocked) 的 strictly-running 状态 CAS + 原 fence；控制先提交拒绝后原 claim acknowledgeControl，竞争丢失保状态，不再调 failed。过期 lease/unknown/新 owner/终态不结算。实际原 run blocked 对账仍沿既有机制；无新增 execution 写集或公开参数，当前独评复核后实施。
+
+
+### DEC-T1217-001 永久删除的最小来源证据闭包补充（2026-10-11）
+
+实际删除后Project getSourceContexts RED和独评见docs/verification/t1217/deletion-provenance-review.md。按已批准FR-CR-017/AC-CR-022及用户继续验证/修复bug授权，选择正式T1217补充中的内部精确adapterConfig证据标记、source ID机械命名空间退役业务externalKey、锁内最小source/run父闭包。业务列表/计数/读写/原ID再次访问/同identity新建仍保持永久删除合同；普通archive/pause保持。原ID/user/account/group/createdAt及受保护实体ID/hash保留，不迁移用户数据、不公开新模式或schema、不保全执行历史。syncPolicy不藏标记；未引用源物理删除。唯一新增测试白名单为intelligence.service.test.ts校准原T665与壳相冲突的私有物理断言，保原RED和全部其它保护/清理断言，另完整public消费和PG竞争必须实际通过。当前正式独立准入PASS前不改此策略。
+
+原 source-sync-runner 用户取消即时ack合同继续：确定性准入拒绝及宿主drain按原claim收口要等待已在途心跳，用户cancelOnAbort=true的即时取消不能被无条件等待心跳挂住；不改T1073旧断言、原控制权/fence/预算或新增执行权。此前扩大await导致的真实旧回归FAIL保留，稳定浏览器窗口结束后原产品窄修复并复验。
+
+2026-10-11 DEC-T1217-001 最终复核补充：依当前正式SPEC与独评真实消费者，未知SQL/transport不作确定归属拒绝；永久删除在锁内核当前execution重试/控制及双向绑定，错指针零删除。share_import无反向source事实，仅已证同组且确定终态时保无法证明可删的原task，合法来源删除继续；不新增执行权或保全部历史。裸无真实平台账号兼容须严格同user/account/kind/owner与NULL/精确legacy组、payload无矛盾，真实成员缺失不能降级。保持五产品写集、公开行为、原失败/ID/预算，实际负族与独评未完成不签GREEN。
+
+DEC-T1217-001 可见历史边界：无法证明可删的 share_import 原终态 task 保留可能仍被既有 execution.tasks.get/list 读到；避免误删的最小安全校正，不新增访问权/执行权，也不声称所有公开查询逐字不变。来源及来源run/events保持永久删除语义，不复活/续期。
+
+DEC-T1217-001 合法终态清理补充：实际group-only RED及已审startRun证明run历史account不能替task冻结执行账号；按真实组/唯一历史member版本及可信创建时间、kind/owner/payload双向证明，NULL纯组不造成员，错成员/指针零变更。正常未confirmed候选真实settled/rejected调用FK RED，选最小原execution审计父保留，不删调用/计费/stream/evidence/AI/产物引用；盘点全部真实FK，active/unknown仍拒绝，无引用证明可删者继续原删。保留历史可由既有查询读到，源及来源run/events永久删除语义保持，不新增权限/schema/执行权。五产品写集和独立准入不扩成执行核心改造，完整新族与公共旅程待实际完成。
+
+## 2026-10-11 DEC-VERIFY-1223-1224：测试/报告工具验收条件校准
+
+独立适用性评审 docs/verification/t1224/independent-review.md 确认 T1223 是报告生成器、T1224 是原E2E预算与证据目录设施；不改变 CreatorOS 产品UI，无PAGE_SPEC或frontend-journey-contract。按技能“未激活的条件不产生缺失工件义务”，root将误填的验收列待验校准为—，不改任务状态/Gate/校验器；后续完成仍原taskctl写审计。全部正式SPEC要求保持：T1223真实RED/GREEN、原索引/图片/历史状态/唯一跳转；T1224原完整公共旅程、真实截图、原同ID读回、零retry/独立证据。没有通过就不能完成，适用性判断不代签全功能或T1217/全局失败。若未来扩大产品UI或引入合同，重新激活原门。
+
+## 2026-10-11 DEC-SOURCE-1217-TOKEN-UNKNOWN：删除复用实际账本判据
+
+用户持续验证/确认缺陷修复授权范围内，真实token settled缺usage删除RED；独立精确准入PASS，沿原ledger.assertResolved settled/null total且非requests补原source删除未确认调用查询。原requests无token已结算可用性实际正例保持，不能把费用未知任意推导为整个请求计量失败。原calls/task/evidence不删除，scope/在途/归属和五源写集不扩；最终67/原76/公共E2E仍待实测。
+
+## 2026-10-11 DEC-MEDIA-1226：补真实测试媒体默认根隔离
+
+用户持续全功能测试与明确bug修复授权；正式SPEC/Packet及docs/verification/t1226/independent-review.md精确范围准入PASS。无持久root时才沿既有CREATOROS_MEDIA_ROOT配置，空env原默认、显式持久root优先；Playwright为fresh数据根覆盖专属media环境目录。不改变HOME/os.homedir、storage.put迁移、token/工作区归属/schema/S3或真实媒体目录。实际blobroute与工厂均经settings.resolveStorageRoot；不以未消费的旧helper注释当证据。四路径已固定，允许轻量RED/单测/静态；公共上传待T1217/T1224串行结束后才跑，真正隔离闭合前T1225不得上传。
+
+
+## DEC-T1229-001 · 2026-10-11 · 雷达正文私有输入明确表达纯文本
+
+用户要求持续功能验证并及时修复确认缺陷。原3914原任务实际frozen不存在/calls0，官方正文Skill真实outputSchema=null与结构化入口矛盾。候选保原IPC运输kind，增加严格正文标签与仅intelligence entry专用能力；不放松通用结构化输出契约、不新建执行权、不给其它Worker正文调用权。新旧冻结并存，保原身份/费用/期限。正式范围见T1229 SPEC；须独立复核及真实official/effective链RED后实施，当前不是实现PASS或真实用户任务已恢复。
+
+
+## DEC-T1238-001 · 2026-10-11 · 本地Codex统一文本与内置生图
+
+用户明确“codex”并要求继续实现，正常选择Codex后不调用独立文本或生图模型。这取代T1057合同候选中仍需单独图片模型的推论，授权补齐全系统文本/图片路由、后端默认偏好及真实内置生图回收。新任务冻结、子任务继承、后台共用；旧Pi任务保持原账本事实，不静默回退。复用随包官方app-server及现有execution_tasks/候选服务，不新增任务权。原生生图实际由Codex登录/套餐/provider能力决定；真实图片字节回收到任务空间，不能读取任意Codex home路径或用供应商API伪称Codex。视频、ASR/Embedding及宿主基础设施不因本次文本/图片要求扩大范围。前置独立评审与实际红→绿、公共链/真实文本生图验收仍需发生，未发生不签PASS；不授权外部发布或购买新服务。
+
+
+## DEC-T1238-002：偏好就绪前保护与媒体凭证公开映射
+
+Date: 2026-10-11
+Status: decided within DEC-T1238-001 confirmed scope
+用户依据：已确认选择Codex时文本与图片不要求独立模型配置，原ASR/视频能力保留。实施选择：未读取可信服务偏好前不展示独立文本/图片卡、引导或启用其连接测试；Pi就绪保原卡，Codex就绪免两类配置。渠道共享媒体服务按已有明确capability→serviceId关联保留，禁止服务名称猜测。原client公开services及原PUT端口已使用该opaque ID；脱敏只恢复该公开user_input集合成员的关联，未知/受管ID仍null，provider/baseUrl/名称/其它实现信息仍清空。不新增API字段、权限或数据归属，不修改原任意ID/受管Key拒绝；仅落实原已确认范围，未新增产品方向选择。
+
+当场证据：pending/cards/services真实红4、真实sanitize投影红1→最终三文件43PASS/0SKIP；独立只读复核实际canonical ready/defaultProbe/testSession、媒体共享服务和原PUT边界无新增阻断。真实浏览器新增有限延迟偏好GET与模型探测计数验收，最终状态以ui-final.json及GATES.md为准，不把fixture写成真机。
+
+
+## DEC-T1246-WORK-CANDIDATE-001（2026-10-12）：真实选择接线与原候选人采纳
+
+**Owner**：user（集中修复授权来源为2026-10-11本会话的实际指令）；技术合同编写root、独评codex_route_inventory。**Status**：已确认范围内的缺陷修复；合同独评PASS，产品实施及完整验收待完成。不是新增用户答复或accepted-risk。
+
+**来源与授权**：用户要求整合已完成会话，开发版打包，AI编写流程和用例，子Agent实际浏览器/App验收留图，发现问题记录后统一解决。既有T1097登记的身份/参考文档未接当前编导、字段默认保护和联合事实对照缺口属于本次确认缺陷修复；遵已确认文章图文联合创作、右侧编导微调，不恢复旧按钮。
+
+**决定**：严格writingContext仅选择真实身份版本和资料file IDs，后台以原owner ports核归属，解析快照进入原hostContext及read/model输入；中性/无资料合法，旧task恢复原快照、原预算。新增唯一只读ai.workCandidates.source核原sourceMessage/task/call/tool、成功候选与完整摘要；外部原参数只在新reserve原事务写原task.payload.externalToolInputs，不补历史证明。原versions.create增加严格assistant分支，用户明确字段/事实选择由后台机械投影、原owner CAS/独立artifact receipt保存；不接受候选document override、不让模型直接写稿或授权采用。原同位置相同历史引用继续合法正文保存；新/改引用及归属撤销保持原门。
+
+**边界**：独立图文精调/native视频继续manual。两个作品各自receipt，ACK重放原意图不增模型、不覆盖后续手工稿。无新表/迁移/SDK/供应商，无真实用户资料迁移或平台发布。Codex免独立文本/图片API与Pi兼容分别实测。2026-10-11用户实际回复暂不授权macOS Automation Mode，App保持未验，不用浏览器或包校验代签。
+
+**可审证据**：[正式SPEC](../docs/features/t1097-article-director-options-diagnosis.md)SHA8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232；[初评需修订](../docs/verification/t1246/first-diagnosis/t1097-formal-spec-independent-review.md)与[真实复评](../docs/verification/t1246/first-diagnosis/t1097-formal-spec-independent-rereview.md)均保留。实际控制面receipt由reviewctl另记；本DEC不等于typed process-review-cycle capability，也不代签实现或测试。
+
+
+## DEC-T1246-CONCENTRATED-REPAIR-003（2026-10-12）
+
+沿用户2026-10-11原授权完成首轮登记后集中修复；最后精确71追加路径与后端205正文完整map通过真实独立复核，T1246 SPEC SHA fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a，reviewctl integration REV:e75e32a6b7a8 / canonical REV:883f7fe733ba，cycle1 round3/3。这是合同批准，不是实现验收。B044未知授权policy仍冻结，B045/B046因果UNKNOWN；不得改expect粉饰。FF001/PB001原41、D01/D02 34、BA001 37、设置controller/Shell/nav13及真实Dialog3 targeted exit0，各自回执单列，原全套首红不变，完整外层超时/公共浏览器/打新包仍待执行。App按用户原回复“暂不授权，保留App验收未完成”，不启授权、不代签AC5、不complete整任务。
+
+
+## DEC-1250 · 2026-10-12 · 真实短预算修复与精确静态分类
+
+依据本次用户 T1246 全功能问题集中修复授权，以及用户本次提供的 AGENTS LED-053：采用 T1250 已登记 SPEC 0c9468d5 的24精确路径，修正11正执行/有限观察与必要私有signal及下层IO，保10冻结vendor和原90秒idle/5分钟life。保原deadline、取消、unknown/原ID、receipt/CAS/资源归属与完整串行外层。独立SPEC报告及root复核见 docs/verification/t1250；正式reviewctl记录负责准入。当前尚未实施/新验收，不代签App或Windows。标准frontend首轮100的4个既有错误保真实非零、不得删除排除；PG27/78仍在途前backend信号路径只读。
+
+
+## DEC-1251 · 2026-10-12 · 可信失败叶与受控崩溃验收
+
+依据本轮用户全功能问题集中修复授权，采用SPEC25431075三精确文件：只在结构化生成叶保留真实GenerationFailure/cause，保complete回读优先与未知、不改global分类/公开预算/Pi顺序。原21和9红全留；串行ACK屏障与同任务spy隔离、真实continuous无期限/合法finite入队、新unknown刺激及计数都按真实consumer和独立候选逐项证明，不能改期望洗绿。独立SPEC由codex_contract_review出具，root正式record负责准入；PG27/78源窗结束前不改本任务输入。没有签新测试、完整有限链、全功能或App通过。
+
+### DEC-1251-OUTCOME：纠正两族真实失败回执名称
+
+依据T1246集中修复授权与独立澄清复核，badOutput/diagnosisEmpty的已安装完整工具失败回执为transient/retryable=true/sideEffect=none，不能伪称no_evidence。仅纠正规格字面事实，保持三文件写集与公开生产合同；其他族no_evidence断言保留。实际工具/完成账本、计数与新断言仍需独评及完整运行，不从partial状态推断通过。复核：docs/verification/t1251/INDEPENDENT_OUTCOME_CLARIFICATION_REVIEW.json；原规格已封存spec-history/candidate-254310755165.md。App仍未授权/未验。
+
+
+## DEC-T1253-EXACT-FIXTURE-001（2026-10-12）
+
+依据用户2026-10-11 T1246整合/全部验收/首轮登记后集中修复授权。正式T1253 SPEC SHA093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19，独立packet3559300884278286de836130dbb17765d409e2415f2335deebdfc6fdbb589adf；reviewctl integration aec1a066db72 / canonical bdc68eac9f3f、taskctl start真实0。这是合同准入，不代签实现或runtime通过。
+
+仅ports/hooks/draft三原test文件8红窄校准，生产源码/公开schema/原预算/unknown/accounting冻结。先只观察原res.destroy两未知族，保原刺激和期望完整原25执行；若第三HTTP重发原unknown调用则生产阻断、必须精确追加SPEC，不能换刺激掩盖。429可信superseded、partial正式结果/准确流提示与Pi缺usage安全unknown分别按实际消费者独评后实施；401/400、原成功case、同ID/父子/CAS/调用次数/unknown保护都留。
+
+原9/46=38PASS8FAIL完整保留，后端/Worker types真实绿不覆盖8红。后续每个精确fixture/工具绑定候选仍需root+独立peer真实窄审；未审不得apply/执行，不引入新模型/服务/数据库。App用户未授权保持未验，不以隔离fixture或打包代签全系统。
+
+
+## DEC-T1252-HTTP-OBSERVATION-001（2026-10-12）
+
+依据用户2026-10-11 T1246全功能整合/实际验收/首轮后集中修复授权与AGENTS LED-053。最终SPEC SHA f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402，经root全文复核与独立initial findings[]，正式reviewctl integration fc42b1d42391 / canonical5ceaed23e00c，taskctl start真实0。合同准入不是实现/300秒运行/包/App PASS。
+
+仅6产品与9原tests：private每dispatch Undici7.27.2 Agent供原fetch dispatcher，有限绝对入口观察贯穿原login/明确401唯一重登/POST/完整JSON EOF/owned cleanup。global不改，原headers/auth/group/key保；已有可信success或error receipt不可被finally cleanup覆盖，诊断分离，不重发未知/不延task deadline。legacy历史无基数上限诚实保；外部MCP默认60秒由caller控制，不能签任意peer慢链。
+
+当前所有源/lock在途窗口冻结；仅模块/pending/context、私有候选和受控RED工具准备，工具独评后才执行，root释放观察25源窗后才apply。原未发生的300秒RED不补历史；打包CLI Node25和真实公共b88 Rust/file/render需独立真实回执，标准types历史红/T1026旧write_set不修或藏。Windows/App/官方语义未验保持。
+
+
+## DEC-T1253-UNKNOWN-PI-LICENSE-002（2026-10-12）
+
+原 DEC-T1253-EXACT-FIXTURE-001 与 SPEC093bbe2、两次原25观察各17PASS8FAIL保留。第二轮实际11个HTTP/ledger快照确认：两任务冻结Pi，原行锁、pending父工具、原摘要/key/parent/预留及原租约内的retryOf授权均吻合既有T1022无外部副作用模型候选合同；不能只凭第三HTTP次数断定无许可重发。root514fb862与独立50550661实际窄复核后，SPEC b132114ba0b561dc362b9f10d2cb5471a12206a35ef6377bfa3324859661059c 原样正式recheck：integration REV5f15e51c94ab / canonical REV0ae4b371a9c9，cycle1round2，均0 open。
+
+仅澄清三原tests内UNKNOWN验收，沿用户T1246集中修复授权；不新增重试策略、产品方向、写集或用户授权。hooks保原三次真实请求身份并最终unknown/null回执；draft保原四次身份及可信no_evidence/none/partial，后续必须直接查询原归属产品表核0作品/0稿件任务/0可采纳正式候选，当前观察未查询不得补签。Codex thread/turn、asset与外部工具未知不获此Pi许可，旧null usage/预留不得归零，原deadline不续期。每份新断言/工具仍须完整diff窄独评与实际原25→46/types/Gate；本次SPEC准入不是runtime PASS。App用户暂不授权，继续未验。
+
+
+## DEC-T1253-USAGE-FAILURE-REPORT-003（2026-10-12）
+
+正式SPEC3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484仅澄清FR-USAGE原成功候选commit与失败状态通报；b132及093b、原8红和两次观察25各17/8全部保留。Worker原requires_reconciliation在新reserve/start/provider前停止，原catch仍经commitResult IPC通报unknown_result/CHECKPOINT_REQUIRES_RECONCILIATION；严格DTO与生产dispatcher将其交failure状态端口而非候选owner。不能要求该IPC数量0或推undefined正文；仍须真实原所有调用、唯一raw失败通报、候选owner0、0正式结果与原null用量/检查点保护。
+
+root b2951412和独立route f469a7e4实际18输入闭包核无漂移，reviewctl真实integration REV908ff8f5d3da / canonical REVe890e7d4ffac，cycle1round3均0 open。不新增产品策略、生产写集或用户确认，不把静态CP001说成runtime红。三测试v3另有独评8c0b0498，须fresh实际SPEC/source/tool准入并执行原25→46/types；本次合同准入不签通过。App保持用户暂不授权及未完成。
+
+
+## DEC-T1254-REQUEST-SOURCE-001（2026-10-12）
+
+依据用户T1246集中修复/开发包与逐项验收授权，闭合完整门两真实30秒请求；选择两原适配根分别真实锁构建、同shared预算修改、完整对应源及static新增精确校验。原CSP和bridge不变，root index.html只机械更新本地产物引用；首次CONCERNS REV001历史保留，4066ef合同round2正式PASS（integration433e70ede4d7/canonical1ebe2f90de0b）。每份源码/测试/工具与最终完整复制清单仍需双审，未签已build/验收；App用户明确不授权保持未完成。
+
+## DEC-1256：原static三无用声明的编译清理（2026-10-12）
+
+用户T1246集中修复/整合/打包/逐项自动验收与“继续”的既有授权覆盖V13当场完整build三TS6133的最小清理。仅owned static EditorPanel.vue三个无用声明，保V6实际0644/inode/UID、模板/样式/操作/原命令/类型策略；对应新source/combined patch经T1254exact清单双审交付。首SPEC模式描述CONCERNS真实保留，第二轮ed320dba0189/b3d116e19a48 PASS；候选仍待V14精确工具准入。原V12/V13失败/missing不补，App仍未授权未验，不新增发布或系统权限。
+
+## DEC-T1255-DIRECT-ENCRYPTED-LOGS（2026-10-12）
+
+用户明确“直接上传…我自己统一在这个growth端去解密”，修订为CreatorOS原脱敏加密日志通过HTTPS直传Growth；Growth持久存密文、官方安全管理员按需解密。之前Activity限定批准不使用，Activity未改。旧结构化及账号共享范围保留，不借旧授权自动扩成完整日志。新合同记录wire/公私钥归属/只写收件和独立官方读权/回执去重/限量/30天保留与关闭语义。用户授权可逆实现与隔离验收，正式部署/实际服务器私钥配置留具体候选交接，不发送真实用户日志或开发者私钥。当前待独评，不沿用原三仓PASS。
+
+## DEC-T1255-DAILY-IDLE-UPLOAD（2026-10-12）
+
+用户明确：“上报的频率不需要这么高…对用户无感…不要影响用户的使用…离线软件…用户在开启软件的情况下一天上报一次”。替代原5分钟日志/60秒指标建议：异常即时本机采集，日志和指标仅运行期间每天最多一轮、等待空闲，活动生成/渲染/导出/发布推迟，退出不等网络；离线/失败保留到后续每日机会，不高频重试。不驻留关机后台，不轮询远端配置，配置随每日响应交接且不可提频。持久lastAttemptAt/租约保护重启/多窗口，单轮限并发/速度/总量作为候选上限待实测。后台显示每日汇总/历史诊断和数据水位，不冒充实时监控。用户频率决定已确认；旧直传PASS不覆盖新指标、排期与性能验收，生产实现前复审。
+
+## DEC-T1255-OWNER-ADMIN-IMPLEMENT（2026-10-12）
+
+用户确认每日无感观测方案并授权开始执行，指定Growth日志查看管理端只允许Admin手机号17362936917。server真实官方登录+现有Admin角色+phone hash候选定位统一保护日志、指标、异常、下载、解密与配置，其他Admin也不可读；可复用MIT社区日志虚拟列表，沿当前Shell与oil-ui-pro。最新范围并入原T1255，旧PASS不代签新合同；Activity排除，生产/私钥配置待具体候选就绪后交接。
+
+## DEC-106903（2026-10-12）T1255用户授权一次当前快照评审周期
+
+用户实际回复“允许重建一次评审周期”。只恢复当前PROJECT生成快照与T1255已确认需求的合法评审绑定，不新增功能范围/用途或生产、密钥许可。LED-053原明确最短两分钟并覆盖真实消费者；共同SPEC将原120秒措辞精确为网络余量加实际有界body/rate，避免合法10MiB低速上传被默认300秒截断，不改变24小时下限/10MiB/限速/退出/原deadline。旧round2与private历史都保留，不改PROJECT生成段或旧receipt。
+
+```text
+ID: DEC-106903
+Authorization-Kind: process-review-cycle
+Task-ID: T-1255
+Previous-Spec-SHA256: 71b9889a5b699ee631bcde0602e2df111414582949592b5414032445ef6ea6d5
+Previous-Constitution-SHA256: dc1df9e9e90e2c74557d9ed7486fa964b7de9f037be0822c4dbba2216bb686fc
+Allowed-Change-IDs: T1255-CURRENT-SNAPSHOT
+Max-Cycles: 1
+Nonce: 7cf8c1d0-2e7d-4c7b-9866-ac0180c2c90b
+Owner: user
+Status: active
+```
+
+## DEC-T1255-REAL-PRODUCERS（2026-10-12）
+
+依据用户已确认完整轻注入/真实指标范围，独立实际dispatcher RED证明central单实例不覆盖真实model/chat/agentic等factory；共享Db typed端口接所有正式生产者，真实outcome结算后及visual-review外层commit后窄观察，严格不记回滚、不得推断前attempt或改变业务事务/可用性。ROOT库存新增exact三路径execution/index.ts、execution-worker-outcome.service.ts、execution-video-visual-review.service.ts；不增加指标用途/Worker直写库/公网端点/任何部署许可。被动浏览器联网状态只经已受控本地strict布尔端口送Host，单在途合并，offline暂停，不探测网络、不立即上报、不重置24小时排期。共同SPEC先独评，RED与缺失证据保留。
+
+
+## DEC-T1255-PRODUCTION-CUTOVER（2026-10-13）
+
+用户本次明确回复“允许部署 Growth 并安装本机验收包”。绑定已冻结Creator90f3a6f48f62961b0a6af3605b17f199c7589d1d、Growth日志候选f2cfcfdc851267de7cac1e8439e629a7e8ad8aa5、兼容回滚a8a33e83ddd4a642b1bf720d6359af1a92d88069，真实备份和隔离恢复先于0071→0075、正式c01钥匙配置及API/worker重启；本机正常退出/冷备/安装。现场发现Growth网关默认1MiB与原已确认10MiB日志合同不一致，按完整feature部署范围仅精确日志上传路径设置10MiB、复制原限流和proxy参数并nginx -t/reload，不改认证/其它URL/DNS。20个MCP映射旧同版本缓存：本次安装先保旧cache，以同包全部文件外部核验后的独占runtime单次启动，默认自动展开另待安全释放验证，不能用此覆盖冒充默认首启。真实用户内容不用于夹具上报，不重置真实日排期；缺真实owner会话先交人正常登录，不伪造凭证。
+## DEC-T1246-MISSING-ORIGINAL-MEDIA-SKIP（2026-10-13）
+
+用户在本轮验收中明确回复“找不到了就跳过啊。”，接受跳过因原始素材丢失而无法执行的旧粗剪用例。该素材为232875字节、SHA-256 `0b22998e8238f35c9c3447c01234ce03f0ee03770db229c53f1e3de9f6905914`；本轮111–116六项共用的beforeEach先因原manifest缺失失败，之后还要求该素材，完整映射留在本轮PRIVATE验收记录。原六项framework FAIL、第一实际缺文件及未达后置全部保留；最终分类为“缺原始输入，用户确认跳过”，不算产品PASS、不合成替代素材、不继续追索或重复询问。其他失败和功能验收不受此决定豁免，原170及各独立分母保持。正在执行的隔离冻结源码、manifest及旧审核回执不改；本决定在完整运行结束后同步其验收报告。App继续按原用户决定保留未完成。
+
+
+
+## DEC-T1255-DESKTOP-ERROR-WORKSPACE（2026-10-13）
+
+用户正式登录后明确电脑使用、进入即看错误、检索可选、原话先提COS，随后明确纠正“是 cls 啊”，参考据此确认为腾讯云CLS日志服务工作台。该确认修订同一T1255/T229的管理端主要构图和默认读取流程：1440×900最近异常日志正文为首屏，时间/来源/字段与详情同页，默认最近真实异常及其关联日志单份按需解密；无异常真实空态并保最近日志入口，不用关键词造异常。服务合同/0075/正式钥匙/唯一真实17362936917 owner/每日空闲24小时排期与原用途开关不改变，仅Growth前端同域及必要测试。原390验收视口恢复电脑，不声称响应式缺陷。当前真实owner可访问但异常total0、只有两份虚拟transport日志，故真实异常关联和安装端dailyhost不能据此签过。原部署授权持续有效；先规格独立复核、当前候选unit/build、现有方向独立视觉评审及真实ownerUAT，再由Root串行切换；保旧审核、漂移与失败，不从本次确认推定新增review-cycle capability。
+
+
+## DEC-106904（2026-10-13）CLS桌面日志工作区的一次当前快照完整评审授权
+
+用户实际回复“允许，按CLS继续实现”，对应问题为“是否允许Creator T1255、Growth T229各重建一次当前范围评审周期”。本仓仅为T-1255重建一次，恢复已确认CLS桌面布局/default read及当前宪法快照的合法评审绑定；前端同域写集和原服务/0075/正式密钥/唯一owner/每日排期保持，不能扩为客户端代码或独立新周期授权。本次原旧cycle/r2、constit漂移及context-compile失败保留，不改生成PROJECT或PRODUCT_SPEC历史值。现绑定SPEC 2af28ffecf4bea7d92957c8608407b6bc1305708f0294d695f0a0caae8bcf1c4、当前constitution 09ddad223f77418a2efc2d037f386542a2c121fe782427b00d0ece6ea3ac68f6；终端旧事件 f5a03dbfb867dede127dc7ea25a1f2a21732d605805b3364e25cc47e0d3d6f93。生产切换沿原既有部署授权，不从评审授权引申其他生产写入。
+
+```text
+ID: DEC-106904
+Authorization-Kind: process-review-cycle
+Task-ID: T-1255
+Previous-Spec-SHA256: 6bcf82dd42d1a98391d0e1e3576d06a6b97d91a2900c224bf2b0b03ebd283cf7
+Previous-Constitution-SHA256: 15c177f592797eaf1873492aa7d45b55e2e2cc2cc1a4739b63fd85e3e789a56a
+Allowed-Change-IDs: T1255-CLS-DESKTOP,T1255-CURRENT-SNAPSHOT
+Max-Cycles: 1
+Nonce: 62ecbfc8-5d3f-44d9-85f5-2107a32f9b87
+Owner: user
+Status: active
+```
+
+
+## DEC-T1255-AGENT-DIAGNOSTIC-PACK（2026-10-13）
+
+用户明确不会亲自看页面，将交Agent定时排查，要求“主要完整，充分基于日志知道客户上下文，发现问题解决问题”，不追优雅可视化。沿同T1255/T229现有cycle r2独立复核，本次仅原Growth四前端范围增加owner当前选中异常/日志完整JSON诊断包，含真实receipt/session/header元数据、发生/收件/已知上报时间、版本/平台/匿名安装、reference/module/code/count、原完整lines/truncated和exact eventId原frame的message/stack/位置；unknown/missing明确，普通日志exception=null，不把alias当实名或激活验证。JSON保存owner下载，不服务器明文落副本、不上传业务DB，不新backend/API/Agent身份token/CLS服务、定时任务或现场自动重发真实任务；后续具体缺陷凭真实证据登记原属主修复回归。本次不建新review-cycle，当前constitution未变，保r1及原未验门，诊断包尚待真实下载与操作验收。
+
+## DEC-T1265-CODEX-JSON-SCHEMA-ADAPTER（2026-10-13）
+
+用户已明确要求继续实现本地Codex执行、免独立文本和生图模型配置，并授权记录验收问题后集中修复、合并打开发包、子Agent浏览器完整复验。本次是该授权范围内的实现选择，用户没有逐项确认某种Schema算法；不补造新的用户确认。原三个同归属回合实际failed且HTTP400 invalid_json_schema已读核。
+
+拟采用最小适配：所有JSON responseFormat在首次turn之前以原完整Schema文字约束同一本地Codex，结果仍经原AI SDK/Zod/业务校验；非JSON保持原行为。避免把可选字段强制必填或补null、禁止关闭开放record、禁止按业务名判断内容，禁止错误后自动第二turn或转独立provider。选择由T1265独立SPEC评审与当场公共consumer TDD验证，未正式通过前不应用生产源。原模型配置、权限/归属、deadline、调用身份/usage/费用及候选采纳合同保持；原任务和原UNKNOWN不重发、不改写。
+
+## DEC-T1255-NATIVE-DAILY-ACCEPTANCE（2026-10-13）
+
+用户本次明确回复：“永远不要问我…你的首要任务是给我完成我的任务”，并对完整日志与指标用途回复“允许开启并按每日排期上报”。已有Growth部署、本机安装许可持续有效；本次正常退出/打开、沿公开CLI保存用途开关并权威回读、到期空闲日轮次真实回执由Agent自行执行，不反复要求用户确认常规可逆验收步骤。持久24小时fence、原用途/脱敏加密、唯一owner、30天保留不改变；不强制tick、不改时钟或数据库、不重提真实业务任务，不将尚未发生的回执签为完成。真实本机日志发送已获本次明确许可，不再沿用之前“保持关闭”的验收状态。
+
+### T1255到期复验的自主执行记录（2026-10-13）
+
+沿用户此前明确“我会让Agent定时去排查”及本次“首要任务是完成任务，不再反复问”的授权，选择当前聊天Codex heartbeat每日北京时间03:10继续原到期验收和只读异常排查；id=creatoros，ACTIVE，目标当前聊天。仅原安装自然运行/到期/空闲时由原dailyhost上传；Agent不启动关闭的Creator、不改日fence、不制造额外轮次，也不新增Creator/Growth后台身份/API。无新可行动变化不重复通知，实际新异常或首次真实回执留证后继续对应缺陷与验收闭环。客户端用途已公开保存/读回true，原最早轮次为10/14 03:00:19.905，不借“自主完成”伪造尚未发生的网络回执。
+
+## DEC-T1271-CODEX-EPHEMERAL（2026-10-13）
+
+用户明确“我觉得不需要保存这个历史对话”，指CreatorOS发起的Codex调用新增个人Codex历史。新受控原生/ACP会话使用官方ephemeral:true，保CreatorOS自身聊天/任务/结算与产物；旧Codex历史和登录不动。临时会话跨进程缺失时，原回合只读对账不能取得结果就保unknown，不自动重发提示词/工具，不把用户隐私选择降为后台归档个人历史。独立初评只覆盖合同，实际TDD与隔离无模型协议证据另记；不把源码完成冒充已经运行的安装版生效。
+
+### T1271验收类型登记更正
+
+本任务仅Worker内部协议参数与同域测试，不新增/重构产品页面，也没有frontend journey contract。初建任务误把验收列填为待验（taskctl会按该值强制要求UI旅程报告），现更正为非UI任务的—；任务状态仍由taskctl转换。SPEC要求的原生/ACP公共链、未知不重发、类型/build/timeout/boundary及真实隔离协议检查照常执行，不豁免或冒充个人Codex UI/当前安装版验收。
+
+## DEC-T1273-RELEASE-HARDENING-PREPARATION（2026-10-13）
+
+用户确认严格零性能损耗的7项反逆向基线；本轮明确取消额外5项。完整范围与来源见docs/features/t1273-release-anti-reverse-hardening.md。只准备可审候选与隔离实证，不用估算替代<200μs。首次签名文件读取/解析/Ed25519实测220.708μs，原FAIL保留，未接入正式启动链。CSP需Next内联启动与既有sandbox预览例外、首次展开需验完再运行、缓存后台全量检查改变原每次tar前置校验时序；具体兼容候选已呈交用户，尚未确认。未生成新root、未替换当前App、未对生产路径或新App签PASS。验收真相见docs/verification/t1273/VERIFICATION.md。
+
+
+## DEC-T1274-CHATCUT-EDITING-PROPOSAL（2026-10-13，具体IA/合同待确认）
+
+用户已明确重做/优化剪辑，并直接copy已分析ChatCut模块的实现模式，不重新设计算法。这一授权及沿用现有CreatorOS品牌持续有效。Agent核当前默认OpenCut原生工作台、v3原生预览导出与既有候选采纳/版本单写者，提出统一素材/转录、画面、时间轴和编导/属性工作区；Markdown作为当前工程的候选投影，沿已有work.editor与applyProductionEditor，保留旧工程和预览导出内核。
+
+本条记录具体待确认方案，不冒称用户已选定新IA/输入格式。完整范围、参考模块缺口、既有消费者证据和验收见 `docs/features/t1274-chatcut-editing-redesign.md`。业务未修改、没有发布或安装动作；静态草图和独立规格审核不等于业务可用性或视觉/操作验收。用户确认后在本条追加真实决定，再通过taskctl进入实现。
+
+### T1274整体方向确认与开工（2026-10-13）
+
+用户对上轮完整接入方案和布局草图回复“整体上是认可的。”，确认统一素材/转录、画面、时间轴、编导/属性工作区，以及Markdown候选接入、保留现有预览/导出内核与旧工程范围。此确认承接已审SPEC，不改变算法/数据归属或扩展为完整专业NLE；不再重复询问整体方向。正常可逆实现、窄补参考接口/占位缺口、独立视觉与任务走查、必要验收持续执行；发布/换安装包未在本轮请求内。
+
+### DEC-T1273-COMPATIBLE-CSP-INTEGRITY（2026-10-13用户确认）
+
+用户明确“采用兼容修正版（推荐）”并“继续”：允许必要Next内联脚本与受限本地预览；首次展开仍验完才启动，已有完成cache保原抽样，首屏完成后全量tar后台核验。<200μs及包不增硬门保持，既有性能FAIL保留。详细安全与发布接线已增补原T1273 SPEC，独立评审与实际Gate之后才可声明通过；无需再次就同一决定询问。
+
+
+### DEC-T1273-CONSUMER-CLOSURE（2026-10-13继续授权）
+
+继续落实已确认兼容修正版：按真实消费者为sandbox预览放行既有精确GSAP脚本；开发资源去新增sig前置要求；clean缓存增加字节与release模式绑定。细节属原7基线的可用性、release-only及禁止旧转换闭包，未新增产品功能或线上发布授权。独立源码审查PASS，原性能FAIL及所有实包未验保持。正式候选为隔离工作树9c70afc00；原共享dirty、已安装App及用户数据保持。
+
+## DEC-T1278-UNIFIED-LICENSE-CAPABILITY-CHOICE（2026-10-14用户明确方向）
+
+用户明确目前自带模型/自配模型两类激活码后续不再区分，用户可在官方模型、自配模型、本地Codex之间按能力自行切换和组合。软件授权与能力来源选择分开；Codex免独立文本/生图配置按所选能力继续成立，官方模型沿真实权益和额度，不从统一授权推导无限免费调用。新任务按能力冻结、历史与在途保持原事实。具体跨系统协议、旧码兼容与迁移需先核真实上游并独评，当前冻结64ca包与T1246真实验收不静默替换。本条记录方向确认，不代签实现/上线，详见T1278 SPEC。
+
+## DEC-T1274-MEDIA-ASSERTION（原确认范围内的实物断言校正）
+
+2026-10-14。用户此前确认统一剪辑与沿用原预览/导出内核并要求继续。本次真实旧83b完整kernel同输入AAC已证明与新候选PCM逐字节相等、容器2.089796秒；画面仍48@24=2秒。此前测试把HTML/container duration视为画面2秒，原FAIL保留，不能扩大0.05容差洗绿。最终旅程将精确核视频2秒/48帧/24fps，并对旧同输入实物逐帧PTS/decoded framemd5/完整PCM及容器时长严格相等，不新增AAC裁剪标准，不改codec或模型。新候选8次重复源帧是真回归，仍必须修；该断言校正不掩盖当前差异，也不签完整媒体PASS。旧AAC有效样本欠债另登记T1277，用户accepted-risk未发生。
+
+
+## DEC-T1278-IMPLEMENTATION-CAPABILITY-SOURCES（2026-10-14）
+
+用户已确认单一软件授权及官方／自配／本地Codex按能力组合，继续实施无需重问方向。采用原user_preferences nullable model_routing及revision CAS、首次显式PUT后新根v2、完整逐mode:capability冻结、带图联合请求整体走vision、v2不隐式发送全局engine、主Codex native图关闭但宿主按选择来源生图。官方真实额度独立核验，目录同步existingOnly不开户／赠额；旧原任务保持原ID/冻结/期限。独立初评CONCERNS收据0c10e42352e6两问题已按精确恢复消费者与旧入口bootstrap预约保护收敛，实际复评PASS收据9458e31d10e9；随后真实新增operation类型/加载失败要求补原CLI及用户scope登记，补审在途，未绕过穷尽门。
+
+Creator源码在codex/unified-capability-models隔离64ca分支由Root串行实现，Main foreign变更不整树拷入；辅助审计只读生产。Activity全仓空写集，Growth精确迁移/隔离另绑定；不运行真实充值或发布。App原生授权用户明确暂不提供，保未验。目录不具scope旧码仍保具体HARD，不猜归属或构造grant。真实模型/付费/新包未验，不能以本DEC或局部测试称交付。
+
+
+## DEC-127801 T1278 消费者补充的一次新独立审核（2026-10-14）
+
+用户具体答复：“同意，按清单补齐并开启一次新审核（推荐）”。只授权原清单三个变化ID，原三轮终结PASS不重置；本capability由reviewctl绑定旧事件并一次消费。生产接线仍需实际独评与测试；Activity空写集、真实资金/App授权与发布边界均不变。
+
+```text
+ID: DEC-127801
+Authorization-Kind: process-review-cycle
+Task-ID: T-1278
+Previous-Spec-SHA256: be170a8947a9d57bdb11cc0a55bc7bf56b59760a6ded57e32577674b7ebd76d8
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: MC-1278-CHAT MC-1278-ASR MC-1278-EMBED
+Max-Cycles: 1
+Nonce: af6bfeeb-436a-4223-9ee6-174ab03b7cac
+Owner: user
+Status: active
+```
+
+
+## DEC-127802 T1278 收尾两项补充与一次新独立审核（2026-10-14）
+
+用户在本会话具体回复：“同意补齐并开启新审核（推荐）”，准确对应 FINAL_INTEGRATION_ADDENDUM_PROPOSED.md 的额度页取消/预算和双旧库迁移桥。此前102项原型的覆盖限制及独立预审三缺口均保留，新的114项与公共DB候选证据另存，不将其当正式完成。仅授权 MC-1278-OPEN 与 MC-1278-MIGRATION 两个变化，原cycle2第三轮PASS及原资金/激活期限/归属不重置。用户未授权原生App系统操作，保持未验；真实充值/生产码/付费模型/Activity/部署和公开发布边界未改变。
+
+```text
+ID: DEC-127802
+Authorization-Kind: process-review-cycle
+Task-ID: T-1278
+Previous-Spec-SHA256: f20727182b5fb634da44fc2fe5ed4d054eb41092205c52491fef44aaa9456e14
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: MC-1278-OPEN MC-1278-MIGRATION
+Max-Cycles: 1
+Nonce: e597cd1c-dd96-4680-af03-27a75be1a4ee
+Owner: user
+Status: active
+```
+
+## DEC-129401 — 按用户安装验收调整模型交互和Codex聊天
+
+- 任务：T-1294，用户本轮截图和文字是确认依据。
+- 决定：默认官方且保已明确来源选择，图片统一入口，RedFox等密钥集中到模型，移除向量检索配置及新实际调用，右上角充值常驻；去聊天画布与重复Codex检查，设置切换核验并复用真实结果。
+- 边界：不删除历史数据/冻结协议、不造永久可用或真实模型ID、不自动重发原unknown任务，不改变充值隔离/幂等/授权，不重置激活。原生自动化未授权保持；不推送/上线/放量。当前用户范围优先于T1278旧向量要求。
+- 验收：按本轮SPEC测试并留真实浏览器截图，原失败待绑定组后只读诊断；当前读取/源码推断不冒原任务实际根因或功能已修复。
+
+## DEC-129501 — 本轮视频CSP实际失败修复范围
+
+用户明确提供正式桌面script-src阻断WebAssembly的实际报错，并要求制作视频等功能都测试验证。准入必要的专用WASM许可与完整视频链复验，禁止借此开放JavaScript eval、关闭CSP或改用户数据。与T1294共同收尾打包；原生App自动化不授权、原失败任务不重发、无推送/部署的既有约束不变。
+
+### DEC-1294-02：仅为已证实的非付费账户读取内部拒绝保留一次同RPC读取
+
+用户本轮已明确要求恢复Codex聊天并完整测试；这是该已确认目标内的执行可用性修复，不新增业务功能、公共服务契约、费用、数据归属或部署。正常close后独立诊断仍定位account/read/-32603；32轮只读实验的trial3/10已见同RPC同params第二次真实成功，原trial仍失败。Root据实际样例补准确SPEC并发起第三轮独立复审，尚未应用新生产。
+
+候选只在原受控factory的精确typed内部错误后允许一次原account/read刷新false，同signal/同RPC，取消优先且不续期。其它拒绝不重复，第二失败原样返回；权限/MCP/认证/图片能力仍由真实response沿原校验，不用缓存造ready。没有业务任务重发、重开session或模型调用，也没有替原失败签通过。最终以独审、实际RED→GREEN、正常bundle公共链与完整旧证据为准。
+
+
+## DEC-129601 — 脚本入口、平台成稿与AI剪辑助手交互收敛（2026-10-15）
+
+用户本轮明确要求：文字只在脚本撰写，公众号/图文默认承接；保留按平台风格重新组织的核心动作，对话内校正与调整；删除暂不需要的精调和细碎按钮；重构过窄的AI剪辑助手布局。此为已确认的产品与IA方向，详见T1296 SPEC。
+
+“回写”是否反向覆盖脚本尚待答复，不记录为已授权双向同步。推荐原稿与平台成稿分离，当前仅为提案。代码盘点发现正文承接缺失和原生聊天只占右上区，纳入本需求必要实现范围；不改变数据归属、安全、发布标准，不删除历史内容。尚未完成正式SPEC审核、实际视觉与操作验证，不以此DEC代签PASS。
+
+### DEC-129601 内容流确认
+
+用户随后明确答复：“是，脚本是原稿，各平台成稿独立调整”。确认单向承接、平台独立重组与对话采纳，平台调整不反向覆盖脚本；无需再次询问此边界。
+
+### DEC-129602 · 精简预览兼容修正（2026-10-15）
+
+依据本轮用户“脚本原稿、各平台成稿独立调整”及删除精调控件的授权，验收时补齐旧 Doocs 只读原版式预览、原检查点恢复；未配置身份时跳过 NoteRelay 自动署名层，避免占位文字进入成稿。源码和产物同步扩展写集，仅落实已确认交互范围。图片继续走既有模型判断→素材采纳→article.save绑定候选→用户采纳链，不恢复一排精调按钮，不改冻结工具schema。
+
+DEC-129602补充：实测窄窗采纳时 automatic minZoom 把 timelineViewState 写入工程；独立审计确认渲染内容、轨道、duration均一致。修正自动适配不持久化，用户主动zoom/水平scroll继续保存；不放宽正式版本或完整字段比较。
+
+## DEC-T1298-01 — 修复真实重组链的动态工具暴露（2026-10-15）
+
+依据：用户要求重构后验证；T1298两次隔离公共页面失败及只读协议探针。锁定Codex 0.159.3动态functions默认进入已禁用code-mode host，按直接工具名单暴露后原回调实际到达且namespace=null。仅外部编导会话显式配置functions直接暴露，精确读回允许集；保持默认/ACP、权限、工具身份及采纳落库边界不变。属于既有目标内故障修正，不构成产品方向或服务契约扩张；不启用code-mode host、shell或MCP。需独立SPEC审核及真实公共链重跑。
+
+## DEC-T1298-02 — 公共采纳同步与候选预览一致性（2026-10-15）
+
+真实UI验收发现：文章/图文port成功采用自身更新稿件generation，未返回已有syncedGeneration，导致协调器误报输入变化；候选预览未使用主稿simplified规则，露出占位符和多余排版设置。沿已有协议返回经身份/clean核验的真实同步代次，保并发保护；候选使用主稿已有简化模式，尊重已选版式。属于原交互及验收范围内修复，独立内容和oil-ui-pro视觉复核后纳入T1298；不新增产品功能。
+
+### DEC-T1298-03 · 受影响历史验收重新绑定
+
+本轮最小修复命中T1294与T1296验收watch路径，原receipt不能代表当前源码。按taskctl block/resume重新打开两项，仅复跑原公共旅程并生成当前源码的验收报告，不改其产品范围。T1296导出证据另存t1298-revalidation，保留原content-final。此为已授权修复所需回归，不降低验收门或把新漂移计入T1292旧债。
+
+### DEC-T1298-04 · 首挂自动发送生命周期窄修
+
+隔离HMR后仍复现，否定HMR根因。独立runtime_audit指出StrictMode先layout后passive恢复，使mounted=false被归属清理误读。真实Composer红测确认应发1次实际0次；研究卡有4项最小实验及现场恢复命令。独立实现前审核PASS，改recoveryMounted生命周期为layout effect，不改任一归属/代次守卫、契约、IA或数据归属。属于既有SPEC授权的验收故障窄修；保留原SPEC三轮审核，不重置轮次。仍需实际51例组件与公共旅程。
+
+## DEC-130001 · 实施T1299建议并优先恢复Codex各功能可用性（2026-10-15）
+
+用户在分析交付后明确要求实施建议、分模块测试众多功能，重点是选择Codex执行引擎后的模型可用性，随后明确“无法正常对话或执行功能”。本轮先核新隔离设置→真实能力路由→公共功能入口与产物，再修确认缺陷并实施已定位工具阶段反馈、owner专属schema、同turn准备去重；Tab先补分段实证，保已有视频常驻。Root继续判断和复核，执行交原GPT-6.1 Sol高思考代理，不主动启用加速，无开关readback不声称已核验。
+
+授权范围详见T1300 SPEC及FUNCTION_MATRIX。事件/工具版本/必要终态module归档兼容须先独立SPEC审核，不能沿用T1299分析完成充当实现审核；当前先登记和只读盘点。允许后续全新owned组/项目/DB/媒体与受控Codex的真实功能测试，现用App数据和设置不动；未知旧任务不重发。脚本原稿/平台独立候选采纳、权限/冻结来源/CAS/真实期限继续保留。不一次性销255旧账，不自动改变旧任务/审核，不推送、安装、部署或发布。
+
+## DEC-130002 · T1300必要控制面收窄及owner装配接线（2026-10-16）
+
+Root已接受两终态module数据归档后真实暴露的下一层阻断：T1294/T1295现役write_set各一条尾星不符合原安全路径规则。仅允许枚举其当前各两份SPEC/邻接review文件收窄权限，不编辑旧文档、状态或审核，不改校验器、不新增归档；保首次失败与原始完整归档。同期只读发现chat-turn-preparation外层第二次定义准备遗漏同一owner选项，纳入同次最小delta独审及B精确源码/测试写集；不改变已审合同，不扩worker/IPC。
+
+详细输入与验证见`docs/features/t1300-workflow-and-owner-wiring-delta.md`。原主SPEC锁定版本保留，再按同一review lineage追加已授权delta绑定及recheck，不能换文件重置审核。Root允许一次原字节流程测试在真实skill规则的临时布局完整验证，原仓库命令7FAIL与夹具根因仍保留，不扩成vendor维护。此为用户已授权实现/测试所需最小前置，不另向用户索要同一授权，不扩大产品范围或将工程整理替代Codex可用性主线。
+
+Root另接受同次delta中前端必要片段：ai-copilot-content仅消费Provider内opaque准备ticket及清理，不改source/engine准入或transport正文；ticket不进wire/storage。重组requireScript在同次真实latest.scriptContext判定，普通聊天不新增脚本门；work.creation卡默认行为不改。精确原测试及保存竞争回归列于上述delta，其他已审边界不变。
+
+## DEC-130003 · T1300候选sidecar功能验收测试授权环境（2026-10-16）
+
+Root依据用户本轮全功能测试授权及独立reviewer对T656既有合同的只读核验，批准在专用本地构建/验证controller中，使用现有`createBuildSmokeVerdictToken`对全新owned production候选sidecar执行更完整的公共功能断言。沿用原真实Ed25519签名、canonical密钥配对、随机端口绑定及不超过5分钟的启动接纳TTL；不改生产鉴权、固定包装脚本或期限，不用dev豁免，不伪造真实激活。签名seed仅留在原获准controller/专用签名进程，实际sidecar、模型及普通诊断子进程不继承。握手、会话、能力配置、用户/账号组归属、原任务期限与采纳/CAS门均按真实公共链执行；不得用403/仅不崩溃签业务PASS。
+
+依据：`docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md` §3.2、SEC-656-02/03/06、AC-656-06；`frontend/scripts/desktop/verdict-key-material.mjs`及`runtime-smoke.mjs`既有真实签名与child env剥离路径；独立报告`docs/verification/t1300/RUNTIME_IMPLEMENTATION_REVIEW.md`。五分钟仅在进程启动验token时检查，不是后续请求/整套旅程或模型任务期限；不因此缩短观察、续签重发旧任务或声称自动撤权。
+
+证据必须标注“production candidate sidecar测试授权模式”，绑定源码/构建HEAD、产物hash、端点、driver和run并逐功能记录真实结果。该模式不证明真实激活、Growth额度或原生Tauri壳/Keychain/defaults/IPC/原生WebView已验；这些尚未验证单列。owned HOME只隔离appData路径，不能证明系统Keychain及固定defaults域隔离，因此本轮不启动原生壳、不碰现用App、用户业务库或系统授权记录。包装继续显式`CREATOROS_LOCAL_SKIP_INSTALL=1`，只准备可审查候选，不安装/发布。
+
+B代码已提交并独立复核后，完成步骤仅将其已冻结报告/证据从runtime执行write_set转入read_set；原packet/提交仍证明先前真实写入授权，不抹去发生事实。首次done因报告中否定范围“未写worker/IPC”被原治理词扫描阻断的exit1保留于`acceptance/runtime-handoff-control.json`；精确化不修改校验器、原文或登记虚假IPC预算。主SPEC/矩阵锁及产品合同不变。
+
+## DEC-130004 · T1300联合创作真实验收缺陷窄修（2026-10-16）
+
+首份隔离production候选合法联合创作POST200后原任务872ms失败CHAT_WORKER_INPUT_UNAVAILABLE，B公共只读账本观察未进入模型；这是本轮范围内功能失败，不是旧债或上游模型耗时。Root批准creation host/source consumer的冻结v1/v2协议选择与必要纯helper、精确五测试及新production候选复验，主矩阵/原稿和平台独立采纳不变。新增受控RED尚未发生，不能补拍通过；按原主SPEC路径同lineage round3独审后才由B唯一实施，不删合法writingContext或弱化完整定义/准入/CAS。详情及原失败证据见t1300-creation-frozen-protocol-delta.md；不改contract/worker/adapter/dispatcher/validateTask，也不扩大group inspect。
+
+A已释放全部资源，C正常stop旧controller后实际exit143，端口无监听，保owned数据；只见lifecycle退出开始而非flush完成，不写shutdown0。旧候选/source/hash及所有失败保留；已过workflow/runtime/frontend历史不重写，新creation-repair步骤依赖原frontend，再进入待验acceptance。
+
+## DEC-130101 · 独立修复图片自动分类身份消费（2026-10-16）
+
+用户已授权恢复Codex各功能，T1300第二份候选真实上传的新自动分类原任务2.278秒进入UNKNOWN，与同exec宿主凭据端口拒绝对应。Root批准独立T1301及初轮SPEC独审，作为T1300验收依赖；不增加T1300第4轮、不重置creation方案或伪用户review-cycle。仅execution-model-identity.service.ts统一三处冻结mode消费，精确三测试与原consumer回归；不改contract/worker/dispatcher/UNKNOWN策略/恢复授权/权限期限。真实原409与缺内层payload保留，新增RED待实际发生，旧unknown不重发。Root只判断复核，执行沿原Sol高思考分工；无新用户审批问题。
+
+
+### DEC-130102 · 中间实现步骤与最终Gate分别记实
+
+Root依据`rules/orchestrator-state-machine.md`中间步骤记录真实提交、看板仍🔨的规则，批准T1301 implementation按dc85a88代码/89受控回归、本步verify与独评局部PASS真实done，以推进新candidate验证。T1301任务仍🔨待验、acceptance pending；SPEC完整素材组合前置RED缺失仍missing，后置反例不改名、无自动accepted-risk。42ae5e89e此前pending记录原样保留。本决定不是用户风险接受，不签完整TDD/整体任务完成。
+
+### DEC-130201 · 原文章图文侧栏精简遗漏的独立窄修
+
+来源为用户T1296精简方向与本轮T1300功能恢复/优化授权；Root只读核A及独评意见后，确认文章/图文嵌入助手的通用chips及raw引用呈现为原方向遗漏，批准T1302独立SPEC初审。仅当前注册同组同项目同output的文章/图文宿主收起通用chips；候选选择移原预览、原状态hook/body/key/default/source/CAS不变；全ref及合法空值如实呈现，无额外取名请求或新技术详情入口。沿已确认原版UI规范，不新选风格。T1300 acceptance加T1302 acceptance依赖；T1301定义/锁及T1300主SPEC/矩阵/review不改，无新数据归属/权限/服务合同，不安装发布。此处只是范围记录，尚非SPEC PASS或产品验收。
+
+
+## DEC-1314-VERIFY — 最终同包分模块独立纯验证
+
+Root依据用户已确认的T1300全功能验收授权，2026-10-16明确采用T1314内容/T1315工具API雷达/T1316视觉媒体三个verification-only任务；各自独立module/lease/owned组/证据目录，零产品或契约变化，审核列—按真实exempt路由。原T1300锁SPEC/FUNCTION_MATRIX/三轮审核原字节不改，父acceptance新增三实证依赖仅作完整汇总；不缩范围/不提前通过。构建source固定0e1dc6228f1fa3dc02f2b1c7a1cee77ab18d650a，不为控制提交重包。设置由C冻结userId共享rev1；各执行者不得改settings/共享控制，Web平台profile由C统一排他，最终性能独占。foreign22仅C写、他路只读拒绝验证。必要owned模型/采纳/保存已获授权；保旧UNKNOWN/失败/环境缺测，不自动重发，不安装/对外发布/碰用户库。具体范围见三SPEC及MODULE，原根65353保留；新50727与session只路径交接。
+
+
+## DEC-133101 · T1331正式审核确认稿consumer额外一次评审周期（2026-10-17）
+
+Root转交真实用户答复：问题 `call_4f1b4dd3930048f39d59ed6a9ea80b56[0]`「是否允许仅针对T1331“恢复旧版本后，正式脚本审核读错版本”开启一次额外评审周期？旧记录全部保留，完成失败复现、修复和回归后继续最终包验收。」用户答复「允许这一次额外评审」。该授权只消费下面精确一次typed capability，不以此前泛化“继续”代替流程确认，不改guard或换task重置lineage。原cycle1三轮与旧SPEC/结果/315索引均保留；新补充SPEC95d83已由独立Root技术PASS，尚无本consumer目标RED或产品W，必须先真实公共两族RED，再最小组合修复/GREEN，最终包仍待真实验收。
+
+```text
+ID: DEC-133101
+Authorization-Kind: process-review-cycle
+Task-ID: T-1331
+Previous-Spec-SHA256: c0770b4a80d40c1ad59c373d1d2f1c50efc0d72741dce34501a151dfccb71dbd
+Previous-Constitution-SHA256: eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df
+Allowed-Change-IDs: T1331-SCRIPT-REVIEW-CONFIRMED-CURRENT
+Max-Cycles: 1
+Nonce: b3c6371f281f6fc71e4822ee4f40eda17129eb7d585325d7
+Owner: user
+Status: active
+```
+
+
+## DEC-133501 · 自主研究知识候选原生来源比较独立窄修（2026-10-17）
+
+依据用户本轮全功能修复和新中性素材真实验收授权（沿DEC-130001/DEC-1314-VERIFY），Root已独立核原诊断错误后，要求登记T1335并先完成SPEC/独立评审。此记录不声称用户逐字段确认技术方案，也不借用T1331额外周期授权。
+
+真实recordCodexToolCall保存含callId的binding，知识候选提交对比四字段canonical发生冲突；原模型和两工具均settled，不能改称模型失败。当前仅SPEC/docs准备W、未START、生产0W。唯一拟生产agentic-proposal-staging.service.ts，正式技术方案及源校验负项待B写SPEC、R独审、Root核与公共RED后再授实施范围。保原错误/UNKNOWN/原任务与DB，不取消/恢复/重发，不扩大T1334一行。
+
+
+## DEC-133701 · 自主任务自动Skill目录的最小隔离提案（2026-10-17）
+
+Root依据用户T1300全功能恢复/可用性与真实模型授权，批准从T1337事实诊断补写独立最小方案供独审：仅agentic显式opt-in skills.include_instructions=false，common默认与其它caller不变；生产拟两源/三既有测试，完整公共受控红绿另新夹具，详情见原T1337 SPEC追加段。此记录不冒用户逐技术确认，不借T1331额外周期，不代表设计已PASS/START或生产授权。实际原collect/research预算UNKNOWN、三RPC目录统计和官方tag源码分列；不将目录字符数当旧模型实收量，不宣称预算全部首因已证，不提高预算/重发旧根。先真实独评/当场目标RED核后才授实现；当前候选性能与设置独占优先，本提案仅文书0生产/模型。
+
+
+## DEC-133801 · 旧账号作品正常组入口父授权兼容提案（2026-10-17）
+
+Root依据用户现有全功能修复/验收授权，要求按7f1正常legacy作品页真实FAIL独立T1338登记并先补最小方案独审；R只读定位与8路径父授权/旧NULL兼容方案由C整理入SPEC。保持全局scope/session/AccountSwitcher、原reportWhere、sameOwner/readFrozenTask及两阶段模型创建保护，不修改历史owner/数据归属；跨入口AI create owner不匹配仍拒。此为总体授权下设计准备，不冒用户逐字段技术确认，不复用T1331额外周期。当前无设计PASS/START/生产W；完整新owned公共RED先于实施，原API续验不覆盖正常UI错误，性能独占优先。
+
+
+## DEC-134001 · 文章异步就绪的当前编辑器可读刷新与平台空态（2026-10-17）
+
+沿用户T1300功能恢复与原T1296/T1302脚本驱动平台改稿方向，Root要求C将7f1文章120秒仍通用助手事实收敛为最小独立方案：仅当前已注册port的纯readiness刷新，保token/epoch/prepared/retiredDerived/首次派生和真实编辑边界；既有embeddedContentOwner下改原空态两句，通用聊天不变。3拟生产与4现役tests见T1340 SPEC。此为已授权范围内设计提案，不冒用户逐字段技术确认，不借T1331额外周期；当前未START、无生产W/模型执行，先Root独审与当场真实Consumer组合RED后再授实施。原7f1功能FAIL与性能样本均保。
+
+
+## DEC-133901 · 缺失实测维度的现合同数值兼容提案（2026-10-17）
+
+沿用户T1300数据准确性/功能恢复授权，Root读现contract缺任一deviation=null及7f1人工cta4事实，要求C依据B只读消费者盘点补最小方案。唯一拟calibration.service，finite pair统一供新写/旧overview全部KPI和行展示及幂等DTO；旧row不回写、空pair不奖励经验、T1336桥仍no-op。仅设计提案，非用户逐技术字段确认/非设计PASS或生产W，先独审与真实公开RED；旧人工指标不称平台实测。
+
+
+## DEC-134101 · 真实素材详情标签读取的独立窄问题（2026-10-17）
+
+沿用户T1300全功能修复/真实素材验收授权，Root读13dd原素材63真实taxonomy标签159及详情—的DOM/截图，要求独立T1341。原v1 wrong-name夹具错误与真实标签现场分别保，不把未到目标断言的程序FAIL冒公共目标RED。B先新副本0模型只读核目标断言与现役taxonomy权限/批量投影方案，Root独审后再START/test，实际目标RED/装配核后才授生产。当前无生产W，不新增标签管理/跨组读取或N+1，不借其它任务评审周期或重复用户确认。
+
+
+### DEC-134101 范围精化（设计待审）
+
+实际v2已到四个标签目标断言，原权限/素材/调用不变。拟10源新增AssetResource可选只读摘要，复用原资产readableGate的批量端口+真实taxonomy own JOIN，新增查询至多2条/批；未知只降标签区，不反杀gallery/下载。不新增HTTP/写入/标签管理/全局权限。该additive服务契约与UI状态精化属已授权实际功能修复范围，仍必须Root独审和公共控链RED后才授实施，不冒用户逐字段技术答复。
+
+
+### DEC-130001 执行入口精化：三真实候选根（2026-10-17）
+
+Root已独立核现役脚本CTA与原T1303 recovery2：再次CTA会新建composition，不能表示已有两稿的joint2。批准前瞻生成入口准确为joint1正常UI、joint2公开ai.conversations.create/messages.create（冻结既有composition、当前两owner和原脚本引用）、editor1正常专属助手UI；候选后均经真实UI预览/采纳/响应丢失恢复。保持已授权恰3根、5新版本和3个终态未采纳checkpoint；不改产品、不新增按钮、不将三根全称UI按钮生成。严格重复从闭合checkpoint新副本0模型，实际生成仍待T1341最终包绑定。
+
+
+## DEC-134501 · 账号绑定精简、首组扫码与切组/趋势修复（2026-10-18）
+
+用户本轮明确要求：账号绑定页直接去掉手动登记/共享资源/整理历史三整块，归档转组保留但单层对象行、管理动作回对象右侧；新用户先建第一个账号组即引导扫码，可连续任意多个已支持平台；核修切组后UI不变、首页采集连线与大孤立点。分别登记T1345/T1346/T1347同批并行，不以等级/版本切割范围。已确认保既有主题，无新风格A/B选择/重复用户确认。只删页面入口与无消费者残留，保既有数据/真实API、归属隔离与任务继续；不发起真实用户数据变更、付费/采集/发布。最小SPEC与独立技术/交互评审后再taskctl START，实际RED前不改产品；本文非已通过审核或已实现证据。Root只分析审核，执行代理修改，唯一account_control负责本批流程写入与整合。
+
+
+### DEC-134501 实体切组与趋势真实ID导航精化
+
+Root沿本轮用户切组目标授权：实际旧项目URL切新组已有安全归属空态，获准离开后改去对应/projects或/canvases列表；不改backend归属。Root最终采用原生自然日报趋势，无可信日报显示真实空态和同卡累计比较/原生报表入口；recentPublications缺projectId，条形图不假造导航，同卡使用已存在daily-report入口，只有真实页面解析的筛选才透传。这些是已授权行为落实，不增平台/采集/持久数据/权限，仍须定向RED/GREEN和实际浏览器。
+
+
+## DEC-134801 · 核心脚本dirty/saving切组前保护（2026-10-18）
+
+Root因T1346新scope卸载策略实际发现rich/structure缺foreground注册，明确要求同轮修保护，不重复请求用户。当前公共关闭autosave+输入后切组无提示且原稿UI消失，非单纯静态猜测。单列T1348最小依赖，仅两个现保存状态接既有registry，不改保存策略/后端/其它编辑器；独审/真实RED后实施，取消必须保原稿原scope。原版对照待实际，不借此重开T1346第四轮，原FAIL保。
+
+### DEC-134501 原生日图读取局部隔离精化（2026-10-18）
+
+实际首页overview为其它卡片唯一整页await，把原生报表分页直接塞入会使全工作台等待；Root依据本轮图表真实口径与界面性能目标，明确裁定新增窄只读pages.groupTrend.get及现app getTrend/transport注册、client图卡局部读取，不能重复getOverview。仅当前有效目标与日期，沿原归属/分页锁、epoch/abort/单在途，失败局部不反杀其它卡；不采集/持久写/新增权限。精确扩集见T1347 SPEC，旧round1 PASS仅对应旧版，不冒新边界已审；本次修订需独立实际审核记录后才生产连通。此为已授权图卡实现必要边界，不重复要求用户确认技术字段。
+
+
+## DEC-135001：画布消费者遵守现有统一导航负责人
+
+2026-10-18，承接用户已授权“切组后实际界面切换”与T1346已审统一owner合同；Root独立实际阅读T1350 SPEC、现account-events协议及CanvasEditor源码/测试后方向PASS，receipt1afc240894ea，taskctl已start。没有新的人类产品方向审批，也不冒其批准实现或安装。
+
+正式d525两视口canvas详情切组均scope新组、两个列表RSC200但旧URL/加载120秒失败。真实CanvasEditor组合RED1FAIL/2PASS后最小两文件条件修：始终清旧scope/epoch/state，routeRefreshScheduled=true交统一owner，false/legacy保原导航，同scope不清稿；不放宽权限/改变保存生成。组件+Switcher/Provider当前96PASS，公共新候选尚待重跑，双RSC原证据仍仅竞争线索不先冒已修根因。
+
+相关正式T1346原项目标题零宽失败归T1349独立既有布局缺陷，全文件与88945字节相同；公共scope改以真实可见row/同ID可见打开入口及旧row0验证，不签标题或更多窄窗已修。query清理后Next仍旧canonical的实际FAIL已在d525窄修并公共works通过，完整最终旅程仍待闭合。T1347父健康探测经代理导致端口误报的0页面失败保，正式自有wrapper明确NO_PROXY本机旁路，不改产品/构建入口。
+
+
+## DEC-135201 · 五产品验收后的本机交付与收据边界（2026-10-18）
+
+沿用户此前明确新包安装、清理旧版授权，Root确认T1352只做本机SHIP运维：五任务3b真实strict全部通过后taskctl start，唯一T7 exact3b固定入口skip-install产包，再由唯一执行者安全退出/暂存替换/同源120秒启动与原生窗口实图。纯运维行验收校准—，不把此规则用于五产品门，不改变发布标准/构建入口/权限，不push、tag或外发。构建失败保原日志并停，不在包装阶段修源。
+
+主树纯文书提交可以后置，不能把它冒为受验产品SHA；foreign九文件/T1255行不纳候选或提交。全局40ERROR保留，七份本轮新宽路径失配与旧身份分列；LED061原global UNKNOWN、managed 378/1与T7同锁闭包26PASS三层独立。测试日志实际env披露记录保留，raw results不提交、不复述值，不擅自轮换凭据。
+
+本机交付实际收口：产品仍exact3b，固定入口第二轮446.663秒成功（首轮旧Cargo绝对路径缓存FAIL保留），正式App正常quit/暂存替换后128.875秒同源启动，完整tar/runtime一致。Root核原生图后核准13旧缓存+旧App备份，control释放、唯一operator精确清14项；两原Next trace先私有原字节归档，16保护路径在，清后同一App持续运行/6组ID相同。见`docs/verification/t1352/REPORT.md`及其三份执行者报告副本。原全局40ERROR与T1353新宽路径漂移仍保留；沿纯运维source/tree证明复用原完整审计，不新增大回归或把全局SHIP置绿。
+
+## DEC-135501 · 新扫码反馈的完成语义与只读诊断授权（2026-10-19）
+
+用户本次明确要求修复公众号扫码失败、小红书完成仍手关与重复动作、多平台已绑但仅抖音可见数据。登记T1354/T1355/T1356，旧已完成记录、3b安装事实与foreign不改。当前先读真实公开原状态，不重新登录/采集/付费/覆盖原任务，不因用户说“已绑定”推定采集已完成。
+
+T1355沿既有主题与tokens，真实本地意图对应run成功后还须同账号、目标组成员与实际列表完成才自动收起本地Dialog并焦点回位/轻反馈；失败/unknown保持原任务。历史成功run的读回不是新动作授权；NativeReportPanel原onChanged带同步副作用，必须分离普通读取与当前已授权同账号原意图恢复，保原key/期限/既有报表。外部登录窗口资源归宿主，不能用本地关窗顺便关闭任意浏览器。
+
+公众号失败的深因、视频号原阻塞与小红书/快手既有采集事实到overview缺失按各自公开证据及实际消费者收敛，不用UI补数代签采集修复。用户原图与当前3b源码标题差异由独立产物审计先核，不预判截图旧版或反写旧安装收据。本轮不打开A/B新主题、不重复询问已确认产品方向；各正式SPEC仍须独评与RED才进入实现。
+
+## DEC-135601 · 既有平台采集事实的首页只读投影（2026-10-19）
+
+本次已证首页groupOverview未消费小红书窗内既有typed指标；用户具体其它缺数页面仍待回复，不能冒已确认位置。沿原publishedAt期间作品累计语义，不把count/lifetime当期间增量，小红书view与视频play/文章read分开。共享项目/发布/待分发数量不改，目录不造Publication/Project；已关联引用排重。
+
+采用collection模块私有只读summary端口及account-group历史membership端口，无新公开operation/表/迁移/数据回写。metric insert-only的服务端ingestedAt结合保留的membership [joinedAt,leftAt)区间作为既有事实归属依据，未知/重叠不猜，原组历史不随当前成员搬移。只读投影与新typed来源/覆盖/累计口径同步合同及用户文案；不改变T1347自然日报独立端口。Root已认可方向，正式独评PASS后后端由protocol独占精确写集，UI由control在T1355后按实际DTO消费，契约变更与T1357串行。
+
+DEC-135601对FR1356-5的本次实施释义：只排重当前组/当前日期/当前筛选下原publishing结果已实际贡献的项，且验证真实Publication与同user/account/platform/引用一致；其它组或窗口的旧Publication不能抹掉本组新采集事实。后端须证明旧Publication留A、转组后新metric属B，B不被旧引用误排除。该解释落实R2已有“未被原出版链覆盖”合同，不扩大范围；SPEC审定原字节保持R2，伴随注释仅引用本DEC，不虚写新审核。
+
+DEC-135601逐指标排重补充：只有同当前组/日期窗口/筛选的原链已实际贡献同语义该metricKey合法值（包括0），才排该key；null或缺失不排，play/view不可混同。此为已审FR1356-5的保守实施释义，不改R2 SPEC字节。
+
+DEC-135601界面落实：已核首页上方原为5项summary，下方另有既有六卡。保原5项并新增独立“浏览合计”为第6项，按实际1366/1024/200%收口6项响应式；下方六卡不改。真实可达的小红书旧发布行将“次播放”准确写为“次浏览”，不造新Publication或改变其数值。覆盖caption采用“当前组已读取X条平台作品 · 数据为累计值”，缺项与不可归属作品以简明人话补充，typed分母仍留DTO审计，不向用户堆机制。
+
+## DEC-135701 · 明确目标账号详情的用户级只读契约（2026-10-19）
+
+本轮绑定核验排查实际loopback HTTP证明：普通UI三种默认选择均200同目标，CLI三种均428；T1355不以此CLI故障为依赖。独立SPEC PASS REV:1725f96f9cd6 后仅将canonical accounts.get登记为user，与既有selection-independent详情读取及service按当前user+params.accountId校验一致。其它操作登记、写入/平台账号守卫、CLI只读策略和审计不放宽。不改route/http-transport生产或用户数据，负例仍须实际HTTP证明不存在与另一owner拒绝。
+
+DEC-135601补充：当前DashboardTrendCard对小红书真实recentPublication仍写累计播放，和本轮已确认浏览口径相冲突。Root批准仅已知XHS fallback标题/说明/summary/aria校准为浏览；数字、排序、日报图/端点/生命周期不变。将trend-card及现test列入SPEC delta，保R2原件与既有Gate，真实组件RED和独立delta复评后实施，无须重问用户方向。
+
+- DEC135701验收路由补充（2026-10-19，Root明确裁定）：T1357只改canonical只读归属，无页面交互；以真实UI transport/CLI HTTP原200/428与修后45项运输保护、14项契约保护验收，BACKLOG验收列为—，不生成浏览器像素报告或挪用T1355截图。T1354/T1355/T1356的实际UI合同与strict不变。
+- DEC135501视觉收口（2026-10-19，独立图评后Root裁定）：Panel只保“绑定到组名”；成功用既有success token、CheckCircle2及可换行账号名突出“已绑定”，无新增按钮/全局组件。断网注入的开发console日志与未展开Issue徽标按真实范围归档。
+
+- DEC135601 FR7实现合同纠正（2026-10-19，Root裁定）：稳定slot不承担中文显示。必要增补HorizontalBarsChart单个可选ariaLabel（缺省沿slot），只XHS消费者提供中文；数值/图形/其余调用者默认不变。原R3原字节保留，独立有限实现/合同复核见review/ARIA_IMPLEMENTATION_ADDENDUM.md；不强开新产品方向或第四轮SPEC。
+
+- DEC135601正式夹具校准（2026-10-19，Root裁定）：原19d正式轮真实首页/DTO正确，两窗口因新测试把CardTitle div当heading而FAIL。仅按现role=region与card-title改测试定位，保数值/scope/六卡断言；下轮启动URL用现只读channel-runtime，仅判进程接请求，PG由helper SELECT1，正式带group首页HTTP/UI不跳。无group 9.2分钟单独T1358待核，不冒既有故障或已修。
+
+
+## DEC-135802 — 本轮真实readiness与未知慢读分证（2026-10-19）
+Root核准使用既有GET /api/v1/auth/me等待同一Next完整bundle，保webServer600s；正式data.id===合成seed.userId、首页120s不变。原无group9.2min及带group120秒失败后200约2.5min均保；139190ms groupOverview在bundle之后，首因UNKNOWN，reconcile并跑不冒因果。两独立Chrome200上下文显式action/navigation120s；日历逐字段实际状态导航；旧A记录response/finished或真实取消，仅成功payload终态才称晚响应。只测试与文书校准，不改产品。
+
+## DEC-136001 — 本轮新增旧收据失配独立登记（2026-10-19）
+41ERROR分旧32身份、此前7宽收据T1353与本轮新1345/1347两份T1360；不追认全部历史债。各当前产品合同必须实际闭合，原全局失败与旧PASS均不洗。T1359仅本机SHIP运维，受验产品source另绑，产包与formal Next串行；root另行唯一build放行。
+
+
+## DEC-136101 — 有效A/B晚响应的工作区刷新缺陷单独处理（2026-10-19）
+Root据formal03与一次Response-stage原200/Aworkspace/Bworkspace的120秒失败授权新T1361，只读定位/窄修既有导航负责人/真实scope收尾；不是新页面方向，不再问用户。原实验Fetch与BrowserResponse两读SHA不同并列，不冒字节等同；未提供重写参数与最终URL/存储B、页面超时为实际观察，首因仍未定。保旧内容遮挡/归属/脏稿与原预算，不删pending/强complete/全页reload。独立Sol评SPEC后才生产；必要白名单候选诊断日志不提交产品hook。T1356最终Gate暂未满足，不能为本机交付跳过。
+
+
+## DEC-136102 — 导航实际提交后再刷新共享范围（2026-10-19）
+独立R1 REV2d84a61178d6后，同原含日期红例记录真实replace已调用，Provider直到原120秒仍serverA/liveB、refreshPending=true。锁定Next队列源码给出连续NAVIGATE/REFRESH挂错旧链的具体候选；精确链指针未运行时私有取证。最小实现只改原Switcher：先真实replace transition提交、再一次refresh，始终同epoch与原timer/deadline；同URL也替代未完成旧筛选，侧栏/外部manager/retry同owner。Provider生产未变，原scope校验/遮旧/草稿守卫保；debug两源逐字撤净。真void+Suspense当场RED→55GREEN，无debug真实单场景原A终态后B完成与额外initialScopeB/workspaceB已证，独立实现审findings[]；仍待两窗全部族及1356/1355正式和strict，未据此完成/安装。
+
+
+## DEC-136103 — 初始化计划行与实际采集执行分开核验（2026-10-19）
+e511窄正式两窗各13导航业务点通过后末尾scheduledJobCount=0断言实际19失败，原轮无UI前baseline不得补造因果。现composition明确startup runAccountGroupStartup会ensureSharedJobs/ensurePrivateJobs创建计划行，后续禁scheduler/driver才阻执行；行数不是执行次数。下一fresh正式只测试校准：auth/me全初始化后、UI前读取同owner私有/state真实三计数，要求collection=14合成既有提交/AI=0/计划为合法非负整数；UI后逐项与baseline全等，保禁驱动配置/真实网络隔离/0新采集模型。同步1356相同末尾无根据0假设，原FAIL保，生产字节不动；不把计划行统计当用户采集已恢复。
+
+
+## DEC-136104 — 代表数据导航等待真实动作完成，竞态族独立保留（2026-10-19）
+2bee新源窄两窗真实导航全部通过，最小最终仅旧onboarding读有一条未观察终态；不能据此删1356原全pending=0或SQL前合法读结束门。采取更保守测试校准：代表数据visit在当前合法请求终态、目标实际页面提交后才硬goto，并在返回前仍等全部pending=0；原helper选择后立即goto，不足以证明前次导航完成。无sleep/额外请求重发，有意A/B竞态时序、旧A/B真实终态、B可见与SQL前pending门原样保留。不宣称旧引导读根因已证或全网络终态，不改产品。
+
+
+## DEC-136105 — 已有引导进度写与采集提交分开记录（2026-10-19）
+1356 formal04正常窗完成27展示/SQL恢复业务点后因通用mutations=[]实际FAIL，7次请求全为既有loadState按真实成员/导入项目派生的settings.onboarding.group.patch；最小窗28点完整通过。保原FAIL。下一轮不改产品或关引导：记录全部写请求，仅准本私有seed7组、单op、每组精确completedSteps/origin及params结构，额外键/其它写仍拒绝。实际collection/AI/计划行完整baseline全等不减，不称页面零写；该校准不将摘要读取改成采集，也不代签正常窗原最终计数未执行的证据。
+
+
+## DEC-136201 — 已采集作品与创作项目使用各自真实入口（2026-10-19）
+用户补充首页和详情均无数，随后明确除视频号失败外其它平台采集成功却无作品，并要求不再问他、睡觉期间自主测试。Root裁定T1362限定历史作品入口→真实平台目录、已有组无account正确选成员、overview消费typed浏览/覆盖，不造Project/Publication、不扩聚合API。受控Next当前4业务RED已实际保（历史链/projects、错误新建组、无选择、总览漏browse123），同ID目录13与作品123为正控制；纯typed末截图缺scope完成断言不作公共RED，后续真实组件另验。组内“已查看”是用户手动自报确认，不能依赖legacy Project阻断，保自动origin原规则/无逐账号新读。既有R3规范1356逐字保，最新事实归补录/T1362；R4事实record三轮拒绝原输出保、不重开周期。T1363单独原视频号失败边界，不因展示绿而冒恢复。
+
+T1362正式夹具沿真实ObservabilityClient挂载时上报的connectivity在线事件单列账本：仅/api/v1/local/observability的精确kind=connectivity、online=true双字段POST允许归此类；异常遥测、其它POST与业务写仍分别完整记录并拒绝未列操作，不冒零写。该校准不拦截或改写请求，不改变生产行为。
+
+
+## DEC-136202 — 切组清理旧作品定位仅限平台作品路由（2026-10-19）
+90b formal01两窗各原120s断言真实FAIL：accountId已清但旧workId残留，旧目录已遮挡，未见跨组数据。Root同意按FR1362-3闭合；独立round2 findings[]并record REV:c30b86daab67后，组件RED1FAIL/20PASS。groupSwitchHref仅/accounts/works清workId、cursor、metricCursor、accountMetricCursor，参数来自真实route声明，其它路径同名参数保留；不改http transport/两阶段导航/epoch/deadline/权限。新生产source与watch追加两文件，保原formal整轮失败，不把URL残留写成数据泄露。
+
+
+## DEC-136301 — 既有直接报表入口晚到与本包受控门（2026-10-19）
+用户明确视频号采集失败、无需再问且要求自主验证。原1499首因仍UNKNOWN，不重发原任务。独立策略只证当前等待中心时遗漏后来出现的既有直接入口候选；R1实际CONCERNS REV:242804b1eaf6指出不能以无关centre重复反杀entry=1旧合法路径，修为实际点击分支唯一性后R2 PASS REV:717233522ed1并taskctl START。只同Page/官方origin/原deadline/signal等待现selector，安全onDiagnostic只固定子阶段/已有计数/权威attempt，不新增公开能力或原任务迁移。T1359依赖补T1363受控公共链闭合、安装动作/期限/保护不变，经单独R2独评后正式注册；真实新owned采集仍须同源安装后Root专门放行一次并保原ID，不自动重POST。
+
+## DEC-136001 — 最终公共切组消费者与旧宽收据分证（2026-10-19）
+最终721完整reconcile自然44ERROR/0WARN，前41身份保留，新增T1348/T1346/T1350因本批公共Switcher与测试字节变更的宽收据失配，登记T1360，不归开工旧32项或扩充用户历史accepted-risk。当前真实Next切组与作品完整链、定向组件及即将执行的本批strict只证明当前合同，不追写旧三任务全族通过；不因全文件hash机械重演模型/渲染。工具stats新输出原件先保再还原foreign，T1073新旧本次SHA相同；foreign9与T1255整行最终全等。产品源eb19124ed/当前strict目标721/历史各run与视觉source分别记录；纯文书后续提交不改写受验来源，不将全局对账失败称绿。
+
+## DEC-136401 — 新安装版真实失败另建精确诊断（2026-10-19）
+Root单独放行的e676唯一新视频号attempt collection-92ecb053-281已125.447秒后failed/EXPORT_FAILED、committedPages0/gen2。T1363受控27GREEN不代签真实恢复，原1499/1502/1726与全部旧失败不动。Root现仅授权精确新attempt+窗口可信日志stage/kind/code/entryObservation投影；control登记T1364待独审，无新POST、selector预设、产品/凭据/用户库写或重包/重门。原125.447秒和gen2不直接归因timeout或重复执行。T1359真实安装清旧独立待最终安全报告结案，不能以其通过结束用户视频号问题。
+
+## DEC-135903 — 本机交付完成与真实采集失败分别结案（2026-10-19）
+Root已审delivery_execute最终SAFE_SUMMARY与DELIVERY_REPORT，正式授权仅T1359收尾。唯一e676固定入口构建426.822秒exit0，正式App同源canonical31851文件/746链接零差异，完整连续120.399秒25点稳定，核准14项精确清旧完成；严格源721与e676六产品树一致。本次文书HEAD不是已安装源。安装前原两活动自然failed及traffic3updated/0new、新281一次真实采集125.447秒后EXPORT_FAILED/prepare wait_entry_or_centre分别保留，T1364未完成，不冒视频号或公众号真人恢复。原生像素、dirty读取、采集close仍无证；运行目录核验脚本隐藏名前导点误处理是helper错误，原FAIL保留。无产品变化，复用真实44ERROR原对账与分类，不重跑大门/构建/Next；只pmem/taskctl和白名单文书提交，foreign9/T1255不动。原构建前false快照原样保留，新安装结果另列true。
+
+## DEC-136402 — 一次同owner导航诊断走canonical链并核真实释放（2026-10-19）
+Root审proposal后选定accounts.wechatNavigation.diagnose窄CLI契约，不另建HTTP鉴权或通用浏览器框架；默认off/服务器可信授权scope、跨重启原子一次准入、真实req.signal仅此新op第四参、同key缓存当前组/成员/账号证明复核，原281及旧失败不动。账号无数值version，冻结现平台/稳定身份/status/updatedAt与group/membership真实version/id。hostLifecycle acquire只追加readonly auditReceipt{leaseId,hostOperationId}，保持原算法，实际close后才onStopped释放；失败保占用/UNKNOWN，不手工解锁。私有两帧/有界DOM仅诊断，最低2450000ms完整包络与真实HTTP断连必须实证。R1日志审查原件与REV756ccf30ea9c保留，R2独审+Root实施放行后才start。实现于新managed e676工件，e676安装无新op，禁止第二个共享用户库/正式profile开发实例或热改；受控验收/独立实现审后冻结并按既有授权另登记正式打包安全替换，单一受管同源运行时才获准一次真实导航；本DEC不预签构建/安装/实际诊断或采集恢复。frontend现平台transport 7-op库存属直接受影响消费者，必须精确+1核验，不归旧债。中央文书control唯一writer，worker与backend/contract分工先冻结接口，persistence/dispatch只一个writer。
+
+## DEC-136501 — 新诊断能力独立交付且不与真实诊断完成成环（2026-10-19）
+Root明确另建T1365本机交付，承接用户已有安装清旧/自主测试授权。依赖T1364受控公共门及最终独立实现审，不依赖T1364 complete；先冻结新候选、固定入口skip-install产包、安全替换单一正式App/同源存活验证，Root随后另放行唯一真实导航，结果归T1364。现只登记SPEC/待审，不构建安装或真实enable。e676旧安装和global44原件不改，foreign9/T1255保护；原281等失败不能被安装通过覆盖。T1364执行预算按真实source aggregate含10000补为2580000=2450000执行+120000结算+10000终端余量，同一started/deadline不续期，属FR10允许实际消费者补足，不重开SPEC轮次。
+
+## DEC-136404 — 受控导航工程按精确清单整合，真实结果与交付继续分证（2026-10-19）
+Root实际读取最终独审后放行28库存/27实际变化（17生产/10测试），清单SHA6a8589e98d8b03d3701a51fb1925515edb0273b371eb1466f9258005e5c7d9a5。worker168、原public04六PASS与旧清单46585/28无漂移、最终仅service/unit/HTTP测试三文件的存储脱敏RED2→HTTP2PASS（原6筛选skip）和scope未知RED1→后台全30PASS分别保留，不冒最终8全重跑；最终独立实现审findings[]。timeout新独立verify实际returncode0、types及boundary/semantic/orphan实际meta保留；registry当前与archive e676同旧两prediction-lock route缺项1FAIL，不顺手修。主树仅control精确整合与白名单提交，foreign9/T1255不动，e676旧交付不改；候选后新执行一轮完整reconcile并分类，不借旧44签新树。T1364仍🔨等待真实诊断；T1365已按Root许可taskctl START用于交付准备，实际构建安装和真实enable均仍未放行，不以工程门结束用户问题。
+
+## DEC-136601 — 导航诊断后的56对账结果与新宽收据分别登记（2026-10-19）
+clean2d唯一完整reconcile实际exit1/1300.595秒/56ERROR0WARN，44旧失败身份仍在但5消息换型；新增2个本批宽收据、8个缺旧本地产物身份和2个新LED fire。T1366仅登记T1354/source与T1356/persistence新字节及T1294旧身份新增交叉，不归开工旧债。旧产物主树真实ignored/clean候选缺失有路径/SHA，原56不回填。Root另派057/061各一门一次诊断，原full子因未记录UNKNOWN与后验可复现环境失败分开保；不修改managed依赖/补binary，不再跑full或旧UI洗绿。T1364继续等待真实诊断，T1365虽START但build仍待Root，本段不代放行。
+
+## DEC-136602 — 原56不洗绿，按真实交付闭包放行exact2d本机包（2026-10-19）
+Root亲读原56ERROR/0WARN分类及独立单门详情：057重验exit101/6.038秒是缺generated externalBin，未进Windows测试；061重验104.955秒exit1共378PASS/1FAIL为真实Whisper Pipeline import缺Sharp0.32 native，四旧输入SHA自然恢复且candidate clean。原full子输出被ignore，不能倒填两个fire首因。独立T7交付闭包native/SWC/PNG与四基本45PASS另已实际核验，新增导航能力controlled/独审完整，Root明确正式放行唯一delivery exact2d3826ef164241860437daa393d336d9b042f980固定产包、通过后safe安装；不修改managed依赖/补binary/重跑full或旧UI。T1366登记两新宽收据与T1294追加交叉，不扩历史accepted-risk；八旧ignored产物缺失新增身份分证。此为范围明确的工程交付裁定，不称全局通过，T1364仍进行中、真实enable/导航仍待后续Root单次放行。纯文书新HEAD不改变exact2d交付源或T1359 e676历史安装源。
+
+## DEC-136502 — 新2d正式安装事实与唯一真实只读导航分别收证（2026-10-19）
+Root亲读2d正式安装原件：观察PID47707，startup125.669秒从open起算；独立完整连续120.430秒25点稳定，canonical31851files/746links/5059dirs零差异，主SHA dd3c655a79b09c5fec4e776c6ee3dfa600e934210abb1159ce1671d8ca70a807、tar1ab286281bd1f97ae192cbd1d55605db807dd243da14d9018745725ce7d99f85。旧helper说明121.597保原模板文案，不能代替新实际计时。清旧14精确路径Root已批，待实际终态/保护与清后核验再关T1365；旧e676 scheduled.comments安装前自然failed独立保历史，不写新包回归。Root现另明确单次授权同2d/config一次/原组grp_legacy_acct-ae1a8346-9与acct-0d742f83-1558的只读导航，外8400000/后端2580000，同key不重POST，实停后恢复默认off；不是collect，不改原281。此授权不代签动作已执行/两图已得/物理close或DB释放，T1364须等真实结果与Root实际看图/根因判断，不提前complete。control仅安全字段投影/收证提纲，不整读含key旧SAFE_SUMMARY，不改产品或重跑门；正式source仍2d，文书666不冒已安装源。
+
+## DEC-136503 — T1365真实交付结案不代签T1364真实诊断（2026-10-19）
+Root亲读DELIVERY_INSTALL_COMPLETE_SAFE后明确放行T1365收尾：source2d固定构建396.891秒exit0/四基本45PASS，正式App观察PID47707、startup125.669与独立连续120.430秒25点、canonical31851/746/5059零差异；DMG8f8265111a3d719a50889a8725b65e4c33f56b78033f4758765fc68b1c5a8cb6，核准14精确清理与两trace保护完成。du6360036KiB与df并发变化不冒精确释放；native pixels/dirty接口未验边界保。旧e676 comments自然failed与helper121.597旧文案不改原件、不混成本包回归。control只白名单读本次交付必要字段，不读key或含key旧摘要；pmem/taskctl真实complete与纯文书提交沿本次原56分类，不再full。T1364真实单次导航是Root独立授权/在途，继续🔨，不预签两图/根因/close/lease/off或原281采集恢复；源仍2d，后续文书HEAD单列。
+
+## DEC-136701 — 实际折叠导航缺证转为独立报表入口修复需求（2026-10-19）
+Root实际查看2d唯一只读诊断两图及机械manifest：127.919秒completed/identityMatched、26样本后台complete但entry/centre精确标签各2且visible0、导航仅图标，末帧作品正常加载；close与原lease callback释放分别.381/.385，stopPending=false。该结果只证明本次诊断，不倒推原281页面/首因或签采集恢复。用户视频号未完需求立即登记T1367，先只读分析实际折叠导航合同/精确写集/公共RED，再独评和Root实施放行；不猜selector/强点隐藏标签，不新POST/复用已消耗准入、改用户库/安装资源。当前只写中央安全文书，T1364待执行方安全最终报告如实结案，global56/T1366和foreign9/T1255保留，纯文书不重跑full。
+
+## DEC-136405 — 唯一真实导航如实结案，采集恢复转T1367继续（2026-10-19）
+Root亲读新根最终专门脱敏报告并实际看两图后，明确授权T1364诊断结案。正式2d唯一req-3547e2dc-238/cli-inv-3547e2dc-239实际127.919秒completed/identityMatched/26样本；物理close00:58:45.381Z、原lease callback释放.385Z、stopPending=false，随后正式main无config PID55420/Ready5.826秒同main/tar恢复默认off，无第二call。两帧只证本次后台已加载、折叠图标与匹配文字不可见，隐藏祖先/命中结构尚缺，不倒推281原页面或首因，不签collect恢复。原失败/私有原件/旧rootActuallyViewed=false快照保，后来Root实看另证；T1367待审继续未完修复，不猜selector/强点隐藏标签。纯文书沿实际56分类收尾、pmem/taskctl，不重full/旧UI/产品/构建；foreign9/T1255保护。
+
+## DEC-136702 — 折叠导航只增严格语义owner的一次hover，现场受阻不绕行（2026-10-19）
+Root选择T1367最小A：保原visible direct/centre路径优先，仅两者均0时识别固定精确可访问名或明确aria-labelledby的button/menuitem/link真实owner，节点identity去重、唯一可见enabled命中、行动前重核且优先晚到旧入口；一次hover后必须真实actionable子入口，tooltip/隐藏文字不点。当前实际站点owner结构缺证，受控GREEN只证合法输入族兼容。CUA site-safety明确拒绝目标内容观测且禁止同目的间接/替代通道，不以正式collect/诊断/另浏览器/CDP绕过，不再问用户；真实恢复UNKNOWN，本任务不能据受控通过提前complete。只witness/现真实公共集成测试及必要source预算phase/test，原deadline/signal/归属/lease算法不变，不扩contract/backend/UI/探针框架。冻结SPEC独审PASS后才start/生产；本DEC不代放行实现、真实操作、打包安装。
+
+## DEC-136703 — 首轮真实major保留，hover入口按owner关系收紧（2026-10-19）
+T1367冻结450f独立首审REV-001为open major，已正式record CONCERNS REV8de3ac93ccae，不覆原件。Root接受最小R2：仅新hover分支的入口限定已验证owner自身/后代，或明确aria-controls同document关联面板，按真实节点去重/唯一，排tooltip和孤立无关同名action浮层；新增对应负族，不给原direct/centre路径追设门。FR5同end结果通过窄传既有observe end到callback落实，旧无参回调与全局observe判定不变，新action timeout同end裁剪且动作后/返回前复核。无新产品方向或探针，不借受控GREEN签真实恢复；R2独审与正式PASS前不start/实现。
+
+## DEC-136704 — 先完整保旧菜单窗口，再以原持久剩余期限做严格恢复（2026-10-19）
+Root拒绝用hover前identity切割破坏任意旧late新增合法入口，明确选最小兼容分段：原菜单流程完整按旧行为执行，只有固定REPORT_LINK_MISSING且原signal/deadline/origin有效才进入独立折叠恢复；其它错误不吞。旧窗口不重置/续期，新恢复owner观察/一次hover/关联entry观察是明确新增串行成本，source每report聚合预算加足且三report真实串行计入，原collector绝对期限仍不可延长。新阶段仅严格语义owner自身/后代或明确aria-controls关联入口，tooltip/无关同名浮层不点；未知/多owner有界等待，原旧成功族hover0次。接受折叠族先原约120秒等待代价，不签性能优化或真实恢复。R2按该精确分段独审后才实施；site-safety拒绝与T1367不提前complete边界不变。
+
+Root进一步冻结该兼容分段的catch只包原initial wait_entry_or_centre且centreClicked=false的固定missing；不捕获已点centre后子入口或route/frame/date/download。独立恢复后不重开原全Page等待、不承诺原截止后无关联late，也不增加持续0/0门阻断合法strict面板；只沿strict关联路径和原scope/origin/signal/deadline。
+
+## DEC-136705 — hover后面板覆盖owner的行动资格按实际动作区分（2026-10-19）
+Root据独立实现审提出的具体合法输入，授权作者在原60case自然结束后做窄受控公共RED：hover展开的明确关联面板可能覆盖原owner中心，原89d6实现的后置sameOwner仍要求旧owner中心可命中会拒绝，而下一实际动作是点击可命中的关联entry。若当场复现，仅区分hover前owner行动资格与hover后owner identity/精确语义/controls关联；entry点击前自身可见enabled命中及原scope/origin/signal/deadline不放宽。此为FR3行动前与FR4关联入口落实的过严纠正，不改已冻SPEC aef632/写集、不增加真实访问。本段只记录授权解释与待查实证，不造RED或GREEN；原witness89d6三扫描/完整60case均按各自原SHA/实际终态保，不能签未来新源。作者最终新SHA冻结后只补实际受影响消费者/静态扫描，再统一唯一full；无平台/安装/taskcomplete。
+
+## DEC-136706 — 后置owner过严缺陷实证关闭，受控产品精确整合并保真实受阻（2026-10-19）
+DEC-136705候选经实际IMPL001_RED02/7.87秒与五DOM proof全true复现，再由d1局部修复GREEN01/8.67秒三报告关闭；首RED01仅hover自身TimeoutError不冒后置缺陷RED。最终独立实现审无open，精确4变更/5库存整合source-only commit665508e66ee4bf46a6ebe3267ce4887c92964e18。最终公共60PASS/1skip/182.81秒，89d6旧完整60/121374ms真实主观察仅未变消费者有限继承，source89/旧witness59/types/静态及最终三扫描实0分证，原types6FAIL/辅助夹具FAIL完整保。Root授权稳定后唯一full据实对旧56分类，新增宽receipt归本次不泛称旧债；随后仅pmem/taskctl如实block，site-safety受阻/真实恢复UNKNOWN，不complete/打包安装或绕访问。正式App仍2d；foreign9/T1255不纳产品提交。
+
+## DEC-136707 — 本次58原输出、两新fire与收尾ENOSPC分证登记（2026-10-19）
+source665唯一完整门原输出58ERROR0WARN/DRIFT，对旧2d56身份全保，新增LED053/060首因UNKNOWN（子stdout原被ignore），不能靠前版timeout174/最终静态0或收尾磁盘不足洗绿。T1354旧source宽漂移同身份追加本次witness字节，T1356未新增本次路径；登记T1368待审根因边界，不泛称旧债。wrapper在child wait返回后git status写index.lock遇ENOSPC/128并自身exit1，child rc未写必须UNKNOWN，不补造完整门exit。原log/运行起时/生成输入与新statsSHA已私有保T7；仅候选自有stats随后还原、只读status clean，main foreign不动。空间搬移/两新单门由Root另裁定，当前无重跑/清理/产品/平台/安装或taskcomplete。
+
+## DEC-136801 — 两新fire仅做同665原门各一次的后验诊断（2026-10-19）
+Root明确授权继续T1368最窄诊断：冻结SPEC经全新独立评审、正式record/start及执行放行后，在同665受管候选依次运行原LED053 `node tools/timeout-policy/verify.mjs`和LED060当前配置整条命令，各顶层命令一次，保原内部串行聚合/`&&`失败截断。执行前只读核同树无冲突活进程、合成测试隔离与环境/磁盘；不满足则保具体阻断而不启动。外层不新增任意短总timeout，原内部预算保留，PTY每次观察不超过60秒；完整stdout/stderr与真实child rc先持久化，再做git/元数据，失败不自行重试或修环境。只读分类T1354 source旧漂移与本次witness新增字节的实际消费者/hash；原full58ERROR0WARN、childUNKNOWN/wrapper1永久保，两门后验不倒填首因。允许原构建自然生成ignored ai-worker/dist和工具已有临时产物；无产品/测试/依赖/门禁/旧收据写、重复full、缓存删除迁移、真实站点/用户库/profile/安装/付费。暴露真实产品问题只保原登记并先独审，不越界修。中央只SPEC/BACKLOG本行/DEC及后续review/context/events/PROJECT与t1368安全证据，t1367 REPORT/control仅纠正陈旧状态引用；foreign9/T1255及三棵保留树不动。T1368完成权仅诊断结果和消费者分类，T1367真实恢复UNKNOWN仍须如实block；本笔仅待审文书，未record/start/test/commit。正式评审constitution采用orchestrator/SYSTEM_ARCHITECTURE.md，沿实际物理边界，不虚构路径。
+
+Root后续审计确认LED053真实HyperFrames CLI有外网及`~/.hyperframes`配置/更新副作用，测试所传telemetry开关不足以关闭；本门须先证明无外网与无用户home修改的原生单命令隔离或既有合法开关，未经核实不得启动。不能改HOME/测试/依赖或默认联网，无法证明安全时仅保只读阻断归因，不自行构建离线wrapper框架，也不把隔离后验回填原full首因。草案等待该点裁定后冻结。
+
+Root亲读taskctl.mjs:257-278确认`待验`无条件执行frontend旅程，`—`只对无linked journey contract合法；T1368无UI改动或journey合同，因此授权冻结前把本任务验收类别纠正为`—`，仍须全部诊断AC闭合并经Root复核，未分类新失败不得complete。这是适用类别纠正，不豁免产品门或洗失败；T1367原`待验`不变且仍须block。
+
+冻结裁定：LED053只用现有`/usr/bin/sandbox-exec`单命令包原node命令，SBPL为version1/allow default/deny network*/deny file-write* subpath `/Users/zyongzhu/.hyperframes`；继承HOME，不改值，只给该子进程已证有效的HYPERFRAMES_NO_TELEMETRY=1和HYPERFRAMES_NO_AUTO_INSTALL=1。不放loopback以防本机代理转外网；审计未见八组需真实HTTP server，但不预签沙箱兼容。若沙箱或内部门因此失败，保原stage/退出并分类为已证环境阻断，不补跑。LED060保原整条命令、合成127.0.0.1和内存PGlite。依据仅系统SBPL示例、sandbox-exec存在和CLI代码写点/原生开关；环境差异显式记录，不称原full同环境或证明原fire首因，不创建常驻框架，不改HOME/依赖/测试/配置。本次作者与审查均Sol，正式记录homogeneous，不称cross-model。
+
+Root授权为现有context-compile消费增补最窄机械登记：仅`orchestrator/process/modules.config.json`与`orchestrator/progress.json`中T1368一个诊断step的task binding，准确路径以工具实际MODULES_CFG/PROGRESS为准。不动其它任务，不改产品或实际验收命令，不虚构运行lease/completion，非新产品范围。此笔只补SPEC/DEC供初审，正式PASS/start后才登记并compile；无绑定时不得伪报Task Packet已生成。
+
+## DEC-136802 — 两门后验诊断结案，产品真实恢复仍受阻（2026-10-19）
+Root亲读执行方REPORT/POSTFLIGHT并接收sol_spec_review实际收尾结论后正式放行；独审记录见docs/verification/t1368/control/FINAL_REVIEW.md，homogeneous/gpt-6.1-sol，只读无新测试、无阻断。T1368两原门各一次：LED053以获批原生OS沙箱和两个有效开关执行，174PASS/静态0、37.626秒exit0；LED060保原整条&&，完整build→worker19PASS→backend52PASS、23.307秒exit0。两门均真实child wait后先flush/fsync退出JSON，再fsync原日志、生成元数据；完整输出私有保全并有字节/SHA。15项source/config及CLI SHA稳定、候选同665且clean、11个ignored dist内容SHA全等、132项用户HyperFrames目录metadata全等、两进程组残留0、T7原full三原件匹配。环境不同于原full，原665唯一full58ERROR0WARN、childUNKNOWN/wrapper1与原两fire首因UNKNOWN永久保，未第二full或重试。T1354旧source漂移与本次witness新增字节及实际消费者/hash分列，T1356 persistence本次未变，原宽receipt/PASS不刷新。Root裁定AC1..3诊断闭合，授权taskctl complete T1368；T1367受控实现通过不等于真实恢复，site-safety外部受阻/恢复UNKNOWN须taskctl block，不complete、不打包安装/真实访问。先pmem sync、按真实taskctl事件更新两任务、再pmem同步最终状态，不为纯文书重跑full或声称全绿。progress诊断binding保原pending，仅未作独立队列步骤迁移，不表示测试未执行；不调用done/verify/claim或伪造lease/e2e/completion。精确暂存仍保护foreign9/T1255与私有原件，提交须Root另放行，不改冻结SPEC或历史快照。
+
+## DEC-136901 — 登记用户三项完整反馈并沿现有平台表整合入口（2026-10-19）
+用户本轮明确要求修复首页平台Tab后侧栏持续“正在打开”，将账号组页顶部五扫码按钮及说明删除并把扫码直接放进原平台能力对应行，移除组内“查看数据”且不新建数据页、隐藏暂不支持能力，以及查清小红书已绑定但创作者总览0/缺指标的原采集→保存→查询→筛选→显示链并修确认缺陷。立即登记T1369/T1370/T1371三个完整任务和各自初始SPEC，不用分期切割已授权范围。入口重排和复用旧数据路径是用户已明确的UI/IA选择，无需再选A/B；沿项目oil-ui-pro 0.10.0、existing-project与账号组UI_RULES保现方向和品牌组件。Root已看四张截图；截图只证可见现象，不证首因或链路已通过，原件只私有路径/实际SHA引用、账号隐私图不纳Git。当前仅中央待审登记与只读定位，不start/改产品/测试/full/安装/commit；诊断回报后Root再冻结窄写集/FR/AC及正式流程，所有产品修改后续独立隔离树。保原业务数据、原任务及foreign9/T1255，不新collect/登录/模型；channels旧site-safety拒绝不绕行，不扩大为禁止本机UI只读验证。当前主树10cab133为文书源，不冒已安装产品身份或把原58/childUNKNOWN等历史结果洗绿。
+
+## DEC-137201 — 用户撤销OilUI项目接入，沿原稳定页面修复三问题（2026-10-19）
+用户最新明确要求“把OilUI删掉”“做页面参照我们之前的风格”“现在两套风格”，优先覆盖AGENTS旧强制和DEC136901中Oil流程引用；旧决定作为历史保留，不倒改。停止该skill/设计审美门，无需再问删除或A/B。Root精确授权T1372：项目目录17tracked/实际17且无foreign，先taskctl start再可逆删除，仅改AGENTS旧段、UI_RULES前两节、modules当前该前缀read/step_read/write引用，并为本任务加真实单步骤binding/packet。CLAUDE无相关引用不改，不动全局技能、其它任务/命令或历史SPEC/context/review事件。原tokens/组件/布局/状态和真实操作验收保留，以旧稳定页面为基线，不扩全站重设计；本轮三份未冻结新SPEC同步撤销Oil约束，T1369/T1370/T1371仍完整推进。该任务仅工具流程配置、无UI journey，审核/验收—适用；真实检查仅JSON parse、精确diff/check、当前入口引用与foreign保护，不产品测试/full/安装/collect/登录/模型。按真实检查pmem/taskctl完成，先不commit，Root看差异后另裁定；主树foreign9/T1255与原58/childUNKNOWN保留，不虚构lease/e2e或步骤完成。
+
+## DEC-137101 — 已归属unknown指标仅进入已授权组的内部摘要（2026-10-19）
+用户要求小红书已绑定的数据在总览真实可见；只读同scope catalog112/summary0及11条窗内入组后available/count/lifetime样本、源码public-only排除已分证。Root明确本次最窄契约不同于旧T1356 FR1非public不计：只新增真实完成current目录（generation>0/completed_at非null）、无该user/account/platform/externalId任意private/hidden/deleted tombstone且typed指标真实归属的unknown内部摘要候选。旧public+两冻结null分支原样，gen0/legacy_import/未完成目录不纳；真实service先private后更新unknown同priority仍须排除。保持unknown值、isPrivate/commitPage/tombstone/uncertainty、外发冻结与导出发布隔离、原权限/入组时间/日期/去重/0-null口径，不伪改parser public或新采集。先独审本SPEC与真实公共RED，窄改scopedWorks后公共读回/两视口UI验证；不重写旧SPEC/PASS或以内部可读代公开资格。用户已撤销Oil流程，旧tokens/组件和数据路径复用，不新页/主题，不扩写集或改用户数据；当前只冻结待审合同，未运行本任务测试/产品修复。
+
+## DEC-136902 — 合成原失败保留，单次读取已安装运行时的实际连续导航（2026-10-19）
+Root已审导航执行方提案并明确放行：原两次合成预算已经消耗，不重跑或续期。诊断1自然GREEN未复现；诊断2在auth/me readiness后首个group首页document原120秒超时、未到受控链，finally执行上下文缺失后由已核cwd runner单次SIGINT收尾，原FAIL/interrupt/trace与dev冷编译事实分别保留，不当用户安装版首因。下一次仅对已核PID和公开auth/me的已安装运行时精确`http://127.0.0.1:50617`新Chromium context做一次真实只读UI观测，原profile/凭据不读不复用；仅该origin GET与库存effect=read/method=GET的dispatch准入，其它mutation、外网和WS一律拦截并记账。只观察首页筛选→侧栏及/settings对照，不改产品、用户DB、安装或原任务，不启动新Next；新raw仅0700私有目录，安全报告限docs/verification/t1369/**。导航300秒、单动作/观察120秒、外层1800秒加清理余量，真实rc与清理分证。此是已授权诊断的真实运行时只读延续，不签用户Tauri真机、修复完成或平台采集恢复；冻结SPEC历史字节不改，不把原两次合成失败洗掉，也不扩大channels旧site-safety拒绝边界。
+
+
+## DEC-136903 — 保留两原件，只补一次尚未执行的受控导航（2026-10-19）
+Root亲读并接受nav冻结DELTA_PROPOSAL SHA0a9fe4ce971383788b78ad61c563dad174e652d9a6f4a469726e75486ae67059。natural01自然PASS未复现、response02首document120秒前置失败且finally阻塞/interrupt分证；安装只读浏览器read快速403finished，原pending判断撤回，不作为卡死首因。为继续解决用户问题，另授权仅normal一次response/overview+settings受控补充，不续原两次预算、不重跑自然/minimum。三真实路由每600秒完整HTTP body预热/无重试/无客户端cache，核心120秒不变；失败不evaluate，owned context/browser/observer各120秒独立清理，test9360秒/wrapper10620秒。只测试/config/本任务证据与中央SPEC追加，不改产品/旧harness/依赖；前置再失败立即保原停止，无RED不修生产、不complete。中央精确复制原提案并追加SPEC，交全新独审实际新hash后正式record/通知执行；原冻结批准/已发生实验历史保持。
+
+
+## DEC-137301 — 完整对账先保真实CLI安全预检阻断（2026-10-19）
+Root要求完整对账先核实际副作用，不以必须full突破无真实模型/采集/用户目录写边界。10238309c只读证明LED053原命令仍直启真实HyperFrames CLI，无T1368单门OS隔离；原telemetry开关无效，配置写/顶层更新/skills/auto-install静态可达。现仅登记T1373待审及PREFLIGHT_BLOCKER，不启动full、不改原验证器/依赖/HOME或换receipt；本轮未产生full退出和数量，665原58/childUNKNOWN不冒102新全局结果。两产品已通过定向/公共/静态及独审，与未执行全局门分证；任何后续最窄隔离或执行契约须具实际安全证据由Root裁定，不临场自造框架或豁免旧门。
+
+
+## DEC-137302 — 两窄产品按实际strict完成，完整对账安全欠债另列（2026-10-19）
+Root已审源码/关键图与实现独评后授权精确候选2d4f32e2f整合及前瞻控制10238309c。两任务taskctl strict真实执行原双窗链，T1370 child0/98.174秒、收据deac4c8faea8；T1371 child0/56.434秒、收据d5729ef84fe8，均verification_executed=true且工具写完成。独立终核fresh四witness与两结果expected2、skip/unexpected/flaky/errors均0，source/candidate clean和foreign9/T1255保护成立，无需重门。Root接受当前完整reconcile只读PREFLIGHT_BLOCKED为范围外T1373验证器安全欠债：未证全局OS闭包、不启动full、无新full退出/数量，665原58/childUNKNOWN只保原源。前瞻合同不倒改初轮RED/GREEN历史；源码/控制/运行源分别记录。T1369仍未复现首因且未完成，原两次及获批补充600秒前置失败保；当前App仍2d旧源，未替换/新collect/模型或外发。收尾只pmem同步与精确安全文书提交，不手改状态或progress flags，不清旧证据/缓存。
+
+
+## DEC-136904 — 同源普通production差异实验保许可门与资源边界（2026-10-19）
+Root明确继续T1369，不以两产品完成或dev前置失败结束用户问题；接受正式helper的新随机合成测试准入方案。冻结proposal c74d22eb0366e98fe9a0cdebfaac3292ae46c5b057438c01dcfed727b3a66729：同10cab标准完整build，build后seed&&start共用原600秒readiness绝对deadline，seed完且剩余有效才临spawn用原createBuildSmokeVerdictToken唯一签发≤5min build_smoke（端口绑定），seed只驱动内存/必要0700/0600不进server env/日志/Git，公钥只本树产物；不读用户凭据、不改verdict/helper/握手或安装。窄已知进程树原生网络隔离、本地探针、禁真实数据/后台、一次normal自然后原受控顺序及真实A取消分证，core120/test9360/build7200/outer18300不续期。df约9.7GiB，入口8/运行3GiB阈值；只获批可再生本轮.next/dev按trace原副本SHA/身份/无活进程条件回收，保全部证据/旧树/foreign。只新增production config/本任务驱动及现e2e minimal，意外tracked变化停止，无公共RED不改产品，不冒Tauri/真机恢复或T1373全局隔离已证；full继续BLOCKED未执行。中央追加SPEC/机械write_set/真实审核记录，PASS匹配后直接放行，无额外用户确认或Root排队。
+
+
+## DEC-136905 — 长TMPDIR的tsx IPC前置失败保原，仅修自有夹具路径（2026-10-19）
+Root接收production01实际exit1/5.155582667秒：sandbox探针0，T1355 fixture的tsx Unix socket路径119B超过103B，listen EINVAL，owner/ready未建立，未build/seed/签名/start/UI，owned三端口全空。原失败原件保留，不充产品RED。Root明确授权仅一次短/private/tmp下0700 owned TMPDIR夹具修正，原env/沙箱网络规则不放宽；先有界同env/sandbox tsx IPC探针，实际PASS后才新attempt02按原production范围/完整预算一次继续，失败停止不自动重试。冻结SPEC/proposal及R3原审结字节保，不另开整轮许可；不改guard/依赖/产品或用户目录，不把夹具调整当首因/修复或全局full闭包证明。实际阶段/清理与安全投影见docs/verification/t1369/control/PRODUCTION_BOOTSTRAP_ADJUSTMENT.md；T1369继续进行中。
+
+
+## DEC-136906 — 短路径探针EPERM保原，只换自有驱动标准Node loader（2026-10-19）
+production02只完成同env/原SBPL的短TMPDIR tsx IPC探针，真实exit1/422.091ms、listen EPERM、marker缺失，未build/seed/sign/start/UI，按前置PASS断言停止。与01长路径EINVAL分证，不充产品RED。Root明确选定不改sandbox或增网络规则，仅本任务自有驱动以node --import tsx加载原TS宿主/seed；执行方/独审核全体直接间接消费者，独立loader探针实际PASS后才同原完整范围/预算一次production03，不自动重试、不改产品/guard/依赖/用户目录。冻结SPEC/proposal/审结历史保，不重合同/许可；实际原件hash、路径长度按原字节校正与边界见docs/verification/t1369/control/PRODUCTION_BOOTSTRAP_ADJUSTMENT.md。T1369仍进行中、未修复/不complete；不得把窄loader可用冒全局full隔离闭包。
+
+
+## DEC-136907 — 明确原合成夹具外层准备，构建与页面保原沙箱（2026-10-19）
+Root已核并授权最窄拓扑差异，最终proposal f846415eb6ebdc4d96e42c15e5310adc4e3d56c13247fb82c239df875393f1de：原host/PG+原seed在外层合成fixture运行，原ps归属/nonce/UID/PID/root/监听检查不改；它们不再OS禁网，按源码未装真实collect/onBound/external adapters、最小env/私有DB及前后state无新增真实任务保护，不冒全栈sandbox。build/Next/browser仍逐字原SBPL；config webServer=[]、无借用未知host，seed/start/auth共600秒且seed后临spawn唯一签名，原build7200/test9360/core120保持。独审核原host实际ps180+pgCommand240串行420秒，清理修PW120+Next120+host480=720秒，唯一production04外18840完整覆盖18660秒串行链另180秒。旧377稿未冻结为最终预算。01–03环境FAIL及03 wrapper残PG24400、后置原pg_ctl0/142.422ms清理全保，不充产品RED；源核/实际预算独审核后直接按既有Root授权一次执行，无新用户许可层。不改原harness/seed/产品/guard/依赖或任务状态，未定位RED不修产品、不complete。中央SPEC追加仅本明确边界与失败事实，原历史段保；此DEC不是Owner=user的typed review-cycle capability，不借夹具授权伪造第4轮流程权限。
+
+
+## DEC-136908 — 新夹具边界候选等待真实单次审核周期授权（2026-10-19）
+Root亲读reviewctl585与665–695：T1369当前cycle1/round3终态只绑定SPEC6f8114cc…，新候选4f608dbb…不能凭一般“继续”或实施审造第4receipt。故暂停DEC136907所述新拓扑的执行，前述直接执行指令以本条后续裁定为准；仅继续静态核实际driver/预算。实际独审候选无方案阻断安全记录在control/FIXTURE_BOUNDARY_STATIC_REVIEW.json，但未正式record，不代签新PASS或回填旧receipt。精确单次changeID为T1369-PRODUCTION-FIXTURE-BOUNDARY，previous spec/constitution/event与候选边界见control/REVIEW_CYCLE_REQUEST_DRAFT.json（均位于docs/verification/t1369）；该草案不是typed capability，无用户授权/active/nonce，不能消费。Root将向用户请求该具体单次新cycle，真实答复前不build/seed/sign/start/UI，不改任务状态。旧R3历史收据、01–03原件及foreign保护保持，不以机械流程伪造已授权。
+
+
+## DEC-137401 — 用户将缺数纠正为全部实际绑定媒体，逐平台恢复而非只诊断（2026-10-19）
+用户最新明确“不只是小红书，其它媒体全缺数据，只有抖音正常”。Root授权立即登记独立T1374完整范围：以本次真实绑定清单为全集，抖音同scope对照，原采集终态/目录/typed指标、归属/日期、公开查询与实际显示分别核；只读先行不等产品gate，因果证据后才窄定生产写集并独审，不凭小红书单例推全平台或只诊断签全部恢复。保T1356/T1362合同与T1371完成/未安装边界，不重写旧PASS；未知、窗外、无源、采集失败与漏显示分证，不按目录补指标/Project，不改原权限/归属/tombstone/冻结及外发保护。当前仅SPEC/BACKLOG/DEC待独审，未start/产品/测试/全门；无新collect/login/模型/安装/用户库写，channels拒绝不绕行、foreign9/T1255/旧证据保。T1369新cycle仍未获用户授权，production04不执行；T1373完整对账安全预检阻断保持，主HEAD961ad来源分证。
+
+
+## DEC-137402 — 已证KS/XHS旧包漏数，零生产变更补真实跨平台回归（2026-10-19）
+Root基于本轮fresh公开矩阵与安装2d两hash核对，精确批准仅扩backend dashboard-collected-metrics.test.ts、frontend现t1371 e2e、docs/t1371 seed三文件；生产/契约/config与原宿主/seed0改，复用干净102共享树，不造新页/接口。backend只真实协议→service/transport；纯KS normalizer在docs seed双扫描，显式按生产字段协议映射测试装配（不声称复用内联dict/真实采集器全程），既有normalizer叶子另回归。保日期/0-null/粉丝/unknown/tombstone/源冻结及XHS/Douyin控制。PLAYWRIGHT_JSON_OUTPUT_FILE绝对新T1374结果路径+CLI --output绝对新artifacts防覆盖T1371旧证据，fresh私有root与原隔离/预算保持，重门串行。无当前产品RED不造红/不改prod，失败保原先回Root；native失败/缺报表与typed缺数分证，不签安装或全部恢复/complete。正式delta独评/record后继续已start任务，无新collect/login/模型/安装/full；1369新cycle/04仍待用户授权。
+
+
+## DEC-137403 — 接受零生产跨平台回归，未交付与原视频号阻断保持任务未完成（2026-10-19）
+Root亲看两窗KS321/粉丝9原图并接独立源/证据审后裁定：本轮三test/seed串联真实协议/纯normalizer→service→typed→公开transport/Next，backend52+leaf3+公共UI2实际PASS；必要frontend/backend类型0、boundary原5无新增、diff0。生产/contract/config/原harnessseed均原字节，无新增产品修复或伪RED。UI原attempt01是driver strip瓷器状态空格的启动前FAIL，Root准同scope rstrip换行修正后独立02真实两窗PASS，不消耗新审轮；旧FAIL与SHA保。旧T1371 48证据/源输入快照保，不刷新旧收据。清理仅独立证明nonce/root、owned helper/PG不运行/三端口空/postmaster无；STOPPED缺失不冒正常shutdown。
+Root明确T1374不能complete：当前安装仍实际匹配2d未交付本修复；视频号原已知采集fresh get仍EXPORT_FAILED/0页、nativeReports0且真实站点观测受既有site-safety拒绝，非latest/未知项不编。已用taskctl block真实0记事件，保T1371原完成，不新collect/login/模型/安装/发布或绕站。full本轮T1373安全预检阻断未执行，不以旧58代当前；源码/受控回归与实际安装恢复分证。授权精确收三tests与本轮安全证据/中央控制、pmem同步并正常提交，foreign9/T1255/旧树/raw/trace全部保；剩余交付与真实采集问题不能靠诊断或本文书完结。
+
+
+## DEC-137501 — 用户要求所有现有代码整合到私有仓库main并添加协作（2026-10-19）
+用户最高优先级原话：“把当前所有的代码。没有合并的，全部合并，然后提交到主分支，然后给这个用户添加协作的权限，私有仓库用户名masx-commits”。Root指定唯一MAIN Sol整合与正常push，nav Sol在push确认后按标准write协作。原foreign9/T1255中代码本次明确允许纳入，不再永久排除；任何未快照在途工作/旧树/stash不删除覆盖，不stage密钥/用户数据/raw/运行构建产物与控制缓存。对160本地分支等逐祖先/patch等价/后继替代审计，不能机械apply旧线复活已删除OilUI或旧语义；保历史、正常merge/patch，无force/reset。按实际缺口必要类型/定向tests，既有full安全预检仍不跑，分支保护拒绝走正常PR。维护整合无新产品方向/UI journey，不铺额外新产品审轮，仍须独立来源/安全审计与真实检查。T1374等原未完成状态保，不冒安装/采集/平台恢复。
+
+
+## DEC-136909 — 用户明确准许一次T1369夹具调整审核周期（2026-10-19）
+Root转交用户真实答复：对“只为这次测试环境调整新增一轮，让Sol继续一次生产模式验证（合成DB准备放外层、应用隔离保持）”，用户答“允许这次调整，继续验证”；并补充首页“任意平台都会卡”。这是此前缺失的精确Owner=user单次review-cycle授权，不冒旧批准；任意平台属于原FR输入族，不修改候选测试语义。候选SPEC4f608dbb…/proposal f846415e…原字节保持，旧R3仍仅6f8114。本条保真实授权，最高优先级T1375整合期间暂不启动新重门或与MAIN争写；后续正式独审/typed capability消费按实际工具契约继续，不将用户继续理解成安装/collect/full或许可绕行。
+
+
+### DEC-137502｜既有代码整合的兼容修正与撤回保护
+
+用户T1375全代码整合授权下，Root批准只修真实合并兼容缺陷：T243新锁前模型准备门已由真实persistence的benchmark captureConfiguration和persistent transcribe根各一次RED证明，临时官方音频不可用不能阻断原existing-local-asr；只恢复协议明确availability回退，保完整来源/冻结map，取消、签名/协议、归属和身份变化仍拒绝。新model-benefit catch同步收紧，不把安全错误冒不可用。T247新增GitHub API/中转60秒请求用mock真实消费者RED后改至少120秒；blob保更长完整传输窗口，外层覆盖原串行与清理，不真实下载/上传/发布。v1候选b81旧env白名单/ASR第二账本曾由main祖先41c50538d明确撤回，不能复活；仅其未撤回且仍符合现per_request协议的一行不读长期凭据与原T763回归独立RED/GREEN纳入。原foreign产品7与T1255本轮已授权纳入，缓存/raw仍排除；跨仓旧v3向量缺失case显式skip并保真实首FAIL，不冒完整通过/真实部署验收。
+
+
+## DEC-137503（2026-10-19）：全代码安全分享拓扑与历史风险分离
+
+**Owner**：user（全代码整合及正常推送授权），Root落实安全边界。原始正常merge `59940d23df047a6bd6e675b771838e0716752f45`与全部本地历史保存在`codex/t1375-preserved-local-history-59940d23d`及原分支/工作树/stash；不reset、force或删除原件。远端main采用唯一父`1963e4ebe48f15ec084a1efe7dac2f195675b92f`的新安全快照后普通FF，仅推main，不传播本地敏感祖先。17份敏感raw整件及精确生成/同blob复制排除清单的路径/hash可追溯；有效产品/工具保持原字节，83项冻结一致，不声称所有旧tip都成main祖先。
+
+旧远端T247已暴露敏感历史，未改该ref；安全main不消除此历史风险。masx-commits邀请继续HOLD，须用户对凭据撤销或历史风险作知情决定；T1375未完成。没有安装、真实采集、发布或production04，T1369用户已授权单次cycle但04未执行的事实保持。

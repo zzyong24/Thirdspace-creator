@@ -99,7 +99,8 @@ it("参数不是授权，等待时不创建执行；真实授权只冻结用户�
     .from(executionTasks)
     .where(eq(executionTasks.id, mapped.executionTaskId!));
   expect(row).toMatchObject({
-    deadlineAt: "2026-09-05T01:01:00.000Z",
+    deadlineAt: null,
+    executionBudget:{policy:"continuous",maxCalls:null,maxTokens:null,deadlineMs:null},
     payload: {
       modelInput: {
         browserAuthorization: {
@@ -223,5 +224,6 @@ it("授权保存后准备失败仍保留可恢复状态，重投不改授权时�
     .select()
     .from(executionTasks)
     .where(eq(executionTasks.id, mapped.executionTaskId!));
-  expect(row?.deadlineAt).toBe("2026-09-05T01:01:00.000Z");
+  expect(row?.deadlineAt).toBeNull();
+  expect(row?.executionBudget).toEqual({policy:"continuous",maxCalls:null,maxTokens:null,deadlineMs:null});
 });

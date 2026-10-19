@@ -1,0 +1,14 @@
+--- /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools-candidate/run-focused-v8-candidate.cjs
++++ /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools-candidate/run-focused-v9-candidate.cjs
+@@ -42,6 +42,11 @@
+ const env=runtime.cleanEnv();for(const key of Object.keys(env))if(/^(CREATOROS_|GROWTH_|TAURI_|S3_|AWS_|OPENAI_|ANTHROPIC_|AZURE_|GOOGLE_API_|GEMINI_|DEEPSEEK_|REDIS_)/.test(key)||/(?:API_KEY|AUTH_TOKEN|SECRET|PASSWORD)$/.test(key))delete env[key];
+ const dirs={app:'CREATOROS_APP_DATA_DIR',db:'CREATOROS_DB_DIR',media:'CREATOROS_MEDIA_ROOT',browser:'CREATOROS_BROWSER_POOL_DIR',workbench:'CREATOROS_WORKBENCH_ROOT',backups:'CREATOROS_DATABASE_BACKUP_DIR',douyin:'CREATOROS_DOUYIN_AUTH_DIR',web:'CREATOROS_WEB_AUTH_DIR'};
+ for(const [name,key]of Object.entries(dirs)){const p=path.join(tmp,name);fs.mkdirSync(p);env[key]=p;}
++// 所有child的原环境只允许task-owned失效连接；fixture缺显式BASEURL时拒默认HOME连接发现。
++const cliRoot=path.join(tmp,'cli-no-user-connection');fs.mkdirSync(cliRoot,{mode:0o700});
++env.CREATOROS_CONNECTION_FILE=path.join(cliRoot,'connection-not-created.json');
++env.CREATOROS_CLI_ACCESS_FILE=path.join(cliRoot,'credential-not-created.json');
++if(fs.existsSync(env.CREATOROS_CONNECTION_FILE)||fs.existsSync(env.CREATOROS_CLI_ACCESS_FILE))throw Error('OWNED_CLI_SENTINELS_MUST_BE_ABSENT');
+ Object.assign(env,{NODE_ENV:'test',CI:'1',TMPDIR:tmp,TMP:tmp,TEMP:tmp,T1246_OWNED_PG_PRELOAD:'1',NODE_OPTIONS:'--require '+helper});
+ if(env.HOME!==process.env.HOME||env.CODEX_HOME!==process.env.CODEX_HOME||Object.keys(env).some(k=>k.startsWith('PG')||['DATABASE_URL','TEST_DATABASE_URL','NODE_PG_FORCE_NATIVE'].includes(k)))throw Error('ENV_ISOLATION_INVALID');
+ const controller=new AbortController();let outerTimer,overallDeadline,outerExhausted=false;const records=[];

@@ -11,7 +11,10 @@ export type OnboardingOrigin = "fresh" | "existing" | null;
 export type StepBranch = "all" | "existing";
 
 export interface OnboardingState {
+  readonly needsFirstGroup?: boolean;
   readonly accountId?: string | null;
+  readonly groupId?: string | null;
+  readonly memberCount?: number;
   readonly completedSteps?: readonly StepKey[];
   readonly preferences?: import("./onboarding-data").OnboardingRecord;
   readonly persistenceError?: string;
@@ -155,7 +158,7 @@ export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
   );
   const out: GuidedStep[] = [];
   for (const spec of visible) {
-    const done = state.completedSteps?.includes(spec.key) === true || spec.isDone(state);
+    const done = state.completedSteps?.includes(spec.key) === true || (state.groupId&&spec.key==="import-account"?typeof state.memberCount==="number"&&state.memberCount>0:spec.isDone(state));
     // 引导只建议下一步，不代替业务权限或阻断用户直接访问功能。
     const blocked = false;
     out.push({
@@ -163,13 +166,13 @@ export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
       // 分支过滤后重新编号，避免新号看到 1、2、4、5 这种断号。
       order: out.length + 1,
       branch: spec.branch,
-      title: spec.title,
-      why: spec.why,
-      ctaLabel: spec.ctaLabel,
+      title:state.needsFirstGroup&&spec.key==="import-account"?"创建第一个账号组":state.groupId?({"import-account":"将平台账号加入账号组","confirm-origin":"确认创作起点","positioning-profile":"确定账号组的内容定位","review-imported-projects":"查看已采集的平台作品"} as Record<string,string>)[spec.key]??spec.title:spec.title,
+      why:state.groupId?({"import-account":"选择平台扫码绑定，可继续添加同平台或其他平台的多个账号。","confirm-origin":"选择从零开始，或基于已有内容继续创作。","review-imported-projects":"选择平台账号查看已采集的作品和数据，回来后手动确认已查看。"} as Record<string,string>)[spec.key]??spec.why:spec.why,
+      ctaLabel: state.needsFirstGroup&&spec.key==="import-account"?"去创建":state.groupId&&spec.key==="review-imported-projects"?"查看已采集作品":spec.ctaLabel,
       done,
       blocked,
       blockedReason: blocked ? spec.blockedReason : "",
-      href: spec.href,
+      href: state.groupId&&spec.key==="review-imported-projects"?"/accounts/works":spec.href,
     });
   }
   return out;

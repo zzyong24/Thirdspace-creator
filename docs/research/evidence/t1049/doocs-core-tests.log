@@ -1,0 +1,9 @@
+
+ RUN  v5.0.2 /private/tmp/t1049-reference-doocs/packages/core
+
+
+ Test Files  2 passed (2)
+      Tests  16 passed (16)
+   Start at  09:50:54
+   Duration  990ms (environment 72%, transform 14%, import 7%, tests 5%, worker 1%)
+

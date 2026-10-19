@@ -1,8 +1,9 @@
+import {accountGroups} from "../../schema/account-groups";
 import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, platformAccounts, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createKnowledgeRepository } from "./knowledge.repository";
 import { createKnowledgeService } from "./knowledge.service";
@@ -74,6 +75,10 @@ describe("G2 — domain acceptance (SPEC §22)", () => {
 
   beforeEach(async () => {
     ({ db } = await createDb());
+    for(const ctx of [ctxA,ctxB]){
+      await db.insert(platformAccounts).values({id:ctx.accountId!,userId:ctx.userId,platform:"douyin",accountHandle:ctx.accountId!,createdAt:NOW,updatedAt:NOW});
+      await db.insert(accountGroups).values({id:`grp_legacy_${ctx.accountId}`,userId:ctx.userId,name:"验收",createdAt:NOW,updatedAt:NOW});
+    }
     repo = createKnowledgeRepository(db, deterministicDeps());
     service = createKnowledgeService(repo);
   });

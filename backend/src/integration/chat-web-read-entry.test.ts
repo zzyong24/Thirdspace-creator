@@ -15,14 +15,16 @@ import {createChatHostContextReader} from "../modules/ai/chat-host-context.servi
 import {createAiRepository} from "../modules/ai/ai.repository";
 import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submission.service";
 import {createChatWorkerDispatcher} from "../modules/execution/model-worker-dispatcher";
+import {createExecutionBrowserProfileLeaseService} from "../modules/execution/execution-browser-profile-lease.service";
 let db:Db,close:()=>Promise<void>,root:string,sequence=0;
 const now=()=>new Date().toISOString(),entryPath=resolve("../ai-worker/dist/execution-worker.cjs"),budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();root=await mkdtemp(join(tmpdir(),"t915-web-entry-"));execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 afterAll(async()=>{await close();await rm(root,{recursive:true,force:true});});
 
-it.each(["cache","permission"] as const)("正式构建 Worker 与后端贯通：%s",async mode=>{
+it.each(["cache","permission","busy-release","busy-stop"] as const)("正式构建 Worker 与后端贯通：%s",async mode=>{
  const ctx={userId:"web-entry-user",accountId:`web-entry-${++sequence}`,requestId:"entry-test",source:"user" as const},ids={now,nextId:(prefix:string)=>`${prefix}-${++sequence}`};
- const url=mode==="cache"?"https://example.com/cached-source":"http://127.0.0.1:9/private";
+ const waiting=mode.startsWith("busy-");
+ const url=mode==="cache"?"https://example.com/cached-source":waiting?"https://1.1.1.1/read":"http://127.0.0.1:9/private";
  const repo=createAiRepository(db,{...ctx,...ids});
  const conversation=await repo.createConversation({title:"网页入口",projectId:null,scope:"global"}),message=await repo.createMessage(conversation.id,{role:"user",content:"阅读网页",attachments:[],modelMetadata:{}});
  const tools=(await prepareChatToolDefinitions(buildChatTools(["web.read"],{} as ChatToolDeps),{workerWebRead:true})).definitions;
@@ -40,8 +42,35 @@ it.each(["cache","permission"] as const)("正式构建 Worker 与后端贯通：
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(c=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...c})}\n\n`).join("")+"data: [DONE]\n\n");
  });await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
  const resolveSearch=vi.fn(async()=>({provider:"browser",baseUrl:null,model:"",token:""}));
- const host=createChatWorkerDispatcher(db,{now,budget,entryPath,workerId:"web-entry-host",modelConcurrency:1,resolveTools:createChatTaskToolHost(createChatHostContextReader(db,{now}),{} as ContextReaders,{webRead:true}),webRead:{assets:assetsService,objectStorageForCtx:async()=>storage,sessions:createBrowserSessionsService({db,...ids,masterKey:Buffer.alloc(32,7)}),resolveSearch},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture-private-model-key"})});
+ const profiles=createExecutionBrowserProfileLeaseService(db,{now}),owner={userId:ctx.userId,domain:"1.1.1.1",hostInstanceId:"fixture-host",hostOperationId:ctx.accountId};
+ const held=waiting?await profiles.acquireForHost(owner):null;let heldReleased=false,sessionReads=0,releaseSession!:()=>void;
+ const pendingSession=new Promise<void>(resolve=>{releaseSession=resolve;});
+ const sessions=createBrowserSessionsService({db,...ids,masterKey:Buffer.alloc(32,7)});
+ const getStateVersioned:typeof sessions.getStateVersioned=async(...args)=>{
+  if(waiting){sessionReads++;if(sessionReads===2)await pendingSession;}
+  return sessions.getStateVersioned(...args);
+ };
+ const host=createChatWorkerDispatcher(db,{now,budget,entryPath,workerId:"web-entry-host",modelConcurrency:1,resolveTools:createChatTaskToolHost(createChatHostContextReader(db,{now}),{} as ContextReaders,{webRead:true}),webRead:{assets:assetsService,objectStorageForCtx:async()=>storage,sessions:{getStateVersioned,saveStateVersioned:sessions.saveStateVersioned},resolveSearch},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture-private-model-key"})});
  try{
+  if(waiting){
+   const draining=host.drainOnce();
+   await vi.waitFor(()=>expect(sessionReads).toBe(1),{timeout:10000});
+   await new Promise(resolve=>setTimeout(resolve,100));
+   expect(requests).toHaveLength(1);
+   if(mode==="busy-release"){
+    expect(await profiles.releaseAfterHostStopped(owner,held!.leaseId)).toBe(true);heldReleased=true;
+    await vi.waitFor(()=>expect(sessionReads).toBe(2),{timeout:5000});
+    // 卡住第二次会话查询，证明取得租约后重读；在网页读取开始前先取消，再让查询返回。
+    const stopping=host.stop();releaseSession();await stopping;await draining;
+    const next=await profiles.acquireForHost(owner);
+    expect(next.leaseId).not.toBe(held!.leaseId);
+    expect(await profiles.releaseAfterHostStopped(owner,next.leaseId)).toBe(true);
+   }else{await host.stop();await draining;expect(sessionReads).toBe(1);}
+   expect(requests).toHaveLength(1);
+   expect(await db.select().from(assets).where(eq(assets.accountId,ctx.accountId))).toHaveLength(0);
+   if(!heldReleased)expect((await profiles.acquireForHost(owner)).leaseId).toBe(held!.leaseId);
+   return;
+  }
   await host.drainOnce();const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
   expect(task?.status).toBe(mode==="cache"?"succeeded":"waiting_user");expect(requests).toHaveLength(mode==="cache"?2:1);
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId)),toolCalls=calls.filter(c=>c.kind==="tool");
@@ -50,5 +79,5 @@ it.each(["cache","permission"] as const)("正式构建 Worker 与后端贯通：
   if(mode==="cache"){expect(requests[1]).toContain("缓存入口的真实完整正文");expect(requests[1]).toContain(url);}
   expect(await db.select().from(assets).where(eq(assets.accountId,ctx.accountId))).toHaveLength(mode==="cache"?1:0);
   expect(resolveSearch).not.toHaveBeenCalled();expect(JSON.stringify({task,calls,requests})).not.toContain("fixture-private-model-key");
- }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+ }finally{releaseSession();await host.stop();if(held&&!heldReleased)await profiles.releaseAfterHostStopped(owner,held.leaseId);server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },30000);

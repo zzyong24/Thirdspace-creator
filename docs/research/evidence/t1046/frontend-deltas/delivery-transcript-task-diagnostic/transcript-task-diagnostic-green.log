@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-ui-work/frontend
+
+(node:27166) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  00:03:50
+   Duration  2.20s (transform 521ms, setup 312ms, import 681ms, tests 262ms, environment 703ms)
+

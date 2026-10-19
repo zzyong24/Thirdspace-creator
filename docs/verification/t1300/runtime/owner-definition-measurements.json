@@ -1,0 +1,53 @@
+{
+  "baseline": "d606c0c612197a5c5186d75175c0934c6d992536",
+  "measurement": "实际冻结description/schema UTF8字节；不是wire、token或时延",
+  "legacy": {
+    "director-v1": {
+      "equalBeforeChange": true,
+      "sha256": "81ce97fa9d70d05fa304e09de2522120f460c547945e4c05789ec4658a46fed3",
+      "definitionBytes": 196244,
+      "proposeSchemaBytes": 192075
+    },
+    "director-v2": {
+      "equalBeforeChange": true,
+      "sha256": "e8d80cfaf950e3b264d3fe7b214cc25f9f1d87f3bda7df63380073efa464483a",
+      "definitionBytes": 196244,
+      "proposeSchemaBytes": 192075
+    },
+    "markdown-v1": {
+      "equalBeforeChange": true,
+      "sha256": "b9591332e9ff6ba2bebabacfe5709ee7b80d6c9bc306b7970527f058b85b1c3a",
+      "definitionBytes": 197521,
+      "proposeSchemaBytes": 192692
+    }
+  },
+  "owners": {
+    "wechat_article": {
+      "definitionsBytes": 25340,
+      "readSchemaBytes": 887,
+      "proposeSchemaBytes": 23377,
+      "versions": [
+        "chat-tools-work-editor-owner-v1-wechat_article:d2a6a79868188b53bfa292ca17377818c8e8bdcef2ba1ea85648115bcb36629b",
+        "chat-tools-work-editor-owner-v1-wechat_article:db39ea9dfb9ceb7b5bdb27b9a78ac46832298b5d8ce60ddd08a3c70c4da06971"
+      ]
+    },
+    "graphic_post": {
+      "definitionsBytes": 17638,
+      "readSchemaBytes": 889,
+      "proposeSchemaBytes": 15626,
+      "versions": [
+        "chat-tools-work-editor-owner-v1-graphic_post:87a6cde34b2e36729ff5fae340827c258ddd3789df954094eb07fdba33b82395",
+        "chat-tools-work-editor-owner-v1-graphic_post:6c642f7915b4538655eb93b31feb29c7c46d0d3de975290c6a89c32fcbd5f9c5"
+      ]
+    },
+    "production": {
+      "definitionsBytes": 157896,
+      "readSchemaBytes": 1157,
+      "proposeSchemaBytes": 155033,
+      "versions": [
+        "chat-tools-work-editor-owner-v1-production:0f33040c51923c4dca36e28c0425ce9017e38b4cc3c0517e9706ea6d32b4d092",
+        "chat-tools-work-editor-owner-v1-production:52a834f6ea2064c1d08c9ad851fbcb00a11ec404a0d22e2638b7f14942cd056d"
+      ]
+    }
+  }
+}

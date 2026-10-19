@@ -1,7 +1,7 @@
 import type { EmbeddingModelV4 } from "@ai-sdk/provider";
-import type { ModelSpec } from "./provider-factory";
+import type { ApiModelSpec } from "./provider-factory";
 /** Pi 未提供 embedding：这是独立 OpenAI-compatible HTTP 端口，不伪称 Pi 向量能力。 */
-export function createHttpEmbeddingModel(spec:ModelSpec,classifyRejection?:(facts:{statusCode:number;responseHeaders:Record<string,string>;message:string})=>Error):EmbeddingModelV4{
+export function createHttpEmbeddingModel(spec:ApiModelSpec,classifyRejection?:(facts:{statusCode:number;responseHeaders:Record<string,string>;message:string})=>Error):EmbeddingModelV4{
   return {specificationVersion:"v4",provider:spec.baseUrl?"creatoros-custom-embedding.embedding":"openai.embedding",modelId:spec.model,maxEmbeddingsPerCall:2048,supportsParallelCalls:true,
     async doEmbed(options){
       const result=await fetch(`${(spec.baseUrl??"https://api.openai.com/v1").replace(/\/$/,"")}/embeddings`,{method:"POST",signal:options.abortSignal,

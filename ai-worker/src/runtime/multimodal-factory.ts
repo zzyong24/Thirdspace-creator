@@ -83,7 +83,9 @@ export interface GenerateVideoOptions {
   prompt: string;
   aspectRatio?: string;
   /** 首帧图(image-to-video 起始帧),可选。 */
-  firstFrame?: Uint8Array;
+  firstFrame?: { bytes: Uint8Array; mimeType: string } | Uint8Array;
+  /** 原无mode任务保留旧适配器协议；仅由Worker冻结输入决定，不做创作选择。 */
+  legacyPlain?: boolean;
   /** H3 v2 输出规格。旧 provider 可忽略；MiniMax H3 必须校验。 */
   durationSec?: number;
   resolution?: "768P" | "2K";
@@ -103,6 +105,8 @@ export interface GenerateVideoOptions {
 export interface TranscribeAudioOptions {
   signal?: AbortSignal;
   executeRequest?: ExecuteAsrRequest;
+  timestampMode?:"segment"|"word";
+  timingAudio?:{sampleRate:number;validSampleCount:number};
   /** 待转写的音频字节(如 16kHz/单声道/mp3)。 */
   audioBytes: Uint8Array;
   /** 可选语言提示(如 "zh"/"en");多数 OpenAI 兼容端点可自动检测,省略即自动。 */
@@ -117,6 +121,7 @@ export interface GeneratedAsset {
 /** ASR 转写返回契约(T-030-D1)—— 与 GeneratedAsset 并列,只是返回形状不同:逐字稿是**文本**
  *  而非字节。language 为端点回传的识别语言(可选)。 */
 export interface GeneratedTranscript {
+  timing?:import("@creatoros/contract/execution-worker").AssetAsrProviderTiming;
   text: string;
   language?: string;
 }
@@ -125,6 +130,8 @@ export interface GeneratedTranscript {
  *  但对工厂/上层而言两者签名都返 `Promise<GeneratedAsset>` —— 异步性被封装。
  *  某 provider 只支持其一(如只出图)→ 另一个方法可不实现(工厂调用时报明确错误)。 */
 export interface MultimodalProviderAdapter {
+  /** 释放此实例拥有的执行资源；调用者须等待关闭后才交还任务归属。 */
+  close?(): Promise<void>;
   generateImage?(
     spec: MultimodalSpec,
     opts: GenerateImageOptions,

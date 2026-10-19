@@ -1,0 +1,53 @@
+{
+  "schema": "t1062-default-worker-execution-evidence/v1",
+  "status": "Unknown_harness_path_canonicalization_failure_before_adapter",
+  "authorization": "ROOT explicit one attempt, source SHA approved, no retry",
+  "reviewEvidence": {
+    "path": "/tmp/t1062-asr-opt1-current-static-review.json",
+    "sha256": "be30344516e66080dcb4bbb6dcda855dd62c2e86c5fdbbd252330433f0eaa1e4",
+    "state": "STATIC_PASS_RUNTIME_PENDING"
+  },
+  "argv": [
+    "/opt/homebrew/bin/node",
+    "--max-old-space-size=2048",
+    "/tmp/t1062-default-worker-preflight/run.cjs",
+    "d43a3d610c07c4e7c4754129c1b38a06eb36305e9ca165682e75c1ba27e78bfc"
+  ],
+  "exit": 1,
+  "stdout": {
+    "path": "/tmp/t1062-default-worker-preflight/run.stdout.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "/tmp/t1062-default-worker-preflight/run.stderr.log",
+    "sha256": "f9734d9eb913602d1ff980fef971397f4c145a3ca87f9587b05355197d3fc017",
+    "bytes": 231
+  },
+  "unknownResult": {
+    "path": "/tmp/t1062-default-worker-preflight/run-one/unknown.json",
+    "sha256": "65850c35c56e8cd1bf6df17f83b760b2b4b14076d5b9561bc98b109801f56024"
+  },
+  "actualRuntime": {
+    "requireBase": "/private/tmp/t1062-default-worker-preflight/run-one/runtime/frontend/package.json",
+    "moduleResolverPath": "/private/tmp/t1062-default-worker-preflight/run-one/runtime/frontend/creatoros-module-resolver.cjs",
+    "runtimeRoot": "/private/tmp/t1062-default-worker-preflight/run-one/runtime"
+  },
+  "runtimeVersion": "v25.9.0",
+  "execPath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "buildTarget": "node24",
+  "sourceBeforeAfterSHAEqual": true,
+  "decodeCalls": 0,
+  "modelCalls": 0,
+  "workerCreated": false,
+  "networkAttempts": 0,
+  "oneAttemptLock": {
+    "path": "/tmp/t1062-default-worker-preflight/run-one/one-attempt.lock",
+    "sha256": "e08af81998eb0a7ed19239c3e7c45fa42683c167284d74630e152e56ff3c5962"
+  },
+  "cause": "Default resolver found moduleResolverPath under /private/tmp, while manifest cwd stores /tmp. Harness direct string equality rejected identical canonical path before reading adapter input or constructing adapter.",
+  "strictTiming": "Unknown: default adapter never called",
+  "productRegression": "Unknown, no product/model execution evidence from this attempt",
+  "retryPerformed": false,
+  "repositoryWrites": 0
+}

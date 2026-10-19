@@ -1,0 +1,156 @@
+{
+  "kind": "READONLY_PRE_IMPLEMENTATION_CHECK_NOT_TEST_RUN",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "specSha256": "ba618de983bccaed60476af010bdaeba60b4607c2c604682ad42f5f42e87ebb1",
+  "bindingSha256": "c19e08211a162322fcfbbe5c51983a554a7ab5a143951c4100ca8bb6e61304a1",
+  "24SourceChecks": [
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "expected": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "current": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "expected": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "current": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "expected": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "current": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "expected": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "current": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "expected": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "current": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.ts",
+      "expected": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3",
+      "current": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "expected": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00",
+      "current": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00",
+      "unchanged": true
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "expected": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5",
+      "current": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "expected": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "current": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "expected": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "current": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "expected": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "current": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "unchanged": true
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "expected": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91",
+      "current": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "expected": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310",
+      "current": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "expected": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa",
+      "current": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.test.ts",
+      "expected": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb",
+      "current": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.test.ts",
+      "expected": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+      "current": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "expected": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0",
+      "current": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.test.ts",
+      "expected": "a24837f2abda9f7a03ae0a95af2ebc804b76d63d5610c5151ace848d6b3d0b81",
+      "current": "a24837f2abda9f7a03ae0a95af2ebc804b76d63d5610c5151ace848d6b3d0b81",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "expected": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "current": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.test.ts",
+      "expected": "8dd2bee68dc566db777803ec81f8c233bfbb35278c04eb5d5393ffbf21d324e0",
+      "current": "8dd2bee68dc566db777803ec81f8c233bfbb35278c04eb5d5393ffbf21d324e0",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "expected": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "current": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.test.ts",
+      "expected": "9871b6a64dfb86b06e6e8dc6c24e01a8922ad643f7ae02b302ee2d99adcfaf2d",
+      "current": "9871b6a64dfb86b06e6e8dc6c24e01a8922ad643f7ae02b302ee2d99adcfaf2d",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "expected": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "current": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "unchanged": true
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "expected": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66",
+      "current": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66",
+      "unchanged": true
+    }
+  ],
+  "allUnchanged": true,
+  "sharedBuildStarted": false,
+  "productionEdited": false,
+  "testsExecuted": false
+}

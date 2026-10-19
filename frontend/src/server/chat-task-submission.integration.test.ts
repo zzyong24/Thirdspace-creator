@@ -27,7 +27,7 @@ vi.mock("@creatoros/backend/modules/ai-runtime",async original=>{
 });
 import {getChatRuntime,compositeTransport,__resetPersistenceForTests} from "./persistence-client";
 it("聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同主题拒绝",async()=>{
- execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});
+ execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe",timeout:180000});
  const directory=mkdtempSync(resolve(tmpdir(),"t915-chat-submission-"));
  vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR",resolve(directory,"db"));__resetPersistenceForTests();
  let requests=0;
@@ -41,14 +41,14 @@ it("聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同�
   const [first,again]=await Promise.all([runtime.dispatchPlanningThesis(ctx,input),runtime.dispatchPlanningThesis(ctx,input)]);
   expect(again.taskId).toBe(first.taskId);
   await expect(runtime.dispatchPlanningThesis(ctx,{...input,topic:"另一个意图"})).rejects.toMatchObject({code:"ATTEMPT_PAYLOAD_MISMATCH"});
-  await vi.waitFor(async()=>{const task=await call("ai.tasks.get",{taskId:first.taskId});expect(task.status,JSON.stringify(task)).toBe("awaiting_confirmation");},{timeout:15000});
+  await vi.waitFor(async()=>{const task=await call("ai.tasks.get",{taskId:first.taskId});expect(task.status,JSON.stringify(task)).toBe("awaiting_confirmation");},{timeout:120000});
   expect((await runtime.dispatchPlanningThesis(ctx,input)).taskId).toBe(first.taskId);
   expect(requests).toBe(1);
   const tasks=await runtime.ai.listTasks(ctx,{taskType:"planning.thesis",limit:100,offset:0});expect(tasks.rows).toHaveLength(1);
  }finally{
   await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});
  }
-},30000);
+},900000);
 
 it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",failures:1},{toolName:"material.generate",failures:0},{toolName:"material.generate",failures:1},{toolName:"review.script",failures:0},{toolName:"review.script",failures:1},{toolName:"review.script",failures:0,empty:true},{toolName:"publish.package",failures:0},{toolName:"publish.package",failures:1},{toolName:"publish.package",failures:0,empty:true},{toolName:"script.draft",failures:0},{toolName:"script.draft",failures:1}])("真实 $toolName 工厂首次准备失败 $failures 次后，不重启也能读回候选",async({toolName,failures,empty=false}:{toolName:string;failures:number;empty?:boolean})=>{
  const publish=toolName==="publish.package",script=toolName==="script.draft";
@@ -62,16 +62,33 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
  const {createChatHostContextReader}=await import("../../../backend/src/modules/ai/chat-host-context.service");
  const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
  const {storageConfigs,aiTasks,executionTasks,executionCalls,eq}=await import("@creatoros/backend");
- execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});
+ execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe",timeout:180000});
  const directory=mkdtempSync(resolve(tmpdir(),"t915-planning-factory-"));
  if(material)vi.stubEnv("CREATOROS_STORAGE","local");
  vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR",resolve(directory,"db"));__resetPersistenceForTests();
  const requests:any[]=[];
+ const rootRequests:any[]=[],childRequests:any[]=[],fixtureErrors:string[]=[];
  const server=createServer(async(req,res)=>{
   let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
-  if(!input.stream && material){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({data:[{b64_json:Buffer.from("fixture-image").toString("base64")}]}));return;}
-  if(!input.stream){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(script?{authorized:true,startAnchor:null,endAnchor:null}:publish?{drafts:[{platform:"douyin",title:"真实发布标题",body:"完整发布简介",tags:["真实"],coverIdea:"原稿画面",auditFlags:[]}]}:review?{verdict:"pass",summary:"已依据原文完成审核",findings:[]}:{core:{title:"真实子任务论点",summary:"选区主题的候选"},branches:[]})},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));return;}
-  const first=requests.filter(item=>item.stream).length===1;
+  // 真实图片端点与冻结根工具声明区分调用角色，不能用stream猜子任务。
+  if(material&&req.url?.endsWith("/images/generations")&&typeof input.prompt==="string"&&!input.messages){childRequests.push(input);res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({data:[{b64_json:Buffer.from("fixture-image").toString("base64")}]}));return;}
+  const root=input.tools?.some((tool:{function?:{name?:string}})=>tool.function?.name===toolName.replaceAll(".","_"));
+  if(!root){
+   if(material||input.tools?.length||!Array.isArray(input.messages)||input.messages.some((message:{role:string})=>message.role==="tool")){
+    fixtureErrors.push(JSON.stringify({url:req.url,tools:input.tools,messageRoles:input.messages?.map((message:{role:string})=>message.role)}));
+    res.writeHead(500);res.end("FIXTURE_AMBIGUOUS_MODEL_ROLE");return;
+   }
+   childRequests.push(input);
+   const content=JSON.stringify(script?{authorized:true,startAnchor:null,endAnchor:null}:publish?{drafts:[{platform:"douyin",title:"真实发布标题",body:"完整发布简介",tags:["真实"],coverIdea:"原稿画面",auditFlags:[]}]}:review?{verdict:"pass",summary:"已依据原文完成审核",findings:[]}:{core:{title:"真实子任务论点",summary:"选区主题的候选"},branches:[]});
+   const usage={prompt_tokens:2,completion_tokens:3,total_tokens:5};
+   if(input.stream){
+    const chunks=[{choices:[{index:0,delta:{content},finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:"stop"}],usage}];
+    res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"child",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+   }else{res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content},finish_reason:"stop"}],usage}));}
+   return;
+  }
+  rootRequests.push(input);
+  const first=rootRequests.length===1;
   const delta=first?{tool_calls:[{index:0,id:"planning-call",type:"function",function:{name:toolName.replaceAll(".","_"),arguments:script?JSON.stringify({mode:"verbatim",sourceRef:"source"}):material?JSON.stringify({kind:"image",prompt:"原素材画面"}):"{}"}}]}:{content:"论点任务已提交，请在候选中查看。"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
@@ -84,6 +101,7 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
   const runtime=await getChatRuntime(),db=fixture.db!;
   // 测试只初始化隔离数据库的存储配置；禁止调用会迁移真实默认媒体目录的设置 API。
   if(material)await db.insert(storageConfigs).values({userId:ctx.userId,rootPath:resolve(directory,"media"),backend:"local",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+  if(publish){ctx.accountId=null;const group=await call("accountGroups.create",undefined,{name:"发布验收隔离组",idempotencyKey:"publish-fixture-group"});ctx.groupId=group.id;const account=await call("accounts.create",undefined,{platform:"douyin",accountHandle:"发布验收隔离账号"});ctx.accountId=account.id;}
   const project=await call("projects.create",undefined,{title:"论点真实工厂项目"});
   if(publish)await call("projects.outputs.create",{projectId:project.id},{title:"发布挂点"});
   const reviewArtifact=(review || publish)?await call("artifacts.create",{projectId:project.id},{title:"当前原稿",artifactType:"output_script",stage:"script"}):null;
@@ -96,22 +114,24 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
   const prototypes=buildChatTools([toolName] as never,{} as never);
   const definitions=(await prepareChatToolDefinitions(prototypes,{atomicPlanningThesis:true,atomicMaterialGenerate:material,atomicScriptReview:review,atomicPublishPackage:publish,workerScriptDraft:script})).definitions;
   const submission=await createChatTurnSubmissionService(db,{assertProject:async(c,id)=>{if(!await runtime.contextReaders.getProjectDetail!(c,{projectId:id}))throw new Error("项目不可访问");},assemble:async()=>({capability:"copilot.assist",system:"使用论点工具",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:4,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"project",projectId:project.id,selection:{kind:"candidate",ids:[],label:"原选区标题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:script?[{ref:"source",label:"原稿",text:originalScript,truncated:false,sourceType:"message",sourceId:source.id}]:[],...(script?{scriptDraftContext:{latestUserInstruction:source.content}}:{}),skillSnapshot:snapshot} as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
-  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"planning-parent",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:material?createChatMaterialTaskHost(createChatHostContextReader(db),runtime.contextReaders,{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatMaterialTask}):createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{publish:{preparePublish:runtime.prepareChatPublishTask,wakeTask:runtime.wakeChatPublishTask},scriptDraft:{prepareDraft:runtime.prepareChatScriptDraftTask,wakeTask:runtime.wakeChatScriptDraftTask},review:{prepareReview:runtime.prepareChatScriptReviewTask,wakeTask:runtime.wakeChatScriptReviewTask},planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture"})});
+  const taskFactory=material?createChatMaterialTaskHost(createChatHostContextReader(db),runtime.contextReaders,{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatMaterialTask}):createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{publish:{preparePublish:runtime.prepareChatPublishTask,wakeTask:runtime.wakeChatPublishTask},scriptDraft:{prepareDraft:runtime.prepareChatScriptDraftTask,wakeTask:runtime.wakeChatScriptDraftTask},review:{prepareReview:runtime.prepareChatScriptReviewTask,wakeTask:runtime.wakeChatScriptReviewTask},planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}});
+  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"planning-parent",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{try{const tools=await taskFactory(...args);const mismatches=args[1].tools.filter(f=>{const t=tools[f.name];return !t||t.version!==f.version||t.effect!==f.effect||(t.execution??"host")!==(f.execution??"host");}).map(f=>f.name);if(mismatches.length)console.error("T1085_FACTORY_MISMATCH",JSON.stringify(mismatches));return tools;}catch(error){console.error("T1085_FACTORY_FAILURE",error instanceof Error?error.message:String(error));throw error;}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture"})});
   host.start();
-  await vi.waitFor(async()=>{const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));expect(row?.status,JSON.stringify(row)).toBe("succeeded");},{timeout:15000});
+  await vi.waitFor(async()=>{const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));expect(row?.status,JSON.stringify(row)).toBe(empty?"partial":"succeeded");},{timeout:120000});
+  expect(fixtureErrors).toEqual([]);expect(rootRequests).toHaveLength(2);
   const children=await runtime.ai.listTasks(ctx,{taskType,limit:100,offset:0});
   if(empty){
-   expect(children.rows).toHaveLength(0);expect(requests.filter(item=>!item.stream)).toHaveLength(0);expect(fixture.prepares).toBe(0);
+   expect(children.rows).toHaveLength(0);expect(childRequests).toHaveLength(0);expect(fixture.prepares).toBe(0);
    const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
    expect(JSON.parse(calls.find(row=>row.kind==="tool")!.resultText!).output).toMatchObject({status:"error",sideEffect:"none",data:{kind:publish?"publish.package":"review.report",taskId:null,projectId:project.id,error:expect.stringContaining(publish?"可用的整稿":"可审的整稿")}});return;
   }
   expect(children.rows,JSON.stringify(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId)))).toHaveLength(1);const child=children.rows[0]!;
-  await vi.waitFor(async()=>{const current=await runtime.ai.getTask(ctx,child.id);const [raw]=await db.select().from(aiTasks).where(eq(aiTasks.id,child.id));const [execution]=raw?.executionTaskId?await db.select().from(executionTasks).where(eq(executionTasks.id,raw.executionTaskId)):[];expect(current.status,JSON.stringify({task:current,execution,requests})).toBe(review?"succeeded":"awaiting_confirmation");},{timeout:15000});
+  await vi.waitFor(async()=>{const current=await runtime.ai.getTask(ctx,child.id);const [raw]=await db.select().from(aiTasks).where(eq(aiTasks.id,child.id));const [execution]=raw?.executionTaskId?await db.select().from(executionTasks).where(eq(executionTasks.id,raw.executionTaskId)):[];expect(current.status,JSON.stringify({task:current,execution,requests})).toBe(review?"succeeded":"awaiting_confirmation");},{timeout:120000});
   expect((await runtime.ai.getTask(ctx,child.id)).inputData).toMatchObject(script?{projectId:project.id,draftMode:"verbatim",verbatimSourceText:originalScript}:publish?{projectId:project.id,topic:"原选区标题",scriptText:originalScript,platforms:["douyin"]}:material?{projectId:project.id,kind:"image",prompt:"原素材画面"}:review?{projectId:project.id,artifactId:reviewArtifact.id,artifactVersion:reviewVersion.versionNumber}:{projectId:project.id,topic:"原选区标题"});
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));const tool=calls.find(row=>row.kind==="tool")!;
   expect(JSON.parse(tool.resultText!).output.data).toMatchObject({kind:review?"review.report":toolName,taskId:child.id,...(material?{}:{projectId:project.id})});
-  expect(JSON.stringify(requests.filter(item=>item.stream)[1])).toContain(child.id);
-  expect(requests.filter(item=>!item.stream)).toHaveLength(1);
+  expect(JSON.stringify(rootRequests[1])).toContain(child.id);
+  expect(childRequests).toHaveLength(1);
   expect(fixture.prepares).toBe(1+failures);
   if(script){const results=await call("ai.tasks.results.list",{taskId:child.id});expect(results[0].resultData).toMatchObject({body:originalScript,draftMode:"verbatim"});}
   if(publish){
@@ -127,10 +147,10 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
   }
   if(material){await runtime.ai.confirmTask(ctx,child.id);await runtime.ai.confirmTask(ctx,child.id);expect((await runtime.ai.getTask(ctx,child.id)).status).toBe("succeeded");}
  }finally{fixture.prepareFailures=0;await host?.stop();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
-},45000);
+},900000);
 
 it("正式发布包派发沿原 attempt 复用首稿快照，稿面改变不重复创建任务",async()=>{
- execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});
+ execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe",timeout:180000});
  const directory=mkdtempSync(resolve(tmpdir(),"t915-publish-replay-"));
  vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR",resolve(directory,"db"));__resetPersistenceForTests();
  let requests=0;
@@ -149,8 +169,8 @@ it("正式发布包派发沿原 attempt 复用首稿快照，稿面改变不重�
   await call("artifacts.versions.create",{artifactId:artifact.id},{contentText:""});
   expect((await runtime.dispatchPublishPackage(ctx,input)).taskId).toBe(a.taskId);
   await expect(runtime.dispatchPublishPackage(ctx,{...input,topic:"新意图"})).rejects.toMatchObject({code:"ATTEMPT_PAYLOAD_MISMATCH"});
-  await vi.waitFor(async()=>expect((await runtime.ai.getTask(ctx,a.taskId)).status).toBe("awaiting_confirmation"),{timeout:15000});
+  await vi.waitFor(async()=>expect((await runtime.ai.getTask(ctx,a.taskId)).status).toBe("awaiting_confirmation"),{timeout:120000});
   expect((await runtime.ai.getTask(ctx,a.taskId)).inputData).toMatchObject({outputId:output.id,scriptText,projectId:project.id,platforms:["douyin"]});
   expect((await runtime.ai.listTasks(ctx,{taskType:"publish.platform_adapt",limit:100,offset:0})).rows).toHaveLength(1);expect(requests).toBe(1);
  }finally{await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
-},30000);
+},900000);

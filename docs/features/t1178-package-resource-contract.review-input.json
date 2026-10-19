@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅当前SPEC独立初审）：实读原LED006完整RED为exit1、42PASS/1FAIL、2.0262746249791235秒，日志SHA与receipt.logSha256一致，原重试和失败保留。shared与Windows两配置完整字节均与65781a81引入第三方声明时的Git对象一致，真实资源精确为sidecar.tar.gz、THIRD_PARTY_NOTICES.md；原测试漏声明文件属于旧静态合同断言漂移。只改windows-runtime-config.test.mjs第一例名称和两个精确数组，并对两个配置明确排除sidecar/，能保单个runtime tar与禁止额外资源的边界；原其它五例全部保留，覆盖本校准足够。产品、配置、资源文件、打包/发布流程、预算和守卫不变。实施后focused及原LED006完整命令、边界/语义/orphan/diff和独立实施复核仍待，原RED不清零；不签Windows真实安装、原生App启动、canonical、T1015整体、完整Gate或微信研究恢复。",
+  "findings": []
+}

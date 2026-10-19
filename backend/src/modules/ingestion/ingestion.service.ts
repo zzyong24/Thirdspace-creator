@@ -1,3 +1,6 @@
+import {assertWritableWorkspace,requireWorkspace} from "../../workspace-scope";
+import type {MembershipTransaction,FrozenWorkspace} from "../platform-account/membership-lock.service";
+import {OwnershipError} from "./ingestion.errors";
 import type { RequestContext } from "@creatoros/contract";
 import { type Db } from "@creatoros/backend";
 import {
@@ -38,12 +41,14 @@ import {
 // and which carries `ingestionRunId` (SPEC §10), so peers can attribute the write.
 
 export interface IngestionPublishingPort {
+  resolveCollectedPublication?(ctx:RequestContext,ref:{platform:string;externalId:string}):Promise<{id:string;contentOutputId?:string|null;groupId?:string|null;accountId?:string|null}|null>;
+  listCollectedExternalIds?(ctx:RequestContext,platform:string):Promise<string[]>;
   resolvePublication(
     ctx: RequestContext,
     ref: { platform: string; externalId: string },
     // [T-321] 返回也带 contentOutputId —— 日拉去重用它反查属主项目(某项目「登记已发布」
     //   把 aweme_id 落 publications.externalId,contentOutputId 指向该项目的 content_output)。
-  ): Promise<{ id: string; contentOutputId?: string | null } | null>;
+  ): Promise<{ id: string; contentOutputId?: string | null;groupId?:string|null;accountId?:string|null } | null>;
   // [T-177 增量化] 列出该平台库里已知作品的 externalId(=aweme_id)集,供 refreshDouyin 传给
   //   fetch 做翻页 early-stop(某页作品全已知 → 停翻页)。可选 —— 未注入时 refreshDouyin 不传
   //   knownAwemeIds,fetch 退化为原全量滚动(向后兼容旧最小组合/旧 fake,零回归)。
@@ -127,6 +132,21 @@ export interface IngestionAnalyticsPort {
   ): Promise<{ created: boolean }>;
 }
 
+export interface IngestionPlatformCollectionPort {
+  recordConfirmedLegacyImport(ctx: RequestContext, input: {
+    accountId: string;
+    platform: "douyin";
+    externalId: string;
+    kind: "video";
+    title: string | null;
+    publishedAt: string | null;
+    publicationId: string;
+    legacyProjectId: string | null;
+    capturedAt: string;
+    metrics: Record<string, unknown>;
+  }): Promise<{ platformWorkId: string; created: boolean; metricsCreated: number }>;
+}
+
 export interface IngestionKnowledgePort {
   ingest(
     ctx: RequestContext,
@@ -163,6 +183,13 @@ export interface IngestionPorts {
   // 数据底座(SPEC §1.3):导入历史项目端口。可选 —— 未注入时 refreshDouyin 退回旧
   // 行为(未知作品 reject)。composition root 注入 projectsService.ensureImportedProject。
   projects?: IngestionProjectsPort;
+  platformCollection?: IngestionPlatformCollectionPort;
+}
+
+class PlatformMirrorRetryableError extends Error {
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause));
+  }
 }
 
 // T-144 —— 扫码绑定时"确保有一个平台账号"的端口(composition root 适配到 platformAccount
@@ -269,6 +296,8 @@ export interface DouyinThrottleStatusPort {
 }
 
 export interface ServiceDeps {
+  membership?: {lock(tx:MembershipTransaction,ctx:RequestContext,options?:{allowArchived?:boolean}):Promise<FrozenWorkspace>;assertFrozen(tx:MembershipTransaction,frozen:FrozenWorkspace,options?:{allowArchived?:boolean}):Promise<void>};
+  assertCollectionAccount?(ctx:RequestContext):Promise<unknown>;
   now: () => string;
   nextId: (prefix: string) => string;
 }
@@ -410,14 +439,15 @@ export function createIngestionService(args: {
     return existing ? sourceId : null;
   }
 
-  function repoFor(ctx: RequestContext): IngestionRepository {
-    return createIngestionRepository(db, {
+  function repoFor(ctx: RequestContext,targetDb:Db=db,frozen?:FrozenWorkspace): IngestionRepository {
+    return createIngestionRepository(targetDb, {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
       // [T-332 S2] 按号第二维度下推;repo 内每个读写点 strict 断言(未选号 → 抛,
       // 不再有门退化)。采集链路 ctx 的账号由绑定/job 派生(ISO-06),恒有号。
       accountId: ctx.accountId ?? null,
+      groupId:ctx.groupId??null,groupVersion:frozen?.groupVersion??null,membershipVersion:frozen?.membershipVersion??null,
     });
   }
 
@@ -433,6 +463,7 @@ export function createIngestionService(args: {
       // 到 analytics/publishing/candidate 等下游时,它们的 repo 门据 ctx.accountId stamp
       // account_id。漏传 = 采集数据 stamp null(无号归属),切号看不到该号真实指标(串味)。
       accountId: ctx.accountId ?? null,
+      groupId:ctx.groupId??null,groupVersion:ctx.groupVersion,membershipVersion:ctx.membershipVersion,
       ingestionRunId: runId,
     };
   }
@@ -610,9 +641,13 @@ export function createIngestionService(args: {
   ): Promise<IngestionRunRow> {
     requireAccountId(ctx.accountId, "ingestion.ingest"); // [T-332 S2] 未选号=引导态禁写
     const repo = repoFor(ctx);
-    await repo.getRun(input.runId); // ownership gate (404 if cross-user/unknown)
+    const frozenRun=await repo.getRun(input.runId); // ownership gate (404 if cross-user/unknown)
+    if(ctx.groupId){
+      if(!deps.membership)throw new OwnershipError("采集任务冻结归属校验不可用");
+      await db.transaction(tx=>deps.membership!.assertFrozen(tx,{userId:ctx.userId,groupId:frozenRun.groupId??null,accountId:frozenRun.accountId,groupVersion:frozenRun.groupVersion??null,membershipVersion:frozenRun.membershipVersion??null},{allowArchived:true}));
+    }
     await repo.markRunRunning(input.runId);
-    const dctx = downstreamCtx(ctx, input.runId);
+    const dctx = downstreamCtx({...ctx,groupId:frozenRun.groupId??ctx.groupId,groupVersion:frozenRun.groupVersion??undefined,membershipVersion:frozenRun.membershipVersion??undefined}, input.runId);
 
     for (let i = 0; i < input.records.length; i++) {
       const record = input.records[i]!;
@@ -640,7 +675,8 @@ export function createIngestionService(args: {
         await repo.appendError({
           ingestionRunId: input.runId,
           recordKey,
-          errorCode: "DOWNSTREAM_ERROR",
+          errorCode: err instanceof PlatformMirrorRetryableError
+            ? "PLATFORM_MIRROR_RETRYABLE" : "DOWNSTREAM_ERROR",
           errorMessage: err instanceof Error ? err.message : String(err),
           rejectedPayload: record,
         });
@@ -682,34 +718,38 @@ export function createIngestionService(args: {
   }
 
   const service: IngestionService = {
-    async createRun(ctx, input) {
-      requireAccountId(ctx.accountId, "ingestion.createRun"); // [T-332 S2]
-      const repo = repoFor(ctx);
-      // §17.3 — a duplicate (external_source_id, idempotency_key) returns the
-      // ORIGINAL run unchanged (no second row).
-      const existing = await repo.findRunByIdempotency(
-        input.externalSourceId,
-        input.idempotencyKey,
-      );
-      if (existing) return existing;
-      return repo.createRun(input);
+    async createRun(ctx,input){
+      const manual=!!ctx.groupId&&input.runType==="manual";
+      if(!manual)requireAccountId(ctx.accountId,"ingestion.createRun");else await assertWritableWorkspace(db,ctx);
+      async function create(repo:IngestionRepository){
+        const source=await repo.getExternalSource(input.externalSourceId);
+        if(!source)throw new OwnershipError("采集源不存在");
+        if(manual&&source.sourceType!=="manual")throw new OwnershipError("无账号仅可手动录入");
+        const existing=await repo.findRunByIdempotency(input.externalSourceId,input.idempotencyKey);if(existing)return existing;
+        return repo.createRun(input);
+      }
+      if(!ctx.groupId)return create(repoFor(ctx));
+      if(!deps.membership)throw new OwnershipError("采集任务归属校验不可用");
+      if(!manual){if(!deps.assertCollectionAccount)throw new OwnershipError("真实采集账号校验不可用");await deps.assertCollectionAccount(ctx);}
+      return db.transaction(async tx=>create(repoFor(ctx,tx as unknown as Db,await deps.membership!.lock(tx,ctx,{allowArchived:!manual}))));
     },
 
     async ensureManualRun(ctx, idempotencyKey) {
       // [T-332 S2] external_sources 是 per-account 表:手动源也每号一条(确定性 id 带号),
       //   未选号 → AccountRequiredError(引导态)。旧 user 级 id(extsrc-manual-<userId>)
       //   随拍板 ②(清库)退役,不留跨号共享源。
-      const accountId = requireAccountId(ctx.accountId, "ingestion.ensureManualRun");
+      const accountId = ctx.groupId?null:requireAccountId(ctx.accountId, "ingestion.ensureManualRun");
+      const manualCtx={...ctx,accountId};
       const repo = repoFor(ctx);
       // 1. 确保该号有一个 source='manual' 的 ExternalSource(确定性 id,幂等 seed)。
-      const sourceId = `extsrc-manual-${accountId}`;
-      const existingSrc = await repo.getExternalSource(sourceId);
+      const sourceId = ctx.groupId?`extsrc-manual-group-${ctx.groupId}`:`extsrc-manual-${accountId}`;
+      const existingSrc = await repoFor(manualCtx).getExternalSource(sourceId);
       if (!existingSrc) {
         await repo.seedExternalSources([
           {
             id: sourceId,
             userId: ctx.userId,
-            accountId, // [T-332 S2] 出生即带号(ISO-03)
+            accountId,groupId:ctx.groupId??null, // 手动来源不伪造平台账号
             sourceType: "manual",
             name: "手动录入",
             sourceIdentifier: "",
@@ -720,16 +760,17 @@ export function createIngestionService(args: {
         ]);
       }
       // 2. 建一次真 run(幂等 key → 同一录入复用同一 run)并标完成(actuals 可追溯)。
-      const run = await service.createRun(ctx, {
+      const run = await service.createRun(manualCtx, {
         externalSourceId: sourceId,
         runType: "manual",
         idempotencyKey,
       });
-      await service.completeRun(ctx, { runId: run.id, status: "completed" });
+      await service.completeRun(manualCtx, { runId: run.id, status: "completed" });
       return run.id;
     },
 
     async ensureImportedProject(ctx, input) {
+      ctx={...ctx,source:"ingestion"};
       requireAccountId(ctx.accountId, "ingestion.ensureImportedProject"); // [T-332 S2]
       // 数据底座(SPEC §1.3)。projects 端口未注入(旧最小组合)→ 返回 null,调用方回退。
       if (!ports.projects) return null;
@@ -744,15 +785,21 @@ export function createIngestionService(args: {
         (input.platform === "douyin"
           ? `https://www.douyin.com/video/${encodeURIComponent(input.externalId)}`
           : undefined);
-      // [T-321] 主去重键 = publications.externalId(不是 projects.platform_ref)。先按
-      //   (platform, externalId) 查既有 publication:命中即该作品已绑定到某属主项目
+      // [T-321/T-1020] 主去重键 = 当前 user+account+platform+publications.externalId
+      //   (不是 projects.platform_ref)。只查本账号既有 publication:命中即该作品已绑定到某属主项目
       //   (用户手建 manual 项目「登记已发布」把 aweme_id 落这里,或上一轮日拉建的 imported
       //   项目)。用它反查属主 → merge 更新(不新建重复)。这样 manual 项目也能被再次命中而
       //   不重建(旧 findImportedByRef 只认 source='imported',对 manual 视而不见 → 建重复)。
-      const boundPub = await ports.publishing.resolvePublication(ctx, {
+      const boundPub = await (ports.publishing.resolveCollectedPublication??ports.publishing.resolvePublication)({...ctx,source:"ingestion"}, {
         platform: input.platform,
         externalId: input.externalId,
       });
+      if(boundPub?.contentOutputId && boundPub.groupId && ctx.groupId && boundPub.groupId!==ctx.groupId){
+        const factCtx={...ctx,source:"ingestion" as const,groupId:boundPub.groupId,accountId:boundPub.accountId??ctx.accountId};
+        const projectId=await ports.projects.getProjectIdByOutput?.(factCtx,boundPub.contentOutputId);
+        if(!projectId)throw new OwnershipError("历史发布来源项目不存在");
+        return {projectId,outputId:boundPub.contentOutputId,publicationId:boundPub.id};
+      }
       if (
         boundPub?.contentOutputId &&
         ports.projects.getProjectIdByOutput &&
@@ -880,7 +927,7 @@ export function createIngestionService(args: {
         parseMetricRecord,
         async (dctx, value) => {
           // Metrics fan-out (SPEC §277-281): resolvePublication → appendSnapshot.
-          const pub = await ports.publishing.resolvePublication(dctx, {
+          const pub = await (ports.publishing.resolveCollectedPublication??ports.publishing.resolvePublication)(dctx, {
             platform: value.platform,
             externalId: value.externalId,
           });
@@ -889,13 +936,30 @@ export function createIngestionService(args: {
               `publication not found for ${value.platform}:${value.externalId}`,
             );
           }
-          await ports.analytics.appendSnapshot(dctx, {
+          await ports.analytics.appendSnapshot({...dctx,groupId:pub.groupId??dctx.groupId,accountId:pub.accountId??dctx.accountId}, {
             publicationId: pub.id,
             ingestionRunId: dctx.ingestionRunId ?? null,
             capturedAt: value.capturedAt,
             source: "ingestion",
             rawMetrics: value.metrics,
           });
+          if (ports.platformCollection && value.platform === "douyin") {
+            const accountId = requireAccountId(dctx.accountId, "ingestion.platformMirror");
+            try {
+              const legacyProjectId = pub.contentOutputId && ports.projects?.getProjectIdByOutput
+                ? await ports.projects.getProjectIdByOutput(dctx, pub.contentOutputId)
+                : null;
+              await ports.platformCollection.recordConfirmedLegacyImport(dctx, {
+                accountId, platform: "douyin", externalId: value.externalId,
+                kind: "video", title: value.title?.trim() || null,
+                publishedAt: value.publishedAt ?? null,
+                publicationId: pub.id, legacyProjectId, capturedAt: value.capturedAt,
+                metrics: value.metrics,
+              });
+            } catch (error) {
+              throw new PlatformMirrorRetryableError(error);
+            }
+          }
         },
       );
     },
@@ -950,7 +1014,7 @@ export function createIngestionService(args: {
     },
 
     async completeRun(ctx, input) {
-      requireAccountId(ctx.accountId, "ingestion.completeRun"); // [T-332 S2]
+      requireWorkspace(ctx); // [T-332 S2]
       const repo = repoFor(ctx);
       const run = await repo.getRun(input.runId); // ownership gate(含 strict 按号门)
       // Explicit status wins (e.g. "failed"); else completed/partial by reject count.
@@ -960,12 +1024,12 @@ export function createIngestionService(args: {
     },
 
     async getRun(ctx, runId) {
-      requireAccountId(ctx.accountId, "ingestion.getRun"); // [T-332 S2]
+      requireWorkspace(ctx); // [T-332 S2]
       return repoFor(ctx).getRun(runId);
     },
 
     async listErrors(ctx, runId) {
-      requireAccountId(ctx.accountId, "ingestion.listErrors"); // [T-332 S2]
+      requireWorkspace(ctx); // [T-332 S2]
       return repoFor(ctx).listErrors(runId);
     },
 
@@ -987,9 +1051,10 @@ export function createIngestionService(args: {
       const capturedAt = input.capturedAt ?? deps.now();
       // [T-177 增量化] 反查库里已知作品 awemeId 集,传给抓取层做翻页 early-stop(某页作品全已知 → 停)。
       //   端口可选:未注入 → undefined → fetchDouyinMetrics 退化为原全量滚动(向后兼容,零回归)。
-      const knownAwemeIds = ports.publishing.listPublishedExternalIds
+      const listKnown=ports.publishing.listCollectedExternalIds??ports.publishing.listPublishedExternalIds;
+      const knownAwemeIds = listKnown
         ? new Set(
-            await ports.publishing.listPublishedExternalIds(ctx, "douyin"),
+            await listKnown({...ctx,source:"ingestion"}, "douyin"),
           )
         : undefined;
       // 真抓(CDP)→ records + identity;失败/无登录态会抛,run 不会被建(快速失败)。

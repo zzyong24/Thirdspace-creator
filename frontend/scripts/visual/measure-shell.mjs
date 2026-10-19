@@ -39,6 +39,8 @@ const BASE = `http://127.0.0.1:${PORT}`;
   const b = await playwright.chromium.launch();
   const c = await b.newContext({ viewport: { width: 1536, height: 1024 } });
   const p = await c.newPage();
+  p.setDefaultTimeout(120_000);
+  p.setDefaultNavigationTimeout(120_000);
   await p.goto(BASE + PATH_, { waitUntil: "load" });
   await p.waitForTimeout(500);
 

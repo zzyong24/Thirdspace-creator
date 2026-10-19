@@ -1,0 +1,18 @@
+[
+  {
+    "path": "docs/verification/t1369/production/server.mjs",
+    "sha256": "1fd45777059309137c94524ab6ebd5d46a24c7f69c4d96fcabba17c5151cd32f"
+  },
+  {
+    "path": "docs/verification/t1369/production/run.py",
+    "sha256": "107da3b606371d1696a8fa1ba929209fac2c6328df44016ed41bef0a41095a1e"
+  },
+  {
+    "path": "docs/verification/t1369/production/environment.py",
+    "sha256": "b576452fe400fda622b5889a35e6ab38f812f30e66345f515b66407d090aead2"
+  },
+  {
+    "path": "frontend/playwright.t1369.production.config.ts",
+    "sha256": "5f812899fb0004b051fde42d33b2318d312b3d935bd93fc4d58c77a7841513e1"
+  }
+]

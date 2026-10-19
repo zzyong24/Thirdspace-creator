@@ -1,0 +1,49 @@
+{
+  "schema": "t1356-dashboard-seed-freeze/v1",
+  "frozenAt": "2026-10-18T17:33:12.546428+00:00",
+  "seedSha256": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df",
+  "sources": [
+    {
+      "path": "docs/verification/t1356/harness/seed-collected-dashboard.mts",
+      "sha256": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+    },
+    {
+      "path": "docs/verification/t1355/harness/binding-fixture-server.mts",
+      "sha256": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13"
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.service.ts",
+      "sha256": "7c5f24fa46ba40320342210807d0c1bce50ab05d66247da16107dd803fc950e0"
+    },
+    {
+      "path": "backend/src/application/queries/group-workspace.ts",
+      "sha256": "2423d9bedee378f8758498a35c332ac3d9af5f2fba37a1ef7e06467907fc70fa"
+    },
+    {
+      "path": "backend/src/application/queries/dashboard-collected-metrics.ts",
+      "sha256": "83ce970818a90a9a84f63dedb6351acb4eb4dadeccb1d857692fd2dc9a5e59d2"
+    }
+  ],
+  "selftest": {
+    "path": "docs/verification/t1356/harness/selftest-attempt01.json",
+    "sha256": "4ab05535d6a712fdb058acf3970fe7b8aa224c95fe1c5ee1929df9a1bd50027c",
+    "passed": true,
+    "syntheticCompleteCollectionRuns": 14,
+    "actualAiScheduledRows": [
+      0,
+      0
+    ],
+    "privatePgPidCurrentlyExists": false
+  },
+  "runtimeSafeManifest": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1356-dashboard-selftest-ogo19913/dashboard-seed-safe.json",
+  "expectationSource": "明确合成service输入，尚待实际Next/HTTP/UI核验；未用in-process dashboard代签",
+  "safety": {
+    "onlyPrivateFreshPg": true,
+    "userAppTouched": false,
+    "productionEdited": false,
+    "frontendTestsEdited": false,
+    "workflowEdited": false,
+    "overlapSchemaInjected": false,
+    "databaseInfrastructureReused": "T1355 binding fixture helper, fresh independent root"
+  }
+}

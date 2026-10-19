@@ -21,12 +21,16 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ErrorCode } from "@creatoros/contract";
 
 import { client } from "@/lib/contract-client";
+import { HttpTransportError } from "@/lib/http-transport";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { plainTextFromSections } from "./script-editor-bridge";
 import type { ScriptSectionView } from "@/types/view-models";
-import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
+import { editorCanonical, useDraftChatRequest, type ScriptSourceRef } from "@/features/draft-workbench/draft-chat-request";
+import { useCreationScope, creationScopeKey, readCreationScope } from "@/lib/creation-workspace-scope";
+import {useForegroundActivity} from "@/lib/foreground-activity";
 
 type SectionType = ScriptSectionView["type"];
 
@@ -51,6 +55,9 @@ const TYPE_ORDER: ReadonlyArray<SectionType> = [
 
 type SaveStatus = "saved" | "saving" | "dirty";
 type PersistedScriptAnchor = { artifactId: string; versionId: string };
+type ScriptSaveBody = Parameters<typeof client.createArtifactVersion>[0]["body"];
+type ScriptVersion = Awaited<ReturnType<typeof client.listArtifactVersions>>;
+type ScriptSaveIntent = { artifactId: string; projectId: string | null; scopeKey: string; priorVersionId: string | null; versionId: string | null; body: ScriptSaveBody };
 
 /** 结构编辑的本地段模型(可变副本;保存时组装回 sections shape)。
  *  [T-387b] visual = 凝固分镜(只读透传:结构编辑不动它,保存时原样带回,防结构编辑把
@@ -76,6 +83,15 @@ function toEditable(sections: ReadonlyArray<ScriptSectionView>): EditableSection
     startSeconds: s.startSeconds,
     endSeconds: s.endSeconds,
     ...(s.visual ? { visual: s.visual } : {}),
+  }));
+}
+
+// SEMANTIC_BOUNDARY_ALLOW: 原结构字段的机械序列化，不选择段落或画面；保原用户顺序和完整visual。
+function payloadSections(local: ReadonlyArray<EditableSection>) {
+  return local.filter(s => s.heading.trim().length > 0 || s.body.trim().length > 0).map((s, i) => ({
+    id: s.id || `script-section-${i}`, type: s.type, heading: s.heading, body: s.body,
+    emphasis: s.type === "golden_quote" ? true : s.emphasis,
+    startSeconds: s.startSeconds, endSeconds: s.endSeconds, ...(s.visual ? { visual: s.visual } : {}),
   }));
 }
 
@@ -185,11 +201,21 @@ function ScriptStructureEditor({
   readonly assetLabels: Readonly<Record<string, string>>;
 }) {
   const router = useRouter();
-  const { openChat, registerFlush } = useDraftChatRequest();
+  const { openChat, registerFlush, registerScript } = useDraftChatRequest();
+  const scopeKey = creationScopeKey(useCreationScope());
+  const mountedRef = React.useRef(false);
+  const artifactIdRef = React.useRef(artifactId);
+  const intentRef = React.useRef<ScriptSaveIntent | null>(null);
+  const ownerRef = React.useRef({ projectId, scopeKey, artifactId });
+  React.useLayoutEffect(() => { ownerRef.current = { projectId, scopeKey, artifactId }; }, [projectId, scopeKey, artifactId]);
+  React.useLayoutEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const [local, setLocal] = React.useState<EditableSection[]>(() =>
     toEditable(sections),
   );
+  const localRef = React.useRef(local);
+  React.useLayoutEffect(() => { localRef.current = local; }, [local]);
   const [status, setStatus] = React.useState<SaveStatus>("saved");
+  useForegroundActivity(status==="saving"?"分镜脚本正在保存":"分镜脚本有未保存的修改",status!=="saved");
   const statusRef = React.useRef<SaveStatus>("saved");
   const persistedAnchorRef = React.useRef<PersistedScriptAnchor | null>(
     artifactId && currentVersionId
@@ -210,9 +236,14 @@ function ScriptStructureEditor({
   React.useEffect(() => {
     if (appliedKeyRef.current === propsKey) return;
     if (status !== "saved") return;
+    const sameContent = editorCanonical(payloadSections(localRef.current)) === editorCanonical(payloadSections(toEditable(sections)));
+    const sameAnchor = persistedAnchorRef.current?.artifactId === artifactId && persistedAnchorRef.current?.versionId === currentVersionId;
+    // 自己保存的回流不改变generation；真正外部换版/正文变化必须使旧确认失效。
+    if (!sameContent || !sameAnchor) editRevisionRef.current += 1;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 服务端换版快照必须在同一已挂载编辑器内原子回灌，不能用初始 state 保留旧稿。
     setLocal(toEditable(sections));
     if (artifactId && currentVersionId) {
+      artifactIdRef.current = artifactId;
       persistedAnchorRef.current = { artifactId, versionId: currentVersionId };
     }
     appliedKeyRef.current = propsKey;
@@ -281,63 +312,138 @@ function ScriptStructureEditor({
   );
 
   const pendingSaveRef = React.useRef<Promise<PersistedScriptAnchor | null> | null>(null);
+  async function readExact(targetId: string, versionId: string) {
+    for (let page = 1; page <= 20; page++) {
+      const response = await client.listArtifactVersions({ params: { artifactId: targetId }, query: { page, pageSize: 100 }, body: undefined });
+      const rows = (Array.isArray(response) ? response : []) as ScriptVersion[];
+      const exact = rows.find(row => row.id === versionId);
+      if (exact) {
+        if (exact.artifactId !== targetId) throw Error("脚本版本不属于原保存目标。");
+        return exact;
+      }
+      if (rows.length < 100) break;
+    }
+    throw Error("原脚本指定版本尚未读回，请保留输入并恢复原回执。");
+  }
+  async function recoverIntent() {
+    const intent = intentRef.current;
+    if (!intent) return null;
+    const check = () => {
+      if (!mountedRef.current || ownerRef.current.projectId !== intent.projectId || ownerRef.current.scopeKey !== intent.scopeKey || creationScopeKey(readCreationScope()) !== intent.scopeKey)
+        throw Error("编辑器已卸载或工作区已切换，原脚本保存回执保留。");
+      if (ownerRef.current.artifactId && ownerRef.current.artifactId !== intent.artifactId)
+        throw Error("当前脚本目标已改变，原保存回执保留。");
+    };
+    check();
+    const artifact = await client.getArtifact({ params: { artifactId: intent.artifactId }, query: undefined, body: undefined });
+    check();
+    if (!artifact || artifact.id !== intent.artifactId || intent.projectId && artifact.projectId !== intent.projectId)
+      throw Error("原脚本保存目标尚未确认，请保留原回执。");
+    // 此API没有按请求查回执的能力。没有响应ID时，即使新current同文，也不能证明是哪次写入。
+    if (!intent.versionId) {
+      await readExact(intent.artifactId, artifact.currentVersionId);
+      throw Error("原保存结果未知且没有唯一版本回执；已保留原目标、正文与基点，未重复追加版本。");
+    }
+    if (intent.versionId === intent.priorVersionId || artifact.currentVersionId !== intent.versionId)
+      throw Error("脚本当前版本已并发更新，请核对原保存回执。");
+    const exact = await readExact(intent.artifactId, intent.versionId);
+    check();
+    if (exact.contentText !== intent.body.contentText || editorCanonical(exact.contentData) !== editorCanonical(intent.body.contentData))
+      throw Error("原脚本保存全文读回不一致，请核对原回执。");
+    const anchor = { artifactId: intent.artifactId, versionId: intent.versionId };
+    persistedAnchorRef.current = anchor;
+    intentRef.current = null;
+    return { anchor, body: intent.body };
+  }
   const persistCurrentSections = React.useCallback(async (
     changeSummary = "结构编辑",
+    strict = false,
   ): Promise<PersistedScriptAnchor | null> => {
     if (pendingSaveRef.current) return pendingSaveRef.current;
     const revision = editRevisionRef.current;
+    const frozenOwner = { projectId, scopeKey };
+    const checkOwner = () => {
+      if (!mountedRef.current || ownerRef.current.projectId !== frozenOwner.projectId || ownerRef.current.scopeKey !== frozenOwner.scopeKey || creationScopeKey(readCreationScope()) !== frozenOwner.scopeKey)
+        throw Error("编辑器已卸载或工作区已切换，原脚本保存回执保留。");
+      if (ownerRef.current.artifactId && ownerRef.current.artifactId !== artifactIdRef.current)
+        throw Error("当前脚本目标已改变，原保存回执保留。");
+    };
     const saving = (async () => {
+      checkOwner();
       if (!artifactId && !projectId) {
         // fixture-only 渲染(结构测试):不打契约,仅本地翻「已保存」。
         setStatus("saved");
         return null;
       }
       if (nonEmpty.length === 0) throw new Error("当前稿为空，请先填写内容。");
+      if (intentRef.current) {
+        const recovered = await recoverIntent(); checkOwner();
+        if (!recovered || editorCanonical(recovered.body.contentData?.sections) !== editorCanonical(payloadSections(localRef.current)))
+          throw Error("原保存已确认，期间的新修改保留，请再次确认当前稿。");
+        statusRef.current = "saved"; setStatus("saved");
+        return recovered.anchor;
+      }
+      statusRef.current = "saving";
       setStatus("saving");
       // 真项目还没有脚本 artifact → 首存 getOrCreate(与 TipTap 保存同路径)。
-      let targetId = artifactId;
+      let targetId = artifactIdRef.current;
       if (!targetId && projectId) {
         const ensured = await ensureScriptArtifact(projectId, null);
         targetId = ensured.artifactId as string;
+        artifactIdRef.current = targetId;
       }
+      checkOwner();
       if (!targetId) throw new Error("no script artifact target");
-      const expectedCurrentVersionId =
+      let expectedCurrentVersionId =
         persistedAnchorRef.current?.artifactId === targetId
           ? persistedAnchorRef.current.versionId
           : undefined;
-      const payloadSections = nonEmpty.map((s, i) => ({
-        id: s.id || `script-section-${i}`,
-        type: s.type,
-        heading: s.heading,
-        body: s.body,
-        // 金句段型语义上即强调;其余保留原 emphasis(TipTap 整段加粗的往返)。
-        emphasis: s.type === "golden_quote" ? true : s.emphasis,
-        startSeconds: s.startSeconds,
-        endSeconds: s.endSeconds,
-        // [T-387b] 凝固分镜原样带回(结构编辑不洗掉分镜真源;无 visual 的段不带字段)。
-        ...(s.visual ? { visual: s.visual } : {}),
-      }));
-      const created = (await client.createArtifactVersion({
-        params: { artifactId: targetId },
-        query: undefined,
-        body: {
-          ...(expectedCurrentVersionId ? { expectedCurrentVersionId } : {}),
-          // 不写 contentData.html:读侧会从新 sections 重拼编辑器 HTML,
-          // 避免结构改动被旧富文本真值盖掉(双向一致的关键)。
-          contentText: plainTextFromSections(
-            payloadSections as unknown as ReadonlyArray<ScriptSectionView>,
-          ),
-          contentData: { sections: payloadSections },
-          changeSummary,
-        },
-      })) as unknown as { id?: string };
+      if (strict) {
+        const current = await client.getArtifact({ params: { artifactId: targetId }, query: undefined, body: undefined });
+        checkOwner();
+        if (current.id !== targetId || current.projectId !== projectId) throw Error("脚本保存目标不属于当前项目。");
+        if (expectedCurrentVersionId && current.currentVersionId !== expectedCurrentVersionId) throw Error("脚本已并发更新，请核对当前版本后重试。");
+        expectedCurrentVersionId = current.currentVersionId;
+      }
+      if (revision !== editRevisionRef.current) throw Error("保存前稿件已有新修改，本次未确认。");
+      const frozenSections = structuredClone(payloadSections(nonEmpty));
+      const body: ScriptSaveBody = {
+        ...(expectedCurrentVersionId ? { expectedCurrentVersionId } : {}),
+        contentText: plainTextFromSections(frozenSections as ReadonlyArray<ScriptSectionView>),
+        contentData: { sections: frozenSections }, changeSummary,
+      };
+      const intent: ScriptSaveIntent = { artifactId: targetId, projectId, scopeKey, priorVersionId: expectedCurrentVersionId ?? null, versionId: null, body };
+      intentRef.current = intent;
+      let created: { id?: string };
+      try {
+        created = (await client.createArtifactVersion({
+          params: { artifactId: targetId },
+          query: undefined,
+          // 原保存shape，不写html或新增回执metadata；正文未知时仅保守原结果恢复。
+          body,
+        })) as unknown as { id?: string };
+      } catch (error) {
+        // 原endpoint的CAS ConflictError在insert前抛出，或使整事务回滚；提交后的派生异常被吞。
+        // 仅此调用的明确无写解除意图，原错误继续交上层；其它状态/码及网络未知仍保回执。
+        if (error instanceof HttpTransportError && error.status === 409 && error.code === ErrorCode.ConflictError
+          && intentRef.current === intent && intent.versionId === null && intent.priorVersionId) {
+          // 首次ensure也保这次实际读到的原base；下次不得把并发current静默换成新base。
+          if (!persistedAnchorRef.current) persistedAnchorRef.current = { artifactId: intent.artifactId, versionId: intent.priorVersionId };
+          intentRef.current = null;
+        }
+        throw error;
+      }
       const versionId = created.id?.trim();
       if (!versionId) throw new Error("script version id missing after save");
+      intent.versionId = versionId;
+      if (versionId === intent.priorVersionId) throw Error("保存回执仍是原版本，无法确认本次保存。");
+      checkOwner();
       const anchor = { artifactId: targetId, versionId };
       persistedAnchorRef.current = anchor;
       if (revision !== editRevisionRef.current) throw new Error("保存期间稿件有新修改，请重试诊断。");
       statusRef.current = "saved";
       setStatus("saved");
+      if (!strict) intentRef.current = null;
       router.refresh();
       return anchor;
     })();
@@ -345,13 +451,71 @@ function ScriptStructureEditor({
     try {
       return await saving;
     } catch (error) {
-      statusRef.current = "dirty";
-      setStatus("dirty");
+      if (mountedRef.current && ownerRef.current.projectId === frozenOwner.projectId && ownerRef.current.scopeKey === frozenOwner.scopeKey && creationScopeKey(readCreationScope()) === frozenOwner.scopeKey) {
+        statusRef.current = "dirty";
+        setStatus("dirty");
+      }
       throw error;
     } finally {
       pendingSaveRef.current = null;
     }
-  }, [artifactId, projectId, nonEmpty, router]);
+  }, [artifactId, projectId, scopeKey, nonEmpty, router]);
+
+  const prepareRef = React.useRef<() => Promise<ScriptSourceRef>>(async () => { throw Error("脚本尚未准备好"); });
+  React.useLayoutEffect(() => { prepareRef.current = async () => {
+    if (!projectId) throw Error("请先打开项目脚本。");
+    const revision = editRevisionRef.current;
+    const frozen = structuredClone(payloadSections(localRef.current));
+    if (frozen.length === 0) throw Error("请先填写并确认脚本。");
+    const contentText = plainTextFromSections(frozen as ReadonlyArray<ScriptSectionView>);
+    const check = () => {
+      if (!mountedRef.current || ownerRef.current.projectId !== projectId || creationScopeKey(readCreationScope()) !== scopeKey)
+        throw Error("编辑器已卸载或工作区已切换，本次未生成。");
+      if (ownerRef.current.artifactId && ownerRef.current.artifactId !== artifactIdRef.current)
+        throw Error("当前脚本目标已改变，本次未生成。");
+      if (revision !== editRevisionRef.current || editorCanonical(payloadSections(localRef.current)) !== editorCanonical(frozen))
+        throw Error("脚本在保存期间已改变，本次未生成。");
+    };
+    check();
+    if (pendingSaveRef.current) await pendingSaveRef.current;
+    check();
+    if (intentRef.current) {
+      const recovered = await recoverIntent(); check();
+      if (!recovered || editorCanonical(recovered.body.contentData?.sections) !== editorCanonical(frozen) || recovered.body.contentText !== contentText)
+        throw Error("原保存已确认，新的修改保留，请再次确认当前稿。");
+      statusRef.current = "saved"; setStatus("saved");
+    }
+    const needsSave = statusRef.current !== "saved" || !persistedAnchorRef.current;
+    if (needsSave) await persistCurrentSections("联合创作前确认脚本", true);
+    check();
+    const readConfirmed = async () => {
+      const anchor = persistedAnchorRef.current;
+      if (!anchor || anchor.artifactId !== artifactIdRef.current) throw Error("当前脚本没有真实保存版本。");
+      const artifact = await client.getArtifact({ params: { artifactId: anchor.artifactId }, query: undefined, body: undefined }); check();
+      if (artifact.id !== anchor.artifactId || artifact.projectId !== projectId) throw Error("脚本不属于当前项目。");
+      if (artifact.currentVersionId !== anchor.versionId) throw Error("脚本当前版本已并发更新，本次未生成。");
+      const exact = await readExact(anchor.artifactId, anchor.versionId); check();
+      return { anchor, exact };
+    };
+    let confirmed = await readConfirmed();
+    const matches = (exact: ScriptVersion) => exact.contentText === contentText && editorCanonical(exact.contentData.sections) === editorCanonical(frozen);
+    if (!matches(confirmed.exact) && !needsSave && !intentRef.current) {
+      // SEMANTIC_BOUNDARY_ALLOW: 富文本的段间空行/legacy可选字段与原结构序列化可能不同。
+      // 当场用户确认仍用原CAS保存当前可见结构，最多一次，再核完整读回；不猜正文相似度。
+      await persistCurrentSections("联合创作前确认脚本", true); check();
+      confirmed = await readConfirmed();
+    }
+    const { anchor, exact } = confirmed;
+    if (!matches(exact))
+      throw Error("当前脚本全文与指定保存版本读回不一致，请保存并核对。");
+    const intent = intentRef.current;
+    if (intent && (intent.versionId !== anchor.versionId || editorCanonical(exact.contentData) !== editorCanonical(intent.body.contentData) || exact.contentText !== intent.body.contentText))
+      throw Error("原脚本保存全文读回不一致，请保留原回执。");
+    if (statusRef.current !== "saved") throw Error("脚本有未保存修改，本次未生成。");
+    if (intent && intentRef.current === intent) intentRef.current = null;
+    return { kind: "project_script", id: anchor.artifactId, versionId: anchor.versionId };
+  }; }, [projectId, scopeKey, persistCurrentSections]);
+  React.useEffect(() => registerScript({ readState: () => ({ generation: editRevisionRef.current }), prepareForCreation: () => prepareRef.current() }), [registerScript, projectId, scopeKey]);
 
   React.useEffect(() => {
     registerFlush(async () => {
@@ -365,8 +529,7 @@ function ScriptStructureEditor({
     try {
       await persistCurrentSections();
     } catch {
-      // 失败保留 dirty,用户可重试。
-      setStatus("dirty");
+      // 原保存函数保留所属稿的状态/回执，迟到失败不能回写已切换或卸载的编辑器。
     }
   }, [persistCurrentSections]);
 
@@ -380,6 +543,7 @@ function ScriptStructureEditor({
         if (statusRef.current === "dirty" || !anchor) {
           anchor = await persistCurrentSections("AI 局部改稿前自动保存");
         }
+        if (!mountedRef.current || ownerRef.current.projectId !== projectId || creationScopeKey(readCreationScope()) !== scopeKey) return;
         if (!anchor) return;
         openChat({
           functionKey: "script.patch",
@@ -395,10 +559,10 @@ function ScriptStructureEditor({
           },
         });
       } catch {
-        setStatus("dirty");
+        if (mountedRef.current && ownerRef.current.projectId === projectId && creationScopeKey(readCreationScope()) === scopeKey) setStatus("dirty");
       }
     },
-    [openChat, persistCurrentSections],
+    [openChat, persistCurrentSections, projectId, scopeKey],
   );
 
   if (local.length === 0) {

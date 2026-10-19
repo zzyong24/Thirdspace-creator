@@ -1,0 +1,51 @@
+{
+  "state": "NOT_RUN_PERFORMANCE_WINDOW_EXCLUSIVE",
+  "specSha256": "df9381d307bd549a38772e1caf500a72416116c1cebc982f81207c04e9d90895",
+  "ownedExternalBase": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3",
+  "ownedProbeRoot": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/probe",
+  "originalObserverPath": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/readonly-v1/observe.cjs",
+  "originalObserverSha256": "86d053c7d2847dacfc8644338913c4e83684d4ddb6701f1fed1d880aced140d4",
+  "command": [
+    "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/probe/observe.cjs"
+  ],
+  "environmentGate": "T1337_SKILL_CATALOG_PROBE_APPROVED=1；仅Root实物批准且C性能RELEASE后执行",
+  "methods": [
+    "initialize",
+    "config/read"
+  ],
+  "configReadParameters": {
+    "includeLayers": false,
+    "cwd": "本次新owned cwd"
+  },
+  "initializedNotification": true,
+  "onlyBehaviorDelta": "configs新增skills.include_instructions=false；删除skills/list，实际false类型/值硬断言；原features/MCP与身份清理不变",
+  "budgets": {
+    "startupSeconds": 120,
+    "requestSeconds": 120,
+    "requestCount": 2,
+    "cleanupSeconds": 120,
+    "executionSeconds": 600,
+    "setupHashReportReserveSeconds": 300,
+    "outerSeconds": 900,
+    "retry": 0
+  },
+  "mcpKeyRead": "沿原已准config.toml全局/profile MCP键元数据仅内存读取禁用；不记录名字或值；未知MCP即停止",
+  "noExplicitAuthFilesRead": true,
+  "authCaveat": "只证明fixture不显式读取auth，不能推断binary内部不自动读取",
+  "forbidden": [
+    "thread/start",
+    "turn/start",
+    "account/read",
+    "skills/list",
+    "model/list",
+    "config/write",
+    "模型",
+    "用户配置改写"
+  ],
+  "expected": "实际config.skills.include_instructions是boolean false；缺失/true/malformed或RPC拒绝则FAIL并停止方案，不改生产",
+  "cleanup": "原EOF→必要TERM/KILL，仅identity匹配独立PGID，总120秒；实际close/PID/PGID核",
+  "evidenceLimit": "证明同binary/当前ownedcwd支持实际配置false，不证明旧token全部首因/全环境隔离",
+  "syntaxRun": false,
+  "rpcExecuted": false
+}

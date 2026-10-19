@@ -32,7 +32,7 @@ const TYPE_LABEL: Record<AssetType, string> = {
 };
 
 export interface AssetDetailPanelProps {
-  readonly asset: ResourceAsset | null;
+  readonly asset: (ResourceAsset & {readonly tagsReadState?: "known" | "unavailable"}) | null;
   readonly usageHistory: ReadonlyArray<ResourceAssetUsage>;
   // Module 07 E3–E6 needs-backend handlers. Optional so the panel stays a pure
   // Server Component when rendered without an island (no handlers → render-only
@@ -210,7 +210,7 @@ export function AssetDetailPanel({
             className="gap-1.5"
           >
             <div data-slot="asset-tags" className="flex flex-wrap gap-1">
-              {asset.tags.length > 0 ? (
+              {asset.tagsReadState === "unavailable" ? (<span className="text-[11px] text-muted-foreground">标签暂不可用</span>) : asset.tags.length > 0 ? (
                 asset.tags.map((tag) => (
                   <TagChip
                     key={`${asset.id}-${tag}`}

@@ -1,0 +1,11 @@
+--- a/frontend/src/features/copilot/ai-copilot-interactions.test.tsx
++++ b/frontend/src/features/copilot/ai-copilot-interactions.test.tsx
+@@ -1465,7 +1465,7 @@
+     await waitFor(() =>
+       expect(fetchMock).toHaveBeenCalledWith(
+         "/api/v1/local/ai-credits/connect",
+-        { method: "POST", headers: {} },
++        { method: "POST", headers: {}, cache: "no-store", redirect: "manual", signal: expect.any(AbortSignal) },
+       ),
+     );
+     await waitFor(() =>

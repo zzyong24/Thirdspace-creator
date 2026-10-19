@@ -1,3 +1,5 @@
+import { applyBrowserTimeoutPolicy } from "./browser-timeouts";
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import { bindAbortContext } from "./abort-context";
 import "server-only";
 
@@ -194,6 +196,7 @@ async function openDouhotPage(
       launchWithBrowser((selection) =>
         chromium.launchPersistentContext(lease.authDir, {
           headless,
+          timeout: executionTimeoutMs(180_000),
           ...selection,
           ...chromiumSandboxOpts(),
           viewport: { width: 1440, height: 1000 },
@@ -203,7 +206,10 @@ async function openDouhotPage(
       ),
     { label: "抖音热点宝",onStopped:lease.onStopped,signal:scope.signal },
   );
+  context.setDefaultTimeout(executionTimeoutMs());
+  context.setDefaultNavigationTimeout(executionTimeoutMs());
   const page = context.pages()[0] ?? (await context.newPage());
+  applyBrowserTimeoutPolicy(page);
   return {
     page,
     close: () => context.close(),
@@ -290,13 +296,13 @@ export async function loginDouhot(
   const opened = await (deps.openPage ??
     ((authDir) => openDouhotPage(authDir, false)))(options.authDir);
   const { page } = opened;
-  const timeoutSec = options.timeoutSec ?? 300;
+  const timeoutSec = executionTimeoutMs((options.timeoutSec ?? 300) * 1000) / 1000;
   console.info(`[douhot-login] authorization-start timeoutSec=${timeoutSec}`);
   try {
     await page
       .goto(DOUHOT_HOME, {
         waitUntil: "domcontentloaded",
-        timeout: 60_000,
+        timeout: executionTimeoutMs(60_000),
       })
       .catch(() => {});
 
@@ -329,8 +335,8 @@ async function fillKeyword(page: Page, keyword: string): Promise<void> {
     'input[type="text"]',
   ];
   // 热点宝是微前端：外壳 domcontentloaded 时榜单应用仍可能未挂载。旧实现只探测一次，
-  // 慢一拍就误报“关键词输入框不可用”；最多等 15 秒，只等 DOM，不吞登录/网络错误。
-  for (let attempt = 0; attempt < 60; attempt += 1) {
+  // 慢一拍就误报“关键词输入框不可用”；最多等 120 秒，只等 DOM，不吞登录/网络错误。
+  for (let attempt = 0; attempt < 480; attempt += 1) {
     for (const selector of selectors) {
       const input = page.locator(selector).filter({ visible: true }).first();
       if (await input.isVisible().catch(() => false)) {
@@ -416,7 +422,7 @@ export async function fetchDouhotLowFollowerBreakout(
     page.on("response", onResponse);
     await page.goto(DOUHOT_HOME, {
       waitUntil: "domcontentloaded",
-      timeout: 60_000,
+      timeout: executionTimeoutMs(60_000),
     });
     let sessionState = await probeDouhotSession(page);
     if (sessionState === "unknown") {
@@ -434,7 +440,7 @@ export async function fetchDouhotLowFollowerBreakout(
     // 不能再靠易变中文文案点击，也不能从五个并发 video_billboard 响应里取最后一个。
     await page.goto(DOUHOT_LOW_FOLLOWER_BOARD, {
       waitUntil: "domcontentloaded",
-      timeout: 60_000,
+      timeout: executionTimeoutMs(60_000),
     });
     responses.length = 0;
     await fillKeyword(page, options.keyword.trim());

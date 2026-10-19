@@ -1,0 +1,24 @@
+import {createRequire} from 'node:module';
+import {build} from '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/node_modules/esbuild/lib/main.js';
+const require=createRequire('/tmp/t1053-native-canvas/source/package.json');
+const {JSDOM}=require('jsdom');
+const dom=new JSDOM('<main></main>',{url:'http://creatoros.test'});
+for(const name of ['window','document','Document','HTMLDocument','Element','HTMLElement','ShadowRoot','Node','File','Blob','DOMParser'])globalThis[name]=dom.window[name];
+const images=[];
+globalThis.Image=class {src='';onload=null;onerror=null;constructor(){images.push(this)}};
+const created=[],revoked=[];
+URL.createObjectURL=()=>{const url=`blob:slow-${created.length}`;created.push(url);return url};
+URL.revokeObjectURL=url=>revoked.push(url);
+const compiled=await build({entryPoints:['/tmp/t1053-native-canvas/source/src/native-controller.ts'],format:'cjs',bundle:true,platform:'node',write:false});
+const module={exports:{}};new Function('module','exports',compiled.outputFiles[0].text)(module,module.exports);
+const {NativeController}=module.exports;
+const root=document.createElement('div'),portal=document.createElement('div');document.body.append(root,portal);
+const host=new NativeController(root,{owner:{accountId:'a',outputId:'o',sourceVersionId:'v'},theme:{mode:'light',tokens:{},fontFamily:'sans-serif',fontSize:'14px',density:'comfortable'},portalContainer:portal,signal:new AbortController().signal,onChanged(){},onError(){},importMedia:async()=>({mediaId:'m'})});
+host.attach({fabricCanvas:{on(){},off(){},getObjects(){return[]}},getJson:()=>({objects:[]})},root);
+let settled=false;
+const pending=host.importFile(new File(['slow'],'slow.png',{type:'image/png'}),'registered-m').then(()=>settled=true,()=>settled=true);
+await Promise.resolve();await Promise.resolve();
+host.close();await Promise.resolve();
+console.log(JSON.stringify({probe:'实际 Kuaitu controller 的慢图片卸载',settled,imageCount:images.length,imageSrc:images[0]?.src,onloadPresent:typeof images[0]?.onload==='function',onerrorPresent:typeof images[0]?.onerror==='function',created,revoked}));
+// Explicitly complete the image fixture after inspection; no real browser or network.
+images[0]?.onerror?.();await pending;dom.window.close();

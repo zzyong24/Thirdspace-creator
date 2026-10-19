@@ -1,4 +1,8 @@
-import { and, asc, eq, desc, type Db } from "@creatoros/backend";
+import {consumeReconstructionSettlement,type ReconstructionTransaction,type ReconstructionSettlement} from './reconstructed-artifact.service';
+import {withWorkspaceParentWrite,type WorkspaceWriteParent} from '../../workspace-write';
+import {projects,contentOutputs} from '../../schema/projects';
+import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
+import { and, asc, eq, desc, isNull, type Db } from "@creatoros/backend";
 import {
   artifacts,
   artifactVersions,
@@ -27,7 +31,8 @@ import { ConflictError, OwnershipError } from "./artifacts.errors";
 //  - restore only moves currentVersionId to an existing immutable version. It
 //    never mutates that version and never manufactures a duplicate revision.
 
-export type ArtifactRow = typeof artifacts.$inferSelect;
+// 私有预留指针不出 repository；公开读侧只消费经真实版本验证的布尔投影。
+export type ArtifactRow = Omit<typeof artifacts.$inferSelect,"scriptDraftReservationVersionId"> & {currentVersionIsReserved?:boolean};
 export type ArtifactVersionRow = typeof artifactVersions.$inferSelect;
 export type ArtifactRelationRow = typeof artifactRelations.$inferSelect;
 export type ScriptSectionRow = typeof scriptSections.$inferSelect;
@@ -41,7 +46,8 @@ export interface RepoDeps {
   // 恒叠 `eq(artifacts.accountId, …)`,create 盖章当前号。未选号在 service 入口
   // requireAccountId 即被拒(SPEC §4.2 引导态)。子表(versions / relations /
   // script_sections / timeline_segments)经 requireArtifact 父锚门透传继承号维。
-  accountId: string;
+  accountId?: string | null;
+  groupId?: string | null;
 }
 
 export interface StructuredContent {
@@ -69,15 +75,17 @@ export interface ArtifactRepository {
   seedVersions(rows: ArtifactVersionRow[]): Promise<void>;
   seedRelations(rows: ArtifactRelationRow[]): Promise<void>;
   listByProject(projectId: string): Promise<ArtifactRow[]>;
-  requireArtifact(artifactId: string): Promise<ArtifactRow>;
+  requireArtifact(artifactId: string, forUpdate?: boolean): Promise<ArtifactRow>;
   create(input: {
     projectId: string;
     title: string;
     artifactType: string;
     stage: string;
     contentOutputId?: string | null;
+    initialContentData?: Record<string, unknown>;
+    initialContentText?: string;
     origin?: "user" | "reconstructed";
-  }): Promise<ArtifactRow>;
+  }, internal?: {reserveScriptDraftInitialVersion:true}): Promise<ArtifactRow>;
   createVersion(
     artifactId: string,
     input: {
@@ -94,6 +102,7 @@ export interface ArtifactRepository {
     },
   ): Promise<ArtifactVersionRow>;
   listVersions(artifactId: string): Promise<ArtifactVersionRow[]>;
+  getVersionByAdoptionKey(artifactId: string, adoptionKey: string): Promise<ArtifactVersionRow | null>;
   getVersion(versionId: string): Promise<ArtifactVersionRow>;
   restore(
     artifactId: string,
@@ -129,18 +138,36 @@ export function resolveNextOrigin(
   return current;
 }
 
-export function createArtifactRepository(
-  db: Db,
-  deps: RepoDeps,
-): ArtifactRepository {
+export function createArtifactRepository(db:Db,deps:RepoDeps):ArtifactRepository{return artifactRepository(db,deps,false);}
+function artifactRepository(db:Db,deps:RepoDeps,locked:boolean):ArtifactRepository {
+  const scope = workspaceKey(deps);
+  const stamp = workspaceStamp(scope);
+  const writable = () => assertWritableWorkspace(db, {userId:deps.userId,...stamp,requestId:"shared-domain-write",source:"user"});
   const userId = deps.userId;
+  const writeCtx={userId,...stamp,requestId:'artifact-parent-write',source:'user' as const};
+  const projectParent:WorkspaceWriteParent={table:projects,id:projects.id,userId:projects.userId,groupId:projects.groupId,accountId:projects.accountId};
+  const artifactStep={table:artifacts,id:artifacts.id,parentId:artifacts.projectId,userId:artifacts.userId,scope:{groupId:artifacts.groupId,accountId:artifacts.accountId}};
+  const artifactParent:WorkspaceWriteParent={...projectParent,via:[artifactStep]};
+  const versionParent:WorkspaceWriteParent={...projectParent,via:[artifactStep,{table:artifactVersions,id:artifactVersions.id,parentId:artifactVersions.artifactId}]};
+
 
   // [T-332 S2 · ISO-02] 按号隔离条件门:strict 恒开(无「null → 退化全量」分支)。
   // 所有 owned-root 读/更新点复用它;子表经 requireArtifact 透传继承。
-  const accountGate = eq(artifacts.accountId, deps.accountId);
+  const accountGate = workspaceFilter(artifacts, scope);
 
-  async function requireArtifact(artifactId: string): Promise<ArtifactRow> {
-    const rows = await db
+  async function projectArtifact(row:typeof artifacts.$inferSelect):Promise<ArtifactRow> {
+    const {scriptDraftReservationVersionId:reservation,...visible}=row;
+    if(reservation==null)return {...visible,currentVersionIsReserved:false};
+    const [initial]=await db.select().from(artifactVersions).where(eq(artifactVersions.id,reservation));
+    if(row.artifactType!=="output_script" || row.stage!=="script" || reservation!==row.currentVersionId ||
+      !initial || initial.artifactId!==row.id || initial.versionNumber!==1 || initial.contentText!=="" ||
+      !initial.contentData || typeof initial.contentData!=="object" || Array.isArray(initial.contentData) || Object.keys(initial.contentData).length!==0)
+      throw new ConflictError("脚本预留版本事实损坏，请重新读取原目标");
+    return {...visible,currentVersionIsReserved:true};
+  }
+
+  async function requireArtifact(artifactId: string, forUpdate?: boolean): Promise<ArtifactRow> {
+    const query = db
       .select()
       .from(artifacts)
       .where(
@@ -150,11 +177,12 @@ export function createArtifactRepository(
           accountGate,
         ),
       );
+    const rows = await (forUpdate ? query.for("update") : query);
     const row = rows[0];
     // Cross-user / unknown id is indistinguishable (foundation §2: 404, never
     // reveal existence) → OwnershipError.
     if (!row) throw new OwnershipError("Artifact not found");
-    return row;
+    return projectArtifact(row);
   }
 
   // Allocate the next version number for an artifact (max+1, starting at 1).
@@ -213,7 +241,7 @@ export function createArtifactRepository(
     },
 
     async listByProject(projectId) {
-      return db
+      const rows=await db
         .select()
         .from(artifacts)
         .where(
@@ -224,11 +252,19 @@ export function createArtifactRepository(
           ),
         )
         .orderBy(asc(artifacts.createdAt));
+      return Promise.all(rows.map(projectArtifact));
     },
 
     requireArtifact,
 
-    async create(input) {
+    async create(input, internal) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,projectParent,[input.projectId],async tx=>{
+        if(input.contentOutputId){const [output]=await tx.select({id:contentOutputs.id}).from(contentOutputs).where(and(eq(contentOutputs.id,input.contentOutputId),eq(contentOutputs.projectId,input.projectId))).for('share');if(!output)throw new OwnershipError('产出不属于当前项目');}
+        return artifactRepository(tx as unknown as Db,deps,true).create(input,internal);
+      });
+      await writable();
+      if(internal?.reserveScriptDraftInitialVersion && (input.artifactType!=="output_script" || input.stage!=="script" || input.initialContentText || Object.keys(input.initialContentData??{}).length))
+        throw new ConflictError("只有新建空整稿目标可以预留初始版本");
       const now = deps.now();
       const artifactId = deps.nextId("artifact");
 
@@ -238,7 +274,7 @@ export function createArtifactRepository(
         id: artifactId,
         userId,
         // [T-332 S2 · ISO-03] create stamp:落库把行归到当前号(必填,列 NOT NULL)。
-        accountId: deps.accountId,
+        ...stamp,
         projectId: input.projectId,
         contentOutputId: input.contentOutputId ?? null,
         currentVersionId: null,
@@ -255,12 +291,13 @@ export function createArtifactRepository(
         updatedAt: now,
       });
       const version = await insertVersion(artifactId, 1, {
-        contentText: "",
+        contentText: input.initialContentText ?? "",
+        contentData: input.initialContentData ?? {},
         changeSummary: "初稿",
       });
       await db
         .update(artifacts)
-        .set({ currentVersionId: version.id, updatedAt: now })
+        .set({ currentVersionId: version.id, scriptDraftReservationVersionId:internal?.reserveScriptDraftInitialVersion?version.id:null, updatedAt: now })
         .where(
           and(
             eq(artifacts.id, artifactId),
@@ -274,6 +311,19 @@ export function createArtifactRepository(
     async createVersion(artifactId, input) {
       if((input.adoptionKey===undefined)!==(input.adoptionSourceDigest===undefined) ||
         (input.adoptionKey!==undefined && (!input.adoptionKey || input.adoptionKey.length>200 || !/^sha256:[a-f0-9]{64}$/.test(input.adoptionSourceDigest!))))throw new ConflictError("采纳来源无效");
+      if(!locked&&input.adoptionKey){
+        const artifact=await requireArtifact(artifactId);
+        const [receipt]=await db.select().from(artifactVersions).where(and(eq(artifactVersions.artifactId,artifactId),eq(artifactVersions.adoptionKey,input.adoptionKey)));
+        if(receipt){
+          const [parent]=await db.select({id:projects.id}).from(projects).where(and(eq(projects.id,artifact.projectId),eq(projects.userId,userId),workspaceFilter(projects,scope)));
+          if(!parent)throw new OwnershipError("Project not found");
+          if(receipt.adoptionSourceDigest!==input.adoptionSourceDigest||receipt.aiTaskId!==(input.aiTaskId??null))throw new ConflictError("采纳来源与原候选不一致");
+          // 已存在的不可变采用回执只回读，不再次 append；归档不隐藏原事实，当前父归属仍核验。
+          return receipt;
+        }
+      }
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...artifactParent,lock:'update'},[artifactId],tx=>artifactRepository(tx as unknown as Db,deps,true).createVersion(artifactId,input));
+      await writable();
       return db.transaction(async (tx) => {
         const artifactRows = await tx
           .select()
@@ -292,6 +342,19 @@ export function createArtifactRepository(
           if(receipt){
             if(receipt.adoptionSourceDigest!==input.adoptionSourceDigest || receipt.aiTaskId!==(input.aiTaskId ?? null))throw new ConflictError("采纳来源与原候选不一致");
             return receipt;
+          }
+        }
+        // T1062：仅文章/图文的新版本追加要求真实父项目仍可写。
+        // 外层已按 group→project→artifact 取锁；在同连接中重读，避免归档先提交后仍写入。
+        // 原采用回执已在上方精确返回，trend_analysis 的已开始重建结算不受此门影响。
+        if (artifact.artifactType === "wechat_article" || artifact.artifactType === "graphic_post") {
+          const [parent] = await tx.select().from(projects).where(and(
+            eq(projects.id, artifact.projectId), eq(projects.userId, userId),
+            workspaceFilter(projects, scope),
+          ));
+          if (!parent) throw new OwnershipError("Project not found");
+          if (parent.archivedAt || parent.status === "archived") {
+            throw new ConflictError("项目已归档，不能新增文章或图文版本");
           }
         }
         if (
@@ -335,6 +398,7 @@ export function createArtifactRepository(
           .update(artifacts)
           .set({
             currentVersionId: version.id,
+            scriptDraftReservationVersionId:null,
             origin: resolveNextOrigin(
               artifact.origin,
               input.origin,
@@ -347,12 +411,8 @@ export function createArtifactRepository(
               eq(artifacts.id, artifactId),
               eq(artifacts.userId, userId),
               accountGate,
-              input.expectedCurrentVersionId
-                ? eq(
-                    artifacts.currentVersionId,
-                    input.expectedCurrentVersionId,
-                  )
-                : undefined,
+              artifact.scriptDraftReservationVersionId==null?isNull(artifacts.scriptDraftReservationVersionId):eq(artifacts.scriptDraftReservationVersionId,artifact.scriptDraftReservationVersionId),
+              artifact.currentVersionId==null?isNull(artifacts.currentVersionId):eq(artifacts.currentVersionId,artifact.currentVersionId),
             ),
           )
           .returning({ id: artifacts.id });
@@ -374,6 +434,14 @@ export function createArtifactRepository(
         .orderBy(asc(artifactVersions.versionNumber));
     },
 
+    async getVersionByAdoptionKey(artifactId, adoptionKey) {
+      await requireArtifact(artifactId);
+      const [version] = await db.select().from(artifactVersions).where(and(
+        eq(artifactVersions.artifactId, artifactId), eq(artifactVersions.adoptionKey, adoptionKey),
+      )).limit(1);
+      return version ?? null;
+    },
+
     async getVersion(versionId) {
       const rows = await db
         .select()
@@ -387,6 +455,8 @@ export function createArtifactRepository(
     },
 
     async restore(artifactId, versionId, expectedCurrentVersionId) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...artifactParent,lock:'update'},[artifactId],tx=>artifactRepository(tx as unknown as Db,deps,true).restore(artifactId,versionId,expectedCurrentVersionId));
+      await writable();
       return db.transaction(async (tx) => {
         const artifactRows = await tx
           .select()
@@ -414,15 +484,14 @@ export function createArtifactRepository(
         // 不能先查再无条件移动指针，否则会覆盖检查后到达的用户保存。
         const updated = await tx
           .update(artifacts)
-          .set({ currentVersionId: target.id, updatedAt: deps.now() })
+          .set({ currentVersionId: target.id, scriptDraftReservationVersionId:null, updatedAt: deps.now() })
           .where(
             and(
               eq(artifacts.id, artifactId),
               eq(artifacts.userId, userId),
               accountGate,
-              expectedCurrentVersionId
-                ? eq(artifacts.currentVersionId, expectedCurrentVersionId)
-                : undefined,
+              artifact.scriptDraftReservationVersionId==null?isNull(artifacts.scriptDraftReservationVersionId):eq(artifacts.scriptDraftReservationVersionId,artifact.scriptDraftReservationVersionId),
+              expectedCurrentVersionId?eq(artifacts.currentVersionId,expectedCurrentVersionId):artifact.currentVersionId==null?isNull(artifacts.currentVersionId):eq(artifacts.currentVersionId,artifact.currentVersionId),
             ),
           )
           .returning();
@@ -432,11 +501,13 @@ export function createArtifactRepository(
             "脚本在这次修改后又有新版本，不能直接撤销以免覆盖后续修改",
           );
         }
-        return restored;
+        return projectArtifact(restored);
       });
     },
 
     async createRelation(sourceArtifactId, input) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,artifactParent,[sourceArtifactId,input.targetArtifactId],tx=>artifactRepository(tx as unknown as Db,deps,true).createRelation(sourceArtifactId,input));
+      await writable();
       // Both ends must be owned (cross-user link → OwnershipError, no leak).
       await requireArtifact(sourceArtifactId);
       await requireArtifact(input.targetArtifactId);
@@ -457,6 +528,8 @@ export function createArtifactRepository(
     },
 
     async replaceStructuredContent(artifactVersionId, payload) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...versionParent,lock:'update'},[artifactVersionId],tx=>artifactRepository(tx as unknown as Db,deps,true).replaceStructuredContent(artifactVersionId,payload));
+      await writable();
       // Internal — only ever called when minting a NEW version (the service
       // guards that). Delete-then-insert the structured rows for this version id;
       // version-scoped, so the immutable-plan rule holds (we mutate the just-made
@@ -523,4 +596,13 @@ export function createArtifactRepository(
     },
 
   };
+}
+
+/** 仅后端原重建结算证明的固定初稿+结果版本，不接受user字段或可变权限flag。 */
+export async function materializeSettledReconstructionRows(tx:ReconstructionTransaction,proof:ReconstructionSettlement,deps:{now:()=>string;nextId:(prefix:string)=>string}){
+ const facts=consumeReconstructionSettlement(proof,tx),stamp=deps.now(),artifactId=deps.nextId('artifact'),initialId=deps.nextId('artifactversion'),resultId=deps.nextId('artifactversion');
+ await tx.insert(artifacts).values({id:artifactId,userId:facts.context.userId,...workspaceStamp(workspaceKey(facts.context)),projectId:facts.projectId,contentOutputId:null,currentVersionId:null,stage:'research',artifactType:'trend_analysis',title:'研究重建（AI 反推）',status:'drafting',archivedAt:null,origin:'reconstructed',createdAt:stamp,updatedAt:stamp});
+ await tx.insert(artifactVersions).values([{id:initialId,artifactId,versionNumber:1,contentText:'',contentData:{},changeSummary:'初稿',createdByType:'user',aiTaskId:null,createdAt:stamp},{id:resultId,artifactId,versionNumber:2,contentText:facts.contentText,contentData:facts.contentData,changeSummary:'AI 历史反推重建',createdByType:'ai',aiTaskId:null,createdAt:stamp}]);
+ await tx.update(artifacts).set({currentVersionId:resultId,updatedAt:stamp}).where(and(eq(artifacts.id,artifactId),eq(artifacts.userId,facts.context.userId),workspaceFilter(artifacts,facts.context)));
+ return{id:artifactId};
 }

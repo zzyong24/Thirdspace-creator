@@ -1,0 +1,26 @@
+{
+  "state": "NOT_RUN",
+  "originalBusinessAssertionTailIdentical": true,
+  "tailSha256": "da7676a2b44a08b03480803a3772d6f47acf3393fec3d26bd4a3a9bfce4075e3",
+  "originalPublicTestSHA": "7eedc2ee6872fd03507803635b7e78ab96f26314cb0ef21d6aadca534034b2d1",
+  "currentPublicTestSHA": "0a75f28926e3abd1d8647d5bb2723b87d9bd896bf59e6bf1baef85bd14287681",
+  "sameWorkerSHA": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709",
+  "links": [
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/node_modules/jsdom",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/jsdom@29.1.1_@noble+hashes@1.8.0/node_modules/jsdom"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/node_modules/@mozilla/readability",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@mozilla+readability@0.6.0/node_modules/@mozilla/readability"
+    }
+  ],
+  "unknownOriginalTaskNotResumed": "ai-task-6aaeb083-7",
+  "controlledIoUnchanged": "v2 URL guard/DNS/HTTP/read/context-close signal代码逐字，只新增try/catch隔离的观察listener",
+  "supplierModelCalls": 0,
+  "deadlineSeconds": 1800,
+  "selectedCases": [
+    "research"
+  ],
+  "budget": "原已审92760外层与8h单test保持，根1800绝对期限不续期"
+}

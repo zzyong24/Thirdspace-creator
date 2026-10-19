@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-17T12:08:07.740887+00:00",
+  "authorizedRoot": "/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13",
+  "mode": "0700",
+  "newlyCreated": true,
+  "scope": "仅本轮owned DB/media/workspaces/cache/tmp/PID和运行日志；fixture专用随机key允许0600持久、只内存stdin，不打印/复制用户auth。",
+  "productionWriteAuthorized": false,
+  "sharedFormalWindow": "4formal及taskctl实际重跑均完成前，10生产源尤其persistence-client仍RO；B只能test/runtime准备/控链RED。"
+}

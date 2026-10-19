@@ -79,6 +79,7 @@ describe("ProjectRepository (pglite-backed real persistence)", () => {
       userId: "user-1",
       accountId: "acct-1", // [T-332 S2] NOT NULL schema
 
+      groupId: null,
       title: "种子项目",
       brief: "",
       briefDetail: {},

@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:81630) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx (11 tests | 2 failed) 257ms
+   × 原组图内容修改后重新进入会冻结新版本，旧画布保留且不陷入旧规划循环 4ms
+   × 明确CAS冲突后重新读取允许新请求，未知回执仍由另一案例守原请求 36ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 原组图内容修改后重新进入会冻结新版本，旧画布保留且不陷入旧规划循环
+AssertionError: expected '/canvases/canvas-new?graphicPageConte…' to match /^\/canvases\/canvas-second\?/canvases\
+
+- Expected:
+/^\/canvases\/canvas-second\?/
+
++ Received:
+"/canvases/canvas-new?graphicPageContext=10326cbf-3d0b-4e22-b130-ca9d1b5eef20"
+
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:27:592
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 明确CAS冲突后重新读取允许新请求，未知回执仍由另一案例守原请求
+AssertionError: expected 'ee7be56b-1254-4f7b-bd72-c99fe8e2076c' not to be 'ee7be56b-1254-4f7b-bd72-c99fe8e2076c' // Object.is equality
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:28:855
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 9 passed (11)
+   Start at  03:40:24
+   Duration  1.90s (transform 532ms, setup 155ms, import 765ms, tests 257ms, environment 552ms)
+

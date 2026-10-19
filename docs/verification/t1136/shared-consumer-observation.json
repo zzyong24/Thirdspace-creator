@@ -1,0 +1,325 @@
+{
+  "surface": "browser",
+  "loadingFixture": "once held real accountGroups.get; original response retained",
+  "feedbackSubmitted": false,
+  "modelCalled": false,
+  "assetId": "asset-a65785f2-4059",
+  "canvasId": "a64f6039-4dc8-4cc0-a3c1-2b0f4bd6fa86",
+  "cancelBeforeRevision": 2,
+  "cancelAfterRevision": 2,
+  "cancelDocumentUnchanged": true,
+  "captures": [
+    {
+      "name": "calendar-loading-900",
+      "url": "http://127.0.0.1:3887/publishing",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 900,
+        "left": 226,
+        "right": 674,
+        "width": 448,
+        "scrollWidth": 448,
+        "clientWidth": 448,
+        "maxWidth": "448px",
+        "gridTemplateColumns": "416px",
+        "controls": [
+          {
+            "label": "共享项目",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "创作日期",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "发布目标（可选）",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "取消",
+            "left": 522,
+            "right": 572,
+            "width": 50
+          },
+          {
+            "label": "保存计划",
+            "left": 580,
+            "right": 658,
+            "width": 78
+          }
+        ]
+      },
+      "text": "安排创作日期\n\n计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。\n\n共享项目\n选择项目\n发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划\n创作日期\n选择日期\n发布目标（可选）\n稍后选择平台账号\n\n正在读取当前组的平台账号…\n\n取消\n保存计划\n关闭"
+    },
+    {
+      "name": "shared-feedback-1366",
+      "url": "http://127.0.0.1:3887/publishing",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 1366,
+        "left": 395,
+        "right": 971,
+        "width": 576,
+        "scrollWidth": 576,
+        "clientWidth": 576,
+        "maxWidth": "576px",
+        "gridTemplateColumns": "544px",
+        "controls": [
+          {
+            "label": "",
+            "left": 411,
+            "right": 955,
+            "width": 544
+          },
+          {
+            "label": "查看本机日志",
+            "left": 569,
+            "right": 697,
+            "width": 128
+          },
+          {
+            "label": "打开反馈页",
+            "left": 705,
+            "right": 819,
+            "width": 114
+          },
+          {
+            "label": "复制反馈内容",
+            "left": 827,
+            "right": 955,
+            "width": 128
+          }
+        ]
+      },
+      "text": "帮助与反馈\n\n这里处理软件使用问题；购买、续费或交付问题，请到设置里的“产品与服务”联系服务方。请先检查下方内容；不会发送日志、附件、截图、激活码或其他内容。\n\n问题摘要\n问题描述\n21 / 4000\n发送内容预览\n可复制后粘贴到反馈页\n查看本机日志\n打开反馈页\n复制反馈内容\n关闭"
+    },
+    {
+      "name": "shared-feedback-900",
+      "url": "http://127.0.0.1:3887/publishing",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 900,
+        "left": 162,
+        "right": 738,
+        "width": 576,
+        "scrollWidth": 576,
+        "clientWidth": 576,
+        "maxWidth": "576px",
+        "gridTemplateColumns": "544px",
+        "controls": [
+          {
+            "label": "",
+            "left": 178,
+            "right": 722,
+            "width": 544
+          },
+          {
+            "label": "查看本机日志",
+            "left": 336,
+            "right": 464,
+            "width": 128
+          },
+          {
+            "label": "打开反馈页",
+            "left": 472,
+            "right": 586,
+            "width": 114
+          },
+          {
+            "label": "复制反馈内容",
+            "left": 594,
+            "right": 722,
+            "width": 128
+          }
+        ]
+      },
+      "text": "帮助与反馈\n\n这里处理软件使用问题；购买、续费或交付问题，请到设置里的“产品与服务”联系服务方。请先检查下方内容；不会发送日志、附件、截图、激活码或其他内容。\n\n问题摘要\n问题描述\n21 / 4000\n发送内容预览\n可复制后粘贴到反馈页\n查看本机日志\n打开反馈页\n复制反馈内容\n关闭"
+    },
+    {
+      "name": "shared-asset-picker-1366",
+      "url": "http://127.0.0.1:3887/canvases/a64f6039-4dc8-4cc0-a3c1-2b0f4bd6fa86",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 1366,
+        "left": 171,
+        "right": 1195,
+        "width": 1024,
+        "scrollWidth": 1024,
+        "clientWidth": 1024,
+        "maxWidth": "1024px",
+        "gridTemplateColumns": "repeat(1, minmax(0px, 1fr))",
+        "controls": [
+          {
+            "label": "搜索素材",
+            "left": 224,
+            "right": 1166,
+            "width": 942
+          },
+          {
+            "label": "全部",
+            "left": 187,
+            "right": 235,
+            "width": 48
+          },
+          {
+            "label": "图片",
+            "left": 243,
+            "right": 291,
+            "width": 48
+          },
+          {
+            "label": "预览 本地弹窗预览图.png",
+            "left": 188,
+            "right": 540,
+            "width": 352
+          },
+          {
+            "label": "取消",
+            "left": 1025,
+            "right": 1075,
+            "width": 50
+          },
+          {
+            "label": "使用此素材",
+            "left": 1087,
+            "right": 1179,
+            "width": 92
+          }
+        ]
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "name": "shared-asset-picker-900",
+      "url": "http://127.0.0.1:3887/canvases/a64f6039-4dc8-4cc0-a3c1-2b0f4bd6fa86",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 900,
+        "left": 16,
+        "right": 884,
+        "width": 868,
+        "scrollWidth": 868,
+        "clientWidth": 868,
+        "maxWidth": "1024px",
+        "gridTemplateColumns": "repeat(1, minmax(0px, 1fr))",
+        "controls": [
+          {
+            "label": "搜索素材",
+            "left": 69,
+            "right": 855,
+            "width": 786
+          },
+          {
+            "label": "全部",
+            "left": 32,
+            "right": 80,
+            "width": 48
+          },
+          {
+            "label": "图片",
+            "left": 88,
+            "right": 136,
+            "width": 48
+          },
+          {
+            "label": "预览 本地弹窗预览图.png",
+            "left": 33,
+            "right": 307,
+            "width": 274
+          },
+          {
+            "label": "取消",
+            "left": 714,
+            "right": 764,
+            "width": 50
+          },
+          {
+            "label": "使用此素材",
+            "left": 776,
+            "right": 868,
+            "width": 92
+          }
+        ]
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "name": "shared-asset-picker-683",
+      "url": "http://127.0.0.1:3887/canvases/a64f6039-4dc8-4cc0-a3c1-2b0f4bd6fa86",
+      "viewport": {
+        "width": 683,
+        "height": 450
+      },
+      "dimensions": {
+        "viewport": 683,
+        "left": 16,
+        "right": 667,
+        "width": 651,
+        "scrollWidth": 651,
+        "clientWidth": 651,
+        "maxWidth": "1024px",
+        "gridTemplateColumns": "repeat(1, minmax(0px, 1fr))",
+        "controls": [
+          {
+            "label": "搜索素材",
+            "left": 69,
+            "right": 638,
+            "width": 569
+          },
+          {
+            "label": "全部",
+            "left": 32,
+            "right": 80,
+            "width": 48
+          },
+          {
+            "label": "图片",
+            "left": 88,
+            "right": 136,
+            "width": 48
+          },
+          {
+            "label": "预览 本地弹窗预览图.png",
+            "left": 33,
+            "right": 198.5,
+            "width": 165.5
+          },
+          {
+            "label": "取消",
+            "left": 497,
+            "right": 547,
+            "width": 50
+          },
+          {
+            "label": "使用此素材",
+            "left": 559,
+            "right": 651,
+            "width": 92
+          }
+        ]
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    }
+  ]
+}

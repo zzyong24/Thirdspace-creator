@@ -1,0 +1,5 @@
+# T1324 用户授权与现役请求边界
+
+用户原全功能修复及Root本轮明确授权，独立修复原U16真实预览404，不改原候选/渲染/采纳状态或重发原任务。C作者，R提前独立设计审实际无阻断；该MD非正式reviewctl收据，此锁此刻才形成。生产仅preview route、新完整组合test及own证据，不改通用context/service/sandbox/其它路由。不新增HEAD handler；Next自动HEAD只能真实框架验证。两种合法header/cookie仍沿真实resolver所有权与membership，不能造ctx绕下游门。
+
+新owned公共组合源链须真实任务/执行服务产生manifest和文件，不mock resolver/readVideo充主证。原U16完整付费决策/渲染/HTTP失败按已绑原件引用，不为任务编号再收费。新包公共任务如必需由Root决定必要fixture，不复制旧DB/不替换source。共享timeout Gate由C最终独占一次实际执行与精确source引用，未发生不签过。

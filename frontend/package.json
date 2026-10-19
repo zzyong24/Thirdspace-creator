@@ -44,7 +44,8 @@
     "desktop:master-key": "node scripts/desktop/master-key.mjs",
     "desktop:activation": "node scripts/desktop/activation.mjs",
     "desktop:prompt-bundle": "node scripts/desktop/prompt-bundle.mjs",
-    "predev": "node ../ai-worker/scripts/build.mjs"
+    "predev": "node ../ai-worker/scripts/build.mjs",
+    "build:noterelay": "node scripts/build-noterelay.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.6",
@@ -61,19 +62,24 @@
     "@tiptap/pm": "3.27.1",
     "@tiptap/react": "3.27.1",
     "@tiptap/starter-kit": "3.27.1",
+    "@xyflow/react": "^12.12.0",
+    "@xzdarcy/react-timeline-editor": "1.0.0",
     "ai": "^7.0.4",
     "antd": "^6.6.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "dayjs": "^1.11.23",
+    "dompurify": "3.3.0",
     "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",
     "exceljs": "^4.4.0",
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "gsap": "^3.12.5",
+    "html-to-image": "1.11.13",
     "hyperframes": "0.7.54",
     "lucide-react": "1.18.0",
     "mammoth": "^1.12.0",
+    "markdown-it": "14.3.0",
     "next": "16.2.9",
     "node-cron": "^4.5.0",
     "pdf-parse": "^2.4.5",
@@ -106,6 +112,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "bytenode": "^1.6.0",
+    "esbuild": "0.28.1",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.9",
     "javascript-obfuscator": "^5.4.3",
@@ -115,6 +122,7 @@
     "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vite": "8.0.16",
-    "vitest": "4.1.8"
+    "vitest": "4.1.8",
+    "@noble/hashes": "1.8.0"
   }
 }

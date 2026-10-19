@@ -1,3 +1,5 @@
+import type {MembershipTransaction,FrozenWorkspace} from "../platform-account/membership-lock.service";
+import {requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -23,9 +25,14 @@ export interface ServiceDeps {
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
+  membership?:{lock(tx:MembershipTransaction,ctx:RequestContext,options?:{allowArchived?:boolean}):Promise<FrozenWorkspace>};
+  assertCollectionAccount?(ctx:RequestContext):Promise<unknown>;
+  assertCandidateOwned?(ctx:RequestContext,id:string):Promise<unknown>;
 }
 
 export interface CreateFavoritesFolderInput {
+  accountId?:string;
+  expectedMembershipVersion?:number;
   name: string;
   note?: string | null;
   enabled?: boolean;
@@ -139,6 +146,7 @@ export interface FavoritesService {
   listItemsForDistill(
     ctx: RequestContext,
     limit: number,
+    options?:{collectorAccountOnly?:boolean},
   ): Promise<DistillCandidateItem[]>;
   /** 落逐字稿(他人作品独立落点,不建 project artifact)。 */
   saveTranscript(
@@ -210,15 +218,25 @@ function toDistillPending(row: FavoritesItemRow): DistillPendingItem {
 export function createFavoritesService(deps: ServiceDeps): FavoritesService {
   const { db, now, nextId } = deps;
 
-  function repoFor(ctx: RequestContext, op: string): FavoritesRepository {
+  function repoFor(ctx: RequestContext, op: string,targetDb:Db=db): FavoritesRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
       // [T-332 S2] 未选号 → AccountRequiredError(读写同门,§4.2)。
-      accountId: requireAccountId(ctx.accountId, op),
+      groupId:ctx.groupId??null,
+      accountId: (requireWorkspace(ctx),ctx.groupId?ctx.accountId??null:requireAccountId(ctx.accountId,op)),
     };
-    return createFavoritesRepository(db, repoDeps);
+    return createFavoritesRepository(targetDb, repoDeps);
+  }
+
+  async function withCollector<T>(ctx:RequestContext,op:string,body:(repo:FavoritesRepository)=>Promise<T>):Promise<T>{
+    requireAccountId(ctx.accountId,"真实收藏采集账号");
+    await assertWritableWorkspace(db,ctx);
+    if(!ctx.groupId&&!deps.membership)return body(repoFor(ctx,op));
+    if(!deps.membership||!deps.assertCollectionAccount)throw new ValidationError("收藏账号归属验证不可用");
+    await deps.assertCollectionAccount(ctx);
+    return db.transaction(async tx=>{await deps.membership!.lock(tx,ctx);return body(repoFor(ctx,op,tx as unknown as Db));});
   }
 
   return {
@@ -232,16 +250,18 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
 
     async createFolder(ctx, input) {
       guardCreate(input);
+      ctx={...ctx,accountId:input.accountId??ctx.accountId,membershipVersion:input.expectedMembershipVersion??ctx.membershipVersion};
       // [T-332 S2] 号由 repo deps stamp(§4.6 防绕过),不再经 input 传递。
-      const row = await repoFor(ctx, "favorites.createFolder").createFolder({
+      const row = await withCollector(ctx,"favorites.createFolder",repo=>repo.createFolder({
         name: input.name.trim(), // 幂等锚:trim 后同名 = 同一夹(抖音夹名精确匹配)
         note: input.note ?? null,
         enabled: input.enabled,
-      });
+      }));
       return toFavoritesFolderDto(row);
     },
 
     async toggleFolder(ctx, folderId, enabled) {
+      await assertWritableWorkspace(db,ctx);
       const row = await repoFor(ctx, "favorites.toggleFolder").setFolderEnabled(
         folderId,
         enabled,
@@ -250,12 +270,13 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     async removeFolder(ctx, folderId) {
+      await assertWritableWorkspace(db,ctx);
       const row = await repoFor(ctx, "favorites.removeFolder").removeFolder(folderId);
       return toFavoritesFolderDto(row);
     },
 
     async listEnabledFolders(ctx) {
-      const rows = await repoFor(ctx, "favorites.listEnabledFolders").listEnabledFolders();
+      const rows = await withCollector(ctx,"favorites.listEnabledFolders",repo=>repo.listEnabledFolders());
       return rows.map((r) => ({
         id: r.id,
         accountId: r.accountId ?? null,
@@ -266,16 +287,13 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     async updateFolderSync(ctx, folderId, patch) {
-      const row = await repoFor(ctx, "favorites.updateFolderSync").updateFolderSync(
-        folderId,
-        patch,
-      );
+      const row = await withCollector(ctx,"favorites.updateFolderSync",repo=>repo.updateFolderSync(folderId,patch));
       return toFavoritesFolderDto(row);
     },
 
     async recordItems(ctx, folderId, items) {
       // [T-332 S2] 号由 repo deps stamp(采集 runtime ctx 账号由 job 行派生,ISO-06)。
-      return repoFor(ctx, "favorites.recordItems").recordItems(
+      return withCollector(ctx,"favorites.recordItems",repo=>repo.recordItems(
         items.map((item) => ({
           folderId,
           awemeId: item.awemeId,
@@ -283,7 +301,7 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
           authorNickname: item.authorNickname,
           url: item.url,
         })),
-      );
+      ));
     },
 
     async listPendingItems(ctx, limit) {
@@ -294,6 +312,8 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     async markItemPromoted(ctx, itemId, candidateId) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertCandidateOwned)throw new ValidationError("候选归属验证不可用");await deps.assertCandidateOwned(ctx,candidateId);}
       await repoFor(ctx, "favorites.markItemPromoted").markItemPromoted(
         itemId,
         candidateId,
@@ -301,15 +321,16 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     // ── [T-235d-distill] 蒸馏链落点 ──
-    async listItemsForDistill(ctx, limit) {
+    async listItemsForDistill(ctx, limit,options) {
       const rows = await repoFor(
         ctx,
         "favorites.listItemsForDistill",
-      ).listItemsForDistill(limit);
+      ).listItemsForDistill(limit,options?.collectorAccountOnly);
       return rows.map(toDistillCandidate);
     },
 
     async saveTranscript(ctx, itemId, transcript) {
+      await assertWritableWorkspace(db,ctx);
       await repoFor(ctx, "favorites.saveTranscript").saveTranscript(
         itemId,
         transcript,
@@ -317,6 +338,7 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     async saveDistillVerdict(ctx, itemId, verdict) {
+      await assertWritableWorkspace(db,ctx);
       await repoFor(ctx, "favorites.saveDistillVerdict").saveDistillVerdict(itemId, {
         status: verdict.status,
         result: verdict.result,

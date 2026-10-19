@@ -4,7 +4,7 @@ export interface ChatToolResultPage { kind: "tool.result.read"; toolCallId: stri
 export type ChatToolResultReader = (input:{toolCallId?:string;offset?:number})=>Promise<ChatToolResultPage>;
 export function buildChatToolResultReader(read?:ChatToolResultReader){
  return defineChatTool("tool.result.read",{
-  description:"分页读取当前任务或冻结对话中已返回的工具结果。不传toolCallId时读取结果目录，再使用原toolCallId与offset；绝不重新执行原工具，也不读取别的对话。用于恢复上下文中省略的原始结果。",
+  description:"分页读取当前任务或冻结对话中已返回的工具结果。不传toolCallId时读取结果目录，再使用原toolCallId与offset；绝不重新执行原工具，也不读取别的对话。用于恢复上下文中省略的原始结果。totalCharacters、offset 与 nextOffset 只计工具回执序列化文本的字符，不是网页正文总长或阅读进度；网页进度使用 web.read.window，继续正文使用 web.read 的 offset。",
   inputSchema:jsonSchema<{toolCallId?:string;offset?:number}>({type:"object",properties:{toolCallId:{type:"string",minLength:1},offset:{type:"integer",minimum:0}},additionalProperties:false}),
   execute:async input=>{if(!read)throw Error("TOOL_RESULT_READER_UNAVAILABLE");return read(input);},
  });

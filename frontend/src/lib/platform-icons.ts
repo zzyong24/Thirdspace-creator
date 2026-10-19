@@ -4,6 +4,8 @@ export type PlatformId =
   | "douyin"
   | "xiaohongshu"
   | "wechatVideo"
+  | "wechatOfficial"
+  | "kuaishou"
   | "x";
 
 export interface PlatformIcon {
@@ -52,6 +54,8 @@ export const platformIcons = Object.freeze({
     background: "#fe860b",
     foreground: white,
   }),
+  wechatOfficial:Object.freeze({id:"wechatOfficial",label:"公众号",glyph:"公",background:"#07c160",foreground:white}),
+  kuaishou:Object.freeze({id:"kuaishou",label:"快手",glyph:"快",background:"#ff6900",foreground:white}),
   x: Object.freeze({
     id: "x",
     label: "X",

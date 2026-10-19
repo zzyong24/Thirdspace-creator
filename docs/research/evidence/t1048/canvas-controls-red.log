@@ -1,0 +1,157 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:82840) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82841) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/infinite-canvas-node-reference.test.tsx (2 tests | 2 failed) 152ms
+   × 切换生成模式清掉精确参考，旧file不能残留阻断合法保存 129ms (retry x2)
+   × 换参考资产清掉旧精确file，沿画布提交冻结新文件 22ms (retry x2)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx (12 tests | 3 failed) 3366ms
+   × 原组图内容修改后重新进入会冻结新版本，旧画布保留且不陷入旧规划循环 6ms (retry x2)
+   × 明确CAS冲突后重新读取允许新请求，未知回执仍由另一案例守原请求 96ms (retry x2)
+   × 返回原组图沿编辑器保存路径；保存失败留在画布 3030ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 原组图内容修改后重新进入会冻结新版本，旧画布保留且不陷入旧规划循环
+AssertionError: expected '/canvases/canvas-new?graphicPageConte…' to match /^\/canvases\/canvas-second\?/canvases\
+
+- Expected:
+/^\/canvases\/canvas-second\?/
+
++ Received:
+"/canvases/canvas-new?graphicPageContext=4087a3be-b8df-4f62-905a-f1da948ea2da"
+
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:27:592
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 原组图内容修改后重新进入会冻结新版本，旧画布保留且不陷入旧规划循环
+AssertionError: expected '/canvases/canvas-new?graphicPageConte…' to match /^\/canvases\/canvas-second\?/canvases\
+
+- Expected:
+/^\/canvases\/canvas-second\?/
+
++ Received:
+"/canvases/canvas-new?graphicPageContext=0e2863d0-9233-4ef4-a5a6-a519510ba100"
+
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:27:592
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 原组图内容修改后重新进入会冻结新版本，旧画布保留且不陷入旧规划循环
+AssertionError: expected '/canvases/canvas-new?graphicPageConte…' to match /^\/canvases\/canvas-second\?/canvases\
+
+- Expected:
+/^\/canvases\/canvas-second\?/
+
++ Received:
+"/canvases/canvas-new?graphicPageContext=82bed98b-03dd-4704-8572-de1cb2f3380b"
+
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:27:592
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 明确CAS冲突后重新读取允许新请求，未知回执仍由另一案例守原请求
+AssertionError: expected 'cc34c744-793f-4ac5-9393-445ba5e5ad63' not to be 'cc34c744-793f-4ac5-9393-445ba5e5ad63' // Object.is equality
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:28:855
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 明确CAS冲突后重新读取允许新请求，未知回执仍由另一案例守原请求
+AssertionError: expected '06f0ed81-cd8f-42f1-8731-20a71657b772' not to be '06f0ed81-cd8f-42f1-8731-20a71657b772' // Object.is equality
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:28:855
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 明确CAS冲突后重新读取允许新请求，未知回执仍由另一案例守原请求
+AssertionError: expected 'b8df59ef-ac05-41eb-ba89-f2ce03962cba' not to be 'b8df59ef-ac05-41eb-ba89-f2ce03962cba' // Object.is equality
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:28:855
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 返回原组图沿编辑器保存路径；保存失败留在画布
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 返回原组图沿编辑器保存路径；保存失败留在画布
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 返回原组图沿编辑器保存路径；保存失败留在画布
+AssertionError: expected "vi.fn()" to be called with arguments: [ '/projects/p/outputs/o/image' ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"原图文页"[39m
+        [33mclass[39m=[32m"space-y-2 border-b bg-primary/5 px-4 py-3 text-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0m第 [0m
+            [0m1[0m
+            [0m 页 · [0m
+            [0m先讲清楚[0m
+          [36m</span>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2"[39m
+            [33mhref[39m=[32m"/projects/p/outputs/o/image"[39m
+          [36m>[39m
+            [0m返回原组图[0m
+          [36m</a>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m生成并保留这一页的候选后，可明确采用回原组图。[0m
+        [36m</p>[39m
+      [36m</section>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:30:292
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  src/features/creative-canvas/infinite-canvas-node-reference.test.tsx > 切换生成模式清掉精确参考，旧file不能残留阻断合法保存
+ FAIL  src/features/creative-canvas/infinite-canvas-node-reference.test.tsx > 切换生成模式清掉精确参考，旧file不能残留阻断合法保存
+ FAIL  src/features/creative-canvas/infinite-canvas-node-reference.test.tsx > 切换生成模式清掉精确参考，旧file不能残留阻断合法保存
+AssertionError: expected { mode: 'text_to_image', …(2) } to have property "referenceFileId" with value undefined
+ ❯ src/features/creative-canvas/infinite-canvas-node-reference.test.tsx:10:186
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  src/features/creative-canvas/infinite-canvas-node-reference.test.tsx > 换参考资产清掉旧精确file，沿画布提交冻结新文件
+ FAIL  src/features/creative-canvas/infinite-canvas-node-reference.test.tsx > 换参考资产清掉旧精确file，沿画布提交冻结新文件
+ FAIL  src/features/creative-canvas/infinite-canvas-node-reference.test.tsx > 换参考资产清掉旧精确file，沿画布提交冻结新文件
+AssertionError: expected { referenceAssetId: 'new' } to have property "referenceFileId" with value undefined
+ ❯ src/features/creative-canvas/infinite-canvas-node-reference.test.tsx:11:173
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 9 passed (14)
+   Start at  03:43:48
+   Duration  5.31s (transform 720ms, setup 391ms, import 1000ms, tests 3.52s, environment 1.30s)
+

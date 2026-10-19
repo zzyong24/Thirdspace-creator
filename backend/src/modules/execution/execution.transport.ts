@@ -1,13 +1,15 @@
 // 执行层 transport(T-255a)—— 5 契约 op 走同一 /api/v1/dispatch(镜像 ai.transport:
 // switch endpoint.id → service,SPEC §14 envelope;无 ctx → AuthenticationError;
 // 不认识的 op → UnsupportedOperationError,composite 不吞真错)。
-import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
+import { ENDPOINTS, type Endpoint, type RequestContext, type Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
+  ExecutionValidationError,
   OwnershipError,
   UnsupportedOperationError,
 } from "./execution.errors";
 import type { ExecutionService } from "./execution.service";
+import {WORKBENCH_OP_IDS} from "./workbench-public.transport";
 import type {
   PersistentTaskKind,
   PersistentTaskService,
@@ -15,12 +17,14 @@ import type {
 } from "./persistent-task.service";
 
 export const EXECUTION_OP_IDS = [
+  ...WORKBENCH_OP_IDS,
   "execution.tasks.create",
   "execution.tasks.list",
   "execution.tasks.get",
   "execution.tasks.confirm",
   "execution.tasks.discard",
   "execution.tasks.command",
+  "execution.tasks.transcribeCommand.v1",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -32,6 +36,19 @@ export function createExecutionTransport(
   return {
     async request(endpoint: Endpoint, input, ctx) {
       if (!ctx) throw new AuthenticationError();
+      if (endpoint.id === ENDPOINTS.commandTranscribeExecutionTaskV1.id) {
+        // 新版本入口真正消费 strict schema，拒绝后不创建或调用命令服务。
+        const parsed = ENDPOINTS.commandTranscribeExecutionTaskV1.body.safeParse(((input ?? {}) as Input).body);
+        if (!parsed.success) throw new ExecutionValidationError("转写控制请求无效，请保留原任务核对");
+        const b = parsed.data;
+        const persistent = persistentServiceFactory?.();
+        if (!persistent) throw new UnsupportedOperationError(endpoint.id);
+        const tasks = await persistent.command(ctx, {
+          ...b,
+          receiptProtocol: "transcribe-command-v1",
+        });
+        return { data: { tasks }, meta: { requestId: ctx.requestId } };
+      }
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
       const { params, query, body } = (input ?? {}) as Input;
@@ -42,10 +59,14 @@ export function createExecutionTransport(
           const b = (body ?? {}) as {
             spec?: unknown;
             projectId?: string | null;
+            contentOutputId?:string;
+            attemptId?:string;
           };
           const task = await service.create(ctx, {
             spec: b.spec,
             projectId: b.projectId ?? null,
+            ...(b.contentOutputId?{contentOutputId:b.contentOutputId}:{}),
+            ...(b.attemptId?{attemptId:b.attemptId}:{}),
           });
           return { data: task, meta: { requestId } };
         }
@@ -100,7 +121,12 @@ export function createExecutionTransport(
           return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "execution.tasks.get": {
-          const task = await service.get(ctx, p.taskId ?? "");
+          let task;
+          try { task = await service.get(ctx, p.taskId ?? ""); }
+          catch(error){
+            if(!(error instanceof OwnershipError)||!persistentServiceFactory)throw error;
+            task=await persistentServiceFactory().get(ctx,p.taskId??"");
+          }
           return { data: task, meta: { requestId } };
         }
         case "execution.tasks.confirm": {

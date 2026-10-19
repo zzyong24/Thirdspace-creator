@@ -1,0 +1,41 @@
+--- actual-v5-258b-original-not-modified
++++ budget-v3-candidate-not-executed
+@@ -1,11 +1,11 @@
+ #!/usr/bin/env python3
+ """Read-only Mach-O metadata and bytes. Does not load or execute inspected images."""
+ import os,sys,json,pathlib,hashlib,subprocess,re,datetime,struct,time
+-P=pathlib.Path(__file__).resolve().parent; INPUT=P/'PRE_METADATA_INPUT.json'; OTOOL='/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/otool-classic'; born=time.monotonic(); DEADLINE=born+900
+-C=json.loads(INPUT.read_text()); NODE=C['fixedNode']; rawdir=P/'raw-fd-v5-git-aliases';rawdir.mkdir(mode=0o700)
++P=pathlib.Path(__file__).resolve().parent; INPUT=P/'PRE_METADATA_INPUT.json'; OTOOL='/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/otool-classic'; born=time.monotonic(); known=json.loads((P/'BROWSER_DYLD_CLOSURE_CURRENT.json').read_text()); expectedPairs={(r['file'],r['arch']) for r in known['loadCommandMetadata']}; pairCapacity=len(expectedPairs); commandSeconds=120; pairStartCloseRawSeconds=120; entrySeconds=900; postSeconds=900; marginSeconds=600; outerSeconds=pairCapacity*(commandSeconds+pairStartCloseRawSeconds)+entrySeconds+postSeconds+marginSeconds; DEADLINE=born+outerSeconds
++C=json.loads(INPUT.read_text()); NODE=C['fixedNode']; rawdir=P/'raw-budget-v3-not-executed';rawdir.mkdir(mode=0o700)
+ def sha(b):return hashlib.sha256(b).hexdigest()
+ def budget():
+- if time.monotonic()>DEADLINE:raise RuntimeError('READONLY_METADATA_OUTER_900S_EXHAUSTED')
++ if time.monotonic()>DEADLINE:raise RuntimeError('READONLY_METADATA_FULL_SERIAL_OUTER_EXHAUSTED')
+ def file_row(p):
+  s=os.lstat(p)
+  if not pathlib.Path(p).is_file() or pathlib.Path(p).is_symlink():raise RuntimeError('not regular '+p)
+@@ -66,13 +66,15 @@
+  key=(file,arch)
+  if key in meta_cache:return meta_cache[key]
+  budget();
+- if time.monotonic()+120>DEADLINE:raise RuntimeError('FULL_METADATA_CHILD_120S_SLOT_UNAVAILABLE')
++ if key not in expectedPairs:raise RuntimeError('FRESH_REVIEW_REQUIRED_METADATA_PAIR_GROWTH')
++ remainingPairs=pairCapacity-len(meta_cache)
++ if time.monotonic()+remainingPairs*(commandSeconds+pairStartCloseRawSeconds)+postSeconds+marginSeconds>DEADLINE:raise RuntimeError('FULL_REMAINING_METADATA_SERIAL_SLOTS_UNAVAILABLE')
+  label=sha((file+'\0'+arch).encode())[:24];stdout=rawdir/(label+'.stdout');stderr=rawdir/(label+'.stderr');args=[OTOOL,'-arch',arch,'-l']
+  with open(file,'rb') as image,stdout.open('xb') as out,stderr.open('xb') as err:
+   sourceStat=os.stat(file);fdStat=os.fstat(image.fileno())
+   if (sourceStat.st_dev,sourceStat.st_ino)!=(fdStat.st_dev,fdStat.st_ino):raise RuntimeError('ACTUAL_METADATA_FD_INODE_MISMATCH')
+   args=args+['/dev/fd/'+str(image.fileno())]
+-  r=subprocess.run(args,pass_fds=(image.fileno(),),stdout=out,stderr=err,timeout=120,check=False,env={'PATH':'/usr/bin:/bin','LC_ALL':'C'})
++  r=subprocess.run(args,pass_fds=(image.fileno(),),stdout=out,stderr=err,timeout=commandSeconds,check=False,env={'PATH':'/usr/bin:/bin','LC_ALL':'C'})
+  rawCommands.append(dict(file=file,arch=arch,command=args,code=r.returncode,stdout=str(stdout),stdoutSha256=sha(stdout.read_bytes()),stderr=str(stderr),stderrSha256=sha(stderr.read_bytes()),processClosed=True,actualSourceStat=dict(dev=sourceStat.st_dev,ino=sourceStat.st_ino),fdReadsActualFile=True))
+  if r.returncode:raise RuntimeError('otool failed '+file+' '+arch)
+  text=stdout.read_text();loads=[];rpaths=[]
+@@ -167,4 +169,4 @@
+  if sha(pathlib.Path(r['path']).read_bytes())!=r['sha256']:raise RuntimeError('ORIGINAL_BUILDER_INPUT_DRIFT')
+ strong=[e for e in unresolved if not e.get('weakOrLazy')];activeStrong=[e for e in strong if e['activeRuntimeContext']]
+ out=dict(schemaVersion=2,task='T-1254',at=datetime.datetime.now(datetime.timezone.utc).isoformat(),fixedNode=NODE,producer=file_row(str(pathlib.Path(__file__).resolve())),metadataTool=file_row(os.path.realpath(OTOOL)),inputPrepare=file_row(str(INPUT)),rootInventory=file_row(C['inputRoots']),rootMachOFiles=sorted(roots),original80Roots=sorted(initialRoots),additionalBrowserMachORoots=sorted(r for r in roots-initialRoots if r.startswith(C['browserRoot']+os.sep)),additionalMetadataAndGitRoots=sorted(r for r in roots-initialRoots if not r.startswith(C['browserRoot']+os.sep)),gitConsumer=C['gitConsumer'],rootRoles=roles,nonSystemFiles=sorted(allfiles.values(),key=lambda r:r['file']),symlinkChain=sorted(alllinks.values(),key=lambda r:r['file']),edges=edges,loadCommandMetadata=raw,rawCommands=rawCommands,unresolved=unresolved,systemHostBoundary=dict(reason='macOS system libraries/frameworks may reside in dyld shared cache; host OS boundary, not claimed byte-sealed',edges=systemEdges),closureCompleteness=dict(status='partial-unresolved' if strong else 'resolved-static-load-command-closure',strongUnresolved=len(strong),activeStrongUnresolved=len(activeStrong),optionalUnresolved=len(unresolved)-len(strong),actualDyldLoadOrRuntimeClaimed=False,nonHostSlicesMetadataOnly=True),oldBuilderInputsUnchanged=True,noCandidateCodeExecution=True,noNetwork=True,notFinalBuiltSeal=True,elapsedSeconds=time.monotonic()-born)
+-budget();output=P/'BROWSER_DYLD_CLOSURE_CURRENT.json';output.write_text(json.dumps(out,indent=2)+'\n');print(json.dumps(dict(roots=len(roots),files=len(allfiles),links=len(alllinks),edges=len(edges),systemEdges=len(systemEdges),unresolved=len(unresolved),activeStrongUnresolved=len(activeStrong),manifestSha256=sha(output.read_bytes()),metadataOnly=True)))
++budget();output=P/'BROWSER_DYLD_CLOSURE_BUDGET_V3_NOT_FINAL.json';output.write_text(json.dumps(out,indent=2)+'\n');print(json.dumps(dict(roots=len(roots),files=len(allfiles),links=len(alllinks),edges=len(edges),systemEdges=len(systemEdges),unresolved=len(unresolved),activeStrongUnresolved=len(activeStrong),manifestSha256=sha(output.read_bytes()),metadataOnly=True)))

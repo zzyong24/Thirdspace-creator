@@ -1,3 +1,4 @@
+import type {Db} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   tagEntityType,
@@ -47,6 +48,7 @@ export interface TaxonomyService {
     ctx: RequestContext,
     input: { entityType: string; entityId: string; tagId: string },
   ): Promise<void>;
+  listAssetTagSummaries(ctx:RequestContext,assetIds:string[]):Promise<Record<string,Array<{id:string;name:string}>>>;
   listTagsForEntity(
     ctx: RequestContext,
     ref: { entityType: string; entityId: string },
@@ -96,9 +98,24 @@ function isUniqueViolation(err: unknown): boolean {
   );
 }
 
+export interface TaxonomyEntityAccess {
+  /** 原资产owner服务的批量可读门；不调用逐实体guard或直接读别的repo。 */
+  readableAssetIds?(ctx:RequestContext,assetIds:string[]):Promise<string[]>;
+  assertEntityReadable(ctx: RequestContext, entityType: TagEntityType, entityId: string): Promise<unknown>;
+  assertEntityWritable(ctx: RequestContext, entityType: TagEntityType, entityId: string, transaction?: Db): Promise<unknown>;
+}
 export function createTaxonomyService(
   repo: TaxonomyRepository,
+  access?: TaxonomyEntityAccess,
 ): TaxonomyService {
+  async function guard(ctx: RequestContext, entityType: string, entityId: string, write = false) {
+    assertEntityType(entityType);
+    if (write) await repo.assertWritableScope(ctx);
+    if (access) return (write ? access.assertEntityWritable : access.assertEntityReadable)(ctx, entityType as TagEntityType, entityId);
+    // Compatibility for the pre-workspace internal foundation fixtures only.
+    // Public application entry points inject actual entity service ports.
+    if (ctx.groupId || ctx.accountId) throw new TagNotFoundError("实体归属校验端口不可用");
+  }
   return {
     async createTag(ctx, { name, color, kind }) {
       const trimmed = name.trim();
@@ -158,55 +175,51 @@ export function createTaxonomyService(
     async assignTags(ctx, { entityType, entityId, tagIds }) {
       assertEntityType(entityType);
       if (entityType === "asset") return (await repo.assignAssetTags(ctx,entityId,tagIds)).map(toEntityTagDTO);
-      // Verify ownership of every tag up front (unknown/foreign → 404) so a
-      // partial assign never lands.
-      for (const tagId of tagIds) {
-        const owned = await repo.findTag(ctx, tagId);
-        if (!owned) throw new TagNotFoundError(`Tag not found: ${tagId}`);
-      }
-      const out: EntityTagResource[] = [];
-      for (const tagId of tagIds) {
-        const before = await repo.listEntityTagsForTag(ctx, tagId, {});
-        const existed = before.some(
-          (e) => e.entityType === entityType && e.entityId === entityId,
-        );
-        const row = await repo.insertEntityTag(ctx, {
-          tagId,
-          entityType,
-          entityId,
-        });
-        // Only bump usage on a genuinely new assignment (idempotent re-assign
-        // must not inflate the counter).
-        if (!existed) await repo.bumpUsage(ctx, tagId, +1);
-        out.push(toEntityTagDTO(row));
-      }
-      return out;
+      await guard(ctx, entityType, entityId, true);
+      return (await repo.assignEntityTags(ctx, {entityType, entityId, tagIds}, access ? tx => access.assertEntityWritable(ctx, entityType as TagEntityType, entityId, tx) : undefined)).map(toEntityTagDTO);
     },
 
     async removeTag(ctx, { entityType, entityId, tagId }) {
       assertEntityType(entityType);
       if (entityType === "asset") return repo.removeAssetTag(ctx,entityId,tagId);
-      const removed = await repo.deleteEntityTag(ctx, {
-        tagId,
-        entityType,
-        entityId,
-      });
-      // Idempotent detach: already-absent assignment is a no-op (no 404). Only
-      // decrement usage when a row was actually removed.
-      if (removed) await repo.bumpUsage(ctx, tagId, -1);
+      await guard(ctx, entityType, entityId, true);
+      await repo.removeEntityTagAndUsage(ctx, {tagId, entityType, entityId}, access ? tx => access.assertEntityWritable(ctx, entityType as TagEntityType, entityId, tx) : undefined);
+    },
+
+    async listAssetTagSummaries(ctx,assetIds) {
+      // SEMANTIC_BOUNDARY_ALLOW: 仅按真实ID去重并复核授权范围/类型，不做标签含义或创作选择。
+      const ids=[...new Set(assetIds)];
+      if(ids.length>200)throw new InvalidEntityRefError("素材标签批量读取超过范围");
+      const result:Record<string,Array<{id:string;name:string}>>=Object.create(null);
+      if(!ids.length)return result;
+      if(!access?.readableAssetIds)throw new InvalidEntityRefError("素材标签读取端口不可用");
+      const readable=await access.readableAssetIds(ctx,ids),requested=new Set(ids);
+      if(readable.some(id=>!requested.has(id)))throw new InvalidEntityRefError("素材标签读取范围不一致");
+      for(const id of readable)result[id]=[];
+      const rows=await repo.listAssetTagSummaries(ctx,readable);
+      for(const row of rows){const labels=result[row.entityId];if(labels)labels.push({id:row.id,name:row.name});}
+      return result;
     },
 
     async listTagsForEntity(ctx, { entityType, entityId }) {
       assertEntityType(entityType);
+      await guard(ctx, entityType, entityId);
       const rows = await repo.listTagsForEntity(ctx, { entityType, entityId });
       return rows.map(toTagDTO);
     },
 
     async listEntitiesForTag(ctx, tagId, query) {
+      if (!access && (ctx.groupId || ctx.accountId)) throw new TagNotFoundError("实体归属校验端口不可用");
       const owned = await repo.findTag(ctx, tagId);
       if (!owned) throw new TagNotFoundError();
-      const rows = await repo.listEntityTagsForTag(ctx, tagId, query);
-      return rows.map(toEntityTagDTO);
+      const rows = await repo.listEntityTagsForTag(ctx, tagId, {});
+      const visible: EntityTagRow[] = [];
+      for (const row of rows) {
+        try { await guard(ctx, row.entityType, row.entityId); visible.push(row); }
+        catch (error) { if (!(typeof error === "object" && error && "code" in error && error.code === "OwnershipError")) throw error; }
+      }
+      const offset = query.offset ?? 0;
+      return visible.slice(offset, query.limit === undefined ? undefined : offset + query.limit).map(toEntityTagDTO);
     },
   };
 }

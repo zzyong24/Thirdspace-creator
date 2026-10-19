@@ -1,0 +1,90 @@
+{
+  "checks": [
+    {
+      "label": "collection",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/node_modules/vitest/vitest.mjs",
+        "list",
+        "--config",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/implementation/vitest.config.mts",
+        "--json"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+      "budgetSeconds": 600,
+      "exitCode": 0,
+      "elapsedSeconds": 1.8814405409502797,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/unit/collection.log",
+      "logSha256": "8aef23993028102b29af4954984ae693b9d7fc6b88898e9158f1bcf8bab55142",
+      "supplierModels": 0,
+      "sharedDistWrites": 0
+    },
+    {
+      "label": "worker-type",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false",
+        "--incremental",
+        "false",
+        "-p",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/tsconfig.json"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+      "budgetSeconds": 900,
+      "exitCode": 0,
+      "elapsedSeconds": 10.17259695904795,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/unit/worker-type.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "supplierModels": 0,
+      "sharedDistWrites": 0
+    },
+    {
+      "label": "owned-build",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/implementation/build-owned-worker.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+      "budgetSeconds": 1800,
+      "exitCode": 0,
+      "elapsedSeconds": 0.40048674994613975,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/unit/owned-build.log",
+      "logSha256": "0776bdfe16067bbe3d53f5102a15110a3e4f9bebd99a50929f96c9bca587223f",
+      "supplierModels": 0,
+      "sharedDistWrites": 0
+    },
+    {
+      "label": "unit",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/implementation/vitest.config.mts",
+        "--reporter=json",
+        "--outputFile=/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/unit/vitest-result.json"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+      "budgetSeconds": 27120,
+      "exitCode": 0,
+      "elapsedSeconds": 3.11203158297576,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/unit/unit.log",
+      "logSha256": "4be56d1c8c4a4ad589c60d99fec38d07550835a38ee2de7f1b306f205b747667",
+      "supplierModels": 0,
+      "sharedDistWrites": 0
+    }
+  ],
+  "unitPassed": 72,
+  "unitFailed": 0,
+  "workerType": 0,
+  "ownedWorkerInputsChanged": [
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-agentic-worker-run.ts",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts"
+  ],
+  "originalPublicTestAndIOUnchanged": true,
+  "frontendTypeInheritedFromRedAssembly": "新publictest未改；当场52.4737498s实际0；本次修改仅worker两源，worker fulltype另10.1725969s实际0",
+  "sharedDistWrites": 0
+}

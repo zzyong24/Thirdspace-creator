@@ -1,0 +1,53 @@
+{
+  "observedAt": "2026-10-18T22:52:27.370683+00:00",
+  "attemptId": "collection-92ecb053-281",
+  "windowStart": "2026-10-18T22:45:42.097543+00:00",
+  "windowEnd": "2026-10-18T22:49:40.784327+00:00",
+  "decoderSha256": "e7cdb7175e9731980d0f50091caa945c326ac7d54d53c34a4e7bd5ff9b279a67",
+  "ciphertextCount": 1,
+  "logs": [
+    {
+      "sourceName": "sidecar-2026-10-18-2.log.enc",
+      "cipherSnapshotSha256": "cb9410addc95260c43c64f066998207e8160361863d0e9e7b9d23df1336c7bd0",
+      "decoderExitCode": 0,
+      "decoderStderrBytes": 0,
+      "truncationMarkerCount": 0,
+      "decodedLineCount": 47,
+      "unmatchedNativeEventsDropped": 0,
+      "oversizeBlocksDropped": 0,
+      "incompleteEventAtEnd": false,
+      "safeEvents": [
+        {
+          "timestamp": "2026-10-18T22:47:48.382Z",
+          "attemptId": "collection-92ecb053-281",
+          "platform": "wechatVideo",
+          "stage": "prepare",
+          "kind": "channelsDaily",
+          "code": "REPORT_LINK_MISSING",
+          "exceptionName": "WechatBrowserSourceError",
+          "entryObservation": {
+            "entryPhase": "wait_entry_or_centre",
+            "entryVisibleCount": 0,
+            "centreVisibleCount": 0,
+            "centreClicked": false
+          }
+        }
+      ]
+    }
+  ],
+  "strictAttemptIdAndTimeWindowFilter": true,
+  "keyValuesNotReadCopiedOrPrintedByHelper": true,
+  "rawDecoderStdoutStderrNeverPersisted": true,
+  "fieldsOnly": [
+    "timestamp",
+    "attemptId",
+    "platform",
+    "stage",
+    "kind",
+    "code",
+    "exceptionName",
+    "failureKind",
+    "entryObservation"
+  ],
+  "noSecondCollection": true
+}

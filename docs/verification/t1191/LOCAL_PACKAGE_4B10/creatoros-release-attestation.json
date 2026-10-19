@@ -1,0 +1,32 @@
+{
+  "schema": "thirdspace-release-attestation/v1",
+  "generatedAt": "2026-10-10T03:57:06.224Z",
+  "releaseProfile": "release-fast",
+  "productIdentity": {
+    "schema": "thirdspace-product-manifest/v1",
+    "productRef": "creatoros",
+    "appIdentifier": "cloud.aitongban.creatoros",
+    "projectKey": "creatoros",
+    "manifestPath": "creatoros-product-manifest.json",
+    "manifestSha256": "sha256:42a9b39118ac1e6b2a7d9110e2675d4c2c107ac100f4902a06112af9ed0beb8c",
+    "binaryPath": "CreatorOS",
+    "binarySha256": "sha256:6660986e09570348f8b5cf87e0f3385a5c922636c5742780fbf83be65d53f6bf",
+    "binaryContainsCanonicalManifest": true
+  },
+  "artifacts": [
+    {
+      "path": "dmg/CreatorOS_1.2.0_aarch64.dmg",
+      "sha256": "sha256:d91079d6542407a6f5c3232f35cd815cfaff259c51fa9e40e5ccf030eb10a1d1",
+      "bytes": 841223134
+    }
+  ],
+  "releaseCommits": {
+    "creator": "4b10e89e226cd16ed12744d6c885931d3a09f0dd",
+    "growth": null,
+    "activity": null,
+    "complete": false
+  },
+  "claimEnabled": false,
+  "publishAuthorized": false,
+  "publishBlocker": "三仓 release commit 未完整绑定，且 T-575 live program-gate GO 尚未附着"
+}

@@ -224,22 +224,25 @@ export async function resolveMultimodalSpec(
   ctx: RequestContext,
   capability: MultimodalCapability,
   deps: ResolveMultimodalDeps,
+  source?:'official'|'self',
 ): Promise<MultimodalSpec> {
   const { env } = deps;
   const kind = CAP_TO_KIND[capability];
-  const channel = await deps.getChannelModelConfig?.();
-  const selectedOptionId = await deps.getChannelModelSelection?.(capability);
+  const channel = source==='self'?null:await deps.getChannelModelConfig?.();
+  const selectedOptionId = source==='self'?undefined:await deps.getChannelModelSelection?.(capability);
   if (channel) {
     const route = resolveChannelCapabilityRoute(channel, capability, {
       selectedOptionId,
     });
     if (route && route.kind === kind) {
-      const credential = route.serviceId
+      // per_request短时凭据在真实派发前领取，不触碰本机长期凭据读取器。
+      const credential = route.credentialLifecycle !== "per_request" && route.serviceId
         ? await deps.getChannelModelCredential?.(route.serviceId)
         : null;
       return channelMultimodalSpecFromRoute(route, credential);
     }
   }
+  if(source==='official')throw new MultimodalConfigError('所选官方模型尚未提供该能力，请检查官方配置；来源未切换。');
 
   // Tier 1 — 用户配的 DB row(先 per-capability,再该 kind 的默认行)。
   const fromCap = tryDbRow(await deps.getModelConfig(ctx, capability), kind, env);
@@ -321,7 +324,11 @@ function resolveWhisperLevel(env: Record<string, string | undefined>): string {
 export async function resolveTranscribeSpec(
   ctx: RequestContext,
   deps: ResolveMultimodalDeps,
+  source?:'official'|'self'|'local',
 ): Promise<MultimodalSpec> {
+  if(source==='local')return {provider:WHISPER_LOCAL_PROVIDER,baseUrl:null,model:resolveWhisperLevel(deps.env),token:'',kind:'audio'};
+  // 显式来源的本地降级由原任务冻结策略决定，不能在这里丢失已选来源或未知远端回合。
+  if(source!==undefined)return resolveMultimodalSpec(ctx,'transcribe.audio',deps,source);
   try {
     return await resolveMultimodalSpec(ctx, "transcribe.audio", deps);
   } catch {

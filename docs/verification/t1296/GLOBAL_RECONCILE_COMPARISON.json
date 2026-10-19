@@ -1,0 +1,44 @@
+{
+  "fullRunExitCode": 1,
+  "fullRunErrorCount": 30,
+  "previousErrorCount": 29,
+  "newKeys": [
+    "T-1296"
+  ],
+  "existingKeys": [
+    "LED-006",
+    "LED-018",
+    "LED-031",
+    "LED-041",
+    "LED-046",
+    "LED-051",
+    "LED-052",
+    "LED-058",
+    "T-1021",
+    "T-1072-owned-devices",
+    "T-1255",
+    "T-635",
+    "T-642",
+    "T-645",
+    "T-652",
+    "T-656",
+    "T-691",
+    "T-694",
+    "T-703",
+    "T-707",
+    "T-726",
+    "T-768",
+    "T-816",
+    "T-819",
+    "T-824",
+    "T-858",
+    "T-859",
+    "T-915",
+    "backlog-health"
+  ],
+  "resolvedDuringRun": {
+    "T-1296": "全局检查先读取原REV:3d51ca534866；独立复审后reviewctl登记REV:54efa4aaf044，随后真实auditReviewReceipts无T-1296错误，见review-receipts-current.json"
+  },
+  "noNewUnresolvedTaskGate": true,
+  "note": "不改写完整运行的30ERROR；其余29项既有门身份保持，T-1292跟踪。没有再次执行耗时全局suite。"
+}

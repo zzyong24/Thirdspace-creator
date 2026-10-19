@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { executionTaskResourceV2 } from "@creatoros/contract";
 
 import {
   IntelligenceWorkbench,
@@ -437,7 +438,7 @@ describe("T-482 内容雷达工作区", () => {
         "热点宝授权已确认，可以保存并开始同步。",
       ),
     ).toBeInTheDocument();
-    expect(save).toBeEnabled();
+    await waitFor(()=>expect(save).toBeEnabled());
 
     await userEvent.click(save);
     await waitFor(() => {
@@ -1922,11 +1923,11 @@ describe("T-482 内容雷达工作区", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "生成选题候选" }),
+      screen.getByRole("button", { name: "生成我的改写稿" }),
     ).toBeEnabled();
   });
 
-  it("[T-913] 当前账号没有定位时给出可点击的定位中心恢复入口", () => {
+  it("[T-1017] 当前账号没有定位仍可直接生成通用改写稿", () => {
     render(
       <IntelligenceWorkbench
         accountId="account-1"
@@ -1953,13 +1954,8 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    expect(screen.getByText("当前账号还没有可用定位。")).toBeInTheDocument();
-    const recovery = document.querySelector(
-      '[data-slot="radar-positioning-recovery-link"]',
-    ) as HTMLAnchorElement;
-    expect(recovery).not.toBeNull();
-    expect(recovery.getAttribute("href")).toBe("/positioning");
-    expect(screen.getByRole("button", { name: "生成选题候选" })).toBeDisabled();
+    expect(screen.getByText("当前没有可用账号定位；生成时会明确标注为通用改写稿。")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "生成我的改写稿" })).toBeEnabled();
   });
 
   it("[T-622] 逐字稿和选题状态筛选、收藏排序统一交给服务端查询", async () => {
@@ -2171,7 +2167,7 @@ describe("T-482 内容雷达工作区", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("[T-546] 生成选题候选立即显示局部进度并阻止重复创建，完成后回显编辑卡", async () => {
+  it("[T-546] 生成我的改写稿立即显示局部进度并阻止重复创建，完成后回显编辑卡", async () => {
     const stub = api();
     const readyDetail: RadarItemDetail = {
       ...detail,
@@ -2235,19 +2231,16 @@ describe("T-482 内容雷达工作区", () => {
     );
 
     const generate = screen.getByRole("button", {
-      name: "生成选题候选",
+      name: "生成我的改写稿",
     });
     fireEvent.click(generate);
-    fireEvent.click(
-      screen.getByRole("button", { name: "确认生成" }),
-    );
 
     expect(stub.previewTopic).toHaveBeenCalledTimes(1);
     expect(
       await screen.findByRole("status"),
-    ).toHaveTextContent("正在生成候选");
+    ).toHaveTextContent("正在生成改写稿");
     expect(
-      screen.getByText(/正在结合当前定位和逐字稿生成/),
+      screen.getByText(/任务已创建；完成后会自动显示可编辑、可复制的改写稿/),
     ).toBeInTheDocument();
     expect(
       screen.getByText("后台完成后会自动更新当前选题，无需切换选题或页面。"),
@@ -2344,10 +2337,7 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "生成选题候选" }),
-    );
-    fireEvent.click(
-      screen.getByRole("button", { name: "确认生成" }),
+      screen.getByRole("button", { name: "生成我的改写稿" }),
     );
 
     await act(async () => {
@@ -2829,25 +2819,22 @@ describe("T-482 内容雷达工作区", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "生成选题候选" }),
-    );
-    await userEvent.click(
-      screen.getByRole("button", { name: "确认生成" }),
+      screen.getByRole("button", { name: "生成我的改写稿" }),
     );
 
     expect(
-      await screen.findByText("模型没有返回可解析的选题结构"),
+      (await screen.findAllByText("模型没有返回可解析的选题结构"))[0],
     ).toBeInTheDocument();
     expect(screen.getByText("错误代码：MODEL_PROTOCOL_ERROR")).toBeInTheDocument();
     expect(
       screen.queryByText("候选仍在后台生成"),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "重新生成" }),
+      screen.getByRole("button", { name: "重新生成改写稿" }),
     ).toBeEnabled();
   });
 
-  it("[T-646] 改写阶段失败保留已有结果，并可只重试未完成部分", async () => {
+  it("[T-1022] 改写阶段暂时失败保留已有结果并由原任务自动恢复", async () => {
     const stub = api();
     vi.mocked(stub.previewTopic).mockResolvedValue({
       transform: {
@@ -2883,9 +2870,10 @@ describe("T-482 内容雷达工作区", () => {
             {
               id: "transform-partial",
               status: "candidate",
-              taskStatus: "failed",
-              taskErrorCode: "TOPIC_PREVIEW_FAILED",
-              taskErrorMessage: "改写初稿暂未完成",
+              taskStatus: "queued",
+              taskRuntimeStatus: "retry_wait",
+              taskErrorCode: "TOPIC_PREVIEW_OUTPUT_INVALID",
+              taskErrorMessage: "模型输出不完整，系统正在继续生成选题卡",
               targetTopicId: null,
               outputSnapshot: {
                 hook: "反常识开场",
@@ -2926,34 +2914,50 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByDisplayValue("先稳定流程，再选择模型"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("拆解和选题已保留，改写初稿待重试"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("改写初稿暂未完成")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "确认写入选题池" }),
-    ).toBeDisabled();
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "重试生成选题卡" }),
-    );
-
-    await waitFor(() =>
-      expect(stub.previewTopic).toHaveBeenCalledWith(
-        expect.objectContaining({
-          itemId: "item-1",
-          sourceSnapshotId: "snapshot-partial",
-          positioningVersionId: "positioning-1",
-          idempotencyKey: expect.any(String),
-        }),
-      ),
-    );
-    expect(screen.getByText("反常识开场")).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue("先稳定流程，再选择模型"),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText("拆解和选题已保留，正在重试改写初稿"),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "重试生成选题卡" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "确认写入选题池" })).toBeDisabled();
+
+    expect(stub.previewTopic).not.toHaveBeenCalled();
+  });
+
+  it("[T-1022] 没有可用模型时保留原选题任务并直达模型设置", () => {
+    const stub = api();
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          transcript: { ...detail.transcript, status: "done", text: "来源完整逐字稿" },
+          snapshots: [{
+            id: "snapshot-model-setup",
+            title: "真实作品",
+            capturedAt: "2026-07-23T12:00:00.000Z",
+            finalUrl: detail.item.canonicalUrl,
+          }],
+          transforms: [{
+            id: "transform-model-setup",
+            status: "candidate",
+            taskStatus: "blocked",
+            taskRuntimeStatus: "waiting_user",
+            taskErrorCode: "MODEL_CONFIGURATION_REQUIRED",
+            taskErrorMessage: "还没有可用的 AI 模型，请完成模型设置后继续原任务",
+            outputSnapshot: null,
+            targetTopicId: null,
+          }],
+        }}
+        api={stub}
+        positioningVersionId="positioning-1"
+      />,
+    );
+
+    expect(screen.getByText("完成 AI 设置后继续")).toBeInTheDocument();
+    const settings = document.querySelector('[data-slot="radar-model-settings-link"]') as HTMLAnchorElement;
+    expect(settings?.getAttribute("href")).toBe("/settings?highlight=text-model");
+    expect(screen.queryByRole("button", { name: "重新生成" })).not.toBeInTheDocument();
   });
 
   it.each([
@@ -3109,6 +3113,9 @@ describe("T-482 内容雷达工作区", () => {
 
   it("可选择分类粘贴分享文本单条建档，且不会自动发起转写", async () => {
     const stub = api();
+    stub.importDouyinShare = vi.fn().mockResolvedValue({ task: {
+      id: "import-task", userId: "user-1", accountId: "account-1", kind: "share_import", ownerType: "item_import", ownerId: "import-1", status: "succeeded", createdAt: "2026-09-30T00:00:00Z", updatedAt: "2026-09-30T00:00:00Z",
+    } });
     render(
       <IntelligenceWorkbench
         accountId="account-1"
@@ -3142,6 +3149,107 @@ describe("T-482 内容雷达工作区", () => {
       }),
     );
     expect(stub.enqueueTranscript).not.toHaveBeenCalled();
-    expect(refresh).toHaveBeenCalled();
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 });
+
+
+it("[T-1022] 空组真实工作台可新建分类并预检公开网页，无须绑定平台账号", async () => {
+  const stub=api();vi.mocked(stub.listCollectors).mockResolvedValue([]);
+  render(<IntelligenceWorkbench groupId="empty-group" workspace={workspace} items={[]} initialDetail={null} api={stub}/>);
+  fireEvent.click(screen.getByRole("button",{name:"新建分类"}));
+  fireEvent.change(screen.getByLabelText("分类名称"),{target:{value:"组内公开来源"}});
+  fireEvent.click(screen.getByRole("button",{name:"创建分类"}));
+  await waitFor(()=>expect(stub.createCollection).toHaveBeenCalledWith(expect.objectContaining({groupId:"empty-group",accountId:undefined,name:"组内公开来源"})));
+  fireEvent.click(screen.getByRole("button",{name:"添加来源"}));
+  const dialog=screen.getByRole("dialog");
+  const input=within(dialog).getByPlaceholderText(/https/);
+  fireEvent.change(input,{target:{value:"https://example.com/public"}});
+  fireEvent.click(within(dialog).getByRole("button",{name:"测试来源"}));
+  await waitFor(()=>expect(stub.previewWeb).toHaveBeenCalledWith(expect.objectContaining({groupId:"empty-group",accountId:undefined,url:"https://example.com/public"})));
+});
+
+it("[T-1022] 两个空组切换卸载旧组列表及详情，旧筛选与迟到列表不污染新组", async () => {
+  const stub=api();let finish!:(value:Awaited<ReturnType<RadarApi["listItems"]>>)=>void;
+  vi.mocked(stub.listItems).mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+  const mounted=render(<IntelligenceWorkbench groupId="group-a" workspace={workspace} items={[{item:detail.item,latestMetric:null,sourceCount:0}]} initialDetail={detail} api={stub}/>);
+  fireEvent.click(screen.getByRole("button",{name:/我的收藏/}));
+  mounted.rerender(<IntelligenceWorkbench groupId="group-b" workspace={workspace} items={[]} initialDetail={null} api={stub}/>);
+  await act(async()=>{finish({items:[{item:detail.item,latestMetric:null,sourceCount:0}],page:1,pageSize:100,total:1,hasMore:false});});
+  expect(screen.queryByText("真实作品")).toBeNull();
+  expect(screen.getByText("先添加一个真实来源")).toBeInTheDocument();
+});
+
+it('[T-1022] 空组已有公开素材可以提交改写候选，未保存定位不要求平台账号',async()=>{
+ const stub=api();const ready={...detail,snapshots:[{id:'group-snapshot',title:'真实作品',capturedAt:'2026-10-04T00:00:00Z',finalUrl:detail.item.canonicalUrl}],transcript:{...detail.transcript,status:'done' as const,text:'已有公开素材的完整逐字稿'}};
+ vi.mocked(stub.getItem).mockResolvedValue(ready);
+ vi.mocked(stub.previewTopic).mockResolvedValue({transform:{id:'group-transform',status:'candidate',outputSnapshot:null,targetTopicId:null},task:{id:'group-task',status:'queued'}});
+ render(<IntelligenceWorkbench groupId='empty-group' workspace={workspace} items={[]} initialDetail={ready} api={stub}/>);
+ await userEvent.click(screen.getByRole('button',{name:'生成我的改写稿'}));
+ expect(stub.previewTopic).toHaveBeenCalledWith(expect.objectContaining({itemId:detail.item.id,sourceSnapshotId:'group-snapshot'}));
+ expect(vi.mocked(stub.previewTopic).mock.calls[0]![0]).not.toHaveProperty('accountId');
+ expect(vi.mocked(stub.previewTopic).mock.calls[0]![0]).not.toHaveProperty('positioningVersionId');
+});
+
+  it("分享文本 queued 回执保持排队，未完成时不刷新或自动转写", async () => {
+    const stub = api();
+    vi.mocked(stub.importDouyinShare).mockResolvedValue({
+      task: executionTaskResourceV2.parse({
+        id: "share-import-1",
+        userId: "user-1",
+        accountId: "account-1",
+        kind: "share_import",
+        ownerType: "item_import",
+        ownerId: "share-import-1",
+        status: "queued",
+        priority: 0,
+        idempotencyKey: "share-import-1",
+        checkpoint: null,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+        attempt: 0,
+        maxAttempts: 3,
+        errorCode: null,
+        errorMessage: null,
+        costEstimate: null,
+        createdAt: "2026-09-20T00:00:00.000Z",
+        updatedAt: "2026-09-20T00:00:00.000Z",
+      }),
+    });
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "粘贴分享链接" }),
+    );
+    expect(
+      screen.getByText(/已有博主就把视频归入其作品/),
+    ).toBeInTheDocument();
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "抖音分享文本" }),
+      "复制打开抖音 https://v.douyin.com/iFooBar/",
+    );
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "导入到分类" }),
+      "collection-darkhorse",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "识别并建档" }));
+
+    expect(stub.importDouyinShare).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accountId: "account-1",
+        collectionId: "collection-darkhorse",
+        shareInput: expect.stringContaining("v.douyin.com"),
+      }),
+    );
+    expect(stub.enqueueTranscript).not.toHaveBeenCalled();
+    expect(await screen.findByText("已排队")).toBeInTheDocument();
+    expect(refresh).not.toHaveBeenCalled();
+  });

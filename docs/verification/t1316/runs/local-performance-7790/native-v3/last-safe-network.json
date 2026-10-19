@@ -1,0 +1,50 @@
+{
+  "denied": [],
+  "ops": [
+    {
+      "operation": "accountGroups.list",
+      "method": "POST",
+      "at": "2026-10-16T15:53:56.724Z"
+    },
+    {
+      "operation": "outputs.production.editor.get",
+      "method": "POST",
+      "at": "2026-10-16T15:53:56.784Z"
+    },
+    {
+      "operation": "settings.modelRouting.get",
+      "method": "POST",
+      "at": "2026-10-16T15:53:56.786Z"
+    },
+    {
+      "operation": "ai.conversations.list",
+      "method": "POST",
+      "at": "2026-10-16T15:53:56.788Z"
+    },
+    {
+      "operation": "ai.tasks.list",
+      "method": "POST",
+      "at": "2026-10-16T15:53:56.788Z"
+    },
+    {
+      "operation": "materialLinks.list",
+      "method": "POST",
+      "at": "2026-10-16T15:53:56.839Z"
+    },
+    {
+      "operation": "outputs.get",
+      "method": "POST",
+      "at": "2026-10-16T15:53:56.840Z"
+    },
+    {
+      "operation": "outputs.production.editor.save",
+      "method": "POST",
+      "at": "2026-10-16T15:53:57.911Z"
+    },
+    {
+      "operation": "outputs.production.editor.save",
+      "method": "POST",
+      "at": "2026-10-16T15:53:58.049Z"
+    }
+  ]
+}

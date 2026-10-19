@@ -1,0 +1,103 @@
+import {generateCodexImage} from './codex-image-generation';
+import {codexAssetCredentialSchema} from '@creatoros/contract/execution-worker';
+import {setTimeout as delay} from "node:timers/promises";
+import {z} from "zod";
+import {assetGenerationInputSchema,assetCredentialSchema,assetResultReceiptSchema,workerReservationSchema,workerStartReceiptSchema,providerJobSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
+import {generateImage,generateVideo,type GeneratedAsset} from "../runtime/multimodal-factory";
+import {createMinimaxAdapter} from "../runtime/multimodal-minimax";
+import {createOpenaiImagesAdapter} from "../runtime/multimodal-openai-images";
+import {createOmnihiVideoAdapter} from "../runtime/multimodal-omnihi";
+import {classifyLlmError,getRetryAfterMs} from "../runtime/retry-policy";
+import {GenerationFailure,generationFailure} from "./generation-error";
+type Input=z.infer<typeof assetGenerationInputSchema>;
+type Credential=z.infer<typeof assetCredentialSchema>;
+const recoverySchema=z.discriminatedUnion("status",[z.object({status:z.literal("committed"),receipt:assetResultReceiptSchema}).strict(),z.object({status:z.enum(["missing","bytes_missing"])}).strict()]);
+type Call=(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>;
+type Generate=(input:Input,spec:Credential,signal:AbortSignal,options:{resumeJobId?:string;idempotencyKey:string;onJobSubmitted:(id:string)=>Promise<void>;referenceImage?:{bytes:Uint8Array;mimeType:string}})=>Promise<GeneratedAsset>;
+export const generateAssetInWorkerRuntime:Generate=async(input,spec,signal,options)=>{
+ if("engine" in input)throw new Error("CODEX_IMAGE_REQUIRES_NATIVE_TRANSPORT");
+ const fetchBound:typeof fetch=(url,init)=>{signal.throwIfAborted();return fetch(url,{...init,signal});};
+ const sleep=(ms:number)=>delay(ms,undefined,{signal});
+ const omnihi=createOmnihiVideoAdapter({fetch:fetchBound,sleep,pollIntervalMs:5000,maxPollAttempts:120,maxTransientAttempts:1});
+ const registry={minimax:createMinimaxAdapter({fetch:fetchBound,sleep,pollIntervalMs:5000,maxPollAttempts:120,h3MaxPollAttempts:240}),openai:createOpenaiImagesAdapter({fetch:fetchBound,sleep,maxTransientAttempts:1}),omnihi,seedance:omnihi,seeddance:omnihi};
+ const result=await (input.mediaKind==="image"?generateImage(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,idempotencyKey:options.idempotencyKey,...(options.referenceImage?{referenceImage:options.referenceImage}:{})},registry):generateVideo(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,durationSec:input.durationSec,resolution:input.resolution,legacyPlain:!input.mode,signal,resumeJobId:options.resumeJobId,idempotencyKey:options.idempotencyKey,onJobSubmitted:options.onJobSubmitted,...(options.referenceImage?{firstFrame:options.referenceImage}:{})},registry));
+ signal.throwIfAborted();return result;
+};
+/** 恢复先于供应商动作；只使用后端持久化的原调用和原任务号。 */
+export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,generateAsset:Generate=generateAssetInWorkerRuntime,readOwnedReference?: (callId:string,signal:AbortSignal)=>Promise<{bytes:Uint8Array;mimeType:string}|undefined>){
+ const reservation=workerReservationSchema.parse(await call("reserveAssetCall",{},signal)),callId=reservation.callId;
+ if("engine" in input){
+  if(!['reserved','started','unknown','settled'].includes(reservation.status))throw new GenerationFailure('unknown_result','CODEX_IMAGE_CALL_UNKNOWN');
+  if(reservation.status!=='reserved'){
+   const recovered=recoverySchema.parse(await call('recoverAssetResult',{callId},signal));
+   if(recovered.status==='committed')return {callId,text:JSON.stringify(recovered.receipt)};
+  }
+  const credential=codexAssetCredentialSchema.parse(await call('resolveAssetCredential',{callId},signal));
+  if(credential.runtimeVersion!==input.runtimeVersion||(input.requestedModel!==undefined&&credential.requestedModel!==input.requestedModel))throw new GenerationFailure('waiting_user','CODEX_IMAGE_IDENTITY_MISMATCH');
+  let reference:{bytes:Uint8Array;mimeType:string}|undefined;
+  if(readOwnedReference)reference=await readOwnedReference(callId,signal);
+  else if(input.reference)reference=z.object({bytes:z.instanceof(Uint8Array),mimeType:z.string()}).parse(await call('readAssetReference',{callId},signal));
+  if(reservation.status==='reserved')workerStartReceiptSchema.parse(await call('startAssetCall',{callId},signal));
+  try{
+   const result=await generateCodexImage({...input,...(credential.requestedModel?{requestedModel:credential.requestedModel}:{})},callId,signal,call,reservation.status!=='reserved',reference);
+   try{
+    const receipt=assetResultReceiptSchema.parse(await call('saveAssetResult',{callId,bytes:result.assetBytes},signal));
+    return {callId,text:JSON.stringify(receipt)};
+   }catch(error){
+    signal.throwIfAborted();const saved=recoverySchema.parse(await call('recoverAssetResult',{callId},signal));
+    if(saved.status!=='committed')throw error;
+    return {callId,text:JSON.stringify(saved.receipt)};
+   }
+  }catch(error){await call('settleAssetCall',{callId,status:'unknown'}).catch(()=>{});throw error;}
+ }
+ let started=false,jobKnown=false;
+ try{
+  let job:z.infer<typeof providerJobSchema>|null=null;
+  if(["started","unknown","settled"].includes(reservation.status)){
+   started=true;
+   const recovery=recoverySchema.parse(await call("recoverAssetResult",{callId},signal));
+   if(recovery.status==="committed")return {callId,text:JSON.stringify(recovery.receipt)};
+   const raw=await call("readAssetProviderJob",{callId},signal);job=raw===null?null:providerJobSchema.parse(raw);
+   if(!job || input.mediaKind!=="video")throw new GenerationFailure("unknown_result","ASSET_ORIGINAL_RESULT_UNKNOWN");
+   jobKnown=true;
+   if(job.provider!==input.provider || job.model!==input.model || job.baseUrl!==input.baseUrl || job.serviceId!==input.serviceId)throw new GenerationFailure("unknown_result","ASSET_JOB_IDENTITY_MISMATCH");
+  }else if(reservation.status!=="reserved")throw new GenerationFailure("unknown_result","ASSET_CALL_NOT_ADMITTED");
+  let spec:Credential;
+  try{spec=assetCredentialSchema.parse(await call("resolveAssetCredential",{callId},signal));}catch{throw new GenerationFailure(started?"unknown_result":"waiting_user","ASSET_CREDENTIAL_UNAVAILABLE");}
+  if(spec.provider!==input.provider || spec.model!==input.model || spec.baseUrl!==input.baseUrl || spec.serviceId!==input.serviceId || spec.kind!==input.mediaKind)throw new GenerationFailure(started?"unknown_result":"waiting_user","ASSET_CREDENTIAL_IDENTITY_MISMATCH");
+  signal.throwIfAborted();
+  let referenceImage:{bytes:Uint8Array;mimeType:string}|undefined;
+  if(input.reference && !job){
+   const raw=await call("readAssetReference",{callId},signal);
+   const parsed=z.object({bytes:z.instanceof(Uint8Array).refine(bytes=>bytes.byteLength>0),mimeType:z.string().min(1)}).strict().parse(raw);
+   if(parsed.mimeType!==input.reference.mimeType)throw new GenerationFailure(started?"unknown_result":"waiting_user","ASSET_REFERENCE_MISMATCH");
+   referenceImage=parsed;
+  }
+  if(!started){started=true;const receipt=workerStartReceiptSchema.parse(await call("startAssetCall",{callId},signal));if(receipt.callId!==callId)throw new Error("ASSET_START_RECEIPT_INVALID");}
+  const result=await generateAsset(input,spec,signal,{resumeJobId:job?.jobId,idempotencyKey:`execution-asset:${callId}`,...(referenceImage?{referenceImage}:{}),onJobSubmitted:async jobId=>{
+   jobKnown=true;
+   await call("recordAssetProviderJob",{callId,job:{schemaVersion:1,provider:input.provider,model:input.model,baseUrl:input.baseUrl,...(input.serviceId?{serviceId:input.serviceId}:{}),jobId}});
+  }});
+  signal.throwIfAborted();
+  try{
+   const receipt=assetResultReceiptSchema.parse(await call("saveAssetResult",{callId,bytes:result.assetBytes},signal));
+   return {callId,text:JSON.stringify(receipt)};
+  }catch(error){
+   signal.throwIfAborted();
+   const recovered=recoverySchema.parse(await call("recoverAssetResult",{callId},signal));
+   if(recovered.status!=="committed")throw error;
+   return {callId,text:JSON.stringify(recovered.receipt)};
+  }
+ }catch(error){
+  if(!started)throw error;
+  // SEMANTIC_BOUNDARY_ALLOW: 只根据明确提交阶段 HTTP 拒绝执行预算重试，不判断内容语义。
+  const e=error as {stage?:string;status?:number;reason?:string;retryAfterMs?:number};
+  const rejected=!jobKnown && !signal.aborted && e?.stage==="submit" && typeof e.status==="number" && e.status>=400 && e.status<500 && e.status!==408;
+  const classification=classifyLlmError(error);
+  const recoverable=jobKnown && !signal.aborted && (e?.stage==="poll" || e?.stage==="download") && (classification.retryable || (typeof e.status!=="number" && (e.reason==="network" || e.reason==="timeout")));
+  const retryAfterMs=typeof e?.retryAfterMs==="number" && Number.isFinite(e.retryAfterMs) && e.retryAfterMs>=0?e.retryAfterMs:getRetryAfterMs(error,Date.now,Infinity)??undefined;
+  const failure=rejected?generationFailure(error,false):new GenerationFailure("unknown_result",recoverable?"ASSET_RECONCILE_RETRYABLE":"ASSET_RESULT_UNKNOWN",recoverable?retryAfterMs:undefined);
+  try{await call("settleAssetCall",{callId,status:rejected?"rejected":"unknown"});}catch{throw new GenerationFailure("unknown_result","ASSET_SETTLEMENT_UNKNOWN");}
+  throw failure;
+ }
+}

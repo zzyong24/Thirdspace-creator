@@ -1,0 +1,122 @@
+{
+  "schema": "t1362-work-entry-seed-delivery/v1",
+  "source": "docs/verification/t1362/harness/seed-work-entry.mts",
+  "sha256": "70d01e90f8ce9553f716e69e2253eb52922df6724ee19517ee85188c0c6e95f2",
+  "unchangedDependencies": [
+    {
+      "path": "docs/verification/t1355/harness/binding-fixture-server.mts",
+      "sha256": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13"
+    },
+    {
+      "path": "docs/verification/t1356/harness/seed-collected-dashboard.mts",
+      "sha256": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+    }
+  ],
+  "selftest": {
+    "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-oohm7jdp",
+    "startedAt": "2026-10-18T19:46:15.187447+00:00",
+    "pgPort": 41478,
+    "hostPort": 41479,
+    "nextStarted": false,
+    "attempt": 1,
+    "helperPid": 99053,
+    "pgPid": 99097,
+    "dashboardExit": 0,
+    "dashboardLog": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-oohm7jdp/dashboard.log",
+    "work-entryExit": 0,
+    "work-entryLog": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-oohm7jdp/work-entry.log",
+    "passed": true,
+    "manifest": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-oohm7jdp/work-entry-seed-safe.json",
+    "actualCounts": {
+      "before": {
+        "collection_runs": 14,
+        "ai_tasks": 0,
+        "projects": 2,
+        "publications": 2
+      },
+      "after": {
+        "collection_runs": 16,
+        "ai_tasks": 0,
+        "projects": 2,
+        "publications": 2
+      },
+      "expectedCollectionSubmissions": 16,
+      "expectedAiTasks": 0
+    },
+    "sameGroupAccountCount": 2,
+    "typedMetricKeys": [
+      "play_count",
+      "like_count"
+    ],
+    "pureTypedProjects": 0,
+    "helperExit": 0,
+    "helperLog": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-oohm7jdp.helper.log",
+    "stopped": {
+      "reason": "SIGTERM",
+      "at": "2026-10-18T19:46:34.456Z",
+      "helperPid": 99053,
+      "pgPid": 99097,
+      "failures": [],
+      "originalRootRetained": true
+    },
+    "finishedAt": "2026-10-18T19:46:34.488384+00:00"
+  },
+  "readback": {
+    "sameGroupAccounts": [
+      "acct-t1356-a0d3c76d-b03e-4b4f-bcb8-9f853d6da196",
+      "acct-t1362-f90d4fde-7d39-410a-9546-7ac1a4d46165"
+    ],
+    "newCatalog": {
+      "accountId": "acct-t1362-f90d4fde-7d39-410a-9546-7ac1a4d46165",
+      "workId": "work-t1362-eb8f8d73-999d-4625-8c43-a47204df6efa",
+      "total": 1,
+      "currentTotal": 1,
+      "publishedAt": "2026-10-03T04:00:00.000Z",
+      "legacyProjectId": null,
+      "publicationId": null,
+      "legacyPublicationId": null
+    },
+    "metrics": [
+      {
+        "id": "metric-t1362-48707b8e-182c-44cf-9c39-ca62e0203b9a",
+        "platformWorkId": "work-t1362-eb8f8d73-999d-4625-8c43-a47204df6efa",
+        "metricKey": "play_count",
+        "value": 7,
+        "availability": "available",
+        "unit": "count",
+        "window": {
+          "kind": "lifetime"
+        }
+      },
+      {
+        "id": "metric-t1362-6c50a411-cdee-4aae-8694-002b17472180",
+        "platformWorkId": "work-t1362-eb8f8d73-999d-4625-8c43-a47204df6efa",
+        "metricKey": "like_count",
+        "value": 0,
+        "availability": "available",
+        "unit": "count",
+        "window": {
+          "kind": "lifetime"
+        }
+      }
+    ],
+    "pureTyped": {
+      "groupId": "grp-t1356-ed9790f4-8d11-4be3-9ad4-9472437ef1c1",
+      "groupName": "零浏览仍是已知值",
+      "accountId": "acct-t1356-58b316c5-bff5-48f7-bbf5-cd4a77c31aa4",
+      "projectCount": 0,
+      "query": {
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-07",
+        "platform": "xiaohongshu"
+      },
+      "browseViews": 0
+    },
+    "emptyGroup": {
+      "groupId": "grp-t1355-99e52208-0218-4ad9-8f61-983d2f304fa2",
+      "groupName": "绑定验收当前组",
+      "memberCount": 0
+    }
+  },
+  "verificationBoundary": "仅helper/真实service提交读回自验；尚非Next HTTP/UI验收，无前端生产或测试写"
+}

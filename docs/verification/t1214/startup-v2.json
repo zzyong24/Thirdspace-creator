@@ -1,0 +1,55 @@
+{
+  "startedAt": "2026-10-11T03:32:29.415908+00:00",
+  "finishedAt": "2026-10-11T03:32:31.060140+00:00",
+  "sourceHead": "a091de271aed5185678da82d51baae0eb7025248",
+  "connected": true,
+  "access": "full",
+  "nativePid": 7259,
+  "nativeCommand": "7259     1 /Applications/CreatorOS.app/Contents/MacOS/CreatorOS",
+  "serviceProcesses": [
+    {
+      "pid": 7566,
+      "ppid": 7259,
+      "command": "next-server (v16.2.9)",
+      "listenPort": 57458
+    }
+  ],
+  "mainPageLoadRecords": [
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:57458/"
+  ],
+  "installedRuntimeStamp": "sha256:80ff6c84cb3b0c6cb972030c1a203b03c290f334650ab35a87a75a05c9c79e10",
+  "cliRecords": [
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.3231018329970539,
+      "logSha256": "ff42cfc9f1c02dfd9b778fe96bb4210de6128607391999db218dd9979c46d72d",
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/status-v2.log"
+    },
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "access",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.24436604202492163,
+      "logSha256": "44ccc728bf212e36a8e6aaabde37a989aeae8bb3660fe75404dd23131e00944b",
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/access-v2.log"
+    }
+  ],
+  "startupMarkers": [
+    "[license] CHANNEL_RUNTIME_DIGEST_MISMATCH",
+    "[sidecar] [CreatorOS] SIDECAR_STARTUP_VERIFIED",
+    "[client-config] phase=config_sync reason=unknown trigger=startup status=blocked http_status=502",
+    "[sidecar] [ai-task-runner] taskId=ai-task-c9ca766f-143 taskType=scheduled.intelligence.sync status=failed finishReason=null usage=null candidateCount=0",
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:57458/",
+    "[sidecar] [client-config] {\"phase\":\"refresh\",\"status\":\"failed\",\"errorCode\":\"CLIENT_CONFIG_ACCESS_CHANGED\",\"retryable\":false}"
+  ],
+  "explicitNewModelCalls": 0,
+  "explicitBusinessWrites": 0,
+  "boundary": "真实安装版主进程、直属HTTP监听、公开健康与HTTP首页完成事件；非屏幕眼验或全功能验收。原首探针PID误解失败完整保留。"
+}

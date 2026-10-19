@@ -157,6 +157,26 @@ describe("generateVideoRenderHtml", () => {
     expect(html).toMatchSnapshot();
   });
 
+  it("[T-1018] 竖屏人物在片尾切换布局时不延长主时间线", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      broll: [],
+      scenes: [{
+        id: "tail",
+        label: "片尾",
+        title: "片尾内容",
+        startSec: 0,
+        endSec: 60,
+        role: "body",
+        cards: [{ kind: "quote", at: 59.8, text: "片尾信息", tone: "accent" }],
+      }],
+    });
+    expect(html).toMatch(/tl\.to\("#th",\{[^\n]*duration:0\.20[^\n]*\},59\.80\);/);
+    expect(html).not.toMatch(/tl\.to\("#th",\{[^\n]*\},60\.00\);/);
+  });
+
   it("双语字幕:SRT 主时钟,重叠行被夹断(end 夹到下一行 start-0.02)", () => {
     const html = generateVideoRenderHtml(fullProps());
     // 第 2 行 end=5.2 但下一行 start=5.3 → duration = 5.28-2.50 = 2.78
@@ -1902,5 +1922,90 @@ describe("generateVideoRenderHtml · 图片 B-roll", () => {
     });
     expect(html).toContain('src="media/portrait.png"');
     expect(html).toMatch(/src="media\/portrait\.png"[^>]+width:416px;height:740px/);
+  });
+});
+
+
+describe("[T794/T902] 人物 transition 不越过原口播终点",()=>{
+  function portrait(durationSec:number,endSec:number){
+    return videoRenderProps.parse({meta:{title:"时长守卫"},delivery:{width:1080,height:1920,fps:30},talkingHead:{file:"speaker.mp4",durationSec},captions:[],broll:[],scenes:[{id:"support",label:"辅助",title:"辅助",startSec:0,endSec,role:"body" as const,cards:[{kind:"quote" as const,at:0,text:"辅助真人"}]}]});
+  }
+  it.each([15,15.019,15.001])("辅助覆盖口播%d时，终点不新增尾部人物tween",duration=>{
+    const html=generateVideoRenderHtml(portrait(duration,duration));
+    const end=Math.floor(duration*100)/100;
+    expect(html).not.toContain(`duration:.34,ease:"power3.inOut"},${end.toFixed(2)})`);
+    expect(html.match(/tl\.to\("#th",\{[^}]*duration:[^}]*\},[\d.]+\);/g)).toHaveLength(1);
+    expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
+  });
+  it.each([{duration:15,end:14,transition:".34",layer:"14.34"},{duration:15,end:14.9,transition:"0.10",layer:"15.00"},{duration:15.019,end:14.999,transition:"0.02",layer:"15.01"}])("剩余窗口 $duration/$end 在原终点内精确回位",({duration,end,transition,layer})=>{
+    const html=generateVideoRenderHtml(portrait(duration,end));
+    const start=(Math.floor(end*100)/100).toFixed(2);
+    expect(html).toContain(`tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:${transition},ease:"power3.inOut"},${start});`);
+    expect(html).toContain(`tl.set("#th",{zIndex:900},${layer});`);
+  });
+  it("连续辅助仅收缩一次，尾部talking-head仍回同一全幅",()=>{
+    const props=portrait(15,14);props.scenes[0]!.cards.push({kind:"quote",at:7,text:"相邻辅助",tone:"accent"});
+    const html=generateVideoRenderHtml(props);
+    expect(html.match(/tl\.set\("#th",\{zIndex:945\}/g)).toHaveLength(1);
+    expect(html).toContain('left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34');
+  });
+  it("横版与visualOnly不取得竖屏人物调度",()=>{
+    const props=portrait(15,15);
+    for(const html of [generateVideoRenderHtml({...props,delivery:{width:1920,height:1080,fps:30}}),generateVideoRenderHtml(props,{visualOnly:true})]){
+      expect(html).not.toContain('tl.set("#th",{zIndex:945}');
+      expect(html).not.toMatch(/tl\.to\("#th",\{[^}]*duration:[^}]*\},15\.00\);/);
+    }
+  });
+});
+
+describe("[T-1343] 合法裸主轨安全承接", () => {
+  function bare(): VideoRenderProps {
+    return videoRenderProps.parse({meta:{title:"原片"},talkingHead:{file:"original.mp4",durationSec:4,hasAudio:true},captions:[],broll:[],scenes:[{id:"original",label:"原片",title:"原片",startSec:0,endSec:4,cards:[]}],delivery:{width:1920,height:1080,fps:24}});
+  }
+  it.each([true,false])("无clips无字幕主轨保留完整contain和hasAudio=%s", hasAudio => {
+    const props=bare();props.talkingHead.hasAudio=hasAudio;const before=structuredClone(props);
+    expect(()=>assertVideoLayoutSafety(props)).not.toThrow();
+    const html=generateVideoRenderHtml(props);
+    expect(html).toMatch(/id="th"[^>]+src="media\/original.mp4"[^>]+left:0px;top:0px;width:1920px;height:1080px/);
+    expect(html).toContain('object-fit:contain');expect(html).not.toContain('landscape-gap-content');
+    expect(html.match(/<video id="th"/g)).toHaveLength(1);expect(props).toEqual(before);
+  });
+  it("局部主视觉前后都恢复原片，同right状态不能吞掉box切换",()=>{
+    const props=bare();props.broll=[{at:1,file:"evidence.png",label:"原证据",durationSec:2,big:false,presentation:"large_stage",sourceWidth:720,sourceHeight:1280}];
+    expect(()=>assertVideoLayoutSafety(props)).not.toThrow();
+    const html=generateVideoRenderHtml(props,{imageFiles:new Set(['evidence.png'])});
+    const full='tl.set("#th",{left:0,top:0,width:1920,height:1080,borderRadius:0,zIndex:900,autoAlpha:1},';
+    expect(html).toContain(full+'0.00);');expect(html).toContain(full+'3.00);');
+    expect(html).toMatch(/tl\.set\("#th",\{left:(?!0,)[^}]+autoAlpha:1\},1\.00\);/);
+    expect(html).toContain('object-fit:contain');
+  });
+  it("全屏主视觉期间仍隐藏，结束后恢复原片",()=>{
+    const props=bare();props.broll=[{at:1,file:"screen.mp4",label:"录屏",durationSec:2,big:false,presentation:"full_frame",visualRole:"screen_recording",speakerMode:"hidden"}];
+    expect(()=>assertVideoLayoutSafety(props)).not.toThrow();const html=generateVideoRenderHtml(props);
+    expect(html).toContain('tl.set("#th",{autoAlpha:0},1.00);');
+    expect(html).toContain('width:1920,height:1080,borderRadius:0,zIndex:900,autoAlpha:1},3.00);');
+  });
+  it("bare已有字幕保留原句文字舞台和右栏",()=>{
+    const props=bare();props.captions=[{start:0,end:4,cn:"原字幕不替换"}];
+    expect(()=>assertVideoLayoutSafety(props)).not.toThrow();const html=generateVideoRenderHtml(props);
+    expect(html).toContain('landscape-gap-content');expect(html).toContain('原字幕不替换');
+    expect(html).not.toMatch(/id="th"[^>]+left:0px;top:0px;width:1920px;height:1080px/);
+  });
+  it("显式clips既有无视觉承接不变",()=>{
+    const props=bare();props.talkingHead.clips=[{clipId:"original",file:"original.mp4",startSec:0,endSec:4,sourceInSec:0,hasAudio:true}];
+    expect(()=>assertVideoLayoutSafety(props)).not.toThrow();const html=generateVideoRenderHtml(props);
+    expect(html).toMatch(/id="th"[^>]+class="clip talking-head"[^>]+left:0px;top:0px;width:1920px;height:1080px/);
+    expect(html).toContain('data-media-start="0"');
+  });
+  it("portrait保留原满幅，visualOnly没有主轨或主轨调度",()=>{
+    const props=bare();const portrait=generateVideoRenderHtml({...props,delivery:{width:1080,height:1920,fps:24}});
+    expect(portrait).toMatch(/id="th"[^>]+left:0px;top:0px;width:1080px;height:1920px/);
+    const visual=generateVideoRenderHtml(props,{visualOnly:true});expect(visual).not.toContain('id="th"');expect(visual).not.toMatch(/tl\.(?:set|to)\("#th"/);
+  });
+  it.each(['', '   '])("没有有效主file仍拒绝：%j",file=>{
+    const props=bare();props.talkingHead.file=file;expect(()=>assertVideoLayoutSafety(props)).toThrow();
+  });
+  it.each([0,-1,NaN,Infinity])("非法主轨时长仍拒绝：%s",durationSec=>{
+    const props=bare();props.talkingHead.durationSec=durationSec;expect(()=>assertVideoLayoutSafety(props)).toThrow();
   });
 });

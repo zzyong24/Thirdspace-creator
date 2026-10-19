@@ -1,4 +1,6 @@
 import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
+import {ConflictError as MembershipConflictError} from "../platform-account";
+import {IntelligenceConflictError,OwnershipError} from "./intelligence.errors";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   PersistentTaskClaim,
@@ -28,6 +30,26 @@ export interface RunIntelligenceSourceTaskDeps {
 
 const SOURCE_SYNC_LEASE_SECONDS = 90;
 const SOURCE_SYNC_HEARTBEAT_MS = 25_000;
+
+/** 只接真实领域类型；临时 SQL/transport 或同名异常不构成确定准入拒绝。 */
+function isSourceAdmissionRejected(error:unknown):boolean {
+ return error instanceof OwnershipError||error instanceof IntelligenceConflictError||error instanceof MembershipConflictError;
+}
+
+/** 只收口本 claim；不可信来源关系不得挑一个业务 run 写入。控制先于 blocked。 */
+async function closeRejectedSourceClaim(ctx:RequestContext,claim:PersistentTaskClaim,deps:RunIntelligenceSourceTaskDeps):Promise<void>{
+ const lease={taskId:claim.task.id,workerId:claim.lease.workerId,attempt:claim.lease.attempt};
+ const current=await deps.tasks.get(ctx,claim.task.id);
+ if(current.leaseOwner!==lease.workerId||current.attempt!==lease.attempt||!current.leaseExpiresAt||Date.parse(current.leaseExpiresAt)<=Date.parse(deps.now?.()??new Date().toISOString()))return;
+ if(current.status==='pause_requested'||current.status==='cancel_requested'){await deps.tasks.acknowledgeControl(lease).catch(()=>{});return;}
+ if(current.status!=='running'||current.runtimeStatus)return;
+ try{await deps.tasks.finish({...lease,fenceToken:claim.lease.fenceToken,status:'blocked',errorCode:'SOURCE_SYNC_ADMISSION_REJECTED',errorMessage:'来源任务的工作区或原执行绑定已改变，请保留原任务并检查账号组'});}
+ catch{
+  // finish(blocked) 仅 running CAS；get 与更新之间的控制竞争不能转 failed 再试。
+  const after=await deps.tasks.get(ctx,claim.task.id);
+  if(after.leaseOwner===lease.workerId&&after.attempt===lease.attempt&&(after.status==='pause_requested'||after.status==='cancel_requested'))await deps.tasks.acknowledgeControl(lease).catch(()=>{});
+ }
+}
 
 function adapterName(
   type: Awaited<
@@ -160,9 +182,10 @@ export async function runIntelligenceSourceTask(
   const control = new AbortController();
   let leaseLost = false;
   let heartbeatStopped = false;
-  let heartbeatInFlight: Promise<void> = Promise.resolve();
+  let heartbeatInFlight: Promise<void> | undefined;
   let parentCancellation: Promise<void> | undefined;
   let adapterPending:Promise<IntelligenceAdapterEnvelope>|undefined;
+  let rejected=false;
   const leaseInput = {taskId: input.taskId, workerId: claim.lease.workerId, attempt: claim.lease.attempt};
   const onParentAbort = () => {
     control.abort(input.signal?.reason);
@@ -185,21 +208,22 @@ export async function runIntelligenceSourceTask(
   input.signal?.addEventListener("abort", onParentAbort, {once: true});
   if (input.signal?.aborted) onParentAbort();
   const heartbeatTimer = setInterval(() => {
-    if (heartbeatStopped) return;
-    heartbeatInFlight = heartbeatInFlight.then(async () => {
-      if (heartbeatStopped || control.signal.aborted) return;
+    if (heartbeatStopped || heartbeatInFlight || control.signal.aborted) return;
+    // 慢数据库心跳只占一个在途槽；跳过的间隔不形成待执行 Promise 链。
+    heartbeatInFlight = (async () => {
       try {
         const task = await deps.tasks.heartbeat({...leaseInput, leaseSeconds: SOURCE_SYNC_LEASE_SECONDS});
-        if (task.status === "pause_requested" || task.status === "cancel_requested") control.abort();
+        if (!heartbeatStopped && (task.status === "pause_requested" || task.status === "cancel_requested")) control.abort();
       } catch {
-        leaseLost = true;
-        control.abort();
+        if (!heartbeatStopped) {leaseLost = true; control.abort();}
       }
-    });
+    })().finally(() => {heartbeatInFlight = undefined;});
   }, SOURCE_SYNC_HEARTBEAT_MS);
   let abortListener: (() => void) | undefined;
   try {
     control.signal.throwIfAborted();
+    const boundRun=await deps.intelligence.getRunByTaskForExecution(ctx,input.taskId);
+    if(boundRun.id!==input.runId||boundRun.sourceId!==input.sourceId)throw new OwnershipError('来源任务与原运行不符');
     const sourceInput = await deps.intelligence.getSourceExecutionInput(ctx, input.sourceId);
     control.signal.throwIfAborted();
     // A non-cooperative adapter may finish late; it cannot hold a cancelled lease or write results.
@@ -215,20 +239,27 @@ export async function runIntelligenceSourceTask(
       if (control.signal.aborted) return;
       envelope = failureEnvelope(sourceInput.source, deps.now?.() ?? new Date().toISOString(), error);
     }
-    await heartbeatInFlight;
+    if (heartbeatInFlight) await new Promise<void>(resolve => {
+      const done = () => {control.signal.removeEventListener("abort", done); resolve();};
+      control.signal.addEventListener("abort", done, {once: true});
+      void heartbeatInFlight!.then(done);
+      if (control.signal.aborted) done();
+    });
     if (control.signal.aborted || leaseLost) return;
     await deps.intelligence.applyAdapterBatch(ctx, {
-      runId: input.runId, lease: claim.lease, envelope, terminal: true,
+      runId: input.runId, lease: claim.lease, expectedFence:claim.lease.fenceToken,envelope, terminal: true,
     });
   } catch (error) {
-    if (!control.signal.aborted) throw error;
+    if (!control.signal.aborted) {rejected=isSourceAdmissionRejected(error);throw error;}
   } finally {
     heartbeatStopped = true;
     clearInterval(heartbeatTimer);
     input.signal?.removeEventListener("abort", onParentAbort);
     if (abortListener) control.signal.removeEventListener("abort", abortListener);
     if(input.cancelOnAbort===false&&adapterPending)await adapterPending.catch(()=>{});
-    await heartbeatInFlight;
+    // 明确取消可以先确认原租约终态；已发出的 DB 查询不能物理中断，但不会再触发新心跳。
+    // 准入拒绝的收口等已发心跳；用户明确取消保持原即时确认，迟到心跳不再驱动控制。
+    if(rejected||!control.signal.aborted||input.cancelOnAbort===false)await heartbeatInFlight;
     if (parentCancellation) await parentCancellation;
     if (control.signal.aborted && !leaseLost) {
       const current = await deps.tasks.get(ctx, input.taskId);
@@ -236,6 +267,7 @@ export async function runIntelligenceSourceTask(
         await deps.tasks.acknowledgeControl(leaseInput);
       }
     }
+    if(rejected)await closeRejectedSourceClaim(ctx,claim,deps);
   }
 }
 
@@ -257,15 +289,14 @@ export async function drainIntelligenceSourceQueue(
     if (!claim || isTaskDrainStopping(control)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
-      accountId: claim.task.accountId,
+      accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined,
       requestId: `execution:${claim.task.id}`,
       source: "ingestion",
       ingestionRunId: claim.task.id,
     };
-    const run = await deps.intelligence.getRunByTaskForExecution(
-      ctx,
-      claim.task.id,
-    );
+    let run:Awaited<ReturnType<IntelligenceService['getRunByTaskForExecution']>>;
+    try{run=await deps.intelligence.getRunByTaskForExecution(ctx,claim.task.id);}
+    catch(error){if(isSourceAdmissionRejected(error))await closeRejectedSourceClaim(ctx,claim,deps);throw error;}
     await runIntelligenceSourceTask(
       ctx,
       {

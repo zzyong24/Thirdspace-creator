@@ -101,8 +101,8 @@ function deps(
 }
 
 describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
-  it("热点选题冻结出题与信源抽取两个Skill，普通出题保持单Skill",()=>{
-    expect(requiredSkillIdsForTask("topic.generate",{basis:"trend"})).toEqual(["topic.generate","trend.extract"]);
+  it("热点选题冻结出题、任务规划与信源抽取三个Skill，普通出题保持单Skill",()=>{
+    expect(requiredSkillIdsForTask("topic.generate",{basis:"trend"})).toEqual(["topic.generate","topic.query-plan","trend.extract"]);
     expect(requiredSkillIdsForTask("topic.generate",{basis:"positioning"})).toEqual(["topic.generate"]);
   });
   it("同名、别名、video/chat 受控输入与非 Skill task 映射固定", () => {
@@ -149,6 +149,11 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
       "research.plan",
       ...CHAT_METHOD_SKILL_IDS,
     ]);
+    expect(requiredSkillIdsForTask("chat.sync", { surface: "canvas" })).toEqual([
+      "chatbox.canvas",
+      "research.plan",
+      ...CHAT_METHOD_SKILL_IDS,
+    ]);
     expect(requiredSkillIdsForTask("chat.sync", { surface: "topics" })).toEqual([
       "chatbox.topic",
       "creatoros.guide",
@@ -189,6 +194,7 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     ]);
     expect(requiredSkillIdsForTask("scheduled.topic.daily", {})).toEqual([
       "topic.generate",
+      "topic.query-plan",
       "trend.extract",
     ]);
     expect(requiredSkillIdsForTask("scheduled.favorites", {})).toEqual([
@@ -198,6 +204,8 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     for (const taskType of [
       "exec.echo.manifest",
       "exec.video.render",
+      "exec.media.probe",
+      "media.probe",
       "exec.agentic.research",
       "exec.agentic.collect",
       "exec.agentic.material",
@@ -236,10 +244,12 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
   });
 
   it("执行节点和聊天纯方法共同覆盖 official registry，纯方法不冒充独立任务", () => {
-    for (const skillId of [...CHAT_METHOD_SKILL_IDS, "research.plan"]) {
+    expect(CHAT_METHOD_SKILL_IDS).toContain("method.report");
+    for (const skillId of [...CHAT_METHOD_SKILL_IDS, "research.plan", "topic.query-plan"]) {
+
       expect(() => requiredSkillIdsForTask(skillId, {})).toThrow("SKILL_TASK_MAPPING_MISSING");
     }
-    expect([...REGISTERED_SKILL_TASK_TYPES, ...CHAT_METHOD_SKILL_IDS, "research.plan"].sort()).toEqual(
+    expect([...REGISTERED_SKILL_TASK_TYPES, ...CHAT_METHOD_SKILL_IDS, "research.plan", "topic.query-plan"].sort()).toEqual(
       listOfficialSkillBases()
         .map((base) => base.skillId)
         .sort(),
@@ -487,6 +497,16 @@ describe("[T-513] snapshot serialization", () => {
 
 
 describe("T-944 官方编导方法到聊天读取链路", () => {
+  it("[T-995] 画布对话从真实官方注册表冻结独立 Skill 和读写候选工具", async () => {
+    const bases = listOfficialSkillBases();
+    const resolver = createEffectiveSkillSnapshotResolver(deps(bases));
+    const snapshot = await resolver(ctx, requiredSkillIdsForTask("chat.sync", {surface: "canvas"}));
+    const canvas = snapshot.skills.find(item => item.skillId === "chatbox.canvas");
+    expect(canvas?.effective.tools).toContain("canvas.read");
+    expect(canvas?.effective.tools).toContain("canvas.propose");
+    expect(canvas?.effective.methodSystem).toContain("空白文字");
+    expect(snapshot.skills.some(item => item.skillId === "chatbox.topic")).toBe(false);
+  });
   it("T-962 新聊天可发现并读取 RedFox 研究和运营复盘方法", async () => {
     const bases = listOfficialSkillBases();
     const resolver = createEffectiveSkillSnapshotResolver(deps(bases));
@@ -507,13 +527,18 @@ describe("T-944 官方编导方法到聊天读取链路", () => {
     const snapshot = await resolver(ctx, ids);
     const library = createChatSkillLibrary(snapshot, ctx);
     expect(library.catalog).toContain("method.research: 【找对标与素材研究】");
-    for (const id of ["method.research", "method.writing", "method.review"]) {
+    for (const id of ["method.research", "method.writing", "method.review", "method.report"]) {
       const base = bases.find(item => item.skillId === id)!;
       const result = library.read({skillId: id});
       expect(result.text).toBe([base.methodSystem, base.template].join("\n\n"));
       expect(result.version).toBe(base.baseVersion);
       expect(result.hasMore).toBe(false);
     }
+    expect(library.catalog).toContain("method.report");
+    expect(library.read({skillId:"method.report"}).text).toContain("HTML");
+    expect(bases.find(item=>item.skillId==="method.report")).toMatchObject({
+      baseVersion:"workbench-report-2026-09-21-diagnostics",tools:[],editableFields:["system","template"],
+    });
   });
   it("新基线保留账号自定义写法，已冻结任务不随后续修改漂移", async () => {
     const rows = [row("method.writing", {system: "账号自定义写法：先讲维修现场"}, {observedBaseVersion: "v1"})];
@@ -526,3 +551,5 @@ describe("T-944 官方编导方法到聊天读取链路", () => {
     expect(createChatSkillLibrary(next, ctx).read({skillId: "method.writing"}).text).toContain("账号下一版写法");
   });
 });
+
+it("T850真实资产ASR只做音频转写，明确登记无创作Skill而保留未知任务拒绝",()=>{expect(requiredSkillIdsForTask("asset.asr",{})).toEqual([]);});

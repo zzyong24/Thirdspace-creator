@@ -1,7 +1,11 @@
 "use client";
 
-import {getLiveChatSession} from "./live-chat-session";
+import {useAssistantEngine} from "./use-assistant-engine";
+import {getLiveChatSession,acquireLiveChatSession} from "./live-chat-session";
 import { ChatToolTrace } from "./chat-tool-trace";
+import {readChatToolOutcome,ChatToolOutcomeNotice} from "./chat-tool-outcome";
+import {ChatSystemActionCard,appendCandidateReviewPrompt,rememberAssistantSourceScope,readAssistantSourceScope} from "./chat-system-action-card";
+import {CanvasChatResult} from "@/features/creative-canvas/canvas-chat-result";
 
 /**
  * Copilot 页面负责输入、流式消息、候选卡与原任务控制。
@@ -13,10 +17,13 @@ import { ChatToolTrace } from "./chat-tool-trace";
 
 import {TaskRuntimeActions,taskRuntimeStatus} from "@/components/ai/task-runtime-actions";
 import {ExecutionTaskCard} from "./execution-task-card";
+import {WorkbenchPlanCard} from "./workbench-plan-card";
+import {WorkbenchArtifactCard} from "./workbench-artifact-card";
+import {WorkbenchArtifactHistory} from "./workbench-artifact-history";
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useChat } from "@ai-sdk/react";
+import { Chat, useChat } from "@ai-sdk/react";
 import { useForegroundActivity } from "@/lib/foreground-activity";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -25,6 +32,7 @@ import {
   isToolUIPart,
   getToolName as sdkGetToolName,
   lastAssistantMessageIsCompleteWithApprovalResponses,
+  type ChatTransport,
   type UIMessage,
 } from "ai";
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
@@ -112,10 +120,12 @@ import {
   IMAGE_MATERIAL_PREFILL,
   VIDEO_MATERIAL_PREFILL,
 } from "@/fixtures/selectors";
+import {copilotImageEnginePrefill} from "@/fixtures/selectors/copilot";
 import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
 } from "@creatoros/contract";
+import {workbenchArtifactSchema,workbenchPlanSchema,workbenchResultSchema} from "@creatoros/contract/agent-workbench";
 
 /**
  * [T-439 配套] 工具名还原 —— **卡片能不能渲出来全靠它**。
@@ -131,6 +141,34 @@ import {
  */
 function getToolName(part: Parameters<typeof sdkGetToolName>[0]): string {
   return String(sdkGetToolName(part)).replace(/_/g, ".");
+}
+
+function workbenchResultOf(output:unknown){
+ if(!output||typeof output!=="object"||Array.isArray(output))return null;
+ const record=output as Record<string,unknown>;
+ const data=record.data&&typeof record.data==="object"&&!Array.isArray(record.data)?record.data as Record<string,unknown>:null;
+ const parsed=workbenchResultSchema.safeParse(record.result??record.workbench??data?.workbench);
+ return parsed.success?parsed.data:null;
+}
+function workbenchPayload(result:ReturnType<typeof workbenchResultOf>):unknown{
+ if(!result||result.status!=="succeeded")return null;
+ const text=result.content.find(part=>part.type==="text")?.text;
+ if(!text)return null;
+ try{return JSON.parse(text);}catch{return null;}
+}
+function visibleWorkbenchProgress(parts:readonly unknown[]){
+ const latest=new Map<string,string>();
+ for(const part of parts){
+  if(!part||typeof part!=="object"||Array.isArray(part))continue;
+  const item=part as Record<string,unknown>;
+  if(item.type!=="data-workbench-progress"||!item.data||typeof item.data!=="object"||Array.isArray(item.data))continue;
+  const data=item.data as Record<string,unknown>;
+  if(typeof data.operationId!=="string"||!data.operationId||data.operationId.length>160||!Array.isArray(data.content))continue;
+  const line=data.content.find(entry=>entry&&typeof entry==="object"&&!Array.isArray(entry)&&
+   (entry as Record<string,unknown>).type==="text"&&typeof (entry as Record<string,unknown>).text==="string") as {text:string}|undefined;
+  if(line){latest.delete(data.operationId);latest.set(data.operationId,line.text.slice(0,240));}
+ }
+ return [...latest].slice(-3);
 }
 
 /**
@@ -158,10 +196,17 @@ import {
 } from "@/lib/ai-error-humanize";
 import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
 import { client } from "@/lib/contract-client";
+import {useDraftChatRequest,type PreparedEditorTurn} from "@/features/draft-workbench/draft-chat-request";
+import {workCreationProposalResult,type WorkEditorTarget,type WorkCreationTarget} from "@creatoros/contract";
+import {ChatWorkEditorCard} from "./chat-work-editor-card";
+import {ChatWorkCreationCard} from "./chat-work-creation-card";
 import { creatorApiHeaders, readCurrentAccountId } from "@/lib/http-transport";
+import { createCreationWorkspace, creationScopeKey, readCreationScope, useCreationScope } from "@/lib/creation-workspace-scope";
+import { TranscribeTaskReceipt } from "./transcribe-task-progress";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
   readStoredConversationId,
+  conversationStorageOwner,
   writeStoredConversationId,
   toUIMessages,
   // [T-239e] 会话成本角标:历史底数(落库行的 token 列)+ 流式增量(metadata.usage)分账相加。
@@ -189,10 +234,12 @@ import { shouldResumeToolApprovalOnce } from "./tool-approval-resume-guard";
 import {
   CopilotAttachmentPicker,
   type CopilotAttachmentPickerHandle,
+  type CopilotAttachmentDraft,
   type CopilotAttachmentState,
 } from "./copilot-attachment-picker";
 import {
   extractChatApiPublicError,
+  isModelBenefitRefreshPending,
   isTerminalScriptSelectionError,
 } from "./chat-api-error";
 
@@ -316,6 +363,10 @@ export interface AICopilotContentProps {
         readonly excerpt?: string;
       };
       readonly nonce: number;
+      readonly preparedEditorTurn?:PreparedEditorTurn;
+      readonly creationTarget?:WorkCreationTarget;
+      readonly onCreationSettled?:()=>void;
+      readonly onCreationSubmission?:(state:"not-submitted"|"submitted-unknown")=>void;
     } | null;
   };
 }
@@ -338,7 +389,8 @@ interface WireTask {
     | "awaiting_confirmation"
     | "succeeded"
     | "failed"
-    | "cancelled";
+    | "cancelled"
+    | "partial";
   readonly executionTaskId?:string|null;
   readonly runtimeStatus?:string|null;
   readonly inputData?: Readonly<Record<string, unknown>>;
@@ -550,12 +602,12 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
   // 通用 AI 素材生成(配图/B-roll;依赖设置里配好的生图/生视频模型;未配时工具卡自带「去设置」降级)。
   "material.generate":
-    "帮我为这条内容生成一张配图/一个画面素材(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+    "帮我为这条内容生成一张配图/一个画面素材，按当前编导引擎执行。",
   "material.generate.image": IMAGE_MATERIAL_PREFILL,
   "material.generate.video": VIDEO_MATERIAL_PREFILL,
   // [T-271] 制作封面链 —— 硬锚立项核心信息 + 口播稿产结构化封面文案(过诚实门,不编数字)并生图。
   "cover.generate":
-    "帮我为这条内容生成封面:先基于这条的立项核心信息和口播稿产一版封面文案方案(主标题/副标题/信息点 + 主视觉 + 构图),封面文案不许编造数字/成绩,再据此生成封面图(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+    "帮我为这条内容生成封面:先基于这条的立项核心信息和口播稿产一版封面文案方案(主标题/副标题/信息点 + 主视觉 + 构图),封面文案不许编造数字/成绩,再据此生成封面图，按当前编导引擎执行。",
 };
 
 // [T-060②→T-077c] 工具 trace 的中文名(对话内「正在调用/已调用」行;未知工具回落原名)。
@@ -767,6 +819,9 @@ export function AICopilotContent({
     contextRequest?.selection?.title ??
     embed?.selection?.title ??
     (searchParams?.get("selTitle") || undefined);
+  const articleOutputId = searchParams?.get("selOutputId") || undefined;
+  const articleVersionId = searchParams?.get("selVersionId") || undefined;
+  const articleProjectId = searchParams?.get("selProjectId") || undefined;
   // [T-096] 会话作用域(scope)—— 历史列表/恢复/新对话的归属桶,与 surface(技能装配)解耦。
   // 入口 → scope 总表见 chat-scope.ts:内嵌右栏 = project:<id>;深链选中项目(复盘岛/选题卡
   // brief.fill)归并 project:<id>;一键岛 = surface:<name>;左下角/首页显式 ?scope=global;
@@ -787,9 +842,39 @@ export function AICopilotContent({
         }
       : null,
   });
+  const [sessionOwner,setSessionOwner]=React.useState(()=>conversationStorageOwner());
+  React.useEffect(()=>{const sync=()=>setSessionOwner(conversationStorageOwner());window.addEventListener("creatoros:accounts-changed",sync);window.addEventListener("storage",sync);return ()=>{window.removeEventListener("creatoros:accounts-changed",sync);window.removeEventListener("storage",sync);};},[]);
+  const liveSessionKey = JSON.stringify([sessionOwner, scope]);
+  const assistantEngine = useAssistantEngine();
   const sessionAccountId = readCurrentAccountId();
-  const liveSessionKey = JSON.stringify([sessionAccountId, scope]);
-  const liveSession = getLiveChatSession(liveSessionKey);
+  const creationScope = useCreationScope();
+  const hasCreationWorkspace = Boolean(creationScope.groupId || creationScope.accountId);
+  const [workspaceReturnDraft] = React.useState(()=>typeof window!=="undefined"?workspaceReturnDrafts.get(scope):undefined);
+  React.useEffect(()=>{if(workspaceReturnDraft&&workspaceReturnDrafts.get(scope)===workspaceReturnDraft)workspaceReturnDrafts.delete(scope);},[scope,workspaceReturnDraft]);
+  const liveSession = getLiveChatSession<Chat<UIMessage>, ChatTransport<UIMessage>, UIMessage>(
+    liveSessionKey,
+    session => new Chat<UIMessage>({
+      id: liveSessionKey,
+      transport: {
+        sendMessages: options => {
+          if (!session.transport) throw new Error("聊天连接尚未就绪");
+          return session.transport.sendMessages(options);
+        },
+        reconnectToStream: options => {
+          if (!session.transport) throw new Error("聊天连接尚未就绪");
+          return session.transport.reconnectToStream(options);
+        },
+      },
+      sendAutomaticallyWhen: input => session.shouldResume?.(input) ?? false,
+    }),
+  );
+  // 新消息取当前设置；sourceEngines 仍冻结旧消息的执行器，transport 不重建。
+  liveSession.executionEngine = assistantEngine.engine;
+  const requestedEngineRef=React.useRef<"pi"|"codex"|undefined>(undefined);
+  requestedEngineRef.current=assistantEngine.v2?undefined:assistantEngine.engine;
+  const modelAdmissionRef=React.useRef<(ids:readonly string[])=>boolean>(()=>assistantEngine.available);
+  modelAdmissionRef.current=ids=>assistantEngine.v2?(ids.length>0?(assistantEngine.canSubmitVision||assistantEngine.canSubmitText):assistantEngine.canSubmitText):assistantEngine.available;
+  React.useLayoutEffect(() => acquireLiveChatSession(liveSessionKey,liveSession), [liveSessionKey,liveSession]);
   const liveSessionRef = React.useRef(liveSession);
   liveSessionRef.current = liveSession;
   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
@@ -801,6 +886,9 @@ export function AICopilotContent({
   React.useEffect(() => {
     if ((activeRequest?.nonce ?? 0) > 0) setSelectionDismissed(false);
   }, [activeRequest?.nonce]);
+  React.useEffect(() => {
+    if (selKind === "article_section" && articleOutputId && articleVersionId && selId) setSelectionDismissed(false);
+  }, [selKind, articleOutputId, articleVersionId, selId]);
   React.useEffect(() => {
     if (!activeRequest) return;
     if (
@@ -871,11 +959,63 @@ export function AICopilotContent({
   const captureConversationId = React.useCallback((id: string) => {
     if (!id) return;
     liveSession.conversationId = id;
-    writeStoredConversationId(scope, id);
+    writeStoredConversationId(scope, id,sessionOwner);
     if (liveSessionRef.current !== liveSession || conversationIdRef.current === id) return;
     conversationIdRef.current = id;
     setConversationId(id);
-  }, [liveSession, scope]);
+  }, [liveSession, scope,sessionOwner]);
+
+  // 历史读取归属仅在本组件内存中使用；恢复整链与显式选择共享同一意图代次。
+  const historyContext = React.useMemo(() => ({
+    scope, owner: sessionOwner, key: liveSessionKey, session: liveSession,
+    mounted: false, revision: 0, intent: 0,
+  }), [scope, sessionOwner, liveSessionKey, liveSession]);
+  const historyContextRef = React.useRef(historyContext);
+  historyContextRef.current = historyContext;
+  React.useLayoutEffect(() => {
+    historyContext.mounted = true;
+    historyContext.revision += 1;
+    let observedOwner = conversationStorageOwner();
+    const changed = () => {
+      const owner = conversationStorageOwner();
+      if (owner !== observedOwner) historyContext.revision += 1;
+      observedOwner = owner;
+    };
+    window.addEventListener("creatoros:accounts-changed", changed);
+    window.addEventListener("storage", changed);
+    return () => {
+      historyContext.mounted = false;
+      historyContext.revision += 1;
+      window.removeEventListener("creatoros:accounts-changed", changed);
+      window.removeEventListener("storage", changed);
+    };
+  }, [historyContext]);
+  const captureHistoryContext = React.useCallback(() => ({
+    context: historyContext, revision: historyContext.revision, epoch: liveSession.epoch,
+  }), [historyContext, liveSession]);
+  type HistoryContextSnapshot = ReturnType<typeof captureHistoryContext>;
+  const ownsHistoryContext = React.useCallback((snapshot: HistoryContextSnapshot) => {
+    const current = snapshot.context;
+    return historyContextRef.current === current && current.mounted &&
+      current.revision === snapshot.revision && scopeRef.current === current.scope &&
+      conversationStorageOwner() === current.owner && liveSessionRef.current === current.session &&
+      current.session.epoch === snapshot.epoch;
+  }, []);
+  const invalidateHistoryReads = React.useCallback(() => {
+    historyContext.intent += 1;
+  }, [historyContext]);
+  const beginHistoryRead = React.useCallback(() => {
+    invalidateHistoryReads();
+    return {...captureHistoryContext(), intent: historyContext.intent,
+      messages: liveSession.chat.messages,
+      blocked: preparationPending.current.has(liveSession) || ["submitted", "streaming"].includes(liveSession.chat.status)};
+  }, [captureHistoryContext, historyContext, invalidateHistoryReads, liveSession]);
+  type HistoryRead = ReturnType<typeof beginHistoryRead>;
+  const ownsHistoryRead = React.useCallback((read: HistoryRead) =>
+    !read.blocked && ownsHistoryContext(read) && read.context.intent === read.intent &&
+    read.context.session.chat.messages === read.messages &&
+    !preparationPending.current.has(read.context.session) &&
+    !["submitted", "streaming"].includes(read.context.session.chat.status), [ownsHistoryContext]);
 
   // @项目引用(T-039b):输入框 @ 选中的项目。存在时等价「选中态项目」注入后端(见下 chatContextBody)。
   // 与 URL 带来的选中态(一键岛)并存时,URL 选中态优先(它是打开来源的强上下文);@ 只在无 URL
@@ -896,6 +1036,7 @@ export function AICopilotContent({
         label?: string;
         artifactId?: string;
         versionId?: string;
+        outputId?: string;
         sectionIndex?: number;
         excerpt?: string;
       };
@@ -918,6 +1059,9 @@ export function AICopilotContent({
         ...(contextRequest?.selection?.versionId
           ? { versionId: contextRequest.selection.versionId }
           : {}),
+        ...(selKind === "article_section" && articleOutputId && articleVersionId
+          ? { outputId: articleOutputId, versionId: articleVersionId }
+          : {}),
         ...(Number.isInteger(contextRequest?.selection?.sectionIndex)
           ? { sectionIndex: contextRequest!.selection!.sectionIndex }
           : {}),
@@ -930,6 +1074,8 @@ export function AICopilotContent({
       // 后端恒 null → 复盘只能账号级泛论)。复盘一键岛(review-analyze-island)正是以 kind=project 打开。
       if (selKind === "project") {
         chatContext.projectId = selId;
+      } else if (selKind === "article_section" && articleProjectId) {
+        chatContext.projectId = articleProjectId;
       }
     } else if (mentionedProject) {
       // T-039b @项目引用:无 URL 选中态时,把 @ 选中的项目当「选中态项目」注入 —— 复用 T-039a 机制
@@ -948,6 +1094,9 @@ export function AICopilotContent({
     selKind,
     selId,
     selTitle,
+    articleOutputId,
+    articleVersionId,
+    articleProjectId,
     mentionedProject,
     selectionDismissed,
     embed?.selection?.kind,
@@ -969,6 +1118,48 @@ export function AICopilotContent({
   // chatContext.functionKey(服务端 applyFunctionKey 置顶 + forcedTool 第 0 步强制),
   // **读后即清**(一次性)—— 不污染后续自由对话轮次。放 ref 不放 state:body 是
   // Resolvable(每次请求求值),ref 更新不重建 transport(重建会打断进行中的流)。
+  const draftEditor=useDraftChatRequest();
+  const currentEditorState = draftEditor.readEditorState();
+  const currentPreparation = currentEditorState?.preparation;
+  const embeddedContentOwner = embed?.selection?.kind === "project" && currentPreparation &&
+    (currentPreparation.owner === "wechat_article" || currentPreparation.owner === "graphic_post") &&
+    currentPreparation.projectId === embed.selection.id &&
+    currentPreparation.scopeKey === creationScopeKey(creationScope) &&
+    currentEditorState.outputId && currentEditorState.outputId === currentPreparation.outputId
+      ? currentPreparation.owner : null;
+  React.useEffect(()=>()=>draftEditor.discardPreparedEditorTurn(embed?.request?.preparedEditorTurn),[draftEditor.discardPreparedEditorTurn,embed?.request?.preparedEditorTurn,liveSessionKey]);
+  const preparedTargets=React.useRef<{editorTarget?:WorkEditorTarget;creationTarget?:WorkCreationTarget}>({});
+  const workMessageSources=React.useRef(new Map<string,{conversationId:string;sourceMessageId:string;toolCallId?:string}>());
+  const workSourceTurn=React.useRef<{conversationId:string;sourceMessageId:string;clientUserId:string;session:typeof liveSession;epoch:number}|null>(null);
+  const preparedReceipt=React.useRef<{sourceMessageId?:string;conversationId?:string;sourceText?:string;attachmentIds?:string[];chatContext:Record<string,unknown>;executionEngine?:string}|null>(null);
+  const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
+  React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
+  const preparationPending=React.useRef(new WeakSet<typeof liveSession>());
+  const [preparationRevision,refreshPreparation]=React.useReducer((revision:number)=>revision+1,0);
+  const submissionAttempt=React.useRef<{
+    text:string;
+    request?:EmbeddedDraftChatRequest|null;
+    session:typeof liveSession;
+    epoch:number;
+    attachmentIds:string[];
+    networkStarted:boolean;
+    preparationFailure:"workspace_required"|"engine_unavailable"|"preparation_failed"|null;
+    taskNotCreated:boolean;
+  }|null>(null);
+  const submittedDraft=React.useRef(false);
+  const recoveryMounted=React.useRef(true);
+  React.useLayoutEffect(()=>{recoveryMounted.current=true;return()=>{recoveryMounted.current=false;};},[]);
+  const ownsSubmissionAttempt=React.useCallback((attempt:NonNullable<typeof submissionAttempt.current>)=>
+    recoveryMounted.current&&submissionAttempt.current===attempt&&liveSessionRef.current===attempt.session&&
+    attempt.session.epoch===attempt.epoch&&conversationStorageOwner()===sessionOwner,[sessionOwner]);
+  const currentSubmissionAttempt=submissionAttempt.current&&ownsSubmissionAttempt(submissionAttempt.current)?submissionAttempt.current:null;
+  React.useLayoutEffect(()=>{
+    if(submissionAttempt.current&&!ownsSubmissionAttempt(submissionAttempt.current)){
+      submissionAttempt.current=null;
+      setComposerLifecycleError(null);
+    }
+  },[liveSessionKey,liveSession,ownsSubmissionAttempt]);
+  const sendPreparedRef=React.useRef<(text:string,request?:EmbeddedDraftChatRequest|null)=>Promise<void>>(async()=>{});
   const quickFunctionKeyRef = React.useRef<string | null>(null);
   // [T-813] 搜索卡「阅读全文」的一次性执行锚。和 functionKey 同轮消费，服务端在浏览器
   // 抓取前把 web.read 绑定到这个 URL，模型不能换成另一条搜索结果。
@@ -982,17 +1173,28 @@ export function AICopilotContent({
     uploading: false,
     count: 0,
   });
+  const selectedEngineAvailable=modelAdmissionRef.current(attachmentState.ids);
   const handleAttachmentStateChange = React.useCallback(
     (next: CopilotAttachmentState) => setAttachmentState(next),
     [],
   );
   const taskControl=React.useRef(liveSession.control);
-  taskControl.current = liveSession.control;
-  const [stopPending,setStopPending]=React.useState(false);
+  taskControl.current=liveSession.control;
+  const [pendingStop,setPendingStop]=React.useState<{session:typeof liveSession;turnKey:string|undefined}|null>(null);
+  const stopPending=pendingStop?.session===liveSession&&pendingStop.turnKey===liveSession.control.turnKey;
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
         api: "/api/chat",
+        prepareSendMessagesRequest:({body,id,messages,trigger,messageId})=>{
+          const source=messages.findLast(message=>message.role==="user");
+          let engine=source?liveSession.sourceEngines.get(source.id):undefined;
+          if(!engine&&trigger!=="regenerate-message"){
+            engine=requestedEngineRef.current;if(source&&engine)liveSession.sourceEngines.set(source.id,engine);
+          }
+          const {executionEngine:_requested,...withoutEngine}=body??{};
+          return {body:{...(trigger!=="regenerate-message"&&requestedEngineRef.current===undefined?withoutEngine:body),id,messages,trigger,messageId,...(engine?{executionEngine:engine}:{})}};
+        },
         // [T-220] 每次请求注入当前选中号 header(与 dispatch 同源 localStorage 真值)。chat route
         //   据此 stamp 工具产的 asset(截图/封面)当前号 —— 此前漏注入 → chat 全程无号 → asset
         //   account_id=NULL → blob 取回 404 破图。未选号 → 不带(server 退化全局)。
@@ -1012,12 +1214,14 @@ export function AICopilotContent({
             requestedFn === "web.read" ? quickWebReadUrlRef.current : null;
           quickWebReadUrlRef.current = null;
           const latestChatContext = chatContextBodyRef.current.chatContext;
+          const frozenTargets=preparedTargets.current;
           const chatContext = requestedFn
             ? { ...latestChatContext, functionKey: requestedFn }
             : latestChatContext;
           return {
             chatContext: {
               ...chatContext,
+              ...frozenTargets,
               ...(webReadUrl ? { webReadUrl } : {}),
               ...(Object.keys(assetAliasRegistryRef.current.aliases).length
                 ? { assetAliases: assetAliasRegistryRef.current.aliases }
@@ -1035,12 +1239,28 @@ export function AICopilotContent({
         // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
         fetch: async (input, init) => {
           const epoch = liveSession.epoch;
+          const attempt=submissionAttempt.current;
+          if(attempt&&attempt.session===liveSession&&attempt.epoch===epoch&&liveSessionRef.current===liveSession&&conversationStorageOwner()===sessionOwner&&!attempt.networkStarted){attempt.networkStarted=true;submittedDraft.current=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
+          const sourceHeaders=new Headers(init?.headers);
+          const clientUserId=liveSession.chat.messages.filter(message=>message.role==='user').at(-1)?.id;
           const res = await liveSession.control.fetch(input as RequestInfo, init);
           try {
+            const sourceTaskId=res.headers.get("x-ai-task-id");
+            if(sourceTaskId&&liveSession.epoch===epoch&&liveSessionRef.current===liveSession)rememberAssistantSourceScope(sourceTaskId,sourceHeaders);
             const cid = res.headers.get("x-conversation-id");
+            const sourceMessageId=res.headers.get("x-source-message-id");
+            if(cid&&sourceMessageId&&clientUserId&&liveSessionRef.current===liveSession&&liveSession.epoch===epoch)workSourceTurn.current={conversationId:cid,sourceMessageId,clientUserId,session:liveSession,epoch};
+            if((sourceMessageId||cid)&&preparedReceipt.current&&liveSession.epoch===epoch){preparedReceipt.current={...preparedReceipt.current,...(sourceMessageId?{sourceMessageId}:{}),...(cid?{conversationId:cid}:{})};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));const executionEngine=preparedReceipt.current.executionEngine;if(sourceMessageId&&(executionEngine==="codex"||executionEngine==="pi"))liveSession.sourceEngines.set(sourceMessageId,executionEngine);}
             if (cid && liveSession.epoch === epoch) captureConversationId(cid);
           } catch {
             /* 读头失败不影响流式 */
+          }
+          // SEMANTIC_BOUNDARY_ALLOW: only the exact own persistence-stage error envelope; no provider or content classification.
+          // This route returns before durable.submit. Generic 500/503, transport loss, and regenerate remain UNKNOWN/original recovery.
+          if(res.status===500&&!res.headers.get("x-ai-task-id")&&!res.headers.get("x-source-message-id")&&attempt&&ownsSubmissionAttempt(attempt)){
+            try{const wire=typeof init?.body==="string"?JSON.parse(init.body):null;const payload=await res.clone().json();
+              if(wire?.trigger==="submit-message"&&wire?.messages?.at(-1)?.role==="user"&&payload?.error==="消息保存失败，请重试。"){attempt.taskNotCreated=true;setPrompt(attempt.text);setComposerLifecycleError("消息保存未完成，本轮尚未启动任务。");}
+            }catch{/* Unconfirmed response stays unconfirmed; never manufacture a source/task identity. */}
           }
           return res;
         },
@@ -1065,7 +1285,7 @@ export function AICopilotContent({
   // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 的授权响应齐了就
   // **同回合自动 resume** execute,无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
   liveSession.transport = transport;
-  liveSession.shouldResume = input => readCurrentAccountId() === sessionAccountId && resumeApprovedToolsOnce(input);
+  liveSession.shouldResume = input => conversationStorageOwner() === sessionOwner && resumeApprovedToolsOnce(input);
   const {
     messages,
     sendMessage,
@@ -1079,20 +1299,61 @@ export function AICopilotContent({
     chat: liveSession.chat,
     experimental_throttle: 50,
   });
+  function workSourceLocation(message:(typeof messages)[number],toolCallId:string){
+    const metadata=message.metadata as {sourceMessageId?:unknown}|undefined;
+    if(typeof metadata?.sourceMessageId==='string'&&conversationId)return {conversationId,sourceMessageId:metadata.sourceMessageId,toolCallId};
+    let known=workMessageSources.current.get(message.id);
+    if(!known){const turn=workSourceTurn.current,index=messages.findIndex(row=>row.id===message.id),prior=messages.slice(0,index).filter(row=>row.role==='user').at(-1);if(turn&&turn.session===liveSession&&turn.epoch===liveSession.epoch&&message.role==='assistant'&&prior?.id===turn.clientUserId){known={conversationId:turn.conversationId,sourceMessageId:turn.sourceMessageId};workMessageSources.current.set(message.id,known);}}
+    return known?{...known,toolCallId}:null;
+  }
   React.useEffect(() => {
     if (liveSession.conversationId && conversationIdRef.current !== liveSession.conversationId) {
       conversationIdRef.current = liveSession.conversationId;
       setConversationId(liveSession.conversationId);
     }
   }, [liveSession, messages, status]);
+  const [stoppedObservation,setStoppedObservation]=React.useState<{session:typeof liveSession;epoch:number}|null>(null);
   const stopTask=async()=>{
     if(stopPending)return;
-    setStopPending(true);
-    try{await taskControl.current.cancel();stop();}
-    catch{setComposerLifecycleError("停止请求尚未确认，请重试停止，或到任务中心核对原任务。");}
-    finally{setStopPending(false);}
+    draftEditor.discardPreparedEditorTurn(embed?.request?.preparedEditorTurn);
+    const session=liveSessionRef.current,epoch=session.epoch;
+    const intent={session,turnKey:session.control.turnKey};
+    setPendingStop(intent);
+    try{
+      const accepted=await session.control.cancel();
+      if(accepted&&session.epoch===epoch&&session.control.turnKey===undefined){
+        if(session.control.stopOutcome==="waiting_stopped"&&liveSessionRef.current===session){setStoppedObservation({session,epoch});setComposerLifecycleError("原请求提交结果尚待确认");}
+        session.chat.stop();
+      }
+    }catch{
+      if(liveSessionRef.current===session&&session.epoch===epoch&&session.control.turnKey===intent.turnKey)setComposerLifecycleError("停止请求尚未确认，请重试停止，或到任务中心核对原任务。");
+    }finally{setPendingStop(current=>current===intent?null:current);}
   };
   const streaming = status === "streaming" || status === "submitted";
+  React.useLayoutEffect(() => {
+    if (streaming) invalidateHistoryReads();
+  }, [streaming, invalidateHistoryReads]);
+  const recoveryAttemptsRef = React.useRef(0);
+  const recoveryTurnKeyRef = React.useRef("");
+  const [recoveryStalled, setRecoveryStalled] = React.useState(false);
+  const recoveryTurnKey = [...messages]
+    .reverse()
+    .find((message) => message.role === "user")?.id ?? "";
+  const hasDurableTaskReceipt = taskControl.current.currentTaskId() !== null;
+  const resetRecoveryBudget = React.useCallback(() => {
+    recoveryAttemptsRef.current = 0;
+    setRecoveryStalled(false);
+  }, []);
+  React.useEffect(() => {
+    if (recoveryTurnKeyRef.current === recoveryTurnKey) return;
+    recoveryTurnKeyRef.current = recoveryTurnKey;
+    resetRecoveryBudget();
+  }, [recoveryTurnKey, resetRecoveryBudget]);
+  React.useEffect(() => {
+    if (!error && !composerLifecycleError && status === "ready") {
+      resetRecoveryBudget();
+    }
+  }, [composerLifecycleError, error, resetRecoveryBudget, status]);
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,
   // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
   useForegroundActivity("AI 编导正在生成回复", streaming);
@@ -1116,6 +1377,15 @@ export function AICopilotContent({
     return out;
   }, [messages]);
   const hasPendingApproval = pendingLocalReads.length > 0;
+  const visibleArtifactRefs=React.useMemo(()=>{
+    const refs=new Set<string>();
+    for(const message of messages)for(const part of message.parts){
+      if(!isToolUIPart(part)||part.state!=="output-available"||!["artifact.register","artifact.copy"].includes(getToolName(part)))continue;
+      const result=workbenchResultOf(part.output),artifact=workbenchArtifactSchema.safeParse(workbenchPayload(result));
+      if(artifact.success&&result?.status==="succeeded")refs.add(`${artifact.data.artifactId}@${artifact.data.version}`);
+    }
+    return refs;
+  },[messages]);
 
   // [T-276] 目录授权批量放行:一张卡点「总是允许该目录」→ 服务端已把该文件所在目录落进授权表,
   //   把**直接父目录相同**的其它待决 local.read 卡一并批准(读文件夹的多文件读共享父目录)。
@@ -1159,16 +1429,68 @@ export function AICopilotContent({
   // [T-094] 本轮流式错误 → 人话气泡:服务端 onError 已转人话;若客户端拿到的仍是原始机器码
   // (装配期 4xx 等路径),这里再过一次共享映射兜底。命中「换模型可解」类附「去设置」链接。
   const terminalScriptSelectionError = isTerminalScriptSelectionError(error);
-  const chatError = React.useMemo(() => {
+  const receiptForRecovery=preparedReceipt.current;
+  const chatError = React.useMemo<{
+    title:string;message:string;suggestSwitchModel:boolean;suggestOpenCredits:boolean;suggestOpenPositioning:boolean;
+    suggestOpenEngine?:boolean;suggestOpenWorkspace?:boolean;suggestInspectTasks?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
+  }|null>(() => {
+    const waitingStopped=stoppedObservation?.session===liveSession&&stoppedObservation.epoch===liveSession.epoch&&liveSession.control.stopOutcome==="waiting_stopped";
+    if(waitingStopped||isModelBenefitRefreshPending(error))return {
+      title:waitingStopped?"已停止等待，原请求结果待核对":"官方模型暂未核对完成",
+      message:waitingStopped?"本轮仅停止等待，原请求可能已经建立任务。请先核对原对话或任务中心，再决定是否继续；系统不会自动重发。":"刚才输入和原对话已保留。请先核对原任务，再决定是否继续；也可以切换自配模型。系统不会自动重发。",
+      suggestSwitchModel:true,suggestInspectTasks:true,suggestOpenCredits:false,suggestOpenPositioning:false,canRetry:false,autoRecover:false,
+    };
     if (!error && !composerLifecycleError) return null;
-    if (!error && composerLifecycleError) {
+    if(composerLifecycleError&&currentSubmissionAttempt&&!currentSubmissionAttempt.networkStarted&&currentSubmissionAttempt.preparationFailure){
+      if(currentSubmissionAttempt.preparationFailure==="workspace_required"){
+        return {title:"先选择账号组",message:"本轮尚未发送，原输入和附件已保留。请先选择或创建账号组；空组也可以创作，无需先绑定平台账号。",suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,suggestOpenWorkspace:!hasCreationWorkspace,canRetry:hasCreationWorkspace,autoRecover:false,retryLabel:"继续本轮",retryDisabled:!hasCreationWorkspace};
+      }
+      const engineReady=modelAdmissionRef.current(currentSubmissionAttempt.attachmentIds)&&!assistantEngine.checking;
+      const engineFailure=currentSubmissionAttempt.preparationFailure==="engine_unavailable"||!engineReady;
       return {
-        title: "这次没有生成成功",
-        message: composerLifecycleError,
+        title:engineFailure?(engineReady?"编导引擎已就绪":assistantEngine.checking?"正在检查编导引擎":"编导引擎尚未就绪"):"稿件尚未准备好",
+        message:engineFailure?(engineReady?"本轮尚未发送，原请求和附件已保留。点击继续本轮即可按当前设置发送。":"本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。"):
+          "本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。",
+        suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,suggestOpenEngine:engineFailure,
+        canRetry:true,autoRecover:false,retryLabel:"继续本轮",retryDisabled:!engineReady,
+      };
+    }
+    if(currentSubmissionAttempt?.taskNotCreated){
+      const canRead=Boolean(conversationIdRef.current);
+      return {title:"本轮尚未启动任务",message:canRead?"消息保存未完成，输入已保留。请先核对当前对话，再决定是否重新发送。":"消息保存未完成，输入已保留。这轮尚未开始，请稍后再核对当前对话。",suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,canRetry:canRead,autoRecover:false,retryLabel:"核对原对话",retryDisabled:!canRead,canRetryWithoutMessages:true};
+    }
+    const receipt=receiptForRecovery;
+    if(composerLifecycleError&&receipt&&(receipt.chatContext.editorTarget||receipt.chatContext.creationTarget)&&!receipt.sourceMessageId&&(!currentSubmissionAttempt||currentSubmissionAttempt.networkStarted)){
+      const canRead=Boolean(receipt.conversationId??conversationIdRef.current);
+      return {
+        title:"原请求结果待确认",
+        message:canRead?"原请求未重复提交。核对原对话回执后，再查看原任务与候选结果。":"原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。",
+        suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,
+        canRetry:true,autoRecover:false,retryLabel:"核对原请求",retryDisabled:!canRead,canRetryWithoutMessages:true,
+      };
+    }
+    if (!error && composerLifecycleError) {
+      if (recoveryStalled) {
+        return {
+          title: "自动恢复暂未取得进展",
+          message: hasDurableTaskReceipt
+            ? "后台任务和已完成内容都已保留。连接暂未恢复，你可以稍后回来，或继续恢复当前轮次。"
+            : "输入和已完成内容已保留，但后台任务尚未建立。你可以继续恢复当前轮次。",
+          suggestSwitchModel: false,
+          suggestOpenCredits: false,
+          suggestOpenPositioning: false,
+          canRetry: true,
+          autoRecover: false,
+        };
+      }
+      return {
+        title: "正在恢复本轮生成",
+        message: "输入和已完成内容已保留，系统正在沿原任务补全结果。",
         suggestSwitchModel: false,
         suggestOpenCredits: false,
         suggestOpenPositioning: false,
-        canRetry: true,
+        canRetry: false,
+        autoRecover: true,
       };
     }
     if (!error) return null;
@@ -1196,9 +1518,15 @@ export function AICopilotContent({
     const suggestOpenPositioning = human?.suggestOpenPositioning ?? false;
     const isMissingModel = human?.code === "model_not_configured";
     const resultUnconfirmed = human?.code === "result_unconfirmed";
-    const modelInterrupted = human?.code === "model_response_interrupted";
+    const autoRecover =
+      !recoveryStalled &&
+      !resultUnconfirmed &&
+      !terminalScriptSelectionError &&
+      !suggestOpenCredits &&
+      !suggestOpenPositioning &&
+      !suggestSwitchModel;
     return {
-      title: modelInterrupted ? "模型回复中断" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
+      title: recoveryStalled ? "自动恢复暂未取得进展" : autoRecover ? "正在恢复本轮生成" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
         ? "AI 额度需要补充"
         : suggestOpenPositioning
           ? "先完成账号定位"
@@ -1208,31 +1536,47 @@ export function AICopilotContent({
               ? "检查 AI 设置后继续"
               : terminalScriptSelectionError
                 ? "这次局部改写已结束"
-                : "这次没有生成成功",
+                : "本轮生成需要处理",
       // 可恢复状态只讲用户下一步，不把版本、渠道、凭据或供应商细节露在主界面。
-      message: resultUnconfirmed || modelInterrupted ? human!.message : suggestOpenCredits
+      message: recoveryStalled
+        ? hasDurableTaskReceipt
+          ? "后台任务和已完成内容都已保留。连接暂未恢复，你可以稍后回来，或继续恢复当前轮次。"
+          : "输入和已完成内容已保留，但后台任务尚未建立。你可以继续恢复当前轮次。"
+        : resultUnconfirmed ? human!.message : suggestOpenCredits
         ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
         : suggestOpenPositioning
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
           : suggestSwitchModel
             ? "刚才输入的内容已经保留。完成设置后，回来即可继续。"
+            : autoRecover
+              ? "输入和已完成内容已保留，系统正在沿原任务自动恢复。"
             : terminalScriptSelectionError || localPatchWasPreserved || chatApiPublicError
               ? publicMessage
               : "刚才输入的内容还在，可以直接再试一次。",
       suggestSwitchModel,
       suggestOpenCredits,
       suggestOpenPositioning,
-      canRetry:
-        !resultUnconfirmed && !modelInterrupted &&
-        !terminalScriptSelectionError &&
-        !suggestOpenCredits &&
-        !suggestOpenPositioning &&
-        !suggestSwitchModel,
+      canRetry: recoveryStalled,
+      autoRecover,
     };
   }, [
+    stoppedObservation,liveSession,
     composerLifecycleError,
+    currentSubmissionAttempt,
+    hasCreationWorkspace,
+    receiptForRecovery,
+    conversationId,
+    selectedEngineAvailable,
+    assistantEngine.checking,
+    assistantEngine.v2,
+    assistantEngine.textAvailable,
+    assistantEngine.visionAvailable,
+    assistantEngine.canSubmitText,
+    assistantEngine.canSubmitVision,
     error,
+    hasDurableTaskReceipt,
     pendingComposerRequest?.functionKey,
+    recoveryStalled,
     retryableScriptPatchRequest?.functionKey,
     terminalScriptSelectionError,
   ]);
@@ -1254,7 +1598,8 @@ export function AICopilotContent({
   }, [openingCredits]);
 
   // 受控输入(useChat v7 不再托管 input;自管 + sendMessage({text}))。
-  const [prompt, setPrompt] = React.useState<string>(vm.prompt);
+  const [prompt, setPrompt] = React.useState<string>(workspaceReturnDraft?.text??vm.prompt);
+  const preserveWorkspaceReturnDraft = React.useCallback(()=>{const current=readCreationScope();if(!current.groupId&&!current.accountId&&!submittedDraft.current&&!submissionAttempt.current?.networkStarted&&!preparedReceipt.current&&!liveSession.conversationId&&!liveSession.control.currentTaskId())workspaceReturnDrafts.set(scope,{text:prompt,attachments:attachmentPickerRef.current?.readDraft?.()??[]});},[scope,prompt,liveSession]);
   const isEmpty = prompt.trim().length === 0 && attachmentState.ids.length === 0;
 
   const finishComposerRequest = React.useCallback((nonce: number) => {
@@ -1356,7 +1701,7 @@ export function AICopilotContent({
       }
       finishComposerRequest(inFlight.nonce);
       setComposerLifecycleError(
-        "本轮回复没有生成可采纳的局部改稿候选，稿面未被修改，目标段落已保留。请直接重试。",
+        "本轮回复没有生成可采纳的局部改稿候选，稿面未被修改，目标段落已保留，系统将沿原任务继续补全。",
       );
       console.warn("[T-716][script.patch] assistant finished without candidate", {
         nonce: inFlight.nonce,
@@ -1372,7 +1717,33 @@ export function AICopilotContent({
     finishComposerRequest(inFlight.nonce);
   }, [error, finishComposerRequest, messages, status]);
 
-  const retryLastTurn = React.useCallback(() => {
+  const retryLastTurn = React.useCallback(async () => {
+    if(preparationPending.current.has(liveSession))return;
+    invalidateHistoryReads();
+    const attempt=submissionAttempt.current;
+    if(attempt&&!attempt.networkStarted&&attempt.preparationFailure){
+      if(!ownsSubmissionAttempt(attempt))return;
+      // This attempt never reached transport.fetch. An explicit retry prepares
+      // the original text/request/attachments, not an older receipt or new picker.
+      requestAttachmentIdsRef.current=[...attempt.attachmentIds];
+      const pending=sendPreparedRef.current(attempt.text,attempt.request);
+      const continuedAttempt=submissionAttempt.current;
+      try{await pending;}catch{/* Original preflight error stays visible. */}
+      finally{if(continuedAttempt&&ownsSubmissionAttempt(continuedAttempt))requestAttachmentIdsRef.current=[];}
+      return;
+    }
+    if(attempt?.taskNotCreated){
+      if(!ownsSubmissionAttempt(attempt))return;
+      const id=conversationIdRef.current;if(!id)return;
+      preparationPending.current.add(liveSession);refreshPreparation();
+      try{
+        const rows=await client.listMessages({params:{conversationId:id},query:undefined,body:undefined}) as unknown as WireAIMessage[];
+        if(!ownsSubmissionAttempt(attempt)||liveSession.chat.status==="streaming"||liveSession.chat.status==="submitted")return;
+        setMessages(toUIMessages(rows));setComposerLifecycleError("已核对原对话，未自动重新提交。原输入已保留，请确认当前记录后再操作。");
+      }catch(cause){if(ownsSubmissionAttempt(attempt))setComposerLifecycleError(cause instanceof Error?cause.message:"原对话尚未读回，输入已保留。");}
+      finally{preparationPending.current.delete(liveSession);if(recoveryMounted.current&&liveSessionRef.current===liveSession)refreshPreparation();}
+      return;
+    }
     setComposerLifecycleError(null);
     const request =
       pendingComposerRequestRef.current ?? retryableScriptPatchRequestRef.current;
@@ -1392,26 +1763,98 @@ export function AICopilotContent({
         mode: "required",
       };
     }
+    const receipt=preparedReceipt.current;
+    if(receipt&&(receipt.chatContext.editorTarget||receipt.chatContext.creationTarget)){
+      if(preparationPending.current.has(liveSession))return;
+      const id=receipt.conversationId??conversationIdRef.current;
+      if(!id){setComposerLifecycleError("原请求结果尚未确认，请保留当前对话并等待原任务回执。");return;}
+      preparationPending.current.add(liveSession);
+      refreshPreparation();
+      const epoch=liveSession.epoch,beforeMessages=liveSession.chat.messages;
+      try{
+        const rows=await client.listMessages({params:{conversationId:id},query:undefined,body:undefined}) as unknown as Array<WireAIMessage&{attachments?:string[]}>;
+        if(!recoveryMounted.current||liveSessionRef.current!==liveSession||liveSession.epoch!==epoch||preparedReceipt.current!==receipt||liveSession.chat.messages!==beforeMessages)return;
+        if(liveSession.chat.status==="streaming"||liveSession.chat.status==="submitted")return;
+        const mapped=toUIMessages(rows);
+        if(!receipt.sourceMessageId){setMessages(mapped);setComposerLifecycleError("已读取原对话回执。原请求未重复提交，请核对任务与候选状态。");return;}
+        const source=rows.find(row=>row.id===receipt.sourceMessageId&&row.role==="user");
+        // SEMANTIC_BOUNDARY_ALLOW: exact original receipt identity/content/attachment
+        // equality only; this never chooses a message by wording or creates a turn.
+        if(!source||!mapped.some(row=>row.id===source.id&&row.role==="user")||(receipt.sourceText!==undefined&&source.content!==receipt.sourceText)||(receipt.attachmentIds!==undefined&&JSON.stringify(source.attachments??[])!==JSON.stringify(receipt.attachmentIds))){setComposerLifecycleError("找不到这次原请求的完整回执，请保留当前对话并核对原任务。");return;}
+        setMessages(mapped);captureConversationId(id);
+        if(receipt.executionEngine==="pi"||receipt.executionEngine==="codex")liveSession.sourceEngines.set(source.id,receipt.executionEngine);
+        await regenerate({messageId:source.id,body:{chatContext:receipt.chatContext,conversationId:id,attachmentIds:receipt.attachmentIds??source.attachments??[],...(receipt.executionEngine?{executionEngine:receipt.executionEngine}:{})}});
+      }catch(cause){if(recoveryMounted.current&&liveSessionRef.current===liveSession&&liveSession.epoch===epoch&&preparedReceipt.current===receipt)setComposerLifecycleError(cause instanceof Error?`原请求恢复未完成：${cause.message}`:"原请求恢复未完成，请核对原任务。");}
+      finally{preparationPending.current.delete(liveSession);if(recoveryMounted.current&&liveSessionRef.current===liveSession)refreshPreparation();}
+      return;
+    }
     return regenerate();
-  }, [messages, regenerate]);
+  }, [messages, regenerate,setMessages,liveSession,captureConversationId,ownsSubmissionAttempt,invalidateHistoryReads]);
+
+  const continueRecovery = React.useCallback(() => {
+    resetRecoveryBudget();
+    return retryLastTurn();
+  }, [resetRecoveryBudget, retryLastTurn]);
+
+  // T-1022/T-1023：regenerate 会复用后端已保存的 sourceMessageId。前端只负责把请求可靠交给
+  // 持久 Agent，连续三次仍没有新流事件就结束自动请求并给出“继续恢复”；已有 executionTaskId
+  // 的后台任务不会被取消，用户离开页面后仍由其自身 retry_wait/检查点推进。
+  React.useEffect(() => {
+    if (!chatError?.autoRecover || streaming || messages.length === 0 || preparationPending.current.has(liveSession)) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const continueOriginalTurn = () => {
+      if (recoveryAttemptsRef.current >= 3) {
+        setRecoveryStalled(true);
+        return;
+      }
+      const delay = 1_000 * 2 ** recoveryAttemptsRef.current;
+      timer = setTimeout(() => {
+        if (cancelled || preparationPending.current.has(liveSession)) return;
+        recoveryAttemptsRef.current += 1;
+        void Promise.resolve(retryLastTurn())
+          .catch(() => undefined)
+          .finally(() => {
+            if (!cancelled) continueOriginalTurn();
+          });
+      }, delay);
+    };
+    continueOriginalTurn();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [chatError?.autoRecover, messages.length, retryLastTurn, streaming,liveSession,preparationRevision]);
 
   // [T-055b SPEC §5.1] 一键岛预填 —— 面板带 fn 打开且对话尚空 → 把「预填话术」写进**输入框**,
   // 用户回车才发,**绝不自动发送**(治「点击后内容重复两遍」:旧预调自动 sendMessage 在带 ?fn
   // 重进/重渲时会重复入历史;预填只写 input value,机制上不可能重复发)。functionKey 置顶工具
   // 的白名单重排(applyFunctionKey)不受影响 —— 用户发出这条时仍优先调专用工具。
   const prefilledRef = React.useRef(false);
+  const lastPrefillRef = React.useRef<string>("");
+  const lastUrlPrefillIdentityRef = React.useRef<string>("");
+  const urlPrefill = searchParams?.get("prefill") || "";
+  const urlPrefillIdentity = JSON.stringify([urlPrefill, selKind, selId, articleOutputId, articleVersionId]);
   React.useEffect(() => {
+    // 深链也可从已有项目会话打开。每次明确的新建议只填空输入框，
+    // 保留用户正在写的文字，下一次发送仍走链接指定的工具。
+    if (urlPrefill && lastUrlPrefillIdentityRef.current !== urlPrefillIdentity) {
+      lastUrlPrefillIdentityRef.current = urlPrefillIdentity;
+      lastPrefillRef.current = urlPrefill;
+      quickFunctionKeyRef.current = functionKey ?? null;
+      setPrompt((prev) => prev.trim() ? prev : urlPrefill);
+      return;
+    }
     if (prefilledRef.current) return;
     if (messages.length > 0 || streaming) return;
-    // [T-060①] URL ?prefill= 自定义话术优先(按钮语义更细);否则按 fn 查默认词条。
-    const custom = searchParams?.get("prefill") || "";
-    const text = custom || (functionKey ? FUNCTION_KEY_PREFILL[functionKey] : "");
+    // [T-060①] 没有自定义预填时，空会话可使用 fn 的默认话术。
+    const text = urlPrefill || (functionKey ? (assistantEngine.v2?(FUNCTION_KEY_PREFILL[functionKey]??""):copilotImageEnginePrefill(FUNCTION_KEY_PREFILL[functionKey]??"",functionKey,assistantEngine.engine)) : "");
     if (!text) return;
     prefilledRef.current = true;
     // 不覆盖用户已敲的字(预填只填空输入框)。
     setPrompt((prev) => (prev.trim().length > 0 ? prev : text));
     lastPrefillRef.current = text;
-  }, [functionKey, messages.length, streaming]);
+  }, [functionKey, messages.length, streaming, urlPrefill, urlPrefillIdentity,assistantEngine.engine,assistantEngine.v2]);
 
   // [T-108] 外部对话请求(方案 A)—— 稿面 AI 按钮点击后 embed.request.nonce 自增,本 effect
   // 据 nonce 变化处理该请求。functionKey/selection 已在上方按 request 优先重算(置顶专用工具 +
@@ -1420,7 +1863,47 @@ export function AICopilotContent({
   //      点按钮,直接发;模型据 functionKey 优先调 review.script/calibration.diagnose)。
   //   ② autoSend 缺省:只预填输入框(不覆盖用户已敲的字,延续 T-055b),用户回车才发。
   // nonce 由 Provider 内部计数器生成(SSR 安全,非 Date.now/Random),天然去重(重渲不重复发)。
-  const lastPrefillRef = React.useRef<string>("");
+  React.useLayoutEffect(()=>{sendPreparedRef.current=async(text,request)=>{
+    if(preparationPending.current.has(liveSession))throw Error("当前稿件仍在准备，请等待原保存结束。");
+    invalidateHistoryReads();
+    preparationPending.current.add(liveSession);refreshPreparation();setComposerLifecycleError(null);
+    submittedDraft.current=false;
+    const attempt:NonNullable<typeof submissionAttempt.current>={text,request,session:liveSession,epoch:liveSession.epoch,attachmentIds:[...requestAttachmentIdsRef.current],networkStarted:false,preparationFailure:null,taskNotCreated:false};submissionAttempt.current=attempt;
+    const ownedWorkspace=createCreationWorkspace(readCreationScope());ownedWorkspace.activate();
+    try{
+      const workspace=readCreationScope();if(!workspace.groupId&&!workspace.accountId){attempt.preparationFailure="workspace_required";setPrompt(text);throw Error("请先选择或创建账号组，原输入已保留。");}
+      if(!modelAdmissionRef.current(attempt.attachmentIds)||assistantEngine.checking){attempt.preparationFailure="engine_unavailable";throw Error("本轮用途的模型尚不可用，请到设置核对；原输入与附件已保留。");}
+      const operation=ownedWorkspace.capture();operation.assertCurrent();
+      const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn(request?.preparedEditorTurn,creationScopeKey(workspace),request?.nonce);
+      operation.assertCurrent();
+      if(!ownsSubmissionAttempt(attempt))return;
+      const currentWorkspace=readCreationScope();if(!currentWorkspace.groupId&&!currentWorkspace.accountId){attempt.preparationFailure="workspace_required";setPrompt(text);throw Error("请先选择或创建账号组，原输入已保留。");}
+      const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
+      if(!targets.editorTarget&&!targets.creationTarget){preparedReceipt.current=null;sessionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
+      const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
+      const webReadUrl=requestedFn==="web.read"?quickWebReadUrlRef.current:null;quickWebReadUrlRef.current=null;
+      const frozenContext={...chatContextBodyRef.current.chatContext,...targets,...(requestedFn?{functionKey:requestedFn}:{}),...(webReadUrl?{webReadUrl}:{}),...(Object.keys(assetAliasRegistryRef.current.aliases).length?{assetAliases:assetAliasRegistryRef.current.aliases}:{})};
+      const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...attempt.attachmentIds],executionEngine:requestedEngineRef.current,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
+      preparedReceipt.current=frozenReceipt;sessionStorage.setItem(receiptStorageKey,JSON.stringify(frozenReceipt));
+      await sendMessage({text},{body:{chatContext:frozenContext,attachmentIds:frozenReceipt.attachmentIds,executionEngine:frozenReceipt.executionEngine,...(frozenReceipt.conversationId?{conversationId:frozenReceipt.conversationId}:{})}});
+    }catch(cause){
+      if(ownsSubmissionAttempt(attempt)){
+        if(!attempt.networkStarted)attempt.preparationFailure??="preparation_failed";
+        setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");
+      }
+      throw cause;
+    }finally{
+      draftEditor.discardPreparedEditorTurn(request?.preparedEditorTurn);
+      ownedWorkspace.dispose();
+      preparationPending.current.delete(liveSession);
+      if(recoveryMounted.current&&liveSessionRef.current===liveSession)refreshPreparation();
+      if(ownsSubmissionAttempt(attempt)){
+        if(!attempt.networkStarted)request?.onCreationSubmission?.("not-submitted");
+      }
+    }
+  };});
+  const settledCreation=React.useRef(new Set<string>());
+  React.useEffect(()=>{const request=embed?.request,target=request?.creationTarget;if(!target||!request?.onCreationSettled||settledCreation.current.has(target.clientRequestId))return;const settled=messages.some(message=>message.role==="assistant"&&message.parts.some(part=>{if(!isToolUIPart(part)||getToolName(part)!=="work.creation.propose"||part.state!=="output-available")return false;const outcome=readChatToolOutcome(part.output);if(outcome.blocksData)return false;const result=workCreationProposalResult.safeParse(outcome.data);return result.success&&result.data.target.clientRequestId===target.clientRequestId;}));if(settled){settledCreation.current.add(target.clientRequestId);request.onCreationSettled();}},[messages,embed?.request]);
   const handledRequestNonceRef = React.useRef(0);
   React.useEffect(() => {
     const req = activeRequest;
@@ -1438,12 +1921,12 @@ export function AICopilotContent({
       // 流式中不打断本轮(极窄竞态:用户上一条还在流)—— 此时**不**标记消费,待 streaming 结束
       // effect 重跑(依赖 streaming)再发,不丢这条请求。functionKey/selection 已随 request 重算进
       // chatContextBody → transport 本次求值带最新上下文,模型据 functionKey 优先调专用工具。
-      if (streaming) return;
+      if (streaming || assistantEngine.checking) return;
       handledRequestNonceRef.current = req.nonce;
       beginComposerRequest(req);
       quickFunctionKeyRef.current = req.functionKey ?? null;
       setPrompt("");
-      const pending = Promise.resolve(sendMessage({ text }));
+      const pending = sendPreparedRef.current(text,req);
       // sendMessage Promise 只代表请求已提交，不代表流、工具和候选卡成功。附件等本轮资源
       // 可在 settle 后释放，但稿面锚点由上面的成功 effect 负责消费。
       void pending.catch(() => undefined);
@@ -1459,7 +1942,7 @@ export function AICopilotContent({
     requestAnimationFrame(() => {
       textareaRef.current?.focus();
     });
-  }, [activeRequest, streaming, sendMessage, finishComposerRequest, beginComposerRequest]);
+  }, [activeRequest, streaming, assistantEngine.checking, sendMessage, finishComposerRequest, beginComposerRequest]);
 
   const submit = React.useCallback(() => {
     const value =
@@ -1471,9 +1954,12 @@ export function AICopilotContent({
       value.length === 0 ||
       streaming ||
       hasPendingApproval ||
-      attachmentState.uploading
+      attachmentState.uploading || !selectedEngineAvailable || !hasCreationWorkspace
     ) {
       return;
+    }
+    if(!assistantEngine.v2&&liveSession.executionEngine==="codex"&&attachmentState.ids.length>0){
+      setComposerLifecycleError("本地 Codex 当前支持文本请求；附件已保留，请到设置中将编导引擎切换为 CreatorOS 后处理附件。");return;
     }
     setComposerLifecycleError(null);
     requestAttachmentIdsRef.current = [...attachmentState.ids];
@@ -1525,14 +2011,19 @@ export function AICopilotContent({
     }
     // useChat 正常返回 Promise；测试 seam 或兼容适配器可能返回 void。统一包成 Promise，
     // 既保证附件 ids 活到 transport 读取本轮 body，又不让旧适配器触发 finally 崩溃。
-    const pending = Promise.resolve(sendMessage({ text: value }));
+    const pending = sendPreparedRef.current(value,explicitRequest);
+    const submittedAttempt=submissionAttempt.current;
     setPrompt("");
     attachmentPickerRef.current?.clear();
-    void pending.finally(() => {
-      requestAttachmentIdsRef.current = [];
+    void pending.catch(()=>{if(submittedAttempt&&ownsSubmissionAttempt(submittedAttempt))setPrompt(value);}).finally(() => {
+      if(submittedAttempt&&ownsSubmissionAttempt(submittedAttempt))requestAttachmentIdsRef.current = [];
     });
   }, [
     prompt,
+    selectedEngineAvailable,
+    hasCreationWorkspace,
+    liveSession,
+    ownsSubmissionAttempt,
     streaming,
     hasPendingApproval,
     sendMessage,
@@ -1551,7 +2042,7 @@ export function AICopilotContent({
   // (T-055b 铁律),用户按发送才出手。无 prefill/functionKey 的老条目退化为原「填字条」。
   const applyQuickPrompt = React.useCallback(
     (item: { readonly prefill?: string; readonly functionKey?: string }, fallbackText: string) => {
-      const text = item.prefill ?? fallbackText;
+      const text = (assistantEngine.v2?(item.prefill??fallbackText):copilotImageEnginePrefill(item.prefill ?? fallbackText,item.functionKey,assistantEngine.engine));
       if (!text) return;
       if (item.functionKey && item.functionKey !== "script.patch") {
         // 用户点了另一个明确功能，旧段落锚点和失败重试都不应暗中跟过去。
@@ -1568,7 +2059,7 @@ export function AICopilotContent({
       quickFunctionKeyRef.current = item.functionKey ?? null;
       textareaRef.current?.focus();
     },
-    [finishComposerRequest],
+    [finishComposerRequest,assistantEngine.engine,assistantEngine.v2],
   );
 
   // [T-239e] 会话成本角标 —— 历史底数(读回时从落库行 token 列累计;老消息 null 兼容跳过)。
@@ -1584,8 +2075,8 @@ export function AICopilotContent({
   // 网络错)→ 静默降级(不清空当前对话、不弹错),只在控制台留日志。既服务「二次进入读回」,
   // 也服务「历史记录点某条切过去」。
   const loadConversation = React.useCallback(
-    async (id: string): Promise<boolean> => {
-      if (!id) return false;
+    async (id: string, read: HistoryRead): Promise<boolean> => {
+      if (!id || !ownsHistoryRead(read)) return false;
       const messagesBeforeRead = liveSession.chat.messages;
       try {
         // 注意:契约 listMessages 只声明 params(conversationId),未声明分页 query(与 listConversations
@@ -1595,7 +2086,7 @@ export function AICopilotContent({
           query: undefined,
           body: undefined,
         })) as unknown as ReadonlyArray<WireAIMessage> | null | undefined;
-        if (liveSessionRef.current !== liveSession) return false;
+        if (!ownsHistoryRead(read)) return false;
         if (liveSession.chat.messages !== messagesBeforeRead) return true;
         if (liveSession.chat.status === "streaming" || liveSession.chat.status === "submitted") return true;
         const mapped = toUIMessages(rows ?? []);
@@ -1603,17 +2094,21 @@ export function AICopilotContent({
         // 读回的 UIMessage 不带 metadata → 与下方流式增量(sumStreamedUsage)天然不重复计。
         setHistoryUsage(sumUsageTokens(rows ?? []));
         setMessages(mapped);
+        // SDK同步替换messages引用；只接纳本次归属提交，后续外部消息推进仍使原读失效。
+        read.messages = liveSession.chat.messages;
+        if (!ownsHistoryRead(read)) return false;
         liveSession.conversationId = id;
         conversationIdRef.current = id;
         setConversationId(id);
-        writeStoredConversationId(scopeRef.current, id);
+        if (!ownsHistoryRead(read)) return false;
+        writeStoredConversationId(read.context.scope, id, read.context.owner);
         return true;
       } catch (err) {
-        console.error("[copilot] load conversation failed:", err);
+        if (ownsHistoryRead(read)) console.error("[copilot] load conversation failed:", err);
         return false;
       }
     },
-    [setMessages, scope, liveSession],
+    [setMessages, scope, liveSession,sessionOwner, ownsHistoryRead],
   );
 
   // 历史记录面板状态(声明提前:下方 scope 恢复 effect 在 scope 切换时要重置它)。
@@ -1629,64 +2124,63 @@ export function AICopilotContent({
   //     即「该入口最近会话」—— 清缓存/换浏览器/指针毁档都不再失忆(根因链断点 3/4 根治);
   //   两路皆空 → 诚实空会话(该入口真的从没聊过)。
   // 读回失败自愈不毁档:失效指针只清指针本身,随即走服务端兜底,不再「一错清档、永远新建」。
-  const hydratedForKeyRef = React.useRef<string | null>(null);
   React.useEffect(() => {
-    if (hydratedForKeyRef.current === liveSessionKey) return;
-    hydratedForKeyRef.current = liveSessionKey;
-    // scope 变了(入口/内嵌项目切换):重置会话态 + 历史面板缓存(历史只列当前 scope)。
+    const read = beginHistoryRead();
+    const dispose = () => { read.blocked = true; };
+    if (!ownsHistoryContext(read)) return dispose;
     setHistoryRows(null);
     setHistoryOpen(false);
     if (liveSession.chat.messages.length > 0 || ["submitted", "streaming"].includes(liveSession.chat.status)) {
       conversationIdRef.current = liveSession.conversationId;
       setConversationId(liveSession.conversationId);
       prefilledRef.current = true;
-      return;
+      return dispose;
     }
-    const stored = readStoredConversationId(scope);
+    const stored = readStoredConversationId(scope,sessionOwner);
+    if (!ownsHistoryRead(read)) return dispose;
     conversationIdRef.current = stored;
     setConversationId(stored);
-    if (stored) {
-      // 有指针 → 先抑制一键岛预填(读回是「续上次」,输入框不再叠预填话术)。
-      prefilledRef.current = true;
-    }
+    if (stored) prefilledRef.current = true;
     void (async () => {
-      // 路 1:指针快路。失败(会话被删/网络错)→ 清失效指针,落入路 2。
       if (stored) {
-        const ok = await loadConversation(stored);
+        const ok = await loadConversation(stored, read);
+        if (!ownsHistoryRead(read)) return;
         if (ok) return;
-        writeStoredConversationId(scope, null);
+        writeStoredConversationId(read.context.scope, null, read.context.owner);
       }
-      // 路 2:服务端兜底 —— 该 scope 最近一条会话(只查本 scope,跨 scope 会话绝不流入)。
+      if (!ownsHistoryRead(read)) return;
       try {
         const rows = (await client.listConversations({
           params: undefined,
-          query: { page: 1, pageSize: 1, scope },
+          query: { page: 1, pageSize: 1, scope: read.context.scope },
           body: undefined,
         })) as unknown as ReadonlyArray<WireConversation> | null | undefined;
+        if (!ownsHistoryRead(read)) return;
         const latest = rows?.[0];
         if (latest?.id) {
-          const ok = await loadConversation(latest.id);
+          const ok = await loadConversation(latest.id, read);
+          if (!ownsHistoryRead(read)) return;
           if (ok) {
-            // 服务端恢复成功 = 「续上次」,同样抑制预填。
             prefilledRef.current = true;
             return;
           }
         }
       } catch (err) {
-        // 兜底失败(离线等)→ 诚实空会话,不弹错;下次进入再试。
-        console.error("[copilot] scope fallback recovery failed:", err);
+        if (ownsHistoryRead(read)) console.error("[copilot] scope fallback recovery failed:", err);
       }
-      if (liveSessionRef.current !== liveSession || liveSession.chat.messages.length > 0) return;
-      // 两路皆空 → 干净空会话,放开一键岛预填(首次进入可预填一次)。
+      if (!ownsHistoryRead(read) || liveSession.chat.messages.length > 0) return;
       conversationIdRef.current = null;
       setConversationId(null);
       setMessages([]);
-      setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 空会话底数归零
+      read.messages = liveSession.chat.messages;
+      if (!ownsHistoryRead(read)) return;
+      setHistoryUsage({ inputTokens: 0, outputTokens: 0 });
       prefilledRef.current = false;
     })();
-    // loadConversation 依赖稳定;scope 变化触发恢复。
+    // 每次挂载/真实owner或scope变化建立整链归属；StrictMode清理后第二setup也正常恢复。
+    return dispose;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope, liveSessionKey]);
+  }, [historyContext]);
 
   // 历史记录(SPEC 本切片,做实占位按钮):点「历史记录」→ 拉过往会话列表(标题+时间),
   // 点某条 → 切到该会话 + 读回消息。open 时懒加载一次(scope 切换时缓存已被上方 effect 清掉)。
@@ -1695,37 +2189,43 @@ export function AICopilotContent({
     setHistoryOpen((prev) => {
       const next = !prev;
       if (next && historyRows === null) {
+        const owner = captureHistoryContext();
         void (async () => {
           try {
             const rows = (await client.listConversations({
               params: undefined,
-              query: { page: 1, pageSize: 20, scope: scopeRef.current },
+              query: { page: 1, pageSize: 20, scope: owner.context.scope },
               body: undefined,
             })) as unknown as ReadonlyArray<WireConversation> | null | undefined;
-            setHistoryRows(rows ?? []);
+            if (ownsHistoryContext(owner)) setHistoryRows(rows ?? []);
           } catch (err) {
             // 列表拉取失败 → 诚实空列表(不弹错)。
-            console.error("[copilot] list conversations failed:", err);
-            setHistoryRows([]);
+            if (ownsHistoryContext(owner)) {
+              console.error("[copilot] list conversations failed:", err);
+              setHistoryRows([]);
+            }
           }
         })();
       }
       return next;
     });
-  }, [historyRows]);
+  }, [historyRows, captureHistoryContext, ownsHistoryContext]);
   const pickHistory = React.useCallback(
     (id: string) => {
+      const read = beginHistoryRead();
       setHistoryOpen(false);
-      void loadConversation(id);
+      void loadConversation(id, read);
     },
-    [loadConversation],
+    [loadConversation, beginHistoryRead],
   );
   // 新对话([T-096] 同 scope 内新开一条):清当前会话 id + 清消息 + 清**当前 scope**的指针,
   // 下轮发言由后端 lazy 建新会话(仍落当前 scope)。绝不跨 scope、绝不影响其它 scope 的指针
   // (选题岛「新对话」动的是 surface:topics 桶,global 的指针纹丝不动)。
   // prefilledRef 复位,让「新对话」后一键岛预调仍可触发一次。
   const startNewConversation = React.useCallback(() => {
-    setHistoryOpen(false);
+    invalidateHistoryReads();
+    setHistoryOpen(false);submittedDraft.current=false;
+    draftEditor.discardPreparedEditorTurn(embed?.request?.preparedEditorTurn);
     // 新对话必须同时结束上一条局部命令、可选段落锚点和失败重试；否则新会话第一句
     // 仍可能继承旧稿面的 script.patch，形成“什么都发不了”的跨会话阻断。
     quickFunctionKeyRef.current = null;
@@ -1737,6 +2237,10 @@ export function AICopilotContent({
     retryableScriptPatchRequestRef.current = null;
     setRetryableScriptPatchRequest(null);
     setComposerLifecycleError(null);
+    submissionAttempt.current=null;
+    preparedReceipt.current=null;
+    try{sessionStorage.removeItem(receiptStorageKey);}catch{/* New conversation still clears the in-memory original receipt. */}
+    requestAttachmentIdsRef.current=[];
     setConsumedRequestNonce((current) =>
       Math.max(current, providerRequest?.nonce ?? 0),
     );
@@ -1745,11 +2249,11 @@ export function AICopilotContent({
     liveSession.conversationId = null;
     conversationIdRef.current = null;
     setConversationId(null);
-    writeStoredConversationId(scopeRef.current, null);
+    writeStoredConversationId(scopeRef.current, null,sessionOwner);
     setMessages([]);
     setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 新对话底数归零
     prefilledRef.current = false;
-  }, [providerRequest?.nonce, setMessages, stop, liveSession]);
+  }, [providerRequest?.nonce, setMessages, stop, liveSession, invalidateHistoryReads]);
 
   // GAP-COP-feed: 最近任务 is now backed by the REAL global task feed (ai.tasks.list) —
   // the user's cross-project AI tasks, newest first. `recentTasks` is null while loading,
@@ -1919,7 +2423,7 @@ export function AICopilotContent({
   const handlePromptChange = React.useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
-      setPrompt(value);
+      submittedDraft.current=false;setPrompt(value);
       syncMentionState(value, e.target.selectionStart ?? value.length);
     },
     [syncMentionState],
@@ -2066,7 +2570,7 @@ export function AICopilotContent({
     // bug #5:面板布局重排 —— 整体撑满浮层高度(min-h-0 让内部可正确收缩),对话区做主区(flex-1
     // 占满、消息流自身滚动),下面的「控制台/快捷入口/智能推荐」收进一个有界、可滚的次区,不再挤占对话。
     <div
-      className="flex h-full min-h-0 flex-col gap-3"
+      className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto"
       data-slot="ai-copilot-content"
     >
       {/* CopilotHeader ------------------------------------------------- */}
@@ -2324,7 +2828,8 @@ export function AICopilotContent({
           data-slot="copilot-message-scroll"
           className="min-h-[120px] min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
-          {messages.length > 0 ? (
+          <WorkbenchArtifactHistory conversationId={conversationId} accountId={sessionAccountId??""} excludeRefs={visibleArtifactRefs}/>
+          {messages.length > 0 || chatError ? (
             <ol
               data-slot="copilot-messages"
               aria-label="助手活动记录"
@@ -2359,6 +2864,10 @@ export function AICopilotContent({
                       </div>
                     );
                   })()}
+                  {visibleWorkbenchProgress(message.parts).map(([operationId,line])=><div key={`${message.id}-progress-${operationId}`}
+                   role="status" className="rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5 text-xs text-muted-foreground">
+                   {line}
+                  </div>)}
                   {/* generative UI:首波 5 工具结果 → 对话内候选卡(逐条/整条采纳走 confirm 门)。
                       工具结果按 kind 分发到对应卡:选题候选 / 选题卡 / 维度诊断 / 复盘经验 / 定位提案。 */}
                   {message.parts.map((part, idx) => {
@@ -2441,14 +2950,39 @@ export function AICopilotContent({
                         </div>
                       );
                     }
-                    const out = part.output as { kind?: string } | undefined;
+                    const outcome=readChatToolOutcome(part.output);
+                    const out = outcome.data as { kind?: string } | undefined;
                     if (!out) return null;
                     const key = `${message.id}-tool-${idx}`;
                     // [T-060②] 已完成 trace 行:可折叠展开看入参/结果摘要;后面若有产物卡
                     // 则卡随其后。纯读工具(context.*)也留痕 —— 用户能看见 AI 读了什么。
                     const traceRow = (
-                      <ChatToolTrace key={`${key}-trace`} label={traceLabel} input={part.input} output={out} />
+                      <React.Fragment key={`${key}-trace`}><ChatToolTrace label={traceLabel} input={part.input} output={part.output}/><ChatToolOutcomeNotice outcome={outcome}/></React.Fragment>
                     );
+                    if(outcome.blocksData)return <React.Fragment key={key}>{traceRow}</React.Fragment>;
+                    if((name==="system.action.propose"&&out.kind==="system.action.proposal")||(name==="canvas.create.propose"&&out.kind==="canvas.create.proposal")||(name==="canvas.generate.propose"&&out.kind==="canvas.generate.proposal")){
+                      const source=(out as {source?:{taskId?:string}}).source;
+                      return <React.Fragment key={key}>{traceRow}<ChatSystemActionCard result={out} scope={source?.taskId?readAssistantSourceScope(source.taskId):null} onReviewCandidate={request=>{
+                        setPrompt(current=>appendCandidateReviewPrompt(current,request));
+                        quickFunctionKeyRef.current=null;
+                        textareaRef.current?.focus();
+                      }}/></React.Fragment>;
+                    }
+                    if((name==="work.editor.read"||name==="work.editor.propose")&&(out.kind==="work.editor.context"||out.kind==="work.editor.candidate"))return <React.Fragment key={key}>{traceRow}<ChatWorkEditorCard result={out} toolCallId={part.toolCallId} location={workSourceLocation(message,part.toolCallId)}/></React.Fragment>;
+                    if((name==="work.creation.read"||name==="work.creation.propose")&&(out.kind==="work.creation.read"||out.kind==="work.creation.propose"))return <React.Fragment key={key}>{traceRow}<ChatWorkCreationCard result={out} toolCallId={part.toolCallId} location={workSourceLocation(message,part.toolCallId)}/></React.Fragment>;
+                    if(name==="plan.update"){
+                      const result=workbenchResultOf(out);
+                      const plan=workbenchPlanSchema.safeParse(workbenchPayload(result));
+                      return <React.Fragment key={key}>{traceRow}{plan.success?<WorkbenchPlanCard plan={plan.data}/>:null}</React.Fragment>;
+                    }
+                    if(name==="artifact.register"||name==="artifact.copy"){
+                      const result=workbenchResultOf(out);
+                      const artifact=workbenchArtifactSchema.safeParse(workbenchPayload(result));
+                      const reference=artifact.success?`${artifact.data.artifactId}@${artifact.data.version}`:null;
+                      return <React.Fragment key={key}>{traceRow}{artifact.success&&result?.status==="succeeded"&&
+                       reference&&result.artifactRefs.includes(reference)&&sessionAccountId?
+                       <WorkbenchArtifactCard artifact={artifact.data} accountId={sessionAccountId}/>:null}</React.Fragment>;
+                    }
                     if(name==="research.autonomous" && out.kind==="research.autonomous"){
                       const research=out as {taskId?:string|null;error?:string|null};
                       return <React.Fragment key={key}>{traceRow}{research.taskId?<ExecutionTaskCard taskId={research.taskId}/>:<div className="text-sm text-error">{research.error||"自主调研任务未提交，请重试。"}</div>}</React.Fragment>;
@@ -2568,9 +3102,7 @@ export function AICopilotContent({
                         </React.Fragment>
                       );
                     }
-                    // [T-385] 抓逐字稿(project.transcribe)→ 简单状态文本(转写分钟级后台跑,
-                    // 不轮询 —— 完成后用户让编导重新拆解即可);失败(无项目上下文/无抖音锚/
-                    // dispatch 失败)→ 诚实错误态。
+                    // 原project.transcribe回执接准确任务读取；缺taskId时保未确认，不假报受理。
                     if (
                       name === "project.transcribe" &&
                       out.kind === "project.transcribe"
@@ -2584,17 +3116,18 @@ export function AICopilotContent({
                           {traceRow}
                           <p
                             data-slot="copilot-transcribe-status"
-                            data-ok={o.error ? "false" : "true"}
+                            data-ok={o.error ? "false" : o.taskId ? "true" : "unknown"}
                             className={
                               o.error
-                                ? "mt-1 text-xs text-destructive"
-                                : "mt-1 text-xs text-success"
+                                ? "mt-1 text-base text-destructive"
+                                : o.taskId ? "mt-1 text-base text-success" : "mt-1 text-base text-muted-foreground"
                             }
                           >
                             {o.error
                               ? `✗ ${o.error}`
-                              : "✓ 已发起逐字稿抓取(后台转写约 1-3 分钟)—— 完成后让我重新拆解这条作品即可。"}
+                              : o.taskId ? "已受理原转写请求；查看原任务步骤与状态，已有稿件仍可使用。" : "转写请求结果未确认，未取得准确任务编号；请保留原请求，不要重复发起。"}
                           </p>
+                          {!o.error && o.taskId ? <TranscribeTaskReceipt taskId={o.taskId} /> : null}
                         </React.Fragment>
                       );
                     }
@@ -2619,10 +3152,15 @@ export function AICopilotContent({
                             if (streaming) return;
                             quickFunctionKeyRef.current = "web.read";
                             quickWebReadUrlRef.current = url;
-                            void sendMessage({ text: `请阅读全文：${url}` });
+                            void sendPreparedRef.current(`请阅读全文：${url}`).catch(()=>{});
                           }}
                         />
                       );
+                    }
+                    // 原生图片复用待采用素材卡，用户确认后才进入素材库。
+                    if (name === "native.image" && out.kind === "native.image") {
+                      const image = out as {asset?:ChatScreenshotAsset|null};
+                      return <ChatScreenshotCard key={key} kind="generated" asset={image.asset??null} error={null} projectId={activeProjectChip?.id??null}/>;
                     }
                     // [T-084b] 网页截图(material.screenshot)→ 缩略图 + 来源 URL +「加入弹药」
                     // (createMaterialLink 挂当前项目);失败(打不开/HTTP/登录墙)→ 卡渲错误态。
@@ -2696,7 +3234,7 @@ export function AICopilotContent({
                             // 的自动重读不再被流式期直接丢弃(原「点了还得手动再发」的确切根因)。极窄
                             // 竞态下 sendMessage 由 useChat 自行排队/处理,不在这里静默 drop。
                             onDecision={(text) => {
-                              void sendMessage({ text });
+                              void sendPreparedRef.current(text).catch(()=>{});
                             }}
                           />
                         </React.Fragment>
@@ -2847,7 +3385,7 @@ export function AICopilotContent({
                         <ChatDiagnosisCard
                           key={key}
                           diagnosis={o.diagnosis ?? null}
-                          blindPredict={embed?.blindPredict ?? null}
+                          blindPredict={embed?.blindPredict ? {...embed.blindPredict,source:workSourceLocation(message,part.toolCallId)} : null}
                         />
                       );
                     }
@@ -2959,6 +3497,7 @@ export function AICopilotContent({
                     }
                     // 无专属卡的非 context 工具 → 只渲 trace 行(context.* 已在上方
                     // 全量走注册表渲数据卡,不再落到这里)。
+                    if ((name === "canvas.read" || name === "canvas.propose") && out.kind === name) return <React.Fragment key={key}>{traceRow}<CanvasChatResult result={out as Record<string, unknown>}/></React.Fragment>;
                     return traceRow;
                   })}
                 </li>
@@ -2971,18 +3510,29 @@ export function AICopilotContent({
                   role="alert"
                   className="flex w-full max-w-[440px] flex-col gap-2 self-start rounded-xl border border-border bg-surface px-3.5 py-3 shadow-sm"
                 >
-                  <strong className="text-[13px] font-semibold text-foreground">
+                  <strong className="text-base font-semibold text-foreground">
                     {chatError.title}
                   </strong>
-                  <span className="text-[12px] leading-relaxed text-muted-foreground">
+                  <span className="text-base leading-relaxed text-muted-foreground">
                     {chatError.message}
                   </span>
                   <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    {chatError.suggestInspectTasks?<Link href="/automations" data-slot="copilot-error-task-center-link" className="inline-flex min-h-10 items-center rounded-md border border-border px-3 text-base font-medium">核对原任务</Link>:null}
+                    {chatError.suggestOpenWorkspace ? <Link href="/accounts" onClick={preserveWorkspaceReturnDraft} data-slot="copilot-error-workspace-link" className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white">选择或创建账号组</Link> : null}
+                    {chatError.suggestOpenEngine ? (
+                      <Link
+                        href="/settings?highlight=assistant-engine"
+                        data-slot="copilot-error-engine-settings-link"
+                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        检查编导引擎
+                      </Link>
+                    ) : null}
                     {chatError.suggestSwitchModel ? (
                       <Link
                         href="/settings?highlight=text-model"
                         data-slot="copilot-error-settings-link"
-                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                        className="inline-flex min-h-10 items-center rounded-md bg-brand px-3 text-base font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       >
                         去设置 AI 模型
                       </Link>
@@ -3017,17 +3567,26 @@ export function AICopilotContent({
                     ) : null}
                   {/* [T-231⑩] 出错不再只让用户「请重试」却无处可点:regenerate() 重发
                       最后一条用户消息(@ai-sdk/react 现成 API,不手搓重放)。流式中不渲。 */}
-                    {chatError.canRetry &&
+                    {chatError.autoRecover ? (
+                      <span
+                        data-slot="copilot-error-auto-recovery"
+                        role="status"
+                        className="inline-flex h-8 items-center rounded-md bg-primary/10 px-3 text-[11px] font-medium text-primary"
+                      >
+                        自动恢复中
+                      </span>
+                    ) : chatError.canRetry &&
                     !chatError.suggestOpenCredits &&
                     !streaming &&
-                    messages.length > 0 ? (
+                    (messages.length > 0 || Boolean(currentSubmissionAttempt&&!currentSubmissionAttempt.networkStarted) || chatError.canRetryWithoutMessages) ? (
                       <button
                         type="button"
                         data-slot="copilot-error-retry"
-                        onClick={() => void retryLastTurn()}
-                        className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[11px] font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                        disabled={chatError.retryDisabled||preparationPending.current.has(liveSession)}
+                        onClick={() => void continueRecovery()}
+                        className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       >
-                        重试
+                        {chatError.retryLabel??(recoveryStalled ? "继续恢复" : "重试")}
                       </button>
                     ) : null}
                   </div>
@@ -3037,10 +3596,10 @@ export function AICopilotContent({
                 <li
                   data-slot="copilot-thinking"
                   aria-live="polite"
-                  className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-xs text-muted-foreground"
+                  className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-base text-muted-foreground"
                 >
                   <span className="size-3 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-                  编导思考中…
+                  {status==="submitted"?"正在准备本轮对话，可停止等待":"编导思考中…"}
                 </li>
               ) : null}
             </ol>
@@ -3054,10 +3613,10 @@ export function AICopilotContent({
                 <Sparkles className="size-4" aria-hidden="true" />
               </span>
               <p className="text-[13px] font-medium text-foreground">
-                描述你的目标，我来帮你规划下一步
+                {embeddedContentOwner ? "告诉我这份成稿需要怎么调整" : "描述你的目标，我来帮你规划下一步"}
               </p>
               <p className="text-xs text-muted-foreground">
-                试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。
+                {embeddedContentOwner ? "可以调整表达、结构或重点，审阅候选后再采纳。" : "试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。"}
               </p>
             </div>
           )}
@@ -3076,6 +3635,12 @@ export function AICopilotContent({
             className="flex flex-col gap-2.5"
             data-slot="prompt-form"
           >
+            {!hasCreationWorkspace && <p role="status" data-slot="copilot-workspace-required" className="text-sm text-muted-foreground">先选择或创建账号组，再发送新请求。空组也可以创作，无需先绑定平台账号。<Link href="/accounts" onClick={preserveWorkspaceReturnDraft} className="ml-2 text-brand underline underline-offset-4">选择或创建账号组</Link></p>}
+            {!assistantEngine.checking && !selectedEngineAvailable && (
+              <p role="status" data-slot="assistant-engine-status" className="text-sm text-muted-foreground">
+                {assistantEngine.v2&&attachmentState.ids.length>0?"附带内容所需模型当前尚不可用，请核对文本与图片理解设置；输入与附件已保留":assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" className="ml-2 text-brand underline underline-offset-4">模型设置</Link>
+              </p>
+            )}
             {/* @项目引用(T-039b):relative 容器锚定下拉;输入 @ 弹真项目列表,选中插入 chip +
                 注入 chatContext(等价选中态项目)。下拉在 textarea 上方(bottom-full)。 */}
             <div className="relative" data-slot="prompt-input-wrap">
@@ -3106,12 +3671,13 @@ export function AICopilotContent({
                 }}
                 rows={2}
                 aria-label="我能帮你做什么"
-                placeholder="我能帮你做什么？（试试「基于最近评论出 5 个选题」，或输入 @ 引用一个项目）"
+                placeholder={embeddedContentOwner === "wechat_article" ? "告诉我这篇文章需要怎么调整" : embeddedContentOwner === "graphic_post" ? "告诉我这份图文需要怎么调整" : "我能帮你做什么？（试试「基于最近评论出 5 个选题」，或输入 @ 引用一个项目）"}
                 className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                 data-slot="prompt-input"
               />
             </div>
             <CopilotAttachmentPicker
+              initialDraft={workspaceReturnDraft?.attachments}
               ref={attachmentPickerRef}
               projectId={chatContextBody.chatContext.projectId}
               disabled={streaming || hasPendingApproval}
@@ -3123,7 +3689,7 @@ export function AICopilotContent({
               data-slot="suggested-action-chips"
             >
               <div className="flex flex-wrap items-center gap-1.5">
-                {vm.chips.map((action) => (
+                {!embeddedContentOwner && vm.chips.map((action) => (
                   <button
                     key={action.id}
                     type="button"
@@ -3175,20 +3741,20 @@ export function AICopilotContent({
                     disabled={stopPending}
                     data-slot="prompt-stop"
                     data-testid="stop-button"
-                    aria-label="停止生成"
-                    className="flex size-9 items-center justify-center rounded-full border border-border bg-surface text-foreground transition-colors hover:bg-surface-muted focus:outline-none"
+                    aria-label={status==="submitted"&&!liveSession.control.currentTaskId()?"停止等待":"停止生成"}
+                    className="flex min-h-10 gap-2 px-3 text-base items-center justify-center rounded-full border border-border bg-surface text-foreground transition-colors hover:bg-surface-muted focus:outline-none"
                   >
                     <span
                       className="size-3 rounded-[2px] bg-foreground"
                       aria-hidden="true"
                     />
-                    <span className="sr-only">停止</span>
+                    <span>{status==="submitted"&&!liveSession.control.currentTaskId()?"停止等待":"停止生成"}</span>
                   </button>
                 ) : (
                   <button
                     type="submit"
                     disabled={
-                      isEmpty || hasPendingApproval || attachmentState.uploading
+                      isEmpty || hasPendingApproval || attachmentState.uploading || !selectedEngineAvailable || !hasCreationWorkspace || preparationPending.current.has(liveSession)
                     }
                     data-slot="submit-button"
                     data-testid="submit-button"
@@ -3209,5 +3775,7 @@ export function AICopilotContent({
     </div>
   );
 }
+
+const workspaceReturnDrafts = new Map<string,{text:string;attachments:CopilotAttachmentDraft}>();
 
 export default AICopilotContent;

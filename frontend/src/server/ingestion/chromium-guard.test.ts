@@ -1,16 +1,19 @@
 // [T-369] chromium-guard 单测:锁/残留清理、同 profile 并发串行、活 context 跳过预检、
 // 超时/失败人话报错。全 fake deps(不碰真进程/真文件系统/真浏览器)。
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   BrowserLaunchError,
   chromiumSandboxOpts,
+  DEFAULT_LAUNCH_TIMEOUT_MS,
   ensureChromiumLaunchable,
   guardedLaunch,
   liveContextCount,
   SINGLETON_LOCK_FILES,
   type ChromiumGuardDeps,
 } from "./chromium-guard";
+
+afterEach(() => vi.useRealTimers());
 
 function makeFakeDeps(pids: number[] = []) {
   const killed: number[] = [];
@@ -222,6 +225,7 @@ describe("guardedLaunch 超时/失败诚实", () => {
   });
 
   it("launch 超时 → BrowserLaunchError 人话报错,迟到的 context 被顺手关掉", async () => {
+    vi.useFakeTimers();
     const profile = "/tmp/guard-timeout";
     const fake = makeFakeDeps();
     const late = makeFakeCtx();
@@ -229,18 +233,23 @@ describe("guardedLaunch 超时/失败诚实", () => {
     const pending = new Promise<typeof late>((r) => {
       resolveLate = r;
     });
-    await expect(
+    const failure = expect(
       guardedLaunch(profile, () => pending, { timeoutMs: 20, label: "测试窗口" }, fake.deps),
     ).rejects.toThrow(BrowserLaunchError);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(DEFAULT_LAUNCH_TIMEOUT_MS).toBeGreaterThanOrEqual(370000);
+    await vi.advanceTimersByTimeAsync(DEFAULT_LAUNCH_TIMEOUT_MS);
+    await failure;
     resolveLate(late); // 底层 launch 迟到成功
-    await new Promise((r) => setTimeout(r, 10));
+    await vi.advanceTimersByTimeAsync(10);
     expect(late.closed).toBe(true); // 不泄漏进程
     expect(liveContextCount(profile)).toBe(0);
-  });
+  }, 120_000);
 
   it("超时错误文案是人话(含「请重试」)", async () => {
+    vi.useFakeTimers();
     const fake = makeFakeDeps();
-    await expect(
+    const failure = expect(
       guardedLaunch(
         "/tmp/guard-timeout-msg",
         () => new Promise<ReturnType<typeof makeFakeCtx>>(() => {}),
@@ -248,7 +257,10 @@ describe("guardedLaunch 超时/失败诚实", () => {
         fake.deps,
       ),
     ).rejects.toThrow(/启动超时.*请重试/);
-  });
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(DEFAULT_LAUNCH_TIMEOUT_MS);
+    await failure;
+  }, 120_000);
 
   it("launch 抛错 → 包成 BrowserLaunchError 人话(保留原因首行)", async () => {
     const fake = makeFakeDeps();

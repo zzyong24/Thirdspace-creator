@@ -1,0 +1,4 @@
+(version 1)
+(allow default)
+(deny file-write* (regex "(^|/)CreatorOS\\.app(/|$)"))
+(deny process-exec (regex "(^|/)CreatorOS\\.app(/|$)"))

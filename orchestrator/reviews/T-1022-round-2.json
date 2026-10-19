@@ -1,0 +1,119 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "本轮按冻结的 REV-001～004 复审，四项均在 SPEC 约束层面解决，无新增确定性 finding。3.2 明确当前成员与历史事实的不同授权范围并冻结事实归属；3.3 将转组、任务创建和定时认领纳入同锁及成员版本协议；7.1 明确项目依赖闭包、资源访问授权引用和全闭包事务；7.2 区分开放新版本写入前的备份回退与写入后的数据保留及向前修复。该结论只销账方案缺口，不证明实现、真实迁移、绑定、发布或真机验收已通过。第10节仍明确历史归属迁移、定位选择、资源授权引用与回退策略需用户确认，视觉候选未选定；本评审不提供或代替上述用户授权。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "3.3 平台账号转组",
+        "quote": "已发生的发布/采集事实继续在原组历史可见，转组后新事实进入新组"
+      },
+      "acceptance_anchor": {
+        "id": "9 隔离迁移与指标",
+        "quote": "跨组读取/下载/采纳均拒绝"
+      },
+      "where": "历史成员关系、publication归属、组聚合查询与账号筛选",
+      "failure_mode": "3.3要求账号转走后原组继续读取历史publication和后续指标更新，但3.2及组页面API又要求按当前组成员取交集并拒绝非成员。按当前成员聚合会使原组历史消失或让新组读到原组历史；只记录采集时组ID也与老publication后续指标继续归原组冲突。现有publication/metric schema只有accountId，尚未明确事实归属字段、引用继承和历史筛选的例外边界。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1022-account-group-workspace.md:60,66,72,127; backend/src/schema/publishing.ts:34-42; backend/src/schema/analytics.ts:43-50",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确当前成员用于新任务和新目标授权，历史事实读取按已冻结的事实groupId授权；定义publication及其指标/评论/明细的归属继承，新发现历史作品以哪个时刻定组，历史账号筛选如何列出。补齐组查询API对历史账号的明确规则，禁止用当前accountId全量替代事实groupId。验收A转B后A旧作品及新增快照仍可读、B仅见B的新事实、两组同时读取/下载均不串组。",
+      "resolution_evidence": "docs/features/t1022-account-group-workspace.md:60,66,68,74,76,145：3.2 将当前成员账号限定于新任务、新采集、新发布、登录态和秘密；历史读取按已冻结的 Publication/指标 groupId 验证，筛选来自历史事实与当前成员并集并标记已转出。平台事实保留真实 accountId，新增事实 groupId，快照继承父 Publication；3.3 明确转组后新事实归新组、旧 Publication 的新增指标继续归原组，不按当前成员重写。第8节组页面读取的组域权限由上述按操作划分的范围约束。原先按当前成员读取导致历史消失或串组的方案矛盾已解决；实际 A→B 隔离和快照读写仍须实施验收。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "7 迁移与兼容",
+        "quote": "旧项目、知识、素材与历史发布是否一起搬入通过预览分别选择，推荐复制引用而非复制文件"
+      },
+      "acceptance_anchor": {
+        "id": "9 隔离迁移",
+        "quote": "前后计数一致、blob可读、跨组读取/下载/采纳均拒绝"
+      },
+      "where": "显式历史项目搬移、素材/知识/发布依赖和blob权限",
+      "failure_mode": "允许项目、素材和历史发布分别选择，却未定义所选项目引用未选素材、知识或原组publication时的处理。当前规则要求所有素材按当前项目/组校验、publication关联必须同组，直接复制引用会留下不可读依赖；扩大原资产权限又会突破组隔离。现有asset_files.storageKey唯一，若选择复制资产元数据但共享原文件，还需要明确可保持storageKey与原ID的引用方式。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/features/t1022-account-group-workspace.md:68,74,111,128,136; backend/src/schema/assets.ts:26-32,44-48; backend/src/schema/publishing.ts:41",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "为迁移预览定义依赖闭包和处理矩阵：每项是转归属、保留原归属的显式授权引用还是不搬，并说明共享blob的元数据/权限落实方式；未选依赖须在预览中阻止不完整提交或由用户明确补选，不得静默放宽读取。明确历史publication搬移与默认原组保留规则的优先级。补API请求、digest和原子提交边界，并验收只搬项目、双方共用文件、删除/恢复引用及失败回滚后的blob可读与组隔离。",
+      "resolution_evidence": "docs/features/t1022-account-group-workspace.md:119-127,149：7.1 将资料归组与账号转组分开，以项目及阶段、contentOutput、稿子、引用素材、关联 Publication/全部快照、复盘来源形成最小闭包；显式迁入的 Publication 与父项目一同归组，否则只转账号时留原组。共享素材/知识保留实体和 storageKey，目标组仅获同用户明确授予的 resource access grant，service/blob 读取下载导出校验实体归属或有效 grant，编辑仍由原实体组控制；删除、撤销和归档影响有明确约束。preview/apply/status 定义有序闭包、grant 清单、digest、版本、同锁复核和整个闭包/授权的原子事务及 before-image，冲突不得静默忽略。原先悬空引用和扩大原组权限的缺口已解决；真实 blob 可读、事务中断和撤销等实现验证仍待实施。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "3.3 平台账号转组",
+        "quote": "转组是version检查的原子事务；只允许账号属于该用户、新组有效且无该账号的非终态采集/发布/AI任务时执行"
+      },
+      "acceptance_anchor": {
+        "id": "9 页面与在途任务",
+        "quote": "后台任务按创建时归属继续"
+      },
+      "where": "previewTransfer/transfer与任务创建、调度触发、worker领取",
+      "failure_mode": "只说明转组事务查非终态任务及membershipVersion，没有规定任务创建/领取是否使用相同账号锁或版本校验。定时采集可以在查到0后、转组提交前创建旧组任务，或在转组后沿用旧job的组上下文。既有scheduled_job持久保存accountId，持续触发并非转组预览的一次性快照；原子转组本身不能保证所有任务入口的排他性。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/features/t1022-account-group-workspace.md:61,72,74,124,140; backend/src/schema/scheduling.ts:28-45; backend/src/modules/platform-account/platform-account.service.ts:229-233",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "将账号转组、账号任务创建和调度触发绑定同一事务锁/成员版本协议，定义queued、running、awaiting-confirmation及可重试终态的阻挡范围；持久采集job在每次触发时解析当前成员，已创建run冻结原版本。worker领取及候选采纳对版本变化给明确可恢复结果，不能写到当前页面组。验收转组与scheduler并发、用户生成并发、预览后新任务、重启重试和历史候选重新绑定，不取消合法原任务来换取转组成功。",
+      "resolution_evidence": "docs/features/t1022-account-group-workspace.md:61,76,78：3.3 要求转组、关联账号任务创建、定时任务认领经同一 platform-account service port，在事务中按稳定顺序锁 platformAccount 和有效 membership；创建/认领在锁内重读并冻结 groupId/version/accountId 后提交执行权，转组检查非终态任务后更新 membershipVersion。worker 外部副作用前复核版本，旧版本明确拒绝并提示重新选择；恢复执行沿用冻结范围，历史候选采纳重新验证归属及版本。SPEC 已列创建先持锁和转组先提交两种验收顺序，且转组拒绝不取消原合法任务。原并发窗口和旧定时上下文沿用的方案缺口已解决；具体任务状态映射及并发回归仍须合同与实现验证。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "resolved",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "7 迁移与兼容",
+        "quote": "真实用户库执行前需要备份、校验和可回退记录"
+      },
+      "acceptance_anchor": {
+        "id": "9 隔离迁移",
+        "quote": "历史任务、重复迁移、事务中断恢复"
+      },
+      "where": "数据库迁移回退、旧客户端兼容与空组创作",
+      "failure_mode": "SPEC承诺可回退，却未定义回退时点、写入窗口和升级后新增数据的保存策略。空组允许无账号创作，而旧projects/assets等共享域要求非空accountId；升级后新建空组项目无法无损映射给旧客户端。跨组搬移后，一个旧accountId又不能代表所有共享对象，单纯恢复备份会丢升级后新增数据，保留旧accountId也不能证明回退后的可见性和隔离。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/features/t1022-account-group-workspace.md:58,108-113,136; docs/features/t1022-account-group-workspace/PAGE_SPEC.md:21; backend/src/schema/projects.ts:13-19; backend/src/schema/assets.ts:26-32; contract/src/request-context.ts:25-32",
+      "risk_class": "data-loss",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确回退保证是提交前失败恢复还是含升级后写入的版本回退；给出备份/迁移账、写入暂停或兼容读写窗口、空组新对象处理、恢复顺序和校验步骤。不能将不支持旧schema的对象随意塞给默认账号；若回退只允许首次新语义写入前执行，明确这一边界及用户确认点。加入迁移失败回退和升级后写入再恢复的隔离库演练，核对新增项目/素材、ID、blob与旧客户端实际读取。",
+      "resolution_evidence": "docs/features/t1022-account-group-workspace.md:68,129-131,164：7.2 明确离线备份并暂停领域写入、校验通过才开放新版本写入；开放写入前可从完整备份恢复，写入后保留新 schema/新数据并提供只读、导出、向前修复，不承诺降回旧 NOT NULL accountId schema。恢复旧安装包须用户明确选择迁移前备份且先导出新增资料，不将空组对象塞入默认账号；资料归组 undo 只在相关版本未变且无新任务/发布/grant 消费时依 before-image 事务撤回。备份覆盖数据库、媒体可读校验与 manifest。3.2 同时限制旧 accountId-only 兼容范围并对无 legacy 归属对象提示升级。原未限定写入窗口导致新增数据丢失的方案承诺已解决；第10节仍将回退选择列为待用户确认，不视为授权已取得，真实恢复演练待实施。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

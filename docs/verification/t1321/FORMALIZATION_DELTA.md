@@ -1,0 +1,9 @@
+# T1321 正式诊断准备增量（尚无正式输入锁/执行授权）
+
+Root依据用户全功能修复与诊断授权，已确认一次新owned公共POST真实Codex诊断、原U14不重发。原作者SPEC与设计初审时点分别保留于SPEC_BEFORE_FORMAL_DIAGNOSIS.md和INITIAL_REVIEW.md；正式化仅精确单test/ownruntime W、BUILD有界诊断、源冻结条件与实际两worker/SDK/loader身份，不增加产品W。
+
+旧MODULE_SCOPE_PENDING_SOURCE未注册的1317/18/19/20 implementation done要求未被写入DAG；当前实际消费须等1323最终source/保护冻结，不等待其它whole task done。原冻结tools不含creativeResults.adopt，本任务不能通过收窄工具假装无交叉，运行前仍核所有实例化可达host前快照。T1325不作为无关硬前置。
+
+STABLE_INPUTS明确partial；路径规范化前准备库存另存，移除别名对在途dispatcher的重复引用。最终INPUT_LOCK须在R释放实际四源后重核全部行，新增正式SPEC、实际harness/loader/config路径由执行事前快照核验；当前不伪造这些尚未形成的脚手架SHA，不称已有formal PASS。两个不可变worker、两SDK package和实际Codex binary已只读核SHA，未执行CLI/status/HTTP/模型或读取认证。
+
+实际运行Node/loader须真实选择已绑定runtime路径。若装配需要未审产品变化或真实未锁首次消费者，记录BLOCKED/缺源，不临场扩大、不重发诊断。所有共享配置、两候选与原后台任务不动。

@@ -1,3 +1,5 @@
+import {DEFAULT_LAUNCH_TIMEOUT_MS} from "@creatoros/ai-worker/browser/chromium-guard";
+import {executionTimeoutMs, completionWaitMs} from "@creatoros/contract/timeout-policy";
 import type {RequestContext} from "@creatoros/contract";
 import {buildTrendQuery,parseFeed} from "@creatoros/ai-worker";
 import {assertUrlAllowed} from "@creatoros/ai-worker/browser/url-guard";
@@ -55,13 +57,19 @@ async function readFeed(source:TrendSourceProjection,signal:AbortSignal){
 export function createChatTrendRead(deps:ChatTrendReadDeps){
  return async(context:RequestContext,positioningBrief:string,abort?:AbortSignal)=>{
   const owner=structuredClone(context);
-  if(!owner.userId||!owner.accountId)throw new Error("热点读取缺少当前账号");
+  if(!owner.userId||(!owner.accountId && !owner.groupId))throw new Error("热点读取缺少当前账号");
   abort?.throwIfAborted();
-  const signal=AbortSignal.any([...(abort?[abort]:[]),AbortSignal.timeout(45_000)]);
+  const sourceBudgetMs=completionWaitMs([DEFAULT_LAUNCH_TIMEOUT_MS,executionTimeoutMs(),executionTimeoutMs(),executionTimeoutMs()]);
+  const searchBudgetMs=completionWaitMs([DEFAULT_LAUNCH_TIMEOUT_MS,executionTimeoutMs()]);
+  const listingSignal=AbortSignal.any([...(abort?[abort]:[]),AbortSignal.timeout(executionTimeoutMs())]);
+  // 信源数量在真实列表返回后确定；外层覆盖并发3个信源的全部串行批次。
+  const searchSignal=AbortSignal.any([...(abort?[abort]:[]),AbortSignal.timeout(searchBudgetMs)]);
   let listFailed=false;
-  const sourcesPromise=bounded(()=>deps.listEnabledSources(owner),signal).catch(()=>{listFailed=true;return [] as TrendSourceProjection[];});
-  const searchPromise=bounded(()=>deps.search(owner,buildTrendQuery(positioningBrief),{count:8,signal}),signal).then(items=>items.filter(item=>item.title.trim()&&publicLink(item.url)).slice(0,8)).catch(()=>[]);
+  const sourcesPromise=bounded(()=>deps.listEnabledSources(owner),listingSignal).catch(()=>{listFailed=true;return [] as TrendSourceProjection[];});
+  const searchPromise=bounded(()=>deps.search(owner,buildTrendQuery(positioningBrief),{count:8,signal:searchSignal}),searchSignal).then(items=>items.filter(item=>item.title.trim()&&publicLink(item.url)).slice(0,8)).catch(()=>[]);
   const sources=structuredClone(await sourcesPromise);
+  const batches=Math.max(1,Math.ceil(sources.length/3));
+  const signal=AbortSignal.any([...(abort?[abort]:[]),AbortSignal.timeout(completionWaitMs(Array.from({length:batches},()=>sourceBudgetMs)))]);
   abort?.throwIfAborted();
   type Read={brief:string;sourceCount:number;signalCount:number;rawWeb:boolean};
   const results:Array<Read|null>=sources.map(()=>null);let cursor=0;
@@ -69,7 +77,7 @@ export function createChatTrendRead(deps:ChatTrendReadDeps){
   await Promise.all(Array.from({length:Math.min(3,sources.length)},async()=>{
    while(cursor<sources.length&&!signal.aborted){
     const index=cursor++,source=sources[index]!;
-    const child=AbortSignal.any([signal,AbortSignal.timeout(20_000)]);
+    const child=AbortSignal.any([signal,AbortSignal.timeout(sourceBudgetMs)]);
     try{
      if(source.sourceType==="rss"){
       const items=await bounded(()=>readFeed(source,child),child);

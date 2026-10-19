@@ -1,0 +1,80 @@
+{
+  "schema": "t1300-production-candidate/v1",
+  "task": "T-1300",
+  "sourceHead": "8ced635520132688c6ef91449ad530d36d9ff1af",
+  "sourceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "evidenceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1303/acceptance/candidate",
+  "artifactRoot": "/private/tmp/t1300-artifact-40cyr7w4",
+  "appPath": "/private/tmp/t1300-artifact-40cyr7w4/CreatorOS.app",
+  "dmgPath": "/private/tmp/t1300-artifact-40cyr7w4/CreatorOS-1.2.0.dmg",
+  "sidecarRoot": "/private/tmp/t1300-artifact-40cyr7w4/sidecar",
+  "dmgSha256": "342da67b5733bb9c8d4d7964e04e239a68d34127dacebdee1764cf1ac57ca4c5",
+  "binarySha256": "4510170c3aacb3b7be40a56e3ad667327cd03fcf20dddd0879e8517273642574",
+  "sidecarTarSha256": "2a71522d40864d3c8ef5992fdcc8b336cecf8f627da7e4e1254397980ca81ed9",
+  "launchFiles": [
+    {
+      "path": "server.app/Contents/MacOS/creatoros-server",
+      "sha256": "5ed0e129e708e36048981aed983f7302b0c18139f5a174e4b8d5fabbacb6d59d",
+      "bytes": 68416
+    },
+    {
+      "path": "frontend/server.js",
+      "sha256": "5e0e2dac653770ffd12b68760ca5f659c09e98a2504c19707b70080c2b6ad652",
+      "bytes": 7454
+    },
+    {
+      "path": "frontend/.next/server/verdict-verify-key.json",
+      "sha256": "9dd7d84c966e7c7a8cd11206a9c536728c1997a434dab1bc810eea92c1b9108d",
+      "bytes": 134
+    },
+    {
+      "path": "frontend/runtime/execution-worker.cjs",
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "bytes": 5618216
+    },
+    {
+      "path": "frontend/runtime/codex-status-worker.cjs",
+      "sha256": "85aad8685af897c066993569432a9498da6a1ceb5755d061348aa7449c32720c",
+      "bytes": 786870
+    }
+  ],
+  "checks": [
+    {
+      "name": "dmg-verify",
+      "exitCode": 0,
+      "log": "dmg-verify.log"
+    },
+    {
+      "name": "codesign-verify",
+      "exitCode": 0,
+      "log": "codesign-verify.log"
+    }
+  ],
+  "installedAppReadonlyHashes": {
+    "binarySha256": "a097febbe991e0fd99eadf51fe7ba8e2d0394f18ce3a88348c91b6a1d62c14b3",
+    "sidecarTarSha256": "13081d30468ffb538c3db4ec9c983226f97ac358d74460136d265a8eae572f5e"
+  },
+  "nativeShellStarted": false,
+  "testAuthorization": "DEC-130003 build_smoke专用controller；非真实激活/原生壳",
+  "developerIdSigned": false,
+  "notarized": false,
+  "fullBusinessAcceptance": "pending",
+  "driverFiles": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1303/acceptance/candidate/driver/bind-candidate.py",
+      "sha256": "3631a175c6a75abc331aa37c3a9c27d5492e2ea49ed651cee13cd92361edbf46"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1303/acceptance/candidate/driver/candidate-controller.mjs",
+      "sha256": "9624c0b47d57c1d9d6fce7b3293b8c65ca7d3e885d5bf7f5eb531a1e402ef328"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1303/acceptance/candidate/driver/playwright.config.cjs",
+      "sha256": "cfc10f5f7052767bb97fdd425a8d3e1d78235e50afff8567805999e03be8feff"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1303/acceptance/candidate/driver/public-fixture.cjs",
+      "sha256": "6d7750848b56b49a5ea60ba990ab1364d2a5b32730762af5164136d343bf73b5"
+    }
+  ]
+}

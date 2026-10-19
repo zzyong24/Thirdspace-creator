@@ -1,0 +1,73 @@
+{
+  "schema": "t1341-formal-ui-plan/v1",
+  "state": "NOT_RUN_PREPARATION",
+  "repo": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "contract": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/formal-ui-acceptance/contracts/T-1341.md",
+  "contractHelper": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/final-package-combined/runner/contract.cjs",
+  "registrar": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/runtime/implementation/working/final-u08-u10/runner/register-owned.cjs",
+  "viewports": [
+    {
+      "width": 1366,
+      "height": 900
+    },
+    {
+      "width": 1024,
+      "height": 680
+    }
+  ],
+  "checkIds": [
+    "collection",
+    "selection",
+    "detail",
+    "tag_search",
+    "empty_next",
+    "unchanged_resource"
+  ],
+  "conditions": [
+    "empty",
+    "back",
+    "refresh",
+    "repeat"
+  ],
+  "emptyQuery": "不存在的雪山茶壶插画",
+  "budgets": {
+    "executionSeconds": 6000,
+    "setupMs": 600000,
+    "viewportMs": 1800000,
+    "requestMs": 180000,
+    "childSeconds": 6600,
+    "outerSeconds": 8400,
+    "cleanupReserveSeconds": 600,
+    "independentOuterWithFallbackSeconds": 9600,
+    "outerCalculation": "wrapper child6600 + hash/setup/cleanup余量至8400；command 8400等待+600finally保留+120kill/reap+300setup/report<=9600，inner仍6000不续窗。"
+  },
+  "maximumModelRoots": 0,
+  "maximumBusinessWrites": 0,
+  "bindingContract": {
+    "schema": "t1341-final-ui/v1",
+    "required": [
+      "controlHead",
+      "candidate",
+      "runtime",
+      "scope",
+      "routing",
+      "expected",
+      "manualFixtureReceipt",
+      "inputLock",
+      "contract"
+    ],
+    "expected": [
+      "assetId",
+      "assetName",
+      "fileId",
+      "sha256",
+      "width",
+      "height",
+      "tagId",
+      "tagName"
+    ],
+    "manualReceipt": "confirmed=true/modelRoots=0/scope全等/expected的assetId,fileId,sha256,tagId,tagName,assetName逐值相等；C公开人工准备，非模型候选。"
+  },
+  "failureRule": "任一禁止请求attempt即失败，即使被abort且持久写0；不假绿/不拦合法读取；系统初始化两POST原样透传并单独记录。",
+  "actualConditions": "导航离开素材页再真实browser back；empty query用原搜索，清空恢复；refresh后重选同实体；两viewport均重验原图960x540、标签与DOM。"
+}

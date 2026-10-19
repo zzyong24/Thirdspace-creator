@@ -1,0 +1,5 @@
+import base from "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/vitest.config.ts";
+import {mergeConfig,defineConfig} from "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/vitest/dist/config.js";
+const resolved=mergeConfig(base,defineConfig({root:"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",cacheDir:"/private/tmp/t1252p-E5iiqj/case-0/vite-cache",envDir:"/private/tmp/t1252p-E5iiqj/case-0",server:{fs:{strict:true,allow:["/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator","/private/tmp/t1252p-E5iiqj"]}},resolve:{dedupe:['vitest','@creatoros/backend','@creatoros/contract','@playwright/test','pngjs','pdf-parse'],alias:{'@':"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src"}},test:{include:["/private/tmp/t1252p-E5iiqj/public-native-render.test.ts"],watch:false,retry:0,fileParallelism:false,maxWorkers:1,maxConcurrency:1}}));
+resolved.test.include=["/private/tmp/t1252p-E5iiqj/public-native-render.test.ts"];
+export default resolved;

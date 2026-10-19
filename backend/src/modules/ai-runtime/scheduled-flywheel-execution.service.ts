@@ -1,6 +1,7 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {randomUUID} from 'node:crypto';
-import {and,asc,desc,eq,inArray,isNull,requireAccountId,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
+import {and,asc,desc,eq,inArray,isNull,requireAccountId,aiTasks,aiTaskSteps,executionTasks,executionCalls,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
 import {createContinuousExecutionBudget,scheduledFlywheelTaskInputSchema,scheduledFlywheelSnapshotSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
 import {createExecutionAuthorityService} from '../execution/execution-authority.service';
@@ -9,7 +10,8 @@ import {createExecutionCallLedgerService} from '../execution/execution-call-ledg
 import {createExecutionWorkerOutcomeService} from '../execution/execution-worker-outcome.service';
 import {createPersistentTaskService,type PersistentTaskClaim} from '../execution/persistent-task.service';
 import {createExecutionFlywheelGenerationService,type FlywheelGenerationDeps} from '../execution/execution-flywheel-generation.service';
-import {bindScheduledFlywheel} from '../execution/scheduled-flywheel-binding';
+import {bindScheduledFlywheel,ScheduledFlywheelBindingError} from '../execution/scheduled-flywheel-binding';
+import {findScheduledParent} from '../execution/execution-scheduled-child.service';
 import {createScheduledRunIntentService} from '../scheduling/daily-topic-run-intent.service';
 import {ScheduledFlywheelSuspended} from './scheduled-flywheel-suspension';
 import {benchmarkTeardownSchema,topicAttributionSchema,favoritesTriageSchema,flywheelKnowledgeResultSchema} from '@creatoros/ai-worker';
@@ -22,7 +24,7 @@ import {teardownFacets,type BenchmarkTeardownPort} from './benchmark-teardown-ru
 import type {ScheduledCollectionAiPort,ScheduledCollectionTask} from './scheduled-collection-runner';
 
 export interface ScheduledFlywheelModels {teardown:BenchmarkTeardownPort;attribute:TopicAttributionPort;triage:FavoritesTriagePort;distillKnowledge:FavoritesKnowledgeDistillPort;transcribeOne:FavoritesTranscribePort}
-export interface ScheduledFlywheelScope {execution:ExecutionRef;signal:AbortSignal;ai:ScheduledCollectionAiPort;models:ScheduledFlywheelModels}
+export interface ScheduledFlywheelScope {execution:ExecutionRef;signal:AbortSignal;ai:ScheduledCollectionAiPort;models:ScheduledFlywheelModels;writeProgress:(ctx:RequestContext,runId:string,progress:Record<string,unknown>|null)=>Promise<void>}
 export interface ScheduledFlywheelDeps extends FlywheelGenerationDeps {
  createFavoritesAsr?(runWorker:ReturnType<typeof createExecutionFlywheelGenerationService>['runWorker']):{transcribe(ref:ExecutionRef,ctx:RequestContext,input:{itemId:string;awemeId:string},signal:AbortSignal):Promise<string|null>};
 }
@@ -38,9 +40,9 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
  const runIntents=createScheduledRunIntentService(db,{now,nextId:prefix=>`${prefix}-${randomUUID()}`},sourceKinds);
  // 槽位只表示本进程正在执行的账号；排队、重试时间与任务状态仍以数据库为准。
  const maxActiveAccounts=2;
- const activeRuns=new Map<string,{userId:string;accountId:string;pending:Promise<void>}>();
+ const activeRuns=new Map<string,{userId:string;accountId:string|null;pending:Promise<void>}>();
  let admissionTail:Promise<void>=Promise.resolve();
- const accountKey=(owner:{userId:string;accountId:string})=>JSON.stringify([owner.userId,owner.accountId]);
+ const accountKey=(owner:{userId:string;accountId:string|null})=>JSON.stringify([owner.userId,owner.accountId]);
  function admit<T>(run:()=>Promise<T>):Promise<T>{
   const pending=admissionTail.then(run);
   admissionTail=pending.then(()=>{},()=>{});
@@ -51,7 +53,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   const pending=consume(claim,collector).finally(()=>{if(activeRuns.get(key)?.pending===pending)activeRuns.delete(key);});
   activeRuns.set(key,{...owner,pending});
   // 后台入口不等待整项任务；保持 rejection 已处理，等待入口仍可观察原错误。
-  void pending.catch(()=>{});
+  void pending.catch(()=>console.error('[scheduled-flywheel]',{event:'consumer_unsettled',executionTaskId:claim.task.id,attempt:claim.lease.attempt}));
   return pending;
  }
  const favoriteAsr=deps.createFavoritesAsr?.(generation.runWorker);
@@ -96,10 +98,11 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
  };
  const service={
  models,
+ async assertModelConfigured(ctx:RequestContext,capability:FlywheelCapability){const scope=await contextFor(ctx);return generation.assertConfiguration(scope.ref,capability);},
  ensureRunForTask:runIntents.ensureRunForTask,
  async prepare(ctx:RequestContext,aiTaskId:string){
   abort.signal.throwIfAborted();
-  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??'')));
+  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));
   if(!task||!taskTypes.includes(task.taskType))throw new Error('不支持的原调度任务');
   if(task.executionTaskId){const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));scheduledFlywheelTaskInputSchema.parse((execution?.payload as Record<string,unknown>)?.modelInput);return authority.bindAiTask(ctx,aiTaskId);}
   if(task.startedAt||task.modelCallStartedAt||task.retryOfTaskId)throw new Error('已有旧执行事实，须恢复原任务，不能重置预算');
@@ -146,7 +149,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   const failures:unknown[]=[];
   for(const row of rows){
    if(abort.signal.aborted)return;
-   const ctx:RequestContext={userId:row.userId,accountId:row.accountId,requestId:`flywheel-recover:${row.id}`,source:'ingestion'};
+   const ctx:RequestContext={userId:row.userId,accountId:row.accountId,groupId:row.groupId,groupVersion:row.groupVersion??undefined,membershipVersion:row.membershipVersion??undefined,requestId:`flywheel-recover:${row.id}`,source:'ingestion'};
    try{await (prepare??service.prepare)(ctx,row.id);}catch(error){
     // 一个旧任务已明确失败不能挡住其它账号的恢复；仍向调用方报告结算错误。
     try{await onFailure(ctx,row.id,error);}catch(failure){failures.push(failure);}
@@ -166,12 +169,53 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
    await tasks.acknowledgeControl({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt});
    return true;
   };
+  // admission 拒绝后只收口原执行生命周期；不能用再次准入来决定是否记录失败。
+  const settleRejected=async(error:unknown,stage:'admission'|'consumption'|'heartbeat',projectionOnly=false)=>{
+   if(abort.signal.aborted)return;
+   const reason=error instanceof ScheduledFlywheelBindingError?error.reason:stage;
+   const message=error instanceof ScheduledFlywheelBindingError?error.message:stage==='admission'?'采集执行校验未通过，原任务已保留，请查看诊断记录。':stage==='heartbeat'?'采集执行权限或租约校验未通过，已停止本次采集。':'采集执行中断，已有结果保留，请查看原任务。';
+   try{
+    await db.transaction(async tx=>{
+     const [snapshot]=await tx.select().from(executionTasks).where(eq(executionTasks.id,ref.executionTaskId));
+     if(!snapshot)return;
+     let parent:typeof snapshot|undefined,parentUnproven=false;
+     try{parent=await findScheduledParent(tx,snapshot);}catch{parentUnproven=true;}
+     // 与正常准入及用户控制共用父子ID锁顺序，避免收口倒序等待。
+     const locked=await tx.select().from(executionTasks).where(inArray(executionTasks.id,parent?[snapshot.id,parent.id]:[snapshot.id])).orderBy(asc(executionTasks.id)).for('update');
+     const current=locked.find(row=>row.id===snapshot.id),parentNow=parent?locked.find(row=>row.id===parent!.id):undefined;
+     if(!current||current.attempt!==ref.attempt||current.fenceToken!==ref.fenceToken||abort.signal.aborted)return;
+     if(projectionOnly?!['unknown_result','waiting_user','failed','partial'].includes(current.status):current.status!=='running')return;
+     if((current.payload as Record<string,unknown>).parentExecutionTaskId!==(snapshot.payload as Record<string,unknown>).parentExecutionTaskId)return;
+     if(parent&&(!parentNow||['pause_requested','paused','cancel_requested','cancelled'].includes(parentNow.status)))return;
+     const calls=await tx.select({status:executionCalls.status}).from(executionCalls).where(eq(executionCalls.executionTaskId,current.id));
+     const unknown=current.status==='unknown_result'||calls.some(call=>call.status==='started'||call.status==='unknown'),status=unknown?'unknown_result':parentUnproven?'blocked':'failed',stamp=now();
+     const errorCode=unknown?'FLYWHEEL_CALL_REQUIRES_RECONCILIATION':parentUnproven?'FLYWHEEL_PARENT_BINDING_UNPROVEN':stage==='consumption'?'FLYWHEEL_CONSUMPTION_FAILED':'FLYWHEEL_ADMISSION_REJECTED';
+     const errorMessage=unknown?'采集调用结果尚未确认，已暂停原任务，已有结果保留。':message;
+     if(!projectionOnly)await tx.update(executionTasks).set({status,lastErrorCode:errorCode,lastErrorMessage:errorMessage,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:stamp}).where(eq(executionTasks.id,current.id));
+     // 不从已拒绝的 modelInput 猜 run ID；只按原 AI/execution 双向物理绑定更新。
+     const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,current.ownerId),eq(aiTasks.executionTaskId,current.id),eq(aiTasks.userId,current.userId),workspaceFilter(aiTasks,{groupId:current.groupId,accountId:current.accountId})));
+     if(parentUnproven||current.kind!=='ai_task'||current.ownerType!=='ai_task'||!business||business.accountId!==current.accountId||business.groupId!==current.groupId||business.groupVersion!==current.groupVersion||business.membershipVersion!==current.membershipVersion)return;
+     const raw=business.inputData as Record<string,unknown>,runs=await tx.select().from(jobRuns).where(and(eq(jobRuns.aiTaskId,business.id),eq(jobRuns.userId,current.userId)));
+     const run=runs.length===1?runs[0]:undefined;
+     if(!run||run.groupId!==current.groupId||run.jobId!==raw?.jobId)return;
+     const [job]=await tx.select().from(scheduledJobs).where(and(eq(scheduledJobs.id,run.jobId),eq(scheduledJobs.userId,current.userId)));
+     if(!job||job.accountId!==current.accountId||business.taskType!==`scheduled.${job.sourceKind}`)return;
+     if(!unknown&&!projectionOnly)await tx.update(aiTasks).set({status:'failed',completedAt:stamp,errorMessage}).where(eq(aiTasks.id,business.id));
+     if(run.status==='running')await tx.update(jobRuns).set({status:'failed',error:errorMessage,finishedAt:stamp,progress:null}).where(eq(jobRuns.id,run.id));
+    });
+    console.error('[scheduled-flywheel]',{event:'consumer_rejection_observed',executionTaskId:ref.executionTaskId,attempt:ref.attempt,stage,reason});
+   }catch{
+    // 结算不可确认时保原fence供恢复；日志不含原异常、SQL或用户内容。
+    console.error('[scheduled-flywheel]',{event:'rejection_settlement_unconfirmed',executionTaskId:ref.executionTaskId,attempt:ref.attempt,stage,reason});
+   }
+  };
   let bound:Awaited<ReturnType<typeof verify>>;
   try{bound=await verify();}catch(error){
    if(signal.aborted)return;
    const acknowledged=await acknowledgeControl().catch(()=>false);
    if(acknowledged)return;
-   throw error;
+   await settleRejected(error,'admission');
+   return;
   }
   if(signal.aborted)return;
   const ctx=bound.context,task:ScheduledCollectionTask={id:bound.business.id,taskType:bound.business.taskType,inputData:{...(bound.business.inputData as Record<string,unknown>),jobId:bound.input.jobId,jobRunId:bound.input.jobRunId,target:bound.input.target}};
@@ -235,17 +279,28 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
     await scope.tx.insert(aiTaskSteps).values({...input,id:stepId,aiTaskId:task.id,stepNo:(last?.stepNo??0)+1,createdAt:now()}).onConflictDoNothing();
    });
   },async markSucceeded(c,id){checkInput(c,id);await finish('succeeded');},async markFailed(c,id,message){checkInput(c,id);await finish('failed',message);}};
-  const timer=setInterval(()=>{if(finished||checking)return;checking=true;void verify().then(()=>tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300})).catch(()=>control.abort()).finally(()=>{checking=false;});},10000);
-  try{await scopeStore.run({ref,signal},()=>collector(ctx,task,{execution:ref,signal,ai,models}));if(!finished){await verify();throw new Error('飞轮采集器未提交原任务终态');}}
+  const writeProgress:ScheduledFlywheelScope['writeProgress']=async(c,runId,progress)=>{
+   // 写入本身在原执行行锁事务内核对租约；不能用心跳或signal代替当前fence。
+   if(c.userId!==ctx.userId||c.accountId!==ctx.accountId||c.groupId!==ctx.groupId||runId!==bound.input.jobRunId)throw new Error('采集进度归属与原运行不符');
+   await leases.withLease(ref,'admission',async scope=>{
+    const current=await bindScheduledFlywheel(scope);signal.throwIfAborted();
+    if(current.input.jobRunId!==runId)throw new Error('采集进度与原运行绑定不符');
+    await scope.tx.update(jobRuns).set({progress}).where(eq(jobRuns.id,runId));
+   });
+  };
+  let heartbeatInFlight:Promise<void>|undefined,verificationFailure:unknown;
+  const timer=setInterval(()=>{if(finished||checking)return;checking=true;heartbeatInFlight=verify().then(async()=>{await tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300});}).catch(error=>{verificationFailure=error;control.abort();}).finally(()=>{checking=false;heartbeatInFlight=undefined;});},10000);
+  try{await scopeStore.run({ref,signal},()=>collector(ctx,task,{execution:ref,signal,ai,models,writeProgress}));if(!finished){await verify();throw new Error('飞轮采集器未提交原任务终态');}}
   catch(error){
    if(error instanceof ScheduledFlywheelSuspended){
     // job_run只是运行投影：等待重试保留进行中，其余明确呈现挂起/失败，不改execution权威。
-    await leases.withLease(ref,'settlement',async scope=>{const current=await bindScheduledFlywheel(scope),retry=current.task.status==='retry_wait'||current.task.status==='queued';await scope.tx.update(jobRuns).set({status:retry?'running':'failed',error:retry?null:current.task.lastErrorMessage??'模型阶段已挂起，请在原任务中恢复',finishedAt:retry?null:now()}).where(eq(jobRuns.id,current.input.jobRunId));}).catch(()=>{});
+    await leases.withLease(ref,'settlement',async scope=>{const current=await bindScheduledFlywheel(scope),retry=current.task.status==='retry_wait'||current.task.status==='queued';await scope.tx.update(jobRuns).set({status:retry?'running':'failed',error:retry?null:current.task.lastErrorMessage??'模型阶段已挂起，请在原任务中恢复',finishedAt:retry?null:now()}).where(eq(jobRuns.id,current.input.jobRunId));}).catch(()=>settleRejected(error,'consumption',true));
     return;
    }
-   if(!signal.aborted){try{await finish('failed','飞轮执行中断，请查看原任务恢复状态');}catch{/* 已挂起/失去fence不得覆盖，原租约恢复接管。 */}}
+   if(!signal.aborted)await settleRejected(error,'consumption');
   }finally{
-   const interrupted=signal.aborted;clearInterval(timer);control.abort();
+   clearInterval(timer);await heartbeatInFlight;const interrupted=signal.aborted;control.abort();
+   if(verificationFailure&&!abort.signal.aborted)await settleRejected(verificationFailure,'heartbeat');
    // 收集器已退出才确认用户控制；应用退出时的 running 不会被改成取消。
    if(interrupted)await acknowledgeControl().catch(()=>{});
   }

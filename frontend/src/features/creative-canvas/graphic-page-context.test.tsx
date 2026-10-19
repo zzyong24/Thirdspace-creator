@@ -1,0 +1,96 @@
+import '@testing-library/jest-dom/vitest';
+import * as React from 'react';
+import {beforeEach,afterEach,it,expect,vi} from 'vitest';
+import {render,screen,waitFor,fireEvent,cleanup,act} from '@testing-library/react';
+const f=vi.hoisted(()=>({account:'a',params:new URLSearchParams(),get:vi.fn(),version:vi.fn(),save:vi.fn(),material:vi.fn(),url:vi.fn(),createCanvas:vi.fn(),saveCanvas:vi.fn(),getCanvas:vi.fn()}));
+vi.mock('next/navigation',()=>({useSearchParams:()=>f.params}));
+vi.mock("@/lib/http-transport", async importOriginal => ({...await importOriginal<typeof import("@/lib/http-transport")>(), readCurrentAccountId:()=>f.account}));
+vi.mock('@/lib/contract-client',()=>({client:{getGraphicPost:(...args:unknown[])=>f.get(...args),getGraphicPostVersion:(...args:unknown[])=>f.version(...args),createGraphicPostVersion:(...args:unknown[])=>f.save(...args),getCanvasGenerationMaterial:(...args:unknown[])=>f.material(...args),getAssetFileDownloadUrl:(...args:unknown[])=>f.url(...args),createCanvas:(...args:unknown[])=>f.createCanvas(...args),saveCanvas:(...args:unknown[])=>f.saveCanvas(...args),getCanvas:(...args:unknown[])=>f.getCanvas(...args)}}));
+import {CanvasWorkContext} from './work-canvas-context';
+import {openGraphicPageCanvas} from './graphic-page-context';
+const doc={schemaVersion:1,title:'一份内容',body:'讲清楚再扩展',summary:'',tags:[],ruleSnapshotRef:null,sourceRefs:[],cardBriefs:[{cardId:'page-a',title:'先讲清楚',body:'先把观点说明白',sourceRefs:[]},{cardId:'page-b',title:'再表达',body:'把相同观点做成图',sourceRefs:[]}],imageUses:[{assetId:'old',assetFileId:'old-file',order:0,role:'card',cardId:'page-a'},{assetId:'other',assetFileId:'other-file',order:1,role:'card',cardId:'page-b'}]};
+const post=()=>({projectId:'p',outputId:'o',artifactId:'art',currentVersionId:'v1',current:structuredClone(doc)});
+const selection={status:'available',phase:'confirmed',origin:{canvasId:'canvas',generationLinkId:'link',nodeId:'page-node',attemptId:'attempt',inputRevision:2,inputDigest:'a'.repeat(64),taskId:'task',resultId:'result',executionTaskId:'exec',callId:'call'},file:{assetId:'new',assetFileId:'new-file'},checksum:'b'.repeat(64),assetType:'image',name:'新页图',assetStatus:'active',taskStatus:'succeeded'} as const;
+function cache(){sessionStorage.setItem('creatoros-graphic-page:a:handle',JSON.stringify({accountId:'a',projectId:'p',outputId:'o',cardId:'page-a',baseVersionId:'v1',artifactId:'art',canvasId:'canvas',nodeId:'page-node',expectedFile:{assetId:'old',assetFileId:'old-file'}}));f.params=new URLSearchParams({graphicPageContext:'handle'});}
+function view(){return render(<CanvasWorkContext {...{accountId:'a',projectId:'p',canvasId:'canvas',confirmedSelections:[selection]}}/>);}
+beforeEach(()=>{vi.clearAllMocks();f.account='a';f.params=new URLSearchParams();sessionStorage.clear();f.get.mockImplementation(async()=>post());f.version.mockResolvedValue({versionId:'v1',document:structuredClone(doc)});f.material.mockResolvedValue(selection);f.url.mockResolvedValue({url:'https://example.test/new.png',fileName:'新页图.png'});f.save.mockImplementation(async({body})=>({versionId:'v2',document:body.document}));f.createCanvas.mockResolvedValue({id:'canvas-new',accountId:'a',projectId:'p',revision:1});f.saveCanvas.mockImplementation(async({body})=>({id:'canvas-new',accountId:'a',projectId:'p',revision:2,document:body.document}));});afterEach(cleanup);
+it('独立图文无需组合即可核对真实页，准确返回原稿',async()=>{cache();view();expect(await screen.findByRole('link',{name:'返回原组图'})).toHaveAttribute('href','/projects/p/outputs/o/image');expect(screen.getByText(/第 1 页/)).toBeInTheDocument();expect(f.version).toHaveBeenCalledWith({params:{outputId:'o',versionId:'v1'},query:undefined,body:undefined});});
+it('媒体已有图无关联也能明确替换这一页，其他页保存当前真值',async()=>{cache();const now=post();now.currentVersionId='v2';now.current.imageUses[1]!.assetFileId='other-new-file';f.get.mockResolvedValue(now);view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));expect(await screen.findByText(/将替换这页当前图片/)).toBeInTheDocument();expect(f.save).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));await waitFor(()=>expect(f.save).toHaveBeenCalledOnce());expect(JSON.parse(sessionStorage.getItem('creatoros-graphic-page:a:handle')!).expectedFile).toEqual(selection.file);expect(f.save.mock.calls[0]![0].body).toMatchObject({expectedCurrentVersionId:'v2',document:{imageUses:[{assetId:'new',assetFileId:'new-file',cardId:'page-a'},{assetId:'other',assetFileId:'other-new-file',cardId:'page-b'}]}});});
+it('并发换图保留候选，未重新读回确认不覆盖',async()=>{cache();view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));const now=post();now.current.imageUses[0]!.assetFileId='changed-file';f.get.mockResolvedValue(now);fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));expect(await screen.findByRole('alert')).toHaveTextContent('这页图片已变化');expect(f.save).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:'重新读取当前页'})).toBeInTheDocument();});
+it('迟到旧账号回读不能显示原页确认操作',async()=>{cache();let done!:(v:unknown)=>void;f.get.mockImplementationOnce(()=>new Promise(resolve=>{done=resolve;}));view();await waitFor(()=>expect(f.get).toHaveBeenCalledOnce());f.account='b';await act(async()=>{done(post());});expect(await screen.findByRole('alert')).toHaveTextContent('当前账号已变化');expect(screen.queryByRole('button',{name:'采用到这一页'})).toBeNull();});
+it('候选即使已保留但来自其他节点，也不能写回此页',async()=>{cache();const wrong={...selection,origin:{...selection.origin,nodeId:'foreign-node'}};render(<CanvasWorkContext {...{accountId:'a',projectId:'p',canvasId:'canvas',confirmedSelections:[wrong]}}/>);await screen.findByRole('link',{name:'返回原组图'});expect(screen.queryByRole('button',{name:'采用到这一页'})).toBeNull();expect(f.save).not.toHaveBeenCalled();});
+
+it('采用响应未知后刷新继续原请求和原完整body，不覆盖新版本',async()=>{cache();f.save.mockRejectedValueOnce(Error('响应未知'));const first=view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));await screen.findByRole('alert');const original=f.save.mock.calls[0]![0];first.unmount();const committed=post();committed.currentVersionId='v2';committed.current.imageUses[0]={...committed.current.imageUses[0]!,assetId:'new',assetFileId:'new-file'};f.get.mockResolvedValue(committed);view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));await waitFor(()=>expect(f.save).toHaveBeenCalledTimes(2));expect(f.save.mock.calls[1]![0]).toEqual(original);await screen.findByText(/已采用回原组图/);});
+it('正文或共享方向变化保留候选并阻止原页回写',async()=>{cache();view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));const changed=post();changed.current.cardBriefs[0]!.body='新观点';f.get.mockResolvedValue(changed);fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));expect(await screen.findByRole('alert')).toHaveTextContent('页规划或统一参考已变化');expect(f.save).not.toHaveBeenCalled();});
+it('直接创建现有画布并带入逐页真值和精确参考，不触发模型',async()=>{const current=post();Object.assign(current.current,{seriesProfile:{visualDirection:'黑白线稿',aspectRatio:'3:4',referenceImage:{assetId:'ref',assetFileId:'ref-file'}}});f.get.mockResolvedValue(current);f.version.mockResolvedValue({versionId:'v1',document:current.current});const href=await openGraphicPageCanvas({accountId:'a',projectId:'p',outputId:'o',cardId:'page-a'});expect(href).toMatch(/^\/canvases\/canvas-new\?graphicPageContext=/);expect(f.createCanvas).toHaveBeenCalledOnce();const node=f.saveCanvas.mock.calls[0]![0].body.document.nodes[0];expect(node).toMatchObject({referenceAssetId:'ref',referenceFileId:'ref-file',aspectRatio:'3:4',mode:'image_to_image'});expect(JSON.parse(node.prompt)).toMatchObject({targetCardId:'page-a',targetPage:current.current.cardBriefs[0],pages:current.current.cardBriefs});});
+it('画布创建结果未知时重开不会再创建一份',async()=>{f.createCanvas.mockRejectedValueOnce(Error('响应未知'));const input={accountId:'a',projectId:'p',outputId:'o',cardId:'page-a'};await expect(openGraphicPageCanvas(input)).rejects.toThrow('响应未知');await expect(openGraphicPageCanvas(input)).rejects.toThrow('不会重复创建');expect(f.createCanvas).toHaveBeenCalledOnce();});
+it('原组图内容修改后重新进入会冻结新版本，旧画布保留且不陷入旧规划循环',async()=>{const first=post(),changed=post();changed.currentVersionId='v2';changed.current.cardBriefs[0]!.body='修改后的观点';f.version.mockImplementation(async({params})=>({versionId:params.versionId,document:params.versionId==='v1'?first.current:changed.current}));const input={accountId:'a',projectId:'p',outputId:'o',cardId:'page-a'};await openGraphicPageCanvas(input);f.get.mockResolvedValue(changed);f.createCanvas.mockResolvedValue({id:'canvas-second',accountId:'a',projectId:'p',revision:1});const next=await openGraphicPageCanvas(input);expect(next).toMatch(/^\/canvases\/canvas-second\?/);expect(f.createCanvas).toHaveBeenCalledTimes(2);const node=f.saveCanvas.mock.calls[1]![0].body.document.nodes[0];expect(JSON.parse(node.prompt).targetPage.body).toBe('修改后的观点');});
+it('明确CAS冲突后重新读取允许新请求，未知回执仍由另一案例守原请求',async()=>{cache();f.save.mockRejectedValueOnce(Object.assign(Error('版本冲突'),{status:409,code:'ConflictError'}));view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));await screen.findByRole('alert');const original=f.save.mock.calls[0]![0].body;const changed=post();changed.currentVersionId='v2';changed.current.imageUses[1]!.assetFileId='other-new-file';f.get.mockResolvedValue(changed);fireEvent.click(screen.getByRole('button',{name:'重新读取当前页'}));await screen.findByText(/已读回当前页/);fireEvent.click(screen.getByRole('button',{name:'采用到这一页'}));fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));await waitFor(()=>expect(f.save).toHaveBeenCalledTimes(2));const next=f.save.mock.calls[1]![0].body;expect(next.clientRequestId).not.toBe(original.clientRequestId);expect(next.expectedCurrentVersionId).toBe('v2');expect(next.document.imageUses[1].assetFileId).toBe('other-new-file');});
+
+it('返回原组图沿编辑器保存路径；保存失败留在画布',async()=>{cache();const onLeave=vi.fn().mockRejectedValue(Error('画布保存失败'));render(<CanvasWorkContext {...{accountId:'a',projectId:'p',canvasId:'canvas',onLeave}}/>);fireEvent.click(await screen.findByRole('link',{name:'返回原组图'}));await waitFor(()=>expect(onLeave).toHaveBeenCalledWith('/projects/p/outputs/o/image'));expect(await screen.findByRole('alert')).toHaveTextContent('画布保存失败');});
+
+it('补上此前无图的首个页也按明确页序保存，旧无绑定照片保留',async()=>{cache();const now=post();now.current.imageUses=[{assetId:'other',assetFileId:'other-file',order:0,role:'card',cardId:'page-b'},{assetId:'legacy',assetFileId:'legacy-file',order:1,role:'card',cardId:undefined as unknown as string}];f.get.mockResolvedValue(now);f.version.mockResolvedValue({versionId:'v1',document:now.current});const value=JSON.parse(sessionStorage.getItem('creatoros-graphic-page:a:handle')!);value.expectedFile=null;sessionStorage.setItem('creatoros-graphic-page:a:handle',JSON.stringify(value));view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));await waitFor(()=>expect(f.save).toHaveBeenCalledOnce());expect(f.save.mock.calls[0]![0].body.document.imageUses.map((use:{assetId:string})=>use.assetId)).toEqual(['new','other','legacy']);});
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

@@ -1,0 +1,121 @@
+import {createPlatformAccountService} from "../platform-account/platform-account.service";
+import {createMembershipLockService} from "../platform-account/membership-lock.service";
+import {createExecutionLeaseService} from "../execution/execution-lease.service";
+import {createIntelligenceService} from "../intelligence/intelligence.service";
+import {createSchedulingService} from "../scheduling/scheduling.service";
+import {createDailyTopicRunIntentService} from "../scheduling/daily-topic-run-intent.service";
+import {accountGroupMemberships} from "../../schema/account-groups";
+import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
+import {createDb,aiTasks,executionTasks,eq} from '@creatoros/backend';
+import type {RequestContext} from '@creatoros/contract';
+import {createAccountGroupService} from '../platform-account/account-group.service';
+import {createAiService} from './ai.service';
+import {createPersistentTaskService} from '../execution/persistent-task.service';
+
+let store:Awaited<ReturnType<typeof createDb>>;
+let clock='2026-10-04T00:00:00.000Z';let sequence=0;
+const user:RequestContext={userId:'group-task-user',requestId:'group-task-request',source:'user'};
+const nextId=(prefix:string)=>`${prefix}-${++sequence}`;
+let groups:ReturnType<typeof createAccountGroupService>;
+let ai:ReturnType<typeof createAiService>;
+let tasks:ReturnType<typeof createPersistentTaskService>;
+let a:RequestContext,b:RequestContext;
+beforeEach(async()=>{
+ store=await createDb();sequence=0;clock='2026-10-04T00:00:00.000Z';
+ const deps={db:store.db,now:()=>clock,nextId};groups=createAccountGroupService(deps);
+ a={...user,groupId:(await groups.create(user,{name:'空组A',idempotencyKey:'a'})).id};
+ b={...user,groupId:(await groups.create(user,{name:'空组B',idempotencyKey:'b'})).id};
+ const noop=vi.fn(async()=>({id:'unused'}));
+ ai=createAiService({...deps,prepareChatReply:async(_ctx,snapshot)=>({capability:"copilot.assist",system:"创作助手",messages:[{role:"user",content:snapshot.sourceMessage.content}],maxSteps:4,maxOutputTokens:1000,tools:[]}),artifacts:{createVersion:noop},knowledge:{createKnowledge:noop},candidate:{createFromAIResult:noop,enrichCard:noop},learnings:{createLearning:noop},publishing:{createPublicationFromDraft:noop},materialLinks:{link:noop},positioning:{upsertProfile:noop,createStatementVersion:noop},calibration:{createDraftPrediction:noop}});
+ tasks=createPersistentTaskService(store.db,{now:()=>clock,nextId});
+});
+afterEach(async()=>{await store?.client.close()});
+describe('T1022 冻结账号组任务范围（隔离数据库）',()=>{
+ it('空组无需平台账号能创建会话和候选任务，子消息按父组授权',async()=>{
+  const conversation=await ai.createConversation(a,{title:'空组创作'});
+  await ai.createMessage(a,conversation.id,{content:'写一篇文章',attachments:[]});
+  expect((await ai.listMessages(a,conversation.id))).toHaveLength(1);
+  await expect(ai.listMessages(b,conversation.id)).rejects.toMatchObject({code:'OwnershipError'});
+  const task=await ai.createTask(a,{taskType:'positioning.generate',inputData:{brief:'空组创作'},attemptId:'group-task-attempt-0001'});
+  const [row]=await store.db.select().from(aiTasks).where(eq(aiTasks.id,task.id));
+  expect(row).toMatchObject({groupId:a.groupId,accountId:null});
+  await expect(ai.getTask(b,task.id)).rejects.toMatchObject({code:'OwnershipError'});
+  expect((await ai.listTasks(b,{limit:20,offset:0})).total).toBe(0);
+ });
+ it('执行任务创建冻结组；恢复后仍是原组且相同幂等键跨组独立',async()=>{
+  const input={kind:'ai_task' as const,ownerType:'ai_task' as const,ownerId:'pure-creation',idempotencyKey:'same-key',payload:{modelInput:{kind:'chat.run'}}};
+  const first=await tasks.enqueue(a,input),second=await tasks.enqueue(b,input);
+  expect(first.id).not.toBe(second.id);
+  const claim=await tasks.claimTask({taskId:first.id,workerId:'worker',leaseSeconds:1});
+  expect(claim?.task).toMatchObject({groupId:a.groupId,accountId:null});
+  clock='2026-10-04T00:00:02.000Z';expect((await tasks.recoverExpiredLeases()).requeued).toBe(1);
+  const restored=await tasks.claimTask({taskId:first.id,workerId:'worker-restarted'});
+  expect(restored?.task).toMatchObject({groupId:a.groupId,accountId:null});
+  await expect(tasks.get(b,first.id)).rejects.toMatchObject({code:'OwnershipError'});
+ });
+ it('空组聊天公共入口原子提交消息、AI任务与冻结执行输入',async()=>{
+  const conversation=await ai.createConversation(a,{title:'创作聊天'});
+  const message=await ai.createMessageWithReplyTask(a,conversation.id,{content:'帮我想三个题目',attachments:[]});
+  const [task]=await store.db.select().from(aiTasks).where(eq(aiTasks.id,String(message.modelMetadata.chatTaskId)));
+  const [execution]=await store.db.select().from(executionTasks).where(eq(executionTasks.id,task!.executionTaskId!));
+  expect(task).toMatchObject({groupId:a.groupId,accountId:null});
+  expect(execution).toMatchObject({groupId:a.groupId,accountId:null});
+  expect((execution!.payload as {modelInput:unknown}).modelInput).toMatchObject({groupId:a.groupId,accountId:null});
+ });
+ it('雷达是共享组域，空组同名集合独立且平台筛选不改变共享内容',async()=>{
+  const radar=createIntelligenceService(store.db,{tasks,now:()=>clock,nextId});
+  const ca=await radar.createCollection(a,{name:'资料',idempotencyKey:'collection-a'});
+  const cb=await radar.createCollection(b,{name:'资料',idempotencyKey:'collection-b'});
+  expect(ca.id).not.toBe(cb.id);
+  const emptyView=await radar.getWorkspace({...a,accountId:null});
+  expect(emptyView.collections.some(row=>row.id===ca.id)).toBe(true);
+  expect(emptyView.collections.some(row=>row.id===cb.id)).toBe(false);
+  const account=await createPlatformAccountService({db:store.db,now:()=>clock,nextId}).createAccount(a,{platform:'douyin',accountHandle:'真实平台筛选'});
+  expect((await groups.forAccount(a,account.id)).groupId).toBe(a.groupId);
+  const view=await radar.getWorkspace({...a,accountId:account.id});
+  expect(view.collections).toEqual(emptyView.collections);
+  await expect(radar.getWorkspace({...b,accountId:account.id})).rejects.toMatchObject({code:'ConflictError'});
+  expect(view.collections.some(row=>row.id===ca.id)).toBe(true);
+  expect(view.collections.some(row=>row.id===cb.id)).toBe(false);
+ });
+ it('空组每日创作任务中断后按原冻结组恢复运行，跨组不能恢复',async()=>{
+  const scheduling=createSchedulingService({db:store.db,now:()=>clock,nextId});
+  const job=await scheduling.createJob(a,{name:'每日创作',sourceKind:'topic.daily',schedule:'0 9 * * *',systemManaged:true});
+  const task=await ai.createTask(a,{taskType:'scheduled.topic.daily',inputData:{jobId:job.id,scheduledRun:{version:1,scheduledFor:'2026-10-04T09:00:00.000Z'}},attemptId:'daily-group-task-attempt'});
+  const intents=createDailyTopicRunIntentService(store.db,{now:()=>clock,nextId});
+  const first=await intents.ensureRunForTask(a,task.id),restored=await intents.ensureRunForTask(a,task.id);
+  expect(restored.id).toBe(first.id);expect(restored.groupId).toBe(a.groupId);
+  expect((await scheduling.getJob(a,job.id)).accountId).toBeNull();
+  await expect(intents.ensureRunForTask(b,task.id)).rejects.toMatchObject({code:'OwnershipError'});
+ });
+ it('平台任务先创建时转组锁检测阻止转组，转组先完成时旧freeze不能创建',async()=>{
+  const accounts=createPlatformAccountService({db:store.db,now:()=>clock,nextId});
+  const account=await accounts.createAccount(user,{platform:'douyin',accountHandle:'真实平台号'});await groups.ensureLegacyGroups(user);
+  const member=await groups.forAccount(user,account.id);
+  const context={...user,accountId:account.id,groupId:member.groupId,membershipVersion:member.version};
+  const lock=createMembershipLockService(store.db);
+  const task=await tasks.enqueue(context,{kind:'source_sync',ownerType:'source',ownerId:'real-source',idempotencyKey:'create-before-transfer',payload:{}});
+  await expect(lock.withLock(context,async tx=>lock.assertNoActiveAccountTasks(tx,user.userId,account.id))).rejects.toMatchObject({code:'ConflictError'});
+  await tasks.command(context,{taskIds:[task.id],command:'cancel',idempotencyKey:'cancel-platform'});
+  await lock.withLock(context,async tx=>{await lock.assertNoActiveAccountTasks(tx,user.userId,account.id);await tx.update(accountGroupMemberships).set({groupId:b.groupId!,version:member.version+1}).where(eq(accountGroupMemberships.id,member.id));});
+  await expect(tasks.enqueue(context,{kind:'source_sync',ownerType:'source',ownerId:'real-source',idempotencyKey:'transfer-before-create',payload:{}})).rejects.toMatchObject({code:'ConflictError'});
+  await expect(ai.createTask({...user,accountId:account.id},{taskType:'positioning.generate',inputData:{},attemptId:'legacy-after-transfer'})).rejects.toMatchObject({code:'ConflictError'});
+ });
+ it('Worker外部副作用前复核member版本，stale冻结不会发送',async()=>{
+  const account=await createPlatformAccountService({db:store.db,now:()=>clock,nextId}).createAccount(user,{platform:'douyin',accountHandle:'真实平台号'});await groups.ensureLegacyGroups(user);
+  const member=await groups.forAccount(user,account.id),context={...user,accountId:account.id,groupId:member.groupId,membershipVersion:member.version};
+  const task=await tasks.enqueue(context,{kind:'source_sync',ownerType:'source',ownerId:'source',idempotencyKey:'frozen-worker',payload:{}});
+  const claim=(await tasks.claimTask({taskId:task.id,workerId:'worker'}))!;
+  await store.db.update(accountGroupMemberships).set({groupId:b.groupId!,version:member.version+1}).where(eq(accountGroupMemberships.id,member.id));
+  const send=vi.fn(async()=>undefined);
+  await expect(createExecutionLeaseService(store.db,{now:()=>clock}).withLease({executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken},'admission',send)).rejects.toMatchObject({code:'ConflictError'});
+  expect(send).not.toHaveBeenCalled();
+ });
+ it('归档组允许读已有会话任务，拒绝写入',async()=>{
+  const conversation=await ai.createConversation(a,{title:'历史'});
+  const group=await groups.get(user,a.groupId!);await groups.archive(user,group.id,group.version);
+  expect((await ai.getConversation(a,conversation.id)).title).toBe('历史');
+  await expect(ai.createConversation(a,{title:'不应新建'})).rejects.toMatchObject({code:'OwnershipError'});
+  await expect(ai.createMessage(a,conversation.id,{content:'不应写入',attachments:[]})).rejects.toMatchObject({code:'OwnershipError'});
+ });
+});

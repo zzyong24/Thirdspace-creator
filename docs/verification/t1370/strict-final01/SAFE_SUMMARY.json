@@ -1,0 +1,79 @@
+{
+  "schema": "actual-taskctl-strict-result/v1",
+  "taskId": "T-1370",
+  "head": "10238309c46f557b0c92d9d008cb466f7974c594",
+  "childExit": 0,
+  "seconds": 98.174,
+  "reportSha256": "deac4c8faea8f9cb075d2234a6af812cff85f900eb3cd775853ac80422c4e949",
+  "command": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1370",
+    "--evidence",
+    "docs/verification/t1370/control/FRONTEND_REPORT.md"
+  ],
+  "rawLogSha256": "21b3ea55a7bad3ba86c9e77c961a9bcb783601b526741d5f3b07f81989e4a7c5",
+  "candidateOutputRefs": [
+    "/Users/zyongzhu/.codex/worktrees/t1370-t1371-ui-data/Thirdspace-creator/docs/verification/t1370/private/strict-EfUe0W"
+  ],
+  "tests": [
+    {
+      "title": "T1370 平台能力行内扫码、真实写后读与原run恢复",
+      "project": "t1370-normal",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 16265,
+          "errorCount": 0
+        }
+      ]
+    },
+    {
+      "title": "T1370 平台能力行内扫码、真实写后读与原run恢复",
+      "project": "t1370-minimum",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 15603,
+          "errorCount": 0
+        }
+      ]
+    }
+  ],
+  "protectedBefore": {
+    "foreignSha256": {
+      "frontend/src-tauri/src/license.rs": "3d55b755c9e9396ef302f95332555bbf4c57764c5d2fd2954be85be85014fb15",
+      "frontend/src/app/api/v1/local/client-config/route.test.ts": "40ca6a82f16200cba93aa6c2f7c3fd08fc6049d072d17428d22e4ff866088d4e",
+      "frontend/src/app/api/v1/local/client-config/route.ts": "5b9fcb9b7cb9e59f2a343932336d5a034b69d87fe251ce07f0a05bc6ae652cbe",
+      "frontend/src/features/settings/channel-model-configuration.tsx": "76a8d487b196e410b437d07157922d766a43728fb960899d9052dd80d2f8722f",
+      "frontend/src/features/settings/settings-interactive-region.test.tsx": "bb7d03c8a4b9437820d76a3d7b936929511b15a8bef708628d314e2f2eca35ca",
+      "frontend/src/server/activation/client-config.server.test.ts": "98ef74b394335046c15bb8e063225438049e20de9b56fb0e88a77015fb247cdd",
+      "frontend/src/server/activation/client-config.server.ts": "f095325e92371ae1906131e846e7e88742106bdca6afedde22017c85ea673471",
+      "orchestrator/.lessons-stats.json": "1614ddca9c28b0c5461d598def146e4ebda9c3d7cd9802b8d179aa6bad1bb299",
+      "orchestrator/context/T-1331.md": "9eccd18638c4e43237e26cd770755f7f30bc910f6dcac8ec62be330e5a4041f4"
+    },
+    "t1255Sha256": "672ff906d5bff61747bf7abd4a5f130d16734cada98d1e4ed90ed0886b3ccf50"
+  },
+  "protectedAfter": {
+    "foreignSha256": {
+      "frontend/src-tauri/src/license.rs": "3d55b755c9e9396ef302f95332555bbf4c57764c5d2fd2954be85be85014fb15",
+      "frontend/src/app/api/v1/local/client-config/route.test.ts": "40ca6a82f16200cba93aa6c2f7c3fd08fc6049d072d17428d22e4ff866088d4e",
+      "frontend/src/app/api/v1/local/client-config/route.ts": "5b9fcb9b7cb9e59f2a343932336d5a034b69d87fe251ce07f0a05bc6ae652cbe",
+      "frontend/src/features/settings/channel-model-configuration.tsx": "76a8d487b196e410b437d07157922d766a43728fb960899d9052dd80d2f8722f",
+      "frontend/src/features/settings/settings-interactive-region.test.tsx": "bb7d03c8a4b9437820d76a3d7b936929511b15a8bef708628d314e2f2eca35ca",
+      "frontend/src/server/activation/client-config.server.test.ts": "98ef74b394335046c15bb8e063225438049e20de9b56fb0e88a77015fb247cdd",
+      "frontend/src/server/activation/client-config.server.ts": "f095325e92371ae1906131e846e7e88742106bdca6afedde22017c85ea673471",
+      "orchestrator/.lessons-stats.json": "1614ddca9c28b0c5461d598def146e4ebda9c3d7cd9802b8d179aa6bad1bb299",
+      "orchestrator/context/T-1331.md": "9eccd18638c4e43237e26cd770755f7f30bc910f6dcac8ec62be330e5a4041f4"
+    },
+    "t1255Sha256": "672ff906d5bff61747bf7abd4a5f130d16734cada98d1e4ed90ed0886b3ccf50"
+  },
+  "foreign9AndT1255Preserved": true,
+  "candidateCleanAfter": true,
+  "fullReconcileStarted": false,
+  "fullBlocker": "docs/verification/t1373/PREFLIGHT_BLOCKER.json",
+  "boundary": "taskctl实际执行配置原双窗旅程后才写状态；新EXIT/输出独立保存，不覆盖首轮RED/GREEN。当前安装App仍2d旧源。"
+}

@@ -1,0 +1,1013 @@
+[
+  {
+    "branchName": "codex-ephemeral-sessions",
+    "head": "196321a012299660e7ffcbe012ccc0cd2fd9c18a",
+    "path": "ai-worker/src/execution/codex-acp-policy.test.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "3621ed3ba6c81f6c7e936d6b75b19d8cb9133eee"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "556fee43042db2257c296c4656a3d0442a5245ad"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "164aaabab09138d4a96ab25393562397abe817df"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "164aaabab09138d4a96ab25393562397abe817df"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "164aaabab09138d4a96ab25393562397abe817df"
+    },
+    "currentRSha256": "f89945251afd9e67bde2f44a0c51970d177d7531deaf21fc77b54cd505eba9ca",
+    "currentRBlob": "164aaabab09138d4a96ab25393562397abe817df",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "codex-ephemeral-sessions",
+    "head": "196321a012299660e7ffcbe012ccc0cd2fd9c18a",
+    "path": "ai-worker/src/execution/codex-app-server.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "f7cb77a0a9c3eb3309a4a42a302adde29b4a5de5"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "a349d65f629e9bf97324590e5062c0ca5500b81d"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b7d2816f7df091c1d03c6687d63d2923e5e63736"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b7d2816f7df091c1d03c6687d63d2923e5e63736"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b7d2816f7df091c1d03c6687d63d2923e5e63736"
+    },
+    "currentRSha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a",
+    "currentRBlob": "b7d2816f7df091c1d03c6687d63d2923e5e63736",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "codex-ephemeral-sessions",
+    "head": "196321a012299660e7ffcbe012ccc0cd2fd9c18a",
+    "path": "ai-worker/src/execution/codex-native-turn.test.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "6abf39beeb8d1e6c89fc5d888a54e1361c0503b9"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "d20a339e666d956d8044f0ac5c979ade97c61091"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ac27738294d8a167f83876f1a242c8a0d1f23b6f"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ac27738294d8a167f83876f1a242c8a0d1f23b6f"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ac27738294d8a167f83876f1a242c8a0d1f23b6f"
+    },
+    "currentRSha256": "73a4c247e54c0154e3d6c92b65d00bff2dba772b1a63abc5aa1bb4babd149c04",
+    "currentRBlob": "ac27738294d8a167f83876f1a242c8a0d1f23b6f",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "codex-text-image",
+    "head": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+    "path": "ai-worker/src/execution/worker-runtime.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ebdc8a848003ba58ca7d671726295e86c827fc9c"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b15aad4c067d34764a702fa22c6770f054fe623"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e60192b5c92d0314a085ee1ab019f7d61125f96a"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "bc3922a7a8051634e55c0104c9c3b2cc1c511b5d"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e60192b5c92d0314a085ee1ab019f7d61125f96a"
+    },
+    "currentRSha256": "2646f74b2e48618cd31152a18b4846abf35be2adc5d520d385af391e6e7c7df7",
+    "currentRBlob": "bc3922a7a8051634e55c0104c9c3b2cc1c511b5d",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "codex-text-image",
+    "head": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+    "path": "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ab10d755238ed151ac5a4b14aa782f11fedb3642"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "cd5a214a5b06943a80eb98a7adcc1d3a1c9b1088"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "77dc2df1356123434dd9e311c58b1be929078c0c"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e429e7d2b78f849e79dc6415e13d5cfbfae2c326"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "77dc2df1356123434dd9e311c58b1be929078c0c"
+    },
+    "currentRSha256": "89b47361cfdcf0f156eae28bcd321a204701e06f2ce9054fdc78f4cd311dc97b",
+    "currentRBlob": "77dc2df1356123434dd9e311c58b1be929078c0c",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "codex-text-image",
+    "head": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+    "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1e2e91d29b05bd48586f360e0dce01b93ad73946"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "c0091ba7c448b39bb763593c72db5911f44e4ce8"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b61ca793e7ba7132300f61ec6595d98ccaca4b89"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "9d35b882276d596282894dbd1de48be4afe179c5"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b61ca793e7ba7132300f61ec6595d98ccaca4b89"
+    },
+    "currentRSha256": "897c7694b2d492dc6efcd2a3c17f23eb14ed03ca494a2973e2a56cb7629ba759",
+    "currentRBlob": "9d35b882276d596282894dbd1de48be4afe179c5",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "codex-text-image",
+    "head": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+    "path": "frontend/src/features/settings/settings-model-region.tsx",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "4ceb13dc4e9bfc52b9db4c0eddfd1ba825e4312e"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "29c7aad2c7e30ef582ef2b726007d415c7308c58"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "480afac3dc537a77a433cf67f1d0bda8f18b67c7"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "860a70b94f80041b4e7ad5ab12858d156ca74926"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "480afac3dc537a77a433cf67f1d0bda8f18b67c7"
+    },
+    "currentRSha256": "3ea6ff6257994e7da33cdef8ba66010f55ce0ad3354b54faf0e4e05c3f4f481e",
+    "currentRBlob": "480afac3dc537a77a433cf67f1d0bda8f18b67c7",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "daily-client-observability",
+    "head": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+    "path": "contract/src/cli-policy.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "58dac2f8e41cc80e5858ae5290b241a6fc50a36b"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1a2e5387659b41c4cd034e3b74adefa89d4f0eec"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "3a771f02c9bea90f8365d23fb63c6398a2ce2311"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "88950746ac6dad020c03c0fa06e39b29eda0dd6d"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1833b210b1610caaaa43f17678d9dba5bd7194f2"
+    },
+    "currentRSha256": "fca1462e14ecdc756f553d7c1af1fd729a9fcb142de3a1ac68cfa2d04d9b1175",
+    "currentRBlob": "16b2f0f8e248b127e182c66ee4723935a408b833",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "daily-client-observability",
+    "head": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+    "path": "contract/src/index.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "adab606b31dca346835ee07075ab7f343670bd5f"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "66f8557a29252c6155f14595c13ab80f4215a147"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "3222ec9d68a4e3ab9a3fe98fc495391986fa332d"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "9a001a319df4ed1010142af9f6bc41084abb5f0b"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "d0ef9b18f6c083d57ed45fd9b0124bd8d639a009"
+    },
+    "currentRSha256": "8b28bac9bb58f39d766377dc670c083422b9e5709c21adfc04aec11f0c1164bc",
+    "currentRBlob": "a842cfe5579aa1ced3558e589486525368dafc0c",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "daily-client-observability",
+    "head": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+    "path": "contract/src/workspace-operation-scope.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "439cd15bf3d37c66b2f6560eb59985632e8db059"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "71d5058d9118e1c202f696048c0e75e316869b95"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "f56c4a77ef6af0fabc5b4ab1051303d93be4d826"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "3a6e06f2c29a95c74fb47fdd6d23a6b6ea98842b"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ebd837871fa0605ce6ef074f1b7a31b7cc0298bc"
+    },
+    "currentRSha256": "92d25b88f9cce0769c6cd7f04a635fc453940d6fa14eea34a1c70316667214ca",
+    "currentRBlob": "c6c52a37633af61b110774331c8f17013073f2b0",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "daily-client-observability",
+    "head": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+    "path": "frontend/src-tauri/src/lib.rs",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "9c0fff1c0712b73608340b5cee35d86015a1a777"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "80342a3732ef16f2d2ccff5aa10d1f77346bb270"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "currentRSha256": "131e44d9091a997901809c09f8dd83fdb523272f40b6fccb0affb3acde78f9fb",
+    "currentRBlob": "80342a3732ef16f2d2ccff5aa10d1f77346bb270",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "daily-client-observability",
+    "head": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+    "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1e2e91d29b05bd48586f360e0dce01b93ad73946"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "add8bdb686b3eb1b15a7c9ff120bd317a0910d6e"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b61ca793e7ba7132300f61ec6595d98ccaca4b89"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "9d35b882276d596282894dbd1de48be4afe179c5"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b61ca793e7ba7132300f61ec6595d98ccaca4b89"
+    },
+    "currentRSha256": "897c7694b2d492dc6efcd2a3c17f23eb14ed03ca494a2973e2a56cb7629ba759",
+    "currentRBlob": "9d35b882276d596282894dbd1de48be4afe179c5",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "daily-client-observability",
+    "head": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+    "path": "frontend/src/server/persistence-client.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "01dd0173f3a6d54070abf366e1a3b05b8dd07822"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "44e4f8bf91717bad42ad979135710fc5c1050d9e"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "8df52f91ad5cb59f4e5a74688a426ca5ef2b2660"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e55a9b937b36861737a4cc01bdc451ce19bc2e82"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "77761d3043622d57323fa4a8d25e0745853f876e"
+    },
+    "currentRSha256": "01e4eaa0a10c3e7f2ada587a0b5d3083a17d4d05fd35df369fa669f53c0b9895",
+    "currentRBlob": "f016d75b34a07f3a8e865b2c9a60680007bf30e7",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "backend/src/modules/execution/persistent-task.service.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "585f95efb5d58c1989777ffe1c8aae66cd81daea"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "96b93f45ee14665ba800a8f6ba431572b858e299"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "7d43a8ed666f0c035b58b536b4bec790caf8ea64"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e96723f5ae7e41930415fb6e754daeb2507b6323"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "7d43a8ed666f0c035b58b536b4bec790caf8ea64"
+    },
+    "currentRSha256": "18c615b1c857aecff94804ac27671d4dd972b8d3c22d5acb525fcafd6c2d46d4",
+    "currentRBlob": "16b10192bab32c4ed53ca1fbe7a55704e64e7de7",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "backend/src/modules/observability/collector.test.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "f0fefeb5cc2d2dba035441bce312b0d2c4e821ce"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "648dec97ed75ebc72818b94ffdbf9137e2027ace"
+    },
+    "wHead": null,
+    "currentRSha256": "ab57a5d3f24d7b88a2a33f10602df767f636345919d5237aacd6e547a05ffbb5",
+    "currentRBlob": "648dec97ed75ebc72818b94ffdbf9137e2027ace",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "backend/src/modules/observability/collector.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "58139c84df3e019edafe947a1f48e9135d8d1710"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "66a37e7a0e982e8cbe4eaa03f5636bd455379b01"
+    },
+    "wHead": null,
+    "currentRSha256": "a710bd7a1ef39bf27fc70601af4dec41bea4593c762904da715836619ed50288",
+    "currentRBlob": "66a37e7a0e982e8cbe4eaa03f5636bd455379b01",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "contract/src/cli-policy.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "58dac2f8e41cc80e5858ae5290b241a6fc50a36b"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1a2e5387659b41c4cd034e3b74adefa89d4f0eec"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "3a771f02c9bea90f8365d23fb63c6398a2ce2311"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "88950746ac6dad020c03c0fa06e39b29eda0dd6d"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1833b210b1610caaaa43f17678d9dba5bd7194f2"
+    },
+    "currentRSha256": "fca1462e14ecdc756f553d7c1af1fd729a9fcb142de3a1ac68cfa2d04d9b1175",
+    "currentRBlob": "16b2f0f8e248b127e182c66ee4723935a408b833",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "contract/src/index.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "adab606b31dca346835ee07075ab7f343670bd5f"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "66f8557a29252c6155f14595c13ab80f4215a147"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "3222ec9d68a4e3ab9a3fe98fc495391986fa332d"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "9a001a319df4ed1010142af9f6bc41084abb5f0b"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "d0ef9b18f6c083d57ed45fd9b0124bd8d639a009"
+    },
+    "currentRSha256": "8b28bac9bb58f39d766377dc670c083422b9e5709c21adfc04aec11f0c1164bc",
+    "currentRBlob": "a842cfe5579aa1ced3558e589486525368dafc0c",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "contract/src/observability.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "d9471b06ae498279a2cd07eee9528e5fa4057907"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "6f25ec2b88b12333be14d0d4188fb7ec5c3a6136"
+    },
+    "wHead": null,
+    "currentRSha256": "c3a3cdff8f0ed79d9e87e07ec3c742ae227c69e218e82fe666260adb2f6675cb",
+    "currentRBlob": "6f25ec2b88b12333be14d0d4188fb7ec5c3a6136",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "contract/src/workspace-operation-scope.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "439cd15bf3d37c66b2f6560eb59985632e8db059"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "71d5058d9118e1c202f696048c0e75e316869b95"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "f56c4a77ef6af0fabc5b4ab1051303d93be4d826"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "3a6e06f2c29a95c74fb47fdd6d23a6b6ea98842b"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ebd837871fa0605ce6ef074f1b7a31b7cc0298bc"
+    },
+    "currentRSha256": "92d25b88f9cce0769c6cd7f04a635fc453940d6fa14eea34a1c70316667214ca",
+    "currentRBlob": "c6c52a37633af61b110774331c8f17013073f2b0",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src-tauri/src/lib.rs",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "9c0fff1c0712b73608340b5cee35d86015a1a777"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "80342a3732ef16f2d2ccff5aa10d1f77346bb270"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "currentRSha256": "131e44d9091a997901809c09f8dd83fdb523272f40b6fccb0affb3acde78f9fb",
+    "currentRBlob": "80342a3732ef16f2d2ccff5aa10d1f77346bb270",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/app/api/v1/local/observability/route.test.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "633f246c343364b46016e7c470dbb7dbc3670197"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "46d59563d46d238226267cdd81dabfcb646c6302"
+    },
+    "wHead": null,
+    "currentRSha256": "6cdcb2949c85f1b2192b2321c06a4dd2e8a1203f5079b875c7e9d7e371132073",
+    "currentRBlob": "46d59563d46d238226267cdd81dabfcb646c6302",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/app/api/v1/local/observability/route.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "df5d18e5ba1b8cabea996a38804a2786a8d527b5"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "2f458b7544d98c8f8457fbefa94a5b2465c1400a"
+    },
+    "wHead": null,
+    "currentRSha256": "894bdaa8c9a6bc96c7eda6c896a470f632d2f89acd08ee417bcf4308d8ba0baf",
+    "currentRBlob": "2f458b7544d98c8f8457fbefa94a5b2465c1400a",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/features/settings/encrypted-log-reporting-card.tsx",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "875d4eea762a0eac6bd2520973af52c8adde5af2"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "ef7dd39eb1a3865f86e2ebf94eba123c7ea1843f"
+    },
+    "wHead": null,
+    "currentRSha256": "dede348fbda173f8429d38c8a6ed34f4890f4e6016f13da7eb363e3cb065b4e0",
+    "currentRBlob": "ef7dd39eb1a3865f86e2ebf94eba123c7ea1843f",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1e2e91d29b05bd48586f360e0dce01b93ad73946"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "add8bdb686b3eb1b15a7c9ff120bd317a0910d6e"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b61ca793e7ba7132300f61ec6595d98ccaca4b89"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "9d35b882276d596282894dbd1de48be4afe179c5"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b61ca793e7ba7132300f61ec6595d98ccaca4b89"
+    },
+    "currentRSha256": "897c7694b2d492dc6efcd2a3c17f23eb14ed03ca494a2973e2a56cb7629ba759",
+    "currentRBlob": "9d35b882276d596282894dbd1de48be4afe179c5",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/lib/observability-client.test.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "cce91249fe70af87f41a4c48898d48fd69f14a26"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "217a96b79eb32b3a574ee504559fccb1f9de902a"
+    },
+    "wHead": null,
+    "currentRSha256": "2ff35559c267739eb004a7adc76126929a4821899be280e3802718a8507f08e5",
+    "currentRBlob": "217a96b79eb32b3a574ee504559fccb1f9de902a",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/lib/observability-client.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "8c85d5dfcae18734a122b3625828e6c40c52769e"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "4eb72268f739500dd002b341935d514b318b1f55"
+    },
+    "wHead": null,
+    "currentRSha256": "ef9d1a53664721097b962cca4eeaaf6a2d1ae622ff1791545338e9c3d2864258",
+    "currentRBlob": "4eb72268f739500dd002b341935d514b318b1f55",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/server/feedback/encrypted-log-upload.server.test.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e35faf892c760f9176b2be180f382c9fd24b9c9b"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "b22db0822834cdfd101158a2726266c377f0318d"
+    },
+    "wHead": null,
+    "currentRSha256": "c9689f96a20db851249eef0c6ab7737491072332af9ddcc672c0377216ab2fa9",
+    "currentRBlob": "b22db0822834cdfd101158a2726266c377f0318d",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/server/feedback/encrypted-log-upload.server.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "0af48aa5d000289569122c359a7112646e2b03ff"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e455d52a9a289a8617f8460b45358f70b553f66b"
+    },
+    "wHead": null,
+    "currentRSha256": "fc6996c67a3a336511d5bbfba4e66c5caf5bc3e5d85e370f53b8642552596073",
+    "currentRBlob": "e455d52a9a289a8617f8460b45358f70b553f66b",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/server/observability-host.server.test.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "c99cec7faf920f3f88e17d5b09cb428a96594120"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "38bd9a105bb175a3f1b3f7607659bf73772fcadb"
+    },
+    "wHead": null,
+    "currentRSha256": "a251bdadfebfbfb383ba87fa9bc3e77700d43b389019525d9d475060e68e539e",
+    "currentRBlob": "38bd9a105bb175a3f1b3f7607659bf73772fcadb",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/server/observability-host.server.ts",
+    "base": null,
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1aa7d6bf49f154e28d649526c7c1d278fb10fb34"
+    },
+    "rHead": null,
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "f249fcea8a7ef1c76fcd4e32d53d68d9f6a621bc"
+    },
+    "wHead": null,
+    "currentRSha256": "79540b919b61d7f1dba7ef1bdd59f8dba539e071929258c3981f906545445815",
+    "currentRBlob": "f249fcea8a7ef1c76fcd4e32d53d68d9f6a621bc",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1255-client-writer",
+    "head": "f54f184d395a049b247e81f263f42945ad15078f",
+    "path": "frontend/src/server/persistence-client.ts",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "01dd0173f3a6d54070abf366e1a3b05b8dd07822"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "6e052ff4279f5d494d3def0877ff226285f125ce"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "8df52f91ad5cb59f4e5a74688a426ca5ef2b2660"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e55a9b937b36861737a4cc01bdc451ce19bc2e82"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "77761d3043622d57323fa4a8d25e0745853f876e"
+    },
+    "currentRSha256": "01e4eaa0a10c3e7f2ada587a0b5d3083a17d4d05fd35df369fa669f53c0b9895",
+    "currentRBlob": "f016d75b34a07f3a8e865b2c9a60680007bf30e7",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1273-release-hardening",
+    "head": "c98e7a958cfa5395d8718310128513671fc51562",
+    "path": "frontend/scripts/desktop/package.mjs",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "df47e91943dc979c8c909e21439d4078bf09ec37"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "cfef5c6cc2ed4c88b96712f1ebb771486f4b4b50"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "de6401efcc3e566aca87fdea245bb4ee2552bc76"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "afba6347dd767e667d8dcc9e23ce8987c3eb69a7"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "de6401efcc3e566aca87fdea245bb4ee2552bc76"
+    },
+    "currentRSha256": "19732761948dfc78aa39f7346020b4c6358b2cd07cd9233d6ac2b7df2976b037",
+    "currentRBlob": "afba6347dd767e667d8dcc9e23ce8987c3eb69a7",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1273-release-hardening",
+    "head": "c98e7a958cfa5395d8718310128513671fc51562",
+    "path": "frontend/src-tauri/src/lib.rs",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "122d27a90eb30265ac6feab161b8910e5c2007d3"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "80342a3732ef16f2d2ccff5aa10d1f77346bb270"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "1b02950b46f8936c89a08fe7f341c3803b396299"
+    },
+    "currentRSha256": "131e44d9091a997901809c09f8dd83fdb523272f40b6fccb0affb3acde78f9fb",
+    "currentRBlob": "80342a3732ef16f2d2ccff5aa10d1f77346bb270",
+    "classification": "unproven-unique-source-review"
+  },
+  {
+    "branchName": "t1273-release-hardening",
+    "head": "c98e7a958cfa5395d8718310128513671fc51562",
+    "path": "pnpm-lock.yaml",
+    "base": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "e4bffcaded9338191160cc9e1aaf269f6e1a18d2"
+    },
+    "branch": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "44e1826c7bc40e35d341cc8f7cba26aef84a5c68"
+    },
+    "rHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "33c893a804839fe2b7e9c4818a8dec764feb8e30"
+    },
+    "mainCheckpoint": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "969c8163267b21b40efa991184a9aaac0ab2a722"
+    },
+    "wHead": {
+      "mode": "100644",
+      "type": "blob",
+      "blob": "33c893a804839fe2b7e9c4818a8dec764feb8e30"
+    },
+    "currentRSha256": "a66f5c971699f96c73e7ec3285657697b2b8b786622de8de9ec1db3847b06b8c",
+    "currentRBlob": "969c8163267b21b40efa991184a9aaac0ab2a722",
+    "classification": "unproven-unique-source-review"
+  }
+]

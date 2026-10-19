@@ -1,3 +1,4 @@
+import {projects as originalProjects} from "../../schema/projects";
 import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -52,6 +53,7 @@ describe("learnings acceptance (SPEC §22)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    for(const id of ["project-1","project-2"])await seedOriginalProject(db,ctxA,id,NOW);
   });
 
   it("has the foundation §5 module layout files", () => {
@@ -147,4 +149,8 @@ describe("learnings acceptance (SPEC §22)", () => {
 function ctx0(): RequestContext {
   // [T-332 S2] strict 门下 ctx 必带号。
   return { userId: "user-a", requestId: "r0", source: "user", accountId: "acct-a" };
+}
+
+async function seedOriginalProject(db:Db,owner:RequestContext,id:string,stamp:string){
+ await db.insert(originalProjects).values({id,userId:owner.userId,accountId:owner.accountId??null,groupId:owner.groupId??null,title:'原用例真实父项目',creationMode:'free',status:'active',currentStage:'review',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
 }

@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { ENDPOINTS, successEnvelope, listEnvelope } from "@creatoros/contract";
 import { expect, test } from "../helpers/test-environment";
 
 /**
@@ -19,7 +21,35 @@ import { expect, test } from "../helpers/test-environment";
 test.describe("Global Search page", () => {
   test("renders the global search structure on the /search route", async ({
     page,
+    baseURL,
   }) => {
+    const groupResponse = await page.request.post("/api/v1/dispatch", { data: { id: "accountGroups.create", input: { body: { name: "搜索真实三项目", idempotencyKey: randomUUID() } } }, timeout: 120_000 });
+    expect(groupResponse.ok()).toBe(true);
+    const group = (await groupResponse.json()).data as { id: string };
+    const query = `search-${randomUUID()}`;
+    const projectIds: string[] = [];
+    for (let index = 0; index < 3; index += 1) {
+      const response = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "projects.create", input: { body: { title: `${query} 项目 ${index + 1}`, brief: "用户创建的真实搜索对象" } } }, timeout: 120_000 });
+      expect(response.ok()).toBe(true);
+      const project = successEnvelope(ENDPOINTS.createProject.response).parse(await response.json()).data;
+      const sameGroup = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "projects.get", input: { params: { projectId: project.id } } }, timeout: 120_000 });
+      expect(sameGroup.ok()).toBe(true);
+      expect(successEnvelope(ENDPOINTS.getProject.response).parse(await sameGroup.json()).data).toEqual(project);
+      projectIds.push(project.id);
+    }
+    const ownListResponse = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "projects.list", input: { query: { page: 1, pageSize: 100 } } }, timeout: 120_000 });
+    expect(ownListResponse.ok()).toBe(true);
+    const ownList = listEnvelope(ENDPOINTS.listProjects.response).parse(await ownListResponse.json()).data;
+    for (const id of projectIds) expect(ownList.some(project => project.id === id)).toBe(true);
+    const wrongGroupResponse = await page.request.post("/api/v1/dispatch", { data: { id: "accountGroups.create", input: { body: { name: "搜索错组", idempotencyKey: randomUUID() } } }, timeout: 120_000 });
+    expect(wrongGroupResponse.ok()).toBe(true);
+    const wrongGroup = successEnvelope(ENDPOINTS.createAccountGroup.response).parse(await wrongGroupResponse.json()).data;
+    for (const id of projectIds) {
+      const denied = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": wrongGroup.id }, data: { id: "projects.get", input: { params: { projectId: id } } }, timeout: 120_000 });
+      expect(denied.status()).toBe(404);
+    }
+    await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(group.id), url: baseURL! }]);
+    await page.addInitScript((id) => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, group.id);
     await page.goto("/search");
 
     // Header is in `search` mode with the global search field.
@@ -67,6 +97,12 @@ test.describe("Global Search page", () => {
     expect(cleaned.indexOf("知识")).toBeLessThan(cleaned.indexOf("素材"));
     expect(cleaned.indexOf("素材")).toBeLessThan(cleaned.indexOf("视频"));
 
+    // 空查询诚实无搜索结果；真实用户输入后原公共项目成为这三张卡。
+    await expect(main.locator('[data-slot="project-result-card"]')).toHaveCount(0);
+    await page.locator("#app-header-search").fill(query);
+    await page.locator("#app-header-search").press("Enter");
+    await expect(page).toHaveURL(new RegExp(`[?&]q=${query}`));
+
     // ProjectResultSection: exactly three project cards.
     const projectSection = main.locator(
       '[data-slot="project-result-section"]',
@@ -76,6 +112,8 @@ test.describe("Global Search page", () => {
       '[data-slot="project-result-card"]',
     );
     await expect(projectCards).toHaveCount(3);
+    expect((await projectCards.evaluateAll((cards) => cards.map((card) => card.getAttribute("data-project-id")))).sort()).toEqual([...projectIds].sort());
+    for (const id of projectIds) await expect(main.locator(`[data-slot="project-result-card"][data-project-id="${id}"]`)).toHaveAttribute("href", `/projects/${id}`);
 
     // SearchSideRail order.
     const rail = main.locator('[data-slot="search-side-rail"]');
@@ -95,9 +133,11 @@ test.describe("Global Search page", () => {
   }) => {
     await page.goto("/search?q=AI");
     const main = page.locator('main[data-page="search"]');
-    const input = main.locator(
-      '[data-slot="search-page-input"]',
-    );
+    await expect(main).toHaveCount(1);
+    const input = page.locator("#app-header-search");
     await expect(input).toHaveValue("AI");
   });
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 30660000 });

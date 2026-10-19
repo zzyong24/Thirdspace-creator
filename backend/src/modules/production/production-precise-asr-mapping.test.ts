@@ -1,0 +1,132 @@
+import {it,expect} from 'vitest';
+import {mkdtemp,readFile,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import {execFile} from 'node:child_process';import {promisify} from 'node:util';
+import {extractProductionAsrAudio} from './production-asset-asr-media';
+import {hash,byteHash} from './production-mechanical-digest';
+import {mapAssetAsrTiming,verifyPcmMapping} from './production-asr-timing';
+import type {AssetAsrInput} from '@creatoros/contract/execution-worker';
+const command=promisify(execFile);
+export async function actualAudioFixture(codec='pcm_s16le',gap=false){const root=await mkdtemp(join(tmpdir(),'creatoros-asr-real-pcm-')),path=join(root,gap?'actual.nut':'actual.mov');await command('/opt/homebrew/bin/ffmpeg',['-v','error','-f','lavfi','-i','testsrc2=size=320x180:rate=30','-itsoffset','0.125','-f','lavfi','-i','sine=frequency=440:sample_rate=48000:duration=1.5',...(gap?['-af','asetpts=PTS+gte(T\\,0.75)*0.2/TB']:[]),'-t','2','-c:v','libx264','-pix_fmt','yuv420p','-c:a',codec,'-video_track_timescale','48000','-y',path]);const bytes=await readFile(path),probe=JSON.parse((await command('/opt/homebrew/bin/ffprobe',['-v','error','-show_streams','-show_format','-of','json',path])).stdout),video=probe.streams.find((s:any)=>s.codec_type==='video'),source={sourceId:'actual-source',assetId:'actual-asset',assetFileId:'actual-file',fileDigest:byteHash(bytes),probeDigest:hash(probe),timebase:{num:Number(video.time_base.split('/')[0]),den:Number(video.time_base.split('/')[1])},durationTicks:video.duration_ts??Math.ceil(Number(probe.format?.duration??2)*Number(video.time_base.split('/')[1])),hasAudio:true},input={kind:'asset.asr' as const,projectId:'actual-project',contentOutputId:'actual-output',source,language:'zh' as const,timestampMode:'word' as const,extractionProtocolVersion:'asset-original-audio.v1' as const,configuration:{provider:'openai',model:'whisper-1',baseUrl:'http://127.0.0.1:1',apiFormat:'openai_chat'}} as AssetAsrInput;return{root,bytes,input,close:()=>rm(root,{recursive:true,force:true})};}
+it('实际native PCM MOV全部source/output帧证明音轨偏移；整数samples严格映射，不量化',async()=>{const f=await actualAudioFixture();try{const result=await extractProductionAsrAudio(f.bytes,f.input);expect(result.evidence.mappingStatus).toBe('verified');const proof=(result.evidence as any).mappingReceipt;expect(proof.sourceFrames.length).toBeGreaterThan(2);expect(proof.outputFrames.length).toBeGreaterThan(2);expect(proof.firstOutputSampleSourcePts).toEqual({num:'6000',den:'1'});expect(verifyPcmMapping(proof,f.input.source)).not.toBeNull();const timing={granularity:'word',units:'audio_samples',callId:'actual-settled-call',durableReceiptId:'actual-settled-call',audioDigest:proof.audioDigest,rawResponseDigest:'sha256:'+'a'.repeat(64),sampleRate:48000,validSampleCount:proof.outputValidSampleCount,ranges:[{id:'actual-provider-unit-1',text:'真实provider字',startSample:4800,endSample:9600}]};const mapped=mapAssetAsrTiming(timing,proof,f.input.source,'actual-original-aggregate')!;expect(mapped.tokens[0]).toMatchObject({text:'真实provider字',startTicks:10800,endTicks:15600});expect(mapAssetAsrTiming(timing,proof,f.input.source,'actual-original-aggregate')).toEqual(mapped);for(const invalid of [{...timing,audioDigest:'sha256:'+'b'.repeat(64)},{...timing,ranges:[{id:'bad',text:'原文',startSample:proof.outputValidSampleCount,endSample:proof.outputValidSampleCount+1}]}])expect(mapAssetAsrTiming(invalid,proof,f.input.source,'actual-original-aggregate')).toBeNull();const wrong=structuredClone(proof);wrong.sourceFrames[1].sourceStartTicks.num=String(BigInt(wrong.sourceFrames[1].sourceStartTicks.num)+1n);expect(verifyPcmMapping(wrong,f.input.source)).toBeNull();}finally{await f.close();}});
+it('实际AAC旧输入和真实PCM帧gap保原全文能力，首PTS/rate不能升级verified',async()=>{for(const [codec,gap] of [['aac',false],['pcm_s16le',true]] as const){const f=await actualAudioFixture(codec,gap);try{const result=await extractProductionAsrAudio(f.bytes,f.input);expect(result.bytes.length).toBeGreaterThan(0);expect(result.evidence.mappingStatus).toBe('unverified');expect((result.evidence as any).mappingReceipt).toBeUndefined();}finally{await f.close();}}});
+it('合法实际PCM MOV全帧ffprobe输出超过精度预算，回退原MP3全文；损坏原身份和取消仍失败',async()=>{const f=await actualAudioFixture();try{const result=await extractProductionAsrAudio(f.bytes,f.input,undefined,{precisionProbeMaxBufferBytes:64});expect(result.evidence.mappingStatus).toBe('unverified');expect((result.evidence as any).mappingReceipt).toBeUndefined();expect(result.bytes.length).toBeGreaterThan(0);expect(Buffer.from(result.bytes).subarray(0,4).toString()).not.toBe('RIFF');const root=await mkdtemp(join(tmpdir(),'creatoros-asr-fallback-check-'));try{const file=join(root,'actual.mp3');await (await import('node:fs/promises')).writeFile(file,result.bytes);const probe=JSON.parse((await command('/opt/homebrew/bin/ffprobe',['-v','error','-show_streams','-of','json',file])).stdout);expect(probe.streams[0]).toMatchObject({codec_name:'mp3',sample_rate:'16000'});}finally{await rm(root,{recursive:true,force:true});}await expect(extractProductionAsrAudio(f.bytes,{...f.input,source:{...f.input.source,fileDigest:'0'.repeat(64)}},undefined,{precisionProbeMaxBufferBytes:64})).rejects.toThrow('抽音原片身份改变');const abort=new AbortController();abort.abort();await expect(extractProductionAsrAudio(f.bytes,f.input,abort.signal,{precisionProbeMaxBufferBytes:64})).rejects.toThrow();}finally{await f.close();}});
+
+// 固定原输入由验收入口显式提供，禁止把模型/安装包兼容性标成此fixture的结果。
+export async function canonicalAacFixture(offset = false) {
+    const original = process.env.T1062_CANONICAL_AAC_FILE;
+    if (!original)
+        throw Error('T1062_CANONICAL_AAC_FILE必须指向保全的原固定AAC');
+    const path = offset ? process.env.T1062_OFFSET_AAC_FILE : original;
+    if (!path)
+        throw Error('缺少固定偏移AAC');
+    const bytes = await readFile(path), probe = JSON.parse((await command('/opt/homebrew/bin/ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', path])).stdout), video = probe.streams.find((s: any) => s.codec_type === 'video');
+    const input = { kind: 'asset.asr', projectId: 'actual-project', contentOutputId: 'actual-output', source: { sourceId: 'actual-source', assetId: 'actual-asset', assetFileId: 'actual-file', fileDigest: byteHash(bytes), probeDigest: hash(probe), timebase: { num: Number(video.time_base.split('/')[0]), den: Number(video.time_base.split('/')[1]) }, durationTicks: video.duration_ts, hasAudio: true }, language: 'zh', timestampMode: 'word', extractionProtocolVersion: 'asset-original-audio.v1', configuration: { provider: 'openai', model: 'whisper-1', baseUrl: 'http://127.0.0.1:1', apiFormat: 'openai_chat' } } as AssetAsrInput;
+    return { bytes, input };
+}
+it('固定普通AAC完整音频v2/strict roundtrip/双域实际词边界；末端不钉、不双扣priming', async () => {
+    const f = await canonicalAacFixture(), result = await extractProductionAsrAudio(f.bytes, f.input), p = (result.evidence as any).mappingReceipt;
+    expect(result.evidence.mappingStatus).toBe('verified');
+    expect(p.protocol).toBe('asset-asr-pcm-mapping/v2');
+    const { assetAsrAudioEvidence } = await import('@creatoros/contract/execution-worker');
+    expect(assetAsrAudioEvidence.parse(result.evidence).mappingReceipt).toEqual(p);
+    expect(p.sourceFrames).toHaveLength(700);
+    expect(p.outputFrames).toHaveLength(701);
+    if ('decodedDomainProtocol' in p) {
+        expect(p.sourceDecodedSampleCount).toBe(716800);
+        expect(p.sourcePresentationSampleCount).toBe(716393);
+        expect(p.outputValidSampleCount).toBe(238933);
+        expect(p.wavProbeFrames).toHaveLength(117);
+    } else {
+        expect(p.sourceDecodedSampleCount).toBe(716393);
+        expect(p.outputValidSampleCount).toBe(238798);
+        expect(p.wavProbeFrames).toHaveLength(234);
+    }
+    expect(verifyPcmMapping(p, f.input.source)).not.toBeNull();
+    const timing = { granularity: 'word', units: 'audio_samples', callId: 'actual-provider', durableReceiptId: 'actual-provider', audioDigest: p.audioDigest, rawResponseDigest: 'sha256:' + 'a'.repeat(64), sampleRate: 16000, validSampleCount: p.outputValidSampleCount, ranges: [{ id: 'one', text: '真实边界', startSample: 1600, endSample: 3200 }] };
+    expect(mapAssetAsrTiming(timing, p, f.input.source, 'aac-aggregate')?.tokens[0]).toMatchObject({ startTicks: 1280, endTicks: 2560 });
+    // 音频完整覆盖超过视频仍可验真；任何实际词越视频、源音频或非整数tick均整份降级。
+    for (const range of [{ id: 'tail', text: '尾', startSample: p.outputValidSampleCount - 1, endSample: p.outputValidSampleCount }, { id: 'video', text: '尾', startSample: 238560, endSample: 238725 }, { id: 'fraction', text: '字', startSample: 1, endSample: 1600 }])
+        expect(mapAssetAsrTiming({ ...timing, ranges: [range] }, p, f.input.source, 'aac-aggregate')).toBeNull();
+    for (const field of ['packetEvidenceDigest', 'decodedFramesDigest', 'toolPairDigest', 'audioDigest', 'outputProbeDigest', 'mappingDigest', 'actualExtractionDigest'])
+        expect(verifyPcmMapping({ ...p, [field]: 'sha256:' + 'b'.repeat(64) }, f.input.source)).toBeNull();
+    expect(verifyPcmMapping({ ...p, sourceDecodedSampleCount: p.sourceDecodedSampleCount - 1024 }, f.input.source)).toBeNull();
+    expect(assetAsrAudioEvidence.safeParse({ ...result.evidence, mappingReceipt: { ...p, unknown: true } }).success).toBe(false);
+    // 重新绑定摘要后的机械坏证据仍拒绝；不把摘要失败冒充packet/edit/完整性覆盖。
+    const { aacMappingDigests, aacDecodedMappingDigests, rationalTicks } = await import('./production-asr-timing');
+    const rebind = (receipt: any, source = f.input.source) => { const q = structuredClone(receipt); q.sourceDurationTicks = source.durationTicks; q.sourceTimebase = source.timebase; q.videoTimebase = source.timebase; q.packetEvidenceDigest = 'sha256:' + hash(q.sourcePackets); q.decodedFramesDigest = 'sha256:' + hash(q.sourceFrames); q.editListEvidenceDigest = 'sha256:' + hash({ movieTimescale: q.movieTimescale, mediaTimescale: q.mediaTimescale, audioTrackId: q.audioTrackId, editEntries: q.editEntries }); q.extractorArgumentsDigest = 'sha256:' + hash(q.extractorArguments); q.probeArgumentsDigest = 'sha256:' + hash(q.probeArguments); q.toolPairDigest = 'sha256:' + hash({ ffmpeg: q.ffmpeg, ffprobe: q.ffprobe }); q.actualExtractionReceiptId = 'asset-asr-extraction:' + hash({ sourceIdentity: source, sourceProbeDigest: q.sourceProbeDigest, outputProbeDigest: q.outputProbeDigest, extractorArgumentsDigest: q.extractorArgumentsDigest, probeArgumentsDigest: q.probeArgumentsDigest, toolPairDigest: q.toolPairDigest, audioDigest: q.audioDigest }); const { mappingDigest, actualExtractionDigest, ...body } = q; return { ...body, ...('decodedDomainProtocol' in body ? aacDecodedMappingDigests(body) : aacMappingDigests(body)) }; };
+    const mutations = [(q: any) => { q.sourcePackets[0].sideData = []; }, (q: any) => { q.sourcePackets[1].pts += 1; }, (q: any) => { if ('decodedDomainProtocol' in q) q.sourcePackets.at(-1).sideData.push({side_data_type:'Skip Samples',skip_samples:0,discard_padding:407,skip_reason:0,discard_reason:0}); else q.sourcePackets.at(-1).sideData[0].discard_padding += 1; }, (q: any) => { q.sourceFrames.pop(); }, (q: any) => { q.sourceFrames[1].sourceStartTicks = { num: '1', den: '1' }; }, (q: any) => { q.outputFrames.pop(); }, (q: any) => { q.wavProbeFrames.pop(); }, (q: any) => { q.editEntries[0].segmentDuration -= 1; }, (q: any) => { q.extractorArguments.splice(10, 0, 'atrim=end_sample=238797'); }];
+    for (const mutate of mutations) {
+        const q = structuredClone(p);
+        mutate(q);
+        expect(verifyPcmMapping(rebind(q), f.input.source)).toBeNull();
+    }
+    // 将冻结视频域变长只隔离测试音频域：最后真实样本位置合法，exclusive N仍必须拒绝。
+    const longSource = { ...f.input.source, timebase: { num: 1, den: 48000 }, durationTicks: 720000 };
+    const q = structuredClone(p);
+    let sourcePosition = 0;
+    for (const frame of q.sourceFrames) {
+        frame.sourceStartTicks = rationalTicks(BigInt(sourcePosition), 1n);
+        sourcePosition += frame.validSampleCount;
+    }
+    q.mappingSegments[0].sourceEndTicks = rationalTicks(BigInt(q.outputValidSampleCount) * 3n, 1n);
+    const longProof = rebind(q, longSource);
+    expect(verifyPcmMapping(longProof, longSource)).not.toBeNull();
+    expect(3 * (p.outputValidSampleCount - 1)).toBeLessThanOrEqual(p.sourceDecodedSampleCount);
+    expect(mapAssetAsrTiming({ ...timing, ranges: [{ id: 'exclusive', text: '末', startSample: p.outputValidSampleCount - 1, endSample: p.outputValidSampleCount }] }, longProof, longSource, 'aac-aggregate')).toBeNull();
+    for (const invalid of [{ ...timing, ranges: [...timing.ranges, { id: 'overlap', text: '重叠', startSample: 2000, endSample: 4000 }] }, { ...timing, audioDigest: 'sha256:' + 'b'.repeat(64) }, { ...timing, validSampleCount: timing.validSampleCount - 1 }])
+        expect(mapAssetAsrTiming(invalid, p, f.input.source, 'aac-aggregate')).toBeNull();
+    if(process.env.T1062_AAC_RECEIPT_DIR){const {writeFile,mkdir}=await import('node:fs/promises');await mkdir(process.env.T1062_AAC_RECEIPT_DIR,{recursive:true});await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-normal-evidence.json'),JSON.stringify({source:f.input.source,evidence:result.evidence},null,2)+'\n');await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-normal-retained.wav'),result.bytes);}
+}, 180000);
+it('固定偏移AAC仍走原全文；canonical精度预算不足不反杀全文', async () => { for (const [offset, budget] of [[true, undefined], [false, 64]] as const) {
+    const f = await canonicalAacFixture(offset);
+    const r = await extractProductionAsrAudio(f.bytes, f.input, undefined, budget ? { precisionProbeMaxBufferBytes: budget } : undefined);
+    expect(r.bytes.length).toBeGreaterThan(0);
+    expect(r.evidence.mappingStatus).toBe('unverified');
+    expect((r.evidence as any).mappingReceipt).toBeUndefined();
+} }, 180000);
+
+// SEMANTIC_BOUNDARY_ALLOW: 参数化计数仅验证BigInt协议边界，不能证明新媒体支持或生成音频样本。
+it('R6.1完整输出计数机械区间：整除唯一值、floor/ceil与大整数乘法精确', async () => {
+    const m = await import('./production-asr-timing');
+    const build = (m as any).aacDecodedOutputCountEvidence;
+    expect(typeof build).toBe('function');
+    expect(build(3, 48000, 16000, 1)).toEqual({ scaledDecodedSampleCount:{num:'1',den:'1'}, lowerSampleCount:1, upperSampleCount:1, retainedSampleCount:1 });
+    expect(build(716800, 48000, 16000, 238933)).toEqual({ scaledDecodedSampleCount:{num:'716800',den:'3'}, lowerSampleCount:238933, upperSampleCount:238934, retainedSampleCount:238933 });
+    expect(build(716800, 48000, 16000, 238934).retainedSampleCount).toBe(238934);
+    expect(build(9007199254740991, 48000, 16000, 3002399751580330)).toEqual({ scaledDecodedSampleCount:{num:'9007199254740991',den:'3'},lowerSampleCount:3002399751580330,upperSampleCount:3002399751580331,retainedSampleCount:3002399751580330 });
+    for (const n of [0, 238932, 238935]) expect(() => build(716800, 48000, 16000, n)).toThrow();
+    expect(() => build(3,48000,16000,2)).toThrow();
+});
+it('R6.1随包工具同固定AAC：实际full-output receipt/count严格缺失伪造和flush/WAV/PCM矛盾均拒绝', async () => {
+    const oldFfmpeg=process.env.CREATOROS_FFMPEG_PATH,oldFfprobe=process.env.CREATOROS_FFPROBE_PATH;
+    process.env.CREATOROS_FFMPEG_PATH='/Users/zyongzhu/.cache/creatoros/ffmpeg-static/b6.0/ffmpeg-darwin-arm64';
+    process.env.CREATOROS_FFPROBE_PATH='/Users/zyongzhu/.cache/creatoros/ffmpeg-static/b6.0/ffprobe-darwin-arm64';
+    try {
+        const f=await canonicalAacFixture(),result=await extractProductionAsrAudio(f.bytes,f.input),p=(result.evidence as any).mappingReceipt;
+        expect(result.evidence.mappingStatus).toBe('verified');
+        expect(p.decodedDomainProtocol).toBe('full-decoded-presentation-boundary/v1');
+        expect(p.outputCountPolicy).toBe('observed-full-output-floor-ceil/v1');
+        expect(p.outputCountEvidence).toEqual({scaledDecodedSampleCount:{num:'716800',den:'3'},lowerSampleCount:238933,upperSampleCount:238934,retainedSampleCount:238933});
+        expect(p.sourceDiscardPadding).toBeNull();expect(p.sourcePackets.at(-1).sideData).toEqual([]);
+        const {assetAsrAudioEvidence}=await import('@creatoros/contract/execution-worker');
+        expect(assetAsrAudioEvidence.parse(result.evidence).mappingReceipt).toEqual(p);
+        const {aacDecodedMappingDigests}=await import('./production-asr-timing');
+        const rebind=(q:any)=>{const {mappingDigest,actualExtractionDigest,...body}=q;return {...body,...aacDecodedMappingDigests(body)};};
+        for (const mutate of [
+            (q:any)=>{delete q.outputCountPolicy;},(q:any)=>{delete q.outputCountEvidence;},
+            (q:any)=>{q.outputCountEvidence.lowerSampleCount--;},(q:any)=>{q.outputCountEvidence.upperSampleCount++;},
+            (q:any)=>{q.outputCountEvidence.retainedSampleCount--;},(q:any)=>{q.outputCountEvidence.scaledDecodedSampleCount.num='716801';},
+            (q:any)=>{q.outputFrames.pop();},(q:any)=>{q.wavProbeFrames.pop();},(q:any)=>{q.audioPcmByteLength-=2;},
+            (q:any)=>{q.resamplerFlushFrameSampleCount--;},(q:any)=>{q.outputCountEvidence.unknown=true;},
+        ]) {const q=structuredClone(p);mutate(q);expect(verifyPcmMapping(rebind(q),f.input.source)).toBeNull();}
+        const timing={granularity:'word',units:'audio_samples',callId:'r6-1-provider',durableReceiptId:'r6-1-provider',audioDigest:p.audioDigest,rawResponseDigest:'sha256:'+'a'.repeat(64),sampleRate:16000,validSampleCount:p.outputValidSampleCount,ranges:[{id:'one',text:'实际供应商边界',startSample:1600,endSample:3200}]};
+        expect(mapAssetAsrTiming(timing,p,f.input.source,'r6-1-aggregate')?.tokens[0]).toMatchObject({startTicks:1280,endTicks:2560});
+        const longSource={...f.input.source,timebase:{num:1,den:48000},durationTicks:720000},q=structuredClone(p);
+        q.sourceDurationTicks=longSource.durationTicks;q.sourceTimebase=longSource.timebase;q.videoTimebase=longSource.timebase;
+        let position=0;for(const frame of q.sourceFrames){frame.sourceStartTicks={num:String(position),den:'1'};position+=frame.validSampleCount;}
+        q.mappingSegments[0].sourceEndTicks={num:String(q.outputValidSampleCount*3),den:'1'};
+        q.actualExtractionReceiptId='asset-asr-extraction:'+hash({sourceIdentity:longSource,sourceProbeDigest:q.sourceProbeDigest,outputProbeDigest:q.outputProbeDigest,extractorArgumentsDigest:q.extractorArgumentsDigest,probeArgumentsDigest:q.probeArgumentsDigest,toolPairDigest:q.toolPairDigest,audioDigest:q.audioDigest});
+        q.decodedFramesDigest='sha256:'+hash(q.sourceFrames);const longProof=rebind(q);expect(verifyPcmMapping(longProof,longSource)).not.toBeNull();
+        for(const range of [{id:'S',text:'呈现域外',startSample:238795,endSample:238800},{id:'N',text:'完整域外',startSample:p.outputValidSampleCount-1,endSample:p.outputValidSampleCount}]) expect(mapAssetAsrTiming({...timing,ranges:[range]},longProof,longSource,'r6-1-aggregate')).toBeNull();
+        if(process.env.T1062_AAC_RECEIPT_DIR){const {writeFile,mkdir}=await import('node:fs/promises');await mkdir(process.env.T1062_AAC_RECEIPT_DIR,{recursive:true});await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-b6-evidence.json'),JSON.stringify({source:f.input.source,evidence:result.evidence},null,2)+'\n');await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-b6-retained.wav'),result.bytes);}
+    } finally { if(oldFfmpeg===undefined)delete process.env.CREATOROS_FFMPEG_PATH;else process.env.CREATOROS_FFMPEG_PATH=oldFfmpeg;if(oldFfprobe===undefined)delete process.env.CREATOROS_FFPROBE_PATH;else process.env.CREATOROS_FFPROBE_PATH=oldFfprobe; }
+},180000);

@@ -1,0 +1,318 @@
+{
+  "interpretation": "list仅收集实际展开测试名，不执行测试，不作为PASS；每项PASS/SKIP来自evidenceRun实际日志。v4为43PASS/1错误码fixture FAIL/1PG SKIP，v5仅9新增安全用例复验；不冒v4全绿。",
+  "postgresUrlConfigured": false,
+  "tests": [
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "article 从真实原owner读取精确值，隔离账号",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "image 从真实原owner读取精确值，隔离账号",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "moments 从真实原owner读取精确值，隔离账号",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "真实图文另卡编辑及重排不改变单卡正文指纹；明确字段改变失效",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "真实文件行摘要及cardId槽位：别卡顺序不失效，精确文件变化失效",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "真实组合selection改变只使组合指纹失效，不影响明确文章字段",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "真实发布稿title不被历史封面缺file阻断，精确pub先筛后锁读",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "真实发布稿description不被历史封面缺file阻断，精确pub先筛后锁读",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "真实发布稿platformTags不被历史封面缺file阻断，精确pub先筛后锁读",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "指定发布稿不锁不读同作品其他发布稿",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "根装配原AI预约失回复重放仍是同任务；真实审核transport读当前字段/请求",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "T1313 普通组创作忽略不可用页面筛选B，私有prepare仍用实际accountnull任务",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "真实原owner冻结+AI原任务：同请求并发只生成一份报告和task，刷新回执完整",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "任务准备丢响应后沿持久原请求恢复，不重冻后来稿件、不复制任务",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "异输入请求/跨账号/错误绑定拒绝，回执不泄露",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "手工确认是真实独立回执；同键重放不确认后来改稿",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "无关正式版本/selection/basis字段不影响field指纹，确切引用摘录和文件hash会影响",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "真实lease+settled call提交：幂等、无改稿候选、文本与旧fence拒绝",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "模型确认关联原报告，新报告为真实latest且不冒充旧确认报告",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "无视觉能力降级真实未验证，模型不能自造可采纳候选引用",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "原任务失败/取消真实投影、状态读取不提交新的task",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "公开transport严格输入/真实回执/当前status，无发布权限或副作用",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "取消/过期和跨账号原task不能提交；所有旧报告和手改保持",
+      "state": "PASS",
+      "evidenceRun": "backend-deadline-final-v6"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "原execution状态落库失败时报告/AI终态/call结果一起回滚，可沿原结算恢复",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "模型报告必须定位冻结触点；候选引用被降为空，不能产生假采纳按钮",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "原project/asset/intelligence来源精确冻结，不能丢失或伪装跨表达锚点",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "整成员/组合保留每个实际触点正式版本，单字段排除该追溯版本",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "structured根调用proof拒绝 'missingProvider'",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "structured根调用proof拒绝 'child'",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "structured根调用proof拒绝 'notLast'",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "structured根调用proof拒绝 'wrongOperation'",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "真实原AI等待投影保留错误并允许人工确认，无新审核任务",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "等待DTO必须具有原task/execution且不能附模型成功证据",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "原执行resume回执幂等：旧命令不重置后来等待，同task/attempt/预算保持",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1062 已迁移旧账号审核确认精确重放不造NULL行，双来源明确冲突",
+      "state": "PASS",
+      "evidenceRun": "backend-final-v4"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 两stage真实旧ctx锁序、预约后rename仍原report/attempt恢复",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 未绑定attempt经原createTask fingerprint校验 original",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 未绑定attempt经原createTask fingerprint校验 changed",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 mapped恢复/终态重复不增任务；旧混合pending拒绝但公开可读取消",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 私有冻结不读当前父，完整owner和持久映射篡改拒绝",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 两stage独立原子回滚，同key恢复原报告无孤儿AI",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 stage间实际membership变化拒绝 archive，不重绑旧report",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 stage间实际membership变化拒绝 move，不重绑旧report",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "backend/src/modules/review/work-reviews.service.test.ts",
+      "name": "T1313 顶层task projectId与input/report/frozen项目不同，mapped/private同时拒绝",
+      "state": "PASS",
+      "evidenceRun": "backend-focused-final-v5"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "name": "完整公开审核 'group'/'script'：实际immutable worker原host完成报告",
+      "state": "PASS",
+      "evidenceRun": "frontend-final-v4"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "name": "完整公开审核 'group'/'work'：实际immutable worker原host完成报告",
+      "state": "PASS",
+      "evidenceRun": "frontend-final-v4"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "name": "完整公开审核 'legacy'/'script'：实际immutable worker原host完成报告",
+      "state": "PASS",
+      "evidenceRun": "frontend-final-v4"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "name": "完整公开审核 'legacy'/'work'：实际immutable worker原host完成报告",
+      "state": "PASS",
+      "evidenceRun": "frontend-final-v4"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "name": "完整公开审核 'group-account'/'script'：实际immutable worker原host完成报告",
+      "state": "PASS",
+      "evidenceRun": "frontend-final-v4"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "name": "完整公开审核 'group-account'/'work'：实际immutable worker原host完成报告",
+      "state": "PASS",
+      "evidenceRun": "frontend-final-v4"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "name": "T1062真实PG原审核root→actualAi(tx)同组双父Lock观察及两个阶段原回执恢复",
+      "state": "SKIP",
+      "evidenceRun": "backend-final-v4",
+      "collection": "原skipIf源名称；list默认不列已skip项"
+    }
+  ],
+  "counts": {
+    "total": 51,
+    "pass": 50,
+    "skip": 1
+  }
+}

@@ -27,6 +27,8 @@ import type { ReactNode } from "react";
 // (Module 01 G2). This test replicates the (creator) layout's AppShell wrapper;
 // the popover's mutation path is not exercised here.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({
     refresh: vi.fn(),
     replace: vi.fn(),
@@ -347,3 +349,31 @@ describe("[T-348] DashboardPage — 0 号降级(未绑号,诚实空态)", () => 
 });
 
 it("运营分析迁入独立导航，首页不再重复展示入口",async()=>{await renderDashboard();expect(document.querySelector('[data-slot="daily-report-entry"]')).toBeNull();expect(screen.getAllByRole("link",{name:"运营分析"})).toHaveLength(1);expect(within(screen.getByRole("navigation",{name:"主要导航"})).getByRole("link",{name:"运营分析"})).toBeInTheDocument();});
+
+it('T1347首页没有原生日元数据时不把采集差分画成每日趋势，并保单卡和累计比较',async()=>{
+ const {DashboardPage}=await import('./dashboard-page');
+ const {buildDashboardViewModel}=await import('@/fixtures/selectors');
+ const vm=buildDashboardViewModel();
+ const {container}=render(await DashboardPage({viewModel:{...vm,dataOverview:{metrics:[],trend:[{label:'2026-10-02',value:9999}]},recentPublications:[{id:'pub-zero',title:'真实零作品',platform:'douyin',status:'published',views:0,engagement:null,publishedAt:'2026-10-02T00:00:00Z'},{id:'pub-unknown',title:'尚无指标作品',platform:'douyin',status:'published',views:null,engagement:null,publishedAt:'2026-10-03T00:00:00Z'}]}}));
+ const card=container.querySelector('[data-slot="data-overview-card"]')!;
+ expect(card.querySelectorAll('[data-slot="section-card"]')).toHaveLength(1);
+ expect(card.textContent).toContain('暂无每日数据，先看近期作品表现');
+ expect(card.textContent).toContain('近期作品累计播放');
+ expect(card.textContent).toContain('0 次');
+ expect(card.textContent).not.toContain('9,999');
+ expect(card.querySelector('[data-testid="dashboard-data-trend"]')).toBeNull();
+});
+
+it('T1356保留原五项总览并独立显示第六项浏览，六项按三列/六列响应',async()=>{
+ const {buildDashboardViewModel}=await import('@/fixtures/selectors');const vm=buildDashboardViewModel();
+ const browse={id:'g-browse',label:'浏览合计（次）',value:'123',delta:'',trend:'flat' as const,tone:'neutral' as const};
+ const {container}=await renderDashboard({viewModel:{...vm,metrics:[...vm.metrics,browse]}});
+ const summary=container.querySelector('[data-slot="dashboard-summary-metrics"]')!;
+ expect(summary.querySelectorAll('[data-slot="metric-card"]')).toHaveLength(6);expect(summary).toHaveTextContent('浏览合计（次）');expect(summary).toHaveTextContent('123');
+ expect(summary).toHaveClass('lg:grid-cols-3','xl:grid-cols-6');
+});
+it('T1356真实发布行的小红书浏览不标作视频播放，真实零仍可见',async()=>{
+ const {buildDashboardViewModel}=await import('@/fixtures/selectors');const vm=buildDashboardViewModel();
+ await renderDashboard({viewModel:{...vm,recentPublications:[{id:'owned-xhs-publication',title:'小红书原发布记录',platform:'xiaohongshu',status:'published',views:0,engagement:null,publishedAt:'2026-10-01T00:00:00Z'}]}});
+ const region=screen.getByRole('region',{name:'最近发布'});expect(within(region).getByText('0 次浏览')).toBeVisible();expect(within(region).queryByText('0 次播放')).toBeNull();
+});

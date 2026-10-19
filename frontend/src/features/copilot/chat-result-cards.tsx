@@ -15,10 +15,15 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
-import {TaskRuntimeActions,taskRuntimeStatus,type RuntimeTask} from "@/components/ai/task-runtime-actions";
+import {taskRuntimeStatus,type RuntimeTask} from "@/components/ai/task-runtime-actions";
 import { client } from "@/lib/contract-client";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
+
+import {type PredictionLockSource,type PredictionLockState} from "@creatoros/contract";
+import {createCreationWorkspace,creationScopeKey,readCreationScope,useCreationScope} from "@/lib/creation-workspace-scope";
 
 type AdoptState = "idle" | "adopting" | "adopted" | "error" | "stale";
 
@@ -34,14 +39,7 @@ function isDiscoveryConflict(error: unknown): boolean {
 }
 
 // ── 维度评分诊断卡(calibration.diagnosis)──────────────────────────────────
-// [T-103a] 盲预测进对话:诊断卡在**稿面盲预测场景**(blindPredict != null,即深链带
-// content_output subject 的稿面右栏)长出「锁定为盲预测」确认动作 —— 铁律②确认门从
-// 后台任务流搬进对话卡。锁定前是对话内候选(可继续追问重新诊断);点「锁定」= 一次确认
-// 动作承载 immutable 语义:走**既有后台流同一条端点链**(createAITask calibration.diagnose
-// → 轮询 awaiting_confirmation → confirmTask 铸 draft Prediction → lockPrediction 定死),
-// 用创作者真实变现 rubric 铸出不可改的 locked Prediction(对话里的通用维度盲评只是给人看
-// 的候选,真·预测按真 rubric 由服务端确认端点铸)。非盲预测场景(blindPredict == null,如
-// 校准/复盘surface的诊断)仍是只读展示,引导去校准中心。
+// 原卡片来源绑定由服务端读回；前端不查找项目最新预测。
 export interface ChatDiagnosisDimension {
   key: string;
   score: number;
@@ -55,136 +53,97 @@ export interface ChatDiagnosis {
   priorityFixes: string[];
 }
 
-// [T-103a] 稿面盲预测锁定所需的 subject —— content_output 挂点(为空则先自愈铸一个,与
-// 登记表单/旧盲预测行同款)+ 项目上下文(标题/项目 id,铸 output 兜底)。
+// 卡片的原消息/工具位置是唯一锁定入口；页面VM只保留展示上下文。
 export interface BlindPredictLockContext {
   readonly outputId: string | null;
   readonly projectId: string;
   readonly projectTitle: string;
+  readonly source?: PredictionLockSource | null;
 }
-
-type LockPhase = "idle" | "locking" | "locked" | "error";
-
-// 轮询诊断任务的间隔(与 blind-predict-row/chat-generate-card 同款 4s;测试可 0 化去抖）。
 const DEFAULT_POLL_INTERVAL_MS = 4000;
-
-export function ChatDiagnosisCard({
-  diagnosis,
-  blindPredict,
-  pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
-}: {
+type LockController = { refresh(): Promise<void>; act(): Promise<void>; command(action:"resume"|"retry"|"cancel"):Promise<void> };
+export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT_POLL_INTERVAL_MS}: {
   readonly diagnosis: ChatDiagnosis | null;
-  /** [T-103a] 稿面盲预测场景的锁定上下文;null = 非盲预测(只读诊断,不长锁定动作)。 */
   readonly blindPredict?: BlindPredictLockContext | null;
-  /** 轮询间隔(测试注入 0 去掉真等待;生产默认 4000)。 */
   readonly pollIntervalMs?: number;
 }) {
-  const router = useRouter();
-  const [phase, setPhase] = React.useState<LockPhase>("idle");
-  const taskRef=React.useRef<{id:string}|null>(null),subjectRef=React.useRef<string|null>(blindPredict?.outputId??null),attemptRef=React.useRef<string|null>(null);
-  const [runtimeTask,setRuntimeTask]=React.useState<RuntimeTask|null>(null);
-  // 卸载后停止在 await 链里 setState(与旧盲预测行同款长任务守卫)。
-  const cancelledRef = React.useRef(false);
-  React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
-    },
-    [],
-  );
+  const router=useRouter(),scope=useCreationScope(),scopeKey=creationScopeKey(scope);
+  const source=blindPredict?.source,conversationId=source?.conversationId,sourceMessageId=source?.sourceMessageId,toolCallId=source?.toolCallId;
+  const identity=JSON.stringify([scopeKey,!!blindPredict,conversationId,sourceMessageId,toolCallId]);
+  const observation=useTaskObservation(identity),{pause:pauseObservation}=observation;
+  const [view,setView]=React.useState<{identity:string;state:PredictionLockState|null;busy:boolean;error:string|null}>({identity,state:null,busy:false,error:null});
+  const state=view.identity===identity?view.state:null,busy=view.identity===identity&&view.busy,error=view.identity===identity?view.error:null;
+  const controller=React.useRef<LockController|null>(null),generation=React.useRef(0);
 
-  // [T-103a] 「锁定为盲预测」:走既有后台盲预测端点链铸 immutable locked Prediction。
-  // 复用旧 blind-predict-row 那条零新 op 的链路(createAITask→轮询→confirmTask→lockPrediction),
-  // 只是触发点从后台按钮搬进对话卡、且铸完直接锁死(锁定=确认门,承载 immutable 语义)。
-  const lock = React.useCallback(() => {
-    if (!blindPredict || phase === "locking" || phase === "locked") return;
-    setPhase("locking");
-    void (async () => {
-      try {
-        // 1. 确保有 ContentOutput 挂点(纯站内项目可能还没走制作)。
-        let subjectId = subjectRef.current;
-        if (!subjectId) {
-          const created = (await client.createOutput({
-            params: { projectId: blindPredict.projectId },
-            query: undefined,
-            body: { title: blindPredict.projectTitle || "主内容" },
-          })) as { id: string };
-          subjectId = created.id;subjectRef.current=subjectId;
+  const routerRef=React.useRef(router);routerRef.current=router;
+  React.useEffect(()=>{
+    const workspace=createCreationWorkspace(scope);workspace.activate();const scopedClient=workspace.client;
+    const epoch=++generation.current;let active=true,intent=false,acting=false,loop:Promise<void>|null=null,read:Promise<PredictionLockState|null>|null=null;
+    let latest:PredictionLockState|null=null,reads=0;const confirmed=new Set<string>(),commandKeys=new Map<string,string>();
+    const current=()=>active&&generation.current===epoch&&creationScopeKey(readCreationScope())===scopeKey;
+    const update=(patch:Partial<typeof view>)=>{if(current())setView(previous=>({...previous,identity,...patch}));};
+    update({state:null,busy:false,error:null});
+    const location=conversationId&&sourceMessageId&&toolCallId?{conversationId,sourceMessageId,toolCallId}:null;
+    const sameSource=(value:PredictionLockState)=>location&&value.source.conversationId===location.conversationId&&value.source.sourceMessageId===location.sourceMessageId&&value.source.toolCallId===location.toolCallId;
+    const accept=(value:PredictionLockState)=>{
+      if(!current())return null;
+      if(!sameSource(value))throw Error('原卡片的锁定回执不匹配，请回原对话核对。');
+      latest=value;update({state:value,error:null});return value;
+    };
+    const fetchState=():Promise<PredictionLockState|null>=>{
+      if(read)return read;
+      const pending=(async()=>{if(!current()||!location)return null;
+        return accept(await scopedClient.readPredictionLockSource({params:{conversationId:location.conversationId},query:{sourceMessageId:location.sourceMessageId,toolCallId:location.toolCallId},body:undefined}));
+      })();
+      read=pending;
+      void pending.finally(()=>{if(read===pending)read=null;}).catch(()=>{});
+      return pending;
+    };
+    const observe=():Promise<void>=>{
+      if(loop)return loop;
+      const pending=(async()=>{try{for(;;){
+        const value=await fetchState();if(!value||!current())return;
+        if(value.status==='awaiting_confirmation'&&intent){
+          const taskId=value.diagnoseTaskId;
+          if(!taskId||value.task?.id!==taskId||confirmed.has(taskId)){intent=false;return;}
+          confirmed.add(taskId);await scopedClient.confirmTask({params:{taskId},query:undefined,body:undefined});
+          if(!current())return;continue;
         }
-        // 2. 起编导诊断任务(既有盲预测流:按真实变现 rubric 铸 draft Prediction)。
-        const task = taskRef.current??(await client.createAITask({
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "calibration.diagnose",
-            attemptId: attemptRef.current??(attemptRef.current=createAiTaskAttemptId()),
-            inputData: { subjectType: "content_output", subjectId },
-          },
-        })) as { id: string };
-        taskRef.current=task;
-        // 3. 轮询到 awaiting_confirmation → confirmTask 铸 draft Prediction → 拿 predictionId。
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
-          await new Promise((r) => setTimeout(r, pollIntervalMs));
-          if (cancelledRef.current) return;
-          const status = (await client.getTask({
-            params: { taskId: task.id },
-            query: undefined,
-            body: undefined,
-          })) as RuntimeTask;
-          setRuntimeTask(status);
-          if(status.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(status))){setPhase("error");return;}
-          if (status.status === "awaiting_confirmation") {
-            // confirmTask 铸 draft Prediction 但只回 task(不回 predictionId)。故 confirm 后
-            // 从 listPredictions(user-scoped, createdAt desc)取该 subject 最新一条 draft →
-            // 拿到它的 id。全程只用既有端点,无新写路径。
-            await client.confirmTask({
-              params: { taskId: task.id },
-              query: undefined,
-              body: undefined,
-            });
-            if (cancelledRef.current) return;
-            // listPredictions 客户端直返数组(isList,createdAt desc)—— 与稿面
-            // readBlindPrediction 同款读法。
-            const raw = await client.listPredictions({
-              params: undefined,
-              query: { page: 1, pageSize: 100 },
-              body: undefined,
-            });
-            const rows = (Array.isArray(raw) ? raw : []) as Array<{
-              id: string;
-              subjectId: string;
-              status: string;
-            }>;
-            const draft = rows.find(
-              (r) => r.subjectId === subjectId && r.status === "draft",
-            );
-            // 4. lockPrediction 定死(immutable)。取不到 draft 则诚实置 error(不假装锁成功);
-            // draft 已落库,稿面盲预测行会显示草稿态可手动补锁。
-            if (draft) {
-              await client.lockPrediction({
-                params: { predictionId: draft.id },
-                query: undefined,
-                body: undefined,
-              });
-            }
-            if (!cancelledRef.current) {
-              setPhase(draft ? "locked" : "error");
-              router.refresh();
-            }
-            return;
-          }
-          if (status.status === "cancelled" || status.status === "failed") {
-            if (!cancelledRef.current) setPhase("error");
-            return;
-          }
+        if(value.status==='locked'){if(intent)routerRef.current.refresh();intent=false;return;}
+        if(value.status!=='running'||value.task?.status==='partial'){intent=false;return;}
+        if(++reads%75===0&&!await pauseObservation())return;
+        if(!current())return;await new Promise(resolve=>setTimeout(resolve,pollIntervalMs));if(!current())return;
+      }}catch(caught){intent=false;update({error:caught instanceof Error?caught.message:'尚未确认锁定完成，请保留原任务核对。'});}finally{update({busy:false});}})();
+      loop=pending;void pending.finally(()=>{if(loop===pending)loop=null;}).catch(()=>{});return pending;
+    };
+    const control:LockController={refresh:observe,async command(action){
+      const task=latest?.task;if(acting||!current()||!task?.executionTaskId)return;
+      acting=true;update({busy:true,error:null});
+      const key=task.executionTaskId+':'+action;if(!commandKeys.has(key))commandKeys.set(key,crypto.randomUUID());
+      try{await scopedClient.commandExecutionTasks({params:undefined,query:undefined,body:{taskIds:[task.executionTaskId],command:action,idempotencyKey:commandKeys.get(key)!}});commandKeys.delete(key);if(current())await observe();}
+      catch(caught){update({error:caught instanceof Error?caught.message:'原任务操作结果尚未确认，请核对原任务。'});}
+      finally{acting=false;update({busy:false});}
+    },async act(){
+      if(acting||!current()||!location||!latest||!['available','awaiting_confirmation'].includes(latest.status))return;
+      acting=true;intent=true;update({busy:true,error:null});
+      try{
+        if(latest.status==='available'){
+          if(!latest.baselineDigest)throw Error('原稿基线尚无法确认，请回原对话核对。');
+          accept(await scopedClient.startPredictionLock({params:{conversationId:location.conversationId},query:undefined,body:{sourceMessageId:location.sourceMessageId,toolCallId:location.toolCallId,expectedBaselineDigest:latest.baselineDigest,policyVersion:1}}));
         }
-        if (!cancelledRef.current) setPhase("error");
-      } catch {
-        if (!cancelledRef.current) setPhase("error");
-      }
-    })();
-  }, [blindPredict, phase, router, pollIntervalMs]);
-
+        if(current())await observe();
+      }catch(caught){intent=false;update({error:caught instanceof Error?caught.message:'锁定结果尚未确认，请查看原卡片。'});}
+      finally{acting=false;update({busy:false});}
+    }};
+    controller.current=control;
+    if(blindPredict&&location)void observe();
+    return()=>{active=false;intent=false;workspace.dispose();if(controller.current===control)controller.current=null;};
+  },[identity,scopeKey,conversationId,sourceMessageId,toolCallId,pollIntervalMs,pauseObservation,!!blindPredict]);
+  const runtimeTask=state?.task as RuntimeTask|null|undefined;
+  const locked=state?.status==='locked';
+  const partial=runtimeTask?.status==='partial',runtimeStatus=runtimeTask?taskRuntimeStatus(runtimeTask):null;
+  const canAct=!!source&&!busy&&!error&&!partial&&!!state&&['available','awaiting_confirmation'].includes(state.status);
+  const unavailable=!source?'原卡片来源未记录，无法确认锁定状态。':!state&&!error?'正在读取原卡片状态…':state?.status==='legacy_unknown'?'这张旧卡片没有可恢复的锁定回执。':state?.status==='missing'?'原锁定记录不可用，请保留当前卡片。':state?.status==='unknown'?'原任务结果尚未确认，请保留原任务核对。':state?.status==='failed'?'原任务未完成，请查看原任务状态。':null;
   if (!diagnosis || diagnosis.dimensions.length === 0) return null;
   return (
     <div
@@ -231,9 +190,14 @@ export function ChatDiagnosisCard({
           优先修改：{diagnosis.priorityFixes.join("；")}
         </p>
       ) : null}
+      <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={partial} />
+      {blindPredict&&state?.baseline?<p className="break-all text-xs text-muted-foreground" data-slot="chat-diagnosis-baseline">确认稿版本：{state.baseline.versionId}</p>:null}
+      {blindPredict&&state&&!state.baseline?<p className="text-xs text-muted-foreground">原锁定基线：尚无确认稿</p>:null}
+      {blindPredict&&state?.diagnoseTaskId&&!locked?<p className="break-all text-xs text-muted-foreground">原任务：{state.diagnoseTaskId}{runtimeTask?` · ${runtimeTask.status}`:''}</p>:null}
       {blindPredict ? (
         // [T-103a] 盲预测确认门:锁定前是候选(可继续追问重生);点「锁定」= immutable。
-        phase === "locked" ? (
+        locked ? (
           <div
             data-slot="chat-diagnosis-locked"
             className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-1.5"
@@ -255,19 +219,21 @@ export function ChatDiagnosisCard({
               <button
                 type="button"
                 data-slot="chat-diagnosis-lock"
-                disabled={phase === "locking" || !!runtimeTask?.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(runtimeTask))}
-                onClick={lock}
+                disabled={!canAct}
+                onClick={()=>void controller.current?.act()}
                 className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
               >
-                {phase === "locking" ? "锁定中…" : "锁定为盲预测"}
+                {busy||state?.status==='running' ? "锁定中…" : state?.status==='awaiting_confirmation' ? "继续锁定" : "锁定为盲预测"}
               </button>
-              {phase === "error" ? (
-                <span className="text-[10px] text-destructive">
-                  尚未确认锁定完成，请查看原任务状态
-                </span>
-              ) : null}
             </div>
-            {runtimeTask?.executionTaskId?<TaskRuntimeActions task={runtimeTask} onUpdated={lock}/>:null}
+            {unavailable?<span className="text-xs text-muted-foreground" role="status">{unavailable}</span>:null}
+            {error?<span className="text-xs text-destructive" role="alert">{error}</span>:null}
+            {source&&!runtimeTask?.executionTaskId&&(error||state&&['failed','unknown','missing'].includes(state.status))?<button type="button" className="self-start text-xs text-brand hover:underline" disabled={busy} onClick={()=>void controller.current?.refresh()}>刷新原卡状态</button>:null}
+            {runtimeTask?.executionTaskId?<div className="flex flex-wrap items-center gap-2 text-xs">
+              {runtimeStatus&&['paused','waiting_user','failed'].includes(runtimeStatus)?<button type="button" disabled={busy} onClick={()=>void controller.current?.command(runtimeStatus==='failed'?'retry':'resume')}>{runtimeStatus==='failed'?'重试原任务':'继续原任务'}</button>:null}
+              {runtimeStatus&&['queued','running','retry_wait','paused','waiting_user','unknown_result','pause_requested'].includes(runtimeStatus)?<button type="button" disabled={busy} onClick={()=>void controller.current?.command('cancel')}>取消任务</button>:null}
+              <button type="button" disabled={busy} onClick={()=>void controller.current?.refresh()}>刷新状态</button>
+            </div>:null}
             <span className="text-[9.5px] text-text-subtle">
               锁定 = 用你的变现 rubric 铸一份发布前盲预测并定死(不可改),发布后用真实数据对照校准；
               锁定前可继续追问、重新诊断。

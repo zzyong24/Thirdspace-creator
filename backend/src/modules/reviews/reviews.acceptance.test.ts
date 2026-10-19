@@ -1,3 +1,4 @@
+import {projects as originalProjects} from "../../schema/projects";
 import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -99,6 +100,7 @@ describe("reviews acceptance (SPEC §22)", () => {
 
   it("user scope: A cannot read B's review (OwnershipError → 404)", async () => {
     const serviceB = makeService(db, "b");
+    await seedOriginalProject(db,ctxB,"project-1",NOW);
     const review = await serviceB.createReview(ctxB, "project-1", {
       reviewType: "project",
       contentOutputId: null,
@@ -111,6 +113,7 @@ describe("reviews acceptance (SPEC §22)", () => {
 
   it("reviews.complete is idempotent (no re-stamp on the second call)", async () => {
     const service = makeService(db);
+    await seedOriginalProject(db,ctxA,"project-1",NOW);
     const review = await service.createReview(ctxA, "project-1", {
       reviewType: "project",
       contentOutputId: null,
@@ -124,6 +127,7 @@ describe("reviews acceptance (SPEC §22)", () => {
 
   it("the DTO mapper never leaks user_id (built explicitly, not the Drizzle row)", async () => {
     const service = makeService(db);
+    await seedOriginalProject(db,ctxA,"project-1",NOW);
     const review = await service.createReview(ctxA, "project-1", {
       reviewType: "project",
       contentOutputId: null,
@@ -153,3 +157,7 @@ describe("reviews acceptance (SPEC §22)", () => {
     ]);
   });
 });
+
+async function seedOriginalProject(db:Db,owner:RequestContext,id:string,stamp:string){
+ await db.insert(originalProjects).values({id,userId:owner.userId,accountId:owner.accountId??null,groupId:owner.groupId??null,title:'原用例真实父项目',creationMode:'free',status:'active',currentStage:'review',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+}

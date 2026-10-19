@@ -1,0 +1,88 @@
+{
+  "schema": "t1359-closeout-safe-whitelist/v1",
+  "inputs": [
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/SAFE_SUMMARY.json",
+      "sha256": "fb246c1892107b0fc8a30a67ddde9e9d39c0b4ca9fa964218a3e9c119c54e3a7",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/DELIVERY_REPORT.md",
+      "sha256": "0bf6955607dd283b2566a6f8cec280505825a436535ef375d1cc65901bb730ff",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/basic-tests-result.json",
+      "sha256": "30ecaa36a0fa13a828203a77ede995795212bb80fadbb9472601e8a082603126",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/package-build-attempt01-result.json",
+      "sha256": "7430d3fb1ce96e2d93105bb925e9b90ed3967ef9d0a5730e9adba76aaaca527e",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/artifacts/SUMMARY.json",
+      "sha256": "1cb5763219fb59c41fc94768df9089943686067e0c1b2e125a7f2af00029fb75",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/install/normal-quit-observed.json",
+      "sha256": "6a4488fb2ca04ea9f931f4f5bc6b0062f4e6bba340f0b7cf5738dac978226079",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/install/replacement.json",
+      "sha256": "e9e29f049f58633368cbbd261b0c1b04b99b92e623827c45700866cbc7d57ed1",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/install/startup-success.json",
+      "sha256": "8b3fe4594ee2a26a0306f5e7b48997e364a3307db695e3727b12e3621e2fe777",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/install/installed-runtime-verification-canonical.json",
+      "sha256": "bb6335f07f838002d89ea25cdccfe5e8c452ca6e414fb39bb61d1ebff75b0c9e",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/install/public-details/SUMMARY.json",
+      "sha256": "ba6bf47eda369714d12de7228c48c2d1b63d44bd3307dd3c1688b2b36668faaa",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/install/continuous-stability-120-observations.json",
+      "sha256": "22f9ef896519589e3ff684d9e68cbdcd3c5a58afa13454db2e16ce83b7984056",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/cleanup/SUMMARY.json",
+      "sha256": "256bc78007b1ebe78fd52a24309d9a1764f8f6990c6e2ef22665b4c1063d1556",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/FINAL_INTEGRITY.json",
+      "sha256": "f50e979c84b6fd4ee3b594c788274818bbc61a7c21f811d6585fc32ec0b9f8db",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1359-final-20261019-e6769b474fde/checks/collection/failure-diagnostic/SAFE_EVENTS.json",
+      "sha256": "d5f1e36dd3de6a850cfb414badb68b86f892238f6aaf695ddc0d45e722beb7f9",
+      "handling": "引用原件路径及SHA；只对白名单字段生成本报告，不复制raw/env/config/凭据/正文"
+    }
+  ],
+  "outputs": [
+    "REPORT.md",
+    "FINAL_DELIVERY_RESULT.json",
+    "final/VIDEO_FAILURE_SAFE_EVENTS.json"
+  ],
+  "excluded": [
+    "raw结果/trace/config.env/连接串/密钥/原日志明文/profile/截图正文",
+    "真实POST幂等key与clientRequestId不复制"
+  ],
+  "preservedHistoricFalse": [
+    "docs/verification/t1359/SOURCE_FREEZE.json",
+    "docs/verification/t1359/FINAL_SCOPE_GATES.json"
+  ]
+}

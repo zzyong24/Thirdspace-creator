@@ -1,4 +1,5 @@
 import { createChatTurnCompletionService } from "../modules/ai/chat-turn-completion.service";
+import { validateTerminalPlanFailures, validateTerminalToolFailures } from "../modules/execution/workbench-plan.service";
 import { createExecutionCheckpointService } from "../modules/execution/execution-checkpoint.service";
 import { readUIMessageStream,type UIMessage,type UIMessageChunk } from "ai";
 import { createExecutionStreamService } from "../modules/execution/execution-stream.service";
@@ -141,7 +142,7 @@ it("工具结算后缺卡不提前结束，并发补卡完成后finish始终最�
  const f=await fixture();await f.host.execute(f.ref,{callId:f.reservation.callId});
  await createExecutionCheckpointService(db,{now}).save(f.ref,{expectedRevision:0,expectedLedgerSequence:2,messages:[{role:"assistant",callId:f.request.modelCallId},{role:"tool",callId:f.reservation.callId}]});
  await db.delete(executionStreamEvents).where(eq(executionStreamEvents.callId,f.reservation.callId));
- const complete=createChatTurnCompletionService(db,{now}),request={lastModelCallId:f.request.modelCallId,toolCallIds:[f.reservation.callId]};
+ const complete=createChatTurnCompletionService(db,{now,validateTerminalPlanFailures,validateTerminalToolFailures}),request={lastModelCallId:f.request.modelCallId,toolCallIds:[f.reservation.callId]};
  await expect(complete.commitResult(f.ref,request)).rejects.toThrow("工具卡尚未确认");
  const stream=createExecutionStreamService(db);
  expect((await stream.read(f.ctx,f.ref.executionTaskId)).status).toBe("running");
@@ -159,7 +160,7 @@ it("工具结算后缺卡不提前结束，并发补卡完成后finish始终最�
 it("旧已完成工具回复缺全部事件时由原回执恢复工具卡和finish",async()=>{
  const f=await fixture();await f.host.execute(f.ref,{callId:f.reservation.callId});
  await createExecutionCheckpointService(db,{now}).save(f.ref,{expectedRevision:0,expectedLedgerSequence:2,messages:[{role:"assistant",callId:f.request.modelCallId},{role:"tool",callId:f.reservation.callId}]});
- const complete=createChatTurnCompletionService(db,{now}),request={lastModelCallId:f.request.modelCallId,toolCallIds:[f.reservation.callId]};
+ const complete=createChatTurnCompletionService(db,{now,validateTerminalPlanFailures,validateTerminalToolFailures}),request={lastModelCallId:f.request.modelCallId,toolCallIds:[f.reservation.callId]};
  const result=await complete.commitResult(f.ref,request);
  await db.delete(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.ref.executionTaskId));
  expect(await complete.commitResult(f.ref,request)).toEqual(result);

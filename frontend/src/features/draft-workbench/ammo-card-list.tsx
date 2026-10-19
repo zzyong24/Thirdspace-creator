@@ -17,17 +17,50 @@ import * as React from "react";
 import { AmmoRemoveButton } from "./ammo-remove-button";
 import { MaterialSummaryModal } from "@/components/resources/material-summary";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
+import { KnowledgeDetailPreview } from "@/features/knowledge/knowledge-detail-preview";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 type AmmoItem = DraftWorkbenchVm["ammo"][number];
 
-export function AmmoCardList({ ammo }: { ammo: DraftWorkbenchVm["ammo"] }) {
+export function AmmoCardList({
+  ammo,
+  readError,
+}: {
+  ammo: DraftWorkbenchVm["ammo"];
+  readError?: string | null;
+}) {
+  const router = useRouter();
   const [previewItem, setPreviewItem] = React.useState<AmmoItem | null>(null);
 
+  const [page, setPage] = React.useState(1);
+  const pageCount = Math.max(1, Math.ceil(ammo.length / 12));
+  const currentPage = Math.min(page, pageCount);
+  const currentPreview =
+    ammo.find((x) => x.linkId === previewItem?.linkId) ?? null;
   return (
     <>
+      {readError && (
+        <div role="alert" className="mb-3 text-sm text-destructive">
+          <p>{readError}</p>
+          <Button
+            variant="outline"
+            className="mt-2"
+            onClick={() => router.refresh()}
+          >
+            重新读取项目资料
+          </Button>
+        </div>
+      )}
       <div className="flex gap-2.5 overflow-x-auto pb-1">
-        {ammo.map((item) => (
+        {ammo.slice((currentPage - 1) * 12, currentPage * 12).map((item) => (
           <div
             key={`${item.kind}-${item.id}`}
             data-slot="draft-ammo-card"
@@ -35,6 +68,7 @@ export function AmmoCardList({ ammo }: { ammo: DraftWorkbenchVm["ammo"] }) {
             role="button"
             tabIndex={0}
             aria-label={`预览 ${item.title}`}
+            onClick={() => setPreviewItem(item)}
             onDoubleClick={() => setPreviewItem(item)}
             onKeyDown={(e) => {
               // 键盘可达:Enter / Space 等效双击开预览。
@@ -83,13 +117,52 @@ export function AmmoCardList({ ammo }: { ammo: DraftWorkbenchVm["ammo"] }) {
             <p className="mt-1.5 truncate text-[11px] text-text-subtle">
               ↳ {item.sourceLabel}
             </p>
-            <p className="mt-1 text-[10px] text-text-subtle/70">双击预览</p>
+            <p className="mt-1 text-[10px] text-text-subtle/70">{item.kind === "knowledge" ? "点击阅读" : "双击预览"}</p>
           </div>
         ))}
       </div>
+      {pageCount > 1 && (
+        <nav aria-label="项目资料分页" className="mt-2 flex items-center gap-3">
+          <Button
+            variant="outline"
+            disabled={currentPage === 1}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            上一页项目资料
+          </Button>
+          <span>
+            {currentPage} / {pageCount} · {ammo.length} 份
+          </span>
+          <Button
+            variant="outline"
+            disabled={currentPage === pageCount}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            下一页项目资料
+          </Button>
+        </nav>
+      )}
+      <Dialog
+        open={currentPreview?.kind === "knowledge"}
+        onOpenChange={(open) => {
+          if (!open) setPreviewItem(null);
+        }}
+      >
+        <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
+          <DialogTitle>{currentPreview?.title}</DialogTitle>
+          <DialogDescription>项目引用的资料原文</DialogDescription>
+          {currentPreview?.kind === "knowledge" && (
+            <KnowledgeDetailPreview
+              key={currentPreview.id}
+              knowledgeId={currentPreview.id}
+              reader
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       {/* 双击预览 Modal —— 复用素材中心同款共用件。 */}
       <MaterialSummaryModal
-        open={previewItem !== null}
+        open={currentPreview !== null && currentPreview.kind === "asset"}
         onOpenChange={(open) => {
           if (!open) setPreviewItem(null);
         }}

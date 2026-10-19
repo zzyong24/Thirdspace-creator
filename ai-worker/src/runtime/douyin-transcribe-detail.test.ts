@@ -17,7 +17,7 @@ describe('Worker 转写详情读取', () => {
     const f = fixture();
     await expect(fetchDouyinVideoUrlViaDetail({ awemeId: '12/34' }, f)).resolves.toEqual({ kind: 'video', playUrl: 'https://cdn.example/video' });
     expect(f.channel).toHaveBeenCalledTimes(1);
-    expect(f.page.goto).toHaveBeenCalledWith('https://www.douyin.com/video/12%2F34', expect.objectContaining({ timeout: 60000 }));
+    expect(f.page.goto).toHaveBeenCalledWith('https://www.douyin.com/video/12%2F34', expect.objectContaining({ timeout: 120000 }));
     expect(f.evaluate.mock.calls[1]![1]).toContain('aweme_id=12%2F34');
     expect(f.close).toHaveBeenCalledTimes(1);
   });

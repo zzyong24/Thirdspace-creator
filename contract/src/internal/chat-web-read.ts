@@ -21,7 +21,8 @@ export const chatWebReadSessionSaveSchema = chatWebReadCallSchema.extend({ revis
 
 /** 仅记录明确失败，不接受成功素材、正文或 Worker 自报的执行终态。 */
 export const chatWebReadFailureSchema = chatWebReadCallSchema.extend({failure:z.discriminatedUnion("kind",[
-  z.object({kind:z.literal("needs_login")}).strict(),
+  // 仅供展示实际登录墙域名；会话读取/写入仍由冻结 URL 授权。
+  z.object({kind:z.literal("needs_login"),domain:z.string().min(1).max(253).optional()}).strict(),
   z.object({kind:z.literal("http_blocked"),status:z.number().int().min(400).max(599),message:z.string().min(1).max(10000),alternates:z.array(z.object({title:z.string().max(10000),url:webUrl,snippet:z.string().max(10000)}).strict()).max(5)}).strict(),
   z.object({kind:z.literal("browser_runtime_unavailable")}).strict(),
   z.object({kind:z.literal("read_error"),code:z.enum(["transient","no_evidence","permission"]),message:z.string().min(1).max(10000)}).strict(),

@@ -85,8 +85,8 @@ describe("buildTools", () => {
   const tools = buildTools();
   const byName = new Map(tools.map((t) => [t.name, t]));
 
-  it("工具数 = ENDPOINTS 数 + 1(overview),名字唯一", () => {
-    expect(tools.length).toBe(Object.keys(ENDPOINTS).length + 1);
+  it("工具数 = ENDPOINTS 数 + overview + 两个离线发现工具，名字唯一", () => {
+    expect(tools.length).toBe(Object.keys(ENDPOINTS).length + 3);
     expect(byName.size).toBe(tools.length);
   });
 

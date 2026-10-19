@@ -141,6 +141,7 @@ function toOutput(row: ContentOutputRow): ContentOutputResource {
     projectId: row.projectId,
     title: row.title,
     contentType: row.contentType as ContentOutputResource["contentType"],
+    targetPlatform: (row.targetPlatform ?? null) as ContentOutputResource["targetPlatform"],
     format: row.format,
     aspectRatio: row.aspectRatio,
     targetDurationSeconds: row.targetDurationSeconds,
@@ -182,9 +183,37 @@ function toActivity(row: ActivityRow): ProjectActivityResource {
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
 
+function publicBriefDetailWrite(
+  raw: unknown,
+  trustedContentRadarEvidence?: unknown,
+): BriefDetail | undefined {
+  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw as BriefDetail | undefined;
+  }
+  const value = { ...(raw as Record<string, unknown>) };
+  // Provenance is written by the server-side Candidate promotion seam only.
+  // Public project create/patch payloads cannot invent or replace it.
+  delete value.contentRadarEvidence;
+  if (trustedContentRadarEvidence !== undefined) {
+    value.contentRadarEvidence = trustedContentRadarEvidence;
+  }
+  return value as BriefDetail;
+}
+
 export interface ProjectsTransportDeps {
   service: ProjectsService;
   repo: ProjectRepository;
+  createArticleOutput?: (ctx: RequestContext, projectId: string, input: {
+    title: string;
+    contentRole?: "traffic" | "trust" | "conversion";
+    clientRequestId?: string;
+    targetPlatform?: string;
+  }) => Promise<ContentOutputRow>;
+  createGraphicPostOutput?: (ctx: RequestContext, projectId: string, input: {
+    title: string;
+    targetPlatform?: string;
+    clientRequestId: string;
+  }) => Promise<ContentOutputRow>;
 }
 
 export function createProjectsTransport(
@@ -193,7 +222,7 @@ export function createProjectsTransport(
   return {
     async request(endpoint: Endpoint, input, ctx) {
       if (!ctx) throw new AuthenticationError();
-      const { service, repo } = factory(ctx);
+      const { service, repo, createArticleOutput, createGraphicPostOutput } = factory(ctx);
 
       const { params, query, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as {
@@ -221,7 +250,7 @@ export function createProjectsTransport(
           const row = await service.createProject(ctx, {
             title: String(b.title ?? ""),
             brief: b.brief as string | undefined,
-            briefDetail: b.briefDetail as BriefDetail | undefined,
+            briefDetail: publicBriefDetailWrite(b.briefDetail),
             contentType: b.contentType as string | undefined,
             creationMode: b.creationMode as string | undefined,
             targetPlatforms: b.targetPlatforms as string[] | undefined,
@@ -247,21 +276,32 @@ export function createProjectsTransport(
             data: toProject(await repo.get(ctx, p.projectId ?? "")),
             meta: singleMeta,
           };
-        case "projects.patch":
+        case "projects.patch": {
+          let briefDetail: BriefDetail | undefined;
+          if ("briefDetail" in b) {
+            const current = await repo.get(ctx, p.projectId ?? "");
+            const currentBrief =
+              (current as { briefDetail?: unknown }).briefDetail;
+            const trustedEvidence =
+              currentBrief &&
+              typeof currentBrief === "object" &&
+              !Array.isArray(currentBrief)
+                ? (currentBrief as Record<string, unknown>).contentRadarEvidence
+                : undefined;
+            briefDetail = publicBriefDetailWrite(b.briefDetail, trustedEvidence);
+          }
           return {
             data: toProject(
               await service.patchProject(ctx, p.projectId ?? "", {
                 title: b.title as string | undefined,
                 brief: b.brief as string | undefined,
-                briefDetail:
-                  "briefDetail" in b
-                    ? (b.briefDetail as Record<string, unknown> | undefined)
-                    : undefined,
+                briefDetail,
                 starred: b.starred as boolean | undefined,
               }),
             ),
             meta: singleMeta,
           };
+        }
         case "projects.archive":
           return {
             data: toProject(await service.archiveProject(ctx, p.projectId ?? "")),
@@ -288,8 +328,31 @@ export function createProjectsTransport(
         case "projects.outputs.create":
           return {
             data: toOutput(
-              await service.createOutput(ctx, p.projectId ?? "", {
+              b.contentType === "image"
+                ? await (() => {
+                    if (!createGraphicPostOutput) throw new UnsupportedOperationError("Graphic post output service unavailable");
+                    if (typeof b.clientRequestId !== "string") throw new UnsupportedOperationError("Graphic post create requires clientRequestId");
+                    return createGraphicPostOutput(ctx, p.projectId ?? "", {
+                      title: String(b.title ?? ""),
+                      targetPlatform: b.targetPlatform as string | undefined,
+                      clientRequestId: b.clientRequestId,
+                    });
+                  })()
+                : b.contentType === "article"
+                ? await (() => {
+                    if (!createArticleOutput) throw new UnsupportedOperationError("Article output service unavailable");
+                    return createArticleOutput(ctx, p.projectId ?? "", {
+                      title: String(b.title ?? ""),
+                      contentRole: b.contentRole as "traffic" | "trust" | "conversion" | undefined,
+                      clientRequestId: b.clientRequestId as string | undefined,
+                      targetPlatform: b.targetPlatform as string | undefined,
+                    });
+                  })()
+                : await service.createOutput(ctx, p.projectId ?? "", {
                 title: String(b.title ?? ""),
+                clientRequestId: b.clientRequestId as string | undefined,
+                contentType: b.contentType as "video" | undefined,
+                targetPlatform: b.targetPlatform as string | undefined,
                 contentRole: b.contentRole as
                   | "traffic"
                   | "trust"

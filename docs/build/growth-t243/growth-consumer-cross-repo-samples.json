@@ -1,0 +1,554 @@
+{
+  "schemaVersion": 1,
+  "boundary": "实际Growth T243 service生成的跨仓合成样本；非生产授权/真实UAT，无私钥输出，fakeprovider token仅测试",
+  "now": "2026-10-17T08:00:05.000Z",
+  "AMFixtureSHA256": "cd8ced4573cc57d855ddbda94d121f5dadc768890ecc0b1ece04c2b5a11beed2",
+  "growthSigner": {
+    "keyId": "growth-config-test-01",
+    "publicKeyBase64": "gyClGXfYw4yopJJ8Zw31gh5El2GUXhXp77JqFQnSMOo="
+  },
+  "cases": [
+    {
+      "name": "assigned",
+      "request": {
+        "contractVersion": "growth-model-benefit-request-v1",
+        "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjMsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBIUjkxMTg4TUdWMEFNTjlKIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsiY2hhbm5lbFJlZiI6Im9mZmljaWFsIiwia2luZCI6ImNoYW5uZWwifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtYXNzaWduZWQiLCJwb2xpY3lJZCI6ImNyZWF0b3Jvcy1mb3JtYWwtbW9kZWwtMjAyNjEwMTctdjEiLCJwcm9qZWN0S2V5IjoiY3JlYXRvcm9zIiwicHVycG9zZSI6Im1vZGVsLWJlbmVmaXQiLCJzb3VyY2VDaGFubmVsUmVmIjoib2ZmaWNpYWwiLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1wcm9vZiJ9.7IOIoV-uvqMCiCfWgwtEjOqbaPf35u2FzImrbgdeiUUSB1RZ6XoJiY7nBVRgo3IHB4Y_KN63gPhktPsYZNkPDg"
+      },
+      "headers": {
+        "Idempotency-Key": "cross-repo-sample-assigned"
+      },
+      "fulfill": {
+        "contractVersion": "growth-model-benefit-credential-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": "official",
+        "modelScope": {
+          "kind": "channel",
+          "channelRef": "official"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 3,
+        "proofDigest": "sha256:abe181e11c11884a3d1e4a1a7f5b31e55742f0532663dde7103a8c4f7dcc6ec9",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "serviceId": "omnihi-main",
+        "credential": {
+          "type": "api_key",
+          "token": "sk-t142-activation-grant-token",
+          "tokenPrefix": "sk-t142...oken"
+        },
+        "includedCredit": {
+          "amount": "5.00000000",
+          "currency": "CNY"
+        },
+        "wallet": {
+          "linked": true,
+          "availableUnits": 250000,
+          "referenceId": "AICA-58938165D8F34DB2A507"
+        }
+      },
+      "directory": {
+        "status": 200,
+        "etag": "\"sha256:5315a91fe1126136beea521509d57a5efba564b793c548aa9d6c854d6c3ac1a0\"",
+        "body": {
+          "contractVersion": "growth-model-benefit-directory-v1",
+          "policyId": "creatoros-formal-model-20261017-v1",
+          "projectKey": "creatoros",
+          "sourceChannelRef": "official",
+          "modelScope": {
+            "kind": "channel",
+            "channelRef": "official"
+          },
+          "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+          "authorizationVersion": 3,
+          "proofDigest": "sha256:abe181e11c11884a3d1e4a1a7f5b31e55742f0532663dde7103a8c4f7dcc6ec9",
+          "expiresAt": "2026-10-17T08:05:00.000Z",
+          "configurationSourceChannelRef": "official",
+          "configurationSource": {
+            "packageRef": "PCP-ABE1F38DE5CF4AB2",
+            "revision": 1,
+            "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+          },
+          "payload": {
+            "services": [
+              {
+                "id": "omnihi-main",
+                "name": "OmniHi 模型服务",
+                "provider": "omnihi",
+                "credential": {
+                  "type": "api_key",
+                  "source": "activation_managed",
+                  "lifecycle": "persistent",
+                  "allowMultiple": false,
+                  "links": {
+                    "portalUrl": "https://omnihi.ai",
+                    "purchaseUrl": null,
+                    "rechargeUrl": null,
+                    "helpUrl": "https://omnihi.ai/market-list"
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "relay-text",
+                "name": "文本模型连接",
+                "serviceId": "omnihi-main",
+                "provider": "openai-compatible",
+                "baseURL": "https://api.omnihi.ai/openai",
+                "apiFormat": "openai_chat"
+              },
+              {
+                "id": "relay-image",
+                "name": "图片模型连接",
+                "serviceId": "omnihi-main",
+                "provider": "openai-compatible",
+                "baseURL": "https://api.omnihi.ai/openai",
+                "apiFormat": "openai_images"
+              },
+              {
+                "id": "relay-video",
+                "name": "视频模型连接",
+                "serviceId": "omnihi-main",
+                "provider": "omnihi",
+                "baseURL": "https://api.omnihi.ai/media/v1",
+                "apiFormat": "omnihi_media"
+              }
+            ],
+            "models": {
+              "default": [
+                {
+                  "id": "claude-haiku-4-5",
+                  "name": "Claude Haiku 4.5",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "claude-haiku-4.5",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "kimi-k2-6",
+                  "name": "Kimi K2.6",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "kimi-k2.6",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "gemini-3-5-flash",
+                  "name": "Gemini 3.5 Flash",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "gemini-3.5-flash",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "claude-sonnet-4-6",
+                  "name": "Claude Sonnet 4.6",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "claude-sonnet-4.6",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "gpt-5-6-sol",
+                  "name": "GPT 5.6 Sol",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "gpt-5.6-sol",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "minimax-m3",
+                  "name": "MiniMax M3",
+                  "isDefault": true,
+                  "connectionId": "relay-text",
+                  "model": "minimax-m3",
+                  "settings": {
+                    "timeoutMs": 3000000,
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "deepseek-v4-pro",
+                  "name": "DeepSeek V4 Pro",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "deepseek-v4-pro",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                }
+              ],
+              "image.generate": [
+                {
+                  "id": "gpt-image-2-text-to-image",
+                  "name": "GPT Image 2 Text-to-Image",
+                  "isDefault": true,
+                  "connectionId": "relay-image",
+                  "model": "openai/gpt-image-2-text-to-image",
+                  "settings": {
+                    "n": 1,
+                    "size": "1024x1024"
+                  }
+                }
+              ],
+              "image.edit": [
+                {
+                  "id": "gpt-image-2-edit",
+                  "name": "GPT Image 2 图片编辑",
+                  "isDefault": true,
+                  "connectionId": "relay-image",
+                  "model": "openai/gpt-image-2-edit",
+                  "settings": {
+                    "n": 1,
+                    "size": "1024x1024"
+                  }
+                }
+              ],
+              "video.generate": [
+                {
+                  "id": "seedance-2-fast-economy",
+                  "name": "Seedance 2.0 Fast",
+                  "isDefault": true,
+                  "connectionId": "relay-video",
+                  "model": "seedance/seedance-2.0-fast",
+                  "settings": {
+                    "mode": "t2v",
+                    "duration": 4,
+                    "resolution": "480p",
+                    "aspect_ratio": "9:16",
+                    "generate_audio": false,
+                    "prompt_max_length": 500
+                  }
+                }
+              ]
+            }
+          },
+          "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+          "bundleDigest": "sha256:25a69675d0ecc60c5157b565ed311348bb68bc8f80a9fcdca38ebc7fc9a52cce",
+          "keyId": "growth-config-test-01",
+          "signature": "pWI_PtZ7miKIr9eZYbVeDpG3HHqr6BMF6yJK5d5PkfC1djTYDzfDLkvwHjEu-MSuVCnlwuUoBsDZBbQ6rZS0DQ"
+        }
+      },
+      "credentials": {
+        "contractVersion": "growth-model-benefit-credential-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": "official",
+        "modelScope": {
+          "kind": "channel",
+          "channelRef": "official"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 3,
+        "proofDigest": "sha256:abe181e11c11884a3d1e4a1a7f5b31e55742f0532663dde7103a8c4f7dcc6ec9",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "serviceId": "omnihi-main",
+        "credential": {
+          "type": "api_key",
+          "token": "sk-t142-activation-grant-token",
+          "tokenPrefix": "sk-t142...oken"
+        },
+        "includedCredit": {
+          "amount": "5.00000000",
+          "currency": "CNY"
+        },
+        "wallet": {
+          "linked": true,
+          "availableUnits": 250000,
+          "referenceId": "AICA-58938165D8F34DB2A507"
+        }
+      },
+      "linkSession": {
+        "flow": "link",
+        "linkRef": "AICL-A5A6E2AC24DB4294944C",
+        "userCode": "J6AKyXgSc4CMXiPOC9DeU6AC0puiP6QuSdd-K9tw-VI",
+        "verificationUrl": "https://growth.example/credits/connect#J6AKyXgSc4CMXiPOC9DeU6AC0puiP6QuSdd-K9tw-VI",
+        "expiresAt": "2026-10-17T08:10:05Z",
+        "expiresIn": 600
+      }
+    },
+    {
+      "name": "unassigned",
+      "request": {
+        "contractVersion": "growth-model-benefit-request-v1",
+        "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+      },
+      "headers": {
+        "Idempotency-Key": "cross-repo-sample-unassigned"
+      },
+      "fulfill": {
+        "contractVersion": "growth-model-benefit-credential-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "serviceId": "omnihi-main",
+        "credential": {
+          "type": "api_key",
+          "token": "sk-t142-activation-grant-token",
+          "tokenPrefix": "sk-t142...oken"
+        },
+        "includedCredit": {
+          "amount": "5.00000000",
+          "currency": "CNY"
+        },
+        "wallet": {
+          "linked": true,
+          "availableUnits": 250000,
+          "referenceId": "AICA-58938165D8F34DB2A507"
+        }
+      },
+      "directory": {
+        "status": 200,
+        "etag": "\"sha256:28e03aa1781ab8f826743d26dd24d84a798d764892c6cabc19f246b9aca6beaa\"",
+        "body": {
+          "contractVersion": "growth-model-benefit-directory-v1",
+          "policyId": "creatoros-formal-model-20261017-v1",
+          "projectKey": "creatoros",
+          "sourceChannelRef": null,
+          "modelScope": {
+            "kind": "unassigned"
+          },
+          "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+          "authorizationVersion": 4,
+          "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+          "expiresAt": "2026-10-17T08:05:00.000Z",
+          "configurationSourceChannelRef": "official",
+          "configurationSource": {
+            "packageRef": "PCP-ABE1F38DE5CF4AB2",
+            "revision": 1,
+            "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+          },
+          "payload": {
+            "services": [
+              {
+                "id": "omnihi-main",
+                "name": "OmniHi 模型服务",
+                "provider": "omnihi",
+                "credential": {
+                  "type": "api_key",
+                  "source": "activation_managed",
+                  "lifecycle": "persistent",
+                  "allowMultiple": false,
+                  "links": {
+                    "portalUrl": "https://omnihi.ai",
+                    "purchaseUrl": null,
+                    "rechargeUrl": null,
+                    "helpUrl": "https://omnihi.ai/market-list"
+                  }
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "relay-text",
+                "name": "文本模型连接",
+                "serviceId": "omnihi-main",
+                "provider": "openai-compatible",
+                "baseURL": "https://api.omnihi.ai/openai",
+                "apiFormat": "openai_chat"
+              },
+              {
+                "id": "relay-image",
+                "name": "图片模型连接",
+                "serviceId": "omnihi-main",
+                "provider": "openai-compatible",
+                "baseURL": "https://api.omnihi.ai/openai",
+                "apiFormat": "openai_images"
+              },
+              {
+                "id": "relay-video",
+                "name": "视频模型连接",
+                "serviceId": "omnihi-main",
+                "provider": "omnihi",
+                "baseURL": "https://api.omnihi.ai/media/v1",
+                "apiFormat": "omnihi_media"
+              }
+            ],
+            "models": {
+              "default": [
+                {
+                  "id": "claude-haiku-4-5",
+                  "name": "Claude Haiku 4.5",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "claude-haiku-4.5",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "kimi-k2-6",
+                  "name": "Kimi K2.6",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "kimi-k2.6",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "gemini-3-5-flash",
+                  "name": "Gemini 3.5 Flash",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "gemini-3.5-flash",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "claude-sonnet-4-6",
+                  "name": "Claude Sonnet 4.6",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "claude-sonnet-4.6",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "gpt-5-6-sol",
+                  "name": "GPT 5.6 Sol",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "gpt-5.6-sol",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "minimax-m3",
+                  "name": "MiniMax M3",
+                  "isDefault": true,
+                  "connectionId": "relay-text",
+                  "model": "minimax-m3",
+                  "settings": {
+                    "timeoutMs": 3000000,
+                    "temperature": 0.6
+                  }
+                },
+                {
+                  "id": "deepseek-v4-pro",
+                  "name": "DeepSeek V4 Pro",
+                  "isDefault": false,
+                  "connectionId": "relay-text",
+                  "model": "deepseek-v4-pro",
+                  "settings": {
+                    "temperature": 0.6
+                  }
+                }
+              ],
+              "image.generate": [
+                {
+                  "id": "gpt-image-2-text-to-image",
+                  "name": "GPT Image 2 Text-to-Image",
+                  "isDefault": true,
+                  "connectionId": "relay-image",
+                  "model": "openai/gpt-image-2-text-to-image",
+                  "settings": {
+                    "n": 1,
+                    "size": "1024x1024"
+                  }
+                }
+              ],
+              "image.edit": [
+                {
+                  "id": "gpt-image-2-edit",
+                  "name": "GPT Image 2 图片编辑",
+                  "isDefault": true,
+                  "connectionId": "relay-image",
+                  "model": "openai/gpt-image-2-edit",
+                  "settings": {
+                    "n": 1,
+                    "size": "1024x1024"
+                  }
+                }
+              ],
+              "video.generate": [
+                {
+                  "id": "seedance-2-fast-economy",
+                  "name": "Seedance 2.0 Fast",
+                  "isDefault": true,
+                  "connectionId": "relay-video",
+                  "model": "seedance/seedance-2.0-fast",
+                  "settings": {
+                    "mode": "t2v",
+                    "duration": 4,
+                    "resolution": "480p",
+                    "aspect_ratio": "9:16",
+                    "generate_audio": false,
+                    "prompt_max_length": 500
+                  }
+                }
+              ]
+            }
+          },
+          "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+          "bundleDigest": "sha256:4cc75b81322103db0a279013cc6215d6014c949fd3916ebef0e189856503dbea",
+          "keyId": "growth-config-test-01",
+          "signature": "ON2zu_MuJrwur2YoNTToLu75Lk-rb5Ro42AeBPJj2LIczLqQ5Gh3TSMN19DTvLewxic6Mgov4YAbndtXOYL7Bw"
+        }
+      },
+      "credentials": {
+        "contractVersion": "growth-model-benefit-credential-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "serviceId": "omnihi-main",
+        "credential": {
+          "type": "api_key",
+          "token": "sk-t142-activation-grant-token",
+          "tokenPrefix": "sk-t142...oken"
+        },
+        "includedCredit": {
+          "amount": "5.00000000",
+          "currency": "CNY"
+        },
+        "wallet": {
+          "linked": true,
+          "availableUnits": 250000,
+          "referenceId": "AICA-58938165D8F34DB2A507"
+        }
+      },
+      "linkSession": {
+        "flow": "link",
+        "linkRef": "AICL-3CF917C5F7BC4B028DA4",
+        "userCode": "OYhxsWnPx_RqrBvX9gHxV29898lMUUqTlxIVvQpcN-w",
+        "verificationUrl": "https://growth.example/credits/connect#OYhxsWnPx_RqrBvX9gHxV29898lMUUqTlxIVvQpcN-w",
+        "expiresAt": "2026-10-17T08:10:05Z",
+        "expiresIn": 600
+      }
+    }
+  ],
+  "sourceFiles": {
+    "server/modules/model_benefits/service.py": "cb71335c601526b241dd65094190bac88d5674c4af071db9b412779ad5705255",
+    "server/modules/model_benefits/authority.py": "98eed31269de154494e4feffe77e4083ac00c126a98a52819e9485f09f9a66b7",
+    "server/modules/model_benefits/contracts.py": "25cf97067955f15292c23f1c655ca1c77002f35a0a41096b1188ce0fecddc490",
+    "server/modules/client_config/service.py": "eb18bca91f1b57db19d7ccab8d2b1f3ef5bfd64361831fe80aaabc99878b0425",
+    "server/application/ai_credit_service.py": "be695b94122053e5a6773215bc6bca006e3d18a444890b5499f15fddf0d5dd9a"
+  }
+}

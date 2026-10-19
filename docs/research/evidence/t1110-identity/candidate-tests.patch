@@ -1,0 +1,91 @@
+diff --git a/ai-worker/src/runtime/platform/wechat-identity-diagnostic.test.ts b/ai-worker/src/runtime/platform/wechat-identity-diagnostic.test.ts
+new file mode 100644
+--- /dev/null
++++ b/ai-worker/src/runtime/platform/wechat-identity-diagnostic.test.ts
+@@ -0,0 +1,86 @@
++import {JSDOM} from 'jsdom';
++import type {BrowserContext,Page} from '@playwright/test';
++import {afterEach,describe,expect,it,vi} from 'vitest';
++import {createWechatBrowserSource,type WechatOperationControls} from './wechat-browser-source';
++import {createVerifiedWechatDomWitnesses} from './wechat-dom-witness';
++
++// 仅Page/BrowserContext为合成fixture；正式source和内置witness实际执行，不启动浏览器。
++const origin='https://channels.weixin.qq.com';
++const secret='Cookie=synthetic-secret-cookie token=synthetic-secret-token /synthetic-private-profile';
++type Step='loginProbe'|'identityNavigation'|'identityFields';
++type DiagnosticControls=WechatOperationControls&{onIdentityStep?:(step:string)=>void};
++function fixture(options:{failAt?:Step;message?:string;diagnosticThrows?:boolean;customRead?:boolean;cancel?:AbortController;pendingFields?:boolean}={}){
++ const dom=new JSDOM('<div id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-finder-id">synthetic-finder-id</div><h2 class="finder-nickname">明确合成显示名</h2>',{url:origin+'/platform',runScripts:'outside-only'});
++ Object.defineProperty(dom.window.HTMLElement.prototype,'getClientRects',{value:()=>[{width:10,height:10}]});
++ const onStopped=vi.fn(async()=>{}),onDiagnostic=vi.fn((_event:unknown)=>{if(options.diagnosticThrows)throw Error(secret);});
++ let current=origin+'/',gotos=0,closed=false,readControls:DiagnosticControls|undefined,resolveFields:((value:unknown)=>void)|undefined;
++ const error=()=>Error(options.message??secret);
++ const page={
++  url:()=>current,
++  goto:vi.fn(async(url:string,controls:{timeout:number})=>{expect(controls.timeout).toBeGreaterThanOrEqual(120000);gotos++;if(gotos===2&&options.failAt==='identityNavigation')throw error();current=new URL(url).pathname==='/'?origin+'/platform':url;dom.reconfigure({url:current});}),
++  evaluate:vi.fn(async(fn:Function,arg:unknown)=>{
++   if(arg===undefined&&options.failAt==='loginProbe'){options.cancel?.abort(Error('明确原用户取消'));throw error();}
++   if(arg==='wechatVideo'&&options.failAt==='identityFields')throw error();
++   if(arg==='wechatVideo'&&options.pendingFields)return new Promise(resolve=>{resolveFields=resolve;});
++   return (dom.window.eval('('+fn.toString()+')') as (value:unknown)=>unknown)(arg);
++  }),
++ } as unknown as Page;
++ const context={pages:()=>[page],newPage:async()=>page,close:vi.fn(async()=>{if(!closed){closed=true;await onStopped();}})} as unknown as BrowserContext;
++ const witnesses=createVerifiedWechatDomWitnesses();
++ const source=createWechatBrowserSource({
++  identityWitness:options.customRead?{isLoggedOut:async()=>false,read:async(_page,_platform,controls)=>{readControls=controls as DiagnosticControls;throw error();}}:witnesses.identityWitness,
++  reportWitness:{prepare:async()=>{throw Error('明确合成prepare失败');}},openProfile:async()=>context,
++ });
++ const run=(controls:{signal?:AbortSignal;deadlineAt?:string}={})=>source.collectNativeReports('wechatVideo','/synthetic-private-profile','synthetic-finder-id',{...controls,onStopped,onDiagnostic});
++ return {source,page,context,onStopped,onDiagnostic,run,getReadControls:()=>readControls,resolveFields:()=>resolveFields?.({platformIdentity:'synthetic-finder-id',displayName:'明确合成显示名'}),dispose:()=>dom.window.close()};
++}
++afterEach(()=>vi.useRealTimers());
++function expectSafe(event:unknown){const text=JSON.stringify(event);for(const value of ['synthetic-secret-cookie','synthetic-secret-token','synthetic-private-profile','synthetic-finder-id'])expect(text).not.toContain(value);}
++describe('T1110 身份内部固定分段诊断（正式source，明确合成浏览器）',()=>{
++ it.each(['loginProbe','identityNavigation','identityFields'] as const)('%s普通Error可区分，原非auth结果与真实close不变',async failAt=>{
++  const f=fixture({failAt});try{
++   await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});
++   expect(f.onDiagnostic).toHaveBeenCalledOnce();
++   expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'readIdentity',identityStep:failAt,code:'BROWSER_OPERATION_FAILED',exceptionName:'Error'});
++   expectSafe(f.onDiagnostic.mock.calls);expect(f.onStopped).toHaveBeenCalledOnce();expect(f.context.close).toHaveBeenCalledOnce();
++  }finally{f.dispose();}
++ });
++ it('custom witness没有内部分段时只记identityRead，不能猜导航/字段阶段',async()=>{
++  const f=fixture({customRead:true});try{await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'readIdentity',identityStep:'identityRead',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error'});expectSafe(f.onDiagnostic.mock.calls);}finally{f.dispose();}
++ });
++ it.each([
++  ['page.evaluate: Execution context was destroyed, most likely because of a navigation. '+secret,'EVALUATION_CONTEXT_DESTROYED'],
++  ['page.evaluate: ReferenceError: '+secret,'JAVASCRIPT_EVALUATION_FAILED'],
++  ['frame.evaluate: TypeError: '+secret,'JAVASCRIPT_EVALUATION_FAILED'],
++ ] as const)('固定SDK分类%s只回枚举，仍是原普通业务失败',async(message,failureKind)=>{
++  const f=fixture({failAt:'identityFields',message});try{await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'readIdentity',identityStep:'identityFields',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error',failureKind});expectSafe(f.onDiagnostic.mock.calls);expect(f.onStopped).toHaveBeenCalledOnce();}finally{f.dispose();}
++ });
++ it('未匹配SDK固定前缀的Error不给JS类别，也不由正文关键词推断登录',async()=>{
++  const f=fixture({failAt:'identityFields',message:'ReferenceError field text 微信扫码登录 '+secret});try{await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});expect(f.onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('failureKind');expect(f.onDiagnostic.mock.calls[0]?.[0]).toHaveProperty('identityStep','identityFields');expectSafe(f.onDiagnostic.mock.calls);}finally{f.dispose();}
++ });
++ it('diagnostic回调抛错不改变原失败、关闭或停止确认',async()=>{
++  const f=fixture({failAt:'loginProbe',diagnosticThrows:true});try{await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});expect(f.onDiagnostic).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).toHaveProperty('identityStep','loginProbe');expect(f.onStopped).toHaveBeenCalledOnce();}finally{f.dispose();}
++ });
++ it('身份成功后prepare失败，旧identityStep不能混进报表诊断',async()=>{
++  const f=fixture();try{await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error'});expect(f.onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('identityStep');expect(f.onStopped).toHaveBeenCalledOnce();}finally{f.dispose();}
++ });
++ it('custom witness晚mark或非法枚举不能回写已发送诊断或产生第二次回执',async()=>{
++  const f=fixture({customRead:true});try{await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});const controls=f.getReadControls();controls?.onIdentityStep?.('identityFields');controls?.onIdentityStep?.(secret);expect(f.onDiagnostic).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).toHaveProperty('identityStep','identityRead');expectSafe(f.onDiagnostic.mock.calls);}finally{f.dispose();}
++ });
++ it('原取消在loginProbe期间优先，固定分段不吞cancel或泄漏原异常',async()=>{
++  const controller=new AbortController(),f=fixture({failAt:'loginProbe',cancel:controller});try{await expect(f.run({signal:controller.signal})).rejects.toBe(controller.signal.reason);expect(f.onDiagnostic).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).toHaveProperty('identityStep','loginProbe');expectSafe(f.onDiagnostic.mock.calls);expect(f.onStopped).toHaveBeenCalledOnce();}finally{f.dispose();}
++ });
++ it('原120000期限在fields等待期间优先，停止后晚fields不再发诊断',async()=>{
++  vi.useFakeTimers();const f=fixture({pendingFields:true});try{
++   const run=f.run({deadlineAt:new Date(Date.now()+120000).toISOString()}),rejected=expect(run).rejects.toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});void rejected.catch(()=>{});
++   await vi.advanceTimersByTimeAsync(120000);await rejected;expect(f.onStopped).toHaveBeenCalledOnce();expect(f.onDiagnostic).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).toHaveProperty('identityStep','identityFields');f.resolveFields();await vi.advanceTimersByTimeAsync(0);expect(f.onDiagnostic).toHaveBeenCalledOnce();expectSafe(f.onDiagnostic.mock.calls);
++  }finally{f.dispose();}
++ });
++ it('内置witness的内部mark回调错误不改真实身份结果或导航',async()=>{
++  const f=fixture(),marker=vi.fn((_step:string)=>{throw Error(secret);});try{
++   const witness=createVerifiedWechatDomWitnesses().identityWitness;
++   await expect(witness.read(f.page,'wechatVideo',{signal:new AbortController().signal,timeoutMs:()=>120000,onIdentityStep:marker} as DiagnosticControls)).resolves.toMatchObject({platformIdentity:'synthetic-finder-id'});
++   expect(marker.mock.calls).toEqual([['identityNavigation'],['identityFields']]);expect(f.page.goto).toHaveBeenCalledOnce();
++  }finally{f.dispose();}
++ });
++});

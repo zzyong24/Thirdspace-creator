@@ -1,0 +1,11 @@
+{
+  "assetId": "asset-1ea3f367-275",
+  "assetFileId": "afile-1ea3f367-276",
+  "bytes": 41522,
+  "sha256": "545086639047813c2ea91f58c11ec7ea871b95a7bb0d3ae38f95236ee0fe22b0",
+  "durationSec": 1.5,
+  "video": "h264 1920x1080 30fps",
+  "audio": "aac 48000Hz 2channels",
+  "providerVisualReview": "skipped",
+  "warning": "BITRATE_BELOW_RECOMMENDED"
+}

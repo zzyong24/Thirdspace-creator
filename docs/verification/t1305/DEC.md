@@ -1,0 +1,21 @@
+# DEC-T1305-01：来源网络读取失败的中文恢复说明
+
+Root/R按原oil-ui-pro交互状态和T1303已采用的预览验收要求，认定实际Failed to fetch缺少原因与恢复动作必须修。用户现有功能恢复授权覆盖此最小说明；独立T1305初审，键盘T1304保持独立，不重置任何旧审核。仅共享review原来源/版本网络读取的结构化失败边界，保业务错误具体说明，不英文词表匹配，不改全局transport/新按钮/自动重试/来源/CAS/body-key。creation与editor恢复生命周期以实际源码为准，不能给无效关闭重开承诺。
+
+实际浏览器未采constructor，TypeError只是原transport源码候选，须前RED补真实链验证；不把静态类型推断追认为旧现场证据。父T1303仅可依本任务implementation冻结后同包回归，不依acceptance造成互等。本任务当前待审，零产品修改。Root判断复核、Sol high执行；正式App/用户库不动。
+
+## Root最终恢复裁决（保上方初稿历史）
+
+creation默认fresh读取且原onOpenChange没有retry，不能承诺仅文案或重新进入作品而丢上下文。Root批准两card最小范围：editor保原error→retry，creation只在用户明确关闭后重开且局部source网络失败时调用既有review.retry；同端点/原scope/source、一次在途、原失败缓存清理，不自动轮询/新增按钮/模型/save。保存UNKNOWN不触发此恢复、不清pending或换body/key。初稿原字节另存SPEC_DRAFT_COPY_ONLY.md；旧TypeError现场构造器未采，必须真实transport前RED，不追签。
+
+按已审明确串行计划先T1304冻结再本任务，独立方案两份各审，产品各自写集无交叉；本任务派发绑定前置新HEAD及combo实际只读字节，不改初审历史锁或假称未变。
+
+## Root/R锁前三项澄清及实际实施基线（2026-10-16）
+
+T1304实现真实冻结commit8ab1b2bcd2158f351e2f27d9533a190dac3f2841，独评有限PASS；3源/test和151原件已核，不把87+174相加。T1304 implementation中间done、task未完成。现在才首次锁本任务，不改旧草案快照或T1304历史。
+
+1. creation重开资格只来自同scope/source身份下用户在已打开预览实际看到source网络error后明确关闭；首次open、loading中关后晚到error、换身份/卸载都不授，消费后在途开关不叠请求。editor原preview error→retry保持，creation只增加原Dialog用户重开的原位恢复。
+2. source窄await机械失败标识必须随共享promise rejection/result到所有subscriber，不是首loader闭包局部setState；本文件内存，不进wire/storage，不新增外部接口。
+3. 真实调用链为useCreationClient→createCreationWorkspace冻结scope/epoch/signal transport→contract client→hook，底层fetchCreatorApi拒绝。前RED不得旁路createHttpTransport或mock workspace；HttpTransportError/AbortError/CreationScopeChangedError及source await后TypeError保具体错误含义。
+
+中文3族RED与creation重开恢复2族RED独立执行，后者不以中文断言阻止动作。Root授权仍原两card/三test W，无新机制、服务或数据写权限；一个最终新包按合法子lease复用同批真实样本。T1301历史risk无答复，父不claim。

@@ -1,3 +1,4 @@
+import {runKnowledgeDistillInWorker} from "./knowledge-distill-worker";
 import { StructuredOutputError } from "../nodes/structured-node";
 import { findStructuredOutputError } from "../nodes/structured-output-error";
 import { findGenerationFailure } from "./generation-error";
@@ -7,7 +8,7 @@ import {runTopicWorkerPipeline} from "./topic-worker-pipeline";
 import {createTopicWorkerReads} from "./topic-worker-reads";
 import { resolveStructuredBusinessSchema } from "./structured-business-schema";
 import {runScriptWorkerPipeline} from "./script-worker-pipeline";
-import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerStructuredResult,type WorkerPort, type structuredGenerationInputSchema,type workerModelSpecSchema } from "@creatoros/contract/execution-worker";
+import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerStructuredResult,type WorkerPort, type structuredGenerationInputSchema,type executionModelSpecSchema } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
 import { modelFor } from "../runtime/provider-factory";
 import { runStructuredNode } from "../nodes/structured-node";
@@ -17,7 +18,7 @@ import { GenerationFailure,generationFailure } from "./generation-error";
 import { scriptReviewSchema, normalizeScriptReviewOutput, isCompleteRawScriptReview } from "../prompt/templates/script-review";
 
 
-export async function generateStructuredInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>,image?:{bytes:Uint8Array;mimeType:string}){
+export async function generateStructuredInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>,image?:{bytes:Uint8Array;mimeType:string}){
   let lastCallId:string|undefined;
   const model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{
     async reserve(request){
@@ -43,7 +44,15 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       },
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
-    const businessSchema=resolveStructuredBusinessSchema(input);
+    let businessSchema: ReturnType<typeof resolveStructuredBusinessSchema>;
+    // 同步输入解析尚未预留或启动模型；供应商/节点/结算异常不进入此边界。
+    try {
+      businessSchema=resolveStructuredBusinessSchema(input);
+    } catch (error) {
+      if (error instanceof z.ZodError || error instanceof SyntaxError)
+        throw new GenerationFailure("failed", "STRUCTURED_INPUT_INVALID");
+      throw error;
+    }
     const runClassification=async()=>{
       if(!image)throw new Error("CLASSIFICATION_IMAGE_MISSING");
       const template=getEffectiveTemplate('asset.classify');
@@ -59,7 +68,7 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       if(!lastCallId)throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_CALL_MISSING");
       try{await call("saveScriptVoiceover",{callId:lastCallId,...value},signal);}
       catch{throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_RECEIPT_UNKNOWN");}
-    }}) : runStructuredNode<unknown>({model,template:getEffectiveTemplate(input.skillId),facets:input.facets,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs,signal,...reviewOptions,...(businessSchema?{outputSchema:businessSchema}:{})}));
+    }}) : input.skillId==="knowledge.distill" && input.facets.__knowledgeDistill ? runKnowledgeDistillInWorker(input.facets.__knowledgeDistill,{model,signal,maxOutputTokens:input.maxOutputTokens}) : runStructuredNode<unknown>({model,template:getEffectiveTemplate(input.skillId),facets:input.facets,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs,signal,...reviewOptions,...(businessSchema?{outputSchema:businessSchema}:{})}));
     signal.throwIfAborted();
     if((input.skillId==="script.review" || input.skillId==="copilot.assist" || (input.skillId==="topic.generate" && input.facets.__dailyTopic!==undefined)) && result.validation?.status==="partial")throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
     // 即使未来节点新增恢复路径，业务协议也必须在保存结果之前满足。
@@ -67,7 +76,7 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
 
     // 原生结构化成功不走节点的文本normalizer；在已通过固定协议的报告上统一补描述字段。
     const object=input.skillId==="script.review"?scriptReviewSchema.parse(normalizeScriptReviewOutput(result.object)):result.object;
-    const text=JSON.stringify(workerStructuredResultSchema.parse({...result,object,modelLabel:spec.model}));
+    const text=JSON.stringify(workerStructuredResultSchema.parse({...result,object,modelLabel:"engine" in spec?"Codex（实际模型见调用回执）":spec.model}));
     if(!lastCallId){
       if(input.skillId!=="script.draft")throw new Error("STRUCTURED_CALL_MISSING");
       try{const receipt=await call("saveScriptFallback",{text},signal) as {callId?:unknown;text?:unknown};if(typeof receipt.callId!=="string" || !receipt.callId || typeof receipt.text!=="string")throw new Error("CALL_RECEIPT_MISMATCH");const saved=workerStructuredResultSchema.parse(JSON.parse(receipt.text));const shotsSchema=z.object({shots:z.array(z.object({口播:z.string()})).min(1)});if(saved.generation.finishReason!=="deterministic_fallback" || saved.validation?.status!=="partial" || shotsSchema.parse(saved.object).shots.map(s=>s.口播).join("")!==shotsSchema.parse(object).shots.map(s=>s.口播).join(""))throw new Error("CALL_RECEIPT_MISMATCH");return {callId:receipt.callId,text:receipt.text};}

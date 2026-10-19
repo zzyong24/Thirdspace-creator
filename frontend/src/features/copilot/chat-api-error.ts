@@ -80,3 +80,8 @@ export function extractChatApiPublicError(error: unknown): string | null {
     ? candidate
     : null;
 }
+
+/** 精确机器码，不从未知错误文字推断是否安全重发。 */
+export function isModelBenefitRefreshPending(error:unknown):boolean{
+ return parseChatApiErrorPayload(error)?.code==="MODEL_BENEFIT_REFRESH_PENDING";
+}

@@ -1,0 +1,196 @@
+{
+  "sourceHead": "cfbaf1ee021ef6904440ffd78afe3f82c4381ed6",
+  "controlHead": "091ffc44dc54f60929d6e53231c3c45abdc573f3",
+  "candidateBinding": "docs/verification/t1304/acceptance/candidate/candidate-binding.json",
+  "candidateBindingSha256": "af548574f185d2ae22ea05de24fdc27bf2971283c75882eef76c9b99b1ddb7cb",
+  "testAuthorization": "production candidate sidecar测试授权模式，DEC-130003；非真实激活/原生壳",
+  "baseURL": "http://127.0.0.1:65112",
+  "privateSessionPath": "/private/tmp/t1300-candidate-IDnfdQ/session.json",
+  "ownedRoot": "/private/tmp/t1300-candidate-IDnfdQ",
+  "groupId": "grp-d99d5a06-6",
+  "projectId": "project-d99d5a06-22",
+  "scriptId": "artifact-d99d5a06-35",
+  "scriptURL": "http://127.0.0.1:65112/projects/project-d99d5a06-22",
+  "ownerURLs": {
+    "article": "http://127.0.0.1:65112/projects/project-d99d5a06-22/article?outputId=output-d99d5a06-76",
+    "graphic": "http://127.0.0.1:65112/projects/project-d99d5a06-22/outputs/output-d99d5a06-88/image"
+  },
+  "turns": {
+    "joint1": {
+      "kind": "joint",
+      "ids": {
+        "conversationId": "ai-conv-d99d5a06-99",
+        "sourceMessageId": "ai-msg-d99d5a06-100",
+        "aiTaskId": "ai-task-19fa77e3-eaba-4402-9644-82200208a40a",
+        "executionTaskId": "execution-task-443b8f95-7163-45f7-8226-38830d80ebed"
+      },
+      "assistantId": "chat:ai-msg-d99d5a06-100",
+      "toolCallId": "call_8cc441edb313490d904df0e3a28d38f3",
+      "articleId": "output-d99d5a06-76",
+      "graphicId": "output-d99d5a06-88",
+      "target": {
+        "projectId": "project-d99d5a06-22",
+        "articleMember": {
+          "kind": "article",
+          "outputId": "output-d99d5a06-76",
+          "artifactId": "artifact-d99d5a06-82",
+          "baseVersionId": "artifactversion-d99d5a06-83"
+        },
+        "compositionId": "work-d99d5a06-71",
+        "graphicMember": {
+          "kind": "image",
+          "outputId": "output-d99d5a06-88",
+          "artifactId": "artifact-d99d5a06-94",
+          "baseVersionId": "artifactversion-d99d5a06-95"
+        },
+        "schemaVersion": 1,
+        "writingContext": {
+          "sourceAssets": [],
+          "schemaVersion": 1,
+          "brandProfileVersionId": null
+        },
+        "clientRequestId": "b96f795e-698a-45fb-b7c5-c09817782d55",
+        "scriptSourceRef": {
+          "id": "artifact-d99d5a06-35",
+          "kind": "project_script",
+          "versionId": "artifactversion-d99d5a06-62"
+        },
+        "scriptConfirmation": {
+          "source": "current-click",
+          "confirmedBy": "user"
+        },
+        "compositionRevision": 4
+      },
+      "candidateFile": "docs/verification/t1303/acceptance/runs/final-t1304-t1305/b/joint1-candidate.json",
+      "sourceRead": {
+        "operation": "ai.workCandidates.source",
+        "input": {
+          "params": {
+            "conversationId": "ai-conv-d99d5a06-99"
+          },
+          "query": {
+            "sourceMessageId": "ai-msg-d99d5a06-100",
+            "toolCallId": "call_8cc441edb313490d904df0e3a28d38f3"
+          }
+        }
+      }
+    },
+    "cleanJoint": {
+      "kind": "joint",
+      "ids": {
+        "conversationId": "ai-conv-d99d5a06-250",
+        "sourceMessageId": "ai-msg-d99d5a06-252",
+        "aiTaskId": "ai-task-d99d5a06-253",
+        "executionTaskId": "execution-task-d99d5a06-254"
+      },
+      "assistantId": "chat:ai-msg-d99d5a06-252",
+      "toolCallId": "call_7de01b74931948f2aefced4c76333650",
+      "articleId": "output-d99d5a06-76",
+      "graphicId": "output-d99d5a06-88",
+      "target": {
+        "projectId": "project-d99d5a06-22",
+        "articleMember": {
+          "kind": "article",
+          "outputId": "output-d99d5a06-76",
+          "artifactId": "artifact-d99d5a06-82",
+          "baseVersionId": "artifactversion-d99d5a06-148"
+        },
+        "compositionId": "work-d99d5a06-71",
+        "graphicMember": {
+          "kind": "image",
+          "outputId": "output-d99d5a06-88",
+          "artifactId": "artifact-d99d5a06-94",
+          "baseVersionId": "artifactversion-d99d5a06-206"
+        },
+        "schemaVersion": 1,
+        "writingContext": {
+          "sourceAssets": [],
+          "schemaVersion": 1,
+          "brandProfileVersionId": null
+        },
+        "clientRequestId": "11d56e6f-3056-4067-9edb-9413d2a6b0bc",
+        "scriptSourceRef": {
+          "id": "artifact-d99d5a06-35",
+          "kind": "project_script",
+          "versionId": "artifactversion-d99d5a06-62"
+        },
+        "scriptConfirmation": {
+          "source": "public-request",
+          "confirmedBy": "user"
+        },
+        "compositionRevision": 4
+      },
+      "candidateFile": "docs/verification/t1303/acceptance/runs/final-t1304-t1305/b/cleanJoint-candidate.json",
+      "sourceRead": {
+        "operation": "ai.workCandidates.source",
+        "input": {
+          "params": {
+            "conversationId": "ai-conv-d99d5a06-250"
+          },
+          "query": {
+            "sourceMessageId": "ai-msg-d99d5a06-252",
+            "toolCallId": "call_7de01b74931948f2aefced4c76333650"
+          }
+        }
+      }
+    },
+    "editor": {
+      "kind": "editor",
+      "ids": {
+        "conversationId": "ai-conv-d99d5a06-502",
+        "sourceMessageId": "ai-msg-d99d5a06-503",
+        "aiTaskId": "ai-task-d3697a84-d932-4dee-9787-9d4f59b77ebd",
+        "executionTaskId": "execution-task-46c76f80-d9bf-4de1-a149-f06c629b41b8"
+      },
+      "assistantId": "chat:ai-msg-d99d5a06-503",
+      "toolCallId": "call_da23af7c7a66490fbd3d52b0e83869c6",
+      "articleId": "output-d99d5a06-76",
+      "graphicId": "output-d99d5a06-88",
+      "target": {
+        "owner": "wechat_article",
+        "outputId": "output-d99d5a06-76",
+        "projectId": "project-d99d5a06-22",
+        "savedBase": {
+          "kind": "artifact",
+          "versionId": "artifactversion-d99d5a06-302",
+          "artifactId": "artifact-d99d5a06-82"
+        },
+        "selection": {
+          "kind": "article",
+          "sectionIds": []
+        },
+        "contentType": "article",
+        "schemaVersion": 1,
+        "documentDigest": "sha256:4f2a9790eb3d1b9d7dbb7a6460924c98401b1806a6ac8680c242900449fbdf49",
+        "writingContext": {
+          "sourceAssets": [],
+          "schemaVersion": 1,
+          "brandProfileVersionId": null
+        }
+      },
+      "candidateFile": "docs/verification/t1303/acceptance/runs/final-t1304-t1305/b/editor-candidate.json",
+      "sourceRead": {
+        "operation": "ai.workCandidates.source",
+        "input": {
+          "params": {
+            "conversationId": "ai-conv-d99d5a06-502"
+          },
+          "query": {
+            "sourceMessageId": "ai-msg-d99d5a06-503",
+            "toolCallId": "call_da23af7c7a66490fbd3d52b0e83869c6"
+          }
+        }
+      }
+    }
+  },
+  "finalCurrentVersionIds": {
+    "article": "artifactversion-d99d5a06-534",
+    "graphic": "artifactversion-d99d5a06-358",
+    "script": "artifactversion-d99d5a06-62"
+  },
+  "completeBeforeAfterFile": "cleanJoint-article-history-newer-isolation-after.json",
+  "sourceInterceptOrder": "creation为fresh eager读取；A须先注册按operation+conversationId+sourceMessageId+toolCallId精确匹配的拦截，再导航/挂载或切历史会话。editor来源lazy，打开预览前注册。",
+  "nextWindow": "仅Root授权后A复用此3组候选；0新增模型/0成稿保存，不复制业务sessionStorage；所有model已终态。",
+  "browserStatus": "Playwright exit0后context/browser已自然关闭；controller由C继续持有，B未操作",
+  "generatedAt": "2026-10-16T01:10:00.156628+00:00"
+}

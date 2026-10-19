@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-11T20:51:49.404039+00:00",
+  "mode": "red",
+  "filter": "ipc::tests::t1250_",
+  "inputs": [
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.lock",
+      "sha256": "a2aea4e2b53e7e9aaad471e7fe8daffb450348f83b27e651e0204de1e0546613"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.toml",
+      "sha256": "48b53dc32c591b2ff41f40f38605c542ec34b844e45b624147a2d9b7f5f5f688"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser.rs",
+      "sha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "sha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command.rs",
+      "sha256": "5e7245ff479f13014ed854e42fab2b1432396941bd97bb1cf7dd6f121db4b626"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command_windows.rs",
+      "sha256": "562a5151148533f3554ba90687c0efb42df4d2f5de537e64ce00c292bf41d768"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command_windows_sandbox.rs",
+      "sha256": "38b3a678dffef3682a9e61b19c8dbd73d88bdf9a017bc41a976c32e00654d107"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/files.rs",
+      "sha256": "f7fd569c00ba2821511178d14ce88949c53e3ef87a7cb9f71df9d73e5d24d661"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/files_windows.rs",
+      "sha256": "f1400bf8b7582f46b2cc871a816d9746390e9302bddbf11f098e4c4c52a1c2c9"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "sha256": "fec9b4772b8d16822cb604a34a2466ab0b44249c264da880d2f1d73878bc80d0"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "sha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/mod.rs",
+      "sha256": "c8ecef697def879cb1937510679155ff03add7d3c14b24e9f2790766238b3f5e"
+    }
+  ],
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "cargoPath": "/Users/zyongzhu/.cargo/bin/cargo",
+  "cargoRealpath": "/Users/zyongzhu/.cargo/bin/rustup",
+  "cargoSha256": "aeb4105778ca1bd3c6b0e75768f581c656633cd51368fa61289b6a71696ac7e1",
+  "scope": "编译原mod.rs精简无Tauri package；只执行新增两个Unix RED，不启ignore/App/模型/PG",
+  "implementationYetChanged": false,
+  "positiveMinimumMs": 120000,
+  "outerMs": 6180000,
+  "sharedTarget": false
+}

@@ -1,7 +1,9 @@
+import {sql} from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
   integer,
+  index,
   jsonb,
   pgTable,
   text,
@@ -11,7 +13,8 @@ import {
 export const intelligenceCollections = pgTable("intelligence_collections", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   parentId: text("parent_id"),
   name: text("name").notNull(),
   normalizedName: text("normalized_name").notNull(),
@@ -26,7 +29,8 @@ export const intelligenceCollections = pgTable("intelligence_collections", {
 export const intelligenceSources = pgTable("intelligence_sources", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   collectionId: text("collection_id"),
   type: text("type").notNull(),
   platform: text("platform").notNull(),
@@ -54,7 +58,8 @@ export const intelligenceSourceCollectionMemberships = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+  groupId: text("group_id"),
     sourceId: text("source_id").notNull(),
     collectionId: text("collection_id").notNull(),
     createdAt: text("created_at").notNull(),
@@ -72,7 +77,8 @@ export const intelligenceSourceCollectionMemberships = pgTable(
 export const intelligenceItems = pgTable("intelligence_items", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   type: text("type").notNull(),
   platform: text("platform").notNull(),
   externalId: text("external_id"),
@@ -97,7 +103,8 @@ export const itemMetricSnapshots = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+  groupId: text("group_id"),
     itemId: text("item_id").notNull(),
     capturedAt: text("captured_at").notNull(),
     likeCount: integer("like_count"),
@@ -113,7 +120,8 @@ export const itemMetricSnapshots = pgTable(
 export const itemTranscripts = pgTable("intelligence_item_transcripts", {
   itemId: text("item_id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   status: text("status").notNull().default("not_requested"),
   text: text("text"),
   source: text("source"),
@@ -130,7 +138,10 @@ export const itemTranscripts = pgTable("intelligence_item_transcripts", {
 export const executionTasks = pgTable("execution_tasks", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
+  groupVersion: integer("group_version"),
+  membershipVersion: integer("membership_version"),
   kind: text("kind").notNull(),
   ownerType: text("owner_type").notNull(),
   ownerId: text("owner_id").notNull(),
@@ -201,7 +212,8 @@ export const executionEvidence = pgTable("execution_evidence", {
 export const intelligenceSyncRuns = pgTable("intelligence_sync_runs", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   sourceId: text("source_id").notNull(),
   executionTaskId: text("execution_task_id").notNull(),
   trigger: text("trigger").notNull(),
@@ -227,7 +239,8 @@ export const intelligenceSyncRunEvents = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+  groupId: text("group_id"),
     runId: text("run_id").notNull(),
     step: text("step").notNull(),
     status: text("status").notNull(),
@@ -243,7 +256,8 @@ export const itemSourceObservations = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+  groupId: text("group_id"),
     itemId: text("item_id").notNull(),
     sourceId: text("source_id").notNull(),
     runId: text("run_id").notNull(),
@@ -257,7 +271,8 @@ export const itemSourceObservations = pgTable(
 export const sourceSnapshots = pgTable("intelligence_source_snapshots", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   sourceId: text("source_id").notNull(),
   runId: text("run_id").notNull(),
   itemId: text("item_id"),
@@ -274,11 +289,12 @@ export const sourceSnapshots = pgTable("intelligence_source_snapshots", {
 export const intelligenceTransforms = pgTable("intelligence_transforms", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   itemId: text("item_id").notNull(),
   sourceSnapshotId: text("source_snapshot_id").notNull(),
   kind: text("kind").notNull().default("topic"),
-  positioningVersionId: text("positioning_version_id").notNull(),
+  positioningVersionId: text("positioning_version_id"),
   aiTaskId: text("ai_task_id"),
   idempotencyKey: text("idempotency_key").notNull(),
   status: text("status").notNull().default("candidate"),
@@ -293,7 +309,8 @@ export const projectIntelligenceReferences = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+  groupId: text("group_id"),
     projectId: text("project_id").notNull(),
     topicId: text("topic_id").notNull(),
     itemId: text("item_id").notNull(),
@@ -313,7 +330,8 @@ export const intelligenceMigrationLedgers = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+  groupId: text("group_id"),
     idempotencyKey: text("idempotency_key").notNull(),
     inventoryHash: text("inventory_hash").notNull(),
     stage: text("stage").notNull().default("inventory"),
@@ -325,3 +343,10 @@ export const intelligenceMigrationLedgers = pgTable(
     updatedAt: text("updated_at").notNull(),
   },
 );
+
+/** 原执行控制回执，状态修改与回执同事务；不创建执行任务或重置预算。 */
+export const executionControlReceipts=pgTable("execution_control_receipts",{
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id"),groupId:text("group_id"),
+ idempotencyKey:text("idempotency_key").notNull(),requestDigest:text("request_digest").notNull(),
+ result:jsonb("result").notNull(),createdAt:text("created_at").notNull(),
+},table=>[uniqueIndex("execution_control_receipts_scope_key_uq").on(table.userId,table.accountId,table.idempotencyKey),uniqueIndex("execution_control_receipts_group_715b2c6d").on(table.userId,table.groupId,table.idempotencyKey).where(sql`${table.groupId} IS NOT NULL AND ${table.accountId} IS NULL`),index("execution_control_receipts_group_scope_idx").on(table.userId,table.groupId)]);

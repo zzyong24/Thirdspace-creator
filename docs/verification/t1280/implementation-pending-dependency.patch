@@ -1,0 +1,120 @@
+diff --git a/frontend/src/server/task-model-authority.ts b/frontend/src/server/task-model-authority.ts
+index 94fedb5d5..3bdd48028 100644
+--- a/frontend/src/server/task-model-authority.ts
++++ b/frontend/src/server/task-model-authority.ts
+@@ -1,5 +1,6 @@
+ import { AsyncLocalStorage } from "node:async_hooks";
+ import { createHash } from "node:crypto";
++import { frozenExecutionEngine } from "@creatoros/contract/execution-worker";
+ 
+ import type {
+   ChannelModelPayload,
+@@ -80,4 +81,19 @@ export class TaskModelAuthorityScope {
+   ): T {
+     return this.storage.run(pinned, execute);
+   }
++
++  async runFrozen(
++    runtimeData: Record<string, unknown>,
++    readAuthority: () => Promise<ChannelModelAuthority>,
++    execute: () => Promise<void>,
++  ): Promise<boolean> {
++    if (frozenExecutionEngine(runtimeData) === "codex") {
++      await this.storage.exit(execute);
++      return true;
++    }
++    const pinned = pinModelAuthority(await readAuthority());
++    if (!matchesPinnedModelAuthority(runtimeData, pinned)) return false;
++    await this.run(pinned, execute);
++    return true;
++  }
+ }
+diff --git a/frontend/src/server/task-model-authority.test.ts b/frontend/src/server/task-model-authority.test.ts
+index 6d18cd341..8f9438138 100644
+--- a/frontend/src/server/task-model-authority.test.ts
++++ b/frontend/src/server/task-model-authority.test.ts
+@@ -99,3 +99,30 @@ describe("T-617 异步任务模型 authority 快照", () => {
+     expect(scope.currentScopeId()).toBeUndefined();
+   });
+ });
++
++describe('T1280 冻结引擎进入原任务作用域', () => {
++  const local = () => ({authority:'local' as const,outcome:'unreachable' as const,payload:null});
++  const route = (engine: 'pi'|'codex') => ({schemaVersion:1,engine,source:'preference',protocolKind:engine==='codex'?'codex-app-server':'pi',...(engine==='codex'?{runtimeVersion:'0.159.3'}:{})});
++  it('Codex不读取渠道配置且不继承父级渠道payload，执行后恢复原作用域', async () => {
++    const scope=new TaskModelAuthorityScope();let runs=0;
++    const parent=pinModelAuthority({authority:'channel',outcome:'configured',scopeId:'parent',payload:{model:'parent-model'}});
++    await scope.run(parent,async()=>{
++      expect(await scope.runFrozen({executionRoute:route('codex')},async()=>{throw Error('不应读取渠道');},async()=>{runs++;expect(scope.currentPayload()).toBeUndefined();})).toBe(true);
++      expect(scope.currentPayload()).toEqual({model:'parent-model'});
++    });expect(runs).toBe(1);
++  });
++  it('Pi完整匹配才执行；变化或缺authority不执行，缺route仍走旧Pi校验', async()=>{
++    const scope=new TaskModelAuthorityScope();let runs=0,reads=0;
++    const read=async()=>{reads++;return local();},execute=async()=>{runs++;expect(scope.currentPayload()).toBeNull();};
++    expect(await scope.runFrozen({executionRoute:route('pi'),modelAuthority:'local',modelAuthorityDigest:'local'},read,execute)).toBe(true);
++    expect(await scope.runFrozen({executionRoute:route('pi'),modelAuthority:'channel-managed',modelAuthorityDigest:'old'},read,execute)).toBe(false);
++    expect(await scope.runFrozen({},read,execute)).toBe(false);
++    expect(await scope.runFrozen({modelAuthority:'local',modelAuthorityDigest:'local'},read,execute)).toBe(true);
++    expect(runs).toBe(2);expect(reads).toBe(4);
++  });
++  it('显式损坏冻结路由不执行也不读取替代配置',async()=>{
++    const scope=new TaskModelAuthorityScope();let reads=0,runs=0;
++    await expect(scope.runFrozen({executionRoute:{engine:'codex'}},async()=>{reads++;return local();},async()=>{runs++;})).rejects.toThrow();
++    expect(reads).toBe(0);expect(runs).toBe(0);
++  });
++});
+diff --git a/frontend/src/server/persistence-client.ts b/frontend/src/server/persistence-client.ts
+index 99c47c1cf..e55a9b937 100644
+--- a/frontend/src/server/persistence-client.ts
++++ b/frontend/src/server/persistence-client.ts
+@@ -2979,20 +3004,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
+         `[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`,
+       );
+     }
+-    const liveModelAuthority = pinModelAuthority(
+-      await readChannelModelAuthority(),
+-    );
+-    if (
+-      !matchesPinnedModelAuthority(runtimeData, liveModelAuthority)
+-    ) {
+-      await aiService.cancelTask(
+-        ctx,
+-        taskId,
+-        "模型配置已变化，请重新发起",
+-      );
+-      return;
+-    }
+-    await taskModelAuthorityScope.run(liveModelAuthority, () =>
++    const authorityMatched = await taskModelAuthorityScope.runFrozen(
++      runtimeData, readChannelModelAuthority, () =>
+       runWithEffectiveSkillSnapshot(skillSnapshot, async () => {
+       const execution = await aiService.runClaimedTaskExecution(
+         ctx,
+@@ -3005,6 +3018,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
+       if (!execution.claimed) return;
+       }),
+     );
++    if (!authorityMatched) {
++      await aiService.cancelTask(ctx, taskId, "模型配置已变化，请重新发起");
++    }
+   };
+   // 确定性执行使用真实任务冻结归属；collection的signal-only闭包仍沿上方原ctx wrapper。
+   const runExecutionWithFrozenSkills=async(ctx:RequestContext,taskId:string,
+@@ -3036,14 +3052,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
+           !validVersion(stamp.groupVersion)||stamp.groupVersion===null||stamp.groupVersion!==owner.groupVersion||
+           !validVersion(stamp.membershipVersion)||stamp.membershipVersion!==owner.membershipVersion)mismatch();
+       }
+-      const liveModelAuthority=pinModelAuthority(await readChannelModelAuthority());
+-      if(!matchesPinnedModelAuthority(runtimeData,liveModelAuthority)){
+-        await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");return;
+-      }
+-      await taskModelAuthorityScope.run(liveModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
++      const authorityMatched=await taskModelAuthorityScope.runFrozen(runtimeData,readChannelModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
+         const execution=await aiService.runClaimedTaskExecution(executionContext,taskId,async({signal})=>execute(signal,executionContext));
+         if(!execution.claimed)return;
+       }));
++      if(!authorityMatched)await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");
+     }catch(error){
+       const message=error instanceof Error?error.message:String(error);
+       await aiService.markFailed(executionContext,taskId,message).catch(()=>undefined);

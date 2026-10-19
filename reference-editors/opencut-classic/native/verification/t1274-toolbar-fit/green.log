@@ -1,0 +1,414 @@
+geometry-contained
+zoom-menu-pass
+play-pause-pass
+time-edit-pass
+{
+  "status": "PASS",
+  "evidence": [
+    {
+      "name": "host-278",
+      "width": 278,
+      "zoom": 1,
+      "panel": {
+        "left": 8,
+        "right": 270,
+        "top": 123.546875,
+        "bottom": 333.921875,
+        "width": 262,
+        "height": 210.375
+      },
+      "toolbar": {
+        "left": 8,
+        "right": 270,
+        "top": 261.921875,
+        "bottom": 333.921875,
+        "width": 262,
+        "height": 72
+      },
+      "controls": [
+        {
+          "label": "00:00:00:00",
+          "left": 47.234375,
+          "right": 131.53125,
+          "top": 272.71875,
+          "bottom": 287.109375,
+          "width": 84.296875,
+          "height": 14.390625
+        },
+        {
+          "label": "播放",
+          "left": 16,
+          "right": 44,
+          "top": 293.921875,
+          "bottom": 325.921875,
+          "width": 28,
+          "height": 32
+        },
+        {
+          "label": "Fit",
+          "left": 158.1875,
+          "right": 213,
+          "top": 295.921875,
+          "bottom": 323.921875,
+          "width": 54.8125,
+          "height": 28
+        },
+        {
+          "label": "切换全屏",
+          "left": 234,
+          "right": 262,
+          "top": 293.921875,
+          "bottom": 325.921875,
+          "width": 28,
+          "height": 32
+        }
+      ],
+      "time": {
+        "left": 51.234375,
+        "right": 226.765625,
+        "top": 269.921875,
+        "bottom": 289.921875,
+        "width": 175.53125,
+        "height": 20
+      }
+    },
+    {
+      "name": "host-260",
+      "width": 260,
+      "zoom": 1,
+      "panel": {
+        "left": 8,
+        "right": 252,
+        "top": 123.546875,
+        "bottom": 323.796875,
+        "width": 244,
+        "height": 200.25
+      },
+      "toolbar": {
+        "left": 8,
+        "right": 252,
+        "top": 251.796875,
+        "bottom": 323.796875,
+        "width": 244,
+        "height": 72
+      },
+      "controls": [
+        {
+          "label": "00:00:01:00",
+          "left": 38.234375,
+          "right": 122.53125,
+          "top": 262.59375,
+          "bottom": 276.984375,
+          "width": 84.296875,
+          "height": 14.390625
+        },
+        {
+          "label": "播放",
+          "left": 16,
+          "right": 44,
+          "top": 283.796875,
+          "bottom": 315.796875,
+          "width": 28,
+          "height": 32
+        },
+        {
+          "label": "Fit",
+          "left": 140.1875,
+          "right": 195,
+          "top": 285.796875,
+          "bottom": 313.796875,
+          "width": 54.8125,
+          "height": 28
+        },
+        {
+          "label": "切换全屏",
+          "left": 216,
+          "right": 244,
+          "top": 283.796875,
+          "bottom": 315.796875,
+          "width": 28,
+          "height": 32
+        }
+      ],
+      "time": {
+        "left": 42.234375,
+        "right": 217.765625,
+        "top": 259.796875,
+        "bottom": 279.796875,
+        "width": 175.53125,
+        "height": 20
+      }
+    },
+    {
+      "name": "single-390",
+      "width": 390,
+      "zoom": 1,
+      "panel": {
+        "left": 8,
+        "right": 382,
+        "top": 123.546875,
+        "bottom": 396.921875,
+        "width": 374,
+        "height": 273.375
+      },
+      "toolbar": {
+        "left": 8,
+        "right": 382,
+        "top": 324.921875,
+        "bottom": 396.921875,
+        "width": 374,
+        "height": 72
+      },
+      "controls": [
+        {
+          "label": "00:00:01:00",
+          "left": 103.234375,
+          "right": 187.53125,
+          "top": 335.71875,
+          "bottom": 350.109375,
+          "width": 84.296875,
+          "height": 14.390625
+        },
+        {
+          "label": "播放",
+          "left": 16,
+          "right": 44,
+          "top": 356.921875,
+          "bottom": 388.921875,
+          "width": 28,
+          "height": 32
+        },
+        {
+          "label": "Fit",
+          "left": 270.1875,
+          "right": 325,
+          "top": 358.921875,
+          "bottom": 386.921875,
+          "width": 54.8125,
+          "height": 28
+        },
+        {
+          "label": "切换全屏",
+          "left": 346,
+          "right": 374,
+          "top": 356.921875,
+          "bottom": 388.921875,
+          "width": 28,
+          "height": 32
+        }
+      ],
+      "time": {
+        "left": 107.234375,
+        "right": 282.765625,
+        "top": 332.921875,
+        "bottom": 352.921875,
+        "width": 175.53125,
+        "height": 20
+      }
+    },
+    {
+      "name": "compact",
+      "width": 1000,
+      "zoom": 1,
+      "panel": {
+        "left": 12,
+        "right": 988,
+        "top": 85.796875,
+        "bottom": 353.515625,
+        "width": 976,
+        "height": 267.71875
+      },
+      "toolbar": {
+        "left": 12,
+        "right": 988,
+        "top": 289.515625,
+        "bottom": 353.515625,
+        "width": 976,
+        "height": 64
+      },
+      "controls": [
+        {
+          "label": "00:00:01:00",
+          "left": 28,
+          "right": 112.296875,
+          "top": 318.3125,
+          "bottom": 332.703125,
+          "width": 84.296875,
+          "height": 14.390625
+        },
+        {
+          "label": "播放",
+          "left": 486,
+          "right": 514,
+          "top": 309.515625,
+          "bottom": 341.515625,
+          "width": 28,
+          "height": 32
+        },
+        {
+          "label": "Fit",
+          "left": 864.1875,
+          "right": 919,
+          "top": 311.515625,
+          "bottom": 339.515625,
+          "width": 54.8125,
+          "height": 28
+        },
+        {
+          "label": "切换全屏",
+          "left": 940,
+          "right": 968,
+          "top": 309.515625,
+          "bottom": 341.515625,
+          "width": 28,
+          "height": 32
+        }
+      ],
+      "time": {
+        "left": 32,
+        "right": 486,
+        "top": 318.3125,
+        "bottom": 332.703125,
+        "width": 454,
+        "height": 14.390625
+      }
+    },
+    {
+      "name": "wide",
+      "width": 1280,
+      "zoom": 1,
+      "panel": {
+        "left": 329.53125,
+        "right": 950.46875,
+        "top": 36.796875,
+        "bottom": 329.015625,
+        "width": 620.9375,
+        "height": 292.21875
+      },
+      "toolbar": {
+        "left": 329.53125,
+        "right": 950.46875,
+        "top": 265.015625,
+        "bottom": 329.015625,
+        "width": 620.9375,
+        "height": 64
+      },
+      "controls": [
+        {
+          "label": "00:00:01:00",
+          "left": 345.53125,
+          "right": 429.828125,
+          "top": 293.8125,
+          "bottom": 308.203125,
+          "width": 84.296875,
+          "height": 14.390625
+        },
+        {
+          "label": "播放",
+          "left": 626,
+          "right": 654,
+          "top": 285.015625,
+          "bottom": 317.015625,
+          "width": 28,
+          "height": 32
+        },
+        {
+          "label": "Fit",
+          "left": 826.65625,
+          "right": 881.46875,
+          "top": 287.015625,
+          "bottom": 315.015625,
+          "width": 54.8125,
+          "height": 28
+        },
+        {
+          "label": "切换全屏",
+          "left": 902.46875,
+          "right": 930.46875,
+          "top": 285.015625,
+          "bottom": 317.015625,
+          "width": 28,
+          "height": 32
+        }
+      ],
+      "time": {
+        "left": 349.53125,
+        "right": 626,
+        "top": 293.8125,
+        "bottom": 308.203125,
+        "width": 276.46875,
+        "height": 14.390625
+      }
+    },
+    {
+      "name": "zoom-200",
+      "width": 278,
+      "zoom": 2,
+      "panel": {
+        "left": 16,
+        "right": 540,
+        "top": 247.15625,
+        "bottom": 667.90625,
+        "width": 524,
+        "height": 420.75
+      },
+      "toolbar": {
+        "left": 16,
+        "right": 540,
+        "top": 523.90625,
+        "bottom": 667.90625,
+        "width": 524,
+        "height": 144
+      },
+      "controls": [
+        {
+          "label": "00:00:01:00",
+          "left": 94.46875,
+          "right": 263.0625,
+          "top": 545.5,
+          "bottom": 574.296875,
+          "width": 168.59375,
+          "height": 28.796875
+        },
+        {
+          "label": "播放",
+          "left": 32,
+          "right": 88,
+          "top": 587.90625,
+          "bottom": 651.90625,
+          "width": 56,
+          "height": 64
+        },
+        {
+          "label": "Fit",
+          "left": 316.375,
+          "right": 426,
+          "top": 591.90625,
+          "bottom": 647.90625,
+          "width": 109.625,
+          "height": 56
+        },
+        {
+          "label": "切换全屏",
+          "left": 468,
+          "right": 524,
+          "top": 587.90625,
+          "bottom": 651.90625,
+          "width": 56,
+          "height": 64
+        }
+      ],
+      "time": {
+        "left": 102.46875,
+        "right": 453.53125,
+        "top": 539.90625,
+        "bottom": 579.90625,
+        "width": 351.0625,
+        "height": 40
+      }
+    }
+  ],
+  "errors": [],
+  "realProductionNative": true,
+  "fullCreatorOSHost": false
+}

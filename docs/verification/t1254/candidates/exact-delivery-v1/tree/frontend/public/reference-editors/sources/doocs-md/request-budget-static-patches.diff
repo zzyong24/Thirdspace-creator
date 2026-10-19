@@ -1,0 +1,2667 @@
+diff --git a/apps/web/src/App.vue b/apps/web/src/App.vue
+index 619d36b..24a89c6 100644
+--- a/apps/web/src/App.vue
++++ b/apps/web/src/App.vue
+@@ -11,8 +11,7 @@ const uiStore = useUIStore()
+ const { isDark } = storeToRefs(uiStore)
+ 
+ usePlatformEnv()
+-useAccountSyncBootstrap()
+-useDeepLinkImport()
++// No account, cloud sync, or deep-link data is enabled in the CreatorOS embed.
+ useCommandPaletteHotkey()
+ usePreferencesHotkey()
+ </script>
+diff --git a/apps/web/src/bootstrap.ts b/apps/web/src/bootstrap.ts
+index 34a13fa..62e2335 100644
+--- a/apps/web/src/bootstrap.ts
++++ b/apps/web/src/bootstrap.ts
+@@ -7,6 +7,7 @@ import { initStorage } from '@/storage'
+ import { useLocaleStore } from '@/stores/locale'
+ 
+ import AppRoot from './App.vue'
++import { installCreatorOSBridge } from './creatoros-bridge'
+ import { scheduleInitialLoaderFallback } from './lib/bootstrap/dismiss-initial-loader'
+ import { setupComponents } from './lib/bootstrap/setup-components'
+ 
+@@ -23,5 +24,6 @@ export async function bootstrap(): Promise<void> {
+   app.use(createPinia())
+   useLocaleStore()
+   app.mount(`#app`)
++  installCreatorOSBridge()
+   scheduleInitialLoaderFallback()
+ }
+diff --git a/apps/web/src/components/editor/EditorPanel.vue b/apps/web/src/components/editor/EditorPanel.vue
+index 73dc084..fa78c5d 100644
+--- a/apps/web/src/components/editor/EditorPanel.vue
++++ b/apps/web/src/components/editor/EditorPanel.vue
+@@ -25,7 +25,6 @@ import { useRenderStore } from '@/stores/render'
+ import { useThemeStore } from '@/stores/theme'
+ import { useUIStore } from '@/stores/ui'
+ 
+-const SidebarAIToolbar = defineAsyncComponent(() => import('@/components/ai/SidebarAIToolbar.vue'))
+ const SlashCommandMenu = defineAsyncComponent(() => import('@/components/editor/SlashCommandMenu.vue'))
+ const SearchTab = defineAsyncComponent(() => import('@/components/ui/search-tab/SearchTab.vue'))
+ 
+@@ -693,11 +692,6 @@ defineExpose({
+       @execute="(cmd) => codeMirrorView && executeSlashCommand(codeMirrorView, cmd)"
+       @close="closeSlashMenu()"
+     />
+-    <SidebarAIToolbar
+-      v-if="showAIToolbox"
+-      :is-mobile="isMobile"
+-      :show-editor="showEditor"
+-    />
+ 
+     <EditorContextMenu>
+       <div
+diff --git a/apps/web/src/creatoros-bridge.ts b/apps/web/src/creatoros-bridge.ts
+new file mode 100644
+index 0000000..39c9f24
+--- /dev/null
++++ b/apps/web/src/creatoros-bridge.ts
+@@ -0,0 +1,104 @@
++import type { ThemeName, PerThemeSettings } from '@md/shared/configs'
++import { usePostStore } from '@/stores/post'
++import { useEditorStore } from '@/stores/editor'
++import { useThemeStore } from '@/stores/theme'
++import { useCssEditorStore } from '@/stores/cssEditor'
++import { getHtmlContent } from '@/services/export/html-content'
++import { EXPORT_LAYOUT_CSS } from '@/services/export/apply-export-layout'
++import { getStylesToAdd, SHARE_SHELL_VARS_CSS } from '@/services/export/share-styles'
++
++const CHANNEL = 'creatoros-doocs'
++const COMMIT = 'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31'
++const imageUrls = new Map<string, string>()
++let parentOrigin = ''
++function imageKey(assetId: string, fileId: string): string { return `${assetId}:${fileId}` }
++
++export function resolveCreatorOSImages(markdown: string): string {
++  return markdown.replace(/src=(['"])creatoros-asset:([^:\s'"]+):([^\s'"]+)\1/g, (_match, quote: string, assetId: string, fileId: string) => {
++    const blobUrl = imageUrls.get(imageKey(assetId, fileId))
++    return blobUrl ? `src=${quote}${blobUrl}${quote}` : `src=${quote}creatoros-asset:${assetId}:${fileId}${quote}`
++  })
++}
++
++export function installCreatorOSBridge(): void {
++  const postStore = usePostStore()
++  const editorStore = useEditorStore()
++  const themeStore = useThemeStore()
++  const cssStore = useCssEditorStore()
++  let sessionId = ''
++  let initialized = false
++  let lastState = ''
++  const send = (type: string, body: Record<string, unknown> = {}) => window.parent.postMessage({ channel: CHANNEL, type, ...(sessionId ? { sessionId } : {}), ...body }, parentOrigin || '*')
++  const currentLayout = () => ({
++    schemaVersion: 1, editor: 'doocs-md', editorCommit: COMMIT,
++    themeId: String(themeStore.theme),
++    themeSettings: JSON.parse(JSON.stringify(themeStore.themeSettings[themeStore.theme] ?? {})),
++    customCss: cssStore.getCurrentTabContent(),
++    exportOptions: { useIndent: Boolean(themeStore.isUseIndent), useJustify: Boolean(themeStore.isUseJustify) },
++  })
++  const applyLayout = (layout: any) => {
++    if (!layout) return
++    if (layout.themeId) themeStore.theme = layout.themeId as ThemeName
++    if (layout.themeId && layout.themeSettings) themeStore.themeSettings = { ...themeStore.themeSettings, [layout.themeId as ThemeName]: layout.themeSettings as PerThemeSettings }
++    if (typeof layout.customCss === 'string') {
++      const tab = cssStore.cssContentConfig.tabs[0]
++      if (tab) { tab.content = layout.customCss; cssStore.cssContentConfig.active = tab.id; cssStore.setCssEditorValue(layout.customCss) }
++    }
++    if (layout.exportOptions) { themeStore.isUseIndent = layout.exportOptions.useIndent; themeStore.isUseJustify = layout.exportOptions.useJustify }
++    void themeStore.applyCurrentTheme()
++  }
++  const applyDocument = (document: { markdown: string; layout: any }) => {
++    applyLayout(document.layout)
++    const post = postStore.currentPost
++    if (post) postStore.updatePostContent(post.id, document.markdown)
++    editorStore.importContent(document.markdown)
++    lastState = ''
++  }
++  window.addEventListener('message', (event: MessageEvent) => {
++    if (event.source !== window.parent) return
++    const message = event.data
++    if (!message || message.channel !== CHANNEL || typeof message.type !== 'string') return
++    if (message.type === 'init') {
++      if (initialized || typeof message.nonce !== 'string' || message.nonce.length < 16 || event.origin === 'null') return
++      parentOrigin = event.origin
++      sessionId = String(message.sessionId || '')
++      if (!sessionId || !message.document || typeof message.document.markdown !== 'string') return
++      initialized = true
++      applyDocument(message.document)
++      send('initialized', { nonce: message.nonce })
++      return
++    }
++    if (!initialized || event.origin !== parentOrigin || message.sessionId !== sessionId) return
++    if (message.type === 'set-document' && typeof message.document?.markdown === 'string') applyDocument(message.document)
++    if (message.type === 'asset' && typeof message.assetId === 'string' && typeof message.assetFileId === 'string' && message.blob instanceof Blob) {
++      const key = imageKey(message.assetId, message.assetFileId)
++      const prior = imageUrls.get(key)
++      if (prior) URL.revokeObjectURL(prior)
++      imageUrls.set(key, URL.createObjectURL(message.blob))
++      const post = postStore.currentPost
++      if (post) editorStore.importContent(post.content)
++    }
++    if (message.type === 'export-html' && typeof message.nonce === 'string') {
++      void (async () => {
++        const styles = await getStylesToAdd()
++        const html = `<style>${SHARE_SHELL_VARS_CSS}</style>${styles}<style>${EXPORT_LAYOUT_CSS}</style><div id="output">${getHtmlContent({ staticLayout: true })}</div>`
++        send('export-html', { nonce: message.nonce, html, bindings: [...imageUrls].map(([key, url]) => ({ key, url })) })
++      })().catch(() => send('export-html', { nonce: message.nonce, error: '公众号 HTML 生成失败，请先确认编辑器预览正常。' }))
++    }
++  })
++  send('ready')
++  window.setInterval(() => {
++    if (!initialized) return
++    const markdown = editorStore.getContent()
++    const layout = currentLayout()
++    const state = JSON.stringify([markdown, layout])
++    if (state === lastState) return
++    lastState = state
++    send('changed', { markdown, layout })
++  }, 500)
++  window.addEventListener('pagehide', () => {
++    for (const url of imageUrls.values()) URL.revokeObjectURL(url)
++    imageUrls.clear()
++    initialized = false
++  }, { once: true })
++}
+diff --git a/apps/web/src/services/share/client.ts b/apps/web/src/services/share/client.ts
+index 0f7fcd0..3ff8f9a 100644
+--- a/apps/web/src/services/share/client.ts
++++ b/apps/web/src/services/share/client.ts
+@@ -16,10 +16,7 @@ export function isShareProUser(user: Pick<AccountUser, `plan` | `planExpiresAt`>
+ 
+ /** Whether to show share entry in UI. */
+ export function isShareUiEnabled(): boolean {
+-  const flag = import.meta.env.VITE_SHARE_UI_ENABLED
+-  if (flag === `false` || flag === `0`)
+-    return false
+-  return isShareConfigured()
++  return false
+ }
+ 
+ export function getSharePageUrl(id: string): string {
+diff --git a/apps/web/src/services/sync/client.ts b/apps/web/src/services/sync/client.ts
+index 15726f6..2316d77 100644
+--- a/apps/web/src/services/sync/client.ts
++++ b/apps/web/src/services/sync/client.ts
+@@ -11,10 +11,7 @@ export function isSyncConfigured(): boolean {
+ 
+ /** Whether to show cloud sync entry in UI. */
+ export function isSyncUiEnabled(): boolean {
+-  const flag = import.meta.env.VITE_SYNC_UI_ENABLED
+-  if (flag === `false` || flag === `0`)
+-    return false
+-  return isSyncConfigured()
++  return false
+ }
+ 
+ export class SyncClient extends MdApiClient {
+diff --git a/apps/web/src/storage/engine.ts b/apps/web/src/storage/engine.ts
+index 5124443..389ba9e 100644
+--- a/apps/web/src/storage/engine.ts
++++ b/apps/web/src/storage/engine.ts
+@@ -2,6 +2,8 @@
+  * Storage engine interface — fully async with sync read cache after initStorage preload.
+  */
+ export interface StorageEngine {
++  /** Volatile engines must never mirror pending data into localStorage. */
++  volatile?: boolean
+   get: (key: string) => Promise<string | null>
+   set: (key: string, value: string) => Promise<void>
+   remove: (key: string) => Promise<void>
+diff --git a/apps/web/src/storage/engines/memory.ts b/apps/web/src/storage/engines/memory.ts
+new file mode 100644
+index 0000000..d59dbd6
+--- /dev/null
++++ b/apps/web/src/storage/engines/memory.ts
+@@ -0,0 +1,16 @@
++import type { StorageEngine } from '@/storage/engine'
++
++/** Product embed mode: process-memory only; parent CreatorOS owns durable state. */
++export class MemoryStorageEngine implements StorageEngine {
++  readonly volatile = true
++  private values = new Map<string, string>()
++
++  supportsSyncRead(): boolean { return true }
++  getSync(key: string): string | null { return this.values.get(key) ?? null }
++  async get(key: string): Promise<string | null> { return this.getSync(key) }
++  async set(key: string, value: string): Promise<void> { this.values.set(key, value) }
++  async remove(key: string): Promise<void> { this.values.delete(key) }
++  async has(key: string): Promise<boolean> { return this.values.has(key) }
++  async clear(): Promise<void> { this.values.clear() }
++  async keys(): Promise<string[]> { return [...this.values.keys()] }
++}
+diff --git a/apps/web/src/storage/index.ts b/apps/web/src/storage/index.ts
+index ee0f6f0..53b9cd5 100644
+--- a/apps/web/src/storage/index.ts
++++ b/apps/web/src/storage/index.ts
+@@ -1,5 +1,6 @@
+ import { getMeta, setMeta } from '@/storage/db'
+ import { IndexedDBEngine } from '@/storage/engines/indexed-db'
++import { MemoryStorageEngine } from '@/storage/engines/memory'
+ import { LEGACY_EMOJI_PACK_KEY, LOCALSTORAGE_CLEANED_KEY, MIGRATION_V1_KEY } from '@/storage/keys'
+ import { store } from '@/storage/manager'
+ import {
+@@ -8,14 +9,14 @@ import {
+   migrateLegacyThemeSettings,
+   migrateMpProfile,
+ } from '@/storage/migrate/from-local-storage'
+-import { documentRepo, setUseLegacyDocumentStorage } from '@/storage/repositories/documents'
++import { documentRepo, setMemoryDocumentStorage, setUseLegacyDocumentStorage } from '@/storage/repositories/documents'
+ 
+ export type { StorageEngine } from '@/storage/engine'
+ export { IndexedDBEngine, LocalStorageEngine, RestfulStorageEngine } from '@/storage/engines/indexed-db'
+ export { store } from '@/storage/manager'
+ export { clearCacheStore } from '@/storage/migrate/from-local-storage'
+ export { addPrefix } from '@/storage/prefix'
+-export { documentRepo, getLoadedDocuments, isUsingLegacyDocumentStorage } from '@/storage/repositories/documents'
++export { documentRepo, getLoadedDocuments, isUsingLegacyDocumentStorage, isMemoryDocumentStorage } from '@/storage/repositories/documents'
+ export {
+   isStorageQuotaError,
+   parseStoredValue,
+@@ -43,6 +44,15 @@ export function initStorage(): Promise<void> {
+     return readyPromise
+ 
+   readyPromise = (async () => {
++    if (window.location.pathname.includes(`/reference-editors/doocs-md/`)) {
++      setUseLegacyDocumentStorage(false)
++      setMemoryDocumentStorage(true)
++      store.setEngine(new MemoryStorageEngine())
++      await documentRepo.loadAll()
++      initComplete = true
++      return
++    }
++
+     if (typeof indexedDB === `undefined`) {
+       await initLegacyFallback(`IndexedDB unavailable`)
+       return
+diff --git a/apps/web/src/storage/manager.ts b/apps/web/src/storage/manager.ts
+index 8806844..91ad280 100644
+--- a/apps/web/src/storage/manager.ts
++++ b/apps/web/src/storage/manager.ts
+@@ -69,6 +69,8 @@ class StorageManager {
+    * nothing is pending). Called on pagehide and after each successful flush.
+    */
+   private refreshPagehideBackup(): void {
++    if (this.engine.volatile)
++      return
+     if (typeof localStorage === `undefined`)
+       return
+     try {
+diff --git a/apps/web/src/storage/repositories/documents.ts b/apps/web/src/storage/repositories/documents.ts
+index f1379f5..21d883c 100644
+--- a/apps/web/src/storage/repositories/documents.ts
++++ b/apps/web/src/storage/repositories/documents.ts
+@@ -39,6 +39,8 @@ function fromStored(doc: StoredDocument): Post {
+ 
+ let cachedPosts: Post[] | null = null
+ let useLegacyStorage = false
++let useMemoryStorage = false
++let memoryPosts: Post[] = []
+ let writeQueue: Promise<void> = Promise.resolve()
+ 
+ /** Fallback to localStorage bundle when IndexedDB is unavailable. */
+@@ -46,6 +48,14 @@ export function setUseLegacyDocumentStorage(enabled: boolean): void {
+   useLegacyStorage = enabled
+ }
+ 
++export function setMemoryDocumentStorage(enabled: boolean): void {
++  useMemoryStorage = enabled
++  memoryPosts = []
++  cachedPosts = null
++}
++
++export function isMemoryDocumentStorage(): boolean { return useMemoryStorage }
++
+ export function isUsingLegacyDocumentStorage(): boolean {
+   return useLegacyStorage
+ }
+@@ -115,6 +125,8 @@ async function savePostIndexedDB(post: Post): Promise<void> {
+ }
+ 
+ async function loadStoredPosts(): Promise<Post[]> {
++  if (useMemoryStorage)
++    return memoryPosts
+   if (useLegacyStorage)
+     return loadFromLegacy()
+   const db = await getDatabase()
+@@ -156,6 +168,11 @@ export const documentRepo = {
+     if (cachedPosts)
+       return cachedPosts
+ 
++    if (useMemoryStorage) {
++      cachedPosts = [...memoryPosts]
++      return cachedPosts
++    }
++
+     const backup = peekDocumentsPagehideBackup()
+     if (backup) {
+       cachedPosts = await restorePagehideBackup(backup)
+@@ -176,6 +193,15 @@ export const documentRepo = {
+   async savePost(post: Post): Promise<void> {
+     return runSerialized(async () => {
+       try {
++        if (useMemoryStorage) {
++          const all = cachedPosts ?? []
++          const index = all.findIndex(item => item.id === post.id)
++          if (index < 0) all.push(post)
++          else all[index] = post
++          memoryPosts = [...all]
++          cachedPosts = all
++          return
++        }
+         if (useLegacyStorage) {
+           const all = cachedPosts ?? await this.loadAll()
+           const idx = all.findIndex(p => p.id === post.id)
+@@ -200,6 +226,11 @@ export const documentRepo = {
+   async saveAll(posts: Post[]): Promise<void> {
+     return runSerialized(async () => {
+       try {
++        if (useMemoryStorage) {
++          memoryPosts = [...posts]
++          cachedPosts = memoryPosts
++          return
++        }
+         if (useLegacyStorage) {
+           await saveAllLegacy(posts)
+           return
+@@ -217,6 +248,11 @@ export const documentRepo = {
+ 
+   async deletePost(id: string): Promise<void> {
+     return runSerialized(async () => {
++      if (useMemoryStorage) {
++        memoryPosts = (cachedPosts ?? memoryPosts).filter(post => post.id !== id)
++        cachedPosts = memoryPosts
++        return
++      }
+       if (useLegacyStorage) {
+         const all = (cachedPosts ?? await this.loadAll()).filter(p => p.id !== id)
+         await saveAllLegacy(all)
+@@ -231,6 +267,11 @@ export const documentRepo = {
+ 
+   async clear(): Promise<void> {
+     return runSerialized(async () => {
++      if (useMemoryStorage) {
++        memoryPosts = []
++        cachedPosts = []
++        return
++      }
+       if (useLegacyStorage) {
+         await store.remove(LEGACY_POSTS_KEY)
+         cachedPosts = []
+diff --git a/apps/web/src/stores/post.ts b/apps/web/src/stores/post.ts
+index 77858e6..aaadbc2 100644
+--- a/apps/web/src/stores/post.ts
++++ b/apps/web/src/stores/post.ts
+@@ -5,7 +5,7 @@ import { t } from '@/i18n/translate'
+ import { debounce } from '@/lib/debounce'
+ import { normalizePostHistory, toStoredDateTime } from '@/lib/format/datetime'
+ import { postSignature } from '@/lib/post-signature'
+-import { documentRepo, getLoadedDocuments, store } from '@/storage'
++import { documentRepo, getLoadedDocuments, isMemoryDocumentStorage, store } from '@/storage'
+ import { addPrefix } from '@/storage/prefix'
+ import { clearDocumentsPagehideBackup, writeDocumentsPagehideBackup } from '@/storage/repositories/documents-backup'
+ import { useEditorStore } from '@/stores/editor'
+@@ -85,9 +85,9 @@ export const usePostStore = defineStore(`post`, () => {
+     dirtyPostIds.clear()
+     const snapshot = [...posts.value]
+     // IndexedDB writes may not finish before a tab is killed (OAuth redirect).
+-    const backupToken = writeDocumentsPagehideBackup(snapshot)
++    const backupToken = isMemoryDocumentStorage() ? null : writeDocumentsPagehideBackup(snapshot)
+     await documentRepo.saveAll(snapshot)
+-    clearDocumentsPagehideBackup(backupToken)
++    if (backupToken) clearDocumentsPagehideBackup(backupToken)
+   }
+ 
+   // Watching per-post signatures instead of a deep watch on `posts`: the
+diff --git a/apps/web/src/stores/render.ts b/apps/web/src/stores/render.ts
+index 064f9d8..97a9b2b 100644
+--- a/apps/web/src/stores/render.ts
++++ b/apps/web/src/stores/render.ts
+@@ -5,6 +5,7 @@ import { resolveAssetUrl } from '@/services/emoji/urlResolver'
+ import { useCustomComponentStore } from './customComponent'
+ import { useThemeStore } from './theme'
+ import { useUIStore } from './ui'
++import { resolveCreatorOSImages } from '@/creatoros-bridge'
+ 
+ export interface RenderOptions {
+   themeMode?: 'light' | 'dark'
+@@ -145,7 +146,7 @@ export const useRenderStore = defineStore(`render`, () => {
+       assetResolver: resolveAssetUrl,
+     })
+ 
+-    const { html: baseHtml, readingTime: readingTimeResult } = renderMarkdown(content, renderer)
++    const { html: baseHtml, readingTime: readingTimeResult } = renderMarkdown(resolveCreatorOSImages(content), renderer)
+ 
+     readingTime.chars = content.length
+     readingTime.words = readingTimeResult.words
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index 5bf31ea..e629bac 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -9,7 +9,6 @@ import { visualizer } from 'rollup-plugin-visualizer'
+ import AutoImport from 'unplugin-auto-import/vite'
+ import Components from 'unplugin-vue-components/vite'
+ import { defineConfig, loadEnv } from 'vite'
+-import { VitePluginRadar } from 'vite-plugin-radar'
+ import vueDevTools from 'vite-plugin-vue-devtools'
+ 
+ import { utoolsLocalAssetsPlugin } from './plugins/vite-plugin-utools-local-assets.ts'
+@@ -19,7 +18,8 @@ const isUTools = process.env.SERVER_ENV === `UTOOLS`
+ const isCfWorkers = process.env.CF_WORKERS === `1`
+ const isCfPages = process.env.CF_PAGES === `1`
+ 
+-const base = isNetlify || isCfWorkers || isCfPages ? `/` : isUTools ? `./` : `/md/`
++const isCreatorOSEmbed = process.env.CREATOROS_EMBED === `1`
++const base = isCreatorOSEmbed ? `/reference-editors/doocs-md/` : isNetlify || isCfWorkers || isCfPages ? `/` : isUTools ? `./` : `/md/`
+ 
+ const vueuseAutoImportExclusions = new Set([`toRefs`, `utils`, `toRef`, `toValue`])
+ 
+@@ -122,9 +122,6 @@ export default defineConfig(({ mode }) => {
+       mode === `development` && env.VITE_VUE_DEVTOOLS === `true` && vueDevTools({
+         launchEditor: env.VITE_LAUNCH_EDITOR ?? `code`,
+       }),
+-      !isUTools && VitePluginRadar({
+-        analytics: { id: `G-7NZL3PZ0NK` },
+-      }),
+       ...(process.env.ANALYZE === `true`
+         ? [visualizer({ emitFile: true, filename: `stats.html` }) as Plugin]
+         : []),
+diff --git a/packages/shared/src/utils/fetch.ts b/packages/shared/src/utils/fetch.ts
+--- a/packages/shared/src/utils/fetch.ts
++++ b/packages/shared/src/utils/fetch.ts
+@@ -1,123 +1,138 @@
+-export interface RequestConfig {
+-  url?: string
+-  method?: string
+-  headers?: Record<string, string>
+-  data?: unknown
+-  timeout?: number
+-}
+-
+-// Some APIs (e.g. WeChat media/uploadimg) return a JSON body with a
+-// text/plain Content-Type. Mirror axios's forcedJSONParsing behavior so
+-// such responses are still parsed into objects.
+-function tryParseJson(text: string): unknown {
+-  const trimmed = text.trim()
+-  if (!trimmed.startsWith(`{`) && !trimmed.startsWith(`[`))
+-    return text
+-  try {
+-    return JSON.parse(trimmed)
+-  }
+-  catch {
+-    return text
+-  }
+-}
+-
+-async function request<T = unknown>(config: RequestConfig): Promise<T> {
+-  const method = (config.method || `GET`).toUpperCase()
+-  const url = config.url || ``
+-  const headers: Record<string, string> = { ...config.headers }
+-  const controller = new AbortController()
+-  const timeout = config.timeout ?? 30_000
+-  const timer = setTimeout(() => controller.abort(), timeout)
+-
+-  let body: BodyInit | undefined
+-  if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
+-    if (typeof FormData !== `undefined` && config.data instanceof FormData) {
+-      body = config.data
+-      // Browser sets multipart boundary; drop explicit multipart Content-Type
+-      for (const key of Object.keys(headers)) {
+-        if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
+-          delete headers[key]
+-      }
+-    }
+-    else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
+-      body = JSON.stringify(config.data)
+-      if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
+-        headers[`Content-Type`] = `application/json`
+-    }
+-    else {
+-      body = config.data as BodyInit
+-    }
+-  }
+-
+-  try {
+-    const res = await globalThis.fetch(url, {
+-      method,
+-      headers,
+-      body,
+-      signal: controller.signal,
+-    })
+-
+-    const contentType = res.headers.get(`content-type`) || ``
+-    const data = contentType.includes(`application/json`)
+-      ? await res.json()
+-      : tryParseJson(await res.text())
+-
+-    if (!res.ok) {
+-      const err = Object.assign(new Error(`Request failed with status ${res.status}`), {
+-        response: { status: res.status, data },
+-        data,
+-        status: res.status,
+-      })
+-      return Promise.reject(err)
+-    }
+-
+-    // Match previous axios interceptor: reject empty bodies
+-    if (data === null || data === undefined || data === ``)
+-      return Promise.reject(new Error(`Empty response`))
+-
+-    return data as T
+-  }
+-  finally {
+-    clearTimeout(timer)
+-  }
+-}
+-
+-function createDataMethod(method: string) {
+-  return <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) =>
+-    request<T>({ ...config, url, method, data })
+-}
+-
+-function createConfigMethod(method: string) {
+-  return <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) =>
+-    request<T>({ ...config, url, method })
+-}
+-
+-interface FetchCallable {
+-  // Two type params kept for call-site compatibility (request body / response)
+-  <_TReq = unknown, TRes = unknown>(config: RequestConfig): Promise<TRes>
+-  <_TReq = unknown, TRes = unknown>(url: string, config?: RequestConfig): Promise<TRes>
+-  get: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
+-  post: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
+-  put: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
+-  delete: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
+-  patch: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
+-  request: typeof request
+-}
+-
+-const service = (async function fetchLike(
+-  urlOrConfig: string | RequestConfig,
+-  maybeConfig?: RequestConfig,
+-): Promise<unknown> {
+-  if (typeof urlOrConfig === `string`)
+-    return request({ ...maybeConfig, url: urlOrConfig })
+-  return request(urlOrConfig)
+-}) as FetchCallable
+-
+-service.get = createConfigMethod(`GET`)
+-service.post = createDataMethod(`POST`)
+-service.put = createDataMethod(`PUT`)
+-service.delete = createConfigMethod(`DELETE`)
+-service.patch = createDataMethod(`PATCH`)
+-service.request = request
+-
+-export default service
++export interface RequestConfig {
++  url?: string
++  method?: string
++  headers?: Record<string, string>
++  data?: unknown
++  timeout?: number
++}
++
++// Some APIs (e.g. WeChat media/uploadimg) return a JSON body with a
++// text/plain Content-Type. Mirror axios's forcedJSONParsing behavior so
++// such responses are still parsed into objects.
++function tryParseJson(text: string): unknown {
++  const trimmed = text.trim()
++  if (!trimmed.startsWith(`{`) && !trimmed.startsWith(`[`))
++    return text
++  try {
++    return JSON.parse(trimmed)
++  }
++  catch {
++    return text
++  }
++}
++
++async function request<T = unknown>(config: RequestConfig): Promise<T> {
++  const method = (config.method || `GET`).toUpperCase()
++  const url = config.url || ``
++  const headers: Record<string, string> = { ...config.headers }
++  const controller = new AbortController()
++  // SEMANTIC_BOUNDARY_ALLOW: 只校验独立请求预算与时间，不做内容理解或创作选择。
++  const requestedTimeout = config.timeout
++  const timeout = typeof requestedTimeout === `number` && Number.isFinite(requestedTimeout) && requestedTimeout >= 0
++    ? Math.max(120_000, requestedTimeout)
++    : 120_000
++  // 宿主单个 timer 有 32 位上界；所有 tick 共用同一个出生时间与预算，不能续期。
++  const bornAt = performance.now()
++  const maxTimerDelay = 2_147_483_647
++  const abortAtDeadline = () => {
++    const remaining = timeout - (performance.now() - bornAt)
++    if (remaining <= 0) {
++      controller.abort()
++      return
++    }
++    timer = setTimeout(abortAtDeadline, Math.min(remaining, maxTimerDelay))
++  }
++  let timer = setTimeout(abortAtDeadline, Math.min(timeout, maxTimerDelay))
++
++  try {
++    let body: BodyInit | undefined
++    if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
++      if (typeof FormData !== `undefined` && config.data instanceof FormData) {
++        body = config.data
++        // Browser sets multipart boundary; drop explicit multipart Content-Type
++        for (const key of Object.keys(headers)) {
++          if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
++            delete headers[key]
++        }
++      }
++      else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
++        body = JSON.stringify(config.data)
++        if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
++          headers[`Content-Type`] = `application/json`
++      }
++      else {
++        body = config.data as BodyInit
++      }
++    }
++
++    const res = await globalThis.fetch(url, {
++      method,
++      headers,
++      body,
++      signal: controller.signal,
++    })
++
++    const contentType = res.headers.get(`content-type`) || ``
++    const data = contentType.includes(`application/json`)
++      ? await res.json()
++      : tryParseJson(await res.text())
++
++    if (!res.ok) {
++      const err = Object.assign(new Error(`Request failed with status ${res.status}`), {
++        response: { status: res.status, data },
++        data,
++        status: res.status,
++      })
++      return Promise.reject(err)
++    }
++
++    // Match previous axios interceptor: reject empty bodies
++    if (data === null || data === undefined || data === ``)
++      return Promise.reject(new Error(`Empty response`))
++
++    return data as T
++  }
++  finally {
++    clearTimeout(timer)
++  }
++}
++
++function createDataMethod(method: string) {
++  return <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) =>
++    request<T>({ ...config, url, method, data })
++}
++
++function createConfigMethod(method: string) {
++  return <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) =>
++    request<T>({ ...config, url, method })
++}
++
++interface FetchCallable {
++  // Two type params kept for call-site compatibility (request body / response)
++  <_TReq = unknown, TRes = unknown>(config: RequestConfig): Promise<TRes>
++  <_TReq = unknown, TRes = unknown>(url: string, config?: RequestConfig): Promise<TRes>
++  get: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
++  post: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
++  put: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
++  delete: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
++  patch: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
++  request: typeof request
++}
++
++const service = (async function fetchLike(
++  urlOrConfig: string | RequestConfig,
++  maybeConfig?: RequestConfig,
++): Promise<unknown> {
++  if (typeof urlOrConfig === `string`)
++    return request({ ...maybeConfig, url: urlOrConfig })
++  return request(urlOrConfig)
++}) as FetchCallable
++
++service.get = createConfigMethod(`GET`)
++service.post = createDataMethod(`POST`)
++service.put = createDataMethod(`PUT`)
++service.delete = createConfigMethod(`DELETE`)
++service.patch = createDataMethod(`PATCH`)
++service.request = request
++
++export default service
+diff --git a/packages/shared/src/utils/fetch.test.ts b/packages/shared/src/utils/fetch.test.ts
+--- a/packages/shared/src/utils/fetch.test.ts
++++ b/packages/shared/src/utils/fetch.test.ts
+@@ -1,102 +1,205 @@
+-import { afterEach, describe, expect, it, vi } from 'vitest'
+-import fetch from './fetch'
+-
+-function jsonResponse(body: unknown, init?: ResponseInit) {
+-  return new Response(JSON.stringify(body), {
+-    status: 200,
+-    ...init,
+-    headers: { 'content-type': `application/json`, ...init?.headers },
+-  })
+-}
+-
+-function stubFetch(handler: (url: string, init?: RequestInit) => Response | Promise<Response>) {
+-  const mock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => Promise.resolve(handler(String(input), init)))
+-  vi.stubGlobal(`fetch`, mock)
+-  return mock
+-}
+-
+-describe(`fetch utils`, () => {
+-  afterEach(() => {
+-    vi.unstubAllGlobals()
+-  })
+-
+-  it(`parses application/json responses`, async () => {
+-    stubFetch(() => jsonResponse({ url: `https://example.com/a.png` }))
+-
+-    const res = await fetch<any, { url: string }>(`https://api.example.com/upload`, { method: `POST` })
+-    expect(res.url).toBe(`https://example.com/a.png`)
+-  })
+-
+-  // Regression test for doocs/md#1877: WeChat media/uploadimg answers a JSON
+-  // body with Content-Type text/plain, which must still be parsed as JSON
+-  it(`parses JSON bodies returned with a text/plain Content-Type`, async () => {
+-    stubFetch(() => new Response(JSON.stringify({ url: `https://mmbiz.qpic.cn/pic` }), {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    const res = await fetch<any, { url: string }>(`https://api.weixin.qq.com/cgi-bin/media/uploadimg`, { method: `POST` })
+-    expect(res.url).toBe(`https://mmbiz.qpic.cn/pic`)
+-  })
+-
+-  it(`returns non-JSON text bodies as strings`, async () => {
+-    stubFetch(() => new Response(`plain text`, {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    const res = await fetch(`https://api.example.com/raw`)
+-    expect(res).toBe(`plain text`)
+-  })
+-
+-  it(`keeps malformed JSON-looking text as a string`, async () => {
+-    stubFetch(() => new Response(`{broken`, {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    const res = await fetch(`https://api.example.com/raw`)
+-    expect(res).toBe(`{broken`)
+-  })
+-
+-  it(`rejects on empty response bodies`, async () => {
+-    stubFetch(() => new Response(``, {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    await expect(fetch(`https://api.example.com/empty`)).rejects.toThrow(`Empty response`)
+-  })
+-
+-  it(`rejects with the status code on non-OK responses`, async () => {
+-    stubFetch(() => jsonResponse({ errcode: 40013 }, { status: 401 }))
+-
+-    await expect(fetch(`https://api.example.com/fail`)).rejects.toThrow(`Request failed with status 401`)
+-  })
+-
+-  it(`serializes object bodies as JSON with a Content-Type header`, async () => {
+-    const mock = stubFetch(() => jsonResponse({ ok: true }))
+-
+-    await fetch(`https://api.example.com/post`, { method: `POST`, data: { a: 1 } })
+-
+-    const init = mock.mock.calls[0][1]
+-    expect(init?.body).toBe(JSON.stringify({ a: 1 }))
+-    expect((init?.headers as Record<string, string>)[`Content-Type`]).toBe(`application/json`)
+-  })
+-
+-  it(`passes FormData bodies through without a manual Content-Type`, async () => {
+-    const mock = stubFetch(() => jsonResponse({ ok: true }))
+-
+-    const form = new FormData()
+-    form.append(`media`, new Blob([`x`]), `a.png`)
+-    await fetch(`https://api.example.com/upload`, {
+-      method: `POST`,
+-      headers: { 'content-type': `multipart/form-data` },
+-      data: form,
+-    })
+-
+-    const init = mock.mock.calls[0][1]
+-    expect(init?.body).toBe(form)
+-    expect((init?.headers as Record<string, string>)[`content-type`]).toBeUndefined()
+-  })
+-})
++import { afterEach, describe, expect, it, vi } from 'vitest'
++import fetch from './fetch'
++
++function jsonResponse(body: unknown, init?: ResponseInit) {
++  return new Response(JSON.stringify(body), {
++    status: 200,
++    ...init,
++    headers: { 'content-type': `application/json`, ...init?.headers },
++  })
++}
++
++function stubFetch(handler: (url: string, init?: RequestInit) => Response | Promise<Response>) {
++  const mock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => Promise.resolve(handler(String(input), init)))
++  vi.stubGlobal(`fetch`, mock)
++  return mock
++}
++
++describe(`fetch utils`, () => {
++  afterEach(() => {
++    vi.unstubAllGlobals()
++  })
++
++  it(`parses application/json responses`, async () => {
++    stubFetch(() => jsonResponse({ url: `https://example.com/a.png` }))
++
++    const res = await fetch<any, { url: string }>(`https://api.example.com/upload`, { method: `POST` })
++    expect(res.url).toBe(`https://example.com/a.png`)
++  })
++
++  // Regression test for doocs/md#1877: WeChat media/uploadimg answers a JSON
++  // body with Content-Type text/plain, which must still be parsed as JSON
++  it(`parses JSON bodies returned with a text/plain Content-Type`, async () => {
++    stubFetch(() => new Response(JSON.stringify({ url: `https://mmbiz.qpic.cn/pic` }), {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    const res = await fetch<any, { url: string }>(`https://api.weixin.qq.com/cgi-bin/media/uploadimg`, { method: `POST` })
++    expect(res.url).toBe(`https://mmbiz.qpic.cn/pic`)
++  })
++
++  it(`returns non-JSON text bodies as strings`, async () => {
++    stubFetch(() => new Response(`plain text`, {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    const res = await fetch(`https://api.example.com/raw`)
++    expect(res).toBe(`plain text`)
++  })
++
++  it(`keeps malformed JSON-looking text as a string`, async () => {
++    stubFetch(() => new Response(`{broken`, {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    const res = await fetch(`https://api.example.com/raw`)
++    expect(res).toBe(`{broken`)
++  })
++
++  it(`rejects on empty response bodies`, async () => {
++    stubFetch(() => new Response(``, {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    await expect(fetch(`https://api.example.com/empty`)).rejects.toThrow(`Empty response`)
++  })
++
++  it(`rejects with the status code on non-OK responses`, async () => {
++    stubFetch(() => jsonResponse({ errcode: 40013 }, { status: 401 }))
++
++    await expect(fetch(`https://api.example.com/fail`)).rejects.toThrow(`Request failed with status 401`)
++  })
++
++  it(`serializes object bodies as JSON with a Content-Type header`, async () => {
++    const mock = stubFetch(() => jsonResponse({ ok: true }))
++
++    await fetch(`https://api.example.com/post`, { method: `POST`, data: { a: 1 } })
++
++    const init = mock.mock.calls[0][1]
++    expect(init?.body).toBe(JSON.stringify({ a: 1 }))
++    expect((init?.headers as Record<string, string>)[`Content-Type`]).toBe(`application/json`)
++  })
++
++  it(`passes FormData bodies through without a manual Content-Type`, async () => {
++    const mock = stubFetch(() => jsonResponse({ ok: true }))
++
++    const form = new FormData()
++    form.append(`media`, new Blob([`x`]), `a.png`)
++    await fetch(`https://api.example.com/upload`, {
++      method: `POST`,
++      headers: { 'content-type': `multipart/form-data` },
++      data: form,
++    })
++
++    const init = mock.mock.calls[0][1]
++    expect(init?.body).toBe(form)
++    expect((init?.headers as Record<string, string>)[`content-type`]).toBeUndefined()
++  })
++})
++
++describe(`CreatorOS 独立请求预算`, () => {
++  afterEach(() => {
++    vi.restoreAllMocks()
++    vi.useRealTimers()
++    vi.unstubAllGlobals()
++  })
++
++  it.each([
++    [`默认`, undefined, 120_000],
++    [`null`, null, 120_000],
++    [`零`, 0, 120_000],
++    [`短值`, 30_000, 120_000],
++    [`较长`, 180_000, 180_000],
++    [`负数`, -1, 120_000],
++    [`NaN`, Number.NaN, 120_000],
++    [`Infinity`, Number.POSITIVE_INFINITY, 120_000],
++    [`非数字`, `180000`, 120_000],
++    [`超宿主单 timer 上界`, 2_147_483_647 + 120_000, 2_147_483_647 + 120_000],
++  ] as const)(`%s 保完整出生预算与单请求`, async (_name, timeout, expectedMs) => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const config = { url: `http://127.0.0.1:1/owned-budget-unit` }
++    Reflect.set(config, `timeout`, timeout)
++    let receivedSignal: AbortSignal | null = null
++    const readSignal = (): AbortSignal | null => receivedSignal
++    const mock = stubFetch((_url, init) => new Promise<Response>((_resolve, reject) => {
++      const signal = init?.signal
++      if (!signal)
++        throw new Error(`missing actual request signal`)
++      receivedSignal = signal
++      signal.addEventListener(`abort`, () => reject(new DOMException(`Aborted`, `AbortError`)), { once: true })
++    }))
++    const observed = fetch.request(config).then(value => ({ value, error: null }), error => ({ value: null, error }))
++    await vi.advanceTimersByTimeAsync(expectedMs - 1)
++    expect(readSignal()).not.toBeNull()
++    expect(readSignal()!.aborted).toBe(false)
++    expect(mock).toHaveBeenCalledTimes(1)
++    await vi.advanceTimersByTimeAsync(1)
++    const settled = await observed
++    expect(settled.error).toBeInstanceOf(DOMException)
++    expect(settled.error?.name).toBe(`AbortError`)
++    expect(readSignal()!.aborted).toBe(true)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++  it(`响应头之后仍以同出生预算监督完整 body`, async () => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    let actualSignal: AbortSignal | null = null
++    const readBodySignal = (): AbortSignal | null => actualSignal
++    const mock = stubFetch((_url, init) => {
++      const signal = init?.signal
++      if (!signal)
++        throw new Error(`missing actual request signal`)
++      actualSignal = signal
++      const response = jsonResponse({ ok: true })
++      vi.spyOn(response, `json`).mockImplementation(() => new Promise((_resolve, reject) => {
++        signal.addEventListener(`abort`, () => reject(new DOMException(`Body aborted`, `AbortError`)), { once: true })
++      }))
++      return response
++    })
++    const observed = fetch.get(`http://127.0.0.1:1/owned-body-unit`).then(value => ({ value, error: null }), error => ({ value: null, error }))
++    await vi.advanceTimersByTimeAsync(119_999)
++    expect(readBodySignal()).not.toBeNull()
++    expect(readBodySignal()!.aborted).toBe(false)
++    await vi.advanceTimersByTimeAsync(1)
++    expect((await observed).error?.name).toBe(`AbortError`)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++  it.each([`成功`, `HTTP错误`, `空响应`, `body读取错误`])(`%s finally 清理最后 timer`, async (mode) => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const mock = stubFetch(() => {
++      const response = mode === `空响应` ? new Response(``, { status: 200 }) : jsonResponse({ ok: true }, { status: mode === `HTTP错误` ? 503 : 200 })
++      if (mode === `body读取错误`)
++        vi.spyOn(response, `json`).mockRejectedValue(new Error(`owned body read failed`))
++      return response
++    })
++    if (mode === `成功`)
++      await expect(fetch.get(`http://127.0.0.1:1/owned-finally-unit`)).resolves.toEqual({ ok: true })
++    else
++      await expect(fetch.get(`http://127.0.0.1:1/owned-finally-unit`)).rejects.toBeInstanceOf(Error)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++
++  it(`正文序列化错误保原错误且不发送请求或遗留 timer`, async () => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const mock = stubFetch(() => jsonResponse({ shouldNotBeRequested: true }))
++    const circular: { self?: unknown } = {}
++    circular.self = circular
++    await expect(fetch.post(`http://127.0.0.1:1/owned-serialization-unit`, circular)).rejects.toBeInstanceOf(TypeError)
++    expect(mock).toHaveBeenCalledTimes(0)
++    expect(vi.getTimerCount()).toBe(0)
++    const originalError = new Error(`owned toJSON error`)
++    const throwsOnSerialization = { toJSON() { throw originalError } }
++    await expect(fetch.post(`http://127.0.0.1:1/owned-serialization-unit`, throwsOnSerialization)).rejects.toBe(originalError)
++    expect(mock).toHaveBeenCalledTimes(0)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++})
+diff --git a/apps/web/src/components/editor/EditorPanel.vue b/apps/web/src/components/editor/EditorPanel.vue
+--- a/apps/web/src/components/editor/EditorPanel.vue
++++ b/apps/web/src/components/editor/EditorPanel.vue
+@@ -1,717 +1,714 @@
+-<script setup lang="ts">
+-import type SearchTabType from '@/components/ui/search-tab/SearchTab.vue'
+-import { Compartment, EditorState, Prec } from '@codemirror/state'
+-import { EditorView, keymap, placeholder } from '@codemirror/view'
+-import { history, markdownSetup, replaceDocumentWithoutHistory, resetEditorHistory, theme } from '@md/shared/editor'
+-import { toBase64 } from '@md/shared/utils/fileHelpers'
+-import { createComponentCompletionExtension } from '@/composables/useComponentCompletion'
+-import { useEditorRefresh } from '@/composables/useEditorRefresh'
+-import { useImageUploader } from '@/composables/useImageUploader'
+-import { completeInitialPreviewBoot } from '@/composables/useInitialPreviewBoot'
+-import { useLocalizedAllComponents } from '@/composables/useLocalizedBuiltinComponents'
+-import { useLocalizedUploadHostOptions } from '@/composables/useLocalizedUploadHosts'
+-import { useSlashCommand } from '@/composables/useSlashCommand'
+-import { CONTENT_FONT_LANG } from '@/i18n/constants'
+-import { toStoredDateTime } from '@/lib/format/datetime'
+-import { jumpToAdjacentHeading } from '@/lib/markdown/headingNavigation'
+-import { contentHasMath, loadMathJax, MATHJAX_READY_EVENT } from '@/lib/preview/mathjax'
+-import { collectClipboardImages } from '@/lib/upload/clipboard-images'
+-import { validateImageFile } from '@/lib/upload/validate-image'
+-import { isUploadProviderConfigured } from '@/services/upload/provider-registry'
+-import { store } from '@/storage'
+-import { useEditorStore } from '@/stores/editor'
+-import { usePostStore } from '@/stores/post'
+-import { useRenderStore } from '@/stores/render'
+-import { useThemeStore } from '@/stores/theme'
+-import { useUIStore } from '@/stores/ui'
+-
+-const SlashCommandMenu = defineAsyncComponent(() => import('@/components/editor/SlashCommandMenu.vue'))
+-const SearchTab = defineAsyncComponent(() => import('@/components/ui/search-tab/SearchTab.vue'))
+-
+-const { t, locale } = useI18n()
+-const uploadHostOptions = useLocalizedUploadHostOptions()
+-const editorStore = useEditorStore()
+-const postStore = usePostStore()
+-const renderStore = useRenderStore()
+-const themeStore = useThemeStore()
+-const uiStore = useUIStore()
+-const localizedAllComponents = useLocalizedAllComponents()
+-const { upload } = useImageUploader()
+-const { editorRefresh, scheduleEditorRefresh } = useEditorRefresh()
+-
+-const {
+-  visible: slashVisible,
+-  position: slashPosition,
+-  filter: slashFilter,
+-  activeIndex: slashActiveIndex,
+-  basicCommands: slashBasicCommands,
+-  commonCommands: slashCommonCommands,
+-  editCommands: slashEditCommands,
+-  styleCommands: slashStyleCommands,
+-  filteredCommands: slashFilteredCommands,
+-  closeMenu: closeSlashMenu,
+-  executeCommand: executeSlashCommand,
+-  createExtension: createSlashExtension,
+-} = useSlashCommand()
+-
+-function onWrapperContextMenuCapture(e: MouseEvent) {
+-  if (!slashVisible.value)
+-    return
+-  e.preventDefault()
+-  e.stopPropagation()
+-}
+-
+-const { editor } = storeToRefs(editorStore)
+-const { isDark, showAIToolbox } = storeToRefs(uiStore)
+-const { posts, currentPostIndex, currentPost } = storeToRefs(postStore)
+-const {
+-  isMobile,
+-  enableImageReupload,
+-  viewMode,
+-} = storeToRefs(uiStore)
+-
+-const { toggleShowUploadImgDialog } = uiStore
+-
+-const showEditor = computed(() => viewMode.value !== `preview`)
+-
+-const codeMirrorView = shallowRef<EditorView | null>(null)
+-const themeCompartment = new Compartment()
+-const placeholderCompartment = new Compartment()
+-const historyCompartment = new Compartment()
+-
+-function editorPlaceholder() {
+-  return placeholder(t(`codemirror.contentPlaceholder`))
+-}
+-const persistTimer = ref<ReturnType<typeof setTimeout>>()
+-
+-const editorRef = useTemplateRef<HTMLDivElement>(`editorRef`)
+-const codeMirrorWrapper = useTemplateRef<HTMLDivElement>(`codeMirrorWrapper`)
+-
+-const isImgLoading = ref(false)
+-
+-// Editor refresh is provided by useEditorRefresh()
+-
+-// --- Search tab integration ---
+-const searchTabRef = useTemplateRef<InstanceType<typeof SearchTabType>>(`searchTabRef`)
+-const searchTabMounted = ref(false)
+-const pendingSearchRequest = ref<{ selected: string } | null>(null)
+-
+-function applySearchRequest(
+-  target: InstanceType<typeof SearchTabType>,
+-  word: string,
+-  showReplace = false,
+-) {
+-  if (showReplace)
+-    target.setSearchWithReplace(word)
+-  else if (word)
+-    target.setSearchWord(word)
+-  else
+-    target.showSearchTab = true
+-}
+-
+-function mountSearchTab() {
+-  searchTabMounted.value = true
+-}
+-
+-const { searchTabRequest } = storeToRefs(uiStore)
+-
+-function openSearchWithSelection(view: EditorView) {
+-  mountSearchTab()
+-  const selection = view.state.selection.main
+-  const selected = view.state.doc.sliceString(selection.from, selection.to).trim()
+-
+-  if (searchTabRef.value)
+-    applySearchRequest(searchTabRef.value, selected)
+-  else
+-    pendingSearchRequest.value = { selected }
+-}
+-
+-function openReplaceWithSelection(view: EditorView) {
+-  mountSearchTab()
+-  const selection = view.state.selection.main
+-  const selected = view.state.doc.sliceString(selection.from, selection.to).trim()
+-
+-  if (searchTabRef.value)
+-    searchTabRef.value.setSearchWithReplace(selected)
+-  else
+-    uiStore.openSearchTab(selected, true)
+-}
+-
+-watch(searchTabRef, (newRef) => {
+-  if (!newRef)
+-    return
+-
+-  if (pendingSearchRequest.value) {
+-    applySearchRequest(newRef, pendingSearchRequest.value.selected)
+-    pendingSearchRequest.value = null
+-  }
+-
+-  if (searchTabRequest.value) {
+-    const { word, showReplace } = searchTabRequest.value
+-    applySearchRequest(newRef, word, showReplace)
+-    uiStore.clearSearchTabRequest()
+-  }
+-})
+-
+-watch(searchTabRequest, (request) => {
+-  if (!request)
+-    return
+-  mountSearchTab()
+-  if (searchTabRef.value) {
+-    applySearchRequest(searchTabRef.value, request.word, request.showReplace)
+-    uiStore.clearSearchTabRequest()
+-  }
+-})
+-
+-function handleGlobalKeydown(e: KeyboardEvent) {
+-  const editorView = codeMirrorView.value
+-  if (e.key === `Escape` && searchTabRef.value?.showSearchTab) {
+-    searchTabRef.value.showSearchTab = false
+-    e.preventDefault()
+-    editorView?.focus()
+-  }
+-}
+-
+-// --- Image upload ---
+-async function beforeImageUpload(file: File) {
+-  const checkResult = validateImageFile(file, t)
+-  if (!checkResult.ok) {
+-    toast.error(checkResult.msg)
+-    return false
+-  }
+-
+-  const imgHost = (await store.get(`imgHost`)) || `default`
+-  await store.set(`imgHost`, imgHost)
+-
+-  if (!await isUploadProviderConfigured(imgHost)) {
+-    const hostLabel = uploadHostOptions.value.find(option => option.value === imgHost)?.label ?? imgHost
+-    toast.error(t('editorPanel.configureImgHost', { host: hostLabel }))
+-    toggleShowUploadImgDialog(true)
+-    return false
+-  }
+-
+-  return true
+-}
+-
+-function uploaded(imageUrl: string) {
+-  if (!imageUrl) {
+-    toast.error(t('editorPanel.uploadUnknownError'))
+-    return
+-  }
+-  setTimeout(() => {
+-    toggleShowUploadImgDialog(false)
+-  }, 1000)
+-  const markdownImage = `![](${imageUrl})`
+-  if (codeMirrorView.value) {
+-    codeMirrorView.value.dispatch(codeMirrorView.value.state.replaceSelection(`\n${markdownImage}\n`))
+-  }
+-  toast.success(t('editorPanel.uploadSuccess'))
+-}
+-
+-async function compressImage(file: File) {
+-  const { default: imageCompression } = await import(`browser-image-compression`)
+-  const options = {
+-    maxSizeMB: 1,
+-    maxWidthOrHeight: 1920,
+-    useWebWorker: true,
+-  }
+-  return await imageCompression(file, options)
+-}
+-
+-async function uploadImage(
+-  file: File,
+-  cb?: (url: string, data: string) => void,
+-  applyUrl?: boolean,
+-) {
+-  try {
+-    isImgLoading.value = true
+-    const useCompression = (await store.get(`useCompression`)) === `true`
+-    if (useCompression)
+-      file = await compressImage(file)
+-
+-    const url = await upload(file)
+-    if (cb) {
+-      cb(url, await toBase64(file))
+-    }
+-    else {
+-      uploaded(url)
+-    }
+-    if (applyUrl)
+-      return uploaded(url)
+-  }
+-  catch (err) {
+-    toast.error(err instanceof Error ? err.message : t('store.uploader.uploadFailed'))
+-    cb?.('', '')
+-  }
+-  finally {
+-    isImgLoading.value = false
+-  }
+-}
+-
+-// --- Drag & drop folder ---
+-async function getMd({ list }: { list: { path: string, file: File }[] }) {
+-  return new Promise<{ str: string, file: File, path: string }>((resolve) => {
+-    const { path, file } = list.find(item => item.path.match(/\.md$/))!
+-    const reader = new FileReader()
+-    reader.readAsText(file!, `UTF-8`)
+-    reader.onload = (evt) => {
+-      resolve({
+-        str: evt.target!.result as string,
+-        file,
+-        path,
+-      })
+-    }
+-  })
+-}
+-
+-async function showFileStructure(root: any) {
+-  const result = []
+-  let cwd = ``
+-  try {
+-    const dirs = [root]
+-    for (const dir of dirs) {
+-      cwd += `${dir.name}/`
+-      for await (const [, handle] of dir) {
+-        if (handle.kind === `file`) {
+-          result.push({
+-            path: cwd + handle.name,
+-            file: await handle.getFile(),
+-          })
+-        }
+-        else {
+-          result.push({
+-            path: `${cwd + handle.name}/`,
+-          })
+-          dirs.push(handle)
+-        }
+-      }
+-    }
+-  }
+-  catch (err) {
+-    console.error(err)
+-  }
+-  return result
+-}
+-
+-async function uploadMdImg({
+-  md,
+-  list,
+-}: {
+-  md: { str: string, path: string, file: File }
+-  list: { path: string, file: File }[]
+-}) {
+-  const mdImgList = [...(md.str.matchAll(/!\[(.*?)\]\((.*?)\)/g) || [])].filter(item => item)
+-  const root = md.path.match(/.+?\//)![0]
+-  const resList = await Promise.all<{ matchStr: string, url: string }>(
+-    mdImgList.map((item) => {
+-      return new Promise((resolve) => {
+-        let [, , matchStr] = item
+-        matchStr = matchStr.replace(/^.\//, ``)
+-        const { file }
+-          = list.find(f => f.path === `${root}${matchStr}`) || {}
+-        uploadImage(file!, url => resolve({ matchStr, url }))
+-      })
+-    }),
+-  )
+-  resList.forEach((item) => {
+-    md.str = md.str
+-      .replace(`](./${item.matchStr})`, `](${item.url})`)
+-      .replace(`](${item.matchStr})`, `](${item.url})`)
+-  })
+-  if (codeMirrorView.value) {
+-    codeMirrorView.value.dispatch({
+-      changes: { from: 0, to: codeMirrorView.value.state.doc.length, insert: md.str },
+-    })
+-  }
+-}
+-
+-function mdLocalToRemote() {
+-  // The async onMounted callback can resolve after an HMR remount, where the
+-  // template ref of the stale instance is already null.
+-  const dom = codeMirrorWrapper.value
+-  if (!dom)
+-    return
+-
+-  dom.ondragover = evt => evt.preventDefault()
+-  dom.ondrop = async (evt) => {
+-    evt.preventDefault()
+-    if (evt.dataTransfer == null || !Array.isArray(evt.dataTransfer.items)) {
+-      return
+-    }
+-
+-    for (const item of evt.dataTransfer.items.filter(item => item.kind === `file`)) {
+-      item
+-        .getAsFileSystemHandle()
+-        .then(async (handle: { kind: string, getFile: () => any }) => {
+-          if (handle.kind === `directory`) {
+-            const list = (await showFileStructure(handle)) as {
+-              path: string
+-              file: File
+-            }[]
+-            const md = await getMd({ list })
+-            uploadMdImg({ md, list })
+-          }
+-          else {
+-            const file = await handle.getFile()
+-            if (await beforeImageUpload(file)) {
+-              uploadImage(file)
+-            }
+-          }
+-        })
+-    }
+-  }
+-}
+-
+-// --- Image paste handler for CodeMirror ---
+-function createPasteHandler() {
+-  return (event: ClipboardEvent, view: EditorView) => {
+-    const imageFiles = collectClipboardImages(event.clipboardData)
+-    if (imageFiles.length > 0) {
+-      if (isImgLoading.value)
+-        return true
+-
+-      void (async () => {
+-        const validItems: File[] = []
+-        for (const item of imageFiles) {
+-          if (await beforeImageUpload(item))
+-            validItems.push(item)
+-        }
+-        for (const item of validItems)
+-          await uploadImage(item)
+-      })()
+-      return true
+-    }
+-
+-    const text = event.clipboardData?.getData('text/plain')
+-    if (text) {
+-      const mdImgRegex = /!\[(.*?)\]\((https?:\/\/[^)]+)\)/g
+-      const matches = [...text.matchAll(mdImgRegex)]
+-
+-      if (matches.length > 0) {
+-        isImgLoading.value = true
+-
+-        let previewText = text
+-        const placeholderMap = new Map<string, { originalUrl: string, originalAlt: string }>()
+-
+-        let matchIndex = 0
+-        previewText = previewText.replace(mdImgRegex, (_, alt, url) => {
+-          const id = `LOADING_${Date.now()}_${matchIndex++}`
+-          placeholderMap.set(id, { originalUrl: url, originalAlt: alt })
+-          return `![${t('editorPanel.reuploading')}](${id})`
+-        })
+-
+-        view.dispatch(view.state.replaceSelection(previewText))
+-
+-        const uniqueUrls = [...new Set(matches.map(m => m[2]))]
+-
+-        Promise.all(uniqueUrls.map(async (url) => {
+-          try {
+-            const newUrl = enableImageReupload.value ? await upload(url) : url
+-
+-            for (const [id, info] of placeholderMap.entries()) {
+-              if (info.originalUrl === url) {
+-                const searchStr = `![${t('editorPanel.reuploading')}](${id})`
+-                const currentDoc = view.state.doc.toString()
+-                const pos = currentDoc.indexOf(searchStr)
+-
+-                if (pos !== -1) {
+-                  const newText = `![${info.originalAlt}](${newUrl})`
+-                  view.dispatch({
+-                    changes: { from: pos, to: pos + searchStr.length, insert: newText },
+-                  })
+-                }
+-              }
+-            }
+-          }
+-          catch (e) {
+-            console.error(`转存失败: ${url}`, e)
+-            for (const [id, info] of placeholderMap.entries()) {
+-              if (info.originalUrl === url) {
+-                const searchStr = `![${t('editorPanel.reuploading')}](${id})`
+-                const currentDoc = view.state.doc.toString()
+-                const pos = currentDoc.indexOf(searchStr)
+-
+-                if (pos !== -1) {
+-                  const newText = `![${info.originalAlt}](${info.originalUrl})`
+-                  view.dispatch({
+-                    changes: { from: pos, to: pos + searchStr.length, insert: newText },
+-                  })
+-                }
+-              }
+-            }
+-            toast.error(t('editorPanel.reuploadFailed'))
+-          }
+-        })).finally(() => {
+-          isImgLoading.value = false
+-        })
+-
+-        return true
+-      }
+-    }
+-    return false
+-  }
+-}
+-
+-// --- CodeMirror creation ---
+-function createFormTextArea(dom: HTMLDivElement) {
+-  const state = EditorState.create({
+-    doc: posts.value[currentPostIndex.value].content,
+-    extensions: [
+-      markdownSetup({
+-        onSearch: openSearchWithSelection,
+-        onReplace: openReplaceWithSelection,
+-        onGoToLine: () => uiStore.requestGoToLine(),
+-        withoutHistory: true,
+-      }),
+-      historyCompartment.of(history()),
+-      Prec.high(keymap.of([
+-        { key: `Mod-Alt-ArrowUp`, run: view => jumpToAdjacentHeading(view, `prev`) },
+-        { key: `Mod-Alt-ArrowDown`, run: view => jumpToAdjacentHeading(view, `next`) },
+-      ])),
+-      placeholderCompartment.of(editorPlaceholder()),
+-      themeCompartment.of(theme(isDark.value)),
+-      EditorView.updateListener.of((update) => {
+-        if (update.docChanged) {
+-          scheduleEditorRefresh()
+-          clearTimeout(persistTimer.value)
+-          persistTimer.value = setTimeout(() => {
+-            commitEditorContentToPost()
+-          }, 300)
+-        }
+-      }),
+-      EditorView.domEventHandlers({
+-        paste: createPasteHandler(),
+-      }),
+-      ...createSlashExtension(() => codeMirrorView.value),
+-      ...createComponentCompletionExtension(() => localizedAllComponents.value),
+-    ],
+-  })
+-
+-  const view = new EditorView({
+-    state,
+-    parent: dom,
+-  })
+-
+-  codeMirrorView.value = view
+-  return view
+-}
+-
+-// --- Lifecycle ---
+-function handleMathJaxReady() {
+-  editorRefresh()
+-}
+-
+-async function preloadMathJaxIfNeeded(content: string) {
+-  if (!contentHasMath(content))
+-    return
+-
+-  try {
+-    await loadMathJax()
+-  }
+-  catch (error) {
+-    console.error(error)
+-  }
+-}
+-
+-let postSwitchGeneration = 0
+-
+-function flushEditorContentToPostAtIndex(index: number) {
+-  clearTimeout(persistTimer.value)
+-  persistTimer.value = undefined
+-  if (!codeMirrorView.value || index < 0)
+-    return
+-
+-  const value = codeMirrorView.value.state.doc.toString()
+-  const post = posts.value[index]
+-  if (!post || value === post.content)
+-    return
+-
+-  post.updateDatetime = new Date()
+-  post.content = value
+-}
+-
+-function commitEditorContentToPost() {
+-  flushEditorContentToPostAtIndex(currentPostIndex.value)
+-}
+-
+-onMounted(() => {
+-  const editorDom = editorRef.value
+-  if (editorDom == null) {
+-    void completeInitialPreviewBoot()
+-    return
+-  }
+-
+-  window.addEventListener(MATHJAX_READY_EVENT, handleMathJaxReady)
+-  document.addEventListener(`keydown`, handleGlobalKeydown, { passive: false, capture: false })
+-
+-  void (async () => {
+-    try {
+-      await renderStore.initRendererInstance({
+-        isMacCodeBlock: themeStore.isMacCodeBlock,
+-        isShowLineNumber: themeStore.isShowLineNumber,
+-      })
+-      themeStore.applyCurrentTheme()
+-      await nextTick()
+-
+-      const editorView = createFormTextArea(editorDom)
+-      editor.value = editorView
+-      editorStore.registerContentFlush(commitEditorContentToPost)
+-
+-      const content = posts.value[currentPostIndex.value]?.content ?? ``
+-      await preloadMathJaxIfNeeded(content)
+-
+-      editorRefresh()
+-      mdLocalToRemote()
+-    }
+-    catch (error) {
+-      console.error(`[EditorPanel] Failed to initialize editor`, error)
+-    }
+-    finally {
+-      void completeInitialPreviewBoot()
+-    }
+-  })()
+-})
+-
+-watch(isDark, () => {
+-  if (codeMirrorView.value) {
+-    codeMirrorView.value.dispatch({
+-      effects: themeCompartment.reconfigure(theme(isDark.value)),
+-    })
+-  }
+-  editorRefresh()
+-})
+-
+-watch(locale, () => {
+-  if (!codeMirrorView.value)
+-    return
+-  codeMirrorView.value.dispatch({
+-    effects: placeholderCompartment.reconfigure(editorPlaceholder()),
+-  })
+-  editorRefresh()
+-})
+-
+-function syncEditorToPostContent(content: string) {
+-  const view = codeMirrorView.value
+-  if (!view)
+-    return
+-
+-  const currentContent = view.state.doc.toString()
+-  if (currentContent === content)
+-    return
+-
+-  const generation = ++postSwitchGeneration
+-  replaceDocumentWithoutHistory(view, content)
+-  resetEditorHistory(view, historyCompartment)
+-  void preloadMathJaxIfNeeded(content).then(() => {
+-    if (generation !== postSwitchGeneration)
+-      return
+-    editorRefresh()
+-  })
+-}
+-
+-watch(currentPostIndex, (newIndex, oldIndex) => {
+-  if (oldIndex !== undefined && oldIndex >= 0)
+-    flushEditorContentToPostAtIndex(oldIndex)
+-
+-  const post = posts.value[newIndex]
+-  if (!post)
+-    return
+-  syncEditorToPostContent(post.content)
+-})
+-
+-/** Refresh editor when posts change externally (e.g. cloud sync) even if index is unchanged */
+-watch(
+-  () => currentPost.value?.content,
+-  (content) => {
+-    if (content == null)
+-      return
+-    syncEditorToPostContent(content)
+-  },
+-)
+-
+-const historyTimer = ref<ReturnType<typeof setTimeout>>()
+-onMounted(() => {
+-  historyTimer.value = setInterval(() => {
+-    const currentPost = posts.value[currentPostIndex.value]
+-
+-    const pre = (currentPost.history || [])[0]?.content
+-    if (pre === currentPost.content) {
+-      return
+-    }
+-
+-    currentPost.history ??= []
+-    currentPost.history.unshift({
+-      content: currentPost.content,
+-      datetime: toStoredDateTime(),
+-    })
+-
+-    currentPost.history.length = Math.min(currentPost.history.length, 10)
+-  }, 30 * 1000)
+-})
+-
+-onUnmounted(() => {
+-  editorStore.unregisterContentFlush()
+-  window.removeEventListener(MATHJAX_READY_EVENT, handleMathJaxReady)
+-  clearTimeout(historyTimer.value)
+-  clearTimeout(persistTimer.value)
+-  document.removeEventListener(`keydown`, handleGlobalKeydown, { capture: false })
+-})
+-
+-defineExpose({
+-  codeMirrorView,
+-  editorRefresh,
+-  uploadImage,
+-  isImgLoading,
+-})
+-</script>
+-
+-<template>
+-  <div
+-    v-show="viewMode !== 'preview'"
+-    ref="codeMirrorWrapper"
+-    class="codeMirror-wrapper relative h-full"
+-    @contextmenu.capture="onWrapperContextMenuCapture"
+-  >
+-    <SearchTab
+-      v-if="searchTabMounted && codeMirrorView"
+-      ref="searchTabRef"
+-      :editor-view="codeMirrorView as any"
+-    />
+-    <SlashCommandMenu
+-      v-if="slashVisible"
+-      :visible="slashVisible"
+-      :position="slashPosition"
+-      :active-index="slashActiveIndex"
+-      :filter="slashFilter"
+-      :container-el="codeMirrorWrapper"
+-      :basic-commands="slashBasicCommands"
+-      :common-commands="slashCommonCommands"
+-      :edit-commands="slashEditCommands"
+-      :style-commands="slashStyleCommands"
+-      :filtered-commands="slashFilteredCommands"
+-      @execute="(cmd) => codeMirrorView && executeSlashCommand(codeMirrorView, cmd)"
+-      @close="closeSlashMenu()"
+-    />
+-
+-    <EditorContextMenu>
+-      <div
+-        id="editor"
+-        ref="editorRef"
+-        class="codemirror-container mathjax-ignore"
+-        :lang="CONTENT_FONT_LANG"
+-      />
+-    </EditorContextMenu>
+-  </div>
+-</template>
+-
+-<style lang="less" scoped>
+-@import url('../../assets/less/app.less');
+-</style>
+-
+-<style lang="less" scoped>
+-.codeMirror-wrapper {
+-  overflow-x: hidden;
+-  height: 100%;
+-  position: relative;
+-}
+-</style>
++<script setup lang="ts">
++import type SearchTabType from '@/components/ui/search-tab/SearchTab.vue'
++import { Compartment, EditorState, Prec } from '@codemirror/state'
++import { EditorView, keymap, placeholder } from '@codemirror/view'
++import { history, markdownSetup, replaceDocumentWithoutHistory, resetEditorHistory, theme } from '@md/shared/editor'
++import { toBase64 } from '@md/shared/utils/fileHelpers'
++import { createComponentCompletionExtension } from '@/composables/useComponentCompletion'
++import { useEditorRefresh } from '@/composables/useEditorRefresh'
++import { useImageUploader } from '@/composables/useImageUploader'
++import { completeInitialPreviewBoot } from '@/composables/useInitialPreviewBoot'
++import { useLocalizedAllComponents } from '@/composables/useLocalizedBuiltinComponents'
++import { useLocalizedUploadHostOptions } from '@/composables/useLocalizedUploadHosts'
++import { useSlashCommand } from '@/composables/useSlashCommand'
++import { CONTENT_FONT_LANG } from '@/i18n/constants'
++import { toStoredDateTime } from '@/lib/format/datetime'
++import { jumpToAdjacentHeading } from '@/lib/markdown/headingNavigation'
++import { contentHasMath, loadMathJax, MATHJAX_READY_EVENT } from '@/lib/preview/mathjax'
++import { collectClipboardImages } from '@/lib/upload/clipboard-images'
++import { validateImageFile } from '@/lib/upload/validate-image'
++import { isUploadProviderConfigured } from '@/services/upload/provider-registry'
++import { store } from '@/storage'
++import { useEditorStore } from '@/stores/editor'
++import { usePostStore } from '@/stores/post'
++import { useRenderStore } from '@/stores/render'
++import { useThemeStore } from '@/stores/theme'
++import { useUIStore } from '@/stores/ui'
++
++const SlashCommandMenu = defineAsyncComponent(() => import('@/components/editor/SlashCommandMenu.vue'))
++const SearchTab = defineAsyncComponent(() => import('@/components/ui/search-tab/SearchTab.vue'))
++
++const { t, locale } = useI18n()
++const uploadHostOptions = useLocalizedUploadHostOptions()
++const editorStore = useEditorStore()
++const postStore = usePostStore()
++const renderStore = useRenderStore()
++const themeStore = useThemeStore()
++const uiStore = useUIStore()
++const localizedAllComponents = useLocalizedAllComponents()
++const { upload } = useImageUploader()
++const { editorRefresh, scheduleEditorRefresh } = useEditorRefresh()
++
++const {
++  visible: slashVisible,
++  position: slashPosition,
++  filter: slashFilter,
++  activeIndex: slashActiveIndex,
++  basicCommands: slashBasicCommands,
++  commonCommands: slashCommonCommands,
++  editCommands: slashEditCommands,
++  styleCommands: slashStyleCommands,
++  filteredCommands: slashFilteredCommands,
++  closeMenu: closeSlashMenu,
++  executeCommand: executeSlashCommand,
++  createExtension: createSlashExtension,
++} = useSlashCommand()
++
++function onWrapperContextMenuCapture(e: MouseEvent) {
++  if (!slashVisible.value)
++    return
++  e.preventDefault()
++  e.stopPropagation()
++}
++
++const { editor } = storeToRefs(editorStore)
++const { isDark } = storeToRefs(uiStore)
++const { posts, currentPostIndex, currentPost } = storeToRefs(postStore)
++const {
++  enableImageReupload,
++  viewMode,
++} = storeToRefs(uiStore)
++
++const { toggleShowUploadImgDialog } = uiStore
++
++const codeMirrorView = shallowRef<EditorView | null>(null)
++const themeCompartment = new Compartment()
++const placeholderCompartment = new Compartment()
++const historyCompartment = new Compartment()
++
++function editorPlaceholder() {
++  return placeholder(t(`codemirror.contentPlaceholder`))
++}
++const persistTimer = ref<ReturnType<typeof setTimeout>>()
++
++const editorRef = useTemplateRef<HTMLDivElement>(`editorRef`)
++const codeMirrorWrapper = useTemplateRef<HTMLDivElement>(`codeMirrorWrapper`)
++
++const isImgLoading = ref(false)
++
++// Editor refresh is provided by useEditorRefresh()
++
++// --- Search tab integration ---
++const searchTabRef = useTemplateRef<InstanceType<typeof SearchTabType>>(`searchTabRef`)
++const searchTabMounted = ref(false)
++const pendingSearchRequest = ref<{ selected: string } | null>(null)
++
++function applySearchRequest(
++  target: InstanceType<typeof SearchTabType>,
++  word: string,
++  showReplace = false,
++) {
++  if (showReplace)
++    target.setSearchWithReplace(word)
++  else if (word)
++    target.setSearchWord(word)
++  else
++    target.showSearchTab = true
++}
++
++function mountSearchTab() {
++  searchTabMounted.value = true
++}
++
++const { searchTabRequest } = storeToRefs(uiStore)
++
++function openSearchWithSelection(view: EditorView) {
++  mountSearchTab()
++  const selection = view.state.selection.main
++  const selected = view.state.doc.sliceString(selection.from, selection.to).trim()
++
++  if (searchTabRef.value)
++    applySearchRequest(searchTabRef.value, selected)
++  else
++    pendingSearchRequest.value = { selected }
++}
++
++function openReplaceWithSelection(view: EditorView) {
++  mountSearchTab()
++  const selection = view.state.selection.main
++  const selected = view.state.doc.sliceString(selection.from, selection.to).trim()
++
++  if (searchTabRef.value)
++    searchTabRef.value.setSearchWithReplace(selected)
++  else
++    uiStore.openSearchTab(selected, true)
++}
++
++watch(searchTabRef, (newRef) => {
++  if (!newRef)
++    return
++
++  if (pendingSearchRequest.value) {
++    applySearchRequest(newRef, pendingSearchRequest.value.selected)
++    pendingSearchRequest.value = null
++  }
++
++  if (searchTabRequest.value) {
++    const { word, showReplace } = searchTabRequest.value
++    applySearchRequest(newRef, word, showReplace)
++    uiStore.clearSearchTabRequest()
++  }
++})
++
++watch(searchTabRequest, (request) => {
++  if (!request)
++    return
++  mountSearchTab()
++  if (searchTabRef.value) {
++    applySearchRequest(searchTabRef.value, request.word, request.showReplace)
++    uiStore.clearSearchTabRequest()
++  }
++})
++
++function handleGlobalKeydown(e: KeyboardEvent) {
++  const editorView = codeMirrorView.value
++  if (e.key === `Escape` && searchTabRef.value?.showSearchTab) {
++    searchTabRef.value.showSearchTab = false
++    e.preventDefault()
++    editorView?.focus()
++  }
++}
++
++// --- Image upload ---
++async function beforeImageUpload(file: File) {
++  const checkResult = validateImageFile(file, t)
++  if (!checkResult.ok) {
++    toast.error(checkResult.msg)
++    return false
++  }
++
++  const imgHost = (await store.get(`imgHost`)) || `default`
++  await store.set(`imgHost`, imgHost)
++
++  if (!await isUploadProviderConfigured(imgHost)) {
++    const hostLabel = uploadHostOptions.value.find(option => option.value === imgHost)?.label ?? imgHost
++    toast.error(t('editorPanel.configureImgHost', { host: hostLabel }))
++    toggleShowUploadImgDialog(true)
++    return false
++  }
++
++  return true
++}
++
++function uploaded(imageUrl: string) {
++  if (!imageUrl) {
++    toast.error(t('editorPanel.uploadUnknownError'))
++    return
++  }
++  setTimeout(() => {
++    toggleShowUploadImgDialog(false)
++  }, 1000)
++  const markdownImage = `![](${imageUrl})`
++  if (codeMirrorView.value) {
++    codeMirrorView.value.dispatch(codeMirrorView.value.state.replaceSelection(`\n${markdownImage}\n`))
++  }
++  toast.success(t('editorPanel.uploadSuccess'))
++}
++
++async function compressImage(file: File) {
++  const { default: imageCompression } = await import(`browser-image-compression`)
++  const options = {
++    maxSizeMB: 1,
++    maxWidthOrHeight: 1920,
++    useWebWorker: true,
++  }
++  return await imageCompression(file, options)
++}
++
++async function uploadImage(
++  file: File,
++  cb?: (url: string, data: string) => void,
++  applyUrl?: boolean,
++) {
++  try {
++    isImgLoading.value = true
++    const useCompression = (await store.get(`useCompression`)) === `true`
++    if (useCompression)
++      file = await compressImage(file)
++
++    const url = await upload(file)
++    if (cb) {
++      cb(url, await toBase64(file))
++    }
++    else {
++      uploaded(url)
++    }
++    if (applyUrl)
++      return uploaded(url)
++  }
++  catch (err) {
++    toast.error(err instanceof Error ? err.message : t('store.uploader.uploadFailed'))
++    cb?.('', '')
++  }
++  finally {
++    isImgLoading.value = false
++  }
++}
++
++// --- Drag & drop folder ---
++async function getMd({ list }: { list: { path: string, file: File }[] }) {
++  return new Promise<{ str: string, file: File, path: string }>((resolve) => {
++    const { path, file } = list.find(item => item.path.match(/\.md$/))!
++    const reader = new FileReader()
++    reader.readAsText(file!, `UTF-8`)
++    reader.onload = (evt) => {
++      resolve({
++        str: evt.target!.result as string,
++        file,
++        path,
++      })
++    }
++  })
++}
++
++async function showFileStructure(root: any) {
++  const result = []
++  let cwd = ``
++  try {
++    const dirs = [root]
++    for (const dir of dirs) {
++      cwd += `${dir.name}/`
++      for await (const [, handle] of dir) {
++        if (handle.kind === `file`) {
++          result.push({
++            path: cwd + handle.name,
++            file: await handle.getFile(),
++          })
++        }
++        else {
++          result.push({
++            path: `${cwd + handle.name}/`,
++          })
++          dirs.push(handle)
++        }
++      }
++    }
++  }
++  catch (err) {
++    console.error(err)
++  }
++  return result
++}
++
++async function uploadMdImg({
++  md,
++  list,
++}: {
++  md: { str: string, path: string, file: File }
++  list: { path: string, file: File }[]
++}) {
++  const mdImgList = [...(md.str.matchAll(/!\[(.*?)\]\((.*?)\)/g) || [])].filter(item => item)
++  const root = md.path.match(/.+?\//)![0]
++  const resList = await Promise.all<{ matchStr: string, url: string }>(
++    mdImgList.map((item) => {
++      return new Promise((resolve) => {
++        let [, , matchStr] = item
++        matchStr = matchStr.replace(/^.\//, ``)
++        const { file }
++          = list.find(f => f.path === `${root}${matchStr}`) || {}
++        uploadImage(file!, url => resolve({ matchStr, url }))
++      })
++    }),
++  )
++  resList.forEach((item) => {
++    md.str = md.str
++      .replace(`](./${item.matchStr})`, `](${item.url})`)
++      .replace(`](${item.matchStr})`, `](${item.url})`)
++  })
++  if (codeMirrorView.value) {
++    codeMirrorView.value.dispatch({
++      changes: { from: 0, to: codeMirrorView.value.state.doc.length, insert: md.str },
++    })
++  }
++}
++
++function mdLocalToRemote() {
++  // The async onMounted callback can resolve after an HMR remount, where the
++  // template ref of the stale instance is already null.
++  const dom = codeMirrorWrapper.value
++  if (!dom)
++    return
++
++  dom.ondragover = evt => evt.preventDefault()
++  dom.ondrop = async (evt) => {
++    evt.preventDefault()
++    if (evt.dataTransfer == null || !Array.isArray(evt.dataTransfer.items)) {
++      return
++    }
++
++    for (const item of evt.dataTransfer.items.filter(item => item.kind === `file`)) {
++      item
++        .getAsFileSystemHandle()
++        .then(async (handle: { kind: string, getFile: () => any }) => {
++          if (handle.kind === `directory`) {
++            const list = (await showFileStructure(handle)) as {
++              path: string
++              file: File
++            }[]
++            const md = await getMd({ list })
++            uploadMdImg({ md, list })
++          }
++          else {
++            const file = await handle.getFile()
++            if (await beforeImageUpload(file)) {
++              uploadImage(file)
++            }
++          }
++        })
++    }
++  }
++}
++
++// --- Image paste handler for CodeMirror ---
++function createPasteHandler() {
++  return (event: ClipboardEvent, view: EditorView) => {
++    const imageFiles = collectClipboardImages(event.clipboardData)
++    if (imageFiles.length > 0) {
++      if (isImgLoading.value)
++        return true
++
++      void (async () => {
++        const validItems: File[] = []
++        for (const item of imageFiles) {
++          if (await beforeImageUpload(item))
++            validItems.push(item)
++        }
++        for (const item of validItems)
++          await uploadImage(item)
++      })()
++      return true
++    }
++
++    const text = event.clipboardData?.getData('text/plain')
++    if (text) {
++      const mdImgRegex = /!\[(.*?)\]\((https?:\/\/[^)]+)\)/g
++      const matches = [...text.matchAll(mdImgRegex)]
++
++      if (matches.length > 0) {
++        isImgLoading.value = true
++
++        let previewText = text
++        const placeholderMap = new Map<string, { originalUrl: string, originalAlt: string }>()
++
++        let matchIndex = 0
++        previewText = previewText.replace(mdImgRegex, (_, alt, url) => {
++          const id = `LOADING_${Date.now()}_${matchIndex++}`
++          placeholderMap.set(id, { originalUrl: url, originalAlt: alt })
++          return `![${t('editorPanel.reuploading')}](${id})`
++        })
++
++        view.dispatch(view.state.replaceSelection(previewText))
++
++        const uniqueUrls = [...new Set(matches.map(m => m[2]))]
++
++        Promise.all(uniqueUrls.map(async (url) => {
++          try {
++            const newUrl = enableImageReupload.value ? await upload(url) : url
++
++            for (const [id, info] of placeholderMap.entries()) {
++              if (info.originalUrl === url) {
++                const searchStr = `![${t('editorPanel.reuploading')}](${id})`
++                const currentDoc = view.state.doc.toString()
++                const pos = currentDoc.indexOf(searchStr)
++
++                if (pos !== -1) {
++                  const newText = `![${info.originalAlt}](${newUrl})`
++                  view.dispatch({
++                    changes: { from: pos, to: pos + searchStr.length, insert: newText },
++                  })
++                }
++              }
++            }
++          }
++          catch (e) {
++            console.error(`转存失败: ${url}`, e)
++            for (const [id, info] of placeholderMap.entries()) {
++              if (info.originalUrl === url) {
++                const searchStr = `![${t('editorPanel.reuploading')}](${id})`
++                const currentDoc = view.state.doc.toString()
++                const pos = currentDoc.indexOf(searchStr)
++
++                if (pos !== -1) {
++                  const newText = `![${info.originalAlt}](${info.originalUrl})`
++                  view.dispatch({
++                    changes: { from: pos, to: pos + searchStr.length, insert: newText },
++                  })
++                }
++              }
++            }
++            toast.error(t('editorPanel.reuploadFailed'))
++          }
++        })).finally(() => {
++          isImgLoading.value = false
++        })
++
++        return true
++      }
++    }
++    return false
++  }
++}
++
++// --- CodeMirror creation ---
++function createFormTextArea(dom: HTMLDivElement) {
++  const state = EditorState.create({
++    doc: posts.value[currentPostIndex.value].content,
++    extensions: [
++      markdownSetup({
++        onSearch: openSearchWithSelection,
++        onReplace: openReplaceWithSelection,
++        onGoToLine: () => uiStore.requestGoToLine(),
++        withoutHistory: true,
++      }),
++      historyCompartment.of(history()),
++      Prec.high(keymap.of([
++        { key: `Mod-Alt-ArrowUp`, run: view => jumpToAdjacentHeading(view, `prev`) },
++        { key: `Mod-Alt-ArrowDown`, run: view => jumpToAdjacentHeading(view, `next`) },
++      ])),
++      placeholderCompartment.of(editorPlaceholder()),
++      themeCompartment.of(theme(isDark.value)),
++      EditorView.updateListener.of((update) => {
++        if (update.docChanged) {
++          scheduleEditorRefresh()
++          clearTimeout(persistTimer.value)
++          persistTimer.value = setTimeout(() => {
++            commitEditorContentToPost()
++          }, 300)
++        }
++      }),
++      EditorView.domEventHandlers({
++        paste: createPasteHandler(),
++      }),
++      ...createSlashExtension(() => codeMirrorView.value),
++      ...createComponentCompletionExtension(() => localizedAllComponents.value),
++    ],
++  })
++
++  const view = new EditorView({
++    state,
++    parent: dom,
++  })
++
++  codeMirrorView.value = view
++  return view
++}
++
++// --- Lifecycle ---
++function handleMathJaxReady() {
++  editorRefresh()
++}
++
++async function preloadMathJaxIfNeeded(content: string) {
++  if (!contentHasMath(content))
++    return
++
++  try {
++    await loadMathJax()
++  }
++  catch (error) {
++    console.error(error)
++  }
++}
++
++let postSwitchGeneration = 0
++
++function flushEditorContentToPostAtIndex(index: number) {
++  clearTimeout(persistTimer.value)
++  persistTimer.value = undefined
++  if (!codeMirrorView.value || index < 0)
++    return
++
++  const value = codeMirrorView.value.state.doc.toString()
++  const post = posts.value[index]
++  if (!post || value === post.content)
++    return
++
++  post.updateDatetime = new Date()
++  post.content = value
++}
++
++function commitEditorContentToPost() {
++  flushEditorContentToPostAtIndex(currentPostIndex.value)
++}
++
++onMounted(() => {
++  const editorDom = editorRef.value
++  if (editorDom == null) {
++    void completeInitialPreviewBoot()
++    return
++  }
++
++  window.addEventListener(MATHJAX_READY_EVENT, handleMathJaxReady)
++  document.addEventListener(`keydown`, handleGlobalKeydown, { passive: false, capture: false })
++
++  void (async () => {
++    try {
++      await renderStore.initRendererInstance({
++        isMacCodeBlock: themeStore.isMacCodeBlock,
++        isShowLineNumber: themeStore.isShowLineNumber,
++      })
++      themeStore.applyCurrentTheme()
++      await nextTick()
++
++      const editorView = createFormTextArea(editorDom)
++      editor.value = editorView
++      editorStore.registerContentFlush(commitEditorContentToPost)
++
++      const content = posts.value[currentPostIndex.value]?.content ?? ``
++      await preloadMathJaxIfNeeded(content)
++
++      editorRefresh()
++      mdLocalToRemote()
++    }
++    catch (error) {
++      console.error(`[EditorPanel] Failed to initialize editor`, error)
++    }
++    finally {
++      void completeInitialPreviewBoot()
++    }
++  })()
++})
++
++watch(isDark, () => {
++  if (codeMirrorView.value) {
++    codeMirrorView.value.dispatch({
++      effects: themeCompartment.reconfigure(theme(isDark.value)),
++    })
++  }
++  editorRefresh()
++})
++
++watch(locale, () => {
++  if (!codeMirrorView.value)
++    return
++  codeMirrorView.value.dispatch({
++    effects: placeholderCompartment.reconfigure(editorPlaceholder()),
++  })
++  editorRefresh()
++})
++
++function syncEditorToPostContent(content: string) {
++  const view = codeMirrorView.value
++  if (!view)
++    return
++
++  const currentContent = view.state.doc.toString()
++  if (currentContent === content)
++    return
++
++  const generation = ++postSwitchGeneration
++  replaceDocumentWithoutHistory(view, content)
++  resetEditorHistory(view, historyCompartment)
++  void preloadMathJaxIfNeeded(content).then(() => {
++    if (generation !== postSwitchGeneration)
++      return
++    editorRefresh()
++  })
++}
++
++watch(currentPostIndex, (newIndex, oldIndex) => {
++  if (oldIndex !== undefined && oldIndex >= 0)
++    flushEditorContentToPostAtIndex(oldIndex)
++
++  const post = posts.value[newIndex]
++  if (!post)
++    return
++  syncEditorToPostContent(post.content)
++})
++
++/** Refresh editor when posts change externally (e.g. cloud sync) even if index is unchanged */
++watch(
++  () => currentPost.value?.content,
++  (content) => {
++    if (content == null)
++      return
++    syncEditorToPostContent(content)
++  },
++)
++
++const historyTimer = ref<ReturnType<typeof setTimeout>>()
++onMounted(() => {
++  historyTimer.value = setInterval(() => {
++    const currentPost = posts.value[currentPostIndex.value]
++
++    const pre = (currentPost.history || [])[0]?.content
++    if (pre === currentPost.content) {
++      return
++    }
++
++    currentPost.history ??= []
++    currentPost.history.unshift({
++      content: currentPost.content,
++      datetime: toStoredDateTime(),
++    })
++
++    currentPost.history.length = Math.min(currentPost.history.length, 10)
++  }, 30 * 1000)
++})
++
++onUnmounted(() => {
++  editorStore.unregisterContentFlush()
++  window.removeEventListener(MATHJAX_READY_EVENT, handleMathJaxReady)
++  clearTimeout(historyTimer.value)
++  clearTimeout(persistTimer.value)
++  document.removeEventListener(`keydown`, handleGlobalKeydown, { capture: false })
++})
++
++defineExpose({
++  codeMirrorView,
++  editorRefresh,
++  uploadImage,
++  isImgLoading,
++})
++</script>
++
++<template>
++  <div
++    v-show="viewMode !== 'preview'"
++    ref="codeMirrorWrapper"
++    class="codeMirror-wrapper relative h-full"
++    @contextmenu.capture="onWrapperContextMenuCapture"
++  >
++    <SearchTab
++      v-if="searchTabMounted && codeMirrorView"
++      ref="searchTabRef"
++      :editor-view="codeMirrorView as any"
++    />
++    <SlashCommandMenu
++      v-if="slashVisible"
++      :visible="slashVisible"
++      :position="slashPosition"
++      :active-index="slashActiveIndex"
++      :filter="slashFilter"
++      :container-el="codeMirrorWrapper"
++      :basic-commands="slashBasicCommands"
++      :common-commands="slashCommonCommands"
++      :edit-commands="slashEditCommands"
++      :style-commands="slashStyleCommands"
++      :filtered-commands="slashFilteredCommands"
++      @execute="(cmd) => codeMirrorView && executeSlashCommand(codeMirrorView, cmd)"
++      @close="closeSlashMenu()"
++    />
++
++    <EditorContextMenu>
++      <div
++        id="editor"
++        ref="editorRef"
++        class="codemirror-container mathjax-ignore"
++        :lang="CONTENT_FONT_LANG"
++      />
++    </EditorContextMenu>
++  </div>
++</template>
++
++<style lang="less" scoped>
++@import url('../../assets/less/app.less');
++</style>
++
++<style lang="less" scoped>
++.codeMirror-wrapper {
++  overflow-x: hidden;
++  height: 100%;
++  position: relative;
++}
++</style>
+diff --git a/scripts/creatoros-request-budget-static-delivery.mjs b/scripts/creatoros-request-budget-static-delivery.mjs
+new file mode 100644
+--- /dev/null
++++ b/scripts/creatoros-request-budget-static-delivery.mjs
+@@ -0,0 +1,181 @@
++import assert from 'node:assert/strict'
++import crypto from 'node:crypto'
++import fs from 'node:fs'
++import path from 'node:path'
++import { pathToFileURL, fileURLToPath } from 'node:url'
++
++const BASE = '/reference-editors/doocs-md/'
++export function inspectStaticResourceSyntax(program, file, localReference) {
++  const checked = []
++function staticString(node) {
++  if (node?.type === 'Literal' && typeof node.value === 'string') return node.value
++  if (node?.type === 'TemplateLiteral' && node.expressions.length === 0 && node.quasis.length === 1) return node.quasis[0].value.cooked ?? node.quasis[0].value.raw
++  return null
++}
++function viteBasePrefix(node, ancestors) {
++  const addition = ancestors.at(-1)
++  if (addition?.type !== 'BinaryExpression' || addition.operator !== '+' || addition.left !== node || addition.right?.type !== 'Identifier') return false
++  const enclosing = ancestors.findLast(parent => ['FunctionExpression', 'FunctionDeclaration', 'ArrowFunctionExpression'].includes(parent.type))
++  if (!enclosing?.params.some(param => param.type === 'Identifier' && param.name === addition.right.name)) return false
++  return enclosing.body === addition || ancestors.at(-2)?.type === 'ReturnStatement'
++}
++function unwrapParenthesized(node) {
++  const seen = new Set()
++  while (node?.type === 'ParenthesizedExpression') {
++    assert.equal(seen.has(node), false, '括号节点不可形成循环')
++    seen.add(node)
++    assert.ok(node.expression && typeof node.expression.type === 'string', '真实OXC括号节点须有expression')
++    node = node.expression
++  }
++  return node
++}
++// SEMANTIC_BOUNDARY_ALLOW: 只判已观察的pathname membership AST协议，不选择内容或放宽资源文件归属。
++function hostPathnameMembership(node, ancestors) {
++  const call = ancestors.findLast(parent => parent.type === 'CallExpression')
++  if (!call || call.arguments.length !== 1 || unwrapParenthesized(call.arguments[0]) !== node) return false
++  const member = (value, property) => value?.type === 'MemberExpression' && value.computed === false && value.property?.type === 'Identifier' && value.property.name === property
++  const callee = unwrapParenthesized(call.callee)
++  if (!member(callee, 'includes')) return false
++  const pathname = unwrapParenthesized(callee.object)
++  if (!member(pathname, 'pathname')) return false
++  const location = unwrapParenthesized(pathname.object)
++  if (!member(location, 'location')) return false
++  const windowObject = unwrapParenthesized(location.object)
++  return windowObject?.type === 'Identifier' && windowObject.name === 'window'
++}
++function vitePreloadTable(node, file) {
++  if (node.type !== 'VariableDeclarator' || node.id?.type !== 'Identifier' || node.id.name !== '__vite__mapDeps') return
++  const fn = node.init
++  assert.equal(fn?.type, 'ArrowFunctionExpression', '真实Vite依赖表函数结构')
++  const cacheParam = fn.params[1]
++  const tableParam = fn.params[2]
++  assert.ok(cacheParam?.type === 'AssignmentPattern' && cacheParam.left?.type === 'Identifier' && cacheParam.right?.type === 'Identifier' && cacheParam.right.name === '__vite__mapDeps')
++  const cacheName = cacheParam.left.name
++  assert.equal(tableParam?.type, 'AssignmentPattern')
++  const reuse = unwrapParenthesized(tableParam.right)
++  assert.ok(reuse?.type === 'LogicalExpression' && reuse.operator === '||')
++  const assignment = unwrapParenthesized(reuse.right)
++  assert.ok(assignment?.type === 'AssignmentExpression' && assignment.operator === '=' && assignment.left?.type === 'MemberExpression' && assignment.left.object?.type === 'Identifier' && assignment.left.object.name === cacheName)
++  assert.equal(assignment.right?.type, 'ArrayExpression')
++  for (const entry of assignment.right.elements) {
++    const dependency = staticString(entry)
++    assert.ok(dependency, '真实默认renderBuiltUrl=false依赖表须逐项静态可核')
++    localReference(dependency.startsWith(BASE) ? dependency : BASE + dependency, file, 'vite-preload-table')
++  }
++}
++function visit(node, file, ancestors = []) {
++  if (!node || typeof node !== 'object') return
++  vitePreloadTable(node, file)
++  if (node.type === 'ImportDeclaration' || node.type === 'ExportNamedDeclaration' || node.type === 'ExportAllDeclaration' || node.type === 'ImportExpression') {
++    const reference = staticString(node.source)
++    if (reference !== null) localReference(reference, file, 'js-import')
++  }
++  // Vite 的依赖表和资源 URL 是实际 local base Literal；库中的说明文字不算资源。
++  const literal = staticString(node)
++  if (literal?.startsWith(BASE)) {
++    if (literal === BASE && viteBasePrefix(node, ancestors)) checked.push({ kind: 'vite-preload-base-prefix', from: file, reference: literal, notAFile: true, parameterConcatConfirmed: true })
++    else if (literal === BASE && hostPathnameMembership(node, ancestors)) checked.push({ kind: 'host-pathname-membership-prefix', from: file, reference: literal, notAFile: true, exactWindowLocationPathnameIncludesArgument: true })
++    else localReference(literal, file, 'js-base-resource')
++  }
++  for (const value of Object.values(node)) {
++    if (Array.isArray(value)) value.forEach(child => visit(child, file, [...ancestors, node]))
++    else if (value && typeof value === 'object') visit(value, file, [...ancestors, node])
++  }
++}
++  visit(program, file)
++  return { basePrefixes: checked }
++}
++
++async function main(args) {
++const [sourceRoot, originalEntry, deliveryRoot, reportPath] = args
++assert.ok(sourceRoot && originalEntry && deliveryRoot && reportPath)
++const diagnostic = { task: 'T-1254', sourceRoot, originalEntry, deliveryRoot, currentArtifact: null, lastReference: null, completeLocalGraph: false }
++const inlineScripts = [], sourceArtifacts = [], checked = [], outputArtifacts = []
++let parsedJs = 0
++try {
++const builtRoot = path.join(sourceRoot, 'apps/web/dist')
++const { parseSync } = await import(pathToFileURL(path.join(sourceRoot, 'apps/web/node_modules/vite/dist/node/index.js')).href)
++const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
++assert.ok(!fs.existsSync(deliveryRoot), '整套新owned目录，禁止覆盖既有交付')
++fs.mkdirSync(deliveryRoot, { mode: 0o700 })
++const staticRoot = path.join(deliveryRoot, 'static')
++fs.cpSync(path.join(builtRoot, 'static'), staticRoot, { recursive: true })
++const builtHtml = fs.readFileSync(path.join(builtRoot, 'index.html'), 'utf8')
++const oldHtml = fs.readFileSync(originalEntry, 'utf8')
++const policy = /<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"\s*\/?>/i.exec(oldHtml)
++assert.ok(policy)
++assert.ok(policy[1].split(';').map(x => x.trim()).includes("connect-src 'none'"))
++assert.equal(/http-equiv=["']Content-Security-Policy/i.test(builtHtml), false, '构建输入策略不隐式覆盖原策略')
++let html = builtHtml.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi, (tag, attributes, body) => {
++  if (/\bsrc\s*=/i.test(attributes) || !body.trim()) return tag
++  const bytes = Buffer.from(body)
++  const file = 'static/js/creatoros-inline-' + hash(bytes) + '.js'
++  fs.mkdirSync(path.dirname(path.join(deliveryRoot, file)), { recursive: true })
++  fs.writeFileSync(path.join(deliveryRoot, file), bytes)
++  inlineScripts.push({ file, sha256: hash(bytes), size: bytes.length, originalAttributes: attributes })
++  return '<script' + attributes + ' src="/reference-editors/doocs-md/' + file + '"></script>'
++})
++html = html.replace(/<head\b[^>]*>/i, tag => tag + policy[0])
++fs.writeFileSync(path.join(deliveryRoot, 'index.html'), html)
++function list(dir, root, out) {
++  for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
++    const file = path.join(dir, entry.name)
++    assert.equal(entry.isSymbolicLink(), false, '构建输出不跟随符号链接')
++    if (entry.isDirectory()) list(file, root, out)
++    else {
++      const bytes = fs.readFileSync(file)
++      out.push({ file: path.relative(root, file), size: bytes.length, sha256: hash(bytes) })
++    }
++  }
++}
++list(builtRoot, builtRoot, sourceArtifacts)
++const BASE = '/reference-editors/doocs-md/'
++function localReference(reference, from, kind) {
++  diagnostic.lastReference = { reference, from, kind, clean: null, resolved: null }
++  if (!reference || reference.startsWith('data:') || reference.startsWith('blob:') || reference.startsWith('#')) return
++  assert.equal(/^(?:https?:)?\/\//.test(reference), false, kind + '不引用外部资源')
++  const clean = decodeURIComponent(reference.split(/[?#]/)[0])
++  const resolved = clean.startsWith(BASE)
++    ? path.join(deliveryRoot, clean.slice(BASE.length))
++    : clean.startsWith('/') ? null : path.resolve(path.dirname(from), clean)
++  Object.assign(diagnostic.lastReference, { clean, resolved })
++  assert.ok(resolved && resolved.startsWith(deliveryRoot + path.sep), '静态引用必须属于本套图：' + reference)
++  if (!fs.existsSync(resolved)) {
++    // favicon/assets由产品root原字节提供，记录明确来源，不新增root文件。
++    const sharedRoot = path.dirname(originalEntry)
++    const sharedRelative = clean.startsWith(BASE) ? clean.slice(BASE.length) : null
++    const permittedFrozenRoot = sharedRelative === 'favicon.png' || sharedRelative?.startsWith('assets/')
++    const existing = permittedFrozenRoot ? path.join(sharedRoot, sharedRelative) : null
++    assert.ok(existing && existing.startsWith(sharedRoot + path.sep) && fs.statSync(existing).isFile(), '引用缺失：' + reference)
++    const generated = path.join(builtRoot, sharedRelative)
++    if (fs.existsSync(generated)) assert.equal(hash(fs.readFileSync(generated)), hash(fs.readFileSync(existing)), '构建要求改变未授权root资源：' + sharedRelative)
++    checked.push({ kind, from: path.relative(deliveryRoot, from), reference, sharedFrozenFile: existing, sha256: hash(fs.readFileSync(existing)) })
++    return
++  }
++  assert.ok(fs.statSync(resolved).isFile(), '资源须为真实文件：' + reference)
++  checked.push({ kind, from: path.relative(deliveryRoot, from), reference, file: path.relative(deliveryRoot, resolved) })
++}
++for (const match of html.matchAll(/<(?:script|link|img)\b[^>]*\b(?:src|href)\s*=\s*["']([^"']+)["']/gi)) localReference(match[1], path.join(deliveryRoot, 'index.html'), 'html')
++for (const match of html.matchAll(/url\(\s*["']?([^"')\s]+)/gi)) localReference(match[1], path.join(deliveryRoot, 'index.html'), 'html-css')
++list(deliveryRoot, deliveryRoot, outputArtifacts)
++for (const artifact of outputArtifacts) {
++  diagnostic.currentArtifact = artifact
++  const file = path.join(deliveryRoot, artifact.file)
++  if (artifact.file.endsWith('.js')) {
++    const parsed = parseSync(file, fs.readFileSync(file, 'utf8'))
++    assert.equal(parsed.errors.length, 0, artifact.file)
++    parsedJs++
++    checked.push(...inspectStaticResourceSyntax(parsed.program, file, localReference).basePrefixes.map(row => ({ ...row, from: path.relative(deliveryRoot, row.from) })))
++  }
++  else if (artifact.file.endsWith('.css')) for (const match of fs.readFileSync(file, 'utf8').matchAll(/url\(\s*["']?([^"')\s]+)/gi)) localReference(match[1], file, 'css-url')
++}
++assert.equal(/<script\b(?![^>]*\bsrc\s*=)[^>]*>\s*\S/i.test(html), false, '原script-src self不执行inline代码')
++assert.equal(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"\s*\/?>/i.exec(html)?.[1], policy[1], '原CSP全部字节不变')
++fs.writeFileSync(reportPath, JSON.stringify({ task: 'T-1254', builtRoot, originalEntry, deliveryRoot, originalPolicy: policy[1], samePolicy: true, inlineScripts, sourceArtifacts, outputArtifacts, checked, parsedJs, completeLocalGraph: true, sourcePatchAndBridgeUnmodified: true, noProductionCopy: true }, null, 2) + '\n')
++} catch (error) {
++  fs.writeFileSync(reportPath, JSON.stringify({ ...diagnostic, inlineScripts, sourceArtifacts, outputArtifacts, checked, parsedJs, partial: true, completeLocalGraph: false, error: { name: error.name, message: error.message, stack: error.stack }, noProductionCopy: true }, null, 2) + '\n')
++  throw error
++}
++
++}
++if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) await main(process.argv.slice(2))

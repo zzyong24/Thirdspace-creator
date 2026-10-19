@@ -1,0 +1,30 @@
+--- /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts
++++ docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts
+@@ -1,17 +1,22 @@
+ import {readFile,readdir} from 'node:fs/promises';
+ import {resolve,sep} from 'node:path';
+ import {createRequire} from 'node:module';
+-import {Journey,expect,observe,REQUEST,UI_OPERATION,key,TEXT} from './acceptance-support';
++import {Journey,expect,observe,REQUEST,UI_OPERATION,OBSERVE,key,TEXT} from './acceptance-support';
++import {completionWaitMs} from '@creatoros/contract/timeout-policy';
+ export type Scenario='text-null'|'text-usage'|'image'|'incomplete'|'missing-binding';
+ export async function allCalls(j:Journey,taskId:string){let afterSequence=0;const calls:any[]=[];let page:any;
+  do{page=await j.op('workbench.tasks.inspect',{params:{taskId},query:{afterSequence,limit:100}});calls.push(...page.calls);if(page.hasMore&&page.nextSequence<=afterSequence)throw Error('NON_PROGRESSING_PUBLIC_LEDGER');afterSequence=page.nextSequence;}while(page.hasMore);return {...page,calls};
+ }
+ export async function submitChat(j:Journey,prompt:string){
+- await j.view(`/projects/${j.project.id}/production?outputId=${j.output.id}&copilot=open#original-protocol-engineering`,'real-video-project-chat');
++ await j.view(`/projects/${j.project.id}/production?outputId=${j.output.id}&copilot=open&surface=project&selKind=project&selId=${encodeURIComponent(j.project.id)}#original-protocol-engineering`,'real-video-project-chat');
+  const input=j.page.getByLabel('我能帮你做什么');await expect(input).toBeVisible();await input.fill(prompt);
+- const source=await j.uiOp('ai.conversations.messages.create',()=>j.page.getByTestId('submit-button').click());expect(source.id).toBeTruthy();expect(source.role).toBe('user');
+- const task=await observe(async()=>{const ts=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,projectId:j.project.id,taskType:'copilot.assist'}});return ts.find((t:any)=>t.inputData?.sourceMessageId===source.id);},t=>Boolean(t));
+- expect(task.groupId).toBe(j.groupId);expect(task.inputData.conversationId).toBe(source.conversationId);j.track(task);return {source,task};
++ const captured=j.page.waitForResponse(r=>{const url=new URL(r.url());if(url.origin!==new URL(j.page.url()).origin||url.pathname!='/api/chat'||r.request().method()!=='POST')return false;try{const body=r.request().postDataJSON();const user=body.messages?.findLast((m:any)=>m.role==='user');return user?.parts?.filter((part:any)=>part.type==='text').map((part:any)=>part.text).join('')===prompt;}catch{return false;}},{timeout:completionWaitMs([REQUEST,OBSERVE])}).then(response=>({response}),error=>({error}));
++ await j.page.getByTestId('submit-button').click();const completed=await captured;if('error' in completed)throw completed.error;
++ const response=completed.response,body=response.request().postDataJSON(),headers=response.headers();const binding={sourceMessageId:headers['x-source-message-id'],taskId:headers['x-ai-task-id'],conversationId:headers['x-conversation-id'],executionTaskId:headers['x-execution-task-id']};j.receipts.push({id:'protocol-original-chat-handshake',status:response.status(),requestContext:{surface:body.chatContext?.surface,scope:body.chatContext?.scope,projectId:body.chatContext?.projectId,conversationId:body.conversationId},...binding});expect(response.ok()).toBe(true);for(const id of Object.values(binding))expect(id,'正式chat握手缺原ID').toBeTruthy();
++ const task=await j.op('ai.tasks.get',{params:{taskId:binding.taskId}});j.track(task);expect(body.chatContext?.projectId).toBe(j.project.id);if(body.conversationId)expect(binding.conversationId).toBe(body.conversationId);expect(task.id).toBe(binding.taskId);expect(task.projectId).toBe(j.project.id);expect(task.taskType).toBe('copilot.assist');expect(task.executionTaskId).toBe(binding.executionTaskId);expect(task.inputData.sourceMessageId).toBe(binding.sourceMessageId);
++ await observe(async()=>{const ts=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,projectId:j.project.id,taskType:'copilot.assist'}});return ts.find((t:any)=>t.id===binding.taskId&&t.inputData?.sourceMessageId===binding.sourceMessageId);},t=>Boolean(t));
++ const messages=await j.op('ai.conversations.messages.list',{params:{conversationId:binding.conversationId}});const source=messages.find((m:any)=>m.id===binding.sourceMessageId);expect(source,'握手source必须从同原会话真实读回').toBeTruthy();expect(source.id).toBeTruthy();expect(source.role).toBe('user');expect(source.conversationId).toBe(binding.conversationId);
++ expect(task.groupId).toBe(j.groupId);expect(task.inputData.conversationId).toBe(source.conversationId);return {source,task};
+ }
+ export async function fixtureState(threadId?:string){const root=process.env.CREATOROS_T1246_FIXTURE_STATE!;if(!root||process.env.CREATOROS_T1246_PROFILE!=='protocol')throw Error('OWNED_PROTOCOL_PROFILE_REQUIRED');const files=(await readdir(root)).filter(p=>/^t1246-thread-.*\.json$/.test(p));const states=await Promise.all(files.map(p=>readFile(resolve(root,p),'utf8').then(JSON.parse)));return threadId?states.find(s=>s.threadId===threadId):states;}
+ export async function originalUnknown(j:Journey,scenario:Scenario,jointSettings=false){

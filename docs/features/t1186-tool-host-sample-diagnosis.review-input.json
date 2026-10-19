@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅T1186精确测试样本SPEC初审）：原完整LED014实际exit1，前端178PASS、后端实际3文件264PASS2FAIL；两模式原循环首拒均canvas.propose，原log SHA4fffe363…与收据一致，后四工具尚未走到，不冒称已观察失败。当前唯一待改chat-tools.test.ts仍原HEAD字节a62cc9fa…；旧sample不处理const/判别联合/positive排他下限，而真实prepareChatToolParameters复用原Zod校验器。五个具名中性样本按当前合同可保持parse输入相等：合法moveNode/baseRevision1、accountGroups.get明确params.groupId且显式offset0/limit20无window、无空白group.create、完整空schemaVersion1画布/projectId:null、合法generate/baseRevision1/nodeId。只限原selected/project两例内，保默认生成器、原226例、五项原正负断言、完整定义覆盖/redfox样本/typed4原跳过，增加canvas revision0/未知type/空operations和system未知kind负测，不改product/guard/owner/预算或执行器。要求focused/完整chat-tools、原完整LED014、相关实际公共链/types/scans/独评；现公共基线35PASS、owner101PASS3原PG跳过、contract首命令无文件exit1及corrected7PASS均如实保留，不代签实现/完整Gate/native/付费模型/平台或2/2耗尽的研究恢复。findings=[]。",
+  "findings": []
+}

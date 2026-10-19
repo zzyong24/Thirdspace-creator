@@ -10,10 +10,13 @@ import {
   listEnvelope,
   successEnvelope,
   type Endpoint,
+  type RequestContext,
 } from "@creatoros/contract";
 import {
   compositeTransport,
   getCliInvocationService,
+  getReportingLocal,
+  getWechatNavigationDiagnosis,
 } from "@/server/persistence-client";
 import {
   AuthenticationError,
@@ -43,6 +46,52 @@ import {
 const ENDPOINTS_BY_ID: Record<string, Endpoint> = Object.fromEntries(
   Object.values(ENDPOINTS).map((e) => [e.id, e]),
 );
+
+// SEMANTIC_BOUNDARY_ALLOW: 缓存只重放旧结果，不执行旧写操作；按正式实体字段和
+// resource schema 重读当前归属。这里不分析正文、ID 前缀或业务名称，也不重签旧收据。
+async function assertCliCachedOwnership(endpoint:Endpoint,input:unknown,response:unknown,ctx:RequestContext):Promise<void> {
+  if(endpoint.id==='accounts.wechatNavigation.diagnose'){
+    const accountId=(input as {params?:{accountId?:unknown}})?.params?.accountId;
+    if(typeof accountId!=='string')throw new Error('WECHAT_NAVIGATION_ACCOUNT_REQUIRED');
+    await (await getWechatNavigationDiagnosis()).assertCachedScope(ctx,accountId,successEnvelope(endpoint.response).parse(response).data);return;
+  }
+  const object=(value:unknown):value is Record<string,unknown>=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+  const request=object(input)?input:{};
+  const envelope=successEnvelope(endpoint.response).parse(response);
+  const refs=new Map<string,Set<string>>();
+  const add=(field:string,id:string)=>{const values=refs.get(field)??new Set<string>();values.add(id);refs.set(field,values);};
+  const fields=['projectId','outputId','contentOutputId','assetId','canvasId','compositionId','momentsId','resultId','bundleId','knowledgeId','artifactId','publicationId','reportId'] as const;
+  const collect=(value:unknown)=>{if(object(value))for(const field of fields){const id=value[field];if(typeof id==='string'&&id)add(field==='contentOutputId'?'outputId':field,id);}};
+  for(const value of [request.params,request.body,request.query,envelope.data])collect(value);
+  const resources=[
+    [ENDPOINTS.getProject,'projectId'],[ENDPOINTS.getOutput,'outputId'],[ENDPOINTS.getAsset,'assetId'],
+    [ENDPOINTS.getCanvas,'canvasId'],[ENDPOINTS.getWorkComposition,'compositionId'],[ENDPOINTS.getMoments,'momentsId'],
+    [ENDPOINTS.getKnowledge,'knowledgeId'],[ENDPOINTS.getArtifact,'artifactId'],[ENDPOINTS.getPublication,'publicationId'],
+  ] as const;
+  for(const [reader,field] of resources)if(endpoint.response===reader.response){
+    const entity=reader.response.parse(envelope.data);if('id' in entity)add(field,entity.id);else if('compositionId' in entity)add(field,entity.compositionId);else if('momentsId' in entity)add(field,entity.momentsId);
+  }
+  for(const value of [request.body,envelope.data]){
+    if(!object(value))continue;
+    if(value.composition!==undefined){const owned=ENDPOINTS.getWorkComposition.response.parse(value.composition);add('compositionId',owned.compositionId);collect(owned);}
+    if(value.moments!==undefined){const owned=ENDPOINTS.getMoments.response.parse(value.moments);add('momentsId',owned.momentsId);collect(owned);}
+    for(const field of ['scope','source','expected','target'] as const)collect(value[field]);
+  }
+  const projectIds=refs.get('projectId')??new Set<string>();
+  for(const id of refs.get('outputId')??[]){const current=successEnvelope(ENDPOINTS.getOutput.response).parse(await compositeTransport.request(ENDPOINTS.getOutput,{params:{outputId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('canvasId')??[]){const current=successEnvelope(ENDPOINTS.getCanvas.response).parse(await compositeTransport.request(ENDPOINTS.getCanvas,{params:{canvasId:id},query:undefined,body:undefined},ctx)).data;if(current.projectId)projectIds.add(current.projectId);}
+  for(const id of refs.get('compositionId')??[]){const current=successEnvelope(ENDPOINTS.getWorkComposition.response).parse(await compositeTransport.request(ENDPOINTS.getWorkComposition,{params:{compositionId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('momentsId')??[]){const current=successEnvelope(ENDPOINTS.getMoments.response).parse(await compositeTransport.request(ENDPOINTS.getMoments,{params:{momentsId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('resultId')??[]){const current=successEnvelope(ENDPOINTS.getResult.response).parse(await compositeTransport.request(ENDPOINTS.getResult,{params:{resultId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('assetId')??[])await compositeTransport.request(ENDPOINTS.getAsset,{params:{assetId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('knowledgeId')??[])await compositeTransport.request(ENDPOINTS.getKnowledge,{params:{knowledgeId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('artifactId')??[])await compositeTransport.request(ENDPOINTS.getArtifact,{params:{artifactId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('publicationId')??[])await compositeTransport.request(ENDPOINTS.getPublication,{params:{publicationId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('bundleId')??[])await compositeTransport.request(ENDPOINTS.getBundle,{params:{bundleId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('reportId')??[])await compositeTransport.request(ENDPOINTS.getWorkReview,{params:{reportId:id},query:undefined,body:undefined},ctx);
+  // 已成功缓存仅回读原事实；归档不触发旧handler。当前父归属仍逐一由真实读端口核验。
+  for(const id of projectIds)successEnvelope(ENDPOINTS.getProject.response).parse(await compositeTransport.request(ENDPOINTS.getProject,{params:{projectId:id},query:undefined,body:undefined},ctx));
+}
 
 const CLI_ACCESS_HEADER = "x-creatoros-cli-access";
 const CLI_ACTIVITY_WINDOW_MS = 5 * 60 * 1000;
@@ -250,6 +299,13 @@ export function dispatchErrorResponse(err: unknown): Response {
   if (err instanceof OwnershipError) {
     return errorEnvelope(ErrorCode.OwnershipError, err.message);
   }
+  // SEMANTIC_BOUNDARY_ALLOW: 识别数据库资源授权守卫的固定错误协议，不按业务正文猜错误。
+  let resourceError:unknown=err;
+  for(let depth=0;depth<5&&resourceError&&typeof resourceError==='object';depth++){
+    const row=resourceError as {code?:unknown;message?:unknown;cause?:unknown};
+    if(row.code==='40001'&&typeof row.message==='string'&&row.message.startsWith('GROUP_RESOURCE_SCOPE_CONFLICT:'))return errorEnvelope(ErrorCode.ConflictError,row.message.slice('GROUP_RESOURCE_SCOPE_CONFLICT:'.length).trim());
+    resourceError=row.cause;
+  }
   // Module/CDP errors carry a contract ErrorCode in `.code`. Keeping the
   // structured envelope here is what lets HttpTransport and UI act on the code.
   const code = (err as { code?: unknown }).code;
@@ -292,6 +348,13 @@ export function safeDispatchErrorDiagnostic(
   };
 }
 
+export function shouldCaptureDispatchFailure(operationId:string,err:unknown):boolean {
+  if(operationId.startsWith("settings.reporting."))return false;
+  const rawCode=(err as {code?:unknown}|null)?.code;
+  const mappedStatus=typeof rawCode==="string" && rawCode in ERROR_HTTP ? ERROR_HTTP[rawCode as ErrorCode] : null;
+  return mappedStatus===null || mappedStatus>=500;
+}
+
 export async function POST(req: Request): Promise<Response> {
   // [RT-H01] 有副作用的 RPC 入口:先挡非本机/跨站请求(DNS rebinding + CSRF)。
   if (!isTrustedLocalRequest(req)) return loopbackForbidden();
@@ -320,7 +383,9 @@ export async function POST(req: Request): Promise<Response> {
   // + active;验不过(不存在/不属主/已归档)→ 抛 OwnershipError → 下方转 404 **拒绝**,
   // 不再静默降级 null(降级会把失效号伪装成「未选号引导态」,不诚实;SPEC §4.3)。
   const rawToken = readSessionCookie(req);
-  const accountId = req.headers.get("x-account-id");
+  // 用户域管理读不依赖当前选择；失效选择也要能从真实账号组列表恢复。
+  const selectionIndependentRead=new Set(["accountGroups.list","accountGroups.get","accounts.list","accounts.get","accounts.bindingCapabilities"]).has(endpoint.id);
+  const accountId = selectionIndependentRead?null:req.headers.get("x-account-id");
   // [RT-H01] 状态变更类 op 要求「明确身份或拒绝」:present-but-invalid cookie 不静默降级
   //   主用户 → 上抛 → 401(缺失 cookie 仍走单机免登录直通,读 op 保持宽松)。契约 HttpMethod
   //   只有 GET/POST/PATCH/PUT/DELETE(无 HEAD),故「非 GET 即写路径」。
@@ -329,6 +394,8 @@ export async function POST(req: Request): Promise<Response> {
   try {
     ctx = await resolveRequestContext(rawToken, accountId, {
       rejectInvalidToken: isMutation,
+      groupId: req.headers.get("x-group-id"),
+      groupSelectionMode:selectionIndependentRead?"unselected":"reject",
     });
   } catch (err) {
     // 结构化识别鉴权错误(跨 Next bundle 边界 instanceof 不可靠,故并用 code/name)。
@@ -406,10 +473,12 @@ export async function POST(req: Request): Promise<Response> {
         );
       }
       if (begin.kind === "cached") {
+        await assertCliCachedOwnership(endpoint,payload.input,begin.response,ctx);
         return NextResponse.json(begin.response);
       }
       if (begin.kind === "receipt") {
-        const status = begin.receipt.outcomeUnknown ? 409 : begin.receipt.status === "running" ? 202 : 200;
+        const status = begin.receipt.outcomeUnknown || begin.receipt.status === "failed"
+          ? 409 : begin.receipt.status === "running" ? 202 : 200;
         return NextResponse.json(
           { data: null, receipt: begin.receipt, meta: { requestId: begin.receipt.requestId } },
           { status },
@@ -417,11 +486,10 @@ export async function POST(req: Request): Promise<Response> {
       }
       cliInvocationId = begin.invocationId;
     }
-    const rawEnvelope = await compositeTransport.request(
-      endpoint,
-      (payload.input ?? {}) as never,
-      ctx,
-    );
+    if(endpoint.id==='accounts.wechatNavigation.diagnose'&&!cliInvocationId)throw Object.assign(new Error('WECHAT_NAVIGATION_TRUSTED_CLI_REQUIRED'),{code:ErrorCode.ConflictError});
+    const rawEnvelope = endpoint.id==='accounts.wechatNavigation.diagnose'
+      ? await compositeTransport.request(endpoint,(payload.input??{}) as never,ctx,{signal:req.signal,trustedInvocationId:cliInvocationId!})
+      : await compositeTransport.request(endpoint,(payload.input??{}) as never,ctx);
     // 普通 UI 路径保持现状；CLI 的跨进程幂等缓存只接受 contract 验证过的响应，禁止把
     // 运行时偶发的畸形 envelope 加密固化 24 小时。
     const envelope = isCliInvocation
@@ -448,6 +516,11 @@ export async function POST(req: Request): Promise<Response> {
       "[CreatorOS] DISPATCH_FAILED",
       JSON.stringify(safeDispatchErrorDiagnostic(id, err)),
     );
+    if (shouldCaptureDispatchFailure(id,err)) {
+      void getReportingLocal()
+        .then(reporting=>reporting.captureDiagnostic(ctx,"operation_failed",ctx.requestId,new Date().toISOString(),id))
+        .catch(()=>undefined);
+    }
     return dispatchErrorResponse(err);
   }
 }

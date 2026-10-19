@@ -1,0 +1,160 @@
+import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
+import { pathToFileURL, fileURLToPath } from 'node:url'
+
+const BASE = '/reference-editors/doocs-md/'
+export function inspectStaticResourceSyntax(program, file, localReference) {
+  const checked = []
+function staticString(node) {
+  if (node?.type === 'Literal' && typeof node.value === 'string') return node.value
+  if (node?.type === 'TemplateLiteral' && node.expressions.length === 0 && node.quasis.length === 1) return node.quasis[0].value.cooked ?? node.quasis[0].value.raw
+  return null
+}
+function viteBasePrefix(node, ancestors) {
+  const addition = ancestors.at(-1)
+  if (addition?.type !== 'BinaryExpression' || addition.operator !== '+' || addition.left !== node || addition.right?.type !== 'Identifier') return false
+  const enclosing = ancestors.findLast(parent => ['FunctionExpression', 'FunctionDeclaration', 'ArrowFunctionExpression'].includes(parent.type))
+  if (!enclosing?.params.some(param => param.type === 'Identifier' && param.name === addition.right.name)) return false
+  return enclosing.body === addition || ancestors.at(-2)?.type === 'ReturnStatement'
+}
+function unwrapParenthesized(node) {
+  const seen = new Set()
+  while (node?.type === 'ParenthesizedExpression') {
+    assert.equal(seen.has(node), false, '括号节点不可形成循环')
+    seen.add(node)
+    assert.ok(node.expression && typeof node.expression.type === 'string', '真实OXC括号节点须有expression')
+    node = node.expression
+  }
+  return node
+}
+function vitePreloadTable(node, file) {
+  if (node.type !== 'VariableDeclarator' || node.id?.type !== 'Identifier' || node.id.name !== '__vite__mapDeps') return
+  const fn = node.init
+  assert.equal(fn?.type, 'ArrowFunctionExpression', '真实Vite依赖表函数结构')
+  const cacheParam = fn.params[1]
+  const tableParam = fn.params[2]
+  assert.ok(cacheParam?.type === 'AssignmentPattern' && cacheParam.left?.type === 'Identifier' && cacheParam.right?.type === 'Identifier' && cacheParam.right.name === '__vite__mapDeps')
+  const cacheName = cacheParam.left.name
+  assert.equal(tableParam?.type, 'AssignmentPattern')
+  const reuse = unwrapParenthesized(tableParam.right)
+  assert.ok(reuse?.type === 'LogicalExpression' && reuse.operator === '||')
+  const assignment = unwrapParenthesized(reuse.right)
+  assert.ok(assignment?.type === 'AssignmentExpression' && assignment.operator === '=' && assignment.left?.type === 'MemberExpression' && assignment.left.object?.type === 'Identifier' && assignment.left.object.name === cacheName)
+  assert.equal(assignment.right?.type, 'ArrayExpression')
+  for (const entry of assignment.right.elements) {
+    const dependency = staticString(entry)
+    assert.ok(dependency, '真实默认renderBuiltUrl=false依赖表须逐项静态可核')
+    localReference(dependency.startsWith(BASE) ? dependency : BASE + dependency, file, 'vite-preload-table')
+  }
+}
+function visit(node, file, ancestors = []) {
+  if (!node || typeof node !== 'object') return
+  vitePreloadTable(node, file)
+  if (node.type === 'ImportDeclaration' || node.type === 'ExportNamedDeclaration' || node.type === 'ExportAllDeclaration' || node.type === 'ImportExpression') {
+    const reference = staticString(node.source)
+    if (reference !== null) localReference(reference, file, 'js-import')
+  }
+  // Vite 的依赖表和资源 URL 是实际 local base Literal；库中的说明文字不算资源。
+  const literal = staticString(node)
+  if (literal?.startsWith(BASE)) {
+    if (literal === BASE && viteBasePrefix(node, ancestors)) checked.push({ kind: 'vite-preload-base-prefix', from: file, reference: literal, notAFile: true, parameterConcatConfirmed: true })
+    else localReference(literal, file, 'js-base-resource')
+  }
+  for (const value of Object.values(node)) {
+    if (Array.isArray(value)) value.forEach(child => visit(child, file, [...ancestors, node]))
+    else if (value && typeof value === 'object') visit(value, file, [...ancestors, node])
+  }
+}
+  visit(program, file)
+  return { basePrefixes: checked }
+}
+
+async function main(args) {
+const [sourceRoot, originalEntry, deliveryRoot, reportPath] = args
+assert.ok(sourceRoot && originalEntry && deliveryRoot && reportPath)
+const builtRoot = path.join(sourceRoot, 'apps/web/dist')
+const { parseSync } = await import(pathToFileURL(path.join(sourceRoot, 'apps/web/node_modules/vite/dist/node/index.js')).href)
+const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
+assert.ok(!fs.existsSync(deliveryRoot), '整套新owned目录，禁止覆盖既有交付')
+fs.mkdirSync(deliveryRoot, { mode: 0o700 })
+const staticRoot = path.join(deliveryRoot, 'static')
+fs.cpSync(path.join(builtRoot, 'static'), staticRoot, { recursive: true })
+const builtHtml = fs.readFileSync(path.join(builtRoot, 'index.html'), 'utf8')
+const oldHtml = fs.readFileSync(originalEntry, 'utf8')
+const policy = /<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"\s*\/?>/i.exec(oldHtml)
+assert.ok(policy)
+assert.ok(policy[1].split(';').map(x => x.trim()).includes("connect-src 'none'"))
+assert.equal(/http-equiv=["']Content-Security-Policy/i.test(builtHtml), false, '构建输入策略不隐式覆盖原策略')
+const inlineScripts = []
+let html = builtHtml.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi, (tag, attributes, body) => {
+  if (/\bsrc\s*=/i.test(attributes) || !body.trim()) return tag
+  const bytes = Buffer.from(body)
+  const file = 'static/js/creatoros-inline-' + hash(bytes) + '.js'
+  fs.mkdirSync(path.dirname(path.join(deliveryRoot, file)), { recursive: true })
+  fs.writeFileSync(path.join(deliveryRoot, file), bytes)
+  inlineScripts.push({ file, sha256: hash(bytes), size: bytes.length, originalAttributes: attributes })
+  return '<script' + attributes + ' src="/reference-editors/doocs-md/' + file + '"></script>'
+})
+html = html.replace(/<head\b[^>]*>/i, tag => tag + policy[0])
+fs.writeFileSync(path.join(deliveryRoot, 'index.html'), html)
+const sourceArtifacts = []
+function list(dir, root, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const file = path.join(dir, entry.name)
+    assert.equal(entry.isSymbolicLink(), false, '构建输出不跟随符号链接')
+    if (entry.isDirectory()) list(file, root, out)
+    else {
+      const bytes = fs.readFileSync(file)
+      out.push({ file: path.relative(root, file), size: bytes.length, sha256: hash(bytes) })
+    }
+  }
+}
+list(builtRoot, builtRoot, sourceArtifacts)
+const checked = []
+const BASE = '/reference-editors/doocs-md/'
+function localReference(reference, from, kind) {
+  if (!reference || reference.startsWith('data:') || reference.startsWith('blob:') || reference.startsWith('#')) return
+  assert.equal(/^(?:https?:)?\/\//.test(reference), false, kind + '不引用外部资源')
+  const clean = decodeURIComponent(reference.split(/[?#]/)[0])
+  const resolved = clean.startsWith(BASE)
+    ? path.join(deliveryRoot, clean.slice(BASE.length))
+    : clean.startsWith('/') ? null : path.resolve(path.dirname(from), clean)
+  assert.ok(resolved && resolved.startsWith(deliveryRoot + path.sep), '静态引用必须属于本套图：' + reference)
+  if (!fs.existsSync(resolved)) {
+    // favicon/assets由产品root原字节提供，记录明确来源，不新增root文件。
+    const sharedRoot = path.dirname(originalEntry)
+    const sharedRelative = clean.startsWith(BASE) ? clean.slice(BASE.length) : null
+    const permittedFrozenRoot = sharedRelative === 'favicon.png' || sharedRelative?.startsWith('assets/')
+    const existing = permittedFrozenRoot ? path.join(sharedRoot, sharedRelative) : null
+    assert.ok(existing && existing.startsWith(sharedRoot + path.sep) && fs.statSync(existing).isFile(), '引用缺失：' + reference)
+    const generated = path.join(builtRoot, sharedRelative)
+    if (fs.existsSync(generated)) assert.equal(hash(fs.readFileSync(generated)), hash(fs.readFileSync(existing)), '构建要求改变未授权root资源：' + sharedRelative)
+    checked.push({ kind, from: path.relative(deliveryRoot, from), reference, sharedFrozenFile: existing, sha256: hash(fs.readFileSync(existing)) })
+    return
+  }
+  assert.ok(fs.statSync(resolved).isFile(), '资源须为真实文件：' + reference)
+  checked.push({ kind, from: path.relative(deliveryRoot, from), reference, file: path.relative(deliveryRoot, resolved) })
+}
+for (const match of html.matchAll(/<(?:script|link|img)\b[^>]*\b(?:src|href)\s*=\s*["']([^"']+)["']/gi)) localReference(match[1], path.join(deliveryRoot, 'index.html'), 'html')
+for (const match of html.matchAll(/url\(\s*["']?([^"')\s]+)/gi)) localReference(match[1], path.join(deliveryRoot, 'index.html'), 'html-css')
+const outputArtifacts = []
+list(deliveryRoot, deliveryRoot, outputArtifacts)
+let parsedJs = 0
+for (const artifact of outputArtifacts) {
+  const file = path.join(deliveryRoot, artifact.file)
+  if (artifact.file.endsWith('.js')) {
+    const parsed = parseSync(file, fs.readFileSync(file, 'utf8'))
+    assert.equal(parsed.errors.length, 0, artifact.file)
+    parsedJs++
+    checked.push(...inspectStaticResourceSyntax(parsed.program, file, localReference).basePrefixes.map(row => ({ ...row, from: path.relative(deliveryRoot, row.from) })))
+  }
+  else if (artifact.file.endsWith('.css')) for (const match of fs.readFileSync(file, 'utf8').matchAll(/url\(\s*["']?([^"')\s]+)/gi)) localReference(match[1], file, 'css-url')
+}
+assert.equal(/<script\b(?![^>]*\bsrc\s*=)[^>]*>\s*\S/i.test(html), false, '原script-src self不执行inline代码')
+assert.equal(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"\s*\/?>/i.exec(html)?.[1], policy[1], '原CSP全部字节不变')
+fs.writeFileSync(reportPath, JSON.stringify({ task: 'T-1254', builtRoot, originalEntry, deliveryRoot, originalPolicy: policy[1], samePolicy: true, inlineScripts, sourceArtifacts, outputArtifacts, checked, parsedJs, completeLocalGraph: true, sourcePatchAndBridgeUnmodified: true, noProductionCopy: true }, null, 2) + '\n')
+
+}
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) await main(process.argv.slice(2))

@@ -1,0 +1,5 @@
+# 已审生成清单原许可库存登记
+
+Root已核governance-guard:202和manifest:374，授权仅T-1307、reference-editors/manifest.json、当前SHA df7f51292ce86b728c60fa22da6d4b88b5849faaf0bd36b77ede3bf757d7b522、language_toolchain单条baseline-migrated登记。真实claim-attempt1 exit1保原件。检测来自既有CodeMirror Rust语法许可文件名，非新Rust/Cargo工具链/宿主权；不改guard、不删词、不用quarantined historical_baseline、不把实际生成W移R，不扩大产品SPEC/审核。
+
+A仅原标准build-noterelay生成；非noterelay子树与许可库存必须逐项保持。只有C在R核验实际产出后才可将同一条绑定到真实新SHA，保此旧锚和原manifest在既有提交中的原文；其它变化立即停核。本登记不签产品/测试或原失败PASS。

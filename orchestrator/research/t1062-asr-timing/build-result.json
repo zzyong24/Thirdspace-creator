@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "node",
+    "/tmp/t1062-asr-timing-observation/build.mjs"
+  ],
+  "exit": 0,
+  "files": [
+    {
+      "path": "/tmp/t1062-asr-timing-observation/build.stdout.log",
+      "sha256": "1bf5f35bbe09aad9ed01be313c82d7dd4122058a2de5d5079c6445e0c54ca01c",
+      "bytes": 61
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/build.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/observe.cjs",
+      "sha256": "a435faff1f0370c7787a3d355555fb3292ebaf2740bc71e415e0261b7482221f",
+      "bytes": 768079
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify.cjs",
+      "sha256": "d2f76fe84a2c96830b5392793bb46ba4b58233d33b31fd9a86a9e77834d6211c",
+      "bytes": 740371
+    }
+  ]
+}

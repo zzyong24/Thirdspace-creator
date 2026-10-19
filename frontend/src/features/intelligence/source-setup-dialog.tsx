@@ -9,19 +9,21 @@ import { sourceVerificationErrorMessage,structuredErrorSignal } from "./intellig
 import type { CreateSourceResult,RadarApi,RadarCollection,RadarSource } from "./intelligence-workbench-types";
 import { operationKey } from "./radar-operation-key";
 export function AddSourceDialog({
+  groupId,
   accountId,
   collections,
   api,
   onDone,
 }: {
-  accountId: string;
+  groupId?: string; accountId?: string;
   collections: RadarCollection[];
   api: RadarApi;
   onDone: (result: CreateSourceResult) => void;
 }) {
+  const legacyAccountId=groupId?undefined:accountId;
   const [open, setOpen] = React.useState(false);
   const [type, setType] = React.useState<RadarSource["type"]>(
-    "creator_profile",
+    groupId ? "web" : "creator_profile",
   );
   const [value, setValue] = React.useState("");
   const [name, setName] = React.useState("");
@@ -67,14 +69,12 @@ export function AddSourceDialog({
     if (!open) return;
     let cancelled = false;
     void api
-      .listCollectors({ accountId })
+      .listCollectors({ groupId,accountId:legacyAccountId })
       .then((rows) => {
         if (cancelled) return;
         setCollectors(rows);
         setCollectorAccountId(
-          rows.find((row) => row.accountId === accountId)?.accountId ??
-            rows[0]?.accountId ??
-            "",
+          groupId ? "" : (rows.find((row) => row.accountId === legacyAccountId)?.accountId ?? rows[0]?.accountId ?? ""),
         );
       })
       .catch(() => {
@@ -86,7 +86,7 @@ export function AddSourceDialog({
     return () => {
       cancelled = true;
     };
-  }, [accountId, api, open]);
+  }, [groupId,legacyAccountId, api, open]);
 
   const verify = React.useCallback(() => {
     startTransition(async () => {
@@ -96,7 +96,7 @@ export function AddSourceDialog({
         if (type === "creator_profile") {
           if (!collectorAccountId) throw new Error("collector required");
           const preview = await api.previewProfile({
-            accountId,
+            groupId,accountId,
             collectorAccountId,
             url: new URL(value).toString(),
           });
@@ -112,7 +112,7 @@ export function AddSourceDialog({
           setFolders([]);
           setValue("");
           const rows = await api.listFavoriteFolders({
-            accountId,
+            groupId,accountId,
             collectorAccountId,
           });
           setFolders(rows);
@@ -156,7 +156,7 @@ export function AddSourceDialog({
         }
         if (type === "web" || type === "rss") {
           const preview = await api.previewWeb({
-            accountId,
+            groupId,accountId,
             url: new URL(value).toString(),
             instruction,
           });
@@ -184,7 +184,7 @@ export function AddSourceDialog({
       }
     });
   }, [
-    accountId,
+    groupId,accountId,
     api,
     collectorAccountId,
     favoriteFolderName,
@@ -279,7 +279,7 @@ export function AddSourceDialog({
           };
         }
         const result = await api.createSource({
-          accountId,
+          groupId,accountId,
           collectionId: collectionId || null,
           type,
           config,
@@ -310,7 +310,7 @@ export function AddSourceDialog({
       }
     });
   }, [
-    accountId,
+    groupId,accountId,
     api,
     collectionId,
     collectorAccountId,
@@ -396,6 +396,7 @@ export function AddSourceDialog({
               }}
               className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground"
             >
+              {groupId && collectors.length > 0 ? <option value="">请选择当前组采集账号</option> : null}
               {collectors.length === 0 ? (
                 <option value="">暂无可用抖音账号</option>
               ) : null}
@@ -405,12 +406,12 @@ export function AddSourceDialog({
                   value={collector.accountId}
                 >
                   {collector.accountHandle}
-                  {collector.accountId === accountId ? "（当前工作区）" : ""}
+                  {collector.accountId === accountId ? "（当前选择）" : ""}
                 </option>
               ))}
             </select>
             <span>
-              用所选账号的登录态采集，内容仍归当前工作区。
+              用当前组所选真实账号的登录态采集，内容归当前组。未绑定账号仍可添加公开网页或 RSS。
             </span>
           </label>
         ) : null}
@@ -605,4 +606,3 @@ export function AddSourceDialog({
     </Dialog>
   );
 }
-

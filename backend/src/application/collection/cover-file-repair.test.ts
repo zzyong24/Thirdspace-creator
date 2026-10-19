@@ -3,10 +3,13 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createDb } from '../../index';
+import { seedAdjacentContent } from '../../integration/adjacent-domain-fixtures';
 import { createAssetsService } from '../../modules/assets/assets.service';
 import { createAssetRepository } from '../../modules/assets/assets.repository';
 import { createLocalFsObjectStorage } from '../../modules/assets/localfs-object-storage';
 import { createPublishingService } from '../../modules/publishing/publishing.service';
+import { OwnershipError } from '../../modules/publishing/publishing.errors';
+import { publications, publicationRevisions } from '../../schema/publishing';
 import { backfillDouyinCovers } from './douyin-cover-backfill';
 const cleanups:Array<()=>Promise<unknown>>=[];
 afterEach(async()=>{for(const f of cleanups.splice(0).reverse())await f();});
@@ -17,6 +20,7 @@ it('真实临时文件删除后，经候选、补采、版本保存整链恢复�
  const storage=createLocalFsObjectStorage({rootPath:root,publicBaseUrl:'/blob'},{nextKey:()=>`object-${++seq}`});
  const assets=createAssetsService(createAssetRepository(db,deps),async()=>storage,deps);
  const ctx={userId:'u',accountId:'a',requestId:'r',source:'user' as const};
+ await seedAdjacentContent(db,ctx,['output-1','output-2']);
  const publishing=createPublishingService({db,...deps,isCoverAvailable:(c,id)=>assets.isAssetFileAvailable(c,id)});
  const bytes=Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jUioAAAAASUVORK5CYII=','base64'));
  const lost=await assets.createGeneratedAsset(ctx,{assetType:'image',name:'old.png',mimeType:'image/png',bytes});
@@ -38,6 +42,23 @@ it('真实临时文件删除后，经候选、补采、版本保存整链恢复�
  const repaired=revisions.find(r=>r.coverAssetId!==lost.id)!;
  expect(await assets.getAssetBytes(ctx,repaired.coverAssetId!)).toMatchObject({bytes});
  expect((await publishing.listRevisions(ctx,other.id,{limit:100,offset:0}))[0]!.coverAssetId).toBe(good.id);
+});
+it.each([
+ {name:'不存在的父稿件',owner:null},
+ {name:'其它用户的父稿件',owner:{userId:'other-user',accountId:'a'}},
+ {name:'其它账号的父稿件',owner:{userId:'u',accountId:'other-account'}},
+])('$name拒绝写发布事实与版本，不绕过真实父链',async({owner})=>{
+ const {db,client}=await createDb();cleanups.push(()=>client.close());
+ const ctx={userId:'u',accountId:'a',requestId:'r',source:'user' as const};
+ if(owner)await seedAdjacentContent(db,{...ctx,...owner},['blocked-output']);
+ let seq=0;
+ const publishing=createPublishingService({db,now:()=>new Date().toISOString(),nextId:p=>`${p}-${++seq}`});
+ const beforePublications=await db.select().from(publications);
+ const beforeRevisions=await db.select().from(publicationRevisions);
+ await expect(publishing.createImportedPublication(ctx,'blocked-output',{platform:'douyin',externalId:'blocked-video'})).rejects.toBeInstanceOf(OwnershipError);
+ expect(await db.select().from(publications)).toEqual(beforePublications);
+ expect(await db.select().from(publicationRevisions)).toEqual(beforeRevisions);
+ expect(await publishing.listPublicationsForUser(ctx,{limit:100,offset:0})).toEqual([]);
 });
 it('单张封面检查未知时只延后该作品，其余缺失图片继续下载补齐',async()=>{
  const downloaded:string[]=[],saved:string[]=[],settled:Array<{id:string;success:boolean}>=[];

@@ -1,0 +1,7 @@
+# T1252合同待独评
+
+本次仅编写SPEC及只读来源绑定，未start/改产品或原assert，未开启HTTP/server/PG/browser/model/App。SPEC和现有Undici7.27.2直接依赖候选真实API、原公开装配、renderer11声明槽及清理/13读取/非固定legacy历史循环、Native和browser区别均逐源核对；有限观察不宣称全库任意时长保证。完整正文见正式SPEC，当前待root与peer独立评审。
+
+源binding记录34个实际源文件及6个安装API输入SHA；真实Node25内置300秒证据保留。公共slow HTTP RED/GREEN与新包CLI尚未执行，原Rust新cfg11PASS1ignored不能代签它们。
+
+SDK外部caller默认60000ms是另一个实际来源边界；服务端不能保证未知peer的默认期限。受控验收使用明确较长有限caller观察及真实cancel，不关闭SDK取消。

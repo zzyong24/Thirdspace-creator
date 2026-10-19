@@ -1,0 +1,60 @@
+{
+  "task": "T-1354",
+  "commit": "721dfacf7b3bcbe82eb9c39b61acf1fb1df367d2",
+  "command": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1354",
+    "--evidence",
+    "docs/verification/t1354/control/FRONTEND_REPORT.md"
+  ],
+  "startedAt": "2026-10-18T21:09:46.650Z",
+  "durationMs": 110253,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "reportSha256": "98f1613ba0d26b158608d3ee7dfb220c6ce0232773d868e112b5e54649f4cd92",
+  "rawLogSha256": "c509100fc8426408a405095e592ed89565d594455212581b0c5eba358e8765cc",
+  "tests": [
+    {
+      "title": "T1355 当前绑定真实写后读自动回位、原run恢复与正式Next同ID",
+      "projectName": "t1355-normal",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 19530,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1355/e2e-artifacts/t1355-binding-dialog-compl-e4400-定真实写后读自动回位、原run恢复与正式Next同ID-t1355-normal/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "T1355 当前绑定真实写后读自动回位、原run恢复与正式Next同ID",
+      "projectName": "t1355-minimum",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 18315,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1355/e2e-artifacts/t1355-binding-dialog-compl-e4400-定真实写后读自动回位、原run恢复与正式Next同ID-t1355-minimum/trace.zip"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "boundary": "原始 Playwright JSON/config/env 只保本地私有0600；本摘要仅白名单用例终态。实际执行由既有taskctl负责，非静态报告生成。",
+  "resultsFresh": true,
+  "resultsRawSha256": "ac883928f395a815dc3912cb588f1936effeeca9caf14f54dc8a993ace9a7486"
+}

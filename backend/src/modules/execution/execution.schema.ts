@@ -54,9 +54,11 @@ export function adoptedItemsOf(
 /** 从结果行集取最新 manifest(无/形状不合法 → null,诚实不编)。 */
 export function latestManifest(
   results: readonly AITaskResultResource[],
+  deterministicGeneration?: number,
 ): ExecutionManifest | null {
   for (let i = results.length - 1; i >= 0; i--) {
     const r = results[i]!;
+    if(deterministicGeneration !== undefined && r.resultType !== EXECUTION_MANIFEST_RESULT_TYPE)continue;
     if (r.resultType === "execution_plan") {
       const plan = r.resultData as {taskType?: unknown; summary?: unknown};
       const parsed = executionManifest.safeParse({taskType:plan.taskType,artifacts:[],summary:plan.summary ?? "",meta:{dryRun:true,plan:r.resultData}});
@@ -71,6 +73,7 @@ export function latestManifest(
     const parsed = executionManifest.safeParse(
       (r.resultData as { manifest?: unknown }).manifest,
     );
+    if (deterministicGeneration !== undefined && (!parsed.success || parsed.data.taskType !== "media.probe" || (parsed.data.meta?.deterministicGeneration ?? 0) !== deterministicGeneration)) continue;
     return parsed.success ? parsed.data : null;
   }
   return null;
@@ -125,7 +128,8 @@ export function toExecutionTaskDto(
         params: {},
         constraints: { timeoutSec: 600, network: "deny", maxOutputMB: 512 },
       } as unknown as ExecutionTaskSpec),
-    manifest: latestManifest(results),
+    deterministicGeneration: task.deterministicGeneration,
+    manifest: latestManifest(results,task.taskType === "exec.media.probe" ? task.deterministicGeneration ?? 0 : undefined),
     adoptedAssetIds: adoptedAssetIdsOf(results),
     requestedAt: task.requestedAt,
     startedAt: task.startedAt,

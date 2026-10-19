@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "files": 715,
+  "standardPatchFuzz": 0,
+  "patchedArchiveAndExpandedAllBytesMatch": true,
+  "sourceArchiveSha256": "f9d035cad877a90f1fefcaf3e34653454695ebf38ad7753bd380342ee2c45d9b",
+  "patchSha256": "5a59aa96cf3bddd2fcc7b55403d4513661fd9355280ca22abcd6cf46a4f5fad9"
+}

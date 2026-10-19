@@ -1,4 +1,9 @@
+export * from "./resources/production-script-markdown";
+export * from "./resources/work-source-select";
+export * from './internal/model-routing';
+export * from "./resources/production-time-mapping";
 export const CONTRACT_API_BASE = "/api/v1";
+export * from "./resources/production-editor";
 
 export * from "./envelope";
 export * from "./primitives";
@@ -8,7 +13,20 @@ export * from "./transport";
 export * from "./client";
 export * from "./local-platform";
 export * from "./cli-policy";
+export * from "./assistant-operation-catalog";
+export * from "./resources/assistant-system";
+export * from './operations/assistant-system';
+export * from "./timeout-policy";
+
 export * from "./version";
+export {canvasDocumentSchema,canvasNodeSchema,canvasEdgeSchema,creativeCanvasResource,canvasGenerationLinkResource,emptyCanvasDocument,type CanvasDocument,type CanvasNode,type CreativeCanvasResource} from "./resources/creative-canvas";
+export {canvasProposalOperationSchema,canvasProposalResource} from "./resources/creative-canvas";
+export * from "./resources/articles";
+export * from "./resources/graphic-posts";
+export * from "./resources/production-main-track";
+export * from "./resources/creative-results";
+export * from "./resources/output-conversions";
+export { contentOutputResource, type ContentOutputResource } from "./resources/projects";
 
 export {
   knowledgeFolderResource,
@@ -88,6 +106,7 @@ export {
   platformAccountResource,
   type PlatformAccountResource,
 } from "./resources/platform-accounts";
+export * from "./resources/platform-capabilities";
 export {
   contentCalendarEntryResource,
   publishingCadenceResource,
@@ -284,3 +303,63 @@ export { onboardingStepKey, onboardingPatchResource, onboardingStateResource, ty
 
 export { dailyReportQuery, type DailyReportQuery } from "./pages/daily-report";
 export {dailyReportAnalysis,type DailyReportAnalysis} from "./pages/daily-report-analysis";
+
+export * from "./resources/audience-task";
+
+export type {GroupResourceGrantResource,GroupResourceRevokePreview,AccountGroupResource,GroupMemberResource,GroupTransferPreview} from "./resources/account-groups";
+
+export {groupWorkspaceQuery,groupWorkspaceMeta,groupDashboardPage,groupDashboardTrend,dashboardPerformanceTrend,dashboardCollectedMetric,dashboardCollectedCoverage,type GroupDashboardTrend,type GroupWorkspaceQuery} from "./pages/group-workspace";
+
+export {platformAccountCapabilitiesResource,type PlatformAccountCapabilitiesResource} from "./resources/platform-accounts";
+
+export {accountBindingStart,accountBindingResource,type AccountBindingResource} from "./resources/platform-accounts";
+
+export {groupOnboardingStateResource,type GroupOnboardingStateResource} from "./resources/settings";
+
+export {WORKSPACE_OPERATION_SCOPES,type WorkspaceOperationScope} from "./workspace-operation-scope";
+export * from "./resources/visual-templates";
+export {canvasVisualGroupSchema,type CanvasVisualGroup} from "./resources/creative-canvas";
+export {publicationVisualNoteSchema,type PublicationVisualNote} from "./resources/publishing";
+export * from "./resources/work-sources";
+export * from "./resources/work-basis";
+export * from "./resources/work-compositions";
+export * from "./resources/work-reviews";
+export * from "./resources/moments";
+
+export {workReviewRequestResource} from "./operations/work-compositions";
+
+export * from './resources/production-transcripts';
+
+export * from './resources/production-conversion';
+
+export * from './resources/production-rough-cut';
+
+export {publicationCoverSaveBody,publicationCoverState,publicationCoverRead,publicationCoverCommitReceipt,publicationCoverSaveResult,publicationCoverOriginalRequest} from "./resources/publication-cover";
+
+export * from "./resources/creative-canvas";
+export * from "./resources/canvas-material-selection";
+export * from './resources/reference-editor';
+
+export * from './resources/production-native-rough';
+
+export * from "./resources/project-script-source";
+
+export {noteRelayLayout,type NoteRelayLayout} from "./resources/noterelay-layout";
+
+export * from "./resources/production-native-document";
+export * from "./resources/work-editor";
+export * from "./resources/work-creation";
+export * from "./resources/ai-public-message";
+
+export * from "./resources/platform-native-reports";
+
+export {accountCollectionPlanReadinessResource, type AccountCollectionPlanReadinessResource} from "./resources/platform-accounts";
+
+export * from "./observability";
+
+export * from './resources/work-writing-context';
+export * from './resources/work-candidate-adoption';
+
+export {predictionLockSource,predictionLockState,type PredictionLockSource,type PredictionLockState} from "./resources/prediction-lock";
+
+export * from "./internal/wechat-navigation-diagnosis";

@@ -1,0 +1,23 @@
+[
+  {
+    "label": "pmem-sync",
+    "command": [
+      "node",
+      "orchestrator/process/pmem.mjs",
+      "sync"
+    ],
+    "exitCode": 0,
+    "expired": false,
+    "durationSeconds": 1.6257596669893246
+  },
+  {
+    "label": "reconcile",
+    "command": [
+      "node",
+      "orchestrator/process/reconcile.mjs"
+    ],
+    "exitCode": 1,
+    "expired": false,
+    "durationSeconds": 1573.0932428329834
+  }
+]

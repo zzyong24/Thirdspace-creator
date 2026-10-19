@@ -1,3 +1,5 @@
+import {learnings as learningRows} from "../../schema/learnings";
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -48,6 +50,8 @@ describe("calibration service", () => {
 
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctxFor("user-a"),["output-1","output-nested","o"]);
+    await db.insert(learningRows).values({id:"learning-1",userId:ctxFor("user-a").userId,accountId:ctxFor("user-a").accountId,title:"真实人工确认经验",createdAt:NOW,updatedAt:NOW});
     let seq = 0;
     adjustConfidence = vi.fn(
       async () => {},
@@ -337,6 +341,27 @@ describe("calibration service", () => {
     });
     // 摊平前会是 3-0/5-0(错);摊平后 hook=3-4=-1, pacing=5-3=2(对)。
     expect(result.deviation).toMatchObject({ hook: -1, pacing: 2 });
+  });
+
+  // T1339：机械数值边界，fixture经真实service/SQL，不以缺值冒真实0。
+  it.each([
+    {name:"缺失actual",p:{hook:3,cta:4},c:{},a:{cta:4},want:{cta:0}},
+    {name:"实际和预测明确0",p:{hook:0,cta:4},c:{},a:{hook:2,cta:0},want:{hook:2,cta:-4}},
+    {name:"缺失prediction",p:{},c:{},a:{hook:4},want:{}},
+    {name:"非数值actual",p:{hook:3,cta:4},c:{},a:{hook:null,cta:"4"},want:{}},
+    {name:"非finiteactual",p:{hook:3,cta:4},c:{},a:{hook:NaN,cta:Infinity},want:{}},
+    {name:"非数值prediction",p:{hook:null,cta:"4"},c:{},a:{hook:3,cta:4},want:{}},
+    {name:"dimensions优先与四位小数",p:{hook:99,cta:4},c:{hook:88,dimensions:[{key:"hook",score:1.23456}]},a:{hook:2,cta:3},want:{hook:0.7654,cta:-1}},
+  ])("T1339 finite pair $name",async ({p,c,a,want})=>{
+    const ctx=ctxFor("user-a"),rubric=await service.createRubric(ctx,{name:"有限数值原规则",dimensions:DIMENSIONS});
+    const prediction=await service.createPrediction(ctx,{subjectType:"content_output",subjectId:"o",rubricVersionId:rubric.currentVersion.id,predictedMetrics:p,predictedConversion:c,confidence:"med"});
+    await service.lockPrediction(ctx,prediction.id);
+    const result=await service.recordResult(ctx,prediction.id,{ingestionRunId:"run-1",actualMetrics:a});
+    expect(result.deviation).toEqual(want);
+    expect(adjustConfidence).toHaveBeenCalledTimes(Object.keys(want).length?1:0);
+    const again=await service.recordResult(ctx,prediction.id,{ingestionRunId:"run-1",actualMetrics:{hook:9999}});
+    expect(again.id).toBe(result.id);expect(again.actualMetrics).toEqual(result.actualMetrics);expect(again.deviation).toEqual(want);
+    expect(adjustConfidence).toHaveBeenCalledTimes(Object.keys(want).length?1:0);
   });
 
   // --- 复盘飞轮回流 轨B (Learning→校准) CalibrationRuleSuggestion ---

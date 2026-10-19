@@ -16,7 +16,11 @@ function inputReservation(request:Record<string,unknown>):number {
     if(!raw || typeof raw!=="object" || !Array.isArray((raw as any).content))return raw;
     return {...raw,content:(raw as any).content.map((part:any)=>{
       if(part?.type==="image" && typeof part.image==="string") {images++;return {...part,image:"[image]"};}
-      if(part?.type==="file" && typeof part.mediaType==="string" && part.mediaType.startsWith("image/") && typeof part.data==="string") {images++;return {...part,data:"[image]"};}
+      if(part?.type==="file" && typeof part.mediaType==="string" && part.mediaType.startsWith("image/")) {
+        if(typeof part.data==="string"){images++;return {...part,data:"[image]"};}
+        // AI SDK 7 的真实 provider 输入保留 data envelope；JSON IPC只把其字节冻结为base64。
+        if(part.data?.type==='data'&&typeof part.data.data==='string'){images++;return {...part,data:{...part.data,data:'[image]'}};}
+      }
       return part;
     })};
   }):request.prompt;

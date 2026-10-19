@@ -1,0 +1,25 @@
+-- =====================================================================================
+-- T-152 自动化采集任务运行日志:job_run 加 progress jsonb(实时采集进度)。
+--
+-- 目的:采集任务跑的时候实时显示进度(跑到哪阶段、累计拉了几条),不再是黑盒只在
+--   结束看「已完成 N 条」。进度落 job_run(自动化页真正读/轮询的记录),不落 ingestion_run
+--   —— 一次 collector 调用可能跨多个 ingestion_run(self.metrics = refreshDouyin run + 封面回填;
+--   comments = 一个 run 内遍历 N 作品;self.detail = 导出→解析→一个 run),job_run 是聚合这
+--   整个 collector 调用的唯一记录 = 进度的正确载体(自动化页 listJobRunsByJob 已 2s 轮询它)。
+--
+-- 形状(jsonb,nullable):{ stage: string, processed: number, total: number|null,
+--   message?: string, updatedAt: string }。
+--   - stage:当前阶段可读键(login / fetch / cover_backfill / export / parse / ingest / …)。
+--   - processed:该阶段已处理条数(累计拉了几条 / 翻到第几页 / 回填第几张封面)。
+--   - total:该阶段总量(未知时 null —— 抖音翻页 has_more 才知有没有下一页,total 常为 null)。
+--   - message:人类可读一句话(可选)。
+--   - updatedAt:进度写入时刻 ISO,前端判「是否还在动」。
+--
+-- additive、幂等、可回滚:
+--   - ADD COLUMN IF NOT EXISTS,nullable,无 DEFAULT —— 旧 run / 旧客户端读到 NULL 不崩(向后兼容)。
+--   - best-effort 写:采集器进度上报失败(catch 吞)绝不阻断采集主流程;进度节流(每页/每 batch
+--     写一次)不拖垮采集。
+--   - 回滚 = 列设回 NULL / DROP COLUMN(无数据依赖)。
+-- =====================================================================================
+
+ALTER TABLE job_run ADD COLUMN IF NOT EXISTS progress JSONB;

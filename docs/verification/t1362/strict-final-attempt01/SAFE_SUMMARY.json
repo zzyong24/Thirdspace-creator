@@ -1,0 +1,60 @@
+{
+  "task": "T-1362",
+  "commit": "721dfacf7b3bcbe82eb9c39b61acf1fb1df367d2",
+  "command": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1362",
+    "--evidence",
+    "docs/verification/t1362/control/FRONTEND_REPORT.md"
+  ],
+  "startedAt": "2026-10-18T21:06:19.338Z",
+  "durationMs": 84105,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "reportSha256": "df3766632db6b954a015ab3ad6d6d41ea435d6018dd3299eb7b669159f32d908",
+  "rawLogSha256": "331069be6688f029d4643105bf5572118805698d7da80630907f1d1cc1730586",
+  "tests": [
+    {
+      "title": "T1362 真实已采集作品入口、成员归属、typed指标与人工确认",
+      "projectName": "t1362-normal",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 25361,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1362/e2e-artifacts/t1362-collected-work-entry-T1362-真实已采集作品入口、成员归属、typed指标与人工确认-t1362-normal/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "T1362 真实已采集作品入口、成员归属、typed指标与人工确认",
+      "projectName": "t1362-minimum",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 20433,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1362/e2e-artifacts/t1362-collected-work-entry-T1362-真实已采集作品入口、成员归属、typed指标与人工确认-t1362-minimum/trace.zip"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "boundary": "原始 Playwright JSON/config/env 只保本地私有0600；本摘要仅白名单用例终态。实际执行由既有taskctl负责，非静态报告生成。",
+  "resultsFresh": true,
+  "resultsRawSha256": "2afe33ad5fd2a7cffabf4be04eea797371445aff0be8ad7441d5a57dc63d26b5"
+}

@@ -5,6 +5,7 @@ import {
   BUDGET_TRUNCATION_SUFFIX,
   CHAT_TOOL_ERROR_ENVELOPES,
   CHAT_TOOL_RESULT_BUDGET_CHARS,
+  UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE,
   buildChatToolApproval,
   defineChatTool,
   enforceChatToolResultBudget,
@@ -41,7 +42,7 @@ afterEach(() => {
 });
 
 describe("defineChatTool 错误信封", () => {
-  it("execute 裸抛 → 统一转 { ...结构占位, kind, error },kind 与正常结果 kind 一致(topic.generate → topic.candidates)", async () => {
+  it("execute 裸抛 → 统一转信封且不把内部异常暴露给模型", async () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const t = defineChatTool("topic.generate", {
       description: "d",
@@ -52,11 +53,12 @@ describe("defineChatTool 错误信封", () => {
     });
     const out = (await executeOf(t)({}, {})) as Record<string, unknown>;
     expect(out.kind).toBe("topic.candidates"); // kind ≠ 工具名的既有契约,信封必须对齐
-    expect(out.error).toBe("upstream boom");
+    expect(out.error).not.toContain("upstream boom");
+    expect(out.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
     expect(out.items).toEqual([]); // 结构占位:前端卡不因缺字段渲染崩
   });
 
-  it("注入 humanizeError 有映射时用人话;无映射(null)回落原始 message;非 Error 抛出转 String", async () => {
+  it("有专属人话映射时保留；无映射或非 Error 抛出时不暴露原始内容", async () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const humanized = defineChatTool(
       "script.hooks",
@@ -87,10 +89,34 @@ describe("defineChatTool 错误信封", () => {
     );
     const out2 = (await executeOf(raw)({}, {})) as Record<string, unknown>;
     expect(out2.kind).toBe("script.draft");
-    expect(out2.error).toBe("weird string throw");
+    expect(out2.error).not.toContain("weird string throw");
+    expect(out2.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
     // [T-268] script.draft 改异步 dispatch:错误信封占位改为 { taskId, projectId }(不再 sections)。
     expect(out2.taskId).toBeNull();
     expect(out2.projectId).toBeNull();
+  });
+
+  it.each([
+    "模型配置声明不支持原生结构化响应",
+    "能力边界第15条：模型配置字段 provider.internal=true",
+    "Error: request failed\\n    at internalProviderCall (/srv/app/provider.js:42:9)",
+    "api_key=secret-value; channel-model.internal timeout",
+  ])("未知错误内容不会进入模型可见信封：%s", async (rawMessage) => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const wrapped = defineChatTool(
+      "topic.generate",
+      {
+        description: "d",
+        inputSchema: NOOP_SCHEMA,
+        execute: async () => {
+          throw new Error(rawMessage);
+        },
+      },
+      () => null,
+    );
+    const out = (await executeOf(wrapped)({}, {})) as Record<string, unknown>;
+    expect(out.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
+    expect(JSON.stringify(out)).not.toContain(rawMessage);
   });
 
   it("未登记 CHAT_TOOL_ERROR_ENVELOPES 的工具名 → 装配期即抛(新工具须同步登记信封)", () => {
@@ -440,4 +466,10 @@ describe("[T-456] sanitizeSystemToolReferences —— system prompt 里带点工
       "hello",
     );
   });
+});
+
+it('T1070只四个作品工具lossless完整60k以上原结果，其它工具继续预算',async()=>{
+ const names=['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'];
+ for(const name of names){const result={kind:CHAT_TOOL_ERROR_ENVELOPES[name]!.kind,document:{body:'完整正文😀'.repeat(20000)},error:null};const t=defineChatTool(name,{description:'实际无损候选',inputSchema:NOOP_SCHEMA,execute:async()=>result});expect(await executeOf(t)({},{})).toEqual(result);}
+ const result={kind:'context.artifact.text',body:'旧读取预算'.repeat(20000)};const t=defineChatTool('context.artifact.text',{description:'原预算',inputSchema:NOOP_SCHEMA,execute:async()=>result});expect(JSON.stringify(await executeOf(t)({},{})).length).toBeLessThanOrEqual(CHAT_TOOL_RESULT_BUDGET_CHARS+1000);
 });

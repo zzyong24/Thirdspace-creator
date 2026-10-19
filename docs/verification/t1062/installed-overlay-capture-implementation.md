@@ -1,0 +1,53 @@
+# T-1062 安装版纯组剪辑预览与渲染的叠层捕获归属落实
+
+原已批准SPEC cfbaf9e80e6c8b005899c9be2f06d080e66cc119a14be381b721850a4fd36a1c不变。用户已经授权账号组内共享创作、空组可创作、本地安装及逐功能验收。本次Owner=agent仅落实既有行为，独立实施step installed-overlay-capture；不新开规格周期，不取得新的用户capability。本说明是原SPEC实现范围，不能替代原SPEC与BACKLOG。
+
+## 当场失败与最小写集
+
+实际安装228dd08a中，纯组无平台成员，真实父项目/output均归该组且accountId=null。公开源prepare/adopt、真实转录全文adopt、Skill候选及手工save/get成功；手工版本revision3可回读。公开editor.preview和editor.render均HTTP428：per-account operation ctx.accountId missing。渲染未创建任务，不能记作完成。真实私有回执保留，不用绑定假账号绕过。
+
+contract已将preview/render逐项声明project-derived；两者在editorVersion2读取readEditorOverlayBindings，组合根接到productionOverlayCapture.readBindings。捕获scope、明细与写入仍requireAccountId，保存可选hook沿既有savepoint安全warn所以保存成功，预览与渲染却被反杀。schema已具group字段、nullable account及组索引，无需新迁移/API。
+
+精确写集为production-overlay-capture.ts、既有production-native-public.integration.test.ts和本说明，共3路径。原integration592、migration283、bootstrap45、原18argv/顺序/预算/断言均原样保留。不改operation权限名单、真实平台账号动作、composition root、数据库历史、旧失效回执或其它file-binding服务。
+
+## 真正父归属与现有协议
+
+saved首先经同transaction真实production.getEditor授权，校验user→project→output→production父链，不以ctx或membership替代。再读取同user/editor.productionId/contentOutputId的真实productions行，取得实际groupId；ctx有group时必须与其相同，legacy仍按既有公共父scope允许null或真实grp_legacy账号。捕获写入groupId来自该实际父行；withWorkspaceWrite证明owner/active及锁，不证明ctx中的groupVersion/membershipVersion数值。两个既有可空版本字段缺少真实已验证值时保NULL，不据此授权，不推断当前成员版本，也不新增epoch校验算法。不得单独信ctx stamp、猜当前成员初始组、开放外国资料或改写旧version。
+
+即使capture.bindings=[]，读取/写入都必须验证真实父production；空明细不是权限豁免。请求与明细按既有workspaceFilter、user、output、production、revision、planDigest和status精确读取，已读取记录的groupId与实际父group一致；request冻结版本不被新ctx版本覆盖，旧version nullable兼容只沿原明确null/initialgroup边界，新保存version必须与实际父一致；同组平台筛选不会隐藏共享捕获，legacy按原null/initialgroup规则。保留v1 schema及全部原owner request digest/plan digest/history binding source/机械媒体血缘/exact asset-file验证和唯一回执；缺捕获依原逻辑返回[]，腐坏证明与ownership继续拒绝，不能把428 catch成伪成功或跳过所有叠层验证。写入保存hook仍由原外层工作区/父锁/同transaction承载，保留可选捕获失败不反杀保存的行为。
+
+## 待发生的真实验证
+
+先新增公开ProductionTransport+真正capture保存hook/readBindings的隔离纯组save→preview/render回归，在原产品字节上执行并保存实际RED；不得mock readBindings返回[]冒充公共链。实施后原同一回归GREEN，覆盖纯组、同组另一账号筛选共享、legacy null/initialgroup、foreign user/group/account零写、归档只读及新写拒绝、原回执幂等、actual production与version/binding归属腐坏和digest拒绝。已有exact叠层/隐藏/继承/恢复/optional safe输出测试不删。
+
+执行本step focused模块命令及现有video-material-owner/hooks回归，完整composite root公共链回归、backend typecheck、boundary/semantic检查、task-preflight精确3路径。既有backend typecheck两处旧T1018诊断必须保留，不以此说明签类型通过。原18及全局reconcile旧失败未被本step替换。最终独评绑定真实before/after、执行回执和commit，再重新冻结打包，安装同纯组公开preview/render并核实际MP4产物/原片摘要；未发生一律待验。
+
+原801 snapshot包含native-public测试，原测试hash及历史18证据保留；不含capture源。该step另记两源before/after绑定；新测试源不复用旧18当场结果签绿，未来801重采只追加记录，原snapshot和历史审计不可覆盖。
+
+```mermaid
+flowchart LR
+ A[真实组内视频工程] --> B[保存成功]
+ B --> C[原父归属与精确叠层证明]
+ C --> D[预览]
+ C --> E[渲染并核成片]
+```
+
+当前仅范围候选，尚未实施或执行RED/GREEN、类型、出包、安装验证。独立评审后由ROOT正常落控制并生成pending队列、claim，再实施；不能在本说明填写虚构PASS。
+
+## 4615cd87正常准入后的实际实现与验证
+
+ROOT以正常worktree租约准入installed-overlay-capture，writer仅修改本说明及两条精确生产/测试路径，未提交控制、未改原SPEC/801/原18或当前安装App。上文记录准入时的待验状态，以下只追加本轮已发生结果。
+
+实现先经真正getEditor公共service授权，再用真实production→contentOutput→project同父关系核对user/group/account及原制作version，即使没有capture或bindings为空也不豁免。对上文“先按workspaceFilter/user精确读取”的实现澄清：此处在父授权后只枚举已授权output的原production+revision及该version原ownerRequestId算出的capture requestId，再枚举该原request.id关联的全部bindings；逐行严格校验user、冻结group与原账号出处，避免腐坏组/账号被前置过滤隐藏成合法[]。同时校验record的production/revision/status/planDigest及原v1完整摘要。该有限关联完整性检查不扫描任意外国资料，不把内部记录返回给调用者，不改变公共父授权或真实平台动作。
+
+写入group来自实际父production，显式group上下文新accountId=null，与当前平台筛选无关；legacy上下文沿真正父account写原出处。旧null/initialgroup兼容仅原legacy上下文且原账号与真实父相同；显式grp_legacy组没有null别名。版本字段缺少实际验证，groupVersion/membershipVersion诚实保NULL，不抄ctx中的数字。原v1 schema、ownerRequestDigest裸64/前缀64身份、requestDigest、bindingSource、continuousHiddenBinding、mediaLineage、sameTouch及exact file校验主体保留；旧数据不补写。
+
+首次新测试12失败/8通过含fixture错从backend根导入未导出的accountGroups，已保存原始失败，仅修正新增测试为真实schema导入，不计产品RED。修正后原产品字节实际RED仍12失败/8通过：纯组preview确实AccountRequiredError命中capture.scope，legacy initial原捕获写group=null违反真正父归属。腐坏族在该RED阶段止于前置capture缺失，不能声称已跑到腐坏断言。
+
+最小生产修复后公开模块首轮20项通过。新增fixture的泛Endpoint分派另导致两条类型错误，已只把新增fixture改为六条具体schema.parse+await真正transport的类型正确调用，旧callback及全部原7用例/断言原文保留。随后准入backend命令实际3文件44项通过，frontend现有公共组合根实际1文件1项通过，retry=0、原命令参数及有限测试预算保持，完整串行测试没有额外整体截断。其media.probe与render任务端口明确是隔离夹具，不能代签真实ASR、MP4渲染或安装版。原组合根另覆盖真实PNG/MP4、exact叠层/继承/恢复/可选savepoint输出的既有公共操作。
+
+当前新增公开测试完整执行到：纯组保存/同源preview/render/原请求幂等、同组不同筛选共享、原legacy null/initialgroup、旧NULL捕获只向原legacy账号开放而显式组拒绝、真正父账号出处共享且新写不造筛选出处、foreign user/group/account零写、group/project归档preview只读与新保存/render拒绝、旧save/preview CAS拒绝、合法未捕获[]、空capture仍核version、production/version/request/binding组或出处及request摘要腐坏拒绝且renderCalls不增。腐坏拒绝后的零执行断言在GREEN实际完成，未把前置RED阻断冒充这层证据。
+
+backend typecheck首次含两条新增helper错误；修正后实际exit2只剩原native-public测试(31,260) unknown→undefined，原行与4615cd87字节相同，未改旧债或称全backend通过。stdout/exit/argv/全部pre-post源hash保存在用户私有installed-overlay-capture-actual-20261006；新公开测试源和生产源在44/1回归前后字节相同，本说明仅在结果发生后追加现场记录。最终边界与精确范围检查另绑定当前3路径，不替代原18/全局reconcile，也不关闭安装、用户操作或Skill词级粗剪验收。
+
+精确3路径task-preflight实际exit0，diffcheck实际exit0。boundary实际exit1，指出live-chat-session.ts已有@ai-sdk/react及ai两条R2；semantic实际exit1，指出video-decisions-runner.ts未调用material.match。这两条失败源及两门卫/边界配置与4615cd87 Git字节完全相同，原7测试完整文件仍为新文件的逐字节前缀。全局门保持红，未修改其源或基线，未把范围外旧失败称通过；原完整结果、精确既有源绑定和新产品证据提交独立评审后由ROOT按原范围处理。

@@ -1,0 +1,12 @@
+'use strict';
+const MIN=120000,HOOK=180000,LIFECYCLE=2160000,CLI=8280000,NATIVE=420000;
+const names=['真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写','T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期','T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节'];
+const original=8*CLI+18*NATIVE+4*1200000+2*MIN+2*MIN+960000;
+const native=3*CLI+4*NATIVE+MIN+1200000+310000+4*MIN+2*MIN+600000;
+const render=4*CLI+1200000+2*MIN+4*MIN+MIN+600000;
+if(original!==80040000||native!==29470000||render!==35760000)throw Error('PUBLIC_BUDGET_FORMULA_CHANGED');
+const bodies=[original,36000000,42000000],cases=names.map((name,index)=>({name,bodyMs:bodies[index],minimumDerivedMs:[original,native,render][index],childMs:bodies[index]+2*HOOK+4*MIN,fixtureDoneMs:index<2?bodies[index]+MIN:null}));
+const prepareMs=240000,listMs=240000,lastSourceMs=600000,marginMs=120000;
+const outerMs=prepareMs+listMs+cases.reduce((s,x)=>s+x.childMs,0)+4*LIFECYCLE+lastSourceMs+marginMs;
+if(outerMs!==170400000||cases.some(c=>c.bodyMs<c.minimumDerivedMs||c.childMs>2147483647))throw Error('FULL_PUBLIC_SERIAL_BUDGET_INVALID');
+module.exports={MIN,HOOK,LIFECYCLE,CLI,NATIVE,prepareMs,listMs,lastSourceMs,marginMs,cases,outerMs,escape:value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')};

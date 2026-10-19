@@ -1,0 +1,1031 @@
+{
+  "selectedCaseCount": 14,
+  "caseRows": [
+    {
+      "id": "codex-group-normal",
+      "engine": "codex",
+      "scope": "group",
+      "kind": "normal",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 4,
+        "initialized": 4,
+        "config/read": 4,
+        "account/read": 2,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt03/codex-group-normal",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_eb0d125d-47c4-45dd-95e3-a2ee5a9db844",
+          "kind": "external_agent",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_45b5fcf5-1cc6-4893-9e67-3ac63879d156",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_0e155a16-1584-4ab3-a43f-26c34f2282da",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_45b5fcf5-1cc6-4893-9e67-3ac63879d156"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_45b5fcf5-1cc6-4893-9e67-3ac63879d156",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-group-recovery-native",
+      "engine": "codex",
+      "scope": "group",
+      "kind": "recovery-native",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "unknown_result",
+      "attempt": 2,
+      "crashed": true,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 8,
+        "initialized": 8,
+        "config/read": 8,
+        "account/read": 4,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "thread/read": 2,
+        "fixture-read-original-turn": 2
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt05/codex-group-recovery-native",
+      "lastErrorCode": "CODEX_TURN_RESULT_UNKNOWN",
+      "lastErrorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+      "callStates": [
+        {
+          "id": "call_0966775b-bc71-4bdd-91b8-c6307b89d6e5",
+          "kind": "external_agent",
+          "status": "unknown",
+          "totalTokens": null,
+          "parentCallId": null
+        },
+        {
+          "id": "call_1a5a4be0-9487-42a8-95d0-baa61337836b",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_fe384b5f-5f51-45e9-b6bf-984842bcd846",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_1a5a4be0-9487-42a8-95d0-baa61337836b"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_1a5a4be0-9487-42a8-95d0-baa61337836b",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-group-recovery-settled",
+      "engine": "codex",
+      "scope": "group",
+      "kind": "recovery-settled",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "unknown_result",
+      "attempt": 2,
+      "crashed": true,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 6,
+        "initialized": 6,
+        "config/read": 6,
+        "account/read": 3,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "thread/read": 1,
+        "fixture-read-original-turn": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt05/codex-group-recovery-settled",
+      "lastErrorCode": "CODEX_TURN_RESULT_UNKNOWN",
+      "lastErrorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+      "callStates": [
+        {
+          "id": "call_353305dd-1342-4601-848f-7f8dfdf4e35f",
+          "kind": "external_agent",
+          "status": "unknown",
+          "totalTokens": null,
+          "parentCallId": null
+        },
+        {
+          "id": "call_41352104-377d-48fe-9578-dafa65bacd80",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_9f45bea8-0dde-422a-9649-1011af9f025f",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_41352104-377d-48fe-9578-dafa65bacd80"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_41352104-377d-48fe-9578-dafa65bacd80",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-group-missing-usage",
+      "engine": "codex",
+      "scope": "group",
+      "kind": "missing-usage",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": {
+        "port": "completeChatGeneration",
+        "attempt": 1,
+        "callId": "call_662f3f3c-de14-4234-a9d6-2ef1ffa08ed8",
+        "name": "ConflictError",
+        "message": "生成缺少完整回执",
+        "stack": [
+          "ConflictError: 生成缺少完整回执",
+          "    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:96:90",
+          "    at receipts (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:93:19)",
+          "    at Object.complete (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:202:36)",
+          "    at Object.complete (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-tool-ports.service.ts:127:1503)",
+          "    at Object.invoke (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:292:44)",
+          "    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/worker-supervisor.ts:150:28"
+        ]
+      },
+      "status": "unknown_result",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 4,
+        "initialized": 4,
+        "config/read": 4,
+        "account/read": 2,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-group-missing-usage",
+      "lastErrorCode": "CODEX_HOST_FAILED",
+      "lastErrorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+      "callStates": [
+        {
+          "id": "call_71953091-26a6-40dd-a7ae-8affbee86c66",
+          "kind": "external_agent",
+          "status": "unknown",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_662f3f3c-de14-4234-a9d6-2ef1ffa08ed8",
+          "kind": "tool",
+          "status": "unknown",
+          "totalTokens": null,
+          "parentCallId": null
+        },
+        {
+          "id": "call_6bd579b4-438c-4fb8-b546-8d14c8e4b44f",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": null,
+          "parentCallId": "call_662f3f3c-de14-4234-a9d6-2ef1ffa08ed8"
+        }
+      ],
+      "toolOutcomes": [],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-group-partial",
+      "engine": "codex",
+      "scope": "group",
+      "kind": "partial",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 5,
+      "modelCalls": 3,
+      "externalRoots": 1,
+      "childCalls": 3,
+      "rpcCounts": {
+        "initialize": 8,
+        "initialized": 8,
+        "config/read": 8,
+        "account/read": 4,
+        "thread/start": 4,
+        "mcpServerStatus/list": 4,
+        "turn/start": 4,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-group-partial",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_df1a5446-14b0-4a3c-a26a-12e9f9117422",
+          "kind": "external_agent",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_da07016b-2ac4-4547-be09-bc203247891f",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_c1b60964-7c81-413c-8a84-bc9bbb8eb121",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_da07016b-2ac4-4547-be09-bc203247891f"
+        },
+        {
+          "id": "call_85d928b0-d494-4bbe-aead-9e7a2029c06d",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_da07016b-2ac4-4547-be09-bc203247891f"
+        },
+        {
+          "id": "call_00c5d948-323a-46e7-973b-091f3dcc8450",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_da07016b-2ac4-4547-be09-bc203247891f"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_da07016b-2ac4-4547-be09-bc203247891f",
+          "status": "error",
+          "sideEffect": "none",
+          "items": 0
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-group-repair",
+      "engine": "codex",
+      "scope": "group",
+      "kind": "repair",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 4,
+      "modelCalls": 2,
+      "externalRoots": 1,
+      "childCalls": 2,
+      "rpcCounts": {
+        "initialize": 6,
+        "initialized": 6,
+        "config/read": 6,
+        "account/read": 3,
+        "thread/start": 3,
+        "mcpServerStatus/list": 3,
+        "turn/start": 3,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-group-repair",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_86467ebf-0102-4f9f-b174-deae1d9d866e",
+          "kind": "external_agent",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_ede332a1-3d55-461f-9861-72e2f51acf15",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_4bf36af8-05cc-499d-a729-6c5889e92110",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_ede332a1-3d55-461f-9861-72e2f51acf15"
+        },
+        {
+          "id": "call_4a8a7005-2b6a-4f12-8555-1a831dd903c1",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_ede332a1-3d55-461f-9861-72e2f51acf15"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_ede332a1-3d55-461f-9861-72e2f51acf15",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-legacy-missing-usage",
+      "engine": "codex",
+      "scope": "legacy",
+      "kind": "missing-usage",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": {
+        "port": "completeChatGeneration",
+        "attempt": 1,
+        "callId": "call_0c83ca3e-556e-4a42-8985-bfab090aa04f",
+        "name": "ConflictError",
+        "message": "生成缺少完整回执",
+        "stack": [
+          "ConflictError: 生成缺少完整回执",
+          "    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:96:90",
+          "    at receipts (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:93:19)",
+          "    at Object.complete (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:202:36)",
+          "    at Object.complete (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-tool-ports.service.ts:127:1503)",
+          "    at Object.invoke (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:292:44)",
+          "    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/worker-supervisor.ts:150:28"
+        ]
+      },
+      "status": "unknown_result",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 4,
+        "initialized": 4,
+        "config/read": 4,
+        "account/read": 2,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-missing-usage",
+      "lastErrorCode": "CODEX_HOST_FAILED",
+      "lastErrorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+      "callStates": [
+        {
+          "id": "call_7debb432-8bc5-4919-88ef-16920970c830",
+          "kind": "external_agent",
+          "status": "unknown",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_0c83ca3e-556e-4a42-8985-bfab090aa04f",
+          "kind": "tool",
+          "status": "unknown",
+          "totalTokens": null,
+          "parentCallId": null
+        },
+        {
+          "id": "call_0b255a02-072a-4749-a88e-be14b5b9fb6f",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": null,
+          "parentCallId": "call_0c83ca3e-556e-4a42-8985-bfab090aa04f"
+        }
+      ],
+      "toolOutcomes": [],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-legacy-normal",
+      "engine": "codex",
+      "scope": "legacy",
+      "kind": "normal",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 4,
+        "initialized": 4,
+        "config/read": 4,
+        "account/read": 2,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-normal",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_921f40a4-cbfc-442d-9467-a5da7f789cdc",
+          "kind": "external_agent",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_ca258ecd-dbc1-4eae-98b4-ecb3026c209d",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_689e1650-2759-4aa5-90e9-9dc890eb89d1",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_ca258ecd-dbc1-4eae-98b4-ecb3026c209d"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_ca258ecd-dbc1-4eae-98b4-ecb3026c209d",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-legacy-partial",
+      "engine": "codex",
+      "scope": "legacy",
+      "kind": "partial",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 5,
+      "modelCalls": 3,
+      "externalRoots": 1,
+      "childCalls": 3,
+      "rpcCounts": {
+        "initialize": 8,
+        "initialized": 8,
+        "config/read": 8,
+        "account/read": 4,
+        "thread/start": 4,
+        "mcpServerStatus/list": 4,
+        "turn/start": 4,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-partial",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_1cbaa19d-214e-4cf6-a54c-cbe7ec86f9de",
+          "kind": "external_agent",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_9601d65c-342f-4f0b-b358-1ee00f26f11e",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_68d37949-fdf3-495d-ad08-d7092305e4e1",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_9601d65c-342f-4f0b-b358-1ee00f26f11e"
+        },
+        {
+          "id": "call_46a026db-ede4-433e-b55e-78f05274ff42",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_9601d65c-342f-4f0b-b358-1ee00f26f11e"
+        },
+        {
+          "id": "call_52e8c29e-214a-4cc9-ac6d-40d756e8918d",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_9601d65c-342f-4f0b-b358-1ee00f26f11e"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_9601d65c-342f-4f0b-b358-1ee00f26f11e",
+          "status": "error",
+          "sideEffect": "none",
+          "items": 0
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-legacy-recovery-native",
+      "engine": "codex",
+      "scope": "legacy",
+      "kind": "recovery-native",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "unknown_result",
+      "attempt": 2,
+      "crashed": true,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 8,
+        "initialized": 8,
+        "config/read": 8,
+        "account/read": 4,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "thread/read": 2,
+        "fixture-read-original-turn": 2
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-recovery-native",
+      "lastErrorCode": "CODEX_TURN_RESULT_UNKNOWN",
+      "lastErrorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+      "callStates": [
+        {
+          "id": "call_5a4c8a8d-5ecb-466e-bd90-128f89b288ba",
+          "kind": "external_agent",
+          "status": "unknown",
+          "totalTokens": null,
+          "parentCallId": null
+        },
+        {
+          "id": "call_1a2266ec-657c-49c5-8417-9234b3590121",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_b34bdb1d-e027-4fb7-9330-e1835a93f280",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_1a2266ec-657c-49c5-8417-9234b3590121"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_1a2266ec-657c-49c5-8417-9234b3590121",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-legacy-recovery-settled",
+      "engine": "codex",
+      "scope": "legacy",
+      "kind": "recovery-settled",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "unknown_result",
+      "attempt": 2,
+      "crashed": true,
+      "callCount": 3,
+      "modelCalls": 1,
+      "externalRoots": 1,
+      "childCalls": 1,
+      "rpcCounts": {
+        "initialize": 6,
+        "initialized": 6,
+        "config/read": 6,
+        "account/read": 3,
+        "thread/start": 2,
+        "mcpServerStatus/list": 2,
+        "turn/start": 2,
+        "thread/read": 1,
+        "fixture-read-original-turn": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-recovery-settled",
+      "lastErrorCode": "CODEX_TURN_RESULT_UNKNOWN",
+      "lastErrorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+      "callStates": [
+        {
+          "id": "call_e5c391d5-8491-41ca-bc22-d2b49889fda4",
+          "kind": "external_agent",
+          "status": "unknown",
+          "totalTokens": null,
+          "parentCallId": null
+        },
+        {
+          "id": "call_29b69d8a-3152-4b0d-b89b-be2ad46d9392",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_4946cfbb-4523-4b14-8f8d-eb342a9235c2",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_29b69d8a-3152-4b0d-b89b-be2ad46d9392"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_29b69d8a-3152-4b0d-b89b-be2ad46d9392",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "codex-legacy-repair",
+      "engine": "codex",
+      "scope": "legacy",
+      "kind": "repair",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 4,
+      "modelCalls": 2,
+      "externalRoots": 1,
+      "childCalls": 2,
+      "rpcCounts": {
+        "initialize": 6,
+        "initialized": 6,
+        "config/read": 6,
+        "account/read": 3,
+        "thread/start": 3,
+        "mcpServerStatus/list": 3,
+        "turn/start": 3,
+        "item/tool/call-reply": 1
+      },
+      "httpRequests": 0,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-repair",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_6a4daf4c-1cd9-4dd7-9aca-57918aca84ad",
+          "kind": "external_agent",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_56a9299f-33be-477d-becc-e8f1ab12f6c9",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_91e20b24-056d-4105-85ac-2336a014be93",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_56a9299f-33be-477d-becc-e8f1ab12f6c9"
+        },
+        {
+          "id": "call_3dc1e460-c9d1-46a5-8832-9f6826ce1ab7",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_56a9299f-33be-477d-becc-e8f1ab12f6c9"
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_56a9299f-33be-477d-becc-e8f1ab12f6c9",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "api-group-normal",
+      "engine": "api",
+      "scope": "group",
+      "kind": "normal",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 4,
+      "modelCalls": 3,
+      "externalRoots": 0,
+      "childCalls": 1,
+      "rpcCounts": {},
+      "httpRequests": 3,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt08/api-group-normal",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_1d3bd471-f14a-4a97-a9d8-0db7f90a77dc",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_3aa33bd5-7a76-4eea-9951-c2da085f9390",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_d2ea3a5d-f85e-42b6-abc4-a0e71c2ae325",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_3aa33bd5-7a76-4eea-9951-c2da085f9390"
+        },
+        {
+          "id": "call_8fa52bf0-5da9-4bcf-8f1a-30b63905263e",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_3aa33bd5-7a76-4eea-9951-c2da085f9390",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    },
+    {
+      "id": "api-legacy-normal",
+      "engine": "api",
+      "scope": "legacy",
+      "kind": "normal",
+      "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+      "firstThrow": null,
+      "status": "succeeded",
+      "attempt": 1,
+      "crashed": false,
+      "callCount": 4,
+      "modelCalls": 3,
+      "externalRoots": 0,
+      "childCalls": 1,
+      "rpcCounts": {},
+      "httpRequests": 3,
+      "diagnosisOnly": true,
+      "originalTaskTouched": false,
+      "evidence": "docs/verification/t1310/runtime/cases/attempt08/api-legacy-normal",
+      "lastErrorCode": null,
+      "lastErrorMessage": null,
+      "callStates": [
+        {
+          "id": "call_c60359fd-790f-42a2-b8be-98ab1d4dbe62",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        },
+        {
+          "id": "call_09d7412d-cb63-4dfb-ab70-1629455b1ca9",
+          "kind": "tool",
+          "status": "settled",
+          "totalTokens": 0,
+          "parentCallId": null
+        },
+        {
+          "id": "call_1128270b-2784-4e02-9d60-ef435373ea7a",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": "call_09d7412d-cb63-4dfb-ab70-1629455b1ca9"
+        },
+        {
+          "id": "call_d88d0f96-ad17-4625-bebc-497f79b25afe",
+          "kind": "model",
+          "status": "settled",
+          "totalTokens": 12,
+          "parentCallId": null
+        }
+      ],
+      "toolOutcomes": [
+        {
+          "callId": "call_09d7412d-cb63-4dfb-ab70-1629455b1ca9",
+          "status": "ok",
+          "sideEffect": "proposal",
+          "items": 1
+        }
+      ],
+      "cleanup": {
+        "workerStopped": true,
+        "dbClosed": true,
+        "apiServerClosed": true,
+        "realModels": 0,
+        "liveCandidateRequests": 0
+      }
+    }
+  ],
+  "additionalObservation": "cases/attempt07/codex-group-missing-usage/one-normal-observation.json",
+  "assertionsAreDiagnosticNotFeaturePass": true
+}

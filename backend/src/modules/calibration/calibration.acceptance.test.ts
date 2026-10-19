@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -133,6 +134,7 @@ describe("G20 — domain acceptance (SPEC §22 + 七步 §6)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctxA,["o"]);
   });
 
   it("immutability §6.2: lock is idempotent (no re-stamp); a locked prediction is never edited/unlocked", async () => {
@@ -219,6 +221,26 @@ describe("G20 — domain acceptance (SPEC §22 + 七步 §6)", () => {
       actualMetrics: { hook: 999 },
     });
     expect(adjustConfidence).toHaveBeenCalledTimes(1);
+  });
+
+  it("T1339 无pair不奖励反馈；已提供0偏差仍按原阈值+5，重放不再反馈",async()=>{
+    const adjustConfidence=vi.fn<CalibrationLearningsPort["adjustConfidence"]>(async()=>{}),svc=makeService(db,"pair",{learnings:{adjustConfidence}});
+    const empty=await seedLocked(svc,ctxA);
+    const result=await svc.recordResult(ctxA,empty.predId,{ingestionRunId:"run-1",actualMetrics:{}});
+    expect(result.deviation).toEqual({});expect(adjustConfidence).not.toHaveBeenCalled();
+    const zero=await seedLocked(svc,ctxA);
+    await svc.recordResult(ctxA,zero.predId,{ingestionRunId:"run-1",actualMetrics:{hook:10}});
+    expect(adjustConfidence).toHaveBeenCalledTimes(1);expect(adjustConfidence.mock.calls[0]?.[1]).toMatchObject({delta:5});
+    await svc.recordResult(ctxA,zero.predId,{ingestionRunId:"run-1",actualMetrics:{}});expect(adjustConfidence).toHaveBeenCalledTimes(1);
+  });
+
+  it("T1339 完整pair反馈失败保原best-effort结果事实且重放不再调用",async()=>{
+    const adjustConfidence=vi.fn<CalibrationLearningsPort["adjustConfidence"]>(async()=>{throw Error("controlled feedback unavailable");}),svc=makeService(db,"bridge",{learnings:{adjustConfidence}});
+    const {predId}=await seedLocked(svc,ctxA);
+    const first=await svc.recordResult(ctxA,predId,{ingestionRunId:"run-1",actualMetrics:{hook:12}});
+    expect(first.deviation).toEqual({hook:2});expect(adjustConfidence).toHaveBeenCalledTimes(1);
+    const again=await svc.recordResult(ctxA,predId,{ingestionRunId:"run-1",actualMetrics:{hook:0}});
+    expect(again).toEqual(first);expect(adjustConfidence).toHaveBeenCalledTimes(1);
   });
 
   it("multi-tenant: user A cannot get user B's rubric or prediction (404-safe OwnershipError)", async () => {

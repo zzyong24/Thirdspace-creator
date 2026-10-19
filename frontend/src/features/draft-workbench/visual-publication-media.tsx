@@ -1,0 +1,31 @@
+"use client";
+import {useEffect,useRef,useState} from "react";
+import {Download,RefreshCw} from "lucide-react";
+import {Button} from "@/components/ui/button";
+import {client} from "@/lib/contract-client";
+import type {PublicationVisualNote} from "@creatoros/contract";
+import {MediaPreview} from "@/features/creative-canvas/infinite-canvas-node";
+type Receipt={caption:string;files:Array<{assetId:string;url:string;fileName:string}>};
+export async function downloadVisualMaterialZip(receipt:Receipt,title:string){
+ const files:Record<string,Uint8Array>={};
+ for(const file of receipt.files){const response=await fetch(file.url);if(!response.ok)throw new Error(`图片${file.fileName}下载失败，单张下载仍可使用`);files[file.fileName]=new Uint8Array(await response.arrayBuffer());}
+ const {zipSync,strToU8}=await import('fflate');files['caption.txt']=new Uint8Array(strToU8(receipt.caption));
+ const blob=new Blob([zipSync(files,{level:0}) as BlobPart],{type:'application/zip'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${title.replace(/[\\/:*?"<>|]/g,'-').slice(0,80)||'发布物料'}.zip`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+function VisualSinglePage({publicationId,revisionId,index}:{publicationId:string;revisionId:string;index:number}){
+ const [file,setFile]=useState<Receipt["files"][number]|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);const live=useRef(true);
+ useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
+ async function download(){if(busy)return;setBusy(true);setError('');try{const receipt=await client.exportPublicationVisualNote({params:{publicationId},query:undefined,body:{revisionId,pageIndex:index}});if(!live.current)return;const selected=receipt.files[0];if(!selected)throw new Error('该页文件不存在');setFile(selected);const a=document.createElement('a');a.href=selected.url;a.download=selected.fileName;a.click();}catch(e){if(live.current)setError(e instanceof Error?e.message:'这一页读取失败');}finally{if(live.current)setBusy(false);}}
+ return <div className="rounded-xl border p-3">{file?<img src={file.url} alt={`发布第${index+1}页`} loading="lazy" className="h-40 w-full object-contain"/>:null}<Button size="sm" variant="outline" disabled={busy} onClick={()=>void download()}><Download className="size-3.5"/>{busy?'正在读取…':`下载第${index+1}页`}</Button>{error?<p role="alert" className="mt-2 text-xs text-destructive">{error}</p>:null}</div>;
+}
+export function VisualPublicationMedia({publicationId,revisionId,visualNote,coverAssetId,title}:{publicationId:string;revisionId?:string;visualNote?:PublicationVisualNote|null;coverAssetId:string|null;title:string}){
+ const [receipt,setReceipt]=useState<Receipt|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(false),[exporting,setExporting]=useState(false),[version,setVersion]=useState(0);const epoch=useRef(0);
+ useEffect(()=>{let live=true;const current=++epoch.current;queueMicrotask(()=>{if(live&&epoch.current===current){setReceipt(null);setError('');setLoading(Boolean(visualNote&&revisionId));}});if(!visualNote||!revisionId)return()=>{live=false;};void client.exportPublicationVisualNote({params:{publicationId},query:undefined,body:{revisionId}}).then(result=>{if(live&&epoch.current===current)setReceipt(result);}).catch(e=>{if(live&&epoch.current===current)setError(e instanceof Error?e.message:'图片读取失败');}).finally(()=>{if(live&&epoch.current===current)setLoading(false);});return()=>{live=false;epoch.current++;};},[publicationId,revisionId,visualNote,version]);
+ async function download(){if(!revisionId||exporting)return;const current=epoch.current;setExporting(true);setError('');try{const fresh=await client.exportPublicationVisualNote({params:{publicationId},query:undefined,body:{revisionId}});if(current!==epoch.current)return;setReceipt(fresh);await downloadVisualMaterialZip(fresh,title);}catch(e){if(current===epoch.current)setError(e instanceof Error?e.message:'整套下载失败');}finally{if(current===epoch.current)setExporting(false);}}
+ if(!visualNote&&!coverAssetId)return null;
+ return <div className="space-y-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-medium text-text-subtle">{visualNote?.imageMode==='carousel'?`图文图片 · ${visualNote.orderedAssetIds.length}页`:'封面'}</span>{visualNote?<Button type="button" size="sm" variant="outline" disabled={exporting||loading||!receipt} onClick={()=>void download()}><Download className="size-3.5"/>{exporting?'正在下载…':'整套下载'}</Button>:null}</div>
+ {error?<p role="alert" className="text-xs text-destructive">{error}<button className="ml-2 inline-flex gap-1 underline" onClick={()=>setVersion(v=>v+1)}><RefreshCw className="size-3"/>重试读取</button></p>:null}{loading?<p className="text-xs text-muted-foreground">正在读取发布图片…</p>:null}
+ {receipt?<div className="grid grid-cols-2 gap-3">{receipt.files.map((file,index)=><div key={file.fileName} className="overflow-hidden rounded-xl border"><img src={file.url} alt={index===0?'发布首图':`发布正文第${index+1}页`} loading="lazy" className="h-48 w-full bg-muted/40 object-contain"/><div className="flex items-center justify-between px-2 py-2 text-xs"><span>{String(index+1).padStart(2,'0')} · {index===0?'首图':'正文'}</span><a href={file.url} download={file.fileName} className="text-primary">下载</a></div></div>)}</div>:visualNote&&revisionId&&error?<div><p className="mb-2 text-xs text-muted-foreground">整套读取失败，可分别下载可用页。</p><div className="grid grid-cols-2 gap-3">{visualNote.orderedAssetIds.map((assetId,index)=><VisualSinglePage key={`${revisionId}:${index}:${assetId}`} publicationId={publicationId} revisionId={revisionId} index={index}/>)}</div></div>:!visualNote&&coverAssetId?<div className="h-56 overflow-hidden rounded-xl border bg-muted/40"><MediaPreview assetId={coverAssetId} type="image"/></div>:null}
+ {!visualNote&&coverAssetId?<Button size="sm" variant="outline" onClick={async()=>{try{const file=await client.getDownloadUrl({params:{assetId:coverAssetId},query:undefined,body:undefined});const a=document.createElement('a');a.href=file.url;a.download=file.fileName;a.click();}catch(e){setError(e instanceof Error?e.message:'下载失败');}}}><Download className="size-3.5"/>下载封面</Button>:null}
+ </div>;
+}

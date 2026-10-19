@@ -56,7 +56,7 @@ async function loadModels(): Promise<ConfigModel[]> {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(120_000),
   });
   if (!response.ok) throw new Error(`T829_MODEL_DISCOVERY_FAILED status=${response.status}`);
   const payload = (await response.json()) as { data?: unknown };
@@ -101,8 +101,8 @@ const requestedProbes = new Set(
 );
 const delayMs = Math.max(0, Math.min(10_000, Number(process.env.T829_DELAY_MS ?? 0) || 0));
 const timeoutMs = Math.max(
-  5_000,
-  Math.min(60_000, Number(process.env.T829_TIMEOUT_MS ?? 60_000) || 60_000),
+  120_000,
+  Math.min(2_147_483_647, Number(process.env.T829_TIMEOUT_MS ?? 120_000) || 120_000),
 );
 
 function errorText(error: unknown): string {

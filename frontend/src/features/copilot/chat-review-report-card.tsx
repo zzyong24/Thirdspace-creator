@@ -18,6 +18,8 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -46,7 +48,7 @@ const VERDICT_META: Record<
   },
 };
 
-type Phase = "running" | "ready" | "error";
+type Phase = "running" | "ready" | "error" | "partial";
 
 export function ChatReviewReportCard({
   taskId,
@@ -61,6 +63,8 @@ export function ChatReviewReportCard({
   readonly pollIntervalMs?: number;
 }) {
   const router = useRouter();
+  const observation = useTaskObservation(taskId);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<Phase>(
     initialError || !taskId || !projectId ? "error" : "running",
   );
@@ -71,8 +75,9 @@ export function ChatReviewReportCard({
   // 卸载后停止在 await 链里 setState(长任务守卫,与旧盲预测/审核行同款)。
   const cancelledRef = React.useRef(false);
   React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
+    () => {
+      cancelledRef.current = false;
+      return () => { cancelledRef.current = true; };
     },
     [],
   );
@@ -82,19 +87,23 @@ export function ChatReviewReportCard({
   React.useEffect(() => {
     if (!taskId || !projectId || initialError) return;
     void (async () => {
+      const isCurrent = captureObservation();
       try {
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
+        for (let i = 0; ; i++) {
+          if (i > 0 && i % 75 === 0 && !await pauseObservation()) return;
+          if (cancelledRef.current || !isCurrent()) return;
           await new Promise((r) => setTimeout(r, pollIntervalMs));
-          if (cancelledRef.current) return;
+          if (cancelledRef.current || !isCurrent()) return;
           const status = (await client.getTask({
             params: { taskId },
             query: undefined,
             body: undefined,
           })) as { status: string };
+          if (cancelledRef.current || !isCurrent()) return;
+          if (status.status === "partial") { setPhase("partial"); return; }
           if (status.status === "succeeded") {
             const latest = await fetchLatest(projectId);
-            if (cancelledRef.current) return;
+            if (cancelledRef.current || !isCurrent()) return;
             if (latest) {
               setReport(latest);
               setPhase("ready");
@@ -107,26 +116,22 @@ export function ChatReviewReportCard({
             return;
           }
           if (status.status === "failed" || status.status === "cancelled") {
-            if (!cancelledRef.current) {
+            if (!cancelledRef.current && isCurrent()) {
               setPhase("error");
               setError("这次语义审核没有完成，请重试。");
             }
             return;
           }
         }
-        if (!cancelledRef.current) {
-          setPhase("error");
-          setError("审核超时,请重试。");
-        }
       } catch {
-        if (!cancelledRef.current) {
+        if (!cancelledRef.current && isCurrent()) {
           setPhase("error");
           setError("审核出错,请重试。");
         }
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [taskId, projectId, initialError, pollIntervalMs, pauseObservation, captureObservation]);
 
   return (
     <div
@@ -139,7 +144,9 @@ export function ChatReviewReportCard({
         AI 编导文案审核 · L1 违禁词 + L2 语义审
       </span>
 
-      {phase === "running" ? (
+      <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
+      {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-review-running"
           className="flex items-center gap-1.5 text-[12px] text-muted-foreground"

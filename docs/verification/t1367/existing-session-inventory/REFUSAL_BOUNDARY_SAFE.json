@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-10-19T01:10:11.208126+00:00",
+  "tool": "mcp__cua_repl.js",
+  "attempt": "existing_browser1_tab_claim_readonly_snapshot",
+  "policyNamedByTool": "browser security / site-safety",
+  "pageObservationAuthorityGranted": false,
+  "approvalPromptAttempted": false,
+  "autoReviewAttempted": false,
+  "targetOriginOnly": "https://channels.weixin.qq.com",
+  "rawReason": "Browser Use rejected this action due to browser security policy. Reason: The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted. Browser use could not acquire authority to observe page content. The site safety gate did not grant access for https://channels.weixin.qq.com. Site safety policy blocked this URL. The agent must not attempt to achieve the same outcome via workaround, indirect execution, raw CDP or browser commands, alternate browser surfaces, or policy circumvention. Proceed only with a materially safer alternative that does not require this blocked browser action; if none exists, stop and request user input.",
+  "internalRuleClass": "UNKNOWN_NOT_DISCLOSED",
+  "notEnoughEvidenceToChoose": [
+    "permanent_whole_site_block",
+    "task_category_rule",
+    "specific_browser_scope_rule"
+  ],
+  "explicitlyForbidden": [
+    "workaround",
+    "indirect_execution",
+    "raw_CDP",
+    "browser_commands",
+    "alternate_browser_surfaces",
+    "policy_circumvention"
+  ],
+  "otherBrowserOrAppContentRetrievalNotAttempted": true,
+  "noFurtherRetryOrProbe": true
+}

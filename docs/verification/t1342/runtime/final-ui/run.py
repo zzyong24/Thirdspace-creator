@@ -1,0 +1,109 @@
+from pathlib import Path
+import subprocess,os,json,hashlib,sys,signal,time,threading
+here=Path(__file__).resolve().parent
+repo=next(p for p in here.parents if (p/'frontend/package.json').is_file())
+plan=json.loads((here/'PLAN.json').read_text());registrar=Path(plan['registrar'])
+if sys.argv[1:]==['--collect']:
+ print(json.dumps({'state':'NOT_RUN','viewports':plan['viewports'],'newModels':0,'businessMutations':0,'sessionRead':False,'network':0,'outerSeconds':plan['budgets']['outerSeconds']}));sys.exit(0)
+assert sys.argv[1:]==['--execute'],'EXPLICIT_EXECUTE_REQUIRED'
+b=json.loads(Path(os.environ['T1342_FINAL_UI_BINDING']).read_text())
+assert os.environ.get('T1342_FINAL_UI_APPROVED')=='1'
+outer_started=time.monotonic();outer_deadline=outer_started+plan['budgets']['outerSeconds']
+out=Path(os.environ['T1342_FINAL_UI_OUTPUT']).resolve();assert out.is_relative_to(Path(b['externalRoot']));assert out.is_dir()
+def save(name,value):(out/(name+'.json')).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
+def digest(p):
+ h=hashlib.sha256()
+ with p.open('rb') as f:
+  for chunk in iter(lambda:f.read(4*1024*1024),b''):h.update(chunk)
+ return h.hexdigest()
+lock_path=Path(b['inputLock']['path']);assert digest(lock_path)==b['inputLock']['sha256'];lock=json.loads(lock_path.read_text());assert lock['state']=='FINAL_UI_INPUTS' and lock['confirmed'] is True
+assert lock['sourceHead']==b['candidate']['sourceHead'];assert lock['packageSha256']==b['candidate']['packageSha256']
+rows=[{'path':str(lock_path),'bytes':lock_path.stat().st_size,'sha256':digest(lock_path)}]
+save('BEFORE_INPUTS',{'inputLock':rows[0],'actualCandidateInputsBound':True,'browserRunsBefore':0})
+def lock_drift():
+ changed=[]
+ for row in lock['files']:
+  if time.monotonic()>=outer_deadline-120:return ['OUTER_DEADLINE_HASH_INCOMPLETE']
+  p=Path(row['path']);p=p if p.is_absolute() else repo/p
+  if not p.is_file() or p.stat().st_size!=row['bytes'] or digest(p)!=row['sha256']:changed.append(row['path'])
+ for row in lock.get('links',[]):
+  p=Path(row['path']);p=p if p.is_absolute() else repo/p
+  if not p.is_symlink() or os.readlink(p)!=row['target']:changed.append('link:'+row['path'])
+ for name in lock.get('absentPaths',[]):
+  p=Path(name);p=p if p.is_absolute() else repo/p
+  if p.exists():changed.append('absent:'+name)
+ return changed
+assert not lock_drift(),'PRE_START_INPUT_DRIFT_NO_BROWSER'
+def identity(pid):
+ r=subprocess.run(['/bin/ps','-p',str(pid),'-o','pgid=,lstart=,comm='],capture_output=True,text=True);v=r.stdout.strip().split(None,1)
+ return {'pgid':int(v[0]),'identity':v[1]} if r.returncode==0 and len(v)==2 else None
+def same(row):return row.get('identity') is not None and identity(row['pid'])=={'pgid':row['pgid'],'identity':row['identity']}
+def group_rows(pgid):
+ r=subprocess.run(['/bin/ps','-axo','pid=,pgid=,lstart=,comm='],capture_output=True,text=True)
+ if r.returncode:raise RuntimeError('ProcessInventoryUnavailable')
+ return [line.strip() for line in r.stdout.splitlines() if len(line.split())>2 and line.split()[1]==str(pgid)]
+env=os.environ.copy();assert not env.get('NODE_OPTIONS'),'EXISTING_NODE_OPTIONS_REQUIRE_REVIEW'
+assert Path(b['runtime']['browserRoot']).is_dir(),'ACTUAL_BUNDLED_BROWSER_ROOT_REQUIRED'
+env['PLAYWRIGHT_BROWSERS_PATH']=b['runtime']['browserRoot']
+tmp=out/'tmp';tmp.mkdir(exist_ok=False,mode=0o700)
+for key in ['TMPDIR','TMP','TEMP']:env[key]=str(tmp)
+env.update(NODE_OPTIONS='--require='+str(registrar),C_FINAL_CONTENT_OUT=str(out),C_FINAL_CONTENT_RUN_ID=os.environ['T1342_FINAL_UI_RUN_ID'],T1342_FINAL_UI_DEADLINE=str(__import__('datetime').datetime.fromtimestamp(time.time()+plan['budgets']['executionSeconds'],__import__('datetime').timezone.utc).isoformat()))
+def terminate(signum,frame):raise KeyboardInterrupt('OUTER_TERMINATION')
+signal.signal(signal.SIGTERM,terminate)
+proc=None;initial=None;expired=False;error=None;actions=[];remaining=[];group=[];start=time.monotonic()
+try:
+ assert outer_deadline-time.monotonic()>=plan['budgets']['childSeconds']+600,'INSUFFICIENT_GLOBAL_PLUS_CLEANUP_BUDGET_NO_SUBMISSION'
+ test_root=Path(b['runtime']['frontendPackageJson']).parent
+ cmd=[b['runtime']['nodePath'],str(here/'observe.cjs'),'--execute']
+ save('EXECUTION_START',{'command':cmd,'outerSeconds':plan['budgets']['outerSeconds'],'childSeconds':plan['budgets']['childSeconds'],'innerGlobalSeconds':plan['budgets']['executionSeconds'],'cleanupReserveSeconds':600,'perViewportMs':plan['budgets']['viewportMs'],'globalMs':plan['budgets']['executionSeconds']*1000,'at':time.time(),'maximumUserModelRootsPerCase':0})
+ with (out/'stdout-safe.ndjson').open('w') as log:
+  proc=subprocess.Popen(cmd,cwd=repo/'frontend',env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True)
+  initial=identity(proc.pid);assert initial and initial['pgid']==proc.pid;save('RUNNER_CHILD',{'pid':proc.pid,'identity':initial})
+  def consume():
+   for raw in iter(proc.stdout.readline,b''):
+    line=raw.decode('utf8','replace').strip();row={'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
+    if len(line)<100 and any(s in line for s in ['Running 1 test','1 passed','1 failed']):row['summary']=line
+    log.write(json.dumps(row)+'\n');log.flush()
+  reader=threading.Thread(target=consume,daemon=True);reader.start()
+  try:proc.wait(timeout=min(plan['budgets']['childSeconds'],max(1,outer_deadline-time.monotonic()-600)))
+  except subprocess.TimeoutExpired:expired=True
+  if not expired:reader.join(timeout=5)
+except BaseException as exc:error=type(exc).__name__
+finally:
+ if proc is not None and proc.poll() is None:
+  if initial and identity(proc.pid)==initial:
+   os.killpg(proc.pid,signal.SIGTERM);actions.append('TERM_IDENTITY_MATCHED_RUNNER_GROUP')
+   try:proc.wait(timeout=120)
+   except subprocess.TimeoutExpired:pass
+  else:error=error or 'RunnerIdentityChanged'
+ try:
+  f=out/'OWNED_CHILDREN.ndjson';registered=[json.loads(v) for v in f.read_text().splitlines()] if f.exists() else [];assert all(row['runId']==os.environ['T1342_FINAL_UI_RUN_ID'] for row in registered)
+  registered=list({(row['pid'],row.get('identity')):row for row in registered}.values())
+  for row in registered:
+   if same(row):os.kill(row['pid'],signal.SIGTERM);actions.append({'pid':row['pid'],'action':'TERM_IDENTITY_MATCHED_CHILD'})
+  end=time.monotonic()+120
+  while time.monotonic()<end and any(same(row) for row in registered):time.sleep(.5)
+  for row in registered:
+   if same(row):os.kill(row['pid'],signal.SIGKILL);actions.append({'pid':row['pid'],'action':'KILL_IDENTITY_MATCHED_CHILD'})
+  end=time.monotonic()+120
+  while time.monotonic()<end and any(same(row) for row in registered):time.sleep(.5)
+  remaining=[{**row,'current':identity(row['pid']),'identityMatches':same(row)} for row in registered]
+  if any(row['identityMatches'] for row in remaining):error=error or 'OwnedRegisteredChildrenRemain'
+ except BaseException as exc:error=error or type(exc).__name__
+ if proc is not None and proc.poll() is None and initial and identity(proc.pid)==initial:
+  os.killpg(proc.pid,signal.SIGKILL);actions.append('KILL_IDENTITY_MATCHED_RUNNER_GROUP')
+  try:proc.wait(timeout=120)
+  except subprocess.TimeoutExpired:error=error or 'RunnerRemains'
+ try:
+  if initial:group=group_rows(initial['pgid'])
+  if group:error=error or 'OwnedProcessGroupRemains'
+ except BaseException as exc:error=error or type(exc).__name__
+ drift=[]
+ for row in rows:
+  try:
+   p=Path(row['path'])
+   if p.stat().st_size!=row['bytes'] or digest(p)!=row['sha256']:drift.append(row['path'])
+  except OSError:drift.append(row['path'])
+ drift.extend(lock_drift())
+ save('EXECUTION_RESULT',{'caseId':'t1342-script-local-director-readonly','exitCode':proc.returncode if proc else None,'expired':expired,'error':error,'elapsedSeconds':time.monotonic()-start,'cleanup':actions,'registeredChildrenAfterCleanup':remaining,'remainingOwnedGroup':group,'afterInputDrift':drift,'maximumUserModelRootsPerCase':0,'oldTaskNeverResent':True,'backendTasksCancelledByRunner':False})
+sys.exit(proc.returncode if proc and proc.returncode is not None and not expired and error is None and not drift else 1)

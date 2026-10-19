@@ -1,0 +1,1046 @@
+diff --git a/dist/cli.js b/dist/cli.js
+index 43a219bd97b4d5d858338f189f815e6ee9c7e053..bf57b7a5491705f851137ab01391065070830798 100755
+--- a/dist/cli.js
++++ b/dist/cli.js
+@@ -1,4 +1,15 @@
+ #!/usr/bin/env node
++// CreatorOS positive execution floor; zero retains the library's explicit unbounded contract.
++function creatorosConfigurePageTimeouts(page) {
++  page.setDefaultTimeout(120000);
++  page.setDefaultNavigationTimeout(120000);
++}
++function creatorosExecutionTimeout(value, fallback = 120000) {
++  const parsed = Number(value ?? fallback);
++  if (parsed === 0) return 0;
++  if (!Number.isFinite(parsed) || parsed < 0) throw new RangeError("Execution timeout must be nonnegative and finite");
++  return Math.max(120000, parsed);
++}
+ import { createRequire as __hf_createRequire } from "node:module";
+ import { fileURLToPath as __hf_fileURLToPath } from "node:url";
+ import { dirname as __hf_dirname } from "node:path";
+@@ -60660,6 +60671,11 @@ function resolveConfig(overrides) {
+     ...cleanEnv,
+     ...overrides
+   };
++  // CreatorOS: positive execution waits are >= 2 minutes; preserve existing zero/unbounded semantics.
++  for (const key of ["browserTimeout", "protocolTimeout", "ffmpegEncodeTimeout", "ffmpegProcessTimeout", "ffmpegStreamingTimeout", "playerReadyTimeout", "renderReadyTimeout", "pageNavigationTimeout"]) {
++    const value = Number(merged[key]);
++    if (Number.isFinite(value) && value > 0) merged[key] = Math.max(120000, value);
++  }
+   const explicitDrawElementOptIn = env("PRODUCER_EXPERIMENTAL_FAST_CAPTURE") === "true" || overrides?.useDrawElement === true;
+   if (merged.useDrawElement && !explicitDrawElementOptIn && !(process.platform === "darwin" && merged.browserGpuMode !== "software")) {
+     merged.useDrawElement = false;
+@@ -60719,7 +60735,7 @@ var init_config2 = __esm({
+       frameDataUriCacheBytesLimitMb: 1500,
+       playerReadyTimeout: 45e3,
+       renderReadyTimeout: 15e3,
+-      pageNavigationTimeout: 6e4,
++      pageNavigationTimeout: 120000,
+       verifyRuntime: true,
+       extractCacheMaxBytes: 2 * 1024 ** 3,
+       debug: false
+@@ -60761,6 +60777,7 @@ async function probeHardwareWebGlInfo(ppt, options) {
+       timeout: options.browserTimeout
+     });
+     const page = await probeBrowser.newPage();
++    creatorosConfigurePageTimeouts(page);
+     return await page.evaluate(() => {
+       const unavailable = { hasWebGL: false, vendor: "", renderer: "" };
+       const c3 = document.createElement("canvas");
+@@ -60828,17 +60845,20 @@ async function probeBeginFrameSupport(browser) {
+   let page;
+   try {
+     page = await browser.newPage();
++    creatorosConfigurePageTimeouts(page);
+     const client = await page.createCDPSession();
+     await client.send("HeadlessExperimental.enable");
+     const beginFrame = client.send("HeadlessExperimental.beginFrame", {
+       frameTimeTicks: 0,
+       interval: 33,
+       noDisplayUpdates: true
+-    });
++    }, { timeout: 120000 });
++    let probeTimer;
+     const timeout = new Promise(
+-      (_, reject) => setTimeout(() => reject(new Error("beginFrame probe timeout")), 2e3)
++      (_, reject) => { probeTimer = setTimeout(() => reject(new Error("beginFrame probe timeout")), 130000); }
+     );
+-    await Promise.race([beginFrame, timeout]);
++    try { await Promise.race([beginFrame, timeout]); }
++    finally { clearTimeout(probeTimer); }
+     await client.detach().catch(() => {
+     });
+     return true;
+@@ -61068,7 +61088,7 @@ function probeNvidiaVramMb() {
+   if (_cachedVramMb !== null) return _cachedVramMb;
+   try {
+     const out = execSync("nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits", {
+-      timeout: 3e3,
++      timeout: 120000,
+       encoding: "utf-8",
+       stdio: ["pipe", "pipe", "pipe"]
+     }).trim();
+@@ -61236,9 +61256,9 @@ async function probeBeginFrameLiveness(page, timeoutMs, frameTimeTicks, interval
+   let timer;
+   try {
+     return await Promise.race([
+-      client.send("HeadlessExperimental.beginFrame", params).then(() => true).catch(() => false),
++      client.send("HeadlessExperimental.beginFrame", params, { timeout: creatorosExecutionTimeout(timeoutMs) }).then(() => true).catch(() => false),
+       new Promise((resolve64) => {
+-        timer = setTimeout(() => resolve64(false), timeoutMs);
++        timer = setTimeout(() => resolve64(false), creatorosExecutionTimeout(timeoutMs) + 10000);
+       })
+     ]);
+   } finally {
+@@ -61985,7 +62005,7 @@ async function produceDrawElementFrame(page, width, height, quality = 80, syncTo
+       if (state.pending.delete(frameId)) {
+         reject(new Error(`drawElement worker encode timed out (frame ${frameId})`));
+       }
+-    }, 3e4);
++    }, 120000);
+     state.pending.set(frameId, {
+       resolve: (b2) => {
+         clearTimeout(timer);
+@@ -62145,7 +62165,7 @@ async function produceDrawElementFrameBatch(page, times, width, height, quality
+         if (state.pending.delete(frameId)) {
+           reject(new Error(`drawElement worker encode timed out (frame ${frameId})`));
+         }
+-      }, 3e4);
++      }, 120000);
+       state.pending.set(frameId, {
+         resolve: (b2) => {
+           clearTimeout(timer);
+@@ -63145,7 +63165,9 @@ function resolveCaptureSessionOptions(options, browserVersion, platform10 = proc
+     captureBeyondViewport: options.captureBeyondViewport ?? shouldDefaultCaptureBeyondViewport(browserVersion, platform10)
+   };
+ }
+-async function waitForCloseWithTimeout(promise) {
++async function waitForCloseWithTimeout(promise, innerTimeoutMs = DEFAULT_CONFIG2.protocolTimeout) {
++  if (innerTimeoutMs === 0) { await promise.catch(() => {}); return true; }
++  const outerTimeoutMs = creatorosExecutionTimeout(innerTimeoutMs) + 10000;
+   let timedOut = false;
+   let timer;
+   await Promise.race([
+@@ -63157,7 +63179,7 @@ async function waitForCloseWithTimeout(promise) {
+       timer = setTimeout(() => {
+         timedOut = true;
+         resolve64();
+-      }, CAPTURE_SESSION_CLOSE_TIMEOUT_MS);
++      }, outerTimeoutMs);
+     })
+   ]);
+   if (timer) clearTimeout(timer);
+@@ -63334,6 +63356,7 @@ async function createCaptureSession(serverUrl, outputDir, options, onBeforeCaptu
+   );
+   const { browser, captureMode } = await acquireBrowser(chromeArgs, config);
+   const page = await browser.newPage();
++  creatorosConfigurePageTimeouts(page);
+   await page.evaluateOnNewDocument(() => {
+     const w3 = window;
+     if (typeof w3.__name !== "function") {
+@@ -64555,7 +64578,7 @@ async function closeCaptureSession(session) {
+     cleanupDrawElementWorkerEncode(session.page);
+   }
+   if (!session.pageReleased && session.page) {
+-    const pageClosed = await waitForCloseWithTimeout(session.page.close());
++    const pageClosed = await waitForCloseWithTimeout(session.page.close(), session.config?.protocolTimeout ?? DEFAULT_CONFIG2.protocolTimeout);
+     if (!pageClosed) {
+       console.warn("[FrameCapture] Timed out closing page; forcing browser process shutdown");
+       forceReleaseBrowser(session.browser);
+@@ -64565,7 +64588,8 @@ async function closeCaptureSession(session) {
+   }
+   if (!session.browserReleased && session.browser) {
+     const browserClosed = await waitForCloseWithTimeout(
+-      releaseBrowser(session.browser, session.config)
++      releaseBrowser(session.browser, session.config),
++      session.config?.protocolTimeout ?? DEFAULT_CONFIG2.protocolTimeout
+     );
+     if (!browserClosed) {
+       console.warn("[FrameCapture] Timed out closing browser; forcing browser process shutdown");
+@@ -64716,7 +64740,7 @@ var init_frameCapture = __esm({
+       }
+     };
+     BROWSER_CONSOLE_BUFFER_SIZE = 200;
+-    CAPTURE_SESSION_CLOSE_TIMEOUT_MS = 5e3;
++    CAPTURE_SESSION_CLOSE_TIMEOUT_MS = 120000;
+     LOCKED_WARMUP_TICKS = 60;
+     realSleep = (ms) => new Promise((resolve64) => setTimeout(resolve64, ms));
+     HF_READY_DIAGNOSTIC_EXPR = `(function() {
+@@ -64858,7 +64882,7 @@ function findOnPath(name) {
+     const output = execFileSync(command2, [name], {
+       encoding: "utf-8",
+       stdio: ["pipe", "pipe", "pipe"],
+-      timeout: 5e3
++      timeout: 120000
+     });
+     found = chooseBestPathCandidate(name, output.split(/\r?\n/));
+   } catch {
+@@ -65073,7 +65097,7 @@ var init_gpuEncoder = __esm({
+       qsv: "h264_qsv",
+       amf: "h264_amf"
+     };
+-    GPU_PROBE_TIMEOUT_MS = 2e3;
++    GPU_PROBE_TIMEOUT_MS = 120000;
+     GPU_PROBE_KILL_GRACE_MS = 1e3;
+     cachedGpuEncoder = void 0;
+     GPU_PROBE_WIDTH = 320;
+@@ -65189,7 +65213,7 @@ ${tail}` : `FFmpeg exited with code ${exitCode}`;
+ async function runFfmpeg(args, opts) {
+   const startMs = Date.now();
+   const signal = opts?.signal;
+-  const timeout = opts?.timeout ?? DEFAULT_TIMEOUT;
++  const timeout = creatorosExecutionTimeout(opts?.timeout, DEFAULT_TIMEOUT);
+   const onStderr = opts?.onStderr;
+   return new Promise((resolve64) => {
+     const ffmpeg = spawn2(getFfmpegBinary(), args);
+@@ -70273,7 +70297,7 @@ function extractMediaUrls(html) {
+ async function lintMediaUrls(html, options = {}) {
+   const urls = extractMediaUrls(html);
+   if (urls.length === 0) return [];
+-  const timeout = options.timeoutMs ?? 8e3;
++  const timeout = creatorosExecutionTimeout(options.timeoutMs);
+   const findings = [];
+   const seen = /* @__PURE__ */ new Set();
+   const unique = urls.filter((u) => {
+@@ -76540,7 +76564,7 @@ var init_audioMixer = __esm({
+ 
+ // ../engine/src/utils/assertSwiftShader.ts
+ async function readWebGlVendorInfo(page) {
+-  await page.goto("chrome://gpu", { waitUntil: "domcontentloaded", timeout: 3e4 });
++  await page.goto("chrome://gpu", { waitUntil: "domcontentloaded", timeout: 120000 });
+   const info = await page.evaluate(() => {
+     const w3 = window;
+     const rows = w3.browserBridge?.gpuInfo_?.graphics_info?.basic_info ?? [];
+@@ -76589,7 +76613,7 @@ var init_assertSwiftShader = __esm({
+ 
+ // ../engine/src/utils/readWebGlVendorInfoFromCanvas.ts
+ async function readWebGlVendorInfoFromCanvas(page) {
+-  await page.goto("about:blank", { waitUntil: "domcontentloaded", timeout: 3e4 });
++  await page.goto("about:blank", { waitUntil: "domcontentloaded", timeout: 120000 });
+   return page.evaluate(() => {
+     try {
+       const canvas = document.createElement("canvas");
+@@ -78463,10 +78487,12 @@ async function launchHdrBrowser(width, height) {
+   }
+   const browser = await ppt.launch({
+     headless: false,
++    timeout: 120000,
+     executablePath: chromePath,
+     args: buildHdrChromeArgs(width, height)
+   });
+   const page = await browser.newPage();
++  creatorosConfigurePageTimeouts(page);
+   await page.setViewport({ width, height });
+   return { browser, page };
+ }
+@@ -79039,7 +79065,7 @@ function getAvailableMemoryMb() {
+   const fallback = bytesToMb(freemem2());
+   if (platform3() === "darwin") {
+     try {
+-      const raw = execSync2("vm_stat", { encoding: "utf-8", timeout: 5e3 });
++      const raw = execSync2("vm_stat", { encoding: "utf-8", timeout: 120000 });
+       const pageSize = parseInt(raw.match(/page size of (\d+)/)?.[1] ?? "0", 10);
+       if (!pageSize) return fallback;
+       const pages = (key2) => parseInt(raw.match(new RegExp(`${key2}:\\s+(\\d+)`))?.[1] ?? "0", 10);
+@@ -79209,7 +79235,7 @@ var init_client = __esm({
+     init_system();
+     POSTHOG_API_KEY = "phc_zjjbX0PnWxERXrMHhkEJWj9A9BhGVLRReICgsfTMmpx";
+     POSTHOG_HOST = "https://us.i.posthog.com";
+-    FLUSH_TIMEOUT_MS = 5e3;
++    FLUSH_TIMEOUT_MS = 120000;
+     eventQueue = [];
+     telemetryEnabled = null;
+   }
+@@ -81785,7 +81811,7 @@ var init_remote = __esm({
+     "use strict";
+     init_dist3();
+     DEFAULT_REGISTRY_URL = "https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry";
+-    FETCH_TIMEOUT_MS = 1e4;
++    FETCH_TIMEOUT_MS = 120000;
+     CACHE_DIR = join17(homedir4(), ".hyperframes", "cache");
+     CACHE_TTL_MS = 24 * 60 * 60 * 1e3;
+   }
+@@ -82171,7 +82197,7 @@ function probeChromeSharedLibs(chromeBinaryPath) {
+   try {
+     output = execFileSync2("ldd", [chromeBinaryPath], {
+       encoding: "utf-8",
+-      timeout: 5e3
++      timeout: 120000
+     });
+   } catch (err) {
+     if (isKilledExecError(err)) {
+@@ -82335,7 +82361,7 @@ function findOnPath2(name) {
+     const output = execSync3(cmd, {
+       encoding: "utf-8",
+       stdio: ["pipe", "pipe", "pipe"],
+-      timeout: 5e3
++      timeout: 120000
+     });
+     const candidate = chooseBestPathCandidate2(name, output.split(/\r?\n/));
+     return candidate ? resolve11(candidate) : void 0;
+@@ -82464,7 +82490,7 @@ function whichBinary(name) {
+     const output = execFileSync3(cmd, [name], {
+       encoding: "utf-8",
+       stdio: ["pipe", "pipe", "pipe"],
+-      timeout: 5e3
++      timeout: 120000
+     });
+     const first = output.split(/\r?\n/).map((s2) => s2.trim()).find(Boolean);
+     return first || void 0;
+@@ -82511,7 +82537,7 @@ function buildFromSource(onProgress) {
+     });
+     execFileSync3("git", ["clone", "--depth", "1", WHISPER_REPO, BUILD_DIR], {
+       stdio: "ignore",
+-      timeout: 6e4,
++      timeout: 120000,
+       env: { ...process.env, GIT_TERMINAL_PROMPT: "0" }
+     });
+   }
+@@ -83240,7 +83266,7 @@ var init_updateCheck = __esm({
+     init_installerDetection();
+     NPM_REGISTRY_URL = "https://registry.npmjs.org/hyperframes/latest";
+     CHECK_INTERVAL_MS = 24 * 60 * 60 * 1e3;
+-    FETCH_TIMEOUT_MS2 = 3e3;
++    FETCH_TIMEOUT_MS2 = 120000;
+   }
+ });
+ 
+@@ -83565,7 +83591,7 @@ var init_skillsManifest = __esm({
+     ]);
+     DEFAULT_REPO_SLUG = "heygen-com/hyperframes";
+     MANIFEST_FILE = "skills-manifest.json";
+-    FETCH_TIMEOUT_MS3 = 4e3;
++    FETCH_TIMEOUT_MS3 = 120000;
+     ENTRY_SKILL = "hyperframes";
+     FALLBACK_CORE_SKILLS = [
+       "hyperframes",
+@@ -83741,7 +83767,7 @@ import { execFileSync as execFileSync4, spawn as spawn7 } from "child_process";
+ function hasNpx() {
+   const npx = buildNpxCommand(["--version"]);
+   try {
+-    execFileSync4(npx.command, npx.args, { stdio: "ignore", timeout: 5e3 });
++    execFileSync4(npx.command, npx.args, { stdio: "ignore", timeout: 120000 });
+     return true;
+   } catch {
+     return false;
+@@ -83749,7 +83775,7 @@ function hasNpx() {
+ }
+ function hasGit2() {
+   try {
+-    execFileSync4("git", ["--version"], { stdio: "ignore", timeout: 5e3 });
++    execFileSync4("git", ["--version"], { stdio: "ignore", timeout: 120000 });
+     return true;
+   } catch {
+     return false;
+@@ -84193,7 +84219,7 @@ function detectLanguage(whisperPath, modelPath2, wavPath) {
+   try {
+     const output = execFileSync5(whisperPath, ["--model", modelPath2, "--detect-language", wavPath], {
+       encoding: "utf-8",
+-      timeout: 3e4,
++      timeout: 120000,
+       stdio: ["ignore", "pipe", "pipe"]
+     });
+     const match = output.match(/auto-detected language:\s*(\w+)/);
+@@ -84290,7 +84316,7 @@ function isWav16kMono(filePath) {
+     const raw = execFileSync5(
+       ffprobePath,
+       ["-v", "quiet", "-print_format", "json", "-show_streams", filePath],
+-      { encoding: "utf-8", timeout: 1e4 }
++      { encoding: "utf-8", timeout: 120000 }
+     );
+     const parsed = JSON.parse(raw);
+     const audio = parsed.streams?.find((s2) => s2.codec_type === "audio");
+@@ -84645,7 +84671,7 @@ async function getProcessOnPort(port) {
+   if (process.platform === "win32") return null;
+   try {
+     const { stdout: stdout2 } = await execFileAsync2("lsof", [`-ti:${port}`, "-sTCP:LISTEN"], {
+-      timeout: 2e3
++      timeout: 120000
+     });
+     const pid = stdout2.trim().split("\n")[0]?.trim();
+     return pid || null;
+@@ -84795,7 +84821,7 @@ var init_portUtils = __esm({
+     init_colors();
+     execFileAsync2 = promisify2(execFile2);
+     MAX_PORT_SCAN = 100;
+-    PROBE_TIMEOUT_MS = 300;
++    PROBE_TIMEOUT_MS = 120000;
+     PROBE_MAX_BYTES = 4096;
+     PORT_PROBE_HOSTS = ["127.0.0.1", "0.0.0.0", "::1", "::"];
+   }
+@@ -84836,7 +84862,7 @@ function killProcessTree(pid, signal = "SIGTERM") {
+ function getDescendants(pid) {
+   let children;
+   try {
+-    const raw = execSync4(`pgrep -P ${pid}`, { encoding: "utf-8", timeout: 2e3 }).trim();
++    const raw = execSync4(`pgrep -P ${pid}`, { encoding: "utf-8", timeout: 120000 }).trim();
+     if (!raw) return [];
+     children = raw.split("\n").map((s2) => parseInt(s2, 10)).filter((n2) => !isNaN(n2) && n2 > 0);
+   } catch {
+@@ -84856,7 +84882,7 @@ function killOrphansByName(processName) {
+   try {
+     const raw = execSync4(`pgrep ${userFlag}-f ${processName}`, {
+       encoding: "utf-8",
+-      timeout: 3e3
++      timeout: 120000
+     }).trim();
+     if (!raw) return 0;
+     pids = raw.split("\n").map((s2) => parseInt(s2, 10)).filter((n2) => !isNaN(n2) && n2 > 0);
+@@ -84874,7 +84900,7 @@ function killOrphansByName(processName) {
+ function getUid() {
+   if (_cachedUid !== void 0) return _cachedUid;
+   try {
+-    _cachedUid = execSync4("id -u", { encoding: "utf-8", timeout: 1e3 }).trim();
++    _cachedUid = execSync4("id -u", { encoding: "utf-8", timeout: 120000 }).trim();
+   } catch {
+     _cachedUid = null;
+   }
+@@ -84884,7 +84910,7 @@ function isOrphan(pid) {
+   try {
+     const ppid = execSync4(`ps -p ${pid} -o ppid=`, {
+       encoding: "utf-8",
+-      timeout: 2e3
++      timeout: 120000
+     }).trim();
+     return ppid === "1";
+   } catch {
+@@ -92421,8 +92447,8 @@ var init_systemFontLocator = __esm({
+   "../core/dist/fonts/systemFontLocator.js"() {
+     "use strict";
+     SYSTEM_FONT_SIZE_LIMIT = 5 * 1024 * 1024;
+-    PROFILER_TIMEOUT_MS = 5e3;
+-    FC_MATCH_TIMEOUT_MS = 3e3;
++    PROFILER_TIMEOUT_MS = 120000;
++    FC_MATCH_TIMEOUT_MS = 120000;
+     FONT_EXT_RE = /\.(otf|ttf|ttc|woff2?)$/i;
+     FORMAT_PRIORITY = {
+       woff2: 0,
+@@ -99269,7 +99295,7 @@ function probeMediaMetadata(filePath, runner = spawnSync2) {
+       "json",
+       filePath
+     ],
+-    { timeout: 15e3, maxBuffer: 1024 * 1024 }
++    { timeout: 120000, maxBuffer: 1024 * 1024 }
+   );
+   if (result.error?.code === "ENOENT") {
+     return { kind, color: classifyMediaColor(null), probeError: "ffprobe unavailable" };
+@@ -99738,7 +99764,7 @@ var init_dist9 = __esm({
+     THUMBNAIL_CACHE_VERSION = "v4";
+     MAX_FONT_RESULTS = 2e3;
+     GOOGLE_FONTS_METADATA_URL = "https://fonts.google.com/metadata/fonts";
+-    GOOGLE_FONTS_FETCH_TIMEOUT_MS = 3e3;
++    GOOGLE_FONTS_FETCH_TIMEOUT_MS = 120000;
+     cachedFonts = null;
+     cachedGoogleFonts = null;
+     GOOGLE_FONT_FALLBACKS = [
+@@ -101499,7 +101525,7 @@ var init_captureCost = __esm({
+     init_errorMessage2();
+     CAPTURE_CALIBRATION_TARGET_MS = 600;
+     MAX_MEASURED_CAPTURE_COST_MULTIPLIER = 8;
+-    CAPTURE_CALIBRATION_PROTOCOL_TIMEOUT_MS = 3e4;
++    CAPTURE_CALIBRATION_PROTOCOL_TIMEOUT_MS = 120000;
+   }
+ });
+ 
+@@ -106821,7 +106847,7 @@ async function inlineExternalScripts(html) {
+   const downloads = await Promise.allSettled(
+     externalScripts.map(async ({ src }) => {
+       const response = await fetch(src, {
+-        signal: AbortSignal.timeout(15e3)
++        signal: AbortSignal.timeout(120000)
+       });
+       if (!response.ok) throw new Error(`HTTP ${response.status} for ${src}`);
+       return { src, text: await response.text() };
+@@ -107000,7 +107026,7 @@ async function fetchExternalStylesheetCss(href) {
+   }
+   try {
+     const response = await fetch(href, {
+-      signal: AbortSignal.timeout(15e3)
++      signal: AbortSignal.timeout(120000)
+     });
+     if (!response.ok) {
+       defaultLogger.warn(
+@@ -107865,7 +107891,7 @@ async function runProbeStage(input2) {
+     probeSession = session;
+     lastBrowserConsole = session.browserConsoleBuffer;
+     if (probeSession.launchCaptureMode === "beginframe") {
+-      const probeTimeoutMs = Number(process.env.PRODUCER_BEGINFRAME_PROBE_TIMEOUT_MS) > 0 ? Number(process.env.PRODUCER_BEGINFRAME_PROBE_TIMEOUT_MS) : 3e4;
++      const probeTimeoutMs = Math.max(120000, Number(process.env.PRODUCER_BEGINFRAME_PROBE_TIMEOUT_MS) || 120000);
+       const livenessStart = Date.now();
+       const probeTick = Math.max(
+         0,
+@@ -115596,7 +115622,7 @@ function whichBinary2(name) {
+     const output = execSync5(cmd, {
+       encoding: "utf-8",
+       stdio: ["pipe", "pipe", "pipe"],
+-      timeout: 5e3
++      timeout: 120000
+     });
+     const first = output.split(/\r?\n/).map((s2) => s2.trim()).find(Boolean);
+     return first || void 0;
+@@ -116829,14 +116855,15 @@ function createStudioServer(options) {
+       let page = null;
+       try {
+         page = await browser.newPage();
++        creatorosConfigurePageTimeouts(page);
+         await page.setViewport({ width: opts.width || 1920, height: opts.height || 1080 });
+-        await page.goto(opts.previewUrl, { waitUntil: "domcontentloaded", timeout: 1e4 });
++        await page.goto(opts.previewUrl, { waitUntil: "domcontentloaded", timeout: 120000 });
+         await page.waitForFunction(
+           () => {
+             const w3 = window;
+             return !!(w3.__timelines && Object.keys(w3.__timelines).length > 0);
+           },
+-          { timeout: 5e3 }
++          { timeout: 120000 }
+         ).catch(() => {
+         });
+         await page.evaluate((t2) => {
+@@ -117886,7 +117913,7 @@ function probeVideo(filePath) {
+     const raw = execFileSync7(
+       ffprobePath,
+       ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", filePath],
+-      { encoding: "utf-8", timeout: 15e3 }
++      { encoding: "utf-8", timeout: 120000 }
+     );
+     const parsed = JSON.parse(raw);
+     const streams = parsed.streams ?? [];
+@@ -120048,7 +120075,7 @@ async function publishProjectArchiveStaged(apiBaseUrl2, title, archive, isPublic
+   if (!uploadResponse.ok || !stagedUpload) {
+     throw new Error(await readErrorMessage(uploadResponse, "Failed to prepare project upload"));
+   }
+-  const presignedUrlTtlMs = stagedUpload.expiresInSeconds * 1e3 - PUBLISH_METADATA_TIMEOUT_MS;
++  const presignedUrlTtlMs = stagedUpload.expiresInSeconds * 1e3 - 30000 /* authorization expiry margin, not an execution timeout */;
+   const s3Response = await fetch(stagedUpload.uploadUrl, {
+     method: "PUT",
+     body: new Blob([archiveArrayBuffer(archive)], { type: stagedUpload.contentType }),
+@@ -120099,7 +120126,7 @@ var init_publishProject = __esm({
+     IGNORED_DIRS = /* @__PURE__ */ new Set([".git", "node_modules", "dist", ".next", "coverage"]);
+     IGNORED_FILES = /* @__PURE__ */ new Set([".DS_Store", "Thumbs.db"]);
+     PUBLISH_CONTENT_TYPE = "application/zip";
+-    PUBLISH_METADATA_TIMEOUT_MS = 3e4;
++    PUBLISH_METADATA_TIMEOUT_MS = 120000;
+     PUBLISH_UPLOAD_MIN_TIMEOUT_MS = 12e4;
+     PUBLISH_UPLOAD_BYTES_PER_SECOND = 5e5;
+     EXT_ASSETS_PREFIX = "_ext";
+@@ -120430,7 +120457,7 @@ function browserTimeoutErrorMessage(error) {
+     case "too-small":
+       return {
+         title,
+-        message: `Got "${error.raw}" seconds, which rounds to 0 ms. Puppeteer treats 0 as 'no timeout' \u2014 pass a value that rounds to at least 1 ms.`
++        message: `Got "${error.raw}" seconds, which is below the 120-second execution floor. Puppeteer treats 0 as 'no timeout' \u2014 pass a value of at least 120 seconds.`
+       };
+     case "too-large":
+       return {
+@@ -120531,7 +120558,7 @@ var init_renderArgs = __esm({
+     init_dist3();
+     init_format();
+     init_compositionFps();
+-    MIN_PAGE_NAVIGATION_TIMEOUT_MS = 1;
++    MIN_PAGE_NAVIGATION_TIMEOUT_MS = 120000;
+     MAX_PAGE_NAVIGATION_TIMEOUT_SECONDS = 86400;
+   }
+ });
+@@ -120574,7 +120601,7 @@ function probeWebmAlpha(filePath) {
+         "json",
+         filePath
+       ],
+-      { encoding: "utf-8", timeout: 15e3 }
++      { encoding: "utf-8", timeout: 120000 }
+     );
+     const parsed = JSON.parse(raw);
+     const stream = parsed.streams?.[0];
+@@ -120830,7 +120857,7 @@ function configuredMissingDetail(envName) {
+ }
+ function readToolVersion(binaryPath) {
+   try {
+-    const raw = execFileSync9(binaryPath, ["-version"], { encoding: "utf-8", timeout: 5e3 }).split("\n")[0] ?? "";
++    const raw = execFileSync9(binaryPath, ["-version"], { encoding: "utf-8", timeout: 120000 }).split("\n")[0] ?? "";
+     const version2 = parseToolVersion(raw);
+     return version2 ? `${version2} at ${binaryPath}` : binaryPath;
+   } catch {
+@@ -121456,7 +121483,7 @@ function resolveDockerfilePath() {
+ }
+ function dockerImageExists(tag) {
+   try {
+-    execFileSync10("docker", ["image", "inspect", tag], { stdio: "pipe", timeout: 1e4 });
++    execFileSync10("docker", ["image", "inspect", tag], { stdio: "pipe", timeout: 120000 });
+     return true;
+   } catch {
+     return false;
+@@ -122255,7 +122282,7 @@ var init_render = __esm({
+         },
+         "browser-timeout": {
+           type: "string",
+-          description: "Puppeteer page-navigation timeout in SECONDS for the entry HTML. Increase when heavy compositions (many videos / fonts / asset requests) cannot reach domcontentloaded within the 60s default (see issue #1199). Accepts 0.001-86400 (24h cap). Note: this controls page.goto only \u2014 very heavy compositions may also need PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS / PRODUCER_PLAYER_READY_TIMEOUT_MS bumped (the post-goto window.__hf readiness poll has its own 45s budget). Env fallback: PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS (MILLISECONDS)."
++          description: "Puppeteer page-navigation timeout in SECONDS for the entry HTML. Increase when heavy compositions (many videos / fonts / asset requests) cannot reach domcontentloaded within the 120s default (see issue #1199). Accepts 120-86400 (24h cap). Note: this controls page.goto only \u2014 very heavy compositions may also need PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS / PRODUCER_PLAYER_READY_TIMEOUT_MS bumped (the post-goto window.__hf readiness poll has its own 120s budget). Env fallback: PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS (MILLISECONDS)."
+         },
+         "protocol-timeout": {
+           type: "string",
+@@ -122263,7 +122290,7 @@ var init_render = __esm({
+         },
+         "player-ready-timeout": {
+           type: "string",
+-          description: "Timeout in ms for the composition player to become ready. Increase for complex compositions on slow hardware. Default: 45000 (45 s). Env: PRODUCER_PLAYER_READY_TIMEOUT_MS."
++          description: "Timeout in ms for the composition player to become ready. Increase for complex compositions on slow hardware. Default: 120000 (120 s). Env: PRODUCER_PLAYER_READY_TIMEOUT_MS."
+         },
+         "low-memory-mode": {
+           type: "boolean",
+@@ -123540,6 +123567,7 @@ async function openSettledCompositionPage(html, url, options) {
+   try {
+     chromeBrowser = await puppeteer.default.launch({
+       headless: true,
++      timeout: 120000,
+       executablePath: browser.executablePath,
+       args: buildChromeArgs2(
+         { ...viewport, captureMode: "screenshot" },
+@@ -123547,10 +123575,11 @@ async function openSettledCompositionPage(html, url, options) {
+       )
+     });
+     const page = await chromeBrowser.newPage();
++    creatorosConfigurePageTimeouts(page);
+     await installPageFunctionGuard(page);
+     await page.setViewport(viewport);
+     await options.beforeNavigate?.(page);
+-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 1e4 });
++    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
+     const renderReadyTimedOut = !await waitForCompositionSettle(page, options);
+     return { browser: chromeBrowser, page, renderReadyTimedOut };
+   } catch (err) {
+@@ -123746,7 +123775,7 @@ var init_captureCompositionFrame = __esm({
+     "use strict";
+     init_colors();
+     init_compositionViewport();
+-    SHADER_TRANSITIONS_TIMEOUT_MS = 9e4;
++    SHADER_TRANSITIONS_TIMEOUT_MS = 120000;
+     CAPTURE_SETTLE_MS = 1500;
+     PREFERRED_SEEK_TARGET_WAIT_MS = 500;
+     DEFAULT_POST_SEEK_FONT_WAIT_MS = 500;
+@@ -123847,7 +123876,7 @@ async function alignViewportToComposition(page, url) {
+     };
+   });
+   await page.setViewport(size);
+-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 1e4 });
++  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
+ }
+ async function runLayoutAudit(projectDir, opts) {
+   const { ensureBrowser: ensureBrowser2 } = await Promise.resolve().then(() => (init_manager2(), manager_exports2));
+@@ -123864,16 +123893,18 @@ async function runLayoutAudit(projectDir, opts) {
+     const browser = await ensureBrowser2();
+     chromeBrowser = await puppeteer.default.launch({
+       headless: true,
++      timeout: 120000,
+       executablePath: browser.executablePath,
+       args: buildChromeArgs2({ width: 1920, height: 1080, captureMode: "screenshot" })
+     });
+     const page = await chromeBrowser.newPage();
++    creatorosConfigurePageTimeouts(page);
+     await installPageFunctionGuard(page);
+     await page.setViewport({ width: 1920, height: 1080 });
+-    await page.goto(server.url, { waitUntil: "domcontentloaded", timeout: 1e4 });
++    await page.goto(server.url, { waitUntil: "domcontentloaded", timeout: 120000 });
+     await alignViewportToComposition(page, server.url);
+     await page.waitForFunction(() => !!window.__timelines, {
+-      timeout: opts.timeout
++      timeout: creatorosExecutionTimeout(opts.timeout)
+     }).catch(() => {
+     });
+     await waitForCompositionFonts(page, 750);
+@@ -124078,7 +124109,7 @@ function createInspectCommand(commandName) {
+       const project = resolveProject(args.dir);
+       const samples = Math.max(1, parseInt(args.samples, 10) || 9);
+       const tolerance = Math.max(0, parseFloat(args.tolerance) || 2);
+-      const timeout = Math.max(500, parseInt(args.timeout, 10) || 5e3);
++      const timeout = Math.max(120000, parseInt(args.timeout, 10) || 120000);
+       const maxIssues = Math.max(1, parseInt(args["max-issues"], 10) || 80);
+       const at4 = parseAt(args.at);
+       const atTransitions = !!args["at-transitions"];
+@@ -124519,6 +124550,7 @@ async function validateInBrowser(project, opts) {
+     const { buildChromeArgs: buildChromeArgs2, analyzeClipMediaFit: analyzeClipMediaFit2 } = await Promise.resolve().then(() => (init_src(), src_exports));
+     const chromeBrowser = await puppeteer.default.launch({
+       headless: true,
++      timeout: 120000,
+       executablePath: browser.executablePath,
+       args: buildChromeArgs2(
+         { ...viewport, captureMode: "screenshot" },
+@@ -124526,6 +124558,7 @@ async function validateInBrowser(project, opts) {
+       )
+     });
+     const page = await chromeBrowser.newPage();
++    creatorosConfigurePageTimeouts(page);
+     await installPageFunctionGuard(page);
+     await page.setViewport(viewport);
+     page.on("console", (msg) => {
+@@ -124573,7 +124606,7 @@ async function validateInBrowser(project, opts) {
+       throw err;
+     }
+     await new Promise((r2) => setTimeout(r2, opts.timeout ?? 3e3));
+-    for (const w3 of await auditClipDurations(page, analyzeClipMediaFit2, opts.timeout ?? 3e3)) {
++    for (const w3 of await auditClipDurations(page, analyzeClipMediaFit2, creatorosExecutionTimeout(opts.timeout))) {
+       warnings.push(w3);
+     }
+     if (opts.contrast) {
+@@ -124677,7 +124710,7 @@ var init_validate = __esm({
+     SEEK_SETTLE_MS = 150;
+     PREFERRED_SEEK_TARGET_WAIT_MS2 = 500;
+     MEDIA_EXTENSIONS = /\.(aac|flac|m4a|mov|mp3|mp4|oga|ogg|wav|webm)$/i;
+-    NAV_TIMEOUT_FLOOR_MS = 1e4;
++    NAV_TIMEOUT_FLOOR_MS = 120000;
+     validate_default = defineCommand({
+       meta: {
+         name: "validate",
+@@ -124706,7 +124739,7 @@ Examples:
+       async run({ args }) {
+         printDeprecationNotice("validate");
+         const project = resolveProject(args.dir);
+-        const timeout = parseInt(args.timeout, 10) || 3e3;
++        const timeout = Math.max(120000, parseInt(args.timeout, 10) || 120000);
+         const useContrast = args.contrast ?? true;
+         const asJson = Boolean(args.json);
+         if (!asJson) {
+@@ -126156,7 +126189,7 @@ var init_checkPipeline = __esm({
+       maxIssues: 80,
+       collapseStatic: true,
+       tolerance: 2,
+-      timeout: 3e3,
++      timeout: 120000,
+       contrast: true,
+       strict: false,
+       snapshots: false
+@@ -126299,7 +126332,7 @@ function parseCheckOptions(args) {
+     maxIssues: positiveInteger(args["max-issues"], DEFAULT_CHECK_OPTIONS.maxIssues),
+     collapseStatic: args["collapse-static"] !== false,
+     tolerance: nonNegativeNumber(args.tolerance, DEFAULT_CHECK_OPTIONS.tolerance),
+-    timeout: Math.max(500, positiveInteger(args.timeout, DEFAULT_CHECK_OPTIONS.timeout)),
++    timeout: Math.max(120000, positiveInteger(args.timeout, DEFAULT_CHECK_OPTIONS.timeout)),
+     contrast: args.contrast !== false,
+     strict: args.strict === true,
+     snapshots: args.snapshots === true,
+@@ -126723,11 +126756,13 @@ async function analyzeBeatsHeadless(audioBytes) {
+   const browser = await ensureBrowser2();
+   const chrome = await puppeteer.default.launch({
+     headless: true,
++    timeout: 120000,
+     executablePath: browser.executablePath,
+     args: ["--no-sandbox", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required"]
+   });
+   try {
+     const page = await chrome.newPage();
++    creatorosConfigurePageTimeouts(page);
+     return await detectOnPage(page, bundle, audioBytes.toString("base64"));
+   } finally {
+     await chrome.close();
+@@ -128645,6 +128680,7 @@ async function openCompositionPage(url, executablePath) {
+   const puppeteer = await import("puppeteer-core");
+   const browser = await puppeteer.default.launch({
+     headless: true,
++    timeout: 120000,
+     executablePath,
+     args: [
+       "--no-sandbox",
+@@ -128656,7 +128692,8 @@ async function openCompositionPage(url, executablePath) {
+     ]
+   });
+   const page = await browser.newPage();
+-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 1e4 });
++  creatorosConfigurePageTimeouts(page);
++  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
+   const size = await page.evaluate(() => {
+     const root = document.querySelector("[data-composition-id][data-width][data-height]");
+     const w3 = root ? parseInt(root.getAttribute("data-width") ?? "", 10) : 0;
+@@ -128667,9 +128704,9 @@ async function openCompositionPage(url, executablePath) {
+     };
+   });
+   await page.setViewport(size);
+-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 1e4 });
++  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
+   await page.waitForFunction(() => !!window.__timelines, {
+-    timeout: 1e4
++    timeout: 120000
+   }).catch(() => {
+   });
+   await page.evaluate(async () => {
+@@ -130544,7 +130581,7 @@ import { homedir as homedir13, tmpdir as tmpdir9 } from "os";
+ import { basename as basename15, extname as extname12, join as join84 } from "path";
+ function isRunnable(bin) {
+   try {
+-    execFileSync11(bin, ["--help"], { stdio: ["ignore", "ignore", "ignore"], timeout: 1e4 });
++    execFileSync11(bin, ["--help"], { stdio: ["ignore", "ignore", "ignore"], timeout: 120000 });
+     return true;
+   } catch {
+     return false;
+@@ -130563,7 +130600,7 @@ function findParakeet() {
+     const out = execFileSync11(which, ["parakeet-mlx"], {
+       encoding: "utf-8",
+       stdio: ["ignore", "pipe", "ignore"],
+-      timeout: 5e3
++      timeout: 120000
+     });
+     const first = out.split(/\r?\n/).map((s2) => s2.trim()).find(Boolean);
+     if (first && existsSync77(first)) return first;
+@@ -131003,7 +131040,7 @@ function findPython() {
+       const version2 = execFileSync12(override, ["--version"], {
+         encoding: "utf-8",
+         stdio: ["pipe", "pipe", "pipe"],
+-        timeout: 5e3
++        timeout: 120000
+       });
+       if (/Python 3/.test(version2)) return override;
+     } catch {
+@@ -131015,14 +131052,14 @@ function findPython() {
+       const output = execFileSync12(cmd, [name], {
+         encoding: "utf-8",
+         stdio: ["pipe", "pipe", "pipe"],
+-        timeout: 5e3
++        timeout: 120000
+       });
+       const first = output.split(/\r?\n/).map((s2) => s2.trim()).find(Boolean);
+       if (!first) continue;
+       const version2 = execFileSync12(first, ["--version"], {
+         encoding: "utf-8",
+         stdio: ["pipe", "pipe", "pipe"],
+-        timeout: 5e3
++        timeout: 120000
+       }).trim();
+       if (version2.includes("Python 3")) return first;
+     } catch {
+@@ -131034,7 +131071,7 @@ function hasPythonPackage(python, pkg) {
+   try {
+     execFileSync12(python, ["-c", `import ${pkg}`], {
+       stdio: ["pipe", "pipe", "pipe"],
+-      timeout: 1e4
++      timeout: 120000
+     });
+     return true;
+   } catch {
+@@ -131049,7 +131086,7 @@ function hasPythonModules(modules) {
+   try {
+     execFileSync12(python, ["-c", probe], {
+       stdio: ["pipe", "pipe", "pipe"],
+-      timeout: 1e4
++      timeout: 120000
+     });
+     return true;
+   } catch {
+@@ -131600,7 +131637,7 @@ import { execSync as execSync6 } from "child_process";
+ import { platform as platform9 } from "os";
+ function checkDocker() {
+   try {
+-    const version2 = execSync6("docker --version", { encoding: "utf-8", timeout: 5e3 }).trim();
++    const version2 = execSync6("docker --version", { encoding: "utf-8", timeout: 120000 }).trim();
+     return { ok: true, detail: version2 };
+   } catch {
+     return {
+@@ -131612,7 +131649,7 @@ function checkDocker() {
+ }
+ function checkDockerRunning() {
+   try {
+-    execSync6("docker info", { stdio: "pipe", timeout: 5e3 });
++    execSync6("docker info", { stdio: "pipe", timeout: 120000 });
+     return { ok: true, detail: "Running" };
+   } catch {
+     return {
+@@ -131988,7 +132025,7 @@ async function submitFeedback(input2) {
+         "content-type": "application/json",
+         heygen_route: "canary"
+       },
+-      signal: AbortSignal.timeout(5e3)
++      signal: AbortSignal.timeout(120000)
+     });
+   } catch {
+   }
+@@ -171556,7 +171593,7 @@ ${underline2}`);
+         }
+       }
+     };
+-    BaseGeminiNextGenAPIClient.DEFAULT_TIMEOUT = 6e4;
++    BaseGeminiNextGenAPIClient.DEFAULT_TIMEOUT = 120000;
+     GeminiNextGenAPIClient = class extends BaseGeminiNextGenAPIClient {
+       constructor() {
+         super(...arguments);
+@@ -172409,7 +172446,7 @@ async function captureSnapshots(projectDir, opts) {
+   const savedPaths = [];
+   try {
+     const { browser: chromeBrowser, page } = await openSettledCompositionPage(html, server.url, {
+-      renderReadyTimeoutMs: opts.timeout ?? 5e3,
++      renderReadyTimeoutMs: creatorosExecutionTimeout(opts.timeout),
+       renderReadyWarningSuffix: "snapshots may be inaccurate"
+     });
+     try {
+@@ -172621,7 +172658,7 @@ var init_snapshot = __esm({
+     init_colors();
+     init_ffmpeg();
+     init_motionShotLayout();
+-    FFMPEG_EXTRACT_TIMEOUT_MS = 3e4;
++    FFMPEG_EXTRACT_TIMEOUT_MS = 120000;
+     examples28 = [
+       ["Capture 5 key frames from a composition", "snapshot capture"],
+       ["Capture 10 evenly-spaced frames", "snapshot capture --frames 10"],
+@@ -172688,7 +172725,7 @@ var init_snapshot = __esm({
+       async run({ args }) {
+         const project = resolveProject(args.dir);
+         const frames = parseInt(args.frames, 10) || 5;
+-        const timeout = parseInt(args.timeout, 10) || 5e3;
++        const timeout = Math.max(120000, parseInt(args.timeout, 10) || 120000);
+         const atTimestamps = args.at ? String(args.at).split(",").map((s2) => parseFloat(s2.trim())).filter((n2) => !isNaN(n2)) : void 0;
+         const describeArg = args.describe === void 0 ? "true" : String(args.describe) === "false" ? null : String(args.describe);
+         const camera = args.angle ? parseAngle(String(args.angle)) : void 0;
+@@ -173011,7 +173048,7 @@ function parseGradeCompareArgs(args) {
+     outPath,
+     source: gradesArg ? { kind: "grades", path: resolveFromBase(projectDir, gradesArg) } : { kind: "luts", value: lutsArg ?? "" },
+     json: args.json === true,
+-    timeoutMs: Number.parseInt(readOptionalString(args.timeout) ?? "", 10) || 5e3
++    timeoutMs: Math.max(120000, Number.parseInt(readOptionalString(args.timeout) ?? "", 10) || 120000)
+   };
+ }
+ function gridMetrics(cellCount, frameWidth, frameHeight) {
+@@ -173273,7 +173310,7 @@ var init_grade_compare = __esm({
+     MAX_COLUMNS = 4;
+     GRID_PADDING = 16;
+     LABEL_HEIGHT = 32;
+-    FFMPEG_EXTRACT_TIMEOUT_MS2 = 3e4;
++    FFMPEG_EXTRACT_TIMEOUT_MS2 = 120000;
+     examples29 = [
+       [
+         "Compare grade presets on one reference frame",
+@@ -173474,7 +173511,7 @@ function parseCompareArgs(args, cwd = process.cwd()) {
+     atSeconds: parseAtSeconds(args.at),
+     cols: parseColumns(args.cols),
+     json: args.json === true,
+-    timeoutMs: Number.parseInt(readOptionalString(args.timeout) ?? "", 10) || DEFAULT_RENDER_READY_TIMEOUT_MS
++    timeoutMs: creatorosExecutionTimeout(Number.parseInt(readOptionalString(args.timeout) ?? "", 10) || DEFAULT_RENDER_READY_TIMEOUT_MS)
+   };
+ }
+ function capCompareVariants(variants) {
+@@ -173665,7 +173702,7 @@ var init_compare = __esm({
+     init_updateCheck();
+     MAX_COMPARE_VARIANTS = 16;
+     MAX_COLUMNS2 = 4;
+-    DEFAULT_RENDER_READY_TIMEOUT_MS = 5e3;
++    DEFAULT_RENDER_READY_TIMEOUT_MS = 120000;
+     examples30 = [
+       [
+         "Compare two agent-authored composition variants",
+@@ -173998,7 +174035,7 @@ async function safeFetch(url, init) {
+ async function fetchBuffer(url) {
+   try {
+     const res = await safeFetch(url, {
+-      signal: AbortSignal.timeout(1e4),
++      signal: AbortSignal.timeout(120000),
+       headers: { "User-Agent": "HyperFrames/1.0" }
+     });
+     if (!res || !res.ok) return null;
+@@ -174307,7 +174344,7 @@ async function extractHtml(page, opts = {}) {
+     try {
+       if (isPrivateUrl(href)) continue;
+       const res = await fetch(href, {
+-        signal: AbortSignal.timeout(1e4),
++        signal: AbortSignal.timeout(120000),
+         headers: { "User-Agent": "Mozilla/5.0" }
+       });
+       if (!res.ok) continue;
+@@ -175838,7 +175875,7 @@ async function saveLottieAnimations(discoveredLotties, lottieDir) {
+         jsonData = JSON.stringify(lottieItem.data);
+       } else if (lottieItem.url) {
+         const res = await safeFetch(lottieItem.url, {
+-          signal: AbortSignal.timeout(1e4),
++          signal: AbortSignal.timeout(120000),
+           headers: { "User-Agent": "HyperFrames/1.0" }
+         });
+         if (!res || !res.ok) continue;
+@@ -175900,6 +175937,7 @@ async function renderLottiePreviews(chromeBrowser, lottieDir, outputDir) {
+       let previewPage;
+       try {
+         previewPage = await chromeBrowser.newPage();
++        creatorosConfigurePageTimeouts(previewPage);
+         await previewPage.setViewport({ width: 400, height: 400 });
+         const animData = JSON.parse(readFileSync63(join97(lottieDir, file), "utf-8"));
+         const midFrame = Math.floor(((raw.op || 0) - (raw.ip || 0)) * 0.3);
+@@ -175909,7 +175947,7 @@ async function renderLottiePreviews(chromeBrowser, lottieDir, outputDir) {
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+ <style>*{margin:0;padding:0;background:transparent}#c{width:400px;height:400px}</style>
+ </head><body><div id="c"></div></body></html>`,
+-          { waitUntil: "load", timeout: 1e4 }
++          { waitUntil: "load", timeout: 120000 }
+         );
+         await previewPage.evaluate(
+           (data2, frame) => {
+@@ -175928,7 +175966,7 @@ async function renderLottiePreviews(chromeBrowser, lottieDir, outputDir) {
+           animData,
+           midFrame
+         );
+-        await previewPage.waitForFunction(() => window.__READY === true, { timeout: 5e3 }).catch(() => {
++        await previewPage.waitForFunction(() => window.__READY === true, { timeout: 120000 }).catch(() => {
+         });
+         await previewPage.screenshot({
+           path: join97(previewDir, previewName),
+@@ -177113,7 +177151,7 @@ function appendNote(existing, note) {
+ }
+ async function readAssetBytes(url) {
+   try {
+-    const response = await fetch(url, { signal: AbortSignal.timeout(15e3) });
++    const response = await fetch(url, { signal: AbortSignal.timeout(120000) });
+     if (!response.ok) return null;
+     const contentLength = response.headers.get("content-length");
+     if (contentLength && Number.parseInt(contentLength, 10) > 25 * 1024 * 1024) return null;
+@@ -177232,6 +177270,7 @@ async function captureWebsite(opts, onProgress) {
+   const puppeteer = await import("puppeteer-core");
+   const chromeBrowser = await puppeteer.default.launch({
+     headless: true,
++    timeout: 120000,
+     executablePath: browser.executablePath,
+     args: [
+       "--no-sandbox",
+@@ -177250,6 +177289,7 @@ async function captureWebsite(opts, onProgress) {
+   try {
+     progress("animations", "Cataloging animations (full JS)...");
+     const page1 = await chromeBrowser.newPage();
++    creatorosConfigurePageTimeouts(page1);
+     await page1.setViewport({ width: viewportWidth, height: viewportHeight });
+     await page1.setUserAgent(
+       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+@@ -177315,7 +177355,7 @@ async function captureWebsite(opts, onProgress) {
+       } catch {
+       }
+     });
+-    await page1.goto(url, { waitUntil: "networkidle2", timeout });
++    await page1.goto(url, { waitUntil: "networkidle2", timeout: creatorosExecutionTimeout(timeout) });
+     await new Promise((r2) => setTimeout(r2, settleTime));
+     const pageContentCheck = await page1.evaluate(`(() => {
+       var text = (document.body.innerText || "").trim();
+@@ -179659,7 +179699,7 @@ function machineVars(args, project, region, image) {
+   if (cpu) vars.push("-var", `cpu=${cpu}`);
+   if (memory) vars.push("-var", `memory=${memory}`);
+   if (maxInstances !== void 0) vars.push("-var", `max_instances=${maxInstances}`);
+-  if (timeout !== void 0) vars.push("-var", `request_timeout_seconds=${timeout}`);
++  if (timeout !== void 0) vars.push("-var", `request_timeout_seconds=${Math.max(120, timeout)}`);
+   return vars;
+ }
+ function findRepoRoot(tfDir) {
+@@ -181482,7 +181522,7 @@ var init_oauth = __esm({
+     init_scrub();
+     init_store();
+     init_colors();
+-    REVOKE_TIMEOUT_MS = 5e3;
++    REVOKE_TIMEOUT_MS = 120000;
+     MIN_EXPIRES_IN_SECONDS = 30;
+     DEFAULT_CLIENT_ID = "q2A2QRSke2LrFTPJhoDbHtXh";
+     DEFAULT_SCOPES = "openid profile email";
+@@ -181866,7 +181906,7 @@ function parsePollIntervalMs(raw) {
+ }
+ function parseMaxWaitMs(raw) {
+   const n2 = parseNumericFlag(raw, { flag: "--max-wait", min: 1e-4 });
+-  return n2 === void 0 ? DEFAULT_MAX_WAIT_MS : Math.round(n2 * 6e4);
++  return Math.max(120000, n2 === void 0 ? DEFAULT_MAX_WAIT_MS : Math.round(n2 * 6e4));
+ }
+ function validateIdempotencyKey(key2) {
+   if (key2 === void 0) return;
+@@ -183040,7 +183080,7 @@ var init_login = __esm({
+     init_dist();
+     init_auth2();
+     init_colors();
+-    STDIN_TIMEOUT_MS = 3e4;
++    STDIN_TIMEOUT_MS = 120000;
+     MIN_KEY_LENGTH = 8;
+     login_default = defineCommand({
+       meta: {

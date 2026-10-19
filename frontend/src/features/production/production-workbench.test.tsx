@@ -10,8 +10,9 @@
  *     rendering→ready，失败不把项目永久留在“渲染中”；分场/export 正常建档。
  */
 
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as assetPickerModule from "@/components/media/asset-picker";
 
 // ── client mock(stateful production 状态,可断言步进序列)──────────────────────
 
@@ -909,6 +910,9 @@ describe("ProductionWorkbench", () => {
   });
 
   it("刷新恢复在跑渲染后，执行卡和已确认分镜共用同一运行状态", async () => {
+    // 只观察原身份；spy 默认透传真实组件，仍验证真实已选卡与移除/保存链。
+    const pickerObserver = vi.spyOn(assetPickerModule, "AssetPicker");
+    try {
     const recoveredDecisions = {
       scenes: [{ title: "开场", startSec: 0, endSec: 12, summary: "开场介绍" }],
       cards: [],
@@ -977,14 +981,18 @@ describe("ProductionWorkbench", () => {
     expect(
       container.querySelector('[data-slot="confirmed-decisions-notice"]'),
     ).not.toBeNull();
-    const recoveredSelect = container.querySelector(
-      '[data-testid="broll-0"] select',
-    ) as HTMLSelectElement;
-    expect(recoveredSelect.options[0]?.textContent).toContain(
-      "恢复后的项目录屏",
-    );
-    expect(recoveredSelect.options[0]?.textContent).toContain("素材已不可用");
-    expect(recoveredSelect.value).toBe("asset-saved");
+    const recoveredBroll = within(container.querySelector('[data-testid="broll-0"]')!);
+    const pickerLabel = "B-roll 素材(当前:恢复后的项目录屏)";
+    // 渲染状态和项目素材独立恢复；清单结算后才有真实不可用状态。
+    await waitFor(() => {
+      const recoveredPicker = recoveredBroll.getByRole("button", { name: pickerLabel });
+      expect(recoveredPicker).toHaveTextContent("恢复后的项目录屏");
+      expect(recoveredPicker).toHaveTextContent("素材已不可用");
+    }, { timeout: 120000 });
+    const recoveredChoice = pickerObserver.mock.calls
+      .filter(([props]) => props.label === pickerLabel).at(-1)?.[0].value;
+    expect(recoveredChoice?.choiceKey).toBe("asset-saved");
+    expect(recoveredChoice?.value).toEqual(expect.objectContaining({ assetId: "asset-saved" }));
     expect(
       container.querySelector('[aria-label="移除 B-roll:恢复后的项目录屏"]'),
     ).not.toBeNull();
@@ -1017,7 +1025,10 @@ describe("ProductionWorkbench", () => {
         }),
       }),
     );
-  });
+    } finally {
+      pickerObserver.mockRestore();
+    }
+  }, 180000);
 
   it("项目最新执行任务覆盖方案里保存的旧 sourceRenderTaskId", async () => {
     mockClient.getOutputProduction.mockResolvedValue({
@@ -1716,7 +1727,9 @@ describe("ProductionWorkbench", () => {
   it("[FE-H01] 决策轮询持续不放弃:远超旧「~10 分钟(150 次)」上限仍在轮询(不静默退出)", async () => {
     vi.useFakeTimers();
     try {
-      // 用恢复路径把一个 running 决策任务挂上轮询;getTask 默认恒 running → 永不遇终态。
+      // 原公共读取必须返回本次请求的同任务ID；仍验证持续轮询，不以外来ID绕过归属。
+      mockClient.getTask.mockResolvedValue({ id: "dec-run", status: "running" });
+      // 用恢复路径把一个 running 决策任务挂上轮询;getTask 恒 running → 永不遇终态。
       mockClient.listAITasks.mockResolvedValueOnce([
         { id: "dec-run", status: "running" },
       ]);
@@ -2094,3 +2107,67 @@ describe("ProductionWorkbench — T-387c B-roll 自动聚合", () => {
     );
   });
 });
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.setItem("creatoros:current-group", "t1062-unit-test-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

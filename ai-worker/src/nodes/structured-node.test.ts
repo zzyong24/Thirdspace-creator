@@ -296,7 +296,7 @@ describe("runStructuredNode 跨模型健壮性", () => {
     ).rejects.toThrow();
   });
 
-  it("交互调用显式 maxRetries=0 时文本兜底只请求一次，避免失败路径成倍放大", async () => {
+  it("maxRetries=0 关闭 SDK 重试，节点格式恢复仍受两次共享预算限制", async () => {
     let calls = 0;
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
@@ -313,10 +313,10 @@ describe("runStructuredNode 跨模型健壮性", () => {
         maxRetries: 0,
       }),
     ).rejects.toThrow();
-    expect(calls).toBe(2);
+    expect(calls).toBe(3);
   });
 
-  it("默认也只做一次结构化尝试和一次文本降级，避免所有工具隐式六次调用", async () => {
+  it("默认只做一次结构化尝试和至多两次格式恢复", async () => {
     let calls = 0;
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
@@ -332,7 +332,27 @@ describe("runStructuredNode 跨模型健壮性", () => {
         outputSchema: schema,
       }),
     ).rejects.toThrow();
-    expect(calls).toBe(2);
+    expect(calls).toBe(3);
+  });
+
+  it.each([0,1,2])("显式格式恢复预算 %s 严格限制总调用数",async formatRepairLimit=>{
+    let calls=0;
+    const model=new MockLanguageModelV4({doGenerate:async()=>{calls++;return textResult("不是 JSON");}});
+    await expect(runStructuredNode({model,template:TEMPLATE,facets:{t:"go"},outputSchema:schema,maxRetries:0,formatRepairLimit})).rejects.toThrow();
+    expect(calls).toBe(1+formatRepairLimit);
+  });
+
+  it("文本兼容首响应失败后携带真实校验问题修复，合法结果不继续重试",async()=>{
+    const prompts:string[]=[];
+    const model=new MockLanguageModelV4({doGenerate:async options=>{
+      prompts.push(JSON.stringify(options.prompt));
+      return textResult(prompts.length===1?'{"hooks":[]}':'{"hooks":[{"text":"恢复的候选","why":"有证据"}]}');
+    }});
+    const result=await runStructuredNode({model,template:TEMPLATE,facets:{t:"go"},outputSchema:schema,structuredOutputMode:"text"});
+    expect(result.object.hooks[0]?.text).toBe("恢复的候选");
+    expect(prompts).toHaveLength(2);
+    expect(prompts[1]).toContain("至少返回一条内容");
+    expect(prompts[1]).not.toContain("模型配置声明不支持原生结构化响应");
   });
 });
 
@@ -514,11 +534,11 @@ describe("isStructuredResponseCompatibilityError", () => {
 
 describe("resolveStructuredNodeTimeoutMs", () => {
   it("默认 90 秒，允许节点级放宽，但始终有上下界", () => {
-    expect(resolveStructuredNodeTimeoutMs(undefined)).toBe(90_000);
+    expect(resolveStructuredNodeTimeoutMs(undefined)).toBe(120_000);
     expect(resolveStructuredNodeTimeoutMs(120_000)).toBe(120_000);
     expect(resolveStructuredNodeTimeoutMs(600_000)).toBe(600_000);
-    expect(resolveStructuredNodeTimeoutMs(1)).toBe(15_000);
+    expect(resolveStructuredNodeTimeoutMs(1)).toBe(120_000);
     expect(resolveStructuredNodeTimeoutMs(999_999)).toBe(900_000);
-    expect(resolveStructuredNodeTimeoutMs(Number.NaN)).toBe(90_000);
+    expect(resolveStructuredNodeTimeoutMs(Number.NaN)).toBe(120_000);
   });
 });

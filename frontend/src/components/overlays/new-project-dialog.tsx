@@ -22,59 +22,29 @@ import { X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { NewProjectForm } from "@/features/projects/new-project-form";
-import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
-import type { CreationMode } from "@/types/domain";
+
+import {useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
+import { createBrowserProjectCreationSession } from "@/features/projects/project-creation";
 
 const DIALOG_TITLE = "新建项目";
 
-// [T-247] 设置「偏好 · 默认创作模式」的真实消费方:非 guided 的偏好值才有信息量
-// (guided 本就是表单默认,不用重挂)。
-const NON_DEFAULT_CREATION_MODES: ReadonlyArray<CreationMode> = [
-  "flexible",
-  "freeform",
-];
-
 export function NewProjectDialog() {
   const router = useRouter();
+  const creationRef=React.useRef<ReturnType<typeof createBrowserProjectCreationSession>|null>(null),generation=React.useRef(0),alive=React.useRef(false),activeRoute=React.useRef(false);
+  const scope=useCreationScope(),scopeKey=creationScopeKey(scope);
+  const dispose=React.useCallback(()=>{generation.current++;const old=creationRef.current;creationRef.current=null;old?.dispose();},[]);
   // Render only while the route is actually /projects/new. The dialog lives
   // in the `@modal` parallel slot; after `onCreate` navigates to a workspace,
   // the modal slot can briefly linger on a soft navigation, so this gate
   // ensures the dialog disappears the moment the route changes.
   const pathname = usePathname();
   const isActiveRoute = pathname === "/projects/new";
+  activeRoute.current=isActiveRoute;
+  React.useEffect(()=>{alive.current=true;if(!isActiveRoute)dispose();return()=>{alive.current=false;dispose();};},[isActiveRoute,scopeKey,dispose]);
 
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
-
-  // [T-247] 读用户偏好的默认创作模式(settings.preferences.get),预选进表单。
-  // 表单先按内置默认(guided)即时渲染;偏好回来且为非默认值时,用 key 重挂一次让
-  // defaultValues 生效(in-process 读毫秒级,用户尚未输入)。读失败/缺 op(单测
-  // mock 未提供)→ 静默保持内置默认,诚实降级不报错。
-  const [prefCreationMode, setPrefCreationMode] =
-    React.useState<CreationMode | null>(null);
-  React.useEffect(() => {
-    if (!isActiveRoute) return;
-    let alive = true;
-    void (async () => {
-      try {
-        const pref = (await client.getPreferences({
-          params: undefined,
-          query: undefined,
-          body: undefined,
-        })) as { defaultCreationMode?: string };
-        const mode = pref?.defaultCreationMode as CreationMode | undefined;
-        if (alive && mode && NON_DEFAULT_CREATION_MODES.includes(mode)) {
-          setPrefCreationMode(mode);
-        }
-      } catch {
-        // 偏好读不到 → 表单保持内置默认(guided)。
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [isActiveRoute]);
 
   // We mark this render as an intercepting overlay if the user navigated
   // here from another route inside CreatorOS. The simplest reliable
@@ -87,6 +57,7 @@ export function NewProjectDialog() {
   }, []);
 
   const close = React.useCallback(() => {
+    activeRoute.current=false;dispose();
     if (hasBackgroundRoute) {
       router.back();
       return;
@@ -104,7 +75,7 @@ export function NewProjectDialog() {
     const query = params.toString();
     const target = query.length > 0 ? `/projects?${query}` : "/projects";
     router.replace(target, { scroll: false });
-  }, [hasBackgroundRoute, router]);
+  }, [hasBackgroundRoute,router,dispose]);
 
   // Initial focus + focus trap + Escape handler.
   React.useEffect(() => {
@@ -189,7 +160,7 @@ export function NewProjectDialog() {
               {DIALOG_TITLE}　<span className="text-brand">✦</span>
             </h2>
             <p className="text-xs text-muted-foreground">
-              从一个想法开始，AI 将陪你完成从研究到发布的全过程
+              从一个想法开始，选择需要的作品形式，进入对应工作台
             </p>
           </div>
           <button
@@ -203,41 +174,18 @@ export function NewProjectDialog() {
             <X className="size-4" aria-hidden="true" />
           </button>
         </header>
-        <NewProjectForm
-          // [T-247] 偏好预选:非默认偏好回读后 key 重挂一次,defaultValues 生效。
-          key={prefCreationMode ?? "builtin-default"}
-          defaultValues={
-            prefCreationMode ? { creationMode: prefCreationMode } : undefined
-          }
+        <NewProjectForm key={scopeKey}
+          includeWorkType
+          advancedOpen
           onCreate={async (values) => {
-            // Island -> client.* -> store mutation. createProject appends a
-            // project to the mock store and returns it with its seeded
-            // `*-mock-*` id. We navigate to the *returned* id's research
-            // workspace (not a slug guess), so the new row resolves on arrival.
-            const created = await client.createProject({
-              params: undefined,
-              query: undefined,
-              // [T-052 裁决④] 宪法 §8:不再提交 contentType/targetPlatforms
-              // (project_target_platforms 停写,平台归属发布层);画幅(横竖屏)
-              // 作为唯一形态区分落 briefDetail.orientation。
-              body: {
-                title: values.name,
-                brief: values.brief,
-                briefDetail: { orientation: values.orientation, targetPlatforms: [] },
-                creationMode: values.creationMode,
-              },
-            });
-            // Invalidate the App Router cache so /projects re-reads from SQL on
-            // return (otherwise the cached pre-create list hides the new row).
-            router.refresh();
-            if (values.enterAfterCreate) {
-              // [T-055a] 阶段路由已退役,创建后直达稿面工作台。
-              router.replace(`/projects/${created.id}`, {
-                scroll: false,
-              });
-              return;
-            }
-            close();
+            const captured=creationRef.current??(creationRef.current=createBrowserProjectCreationSession()),epoch=generation.current;
+            const current=()=>{if(!alive.current||!activeRoute.current||epoch!==generation.current||creationRef.current!==captured)return false;try{captured.assertCurrent();return true;}catch{return false;}};
+            try{const result=await captured.create(values);if(!current())return;
+              router.refresh();
+              if(values.enterAfterCreate){dispose();activeRoute.current=false;router.replace(`/projects/${encodeURIComponent(result.project.id)}`,{scroll:false});return;}
+              close();
+            }catch(error){if(current())throw error;}
+
           }}
           onCancel={close}
         />

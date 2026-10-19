@@ -1,0 +1,60 @@
+{
+  "task": "T-1356",
+  "commit": "721dfacf7b3bcbe82eb9c39b61acf1fb1df367d2",
+  "command": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1356",
+    "--evidence",
+    "docs/verification/t1356/control/FRONTEND_REPORT.md"
+  ],
+  "startedAt": "2026-10-18T21:07:58.432Z",
+  "durationMs": 99523,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "reportSha256": "f09f084b6785ba35e80dcfb1028c137568476441d7447ce2dd923aaf518c363a",
+  "rawLogSha256": "636314c890035671fcab1b62b5b3afa45569845f39b9eafb6477ff5a5a13a6a7",
+  "tests": [
+    {
+      "title": "T1356 既有typed采集经真实Next与首页同scope、日期与累计语义",
+      "projectName": "t1356-normal",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 34631,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1356/e2e-artifacts/t1356-collected-metrics-T1-00e84-d采集经真实Next与首页同scope、日期与累计语义-t1356-normal/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "T1356 既有typed采集经真实Next与首页同scope、日期与累计语义",
+      "projectName": "t1356-minimum",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 31409,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1356/e2e-artifacts/t1356-collected-metrics-T1-00e84-d采集经真实Next与首页同scope、日期与累计语义-t1356-minimum/trace.zip"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "boundary": "原始 Playwright JSON/config/env 只保本地私有0600；本摘要仅白名单用例终态。实际执行由既有taskctl负责，非静态报告生成。",
+  "resultsFresh": true,
+  "resultsRawSha256": "6a6610b2a5a562833f4cb4c50bd9843f2f862174a9dd8b98535f0b6dea34fdba"
+}

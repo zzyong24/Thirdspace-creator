@@ -1,0 +1,69 @@
+{
+  "observedAt": 1792388489.4589481,
+  "originalNavigationTimeoutPreserved": true,
+  "controlledNavigationReached": false,
+  "events": [
+    {
+      "type": "after",
+      "callId": "call@21",
+      "endTime": 28553.597
+    },
+    {
+      "type": "before",
+      "callId": "call@23",
+      "class": "Page",
+      "method": "addInitScript",
+      "startTime": 28554.087
+    },
+    {
+      "type": "after",
+      "callId": "call@23",
+      "endTime": 28554.598
+    },
+    {
+      "type": "before",
+      "callId": "call@25",
+      "class": "Frame",
+      "method": "goto",
+      "startTime": 28555.498
+    },
+    {
+      "type": "before",
+      "callId": "call@27",
+      "class": "Route",
+      "method": "continue",
+      "startTime": 28569.011
+    },
+    {
+      "type": "after",
+      "callId": "call@27",
+      "endTime": 28569.281
+    },
+    {
+      "type": "after",
+      "callId": "call@25",
+      "endTime": 148561.015,
+      "error": {
+        "message": "Timeout 120000ms exceeded.",
+        "stack": "TimeoutError: Timeout 120000ms exceeded.\n    at _ProgressController.run (/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:12962:32)\n    at _FrameDispatcher._runCommand (/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:24019:35)\n    at DispatcherConnection.dispatch (/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:24253:44)",
+        "name": "TimeoutError"
+      }
+    },
+    {
+      "type": "before",
+      "callId": "call@29",
+      "class": "Frame",
+      "method": "evaluateExpression",
+      "startTime": 148562.804
+    }
+  ],
+  "liveTraceFiles": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator/docs/verification/t1369/response-attempt02/artifacts/.playwright-artifacts-0/traces/dafbb5fd862a7241e8e3-d5e5d88307aa27c75ee2.trace",
+      "sha256": "1b8902c1388de0a4df1ba502ff88496850554644500221c2e70ee8157fb1d1f1",
+      "bytes": 9300
+    }
+  ],
+  "cleanup": "仅向已核cwd的本次Playwright runner发SIGINT，原goto超时和finally无界evaluate分证；不停止用户App",
+  "runnerPid": 90370
+}

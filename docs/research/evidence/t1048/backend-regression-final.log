@@ -1,0 +1,100 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+ ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts (2 tests | 1 failed) 7591ms
+   × 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本 5977ms
+ ❯ src/modules/creative-results/media-adoption.integration.test.ts (2 tests | 1 failed) 7081ms
+     × 顺序合并、正式回执重放与确认后并发冲突均保留新稿 5354ms
+ ❯ src/modules/creative-results/graphic-series.integration.test.ts (3 tests | 1 failed) 8951ms
+     × 失败页局部恢复、同批顺序采用、同页重做和回执重放，旧照片不丢 6132ms
+ ❯ src/modules/creative-results/creative-results.integration.test.ts (10 tests | 1 failed) 16960ms
+     × persists an article image candidate's selected section across result and bundle reads 6056ms
+ ❯ src/modules/graphic-posts/graphic-posts.integration.test.ts (13 tests | 1 failed) 19255ms
+     × 同一基准四种字段依次采纳，来源不重复且同请求回放无新版本 5867ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas-series-reference.test.ts > 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本
+AssertionError: expected { …(13) } to deeply equal { …(13) }
+
+- Expected
++ Received
+
+@@ -9,7 +9,7 @@
+    "nodeId": "page",
+    "referenceChecksum": "039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81",
+    "referenceFileId": "file-old",
+    "resultAssetId": null,
+    "taskId": "task-series-attempt-original",
+-   "updatedAt": "2026-10-02T19:48:12.388Z",
++   "updatedAt": "2026-10-02T19:48:12.401Z",
+  }
+
+ ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts:20:120
+     18|   expect(link.referenceFileId).toBe('file-old');expect(submitted.get('…
+     19|   expect(getReference).toHaveBeenCalledWith(expect.anything(),'ref','f…
+     20|   expect(await s.generate(ctx,canvas.id,'page',{expectedRevision:saved…
+       |                                                                                                                        ^
+     21|   expect(submitTask).toHaveBeenCalledOnce();
+     22|   await expect(s.generate({...ctx,accountId:'other'},canvas.id,'page',…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/creative-results/creative-results.integration.test.ts > T-1029 result ownership and partial delivery > persists an article image candidate's selected section across result and bundle reads
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/creative-results/creative-results.integration.test.ts:10:3
+      8|
+      9| describe("T-1029 result ownership and partial delivery", () => {
+     10|   it("persists an article image candidate's selected section across re…
+       |   ^
+     11|     const opened = await createDb();
+     12|     let sequence = 0;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/creative-results/graphic-series.integration.test.ts > 多页公共bundle到GraphicPosts原owner版本 > 失败页局部恢复、同批顺序采用、同页重做和回执重放，旧照片不丢
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/creative-results/graphic-series.integration.test.ts:41:2
+     39| // Real PGlite domain/task/bundle receipts; model/Asset byte ports are…
+     40| describe('多页公共bundle到GraphicPosts原owner版本',()=>{
+     41|  it('失败页局部恢复、同批顺序采用、同页重做和回执重放，旧照片不丢',async()=>{
+       |  ^
+     42|   const f=await fixture();try{
+     43|    const bundle=await f.results.createBundle(ctx,{outputId:f.output.id…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/modules/creative-results/media-adoption.integration.test.ts > graphic 媒体到正式稿公共服务集成 > 顺序合并、正式回执重放与确认后并发冲突均保留新稿
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/creative-results/media-adoption.integration.test.ts:17:3
+     15|
+     16| for(const kind of ["graphic","article"] as const) describe(`${kind} 媒体…
+     17|   it("顺序合并、正式回执重放与确认后并发冲突均保留新稿",async()=>{
+       |   ^
+     18|     const opened=await createDb(); let seq=0,confirmed=0,injectRace=fa…
+     19|     const deps={now,nextId:(prefix:string)=>`${prefix}-${++seq}`};
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/modules/graphic-posts/graphic-posts.integration.test.ts > T-1031 图文候选字段采纳持久链 > 同一基准四种字段依次采纳，来源不重复且同请求回放无新版本
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/graphic-posts/graphic-posts.integration.test.ts:45:3
+     43|
+     44| describe("T-1031 图文候选字段采纳持久链", () => {
+     45|   it("同一基准四种字段依次采纳，来源不重复且同请求回放无新版本", async () => {
+       |   ^
+     46|     const f = await fixture();
+     47|     try {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  5 failed | 7 passed (12)
+      Tests  5 failed | 79 passed (84)
+   Start at  03:48:03
+   Duration  23.13s (transform 21.13s, setup 0ms, import 51.99s, tests 66.23s, environment 7ms)
+

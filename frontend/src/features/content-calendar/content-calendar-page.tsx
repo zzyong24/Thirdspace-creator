@@ -71,12 +71,14 @@ export interface CalendarPublicationItem {
 
 /** 日历只读项目排期需要的标题投影(id + 标题)，不承担排期写入。 */
 export interface CalendarProjectOption {
+  readonly schedulable?: boolean;
   readonly id: string;
   readonly title: string;
 }
 
 export interface ContentCalendarViewModel {
   readonly accountId: string | null;
+  readonly groupId?: string | null;
   readonly accounts: PlatformAccountResource[];
   /** 渲染的月份,"YYYY-MM"。 */
   readonly month: string;
@@ -84,11 +86,13 @@ export interface ContentCalendarViewModel {
   readonly referenceDateKey: string;
   /** 本月已发布作品(publications 真数据,已按月过滤)。 */
   readonly publications: CalendarPublicationItem[];
+  readonly publicationsUnavailable?: boolean;
   /** 本月排期 entries(content_calendar_entries;现 0 行 → 诚实空)。 */
   readonly entries: ContentCalendarEntryResource[];
   /** 项目标题投影；读失败时项目排期显示通用标签，不猜标题。 */
   readonly projects: CalendarProjectOption[];
   readonly cadence: PublishingCadenceResource | null;
+  readonly cadenceUnavailable?: boolean;
   readonly attainment: CadenceAttainmentResource | null;
   readonly window: { from: string; to: string };
 }

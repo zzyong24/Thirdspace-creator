@@ -1,0 +1,11 @@
+--- v2-cli-shim
++++ diagnostic-cli-shim
+@@ -14,7 +14,7 @@
+ const audit=v=>fs.appendFileSync(path.join(root,'native-rpc.ndjson'),JSON.stringify({at:new Date().toISOString(),pid:process.pid,...v})+'\n');audit({method:'ACTUAL_CLI_CONFIGURATION',argv,pairs,config,externalProvider:false});
+ const direct=config.features.code_mode?.direct_only_tool_namespaces??[];
+ const visible=direct.includes('functions');let tools=[],current,seq=100,observation=0;const pending=new Map();
+-const out=v=>process.stdout.write(JSON.stringify(v)+'\n'),provider=name=>name.replace(/[^a-zA-Z0-9_-]/g,'_');
++const observeFinal=value=>{try{audit(value);}catch{/* 观察不得替换原emit结果 */}},out=v=>{const final=['thread/tokenUsage/updated','item/completed','turn/completed'].includes(v.method);if(final)observeFinal({method:'CONTROLLED_FINAL_EMISSION_BEFORE',frame:v});const result=process.stdout.write(JSON.stringify(v)+'\n');if(final)observeFinal({method:'CONTROLLED_FINAL_EMISSION_AFTER',originalMethod:v.method,writeAccepted:result});return result;},provider=name=>name.replace(/[^a-zA-Z0-9_-]/g,'_');
+ function request(originalName,args){assert(visible,'FUNCTIONS_NOT_DIRECTLY_VISIBLE');const name=provider(originalName);assert(tools.some(t=>t.name===name),'REGISTERED_TOOL_REQUIRED');const id=++seq,toolCallId='controlled-tool-'+id;pending.set(id,{originalName,name,toolCallId,args});audit({method:'registered-tool-request',name,originalName,toolCallId,args});out({id,method:'item/tool/call',params:{threadId:current.threadId,turnId:current.turnId,callId:toolCallId,tool:name,namespace:null,arguments:args}});}
+ function complete(){const item={id:'controlled-final',type:'agentMessage',phase:'final_answer',text:visible?'受控工具链已返回，等待正式业务结果核验。':'受控CLI配置未直接暴露functions，未发出工具请求。'};current.turn={id:current.turnId,status:'completed',itemsView:'full',items:[item]};out({method:'thread/tokenUsage/updated',params:{threadId:current.threadId,turnId:current.turnId,tokenUsage:{total:{inputTokens:7,outputTokens:5,totalTokens:12,cachedInputTokens:0,reasoningOutputTokens:0}}}});out({method:'item/completed',params:{threadId:current.threadId,turnId:current.turnId,item}});out({method:'turn/completed',params:{threadId:current.threadId,turn:current.turn}});}
+ async function handle(m){

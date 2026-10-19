@@ -1,23 +1,70 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { createServer } from "node:http";
+import type { Db } from "@creatoros/backend";
+import { DispatchClient } from "../../../../../../mcp-server/src/dispatch";
+import { main as cliMain } from "../../../../../../mcp-server/src/cli";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   dispatchErrorResponse,
   safeDispatchErrorDiagnostic,
+  shouldCaptureDispatchFailure,
   validateCliInvocation,
   POST,
 } from "./route";
-import { ENDPOINTS } from "@creatoros/contract";
+import { ENDPOINTS, errorEnvelope } from "@creatoros/contract";
+import { createHttpTransport, HttpTransportError } from "@/lib/http-transport";
 import { resetStore } from "@/server/mock-backend/index";
-import { __resetPersistenceForTests } from "@/server/persistence-client";
+import { __resetPersistenceForTests, compositeTransport } from "@/server/persistence-client";
 import { ConflictError as PublishingConflictError } from "@creatoros/backend/modules/publishing";
+
+const receiptDb = vi.hoisted(() => ({ db: null as Db | null }));
+// 只持有真实内存库以核对原 invocation/零业务重执；不替换任何服务、事务或响应。
+vi.mock("@creatoros/backend", async (load) => {
+  const actual = await load<typeof import("@creatoros/backend")>();
+  return { ...actual, createConfiguredDb: async (...args: Parameters<typeof actual.createConfiguredDb>) => {
+    const opened = await actual.createConfiguredDb(...args);
+    receiptDb.db = opened.db;
+    return opened;
+  } };
+});
 
 // Task 9 — dispatch derives ctx from the `creatoros_session` cookie.
 // [用户裁决 2026-07-06] canonical email 已置空(用户属性不 seed)→ 不再 email-login。
 // 走 T-046 单机免登录:不带 cookie → 本机主用户(= seed canonical user-zyongzhu)直通,
 // dispatch 照旧解析到规范租户,无需 mint 会话。
 const SESSION_COOKIE = "";
+
+it("T1165 平台身份拒绝经正式dispatch和HttpTransport保留固定码及原400", async () => {
+  const response = dispatchErrorResponse(Object.assign(new Error("此账号需要重新完成平台身份核验"), {
+    code: "SCOPE_MISSING",
+    details: {},
+  }));
+  expect(response.status).toBe(400);
+  const body = errorEnvelope.parse(await response.clone().json());
+  expect(body.error).toEqual({ code: "SCOPE_MISSING", message: "此账号需要重新完成平台身份核验", details: {} });
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(response);
+  try {
+    const caught = await createHttpTransport("/api/v1", { groupId: "owned-group", accountId: "owned-account" })
+      .request(ENDPOINTS.startCollection, { params: { accountId: "owned-account" }, query: undefined, body: { capability: "nativeReports", clientRequestId: "original-intent" } })
+      .then(() => null, (error: unknown) => error);
+    expect(caught).toBeInstanceOf(HttpTransportError);
+    expect(caught).toMatchObject({ status: 400, code: "SCOPE_MISSING", details: {} });
+    expect((caught as HttpTransportError).message).toContain(body.error.message);
+    expect(fetchMock).toHaveBeenCalledOnce();
+  } finally { fetchMock.mockRestore(); }
+  const unknown = dispatchErrorResponse(Object.assign(new Error("原未知错误"), { code: "UNREGISTERED_PLATFORM_CODE" }));
+  expect(unknown.status).toBe(400);
+  expect(await unknown.json()).toEqual({ error: "原未知错误" });
+});
+
+it("T-1024 only queues unexpected dispatch failures, never consent recursion or ordinary client errors",()=>{
+  expect(shouldCaptureDispatchFailure("projects.get",{code:"OwnershipError"})).toBe(false);
+  expect(shouldCaptureDispatchFailure("settings.reporting.consent.set",new Error("db"))).toBe(false);
+  expect(shouldCaptureDispatchFailure("projects.scripts.generateCandidate",{code:"ExternalDependencyError"})).toBe(true);
+  expect(shouldCaptureDispatchFailure("projects.scripts.generateCandidate",new Error("unexpected"))).toBe(true);
+});
 
 describe("T-843 CLI 完整访问调用门", () => {
   const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;
@@ -156,13 +203,15 @@ function cliDispatch(
   accountId: string,
   idempotencyKey: string,
   confirmImpact?: string,
+  groupId?:string,
 ) {
   return POST(
     new Request("http://localhost/api/v1/dispatch", {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-account-id": accountId,
+        ...(accountId?{"x-account-id":accountId}:{}),
+        ...(groupId?{"x-group-id":groupId}:{}),
         "x-creatoros-cli-access": "cli-integration-grant",
         "x-creatoros-cli-client-id": "cli-integration-client",
         "x-creatoros-cli-apply": "1",
@@ -212,6 +261,198 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     // [T-332 S2] 真建当前号(开箱空,canonical account seed 已随 T-135 退役)。
     ACCOUNT_ID = await createFixtureAccount();
   });
+
+  it("T1357 真实HTTP UI与CLI按明确本人目标读取详情，不依赖默认账号",async()=>{
+    const previousGrant=process.env.CREATOROS_CLI_ACCESS_TOKEN;process.env.CREATOROS_CLI_ACCESS_TOKEN="cli-integration-grant";
+    const created=await dispatch("accounts.create",{body:{platform:"xiaohongshu",accountHandle:"T1357合成目标账号"}},"","");
+    expect(created.status).toBe(200);const target=ENDPOINTS.createAccount.response.parse((await created.json()).data);
+    const seen:Array<{operation:string;status:number;cli:boolean;accountHeaderPresent:boolean}>=[];
+    const server=createServer(async(incoming,outgoing)=>{
+      try{
+        const chunks:Buffer[]=[];for await(const chunk of incoming)chunks.push(Buffer.from(chunk));
+        const headers=new Headers();for(const [key,value]of Object.entries(incoming.headers))if(value!==undefined)headers.set(key,Array.isArray(value)?value.join(","):value);
+        const body=Buffer.concat(chunks).toString("utf8");const response=await POST(new Request(`http://127.0.0.1${incoming.url}`,{method:"POST",headers,body}));
+        seen.push({operation:JSON.parse(body).id,status:response.status,cli:headers.has("x-creatoros-cli-client-id"),accountHeaderPresent:headers.has("x-account-id")});
+        outgoing.writeHead(response.status,Object.fromEntries(response.headers));outgoing.end(await response.text());
+      }catch{outgoing.writeHead(500,{"content-type":"application/json"});outgoing.end(JSON.stringify({error:"隔离HTTP夹具处理失败"}));}
+    });
+    try{
+      await new Promise<void>((done,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",done);});
+      const address=server.address();if(!address||typeof address==="string")throw Error("隔离HTTP端口未就绪");const base=`http://127.0.0.1:${address.port}`;
+      const cli=new DispatchClient({baseUrl:base,cliAccessToken:"cli-integration-grant",clientId:"t1357-public-read"});
+      const outcomes:Array<{selection:string;uiStatus:number;cliStatus:number;uiSameId:boolean;cliSameId:boolean}>=[];
+      for(const [selection,accountId]of [["unselected",null],["stale","t1357-stale-selection"],["other-platform",ACCOUNT_ID]] as const){
+        const input={params:{accountId:target.id},query:undefined,body:undefined};
+        const uiEnvelope=await createHttpTransport(base+"/api/v1",{groupId:null,accountId}).request(ENDPOINTS.getAccount,input);
+        const ui=ENDPOINTS.getAccount.response.parse((uiEnvelope as {data:unknown}).data);
+        const cliOutcome=await cli.dispatch("accounts.get",{params:{accountId:target.id}},{accountId:accountId??undefined}).then(value=>({status:200,id:(value as {data:{id:string}}).data.id}), (error:unknown)=>({status:(error as {status:number}).status,id:null}));
+        outcomes.push({selection,uiStatus:seen.at(-2)?.status??0,cliStatus:cliOutcome.status,uiSameId:ui.id===target.id,cliSameId:cliOutcome.id===target.id});
+      }
+      console.info("T1357_SAFE_HTTP_OBSERVATIONS",JSON.stringify({outcomes,requests:seen}));
+      expect(outcomes.map(row=>row.uiSameId)).toEqual([true,true,true]);expect(seen.filter(row=>!row.cli).every(row=>!row.accountHeaderPresent)).toBe(true);
+      expect(outcomes.map(row=>row.cliStatus)).toEqual([200,200,200]);expect(outcomes.map(row=>row.cliSameId)).toEqual([true,true,true]);
+      // 仅测试组合口建立另一owner的合成事实；真实HTTP仍使用本机当前user鉴权。
+      const foreignEnvelope=await compositeTransport.request(ENDPOINTS.createAccount,{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:"另一所有者的合成账号"}},{userId:"t1357-other-owner",requestId:"t1357-seed-foreign-owner",source:"user",accountId:null,groupId:null});
+      const foreign=ENDPOINTS.createAccount.response.parse((foreignEnvelope as {data:unknown}).data);
+      const rejected:Array<{kind:string;ui:number;cli:number}>=[];
+      for(const [kind,accountId]of [["missing","t1357-nonexistent-account"],["other-owner",foreign.id]] as const){
+        const input={params:{accountId},query:undefined,body:undefined};
+        const ui=await createHttpTransport(base+"/api/v1").request(ENDPOINTS.getAccount,input).then(()=>200,(error:unknown)=>(error as {status:number}).status);
+        const cliStatus=await cli.dispatch("accounts.get",{params:{accountId}}).then(()=>200,(error:unknown)=>(error as {status:number}).status);
+        rejected.push({kind,ui,cli:cliStatus});
+      }
+      const guarded=await cli.dispatch("platforms.metrics.read",{params:{accountId:target.id},query:{pageSize:10}}).then(()=>200,(error:unknown)=>(error as {status:number}).status);
+      console.info("T1357_SAFE_OWNER_GUARDS",JSON.stringify({rejected,otherPlatformAccountReadStatus:guarded}));
+      expect(rejected).toEqual([{kind:"missing",ui:404,cli:404},{kind:"other-owner",ui:404,cli:404}]);expect(guarded).toBe(428);
+    }finally{
+      server.closeAllConnections();await new Promise<void>((done,reject)=>server.close(error=>error?reject(error):done()));
+      if(previousGrant===undefined)delete process.env.CREATOROS_CLI_ACCESS_TOKEN;else process.env.CREATOROS_CLI_ACCESS_TOKEN=previousGrant;
+    }
+  },120000);
+
+  it('T1062 CLI公开缓存不得泄露已显式迁组的project/output，纯组切平台不串缓存',async()=>{
+    const previous=process.env.CREATOROS_CLI_ACCESS_TOKEN;process.env.CREATOROS_CLI_ACCESS_TOKEN='cli-integration-grant';
+    const userCall=async(id:string,input:unknown,groupId?:string)=>POST(new Request('http://localhost/api/v1/dispatch',{method:'POST',headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},body:JSON.stringify({id,input})}));
+    try{const a=ENDPOINTS.createAccountGroup.response.parse((await(await userCall('accountGroups.create',{body:{name:'CLI空组A',idempotencyKey:'cli-empty-a'}})).json()).data),b=ENDPOINTS.createAccountGroup.response.parse((await(await userCall('accountGroups.create',{body:{name:'CLI空组B',idempotencyKey:'cli-empty-b'}})).json()).data);
+      const input={body:{title:'真实缓存作品',brief:'迁移后原组不能取缓存'}};const first=await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,a.id);expect(first.status).toBe(200);const project=ENDPOINTS.createProject.response.parse((await first.json()).data);
+      const again=await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,a.id);expect(again.status).toBe(200);expect((await again.json()).data.id).toBe(project.id);
+      const outputInput={params:{projectId:project.id},body:{title:'真实缓存成品'}};const output=await cliDispatch('projects.outputs.create',outputInput,'','cli-group-output-key',undefined,a.id);expect(output.status).toBe(200);
+      const selection={fromGroupId:a.id,toGroupId:b.id,projectIds:[project.id],knowledgeIds:[],conversationIds:[]};const previewResponse=await userCall('accountGroups.migration.preview',{body:selection},a.id);expect(previewResponse.status).toBe(200);const preview=ENDPOINTS.previewAccountGroupMigration.response.parse((await previewResponse.json()).data);const applied=await userCall('accountGroups.migration.apply',{body:{...selection,digest:preview.digest,idempotencyKey:'cli-cache-explicit-move'}},a.id);expect(applied.status).toBe(200);
+      expect((await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,a.id)).status).toBe(404);expect((await cliDispatch('projects.outputs.create',outputInput,'','cli-group-output-key',undefined,a.id)).status).toBe(404);
+      const other=await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,b.id);expect(other.status).toBe(200);expect((await other.json()).data.id).not.toBe(project.id);
+    }finally{if(previous===undefined)delete process.env.CREATOROS_CLI_ACCESS_TOKEN;else process.env.CREATOROS_CLI_ACCESS_TOKEN=previous;}
+  },120000);
+
+  it('T1062 CLI成功缓存是历史回读，项目/组归档后不执行旧handler，新键仍拒绝',async()=>{
+    const previous=process.env.CREATOROS_CLI_ACCESS_TOKEN;process.env.CREATOROS_CLI_ACCESS_TOKEN='cli-integration-grant';
+    const userCall=(id:string,input:unknown,groupId?:string)=>POST(new Request('http://localhost/api/v1/dispatch',{method:'POST',headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},body:JSON.stringify({id,input})}));
+    try{
+      const created=await userCall('accountGroups.create',{body:{name:'CLI历史组',idempotencyKey:'cli-history-group'}});expect(created.status).toBe(200);const group=ENDPOINTS.createAccountGroup.response.parse((await created.json()).data);
+      const input={body:{title:'归档历史项目',brief:'保留原cache'}};const first=await cliDispatch('projects.create',input,'','cli-history-project',undefined,group.id);expect(first.status).toBe(200);const project=ENDPOINTS.createProject.response.parse((await first.json()).data);
+      const outputInput={params:{projectId:project.id},body:{title:'归档历史output'}};const outputResponse=await cliDispatch('projects.outputs.create',outputInput,'','cli-history-output',undefined,group.id);expect(outputResponse.status).toBe(200);const output=ENDPOINTS.createOutput.response.parse((await outputResponse.json()).data);
+      expect((await userCall('projects.archive',{params:{projectId:project.id}},group.id)).status).toBe(200);
+      const projectReplay=await cliDispatch('projects.create',input,'','cli-history-project',undefined,group.id);expect(projectReplay.status).toBe(200);expect(ENDPOINTS.createProject.response.parse((await projectReplay.json()).data).id).toBe(project.id);
+      const groupArchived=await userCall('accountGroups.archive',{params:{groupId:group.id},body:{expectedVersion:group.version}});expect(groupArchived.status).toBe(200);
+      const outputReplay=await cliDispatch('projects.outputs.create',outputInput,'','cli-history-output',undefined,group.id);expect(outputReplay.status).toBe(200);expect(ENDPOINTS.createOutput.response.parse((await outputReplay.json()).data).id).toBe(output.id);
+      expect((await cliDispatch('projects.outputs.create',outputInput,'','cli-history-new-output',undefined,group.id)).status).not.toBe(200);
+      const historicalRead=await cliDispatch('projects.get',{params:{projectId:project.id}},'','cli-history-read',undefined,group.id);expect(historicalRead.status).toBe(200);expect(ENDPOINTS.getProject.response.parse((await historicalRead.json()).data).id).toBe(project.id);
+    }finally{if(previous===undefined)delete process.env.CREATOROS_CLI_ACCESS_TOKEN;else process.env.CREATOROS_CLI_ACCESS_TOKEN=previous;}
+  },120000);
+
+  it("T1062 真实loopback HTTP：素材关联后同key失败仍保持原回执，CLI非零且零重执", async () => {
+    const envKeys = ["CREATOROS_BASE_URL", "CREATOROS_CLI_ACCESS_TOKEN", "CREATOROS_CLI_ACCESS_FILE", "CREATOROS_HANDSHAKE_TOKEN", "CREATOROS_EMAIL", "CREATOROS_PASSWORD"] as const;
+    const priorEnv = envKeys.map((key) => [key, process.env[key]] as const);
+    const priorExitCode = process.exitCode;
+    process.env.CREATOROS_CLI_ACCESS_TOKEN = "cli-integration-grant";
+    for (const key of envKeys.filter((key) => key !== "CREATOROS_CLI_ACCESS_TOKEN")) delete process.env[key];
+    const seen: Array<{ id: string; status: number }> = [];
+    const server = createServer(async (incoming, outgoing) => {
+      try {
+        const chunks: Buffer[] = [];
+        for await (const chunk of incoming) chunks.push(Buffer.from(chunk));
+        const headers = new Headers();
+        for (const [key, value] of Object.entries(incoming.headers)) {
+          if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(",") : value);
+        }
+        const body = Buffer.concat(chunks).toString("utf8");
+        const response = await POST(new Request(`http://127.0.0.1${incoming.url}`, { method: "POST", headers, body }));
+        seen.push({ id: JSON.parse(body).id, status: response.status });
+        outgoing.writeHead(response.status, Object.fromEntries(response.headers));
+        outgoing.end(await response.text());
+      } catch (error) {
+        outgoing.writeHead(500, { "content-type": "application/json" });
+        outgoing.end(JSON.stringify({ error: { message: String(error) } }));
+      }
+    });
+    const handler = vi.spyOn(compositeTransport, "request");
+    let stdout: ReturnType<typeof vi.spyOn> | undefined;
+    try {
+      await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("隔离HTTP监听未就绪");
+      const baseUrl = `http://127.0.0.1:${address.port}`;
+      process.env.CREATOROS_BASE_URL = baseUrl;
+      const client = new DispatchClient({ baseUrl, cliAccessToken: "cli-integration-grant", clientId: "real-receipt-loopback" });
+      const write = (id: string, input: unknown, key: string, groupId?: string) => client.dispatch(id, input as never, { groupId, apply: true, idempotencyKey: key });
+      const groupEnvelope = await write("accountGroups.create", { body: { name: "失败回执隔离组", idempotencyKey: "receipt-fixture-group" } }, "receipt-fixture-group") as { data: { id: string } };
+      const groupId = groupEnvelope.data.id;
+      const projectEnvelope = await write("projects.create", { body: { title: "隔离失败回放", brief: "" } }, "receipt-fixture-project", groupId) as { data: { id: string } };
+      const projectId = projectEnvelope.data.id;
+      const outputEnvelope = await write("projects.outputs.create", { params: { projectId }, body: { title: "真实父视频", contentType: "video" } }, "receipt-fixture-output", groupId) as { data: { id: string } };
+      const outputId = outputEnvelope.data.id;
+      // 既有test对象存储夹具；本测试证明拒绝/幂等/真实SQL与HTTP，不声称视频解码通过。
+      const upload = await write("assets.uploads.create", { body: { assetType: "video", mimeType: "video/mp4", fileSize: 32 } }, "receipt-fixture-upload", groupId) as { data: { uploadId: string } };
+      const asset = await write("assets.uploads.complete", { params: { uploadId: upload.data.uploadId }, body: { name: "未关联测试原片" } }, "receipt-fixture-complete", groupId) as { data: { id: string; currentFileId: string } };
+      const id = "outputs.production.editor.sources.prepare";
+      const key = "receipt-original-failed-key";
+      const input = { params: { outputId }, body: { assetId: asset.data.id, assetFileId: asset.data.currentFileId, requestId: "receipt-original-source-intent" } };
+      await expect(write(id, input, key, groupId)).rejects.toMatchObject({ status: 409, message: expect.stringContaining("请先将该素材加入当前项目") });
+      const { cliInvocations, cliInvocationResults, productionMediaRequests, executionTasks, projects, eq } = await import("@creatoros/backend");
+      const before = (await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === key)!;
+      expect(before).toMatchObject({ status: "failed", operation: id });
+      expect(await receiptDb.db!.select().from(productionMediaRequests)).toHaveLength(0);
+      expect(await receiptDb.db!.select().from(executionTasks)).toHaveLength(0);
+      await write("materialLinks.create", { body: { projectId, entityType: "asset", entityId: asset.data.id } }, "receipt-fixture-real-link", groupId);
+      const links = await client.dispatch("materialLinks.list", { query: { projectId, page: 1, pageSize: 50 } }, { groupId }) as { data: Array<{ entityId: string }> };
+      expect(links.data.some((link) => link.entityId === asset.data.id)).toBe(true);
+      const expectedReceipt = { duplicate: true, requestId: before.requestId, status: "failed", taskId: null, targetRefs: before.targetRefs, resultExpired: false, outcomeUnknown: false, manualReconcileRequired: false };
+      const duplicate = await write(id, input, key, groupId).catch((error: unknown) => error);
+      expect.soft(duplicate).toMatchObject({ status: 409, requestId: before.requestId, receipt: expectedReceipt });
+      let printed = "";
+      stdout = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => { printed += String(chunk); return true; });
+      process.exitCode = undefined;
+      await cliMain(["call", id, "--input", JSON.stringify(input), "--group", groupId, "--apply", "--idempotency-key", key]);
+      stdout.mockRestore(); stdout = undefined;
+      expect.soft(process.exitCode).toBe(4);
+      expect.soft(JSON.parse(printed)).toMatchObject({ ok: false, requestId: before.requestId, receipt: expectedReceipt, meta: { requestId: before.requestId }, error: { code: "HTTP_409" } });
+      expect.soft(seen.filter((request) => request.id === id).map((request) => request.status)).toEqual([409, 409, 409]);
+      expect(handler.mock.calls.filter(([endpoint]) => endpoint.id === id)).toHaveLength(1);
+      expect((await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === key)).toEqual(before);
+      expect(await receiptDb.db!.select().from(productionMediaRequests)).toHaveLength(0);
+      expect(await receiptDb.db!.select().from(executionTasks)).toHaveLength(0);
+      await expect(client.dispatch("outputs.production.editor.sources.get", { params: { outputId, requestId: input.body.requestId } }, { groupId })).rejects.toMatchObject({ status: 404 });
+      await expect(write(id, { ...input, body: { ...input.body, requestId: "receipt-different-input" } }, key, groupId)).rejects.toMatchObject({ status: 409 });
+      expect(handler.mock.calls.filter(([endpoint]) => endpoint.id === id)).toHaveLength(1);
+
+      // 仅在另建隔离夹具上放置已有持久终态/过期，不改原failed行；仍经真实HTTP读取既有状态机。
+      for (const state of ["running", "succeeded", "outcome_unknown"] as const) {
+        const stateKey = `receipt-${state}-fixture`, stateInput = { body: { title: `隔离${state}回执`, brief: "" } };
+        const created = await write("projects.create", stateInput, stateKey, groupId) as { data: { id: string }; meta: { requestId: string } };
+        expect(await write("projects.create", stateInput, stateKey, groupId)).toEqual(created);
+        const invocation = (await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === stateKey)!;
+        if (state === "succeeded") {
+          await receiptDb.db!.update(cliInvocationResults).set({ resultExpiresAt: "2000-01-01T00:00:00.000Z" }).where(eq(cliInvocationResults.invocationId, invocation.id));
+        } else {
+          await receiptDb.db!.update(cliInvocations).set({ status: state }).where(eq(cliInvocations.id, invocation.id));
+        }
+        const callsBefore = handler.mock.calls.filter(([endpoint]) => endpoint.id === "projects.create").length;
+        const projectCount = (await receiptDb.db!.select().from(projects)).length;
+        const terminalReceipt = { duplicate: true, requestId: invocation.requestId, status: state, taskId: invocation.taskId, targetRefs: invocation.targetRefs, resultExpired: state === "succeeded", outcomeUnknown: state === "outcome_unknown", manualReconcileRequired: state === "outcome_unknown" };
+        const replay = await write("projects.create", stateInput, stateKey, groupId).catch((error: unknown) => error);
+        expect(replay).toMatchObject(state === "outcome_unknown"
+          ? { status: 409, requestId: invocation.requestId, receipt: terminalReceipt }
+          : { data: null, receipt: terminalReceipt, meta: { requestId: invocation.requestId } });
+        printed = "";
+        stdout = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => { printed += String(chunk); return true; });
+        process.exitCode = undefined;
+        await cliMain(["call", "projects.create", "--input", JSON.stringify(stateInput), "--group", groupId, "--apply", "--idempotency-key", stateKey]);
+        stdout.mockRestore(); stdout = undefined;
+        expect(JSON.parse(printed)).toMatchObject({ ok: state !== "outcome_unknown", requestId: invocation.requestId, receipt: terminalReceipt, meta: { requestId: invocation.requestId } });
+        expect(process.exitCode).toBe(state === "outcome_unknown" ? 4 : undefined);
+        expect(seen.slice(-2).map((request) => request.status)).toEqual(state === "running" ? [202, 202] : state === "succeeded" ? [200, 200] : [409, 409]);
+        expect(handler.mock.calls.filter(([endpoint]) => endpoint.id === "projects.create")).toHaveLength(callsBefore);
+        expect(await receiptDb.db!.select().from(projects)).toHaveLength(projectCount);
+      }
+      expect((await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === key)).toEqual(before);
+    } finally {
+      stdout?.mockRestore(); handler.mockRestore();
+      await new Promise<void>((resolve, reject) => { server.close((error) => error ? reject(error) : resolve()); server.closeAllConnections(); });
+      for (const [key, value] of priorEnv) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+      process.exitCode = priorExitCode;
+      await (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence?.();
+      __resetPersistenceForTests();
+    }
+  }, 120000);
 
   it("[T-843] CLI 同号重复写返回原结果、异输入冲突，三个号同 key 不串号", async () => {
     const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;
@@ -524,4 +765,15 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     const json = (await res.json()) as { data: Array<{ id: string }> };
     expect(json.data.length).toBeGreaterThan(0);
   });
+});
+
+
+it("账号组授权事务冲突透传409，其他数据库错误不冒充授权冲突", async () => {
+ const conflict=Object.assign(new Error("GROUP_RESOURCE_SCOPE_CONFLICT: 原组授权已撤销，请重新选择素材"),{code:"40001"});
+ const wrapped=new Error("数据库执行失败",{cause:new Error("查询失败",{cause:conflict})});
+ const response=dispatchErrorResponse(wrapped);
+ expect(response.status).toBe(409);
+ expect((await response.json()).error).toMatchObject({code:"ConflictError",message:"原组授权已撤销，请重新选择素材"});
+ const other=dispatchErrorResponse(Object.assign(new Error("真实数据库故障"),{code:"40001"}));
+ expect(other.status).not.toBe(409);
 });

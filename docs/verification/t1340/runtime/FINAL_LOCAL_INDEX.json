@@ -1,0 +1,250 @@
+{
+  "priorIndexSha256": "4524f61f38535bab4b5c0a9445b5445869e8e7b7573f0db4a4677b0ac99d2355",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/PRODUCT_STABLE.json",
+      "bytes": 650,
+      "sha256": "a68f8d5c2c494ea6eb0947dd00c0f47515576fcc5ae81632b730d45ce0e04a6f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/PRODUCT_IMPLEMENTATION.diff",
+      "bytes": 7528,
+      "sha256": "f9fadf423abedceb54f468877a5e67febb4b24517ba76a94edbd47e453762b15"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/FIXTURE_CORRECTIONS_AND_LOAD_PROTECTION.json",
+      "bytes": 633,
+      "sha256": "612224b193fd57f07a341fabd22b95aeb63f17e0561e68dcbc83baf9e211e8a2"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/LOCAL_IMPLEMENTATION_RESULT.json",
+      "bytes": 3730,
+      "sha256": "f49fd7860f22f8609082c4fe836dc428f208d9ee3619d8b64848dae4c3defb6c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/LOCAL_IMPLEMENTATION_RESULT.md",
+      "bytes": 1381,
+      "sha256": "0f887b0945e8e59288ecb299138579429c074577c3b6e770e05ba738e1fb4500"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/RED_CLEANUP_CONFIRMATION.json",
+      "bytes": 260,
+      "sha256": "fb86155c2dd3c25ebeab91cbccf48567f8dedf39ed2d7c9fe11ef830c6a03324"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/red-v1/OUTPUT_INDEX.json",
+      "bytes": 1428,
+      "sha256": "b9cc9088fba75941da2f9080ceea72fd573ade4b20b05bb010c2d1210d4e5f41"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/red-v1/TARGET_RED_SUMMARY.json",
+      "bytes": 15656,
+      "sha256": "128871acfb01333a43fca7adedb54d9c8db85ea90b23cb5fe819e17e2f45f379"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-tail-v2/ACTUAL_DISPATCH_READS.json",
+      "bytes": 188,
+      "sha256": "1e5d58a544aae722353e2380d463b1d0ff2c401a96bb6187ab379867c559946d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/static-gates-v1/RESULT.json",
+      "bytes": 1047,
+      "sha256": "29afdc0bd19e82f4d445af964fc9f55fefe4158455f712a87e3a5d65b2b03114"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1338/runtime/TYPE_STABLE_RESULT.json",
+      "bytes": 142,
+      "sha256": "684a5bae7f13ef9a80ccf0b890ccc86c2ba1e5ebc1411a805d1857203048798c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/red-v1/EXECUTION_RESULT.json",
+      "bytes": 131,
+      "sha256": "4e7a5cac498af35012e9e41d94e1923bb194c98ba96e2a2f09f183b74ee4bb49"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/red-v1/vitest-result.json",
+      "bytes": 47420,
+      "sha256": "3c0618af9468e25af6c08605eaa13dcbc607fd7bd0cace462aa596c761b78c0b"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/red-v1/output.log",
+      "bytes": 20865,
+      "sha256": "2f19774a4cc80cf8d9fc4a75b5c39a6246112f4bdc99c65c4453eab084919881"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-v1/EXECUTION_RESULT.json",
+      "bytes": 158,
+      "sha256": "4b3af987b0a0de0d9401b303768f7b49e02466911550286357035d4fd4c7ff01"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-v1/vitest-result.json",
+      "bytes": 67063,
+      "sha256": "82cd238646a326b44d7a4d9aa933086f5aab505870dedb0837b9067b1c8ea035"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-v1/output.log",
+      "bytes": 41922,
+      "sha256": "7ae52a5d99d2af6243dc06fabb545002edb604f7e70217f98627a68ed9278976"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-tail-v2/EXECUTION_RESULT.json",
+      "bytes": 143,
+      "sha256": "62242e9767c1eb62dd2c376597a0a0876a00bed687173426c0fa66a7b7282463"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-tail-v2/vitest-result.json",
+      "bytes": 59866,
+      "sha256": "7a5eecf427431a3b1ce94bf253cb9ad2103d8136657fcacb2cd7377f4e498e02"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-tail-v2/output.log",
+      "bytes": 1591,
+      "sha256": "6a5222be314d1d5c8802485b15617182be5c3349ba447b0895d7e81dc29b14b4"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-late-load-v3/EXECUTION_RESULT.json",
+      "bytes": 144,
+      "sha256": "fe4665625b0e1c0c88907af33743d3ca6206732c544c21146c97fb012306ee8e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-late-load-v3/vitest-result.json",
+      "bytes": 61293,
+      "sha256": "b2a3663ddbe46f2939a225a230db97652f7a74cc09851ab7c9190f0c7f1ce227"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-late-load-v3/output.log",
+      "bytes": 3015,
+      "sha256": "3a32e72c51b9e92a875acca7ded27887483b88176d1461258d159493369d33d8"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/led047-v1/EXECUTION_RESULT.json",
+      "bytes": 164,
+      "sha256": "fde9158cd972d3974a41a37ccdda2c06a26e9d17a073df77b711e555e3bdc125"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/led047-v1/vitest-result.json",
+      "bytes": 63629,
+      "sha256": "c85482b3960cb23ff7bb2cc9dc42205c4a29972ffc68be9a093d45259caa4a6e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/led047-v1/output.log",
+      "bytes": 21140,
+      "sha256": "834dc6feedd242febf82066d005358ff19d3fa3a0ade9d2b8567d22a84761f19"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/before-product/ai-copilot-content.tsx",
+      "bytes": 204233,
+      "sha256": "ffbe972e4626d3348f857534083d2f9c0d0e776e42f904214a1439e69a98ef6d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/before-product/article-workbench.tsx",
+      "bytes": 43784,
+      "sha256": "92a5d6f880853f0c9cb933f0b5fb705dedc181015a383c303eaa3b9b5f1dca50"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/before-product/draft-chat-request.tsx",
+      "bytes": 28099,
+      "sha256": "a8e9845dea6d106cad304690851070a7862cbf82fe555cf8aa9d34d44fa98b78"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/fixture-tail-v2/draft-chat-request.test.tsx",
+      "bytes": 19383,
+      "sha256": "518757b8a78f36e964acd9bd37d32fd792ddb87f405866e9d4dfbb25e094f6e9"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/fixture-tail-v2/ai-copilot-content.test.tsx",
+      "bytes": 93838,
+      "sha256": "51b621c0d36cd70f6fdf06d774cdeeaaec34e790ace48ca9b149bc4e5c5840c8"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/fixture-tail-v2/CURRENT_TEST_DIFF.diff",
+      "bytes": 10651,
+      "sha256": "27b3fc06ebc4bf8dc28a9432e2e0501d5f41f4e39c43c5866f29bb4fb26f73ed"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "bytes": 28480,
+      "sha256": "b0ebb9106e716cf0969e04c34894044ac474f72dc8eb6b5182479393ec34f9f6"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/article/article-workbench.tsx",
+      "bytes": 44320,
+      "sha256": "28ba7c245eab15d3483ddc7e132c81515adee46695c626c7aa7cc8f78f23749b"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "bytes": 204402,
+      "sha256": "2e9eb789fb085fd18523e65493482bde43b19ec54ab24eda380914447392721d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "bytes": 98399,
+      "sha256": "8002fd16e700a7b67b439ac1a02d6d00b55932ca3f1f474d17726a07cee4d70a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+      "bytes": 19440,
+      "sha256": "c0139ece441267216739c32db6ed2af7d4c49bfb0164b315ed1a75152c59e966"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx",
+      "bytes": 46862,
+      "sha256": "de88ca730481ca4e9294199ef7305857f7e089b328d0f232494be182ded9b921"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/static-gates-v1/1.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/static-gates-v1/2.log",
+      "bytes": 5674,
+      "sha256": "4de939d1307e896e10c267561e73937f4b00bf9b545b43f5989109c15b3f592d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/static-gates-v1/3.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/static-gates-v1/4.log",
+      "bytes": 15862,
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/vitest.config.ts",
+      "bytes": 450,
+      "sha256": "9a38442dc8d072fa89ec411281156623065718ac8d750642e880358577077245"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/vitest-green.config.ts",
+      "bytes": 692,
+      "sha256": "f1457019ede8ea908028f2dd989e6f39d6b4830d3effd5c1249e95c039070486"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/vitest-led047.config.ts",
+      "bytes": 804,
+      "sha256": "ab329f44ebb0deb60fc9cdda358bf0c6a86068db652d339d2054aed8c45e2954"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/red-v1/INPUT_LOCK.json",
+      "bytes": 129283,
+      "sha256": "47665eb5fc9040efbf04af1b02f3303512664fa4f2b06f95e56efd12abd32a1d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1340/runtime/green-v1/INPUT_LOCK.json",
+      "bytes": 119197,
+      "sha256": "d50712f4188c336e1e9a31b9d74c8512418abbc87f78663d9b9fe0f31f55bb73"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/article/article-workbench.test.tsx",
+      "bytes": 18051,
+      "sha256": "4f5ba2a22266cab1c167214c54a524d23824de7c25d447089886dca6dab1c67c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/article/article-workbench-save-race.test.tsx",
+      "bytes": 8274,
+      "sha256": "b0a61e26e6f496d5f00c565c421e82cd76d3d3cee09d05adc3df3ac4da4aa5ea"
+    }
+  ]
+}

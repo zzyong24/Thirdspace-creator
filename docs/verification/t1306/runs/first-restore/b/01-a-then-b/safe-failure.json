@@ -1,0 +1,4 @@
+{
+  "name": "Error",
+  "message": "明确选择B后应显示B；先落实际原件，再保自然FAIL\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeUndefined\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m[Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[31m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed·\u001b[39m\n\u001b[31mLocator: getByRole('region', { name: '文章和图文联合候选', exact: true })\u001b[39m\n\u001b[31mExpected: visible\u001b[39m\n\u001b[31mTimeout: 120000ms\u001b[39m\n\u001b[31mError: element(s) not found·\u001b[39m\n\u001b[31mCall log:\u001b[39m\n\u001b[31m\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\u001b[39m\n\u001b[31m\u001b[2m  - waiting for getByRole('region', { name: '文章和图文联合候选', exact: true })\u001b[22m\u001b[39m\n\u001b[31m]\u001b[39m"
+}

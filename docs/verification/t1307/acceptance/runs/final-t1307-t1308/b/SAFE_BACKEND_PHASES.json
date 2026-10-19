@@ -1,0 +1,216 @@
+{
+  "schema": "t1307-t1308-safe-backend-phase-extract/v1",
+  "sourcePath": "docs/verification/t1307/acceptance/candidate/runs/owned-fe90d20b0f57ec60/sidecar.log",
+  "extractedAt": "2026-10-16T04:20:58.240688+00:00",
+  "sourceFileSha256AtExtraction": "47d30b341630209d1071cbf82435b7f93228a808abbe422e72bd9b063665b370",
+  "sourceBytesAtExtraction": 8662,
+  "rawLogCopied": false,
+  "whitelist": [
+    "attempt",
+    "callId",
+    "elapsedMs",
+    "executionTaskId",
+    "inputSchemaBytes",
+    "observedAt",
+    "phase",
+    "projectionTiming",
+    "result"
+  ],
+  "rows": [
+    {
+      "sourceLine": 15,
+      "sourceLineSha256": "c0bbbd2163c0b14673c48d2a3b607c8a0b33792ed2709fae7a77ae4288823ce6",
+      "observedAt": "2026-10-16T04:14:45.386Z",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "result": "ok",
+      "callId": "call_1a26435b-f134-4d54-8bbb-a660bf2f1fc6",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 16,
+      "sourceLineSha256": "470f0d29c7b778a237317a45a7041f17404eaca187e27058abad6f1ddee1a616",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:14:45.422Z",
+      "inputSchemaBytes": 173,
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_1a26435b-f134-4d54-8bbb-a660bf2f1fc6",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 19,
+      "sourceLineSha256": "b64da1d72f6d5a2562b32bbe10624ce703b323bd59d399c6261084584ee2c4c6",
+      "observedAt": "2026-10-16T04:14:47.543Z",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "result": "ok",
+      "callId": "call_3f3bf880-0be7-49b6-8063-9f7690d3f516",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 20,
+      "sourceLineSha256": "e2de532e886541e5a4051db34a36a75dcd8d6fee92c73708507567788d0d6739",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:14:47.578Z",
+      "inputSchemaBytes": 282,
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_3f3bf880-0be7-49b6-8063-9f7690d3f516",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 22,
+      "sourceLineSha256": "8757864f0d601271001d7d48fd5f622d20ca65110b1bead05a1c78952f8729c4",
+      "observedAt": "2026-10-16T04:14:49.631Z",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "result": "ok",
+      "callId": "call_7cc8d39e-e5b0-4c48-9331-db306113fcaf",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 23,
+      "sourceLineSha256": "c7bddb4b434226dc10b41073da37989a258a96479fdc7096498b4b16e7738ee7",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:14:49.667Z",
+      "inputSchemaBytes": 166,
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_7cc8d39e-e5b0-4c48-9331-db306113fcaf",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 25,
+      "sourceLineSha256": "dad593daabe9a77307269bcfb512e5ad1784495176fa558f195c541380d1df63",
+      "observedAt": "2026-10-16T04:15:12.504Z",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "result": "ok",
+      "callId": "call_1a4e4451-1380-42ab-9835-9684f4c69557",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 26,
+      "sourceLineSha256": "0cb759d99b8bca684e19063dbaa3a4fc48bf3cb554ba6b1a3613b4c278b7800f",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:15:15.219Z",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_1a26435b-f134-4d54-8bbb-a660bf2f1fc6",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 27,
+      "sourceLineSha256": "1a51fcd008ab91db072e12695bd24cca176e42123370f20ebb1b40c7b94f2200",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:15:15.219Z",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_3f3bf880-0be7-49b6-8063-9f7690d3f516",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 28,
+      "sourceLineSha256": "e7b465b3dea434b2aef20517a67a00c3b7b1ff5086f36f614c62230964d9e32a",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:15:15.219Z",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_7cc8d39e-e5b0-4c48-9331-db306113fcaf",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 29,
+      "sourceLineSha256": "6787a6395be79faf466a32da2dd2473971c1a22d493298a592c48c341ac7fc8d",
+      "projectionTiming": "deferred_proposal",
+      "observedAt": "2026-10-16T04:15:15.219Z",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_1a4e4451-1380-42ab-9835-9684f4c69557",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 30,
+      "sourceLineSha256": "c5b9dc62f6e3fe1a8bf322182302395f23ed636df572365d56f8b2765ba51e91",
+      "observedAt": "2026-10-16T04:15:15.219Z",
+      "attempt": 1,
+      "phase": "turn_finished",
+      "result": "ok",
+      "callId": "call_1b70d197-3d6c-4d98-85f9-6e52038a4869",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    {
+      "sourceLine": 37,
+      "sourceLineSha256": "d4247f7403ac63f648eb1a94f9a3f48b5167622981e5208e4abdefde0cde0e4b",
+      "observedAt": "2026-10-16T04:15:40.884Z",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "result": "ok",
+      "callId": "call_e9bd2217-a249-48f3-8775-96d7e3ed3343",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    },
+    {
+      "sourceLine": 38,
+      "sourceLineSha256": "b184119ae00bacc90fdadaa5a14f5cc007f9f986f6d28f0f568143290d75e04a",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:15:40.920Z",
+      "inputSchemaBytes": 887,
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_e9bd2217-a249-48f3-8775-96d7e3ed3343",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    },
+    {
+      "sourceLine": 40,
+      "sourceLineSha256": "490d0c807ff23cf64d99fef9cb47fd76fad042c45d0b941ab50e395182dae606",
+      "observedAt": "2026-10-16T04:15:48.144Z",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "result": "ok",
+      "callId": "call_78f174ac-3562-4432-aa2e-528689ddfe80",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    },
+    {
+      "sourceLine": 41,
+      "sourceLineSha256": "dd903c37829eedffea077054e164894200d24596273e6216bbb9321f1cf20f20",
+      "projectionTiming": "before_finish",
+      "observedAt": "2026-10-16T04:15:50.954Z",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_e9bd2217-a249-48f3-8775-96d7e3ed3343",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    },
+    {
+      "sourceLine": 42,
+      "sourceLineSha256": "63342947d624d9cce818d82bc3d48454b5bb9a2f051c877fd322ab2caa12ac85",
+      "projectionTiming": "deferred_proposal",
+      "observedAt": "2026-10-16T04:15:50.954Z",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "result": "ok",
+      "callId": "call_78f174ac-3562-4432-aa2e-528689ddfe80",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    },
+    {
+      "sourceLine": 43,
+      "sourceLineSha256": "1097de4da2d8a9aa34161071b89baf98b81a9845181be2cd33831f08f23f4fac",
+      "observedAt": "2026-10-16T04:15:50.954Z",
+      "attempt": 1,
+      "phase": "turn_finished",
+      "result": "ok",
+      "callId": "call_7d87f9ca-5e02-4fff-9f9f-d4938bf42bcb",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    }
+  ],
+  "interpretation": "第一次tool_projection_appended才是早期append；turn_finished同stamp重复before_finish是终态对账，不是新增早流。无浏览器精确可见时间或TTFT/TTI证明。"
+}

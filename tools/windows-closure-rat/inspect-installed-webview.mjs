@@ -9,13 +9,14 @@ if (!Number.isInteger(port) || port < 1 || port > 65535 || !outputArg) {
   );
 }
 
-const deadline = Date.now() + 30_000;
+const deadline = Date.now() + 120_000;
 let targets = [];
 let lastDiscoveryError = "";
 while (Date.now() < deadline) {
   for (const host of ["127.0.0.1", "localhost", "[::1]"]) {
+    if (Date.now() >= deadline) break;
     try {
-      targets = await fetch(`http://${host}:${port}/json/list`).then(
+      targets = await fetch(`http://${host}:${port}/json/list`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) }).then(
         (response) => {
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -48,8 +49,8 @@ if (!target?.webSocketDebuggerUrl) {
 const socket = new WebSocket(target.webSocketDebuggerUrl);
 await new Promise((resolveOpen, rejectOpen) => {
   const timer = setTimeout(
-    () => rejectOpen(new Error("[T-565] WebView2 CDP 连接超时")),
-    10_000,
+    () => { socket.close(); rejectOpen(new Error("[T-565] WebView2 CDP 连接超时")); },
+    120_000,
   );
   socket.addEventListener(
     "open",
@@ -96,8 +97,8 @@ socket.send(
 );
 const response = await new Promise((resolveResponse, rejectResponse) => {
   const timer = setTimeout(
-    () => rejectResponse(new Error("[T-565] WebView2 DOM 读取超时")),
-    10_000,
+    () => { socket.close(); rejectResponse(new Error("[T-565] WebView2 DOM 读取超时")); },
+    120_000,
   );
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(String(event.data));

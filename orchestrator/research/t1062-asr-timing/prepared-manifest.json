@@ -1,0 +1,50 @@
+{
+  "status": "prepared_not_executed",
+  "directory": "/tmp/t1062-asr-timing-observation",
+  "syntaxChecks": {
+    "command": "node --check",
+    "files": [
+      "common.mjs",
+      "observe.mjs",
+      "verify.mjs",
+      "build.mjs"
+    ],
+    "allExit0": true
+  },
+  "pipelineCalls": 0,
+  "modelCalls": 0,
+  "newDecodeCalls": 0,
+  "repositoryWrites": 0,
+  "files": [
+    {
+      "path": "/tmp/t1062-asr-timing-observation/registry.json",
+      "sha256": "63d10d75ac2d33239806ba5ab9105786b1ae6c1fea21efea3e1f0c8cd82f394f",
+      "bytes": 3924
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/common.mjs",
+      "sha256": "9a4540ee768bd67b070a5cc885df12b03312ec46815c96e1830dff583f35e311",
+      "bytes": 4038
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/observe.mjs",
+      "sha256": "e252ca1e341481966572e657c9cf6f20a4d90ce45142b8a1ca6d69fd6babcfeb",
+      "bytes": 9879
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify.mjs",
+      "sha256": "0312653b0ba75040f815ffe9382b521fd8709bef0068c431e0d88688b0c28abc",
+      "bytes": 5799
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/build.mjs",
+      "sha256": "0514a4b483b2136cacb36a4394997fd8660a61704d789757aad2f477739956d1",
+      "bytes": 1061
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/README.md",
+      "sha256": "4cc5ab519b4b2aaa32cff0bd89308cf4bb6b272f8fccb7c3c938ac173f8fc0d5",
+      "bytes": 3858
+    }
+  ]
+}

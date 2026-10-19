@@ -28,6 +28,10 @@ describe("aiTaskStatus", () => {
       "succeeded",
       "failed",
       "cancelled",
+      "partial",
     ]);
+  });
+  it("仍严格拒绝未知状态", () => {
+    expect(aiTaskStatus.safeParse("not-a-status").success).toBe(false);
   });
 });

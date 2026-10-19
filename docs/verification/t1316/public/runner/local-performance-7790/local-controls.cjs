@@ -1,0 +1,3 @@
+'use strict';
+const {open,save,out,pw}=require('./support.cjs');
+(async()=>{const h=await open('production');try{const n=h.page.locator('[data-native-root="opencut"]');await n.locator('.native-workbench').waitFor({timeout:120000});save('native-dom-controls-v2',{text:await n.innerText(),labels:await n.locator('*').evaluateAll(xs=>xs.filter(x=>x.textContent==='默认文字').map(x=>({tag:x.tagName,cls:x.className,html:x.outerHTML.slice(0,1600),parent:x.parentElement?.outerHTML.slice(0,2400)}))),controls:await n.locator('button').evaluateAll(xs=>xs.map(x=>({text:x.textContent,label:x.getAttribute('aria-label'),title:x.getAttribute('title')})))});console.log('native DOM safe capture complete');}finally{await h.close();}})().catch(e=>{console.error(e.message);process.exitCode=1;});

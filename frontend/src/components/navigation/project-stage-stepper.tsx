@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * `ProjectStageStepper` is the canonical project progress indicator
  * (SPEC §5, §7;[T-076] 数据驱动——阶段项由调用方传入,两阶段化后为
@@ -25,6 +27,8 @@ import { projectWorkspaceHref } from "@/features/projects/project-href";
 export interface ProjectStageStepperStage {
   readonly id: string;
   readonly label: string;
+  /** 显式工作面链接不参与顺序阶段门禁。 */
+  readonly href?: string;
   // §16 needs_review:阶段「声称完成」但内容 gate 未过(核心交付物缺失)的停泊态,
   // stepper 以 warning 样式标出「待补」,让创作者看到为什么进不去下一阶段。
   readonly status:
@@ -70,7 +74,15 @@ export function ProjectStageStepper({
   projectId,
   className,
 }: ProjectStageStepperProps) {
+  const strip=React.useRef<HTMLOListElement>(null);
+  React.useLayoutEffect(()=>{
+    const node=strip.current;if(variant!=="segmented"||!node)return;
+    // 只调整自身滚动，不滚动页面；用户仍可横向浏览其它阶段，真实链接与离开守卫不变。
+    const reveal=()=>{const selected=node.querySelector<HTMLElement>('[data-current="true"]');if(selected&&node.clientWidth>0)node.scrollLeft=Math.max(0,selected.offsetLeft-(node.clientWidth-selected.offsetWidth)/2);};
+    reveal();if(typeof ResizeObserver==='undefined')return;const observer=new ResizeObserver(reveal);observer.observe(node);return()=>observer.disconnect();
+  },[variant,currentStage,stages]);
   if (variant === "segmented") {
+    const workspaces = stages.some(stage => Boolean(stage.href));
     // Resolve the current stage index: prefer the explicit `currentStage`,
     // else fall back to whichever segment is `in_progress`.
     const currentIndex =
@@ -79,12 +91,14 @@ export function ProjectStageStepper({
         : stages.findIndex((stage) => stage.status === "in_progress");
     return (
       <ol
+        ref={strip}
         role="list"
-        aria-label="项目阶段"
+        aria-label={workspaces ? "项目工作面" : "项目阶段"}
         data-slot="header-stage-stepper"
         data-current={currentStage}
         className={cn(
-          "hidden min-w-0 flex-1 items-stretch overflow-x-auto md:flex",
+          "relative min-w-0 flex-1 items-stretch overflow-x-auto",
+          workspaces ? "flex" : "hidden md:flex",
           className,
         )}
       >
@@ -103,11 +117,11 @@ export function ProjectStageStepper({
             stage.status === "needs_review" ||
             stage.status === "skipped";
           const reachable =
-            alreadyReached ||
+            Boolean(stage.href) || alreadyReached ||
             (currentIndex === -1 ? false : index <= currentIndex + 1);
           // [T-049 B1] 局部窄化:navigable 为真时 projectId 必非空(下方 Link 用它拼 href)。
           const navigableProjectId = reachable ? projectId : undefined;
-          const navigable = Boolean(navigableProjectId);
+          const navigable = Boolean(stage.href || navigableProjectId);
           const segmentClassName = cn(
             "flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground",
             index === 0 && "border-l",
@@ -122,13 +136,13 @@ export function ProjectStageStepper({
           );
           const inner = (
             <>
-              <span
+              {!workspaces && <span
                 aria-hidden="true"
                 className={cn(
                   "size-1.5 rounded-full",
                   STATUS_INDICATOR[stage.status],
                 )}
-              />
+              />}
               {stage.label}
             </>
           );
@@ -137,14 +151,15 @@ export function ProjectStageStepper({
               key={stage.id}
               data-status={stage.status}
               data-current={isCurrent ? "true" : "false"}
-              className="flex h-12 min-w-24 flex-1 items-stretch"
+              className={cn("flex h-12 flex-1 items-stretch", workspaces ? "min-w-20" : "min-w-24")}
             >
               {navigable ? (
                 <Link
-                  href={projectWorkspaceHref(navigableProjectId!, stage.id as import("@/types/domain").ProjectStageName)}
+                  href={stage.href ?? projectWorkspaceHref(navigableProjectId!, stage.id as import("@/types/domain").ProjectStageName)}
+                  prefetch={false}
                   data-slot="header-stage-link"
                   data-testid={`stage-segment-${stage.id}`}
-                  aria-current={isCurrent ? "step" : undefined}
+                  aria-current={isCurrent ? (stage.href ? "page" : "step") : undefined}
                   className={segmentClassName}
                 >
                   {inner}

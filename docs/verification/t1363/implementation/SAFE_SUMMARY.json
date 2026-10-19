@@ -1,0 +1,42 @@
+{
+  "schema": "t1363-controlled-red/v1",
+  "status": "RED",
+  "evidence": "red.log",
+  "original_inputs_sha256": {
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "eb22acc8cfc9115f5a20c0f2b104eb91d7e7100ddd83cd63d23cd48c4dfe2d52",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "6f123299ea111a17db56a690c5b9e53f3cb3736bfcc73b9e8ef5ecf9a65e5a36",
+    "ai-worker/src/runtime/platform/wechat-channels-entry.integration.test.ts": "032456e5b32c03dbe889afec68af7ee38d7a133c095155be1217573e861fda47"
+  },
+  "elapsed_menu_ms": 120312,
+  "real_dom": {
+    "initial_entry_visible_count": 0,
+    "rendered_entry_visible_count": 1,
+    "centre_visible_count": 0,
+    "same_page": true
+  },
+  "source_diagnostic": {
+    "stage": "prepare",
+    "kind": "channelsDaily",
+    "code": "REPORT_LINK_MISSING",
+    "entryPhase": "unavailable_in_original_source"
+  },
+  "collector": {
+    "status": "failed",
+    "reasonCode": "EXPORT_FAILED",
+    "committedReports": 0
+  },
+  "physical": {
+    "opened": 1,
+    "closed": 1,
+    "released": 1,
+    "downloads": 0,
+    "held": false,
+    "pendingStop": false
+  },
+  "excluded_setup_failure": {
+    "evidence": "red-load-failure.log",
+    "cause": "Vitest 4 removed test(name, fn, options) signature; corrected options position",
+    "counts_as_defect_red": false
+  },
+  "scope": "真实Chromium本地网络拦截合成页面+正式source/collector+真实内存PGlite服务；不是用户原1499复现或真实平台恢复"
+}

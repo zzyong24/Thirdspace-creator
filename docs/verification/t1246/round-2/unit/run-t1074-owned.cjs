@@ -1,0 +1,34 @@
+'use strict';
+// 第28消费者的独立候选；不覆盖正在执行的27输入与工具回执。
+const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process');
+const runtime=require('./owned-pg-runtime.cjs'),source=require('./verify-source.cjs'),root=path.resolve(__dirname,'../../../../..');
+const caseFile='backend/src/application/chat/assistant-system-root.integration.test.ts';
+const caseBudgetMs=28800000,buildBudgetMs=1800000,startBudgetMs=1380000,cleanupReserveMs=1440000,totalBudgetMs=caseBudgetMs+buildBudgetMs+startBudgetMs+cleanupReserveMs+5*(runtime.GROUP_TERM_GRACE_MS+runtime.GROUP_KILL_GRACE_MS);
+function binding(){
+ const original=JSON.parse(fs.readFileSync(path.join(__dirname,'manifest.json'))),excluded=new Set(original.originalConsumers.map(row=>row.file));
+ for(const name of ['run-unit.cjs','budget-consumers.json'])excluded.add(path.relative(root,path.join(__dirname,name)));
+ const all=source.snapshot(root,'targeted-pg-27').files.filter(row=>!excluded.has(row.file));
+ const additions=[caseFile,path.relative(root,__filename),path.relative(root,path.join(__dirname,"manifest.json"))];for(const file of additions)all.push({file,sha256:runtime.sha(fs.readFileSync(path.join(root,file)))});
+ all.sort((a,b)=>a.file.localeCompare(b.file));return {task:'T-1246',scope:'owned-t1074-full-file',runtimeRoot:root,inputs:all,sourceSnapshotDigest:runtime.sha(JSON.stringify(all)),caseFile,caseBudgetMs,totalBudgetMs,buildBudgetMs,cleanupReserveMs,noFrontend:true,noOtherTests:true,retry:0};
+}
+async function main(){
+ const before=binding();if(!process.argv.includes('--execute')){console.log(JSON.stringify({...before,status:'reviewable_only_no_pg_started'},null,2));return;}
+ const index=process.argv.indexOf('--review');if(index<0)throw Error('T1246_T1074_REVIEW_REQUIRED');const review=JSON.parse(fs.readFileSync(process.argv[index+1]));
+ if(review.approved!==true||review.scope!==before.scope||review.sourceSnapshotDigest!==before.sourceSnapshotDigest||review.runtimeRoot!==root||review.runtimeDistExclusive!==true)throw Error('T1246_T1074_REVIEW_NOT_BOUND');
+ const started=Date.now(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(Error('T1246_T1074_TOTAL_BUDGET')),totalBudgetMs);let state,exitCode=0;const receipts=[];
+ try{
+  state=await runtime.start({workspace:root,evidenceRoot:path.join(__dirname,'t1074-evidence'),signal:controller.signal});fs.writeFileSync(path.join(state.out,'source-before.json'),JSON.stringify(before,null,2));fs.writeFileSync(path.join(state.out,'review.json'),JSON.stringify(review,null,2));
+  const env={...state.env};for(const key of Object.keys(env))if(/^(CREATOROS_|S3_|AWS_|OPENAI_|ANTHROPIC_|AZURE_OPENAI_|GOOGLE_API_)/.test(key)||key==='PGLITE_DATA_DIR')delete env[key];
+  Object.assign(env,{CREATOROS_OWNED_PG_MARKER:state.markerPath,CREATOROS_OWNED_PG_NONCE:state.nonce,CREATOROS_TEST_POSTGRES_URL:state.env.CREATOROS_TEST_POSTGRES_URL,CREATOROS_ISOLATED_PG_URL:state.env.CREATOROS_ISOLATED_PG_URL,CREATOROS_T1074_ISOLATED_PG_URL:state.env.CREATOROS_TEST_POSTGRES_URL,NODE_ENV:'test',CI:'1',T1246_OWNED_PG_PRELOAD:'1',NODE_OPTIONS:'--require '+path.join(__dirname,'owned-pg-runtime.cjs')});
+  for(const [key,name]of Object.entries({CREATOROS_APP_DATA_DIR:'app',CREATOROS_DB_DIR:'db',CREATOROS_MEDIA_ROOT:'media',CREATOROS_BROWSER_POOL_DIR:'browser',CREATOROS_WORKBENCH_ROOT:'workbench',CREATOROS_DATABASE_BACKUP_DIR:'backup',CREATOROS_DOUYIN_AUTH_DIR:'douyin',CREATOROS_WEB_AUTH_DIR:'web'})){const dir=path.join(state.root,'test-runtime',name);fs.mkdirSync(dir,{recursive:true});env[key]=dir;}
+  if(Object.hasOwn(env,'NODE_PG_FORCE_NATIVE')||Object.hasOwn(env,'PGSERVICE')||Object.hasOwn(env,'PGSERVICEFILE'))throw Error('T1246_NATIVE_OR_SERVICE_NOT_CLEARED');
+  const native=JSON.parse(cp.execFileSync(process.execPath,['-e',"console.log(JSON.stringify({nativeAbsent:!Object.hasOwn(process.env,'NODE_PG_FORCE_NATIVE'),serviceAbsent:!Object.hasOwn(process.env,'PGSERVICE')&&!Object.hasOwn(process.env,'PGSERVICEFILE'),preloadBound:require('node:net').Socket.prototype.connect.name==='t1246OwnedPgConnect'}))"],{cwd:root,env,encoding:'utf8',timeout:180000}));if(!native.nativeAbsent||!native.serviceAbsent||!native.preloadBound)throw Error('T1246_PRELOAD_BINDING_FAILED');fs.writeFileSync(path.join(state.out,'native-binding.json'),JSON.stringify(native,null,2));
+  const build=await runtime.run('pnpm',['--filter','@creatoros/ai-worker','build'],{cwd:root,env,budgetMs:buildBudgetMs,signal:controller.signal});receipts.push({kind:'build',...build});fs.writeFileSync(path.join(state.out,'build.json'),JSON.stringify(build,null,2));
+  const dist=cp.execFileSync('rg',['--files','ai-worker/dist'],{cwd:root,encoding:'utf8',timeout:180000}).trim().split('\n').sort().map(file=>({file,sha256:runtime.sha(fs.readFileSync(path.join(root,file)))}));fs.writeFileSync(path.join(state.out,'dist.json'),JSON.stringify(dist,null,2));
+  const args=[fs.realpathSync(path.join(root,'backend/node_modules/vitest/vitest.mjs')),'run',caseFile.replace(/^backend\//,''),'--retry=0','--bail=0','--allowOnly=false','--testTimeout=180000','--hookTimeout=180000','--teardownTimeout=180000','--maxWorkers=1','--no-file-parallelism','--reporter=default','--reporter=json','--outputFile.json='+path.join(state.out,'backend.json')];
+  const test=await runtime.boundedProcess(process.execPath,args,{cwd:path.join(root,'backend'),env,log:path.join(state.out,'backend.log'),budgetMs:caseBudgetMs,signal:controller.signal});receipts.push({kind:'test',...test});fs.writeFileSync(path.join(state.out,'backend-exit.json'),JSON.stringify(test,null,2));if(test.code!==0||test.budgetExhausted||!test.processClosed||test.remainingOwnedGroupMembers.length)exitCode=1;
+  const after=binding();fs.writeFileSync(path.join(state.out,'source-after.json'),JSON.stringify({...after,unchanged:after.sourceSnapshotDigest===before.sourceSnapshotDigest},null,2));if(after.sourceSnapshotDigest!==before.sourceSnapshotDigest)exitCode=1;
+ }catch(error){exitCode=1;if(state)fs.writeFileSync(path.join(state.out,'error.json'),JSON.stringify({message:error.message,receipt:error.receipt??null},null,2));else throw error;}
+ finally{if(state){try{await runtime.stop(state);}catch(error){exitCode=1;fs.writeFileSync(path.join(state.out,'cleanup-failure.json'),JSON.stringify({message:error.message,ownedRootRetained:state.root},null,2));}if(controller.signal.aborted)exitCode=1;fs.writeFileSync(path.join(state.out,'summary.json'),JSON.stringify({task:'T-1246',nonce:state.nonce,scope:before.scope,startedAt:new Date(started).toISOString(),deadlineAt:new Date(started+totalBudgetMs).toISOString(),elapsedMs:Date.now()-started,totalBudgetMs,outerBudgetExhausted:controller.signal.aborted,exitCode,receipts,firstEvidencePreserved:true,retry:0,nativeAppAcceptance:false},null,2));}clearTimeout(timer);}process.exitCode=exitCode;
+}
+main().catch(error=>{console.error(error.stack);process.exitCode=1;});

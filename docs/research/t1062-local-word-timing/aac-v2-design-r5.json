@@ -1,0 +1,279 @@
+{
+  "schema": "t1062-aac-v2-static-admission-design/v5",
+  "reviewed_at": "2026-10-06T01:00:01.522395Z",
+  "verdict": "GO_FOR_NARROW_SPEC_AND_SCOPE_ONLY",
+  "implementation_or_test_pass": false,
+  "evidence": {
+    "physical_report": "/tmp/t1062-aac-physical-mapping-experiment-result.json",
+    "physical_report_sha256": "bf3021053cc65132e31eca83f08150d2b4991243b84b055ef26fc766e40d28bd",
+    "raw_manifest": "/tmp/t1062-aac-physical-mapping-experiment-r2/manifest.json",
+    "raw_manifest_sha256": "c641c1318fb9cb53fe6d98f28f9d9ac41519efd0c511b8f2c096616e8e2b5420",
+    "scope_review": "/tmp/t1062-aac-mapping-scope-and-acceptance-independent-review-r2.json",
+    "scope_review_sha256": "c7cf0149a538c8626cf9b035b0a717ec83df8ec03107b4c2e370f9d7857e46e4"
+  },
+  "admitted_family": {
+    "description": "参数化canonical族：MOV/MP4、AAC-LC、mono、48kHz，视频与音频有效presentation原点均为0；音轨必须有且仅有一条标准priming elst，rate=1.0、无empty edit，movie/media timescale均48000，media_time=1024与首packet priming/skip1024同证，segment_duration精确等于S；首有效decoded PTS=0；中间packet/frame均1024；末packet有效duration D∈1..1024且discardPadding=1024-D。",
+    "parameters": {
+      "D": "末packet实际有效duration，1..1024",
+      "S": "从完整decoded frames求和，并与packet有效终点独立同证的有效源样本总数",
+      "N": "实际resampler output frames的nb_samples求和；必须等于ceil(S*16000/48000)，但receipt保存实测N而非凭公式生成",
+      "example_only": {
+        "D": 617,
+        "S": 716393,
+        "N": 238798,
+        "skip": 1024,
+        "discard": 407
+      }
+    },
+    "identity_guards": [
+      "源asset/file/digest/probe/stream index与业务父一致",
+      "codec/profile/rate/channel/container/origin/标准priming edit逐字段匹配",
+      "首packet负PTS与skip=1024由side-data证明，首有效decoded frame PTS=0",
+      "直接解析elst完整条目：仅单entry、rate=1、media_time=skip=1024、segment_duration=S（movie/media timescale均48000）；并与packet side-data及decoded first PTS=0三方闭合",
+      "除末尾外packet和decoded frame均1024且PTS连续；末packet duration=D、discard=1024-D",
+      "S由decoded frame nb_samples完整求和且等于packet有效终点，不从duration秒推算",
+      "实际resolved extractor/probe binary各自realpath/SHA/version与完整argv；输出ashowinfo frames从0连续、实测和为N，N=ceil(S/3)，PCM bytes/probe/digest一致"
+    ],
+    "excluded": [
+      "非AAC-LC/48k/mono/MOV-MP4",
+      "任意empty edit、多entry、rate非1、timescale/媒体时间/segment duration不闭合，或非零源起点、gap、未知或不一致skip/discard",
+      "非1024完整packet/frame结构、末尾metadata不闭合",
+      "不同resampler或任一证据/digest/算术不符"
+    ]
+  },
+  "tail_sample_decision": {
+    "output_policy": "保留实际全部N个PCM samples，不atrim。N=ceil(S/3)时，最后一个真实样本位置3*(N-1)仍可位于源域内；输出coverage和source-clippable domain分别建模。",
+    "no_terminal_pin": "撤销R1把output boundary N钉到source S的规则。任意output boundary n一律按精确n*48000/16000计算；对示例N=238798得到716394，不得改写为716393。",
+    "mapping_rejection": "若任一provider start/end boundary映射的源样本位置> S、不是整数source tick、partial、重叠或越界，则整份word mapping返回null并保全文。",
+    "trim_prohibition": "atrim floor没有逐样本无效证据，仍禁止。"
+  },
+  "v2_receipt_schema": {
+    "protocol": "asset-asr-pcm-mapping/v2",
+    "compatibility": "v1 schema、export、解析和行为逐字节保持；新增独立v2 schema/type，再在asset-asr.ts的audioEvidence.mappingReceipt显式使用strict v1|v2 union。禁止把v1 export暗改为union。",
+    "required_fields": {
+      "identity": [
+        "assetId",
+        "assetFileId",
+        "fileDigest",
+        "probeDigest",
+        "streamIndex"
+      ],
+      "family": [
+        "container",
+        "codec",
+        "profile",
+        "channelLayout",
+        "sourceSampleRate",
+        "sourceTimebase",
+        "videoTimebase",
+        "sourceClockOriginTicks"
+      ],
+      "packet_evidence": [
+        "packetEvidenceDigest",
+        "editListEvidenceDigest",
+        "movieTimescale",
+        "mediaTimescale",
+        "editEntries",
+        "firstPacketPts",
+        "sourceSkipSamples",
+        "lastPacketPts",
+        "lastPacketDuration",
+        "sourceDiscardPadding"
+      ],
+      "decoded_evidence": [
+        "sourceFramesAlreadySkipApplied",
+        "sourceDecodedSampleCount=S",
+        "packetEffectiveEndSample=S",
+        "lastPacketEffectiveDuration=D",
+        "decodedFramesDigest",
+        "primingConsumption=decoder_applied_once"
+      ],
+      "extraction": [
+        "ffmpegRealpath",
+        "ffmpegBinaryDigest",
+        "ffmpegVersionOutputDigest",
+        "ffprobeRealpath",
+        "ffprobeBinaryDigest",
+        "ffprobeVersionOutputDigest",
+        "toolPairDigest",
+        "extractorArguments",
+        "extractorArgumentsDigest",
+        "probeArguments",
+        "probeArgumentsDigest",
+        "actualExtractionReceiptId"
+      ],
+      "output": [
+        "resamplerOutputFrames",
+        "outputDecodedSampleCount=N",
+        "outputValidSampleCount=N",
+        "resamplerFlushFrameSampleCount",
+        "wavProbeDecodedSampleCount=N",
+        "audioDigest",
+        "outputProbeDigest"
+      ],
+      "mapping": [
+        "mappingRule=zero-origin-rational-resample/v1",
+        "mappingSegments",
+        "mappingDigest",
+        "actualExtractionDigest"
+      ]
+    },
+    "strict_consumption": "asset-asr.ts roundtrip必须保留v2全部字段；worker仅在union strict parse及backend verify成功时传timingAudio，禁止类型断言或删字段重建。"
+  },
+  "mapping_invariants": {
+    "source_packet_frame_proof": "首priming/skip、全部packet PTS/duration、全部decoded frame PTS/nb_samples和末discard逐项连续；decoded sum与packet effective end必须都等于S。只凭stream duration或总秒数失败。",
+    "resampler_proof": "全部ashowinfo/output frames的startSample和nb_samples从0连续覆盖N，N必须等于ceil(S/3)，但验收以实际frames/PCM digest为真，不按公式合成缺失证据。flush frame如实记录，不宣称padding。",
+    "clock_mapping": "每个provider boundary n使用规范有理数sourceSample=n*48000/16000；再按source timebase做BigInt精确换算。不得terminal clamp、duration线性插值或round/floor/ceil token。",
+    "source_domain": "映射边界必须满足0<=sourceSample<=S。PCM输出域可覆盖到N，而source可映射域由S独立限制；两者无需假装相等。",
+    "provider_quantization": "Xenova 2.17.2真实word timestamp round(x,2)，转换到16k时理论为160-sample步长，可满足1/12800整数tick；实际raw仍逐项校验finite/monotonic/range，不能预签模型结果。",
+    "failure_atomicity": "任一token边界失败，整份word映射降级为text；原source/digest/CAS/全文保存不变。",
+    "edit_priming_proof": "elst不得缺失或仅按名称判断。single entry的media_time必须等于已证skip=1024，segment_duration按movie timescale精确等于有效S/48000，rate=1；packet首负PTS+Skip Samples、edit media_time、decoded first PTS=0必须同时成立。",
+    "dual_domain": "extraction receipt验证完整S/N音频，不拿video duration截断；mapAssetAsrTiming逐unit同时要求sourceSample<=S和mappedTick<=source.durationTicks。normal尾部约4.854ms可存在于完整ASR音频，但不得形成视频范围外的可剪token。",
+    "skip_once": "packet首负PTS与Skip Samples、elst media_time及decoded firstPTS0用于证明decoder已经消费priming。S和sourceFrames必须取已解码有效frames；不得再从decoded frame总数二次减1024。sourceSkipSamples保留为证据字段，不再次参与有效样本算术。",
+    "frame_sources": "outputFrames必须来自resampler链中ashowinfo的逐frame PTS/nb_samples（含flush）并连续求和N；WAV ffprobe解码可能按不同帧大小重新分组，只用于独立确认PCM总样本、format/probe digest与bytes digest，禁止把其frame分组冒充resampler outputFrames或要求两者逐帧相等。"
+  },
+  "guard_order": [
+    "1. strict解析原v1或独立v2",
+    "2. 核业务父与文件/probe身份",
+    "3. 核参数化canonical family，不比较夹具固定S/N/D",
+    "4. 从packet+decoded frames独立重算D、S及连续性",
+    "4a. 直接重算ISO elst digest并核单一标准priming edit与packet skip/decoded origin三方一致",
+    "5a. 读取实际resolved ffmpeg/ffprobe身份并重算pair/argv digest；不以路径或版本白名单替代行为验证",
+    "5. 从输出frames重算N并验证N=ceil(S/3)、PCM/probe/digest",
+    "6. 核binary/version/argv与所有receipt digest",
+    "7. 核provider audioDigest/rate/count=N",
+    "8. 每个boundary按n*48000/16000及source timebase精确BigInt映射，要求<=S且整数tick；任一失败整体降级",
+    "9. map provider units时同时核audio S域和video durationTicks域；任一unit越任一域整体降级text，extraction/full audio receipt仍合法"
+  ],
+  "scope": {
+    "production_required": [
+      "contract/src/internal/asset-asr-timing.ts",
+      "contract/src/internal/asset-asr.ts",
+      "backend/src/modules/production/production-asr-pcm.ts",
+      "backend/src/modules/production/production-asr-timing.ts"
+    ],
+    "conditional": "backend/src/modules/production/production-asset-asr-media.ts仅在真实diff需要把canonical AAC交给新receipt builder时纳入；不得顺手泛化媒体入口。",
+    "tests": "按独评c7cf冻结的两个既有精确测试和owned E2E；normal word/full-audio/adopt不变，offset-B完整全文/manual/save/reload等价旅程，22 case与原18 argv不变。",
+    "packaging_scripts": "frontend/scripts/desktop/fetch-ffmpeg.mjs与build-sidecar.mjs仅只读依赖，不需修改；禁止为本功能更换/下载新工具洗绿。",
+    "conditional_media_entry": "backend/src/modules/production/production-asset-asr-media.ts仅当真实路由diff必须把已识别canonical AAC交给v2 extraction时准入；若production-asr-pcm既有入口能原位处理，则保持不改。"
+  },
+  "fallback": {
+    "ordinary_unknown": "任意其它edit结构（包括empty/multi-entry）、codec/profile/rate或证据不闭合均沿旧MP3/全文流程，mapping unverified；不反杀全文或保存。",
+    "nonzero": "按已独评OFFSET-B提供text、无tokens、明确warning、0自动候选/采用，source/digest/CAS不变，工程可保存并reload完整plan。",
+    "known_canonical_but_invalid_provider": "保留完整全文与完整音频receipt；若任一unit越audio S或video duration、非整数tick、partial/重叠，拒绝整份word mapping，不裁尾、不丢单token。"
+  },
+  "impact": {
+    "external_api": "无",
+    "ia": "无",
+    "data_ownership": "无；仍使用原asset/file/output/group父链",
+    "security": "无新凭据、网络、进程或权限机制；只增加内部严格证据schema与机械验证",
+    "user_contract": "普通canonical AAC可在实际验证后获得真实word；其他族确定性降级。offset-B已另行独评，不宣称nonzero物理映射闭合。"
+  },
+  "research_gate_closure": {
+    "status": "STATIC_DESIGN_CLOSED_FOR_SPEC_SCOPE",
+    "basis": "Homebrew9.0.1仅是物理机制实例；R5以每次resolved工具身份+全行为证据作为准入，不要求包内工具字节相同，也不降低R4守卫。静态逻辑足以进入实现，实际工具支持与安装版仍是后续必验。",
+    "not_claimed": [
+      "实现PASS",
+      "ASR真实模型PASS",
+      "浏览器22case PASS",
+      "安装版PASS",
+      "所有AAC支持"
+    ],
+    "implementation_precondition": "SPEC/DEC与精确scope按本报告和c7cf独评落盘后，方可实现；实现必须通过strict schema/公共service/原固定AAC E2E验证。"
+  },
+  "supersedes": {
+    "path": "/tmp/t1062-aac-v2-static-admission-design-r4.json",
+    "sha256": "59270941b0cb865f454fec22d5344408c60e0d40508892a51af662d149166a7a",
+    "reason": "去除Homebrew 9.0.1工具身份硬编码；按每次实际resolved ffmpeg/ffprobe及行为证据准入"
+  },
+  "edit_list_evidence": {
+    "path": "/tmp/t1062-mp4-edit-list-readonly.json",
+    "sha256": "62393de494cb79fc3d72d31ca13ec2e182cbd64481a9793da5152934d5911b2c",
+    "method": "直接解析固定MP4 ISO BMFF boxes；未调用ffmpeg/ASR/model",
+    "normal": {
+      "movie_timescale": 48000,
+      "audio_media_timescale": 48000,
+      "entries": [
+        {
+          "segment_duration": 716393,
+          "media_time": 1024,
+          "rate": "1.0"
+        }
+      ],
+      "closure": "单一非空edit；media_time=1024与AAC priming/skip1024相符，segment_duration=S=716393，packet skip后首有效decoded PTS=0。"
+    },
+    "offset": {
+      "movie_timescale": 192000,
+      "audio_media_timescale": 48000,
+      "entries": [
+        {
+          "segment_duration": 211904,
+          "media_time": -1,
+          "rate": "1.0"
+        },
+        {
+          "segment_duration": 2869668,
+          "media_time": 0,
+          "rate": "1.0"
+        }
+      ],
+      "closure": "先empty edit再media edit，明确非零presentation origin；继续fallback/manual。"
+    }
+  },
+  "clock_domains": {
+    "audio_evidence_domain": "完整有效音频S/sourceRate；normal实例716393/48000=14.924854s。此域用于证明解码、重采样和ASR输入完整，不因视频更短而裁剪。",
+    "editable_source_domain": "业务source.durationTicks*sourceTimebase；normal实例190976/12800=14.920000s。只有provider unit的start/end同时落在音频域和该视频可剪域内，才可生成token。",
+    "rule": "whole audio可比video长；不得因audio end>video duration拒绝整个extraction receipt，也不得裁音频、clamp、terminal pin或用container duration生成cut。逐provider unit映射后，任一边界越S或越source.durationTicks即整份word→text。"
+  },
+  "packaged_toolchain_readonly_evidence": {
+    "fetch_ffmpeg": {
+      "path": "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+      "sha256": "397085003d8db4331dc9cc9f7658a48cc626d3b6df3660f20820d5808b8d2b5d",
+      "facts": [
+        "默认RELEASE_TAG=b6.0静态ffmpeg/ffprobe",
+        "支持四target triple",
+        "允许CREATOROS_FFMPEG_BUNDLE_SRC与CREATOROS_FFPROBE_BUNDLE_SRC显式替代",
+        "host只做-version冒烟，交叉target留待目标机"
+      ]
+    },
+    "build_sidecar": {
+      "path": "frontend/scripts/desktop/build-sidecar.mjs",
+      "sha256": "aca1c2313f3295eafcad580cd9e16dd612828d73232ad168595e9a1999c1a570",
+      "facts": [
+        "bundleMediaTools将实际静态工具复制到sidecar/frontend/bin",
+        "host target执行实际-version，不可用即拒绝打包",
+        "运行时由CREATOROS_BIN_DIR/统一executable-path解析，不依赖Homebrew"
+      ]
+    },
+    "runtime_resolver": {
+      "path": "ai-worker/src/runtime/ffmpeg-path.ts",
+      "sha256": "0886643930e7f4f172e1062d7eda93926f7a763fa779d4de2573c7aba1c2d8c1",
+      "facts": [
+        "实际运行可能解析显式env、随包bin或开发机路径",
+        "因此研究用/opt/homebrew路径与9.0.1只能作为实验实例"
+      ]
+    }
+  },
+  "toolchain_admission": {
+    "identity_policy": "不设允许版本表，也不硬编码路径、Homebrew SHA或9.0.1。每次抽取均对实际resolve后的ffmpeg和ffprobe分别记录realpath、文件SHA256、-version原始输出digest、平台/架构和完整argv digest。身份字段用于不可变receipt与复核，不单独构成verified。",
+    "behavior_policy": "verified完全由本次输入上的完整物理行为证据决定：ISO edit、全部packet/side-data、全部decoded frame PTS/nb_samples、resampler ashowinfo frames/flush、WAV probe总样本和PCM bytes digest均满足R4参数化守卫。版本不同但行为全部闭合可verified；任一命令/字段不支持、输出缺失、行为不同或未知即旧text/manual。",
+    "ffmpeg_ffprobe_pair": "两个工具分别绑定身份；probe/extract receipt同时包含pair digest，禁止用构建期ffprobe证明运行时另一个ffmpeg，或工具替换后复用旧receipt。",
+    "argv": "完整argv按位置冻结，并用占位后的路径身份digest避免临时路径污染；实际执行receipt仍绑定原文件和输出文件digest。不得设置first_pts/async补偿来迎合守卫；若运行工具自行呈现不同PTS/count，按实证失败降级。",
+    "fail_closed": "无法执行-version、无法hash realpath、命令失败、JSON字段缺失、unknown side-data/edit、frame不连续、S/N/D不闭合或digest漂移均不产生v2 receipt；全文/保存仍可用。"
+  },
+  "safety_assessment": {
+    "logic": "SUFFICIENT_FOR_STATIC_DESIGN",
+    "reason": "准入不信任版本标签，而是对每次实际工具输出做完整、可重算、fail-closed的物理证据验证；不同打包工具不会自动获得PASS，只会在现场满足同一守卫时verified。",
+    "remaining_verification": [
+      "打包前只读确认随包静态工具能提供所需CLI选项/JSON字段",
+      "真正安装版用实际随包binary执行固定normal AAC公共回归",
+      "原22case/18argv与offset-B降级保持"
+    ],
+    "not_claimed": [
+      "ffmpeg-static b6.0已兼容v2",
+      "跨平台工具已PASS",
+      "安装版已PASS",
+      "不同version行为等价"
+    ]
+  }
+}

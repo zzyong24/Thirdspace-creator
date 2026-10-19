@@ -11,6 +11,9 @@
 
 export {
   createSettingsService,
+  type ModelRoutingProjectionReader,
+  ModelRoutingConflictError,
+  ModelRoutingValidationError,
   type SettingsService,
   type AccountReader,
   type AccountWriter,
@@ -80,3 +83,8 @@ export {createIntegrationCredentials,INTEGRATION_CREDENTIALS_DDL} from "./integr
 export {createRedfoxSubmissions} from "./redfox-submissions";
 
 export { createOnboardingState, type OnboardingAccountReader } from "./onboarding-state";
+export { createReportingLocal, REPORTING_CONSENT_VERSION } from "./reporting-local";
+
+export {createEncryptedLogReporting} from "./encrypted-log-reporting";
+
+export {effectiveModelRouting} from './model-routing-defaults';

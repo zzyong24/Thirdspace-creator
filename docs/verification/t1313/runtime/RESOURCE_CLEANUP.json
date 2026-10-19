@@ -1,0 +1,104 @@
+{
+  "checkedAt": "2026-10-16T10:46:42.406911+00:00",
+  "scope": "仅实际wrapper记录的owned PGID、已记录T1313临时根及精确前缀盘点；不声明全系统临时文件清零",
+  "ownedGroups": [
+    91888,
+    92215,
+    92576,
+    93503,
+    93519,
+    94328,
+    95683,
+    96149,
+    96150,
+    96151,
+    96242,
+    96475,
+    96476,
+    96477,
+    96478,
+    98364,
+    98409,
+    99392,
+    99393,
+    99512,
+    99513
+  ],
+  "incompleteRuns": [],
+  "remainingRecordedGroupProcesses": [],
+  "recordedTemporaryRoots": [
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-0vDlZ4",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-6nlHDj",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-BKK4q5",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-DlxKS8",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-PDy2ly",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-TWowc4",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-g4mfRd",
+      "exists": false
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1313-owned-review-ipsXm6",
+      "exists": false
+    }
+  ],
+  "remainingExactPrefixDirectories": [],
+  "workerBinding": {
+    "path": "/private/tmp/t1300-artifact-bcz9nlt5/sidecar/frontend/runtime/execution-worker.cjs",
+    "bytes": 5618216,
+    "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+    "unchanged": true
+  },
+  "timeoutGateOriginalCacheFootprint": [
+    {
+      "path": "contract/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 7088,
+      "sha256": "371638c0bfa95b2510a9be28819e19361c68ad9a4a39151e0ca4170f722204b2",
+      "mtimeNs": 1792147211287402611
+    },
+    {
+      "path": "ai-worker/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 13128,
+      "sha256": "36df56f792ea9dea4bc8ac1a1810892910719fa0fe9e2863353a82d8dee7f0d3",
+      "mtimeNs": 1792147217526365914
+    },
+    {
+      "path": "backend/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 59501,
+      "sha256": "c4721b57561a231b9b07723b1e2b9067ce26aa5d4ef4f09481cfaff7e6047344",
+      "mtimeNs": 1792147266195037496
+    },
+    {
+      "path": "frontend/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 21435,
+      "sha256": "6e54401e282d14dad51154974b5b71b9ec4478147ff7b94c1b64b26673d52937",
+      "mtimeNs": 1792147275445200385
+    },
+    {
+      "path": "mcp-server/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 647,
+      "sha256": "3820c39a75f21d35c0dd2da1237776be0fe2b35688d7bb1b5aadea7960d500e5",
+      "mtimeNs": 1792147278514201920
+    }
+  ],
+  "cacheInterpretation": "原verify命令五包固有当前足迹，未删缓存；非本任务全工作区新建文件因果清单",
+  "controlledServerLifecycle": "frontend afterEach实际closeAllConnections+await close；dispatcher.stop+dispose persistence+rm自有根；进程退出后以上PGID查询再次核验"
+}

@@ -1,0 +1,11 @@
+# T1253 FR-USAGE 独立窄复评
+
+结论：PASS_FR_USAGE_SPEC_ONLY，findings=[]。绑定候选3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484；原b132所有其它FR/AC/三原test写集不变。没有修改正式SPEC、测试或产品，没有运行Worker/PG/模型/App。
+
+worker-runtime.ts:292–301 对requires_reconciliation先读取原凭据；Pi没有engine原回合许可即抛CHECKPOINT_REQUIRES_RECONCILIATION，在reserve/start前停止。此时started=false/committing=false，353行原catch仍发送失败状态通报，不能把名称commitResult当成功提交：contract execution-worker.ts:318严格区分succeeded(callId,text)与failure(outcome,errorCode,可选原retryAfterMs)。dispatcher:424–439对failure只走outcomes.recordFailure，成功才进入候选owner。execution-candidate.service.ts:54也严格拒绝失败输入，证明原fixture把所有commitResult推入committedTexts会推undefined且错误交候选owner；这是夹具路由错误，不是可新增正式正文资格。
+
+execution-worker-outcome.service.ts:20–67通过原settlement lease/fence核原running任务；unknown_result写真实停止状态、释放原lease，不新增候选/模型/费用或对账许可。checkpoint:129–144仍把已settled但null totalTokens判requires_reconciliation，spentTokens继续null、原预留保留。原缺usage=true恢复只能unknown，原成功usage=false完整候选采纳、同HTTP1/原检查点revision1/原消息等全部保留。
+
+新合同只纠正“0所有commitResult IPC”的歧义：必须完整保原raw IPC；唯一失败通报不进入正文数组或候选owner、不新增formal。0新增reserve/start/settle/save/provider指恢复这一轮新增量，不能抹掉首次真实1HTTP/1checkpoint/已有结算，也不能仅spy过滤来署0动作。后续具体handler/body/table断言仍须独评；规格本身不允许null→0、恢复供应商调用或擅自换Codex。
+
+CP001旧candidate4b1a的静态独评阻断、原missingusage恢复completed失败保历史，本评没有补拍新的runtimeRED。底层具体评审模型版本未知，不虚构。

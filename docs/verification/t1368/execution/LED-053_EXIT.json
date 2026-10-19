@@ -1,0 +1,12 @@
+{
+  "gate": "LED-053",
+  "attempt": 1,
+  "pid": 48707,
+  "startedAt": "2026-10-19T04:11:36.880419+00:00",
+  "endedAt": "2026-10-19T04:12:14.506633+00:00",
+  "elapsedSeconds": 37.62602424999932,
+  "returnCode": 0,
+  "exitCode": 0,
+  "signal": null,
+  "recordOrder": "process.wait → durable exit JSON flush/fsync → log fsync → metadata"
+}

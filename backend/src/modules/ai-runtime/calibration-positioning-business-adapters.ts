@@ -14,10 +14,15 @@ function facetsFor(execution:Parameters<StructuredBusinessAdapter["project"]>[2]
  if(input.skillId!==skillId || input.capability!==skillId)throw new Error("候选与冻结任务类型不符");return input.facets;
 }
 /** 仅准备真实上下文和投影候选；不执行模型，也不写入业务实体。 */
-export function createCalibrationDiagnoseBusinessAdapter(deps:ContextDeps & {subject:DiagnosisSubjectReader;rubric:DiagnosisRubricReader}):StructuredBusinessAdapter{
+export function createCalibrationDiagnoseBusinessAdapter(deps:ContextDeps & {subject:DiagnosisSubjectReader;rubric:DiagnosisRubricReader;predictionLocks?:{readFrozen(ctx:import("@creatoros/contract").RequestContext,task:{id:string;inputData:Record<string,unknown>}):Promise<{subject:{title:string;scriptText:string};rubric:Awaited<ReturnType<DiagnosisRubricReader["current"]>>}>}}):StructuredBusinessAdapter{
  return {skillId:"calibration.diagnose",capability:"calibration.diagnose",
   async prepare(ctx,task){
-   const target=subjectSchema.parse(task.inputData);const subject=await deps.subject.get(ctx,target.subjectType,target.subjectId);const rubric=await deps.rubric.current(ctx);
+   const target=subjectSchema.parse(task.inputData);
+   const bound=task.inputData.predictionLockSource!==undefined;
+   if(bound&&!deps.predictionLocks)throw new Error("原卡诊断来源服务未装配");
+   const frozenSource=bound?await deps.predictionLocks!.readFrozen(ctx,task):null;
+   const subject=frozenSource?.subject??await deps.subject.get(ctx,target.subjectType,target.subjectId);
+   const rubric=frozenSource?.rubric??await deps.rubric.current(ctx);
    const frozen=diagnosisTargetSchema.parse({...target,rubricVersionId:rubric.rubricVersionId,rubricKeys:rubric.dimensions.map(d=>d.key)});
    const context=await assembleCreativeContext(ctx,{projectId:null,topic:subject.title,angle:""},deps);
    return {...diagnoseFacets(context,subject,rubric.dimensions),__calibrationDiagnosis:JSON.stringify(frozen)};

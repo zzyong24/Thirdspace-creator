@@ -1,0 +1,5 @@
+# T1160 正式审核产物路径被提前放入手工报告
+
+T1159独立初审真实PASS，但root将独立报告提前复制到reviewctl的正式 `.review.md` 输出路径。2026-10-09T19:45:01Z正式record实际exit1：检测为legacy review，拒绝静默覆盖。原失败私有收据SHA e39b76f8106ace8a087db981d240de17d80232eb0716b37ebe8c174bc95b3cf0，未取得正式receipt，尚未改产品或开始实施。
+
+只修本次root产物落点：保留独立原报告/packet和拒绝原日志，将未tracked、无历史审核的新手工报告原字节保在docs/verification/t1159/SPEC_INDEPENDENT_REVIEW.md；仅移走这个本轮误放文件，正式路径交给原reviewctl生成。原SPEC/module/PAGE/source字节不变，不改验证器、不迁移或覆盖任何旧审核。以同一原record命令实际成功、原packet和SPEC SHA一致为验证；taskctl留下真实诊断状态。无产品写集，无补拍PASS。

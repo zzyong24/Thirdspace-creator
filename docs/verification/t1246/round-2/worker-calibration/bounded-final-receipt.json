@@ -1,0 +1,13 @@
+{
+  "exitCode": 0,
+  "durationMs": 19722,
+  "outerTimedOut": false,
+  "outerMs": 24000000,
+  "cleanupMs": 120000,
+  "pid": 9431,
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker",
+  "sharedDistRead": false,
+  "ownedPrivateCjsBuild": true,
+  "environment": "保留HOME/CODEX_HOME，清真实App/PG/供应商变量；所有bundle child preload禁fetch",
+  "scope": "85用例/8文件；不代表官方供应商、native App或publicUI验收"
+}

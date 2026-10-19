@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   uniqueIndex,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 // Settings tables (data-model USER_PREFERENCE / MODEL_CONFIGURATION /
@@ -32,6 +33,9 @@ export const userPreferences = pgTable("user_preferences", {
   fileNamingRule: text("file_naming_rule").notNull().default(""),
   // 默认关 —— PROTECTION.md §4「数据上报 · 默认零收集」。隐私优先本地软件,遥测新用户默认 off。
   analyticsEnabled: boolean("analytics_enabled").notNull().default(false),
+  assistantExecutionEngine: text("assistant_execution_engine"),
+  modelRouting: jsonb('model_routing').$type<import('@creatoros/contract').ModelRoutingChoices>(),
+  modelRoutingRevision: integer('model_routing_revision').notNull().default(0),
 });
 
 // MODEL_CONFIGURATION — upsert keyed on (user_id, capability) (the unique index
@@ -161,7 +165,8 @@ export const accountSkillOverlays = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+    groupId: text("group_id"),
     skillId: text("skill_id").notNull(),
     rowRevision: integer("row_revision").notNull(),
     observedBaseVersion: text("observed_base_version").notNull(),
@@ -186,7 +191,8 @@ export const accountSkillOverlayVersions = pgTable(
     id: text("id").primaryKey(),
     overlayId: text("overlay_id").notNull(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+    groupId: text("group_id"),
     skillId: text("skill_id").notNull(),
     rowRevision: integer("row_revision").notNull(),
     observedBaseVersion: text("observed_base_version").notNull(),
@@ -205,6 +211,40 @@ export const accountSkillOverlayVersions = pgTable(
   ],
 );
 
+// T-1024: consent is distinct from the legacy analyticsEnabled preference.
+// An absent row means no grant. Account grants are independent of diagnostics.
+export const reportingConsents = pgTable("reporting_consents", {
+  userId: text("user_id").notNull(),
+  scope: text("scope").notNull(),
+  accountId: text("account_id").notNull().default(""),
+  enabled: boolean("enabled").notNull().default(false),
+  consentVersion: integer("consent_version").notNull(),
+  consentEpoch: integer("consent_epoch").notNull().default(0),
+  accountAlias: text("account_alias"),
+  changedAt: text("changed_at").notNull(),
+}, table => [uniqueIndex("reporting_consents_owner_scope_account").on(table.userId, table.scope, table.accountId)]);
+
+export const reportingOutbox = pgTable("reporting_outbox", {
+  eventId: text("event_id").primaryKey(),
+  userId: text("user_id").notNull(),
+  scope: text("scope").notNull(),
+  accountId: text("account_id").notNull().default(""),
+  workAlias: text("work_alias"),
+  consentEpoch: integer("consent_epoch").notNull(),
+  encryptedPayload: text("encrypted_payload").notNull(),
+  createdAt: text("created_at").notNull(),
+  expiresAt: text("expires_at").notNull(),
+});
+
+export const reportingConsentChanges = pgTable("reporting_consent_changes", {
+  userId: text("user_id").notNull(),
+  changeId: text("change_id").notNull(),
+  scope: text("scope").notNull(),
+  accountId: text("account_id").notNull().default(""),
+  enabled: boolean("enabled").notNull(),
+  changedAt: text("changed_at").notNull(),
+}, table => [uniqueIndex("reporting_consent_changes_owner_id").on(table.userId, table.changeId)]);
+
 export type AccountSkillOverlayRow = InferSelectModel<
   typeof accountSkillOverlays
 >;
@@ -215,7 +255,21 @@ export type AccountSkillOverlayVersionRow = InferSelectModel<
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - model_config_user_capability: the (user_id, capability) unique upsert key
 //     putModel's ON CONFLICT DO UPDATE targets.
+export const groupOnboardingStates=pgTable("group_onboarding_states",{
+ userId:text("user_id").notNull(),groupId:text("group_id").notNull(),
+ origin:text("origin"),hidden:boolean("hidden").notNull().default(false),collapsed:boolean("collapsed").notNull().default(true),
+ completedSteps:jsonb("completed_steps").notNull().default([]),updatedAt:text("updated_at").notNull(),
+},table=>[primaryKey({columns:[table.userId,table.groupId]})]);
+
 export const SETTINGS_DDL = `
+CREATE TABLE IF NOT EXISTS group_onboarding_states (
+ user_id text NOT NULL, group_id text NOT NULL,
+ origin text CHECK(origin IN ('fresh','existing')),
+ hidden boolean NOT NULL DEFAULT false, collapsed boolean NOT NULL DEFAULT true,
+ completed_steps jsonb NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(completed_steps)='array'),
+ updated_at text NOT NULL, PRIMARY KEY(user_id,group_id)
+);
+
 CREATE TABLE IF NOT EXISTS redfox_submissions (user_id text NOT NULL, input_hash text NOT NULL, fingerprint text NOT NULL, call_id text NOT NULL, task_id text, observation jsonb, PRIMARY KEY(user_id,input_hash));
 CREATE TABLE IF NOT EXISTS integration_credentials (user_id text NOT NULL, provider text NOT NULL, encrypted_secret text NOT NULL, updated_at text NOT NULL, PRIMARY KEY(user_id,provider));
 CREATE TABLE IF NOT EXISTS user_preferences (
@@ -225,7 +279,10 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   default_visibility TEXT NOT NULL,
   autosave_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   file_naming_rule TEXT NOT NULL DEFAULT '',
-  analytics_enabled BOOLEAN NOT NULL DEFAULT FALSE
+  analytics_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  assistant_execution_engine TEXT CHECK (assistant_execution_engine IN ('pi', 'codex')),
+  model_routing JSONB,
+  model_routing_revision INTEGER NOT NULL DEFAULT 0 CHECK (model_routing_revision >= 0)
 );
 CREATE TABLE IF NOT EXISTS model_configurations (
   id TEXT PRIMARY KEY,
@@ -306,5 +363,37 @@ CREATE TABLE IF NOT EXISTS account_skill_overlay_versions (
   updated_by TEXT NOT NULL,
   created_at TEXT NOT NULL,
   UNIQUE (user_id, account_id, skill_id, row_revision)
+);
+CREATE TABLE IF NOT EXISTS reporting_consents (
+  user_id TEXT NOT NULL,
+  scope TEXT NOT NULL CHECK (scope IN ('diagnostics','creator')),
+  account_id TEXT NOT NULL DEFAULT '',
+  enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  consent_version INTEGER NOT NULL,
+  consent_epoch INTEGER NOT NULL DEFAULT 0,
+  account_alias TEXT,
+  changed_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, scope, account_id)
+);
+CREATE TABLE IF NOT EXISTS reporting_outbox (
+  event_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  account_id TEXT NOT NULL DEFAULT '',
+  work_alias TEXT,
+  consent_epoch INTEGER NOT NULL,
+  encrypted_payload TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reporting_outbox_owner_scope ON reporting_outbox(user_id,scope,account_id,created_at);
+CREATE TABLE IF NOT EXISTS reporting_consent_changes (
+  user_id TEXT NOT NULL,
+  change_id TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  account_id TEXT NOT NULL DEFAULT '',
+  enabled BOOLEAN NOT NULL,
+  changed_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, change_id)
 );
 `;

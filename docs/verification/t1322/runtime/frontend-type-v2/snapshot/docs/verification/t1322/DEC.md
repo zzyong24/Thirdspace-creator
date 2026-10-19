@@ -1,0 +1,7 @@
+# T1322 授权与取舍
+
+用户原全功能恢复授权与Root于2026-10-16裁决：只修两个现役文案/图片身份消费者；作者B，Root独立审核。两族完整真实受控文案RED先于第一源修改，第二源原字节下自然图卡凭据RED先于第二修；不伪填coverImage或账本。旧2613/5713 UNKNOWN具体首断言未证，不重发。
+
+T1319 implementation原lease已用受支持progress release命令释放（exit0），原claim历史保留；T1322对persistence-client仅只读，期间T1319不得修改该装配。R的T1317/T1318独立范围继续，T1323须另审另claim；不以不同生产文件掩盖共享RO冲突。B释放T1322后，T1319重核实际兄弟依赖字节再编译packet，不改旧锁历史。
+
+共享timeout-policy最终由C独占真实执行一次，五包固有Vitest结果缓存按原授权精确派生；本任务必须准确引用实际源与Gate结果，未发生保持待验。Root方向认可不等于工具PASS，正式初审record及START前不实施。

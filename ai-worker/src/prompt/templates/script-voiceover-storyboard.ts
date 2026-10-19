@@ -5,6 +5,7 @@ import {
   AUDIENCE_MINDSET_CLAUSE,
 } from "../grounding-facets";
 import {
+  SCRIPT_FACT_SCOPE_SYSTEM,
   SCRIPT_DRAFT_COMPLETION_POLICY,
   SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER,
   scriptDraftSchema,
@@ -20,12 +21,13 @@ export type VoiceoverComposeOutput = z.infer<typeof voiceoverComposeSchema>;
 
 export const SCRIPT_VOICEOVER_COMPOSE_TEMPLATE: PromptTemplate = {
   id: "script.voiceover.compose",
-  version: "v2",
+  version: "v3",
   outputRecovery: "creative-partial",
   outputSchema: voiceoverComposeSchema,
   tools: [],
   system:
-    "你是这位创作者的口播主笔。先把一条内容讲通、讲顺、讲得值得听，不承担镜头和制作字段。",
+    `你是这位创作者的口播主笔。先把一条内容讲通、讲顺、讲得值得听，不承担镜头和制作字段。
+${SCRIPT_FACT_SCOPE_SYSTEM}`,
   template: `{{sourceInstruction}}{{sourceMaterials}}【次级项目背景·仅在不冲突时使用】
 【创作者定位】
 {{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{topic}}{{orientation}}{{durationTarget}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}

@@ -1,0 +1,24 @@
+{
+  "schema": "task-input-supplement/v1",
+  "task": "T-1312",
+  "originalInputLock": "INPUT_LOCK_ROUND2.json",
+  "originalSha256": "e8783769073e3b1402d1b26106d50fda453775a1afd241b4f3e81901cf9dde42",
+  "entries": [
+    {
+      "path": "backend/src/integration/scheduled-export-progress.test.ts",
+      "bytes": 15110,
+      "sha256": "4e77a9b2a4a7a6344dd3c635391e3501a2b954b9acc36a7977b8b056dcc78ec8"
+    },
+    {
+      "path": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "bytes": 20217,
+      "sha256": "ef9e1c06ba12cf72742a4841b757594a227503b05549952bfec7fdd97d584a07"
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "bytes": 19540,
+      "sha256": "fcb04e20e731463a49aefb1084682281922242d9cae715b99187a07ec5e095f6"
+    }
+  ],
+  "scopeSha256": "8f0eae5c775c5be95964671796846b332cae41164f2b8eb1ddc04962fc8c8f01"
+}

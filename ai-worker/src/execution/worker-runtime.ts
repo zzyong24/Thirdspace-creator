@@ -1,3 +1,9 @@
+import {codexCallAuthority,codexWorkerPorts} from './codex-call-context';
+import {AsrExecutionInterruption} from '../runtime/asr-request';
+import type {runAssetAsrInWorker} from './asset-asr-worker-run';
+import type {runExternalChatInWorker} from "./external-chat-worker-run";
+import {executionTimeoutMs, remainingDeadlineMs} from "@creatoros/contract/timeout-policy";
+
 import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import type {runAssetProcessingInWorker} from "./asset-processing-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
@@ -9,8 +15,8 @@ import {dailyTopicInputSchema} from "./topic-worker-input";
 import {getHistoricalScriptFallback} from "./script-fallback";
 import { randomUUID } from "node:crypto";
 import {
-  chatToolApprovalReceiptSchema, chatCommitReceiptSchema, hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
-  workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
+  chatToolApprovalReceiptSchema, chatCommitReceiptSchema, hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, executionModelSpecSchema, sameExecution,
+  workerTaskInputSchema, structuredGenerationInputSchema, intelligenceRewriteInputSchema, workerCallRequestId, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
 import type { runAgenticInWorker } from "./agentic-worker-run";
@@ -24,8 +30,9 @@ const modelCheckpointSchema = z.object({
 });
 
 export interface WorkerDependencies {
+  observeException?:(event:{eventId:string;module:"worker";code:string;occurredAt:string;referenceId:string;stack:string;message:string})=>void;
   heartbeatMs?: number;
-  capabilities?: Array<"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
+  capabilities?: Array<"asset.asr"|"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"intelligence.rewrite-text"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
   supportsChatWebRead?:boolean;
   supportsChatResearch?:boolean;
   supportsChatHooks?:boolean;
@@ -33,44 +40,69 @@ export interface WorkerDependencies {
   supportsChatStructured?:boolean;
   runAsset?:typeof runAssetInWorker;
   runAssetProcessing?:typeof runAssetProcessingInWorker;
+  runAssetAsr?:typeof runAssetAsrInWorker;
   runTranscribe?:typeof runTranscribeInWorker;
   runCover?:typeof runCoverInWorker;
   runVideo?:typeof runVideoDecisionsInWorker;
   runAgentic?: typeof runAgenticInWorker;
   runChat?: typeof runChatInWorker;
-  generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
+  runExternalChat?:typeof runExternalChatInWorker;
+  generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
+  generateIntelligenceText?(input:z.infer<typeof intelligenceRewriteInputSchema>,model:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
-  generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
+  generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof executionModelSpecSchema>, signal: AbortSignal,
     onText: (text: string) => void | Promise<void>): Promise<{text: string; usage: unknown}>;
 }
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate", ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
-  const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
+  const capabilities=["model.generate",...(deps.runAssetAsr?["asset.asr"]:[]), ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.generateIntelligenceText ? ["intelligence.rewrite-text"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  type Active = {execution: ExecutionRef; controller: AbortController;deadlineAt:number|null;receiptProtocol:boolean;nextCallSeq:number};
+  const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void;scope?:Active;callSeq?:number}>();
+
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
-  let active: {execution: ExecutionRef; controller: AbortController;deadlineAt:number|null} | undefined;
+  let active: Active | undefined;
   let closed = false;
   const send = (message: WorkerMessage) => { if (!closed) deps.send(message); };
   const key = (ref: ExecutionRef) => JSON.stringify(ref);
+  const acknowledge = (scope: Active, resend = false) => {
+    if (!scope.receiptProtocol || active !== scope || closed) return;
+    // 从当前在途集合的空隙计算累计确认；较早挂起调用不阻挡后面的音频释放。
+    // 区间数最多为在途空隙数，随空隙关闭合并，不保存历史 ID/tombstone。
+    const outstanding=[...pending.values()].filter(item=>item.scope===scope).map(item=>item.callSeq!).sort((a,b)=>a-b);
+    const throughSeq=outstanding.length?outstanding[0]!-1:scope.nextCallSeq;
+    const consumedRanges:Array<{fromSeq:number;toSeq:number}>=[];
+    let fromSeq=throughSeq+1;
+    for(const sequence of outstanding){if(sequence>fromSeq)consumedRanges.push({fromSeq,toSeq:sequence-1});fromSeq=sequence+1;}
+    if(fromSeq<=scope.nextCallSeq)consumedRanges.push({fromSeq,toSeq:scope.nextCallSeq});
+    if(throughSeq>0 || consumedRanges.length || resend){
+      try {send({version:1,type:'consumed',requestId:randomUUID(),execution:scope.execution,throughSeq,consumedRanges});} catch {/* 断连由原任务监督，不重发调用。 */}
+    }
+  };
   const call = (execution: ExecutionRef, port: WorkerPort, data: unknown, signal?: AbortSignal): Promise<unknown> => {
     signal?.throwIfAborted();
     if (closed) return Promise.reject(new Error("WORKER_DISCONNECTED"));
-    const requestId = randomUUID();
+    const scope = active?.receiptProtocol && sameExecution(active.execution, execution) ? active : undefined;
+    const callSeq = scope ? ++scope.nextCallSeq : undefined;
+    const requestId = callSeq ? workerCallRequestId(execution,callSeq) : randomUUID();
     return new Promise((resolve, reject) => {
       const onAbort = () => { cleanup(); reject(new Error("WORKER_CANCELLED")); };
-      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","acquireTranscribeProfile","acquireTranscribeChannel"].includes(port) && active && sameExecution(active.execution,execution) ? active.deadlineAt===null ? 600000 : Math.max(1,active.deadlineAt-Date.now()) : 30000);
-      const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId);};
-      pending.set(requestId, {resolve, reject, cleanup});
+      // 每个端口共享原领取任务的绝对deadline；continuous由原取消/心跳/租约监督。
+      // 素材准备含登录取流、抽音和保存，不能再由独立30秒限误杀。
+      const waitMs = active && sameExecution(active.execution, execution)
+        ? remainingDeadlineMs(active.deadlineAt) : executionTimeoutMs();
+      const timer = waitMs === undefined ? undefined : setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, waitMs);
+      const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId); if(scope)acknowledge(scope);};
+      pending.set(requestId, {resolve, reject, cleanup, scope, callSeq});
       signal?.addEventListener("abort", onAbort, {once: true});
-      try { send({version: 1, type: "call", requestId, execution, port, data}); }
+      try { send({version: 1, type: "call", requestId, execution, port, data, ...(callSeq ? {callSeq} : {})}); }
       catch {cleanup(); reject(new Error("WORKER_DISCONNECTED"));}
     });
   };
-  const execute = async (execution: ExecutionRef, deadlineAt: number|null, requestId: string) => {
+  const execute = async (execution: ExecutionRef, deadlineAt: number|null, requestId: string, receiptProtocol?: 'consumed-v1') => {
     const controller = new AbortController();
-    active = {execution, controller,deadlineAt};
+    active = {execution, controller,deadlineAt,receiptProtocol:receiptProtocol === 'consumed-v1',nextCallSeq:0};
     const signal = controller.signal;
     const timer = deadlineAt===null ? undefined : setTimeout(() => controller.abort(), Math.max(0, deadlineAt - Date.now()));
     let reason: WorkerStopReason = "failed";
@@ -106,8 +138,29 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return parsed.data;
       };
       const input = await readBoundary("readTaskContext", {}, workerTaskInputSchema);
-      if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      const executionCapability="intelligenceText" in input ? "intelligence.rewrite-text" : input.kind;
+      if(!capabilities.includes(executionCapability))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      // 明确标签先进入专用依赖，不被视频等旧 structured facets 抢走，也不降为泛型 handler。
+      if("intelligenceText" in input){
+        if(!deps.generateIntelligenceText)throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+        const model=await readBoundary("resolveModelCredential",{capability:input.capability},executionModelSpecSchema);
+        const result=await deps.generateIntelligenceText(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+        signal.throwIfAborted();committing=true;
+        await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
+        reason="completed";return;
+      }
       if((input.kind==="scheduled.flywheel"||input.kind==="benchmark.transcribe"))throw new GenerationFailure("failed","DOMAIN_STAGE_AUTHORIZATION_REQUIRED");
+      if(input.kind==="asset.asr"){
+        if(!deps.runAssetAsr)throw new GenerationFailure("waiting_user","ASSET_ASR_WORKER_UNAVAILABLE");
+        try {
+          const result=await deps.runAssetAsr(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+          reason=result.status==="succeeded"?"completed":"failed";return;
+        } catch(error) {
+          // 原持久 ASR 端口报告未确认结果；不得被普通文本生命周期的局部 started 标志降为可重试失败。
+          if(error instanceof AsrExecutionInterruption)throw new GenerationFailure("unknown_result","ASR_RESULT_UNKNOWN");
+          throw error;
+        }
+      }
       if(input.kind==="transcribe.douyin"){
         if(!deps.runTranscribe)throw new GenerationFailure("waiting_user","TRANSCRIBE_WORKER_UNAVAILABLE");
         const result=await deps.runTranscribe(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
@@ -121,15 +174,26 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         reason="completed";return;
       }
       if(input.kind==="chat.run"){
+        if(input.executionEngine==="codex"){
+          if(!deps.runExternalChat)throw new GenerationFailure("waiting_user","CODEX_WORKER_UNAVAILABLE");
+          const result=await deps.runExternalChat(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal),async text=>{
+            if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
+          });
+          signal.throwIfAborted();committing=true;
+          const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitExternalChatResult",result,signal));
+          if(receipt.messageId!==`chat:${input.sourceMessageId}`)throw new Error("CODEX_COMMIT_RECEIPT_MISMATCH");
+          reason="completed";return;
+        }
         if(input.tools.some(tool=>tool.execution==="worker.web-read") && !capabilities.includes("chat.web-read"))throw new GenerationFailure("waiting_user","CHAT_WEB_READ_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.research") && !capabilities.includes("chat.research"))throw new GenerationFailure("waiting_user","CHAT_RESEARCH_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.structured-node") && !capabilities.includes("chat.structured"))throw new GenerationFailure("waiting_user","CHAT_STRUCTURED_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.script-draft") && !capabilities.includes("chat.script-draft"))throw new GenerationFailure("waiting_user","CHAT_SCRIPT_DRAFT_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !capabilities.includes("chat.hooks"))throw new GenerationFailure("waiting_user","CHAT_HOOKS_WORKER_UNAVAILABLE");
         if(!deps.runChat)throw new GenerationFailure("waiting_user","CHAT_WORKER_NOT_READY");
-        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
         const result=await deps.runChat(input,model,signal,{
           call:(port,data,portSignal)=>call(execution,port,data,portSignal),
+          readPlanStatus:async(modelCallId,planSignal)=>call(execution,"readWorkbenchPlan",{modelCallId},planSignal) as ReturnType<NonNullable<Parameters<typeof deps.runChat>[3]["readPlanStatus"]>>,
           approve:async(request,approvalSignal)=>{
             const decision=chatToolApprovalReceiptSchema.parse(await call(execution,"checkChatToolApproval",request,approvalSignal));
             if(decision.status==="unavailable")throw new GenerationFailure("waiting_user","CHAT_APPROVAL_UNAVAILABLE");
@@ -140,13 +204,13 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         signal.throwIfAborted();
         if(result.outcome==="awaiting_confirmation")throw new GenerationFailure("waiting_user","CHAT_APPROVAL_REQUIRED");
         committing=true;
-        const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitChatResult",{lastModelCallId:result.lastModelCallId,toolCallIds:result.toolCallIds},signal));
+        const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitChatResult",{lastModelCallId:result.lastModelCallId,toolCallIds:result.toolCallIds,...(result.terminalPlanFailureStepIds?.length?{partialPlanFailureStepIds:result.terminalPlanFailureStepIds}:{}),...(result.terminalToolFailureCallIds?.length?{terminalToolFailureCallIds:result.terminalToolFailureCallIds}:{})},signal));
         if(receipt.messageId!==`chat:${input.sourceMessageId}`)throw new Error("CHAT_COMMIT_RECEIPT_MISMATCH");
         reason="completed";return;
       }
       if(input.kind==="agentic.run"){
         if(!deps.runAgentic)throw new GenerationFailure("waiting_user","AGENTIC_WORKER_NOT_READY");
-        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
         signal.throwIfAborted();
         const result=await deps.runAgentic(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal),text=>{
           if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
@@ -166,11 +230,11 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           await call(execution,"commitResult",{outcome:"succeeded",...result},signal);reason="completed";return;
         }
         if(input.facets.__assetProcessing!==undefined){if(!deps.runAssetProcessing)throw new Error("ASSET_PROCESSING_WORKER_UNAVAILABLE");await deps.runAssetProcessing(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));reason="completed";return;}
-        if(input.skillId==="cover.brief"){
+        if(input.skillId==="cover.brief" || input.skillId==="graphic.card-brief"){
           if(!deps.runCover)throw new GenerationFailure("waiting_user","COVER_WORKER_UNAVAILABLE");
           if(input.capability!=="copy.generate")throw new Error("COVER_INPUT_MISMATCH");
           // 先沿原凭据端口锁定业务任务的模型身份，封面链返回最终图片回执。
-          const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+          const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
           const result=await deps.runCover(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
           signal.throwIfAborted();committing=true;
           await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
@@ -205,7 +269,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           return;
         }
         if(!deps.generateStructured)throw new Error("STRUCTURED_WORKER_UNAVAILABLE");
-        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
         const result=await deps.generateStructured(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
         signal.throwIfAborted();
         committing=true;
@@ -221,9 +285,6 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return checkpoint;
       };
       const initialCheckpoint = await readCheckpoint();
-      if(initialCheckpoint.recovery === "requires_reconciliation" && ![...initialCheckpoint.messages,...initialCheckpoint.uncheckpointedReceipts].some(receipt=>receipt.resultText?.trim())) {
-        throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
-      }
       const checkpointReceipt = async (id:string, checkpoint=initialCheckpoint) => {
         const messages=checkpoint.messages.map(message=>({role:"assistant" as const,callId:message.callId}));
         const seen=new Set(messages.map(message=>message.callId));
@@ -238,6 +299,10 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         if(saved.revision!==checkpoint.revision+1)throw new Error("CHECKPOINT_REVISION_MISMATCH");
       };
       if(input.kind!=="model.generate")throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      // Pi 对账中的原检查点仍在任何调用预留前停止；Codex才核原回合只读证明。
+      const reconciliationModel=initialCheckpoint.recovery === "requires_reconciliation"
+        ? await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema) : undefined;
+      if(reconciliationModel && !("engine" in reconciliationModel))throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
       const operationKey = input.operationKey;
       const reservation = workerReservationSchema.parse(await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal));
       callId = reservation.callId;
@@ -248,21 +313,27 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         reason = "completed";
         return;
       }
-      if (initialCheckpoint.recovery === "requires_reconciliation") throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
-      if (reservation.status !== "reserved") throw new GenerationFailure("unknown_result", "CALL_REQUIRES_RECONCILIATION");
-      const model = await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+      const model = reconciliationModel ?? await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
+      const codex="engine" in model;
+      const originalNative=codex&&['started','unknown'].includes(reservation.status)
+        ? z.object({threadId:z.string().min(1),turnId:z.string().min(1)}).passthrough().safeParse(await call(execution,'readCodexCall',{callId},signal)) : undefined;
+      const recovering=originalNative?.success===true;
+      if (!recovering && initialCheckpoint.recovery === "requires_reconciliation") throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
+      if (!recovering && reservation.status !== "reserved") throw new GenerationFailure("unknown_result", "CALL_REQUIRES_RECONCILIATION");
       signal.throwIfAborted();
       // 启动回执丢失也视为未知；没有明确许可绝不调用供应商。
       started = true;
-      const receipt = workerStartReceiptSchema.parse(await call(execution, "startCall", {callId}, signal));
-      if (receipt.callId !== callId) throw new Error("CALL_RECEIPT_MISMATCH");
+      if(!recovering){const receipt = workerStartReceiptSchema.parse(await call(execution, "startCall", {callId}, signal));
+      if (receipt.callId !== callId) throw new Error("CALL_RECEIPT_MISMATCH");}
       signal.throwIfAborted();
       const streamWriter=createPersistentStreamWriter(callId,data=>call(execution,"appendStreamEvents",data));
       const result = await (async()=>{
-        try{return await deps.generate(input,model,signal,async text=>{
+        try{return await codexCallAuthority.run({callId,recover:recovering},()=>deps.generate(input,model,signal,async text=>{
+          // 原回合只读结果直接结算；旧stream所属原启动attempt，不伪造新流执行事实。
+          if(recovering)return;
           await streamWriter.push({type:"text-delta",id:callId,delta:text});
           if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
-        });}finally{await streamWriter.close();}
+        }));}finally{await streamWriter.close();}
       })();
       // 已执行调用允许在取消后结算，提交候选仍由父端口检查控制状态。
       await call(execution, "settleCall", {callId, status: "settled", usage: result.usage, text:result.text});
@@ -274,6 +345,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       reason = "completed";
     } catch (error) {
       const failure = error instanceof GenerationFailure ? error : undefined;
+      if(!signal.aborted){try{deps.observeException?.({eventId:randomUUID(),module:"worker",code:"WORKER_EXECUTION_INTERRUPTED",occurredAt:new Date().toISOString(),referenceId:execution.executionTaskId,stack:error instanceof Error?Buffer.from(error.stack??"").subarray(0,16000).toString("utf8"):"",message:error instanceof Error?Buffer.from(error.message).subarray(0,4000).toString("utf8"):""});}catch{/* 观察者不改变结局 */}}
       reason = signal.aborted ? "cancelled" : failure?.outcome ?? (started || committing ? "unknown_result" : "failed");
       if (started && !settled) {
         await call(execution, "settleCall", {callId, status: failure && failure.outcome !== "unknown_result" ? "rejected" : "unknown"}).catch(() => {});
@@ -293,14 +365,19 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     }
   };
   return {
-    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities});},
+    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities,receiptProtocol:'consumed-v1'});},
     receive(raw: unknown) {
       const parsed = hostMessageSchema.safeParse(raw);
       if (!parsed.success || closed) return;
       const message = parsed.data;
       if (message.type === "reply") {
         const item = pending.get(message.requestId);
-        if (!item) return;
+        if (!item) {
+          // 迟到/重复回复表示宿主可能丢了确认；重发当前累计水位，不创建新的调用。
+          if(active?.receiptProtocol && message.execution && sameExecution(active.execution,message.execution) && message.callSeq && message.callSeq <= active.nextCallSeq)acknowledge(active,true);
+          return;
+        }
+        if(item.scope && (message.callSeq !== item.callSeq || !message.execution || !sameExecution(item.scope.execution,message.execution)))return;
         item.cleanup();
         if (message.ok) item.resolve(message.data); else item.reject(["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(message.errorCode ?? "") ? new GenerationFailure("waiting_user",message.errorCode!) : new Error(message.errorCode ?? "HOST_PORT_REJECTED"));
       } else if (message.type === "cancel") {
@@ -315,7 +392,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           if (!sameExecution(active.execution, message.execution)) send({version: 1, type: "stopped", requestId: message.requestId, execution: message.execution, reason: "failed"});
           return;
         }
-        void execute(message.execution, message.deadlineAt, message.requestId);
+        void codexWorkerPorts.run((port,data,signal)=>call(message.execution,port,data,signal),()=>execute(message.execution,message.deadlineAt,message.requestId,message.receiptProtocol));
       }
     },
     close() {

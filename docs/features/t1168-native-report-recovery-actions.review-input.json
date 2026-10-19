@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：当前身份恢复态同时要求先扫码与点击已禁用同步，恢复按钮为错误色次级描边；原生报表h1的text-2xl经globals与tokens实际映射32px。仅在现NativeReportPanel按真实bindingRequired/needsAuth将原恢复动作移到页头并删除重复入口、校正同状态空态和现text-xl24px，可恢复规范内动作层级。原能力关闭、身份拒绝、任务/原key、取消/未知结果、owner与研究暂停不变；新增组件RED及原真实0 Chrome、纯打开Esc回焦、computed24px和零副作用验证后才能签实施。",
+  "findings": []
+}

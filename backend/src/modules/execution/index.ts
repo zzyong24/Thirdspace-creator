@@ -1,4 +1,5 @@
 // Execution 模块(T-255a 执行层框架,脑手分离)—— 唯一公共出口(foundation §1)。
+export {readFrozenChatExecutionEngine} from './execution-chat-route.service';
 //
 // 存储复用 ai_tasks(taskType 命名空间 `exec.*`,六态 + 步骤流 + 结果表现成,零新表/
 // 零迁移);本模块自己不碰 db,读写全经注入的 AI/Assets 端口(SPEC §22)。组成:
@@ -23,6 +24,11 @@ export {
 
 export {
   createPersistentTaskService,
+  registerPersistentTaskObserver,
+  observeCommittedTaskAttempt,
+  observeCommittedTaskSettlement,
+  type PersistentTaskAttemptObservation,
+  type PersistentTaskSettlementObservation,
   type PersistentTaskService,
   type PersistentTaskServiceDeps,
   type PersistentTaskClaim,
@@ -153,6 +159,7 @@ export {
 } from "./agentic";
 export { createExecutionAuthorityService, type PreparedModelExecution } from "./execution-authority.service";
 export { createExecutionLeaseService } from "./execution-lease.service";
+export { createWorkbenchFileRecoveryService } from "./workbench-file-recovery.service";
 export { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 export { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
 export { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.service";
@@ -168,6 +175,7 @@ export { DEFAULT_AGENTIC_SYSTEM_PROMPT } from "./agentic/default-system-prompt";
 export { createExecutionScriptCheckpointService } from "./execution-script-checkpoint.service";
 
 export { createExecutionBrowserProfileLeaseService, BrowserProfileBusyError } from "./execution-browser-profile-lease.service";
+export { createWorkbenchBrowserAdmissionService } from "./workbench-browser-admission.service";
 
 export {createExecutionScheduledChildService} from "./execution-scheduled-child.service";
 
@@ -182,6 +190,19 @@ export {createExecutionTranscribePreparationService} from "./execution-transcrib
 export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
 
 export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from './host-browser-profile-lifecycle';
+export {createWorkbenchArtifactService,createWorkbenchArtifactReadService,WorkbenchArtifactPendingError,type WorkbenchArtifactBlobPort,type WorkbenchArtifactFilePort} from './workbench-artifact.service';
+export {startWorkbenchArtifactReconciler} from './workbench-artifact-reconciler';
+export {createWorkbenchScreenshotMediaService} from './workbench-screenshot-media.service';
 
 export {isTaskDrainStopping,type TaskDrainControl} from "./task-drain-control";
 export {createDesktopHostProcessRecovery,type HostProcessRecovery} from './host-browser-process-recovery';
+export {createFrozenModelRetryPort} from "./frozen-model-retry";
+
+export {createAssetAsrOwner} from './asset-asr-owner.service';
+
+export {createExecutionGenerationPorts} from "./execution-generation-ports.service";
+export {createWorkbenchPublicService} from "./workbench-public.service";
+export {createWorkbenchPublicTransport,WORKBENCH_OP_IDS} from "./workbench-public.transport";
+export {createExecutionStreamService as createWorkbenchPublicStreamService} from "./execution-stream.service";
+
+export {createExecutionVideoVisualReviewService,type VideoVisualReviewServiceDeps} from './execution-video-visual-review.service';

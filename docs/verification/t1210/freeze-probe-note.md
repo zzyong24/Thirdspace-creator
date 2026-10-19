@@ -1,0 +1,2 @@
+首次私有冻结探针因写死Cargo包名creatoros发生StopIteration；已按真实Cargo.toml名称校准。第二次使用逐对象git子进程扫描，六分钟仍在执行，为降低验收驱动开销主动终止；改为同一cat-file批处理逐个请求读取，扫描对象范围、规则、精确fixture哈希和断言均保留。未改变产品、构建、Gate或测试。实际原始工具失败记录保留。
+初始私有扫描sk-规则未约束token起始，误命中task ID/文件名子串；按token边界校准后仅多一处vendor evaluate.rs的script_audit_summary_redacts_high_entropy_in_preview硬编码去敏单测。查看遮值上下文确认无真人凭据，仅加该blob精确SHA256分类；原3个精确夹具哈希与所有真实独立token规则/对象范围保留。原失败输出保留，不修改候选源码或仓库Gate。

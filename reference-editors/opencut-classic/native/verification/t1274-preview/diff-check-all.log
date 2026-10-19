@@ -1,0 +1,154 @@
+reference-editors/opencut-classic/native/native-from-t1046.patch:2081: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:2087: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5060: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5063: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5106: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5113: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5163: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5170: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5226: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5246: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5408: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5468: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5657: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5676: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5701: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5765: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5839: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5877: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:5925: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6047: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6195: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6343: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6405: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6443: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6488: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6504: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6552: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6664: space before tab in indent.
++ 	Input,
+reference-editors/opencut-classic/native/native-from-t1046.patch:6665: space before tab in indent.
++ 	ALL_FORMATS,
+reference-editors/opencut-classic/native/native-from-t1046.patch:6668: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:6677: space before tab in indent.
++ 	const input = new Input({
+reference-editors/opencut-classic/native/native-from-t1046.patch:6678: space before tab in indent.
++ 		source: new BlobSource(file),
+reference-editors/opencut-classic/native/native-from-t1046.patch:6679: space before tab in indent.
++ 		formats: ALL_FORMATS,
+reference-editors/opencut-classic/native/native-from-t1046.patch:7329: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7340: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7355: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7375: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7384: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7402: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7411: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7420: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7503: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7574: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7581: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7646: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7651: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7662: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7697: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7708: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7723: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7729: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7740: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7745: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7751: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7770: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7779: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7788: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7794: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7813: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7856: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7869: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7875: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:7947: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8038: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8098: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8206: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8294: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8349: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8404: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8452: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8574: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8642: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8721: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8785: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8812: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8829: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:8840: trailing whitespace.
++ 

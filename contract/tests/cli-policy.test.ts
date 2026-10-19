@@ -3,13 +3,22 @@ import { describe, expect, it } from "vitest";
 import { CLI_OPERATION_POLICIES, ENDPOINTS } from "../src";
 
 describe("T-843 CLI operation policy", () => {
+  it('T1278模型来源读取无副作用，保存仍经明确写确认',()=>{
+    expect(CLI_OPERATION_POLICIES['settings.modelRouting.get']).toMatchObject({effect:'read',confirmation:'none',asyncTask:false});
+    expect(CLI_OPERATION_POLICIES['settings.modelRouting.put']).toMatchObject({effect:'write',confirmation:'apply',asyncTask:false});
+  });
   it("穷尽覆盖且只覆盖全部正式 operation", () => {
     expect(Object.keys(CLI_OPERATION_POLICIES).sort()).toEqual(
       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),
     );
-    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(252);
+    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(Object.keys(ENDPOINTS).length);
+
   });
 
+  it('观众任务三操作有对应读写策略',()=>{
+    expect(CLI_OPERATION_POLICIES['topics.workspace.get'].effect).toBe('read');
+    for(const id of ['topics.workspace.save','topics.proposals.feedback'] as const)expect(CLI_OPERATION_POLICIES[id]).toMatchObject({effect:'write',idempotency:'native'});
+  });
   it("每项都有服务端可信的执行元数据", () => {
     for (const policy of Object.values(CLI_OPERATION_POLICIES)) {
       expect(["read", "write", "destructive", "external"]).toContain(policy.effect);
@@ -32,4 +41,14 @@ describe("T-843 CLI operation policy", () => {
       confirmation: "confirm_impact",
     });
   });
+
+  it('T-1027 评论失败列表只读，调整作品重试时间须apply且经gateway幂等',()=>{
+    const policies=CLI_OPERATION_POLICIES as Record<string,unknown>;
+    expect(policies['analytics.comments.failures.list']).toMatchObject({effect:'read',confirmation:'none',asyncTask:false,idempotency:'not_applicable'});
+    expect(policies['analytics.comments.retry']).toMatchObject({effect:'write',confirmation:'apply',asyncTask:false,idempotency:'gateway'});
+  });
+});
+
+it("T1199 默认计划资格为公开只读且无确认或异步任务",()=>{
+ expect(CLI_OPERATION_POLICIES["accounts.collectionPlanReadiness"]).toMatchObject({effect:"read",confirmation:"none",asyncTask:false,idempotency:"not_applicable"});
 });

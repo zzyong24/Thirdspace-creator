@@ -11,6 +11,8 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
+import {ArrowUpRight,Images,Video} from "lucide-react";
 
 import { CoverThumb } from "@/components/resources/cover-thumb";
 import { ScriptRichEditor } from "@/features/script/script-rich-editor";
@@ -43,6 +45,9 @@ import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
   const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
+  const hasTranscribeAction = Boolean(project.douyinExternalId && project.transcriptState !== "done");
+  const isPublished = publishPack?.outputPublished ?? publishPack?.status === "published";
+  const hasTopbarContent = project.imported || hasTranscribeAction || isPublished;
   const radarDraftSeed = vm.radarDraftSeed ?? "";
   const seedHtml = radarDraftSeed
     .split(/\n+/)
@@ -74,11 +79,11 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
     >
       {/* ── 顶条(T-075 收窄:标题与阶段条由 shell project-workspace header 统一提供;
           [T-076] 阶段条两段化「脚本|复盘」,主行动按发布态收敛)。 ── */}
-      <header
+      {hasTopbarContent && <header
         data-slot="draft-topbar"
         className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
       >
-        <div className="ml-auto flex shrink-0 items-center gap-2.5">
+        <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center gap-2.5">
           {project.imported ? (
             <span
               data-slot="draft-imported-badge"
@@ -87,23 +92,21 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               真实导入作品
             </span>
           ) : null}
-          {/* [T-505] 只在有抖音锚且尚无真稿时渲染；queued/running 从持久任务恢复并置灰。 */}
-          {project.douyinExternalId && project.transcriptState !== "done" ? (
+          {/* 有真稿后保原任务入口；只读结果不等于本次刚保存。 */}
+          {project.douyinExternalId ? (
             <TranscribeNowButton
               projectId={project.id}
+              awemeId={project.douyinExternalId}
               initialState={project.transcriptState}
             />
           ) : null}
           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction
             projectId={project.id}
-            published={
-              publishPack?.outputPublished ??
-              publishPack?.status === "published"
-            }
+            published={isPublished}
           />
         </div>
-      </header>
+      </header>}
 
       {/* ── 主体:左稿面 + 右对话位 ──
           [T-108] DraftChatRequestProvider 包住左稿面 + 右 rail:左稿面的 AI 按钮(盲预测/审核)
@@ -126,7 +129,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           <CreationFlowCtas projectId={project.id} />
 
           {/* [T-146/T-726] 弹药上移:用户先看到手里有哪些素材/资料，再直接写稿。 */}
-          <AmmoDrawer ammo={ammo} projectId={project.id} />
+          <AmmoDrawer ammo={ammo} projectId={project.id} readError={vm.ammoReadError} />
 
           <ThesisSkeletonPanel
             thesis={thesis}
@@ -336,7 +339,7 @@ function PublishPackSection({
       </div>
       {/* [T-350b/T-738] 无发布物料时生成；已有持久化物料时原位查看。
           发布中心只负责排期，不承担发布物料查看。 */}
-      {unlocked ? (
+      {unlocked || publishPack ? (
         <PublishPackageCta
           projectId={projectId}
           projectTitle={projectTitle}
@@ -434,23 +437,35 @@ function MissingMaterialsNote({
 function AmmoDrawer({
   ammo,
   projectId,
+  readError,
 }: {
   ammo: DraftWorkbenchVm["ammo"];
   projectId: string;
+  readError?:string|null;
 }) {
   return (
     <section
+      id="materials"
       data-slot="draft-ammo-drawer"
       aria-label="创作素材"
       className="rounded-xl border border-border/70 bg-surface p-3"
     >
-      <div className="mb-2 flex flex-wrap items-start gap-x-2 gap-y-1">
+      <div className="mb-3 flex flex-wrap items-start gap-x-3 gap-y-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-[13.5px] font-semibold text-foreground">创作素材</h2>
           <p className="mt-0.5 text-xs leading-5 text-text-subtle">
-            联网找到的资料、你上传的文件和制作中产生的截图、录屏，都统一保存在这里，整个创作周期都能继续使用。
+            收集资料、上传文件，也可以用画布制作图片和视频。选中的结果会出现在这件作品里。
           </p>
         </div>
+        <Link
+          href={`/canvases?projectId=${encodeURIComponent(projectId)}`}
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <Images className="size-4" aria-hidden="true" />
+          打开创作画布
+          <Video className="size-3.5" aria-hidden="true" />
+          <ArrowUpRight className="size-3.5" aria-hidden="true" />
+        </Link>
         {/* [T-055g SPEC §8.1] 知识库可写:稿面就地记一条,存入即挂本项目。 */}
         <AmmoNoteForm projectId={projectId} />
         {ammo.length > 0 ? (
@@ -465,7 +480,7 @@ function AmmoDrawer({
         <AmmoDumpZone projectId={projectId} />
       </div>
       {/* [T-146] 已上传素材/知识列表 + 双击预览(client 组件);空态时不渲染。 */}
-      {ammo.length > 0 ? <AmmoCardList ammo={ammo} /> : null}
+      {ammo.length > 0 || readError ? <AmmoCardList ammo={ammo} readError={readError}/> : null}
     </section>
   );
 }

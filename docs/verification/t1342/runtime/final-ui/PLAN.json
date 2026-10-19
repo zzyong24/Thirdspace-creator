@@ -1,0 +1,88 @@
+{
+  "schema": "t1342-final-ui-plan/v1",
+  "state": "NOT_RUN_PREPARATION",
+  "repo": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "contract": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1342/control/T-1342.md",
+  "contractHelper": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/final-package-combined/runner/contract.cjs",
+  "registrar": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/runtime/implementation/working/final-u08-u10/runner/register-owned.cjs",
+  "viewports": [
+    {
+      "width": 1366,
+      "height": 900
+    },
+    {
+      "width": 1280,
+      "height": 800
+    },
+    {
+      "width": 1024,
+      "height": 680
+    }
+  ],
+  "checkIds": [
+    "minimum_local_entry",
+    "same_project_history",
+    "stable_input_and_breakpoints",
+    "keyboard_focus_return",
+    "back_refresh_and_readonly",
+    "real_chrome_zoom"
+  ],
+  "conditions": [
+    "back",
+    "refresh",
+    "repeat",
+    "breakpoints",
+    "zoom"
+  ],
+  "budgets": {
+    "executionSeconds": 9000,
+    "setupMs": 600000,
+    "viewportMs": 2400000,
+    "requestMs": 180000,
+    "childSeconds": 9600,
+    "outerSeconds": 11400,
+    "cleanupReserveSeconds": 600,
+    "independentOuterWithFallbackSeconds": 13200,
+    "outerCalculation": "独立outer13200覆盖wrapper11400+600finally+120reap+300setup/report，wrapper含Node9600+hash与cleanup余量；3viewport各2400000ms并取global9000000ms有限窗，不续任务。"
+  },
+  "maximumModelRoots": 0,
+  "maximumBusinessWrites": 0,
+  "bindingContract": {
+    "schema": "t1342-final-ui/v1",
+    "required": [
+      "controlHead",
+      "candidate",
+      "runtime",
+      "scope",
+      "routing",
+      "handoff",
+      "sources",
+      "inputLock",
+      "contract",
+      "candidateBinding",
+      "ready",
+      "fixtureCopy",
+      "externalRoot"
+    ],
+    "sources": "恰2条完整原source和原project/output/artifact/version/prediction；同project；不以最近预测替代",
+    "handoff": "原已完成受控来源及receipt，CLI合成与真实供应商分开；C独占关闭源copy和private key"
+  },
+  "failureRule": "任一禁止请求attempt即失败，即使被abort且持久写0；不假绿/不拦合法读取；系统初始化两POST原样透传并单独记录。",
+  "actualConditions": "仅真实脚本页本地入口；三viewport两来源历史/锁定、未发送输入/同DOM/关闭/断点/键盘/返回刷新；Chrome appearance200%真实读回后恢复。无来源附件不造nested，组件与原T1304独立证据另列。",
+  "versionCopy": "保当前真实确认稿版本原文和PNG，正式copy guard照实际执行；不把artifactversion先判为流程ID命中。",
+  "systemInitializationException": {
+    "id": "settings.onboarding.group.patch",
+    "scope": "仅当前owned group/account null，params/header group逐值全等且无account header",
+    "body": {
+      "completedSteps": [
+        "first-project"
+      ],
+      "origin": null
+    },
+    "record": "实际请求body/两scope headers/status单列systemWrites/systemResponses；onboarding BEFORE/AFTER仅completedSteps与updatedAt可变，其余字段全等，业务baseline完全不变。",
+    "unverifiedBeforeExecution": "准确body为真实源码推导，仅执行原wire后才签实际。"
+  },
+  "contractSha256": "b486470d69c972cb8f4546a1ea037c51db9453314e785321dbbdbfc5dd4cb680",
+  "dataTruth": "人工隔离受控来源，不冒non-fixture用户内容；包浏览器不注入mount/nonce探针。",
+  "externalRoot": "/Volumes/T7-MacData/CodexBuilds/t1342-script-minimum-20261018/ui-runs"
+}

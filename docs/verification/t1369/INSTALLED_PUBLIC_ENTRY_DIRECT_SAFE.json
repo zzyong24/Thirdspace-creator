@@ -1,0 +1,14 @@
+{
+  "method": "GET",
+  "path": "/api/v1/auth/me",
+  "origin": "http://127.0.0.1:50617",
+  "credentialMechanism": "none; normal public unauthenticated request",
+  "transport": "http.client direct loopback; no proxy or auth/header injection",
+  "requestTimeoutSeconds": 180,
+  "status": 200,
+  "contentType": "application/json",
+  "bytes": 217,
+  "ok": null,
+  "errorCode": null,
+  "completeReadDurationMs": 555.423
+}

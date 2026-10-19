@@ -1,0 +1,51 @@
+{
+  "schema": "t1375-source-syntax-only/v1",
+  "rows": [
+    {
+      "path": "docs/build/growth-t246/manual-ui-r2/browser-preview-r2.mjs",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/production-activate-r3/browser-buy-production-r5.mjs",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/production-activate-r3/browser-download-click-r7.mjs",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/production-activate-r3/browser-production-r4.mjs",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/release/collect-external-download-resume-r3.py",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/release/collect-external-download.py",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/release/deploy-t246-r3.py",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/release/deploy-t246.py",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/release/history/deploy-t246-r1.py",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/release/test_deploy_t246.py",
+      "syntaxExit": 0
+    },
+    {
+      "path": "docs/build/growth-t246/release/test_download_resume_r3.py",
+      "syntaxExit": 0
+    }
+  ],
+  "productionExecuted": false,
+  "externalManifestTest": "NOT-RUN：test_download_resume_r3.py依赖被排除的原production pending manifest，未复制或伪造该原件。"
+}

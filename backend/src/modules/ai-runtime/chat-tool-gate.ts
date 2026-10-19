@@ -1,10 +1,12 @@
 import {
   tool,
+  jsonSchema,
   type Tool,
   type FlexibleSchema,
   type ToolApprovalStatus,
   type ToolSet,
 } from "ai";
+import { workbenchCapabilitySchema, workbenchResultSchema, type WorkbenchCapability, type WorkbenchResult } from "@creatoros/contract/agent-workbench";
 import { formatErrorDiagnostic } from "./error-diagnostics";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,7 +38,11 @@ export const BUDGET_MIN_KEEP_CHARS = 200;
 /** 截断标记(拼在截口,让模型/用户知道此处被截,不假装是全文)。 */
 export const BUDGET_TRUNCATION_SUFFIX = "…(已截断)";
 
-/** 错误→人话端口形状(与 ChatToolDeps.humanizeError 同;null = 无映射,回落原始 message)。 */
+/** 不含供应商/模型/实现细节的安全回退；真实原因继续留在内部诊断日志。 */
+export const UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE =
+  "这一步未能完成，原因尚未确认。请先确认是否已有结果，再决定是否重试。";
+
+/** 错误→人话端口形状(与 ChatToolDeps.humanizeError 同;null = 无安全映射,使用通用中性错误)。 */
 export type HumanizeErrorPort = (
   err: unknown,
 ) => { message: string; suggestSwitchModel: boolean } | null;
@@ -49,6 +55,8 @@ export interface ChatToolErrorEnvelope {
   extras?: Record<string, unknown>;
   /** per-tool 结果预算覆盖(默认 CHAT_TOOL_RESULT_BUDGET_CHARS)。 */
   budgetChars?: number;
+  /** 仅四个已审计完整作品工具保留原结果；模型展示窗口由既有context预算管理。 */
+  lossless?:boolean;
 }
 
 /**
@@ -59,6 +67,17 @@ export interface ChatToolErrorEnvelope {
 export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   Record<string, ChatToolErrorEnvelope>
 > = {
+  'system.features':{kind:'system.features',extras:{rows:[],error:null}},
+  'system.read':{kind:'system.read',extras:{text:null,complete:false},lossless:true},
+  'system.action.propose':{kind:'system.action.proposal',lossless:true},
+  'canvas.create.propose':{kind:'canvas.create.proposal',lossless:true},
+  'canvas.generate.propose':{kind:'canvas.generate.proposal',lossless:true},
+  "work.editor.read":{kind:"work.editor.context",lossless:true,extras:{schemaVersion:1,document:null,selected:[],media:[],sourceTranscripts:[],complete:false,failureCode:"unavailable"}},
+  "work.editor.propose":{kind:"work.editor.candidate",lossless:true,extras:{schemaVersion:1,candidate:null,apply:null,changes:[],candidateDigest:null,imageRequest:null,failureCode:"unavailable"}},
+  "work.creation.read":{kind:"work.creation.read",lossless:true,extras:{article:null,graphic:null,scriptText:null}},
+  "work.creation.propose":{kind:"work.creation.propose",lossless:true,extras:{article:null,graphic:null,articleDigest:null,graphicDigest:null}},
+  "canvas.read":{kind:"canvas.read",extras:{canvasId:null,revision:null,title:null,projectId:null,nodes:[],edges:[]}},
+  "canvas.propose":{kind:"canvas.propose",extras:{proposalId:null,canvasId:null,baseRevision:null,operations:[]}},
   "history.read": { kind: "history.read", extras: { text: null, hasMore: false, nextOffset: null } },
   "tool.result.read": { kind: "tool.result.read", extras: { text: null, hasMore: false, nextOffset: null } },
   "skill.read": { kind: "skill.read", extras: { text: null, hasMore: false, nextOffset: null } },
@@ -390,6 +409,12 @@ const CHAT_TOOL_APPROVAL_DECIDERS = new WeakMap<
 /** 宿主经过参数、授权及执行权校验后使用；此端口不自行授权或重试。 */
 type ChatToolNativeExecutor = (input: unknown, callOptions?: unknown) => Promise<unknown>;
 const CHAT_TOOL_NATIVE_EXECUTORS = new WeakMap<Tool, { name: string; execute: ChatToolNativeExecutor }>();
+const CHAT_TOOL_WORKBENCH_CAPABILITIES = new WeakMap<Tool, WorkbenchCapability>();
+
+export function getChatToolWorkbenchCapability(t: Tool): WorkbenchCapability | undefined {
+  const descriptor = CHAT_TOOL_WORKBENCH_CAPABILITIES.get(t);
+  return descriptor ? structuredClone(descriptor) : undefined;
+}
 
 /** 保留原始异常。返回的业务错误信封仍须由具体工具适配器解释，不能一律当成功。 */
 export function getChatToolNativeExecutor(t: Tool): ChatToolNativeExecutor | undefined {
@@ -467,8 +492,9 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     needsApproval?: ChatToolApprovalDecider<INPUT>;
   },
   humanizeError?: HumanizeErrorPort,
+  extension?: { envelope: ChatToolErrorEnvelope; preserveNativeResult: true },
 ): Tool {
-  const envelope = CHAT_TOOL_ERROR_ENVELOPES[name];
+  const envelope = extension?.envelope ?? CHAT_TOOL_ERROR_ENVELOPES[name];
   if (!envelope) {
     // 新工具没登记信封元数据 = 契约缺口(错误态 kind 无从对齐)→ 装配期即炸,别拖到运行期。
     throw new Error(`[chat-tool-gate] 工具 ${name} 未登记 CHAT_TOOL_ERROR_ENVELOPES —— 新增工具须同步登记错误信封(kind 与正常结果一致 + 结构占位)`);
@@ -478,7 +504,9 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     const startedAt = Date.now();
     try {
       const result = await config.execute(input, callOptions);
-      const bounded = enforceChatToolResultBudget(result, budget);
+      // 完整host结果和Workbench native结果先进入原executionCalls回执；模型投影仍遵循原预算。
+      const bounded = (envelope.lossless===true || extension?.preserveNativeResult) ? result : enforceChatToolResultBudget(result, budget);
+
       // 【T-239e 挂点】usage 归因扩展字段(tokens/费用)加在这行日志上,别另起打点层。
       const resultRecord =
         result && typeof result === "object"
@@ -504,14 +532,14 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
   };
   const gatedExecute = async (input: INPUT, callOptions?: unknown): Promise<unknown> => {
     try {
-      return await nativeExecute(input, callOptions);
+      const result = await nativeExecute(input, callOptions);
+      return extension?.preserveNativeResult ? enforceChatToolResultBudget(result, budget) : result;
     } catch (err) {
       const human = humanizeError?.(err) ?? null;
       return {
         ...(envelope.extras ?? {}),
         kind: envelope.kind,
-        error:
-          human?.message ?? (err instanceof Error ? err.message : String(err)),
+        error: human?.message ?? UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE,
       };
     }
   };
@@ -529,5 +557,21 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
       config.needsApproval as ChatToolApprovalDecider<unknown>,
     );
   }
+  return built;
+}
+
+/** 仅可信目录可创建动态工具；宿主原始入口保留完整回执，普通 UI 入口仍受字符预算。 */
+export function defineWorkbenchChatTool(
+  rawCapability: WorkbenchCapability,
+  execute: (input: Record<string, unknown>, callOptions?: unknown) => Promise<WorkbenchResult> | WorkbenchResult,
+): Tool {
+  const capability = workbenchCapabilitySchema.parse(rawCapability);
+  if (Object.hasOwn(CHAT_TOOL_ERROR_ENVELOPES, capability.name)) throw new Error("Workbench 工具不能覆盖正式聊天工具");
+  const built = defineChatTool(capability.name, {
+    description: capability.description,
+    inputSchema: jsonSchema<Record<string, unknown>>(capability.inputSchema),
+    execute: async (input, callOptions) => ({ kind: "workbench.result", result: workbenchResultSchema.parse(await execute(input, callOptions)) }),
+  }, undefined, { envelope: { kind: "workbench.result", extras: { result: null } }, preserveNativeResult: true });
+  CHAT_TOOL_WORKBENCH_CAPABILITIES.set(built, structuredClone(capability));
   return built;
 }

@@ -38,6 +38,8 @@ import type { AnalyticsViewModel as AnalyticsViewModelType } from "@/types/view-
 // `useRouter()`. The page renders WITHOUT reviewsWiring here, so the controls are
 // inert and the router is never actually used; the stub just satisfies the hook.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({
     refresh: vi.fn(),
     replace: vi.fn(),

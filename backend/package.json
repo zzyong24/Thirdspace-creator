@@ -36,10 +36,11 @@
     "drizzle-orm": "^0.36.0",
     "gsap": "^3.12.5",
     "hyperframes": "0.7.54",
+    "image-size": "2.0.4",
     "node-cron": "^4.5.0",
     "pg": "^8.22.0",
-    "zod": "^4.4.3",
-    "tldts": "7.4.2"
+    "tldts": "7.4.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "20.19.43",

@@ -1,0 +1,15 @@
+{
+  "phase": "same-env-sandbox-typescript-loader-probe",
+  "innerTimeout": false,
+  "state": "PASS",
+  "exitCode": 0,
+  "elapsedMs": 1322.885,
+  "rawPath": "/private/tmp/c1369-6oqhvnwq/tsx-loader-probe.log",
+  "rawBytes": 128,
+  "rawSha256": "5bc51e21dda30127b494ee9d325f423e39d5b2bc7bd342c61e99b20be4248b44",
+  "controlRootMode": "0o700",
+  "controlRootUidMatches": true,
+  "policySha256": "5cd42c928b4211f5502db1e4e2faae4bfc8f8f006526a45583a7c27bfe3aba67",
+  "sameEnvironmentSha256": "fa7b3fedf4798284dbfc644a2a25e3bea3835ec51699b5498e84a9e169a20b98",
+  "expectedMarkerPresent": true
+}

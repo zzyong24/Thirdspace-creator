@@ -6,16 +6,17 @@
  * 读三样真值再交给 ProductionWorkbench 客户端岛:
  *   - 口播稿:稿面同一读路径(resolveScriptArtifactIdFromDb → loadScriptEditorData
  *     的 sections 投影拼纯文本)—— 提词展示 + SRT 相似度校验的基准;
- *   - 项目首个产出 outputId(没有 → null,岛内状态机接线时懒建);
+ *   - 当前选定视频产出 outputId(没有 → null,岛内状态机接线时懒建);
  *   - production 状态 + 已登记分场数(outputs.production.get 是 get-or-create,
  *     首访即落一行 drafting —— 与后端注释语义一致)。
  * 任何读失败诚实降级(null / 0),页面不炸。
  */
 
-import { ProductionWorkbench } from "@/features/production/production-workbench";
+import { ProductionEditorEntry } from "@/features/production/production-editor-entry";
+import Link from "next/link";
+import { selectProductionOutput,resolveProductionScriptArtifactId,type ProductionOutputRef } from "@/features/production/production-output-data";
 import {
   loadScriptEditorData,
-  resolveScriptArtifactIdFromDb,
   type ScriptDataClient,
 } from "@/features/script/script-editor-data";
 import { isOwnershipError } from "@/features/project-overview/project-overview-workspace-data";
@@ -26,6 +27,7 @@ import { resolveProjectScriptText } from "@/server/project-script-truth";
 
 interface ProductionRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
+  readonly searchParams?:Promise<{readonly outputId?:string}>;
 }
 
 // URL 段可能是标题 slug(与 [projectId]/layout.tsx 同款解析);解析不出保持原值。
@@ -124,13 +126,13 @@ function sectionsToScriptText(
   return text.length > 0 ? text : null;
 }
 
-export default async function ProductionRoute({ params }: ProductionRouteProps) {
+export default async function ProductionRoute({ params,searchParams }: ProductionRouteProps) {
   const { projectId: param } = await params;
   const session = await resolveSession();
   if (!session) {
     // SSR 兜底(未登录/测试):渲染诚实空态的工作台,不 301、不编数据。
     return (
-      <ProductionWorkbench
+      <ProductionEditorEntry
         projectId={param}
         projectTitle=""
         scriptText={null}
@@ -163,6 +165,7 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
           className="flex flex-col gap-card-gap"
         >
           <CrossAccountEmptyState
+            groupId={session.ctx.groupId}
             entityLabel="项目"
             backHref="/projects"
             backLabel="回项目列表"
@@ -172,11 +175,21 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
     }
   }
 
-  // 口播稿(稿面同一读路径;读失败 → null 诚实空态)。
-  const scriptArtifactId = await resolveScriptArtifactIdFromDb(
-    projectId,
-    scoped as unknown as ScriptDataClient,
-  );
+  const requestedId=(await searchParams)?.outputId;
+  let outputs:ReadonlyArray<ProductionOutputRef>;
+  try {outputs=await scoped.listOutputs({params:{projectId},query:undefined,body:undefined}) as ReadonlyArray<ProductionOutputRef>;} catch {
+    return <main data-page="production-read-error"><h1>视频制作</h1><p>作品列表暂未读取完成，请重试。</p><Link href={`/projects/${encodeURIComponent(projectId)}/production`}>重新读取</Link></main>;
+  }
+  const selection=selectProductionOutput(outputs,requestedId);
+  if(selection.invalid)return <CrossAccountEmptyState entityLabel="视频作品" backHref={`/projects/${encodeURIComponent(projectId)}`} backLabel="回项目" />;
+  if(!selection.output && outputs.length>0)return <main data-page="production-output-selection" className="space-y-4"><h1 className="text-xl font-semibold">选择要制作的视频</h1>
+    <p className="text-sm text-muted-foreground">{selection.videos.length?"每条视频独立保存素材、剪辑方案和成片。":"该项目还没有视频作品，请先创建视频。"}</p>
+    <ul className="space-y-2">{selection.videos.map(output=><li key={output.id}><Link className="text-primary hover:underline" href={`/projects/${encodeURIComponent(projectId)}/production?outputId=${encodeURIComponent(output.id)}`}>{output.title || "未命名视频"}</Link></li>)}</ul>
+    <Link href={`/projects/${encodeURIComponent(projectId)}`} className="text-primary hover:underline">回项目</Link></main>;
+  const selectedOutput=selection.output;
+  // 只读此作品的正式脚本；唯一视频兼容原项目母稿，多视频不回退别的作品。
+  let scriptArtifactId:string|null=null;
+  try {scriptArtifactId = await resolveProductionScriptArtifactId(scoped as unknown as ScriptDataClient,projectId,selectedOutput?.id??"",selection.videos.length<=1);} catch { /* 读取失败仍可继续备料；不回退另一条作品脚本。 */ }
   const scriptData = await loadScriptEditorData(
     scriptArtifactId,
     scoped as unknown as ScriptDataClient,
@@ -184,20 +197,14 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
   const scriptText = resolveProjectScriptText({
     persistedText: sectionsToScriptText(scriptData?.sections ?? null),
     persistedVersionCount: scriptData?.versions.length ?? 0,
-    briefDetail: ownedProject?.briefDetail,
+    briefDetail: selection.videos.length<=1?ownedProject?.briefDetail:undefined,
   });
 
   // 项目首个产出 + production 状态 + 分场数(全 best-effort)。
-  let outputId: string | null = null;
+  const outputId=selectedOutput?.id??null;
   let initialStatus: string | null = null;
   let initialSegmentCount = 0;
   try {
-    const outputs = (await scoped.listOutputs({
-      params: { projectId },
-      query: undefined,
-      body: undefined,
-    })) as ReadonlyArray<{ id: string }>;
-    outputId = outputs[0]?.id ?? null;
     if (outputId) {
       const production = (await scoped.getOutputProduction({
         params: { outputId },
@@ -217,7 +224,7 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
   }
 
   return (
-    <ProductionWorkbench
+    <ProductionEditorEntry
       projectId={projectId}
       projectTitle={project?.title ?? ""}
       scriptText={scriptText}

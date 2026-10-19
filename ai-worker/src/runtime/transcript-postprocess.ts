@@ -1,4 +1,5 @@
 import type { LanguageModel } from "ai";
+import { z } from "zod";
 import type { ModelSpec } from "./provider-factory";
 import { isAsrExecutionControlError } from "./asr-request";
 import { GenerationFailure } from "../execution/generation-error";
@@ -84,6 +85,8 @@ export const TRANSCRIPT_POSTPROCESS_SCHEMA = {
 interface RawCorrected {
   correctedText?: unknown;
 }
+
+const correctedOutputSchema = z.object({ correctedText: z.string() }).strict();
 
 // ── 保真护栏(防篡改:校正≠改写)────────────────────────────────────────────────
 
@@ -211,7 +214,15 @@ export async function buildTranscriptPostprocessNode(input: TranscriptPostproces
   return {
     template: TRANSCRIPT_POSTPROCESS_TEMPLATE,
     facets: {transcript: input.transcript, context: buildContextFacet(input)},
-    outputSchema: jsonSchema<RawCorrected>(TRANSCRIPT_POSTPROCESS_SCHEMA as Parameters<typeof jsonSchema>[0]),
+    // 原 wire schema 和模板摘要不变；text兼容与后端无网络回放也需要实际validator。
+    outputSchema: jsonSchema<RawCorrected>(TRANSCRIPT_POSTPROCESS_SCHEMA as Parameters<typeof jsonSchema>[0], {
+      validate(value) {
+        const result = correctedOutputSchema.safeParse(value);
+        return result.success
+          ? { success: true, value: result.data }
+          : { success: false, error: result.error };
+      },
+    }),
     maxOutputTokens: input.maxOutputTokens,
   };
 }

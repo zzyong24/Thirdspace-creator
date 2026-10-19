@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "静态首轮评审发现两处会使已确认验收产生不同用户可见结果的规格缺口：失败/冲突恢复后的状态后置条件未定义，以及两类工作台的最低导出物与读回断言未明确。指定 worktree 不存在 PRODUCT_SPEC.md，因此本轮无法核对宪法一致性；该输入缺失单独记录在 review-note.md，不伪装为已完成审查。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "REQ-SPEC-L29",
+        "quote": "无法保真双向转换时保留原稿与原生文档，明确显示限制；不靠静默丢段落、图片或未知图层完成迁移。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-SPEC-L59-RECOVERY",
+        "quote": "完成真实中文内容与图片导入、编辑、主题或页顺序修改、保存、刷新恢复、局部失败继续、版本冲突恢复、真实导出文件读回。"
+      },
+      "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 57-59 行的保存读回、局部失败与版本冲突验收",
+      "failure_mode": "规格没有规定局部失败或版本冲突发生后，正式版本、原生文档、成功页和失败页各自应保持什么状态。一个实现可以保存成功子集并覆盖正式版本，另一个实现可以保持旧正式版本并等待整组重试；两者都可声称“继续/恢复”，但前者可能把新旧页或正文与图片版本静默混合，无法据此判定是否满足保留原稿和不静默丢失的已确认要求。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L29,L57-L59",
+      "risk_class": "data-loss",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "补一条最小后置条件：失败或冲突时哪一版仍是正式真值、哪些成功结果可保留、失败项如何显式标记，以及用户完成何种明确采用动作后才更新正式版本；绑定保存后刷新读回与冲突恢复旅程。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "REQ-SPEC-L41-EXPORT",
+        "quote": "能复制的排版 HTML、下载文件或原发布物料必须携带真实图片引用与实际样式，不能只展示漂亮预览。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-SPEC-L59-EXPORT",
+        "quote": "真实导出文件读回；小红书检验三页连续内容及单页重做，公众号检验段落结构、图片与实际排版输出。"
+      },
+      "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 41、59 行的交付物与导出验收",
+      "failure_mode": "“排版 HTML、下载文件或原发布物料”允许多种交付形式，但验收又要求“真实导出文件读回”，且没有分别规定小红书与公众号至少必须产出哪一种可读回工件。公众号实现若只提供可复制 HTML、或小红书实现只提供单页图片/预览，都可能满足一处文字却无法执行另一处验收；不同实现会形成不兼容的完成标准。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L41,L59",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "分别列明两类工作台的最低交付物类型及读回断言：小红书需能按确认页序读回整组实际图片工件；公众号需明确可复制 HTML、下载文件或发布物料中哪一项是必验工件，并验证正文结构、真实图片引用与实际样式。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

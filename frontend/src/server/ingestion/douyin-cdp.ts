@@ -1,4 +1,9 @@
+import type {DouyinExportPhase, DouyinExportProgress} from "@creatoros/backend/application/collection/self";
+import { applyBrowserTimeoutPolicy } from "./browser-timeouts";
+import { completionWaitMs, executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import {commentExternalId,type CommentRecord} from "@creatoros/backend/application/collection/comment-ingestion";
+import type {CommentReadDiagnostics,CommentReadReason} from '@creatoros/backend/application/collection/comment-read-diagnostics';
+import {commentHttpStatus,createCommentPageEvidence,finishCommentPageEvidence,observeCommentResponse} from './douyin-cdp-page-evidence';
 export {commentExternalId,ingestComments,type CommentRecord,type CommentIngestPorts,type IngestCommentsResult} from "@creatoros/backend/application/collection/comment-ingestion";
 import { fetchDouyinVideoUrlViaDetail as fetchWorkerDouyinVideoUrlViaDetail, AWEME_DETAIL_API, mapDetailErr } from "@creatoros/ai-worker/douyin-transcribe-detail";
 import {
@@ -267,18 +272,21 @@ export function parseCreatorProfileIdentity(
  * create_time/user.nickname/aweme_id 多键兜底)。评论列表键宽松匹配 comments /
  * comment_list / data.comments。无 commentId 或无正文的脏数据丢弃。
  */
-export function parseCommentList(
-  json: unknown,
-  defaultAwemeId = "",
-): CommentRecord[] {
+function commentListValue(json:unknown):unknown[]|null {
   const root = (json ?? {}) as Record<string, unknown>;
   const data = (root.data ?? {}) as Record<string, unknown>;
-  const list =
+  return (
     (Array.isArray(root.comments) && root.comments) ||
     (Array.isArray(root.comment_list) && root.comment_list) ||
     (Array.isArray(data.comments) && data.comments) ||
     (Array.isArray(data.comment_list) && data.comment_list) ||
-    [];
+    null);
+}
+export function parseCommentList(
+  json: unknown,
+  defaultAwemeId = "",
+): CommentRecord[] {
+  const list=commentListValue(json)??[];
   return (list as unknown[])
     .map((raw): CommentRecord | null => {
       const c = (raw ?? {}) as Record<string, unknown>;
@@ -434,6 +442,8 @@ export interface FetchDouyinOptions {
 
 export interface LoginDouyinOptions {
   authDir: string;
+  /** 本次扫码任务的取消权；停止必须等待 owned context 关闭。 */
+  signal?: AbortSignal;
   /** 扫码最多等多少秒(默认 240)。 */
   timeoutSec?: number;
 }
@@ -611,6 +621,12 @@ const readSessionKey = Symbol.for('creatoros.douyinReadSessionPool');
 const readSessionRegistry = globalThis as typeof globalThis & {
   [readSessionKey]?: Promise<ReturnType<typeof import('@creatoros/ai-worker/browser/shared-read-browser-session').createSharedReadBrowserSessionPool>>;
 };
+/** T1027：同采集profile的排他诊断会话，仅暴露本次Page与确认停止清理。 */
+export async function openCommentDiagnosisSession(authDir:string,signal:AbortSignal){
+  const context=await openContext(authDir,false,signal);
+  return {newPage:()=>context.newPage(),close:()=>context.close()};
+}
+
 async function openContext(authDir: string, headless: false, signal?: AbortSignal): Promise<ExclusiveBrowserSession>;
 async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession>;
 async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession> {
@@ -679,22 +695,26 @@ export async function loginDouyin(
   opts: LoginDouyinOptions,
   deps: LoginDouyinDeps = {},
 ): Promise<boolean> {
-  const timeoutSec = opts.timeoutSec ?? 240;
+  opts.signal?.throwIfAborted();
+  const timeoutSec = executionTimeoutMs((opts.timeoutSec ?? 240) * 1000) / 1000;
   const openCtx = deps.openContext ?? openContext;
-  const ctx = await openCtx(opts.authDir, false);
+  const ctx = await openCtx(opts.authDir, false, opts.signal);
   try {
+    opts.signal?.throwIfAborted();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
     await page
       .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
       .catch(() => {});
     let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
+      opts.signal?.throwIfAborted();
       try {
         if (await isLoggedIn(ctx)) {
           // 在创作者中心页面内请求同源账号资料，既验证服务端确实接受会话，也不会被
           // BrowserContext.request 缺页面反爬上下文误判。扫码成功后即可自动关窗。
           const acceptance = await probeCreatorSessionAcceptance(page);
-          if (acceptance === "active") return true;
+          if (acceptance === "active") {opts.signal?.throwIfAborted();return true;}
           if (acceptance === "expired" && !rejectedSessionCleared) {
             // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
             // 其它站点或浏览数据；否则旧 Cookie 会让登录页继续把失效会话当成已登录。
@@ -710,15 +730,18 @@ export async function loginDouyin(
           }
         }
         await page.waitForTimeout(1000);
+        opts.signal?.throwIfAborted();
       } catch (error) {
         // 用户主动关掉扫码窗口是一次正常取消，不应冒泡成 transport 400。
+        opts.signal?.throwIfAborted();
         if (isPlaywrightTargetClosed(error)) return false;
         throw error;
       }
     }
     return false;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+    if(opts.signal)await ctx.close(); // 新 run 不能吞停止失败；host guard close 等待真实 onStopped。
+    else await ctx.close().catch(() => {}); // 保留旧同步入口的关闭兼容
   }
 }
 
@@ -876,6 +899,7 @@ export async function fetchDouyinMetrics(
     );
     if (!loggedIn) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
 
     const workJsons: unknown[] = [];
     const seenIds = new Set<string>();
@@ -924,7 +948,7 @@ export async function fetchDouyinMetrics(
 
     // [T-202] 导航加退避重试(瞬时超时自愈,不首撞就抛)。
     await gotoWithRetry(page, CREATOR_CONTENT, {
-      timeoutMs: 60_000,
+      timeoutMs: executionTimeoutMs(60_000),
       label: "creator-content(作品列表)",
       signal:opts.signal,
     });
@@ -1030,25 +1054,32 @@ export async function fetchDouyinMetrics(
  */
 export async function fetchDouyinIdentity(opts: {
   authDir: string;
+  signal?: AbortSignal;
 }, deps: FetchDouyinMetricsDeps = {}): Promise<DouyinSelfIdentity | null> {
+  opts.signal?.throwIfAborted();
   const openCtx = deps.openContext ?? realMetricsOpenContext;
-  const ctx = await openCtx(opts.authDir, true);
+  const ctx = await openCtx(opts.authDir, true, opts.signal);
+  const lifetime=bindAbortContext(opts.signal,()=>ctx.close());
   let profileIdentity: DouyinSelfIdentity | null = null;
   try {
+    opts.signal?.throwIfAborted();
     const cookies = await ctx.cookies("https://creator.douyin.com");
     const loggedIn = cookies.some(
       (c) => c.name === "sessionid" || c.name === "sessionid_ss",
     );
     if (!loggedIn) throw new DouyinNotLoggedInError();
+    opts.signal?.throwIfAborted();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
     const pending: Array<Promise<void>> = [];
     page.on("response", (resp) => {
       // 只解析 user/account/profile 结构，不读取作品 author；URL 不写死，兼容创作者中心
       // 灰度接口改名。parseCreatorProfileIdentity 自身要求稳定平台标识，负责最后一道防误认。
+      if(opts.signal?.aborted)return;
       const task = resp
         .json()
         .then((json) => {
-          if (profileIdentity) return;
+          if (profileIdentity||opts.signal?.aborted) return;
           const parsed = parseCreatorProfileIdentity(json);
           if (!parsed) return;
           profileIdentity = parsed;
@@ -1063,14 +1094,22 @@ export async function fetchDouyinIdentity(opts: {
       pending.push(task);
     });
     await gotoWithRetry(page, CREATOR_LOGIN_HOME, {
-      timeoutMs: 60_000,
+      timeoutMs: executionTimeoutMs(60_000),
       label: "creator-home(账号资料)",
+      signal:opts.signal,
     });
+    opts.signal?.throwIfAborted();
     await page.waitForTimeout(3000);
+    opts.signal?.throwIfAborted();
     await Promise.allSettled([...pending]);
+    opts.signal?.throwIfAborted();
+  } catch(error) {
+    opts.signal?.throwIfAborted();
+    throw error;
   } finally {
-    await ctx.close().catch(() => {});
+    await lifetime.close();
   }
+  opts.signal?.throwIfAborted();
   if (profileIdentity) return profileIdentity;
 
   console.warn(
@@ -1080,7 +1119,9 @@ export async function fetchDouyinIdentity(opts: {
     authDir: opts.authDir,
     capturedAt: new Date().toISOString(),
     maxPages: 1,
+    signal:opts.signal,
   }, deps);
+  opts.signal?.throwIfAborted();
   return identity;
 }
 
@@ -1148,6 +1189,7 @@ export async function fetchDouyinUserPosts(
     );
     if (!loggedIn) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
 
     const workJsons: unknown[] = [];
     let decodedListResponseCount = 0;
@@ -1240,7 +1282,7 @@ export async function fetchDouyinUserPosts(
 
     const profileUrl = `https://www.douyin.com/user/${encodeURIComponent(opts.secUid)}`;
     await gotoWithRetry(page, profileUrl, {
-      timeoutMs: 60_000,
+      timeoutMs: executionTimeoutMs(60_000),
       label: `对标主页(${opts.secUid})`,
     });
     await page.waitForTimeout(3000); // 等首屏 aweme/post XHR
@@ -1293,7 +1335,7 @@ export async function fetchDouyinUserPosts(
         page,
         `${profileUrl}?from_tab_name=main&creatoros_retry=1`,
         {
-          timeoutMs: 60_000,
+          timeoutMs: executionTimeoutMs(60_000),
           label: `对标主页重试(${opts.secUid})`,
         },
       );
@@ -1400,8 +1442,9 @@ export async function previewDouyinUserProfile(
       throw new DouyinNotLoggedInError();
     }
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
     await gotoWithRetry(page, canonicalUrl, {
-      timeoutMs: 60_000,
+      timeoutMs: executionTimeoutMs(60_000),
       label: `对标主页预览(${opts.secUid})`,
     });
     await page.waitForTimeout(2_000);
@@ -1561,6 +1604,7 @@ export async function fetchDouyinSearchVideos(
     );
     if (!loggedIn) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
 
     const kw = encodeURIComponent(opts.keyword);
     // 整次搜索 acquire 一次限流网关(导航 + 页内 fetch 算一次请求节奏,防高频撞风控)。
@@ -1569,7 +1613,7 @@ export async function fetchDouyinSearchVideos(
       await gotoWithRetry(
         page as unknown as GotoCapablePage,
         `https://www.douyin.com/search/${kw}?publish_time=1&sort_type=1&type=video`,
-        { timeoutMs: 60_000, label: `黑马搜索(${opts.keyword})`, signal:opts.signal },
+        { timeoutMs: executionTimeoutMs(60_000), label: `黑马搜索(${opts.keyword})`, signal:opts.signal },
       );
       await page.waitForTimeout(5000); // 等页面就绪(darkhorse.py 等 6s,这里 5s + gateway 节奏)
 
@@ -1689,7 +1733,7 @@ export async function resolveDouyinShareTarget(
     const response = await request(current, {
       method: "GET",
       redirect: "manual",
-      signal: deps.signal?AbortSignal.any([deps.signal,AbortSignal.timeout(10_000)]):AbortSignal.timeout(10_000),
+      signal: deps.signal?AbortSignal.any([deps.signal,AbortSignal.timeout(executionTimeoutMs(10_000))]):AbortSignal.timeout(executionTimeoutMs(10_000)),
       headers: {
         "user-agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
@@ -1896,6 +1940,7 @@ export async function fetchDouyinSharedItem(
     );
     if (!loggedIn) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
     const id = encodeURIComponent(opts.awemeId);
     return await withDouyinChannel(
       gateway,
@@ -1904,7 +1949,7 @@ export async function fetchDouyinSharedItem(
         await gotoWithRetry(
           page as unknown as GotoCapablePage,
           opts.canonicalUrl,
-          { timeoutMs: 60_000, label: `单条作品导入(${opts.awemeId})`,signal:opts.signal },
+          { timeoutMs: executionTimeoutMs(60_000), label: `单条作品导入(${opts.awemeId})`,signal:opts.signal },
         );
         await page.waitForTimeout(2_000);
         const bodyHead = await page
@@ -2027,10 +2072,14 @@ export interface FetchCommentsTarget {
 // 结构上满足这两个接口(用作默认注入时的向上转型目标)。
 type CommentResponseHandler = (resp: {
   url(): string;
+  status?(): number;
+  request?(): {method?():string;resourceType?():string};
   json(): Promise<unknown>;
 }) => void;
 
 interface CommentCapablePage {
+  url?(): string;
+  isClosed?(): boolean;
   on(event: "response", cb: CommentResponseHandler): void;
   // 多作品复用同一 page 时,每作品抓完必须摘掉本作品的 response 监听(否则监听在 page 上累积,
   // 后续作品的 XHR 会被历史 handler 重复解析,且泄漏监听器)。真实 Playwright Page 有 off。
@@ -2064,10 +2113,8 @@ export interface FetchDouyinCommentsDeps {
   //   publishingService.resolvePublication + candidateService.listCommentsForPublication 反查装配)。
   //   评论列表倒序(新→旧):翻页时某页评论**全部** ∈ 该集(且非空)= 已翻到之前抓过的老评论 →
   //   提前 break,不再滚到 staleRounds≥3。首次无 watermark(空集 / 省略)→ 退化为原全量(安全)。
-  //   [依赖 item_id T-065,诚实标注]:若创作者中心评论管理页对该账号返回的是**全局评论列表**
-  //   (item_id 未服务端过滤,见 scrapeCommentsForWork 注释),某页会混入**其它作品**的评论 →
-  //   本作品 watermark 无法覆盖它们 → 该页非"全已知" → early-break 不触发,安全退化为全量滚动。
-  //   故真增量收益(每作品少翻很多页)要等 item_id 真机验证/收窄后才**完全**兑现;当前实现无回归。
+  // 请求作品 ID 与记录作品 ID 精确核对；混合归属的页只保留确认属于当前作品的记录，
+  // 不作为 watermark 或完整读取的证据。
   commentWatermark?: (awemeId: string) => Promise<Set<string>>;
   /** 多作品抓取每完成一个作品立即回调；调用方可同步落库并上报真实 M/N 进度。 */
   onWorkComplete?: (
@@ -2099,43 +2146,68 @@ async function scrapeCommentsForWork(
   gateway: DouyinChannelGate = instantNoopGateway,
   // [T-177 增量化] 库里该作品已知评论的 externalId 集(倒序 early-break 锚)。空集 → 退化全量。
   watermark: Set<string> = new Set<string>(),
-  onCompletion?: (complete:boolean)=>void,
+  onCompletion?: (complete:boolean,diagnostics:CommentReadDiagnostics)=>void,
 ): Promise<CommentRecord[]> {
-  const commentJsons: unknown[] = [];
+  const byId = new Map<string, CommentRecord>();
   const seenIds = new Set<string>();
   // [T-177] 某页评论全部已在 watermark(且非空)→ 倒序下已翻到老评论,提前停翻页。
   let reachedWatermark = false;
-  // [T-065 / T-176 已知未决] item_id 过滤是否真在服务端生效**尚未在真机核实**:onResponse 目前
-  //   无条件收下每一个 `/comment/list/` XHR 并用页面级 awemeId 兜底归属(parseCommentList 的
-  //   `|| defaultAwemeId`)。若创作者中心评论管理页对某些账号返回的是**全局评论列表**(item_id
-  //   仅作 UI 过滤、XHR 未带 item_id / 未服务端过滤),则 N 个作品会各自拦到同一份列表并全部误挂到
-  //   当前 awemeId → N 作品重刷 N 次。安全的收敛做法是「只保留 comment 自带 aweme_id/item_id ===
-  //   目标 awemeId 的记录」,但当且仅当该 XHR 确实逐条带 aweme_id 时才不会误伤成采 0——这需要真机
-  //   抓一次 comment/list 响应体确认字段形状(本任务硬约束:不跑真实采集/不扫码),故**暂不硬改**
-  //   运行时行为以免把「重复」变成「采 0」。待 T-177 增量化或后续真机验证时按实测 XHR 形状收窄。
+  const pageEvidence=createCommentPageEvidence();
+  let active=true,matchedResponses=0,validResponses=0,invalidResponses=0,parsedComments=0,pendingResponses=0,ignoredResponses=0;
+  // 同一请求页的成功重试可以恢复；历史计数只用于诊断，不永久否决后续成功。
+  type CommentPageState={sequence:number;invalid:boolean;unparseable:boolean;hasMore:boolean|null;watermark:boolean;identityUnverified?:boolean};
+  const pageStates=new Map<string,CommentPageState>();
+  const setPageState=(key:string,state:CommentPageState)=>{
+    if((pageStates.get(key)?.sequence??-1)>state.sequence)return;
+    pageStates.set(key,state);
+    reachedWatermark=[...pageStates.values()].some(value=>!value.invalid&&value.watermark);
+  };
   const onResponse: CommentResponseHandler = (resp) => {
+    observeCommentResponse(pageEvidence,resp);
     const url = resp.url();
     if (!COMMENT_LIST_HINTS.some((h) => url.includes(h))) return;
+    const sequence=++matchedResponses;
+    let params:URLSearchParams;
+    try{params=new URL(url).searchParams;}catch{ignoredResponses++;return;}
+    // SEMANTIC_BOUNDARY_ALLOW: 仅精确核对请求/记录作品 ID 与分页键，不推断评论语义或页面归属。
+    const requestIds=[...params.getAll('item_id'),...params.getAll('aweme_id')].filter(Boolean);
+    if(requestIds.some(id=>id!==awemeId)){ignoredResponses++;return;}
+    const requestScoped=requestIds.length>0;
+    const pageKey=JSON.stringify(['cursor','offset','page','page_index'].map(key=>params.get(key)??'0'));
+    pendingResponses++;
     void (async () => {
       try {
         const j = await resp.json();
-        commentJsons.push(j);
-        const batch = parseCommentList(j, awemeId);
-        // [T-177 增量化] 倒序 early-break:本页评论全部已在 watermark(库里已抓过)且非空 →
-        //   已翻到老评论,标记提前停(externalId 口径同落库锚 commentExternalId,cid 缺失 hash 兜底一致)。
-        if (
-          watermark.size > 0 &&
-          batch.length > 0 &&
-          batch.every((c) => watermark.has(commentExternalId(c)))
-        ) {
-          reachedWatermark = true;
+        if(!active)return;
+        const root=(j??{}) as Record<string,unknown>,data=(root.data??{}) as Record<string,unknown>;
+        const list=commentListValue(j),status=root.status_code??data.status_code;
+        if(list===null||(status!==undefined&&status!==0)){
+          invalidResponses++;
+          if(requestScoped)setPageState(pageKey,{sequence,invalid:true,unparseable:false,hasMore:null,watermark:false});
+          return;
         }
+        const rowIds=list.map(raw=>{const row=(raw??{}) as Record<string,unknown>;return [str(row.aweme_id),str(row.item_id)].filter(Boolean);});
+        const rowMatches=(ids:string[])=>ids.length?ids.every(id=>id===awemeId):requestScoped;
+        const batch=parseCommentList({comments:list.filter((_raw,index)=>rowMatches(rowIds[index]!))},requestScoped?awemeId:'');
+        parsedComments+=batch.length;
         for (const c of batch) {
-          seenIds.add(c.commentId);
+          seenIds.add(c.commentId);byId.set(c.commentId,c);
         }
+        const identityVerified=(requestScoped||list.length>0)&&rowIds.every(rowMatches);
+        if(!identityVerified){
+          ignoredResponses++;
+          // 明确属于当前作品的请求页必须保留未解决状态；完全无关的迟到请求在入口已忽略。
+          if(requestScoped)setPageState(pageKey,{sequence,invalid:false,unparseable:false,hasMore:null,watermark:false,identityUnverified:true});
+          return;
+        }
+        validResponses++;
+        const hasMoreValue=root.has_more??data.has_more;
+        const hasMore=hasMoreValue===0||hasMoreValue===false?false:hasMoreValue===1||hasMoreValue===true?true:null;
+        setPageState(pageKey,{sequence,invalid:false,unparseable:list.length>batch.length,hasMore,
+          watermark:watermark.size>0&&batch.length>0&&batch.every(c=>watermark.has(commentExternalId(c)))});
       } catch {
-        /* 非 JSON 响应,忽略 */
-      }
+        if(active){invalidResponses++;if(requestScoped)setPageState(pageKey,{sequence,invalid:true,unparseable:false,hasMore:null,watermark:false});}
+      }finally{pendingResponses--;}
     })();
   };
   page.on("response", onResponse);
@@ -2143,13 +2215,17 @@ async function scrapeCommentsForWork(
     // item_id 过滤 → 评论管理页只显示该作品的评论(对齐 crawler.py urls_to_try)。
     // [T-202] 导航加退避重试(瞬时超时自愈)。
     await gotoWithRetry(
-      page,
+      {goto:async(url,opts)=>{
+        const response=await page.goto(url,opts);
+        pageEvidence.navigationStatus=commentHttpStatus(response);
+        return response;
+      },waitForTimeout:ms=>page.waitForTimeout(ms)},
       `${CREATOR_COMMENT_MANAGE}?item_id=${encodeURIComponent(awemeId)}`,
-      { timeoutMs: 60_000, label: `comment-manage(${awemeId})` },
+      { timeoutMs: executionTimeoutMs(60_000), label: `comment-manage(${awemeId})` },
     );
     await page.waitForTimeout(3000); // 等首屏 comment/list XHR 回来
 
-    // 礼貌滚动翻页:滚到底触发下一页加载;连续 3 轮无新评论即停(评论无 has_more 可靠信号)。
+    // 连续 3 轮无新评论只限制等待；显式 has_more=1 不能被静默覆盖为已完成。
     let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
       // [T-177 增量化] 首屏(goto 后)或上一轮已翻到全是库里已抓过的老评论 → 提前停,不再全量重翻。
@@ -2157,6 +2233,7 @@ async function scrapeCommentsForWork(
       const before = seenIds.size;
       // [gate-F7 插装点③] 每翻一页 acquire 一次 creator-center(评论翻页真正限速)。
       await withDouyinChannel(gateway, "creator-center", async () => {
+        pageEvidence.scroll.attempts++;
         await page
           .evaluate(() => {
             // 窗口滚 + 内层可滚容器全滚到底(T-065 拉全:评论管理页列表是内层滚动容器,
@@ -2169,8 +2246,8 @@ async function scrapeCommentsForWork(
               }
             }
           })
-          .catch(() => {});
-        await page.mouse.wheel(0, 2000).catch(() => {});
+          .catch(() => {pageEvidence.scroll.evaluateErrors++;});
+        await page.mouse.wheel(0, 2000).catch(() => {pageEvidence.scroll.wheelErrors++;});
         await page.waitForTimeout(2000);
       });
       if (reachedWatermark) break; // [T-177] 本轮滚动加载的页全是老评论 → 停
@@ -2178,18 +2255,21 @@ async function scrapeCommentsForWork(
       if (staleRounds >= 3) break;
     }
 
-    // 去重(同 commentId 保留最后一次;跨页重复评论合一)。
-    const byId = new Map<string, CommentRecord>();
-    for (const j of commentJsons) {
-      for (const c of parseCommentList(j, awemeId)) {
-        byId.set(c.commentId, c);
-      }
-    }
-    onCompletion?.(commentJsons.length>0 && (reachedWatermark || staleRounds>=3));
+    const states=[...pageStates.values()];
+    const latest=states.filter(state=>!state.invalid&&!state.identityUnverified).sort((a,b)=>b.sequence-a.sequence)[0];
+    const reason:CommentReadReason=pendingResponses>0?'response_pending':validResponses===0?
+      (matchedResponses===0?'no_matching_response':ignoredResponses>0?'response_identity_unverified':'no_valid_response'):
+      states.some(state=>state.invalid)?'invalid_response':states.some(state=>state.identityUnverified)?'response_identity_unverified':states.some(state=>state.unparseable)?'unparseable_records':
+      reachedWatermark?'watermark_reached':latest?.hasMore===false?'pagination_exhausted':latest?.hasMore===true?'more_pages_pending':staleRounds>=3?'stable_end':'page_limit';
+    // 在原监听窗口终点固定结果，诊断读取不能延长采集或改变pending/完成判断。
+    active=false;page.off("response",onResponse);
+    const diagnostics:CommentReadDiagnostics={matchedResponses,validResponses,invalidResponses,parsedComments,pendingResponses,ignoredResponses,reason,pageEvidence};
+    await finishCommentPageEvidence(page,pageEvidence,reason);
+    onCompletion?.(reason==='watermark_reached'||reason==='stable_end'||reason==='pagination_exhausted',diagnostics);
     return [...byId.values()];
   } finally {
     // 多作品复用 page 时,摘掉本作品监听,避免监听在 page 上累积/后续作品 XHR 被重复解析。
-    page.off("response", onResponse);
+    active=false;page.off("response", onResponse);
   }
 }
 
@@ -2215,6 +2295,7 @@ export async function fetchDouyinComments(
   try {
     if (!(await isCommentContextLoggedIn(ctx))) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
     // [T-177 增量化] 抓前反查该作品 watermark(库里已知评论 externalId 集);无端口 → 空集退化全量。
     const watermark = deps.commentWatermark
       ? await deps.commentWatermark(target.awemeId)
@@ -2237,6 +2318,7 @@ export interface FetchCommentsForWorksResult {
   complete?: boolean;
   awemeId: string;
   records: CommentRecord[];
+  diagnostics?: CommentReadDiagnostics;
 }
 
 /** [T-232] 多作品评论抓取的批结果:works = 已成功抓到的作品(逐作品评论);truncated = 是否因
@@ -2284,6 +2366,7 @@ export async function fetchDouyinCommentsForWorks(
     // isLoggedIn 检查一次(未登录一次性抛,不是每作品抛)。
     if (!(await isCommentContextLoggedIn(ctx))) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
     const out: FetchCommentsForWorksResult[] = [];
     for (const awemeId of awemeIds) {
       // [T-177 增量化] 每作品抓前反查其 watermark(库里已知评论 externalId 集);无端口 → 空集退化全量。
@@ -2293,12 +2376,12 @@ export async function fetchDouyinCommentsForWorks(
       try {
         // [gate-F7 插装点④] **每作品 acquire 一次** creator-center(把 72 作品逐个导航真正限速);
         // 作品内翻页再由 scrapeCommentsForWork 内部 acquire(插装点③),两层正交、均串行到 creator-center。
-        let complete=false;
+        let complete=false,diagnostics:CommentReadDiagnostics|undefined;
         const records = await withDouyinChannel(gateway, "creator-center", () =>
           // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
-          scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark,value=>{complete=value;}),
+          scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark,(value,detail)=>{complete=value;diagnostics=detail;}),
         );
-        const work = { awemeId, records, complete };
+        const work = { awemeId, records, complete,diagnostics };
         out.push(work);
         await deps.onWorkComplete?.(work, {
           processed: out.length,
@@ -2420,6 +2503,7 @@ const TOAST_NO_DATA_CODES = [
 ];
 
 export interface FetchWorkListExportOptions {
+  onProgress?: DouyinExportProgress;
   signal?: AbortSignal;
   authDir: string;
 }
@@ -2618,7 +2702,7 @@ async function markAndClick(
   try {
     await page
       .locator('[data-cos-export-target="1"]')
-      .click({ timeout: opts.timeout ?? 5_000 });
+      .click({ timeout: executionTimeoutMs(opts.timeout, 5_000) });
     return true;
   } catch (err) {
     if (opts.silent) return false;
@@ -2632,8 +2716,8 @@ async function waitForVisibleByCharCodes(
   codes: number[],
   opts: { tries?: number; intervalMs?: number } = {},
 ): Promise<boolean> {
-  const tries = opts.tries ?? 10;
   const intervalMs = opts.intervalMs ?? 1_000;
+  const tries = Math.max(opts.tries ?? 10, Math.ceil(executionTimeoutMs((opts.tries ?? 10) * intervalMs) / Math.max(1, intervalMs)));
   for (let i = 0; i < tries; i++) {
     const ok = await page
       .evaluate(hasVisibleByCharCodesInPage, codes)
@@ -2678,11 +2762,45 @@ async function isLoggedInExport(ctx: ExportCapableContext): Promise<boolean> {
  * 端口注入(openContext/readFile),故装配 + 失败分类可确定性单测,不碰真抖音/真 Chromium。
  * 真选择器已经真创作者中心验证(DATA-2 扫码验导航;T-036 headed 探针验日期面板:39 行 → 74 行)。
  */
+/** 只定位当前遮挡层里显式关闭控件；不解释弹窗正文或点击授权/确认。
+ * 自包含页内函数：桌面压缩/混淆后仍可由Playwright序列化。 */
+function markVisibleExportModalCloseInPage(_arg: null): number {
+  for (const previous of document.querySelectorAll('[data-cos-export-modal-close]')) previous.removeAttribute('data-cos-export-modal-close');
+  const visible = (element: Element) => {
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return false;
+    for (let ancestor: Element | null = element; ancestor; ancestor = ancestor.parentElement) {
+      const style = getComputedStyle(ancestor);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0' || ancestor.getAttribute('aria-hidden') === 'true') return false;
+    }
+    return true;
+  };
+  const dialogs = Array.from(document.querySelectorAll('.douyin-creator-pc-modal-wrap,[role="dialog"]')).reverse();
+  for (const dialog of dialogs) {
+    if (!visible(dialog)) continue;
+    const controls = dialog.querySelectorAll('.douyin-creator-pc-modal-close,button[aria-label="Close"],button[aria-label="close"],button[aria-label="关闭"],[role="button"][aria-label="Close"],[role="button"][aria-label="关闭"]');
+    for (const control of controls) {
+      if (!visible(control) || control.hasAttribute('disabled') || control.getAttribute('aria-disabled') === 'true') continue;
+      const rect = control.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      if (!hit || (hit !== control && !control.contains(hit))) continue;
+      control.setAttribute('data-cos-export-modal-close', '1');
+      return 1;
+    }
+  }
+  return 0;
+}
+
 export async function fetchDouyinWorkListExport(
   opts: FetchWorkListExportOptions,
   deps: FetchWorkListExportDeps = {},
 ): Promise<Uint8Array> {
   opts.signal?.throwIfAborted();
+  const notify = (phase: DouyinExportPhase) => {
+    // 通知只记录固定机械阶段；不可因诊断失败反杀导出或泄露原始错误。
+    console.info("[douyin-export-progress]", {event: "export_phase", phase});
+    try { void Promise.resolve(opts.onProgress?.(phase)).catch(() => {}); } catch { /* best-effort */ }
+  };
   const openCtx =
     deps.openContext ??
     ((authDir, headless, signal) =>
@@ -2693,9 +2811,10 @@ export async function fetchDouyinWorkListExport(
       const { readFile: rf } = await import("node:fs/promises");
       return new Uint8Array(await rf(p));
     });
-  const downloadTimeoutMs = deps.downloadTimeoutMs ?? 180_000; // 大账号导出保留生成时间；注入超时仍可覆盖
+  const downloadTimeoutMs = deps.downloadTimeoutMs === 0 ? 0 : executionTimeoutMs(deps.downloadTimeoutMs, 180_000); // 大账号导出保留生成时间；注入超时仍可覆盖
   const gateway = deps.gateway ?? instantNoopGateway; // [gate-F7 插装点⑤] creator-center 整个导出一次限流
 
+  notify("browser");
   const ctx = await openCtx(opts.authDir, true, opts.signal);
   const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   // [gate-F6] download 超时时探到的「当前暂无数据可导出」toast 结果(true=内容空非频控)。
@@ -2720,10 +2839,11 @@ export async function fetchDouyinWorkListExport(
 
   try {
     opts.signal?.throwIfAborted();
+    notify("channel");
     return await withDouyinChannel(
       gateway,
       "creator-center",
-      () => runExportOnce(ctx, { signal:opts.signal, downloadTimeoutMs, readFile, onDownloadTimeout: (v) => { sawNoDataToast = v; } }),
+      () => runExportOnce(ctx, { notify, signal:opts.signal, downloadTimeoutMs, readFile, onDownloadTimeout: (v) => { sawNoDataToast = v; } }),
       mapExportErr,
       opts.signal,
     );
@@ -2731,6 +2851,7 @@ export async function fetchDouyinWorkListExport(
     opts.signal?.throwIfAborted();
     throw error;
   } finally {
+    notify("close");
     await lifetime.close(); // 等待真实 context 停止；关闭失败不伪装已释放 profile
   }
 }
@@ -2740,42 +2861,59 @@ export async function fetchDouyinWorkListExport(
 async function runExportOnce(
   ctx: ExportCapableContext,
   args: {
+    notify: (phase: DouyinExportPhase) => void;
     signal?: AbortSignal;
     downloadTimeoutMs: number;
     readFile: (path: string) => Promise<Uint8Array>;
     onDownloadTimeout: (hasNoDataToast: boolean) => void;
   },
 ): Promise<Uint8Array> {
-  const { downloadTimeoutMs, readFile, onDownloadTimeout } = args;
+  const { downloadTimeoutMs, readFile, onDownloadTimeout, notify } = args;
   args.signal?.throwIfAborted();
   {
+    notify("login");
     if (!(await isLoggedInExport(ctx))) throw new DouyinNotLoggedInError();
+    notify("page");
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
 
     // 1) 强制导航旧版数据中心作品分析(TzFilm 坑:不设旧版 URL → Garfish 不加载,按钮找不到)。
     //    [T-202] 加退避重试:xlsx 导出这一步撞瞬时超时是真机 self.detail 跑不完的头号根因。
+    notify("navigate");
     await gotoWithRetry(page, CREATOR_DATA_CENTER_CONTENT, {
-      timeoutMs: 60_000,
+      timeoutMs: executionTimeoutMs(60_000),
       label: "data-center-content(xlsx 导出)",
       signal:args.signal,
     });
     // 等 Garfish 微前端初始化(真机 ~15s;DATA-2 已验)。
+    notify("initialize");
     await page.waitForTimeout(15_000);
     await debugShot(page, "01-after-garfish.png");
 
     // 2) 关首屏引导 modal(「新增直播复盘能力」)—— 盖住交互,不关点不到 tab。找不到不致命,
     //    但 modal 存在时会拦截 tab 点击(真机踩坑:未关 modal → 点投稿作品无效 → 停在直播场次 →
     //    找不到投稿列表 → 旧修复失败)。故点完再确认它消失(轮询「我知道了」不再可见)。
-    if (await markAndClick(page, MODAL_GOTIT_CODES, { silent: true, timeout: 3_000 })) {
+    notify("modal");
+    if (await markAndClick(page, MODAL_GOTIT_CODES, { silent: true, timeout: executionTimeoutMs(3_000) })) {
       await page.waitForTimeout(800);
     }
     // 二次兜底:若引导 modal 仍在(多页引导 / 变体),再点一次并等其消失(最多 ~4s)。
     for (let i = 0; i < 4; i++) {
+      args.signal?.throwIfAborted();
+      const closeMarked = await page.evaluate(markVisibleExportModalCloseInPage, null).catch(() => 0);
+      if (closeMarked) {
+        try {
+          await page.locator('[data-cos-export-modal-close="1"]').click({timeout: executionTimeoutMs(2_000)});
+        } catch { args.signal?.throwIfAborted(); }
+        await page.waitForTimeout(1_000);
+        // 下一轮重新确认可见遮挡层；不能保留旧元素或假装已关闭。
+        continue;
+      }
       const stillThere = await page
         .evaluate(hasVisibleByCharCodesInPage, MODAL_GOTIT_CODES)
         .catch(() => false);
       if (!stillThere) break;
-      await markAndClick(page, MODAL_GOTIT_CODES, { silent: true, timeout: 2_000 });
+      await markAndClick(page, MODAL_GOTIT_CODES, { silent: true, timeout: executionTimeoutMs(2_000) });
       await page.waitForTimeout(1_000);
     }
 
@@ -2792,10 +2930,11 @@ async function runExportOnce(
       // [T-463] 2026-07-22 补:silent 点击失败会返 false 无声吞掉。第 3 轮改非 silent 抛出,
       //   把点击的真实错误暴露给上层日志(而非泛泛 "未见投稿列表子tab" 空描述)。
       const isLast = attempt === 2;
+      notify("posts_click");
       try {
         const ok = await markAndClick(page, TAB_POSTS_CODES, {
           silent: !isLast,
-          timeout: 8_000,
+          timeout: executionTimeoutMs(8_000),
         });
         if (!ok && isLast) {
           lastClickErr = "markAndClick 返回 false(未标记到「投稿作品」元素或点不上)";
@@ -2803,6 +2942,7 @@ async function runExportOnce(
       } catch (err) {
         lastClickErr = err instanceof Error ? err.message : String(err);
       }
+      notify("posts_wait");
       listVisible = await waitForVisibleByCharCodes(page, SUBTAB_LIST_CODES, {
         tries: 15,
         intervalMs: 1_000,
@@ -2817,6 +2957,7 @@ async function runExportOnce(
     }
 
     // 4) 切到「投稿列表」子tab —— 「刷新数据」+ 出 `作品列表.xlsx` 的「导出数据」只在此视图。
+    notify("list_click");
     const listOk = await markAndClick(page, SUBTAB_LIST_CODES, {
       silent: true,
     });
@@ -2826,6 +2967,7 @@ async function runExportOnce(
       );
     }
     // 等投稿列表视图渲染出「导出数据」(该视图特有的导出;轮询而非固定 sleep)。
+    notify("list_wait");
     await waitForVisibleByCharCodes(page, BTN_EXPORT_CODES, {
       tries: 6,
       intervalMs: 1_000,
@@ -2838,6 +2980,7 @@ async function runExportOnce(
     //      (真机验:39 行 → 74 行)。整段 silent:任一步失败仍可按默认范围导出,只是覆盖少,
     //      绝不因此挡导出。「全部」点击即应用并收面板;若面板开了却没点到 preset,再点一次
     //      「投稿列表」子tab 收面板,防悬浮层遮住后面的刷新/导出按钮。
+    notify("date");
     const pickerMarked = await page
       .evaluate(markDatePickerInPage, null)
       .catch(() => 0);
@@ -2846,7 +2989,7 @@ async function runExportOnce(
       try {
         await page
           .locator('[data-cos-export-target="1"]')
-          .click({ timeout: 4_000 });
+          .click({ timeout: executionTimeoutMs(4_000) });
         pickerOpened = true;
       } catch {
         /* silent:点不开 picker → 按默认范围导出 */
@@ -2863,7 +3006,7 @@ async function runExportOnce(
           try {
             await page
               .locator('[data-cos-export-target="1"]')
-              .click({ timeout: 4_000 });
+              .click({ timeout: executionTimeoutMs(4_000) });
             allClicked = true;
           } catch {
             /* silent:重试下一轮 */
@@ -2881,6 +3024,7 @@ async function runExportOnce(
     }
 
     // 5) 点「刷新数据」确保数据最新(找不到不致命,可能页面已最新)。
+    notify("refresh");
     await markAndClick(page, BTN_REFRESH_CODES, { silent: true });
     await page.waitForTimeout(4_000);
 
@@ -2888,9 +3032,7 @@ async function runExportOnce(
     //    事件,不被 Chromium 当脚本点击拦下载)。页面此时有多个"导出数据"(直播场次/投稿概览/投稿表现/
     //    投稿列表)—— 必须点**投稿列表视图**那个,故就近锚定「刷新数据」(仅存于投稿列表工具条)同容器的
     //    导出;锚定失败(版式变化)兜底用最深匹配的通用标记。
-    const downloadPromise = page.waitForEvent("download", {
-      timeout: downloadTimeoutMs,
-    });
+    notify("export_click");
     let exportMarked = await page
       .evaluate(markExportNearRefreshInPage, {
         exportCodes: BTN_EXPORT_CODES,
@@ -2903,12 +3045,21 @@ async function runExportOnce(
         .evaluate(markElementByCharCodesInPage, BTN_EXPORT_CODES)
         .catch(() => 0);
     }
+    // 先准备按钮再计下载等待；监听覆盖点击 + 平台生成 + 调试截图与结算。
+    const downloadPromise = page.waitForEvent("download", {
+      timeout: downloadTimeoutMs === 0 ? 0 : completionWaitMs([
+        executionTimeoutMs(5_000), downloadTimeoutMs,
+        ...(process.env.DOUYIN_EXPORT_DEBUG === "1" ? [executionTimeoutMs()] : []),
+      ]),
+    });
+    // 点击失败也可能晚到 download 拒绝；保留后续 await 的原错且及时附处理器。
+    void downloadPromise.catch(() => {});
     let clicked = false;
     if (exportMarked) {
       try {
         await page
           .locator('[data-cos-export-target="1"]')
-          .click({ timeout: 5_000 });
+          .click({ timeout: executionTimeoutMs(5_000) });
         clicked = true;
       } catch {
         clicked = false;
@@ -2925,6 +3076,7 @@ async function runExportOnce(
     //    「当前暂无数据可导出」的图集/无数据号永不触发 download → 必然超时)先探 no-data toast:
     //    有 toast = 内容空非频控(content-error 不退避);无 toast = 疑似频控(export-download-timeout
     //    → throttled)。探测结果经 onDownloadTimeout 回传给 mapExportErr 定分类,原超时错照旧抛出。
+    notify("download_event");
     let download: { path(): Promise<string> };
     try {
       download = await downloadPromise;
@@ -2937,8 +3089,10 @@ async function runExportOnce(
       await debugShot(page, "03-download-timeout.png");
       throw timeoutErr; // 原超时错向上传(withDouyinChannel 据 mapExportErr 分类后仍抛)
     }
+    notify("download_finish");
     const path = await download.path();
     args.signal?.throwIfAborted();
+    notify("file_read");
     const bytes = await readFile(path);
     args.signal?.throwIfAborted();
 
@@ -3135,10 +3289,11 @@ async function openCollectsPage(
   );
   if (!loggedIn) throw new DouyinNotLoggedInError();
   const page = ctx.pages()[0] ?? (await ctx.newPage());
+    applyBrowserTimeoutPolicy(page);
 
   // 先落到收藏 tab 页(建立 referer/风控上下文),再页内 fetch API(T-235b 搜索同款)。
   await gotoWithRetry(page as unknown as GotoCapablePage, COLLECTS_TAB_URL, {
-    timeoutMs: 60_000,
+    timeoutMs: executionTimeoutMs(60_000),
     label,
     logRetries: false,
   });

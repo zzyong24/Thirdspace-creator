@@ -1,4 +1,5 @@
 export {createVideoEditCandidatePreparer} from "./video-edit-candidate";
+export * from './capability-model-routing';
 // AI runtime module (T-163) —— 前端 AI SDK 解耦:26 个 runner + AI 编排基底(creative-context /
 // llm 适配 / multimodal 解析 / skill 覆盖)从 frontend 包下沉至此,使 AI 生成逻辑 + prompt 调用
 // 住在受保护的 backend 侧(桌面化 T-147 护城河前置)。前端只经 `@creatoros/backend/modules/
@@ -9,7 +10,6 @@ export {createVideoEditCandidatePreparer} from "./video-edit-candidate";
 // chat 上下文与工具定义准备及 web search(search/)不在此说明范围 —— 前者走
 // §3.2 流式端点(Batch 3),后者属前端 browser 设施经端口注入。
 
-export * from "./agent-run";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 export * from "./cover-runner";
 export * from "./calibration-diagnose-runner";
@@ -129,7 +129,7 @@ export {createAssetBusinessExecutionService} from "./asset-business-execution.se
 
 export {preparePublishPackageTaskInput} from "./publish-package-task-input";
 
-export {createTranscribeBusinessExecutionService} from "./transcribe-business-execution.service";
+export {createTranscribeBusinessExecutionService,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner} from "./transcribe-business-execution.service";
 
 export {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 export * from "./chat-production-runtime";
@@ -158,3 +158,17 @@ export {createModelProbeIoService} from "./model-probe-io.service";
 export {resolveSubmittedChatToolParameters} from "./chat-submitted-tool-parameters";
 
 export {createChatRedfoxTaskToolHost} from "./chat-redfox-tool-host";
+
+export {createLocalCodexStatusService} from "./local-codex-status.service";
+
+export {transcribeConfiguration} from './transcribe-business-execution.service';
+
+export type {StructuredBusinessAdapter} from "./structured-business-execution.service";
+
+export {createWorkEditorCandidateService,workEditorContentDigest,type WorkEditorPorts} from "./work-editor-candidate";
+export {createChatWorkEditorToolHost} from "./chat-work-editor-tool-host";
+export {createChatWorkCreationToolHost,type ChatWorkCreationToolPorts} from "./chat-work-creation-tool-host";
+
+export {createKnowledgeGenerationBusinessAdapters,type KnowledgeGenerationReaders} from "./knowledge-generation-business-adapters";
+export {createKnowledgeGenerationService,KnowledgeGenerationPendingError,type KnowledgeGenerationDeps} from "./knowledge-generation.service";
+export type {KnowledgeGenerationPort,KnowledgeGenerationSkill} from "./knowledge-generation.types";

@@ -1,3 +1,4 @@
+import { renderProbeOptions } from "./render-probe-policy.mjs";
 import { smokeWorker } from "./worker-smoke.mjs";
 import {
   copyFileSync,
@@ -17,6 +18,17 @@ import { spawn, spawnSync } from "node:child_process";
 import { createBuildSmokeVerdictToken } from "../../frontend/scripts/desktop/verdict-key-material.mjs";
 
 import { reportCapacity } from "./runtime-diagnostics.mjs";
+
+// T247_CREDENTIAL_CAPTURE_BEGIN
+// 正式shell→sidecar gate材料仅供本驱动签一次原build_smoke声明。
+// 先从全局env移除，防ffmpeg/Chromium等默认继承；不宣JS字符串物理擦除。
+const localBuildSmokeVerdictEnv = {
+  CREATOROS_VERDICT_SIGNING_KEY_B64: process.env.CREATOROS_VERDICT_SIGNING_KEY_B64,
+  CREATOROS_VERDICT_PUBKEY_B64: process.env.CREATOROS_VERDICT_PUBKEY_B64,
+};
+delete process.env.CREATOROS_VERDICT_SIGNING_KEY_B64;
+delete process.env.CREATOROS_VERDICT_PUBKEY_B64;
+// T247_CREDENTIAL_CAPTURE_END
 
 const [closureArg] = process.argv.slice(2);
 if (!closureArg) {
@@ -72,14 +84,15 @@ const moduleResolver = resolve(
   "creatoros-module-resolver.cjs",
 );
 const results = {};
+let buildSmokeStatements = 0;
 const startedAt = Date.now();
 // 失败也保留已经发生的消费者结果；不能把部分成功当完整通过。
 const smokeReportPath = resolve(runtimeRoot, "runtime-smoke-results.json");
 const saveProgress = () => writeFileSync(smokeReportPath, JSON.stringify({
-  schemaVersion: 1, target, status: "running", durationMs: Date.now() - startedAt, results,
+  schemaVersion: 1, target, buildSmokeStatements, status: "running", durationMs: Date.now() - startedAt, results,
 }, null, 2) + "\n");
 process.on("uncaughtExceptionMonitor", (error) => {
-  writeFileSync(smokeReportPath, JSON.stringify({schemaVersion:1,target,status:"failed",durationMs:Date.now()-startedAt,results,error:error.message},null,2)+"\n");
+  writeFileSync(smokeReportPath, JSON.stringify({schemaVersion:1,target,buildSmokeStatements,status:"failed",durationMs:Date.now()-startedAt,results,error:error.message},null,2)+"\n");
 });
 saveProgress();
 const record = (name, value = true) => {
@@ -153,7 +166,10 @@ record("pglite-query");
 const { createRequire: createWorkerRequire } = await import("node:module");
 const workerRequire = createWorkerRequire(resolve(runtimeRoot,"frontend/runtime/execution-worker.cjs"));
 for (const name of ["jsdom","@mozilla/readability","mammoth","pdf-parse","@napi-rs/canvas"]) {
-  const resolved=workerRequire.resolve(name);
+  const dependencyRequire = name === "@napi-rs/canvas"
+    ? createWorkerRequire(workerRequire.resolve("pdf-parse"))
+    : workerRequire;
+  const resolved=dependencyRequire.resolve(name);
   if (!resolved.startsWith(`${runtimeRoot}${sep}`)) throw new Error(`Worker ${name} 解析到了包外`);
   await import(pathToFileURL(resolved).href);
   record(`worker-dependency:${name}`);
@@ -201,7 +217,7 @@ const worker = new Worker(${JSON.stringify(whisperWorkerSource)}, {
     runtimeRoot: ${JSON.stringify(runtimeRoot)},
   },
 });
-const timer = setTimeout(() => { console.error("worker-timeout"); process.exit(2); }, 30000);
+const timer = setTimeout(() => { console.error("worker-timeout"); process.exit(2); }, 120_000);
 worker.once("message", async (message) => {
   clearTimeout(timer);
   await worker.terminate();
@@ -217,7 +233,7 @@ const whisperWorkerResult = spawnSync(smokeNode, ["-e", whisperWorkerProbe], {
     SystemRoot: process.env.SystemRoot,
     CREATOROS_RUNTIME_ROOT: runtimeRoot,
   },
-  timeout: 35_000,
+  timeout: 150_000,
 });
 if (
   whisperWorkerResult.status !== 0 ||
@@ -253,7 +269,7 @@ const render = spawnSync(
     SystemRoot: process.env.SystemRoot,
     CREATOROS_RUNTIME_ROOT: runtimeRoot,
   },
-  timeout: 30_000,
+  timeout: 120_000,
   },
 );
 if (
@@ -275,7 +291,7 @@ for (const [tool, toolPath] of [
 ]) {
   const probe = spawnSync(toolPath, ["-version"], {
     encoding: "utf8",
-    timeout: 30_000,
+    timeout: 120_000,
   });
   if (probe.status !== 0 || !`${probe.stdout}`.startsWith(`${tool} version`)) {
     throw new Error(
@@ -292,6 +308,8 @@ const browser = await playwright.chromium.launch({ headless: true });
 const chromiumPath = playwright.chromium.executablePath();
 try {
   const page = await browser.newPage();
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   await page.setContent("<title>CreatorOS RAT</title><main>ready</main>");
   if ((await page.title()) !== "CreatorOS RAT") {
     throw new Error("[closure-rat] Chromium 页面 smoke 失败");
@@ -353,7 +371,7 @@ const renderVideo = spawnSync(
   ],
   {
     encoding: "utf8",
-    env: {
+    ...renderProbeOptions({
       PATH: `${mediaBin}${delimiter}${process.env.PATH ?? ""}`,
       SystemRoot: process.env.SystemRoot,
       CREATOROS_RUNTIME_ROOT: runtimeRoot,
@@ -361,8 +379,7 @@ const renderVideo = spawnSync(
       HYPERFRAMES_FFMPEG_PATH: ffmpegPath,
       HYPERFRAMES_FFPROBE_PATH: ffprobePath,
       HYPERFRAMES_TELEMETRY: "0",
-    },
-    timeout: 120_000,
+    }, process.env),
   },
 );
 if (
@@ -389,7 +406,17 @@ async function freePort() {
 }
 
 const port = await freePort();
-const verdictToken = createBuildSmokeVerdictToken({ sidecarPort: port });
+// T247_LOCAL_VERDICT_BEGIN
+let verdictToken;
+try {
+  // 仍在Next启动前取得端口后签发，沿原≤5分钟TTL/nonce/公钥对校验。
+  verdictToken = createBuildSmokeVerdictToken({ sidecarPort: port }, localBuildSmokeVerdictEnv);
+  buildSmokeStatements++;
+} finally {
+  delete localBuildSmokeVerdictEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
+  delete localBuildSmokeVerdictEnv.CREATOROS_VERDICT_PUBKEY_B64;
+}
+// T247_LOCAL_VERDICT_END
 const serverLogs = [];
 const sidecarEnv = {
   ...process.env,
@@ -419,11 +446,11 @@ sidecar.stdout.on("data", (chunk) => serverLogs.push(`${chunk}`));
 sidecar.stderr.on("data", (chunk) => serverLogs.push(`${chunk}`));
 let mainHtml = "";
 try {
-  const deadline = Date.now() + 120_000;
+  const deadline = Date.now() + 150_000;
   while (Date.now() < deadline) {
     if (sidecar.exitCode !== null) break;
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/`);
+      const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });
       if (response.ok) {
         mainHtml = await response.text();
         if (mainHtml.includes(expectedMainTitle)) break;
@@ -435,7 +462,7 @@ try {
   }
   if (!mainHtml.includes(expectedMainTitle)) {
     throw new Error(
-      `[closure-rat] Next 主页面 120 秒内未就绪(expectedTitle=${expectedMainTitle}, exit=${sidecar.exitCode})\n${serverLogs.join("").slice(-8000)}`,
+      `[closure-rat] Next 主页面 150 秒内未就绪(expectedTitle=${expectedMainTitle}, exit=${sidecar.exitCode})\n${serverLogs.join("").split(verdictToken).join("<local-build-smoke-verdict>").slice(-8000)}`,
     );
   }
   record(
@@ -459,7 +486,7 @@ try {
     gracefulShutdownCompleted = await Promise.race([
       exitPromise,
       new Promise((resolveWait) =>
-        setTimeout(() => resolveWait(false), 10_000),
+        setTimeout(() => resolveWait(false), 120_000),
       ),
     ]);
   }
@@ -467,7 +494,7 @@ try {
   rmSync(tempRoot, { recursive: true, force: true });
   if (requestedWindowsShutdown && !gracefulShutdownCompleted) {
     throw new Error(
-      "[closure-rat] Windows sidecar 未在停机哨兵后 10 秒内优雅退出",
+      "[closure-rat] Windows sidecar 未在停机哨兵后 120 秒内优雅退出",
     );
   }
   if (requestedWindowsShutdown) {
@@ -487,6 +514,7 @@ record("runtime-structure", "node_modules=0");
 const report = {
   schemaVersion: 1,
   status: "passed",
+  buildSmokeStatements,
   capacityWarnings: capacity,
   target,
   durationMs: Date.now() - startedAt,

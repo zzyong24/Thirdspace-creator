@@ -1,0 +1,27 @@
+[
+  {
+    "path": "docs/verification/t1369/production/run.py",
+    "snapshot": "docs/verification/t1369/production/EXECUTED_ATTEMPT01_SOURCES/run.py",
+    "sha256": "3290111fea96362312bd710c88712bd5d49b8c3e91a51c2b2bee8d165fa40cf9"
+  },
+  {
+    "path": "docs/verification/t1369/production/server.mjs",
+    "snapshot": "docs/verification/t1369/production/EXECUTED_ATTEMPT01_SOURCES/server.mjs",
+    "sha256": "a1307d92c0bfdfe7723cff0625285dbb35094973b3ecc5a1d352cf7f771ff979"
+  },
+  {
+    "path": "docs/verification/t1369/production/preflight.mjs",
+    "snapshot": "docs/verification/t1369/production/EXECUTED_ATTEMPT01_SOURCES/preflight.mjs",
+    "sha256": "219b3f7081f15c49f0aa4ef4407d12588f596d35dbd2118f13385a901f3f4ccc"
+  },
+  {
+    "path": "frontend/playwright.t1369.production.config.ts",
+    "snapshot": "docs/verification/t1369/production/EXECUTED_ATTEMPT01_SOURCES/playwright.t1369.production.config.ts",
+    "sha256": "e103a174360bfd059e245cee66116b4af5b17ba43f77319acaaf8fa8ab722928"
+  },
+  {
+    "path": "frontend/tests/e2e/t1369-dashboard-filter-sidebar-navigation.spec.ts",
+    "snapshot": "docs/verification/t1369/production/EXECUTED_ATTEMPT01_SOURCES/t1369-dashboard-filter-sidebar-navigation.spec.ts",
+    "sha256": "6ffb2d65a78cb026b60ce0c08fd8f8626568419faea443b28ff6bb93d09a1ca8"
+  }
+]

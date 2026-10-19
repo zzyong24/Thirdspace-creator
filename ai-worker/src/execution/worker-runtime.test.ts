@@ -1,9 +1,114 @@
 import {createHash} from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { GenerationFailure } from "./generation-error";
-import { createExecutionWorker } from "./worker-runtime";
+import { createExecutionWorker, type WorkerDependencies } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
+function intelligenceTextContext(){
+ return {kind:"model.structured",intelligenceText:"rewrite_only",operationKey:"intelligence:original",capability:"topic.generate",skillId:"intelligence.topic-adapted-draft",maxOutputTokens:8192,timeoutMs:600000,
+  facets:{mode:"topic_preview",target:JSON.stringify({generationMode:"rewrite_only"}),__videoDecisions:"{}",__assetProcessing:"{}",__dailyTopic:"{}"},
+  skillSnapshot:{snapshotVersion:1,userId:"u",accountId:"a",groupId:"g",resolvedAt:"now",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"intelligence.topic-adapted-draft",baseVersion:"v3",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"",template:"{{transcript}}",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
+}
+async function intelligenceRuntime(overrides:Partial<WorkerDependencies>={}){
+ const messages:WorkerMessage[]=[],generateStructured=vi.fn(),runVideo=vi.fn(),runAssetProcessing=vi.fn(),generateIntelligenceText=vi.fn(async()=>({callId:"original-model-call",text:"正文"}));
+ const worker=createExecutionWorker({generate:vi.fn(),generateStructured,runVideo,runAssetProcessing,generateIntelligenceText,...overrides,send(message){messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:message.port==="readTaskContext"?intelligenceTextContext():message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"local",token:"secret"}:{}}));}});
+ worker.ready();worker.receive({version:1,type:"run",requestId:"rewrite",execution,deadlineAt:Date.now()+600000});
+ try{await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true),{timeout:120000});return {messages,generateStructured,runVideo,runAssetProcessing,generateIntelligenceText};}finally{worker.close();}
+}
+it("专用正文标签先映射能力与依赖，不被视频/素材/每日选题抢走",async()=>{
+ const f=await intelligenceRuntime({capabilities:["intelligence.rewrite-text"]});
+ expect(f.messages.find(message=>message.type==="ready")).toMatchObject({capabilities:["intelligence.rewrite-text"]});
+ expect(f.generateIntelligenceText).toHaveBeenCalledOnce();expect(f.generateStructured).not.toHaveBeenCalled();expect(f.runVideo).not.toHaveBeenCalled();expect(f.runAssetProcessing).not.toHaveBeenCalled();
+ expect(f.messages.find(message=>message.type==="call"&&message.port==="commitResult")).toMatchObject({data:{outcome:"succeeded",callId:"original-model-call",text:"正文"}});
+});
+it.each(["generic", "capability-only", "dependency-excluded"])("%s 不获得正文执行权，拒绝发生在凭据/预留前",async mode=>{
+ const overrides:Partial<WorkerDependencies>=mode==="generic"?{generateIntelligenceText:undefined}:mode==="capability-only"?{generateIntelligenceText:undefined,capabilities:["intelligence.rewrite-text"]}:{capabilities:["model.structured"]};
+ const f=await intelligenceRuntime(overrides);
+ expect(f.messages.find(message=>message.type==="call"&&message.port==="commitResult")).toMatchObject({data:{outcome:"waiting_user",errorCode:"WORKER_CAPABILITY_UNAVAILABLE"}});
+ expect(f.messages.filter(message=>message.type==="call").map(message=>message.port)).not.toContain("resolveModelCredential");
+ expect(f.generateStructured).not.toHaveBeenCalled();expect(f.generateIntelligenceText).not.toHaveBeenCalled();expect(f.runVideo).not.toHaveBeenCalled();
+ const ready=f.messages.find(message=>message.type==="ready");expect(ready?.type==="ready" && ready.capabilities.includes("intelligence.rewrite-text")).toBe(false);
+});
+it("正文专用调用继承原取消 signal，错 fence 取消不生效，晚返回不提交正文",async()=>{
+ const messages:WorkerMessage[]=[],generateStructured=vi.fn();
+ let activeSignal:AbortSignal|undefined,release:()=>void=()=>{};
+ const generateIntelligenceText=vi.fn(async(_input,_model,signal:AbortSignal)=>{activeSignal=signal;await new Promise<void>(done=>{release=done;});return {callId:"late-call",text:"晚返回正文"};});
+ const worker=createExecutionWorker({generate:vi.fn(),generateStructured,generateIntelligenceText,capabilities:["intelligence.rewrite-text"],send(message){messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:message.port==="readTaskContext"?intelligenceTextContext():message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"local",token:"secret"}:{}}));}});
+ try{
+  worker.receive({version:1,type:"run",requestId:"cancel-rewrite",execution,deadlineAt:Date.now()+600000});
+  await vi.waitFor(()=>expect(generateIntelligenceText).toHaveBeenCalledOnce(),{timeout:120000});
+  worker.receive({version:1,type:"cancel",requestId:"stale-cancel",execution:{...execution,fenceToken:"stale"}});
+  expect(activeSignal?.aborted).toBe(false);
+  worker.receive({version:1,type:"cancel",requestId:"owned-cancel",execution});
+  expect(activeSignal?.aborted).toBe(true);release();
+  await vi.waitFor(()=>expect(messages.find(message=>message.type==="stopped")).toMatchObject({reason:"cancelled"}),{timeout:120000});
+  expect(messages.filter(message=>message.type==="call").map(message=>message.port)).not.toContain("commitResult");
+  expect(generateStructured).not.toHaveBeenCalled();
+ }finally{release();worker.close();}
+},120000);
+it("图卡 Skill 进入持久图片 Worker 分支，不落普通结构化文本提交",async()=>{
+ const messages:WorkerMessage[]=[],runCover=vi.fn(async()=>({callId:"image-call",text:"{}"}));
+ const skillSnapshot={snapshotVersion:1,userId:"u",accountId:"a",resolvedAt:"now",platformPolicyVersion:"1",platformPolicy:"候选",
+  skills:[{skillId:"graphic.card-brief",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"",template:"",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:{type:"object"},completionPolicy:null,completionPolicyAdapter:null}}]};
+ const input={kind:"model.structured",operationKey:"graphic.card-brief",capability:"copy.generate",maxOutputTokens:100,
+  skillId:"graphic.card-brief",skillSnapshot,facets:{graphicCardContext:"{}"}};
+ const worker=createExecutionWorker({generate:vi.fn(),generateStructured:vi.fn(),runCover:runCover as never,
+  send(message){messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,
+   data:message.port==="readTaskContext"?input:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"text-model",token:"secret"}:{resultId:"result-1"}}));}});
+ try{worker.receive({version:1,type:"run",requestId:"card-run",execution,deadlineAt:Date.now()+10000});
+  await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true));
+  expect(messages.find(message=>message.type==="stopped")).toMatchObject({reason:"completed"});
+  expect(runCover).toHaveBeenCalledOnce();
+  expect(messages.find(message=>message.type==="call"&&message.port==="commitResult")).toMatchObject({data:{outcome:"succeeded",callId:"image-call"}});
+ }finally{worker.close();}
+});
+
+describe('私有消费确认与断连',()=>{
+  function receiptFixture(){
+    const messages:WorkerMessage[]=[],portErrors:string[]=[];
+    const worker=createExecutionWorker({generate:vi.fn(),
+      runTranscribe:async(_input,signal,call)=>{
+        void call('heartbeat',{},signal).catch(()=>portErrors.push('heartbeat'));
+        void call('readTranscribeAudio',{awemeId:'synthetic'},signal).catch(()=>portErrors.push('audio'));
+        return await new Promise<never>((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));
+      },
+      send(message){messages.push(message);if(message.type==='call' && message.port==='readTaskContext')queueMicrotask(()=>worker.receive({version:1,type:'reply',requestId:message.requestId,execution,callSeq:message.callSeq,ok:true,data:{kind:'transcribe.douyin',awemeIds:['synthetic'],language:'zh',configuration:{kind:'audio',provider:'whisper-local',model:'small',baseUrl:null}}}));},
+    });
+    worker.receive({version:1,type:'run',requestId:'receipt-run',execution,deadlineAt:Date.now()+120000,receiptProtocol:'consumed-v1'});
+    return {worker,messages,portErrors};
+  }
+  it('先完成的音频确认独立于较早在途心跳，重复回复重发紧凑确认，错误 fence 不解开在途请求',async()=>{
+    const f=receiptFixture();
+    try{
+      await vi.waitFor(()=>expect(f.messages.filter(message=>message.type==='call')).toHaveLength(3),{timeout:120000});
+      const audio=f.messages.find(message=>message.type==='call' && message.port==='readTranscribeAudio') as Extract<WorkerMessage,{type:'call'}>;
+      const heartbeat=f.messages.find(message=>message.type==='call' && message.port==='heartbeat') as Extract<WorkerMessage,{type:'call'}>;
+      const reply={version:1,type:'reply',requestId:audio.requestId,execution,callSeq:audio.callSeq,ok:true,data:{bytes:new Uint8Array([1])}};
+      f.worker.receive(reply);
+      expect(f.messages.at(-1)).toMatchObject({type:'consumed',throughSeq:1,consumedRanges:[{fromSeq:3,toSeq:3}]});
+      f.worker.receive(reply);
+      expect(f.messages.at(-1)).toMatchObject({type:'consumed',throughSeq:1,consumedRanges:[{fromSeq:3,toSeq:3}]});
+      const count=f.messages.length;
+      f.worker.receive({...reply,requestId:heartbeat.requestId,callSeq:heartbeat.callSeq,execution:{...execution,fenceToken:'stale'}});
+      expect(f.messages).toHaveLength(count);
+      f.worker.receive({...reply,requestId:heartbeat.requestId,callSeq:heartbeat.callSeq,data:{}});
+      expect(f.messages.at(-1)).toMatchObject({type:'consumed',throughSeq:3,consumedRanges:[]});
+      f.worker.receive({version:1,type:'cancel',requestId:'cancel',execution});
+      await vi.waitFor(()=>expect(f.messages.find(message=>message.type==='stopped')).toMatchObject({reason:'cancelled'}),{timeout:120000});
+    }finally{f.worker.close();}
+  });
+  it('断连撤回所有在途端口，迟到回复不产生确认或新的工作',async()=>{
+    const f=receiptFixture();
+    await vi.waitFor(()=>expect(f.messages.filter(message=>message.type==='call')).toHaveLength(3),{timeout:120000});
+    const audio=f.messages.find(message=>message.type==='call' && message.port==='readTranscribeAudio') as Extract<WorkerMessage,{type:'call'}>;
+    f.worker.close();
+    await vi.waitFor(()=>expect(f.portErrors.sort()).toEqual(['audio','heartbeat']),{timeout:120000});
+    const count=f.messages.length;
+    f.worker.receive({version:1,type:'reply',requestId:audio.requestId,execution,callSeq:audio.callSeq,ok:true,data:{bytes:new Uint8Array([1])}});
+    expect(f.messages).toHaveLength(count);
+  });
+
+});
 it.each([false,true])("网页能力声明依赖已装配对话运行器：%s",hasRunner=>{
  const messages:WorkerMessage[]=[];
  const worker=createExecutionWorker({generate:vi.fn(),supportsChatWebRead:true,...(hasRunner?{runChat:vi.fn()}:{}),send:message=>{messages.push(message);}});
@@ -18,6 +123,39 @@ it("未声明网页能力时在读取模型凭据前拒绝网页任务",async()=
   await vi.waitFor(()=>expect(messages.some(m=>m.type==="stopped")).toBe(true));
   expect(runChat).not.toHaveBeenCalled();expect(messages.filter(m=>m.type==="call").map(m=>m.port)).not.toContain("resolveModelCredential");
   expect(messages.find(m=>m.type==="call" && m.port==="commitResult")).toMatchObject({data:{outcome:"waiting_user",errorCode:"CHAT_WEB_READ_WORKER_UNAVAILABLE"}});
+ }finally{worker.close();}
+});
+
+it("对话计划读取使用当前执行租约的命名端口",async()=>{
+ const messages:WorkerMessage[]=[];
+ const input={kind:"chat.run",executionEngine:"pi",operationKey:"plan",capability:"copilot.assist",userId:"u",accountId:"a",conversationId:"c",sourceMessageId:"m",system:"执行",messages:[{role:"user",content:"做一份报告"}],maxSteps:4,maxOutputTokens:100,tools:[]};
+ const expected={revision:1,progressToken:"saved",steps:[{title:"读取",status:"pending"}]};
+ const runChat=vi.fn(async(_input,_spec,_signal,ports)=>{
+   expect(await ports.readPlanStatus?.("settled-stop-model",new AbortController().signal)).toEqual(expected);
+   throw new GenerationFailure("waiting_user","TEST_PLAN_PORT_REACHED");
+ });
+ const worker=createExecutionWorker({generate:vi.fn(),runChat,send(message){
+   messages.push(message);
+   if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:message.port==="readTaskContext"?input:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"private"}:message.port==="readWorkbenchPlan"?expected:{}}));
+ }});
+ try{
+   worker.receive({version:1,type:"run",requestId:"plan-run",execution,deadlineAt:Date.now()+10000});
+   await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true));
+   expect(runChat).toHaveBeenCalledTimes(1);
+   expect(messages.find(message=>message.type==="call"&&message.port==="readWorkbenchPlan")).toMatchObject({execution,data:{modelCallId:"settled-stop-model"}});
+ }finally{worker.close();}
+});
+
+it("终态失败步骤ID只沿受限聊天提交字段交给后端",async()=>{
+ const messages:WorkerMessage[]=[],input={kind:"chat.run",executionEngine:"pi",operationKey:"terminal",capability:"copilot.assist",userId:"u",accountId:"a",conversationId:"c",sourceMessageId:"m",system:"生成",messages:[{role:"user",content:"生成"}],maxSteps:4,maxOutputTokens:100,tools:[]};
+ const runChat=vi.fn(async()=>({message:{id:"chat:m",role:"assistant" as const,parts:[]},text:"",finishReason:"stop",awaitingApproval:false,lastModelCallId:"model-stop",toolCallIds:[],terminalPlanFailureStepIds:["step-failed"],outcome:"partial" as const}));
+ const worker=createExecutionWorker({generate:vi.fn(),runChat,send(message){
+  messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:
+   message.port==="readTaskContext"?input:message.port==="readCheckpoint"?{pendingCalls:[],replayableScriptDraftToolCallIds:[],replayableWebReadToolCallIds:[],replayableGenerationToolCallIds:[],completableToolCallIds:[],resumableToolCallIds:[],acknowledgedBlockedCallIds:[],revision:0,ledgerSequence:0,modelReplayFingerprints:[],messages:[],uncheckpointedReceipts:[],recovery:"ready"}:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"private"}:message.port==="commitChatResult"?{resultId:"result",aiTaskId:"task",messageId:"chat:m",outcome:"partial"}:{}}));
+ }});
+ try{worker.ready();worker.receive({version:1,type:"run",requestId:"terminal-run",execution,deadlineAt:Date.now()+10000});await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true));
+  expect(messages.find(message=>message.type==="call"&&message.port==="commitChatResult")).toMatchObject({data:{lastModelCallId:"model-stop",toolCallIds:[],partialPlanFailureStepIds:["step-failed"]}});
+  expect(runChat).toHaveBeenCalledOnce();expect(messages.find(message=>message.type==="stopped")).toMatchObject({reason:"completed"});
  }finally{worker.close();}
 });
 
@@ -319,16 +457,16 @@ describe('每日选题Worker专用完成端口',()=>{
  it.each(['quota',undefined] as const)('每日完成回执丢失不二次覆盖终态 skip=%s',async(skip)=>{const f=dailyFixture(skip,true);f.worker.receive(run);await vi.waitFor(()=>expect(f.messages.some(m=>m.type==='stopped')).toBe(true));expect(f.messages.at(-1)).toMatchObject({type:'stopped',reason:'unknown_result'});expect(f.messages.filter(m=>m.type==='call').map(m=>m.port)).toEqual(skip?['readTaskContext','completeDailyTopicSkip']:['readTaskContext','resolveModelCredential','commitDailyTopicResult']);f.worker.close();});
 });
 
-it("宿主工具超过30秒但仍在任务预算内可以完成",async()=>{
+it.each(["executeAgenticTool", "readChatWebReadSession"] as const)("宿主端口%s超过30秒但仍在任务预算内可以完成",async port=>{
  vi.useFakeTimers();
  const messages:WorkerMessage[]=[];
  const worker=createExecutionWorker({generate:vi.fn(),runAgentic:async(_input,_model,signal,call)=>{
-  await call("executeAgenticTool",{callId:"long-tool"},signal);
+  await call(port,{callId:"long-tool"},signal);
   return {actualEngine:"pi",summary:"完成",stopReason:"completed",lastModelCallId:"m",toolCallIds:["long-tool"]};
  },send(message){
   messages.push(message);if(message.type!=="call")return;
   const data=message.port==="readTaskContext"?{kind:"agentic.run",operationKey:"long",taskType:"agentic.research",goal:"研究",systemPrompt:"冻结",capability:"research",maxOutputTokens:100,dryRun:false,tools:[{name:"web.read",version:"1",label:"读取",description:"读取",parameters:{type:"object"},effect:"none"}]}:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"test"}:message.port==="commitAgenticResult"?{resultId:"r",aiTaskId:"a"}:{};
-  setTimeout(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data}),message.port==="executeAgenticTool"?31000:0);
+  setTimeout(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data}),message.port===port?31000:0);
  }});
  try{
   worker.receive({...run,deadlineAt:Date.now()+60000});
@@ -336,5 +474,97 @@ it("宿主工具超过30秒但仍在任务预算内可以完成",async()=>{
   expect(messages.some(m=>m.type==="stopped")).toBe(false);
   await vi.advanceTimersByTimeAsync(1000);
   expect(messages.find(m=>m.type==="stopped")).toMatchObject({reason:"completed"});
+  expect(messages.filter(m=>m.type==="call" && m.port===port)).toHaveLength(1);
+  expect(messages.some(m=>m.type==="call" && m.port==="heartbeat")).toBe(true);
  }finally{worker.close();vi.useRealTimers();}
+});
+
+// T1294：真实Worker receive/reply/consumed/commit链接真实external入口，只替换Codex边界。
+import {codexExecutionSpec as precheckCodexSpec,chatWorkerInputSchema as precheckChatSchema} from '@creatoros/contract/execution-worker';
+import * as precheckSessionModule from './codex-app-server';
+import * as precheckNativeModule from './codex-native-turn';
+import {runExternalChatInWorker as precheckRealExternalChat} from './external-chat-worker-run';
+import {CodexHostError as WorkerPrecheckCodexError} from './codex-app-server-protocol';
+type PrecheckMode='local'|'typed-authority'|'typed-credential'|'host-unknown'|'wrong-ack'|'cancel';
+function precheckWorkerFixture(mode:PrecheckMode){
+ const messages:WorkerMessage[]=[];
+ const source=precheckChatSchema.parse({kind:'chat.run',executionEngine:'codex',modelRoutingVersion:2,codexNativeImageGeneration:false,requestedModel:'fixture-default-model',operationKey:'precheck-chain',capability:'copilot.assist',userId:'fixture-user',accountId:'fixture-account',conversationId:'fixture-conversation',sourceMessageId:'fixture-source',system:'受控系统',messages:[{role:'user',content:'只验证预检查状态链'}],maxSteps:4,maxOutputTokens:128,tools:[]});
+ const selected={...precheckCodexSpec(),requestedModel:source.requestedModel};
+ const session=vi.spyOn(precheckSessionModule,'createControlledCodexSession').mockRejectedValue(new WorkerPrecheckCodexError('CODEX_RPC_REJECTED'));
+ const native=vi.spyOn(precheckNativeModule,'runCodexNativeTurn').mockRejectedValue(new Error('FIXTURE_FORBIDS_REAL_TURN'));
+ const read=vi.spyOn(precheckNativeModule,'recoverCodexNativeTurn').mockRejectedValue(new Error('FIXTURE_FORBIDS_REAL_READ'));
+ if(mode==='cancel')session.mockImplementation(async(_cwd,signal)=>new Promise<never>((_resolve,reject)=>{
+  if(signal?.aborted){reject(new DOMException('fixture cancellation','AbortError'));return;}
+  signal?.addEventListener('abort',()=>reject(new DOMException('fixture cancellation','AbortError')),{once:true});
+ }));
+ const worker=createExecutionWorker({generate:vi.fn(),runChat:vi.fn(async()=>{throw Error('FIXTURE_FORBIDS_PI_CHAT');}),runExternalChat:precheckRealExternalChat,send(message){
+  messages.push(message);if(message.type!=='call')return;
+  queueMicrotask(()=>{
+   let ok=true,errorCode:string|undefined,data:unknown={};
+   if(message.port==='readTaskContext')data=source;
+   else if(message.port==='reserveExternalChatTurn')data={callId:'original-worker-precheck-call',status:'reserved'};
+   else if(message.port==='resolveModelCredential'){
+    if(mode==='typed-authority'||mode==='typed-credential'||mode==='host-unknown'){
+     ok=false;errorCode=mode==='typed-authority'?'MODEL_AUTHORITY_CHANGED':mode==='typed-credential'?'MODEL_CREDENTIAL_UNAVAILABLE':'LEASE_FENCE_MISMATCH';
+    }else data=selected;
+   }else if(message.port==='settleExternalChatTurn')data={callId:mode==='wrong-ack'?'foreign-call':'original-worker-precheck-call',status:'rejected'};
+   else if(message.port!=='commitResult'&&message.port!=='heartbeat'){
+    ok=false;errorCode='UNEXPECTED_FIXTURE_PORT';
+   }
+   worker.receive({version:1,type:'reply',requestId:message.requestId,execution:message.execution,callSeq:message.callSeq,ok,...(ok?{data}:{errorCode})});
+  });
+ }});
+ worker.ready();worker.receive({version:1,type:'run',requestId:'precheck-worker-run',execution,receiptProtocol:'consumed-v1',deadlineAt:Date.now()+120000});
+ return {worker,messages,session,native,read,restore(){worker.close();session.mockRestore();native.mockRestore();read.mockRestore();}};
+}
+
+it.each([
+ {mode:'local' as const,outcome:'waiting_user',errorCode:'CODEX_SESSION_PRECHECK_REJECTED'},
+ {mode:'typed-authority' as const,outcome:'waiting_user',errorCode:'MODEL_AUTHORITY_CHANGED'},
+ {mode:'typed-credential' as const,outcome:'waiting_user',errorCode:'MODEL_CREDENTIAL_UNAVAILABLE'},
+])('Codex $mode：真实消息链结算原call后commit $outcome及原安全码，非generic',async({mode,outcome,errorCode})=>{
+ const f=precheckWorkerFixture(mode);
+ try{
+  await vi.waitFor(()=>expect(f.messages.some(m=>m.type==='stopped')).toBe(true),{timeout:120000});
+  const calls=f.messages.filter((m):m is Extract<WorkerMessage,{type:'call'}>=>m.type==='call');
+  expect(calls.map(m=>m.port)).toEqual(['readTaskContext','reserveExternalChatTurn','resolveModelCredential','settleExternalChatTurn','commitResult']);
+  expect(calls.find(m=>m.port==='settleExternalChatTurn')).toMatchObject({execution,data:{callId:'original-worker-precheck-call',status:'rejected',rejectionCode:mode==='local'?'CODEX_RPC_REJECTED':errorCode}});
+  expect(calls.filter(m=>m.port==='commitResult')).toHaveLength(1);
+  expect(calls.find(m=>m.port==='commitResult')).toMatchObject({data:{outcome,errorCode}});
+  expect(f.messages.find(m=>m.type==='stopped')).toMatchObject({reason:outcome});
+  expect(f.messages.some(m=>m.type==='consumed')).toBe(true);
+  expect(calls.every(m=>m.execution.executionTaskId===execution.executionTaskId&&m.execution.fenceToken===execution.fenceToken&&Number.isInteger(m.callSeq))).toBe(true);
+  if(mode==='local'){expect(f.session).toHaveBeenCalledTimes(1);expect(f.session).toHaveBeenCalledWith(expect.any(String),expect.any(AbortSignal),undefined,false,true);}else expect(f.session).not.toHaveBeenCalled();
+  expect(f.native).not.toHaveBeenCalled();expect(f.read).not.toHaveBeenCalled();
+  expect(JSON.stringify(f.messages)).not.toContain('WORKER_EXECUTION_INTERRUPTED');
+ }finally{f.restore();}
+});
+
+it.each(['host-unknown','wrong-ack'] as const)('Codex %s：真实Worker投unknown，不能committed waiting_user或成功',async mode=>{
+ const f=precheckWorkerFixture(mode);
+ try{
+  await vi.waitFor(()=>expect(f.messages.some(m=>m.type==='stopped')).toBe(true),{timeout:120000});
+  const calls=f.messages.filter((m):m is Extract<WorkerMessage,{type:'call'}>=>m.type==='call');
+  expect(calls.filter(m=>m.port==='reserveExternalChatTurn')).toHaveLength(1);
+  expect(calls.filter(m=>m.port==='commitResult')).toHaveLength(1);
+  expect(calls.find(m=>m.port==='commitResult')).toMatchObject({data:{outcome:'unknown_result'}});
+  expect(f.messages.find(m=>m.type==='stopped')).toMatchObject({reason:'unknown_result'});
+  const settlements=calls.filter(m=>m.port==='settleExternalChatTurn');
+  if(mode==='host-unknown'){expect(settlements).toHaveLength(0);expect(f.session).not.toHaveBeenCalled();}
+  else{expect(settlements).toHaveLength(1);expect(f.session).toHaveBeenCalledTimes(1);}
+  expect(calls.some(m=>m.port==='commitExternalChatResult'||m.port==='startExternalChatTurn')).toBe(false);
+  expect(f.native).not.toHaveBeenCalled();expect(f.read).not.toHaveBeenCalled();
+ }finally{f.restore();}
+});
+
+it('Codex真实消息取消：会话准备中同租约cancel仅停止，不结算拒绝/失败、不重发',async()=>{
+ const f=precheckWorkerFixture('cancel');
+ try{
+  await vi.waitFor(()=>expect(f.session).toHaveBeenCalledTimes(1),{timeout:120000});
+  f.worker.receive({version:1,type:'cancel',requestId:'precheck-owned-cancel',execution});
+  await vi.waitFor(()=>expect(f.messages.find(m=>m.type==='stopped')).toMatchObject({reason:'cancelled'}),{timeout:120000});
+  const calls=f.messages.filter((m):m is Extract<WorkerMessage,{type:'call'}>=>m.type==='call');
+  expect(calls.map(m=>m.port)).toEqual(['readTaskContext','reserveExternalChatTurn','resolveModelCredential']);
+  expect(f.native).not.toHaveBeenCalled();expect(f.read).not.toHaveBeenCalled();
+ }finally{f.restore();}
 });

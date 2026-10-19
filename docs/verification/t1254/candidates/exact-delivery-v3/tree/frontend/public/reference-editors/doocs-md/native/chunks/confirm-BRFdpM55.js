@@ -1,0 +1,26 @@
+import { dt as e, n as t } from "./vendor_vue-OlfIOlFg.js";
+import { n } from "./translate-CUv9RhnO.js";
+var r = t("confirm", () => {
+	let t = e(!1), r = e(n("common.tip")), i = e(""), a = e(n("common.cancel")), o = e(n("common.confirm")), s = e(!1), c = null, l = null;
+	function u(e) {
+		r.value = e.title ?? n("common.tip"), i.value = e.description ?? "", a.value = e.cancelText ?? n("common.cancel"), o.value = e.confirmText ?? n("common.confirm"), s.value = e.destructive ?? !1, c = e.onConfirm ?? null, l = e.onCancel ?? null, t.value = !0;
+	}
+	function d() {
+		c?.(), t.value = !1, c = null, l = null;
+	}
+	function f() {
+		l?.(), t.value = !1, c = null, l = null;
+	}
+	return {
+		isOpen: t,
+		title: r,
+		description: i,
+		cancelText: a,
+		confirmText: o,
+		destructive: s,
+		confirm: u,
+		handleConfirm: d,
+		handleCancel: f
+	};
+});
+export { r as t };

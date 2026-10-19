@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "首次完整独立审核新任务T1067 SPEC SHA422b2c082d05654579433ea21e06b6168241469f63656371a0352640cc972982及固定8路径patch0daae7c7c932b21689942291f76907e1d2f58d81eb858417997dd1a48fbb88be。完整源码/patch、8实际before/afterSHA再核，默认build-only1/显式0、真实编译/资源/Node25/secret/Verdict/worker包内路径/Codex/CLI/签名公证保留，额外quality not-run诚实；显式0B问题已由非空普通文件source/destguard及实际独立12组合RED1/GREEN0闭合。新编号仅避免并行重号，正文除题首ID及末collision说明与已审34c70...规格完全一致；旧T1066CONCERNS/PASS/追加报告完整保留，不移旧taskreceipt。T1062同六/原18/候选commit先，next保护后单独8lease/验证/commit不扩592/801，后固定入口真实DMG/备份安装功能验收待实测。当前完整规格无finding；仅规格固定8准入，不签构建/model/browser/install。完整独评/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1067-initial-independent-spec-review-dvo_patx/t1067-initial-complete-review.json SHAb5a3b0f0a68cda1b65a1b65a6ec7c93684e98f5c5f0c4b358c78c71b220dfda2。",
+  "findings": []
+}

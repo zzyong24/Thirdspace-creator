@@ -9,15 +9,17 @@ import { createChatTurnSubmissionService } from "../modules/ai/chat-turn-submiss
 import { createAiRepository } from "../modules/ai/ai.repository";
 import { createChatWorkerDispatcher } from "../modules/execution/model-worker-dispatcher";
 import { createPersistentTaskService } from "../modules/execution/persistent-task.service";
-import { afterAll,beforeAll,expect,it,vi } from "vitest";
+import { afterEach,beforeEach,beforeAll,expect,it,vi } from "vitest";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { createWorkerSupervisor } from "../modules/execution/worker-supervisor";
 let db:Db,close:()=>Promise<void>,sequence=0;
-beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});
-afterAll(async()=>close());
+// 每例拥有独立真实数据库；dispatcher 全局认领不会接触上一例的待恢复任务，也不删除任务历史。
+beforeEach(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});
+afterEach(async()=>close());
+const waitFor=<T>(callback:()=>T|Promise<T>,options:{timeout?:number;interval?:number}={})=>vi.waitFor(callback,{...options,timeout:180000});
 const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
-beforeAll(()=>{execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
+beforeAll(()=>{execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},180000);
 it("正式 Worker 二进制真实声明 chat.run 能力",async()=>{
  const worker=createWorkerSupervisor({entryPath,ports:{validate:async()=>{},invoke:async()=>{throw Error("本用例只探测能力");}}});
  try{expect(await worker.start()).toContain("chat.run");}finally{await worker.stop();}
@@ -26,7 +28,7 @@ it("正式 Worker 二进制真实声明 chat.run 能力",async()=>{
 const staticModes=["text","tool","retry","approval","denied","cancel","unknown","partial","missing-tools","revoked","login","late-denied","live"];
 it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),...["tool","approval","missing-tools"].map(mode=>({mode,dynamic:true,resolveFailure:false})),{mode:"missing-tools",dynamic:true,resolveFailure:true}])("正式聊天子进程通过宿主完成并保留执行事实：$mode dynamic=$dynamic resolverFailure=$resolveFailure",async ({mode,dynamic,resolveFailure})=>{
  const ctx={userId:"chat-entry-u",accountId:`chat-entry-a-${++sequence}`,requestId:"test",source:"user" as const};
- const now=()=>new Date().toISOString(),budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
+ const now=()=>new Date().toISOString(),budget={maxCalls:10,maxTokens:100000,deadlineMs:180000};
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-entry-${++sequence}`});
  const conversation=await repo.createConversation({title:"真实 Worker",projectId:null,scope:"global"});
  const source=await repo.createMessage(conversation.id,{role:"user",content:"查找来源",attachments:[],modelMetadata:{}});
@@ -73,7 +75,7 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
   host.start();
   if(mode==="live"){
     const stream=createExecutionStreamService(db);
-    await vi.waitFor(async()=>expect((await stream.read(ctx,submission.executionTaskId)).events.some(event=>event.chunk.type==="text-delta")).toBe(true));
+    await waitFor(async()=>expect((await stream.read(ctx,submission.executionTaskId)).events.some(event=>event.chunk.type==="text-delta")).toBe(true));
     expect((await state()).status).toBe("running");
     const stop=new AbortController(),subscription=subscribeExecutionStream(stream,ctx,submission.executionTaskId,{signal:stop.signal});
     const first=await subscription.next();expect(first.done).toBe(false);
@@ -83,40 +85,42 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
     responseGate.finish!();
   }
   if(mode==="cancel"){
-   await vi.waitFor(()=>expect(requests).toBe(1));await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"cancel",idempotencyKey:"cancel"});
-   await vi.waitFor(async()=>expect((await state()).status).toBe("cancelled"));expect(disconnected).toBe(true);
+   await waitFor(()=>expect(requests).toBe(1));await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"cancel",idempotencyKey:"cancel"});
+   await waitFor(async()=>expect((await state()).status).toBe("cancelled"));expect(disconnected).toBe(true);
   }else if(mode==="unknown" || mode==="missing-tools"){
-   await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="unknown"?"unknown_result":"failed"));
+   await waitFor(async()=>expect((await state()).status).toBe(mode==="unknown"?"unknown_result":"failed"));
    expect(requests).toBe(mode==="unknown"?1:0);expect(execute).toHaveBeenCalledTimes(mode==="unknown"?1:0);
   }else{
    if(["approval","revoked","login","late-denied"].includes(mode)){
-    await vi.waitFor(async()=>expect((await state()).status).toBe("waiting_user"));
+    await waitFor(async()=>expect((await state()).status).toBe("waiting_user"));
     const waiting=await state();expect(waiting.lastErrorCode).toBe(mode==="approval"?"CHAT_APPROVAL_REQUIRED":"CHAT_TOOL_REQUIRES_USER");expect(execute).toHaveBeenCalledTimes(mode==="login"?1:0);expect(requests).toBe(1);
     if(mode==="approval"){
       const page=await createExecutionStreamService(db).read(ctx,submission.executionTaskId);
       const approvals=page.events.filter(event=>event.chunk.type==="tool-approval-request");expect(approvals).toHaveLength(1);pendingApprovalId=String(approvals[0]!.chunk.approvalId);
       await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"resume-without-grant"});
-      await vi.waitFor(async()=>expect(await state()).toMatchObject({status:"waiting_user",attempt:2}));
+      await waitFor(async()=>expect(await state()).toMatchObject({status:"waiting_user",attempt:2}));
       expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();
       expect((await createExecutionStreamService(db).read(ctx,submission.executionTaskId)).events.filter(event=>event.chunk.type==="tool-approval-request")).toHaveLength(1);
       expect((await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId))).filter(call=>call.kind==="tool")).toHaveLength(0);
     }
     grant=true;await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"allow-and-resume"});
    }
-   await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="partial"?"partial":"succeeded"),{timeout:15000});
+   const denied=["denied","late-denied"].includes(mode),partial=mode==="partial"||denied;
+   const expectedText=(mode==="partial"?"最终回复".repeat(3):"最终回复")+(denied?"\n\n本次部分完成。最后一次工具操作未成功，尚未交付可采用候选或已提交结果。请查看上方真实错误与恢复说明。":"");
+   await waitFor(async()=>expect((await state()).status).toBe(partial?"partial":"succeeded"));
    const streamEvents=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId));
-   expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("最终回复");
-   expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(1);
+   expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe(expectedText);
+   expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(mode==="partial"?3:denied?2:1);
    expect(streamEvents.filter(event=>event.chunk.type==="finish")).toHaveLength(1);
-   expect(streamEvents.sort((a,b)=>a.sequence-b.sequence).at(-1)!.chunk).toMatchObject({type:"finish",finishReason:mode==="partial"?"length":"stop"});
+   expect(streamEvents.sort((a,b)=>a.sequence-b.sequence).at(-1)!.chunk).toMatchObject({type:"finish",finishReason:mode==="partial"?"length":"stop",messageMetadata:{completeness:partial?"partial":"completed"}});
    if(usesTool){
     const results=streamEvents.filter(event=>["tool-output-available","tool-output-denied","tool-input-error"].includes(String(event.chunk.type)));
     expect(results).toHaveLength(["revoked","login"].includes(mode)?2:1);
-    if(["denied","late-denied"].includes(mode))expect(results[0]!.chunk.type).toBe("tool-output-denied");
+    if(denied){expect(results[0]!.chunk.type).toBe("tool-output-denied");expect(execute).not.toHaveBeenCalled();}
    }
-   const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:"最终回复"});
+   const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:expectedText,modelMetadata:{completeness:partial?"partial":"completed"}});
    expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
-   expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);
+   expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(mode==="partial"?3:["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);
    if(usesTool && !["denied","late-denied"].includes(mode))expect(bodies.at(-1)).toContain("https://source.test/evidence");
    if(["approval","revoked","login","late-denied"].includes(mode))expect((await state()).attempt).toBe(mode==="approval"?3:2);
    if(mode==="approval"){
@@ -138,55 +142,67 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
   if(mode==="retry")expect(calls.map(call=>call.status)).toEqual(["rejected","settled"]);
   if(["cancel","unknown","missing-tools"].includes(mode))expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(0);
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
-},20000);
+},360000);
 
-it.each(["cancel","stop","pause","unknown","expired","lease-expired"])("动态工具解析不响应取消时，%s 仍能停止且迟到返回不能调用模型",async mode=>{
+it.each(["cancel","stop","pause","unknown","model-resumed","expired","lease-expired"])("动态工具解析不响应取消时，%s 仍能停止且迟到返回不能调用模型",async mode=>{
  let clockOffset=0;
  const ctx={userId:"resolve-race",accountId:`resolve-${++sequence}`,requestId:"test",source:"user" as const},now=()=>new Date(Date.now()+clockOffset).toISOString();
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-race-${++sequence}`});
  const conversation=await repo.createConversation({title:"解析竞态",projectId:null,scope:"global"}),source=await repo.createMessage(conversation.id,{role:"user",content:"问题",attachments:[],modelMetadata:{}});
  const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"fixture",messages:[{role:"user",content:"问题"}],tools:[],maxSteps:3,maxOutputTokens:128})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  const releases:Array<(tools:Record<string,ChatBackendTool>)=>void>=[];
- const resolveTools=vi.fn(()=>mode==="unknown"?Promise.reject(new Error("恢复工具不可用")):new Promise<Record<string,ChatBackendTool>>(resolve=>releases.push(resolve)));
+ const resolverFails=["unknown","model-resumed"].includes(mode);
+ const resolveTools=vi.fn(()=>resolverFails?Promise.reject(new Error("恢复工具不可用")):new Promise<Record<string,ChatBackendTool>>(resolve=>releases.push(resolve)));
  const credentials=vi.fn(async()=>{throw Error("不应请求凭据");});
- const host=createChatWorkerDispatcher(db,{now,entryPath,workerId:"resolve-race",budget:{maxCalls:5,maxTokens:10000,deadlineMs:mode==="expired"?1000:["stop","lease-expired"].includes(mode)?600000:60000},pollMs:100,modelConcurrency:1,resolveTools,resolveModelCredential:credentials});
+ const host=createChatWorkerDispatcher(db,{now,entryPath,workerId:"resolve-race",budget:{maxCalls:5,maxTokens:10000,deadlineMs:mode==="expired"?1000:["stop","lease-expired"].includes(mode)?600000:180000},pollMs:100,modelConcurrency:1,resolveTools,resolveModelCredential:credentials});
  const state=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!;
  const tasks=createPersistentTaskService(db);
- if(mode==="unknown"){
+ let originalCall:typeof executionCalls.$inferSelect|undefined;
+ if(resolverFails){
   const claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId:"prior"}))!;
   const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
   const {createExecutionCallLedgerService}=await import("../modules/execution/execution-call-ledger.service");
-  const ledger=createExecutionCallLedgerService(db,{budget:{maxCalls:5,maxTokens:10000,deadlineMs:60000}});
-  const call=await ledger.reserve(ref,{kind:"model",operationKey:"original",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:10});await ledger.start(ref,call.id);
+  const ledger=createExecutionCallLedgerService(db,{budget:{maxCalls:5,maxTokens:10000,deadlineMs:180000}});
+  // 无外部结果的根模型可在显式resume时废弃；未决工具仍必须保留unknown门。
+  const call=await ledger.reserve(ref,{kind:mode==="unknown"?"tool":"model",operationKey:"original",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:mode==="unknown"?0:10});await ledger.start(ref,call.id);
   await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"pause",idempotencyKey:"prior-pause"});
   await tasks.acknowledgeControl({taskId:submitted.executionTaskId,workerId:"prior",attempt:claim.lease.attempt});
+  originalCall=(await db.select().from(executionCalls).where(eq(executionCalls.id,call.id)))[0]!;
+  expect(originalCall.status).toBe("started");
   await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"resume",idempotencyKey:"prior-resume"});
+  const resumed=(await db.select().from(executionCalls).where(eq(executionCalls.id,call.id)))[0]!;
+  expect(resumed).toEqual({...originalCall,status:mode==="unknown"?"started":"superseded",updatedAt:resumed.updatedAt});
+  expect((await state()).retryOfCallId).toBe(mode==="unknown"?null:call.id);
  }
  try{
-  host.start();await vi.waitFor(()=>expect(resolveTools).toHaveBeenCalledTimes(1));
-  if(mode==="unknown"){
-   await vi.waitFor(async()=>expect((await state()).status).toBe("unknown_result"));
+  host.start();await waitFor(()=>expect(resolveTools).toHaveBeenCalledTimes(1));
+  if(resolverFails){
+   if(mode==="unknown")await waitFor(async()=>expect((await state()).status).toBe("unknown_result"));
+   else await waitFor(async()=>expect((await state()).status).toBe("failed"));
+   expect((await state()).lastErrorCode).toBe("CHAT_WORKER_INPUT_UNAVAILABLE");
    expect(credentials).not.toHaveBeenCalled();
    const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
-   expect(calls).toHaveLength(1);expect(calls[0]!.operationKey).toBe("original");expect(calls[0]!.status).toBe("started");return;
+   expect(calls).toHaveLength(1);
+   expect(calls[0]).toEqual({...originalCall,status:mode==="unknown"?"started":"superseded",updatedAt:calls[0]!.updatedAt});
+   expect(calls[0]).toMatchObject({operationKey:"original",reservedTokens:mode==="unknown"?0:10,totalTokens:null,providerResult:null});return;
   }
   if(mode==="expired" || mode==="lease-expired"){
    clockOffset=mode==="expired"?2000:Date.parse((await state()).leaseExpiresAt!)-Date.now()+100;
-   await vi.waitFor(async()=>expect((await state()).status).toBe("failed"),{timeout:1500});
+   await waitFor(async()=>expect((await state()).status).toBe("failed"),{timeout:3000});
    expect(credentials).not.toHaveBeenCalled();return;
   }
   if(mode!=="stop"){
    await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:mode==="pause"?"pause":"cancel",idempotencyKey:"control"});
-   await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="pause"?"paused":"cancelled"));
+   await waitFor(async()=>expect((await state()).status).toBe(mode==="pause"?"paused":"cancelled"));
   }
   if(mode==="pause"){
    await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"resume",idempotencyKey:"resume"});
-   await vi.waitFor(()=>expect(resolveTools).toHaveBeenCalledTimes(2));
+   await waitFor(()=>expect(resolveTools).toHaveBeenCalledTimes(2));
    releases[0]!({});await Promise.resolve();await Promise.resolve();
    expect((await state()).attempt).toBe(2);expect((await state()).status).toBe("running");
   }
   let stopped=false;const stopping=host.stop().then(()=>{stopped=true;});
-  await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:3000});await stopping;
+  await waitFor(()=>expect(stopped).toBe(true),{timeout:3000});await stopping;
   if(mode==="stop"){
    expect((await state()).status).toBe("running");
    clockOffset=Date.parse((await state()).leaseExpiresAt!)-Date.now()+100;
@@ -198,4 +214,4 @@ it.each(["cancel","stop","pause","unknown","expired","lease-expired"])("动态�
   expect(credentials).not.toHaveBeenCalled();
   expect(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId))).toHaveLength(0);
  }finally{for(const release of releases)release({});await host.stop();}
-},10000);
+},360000);

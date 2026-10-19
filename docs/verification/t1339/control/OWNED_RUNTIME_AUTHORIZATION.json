@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-17T09:35:17.996047+00:00",
+  "ownedRoot": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6",
+  "parentRealpath": "/Volumes/T7-MacData/CodexBuilds",
+  "createdFresh": true,
+  "mode": "0700",
+  "allowed": "仅本轮DB/cache/tmp/media/workspaces/日志，fixture专用随机测试应用key从开始0600保存供同RED终态DB/原IDs GREEN复用；仅内存读取，证据只记存在/权限。",
+  "forbidden": [
+    "用户auth/Keychain复制",
+    "旧UNKNOWN库恢复",
+    "共享dist build",
+    "生产service修改未经真实RED授权"
+  ]
+}

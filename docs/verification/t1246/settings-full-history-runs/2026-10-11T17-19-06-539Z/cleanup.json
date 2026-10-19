@@ -1,0 +1,101 @@
+{
+  "before": {
+    "members": [],
+    "listeners": []
+  },
+  "after": {
+    "members": [],
+    "listeners": []
+  },
+  "killed": [],
+  "ownedRunnerProcessGroup": 52923,
+  "observedOwnedProcesses": [
+    {
+      "pid": 52923,
+      "ppid": 52910,
+      "pgid": 52923,
+      "start": "Mon Oct 12 01:27:03 2026",
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js test --config /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/settings-full-history-tool/playwright.config.ts --project e2e --grep renders the settings structure|外观主题与密度"
+    },
+    {
+      "pid": 52958,
+      "ppid": 52923,
+      "pgid": 52958,
+      "start": "Mon Oct 12 01:27:03 2026",
+      "command": "node ../docs/verification/t1246/driver/start-isolated-next.cjs"
+    },
+    {
+      "pid": 52993,
+      "ppid": 52958,
+      "pgid": 52958,
+      "start": "Mon Oct 12 01:27:03 2026",
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 61349"
+    },
+    {
+      "pid": 52994,
+      "ppid": 52993,
+      "pgid": 52958,
+      "start": "Mon Oct 12 01:27:04 2026",
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next/dist/server/lib/start-server.js"
+    },
+    {
+      "pid": 53000,
+      "ppid": 52994,
+      "pgid": 52958,
+      "start": "Mon Oct 12 01:27:05 2026",
+      "command": "node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-4295ca2b1c2f9fbb/build/3c1d5e8e2db29077.js 52907"
+    },
+    {
+      "pid": 53002,
+      "ppid": 52994,
+      "pgid": 52958,
+      "start": "Mon Oct 12 01:27:05 2026",
+      "command": "node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-4295ca2b1c2f9fbb/build/3c1d5e8e2db29077.js 52911"
+    },
+    {
+      "pid": 53201,
+      "ppid": 52923,
+      "pgid": 52923,
+      "start": "Mon Oct 12 01:27:32 2026",
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/worker/workerProcessEntry.js"
+    },
+    {
+      "pid": 53229,
+      "ppid": 53201,
+      "pgid": 53229,
+      "start": "Mon Oct 12 01:27:33 2026",
+      "command": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-t1246-settings-full-NSLDW7/scratch/playwright_chromiumdev_profile-UFpG0h --remote-debugging-pipe --no-startup-window"
+    },
+    {
+      "pid": 53230,
+      "ppid": 53229,
+      "pgid": 53229,
+      "start": "Mon Oct 12 01:27:33 2026",
+      "command": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell --type=gpu-process --no-sandbox --disable-breakpad --headless --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --gpu-preferences=SAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAAAwAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --use-gl=angle --shared-files --field-trial-handle=1718379636,r,5446577526775571354,4881931480508433141,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=1935764596,r,6100620452431752466,3606903944972686724,4 --trace-process-track-uuid=3190708988185955192"
+    },
+    {
+      "pid": 53231,
+      "ppid": 53229,
+      "pgid": 53229,
+      "start": "Mon Oct 12 01:27:34 2026",
+      "command": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-sandbox --use-angle=swiftshader-webgl --use-gl=angle --mute-audio --headless=old --shared-files --field-trial-handle=1718379636,r,5446577526775571354,4881931480508433141,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=1935764596,r,6100620452431752466,3606903944972686724,4 --trace-process-track-uuid=3190708989122997041"
+    },
+    {
+      "pid": 53232,
+      "ppid": 53229,
+      "pgid": 53229,
+      "start": "Mon Oct 12 01:27:34 2026",
+      "command": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell --type=renderer --headless=old --no-sandbox --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=4 --time-ticks-at-unix-epoch=-1791271126117954 --launch-time-ticks=468527988972 --shared-files --field-trial-handle=1718379636,r,5446577526775571354,4881931480508433141,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=1935764596,r,6100620452431752466,3606903944972686724,4 --trace-process-track-uuid=3190708990060038890"
+    },
+    {
+      "pid": 53360,
+      "ppid": 53229,
+      "pgid": 53229,
+      "start": "Mon Oct 12 01:27:48 2026",
+      "command": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell --type=renderer --headless=old --no-sandbox --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1791271126117954 --launch-time-ticks=468542016060 --shared-files --field-trial-handle=1718379636,r,5446577526775571354,4881931480508433141,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=1935764596,r,6100620452431752466,3606903944972686724,4 --trace-process-track-uuid=3190708990997080739"
+    }
+  ],
+  "ownershipMethod": "Observed live PPID lineage from spawned runner; before every signal recheck PID birth time",
+  "foreignProcessesNeverSignalled": true,
+  "ownedDataPreserved": true
+}

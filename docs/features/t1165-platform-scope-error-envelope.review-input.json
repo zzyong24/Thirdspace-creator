@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：实际SCOPE_MISSING因未登记contract ErrorCode/ERROR_HTTP而从dispatch退化为HTTP400裸字符串，HttpTransport得到code=null，既有NativeReportPanel恢复按钮无法出现。仅在contract/envelope登记该既有码并保持原400，可沿现成dispatch→strict envelope→HttpTransport→固定码UI恢复完整链路；backend权限、unknown字符串回退、5xx未知结果、真人研究和Chrome原断言均不放宽。",
+  "findings": []
+}

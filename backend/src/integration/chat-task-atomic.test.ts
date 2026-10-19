@@ -12,7 +12,7 @@ import {createExecutionChatToolPorts,type ChatBackendTool} from "../modules/exec
 let db:Db,close:()=>Promise<void>,seq=0;
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});afterAll(async()=>close());
 const budget={maxCalls:6,maxTokens:100000,deadlineMs:60000};
-async function fixture(second=false,start=true,toolName:"planning.thesis"|"material.generate"|"review.script"|"publish.package"="planning.thesis",mixed=false){
+async function fixture(second=false,start=true,toolName:"planning.thesis"|"material.generate"|"review.script"|"publish.package"="planning.thesis",mixed=false,legacyParentBudget?:typeof budget){
  const childType=toolName==="material.generate"?"asset.generate":toolName==="review.script"?"script.review":toolName==="publish.package"?"publish.platform_adapt":"planning.thesis";
  const modelToolName=toolName.replaceAll(".","_");
  let time=Date.now();const now=()=>new Date(time).toISOString();
@@ -23,6 +23,17 @@ async function fixture(second=false,start=true,toolName:"planning.thesis"|"mater
  const parameters=z.object({topic:z.string()}).strict();
  const definition={name:toolName,version:"atomic-test-v1",effect:"committed",execution:"host.task-submit",description:"论点",parameters:z.toJSONSchema(parameters)};
  const submitted=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"策略",messages:[{role:"user",content:"立论点"}],maxSteps:6,maxOutputTokens:128,tools:[definition,...(mixed?[{...definition,name:"planning.thesis"}]:[])] as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const parentIdentity={id:submitted.executionTaskId,kind:"ai_task",ownerType:"ai_task",ownerId:submitted.taskId,userId:ctx.userId,accountId:ctx.accountId,status:"queued"};
+ const [originalParent]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
+ expect(originalParent).toMatchObject(parentIdentity);expect(originalParent!.executionBudget).toEqual({policy:"continuous",maxCalls:null,maxTokens:null,deadlineMs:null});expect(originalParent!.deadlineAt).toBeNull();
+ // 旧bounded持久协议兼容夹具：公共submit仍创建continuous；仅显式选择的旧预算用例在第一次claim前设真实父行，不改冻结payload/子任务/回执。
+ if(legacyParentBudget){
+  const deadlineAt=new Date(time+legacyParentBudget.deadlineMs).toISOString();
+  await db.update(executionTasks).set({executionBudget:legacyParentBudget,deadlineAt}).where(eq(executionTasks.id,submitted.executionTaskId));
+  const [legacyParent]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
+  expect(legacyParent).toMatchObject({...parentIdentity,executionBudget:legacyParentBudget,deadlineAt});
+  expect({...legacyParent,executionBudget:originalParent!.executionBudget,deadlineAt:originalParent!.deadlineAt}).toEqual(originalParent);
+ }
  const tasks=createPersistentTaskService(db,{now});const claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId:"worker",leaseSeconds:10}))!;
  const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const ledger=createExecutionCallLedgerService(db,{now,budget}),generation=createExecutionGenerationPorts(db,{now,budget});
@@ -131,7 +142,7 @@ it("真实原子回执才唤醒同一个子任务，回读可补偿唤醒失败�
 });
 
 it.each(["planning.thesis","material.generate","review.script","publish.package"] as const)("%s 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async toolName=>{
- const f=await fixture(false,true,toolName,toolName==="material.generate"),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+ const f=await fixture(false,true,toolName,toolName==="material.generate",budget),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const child=await f.ai.getTask(f.ctx,id);let time=Date.parse(child.requestedAt);
  const prepare=vi.fn(async()=>{throw Object.assign(new Error("private temporary text"),{statusCode:503,responseHeaders:{"retry-after":"2"}});});
  const fail=vi.fn(f.ai.markFailed),options={deadlineMs:60000,now:()=>time,random:()=>0,prepare,fail};
@@ -157,8 +168,11 @@ it.each(["planning.thesis","material.generate"].flatMap(toolName=>["account","or
  await expect(recovery.prepare(variant==="account"?{...f.ctx,accountId:"other"}:f.ctx,id)).rejects.toThrow();expect(prepare).not.toHaveBeenCalled();await recovery.stop();
 });
 it("子任务原期限耗尽时不再准备，也不重设 requestedAt",async()=>{
- const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId,child=await f.ai.getTask(f.ctx,id);
- const prepare=vi.fn(async()=>{}),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:1000,now:()=>Date.parse(child.requestedAt)+1001,prepare,fail:f.ai.markFailed});
+ const f=await fixture(false,true,"planning.thesis",false,{...budget,deadlineMs:1000}),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId,child=await f.ai.getTask(f.ctx,id);
+ // 旧持久准备记录的绝对期限已经耗尽；新预算下限不能续期旧任务。
+ const [record]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+ await db.update(aiTasks).set({runtimeData:{...(record!.runtimeData as any),hostTaskPreparation:{attempts:0,nextAt:new Date(0).toISOString(),deadlineAt:new Date(Date.parse(child.requestedAt)+1000).toISOString(),continuous:false,errorCode:null}}}).where(eq(aiTasks.id,id));
+ const prepare=vi.fn(async()=>{}),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:120000,now:()=>Date.parse(child.requestedAt)+1001,prepare,fail:f.ai.markFailed});
  await recovery.prepare(f.ctx,id);expect(prepare).not.toHaveBeenCalled();expect(await f.ai.getTask(f.ctx,id)).toMatchObject({status:"failed",requestedAt:child.requestedAt});await recovery.stop();
 });
 it("停止等待在途准备收口，停止后不再重领；并发回读共用同一准备",async()=>{
@@ -172,17 +186,18 @@ it("停止等待在途准备收口，停止后不再重领；并发回读共用�
  await expect(recovery.prepare(f.ctx,id)).rejects.toThrow();expect(prepare).toHaveBeenCalledTimes(1);
 });
 
-it.each(["stop","deadline"])("实际纯准备挂起后 %s 能收口，迟到读取不能再创建执行映射",async reason=>{
+it.each(["stop","deadline","continuous"])("实际纯准备挂起后 %s 保留原期限或取消权，迟到读取不能再创建执行映射",async reason=>{
  const {createStructuredBusinessExecutionService}=await import("../modules/ai-runtime/structured-business-execution.service");
- const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+ const f=await fixture(false,true,"planning.thesis",false,reason==="deadline"?{...budget,deadlineMs:1000}:undefined),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const [child]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
- await db.update(aiTasks).set({runtimeData:{...(child!.runtimeData as any),skillSnapshot:{snapshotVersion:1,userId:f.ctx.userId,accountId:f.ctx.accountId,resolvedAt:new Date().toISOString(),platformPolicyVersion:"1",platformPolicy:"test",skills:[{skillId:"planning.thesis",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"test",template:"test",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}}}).where(eq(aiTasks.id,id));
+ await db.update(aiTasks).set({runtimeData:{...(child!.runtimeData as any),...(reason==="deadline"?{hostTaskPreparation:{attempts:0,nextAt:new Date(0).toISOString(),deadlineAt:new Date(Date.parse(child!.requestedAt)+1000).toISOString(),continuous:false,errorCode:null}}:{}),skillSnapshot:{snapshotVersion:1,userId:f.ctx.userId,accountId:f.ctx.accountId,resolvedAt:new Date().toISOString(),platformPolicyVersion:"1",platformPolicy:"test",skills:[{skillId:"planning.thesis",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"test",template:"test",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}}}).where(eq(aiTasks.id,id));
  let release!:()=>void;const prepare=vi.fn(async()=>{await new Promise<void>(r=>{release=r;});return {};});
  const business=createStructuredBusinessExecutionService(db,{budget,maxOutputTokens:128,adapters:{"planning.thesis":{skillId:"planning.thesis",capability:"planning.thesis",prepare,project:()=>{throw new Error("unused");}}}});
  await business.recoverQueued(async()=>{});expect(prepare).not.toHaveBeenCalled();
- const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:reason==="deadline"?1000:60000,prepare:(c,id,signal)=>business.prepare(c,id,signal),fail:f.ai.markFailed});
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:120000,prepare:(c,id,signal,inheritedBudget)=>business.prepare(c,id,signal,inheritedBudget),fail:f.ai.markFailed});
+
  let preparationError:unknown;const work=recovery.prepare(f.ctx,id).catch(error=>{preparationError=error;});let stopped=false;
- try{await vi.waitFor(()=>expect(release,String(preparationError)).toBeDefined());const stop=(reason==="stop"?recovery.stop():work).then(()=>{stopped=true;});await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:2500});release();await stop;await work;await Promise.resolve();const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(current!.executionTaskId).toBeNull();expect(current!.status).toBe(reason==="deadline"?"failed":"queued");}
+ try{await vi.waitFor(()=>expect(release,String(preparationError)).toBeDefined());const stop=(reason==="stop"?recovery.stop():reason==="deadline"?work:(async()=>{await new Promise(resolve=>setTimeout(resolve,1500));expect(stopped).toBe(false);return recovery.stop();})()).then(()=>{stopped=true;});await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:2500});release();await stop;await work;await Promise.resolve();const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(current!.executionTaskId).toBeNull();expect(current!.status).toBe(reason==="deadline"?"failed":"queued");}
  finally{release?.();await work;await recovery.stop();}
 });
 
@@ -242,17 +257,20 @@ it("素材提交不能偷换子任务类型，错误映射在同一事务中回�
  const {createAssetBusinessExecutionService}=await import("../modules/ai-runtime/asset-business-execution.service");
  const f=await fixture(false,true,"material.generate",true),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const child=await f.ai.getTask(f.ctx,id);
+ const [parentExecution]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+ expect(parentExecution!.executionBudget).toEqual({policy:"continuous",maxCalls:null,maxTokens:null,deadlineMs:null});expect(parentExecution!.deadlineAt).toBeNull();
  const business=createAssetBusinessExecutionService(db,{budget,assertProject:async()=>{},resolveSpec:async()=>({kind:"image",provider:"openai",model:"gpt-image-1",token:"private-test-key",baseUrl:"http://localhost"})});
- const prepare=vi.fn((c:any,taskId:string,signal:AbortSignal)=>business.prepare(c,taskId,signal));
+ const prepare=vi.fn((c:any,taskId:string,signal:AbortSignal,inheritedBudget?:Parameters<typeof business.prepare>[3])=>business.prepare(c,taskId,signal,inheritedBudget));
  const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,prepare,fail:f.ai.markFailed});
  try{
   let mapped:typeof aiTasks.$inferSelect|undefined;
   for(let scan=0;scan<20;scan++){await recovery.recover(new AbortController().signal);[mapped]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));if(mapped?.executionTaskId)break;}
   expect(mapped!.executionTaskId).toBeTruthy();expect(mapped!.requestedAt).toBe(child.requestedAt);
-  expect(prepare).toHaveBeenCalledWith(expect.objectContaining({userId:f.ctx.userId,accountId:f.ctx.accountId}),id,expect.any(AbortSignal));
+  expect(prepare).toHaveBeenCalledWith(expect.objectContaining({userId:f.ctx.userId,accountId:f.ctx.accountId}),id,expect.any(AbortSignal),parentExecution!.executionBudget);
   expect((await f.children()).rows).toHaveLength(1);
   const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped!.executionTaskId!));
   expect(execution!.payload).toMatchObject({modelInput:{kind:"asset.generate",prompt:"原主题",mediaKind:"image"}});
+  expect(execution!.executionBudget).toEqual(parentExecution!.executionBudget);expect(execution!.deadlineAt).toBe(parentExecution!.deadlineAt);
   expect(JSON.stringify(execution!.payload)).not.toContain("private-test-key");
   await recovery.prepare(f.ctx,id);expect(prepare.mock.calls.filter(call=>call[1]===id)).toHaveLength(1);
  }finally{await recovery.stop();business.stop();}
@@ -273,4 +291,44 @@ it("已确认未提交的审核前置失败保留原卡片，无子任务或唤�
  f.prepare.mockRejectedValue(new ChatTaskPreparationFailure({status:"error",summary:"请先保存整稿",evidence:[],data:{kind:"review.report",taskId:null,projectId:null,error:"请先保存整稿"},error:{code:"no_evidence",retryable:false,recovery:"请先保存整稿"},continuation:null,sideEffect:"none"}));
  expect(await f.host.execute(f.ref,{callId:f.call.callId})).toMatchObject({status:"error",sideEffect:"none",data:{kind:"review.report",taskId:null,error:"请先保存整稿"}});
  expect((await f.children()).rows).toHaveLength(0);expect(f.wakeTask).not.toHaveBeenCalled();
+});
+
+// T1080：以下短窗口只模拟已经冻结的旧bounded父任务，不改变新正执行两分钟下限。
+it("bounded旧父任务已到原deadline，首次准备没有旧record也不能被新floor续期",async()=>{
+ const f=await fixture(false,true,"planning.thesis",false,{...budget,deadlineMs:1000});
+ const result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as {taskId:string}).taskId;
+ const child=await f.ai.getTask(f.ctx,id),[parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const [beforeCall]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId));
+ expect((await f.ai.getTaskRuntimeData(f.ctx,id)).hostTaskPreparation).toBeUndefined();
+ const prepare=vi.fn(async()=>{}),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:120000,now:()=>Date.parse(parent!.deadlineAt!)+1,prepare,fail:f.ai.markFailed});
+ try{
+  await recovery.prepare(f.ctx,id);expect(prepare).not.toHaveBeenCalled();
+  expect(await f.ai.getTask(f.ctx,id)).toMatchObject({status:"failed",requestedAt:child.requestedAt});
+  const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(current!.executionTaskId).toBeNull();
+  expect((await db.select().from(executionTasks).where(eq(executionTasks.id,parent!.id)))[0]).toEqual(parent);
+  expect((await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId)))[0]).toEqual(beforeCall);
+ }finally{await recovery.stop();}
+});
+it.each([false,true])("真实四参bounded父任务绑定仍守原deadline，伪造提交digest=%s不获得继承权",async forged=>{
+ const {createStructuredBusinessExecutionService}=await import("../modules/ai-runtime/structured-business-execution.service");
+ const f=await fixture(false,true,"planning.thesis",false,{...budget,deadlineMs:60000});
+ const result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as {taskId:string}).taskId;
+ const [child]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const [beforeCall]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId));
+ await db.update(aiTasks).set({runtimeData:{...(child!.runtimeData as Record<string,unknown>),skillSnapshot:{snapshotVersion:1,userId:f.ctx.userId,accountId:f.ctx.accountId,resolvedAt:new Date().toISOString(),platformPolicyVersion:"1",platformPolicy:"fixture",skills:[{skillId:"planning.thesis",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"fixture",template:"fixture",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:{type:"object"},completionPolicy:null,completionPolicyAdapter:null}}]}}}).where(eq(aiTasks.id,id));
+ const business=createStructuredBusinessExecutionService(db,{budget:{...budget,deadlineMs:120000},maxOutputTokens:128,adapters:{"planning.thesis":{skillId:"planning.thesis",capability:"planning.thesis",prepare:async()=>({topic:"fixture"}),project:()=>{throw new Error("不用模型和候选");}}}});
+ const preparationErrors:string[]=[];
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:120000,prepare:async(c,id,signal,inheritedBudget)=>{
+  if(forged){const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));const runtime=current!.runtimeData as Record<string,unknown>;await db.update(aiTasks).set({runtimeData:{...runtime,hostTaskSubmission:{...(runtime.hostTaskSubmission as Record<string,unknown>),inputDigest:"changed"}}}).where(eq(aiTasks.id,id));}
+  try{return await business.prepare(c,id,signal,inheritedBudget);}catch(error){preparationErrors.push(String(error));throw error;}
+ },fail:f.ai.markFailed});
+ try{
+  await recovery.prepare(f.ctx,id);const current=await f.ai.getTask(f.ctx,id),[raw]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+  expect(raw).toMatchObject({userId:f.ctx.userId,accountId:f.ctx.accountId});
+  if(forged){expect(raw!.executionTaskId).toBeNull();expect(current.status).toBe("failed");}
+  else{expect(preparationErrors).toEqual([]);expect(raw!.executionTaskId).toBeTruthy();const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,raw!.executionTaskId!));expect(execution!.deadlineAt).toBe(parent!.deadlineAt);expect(execution!.executionBudget).toEqual({...budget,deadlineMs:Date.parse(parent!.deadlineAt!)-Date.parse(child!.requestedAt)});}
+  expect((await db.select().from(executionTasks).where(eq(executionTasks.id,parent!.id)))[0]).toEqual(parent);
+  expect((await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId)))[0]).toEqual(beforeCall);
+ }finally{await recovery.stop();}
 });

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createDb, sql, type Db } from "@creatoros/backend";
 import {
   createAssetRepository,
   type AssetRepository,
@@ -34,10 +34,11 @@ function deterministicDeps() {
 }
 
 let db: Db;
+let t1341Client: Awaited<ReturnType<typeof createDb>>["client"];
 let repo: AssetRepository;
 
 beforeEach(async () => {
-  ({ db } = await createDb());
+  ({ db, client: t1341Client } = await createDb());
   repo = createAssetRepository(db, deterministicDeps());
 });
 
@@ -628,3 +629,20 @@ describe("assets.repository — findAssetBySourceUrl ([T-251])", () => {
     ).toBeNull();
   });
 });
+
+
+it("T1341 批量ID读复用原grant门/撤销/legacy；空0查询、200去重、201拒绝",async()=>{
+ try{
+  await db.execute(sql`INSERT INTO account_groups(id,user_id,name,created_at,updated_at) VALUES('t1341-ga',${A},'甲',${NOW},${NOW}),('t1341-gb',${A},'乙',${NOW},${NOW})`);
+  const own={kind:'group' as const,id:'t1341-ga'},other={kind:'group' as const,id:'t1341-gb'};
+  const a=await repo.insertAsset(A,{assetType:'image',name:'原组',currentFileId:null},own),b=await repo.insertAsset(A,{assetType:'image',name:'另一组',currentFileId:null},other),legacy=await makeAsset(A,'旧账号','t1341-legacy'),foreign=await makeAsset(B,'其它用户','t1341-legacy');
+  const query=vi.spyOn(t1341Client,'query');query.mockClear();expect(await repo.listReadableAssetIds(A,[],own)).toEqual([]);expect(query).not.toHaveBeenCalled();
+  query.mockClear();expect(await repo.listReadableAssetIds(A,[a.id,a.id,b.id,legacy.id,foreign.id],own)).toEqual([a.id]);expect(query).toHaveBeenCalledTimes(1);
+  await db.execute(sql`INSERT INTO resource_access_grants(id,user_id,target_group_id,resource_type,resource_id,origin_group_id,migration_id,created_at) VALUES('t1341-grant',${A},'t1341-ga','asset',${b.id},'t1341-gb','controlled-permission-fixture',${NOW})`);
+  expect((await repo.listReadableAssetIds(A,[a.id,b.id],own)).sort()).toEqual([a.id,b.id].sort());
+  await db.execute(sql`UPDATE resource_access_grants SET revoked_at=${NOW} WHERE id='t1341-grant'`);expect(await repo.listReadableAssetIds(A,[b.id],own)).toEqual([]);
+  expect(await repo.listReadableAssetIds(A,[legacy.id,foreign.id],{kind:'legacy-account',id:'t1341-legacy'})).toEqual([legacy.id]);
+  query.mockClear();await repo.listReadableAssetIds(A,Array.from({length:200},(_,i)=>'bounded-'+i),own);expect(query).toHaveBeenCalledTimes(1);
+  query.mockClear();await expect(repo.listReadableAssetIds(A,Array.from({length:201},(_,i)=>'overflow-'+i),own)).rejects.toThrow();expect(query).not.toHaveBeenCalled();
+ }finally{await t1341Client.close();}
+},180000);

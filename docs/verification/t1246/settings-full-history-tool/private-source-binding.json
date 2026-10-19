@@ -1,0 +1,85 @@
+{
+  "frozen": "533224f334c43cdb81a344424e420cad93784dd1",
+  "scope": "Supplementary diagnosis of the two original failed settings bodies; original failed receipts never overwritten",
+  "testTree": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-settings-history-full",
+  "originalSettingsAssertionsUnchanged": true,
+  "originalDriverInventoryNotChanged": true,
+  "testBudgetMs": 74100000,
+  "launcherOuterMs": 5530920000,
+  "sourceFiles": [
+    {
+      "path": "e2e/settings.spec.ts",
+      "sourcePath": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+      "sourceSHA256": "6d012f7c3657f43da6030f8014c2b0fb7b9aba52403abf16f77450a428a63969",
+      "privateSHA256": "6d012f7c3657f43da6030f8014c2b0fb7b9aba52403abf16f77450a428a63969",
+      "inverseExactlyEqual": true,
+      "onlyDifference": "none"
+    },
+    {
+      "path": "helpers/test-environment.ts",
+      "sourcePath": "frontend/tests-t1246-generated/helpers/test-environment.ts",
+      "sourceSHA256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82",
+      "privateSHA256": "8e74f4a4801d8dc38704bbda31abfbaaa9edd1739cd6207cec7981f261bc1d56",
+      "inverseExactlyEqual": true,
+      "onlyDifference": "history-raw-original-function-observation"
+    },
+    {
+      "path": "helpers/network-policy.ts",
+      "sourcePath": "frontend/tests-t1246-generated/helpers/network-policy.ts",
+      "sourceSHA256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+      "privateSHA256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+      "inverseExactlyEqual": true,
+      "onlyDifference": "none"
+    }
+  ],
+  "projectCleanupMs": 672660000,
+  "budgetComponentsMs": {
+    "twoCaseBodies": 148200000,
+    "twoAfterHooksSlots": 1345320000,
+    "twoFailureWorkerCleanupSlots": 1345320000,
+    "twoTraceStopSlots": 1345320000,
+    "twoFinalWorkerGracefulCloseSlots": 1345320000,
+    "nextStartup": 300000,
+    "globalSetupObservationAllowance": 300000,
+    "globalTeardownObservationAllowance": 300000,
+    "nextGracefulShutdown": 120000,
+    "launcherOwnedCleanup": 240000,
+    "launchAndReportMargin": 180000
+  },
+  "deadlineTimer": {
+    "maxSegmentMs": 60000,
+    "deadlineSource": "performance.now() monotonic elapsed; original effectiveCase/project cleanup limits remain unchanged",
+    "signed32SingleTimerNotUsed": true
+  },
+  "playwrightCleanupEvidence": {
+    "path": "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/worker/workerProcessEntry.js",
+    "lines": [
+      2812,
+      3051,
+      3091,
+      3115
+    ],
+    "afterHooks": "Math.max(project.timeout, testInfo.timeout)",
+    "workerCleanup": "project.timeout",
+    "traceStop": "project.timeout",
+    "finalGracefulClose": "shared fake TestInfo default slot with project timeout; conservatively reserve once per up-to-two workers"
+  },
+  "environmentBoundary": {
+    "HOME": "preserve parent value; never assigned to task root",
+    "CODEX_HOME": "preserve parent value if present; never assigned to task root",
+    "officialAuth": "not copied; no model invocation in selected cases",
+    "ownedTaskDirectories": [
+      "PGLITE_DATA_DIR",
+      "CREATOROS_APP_DATA_DIR",
+      "CREATOROS_MEDIA_ROOT",
+      "CREATOROS_DOUYIN_AUTH_DIR",
+      "CREATOROS_WEB_AUTH_DIR",
+      "TMPDIR",
+      "CREATOROS_CACHE_DIR",
+      "CREATOROS_BACKUP_DIR"
+    ],
+    "port": 61349,
+    "beforeStart": "net.listen exclusive 127.0.0.1:61349 preflight; reuseExistingServer false",
+    "cleanup": "only observed spawned-runner descendants with PID birth-time revalidation; foreign listeners are reported, never signalled"
+  }
+}

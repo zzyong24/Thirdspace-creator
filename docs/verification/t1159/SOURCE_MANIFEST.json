@@ -1,0 +1,475 @@
+{
+  "mainHead": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "sourceHead": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+  "commonBase": "d35f7d57ff952d306071eb40d34127956b067906",
+  "entries": [
+    {
+      "path": "ai-worker/package.json",
+      "sourceSha256": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+      "currentSha256": "a3a77bd493f0fe4ba1a21317b772d5daa15ec2763903c2071d3d400337f7d567",
+      "commonBaseSha256": "a3a77bd493f0fe4ba1a21317b772d5daa15ec2763903c2071d3d400337f7d567",
+      "newInCurrentMain": false,
+      "role": "package"
+    },
+    {
+      "path": "ai-worker/smoke/t1110-native-report-private-files.ts",
+      "sourceSha256": "2e07339356687513222e3de122f3c88d64ee51c7016d55893095af265c743c08",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+      "sourceSha256": "5ebd88a30eec2b59b799fe138661533695afd8a1019c456d9239bb27e13a9bd1",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "sourceSha256": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+      "sourceSha256": "d7f8451b1a175acd554cbad680cd2c3a396696a35de75e93d31c50a8513dcc89",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "sourceSha256": "039dc9abc6716b1efbbc0f60e3e4895da16a9318a973a7fbb3bfaf198dda26c7",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-native-report-parser.test.ts",
+      "sourceSha256": "e8ae028592658a9a7e00c5290d1e764a62db66442d5618404f1fe2b7c1cd1404",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-native-report-parser.ts",
+      "sourceSha256": "7244f11d1d46c0edd4aeb190217d23b85dd8738a4cd578083c36f3202a8b9d07",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "backend/drizzle/0131_platform_native_reports.sql",
+      "sourceSha256": "36a411fb6ee7a77923090fa346ed768365fa548746fa62d4735f561bf0a5e84f",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "sourceSha256": "8200bd9de4229786c48cc0fd90359de6512410267bc70504ce0177fd86b3fbfc",
+      "currentSha256": "7c517512f66ec5461f751668a2629f730827a3c0c404b80236ce839f74e3b2b4",
+      "commonBaseSha256": "7c517512f66ec5461f751668a2629f730827a3c0c404b80236ce839f74e3b2b4",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/application/collection/wechat-native-collector.test.ts",
+      "sourceSha256": "eddb707930046b1f10d8cf2a4ae60801ca756a9d3424926f44058d120ff978ea",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/application/collection/wechat-native-collector.ts",
+      "sourceSha256": "c09b829dc9ecf0b19b8b89ffa901a732f68500018d94b32d20d11d0a93f02dd9",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/application/platform-collection/periodic.test.ts",
+      "sourceSha256": "de0d13f8cc1c9d0b885172e14fc635503ee5cc129c611fdff849458cfcc116cc",
+      "currentSha256": "18c70e54c602f0e9b090008c5c5e0ec83fe1e1640cf2c954c3516071cb191c04",
+      "commonBaseSha256": "18c70e54c602f0e9b090008c5c5e0ec83fe1e1640cf2c954c3516071cb191c04",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/application/platform-collection/periodic.ts",
+      "sourceSha256": "303cc7cfe430a790b642fc119097d750a05c9d2f74eb308d1758a901477c2d40",
+      "currentSha256": "6f919a977d03a3cd30c03e821d4cc5f597d0aa9eac7373668c7debee196f3b3c",
+      "commonBaseSha256": "6f919a977d03a3cd30c03e821d4cc5f597d0aa9eac7373668c7debee196f3b3c",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/application/scheduling/platform-collector.test.ts",
+      "sourceSha256": "173fee62762fe266b45e468bc34165885baa32e0494d5bb391b9ff43d6028074",
+      "currentSha256": "1e63318cd6011843f1c90f63ad45a9cd8704fd2422ae5233928909e4e67bb20f",
+      "commonBaseSha256": "1e63318cd6011843f1c90f63ad45a9cd8704fd2422ae5233928909e4e67bb20f",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/application/scheduling/platform-collector.ts",
+      "sourceSha256": "55560f2a87a8c2720bc29a5cd5067ed978f98ebeae673ea57f0fe23fbe9c7364",
+      "currentSha256": "4cedf71a425df74621034a076b9380fc1d850edffdfd96c9785aee8d8100c7b0",
+      "commonBaseSha256": "4cedf71a425df74621034a076b9380fc1d850edffdfd96c9785aee8d8100c7b0",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/application/workspace/startup.test.ts",
+      "sourceSha256": "eac60fbf09b3e74ecbc6cfcb56c5ba5b0baae6ae0451f1988b4d1e0c0e1813d6",
+      "currentSha256": "814be79a74d82de441fb4066f8d8d7cb837dc86be55abf62aaa289c78e6cefe0",
+      "commonBaseSha256": "814be79a74d82de441fb4066f8d8d7cb837dc86be55abf62aaa289c78e6cefe0",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/application/workspace/startup.ts",
+      "sourceSha256": "9e2bc08d1547e70ca065f93a145db55540fb256af95bf83205cb3437729f9317",
+      "currentSha256": "85be4c9f8fbad0860ecdf10f33a783a234a6e12d494b81f7b9e13080602acf7b",
+      "commonBaseSha256": "85be4c9f8fbad0860ecdf10f33a783a234a6e12d494b81f7b9e13080602acf7b",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/migration-convergence.test.ts",
+      "sourceSha256": "41e7590192b7813808b4866413151de9cca8147f87014f718c6f5172093bb2e7",
+      "currentSha256": "3b02c47d387b572a54581c324daabf0331a523f670d094ac4d085512b9836408",
+      "commonBaseSha256": "3b02c47d387b572a54581c324daabf0331a523f670d094ac4d085512b9836408",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/migration-convergence.ts",
+      "sourceSha256": "f6c0324f6a6d2add206251d166c839a34aa097e9c9f31d50dfe2eeea50f8cbcb",
+      "currentSha256": "f409e62f1321d15c93f86634b3274a602f1d3936d11da832ee289184e6feb58e",
+      "commonBaseSha256": "f409e62f1321d15c93f86634b3274a602f1d3936d11da832ee289184e6feb58e",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/collection-bootstrap.test.ts",
+      "sourceSha256": "6e18e55cbd337e897d9f97fd0f799518bb6faa0fb370a61dbc90e33130bb27d8",
+      "currentSha256": "fe31927cf3c8cb45973bdb91ec20591eb708a2552b5d4b7c796a34aabac13da1",
+      "commonBaseSha256": "fe31927cf3c8cb45973bdb91ec20591eb708a2552b5d4b7c796a34aabac13da1",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+      "sourceSha256": "c39edc58f3a88ea47c22db9d4a5b2828e80192517d50e30247f55e6631fe9a39",
+      "currentSha256": "851163874acae1cad64d1da9a14f4a71bab70e5373d15663726e53b7f04d480a",
+      "commonBaseSha256": "851163874acae1cad64d1da9a14f4a71bab70e5373d15663726e53b7f04d480a",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "sourceSha256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "currentSha256": "9326b302bd429778657617ed3d4f9e5bf203a8dce07def4e3fe5f32018209bc4",
+      "commonBaseSha256": "9326b302bd429778657617ed3d4f9e5bf203a8dce07def4e3fe5f32018209bc4",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-account/browser-profile-authority.service.ts",
+      "sourceSha256": "0364271422f15ed4eafa75e9aa5a77ac2245cb02a88f8ed2833ce9ae156eb22b",
+      "currentSha256": "4b4f1434f86f985c790ffad21ebb1af2a0d83004a1bc563fa6e0df3aa8b73032",
+      "commonBaseSha256": "4b4f1434f86f985c790ffad21ebb1af2a0d83004a1bc563fa6e0df3aa8b73032",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-account/index.ts",
+      "sourceSha256": "949e192e779c24167558266b63e3d03fe71b670c84dff094c979d7dac890f210",
+      "currentSha256": "520f7ea31112cc2658bbd9e18ebd1c5528fa64364c36f7239787f9399a208da9",
+      "commonBaseSha256": "520f7ea31112cc2658bbd9e18ebd1c5528fa64364c36f7239787f9399a208da9",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-account/local-platform-binding-stage.ts",
+      "sourceSha256": "f5cc1e3f9c994aabfe07627c49d15fdfee4f82ee16ec77aefb16a091a2ab9c49",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "sourceSha256": "020fffdcc4223e1362f9aab808fa564b314ba4281f556a8c38fd514ab00a2d48",
+      "currentSha256": "27d59f591636b8fd4b6ce3a09f485e7966274bac01744e724fd00882ca426fa4",
+      "commonBaseSha256": "27d59f591636b8fd4b6ce3a09f485e7966274bac01744e724fd00882ca426fa4",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.service.ts",
+      "sourceSha256": "1c234861a4316a6bd6e9d375c6af4af43447b7c8f7131c5950d3d456a2f35ef9",
+      "currentSha256": "b12e60e78e8ddb0212a6d7c365c099a07f40bc3d85d76648973c659b7fc11317",
+      "commonBaseSha256": "b12e60e78e8ddb0212a6d7c365c099a07f40bc3d85d76648973c659b7fc11317",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+      "sourceSha256": "ffaeb65a3dd79baab3d94647218ecc42225fb5b5a901801dba32d473bbb134d9",
+      "currentSha256": "e0ffb28a8f798168f330738a7fe544cbec0b62480cd16b3a1c9fbac215657d68",
+      "commonBaseSha256": "e0ffb28a8f798168f330738a7fe544cbec0b62480cd16b3a1c9fbac215657d68",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.transport.ts",
+      "sourceSha256": "bc4c854d56f02bf4acafb1a494a3f621dd0f8a9c9f551c5c6ec19a4a6083aff2",
+      "currentSha256": "9901c31efc8e877c3d25e10c557600c141991a2e4853dae5dbcee8c6a47c5988",
+      "commonBaseSha256": "9901c31efc8e877c3d25e10c557600c141991a2e4853dae5dbcee8c6a47c5988",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-native-reports.integration.test.ts",
+      "sourceSha256": "cbf66ca352f23820c0af37a7baf444e36388e549bfbad1e9569d931ff0c8ecfa",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "sourceSha256": "ae5f92c8d2987819fb02d62d808c44d4aa5746a891e446910533ee81d2f6559d",
+      "currentSha256": "e8c532d2ca92f5c62aba5be18504e4b884b1fb6e12309fecb0fa27b0178540b9",
+      "commonBaseSha256": "e8c532d2ca92f5c62aba5be18504e4b884b1fb6e12309fecb0fa27b0178540b9",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-wechat-admission.test.ts",
+      "sourceSha256": "ba49b4fc4e2eae47a1f2507b2768b08103f9f0995444aa053393cdda19775ff6",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "backend/src/schema/platform-collection.ts",
+      "sourceSha256": "2ee39aba4369892075c7c23d154f6f6c3fc0bc01d5b56743400b8a1c9a83a74e",
+      "currentSha256": "1a6679c2ffa1689394d4fefc79e5981f51d2ab5b08a3eaf02a2d8deba6628fb1",
+      "commonBaseSha256": "1a6679c2ffa1689394d4fefc79e5981f51d2ab5b08a3eaf02a2d8deba6628fb1",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "contract/src/cli-policy.ts",
+      "sourceSha256": "ecd017f26c568d1eb6f7726266d5d718652e9b7cc24774df588f992125b4b028",
+      "currentSha256": "c58542031958783463be955d1e7d8581da606d6c0c61fdde4aa79e7a04b69f6c",
+      "commonBaseSha256": "2e396255b06b0321ec6e08f8b8eacab015c0003f57a794755dc7a188527d3b29",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "contract/src/index.ts",
+      "sourceSha256": "f8e56beed1c8731140a42db2d969c639262b1345d883a8668a5ecb53846ed77e",
+      "currentSha256": "c1fb9444e20382972f21676e9f56ba13a34104333377632abd6df366eff7ebaa",
+      "commonBaseSha256": "c1fb9444e20382972f21676e9f56ba13a34104333377632abd6df366eff7ebaa",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "contract/src/operations/platform-collection.ts",
+      "sourceSha256": "6d77eacf587b7abe1710e75e5c99bd834e59a130d1aacc3aab8826433539f136",
+      "currentSha256": "580114b57ec6ada3dfd998847f101861c1bc2e864f26b2068c922782df1f44d5",
+      "commonBaseSha256": "580114b57ec6ada3dfd998847f101861c1bc2e864f26b2068c922782df1f44d5",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "contract/src/resources/platform-capabilities.ts",
+      "sourceSha256": "03edd7caae0890c465139c30b4a6bd21b812bde9a0cd2e11d0c8fcb82bd3f133",
+      "currentSha256": "810dc293d7494037f0cb4f67bffd00525c92668efd95d0ed8dab452a74369310",
+      "commonBaseSha256": "810dc293d7494037f0cb4f67bffd00525c92668efd95d0ed8dab452a74369310",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "contract/src/resources/platform-native-reports.ts",
+      "sourceSha256": "077fc070629dab475a2257aea907215a1b83a575983e33afb5d3aced19576c53",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "sourceSha256": "219144862877d49f14115129b77bf29542a185af2144765bb9b72a7a08aff70d",
+      "currentSha256": "7da9dacff4427812ad88ba5e8b25d84674462752cf0e7453e1dac8fe40f250f1",
+      "commonBaseSha256": "4ef7567647555b86e6d1a7f8a840b7cf0ef959c4a99f61d58b376b4ad7290d94",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "contract/tests/platform-native-reports.test.ts",
+      "sourceSha256": "ae1301a706008c914d9f5d555e6001eef11e316f16a0cfed834787fb88f01dca",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "sourceSha256": "4a0a8ae95c464c010215b8ae5ce9a6636d64208eacaa1ab12f6f780c82b82f2b",
+      "currentSha256": "5d563f989ecbf599277a9fe770a3a12205c10aea05d3843b2c532c0f39262318",
+      "commonBaseSha256": "5d563f989ecbf599277a9fe770a3a12205c10aea05d3843b2c532c0f39262318",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "frontend/src/app/(creator)/accounts/works/page.tsx",
+      "sourceSha256": "fa750bc21592955476a057496ddaa394c7426da76c3f7135a4f41073b124813b",
+      "currentSha256": "51700121a7c93c3576bde4a7843fdd67f12d20b975ce2b46f7cb0c8b1e6e0677",
+      "commonBaseSha256": "51700121a7c93c3576bde4a7843fdd67f12d20b975ce2b46f7cb0c8b1e6e0677",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-binding-panel.test.tsx",
+      "sourceSha256": "94d1848b57ad889d1da37ec696937f6db26face86fdea2cd4ce9f89ae0ebcc4c",
+      "currentSha256": "6a2a81b7a87338a6af8c52a32eee89444540b4d003a6bd6af1be42a4e5190a8e",
+      "commonBaseSha256": "6a2a81b7a87338a6af8c52a32eee89444540b4d003a6bd6af1be42a4e5190a8e",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-binding-panel.tsx",
+      "sourceSha256": "eb3bab8297d784b9715c1d8bfdbcd9ec1564261712a5aa32a7e6c241bf1c6ee2",
+      "currentSha256": "4d404fe32d32d75402dcd394ab9d731063061e295a5ffb6daa9c5a491aa7ab4f",
+      "commonBaseSha256": "4d404fe32d32d75402dcd394ab9d731063061e295a5ffb6daa9c5a491aa7ab4f",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "sourceSha256": "6d096c4410a259edb8c1d63f5f1848f03cdd7f5832cb80593b24a0a97c20eccd",
+      "currentSha256": "f6c5b4528f1163c744b064e8238c27d6b438fa3dc7dbb10a5e26643c04ec25f0",
+      "commonBaseSha256": "f6c5b4528f1163c744b064e8238c27d6b438fa3dc7dbb10a5e26643c04ec25f0",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "sourceSha256": "c0f3bc1a27a64ee7c4500b31d311e854e32464260b5ca50535d4ddbf653235a2",
+      "currentSha256": "124feb0a9ff8f04ee500eb4d44e360bc6f487c320dfaab857a9a634a09a9b4b2",
+      "commonBaseSha256": "124feb0a9ff8f04ee500eb4d44e360bc6f487c320dfaab857a9a634a09a9b4b2",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-page.test.tsx",
+      "sourceSha256": "a187154b2b62fb80cb1f7d71708f7be070097c7354aae5ee2ebcccb5015caf07",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-panel.test.tsx",
+      "sourceSha256": "02bce911e5b4ec7d19296565a861d22195fcd7a2f984a5d7ed28cb5b394a84a7",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "test"
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-panel.tsx",
+      "sourceSha256": "c79e758d4821cfb1e01f407999e83d75f84c71ac234e85b08853ee52764d2bec",
+      "currentSha256": null,
+      "commonBaseSha256": null,
+      "newInCurrentMain": true,
+      "role": "product"
+    },
+    {
+      "path": "frontend/src/features/platform-account/platform-account-labels.ts",
+      "sourceSha256": "bc20a8d1e914a1025d5f664d00cfe5392b55e7aaa83913958bcfb532561e3b55",
+      "currentSha256": "a9b8b1eb7359fc49605b88739011e011952299fe1b198059765dfa1613041701",
+      "commonBaseSha256": "a9b8b1eb7359fc49605b88739011e011952299fe1b198059765dfa1613041701",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "sourceSha256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+      "currentSha256": "5e3d9de136b99ede64a46b982f019f4f1faabda518f095022dc5630c87a07d75",
+      "commonBaseSha256": "5e3d9de136b99ede64a46b982f019f4f1faabda518f095022dc5630c87a07d75",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+      "sourceSha256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+      "currentSha256": "4f165ec62e495e71db6f0028fafdaa035679b4c568d8498f73ffd54fcf5bbd82",
+      "commonBaseSha256": "4f165ec62e495e71db6f0028fafdaa035679b4c568d8498f73ffd54fcf5bbd82",
+      "newInCurrentMain": false,
+      "role": "test"
+    },
+    {
+      "path": "frontend/src/server/ingestion/account-binding-stage.ts",
+      "sourceSha256": "d7e517b273132150d5144fd0f32bf8eea83ad61823c56649f7d67d417a199f00",
+      "currentSha256": "0faeace19f52f90ec380cfa5732eacd90ab9874c3675024beb0334ae94843e1f",
+      "commonBaseSha256": "0faeace19f52f90ec380cfa5732eacd90ab9874c3675024beb0334ae94843e1f",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sourceSha256": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+      "currentSha256": "9720dc8c79284ff28747537673951824fb46e35b7ba842694405320261c0c3a1",
+      "commonBaseSha256": "9720dc8c79284ff28747537673951824fb46e35b7ba842694405320261c0c3a1",
+      "newInCurrentMain": false,
+      "role": "product"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sourceSha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6",
+      "currentSha256": "8d184edcb50c7cc8232fc35cdc352c7254da7118d21a1072889b494256250cb1",
+      "commonBaseSha256": "8d184edcb50c7cc8232fc35cdc352c7254da7118d21a1072889b494256250cb1",
+      "newInCurrentMain": false,
+      "role": "package"
+    }
+  ],
+  "excludedAsSuperseded": [
+    "backend/src/modules/platform-account/legacy-task-membership.integration.test.ts",
+    "frontend/src/features/intelligence/intelligence-display.ts",
+    "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+    "frontend/src/features/intelligence/intelligence-workbench.tsx",
+    "frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx",
+    "frontend/src/features/intelligence/use-project-upgrade-queue.ts"
+  ],
+  "directMergeAllowed": false,
+  "sourceResearch": {
+    "family": "wechat-statistics-visible-section",
+    "status": "researching",
+    "consumedExperiments": 2,
+    "remainingExperiments": 0,
+    "videoBound": true,
+    "officialBound": false,
+    "reports": 0,
+    "navigationCause": "UNKNOWN",
+    "liveExecutionPaused": true
+  }
+}

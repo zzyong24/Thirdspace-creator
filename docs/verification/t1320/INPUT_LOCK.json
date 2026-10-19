@@ -1,0 +1,219 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1320",
+  "baseHead": "24a834ea2139f26e323616643bdfb7ad9b91809e",
+  "specPath": "docs/features/t1320-codex-mixed-tool-stream-projection.md",
+  "specSha256": "04dcbe1a090a3bed584d15a7ce7caced22bb790b45f2c2223f1bc39f43b3ea66",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6819,
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "bytes": 67379,
+      "sha256": "18c615b1c857aecff94804ac27671d4dd972b8d3c22d5acb525fcafd6c2d46d4"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.service.ts",
+      "bytes": 14543,
+      "sha256": "b3cc28576842960a6b2420eea674c1fd5f849278aa3682be19b7f4803e4d83f8"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "bytes": 3372,
+      "sha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "c7be348612b2d9cc105a84c2dcca84a5a8b252c7cc4a49be38b03d357fd6b152"
+    },
+    {
+      "path": "docs/verification/t1300/FUNCTION_MATRIX.md",
+      "bytes": 24390,
+      "sha256": "c4d57cf7fbb4025d91c03d84f69f24795b5b4e421d93a4e7df6a5453984ec577"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+      "bytes": 14191,
+      "sha256": "942cb477bdaf98204156516e1cde28ff24826ce03e81735d0aafa78915b39d29"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-tool-stream-chunks.ts",
+      "bytes": 8781,
+      "sha256": "115f2bd5b01edd1996e998da2dd97ec31e3f8baf7cd2d0ec0b84cac899ce359a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+      "bytes": 15715,
+      "sha256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285"
+    },
+    {
+      "path": "backend/src/modules/execution/agentic-tool-binding.ts",
+      "bytes": 10506,
+      "sha256": "4314d1a8304ea5607ae1fa2d36c2817104cf955e9e3bfc09bfc8dac9d5d30ee4"
+    },
+    {
+      "path": "backend/src/modules/execution/codex-read-recovery.ts",
+      "bytes": 7126,
+      "sha256": "258399f3529c963ac89d0fa93e65e35a6ccc35d26fd753de639216601e1221c3"
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-turn.service.ts",
+      "bytes": 32803,
+      "sha256": "e91690846a17288b3285e254ccd2ec610520b78deefba8cf0b3f78085a3571c1"
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-turn.service.test.ts",
+      "bytes": 23037,
+      "sha256": "0c0a51c0cc8ccbe5ff349fd9227cdef62fe5953fb2da5bfcf7d2ec239277790b"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "bytes": 14697,
+      "sha256": "d37825952088d4475661cf87acaa928bb820ae3d1c47f20cd326684ee2035a25"
+    },
+    {
+      "path": "backend/src/application/chat/assistant-system-root.ts",
+      "bytes": 40707,
+      "sha256": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-codex-chat-tool.test.ts",
+      "bytes": 16839,
+      "sha256": "102d3f6eac2a85b09c27a5c3d203d075c2f237d3af0b15b7ee5c7543d8f4031a"
+    },
+    {
+      "path": "docs/verification/t1310/supplemental/runtime/topic-chat.diagnosis.test.ts",
+      "bytes": 17969,
+      "sha256": "1383fbaaeb89a6a1a862ba86b82d32e0c6edf27d7760f8a0681089022981ec6c"
+    },
+    {
+      "path": "docs/verification/t1310/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1320/DEC.md",
+      "bytes": 227,
+      "sha256": "897a7349585ff5aaec3bc22e36ff4f49c193f50ae30409838d264b20a3b6cb14"
+    },
+    {
+      "path": "docs/verification/t1320/MODULE_SCOPE.json",
+      "bytes": 3885,
+      "sha256": "4f149bf0babb30ad5c5a23a825ab83b5305fd6cdc4b07e31381420ebeac12246"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+      "bytes": 7096,
+      "sha256": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-structured-tool-host.ts",
+      "bytes": 10286,
+      "sha256": "89acc7cc3bc9e00764ac527084b7bc4264a768daafe1c1b95930fc18bd0b0b43"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+      "bytes": 9205,
+      "sha256": "fc0ccf07e88e94f8e75bad236a0df422ff19c28d32dadc23a977bb7de7b3aa6d"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "bytes": 269548,
+      "sha256": "815626d27e9e25f0914915c81a642ad569571722a9b7362882f7c1f2437bd703"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-host-context.service.ts",
+      "bytes": 7119,
+      "sha256": "ace427b8cad238fd56329424303919226fb745f6a64edf6469cc9001032f00a8"
+    },
+    {
+      "path": "backend/src/modules/ai/external-task-tool.service.ts",
+      "bytes": 13451,
+      "sha256": "b4fa4407eaf2c9cd788b5de85cf6b309c442b7ba36a4edb37dda0c9908e84b58"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-proposal-source.service.ts",
+      "bytes": 10711,
+      "sha256": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4"
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-call-tree.ts",
+      "bytes": 4112,
+      "sha256": "92cf1becdc4e897755879d875eaa0e2273f815e8f531dc52b3e6563cfd544b78"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    }
+  ],
+  "immutableWorker": {
+    "path": "/private/tmp/t1300-artifact-940jy2at/sidecar/frontend/runtime/execution-worker.cjs",
+    "bytes": 5618216,
+    "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+  }
+}

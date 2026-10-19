@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 /** 转写取流的纯解析和匿名请求由 Worker 持有；登录浏览器仍通过窄端口注入。 */
 export type DouyinSourceFailure = { kind: "empty-item-list" | "router-data-missing" } | { kind: "net-timeout"; consecutiveTimeouts: number };
 export type DouyinSourceChannel = (run: () => Promise<DouyinVideoUrl>, mapError: (error: unknown) => DouyinSourceFailure, signal?: AbortSignal) => Promise<DouyinVideoUrl>;
@@ -150,13 +151,13 @@ function mapIesdouyinErr(err: unknown): DouyinSourceFailure {
  * 全局 fetch),故 D2 runner 里这层由 host 装配真 fetch,单测注 fake(返 canned HTML)。
  * 非 2xx / 无 _ROUTER_DATA → 抛 DouyinAudioFetchError(runner 标该 aweme 失败,其余继续)。
  *
- * [Bug-4 T-017] **30s 超时**(AbortSignal.timeout):iesdouyin 偶发半开连接 / IP 静默风控 /
+ * [Bug-4 T-017] **120s 超时**(AbortSignal.timeout):iesdouyin 偶发半开连接 / IP 静默风控 /
  * 服务器不返响应,裸 await 永不 resolve → runner 卡死(封面回填看到「5/73」即此) →
  * 整批僵在某条作品等永远。30s 远超正常 (~1-3s) 但不至于让一个坏作品卡整批。
  * 超时触发 → fetch reject AbortError → 下面 try/catch 把它当失败归一,网关报 net-timeout,
  * runner 增 failed 计数继续下一条(已存在的兜底链路)。
  */
-const IESDOUYIN_FETCH_TIMEOUT_MS = 30_000;
+const IESDOUYIN_FETCH_TIMEOUT_MS = 120_000;
 
 export async function fetchDouyinVideoUrl(
   awemeId: string,
@@ -180,7 +181,7 @@ export async function fetchDouyinVideoUrl(
               "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "zh-CN,zh;q=0.9",
           },
-          signal: deps.signal ? AbortSignal.any([deps.signal, AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS)]) : AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS),
+          signal: deps.signal ? AbortSignal.any([deps.signal, AbortSignal.timeout(executionTimeoutMs(IESDOUYIN_FETCH_TIMEOUT_MS))]) : AbortSignal.timeout(executionTimeoutMs(IESDOUYIN_FETCH_TIMEOUT_MS)),
         });
       } catch (err) {
         deps.signal?.throwIfAborted();

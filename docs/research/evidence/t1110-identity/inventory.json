@@ -1,0 +1,30 @@
+{
+  "savedAt": "2026-10-10T04:37:41.082Z",
+  "scope": "pre-OPEN exploration and unverified discardable candidate; no shared implementation write, no real-root-cause proof",
+  "files": [
+    {
+      "path": "docs/research/evidence/t1110-identity/preopen-exp1-metadata.json",
+      "sha256": "431e540d1e4a0c34984ae1980db2b8bf1f47056dfce95826cd2779da67259361"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-manifest.json",
+      "sha256": "e1518c9b9e3a8a4bc96865ea7b58b89d42e4b2e25142ab14a2a3490504b7a9a6"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-implementation.patch",
+      "sha256": "c98d4d01fdfa1324bfc4c1938cd156cf6448050023fe8ea7934bbdaee72fafcc"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-tests.patch",
+      "sha256": "8fa7383eb1562c4b613b9fba1ea7db1d72aa330bdd88f7628f39af58eba208a1"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/preopen-exp1-red.log",
+      "sha256": "04ab8d481bd10eb4d709105749be80562be32095e0404162d306c49f658e94a0"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-delivery.md",
+      "sha256": "e6065770c7ea488d0572390edd5e37aec5ef3b319d7cb7ff411489e69f7b53e1"
+    }
+  ]
+}

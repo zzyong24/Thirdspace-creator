@@ -1,0 +1,4 @@
+import http from 'node:http';
+async function bounded(run,ms){let timer;try{return await Promise.race([run(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('SANDBOX_LOOPBACK_PREFLIGHT_TIMEOUT')),ms);})]);}finally{clearTimeout(timer);}}
+const server=http.createServer((_request,response)=>response.end('t1369-owned-loopback'));
+try{await bounded(()=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);}),120000);const port=server.address().port;await bounded(async()=>{const r=await fetch(`http://127.0.0.1:${port}/`,{signal:AbortSignal.timeout(120000)});if(r.status!==200||await r.text()!=='t1369-owned-loopback')throw Error('LOOPBACK_PREFLIGHT_MISMATCH');},120000);console.log(JSON.stringify({phase:'sandbox-preflight',loopback:'completed',externalRequests:0}));}finally{await bounded(()=>new Promise(resolve=>server.close(resolve)),120000);}

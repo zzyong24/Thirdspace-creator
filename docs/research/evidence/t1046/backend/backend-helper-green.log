@@ -1,0 +1,119 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/backend
+
+ ❯ src/modules/production/production-native-rough.test.ts (3 tests | 3 failed) 16ms
+   × whole instance删除只ripple所选scene主轨，保留gap、图片、其他scene和独立音轨 9ms
+   × basic token切除120k映射并保持首id/未知字段，rich局部review-only但whole有效 4ms
+   × sceneDigest覆盖独立图层，多个重叠删除窗口只算一次，空工程可恢复 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-native-rough.test.ts > whole instance删除只ripple所选scene主轨，保留gap、图片、其他scene和独立音轨
+AssertionError: expected [ [ 'first', 240000 ], …(2) ] to deeply equal [ [ 'repeat', 480000 ], …(1) ]
+
+- Expected
++ Received
+
+  [
+    [
++     "first",
++     240000,
++   ],
++   [
+      "repeat",
+-     480000,
++     600000,
+    ],
+    [
+      "image",
+-     720000,
++     840000,
+    ],
+  ]
+
+ ❯ src/modules/production/production-native-rough.test.ts:6:721
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/production/production-native-rough.test.ts > basic token切除120k映射并保持首id/未知字段，rich局部review-only但whole有效
+AssertionError: expected [ …(2) ] to deeply equal [ …(3) ]
+
+- Expected
++ Received
+
+  [
+    [
+      "first",
+      240000,
+-     48000,
+      120000,
+-   ],
+-   [
+-     "child",
+-     288000,
+-     48000,
+-     192000,
++     120000,
+    ],
+    [
+      "repeat",
+-     576000,
++     600000,
+      120000,
+      120000,
+    ],
+  ]
+
+ ❯ src/modules/production/production-native-rough.test.ts:7:796
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/production/production-native-rough.test.ts > sceneDigest覆盖独立图层，多个重叠删除窗口只算一次，空工程可恢复
+AssertionError: expected [ { id: 'first', …(8) }, …(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "duration": 120000,
++     "id": "first",
++     "mediaId": "m",
++     "params": {
++       "volume": 1,
++     },
++     "sourceDuration": 1200000,
++     "startTime": 240000,
++     "trimEnd": 960000,
++     "trimStart": 120000,
++     "type": "video",
++   },
++   {
++     "duration": 120000,
++     "id": "repeat",
++     "mediaId": "m",
++     "params": {},
++     "startTime": 600000,
++     "trimEnd": 960000,
++     "trimStart": 120000,
++     "type": "video",
++   },
++ ]
+
+ ❯ src/modules/production/production-native-rough.test.ts:8:647
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  23:11:54
+   Duration  1.38s (transform 634ms, setup 0ms, import 1.21s, tests 16ms, environment 0ms)
+
+undefined
+/private/tmp/t1046-backend-work/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/production/production-native-rough.test.ts

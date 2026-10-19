@@ -1,0 +1,14 @@
+{
+  "oldCommit": "c0065d85905433c0b993641533d8dee4db87746b",
+  "oldKernelSha256": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+  "sourceSha256": "ab4ebe8c8bf6cd9d0a5ee9b00bf03d4af613b36f53cd6ecb090df18a607c47aa",
+  "document": {
+    "settings": {
+      "fps": {
+        "numerator": 24,
+        "denominator": 1
+      }
+    }
+  },
+  "browserChannel": "chrome"
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-1105",
+  "commit_sha": "0e1c0ffc98bfeccf8c89bdb6bfe9e353047f7648",
+  "captures": [
+    {
+      "checkpoint": "resource-normal",
+      "check_ids": [
+        "AC-READ"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "共享资源\n资料保留在原组，目标组通过授权继续引用。\n显示已撤销授权\n重新读取\n\n当前没有共享授权。整理历史资料时，需要的素材与知识会保留来源并授权给目标组。"
+    },
+    {
+      "checkpoint": "resource-read-error",
+      "check_ids": [
+        "AC-RECOVERY"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "共享资源\n资料保留在原组，目标组通过授权继续引用。\n显示已撤销授权\n重新读取\n\n验收读取失败"
+    },
+    {
+      "checkpoint": "resource-recovered-narrow",
+      "check_ids": [
+        "AC-READ",
+        "AC-RECOVERY"
+      ],
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "共享资源\n资料保留在原组，目标组通过授权继续引用。\n显示已撤销授权\n重新读取\n\n当前没有共享授权。整理历史资料时，需要的素材与知识会保留来源并授权给目标组。"
+    }
+  ]
+}

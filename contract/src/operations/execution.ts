@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, paginationQuery } from "../primitives";
 import {
   executionTaskSpec,
@@ -25,6 +25,8 @@ export const executionOperations = {
     body: z.object({
       spec: executionTaskSpec,
       projectId: id.nullable().optional(),
+      contentOutputId:id.optional(),
+      attemptId:z.string().min(16).max(128).optional(),
     }),
     response: executionTaskResource,
     fr: ["FR-EXECUTION-TASKS"],
@@ -59,12 +61,24 @@ export const executionOperations = {
     response: z.object({ tasks: z.array(executionTaskResourceV2) }).strict(),
     fr: ["FR-CR-020"],
   }),
+  commandTranscribeExecutionTaskV1: defineEndpoint({
+    id: "execution.tasks.transcribeCommand.v1",
+    method: "POST",
+    path: "/execution/tasks/transcribe-commands/v1",
+    body: z.object({
+      taskIds: z.array(id).length(1),
+      command: z.enum(["pause", "resume", "cancel", "retry"]),
+      idempotencyKey: z.string().min(1),
+    }).strict(),
+    response: z.object({ tasks: z.array(executionTaskResourceV2) }).strict(),
+    fr: ["FR-CR-020"],
+  }),
   getExecutionTask: defineEndpoint({
     id: "execution.tasks.get",
     method: "GET",
     path: "/execution/tasks/:taskId",
     params: taskParams,
-    response: executionTaskResource,
+    response: z.union([executionTaskResource, executionTaskResourceV2]),
     fr: ["FR-EXECUTION-TASKS"],
   }),
   confirmExecutionTask: defineEndpoint({

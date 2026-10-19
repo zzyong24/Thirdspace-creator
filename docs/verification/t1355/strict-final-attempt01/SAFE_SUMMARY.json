@@ -1,0 +1,60 @@
+{
+  "task": "T-1355",
+  "commit": "721dfacf7b3bcbe82eb9c39b61acf1fb1df367d2",
+  "command": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1355",
+    "--evidence",
+    "docs/verification/t1355/control/FRONTEND_REPORT.md"
+  ],
+  "startedAt": "2026-10-18T21:11:41.833Z",
+  "durationMs": 108389,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "reportSha256": "fff9f5e92b3b2054a0e8a2b8d7a23fe3124599ec6e5e75c3bd08ec175037c645",
+  "rawLogSha256": "b307660ea5a2402f98e5ce25069a3015a8a3bab2e6302ad881e58c1e979758d8",
+  "tests": [
+    {
+      "title": "T1355 当前绑定真实写后读自动回位、原run恢复与正式Next同ID",
+      "projectName": "t1355-normal",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 20851,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1355/e2e-artifacts/t1355-binding-dialog-compl-e4400-定真实写后读自动回位、原run恢复与正式Next同ID-t1355-normal/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "T1355 当前绑定真实写后读自动回位、原run恢复与正式Next同ID",
+      "projectName": "t1355-minimum",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 17781,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1355/e2e-artifacts/t1355-binding-dialog-compl-e4400-定真实写后读自动回位、原run恢复与正式Next同ID-t1355-minimum/trace.zip"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "boundary": "原始 Playwright JSON/config/env 只保本地私有0600；本摘要仅白名单用例终态。实际执行由既有taskctl负责，非静态报告生成。",
+  "resultsFresh": true,
+  "resultsRawSha256": "fe2e7a08725ce746d801b4ae8de934f8cf8ab99b28ba180427322f7079eae2d6"
+}

@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import {
   and,
@@ -57,7 +58,7 @@ export function createScriptPartialFinalizationService(
                 eq(aiTasks.id, task.ownerId),
                 eq(aiTasks.executionTaskId, task.id),
                 eq(aiTasks.userId, context.userId),
-                eq(aiTasks.accountId, context.accountId!),
+                workspaceFilter(aiTasks,context),
               ),
             )
             .for("update");

@@ -1,4 +1,4 @@
-import { and, eq, requireAccountId, projectTranscriptionRequests, type Db } from '@creatoros/backend';
+import { and, eq, workspaceKey, workspaceFilter, workspaceStamp, projectTranscriptionRequests, type Db } from '@creatoros/backend';
 import type { RequestContext } from '@creatoros/contract';
 import { createAiService, type ServiceDeps } from './ai.service';
 import { AttemptIdInvalidError, AttemptPayloadMismatchError, ConflictError } from './ai.errors';
@@ -14,7 +14,8 @@ type Prepared = {
 /** 请求回执、在途合并、任务创建由后端提交；配置读取不占数据库写事务。 */
 export async function submitProjectTranscription(deps: ServiceDeps, context: RequestContext, original: ProjectTranscriptionSubmission) {
     const ctx = structuredClone(context), input = structuredClone(original);
-    const accountId = requireAccountId(ctx.accountId, 'ai.projectTranscription');
+    const workspace = workspaceKey(ctx);
+    const stamp = workspaceStamp(ctx);
     if (typeof input.attemptId !== 'string' || input.attemptId.length < 16 || input.attemptId.length > 128)
         throw new AttemptIdInvalidError();
     if (!input.projectId?.trim())
@@ -22,7 +23,7 @@ export async function submitProjectTranscription(deps: ServiceDeps, context: Req
     const targets = deps.projectTranscriptionTargets;
     if (!targets)
         throw new Error('转写事务目标端口未装配');
-    const where = and(eq(projectTranscriptionRequests.userId, ctx.userId), eq(projectTranscriptionRequests.accountId, accountId), eq(projectTranscriptionRequests.attemptId, input.attemptId));
+    const where = and(eq(projectTranscriptionRequests.userId, ctx.userId), workspaceFilter(projectTranscriptionRequests,workspace), eq(projectTranscriptionRequests.attemptId, input.attemptId));
     function awemeOf(task: Task) {
         const ids = task.inputData.awemeIds;
         if (task.taskType !== 'transcribe.douyin' || task.projectId !== input.projectId || !Array.isArray(ids) || ids.length !== 1 || typeof ids[0] !== 'string' || !ids[0])
@@ -42,7 +43,7 @@ export async function submitProjectTranscription(deps: ServiceDeps, context: Req
         return task;
     }
     async function record(tx: Db, task: Task) {
-        const inserted = await tx.insert(projectTranscriptionRequests).values({ id: deps.nextId('transcription-request'), userId: ctx.userId, accountId, attemptId: input.attemptId, projectId: input.projectId, awemeId: awemeOf(task), aiTaskId: task.id, createdAt: deps.now() }).onConflictDoNothing().returning();
+        const inserted = await tx.insert(projectTranscriptionRequests).values({ id: deps.nextId('transcription-request'), userId: ctx.userId, ...stamp, attemptId: input.attemptId, projectId: input.projectId, awemeId: awemeOf(task), aiTaskId: task.id, createdAt: deps.now() }).onConflictDoNothing().returning();
         if (!inserted.length) {
             // 跨项目争用同请求键时整笔事务回滚，不留下输家的新任务。
             const [winner] = await tx.select().from(projectTranscriptionRequests).where(where);

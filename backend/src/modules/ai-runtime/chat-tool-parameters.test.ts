@@ -8,8 +8,14 @@ it("执行前实际拒绝必填、额外字段和数值范围，不改输入",as
  for(const input of [{},{name:"x",count:0},{name:"x",count:4},{name:"x",count:1.5},{name:"",count:1},{name:"x",count:1,extra:true}])expect(prepared.parameters.safeParse(input).success).toBe(false);
  const input={name:"合法",count:2};expect(prepared.parameters.parse(input)).toEqual(input);
 });
-it.each(["uniqueItems","contains","minProperties","patternProperties","dependencies","format","default"])("不能静默忽略约束 %s",async key=>{
+it.each(["uniqueItems","contains","minProperties","patternProperties","dependencies","default"])("不能静默忽略约束 %s",async key=>{
  await expect(prepareChatToolParameters(jsonSchema({type:"object",properties:{value:{type:"string",[key]:key==="default"?"伪默认":true}}} as never))).rejects.toThrow();
+});
+it("严格支持内置浏览器工具使用的 uri 格式，未知格式仍失败",async()=>{
+ const {parameters}=await prepareChatToolParameters(jsonSchema({type:"object",properties:{url:{type:"string",format:"uri",maxLength:4096}},required:["url"],additionalProperties:false} as never));
+ expect(parameters.safeParse({url:"https://example.com/path?q=1"}).success).toBe(true);
+ expect(parameters.safeParse({url:"不是 URI"}).success).toBe(false);
+ await expect(prepareChatToolParameters(jsonSchema({type:"object",properties:{value:{type:"string",format:"creatoros-unknown"}}} as never))).rejects.toThrow("工具参数字符串格式尚不支持");
 });
 it("字符串长度按Unicode字符计算而非UTF16单元",async()=>{
  const {parameters}=await prepareChatToolParameters(jsonSchema({type:"object",properties:{label:{type:"string",minLength:2,maxLength:2}},required:["label"],additionalProperties:false}));

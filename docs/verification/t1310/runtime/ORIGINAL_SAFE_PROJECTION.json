@@ -1,0 +1,92 @@
+{
+  "sourcePath": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1307/acceptance/candidate/runs/owned-fe90d20b0f57ec60/sidecar.log",
+  "boundBytes": 36469,
+  "boundSha256": "32d2aad4f5e30d8b544b1039ffbe21597105d499078ccc72cd8c18c5a8d679a2",
+  "prefixSha256": "32d2aad4f5e30d8b544b1039ffbe21597105d499078ccc72cd8c18c5a8d679a2",
+  "prefixMatches": true,
+  "currentBytes": 36609,
+  "whitelistedLines": [
+    {
+      "line": 170,
+      "executionTaskId": "execution-task-4e3e9dfc-2db7-419d-9dbf-9c4561b2fc5a",
+      "attempt": 1,
+      "phase": "tool_settled",
+      "callId": "call_aa2cb97e-e967-4d44-85cc-73e057252820"
+    },
+    {
+      "line": 171,
+      "executionTaskId": "execution-task-4e3e9dfc-2db7-419d-9dbf-9c4561b2fc5a",
+      "attempt": 1,
+      "phase": "tool_projection_appended",
+      "callId": "call_aa2cb97e-e967-4d44-85cc-73e057252820"
+    },
+    {
+      "line": 182,
+      "port": "completeChatGeneration",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 183,
+      "port": "settleAgenticTool",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 184,
+      "port": "reserveAgenticTool",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 195,
+      "port": "completeChatGeneration",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 196,
+      "port": "settleAgenticTool",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 197,
+      "port": "reserveAgenticTool",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 198,
+      "port": "commitExternalChatResult",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 199,
+      "port": "commitExternalChatResult",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 201,
+      "port": "commitExternalChatResult",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 202,
+      "port": "commitExternalChatResult",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    },
+    {
+      "line": 203,
+      "port": "commitExternalChatResult",
+      "category": "ConflictError",
+      "errorCode": "HOST_PORT_REJECTED"
+    }
+  ],
+  "firstChineseAssertionMessageAvailable": false,
+  "rawLogsWritten": false
+}

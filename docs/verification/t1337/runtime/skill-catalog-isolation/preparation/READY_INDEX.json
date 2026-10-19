@@ -1,0 +1,151 @@
+{
+  "state": "ACTUAL_FALSE_PROBE_PASS_PUBLIC_RED_ASSEMBLY_READY_NOT_YET_ITS",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/vitest.config.mts",
+      "bytes": 1031,
+      "sha256": "cd71b6f3818198b61bde13a3026eb72f7b7685246af79511f9af7bc5d99ded75"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/OWNED_BINDING.json",
+      "bytes": 1098,
+      "sha256": "a0c68037ff139b934dd8b1999e4512f578b674a0d77c90c304576c84f1a4629f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/run.py",
+      "bytes": 6884,
+      "sha256": "6f2d07510c2bbb70908070dacf877dbdc53c69b0503471c039dc21cb150fb366"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/worker-entry.fixture.cjs",
+      "bytes": 6771,
+      "sha256": "ad35244a93dfdaee69adf20eb1c002974bf2055a2c5babf4def592e6591b84ab"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/check.py",
+      "bytes": 1748,
+      "sha256": "f5780e1ea704756495152692b782ce40fb471d658c5e491ff8a0b03c8ad15029"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/ASSEMBLY.md",
+      "bytes": 2942,
+      "sha256": "60cadff44e18299753ee42734ec6901bec6ff1a2629f1f344eec8c15c89d4b82"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/PRODUCTION_BASELINE.json",
+      "bytes": 522,
+      "sha256": "453253bf36a495ff2f0db6432914afd1068cf4de684df17d7ef96f912e138907"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/CLI_CONFIG_ONLY_DELTA.diff",
+      "bytes": 2051,
+      "sha256": "e45a4fbd662b0ef7953e83d3f8bf48cf43ca416c0c9c6dc992f388482cb58328"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/PREPARATION_STATE.json",
+      "bytes": 480,
+      "sha256": "47f4b4571a9ede0e2d293df3dee8167373e6d42b1cce521c979bbd970bf43635"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/PUBLIC_REUSE_DELTA.diff",
+      "bytes": 10499,
+      "sha256": "4ff655894240e0c74a3fa20a53a567b49ba2a8a83fbbbe9b8c454ee291d19f18"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/SOURCE_EVIDENCE.json",
+      "bytes": 5851,
+      "sha256": "c5a066134fd1d7377f79d98bb4b15e4a136bc2493c8946f42db9210d48782733"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/CHECKS.json",
+      "bytes": 3631,
+      "sha256": "66407e48dfb95b4b9bc3930bbe0ceb952c0311edb928b18875dadf8078457964"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/codex-cli.fixture.cjs",
+      "bytes": 7668,
+      "sha256": "f213d850ca9bdc9db40dc017de556beca67b0aaaba0e5eae941aa63e134f16a0"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/freeze.py",
+      "bytes": 5170,
+      "sha256": "04f70dd52f833c80eea5776ab57bb9dc47663a67f7d6ed38f0b9a2daa2101d12"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/agentic-skill-catalog-isolation.persistence-client.test.ts",
+      "bytes": 27954,
+      "sha256": "ad63d2b07614e2eb33fd62e002fd0965e844032fb8a200a56e55cd6080d04fe4"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/PRE_RUN_LOCK.json",
+      "bytes": 10138224,
+      "sha256": "038fbe713ad9a1dad36c7299e272cb9873fe551b764400db4e4ae0cede19133d"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/WORKER_BINDING.json",
+      "bytes": 65132,
+      "sha256": "41682409b4f10a352daad72f938ec52917ac645789e14a513befc5d5cf1f771b"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/collection-RESULT.json",
+      "bytes": 836,
+      "sha256": "45e83ac99b2293ba907d7f382734136774488b3bab7521f8f133f10f87945969"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/frontend-type-RESULT.json",
+      "bytes": 841,
+      "sha256": "e5838969b8f9f4aa7d0359520c8a2008a52b7276f8123e27f9644d3f8a90cff2"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/syntax-worker-RESULT.json",
+      "bytes": 747,
+      "sha256": "cd61ebfa954a059cd8cd02fdca448c4c26d2a59776c82c246c8b11bd5e7b29d1"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/syntax-cli-RESULT.json",
+      "bytes": 736,
+      "sha256": "43bbd12e87dbde69cc39001ff9f4cb31fb2b27178a93eb4b50cb57bf858fe26e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/probe/PLAN.json",
+      "bytes": 2427,
+      "sha256": "fce3a5b3ad2d23b742ef9ecefe81eeecec4d48a25b8578431257f5c18963b6e9"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/probe/observe.cjs",
+      "bytes": 12016,
+      "sha256": "d8581a199e83fe80f020a0ac0fd42fa7e1070d80fb1a0ec57aa593de1e592f22"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/probe/RESULT.json",
+      "bytes": 4217,
+      "sha256": "b34f329a49ffc5cadb519d8d510d531846a943c11e71e3db2b4ccf65a943611d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/probe/OUTER_RESULT.json",
+      "bytes": 1756,
+      "sha256": "2e023b32fd5029c5d3118389b9c66ac8b2c52d20a7b369094b6b7cff2922cf07"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/probe/ACTUAL_INPUTS.json",
+      "bytes": 1463,
+      "sha256": "aa5c75110cced2aee8d897c082e1da2b3610c12b962309c7ed75f719c58f8dc8"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/probe/OUTPUT_INDEX.json",
+      "bytes": 840,
+      "sha256": "ec6d1d289c0439fee7a480731233d8607a210cbbb8bb0ae5c81e339c6c3a0484"
+    }
+  ],
+  "inputsLockSha256": "038fbe713ad9a1dad36c7299e272cb9873fe551b764400db4e4ae0cede19133d",
+  "testCount": 3,
+  "caseLabels": [
+    "collect",
+    "material",
+    "research"
+  ],
+  "executedIts": 0,
+  "productionWrites": 0,
+  "actualSupplierModels": 0,
+  "retry": 0
+}

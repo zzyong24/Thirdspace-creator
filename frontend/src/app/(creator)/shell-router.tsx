@@ -1,4 +1,5 @@
 "use client";
+import {ProjectVideoSessionHost} from "@/features/reference-editors/project-video-session-host";
 
 /**
  * ShellRouter derives the AppShell props from the current pathname and
@@ -17,8 +18,11 @@
  * resolver never branches on cookies or auth state.
  */
 
+import { WorkspaceInitializationBoundary } from "@/components/shell/workspace-initialization";
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import {readVideoSession,readServerVideoSession,subscribeVideoSession} from "@/features/reference-editors/project-video-session-registry";
+import {creationScopeKey,useCreationScope} from "@/lib/creation-workspace-scope";
+import { usePathname,useSearchParams } from "next/navigation";
 
 import { AppShell } from "@/components/shell/app-shell";
 import type {
@@ -33,6 +37,7 @@ import type {
 import { OverlayController } from "@/components/overlays/overlay-controller";
 import { AICopilotDialog } from "@/components/overlays/ai-copilot-dialog";
 import { CopilotOverlayBridge } from "@/components/overlays/copilot-overlay-bridge";
+import { projectWorkspaces } from "@/features/projects/project-workspaces";
 import { canonicalDataset } from "@/fixtures/canonical";
 import type { NotificationsViewModel } from "@/fixtures/selectors";
 import {
@@ -73,6 +78,7 @@ interface RouteResolution {
  */
 const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
   "/topics",
+  "/knowledge",
   "/positioning",
   "/intelligence",
 ]);
@@ -80,9 +86,10 @@ const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
 /** 该路由是否走固定高度填满模式。工作台路由 + [T-055a] 稿面工作台(/projects/<id>,
  * 无 stage 子段;new 除外——那是新建弹窗拦截路由)。 */
 export function isContentFillRoute(pathname: string): boolean {
+  if(startsWith(pathname,"/canvases") && pathname!=="/canvases")return true;
   if (CONTENT_FILL_ROUTES.has(pathname)) return true;
   const m = pathname.match(/^\/projects\/([^/]+)$/);
-  return Boolean(m && m[1] !== "new");
+  return Boolean(m && m[1] !== "new" && m[1] !== "create");
 }
 
 // [T-076] 项目两阶段化(SPEC 2026-07-03 §1):阶段条 6 项 → 2 项(脚本 | 复盘)。
@@ -104,6 +111,7 @@ const LEGACY_STAGE_SEGMENT: Record<string, string> = {
   research: "script",
   planning: "script",
   script: "script",
+  article: "script",
   production: "production",
   publishing: "script",
   review: "review",
@@ -130,22 +138,7 @@ function relativeUpdatedLabel(updatedAt: string): string {
   return `更新于 ${days} 天前`;
 }
 
-function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage> {
-  // [T-076] 先把旧枚举/旧路由段映射进两段,再定位;未知值 → -1 → 全 pending(诚实)。
-  const segment = LEGACY_STAGE_SEGMENT[currentStage] ?? "";
-  const currentIndex = PROJECT_STAGES.findIndex(
-    (stage) => stage.id === segment,
-  );
-  return PROJECT_STAGES.map((stage, index) => ({
-    ...stage,
-    status:
-      index < currentIndex
-        ? "completed"
-        : index === currentIndex
-          ? "in_progress"
-          : "pending",
-  }));
-}
+
 
 // [T-076] 主行动收敛:复盘页保留「导出报告」(现状);脚本段不渲阶段跳转主行动
 // (可执行入口都在稿面内:脚本编辑、发布包区「先盲预测」「登记已发布」)→ 返回空串,
@@ -161,7 +154,9 @@ export function resolveRoute(
   // 灌进来)。项目路由下有真 {projectId,title} 时,标题优先用真值(fixture 里查不到真项目 → 原来
   // 退回中性「当前项目」)。非项目路由 / 无 override → 走原 fixture 逻辑,**不破坏现有 fixture 路由**。
   override?: CurrentProjectOverride | null,
+  selectedVideoId?:string|null,
 ): RouteResolution {
+  if (pathname === "/overview") return {headerMode:"global",pageTitle:"创作者总览",pageDescription:"账号组的内容与多平台表现",contextualCardVariant:"assistant"};
   if (pathname === "/") {
     return {
       headerMode: "global",
@@ -182,8 +177,16 @@ export function resolveRoute(
     return {
       headerMode: "global",
       // [T-136§D-bind⑤] 抖音-only 极简:去「多账号矩阵/字符串」老话术,一句话说清扫码即绑。
-      pageTitle: "抖音号",
-      pageDescription: "扫码绑定你的抖音号，作品数据、定位都归到这个号",
+      pageTitle: "账号组与绑定账号",
+      pageDescription: "管理创作者工作区和各平台账号",
+      contextualCardVariant: "assistant",
+    };
+  }
+  if (pathname === "/accounts/works") {
+    return {
+      headerMode: "global",
+      pageTitle: "平台作品",
+      pageDescription: "按账号查看已采集作品、目录完整性与真实指标",
       contextualCardVariant: "assistant",
     };
   }
@@ -224,6 +227,13 @@ export function resolveRoute(
     return {
       headerMode: "global",
       pageTitle: "新建项目",
+      contextualCardVariant: "assistant",
+    };
+  }
+  if (pathname === "/projects/create") {
+    return {
+      headerMode: "global",
+      pageTitle: "直接创作作品",
       contextualCardVariant: "assistant",
     };
   }
@@ -272,37 +282,14 @@ export function resolveRoute(
     // 左下角指示器 + header 的标题:真标题优先,否则维持中性「当前项目」/「项目概览」。
     const sidebarLabel = realTitle || "当前项目";
 
-    if (!stage) {
-      // [T-075] 双导航真因修复:稿面与阶段页统一走 project-workspace header 的同一套
-      // 阶段条;稿面自带 MaturityBar 已退役。主行动仍在稿面行内(真按钮),header 不叠 label。
-      // [T-076] 阶段条收敛为 2 项(脚本|复盘),旧 stage 值经 LEGACY_STAGE_SEGMENT 映射。
-      return {
-        headerMode: "project-workspace",
-        pageTitle: realTitle || undefined,
-        contextualCardVariant: "assistant",
-        project: identity,
-        projectStages: buildProjectStages(identity?.stage ?? ""),
-        sidebarContext: {
-          heading: "当前项目",
-          items: [
-            {
-              id: projectId,
-              label: sidebarLabel,
-              href: pathname,
-              indicator: "active",
-            },
-          ],
-        },
-      };
-    }
     // [T-076] 主行动:仅复盘页有(「导出报告」);其余阶段段空串 → 不传 label,header 不渲按钮。
-    const primaryActionLabel = resolveWorkspacePrimaryAction(stage);
+    const primaryActionLabel = resolveWorkspacePrimaryAction(stage ?? "script");
     return {
       headerMode: "project-workspace",
       pageTitle: realTitle || undefined,
       contextualCardVariant: "assistant",
       project: identity,
-      projectStages: buildProjectStages(stage),
+      projectStages: projectWorkspaces(identity?.projectId ?? projectId, pathname, overrideMatches ? override!.workOutputs ?? null : null,selectedVideoId),
       ...(primaryActionLabel ? { primaryActionLabel } : {}),
       // [T-209] 移除假「分享」按钮的 label 来源(该按钮无 onClick,已随 top-header 一并删除)。
       sidebarContext: {
@@ -333,6 +320,9 @@ export function resolveRoute(
       pageDescription: "所有图片、视频、音频与文档",
       contextualCardVariant: "storage",
     };
+  }
+  if (startsWith(pathname,"/canvases")) {
+    return {headerMode:"global",pageTitle:"创作画布",pageDescription:"整理想法，生成图片和视频",contextualCardVariant:"assistant"};
   }
   if (pathname === "/publishing") {
     return {
@@ -395,18 +385,22 @@ export interface ShellRouterProps {
   readonly overlayMasked?: boolean;
 }
 
-export function ShellRouter({
+function ShellRouterContents({
   children,
   user,
   notifications,
   hasInterceptingModal = false,
   overlayMasked = false,
 }: ShellRouterProps) {
+  const [queryOutputId,setQueryOutputId]=React.useState<string|null>(null);
   const pathname = usePathname() ?? "/";
   // T-039b item②:项目路由下读真项目 identity(由 projects/[projectId]/layout.tsx 灌进 context)。
   // 非项目路由无 Provider → null → resolveRoute 走原 fixture 逻辑(向后兼容,不破坏现有路由)。
   const projectOverride = useCurrentProjectOverride();
-  const resolution = resolveRoute(pathname, projectOverride);
+  const remembered=React.useSyncExternalStore(subscribeVideoSession,readVideoSession,readServerVideoSession);
+  const scopeKey=creationScopeKey(useCreationScope());
+  const selectedVideoId=/\/production(?:\/|$)/.test(pathname)&&queryOutputId?queryOutputId:remembered?.scopeKey===scopeKey&&remembered.projectId===projectOverride?.projectId?remembered.outputId:null;
+  const resolution = resolveRoute(pathname, projectOverride,selectedVideoId);
 
   return (
     <AppShell
@@ -424,17 +418,23 @@ export function ShellRouter({
       contentFill={isContentFillRoute(pathname)}
       overlayMasked={hasInterceptingModal || overlayMasked}
     >
-      {children}
+      <React.Suspense fallback={null}><ShellRouterQuery onChange={setQueryOutputId}/></React.Suspense>
+      <ProjectVideoSessionHost selectedOutputId={queryOutputId}><WorkspaceInitializationBoundary allowRecovery>{children}</WorkspaceInitializationBoundary></ProjectVideoSessionHost>
       {/* The Copilot overlay controller is wrapped in a Suspense boundary
           because it consumes `useSearchParams()`, which Next.js requires
           during prerender. The fallback is `null` so the panel only
           appears on the client, after hydration. */}
+      <WorkspaceInitializationBoundary surface="overlay">
       <React.Suspense fallback={null}>
         <OverlayController>
           <AICopilotDialog pathname={pathname} />
           <CopilotOverlayBridge />
         </OverlayController>
       </React.Suspense>
+      </WorkspaceInitializationBoundary>
     </AppShell>
   );
 }
+
+function ShellRouterQuery({onChange}:{onChange:(value:string|null)=>void}){const params=useSearchParams(),value=params.get("outputId");React.useLayoutEffect(()=>onChange(value),[value,onChange]);return null;}
+export function ShellRouter(props:ShellRouterProps){return <ShellRouterContents {...props}/>;}

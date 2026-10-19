@@ -1,0 +1,14 @@
+const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process'),{createRequire}=require('node:module');
+const root=process.argv[2],base=process.argv[3],ts=createRequire(path.join(root,'backend/package.json'))('typescript');
+process.chdir(path.join(root,'backend'));
+const tracked=new Set(cp.execFileSync('git',['ls-tree','-r','--name-only',base],{cwd:root,encoding:'utf8'}).trim().split('\n'));
+const altered=cp.execFileSync('git',['diff','--name-only',base],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(file=>file.endsWith('.ts') && tracked.has(file));
+const baseline=new Map(altered.map(file=>[path.join(root,file),cp.execFileSync('git',['show',`${base}:${file}`],{cwd:root,encoding:'utf8',maxBuffer:2*1024*1024})]));
+const config=ts.readConfigFile(path.join(root,'backend/tsconfig.json'),ts.sys.readFile),parsed=ts.parseJsonConfigFileContent(config.config,ts.sys,path.join(root,'backend'));
+const host=ts.createCompilerHost(parsed.options),read=host.readFile;
+host.readFile=file=>{let key=file;try{key=fs.realpathSync(file);}catch{}return baseline.has(key)?baseline.get(key):read(file);};
+const roots=parsed.fileNames.filter(file=>tracked.has(path.relative(root,file)));
+console.log(`基线 ${base}；仅在 TypeScript CompilerHost 内覆盖 ${baseline.size} 个已修改源码；排除新增测试，不改工作树。`);
+const program=ts.createProgram(roots,parsed.options,host),diagnostics=ts.getPreEmitDiagnostics(program);
+console.log(ts.formatDiagnostics(diagnostics,{getCanonicalFileName:file=>file,getCurrentDirectory:()=>path.join(root,'backend'),getNewLine:()=> '\n'}));
+console.log(`基线诊断条数：${diagnostics.length}`);process.exitCode=diagnostics.length?2:0;

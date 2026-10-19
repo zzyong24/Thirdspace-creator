@@ -6,6 +6,7 @@ describe("isContentFillRoute", () => {
   it("opts the multi-column workbench routes into fixed-height fill mode", () => {
     expect(isContentFillRoute("/topics")).toBe(true);
     expect(isContentFillRoute("/positioning")).toBe(true);
+    expect(isContentFillRoute("/knowledge")).toBe(true);
   });
 
   it("leaves simple pages on the default (PageScrollArea) whole-page scroll", () => {
@@ -27,27 +28,21 @@ describe("resolveRoute", () => {
     expect(resolution.headerMode).toBe("project-workspace");
     expect(resolution.primaryActionLabel).toBeUndefined();
     expect(resolution.sidebarContext?.heading).toBe("当前项目");
-    expect(resolution.projectStages?.[0]?.status).toBe("in_progress");
-    expect(resolution.projectStages?.[1]?.status).toBe("pending");
+    expect(resolution.projectStages?.find(tab => tab.id === "script")?.status).toBe("in_progress");
+    expect(resolution.projectStages?.find(tab => tab.id === "review")?.status).toBe("pending");
   });
 
-  it("[T-076/T-254c] 阶段条三段:脚本|制作视频|复盘,复盘页主行动为「导出报告」", () => {
+  it("未获得真实作品时仅显示公共入口和当前复盘", () => {
     const res = resolveRoute("/projects/ai-native-browser/review");
-    expect(res.projectStages?.map((s) => s.label)).toEqual([
-      "脚本",
-      "制作视频",
-      "复盘",
-    ]);
-    expect(res.projectStages?.[0]?.status).toBe("completed");
-    expect(res.projectStages?.[1]?.status).toBe("completed");
-    expect(res.projectStages?.[2]?.status).toBe("in_progress");
+    expect(res.projectStages?.map(s => s.label)).toEqual(["脚本", "复盘"]);
+    expect(res.projectStages?.find(s => s.id === "review")?.status).toBe("in_progress");
     expect(res.primaryActionLabel).toBe("导出报告");
   });
 
   it("[T-254c] production 路由映射进「制作视频」段(脚本 completed,复盘 pending)", () => {
     const res = resolveRoute("/projects/ai-native-browser/production");
     expect(res.headerMode).toBe("project-workspace");
-    expect(res.projectStages?.[0]?.status).toBe("completed");
+    expect(res.projectStages?.[0]?.status).toBe("pending");
     expect(res.projectStages?.[1]?.status).toBe("in_progress");
     expect(res.projectStages?.[2]?.status).toBe("pending");
     // 制作视频段不渲阶段跳转主行动(可执行入口都在 tab 内)。
@@ -58,7 +53,7 @@ describe("resolveRoute", () => {
     const res = resolveRoute("/projects/ai-native-browser");
     expect(res.headerMode).toBe("project-workspace");
     // [T-076] 6 项 → 2 项;[T-254c] 制作视频段复活 → 3 项(脚本 | 制作视频 | 复盘)。
-    expect(res.projectStages?.length).toBe(3);
+    expect(res.projectStages?.map(s => s.id)).toEqual(["script", "review"]);
   });
 
   // T-039b item②:真项目 identity override —— fixture 里查不到的真项目,标题优先用 override 真值。
@@ -120,10 +115,9 @@ describe("resolveRoute", () => {
     const res = resolveRoute("/projects/proj-real-xyz", override);
     expect(res.project?.stage).toBe("review");
     expect(res.project?.stageProgressPct).toBe(80);
-    // 稿面根路由的阶段条据真实阶段高亮:review 段 in_progress,前两段 completed。
-    expect(res.projectStages?.[0]?.status).toBe("completed");
-    expect(res.projectStages?.[1]?.status).toBe("completed");
-    expect(res.projectStages?.[2]?.status).toBe("in_progress");
+    // 根稿面高亮脚本，项目真实 review 成熟度仍保留在 identity。
+    expect(res.projectStages?.find(tab => tab.id === "script")?.status).toBe("in_progress");
+    expect(res.projectStages?.find(tab => tab.id === "review")?.status).toBe("pending");
   });
 
   it("override 缺 stage/progress(旧形状)→ 兜底 research/0%(向后兼容,不炸)", () => {
@@ -148,4 +142,11 @@ describe("resolveRoute", () => {
     expect(res.project?.title).toBe("改过名的真标题");
     expect(res.sidebarContext?.items?.[0]?.label).toBe("改过名的真标题");
   });
+});
+
+it("T-1050 同项目刷新读到新作品后增加对应 Tab，过期其他项目数据不串入", () => {
+  const identity = {routeParam: "p", projectId: "p", title: "项目", workOutputs: [{id: "a", contentType: "article"}]};
+  expect(resolveRoute("/projects/p/article", identity).projectStages?.map(s => s.id)).toEqual(["script", "article", "review"]);
+  expect(resolveRoute("/projects/p/article", {...identity, workOutputs: [...identity.workOutputs, {id: "i", contentType: "image"}]}).projectStages?.map(s => s.id)).toEqual(["script", "article", "image", "review"]);
+  expect(resolveRoute("/projects/other/article", identity).projectStages?.map(s => s.id)).toEqual(["script", "article", "review"]);
 });

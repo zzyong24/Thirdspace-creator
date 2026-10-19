@@ -1,0 +1,8 @@
+'use strict';
+const fs=require('node:fs'),http=require('node:http'),path=require('node:path'),{createRequire}=require('node:module');
+const b=JSON.parse(fs.readFileSync(process.env.T1299_BINDING,'utf8')),port=Number(process.env.T1299_PORT),next=createRequire(path.join(b.sourceRoot,'frontend/package.json'))('next');
+const app=next({dev:true,dir:path.join(b.sourceRoot,'frontend'),hostname:'127.0.0.1',port,turbopack:true});let server,stopping=false;
+const ack=(event,details={})=>process.send?.({event,pid:process.pid,at:new Date().toISOString(),...details});
+async function stop(){if(stopping)return;stopping=true;try{if(server){server.closeIdleConnections();await new Promise((ok,bad)=>server.close(e=>e?bad(e):ok()));}ack('http-closed');const dispose=globalThis.__creatorosDisposePersistence;ack('dispose-reachable',{reachable:typeof dispose==='function'});if(dispose){await dispose();ack('persistence-closed');}else ack('persistence-close-unproven');await app.close();ack('next-closed');process.exitCode=typeof dispose==='function'?0:1;if(process.connected)process.disconnect();setImmediate(()=>process.exit(process.exitCode??1));}catch{ack('shutdown-error');process.exitCode=1;if(process.connected)process.disconnect();}}
+process.on('message',m=>{if(m==='stop')void stop();});process.on('SIGTERM',()=>void stop());process.on('SIGINT',()=>void stop());
+(async()=>{await app.prepare();server=http.createServer(app.getRequestHandler());await new Promise((ok,bad)=>{server.once('error',bad);server.listen(port,'127.0.0.1',ok);});ack('listening',{port});})().catch(()=>{ack('startup-error');void stop();});

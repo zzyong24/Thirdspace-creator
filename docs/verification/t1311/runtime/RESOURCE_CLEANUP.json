@@ -1,0 +1,125 @@
+{
+  "checkedAt": 1792138759.954514,
+  "ownedGroups": [
+    {
+      "label": "backend-type-v1",
+      "pid": 38039,
+      "pgid": 38039,
+      "exitCode": 0
+    },
+    {
+      "label": "backend-v1",
+      "pid": 36614,
+      "pgid": 36614,
+      "exitCode": 1
+    },
+    {
+      "label": "backend-v2",
+      "pid": 37296,
+      "pgid": 37296,
+      "exitCode": 1
+    },
+    {
+      "label": "backend-v3",
+      "pid": 38518,
+      "pgid": 38518,
+      "exitCode": 0
+    },
+    {
+      "label": "boundary",
+      "pid": 38262,
+      "pgid": 38262,
+      "exitCode": 0
+    },
+    {
+      "label": "diff-check",
+      "pid": 39246,
+      "pgid": 39246,
+      "exitCode": 0
+    },
+    {
+      "label": "frontend-type-v1",
+      "pid": 39215,
+      "pgid": 39215,
+      "exitCode": 0
+    },
+    {
+      "label": "green-v1",
+      "pid": 35214,
+      "pgid": 35214,
+      "exitCode": 0
+    },
+    {
+      "label": "orphan",
+      "pid": 39230,
+      "pgid": 39230,
+      "exitCode": 0
+    },
+    {
+      "label": "public-scopes-v1",
+      "pid": 37809,
+      "pgid": 37809,
+      "exitCode": 1
+    },
+    {
+      "label": "red-v1",
+      "pid": 34075,
+      "pgid": 34075,
+      "exitCode": 1
+    },
+    {
+      "label": "red-v2",
+      "pid": 34482,
+      "pgid": 34482,
+      "exitCode": 1
+    },
+    {
+      "label": "semantic",
+      "pid": 38535,
+      "pgid": 38535,
+      "exitCode": 0
+    },
+    {
+      "label": "timeout",
+      "pid": 38220,
+      "pgid": 38220,
+      "exitCode": 0
+    }
+  ],
+  "survivors": [],
+  "survivorDetails": [],
+  "ownedTempDirectoriesRemaining": [],
+  "inherentOriginalTimeoutGateCaches": [
+    {
+      "path": "contract/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 7090,
+      "sha256": "da67693a3a1646d86125051ac15b1769b6e69f8152846de61f6ab7e99572099f",
+      "mtime": 1792138470.8935122
+    },
+    {
+      "path": "ai-worker/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 13128,
+      "sha256": "e246440fef937204ff1f0bc2c27b1213e81ed17eb6d5e3ea871afaec93f3e600",
+      "mtime": 1792138476.2937002
+    },
+    {
+      "path": "backend/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 59489,
+      "sha256": "1e1ea07c5c0e328f56f022810eedeb146f0be82b4ea7aab328bd39302910c825",
+      "mtime": 1792138511.6741443
+    },
+    {
+      "path": "frontend/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 21443,
+      "sha256": "46777fe2a980d0695df0180501b6afc93f5f67231fe1bdbc1916a8a2b90d79ab",
+      "mtime": 1792138521.880175
+    },
+    {
+      "path": "mcp-server/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "bytes": 647,
+      "sha256": "839804966cd1ccfe0eb08f2c25ce4165b2ae578600f5cff3be557edc8e4d5973",
+      "mtime": 1792138525.4993463
+    }
+  ],
+  "limits": "仅核已记录owned进程组及本轮专用临时根前缀；不清理未知目录、不触碰94030/65353及其它agent。缓存为原timeout命令固有派生，未改依赖源码。"
+}

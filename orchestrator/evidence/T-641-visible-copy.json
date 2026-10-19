@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-641",
-  "commit_sha": "5f931f78acebcb942a11c9ab46fbd675c64f8bde",
+  "commit_sha": "4985fd526f9a8c2b81bf04bf7b38c0d29c12bcd4",
   "captures": [
     {
       "checkpoint": "desktop-asr-card",

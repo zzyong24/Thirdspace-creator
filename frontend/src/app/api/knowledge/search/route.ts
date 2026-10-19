@@ -9,6 +9,7 @@ import { readSessionCookie } from "../../v1/auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 
 // 知识库 AI 搜索入口(T-093 SPEC §3)—— 同步轻路由(distill 同款 escape hatch,
@@ -45,6 +46,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     ctx = await resolveRequestContext(rawToken, readRequestAccountId(req), {
       rejectInvalidToken: true,
+      groupId:readRequestGroupId(req),
     });
   } catch (err) {
     if (err instanceof AuthenticationError) {

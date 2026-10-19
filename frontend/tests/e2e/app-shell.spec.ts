@@ -34,14 +34,10 @@ test.describe("AppShell", () => {
     const nav = page.getByRole("navigation", { name: "主要导航" });
     const items = nav.getByRole("link");
 
-    await expect(items).toHaveCount(7);
-    await expect(items.nth(0)).toHaveText("首页");
-    await expect(items.nth(1)).toHaveText("项目");
-    await expect(items.nth(2)).toHaveText("知识库");
-    await expect(items.nth(3)).toHaveText("素材中心");
-    await expect(items.nth(4)).toHaveText("发布中心");
-    await expect(items.nth(5)).toHaveText("经验沉淀");
-    await expect(items.nth(6)).toHaveText("设置");
+    const approved=[["首页", "/"], ["创作者总览", "/overview"], ["定位中心", "/positioning"], ["内容雷达", "/intelligence"], ["选题", "/topics"], ["项目", "/projects"], ["知识库", "/knowledge"], ["素材中心", "/assets"], ["创作画布", "/canvases"], ["发布中心", "/publishing"], ["运营分析", "/daily-report"], ["自动化", "/automations"], ["设置", "/settings"]] as const;
+    await expect(items).toHaveCount(approved.length);
+    for(const [index,[label,href]] of approved.entries()){await expect(items.nth(index)).toHaveText(label);await expect(items.nth(index)).toHaveAttribute("href",href);await expect(items.nth(index)).toBeVisible();}
+
   });
 
   test("derives the active nav item from the pathname", async ({ page }) => {
@@ -60,50 +56,20 @@ test.describe("AppShell", () => {
   }) => {
     await page.goto("/");
 
-    // Tab through the primary nav (sidebar) until we land in the header.
-    let attempts = 0;
-    let inHeader = false;
-    let inScroll = false;
-    while (attempts < 12 && !inHeader) {
-      await page.keyboard.press("Tab");
-      attempts += 1;
-      const focused = await page.evaluate(() => {
-        const active = document.activeElement;
-        if (!active || !(active instanceof HTMLElement)) return null;
-        return {
-          inHeader:
-            active.closest('[data-testid="app-top-header"]') !== null,
-          inScroll:
-            active.closest('[data-testid="page-scroll-area"]') !== null,
-        };
-      });
-      inHeader = focused?.inHeader ?? false;
-      inScroll = focused?.inScroll ?? false;
+    await expect(page.locator('main[data-page="dashboard"]')).toBeVisible();
+    const limit=await page.evaluate(()=>Array.from(document.querySelectorAll<HTMLElement>('a[href],button,input,select,textarea,[tabindex]')).filter(e=>e.tabIndex>=0&&!e.matches(':disabled,[hidden]')&&e.getClientRects().length>0&&getComputedStyle(e).visibility!=="hidden").length*2+1);
+    expect(limit).toBeGreaterThan(0);let inHeader=false,inScroll=false;
+    for(let attempts=0;attempts<limit&&!inHeader;attempts++){
+      await page.keyboard.press("Tab");const focused=await page.evaluate(()=>{const a=document.activeElement;return a instanceof HTMLElement?{inHeader:!!a.closest('[data-testid="app-top-header"]'),inScroll:!!a.closest('[data-testid="page-scroll-area"]')}:null;});
+      inHeader=focused?.inHeader??false;inScroll=focused?.inScroll??false;expect(inScroll,"正文不得先于Header获得Tab焦点").toBe(false);
     }
-    expect(inHeader).toBe(true);
-    expect(inScroll).toBe(false);
+    expect(inHeader).toBe(true);expect(inScroll).toBe(false);
+    for(let attempts=0;attempts<limit&&!inScroll;attempts++){
+      await page.keyboard.press("Tab");const focused=await page.evaluate(()=>{const a=document.activeElement;return a instanceof HTMLElement?{inScroll:!!a.closest('[data-testid="page-scroll-area"]'),inSidebar:!!a.closest('[data-testid="app-sidebar"]')}:null;});
+      expect(focused?.inSidebar,"未进入正文前不能绕回侧栏形成焦点循环").not.toBe(true);inScroll=focused?.inScroll??false;
+    }
+    expect(inScroll,"真实Tab必须从Header进入正文").toBe(true);
 
-    // Continue tabbing — the next page-content focusable should be after
-    // the header. We assert by tabbing through every header action and
-    // confirming we do not enter the page scroll area.
-    for (let i = 0; i < 8; i += 1) {
-      await page.keyboard.press("Tab");
-      const focused = await page.evaluate(() => {
-        const active = document.activeElement;
-        if (!active || !(active instanceof HTMLElement)) return null;
-        return {
-          inHeader:
-            active.closest('[data-testid="app-top-header"]') !== null,
-          inScroll:
-            active.closest('[data-testid="page-scroll-area"]') !== null,
-        };
-      });
-      if (focused?.inScroll) {
-        // Once we have crossed all header actions, the next focusable is
-        // in the page content. That's the expected order.
-        break;
-      }
-    }
   });
 
   test("the page scroll area is the only scrollable region in the main frame", async ({
@@ -187,11 +153,13 @@ test.describe("AppShell", () => {
   test("applies shared page spacing tokens in the browser", async ({ page }) => {
     await page.goto("/");
 
+    await expect(page.locator('main[data-page="dashboard"]')).toBeVisible();
     const styles = await page
       .locator('[data-slot="app-page-content"]')
       .evaluate((element) => {
         const pageStyle = getComputedStyle(element);
-        const main = element.firstElementChild as HTMLElement;
+        const main = element.querySelector('main[data-page="dashboard"]') as HTMLElement;
+        if(!main||!main.getClientRects().length)throw new Error("当前可见Dashboard尚未交付");
         return {
           gap: getComputedStyle(main).gap,
           paddingLeft: pageStyle.paddingLeft,

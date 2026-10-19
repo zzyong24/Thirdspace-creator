@@ -6,6 +6,7 @@
 // 契约每加一个 op,这里自动多一个 tool,零手工维护。
 
 import { z } from "zod";
+import {operationCatalogInput,operationDescribeInput} from "./operation-catalog";
 import {
   ENDPOINTS,
   getCliOperationPolicy,
@@ -74,8 +75,9 @@ export function endpointInputSchema(endpoint: Endpoint): Record<string, unknown>
       : ["idempotencyKey", "apply"];
   properties._creatoros = {
     type: "object",
-    description: "CreatorOS CLI/MCP 调用上下文。并行多账号时每次显式传 accountId。",
+    description: "CreatorOS CLI/MCP 调用上下文。每次显式传 groupId；平台目标另传真实 accountId。",
     properties: {
+      groupId: { type: "string", minLength: 1 },
       accountId: { type: "string", minLength: 1 },
       idempotencyKey: { type: "string", minLength: 1 },
       apply: { type: "boolean" },
@@ -159,8 +161,8 @@ export const OVERVIEW_TOOL: McpToolDef = {
     properties: {
       _creatoros: {
         type: "object",
-        description: "并行多账号时显式传 accountId。",
-        properties: { accountId: { type: "string", minLength: 1 } },
+        description: "显式传 groupId，平台目标另传 accountId。",
+        properties: { groupId: { type: "string", minLength: 1 }, accountId: { type: "string", minLength: 1 } },
         additionalProperties: false,
       },
     },
@@ -174,6 +176,11 @@ export const OVERVIEW_TOOL: McpToolDef = {
   },
   opId: "pages.dashboard.get",
 };
+
+export const OPERATION_DISCOVERY_TOOLS:McpToolDef[]=[
+  {name:"creatoros_operations_list",opId:"creatoros.operations.list",description:"离线查看CreatorOS真实能力的简明目录，可按domain/effect精确筛选并分页（最多50项）。返回操作ID、入口、效果及确认要求，不含完整schema；需要参数时调用creatoros_operations_describe。目录不会授予执行权限。",inputSchema:schemaToJson(operationCatalogInput),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},
+  {name:"creatoros_operations_describe",opId:"creatoros.operations.describe",description:"按真实operation ID读取完整参数/结果合同与确认要求。先从creatoros_operations_list取得ID；此工具不执行操作、不读取用户业务资料。",inputSchema:schemaToJson(operationDescribeInput),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},
+];
 
 /** 从 ENDPOINTS 生成全部 MCP tools(含 creatoros_overview 辅助工具)。 */
 export function buildTools(): McpToolDef[] {
@@ -196,6 +203,6 @@ export function buildTools(): McpToolDef[] {
       opId: endpoint.id,
     });
   }
-  tools.push(OVERVIEW_TOOL);
+  tools.push(OVERVIEW_TOOL,...OPERATION_DISCOVERY_TOOLS);
   return tools.sort((left, right) => left.name.localeCompare(right.name));
 }

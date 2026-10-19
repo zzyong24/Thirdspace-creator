@@ -1,0 +1,62 @@
+{
+  "focused-final": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/copilot/chat-work-editor-card.test.tsx",
+    "src/features/copilot/chat-work-creation-card.test.tsx",
+    "src/features/copilot/work-candidate-adoption.ui.integration.test.tsx",
+    "src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+    "src/features/reference-editors/noterelay/native-bundle.test.ts",
+    "--retry=0",
+    "--maxWorkers=1",
+    "--testTimeout=180000",
+    "--hookTimeout=180000"
+  ],
+  "led047": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/copilot/ai-copilot-interactions.test.tsx",
+    "src/features/knowledge/knowledge-dump-zone.test.tsx",
+    "src/features/topics/topics-interactions.test.tsx",
+    "src/components/overlays/overlay-routing.test.tsx",
+    "src/lib/copilot-navigation.test.ts",
+    "src/features/copilot/chat-tool-trace.test.tsx",
+    "src/features/automations/run-controls.test.tsx",
+    "src/features/automations/cadence.test.ts",
+    "src/features/copilot/ai-copilot-content.test.tsx",
+    "--retry=0",
+    "--maxWorkers=1",
+    "--testTimeout=180000",
+    "--hookTimeout=180000"
+  ],
+  "types": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "tsc",
+    "--noEmit",
+    "--incremental",
+    "false"
+  ],
+  "boundary": [
+    "node",
+    "orchestrator/process/boundary-scan.mjs"
+  ],
+  "semantic": [
+    "node",
+    "orchestrator/process/semantic-boundary-scan.mjs"
+  ],
+  "timeout": [
+    "node",
+    "tools/timeout-policy/verify.mjs"
+  ]
+}

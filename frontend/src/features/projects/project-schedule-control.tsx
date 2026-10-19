@@ -34,7 +34,8 @@ export type ProjectScheduleSummary = Pick<
 };
 
 export interface ProjectScheduleControlProps {
-  readonly accountId: string;
+  readonly accountId: string | null;
+  readonly groupId?: string | null;
   readonly projectId: string;
   readonly projectTitle: string;
   readonly referenceDateKey: string;
@@ -56,6 +57,7 @@ function mutationErrorMessage(action: "save" | "delete"): string {
 
 export function ProjectScheduleControl({
   accountId,
+  groupId,
   projectId,
   projectTitle,
   referenceDateKey,
@@ -107,7 +109,10 @@ export function ProjectScheduleControl({
           query: undefined,
           body: { plannedDate: draftDate },
         });
+      } else if(groupId) {
+        await client.createGroupEntry({params:{groupId},query:undefined,body:{projectId,plannedDate:draftDate,targetAccountId:null}});
       } else {
+        if(!accountId)throw new Error("请选择账号组");
         await client.createEntry({
           params: { accountId },
           query: undefined,

@@ -8,6 +8,7 @@ import { readSessionCookie } from "../../auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 import {
   LocalPathViolation,
@@ -42,7 +43,7 @@ export async function POST(req: Request): Promise<Response> {
   const accountId = readRequestAccountId(req);
   let ctx;
   try {
-    ctx = await resolveRequestContext(rawToken, accountId);
+    ctx = await resolveRequestContext(rawToken, accountId,{groupId:readRequestGroupId(req)});
   } catch {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

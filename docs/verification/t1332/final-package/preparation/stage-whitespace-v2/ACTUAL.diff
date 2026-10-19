@@ -1,0 +1,15 @@
+{
+  "format": "escaped-byte-diff",
+  "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1332/final-package/runner/final.spec.cjs",
+  "onlyChangedLine": 5,
+  "beforeUtf8Escaped": "const isBad=task=>Boolean(task&&(failed.has(task.status)||failed.has(task.runtimeStatus))); \n",
+  "afterUtf8Escaped": "const isBad=task=>Boolean(task&&(failed.has(task.status)||failed.has(task.runtimeStatus)));\n",
+  "removedBytesHex": "20",
+  "beforeSha256": "ead3f347563a5e7700eb79ccbd77ef4621ef056a0d70372096a8e574ca7ae0b4",
+  "afterSha256": "3b8fbdfe2be2577c0bfdd56798c8386bc59502eaa044bbd8891db1c0539f5a4a",
+  "fullByteReconstruction": {
+    "unchangedPrefixLines": 4,
+    "unchangedSuffixFromLine": 6,
+    "equalOutsideOnlyLine5TrailingSpace": true
+  }
+}

@@ -78,9 +78,11 @@ function requireFreshRoutes(tsPath) {
 
 async function waitForServer(url, timeoutMs = 120_000) {
   const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
+  timeoutMs = Math.max(120_000, timeoutMs);
+  const deadline = start + timeoutMs;
+  while (Date.now() < deadline) {
     try {
-      const res = await fetch(url, { redirect: "manual" });
+      const res = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });
       // Any HTTP response (including 4xx) is good enough — the
       // server is listening and serving.
       if (res.status >= 200 && res.status < 600) return;
@@ -146,7 +148,7 @@ async function main() {
     serverProcess = await bootDevServer();
   } else {
     console.log(`[capture-current] Reusing dev server at ${BASE_URL}…`);
-    await waitForServer(BASE_URL, 5_000).catch(() => {
+    await waitForServer(BASE_URL, 120_000).catch(() => {
       throw new Error(
         `No dev server detected at ${BASE_URL}. Re-run with --boot to start one.`,
       );
@@ -165,6 +167,8 @@ async function main() {
     deviceScaleFactor: 1,
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
 
   // Block any external network so the visual capture is hermetic.
   await context.route("**/*", (route) => {
@@ -190,13 +194,13 @@ async function main() {
       console.log(`[capture-current] ${route.id} → ${url}`);
       const response = await page.goto(url, {
         waitUntil: "domcontentloaded",
-        timeout: 30_000,
+        timeout: 120_000,
       });
       // Give the client a brief moment to hydrate, but avoid
       // networkidle so the run is not held hostage by long-poll
       // requests. Animations are disabled in the config so this
       // does not need to be long.
-      await page.waitForLoadState("load", { timeout: 10_000 }).catch(() => {});
+      await page.waitForLoadState("load", { timeout: 120_000 }).catch(() => {});
       await page.waitForTimeout(500);
 
       await page.screenshot({ path: outPath, fullPage: true });

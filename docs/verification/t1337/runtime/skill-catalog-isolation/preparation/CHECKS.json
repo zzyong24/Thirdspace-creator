@@ -1,0 +1,84 @@
+{
+  "state": "OFFLINE_CHECKS_PASS_ZERO_ITS",
+  "checks": [
+    {
+      "label": "syntax-worker",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "--check",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/worker-entry.fixture.cjs"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend",
+      "budgetSeconds": 120,
+      "exitCode": 0,
+      "elapsedSeconds": 0.14476362499408424,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/syntax-worker.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "executedIts": 0,
+      "models": 0,
+      "rpcCalls": 0
+    },
+    {
+      "label": "syntax-cli",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "--check",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/codex-cli.fixture.cjs"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend",
+      "budgetSeconds": 120,
+      "exitCode": 0,
+      "elapsedSeconds": 0.130951791012194,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/syntax-cli.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "executedIts": 0,
+      "models": 0,
+      "rpcCalls": 0
+    },
+    {
+      "label": "collection",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/node_modules/vitest/vitest.mjs",
+        "list",
+        "--config",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/skill-catalog-isolation/preparation/vitest.config.mts"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend",
+      "budgetSeconds": 600,
+      "exitCode": 0,
+      "elapsedSeconds": 8.952417291991878,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/collection.log",
+      "logSha256": "a5ec1d91412b205e3bc094786429c53f222a8a8110284ee21b3e3fc9a1dc627a",
+      "executedIts": 0,
+      "models": 0,
+      "rpcCalls": 0
+    },
+    {
+      "label": "frontend-type",
+      "command": [
+        "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false",
+        "--incremental",
+        "false",
+        "-p",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tsconfig.json"
+      ],
+      "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend",
+      "budgetSeconds": 900,
+      "exitCode": 0,
+      "elapsedSeconds": 52.47374983399641,
+      "log": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/red-v1/frontend-type.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "executedIts": 0,
+      "models": 0,
+      "rpcCalls": 0
+    }
+  ],
+  "pythonAst": "run.py/freeze.py/check.py AST通过",
+  "executedIts": 0,
+  "productionWrites": 0
+}

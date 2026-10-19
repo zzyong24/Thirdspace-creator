@@ -1,0 +1,45 @@
+{
+  "clockAdvancedMs": 121000,
+  "claimed": 0,
+  "before": {
+    "status": "unknown_result",
+    "attempt": 1,
+    "lastErrorCode": "CODEX_HOST_FAILED"
+  },
+  "after": {
+    "status": "unknown_result",
+    "attempt": 1,
+    "lastErrorCode": "CODEX_HOST_FAILED"
+  },
+  "newTurnStarts": 0,
+  "newCalls": 0,
+  "errors": [
+    {
+      "port": "completeChatGeneration",
+      "attempt": 1,
+      "callId": "call_ac46b545-46ba-4bb7-99b6-8e5eb24e17fa",
+      "name": "ConflictError",
+      "message": "生成缺少完整回执",
+      "stack": [
+        "ConflictError: 生成缺少完整回执",
+        "    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:96:90",
+        "    at receipts (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:93:19)",
+        "    at Object.complete (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts:202:36)",
+        "    at Object.complete (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-tool-ports.service.ts:127:1503)",
+        "    at Object.invoke (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:292:44)",
+        "    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/worker-supervisor.ts:150:28"
+      ]
+    },
+    {
+      "port": "settleExternalChatTurn",
+      "attempt": 1,
+      "callId": "call_31b7ae1c-7430-423f-b46b-8a5ab27083c6",
+      "name": "ConflictError",
+      "message": "子工具回执尚未确认",
+      "stack": [
+        "ConflictError: 子工具回执尚未确认",
+        "    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/external-chat-turn.service.ts:168:116"
+      ]
+    }
+  ]
+}

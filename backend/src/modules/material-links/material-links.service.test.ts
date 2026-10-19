@@ -1,3 +1,11 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["proj-1", "user-a", "acct-a"], ["proj-2", "user-a", "acct-a"], ["proj-a", "user-a", "acct-a"], ["proj-b", "user-a", "acct-a"], ["shared-proj", "user-a", "acct-a"], ["proj-1-b", "user-b", "acct-b"], ["shared-proj-b", "user-b", "acct-b"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
+import {assets,knowledgeItems} from '@creatoros/backend';
+import {accountGroups} from '../../schema/account-groups';
+async function seedOwnedReferences(db:FixtureDb){const at=new Date().toISOString();await db.insert(accountGroups).values([{id:'grp_legacy_acct-a',userId:'user-a',name:'甲真实工作区',createdAt:at,updatedAt:at},{id:'grp_legacy_acct-b',userId:'user-b',name:'乙真实工作区',createdAt:at,updatedAt:at}]);await db.insert(assets).values([...Array.from({length:201},(_,i)=>({id:`a-${i}`,userId:'user-a',accountId:'acct-a',assetType:'image',name:'素材',status:'active',createdAt:at,updatedAt:at})),{id:'asset-web-1',userId:'user-a',accountId:'acct-a',assetType:'image',name:'网页素材',status:'active',createdAt:at,updatedAt:at},{id:'b-1',userId:'user-b',accountId:'acct-b',assetType:'image',name:'乙素材',status:'active',createdAt:at,updatedAt:at}]);await db.insert(knowledgeItems).values({id:'k-1',userId:'user-a',accountId:'acct-a',currentRevisionId:'revision-1',title:'真实知识',status:'active',createdAt:at,updatedAt:at});}
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -12,8 +20,8 @@ import { OwnershipError, ValidationError } from "./material-links.errors";
 // Mirrors the realized platform-account service test.
 
 const NOW = "2026-06-22T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user" };
+const ctxA: RequestContext = { userId: "user-a", requestId: "r1", source: "user",accountId:"acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user",accountId:"acct-b" };
 
 function makeService(db: Db): MaterialLinksService {
   let seq = 0;
@@ -29,6 +37,7 @@ describe("material-links service", () => {
   let svc: MaterialLinksService;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedOwnedProjects(db);await seedOwnedReferences(db);
     svc = makeService(db);
   });
 
@@ -65,7 +74,7 @@ describe("material-links service", () => {
       });
       ids.push(row.id);
     }
-    await svc.create(ctxB, { projectId: "proj-1", entityType: "asset", entityId: "b-1" });
+    await svc.create(ctxB, { projectId: "proj-1-b", entityType: "asset", entityId: "b-1" });
     const pages = [];
     for (let page = 1; page <= 3; page += 1) {
       const result = await svc.list(ctxA, { page, pageSize: 100 });

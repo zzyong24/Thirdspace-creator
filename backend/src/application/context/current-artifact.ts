@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import type {RequestContext} from "@creatoros/contract";
-import {extractLegacyScriptText,canonicalizeScriptSectionRecords,type ArtifactsService} from "../../modules/artifacts";
+import {extractLegacyScriptText,canonicalizeScriptSectionRecords,type ArtifactsService,type ArtifactRow,type ArtifactVersionRow} from "../../modules/artifacts";
 import type {ProjectsService} from "../../modules/projects";
 export function extractArtifactText(
   contentText: string | null | undefined,
@@ -54,6 +54,12 @@ return async (
     );
     if (!current) return null;
 
+    return readArtifactVersionTruth(c,target,current,artifactsService);
+  };
+}
+
+/** 已选定准确工件/不可变版本的原正文提取叶子；不再按 type 重选目标。 */
+export async function readArtifactVersionTruth(c:RequestContext,target:Pick<ArtifactRow,"id"|"projectId"|"artifactType"|"updatedAt">,current:ArtifactVersionRow,artifactsService:Pick<ArtifactsService,"getScriptSections">) {
     const data =
       current.contentData &&
       typeof current.contentData === "object" &&
@@ -92,7 +98,7 @@ return async (
         };
       },
     );
-    if (sections.length === 0 && artifactType === "output_script") {
+    if (sections.length === 0 && target.artifactType === "output_script") {
       const rows = await artifactsService.getScriptSections(c, current.id);
       sections = rows.flatMap((section, index) => {
         const body =
@@ -130,7 +136,7 @@ return async (
         : extractArtifactText(current.contentText, current.contentData);
     return {
       artifactType: target.artifactType,
-      projectId,
+      projectId:target.projectId,
       artifactId: target.id,
       currentVersionId: current.id,
       versionNumber: current.versionNumber,
@@ -140,5 +146,4 @@ return async (
       sections,
       fullText,
     };
-  };
 }

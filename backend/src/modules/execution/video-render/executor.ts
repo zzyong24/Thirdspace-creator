@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // [T-254a] video.render executor(HyperFrames 确定性渲染,SPEC 2026-07-11
 // execution-layer-video-pipeline §3.1 步骤4)。
 //
@@ -270,6 +271,7 @@ export type ChromiumDownloader = (
 export type VideoVisualReviewer = (
   ctx: RequestContext,
   input: { bytes: Uint8Array; mimeType: "image/jpeg"; prompt: string },
+  scope: { parentTaskId: string; deadlineAt: number | null; signal: AbortSignal },
 ) => Promise<string | null>;
 
 export interface VideoVisualReview {
@@ -553,6 +555,13 @@ async function renderWithHyperframesCli(opts: {
           HYPERFRAMES_FFMPEG_PATH: opts.ffmpegPath,
           HYPERFRAMES_FFPROBE_PATH: opts.ffprobePath,
           HYPERFRAMES_TELEMETRY: "0",
+          // 可配第三方执行等待显式归一，不继承隐含短默认；协议/进程300s、编码600s保留。
+          PRODUCER_PUPPETEER_LAUNCH_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PUPPETEER_LAUNCH_TIMEOUT_MS ? Number(process.env.PRODUCER_PUPPETEER_LAUNCH_TIMEOUT_MS) : undefined)),
+          PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS ? Number(process.env.PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS) : undefined)),
+          PRODUCER_PLAYER_READY_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PLAYER_READY_TIMEOUT_MS ? Number(process.env.PRODUCER_PLAYER_READY_TIMEOUT_MS) : undefined)),
+          PRODUCER_RENDER_READY_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_RENDER_READY_TIMEOUT_MS ? Number(process.env.PRODUCER_RENDER_READY_TIMEOUT_MS) : undefined)),
+          PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS ? Number(process.env.PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS) : undefined, 300_000)),
+          FFMPEG_PROCESS_TIMEOUT_MS: String(executionTimeoutMs(process.env.FFMPEG_PROCESS_TIMEOUT_MS ? Number(process.env.FFMPEG_PROCESS_TIMEOUT_MS) : undefined, 300_000)),
           // resolver 虽能从自身 __dirname 推导根目录，仍显式传递同一绝对 root，
           // 避免安装目录重排时 resolver 与 executor 对分层根产生不同理解。
           ...(process.env.CREATOROS_RUNTIME_ROOT
@@ -578,6 +587,7 @@ async function renderWithHyperframesCli(opts: {
       const m = /Capturing frame (\d+)\/(\d+)/.exec(text);
       if (m) opts.onProgress(`捕帧 ${m[1]}/${m[2]}`);
       else if (text.includes("Encoding video")) opts.onProgress("编码中");
+      else if (/audio|Audio|WARN|ERROR/.test(text)) opts.onProgress(redactHyperframesDiagnostic(text).slice(-2000));
     };
     child.stdout.on("data", onData);
     child.stderr.on("data", onData);
@@ -1135,7 +1145,7 @@ export function createVideoRenderExecutor(
               direction: {
                 ...renderProps.direction,
                 beatGraph: renderProps.direction.beatGraph.map((beat) =>
-                  beat.subject.kind === "broll"
+                  beat.subject.kind === "broll" && !renderProps.broll.some(item => item.id && beat.subject.ref === `broll:${item.id}`)
                     ? {
                         ...beat,
                         subject: {
@@ -1148,7 +1158,8 @@ export function createVideoRenderExecutor(
               },
             }
           : {}),
-        talkingHead: { ...renderProps.talkingHead, file: rename(renderProps.talkingHead.file) },
+        talkingHead: { ...renderProps.talkingHead, file: rename(renderProps.talkingHead.file),
+          ...(renderProps.talkingHead.clips ? {clips:renderProps.talkingHead.clips.map(clip=>({...clip,file:rename(clip.file)}))} : {}) },
         broll: renderProps.broll.map((b) => ({ ...b, file: rename(b.file) })),
         scenes: renderProps.scenes.map((s) => ({
           ...s,
@@ -1194,14 +1205,31 @@ export function createVideoRenderExecutor(
       throwIfAborted(signal);
       await reportStep("交付文件无损整理(stream copy + faststart)");
       const finalFile = path.join(sandbox.outDir, "final.mp4");
+      // SEMANTIC_BOUNDARY_ALLOW: 仅落实已保存的主轨实例、入点和时长，不判断语音内容。
+      // 主轨音频直接按冻结区间编译，避免外部引擎静默丢失音轨或重复实例去重。
+      // 旧V1单主文件也有明确音轨边界；只编译音频，不改变其字幕/视觉模板。
+      const mainClips=renamedProps.talkingHead.clips??[{
+        file:renamedProps.talkingHead.file,startSec:0,endSec:renamedProps.talkingHead.durationSec,
+        sourceInSec:0,hasAudio:renamedProps.talkingHead.hasAudio,
+      }];
+      const audioArgs=mainClips?.some(clip=>clip.hasAudio)?(()=>{
+        const inputs=mainClips.flatMap(clip=>["-i",path.join(mediaDir,clip.file)]);
+        const filters=mainClips.map((clip,index)=>{
+          const duration=clip.endSec-clip.startSec;
+          return clip.hasAudio
+            ? `[${index+1}:a]atrim=start=${clip.sourceInSec}:duration=${duration},asetpts=PTS-STARTPTS,aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,apad,atrim=duration=${duration}[a${index}]`
+            : `anullsrc=r=48000:cl=stereo,atrim=duration=${duration}[a${index}]`;
+        });
+        filters.push(mainClips.map((_,index)=>`[a${index}]`).join("")+`concat=n=${mainClips.length}:v=0:a=1[main_audio]`);
+        return [...inputs,"-filter_complex",filters.join(";"),"-map","0:v:0","-map","[main_audio]","-c:v","copy","-c:a","aac","-b:a","192k","-t",String(props.talkingHead.durationSec)];
+      })():["-c","copy"];
       await engine.runFfmpeg(
         ffmpeg,
         [
           "-y",
           "-i",
           rawFile,
-          "-c",
-          "copy",
+          ...audioArgs,
           "-movflags",
           "+faststart",
           finalFile,
@@ -1255,7 +1283,7 @@ export function createVideoRenderExecutor(
             bytes: await fs.readFile(contactSheet),
             mimeType: "image/jpeg",
             prompt: VIDEO_VISUAL_REVIEW_PROMPT,
-          });
+          }, { parentTaskId: sandbox.taskId, deadlineAt: opts.deadlineAt ?? null, signal });
           if (raw) {
             visualReview =
               parseVideoVisualReview(raw) ?? {

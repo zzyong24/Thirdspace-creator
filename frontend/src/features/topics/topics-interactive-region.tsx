@@ -1,4 +1,5 @@
 "use client";
+import { AudienceTaskDetail } from "./audience-task-detail";
 
 /**
  * `topics-interactive-region.tsx` — Client islands for the 选题中心 (选题中心大改 · Slice 2,
@@ -1101,7 +1102,7 @@ function CandidateDetailPanel({
               从中间候选池选一条，查看它的选题卡。
             </p>
           </div>
-        ) : !candidate.card.oneLiner ? (
+        ) : !candidate.card.oneLiner && !candidate.card.audienceTask ? (
           // card 为空：不显示空字段,给一个 CTA(不编).
           <div
             data-testid="detail-empty-card"
@@ -1208,6 +1209,7 @@ function CandidateCardDetail({
         </div>
       ) : null}
 
+      {card.audienceTask?<AudienceTaskDetail task={card.audienceTask}/>:null}
       <DetailRow label="目标观众" value={card.targetAudience} />
       <DetailRow label="观众痛点" value={card.audiencePain} />
       <DetailRow label="核心冲突" value={card.coreConflict} />

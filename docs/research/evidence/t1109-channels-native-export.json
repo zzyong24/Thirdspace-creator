@@ -1,0 +1,242 @@
+{
+  "task": "T-1109",
+  "checked_at_utc": "2026-10-09T09:11:00.892156+00:00",
+  "scope": "用户确认本人微信登录后，同一浏览器空间原生导出核验；未改产品/账号/凭据/计划或入库",
+  "user_authorization": "本会话用户先要求研究浏览器自动化与原生导出，再要求重新打开登录页，并确认“已经登录了”",
+  "public_entry": "https://channels.weixin.qq.com/",
+  "browser": {
+    "skill": "ego-browser 2.0.0",
+    "task_space_id": 20,
+    "page": "p5",
+    "login_result": "本人视频号主页和数据中心真实可用",
+    "cookies_read_or_copied": false,
+    "completion_status": "已调用finish一次并成功，保留本人后台页面供用户继续查看",
+    "finish_receipt": {
+      "spaceId": 20,
+      "closedSpace": false,
+      "keptManagedLabels": [
+        "p1",
+        "p4",
+        "p5"
+      ],
+      "closedManagedLabels": [],
+      "preservedUnmanagedCount": 0
+    },
+    "retention_reason": "用户要求重新打开后台；保留两平台结果页面供本人继续查看，未关闭已有公众号工作页"
+  },
+  "native_export_operation": "当前页面下载表格 → 预订download事件120000ms → 原生点击 → download.saveAs绝对路径；不猜端点",
+  "reports": [
+    {
+      "kind": "账号视频日汇总",
+      "file": {
+        "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/视频号-全部视频数据.csv",
+        "bytes": 1100,
+        "sha256": "21a6e7523ddcac8d33267d2a12329a0c07221a9ed843b8fc0ef41d8f699165e6"
+      },
+      "encoding": "UTF-8",
+      "header_row_index_0based": 2,
+      "headers": [
+        "时间",
+        "播放",
+        "推荐",
+        "喜欢",
+        "评论",
+        "分享",
+        "关注"
+      ],
+      "data_rows": 30,
+      "page_proof": {
+        "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/全部视频-页面证据.json",
+        "bytes": 3255,
+        "sha256": "9e7018344bebc85af58c1920b922bc3f5be08d7c8399543ede2faa481b5de98c"
+      },
+      "page_path": "/platform/statistic/post",
+      "date_range": [
+        "2026/09/09",
+        "2026/10/08"
+      ],
+      "matches_page_rows": true
+    },
+    {
+      "kind": "关注者每日增长",
+      "file": {
+        "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/视频号-关注者增长数据.csv",
+        "bytes": 998,
+        "sha256": "6733792b2d42a34387826280098024b2817dee66c971379485bf59788f4ec3ad"
+      },
+      "encoding": "UTF-8",
+      "header_row_index_0based": 2,
+      "headers": [
+        "时间",
+        "净增关注",
+        "新增关注",
+        "取消关注",
+        "关注者总数"
+      ],
+      "data_rows": 30,
+      "page_proof": {
+        "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/关注者增长-页面证据.json",
+        "bytes": 2563,
+        "sha256": "8445f1907dbba44f1fd69b30e2f8c0308df141e3f91e8c358cfc67f40aa7bc2c"
+      },
+      "page_path": "/platform/statistic/follower",
+      "date_range": [
+        "2026/09/09",
+        "2026/10/08"
+      ],
+      "matches_page_rows": true
+    },
+    {
+      "kind": "单篇视频列表",
+      "file": {
+        "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/视频号-单篇视频数据.csv",
+        "bytes": 5102,
+        "sha256": "dddc5af37a11792c59acecdfa0a1a324817067d494cea3bc1da01086d3f246eb"
+      },
+      "encoding": "UTF-8",
+      "header_row_index_0based": 0,
+      "headers": [
+        "视频描述",
+        "视频ID",
+        "发布时间",
+        "完播率",
+        "平均播放时长",
+        "播放量",
+        "推荐",
+        "喜欢",
+        "评论量",
+        "分享量",
+        "关注量",
+        "转发聊天和朋友圈",
+        "设为铃声",
+        "设为状态",
+        "设为朋友圈封面",
+        "企微链接点击次数",
+        "企微链接点击人数",
+        "添加到通讯录次数",
+        "添加到通讯录人数"
+      ],
+      "data_rows": 13,
+      "page_proof": {
+        "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/单篇视频-页面证据.json",
+        "bytes": 4822,
+        "sha256": "04005c58e894591cf9999cc9b64a256584ffab65adb2f03c4277edd9e7197e0f"
+      },
+      "page_path": "/platform/statistic/post",
+      "selected_range": [
+        "近30天"
+      ],
+      "page_reported_total": 13,
+      "page_visible_rows": 10,
+      "publication_date_range": [
+        "2026/09/10",
+        "2026/10/08"
+      ],
+      "native_id_unique_count": 13,
+      "row_widths": [
+        19
+      ],
+      "completion_rate_percent_observed": true,
+      "duration_seconds_observed": true,
+      "unavailable_marker_observed": true,
+      "blank_fields_observed": true,
+      "metric_accumulation_semantics": "未独立核实终身/区间口径；不强行声明30天增量"
+    }
+  ],
+  "attempts": [
+    {
+      "action": "点击隐藏radio输入引用",
+      "result": "FAILED",
+      "observed": "不可见；SDK默认3000ms动作失败",
+      "recovery": "观察真实DOM后改用可见原生标签"
+    },
+    {
+      "action": "泛文本选择 + 主文档waitForFunction",
+      "result": "FAILED",
+      "timeout_ms": 120000,
+      "observed": "数据页由同源iframe承载；主文档不含数据表，且泛文本选择定位到趋势控件",
+      "recovery": "定位真实控件类与分析iframe的详情日期行"
+    },
+    {
+      "action": "首次视频汇总原生下载",
+      "download_result": "PASS",
+      "selected_period_ready_result": "FAILED",
+      "file": {
+        "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/视频号-全部视频数据-首次7天.csv",
+        "bytes": 450,
+        "sha256": "c652c64704becae4bd7c62671339d739c85d40e861e3202624677226aaf3cbe7"
+      },
+      "actual_date_range": [
+        "2026/10/02",
+        "2026/10/08"
+      ],
+      "actual_data_rows": 7,
+      "reason": "日期标签已变30天，表格仍为7天；保留原文件/截图，未代签30天"
+    },
+    {
+      "action": "首次文件保存后旧引用跳转",
+      "result": "FAILED",
+      "observed": "Stale ref @43；文件已真实保存，不算整段脚本成功",
+      "recovery": "重新观察页面，使用真实语义导航"
+    },
+    {
+      "action": "视频及关注者日表恢复导出",
+      "result": "PASS",
+      "ready_condition": "实际表格30个不同日期且含2026/09/09",
+      "download_event_timeout_ms": 120000,
+      "page_csv_row_match": true
+    },
+    {
+      "action": "单篇原生导出",
+      "result": "PASS",
+      "before_click_transient_total": 4,
+      "csv_final_rows": 13,
+      "after_download_page_total": 13,
+      "after_download_page_visible_rows": 10,
+      "initial_metadata_not_used_as_final": "即时旧计数不代签为最终数据；重新保存页面证据"
+    }
+  ],
+  "local_screenshots": [
+    {
+      "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/全部视频数据.png",
+      "bytes": 90274,
+      "sha256": "3b5860be74e12f43467639be41204cbfe76742eaf842ce151bf4dff8abc6544d"
+    },
+    {
+      "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/关注者增长数据.png",
+      "bytes": 88840,
+      "sha256": "980cd124da77fc7389150a8b7bf6ad7e37117200d95057f51e88ceccb4f14f21"
+    },
+    {
+      "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/channels-native-export-20261009/单篇视频数据.png",
+      "bytes": 175683,
+      "sha256": "29ec03d6464e093f7ce84521c15dfb9e811354566477e7d35f7162423175b1da"
+    }
+  ],
+  "privacy": "仓库无原始CSV/截图、账号标识、作品标题或原生ID、账号统计值、Cookie或带登录参数URL；原始文件及页面数据只保留本机用户目录",
+  "limitations": [
+    "单次本人授权会话，未验证过期/重启/持续定时运行",
+    "未改CreatorOS能力表或适配/数据库",
+    "单篇仅当前近30天作品窗口，未验证全历史与逐页全部指标",
+    "图文/直播/带货/关注者画像未测",
+    "来源与粉丝细分筛选未逐项测试"
+  ],
+  "review": {
+    "status": "PASS",
+    "report_sha256": "d6d042affaf044a9df9ad365621f309efe08185e5d65fc7f118e4fd18a395b58",
+    "reviewer": "/root/spec_review",
+    "checked_at_utc": "2026-10-09T09:14:41.919676+00:00",
+    "findings": "三份文件哈希/表头/行数/日期及日表页面逐行一致，单篇计数与格式符合；原失败及未验证边界保留；未发现私密内容入仓库"
+  },
+  "global_gates": "产品源码/项目依赖/全局Gate环境未变，按公共流程复用T1106实际45ERROR/0WARN及范围外欠债；不宣称全绿",
+  "validation": {
+    "diff_check": "PASS",
+    "json_report_hash": "PASS",
+    "relative_links": "PASS",
+    "raw_file_hashes": "PASS",
+    "private_login_parameter_scan": "PASS",
+    "pmem_sync": "PASS",
+    "product_source_unchanged": "PASS",
+    "global_reconcile": "未重跑；复用未改源码/项目依赖/全局Gate环境的T1106实际45ERROR/0WARN及范围外旧欠债"
+  }
+}

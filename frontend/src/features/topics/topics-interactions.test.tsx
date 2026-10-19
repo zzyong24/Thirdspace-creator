@@ -175,6 +175,9 @@ describe("topics view (pure render, deterministic)", () => {
         }}
       />,
     );
+    // T-1074：退役九宫格工作区，保留普通四依据与候选池。
+    expect(screen.queryByTestId("audience-task-workspace")).not.toBeInTheDocument();
+    expect(screen.queryByText(/九宫格/)).not.toBeInTheDocument();
     // three-column body
     expect(screen.getByTestId("topics-three-column")).toBeInTheDocument();
     expect(screen.getByTestId("topics-sources")).toBeInTheDocument();

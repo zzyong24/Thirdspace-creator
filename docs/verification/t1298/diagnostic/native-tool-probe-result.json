@@ -1,0 +1,25 @@
+[
+  {
+    "threadId": "01a13f2e-7c11-7461-86b8-e1372b4f015d"
+  },
+  {
+    "turnId": "01a13f2e-7c7b-79f3-87c2-d5b495e097df"
+  },
+  {
+    "method": "item/tool/call",
+    "threadId": "01a13f2e-7c11-7461-86b8-e1372b4f015d",
+    "turnId": "01a13f2e-7c7b-79f3-87c2-d5b495e097df",
+    "callId": "call_32e96283913446aaa60a5ca6b3b070ba",
+    "tool": "read_probe",
+    "namespace": null,
+    "argumentKeys": []
+  },
+  {
+    "executed": true,
+    "callId": "call_32e96283913446aaa60a5ca6b3b070ba",
+    "name": "read_probe"
+  },
+  {
+    "text": "probe-observed"
+  }
+]

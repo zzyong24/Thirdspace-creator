@@ -11,5 +11,17 @@ describe('日报持久分析',()=>{
 });
 
 describe('恢复边界',()=>{
+ it('部分完成保留原回复，再次分析只读原任务而不重发',async()=>{
+  const {api,s,send}=setup();
+  api.listConversations.mockResolvedValue([{id:'c'}]);
+  api.listMessages.mockResolvedValue([{id:'m',role:'user',content:JSON.stringify({kind:'daily-report.request.v1',report}),modelMetadata:{chatTaskId:'original-partial'}},{id:'reply',role:'assistant',content:'已收到的部分分析正文',modelMetadata:{sourceMessageId:'m',chatTaskId:'original-partial'}}]);
+  api.getTask.mockResolvedValue({id:'original-partial',status:'partial',runtimeStatus:'partial',executionTaskId:'original-execution'});
+  const result=await s.refresh();
+  expect(result.status).toBe('failed');expect(result.error).toContain('部分完成');expect(result.rawAnalysis).toBe('已收到的部分分析正文');
+  await s.start();
+  expect(api.getTask).toHaveBeenCalledTimes(2);
+  expect(api.getTask.mock.calls.every(([input]:any[])=>input.params.taskId==='original-partial')).toBe(true);
+  expect(send).not.toHaveBeenCalled();expect(api.createMessage).not.toHaveBeenCalled();expect(api.createConversation).not.toHaveBeenCalled();expect(api.commandExecutionTasks).not.toHaveBeenCalled();
+ });
  it('未知结果只能读取原任务，禁止重新生成',async()=>{const {api,s,send}=setup();api.listConversations.mockResolvedValue([{id:'c'}]);api.listMessages.mockResolvedValue([{id:'m',role:'user',content:JSON.stringify({kind:'daily-report.request.v1',report}),modelMetadata:{chatTaskId:'t'}}]);api.getTask.mockResolvedValue({id:'t',status:'unknown_result',runtimeStatus:'unknown_result',executionTaskId:'e'});await s.refresh();await s.start();expect(send).not.toHaveBeenCalled();expect(api.createMessage).not.toHaveBeenCalled();});
 });

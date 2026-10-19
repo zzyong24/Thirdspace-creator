@@ -37,7 +37,7 @@ export function createChatStructuredTaskToolHost(
   signal?.throwIfAborted();
   const restored=structuredClone(await reader.read(execution));
   signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("生成工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==(owner.accountId??null) || (restored.context.groupId??null)!==(owner.groupId??null))throw new Error("生成工具账号与原任务不符");
   const definitions=restored.modelInput.tools.filter(tool=>names.some(name=>name===tool.name));
   if(!definitions.length)return null;
   const creative=chatStructuredContextSchema.parse(restored.hostContext.structuredContext);
@@ -78,7 +78,7 @@ export function createChatStructuredTaskToolHost(
       const args=resolved.input as {basis?:"positioning"|"comments"|"knowledge"|"trend";extraBrief?:string};
       const prepared=await ports.business.prepareTopic(resolved.restored.context,{basis:args.basis??"positioning",extraBrief:clampExtraBrief(args.extraBrief),projectId:resolved.restored.hostContext.chatContext.projectId??undefined},scope.signal);
       scope.signal?.throwIfAborted();
-      return {node:{capability:"topic.generate",facets:prepared.facets,trendNote:prepared.trendNote??null},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+      return {node:{capability:"topic.generate",facets:{...prepared.facets,userRequest:resolved.restored.snapshot.sourceMessage.content},trendNote:prepared.trendNote??null},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
      }
      if(definition.name==="review.analyze"){
       if(!ports.business)throw new Error("复盘上下文准备端口未装配");

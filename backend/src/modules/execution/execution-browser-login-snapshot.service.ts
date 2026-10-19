@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { assertFrozenBrowserTaskGrant } from "./browser-task-grant";
 import { and, eq, aiTasks, type Db } from "@creatoros/backend";
 import {
@@ -48,7 +49,7 @@ export function createExecutionBrowserLoginSnapshotService(
                 eq(aiTasks.id, task.ownerId),
                 eq(aiTasks.executionTaskId, task.id),
                 eq(aiTasks.userId, context.userId),
-                eq(aiTasks.accountId, context.accountId!),
+                workspaceFilter(aiTasks,context),
               ),
             )
             .for("update");

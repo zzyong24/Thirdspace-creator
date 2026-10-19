@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-17T09:16:29.871395+00:00",
+  "ownedRoot": "/Volumes/T7-MacData/CodexBuilds/t1338-legacy-work-parent-20261017-11c9cca0",
+  "parentRealpath": "/Volumes/T7-MacData/CodexBuilds",
+  "mode": "0700",
+  "createdFresh": true,
+  "authorization": "Root已审T1338测试准备；仅独立DB/media/tmp/cache/processlogs；生成masterkey原始0600持久供同终态ownedDB GREEN原ID继续；外部真实凭据不复制；旧UNKNOWN不打开。",
+  "productionWriteAuthorized": false,
+  "noBuildSharedDist": true
+}

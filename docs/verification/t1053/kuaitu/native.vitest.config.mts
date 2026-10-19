@@ -1,0 +1,2 @@
+import {defineConfig} from '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/node_modules/vitest/dist/config.js';
+export default defineConfig({resolve:{alias:{'@creatoros/contract':'/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/resources/reference-editor.ts',vitest:'/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/node_modules/vitest/dist/index.js'}},test:{root:'/tmp/t1053-native-canvas/source',include:['native-*.test.ts'],environment:'jsdom',maxWorkers:1}});

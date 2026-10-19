@@ -47,6 +47,16 @@ const baseTask: ScheduledCollectionTask = {
 };
 
 describe("runScheduledCollection(确定性采集 runner)", () => {
+  it.each(['navigationStatus','timeout','audio','export'])("incomplete结构化说明含%s也不被异常文案映射误分类",async field=>{
+    const message='本批未完整完成:已处理 1/1 个作品，确认完成 0 个\n评论抓取诊断：'+JSON.stringify({reason:'no_matching_response',pageEvidence:{[field]:200,network:{totalResponses:244}}});
+    const deps=makeDeps({collectors:{comments:async()=>({itemsNew:0,itemsUpdated:0,incomplete:true,message})}});
+    await runScheduledCollection(ctx,{...baseTask,taskType:'scheduled.comments'},deps);
+    const patch=(deps.runs.updateRun as ReturnType<typeof vi.fn>).mock.calls.at(-1)![2];
+    expect(patch).toMatchObject({status:'failed',itemsNew:0,itemsUpdated:0,error:`采集抖音评论失败:${message}。`});
+    expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx,baseTask.id,patch.error);
+    expect(deps.ai.markSucceeded).not.toHaveBeenCalled();
+  });
+
   it("成功路径:collector 抓数 → step → succeeded → 回填 job_run(items + finished_at)", async () => {
     const deps = makeDeps();
     await runScheduledCollection(ctx, baseTask, deps);
@@ -109,7 +119,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     expect(patch.finishedAt).toBe("2026-07-01T00:00:00.000Z");
   });
 
-  it("§6:未登录异常 → job_run 落 needs_reconnect(非普通 failed)+ error 含「设置 → 账户」扫码引导", async () => {
+  it("§6:未登录异常 → job_run 落 needs_reconnect(非普通 failed)+ error 含「账号管理」扫码引导", async () => {
     class NotLoggedIn extends Error {}
     const deps = makeDeps({
       collectors: {
@@ -124,9 +134,9 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
       .calls[0]![2];
     expect(patch.status).toBe("needs_reconnect");
-    // T-032b ②:人话引导(去「设置 → 账户」扫码),不留空/泛化
-    expect(patch.error).toContain("设置 → 账户");
-    expect(patch.error).toContain("扫码登录");
+    // T-032b ②:人话引导(去「账号管理」重新扫码绑定),不留空/泛化
+    expect(patch.error).toContain("账号管理");
+    expect(patch.error).toContain("扫码绑定");
     expect(deps.ai.markFailed).toHaveBeenCalled(); // task 也落诚实终态
   });
 
@@ -155,7 +165,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
       .calls[0]![2];
     expect(patch.status).toBe("needs_reconnect");
-    expect(patch.error).toContain("设置 → 账户");
+    expect(patch.error).toContain("账号管理");
     // 关键:未登录不是普通 failed,itemsNew 保持 0(没抓到任何东西)
     expect(patch.itemsNew).toBe(0);
   });

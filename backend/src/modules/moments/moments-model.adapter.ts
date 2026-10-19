@@ -1,0 +1,3 @@
+import type {StructuredBusinessAdapter} from '../ai-runtime';
+import type {createMomentsModelService} from './moments-model.service';
+export const createMomentsModelAdapter=(owner:ReturnType<typeof createMomentsModelService>):StructuredBusinessAdapter=>({skillId:'moments.compose',capability:'default',prepare:async(ctx,task)=>{const r=await owner.readFrozenGenerationTask(ctx,task.id,task.inputData);return{generationContext:JSON.stringify(r.frozenInput),__momentsFrozen:JSON.stringify({generationRootId:r.rootId,momentsId:r.candidate.momentsId,artifactId:r.candidate.artifactId,baseVersionId:r.candidate.baseVersionId,field:r.candidate.field,frozenInputDigest:r.frozenInputDigest})};},project(){throw Error('MOMENTS_USES_ORIGINAL_LEASE_PRIVATE_COMMIT');}});

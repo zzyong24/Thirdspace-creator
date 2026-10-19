@@ -1,0 +1,178 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1310",
+  "baselineHead": "c29a968718921a986e66293976baf57480ddee4b",
+  "candidateSource": "dc46cfa700ec9c9cbada47fb76237d0b50d10a67",
+  "stage": "BUILD维护；1309既有内部写归属补审，1310仅诊断",
+  "productEdited": false,
+  "newTestsExecuted": false,
+  "files": [
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-generation.service.ts",
+      "bytes": 22646,
+      "sha256": "e187531aa4726b180ebed0da0809b4b074607c2360f3696d0d57c141a82b3f86"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-generation.service.test.ts",
+      "bytes": 24323,
+      "sha256": "4a9c8e2d11cdc38132b60fe3eeb8e70bdf5e480086810bfd4c06d3d47859c5f7"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-generation-recovery.ts",
+      "bytes": 14943,
+      "sha256": "41c712d6e0ccd44716a488b2a1b1ef79f6459bb9f01874a7adbd5f385e858287"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-generation-recovery.test.ts",
+      "bytes": 7048,
+      "sha256": "06816899697e0601025c3aee36b6b122c675f3e53c2085f83085fc97d1617c54"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-codex-call.service.ts",
+      "bytes": 6221,
+      "sha256": "3afaf6c557d64d79efc070a0ed80a9deca5a90481bf2dac842087584f9c29d82"
+    },
+    {
+      "path": "backend/src/modules/execution/codex-read-recovery.ts",
+      "bytes": 7126,
+      "sha256": "258399f3529c963ac89d0fa93e65e35a6ccc35d26fd753de639216601e1221c3"
+    },
+    {
+      "path": "backend/src/modules/execution/model-call-recovery.ts",
+      "bytes": 8412,
+      "sha256": "053c29b1cd8c26e0120cbc355698cb6cb97432f318eac444030d9f712df2edf4"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "backend/src/modules/ai/external-task-tool.service.ts",
+      "bytes": 13451,
+      "sha256": "b4fa4407eaf2c9cd788b5de85cf6b309c442b7ba36a4edb37dda0c9908e84b58"
+    },
+    {
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "bytes": 32099,
+      "sha256": "02bcd783fdbca849e903b660a81c067855b67df9e4f33798bd20cbdf74879f86"
+    },
+    {
+      "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+      "bytes": 17461,
+      "sha256": "816789db7be33ea4bbddbae2b048fd881956a21cf7ad7ec8df48d63a795b063f"
+    },
+    {
+      "path": "ai-worker/src/execution/chat-generation-worker.ts",
+      "bytes": 3161,
+      "sha256": "de1a62340a7ec38d7b1a51fa00bce27acfcd9af86f679f504c0faf44b2a1b273"
+    },
+    {
+      "path": "ai-worker/src/execution/chat-generation-worker.test.ts",
+      "bytes": 6106,
+      "sha256": "3758fa3b71a58e3a3238467491233f6ae6efa73c3145f449961259dbf88b2fb8"
+    },
+    {
+      "path": "ai-worker/src/execution/chat-structured-sequence.ts",
+      "bytes": 1200,
+      "sha256": "156884f2b84f078f8617eea446e50a58dfffba4b78bd2fd945731559fb6e62d6"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "contract/src/internal/chat-worker.ts",
+      "bytes": 6791,
+      "sha256": "1176d9939ef6340bad147c5cf9485c088701ce0134f1d50c285c7304da994d60"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 478465,
+      "sha256": "2b9d6ec76ddecec372e8203707f408af9beaddf790ba434fe9c8b99741a03860"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/submission.json",
+      "bytes": 296,
+      "sha256": "5c20fa0422110036e1c7ba3744929f96fbdc828af57437246676ab75313f0de7"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/action-result.json",
+      "bytes": 789,
+      "sha256": "debd820034fff3a619644a28da676abbec3a9c3a7b281001deb51bba06468928"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/task.json",
+      "bytes": 1062,
+      "sha256": "5d736c609ea5db7b0a7fa49dfc6ea582e4402c52936167fd93c29d3a82caa9ad"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/modelcalls-allpages.json",
+      "bytes": 359,
+      "sha256": "638dc30326d53a11afc822940aa97834bd6250ea1bad284031bae1357c24afe8"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-public-cancel.json",
+      "bytes": 1935,
+      "sha256": "fe0a3b1e44a7e9e7e6f7713a1f73735905a133abd56e85b94f44f640670f0142"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-after-cancel.json",
+      "bytes": 803,
+      "sha256": "489a2252a7641bf0454684416ee2c32b546e1ed7d825041f8e3d89fef235c1bf"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-log-binding.json",
+      "bytes": 312,
+      "sha256": "c8fe6a8dfa8f329145af24bcbc6763098fa076cfb6f3dc3b6788df3c39541f72"
+    },
+    {
+      "path": "docs/features/t1310-topic-chat-completion-conflict-diagnosis.md",
+      "bytes": 6278,
+      "sha256": "d156a5fcfb8968929c97d4a5ff65834ad7ca6ed430d45d5fb2b74d354971d403"
+    },
+    {
+      "path": "docs/verification/t1310/DEC.md",
+      "bytes": 992,
+      "sha256": "fe85fb4d5fddc62d1a1cbcc064a6ea72f02728edbdfb2de0634f5f7dcd72c0a6"
+    },
+    {
+      "path": "docs/verification/t1310/MODULE_SCOPE.json",
+      "bytes": 5658,
+      "sha256": "b0677e8546272623b5da62c5cd628728ad1aecff29c1e7b2e8ac2a3d5d119413"
+    },
+    {
+      "path": "docs/verification/t1310/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    }
+  ],
+  "originalLiveLogFrozen": false,
+  "notes": "只锁不可变源码/公共原件与安全日志时点绑定；活动sidecar日志不冒完整冻结。"
+}

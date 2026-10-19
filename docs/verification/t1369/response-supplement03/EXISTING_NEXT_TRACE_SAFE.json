@@ -1,0 +1,175 @@
+{
+  "sourcePath": "/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator/frontend/.next/dev/trace",
+  "mtimeWithinRun": true,
+  "rawPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-supplement-2hh4e9nc/existing-next-dev-trace.jsonl",
+  "rawBytes": 181754,
+  "rawSha256": "d47794c2f3a4942b24dafd389cb37a34ac099aee8d7a535107fdfe3672a2cf53",
+  "eventCount": 939,
+  "selectedRecentEvents": 30,
+  "malformedLines": 0,
+  "nameCounts": [
+    [
+      "ensure-page",
+      10
+    ],
+    [
+      "handle-request",
+      5
+    ],
+    [
+      "compile-path",
+      4
+    ],
+    [
+      "turbopack-compaction",
+      3
+    ],
+    [
+      "render-path",
+      2
+    ],
+    [
+      "memory-usage",
+      2
+    ],
+    [
+      "hot-reloader",
+      1
+    ],
+    [
+      "setup-dev-bundler",
+      1
+    ],
+    [
+      "start-dev-server",
+      1
+    ],
+    [
+      "turbopack-persistence",
+      1
+    ]
+  ],
+  "lastSafeEvents": [
+    {
+      "name": "ensure-page",
+      "id": 18,
+      "parentId": 3,
+      "timestamp": 445446908811,
+      "duration": 345,
+      "startTime": 1792390000025
+    },
+    {
+      "name": "ensure-page",
+      "id": 19,
+      "parentId": 3,
+      "timestamp": 445446909435,
+      "duration": 261,
+      "startTime": 1792390000026
+    },
+    {
+      "name": "handle-request",
+      "id": 17,
+      "parentId": 1,
+      "timestamp": 445446908331,
+      "duration": 2281,
+      "startTime": 1792390000025
+    },
+    {
+      "name": "ensure-page",
+      "id": 21,
+      "parentId": 3,
+      "timestamp": 445446911165,
+      "duration": 670,
+      "startTime": 1792390000028
+    },
+    {
+      "name": "render-path",
+      "id": 22,
+      "parentId": 1,
+      "timestamp": 445446912524,
+      "duration": 3946,
+      "startTime": 1792390000033
+    },
+    {
+      "name": "handle-request",
+      "id": 20,
+      "parentId": 1,
+      "timestamp": 445446910936,
+      "duration": 5692,
+      "startTime": 1792390000027
+    },
+    {
+      "name": "memory-usage",
+      "id": 23,
+      "parentId": 20,
+      "timestamp": 445446916663,
+      "duration": 0,
+      "startTime": 1792390000033
+    },
+    {
+      "name": "ensure-page",
+      "id": 24,
+      "parentId": 3,
+      "timestamp": 445446926640,
+      "duration": 280,
+      "startTime": 1792390000043
+    },
+    {
+      "name": "ensure-page",
+      "id": 26,
+      "parentId": 3,
+      "timestamp": 445446928149,
+      "duration": 411,
+      "startTime": 1792390000044
+    },
+    {
+      "name": "ensure-page",
+      "id": 27,
+      "parentId": 3,
+      "timestamp": 445446928933,
+      "duration": 211,
+      "startTime": 1792390000045
+    },
+    {
+      "name": "handle-request",
+      "id": 25,
+      "parentId": 1,
+      "timestamp": 445446926956,
+      "duration": 3097,
+      "startTime": 1792390000043
+    },
+    {
+      "name": "turbopack-persistence",
+      "id": 31,
+      "parentId": 3,
+      "timestamp": 445734945465,
+      "duration": 133000,
+      "startTime": 1792390288193
+    },
+    {
+      "name": "turbopack-compaction",
+      "id": 33,
+      "parentId": 3,
+      "timestamp": 445735078901,
+      "duration": 2432000,
+      "startTime": 1792390290624
+    },
+    {
+      "name": "turbopack-compaction",
+      "id": 35,
+      "parentId": 3,
+      "timestamp": 445737510815,
+      "duration": 1359000,
+      "startTime": 1792390291983
+    },
+    {
+      "name": "turbopack-compaction",
+      "id": 37,
+      "parentId": 3,
+      "timestamp": 445738869895,
+      "duration": 1041000,
+      "startTime": 1792390293024
+    }
+  ],
+  "boundary": "既有trace只含已落盘span，不能从未见完成span断言未完成阶段；不输出tags/路径参数/正文，未加插桩或请求。"
+}

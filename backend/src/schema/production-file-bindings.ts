@@ -1,0 +1,19 @@
+import {sql} from 'drizzle-orm';
+import {pgTable,index,text,integer,jsonb,uniqueIndex,foreignKey,check} from 'drizzle-orm/pg-core';
+import {contentOutputs} from './projects';
+import {productionEditVersions} from './production';
+export const productionFileBindingRequests=pgTable('production_editor_file_binding_requests',{
+ groupId:text("group_id"),
+ groupVersion:integer("group_version"),
+ membershipVersion:integer("membership_version"),
+ id:text('id').primaryKey(),userId:text('user_id').notNull(),accountId:text('account_id'),outputId:text('output_id').notNull().references(()=>contentOutputs.id,{onDelete:'cascade'}),
+ requestId:text('request_id').notNull(),requestDigest:text('request_digest').notNull(),productionId:text('production_id').notNull(),revision:integer('revision').notNull(),planDigest:text('plan_digest').notNull(),sourceCommitRequestId:text('source_commit_request_id').notNull(),sourceCommitDigest:text('source_commit_digest').notNull(),frozenInput:jsonb('frozen_input').notNull(),status:text('status').notNull(),createdAt:text('created_at').notNull(),
+},t=>[
+ uniqueIndex("production_editor_file_binding_requests_group_68016e59").on(t.userId,t.groupId,t.outputId,t.requestId).where(sql`${t.groupId} IS NOT NULL AND ${t.accountId} IS NULL`),
+ index("production_editor_file_binding_requests_group_scope_idx").on(t.userId,t.groupId),check('production_file_binding_requests_status_ck',sql`${t.status} IN ('reserved','committed')`),check('production_file_binding_requests_revision_ck',sql`${t.revision} >= 1`),check('production_file_binding_requests_request_digest_ck',sql`${t.requestDigest} ~ '^[a-f0-9]{64}$'`),check('production_file_binding_requests_plan_digest_ck',sql`${t.planDigest} ~ '^sha256:[a-f0-9]{64}$'`),check('production_file_binding_requests_source_digest_ck',sql`${t.sourceCommitDigest} ~ '^[a-f0-9]{64}$'`),uniqueIndex('production_file_binding_requests_scope_ux').on(t.userId,t.accountId,t.outputId,t.requestId),foreignKey({columns:[t.productionId,t.revision],foreignColumns:[productionEditVersions.productionId,productionEditVersions.revision]}).onDelete('cascade')]);
+export const productionFileBindings=pgTable('production_editor_file_bindings',{
+ groupId:text("group_id"),
+ id:text('id').primaryKey(),userId:text('user_id').notNull(),accountId:text('account_id'),outputId:text('output_id').notNull().references(()=>contentOutputs.id,{onDelete:'cascade'}),productionId:text('production_id').notNull(),revision:integer('revision').notNull(),planDigest:text('plan_digest').notNull(),location:text('location').notNull(),reference:text('reference').notNull(),assetId:text('asset_id').notNull(),assetFileId:text('asset_file_id').notNull(),fileDigest:text('file_digest').notNull(),bindingRequestId:text('binding_request_id').notNull().references(()=>productionFileBindingRequests.id,{onDelete:'cascade'}),createdAt:text('created_at').notNull(),
+},t=>[
+ uniqueIndex("production_editor_file_bindings_group_bb5f5789").on(t.userId,t.groupId,t.outputId,t.revision,t.location).where(sql`${t.groupId} IS NOT NULL AND ${t.accountId} IS NULL`),
+ index("production_editor_file_bindings_group_scope_idx").on(t.userId,t.groupId),check('production_file_bindings_revision_ck',sql`${t.revision} >= 1`),check('production_file_bindings_plan_digest_ck',sql`${t.planDigest} ~ '^sha256:[a-f0-9]{64}$'`),check('production_file_bindings_file_digest_ck',sql`${t.fileDigest} ~ '^[a-f0-9]{64}$'`),uniqueIndex('production_file_bindings_slot_ux').on(t.userId,t.accountId,t.outputId,t.revision,t.location),foreignKey({columns:[t.productionId,t.revision],foreignColumns:[productionEditVersions.productionId,productionEditVersions.revision]}).onDelete('cascade')]);

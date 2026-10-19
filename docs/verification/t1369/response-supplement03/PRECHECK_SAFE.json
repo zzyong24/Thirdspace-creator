@@ -1,0 +1,20 @@
+{
+  "eslint": {
+    "exitCode": 0,
+    "finalSourceSha256": "c65c28741b68a3b152b72a96e5c431149c7cf985ffba5236fbf920038c981e40"
+  },
+  "typescript": {
+    "exitCode": 0,
+    "scope": "frontend tsc --noEmit --pretty false --incremental false",
+    "boundary": "完整类型检查发生于最后target bounded/context fallback/pending UNKNOWN三处普通类型守卫前；其后ESLint再次实际exit0。"
+  },
+  "portsBeforeLaunch": {
+    "41377": "no listener",
+    "41378": "no listener",
+    "41379": "no listener"
+  },
+  "productionChanged": false,
+  "centralReview": "3f5c80979bef",
+  "specSha256": "152fccf53a18e74bd0fe544f7ed424fa804f5cd323358a0c3ea40f37ec59327a",
+  "deltaSha256": "0a9fe4ce971383788b78ad61c563dad174e652d9a6f4a469726e75486ae67059"
+}

@@ -1,9 +1,11 @@
+import {sql} from "drizzle-orm";
 import {
-  pgTable,
+  pgTable,index,
   text,
   integer,
   boolean,
   jsonb,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // Timestamps are stored as ISO-8601 text to match the contract resource schemas
@@ -16,7 +18,8 @@ export const projects = pgTable("projects", {
   // [T-136 多账号] 按号隔离维度(soft FK → platform_accounts.id)。nullable —— 存量行/
   // 全局视图 accountId=null 兜底(SPEC §6 MAJOR-3:nullable 是稳定终态,新行由 service
   // 层强制带号,非 DB 约束)。迁移 0025 建默认号后 backfill。
-  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
   title: text("title").notNull(),
   brief: text("brief").notNull().default(""),
   // 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— jsonb 扩展位(沿用 facets/card 模式,
@@ -41,7 +44,7 @@ export const projects = pgTable("projects", {
   archivedAt: text("archived_at"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
-});
+},t=>[index("projects_group_scope_ix").on(t.userId,t.groupId)]);
 
 export const projectActivities = pgTable("project_activities", {
   id: text("id").primaryKey(),
@@ -84,10 +87,12 @@ export const projectTargetPlatforms = pgTable("project_target_platforms", {
 // monetization-weighted intent layer (七步整合设计 §4.4): traffic | trust |
 // conversion (nullable for outputs created before the field).
 export const contentOutputs = pgTable("content_outputs", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   projectId: text("project_id").notNull(),
   title: text("title").notNull(),
   contentType: text("content_type").notNull(),
+  targetPlatform: text("target_platform"),
   format: text("format").notNull().default(""),
   aspectRatio: text("aspect_ratio").notNull().default(""),
   targetDurationSeconds: integer("target_duration_seconds").notNull().default(0),
@@ -97,6 +102,19 @@ export const contentOutputs = pgTable("content_outputs", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const outputCreateRequests = pgTable("output_create_requests", {
+ groupId:text("group_id"),
+  userId: text("user_id").notNull(),
+  accountId: text("account_id"),
+  clientRequestId: text("client_request_id").notNull(),
+  requestDigest: text("request_digest").notNull(),
+  projectId: text("project_id").notNull(),
+  outputId: text("output_id").notNull(),
+  createdAt: text("created_at").notNull(),
+}, table => [
+ uniqueIndex("output_create_requests_group_46c5ab4b").on(table.userId,table.groupId,table.clientRequestId).where(sql`${table.groupId} IS NOT NULL AND ${table.accountId} IS NULL`),
+ index("output_create_requests_group_scope_idx").on(table.userId,table.groupId),uniqueIndex("output_create_requests_owner_key_ux").on(table.userId, table.accountId, table.clientRequestId)]);
 
 // Output's four independent stages (script/production/publishing/review);
 // ≤1 row per (content_output, stage).
@@ -127,6 +145,11 @@ export const tasks = pgTable("tasks", {
 
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 export const PROJECTS_DDL = `
+CREATE TABLE IF NOT EXISTS output_create_requests (
+  user_id TEXT NOT NULL, account_id TEXT NOT NULL, client_request_id TEXT NOT NULL,
+  request_digest TEXT NOT NULL, project_id TEXT NOT NULL, output_id TEXT NOT NULL, created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS output_create_requests_owner_key_ux ON output_create_requests(user_id, account_id, client_request_id);
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -187,6 +210,7 @@ CREATE TABLE IF NOT EXISTS content_outputs (
   project_id TEXT NOT NULL,
   title TEXT NOT NULL,
   content_type TEXT NOT NULL,
+  target_platform TEXT,
   format TEXT NOT NULL DEFAULT '',
   aspect_ratio TEXT NOT NULL DEFAULT '',
   target_duration_seconds INTEGER NOT NULL DEFAULT 0,
@@ -196,6 +220,7 @@ CREATE TABLE IF NOT EXISTS content_outputs (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+ALTER TABLE content_outputs ADD COLUMN IF NOT EXISTS target_platform TEXT;
 CREATE TABLE IF NOT EXISTS output_stages (
   id TEXT PRIMARY KEY,
   content_output_id TEXT NOT NULL,

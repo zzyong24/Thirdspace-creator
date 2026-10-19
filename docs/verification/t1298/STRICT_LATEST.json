@@ -1,0 +1,10 @@
+{
+  "binding": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1298/browser/runs/prepared-78ec5dfefb16c9e9/binding.json",
+  "evidenceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1298/browser/runs/prepared-78ec5dfefb16c9e9",
+  "head": "8dbccad6a1b359bd69cd0d43a68988b1b4d37b95",
+  "realJourneyPassed": true,
+  "shutdown": {
+    "code": 0,
+    "signal": null
+  }
+}

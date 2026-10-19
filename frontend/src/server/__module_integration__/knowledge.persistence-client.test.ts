@@ -29,17 +29,22 @@ afterAll(() => {
 
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
 // [T-332 S2] strict 账号门:知识库按号独立(SPEC C-01),ctx 必须带 accountId
-// (未选号 → AccountRequiredError,SPEC §4.2)。测试号按 userId 派生即可(composite
-// 层 ctx 可信,无需真建账号行);开箱空断言不受影响(该号下本就没有任何条目)。
-const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
+// (未选号 → AccountRequiredError,SPEC §4.2)。测试先通过 accounts.create 建真实账号与对应账号组;开箱空断言不受影响(该号下本就没有任何条目)。
+let fixtureAccountId = "";
+const ctx = (userId: string, accountId = userId === canonicalDataset.user.id ? fixtureAccountId : `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
   accountId,
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   __resetPersistenceForTests();
+  const created = await compositeTransport.request(ep("accounts.create"), {
+    params: undefined, query: undefined,
+    body: {platform:"douyin",accountHandle:"@t1246-owned-fixture",followerBaseline:0},
+  } as never, {userId:canonicalDataset.user.id,requestId:"t1246-public-account",source:"user"}) as {data:{id:string}};
+  fixtureAccountId = created.data.id;
 });
 
 describe("knowledge ops registered in the composite transport", () => {

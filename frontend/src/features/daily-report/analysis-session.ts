@@ -2,7 +2,7 @@ import type {DailyReportAnalysis} from '@creatoros/contract';
 import type {client} from '@/lib/contract-client';
 import {reportPeriodLabel} from "./report-period";
 import type {DailyReport} from './report-metrics';
-import {createReportRequest,declaresReportProtocol,readReportRequest,parseReportAnalysis,reportEvidenceKey,reportScope,type ReportRequest} from './analysis-protocol';
+import {createReportRequest,declaresReportProtocol,readReportRequest,parseReportAnalysis,reportEvidenceKey,reportScope,hasReportScope,type ReportRequest} from './analysis-protocol';
 type AIConversationResource=Awaited<ReturnType<typeof client.listConversations>>;
 type AIMessageResource=Awaited<ReturnType<typeof client.listMessages>>;
 type Api=Pick<typeof client,'listConversations'|'createConversation'|'createMessage'|'listMessages'|'getTask'|'commandExecutionTasks'>;
@@ -17,7 +17,7 @@ export function createAnalysisSession(report:DailyReport,deps:{api:Api;send:(bod
  const call=async<T>(fn:()=>Promise<T>)=>{deps.assertScope();const value=await fn();deps.assertScope();return value;};
  const api=deps.api;
  async function refresh():Promise<AnalysisState>{
-  if(!report.accountId)return {...emptyAnalysis};
+  if(!hasReportScope(report))return {...emptyAnalysis};
   if(!conversationId){const rows=await call(()=>api.listConversations({params:undefined,query:{scope:reportScope(report),page:1,pageSize:1},body:undefined})) as unknown as AIConversationResource[];conversationId=rows[0]?.id??null;}
   if(!conversationId)return state={...emptyAnalysis};
   const messages=await call(()=>api.listMessages({params:{conversationId:conversationId!},query:undefined,body:undefined})) as unknown as AIMessageResource[];
@@ -31,12 +31,14 @@ export function createAnalysisSession(report:DailyReport,deps:{api:Api;send:(bod
   if(typeof taskId!=='string')return state={...base,status:'failed',error:'分析尚未启动，可重试原请求。'};
   const task=await call(()=>api.getTask({params:{taskId},query:undefined,body:undefined}));executionId=task.executionTaskId??null;retryTerminal=['failed','cancelled'].includes(task.status);
   const reply=messages.find(m=>m.role==='assistant'&&m.modelMetadata.sourceMessageId===message.id&&m.modelMetadata.chatTaskId===taskId);
+  if((task.runtimeStatus??task.status)==='partial')return state={...base,status:'failed',rawAnalysis:reply?.content??null,error:'本次分析部分完成，已保留收到的正文；请查看原任务结果。'};
   if(task.status==='succeeded'&&reply){const analysis=parseReportAnalysis(reply.content,request.report);if(!analysis&&declaresReportProtocol(reply.content)){retryTerminal=true;return state={...base,status:'failed',error:'分析结果的格式或来源与本次请求不一致，请重新分析。'};}return state={...base,status:'succeeded',analysis,rawAnalysis:analysis?null:reply.content};}
   if(task.status==='succeeded'&&!reply)return state={...base,status:'failed',error:'原任务已结束，结果暂未读取到，请刷新状态。'};
   if(['failed','cancelled','unknown_result','blocked','paused','waiting_user'].includes(task.runtimeStatus??task.status))return state={...base,status:'failed',rawAnalysis:reply?.content??null,error:task.status==='cancelled'?'分析已停止。':task.errorMessage||'分析需要处理，可刷新原任务状态。'};
   return state={...base,status:'running'};
  }
  async function performStart(){
+  if(!hasReportScope(report))return state={...emptyAnalysis};
   // 已有明确在途任务只恢复显示，不额外提交。
   if(state.status==='running'||(executionId&&state.status==='failed'&&!retryTerminal))return refresh();
   if(!conversationId){const c=await call(()=>api.createConversation({params:undefined,query:undefined,body:{title:`运营报表 ${reportPeriodLabel(report)}`,scope:reportScope(report),projectId:null}}));conversationId=c.id;}

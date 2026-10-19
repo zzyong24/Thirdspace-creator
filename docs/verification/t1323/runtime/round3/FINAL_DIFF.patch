@@ -1,0 +1,209 @@
+diff --git a/backend/src/modules/execution/execution-checkpoint.service.ts b/backend/src/modules/execution/execution-checkpoint.service.ts
+index a86595881..90e7a2546 100644
+--- a/backend/src/modules/execution/execution-checkpoint.service.ts
++++ b/backend/src/modules/execution/execution-checkpoint.service.ts
+@@ -2,19 +2,95 @@ import {executionEvidence} from "../../schema/intelligence";
+ import {recoverableChatNodeParents,recoverableCodexStructuredParents,recoverableCodexTextParents} from "./chat-generation-recovery";
+ import { partitionExecutionCalls } from "./execution-call-tree";
+ import { createHash } from "node:crypto";
++import {isAssistantEngineToolAllowed} from "@creatoros/contract";
+ import { asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
+ import {
+   chatProviderNonTextSchema, executionCheckpointSchema, saveExecutionCheckpointSchema, checkpointToolCallSchema,
+   workerToolResultReceiptSchema, type ExecutionRef,
+   chatWorkerInputSchema, chatModelReplayFingerprintsSchema,
++  externalChatStartSchema,externalChatReceiptSchema,externalTaskToolCallSchema,
++  externalToolInputProofSchema,agenticToolOutcomeSchema,
+ } from "@creatoros/contract/execution-worker";
+ import { createExecutionLeaseService } from "./execution-lease.service";
+ import { ConflictError } from "./execution.errors";
+ import { isAcknowledgableResearchBlock } from "./execution-research-blocked";
++import {requireExternalChatCallTree} from "../ai/external-chat-call-tree";
++import {chatInputDigest} from "../ai/chat-turn-submission.service";
++import {agenticToolOperationKey} from "./agentic-tool-binding";
++import {originalCodexReadBinding} from "./codex-read-recovery";
+ 
+ type Call = typeof executionCalls.$inferSelect;
+ type MessageRef = {role:"assistant"|"tool";callId:string};
++type Task = typeof executionTasks.$inferSelect;
++/** 同一lease事务的当前事实，仅调用原绑定器；不能在回调中解析工具或执行I/O。 */
++export type NativeCheckpointToolValidator=(task:Task,calls:Call[],call:Call)=>unknown;
++const object=(raw:unknown):Record<string,unknown>=>raw&&typeof raw==="object"&&!Array.isArray(raw)?raw as Record<string,unknown>:{};
+ const hasReceipt = (call:Call) => call.status === "settled" && (call.resultText !== null || call.providerResult !== null);
++/** SEMANTIC_BOUNDARY_ALLOW: 仅核原native身份/参数证明/账本关系；验证全树后分配检查点角色，不执行或投影工具。 */
++function checkpointCalls(task:Task,calls:Call[],validateNativeTool?:NativeCheckpointToolValidator) {
++  const payload=object(task.payload),chat=chatWorkerInputSchema.safeParse(payload.modelInput);
++  if(!calls.length||!chat.success||chat.data.executionEngine!=="codex"||chat.data.externalAgentBinding) {
++    return {...partitionExecutionCalls(calls),native:false};
++  }
++  const frozen=chat.data;
++  if(task.ownerType!=="ai_task"||payload.aiTaskId!==task.ownerId||frozen.userId!==task.userId||
++      frozen.accountId!==task.accountId||(frozen.groupId??null)!==(task.groupId??null))throw new ConflictError("原生检查点冻结任务归属不符");
++  const roots=calls.filter(call=>call.kind==="external_agent");
++  if(roots.length!==1)throw new ConflictError("原生检查点缺少唯一外部根");
++  const root=requireExternalChatCallTree(task,calls,roots[0]!.id);
++  const native=object(object(payload.codexCalls)[root.id]);
++  const source=(root.status==="settled"?externalChatReceiptSchema:externalChatStartSchema).safeParse(root.providerResult);
++  if(root.sequence!==1||root.operationKey!==`${frozen.operationKey}/external-turn/1`||root.inputDigest!==chatInputDigest(frozen)||
++      !source.success||source.data.engine!=="codex"||source.data.turnId!==root.id||source.data.protocolKind!=="codex-app-server"||
++      source.data.protocolVersion!==1||!source.data.providerTurnId||source.data.sessionId!==native.threadId||source.data.providerTurnId!==native.turnId||
++      (!["started","unknown","settled"].includes(root.status))||
++      (root.status!=="settled"&&!originalCodexReadBinding(task,root)))throw new ConflictError("原生检查点缺少原线程只读恢复证明");
++  const toolIds=new Set<string>();
++  for(const call of calls) {
++    if(call.executionTaskId!==task.id)throw new ConflictError("原生检查点调用跨任务");
++    if(call===root)continue;
++    if(call.kind==="external_tool") {
++      const identity=externalTaskToolCallSchema.safeParse(call.providerResult);
++      const proof=externalToolInputProofSchema.safeParse(object(payload.externalToolInputs)[call.id]);
++      if(!identity.success||!proof.success)throw new ConflictError("原生检查点Host参数证明缺失");
++      const id=identity.data,p=proof.data,definitions=frozen.tools.filter(def=>def.name===id.toolName),definition=definitions[0];
++      if(definitions.length!==1||!definition||!["none","proposal"].includes(definition.effect)||(definition.execution??"host")!=="host"||
++          definition.version!==id.toolVersion||p.toolVersion!==definition.version||p.callId!==call.id||p.turnCallId!==root.id||
++          p.toolCallId!==id.toolCallId||p.toolName!==id.toolName||p.inputDigest!==call.inputDigest||id.turnCallId!==root.id||
++          !isAssistantEngineToolAllowed("codex",definition,frozen.workbenchCapabilities?.find(item=>item.name===definition.name))||
++          definition.name==="plan.update"||frozen.workbenchCapabilities?.some(item=>item.name===definition.name))throw new ConflictError("原生检查点Host冻结定义或参数证明不符");
++      const digest=`sha256:${chatInputDigest({turnCallId:root.id,toolCallId:id.toolCallId,toolName:id.toolName,version:definition.version,input:p.input})}`;
++      const key=`external-tool:${createHash("sha256").update(JSON.stringify([root.id,id.toolCallId])).digest("hex")}`;
++      if(call.parentCallId!==root.id||call.sequence<=root.sequence||call.inputDigest!==digest||call.operationKey!==key||
++          call.accountingBasis!=="requests"||!["started","unknown","settled"].includes(call.status))throw new ConflictError("原生检查点Host摘要或调用键不符");
++      if(call.status==="settled") {
++        let receipt:unknown;try{receipt=JSON.parse(call.resultText??"");}catch{throw new ConflictError("原生检查点Host回执不完整");}
++        const outcome=agenticToolOutcomeSchema.safeParse(receipt);
++        if(!outcome.success||!["none","proposal"].includes(outcome.data.sideEffect)||
++            (definition.effect==="none"&&outcome.data.sideEffect!=="none"))throw new ConflictError("原生检查点Host回执效果不符");
++      }
++      if(toolIds.has(id.toolCallId))throw new ConflictError("原生检查点工具调用ID重复");
++      toolIds.add(id.toolCallId);
++    }else if(call.kind==="tool") {
++      if(!validateNativeTool)throw new ConflictError("原生检查点普通工具校验器尚未准备");
++      validateNativeTool(task,calls,call);
++      const parts=Object.values(object(native.tools)).map(raw=>checkpointToolCallSchema.safeParse({type:"tool-call",...object(raw)}))
++        .filter(part=>part.success&&agenticToolOperationKey(root.id,part.data.toolCallId)===call.operationKey);
++      if(parts.length!==1||!parts[0]!.success)throw new ConflictError("原生检查点普通工具来源不唯一");
++      const part=parts[0]!.data;
++      if(toolIds.has(part.toolCallId))throw new ConflictError("原生检查点工具调用ID重复");
++      toolIds.add(part.toolCallId);
++      if(call.status==="settled") {
++        let receipt:unknown;try{receipt=JSON.parse(call.resultText??"");}catch{throw new ConflictError("原生检查点普通工具回执不完整");}
++        const parsed=workerToolResultReceiptSchema.safeParse(receipt);
++        if(!parsed.success||parsed.data.toolCallId!==part.toolCallId||parsed.data.toolName!==part.toolName)throw new ConflictError("原生检查点普通工具回执来源不符");
++      }
++    }
++  }
++  // Host 已逐行严格验证；原通用规则仍完整校验普通tool/model子树，未把未知kind藏在过滤器后。
++  const partition=partitionExecutionCalls(calls.filter(call=>call.kind!=="external_tool"));
++  return {roots:partition.roots,children:calls.filter(call=>call.parentCallId!==null),native:true};
++}
+ function parseCheckpoint(raw:unknown) {
+   if (raw === null) return null;
+   const parsed = executionCheckpointSchema.safeParse(raw);
+@@ -41,8 +117,9 @@ function modelToolCalls(call:Call,piChat=false) {
+   if ((provider.finishReason?.unified==="tool-calls") !== (tools.length>0) && !(truncated && tools.length>0)) throw new ConflictError("模型结束原因与工具调用回执不一致");
+   return tools;
+ }
+-export function reconstructCheckpointMessages(refs:MessageRef[], calls:Call[],piChat=false) {
+-  const {roots} = partitionExecutionCalls(calls);
++export function reconstructCheckpointMessages(refs:MessageRef[], calls:Call[],piChat=false,task?:Task,validateNativeTool?:NativeCheckpointToolValidator) {
++  const {roots,native}=task?checkpointCalls(task,calls,validateNativeTool):{...partitionExecutionCalls(calls),native:false};
++  if(native&&refs.length)throw new ConflictError("原生聊天检查点不能合成消息引用");
+   const confirmed = roots.filter(hasReceipt);
+   const pendingTools = new Map<string,string>();
+   const seenTools = new Set<string>();
+@@ -81,37 +158,41 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
+   const now=deps.now ?? (()=>new Date().toISOString());
+   const leases=createExecutionLeaseService(db,{now});
+   return {
+-    async save(ref:ExecutionRef,raw:unknown) {
++    async save(ref:ExecutionRef,raw:unknown,validateNativeTool?:NativeCheckpointToolValidator) {
+       const input=saveExecutionCheckpointSchema.parse(raw);
+       const digest=createHash("sha256").update(JSON.stringify(input)).digest("hex");
+       return leases.withLease(ref,"admission",async({tx,task})=>{
+         if(task.kind!=="ai_task")throw new ConflictError("当前任务不支持 Agent 检查点");
+         const previous=parseCheckpoint(task.checkpoint);
++        const chat=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
++        const native=chat.success&&chat.data.executionEngine==="codex"&&!chat.data.externalAgentBinding;
++        // native的幂等回执同样验证当前全树；不能让相同请求绕过后来损坏的参数事实。
++        const nativeCalls=native?await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence)):undefined;
++        if(nativeCalls)checkpointCalls(task,nativeCalls,validateNativeTool);
+         // 仅最新检查点的同请求可返回原保存回执，永不回滚后续 revision。
+         if(previous?.expectedRevision===input.expectedRevision && previous.requestDigest===digest)return {revision:previous.revision};
+         if((previous?.revision ?? 0)!==input.expectedRevision)throw new ConflictError("检查点版本已改变");
+-        const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
++        const calls=nativeCalls??await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
+         const sequence=calls.at(-1)?.sequence ?? 0;
+         if(input.expectedLedgerSequence!==sequence)throw new ConflictError("调用账本已改变，须重新读取");
+         if(previous && (input.messages.length<previous.messages.length || previous.messages.some((message,index)=>message.callId!==input.messages[index]?.callId || message.role!==input.messages[index]?.role))) {
+           throw new ConflictError("已保存消息不能删除或改写");
+         }
+-        const chat=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
+-        reconstructCheckpointMessages(input.messages,calls,chat.success && chat.data.executionEngine==="pi");
++        reconstructCheckpointMessages(input.messages,calls,chat.success && chat.data.executionEngine==="pi",task,validateNativeTool);
+         const checkpoint=executionCheckpointSchema.parse({schemaVersion:1,revision:input.expectedRevision+1,expectedRevision:input.expectedRevision,requestDigest:digest,ledgerSequence:sequence,messages:input.messages});
+         await tx.update(executionTasks).set({checkpoint,updatedAt:now()}).where(eq(executionTasks.id,task.id));
+         return {revision:checkpoint.revision};
+       });
+     },
+-    async read(ref:ExecutionRef) {
++    async read(ref:ExecutionRef,validateNativeTool?:NativeCheckpointToolValidator) {
+       return leases.withLease(ref,"admission",async({tx,task})=>{
+         if(task.kind!=="ai_task")throw new ConflictError("当前任务不支持 Agent 检查点");
+         const checkpoint=parseCheckpoint(task.checkpoint);
+         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
+-        const {roots,children}=partitionExecutionCalls(calls);
++        const {roots,children}=checkpointCalls(task,calls,validateNativeTool);
+         const chat=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
+         const piChat=chat.success && chat.data.executionEngine==="pi";
+-        const reconstructed=reconstructCheckpointMessages(checkpoint?.messages ?? [],calls,piChat);
++        const reconstructed=reconstructCheckpointMessages(checkpoint?.messages ?? [],calls,piChat,task,validateNativeTool);
+         // 每个操作键只暴露最新根模型调用；该查询已受当前任务账号及租约约束。
+         const latestModels=new Map(roots.filter(call=>call.kind==="model").map(call=>[call.operationKey,call]));
+         const modelReplayFingerprints=chatModelReplayFingerprintsSchema.parse(piChat?[...latestModels.values()]
+diff --git a/backend/src/modules/execution/model-worker-dispatcher.ts b/backend/src/modules/execution/model-worker-dispatcher.ts
+index 20d584812..d12406b27 100644
+--- a/backend/src/modules/execution/model-worker-dispatcher.ts
++++ b/backend/src/modules/execution/model-worker-dispatcher.ts
+@@ -48,7 +48,7 @@ import {createExecutionResearchEvidenceService} from "./execution-research-evide
+ import { createExecutionAgenticModelPorts } from "./execution-agentic-model-ports.service";
+ import { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./execution-agentic-tool-ports.service";
+ import { createExecutionAgenticCandidateService } from "../ai/execution-agentic-candidate.service";
+-import { createExecutionCheckpointService } from "./execution-checkpoint.service";
++import { createExecutionCheckpointService,type NativeCheckpointToolValidator } from "./execution-checkpoint.service";
+ import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
+ import { eq,executionTasks,executionCalls,type Db } from "@creatoros/backend";
+ import type { RequestContext,ModelRouteMode } from "@creatoros/contract";
+@@ -386,8 +386,32 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
+       if(port==="saveBrowserSession" && browserSessions)return browserSessions.save(ref,raw);
+       if(port==="settleResearchRead" && researchEvidence)return researchEvidence.settleRead(ref,raw);
+       if(port==="executeEvidenceRead" && researchEvidence)return researchEvidence.readWindow(ref,raw);
+-      if(port==="readCheckpoint")return checkpoints.read(ref);
+-      if(port==="saveCheckpoint")return checkpoints.save(ref,raw);
++      if(port==="readCheckpoint"||port==="saveCheckpoint"){
++        if(deps.executionMode!=="chat.run")return port==="readCheckpoint"?checkpoints.read(ref):checkpoints.save(ref,raw);
++        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
++        const current=()=>{scope.controller.signal.throwIfAborted();if(activeTools.get(executionKey(ref))!==scope)throw new Error("STALE_EXECUTION");};
++        const work=(async()=>{
++          current();
++          // 这里只选择是否取真实工具解析器；授权和全部事实在checkpoint事务中重新读取。
++          const needed=await leases.withLease(ref,"admission",async({tx,task})=>{
++            const input=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
++            if(!input.success||input.data.executionEngine!=="codex"||input.data.externalAgentBinding)return false;
++            const rows=await tx.select({kind:executionCalls.kind}).from(executionCalls).where(eq(executionCalls.executionTaskId,task.id));
++            return rows.some(call=>call.kind==="tool");
++          });
++          current();
++          let validate:NativeCheckpointToolValidator|undefined;
++          if(needed){
++            await getChatTools(ref);current();
++            const tools=await scope.externalToolMap!;current();
++            const binding=createAgenticToolBinding(tools);
++            validate=(task,rows,call)=>{current();return binding.forCall(task,rows,call,{readonlyRecovery:true});};
++          }
++          current();
++          return port==="readCheckpoint"?checkpoints.read(ref,validate):checkpoints.save(ref,raw,validate);
++        })();
++        scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
++      }
+       if(port==="reserveAgenticModel" && agentModels)return agentModels.reserve(ref,raw);
+       if(port==="reserveAgenticTool" && currentTools)return currentTools.reserve(ref,raw);
+       if(port==="startAgenticTool" && currentTools)return currentTools.start(ref,raw);

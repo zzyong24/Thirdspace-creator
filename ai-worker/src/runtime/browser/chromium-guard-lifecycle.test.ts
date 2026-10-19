@@ -5,7 +5,7 @@ function deferred<T>(){let resolve!:(value:T)=>void;const promise=new Promise<T>
 afterEach(()=>vi.useRealTimers());
 it('启动超时后，迟到浏览器关闭确认前不得清锁或放行后继',async()=>{
  vi.useFakeTimers();const close=deferred<void>(),closing=vi.fn(()=>close.promise),late={close:closing},launch=deferred<typeof late>(),next=vi.fn(async()=>({close:async()=>{}})),profile='/isolated/guard-late-close';
- const first=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5},deps);const failure=expect(first).rejects.toThrow('启动超时');await vi.advanceTimersByTimeAsync(10);await failure;
+ const first=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5},deps);const failure=expect(first).rejects.toThrow('启动超时');await vi.advanceTimersByTimeAsync(370_000);await failure;
  const second=guardedLaunch(profile,next,{},deps);await vi.advanceTimersByTimeAsync(0);expect(next).not.toHaveBeenCalled();
  launch.resolve(late);await vi.advanceTimersByTimeAsync(0);expect(closing).toHaveBeenCalledTimes(1);expect(next).not.toHaveBeenCalled();
  close.resolve();const ctx=await second;expect(next).toHaveBeenCalledTimes(1);await ctx.close();expect(liveContextCount(profile)).toBe(0);
@@ -50,7 +50,7 @@ it('预检完成到实际 launch 微任务之间取消，不再启动浏览器',
 });
 it('排队有界超时只退出自己的等待，不能清理或释放原浏览器',async()=>{
  vi.useFakeTimers();const profile='/isolated/guard-queue-timeout',first=await guardedLaunch(profile,async()=>({close:async()=>{}}),{},deps),next=vi.fn(async()=>({close:async()=>{}}));
- const waiting=guardedLaunch(profile,next,{queueTimeoutMs:5},deps),failure=expect(waiting).rejects.toMatchObject({code:'CHROMIUM_PROFILE_LOCKED'});await vi.advanceTimersByTimeAsync(10);await failure;
+ const waiting=guardedLaunch(profile,next,{queueTimeoutMs:5},deps),failure=expect(waiting).rejects.toMatchObject({code:'CHROMIUM_PROFILE_LOCKED'});await vi.advanceTimersByTimeAsync(370_000);await failure;
  expect(next).not.toHaveBeenCalled();expect(liveContextCount(profile)).toBe(1);await first.close();await vi.advanceTimersByTimeAsync(0);expect(next).not.toHaveBeenCalled();
  const final=await guardedLaunch(profile,next,{},deps);await final.close();
 });
@@ -65,7 +65,7 @@ it('实际关闭后才通知宿主释放租约，释放完成前不放行队列'
 it('启动超时不通知宿主释放，迟到 context 实际关闭后才通知',async()=>{
  vi.useFakeTimers();const profile='/isolated/guard-late-host-release',closing=deferred<void>(),launch=deferred<{close:()=>Promise<void>}>(),onStopped=vi.fn(async()=>{});
  const pending=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5,onStopped},deps),failure=expect(pending).rejects.toThrow('启动超时');
- await vi.advanceTimersByTimeAsync(10);await failure;expect(onStopped).not.toHaveBeenCalled();
+ await vi.advanceTimersByTimeAsync(370_000);await failure;expect(onStopped).not.toHaveBeenCalled();
  launch.resolve({close:()=>closing.promise});await vi.advanceTimersByTimeAsync(0);expect(onStopped).not.toHaveBeenCalled();closing.resolve();await vi.advanceTimersByTimeAsync(0);expect(onStopped).toHaveBeenCalledTimes(1);
 });
 it('关闭失败不通知宿主；释放失败可通过再次关闭重试且不提前放行',async()=>{
@@ -89,13 +89,13 @@ it('启动失败未返回context时，宿主可用同一清理凭证恢复释放
 });
 it('超时后的迟到资源已停但释放失败，后继请求重试原清理后再启动',async()=>{
  vi.useFakeTimers();const profile='/isolated/guard-late-host-cleanup-retry',launch=deferred<{close:()=>Promise<void>}>(),onStopped=vi.fn().mockRejectedValueOnce(Error('db down')).mockResolvedValue(undefined);
- const pending=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5,onStopped},deps),failure=expect(pending).rejects.toThrow('启动超时');await vi.advanceTimersByTimeAsync(10);await failure;
+ const pending=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5,onStopped},deps),failure=expect(pending).rejects.toThrow('启动超时');await vi.advanceTimersByTimeAsync(370_000);await failure;
  launch.resolve({close:async()=>{}});await vi.advanceTimersByTimeAsync(0);expect(onStopped).toHaveBeenCalledTimes(1);expect(liveContextCount(profile)).toBe(1);
  const next=await guardedLaunch(profile,async()=>({close:async()=>{}}),{},deps);expect(onStopped).toHaveBeenCalledTimes(2);await next.close();expect(liveContextCount(profile)).toBe(0);
 });
 it('宿主清理等待超时不重复结算或释放占用，原清理仍可完成',async()=>{
  vi.useFakeTimers();const profile='/isolated/guard-host-pending-timeout',settlement=deferred<void>(),onStopped=vi.fn(()=>settlement.promise);
  const ctx=await guardedLaunch(profile,async()=>({close:async()=>{}}),{onStopped},deps),closing=ctx.close();await vi.advanceTimersByTimeAsync(0);
- const waiting=retryBrowserProfileCleanup(profile,{queueTimeoutMs:5}),failure=expect(waiting).rejects.toMatchObject({code:'BROWSER_CLEANUP_PENDING'});await vi.advanceTimersByTimeAsync(10);await failure;
+ const waiting=retryBrowserProfileCleanup(profile,{queueTimeoutMs:5}),failure=expect(waiting).rejects.toMatchObject({code:'BROWSER_CLEANUP_PENDING'});await vi.advanceTimersByTimeAsync(370_000);await failure;
  expect(onStopped).toHaveBeenCalledTimes(1);expect(liveContextCount(profile)).toBe(1);settlement.resolve();await closing;expect(liveContextCount(profile)).toBe(0);
 });

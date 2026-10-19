@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+> vitest run src/modules/production/production-editor-plan.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  16:10:13
+   Duration  1.54s (transform 659ms, setup 0ms, import 1.33s, tests 24ms, environment 0ms)
+

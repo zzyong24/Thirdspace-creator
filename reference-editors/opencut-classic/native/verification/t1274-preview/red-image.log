@@ -1,0 +1,22 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-image.test.ts:
+2 | let parent=new AbortController(),images:any[]=[];
+3 | class ImageFixture{onload:any;onerror:any;src='';constructor(){images.push(this);}removeAttribute(){this.src='';}remove(){}}
+4 | Object.assign(globalThis,{Image:ImageFixture,HTMLImageElement:ImageFixture});
+5 | mock.module('@/embedded/native-host',()=>({currentNativeHost:()=>({lifetime:{signal:parent.signal}})}));
+6 | const {loadImageSource,clearImageSources}=await import('@/services/renderer/nodes/image-node');
+7 | test('候选自己的取消signal立即停止慢图片，不取消活动host寿命且迟到图片不返回',async()=>{parent=new AbortController();images=[];const request=new AbortController(),pending=loadImageSource({url:'blob:preview-only',signal:request.signal} as any).catch(e=>e);try{expect(images).toHaveLength(1);request.abort();expect(images[0].src).toBe('');expect(parent.signal.aborted).toBe(false);expect(await pending).toMatchObject({name:'AbortError'});}finally{parent.abort();await pending;clearImageSources();}});
+
+error: expect(received).toBe(expected)
+
+Expected: ""
+Received: "blob:preview-only"
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-preview-image.test.ts:7:299)
+(fail) 候选自己的取消signal立即停止慢图片，不取消活动host寿命且迟到图片不返回 [30.78ms]
+
+ 0 pass
+ 1 fail
+ 2 expect() calls
+Ran 1 test across 1 file. [106.00ms]

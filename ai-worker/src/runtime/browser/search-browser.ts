@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { parseDuckDuckGoResults } from "./search-duckduckgo";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -32,7 +33,7 @@ import {
 
 // 默认搜索引擎:DuckDuckGo HTML。baseUrl 可换成含 {q} 占位的 URL 模板(如自建/其它引擎)。
 const DEFAULT_ENGINE = "https://html.duckduckgo.com/html/?q={q}";
-const NAV_TIMEOUT_MS = 20000;
+const NAV_TIMEOUT_MS = 120_000;
 
 // 从 spec.baseUrl 模板(或默认)构造搜索 URL,{q}=编码后的 query。无 {q} 占位则追加在末尾。
 export function buildSearchUrl(spec: SearchSpec, query: string): string {
@@ -260,7 +261,7 @@ export function createBrowserScrapeAdapter(
           resp = await page.goto(url, {
             // 搜索页有广告/统计长连接，networkidle 会把已可用的 SERP 拖到超时。
             waitUntil: "domcontentloaded",
-            timeout: Math.max(opts.timeoutMs, NAV_TIMEOUT_MS),
+            timeout: executionTimeoutMs(opts.timeoutMs, NAV_TIMEOUT_MS),
           });
         } catch (err) {
           opts.signal?.throwIfAborted();

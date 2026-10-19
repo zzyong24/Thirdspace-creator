@@ -1,0 +1,25 @@
+{
+  "pid": 7539,
+  "cwdVerified": true,
+  "fixtureNonceVerified": true,
+  "preflight": "首次只核root字符串因macOS /var别名与真实/private/var不同而在sample前中止；改用既有config同样realpath核验后才采唯一一次。",
+  "snapshotFields": "pid ppid etime pcpu rssKiB comm",
+  "snapshot": "7539  7532 04:05   1.4 1381776 next-server (v16.2.9)",
+  "sampleExitCode": 0,
+  "elapsedSeconds": 5.648263167007826,
+  "rawPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-supplement-2hh4e9nc/owned-next-prewarm.sample.txt",
+  "rawBytes": 178149,
+  "rawSha256": "15e0d49e434de915d22a96fccc0734e90c981b1890b9678e403a27f712b272ef",
+  "symbolLineCounts": {
+    "PromiseFulfillReactionJob": 2,
+    "CaptureSimpleStackTrace": 2,
+    "Scavenge": 50,
+    "Turbopack": 0,
+    "turbopack": 0,
+    "compile": 26,
+    "kevent": 4,
+    "mach_msg": 9,
+    "uv__io_poll": 5
+  },
+  "boundary": "仅自有隔离Next；采样窗口不是执行deadline；符号计数不能单独断言JS/业务首因。"
+}

@@ -1,0 +1,68 @@
+--- packages/shared/src/utils/fetch.ts (原归档)
++++ fetch-budget-candidate-v2.ts
+@@ -26,30 +26,45 @@
+   const url = config.url || ``
+   const headers: Record<string, string> = { ...config.headers }
+   const controller = new AbortController()
+-  const timeout = config.timeout ?? 30_000
+-  const timer = setTimeout(() => controller.abort(), timeout)
++  // SEMANTIC_BOUNDARY_ALLOW: 只校验独立请求预算与时间，不做内容理解或创作选择。
++  const requestedTimeout = config.timeout
++  const timeout = typeof requestedTimeout === `number` && Number.isFinite(requestedTimeout) && requestedTimeout >= 0
++    ? Math.max(120_000, requestedTimeout)
++    : 120_000
++  // 宿主单个 timer 有 32 位上界；所有 tick 共用同一个出生时间与预算，不能续期。
++  const bornAt = performance.now()
++  const maxTimerDelay = 2_147_483_647
++  const abortAtDeadline = () => {
++    const remaining = timeout - (performance.now() - bornAt)
++    if (remaining <= 0) {
++      controller.abort()
++      return
++    }
++    timer = setTimeout(abortAtDeadline, Math.min(remaining, maxTimerDelay))
++  }
++  let timer = setTimeout(abortAtDeadline, Math.min(timeout, maxTimerDelay))
+ 
+-  let body: BodyInit | undefined
+-  if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
+-    if (typeof FormData !== `undefined` && config.data instanceof FormData) {
+-      body = config.data
+-      // Browser sets multipart boundary; drop explicit multipart Content-Type
+-      for (const key of Object.keys(headers)) {
+-        if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
+-          delete headers[key]
++  try {
++    let body: BodyInit | undefined
++    if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
++      if (typeof FormData !== `undefined` && config.data instanceof FormData) {
++        body = config.data
++        // Browser sets multipart boundary; drop explicit multipart Content-Type
++        for (const key of Object.keys(headers)) {
++          if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
++            delete headers[key]
++        }
++      }
++      else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
++        body = JSON.stringify(config.data)
++        if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
++          headers[`Content-Type`] = `application/json`
++      }
++      else {
++        body = config.data as BodyInit
+       }
+     }
+-    else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
+-      body = JSON.stringify(config.data)
+-      if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
+-        headers[`Content-Type`] = `application/json`
+-    }
+-    else {
+-      body = config.data as BodyInit
+-    }
+-  }
+ 
+-  try {
+     const res = await globalThis.fetch(url, {
+       method,
+       headers,

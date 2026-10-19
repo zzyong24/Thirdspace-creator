@@ -19,6 +19,12 @@ import type { PreferredSlot } from "./content-calendar.repository";
 // PERSISTED_OPS from CONTENT_CALENDAR_OP_IDS (adding the module = registering it).
 
 export const CONTENT_CALENDAR_OP_IDS = [
+  "group.calendar.list",
+  "group.calendar.entries.create",
+  "calendar.entries.target",
+  "group.cadence.get",
+  "group.cadence.upsert",
+  "group.cadence.attainment",
   "accounts.calendar.list",
   "accounts.calendar.entries.create",
   "calendar.entries.update",
@@ -40,9 +46,19 @@ export function createContentCalendarTransport(
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
       const { params, query, body } = (input ?? {}) as Input;
-      const p = (params ?? {}) as { accountId?: string; entryId?: string };
+      const p = (params ?? {}) as { accountId?: string; groupId?: string; entryId?: string };
 
       switch (endpoint.id) {
+        case "group.calendar.list": {
+          const q=(query??{}) as {from?:string;to?:string;page?:number;pageSize?:number}; const page=q.page??1,pageSize=q.pageSize??100;
+          const result=await service.listGroupCalendar(ctx,p.groupId??"",{from:q.from??"",to:q.to??""},{limit:pageSize,offset:(page-1)*pageSize});
+          return {data:result.rows,meta:{requestId,page,pageSize,total:result.total}};
+        }
+        case "group.calendar.entries.create": return {data:await service.createGroupEntry(ctx,p.groupId??"",(body??{}) as Parameters<typeof service.createGroupEntry>[2]),meta:{requestId}};
+        case "calendar.entries.target": return {data:await service.setEntryTarget(ctx,p.entryId??"",((body??{}) as {targetAccountId:string|null}).targetAccountId),meta:{requestId}};
+        case "group.cadence.get": return {data:await service.getGroupCadence(ctx,p.groupId??""),meta:{requestId}};
+        case "group.cadence.upsert": return {data:await service.upsertGroupCadence(ctx,p.groupId??"",(body??{}) as Parameters<typeof service.upsertGroupCadence>[2]),meta:{requestId}};
+        case "group.cadence.attainment": return {data:await service.groupAttainment(ctx,p.groupId??"",(query??{}) as {from:string;to:string}),meta:{requestId}};
         case "accounts.calendar.list": {
           const q = (query ?? {}) as {
             from?: string;

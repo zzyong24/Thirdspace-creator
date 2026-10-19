@@ -2,8 +2,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync,mkdirSync,copyFileSync,realpathSync } from "node:fs";
 import { join,dirname,relative,isAbsolute } from "node:path";
 import { createRequire } from "node:module";
-export const workerExternalPackages = ["jsdom", "@mozilla/readability", "mammoth"];
-const workerEntries=["execution-worker.cjs","agentic-worker.cjs","intelligence-generation-worker.cjs","intelligence-transcript-worker.cjs","embedding-worker.cjs","flywheel-generation-worker.cjs","model-probe-worker.cjs"];
+export const workerExternalPackages = ["jsdom", "@mozilla/readability", "mammoth", "@openai/codex/package.json", "@openclaw/fs-safe",`@openai/codex-${process.platform}-${process.arch}/package.json`];
+const workerEntries=["codex-acp.cjs","codex-status-worker.cjs","execution-worker.cjs","agentic-worker.cjs","intelligence-generation-worker.cjs","intelligence-transcript-worker.cjs","embedding-worker.cjs","flywheel-generation-worker.cjs","model-probe-worker.cjs","video-visual-review-worker.cjs"];
 export function assertExecutionWorkerRuntime(runtimeRoot){
   const entry=join(runtimeRoot,"frontend/runtime/execution-worker.cjs");
   for(const filename of workerEntries){
@@ -22,7 +22,9 @@ export function stageExecutionWorkerRuntime({repoRoot,runtimeRoot}){
 }
 
 /** 只解析依赖，不执行解析器；拒绝借构建机祖先 node_modules 假装随包齐全。 */
-export function assertWorkerExternalPackages(runtimeRoot) {
+export function assertWorkerExternalPackages(runtimeRoot, { buildOnly = process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1", run = spawnSync } = {}) {
+  // build-only只负责组装；额外真加载探针由验证流程运行，所有消费者统一遵守。
+  if (buildOnly) return;
   const root = realpathSync(runtimeRoot);
   const resolver = join(root,"frontend/creatoros-module-resolver.cjs");
   if (existsSync(resolver)) {
@@ -38,8 +40,8 @@ export function assertWorkerExternalPackages(runtimeRoot) {
         const local=path.relative(root,fs.realpathSync(req.resolve(name)));
         if(local==='..'||local.startsWith('../')||local.startsWith('..\\\\')||path.isAbsolute(local))throw new Error('Worker依赖解析到包外:'+name);
       }`;
-    const result=spawnSync(node,["--require",resolver,"-e",check,root,JSON.stringify(workerExternalPackages)],{
-      cwd:root,encoding:"utf8",timeout:30000,
+    const result=run(node,["--require",resolver,"-e",check,root,JSON.stringify(workerExternalPackages)],{
+      cwd:root,encoding:"utf8",timeout:120_000,
       env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,CREATOROS_RUNTIME_ROOT:root},
     });
     if(result.error || result.status!==0) throw new Error(`Worker分层依赖验证失败: ${result.error?.message ?? result.stderr}`);

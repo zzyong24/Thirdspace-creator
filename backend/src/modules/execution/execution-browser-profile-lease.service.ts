@@ -6,6 +6,7 @@ import {
   isNull,
   asc,
   executionBrowserProfileLeases,
+  executionTasks,
   type Db,
 } from "@creatoros/backend";
 import {
@@ -85,6 +86,20 @@ export function createExecutionBrowserProfileLeaseService(
   }
   return {
     acquireMany,
+    /** 私有宿主恢复读端口：只给出旧 attempt 或已停止任务持有的精确物理租约。 */
+    async getRecoverableWorkerProfile(rawProfileKey:string) {
+      const profileKey=z.string().regex(/^[a-f0-9]{64}$/).parse(rawProfileKey);
+      const [held]=await db.select().from(executionBrowserProfileLeases).where(and(
+        eq(executionBrowserProfileLeases.profileKey,profileKey),isNull(executionBrowserProfileLeases.releasedAt)));
+      if(!held?.ownerExecutionTaskId || held.attempt===null || !held.fenceToken)return null;
+      const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,held.ownerExecutionTaskId));
+      if(!task || task.userId!==held.userId || !task.accountId ||
+          (["running","waiting_user","unknown_result"].includes(task.status) &&
+           task.attempt===held.attempt && task.fenceToken===held.fenceToken))return null;
+      return {ref:{executionTaskId:task.id,attempt:held.attempt,fenceToken:held.fenceToken},
+        accountId:task.accountId,userId:task.userId,domain:held.domain,profileKey:held.profileKey,leaseId:held.leaseId,
+        taskStatus:task.status,currentAttempt:task.attempt===held.attempt&&task.fenceToken===held.fenceToken};
+    },
     async acquire(ref: ExecutionRef, rawDomain: string) {
       return (await acquireMany(ref, [rawDomain]))[0]!;
     },

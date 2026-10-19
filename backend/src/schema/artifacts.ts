@@ -25,13 +25,16 @@ export const artifacts = pgTable("artifacts", {
   // [T-136 多账号] 按号隔离维度(soft FK → platform_accounts.id)。nullable 稳定终态
   // (SPEC §6 MAJOR-3)。子表 artifact_versions/relations/script_sections/timeline_segments
   // 无 user_id、经 requireArtifact 门透传属主,故不加 account_id(同 user_id 范式)。
-  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable → contract id|null
   // Nullable in the DB only during the create UoW (artifact row inserted before
   // version #1); the contract resource requires it (id, non-null), and create
   // immediately repoints it, so a fully-formed artifact never exposes null.
   currentVersionId: text("current_version_id"),
+  // T1331：仅内部整稿目标创建事务设置；历史/公开创建默认 NULL。
+  scriptDraftReservationVersionId: text("script_draft_reservation_version_id"),
   stage: text("stage").notNull(),
   artifactType: text("artifact_type").notNull(),
   title: text("title").notNull(),
@@ -110,6 +113,7 @@ CREATE TABLE IF NOT EXISTS artifacts (
   project_id TEXT NOT NULL,
   content_output_id TEXT,
   current_version_id TEXT,
+  script_draft_reservation_version_id TEXT,
   stage TEXT NOT NULL,
   artifact_type TEXT NOT NULL,
   title TEXT NOT NULL,

@@ -1,0 +1,51 @@
+{
+  "rawSha256": "54bb05a95768972190d6ff4603527bda37084e5c74ded10045da72e8ee4fc9ec",
+  "stats": {
+    "startTime": "2026-10-18T15:06:24.226Z",
+    "duration": 132514.66,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "切组真实连续旅程 1280×800",
+      "status": "passed",
+      "startTime": "2026-10-18T15:06:46.341Z",
+      "duration": 56053,
+      "errors": [],
+      "attachments": [
+        {
+          "name": "witness",
+          "contentType": "application/json",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1280×800-t1346/attachments/witness-5e4d5219887d079063b557e276609518b1bc837e.json"
+        },
+        {
+          "name": "trace",
+          "contentType": "application/zip",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1280×800-t1346/trace.zip"
+        }
+      ]
+    },
+    {
+      "title": "切组真实连续旅程 1024×680",
+      "status": "passed",
+      "startTime": "2026-10-18T15:07:44.866Z",
+      "duration": 49307,
+      "errors": [],
+      "attachments": [
+        {
+          "name": "witness",
+          "contentType": "application/json",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1024×680-t1346/attachments/witness-ee7dcdaac0aabaf2238049ef29a5618eeb99b1d8.json"
+        },
+        {
+          "name": "trace",
+          "contentType": "application/zip",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1024×680-t1346/trace.zip"
+        }
+      ]
+    }
+  ]
+}

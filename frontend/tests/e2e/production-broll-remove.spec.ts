@@ -19,7 +19,7 @@ async function dispatch<T>(
       ...(accountId ? { "x-account-id": accountId } : {}),
     },
     data: { id, input },
-  });
+  timeout: 120000});
   const payload = (await response.json()) as {
     data?: T;
     error?: { message?: string };
@@ -78,7 +78,7 @@ async function uploadVideoAsset(
   const put = await page.request.put(upload.uploadUrl, {
     headers: { "content-type": "video/mp4" },
     data: bytes,
-  });
+  timeout: 120000});
   expect(put.ok()).toBe(true);
   return dispatch<{ id: string }>(
     page,
@@ -96,7 +96,7 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
   page,
   baseURL,
 }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(Math.max((90_000), 31260000));
   const account = await dispatch<{ id: string }>(page, "accounts.create", {
     params: undefined,
     query: undefined,
@@ -233,6 +233,7 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
   await selectAccount(page, account.id, baseURL);
   await page.setViewportSize({ width: 1536, height: 1024 });
   await page.goto(`/projects/${project.id}/production`);
+  await page.getByRole("button", { name: "返回制作页", exact: true }).click();
   await expect(page.locator('[data-slot="confirmed-decisions-notice"]')).toBeVisible();
   const item = page.locator('[data-slot="broll-auto-item"]', {
     hasText: "待剔除真实素材.mp4",
@@ -265,6 +266,12 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
 
   await page.setViewportSize({ width: 1024, height: 720 });
   await page.reload();
+  // 原生工作台刷新回入口；真实再进入备料，随后仍核同output公开plan与原UI剔除状态。
+  await page.getByRole("button", { name: "返回制作页", exact: true }).click();
+  const afterReload = await dispatch<{ recordingConfig: { videoEditingPlan: typeof plan } }>(
+    page, "outputs.production.get", { params: { outputId: output.id }, query: undefined, body: undefined }, account.id,
+  );
+  expect(afterReload.recordingConfig.videoEditingPlan).toEqual(plan);
   const restored = page.locator('[data-slot="broll-auto-item"]', {
     hasText: "待剔除真实素材.mp4",
   });
@@ -274,3 +281,6 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
   );
 
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 31260000 });

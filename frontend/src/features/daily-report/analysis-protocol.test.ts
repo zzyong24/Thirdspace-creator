@@ -3,6 +3,12 @@ import {createReportRequest,parseReportAnalysis,reportEvidenceKey,declaresReport
 const report:any={date:'2026-09-12',timeZone:'Asia/Shanghai',generatedAt:'2026-09-13T01:00:00Z',accountId:'a',accountName:'账号',positioning:null,works:[{publicationId:'p',script:'正文',metrics:{plays:0}}],recentWorks:[],warnings:[]};
 const result={format:'creatoros.daily-report.v1',date:report.date,accountId:'a',sourceGeneratedAt:report.generatedAt,headline:'建议',summary:'摘要',positioning:{observation:'观察',suggestion:'建议'},works:[{publicationId:'p',observation:'观察',hypothesis:'待验证',experiment:'实验'}],experiments:[]};
 describe('日报分析协议',()=>{
+ it('周期方向作为可选扩展，旧缓存继续解析，新报告保留依据与验证标准',()=>{
+  expect(parseReportAnalysis(JSON.stringify(result),report)?.directions).toBeUndefined();
+  const directions=[{title:'继续做生活场景',evidence:'两条生活场景作品的关注表现较好',recommendation:'每周保留一条生活场景作品',nextStep:'先拍产品在真实家庭中的使用过程',signal:'发布后7天观察作品带来的关注'}];
+  expect(parseReportAnalysis(JSON.stringify({...result,directions}),report)?.directions).toEqual(directions);
+ });
+ it('周期分析要求阶段方向有证据和复盘指标，允许样本不足时减少条数',()=>{const instruction=createReportRequest({...report,startDate:'2026-09-06',endDate:'2026-09-12'}).instruction;expect(instruction).toContain('周/月有多条可比较作品和足够指标时');expect(instruction).toContain('证据只够一个方向时就写一个');expect(instruction).toContain('不能把涨粉、咨询或成交编造出来');});
  it('仅接受绑定源快照的结构，不跨账号日期作品挂载',()=>{expect(parseReportAnalysis(JSON.stringify(result),report)?.headline).toBe('建议');for(const patch of [{accountId:'b'},{date:'2026-09-11'},{sourceGeneratedAt:'old'},{works:[{...result.works[0],publicationId:'foreign'}]}])expect(parseReportAnalysis(JSON.stringify({...result,...patch}),report)).toBeNull();expect(parseReportAnalysis('普通Markdown分析',report)).toBeNull();});
  it('样本有界且数量明确，纯读取时间变化不让旧分析误过期',()=>{const r={...report,works:Array.from({length:1000},(_,i)=>({...report.works[0],publicationId:'p'+i,script:'稿'.repeat(9000)})),recentWorks:Array.from({length:1000},(_,i)=>({publicationId:'r'+i}))};const q=createReportRequest(r);expect(q.report.works).toHaveLength(12);expect(q.report.works[0].script).toHaveLength(5000);expect(q.totalWorks).toBe(1000);expect(q.report.recentWorks).toEqual([]);expect(reportEvidenceKey(r)).toBe(reportEvidenceKey({...r,generatedAt:'later'}));expect(reportEvidenceKey(q.report,q.totalWorks,q.totalRecentWorks)).toBe(reportEvidenceKey(r));});
 });

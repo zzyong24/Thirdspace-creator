@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   refreshClientConfig,
+  fulfillActivationIncludedCredit,
   PullError,
   putManagedCredential,
   readSessionCookie,
@@ -9,6 +10,7 @@ const {
   resolveRequestContext,
 } = vi.hoisted(() => ({
   refreshClientConfig: vi.fn(),
+  fulfillActivationIncludedCredit: vi.fn(),
   putManagedCredential: vi.fn(),
   readSessionCookie: vi.fn(() => "session" as string | null),
   readRequestAccountId: vi.fn(() => "acct-1" as string | null),
@@ -30,6 +32,7 @@ const {
 }));
 vi.mock("@/server/activation/client-config.server", () => ({
   refreshClientConfig,
+  fulfillActivationIncludedCredit,
   ClientConfigPullError: PullError,
 }));
 vi.mock("@/lib/request-context.server", () => ({
@@ -52,6 +55,8 @@ function localRequest(origin = "http://127.0.0.1") {
 describe("POST /api/v1/local/client-config（API-575-002）", () => {
   beforeEach(() => {
     refreshClientConfig.mockReset();
+    fulfillActivationIncludedCredit.mockReset();
+    fulfillActivationIncludedCredit.mockResolvedValue({status:"ready",action:"产品已含额度已启用",retryable:false});
     putManagedCredential.mockReset();
     readSessionCookie.mockReset();
     readSessionCookie.mockReturnValue("session");
@@ -221,4 +226,25 @@ describe("POST /api/v1/local/client-config（API-575-002）", () => {
     expect(response.status).toBe(422);
     expect(refreshClientConfig).not.toHaveBeenCalled();
   });
+
+it('T238 只有明确activation在原可信空POST中先履约后目录同步',async()=>{
+ refreshClientConfig.mockResolvedValue({authority:'channel',outcome:'configured',retryable:false});
+ const response=await POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':'activation'}}));
+ expect(fulfillActivationIncludedCredit).toHaveBeenCalledTimes(1);expect(refreshClientConfig).toHaveBeenCalledTimes(1);
+ expect(fulfillActivationIncludedCredit.mock.invocationCallOrder[0]).toBeLessThan(refreshClientConfig.mock.invocationCallOrder[0]!);
+ expect(await response.json()).toMatchObject({activationFulfillment:{status:'ready'}});
+},180_000);
+
+it('T238 履约观察被取消后不能晚发目录同步或写旧scope凭据',async()=>{
+ const controller=new AbortController();let finish!:(value:unknown)=>void;
+ fulfillActivationIncludedCredit.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ const pending=POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',signal:controller.signal,headers:{'x-creatoros-config-trigger':'activation'}}));
+ await vi.waitFor(()=>expect(fulfillActivationIncludedCredit).toHaveBeenCalledOnce());controller.abort();finish({status:'ready',action:'已启用',retryable:false});await pending;
+ expect(refreshClientConfig).not.toHaveBeenCalled();expect(putManagedCredential).not.toHaveBeenCalled();
+},180_000);
+it.each(['startup','scheduled','bootstrap','manual_revalidate'])('T238 普通%s同步不触发额度履约',async(trigger)=>{
+ refreshClientConfig.mockResolvedValue({authority:'channel',outcome:'configured',retryable:false});
+ await POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':trigger}}));
+ expect(fulfillActivationIncludedCredit).not.toHaveBeenCalled();expect(refreshClientConfig).toHaveBeenCalledOnce();
+},180_000);
 });

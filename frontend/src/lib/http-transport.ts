@@ -1,5 +1,6 @@
 import { ErrorCode, type Endpoint, type Transport } from "@creatoros/contract";
 import { handshakeHeaders } from "@/lib/handshake-client";
+import type {AccountChangeDetail} from './account-events';
 
 // [T-136 切片 a] 当前选中抖音号的 localStorage 键(与 account-switcher 同一真值)。切号写它,
 // 每次请求读它注入 x-account-id header。server 端会验属主([T-332 S3] 验不过 → 404 拒绝,
@@ -54,27 +55,60 @@ export function syncCurrentAccountCookie(accountId: string | null): void {
  *   - 桌面启动握手；
  *   - same-origin 凭据。
  */
+export interface FrozenWorkspaceScope {
+  groupId?: string | null;
+  accountId?: string | null;
+}
+
 export function creatorApiHeaders(
   input?: HeadersInit,
+  scope?: FrozenWorkspaceScope & {readonly includeCurrentAccount?:boolean},
 ): Record<string, string> {
   const headers = Object.fromEntries(new Headers(input).entries());
+  const options=scope??{};
+  if (scope !== undefined && ("groupId" in scope || "accountId" in scope || !("includeCurrentAccount" in scope))) {
+    Object.assign(headers, handshakeHeaders());
+    delete headers["x-group-id"];
+    delete headers["x-account-id"];
+    if (scope.groupId) headers["x-group-id"] = scope.groupId;
+    if (scope.accountId) headers["x-account-id"] = scope.accountId;
+    return headers;
+  }
+  const currentGroupId=readCurrentGroupId();
+  syncCurrentGroupCookie(currentGroupId);
+  if(currentGroupId)headers["x-group-id"]=currentGroupId;
   const currentAccountId = readCurrentAccountId();
   syncCurrentAccountCookie(currentAccountId);
   Object.assign(headers, handshakeHeaders());
-  if (currentAccountId) headers["x-account-id"] = currentAccountId;
+  if (options.includeCurrentAccount !== false) {
+    const currentAccountId = readCurrentAccountId();
+    syncCurrentAccountCookie(currentAccountId);
+    if (currentAccountId) headers["x-account-id"] = currentAccountId;
+  } else {
+    delete headers["x-account-id"];
+  }
   return headers;
 }
 
 export function fetchCreatorApi(
   input: RequestInfo | URL,
   init: RequestInit = {},
+  scope?: FrozenWorkspaceScope & {readonly includeCurrentAccount?:boolean},
 ): Promise<Response> {
   return fetch(input, {
     ...init,
-    headers: creatorApiHeaders(init.headers),
+    headers: creatorApiHeaders(init.headers, scope),
     credentials: init.credentials ?? "same-origin",
   });
 }
+
+// These operations are user-scoped and validate their target IDs in their own
+// service. A stale current-account selection must not block account recovery
+// or binding another account. Account-owned reads/writes still use the header.
+const USER_SCOPED_OPERATIONS = new Set([
+  "accounts.list", "accounts.create", "accounts.get", "accounts.update", "accounts.archive",
+  "platforms.capabilities.list", "platforms.bind.begin", "platforms.bind.confirm", "platforms.bind.cancel",
+]);
 
 /**
  * [T-332 S3] dispatch 结构化错误的类型化载体。之前只抛裸 Error(message 拼串),调用方
@@ -122,9 +156,12 @@ export function isAccountRequiredError(err: unknown): boolean {
 // No server imports here — keeps the mock backend + canonicalDataset out of the
 // client bundle. Stage 16 replaces the route's handler with real persistence;
 // this transport is unchanged.
-export function createHttpTransport(baseUrl = "/api/v1"): Transport {
+export function createHttpTransport(baseUrl = "/api/v1", scope?: FrozenWorkspaceScope): Transport {
+  const frozenScope = scope === undefined ? undefined : Object.freeze({ ...scope });
   return {
     async request(endpoint: Endpoint, input) {
+      const forceNewDouyin = endpoint.id === "ingestion.douyin.login" &&
+        (input as { body?: { forceNew?: boolean } } | undefined)?.body?.forceNew === true;
       const res = await fetchCreatorApi(`${baseUrl}/dispatch`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -134,7 +171,7 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
         // auth.
         credentials: "same-origin",
         body: JSON.stringify({ id: endpoint.id, input }),
-      });
+      }, USER_SCOPED_OPERATIONS.has(endpoint.id) || forceNewDouyin ? {groupId:null,accountId:null} : frozenScope);
       if (!res.ok) {
         // 把后端的错误文案带上。否则前端只看到 "400/409",拿不到 DouyinNotLoggedInError /
         // 阶段交付物缺失 之类的可判定信息 —— 错误处理(未登录引导 / 进入下一步 gate 原因)失效。
@@ -178,4 +215,21 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
       return res.json();
     },
   };
+}
+
+export const CURRENT_GROUP_KEY="creatoros:current-group";
+export const CURRENT_GROUP_COOKIE="creatoros_current_group";
+export function readCurrentGroupId():string|null{
+ try{return typeof window==="undefined"?null:window.localStorage.getItem(CURRENT_GROUP_KEY);}catch{return null;}
+}
+export function syncCurrentGroupCookie(groupId:string|null):void{
+ try{if(typeof document==="undefined")return;
+ document.cookie=`${CURRENT_GROUP_COOKIE}=${groupId?encodeURIComponent(groupId):""}; Path=/; SameSite=Lax; Max-Age=${groupId?31536000:0}`;}catch{/* 隐私模式不崩；HTTP header仍需真实服务端校验。 */}
+}
+export function writeCurrentGroupId(groupId:string|null,eventSource:AccountChangeDetail['source']='external'):void{
+ const previous=readCurrentGroupId();
+ if(typeof window!=="undefined"&&previous!==groupId){const url=new URL(window.location.href);for(const key of ["platform","accountId","date","startDate","endDate","month","migrationId"])url.searchParams.delete(key);window.history.replaceState(window.history.state,"",url);}
+ try{if(groupId)window.localStorage.setItem(CURRENT_GROUP_KEY,groupId);else window.localStorage.removeItem(CURRENT_GROUP_KEY);window.localStorage.removeItem(CURRENT_ACCOUNT_KEY);}catch{/* cookie remains usable */}
+ syncCurrentGroupCookie(groupId);syncCurrentAccountCookie(null);
+ if(typeof window!=="undefined"&&previous!==groupId)window.dispatchEvent(new CustomEvent("creatoros:accounts-changed",{detail:{source:eventSource,routeRefreshScheduled:true,groupId}}));
 }

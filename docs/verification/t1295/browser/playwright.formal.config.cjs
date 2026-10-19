@@ -1,0 +1,5 @@
+'use strict';
+const path=require('node:path'),{createRequire}=require('node:module');
+const root=process.env.T1295_SOURCE_ROOT;if(!root||!process.env.T1295_EVIDENCE_ROOT||!process.env.T1295_SERVICE_BINDING)throw Error('EXPLICIT_T1295_OWNED_BINDING_REQUIRED');
+const {defineConfig}=createRequire(path.join(root,'frontend/package.json'))('@playwright/test');
+module.exports=defineConfig({testDir:path.join(root,'frontend/tests/e2e'),testMatch:'t1295-desktop-csp-wasm-video.spec.ts',workers:1,retries:0,fullyParallel:false,forbidOnly:true,timeout:1800000,globalTimeout:0,expect:{timeout:120000},outputDir:path.join(process.env.T1295_EVIDENCE_ROOT,'artifacts'),reporter:[['list'],['json',{outputFile:path.join(process.env.T1295_EVIDENCE_ROOT,'playwright.json')}]],use:{headless:true,channel:process.env.T1295_BROWSER_CHANNEL||undefined,viewport:{width:1536,height:1024},locale:'zh-CN',serviceWorkers:'block',actionTimeout:120000,navigationTimeout:120000,trace:'retain-on-failure',screenshot:'only-on-failure',launchOptions:{timeout:180000}}});

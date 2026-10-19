@@ -1,0 +1,11 @@
+▲ Next.js 16.2.9 (webpack)
+- Experiments (use with caution):
+  ✓ externalDir
+
+  Creating an optimized production build ...
+
+> Build error occurred
+SyntaxError: Unexpected end of input
+    at ignore-listed frames {
+  type: 'SyntaxError'
+}

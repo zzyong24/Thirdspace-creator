@@ -26,13 +26,15 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
-type Phase = "idle" | "running" | "review" | "done" | "error";
+type Phase = "idle" | "running" | "review" | "done" | "error" | "partial";
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 75; // ~5 min — multi-angle agent work (WebSearch) can run minutes.
@@ -53,6 +55,7 @@ function mergeEdit<T>(item: T, patch: Partial<T> | undefined): T {
  * 把改动并进 card 的 `edits`,采纳时和「删」走同一条 patch 落库。不传 = 该 node 只读(降级)。
  */
 export interface ItemEditor<T> {
+  taskId?: string;
   /** 把一个字段补丁并进本条的本地编辑态(浅合并,确定性,无副作用)。 */
   onEdit: (patch: Partial<T>) => void;
   /** 采纳进行中时为 true —— 编辑控件应 disabled,避免改了又被 patch 覆盖。 */
@@ -91,6 +94,8 @@ export function AdoptCandidateCard<T>({
   doneLabel,
 }: AdoptCandidateCardProps<T>) {
   const router = useRouter();
+  const observation = useTaskObservation(`${taskType}:${String(inputData.projectId ?? "")}`);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [items, setItems] = React.useState<T[]>([]);
   // CollabField(COLLAB-02):保留原始 items(用于 patch)+ 人删掉的下标 —— 采纳前可逐条筛掉。
@@ -114,8 +119,9 @@ export function AdoptCandidateCard<T>({
   const claimedRef = React.useRef(false);
 
   React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
+    () => {
+      cancelledRef.current = false;
+      return () => { cancelledRef.current = true; };
     },
     [],
   );
@@ -148,10 +154,12 @@ export function AdoptCandidateCard<T>({
   // hydration (resuming a queued/running task found server-side) drive the same machine.
   const pollUntilDone = React.useCallback(
     async (id: string) => {
-      for (let i = 0; i < MAX_POLLS; i++) {
-        if (cancelledRef.current) return;
+      const isCurrent = captureObservation();
+      for (let i = 0; ; i++) {
+        if (i > 0 && i % MAX_POLLS === 0 && !await pauseObservation()) return;
+        if (cancelledRef.current || !isCurrent()) return;
         await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-        if (cancelledRef.current) return;
+        if (cancelledRef.current || !isCurrent()) return;
         // 拉实时步骤事件喂步骤日志(辅助信息,拉失败不影响主轮询)。
         try {
           const stepRows = (await client.listTaskSteps({
@@ -163,7 +171,7 @@ export function AdoptCandidateCard<T>({
             text: string;
             kind: string;
           }>;
-          if (!cancelledRef.current && Array.isArray(stepRows))
+          if (!cancelledRef.current && isCurrent() && Array.isArray(stepRows))
             setSteps(stepRows);
         } catch {
           /* 步骤是辅助信息 */
@@ -173,6 +181,8 @@ export function AdoptCandidateCard<T>({
           query: undefined,
           body: undefined,
         })) as { status: string };
+        if (cancelledRef.current || !isCurrent()) return;
+        if (status.status === "partial") { setPhase("partial"); return; }
         if (status.status === "awaiting_confirmation") {
           await enterReview(id);
           return;
@@ -182,9 +192,8 @@ export function AdoptCandidateCard<T>({
           return;
         }
       }
-      setPhase("error"); // budget exhausted
     },
-    [enterReview],
+    [enterReview, pauseObservation, captureObservation],
   );
 
   const start = React.useCallback(async () => {
@@ -240,13 +249,15 @@ export function AdoptCandidateCard<T>({
             (projectId === undefined || t.projectId === projectId) &&
             (t.status === "queued" ||
               t.status === "running" ||
-              t.status === "awaiting_confirmation"),
+              t.status === "awaiting_confirmation" || t.status === "partial"),
         );
         if (abandoned || cancelledRef.current || claimedRef.current || !match)
           return;
         claimedRef.current = true; // hydration owns the loop now
         setTaskId(match.id);
-        if (match.status === "awaiting_confirmation") {
+        if (match.status === "partial") {
+          setPhase("partial");
+        } else if (match.status === "awaiting_confirmation") {
           await enterReview(match.id);
         } else {
           setPhase("running");
@@ -321,7 +332,9 @@ export function AdoptCandidateCard<T>({
             </button>
           ) : null}
 
-          {phase === "running" ? (
+          <TaskObservationNotice {...observation} />
+          <TaskPartialNotice visible={phase === "partial"} />
+          {phase === "running" && !observation.paused ? (
             <div data-slot="adopt-running" className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
@@ -371,7 +384,8 @@ export function AdoptCandidateCard<T>({
                           i,
                           canEdit
                             ? {
-                                onEdit: (patch) =>
+                                taskId:taskId??undefined,
+                        onEdit: (patch) =>
                                   setEdits((prev) => {
                                     const next = new Map(prev);
                                     next.set(i, {

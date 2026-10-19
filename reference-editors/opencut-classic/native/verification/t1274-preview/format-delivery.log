@@ -1,0 +1,11 @@
+apps/web/src/embedded/preview-scene.ts 159ms
+apps/web/src/embedded/__tests__/native-preview-audio.test.ts 18ms
+apps/web/src/embedded/__tests__/native-preview-canvas.test.ts 15ms
+apps/web/src/embedded/__tests__/native-preview-resources.test.ts 13ms
+apps/web/src/embedded/__tests__/native-preview.test.ts 71ms
+apps/web/src/media/audio.ts 73ms
+apps/web/src/services/renderer/canvas-renderer.ts 10ms
+apps/web/src/services/renderer/scene-exporter.ts 13ms
+apps/web/src/core/managers/renderer-manager.ts 21ms
+apps/web/src/services/renderer/resolve.ts 31ms
+apps/web/src/services/renderer/nodes/image-node.ts 11ms

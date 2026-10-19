@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor-plan.test.ts (9 tests | 1 failed) 19ms
+     × 更新卡片只补明确输入，省略样式不重置已选色调 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor-plan.test.ts > T-1037 稳定制作片段与结构编辑 > 更新卡片只补明确输入，省略样式不重置已选色调
+AssertionError: expected 'muted' to be 'danger' // Object.is equality
+
+Expected: "danger"
+Received: "muted"
+
+ ❯ src/modules/production/production-editor-plan.test.ts:86:56
+     84|     target.tone="danger";
+     85|     const next=applyEditorEdits(p,[{type:"updateCard",itemId:target.id…
+     86|     expect(next.renderProps.scenes[0]!.cards[0]!.tone).toBe("danger");
+       |                                                        ^
+     87|     expect(next.renderProps.scenes[0]!.cards[0]!.extraCard).toEqual({p…
+     88|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  18:53:57
+   Duration  1.17s (transform 497ms, setup 0ms, import 1.00s, tests 19ms, environment 0ms)
+

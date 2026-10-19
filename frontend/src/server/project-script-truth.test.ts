@@ -95,3 +95,10 @@ describe("selectReadableProjectScriptArtifact", () => {
     ).toBeNull();
   });
 });
+
+it("只跳明确预留，旧缺省与正式空稿仍权威",()=>{
+ const master={artifactType:"master_script",currentVersionId:"master-v",id:"master"};
+ const reserved={artifactType:"output_script",currentVersionId:"reserved-v",currentVersionIsReserved:true,id:"reserved"};
+ expect(selectReadableProjectScriptArtifact([master,reserved])?.id).toBe("master");expect(selectReadableProjectScriptArtifact([reserved])).toBeNull();
+ expect(selectReadableProjectScriptArtifact([master,{...reserved,currentVersionIsReserved:false}])?.id).toBe("reserved");
+});

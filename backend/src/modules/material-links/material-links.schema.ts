@@ -19,6 +19,7 @@ export function toMaterialLinkDto(row: MaterialLinkRow): MaterialLinkResource {
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,accountId:row.accountId??null,
     projectId: row.projectId,
     contentOutputId: row.contentOutputId ?? null,
     entityType: row.entityType as MaterialLinkResource["entityType"],

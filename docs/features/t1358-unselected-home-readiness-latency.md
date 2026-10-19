@@ -1,0 +1,16 @@
+# T1358 隔离首页首次装配与组读取长耗时的独立观察
+
+2026-10-19 Root要求登记本轮隔离诊断观察，不能把未知首因直接列为既有债。本任务未评审/未开工，不阻将有明确group的首页typed指标合同验真，也不授权真实用户数据库/进程诊断或重发平台任务。
+
+19d33c0cdf68fce8d3eef8fafc5577084987301f 干净候选，T1356 formal01的私有PG含100个分页filler账号、7场景和14条已完成合成采集；无group cookie readiness GET /真实9.2分钟返回（编译10.9s，application-code9.1min）。其后目标带group首页GET200单次约675ms；不是普遍性能承诺。不能类推全新零组/零账号用户或实际已安装3b App。
+
+源码resolveSession→verifyAccountSelection(null)/verifyGroupSelection(null,unselected)，根page无group分支请求pages.dashboard.get，遇AccountRequired回空VM。layout另并行accounts.list与notifications.list，两读日志约267秒。未直接走本轮groupOverview投影。独立短sample中主线程PromiseFulfillReactionJob与V8 CaptureSimpleStackTrace/GatherAsyncStackTrace；无精确JS来源，不能断言编译器或业务循环。私有PG连接ClientRead，含4条idle-in-transaction BEGIN，无锁等待证据。记录在docs/verification/t1356/startup-observation-attempt01.json与startup-sample-attempt01（native栈0600私有）。
+
+后续必须先用明确隔离数据区分无group/带group、零数据/本次代表事实、dev/实际支持启动方式；保原预算和每次输出。先核实际调用链/等待点，必要SPEC独评及真实公共RED后才定窄修，不盲加等待、改bundler或终止原用户任务。
+
+现成GET /api/v1/local/channel-runtime可用于后续仅判进程可接请求，helper /health真实SELECT1判私有PG；这两者不能替代正式带group首页HTTP/UI，更不能称本慢路径已修。当前formal01在原600秒内自然继续，因此本轮未改启动URL、未重启。
+
+
+1db7b2f16de445cae749eb8970150c9897f0dcfd formal02改用廉价channel-runtime进程ready后，两视口首次**带group**导航仍各在原120s失败；正常原GET后来200约2.5min。原日志另有pages.groupOverview.get durationMs=139190；page已先await resolveSession/getBundle，这139s属于后续业务组合，不能全部归初始化。日志无requestId，不能精确配给哪次视口GET。原reconcile当时并跑是负载事实，未证明因果。两次原导航不重试，原FAIL保全于candidate-attempt02。
+
+下一轮仅采用现成只读GET /api/v1/auth/me作为同一Next完整bundle装配ready（原600s包络）。它会触发既有初始化迁移/seed，不能称零写或加速；正式用例核真实data.id等于私有seed.userId，首页导航仍原120s。已核Playwright1.60 httpStatusCode调用未设置SDK socketTimeout，仍由webServer600s包络。若组query再次超预算，需沿其真实执行诊断，不再迁移等待洗绿。正式readiness与后续groupHTTP/UI分证，不称本任务慢读已修。

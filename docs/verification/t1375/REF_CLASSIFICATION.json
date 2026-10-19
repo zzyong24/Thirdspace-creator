@@ -1,0 +1,1079 @@
+{
+  "schema": "t1375-readonly-ref-classification/v1",
+  "main": "f530722c25f627c8c59740aebfecfd6be2c05185",
+  "origin_main": "1963e4ebe48f15ec084a1efe7dac2f195675b92f",
+  "scope": "frozen heads/remotes; no ref/product mutation by reviewer",
+  "rows": [
+    {
+      "ref": "refs/heads/codex/creator-canvas",
+      "oid": "de031bc3094ca8ea5a06683e725bd6e19f80f73f",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/daily-client-observability",
+      "oid": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/external-agent-bridge",
+      "oid": "7d2087a8a81ebf522f15a2119f55fc3118f56b22",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "T1060-fixed-vendor-ACP-and-WorkBuddy-successor"
+    },
+    {
+      "ref": "refs/heads/codex/external-agent-mcp",
+      "oid": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "all-product-blobs-exact-main-history"
+    },
+    {
+      "ref": "refs/heads/codex/growth-activity-product-identity",
+      "oid": "a8c1d4724a9700c678a4b7edcabf3953a60068d4",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/integrated-dev-package-acceptance",
+      "oid": "64ca6add4375820b346bc3b6ccc8cafa913daba5",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/local-codex-unified-engine",
+      "oid": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/release-1.2",
+      "oid": "33dad57a69334dc0bbda8d50dc40b99585acac06",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1000-operations-strategy",
+      "oid": "ecd2e665d72071a30c3002bdd9a21d2d7edeb88e",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1004-agent-workbench",
+      "oid": "8b0249078840042b85b04db01ba2a86ef562b93c",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1005-file-plan-proof",
+      "oid": "492a1624a479f450e839e262e549d5dcdd7a59e0",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1005-plan-recovery",
+      "oid": "57a547a05bdbdfd9bd7bb1798c7bea11735285e3",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1006-gateway",
+      "oid": "b86104d406c45dd5ec58b00d3af62f7c82984f8d",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1006-integration",
+      "oid": "edeb09f2c0c1d1afd54d94c21e594c3262d56050",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1006-progress",
+      "oid": "fa0f602b416fc3cd386814b250e7e191430d49f8",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-command",
+      "oid": "6403379d6942194201809099217a065f0d6e738f",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-desktop",
+      "oid": "99a3dc5b47d6861bd11cbfaa9334019480b74f04",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-files-command",
+      "oid": "5393c17d976039ae12a6f1cefa2c0a7202c5d81d",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-html-files",
+      "oid": "dbfde24ff63bf210d39c4f4a9fd7dc625a95aa71",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-ipc",
+      "oid": "8d44917b90b495f9109e6879ed4d6b9f8f9e9d39",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-windows",
+      "oid": "118e75ef67a7de66295ef9a4ed1f83ca14b307f7",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-windows-command",
+      "oid": "ce7035b3221553b290fae59452aacec67287d6db",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-windows-command-isolation",
+      "oid": "2e7e44219756b160bd517a8be9fde7c5db9fb6c5",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-windows-command-wire",
+      "oid": "23eb181d5e826c225f0852d140c562f3de736333",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1007-windows-ipc",
+      "oid": "98e12d4f14f87396f3569a344f82e143070d901d",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1008-rust-browser",
+      "oid": "8f6311a130f2ad3bfea9bce59c9404da8182e31c",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1008-screenshot-pi",
+      "oid": "871e7209db6773eefcbc09636279341b1de2069c",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1008-vendor",
+      "oid": "18ca31c8933e05c2730d04f948a0b3a745adf7d3",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-blob-port",
+      "oid": "8b8ee2cdbe78f45974b9fec44923da9a9919e5bb",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-host-chain",
+      "oid": "5e29be9727d3a5a22f7c89334aa4adb68921e43e",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-html-export-chain",
+      "oid": "5fd4d63e76a49543f7141a82788940d16eac952a",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-html-render",
+      "oid": "00835827e81dc8885fc95d8917f35a490d0a7cf3",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-native-export",
+      "oid": "9a6f5594155b2ba82d50f6d998e088389b10107c",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-preview",
+      "oid": "4b6cc194245a6e98ad9e130fa387ad69d90ba22b",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-preview-read",
+      "oid": "81db8c19eb4dfa59f37a9360bd23e115b43d1d5e",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1009-relative-assets",
+      "oid": "4a1a7752ada2fb54e939c8105ad595b01cd15a33",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1015-lesson-verification",
+      "oid": "504d0761b47559607d7d032cf5a5820dd4208fc1",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1017-durable-chat-regression",
+      "oid": "9e1a814709c496f2a61fffdc47b6685485a88434",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1021-canvas-templates",
+      "oid": "55a526d609633e2b014e2a70f319125dec8c0fea",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1021-template-backend",
+      "oid": "cfc2d86823c946ccb758e3e4c96b7f6fce220ff8",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-account-group-snapshot",
+      "oid": "45ff5ff5e6676d32be38c834660bab88c238a2ba",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-backend-adaptation-candidate",
+      "oid": "b1cd073b8a813dda2dfd4233a3855dffc43a00b3",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-frontend-native-delivery",
+      "oid": "67b4a27f8550f52dc99654c443efa59b8e6e0900",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-integrated-client",
+      "oid": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-migration-candidate",
+      "oid": "f8ce322d63e1844e6eff8595af85813e50d7d79d",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-runtime-merge-candidate",
+      "oid": "a56dba58bc4d624c834f5ecda101787a545e769c",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "all-1622-product-blobs-exact-current-or-history"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-template-backend-candidate",
+      "oid": "7a45ad30adc53bcfac065fb789d75821156ab1d8",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-template-frontend-candidate",
+      "oid": "eab9a280a6b0c4c515909c3a0f9c48303ef408bb",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1062-workbench-snapshot",
+      "oid": "c53165064167c109368605d78f8c9a8e9978c5f6",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1063-release-pipeline",
+      "oid": "6636e4faf506dcdd417004354637feb7801ee020",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1066-frontend",
+      "oid": "fd649738d8838140b93ee4f77e66f1914f0fd782",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1066-timeout-policy",
+      "oid": "4aa040f47361903ed0694fbb9cf298fd5be95b9d",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1066-tooling",
+      "oid": "3c6db27f3077e38fadda133bee4bd4a410e9d7af",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1066-worker",
+      "oid": "b1533b76baebbeef3fe01b078f5e8687744120e8",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1067-local-package",
+      "oid": "69b6be8f8078ebf9380014be000416a89880dbb0",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1070-backend-candidate",
+      "oid": "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1070-frontend-candidate",
+      "oid": "b4356246ed4efc5def535aed774be5b227cea4e7",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1070-native-candidate",
+      "oid": "dda4ef6b9076892f1c865465d6d41e0e72127f49",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1073-backend",
+      "oid": "54a2e8c9074f3afd6a7752f7d67ecada0eac1746",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1073-frontend",
+      "oid": "ce5d89d88f4c3433b9579dea800c4c6f2a8e5db2",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1073-worker",
+      "oid": "7081ba6b8911ecaece9f9212a8b115082d08c7ee",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t1080-retain-t1022-charts",
+      "oid": "119ca6f0a9b087b0582619fa44d4435b05b218f2",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1080-retain-t1022-project-root",
+      "oid": "46f047cad4922f91069634747591373220f68aee",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1080-retain-t1022-shared-domains",
+      "oid": "844b26656eede888a5c85b133b8901007f178c1f",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1080-retain-t1022-task-scope",
+      "oid": "ff8dfcdc59501f18dd9b51960d8402025d982c6b",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1080-retain-t1062-aac-v2-candidate-cbf9a9f6",
+      "oid": "5e0d81a4b349c93cfb5ad74381d8dabd262a5f6b",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1080-retain-t1062-aac-v2-r6-candidate-6bb4bd15",
+      "oid": "ccb47a0faf6370d9a5fe8f4502ee25e8a3fe0b47",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1080-retain-t1070-native-intermediates",
+      "oid": "0ebfc0009ef7c18f08ecfd0b9f7735c86cb6031f",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "historical-source-and-evidence-only"
+    },
+    {
+      "ref": "refs/heads/codex/t1101-canvas-binding",
+      "oid": "23c3bedc0e8216e20b67f39c653e34a3dfdd508e",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1106-chart-cover-labels",
+      "oid": "454e9241a2adb107f3beb224914bc3273c063bee",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "aa7de1e91-label-and-DialogTrigger-successor"
+    },
+    {
+      "ref": "refs/heads/codex/t1110-wechat-evidence-continuation",
+      "oid": "a3bc947d4bcb70be5c14f11ff56639a54b184b31",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1255-client-writer",
+      "oid": "f54f184d395a049b247e81f263f42945ad15078f",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1271-ephemeral-sessions",
+      "oid": "196321a012299660e7ffcbe012ccc0cd2fd9c18a",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1273-release-hardening",
+      "oid": "c98e7a958cfa5395d8718310128513671fc51562",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1274-markdown",
+      "oid": "949ec229979ff1d89f359739df618e5ebacaf2d0",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1274-native-workspace",
+      "oid": "19a1d87cee486b157fa596b73395dd9bf68bbf2e",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1290-preserved-codex-text-image",
+      "oid": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1290-preserved-integrated-dev-acceptance",
+      "oid": "64ca6add4375820b346bc3b6ccc8cafa913daba5",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1290-preserved-integrated-frontend-unit",
+      "oid": "533224f334c43cdb81a344424e420cad93784dd1",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t1290-preserved-integrated-unit-acceptance",
+      "oid": "22eb77eb98ec61a0144c8ab7fd873f7659648697",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "no-product-delta-evidence-preservation"
+    },
+    {
+      "ref": "refs/heads/codex/t1370-t1371-ui-data-fixes",
+      "oid": "10238309c46f557b0c92d9d008cb466f7974c594",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t188-completion-integration",
+      "oid": "db769ddc2968e373bb92e253f13fad9d0927ee08",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t188-creator-owned-devices",
+      "oid": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t243-formal-model-benefit-consumer-20261017",
+      "oid": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "classification": "product-lineage-in-T247-plus-tip-tool-source-gap",
+      "evidence": "e3151ce89 is ancestor of 8e39; d4432b611 is not. git cherry 8e39 d443 has only +d443. 49 product paths are contained through e315, while d443 tip contains 11 handwritten deploy/download/browser verification tools plus generated site candidate/diffs and production receipts/screenshots. Precisely share safe reviewed source; do not merge raw delivery history wholesale."
+    },
+    {
+      "ref": "refs/heads/codex/t247-windows-e315-build-20261017",
+      "oid": "8e39d20a77baa5317aa1082609f71beb37f48c14",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "TRUE-GAP-66-product-paths-central-integrating"
+    },
+    {
+      "ref": "refs/heads/codex/t675-windows-production-closure",
+      "oid": "44a104ac365dae5b92a93f09d35ceb6d3a23b191",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t705-startup-http-ready",
+      "oid": "b0a7f88b8634545deb4034f7a90065695d908eae",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t735-managed-output",
+      "oid": "6747569bf5a2f00b9cbef7bc7e59dc185216e537",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "19-exact-product-blobs-and-superset-skill-test"
+    },
+    {
+      "ref": "refs/heads/codex/t793-local-package",
+      "oid": "ebd63d9891d162b1bd8bf518bc1b9f573fa9146f",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t859-managed-media-reliability",
+      "oid": "83509234cd9c483e82987351bfc1717b007713f0",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t915-asr-fallback",
+      "oid": "c90eef6a2bf767845c9932d813dc3830c9150a94",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-asset-legacy-resume",
+      "oid": "e83b92a133389d8dddac31649576aeb201ca9d00",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-chat-composition",
+      "oid": "498bd848bf624ac7b42dd88d97d91018c13ceaf3",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-chat-remaining-tools",
+      "oid": "4fc4de24233881b2392e8cb70d362b80fb583a2c",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-chat-retire",
+      "oid": "ba720d5a9ee6e889439561fe6a3fb03acc965cb5",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-collector-abort",
+      "oid": "f1204a35ea5bbe442c7045156d0ef8e2d6d72ee1",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-flywheel-worker",
+      "oid": "0874b90eb54c31401b5dcd1e17c9ca87a4767f33",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-formal-chat-entry",
+      "oid": "b0213b2b97a2bc13df1df80d39ecac7daad5cc10",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-intelligence-generations",
+      "oid": "7ab4fa4f4d073c95954344ee6baa66aee72d9eb2",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-intelligence-retry",
+      "oid": "f683f664f8e2f2d47a94f4f31c4a12e5fb6dc8c6",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-intelligence-task-actions",
+      "oid": "762cdb5ab6a5b197dc089e1821a79b583522a4ed",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-intelligence-transcript",
+      "oid": "16c44974ddb4c98c3955b301e6288d705a43768e",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-intelligence-workbench",
+      "oid": "b1ee8cee42afa0d2e5792d33b389f6604c26c8e4",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-postprocess-ledger",
+      "oid": "80d66981ecc3b7dc84e083233d85a0157cf563c3",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-preference-worker",
+      "oid": "fa2371bcfbf177cdf8d17b8f57ab4ca300d758da",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-production-a08",
+      "oid": "a27e5eb4e4f0fd58ce8da2ef3781aa3cf10b7e5e",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-recovery-wake",
+      "oid": "d78084cba13756e0a836e7050ddd8915fb11e2ef",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-remaining-task-workers",
+      "oid": "375ba4f0e06eec57224f29269d9f46de62581177",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-retire-structured-runners",
+      "oid": "48d8c58288c6b52113519a6b4145c36637d8d468",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-search-background-index",
+      "oid": "46d2460a056499e8e9c5d5ea114fc4137bfe26be",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-settings-model-region",
+      "oid": "d9db7d889d817e10401e5877f915454126a63d74",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-share-dialog",
+      "oid": "1581df7f9e4d8d69b9c1b94953f80708ef98e150",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-share-recovery",
+      "oid": "032538a015421f63dc6d8a0e8d91e1ecb0e4f8d7",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-shell-stop-proof",
+      "oid": "3eb06ea4e0ccd562643e66b7d6b7c0aa12e8a4d2",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-task-status",
+      "oid": "f92d23cab5ff3e9851898a19de4b12fd63f2f76c",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-transcribe-complete",
+      "oid": "c11e7f604378fc45b4f5472cf20aa0e512335e80",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-transcribe-profile",
+      "oid": "7b62ab31dccc506c5554c4bc2c2863e76b563dfa",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-transcribe-source",
+      "oid": "3a034d860118815fc910a79b7a229eec61a92a26",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-trend-probe-io",
+      "oid": "1dda8dc251bc0ba3a748f730af652c767d8f5a0d",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-whisper-cancel",
+      "oid": "a41dcd787a7160bb8bf5a04345101486a9c130de",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t915-worker-package-closure",
+      "oid": "8ae269f1149a9e2eb80bd733bb63b6020f19ed19",
+      "classification": "legacy-worker-successor",
+      "evidence": "T915-split-worker-current-declarations-present-plus-original-product-blob-history"
+    },
+    {
+      "ref": "refs/heads/codex/t923-chat-pi",
+      "oid": "ac1a9cc1d9d155546c8afd591de616961805033c",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t923-continuous",
+      "oid": "3f1e15f9fbe0ec0a84ac8b14f56f9439dc906d1d",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t923-pi-recovery",
+      "oid": "a9f6985decf2e6a599fa8c27c034291289c08018",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t932-methods",
+      "oid": "784d57df9807121d5aacf88eeb649bff91453bfe",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t957-legacy-patch",
+      "oid": "ebaa17bbd449455f600cce7b23f0ecd516d6453d",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t957-review-evidence",
+      "oid": "9b37586bf9505aed1311242c64ebf2899c58487f",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t959-diagnosis",
+      "oid": "565247591683eb7488bd10a814e48e939465ee01",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t959-review",
+      "oid": "a02909113b8f340da889d0ca43701db620e61301",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t962-redfox",
+      "oid": "3621dbeecebcabaa8d4334e73d660d494a300e48",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t962-sync",
+      "oid": "5a49995b717d49d9c5dedbf218f1094fec653900",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "main-readers-and-canonical-migration-journal-successor"
+    },
+    {
+      "ref": "refs/heads/codex/t964-onboarding",
+      "oid": "954b8a8cfdc1d68800114e08cae3d15e6f8d682b",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t964-report",
+      "oid": "176e08be8945fcb72ecbecc7d9d89d68ef82208a",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t965-read-model",
+      "oid": "3e5f20cd1cbc90ed582e3e689e7a7fb3b1f62c06",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t965-report-ui",
+      "oid": "35d5f7791d374c5be2474223bf6f43cfa81acbea",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t966-period-ui",
+      "oid": "db526d2409b77313a26a49249ef20391805e0325",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t967-share",
+      "oid": "92be27a57092c19f9d9ce2c80a692b613176c6e5",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t974-windows-package",
+      "oid": "c4b377459eed034f2980bd8310ef96eae3c7a03e",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t980-release",
+      "oid": "fe5332cd91141071885732c3844da80430cf7f63",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t983-account-concurrency",
+      "oid": "13e8e3ca75dcf144480e3fac483d93a4850df1ee",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t983-collection-state",
+      "oid": "fd232ef8d5883be86af02d270a5d41ccfc8b1b87",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t983-resource-wait",
+      "oid": "e8f7e1bd65c1e6a36d05fa3d510b4bf48d9c24c9",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t983-run-controls",
+      "oid": "61b00e219580337e8f8a19ba377d6311e6f1e5df",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t983-run-now",
+      "oid": "f0ea4d33acc2e923d640646995f1e526d2a1893a",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t983-separate-jobs",
+      "oid": "014f089194c49e6b647c4df0f6900c981d2fc7ef",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t983-separate-ui",
+      "oid": "43bb13176b446f4c0dd61065bdf9f1194fbbd5bb",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t983-stagger",
+      "oid": "96f9336d1ffb2f1228964511a3cf31a8e610a019",
+      "classification": "collection-successor",
+      "evidence": "662641110-plus-current-groupId-workspaceFilter-and-cover-guard"
+    },
+    {
+      "ref": "refs/heads/codex/t985-browser",
+      "oid": "6ce982aa4fc3836be20b325d68501ca28925a0b3",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t985-cooldown",
+      "oid": "2d3f808bd7be82b18bc89c58028f592a4052072d",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t985-cover-cache",
+      "oid": "f4d557bf3cd4171b6b114f112118c71be3f1fc05",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t985-progress",
+      "oid": "107acf8c5379697e2d83da80df47e4fa10093cb9",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/heads/codex/t990-release",
+      "oid": "7e27960364a5bae392f8a07d73f4f765119e670b",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t991-windows-memory",
+      "oid": "5a5f61dd5859d9e31723202954651d4a3b3849a6",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/t992-windows-runtime",
+      "oid": "92a8d326c3f26f626ae753a2eb2621fb17e4f0ca",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/unified-capability-models",
+      "oid": "03d60d39c899c08f15c6cebee3d2516079c45a74",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/unified-editing-integration",
+      "oid": "c9a8b6aa503a89356ce6aba34e79444166a54f57",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/user-diagnostics",
+      "oid": "bb00d580e2543dc886f145c13f686cf7dc50a4b8",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/v1-security-rollback",
+      "oid": "3ac3739f5fce0e1ac1df07e32279a49bc8d75d49",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/heads/codex/v1.0-candidate",
+      "oid": "b81e2627389cfbeb4d0d92818d1207475f2b16c5",
+      "classification": "mixed-explicit-withdrawal-and-one-true-gap",
+      "evidence": "41c50538 main ancestor explicitly withdraws env hardening and old ledger/schema. b81 per_request credential predicate plus original getter test is a real gap: full-history -S shows only b81, 41 did not change resolve.ts/tests; current channel-model-config uses empty per_request token while legacy resolve still calls persistent getter. Central narrowly integrating predicate/test with actual RED/GREEN; not entire b81 merge or equivalence."
+    },
+    {
+      "ref": "refs/heads/main",
+      "oid": "698eba4b94727a95c7f0de696e386fc7d535e94d",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/remotes/origin/HEAD",
+      "oid": "1963e4ebe48f15ec084a1efe7dac2f195675b92f",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/growth-activity-product-identity",
+      "oid": "a8c1d4724a9700c678a4b7edcabf3953a60068d4",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/release-1.2",
+      "oid": "33dad57a69334dc0bbda8d50dc40b99585acac06",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t1063-release-pipeline",
+      "oid": "6636e4faf506dcdd417004354637feb7801ee020",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t247-windows-e315-build-20261017",
+      "oid": "8e39d20a77baa5317aa1082609f71beb37f48c14",
+      "classification": "unmatched-patch-cluster-reviewed",
+      "evidence": "TRUE-GAP-66-product-paths-central-integrating"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t675-windows-production-closure",
+      "oid": "44a104ac365dae5b92a93f09d35ceb6d3a23b191",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t793-local-package",
+      "oid": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t859-managed-media-reliability",
+      "oid": "83509234cd9c483e82987351bfc1717b007713f0",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t974-windows-package",
+      "oid": "c4b377459eed034f2980bd8310ef96eae3c7a03e",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t980-release",
+      "oid": "fe5332cd91141071885732c3844da80430cf7f63",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t990-release",
+      "oid": "7e27960364a5bae392f8a07d73f4f765119e670b",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t991-windows-memory",
+      "oid": "5a5f61dd5859d9e31723202954651d4a3b3849a6",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t992-windows-runtime",
+      "oid": "92a8d326c3f26f626ae753a2eb2621fb17e4f0ca",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/v1-security-rollback",
+      "oid": "3ac3739f5fce0e1ac1df07e32279a49bc8d75d49",
+      "classification": "ancestor",
+      "evidence": "exact-commit-reachable"
+    },
+    {
+      "ref": "refs/remotes/origin/codex/v1.0-candidate",
+      "oid": "b81e2627389cfbeb4d0d92818d1207475f2b16c5",
+      "classification": "mixed-explicit-withdrawal-and-one-true-gap",
+      "evidence": "41c50538 main ancestor explicitly withdraws env hardening and old ledger/schema. b81 per_request credential predicate plus original getter test is a real gap: full-history -S shows only b81, 41 did not change resolve.ts/tests; current channel-model-config uses empty per_request token while legacy resolve still calls persistent getter. Central narrowly integrating predicate/test with actual RED/GREEN; not entire b81 merge or equivalence."
+    },
+    {
+      "ref": "refs/remotes/origin/main",
+      "oid": "1963e4ebe48f15ec084a1efe7dac2f195675b92f",
+      "classification": "patch-equivalent",
+      "evidence": "first-full-git-cherry-run-all-minus-no-plus"
+    }
+  ],
+  "notes": [
+    "unmatched patch alone does not prove missing implementation",
+    "v1.0-candidate remains unresolved; do not sign full merge completion",
+    "T1359 SAFE_SUMMARY untracked not read or staged",
+    "main 956-commit gitleaks running no final receipt yet",
+    "worktree t238 4541 missing files are build layout, no product deletion",
+    "foreign T238 seven changed code paths hash equal to main dirty",
+    "T1374 three source files already in f530; T1369 harness unchanged and no production04 execution"
+  ],
+  "source_integrity_protection": [
+    "OilUI deletion at72f167cd2",
+    "T1371 generic unknown protected branch at2d4f32e2f",
+    "T1374 three tests atf530722c2"
+  ],
+  "audit_correction": "Default simplified git log hid deletion ancestry; earlier never-present/no-deletion claim withdrawn. Actual git --full-history and show 41c50538 establish explicit withdrawal, not patch equivalence or no-code."
+}

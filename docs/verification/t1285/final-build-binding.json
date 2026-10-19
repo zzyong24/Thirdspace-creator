@@ -1,0 +1,5 @@
+{
+  "root": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1285-final-build-o73C3G",
+  "startedAt": "2026-10-14T10:18:31.699Z",
+  "command": "pnpm --dir frontend build"
+}

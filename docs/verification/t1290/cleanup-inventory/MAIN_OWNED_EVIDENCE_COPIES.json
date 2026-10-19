@@ -1,0 +1,77 @@
+{
+  "capturedAt": "2026-10-14T15:32:33.872931+00:00",
+  "mainHead": "30cd8f68e6d7c539b3bd01d4e90d5f695526f86b",
+  "scope": "Main docs verification derivative copies only; Main is retained, not a worktree cleanup target",
+  "candidates": [
+    {
+      "relativeDirectory": "docs/verification/t1204/current-four-original-diagnostic/raw/owned-pg",
+      "kind": "owned-evidence-data-or-prototype-source-copy-name-only",
+      "logicalApparentBytes": 9216,
+      "requiresOwnedAndClosedAndRetainedEvidence": true
+    },
+    {
+      "relativeDirectory": "docs/verification/t1290/canonical111-fixtures/owned-pglite-data",
+      "kind": "owned-evidence-data-or-prototype-source-copy-name-only",
+      "logicalApparentBytes": 596278272,
+      "requiresOwnedAndClosedAndRetainedEvidence": true
+    },
+    {
+      "relativeDirectory": "docs/verification/t1278/bootstrap-security-recheck/open-helper-candidate/prototype-verification",
+      "kind": "owned-evidence-data-or-prototype-source-copy-name-only",
+      "logicalApparentBytes": 37370880,
+      "requiresOwnedAndClosedAndRetainedEvidence": true
+    },
+    {
+      "relativeDirectory": "docs/verification/t1278/bootstrap-security-recheck/open-helper-candidate/budget-revision/prototype-verification",
+      "kind": "owned-evidence-data-or-prototype-source-copy-name-only",
+      "logicalApparentBytes": 14886912,
+      "requiresOwnedAndClosedAndRetainedEvidence": true
+    },
+    {
+      "relativeDirectory": "docs/verification/t1278/integration-candidate/migration-preflight-revision/prototype-eaabf767cb3db8d3",
+      "kind": "owned-evidence-data-or-prototype-source-copy-name-only",
+      "logicalApparentBytes": 701622272,
+      "requiresOwnedAndClosedAndRetainedEvidence": true
+    }
+  ],
+  "logicalApparentBytesSum": 1350167552,
+  "knownClosureEvidence": {
+    "evidencePath": "docs/verification/t1278/integration-candidate/migration-preflight-revision/OWNED_PG_RESULT.json",
+    "topLevelFields": [
+      "purpose",
+      "nonce",
+      "uid",
+      "root",
+      "dataDir",
+      "formalScope",
+      "formalGate",
+      "sourceRoot",
+      "spawnBirth",
+      "marker",
+      "pid",
+      "port",
+      "postmasterMarker",
+      "nodeExit",
+      "status",
+      "postgresExit",
+      "pidFileRemoved",
+      "unixSocketRemoved",
+      "socketLockRemoved",
+      "originalPidAbsent",
+      "tcpListenerAbsent",
+      "registeredDatabasesRemaining"
+    ],
+    "rawEvidenceRetained": true,
+    "pid": 86698,
+    "nodeExit": 0,
+    "postgresExit": 0,
+    "pidFileRemoved": true,
+    "unixSocketRemoved": true,
+    "socketLockRemoved": true,
+    "originalPidAbsent": true,
+    "tcpListenerAbsent": true
+  },
+  "deletedFiles": 0,
+  "stoppedProcesses": 0,
+  "noPermissionToInferOwnedFromNameOnly": true
+}

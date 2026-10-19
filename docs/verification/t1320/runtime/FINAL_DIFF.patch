@@ -1,0 +1,55 @@
+diff --git a/backend/src/modules/execution/chat-tool-stream-projection.service.ts b/backend/src/modules/execution/chat-tool-stream-projection.service.ts
+index f56de2a36..c20f9a963 100644
+--- a/backend/src/modules/execution/chat-tool-stream-projection.service.ts
++++ b/backend/src/modules/execution/chat-tool-stream-projection.service.ts
+@@ -1,7 +1,8 @@
+ import {chatToolOutputChunks,externalToolCard,ensureExternalToolCard,chatToolDiagnostic} from './chat-tool-stream-chunks';
+-import {aiTasks,aiConversations,and} from '@creatoros/backend';
++import {aiTasks,aiConversations,and,or,sql} from '@creatoros/backend';
+ import {workspaceFilter} from '../../workspace-scope';
+ import {chatInputDigest} from '../ai/chat-turn-submission.service';
++import {requireExternalChatCallTree} from '../ai/external-chat-call-tree';
+ import {originalCodexReadBinding} from './codex-read-recovery';
+ import {recoverableCodexProposalParents,recoverableCodexSettledProposalParents} from './chat-generation-recovery';
+ import { isDeepStrictEqual } from "node:util";
+@@ -88,11 +89,37 @@ async function ensureInputs(tx:Transaction,task:typeof import("@creatoros/backen
+     try{return [{type:"tool-input-available",toolCallId:tool.toolCallId,toolName:tool.toolName,input:z.json().parse(JSON.parse(tool.input)),...metadata}];}
+     catch{return [{type:"tool-input-start",toolCallId:tool.toolCallId,toolName:tool.toolName,...metadata}];}
+   }).map(chunk=>executionStreamChunkSchema.parse(chunk));
+-  const modelEvents=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,model.id)).orderBy(asc(executionStreamEvents.callIndex));
++  const taskEvents=await tx.select().from(executionStreamEvents).where(and(
++   eq(executionStreamEvents.executionTaskId,task.id),
++   or(eq(executionStreamEvents.callId,model.id),sql`${executionStreamEvents.chunk}->>'type' IN ('tool-input-start','tool-input-available')`),
++  )).orderBy(asc(executionStreamEvents.sequence));
++  const modelEvents=taskEvents.filter(event=>event.callId===model.id).sort((a,b)=>a.callIndex-b.callIndex);
+   const savedInputs=modelEvents.filter(event=>["tool-input-start","tool-input-available"].includes(String(event.chunk.type)));
+-  if(savedInputs.length && (savedInputs.length>initial.length || (!native&&savedInputs.length!==initial.length) || savedInputs.some((event,i)=>!isDeepStrictEqual(event.chunk,initial[i]))))throw new ConflictError("工具输入卡与模型回执不符");
++  let savedOrdinaryCount=savedInputs.length;
++  if(native){
++   // SEMANTIC_BOUNDARY_ALLOW: 按原账本归属核对两类输入，不选择工具或改变已有事件顺序。
++   requireExternalChatCallTree(task,calls,model.id);
++   if(taskEvents.some(event=>["tool-input-start","tool-input-available"].includes(String(event.chunk.type))&&event.callId!==model.id))throw new ConflictError("工具输入卡不属于原回合");
++   const seen=new Set<string>();savedOrdinaryCount=0;
++   const finished=modelEvents.some(event=>event.chunk.type==='finish');
++   for(const event of savedInputs){
++    const id=event.chunk.toolCallId;
++    if(typeof id!=='string'||seen.has(id))throw new ConflictError("工具输入卡与模型回执不符");
++    seen.add(id);
++    const ordinary=initial.filter(chunk=>chunk.toolCallId===id);
++    const external=calls.filter(call=>call.kind==='external_tool'&&call.parentCallId===model.id&&(call.providerResult as {toolCallId?:unknown}|null)?.toolCallId===id);
++    if(ordinary.length){
++     if(ordinary.length!==1||external.length||!isDeepStrictEqual(event.chunk,initial[savedOrdinaryCount]))throw new ConflictError("工具输入卡与模型回执不符");
++     savedOrdinaryCount++;
++    }else{
++     if(external.length!==1)throw new ConflictError("工具输入卡缺少真实调用来源");
++     const card=externalToolCard(task,calls,external[0]!);
++     if(card.parent.id!==model.id||(!finished&&card.definition.effect==='proposal')||!isDeepStrictEqual(event.chunk,card.input))throw new ConflictError("外部工具输入卡与原回执不符");
++    }
++   }
++  }else if(savedInputs.length && (savedInputs.length!==initial.length || savedInputs.some((event,i)=>!isDeepStrictEqual(event.chunk,initial[i]))))throw new ConflictError("工具输入卡与模型回执不符");
+   // SEMANTIC_BOUNDARY_ALLOW: 原生工具来源随真实call增长，只按Host账本次序追加未保存的输入前缀。
+-  const remaining=initial.slice(savedInputs.length);
++  const remaining=initial.slice(savedOrdinaryCount);
+   if(remaining.length){
+     const [tail]=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(desc(executionStreamEvents.sequence)).limit(1);
+     if(tail?.chunk.type==='finish')throw new ConflictError('聊天结束后不能追加工具输入');

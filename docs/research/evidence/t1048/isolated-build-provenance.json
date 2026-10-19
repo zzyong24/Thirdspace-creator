@@ -1,0 +1,11 @@
+{
+  "build_command": "CREATOROS_DESKTOP=1 pnpm --dir frontend build",
+  "exitCode": 0,
+  "sourceRoot": "/tmp/t1048-build-work",
+  "runtimeRoot": "/tmp/t1048-build-runtime",
+  "selectedSourceCount": 44,
+  "selectedSourceMismatch": [],
+  "standaloneServer": "/tmp/t1048-build-work/frontend/.next/standalone/frontend/server.js",
+  "standaloneServerSHA256": "bd378b6c18bde4b2022d3fc0fa2ad5f44b1c31600103c0d68780f48d46676dd0",
+  "acceptance": "仅隔离桌面前端生产构建；非安装包、真实界面或干净 checkout 验收"
+}

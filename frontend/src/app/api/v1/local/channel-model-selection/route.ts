@@ -1,3 +1,4 @@
+import {readRequestGroupId} from "@/lib/request-context.server";
 import { NextResponse } from "next/server";
 
 import { resolveChannelCapabilityRoute } from "@creatoros/backend/modules/ai-runtime";

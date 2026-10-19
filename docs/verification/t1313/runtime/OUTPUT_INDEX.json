@@ -1,0 +1,3878 @@
+{
+  "schema": "t1313-output-index/v1",
+  "generatedAt": "2026-10-16T10:47:54.643243+00:00",
+  "baseHead": "9e596ec1d18b9a9cbad940c11dc50e7de20d2465",
+  "review": "PASS[REV:c53068dc3216] cycle1round1",
+  "status": "controlled-implementation-delivery; pending independent final review and parent provider/candidate acceptance",
+  "productionSources": [
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19412,
+      "sha256": "0757799b32bf814add665ecab5719de21f546cc585808fb83e7d8083bea681e5"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    }
+  ],
+  "tests": [
+    {
+      "path": "backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 43433,
+      "sha256": "5649c7b2e3becb2a57c6a8aadbdc6aa0a9f2aa580951655412effc6704e0273e"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 26477,
+      "sha256": "3f4cfb4b76141b2666f91f5c42247f72ae68205282dffcdfa9b5db6194767a33"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    }
+  ],
+  "files": [
+    {
+      "path": "docs/verification/t1313/runtime/CACHE_BEFORE.json",
+      "bytes": 1252,
+      "sha256": "1f47f4ff0b16b9e6fdabf14569975f69f45e42e25ab04978e724e7b9e143a2ca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/RESOURCE_CLEANUP.json",
+      "bytes": 3524,
+      "sha256": "86c462b8087364e889e8de5880c8d96bfed66f3f36057ed868c5b4e34d85246b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/SOURCE_MANIFEST.json",
+      "bytes": 1349,
+      "sha256": "b42d096df00eafdc7d2d8c3b5ddf398da4471a22513a430f17f80b399d9c1fd3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/TEST_COVERAGE.json",
+      "bytes": 13249,
+      "sha256": "20eb67cb881186ed1eb030250d615b0d5b0368297e16de5bc16ca5aab38ab827"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/add-tests.py",
+      "bytes": 296,
+      "sha256": "df7ca4a26130fb61ab17321aaf9d9da1d6431a4df34561195d0f98ab212174cd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-deadline-final-v6.json",
+      "bytes": 603,
+      "sha256": "5c213374346cfd99d30a28efa39a93fa1bf1eb5166ab8ac3aaf07c8c996d764f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-deadline-final-v6.log",
+      "bytes": 250,
+      "sha256": "c479f1f835c984bd1ab8f76da0fd4eb629a9fc536f44a0833e40ebc5facaa321"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-final-v4.json",
+      "bytes": 585,
+      "sha256": "d8cf3719c489dc5dea4f095913e5ae2c284ac1eacee0632417416e3e480c517b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-final-v4.log",
+      "bytes": 1389,
+      "sha256": "0fe745533197cb786f3b84d3a5489733fb7cfd5f9b8e11468265531c8ab170d3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-focused-final-v5.json",
+      "bytes": 558,
+      "sha256": "5d2d31c617322a6b7e824680b796b7f956a2ad2064798d8151d369327cadf435"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-focused-final-v5.log",
+      "bytes": 251,
+      "sha256": "36a10755dc494c27d92a2585f9ecb99441681499a6c7ba0f48d84b5e54232902"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-list-final-v6.json",
+      "bytes": 595,
+      "sha256": "35bd53a302e7b404f864a0510066ae403e8252b690eb72ed2c5eb6a8c03931ce"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-list-final-v6.log",
+      "bytes": 5607,
+      "sha256": "53d47b8a69739aceca87a207eb2d482b1b8f114c687b670cfe40141112ea458b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-matrix-v2.json",
+      "bytes": 588,
+      "sha256": "4c25007c765a4aaaf12f0fff12033cff869cad083e135ed20a6fb2daf0df56d3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-matrix-v2.log",
+      "bytes": 2786,
+      "sha256": "777da071353f99b25c8d58beb714ec5ffa85496f1ec5a1477561f0d7e42bfab3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-top-project-red-v3.json",
+      "bytes": 588,
+      "sha256": "4c1714408d2d00aa2605a965fc87952dc728c04b9b0db11f3283ed6c4ee9e908"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-top-project-red-v3.log",
+      "bytes": 1311,
+      "sha256": "c38a8721340df5bf3aa8a5f43fa9d0985075674c890045addde9636a050f432e"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-core-v1.json",
+      "bytes": 429,
+      "sha256": "9e442c81b91ec5b6c1e821fa4268e34c0434f3059bf845dfaafc53d4d98debad"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-core-v1.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-final-v4.json",
+      "bytes": 432,
+      "sha256": "c573b207a3d858c87c55e39d7cfb3190baeccfbd6c448d67a85a520786a87f9c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-final-v4.log",
+      "bytes": 131,
+      "sha256": "a4309e02a1c237122babda906a476ffdee3c3551fca6cb5af724daa3aa668f58"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-final-v5.json",
+      "bytes": 430,
+      "sha256": "b5e77b7df085988950e5bc7e8c8f87ea2dfa7869d19cd198910ecf122c788b14"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-final-v5.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-final-v6.json",
+      "bytes": 430,
+      "sha256": "64b8c6233f40fb027beed2992e95bac911653000ed60cd4a6c55ee6a368e2770"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend-type-final-v6.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/backend.vitest.config.ts",
+      "bytes": 466,
+      "sha256": "739ec7fae566ac74c7c83c24082043688ae36a5cce5468faddc7473f480e5f13"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/boundary-final-v4.json",
+      "bytes": 380,
+      "sha256": "149ccc1ee3b5cee751047f581c0bd5ff194d5215855da56faa4929990053f5f9"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/boundary-final-v4.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/build-coverage.py",
+      "bytes": 1876,
+      "sha256": "b6f4d123a3f06e4ec90f86ba0a0d59b08719b3c05dd8a05e05c5f76a064f49ab"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/build-index.py",
+      "bytes": 2377,
+      "sha256": "08e5f5474834092d8844174f284d516f2ab7ab04a0b7ccee83b0c44b365d9416"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/build-report.py",
+      "bytes": 9768,
+      "sha256": "4ff8cdcada866798060623cc8d0fcef372a490135769e40d52727e2c21ba07c7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/cleanup-evidence.py",
+      "bytes": 3182,
+      "sha256": "770542830207c02eda40b3b1afdfdee3469f240ef005dc240e23f5903912738a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/SNAPSHOT.json",
+      "bytes": 11791,
+      "sha256": "656968706d509c0f60d76c1825d76bb907b71b4f7f4a0690bed44c098def0d78"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/legacy-work-before-dispatch.json",
+      "bytes": 126981,
+      "sha256": "99f1d5e0af569aa7f2306ae67851767fb47665a82892cebde325278d6eeb38d9"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/legacy-work-confirmed.json",
+      "bytes": 627698,
+      "sha256": "c7c28cd3704657028ef6609757b6a3c4f75fb70f5fd16fd0655c0e6f32b2267d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/legacy-work-final.json",
+      "bytes": 809904,
+      "sha256": "60d213ee3cd9cfa39828c5a593aa863666205c7026c61c4ae2e1e1548212f692"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/legacy-work-outcome.json",
+      "bytes": 22951,
+      "sha256": "4275b1f3aeaaac40cd1d0caeda582052d4c1a5252fa4ced7a1337a54bd3cb433"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/legacy-work-parents-before.json",
+      "bytes": 2136,
+      "sha256": "08828793302a8885099502c0b0155a03b0050203587cae920a030c4112f32a9f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/legacy-work-prepared.json",
+      "bytes": 429141,
+      "sha256": "e9b5e48c8a894f83f6f72f50d75d2c6d60b368a39064a3a41b8129f90e57e7d0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 23857,
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 29715,
+      "sha256": "40ea42975d0d28e8e9221ae78dc7ac19c2d3e5a08681a16a4339a13e08feb061"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19355,
+      "sha256": "64a07d015b9a3c998de4d44afe03a9f01b92ed8ffab18b4c5f2008c99c14e61d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2409,
+      "sha256": "34ca1ee9eb9d4fec050f83820bd6d9b2553f19e56fa8b680e49699ca24093219"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/core-v1/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/SNAPSHOT.json",
+      "bytes": 12318,
+      "sha256": "2eeb7f62cd799c7b56de5282071bc9a2a910f6ac032ef72d297e4b174b37cb21"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 26477,
+      "sha256": "3f4cfb4b76141b2666f91f5c42247f72ae68205282dffcdfa9b5db6194767a33"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/ai/ai.schema.ts",
+      "bytes": 4994,
+      "sha256": "673f6487ad00316bd9165dd1a88407681bee2fa2cbcb3888ec41377d96c78c68"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 43433,
+      "sha256": "5649c7b2e3becb2a57c6a8aadbdc6aa0a9f2aa580951655412effc6704e0273e"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19412,
+      "sha256": "0757799b32bf814add665ecab5719de21f546cc585808fb83e7d8083bea681e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/resources/ai.ts",
+      "bytes": 7366,
+      "sha256": "3706a6479215427e5da7664409b618746c09cec5866730e7916068949b11361b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1313/runtime/backend.vitest.config.ts",
+      "bytes": 466,
+      "sha256": "739ec7fae566ac74c7c83c24082043688ae36a5cce5468faddc7473f480e5f13"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2531,
+      "sha256": "b2f6cb5d190067c7fbcf1bada4fd79d6a0c077924fb3f0f22ead09f35e9e6d06"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/deadline-v6/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/edit-core.py",
+      "bytes": 8409,
+      "sha256": "0708d5abcd3be83d86ddc007c93f87198983e00835bcef7e6318683160cb6766"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/SNAPSHOT.json",
+      "bytes": 12315,
+      "sha256": "88a87c76ac9f65402cbe04fff0573f6771416b1ec7d1080fd9627f38a58d08b5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-script-before-dispatch.json",
+      "bytes": 117332,
+      "sha256": "65b0b3e40667a8d1466c6b834ddbd2809fe5ac6d517a894f0fce7269329e091c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-script-final.json",
+      "bytes": 574507,
+      "sha256": "c46c9bb1fdb5645fc78ff7105f83f001c325e2584cb74aacb5a54f9625183107"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-script-outcome.json",
+      "bytes": 17566,
+      "sha256": "ac32fa50fc63067fc82c594b70e5c050c56527516749fa0020ca6343955c849e"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-work-before-dispatch.json",
+      "bytes": 126522,
+      "sha256": "65e1c68bedc3a0b2c07a3c2806cef01f633afd399966e62be2b8cdcc21a6757c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-work-confirmed.json",
+      "bytes": 533178,
+      "sha256": "277aed7dd46c6aa8b6c2739d4219ccdac54b5e575949fa4ec4640b1c1e376885"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-work-final.json",
+      "bytes": 715288,
+      "sha256": "b6e5840dfc78599e1bf46e529462e544836f287a8b43274042a6642c942923aa"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-work-outcome.json",
+      "bytes": 22932,
+      "sha256": "f0522ff60d7e6a1d6451a01ba37a400040a2b4a5d4fa8f76bf25d70c311c4d1a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-work-parents-before.json",
+      "bytes": 1762,
+      "sha256": "34314a05beb59b36d8cd5d0847450e5405c2fcd314fd68ac7a6fafc9ef4e2338"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-account-work-prepared.json",
+      "bytes": 384345,
+      "sha256": "7148bba4f17fc5f534ec0e37de1fcf973f881221cdcf72b66a02651119f95aeb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-script-before-dispatch.json",
+      "bytes": 117279,
+      "sha256": "939834f55685a58c4ab1133b6e758f17d91b32ff55c4aef94ca0ba59d336e7c3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-script-final.json",
+      "bytes": 516378,
+      "sha256": "9ffeb03d28cef020740b0806f4a25f24599ba4eebcf36b48dbe2e5f970b87169"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-script-outcome.json",
+      "bytes": 17569,
+      "sha256": "16086fd98e1a0bc6e152a8a40b94196e0f906ec68cafda4ea5b6f800535b1503"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-work-before-dispatch.json",
+      "bytes": 126509,
+      "sha256": "b8a522a4e4022f5ac7906477df15be6c7a965213b4f02121a212fd828ead79d7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-work-confirmed.json",
+      "bytes": 560341,
+      "sha256": "6b67cbf7bbc8d4c05efc1917e78545556151a0e015c74dcb28849004a2d54105"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-work-final.json",
+      "bytes": 742425,
+      "sha256": "db8f63febeecc213731ff57b9917fbb12a0e357ee1c4065d5654a1962a6d635e"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-work-outcome.json",
+      "bytes": 22932,
+      "sha256": "0880e4af25c24b19eb95a619aafad47029eac83344b629709a448018701b620c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-work-parents-before.json",
+      "bytes": 1736,
+      "sha256": "f88ee543728cc76dde38f70d184900dae4e10decb8cbbf247674a432b43419ee"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/group-work-prepared.json",
+      "bytes": 384252,
+      "sha256": "e0e6a88127d00e8fc3066b23afeece3020feb32ed90a10c345401b21c80d077c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-script-before-dispatch.json",
+      "bytes": 117753,
+      "sha256": "de34c197f9ea306327ffa6ba7f226116c9e2192a86ac83311f1040bd7ad25291"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-script-final.json",
+      "bytes": 530966,
+      "sha256": "d40b6d9e129e046d7f9e6fa97cecfe8391f34a088c3bb0d10dc5a5fbd8ce3105"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-script-outcome.json",
+      "bytes": 17588,
+      "sha256": "6b0677c3a3428459724c6691d6b0c04b9900d321075f1f0cb323eace978cbc35"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-work-before-dispatch.json",
+      "bytes": 126981,
+      "sha256": "59abdd1574efbe36336054436c429fbdf960258e624c5f06d7aed5a1ddfb8966"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-work-confirmed.json",
+      "bytes": 712668,
+      "sha256": "6aaa04c629ba9589d8009f3fd4121dc14179a3d7744ec7a986a0e6fdd2ddd81b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-work-final.json",
+      "bytes": 894874,
+      "sha256": "4d62a8521a649a2a0fb65bcd638a50a008d77032fc6e4eabda5aa377c1be6244"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-work-outcome.json",
+      "bytes": 22951,
+      "sha256": "d327a9b1707ec51da06aeb98f13934189d25b9061b357d8092d3e96d42bf4cab"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-work-parents-before.json",
+      "bytes": 2136,
+      "sha256": "78b398665a139f6fb7e5f6d87d898645b78ff26eeafc6a6e075b91036079f9cc"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/legacy-work-prepared.json",
+      "bytes": 450461,
+      "sha256": "5dacec5d6cd97842a96baf06cf9f5f0a4b1e26156eda6228e4116dd66e4e3447"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 26477,
+      "sha256": "3f4cfb4b76141b2666f91f5c42247f72ae68205282dffcdfa9b5db6194767a33"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/ai/ai.schema.ts",
+      "bytes": 4994,
+      "sha256": "673f6487ad00316bd9165dd1a88407681bee2fa2cbcb3888ec41377d96c78c68"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 42806,
+      "sha256": "10d90c837438b11c182947076dd82cf84fe96636ebbeb8b3b6b9cb16dc0d857c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19412,
+      "sha256": "0757799b32bf814add665ecab5719de21f546cc585808fb83e7d8083bea681e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/resources/ai.ts",
+      "bytes": 7366,
+      "sha256": "3706a6479215427e5da7664409b618746c09cec5866730e7916068949b11361b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1313/runtime/backend.vitest.config.ts",
+      "bytes": 466,
+      "sha256": "739ec7fae566ac74c7c83c24082043688ae36a5cce5468faddc7473f480e5f13"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2531,
+      "sha256": "b2f6cb5d190067c7fbcf1bada4fd79d6a0c077924fb3f0f22ead09f35e9e6d06"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v4/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/SNAPSHOT.json",
+      "bytes": 12315,
+      "sha256": "8c68a053790dd790c76ad9f7ab8db2548af7a8f24fa01d64d6f16285623c57d6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 26477,
+      "sha256": "3f4cfb4b76141b2666f91f5c42247f72ae68205282dffcdfa9b5db6194767a33"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/ai/ai.schema.ts",
+      "bytes": 4994,
+      "sha256": "673f6487ad00316bd9165dd1a88407681bee2fa2cbcb3888ec41377d96c78c68"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 43002,
+      "sha256": "653f7cb14d498e4e646e13d15f58d2c7ed735381d6690e780311408715e738f2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19412,
+      "sha256": "0757799b32bf814add665ecab5719de21f546cc585808fb83e7d8083bea681e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/resources/ai.ts",
+      "bytes": 7366,
+      "sha256": "3706a6479215427e5da7664409b618746c09cec5866730e7916068949b11361b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1313/runtime/backend.vitest.config.ts",
+      "bytes": 466,
+      "sha256": "739ec7fae566ac74c7c83c24082043688ae36a5cce5468faddc7473f480e5f13"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2531,
+      "sha256": "b2f6cb5d190067c7fbcf1bada4fd79d6a0c077924fb3f0f22ead09f35e9e6d06"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/final-v5/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2531,
+      "sha256": "b2f6cb5d190067c7fbcf1bada4fd79d6a0c077924fb3f0f22ead09f35e9e6d06"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-core-v1.json",
+      "bytes": 583,
+      "sha256": "41eb3298877db54f1200fb174880b2dc3f437e2de4b8fd15aea3427bc1aa08a3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-core-v1.log",
+      "bytes": 252,
+      "sha256": "c2171c1c0575b750ffb71f25db5eb2858f589a3b3e13c72019f0c02a6ca5eaf7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-final-v4.json",
+      "bytes": 553,
+      "sha256": "a2b62ba87d50379c1f440d1cedb2ec45fe24a999cb7e9912da6779344c657b06"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-final-v4.log",
+      "bytes": 244,
+      "sha256": "8d1cbe63a6380058614082b35e108fa1e9a30e7447df4c9d4955c5555e67c8ab"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-list-final-v6.json",
+      "bytes": 577,
+      "sha256": "9bb8b2e7c3119c89a29a6de2425399e346d950b189c709b01f86526064bc6274"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-list-final-v6.log",
+      "bytes": 1056,
+      "sha256": "7f7887f5f421e5d5d354ae08ff4fe3049f899fe88bf9b098dd0c4b2aeb17a548"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-red-v1.json",
+      "bytes": 592,
+      "sha256": "a8daf4745089a88a67ca22f51d05d3bd8c6d27670103e3935417bc8b0d8f1adb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-red-v1.log",
+      "bytes": 238,
+      "sha256": "8b4038f01c3b1f2036e522dc27a6621c4f7d9b4793c8e9bf0fbe664f0f1736e9"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-red-v2.json",
+      "bytes": 596,
+      "sha256": "70c0d788f47afa7ca4e9e1f0300eef1f1d0464a082cfaa8ff04062f842d79cbd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-red-v2.log",
+      "bytes": 1280,
+      "sha256": "7d1063347fa45ab24234cd5cdb316b11df6d2ac8bbd8d8fc30956533b216ccd3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-red-v3.json",
+      "bytes": 581,
+      "sha256": "b833e029e4e991155910ebb0851f76ae256e7f44bf3372d0e64257d167e8e8ba"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-red-v3.log",
+      "bytes": 4782,
+      "sha256": "b64e83c7afa5597a8e6574bf953531c894002c0e698584b7cec2110932d5e589"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-type-final-v4.json",
+      "bytes": 470,
+      "sha256": "6ce9212de7d1822a82f25852559b1084eec291443577114d0e0a3affeb38b827"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend-type-final-v4.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/legacy-lock-order.json",
+      "bytes": 30831,
+      "sha256": "caaa5734bb3bd6d119c243f33c65730b361a682ed8019a6bf1f8fdd321f4a2de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/SNAPSHOT.json",
+      "bytes": 11983,
+      "sha256": "87de26ee5da2cc73ae198ee48bdf31d0a8b04ca2df03a3fc6a24d7dbc008f801"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 26477,
+      "sha256": "3f4cfb4b76141b2666f91f5c42247f72ae68205282dffcdfa9b5db6194767a33"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 41597,
+      "sha256": "7647976ed53505c3d23c50965c2dcde88dd257331a926752b8cb3e4ba02dff23"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19355,
+      "sha256": "64a07d015b9a3c998de4d44afe03a9f01b92ed8ffab18b4c5f2008c99c14e61d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1313/runtime/backend.vitest.config.ts",
+      "bytes": 466,
+      "sha256": "739ec7fae566ac74c7c83c24082043688ae36a5cce5468faddc7473f480e5f13"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2466,
+      "sha256": "f727635b7e450ec05705caefafb7b075780221e46934ddca72107825a8612558"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/matrix-v2/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/orphan-final-v4.json",
+      "bytes": 359,
+      "sha256": "7239ae32490391c54ff7793598464248c145cf6630cbe9af2452f2c5a48ed988"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/orphan-final-v4.log",
+      "bytes": 15862,
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/SNAPSHOT.json",
+      "bytes": 11790,
+      "sha256": "1a1a0c0d0ac0bbf491a250d3c11b06f12085336407f2e4b33568d635a9e46fc6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 23857,
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3471,
+      "sha256": "ec3c0c7600b07886b5eafbc14b9867b2cca2cbe6b01d7bec0f19658f3799c8d1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 1943,
+      "sha256": "f05f3eab6686639e039011b804df7bd50105ae512f32323b1ffd57f2ba74eff0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 29715,
+      "sha256": "40ea42975d0d28e8e9221ae78dc7ac19c2d3e5a08681a16a4339a13e08feb061"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 15949,
+      "sha256": "3852abe7044a1cb2532974b1cbd4cc9c3568465e14ee4e21e196e84c6c91dfcc"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2409,
+      "sha256": "34ca1ee9eb9d4fec050f83820bd6d9b2553f19e56fa8b680e49699ca24093219"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v1/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/SNAPSHOT.json",
+      "bytes": 11790,
+      "sha256": "6d09964caf8c51f59a33776a61e316fbdc1e8565479156327e4be8f1aeffa079"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 23857,
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3471,
+      "sha256": "ec3c0c7600b07886b5eafbc14b9867b2cca2cbe6b01d7bec0f19658f3799c8d1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 1943,
+      "sha256": "f05f3eab6686639e039011b804df7bd50105ae512f32323b1ffd57f2ba74eff0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 29715,
+      "sha256": "40ea42975d0d28e8e9221ae78dc7ac19c2d3e5a08681a16a4339a13e08feb061"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 15949,
+      "sha256": "3852abe7044a1cb2532974b1cbd4cc9c3568465e14ee4e21e196e84c6c91dfcc"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2409,
+      "sha256": "34ca1ee9eb9d4fec050f83820bd6d9b2553f19e56fa8b680e49699ca24093219"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v2/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/SNAPSHOT.json",
+      "bytes": 11790,
+      "sha256": "64f79dea40fefdb46cb06e6dc2d9d7cea61814a911b148080b316ad245c69865"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/legacy-work-final.json",
+      "bytes": 308250,
+      "sha256": "25ac9de7702d75ded2b916af4092cf8d2805cb2227d6cd1d1dd8398a5bda666d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/legacy-work-parents-before.json",
+      "bytes": 2136,
+      "sha256": "3bdad84154c401b7df575d4c4995b193142be6c52215074485e040facb4f2ebd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/legacy-work-prepared.json",
+      "bytes": 303103,
+      "sha256": "09cc76df8ef6bc14e31288f48bd4a93d9057e18d67a4bafee51426ab07e76328"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 23857,
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3471,
+      "sha256": "ec3c0c7600b07886b5eafbc14b9867b2cca2cbe6b01d7bec0f19658f3799c8d1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 1943,
+      "sha256": "f05f3eab6686639e039011b804df7bd50105ae512f32323b1ffd57f2ba74eff0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 29715,
+      "sha256": "40ea42975d0d28e8e9221ae78dc7ac19c2d3e5a08681a16a4339a13e08feb061"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 15949,
+      "sha256": "3852abe7044a1cb2532974b1cbd4cc9c3568465e14ee4e21e196e84c6c91dfcc"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2409,
+      "sha256": "34ca1ee9eb9d4fec050f83820bd6d9b2553f19e56fa8b680e49699ca24093219"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/red-v3/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/semantic-final-v4.json",
+      "bytes": 373,
+      "sha256": "503e7d926b63faca33d61df56e0a27b4583439cabbc00223db2873a9f41c042a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/semantic-final-v4.log",
+      "bytes": 86,
+      "sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/timeout-final-v4.json",
+      "bytes": 359,
+      "sha256": "e611c293c7304847377c56c140c04ff5a1a012f6bf57490e7251719f8b663f6b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/timeout-final-v4.log",
+      "bytes": 5679,
+      "sha256": "e86ca954dfda95ccf4fa2835c952031427e740e663e99fce025b1169dacc16df"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/SNAPSHOT.json",
+      "bytes": 11992,
+      "sha256": "385835cd011f70c04aac5767e4c0a1370a3ebe853461664027b1c37e912aaa5e"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/drizzle/0128_workspace_convergence.sql",
+      "bytes": 293300,
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/application/generation/task-wake.ts",
+      "bytes": 2402,
+      "sha256": "db4b0c9b02f9ebb0ef2dbef3a4ff597d25d2ba4704eb985c57812b31f83968b1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 26477,
+      "sha256": "3f4cfb4b76141b2666f91f5c42247f72ae68205282dffcdfa9b5db6194767a33"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/db.ts",
+      "bytes": 22401,
+      "sha256": "82420403de832caeae7a981e3677dd0c8ad062535da5115731c4a4f70411e6f6"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/execution/worker-supervisor.ts",
+      "bytes": 17030,
+      "sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/moments/moments.service.ts",
+      "bytes": 10483,
+      "sha256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/platform-account/platform-account.repository.ts",
+      "bytes": 8523,
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/projects/projects.repository.ts",
+      "bytes": 59137,
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6507,
+      "sha256": "86e91f8897dcbf405abca5d0fb1830e7d5b82c431eb9ae028450f4df8ff65846"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6801,
+      "sha256": "e5499722a724fe32dba2ecd1ef43403d3d47be675840250fb69b83ca8b6fdd7f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/review/work-review-fingerprint.ts",
+      "bytes": 4086,
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/review/work-review-read-current.ts",
+      "bytes": 14182,
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 42806,
+      "sha256": "10d90c837438b11c182947076dd82cf84fe96636ebbeb8b3b6b9cb16dc0d857c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19355,
+      "sha256": "64a07d015b9a3c998de4d44afe03a9f01b92ed8ffab18b4c5f2008c99c14e61d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/modules/work-compositions/work-compositions.service.ts",
+      "bytes": 21657,
+      "sha256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/account-groups.ts",
+      "bytes": 1772,
+      "sha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/artifacts.ts",
+      "bytes": 8166,
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/moments.ts",
+      "bytes": 1445,
+      "sha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/projects.ts",
+      "bytes": 10047,
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/work-compositions.ts",
+      "bytes": 1834,
+      "sha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/operations/work-compositions.ts",
+      "bytes": 14069,
+      "sha256": "9b1ed9a624cfa335433afc5b9830e2013571fc61127f583775de52abb31d8220"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/resources/moments.ts",
+      "bytes": 7890,
+      "sha256": "a823290723b5523ab1c6c4c27ffa14fc6d83d4703df94833f277f32d6e35ffca"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/resources/projects.ts",
+      "bytes": 8154,
+      "sha256": "06ca31508c79b8d7f5ba5f3c123f07a6f1ffb0bdacb30e2a53843057c3862c81"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/resources/review-gate.ts",
+      "bytes": 3376,
+      "sha256": "6e77e3b8fd6b3a973e7d7d30a58c3bd771f227f48cf1ddf2bcbf182dfd316be1"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/resources/work-compositions.ts",
+      "bytes": 13708,
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/contract/src/resources/work-reviews.ts",
+      "bytes": 9095,
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/features/t1313-legacy-work-review-preparation.md",
+      "bytes": 8335,
+      "sha256": "737c474553d94654d9ac52c9323ac589f0bc615c88dd4944d1d9a0b5bd63997f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1311/IMPLEMENTATION_RESULT.md",
+      "bytes": 9949,
+      "sha256": "8858ac6f0cd77fd3a0ccf74ef2ee7033b938cb833ccda534b585700757efefe7"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1311/runtime/LEGACY_WORK_PREPARATION_FAILURE.json",
+      "bytes": 3824,
+      "sha256": "36ccac31347b15c0673eed6906bf258e580b1e3ef5d9aae53ad3a55ff21b30e4"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1311/runtime/public-scopes-v1/legacy-work-final.json",
+      "bytes": 69192,
+      "sha256": "ff2b7ad224022a4a6a02b374b0e389a0c3e619cc8c5f3d95a646656e45e4aa4f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1313/DEC.md",
+      "bytes": 662,
+      "sha256": "08a2a207eab87eab8fc1f65f3f4164d809e9b693fd68c5db1302056e912c4749"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1313/MODULE_SCOPE.json",
+      "bytes": 8964,
+      "sha256": "0717c9df94e5dc90bd8a2761102ac4e661f1d40f6351c62420d0030657585c5f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1313/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1313/runtime/backend.vitest.config.ts",
+      "bytes": 466,
+      "sha256": "739ec7fae566ac74c7c83c24082043688ae36a5cce5468faddc7473f480e5f13"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1313/runtime/freeze.py",
+      "bytes": 2466,
+      "sha256": "f727635b7e450ec05705caefafb7b075780221e46934ddca72107825a8612558"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1313/runtime/frontend.vitest.config.ts",
+      "bytes": 458,
+      "sha256": "de4d8c54619936ae1bff90d8298be57acc91ff964b6e3115ebedd8ff90c864bb"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/docs/verification/t1313/runtime/run-owned.py",
+      "bytes": 1002,
+      "sha256": "a94156c3a5df0f9fc122089156b8af3293a6755c5983e55a46721989906e627f"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1313/runtime/top-project-red-v3/snapshot/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "docs/verification/t1313/IMPLEMENTATION_RESULT.md",
+      "bytes": 10051,
+      "sha256": "a0747c64ba25fadfef494de25098fb899920cdc47ef1669a406e81e02172404d"
+    }
+  ],
+  "runs": [
+    {
+      "label": "backend-deadline-final-v6",
+      "command": [
+        "node",
+        "backend/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "docs/verification/t1313/runtime/backend.vitest.config.ts",
+        "backend/src/modules/review/work-reviews.service.test.ts",
+        "-t",
+        "取消/过期和跨账号"
+      ],
+      "pid": 99393,
+      "pgid": 99393,
+      "startedAt": 1792147520.175411,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-deadline-final-v6.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 13.751
+    },
+    {
+      "label": "backend-final-v4",
+      "command": [
+        "node",
+        "backend/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "docs/verification/t1313/runtime/backend.vitest.config.ts",
+        "backend/src/modules/review/work-reviews.service.test.ts",
+        "backend/src/application/generation/work-review-root.test.ts"
+      ],
+      "pid": 96150,
+      "pgid": 96150,
+      "startedAt": 1792147131.009043,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 1,
+      "elapsedSeconds": 243.64
+    },
+    {
+      "label": "backend-focused-final-v5",
+      "command": [
+        "node",
+        "backend/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "docs/verification/t1313/runtime/backend.vitest.config.ts",
+        "backend/src/modules/review/work-reviews.service.test.ts",
+        "-t",
+        "T1313"
+      ],
+      "pid": 98364,
+      "pgid": 98364,
+      "startedAt": 1792147411.5357828,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-focused-final-v5.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 43.441
+    },
+    {
+      "label": "backend-list-final-v6",
+      "command": [
+        "node",
+        "backend/node_modules/vitest/vitest.mjs",
+        "list",
+        "--config",
+        "docs/verification/t1313/runtime/backend.vitest.config.ts",
+        "backend/src/modules/review/work-reviews.service.test.ts",
+        "backend/src/application/generation/work-review-root.test.ts"
+      ],
+      "pid": 99513,
+      "pgid": 99513,
+      "startedAt": 1792147549.944891,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-list-final-v6.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 9.885
+    },
+    {
+      "label": "backend-matrix-v2",
+      "command": [
+        "node",
+        "backend/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "docs/verification/t1313/runtime/backend.vitest.config.ts",
+        "backend/src/modules/review/work-reviews.service.test.ts",
+        "backend/src/application/generation/work-review-root.test.ts"
+      ],
+      "pid": 94328,
+      "pgid": 94328,
+      "startedAt": 1792146866.245207,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-matrix-v2.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 1,
+      "elapsedSeconds": 161.578
+    },
+    {
+      "label": "backend-top-project-red-v3",
+      "command": [
+        "node",
+        "backend/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "docs/verification/t1313/runtime/backend.vitest.config.ts",
+        "backend/src/modules/review/work-reviews.service.test.ts",
+        "-t",
+        "T1313 顶层task projectId"
+      ],
+      "pid": 95683,
+      "pgid": 95683,
+      "startedAt": 1792147095.881737,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-top-project-red-v3.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 1,
+      "elapsedSeconds": 12.049
+    },
+    {
+      "label": "backend-type-core-v1",
+      "command": [
+        "node",
+        "backend/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "backend/tsconfig.json"
+      ],
+      "pid": 93519,
+      "pgid": 93519,
+      "startedAt": 1792146732.7436569,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-type-core-v1.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 61.819
+    },
+    {
+      "label": "backend-type-final-v4",
+      "command": [
+        "node",
+        "backend/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "backend/tsconfig.json"
+      ],
+      "pid": 96149,
+      "pgid": 96149,
+      "startedAt": 1792147131.0089002,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-type-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 2,
+      "elapsedSeconds": 143.426
+    },
+    {
+      "label": "backend-type-final-v5",
+      "command": [
+        "node",
+        "backend/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "backend/tsconfig.json"
+      ],
+      "pid": 98409,
+      "pgid": 98409,
+      "startedAt": 1792147412.461277,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-type-final-v5.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 57.662
+    },
+    {
+      "label": "backend-type-final-v6",
+      "command": [
+        "node",
+        "backend/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "backend/tsconfig.json"
+      ],
+      "pid": 99392,
+      "pgid": 99392,
+      "startedAt": 1792147520.1754088,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/backend-type-final-v6.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 55.53
+    },
+    {
+      "label": "boundary-final-v4",
+      "command": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs",
+        "--quiet"
+      ],
+      "pid": 96476,
+      "pgid": 96476,
+      "startedAt": 1792147165.946607,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/boundary-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 1.812
+    },
+    {
+      "label": "frontend-core-v1",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "../docs/verification/t1313/runtime/frontend.vitest.config.ts",
+        "src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+        "-t",
+        "'legacy'/'work'"
+      ],
+      "pid": 93503,
+      "pgid": 93503,
+      "startedAt": 1792146731.525905,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/frontend-core-v1.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 26.155
+    },
+    {
+      "label": "frontend-final-v4",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "../docs/verification/t1313/runtime/frontend.vitest.config.ts",
+        "src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts"
+      ],
+      "pid": 96242,
+      "pgid": 96242,
+      "startedAt": 1792147135.449894,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/frontend-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 146.161
+    },
+    {
+      "label": "frontend-list-final-v6",
+      "command": [
+        "node",
+        "frontend/node_modules/vitest/vitest.mjs",
+        "list",
+        "--config",
+        "docs/verification/t1313/runtime/frontend.vitest.config.ts",
+        "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts"
+      ],
+      "pid": 99512,
+      "pgid": 99512,
+      "startedAt": 1792147549.944882,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/frontend-list-final-v6.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 11.52
+    },
+    {
+      "label": "frontend-red-v1",
+      "command": [
+        "node",
+        "frontend/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "docs/verification/t1313/runtime/frontend.vitest.config.ts",
+        "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+        "-t",
+        "legacy/work"
+      ],
+      "pid": 91888,
+      "pgid": 91888,
+      "startedAt": 1792146550.8337421,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/frontend-red-v1.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 9.824
+    },
+    {
+      "label": "frontend-red-v2",
+      "command": [
+        "node",
+        "frontend/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "docs/verification/t1313/runtime/frontend.vitest.config.ts",
+        "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+        "-t",
+        "'legacy'/'work'"
+      ],
+      "pid": 92215,
+      "pgid": 92215,
+      "startedAt": 1792146597.966872,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/frontend-red-v2.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 1,
+      "elapsedSeconds": 11.289
+    },
+    {
+      "label": "frontend-red-v3",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "../docs/verification/t1313/runtime/frontend.vitest.config.ts",
+        "src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+        "-t",
+        "'legacy'/'work'"
+      ],
+      "pid": 92576,
+      "pgid": 92576,
+      "startedAt": 1792146641.089568,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/frontend-red-v3.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 1,
+      "elapsedSeconds": 20.841
+    },
+    {
+      "label": "frontend-type-final-v4",
+      "command": [
+        "node",
+        "frontend/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--incremental",
+        "false",
+        "-p",
+        "frontend/tsconfig.json"
+      ],
+      "pid": 96151,
+      "pgid": 96151,
+      "startedAt": 1792147131.0090601,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/frontend-type-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 153.519
+    },
+    {
+      "label": "orphan-final-v4",
+      "command": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ],
+      "pid": 96475,
+      "pgid": 96475,
+      "startedAt": 1792147165.950062,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/orphan-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 0.403
+    },
+    {
+      "label": "semantic-final-v4",
+      "command": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "pid": 96477,
+      "pgid": 96477,
+      "startedAt": 1792147165.950061,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/semantic-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 1.76
+    },
+    {
+      "label": "timeout-final-v4",
+      "command": [
+        "node",
+        "tools/timeout-policy/verify.mjs"
+      ],
+      "pid": 96478,
+      "pgid": 96478,
+      "startedAt": 1792147165.9513369,
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/runtime/timeout-final-v4.log",
+      "outerTimeoutSeconds": 86400,
+      "exitCode": 0,
+      "elapsedSeconds": 113.137
+    }
+  ],
+  "integrationInstruction": "C须同时核productionSources+tests+files；不可仅暂存files漏掉源/测试。",
+  "limitations": [
+    "受控owned provider协议替身，不是真实供应商模型",
+    "PGlite同session/savepoint与原SQL轨迹，不是PG多连接死锁压测；原PG用例按真实环境skip",
+    "T1311原5PASS/1FAIL及本轮全部原FAIL保留，父任务未在此完成"
+  ]
+}

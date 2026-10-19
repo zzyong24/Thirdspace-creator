@@ -1,3 +1,5 @@
+import type {createPredictionLockService} from "./prediction-lock.service";
+import {ENDPOINTS} from '@creatoros/contract';
 import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
@@ -19,6 +21,9 @@ import type { AiService } from "./ai.service";
 // the envelope.
 
 export const AI_OP_IDS = [
+  "ai.workCandidates.source",
+  "ai.predictionLocks.source",
+  "ai.predictionLocks.start",
   "ai.conversations.list",
   "ai.conversations.create",
   "ai.conversations.messages.create",
@@ -38,6 +43,7 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 export function createAiTransport(
   serviceFactory: () => AiService,
+  predictionLocks?:()=>ReturnType<typeof createPredictionLockService>,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -50,6 +56,14 @@ export function createAiTransport(
       const p = (params ?? {}) as { conversationId?: string; taskId?: string };
 
       switch (endpoint.id) {
+        case "ai.predictionLocks.source":
+        case "ai.predictionLocks.start": {
+          if(!predictionLocks)throw new Error("原卡锁定服务未装配");
+          const requested={conversationId:p.conversationId!,...((endpoint.id==="ai.predictionLocks.source"?query:body) as {sourceMessageId:string;toolCallId:string})};
+          const source={conversationId:requested.conversationId,sourceMessageId:requested.sourceMessageId,toolCallId:requested.toolCallId};
+          const data=endpoint.id==="ai.predictionLocks.source"?await predictionLocks().read(ctx,source):await predictionLocks().start(ctx,source,(body as {expectedBaselineDigest:string}).expectedBaselineDigest);
+          return {data,meta:{requestId}};
+        }
         case "ai.conversations.list": {
           // The contract query is paginationQuery (page/pageSize, 1-based). Convert to
           // the repo's limit/offset (mirrors the other list transports).
@@ -86,6 +100,7 @@ export function createAiTransport(
           );
           return { data: message, meta: { requestId } };
         }
+        case "ai.workCandidates.source": return {data:await service.readWorkCandidateSource(ctx,{conversationId:p.conversationId??'',sourceMessageId:String((query as Record<string,unknown>|undefined)?.sourceMessageId??''),toolCallId:String((query as Record<string,unknown>|undefined)?.toolCallId??'')}),meta:{requestId}};
         case "ai.conversations.messages.list": {
           const rows = await service.listMessages(ctx, p.conversationId ?? "");
           return {
@@ -103,6 +118,7 @@ export function createAiTransport(
             taskType: string;
             inputData?: Record<string, unknown>;
           };
+          if(b.taskType==="asset.asr"||b.taskType==="production.rough-cut.propose")ENDPOINTS.createAITask.body.parse(body);
           const task = await service.createTask(ctx, b);
           return { data: task, meta: { requestId } };
         }

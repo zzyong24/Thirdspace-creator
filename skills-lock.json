@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "guizang-product-video-skill": {
+      "source": "op7418/guizang-product-video-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "3339679559cdc7c12518599fe0cd57fde5ea4e55900b920644e272c06286bcc4"
+    }
+  }
+}

@@ -225,8 +225,8 @@ export async function runScriptDraft(
     const spec = await deps.resolveModelSpec(ctx, "script.draft");
     resolvedSpec = spec;
     console.info(
-      `[script-runner] task=${task.id} capability=script.draft apiFormat=${spec.apiFormat} ` +
-        `model=${observableModelKey(spec)} endpoint=${spec.baseUrl ? "custom" : "official"}`,
+      `[script-runner] task=${task.id} capability=script.draft apiFormat=${("engine" in spec ? spec.protocolKind : spec.apiFormat)} ` +
+        `model=${("engine" in spec ? "codex" : observableModelKey(spec))} endpoint=${!("engine" in spec) && spec.baseUrl ? "custom" : "official"}`,
     );
     const {
       modelFor,
@@ -255,7 +255,7 @@ export async function runScriptDraft(
           onStep: async (e) => {
             const terminal = JSON.stringify({
               taskId: task.id,
-              accountId: activeSnapshot.accountId,
+              accountId: activeSnapshot.accountId,groupId:activeSnapshot.groupId,
               skillId: effectiveSkill.skillId,
               baseVersion: effectiveSkill.baseVersion,
               overlayVersion: effectiveSkill.overlayVersion,
@@ -588,15 +588,15 @@ export async function runScriptDraft(
       shots: result.shots,
       generation: result.generation,
       validation: result.validation,
-      accountId: activeSnapshot.accountId,
+      accountId: activeSnapshot.accountId,groupId:activeSnapshot.groupId,
       effectiveSkill,
       pipelineMetadata,
       sourceMetadata: frozenSources.metadata,
     }));
   } catch (err) {
     const channelManaged =
-      resolvedSpec?.displayModelKey === "channel-managed";
-    const failureMessage = safeModelFailureMessage(err, resolvedSpec);
+      (resolvedSpec && !("engine" in resolvedSpec) ? resolvedSpec.displayModelKey : undefined) === "channel-managed";
+    const failureMessage = safeModelFailureMessage(err, resolvedSpec && !("engine" in resolvedSpec) ? resolvedSpec : null);
     const failure = err as {
       code?: unknown;
       violations?: Array<{ message?: unknown }>;
@@ -617,7 +617,7 @@ export async function runScriptDraft(
           kind: "validation",
           text: JSON.stringify({
             taskId: task.id,
-            accountId: activeSnapshot.accountId,
+            accountId: activeSnapshot.accountId,groupId:activeSnapshot.groupId,
             skillId: effectiveSkill.skillId,
             baseVersion: effectiveSkill.baseVersion,
             overlayVersion: effectiveSkill.overlayVersion,

@@ -78,3 +78,4 @@ export {
   type RubricDimension,
   type ProposedDimension,
 } from "./calibration.repository";
+export {defaultRubricIdentity} from './default-rubric';

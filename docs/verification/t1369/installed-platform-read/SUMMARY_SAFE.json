@@ -1,0 +1,70 @@
+{
+  "reads": [
+    {
+      "label": "all",
+      "completeParseDurationMs": 1435.431,
+      "exitCode": 0,
+      "ok": true,
+      "scopeMatches": true,
+      "rawBytes": 23393,
+      "rawSha256": "342daf9f50d5dbe8377e50cfe7f4193aac4e318de8ae37e4e8436a67c1060e62",
+      "catalog": {
+        "state": "ready",
+        "catalogWorkCount": 0,
+        "unattributableWorkCount": 0,
+        "deduplicatedWorkCount": 0
+      },
+      "workspaceCounts": {
+        "totalAccounts": 4,
+        "collectedAccounts": 1,
+        "contentCount": 11,
+        "publicationCount": 11
+      }
+    },
+    {
+      "label": "douyin",
+      "completeParseDurationMs": 708.507,
+      "exitCode": 0,
+      "ok": true,
+      "scopeMatches": true,
+      "rawBytes": 13460,
+      "rawSha256": "69b37c3e5a9f5b8a995c258a60e843b94983129561c198bdf228445c6cf77707",
+      "catalog": {
+        "state": "ready",
+        "catalogWorkCount": 0,
+        "unattributableWorkCount": 0,
+        "deduplicatedWorkCount": 0
+      },
+      "workspaceCounts": {
+        "totalAccounts": 1,
+        "collectedAccounts": 1,
+        "contentCount": 11,
+        "publicationCount": 11
+      }
+    },
+    {
+      "label": "wechatVideo",
+      "completeParseDurationMs": 1002.831,
+      "exitCode": 0,
+      "ok": true,
+      "scopeMatches": true,
+      "rawBytes": 11716,
+      "rawSha256": "681820575b05efe526c4d81287c2b2f1f4f0d738b40a2dc9a6e90a2f256f1906",
+      "catalog": {
+        "state": "ready",
+        "catalogWorkCount": 0,
+        "unattributableWorkCount": 0,
+        "deduplicatedWorkCount": 0
+      },
+      "workspaceCounts": {
+        "totalAccounts": 1,
+        "collectedAccounts": 0,
+        "contentCount": 0,
+        "publicationCount": 0
+      }
+    }
+  ],
+  "originalXhsTimingBoundary": "原990.362ms只覆盖xiaohongshu。原900s外层短于已安装来源2d源码正常本地CLI8280s完整观察，因此原短外层不能用于慢请求上限验证；实际990ms完整解析快读事实保留。此次每项8520s保持更长原CLI预算，不复测XHS、不重发。",
+  "boundary": "全部平台/platform省略，抖音douyin，视频号wechatVideo；同既核组/2026-09-20..2026-10-19，accountId省略。3项唯一各一次，完整parse单调耗时含CLI/本机服务/parse，不冒首页RSC或服务独立阶段。无采集/模型/外站/业务写/连接凭据读。",
+  "productionChanged": false
+}

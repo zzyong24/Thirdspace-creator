@@ -38,10 +38,16 @@ flowchart LR
 上述错误不得继续驱动第二次在线申请，也不得阻断本地尝试。坏签名或不可信在线配置只能被丢弃，
 不得用于请求；改用本地不等于接受不可信配置。
 
+云端请求已发出但因超时、5xx 或响应丢失而结果未知时，仍按用户已确认规则启动本地 Whisper，但必须
+把云端调用永久保留为 `unknown` 计费事实，禁止在线重放；本地路径使用独立且稳定的 fallback
+operationKey，成功结果明确标记 `whisper-local` 与 `cloudCallStatus=unknown`。本地成功只完成逐字稿业务，
+不得把未知云端调用伪记为失败、已退款或未发生。
+
 ### FR-768-02 单次、无重复扣费
 
 - 每段音频最多尝试一次在线路径和一次本地路径。
 - 在线失败后不得换幂等键重新申请 lease，不得再次产生在线 ASR 消耗。
+- 在线调用结果未知时永久禁止重放该在线 operation；本地 fallback 的独立 operationKey 也只结算一次。
 - 本地 Whisper 已是当前 provider 时，不得递归调用自己或形成无限降级循环。
 - 批量任务中一条失败不得让其他音频重复申请或重复转写。
 
@@ -66,6 +72,11 @@ flowchart LR
 
 ## 3. 运行合同
 
+0. **所有权**：Backend 独占 RequestContext、在线凭据解析、execution task/calls 账本和逐字稿结果投影；
+   ai-worker 独占在线/本地 ASR adapter、Whisper pipeline、模型准备、推理及 ffmpeg 子进程寿命；frontend
+   只经 contract/RPC 读取状态和发控制命令。Worker 不直连数据库。单 Worker 内同模型首次准备必须单飞，
+   失败可重试；取消、Worker 退出和应用退出都要清理 ffmpeg 与推理子进程。
+
 1. **解析阶段**：`resolveTranscribeSpec` 对所有在线/渠道配置解析异常返回规范的
    `whisper-local` spec；不得只捕获“未配置”这一种异常。
 2. **授权阶段**：`prepareManagedTranscribeSpec` 对所有 lease 获取异常返回本地 spec；额度相关错误
@@ -83,20 +94,34 @@ flowchart LR
 6. **错误投影**：本地 adapter 的原始错误只用于既有脱敏、限长的非用户面诊断。用户可见及持久化
    任务文案只能使用稳定的“本地转写失败，请重试”类别，不得包含绝对路径、ffmpeg stderr、ONNX/
    worker 加载详情、模型下载 URL 或底层异常正文。
+7. **执行账本与恢复**：在线调用、fallback 选择、本地调用和逐字稿投影都绑定同一个 execution_task，
+   冻结音频 SHA-256、可信 user/account/task、稳定在线/fallback operationKey、attempt/fence 与
+   executionCalls 的 `reserved | started | settled | rejected | unknown`。恢复先回放 settled 回执；只有已
+   证明拒绝、合同坏或空结果才直接进入本地计划，unknown 按 FR-768-01 的独立 fallback 继续但不重放在线；
+   旧 fence、暂停或取消生效后不得启动新调用，也不得覆盖终态。
+8. **当下真值**：userId、accountId、taskId、attempt、fence 和宿主权限只能由 Backend 从 execution_task
+   与当前 RequestContext 恢复，Worker 参数不是身份真值。每次准备凭据、读取音频、保留调用回执和保存
+   逐字稿前都重查任务、业务资源、音频摘要与账号归属；资源删除、转移或归属变化时明确冲突，不跨账号复用。
 
 ## 4. 验收标准
 
 - **AC-768-01**：未绑定、额度不足、授权拒绝、坏响应、网络异常、限流、超时和任意普通异常均实际
   调用本地 adapter，并且在线申请次数不超过 1；在线返回空白 `text` 或不合法结果同样满足此断言。
+  云端结果 unknown 的用例保留 unknown 账本、在线不重放，本地按独立稳定 key 只执行一次。
 - **AC-768-02**：用户自配云端 ASR 与渠道受管 ASR 的调用失败都走同一兜底；`whisper-local` 自身失败
   不递归，错误明确属于本地转写。
 - **AC-768-03**：在线调用成功时不调用本地；本地成功保存真实文本且任务成功收口。
   在线失败、本地成功时，保存、步骤与日志的实际执行模式都只能是 `whisper-local`。
 - **AC-768-04**：安全测试证明坏在线配置没有被使用，token 不落库/日志，回退不重新申请或重复扣费。
   含绝对路径、ffmpeg stderr、ONNX/worker 详情的本地伪异常不得进入用户可见或持久化任务文案。
+- **AC-768-04A**：分别在在线调用前后、fallback 选择后、本地推理完成后和最终投影前杀 Worker/父进程；
+  恢复只回放已结算回执，不重复在线调用、本地推理或投影，旧 fence 不能写入。覆盖同 user 不同 account、
+  账号切换、音频删除/转移、伪造 Worker accountId 与相同 intentId，证明配置、音频、回执和结果不串用。
 - **AC-768-05**：打包合同覆盖 macOS/Windows 本地 ASR 运行时、ONNX 与 ffmpeg；正式发布前两平台安装
   候选各完成一条非 fixture 短音频本地 Whisper 真转写。
 - **AC-768-06**：现有 ASR、逐字稿批处理、类型检查与桌面打包契约通过；无视觉文件改动。
+  边界与生产消费者盘点证明 Backend/Worker/frontend 所有权唯一，并覆盖并发首次模型准备、准备失败重试、
+  取消及退出清理 ffmpeg；旧宿主路径不得形成第二执行 owner。
 
 ## 5. 与既有任务的边界
 

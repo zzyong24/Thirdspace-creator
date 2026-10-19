@@ -1,0 +1,17 @@
+{
+  "state": "TWO_PRODUCTION_SOURCES_UNCHANGED_BEFORE_RED",
+  "files": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "bytes": 10008,
+      "sha256": "837e3ca7c28d35d90d90941de9013dfc0721b418778cc396a67a50319dd258af",
+      "equals7f1CommittedBytes": true
+    },
+    {
+      "path": "ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "bytes": 12004,
+      "sha256": "d28578f7b79c70156ee15e827c6b4d7673084ed6d8e1eae0ebf42281b24d6439",
+      "equals7f1CommittedBytes": true
+    }
+  ]
+}

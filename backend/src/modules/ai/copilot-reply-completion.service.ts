@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { z } from "zod";
 import {
   and,
@@ -54,7 +55,7 @@ export function createCopilotReplyCompletionService(
                 eq(aiTasks.id, task.ownerId),
                 eq(aiTasks.executionTaskId, task.id),
                 eq(aiTasks.userId, context.userId),
-                eq(aiTasks.accountId, context.accountId!),
+                workspaceFilter(aiTasks,context),
               ),
             )
             .for("update");
@@ -130,7 +131,7 @@ export function createCopilotReplyCompletionService(
               and(
                 eq(aiConversations.id, frozen.conversationId),
                 eq(aiConversations.userId, context.userId),
-                eq(aiConversations.accountId, context.accountId!),
+                workspaceFilter(aiConversations,context),
               ),
             )
             .for("update");
@@ -140,7 +141,7 @@ export function createCopilotReplyCompletionService(
             now: () => stamp,
             nextId: () => messageId,
             userId: context.userId,
-            accountId: context.accountId!,
+            accountId: context.accountId??null,groupId:context.groupId,
           });
           const messages = await repo.listMessages(conversation.id),
             byId = new Map(messages.map((m) => [m.id, m])),

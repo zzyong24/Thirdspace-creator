@@ -1,0 +1,136 @@
+import type { RequestContext } from "@creatoros/contract";
+import { jsonSchema } from "ai";
+import {
+  workbenchCapabilitySchema, workbenchHostCallSchema, workbenchResultSchema,
+  type WorkbenchCapability, type WorkbenchHostContext, type WorkbenchHostCall, type WorkbenchResult,
+} from "@creatoros/contract/agent-workbench";
+import { workbenchToolOutcome, type AgenticToolOutcome, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import type { ChatWorkerDispatcherDeps } from "../execution/model-worker-dispatcher";
+import { defineWorkbenchChatTool } from "./chat-tool-gate";
+import { prepareChatToolDefinitions } from "./chat-tool-definitions";
+import { prepareChatToolParameters } from "./chat-tool-parameters";
+import { canonicalJson } from "../ai/canonical-json";
+
+export interface ChatWorkbenchCapabilityHost {
+  catalog: readonly WorkbenchCapability[];
+  /** 仅供旧任务精确匹配，不向新任务目录公开；仍受当前平台和授权约束。 */
+  legacyFrozenCapabilities?: readonly WorkbenchCapability[];
+  platform: WorkbenchCapability["platforms"][number];
+  capabilities: readonly string[];
+  /** 未注入此端口即未装配。文件、浏览器等能力不能靠目录声明自行启用。 */
+  dispatch(call: WorkbenchHostCall, options: { signal: AbortSignal; onProgress: (result: WorkbenchResult) => void }): Promise<WorkbenchResult>;
+  /** 需要与原 execution call 原子落库的能力使用此端口；普通能力不得伪造结算。 */
+  commitAndSettle?(call:WorkbenchHostCall,input:{claimId:string;toolCallId:string;outcome:AgenticToolOutcome}):Promise<AgenticToolOutcome>;
+  markUnknown?(call:WorkbenchHostCall,input:{claimId:string;toolCallId:string;toolName:string}):Promise<void>;
+  progress?(call: WorkbenchHostCall, update: Extract<WorkbenchResult, { status: "running" }>): void;
+}
+
+/** 目录只能由可信宿主给出；冻结前过滤平台和实际授权。 */
+export function availableWorkbenchCapabilities(host: ChatWorkbenchCapabilityHost): WorkbenchCapability[] {
+  if (typeof host.dispatch !== "function") return [];
+  if (host.catalog.length > 100) throw new Error("WORKBENCH_CATALOG_TOO_LARGE");
+  const names = new Set<string>(), granted = new Set(host.capabilities);
+  return host.catalog.map(raw => {
+    const descriptor = workbenchCapabilitySchema.parse(raw);
+    if (names.has(descriptor.name)) throw new Error("WORKBENCH_CAPABILITY_DUPLICATE");
+    names.add(descriptor.name);
+    return structuredClone(descriptor);
+  }).filter(item => item.platforms.includes(host.platform) && item.requiredCapabilities.every(capability => granted.has(capability)));
+}
+
+type LeaseContext = Omit<WorkbenchHostContext, "operationId">;
+/** 原动态工具解析器只构造冻结能力的后端执行端口；身份每次执行前按真实租约重读。 */
+export function createChatWorkbenchCapabilityHost(
+  host: ChatWorkbenchCapabilityHost,
+  readLease: (ref: ExecutionRef) => Promise<LeaseContext>,
+  persistProgress: (ref: ExecutionRef, callId: string, progress: Extract<WorkbenchResult, {status:"running"}>) => Promise<unknown>,
+): NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
+  return async (owner, input, _ref, signal) => {
+    signal.throwIfAborted();
+    const available = new Map(availableWorkbenchCapabilities(host).map(item => [item.name, item]));
+    const legacy=availableWorkbenchCapabilities({...host,catalog:host.legacyFrozenCapabilities??[]});
+    const frozen = input.workbenchCapabilities ?? [];
+    const selected=new Map<string,WorkbenchCapability>();
+    const tools = Object.fromEntries(frozen.map(descriptor => {
+      const installed = available.get(descriptor.name);
+      const matches=[...(installed?[installed]:[]),...legacy.filter(item=>item.name===descriptor.name)]
+        .filter(item=>canonicalJson(item)===canonicalJson(descriptor));
+      if (!installed || matches.length!==1 || selected.has(descriptor.name)) throw new Error("WORKBENCH_FROZEN_CAPABILITY_UNAVAILABLE");
+      selected.set(descriptor.name,descriptor);
+      return [descriptor.name, defineWorkbenchChatTool(descriptor, async () => { throw new Error("WORKBENCH_REQUIRES_ORIGINAL_TASK_LEASE"); })];
+    }));
+    if (!frozen.length) return {};
+    const prepared = await prepareChatToolDefinitions(tools, { workbenchCapabilities: frozen });
+    const resultValidators = await Promise.all(frozen.map(async descriptor => [descriptor.name, (await prepareChatToolParameters(jsonSchema(descriptor.resultSchema))).parameters] as const));
+    const resultByName = new Map(resultValidators);
+    const bindings = Object.fromEntries(prepared.definitions.map(definition => {
+      const descriptor = selected.get(definition.name)!;
+      const declared = input.tools.find(tool => tool.name === definition.name);
+      if (!declared || declared.version !== definition.version || declared.effect !== definition.effect || declared.execution !== definition.execution) throw new Error("WORKBENCH_FROZEN_DEFINITION_MISMATCH");
+      return [definition.name, {
+        version: definition.version, effect: definition.effect,
+        // SEMANTIC_BOUNDARY_ALLOW: 命令启动和浏览器 open/act/close 按 operationId
+        // 标识一次操作，同参数不代表同一进程、Lane 或交互；保留原 call 重放及 unknown 防重发。
+        ...(["execution.run","browser.open","browser.act","browser.close"].includes(definition.name)?{reuseSettledResults:false}:{}),
+        parameters: prepared.parameters[definition.name]!.parameters,
+        async approve() { return { status: "not-applicable" as const }; },
+        async execute(context: RequestContext, raw: unknown, scope: { execution: ExecutionRef; callId: string; signal: AbortSignal }) {
+          scope.signal.throwIfAborted();
+          const identity = await readLease(scope.execution);
+          if (identity.userId !== owner.userId || identity.accountId !== owner.accountId || identity.userId !== context.userId || identity.accountId !== context.accountId || identity.taskId !== scope.execution.executionTaskId || identity.attempt !== scope.execution.attempt || identity.fenceToken !== scope.execution.fenceToken) throw new Error("WORKBENCH_LEASE_IDENTITY_CHANGED");
+          const parsed = prepared.parameters[definition.name]!.parameters.parse(raw) as Record<string, unknown>;
+          const call = workbenchHostCallSchema.parse({ context: { ...identity, operationId: scope.callId }, invocation: { name: definition.name, schemaVersion: descriptor.schemaVersion, input: parsed } });
+          let result: WorkbenchResult;
+          let pendingProgress = Promise.resolve();
+          let dispatchSettled = false;
+          try {
+            const returned = await host.dispatch(call, { signal: scope.signal, onProgress: rawProgress => {
+              // 仅可信宿主端口能进入持久事件；坏进度与观察者故障不得覆写工具终态。
+              const progress = workbenchResultSchema.safeParse(rawProgress);
+              if (progress.success && progress.data.status === "running" && progress.data.operationId === scope.callId &&
+                  Buffer.byteLength(JSON.stringify(progress.data),"utf8") <= 4096 && !scope.signal.aborted && !dispatchSettled) {
+                const update = progress.data;
+                pendingProgress = pendingProgress.then(async () => {
+                  try { await persistProgress(scope.execution,scope.callId,update); } catch { /* 进度写入故障不改变工具回执。 */ }
+                  try { host.progress?.(call, update); } catch { /* 订阅者故障不改变工具回执。 */ }
+                });
+              }
+            } });
+            dispatchSettled = true;
+            await pendingProgress;
+            scope.signal.throwIfAborted();
+            result = workbenchResultSchema.parse(returned);
+            if (result.operationId !== scope.callId || result.status === "running" || (result.status === "succeeded" && !resultByName.get(definition.name)!.safeParse(result).success)) throw new Error("WORKBENCH_RESULT_INVALID");
+            // The bounded ledger projection can reject an otherwise valid but
+            // oversized result. Keep it inside the same failure boundary.
+            return workbenchToolOutcome(result, descriptor);
+          } catch (error) {
+            dispatchSettled = true;
+            await pendingProgress;
+            if (scope.signal.aborted) throw error;
+            result = { operationId: scope.callId, status: "unknown", artifactRefs: [], progressCursor: null,
+              error: { code: "WORKBENCH_RESULT_UNKNOWN", retryable: false, dispatched: true, nextAction: "reconcile" } };
+          }
+          return workbenchToolOutcome(result, descriptor);
+        },
+        ...(host.commitAndSettle&&["artifact.register","artifact.copy"].includes(definition.name)?{async commitAndSettle(context:RequestContext,raw:unknown,outcome:AgenticToolOutcome,scope:{execution:ExecutionRef;callId:string;toolCallId:string;claimId:string}){
+          const identity=await readLease(scope.execution);
+          if(identity.userId!==owner.userId||identity.accountId!==owner.accountId||identity.userId!==context.userId||identity.accountId!==context.accountId||identity.taskId!==scope.execution.executionTaskId)
+            throw new Error("WORKBENCH_LEASE_IDENTITY_CHANGED");
+          const parsed=prepared.parameters[definition.name]!.parameters.parse(raw) as Record<string,unknown>;
+          const call=workbenchHostCallSchema.parse({context:{...identity,operationId:scope.callId},invocation:{name:definition.name,schemaVersion:descriptor.schemaVersion,input:parsed}});
+          return host.commitAndSettle!(call,{claimId:scope.claimId,toolCallId:scope.toolCallId,outcome});
+        }}:{}),
+        ...(host.markUnknown&&["artifact.register","artifact.copy"].includes(definition.name)?{async markUnknown(context:RequestContext,scope:{execution:ExecutionRef;callId:string;toolCallId:string;claimId:string;toolName:string}){
+          const identity=await readLease(scope.execution);
+          if(identity.userId!==context.userId||identity.accountId!==context.accountId||identity.taskId!==scope.execution.executionTaskId)
+           throw new Error("WORKBENCH_LEASE_IDENTITY_CHANGED");
+          const call=workbenchHostCallSchema.parse({context:{...identity,operationId:scope.callId},invocation:{name:definition.name,schemaVersion:descriptor.schemaVersion,input:{}}});
+          return host.markUnknown!(call,{claimId:scope.claimId,toolCallId:scope.toolCallId,toolName:scope.toolName});
+        }}:{}),
+      }];
+    }));
+    signal.throwIfAborted();
+    return bindings;
+  };
+}

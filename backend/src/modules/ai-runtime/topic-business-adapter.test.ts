@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 import {
   createTopicGenerateBusinessAdapter,
   prepareTopicGenerateContext,
@@ -239,4 +240,29 @@ it('必要调用容量只由冻结来源计数，普通定位0、trend搜索加w
  const makeTask=(basis:string)=>({...task(basis),id:'t',retryOfTaskId:null,skillSnapshot});
  expect(topicAdditionalCalls(await adapter.prepare(ctx,makeTask('positioning')))).toBe(0);
  expect(topicAdditionalCalls(await adapter.prepare(ctx,makeTask('trend')))).toBe(4);
+});
+
+it("T-957 助手给子任务的建议不冒充优先用户指令",async()=>{
+ const business=createChatBusinessGenerationPreparation({...base,assertProject:async()=>{},readTrend:vi.fn()});
+ const prepared=await business.prepareTopic(ctx,{basis:"positioning",extraBrief:"生成八条，我曾踩过算法串台"});
+ expect(prepared.facets.basisContext).toContain("助手建议（不是用户原话或已核实事实）");
+ expect(prepared.facets.basisContext).not.toContain("本次生成指令");
+});
+
+it('T-1074 新普通聊天、手动四依据和每日准备不再消费已配置网格',async()=>{
+ const {emptyTopicWorkspaceConfig}=await import('@creatoros/contract');
+ const context={version:2,positioningVersionId:'position',rejected:[],config:{...emptyTopicWorkspaceConfig(),audience:'已确认观众',audienceGrid:[{id:'audience:0',version:1,text:'历史观众格',evidence:'hypothesis' as const,sourceRefs:[],basis:'',publicQueryAllowed:false}],industryGrid:[{id:'industry:0',version:1,text:'历史行业格',evidence:'hypothesis' as const,sourceRefs:[],basis:'',publicQueryAllowed:false}]}};
+ const getContext=vi.fn(async()=>context);
+ const deps={...base,topicWorkspace:{getContext},assertProject:async()=>{},readTrend:vi.fn()};
+ const business=createChatBusinessGenerationPreparation(deps);
+ const prepared=await business.prepareTopic(ctx,{basis:'positioning'});
+ expect(prepared.facets.audienceTaskContext).toBe('');
+ for(const basis of ['positioning','comments','knowledge','trend']){
+  const frozen=await prepareTopicGenerateContext(ctx,task(basis),deps);
+  expect(frozen.audienceTaskContext).toBeUndefined();
+ }
+ const daily=await prepareTopicGenerateContext(ctx,task('positioning'),deps,{mode:'daily'});
+ expect(daily.audienceTaskContext).toBeUndefined();
+ expect(getContext).not.toHaveBeenCalled();
+ expect(prepared.facets.sourceReads).toBe('[]');
 });

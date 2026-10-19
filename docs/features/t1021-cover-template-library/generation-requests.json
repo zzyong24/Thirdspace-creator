@@ -1,0 +1,114 @@
+{
+  "generatedAt": "2026-10-04",
+  "notice": "本轮真实模型请求记录；图文图片为风格预览板，不是独立正文成品。",
+  "images": [
+    {
+      "id": "evidence-cards",
+      "name": "证据卡片",
+      "request": {
+        "prompt": "Use case: ads-marketing. Generate ONE finished editorial social video cover as a portrait 3:4 bitmap, composed for 1080x1440. Exact large simplified Chinese title: “把灵感变成作品”. Exact small subtitle: “创作者工作流”. This is an original example for a cover style template library. Typography must be excellent, readable on a phone, title integrated into the final image. No watermark, brand logo, fake screenshots, invented numeric results or portrait faces. Keep generous safe margins. Warm ivory paper background with subtle grid, deep navy large title and restrained copper orange accent. A clean connected sequence of three elegant content cards carrying only the short Chinese labels “灵感”, “草稿”, “作品”. Clear product editorial design, flat front view, high-end Chinese knowledge creator visual style, one focal content relation, no dense small print.",
+        "transparent_background": false
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-62386174-7e9a-4b2a-9381-6bdadbd49354.png"
+    },
+    {
+      "id": "editorial-type",
+      "name": "杂志大字",
+      "request": {
+        "prompt": "Use case: ads-marketing. Generate ONE finished editorial social video cover as a portrait 3:4 bitmap, composed for 1080x1440. Exact large simplified Chinese title: “把灵感变成作品”. Exact small subtitle: “创作者工作流”. This is an original example for a cover style template library. Typography must be excellent, readable on a phone, title integrated into the final image. No watermark, brand logo, fake screenshots, invented numeric results or portrait faces. Keep generous safe margins. Dramatic Swiss editorial poster, vivid vermilion-red background, huge bold off-white Chinese title stacked as “把灵感” then “变成作品”. Asymmetric type-led composition with a single sculptural black paper-fold object in the lower third, sharp graphic confidence, contemporary creative magazine art direction, almost no decorative elements.",
+        "transparent_background": false
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-f75b0e47-0643-4950-ac16-2624e7b4a4d3.png"
+    },
+    {
+      "id": "comparison",
+      "name": "对比结果",
+      "request": {
+        "prompt": "Use case: ads-marketing. Generate ONE finished editorial social video cover as a portrait 3:4 bitmap, composed for 1080x1440. Exact large simplified Chinese title: “把灵感变成作品”. Exact small subtitle: “创作者工作流”. This is an original example for a cover style template library. Typography must be excellent, readable on a phone, title integrated into the final image. No watermark, brand logo, fake screenshots, invented numeric results or portrait faces. Keep generous safe margins. A polished split comparison poster on pale violet and warm cream. Left shows scattered handwritten blank note papers, right shows one beautifully organized finished storyboard page as an artistic schematic rather than a real app screenshot. The title dominates the upper third in very dark plum; small label “零散灵感” over left and “完整作品” over right. One clean directional arrow links the two. Friendly confident hierarchy with subtle yellow accents.",
+        "transparent_background": false
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-aadd364c-3421-4407-bb13-79a1cf6e00bd.png"
+    },
+    {
+      "id": "handdrawn-notes",
+      "name": "手绘笔记",
+      "request": {
+        "prompt": "Use case: ads-marketing. Generate ONE finished editorial social video cover as a portrait 3:4 bitmap, composed for 1080x1440. Exact large simplified Chinese title: “把灵感变成作品”. Exact small subtitle: “创作者工作流”. This is an original example for a cover style template library. Typography must be excellent, readable on a phone, title integrated into the final image. No watermark, brand logo, fake screenshots, invented numeric results or portrait faces. Keep generous safe margins. Tactile cream notebook paper, playful thoughtful hand-drawn pencil and ink sketches of a light bulb, a writing pencil and a tiny film storyboard connected by sweeping curved arrows. Large expressive dark navy handwritten Chinese title, subtle terracotta marker highlight, charming handmade journal, simple and legible, small teal accents, no clutter.",
+        "transparent_background": false
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-9dbf71a4-4897-4974-87f5-8337a47920ba.png"
+    },
+    {
+      "id": "cinematic-desk",
+      "name": "纪实叙事",
+      "request": {
+        "prompt": "Use case: ads-marketing. Generate ONE finished editorial social video cover as a portrait 3:4 bitmap, composed for 1080x1440. Exact large simplified Chinese title: “把灵感变成作品”. Exact small subtitle: “创作者工作流”. This is an original example for a cover style template library. Typography must be excellent, readable on a phone, title integrated into the final image. No watermark, brand logo, fake screenshots, invented numeric results or portrait faces. Keep generous safe margins. Beautiful realistic editorial still life of a creator desk lit by late afternoon window light, notebook with mostly blank pages, pencil and neatly arranged storyboard prints. Warm walnut, soft cream, rich dark shadows, shallow depth of field, elegant cinematic texture. Upper half offers clean dark negative space with very large ivory Chinese title and subtle copper accent. No people, no logos or fake UI.",
+        "transparent_background": false
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-5e3da88b-1ada-4378-b816-0a452507fa52.png"
+    },
+    {
+      "id": "three-dimensional",
+      "name": "立体产品",
+      "request": {
+        "prompt": "Use case: ads-marketing. Generate ONE finished editorial social video cover as a portrait 3:4 bitmap, composed for 1080x1440. Exact large simplified Chinese title: “把灵感变成作品”. Exact small subtitle: “创作者工作流”. This is an original example for a cover style template library. Typography must be excellent, readable on a phone, title integrated into the final image. No watermark, brand logo, fake screenshots, invented numeric results or portrait faces. Keep generous safe margins. Premium playful 3D editorial cover, cobalt blue backdrop, one beautiful oversized cream origami idea sheet unfolding into a miniature orange film storyboard in the lower half. Carefully lit soft ceramic and paper materials, restrained whimsical design, title dominates upper half in huge warm white Chinese typography, bright clean bold shapes, no generic robot or neon circuitry.",
+        "transparent_background": false
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-498ef540-31aa-4204-9652-9e221c81b211.png"
+    },
+    {
+      "id": "xhs-learning",
+      "name": "教育学习·步骤笔记",
+      "request": {
+        "transparent_background": false,
+        "prompt": "生成一张小红书多页图文模板的预览板位图，不是最终要上传的单张笔记。这张预览板中横向并列三个相互独立的3:4竖版页面：第一页首图、第二页正文、第三页正文。三页大小相等且完整显示，页面间留白，整体宽高约2.4:1，近似尺寸2400×1000。不是手机外框，不做网页按钮。每页各自排版，字体清楚，三页共享字体、配色、图片处理与安全边距。只渲染指定的短标题短句，不添加无关小字、页码装饰与水印。以教育学习为主题，标题“把知识变成行动”，第二页标题“先解释清楚”，包含一句“用一个例子说明”，第三页标题“再动手试一遍”，包含一句“把结果记下来”。奶油纸、深蓝标题、薄荷绿标记、细线笔记图示。 所有摄影对象是原创生成的风格示例，不能冒充用户的真实店铺、产品或实测证据。"
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-1c5c2df3-eab9-4476-9468-0f4b6ddaa84a.png"
+    },
+    {
+      "id": "xhs-food",
+      "name": "餐饮美食·探店记录",
+      "request": {
+        "transparent_background": false,
+        "prompt": "生成一张小红书多页图文模板的预览板位图，不是最终要上传的单张笔记。这张预览板中横向并列三个相互独立的3:4竖版页面：第一页首图、第二页正文、第三页正文。三页大小相等且完整显示，页面间留白，整体宽高约2.4:1，近似尺寸2400×1000。不是手机外框，不做网页按钮。每页各自排版，字体清楚，三页共享字体、配色、图片处理与安全边距。只渲染指定的短标题短句，不添加无关小字、页码装饰与水印。主题为咖啡店探店记录，标题“一家店的慢时光”，第二页标题“先看空间”，短句“光线与座位”，第三页标题“再尝味道”，短句“香气与口感”。使用自然光下真实感的咖啡杯与木桌摄影、杂志排版、暖棕与奶油色。没有虚构店名价格和评分。 所有摄影对象是原创生成的风格示例，不能冒充用户的真实店铺、产品或实测证据。"
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-5a8be2f3-5475-4619-84ae-ad24b61f1653.png"
+    },
+    {
+      "id": "xhs-travel",
+      "name": "旅行户外·路线手帐",
+      "request": {
+        "transparent_background": false,
+        "prompt": "生成一张小红书多页图文模板的预览板位图，不是最终要上传的单张笔记。这张预览板中横向并列三个相互独立的3:4竖版页面：第一页首图、第二页正文、第三页正文。三页大小相等且完整显示，页面间留白，整体宽高约2.4:1，近似尺寸2400×1000。不是手机外框，不做网页按钮。每页各自排版，字体清楚，三页共享字体、配色、图片处理与安全边距。只渲染指定的短标题短句，不添加无关小字、页码装饰与水印。旅行路线手帐主题，标题“周末去山里走走”，第二页标题“出发前准备”，短句“天气与装备”，第三页标题“留住沿途风景”，短句“走走停停”。自然森林山景照片、简洁手绘路线作为示意不伪造实际地图、墨绿与米白、克制撕纸元素。 所有摄影对象是原创生成的风格示例，不能冒充用户的真实店铺、产品或实测证据。"
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-93668ed7-9c35-4790-9d7c-8ed0d3f0dc07.png"
+    },
+    {
+      "id": "xhs-beauty",
+      "name": "美妆穿搭·实测清单",
+      "request": {
+        "transparent_background": false,
+        "prompt": "生成一张小红书多页图文模板的预览板位图，不是最终要上传的单张笔记。这张预览板中横向并列三个相互独立的3:4竖版页面：第一页首图、第二页正文、第三页正文。三页大小相等且完整显示，页面间留白，整体宽高约2.4:1，近似尺寸2400×1000。不是手机外框，不做网页按钮。每页各自排版，字体清楚，三页共享字体、配色、图片处理与安全边距。只渲染指定的短标题短句，不添加无关小字、页码装饰与水印。个人护理实测记录主题，标题“找到适合自己的”，第二页标题“先记录使用感”，短句“质地与肤感”，第三页标题“再比较变化”，短句“记录真实感受”。奶油粉与淡灰、高级真实感无品牌瓶罐摄影、清楚笔记区。不要医疗或功效承诺，不伪造前后皮肤对照，不画人物。 所有摄影对象是原创生成的风格示例，不能冒充用户的真实店铺、产品或实测证据。"
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-173a87da-ed5b-4e22-a5c8-d0cc73bca2bb.png"
+    },
+    {
+      "id": "xhs-home",
+      "name": "家居生活·空间案例",
+      "request": {
+        "transparent_background": false,
+        "prompt": "生成一张小红书多页图文模板的预览板位图，不是最终要上传的单张笔记。这张预览板中横向并列三个相互独立的3:4竖版页面：第一页首图、第二页正文、第三页正文。三页大小相等且完整显示，页面间留白，整体宽高约2.4:1，近似尺寸2400×1000。不是手机外框，不做网页按钮。每页各自排版，字体清楚，三页共享字体、配色、图片处理与安全边距。只渲染指定的短标题短句，不添加无关小字、页码装饰与水印。家居角落整理主题，标题“把角落留给生活”，第二页标题“腾出一点空间”，短句“减少重复物件”，第三页标题“留下常用的”，短句“让取用更顺手”。自然光下小木书桌与米白陶器真实感摄影、燕麦色与鼠尾草绿、空间杂志版式。 所有摄影对象是原创生成的风格示例，不能冒充用户的真实店铺、产品或实测证据。"
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-be25d46d-8147-47ed-896e-a83dab405afb.png"
+    },
+    {
+      "id": "xhs-career",
+      "name": "职场商业·案例拆解",
+      "request": {
+        "transparent_background": false,
+        "prompt": "生成一张小红书多页图文模板的预览板位图，不是最终要上传的单张笔记。这张预览板中横向并列三个相互独立的3:4竖版页面：第一页首图、第二页正文、第三页正文。三页大小相等且完整显示，页面间留白，整体宽高约2.4:1，近似尺寸2400×1000。不是手机外框，不做网页按钮。每页各自排版，字体清楚，三页共享字体、配色、图片处理与安全边距。只渲染指定的短标题短句，不添加无关小字、页码装饰与水印。职场工作方法主题，标题“让工作更有条理”，第二页标题“说清楚目标”，短句“先确定要交付什么”，第三页标题“把过程记下来”，短句“让经验可以复用”。蓝白商务编辑设计，柔和灰蓝，干净的工作笔记和步骤示意，理性清楚的大字，不画虚构指标。 所有摄影对象是原创生成的风格示例，不能冒充用户的真实店铺、产品或实测证据。"
+      },
+      "output": "/Users/zyongzhu/.codex/generated_images/01a105e1-58bd-7eb3-a187-36219849ccd1/exec-7298ef1e-41c9-44e3-a602-a2d9b06d30d8.png"
+    }
+  ]
+}

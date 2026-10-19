@@ -1,0 +1,14 @@
+{
+  "authority": "Root消息允许R T1338同8源内Moments requestRows/reserved-save最小修；R明确生产稳定",
+  "bWroteTheseFiles": false,
+  "redLockSha256": "72ba66a969180befefca2f92cc2acfcad3d400c343d265c0c5400ecb69b839b5",
+  "files": [
+    {
+      "path": "backend/src/modules/moments/moments.service.ts",
+      "redSha256": "d63d8b83ed0d2474429380c51570a5eb795310c3e104648976c3f5e6783fc0da",
+      "currentSha256": "0fc4ac90a9dac02c86e91afd173b0f46e0f58e050f211b3e1edf9dac2ba21334",
+      "bytes": 12975
+    }
+  ],
+  "meaning": "T1339 GREEN运行于当前已审混合工作树，不冒原7f1包或仅B全部生产改动；B唯一生产改动仍calibration.service.ts"
+}

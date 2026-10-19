@@ -1,0 +1,9 @@
+# T1294 实际服务环境零回合核验
+
+本次未复现account/read拒绝。实际port62653监听进程73120的Codex运行时白名单环境由KERN_PROCARGS2只在内存提取；未读取配置/账号/密钥文件，未修改HOME或CODEX_HOME。探针保持该服务的真实TMPDIR，在原隔离root下creatoros-native-codex-workspaces中新建唯一hash私有空目录，采用原createControlledCodexSession及locked 0.159.3 binary。
+
+实际顺序initialize→config/read→关闭首session→initialize→config/read→account/read全部OK；在account/read完成后立即关闭，thread/start=0、turn/start=0、模型回合=0、付费操作=0。两个原生子进程83356/83359均已不存在，closed=true。请求仍原120000ms完整预算，外层3840000ms含完整串行与清理；无正式源/控制写。实际安全RPC错误数组为空，故没有上游整数code或原因族可报告，不能编造第一轮错误码。
+
+与工具进程环境不同的变量名为TEMP/TMP/TMPDIR/LANG/LC_ALL/LC_CTYPE/HTTP_PROXY/HTTPS_PROXY/NO_PROXY；仅保presence/hash和matchesCaller，未落值。实际环境差异说明先前工具探针不可替代本服务现场；本次又成功，因此既不能把account/read永久判断为损坏，也不能把旧失败归因于代理、登录、keychain或参数。生成的真实0.159.3协议schema已确认refreshToken:false合法，该事实不构成改参数授权。
+
+原UI失败的安全栈仍只证明createControlledCodexSession预try出现CODEX_RPC_REJECTED，不含方法；不将本探针成功回写旧失败，也不把原UI失败指认为account/read。同task的真实错误仍需新增固定method/integer元数据后在新的明确测试对话中观察；本诊断不会重发原任务。当前production协议已新增安全元数据，Source before/after相同，完整绑定见BINDING.json；未签真实聊天或模型成功。

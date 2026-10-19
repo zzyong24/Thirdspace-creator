@@ -1,0 +1,143 @@
+{
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "startedAt": "2026-10-10T00:38:39.549Z",
+  "finishedAt": "2026-10-10T00:39:01.573Z",
+  "observed": {
+    "httpStatus": 200,
+    "renderedUrl": "http://127.0.0.1:56752/",
+    "executablePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "executableSha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "navigation": [
+      [
+        "首页",
+        "/"
+      ],
+      [
+        "创作者总览",
+        "/overview"
+      ],
+      [
+        "定位中心",
+        "/positioning"
+      ],
+      [
+        "内容雷达",
+        "/intelligence"
+      ],
+      [
+        "选题",
+        "/topics"
+      ],
+      [
+        "项目",
+        "/projects"
+      ],
+      [
+        "知识库",
+        "/knowledge"
+      ],
+      [
+        "素材中心",
+        "/assets"
+      ],
+      [
+        "创作画布",
+        "/canvases"
+      ],
+      [
+        "发布中心",
+        "/publishing"
+      ],
+      [
+        "运营分析",
+        "/daily-report"
+      ],
+      [
+        "自动化",
+        "/automations"
+      ],
+      [
+        "设置",
+        "/settings"
+      ]
+    ],
+    "layout": [
+      {
+        "url": "/",
+        "fill": "false",
+        "rootCount": 1,
+        "contentCount": 1,
+        "overflowY": "scroll",
+        "clientHeight": 720,
+        "scrollHeight": 1131,
+        "scrollTop": 0,
+        "bodyClientHeight": 720,
+        "bodyScrollHeight": 720,
+        "scrollbarDisplays": [],
+        "internalScrollRegions": [],
+        "sameRoot": true,
+        "sameViewport": true
+      },
+      {
+        "url": "/intelligence",
+        "fill": "true",
+        "rootCount": 1,
+        "contentCount": 1,
+        "overflowY": "hidden",
+        "clientHeight": 720,
+        "scrollHeight": 720,
+        "scrollTop": 0,
+        "bodyClientHeight": 720,
+        "bodyScrollHeight": 720,
+        "scrollbarDisplays": [],
+        "internalScrollRegions": [],
+        "sameRoot": true,
+        "sameViewport": true
+      },
+      {
+        "url": "/",
+        "fill": "false",
+        "rootCount": 1,
+        "contentCount": 1,
+        "overflowY": "scroll",
+        "clientHeight": 720,
+        "scrollHeight": 1131,
+        "scrollTop": 0,
+        "bodyClientHeight": 720,
+        "bodyScrollHeight": 720,
+        "scrollbarDisplays": [
+          "flex"
+        ],
+        "internalScrollRegions": [],
+        "sameRoot": true,
+        "sameViewport": true
+      }
+    ],
+    "fillAfterWheel": 0,
+    "homeAfterWheel": {
+      "scrollTop": 411,
+      "maxScroll": 411
+    },
+    "groupReads": [
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      }
+    ],
+    "browserVersion": "148.0.7778.96",
+    "pageErrorCount": 0,
+    "dispatchStatus": 404,
+    "masterKeyDevelopmentFallback": false,
+    "sidecarExit": {
+      "code": 143,
+      "signal": null
+    }
+  },
+  "nodeExecutable": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+  "isolationRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-navigation-recovery-isolation-a5gT0E",
+  "nativeApp": false,
+  "realUserDataUsed": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "scope": "T1176现5a新包隔离Node/full Chromium真实13导航，首页→内容雷达contentFill→首页，浏览器计算样式/滚轮与同滚动容器身份；不签原生安装、真人平台、数据充满时的内部滚动或全功能。"
+}

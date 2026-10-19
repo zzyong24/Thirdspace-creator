@@ -1,3 +1,4 @@
+import {codexCallAuthority} from './codex-call-context';
 import { isStructuredResponseCompatibilityError } from "../nodes/structured-response-errors";
 import { wrapLanguageModel,type LanguageModel } from "ai";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
@@ -9,12 +10,12 @@ export interface DurableGenerationPorts {
   /** 宿主根据请求内容计算指纹和预留，Worker 不自报预算真值。 */
   reserve(input:{operationKey:string;request:Record<string,unknown>}):Promise<{callId:string;status:string;providerResult?:unknown;rejectionCode?:string|null}>;
   start(callId:string):Promise<void>;
-  settle(callId:string,input:{status:"settled";providerResult:WorkerProviderReceipt;usage:{inputTokens?:number;outputTokens?:number;inputTokenDetails:{noCacheTokens?:number;cacheReadTokens?:number;cacheWriteTokens?:number};outputTokenDetails:{textTokens?:number;reasoningTokens?:number}}}|{status:"unknown"}|{status:"rejected";rejectionCode?:"STRUCTURED_PROTOCOL_UNSUPPORTED"|"CHAT_MODEL_RETRYABLE_REJECTION"}):Promise<void>;
+  settle(callId:string,input:{status:"settled";providerResult:WorkerProviderReceipt;usage:{inputTokens?:number;outputTokens?:number;inputTokenDetails:{noCacheTokens?:number;cacheReadTokens?:number;cacheWriteTokens?:number};outputTokenDetails:{textTokens?:number;reasoningTokens?:number}}}|{status:"unknown"}|{status:"superseded"}|{status:"rejected";rejectionCode?:"STRUCTURED_PROTOCOL_UNSUPPORTED"|"CHAT_MODEL_RETRYABLE_REJECTION"}):Promise<void>;
 }
 const durableModels=new WeakSet<object>();
 export function isDurableGenerationModel(model:LanguageModel){return typeof model==="object" && model!==null && durableModels.has(model);}
 /** 结构化协议降级和补充生成仍用原节点；每次真正的provider调用单独预留、启动、结算。 */
-export function createDurableGenerationModel(input:{model:LanguageModel;operationKey:string;ports:DurableGenerationPorts;signal?:AbortSignal}){
+export function createDurableGenerationModel(input:{model:LanguageModel;operationKey:string;ports:DurableGenerationPorts;signal?:AbortSignal;allowUnconfirmedModelRetry?:boolean}){
   if(typeof input.model === "string")throw new Error("DURABLE_MODEL_REQUIRES_RESOLVED_PROVIDER");
   let sequence=0;
   const wrapped=wrapLanguageModel({model:input.model,middleware:{
@@ -34,18 +35,20 @@ export function createDurableGenerationModel(input:{model:LanguageModel;operatio
         return receipt as LanguageModelV4GenerateResult;
       }
       if(reservation.status==="rejected" && reservation.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED")throw new Error("response_format unsupported");
-      if(reservation.status!=="reserved")throw new GenerationFailure("unknown_result","MODEL_CALL_REQUIRES_RECONCILIATION");
+      const recovering=model.provider==="codex-app-server"&&["started","unknown"].includes(reservation.status);
+      if(reservation.status!=="reserved"&&!recovering)throw new GenerationFailure("unknown_result","MODEL_CALL_REQUIRES_RECONCILIATION");
       params.abortSignal?.throwIfAborted();
       // 启动回执丢失也不能重发供应商请求。
-      try{await input.ports.start(reservation.callId);}catch{throw new GenerationFailure("unknown_result","MODEL_START_RECEIPT_UNKNOWN");}
+      try{if(!recovering)await input.ports.start(reservation.callId);}catch{throw new GenerationFailure("unknown_result","MODEL_START_RECEIPT_UNKNOWN");}
       let result:LanguageModelV4GenerateResult;
-      try{params.abortSignal?.throwIfAborted();result=await doGenerate();}
+      try{params.abortSignal?.throwIfAborted();result=await codexCallAuthority.run({callId:reservation.callId,recover:recovering},doGenerate);}
       catch(error){
-        const failure=generationFailure(error,false);
-        try{await input.ports.settle(reservation.callId,failure.outcome==="unknown_result" ? {status:"unknown"} : {status:"rejected",...(isStructuredResponseCompatibilityError(error) ? {rejectionCode:"STRUCTURED_PROTOCOL_UNSUPPORTED" as const} : {})});}
+        // Codex有原thread/turn只读恢复；连接或绑定确认丢失不能废弃原调用后另发新回合。
+        const failure=generationFailure(error,false,{allowUnconfirmedModelRetry:model.provider==='codex-app-server'?false:input.allowUnconfirmedModelRetry});
+        try{await input.ports.settle(reservation.callId,failure.outcome==="unknown_result" ? {status:"unknown"} : failure.outcome==="retry_wait" && !isStructuredResponseCompatibilityError(error) ? {status:"superseded"} : {status:"rejected",...(isStructuredResponseCompatibilityError(error) ? {rejectionCode:"STRUCTURED_PROTOCOL_UNSUPPORTED" as const} : {})});}
         catch{throw new GenerationFailure("unknown_result","MODEL_SETTLEMENT_RECEIPT_UNKNOWN");}
         // 明确协议拒绝保留给原结构化兼容判断；未知提交不能触发协议回退。
-        throw failure.outcome==="unknown_result" ? failure : error;
+        throw failure.outcome==="unknown_result" || failure.outcome==="retry_wait" ? failure : error;
       }
       let receipt:WorkerProviderReceipt;
       try{receipt=workerProviderReceiptSchema.parse(JSON.parse(JSON.stringify({content:result.content,finishReason:result.finishReason,usage:result.usage,warnings:result.warnings,providerMetadata:result.providerMetadata})));}

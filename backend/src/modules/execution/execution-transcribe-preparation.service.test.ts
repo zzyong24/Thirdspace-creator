@@ -2,9 +2,10 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {beforeAll,afterAll,it,expect,vi} from 'vitest';
-import {createDb,aiTasks,executionTasks,executionCalls,eq,type Db} from '@creatoros/backend';
+import {createDb,aiTasks,executionTasks,executionCalls,eq,OwnershipError,type Db} from '@creatoros/backend';
 import {runTranscribeAsrInWorker,localWhisperSpec,createQwenAsrAdapter,createOpenaiAsrAdapter,createWhisperLocalAdapter,transcribeAudio,createDurableAsrRequestExecutor,type MultimodalSpec} from '@creatoros/ai-worker';
 import {createTranscribeBusinessExecutionService} from '../ai-runtime/transcribe-business-execution.service';
+import {ConflictError,ExecutionBudgetError} from './execution.errors';
 import {createExecutionTranscribePreparationService} from './execution-transcribe-preparation.service';
 import {createExecutionTranscribeAudioService} from './execution-transcribe-audio.service';
 import {createExecutionAsrPorts} from './execution-asr-ports.service';
@@ -151,3 +152,9 @@ it('选择本地的 ACK 丢失后恢复原选择，旧云事实仍可核对但�
  const request=call.mock.calls.find(args=>args[0]==='reserveAsrRequest')![1];await expect(asr.reserve(f.ref,request)).rejects.toThrow();
  expect((await runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).text).toBe('原回退结果');expect(fetcher).toHaveBeenCalledTimes(1);expect(pipeline).toHaveBeenCalledTimes(1);
 });
+
+it.each([new OwnershipError('原属主拒绝'),new ConflictError('原scope拒绝'),new ExecutionBudgetError('原期限耗尽'),Object.assign(new OwnershipError('复合属主拒绝'),{details:{domainCode:'MODEL_CREDENTIAL_UNAVAILABLE'}}),Object.assign(new ExecutionBudgetError('复合预算拒绝'),{details:{domainCode:'MODEL_CREDENTIAL_UNAVAILABLE'}})])('配置准备拒绝 %s 不得吞成本地识别',async error=>{
+ const f=await fixture();f.resolveSpec.mockRejectedValueOnce(error);
+ await expect(f.service.prepare(f.ref,'one')).rejects.toBe(error);expect(f.prepareSpec).not.toHaveBeenCalled();
+ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));expect((task!.payload as Record<string,unknown>).transcribeAsrPlans).toBeUndefined();
+},180_000);

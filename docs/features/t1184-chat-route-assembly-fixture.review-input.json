@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅T1184精确单测试夹具SPEC初审）：原LED014完整命令实际exit1／28.671211499953642秒、147PASS／29FAIL，原logSHA9998244e…与receipt一致，retry x2及backend后段未执行保留。实际旧公共mock在185行assemble(ctx,snapshot)缺第三参数，而真实backend的ChatPrepareOptions为必需{executionEngine:pi|codex}、submit以请求缺省Pi传入；route599–613直接读options.executionEngine，静态可证此夹具不合法。仅route.test.ts校准typed第三参数input.executionEngine??pi，补默认Pi、显式Codex请求/prepare一致、非法引擎400/CHAT_ENGINE_INVALID且四项副作用0。保原54例、完整历史快照/来源/附件/权限/去重/错误流/锚点/原任务恢复及预算，不修改生产callback或其它mock/守卫。其它29例是否全部同因仍待复跑，出现不同原因保原断言并登记/另审范围。要求原完整LED014串行两段及真实chat-turn-submission/chat-host-context服务合同回归、双端类型/scans/diff与独评；公共持久服务不代签实际模型/Codex进程/native/完整Gate或T1181研究恢复。当前源及配置字节均未改，findings=[]。",
+  "findings": []
+}

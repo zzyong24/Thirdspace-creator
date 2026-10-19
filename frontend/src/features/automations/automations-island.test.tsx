@@ -120,7 +120,7 @@ describe("AutomationsIsland — 列表渲染", () => {
       />,
     );
     const head = screen.getByTestId("automations-current-account");
-    expect(head.textContent).toContain("仅当前号 @主号");
+    expect(head.textContent).toContain("@主号");
     const rowBadge = screen.getByTestId("automation-account-badge");
     expect(rowBadge.textContent).toContain("@主号");
     expect(rowBadge).toHaveAttribute("data-account-id", "acct-a");
@@ -130,7 +130,7 @@ describe("AutomationsIsland — 列表渲染", () => {
     render(<AutomationsIsland jobs={[]} currentAccount={null} />);
     expect(screen.getByTestId("automations-no-account")).toBeInTheDocument();
     expect(
-      screen.getByText(/先在左下角切换器绑定\/选择一个抖音号/),
+      screen.getByText(/当前筛选没有账号采集任务/),
     ).toBeInTheDocument();
   });
 
@@ -143,7 +143,7 @@ describe("AutomationsIsland — 列表渲染", () => {
     );
     expect(
       screen.getByTestId("automation-account-badge").textContent,
-    ).toContain("其他账号");
+    ).toContain("账号信息未读取");
   });
 
   it("有作业:渲染 name / source 中文 / 友好频率(非裸 cron)/ 上次·下次", () => {
@@ -677,46 +677,21 @@ describe("D4 — needs_reconnect 行:红标 + 登录抖音恢复", () => {
     ]);
     render(<AutomationsIsland jobs={[makeJob({ id: "job-nr", enabled: true })]} />);
     await waitFor(() =>
-      expect(screen.getByText(/需重连抖音/)).toBeInTheDocument(),
+      expect(screen.getByText(/需重连账号/)).toBeInTheDocument(),
     );
     // 该行换成「登录抖音」,没有「立即运行」
     expect(screen.getByTestId("automation-login-douyin")).toBeInTheDocument();
     expect(screen.queryByTestId("automation-run-now")).not.toBeInTheDocument();
   });
 
-  it("点「登录抖音」→ loginDouyin;成功后 runScheduledJobNow 恢复 + refresh", async () => {
-    mockClient.listJobRunsByJob.mockResolvedValue([
-      makeRun({ status: "needs_reconnect", aiTaskId: null }),
-    ]);
-    mockClient.loginDouyin.mockResolvedValueOnce({ loggedIn: true });
-    render(<AutomationsIsland jobs={[makeJob({ id: "job-nr", enabled: true })]} />);
-    const btn = await screen.findByTestId("automation-login-douyin");
-    fireEvent.click(btn);
-    await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
-    // 登录成功 → 触发一次 runNow 恢复该 job
-    await waitFor(() =>
-      expect(mockClient.runScheduledJobNow).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.runScheduledJobNow.mock.calls[0]![0] as {
-      params: { jobId: string };
-    };
-    expect(arg.params.jobId).toBe("job-nr");
-    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  it('需要重连时进入真实平台扫码入口，不提交抖音登录或提前运行采集',async()=>{
+    mockClient.listJobRunsByJob.mockResolvedValue([makeRun({status:'needs_reconnect',aiTaskId:null})]);
+    render(<AutomationsIsland jobs={[makeJob({id:'job-nr',enabled:true})]}/>);
+    fireEvent.click(await screen.findByTestId('automation-login-douyin'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/accounts');
+    expect(mockClient.loginDouyin).not.toHaveBeenCalled();expect(mockClient.runScheduledJobNow).not.toHaveBeenCalled();
   });
 
-  it("登录未成功(loggedIn=false)→ 不触发 runNow(不假装恢复)", async () => {
-    mockClient.listJobRunsByJob.mockResolvedValue([
-      makeRun({ status: "needs_reconnect", aiTaskId: null }),
-    ]);
-    mockClient.loginDouyin.mockResolvedValueOnce({ loggedIn: false });
-    render(<AutomationsIsland jobs={[makeJob({ id: "job-nr", enabled: true })]} />);
-    const btn = await screen.findByTestId("automation-login-douyin");
-    fireEvent.click(btn);
-    await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
-    // 给微任务队列一拍,确认没有 runNow(诚实:未登录不恢复)
-    await Promise.resolve();
-    expect(mockClient.runScheduledJobNow).not.toHaveBeenCalled();
-  });
 });
 
 // T-038c 采集限流可观测:cooldown 时自动化诚实显限流保护横幅(不装死)。
@@ -935,7 +910,7 @@ describe("RunDetailDialog — 运行详情读 runs + steps", () => {
     ]);
     render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
     await waitFor(() =>
-      expect(screen.getByText("需重连抖音")).toBeInTheDocument(),
+      expect(screen.getByText("需重连账号")).toBeInTheDocument(),
     );
   });
 });
@@ -953,7 +928,7 @@ describe("T-032b — 采集反馈结果文案分档", () => {
     // 诚实:状态徽标是「完成」,不是失败/需重连
     expect(screen.getByText("完成")).toBeInTheDocument();
     expect(screen.queryByText("失败")).not.toBeInTheDocument();
-    expect(screen.queryByText("需重连抖音")).not.toBeInTheDocument();
+    expect(screen.queryByText("需重连账号")).not.toBeInTheDocument();
   });
 
   it("succeeded 且 itemsNew>0 → 「✅ 新增 N 条」", async () => {
@@ -968,7 +943,7 @@ describe("T-032b — 采集反馈结果文案分档", () => {
     expect(screen.queryByText(/更新 0 条/)).not.toBeInTheDocument();
   });
 
-  it("needs_reconnect → 行显「⚠️ 需重连抖音 —— 去扫码登录」+ error 用琥珀(非红失败色)", async () => {
+  it("needs_reconnect → 行显「⚠️ 需重连账号 · 去扫码绑定」+ error 用琥珀(非红失败色)", async () => {
     mockClient.listJobRunsByJob.mockResolvedValueOnce([
       makeRun({
         status: "needs_reconnect",
@@ -978,10 +953,10 @@ describe("T-032b — 采集反馈结果文案分档", () => {
     ]);
     render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
     await waitFor(() =>
-      expect(screen.getByText(/需重连抖音 —— 去扫码登录/)).toBeInTheDocument(),
+      expect(screen.getByText(/需重连账号 · 去扫码绑定/)).toBeInTheDocument(),
     );
     // 选中该 run → error 文案用琥珀底(data-slot=automation-run-error),不是红失败色
-    fireEvent.click(screen.getByText("需重连抖音"));
+    fireEvent.click(screen.getByText("需重连账号"));
     await waitFor(() => {
       const errEl = document.querySelector(
         '[data-slot="automation-run-error"]',

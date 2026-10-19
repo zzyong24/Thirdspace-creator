@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { client } from "@/lib/contract-client";
 import { handshakeHeaders } from "@/lib/handshake-client";
-import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
+import { fetchCreatorApi, readCurrentAccountId, readCurrentGroupId } from "@/lib/http-transport";
+import { executionTimeoutMs, completionWaitMs } from "@creatoros/contract/timeout-policy";
+import { openAiCreditCenter, waitForAiCreditCenter, withAiCreditCenterBudget, AI_CREDIT_CENTER_OPEN_WAIT_MS } from "@/lib/open-ai-credit-center";
 import { cn } from "@/lib/utils";
 import {
   Loader2
@@ -22,40 +24,110 @@ import type {
 
 import { TestConnectionButton } from "./model-connection-test";
 import { useSettingsMutation } from "./use-settings-mutation";
-export function AiCreditCenterCard() {
+const INCLUDED_CREDIT_WAIT_MS = 730_000;
+function IncludedCreditActivation() {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const generation = React.useRef(0), active = React.useRef<AbortController | null>(null);
+  React.useEffect(() => {
+    let scope = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+    const changed = () => {
+      const next = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+      if (next === scope) return;
+      scope = next; generation.current++; active.current?.abort(); active.current = null; setBusy(false); setMessage(null);
+    };
+    window.addEventListener("creatoros:accounts-changed", changed); window.addEventListener("storage", changed);
+    return () => { generation.current++; active.current?.abort(); window.removeEventListener("creatoros:accounts-changed", changed); window.removeEventListener("storage", changed); };
+  }, []);
+  const activate = async () => {
+    if (active.current) return;
+    const current = ++generation.current, controller = new AbortController(); active.current = controller;
+    const scope = { groupId: readCurrentGroupId(), accountId: readCurrentAccountId() };
+    const live = () => current === generation.current && !controller.signal.aborted && scope.groupId === readCurrentGroupId() && scope.accountId === readCurrentAccountId();
+    const timer = setTimeout(() => controller.abort(), INCLUDED_CREDIT_WAIT_MS);
+    setBusy(true); setMessage("正在核对产品已含额度，你可以继续使用其它功能");
+    try {
+      const response = await waitForAiCreditCenter(() => fetchCreatorApi("/api/v1/local/client-config", {
+        method: "POST", cache: "no-store", signal: controller.signal, headers: { "x-creatoros-config-trigger": "activation" },
+      }, scope), controller.signal);
+      const body = await waitForAiCreditCenter(() => response.json(), controller.signal) as {
+        authority?: string; outcome?: string; activationFulfillment?: { status?: string; action?: string };
+      };
+      if (!live()) return;
+      const result = body.activationFulfillment;
+      if (!response.ok || !result || !["ready", "pending", "not_eligible", "unavailable"].includes(result.status ?? "") || typeof result.action !== "string" || result.action.length > 400)
+        throw new Error("启用结果尚未确认，请重新核对原权益，也可先切换为自配模型");
+      setMessage(result.status === "ready" && (body.authority !== "channel" || body.outcome !== "configured")
+        ? "产品已含额度已开通，模型配置仍在同步，可稍后再核对或先用自配模型" : result.action);
+      if (result.status === "ready") router.refresh();
+    } catch (error) {
+      if (live()) setMessage(error instanceof Error ? error.message : "启用结果尚未确认，请稍后核对原权益");
+      else if (current === generation.current) setMessage("已停止等待，服务端结果仍需核对；可再次启用核对原权益，也可先用自配模型");
+    } finally {
+      clearTimeout(timer);
+      if (current === generation.current) { active.current = null; setBusy(false); }
+    }
+  };
+  return <div data-slot="included-credit-activation" className="flex w-full flex-col gap-3 border-b border-border/70 pb-4">
+    <p className="text-base leading-6 text-muted-foreground">产品已包含的官方额度可在这里启用，无需另购充值码。没有包含额度时，也可在模型来源中选择自配模型或本地 Codex 继续使用。</p>
+    <div className="flex flex-wrap gap-3">
+      <Button type="button" className="min-h-11 text-base" disabled={busy} onClick={() => void activate()}>{busy ? "正在核对已含额度…" : "启用产品已含额度"}</Button>
+      {busy && <Button type="button" className="min-h-11 text-base" variant="outline" onClick={() => active.current?.abort()}>取消等待</Button>}
+    </div>
+    {message && <p role="status" className="text-base leading-6">{message}</p>}
+  </div>;
+}
+
+export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?: "ready" | "not_configured" | "unverified" } = {}) {
   const [opening, setOpening] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const openingGeneration = React.useRef(0);
+  const openingController = React.useRef<AbortController | null>(null);
+  React.useEffect(() => {
+    let scope = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+    const change = () => {
+      const next = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+      if (next === scope) return;
+      scope = next; openingGeneration.current++; openingController.current?.abort(); openingController.current = null;
+      setOpening(false); setError(null);
+    };
+    window.addEventListener("creatoros:accounts-changed", change); window.addEventListener("storage", change);
+    return () => {
+      openingGeneration.current++; openingController.current?.abort();
+      window.removeEventListener("creatoros:accounts-changed", change); window.removeEventListener("storage", change);
+    };
+  }, []);
   const openCredits = React.useCallback(async () => {
-    if(opening) return;
-    setOpening(true);
-    setError(null);
+    if (openingController.current) return;
+    const current = ++openingGeneration.current;
+    const controller = new AbortController(); openingController.current = controller;
+    const live = () => current === openingGeneration.current && !controller.signal.aborted;
+    setOpening(true); setError(null);
     try {
-      await openAiCreditCenter();
-    } catch(cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "暂时无法打开 AI 额度，请稍后重试",
-      );
+      await openAiCreditCenter({ signal: controller.signal, isCurrent: live });
+    } catch (cause) {
+      if (live()) setError(cause instanceof Error ? cause.message : "暂时无法打开 AI 额度，请稍后重试");
     } finally {
-      setOpening(false);
+      if (current === openingGeneration.current) { openingController.current = null; setOpening(false); }
     }
-  }, [opening]);
+  }, []);
 
   return (
     <SectionCard
       title="AI 额度与消耗"
       description="前往额度中心查看总额度、已消耗和剩余额度，并进行购买或充值。"
     >
+      {accountStatus !== "ready" && <IncludedCreditActivation />}
       <div
         data-slot="ai-credit-center-card"
         className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"
       >
-        <p className="text-xs leading-5 text-muted-foreground">
+        <p className="text-base leading-6 text-muted-foreground">
           首次使用时按页面提示完成账号连接；之后可从这里直接进入额度中心。
         </p>
-        <Button
+        {accountStatus !== "not_configured" ? <Button
           type="button"
           data-slot="open-ai-credit-center"
           disabled={opening}
@@ -65,13 +137,14 @@ export function AiCreditCenterCard() {
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           ) : null}
           {opening ? "正在打开…" : "查看 AI 额度与消耗"}
-        </Button>
+        </Button> : null}
       </div>
       {error ? (
-        <p data-slot="ai-credit-center-error" className="mt-2 text-xs text-destructive">
+        <p data-slot="ai-credit-center-error" className="mt-2 text-base text-destructive">
           {error}
         </p>
       ) : null}
+      <AiCreditBootstrapForm />
     </SectionCard>
   );
 }
@@ -282,3 +355,152 @@ export function ChannelManagedModelCard({
 // the "default" capability via `settings.models.put`; resolve.ts then reads it
 // (stored key preferred over env-ref) with a global-default fallback.
 // [T-325] 顶部加「供应商预设」下拉:选一家 → 填 baseUrl/接口格式 + 切模型候选 datalist。
+
+// 已到账后同步/开窗是独立completion；不续reserve/resume的资金operation deadline。
+const AI_CREDIT_CONFIG_SYNC_WAIT_MS = completionWaitMs([120_000, 120_000, 120_000, 120_000]);
+// cold readiness120000+execution120000+原completion grace10000，再留HTTP观察余量10000。
+// FIFO无公开长度上界：超出有限观察保原shared GET/后端任务，不重发、不称全队列worst。
+const AI_CREDIT_ROUTING_OBSERVER_WAIT_MS = completionWaitMs([120_000, 120_000], 20_000);
+const AI_CREDIT_PAID_COMPLETION_WAIT_MS = completionWaitMs([
+  AI_CREDIT_CONFIG_SYNC_WAIT_MS, AI_CREDIT_ROUTING_OBSERVER_WAIT_MS, AI_CREDIT_CENTER_OPEN_WAIT_MS,
+]);
+type BootstrapView = {
+  contractVersion: "growth-ai-credit-bootstrap-v1"; operationRef: string;
+  status: "pending" | "provider_unknown" | "applied" | "expired";
+  creditUnits: number; expiresAt: string;
+};
+function readBootstrapView(value: unknown): BootstrapView {
+  const row = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  if (!row || Object.keys(row).sort().join() !== ["contractVersion", "operationRef", "status", "creditUnits", "expiresAt"].sort().join() ||
+    row.contractVersion !== "growth-ai-credit-bootstrap-v1" || typeof row.operationRef !== "string" ||
+    !/^AICLE-[A-Za-z0-9_-]{6,96}$/.test(row.operationRef) ||
+    typeof row.status !== "string" || !["pending", "provider_unknown", "applied", "expired"].includes(row.status) ||
+    typeof row.creditUnits !== "number" || !Number.isSafeInteger(row.creditUnits) || row.creditUnits <= 0 ||
+    typeof row.expiresAt !== "string" || !Number.isFinite(Date.parse(row.expiresAt))) throw new Error("开通结果无法验证，请保留原操作并查询");
+  return row as unknown as BootstrapView;
+}
+function AiCreditBootstrapForm() {
+  const router = useRouter();
+  const [code, setCode] = React.useState("");
+  const [operationRef, setOperationRef] = React.useState("");
+  const [operation, setOperation] = React.useState<BootstrapView | null>(null);
+  const [busy, setBusy] = React.useState(false);
+  const [uncertain, setUncertain] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const attempt = React.useRef<{ digest: string; key: string } | null>(null);
+  const inFlight = React.useRef(false);
+  const generation = React.useRef(0);
+  const abort = React.useRef<AbortController | null>(null);
+  React.useEffect(() => {
+    let scope = `${readCurrentGroupId() ?? ""}:${readCurrentAccountId() ?? ""}`;
+    const change = () => {
+      const next = `${readCurrentGroupId() ?? ""}:${readCurrentAccountId() ?? ""}`;
+      if (next === scope) return;
+      scope = next; generation.current++; abort.current?.abort(); attempt.current = null;
+      inFlight.current = false; setBusy(false); setCode(""); setOperationRef(""); setOperation(null); setError(null); setUncertain(false);
+    };
+    window.addEventListener("creatoros:accounts-changed", change);
+    window.addEventListener("storage", change);
+    return () => { generation.current++; abort.current?.abort(); window.removeEventListener("creatoros:accounts-changed", change); window.removeEventListener("storage", change); };
+  }, []);
+  async function perform(action: "reserve" | "read" | "resume" | "connect") {
+    if (inFlight.current) return;
+    const submittedCode = code.trim();
+    const ref = operation?.operationRef ?? operationRef.trim();
+    if (action === "reserve" && !/^AICR-[A-Za-z0-9_-]{35,59}$/.test(submittedCode)) { setError("请输入自己的有效充值码"); return; }
+    if (action !== "reserve" && !/^AICLE-[A-Za-z0-9_-]{6,96}$/.test(ref)) { setError("请填写原操作编号"); return; }
+    inFlight.current = true; setBusy(true); setError(null);
+    if (action === "reserve") setCode("");
+    const current = generation.current;
+    const scope = { groupId: readCurrentGroupId(), accountId: readCurrentAccountId() };
+    const controller = new AbortController(); abort.current = controller;
+    const timer = setTimeout(() => controller.abort(), action === "connect" ? AI_CREDIT_PAID_COMPLETION_WAIT_MS : executionTimeoutMs(900_000));
+    const live = () => current === generation.current && !controller.signal.aborted &&
+      scope.groupId === readCurrentGroupId() && scope.accountId === readCurrentAccountId();
+    let sent = false;
+    try {
+      if (action === "reserve") {
+        // 只在当前提交中持有充值码；未确认时只保摘要和原幂等键，显式恢复不得换码。
+        const bytes = await waitForAiCreditCenter(() => crypto.subtle.digest("SHA-256", new TextEncoder().encode(submittedCode)), controller.signal);
+        const digest = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, "0")).join("");
+        if (!live()) return;
+        if (attempt.current && attempt.current.digest !== digest) { setError("本次结果尚未确认，请输入原充值码恢复同一次提交"); return; }
+        attempt.current ??= { digest, key: `bootstrap-${crypto.randomUUID()}` };
+      }
+      if (action === "connect") {
+        if (operation?.status !== "applied") return;
+        const { sync, body } = await withAiCreditCenterBudget(AI_CREDIT_CONFIG_SYNC_WAIT_MS, controller.signal, async signal => {
+          const sync = await waitForAiCreditCenter(() => fetchCreatorApi("/api/v1/local/client-config", { method: "POST", cache: "no-store", signal, headers: { "x-creatoros-config-trigger": "bootstrap" } }, scope), signal);
+          if (!live()) throw new DOMException("当前账号组已变化，请保留原操作", "AbortError");
+          const body = await waitForAiCreditCenter(() => sync.json(), signal) as { outcome?: string; authority?: string; action?: string };
+          return { sync, body };
+        });
+        if (!live()) return;
+        if (!sync.ok || body.outcome !== "configured" || body.authority !== "channel") throw new Error("兑换已到账，但配置同步暂未完成，请保留原操作后重试同步");
+        window.dispatchEvent(new CustomEvent("creatoros:client-config-synced", { detail: { outcome: "configured" } }));
+        router.refresh();
+        await withAiCreditCenterBudget(AI_CREDIT_ROUTING_OBSERVER_WAIT_MS, controller.signal, async signal => {
+          const { loadModelRouting } = await waitForAiCreditCenter(() => import("@/features/copilot/assistant-engine"), signal);
+          if (!live()) throw new DOMException("当前账号组已变化，请保留原操作", "AbortError");
+          // 借等原shared GET，取消的是本观察者，不能清除/abort全局读者或另发GET。
+          await waitForAiCreditCenter(() => loadModelRouting(true), signal);
+        });
+        if (!live()) return;
+        await openAiCreditCenter({ signal: controller.signal, isCurrent: live });
+        return;
+      }
+      const path = action === "reserve" ? "/api/v1/local/ai-credits/bootstrap" :
+        `/api/v1/local/ai-credits/bootstrap/${encodeURIComponent(ref)}${action === "resume" ? "/resume" : ""}`;
+      const response = await waitForAiCreditCenter(() => {
+        sent = true; // 原signal已取消则thunk不调用，不把未发出的请求当成未知资金提交。
+        return fetchCreatorApi(path, {
+        method: action === "read" ? "GET" : "POST", cache: "no-store", signal: controller.signal,
+        headers: action === "read" ? {} : { "Content-Type": "application/json", ...(action === "reserve" ? { "Idempotency-Key": attempt.current!.key } : {}) },
+        ...(action === "reserve" ? { body: JSON.stringify({ serviceId: "omnihi-main", code: submittedCode }) } : action === "resume" ? { body: "{}" } : {}),
+        }, scope);
+      }, controller.signal);
+      const value: unknown = await waitForAiCreditCenter(() => response.json(), controller.signal);
+      if (!live()) return;
+      if (!response.ok) {
+        const failed = value && typeof value === "object" ? value as { error?: unknown; uncertain?: unknown } : {};
+        if (action === "reserve") {
+          const unknown = failed.uncertain === true; setUncertain(unknown);
+          if (!unknown) attempt.current = null;
+        }
+        throw new Error(typeof failed.error === "string" ? failed.error : "开通结果尚未确认，请保留原操作并查询");
+      }
+      const result = readBootstrapView(value);
+      if (action !== "reserve" && result.operationRef !== ref) throw new Error("操作身份无法验证，请保留原操作并查询");
+      setOperation(result); setOperationRef(result.operationRef); setUncertain(false); attempt.current = null;
+    } catch (cause) {
+      if (current !== generation.current) return;
+      if (action === "reserve" && sent && attempt.current) setUncertain(true);
+      setError(action === "connect" && (cause as { name?: unknown } | null)?.name === "AbortError"
+        ? "本次等待已结束或取消，兑换已到账，请保留原操作后重试同步"
+        : cause instanceof Error ? cause.message : "到账结果尚未确认，请保留原操作并查询");
+    } finally {
+      clearTimeout(timer);
+      if (current === generation.current) { inFlight.current = false; setBusy(false); }
+    }
+  }
+  const status = operation ? ({ pending: "开通处理中", provider_unknown: "到账确认中，请查询原操作，不要更换充值码", applied: "本次兑换已到账", expired: "原操作期限已到，请保留编号核对到账状态，不要更换充值码" } as const)[operation.status] : null;
+  return <details data-slot="ai-credit-bootstrap" className="mt-3 border-t border-border/70 pt-3">
+    <summary className="cursor-pointer text-sm font-medium">使用充值码开通官方额度</summary>
+    <div className="mt-3 flex flex-col gap-3">
+      <p className="text-xs leading-5 text-muted-foreground">没有官方额度账户时，可使用自己的充值码开通。已有账户请在额度中心充值。</p>
+      {!operation ? <div className="flex flex-col gap-2 sm:flex-row">
+        <Input aria-label="官方额度充值码" type="password" autoComplete="off" value={code} disabled={busy} onChange={event => setCode(event.target.value)} placeholder={uncertain ? "重新输入原充值码，恢复同一次提交" : "粘贴自己的 AICR 充值码"}/>
+        <Button type="button" disabled={busy || !code.trim()} onClick={() => void perform("reserve")}>{uncertain ? "恢复原提交" : "兑换并开通"}</Button>
+      </div> : null}
+      {uncertain ? <p className="text-xs text-warning">本次请求结果尚未确认。只恢复同一次提交；已有操作编号时，请查询原操作。</p> : null}
+      <label className="flex flex-col gap-2 text-sm"><span>原操作编号</span><Input aria-label="原操作编号" autoComplete="off" value={operationRef} disabled={busy || !!operation} onChange={event => setOperationRef(event.target.value)}/></label>
+      {operation ? <p role="status" className="text-xs text-muted-foreground">{status}</p> : null}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" disabled={busy || !operationRef.trim()} onClick={() => void perform("read")}>查询原操作</Button>
+        {operation && (operation.status === "pending" || operation.status === "provider_unknown") ? <Button type="button" variant="outline" disabled={busy} onClick={() => void perform("resume")}>恢复原操作</Button> : null}
+        {operation?.status === "applied" ? <Button type="button" disabled={busy} onClick={() => void perform("connect")}>同步并打开额度中心</Button> : null}
+      </div>
+      {error ? <p role="alert" className="text-xs text-destructive">{error}</p> : null}
+    </div>
+  </details>;
+}

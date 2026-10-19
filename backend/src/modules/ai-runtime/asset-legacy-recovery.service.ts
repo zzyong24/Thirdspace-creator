@@ -1,3 +1,6 @@
+import {withWorkspaceWrite} from "../../workspace-write";
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {createHash,randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {and,asc,eq,inArray,aiTasks,aiTaskResults,executionTasks,executionCalls,OwnershipError,type Db} from '@creatoros/backend';
@@ -8,16 +11,23 @@ import {generationFingerprint,parseProviderCheckpoint} from './asset-provider-ch
 type Task=typeof aiTasks.$inferSelect;
 type Input=import('zod').z.infer<typeof assetGenerationInputSchema>;
 /** 旧提交事实单向导入现有账本。仅允许读取原 video job，绝不授予新的付费提交额度。 */
-export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapshot:Task,modelInput:Input|undefined,options:{deadlineMs:number;now:()=>string;signal:AbortSignal}){
+export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapshot:Task,modelInput:Input|undefined,options:{deadlineMs:number;now:()=>string;signal:AbortSignal;assertProject?:(ctx:RequestContext,id:string,tx:Db,forUpdate:boolean)=>Promise<void>}){
  const {signal,now}=options;
- return db.transaction(async tx=>{
+ return db.transaction(async outer=>{
+  await assertFrozenWorkspaceMembership(outer,snapshot);
+  return withWorkspaceWrite(outer,ctx,async tx=>{
+  if(snapshot.projectId){if(!options.assertProject)throw new OwnershipError("旧素材父项目核验不可用");await options.assertProject(ctx,snapshot.projectId,tx,true);}
   signal.throwIfAborted();
   const ids=[...new Set([snapshot.id,snapshot.retryOfTaskId].filter((id):id is string=>!!id))].sort();
-  const rows=await tx.select().from(aiTasks).where(and(inArray(aiTasks.id,ids),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??''))).orderBy(asc(aiTasks.id)).for('update');
+  const rows=await tx.select().from(aiTasks).where(and(inArray(aiTasks.id,ids),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx))).orderBy(asc(aiTasks.id)).for('update');
   const current=rows.find(row=>row.id===snapshot.id),original=rows.find(row=>row.id===(snapshot.retryOfTaskId??snapshot.id));
-  if(!current||!original||rows.length!==ids.length||rows.some(row=>row.taskType!=='asset.generate'))throw new OwnershipError('旧素材任务归属不符');
+  if(!current||!original||rows.length!==ids.length||rows.some(row=>row.taskType!=='asset.generate'||row.groupId!==snapshot.groupId||row.accountId!==snapshot.accountId))throw new OwnershipError('旧素材任务归属不符');
   if(!isDeepStrictEqual(current.inputData,snapshot.inputData)||current.requestFingerprint!==snapshot.requestFingerprint||current.projectId!==snapshot.projectId)throw new Error('旧素材记录在准备期间改变');
-  if(current.executionTaskId)return {aiTaskId:current.id,executionTaskId:current.executionTaskId};
+  if(current.executionTaskId){
+   const [existing]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,current.executionTaskId),eq(executionTasks.userId,current.userId),workspaceFilter(executionTasks,current),eq(executionTasks.ownerId,current.id),eq(executionTasks.ownerType,'ai_task'),eq(executionTasks.kind,'ai_task')));
+   if(!existing||existing.accountId!==current.accountId||existing.groupId!==current.groupId||existing.groupVersion!==current.groupVersion||existing.membershipVersion!==current.membershipVersion)throw new OwnershipError('旧素材执行原归属不符');
+   return {aiTaskId:current.id,executionTaskId:existing.id};
+  }
   if(!isDeepStrictEqual(current.runtimeData,snapshot.runtimeData))throw new Error('旧素材提交记录在准备期间改变');
   // 旧租约未交还时不能接管；过期清理由原租约恢复器负责。
   if(rows.some(row=>row.leaseOwner||row.leaseToken))throw new Error('旧素材执行尚未确认停止');
@@ -35,6 +45,7 @@ export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapsh
   else if(mismatched)reason='重试输入或项目与原素材意图不同，请核对原提交';
   else if(modelInput){
    const input=assetGenerationInputSchema.parse(modelInput);
+   if("engine" in input)throw new Error("旧素材迁移不能接收新Codex执行输入");
    const fingerprint=generationFingerprint({intentId:current.retryOfTaskId??current.id,capability:input.capability,prompt:input.prompt,aspectRatio:input.aspectRatio,durationSec:input.durationSec,resolution:input.mediaKind==='video'?input.resolution:'768P',spec:input});
    const checkpoints=rows.map(row=>({row,raw:(row.runtimeData as Record<string,unknown>).multimodalProviderCheckpoint})).filter(item=>item.raw!==undefined);
    const parsed=checkpoints.map(item=>parseProviderCheckpoint(item.raw,fingerprint));
@@ -53,7 +64,7 @@ export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapsh
   const callId=jobId?`call_${randomUUID()}`:undefined;
   const reservedTokens=frozen?Buffer.byteLength(frozen.prompt)+1024:1;
   // 旧链没有可证明的 token 用量，不能置零；唯一旧请求占满调用额度，仅允许同键回读。
-  await tx.insert(executionTasks).values({id:executionTaskId,userId:current.userId,accountId:current.accountId,kind:'ai_task',ownerType:'ai_task',ownerId:current.id,idempotencyKey:`ai:${current.id}`,status,
+  await tx.insert(executionTasks).values({id:executionTaskId,userId:current.userId,accountId:current.accountId,groupId:current.groupId,groupVersion:current.groupVersion,membershipVersion:current.membershipVersion,kind:'ai_task',ownerType:'ai_task',ownerId:current.id,idempotencyKey:`ai:${current.id}`,status,
    payload:{aiTaskId:current.id,...(frozen?{modelInput:frozen}:{}),assetLegacyRecovery:{schemaVersion:1,mode:jobId?'provider_job':'review',originalTaskId:original.id,callId:callId??null,inputData:current.inputData,requestFingerprint:current.requestFingerprint,recoveryStartedAt:stamp,sourceModelCallStartedAt:original.modelCallStartedAt??null,sourceTaskStartedAt:original.startedAt??null}},
    executionBudget:{maxCalls:1,maxTokens:reservedTokens,deadlineMs:options.deadlineMs},deadlineAt,createdAt:original.requestedAt,updatedAt:stamp,
    lastErrorCode:jobId?null:'ASSET_LEGACY_REVIEW_REQUIRED',lastErrorMessage:jobId?null:reason});
@@ -65,5 +76,6 @@ export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapsh
   }
   await tx.update(aiTasks).set({executionTaskId,...(ownResults.length?{status:'awaiting_confirmation'}:{}),errorMessage:jobId?null:reason}).where(eq(aiTasks.id,current.id));
   signal.throwIfAborted();return {aiTaskId:current.id,executionTaskId};
+  });
  });
 }

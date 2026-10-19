@@ -1,0 +1,1895 @@
+{
+  "kind": "actual52-Git-R-display-exact-approved-delete-plus-write-source-receipt",
+  "originalFailedAuditReport": {
+    "file": "docs/verification/t1246/round-2/final-source-audits/stage-source-v5-51423dea25343a726d94758a.json",
+    "sha256": "96958f03e431314836fb313f83c3cfd211264ef4b456b34c1314a54e836c42c0"
+  },
+  "deliveryManifest": {
+    "file": "docs/verification/t1254/candidates/exact-delivery-v3/DELIVERY_EXACT_FILE_MANIFEST.json",
+    "sha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd"
+  },
+  "actualCopyStageReceipt": {
+    "file": "docs/verification/t1254/ROOT_EXACT_COPY_AND_STAGE_COMPLETE.json",
+    "sha256": "94838ee358d4991786e7c639f6fd522cc81f5164d966dd0523aa13dc746dedc9"
+  },
+  "expectedPairs": 52,
+  "pairs": [
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-B_etG6Rp.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+        "after": {
+          "sha256": "09f05f98c596f542e8d9ad15ca6ce8e5ec1a0ec6bbcaa6ea44063526ad4bb6cc",
+          "size": 37983,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-B_etG6Rp.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "261bacfecd380f63cba380be0ef91bc7d2763d16e0d4aa0a8075694854118bb9",
+          "size": 37983,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-B_etG6Rp.js",
+      "currentTargetSha256": "09f05f98c596f542e8d9ad15ca6ce8e5ec1a0ec6bbcaa6ea44063526ad4bb6cc",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-B_etG6Rp.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-luI7Wkxl.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+        "after": {
+          "sha256": "988f1e4564bac558f7d687bf9ac8d2293e837aae218c58e941612386b296538c",
+          "size": 10774,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-luI7Wkxl.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "2b28b7dabf08424478b087fd7cf328dd1f424cbd5ed9a6d251f5a963cef4d4e4",
+          "size": 10774,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-luI7Wkxl.js",
+      "currentTargetSha256": "988f1e4564bac558f7d687bf9ac8d2293e837aae218c58e941612386b296538c",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-luI7Wkxl.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-Cl7WEyAt.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+        "after": {
+          "sha256": "c52539a25c375f28392164a570063c26472d4a885a3bc0798e4644e28633f604",
+          "size": 23222,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-Cl7WEyAt.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "995715519fccf15f97dd04f239f1aa12a98c5179068a483b40e915346b65d6da",
+          "size": 23222,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-Cl7WEyAt.js",
+      "currentTargetSha256": "c52539a25c375f28392164a570063c26472d4a885a3bc0798e4644e28633f604",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-Cl7WEyAt.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-B7Jpldbh.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+        "after": {
+          "sha256": "4d1e9bc24b5162d892a64b06994aa930a875f6c34953f295f71bdd89d8759c4c",
+          "size": 14636,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-B7Jpldbh.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "5518a5f9230fe65e11c751bdc5bdfda105d61d5d0c1dab83d00eb245c3464754",
+          "size": 14636,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-B7Jpldbh.js",
+      "currentTargetSha256": "4d1e9bc24b5162d892a64b06994aa930a875f6c34953f295f71bdd89d8759c4c",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-B7Jpldbh.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-BXHl_kMQ.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+        "after": {
+          "sha256": "0bdd901b555e5ea2d62c7fd282b18fd7ab2b6363737790f930e4e5e09cb1eb9e",
+          "size": 38626,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-BXHl_kMQ.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "2878e86ad4b46aefd6c56bd3b60a20b44f6fe46be9129fe8dcc21aa4ffa6fed4",
+          "size": 38626,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-BXHl_kMQ.js",
+      "currentTargetSha256": "0bdd901b555e5ea2d62c7fd282b18fd7ab2b6363737790f930e4e5e09cb1eb9e",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-BXHl_kMQ.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-wZLC_pTV.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+        "after": {
+          "sha256": "225fe0a6e514bd29fc2de0404bb880b19804e5e7472c1d2653fd10c9c971f460",
+          "size": 15248,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-wZLC_pTV.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "4f6783befa4769efc3e388d07e425ba84ee946b0956a47b616a6e412119de4f6",
+          "size": 15248,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-wZLC_pTV.js",
+      "currentTargetSha256": "225fe0a6e514bd29fc2de0404bb880b19804e5e7472c1d2653fd10c9c971f460",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-wZLC_pTV.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+        "after": {
+          "sha256": "5b423cc59e3d081ad8a7e5002d8240ea4cb1a69dfa61acde4edd3856f590ed7f",
+          "size": 2964,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "be6f97ab7e84116fbd22a0328f245dbd45a0b209f1e4a85d5815ffd21845614f",
+          "size": 2699,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "currentTargetSha256": "5b423cc59e3d081ad8a7e5002d8240ea4cb1a69dfa61acde4edd3856f590ed7f",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bd_SEvWI.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+        "after": {
+          "sha256": "0205ec1a922d9d04a12c5b3941aa4422e9b49546bde118e928202b23914858a2",
+          "size": 16306,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bd_SEvWI.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "6c1a536b71a0c4a981af05181e655458546ee99336efdee72dccfcde68215995",
+          "size": 16306,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bd_SEvWI.js",
+      "currentTargetSha256": "0205ec1a922d9d04a12c5b3941aa4422e9b49546bde118e928202b23914858a2",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bd_SEvWI.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+        "after": {
+          "sha256": "a7f4b8844fff89f87a9437b5a596b456f146136867708205f67ec1a831eaf8a0",
+          "size": 729,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "82df4c1681098e8668d62758641483193091720660287aaf8702da2331b01f0a",
+          "size": 729,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js",
+      "currentTargetSha256": "a7f4b8844fff89f87a9437b5a596b456f146136867708205f67ec1a831eaf8a0",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+        "after": {
+          "sha256": "2424a250858f3d366a86015873e2c710adde669ebef3f8cf3a3f8f374f37d421",
+          "size": 15675,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "a1446488dc0690cd98d4fba9527df9a6627db1c7ff25f0f48c6b9e8532c11998",
+          "size": 15675,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js",
+      "currentTargetSha256": "2424a250858f3d366a86015873e2c710adde669ebef3f8cf3a3f8f374f37d421",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+        "after": {
+          "sha256": "8bc05eb4382ee40a1ff0466a17a1e3163f1a1c71031f42265aab4b9e031a4e3f",
+          "size": 86009,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "ee5dea2c3534d536e2d5a7ca3bb317e1809c2cf07a6795c3032128da22730645",
+          "size": 86009,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js",
+      "currentTargetSha256": "8bc05eb4382ee40a1ff0466a17a1e3163f1a1c71031f42265aab4b9e031a4e3f",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bz80_cwg.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+        "after": {
+          "sha256": "98ba2b7784da56e8a7e7f0bb3032bf0acba903626b343d4a49326052e6e18a29",
+          "size": 13971,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bz80_cwg.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "b1591960b8463814cd68bd8e9f2466716f200ea0183ce1cf85969fa43788121a",
+          "size": 13971,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bz80_cwg.js",
+      "currentTargetSha256": "98ba2b7784da56e8a7e7f0bb3032bf0acba903626b343d4a49326052e6e18a29",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bz80_cwg.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-CP-K_yWo.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+        "after": {
+          "sha256": "e73eff8cf9ad6d3706b60751dac4f029c18a1f956769833f7c3fb6f05d89d364",
+          "size": 953,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-CP-K_yWo.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "85687c0c284d9589fbb796a99bca15550cc8f0d294c530037458ffe3fdcc0ddd",
+          "size": 953,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-CP-K_yWo.js",
+      "currentTargetSha256": "e73eff8cf9ad6d3706b60751dac4f029c18a1f956769833f7c3fb6f05d89d364",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-CP-K_yWo.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BawQ5Q6I.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+        "after": {
+          "sha256": "4554424d3fa55677b3d9eef6edd0d43119b905a1f2a2c3ddc4d513fb5e472038",
+          "size": 3292,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BawQ5Q6I.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "4ad77319caf54915d3ef4f1b8f31e9feb8b5bf422acedb055d199f650e6929de",
+          "size": 3292,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BawQ5Q6I.js",
+      "currentTargetSha256": "4554424d3fa55677b3d9eef6edd0d43119b905a1f2a2c3ddc4d513fb5e472038",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+        "source": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BawQ5Q6I.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+      "source": "frontend/public/reference-editors/doocs-md/static/css/md-index-9PNpNGUa.css",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+        "after": {
+          "sha256": "ec4dc490c97f5e284ca0d47449b7daabe1b0a631afb3e0a89f7211c447e7a390",
+          "size": 143208,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/css/md-index-9PNpNGUa.css",
+        "operation": "delete",
+        "before": {
+          "sha256": "9a55fe22e0ddc28fd4d5560da5a77eb3fb74c3dce1edb46fd72de6e946ec2a5f",
+          "size": 143208,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/css/md-index-9PNpNGUa.css",
+      "currentTargetSha256": "ec4dc490c97f5e284ca0d47449b7daabe1b0a631afb3e0a89f7211c447e7a390",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+        "source": "frontend/public/reference-editors/doocs-md/static/css/md-index-9PNpNGUa.css"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-C-l5A6vK.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+        "after": {
+          "sha256": "e91c25e309c9ca9c26f20e07cf786b259f741d8c485ed32f789ebe64ce7aa332",
+          "size": 6242,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-C-l5A6vK.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "fa458e3fe6d7ef7f4ab4aff2bcfd4f558e6c99ada748bc780d40a5df0243e77c",
+          "size": 6242,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-C-l5A6vK.js",
+      "currentTargetSha256": "e91c25e309c9ca9c26f20e07cf786b259f741d8c485ed32f789ebe64ce7aa332",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-C-l5A6vK.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-DfNpoxs6.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+        "after": {
+          "sha256": "551448e87f21ac853a6393ceec34811f5aa27c3e96c1b2a8c9e43eadb09981fe",
+          "size": 19080,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-DfNpoxs6.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "7fc90ce50b58d258adda9d690bedb4aaf7115703c34fe37db0981d82ba6d1332",
+          "size": 19080,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-DfNpoxs6.js",
+      "currentTargetSha256": "551448e87f21ac853a6393ceec34811f5aa27c3e96c1b2a8c9e43eadb09981fe",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-DfNpoxs6.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-BO3RH86h.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+        "after": {
+          "sha256": "305193a0e9d0ed42313767c099f40228840c53b1453b20ecf815556462d78cd0",
+          "size": 40990,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-BO3RH86h.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "11ed5f5079dbd3404ca4669ee02452ea680b9a99963554212cee47273935c27b",
+          "size": 40990,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-BO3RH86h.js",
+      "currentTargetSha256": "305193a0e9d0ed42313767c099f40228840c53b1453b20ecf815556462d78cd0",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-BO3RH86h.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Be9_RozG.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+        "after": {
+          "sha256": "5d4854e05b96c9817ddb3e326aaedbee17289937411332993f4ad9d5102cc65c",
+          "size": 13540,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Be9_RozG.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "09de013f9561c433368aa3015113bb1f9bdb56f76ae4996a5c3b402e1b150b6f",
+          "size": 13540,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Be9_RozG.js",
+      "currentTargetSha256": "5d4854e05b96c9817ddb3e326aaedbee17289937411332993f4ad9d5102cc65c",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Be9_RozG.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-BJdrURW-.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+        "after": {
+          "sha256": "4f7aeaef754f718e01f9fbeb390839e4e89ef798430ef0fe9124976d3e32c477",
+          "size": 317913,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-BJdrURW-.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "0c332ad55771cb0b05e03caf5541a90c7291ad9ff3779fc9ce8120ff353c9d3b",
+          "size": 317913,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-BJdrURW-.js",
+      "currentTargetSha256": "4f7aeaef754f718e01f9fbeb390839e4e89ef798430ef0fe9124976d3e32c477",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-BJdrURW-.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-C1zEtBm-.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+        "after": {
+          "sha256": "581b8ad49813c5809a29a7898ccdd56843cfa7a1a0fbe26815f7da91452f23d3",
+          "size": 8467,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-C1zEtBm-.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "54879cbcd44c80e6ca02330103a9186d60a4aed05c218d5c73e4a64d09a007a4",
+          "size": 8467,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-C1zEtBm-.js",
+      "currentTargetSha256": "581b8ad49813c5809a29a7898ccdd56843cfa7a1a0fbe26815f7da91452f23d3",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-C1zEtBm-.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CB74oqBL.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+        "after": {
+          "sha256": "9bc7b363ccb0a25ce4215f3adedda033c1453afa34df89c727abafa98b906a43",
+          "size": 6917,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CB74oqBL.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "aff00e68a516529f046a3abcc2b10619fcf9fa0e91f6e7eaec5c4602648e9449",
+          "size": 6917,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CB74oqBL.js",
+      "currentTargetSha256": "9bc7b363ccb0a25ce4215f3adedda033c1453afa34df89c727abafa98b906a43",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CB74oqBL.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D8m8Y5IS.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+        "after": {
+          "sha256": "ee1862dc105291e215caaebed34606842b3833ac76a461ebf941a528c1218877",
+          "size": 6066,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D8m8Y5IS.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "8aadc723497137945a0da4459dbfbd048a72b201ef1e91734517cc36b5a3d207",
+          "size": 6066,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D8m8Y5IS.js",
+      "currentTargetSha256": "ee1862dc105291e215caaebed34606842b3833ac76a461ebf941a528c1218877",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D8m8Y5IS.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-TEm2HKiq.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+        "after": {
+          "sha256": "720976275db0b2751d2f2028e3fcd2b6256eefec1d579b4f1eafb09396fa91ba",
+          "size": 22974,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-TEm2HKiq.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "3ca9b15946dd8e854ef3dd57b0a2b63c43337502f51f74bfc12492f5d8c2e896",
+          "size": 22974,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-TEm2HKiq.js",
+      "currentTargetSha256": "720976275db0b2751d2f2028e3fcd2b6256eefec1d579b4f1eafb09396fa91ba",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-TEm2HKiq.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-C-hBAbgh.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+        "after": {
+          "sha256": "577580cba9a4302a7a1fcf41f8b929add2d29884ab1799a1e7f736a8789b8d7a",
+          "size": 5963,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-C-hBAbgh.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "ae03ce2e7fdb7fbb0c5cf584886d8d7b96e8beb6d4c44edd146ed352bd0f2136",
+          "size": 5963,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-C-hBAbgh.js",
+      "currentTargetSha256": "577580cba9a4302a7a1fcf41f8b929add2d29884ab1799a1e7f736a8789b8d7a",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-C-hBAbgh.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-9ZpYLtCg.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+        "after": {
+          "sha256": "f7507e1a740b60401c568e32c27564f62f8dde6d52ac1a271ab1fd2910197925",
+          "size": 7138,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-9ZpYLtCg.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "1a4d60dd1d23deeb5d5ac0844a5e0bc593e8120744d322e37981790b9a173998",
+          "size": 7138,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-9ZpYLtCg.js",
+      "currentTargetSha256": "f7507e1a740b60401c568e32c27564f62f8dde6d52ac1a271ab1fd2910197925",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-9ZpYLtCg.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-DEpTD7Ru.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+        "after": {
+          "sha256": "2328539153335f16041d1b8e613da6a677e4991f022c48c4a3f6df7c9e65c7fa",
+          "size": 13843,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-DEpTD7Ru.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "0adfd62b27d7edaf64bc3bb78d176b61deb12d0178f19c1811299c39bdc64647",
+          "size": 13843,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-DEpTD7Ru.js",
+      "currentTargetSha256": "2328539153335f16041d1b8e613da6a677e4991f022c48c4a3f6df7c9e65c7fa",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-DEpTD7Ru.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-CNJopoPm.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+        "after": {
+          "sha256": "10181435a73d824e13a17a6c1318a771a13b31cc0fd89015a769847b856b9bdc",
+          "size": 16051,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-CNJopoPm.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "df924b4d0f7c9412c819f12bb1d74d823440fe34e8103b759602c804aa477b8b",
+          "size": 16051,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-CNJopoPm.js",
+      "currentTargetSha256": "10181435a73d824e13a17a6c1318a771a13b31cc0fd89015a769847b856b9bdc",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-CNJopoPm.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-eximbpzJ.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+        "after": {
+          "sha256": "f47d4b9a253defdfa9bfec5f7bad9767bf70e36fc0a101be14202f96dc36e50c",
+          "size": 10880,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-eximbpzJ.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "3820a6ee1d4caae73e7288cf3a3eb6e28c11123a8b8fe2b040f1b291c65084c5",
+          "size": 10880,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-eximbpzJ.js",
+      "currentTargetSha256": "f47d4b9a253defdfa9bfec5f7bad9767bf70e36fc0a101be14202f96dc36e50c",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-eximbpzJ.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-BXqfIH1Q.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+        "after": {
+          "sha256": "d3cf8ca72a77fdae593ef78bb935cf75c430c5670807b225165cda2de243c26a",
+          "size": 3334,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-BXqfIH1Q.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "1402f99fe3772ca5b676499d512ad92926c5ef813c55aee66d7fa9d47999f8b3",
+          "size": 3334,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-BXqfIH1Q.js",
+      "currentTargetSha256": "d3cf8ca72a77fdae593ef78bb935cf75c430c5670807b225165cda2de243c26a",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-BXqfIH1Q.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CPsXDRjK.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+        "after": {
+          "sha256": "b425e6c58eaeaa95bc111d5391505b995b06e36f884d8859cded8337e9ca1e1a",
+          "size": 29268,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CPsXDRjK.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "11653b9ea3d70eee3f00140f5a9463f0dedbf9906595050cd1d20a8fc62e0def",
+          "size": 29268,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CPsXDRjK.js",
+      "currentTargetSha256": "b425e6c58eaeaa95bc111d5391505b995b06e36f884d8859cded8337e9ca1e1a",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CPsXDRjK.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-BjUIeOur.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+        "after": {
+          "sha256": "8ba120fd1651ebb823078e1e0464ca02f280ac77df3388b752e89c78fc715f27",
+          "size": 8096,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-BjUIeOur.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "eb298941c28fe3af2c806f808ac72023c2fe82f7175c1650c9f2c4be53c8ecce",
+          "size": 8096,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-BjUIeOur.js",
+      "currentTargetSha256": "8ba120fd1651ebb823078e1e0464ca02f280ac77df3388b752e89c78fc715f27",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-BjUIeOur.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-BsDUHnIi.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+        "after": {
+          "sha256": "743767353cf7882af662eeca05ee98777bb593bba1488c12adf604e4723c5c27",
+          "size": 28029,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-BsDUHnIi.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "c4f372dfd763501e160ff7c9afa0287d23bc12f07f99ce393a8eb09dcd1a5987",
+          "size": 28029,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-BsDUHnIi.js",
+      "currentTargetSha256": "743767353cf7882af662eeca05ee98777bb593bba1488c12adf604e4723c5c27",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-BsDUHnIi.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-auth-Lj20kOUp.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+        "after": {
+          "sha256": "01bb0d0ed289cfeee787d2432ba95aa95a3a476448f2e0ee10d29746a2da071b",
+          "size": 4222,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-auth-Lj20kOUp.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "78fae0347d80a43a90c0effe48e27a3b167978c153f8f134b6569ac0613c6c06",
+          "size": 4222,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-auth-Lj20kOUp.js",
+      "currentTargetSha256": "01bb0d0ed289cfeee787d2432ba95aa95a3a476448f2e0ee10d29746a2da071b",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-auth-Lj20kOUp.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-client-BtSlI_Gv.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+        "after": {
+          "sha256": "2ae12107995f72430f1fb124c7e2169fe7ce50a9ef86a59a0eff4d3864b7f8d7",
+          "size": 802,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-client-BtSlI_Gv.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "bd5309185ddf90ff128289bb9e84cade90db2e39727dcd577ac342091b1ebaf9",
+          "size": 802,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-client-BtSlI_Gv.js",
+      "currentTargetSha256": "2ae12107995f72430f1fb124c7e2169fe7ce50a9ef86a59a0eff4d3864b7f8d7",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-client-BtSlI_Gv.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-BLaxswny.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+        "after": {
+          "sha256": "0204615fbd007c1a039d90c57cf07ead2a70dce9be8ad050d04bf8bdc9d8f0c6",
+          "size": 3611,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-BLaxswny.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "7394d36128a864bb9e133cf24331a4cc6e733c95ba79c7685150613fc4ef2c43",
+          "size": 3611,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-BLaxswny.js",
+      "currentTargetSha256": "0204615fbd007c1a039d90c57cf07ead2a70dce9be8ad050d04bf8bdc9d8f0c6",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-BLaxswny.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-export-BG6p5-Wz.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+        "after": {
+          "sha256": "5fc139dc0513bcc9f762212200b899cc29b70a54e149456990dd975e709b79d8",
+          "size": 1297,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-export-BG6p5-Wz.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "216057b8ceac740640bb520edf8f83a7535dcc684a85e219ffd28bad70f7da4b",
+          "size": 1297,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-export-BG6p5-Wz.js",
+      "currentTargetSha256": "5fc139dc0513bcc9f762212200b899cc29b70a54e149456990dd975e709b79d8",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-export-BG6p5-Wz.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-DYwdTMDU.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+        "after": {
+          "sha256": "4ac7bd1f2e17d0e698476ae47b2c0addf78dfc2d66595defe7e79caf2b7ea43a",
+          "size": 11602,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-DYwdTMDU.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "4226363093a5dd5ac5dfb462a66cc4251b64f8c64d8415c6eebbe9fb069c1295",
+          "size": 11602,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-DYwdTMDU.js",
+      "currentTargetSha256": "4ac7bd1f2e17d0e698476ae47b2c0addf78dfc2d66595defe7e79caf2b7ea43a",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-DYwdTMDU.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+        "after": {
+          "sha256": "a40919eb7e218b223a76e50a89372d55ce006a1876902a8e9755e9dbb92d57b3",
+          "size": 309784,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "5b601c49f654a23b1d116180ba47145edbe71129c9173e274d389956c26e5315",
+          "size": 309841,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "currentTargetSha256": "a40919eb7e218b223a76e50a89372d55ce006a1876902a8e9755e9dbb92d57b3",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-CFPNYZKu.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+        "after": {
+          "sha256": "7728e0a09272a1e554f26212084c145dc8606ac91b894084bf7b7139be1cfd97",
+          "size": 1026,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-CFPNYZKu.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "efcdd54146f2a3fa810930bf48532ad1c84bc8670bb9ec359a27803c26753f82",
+          "size": 1026,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-CFPNYZKu.js",
+      "currentTargetSha256": "7728e0a09272a1e554f26212084c145dc8606ac91b894084bf7b7139be1cfd97",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-CFPNYZKu.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-CSX1gdNq.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+        "after": {
+          "sha256": "0763cc1cb7abf333e4094a8086fd2f7d7557859779e4c45ad8b4051159425a9f",
+          "size": 10007,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-CSX1gdNq.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "fcfaa9cc732738b3950a8f653d8e9a51673373dbc26ec4401e3e43d415a4a3b5",
+          "size": 10007,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-CSX1gdNq.js",
+      "currentTargetSha256": "0763cc1cb7abf333e4094a8086fd2f7d7557859779e4c45ad8b4051159425a9f",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-CSX1gdNq.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-BCzwh0d_.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+        "after": {
+          "sha256": "e2f3e0a4c4e82ce5773c62fdaad51ef58d90a2cf45928cacf10ee5596a25eda7",
+          "size": 631,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-BCzwh0d_.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "198beb23cce714eb8584546576a6853dc91ca48f06dfa81529dcfc0d7c1933d5",
+          "size": 631,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-BCzwh0d_.js",
+      "currentTargetSha256": "e2f3e0a4c4e82ce5773c62fdaad51ef58d90a2cf45928cacf10ee5596a25eda7",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-BCzwh0d_.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-aZldM3cv.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+        "after": {
+          "sha256": "a88434b6a1b53d1a871b4072b168fb2434a1c4318c6a90f01b3c6a1fcd4fb750",
+          "size": 46919,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-aZldM3cv.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "710a0a54d4416b1648c209bfd1688706dda1abd1457232ab644d88065d6c44d2",
+          "size": 46919,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-aZldM3cv.js",
+      "currentTargetSha256": "a88434b6a1b53d1a871b4072b168fb2434a1c4318c6a90f01b3c6a1fcd4fb750",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-aZldM3cv.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dc8_KifI.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+        "after": {
+          "sha256": "f26dc85a743ab8d153a978d7d7b2bea022756aaff910a4870cc7793fcbd9c0a0",
+          "size": 13434,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dc8_KifI.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "468d1730eeec8132066fe9fae592b8a4a0250692f6afc27e359c8a2f161c2fd8",
+          "size": 13434,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dc8_KifI.js",
+      "currentTargetSha256": "f26dc85a743ab8d153a978d7d7b2bea022756aaff910a4870cc7793fcbd9c0a0",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dc8_KifI.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-y0FDEGp1.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+        "after": {
+          "sha256": "5abe07ffcffc6e29734ce5690cab69d0dd2d553c8ea948ad986dcb4a718104e8",
+          "size": 9562,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-y0FDEGp1.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "92dd88aac97e0b8f2c6c548f0a82e4a90a3692ed9557380e326323a731510b3e",
+          "size": 9562,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-y0FDEGp1.js",
+      "currentTargetSha256": "5abe07ffcffc6e29734ce5690cab69d0dd2d553c8ea948ad986dcb4a718104e8",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-y0FDEGp1.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-sync-DJtROAMh.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+        "after": {
+          "sha256": "a9695044dcbcb61428b320e45e11282af4a0341efc08c26857aa354b0725e8af",
+          "size": 16154,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-sync-DJtROAMh.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "79b79796a6e8245a3e5f94bab8d7aca64554ce83162c72b272f6d869b7c8a447",
+          "size": 16154,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-sync-DJtROAMh.js",
+      "currentTargetSha256": "a9695044dcbcb61428b320e45e11282af4a0341efc08c26857aa354b0725e8af",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-sync-DJtROAMh.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+        "after": {
+          "sha256": "602839a1bfc78342bf394d71244b6310d183a2e7ac2253bb84d746eec12ab063",
+          "size": 108972,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "0761c35f3d6299c2f76f2e6f61f36e28ca5ca01edc9bb487fc23429c902e9c21",
+          "size": 108972,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js",
+      "currentTargetSha256": "602839a1bfc78342bf394d71244b6310d183a2e7ac2253bb84d746eec12ab063",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-Cv1siQDW.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+        "after": {
+          "sha256": "17376ce37f494e8c33b3f9884c23e25dba4b7590c5dd0062ae0e36ece6a4e39d",
+          "size": 670,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-Cv1siQDW.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "7b52dc310e4f5a6924b9e518ce5cd72132c6d86437ce04fbaafe7639b03d67b8",
+          "size": 670,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-Cv1siQDW.js",
+      "currentTargetSha256": "17376ce37f494e8c33b3f9884c23e25dba4b7590c5dd0062ae0e36ece6a4e39d",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-Cv1siQDW.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-B72X2veA.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+        "after": {
+          "sha256": "834aa227d660262f4985bb2605284c82c69cbd34156de9cc62dce74156dbf466",
+          "size": 2880,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-B72X2veA.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "08847223e3d633392ba9d688b52a80fbe0300202db01cc6473f1d25945885db7",
+          "size": 2880,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-B72X2veA.js",
+      "currentTargetSha256": "834aa227d660262f4985bb2605284c82c69cbd34156de9cc62dce74156dbf466",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-B72X2veA.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-BYymQo69.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+        "after": {
+          "sha256": "ca23240cf89865dd7086210762a80602c4467414b9d4af784fd3104891d5dffc",
+          "size": 18461,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-BYymQo69.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "f13092c65282dc33a99417ad610675774184e9d5db2085db9a37123795c8d123",
+          "size": 18461,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-BYymQo69.js",
+      "currentTargetSha256": "ca23240cf89865dd7086210762a80602c4467414b9d4af784fd3104891d5dffc",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-BYymQo69.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-D-3eBhAl.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+        "after": {
+          "sha256": "57461a04c4ea8375ac75bdf48a881cf7d500afe8de6ffb85477501fab4682e58",
+          "size": 2754,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-D-3eBhAl.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "91d6dda99dfade9788097d192ce73b8227d840d4af9239055a5d3ed0995d9ca4",
+          "size": 2754,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-D-3eBhAl.js",
+      "currentTargetSha256": "57461a04c4ea8375ac75bdf48a881cf7d500afe8de6ffb85477501fab4682e58",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-D-3eBhAl.js"
+      }
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-Cw9gwpgj.js",
+      "targetWriteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js",
+        "candidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/tree/frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js",
+        "after": {
+          "sha256": "8fa69dd4524dcf830f8caa56f477561b8a3903096a5692a4375ad37dad0975f4",
+          "size": 2656,
+          "mode": 420,
+          "uid": 501
+        },
+        "before": null,
+        "operation": "add"
+      },
+      "sourceDeleteRow": {
+        "path": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-Cw9gwpgj.js",
+        "operation": "delete",
+        "before": {
+          "sha256": "110e48e621398be31d9a76176ce1f553e8f483d7415027ed546aeba1a68cf00e",
+          "size": 2656,
+          "mode": 420,
+          "uid": 501
+        }
+      },
+      "actualAppliedWritePath": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js",
+      "actualAppliedDeletePath": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-Cw9gwpgj.js",
+      "currentTargetSha256": "8fa69dd4524dcf830f8caa56f477561b8a3903096a5692a4375ad37dad0975f4",
+      "sourceActuallyAbsent": true,
+      "originalGitStatusRow": {
+        "status": "R ",
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js",
+        "source": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-Cw9gwpgj.js"
+      }
+    }
+  ],
+  "copyStatusAlwaysRejected": true,
+  "unexpectedPairsAlwaysRejected": true,
+  "sourceCount348Driver100Delete53Unchanged": true,
+  "originalFAILNotRewritten": true,
+  "newAuditBodyExecuted": false
+}

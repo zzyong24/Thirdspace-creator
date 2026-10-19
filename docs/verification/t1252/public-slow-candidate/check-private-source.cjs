@@ -1,0 +1,7 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path');const root=path.resolve(__dirname,'../../../..'),ts=require(path.join(root,'frontend/node_modules/typescript'));
+const actual=path.join(root,'frontend/src/server/workbench-file-recovery.test.ts'),candidate=path.join(__dirname,'file-recovery-public-slow-candidate.test.ts'),source=fs.readFileSync(candidate,'utf8');
+const configFile=ts.readConfigFile(path.join(root,'frontend/tsconfig.json'),ts.sys.readFile),parsed=ts.parseJsonConfigFileContent(configFile.config,ts.sys,path.join(root,'frontend'));
+const opts={...parsed.options,noEmit:true,incremental:false};const host=ts.createCompilerHost(opts),read=host.readFile;host.readFile=file=>path.resolve(file)===actual?source:read(file);
+const program=ts.createProgram([actual],opts,host),diagnostics=ts.getPreEmitDiagnostics(program).map(d=>({code:d.code,file:d.file?.fileName,line:d.file&&d.start!==undefined?d.file.getLineAndCharacterOfPosition(d.start).line+1:null,message:ts.flattenDiagnosticMessageText(d.messageText,'\n')}));
+fs.writeFileSync(path.join(__dirname,'PRIVATE_TYPE_DIAGNOSTICS.json'),JSON.stringify({scope:'read-only in-memory candidate at original source path; not standard whole frontend types, no tests/PG/native/HTTP',diagnostics},null,2)+'\n');console.log(JSON.stringify({diagnostics:diagnostics.length,privateCandidateDiagnostics:diagnostics.filter(d=>d.file===actual)}));if(diagnostics.length)process.exitCode=1;

@@ -1,3 +1,5 @@
+import {intelligenceWorkspaceFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 
 import {
@@ -42,7 +44,7 @@ export interface ProjectIntelligenceSourceContext {
   };
   transform: {
     id: string;
-    positioningVersionId: string;
+    positioningVersionId: string | null;
     outputSnapshot: Record<string, unknown>;
   };
   transcript: {
@@ -121,25 +123,23 @@ export function createProjectIntelligenceReferenceService(
   async function findConfirmedTransform(
     ctx: RequestContext,
     topicId: string,
+    connection:Pick<Db,"select">=db,
   ) {
-    const accountId = requireAccountId(
-      ctx.accountId,
-      "intelligence.projectReference.transform",
-    );
-    const [transform] = await db
+    requireWorkspace(ctx);const accountId=ctx.accountId??null;
+    const transforms = await connection
       .select()
       .from(intelligenceTransforms)
       .where(
         and(
           eq(intelligenceTransforms.userId, ctx.userId),
-          eq(intelligenceTransforms.accountId, accountId),
+          intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
           eq(intelligenceTransforms.targetTopicId, topicId),
           eq(intelligenceTransforms.status, "confirmed"),
         ),
       )
       .orderBy(desc(intelligenceTransforms.updatedAt))
-      .limit(1);
-    return transform ?? null;
+      .limit(2);
+    return uniqueIntelligenceRow(transforms) ?? null;
   }
 
   async function attachResolved(
@@ -153,10 +153,8 @@ export function createProjectIntelligenceReferenceService(
     },
     missingIsNull: boolean,
   ): Promise<ProjectIntelligenceReferenceResource | null> {
-    const accountId = requireAccountId(
-      ctx.accountId,
-      "intelligence.projectReference.attach",
-    );
+    requireWorkspace(ctx);const accountId=ctx.accountId??null;
+    await assertWritableWorkspace(db,ctx);
     if (!input.idempotencyKey.trim()) {
       throw new IntelligenceValidationError("idempotencyKey 不能为空");
     }
@@ -164,7 +162,8 @@ export function createProjectIntelligenceReferenceService(
       await deps.projects.assertExists(ctx, input.projectId);
     }
 
-    const transform = await findConfirmedTransform(ctx, input.topicId);
+    return withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+    const transform = await findConfirmedTransform(ctx, input.topicId,tx);
     if (!transform) {
       if (missingIsNull) return null;
       throw new OwnershipError("Intelligence topic provenance not found");
@@ -183,14 +182,17 @@ export function createProjectIntelligenceReferenceService(
       );
     }
 
-    const [transcript] = await db
+    const [item]=await tx.select().from(intelligenceItems).where(and(eq(intelligenceItems.id,transform.itemId),intelligenceWorkspaceFilter(intelligenceItems,ctx)));
+    const [snapshot]=await tx.select().from(sourceSnapshots).where(and(eq(sourceSnapshots.id,transform.sourceSnapshotId),intelligenceWorkspaceFilter(sourceSnapshots,ctx)));
+    if(!item||!snapshot||snapshot.itemId!==item.id)throw new OwnershipError("选题的原作品与快照关联不完整");
+    const [transcript] = await tx
       .select()
       .from(itemTranscripts)
       .where(
         and(
           eq(itemTranscripts.itemId, transform.itemId),
           eq(itemTranscripts.userId, ctx.userId),
-          eq(itemTranscripts.accountId, accountId),
+          intelligenceWorkspaceFilter(itemTranscripts,ctx),
         ),
       )
       .limit(1);
@@ -207,13 +209,13 @@ export function createProjectIntelligenceReferenceService(
     }
     const hash = transcriptHash(text);
 
-    const [existing] = await db
+    const [existing] = await tx
       .select()
       .from(projectIntelligenceReferences)
       .where(
         and(
           eq(projectIntelligenceReferences.userId, ctx.userId),
-          eq(projectIntelligenceReferences.accountId, accountId),
+          intelligenceWorkspaceFilter(projectIntelligenceReferences,ctx),
           eq(projectIntelligenceReferences.projectId, input.projectId),
           eq(projectIntelligenceReferences.transformId, transform.id),
         ),
@@ -221,12 +223,12 @@ export function createProjectIntelligenceReferenceService(
       .limit(1);
     if (existing) return toReference(existing);
 
-    const [created] = await db
+    const [created] = await tx
       .insert(projectIntelligenceReferences)
       .values({
         id: deps.nextId("project-intelligence-reference"),
         userId: ctx.userId,
-        accountId,
+        accountId,groupId:frozen.groupId,
         projectId: input.projectId,
         topicId: input.topicId,
         itemId: transform.itemId,
@@ -239,13 +241,13 @@ export function createProjectIntelligenceReferenceService(
       .returning();
     if (created) return toReference(created);
 
-    const [raced] = await db
+    const [raced] = await tx
       .select()
       .from(projectIntelligenceReferences)
       .where(
         and(
           eq(projectIntelligenceReferences.userId, ctx.userId),
-          eq(projectIntelligenceReferences.accountId, accountId),
+          intelligenceWorkspaceFilter(projectIntelligenceReferences,ctx),
           eq(projectIntelligenceReferences.projectId, input.projectId),
           eq(projectIntelligenceReferences.transformId, transform.id),
         ),
@@ -255,6 +257,7 @@ export function createProjectIntelligenceReferenceService(
       throw new Error("failed to attach project intelligence reference");
     }
     return toReference(raced);
+    });
   }
 
   return {
@@ -278,17 +281,14 @@ export function createProjectIntelligenceReferenceService(
     },
 
     async getSourceContexts(ctx, input) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "intelligence.projectReference.context",
-      );
+      requireWorkspace(ctx);const accountId=ctx.accountId??null;
       if (deps.projects) {
         await deps.projects.assertExists(ctx, input.projectId);
       }
       const requestedIds = [...new Set(input.referenceIds ?? [])];
       const conditions = [
         eq(projectIntelligenceReferences.userId, ctx.userId),
-        eq(projectIntelligenceReferences.accountId, accountId),
+        intelligenceReferenceRootFilter(projectIntelligenceReferences,ctx),
         eq(projectIntelligenceReferences.projectId, input.projectId),
       ];
       if (requestedIds.length > 0) {
@@ -319,7 +319,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(intelligenceItems.id, reference.itemId),
                   eq(intelligenceItems.userId, ctx.userId),
-                  eq(intelligenceItems.accountId, accountId),
+                  intelligenceWorkspaceFilter(intelligenceItems,ctx),
                 ),
               )
               .limit(1),
@@ -330,7 +330,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(sourceSnapshots.id, reference.sourceSnapshotId),
                   eq(sourceSnapshots.userId, ctx.userId),
-                  eq(sourceSnapshots.accountId, accountId),
+                  intelligenceWorkspaceFilter(sourceSnapshots,ctx),
                 ),
               )
               .limit(1),
@@ -341,7 +341,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(intelligenceTransforms.id, reference.transformId),
                   eq(intelligenceTransforms.userId, ctx.userId),
-                  eq(intelligenceTransforms.accountId, accountId),
+                  intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
                 ),
               )
               .limit(1),
@@ -352,7 +352,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(itemTranscripts.itemId, reference.itemId),
                   eq(itemTranscripts.userId, ctx.userId),
-                  eq(itemTranscripts.accountId, accountId),
+                  intelligenceWorkspaceFilter(itemTranscripts,ctx),
                 ),
               )
               .limit(1),
@@ -363,6 +363,10 @@ export function createProjectIntelligenceReferenceService(
           !snapshot ||
           !transform ||
           !transform.outputSnapshot ||
+          transform.status !== "confirmed" ||
+          transform.targetTopicId !== reference.topicId ||
+          transform.itemId !== reference.itemId ||
+          transform.sourceSnapshotId !== reference.sourceSnapshotId ||
           !transcript ||
           transcript.status !== "done" ||
           !transcript.completedAt ||
@@ -377,6 +381,50 @@ export function createProjectIntelligenceReferenceService(
           throw new IntelligenceConflictError(
             "来源逐字稿已变化，请重新确认来源后再生成稿件",
           );
+        }
+        const outputSnapshot = transform.outputSnapshot as Record<string, unknown>;
+        if (outputSnapshot.generationMode === "rewrite_only") {
+          const draft = outputSnapshot.adaptedDraft;
+          const adaptedDraft =
+            draft && typeof draft === "object" && !Array.isArray(draft)
+              ? (draft as Record<string, unknown>)
+              : null;
+          const frozenPositioning = outputSnapshot.positioningSnapshot;
+          const frozenPositioningRecord =
+            frozenPositioning &&
+            typeof frozenPositioning === "object" &&
+            !Array.isArray(frozenPositioning)
+              ? (frozenPositioning as Record<string, unknown>)
+              : null;
+          const hasMasterSnapshot =
+            frozenPositioningRecord?.masterSnapshot != null &&
+            typeof frozenPositioningRecord.masterSnapshot === "object" &&
+            !Array.isArray(frozenPositioningRecord.masterSnapshot);
+          if (
+            !adaptedDraft ||
+            adaptedDraft.generationMode !== "rewrite_only" ||
+            typeof adaptedDraft.contentText !== "string" ||
+            !adaptedDraft.contentText.trim() ||
+            adaptedDraft.sourceSnapshotId !== reference.sourceSnapshotId ||
+            adaptedDraft.generatedFromTranscriptHash !== currentHash ||
+            !transform.aiTaskId ||
+            adaptedDraft.aiTaskId !== transform.aiTaskId ||
+            typeof adaptedDraft.templateVersion !== "string" ||
+            !adaptedDraft.templateVersion.trim() ||
+            (transform.positioningVersionId === null &&
+              (outputSnapshot.personalizationStatus !== "not_applied" ||
+                frozenPositioningRecord !== null ||
+                adaptedDraft.positioningVersionId !== undefined)) ||
+            (transform.positioningVersionId !== null &&
+              (outputSnapshot.personalizationStatus !== "applied" ||
+                frozenPositioningRecord?.id !== transform.positioningVersionId ||
+                !hasMasterSnapshot ||
+                adaptedDraft.positioningVersionId !== transform.positioningVersionId))
+          ) {
+            throw new IntelligenceConflictError(
+              "内容雷达改写稿的来源或定位 provenance 不一致",
+            );
+          }
         }
         contexts.push({
           reference: toReference(reference),

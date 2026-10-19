@@ -1,0 +1,1775 @@
+T-1238 设置偏好 pending 护栏与公开媒体服务关联：当场红绿证据（2026-10-11）
+工作树：/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator
+授权写集：settings-model-region.tsx / settings-model-region.codex.test.tsx；后续扩到 settings-page.tsx sanitizeModelAuthorityForClient 单一projection与现有settings-page.test.tsx。
+未修改后端、会话hook、模型配置存储、账户或API。未commit。
+
+问题及修复边界：
+1. 旧 usesCodex=ready&&engine===codex 在偏好pending时false，!usesCodex暂时露出Pi独立text/image卡、配模型手册与原文本配置引导。
+   新 showIndependentModels=ready&&!usesCodex，统一上述显隐；pending沿用现ASR/video原标题说明，不增加新状态/视觉方案。
+2. pending和readyCodex的原渠道凭证按真实 capabilities->serviceId 精确保留 transcribe.audio/video.generate/knowledge.search.embed；readyPi保所有原服务。
+   当前公开ModelAuthorityState只有四类capability，没有embedding配置卡；如果真实capabilities带knowledge.search.embed原关联，逻辑保留其service ID；没有服务名或供应商名猜测。
+3. sanitize原清空所有capability serviceId，导致真实ASR/video凭证映射缺失。现在只有已存在公开user_input服务列表的原opaque ID可保留；activation_managed内部ID与未公开ID仍null。
+   serviceName/provider/baseUrl仍null，ASR实现model/options原脱敏仍保留；不新增API字段、secret或权限。原credential PUT仍是原端口。
+4. region凭证fixture经过真实sanitize后再渲染；同名服务不能用于猜测，default+video共享的原service ID继续保留。
+5. settings-page结构测试按真实getPreferences异步回执先await ready，保留全部旧卡片/手册/安全投影断言，没有削弱生产ready门。
+
+当场结果：
+- pending卡/manual初始红：2FAIL/6PASS；真实deferred getPreferences、fresh module ready=false，不mock hook。
+- 加入原凭证覆盖后红：4FAIL/6PASS。
+- 原sanitize媒体映射红：1FAIL/29SKIP（单新增证明定位，不替代全组）；真实旧projection public-media-service返回null。
+- 新leaf单文件卡/manual绿：10PASS（该轮媒体凭证为raw fixture；最终组合已改为经过真实sanitize后渲染）。
+- 最终三文件完整设置回归：settings-model-region.codex.test.tsx 10 + assistant-engine-card.test.tsx 3 + settings-page.test.tsx 30 = 43PASS/0SKIP；20:58:36，退出0。
+- 所有执行retry0、test/hook180000；旧用例内部120000最短正执行预算仍保留。
+
+审查边界：pending no independent cards/manual/configure guidance；readyPi完整原卡/手册；readyCodex免text/image密钥；ASR/video卡与共享服务Key保留。没有改canonical parent defaultProbe.enabled，主线程另行合并 preference.ready&&!usesCodex。未声称真实浏览器pending截图/真机E2E，本证据是DOM+真实异步偏好/SDK消费者fixture；源diff由coverage独立只读审查。
+
+FIRST RED COMMAND:
+pnpm --dir frontend exec vitest run src/features/settings/settings-model-region.codex.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000
+FIRST RED EXIT CODE: 1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:29655) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-model-region.codex.test.tsx (8 tests | 2 failed) 855ms
+     × 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回pi后沿原配置显示 344ms
+     × 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回codex后沿原配置显示 230ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/settings-model-region.codex.test.tsx > T-1238 模型设置区域按已保存引擎显示原配置 > 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回pi后沿原配置显示
+AssertionError: expected <div …(3)>…(6)</div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="flex flex-col gap-3"
+  data-highlight="text-model"
+  data-slot="model-configuration-card"
+>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-preset"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-preset"
+      >
+        供应商预设
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <button
+        aria-autocomplete="none"
+        aria-expanded="false"
+        class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full md:w-72"
+        data-size="sm"
+        data-slot="model-preset-trigger"
+        data-state="closed"
+        dir="ltr"
+        id="model-preset"
+        role="combobox"
+        type="button"
+      >
+        <span
+          data-slot="select-value"
+          style="pointer-events: none;"
+        >
+          Anthropic 官方
+        </span>
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m6 9 6 6 6-6"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-name"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-name"
+      >
+        模型
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <input
+        aria-label="模型名称"
+        class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+        data-slot="model-name-input"
+        id="model-name"
+        list="model-name-suggestions"
+        value="saved-pi-text"
+      />
+      <datalist
+        id="model-name-suggestions"
+      />
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-secret"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-secret"
+      >
+        密钥
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        粘贴 API Key(存于本地库)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <div
+        class="flex w-full items-center gap-2"
+      >
+        <input
+          aria-label="模型密钥"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-secret-input"
+          id="model-secret"
+          placeholder="粘贴 API Key"
+          type="password"
+          value=""
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex justify-end"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-advanced-toggle"
+      type="button"
+    >
+      高级设置
+    </button>
+  </div>
+  <div
+    class="flex flex-col gap-3 rounded-lg border border-border bg-surface-subtle p-3"
+    data-slot="model-advanced-settings"
+    hidden=""
+  >
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-provider"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-provider"
+        >
+          提供商标识
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          仅用于识别配置；选择预设时已自动填写。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型提供商"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-provider-input"
+          id="model-provider"
+          list="model-provider-suggestions"
+          value=""
+        />
+        <datalist
+          id="model-provider-suggestions"
+        >
+          <option
+            value="anthropic"
+          />
+          <option
+            value="minimax"
+          />
+          <option
+            value="openai"
+          />
+          <option
+            value="new-api"
+          />
+          <option
+            value="google"
+          />
+          <option
+            value="deepseek"
+          />
+        </datalist>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-base-url"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-base-url"
+        >
+          接口地址
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          填写兼容 API 地址；通常应包含 /v1，具体以接口文档为准。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="接口地址"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-base-url-input"
+          id="model-base-url"
+          placeholder="https://example.com/v1"
+          value=""
+        />
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-api-format"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-api-format"
+        >
+          接口格式
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          必须与服务商实际支持的协议一致；New API 可按渠道选择 Chat 或 Responses。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <button
+          aria-autocomplete="none"
+          aria-expanded="false"
+          class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-52"
+          data-size="sm"
+          data-slot="model-api-format-trigger"
+          data-state="closed"
+          dir="ltr"
+          id="model-api-format"
+          role="combobox"
+          type="button"
+        >
+          <span
+            data-slot="select-value"
+            style="pointer-events: none;"
+          >
+            Anthropic 兼容
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-temperature"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-temperature"
+        >
+          温度
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          一般保持默认即可；较高会让回答更发散。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型温度"
+          class="h-8 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 w-24"
+          data-slot="model-temperature-input"
+          id="model-temperature"
+          max="1"
+          min="0"
+          step="0.1"
+          type="number"
+          value="0.6"
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex items-start justify-between gap-3"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-save"
+      disabled=""
+      type="button"
+    >
+      仅保存
+    </button>
+    <div
+      class="flex flex-col items-end gap-1"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          会先保存当前填写，再按正式调用方式测试
+        </span>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+          data-slot="model-test-connection"
+          disabled=""
+          type="button"
+        >
+          保存并测试
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+ ❯ src/features/settings/settings-model-region.codex.test.tsx:21:69
+     19|    await waitFor(()=>expect(api.getPreferences).toHaveBeenCalled());
+     20|    expect(screen.getByRole('status')).toHaveTextContent('正在读取引擎设置');
+     21|    expect(container.querySelector('[data-highlight="text-model"]')).to…
+       |                                                                     ^
+     22|    expect(screen.queryByRole('button',{name:'打开模型配置手册'})).toBeNull();e…
+     23|    expect(container.querySelector('[data-highlight="asr-model"]')).not…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/settings/settings-model-region.codex.test.tsx > T-1238 模型设置区域按已保存引擎显示原配置 > 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回codex后沿原配置显示
+AssertionError: expected <div …(3)>…(6)</div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="flex flex-col gap-3"
+  data-highlight="text-model"
+  data-slot="model-configuration-card"
+>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-preset"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-preset"
+      >
+        供应商预设
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <button
+        aria-autocomplete="none"
+        aria-expanded="false"
+        class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full md:w-72"
+        data-size="sm"
+        data-slot="model-preset-trigger"
+        data-state="closed"
+        dir="ltr"
+        id="model-preset"
+        role="combobox"
+        type="button"
+      >
+        <span
+          data-slot="select-value"
+          style="pointer-events: none;"
+        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m6 9 6 6 6-6"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-name"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-name"
+      >
+        模型
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <input
+        aria-label="模型名称"
+        class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+        data-slot="model-name-input"
+        id="model-name"
+        list="model-name-suggestions"
+        value="saved-pi-text"
+      />
+      <datalist
+        id="model-name-suggestions"
+      />
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-secret"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-secret"
+      >
+        密钥
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        粘贴 API Key(存于本地库)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <div
+        class="flex w-full items-center gap-2"
+      >
+        <input
+          aria-label="模型密钥"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-secret-input"
+          id="model-secret"
+          placeholder="粘贴 API Key"
+          type="password"
+          value=""
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex justify-end"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-advanced-toggle"
+      type="button"
+    >
+      高级设置
+    </button>
+  </div>
+  <div
+    class="flex flex-col gap-3 rounded-lg border border-border bg-surface-subtle p-3"
+    data-slot="model-advanced-settings"
+    hidden=""
+  >
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-provider"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-provider"
+        >
+          提供商标识
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          仅用于识别配置；选择预设时已自动填写。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型提供商"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-provider-input"
+          id="model-provider"
+          list="model-provider-suggestions"
+          value=""
+        />
+        <datalist
+          id="model-provider-suggestions"
+        >
+          <option
+            value="anthropic"
+          />
+          <option
+            value="minimax"
+          />
+          <option
+            value="openai"
+          />
+          <option
+            value="new-api"
+          />
+          <option
+            value="google"
+          />
+          <option
+            value="deepseek"
+          />
+        </datalist>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-base-url"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-base-url"
+        >
+          接口地址
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          填写兼容 API 地址；通常应包含 /v1，具体以接口文档为准。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="接口地址"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-base-url-input"
+          id="model-base-url"
+          placeholder="https://example.com/v1"
+          value=""
+        />
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-api-format"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-api-format"
+        >
+          接口格式
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          必须与服务商实际支持的协议一致；New API 可按渠道选择 Chat 或 Responses。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <button
+          aria-autocomplete="none"
+          aria-expanded="false"
+          class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-52"
+          data-size="sm"
+          data-slot="model-api-format-trigger"
+          data-state="closed"
+          dir="ltr"
+          id="model-api-format"
+          role="combobox"
+          type="button"
+        >
+          <span
+            data-slot="select-value"
+            style="pointer-events: none;"
+          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-temperature"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-temperature"
+        >
+          温度
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          一般保持默认即可；较高会让回答更发散。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型温度"
+          class="h-8 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 w-24"
+          data-slot="model-temperature-input"
+          id="model-temperature"
+          max="1"
+          min="0"
+          step="0.1"
+          type="number"
+          value="0.6"
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex items-start justify-between gap-3"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-save"
+      disabled=""
+      type="button"
+    >
+      仅保存
+    </button>
+    <div
+      class="flex flex-col items-end gap-1"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          会先保存当前填写，再按正式调用方式测试
+        </span>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+          data-slot="model-test-connection"
+          disabled=""
+          type="button"
+        >
+          保存并测试
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+ ❯ src/features/settings/settings-model-region.codex.test.tsx:21:69
+     19|    await waitFor(()=>expect(api.getPreferences).toHaveBeenCalled());
+     20|    expect(screen.getByRole('status')).toHaveTextContent('正在读取引擎设置');
+     21|    expect(container.querySelector('[data-highlight="text-model"]')).to…
+       |                                                                     ^
+     22|    expect(screen.queryByRole('button',{name:'打开模型配置手册'})).toBeNull();e…
+     23|    expect(container.querySelector('[data-highlight="asr-model"]')).not…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  20:55:18
+   Duration  4.40s (transform 1.67s, setup 797ms, import 2.22s, tests 855ms, environment 380ms)
+
+
+SERVICES RED（same command，加入原凭证测试） EXIT CODE: 1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:30847) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-model-region.codex.test.tsx (10 tests | 4 failed) 970ms
+     × 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回pi后沿原配置显示 297ms
+     × 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回codex后沿原配置显示 198ms
+     × pending只保留实际ASR/video serviceId凭证，读回pi后不猜服务名称 141ms
+     × pending只保留实际ASR/video serviceId凭证，读回codex后不猜服务名称 126ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/settings-model-region.codex.test.tsx > T-1238 模型设置区域按已保存引擎显示原配置 > 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回pi后沿原配置显示
+AssertionError: expected <div …(3)>…(6)</div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="flex flex-col gap-3"
+  data-highlight="text-model"
+  data-slot="model-configuration-card"
+>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-preset"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-preset"
+      >
+        供应商预设
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <button
+        aria-autocomplete="none"
+        aria-expanded="false"
+        class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full md:w-72"
+        data-size="sm"
+        data-slot="model-preset-trigger"
+        data-state="closed"
+        dir="ltr"
+        id="model-preset"
+        role="combobox"
+        type="button"
+      >
+        <span
+          data-slot="select-value"
+          style="pointer-events: none;"
+        >
+          Anthropic 官方
+        </span>
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m6 9 6 6 6-6"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-name"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-name"
+      >
+        模型
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <input
+        aria-label="模型名称"
+        class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+        data-slot="model-name-input"
+        id="model-name"
+        list="model-name-suggestions"
+        value="saved-pi-text"
+      />
+      <datalist
+        id="model-name-suggestions"
+      />
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-secret"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-secret"
+      >
+        密钥
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        粘贴 API Key(存于本地库)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <div
+        class="flex w-full items-center gap-2"
+      >
+        <input
+          aria-label="模型密钥"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-secret-input"
+          id="model-secret"
+          placeholder="粘贴 API Key"
+          type="password"
+          value=""
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex justify-end"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-advanced-toggle"
+      type="button"
+    >
+      高级设置
+    </button>
+  </div>
+  <div
+    class="flex flex-col gap-3 rounded-lg border border-border bg-surface-subtle p-3"
+    data-slot="model-advanced-settings"
+    hidden=""
+  >
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-provider"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-provider"
+        >
+          提供商标识
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          仅用于识别配置；选择预设时已自动填写。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型提供商"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-provider-input"
+          id="model-provider"
+          list="model-provider-suggestions"
+          value=""
+        />
+        <datalist
+          id="model-provider-suggestions"
+        >
+          <option
+            value="anthropic"
+          />
+          <option
+            value="minimax"
+          />
+          <option
+            value="openai"
+          />
+          <option
+            value="new-api"
+          />
+          <option
+            value="google"
+          />
+          <option
+            value="deepseek"
+          />
+        </datalist>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-base-url"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-base-url"
+        >
+          接口地址
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          填写兼容 API 地址；通常应包含 /v1，具体以接口文档为准。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="接口地址"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-base-url-input"
+          id="model-base-url"
+          placeholder="https://example.com/v1"
+          value=""
+        />
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-api-format"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-api-format"
+        >
+          接口格式
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          必须与服务商实际支持的协议一致；New API 可按渠道选择 Chat 或 Responses。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <button
+          aria-autocomplete="none"
+          aria-expanded="false"
+          class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-52"
+          data-size="sm"
+          data-slot="model-api-format-trigger"
+          data-state="closed"
+          dir="ltr"
+          id="model-api-format"
+          role="combobox"
+          type="button"
+        >
+          <span
+            data-slot="select-value"
+            style="pointer-events: none;"
+          >
+            Anthropic 兼容
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-temperature"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-temperature"
+        >
+          温度
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          一般保持默认即可；较高会让回答更发散。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型温度"
+          class="h-8 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 w-24"
+          data-slot="model-temperature-input"
+          id="model-temperature"
+          max="1"
+          min="0"
+          step="0.1"
+          type="number"
+          value="0.6"
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex items-start justify-between gap-3"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-save"
+      disabled=""
+      type="button"
+    >
+      仅保存
+    </button>
+    <div
+      class="flex flex-col items-end gap-1"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          会先保存当前填写，再按正式调用方式测试
+        </span>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+          data-slot="model-test-connection"
+          disabled=""
+          type="button"
+        >
+          保存并测试
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+ ❯ src/features/settings/settings-model-region.codex.test.tsx:26:69
+     24|    await waitFor(()=>expect(api.getPreferences).toHaveBeenCalled());
+     25|    expect(screen.getByRole('status')).toHaveTextContent('正在读取引擎设置');
+     26|    expect(container.querySelector('[data-highlight="text-model"]')).to…
+       |                                                                     ^
+     27|    expect(screen.queryByRole('button',{name:'打开模型配置手册'})).toBeNull();e…
+     28|    expect(container.querySelector('[data-highlight="asr-model"]')).not…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/features/settings/settings-model-region.codex.test.tsx > T-1238 模型设置区域按已保存引擎显示原配置 > 服务偏好未取得时不先显示Pi文本/图片卡或配模型手册，读回codex后沿原配置显示
+AssertionError: expected <div …(3)>…(6)</div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="flex flex-col gap-3"
+  data-highlight="text-model"
+  data-slot="model-configuration-card"
+>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-preset"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-preset"
+      >
+        供应商预设
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <button
+        aria-autocomplete="none"
+        aria-expanded="false"
+        class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full md:w-72"
+        data-size="sm"
+        data-slot="model-preset-trigger"
+        data-state="closed"
+        dir="ltr"
+        id="model-preset"
+        role="combobox"
+        type="button"
+      >
+        <span
+          data-slot="select-value"
+          style="pointer-events: none;"
+        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m6 9 6 6 6-6"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-name"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-name"
+      >
+        模型
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <input
+        aria-label="模型名称"
+        class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+        data-slot="model-name-input"
+        id="model-name"
+        list="model-name-suggestions"
+        value="saved-pi-text"
+      />
+      <datalist
+        id="model-name-suggestions"
+      />
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+    data-control-id="model-secret"
+    data-slot="settings-form-row"
+  >
+    <div
+      class="flex flex-col gap-0.5"
+      data-slot="form-row-label"
+    >
+      <label
+        class="text-sm font-medium text-foreground"
+        for="model-secret"
+      >
+        密钥
+      </label>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        粘贴 API Key(存于本地库)。
+      </span>
+    </div>
+    <div
+      class="flex min-w-0 items-center justify-start"
+      data-slot="form-row-control"
+    >
+      <div
+        class="flex w-full items-center gap-2"
+      >
+        <input
+          aria-label="模型密钥"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-secret-input"
+          id="model-secret"
+          placeholder="粘贴 API Key"
+          type="password"
+          value=""
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex justify-end"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-advanced-toggle"
+      type="button"
+    >
+      高级设置
+    </button>
+  </div>
+  <div
+    class="flex flex-col gap-3 rounded-lg border border-border bg-surface-subtle p-3"
+    data-slot="model-advanced-settings"
+    hidden=""
+  >
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-provider"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-provider"
+        >
+          提供商标识
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          仅用于识别配置；选择预设时已自动填写。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型提供商"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-provider-input"
+          id="model-provider"
+          list="model-provider-suggestions"
+          value=""
+        />
+        <datalist
+          id="model-provider-suggestions"
+        >
+          <option
+            value="anthropic"
+          />
+          <option
+            value="minimax"
+          />
+          <option
+            value="openai"
+          />
+          <option
+            value="new-api"
+          />
+          <option
+            value="google"
+          />
+          <option
+            value="deepseek"
+          />
+        </datalist>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-base-url"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-base-url"
+        >
+          接口地址
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          填写兼容 API 地址；通常应包含 /v1，具体以接口文档为准。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="接口地址"
+          class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+          data-slot="model-base-url-input"
+          id="model-base-url"
+          placeholder="https://example.com/v1"
+          value=""
+        />
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-api-format"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-api-format"
+        >
+          接口格式
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          必须与服务商实际支持的协议一致；New API 可按渠道选择 Chat 或 Responses。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <button
+          aria-autocomplete="none"
+          aria-expanded="false"
+          class="flex items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-52"
+          data-size="sm"
+          data-slot="model-api-format-trigger"
+          data-state="closed"
+          dir="ltr"
+          id="model-api-format"
+          role="combobox"
+          type="button"
+        >
+          <span
+            data-slot="select-value"
+            style="pointer-events: none;"
+          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
+      data-control-id="model-temperature"
+      data-slot="settings-form-row"
+    >
+      <div
+        class="flex flex-col gap-0.5"
+        data-slot="form-row-label"
+      >
+        <label
+          class="text-sm font-medium text-foreground"
+          for="model-temperature"
+        >
+          温度
+        </label>
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          一般保持默认即可；较高会让回答更发散。
+        </span>
+      </div>
+      <div
+        class="flex min-w-0 items-center justify-start"
+        data-slot="form-row-control"
+      >
+        <input
+          aria-label="模型温度"
+          class="h-8 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 w-24"
+          data-slot="model-temperature-input"
+          id="model-temperature"
+          max="1"
+          min="0"
+          step="0.1"
+          type="number"
+          value="0.6"
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex items-start justify-between gap-3"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+      data-slot="model-save"
+      disabled=""
+      type="button"
+    >
+      仅保存
+    </button>
+    <div
+      class="flex flex-col items-end gap-1"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-xs text-muted-foreground"
+        >
+          会先保存当前填写，再按正式调用方式测试
+        </span>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"
+          data-slot="model-test-connection"
+          disabled=""
+          type="button"
+        >
+          保存并测试
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+ ❯ src/features/settings/settings-model-region.codex.test.tsx:26:69
+     24|    await waitFor(()=>expect(api.getPreferences).toHaveBeenCalled());
+     25|    expect(screen.getByRole('status')).toHaveTextContent('正在读取引擎设置');
+     26|    expect(container.querySelector('[data-highlight="text-model"]')).to…
+       |                                                                     ^
+     27|    expect(screen.queryByRole('button',{name:'打开模型配置手册'})).toBeNull();e…
+     28|    expect(container.querySelector('[data-highlight="asr-model"]')).not…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/features/settings/settings-model-region.codex.test.tsx > T-1238 模型设置区域按已保存引擎显示原配置 > pending只保留实际ASR/video serviceId凭证，读回pi后不猜服务名称
+ FAIL  src/features/settings/settings-model-region.codex.test.tsx > T-1238 模型设置区域按已保存引擎显示原配置 > pending只保留实际ASR/video serviceId凭证，读回codex后不猜服务名称
+AssertionError: expected [ 'text-id', 'image-id', …(2) ] to deeply equal [ 'media-id', 'shared-id' ]
+
+- Expected
++ Received
+
+  [
++   "text-id",
++   "image-id",
+    "media-id",
+    "shared-id",
+  ]
+
+ ❯ src/features/settings/settings-model-region.codex.test.tsx:41:86
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 6 passed (10)
+   Start at  20:56:23
+   Duration  2.89s (transform 712ms, setup 144ms, import 1.16s, tests 970ms, environment 482ms)
+
+
+SANITIZER RED COMMAND:
+pnpm --dir frontend exec vitest run src/features/settings/settings-page.test.tsx -t 'T-1238只保留本次公开用户服务' --retry=0 --testTimeout=180000 --hookTimeout=180000
+SANITIZER RED EXIT CODE: 1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:32622) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-page.test.tsx (30 tests | 1 failed | 29 skipped) 1864ms
+     × T-1238只保留本次公开用户服务的opaque映射，媒体可合法配Key且未知/受管ID仍不下发 1863ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > T-1238只保留本次公开用户服务的opaque映射，媒体可合法配Key且未知/受管ID仍不下发
+AssertionError: expected null to be 'public-media-service' // Object.is equality
+
+- Expected:
+"public-media-service"
+
++ Received:
+null
+
+ ❯ src/features/settings/settings-page.test.tsx:162:70
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 29 skipped (30)
+   Start at  20:58:11
+   Duration  2.61s (transform 1.34s, setup 124ms, import 43ms, tests 1.86s, environment 394ms)
+
+
+INTERMEDIATE LEAF GREEN（same command） EXIT CODE: 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:31352) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  20:57:00
+   Duration  3.22s (transform 875ms, setup 128ms, import 1.36s, tests 1.05s, environment 479ms)
+
+
+FINAL FULL COMMAND:
+pnpm --dir frontend exec vitest run src/features/settings/settings-model-region.codex.test.tsx src/features/settings/assistant-engine-card.test.tsx src/features/settings/settings-page.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000
+FINAL EXIT CODE: 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:32911) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32910) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32909) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  3 passed (3)
+      Tests  43 passed (43)
+   Start at  20:58:36
+   Duration  3.95s (transform 2.35s, setup 340ms, import 2.39s, tests 4.46s, environment 1.35s)
+

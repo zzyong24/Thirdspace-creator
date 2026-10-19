@@ -37,7 +37,7 @@ const MODEL_CAPABILITY = "default";
 const MULTIMODAL_META = {
   image: {
     capability: "image.generate" as const,
-    title: "文生图模型",
+    title: "图片生成与编辑模型",
     icon: Palette,
     description:
       "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
@@ -53,6 +53,13 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder:
       "示例：https://api.example.com/v1（留空使用默认地址）",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
+  },
+  imageEdit: {
+    capability: "image.edit" as const,title: "独立编辑配置",icon: Palette,
+    description: "默认复用图片生成配置。仅需独立编辑接口时填写；已有独立配置保持。",
+    providerSuggestions: ["openai"] as ReadonlyArray<string>,providerPlaceholder: "openai",
+    providerHelp: "使用已接入的 OpenAI 兼容图片编辑接口。",modelHelp: "填写服务商支持图片编辑的准确模型 ID。",
+    modelPlaceholder: "",baseUrlPlaceholder: "https://api.example.com/v1",disabledHint: "未配置时编辑状态由真实兼容配置核验。",
   },
   video: {
     capability: "video.generate" as const,
@@ -237,6 +244,7 @@ function matchAsrPreset(provider: string, baseUrl: string): string {
 // (不加 data-highlight,不影响定位)。
 const MULTIMODAL_HIGHLIGHT_KEY: Record<
   | "image"
+  | "imageEdit"
   | "video"
   | "audio"
   | "embed"
@@ -246,6 +254,7 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
   string | undefined
 > = {
   image: "image-model",
+  imageEdit: "image-edit-model",
   video: "video-model",
   audio: "asr-model",
   search: "web-search",
@@ -258,9 +267,11 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
 export function MultimodalModelCard({
   kind,
   state,
+  onAudioPresetOpenChange,
 }: {
   kind:
   | "image"
+  | "imageEdit"
   | "video"
   | "audio"
   | "embed"
@@ -268,7 +279,11 @@ export function MultimodalModelCard({
   | "search"
   | "fallback";
   state: MultimodalModelState;
+  onAudioPresetOpenChange?: (open: boolean) => void;
 }) {
+  const audioPresetOpenChangeRef = React.useRef(onAudioPresetOpenChange);
+  React.useLayoutEffect(() => { audioPresetOpenChangeRef.current = onAudioPresetOpenChange; }, [onAudioPresetOpenChange]);
+  React.useEffect(() => () => audioPresetOpenChangeRef.current?.(false), []);
   const meta = MULTIMODAL_META[kind];
   const [provider, setProvider] = React.useState<string>(state.provider);
   const [modelName, setModelName] = React.useState<string>(state.modelName);
@@ -288,7 +303,7 @@ export function MultimodalModelCard({
   // [T-325] 仅备用对话卡(fallback,apiFormat 分派的文本 LLM)复用供应商预设 —— 与文本
   // 模型卡同款目录。其它多模态卡按 provider 分派、字段语义不同,不挂预设(state 恒存
   // 但仅 fallback 渲染,遵守 Hooks 规则)。
-  const isFallback = kind === "fallback";
+  const isFallback = kind === "fallback" || kind === "vision";
   const [presetId, setPresetId] = React.useState<string>(() =>
     isFallback
       ? matchPresetByConfig(state.baseUrl, state.apiFormat ?? "anthropic")?.id ??
@@ -423,6 +438,7 @@ export function MultimodalModelCard({
             <Select
               value={asrPresetId}
               onValueChange={handleSelectAsrPreset}
+              onOpenChange={onAudioPresetOpenChange}
             >
               <SelectTrigger
                 id="multimodal-audio-preset"
@@ -615,7 +631,7 @@ export function MultimodalModelCard({
             {showAudioAdvanced ? "收起高级设置" : "高级设置（自定义供应商）"}
           </button>
         ) : null}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-start sm:justify-between">
           {/* [T-377] 测试连接:按能力走最小真实调用/最便宜鉴权探测(生图/付费搜索会真实
               调用 → 额度提示;生视频只验鉴权不真生成)。 */}
           <TestConnectionButton

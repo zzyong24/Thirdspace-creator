@@ -1,0 +1,18 @@
+{
+  "sourceHead": "806a42e67a8a75d74df14eaa917ec1cdbe30d657",
+  "targetRedLockSha256": "5c539641eea443a644aae1859b0eeb35f2a26b34f3e7827f5289610063863383",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "snapshotPath": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/implementation/baseline/codex-agentic-worker-run.ts",
+      "bytes": 11983,
+      "sha256": "9180d2f140f35080cb6880ae22cece3e2d967f36ace67ca30755baa60e5f0b16"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-agentic-worker-run.test.ts",
+      "snapshotPath": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/implementation/baseline/codex-agentic-worker-run.test.ts",
+      "bytes": 11477,
+      "sha256": "00d5a042b16b33a13f190b5477a1b3793c278df17ae5ac478e4771c66c9b08ac"
+    }
+  ]
+}

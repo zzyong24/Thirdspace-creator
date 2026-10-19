@@ -1,0 +1,75 @@
+--- /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation/vitest.config.mts
++++ /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation-v2/vitest.config.mts
+@@ -1,4 +1,4 @@
+ import {fileURLToPath}from'node:url';import path from'node:path';
+ const here=path.dirname(fileURLToPath(import.meta.url)),repo=path.resolve(here,'../../../../..');
+-const phase=process.env.T1334_PHASE_ROOT??'/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/red-v1';
++const phase=process.env.T1334_PHASE_ROOT??'/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/red-v2';
+ export default{root:path.join(repo,'frontend'),resolve:{tsconfigPaths:true},cacheDir:path.join(phase,'cache'),test:{environment:'node',include:['src/server/__module_integration__/agentic-task-tool-visibility.persistence-client.test.ts'],exclude:['**/node_modules/**'],setupFiles:[],alias:{'server-only':path.join(repo,'frontend/src/test/empty-module.ts'),'client-only':path.join(repo,'frontend/src/test/empty-module.ts')},testTimeout:28800000,hookTimeout:180000,globalTimeout:86760000,maxWorkers:1,fileParallelism:false,retry:0,reporters:['default',['json',{outputFile:path.join(phase,'vitest-result.json')}]]}};
+--- /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation/run.py
++++ /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation-v2/run.py
+@@ -5,7 +5,7 @@
+ repo=runtime.parents[4]
+ external=Path('/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7')
+ label=sys.argv[1]
+-assert label in ['red-v1','green-v1']
++assert label in ['red-v2','green-v1']
+ assert os.environ.get('T1334_APPROVED')=='1','独立装配审未通过，不运行'
+ phase=external/label
+ lock=json.loads((phase/'PRE_RUN_LOCK.json').read_text())
+--- /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation/worker-entry.fixture.cjs
++++ /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation-v2/worker-entry.fixture.cjs
+@@ -9,7 +9,7 @@
+ const originalSpawn=cp.spawn,originalExecFile=cp.execFile;
+ cp.execFile=function(file,args,options,callback){if(typeof options==='function')callback=options;assert.equal(path.basename(file),'codex');assert.deepEqual(args,['--version']);log({boundary:'controlled-codex-version',actualSupplierStarted:false});queueMicrotask(()=>callback(null,'codex-cli 0.159.3\n',''));return{kill(){return true;}};};
+ cp.spawn=function(file,args,options){
+- if(path.basename(file)==='codex'){assert.equal(args?.[0],'app-server');log({boundary:'controlled-codex-stdio',originalArgs:args,actualSupplierStarted:false});const child=originalSpawn(process.execPath,[path.join(__dirname,'codex-cli.fixture.cjs'),root,...args],options);child.once('spawn',()=>register(child.pid,'codex-rpc-io-fixture'));return child;}
++ if(path.basename(file)==='codex'){assert.equal(args?.[0],'app-server');log({boundary:'controlled-codex-stdio',originalArgs:args,actualSupplierStarted:false});const child=originalSpawn(process.execPath,[path.join(__dirname,'codex-cli.fixture.cjs'),root,...args],options);child.stderr?.on('data',chunk=>fs.appendFileSync(path.join(root,'controlled-cli-stderr.log'),chunk));child.once('spawn',()=>register(child.pid,'codex-rpc-io-fixture'));return child;}
+  assert.equal(path.resolve(file),path.resolve(process.env.T1334_CHROMIUM_EXECUTABLE));const userDir=args.find(x=>x.startsWith('--user-data-dir='))?.slice('--user-data-dir='.length);assert(userDir&&path.resolve(userDir).startsWith(path.resolve(root,'tmp')+path.sep));log({boundary:'real-owned-empty-browser',file,userDataDir:userDir});const child=originalSpawn(file,args,options);child.once('spawn',()=>register(child.pid,'owned-chromium'));return child;
+ };
+ process.env.CODEX_HOME=path.join(root,'empty-codex-home');for(const k of ['HTTP_PROXY','HTTPS_PROXY','ALL_PROXY'])delete process.env[k];
+--- /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation/codex-cli.fixture.cjs
++++ /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation-v2/codex-cli.fixture.cjs
+@@ -3,9 +3,10 @@
+ const fs=require('node:fs'),path=require('node:path'),readline=require('node:readline'),assert=require('node:assert/strict');
+ const root=process.argv[2],scenario=JSON.parse(fs.readFileSync(path.join(root,'scenario.json'))),argv=process.argv.slice(3),config={features:{},mcp_servers:{}};
+ assert.equal(argv[0],'app-server');assert.equal(argv[1],'--stdio');
++fs.appendFileSync(path.join(root,'native-rpc.ndjson'),JSON.stringify({at:new Date().toISOString(),pid:process.pid,method:'ACTUAL_CLI_ARGUMENTS_BEFORE_PARSE',argv,externalProvider:false})+'\n');
+ const pairs=[];
+ for(let i=2;i<argv.length;i+=2){assert.equal(argv[i],'-c');const value=argv[i+1];assert.equal(typeof value,'string');pairs.push(value);
+- const m=value.match(/^features\.([a-z_]+)=(.*)$/);
++ const m=value.match(/^features\.([a-z0-9_]+)=(.*)$/);
+  if(m){if(m[1]==='code_mode'&&m[2].startsWith('{')){const p=m[2].match(/^\{enabled=false,direct_only_tool_namespaces=(\[.*\])\}$/);assert(p);config.features.code_mode={enabled:false,direct_only_tool_namespaces:JSON.parse(p[1])};}else{assert(['true','false'].includes(m[2]));config.features[m[1]]=m[2]==='true';}}
+  else if(value.startsWith('web_search='))config.web_search=JSON.parse(value.slice('web_search='.length));
+  else if(value==='mcp_servers={}')config.mcp_servers={};else throw Error('UNSUPPORTED_ACTUAL_CONFIGURATION '+value);
+--- /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation/freeze.py
++++ /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/preparation-v2/freeze.py
+@@ -3,7 +3,7 @@
+ import hashlib,json,os,subprocess,sys,datetime,re
+ runtime=Path(__file__).resolve().parent
+ repo=runtime.parents[4]
+-external=Path('/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/red-v1')
++external=Path('/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/red-v2')
+ mode=sys.argv[1] if len(sys.argv)>1 else 'PREPARATION'
+ assert re.fullmatch(r'(?:PREPARATION|(?:RED|GREEN)(?:_[A-Z0-9]+)*)',mode)
+ files={};links={};packages=set();pending=[]
+--- /Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/red-v1/source-before-v2/agentic-task-tool-visibility.persistence-client.test.ts
++++ /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/agentic-task-tool-visibility.persistence-client.test.ts
+@@ -40,7 +40,7 @@
+   const status = {engine: 'codex' as const, installed: true, available: true, version: '0.159.3', defaultModelId: 't1334-fixture-model', availableModels: [{id: 't1334-fixture-model', inputModalities: ['text', 'image']}], loginStatus: 'authenticated' as const, capabilities: {text: true, imageUnderstanding: true, imageGeneration: true, imageEditing: 'unverified' as const}};
+   return {...actual, createLocalCodexStatusService: () => ({read: async () => structuredClone(status), peek: () => structuredClone(status), stop: async () => {}})};
+ });
+-vi.mock('@/server/execution-worker-path', async original => ({...await original<typeof import('@/server/execution-worker-path')>(), resolveAgenticWorkerPath: () => path.resolve('../docs/verification/t1334/runtime/preparation/worker-entry.fixture.cjs')}));
++vi.mock('@/server/execution-worker-path', async original => ({...await original<typeof import('@/server/execution-worker-path')>(), resolveAgenticWorkerPath: () => path.resolve('../docs/verification/t1334/runtime/preparation-v2/worker-entry.fixture.cjs')}));
+ vi.mock('@creatoros/backend/modules/execution', async original => {
+   const actual = await original<typeof import('@creatoros/backend/modules/execution')>();
+   return {...actual,
+@@ -107,7 +107,7 @@
+   let business:any;for(;;){business=await call(ENDPOINTS.getTask,{params:{taskId}});save('public-current',{business,at:new Date().toISOString(),originalDeadlineAt:new Date(deadline).toISOString()});if(['succeeded','awaiting_confirmation','failed','cancelled','unknown_result','waiting_user','blocked'].includes(business.runtimeStatus??business.status))break;await new Promise(resolve=>setTimeout(resolve,Math.min(500,remaining())));}
+   const results=await call(ENDPOINTS.listTaskResults,{params:{taskId}});save('public-results',results);await snapshot('terminal-before-assertions');
+   const rawCalls=await owned.db!.select().from(executionCalls).orderBy(asc(executionCalls.sequence));const toolCalls=rawCalls.filter(c=>c.kind==='tool'),models=rawCalls.filter(c=>c.kind==='model');
+-  const native=fs.readFileSync(path.join(owned.root,'native-rpc.ndjson'),'utf8').trim().split('\n').map(x=>JSON.parse(x));save('visibility-and-ledger',{business,rawCalls,native,expectedBusinessStatus:name==='collect'?'succeeded':'awaiting_confirmation'});
++  const nativePath=path.join(owned.root,'native-rpc.ndjson'),native=fs.existsSync(nativePath)?fs.readFileSync(nativePath,'utf8').trim().split('\n').filter(Boolean).map(x=>JSON.parse(x)):[];save('native-audit-availability',{present:fs.existsSync(nativePath),publicStatus:business.status,publicRuntimeStatus:business.runtimeStatus??null,publicErrorCode:business.errorCode??null});save('visibility-and-ledger',{business,rawCalls,native,expectedBusinessStatus:name==='collect'?'succeeded':'awaiting_confirmation'});
+   // 修改前目标RED必须先由原公共业务终态证明，不以argv断言替代业务失败。
+   expect(business.status,'目标：实际公共业务必须完成或形成正式可采纳候选').toBe(name==='collect'?'succeeded':'awaiting_confirmation');
+   expect(models).toHaveLength(1);expect(models[0]!.status).toBe('settled');expect(toolCalls.length).toBeGreaterThan(0);const configs=native.filter(x=>x.method==='ACTUAL_CLI_CONFIGURATION');expect(configs).toHaveLength(2);for(const x of configs){expect(x.config.features.code_mode).toEqual({enabled:false,direct_only_tool_namespaces:['functions']});expect(x.config.web_search).toBe('disabled');expect(x.config.features.shell_tool).toBe(false);expect(x.config.features.unified_exec).toBe(false);expect(x.config.features.browser_use).toBe(false);expect(x.config.features.image_generation).toBe(false);expect(x.config.mcp_servers).toEqual({});}

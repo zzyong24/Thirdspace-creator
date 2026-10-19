@@ -1,0 +1,329 @@
+首页 文档
+快速接入
+帮助
+介绍
+能力概览
+分享SDK接入
+Android SDK 接入指南
+iOS SDK 接入指南
+HarmonyOS SDK 接入指南
+JS SDK 接入指南
+SDK 下载
+小红书分享SDK合规性接入说明
+帮助
+常见问题 Q&A
+联系我们
+文档
+/
+Android SDK 接入指南
+Android SDK 接入指南
+2023-10-11 10:27:29 更新
+小红书分享 SDK Android 接入指南
+SDK 基础信息
+KEY	VALUE	备注
+小红书最低版本号要求	7.81	
+manifest 中声明的权限	android.permission.INTERNET	此权限已经在 sdk 的 manifest 清单文件中声明，接入方无需再次声明
+manifest 中声明的四大组件	com.xingin.xhssharesdk.core.XhsShareActivity(exported = true)	此 Activity 已经在 sdk 的 manifest 清单文件中声明，接入方无需再次声明
+manifest 中声明的 queries	<package android:name="com.xingin.xhs" />	此 query 已经在 sdk 的 manifest 清单文件中声明，接入方无需再次声明
+SDK 包体积	170.3 KB	
+前置要求
+项目中需要配置 FileProvider，参考链接
+和小红书商务同学沟通，提供包名等消息，获取对应的 App Key
+集成 SDK
+
+使用本地依赖 aar 的方式集成到项目中。
+
+ 
+
+API
+
+备注：以下示例代码均为 Kotlin 代码。
+
+初始化
+
+进行分享之前，需要先对 sdk 初始化。
+
+/**
+ * 初始化 SDK
+ */
+XhsShareSdk.registerApp(context, "appkey",
+            XhsShareGlobalConfig().setEnableLog(true).setClearCacheWhenShareComplete(true),
+            object : XhsShareRegisterCallback {
+                override fun onSuccess() {
+                    Log.i("xhs", "onSuccess: 注册成功！")
+                }
+
+                override fun onError(
+                    errorCode: Int,
+                    errorMessage: String,
+                    @Nullable exception: Exception?
+                ) {
+                    Log.i(
+                        "xhs",
+                        "onError: 注册失败！errorCode: $errorCode errorMessage: $errorMessage exception: $exception"
+                    )
+                }
+            })
+
+
+参数解析
+
+/**
+* 注册 app （即初始化）
+* @param context 任意 context 即可
+* @param appKey 申请的 appKey
+* @param config 一些配置项
+* @param callback 注册回调
+*/
+public static void registerApp(Context context, String appKey, XhsShareGlobalConfig config, XhsShareRegisterCallback callback)
+
+
+配置项（XhsShareGlobalConfig）
+
+支持的配置如下：
+
+配置项	方法名	含义	默认值	备注
+log 打印	setEnableLog(Boolean)	是否打印分享过程中的日志	false，不打印	
+log 实现	setShareLogger(IShareLogger)	日志打印方式	系统 Log，打印在控制台	
+
+
+缓存文件夹	setCacheDirPath(String)	分享过程中缓存文件的存储目录	/storage/emulated/0/Android/data/yourpackagename/cache/xhs_share_cache_dir	1. 配置的缓存文件夹路径需要在 FileProvider 的根目录下
+2. 若配置的缓存文件夹非应用私有目录下时，需自行处理文件读写权限问题，SDK 未进行权限判断以及权限申请。
+authority	setFileProviderAuthority(String)	FileProvider 将 file 转换为 uri 所需要的 Authority	yourpackagename + “.provider”	
+清除缓存选项	setClearCacheWhenShareComplete(boolean)	分享结束后是否清除中间产生的缓存文件夹	true，清除	
+使用外部 Activity 注册广播接收分享结果	setNeedRegisterReceiverWithOutsideActivity(boolean)	使用外部 Activity 注册广播接收分享结果	false	如果中间透明 Activity （XhsShareActivity）在分享过程中会被杀掉的话，可以使用此配置来保证可以正常使用分享 SDK。
+此选项开启后，分享结果会有 20s 的超时兜底时限，即：如果调用分享后 20s 内接收不到分享结果即认为是分享失败
+开始分享
+
+构建分享数据
+
+笔记类型	标题	正文	图片	视频	视频封面
+图文笔记	可选	可选	必传，1-18 张	-	-
+视频笔记	可选	可选	-	必传，1 个视频	可选，0 - 1 张封面
+图文笔记
+XhsNote().apply {
+    title = getTitleString()    // 正文，String
+    content = getContentString()    // 标题，String
+    imageInfo = XhsImageInfo(listOf(
+        XhsImageResourceBean.fromUrl("网络图片 url"), 
+        XhsImageResourceBean.fromUrl("网络图片 url")))            
+}
+
+视频笔记
+XhsNote().apply {
+    title = getTitleString()
+    content = getContentString()
+    videoInfo = XhsVideoInfo(XhsVideoResourceBean("本地视频 uri"),     // 视频
+                            XhsImageResourceBean("本地图片 uri"))    // 封面
+                    }
+
+
+NOTE:
+
+XhsImageResourceBean 支持三种构造方式
+new XhsImageResourceBean(File) // 本地图片
+new XhsImageResourceBean(Uri) // 本地图片
+XhsImageResourceBean.fromUrl(String) // 网络图片或者本地图片。如果入参是网络链接，则是网络图片；如果入参是本地文件路径，则是本地图片
+XhsVideoResourceBean 支持三种构造方式
+new XhsVideoResourceBean(File) // 本地视频
+new XhsVideoResourceBean(Uri) // 本地视频
+XhsVideoResourceBean.fromUrl(String) // 网络视频或者本地视频。如果入参是网络链接，则是网络视频；如果入参是本地文件路径，则是本地视频
+如果同时设置了图片资源（imageInfo 字段）和视频资源（videoInfo 字段）的话，则认为是图文笔记，废弃视频资源
+
+开始分享
+
+val sessionId = XhsShareSdk.shareNote(context, xhsNote)
+
+context 需要传入 Activity context
+sessionId 为本次分享的唯一标识，每次分享都会改变
+分享回调
+
+设置分享回调（1.1.0 版本有变更）
+
+XhsShareSdk.setShareCallback(object : XhsShareCallback {
+            override fun onSuccess(sessionId: String?) {
+                Log.i("xhs", "onSuccess: 分享成功！！！")
+            }
+
+            // 1.1.0 版本之后废弃
+            override fun onError(
+                sessionId: String,
+                errorCode: Int,
+                errorMessage: String,
+                throwable: Throwable?
+            ) {
+                Log.i(
+                    "xhs",
+                    "onError: 分享失败!! $sessionId $errorCode $errorMessage $throwable"
+                )
+            }
+            
+            // 1.1.0 版本后提供的新错误回调，内含新的错误码
+            override fun onError2(
+                sessionId: String,
+                newErrorCode: Int,
+                oldErrorCode: Int,
+                errorMessage: String,
+                throwable: Throwable?
+            ) {
+                Log.i(
+                    "xhs",
+                    "onError: 分享失败!! $sessionId $newErrorCode $oldErrorCode $errorMessage $throwable"
+                )
+            }
+
+        })
+
+
+注意：设置分享回调时，注意内存泄露。
+
+移除分享回调
+
+XhsShareSdk.setShareCallback(null)
+
+打开活动页，1.1.4 新增
+/**
+ * 在小红书打开活动页
+ * @param context - Activity
+ * @param url - 网页链接，仅支持 http 和 https 链接
+ */
+void XhsShareSdk.openUrlInXhs(context, url)
+
+一些工具方法
+
+获取小红书包名
+
+/**
+ * 获取小红书包名
+ *
+ * @return 小红书包名
+ */
+String XhsShareSdkTools.getXhsPackageName()
+
+
+判断小红书是否安装
+
+/**
+ * 小红书是否已经安装
+ *
+ * @return 是否已经安装
+*/
+boolean XhsShareSdkTools.isXhsInstalled(Context)
+
+
+判断是否支持分享笔记到小红书
+
+/**
+ * 是否支持分享笔记到小红书
+ * 判断条件：
+ * * 小红书 app 是否安装
+ * * 小红书版本号是否满足要求
+ */
+VersionCheckResult XhsShareSdkTools.isSupportShareNote(Context))
+
+/**
+ * VersionCheckResult 数据结构
+ */
+public class VersionCheckResult {
+    
+    /*
+    * 检测结果：
+    * 0 - 支持分享
+    * -1 - 小红书未安装
+    * -2 - 小红书版本号不满足要求
+    */
+    @ResultCode
+    public int checkResultCode;
+
+    @NonNull
+    public String errorMessage;
+
+    @Nullable
+    public Throwable exception;
+}
+
+错误码定义（1.1.0 版本后有变更）
+
+以下是分享回调中的错误码定义。
+
+错误码
+
+1.1.0 版本新增，后续版本只会维护此表
+
+错误码	错误码含义
+-20100001	小红书未安装
+-20100002	小红书版本号太低
+-20100003	资源缺失，图文和视频都没传
+-20100004	图片或者视频文件不存在
+-20100005	文件处理失败
+-20100006	生成跨应用 uri 失败
+-20100007	分享方法重复调用，上次分享流程还没有结束
+-20100008	鉴权失败
+-20100009	打开分享页面失败
+-20100010	传递数据有误
+-20100011	传递数据有误
+-20100012	分享时还没有注册过
+-20100013	分享上下文为空
+-20100014	sessionId 与上下文不一致
+-20100015	数据处理错误
+-20100016	IO 错误
+-20100017	数据处理线程被打断
+-20100018	JSON 处理错误
+-20100019	无法打开小红书
+-20302001	数据解析失败
+-20302002	数据解析失败
+-20302003	数据解析失败
+-20302004	数据解析失败
+-20302005	小红书内部被新的分享打断并替代
+-20302006	数据解析失败
+-20302999	数据解析失败
+-20400001	小红书内部被新的分享打断并替代
+-20400002	无法发布，不满足小红书的发布规范
+-20400003	用户取消发布
+-20400004	分享过程中提前切回第三方 app，导致获取不到分享结果
+旧错误码
+
+1.1.0 版本后不再维护！！
+
+错误码	解释
+-10000001	一些基础性的错误，具体的错误信息中会进行解释
+-10000002	重复分享，上一次分享流程还没有结束
+-10000003	版本号问题，小红书未安装、sdk 版本号太低或者太高、小红书版本号太低或太高
+-10000004	预检查失败，视频文件和图片文件都没有
+-10000005	数据处理线程被打断
+-10000006	数据处理错误，io 错误等等
+-10000007	token 检测失败，失败原因会在错误信息中展示
+-10000008	生成 json 错误
+-10000009	跳转小红书失败
+-10000010	小红书内部被新的分享打断并代替
+-10000011	分享类型错误，直接跳转到主页（此阶段不会有此问题）
+-10000012	无法发布，不满足一些发布规范（比如网络错误等）
+-10000013	用户取消发布
+-10000014	分享过程中提前切回第三方 app，导致获取不到分享结果
+-10000015	打开 XhsShareActivity 失败
+没有找到答案 ？
+您可以联系我们获取更多信息，我们会在第一时间回复您。
+联系我们
+小红书分享 SDK Android 接入指南
+SDK 基础信息
+前置要求
+集成 SDK
+API
+初始化
+开始分享
+分享回调
+打开活动页，1.1.4 新增
+一些工具方法
+错误码定义（1.1.0 版本后有变更）
+错误码
+旧错误码
+关于小红书
+小红书网页版
+电商开放平台
+专业号
+推广合作
+蒲公英
+商家入驻
+MCN 入驻
+Copyright © 2014-2025 行吟信息科技（上海）有限公司️ 沪ICP备 13030189号
+隐私政策

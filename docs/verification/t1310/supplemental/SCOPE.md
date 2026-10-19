@@ -1,0 +1,7 @@
+# T1310：原已审unknown/重入族的同turn补充观察
+
+Root授权在原诊断范围补一组真实受控轨迹，不是生产修复、新功能或原首因已证。原diagnosis done、DIAGNOSIS_RESULT与BOUNDED_NOT_REPRODUCED保留，不重置旧步骤。新增supported same-turn-observation仅依赖原done步骤。
+
+以新owned纯组任务、原immutable worker/真实SDK/host/dispatcher/lease/ledger，合成外部Codex native协议（空认证目录，无真实模型）先触发missing usage/TOOL_REQUIRES_RECONCILIATION，再在同native turn发同键重试、新键/其它工具，逐项保端口response及账本/state。核catch-all CREATOROS_INTERACTION_UNSUPPORTED与后续工具拒绝、外层settle，不预设原U04根因或bug。0旧task重放/HTTP、0当前candidate请求/活DB，不改生产/合同/worker/权限/continuous/maxAttempts/timeout；原调用ID/fence/fee和未知不自动重发。
+
+仅W supplemental/runtime/**及supplemental/DIAGNOSIS_RESULT.md；所有原diagnosis原件R。复用冻结worker SHA3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454，不build dist。test540000/hook180000ms、retry0、singleworker、外层86400s，正执行/观察至少120s保长值。原timeout-policy Gate实际必需五包Vitest可再生缓存准确记录，禁止依赖源码修改/shim。原U04持续策略可超过legacy3不是缺陷；最终只报受控same-turn事实与原案证据差距，未经独立方案不修产品。

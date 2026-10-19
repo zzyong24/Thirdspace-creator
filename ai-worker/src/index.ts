@@ -150,11 +150,6 @@ export {
   type TopicItem,
   type TopicBasis,
 } from "./nodes/topic-node";
-export {
-  runTopicTask,
-  type TopicTaskPorts,
-  type RunTopicTaskInput,
-} from "./orchestrate/run-topic-task";
 // 提示词模板系统(脊柱-1):模板化解耦 + 注册表(可版本化/外部覆盖/未来服务端推送)。
 export {
   bindPrompt,
@@ -162,6 +157,7 @@ export {
   type PromptTemplate,
   type BoundPrompt,
 } from "./prompt/template";
+export { USER_FACING_RESPONSE_POLICY } from "./prompt/user-facing-response-policy";
 // [T-269/T-270] 共享接地 facet 包(创作生成链接地根)—— anti-fabrication 可溯硬约束段(模板 +
 // 自由文本子调用共用单一真值)+ 可溯后处理纯函数(生成后校验具体 claim 是否命中注入素材,未命中标
 // 「未溯源」)。立项 Brief 硬锚段的渲染在 backend creative-context(读 CreativeContext,不拉 AI SDK)。
@@ -600,3 +596,7 @@ export {runTranscribeAsrInWorker} from './execution/transcribe-asr-run';
 
 export * from './prompt/templates/asset-processing';
 export {flywheelOutputSchema,flywheelKnowledgeResultSchema} from './runtime/flywheel-output';
+
+export {runAssetAsrInWorker} from './execution/asset-asr-worker-run';
+
+export {MOMENTS_COMPOSE_TEMPLATE} from "./prompt/moments-compose";

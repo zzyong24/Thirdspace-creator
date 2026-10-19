@@ -1,0 +1,113 @@
+{
+  "schema": "creatoros/terminal-module-archive@1",
+  "purpose": "只读历史项目定义；不是执行配置，不加载为module或命令",
+  "authorizedBy": "DEC-130001",
+  "reviewedSpecSha256": "220aa12786f59be04d81391eadb496c671674d1bdfa6ace98cb0f6a9b3f94b7a",
+  "migratedAt": "2026-10-15T16:10:13.478Z",
+  "source": {
+    "path": "orchestrator/process/modules.config.json",
+    "snapshotPath": "docs/verification/t1300/workflow/modules.before-archive.json",
+    "sha256": "94c3f63200526a88a00dec075903329ddb269629dd1de4264fdb42215635a04a",
+    "bytes": 722340
+  },
+  "archivedModules": {
+    "T-1111": {
+      "module": {
+        "task_id": "T-1111",
+        "archetype": [
+          "orchestration"
+        ],
+        "tasks": [
+          "implementation"
+        ],
+        "depends_on": [],
+        "read_set": [
+          "docs/features/t1111-freeze-resolved-review.md",
+          "BACKLOG.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md",
+          "docs/verification/t1107/IMPLEMENTATION_REVIEW_FINAL.json",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-package/freeze-source.py"
+        ],
+        "write_set": [
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-package/freeze-source.py",
+          "docs/features/t1111-freeze-resolved-review.md",
+          "docs/features/t1111-freeze-resolved-review.review-input.json",
+          "docs/features/t1111-freeze-resolved-review.review.md",
+          "docs/features/t1111-freeze-resolved-review.independent-review.md",
+          "docs/verification/t1111/**",
+          "BACKLOG.md",
+          "orchestrator/events.ndjson",
+          "orchestrator/review-events.ndjson",
+          "orchestrator/process/modules.config.json"
+        ],
+        "verify_commands": {
+          "implementation": [
+            "git diff --check",
+            "python3 /Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-package/freeze-source.py"
+          ]
+        }
+      },
+      "originalModuleJSONSha256": "59a8a608f01fda7bb2842ea9c61937aa199c21d0cc81745357657d0bfb0654c3",
+      "terminalEvent": {
+        "line": 1272,
+        "raw": "{\"ts\":\"2026-10-09T06:03:34.815Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1111\",\"evidence\":\"94c80195；私有helper 30453915→49c810e8，原freeze exit1保留；正式独评recheck PASS、实施有限PASS；同一入口freeze-green真实exit0/1.688秒，clean main四版本1.2.0与87已审源一致；仅辅助复核状态读取，原resolved历史/Gate/安全/产品未改；不签构建安装或全仓。\",\"sha_before\":\"de12e2baba78\",\"sha_after\":\"5e010a1c96c5\"}",
+        "sha256": "1f934df4fe4be1a16686cb24007702431af576cb9005682507b5388839102b9c"
+      },
+      "canonicalRow": {
+        "file": "BACKLOG-archive.md",
+        "line": 1072,
+        "row": "| T-1111 | 修正本地冻结辅助校验把已解决复核项误判为阻断 | ✅ 待办 | PASS[REV:be761523cfcf] | — | [SPEC](docs/features/t1111-freeze-resolved-review.md) | 当前main文档已提交，冻结预检退出1：T1107有限PASS报告保留IMP-001 resolved，被辅助脚本findings==[]误拒。只修本机私有校验的机械状态读取，未解决/未知状态仍拒；保原报告/失败/产品字节，不改仓库构建、Gate或用户数据。 |"
+      }
+    },
+    "T-1125": {
+      "module": {
+        "task_id": "T-1125",
+        "archetype": [
+          "orchestration"
+        ],
+        "tasks": [
+          "implementation"
+        ],
+        "depends_on": [],
+        "read_set": [
+          "docs/features/t1125-package-private-preflight-fixture.md",
+          "docs/verification/t1125/actual-fixture-diagnosis.json",
+          "BACKLOG.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md",
+          "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source.py"
+        ],
+        "write_set": [
+          "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py",
+          "docs/features/t1125-package-private-preflight-fixture.md",
+          "docs/features/t1125-package-private-preflight-fixture.review.md",
+          "docs/features/t1125-package-private-preflight-fixture.review-input.json",
+          "docs/verification/t1125/**",
+          "docs/verification/t1124/**",
+          "BACKLOG.md",
+          "PROJECT.md",
+          "orchestrator/events.ndjson",
+          "orchestrator/review-events.ndjson",
+          "orchestrator/process/modules.config.json"
+        ],
+        "verify_commands": {
+          "implementation": [
+            "python3 /Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py --self-test",
+            "python3 /Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py --scan-only",
+            "git diff --check"
+          ]
+        }
+      },
+      "originalModuleJSONSha256": "d7eaf596785ea0b2dbb3c6c90b476158020fdec7452a08c73251b5029b01baa0",
+      "terminalEvent": {
+        "line": 1300,
+        "raw": "{\"ts\":\"2026-10-09T12:12:33.201Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1125\",\"evidence\":\"docs/verification/t1125/CURRENT_VALIDATION.md\",\"sha_before\":\"53885ef6ee03\",\"sha_after\":\"a708ad063fe7\"}",
+        "sha256": "ac3122022d01f2d64e88926549235dad98380815cbf024352911b310b3cbe294"
+      },
+      "canonicalRow": {
+        "file": "BACKLOG-archive.md",
+        "line": 1062,
+        "row": "| T-1125 | 修正本机出包冻结辅助检查把脱敏测试夹具误报为真实密钥 | ✅ 待办 | PASS[REV:d9e25d4f31e7] | — | [SPEC](docs/features/t1125-package-private-preflight-fixture.md) | ec5冻结全扫描321秒exit1，三Rust测试模块4类命中皆脱敏合成夹具；保原RED并先独评仅准确path/sourceSHA/逐值SHA分类，未知仍拒，原规则全扫描不删。只改私有helper，不改vendor/build；当前45基本PASS不代签出包。 |"
+      }
+    }
+  }
+}

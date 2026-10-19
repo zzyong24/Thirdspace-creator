@@ -1,0 +1,67 @@
+{
+  "task": "T-1254",
+  "status": "READ_ONLY_DIAGNOSIS_NO_RUNTIME_NO_SOURCE_CHANGE",
+  "actualFailureNonce": "b559d0cf89accea8faf82f2c00370e9f",
+  "reviewedRunnerSha256": "2ce5215e244e9ca00e71ca8b31b15f18754819952ea5df760da0edc8598da41a",
+  "reviewedNetworkSha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34",
+  "actualCrash": {
+    "pid": 89663,
+    "signal": "SIGABRT",
+    "libnodeUuid": "d8006fe9-cd87-3eef-bd46-b24c722a5083",
+    "returnImageOffsetDecimal": 2542972,
+    "returnImageOffsetHex": "0x26cd7c",
+    "abortCall": "0x26cd78 BL 0x1215510",
+    "causingBranch": "0x26bdd8 fstat; errno != EBADF(9) at 0x26bdec branches to 0x26cd78",
+    "stdioFdFromPreservedX23": 1,
+    "x25X26NodeStdioDelta": 224
+  },
+  "conclusion": {
+    "confirmed": "本次 Node 初始化在检查标准输出 fd1 的 fstat 错误分支中 abort，尚未进入 network probe JS。cold.3 名称不能定位为 CSPRNG 或 libuv IPC。",
+    "mechanismInference": "helper393f887 openSync(log,wx) 将同一文件 fd 传 stdout/stderr；V9传入HOME内 docs execution log，与deny file-read*/write* HOME边界冲突。本次调用分支和fd已确认，具体errno未从crash读取，日志路径受限导致fstat失败是候选修复依据而非已观察的errno值。",
+    "narrowFixToReview": "保持原HOME/network/TCC规则，将child日志改为独占owned private原文件；仅真实closed后父进程按字节SHA归档。原FAIL/未执行RED必须保留。"
+  },
+  "confirmedClosureGap": {
+    "description": "Node入口会载入 @rpath/libnode.141.dylib 及非系统Homebrew dylibs；旧141101工具闭包未包含libnode/libuv，这影响完整执行工具闭包签名，不能将旧签名描述为含全部Mach-O运行时。",
+    "requiredBeforeNextAdmission": "增加递归真实LC_LOAD_DYLIB/LC_RPATH解析、regular实际hash/size/mode、symlink真实target链和动态load可达节点；系统dyld缓存明确标为OS边界，不虚称全系统SHA。",
+    "priorReviewsPreserved": true
+  },
+  "evidence": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/independent-v9-node-init-diagnosis/ABORT_RETURN_POINT.txt",
+      "size": 2740,
+      "sha256": "57a6999510eefd9753926c84e83c400c9c5ad624c9630b0911b9f780170697f6"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/independent-v9-node-init-diagnosis/CURRENT_PID_CRASH_PROJECTION.json",
+      "size": 3035,
+      "sha256": "0c528ab5a4704300118210060519f9b3d44c654126d6a9fbf98ae1edb833f6f8"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/independent-v9-node-init-diagnosis/DYLIB_UUID.txt",
+      "size": 12402,
+      "sha256": "6d11cd2fd5625df01c2dbdf9631ca2990fc94fe57a8706d6f55899e00bed0e06"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/independent-v9-node-init-diagnosis/EXACT_FSTAT_ERRNO_STUBS.txt",
+      "size": 68,
+      "sha256": "ceda1fe39f0cb4ac39f9cf857b068ac2f39064473feff0d70be8ed431b680ed8"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/independent-v9-node-init-diagnosis/FSTAT_BRANCH.txt",
+      "size": 2233,
+      "sha256": "6d0155e4ab549deb71ceb0a412ac4000970804b9d1f1c9dc41714bf3b807c207"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/independent-v9-node-init-diagnosis/NODE_DYLIB_LOADS.txt",
+      "size": 2696,
+      "sha256": "94be50fdd22d8496ebc74db40f1c4c26ffeda5947422c76ae55737871a908961"
+    }
+  ],
+  "notProven": [
+    "probe程序正文通过",
+    "AF_UNIX需求",
+    "CSPRNG失败",
+    "公网权限需求",
+    "新修复运行通过"
+  ]
+}

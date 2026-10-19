@@ -1,6 +1,9 @@
+import {predictionLockState} from "../resources/prediction-lock";
+import {workCandidateSourceResult} from '../resources/work-candidate-adoption';
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, paginationQuery } from "../primitives";
+import {aiPublicMessageBody} from '../resources/ai-public-message';
 import {
   aiConversationResource,
   aiMessageResource,
@@ -14,6 +17,9 @@ const taskParams = z.object({ taskId: id });
 
 // SPEC §13 "AI 助手" group.
 export const aiOperations = {
+  readPredictionLockSource:defineEndpoint({id:"ai.predictionLocks.source",method:"GET",path:"/ai/conversations/:conversationId/prediction-locks/source",params:conversationParams,query:z.object({sourceMessageId:id,toolCallId:id}).strict(),response:predictionLockState,fr:["FR-CALIB-PRED-LOCK"]}),
+  startPredictionLock:defineEndpoint({id:"ai.predictionLocks.start",method:"POST",path:"/ai/conversations/:conversationId/prediction-locks/start",params:conversationParams,body:z.object({sourceMessageId:id,toolCallId:id,expectedBaselineDigest:z.string().min(1),policyVersion:z.literal(1)}).strict(),response:predictionLockState,fr:["FR-CALIB-PRED-LOCK"]}),
+  readWorkCandidateSource:defineEndpoint({id:'ai.workCandidates.source',method:'GET',path:'/ai/conversations/:conversationId/work-candidates/source',params:conversationParams,query:z.object({sourceMessageId:id,toolCallId:id}).strict(),response:workCandidateSourceResult,fr:['FR-1097-CANDIDATE-SOURCE']}),
   listConversations: defineEndpoint({
     id: "ai.conversations.list",
     method: "GET",
@@ -43,10 +49,7 @@ export const aiOperations = {
     method: "POST",
     path: "/ai/conversations/:conversationId/messages",
     params: conversationParams,
-    body: z.object({
-      content: z.string().min(1),
-      attachments: z.array(id).optional(),
-    }),
+    body: aiPublicMessageBody,
     response: aiMessageResource,
     fr: ["FR-AI-MESSAGES-CREATE"],
   }),
@@ -64,7 +67,7 @@ export const aiOperations = {
     method: "POST",
     path: "/ai/tasks",
     body: z.object({
-      taskType: z.string().min(1),
+      taskType: z.string().min(1).refine(value=>value!=="asset.asr"&&value!=="production.rough-cut.propose","资产转写或粗剪须从生产预约创建"),
       attemptId: z.string().min(16).max(128),
       retryOfTaskId: id.optional(),
       inputData: z.record(z.string(), z.unknown()).optional(),

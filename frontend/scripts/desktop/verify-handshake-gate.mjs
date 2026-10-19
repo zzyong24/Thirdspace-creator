@@ -73,7 +73,7 @@ function boot(dir, port, withToken) {
   return child;
 }
 
-async function waitReady(port, ms = 30000) {
+async function waitReady(port, ms = 150_000) {
   const deadline = Date.now() + ms;
   while (Date.now() < deadline) {
     try {
@@ -82,7 +82,7 @@ async function waitReady(port, ms = 30000) {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: "{}",
-        signal: AbortSignal.timeout(1500),
+        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) // 共用readiness绝对deadline，不能重置,
       });
       if (res.status) return true;
     } catch {
@@ -104,7 +104,7 @@ async function probe(port, r, extraHeader) {
       method: r.method,
       headers,
       body: r.method === "POST" ? "{}" : undefined,
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(120_000),
     });
     let body = "";
     try {

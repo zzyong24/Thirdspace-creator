@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "outputs": {
+    "native.js": {
+      "/tmp/t1282-native-protocol-archive/apps/web/native-dist": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+      "/tmp/creatoros-t1274-preview-isolated/apps/web/native-dist": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/frontend/public/reference-editors/opencut-classic/native": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90"
+    },
+    "native.css": {
+      "/tmp/t1282-native-protocol-archive/apps/web/native-dist": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
+      "/tmp/creatoros-t1274-preview-isolated/apps/web/native-dist": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/frontend/public/reference-editors/opencut-classic/native": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c"
+    },
+    "NATIVE_BUILD_GRAPH.json": {
+      "/tmp/t1282-native-protocol-archive/apps/web/native-dist": "a5a6d38f6fcf1d07100853313ea9b7adb302692ef93e404ea940eb0ea9e81667",
+      "/tmp/creatoros-t1274-preview-isolated/apps/web/native-dist": "a5a6d38f6fcf1d07100853313ea9b7adb302692ef93e404ea940eb0ea9e81667",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native": "a5a6d38f6fcf1d07100853313ea9b7adb302692ef93e404ea940eb0ea9e81667",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/frontend/public/reference-editors/opencut-classic/native": "a5a6d38f6fcf1d07100853313ea9b7adb302692ef93e404ea940eb0ea9e81667"
+    },
+    "THIRD_PARTY_LICENSES.json": {
+      "/tmp/t1282-native-protocol-archive/apps/web/native-dist": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "/tmp/creatoros-t1274-preview-isolated/apps/web/native-dist": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/frontend/public/reference-editors/opencut-classic/native": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad"
+    },
+    "THIRD_PARTY_LICENSES.txt": {
+      "/tmp/t1282-native-protocol-archive/apps/web/native-dist": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "/tmp/creatoros-t1274-preview-isolated/apps/web/native-dist": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/frontend/public/reference-editors/opencut-classic/native": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f"
+    },
+    "LICENSE.opencut": {
+      "/tmp/t1282-native-protocol-archive/apps/web/native-dist": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "/tmp/creatoros-t1274-preview-isolated/apps/web/native-dist": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/frontend/public/reference-editors/opencut-classic/native": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d"
+    },
+    "effects/preview.jpg": {
+      "/tmp/t1282-native-protocol-archive/apps/web/native-dist": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "/tmp/creatoros-t1274-preview-isolated/apps/web/native-dist": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/frontend/public/reference-editors/opencut-classic/native": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    }
+  },
+  "sevenArchiveSourceAndBothPublishedBytesMatch": true,
+  "fixturePublished": false,
+  "freshDependencyInstall": false,
+  "crossOS": "not_claimed"
+}

@@ -137,7 +137,10 @@ describe('本地 Whisper 取消与资源归属', () => {
         const second = pipe(new Float32Array([1])).catch(e => e);
         await tick();
         expect(workers).toHaveLength(1);
+        let settled=false;void second.then(()=>{settled=true;});
         workers[0]!.emit('error', new Error('crash'));
+        await tick();expect(settled).toBe(false);expect(workers).toHaveLength(1);
+        expect(workers[0]!.terminate).toHaveBeenCalledTimes(1);workers[0]!.stopped.resolve(0);
         expect(await second).toMatchObject({ reference: 'LOCAL_WHISPER_WORKER_CRASH' });
         const third = pipe(new Float32Array([1]));
         await tick();

@@ -21,10 +21,11 @@ import * as React from "react";
 import type { EChartsOption } from "echarts";
 
 import { EChart, useChartTokens } from "@/components/analytics/echarts-base";
+import { EmptyChartGrid } from "./empty-chart-grid";
 
 export interface TrendPoint {
   readonly label: string;
-  readonly value: number;
+  readonly value: number | null;
 }
 
 export type ViewsTrendMode = "daily" | "single" | "empty";
@@ -35,6 +36,10 @@ export interface ViewsTrendChartProps {
   readonly summary: string;
   readonly slot?: string;
   readonly testId?: string;
+  readonly unit?: string;
+  readonly valueLabel?: string;
+  readonly singleNote?: string;
+  readonly dateRange?: {startDate:string;endDate:string};
 }
 
 export function ViewsTrendChart({
@@ -43,38 +48,59 @@ export function ViewsTrendChart({
   summary,
   slot = "views-trend-chart",
   testId = "views-trend-chart",
+  unit = "次",
+  valueLabel = "播放量",
+  singleNote = "数据刚更新了一次,还画不出走势;过几天再来看趋势。",
+  dateRange,
 }: ViewsTrendChartProps) {
   const tokens = useChartTokens();
-  const isSingle = mode === "single" || data.length <= 1;
+  const validCount = data.filter((point) => typeof point.value === "number" && Number.isFinite(point.value)).length;
+  const isSingle = mode === "single" || validCount <= 1;
 
   const option = React.useMemo<EChartsOption>(() => {
     const labels = data.map((d) => d.label);
-    const values = data.map((d) => d.value);
+    const values = data.map((d) => typeof d.value === "number" && Number.isFinite(d.value) ? d.value : null);
+    const timeAxis = Boolean(dateRange&&dateRange.startDate!==dateRange.endDate);
+    const timestamp=(label:string)=>Date.parse(label+"T00:00:00+08:00");
+    const minimum = Math.min(0, ...values.filter((value): value is number => value !== null));
+    const axisBase={
+      name:"日期",nameLocation:"middle" as const,nameGap:28,
+      nameTextStyle:{color:tokens.mutedForeground,fontSize:12},
+      axisLine:{lineStyle:{color:tokens.border}},axisTick:{show:false},
+    };
+    const xAxis:EChartsOption["xAxis"]=timeAxis&&dateRange?{
+      ...axisBase,type:"time",min:timestamp(dateRange.startDate),max:timestamp(dateRange.endDate),
+      axisLabel:{color:tokens.mutedForeground,fontSize:12,hideOverlap:true,formatter:(value:number)=>new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit"}).format(new Date(value))},
+    }:{...axisBase,type:"category",data:labels,boundaryGap:false,axisLabel:{color:tokens.mutedForeground,fontSize:12}};
     return {
-      grid: { left: 8, right: 12, top: 16, bottom: 20, containLabel: true },
+      grid: { left: 8, right: 12, top: 32, bottom: 40, containLabel: true },
       tooltip: {
         trigger: "axis" as const,
+        ...(dateRange?{renderMode:"richText" as const,formatter:(input:unknown)=>{
+          const item=(Array.isArray(input)?input[0]:input) as {value?:unknown;axisValueLabel?:string;name?:string};
+          const pair=Array.isArray(item.value)?item.value:null,value=pair?pair[1]:item.value;
+          const date=pair?new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(Number(pair[0]))):item.name??item.axisValueLabel??"";
+          return `${date}\n${valueLabel}：${typeof value==="number"?value.toLocaleString("zh-CN")+" "+unit:"暂无数据"}`;
+        }}:{}),
         backgroundColor: tokens.surface,
         borderColor: tokens.border,
         borderWidth: 1,
         textStyle: { color: tokens.foreground, fontSize: 12 },
         valueFormatter: (v) =>
-          typeof v === "number" ? v.toLocaleString("zh-CN") : String(v),
+          typeof (Array.isArray(v)?v[1]:v) === "number" ? `${Number(Array.isArray(v)?v[1]:v).toLocaleString("zh-CN")} ${unit}` : "暂无数据",
       },
-      xAxis: {
-        type: "category" as const,
-        data: labels,
-        boundaryGap: false,
-        axisLine: { lineStyle: { color: tokens.border } },
-        axisTick: { show: false },
-        axisLabel: { color: tokens.mutedForeground, fontSize: 11 },
-      },
+      xAxis,
       yAxis: {
         type: "value" as const,
+        name: `${valueLabel}（${unit}）`,
+        nameTextStyle: { color: tokens.mutedForeground, fontSize: 12 },
+        min: minimum < 0 ? undefined : 0,
+        axisLine: { show: true, lineStyle: { color: tokens.border } },
         splitLine: { lineStyle: { color: tokens.border, opacity: 0.5 } },
         axisLabel: {
           color: tokens.mutedForeground,
-          fontSize: 11,
+          fontSize: 12,
+          showMinLabel: true,
           formatter: (v: number) =>
             typeof v === "number" && v >= 10000
               ? `${(v / 10000).toFixed(1)}万`
@@ -83,13 +109,14 @@ export function ViewsTrendChart({
       },
       series: [
         {
-          name: "播放量",
+          name: valueLabel,
           type: "line" as const,
-          data: values,
-          smooth: true,
+          data: timeAxis?data.map((point,index)=>[timestamp(point.label),values[index]]):values,
+          smooth: false,
+          connectNulls: false,
           // Single point → show the symbol (a lone point reads as data, not a
           // flat line pretending to be a trend).
-          showSymbol: isSingle ? true : false,
+          showSymbol: isSingle || values.some((value) => value === null),
           symbolSize: isSingle ? 9 : 6,
           lineStyle: { color: tokens.brand, width: 2 },
           itemStyle: { color: tokens.brand },
@@ -111,7 +138,7 @@ export function ViewsTrendChart({
         },
       ],
     };
-  }, [data, isSingle, tokens]);
+  }, [data, isSingle, tokens, unit, valueLabel,dateRange]);
 
   return (
     <figure
@@ -119,21 +146,21 @@ export function ViewsTrendChart({
       data-slot={slot}
       data-shape="line"
       data-trend-mode={mode}
-      aria-label="播放趋势"
+      aria-label={`${valueLabel}趋势`}
       className="flex flex-col gap-1"
     >
-      <EChart
+      {validCount === 0 ? <EmptyChartGrid message="暂无趋势数据" dateLabels={data.map(point=>point.label)}/> : <EChart
         option={option}
         testId={testId}
         className="h-40 w-full"
         style={{ height: "10rem", width: "100%" }}
-      />
-      {isSingle ? (
+      />}
+      {isSingle && validCount > 0 ? (
         <p
           data-slot="views-trend-single-note"
-          className="text-[11px] leading-relaxed text-muted-foreground"
+          className="text-xs leading-relaxed text-muted-foreground"
         >
-          数据刚更新了一次,还画不出走势;过几天再来看趋势。
+          {singleNote}
         </p>
       ) : null}
       <p data-slot="chart-summary" className="sr-only">

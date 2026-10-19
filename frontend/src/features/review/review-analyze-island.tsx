@@ -22,11 +22,13 @@ export function ReviewAnalyzeButton({
   projectTitle,
   className,
   slot,
+  analysisScope,
 }: {
   projectId: string;
   projectTitle?: string;
   className?: string;
   slot?: string;
+  analysisScope?: string;
 }) {
   const { openChat } = useDraftChatRequest();
   return (
@@ -36,7 +38,7 @@ export function ReviewAnalyzeButton({
       onClick={() =>
         openChat({
           functionKey: "review.analyze",
-          prefill: REVIEW_ANALYZE_PREFILL,
+          prefill: REVIEW_ANALYZE_PREFILL+(analysisScope?`\n本次明确选择的复盘范围：${analysisScope}。按各平台原生口径分别说明来源、样本与未知项，不合并不同平台的比例；效果判断只使用此范围。`:''),
           autoSend: true,
           selection: {
             kind: "project",
@@ -59,14 +61,17 @@ export function ReviewAnalyzeButton({
 export function ReviewAnalyzeIsland({
   projectId,
   projectTitle,
+  analysisScope,
 }: {
   projectId: string;
   projectTitle?: string;
+  analysisScope?: string;
 }) {
   return (
     <ReviewAnalyzeButton
       projectId={projectId}
       projectTitle={projectTitle}
+      analysisScope={analysisScope}
       className="h-9 w-fit px-4 text-sm"
       slot="review-analyze-primary"
     />

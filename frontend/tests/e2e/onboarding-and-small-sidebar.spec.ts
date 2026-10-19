@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -27,7 +28,7 @@ function writeVisibleCopy(
   }>,
 ) {
   const repoRoot = resolve(process.cwd(), "..");
-  const evidenceDir = resolve(repoRoot, "orchestrator", "evidence");
+  const evidenceDir = resolve(process.env.CREATOROS_T1246_RUN_DIR!, "original-output", "orchestrator", "evidence");
   mkdirSync(evidenceDir, { recursive: true });
   const commitSha = execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: repoRoot,
@@ -51,6 +52,7 @@ function writeVisibleCopy(
 test.describe("新手成果路径与低高度侧栏", () => {
   test("重新打开后真实回到首页，并保留新号/已有作品两条连续路径", async ({
     page,
+    baseURL,
   }) => {
     const captures: Array<{
       checkpoint: string;
@@ -59,44 +61,50 @@ test.describe("新手成果路径与低高度侧栏", () => {
       text: string;
     }> = [];
 
+    const created = await page.request.post("/api/v1/dispatch", { data: { id: "accountGroups.create", input: { body: { name: "引导真实空组", idempotencyKey: randomUUID() } } }, timeout: 120_000 });
+    expect(created.ok()).toBe(true);
+    const group = (await created.json()).data as { id: string };
+    const saveOnboarding = async (body: Record<string, unknown>) => {
+      const response = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "settings.onboarding.group.patch", input: { params: { groupId: group.id }, body } }, timeout: 120_000 });
+      expect(response.ok()).toBe(true);
+      const saved = (await response.json()).data as { groupId: string; origin: string; hidden: boolean; collapsed: boolean };
+      expect(saved.groupId).toBe(group.id);
+      return saved;
+    };
+    expect(await saveOnboarding({ origin: "fresh", hidden: true, collapsed: false })).toMatchObject({ origin: "fresh", hidden: true, collapsed: false });
+    await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(group.id), url: baseURL! }]);
+    await page.addInitScript((id) => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, group.id);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/settings");
+    await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state", "ready");
     await page.getByRole("tab", { name: "偏好" }).click();
-    await page.evaluate(() => {
-      localStorage.setItem("creatoros:onboarding:hidden", "1");
-      localStorage.removeItem("creatoros:onboarding:force-open");
-      localStorage.setItem("creatoros:onboarding:origin", "fresh");
-    });
     await page.locator('[data-slot="pref-reopen-onboarding"]').click();
     await expect(page).toHaveURL(/\/$/);
 
     const card = page.locator('[data-slot="onboarding-card"]');
     await expect(card).toBeVisible();
     await expect(card).toContainText("上手引导");
-    await expect(card).toContainText("绑定你的抖音号");
-    await expect(card).toContainText("确定账号定位");
+    await expect(card).toContainText("将平台账号加入账号组");
+    await expect(card).toContainText("确定账号组的内容定位");
     await expect(card).toContainText("添加一个对标账号");
     await expect(card).toContainText("从对标内容创建选题");
     await expect(card).toContainText("把选题变成项目");
     await expect(card).not.toContainText("模型配置");
     await expect(card).not.toContainText("自动化任务");
-    expect(
-      await page.evaluate(() => ({
-        hidden: localStorage.getItem("creatoros:onboarding:hidden"),
-        forceOpen: localStorage.getItem("creatoros:onboarding:force-open"),
-      })),
-    ).toEqual({ hidden: null, forceOpen: "1" });
+    const afterReopen = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "settings.onboarding.group.get", input: { params: { groupId: group.id } } }, timeout: 120_000 });
+    expect(afterReopen.ok()).toBe(true);
+    expect((await afterReopen.json()).data).toMatchObject({ groupId: group.id, origin: "fresh", hidden: false, collapsed: false });
 
     const freshSteps = card.locator('[data-slot="onboarding-step"]');
     await expect(freshSteps).toHaveCount(6);
-    expect(await freshSteps.evaluateAll((rows) => rows.map((row) => row.getAttribute("data-order")))).toEqual([
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
+    expect(await freshSteps.evaluateAll((rows) => rows.map((row) => row.getAttribute("data-step-key")))).toEqual([
+      "import-account", "confirm-origin", "positioning-profile", "benchmark-monitor", "benchmark-topic", "first-project",
     ]);
+    // 已确认起点的步骤使用完成图标，其余步骤仍显示原序号；不能要求完成步骤仍写数字2。
+    const originStep = card.locator('[data-slot="onboarding-step"][data-step-key="confirm-origin"]');
+    await expect(originStep).toHaveAttribute("data-done", "true");
+    await expect(originStep.locator(":scope > span svg")).toHaveCount(1);
+    expect(await freshSteps.evaluateAll(rows => rows.filter(row => row.getAttribute("data-step-key") !== "confirm-origin").map(row => row.querySelector(":scope > span")?.textContent))).toEqual(["1", "3", "4", "5", "6"]);
     await expect(card).not.toContainText("查看已发布的历史项目");
     captures.push({
       checkpoint: "reopen-fresh-account",
@@ -105,9 +113,7 @@ test.describe("新手成果路径与低高度侧栏", () => {
       text: await card.innerText(),
     });
 
-    await page.evaluate(() =>
-      localStorage.setItem("creatoros:onboarding:origin", "existing"),
-    );
+    expect(await saveOnboarding({ origin: "existing" })).toMatchObject({ origin: "existing", hidden: false });
     await page.reload();
     await expect(card).toBeVisible();
     await expect(card).toContainText("查看已发布的历史项目");
@@ -173,3 +179,6 @@ test.describe("新手成果路径与低高度侧栏", () => {
     writeVisibleCopy("T-638", captures);
   });
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 37860000 });

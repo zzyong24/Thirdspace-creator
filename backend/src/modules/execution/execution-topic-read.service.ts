@@ -1,7 +1,9 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
   aiTasks,
+  executionTasks,
   executionCalls,
   and,
   eq,
@@ -30,6 +32,7 @@ import type { RequestContext } from "@creatoros/contract";
 import { ConflictError } from "./execution.errors";
 const frozenSchema = z.object({
   version: z.literal(1),
+  audienceTaskContext:z.unknown().optional(),
   basis: z.enum(["trend", "positioning"]),
   mode: z.literal("daily").optional(),
   context: z.object({ positioningBrief: z.string() }),
@@ -104,7 +107,7 @@ export function createExecutionTopicReadService(
             eq(aiTasks.id, task.ownerId),
             eq(aiTasks.executionTaskId, task.id),
             eq(aiTasks.userId, context.userId),
-            eq(aiTasks.accountId, context.accountId!),
+            workspaceFilter(aiTasks,context),
           ),
         );
       if (!business || !["topic.generate","scheduled.topic.daily"].includes(business.taskType))
@@ -125,6 +128,7 @@ export function createExecutionTopicReadService(
         input,
         calls,
         context,
+        plannedTargets:z.array(workerPortInputSchemas.reserveTopicRead.shape.target).parse(payload.topicPlannedReadTargets??[]),
         ack: Array.isArray(payload.researchBlockedAcknowledgedCallIds)
           ? payload.researchBlockedAcknowledgedCallIds.filter(
               (x): x is string => typeof x === "string",
@@ -141,7 +145,7 @@ export function createExecutionTopicReadService(
     if (target.kind === "search")
       request = {
         kind: "search",
-        query: deps.buildTrendQuery(frozen.context.positioningBrief),
+        query: target.query && frozen.audienceTaskContext ? target.query : deps.buildTrendQuery(frozen.context.positioningBrief),
       };
     else {
       const sources = frozen.trendSources.filter(
@@ -199,6 +203,7 @@ export function createExecutionTopicReadService(
     const call = scope.calls.find((c) => c.id === callId);
     if (!call) throw new ConflictError("热点读取调用不存在");
     const targets: TopicReadTarget[] = [
+      ...((scope as Scope & {plannedTargets?:TopicReadTarget[]}).plannedTargets??[]),
       { kind: "search" },
       ...scope.input.facets.__topicGenerate.trendSources.map((s) => ({
         kind: "source" as const,
@@ -342,8 +347,20 @@ export function createExecutionTopicReadService(
       return session(ref, request.callId, request);
     },
     async reserveTopicRead(ref: ExecutionRef, raw: unknown) {
-      const request = workerPortInputSchemas.reserveTopicRead.parse(raw),
-        scope = await scoped(ref, "admission"),
+      const request = workerPortInputSchemas.reserveTopicRead.parse(raw);
+      if (request.target.allowPartial || (request.target.kind === "search" && request.target.query)) {
+        await scoped(ref,"admission",async (scope,tx)=>{
+          if (!scope.input.facets.__topicGenerate.audienceTaskContext) throw new ConflictError("任务未配置观众查询规划");
+          const [current]=await tx.select().from(executionTasks).where(eq(executionTasks.id,ref.executionTaskId));
+          if(!current)throw new ConflictError("执行任务不存在");
+          const payload=current.payload as Record<string,unknown>;
+          const targets=z.array(workerPortInputSchemas.reserveTopicRead.shape.target).parse(payload.topicPlannedReadTargets??[]);
+          const previous=targets.find(t=>t.kind===request.target.kind&&(t.kind==="search"||(request.target.kind==="source"&&t.sourceId===request.target.sourceId)));
+          if(previous&&hash(previous)!==hash(request.target))throw new ConflictError("已规划读取目标不能改换");
+          if(!previous)await tx.update(executionTasks).set({payload:{...payload,topicPlannedReadTargets:[...targets,request.target]}}).where(eq(executionTasks.id,current.id));
+        });
+      }
+      const scope = await scoped(ref, "admission"),
         bound = canonical(scope, request.target),
         selection = select(scope, bound, request.ordinal);
       const call = await ledger.reserve(

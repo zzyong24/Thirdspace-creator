@@ -1,0 +1,528 @@
+{
+  "head": "4b10e89e226cd16ed12744d6c885931d3a09f0dd",
+  "startedAt": "2026-10-10T04:01:10.083Z",
+  "finishedAt": "2026-10-10T04:01:31.744Z",
+  "observed": {
+    "httpStatus": 200,
+    "renderedUrl": "http://127.0.0.1:51837/",
+    "executablePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "executableSha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "isolatedGroupCreatedThroughUI": true,
+    "navigation": [
+      [
+        "首页",
+        "/"
+      ],
+      [
+        "创作者总览",
+        "/overview"
+      ],
+      [
+        "定位中心",
+        "/positioning"
+      ],
+      [
+        "内容雷达",
+        "/intelligence"
+      ],
+      [
+        "选题",
+        "/topics"
+      ],
+      [
+        "项目",
+        "/projects"
+      ],
+      [
+        "知识库",
+        "/knowledge"
+      ],
+      [
+        "素材中心",
+        "/assets"
+      ],
+      [
+        "创作画布",
+        "/canvases"
+      ],
+      [
+        "发布中心",
+        "/publishing"
+      ],
+      [
+        "运营分析",
+        "/daily-report"
+      ],
+      [
+        "自动化",
+        "/automations"
+      ],
+      [
+        "设置",
+        "/settings"
+      ]
+    ],
+    "entryPages": [
+      {
+        "name": "首页",
+        "path": "/",
+        "elapsedMs": 69,
+        "layout": {
+          "url": "/",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 1125,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [
+            "flex"
+          ],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "创作者总览",
+        "path": "/overview",
+        "elapsedMs": 132,
+        "layout": {
+          "url": "/overview",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 1390,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [
+            "flex"
+          ],
+          "internalScrollRegions": [
+            {
+              "slot": null,
+              "clientHeight": 370,
+              "scrollHeight": 370,
+              "overflowY": "auto"
+            }
+          ],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "定位中心",
+        "path": "/positioning",
+        "elapsedMs": 95,
+        "layout": {
+          "url": "/positioning",
+          "fill": "true",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "hidden",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [
+            "none"
+          ],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "内容雷达",
+        "path": "/intelligence",
+        "elapsedMs": 105,
+        "layout": {
+          "url": "/intelligence",
+          "fill": "true",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "hidden",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "选题",
+        "path": "/topics",
+        "elapsedMs": 76,
+        "layout": {
+          "url": "/topics",
+          "fill": "true",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "hidden",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "项目",
+        "path": "/projects",
+        "elapsedMs": 85,
+        "layout": {
+          "url": "/projects",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "知识库",
+        "path": "/knowledge",
+        "elapsedMs": 106,
+        "layout": {
+          "url": "/knowledge",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "素材中心",
+        "path": "/assets",
+        "elapsedMs": 99,
+        "layout": {
+          "url": "/assets",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "创作画布",
+        "path": "/canvases",
+        "elapsedMs": 88,
+        "layout": {
+          "url": "/canvases",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "发布中心",
+        "path": "/publishing",
+        "elapsedMs": 121,
+        "layout": {
+          "url": "/publishing",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "运营分析",
+        "path": "/daily-report",
+        "elapsedMs": 130,
+        "layout": {
+          "url": "/daily-report",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "自动化",
+        "path": "/automations",
+        "elapsedMs": 94,
+        "layout": {
+          "url": "/automations",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      },
+      {
+        "name": "设置",
+        "path": "/settings",
+        "elapsedMs": 136,
+        "layout": {
+          "url": "/settings",
+          "fill": "false",
+          "rootCount": 1,
+          "contentCount": 1,
+          "overflowY": "scroll",
+          "clientHeight": 720,
+          "scrollHeight": 720,
+          "scrollTop": 0,
+          "bodyClientHeight": 720,
+          "bodyScrollHeight": 720,
+          "scrollbarDisplays": [],
+          "internalScrollRegions": [],
+          "sameRoot": true,
+          "sameViewport": true
+        }
+      }
+    ],
+    "aiOverlay": {
+      "elapsedMs": 319,
+      "pathBefore": "/",
+      "pathAfter": "/",
+      "fullNavigationRequests": [],
+      "escapeClosed": true,
+      "focusRestored": true
+    },
+    "layout": [
+      {
+        "url": "/",
+        "fill": "false",
+        "rootCount": 1,
+        "contentCount": 1,
+        "overflowY": "scroll",
+        "clientHeight": 720,
+        "scrollHeight": 1383,
+        "scrollTop": 0,
+        "bodyClientHeight": 720,
+        "bodyScrollHeight": 720,
+        "scrollbarDisplays": [
+          "flex"
+        ],
+        "internalScrollRegions": [],
+        "sameRoot": true,
+        "sameViewport": true
+      },
+      {
+        "url": "/intelligence",
+        "fill": "true",
+        "rootCount": 1,
+        "contentCount": 1,
+        "overflowY": "hidden",
+        "clientHeight": 720,
+        "scrollHeight": 720,
+        "scrollTop": 0,
+        "bodyClientHeight": 720,
+        "bodyScrollHeight": 720,
+        "scrollbarDisplays": [],
+        "internalScrollRegions": [
+          {
+            "slot": null,
+            "clientHeight": 529,
+            "scrollHeight": 529,
+            "overflowY": "auto"
+          },
+          {
+            "slot": null,
+            "clientHeight": 455,
+            "scrollHeight": 455,
+            "overflowY": "auto"
+          },
+          {
+            "slot": null,
+            "clientHeight": 609,
+            "scrollHeight": 609,
+            "overflowY": "auto"
+          }
+        ],
+        "sameRoot": true,
+        "sameViewport": true
+      },
+      {
+        "url": "/intelligence",
+        "fill": "true",
+        "rootCount": 1,
+        "contentCount": 1,
+        "overflowY": "hidden",
+        "clientHeight": 360,
+        "scrollHeight": 360,
+        "scrollTop": 0,
+        "bodyClientHeight": 360,
+        "bodyScrollHeight": 360,
+        "scrollbarDisplays": [],
+        "internalScrollRegions": [
+          {
+            "slot": null,
+            "clientHeight": 169,
+            "scrollHeight": 169,
+            "overflowY": "auto"
+          },
+          {
+            "slot": null,
+            "clientHeight": 95,
+            "scrollHeight": 312,
+            "overflowY": "auto"
+          },
+          {
+            "slot": null,
+            "clientHeight": 249,
+            "scrollHeight": 249,
+            "overflowY": "auto"
+          }
+        ],
+        "sameRoot": true,
+        "sameViewport": true
+      },
+      {
+        "url": "/",
+        "fill": "false",
+        "rootCount": 1,
+        "contentCount": 1,
+        "overflowY": "scroll",
+        "clientHeight": 720,
+        "scrollHeight": 1383,
+        "scrollTop": 0,
+        "bodyClientHeight": 720,
+        "bodyScrollHeight": 720,
+        "scrollbarDisplays": [
+          "flex"
+        ],
+        "internalScrollRegions": [],
+        "sameRoot": true,
+        "sameViewport": true
+      }
+    ],
+    "fillAfterWheel": 0,
+    "actualInnerWheel": {
+      "scrollTop": 217,
+      "maxScroll": 217
+    },
+    "homeAfterWheel": {
+      "scrollTop": 663,
+      "maxScroll": 663
+    },
+    "groupReads": [
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      }
+    ],
+    "browserVersion": "148.0.7778.96",
+    "pageErrorCount": 0,
+    "dispatchStatus": 404,
+    "masterKeyDevelopmentFallback": false,
+    "sidecarExit": {
+      "code": 143,
+      "signal": null
+    }
+  },
+  "nodeExecutable": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+  "isolationRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-entry-smoke-recovery-isolation-xFVy7A",
+  "nativeApp": false,
+  "realUserDataUsed": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "scope": "T1191当前4b10新包隔离Node/full Chromium真实13导航，首页→内容雷达contentFill→首页，浏览器计算样式/滚轮与同滚动容器身份；追加1280×360真实内层溢出与滚轮；追加13页真实点击/渲染与同页AI打开/关闭；不提交AI提示，不签模型、页面内所有动作、原生安装、真人平台或全功能。"
+}

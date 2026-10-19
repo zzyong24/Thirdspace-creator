@@ -1,0 +1,170 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1318",
+  "baseHead": "4aca155ecbf5827e8ef28050238d5cb313eef8e7",
+  "frozenAt": "2026-10-16T11:42:50.310685+00:00",
+  "specPath": "docs/features/t1318-group-planning-thesis-adoption.md",
+  "specSha256": "c4e1d08b5fc60bead1959d123cb0f7012ae6a5eed1f5fe3e6937e2506c66433c",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6819,
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "bytes": 67379,
+      "sha256": "18c615b1c857aecff94804ac27671d4dd972b8d3c22d5acb525fcafd6c2d46d4"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.service.ts",
+      "bytes": 14543,
+      "sha256": "b3cc28576842960a6b2420eea674c1fd5f849278aa3682be19b7f4803e4d83f8"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "bytes": 3372,
+      "sha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "c7be348612b2d9cc105a84c2dcca84a5a8b252c7cc4a49be38b03d357fd6b152"
+    },
+    {
+      "path": "docs/verification/t1300/FUNCTION_MATRIX.md",
+      "bytes": 24390,
+      "sha256": "c4d57cf7fbb4025d91c03d84f69f24795b5b4e421d93a4e7df6a5453984ec577"
+    },
+    {
+      "path": "docs/verification/t1315/runs/final-0e1dc6228/BUG_FINDINGS.md",
+      "bytes": 5799,
+      "sha256": "df5d428f01aea9421b475b3d7fa35de054cb9b69d20d1914dc7b2c92c51008ab"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/planning-thesis-business-adapter.ts",
+      "bytes": 1654,
+      "sha256": "4b266d15e0c7b6511e1f4faa9fddafbf1b2f41f0ca0f975d6cc95b2a3e590b24"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/planning-thesis-business-adapter.test.ts",
+      "bytes": 3301,
+      "sha256": "41c0d1364ea7213ddff99be7f1edbb20ac115a552283d0630bf1bf01832c88ea"
+    },
+    {
+      "path": "backend/src/modules/artifacts/artifacts.service.ts",
+      "bytes": 21474,
+      "sha256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "backend/src/modules/artifacts/artifacts.repository.ts",
+      "bytes": 26403,
+      "sha256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "backend/src/application/thesis-adoption.ts",
+      "bytes": 3766,
+      "sha256": "09e486126aade26d1dd24d3313238711788171b6e1462a78a8fd90dc29671547"
+    },
+    {
+      "path": "docs/verification/t1315/runs/final-0e1dc6228/u32-followup-attempt01/thesis-confirm.json",
+      "bytes": 309,
+      "sha256": "cd769073ecb2e62aae3b620e1cdcf2dbae924e852215377356e4cdf3eb999a5b"
+    },
+    {
+      "path": "docs/verification/t1315/runs/final-0e1dc6228/u32-followup-attempt01/thesis-before-confirm.json",
+      "bytes": 8864,
+      "sha256": "0a98cee01a21a5593fbd50d2c4d444c3db5c6100b1d3fb806010c1c3ea46749b"
+    },
+    {
+      "path": "docs/verification/t1315/runs/final-0e1dc6228/u32-followup-attempt01/thesis-after-confirm.json",
+      "bytes": 8864,
+      "sha256": "0a98cee01a21a5593fbd50d2c4d444c3db5c6100b1d3fb806010c1c3ea46749b"
+    },
+    {
+      "path": "docs/verification/t1318/DEC.md",
+      "bytes": 713,
+      "sha256": "a104fe4dc80bc152a2aa351e5dcb4c1f644a149fa45c189815b6f8c2c1142718"
+    },
+    {
+      "path": "docs/verification/t1318/MODULE_SCOPE.json",
+      "bytes": 3330,
+      "sha256": "4232b8d59db9b61980c24a7501e947bcb7861ede6b052d4b47f0efef366e4176"
+    },
+    {
+      "path": "backend/src/modules/ai/topic-candidate-adoption.service.ts",
+      "bytes": 7750,
+      "sha256": "730d44239b532a39ccb0795fb722276b5ef53a744e595ad540c895d647e9d69d"
+    },
+    {
+      "path": "backend/src/modules/ai/calibration-positioning-adoption.service.ts",
+      "bytes": 9603,
+      "sha256": "06daee04f86dff76afb01152239ef20df68e8d50e51d85545202416c027d72b9"
+    }
+  ],
+  "immutableWorker": {
+    "path": "/private/tmp/t1300-artifact-940jy2at/sidecar/frontend/runtime/execution-worker.cjs",
+    "bytes": 5618216,
+    "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+  }
+}

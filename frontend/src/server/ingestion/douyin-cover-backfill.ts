@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import "server-only";
 export * from "@creatoros/backend/application/collection/douyin-cover-backfill";
 const DY_IMAGE_REFERER = "https://www.douyin.com/";
@@ -40,7 +41,7 @@ export async function downloadDouyinImage(
         Referer: DY_IMAGE_REFERER,
         Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
       },
-      signal: AbortSignal.timeout(COVER_IMAGE_FETCH_TIMEOUT_MS),
+      signal: AbortSignal.timeout(executionTimeoutMs(COVER_IMAGE_FETCH_TIMEOUT_MS)),
     });
   } catch (err) {
     throw new DouyinCoverDownloadError(

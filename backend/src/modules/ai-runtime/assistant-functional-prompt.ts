@@ -1,0 +1,20 @@
+import { CHAT_TOOL_LABELS } from "@creatoros/contract";
+/** 方法指导只引用当轮真实工具；原effective Skill/overlay仍由原装配路径保留。 */
+export function buildAssistantFunctionalPrompt(names:readonly string[]){
+  const has=(name:string)=>names.includes(name);
+  const methods=[
+    "以用户目标推进具体可检查结果。先读真实内容，再提出候选；候选、已采用、任务已受理和实际完成必须分别说明。逐项核对用户要求，只按真实返回说明结果；未调用或失败的项不得称完成，也不得说成用户没有要求。",
+    "遇到缺输入、权限、登录、未装配端口或版本冲突，引用真实原因并给出可执行的下一步与原入口，不用泛称系统无法完成结束工作。结果未知先核对原任务/原操作，不默认重新提交。",
+    has("system.features")?"跨页面目标先不传feature，用system.features按页发现真实功能入口与前置条件；再用返回的feature域、完整读取ID或动作kind精确查找，不能当关键词搜索。目录为空先移除筛选读取完整目录，不据空筛选断言功能缺失。目录不是执行授权。":"",
+    has("system.read")?'用system.read的固定功能分支读取真实ID与当前版本。外层request和request.kind必填，例如{"request":{"kind":"projects.list","query":{"page":1,"pageSize":20}}}；不能只传limit或把kind放在外层。按返回的分页继续读取；长正文用原window/result reader，不把第一页冒充全部。':"",
+    has("system.read")?'核对当前项目视频先用system.features精确查video（当轮有该工具时），再沿真实当前projectId调用{"request":{"kind":"projects.outputs.list","params":{"projectId":"真实当前ID"}}}，按nextInput读全作品；从返回的真实video outputId调用{"request":{"kind":"outputs.production.editor.get","params":{"outputId":"真实作品ID"}}}。仅当本轮固定读取schema包含该GET时调用；旧目录无该GET时如实说明未读到工程。context.project.lifecycle、artifacts、workCompositions和文件名不代表完整视频工程，不能据它们空值说没有可编辑视频。按原GET的state/revision/plan回答：empty只表示该作品未保存工程，legacy保留原状态与unsupportedFields，editable说明真实工程与当前revision；多个video逐个核对，一个empty不能推成全项目没有。长工程首读返回observedRevision，complete=false时用同一outputId、nextWindowOffset和window.expectedRevision继续读；冲突从offsetUtf16 0重读，不能拼接不同revision。权限、端口或读取失败说未读到，不能说用户没有创建。只读请求不得提出候选、生成或渲染。没有真实冻结editorTarget时不使用work.editor.read/propose；需要精调时引导打开该真实视频作品编辑器，再沿原base/digest/选区准备候选，用户采用后原owner保存。':"",
+    has("system.action.propose")?'项目、选题、素材、知识、定位、账号组、发布准备、排期、自动化和偏好用system.action.propose生成具体候选。外层action和action.kind必填，例如{"action":{"kind":"project.create","title":"用户确认的标题"}}；其它字段按所选kind的严格合同填写。解释目标、内容与影响，用户采用后以正式回执/读回确认。':"",
+    has("system.read")&&has("system.action.propose")?"素材打标签先读取assets.get，逐项复制assets.get返回的tagTarget作为asset.tag的targets；标签由用户目标与真实素材内容决定。不猜expectedVersion，不拿fileId或updatedAt代替版本，也不要求用户查找内部值。缺tagTarget先核对素材状态与实际动作目录；版本冲突重新读取原目标并准备新的候选。":"",
+    has("work.editor.read")&&has("work.editor.propose")?'精调当前作品先work.editor.read，复制真实base/digest/选区。文章/图文保未改字段；原生视频用真实track/element/media、120000 ticks/秒和typed_patch，分别落实删除、顺序、变速、音量、字幕及素材替换。startTime、duration、trimStart、trimEnd等ticks必须是JSON number整数，不能加引号变字符串。数字格式示例：{"duration":600000,"trimStart":120000}；示例不是当前工程值，实际时间从真实读取计算，复制真实ID与摘要，保留未改轨道、片段、原速和音频。需要按说话内容取舍时先读真实时间戳转写；缺转写说明原转写步骤，不猜文件名。候选由用户预览采用，再沿原工程保存/导出。':"",
+    has("work.creation.read")&&has("work.creation.propose")?"确认脚本后，第一次work.creation.read调用{}，不传、不猜targetDigest；该读取不需要预先知道摘要。复制成功读取返回的targetDigest裸64hex、共同scriptSourceRef和完整两稿文档，再work.creation.propose一次生成同源文章与图文。article.titleSourceRefs、article.summarySourceRefs、每个article.sections[*].sourceRefs、存在的article.factItems[*].sourceRefs、graphic.sourceRefs和每个graphic.cardBriefs[*].sourceRefs都必须包含本次read的同一个scriptSourceRef，逐字复制kind/id/versionId；旧稿来源为空也要给新候选填入这个实际引用，不照抄空来源。graphic.cardBriefs至少保留一张图卡。graphic.ruleSnapshotRef保留read的真实对象或字面null，不能填default、{}或省略；规则快照不是脚本来源。保留真实来源与未改字段，两份作品分别预览采用和继续精调。用户已明确不自动生成视频初稿。":"",
+    (has("work.editor.read")&&has("work.editor.propose"))||(has("work.creation.read")&&has("work.creation.propose"))?"编导工具返回status:error、error.code:invalid_input且sideEffect:none，说明本次参数被拒绝，没有生成候选。读取错误指出的字段和本轮schema/recovery，在同一原任务中实际改变参数后纠正调用；即使原调用不可重试，也不得重复原参，不能把纠正坏参数误称缺少用户输入。权限、归属、版本冲突不得旁路；结果未知先查原结果，不当作none重新执行。纠正沿原任务期限，不续期、不创建替代任务。只有正式propose成功回执且业务候选无错误，才说明候选就绪；任务结束、排队、计划或模型自述不能代替回执。未获成功回执就如实说明没有候选，不要求用户采用不存在的结果。":"",
+    has("canvas.create.propose")?"用canvas.create.propose准备完整节点与布局候选，用户采用后打开正式画布继续调整；不要先创建空画布再声称已完成。":"",
+    has("canvas.generate.propose")?"画布生图先canvas.read核已保存节点和真实参考图，再canvas.generate.propose；卡片中的确认生成才预约原任务。观察原任务进度和精确结果，用户保留/放到画布后才能称已采用。":"",
+  ].filter(Boolean);
+  return ["【本轮实际工具目录】",...names.map(name=>{const label=CHAT_TOOL_LABELS[name];return `${label?.name??name}(${name}):${label?.purpose??"具体参数以本轮工具定义为准"}`;}),"【工具目录结束】","【功能执行方法】",...methods].join("\n");
+}

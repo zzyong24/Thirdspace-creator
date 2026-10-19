@@ -1,0 +1,115 @@
+{
+  "state": "NOT_RUN_TRANSPARENT_OBSERVATION_ONLY",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/CLI_OBSERVATION.diff",
+      "bytes": 2339,
+      "sha256": "e08815194929636ceab124d75627d5033aad98413e186e4970066fb82662c6f8"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/OBSERVATION_SCOPE.json",
+      "bytes": 1401,
+      "sha256": "8340efab2702cb7467e17c10f82165bc891cd1f1185c99aa843a47cf329c03cc"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/PUBLIC_TEST_OBSERVATION.diff",
+      "bytes": 9775,
+      "sha256": "b81d7c21d1446e3555603af31864b1268a14b7b8aac8082a59154e00b4fdaf1d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/WORKER_OBSERVATION.diff",
+      "bytes": 4873,
+      "sha256": "8fa4982c18d5b669c6e5257dec612e4b26e8210fa21de7cc9aa5608c846b3942"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/codex-cli.fixture.cjs",
+      "bytes": 7412,
+      "sha256": "dd6f6d89fe3dfa2ba1e5a1bfc6d802908c60ae53c51c32142215c644e1831e8b"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/freeze.py",
+      "bytes": 2168,
+      "sha256": "6d79811fefe6bc978340b3f83908aa51e2826cce5899b4fe70e9433a389f2fc8"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/run.py",
+      "bytes": 6776,
+      "sha256": "759330b4857ddb9520ba2b1e2554cb6b7d4a7bea8c634c0a095c6c35bf454f37"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/vitest.config.mts",
+      "bytes": 901,
+      "sha256": "f962a91ebf3a78ad0fe9bed8dbc23da93ecd2477989723420045b1584927b816"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/diagnostic-research-v3/worker-entry.fixture.cjs",
+      "bytes": 6589,
+      "sha256": "4f168cbe27cdd04239a35b42534cd0f77c45f5ca2bd7d9f2bcc8da64888642cc"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/agentic-task-tool-visibility.persistence-client.test.ts",
+      "bytes": 26096,
+      "sha256": "0a75f28926e3abd1d8647d5bb2723b87d9bd896bf59e6bf1baef85bd14287681"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/PRE_RUN_LOCK.json",
+      "bytes": 10243378,
+      "sha256": "bc5915dd1bbea24558fa525889bf2c74d9425a75496ffbe3095313933366818d"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/WORKER_BINDING.json",
+      "bytes": 64226,
+      "sha256": "b84fa2244f628aa37f22239ac70af78800e12fead939de35de24485cb6afdceb"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/collection.json",
+      "bytes": 600,
+      "sha256": "66aa54afc8c024cccac59ec7f51eef00a28db17f63ccb5d768ddd42a8231ed69"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/collection.log",
+      "bytes": 150,
+      "sha256": "4000c36b54d35831c48dd50badd867e7d5bf2a06f2437f79b40d7943fc077e25"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/frontend-type.json",
+      "bytes": 617,
+      "sha256": "bc22cadfc0767f1f441871f7a9cd544c49f84af1344dc6a2a94da6b1ba1b4b03"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/frontend-type.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/source-before.test.ts",
+      "bytes": 23169,
+      "sha256": "7eedc2ee6872fd03507803635b7e78ab96f26314cb0ef21d6aadca534034b2d1"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/syntax-codex-cli.fixture.cjs.json",
+      "bytes": 537,
+      "sha256": "dd63e4ce3811fe756d9683bf543088ee36165b7f9efe9584b8a91a4d35b7718c"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/syntax-codex-cli.fixture.cjs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/syntax-worker-entry.fixture.cjs.json",
+      "bytes": 545,
+      "sha256": "313fc7fe3d4340f87c57d9df3e02debf65c2a8cceb4bc74246a32cf7a9ab6759"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/syntax-worker-entry.fixture.cjs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/diagnostic-research-v3/worker.cjs",
+      "bytes": 1540654,
+      "sha256": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709"
+    }
+  ]
+}

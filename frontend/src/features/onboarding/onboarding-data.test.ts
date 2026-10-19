@@ -1,8 +1,9 @@
 import {beforeEach,describe,expect,it,vi} from "vitest";
-const current=vi.hoisted(()=>vi.fn(()=>"a"));
+const current=vi.hoisted(()=>vi.fn<()=>string|null>(()=>"a"));
+const publicReads=vi.hoisted(()=>vi.fn());
 const client=vi.hoisted(()=>({getOnboarding:vi.fn(),patchOnboarding:vi.fn(),getAccount:vi.fn(),listProjects:vi.fn(),getPositioningCenter:vi.fn(),getIntelligenceWorkspace:vi.fn(),listIntelligenceItems:vi.fn(),statusDouyin:vi.fn()}));
 vi.mock("@/lib/contract-client",()=>({client}));
-vi.mock("@/lib/http-transport",()=>({readCurrentAccountId:current}));
+vi.mock("@/lib/http-transport",()=>({readCurrentAccountId:current,readCurrentGroupId:()=>null,createHttpTransport:()=>({request:publicReads})}));
 import {loadState,loadProjectSignals,saveOnboarding} from './onboarding-data';
 const record=()=>({accountId:"a",origin:null,hidden:false,collapsed:true,completedSteps:[] as string[],updatedAt:null});
 beforeEach(()=>{vi.clearAllMocks();window.localStorage.clear();current.mockReturnValue('a');client.getOnboarding.mockResolvedValue(record());client.patchOnboarding.mockImplementation(async({body})=>({...record(),...body}));client.getAccount.mockResolvedValue({id:'a'});client.listProjects.mockResolvedValue([]);client.getPositioningCenter.mockResolvedValue({profile:null});client.getIntelligenceWorkspace.mockResolvedValue({sources:[]});client.listIntelligenceItems.mockResolvedValue([]);});
@@ -34,4 +35,14 @@ describe('T-964 引导真实数据与持久进度',()=>{
  it('旧全局偏好仅迁入第一个当前账号',async()=>{
   window.localStorage.setItem('creatoros:onboarding:hidden','1');expect((await loadState()).preferences?.hidden).toBe(true);expect(window.localStorage.getItem('creatoros:onboarding:legacy-migrated-account')).toBe('a');current.mockReturnValue('b');client.getOnboarding.mockResolvedValue({...record(),accountId:'b'});client.getAccount.mockResolvedValue({id:'b'});client.patchOnboarding.mockImplementation(async({body})=>({...record(),accountId:'b',...body}));expect((await loadState()).preferences?.hidden).toBe(false);
  });
+});
+
+it('T1345零身份必须实际确认完整零组零旧账号后才投影首组引导',async()=>{
+ current.mockReturnValue(null);publicReads.mockImplementation(async(endpoint,input)=>({data:[],meta:{requestId:'first-user',page:1,pageSize:1,total:0}}));
+ expect(await loadState()).toMatchObject({needsFirstGroup:true});expect(publicReads).toHaveBeenCalledTimes(2);
+ expect(publicReads.mock.calls.find(([ep])=>ep.id==='accountGroups.list')?.[1].query).toMatchObject({includeArchived:true});
+});
+it('T1345已有组或旧账号的无身份恢复不误当新用户，读取错误不假装零',async()=>{
+ current.mockReturnValue(null);publicReads.mockImplementation(async(endpoint)=>{const rows=endpoint.id==='accountGroups.list'?[{id:'existing',userId:'u',name:'已有组',status:'archived',version:1,members:[],createdAt:'2026-10-01T00:00:00Z',updatedAt:'2026-10-01T00:00:00Z'}]:[];return {data:rows,meta:{requestId:'existing-user',page:1,pageSize:1,total:rows.length}};});
+ expect(await loadState()).toMatchObject({needsFirstGroup:false});publicReads.mockRejectedValueOnce(Error('groups offline'));await expect(loadState()).rejects.toThrow('groups offline');
 });

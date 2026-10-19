@@ -27,6 +27,7 @@ describe("buildLocalPackageEnv", () => {
       CREATOROS_LICENSE_PROJECT_KEY: "creatoros",
       CREATOROS_CLIENT_CONFIG_PULL_ENABLED: "1",
       CREATOROS_LOCAL_ADHOC_SIGN: "1",
+      CREATOROS_PACKAGE_BUILD_ONLY: "1",
       CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN: "https://growth.aitongban.cloud",
       CREATOROS_GROWTH_CONFIG_KEY_ID: "growth-client-config-20260805-01",
       CREATOROS_VERDICT_SIGNING_KEY_B64: "local-signing-key",
@@ -49,6 +50,18 @@ describe("buildLocalPackageEnv", () => {
 
     expect(env.CREATOROS_VERDICT_SIGNING_KEY_B64).toBe("explicit-signing");
     expect(env.CREATOROS_VERDICT_PUBKEY_B64).toBe("explicit-public");
+  });
+
+  it("可显式选择原有额外验证且保留本机密钥与 ad-hoc 签名", () => {
+    const env = buildLocalPackageEnv({
+      baseEnv: { CREATOROS_PACKAGE_BUILD_ONLY: "0" },
+      homeDir: "/test-home",
+      readFile: fakeReadFile,
+    });
+    expect(env.CREATOROS_PACKAGE_BUILD_ONLY).toBe("0");
+    expect(env.CREATOROS_LOCAL_ADHOC_SIGN).toBe("1");
+    expect(env.CREATOROS_VERDICT_SIGNING_KEY_B64).toBe("local-signing-key");
+    expect(env.CREATOROS_VERDICT_PUBKEY_B64).toBe("local-public-key");
   });
 
   it("缺少本机安全密钥时在重型构建前给出明确错误", () => {
@@ -225,5 +238,37 @@ describe("macOS 本地验收包安装交付", () => {
       "pgrep",
       ["-f", "/Applications/智溯AI.app/Contents/MacOS/ZhisuAI"],
     ]);
+  });
+});
+
+// 本地出包调用实际公开资源解析函数，空工具不得因略过启动探针进入包。
+describe("本地出包媒体资源完整性", () => {
+  it("ffmpeg和ffprobe显式源拒绝空文件及目录，允许非空普通文件", async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { ensureFfmpegStatic, ensureFfprobeStatic } = await import("./fetch-ffmpeg.mjs");
+    const directory = mkdtempSync(join(tmpdir(), "creatoros-package-media-resource-"));
+    const zero = join(directory, "empty-tool");
+    const nonempty = join(directory, "nonempty-tool");
+    writeFileSync(zero, "");
+    writeFileSync(nonempty, "neutral resource; this test does not execute it");
+    try {
+      vi.stubEnv("CREATOROS_PACKAGE_BUILD_ONLY", "1");
+      for (const [key, resolveTool] of [
+        ["CREATOROS_FFMPEG_BUNDLE_SRC", ensureFfmpegStatic],
+        ["CREATOROS_FFPROBE_BUNDLE_SRC", ensureFfprobeStatic],
+      ]) {
+        vi.stubEnv(key, zero);
+        expect(() => resolveTool("aarch64-apple-darwin")).toThrow(/非空普通文件/);
+        vi.stubEnv(key, directory);
+        expect(() => resolveTool("aarch64-apple-darwin")).toThrow(/非空普通文件/);
+        vi.stubEnv(key, nonempty);
+        expect(resolveTool("aarch64-apple-darwin")).toBe(nonempty);
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

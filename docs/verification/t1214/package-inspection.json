@@ -1,0 +1,80 @@
+{
+  "recordedAt": "2026-10-11T03:30:38.235732+00:00",
+  "sourceHead": "a091de271aed5185678da82d51baae0eb7025248",
+  "version": "1.2.0",
+  "artifactPath": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "artifactSha256": "501bfc6744929702f0500179965000e36cb23b00ff5965f0ab636994a5db226b",
+  "runtimeTarSha256": "80ff6c84cb3b0c6cb972030c1a203b03c290f334650ab35a87a75a05c9c79e10",
+  "shellSha256": "ad758ba297896d1a2dcb25e60f1ee9af9d65d7345bab7977aaf976e2db7cdcbc",
+  "migrationEntries": {
+    "backend/drizzle/0132_legacy_scheduled_job_membership.sql": "f45db49f8a826b15511cf27c23957fdf7d6d04322975ae13b34151d10a106eb6",
+    "backend/drizzle/meta/_journal.json": "de19d9e5bd87de6fb777971041556a71cbf49d15348be5c3b36ba48f70eb917f"
+  },
+  "consumerMarkers": [],
+  "trackedSourceUnchanged": true,
+  "dmgAndBuiltAppMatch": true,
+  "notarized": false,
+  "signature": "local-ad-hoc",
+  "commands": [
+    {
+      "argv": [
+        "hdiutil",
+        "verify",
+        "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg"
+      ],
+      "exitCode": 0,
+      "stdout": "正在检查“Protective Master Boot Record（MBR：0）”的校验和…\nProtective Master Boot Record（MBR：0）：已验证CRC32 $5C07FABC\n正在检查“GPT Header（Primary GPT Header：1）”的校验和…\n    GPT Header（Primary GPT Header：1）：已验证CRC32 $566E7A68\n正在检查“GPT Partition Data（Primary GPT Table：2）”的校验和…\nGPT Partition Data（Primary GPT Table：已验证CRC32 $05A5E5DB\n正在检查“（Apple_Free：3）”的校验和…\n                      （Apple_Free：3）：已验证CRC32 $00000000\n正在检查“disk image（Apple_HFS：4）”的校验和…\n             disk image（Apple_HFS：4）：已验证CRC32 $972B74B8\n正在检查“（Apple_Free：5）”的校验和…\n                      （Apple_Free：5）：已验证CRC32 $00000000\n正在检查“GPT Partition Data（Backup GPT Table：6）”的校验和…\nGPT Partition Data（Backup GPT Table：：已验证CRC32 $05A5E5DB\n正在检查“GPT Header（Backup GPT Header：7）”的校验和…\n     GPT Header（Backup GPT Header：7）：已验证CRC32 $DBE21701\n已验证CRC32 $DE265760\n",
+      "stderr": "hdiutil: verify: checksum of \"/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg\" is VALID\n"
+    },
+    {
+      "argv": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "--verbose=2",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "--prepared:/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/creatoros-server\n--validated:/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/creatoros-server\n/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app: valid on disk\n/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app: satisfies its Designated Requirement\n"
+    },
+    {
+      "argv": [
+        "hdiutil",
+        "attach",
+        "-readonly",
+        "-nobrowse",
+        "-mountpoint",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount",
+        "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg"
+      ],
+      "exitCode": 0,
+      "stdout": "预计CRC32 $DE265760\n/dev/disk11         \tGUID_partition_scheme          \t\n/dev/disk11s1       \tApple_HFS                      \t/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "--verbose=2",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount/CreatorOS.app"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "--prepared:/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount/CreatorOS.app/Contents/MacOS/creatoros-server\n--validated:/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount/CreatorOS.app/Contents/MacOS/creatoros-server\n/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount/CreatorOS.app: valid on disk\n/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount/CreatorOS.app: satisfies its Designated Requirement\n"
+    },
+    {
+      "argv": [
+        "hdiutil",
+        "detach",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/package-mount"
+      ],
+      "exitCode": 0,
+      "stdout": "\"disk11\" ejected.\n",
+      "stderr": ""
+    }
+  ]
+}

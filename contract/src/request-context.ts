@@ -27,6 +27,9 @@ export interface RequestContext {
   requestId: string;
   source: "user" | "ingestion" | "ai";
   accountId?: string | null;
+  groupId?: string | null;
+  groupVersion?: number;
+  membershipVersion?: number;
   ingestionRunId?: string;
   aiTaskId?: string;
 }

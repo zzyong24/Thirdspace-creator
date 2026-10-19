@@ -1,0 +1,19 @@
+{
+  "contract/src/index.ts": "6e3bcc6c9c380fe9d2a3ef94d251b833a787aa082e912a88be341f7e39a0ba7b",
+  "contract/src/resources/production-editor.ts": "98e772556cc76fe703335bc2238d930d93548865971a9e02ae8c3dd7202c7d17",
+  "contract/src/resources/production-rough-cut.ts": "33a6f8b5b10afbdae7d4768fcaf97d2c4ba81e333c7367ce4f240be395bb4d5d",
+  "contract/src/resources/production-native-rough.ts": "4bafe4e5629eadeda81c2932b63f43c8fc544a4f3711720b7769318ba4aaec54",
+  "contract/src/resources/reference-editor.ts": "38c87edbdb20d483aba200ccbf8db5e0aebba7d6fe17b71c8052cb09f49b7033",
+  "contract/tests/production-native-rough.test.ts": "0e0cd5dbb98dbfd8d2eb15e27e3819854c2f3d8c07afe3811e79f89482c608f8",
+  "backend/src/modules/production/production-sources.ts": "e4ad8a79cf357023f875b3507f308bdb8dc4ce9767a5f2650fccb97a5b8cff40",
+  "backend/src/modules/production/production-rough-cut-touch.ts": "a9985e2613e1a648c70671d43ff31d4daa37e9a92d00fb7acbf762a3ec74273b",
+  "backend/src/modules/production/production-native-rough.test.ts": "10b10738330e763e06ad93a8118169c1d5124222bc8c93f4528755a125515088",
+  "backend/src/modules/production/production.service.ts": "5f575eee95b8ee52f2bd89d8edbba5c1107d01641f5cd0a5e5d7529542dc9d95",
+  "backend/src/modules/production/production-asset-asr.integration.test.ts": "62476aa0b20e7a3c0f19cf5dc9bbf8fb4fa29bcc7e270a540a7b276ef8e99be7",
+  "backend/src/modules/production/production-native-rough.ts": "ea627804ccfdbeb6f3bb4e417a69971d138b5b01a85d4f03ff8f301ff9b28140",
+  "backend/src/modules/production/production-rough-cut-reservation.ts": "4f287ba69c882b4e908cfbdb60c5a9f403311d1647d179dc690c5e6958676204",
+  "backend/src/modules/production/production-transcripts.service.ts": "93255533e6faa6ef3a5ee8c48a127d4b0a8f7161e210debae1d39845786b89b2",
+  "backend/src/modules/production/production-native-public.integration.test.ts": "56449ed0d8affdf1aac96175aa90bc6503c66829f0dd7d9fa8f12464c1d6883c",
+  "backend/src/modules/production/production-rough-cut.integration.test.ts": "db2fe9eb9d5fc078f3ff8cc22be847043b5072693e84d9264d18a8b113bdd6da",
+  "frontend/src/server/persistence-client.ts": "49c324d58f66668a322385fecc9178560678ceab169d1bea87c863c0e5c7246f"
+}

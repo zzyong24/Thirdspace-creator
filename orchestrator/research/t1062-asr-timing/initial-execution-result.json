@@ -1,0 +1,115 @@
+{
+  "revision": "initial frozen script",
+  "exits": {
+    "build": 0,
+    "observe": 0,
+    "evidence": 1,
+    "timing": 1
+  },
+  "modelGenerationCalls": 1,
+  "pipelineCalls": 1,
+  "forwardCalls": 86,
+  "captureBytes": 76459164,
+  "featureDims": [
+    1,
+    80,
+    3000
+  ],
+  "encoderDims": [
+    1,
+    1500,
+    768
+  ],
+  "attentionDims": [
+    1,
+    12,
+    1,
+    1500
+  ],
+  "strideWitness": {
+    "featureFrames": 3000,
+    "encoderFrames": 1500,
+    "attentionFrames": 1500,
+    "measuredEncoderStride": 2,
+    "featureHopSamples": 160,
+    "timePrecision": 0.02,
+    "legacyCropRequested": 1916,
+    "legacyCropEffective": 1500,
+    "actualStrideCrop": 958,
+    "derivation": "floor(validSampleCount * actualEncoderFrames / (hop_length * actualFeatureFrames)); no guessed divide-by-two"
+  },
+  "legacyRawTail": {
+    "text": "大家。",
+    "timestamp": [
+      18.36,
+      19.4
+    ]
+  },
+  "legacyDriverTiming": false,
+  "offlineFidelity": "Unknown; module initialization harness failed before DTW",
+  "offlineStrictTiming": "Unknown; module initialization harness failed before DTW",
+  "networkAttempts": 0,
+  "sourceAndCacheUnchanged": true,
+  "files": [
+    {
+      "path": "/tmp/t1062-asr-timing-observation/build.stdout.log",
+      "sha256": "1bf5f35bbe09aad9ed01be313c82d7dd4122058a2de5d5079c6445e0c54ca01c",
+      "bytes": 61
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/build.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/observe.stdout.log",
+      "sha256": "c5407d21c39ff164e38abc2d6944352b611cfb5365715d959a1728184edac215",
+      "bytes": 620
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/observe.stderr.log",
+      "sha256": "ee433f5b78105d5a70db523caf2322088ffe85c715c77d73fbddeb056c4f7ad1",
+      "bytes": 65809
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/evidence.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/evidence.stderr.log",
+      "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+      "bytes": 557
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/timing.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/timing.stderr.log",
+      "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+      "bytes": 557
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify.mjs",
+      "sha256": "0312653b0ba75040f815ffe9382b521fd8709bef0068c431e0d88688b0c28abc",
+      "bytes": 5799
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify.cjs",
+      "sha256": "d2f76fe84a2c96830b5392793bb46ba4b58233d33b31fd9a86a9e77834d6211c",
+      "bytes": 740371
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/capture-one/capture.json",
+      "sha256": "68e088a43661cc543edba4ed7d685f9e479da04eafd5d1ea1e29a592fbe94dd0",
+      "bytes": 652753
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/capture-one/capture.bin",
+      "sha256": "75811d3b3e16662ced7ff8484a8d7d0c8ed6e6a623c24df96e2236d379823655",
+      "bytes": 76459164
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "head": "daa8cc7f0b785f83e37ae65be31c79749ce71217",
+  "node": "v25.9.0",
+  "files": {
+    "BACKLOG.md": {
+      "sha256": "dec098fddef6c0cf75e553743d8f554d7700b449ebb5212f2cf04791a508c0ee",
+      "bytes": 59539
+    },
+    "PROJECT.md": {
+      "sha256": "6c779d7481577b44f54f18ccc2f0c593313bc5ef41f398c1b05ad37436de07de",
+      "bytes": 18975
+    },
+    "docs/features/t1072-owned-devices.md": {
+      "sha256": "971a503642f67e92b5343772d96abc6800ba74814c014b30fdfb6b486e866f7b",
+      "bytes": 13631
+    },
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md": {
+      "sha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3",
+      "bytes": 54947
+    },
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md": {
+      "sha256": "a3be0936b204afd59b47669edf3cb00027fd367d2ef687404505977b5eada40f",
+      "bytes": 8203
+    },
+    "docs/verification/t1072/integration/ENGINE.md": {
+      "sha256": "f079ef2437597868c742a759a54e115d557d1ad1c503ff05e1461c1af742bc36",
+      "bytes": 1142
+    },
+    "docs/verification/t1072/integration/TEST_ENGINEERING_RECOVERY.md": {
+      "sha256": "9eab3f2149251ed96ab998d9fb94afbcd06ad7519548e1833c5a3fede79a345c",
+      "bytes": 17728
+    },
+    "orchestrator/.lessons-stats.json": {
+      "sha256": "742b1f3246e1df73da81ca644aead7f9b7127e31b8725c0bd9b532dee383ce7b",
+      "bytes": 9791
+    },
+    "orchestrator/ARTIFACT_MANIFEST.yaml": {
+      "sha256": "57d8629a89dc68869ca6b7dd012ba720efc6560704a99d7276607af9629998cf",
+      "bytes": 52641
+    },
+    "orchestrator/CHANGE_IMPACT.md": {
+      "sha256": "e1e6ad4f1b92867cd033e7debb7325a01eca7bc850946e402bf636a51e045511",
+      "bytes": 68143
+    },
+    "orchestrator/DECISION_LOG.md": {
+      "sha256": "4fe0f9d09f8da5ca2e5ecfddbafbb2b462fd8f4168d2216cf2a372fc68d57786",
+      "bytes": 277691
+    },
+    "orchestrator/context/T-915.md": {
+      "sha256": "2d395bdd515f5406fac80e37b40df597886aad862a101865abc230eaed2838ea",
+      "bytes": 9178
+    },
+    "orchestrator/events.ndjson": {
+      "sha256": "0e5337b4526724b2c779939a6691ef438b09d4f1af80b0da3bf047154e87632b",
+      "bytes": 341400
+    },
+    "orchestrator/process/modules.config.json": {
+      "sha256": "77b5835bc21f239317a3a17328a669219f54106c6523f3bde0565e30c5817dc5",
+      "bytes": 95143
+    },
+    "orchestrator/progress.json": {
+      "sha256": "2ea2bc4be379d6ebe8a002d26e161023f57f6508a192d93f6cd6f3d7482f51e5",
+      "bytes": 94911
+    },
+    "orchestrator/review-events.ndjson": {
+      "sha256": "ed87f9b6aaed3c01814d186d796ca3ee8c0184d6148387a3423472032c4118b7",
+      "bytes": 939983
+    },
+    "AGENTS.md": {
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819
+    },
+    "orchestrator/process/.skill-version": {
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84
+    },
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": {
+      "sha256": "66784d2d4605c484129e05d8c33073be092429f0609978f3767a2f2b509a5235",
+      "bytes": 9653
+    },
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": {
+      "sha256": "2d68dce52f9884928d4e83174b5c3d57a0ee737e7ef5f936a7f99096e2ae4d66",
+      "bytes": 29584
+    },
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": {
+      "sha256": "8f288b22af9a396896a0b31ad5a2331e2c8cc55f703ec175c9b877480575aadc",
+      "bytes": 22182
+    }
+  }
+}

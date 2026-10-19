@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T1091 独立初审完成。SPEC 将公开 ai.conversations.messages.create 仅扩展为可选 pi/codex 引擎与严格作品目标，默认 Pi、原 operation/确认策略/返回 DTO 保持；editorTarget 完整复用 WorkEditorTarget，公开 creationTarget 省略内部 scriptConfirmation，由已验证 RequestContext 的后端 owner 补 public-request，候选仍经原采纳 owner 保存。实际 AiService 当前准备与提交均固定 Pi，现有 prepareChatReply、readEditorTarget/readCreationTarget、chatHostContext、chat-turn submission 已具备引擎、目标、真实会话项目、摘要/CAS、lease/fence 与回执边界，六个产品路径可以在不新增执行器、权限或 frontend 业务 owner 的前提下完成接线。三个新增测试分别覆盖严格 wire schema、真实 PGlite owner/事务零孤儿、frontend 组合根与原目标 reader/task freeze；SPEC 还要求原 Worker、提交/完成/proposal/external、类型、boundary、semantic、orphan、reconcile、打包安装和公开实际调用回归。未发现 blocker/major/minor finding，findings=[]；建议允许 reviewctl 计算初审 PASS 后进入 RED→实现。此结论仅为 SPEC 可实施性与范围审查，不代签实现、真实 Codex、浏览器、安装版或父任务全功能验收。SPEC SHA256=f170559edf6d630ffd97d5d365e044bbbc575ef9eda7ce523bad8f2aa8a70cf7；constitution SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。",
+  "findings": []
+}

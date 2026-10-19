@@ -1,0 +1,74 @@
+{
+  "schema": "t1365-final-safe-whitelist/v1",
+  "inputs": [
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/DELIVERY_INSTALL_COMPLETE_SAFE.json",
+      "sha256": "87609062380043bb3ecef88544859ea6846248077939ca71267e9ed3e05fb9f2",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/basic-tests-result.json",
+      "sha256": "5fcb3f780dc67168865ff4d8e093b9dd9d279086280fb9696dbdccf8ed141465",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/package-build-attempt01-start.json",
+      "sha256": "183401f7820229f925ca444469b445e32e57cac8f06aec6df0f75a7c215106a3",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/package-build-attempt01-result.json",
+      "sha256": "08dcbb29bc828f85db938a7e05eec21dd272fb162c32a82647427baffe93148b",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/artifacts/SUMMARY.json",
+      "sha256": "6608146ac6b378bdf4c9e3c99fee235487c55e4964168a17e15e786259909e6e",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/install/normal-quit-observed.json",
+      "sha256": "7d8cdd3cd29842933e13ef217d7797cec230f5c698c6bbce73602d236d549037",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/install/replacement.json",
+      "sha256": "daf40fb3949b4102ed2ae852c6dbb2f68298c7cd5c22e632650243dd6675476f",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/install/startup-success.json",
+      "sha256": "164cce530b6d7bfe06903cea13c2a48a807b55cf33bb829287f60af4e0f1c860",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/install/continuous-stability-120-success.json",
+      "sha256": "78723976025b3f9b894375910d7e5b92eda6734d85b1f2aa1a88d9f4f172fd28",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/install/installed-runtime-verification-canonical.json",
+      "sha256": "eb4a20defe36950bd7f28b12a4e8670804fde420b65c0f4a364cc04add1ca8b1",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/install/public-details/SUMMARY.json",
+      "sha256": "09419d0481f7b5099d511454ae8b8e6714638a4112f8e752013c00fba75aa1d1",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/cleanup/SUMMARY.json",
+      "sha256": "ca62bcbf9bbf339a5affbf5b41a1da22c698e04d8c98d37cdee6761b76c1b707",
+      "handling": "只读明确白名单字段；未复制raw/env/config/凭据/POSTkey或真实截图"
+    }
+  ],
+  "outputs": [
+    "REPORT.md",
+    "FINAL_DELIVERY_RESULT.json"
+  ],
+  "excluded": [
+    "任何raw/private log/trace/图像",
+    "含key的旧SAFE_SUMMARY/配置/env/准入标记/key值"
+  ],
+  "runtimeSource": "2d3826ef164241860437daa393d336d9b042f980"
+}

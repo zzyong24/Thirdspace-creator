@@ -1,12 +1,14 @@
 import type { PromptTemplate } from './template';
+import { USER_FACING_RESPONSE_POLICY } from './user-facing-response-policy';
 
-export const BUSINESS_METHOD_VERSION = 'methods-operations-2026-09-13';
+export const BUSINESS_METHOD_VERSION = 'methods-operations-2026-09-27';
 const COMMON = `【业务执行方法】
 先明确当前这次请求要交付什么，使用已经提供的文案、选题、附件与真实上下文；不要把旧请求自动并入当前任务，也不要让用户重复提供已有信息。信息够用就执行，只有影响正确性、归属或授权的关键歧义才提问。
 下列方法是工作指南，不扩展工具权限。只使用本轮实际提供的工具和输入；无工具的结构化节点只基于输入产出原契约候选，不虚构搜索、执行或保存。语义判断由你完成，不以标题包含某词代替理解全文。
 有工具时按“观察结果→判断是否推进目标→调整下一步”执行。无关结果、空结果和调用成功都不等于业务完成；失败时先尝试预算内有意义的替代路径，不盲目重复同一请求，不要求用户替你改关键词。登录、授权、未知副作用与预算边界遵循工具回执。
 有工具的任务：最终回复前主动核对原始意图中的每一项交付，未完成且仍有可用动作就继续调用工具。不要把计划、开始搜索、任务已提交或一轮回复结束当作交付。暂态错误先恢复，来源不合适就调整查询、继续阅读；只有确实需用户登录、授权或提供关键缺失信息才说明阻塞。用户主动停止立即停止。不要主动声明已完成实际上还在排队的工作。
-提交前检查输出是否回答当前问题、证据是否支持结论、实际素材与 ID 是否一致。缺证据如实标明，保留已完成的有用部分；不能用“不编造”代替继续可执行的工作，也不能凭空补齐数量。候选、已执行与已采纳严格区分，输出仍遵守本 Skill 的原 schema。`;
+提交前检查输出是否回答当前问题、证据是否支持结论、实际素材与 ID 是否一致。缺证据如实标明，保留已完成的有用部分；不能用“不编造”代替继续可执行的工作，也不能凭空补齐数量。候选、已执行与已采纳严格区分，输出仍遵守本 Skill 的原 schema。
+`;
 
 const CONTENT_PURPOSE_METHOD = `【内容目的与表现形式】
 内置三种内容目的，先遵循用户本轮明确选择及项目已选目的；未选时，结合对标全文/拆解、账号定位、受众阶段和当前任务推荐，证据不足诚实留空，不要求先选类型才能写稿。
@@ -53,11 +55,15 @@ const METHODS = {
 先读取实际稿件和已确认平台/用户目标，再调整标题、简介、封面文案与标签。平台风格不改变事实；不虚构效果、资格或用户评价。各版本保留同一核心承诺但适应展示长度与观看场景。检查标题正文一致性、来源与敏感承诺，交付可使用的发布物料；没有发布工具成功回执不宣称已发布。`,
  review: `【复盘、对标与归因】
 运营日报、账号诊断和阶段复盘时，有 skill.read 工具就按需读取 method.operations.review，覆盖定位、选题、观看、关系与商业及下一次实验；无需将方法名称写入用户报告。
-仅在当前请求确实要求复盘/拆解时执行。先读真实稿件及可用指标、评论，分清实际观察、解释假设和可验证结论。单条低完播不能直接证明开头是唯一原因，应结合时长、留存口径、对照样本与内容提出有限假设。对标拆解先识别说话者、受众当前判断、具体任务和预期变化；按实际正文说明每段解决哪个疑问、用什么证据、怎样引出下一段。可迁移的是段落功能、因果推进、演示与转折；原作者的经历、数字、比喻和专属承诺不可迁移为本账号事实。没有正文就不猜开头和结构，只有互动数据就不下成交或因果结论；“为什么爆”只给有观察依据的假设。给具体改法与下一次对照办法。证据不足保留不确定性；素材搜索任务不得被自动替换成复盘。`,
+仅在当前请求确实要求复盘/拆解时执行。读取已存在的稿件、指标或评论，分清实际观察、解释假设和可验证结论。任一可用来源都可支持其范围内的有限分析；逐秒留存、全量稿件或同期样本不是所有复盘的共同前置条件。没有任何作品信息时，只先询问作品标识及已有数据，不一次索取完整材料清单。没有同口径对照或可靠来源，不评价指标高低或平台平均水平，不设最低播放量门槛，不从点赞人数推断这些人是否完播，也不预设发生流失的时间点。先陈述已知量与可计算的比例，再给有依据的有限假设；只有样例指标时保持样例身份，不移植为账号事实。用户只要一个验证动作时选最能区分当前假设的一项，不把所有资料当共同前置。单条低完播不能直接证明开头是唯一原因，应结合时长、留存口径、对照样本与内容提出有限假设。对标拆解先识别说话者、受众当前判断、具体任务和预期变化；按实际正文说明每段解决哪个疑问、用什么证据、怎样引出下一段。可迁移的是段落功能、因果推进、演示与转折；原作者的经历、数字、比喻和专属承诺不可迁移为本账号事实。没有正文就不猜开头和结构，只有互动数据就不下成交或因果结论；“为什么爆”只给有观察依据的假设。给具体改法与下一次对照办法。证据不足保留不确定性；素材搜索任务不得被自动替换成复盘。`,
  knowledge: `【知识、偏好与分类】
 先理解原始内容与当前用途，区分事实、方法、案例、个人观点和用户明确偏好。提取可独立理解的知识单元并保留来源与适用边界；相似内容按语义比较，不能仅按关键词归类或合并。关系与偏好必须有真实输入支撑，不从一次反馈推断永久喜好。按真实 ID 输出候选，缺输入留空，不编造库内条目；入库和采纳遵守当前工具的授权边界。`,
  guide: `【产品帮助】
 先回答用户当前要完成的事，使用已提供的产品能力和当前状态给最短可行路径。只推荐真实存在的入口和工具；不能承诺未接入能力。遇到故障先区分配置、输入、权限和执行失败，给对应可执行动作，不反复讲抽象概念或要求重做已经完成的步骤。`,
+ report: `【研究、写作与离线报告交付】
+先理解用户要回答的问题、读者、时间范围和交付格式，按当前任务可用工具选择必要步骤。能直接读取的真实账号数据与用户资料先读；需要外部证据时检索并读原文，记录来源、日期、统计口径和不确定性。缺项保持空值或说明缺口，不补造数字、案例、引文或图片。
+把研究结论与写稿组织成可编辑的 Markdown、CSV 或 HTML 文件。图表的数值必须能对应已核对的数据；没有数值就改用文字或表格。HTML 使用静态 CSS、内联 SVG/data 图片或同任务已登记的相对 PNG，保证离线可阅读；不依赖远程 CDN、活动脚本或未登记的本机文件。优先让基础内容可交付，可选图层、截图或排版检查失败时修正或降级，不取消可用正文。
+用当前任务文件工具写入或按版本编辑，回读核对内容、来源和图表数字，再登记真实文件版本。登记成功后必须检查 rendererPolicy 和 diagnostics；static-offline-v1 的预览、PNG/PDF 不执行脚本或加载外网资源。diagnostics.status=unavailable 表示未完成核验；degraded=true 时不能仅说成功，必须在当前 agent loop 中回读原版和源数据，核对动态图表是否有完整静态后备。结构计数不能代替这个判断。若无后备，保留原版和可用正文，以纯 SVG/CSS/静态表格生成下一版本，逐项验证数值与来源，再登记并验证预览、PNG/PDF；安全的现有输出继续交付。登记成功后的 artifactId、version 与哈希才是交付依据；工作目录里的未登记文件不能声称已经交付。用户提出“把第二部分精简、换柱状图”等反馈时，先核对本轮能否回读原产物与源数据；只有当前任务拥有旧版且实际回读后，才能在其上登记新版本并保留旧版。跨任务读不到旧版时说明具体缺口，不复用旧回执冒充新文件。导出位置由用户在桌面端选择；保存取消不算成功。能力缺失时明确指出不可执行的环节，同时交付已完成且可核验的部分。`,
 } as const;
 type Method = keyof typeof METHODS;
 /** 纯方法的用途说明也是冻结方法正文的一部分；目录无需猜测正文语义。 */
@@ -72,6 +78,7 @@ const METHOD_PURPOSES: Record<Method, string> = {
  review: '基于稿件和真实表现复盘、拆解与形成归因假设。',
  knowledge: '理解资料、提炼知识与偏好候选并保留出处。',
  guide: '根据真实产品能力回答使用问题与排查故障。',
+ report: '依据真实数据与来源生成可编辑的离线报告，并核对图表、文件版本和交付回执。',
 };
 // 注册职责决定哪些节点获得方法，不据文本作创作判断。
 function methodBody(method: Method): string {
@@ -80,7 +87,7 @@ function methodBody(method: Method): string {
 }
 export const BUSINESS_METHOD_TEMPLATES: readonly PromptTemplate[] = (Object.keys(METHODS) as Method[]).map(method => ({
  id: `method.${method}`,
- version: BUSINESS_METHOD_VERSION,
+ version: method === 'report' ? 'workbench-report-2026-09-21-diagnostics' : BUSINESS_METHOD_VERSION,
  system: `${METHODS[method].split('\n')[0]}\n用途：${METHOD_PURPOSES[method]}\n\n${methodBody(method)}`,
  template: '按当前意图使用本方法；只使用本轮实际工具与已知内容，产出仍遵守调用节点的原契约。',
  requiredFacets: [],
@@ -107,7 +114,7 @@ export const BUSINESS_METHOD_BINDINGS: Readonly<Record<string, Method>> = {
  'asset.classify':'knowledge', 'material.extract':'knowledge', 'creatoros.guide':'guide',
 };
 export const CONVERSATIONAL_METHOD_SKILLS = new Set([
- 'copilot.assist','chatbox.topic','chatbox.calibration','chatbox.positioning','chatbox.review','chatbox.distill',
+ 'copilot.assist','chatbox.topic','chatbox.canvas','chatbox.calibration','chatbox.positioning','chatbox.review','chatbox.distill',
 ]);
 export function withBusinessMethod(template: PromptTemplate): PromptTemplate {
  const method = BUSINESS_METHOD_BINDINGS[template.id];
@@ -115,7 +122,7 @@ export function withBusinessMethod(template: PromptTemplate): PromptTemplate {
  if (!method && !conversational) return template;
  if (conversational) return {...template,
    version: `${template.version}+methods-on-demand-2026-09-08`,
-   system: `${template.system}\n\n${COMMON}`};
+   system: `${template.system}\n\n${COMMON}\n\n${USER_FACING_RESPONSE_POLICY}`};
  return {...template, version: `${template.version}+${BUSINESS_METHOD_VERSION}`,
-   system: `${template.system}\n\n${COMMON}\n\n${methodBody(method!)}`};
+   system: `${template.system}\n\n${COMMON}\n\n${methodBody(method!)}\n\n${USER_FACING_RESPONSE_POLICY}`};
 }

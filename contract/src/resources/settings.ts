@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { id, iso8601, creationMode } from "../primitives";
+export {modelRoutingResourceSchema,modelRoutingChoicesSchema,modelRoutingPutSchema,type ModelRoutingResource,type ModelRoutingChoices,type ModelRoutingPut} from '../internal/model-routing';
 
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
@@ -28,6 +29,7 @@ export const userPreferenceResource = z.object({
   autosaveEnabled: z.boolean(),
   fileNamingRule: z.string(),
   analyticsEnabled: z.boolean(),
+  assistantExecutionEngine: z.enum(["pi", "codex"]).nullable().default(null),
 });
 export type UserPreferenceResource = z.infer<typeof userPreferenceResource>;
 
@@ -188,6 +190,7 @@ export const accountSkillOverlayResource = z.object({
   // Official catalog is readable before a platform account is selected.
   // null means no account overlay is in scope; writes remain account-required.
   accountId: z.string().min(1).nullable(),
+  groupId:z.string().min(1).nullable().optional(),
   baseVersion: z.string().min(1),
   editableFields: z.array(
     z.enum([
@@ -219,7 +222,8 @@ export type AccountSkillOverlayResource = z.infer<
 export const accountSkillOverlayVersionResource = z.object({
   id: z.string().min(1),
   skillId: z.string().min(1),
-  accountId: z.string().min(1),
+  accountId: z.string().min(1).nullable(),
+  groupId:z.string().min(1).nullable().optional(),
   rowRevision: z.number().int().min(1),
   observedBaseVersion: z.string().min(1),
   overlayVersion: z.string().nullable(),
@@ -274,3 +278,7 @@ export const onboardingStateResource = z.object({
 });
 export type OnboardingPatch = z.infer<typeof onboardingPatchResource>;
 export type OnboardingStateResource = z.infer<typeof onboardingStateResource>;
+
+// 账号组引导独立保存；空组不会用任意成员或占位账号冒充工作区。
+export const groupOnboardingStateResource=onboardingStateResource.extend({groupId:id,accountId:z.null()});
+export type GroupOnboardingStateResource=z.infer<typeof groupOnboardingStateResource>;

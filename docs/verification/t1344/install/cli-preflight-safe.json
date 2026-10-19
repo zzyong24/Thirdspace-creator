@@ -1,0 +1,27 @@
+{
+  "--version": {
+    "exit_code": 0,
+    "ok": true,
+    "error_code": null,
+    "data_keys": []
+  },
+  "help": {
+    "exit_code": 0,
+    "ok": true,
+    "error_code": null,
+    "data_keys": [],
+    "usage": null
+  },
+  "status": {
+    "exit_code": 0,
+    "ok": true,
+    "error_code": null,
+    "data_keys": []
+  },
+  "access status": {
+    "exit_code": 0,
+    "ok": true,
+    "error_code": null,
+    "data_keys": []
+  }
+}

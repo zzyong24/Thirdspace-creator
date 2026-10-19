@@ -1,0 +1,2 @@
+import base from "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/vitest.config.ts";
+export default {...base,root:"/Users/zyongzhu/Workbase/Thirdspace-creator/frontend",cacheDir:"/Volumes/T7-MacData/CodexBuilds/t1340-article-readiness-20261017-ff4a19f6/cache",test:{...base.test,include:["src/features/copilot/ai-copilot-content.test.tsx"],testTimeout:120000,hookTimeout:180000,globalTimeout:720000,maxWorkers:1,fileParallelism:false,retry:0}};

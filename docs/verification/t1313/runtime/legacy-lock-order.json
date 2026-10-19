@@ -1,0 +1,245 @@
+{
+  "queries": [
+    "select \"id\", \"user_id\", \"platform\", \"account_handle\", \"external_account_id\", \"secret_reference\", \"follower_baseline\", \"status\", \"created_at\", \"updated_at\" from \"platform_accounts\" where (\"platform_accounts\".\"user_id\" = $1 and \"platform_accounts\".\"id\" = $2) for update",
+    "select \"id\", \"user_id\", \"group_id\", \"platform_account_id\", \"version\", \"joined_at\", \"left_at\" from \"account_group_memberships\" where (\"account_group_memberships\".\"user_id\" = $1 and \"account_group_memberships\".\"platform_account_id\" = $2 and \"account_group_memberships\".\"left_at\" is null) for update",
+    "select \"id\", \"user_id\", \"name\", \"status\", \"version\", \"created_at\", \"updated_at\" from \"account_groups\" where (\"account_groups\".\"user_id\" = $1 and \"account_groups\".\"id\" = $2) for update",
+    "savepoint sp1",
+    "select \"id\", \"user_id\", \"group_id\", \"platform_account_id\", \"version\", \"joined_at\", \"left_at\" from \"account_group_memberships\" where (\"account_group_memberships\".\"user_id\" = $1 and \"account_group_memberships\".\"platform_account_id\" = $2 and \"account_group_memberships\".\"left_at\" is null)",
+    "select \"id\" from \"account_groups\" where (\"account_groups\".\"id\" = $1 and \"account_groups\".\"user_id\" = $2 and \"account_groups\".\"status\" = $3)",
+    "select \"id\", \"status\" from \"account_groups\" where (\"account_groups\".\"id\" = $1 and \"account_groups\".\"user_id\" = $2) for share",
+    "select \"id\", \"user_id\", \"group_id\", \"platform_account_id\", \"version\", \"joined_at\", \"left_at\" from \"account_group_memberships\" where (\"account_group_memberships\".\"user_id\" = $1 and \"account_group_memberships\".\"platform_account_id\" = $2 and \"account_group_memberships\".\"left_at\" is null)",
+    "select \"id\" from \"account_groups\" where (\"account_groups\".\"id\" = $1 and \"account_groups\".\"user_id\" = $2 and \"account_groups\".\"status\" = $3)",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and \"work_compositions\".\"account_id\" = $3)",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4))) for update",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where \"work_compositions\".\"id\" = $1 for update",
+    "select \"group_id\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"request_id\", \"request_digest\", \"operation\", \"input\", \"status\", \"report_id\", \"confirmation_id\", \"error_code\", \"created_at\" from \"work_review_requests\" where (\"work_review_requests\".\"request_id\" = $1 and \"work_review_requests\".\"user_id\" = $2 and (\"work_review_requests\".\"account_id\" = $3 and (\"work_review_requests\".\"group_id\" is null or \"work_review_requests\".\"group_id\" = $4))) for update",
+    "insert into \"work_review_requests\" (\"group_id\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"request_id\", \"request_digest\", \"operation\", \"input\", \"status\", \"report_id\", \"confirmation_id\", \"error_code\", \"created_at\") values ($1, $2, default, $3, $4, $5, $6, $7, $8, $9, $10, $11, default, default, default, $12) on conflict do nothing",
+    "select \"group_id\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"request_id\", \"request_digest\", \"operation\", \"input\", \"status\", \"report_id\", \"confirmation_id\", \"error_code\", \"created_at\" from \"work_review_requests\" where (\"work_review_requests\".\"request_id\" = $1 and \"work_review_requests\".\"user_id\" = $2 and (\"work_review_requests\".\"account_id\" = $3 and (\"work_review_requests\".\"group_id\" is null or \"work_review_requests\".\"group_id\" = $4))) for update",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and \"work_compositions\".\"account_id\" = $3)",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4))) for update",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where \"work_compositions\".\"id\" = $1 for update",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and (\"work_compositions\".\"account_id\" = $3 and (\"work_compositions\".\"group_id\" is null or \"work_compositions\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and (\"work_compositions\".\"account_id\" = $3 and (\"work_compositions\".\"group_id\" is null or \"work_compositions\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"composition_id\", \"revision\", \"snapshot\", \"created_at\" from \"work_composition_versions\" where (\"work_composition_versions\".\"composition_id\" = $1 and \"work_composition_versions\".\"revision\" = $2)",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and (\"work_compositions\".\"account_id\" = $3 and (\"work_compositions\".\"group_id\" is null or \"work_compositions\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and (\"work_compositions\".\"account_id\" = $3 and (\"work_compositions\".\"group_id\" is null or \"work_compositions\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"composition_id\", \"revision\", \"snapshot\", \"created_at\" from \"work_composition_versions\" where (\"work_composition_versions\".\"composition_id\" = $1 and \"work_composition_versions\".\"revision\" = $2)",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"project_id\", \"content_output_id\", \"current_version_id\", \"stage\", \"artifact_type\", \"title\", \"status\", \"archived_at\", \"origin\", \"created_at\", \"updated_at\" from \"artifacts\" where (\"artifacts\".\"id\" = $1 and \"artifacts\".\"user_id\" = $2 and (\"artifacts\".\"account_id\" = $3 and (\"artifacts\".\"group_id\" is null or \"artifacts\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"project_id\", \"content_output_id\", \"current_version_id\", \"stage\", \"artifact_type\", \"title\", \"status\", \"archived_at\", \"origin\", \"created_at\", \"updated_at\" from \"artifacts\" where (\"artifacts\".\"id\" = $1 and \"artifacts\".\"user_id\" = $2 and (\"artifacts\".\"account_id\" = $3 and (\"artifacts\".\"group_id\" is null or \"artifacts\".\"group_id\" = $4)))",
+    "select \"id\", \"artifact_id\", \"version_number\", \"content_text\", \"content_data\", \"change_summary\", \"created_by_type\", \"ai_task_id\", \"created_at\", \"adoption_key\", \"adoption_source_digest\" from \"artifact_versions\" where \"artifact_versions\".\"artifact_id\" = $1 order by \"artifact_versions\".\"version_number\" asc",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"artifact_id\", \"created_at\" from \"moments_anchors\" where (\"moments_anchors\".\"id\" = $1 and \"moments_anchors\".\"user_id\" = $2 and (\"moments_anchors\".\"account_id\" = $3 and (\"moments_anchors\".\"group_id\" is null or \"moments_anchors\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"project_id\", \"content_output_id\", \"current_version_id\", \"stage\", \"artifact_type\", \"title\", \"status\", \"archived_at\", \"origin\", \"created_at\", \"updated_at\" from \"artifacts\" where (\"artifacts\".\"id\" = $1 and \"artifacts\".\"user_id\" = $2 and (\"artifacts\".\"account_id\" = $3 and (\"artifacts\".\"group_id\" is null or \"artifacts\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"project_id\", \"content_output_id\", \"current_version_id\", \"stage\", \"artifact_type\", \"title\", \"status\", \"archived_at\", \"origin\", \"created_at\", \"updated_at\" from \"artifacts\" where (\"artifacts\".\"id\" = $1 and \"artifacts\".\"user_id\" = $2 and (\"artifacts\".\"account_id\" = $3 and (\"artifacts\".\"group_id\" is null or \"artifacts\".\"group_id\" = $4)))",
+    "select \"id\", \"artifact_id\", \"version_number\", \"content_text\", \"content_data\", \"change_summary\", \"created_by_type\", \"ai_task_id\", \"created_at\", \"adoption_key\", \"adoption_source_digest\" from \"artifact_versions\" where \"artifact_versions\".\"artifact_id\" = $1 order by \"artifact_versions\".\"version_number\" asc",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"artifact_id\", \"created_at\" from \"moments_anchors\" where (\"moments_anchors\".\"id\" = $1 and \"moments_anchors\".\"user_id\" = $2 and (\"moments_anchors\".\"account_id\" = $3 and (\"moments_anchors\".\"group_id\" is null or \"moments_anchors\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"project_id\", \"content_output_id\", \"current_version_id\", \"stage\", \"artifact_type\", \"title\", \"status\", \"archived_at\", \"origin\", \"created_at\", \"updated_at\" from \"artifacts\" where (\"artifacts\".\"id\" = $1 and \"artifacts\".\"user_id\" = $2 and (\"artifacts\".\"account_id\" = $3 and (\"artifacts\".\"group_id\" is null or \"artifacts\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"project_id\", \"content_output_id\", \"current_version_id\", \"stage\", \"artifact_type\", \"title\", \"status\", \"archived_at\", \"origin\", \"created_at\", \"updated_at\" from \"artifacts\" where (\"artifacts\".\"id\" = $1 and \"artifacts\".\"user_id\" = $2 and (\"artifacts\".\"account_id\" = $3 and (\"artifacts\".\"group_id\" is null or \"artifacts\".\"group_id\" = $4)))",
+    "select \"id\", \"artifact_id\", \"version_number\", \"content_text\", \"content_data\", \"change_summary\", \"created_by_type\", \"ai_task_id\", \"created_at\", \"adoption_key\", \"adoption_source_digest\" from \"artifact_versions\" where \"artifact_versions\".\"artifact_id\" = $1 order by \"artifact_versions\".\"version_number\" asc",
+    "insert into \"work_review_reports\" (\"group_id\", \"group_version\", \"membership_version\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"scope_key\", \"snapshot\", \"frozen_context\", \"attempt_id\", \"task_id\", \"execution_task_id\", \"settled_call_id\", \"status\", \"outcome\", \"error_code\", \"created_at\") values ($1, $2, $3, $4, default, $5, $6, $7, $8, $9, $10, $11, $12, default, default, default, $13, default, default, $14)",
+    "select \"group_id\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"request_id\", \"request_digest\", \"operation\", \"input\", \"status\", \"report_id\", \"confirmation_id\", \"error_code\", \"created_at\" from \"work_review_requests\" where (\"work_review_requests\".\"request_id\" = $1 and \"work_review_requests\".\"user_id\" = $2 and (\"work_review_requests\".\"account_id\" = $3 and (\"work_review_requests\".\"group_id\" is null or \"work_review_requests\".\"group_id\" = $4))) for update",
+    "update \"work_review_requests\" set \"report_id\" = $1 where \"work_review_requests\".\"id\" = $2",
+    "release savepoint sp1",
+    "select \"group_id\", \"group_version\", \"membership_version\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"scope_key\", \"snapshot\", \"frozen_context\", \"attempt_id\", \"task_id\", \"execution_task_id\", \"settled_call_id\", \"status\", \"outcome\", \"error_code\", \"created_at\" from \"work_review_reports\" where (\"work_review_reports\".\"id\" = $1 and \"work_review_reports\".\"user_id\" = $2 and (\"work_review_reports\".\"account_id\" = $3 and (\"work_review_reports\".\"group_id\" is null or \"work_review_reports\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and \"work_compositions\".\"account_id\" = $3)",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"id\", \"user_id\", \"platform\", \"account_handle\", \"external_account_id\", \"secret_reference\", \"follower_baseline\", \"status\", \"created_at\", \"updated_at\" from \"platform_accounts\" where (\"platform_accounts\".\"user_id\" = $1 and \"platform_accounts\".\"id\" = $2) for update",
+    "select \"id\", \"user_id\", \"group_id\", \"platform_account_id\", \"version\", \"joined_at\", \"left_at\" from \"account_group_memberships\" where (\"account_group_memberships\".\"user_id\" = $1 and \"account_group_memberships\".\"platform_account_id\" = $2 and \"account_group_memberships\".\"left_at\" is null) for update",
+    "select \"id\", \"user_id\", \"name\", \"status\", \"version\", \"created_at\", \"updated_at\" from \"account_groups\" where (\"account_groups\".\"user_id\" = $1 and \"account_groups\".\"id\" = $2) for update",
+    "savepoint sp1",
+    "select \"id\", \"user_id\", \"group_id\", \"platform_account_id\", \"version\", \"joined_at\", \"left_at\" from \"account_group_memberships\" where (\"account_group_memberships\".\"user_id\" = $1 and \"account_group_memberships\".\"platform_account_id\" = $2 and \"account_group_memberships\".\"left_at\" is null)",
+    "select \"id\" from \"account_groups\" where (\"account_groups\".\"id\" = $1 and \"account_groups\".\"user_id\" = $2 and \"account_groups\".\"status\" = $3)",
+    "select \"id\", \"status\" from \"account_groups\" where (\"account_groups\".\"id\" = $1 and \"account_groups\".\"user_id\" = $2) for share",
+    "select \"id\", \"user_id\", \"group_id\", \"platform_account_id\", \"version\", \"joined_at\", \"left_at\" from \"account_group_memberships\" where (\"account_group_memberships\".\"user_id\" = $1 and \"account_group_memberships\".\"platform_account_id\" = $2 and \"account_group_memberships\".\"left_at\" is null)",
+    "select \"id\" from \"account_groups\" where (\"account_groups\".\"id\" = $1 and \"account_groups\".\"user_id\" = $2 and \"account_groups\".\"status\" = $3)",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and \"work_compositions\".\"account_id\" = $3)",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4))) for update",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where \"work_compositions\".\"id\" = $1 for update",
+    "select \"group_id\", \"group_version\", \"membership_version\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"scope_key\", \"snapshot\", \"frozen_context\", \"attempt_id\", \"task_id\", \"execution_task_id\", \"settled_call_id\", \"status\", \"outcome\", \"error_code\", \"created_at\" from \"work_review_reports\" where (\"work_review_reports\".\"id\" = $1 and \"work_review_reports\".\"user_id\" = $2 and (\"work_review_reports\".\"account_id\" = $3 and (\"work_review_reports\".\"group_id\" is null or \"work_review_reports\".\"group_id\" = $4))) for update",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and \"work_compositions\".\"account_id\" = $3)",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"request_id\", \"request_digest\", \"operation\", \"input\", \"status\", \"report_id\", \"confirmation_id\", \"error_code\", \"created_at\" from \"work_review_requests\" where (\"work_review_requests\".\"request_id\" = $1 and \"work_review_requests\".\"user_id\" = $2 and (\"work_review_requests\".\"account_id\" = $3 and (\"work_review_requests\".\"group_id\" is null or \"work_review_requests\".\"group_id\" = $4))) for update",
+    "rollback to savepoint sp1",
+    "select \"group_id\", \"group_version\", \"membership_version\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"scope_key\", \"snapshot\", \"frozen_context\", \"attempt_id\", \"task_id\", \"execution_task_id\", \"settled_call_id\", \"status\", \"outcome\", \"error_code\", \"created_at\" from \"work_review_reports\"",
+    "select \"id\", \"execution_task_id\", \"user_id\", \"account_id\", \"group_id\", \"group_version\", \"membership_version\", \"project_id\", \"content_output_id\", \"task_type\", \"status\", \"input_data\", \"runtime_data\", \"model_key\", \"idempotency_key\", \"attempt_id\", \"request_fingerprint\", \"retry_of_task_id\", \"requested_at\", \"started_at\", \"completed_at\", \"error_message\", \"session_id\", \"cost_usd\", \"lease_owner\", \"lease_token\", \"lease_expires_at\", \"model_call_started_at\" from \"ai_tasks\"",
+    "select \"group_id\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"request_id\", \"request_digest\", \"operation\", \"input\", \"status\", \"report_id\", \"confirmation_id\", \"error_code\", \"created_at\" from \"work_review_requests\" where (\"work_review_requests\".\"request_id\" = $1 and \"work_review_requests\".\"user_id\" = $2 and (\"work_review_requests\".\"account_id\" = $3 and (\"work_review_requests\".\"group_id\" is null or \"work_review_requests\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"user_id\", \"account_id\", \"project_id\", \"current_revision\", \"created_at\", \"updated_at\" from \"work_compositions\" where (\"work_compositions\".\"id\" = $1 and \"work_compositions\".\"user_id\" = $2 and \"work_compositions\".\"account_id\" = $3)",
+    "select \"id\", \"user_id\", \"group_id\", \"account_id\", \"title\", \"brief\", \"brief_detail\", \"content_category\", \"source\", \"platform_ref\", \"creation_mode\", \"status\", \"current_stage\", \"progress_pct\", \"starred\", \"started_at\", \"target_completed_at\", \"completed_at\", \"archived_at\", \"created_at\", \"updated_at\" from \"projects\" where (\"projects\".\"id\" = $1 and \"projects\".\"user_id\" = $2 and (\"projects\".\"account_id\" = $3 and (\"projects\".\"group_id\" is null or \"projects\".\"group_id\" = $4)))",
+    "select \"group_id\", \"id\", \"ordinal\", \"user_id\", \"account_id\", \"project_id\", \"composition_id\", \"request_id\", \"request_digest\", \"operation\", \"input\", \"status\", \"report_id\", \"confirmation_id\", \"error_code\", \"created_at\" from \"work_review_requests\"",
+    "select \"id\", \"execution_task_id\", \"user_id\", \"account_id\", \"group_id\", \"group_version\", \"membership_version\", \"project_id\", \"content_output_id\", \"task_type\", \"status\", \"input_data\", \"runtime_data\", \"model_key\", \"idempotency_key\", \"attempt_id\", \"request_fingerprint\", \"retry_of_task_id\", \"requested_at\", \"started_at\", \"completed_at\", \"error_message\", \"session_id\", \"cost_usd\", \"lease_owner\", \"lease_token\", \"lease_expires_at\", \"model_call_started_at\" from \"ai_tasks\""
+  ],
+  "report": {
+    "groupId": "grp_legacy_review-account",
+    "groupVersion": 1,
+    "membershipVersion": 1,
+    "id": "wr-report-13",
+    "ordinal": 1,
+    "userId": "review-user",
+    "accountId": "review-account",
+    "projectId": "project",
+    "compositionId": "work-8",
+    "scopeKey": "{\"compositionId\":\"work-8\",\"kind\":\"field\",\"member\":{\"kind\":\"moments\",\"momentsId\":\"moments-4\"},\"target\":{\"field\":\"text\",\"kind\":\"moments_field\",\"momentsId\":\"moments-4\"}}",
+    "snapshot": {
+      "scope": {
+        "kind": "field",
+        "member": {
+          "kind": "moments",
+          "momentsId": "moments-4"
+        },
+        "target": {
+          "kind": "moments_field",
+          "field": "text",
+          "momentsId": "moments-4"
+        },
+        "compositionId": "work-8"
+      },
+      "members": [
+        {
+          "fields": [
+            {
+              "files": [],
+              "target": {
+                "kind": "moments_field",
+                "field": "text",
+                "momentsId": "moments-4"
+              },
+              "sources": [],
+              "ruleRefs": [],
+              "sourceRefs": [],
+              "valueDigest": "dc43ed174011826fc1b2b30dfe5d6ca4b268b13452de3f21691722562eec45f9",
+              "provenanceVersion": {
+                "kind": "artifact",
+                "versionId": "artifactversion-3",
+                "artifactId": "artifact-2"
+              }
+            }
+          ],
+          "member": {
+            "kind": "moments",
+            "momentsId": "moments-4"
+          },
+          "ownerVersion": {
+            "kind": "artifact",
+            "versionId": "artifactversion-3",
+            "artifactId": "artifact-2"
+          }
+        }
+      ],
+      "frozenAt": "2026-10-02T07:00:25.000Z",
+      "selection": [],
+      "fingerprint": "a79221055b38d787ed0a02d9ea4284df6f049bd596f4b999660dc2dbb1fdc2e8",
+      "basisVersionId": "artifactversion-7",
+      "basisArtifactId": "artifact-6"
+    },
+    "frozenContext": {
+      "basis": {
+        "value": {
+          "topic": "",
+          "claims": [],
+          "ruleRefs": [],
+          "factItems": [],
+          "sourceRefs": [],
+          "schemaVersion": 1
+        },
+        "versionId": "artifactversion-7",
+        "artifactId": "artifact-6"
+      },
+      "scope": {
+        "kind": "field",
+        "member": {
+          "kind": "moments",
+          "momentsId": "moments-4"
+        },
+        "target": {
+          "kind": "moments_field",
+          "field": "text",
+          "momentsId": "moments-4"
+        },
+        "compositionId": "work-8"
+      },
+      "members": [
+        {
+          "fields": [
+            {
+              "files": [],
+              "rules": [],
+              "value": "实际朋友圈文字",
+              "target": {
+                "kind": "moments_field",
+                "field": "text",
+                "momentsId": "moments-4"
+              },
+              "sources": [],
+              "sourceRefs": [],
+              "provenanceVersion": {
+                "kind": "artifact",
+                "versionId": "artifactversion-3",
+                "artifactId": "artifact-2"
+              }
+            }
+          ],
+          "member": {
+            "kind": "moments",
+            "momentsId": "moments-4"
+          },
+          "ownerVersion": {
+            "kind": "artifact",
+            "versionId": "artifactversion-3",
+            "artifactId": "artifact-2"
+          }
+        }
+      ],
+      "projectId": "project",
+      "selection": []
+    },
+    "attemptId": "work-review-wr-report-13",
+    "taskId": null,
+    "executionTaskId": null,
+    "settledCallId": null,
+    "status": "queued",
+    "outcome": null,
+    "errorCode": null,
+    "createdAt": "2026-10-02T07:00:26.000Z"
+  },
+  "requests": [
+    {
+      "groupId": null,
+      "id": "wr-request-12",
+      "ordinal": 1,
+      "userId": "review-user",
+      "accountId": "review-account",
+      "projectId": "project",
+      "compositionId": "work-8",
+      "requestId": "t1313-stage-gap",
+      "requestDigest": "4ea4cdd28c914c50eaf58fd240e180ec7319e97f664bacfcc26e38afe7410322",
+      "operation": "create",
+      "input": {
+        "scope": {
+          "kind": "field",
+          "member": {
+            "kind": "moments",
+            "momentsId": "moments-4"
+          },
+          "target": {
+            "kind": "moments_field",
+            "field": "text",
+            "momentsId": "moments-4"
+          },
+          "compositionId": "work-8"
+        },
+        "clientRequestId": "t1313-stage-gap"
+      },
+      "status": "reserved",
+      "reportId": "wr-report-13",
+      "confirmationId": null,
+      "errorCode": null,
+      "createdAt": "2026-10-02T07:00:24.000Z"
+    }
+  ],
+  "tasks": []
+}

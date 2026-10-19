@@ -19,18 +19,20 @@
  */
 
 import { client as defaultClient } from "@/lib/contract-client.server";
+import type { FrozenWorkspaceScope } from "@/lib/http-transport";
 import { isAccountRequiredError } from "@/lib/http-transport";
 import type { ScheduledJobResource } from "@creatoros/backend/modules/scheduling";
 import {
   AutomationsIsland,
   type CurrentAccountBadge,
+  type AutomationAccount,
 } from "@/features/automations/automations-island";
 
 // 结构缝:server 读需 listScheduledJobs + listAccounts(解析当前号 handle);
 // route 传 session-scoped client。
 export type AutomationsReadClient = Pick<
   typeof defaultClient,
-  "listScheduledJobs" | "listAccounts"
+  "listScheduledJobs" | "listAccounts" | "getAccountGroup" | "getAccountCollectionPlanReadiness"
 >;
 
 export interface AutomationsPageProps {
@@ -40,17 +42,22 @@ export interface AutomationsPageProps {
   readonly client?: AutomationsReadClient;
   /** [T-332 S4] 当前号 id(route 传 session.ctx.accountId;null = 未选号)。 */
   readonly currentAccountId?: string | null;
+  readonly scope?: FrozenWorkspaceScope;
 }
 
 export async function AutomationsPage({
   jobs,
   client = defaultClient,
   currentAccountId = null,
+  scope,
 }: AutomationsPageProps = {}) {
   // 独立读并发启动；账号失败沿用原来的诚实降级，运行配置仍实时。
-  const accountsPromise = currentAccountId
-    ? client.listAccounts({ params: undefined, query: { page: 1, pageSize: 100, platform: "douyin" }, body: undefined }).catch(() => [])
-    : Promise.resolve([]);
+  const groupPromise = (scope?.groupId
+    ? client.getAccountGroup({params:{groupId:scope.groupId},query:undefined,body:undefined})
+    : Promise.resolve(null)).then(value=>({value,error:null}),error=>({value:null,error}));
+  const accountsPromise = (!scope?.groupId && currentAccountId
+    ? client.listAccounts({params:undefined,query:{page:1,pageSize:100},body:undefined})
+    : Promise.resolve([])).then(value=>({value,error:null}),error=>({value:[],error}));
   // 读:page -> await client.listScheduledJobs -> composite transport -> pglite -> DTO。
   // `jobs?` 是测试覆盖缝(fixture,sync);生产读拉全部 enabled+disabled 作业(自动化
   // 两态都展示),按创建时刻的自然顺序(service 默认)。
@@ -61,11 +68,13 @@ export async function AutomationsPage({
     rows = jobs;
   } else {
     try {
-      rows = (await client.listScheduledJobs({
-        params: undefined,
-        query: { page: 1, pageSize: 200 },
-        body: undefined,
-      })) as unknown as ReadonlyArray<ScheduledJobResource>;
+      const all: ScheduledJobResource[] = [];
+      for (let page=1; ; page++) {
+        const batch = await client.listScheduledJobs({params:undefined,query:{page,pageSize:100},body:undefined}) as unknown as ScheduledJobResource[];
+        all.push(...batch);
+        if (batch.length < 100) break;
+      }
+      rows = all;
     } catch (err) {
       if (!isAccountRequiredError(err)) throw err;
       rows = [];
@@ -80,31 +89,23 @@ export async function AutomationsPage({
       !(job.target as Record<string, unknown>)?.mergedIntoSelfMetrics,
   );
 
-  // [T-332 S4·§6.3] 解析当前号 handle(user 级读,不需要当前号)→ badge。读失败/
-  // 未选号 → null(island 显「未选择账号」提示,不猜)。
-  let currentAccount: CurrentAccountBadge | null = null;
-  // [T-433 S3] 多账号(≥2 active)→ 页面提示「每日采集已自动错峰跨账号」(引导用户,消除
-  //   「多号是否要手动错开时间」的疑虑;系统已按账号确定性打散,无需手动)。
-  let multiAccount = false;
-  if (currentAccountId) {
+  const groupResult = await groupPromise;
+  if(groupResult.error)throw groupResult.error;
+  const group=groupResult.value;
+  const accounts: AutomationAccount[] = group ? await Promise.all(group.members.map(async member => {
     try {
-      const accounts = (await accountsPromise) as unknown as ReadonlyArray<{
-        id: string;
-        accountHandle: string;
-        status: "active" | "archived";
-      }>;
-      multiAccount =
-        (accounts ?? []).filter((a) => a.status === "active").length >= 2;
-      const hit = (accounts ?? []).find(
-        (a) => a.id === currentAccountId && a.status === "active",
-      );
-      if (hit) {
-        currentAccount = { id: hit.id, handle: hit.accountHandle };
-      }
+      const readiness = await client.getAccountCollectionPlanReadiness({params:{accountId:member.accountId},query:undefined,body:undefined});
+      return {id:member.accountId,handle:member.accountHandle,platform:member.platform,status:member.status,readiness};
     } catch {
-      currentAccount = null; // 诚实降级:解析不到就不渲 handle,绝不编
+      return {id:member.accountId,handle:member.accountHandle,platform:member.platform,status:member.status,readinessError:"采集计划资格读取失败，请刷新后重试"};
     }
-  }
+  })) : [];
+  let currentAccount: CurrentAccountBadge | null = null;
+  const accountsResult=await accountsPromise;
+  if(accountsResult.error)throw accountsResult.error;
+  const legacyAccounts = accountsResult.value as unknown as {id:string;accountHandle:string}[];
+  const selected = accounts.find(a=>a.id===currentAccountId) ?? legacyAccounts.find(a=>a.id===currentAccountId);
+  if (selected) currentAccount = {id:selected.id,handle:'handle' in selected ? selected.handle : selected.accountHandle};
 
   return (
     <main
@@ -125,17 +126,9 @@ export async function AutomationsPage({
         >
           让作品指标、评论、流量来源和视频内容按需更新，持续支持选题与复盘。
         </p>
-        {multiAccount ? (
-          <p
-            data-slot="automations-stagger-hint"
-            className="text-xs text-muted-foreground"
-          >
-            检测到多个账号 —— 每日采集时间已自动错峰(按账号打散到早间不同时刻),避免多号同时抓取。无需手动调整;如需自定义可在各作业里改时间。
-          </p>
-        ) : null}
       </header>
 
-      <AutomationsIsland jobs={rows} currentAccount={currentAccount} />
+      <AutomationsIsland key={scope?.groupId ?? "legacy"} jobs={rows} currentAccount={currentAccount} accounts={accounts} groupName={group?.name} scope={scope} />
     </main>
   );
 }

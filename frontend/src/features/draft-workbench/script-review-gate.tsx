@@ -31,6 +31,7 @@
  */
 
 import * as React from "react";
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
@@ -147,10 +148,17 @@ export function ScriptReviewGate({
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [error, setError] = React.useState<string | null>(null);
   // 卸载后停止在 await 链里 setState(长任务守卫)。
+  const outputRequestRef = React.useRef<Promise<{ id: string }> | null>(null);
+  const projectScopeRef = React.useRef(projectId);
+  React.useEffect(() => {
+    projectScopeRef.current = projectId;
+    outputRequestRef.current = null;
+  }, [projectId]);
   const cancelledRef = React.useRef(false);
   React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
+    () => {
+      cancelledRef.current = false;
+      return () => { cancelledRef.current = true; };
     },
     [],
   );
@@ -166,10 +174,10 @@ export function ScriptReviewGate({
     void (async () => {
       try {
         // [T-108 v2] 先 flush 保存编辑器在途未落库的最新内容(dirty 才真存,saved 则 no-op)——
-        // 否则 review.script 审的是持久化旧版(用户改了还在 dirty 窗口没保存)。flushSave 已 4s
+        // 否则 review.script 审的是持久化旧版(用户改了还在 dirty 窗口没保存)。flushSave 已 120s
         // 封顶(T-120),不会挂死。
         await flushSave();
-        if (cancelledRef.current) return;
+        if (cancelledRef.current || projectScopeRef.current !== projectId) return;
         // [T-123] 纯站内项目可能还没走制作 → 自愈铸 content_output 挂点让 selection 有真 id。
         // **但铸挂点是尽力而为,绝不能阻断「开对话+自动发」**:createOutput 慢/挂/失败都不卡按钮
         // ——review.script 工具靠 projectId 审当前脚本,不依赖 content_output id(selection 只为
@@ -177,22 +185,31 @@ export function ScriptReviewGate({
         let subjectId = outputId;
         if (!subjectId) {
           try {
-            const created = (await Promise.race([
-              client.createOutput({
-                params: { projectId },
-                query: undefined,
+            if (!outputRequestRef.current) {
+              const pending = client.createOutput({
+                params: { projectId }, query: undefined,
                 body: { title: projectTitle || "主内容" },
-              }),
-              new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("createOutput 超时")), 6000),
-              ),
-            ])) as { id: string };
-            subjectId = created.id;
+              }) as Promise<{ id: string }>;
+              outputRequestRef.current = pending;
+              void pending.catch(() => {
+                if (outputRequestRef.current === pending) outputRequestRef.current = null;
+              });
+            }
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            try {
+              const created = await Promise.race([
+                outputRequestRef.current,
+                new Promise<never>((_, reject) => {
+                  timer = setTimeout(() => reject(new Error("创建仍在处理中")), executionTimeoutMs(6000));
+                }),
+              ]);
+              subjectId = created.id;
+            } finally { clearTimeout(timer); }
           } catch {
             /* 铸挂点慢/挂/失败 → 不阻断开对话;subjectId 保持 null */
           }
         }
-        if (cancelledRef.current) return;
+        if (cancelledRef.current || projectScopeRef.current !== projectId) return;
         // 方案 A:自动发进常驻 rail —— functionKey=review.script(置顶审核工具),autoSend 直接发
         // 审核话术。有挂点就带 selection(免编导索要 id/标题);没铸出来也照开(工具靠 projectId 审)。
         openChat({

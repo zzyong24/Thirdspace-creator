@@ -1,0 +1,115 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS。Cycle 2 round 2 定向复审确认 REV-003 至 REV-006 的冻结通过条件均已由 changed lines 完整落实：backend service port 成为凭据、选择和 lease 的唯一物理属主；转写 intent/attempt 幂等键可跨崩溃恢复；authority 安全失败与有效 authority 后 provider 故障具有互斥状态转换；全部非默认模型进入完整性判定并由 TC-T645-15 覆盖。未发现本轮变更新增 blocker 或 major。",
+  "findings": [
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "ARCH-SINGLE-WRITER",
+        "quote": "frontend 只放页面、UI、交互，通过 contract client 走 RPC 调后端；唯一 schema 属主和数据库写入方是 backend。"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T645-09",
+        "quote": "Key 加密写后读回可用于真实 resolver，API/UI/日志不出现明文。"
+      },
+      "where": "§10.1 受管凭据同步与 §11.3 已实现写集",
+      "failure_mode": "SPEC 要求 API-265 返回的完整 token 直接写入本机加密凭据库，并把签名 bundle 解析固定在 frontend/src/server，同时只把 lease client 描述为未归属的 server-only 组件；它没有规定持久凭据写入、模型选择读写和单次 lease 必须经 contract/RPC 进入 backend service port。按该文本实现可以继续让 frontend server 持有业务凭据写权或独立 lease 权，与当前物理架构的 backend 单写者和凭据管理唯一属主冲突，也会让同步、设置页和 worker resolver 形成两套执行真值。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:240-245,345-355; orchestrator/SYSTEM_ARCHITECTURE.md:20-25,74-79,94-104",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "明确唯一物理链：frontend 只通过 contract client 发起同步、选择和状态查询；backend settings/ai-runtime service 校验当前 RequestContext 与已验签 authority、持久化长期凭据并申请单次 lease；ai-worker 只通过受控私有端口接收本次内存 token，禁止直接读库或自行续租。把现有 frontend server 文件限定为无写权兼容适配器或迁出，并为该边界补跨层验收。",
+      "resolution_evidence": "§10.1（SPEC-LINE:253:f4f7fde456597131 至 SPEC-LINE:258:fdf989a440a9cd47）已将 server-only 唯一物理属主收敛为 backend service port：frontend 仅经 contract client 转交，backend 以当前 RequestContext 校验 authority 并持久化长期凭据、模型选择及申请 lease，ai-worker 只接收本次内存 token且不直连数据库、不申请或续租。§10.3（SPEC-LINE:298:d9079a1cf45753bb 至 SPEC-LINE:299:064dafcc6501916b）和 §11.3（SPEC-LINE:368:61e07dfdaca75ab1 至 SPEC-LINE:374:26ed630ea23a9f5c）补齐跨层写权验收与唯一实现链。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "REQ-API-282-IDEMPOTENCY",
+        "quote": "同一次转写意图生成并复用稳定 Idempotency-Key；网络断连、响应丢失或重进页面不得换 key。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-API-282-IDEMPOTENCY",
+        "quote": "同一 intent 的所有重试复用同一个 Idempotency-Key；provider_unknown/expired 不生成新 key、不重复申请。"
+      },
+      "where": "§11.2 API-282 消费语义与 §11.4 验收状态",
+      "failure_mode": "SPEC 使用“同一次转写意图”作为计费幂等边界，却没有给出该意图的稳定身份、与账号/任务/音频的绑定、首次 lease 前的持久化时点、崩溃恢复读回规则或明确的新意图转换。两个实现可以分别按页面会话、按钮点击或 execution task 生成 key；刷新、进程崩溃或响应丢失后都可能把同一音频重试误判为新意图，申请第二枚 lease 并重复扣减额度，而仍声称复用了各自内存中的 key。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:331-341,359-371",
+      "risk_class": "data-loss",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "把 intent 固定绑定到当前账号、持久 execution/transcription task、输入音频内容摘要和一次明确创建的 attempt；在任何 lease 请求前原子保存随机 Idempotency-Key，所有网络重试、页面重进和进程恢复只读回该 key。只有用户明确新建转写 attempt 才可生成新 key，并补充请求前崩溃、请求后响应丢失、重启恢复和并发双击验收。",
+      "resolution_evidence": "§11.2（SPEC-LINE:352:56da58dd8c29b8d9 至 SPEC-LINE:355:4add9594a259a49b）把转写 intent 固定绑定 accountId、transcriptionTaskId、audioSha256 与 attemptId，并要求 backend 在任何 lease 请求前于同一事务持久化随机 Idempotency-Key；并发双击、请求前崩溃、响应丢失、页面重进和进程重启均只能读回同一 key，只有用户明确创建新 attempt 才生成新 key。§11.4（SPEC-LINE:384:4a7bb4ceb7091382 至 SPEC-LINE:385:974aadf0db82f2f3）同步锁定验收。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-005",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "REQ-T733-AUTHORITY-FAIL-CLOSED",
+        "quote": "坏签名、响应结构漂移、撤权、过期、绑定变化、locator 不一致、版本降级与碰撞仍按原安全规则失败关闭，不得因本地模型存在而吞掉真实安全事件。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-T768-ASR-FALLBACK",
+        "quote": "签名配置不可用、鉴权及其他云端 ASR 故障都不得阻断逐字稿，当前云端路径立即作废并只尝试一次本地 Whisper。"
+      },
+      "where": "§12 T-733 票据不适用边界与 §13 T-768 ASR 全故障兜底",
+      "failure_mode": "§12 要求真实 authority 安全事件保持失败关闭且不能被本地模型吞掉，§13 又把未分类的“签名配置不可用、鉴权”纳入必须自动回退 Whisper 的全故障集合。SPEC 没有区分已验签 authority/票据链失败与有效 authority 下的 provider/lease 调用失败，也没有说明本地转写成功时安全状态是否仍须保留并回显。实现者可把撤权、坏签名或 scope 绑定变化降级成普通本地成功，也可因 provider 401 阻断本可安全完成的本地转写，两种相反行为都能分别援引正文。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:379-400",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "给出互斥错误分类和唯一状态转换：坏签名、撤权、绑定/版本/locator 异常继续冻结渠道 authority、保留可见安全状态且零 Growth/provider 调用；只有已建立有效 authority 后的 lease、额度、网络、provider 或响应故障进入一次 Whisper 降级。若安全失败时仍允许独立本地转写，必须明确它不清除、不改写也不伪装渠道安全状态，并为两类路径分别验收。",
+      "resolution_evidence": "§12（SPEC-LINE:408:f6a3a0f759bd8cf0 至 SPEC-LINE:410:015eeaa910baddfa）规定 authority 安全失败冻结渠道路径、保持 security_error/blocked 且 ticket/Growth/lease/provider 调用为 0；独立 Whisper 成功不得清除或冒充渠道状态，并由 SPEC-LINE:415:a7c7e860553ce316 至 SPEC-LINE:416:4fad373dd92f2c2e 补齐回归。§13（SPEC-LINE:421:cd16f342afd445e4 至 SPEC-LINE:425:943519cf82e24ff3）把有效 authority 后的 provider/lease 故障与坏签名、撤权、scope/locator/版本绑定异常明确分流，消除了相反状态转换。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-006",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-645-08",
+        "quote": "渠道为某个 capability 下发多个有效模型时，CreatorOS 必须展示每一项真实的 name + model，并只允许在已验签白名单内选择。"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T645-13/14",
+        "quote": "多模型选择必须驱动测试连接和真实调用；白名单移除旧选择后只能回退唯一默认项，旧模型不可再选择或调用。"
+      },
+      "where": "§3 渠道能力完整性的唯一判定与 §8 TC-T645-13/14",
+      "failure_mode": "managed 判定只明确要求默认模型具备非空 id/name/model/connectionId，并未要求 models[C] 中每个非默认选项都具备完整字段、唯一 ID、可解析 connection/service、合法 settings 和当前 adapter 支持，也未规定任一附加选项损坏时是整项回 local 还是只剔除坏项。一个带完整默认项但含断裂第二项的签名 payload 因此可以被判 managed；实现既可能把不可调用项展示给用户，也可能静默过滤后改变 Growth 白名单语义，现有只覆盖“三个有效模型”的验收无法区分。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:75-98,214-218",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "把完整性谓词扩展到 models[C] 的每个选项：字段完整且 ID 唯一、connection/service 引用唯一、协议/settings/adapter 可用；并选择唯一失败语义。建议任一选项断裂就仅将该 capability 判 local并给出脱敏诊断，避免已验签白名单被客户端静默改写；补非默认项缺字段、断引用、重复 ID、未知 adapter 和白名单更新并发验收。",
+      "resolution_evidence": "§3（SPEC-LINE:93:ff6fb5f4fbee29bc 至 SPEC-LINE:100:67aa8d80ab40ee9a）已要求 models[C] 每一项具备完整且唯一字段、唯一可解析 connection/service 以及当前支持的协议、settings 和 adapter；SPEC-LINE:102:3c54a05525ab94b8 至 SPEC-LINE:103:e9c9aecbc62954d8 固定任一坏项使整个 capability 回 local并禁止静默过滤。TC-T645-15（SPEC-LINE:224:d6ebdd08b3dcb750 至 SPEC-LINE:225:c62561a6f1fac399）覆盖全部负向输入。",
+      "parent_id": ""
+    }
+  ]
+}

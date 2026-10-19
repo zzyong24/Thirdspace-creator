@@ -20,7 +20,15 @@ describe("正式网页读取共享编排", () => {
     const deps = ports();
     deps.readCached.mockResolvedValue({ assetId: "cached", name: "正文·旧标题", previewUrl: null, fullText: document.text });
     expect(await readWebDocument(input, deps)).toMatchObject({ assetId: "cached", title: "旧标题", sourceUrl: input.url, fromCache: true, fullText: document.text, excerpt: document.text.slice(0, 280), extractor: "cached", turnCount: null });
+    expect(await readWebDocument(input, deps)).not.toHaveProperty("finalUrl");
     expect(deps.read).not.toHaveBeenCalled(); expect(deps.saveDocument).not.toHaveBeenCalled();
+  });
+
+  it("明确刷新跳过旧缓存且不删除原素材，返回新读正文", async () => {
+    const deps = ports();
+    deps.readCached.mockResolvedValue({ assetId: "old", name: "旧导航", previewUrl: null, fullText: "旧迁移页" });
+    expect(await readWebDocument({ ...input, refresh: true }, deps)).toMatchObject({fromCache:false,fullText:document.text});
+    expect(deps.readCached).not.toHaveBeenCalled();expect(deps.read).toHaveBeenCalledTimes(1);expect(deps.saveDocument).toHaveBeenCalledTimes(1);
   });
 
   it("缓存修复失败直接失败，不重新抓取或创建素材", async () => {
@@ -32,7 +40,7 @@ describe("正式网页读取共享编排", () => {
   it.each(["ssr", "dom"] as const)("缓存 miss 后读全文，%s 诊断和原 URL 保留", async (extractPath) => {
     const deps = ports(); deps.read.mockResolvedValue({ ...document, extractPath });
     const result = await readWebDocument(input, deps);
-    expect(result).toMatchObject({ needLogin: false, assetId: "real-asset", sourceUrl: input.url, fullText: document.text, excerpt: document.text.slice(0, 280), fromCache: false, turnCount: 40 });
+    expect(result).toMatchObject({ needLogin: false, assetId: "real-asset", sourceUrl: input.url, finalUrl: document.finalUrl, fullText: document.text, excerpt: document.text.slice(0, 280), fromCache: false, turnCount: 40 });
     expect(result).toHaveProperty("extraction", extractPath === "ssr" ? "抽到 40 轮对话(SSR 全量,长对话不截断)" : "抽到 40 轮对话(DOM 渲染抽取,超长对话可能不全)");
     expect(deps.saveDocument).toHaveBeenCalledWith({ name: "正文·页面标题", sourceUrl: input.url, fullText: document.text }, undefined);
   });
@@ -66,6 +74,23 @@ describe("正式网页读取共享编排", () => {
     expect(deps.searchers).not.toHaveBeenCalled();
     deps.saveDocument.mockRejectedValue(new Error("保存失败"));
     await expect(readWebDocument(input, deps)).rejects.toThrow("保存失败");
+  });
+
+  it("备用搜索初始化失败仍保留原网页 HTTP 状态，不误报另一个读取错误", async () => {
+    const deps = ports();
+    deps.read.mockRejectedValue(new WebCaptureError("HTTP 404", { status: 404 }));
+    deps.searchers.mockRejectedValue(new Error("备用搜索暂不可用"));
+    expect(await readWebDocument(input, deps)).toMatchObject({ blocked: true, status: 404, alternates: [] });
+    expect(deps.read).toHaveBeenCalledTimes(1);
+    expect(deps.saveDocument).not.toHaveBeenCalled();
+  });
+
+  it("登录态查询失败只表示未知，不误称用户未登录", async () => {
+    const deps = ports();
+    deps.read.mockRejectedValue(new WebCaptureError("HTTP 403", { status: 403 }));
+    deps.hasSession.mockRejectedValue(new Error("会话查询暂不可用"));
+    expect(await readWebDocument(input, deps)).toMatchObject({ blocked: true, status: 403, message: "HTTP 403", alternates: [] });
+    expect(deps.saveDocument).not.toHaveBeenCalled();
   });
 
   it("读取返回前取消，不开始保存，并向端口透传同一 signal", async () => {

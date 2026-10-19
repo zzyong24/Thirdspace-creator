@@ -1,5 +1,7 @@
+import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
+import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
-import { and, asc, eq, inArray, sql, assets, tags, entityTags, assetTagAdoptions, type Db } from "@creatoros/backend";
+import { and, asc, eq, inArray, isNull, sql, assets, tags, entityTags, assetTagAdoptions, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import type { RepoDeps } from "./taxonomy.repository";
 import { DuplicateTagError, InvalidEntityRefError, TagNotFoundError } from "./taxonomy.errors";
@@ -10,12 +12,22 @@ export interface AssetTagProposal { proposalId: string; targets: AssetTagTarget[
 export interface AssetTagAdoptionResult { proposalId: string; assetIds: string[]; tagId: string; addedCount: number }
 // SEMANTIC_BOUNDARY_ALLOW: hashes compare immutable observations and requests, never choose tags.
 const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-function account(ctx: RequestContext) {
-  if (!ctx.accountId) throw new InvalidEntityRefError("素材标签操作需要当前账号");
-  return ctx.accountId;
+export async function lockTagWorkspace(tx: Tx, ctx: RequestContext) {
+  workspaceKey(ctx);
+  let groupId = ctx.groupId;
+  if (!groupId) {
+    const [member] = await tx.select({groupId:accountGroupMemberships.groupId}).from(accountGroupMemberships).where(and(eq(accountGroupMemberships.userId,ctx.userId),eq(accountGroupMemberships.accountId,ctx.accountId!),isNull(accountGroupMemberships.leftAt)));
+    groupId = member?.groupId;
+  }
+  if (groupId) {
+    const [group] = await tx.select({id:accountGroups.id}).from(accountGroups).where(and(eq(accountGroups.userId,ctx.userId),eq(accountGroups.id,groupId))).for("share");
+    if (!group) throw new TagNotFoundError("账号组不存在");
+  }
+  await assertWritableWorkspace(tx as Db,ctx);
 }
-export async function lockTagAssets(tx: Tx, ctx: RequestContext, ids: string[]) {
-  const rows = await tx.select().from(assets).where(and(eq(assets.userId, ctx.userId), eq(assets.accountId, account(ctx)), inArray(assets.id, ids))).orderBy(asc(assets.id)).for("update");
+export async function lockTagAssets(tx: Tx, ctx: RequestContext, ids: string[], options: {writable?: boolean} = {}) {
+  if (options.writable !== false) await lockTagWorkspace(tx, ctx);
+  const rows = await tx.select().from(assets).where(and(eq(assets.userId, ctx.userId), workspaceFilter(assets, ctx), inArray(assets.id, ids))).orderBy(asc(assets.id)).for("update");
   if (rows.length !== ids.length || rows.some(row => row.status !== "active")) throw new TagNotFoundError("素材不存在或不可用");
   return rows;
 }
@@ -25,22 +37,24 @@ async function version(tx: Tx, ctx: RequestContext, row: typeof assets.$inferSel
 }
 export function createAssetTagProposalService(db: Db, deps: RepoDeps) {
   async function adoptBatch(ctx: RequestContext, inputs: AssetTagProposal[], transaction?: Tx): Promise<AssetTagAdoptionResult[]> {
-    const accountId = account(ctx);
+    const scope = workspaceKey(ctx);
+    const stamp = workspaceStamp(scope);
     if (!inputs.length || inputs.length > 100 || new Set(inputs.map(p=>p.proposalId)).size !== inputs.length) throw new InvalidEntityRefError("标签建议批次无效或重复");
     const normalized = inputs.map(input=>{
       const tag=input.tag.trim();
       const targets=[...input.targets].sort((a,b)=>a.assetId<b.assetId?-1:a.assetId>b.assetId?1:0);
       if (!input.proposalId || !tag || tag.length>200 || !targets.length || targets.length>100 || new Set(targets.map(t=>t.assetId)).size!==targets.length || targets.some(t=>!t.assetId||!t.expectedVersion)) throw new InvalidEntityRefError("标签建议参数无效");
-      return {proposalId:input.proposalId,tag,targets,sourceDigest:digest([targets,tag]),receiptId:digest([ctx.userId,accountId,input.proposalId])};
+      return {proposalId:input.proposalId,tag,targets,sourceDigest:digest([targets,tag]),receiptId:digest([ctx.userId,scope.kind,scope.id,input.proposalId])};
     }).sort((a,b)=>a.proposalId<b.proposalId?-1:a.proposalId>b.proposalId?1:0);
     const operation = async(tx:Tx):Promise<AssetTagAdoptionResult[]>=>{
+      await lockTagWorkspace(tx,ctx);
       const results=new Map<string,AssetTagAdoptionResult>();
       const pending:typeof normalized=[];
       // Reserve every receipt before acquiring the union of asset locks.
       for(const proposal of normalized){
-        const [reserved]=await tx.insert(assetTagAdoptions).values({id:proposal.receiptId,userId:ctx.userId,accountId,proposalId:proposal.proposalId,sourceDigest:proposal.sourceDigest,result:{},createdAt:deps.now()}).onConflictDoNothing().returning();
+        const [reserved]=await tx.insert(assetTagAdoptions).values({id:proposal.receiptId,userId:ctx.userId,...stamp,proposalId:proposal.proposalId,sourceDigest:proposal.sourceDigest,result:{},createdAt:deps.now()}).onConflictDoNothing().returning();
         if(reserved){pending.push(proposal);continue;}
-        const [receipt]=await tx.select().from(assetTagAdoptions).where(and(eq(assetTagAdoptions.userId,ctx.userId),eq(assetTagAdoptions.accountId,accountId),eq(assetTagAdoptions.proposalId,proposal.proposalId)));
+        const [receipt]=await tx.select().from(assetTagAdoptions).where(and(eq(assetTagAdoptions.userId,ctx.userId),workspaceFilter(assetTagAdoptions,scope),eq(assetTagAdoptions.proposalId,proposal.proposalId)));
         if(!receipt || receipt.sourceDigest!==proposal.sourceDigest)throw new DuplicateTagError("建议标识已绑定不同内容");
         results.set(proposal.proposalId,receipt.result as AssetTagAdoptionResult);
       }
@@ -73,7 +87,7 @@ export function createAssetTagProposalService(db: Db, deps: RepoDeps) {
       const ids = [...new Set(assetIds)].sort();
       if (!ids.length || ids.length > 100 || ids.length !== assetIds.length) throw new InvalidEntityRefError("素材目标无效或重复");
       return db.transaction(async tx => {
-        const rows = await lockTagAssets(tx,ctx,ids);
+        const rows = await lockTagAssets(tx,ctx,ids,{writable:false});
         return Promise.all(rows.map(async row => ({assetId:row.id,expectedVersion:await version(tx,ctx,row)})));
       });
     },

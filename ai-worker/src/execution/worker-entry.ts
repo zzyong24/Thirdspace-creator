@@ -1,3 +1,5 @@
+import {runAssetAsrInWorker} from './asset-asr-worker-run';
+import {runExternalChatInWorker} from "./external-chat-worker-run";
 import {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import {runAssetProcessingInWorker} from "./asset-processing-worker";
 import {runTranscribeInWorker} from "./transcribe-worker-run";
@@ -8,21 +10,27 @@ import {closeChatResearchResources} from "./chat-research-worker";
 import {runChatInWorker} from "./chat-worker-run";
 import {closeTopicWorkerResources} from "./topic-worker-reads";
 import { generateStructuredInWorker } from "./structured-worker-generation";
-import { streamText } from "ai";
+import { generateText, streamText } from "ai";
 import { modelFor } from "../runtime/provider-factory";
 import { createExecutionWorker } from "./worker-runtime";
 import { generationFailure } from "./generation-error";
 
+const observeException=(event:unknown)=>{if(process.connected)process.send?.({version:1,type:"observability",event});};
+process.on("uncaughtExceptionMonitor",error=>{try{observeException({eventId:crypto.randomUUID(),module:"worker",code:"UNCLASSIFIED_EXCEPTION",occurredAt:new Date().toISOString(),referenceId:null,stack:Buffer.from(error.stack??"").subarray(0,16000).toString("utf8"),message:Buffer.from(error.message).subarray(0,4000).toString("utf8")});}catch{/* 保原崩溃 */}});
+
 if (!process.send) throw new Error("执行 Worker 只能由宿主私有 IPC 启动");
 // 包内 Pi 引擎能力尚待真实产物验证；未装配 runAgentic 时不声明该 capability。
 const worker = createExecutionWorker({
+  observeException,
   runAssetProcessing:runAssetProcessingInWorker,
   runAsset:runAssetInWorker,
   runVideo:runVideoDecisionsInWorker,
   runTranscribe:runTranscribeInWorker,
+  runAssetAsr:runAssetAsrInWorker,
   runCover:runCoverInWorker,
   generateStructured:generateStructuredInWorker,
   runChat:runChatInWorker,
+  runExternalChat:runExternalChatInWorker,
   supportsChatWebRead:true,
   supportsChatHooks:true,
   supportsChatScriptDraft:true,
@@ -30,6 +38,12 @@ const worker = createExecutionWorker({
   supportsChatStructured:true,
   send(message) {if (process.connected) process.send!(message);},
   async generate(input, spec, signal, onText) {
+    if("engine" in spec){
+      try{const result=await generateText({model:modelFor(spec),prompt:input.prompt,system:input.system,maxOutputTokens:input.maxOutputTokens,maxRetries:0,abortSignal:signal});
+        signal.throwIfAborted();if(!result.text.trim())throw Error('CODEX_TEXT_RESULT_UNKNOWN');
+        await onText(result.text);return {text:result.text,usage:result.totalUsage};
+      }catch(error){throw generationFailure(error,false);}
+    }
     let streamFailed = false;
     let streamError: unknown;
     const result = streamText({model: modelFor(spec), prompt: input.prompt, system: input.system,

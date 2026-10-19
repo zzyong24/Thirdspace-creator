@@ -17,6 +17,8 @@ export const assetResource = z.object({
   assetType,
   name: z.string(),
   description: z.string(),
+  // 真实taxonomy只读摘要；null/旧省略=不可用，[]仅真实无关联。
+  tags: z.array(z.object({id,name:z.string()})).nullable().optional(),
   status: assetStatus,
   // 收藏 (favorite) flag — toggled by assets.favorite.toggle. Persisted on the
   // asset row so the gallery 收藏 affordance survives reloads (not a client hack).

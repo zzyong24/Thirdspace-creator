@@ -1,0 +1,422 @@
+{
+  "streams": [
+    {
+      "headers": {
+        "conversationId": "ai-conv-bcda7005-1053",
+        "sourceMessageId": "ai-msg-bcda7005-1054",
+        "aiTaskId": "ai-task-8596d7e7-a8d1-4498-9115-c0364a17aec8",
+        "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7"
+      },
+      "startedAt": 1524.5999999940395,
+      "events": [
+        {
+          "type": "start",
+          "receivedAt": 1530.9000000059605,
+          "messageId": "chat:ai-msg-bcda7005-1054"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 1530.9000000059605,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "queued"
+          }
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 2603.0999999940395,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 13913.09999999404,
+          "toolCallId": "call_a61917c010014cc1ad28480bfcd536ac",
+          "toolName": "work.editor.read"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 13913.09999999404,
+          "toolCallId": "call_a61917c010014cc1ad28480bfcd536ac"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 13913.09999999404,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 17181.40000000596,
+          "toolCallId": "call_719a2725ebbd4628922b1ebeaa5712d6",
+          "toolName": "skill.read"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 17181.40000000596,
+          "toolCallId": "call_719a2725ebbd4628922b1ebeaa5712d6"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 17181.40000000596,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 19372.20000001788,
+          "toolCallId": "call_6d3307d704704a1f8d6b61a76dd4e674",
+          "toolName": "context.project.lifecycle"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 19372.20000001788,
+          "toolCallId": "call_6d3307d704704a1f8d6b61a76dd4e674"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 19372.20000001788,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 25083.90000000596,
+          "toolCallId": "call_f90b7e00b59a4607a3b8712d5cedc335",
+          "toolName": "system.features"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 25083.90000000596,
+          "toolCallId": "call_f90b7e00b59a4607a3b8712d5cedc335"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 25083.90000000596,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 28811.5,
+          "toolCallId": "call_8af818cac6a34214b85814014ac51ba4",
+          "toolName": "system.read"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 28811.5,
+          "toolCallId": "call_8af818cac6a34214b85814014ac51ba4"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 28811.5,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 31542.40000000596,
+          "toolCallId": "call_801a3dc2365e436dbab4453c861867be",
+          "toolName": "system.features"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 31542.40000000596,
+          "toolCallId": "call_801a3dc2365e436dbab4453c861867be"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 31542.40000000596,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 36253,
+          "toolCallId": "call_a57d97ddedd643408b11fde1fd5b4a9d",
+          "toolName": "system.read"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 36253,
+          "toolCallId": "call_a57d97ddedd643408b11fde1fd5b4a9d"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 36253,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 44486.59999999404,
+          "toolCallId": "call_a4ce0b03081f4a01b2b9d49874889aaa",
+          "toolName": "work.editor.read"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 44486.59999999404,
+          "toolCallId": "call_a4ce0b03081f4a01b2b9d49874889aaa"
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 44486.59999999404,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "running"
+          }
+        },
+        {
+          "type": "tool-input-available",
+          "receivedAt": 69017.09999999404,
+          "toolCallId": "call_e2ab0d83aafe406fb00f8795336c311d",
+          "toolName": "work.editor.propose"
+        },
+        {
+          "type": "tool-output-available",
+          "receivedAt": 69017.09999999404,
+          "toolCallId": "call_e2ab0d83aafe406fb00f8795336c311d"
+        },
+        {
+          "type": "text-start",
+          "receivedAt": 69017.09999999404
+        },
+        {
+          "type": "text-delta",
+          "receivedAt": 69017.09999999404
+        },
+        {
+          "type": "text-end",
+          "receivedAt": 69017.09999999404
+        },
+        {
+          "type": "finish",
+          "receivedAt": 69017.09999999404
+        },
+        {
+          "type": "message-metadata",
+          "receivedAt": 69017.09999999404,
+          "execution": {
+            "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7",
+            "status": "succeeded"
+          }
+        },
+        {
+          "type": "DONE",
+          "receivedAt": 69017.09999999404
+        }
+      ]
+    }
+  ],
+  "dom": [
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 0,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 读取当前作品…",
+      "visible": true,
+      "observedAt": 13915.700000017881
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 0,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · 读取当前作品",
+      "visible": true,
+      "observedAt": 13967.200000017881
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 1,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 读取执行方法…",
+      "visible": true,
+      "observedAt": 17184.59999999404
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 1,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · 读取执行方法",
+      "visible": true,
+      "observedAt": 17233.59999999404
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 2,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 读取项目全流程…",
+      "visible": true,
+      "observedAt": 19374.20000001788
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 2,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · 读取项目全流程",
+      "visible": true,
+      "observedAt": 19426.20000001788
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 3,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 system.features…",
+      "visible": true,
+      "observedAt": 25086.30000001192
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 3,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · system.features（共 14 条）",
+      "visible": true,
+      "observedAt": 25138
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 0,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · 读取当前作品",
+      "visible": false,
+      "observedAt": 28814.30000001192
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 4,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 system.read…",
+      "visible": true,
+      "observedAt": 28814.40000000596
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 4,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · system.read",
+      "visible": true,
+      "observedAt": 28865.59999999404
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 5,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 system.features…",
+      "visible": true,
+      "observedAt": 31545
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 5,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · system.features（共 1 条）",
+      "visible": true,
+      "observedAt": 31596.80000001192
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 6,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 system.read…",
+      "visible": true,
+      "observedAt": 36256.80000001192
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 1,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · 读取执行方法",
+      "visible": false,
+      "observedAt": 36306.20000001788
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 6,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · system.read",
+      "visible": true,
+      "observedAt": 36306.20000001788
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 7,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 读取当前作品…",
+      "visible": true,
+      "observedAt": 44490.09999999404
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 2,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · 读取项目全流程",
+      "visible": false,
+      "observedAt": 44540.20000001788
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 7,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · 读取当前作品",
+      "visible": true,
+      "observedAt": 44540.30000001192
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 8,
+      "slot": "copilot-tool-running",
+      "label": "正在调用 生成精调候选…",
+      "visible": true,
+      "observedAt": 69021
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 3,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · system.features（共 14 条）",
+      "visible": false,
+      "observedAt": 69037.30000001192
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 4,
+      "slot": "copilot-tool-trace",
+      "label": "读取完成 · system.read",
+      "visible": false,
+      "observedAt": 69037.30000001192
+    },
+    {
+      "assistantOrdinal": 0,
+      "toolOrdinal": 8,
+      "slot": "copilot-tool-trace",
+      "label": "候选待采用 · 生成精调候选",
+      "visible": true,
+      "observedAt": 69037.40000000596
+    }
+  ],
+  "armedAt": 1184.7000000178814,
+  "timeOrigin": 1792127586086,
+  "ids": {
+    "conversationId": "ai-conv-bcda7005-1053",
+    "sourceMessageId": "ai-msg-bcda7005-1054",
+    "aiTaskId": "ai-task-8596d7e7-a8d1-4498-9115-c0364a17aec8",
+    "executionTaskId": "execution-task-51389c73-9793-40cf-9f3f-b9cf0efabac7"
+  },
+  "boundary": "仅新空会话发送后新增assistant子树；安全SSE白名单，无input/output/正文/推理；DOM没有message/toolID，最终按唯一顺序/label匹配，歧义缺测；同page单调接收→DOM，后端ISO单列"
+}

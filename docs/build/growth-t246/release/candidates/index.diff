@@ -1,0 +1,19 @@
+--- actual-cb5c/index.html
++++ candidate/index.html
+@@ -468,6 +468,16 @@
+     </div>
+   </div>
+ </header>
++<!-- T246：独立手动下载入口；不改自动更新索引或其它平台附件。 -->
++<section id="creatoros-manual-download-e315" aria-label="CreatorOS新版手动下载" style="box-sizing:border-box;width:calc(100% - 32px);max-width:1100px;margin:24px auto;padding:20px;border:1px solid var(--hair,#e3e1ea);border-radius:16px;background:var(--panel,#fff);color:var(--ink,#1d1d1f);font-size:16px;line-height:1.7;overflow-wrap:anywhere">
++  <h2 style="font-size:24px;line-height:1.4;margin:0 0 12px">CreatorOS 1.2.0 · 本轮 Mac 验收包</h2>
++  <p style="font-size:16px;margin:0 0 12px">仅适用于 macOS 13.5 及以上的 Apple 芯片 Mac。Intel Mac 与 Windows 本次没有新版安装包，请继续使用原有平台的下载与安装指南。</p>
++  <p style="font-size:16px;margin:0 0 12px">本包采用 ad-hoc 签名，尚未通过 Apple 公证；请按系统提示自行确认是否安装。网页不会替换你现有的软件或个人数据。</p>
++  <p style="font-size:16px;margin:0 0 12px">CreatorOS所有有效正式激活码默认自带官方模型额度；首次默认权益为5元；历史已含权益与已有账户余额照旧，不重复发放。所有版本均可在设置中自由切换自配置模型，后续按需充值。</p>
++  <a href="/updates/CreatorOS_1.2.0_e3151ce89_macos-arm64.dmg" download="CreatorOS_1.2.0_e3151ce89_macos-arm64.dmg" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;max-width:100%;padding:10px 16px;border-radius:10px;background:var(--brand,#6d3bef);color:#fff;font-size:16px;font-weight:600;text-align:center">下载 Apple 芯片 Mac 验收包</a>
++  <p style="font-size:16px;margin:12px 0 0">文件大小：845127298 字节。构建：e3151ce89。SHA256：<span style="font-size:16px;overflow-wrap:anywhere">5737445f53ec3af024596cecca34e4d8e404294ede0827191846bf0fb1193793</span></p>
++</section>
++
+ 
+ <!-- HERO -->
+ <section class="hero" id="top">

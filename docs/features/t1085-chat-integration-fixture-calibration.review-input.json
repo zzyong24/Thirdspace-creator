@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "范围、恢复合同与验收闭环可实施；未知非法回执首例保持原成功预期并先补诊断。仅有一个不阻断的来源哈希漂移：SPEC 仍绑定更正前的相邻诊断报告字节。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "minor",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SRC-001",
+        "quote": "只读来源绑定"
+      },
+      "acceptance_anchor": {
+        "id": "AC-EVIDENCE",
+        "quote": "补测/校准记录真实 argv、退出码、日志 SHA、retry 0 和完整终态"
+      },
+      "where": "SPEC 第 74 行 adjacent-integration-diagnosis.md SHA256",
+      "failure_mode": "SPEC 声称该报告 SHA256 为 3f72e154…，但按要求撤回首例同签名推断后的当前文件 SHA256 为 5ae688b1aaadeb873dff38d93e12810a402d01c5e165720c6ff688d11dac4abe；后续按表核验会把真实更正报告判为不匹配。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "sha256sum /Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/adjacent-integration-diagnosis.md",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "只更新来源表中 adjacent-integration-diagnosis.md 的 SHA256 为 5ae688b1aaadeb873dff38d93e12810a402d01c5e165720c6ff688d11dac4abe，不改变产品、测试范围或验收语义。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

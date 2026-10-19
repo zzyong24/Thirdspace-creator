@@ -1,0 +1,265 @@
+{
+  "label": "all",
+  "startedAtUnix": 1792390696.57179,
+  "commandOuterSeconds": 8520,
+  "cliNormalObservationMs": 8280000,
+  "boundary": "公开CLI正常安装身份机制；未读取连接凭据；无apply/idempotency-key/collect/model/site；含CLI启动/本机传输/服务到完整JSON解析，不冒服务单阶段。",
+  "exitCode": 0,
+  "status": "parsed",
+  "ok": true,
+  "groupIdSha256": "9a72d3429b5145ffb37b1f02bca0d465d9e0911f53805ef6906ea03e63fdf17e",
+  "requestQuery": {
+    "startDate": "2026-09-20",
+    "endDate": "2026-10-19"
+  },
+  "scopeMatches": true,
+  "workspaceStatus": "active",
+  "catalog": {
+    "state": "ready",
+    "catalogWorkCount": 0,
+    "unattributableWorkCount": 0,
+    "deduplicatedWorkCount": 0
+  },
+  "metricKnown": [
+    {
+      "platform": "douyin",
+      "metricKey": "play_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "view_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "read_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "like_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "comment_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "share_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "favorite_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "play_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "view_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "read_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "like_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "comment_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "share_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "favorite_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "play_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "view_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "read_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "like_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "comment_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "share_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "favorite_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "play_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "view_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "read_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "like_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "comment_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "share_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "favorite_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "follower_count",
+      "scope": "account",
+      "knownCount": 0,
+      "eligibleCount": 1
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "follower_count",
+      "scope": "account",
+      "knownCount": 0,
+      "eligibleCount": 1
+    },
+    {
+      "platform": "kuaishou",
+      "metricKey": "follower_count",
+      "scope": "account",
+      "knownCount": 1,
+      "eligibleCount": 1
+    },
+    {
+      "platform": "xiaohongshu",
+      "metricKey": "follower_count",
+      "scope": "account",
+      "knownCount": 0,
+      "eligibleCount": 1
+    }
+  ],
+  "workspaceCounts": {
+    "totalAccounts": 4,
+    "collectedAccounts": 1,
+    "contentCount": 11,
+    "publicationCount": 11
+  },
+  "metaKeys": [
+    "requestId"
+  ],
+  "errorCode": null,
+  "completeParseDurationMs": 1435.431,
+  "endedAtUnix": 1792390698.0072331,
+  "rawPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-platform-read-fxx4e0ni/all.json",
+  "rawBytes": 23393,
+  "rawSha256": "342daf9f50d5dbe8377e50cfe7f4193aac4e318de8ae37e4e8436a67c1060e62",
+  "stderrBytes": 0
+}

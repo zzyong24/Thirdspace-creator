@@ -1,0 +1,18 @@
+[
+  {
+    "path": "docs/verification/t1369/production/bootstrap_probe.py",
+    "sha256": "f389dc300e7bc9577a443d47999df362b969a3ee6f6bf76748b2410e431dc7a1"
+  },
+  {
+    "path": "docs/verification/t1369/production/environment.py",
+    "sha256": "7fd31157d818df4d62b2ed0afbddc914ccf3f8a284a687d5989798be5a80866f"
+  },
+  {
+    "path": "docs/verification/t1369/production/run.py",
+    "sha256": "4549baf29c7565bf9c488e6314b0dca969cf0b05eea4ef33ee69bac897f3b1dc"
+  },
+  {
+    "path": "docs/verification/t1369/production/server.mjs",
+    "sha256": "49d276f5d2ec3164e245189a0bb40d937668d3de03fed67da66e05b8ff674a47"
+  }
+]

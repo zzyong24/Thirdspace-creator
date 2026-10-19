@@ -1,0 +1,21 @@
+{
+  "schema": "t1300-terminal-module-migration/v1",
+  "archivedIds": [
+    "T-1111",
+    "T-1125"
+  ],
+  "archivePath": "orchestrator/process/modules.terminal-archive.json",
+  "snapshotPath": "docs/verification/t1300/workflow/modules.before-archive.json",
+  "beforeModuleCount": 208,
+  "afterModuleCount": 206,
+  "remainingModulesUnchanged": true,
+  "originalConfigSha256": "94c3f63200526a88a00dec075903329ddb269629dd1de4264fdb42215635a04a",
+  "activeConfigSha256": "a58d1e8ad586c45f5709b0c13ba80ca9735b18c24542d64c5be67753b93c1560",
+  "archiveSha256": "044e82202f5ba7015e47152ac958c32d932bcf05a1ec7e6cb6652bbbde11445f",
+  "pathGuard": {
+    "path": "orchestrator/process/progress.mjs",
+    "sha256": "1677a9b1aef9cc04cd77f88b3d832abce7c69b4884089a1a74ef9687949a2423",
+    "modified": false
+  },
+  "scope": "仅数据迁移；不等于progress/context-compile/安全负例已通过，不修改旧任务状态/审核/历史"
+}

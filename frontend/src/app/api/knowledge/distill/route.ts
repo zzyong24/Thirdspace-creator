@@ -1,3 +1,4 @@
+import {KnowledgeGenerationPendingError} from '@creatoros/backend/modules/ai-runtime';
 import { NextResponse } from "next/server";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -10,6 +11,7 @@ import { readSessionCookie } from "../../v1/auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 
@@ -51,7 +53,7 @@ export async function POST(req: Request): Promise<Response> {
     ctx = await resolveRequestContext(
       rawToken,
       readRequestAccountId(req),
-      { rejectInvalidToken: true },
+      { rejectInvalidToken: true,groupId:readRequestGroupId(req) },
     );
   } catch (err) {
     if (err instanceof AuthenticationError) {
@@ -71,8 +73,8 @@ export async function POST(req: Request): Promise<Response> {
       () =>
         runKnowledgeDistill(
           ctx,
-          { content },
-          { resolveModelSpec: runtime.resolveModelSpec },
+          { content,signal:req.signal },
+          { runKnowledgeGeneration: runtime.runKnowledgeGeneration },
         ),
     );
     return NextResponse.json(distillation);
@@ -83,6 +85,6 @@ export async function POST(req: Request): Promise<Response> {
     const raw = err instanceof Error ? err.message : String(err);
     const message = humanizeAiError(err)?.message ?? raw;
     console.error("[api/knowledge/distill] failed:", err);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message,...(err instanceof KnowledgeGenerationPendingError?{taskId:err.taskId,executionTaskId:err.executionTaskId,runtimeStatus:err.runtimeStatus,errorCode:err.errorCode}:{}) }, { status: 400 });
   }
 }

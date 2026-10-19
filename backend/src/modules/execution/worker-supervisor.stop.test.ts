@@ -38,7 +38,7 @@ it.each(["cancel","startup","stop"])("%s强杀捕获实际Worker并等待清理�
       await vi.advanceTimersByTimeAsync(0);supervisor.cancel(execution);
     }
     if(mode==="stop")stop=supervisor.stop().then(()=>{stopped=true;});
-    await vi.advanceTimersByTimeAsync(10);
+    await vi.advanceTimersByTimeAsync(120_000);
     expect(fixture.killTree).toHaveBeenCalledExactlyOnceWith(first);
     first.connected=false;first.emit("exit",null,"SIGKILL");
     if(mode!=="stop")stop=supervisor.stop().then(()=>{stopped=true;});
@@ -57,7 +57,7 @@ it("进程树清理失败必须拒绝stop及下一Worker启动",async()=>{
   const started=supervisor.start();child.emit("message",{version:1,type:"ready",requestId:"ready",capabilities:[]});await started;
   try{
     const stopped=supervisor.stop();const rejected=expect(stopped).rejects.toThrow("NOT_STABLE");
-    await vi.advanceTimersByTimeAsync(10);await rejected;
+    await vi.advanceTimersByTimeAsync(120_000);await rejected;
     await expect(supervisor.start()).rejects.toThrow("NOT_STABLE");
   }finally{child.emit("exit",0);vi.useRealTimers();}
 });

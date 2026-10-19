@@ -1,0 +1,184 @@
+{
+  "schema": "t1362-work-entry-seed-delivery/v1",
+  "source": "docs/verification/t1362/harness/seed-work-entry.mts",
+  "sha256": "b03ab0253227d12c4fd406ae8d858d107b446831fc223fb8749c67220e2f192f",
+  "unchangedDependencies": [
+    {
+      "path": "docs/verification/t1355/harness/binding-fixture-server.mts",
+      "sha256": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13"
+    },
+    {
+      "path": "docs/verification/t1356/harness/seed-collected-dashboard.mts",
+      "sha256": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+    }
+  ],
+  "previousTrueReceipt": {
+    "path": "docs/verification/t1362/harness/SAFE_MANIFEST-attempt01.json",
+    "sha256": "1e25dd692a649e70b3514821571fb9effc34672f4473c0ca6763711c80a1ecdc",
+    "collectionSubmissions": 16,
+    "selftest": "selftest-attempt01.json",
+    "notOverwritten": true
+  },
+  "selftest": {
+    "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-kgo5q6ku",
+    "startedAt": "2026-10-18T19:49:53.203140+00:00",
+    "pgPort": 41478,
+    "hostPort": 41479,
+    "nextStarted": false,
+    "attempt": 2,
+    "helperPid": 4681,
+    "pgPid": 4711,
+    "dashboardExit": 0,
+    "dashboardLog": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-kgo5q6ku/dashboard.log",
+    "work-entryExit": 0,
+    "work-entryLog": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-kgo5q6ku/work-entry.log",
+    "passed": true,
+    "manifest": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-kgo5q6ku/work-entry-seed-safe.json",
+    "actualCounts": {
+      "before": {
+        "collection_runs": 14,
+        "ai_tasks": 0,
+        "projects": 2,
+        "publications": 2
+      },
+      "after": {
+        "collection_runs": 18,
+        "ai_tasks": 0,
+        "projects": 2,
+        "publications": 2
+      },
+      "expectedCollectionSubmissions": 18,
+      "expectedAiTasks": 0
+    },
+    "sameGroupAccountCount": 2,
+    "typedMetricKeys": [
+      "play_count",
+      "like_count"
+    ],
+    "pureTypedByProject": {
+      "t1362-normal": {
+        "groupId": "grp-t1356-76905e4c-8b1d-4064-aa7a-6e94c1369e4d",
+        "groupName": "零浏览仍是已知值",
+        "accountId": "acct-t1356-4024a6f1-f418-41d3-9781-29cb932a997f",
+        "projectCount": 0,
+        "query": {
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-07",
+          "platform": "xiaohongshu"
+        },
+        "browseViews": 0
+      },
+      "t1362-minimum": {
+        "groupId": "grp-t1362-e1dc8117-b99a-4107-9424-fbb12985eef1",
+        "groupName": "窄窗独立已采集作品",
+        "accountId": "acct-t1362-0ca29921-2ca8-4f02-a641-df975b13569f",
+        "projectCount": 0,
+        "query": {
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-07",
+          "platform": "xiaohongshu"
+        },
+        "browseViews": 0,
+        "catalogWorkId": "work-t1362-f9b3bc3a-8e5e-459c-a930-011a4a917247",
+        "metricId": "metric-t1362-f58c672d-ea1a-4773-bdc5-6ef0d9a55ffd"
+      }
+    },
+    "helperExit": 0,
+    "helperLog": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1362-work-entry-selftest-kgo5q6ku.helper.log",
+    "stopped": {
+      "reason": "SIGTERM",
+      "at": "2026-10-18T19:50:13.419Z",
+      "helperPid": 4681,
+      "pgPid": 4711,
+      "failures": [],
+      "originalRootRetained": true
+    },
+    "finishedAt": "2026-10-18T19:50:13.503356+00:00"
+  },
+  "readback": {
+    "sameGroupAccounts": [
+      "acct-t1356-424a2219-7a75-4ef3-bf79-b4fa7e3b6c9a",
+      "acct-t1362-716d4b0a-1072-4a3d-9492-59495e9e980e"
+    ],
+    "newCatalog": {
+      "accountId": "acct-t1362-716d4b0a-1072-4a3d-9492-59495e9e980e",
+      "workId": "work-t1362-c0c90b41-a061-41dd-a2e9-903a2b631442",
+      "total": 1,
+      "currentTotal": 1,
+      "publishedAt": "2026-10-03T04:00:00.000Z",
+      "legacyProjectId": null,
+      "publicationId": null,
+      "legacyPublicationId": null
+    },
+    "metrics": [
+      {
+        "id": "metric-t1362-2b0536a8-441f-4186-af2e-bea1cf32de87",
+        "platformWorkId": "work-t1362-c0c90b41-a061-41dd-a2e9-903a2b631442",
+        "metricKey": "play_count",
+        "value": 7,
+        "availability": "available",
+        "unit": "count",
+        "window": {
+          "kind": "lifetime"
+        }
+      },
+      {
+        "id": "metric-t1362-ba5022ff-15f4-41b5-bc50-a626f25f59cc",
+        "platformWorkId": "work-t1362-c0c90b41-a061-41dd-a2e9-903a2b631442",
+        "metricKey": "like_count",
+        "value": 0,
+        "availability": "available",
+        "unit": "count",
+        "window": {
+          "kind": "lifetime"
+        }
+      }
+    ],
+    "pureTyped": {
+      "groupId": "grp-t1356-76905e4c-8b1d-4064-aa7a-6e94c1369e4d",
+      "groupName": "零浏览仍是已知值",
+      "accountId": "acct-t1356-4024a6f1-f418-41d3-9781-29cb932a997f",
+      "projectCount": 0,
+      "query": {
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-07",
+        "platform": "xiaohongshu"
+      },
+      "browseViews": 0
+    },
+    "pureTypedByProject": {
+      "t1362-normal": {
+        "groupId": "grp-t1356-76905e4c-8b1d-4064-aa7a-6e94c1369e4d",
+        "groupName": "零浏览仍是已知值",
+        "accountId": "acct-t1356-4024a6f1-f418-41d3-9781-29cb932a997f",
+        "projectCount": 0,
+        "query": {
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-07",
+          "platform": "xiaohongshu"
+        },
+        "browseViews": 0
+      },
+      "t1362-minimum": {
+        "groupId": "grp-t1362-e1dc8117-b99a-4107-9424-fbb12985eef1",
+        "groupName": "窄窗独立已采集作品",
+        "accountId": "acct-t1362-0ca29921-2ca8-4f02-a641-df975b13569f",
+        "projectCount": 0,
+        "query": {
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-07",
+          "platform": "xiaohongshu"
+        },
+        "browseViews": 0,
+        "catalogWorkId": "work-t1362-f9b3bc3a-8e5e-459c-a930-011a4a917247",
+        "metricId": "metric-t1362-f58c672d-ea1a-4773-bdc5-6ef0d9a55ffd"
+      }
+    },
+    "emptyGroup": {
+      "groupId": "grp-t1355-608cb4aa-5647-4564-b5ce-e299c70f2978",
+      "groupName": "绑定验收当前组",
+      "memberCount": 0
+    }
+  },
+  "verificationBoundary": "仅真实service四次提交读回自验；不签Next HTTP/UI或人工确认，未操作任何onboarding状态"
+}

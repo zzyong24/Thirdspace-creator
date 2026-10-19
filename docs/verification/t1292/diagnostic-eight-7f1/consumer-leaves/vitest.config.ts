@@ -1,0 +1,2 @@
+import base from "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/vitest.config.ts";
+export default {...base,root:"/Users/zyongzhu/Workbase/Thirdspace-creator/frontend",cacheDir:"/Volumes/T7-MacData/CodexBuilds/t1292-eight-lessons-7f1d4ec9-20261017/consumer-leaves-cache",test:{...base.test,include:["src/features/intelligence/intelligence-workbench.test.tsx","src/server/chat-execution-stream.test.ts"],testTimeout:120000,hookTimeout:180000,globalTimeout:30600000,maxWorkers:1,fileParallelism:false,retry:0}};

@@ -2,15 +2,17 @@
 import * as React from 'react';
 import type {PublicationTrafficResource} from '@creatoros/contract';
 import {client} from '@/lib/contract-client';
-import {readCurrentAccountId} from '@/lib/http-transport';
+import {readCurrentAccountId,readCurrentGroupId} from '@/lib/http-transport';
 import {describeUserError} from '@/lib/ai-error-humanize';
 const statuses={pending:'后台补采中',succeeded:'已采集',failed:'读取失败，可重试',needs_reconnect:'需重新连接抖音',unavailable:'平台暂未提供来源数据'};
-export function TrafficSourcesPanel({projectId}:{projectId:string}){
+export function TrafficSourcesPanel({projectId,publicationIds}:{projectId:string;publicationIds?:readonly string[]}){
  const [items,setItems]=React.useState<PublicationTrafficResource[]>([]),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null);
  const [accountId,setAccountId]=React.useState<string|null>(()=>readCurrentAccountId());
+ const [groupId,setGroupId]=React.useState<string|null>(()=>readCurrentGroupId());
+ const selection=publicationIds?JSON.stringify([...publicationIds].sort()):null;
  const operations=React.useRef<{load:()=>Promise<void>;refresh:()=>Promise<void>}|null>(null);
  React.useEffect(()=>{
-  const onAccount=()=>setAccountId(readCurrentAccountId());
+  const onAccount=()=>{setAccountId(readCurrentAccountId());setGroupId(readCurrentGroupId());};
   window.addEventListener('creatoros:accounts-changed',onAccount);
   window.addEventListener('storage',onAccount);
   onAccount();
@@ -18,9 +20,9 @@ export function TrafficSourcesPanel({projectId}:{projectId:string}){
  },[]);
  React.useEffect(()=>{
   // 每个项目/账号使用独立寿命，旧请求即使晚到也不能改写新页面或重新开启轮询。
-  let active=true,requestSequence=0,refreshing=false,pending=false;
+  let active=true,requestSequence=0,refreshing=false,pending=false,reading=false,readAgain=false;
   let timer:ReturnType<typeof setTimeout>|undefined;
-  const current=()=>active&&accountId===readCurrentAccountId();
+  const current=()=>active&&accountId===readCurrentAccountId()&&groupId===readCurrentGroupId();
   setItems([]);setError(null);setMessage(null);setBusy(false);
   const schedule=()=>{
    clearTimeout(timer);
@@ -28,17 +30,21 @@ export function TrafficSourcesPanel({projectId}:{projectId:string}){
   };
   const load=async()=>{
    if(!current())return;
+   if(reading){readAgain=true;return;}
+   reading=true;
    clearTimeout(timer);
    const sequence=++requestSequence;
    try{
     const result=await client.getProjectTrafficSources({params:{projectId},query:undefined,body:undefined});
     if(!current()||sequence!==requestSequence)return;
-    setItems(result.items);setError(null);
-    pending=result.items.some(row=>row.status==='pending');
+    const selected=selection?new Set<string>(JSON.parse(selection)):null;
+    const visible=selected?result.items.filter(row=>selected.has(row.publicationId)):result.items;
+    setItems(visible);setError(null);
+    pending=visible.some(row=>row.status==='pending');
    }catch(e){
     if(!current()||sequence!==requestSequence)return;
     setError(describeUserError(e,'流量来源暂时无法读取，基础指标不受影响'));
-   }finally{if(current()&&sequence===requestSequence)schedule();}
+   }finally{reading=false;if(current()&&sequence===requestSequence){if(readAgain){readAgain=false;void load();}else schedule();}}
   };
   const refresh=async()=>{
    if(!current()||refreshing)return;
@@ -56,7 +62,7 @@ export function TrafficSourcesPanel({projectId}:{projectId:string}){
   operations.current={load,refresh};
   void load();
   return()=>{active=false;clearTimeout(timer);operations.current=null;};
- },[projectId,accountId]);
+ },[projectId,accountId,groupId,selection]);
  return <section aria-label="流量来源" className="rounded-card border border-border bg-surface p-4">
   <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-sm font-semibold">观众从哪里来</h2><p className="mt-1 text-xs text-text-subtle">对照播放量与留存看来源构成，占比不等于曝光数。</p></div><div className="flex gap-2"><button type="button" disabled={busy} onClick={()=>void operations.current?.refresh()} className="rounded-control border border-border px-3 py-1.5 text-xs disabled:opacity-50">{busy?'正在排队…':'补采 / 重试'}</button><button type="button" onClick={()=>void operations.current?.load()} className="rounded-control border border-border px-3 py-1.5 text-xs">刷新结果</button></div></div>
   {error?<p role="alert" className="mt-3 text-xs text-destructive">{error}</p>:null}

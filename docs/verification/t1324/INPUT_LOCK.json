@@ -1,0 +1,191 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1324",
+  "baseHead": "43b69578c2af45c9d31b3eda023a5cf5144e6a44",
+  "specPath": "docs/features/t1324-group-execution-preview-context.md",
+  "specSha256": "00d6753735e11349912603df4bf1c8d11feda389351f8348007db527aa897fb4",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6819,
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "frontend/src/lib/request-context.server.ts",
+      "bytes": 11031,
+      "sha256": "b4b218b8ad70fa4c627bb11e9c5f60f6de39a3afd8f7e6dd851210ac842b0c31"
+    },
+    {
+      "path": "frontend/src/lib/request-context.server.test.ts",
+      "bytes": 14844,
+      "sha256": "23d1631f83d2225c0e32f902254ef2af8308d627de45dcbd9f3e1c75ae747925"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "frontend/src/app/api/v1/auth/_session.ts",
+      "bytes": 2980,
+      "sha256": "70d683efd30b08c9d8d3178348ea18badbd1afe613715bd4f94f52081e28c2c6"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.service.ts",
+      "bytes": 14543,
+      "sha256": "b3cc28576842960a6b2420eea674c1fd5f849278aa3682be19b7f4803e4d83f8"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.service.test.ts",
+      "bytes": 15278,
+      "sha256": "9a06c86999a176b416123ded5ee28b7812868d6008020d80ff5db767665c24ea"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.schema.ts",
+      "bytes": 6014,
+      "sha256": "6b0f2b0c98aea2c75010a29170a55d699a8eaa54c91b19193595584fb6d60dcf"
+    },
+    {
+      "path": "backend/src/modules/execution/sandbox.ts",
+      "bytes": 13487,
+      "sha256": "e145b6d8edc4c86e540a1f442325433c7a8730deb4620dbdd1181b108c63ebae"
+    },
+    {
+      "path": "backend/src/modules/execution/sandbox.test.ts",
+      "bytes": 9868,
+      "sha256": "b0569a2dc6972a8a5a21eeecc989c5839c39eff6e9a719962debb6a1b7a86345"
+    },
+    {
+      "path": "backend/src/modules/execution/run-execution-task.ts",
+      "bytes": 14811,
+      "sha256": "945813fe76daced636583336702d8f5cbae1cb0aa3ff8cf7dd90377f65c1586d"
+    },
+    {
+      "path": "backend/src/modules/execution/executor-registry.ts",
+      "bytes": 6930,
+      "sha256": "a464fbefde73e4c267844ecec9a7eefe1583066bc3bd881430f9656dedabeb58"
+    },
+    {
+      "path": "backend/src/modules/execution/video-render/executor.ts",
+      "bytes": 53378,
+      "sha256": "9f78615bcb06cd447fb5d5762792ccc0405f0189bd4b367f81fcdfb604053e71"
+    },
+    {
+      "path": "backend/src/modules/execution/video-render/template.ts",
+      "bytes": 131514,
+      "sha256": "a808c1ee3e0d6840468a420849636a537d03db055c29e7eb11c3c55b0fea98fc"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "bytes": 3372,
+      "sha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da"
+    },
+    {
+      "path": "contract/src/request-context.ts",
+      "bytes": 1986,
+      "sha256": "85de07c38e0acb8baed83aa7f1d46b19a68d589b61cd1a9be6d936735c4e61ba"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.test.ts",
+      "bytes": 753,
+      "sha256": "6e8fbf006b3becb33ec5291bedac6dbfe3a5267c67e9e70c1cd9d793959aa7d0"
+    },
+    {
+      "path": "docs/verification/t1313/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "c7be348612b2d9cc105a84c2dcca84a5a8b252c7cc4a49be38b03d357fd6b152"
+    },
+    {
+      "path": "docs/verification/t1316/public/runner/16-preview-readonly-diagnosis.spec.cjs",
+      "bytes": 2107,
+      "sha256": "8186464bbd12dc2dc0a586a18fafc6488a03e0e70283c8958898e61014009fec"
+    },
+    {
+      "path": "docs/verification/t1316/runs/final-0e1dc6228/U16-preview-diagnosis/original-preview-response.json",
+      "bytes": 196,
+      "sha256": "2320bd77b003bf82bf3416b2f12d0af6edc865d5ca9434faf7ed90b16795fe35"
+    },
+    {
+      "path": "docs/verification/t1316/runs/final-0e1dc6228/U16-preview-diagnosis/video-state.json",
+      "bytes": 245,
+      "sha256": "8fcef1c512a415d2eab9ff44e7b093a833adb35b30177a2a35c8991bcc4d2fc5"
+    },
+    {
+      "path": "docs/verification/t1316/runs/final-0e1dc6228/U16-preview-diagnosis/task-before.json",
+      "bytes": 9651,
+      "sha256": "49d9eb852ee771f043264de0c163fcdbd39d1e31c3d98c311ae68c876d3c708d"
+    },
+    {
+      "path": "docs/verification/t1316/runs/final-0e1dc6228/U16-preview-diagnosis/task-after.json",
+      "bytes": 9651,
+      "sha256": "49d9eb852ee771f043264de0c163fcdbd39d1e31c3d98c311ae68c876d3c708d"
+    },
+    {
+      "path": "docs/verification/t1324/ANALYSIS.md",
+      "bytes": 2581,
+      "sha256": "ac1bda317920f5048fe8adbf7fd45814eafb5420df582065931cacb05a795732"
+    },
+    {
+      "path": "docs/verification/t1324/INITIAL_REVIEW.md",
+      "bytes": 4842,
+      "sha256": "0d31edf1d4a8452b5e3fb4369f518b9baeada54837e988f6540f95b675528526"
+    },
+    {
+      "path": "docs/features/t1324-group-execution-preview-context.md",
+      "bytes": 4960,
+      "sha256": "00d6753735e11349912603df4bf1c8d11feda389351f8348007db527aa897fb4"
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.ts",
+      "bytes": 2869,
+      "sha256": "06358e495be63bb3feb79f298082f219f87631713a7044bad27348e8087d1a37"
+    },
+    {
+      "path": "docs/verification/t1324/MODULE_SCOPE.json",
+      "bytes": 3493,
+      "sha256": "a268db1f815b2b477d830a931e480792ba0e46f2337017f168f79bdf76f40263"
+    },
+    {
+      "path": "docs/verification/t1324/DEC.md",
+      "bytes": 968,
+      "sha256": "c383e8eab5249de4d37c61e1949d77a89e7846c9bd60f605c3e5119345d9f0ba"
+    }
+  ],
+  "plannedNewTest": "frontend/src/server/__module_integration__/group-execution-preview.persistence-client.test.ts",
+  "workerNote": "preview GET沿真实runtime/task/results/file；若夹具使用worker，运行前另精确绑定既有immutable产物，不build/dist。"
+}

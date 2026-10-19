@@ -1,0 +1,2499 @@
+{
+  "sourceRun": "docs/verification/t1298/browser/runs/prepared-78ec5dfefb16c9e9",
+  "sourceHead": "8dbccad6a1b359bd69cd0d43a68988b1b4d37b95",
+  "ownerVerified": true,
+  "shutdownVerified": true,
+  "originalDbOpened": false,
+  "scratch": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1299-owned-snapshot-fF8hJl",
+  "readOnlyTransaction": true,
+  "taskIds": [
+    "execution-task-fa0bc3ff-f621-4ed1-ac08-ff78f6ed5705",
+    "execution-task-4152a389-0dfb-4a00-b584-e3080f820885",
+    "execution-task-518ea201-af7b-4bae-8157-6a5244d5037c",
+    "execution-task-e74fed2e-4f4b-4ef2-addb-6ba2b1f58c25"
+  ],
+  "rows": [
+    {
+      "label": "article-reorganize",
+      "id": "execution-task-fa0bc3ff-f621-4ed1-ac08-ff78f6ed5705",
+      "createdAt": "2026-10-15T12:27:16.434Z",
+      "updatedAt": "2026-10-15T12:28:09.794Z",
+      "payloadUtf8Bytes": 505176,
+      "input": {
+        "systemUtf8Bytes": 28459,
+        "systemCharacters": 13341,
+        "messagesUtf8Bytes": 513,
+        "messageCount": 1,
+        "toolsUtf8Bytes": 336290,
+        "toolCount": 52,
+        "tools": [
+          {
+            "name": "work.editor.propose",
+            "descriptionBytes": 2454,
+            "parametersBytes": 192692,
+            "totalBytes": 195339
+          },
+          {
+            "name": "system.action.propose",
+            "descriptionBytes": 327,
+            "parametersBytes": 45297,
+            "totalBytes": 45814
+          },
+          {
+            "name": "system.read",
+            "descriptionBytes": 262,
+            "parametersBytes": 24304,
+            "totalBytes": 24742
+          },
+          {
+            "name": "canvas.create.propose",
+            "descriptionBytes": 341,
+            "parametersBytes": 5186,
+            "totalBytes": 5717
+          },
+          {
+            "name": "script.draft",
+            "descriptionBytes": 1153,
+            "parametersBytes": 2630,
+            "totalBytes": 4005
+          },
+          {
+            "name": "material.generate",
+            "descriptionBytes": 1604,
+            "parametersBytes": 1787,
+            "totalBytes": 3609
+          },
+          {
+            "name": "web.read",
+            "descriptionBytes": 2059,
+            "parametersBytes": 1145,
+            "totalBytes": 3412
+          },
+          {
+            "name": "local.read",
+            "descriptionBytes": 1957,
+            "parametersBytes": 697,
+            "totalBytes": 2824
+          },
+          {
+            "name": "cover.generate",
+            "descriptionBytes": 1346,
+            "parametersBytes": 1165,
+            "totalBytes": 2723
+          },
+          {
+            "name": "work.editor.read",
+            "descriptionBytes": 399,
+            "parametersBytes": 1594,
+            "totalBytes": 2179
+          },
+          {
+            "name": "positioning.generate",
+            "descriptionBytes": 674,
+            "parametersBytes": 1264,
+            "totalBytes": 2166
+          },
+          {
+            "name": "script.patch",
+            "descriptionBytes": 617,
+            "parametersBytes": 1187,
+            "totalBytes": 1982
+          },
+          {
+            "name": "context.artifact.text",
+            "descriptionBytes": 513,
+            "parametersBytes": 966,
+            "totalBytes": 1649
+          },
+          {
+            "name": "topic.generate",
+            "descriptionBytes": 812,
+            "parametersBytes": 602,
+            "totalBytes": 1636
+          },
+          {
+            "name": "video.edit.render",
+            "descriptionBytes": 435,
+            "parametersBytes": 1025,
+            "totalBytes": 1630
+          },
+          {
+            "name": "redfox.query",
+            "descriptionBytes": 666,
+            "parametersBytes": 745,
+            "totalBytes": 1619
+          },
+          {
+            "name": "calibration.diagnose",
+            "descriptionBytes": 759,
+            "parametersBytes": 594,
+            "totalBytes": 1584
+          },
+          {
+            "name": "material.screenshot",
+            "descriptionBytes": 852,
+            "parametersBytes": 509,
+            "totalBytes": 1534
+          },
+          {
+            "name": "topic.enrich",
+            "descriptionBytes": 715,
+            "parametersBytes": 539,
+            "totalBytes": 1476
+          },
+          {
+            "name": "context.knowledge.text",
+            "descriptionBytes": 607,
+            "parametersBytes": 696,
+            "totalBytes": 1474
+          },
+          {
+            "name": "learning.capture",
+            "descriptionBytes": 574,
+            "parametersBytes": 718,
+            "totalBytes": 1461
+          },
+          {
+            "name": "brief.fill",
+            "descriptionBytes": 418,
+            "parametersBytes": 771,
+            "totalBytes": 1352
+          },
+          {
+            "name": "research.autonomous",
+            "descriptionBytes": 570,
+            "parametersBytes": 516,
+            "totalBytes": 1314
+          },
+          {
+            "name": "publish.package",
+            "descriptionBytes": 815,
+            "parametersBytes": 169,
+            "totalBytes": 1200
+          },
+          {
+            "name": "plan.update",
+            "descriptionBytes": 134,
+            "parametersBytes": 878,
+            "totalBytes": 1176
+          },
+          {
+            "name": "context.learnings",
+            "descriptionBytes": 456,
+            "parametersBytes": 552,
+            "totalBytes": 1174
+          },
+          {
+            "name": "context.materials",
+            "descriptionBytes": 629,
+            "parametersBytes": 340,
+            "totalBytes": 1135
+          },
+          {
+            "name": "review.script",
+            "descriptionBytes": 656,
+            "parametersBytes": 242,
+            "totalBytes": 1112
+          },
+          {
+            "name": "local.tools",
+            "descriptionBytes": 498,
+            "parametersBytes": 400,
+            "totalBytes": 1069
+          },
+          {
+            "name": "creatoros.guide",
+            "descriptionBytes": 750,
+            "parametersBytes": 140,
+            "totalBytes": 1054
+          },
+          {
+            "name": "context.projects.search",
+            "descriptionBytes": 203,
+            "parametersBytes": 675,
+            "totalBytes": 1050
+          },
+          {
+            "name": "script.hooks",
+            "descriptionBytes": 179,
+            "parametersBytes": 595,
+            "totalBytes": 986
+          },
+          {
+            "name": "context.positioning.detail",
+            "descriptionBytes": 698,
+            "parametersBytes": 62,
+            "totalBytes": 935
+          },
+          {
+            "name": "local.workspace",
+            "descriptionBytes": 671,
+            "parametersBytes": 76,
+            "totalBytes": 922
+          },
+          {
+            "name": "context.knowledge.detail",
+            "descriptionBytes": 458,
+            "parametersBytes": 285,
+            "totalBytes": 916
+          },
+          {
+            "name": "knowledge.distill",
+            "descriptionBytes": 385,
+            "parametersBytes": 294,
+            "totalBytes": 904
+          },
+          {
+            "name": "planning.thesis",
+            "descriptionBytes": 427,
+            "parametersBytes": 250,
+            "totalBytes": 893
+          },
+          {
+            "name": "context.publications",
+            "descriptionBytes": 465,
+            "parametersBytes": 240,
+            "totalBytes": 874
+          },
+          {
+            "name": "context.metrics",
+            "descriptionBytes": 387,
+            "parametersBytes": 286,
+            "totalBytes": 837
+          },
+          {
+            "name": "context.artifacts",
+            "descriptionBytes": 345,
+            "parametersBytes": 297,
+            "totalBytes": 808
+          },
+          {
+            "name": "context.project.detail",
+            "descriptionBytes": 331,
+            "parametersBytes": 282,
+            "totalBytes": 784
+          },
+          {
+            "name": "tool.result.read",
+            "descriptionBytes": 453,
+            "parametersBytes": 146,
+            "totalBytes": 764
+          },
+          {
+            "name": "context.project.lifecycle",
+            "descriptionBytes": 301,
+            "parametersBytes": 282,
+            "totalBytes": 757
+          },
+          {
+            "name": "material.gather",
+            "descriptionBytes": 375,
+            "parametersBytes": 151,
+            "totalBytes": 736
+          },
+          {
+            "name": "context.candidates",
+            "descriptionBytes": 324,
+            "parametersBytes": 240,
+            "totalBytes": 731
+          },
+          {
+            "name": "context.knowledge",
+            "descriptionBytes": 268,
+            "parametersBytes": 240,
+            "totalBytes": 674
+          },
+          {
+            "name": "context.review.report",
+            "descriptionBytes": 219,
+            "parametersBytes": 259,
+            "totalBytes": 648
+          },
+          {
+            "name": "system.features",
+            "descriptionBytes": 138,
+            "parametersBytes": 299,
+            "totalBytes": 617
+          },
+          {
+            "name": "context.comments",
+            "descriptionBytes": 228,
+            "parametersBytes": 203,
+            "totalBytes": 596
+          },
+          {
+            "name": "context.predictions",
+            "descriptionBytes": 354,
+            "parametersBytes": 62,
+            "totalBytes": 584
+          },
+          {
+            "name": "history.read",
+            "descriptionBytes": 224,
+            "parametersBytes": 147,
+            "totalBytes": 532
+          },
+          {
+            "name": "skill.read",
+            "descriptionBytes": 203,
+            "parametersBytes": 166,
+            "totalBytes": 528
+          }
+        ],
+        "messageShape": [
+          {
+            "role": "user",
+            "bytes": 511,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          }
+        ],
+        "contextPolicyVersion": 2
+      },
+      "calls": [
+        {
+          "id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "sequence": 1,
+          "kind": "external_agent",
+          "status": "settled",
+          "parentCallId": null,
+          "createdAt": "2026-10-15T12:27:19.320Z",
+          "updatedAt": "2026-10-15T12:28:09.794Z",
+          "usage": {
+            "inputTokens": 264417,
+            "totalTokens": 265647,
+            "outputTokens": 1230,
+            "thoughtTokens": 444,
+            "cachedReadTokens": 216192
+          },
+          "totalTokens": 265647,
+          "resultUtf8Bytes": 314,
+          "providerResultUtf8Bytes": 749,
+          "toolName": null,
+          "protocolKind": "codex-app-server",
+          "providerUsage": {
+            "inputTokens": 264417,
+            "totalTokens": 265647,
+            "outputTokens": 1230,
+            "thoughtTokens": 444,
+            "cachedReadTokens": 216192
+          }
+        },
+        {
+          "id": "call_d69ef1ee-fe59-4bf6-bed2-2b1fc5977467",
+          "sequence": 2,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "createdAt": "2026-10-15T12:27:37.091Z",
+          "updatedAt": "2026-10-15T12:27:37.391Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 6633,
+          "providerResultUtf8Bytes": 298,
+          "toolName": "work.editor.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_ef856d23-33ab-4051-98c1-c093a39a550e",
+          "sequence": 3,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "createdAt": "2026-10-15T12:27:41.639Z",
+          "updatedAt": "2026-10-15T12:27:41.880Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 1412,
+          "providerResultUtf8Bytes": 286,
+          "toolName": "context.project.lifecycle",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_c3f2f44d-35b6-49f9-ac4e-329e383fa188",
+          "sequence": 4,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "createdAt": "2026-10-15T12:27:43.653Z",
+          "updatedAt": "2026-10-15T12:27:43.868Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5759,
+          "providerResultUtf8Bytes": 271,
+          "toolName": "skill.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_86ac81e7-7c61-418a-8fdf-f8141c4dbe39",
+          "sequence": 5,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "createdAt": "2026-10-15T12:27:47.942Z",
+          "updatedAt": "2026-10-15T12:27:48.165Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 1037,
+          "providerResultUtf8Bytes": 282,
+          "toolName": "context.artifact.text",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_46a8ca31-1bec-4642-99d6-58ba4977b122",
+          "sequence": 6,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "createdAt": "2026-10-15T12:28:05.273Z",
+          "updatedAt": "2026-10-15T12:28:05.651Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5371,
+          "providerResultUtf8Bytes": 301,
+          "toolName": "work.editor.propose",
+          "protocolKind": null,
+          "providerUsage": null
+        }
+      ],
+      "streamSummary": [
+        {
+          "sequence": 1,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.read",
+          "bytes": 150
+        },
+        {
+          "sequence": 2,
+          "call_id": "call_d69ef1ee-fe59-4bf6-bed2-2b1fc5977467",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 7168
+        },
+        {
+          "sequence": 3,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 1,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-input-available",
+          "tool_name": "context.project.lifecycle",
+          "bytes": 174
+        },
+        {
+          "sequence": 4,
+          "call_id": "call_ef856d23-33ab-4051-98c1-c093a39a550e",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 1695
+        },
+        {
+          "sequence": 5,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 2,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-input-available",
+          "tool_name": "skill.read",
+          "bytes": 153
+        },
+        {
+          "sequence": 6,
+          "call_id": "call_c3f2f44d-35b6-49f9-ac4e-329e383fa188",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5962
+        },
+        {
+          "sequence": 7,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 3,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-input-available",
+          "tool_name": "context.artifact.text",
+          "bytes": 221
+        },
+        {
+          "sequence": 8,
+          "call_id": "call_86ac81e7-7c61-418a-8fdf-f8141c4dbe39",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 1252
+        },
+        {
+          "sequence": 9,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 4,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.propose",
+          "bytes": 1730
+        },
+        {
+          "sequence": 10,
+          "call_id": "call_46a8ca31-1bec-4642-99d6-58ba4977b122",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5731
+        },
+        {
+          "sequence": 11,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 5,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "text-start",
+          "tool_name": null,
+          "bytes": 82
+        },
+        {
+          "sequence": 12,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 6,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "text-delta",
+          "tool_name": null,
+          "bytes": 411
+        },
+        {
+          "sequence": 13,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 7,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "text-end",
+          "tool_name": null,
+          "bytes": 80
+        },
+        {
+          "sequence": 14,
+          "call_id": "call_c5a5b114-3a91-4cfd-95a3-aee50cc78a36",
+          "call_index": 8,
+          "created_at": "2026-10-15T12:28:09.794Z",
+          "type": "finish",
+          "tool_name": null,
+          "bytes": 471
+        }
+      ],
+      "businessTiming": [
+        {
+          "id": "ai-task-e4fc2705-3cfd-4eb8-9778-24bbb6700388",
+          "status": "succeeded",
+          "requested_at": "2026-10-15T12:27:16.420Z",
+          "started_at": null,
+          "model_call_started_at": null,
+          "completed_at": "2026-10-15T12:28:09.794Z"
+        }
+      ]
+    },
+    {
+      "label": "article-correct",
+      "id": "execution-task-4152a389-0dfb-4a00-b584-e3080f820885",
+      "createdAt": "2026-10-15T12:28:17.466Z",
+      "updatedAt": "2026-10-15T12:28:54.927Z",
+      "payloadUtf8Bytes": 529227,
+      "input": {
+        "systemUtf8Bytes": 28817,
+        "systemCharacters": 13527,
+        "messagesUtf8Bytes": 24803,
+        "messageCount": 4,
+        "toolsUtf8Bytes": 336290,
+        "toolCount": 52,
+        "tools": [
+          {
+            "name": "work.editor.propose",
+            "descriptionBytes": 2454,
+            "parametersBytes": 192692,
+            "totalBytes": 195339
+          },
+          {
+            "name": "system.action.propose",
+            "descriptionBytes": 327,
+            "parametersBytes": 45297,
+            "totalBytes": 45814
+          },
+          {
+            "name": "system.read",
+            "descriptionBytes": 262,
+            "parametersBytes": 24304,
+            "totalBytes": 24742
+          },
+          {
+            "name": "canvas.create.propose",
+            "descriptionBytes": 341,
+            "parametersBytes": 5186,
+            "totalBytes": 5717
+          },
+          {
+            "name": "script.draft",
+            "descriptionBytes": 1153,
+            "parametersBytes": 2630,
+            "totalBytes": 4005
+          },
+          {
+            "name": "material.generate",
+            "descriptionBytes": 1604,
+            "parametersBytes": 1787,
+            "totalBytes": 3609
+          },
+          {
+            "name": "web.read",
+            "descriptionBytes": 2059,
+            "parametersBytes": 1145,
+            "totalBytes": 3412
+          },
+          {
+            "name": "local.read",
+            "descriptionBytes": 1957,
+            "parametersBytes": 697,
+            "totalBytes": 2824
+          },
+          {
+            "name": "cover.generate",
+            "descriptionBytes": 1346,
+            "parametersBytes": 1165,
+            "totalBytes": 2723
+          },
+          {
+            "name": "work.editor.read",
+            "descriptionBytes": 399,
+            "parametersBytes": 1594,
+            "totalBytes": 2179
+          },
+          {
+            "name": "positioning.generate",
+            "descriptionBytes": 674,
+            "parametersBytes": 1264,
+            "totalBytes": 2166
+          },
+          {
+            "name": "script.patch",
+            "descriptionBytes": 617,
+            "parametersBytes": 1187,
+            "totalBytes": 1982
+          },
+          {
+            "name": "context.artifact.text",
+            "descriptionBytes": 513,
+            "parametersBytes": 966,
+            "totalBytes": 1649
+          },
+          {
+            "name": "topic.generate",
+            "descriptionBytes": 812,
+            "parametersBytes": 602,
+            "totalBytes": 1636
+          },
+          {
+            "name": "video.edit.render",
+            "descriptionBytes": 435,
+            "parametersBytes": 1025,
+            "totalBytes": 1630
+          },
+          {
+            "name": "redfox.query",
+            "descriptionBytes": 666,
+            "parametersBytes": 745,
+            "totalBytes": 1619
+          },
+          {
+            "name": "calibration.diagnose",
+            "descriptionBytes": 759,
+            "parametersBytes": 594,
+            "totalBytes": 1584
+          },
+          {
+            "name": "material.screenshot",
+            "descriptionBytes": 852,
+            "parametersBytes": 509,
+            "totalBytes": 1534
+          },
+          {
+            "name": "topic.enrich",
+            "descriptionBytes": 715,
+            "parametersBytes": 539,
+            "totalBytes": 1476
+          },
+          {
+            "name": "context.knowledge.text",
+            "descriptionBytes": 607,
+            "parametersBytes": 696,
+            "totalBytes": 1474
+          },
+          {
+            "name": "learning.capture",
+            "descriptionBytes": 574,
+            "parametersBytes": 718,
+            "totalBytes": 1461
+          },
+          {
+            "name": "brief.fill",
+            "descriptionBytes": 418,
+            "parametersBytes": 771,
+            "totalBytes": 1352
+          },
+          {
+            "name": "research.autonomous",
+            "descriptionBytes": 570,
+            "parametersBytes": 516,
+            "totalBytes": 1314
+          },
+          {
+            "name": "publish.package",
+            "descriptionBytes": 815,
+            "parametersBytes": 169,
+            "totalBytes": 1200
+          },
+          {
+            "name": "plan.update",
+            "descriptionBytes": 134,
+            "parametersBytes": 878,
+            "totalBytes": 1176
+          },
+          {
+            "name": "context.learnings",
+            "descriptionBytes": 456,
+            "parametersBytes": 552,
+            "totalBytes": 1174
+          },
+          {
+            "name": "context.materials",
+            "descriptionBytes": 629,
+            "parametersBytes": 340,
+            "totalBytes": 1135
+          },
+          {
+            "name": "review.script",
+            "descriptionBytes": 656,
+            "parametersBytes": 242,
+            "totalBytes": 1112
+          },
+          {
+            "name": "local.tools",
+            "descriptionBytes": 498,
+            "parametersBytes": 400,
+            "totalBytes": 1069
+          },
+          {
+            "name": "creatoros.guide",
+            "descriptionBytes": 750,
+            "parametersBytes": 140,
+            "totalBytes": 1054
+          },
+          {
+            "name": "context.projects.search",
+            "descriptionBytes": 203,
+            "parametersBytes": 675,
+            "totalBytes": 1050
+          },
+          {
+            "name": "script.hooks",
+            "descriptionBytes": 179,
+            "parametersBytes": 595,
+            "totalBytes": 986
+          },
+          {
+            "name": "context.positioning.detail",
+            "descriptionBytes": 698,
+            "parametersBytes": 62,
+            "totalBytes": 935
+          },
+          {
+            "name": "local.workspace",
+            "descriptionBytes": 671,
+            "parametersBytes": 76,
+            "totalBytes": 922
+          },
+          {
+            "name": "context.knowledge.detail",
+            "descriptionBytes": 458,
+            "parametersBytes": 285,
+            "totalBytes": 916
+          },
+          {
+            "name": "knowledge.distill",
+            "descriptionBytes": 385,
+            "parametersBytes": 294,
+            "totalBytes": 904
+          },
+          {
+            "name": "planning.thesis",
+            "descriptionBytes": 427,
+            "parametersBytes": 250,
+            "totalBytes": 893
+          },
+          {
+            "name": "context.publications",
+            "descriptionBytes": 465,
+            "parametersBytes": 240,
+            "totalBytes": 874
+          },
+          {
+            "name": "context.metrics",
+            "descriptionBytes": 387,
+            "parametersBytes": 286,
+            "totalBytes": 837
+          },
+          {
+            "name": "context.artifacts",
+            "descriptionBytes": 345,
+            "parametersBytes": 297,
+            "totalBytes": 808
+          },
+          {
+            "name": "context.project.detail",
+            "descriptionBytes": 331,
+            "parametersBytes": 282,
+            "totalBytes": 784
+          },
+          {
+            "name": "tool.result.read",
+            "descriptionBytes": 453,
+            "parametersBytes": 146,
+            "totalBytes": 764
+          },
+          {
+            "name": "context.project.lifecycle",
+            "descriptionBytes": 301,
+            "parametersBytes": 282,
+            "totalBytes": 757
+          },
+          {
+            "name": "material.gather",
+            "descriptionBytes": 375,
+            "parametersBytes": 151,
+            "totalBytes": 736
+          },
+          {
+            "name": "context.candidates",
+            "descriptionBytes": 324,
+            "parametersBytes": 240,
+            "totalBytes": 731
+          },
+          {
+            "name": "context.knowledge",
+            "descriptionBytes": 268,
+            "parametersBytes": 240,
+            "totalBytes": 674
+          },
+          {
+            "name": "context.review.report",
+            "descriptionBytes": 219,
+            "parametersBytes": 259,
+            "totalBytes": 648
+          },
+          {
+            "name": "system.features",
+            "descriptionBytes": 138,
+            "parametersBytes": 299,
+            "totalBytes": 617
+          },
+          {
+            "name": "context.comments",
+            "descriptionBytes": 228,
+            "parametersBytes": 203,
+            "totalBytes": 596
+          },
+          {
+            "name": "context.predictions",
+            "descriptionBytes": 354,
+            "parametersBytes": 62,
+            "totalBytes": 584
+          },
+          {
+            "name": "history.read",
+            "descriptionBytes": 224,
+            "parametersBytes": 147,
+            "totalBytes": 532
+          },
+          {
+            "name": "skill.read",
+            "descriptionBytes": 203,
+            "parametersBytes": 166,
+            "totalBytes": 528
+          }
+        ],
+        "messageShape": [
+          {
+            "role": "user",
+            "bytes": 511,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          },
+          {
+            "role": "assistant",
+            "bytes": 2677,
+            "contentType": "object",
+            "partTypes": [
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "text"
+            ]
+          },
+          {
+            "role": "tool",
+            "bytes": 21305,
+            "contentType": "object",
+            "partTypes": [
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result"
+            ]
+          },
+          {
+            "role": "user",
+            "bytes": 305,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          }
+        ],
+        "contextPolicyVersion": 2
+      },
+      "calls": [
+        {
+          "id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "sequence": 1,
+          "kind": "external_agent",
+          "status": "settled",
+          "parentCallId": null,
+          "createdAt": "2026-10-15T12:28:19.952Z",
+          "updatedAt": "2026-10-15T12:28:54.927Z",
+          "usage": {
+            "inputTokens": 253143,
+            "totalTokens": 253730,
+            "outputTokens": 587,
+            "thoughtTokens": 23,
+            "cachedReadTokens": 198784
+          },
+          "totalTokens": 253730,
+          "resultUtf8Bytes": 292,
+          "providerResultUtf8Bytes": 727,
+          "toolName": null,
+          "protocolKind": "codex-app-server",
+          "providerUsage": {
+            "inputTokens": 253143,
+            "totalTokens": 253730,
+            "outputTokens": 587,
+            "thoughtTokens": 23,
+            "cachedReadTokens": 198784
+          }
+        },
+        {
+          "id": "call_ec60f209-55da-4b03-a876-af997dccbfd0",
+          "sequence": 2,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "createdAt": "2026-10-15T12:28:36.255Z",
+          "updatedAt": "2026-10-15T12:28:36.568Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 6875,
+          "providerResultUtf8Bytes": 298,
+          "toolName": "work.editor.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_894c2304-797b-47a1-9dc9-9189e5e14a2b",
+          "sequence": 3,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "createdAt": "2026-10-15T12:28:39.588Z",
+          "updatedAt": "2026-10-15T12:28:39.841Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 1413,
+          "providerResultUtf8Bytes": 286,
+          "toolName": "context.project.lifecycle",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_be184752-1c37-474f-919b-0df8d4c55a36",
+          "sequence": 4,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "createdAt": "2026-10-15T12:28:43.150Z",
+          "updatedAt": "2026-10-15T12:28:43.410Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5759,
+          "providerResultUtf8Bytes": 271,
+          "toolName": "skill.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_abefb688-ec15-4118-a522-c1b862f9f835",
+          "sequence": 5,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "createdAt": "2026-10-15T12:28:51.109Z",
+          "updatedAt": "2026-10-15T12:28:51.483Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5102,
+          "providerResultUtf8Bytes": 301,
+          "toolName": "work.editor.propose",
+          "protocolKind": null,
+          "providerUsage": null
+        }
+      ],
+      "streamSummary": [
+        {
+          "sequence": 1,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.read",
+          "bytes": 150
+        },
+        {
+          "sequence": 2,
+          "call_id": "call_ec60f209-55da-4b03-a876-af997dccbfd0",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 7410
+        },
+        {
+          "sequence": 3,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 1,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-input-available",
+          "tool_name": "context.project.lifecycle",
+          "bytes": 174
+        },
+        {
+          "sequence": 4,
+          "call_id": "call_894c2304-797b-47a1-9dc9-9189e5e14a2b",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 1696
+        },
+        {
+          "sequence": 5,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 2,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-input-available",
+          "tool_name": "skill.read",
+          "bytes": 153
+        },
+        {
+          "sequence": 6,
+          "call_id": "call_be184752-1c37-474f-919b-0df8d4c55a36",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5962
+        },
+        {
+          "sequence": 7,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 3,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.propose",
+          "bytes": 1441
+        },
+        {
+          "sequence": 8,
+          "call_id": "call_abefb688-ec15-4118-a522-c1b862f9f835",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5452
+        },
+        {
+          "sequence": 9,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 4,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "text-start",
+          "tool_name": null,
+          "bytes": 82
+        },
+        {
+          "sequence": 10,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 5,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "text-delta",
+          "tool_name": null,
+          "bytes": 391
+        },
+        {
+          "sequence": 11,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 6,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "text-end",
+          "tool_name": null,
+          "bytes": 80
+        },
+        {
+          "sequence": 12,
+          "call_id": "call_4360357a-7945-463f-9ac2-f06da0e27bf7",
+          "call_index": 7,
+          "created_at": "2026-10-15T12:28:54.927Z",
+          "type": "finish",
+          "tool_name": null,
+          "bytes": 471
+        }
+      ],
+      "businessTiming": [
+        {
+          "id": "ai-task-22a55695-07ad-4799-8928-45d68d842977",
+          "status": "succeeded",
+          "requested_at": "2026-10-15T12:28:17.456Z",
+          "started_at": null,
+          "model_call_started_at": null,
+          "completed_at": "2026-10-15T12:28:54.927Z"
+        }
+      ]
+    },
+    {
+      "label": "graphic-reorganize",
+      "id": "execution-task-518ea201-af7b-4bae-8157-6a5244d5037c",
+      "createdAt": "2026-10-15T12:29:00.375Z",
+      "updatedAt": "2026-10-15T12:30:09.392Z",
+      "payloadUtf8Bytes": 553109,
+      "input": {
+        "systemUtf8Bytes": 28726,
+        "systemCharacters": 13522,
+        "messagesUtf8Bytes": 47516,
+        "messageCount": 7,
+        "toolsUtf8Bytes": 336290,
+        "toolCount": 52,
+        "tools": [
+          {
+            "name": "work.editor.propose",
+            "descriptionBytes": 2454,
+            "parametersBytes": 192692,
+            "totalBytes": 195339
+          },
+          {
+            "name": "system.action.propose",
+            "descriptionBytes": 327,
+            "parametersBytes": 45297,
+            "totalBytes": 45814
+          },
+          {
+            "name": "system.read",
+            "descriptionBytes": 262,
+            "parametersBytes": 24304,
+            "totalBytes": 24742
+          },
+          {
+            "name": "canvas.create.propose",
+            "descriptionBytes": 341,
+            "parametersBytes": 5186,
+            "totalBytes": 5717
+          },
+          {
+            "name": "script.draft",
+            "descriptionBytes": 1153,
+            "parametersBytes": 2630,
+            "totalBytes": 4005
+          },
+          {
+            "name": "material.generate",
+            "descriptionBytes": 1604,
+            "parametersBytes": 1787,
+            "totalBytes": 3609
+          },
+          {
+            "name": "web.read",
+            "descriptionBytes": 2059,
+            "parametersBytes": 1145,
+            "totalBytes": 3412
+          },
+          {
+            "name": "local.read",
+            "descriptionBytes": 1957,
+            "parametersBytes": 697,
+            "totalBytes": 2824
+          },
+          {
+            "name": "cover.generate",
+            "descriptionBytes": 1346,
+            "parametersBytes": 1165,
+            "totalBytes": 2723
+          },
+          {
+            "name": "work.editor.read",
+            "descriptionBytes": 399,
+            "parametersBytes": 1594,
+            "totalBytes": 2179
+          },
+          {
+            "name": "positioning.generate",
+            "descriptionBytes": 674,
+            "parametersBytes": 1264,
+            "totalBytes": 2166
+          },
+          {
+            "name": "script.patch",
+            "descriptionBytes": 617,
+            "parametersBytes": 1187,
+            "totalBytes": 1982
+          },
+          {
+            "name": "context.artifact.text",
+            "descriptionBytes": 513,
+            "parametersBytes": 966,
+            "totalBytes": 1649
+          },
+          {
+            "name": "topic.generate",
+            "descriptionBytes": 812,
+            "parametersBytes": 602,
+            "totalBytes": 1636
+          },
+          {
+            "name": "video.edit.render",
+            "descriptionBytes": 435,
+            "parametersBytes": 1025,
+            "totalBytes": 1630
+          },
+          {
+            "name": "redfox.query",
+            "descriptionBytes": 666,
+            "parametersBytes": 745,
+            "totalBytes": 1619
+          },
+          {
+            "name": "calibration.diagnose",
+            "descriptionBytes": 759,
+            "parametersBytes": 594,
+            "totalBytes": 1584
+          },
+          {
+            "name": "material.screenshot",
+            "descriptionBytes": 852,
+            "parametersBytes": 509,
+            "totalBytes": 1534
+          },
+          {
+            "name": "topic.enrich",
+            "descriptionBytes": 715,
+            "parametersBytes": 539,
+            "totalBytes": 1476
+          },
+          {
+            "name": "context.knowledge.text",
+            "descriptionBytes": 607,
+            "parametersBytes": 696,
+            "totalBytes": 1474
+          },
+          {
+            "name": "learning.capture",
+            "descriptionBytes": 574,
+            "parametersBytes": 718,
+            "totalBytes": 1461
+          },
+          {
+            "name": "brief.fill",
+            "descriptionBytes": 418,
+            "parametersBytes": 771,
+            "totalBytes": 1352
+          },
+          {
+            "name": "research.autonomous",
+            "descriptionBytes": 570,
+            "parametersBytes": 516,
+            "totalBytes": 1314
+          },
+          {
+            "name": "publish.package",
+            "descriptionBytes": 815,
+            "parametersBytes": 169,
+            "totalBytes": 1200
+          },
+          {
+            "name": "plan.update",
+            "descriptionBytes": 134,
+            "parametersBytes": 878,
+            "totalBytes": 1176
+          },
+          {
+            "name": "context.learnings",
+            "descriptionBytes": 456,
+            "parametersBytes": 552,
+            "totalBytes": 1174
+          },
+          {
+            "name": "context.materials",
+            "descriptionBytes": 629,
+            "parametersBytes": 340,
+            "totalBytes": 1135
+          },
+          {
+            "name": "review.script",
+            "descriptionBytes": 656,
+            "parametersBytes": 242,
+            "totalBytes": 1112
+          },
+          {
+            "name": "local.tools",
+            "descriptionBytes": 498,
+            "parametersBytes": 400,
+            "totalBytes": 1069
+          },
+          {
+            "name": "creatoros.guide",
+            "descriptionBytes": 750,
+            "parametersBytes": 140,
+            "totalBytes": 1054
+          },
+          {
+            "name": "context.projects.search",
+            "descriptionBytes": 203,
+            "parametersBytes": 675,
+            "totalBytes": 1050
+          },
+          {
+            "name": "script.hooks",
+            "descriptionBytes": 179,
+            "parametersBytes": 595,
+            "totalBytes": 986
+          },
+          {
+            "name": "context.positioning.detail",
+            "descriptionBytes": 698,
+            "parametersBytes": 62,
+            "totalBytes": 935
+          },
+          {
+            "name": "local.workspace",
+            "descriptionBytes": 671,
+            "parametersBytes": 76,
+            "totalBytes": 922
+          },
+          {
+            "name": "context.knowledge.detail",
+            "descriptionBytes": 458,
+            "parametersBytes": 285,
+            "totalBytes": 916
+          },
+          {
+            "name": "knowledge.distill",
+            "descriptionBytes": 385,
+            "parametersBytes": 294,
+            "totalBytes": 904
+          },
+          {
+            "name": "planning.thesis",
+            "descriptionBytes": 427,
+            "parametersBytes": 250,
+            "totalBytes": 893
+          },
+          {
+            "name": "context.publications",
+            "descriptionBytes": 465,
+            "parametersBytes": 240,
+            "totalBytes": 874
+          },
+          {
+            "name": "context.metrics",
+            "descriptionBytes": 387,
+            "parametersBytes": 286,
+            "totalBytes": 837
+          },
+          {
+            "name": "context.artifacts",
+            "descriptionBytes": 345,
+            "parametersBytes": 297,
+            "totalBytes": 808
+          },
+          {
+            "name": "context.project.detail",
+            "descriptionBytes": 331,
+            "parametersBytes": 282,
+            "totalBytes": 784
+          },
+          {
+            "name": "tool.result.read",
+            "descriptionBytes": 453,
+            "parametersBytes": 146,
+            "totalBytes": 764
+          },
+          {
+            "name": "context.project.lifecycle",
+            "descriptionBytes": 301,
+            "parametersBytes": 282,
+            "totalBytes": 757
+          },
+          {
+            "name": "material.gather",
+            "descriptionBytes": 375,
+            "parametersBytes": 151,
+            "totalBytes": 736
+          },
+          {
+            "name": "context.candidates",
+            "descriptionBytes": 324,
+            "parametersBytes": 240,
+            "totalBytes": 731
+          },
+          {
+            "name": "context.knowledge",
+            "descriptionBytes": 268,
+            "parametersBytes": 240,
+            "totalBytes": 674
+          },
+          {
+            "name": "context.review.report",
+            "descriptionBytes": 219,
+            "parametersBytes": 259,
+            "totalBytes": 648
+          },
+          {
+            "name": "system.features",
+            "descriptionBytes": 138,
+            "parametersBytes": 299,
+            "totalBytes": 617
+          },
+          {
+            "name": "context.comments",
+            "descriptionBytes": 228,
+            "parametersBytes": 203,
+            "totalBytes": 596
+          },
+          {
+            "name": "context.predictions",
+            "descriptionBytes": 354,
+            "parametersBytes": 62,
+            "totalBytes": 584
+          },
+          {
+            "name": "history.read",
+            "descriptionBytes": 224,
+            "parametersBytes": 147,
+            "totalBytes": 532
+          },
+          {
+            "name": "skill.read",
+            "descriptionBytes": 203,
+            "parametersBytes": 166,
+            "totalBytes": 528
+          }
+        ],
+        "messageShape": [
+          {
+            "role": "user",
+            "bytes": 511,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          },
+          {
+            "role": "assistant",
+            "bytes": 2677,
+            "contentType": "object",
+            "partTypes": [
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "text"
+            ]
+          },
+          {
+            "role": "tool",
+            "bytes": 21305,
+            "contentType": "object",
+            "partTypes": [
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result"
+            ]
+          },
+          {
+            "role": "user",
+            "bytes": 305,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          },
+          {
+            "role": "assistant",
+            "bytes": 2176,
+            "contentType": "object",
+            "partTypes": [
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "text"
+            ]
+          },
+          {
+            "role": "tool",
+            "bytes": 20026,
+            "contentType": "object",
+            "partTypes": [
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result"
+            ]
+          },
+          {
+            "role": "user",
+            "bytes": 508,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          }
+        ],
+        "contextPolicyVersion": 2
+      },
+      "calls": [
+        {
+          "id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "sequence": 1,
+          "kind": "external_agent",
+          "status": "settled",
+          "parentCallId": null,
+          "createdAt": "2026-10-15T12:29:02.816Z",
+          "updatedAt": "2026-10-15T12:30:09.392Z",
+          "usage": {
+            "inputTokens": 399040,
+            "totalTokens": 400087,
+            "outputTokens": 1047,
+            "thoughtTokens": 296,
+            "cachedReadTokens": 337920
+          },
+          "totalTokens": 400087,
+          "resultUtf8Bytes": 389,
+          "providerResultUtf8Bytes": 826,
+          "toolName": null,
+          "protocolKind": "codex-app-server",
+          "providerUsage": {
+            "inputTokens": 399040,
+            "totalTokens": 400087,
+            "outputTokens": 1047,
+            "thoughtTokens": 296,
+            "cachedReadTokens": 337920
+          }
+        },
+        {
+          "id": "call_56e7fc72-9ada-4dd8-9c47-9aaf9538997f",
+          "sequence": 2,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "createdAt": "2026-10-15T12:29:26.118Z",
+          "updatedAt": "2026-10-15T12:29:26.437Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5077,
+          "providerResultUtf8Bytes": 298,
+          "toolName": "work.editor.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_89992378-dd98-4704-9ef9-07dfd0f96b1d",
+          "sequence": 3,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "createdAt": "2026-10-15T12:29:29.288Z",
+          "updatedAt": "2026-10-15T12:29:29.538Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 1413,
+          "providerResultUtf8Bytes": 286,
+          "toolName": "context.project.lifecycle",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_b55ff3f3-30dd-4bba-b792-bcc48c7bf2e6",
+          "sequence": 4,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "createdAt": "2026-10-15T12:29:32.668Z",
+          "updatedAt": "2026-10-15T12:29:32.898Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5759,
+          "providerResultUtf8Bytes": 271,
+          "toolName": "skill.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_62481866-46df-402a-9641-4a260c362ec5",
+          "sequence": 5,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "createdAt": "2026-10-15T12:29:47.507Z",
+          "updatedAt": "2026-10-15T12:29:47.735Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 1037,
+          "providerResultUtf8Bytes": 282,
+          "toolName": "context.artifact.text",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_add6ea84-741e-4f15-b75e-b829d9a78ea8",
+          "sequence": 6,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "createdAt": "2026-10-15T12:30:04.219Z",
+          "updatedAt": "2026-10-15T12:30:04.578Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5114,
+          "providerResultUtf8Bytes": 301,
+          "toolName": "work.editor.propose",
+          "protocolKind": null,
+          "providerUsage": null
+        }
+      ],
+      "streamSummary": [
+        {
+          "sequence": 1,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.read",
+          "bytes": 150
+        },
+        {
+          "sequence": 2,
+          "call_id": "call_56e7fc72-9ada-4dd8-9c47-9aaf9538997f",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5541
+        },
+        {
+          "sequence": 3,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 1,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-input-available",
+          "tool_name": "context.project.lifecycle",
+          "bytes": 174
+        },
+        {
+          "sequence": 4,
+          "call_id": "call_89992378-dd98-4704-9ef9-07dfd0f96b1d",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 1696
+        },
+        {
+          "sequence": 5,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 2,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-input-available",
+          "tool_name": "skill.read",
+          "bytes": 153
+        },
+        {
+          "sequence": 6,
+          "call_id": "call_b55ff3f3-30dd-4bba-b792-bcc48c7bf2e6",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5962
+        },
+        {
+          "sequence": 7,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 3,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-input-available",
+          "tool_name": "context.artifact.text",
+          "bytes": 221
+        },
+        {
+          "sequence": 8,
+          "call_id": "call_62481866-46df-402a-9641-4a260c362ec5",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 1252
+        },
+        {
+          "sequence": 9,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 4,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.propose",
+          "bytes": 1695
+        },
+        {
+          "sequence": 10,
+          "call_id": "call_add6ea84-741e-4f15-b75e-b829d9a78ea8",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5437
+        },
+        {
+          "sequence": 11,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 5,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "text-start",
+          "tool_name": null,
+          "bytes": 82
+        },
+        {
+          "sequence": 12,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 6,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "text-delta",
+          "tool_name": null,
+          "bytes": 488
+        },
+        {
+          "sequence": 13,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 7,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "text-end",
+          "tool_name": null,
+          "bytes": 80
+        },
+        {
+          "sequence": 14,
+          "call_id": "call_da771488-3a50-4505-8b66-05dd172fde9c",
+          "call_index": 8,
+          "created_at": "2026-10-15T12:30:09.392Z",
+          "type": "finish",
+          "tool_name": null,
+          "bytes": 471
+        }
+      ],
+      "businessTiming": [
+        {
+          "id": "ai-task-179a0ce3-bce9-450f-83ac-138dbd9568eb",
+          "status": "succeeded",
+          "requested_at": "2026-10-15T12:29:00.363Z",
+          "started_at": null,
+          "model_call_started_at": null,
+          "completed_at": "2026-10-15T12:30:09.392Z"
+        }
+      ]
+    },
+    {
+      "label": "graphic-correct",
+      "id": "execution-task-e74fed2e-4f4b-4ef2-addb-6ba2b1f58c25",
+      "createdAt": "2026-10-15T12:30:16.760Z",
+      "updatedAt": "2026-10-15T12:31:03.573Z",
+      "payloadUtf8Bytes": 575364,
+      "input": {
+        "systemUtf8Bytes": 29084,
+        "systemCharacters": 13708,
+        "messagesUtf8Bytes": 70043,
+        "messageCount": 10,
+        "toolsUtf8Bytes": 336290,
+        "toolCount": 52,
+        "tools": [
+          {
+            "name": "work.editor.propose",
+            "descriptionBytes": 2454,
+            "parametersBytes": 192692,
+            "totalBytes": 195339
+          },
+          {
+            "name": "system.action.propose",
+            "descriptionBytes": 327,
+            "parametersBytes": 45297,
+            "totalBytes": 45814
+          },
+          {
+            "name": "system.read",
+            "descriptionBytes": 262,
+            "parametersBytes": 24304,
+            "totalBytes": 24742
+          },
+          {
+            "name": "canvas.create.propose",
+            "descriptionBytes": 341,
+            "parametersBytes": 5186,
+            "totalBytes": 5717
+          },
+          {
+            "name": "script.draft",
+            "descriptionBytes": 1153,
+            "parametersBytes": 2630,
+            "totalBytes": 4005
+          },
+          {
+            "name": "material.generate",
+            "descriptionBytes": 1604,
+            "parametersBytes": 1787,
+            "totalBytes": 3609
+          },
+          {
+            "name": "web.read",
+            "descriptionBytes": 2059,
+            "parametersBytes": 1145,
+            "totalBytes": 3412
+          },
+          {
+            "name": "local.read",
+            "descriptionBytes": 1957,
+            "parametersBytes": 697,
+            "totalBytes": 2824
+          },
+          {
+            "name": "cover.generate",
+            "descriptionBytes": 1346,
+            "parametersBytes": 1165,
+            "totalBytes": 2723
+          },
+          {
+            "name": "work.editor.read",
+            "descriptionBytes": 399,
+            "parametersBytes": 1594,
+            "totalBytes": 2179
+          },
+          {
+            "name": "positioning.generate",
+            "descriptionBytes": 674,
+            "parametersBytes": 1264,
+            "totalBytes": 2166
+          },
+          {
+            "name": "script.patch",
+            "descriptionBytes": 617,
+            "parametersBytes": 1187,
+            "totalBytes": 1982
+          },
+          {
+            "name": "context.artifact.text",
+            "descriptionBytes": 513,
+            "parametersBytes": 966,
+            "totalBytes": 1649
+          },
+          {
+            "name": "topic.generate",
+            "descriptionBytes": 812,
+            "parametersBytes": 602,
+            "totalBytes": 1636
+          },
+          {
+            "name": "video.edit.render",
+            "descriptionBytes": 435,
+            "parametersBytes": 1025,
+            "totalBytes": 1630
+          },
+          {
+            "name": "redfox.query",
+            "descriptionBytes": 666,
+            "parametersBytes": 745,
+            "totalBytes": 1619
+          },
+          {
+            "name": "calibration.diagnose",
+            "descriptionBytes": 759,
+            "parametersBytes": 594,
+            "totalBytes": 1584
+          },
+          {
+            "name": "material.screenshot",
+            "descriptionBytes": 852,
+            "parametersBytes": 509,
+            "totalBytes": 1534
+          },
+          {
+            "name": "topic.enrich",
+            "descriptionBytes": 715,
+            "parametersBytes": 539,
+            "totalBytes": 1476
+          },
+          {
+            "name": "context.knowledge.text",
+            "descriptionBytes": 607,
+            "parametersBytes": 696,
+            "totalBytes": 1474
+          },
+          {
+            "name": "learning.capture",
+            "descriptionBytes": 574,
+            "parametersBytes": 718,
+            "totalBytes": 1461
+          },
+          {
+            "name": "brief.fill",
+            "descriptionBytes": 418,
+            "parametersBytes": 771,
+            "totalBytes": 1352
+          },
+          {
+            "name": "research.autonomous",
+            "descriptionBytes": 570,
+            "parametersBytes": 516,
+            "totalBytes": 1314
+          },
+          {
+            "name": "publish.package",
+            "descriptionBytes": 815,
+            "parametersBytes": 169,
+            "totalBytes": 1200
+          },
+          {
+            "name": "plan.update",
+            "descriptionBytes": 134,
+            "parametersBytes": 878,
+            "totalBytes": 1176
+          },
+          {
+            "name": "context.learnings",
+            "descriptionBytes": 456,
+            "parametersBytes": 552,
+            "totalBytes": 1174
+          },
+          {
+            "name": "context.materials",
+            "descriptionBytes": 629,
+            "parametersBytes": 340,
+            "totalBytes": 1135
+          },
+          {
+            "name": "review.script",
+            "descriptionBytes": 656,
+            "parametersBytes": 242,
+            "totalBytes": 1112
+          },
+          {
+            "name": "local.tools",
+            "descriptionBytes": 498,
+            "parametersBytes": 400,
+            "totalBytes": 1069
+          },
+          {
+            "name": "creatoros.guide",
+            "descriptionBytes": 750,
+            "parametersBytes": 140,
+            "totalBytes": 1054
+          },
+          {
+            "name": "context.projects.search",
+            "descriptionBytes": 203,
+            "parametersBytes": 675,
+            "totalBytes": 1050
+          },
+          {
+            "name": "script.hooks",
+            "descriptionBytes": 179,
+            "parametersBytes": 595,
+            "totalBytes": 986
+          },
+          {
+            "name": "context.positioning.detail",
+            "descriptionBytes": 698,
+            "parametersBytes": 62,
+            "totalBytes": 935
+          },
+          {
+            "name": "local.workspace",
+            "descriptionBytes": 671,
+            "parametersBytes": 76,
+            "totalBytes": 922
+          },
+          {
+            "name": "context.knowledge.detail",
+            "descriptionBytes": 458,
+            "parametersBytes": 285,
+            "totalBytes": 916
+          },
+          {
+            "name": "knowledge.distill",
+            "descriptionBytes": 385,
+            "parametersBytes": 294,
+            "totalBytes": 904
+          },
+          {
+            "name": "planning.thesis",
+            "descriptionBytes": 427,
+            "parametersBytes": 250,
+            "totalBytes": 893
+          },
+          {
+            "name": "context.publications",
+            "descriptionBytes": 465,
+            "parametersBytes": 240,
+            "totalBytes": 874
+          },
+          {
+            "name": "context.metrics",
+            "descriptionBytes": 387,
+            "parametersBytes": 286,
+            "totalBytes": 837
+          },
+          {
+            "name": "context.artifacts",
+            "descriptionBytes": 345,
+            "parametersBytes": 297,
+            "totalBytes": 808
+          },
+          {
+            "name": "context.project.detail",
+            "descriptionBytes": 331,
+            "parametersBytes": 282,
+            "totalBytes": 784
+          },
+          {
+            "name": "tool.result.read",
+            "descriptionBytes": 453,
+            "parametersBytes": 146,
+            "totalBytes": 764
+          },
+          {
+            "name": "context.project.lifecycle",
+            "descriptionBytes": 301,
+            "parametersBytes": 282,
+            "totalBytes": 757
+          },
+          {
+            "name": "material.gather",
+            "descriptionBytes": 375,
+            "parametersBytes": 151,
+            "totalBytes": 736
+          },
+          {
+            "name": "context.candidates",
+            "descriptionBytes": 324,
+            "parametersBytes": 240,
+            "totalBytes": 731
+          },
+          {
+            "name": "context.knowledge",
+            "descriptionBytes": 268,
+            "parametersBytes": 240,
+            "totalBytes": 674
+          },
+          {
+            "name": "context.review.report",
+            "descriptionBytes": 219,
+            "parametersBytes": 259,
+            "totalBytes": 648
+          },
+          {
+            "name": "system.features",
+            "descriptionBytes": 138,
+            "parametersBytes": 299,
+            "totalBytes": 617
+          },
+          {
+            "name": "context.comments",
+            "descriptionBytes": 228,
+            "parametersBytes": 203,
+            "totalBytes": 596
+          },
+          {
+            "name": "context.predictions",
+            "descriptionBytes": 354,
+            "parametersBytes": 62,
+            "totalBytes": 584
+          },
+          {
+            "name": "history.read",
+            "descriptionBytes": 224,
+            "parametersBytes": 147,
+            "totalBytes": 532
+          },
+          {
+            "name": "skill.read",
+            "descriptionBytes": 203,
+            "parametersBytes": 166,
+            "totalBytes": 528
+          }
+        ],
+        "messageShape": [
+          {
+            "role": "user",
+            "bytes": 511,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          },
+          {
+            "role": "assistant",
+            "bytes": 2677,
+            "contentType": "object",
+            "partTypes": [
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "text"
+            ]
+          },
+          {
+            "role": "tool",
+            "bytes": 21305,
+            "contentType": "object",
+            "partTypes": [
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result"
+            ]
+          },
+          {
+            "role": "user",
+            "bytes": 305,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          },
+          {
+            "role": "assistant",
+            "bytes": 2176,
+            "contentType": "object",
+            "partTypes": [
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "text"
+            ]
+          },
+          {
+            "role": "tool",
+            "bytes": 20026,
+            "contentType": "object",
+            "partTypes": [
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result"
+            ]
+          },
+          {
+            "role": "user",
+            "bytes": 508,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          },
+          {
+            "role": "assistant",
+            "bytes": 2726,
+            "contentType": "object",
+            "partTypes": [
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "tool-call",
+              "text"
+            ]
+          },
+          {
+            "role": "tool",
+            "bytes": 19493,
+            "contentType": "object",
+            "partTypes": [
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result",
+              "tool-result"
+            ]
+          },
+          {
+            "role": "user",
+            "bytes": 305,
+            "contentType": "object",
+            "partTypes": [
+              "text"
+            ]
+          }
+        ],
+        "contextPolicyVersion": 2
+      },
+      "calls": [
+        {
+          "id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "sequence": 1,
+          "kind": "external_agent",
+          "status": "settled",
+          "parentCallId": null,
+          "createdAt": "2026-10-15T12:30:18.820Z",
+          "updatedAt": "2026-10-15T12:31:03.573Z",
+          "usage": {
+            "inputTokens": 315014,
+            "totalTokens": 315579,
+            "outputTokens": 565,
+            "thoughtTokens": 13,
+            "cachedReadTokens": 281344
+          },
+          "totalTokens": 315579,
+          "resultUtf8Bytes": 268,
+          "providerResultUtf8Bytes": 703,
+          "toolName": null,
+          "protocolKind": "codex-app-server",
+          "providerUsage": {
+            "inputTokens": 315014,
+            "totalTokens": 315579,
+            "outputTokens": 565,
+            "thoughtTokens": 13,
+            "cachedReadTokens": 281344
+          }
+        },
+        {
+          "id": "call_3b7fc2d1-2e16-47c9-b075-29d5a6a0178b",
+          "sequence": 2,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "createdAt": "2026-10-15T12:30:41.052Z",
+          "updatedAt": "2026-10-15T12:30:41.371Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5261,
+          "providerResultUtf8Bytes": 298,
+          "toolName": "work.editor.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_6cc3f7a6-8048-4502-b3cb-5153f58b892b",
+          "sequence": 3,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "createdAt": "2026-10-15T12:30:45.806Z",
+          "updatedAt": "2026-10-15T12:30:46.067Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 1414,
+          "providerResultUtf8Bytes": 286,
+          "toolName": "context.project.lifecycle",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_27d6f095-1bfb-4dd1-896c-a76b0a85d354",
+          "sequence": 4,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "createdAt": "2026-10-15T12:30:48.520Z",
+          "updatedAt": "2026-10-15T12:30:48.754Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 5759,
+          "providerResultUtf8Bytes": 271,
+          "toolName": "skill.read",
+          "protocolKind": null,
+          "providerUsage": null
+        },
+        {
+          "id": "call_99b4c756-aabf-4fdd-b599-d876cc487e1e",
+          "sequence": 5,
+          "kind": "external_tool",
+          "status": "settled",
+          "parentCallId": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "createdAt": "2026-10-15T12:30:58.244Z",
+          "updatedAt": "2026-10-15T12:30:58.629Z",
+          "usage": null,
+          "totalTokens": null,
+          "resultUtf8Bytes": 4781,
+          "providerResultUtf8Bytes": 301,
+          "toolName": "work.editor.propose",
+          "protocolKind": null,
+          "providerUsage": null
+        }
+      ],
+      "streamSummary": [
+        {
+          "sequence": 1,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.read",
+          "bytes": 150
+        },
+        {
+          "sequence": 2,
+          "call_id": "call_3b7fc2d1-2e16-47c9-b075-29d5a6a0178b",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5725
+        },
+        {
+          "sequence": 3,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 1,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-input-available",
+          "tool_name": "context.project.lifecycle",
+          "bytes": 174
+        },
+        {
+          "sequence": 4,
+          "call_id": "call_6cc3f7a6-8048-4502-b3cb-5153f58b892b",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 1697
+        },
+        {
+          "sequence": 5,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 2,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-input-available",
+          "tool_name": "skill.read",
+          "bytes": 153
+        },
+        {
+          "sequence": 6,
+          "call_id": "call_27d6f095-1bfb-4dd1-896c-a76b0a85d354",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5962
+        },
+        {
+          "sequence": 7,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 3,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-input-available",
+          "tool_name": "work.editor.propose",
+          "bytes": 1375
+        },
+        {
+          "sequence": 8,
+          "call_id": "call_99b4c756-aabf-4fdd-b599-d876cc487e1e",
+          "call_index": 0,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "tool-output-available",
+          "tool_name": null,
+          "bytes": 5094
+        },
+        {
+          "sequence": 9,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 4,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "text-start",
+          "tool_name": null,
+          "bytes": 82
+        },
+        {
+          "sequence": 10,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 5,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "text-delta",
+          "tool_name": null,
+          "bytes": 367
+        },
+        {
+          "sequence": 11,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 6,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "text-end",
+          "tool_name": null,
+          "bytes": 80
+        },
+        {
+          "sequence": 12,
+          "call_id": "call_3ffde022-f851-4ea5-b257-ac2de377c860",
+          "call_index": 7,
+          "created_at": "2026-10-15T12:31:03.573Z",
+          "type": "finish",
+          "tool_name": null,
+          "bytes": 471
+        }
+      ],
+      "businessTiming": [
+        {
+          "id": "ai-task-dc88ed3d-2d0c-4390-83ce-b9d9892b1a1e",
+          "status": "succeeded",
+          "requested_at": "2026-10-15T12:30:16.748Z",
+          "started_at": null,
+          "model_call_started_at": null,
+          "completed_at": "2026-10-15T12:31:03.573Z"
+        }
+      ]
+    }
+  ],
+  "rolledBack": true,
+  "closed": true,
+  "observedAt": "2026-10-15T13:54:59.334Z",
+  "scratchRemovedAfterClose": true
+}

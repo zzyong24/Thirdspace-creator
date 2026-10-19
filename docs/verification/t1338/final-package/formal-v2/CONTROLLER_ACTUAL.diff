@@ -1,0 +1,49 @@
+--- original-RO-owned-fixture.mjs
++++ formal-v2/runner/owned-fixture.mjs
+@@ -3,8 +3,14 @@
+ import crypto from 'node:crypto';
+ import {spawnSync} from 'node:child_process';
+ const allowed={
+- T1338:{root:'/Volumes/T7-MacData/CodexBuilds/t1338-legacy-work-parent-20261017-11c9cca0/cases/red-v2/legacy',key:'/Volumes/T7-MacData/CodexBuilds/t1338-legacy-work-parent-20261017-11c9cca0/cases/red-v2/legacy/private-master-key'},
+- T1339:{root:'/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1',key:'/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/fixture-application-key'},
++  "T1338": {
++    "root": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-13dd66ce-907831dcd2/candidate/completed-fixture-t1338/t1300-candidate-DZW8rG",
++    "key": "/Volumes/T7-MacData/CodexBuilds/t1338-legacy-work-parent-20261017-11c9cca0/cases/red-v2/legacy/private-master-key"
++  },
++  "T1339": {
++    "root": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-13dd66ce-907831dcd2/candidate/completed-fixture-t1339/t1300-candidate-E85KCQ",
++    "key": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/fixture-application-key"
++  }
+ };
+ function fail(message){throw Error('COMPLETED_FIXTURE_'+message);}
+ export function fileSha(file){const h=crypto.createHash('sha256'),fd=fs.openSync(file,'r'),chunk=Buffer.alloc(1024*1024);try{let n;while((n=fs.readSync(fd,chunk,0,chunk.length,null))>0)h.update(chunk.subarray(0,n));}finally{fs.closeSync(fd);chunk.fill(0);}return h.digest('hex');}
+@@ -13,19 +19,20 @@
+ function proof(ref){if(!ref||typeof ref.path!=='string'||typeof ref.sha256!=='string')fail('PROOF_REQUIRED');realOwned(ref.path);if(fileSha(ref.path)!==ref.sha256)fail('PROOF_DRIFT');return JSON.parse(fs.readFileSync(ref.path,'utf8'));}
+ export function loadCompletedOwnedFixture(manifestPath){
+  realOwned(path.resolve(manifestPath));const f=JSON.parse(fs.readFileSync(manifestPath,'utf8')),a=allowed[f.task];
+- if(f.schema!=='creatoros-completed-owned-test-fixture/v1'||!a||f.sourceRoot!==a.root||f.keyPath!==a.key||f.originalAgenticUnknown!==false||f.noConcurrentSourceProcess!==true)fail('EXACT_INPUT_BINDING_REQUIRED');
++ if(f.schema!=='creatoros-completed-owned-ui-fixture/v1'||!a||f.sourceRoot!==a.root||f.keyPath!==a.key||f.originalAgenticUnknown!==false||f.noConcurrentSourceProcess!==true)fail('EXACT_UI_SOURCE_BINDING_REQUIRED');
+  realOwned(f.sourceRoot);realOwned(f.keyPath);assertNoDatabaseProcess(f.sourceRoot);if((fs.statSync(f.keyPath).mode&0o777)!==0o600)fail('ORIGINAL_KEY_MODE');
+- const execution=proof(f.receipts.lastExecution),outer=proof(f.receipts.lastOuter),cleanup=proof(f.receipts.lastCleanup),snapshot=proof(f.receipts.businessSnapshot);
+- if(execution.exitCode!==0||execution.expired!==false||execution.error!==null||execution.dataDir!==path.join(f.sourceRoot,'db')||execution.afterInputDrift?.length!==0||execution.remainingOwnedGroup?.length!==0||execution.registeredChildrenAfterCleanup?.some(row=>row.actualIdentityAfterCleanup!==null))fail('COMPLETED_CLEANUP_REQUIRED');
+- if(outer.exitCode!==0||outer.expired!==false||(outer.wrapperIdentityAfter!==undefined?outer.wrapperIdentityAfter:outer.actualIdentityAfter)!==null)fail('OUTER_COMPLETED_REQUIRED');
++ const stop=proof(f.receipts.controllerStop),ready=proof(f.receipts.originalReady),sourceAfter=proof(f.receipts.previousSourceAfter),execution=proof(f.receipts.uiExecution),outer=proof(f.receipts.uiOuter),cleanup=proof(f.receipts.browserCleanup),business=proof(f.receipts.businessSnapshot),copy=proof(f.receipts.originalCopy),previous=proof(f.receipts.previousFixture);
++ if(stop.exitCode!==143||stop.expired!==false||stop.error!==null||!Array.isArray(stop.remaining)||stop.remaining.length!==2||stop.remaining.some(row=>row.current!==null)||stop.sourceAfterUiReceipt!==f.receipts.previousSourceAfter.path)fail('EXACT_CONTROLLER_STOP_REQUIRED');
++ if(ready.ownedRoot!==f.sourceRoot||ready.sourceHead!=='13dd66ceb3b296461b54f544b78aab3a08058b6b'||ready.startupVerified!==true||ready.completedOwnedFixture?.copyReceipt!==f.receipts.originalCopy.path||sourceAfter.unchanged!==true)fail('ORIGINAL_LAUNCH_AND_SOURCE_PROOF_REQUIRED');
++ if(execution.exitCode!==0||execution.expired!==false||execution.error!==null||execution.afterInputDrift?.length!==0||execution.remainingOwnedGroup?.length!==0||!Array.isArray(execution.registeredChildrenAfterCleanup)||execution.registeredChildrenAfterCleanup.some(row=>row.current!==null))fail('COMPLETED_UI_CLEANUP_REQUIRED');
++ if(outer.exitCode!==0||outer.expired!==false||outer.error!==null||outer.wrapperIdentityAfter!==null||cleanup.browserCreated!==true||cleanup.browserClosed!==true||cleanup.modelRootSubmitted!==false)fail('BROWSER_AND_OUTER_COMPLETED_REQUIRED');
++ if(copy.destinationRoot!==f.sourceRoot||copy.sourceRoot!==previous.sourceRoot||previous.keyPath!==f.keyPath||copy.sourceUnchanged!==true||copy.copiedAuthenticationOrPrivateKey!==false||JSON.stringify(copy.copiedOnly)!==JSON.stringify(['db','media','workspaces']))fail('KNOWN_ORIGINAL_KEY_PROVENANCE_REQUIRED');
+  if(f.task==='T1338'){
+-  const formal=proof(f.receipts.originalFormal);if(formal.formal.status!=='succeeded'||formal.confirmed.status.state!=='confirmed_current'||cleanup.actions?.find(x=>x.name==='persistence.dispose')?.status!=='COMPLETED')fail('FORMAL_OR_DISPOSE_REQUIRED');
+-  if(!snapshot.ai?.length||!snapshot.executions?.length||snapshot.ai.some(x=>x.status!=='succeeded')||snapshot.executions.some(x=>x.status!=='succeeded')||snapshot.calls.some(x=>x.status!=='settled'))fail('TERMINAL_LEDGER_REQUIRED');
+- }else{
+-  if(cleanup.persistence!=='DISPOSED'||!['aiTasks','executionTasks','calls','children','network'].every(k=>Array.isArray(snapshot[k])&&snapshot[k].length===0))fail('ZERO_MODEL_DISPOSE_REQUIRED');
+- }
++  if(business.state!=='NATIVE_READY_AND_READ_ONLY'||business.allDataUnchanged!==true||business.modelRoots!==0||JSON.stringify(business.before)!==JSON.stringify(business.after))fail('COMPLETED_CONTENT_WITNESS_REQUIRED');
++ }else if(business.state!=='PUBLIC_MANUAL_PUBLICATION_NUMERIC_UI_PASS'||business.manualFixture!==true||business.externalPublishing!==false||business.realPlatformMetrics!==false||business.modelRoots!==0||JSON.stringify(business.before)!==JSON.stringify(business.after)||business.before.models.some(rows=>rows.length!==0))fail('COMPLETED_PUBLICATION_WITNESS_REQUIRED');
+  return f;
+ }
++
+ export function treeInventory(root){
+  if(!fs.existsSync(root))return{present:false,directories:[],files:[]};realOwned(root);const directories=[],files=[];
+  function visit(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){const file=path.join(dir,entry.name),relative=path.relative(root,file);if(entry.isSymbolicLink())fail('SOURCE_SYMLINK_REJECTED');if(entry.isDirectory()){directories.push(relative);visit(file);}else if(entry.isFile()){const stat=fs.statSync(file);files.push({path:relative,bytes:stat.size,sha256:fileSha(file)});}else fail('SPECIAL_SOURCE_FILE');}}

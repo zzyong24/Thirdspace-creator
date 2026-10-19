@@ -1,0 +1,13 @@
+[
+  {
+    "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/SAFE_SUMMARY.json",
+    "sha256": "f8cd0b43e1ab23f6a2a4b231d605f277ec2dea7b6ddb94585f957013142e18cf",
+    "permissionToRead": "Root明确新根最终专门脱敏，可读",
+    "copied": "仅显式白名单投影，未整份复制"
+  },
+  {
+    "path": "/Volumes/T7-MacData/CodexBuilds/t1365-final-20261019-2d3826ef1642/checks/DELIVERY_REPORT.md",
+    "sha256": "151a94e5fecf06b620f0730108774af43f0e4ed5d558647eb82df063b91a9983",
+    "copied": "未整份复制，仅作为执行者叙述来源"
+  }
+]

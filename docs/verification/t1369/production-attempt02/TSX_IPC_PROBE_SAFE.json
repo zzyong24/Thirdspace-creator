@@ -1,0 +1,15 @@
+{
+  "phase": "same-env-sandbox-tsx-ipc-probe",
+  "innerTimeout": false,
+  "state": "FAIL",
+  "exitCode": 1,
+  "elapsedMs": 422.091,
+  "rawPath": "/private/tmp/c1369-2y133yus/tsx-ipc-probe.log",
+  "rawBytes": 1031,
+  "rawSha256": "bbf8954971719bee262118e76e045cec7e77c408b5ef37078ad5c47fdfb1f7e9",
+  "controlRootMode": "0o700",
+  "controlRootUidMatches": true,
+  "policySha256": "5cd42c928b4211f5502db1e4e2faae4bfc8f8f006526a45583a7c27bfe3aba67",
+  "sameEnvironmentSha256": "51f03d3658c2a3856b04a4bd20f72fe5b48c0db3472b3e528bac131dace912c9",
+  "expectedMarkerPresent": false
+}

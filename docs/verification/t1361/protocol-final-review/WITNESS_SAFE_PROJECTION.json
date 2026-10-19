@@ -1,0 +1,373 @@
+[
+  {
+    "source": "docs/verification/t1361/candidate-final-attempt04/artifacts/t1361-pending-filter-works-cdfaf-sh-待完成筛选与切组使用真实Next收尾并排除旧响应-t1361-minimum/witness.json",
+    "completed": false,
+    "viewport": {
+      "width": 1024,
+      "height": 680
+    },
+    "network": [
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355705642,
+        "finishedError": null,
+        "bytes": 64,
+        "sha256": "f044eb79236eee1c0218310f975eb40b1804431d314c54a0f29c92a9e43f0f60",
+        "scopes": []
+      },
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355705701,
+        "finishedError": null,
+        "bytes": 39411,
+        "sha256": "3c74fddf8046351ff60a45645f6d8c194f67afa710ebba7e1863c5540d643033",
+        "scopes": [
+          {
+            "kind": "workspace",
+            "path": "record:5[3].children[2][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          }
+        ]
+      },
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355705784,
+        "finishedError": null,
+        "bytes": 42575,
+        "sha256": "2e69798e7932a2ff4867687d55deb232d8bd3da59815ffa7fe5aa414f3ecafa0",
+        "scopes": [
+          {
+            "kind": "workspace",
+            "path": "record:5[3].children[2][3]",
+            "groupId": "grp-t1356-9156926b-1feb-4bd7-8c36-5fb095efd7e8"
+          }
+        ]
+      },
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355705820,
+        "finishedError": null,
+        "bytes": 81181,
+        "sha256": "e9be77afd2e285e6bfbe26a57401b6fe8f776a08d0629cb77c064ce7cc3fcc96",
+        "scopes": [
+          {
+            "kind": "initialScope",
+            "path": "record:66[4][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          },
+          {
+            "kind": "workspace",
+            "path": "record:8a[3].children[2][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          }
+        ]
+      }
+    ],
+    "points": [
+      {
+        "point": "date-url-b-http-before-a",
+        "at": 1792355705768,
+        "loading": true,
+        "error": null,
+        "storageGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "cookieGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "aResponse": {},
+        "bResponse": {
+          "kind": "finished",
+          "status": 200,
+          "at": 1792355705701,
+          "finishedError": null,
+          "bytes": 39411,
+          "sha256": "3c74fddf8046351ff60a45645f6d8c194f67afa710ebba7e1863c5540d643033",
+          "scopes": [
+            {
+              "kind": "workspace",
+              "path": "record:5[3].children[2][3]",
+              "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "source": "docs/verification/t1361/candidate-final-attempt04/artifacts/t1361-pending-filter-works-cdfaf-sh-待完成筛选与切组使用真实Next收尾并排除旧响应-t1361-normal/witness.json",
+    "completed": true,
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "network": [
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355689247,
+        "finishedError": null,
+        "bytes": 64,
+        "sha256": "f044eb79236eee1c0218310f975eb40b1804431d314c54a0f29c92a9e43f0f60",
+        "scopes": []
+      },
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355689336,
+        "finishedError": null,
+        "bytes": 39661,
+        "sha256": "14c45001677e8a6b2e3885f4649b222fddf144c8ba0379ff4594ebd6d06d21fc",
+        "scopes": [
+          {
+            "kind": "workspace",
+            "path": "record:5[3].children[2][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          }
+        ]
+      },
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355689393,
+        "finishedError": null,
+        "bytes": 81159,
+        "sha256": "b0530ab25884036acafdf97292a6cdcaf4da9df2b5369c86371d028c1317dda8",
+        "scopes": [
+          {
+            "kind": "initialScope",
+            "path": "record:66[4][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          },
+          {
+            "kind": "workspace",
+            "path": "record:8a[3].children[2][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          }
+        ]
+      },
+      {
+        "case": "date-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355689485,
+        "finishedError": null,
+        "bytes": 42608,
+        "sha256": "14a70f3f0d102d58b0c7195481da7913b7ef86ffaebb282495b45ed32384dcb7",
+        "scopes": [
+          {
+            "kind": "workspace",
+            "path": "record:5[3].children[2][3]",
+            "groupId": "grp-t1356-9156926b-1feb-4bd7-8c36-5fb095efd7e8"
+          }
+        ]
+      },
+      {
+        "case": "same-clean-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355691651,
+        "finishedError": null,
+        "bytes": 64,
+        "sha256": "f044eb79236eee1c0218310f975eb40b1804431d314c54a0f29c92a9e43f0f60",
+        "scopes": []
+      },
+      {
+        "case": "same-clean-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355691710,
+        "finishedError": null,
+        "bytes": 40014,
+        "sha256": "ba81d3821a3ace918c9b28f5145371fd1de3804c2d6a43cc27dd6ab8cf5f8861",
+        "scopes": [
+          {
+            "kind": "workspace",
+            "path": "record:5[3].children[2][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          }
+        ]
+      },
+      {
+        "case": "same-clean-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355691785,
+        "finishedError": null,
+        "bytes": 81121,
+        "sha256": "d6016732b4594b9487a54cf561260d9641829ac0d93939bc2c5d58f1cef2a9f3",
+        "scopes": [
+          {
+            "kind": "initialScope",
+            "path": "record:66[4][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          },
+          {
+            "kind": "workspace",
+            "path": "record:8a[3].children[2][3]",
+            "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+          }
+        ]
+      },
+      {
+        "case": "same-clean-url",
+        "kind": "finished",
+        "status": 200,
+        "at": 1792355691879,
+        "finishedError": null,
+        "bytes": 42425,
+        "sha256": "6b5ee379feddbfae8e9c166e37059d0bebae06b0010cb002abf22dfe50a4b164",
+        "scopes": [
+          {
+            "kind": "workspace",
+            "path": "record:5[3].children[2][3]",
+            "groupId": "grp-t1356-9156926b-1feb-4bd7-8c36-5fb095efd7e8"
+          }
+        ]
+      }
+    ],
+    "points": [
+      {
+        "point": "date-url-b-http-before-a",
+        "at": 1792355689468,
+        "loading": true,
+        "error": null,
+        "storageGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "cookieGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "aResponse": {},
+        "bResponse": {
+          "kind": "finished",
+          "status": 200,
+          "at": 1792355689336,
+          "finishedError": null,
+          "bytes": 39661,
+          "sha256": "14c45001677e8a6b2e3885f4649b222fddf144c8ba0379ff4594ebd6d06d21fc",
+          "scopes": [
+            {
+              "kind": "workspace",
+              "path": "record:5[3].children[2][3]",
+              "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+            }
+          ]
+        }
+      },
+      {
+        "point": "date-url-b-final-after-old-a",
+        "at": 1792355689696,
+        "loading": false,
+        "error": null,
+        "storageGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "cookieGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "aResponse": {
+          "kind": "finished",
+          "status": 200,
+          "at": 1792355689485,
+          "finishedError": null,
+          "bytes": 42608,
+          "sha256": "14a70f3f0d102d58b0c7195481da7913b7ef86ffaebb282495b45ed32384dcb7",
+          "scopes": [
+            {
+              "kind": "workspace",
+              "path": "record:5[3].children[2][3]",
+              "groupId": "grp-t1356-9156926b-1feb-4bd7-8c36-5fb095efd7e8"
+            }
+          ]
+        },
+        "bResponse": {
+          "kind": "finished",
+          "status": 200,
+          "at": 1792355689393,
+          "finishedError": null,
+          "bytes": 81159,
+          "sha256": "b0530ab25884036acafdf97292a6cdcaf4da9df2b5369c86371d028c1317dda8",
+          "scopes": [
+            {
+              "kind": "initialScope",
+              "path": "record:66[4][3]",
+              "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+            },
+            {
+              "kind": "workspace",
+              "path": "record:8a[3].children[2][3]",
+              "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+            }
+          ]
+        }
+      },
+      {
+        "point": "same-clean-url-b-http-before-a",
+        "at": 1792355691864,
+        "loading": true,
+        "error": null,
+        "storageGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "cookieGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "aResponse": {},
+        "bResponse": {
+          "kind": "finished",
+          "status": 200,
+          "at": 1792355691710,
+          "finishedError": null,
+          "bytes": 40014,
+          "sha256": "ba81d3821a3ace918c9b28f5145371fd1de3804c2d6a43cc27dd6ab8cf5f8861",
+          "scopes": [
+            {
+              "kind": "workspace",
+              "path": "record:5[3].children[2][3]",
+              "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+            }
+          ]
+        }
+      },
+      {
+        "point": "same-clean-url-b-final-after-old-a",
+        "at": 1792355692065,
+        "loading": false,
+        "error": null,
+        "storageGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "cookieGroup": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4",
+        "aResponse": {
+          "kind": "finished",
+          "status": 200,
+          "at": 1792355691879,
+          "finishedError": null,
+          "bytes": 42425,
+          "sha256": "6b5ee379feddbfae8e9c166e37059d0bebae06b0010cb002abf22dfe50a4b164",
+          "scopes": [
+            {
+              "kind": "workspace",
+              "path": "record:5[3].children[2][3]",
+              "groupId": "grp-t1356-9156926b-1feb-4bd7-8c36-5fb095efd7e8"
+            }
+          ]
+        },
+        "bResponse": {
+          "kind": "finished",
+          "status": 200,
+          "at": 1792355691785,
+          "finishedError": null,
+          "bytes": 81121,
+          "sha256": "d6016732b4594b9487a54cf561260d9641829ac0d93939bc2c5d58f1cef2a9f3",
+          "scopes": [
+            {
+              "kind": "initialScope",
+              "path": "record:66[4][3]",
+              "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+            },
+            {
+              "kind": "workspace",
+              "path": "record:8a[3].children[2][3]",
+              "groupId": "grp-t1356-3c06a821-3b87-4c9c-8017-aa2a7c9268f4"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

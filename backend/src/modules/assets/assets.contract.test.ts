@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   createDb,
   type Db,
@@ -46,10 +46,11 @@ function deterministicDeps() {
 }
 
 let db: Db;
+let t1341Client: Awaited<ReturnType<typeof createDb>>["client"];
 let transport: Transport;
 
 beforeEach(async () => {
-  ({ db } = await createDb());
+  ({ db, client: t1341Client } = await createDb());
   const deps = deterministicDeps();
   const repo = createAssetRepository(db, deps);
   let keySeq = 0;
@@ -174,3 +175,43 @@ describe("assets.transport — 7-op contract conformance", () => {
     ).rejects.toBeInstanceOf(UnsupportedOperationError);
   });
 });
+
+it("assets.search 公共读口返回实际文件元数据与游标，不伪造列表 envelope",async()=>{
+ const id=await uploadAsset("目标图片");
+ const result=await transport.request(ENDPOINTS.searchAssets,{params:undefined,body:undefined,query:{query:"目标",limit:24,assetTypes:["image"]}},ctx);
+ const parsed=successEnvelope(ENDPOINTS.searchAssets.response).parse(result);
+ expect(parsed.data.items.map(item=>item.id)).toEqual([id]);expect(parsed.data.items[0]!.currentFileId).toBeTruthy();expect(parsed.data.items[0]!.fileSize).toBe(4096);expect(parsed.data.nextCursor).toBeNull();
+ expect(ENDPOINTS.searchAssets.query!.safeParse({query:"",limit:0}).success).toBe(false);
+ expect(ENDPOINTS.searchAssets.query!.safeParse({query:"",assetTypes:[]}).success).toBe(false);
+});
+
+
+describe('T1341 真实资产transport附加标签projection不伤原读权/下载',()=>{
+ it.each(['known','empty','unavailable'] as const)('list/get/search完整同源摘要 %s',async mode=>{
+  const storage=createMockObjectStorage({nextKey:()=>`t1341/${mode}`}),service=createAssetsService(createAssetRepository(db,deterministicDeps()),async()=>storage,deterministicDeps());
+  const readAssetTags=vi.fn(async(_ctx:RequestContext,ids:string[])=>{if(mode==='unavailable')throw new Error('CONTROLLED_TAG_READ_UNAVAILABLE');return Object.fromEntries(ids.map(id=>[id,mode==='empty'?[]:[{id:'t1341-tag',name:'中文真实'}]]));});
+  transport=createAssetsTransport(()=>service,{readAssetTags});const assetId=await uploadAsset('T1341真实资产');
+  const get:any=await call('assets.get',{params:{assetId}}),list:any=await call('assets.list',{query:{page:1,pageSize:100}},true),search:any=await call('assets.search',{query:{query:'T1341',limit:100}}),download:any=await call('assets.downloadUrl',{params:{assetId}});
+  const expected=mode==='unavailable'?null:mode==='empty'?[]:[{id:'t1341-tag',name:'中文真实'}];expect(get.data.tags).toEqual(expected);expect(list.data[0].tags).toEqual(expected);expect(search.data.items[0].tags).toEqual(expected);expect(download.data.url).toBeTruthy();expect(get.data.name).toBe('T1341真实资产');expect(()=>assetResource.parse(get.data)).not.toThrow();
+  readAssetTags.mockClear();await expect(transport.request(ep('assets.get'),{params:{assetId}} as never,{...ctx,userId:'other-user'})).rejects.toThrow();expect(readAssetTags).not.toHaveBeenCalled();
+ },180000);
+ it('旧独立装配无projection端口明确null，不能冒真实空数组',async()=>{const id=await uploadAsset('旧装配');const result:any=await call('assets.get',{params:{assetId:id}});expect(result.data.tags).toBeNull();},180000);
+});
+
+
+it('T1341 100真实素材各自标签：两个50条页/100搜索无截断且每次新增权限+taxonomy两条SQL',async()=>{
+ const {createTaxonomyRepository,createTaxonomyService}=await import('../taxonomy');const deps=deterministicDeps(),repo=createAssetRepository(db,deps),service=createAssetsService(repo,async()=>createMockObjectStorage({nextKey:()=>''}),deps),taxonomyRepo=createTaxonomyRepository(db,deps);
+ const expected=new Map<string,Array<{id:string;name:string}>>();
+ for(let i=0;i<100;i++){
+  const row=await repo.insertAsset(ctx.userId,{assetType:'image',name:'T1341有效-'+i,currentFileId:null},ctx.accountId!),file=await repo.insertAssetFile(ctx.userId,{assetId:row.id,storageKey:'t1341-real-batch/'+i,mimeType:'image/png',fileSize:8,checksum:'fixture-'+i,width:960,height:540,durationMs:null,mediaMetadata:{}},ctx.accountId!);await repo.updateAssetStatus(ctx.userId,row.id,{currentFileId:file.id},ctx.accountId!);
+  const tag=await taxonomyRepo.insertTag(ctx,{name:'真实对应-'+i});await taxonomyRepo.insertEntityTag(ctx,{entityType:'asset',entityId:row.id,tagId:tag.id});const tags=[{id:tag.id,name:tag.name}];
+  if(i===0||i===99){const extra=await taxonomyRepo.insertTag(ctx,{name:'首尾第二标签-'+i});await taxonomyRepo.insertEntityTag(ctx,{entityType:'asset',entityId:row.id,tagId:extra.id});tags.push({id:extra.id,name:extra.name});}expected.set(row.id,tags);
+ }
+ const query=vi.spyOn(t1341Client,'query'),counts:number[]=[];
+ const taxonomy=createTaxonomyService(taxonomyRepo,{assertEntityReadable:async(c,type,id)=>{if(type!=='asset')throw Error('仅资产族');return service.getAsset(c,id);},assertEntityWritable:async()=>{throw Error('只读组合');},readableAssetIds:(c,ids)=>service.listReadableAssetIds(c,ids)});
+ const projected=createAssetsTransport(()=>service,{readAssetTags:async(c,ids)=>{const before=query.mock.calls.length;const value=await taxonomy.listAssetTagSummaries(c,ids);const queries=query.mock.calls.slice(before).map(args=>String(args[0]));counts.push(queries.filter(text=>/from "(?:assets|entity_tags)"/.test(text)).length);return value;}});
+ const first:any=await projected.request(ENDPOINTS.listAssets,{query:{page:1,pageSize:50}} as never,ctx),second:any=await projected.request(ENDPOINTS.listAssets,{query:{page:2,pageSize:50}} as never,ctx),search:any=await projected.request(ENDPOINTS.searchAssets,{query:{query:'T1341有效-',limit:100}} as never,ctx);
+ expect(first.data).toHaveLength(50);expect(second.data).toHaveLength(50);expect(new Set([...first.data,...second.data].map((x:any)=>x.id)).size).toBe(100);expect(search.data.items).toHaveLength(100);
+ for(const row of [...first.data,...second.data,...search.data.items]){expect(row.tags).toEqual(expected.get(row.id));expect(row.width).toBe(960);expect(row.height).toBe(540);}
+ expect(counts).toEqual([2,2,2]);const before=query.mock.calls.length;expect(await taxonomy.listAssetTagSummaries(ctx,[])).toEqual({});expect(query.mock.calls.length).toBe(before);
+},180000);

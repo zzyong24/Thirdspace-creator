@@ -1,0 +1,41 @@
+{
+  "rawSha256": "baaa64a4871e5b2a7106128d3af22be5a27760b68bacdde8c744fb8eec70accd",
+  "stats": {
+    "startTime": "2026-10-18T15:14:35.350Z",
+    "duration": 428629.61699999997,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "T1347公开首页与原生日数据 1366",
+      "status": "passed",
+      "startTime": "2026-10-18T15:15:26.562Z",
+      "duration": 60410,
+      "errors": [],
+      "attachments": [
+        {
+          "name": "trace",
+          "contentType": "application/zip",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1347/formal-ui-artifacts/ui-public-probe-T1347公开首页与原生日数据-1366/trace.zip"
+        }
+      ]
+    },
+    {
+      "title": "T1347公开首页与原生日数据 1024",
+      "status": "passed",
+      "startTime": "2026-10-18T15:16:29.095Z",
+      "duration": 41454,
+      "errors": [],
+      "attachments": [
+        {
+          "name": "trace",
+          "contentType": "application/zip",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1347/formal-ui-artifacts/ui-public-probe-T1347公开首页与原生日数据-1024/trace.zip"
+        }
+      ]
+    }
+  ]
+}

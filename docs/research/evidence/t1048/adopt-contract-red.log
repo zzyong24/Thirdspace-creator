@@ -1,0 +1,157 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract
+
+ ❯ tests/graphic-series.test.ts (4 tests | 1 failed) 11ms
+   × 采用公共契约保留真实页ID，旧无绑定图继续有效 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/graphic-series.test.ts > 采用公共契约保留真实页ID，旧无绑定图继续有效
+ZodError: [
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "sectionId"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "heading"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "body"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "code": "invalid_value",
+          "values": [
+            "insert",
+            "replace"
+          ],
+          "path": [
+            0,
+            "op"
+          ],
+          "message": "Invalid option: expected one of \"insert\"|\"replace\""
+        },
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "assetId",
+            "assetFileId",
+            "role",
+            "cardId"
+          ],
+          "path": [
+            0
+          ],
+          "message": "Unrecognized keys: \"assetId\", \"assetFileId\", \"role\", \"cardId\""
+        }
+      ],
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "title"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "body"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "sourceRefs"
+          ],
+          "message": "Invalid input: expected array, received undefined"
+        },
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "assetId",
+            "assetFileId",
+            "role",
+            "order"
+          ],
+          "path": [
+            0
+          ],
+          "message": "Unrecognized keys: \"assetId\", \"assetFileId\", \"role\", \"order\""
+        }
+      ],
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received array"
+        }
+      ],
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0
+          ],
+          "message": "Invalid input: expected string, received object"
+        }
+      ],
+      [
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "cardId"
+          ],
+          "path": [
+            0
+          ],
+          "message": "Unrecognized key: \"cardId\""
+        }
+      ]
+    ],
+    "path": [
+      "editedValue"
+    ],
+    "message": "Invalid input"
+  }
+]
+ ❯ tests/graphic-series.test.ts:21:281
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  03:58:10
+   Duration  718ms (transform 358ms, setup 0ms, import 556ms, tests 11ms, environment 0ms)
+

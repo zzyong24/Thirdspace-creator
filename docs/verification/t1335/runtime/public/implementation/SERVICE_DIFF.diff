@@ -1,0 +1,26 @@
+--- service-before
++++ service-after
+@@ -22,6 +22,9 @@
+ const knowledgeParameters = z.object({ title: z.string().trim().min(1), note: z.string().trim().min(1), sourceNote: z.string(), evidenceRefs: z.array(z.string().min(1)).min(1) });
+ 
+ export class KnowledgeSourceError extends ConflictError {}
++// SEMANTIC_BOUNDARY_ALLOW: 仅核原模型归属及同一工具事实的协议投影，不做内容或来源创作判断。
++const nativeToolFact=(part:z.infer<typeof checkpointToolCallSchema>)=>({type:part.type,toolCallId:part.toolCallId,toolName:part.toolName,input:part.input});
++const nativeToolOwnerMatches=(part:z.infer<typeof checkpointToolCallSchema>,modelId:string)=>!Object.prototype.hasOwnProperty.call(part,'callId') || (typeof part.callId==='string'&&part.callId===modelId);
+ 
+ /** 只读核验：候选必须对应真实模型参数及此前已经结算的阅读，不是新写入端口。 */
+ export async function verifyExecutionKnowledgeSource(tx: Tx, executionTaskId: string, input: KnowledgeInput, requireCurrentModel = false) {
+@@ -36,10 +39,11 @@
+     if(native){
+       const binding=bindings?.[model.id],part=checkpointToolCallSchema.safeParse({type:'tool-call',...(binding?.tools?.[input.toolCallId] as object??{})});
+       if(model.parentCallId||!['started','settled'].includes(model.status)||!binding?.threadId||!binding.turnId||!part.success)continue;
+-      if(part.data.toolCallId!==input.toolCallId||part.data.toolName!=='knowledge.write')throw new ConflictError('知识候选缺少正确的原生工具来源');
++      if(part.data.toolCallId!==input.toolCallId||part.data.toolName!=='knowledge.write'||!nativeToolOwnerMatches(part.data,model.id))throw new ConflictError('知识候选缺少正确的原生工具来源');
+       if(model.status==='settled'){
+         const receipt=workerProviderReceiptSchema.parse(model.providerResult),canonical=receipt.content.filter(raw=>checkpointToolCallSchema.safeParse(raw).data?.toolCallId===input.toolCallId);
+-        if(canonical.length!==1||!isDeepStrictEqual(checkpointToolCallSchema.parse(canonical[0]),part.data))throw new ConflictError('知识候选与已结算原生工具来源不符');
++        const confirmed=canonical.length===1?checkpointToolCallSchema.parse(canonical[0]):undefined;
++        if(!confirmed||!nativeToolOwnerMatches(confirmed,model.id)||!isDeepStrictEqual(nativeToolFact(confirmed),nativeToolFact(part.data)))throw new ConflictError('知识候选与已结算原生工具来源不符');
+       }
+       matching.push({model,params:knowledgeParameters.parse(JSON.parse(part.data.input))});
+       continue;

@@ -1,0 +1,106 @@
+{
+  "task_id": "T-1310",
+  "archetype": [
+    "orchestration"
+  ],
+  "tasks": [
+    "diagnosis"
+  ],
+  "depends_on": [],
+  "step_depends_on": {
+    "diagnosis": []
+  },
+  "write_set": [
+    "docs/verification/t1310/runtime/**",
+    "docs/verification/t1310/DIAGNOSIS_RESULT.md"
+  ],
+  "read_set": [
+    "orchestrator/SYSTEM_ARCHITECTURE.md",
+    "backend/src/modules/execution/execution-chat-generation.service.ts",
+    "backend/src/modules/execution/execution-chat-generation.service.test.ts",
+    "backend/src/modules/execution/chat-generation-recovery.ts",
+    "backend/src/modules/execution/chat-generation-recovery.test.ts",
+    "backend/src/modules/execution/execution-codex-call.service.ts",
+    "backend/src/modules/execution/codex-read-recovery.ts",
+    "backend/src/modules/execution/model-call-recovery.ts",
+    "backend/src/modules/execution/execution-call-ledger.service.ts",
+    "backend/src/modules/execution/execution-lease.service.ts",
+    "backend/src/modules/execution/model-worker-dispatcher.ts",
+    "backend/src/modules/ai/external-task-tool.service.ts",
+    "backend/src/integration/chat-generation-worker.test.ts",
+    "backend/src/integration/chat-work-editor-worker.test.ts",
+    "ai-worker/src/execution/chat-generation-worker.ts",
+    "ai-worker/src/execution/chat-generation-worker.test.ts",
+    "ai-worker/src/execution/chat-structured-sequence.ts",
+    "contract/src/internal/execution-worker.ts",
+    "contract/src/internal/chat-worker.ts",
+    "backend/vitest.config.ts",
+    "frontend/src/server/persistence-client.ts",
+    "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/submission.json",
+    "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/action-result.json",
+    "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/task.json",
+    "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/modelcalls-allpages.json",
+    "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-public-cancel.json",
+    "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-after-cancel.json",
+    "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-log-binding.json",
+    "docs/features/t1310-topic-chat-completion-conflict-diagnosis.md",
+    "docs/verification/t1310/DEC.md",
+    "backend/src/modules/ai-runtime/**",
+    "ai-worker/src/runtime/**",
+    "docs/verification/t1310/WORKER_BINDING.json",
+    "docs/verification/t1307/acceptance/candidate/candidate-binding.json"
+  ],
+  "step_write_set": {
+    "diagnosis": [
+      "docs/verification/t1310/runtime/**",
+      "docs/verification/t1310/DIAGNOSIS_RESULT.md"
+    ]
+  },
+  "step_read_set": {
+    "diagnosis": [
+      "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "backend/src/modules/execution/execution-chat-generation.service.ts",
+      "backend/src/modules/execution/execution-chat-generation.service.test.ts",
+      "backend/src/modules/execution/chat-generation-recovery.ts",
+      "backend/src/modules/execution/chat-generation-recovery.test.ts",
+      "backend/src/modules/execution/execution-codex-call.service.ts",
+      "backend/src/modules/execution/codex-read-recovery.ts",
+      "backend/src/modules/execution/model-call-recovery.ts",
+      "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "backend/src/modules/execution/execution-lease.service.ts",
+      "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "backend/src/modules/ai/external-task-tool.service.ts",
+      "backend/src/integration/chat-generation-worker.test.ts",
+      "backend/src/integration/chat-work-editor-worker.test.ts",
+      "ai-worker/src/execution/chat-generation-worker.ts",
+      "ai-worker/src/execution/chat-generation-worker.test.ts",
+      "ai-worker/src/execution/chat-structured-sequence.ts",
+      "contract/src/internal/execution-worker.ts",
+      "contract/src/internal/chat-worker.ts",
+      "backend/vitest.config.ts",
+      "frontend/src/server/persistence-client.ts",
+      "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/submission.json",
+      "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/action-result.json",
+      "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/task.json",
+      "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U04-topic-generate-node/modelcalls-allpages.json",
+      "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-public-cancel.json",
+      "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-after-cancel.json",
+      "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/U04-original-log-binding.json",
+      "docs/features/t1310-topic-chat-completion-conflict-diagnosis.md",
+      "docs/verification/t1310/DEC.md",
+      "backend/src/modules/ai-runtime/**",
+      "ai-worker/src/runtime/**",
+      "docs/verification/t1310/WORKER_BINDING.json",
+      "docs/verification/t1307/acceptance/candidate/candidate-binding.json"
+    ]
+  },
+  "exclusive_resources": [
+    "t1300-shared-checkout-single-writer"
+  ],
+  "verify_commands": {
+    "diagnosis": [
+      "pnpm --dir backend exec vitest run --config ../docs/verification/t1310/runtime/vitest.config.ts --retry=0 --maxWorkers=1 --testTimeout=180000 --hookTimeout=180000",
+      "node tools/timeout-policy/verify.mjs"
+    ]
+  }
+}

@@ -1,0 +1,177 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-lifecycle.test.ts:
+(pass) 取消后不发布慢操作的结果；销毁等待原操作到达不可写状态 [0.74ms]
+(pass) 同文档lease交接必须等旧实例关闭；排队取消不取得资源 [0.53ms]
+
+src/embedded/__tests__/native-command.test.ts:
+(pass) 采纳命令跨scene撤销只恢复目标scene，其他scene最新编辑、选区和播放头保留 [0.77ms]
+(pass) 已闭合的after不被原生ripple二次重排独立图层 [0.10ms]
+(pass) 完整beforeTracks包含独立轨；后来文字修改时零Command且原输入保留 [1.90ms]
+(pass) 相同ACK重播一次Command，撤销后重播不重新写入after [0.69ms]
+(pass) 错owner/scene回执均不写时间轴 [0.33ms]
+(pass) 原采纳摘要异步核对期间取消请求，零Command且完整轨道保留 [0.19ms]
+
+src/embedded/__tests__/host-boundary.test.ts:
+(pass) 原生变更直接报告host回调；不建立窗口消息监听 [0.16ms]
+(pass) storage holds one current output and snapshots without runtime binaries/URLs [1.24ms]
+(pass) export returns the exact frozen render document and rejects delayed imported edits [0.97ms]
+(pass) failed export releases editing and pending import replies cannot write during the freeze [0.88ms]
+(pass) load baseline suppresses autosave timestamps and identical snapshots but preserves editorial changes [0.41ms]
+(pass) T1062 同组平台owner key稳定，实际native-context变化同步abort旧范围且未产生试听确认 [0.11ms]
+(pass) T1062 原storage相同内容/时间戳save不假造新的context epoch [0.11ms]
+(pass) T1062 实际context relay连续播放帧不刷epoch；离散seek/state/selection/真实document各一次，重复storage通知无新增 [0.26ms]
+(pass) T1062 context显式pause先触发实际playing失效再返回暂停后epoch；原声playing保护零read且不暗暂停 [0.19ms]
+(pass) T1062 显式pause保留Abort；已暂停再次pause不伪造新epoch，取消不得继续read [0.13ms]
+(pass) T1069 隐藏工作台不接管快捷键事件，重新可见保持同一owner [0.08ms]
+
+ 19 pass
+ 0 fail
+ 116 expect() calls
+Ran 19 tests across 3 files. [310.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-workspace.test.tsx:
+(pass) T1274 open-addon严格校验panel且不改变context/owner，四面板切换保留宿主 [0.41ms]
+(pass) T1274 addon键盘与粘贴事件不归原生，原时间轴事件仍归原生 [0.11ms]
+(pass) T1274 disabled只禁用原生core与portal，tabs/slot可用；hidden全部inert [0.05ms]
+(pass) T1274旧挂载没有addons保持旧disabled语义，dispose后新owner默认状态不复用 [0.05ms]
+
+ 4 pass
+ 0 fail
+ 24 expect() calls
+Ran 4 tests across 1 file. [6.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-resources.test.ts:
+(pass) 慢图片解码取消释放临时Image与BlobURL，寿命排空后不能返回素材 [1.54ms]
+(pass) 换稿后迟到素材上传回执不注册到当前编辑器 [0.14ms]
+(pass) 上传提示等待绘制时换稿会取消RAF且不启动旧导入 [0.27ms]
+(pass) T1062 实际range实现逐样本裁剪连续块并echo完整本地身份，decode不等于已听/采纳 [1.75ms]
+(pass) T1062 合成负音频PTS不是视频zero；相邻解码重叠去重但不补零 [0.12ms]
+(pass) T1062 nonzero video仅该范围manual且Input释放，不伪造音频 [0.12ms]
+(pass) T1062 missing first coverage仅该范围manual且Input释放，不伪造音频 [0.04ms]
+(pass) T1062 hole仅该范围manual且Input释放，不伪造音频 [0.03ms]
+(pass) T1062 sample-rate change仅该范围manual且Input释放，不伪造音频 [0.02ms]
+(pass) T1062 request cancel取消真实range实现；迟到块不得返回decoded/假完成 [0.51ms]
+(pass) T1062 context seek取消真实range实现；迟到块不得返回decoded/假完成 [0.09ms]
+(pass) T1062 owner dispose取消真实range实现；迟到块不得返回decoded/假完成 [0.04ms]
+(pass) T1062 foreign本地owner或当前真实scene/clip proof失败在读取Input之前拒绝 [0.11ms]
+(pass) T1062 纯组NULLaccount原声读取保持同group owner，平台账号筛选不改实际本地root [0.10ms]
+(pass) T1069 第一份已完成素材立即交给编辑器，不等待第二份上传且取消不撤销已接管URL [2.66ms]
+(pass) T1069 原导入取消实际传递到宿主上传请求 [0.09ms]
+(pass) T1274 private exact cache等待prefetch按actual next PTS处理24fps double边界，无重复前帧 [3.38ms]
+(pass) T1274 默认interactive暖cache保持旧快路径，prefetch ready帧仍按PTS晋升 [2.67ms]
+(pass) T1274 private exact cache保留declared duration gap，不把next PTS之前空隙延长成内容 [0.11ms]
+Prefetch failed: warn: Input has been disposed.
+      at dispose (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-resources.test.ts:27:146)
+      at clearVideo (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/services/video-cache/service.ts:335:19)
+      at clearAll (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/services/video-cache/service.ts:347:9)
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-resources.test.ts:105:195)
+
+(pass) T1274 private exact cache清理取消pending prefetch，不返回迟到帧且Input释放 [2.24ms]
+
+ 20 pass
+ 0 fail
+ 79 expect() calls
+Ran 20 tests across 1 file. [41.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview.test.ts:
+(pass) preview-scene public 命令使用候选独立 frozen 实际编码端口，活动工程/撤销/选区/epoch不变 [3.79ms]
+(pass) preview-scene owner拒绝在编码前，保留活动稿件 [0.58ms]
+(pass) preview-scene epoch拒绝在编码前，保留活动稿件 [0.30ms]
+(pass) preview-scene before拒绝在编码前，保留活动稿件 [0.36ms]
+(pass) preview-scene candidate拒绝在编码前，保留活动稿件 [0.41ms]
+(pass) preview-scene scene拒绝在编码前，保留活动稿件 [0.25ms]
+(pass) preview-scene file拒绝在编码前，保留活动稿件 [0.52ms]
+(pass) preview-scene duplicate media拒绝在编码前，保留活动稿件 [0.36ms]
+(pass) preview-scene missing media拒绝在编码前，保留活动稿件 [0.52ms]
+(pass) preview-scene request期间取消，迟到buffer不得返回且URL释放 [1.66ms]
+(pass) preview-scene selection epoch期间取消，迟到buffer不得返回且URL释放 [1.48ms]
+(pass) preview-scene owner lifetime期间取消，迟到buffer不得返回且URL释放 [1.43ms]
+(pass) preview-scene 编码失败不能伪造Blob，临时URL释放且旧seek/read命令仍可达 [0.49ms]
+(pass) 原公共load/context/snapshot/seek/apply-tracks/export仍沿真实controller命令入口成功 [1.22ms]
+(pass) preview-scene保留旧未知只读层、无时间字段扩展和其他scene，不按未知内容猜媒体 [0.66ms]
+(pass) preview-scene public 支持原video及其已分离upload原声音轨，仅改主轨时音轨完整保留 [0.73ms]
+(pass) preview-scene public audio-image继续拒绝不兼容媒体类型 [0.61ms]
+(pass) preview-scene public video-audio继续拒绝不兼容媒体类型 [0.52ms]
+(pass) preview-scene public image-video继续拒绝不兼容媒体类型 [0.44ms]
+(pass) 旧video缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.99ms]
+(pass) 旧image缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.57ms]
+(pass) 旧audio缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.56ms]
+(pass) 缺失素材new不能借保留旧元素放宽 [0.55ms]
+(pass) 缺失素材duration不能借保留旧元素放宽 [0.53ms]
+(pass) 缺失素材params不能借保留旧元素放宽 [0.44ms]
+(pass) 缺失素材mediaId不能借保留旧元素放宽 [0.46ms]
+(pass) 缺失素材move-track不能借保留旧元素放宽 [0.48ms]
+(pass) 全部主素材缺失但显式#2244cc背景是原renderer合法画面 [1.72ms]
+(pass) 全部主素材缺失但显式#000000背景是原renderer合法画面 [0.41ms]
+(pass) 全部素材缺失且color无画面时明确拒绝，不把旧全黑片签成有效候选 [0.45ms]
+(pass) 全部素材缺失且blur无画面时明确拒绝，不把旧全黑片签成有效候选 [0.46ms]
+(pass) 全部主素材缺失但原文字图层存在仍可预览 [0.65ms]
+(pass) 缺失主素材后effect-only不冒充可用画面 [0.64ms]
+(pass) 缺失主素材后hidden-text不冒充可用画面 [0.63ms]
+
+ 34 pass
+ 0 fail
+ 124 expect() calls
+Ran 34 tests across 1 file. [46.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview-resources.test.ts:
+(pass) SceneExporter取消关闭未finalize输出、视频源并释放独立decode cache [0.76ms]
+(pass) SceneExporter编码错误仍关闭源/取消输出/排空decode cache [0.20ms]
+(pass) SceneExporter成功保留真实buffer但释放独立decode cache，不cancel已finalize输出 [0.10ms]
+
+ 3 pass
+ 0 fail
+ 15 expect() calls
+Ran 3 tests across 1 file. [9.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview-audio.test.ts:
+(pass) 空音轨导出关闭自行创建的临时AudioContext，真实空保持null [0.47ms]
+(pass) 调用方的AudioContext不由导出关闭 [0.04ms]
+(pass) 原取消回调已取消时不分配context，不进入音频准备 [0.07ms]
+
+ 3 pass
+ 0 fail
+ 6 expect() calls
+Ran 3 tests across 1 file. [21.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview-canvas.test.ts:
+(pass) 活动预览和候选编码输出画布实例不同，后续render不覆盖前一实例完成帧 [0.28ms]
+
+ 1 pass
+ 0 fail
+ 5 expect() calls
+Ran 1 test across 1 file. [5.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview-image.test.ts:
+(pass) 候选自己的取消signal立即停止慢图片，不取消活动host寿命且迟到图片不返回 [0.48ms]
+
+ 1 pass
+ 0 fail
+ 4 expect() calls
+Ran 1 test across 1 file. [5.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview-video-cache.test.ts:
+(pass) T1274 private export同asset不同sourceTime多节点保留各自真实canvas像素，不被后续迭代池覆写 [4.50ms]
+
+ 1 pass
+ 0 fail
+ 7 expect() calls
+Ran 1 test across 1 file. [348.00ms]
+{
+  "status": "PASS",
+  "sha256": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+  "unreplacedNodeEnv": 0,
+  "guardedGlobalProcessReferences": 6,
+  "unguardedGlobalProcessReferences": 0,
+  "propertyOrMethodNames": 8,
+  "scope": "TypeScript AST检查全产物；仅typeof和同条件短路保护的Node可选分支属于安全全局引用，成员/方法名不算全局。"
+}

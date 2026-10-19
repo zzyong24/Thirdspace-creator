@@ -393,7 +393,7 @@ export function createIntelligenceTransport(
             data: await service.startTopicPreview(ctx, {
               itemId: b.itemId ?? "",
               sourceSnapshotId: b.sourceSnapshotId ?? "",
-              positioningVersionId: b.positioningVersionId ?? "",
+              ...(b.positioningVersionId ? { positioningVersionId: b.positioningVersionId } : {}),
               idempotencyKey: b.idempotencyKey ?? "",
             }),
             meta: { requestId },
@@ -417,19 +417,17 @@ export function createIntelligenceTransport(
                 avoid: string[];
               };
             };
+            editedDraftContentText?: string;
             idempotencyKey?: string;
           };
-          if (!b.editedCandidate) {
-            throw new UnsupportedOperationError(
-              "intelligence.transforms.confirmTopic.invalid",
-            );
-          }
+          // rewrite_only允许采纳已保存原稿；来源、正文与旧卡片校验仍由service执行。
           return {
             data: await service.confirmTopic(
               ctx,
               p.transformId ?? "",
               {
-                editedCandidate: b.editedCandidate,
+                ...(b.editedCandidate ? { editedCandidate: b.editedCandidate } : {}),
+                ...(b.editedDraftContentText !== undefined ? { editedDraftContentText: b.editedDraftContentText } : {}),
                 idempotencyKey: b.idempotencyKey ?? "",
               },
             ),

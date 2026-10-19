@@ -1,0 +1,11 @@
+{
+  "id": "ai-task-31605a03-300",
+  "status": "failed",
+  "executionTaskId": "exec_2e1fe915-9e18-4378-927d-a4f37fc28aee",
+  "runtimeStatus": "failed",
+  "errorCode": "WORKER_EXECUTION_INTERRUPTED",
+  "errorMessage": "执行停止，等待恢复或诊断",
+  "requestedAt": "2026-10-02T15:52:00.620Z",
+  "startedAt": null,
+  "completedAt": null
+}

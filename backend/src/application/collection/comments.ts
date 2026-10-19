@@ -1,24 +1,27 @@
 import {isBrowserProfileBusy,BROWSER_PROFILE_RETRY_MS} from "../../modules/ai-runtime/scheduled-collection-runner";
 import {readAllPublicationPages} from './publication-pages';
-import type { RequestContext } from "@creatoros/contract";
+import { ENDPOINTS,type RequestContext } from "@creatoros/contract";
+import {OwnershipError} from '../../modules/publishing';
 import type { Collector as ScheduledCollector } from "../../modules/ai-runtime";
 import { createIngestionRepository } from "../../modules/ingestion";
 import { ingestComments, type CommentRecord, type CommentIngestPorts } from "./comment-ingestion";
 import { orderCommentCollection, buildCommentCoverageMessage, type CommentCollectionCandidate } from "./comment-collection-plan";
+import {formatCommentReadDiagnostics,type CommentReadDiagnostics} from './comment-read-diagnostics';
 interface CommentReadOptions {maxPages?:number;commentWatermark:(awemeId:string)=>Promise<Set<string>>}
 /** 评论增量读取、原入库去重账本与进度组合。 */
 export function createCommentsCollector(ports:{db: import("../../db").Db;
 deps: {now:()=>string;nextId:(prefix:string)=>string};
-sync?:Pick<import("../../modules/analytics").PublicationSyncService,"due"|"settle">;
+sync?:Pick<import("../../modules/analytics").PublicationSyncService,"due"|"settle"> & Partial<Pick<import("../../modules/analytics").PublicationSyncService,"failures">>;
 checkScheduledSignal:()=>void;
 ingestionService: Pick<ReturnType<typeof import("../../modules/ingestion").createIngestionService>,"ensureDouyinSource"|"createRun"|"completeRun">;
 candidateService: Pick<ReturnType<typeof import("../../modules/candidate").createCandidateService>,"ingestAudienceSignal"|"listCommentsForPublication">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"resolvePublication"|"getRecentPublicationsWithTitle">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>,"getPublicationAnalytics">;
 readComments:(ctx:RequestContext,awemeId:string,options:CommentReadOptions)=>Promise<CommentRecord[]>;
-readCommentsForWorks:(ctx:RequestContext,awemeIds:string[],options:CommentReadOptions & {onWorkComplete:(work:{awemeId:string;records:CommentRecord[];complete?:boolean},progress:{processed:number;total:number})=>Promise<void>})=>Promise<{works:Array<{awemeId:string;records:CommentRecord[];complete?:boolean}>;truncated:boolean;cooldownRemainMs:number}>;}):ScheduledCollector {
+readCommentsForWorks:(ctx:RequestContext,awemeIds:string[],options:CommentReadOptions & {onWorkComplete:(work:{awemeId:string;records:CommentRecord[];complete?:boolean;diagnostics?:CommentReadDiagnostics},progress:{processed:number;total:number})=>Promise<void>})=>Promise<{works:Array<{awemeId:string;records:CommentRecord[];complete?:boolean;diagnostics?:CommentReadDiagnostics}>;truncated:boolean;cooldownRemainMs:number}>;}):ScheduledCollector {
 const {db,deps,checkScheduledSignal,ingestionService,candidateService,publishingService,analyticsService,readComments,readCommentsForWorks}=ports;
 return async (ctx, target, report, execution) => {
+      const selection=target.publicationIds===undefined?undefined:ENDPOINTS.runScheduledJobNow.body.parse({publicationIds:target.publicationIds})!.publicationIds!;
       // [T-152] 阶段①:登录校验 + 确保采集源(抓评论前 fetchDouyinComments* 内先校验登录态)。
       report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
       const externalSourceId =
@@ -95,6 +98,7 @@ return async (ctx, target, report, execution) => {
       };
       // 单作品评论落库(纯 ingest 部分,抓取已由调用方完成;每作品前 100 条由抓取层 maxPages 控)。
       // commentPorts 复用(整批共用一套),ingest 逻辑不变。
+      let receivedComments=0,skippedComments=0;
       const ingestRecordsForWork = async (
         awemeId: string,
         records: CommentRecord[],
@@ -109,6 +113,7 @@ return async (ctx, target, report, execution) => {
             ports: commentPorts,
           },
         );
+        receivedComments+=result.received;skippedComments+=result.skipped;
         return result.written;
       };
       // [T-177 增量化] 评论 watermark 只读端口:按 awemeId 反查库里该作品已知评论的 externalId 集
@@ -136,7 +141,7 @@ return async (ctx, target, report, execution) => {
       //    (fetchDouyinCommentsForWorks:openContext 开一次 → 循环内逐作品抓 → close 一次),
       //    取代旧「N 作品 × 各开一个 headless 浏览器」路径。
       const single =
-        typeof target.awemeId === "string" && target.awemeId
+        !selection && typeof target.awemeId === "string" && target.awemeId
           ? target.awemeId
           : "";
       if (single) {
@@ -161,10 +166,26 @@ return async (ctx, target, report, execution) => {
       }
       const pubs = await readAllPublicationPages(page=>publishingService.getRecentPublicationsWithTitle(ctx,page));
       const visiblePubs = pubs.filter(p=>p.platform === "douyin" && p.externalId && !p.hiddenAt && p.status === "published");
+      const selectedIds=selection?new Set(selection):null;
+      const eligiblePubs=selectedIds?visiblePubs.filter(pub=>selectedIds.has(pub.id)):visiblePubs;
+      if(selection&&eligiblePubs.length!==selection.length)throw new OwnershipError('选中的作品不存在或当前账号不可采集');
       const douyinPubs=[];
-      for(const pub of visiblePubs){if(!ports.sync||await ports.sync.due(ctx,pub.id,"comments"))douyinPubs.push(pub);}
+      for(const pub of eligiblePubs){if(!ports.sync||await ports.sync.due(ctx,pub.id,"comments"))douyinPubs.push(pub);}
 
-      if(!douyinPubs.length)return {itemsNew:0,itemsUpdated:0,message:"评论数据尚未到更新时间"};
+      // 当前账号的持久失败水位包含 backoff 中的前批作品，不能用 due 过滤后的最后一批覆盖。
+      let accountFailures:number|null=null;
+      const readUnresolvedFailures=async()=>{
+        accountFailures=ports.sync?.failures?await ports.sync.failures(ctx,["comments"]):null;
+        return selection&&ports.sync?.failures?await ports.sync.failures(ctx,["comments"],selection):accountFailures;
+      };
+      const failureLabel=selection?'选中作品的评论同步':'当前账户评论同步';
+      const diagnosticScope=()=>selection?{size:selection.length,accountFailures}:undefined;
+      if(!douyinPubs.length){
+        const unresolved=await readUnresolvedFailures();
+        return {itemsNew:0,itemsUpdated:0,incomplete:unresolved!==null&&unresolved>0,
+          message:(unresolved?`${failureLabel}仍有 ${unresolved} 个作品失败未恢复，等待重试`:"评论数据尚未到更新时间")+
+            '\n评论抓取诊断：'+formatCommentReadDiagnostics([],{receivedComments:0,writtenComments:0,skippedComments:0},unresolved,diagnosticScope())};
+      }
       // [T-232 断点续采] 逐作品预取 watermark:一石二鸟 ——「已采与否」的判据(非空 = 采过,
       //   复用 T-177 既有机制不新造持久锚)+ 直接喂给抓取层做增量 early-break(免每作品双读)。
       const watermarks = new Map<string, Set<string>>();
@@ -235,7 +256,7 @@ return async (ctx, target, report, execution) => {
           onWorkComplete: async ({ awemeId, records,complete }, progress) => {
             total += await ingestRecordsForWork(awemeId, records);
             const pub=pubByExternalId.get(awemeId);
-            if(ports.sync&&pub&&complete!==false){await ports.sync.settle(ctx,pub.id,"comments",{success:true});completedDuringRead.add(awemeId);}
+            if(ports.sync&&pub&&complete===true){await ports.sync.settle(ctx,pub.id,"comments",{success:true});completedDuringRead.add(awemeId);}
             report({
               stage: "comments",
               processed: progress.processed,
@@ -253,7 +274,7 @@ return async (ctx, target, report, execution) => {
         throw error;
       }
       if(ports.sync){
-        const completed=new Set(batch.works.filter(w=>w.complete!==false).map(w=>w.awemeId));
+        const completed=new Set(batch.works.filter(w=>w.complete===true).map(w=>w.awemeId));
         for(const pub of batchPubs){
           if(completedDuringRead.has(pub.externalId!))continue;
           // 截断可能落在当前作品内部，保留结果但不把部分评论误记整作品成功。
@@ -262,18 +283,23 @@ return async (ctx, target, report, execution) => {
       }
       // [T-232 run 诚实] 全量完成 vs 额度截断,message 走 CollectResult.message(T-235a 既有
       //   机制,runner 拼进合成 step 文本供运行详情展示);itemsNew 照实,不假装全量。
+      const completedWorks=batch.works.filter(work=>work.complete===true).length;
+      const unresolved=await readUnresolvedFailures();
       const coverageMessage = buildCommentCoverageMessage({
         collectedWorks: batch.works.length,
+        completedWorks,
         totalWorks: awemeIds.length,
         truncated: batch.truncated,
         cooldownRemainMs: batch.cooldownRemainMs,
-      });
+        hasMore,
+      })+(unresolved?`；${failureLabel}仍有 ${unresolved} 个作品失败未恢复`:'')+
+        '\n评论抓取诊断：'+formatCommentReadDiagnostics(batch.works,{receivedComments,writtenComments:total,skippedComments},unresolved,diagnosticScope());
       report({
         stage: "comments",
         processed: batch.works.length,
         total: awemeIds.length,
         message: coverageMessage,
       });
-      return { itemsNew: total, itemsUpdated: 0, continueCollection:execution ? hasMore||batch.truncated : undefined, ...(execution&&batch.truncated&&batch.cooldownRemainMs>0?{retryAfterMs:Math.min(86_400_000,Math.max(2000,batch.cooldownRemainMs))}:{}), incomplete:batch.truncated||batch.works.some(w=>w.complete===false), message: coverageMessage };
+      return { itemsNew: total, itemsUpdated: 0, continueCollection:execution ? hasMore||batch.truncated : undefined, ...(execution&&batch.truncated&&batch.cooldownRemainMs>0?{retryAfterMs:Math.min(86_400_000,Math.max(2000,batch.cooldownRemainMs))}:{}), incomplete:batch.truncated||completedWorks<awemeIds.length||(unresolved!==null&&unresolved>0), message: coverageMessage };
     };
 }

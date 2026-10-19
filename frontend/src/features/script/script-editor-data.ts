@@ -147,12 +147,10 @@ async function fetchVersionsAndCurrent(
     body: undefined,
   });
   const rows = (Array.isArray(versions) ? versions : []) as VersionRow[];
-  if (rows.length === 0) return null;
+  if (rows.length === 0) throw new Error("当前脚本保存版本不存在");
   const current =
-    rows.find((v) => v.id === artifact.currentVersionId) ??
-    // Fallback: highest versionNumber if currentVersionId did not resolve.
-    rows.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
-  if (!current) return null;
+    rows.find((v) => v.id === artifact.currentVersionId);
+  if (!current) throw new Error("当前脚本版本指针不可读取");
   return { rows, current };
 }
 
@@ -311,8 +309,9 @@ export async function loadScriptEditorData(
       outline,
       goldenQuotes,
     };
-  } catch {
-    return null;
+  } catch(error) {
+    // 原稿读取错误必须到既有页面错误边界，不能作为无正式稿回灌 seed。
+    throw error;
   }
 }
 
@@ -324,16 +323,13 @@ interface OutlineArtifactDto {
   readonly id: string;
   readonly artifactType: string;
   readonly stage?: string;
+  readonly currentVersionId?:string|null;
+  readonly currentVersionIsReserved?:boolean;
 }
 
 /**
- * [T-050] Resolve the script artifact id from the DB (was: fixture 查表旁路 —— selector
- * 查 canonicalDataset.artifacts,真项目永远 null → 页面渲染 demo sections)。语义与旧
- * selector 一致:优先**有正文**的分镜脚本(output_script),回退有正文的主脚本
- * (master_script)。历史 CLI/Agent 可能先铸出一个空 output_script v1；它不能遮住
- * 已有母稿，否则项目页会显示“v1”但编辑器正文为空。所有候选都没有正文时仍返回
- * 第一个 output_script 作为正式写入目标；两类都没有 → null。任何读失败按候选降级，
- * 不让一条损坏版本拖空整个项目。
+ * 按后端明确预留投影读取正式 output_script，再兼容 master_script。
+ * 正式保存空稿仍 authoritative；旧缺省标记按已保存读取，不按正文猜预留。
  */
 export async function resolveScriptArtifactIdFromDb(
   projectId: string | null,
@@ -354,29 +350,10 @@ export async function resolveScriptArtifactIdFromDb(
     const masters = scriptArtifacts.filter(
       (a) => a.artifactType === "master_script",
     );
-    const candidates = [...outputs, ...masters];
-
-    for (const candidate of candidates) {
-      try {
-        const fetched = await fetchVersionsAndCurrent(client, candidate.id);
-        if (!fetched) continue;
-        const data = fetched.current.contentData as
-          | { html?: unknown }
-          | undefined;
-        const hasHtml =
-          typeof data?.html === "string" && data.html.trim().length > 0;
-        const sections = sectionsFromVersion(fetched.current);
-        if (hasHtml || (sections?.length ?? 0) > 0) return candidate.id;
-      } catch {
-        // 单个候选损坏/读失败：继续尝试同项目其他正式脚本。
-      }
-    }
-
-    // 全部都是空壳时保留 output_script 作为正式写入目标；没有 output 才退
-    // master。这样“新项目尚未写稿”仍会写到既有正式 artifact，而不是重复创建。
-    return outputs[0]?.id ?? masters[0]?.id ?? null;
-  } catch {
-    return null;
+    // 只排除后端明确预留状态；已保存空稿仍是正式写入/读取目标。
+    return [...outputs,...masters].find(row=>row.currentVersionId && row.currentVersionIsReserved!==true)?.id??null;
+  } catch(error) {
+    throw error;
   }
 }
 

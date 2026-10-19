@@ -708,6 +708,83 @@
       "when": 1789430400001,
       "tag": "0100_traffic_unavailable",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1789963200000,
+      "tag": "0101_workbench_artifact_lineage",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1791043200001,
+      "tag": "0128_workspace_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1791043200002,
+      "tag": "0129_workbench_artifact_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1791043200003,
+      "tag": "0130_legacy_source_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1791043200004,
+      "tag": "0131_platform_native_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1791043200005,
+      "tag": "0132_legacy_scheduled_job_membership",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1791043200006,
+      "tag": "0133_assistant_execution_engine",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1791043200008,
+      "tag": "0135_model_routing",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1791043200009,
+      "tag": "0136_embedding_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1791043200010,
+      "tag": "0137_observability_routing_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1791043200011,
+      "tag": "0138_script_target_reservation",
+      "breakpoints": true
     }
   ]
 }

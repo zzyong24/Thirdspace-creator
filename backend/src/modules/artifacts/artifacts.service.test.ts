@@ -1,3 +1,8 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["project-1", "user-a", "acct-a"], ["project-b", "user-b", "acct-b"], ["proj-shared-1", "user-a", "acct-1"], ["proj-shared-2", "user-a", "acct-2"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -51,12 +56,13 @@ let service: ArtifactsService;
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedOwnedProjects(db);
   service = makeService(db);
 });
 
 async function seedArtifact(ctx: RequestContext) {
   return service.createArtifact(ctx, {
-    projectId: "project-1",
+    projectId: ctx.userId===ctxB.userId?"project-b":"project-1",
     title: "脚本",
     artifactType: "master_script",
     stage: "script",
@@ -485,6 +491,7 @@ describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)
 
   it("AI 版 → 用户改版 (脚本) → 触发一条 delta,before/after 正确", async () => {
     const { db } = await createDb();
+    await seedOwnedProjects(db);
     const { service: svc, calls } = makeServiceWithSpy(db);
     const artifact = await seedScript(svc, ctxA);
     // 前一版 = AI 产出。
@@ -505,6 +512,7 @@ describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)
 
   it("纯用户版 → 用户版 → 不触发(前版非 AI)", async () => {
     const { db } = await createDb();
+    await seedOwnedProjects(db);
     const { service: svc, calls } = makeServiceWithSpy(db);
     const artifact = await seedScript(svc, ctxA);
     await svc.createVersion(ctxA, artifact.id, { contentText: "用户稿 A" });
@@ -514,6 +522,7 @@ describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)
 
   it("非脚本 artifact 即使 AI→用户 也不触发(埋点限脚本改稿)", async () => {
     const { db } = await createDb();
+    await seedOwnedProjects(db);
     const { service: svc, calls } = makeServiceWithSpy(db);
     const artifact = await svc.createArtifact(ctxA, {
       projectId: "project-1",
@@ -569,22 +578,22 @@ describe("[T-332 S2] artifacts 按号隔离:未选号禁读写 + 双号零交叉
 
   it("双号隔离:同项目下各建稿,list 零交叉,by-id 跨号 404,版本链承父锚", async () => {
     const a1 = await service.createArtifact(ctxAcct1, {
-      projectId: "proj-shared",
+      projectId: "proj-shared-1",
       title: "号1稿",
       artifactType: "master_script",
       stage: "script",
     });
     const a2 = await service.createArtifact(ctxAcct2, {
-      projectId: "proj-shared",
+      projectId: "proj-shared-2",
       title: "号2稿",
       artifactType: "master_script",
       stage: "script",
     });
     expect(
-      (await service.listProjectArtifacts(ctxAcct1, "proj-shared")).map((x) => x.id),
+      (await service.listProjectArtifacts(ctxAcct1, "proj-shared-1")).map((x) => x.id),
     ).toEqual([a1.id]);
     expect(
-      (await service.listProjectArtifacts(ctxAcct2, "proj-shared")).map((x) => x.id),
+      (await service.listProjectArtifacts(ctxAcct2, "proj-shared-2")).map((x) => x.id),
     ).toEqual([a2.id]);
     // §4.5 by-id 门:跨号读与未知 id 同语义。
     await expect(service.getArtifact(ctxAcct2, a1.id)).rejects.toBeInstanceOf(
@@ -599,4 +608,55 @@ describe("[T-332 S2] artifacts 按号隔离:未选号禁读写 + 双号零交叉
       service.createVersion(ctxAcct2, a1.id, { contentText: "越号改稿" }),
     ).rejects.toBeInstanceOf(OwnershipError);
   });
+});
+
+// 补充公共服务回归，独立于 T-1029 候选采纳模块；不是追补历史红测。
+it("T-1034：分镜保存→局部修改→实际制作正文与导出→回滚保持同一真值",async()=>{
+ const {createReviewSubjectContext}=await import('../../application/context/review-subject');
+ const {extractVoiceoverText}=await import('../production/material-export');
+ let sequence=1000;
+ const ctx:RequestContext={userId:"u-table",accountId:"a-table",requestId:"r-table",source:"user"};
+ const deps={now:()=>"2026-10-01T02:00:00.000Z",nextId:(prefix:string)=>prefix+"-"+(++sequence)};
+ const {createProjectsService,createProjectRepository}=await import("../projects");
+ const projects=createProjectsService(createProjectRepository(db),deps);
+ const artifacts=createArtifactsService({db,...deps,assertProjectOwned:(c,id)=>projects.getProject(c,id),resolveOutputProjectId:(c,id)=>projects.getProjectIdByOutput(c,id)});
+ const text="# 分镜脚本\n\n| # | 口播 | 画面 | 字幕 |\n| --- | --- | --- | --- |\n| 1 | 先定作品。 | 作品清单 | 先定作品 |\n| 2 | 再备正文和图片。 | 图文稿 | 准备素材 |";
+ {
+  const project=await projects.createProject(ctx,{title:"结构往返"});const output=await projects.createOutput(ctx,project.id,{title:"视频",contentType:"video"});
+  const artifact=await artifacts.createArtifact(ctx,{projectId:project.id,contentOutputId:output.id,artifactType:"output_script",stage:"script",title:"稿"});
+  const versionId=(await artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:text})).id;
+  const saved=(await artifacts.listVersions(ctx,artifact.id)).find(v=>v.id===versionId)!;
+  expect(saved.contentText).toBe(text);
+  expect(saved.contentData).toMatchObject({transcript:"先定作品。\n再备正文和图片。",sections:[{id:"script-saved-0",body:"口播：先定作品。\n画面：作品清单\n字幕：先定作品"},{id:"script-saved-1",body:"口播：再备正文和图片。\n画面：图文稿\n字幕：准备素材"}]});
+  const reader=createReviewSubjectContext({projectsService:projects,artifactsService:artifacts,selectReadableProjectScriptArtifact:rows=>rows.find(r=>r.id===artifact.id),readProjectRadarDraftSeed:async()=>"旧seed",publishingService:{listPublications:async()=>[]},analyticsService:{getPublicationAnalytics:async()=>({rows:[],total:0})},candidateService:{listCommentsForPublication:async()=>[]}} as Parameters<typeof createReviewSubjectContext>[0]);
+  expect(await reader.getScript(ctx,project.id)).toBe("先定作品。\n再备正文和图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("先定作品。\n再备正文和图片。");
+  await expect(artifacts.createVersion({...ctx,accountId:"other"},artifact.id,{contentText:text})).rejects.toThrow();
+  await expect(artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:text})).rejects.toThrow();
+  const originalSections=(saved.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const patched=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:versionId,sectionId:originalSections[0]!.id,expectedOriginalText:originalSections[0]!.body,replacementText:"口播：先核对作品。\n每个平台都用自己的稿。\n画面：新作品清单\n字幕：新作品"});
+  expect(await reader.getScript(ctx,project.id)).toBe("先核对作品。\n每个平台都用自己的稿。\n再备正文和图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("先核对作品。\n每个平台都用自己的稿。\n再备正文和图片。");
+  const patchSections=(patched.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const plain=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:patched.id,sectionId:patchSections[0]!.id,expectedOriginalText:patchSections[0]!.body,replacementText:"用户明确输入的新正文。"});
+  expect(await reader.getScript(ctx,project.id)).toBe("用户明确输入的新正文。\n再备正文和图片。");
+  const plainSections=(plain.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const visualOnly=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:plain.id,sectionId:plainSections[0]!.id,expectedOriginalText:plainSections[0]!.body,replacementText:"画面：展示作品\n字幕：作品"});
+  expect(await reader.getScript(ctx,project.id)).toBe("\n再备正文和图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("再备正文和图片。");
+  await expect(artifacts.applyScriptPatch({...ctx,accountId:"other"},artifact.id,{expectedVersionId:visualOnly.id,sectionId:originalSections[0]!.id,expectedOriginalText:"画面：展示作品\n字幕：作品",replacementText:"不应保存"})).rejects.toThrow();
+  await artifacts.restoreVersion(ctx,artifact.id,versionId,visualOnly.id);
+  expect(await reader.getScript(ctx,project.id)).toBe("先定作品。\n再备正文和图片。");
+  const ambiguousText=text.replace("先定作品。", "说明两行设置：<br>画面：蓝色<br>字幕：要点");
+  const ambiguous=await artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:versionId,contentText:ambiguousText});
+  const ambiguousSections=(ambiguous.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const unrelatedPatch=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:ambiguous.id,sectionId:ambiguousSections[1]!.id,expectedOriginalText:ambiguousSections[1]!.body,replacementText:"再核对图片。"});
+  expect(await reader.getScript(ctx,project.id)).toBe("说明两行设置：\n画面：蓝色\n字幕：要点\n再核对图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("说明两行设置：\n画面：蓝色\n字幕：要点\n再核对图片。");
+  await artifacts.restoreVersion(ctx,artifact.id,versionId,unrelatedPatch.id);
+  const explicit=await artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:versionId,contentText:text,contentData:{}});expect(explicit.contentData).toEqual({});
+  expect(await reader.getScript(ctx,project.id)).toBe(text);
+  const other=await artifacts.createArtifact(ctx,{projectId:project.id,artifactType:"research_material",stage:"script",title:"其他类型"});
+  expect((await artifacts.createVersion(ctx,other.id,{contentText:text})).contentData).toEqual({});
+ }
 });

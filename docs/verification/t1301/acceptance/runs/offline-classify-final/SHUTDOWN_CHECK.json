@@ -1,0 +1,36 @@
+{
+  "toolSessionExitCode": 143,
+  "sidecarExit": {
+    "code": 143,
+    "signal": null,
+    "childPid": 727,
+    "endedAt": "2026-10-15T20:40:27.200Z",
+    "formalAppTouched": false,
+    "ownedDataPreserved": true
+  },
+  "gracefulFlushMarkerObserved": false,
+  "rootGracefulShutdownProven": false,
+  "allKnownProcessesEnded": true,
+  "listenerAbsent": true,
+  "allDatabaseHandlesAbsent": true,
+  "checks": {
+    "processGroup": {
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "port": {
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "databaseHandles": {
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "observedAt": "2026-10-15T20:41:12.679774+00:00",
+  "offlineMode": "仅静止副本恢复一致性取证；不声称原库优雅flush",
+  "originalRootMayReopen": false
+}

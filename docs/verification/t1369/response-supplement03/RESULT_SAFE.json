@@ -1,0 +1,44 @@
+{
+  "outcome": "预热FAIL，受控首页筛选/侧栏未执行；非产品导航RED/GREEN",
+  "primaryError": "Error: PREWARM_ABSOLUTE_DEADLINE_600000",
+  "prewarmElapsedMs": 600000.560417,
+  "wrapperDurationSeconds": 630.2005673340173,
+  "wrapperExitCode": 1,
+  "controlledActionCount": 0,
+  "completed": false,
+  "cleanup": [
+    {
+      "phase": "context-close",
+      "at": 1792390600042,
+      "endedAt": 1792390600096,
+      "state": "completed"
+    },
+    {
+      "phase": "observer-settle",
+      "at": 1792390600096,
+      "endedAt": 1792390600096,
+      "state": "completed"
+    },
+    {
+      "phase": "request-terminal-check",
+      "at": 1792390600096,
+      "state": "completed",
+      "unfinished": []
+    }
+  ],
+  "unfinishedRequests": 0,
+  "productionChanged": false,
+  "evidence": {
+    "witness": "docs/verification/t1369/response-supplement03/artifacts/t1369-dashboard-filter-sid-ffb73-on-真实首页筛选后立即侧栏导航，保完整响应和最终页面-t1369-normal/witness.json",
+    "processSample": "docs/verification/t1369/response-supplement03/OWNED_PREWARM_PROCESS_SAMPLE_SAFE.json",
+    "pgActivity": "docs/verification/t1369/response-supplement03/PRIVATE_PG_ACTIVITY_SAFE.json",
+    "nextTrace": "docs/verification/t1369/response-supplement03/EXISTING_NEXT_TRACE_SAFE.json",
+    "processCleanup": "docs/verification/t1369/response-supplement03/OWNED_CLEANUP_SAFE.json"
+  },
+  "limits": [
+    "不把Next Compiling标签当持续CPU编译证据；本轮采样主线程主要kevent等待，PG当时11idle无锁等待。",
+    "既有Next trace只保完成落盘span，缺少首页完成记录不能指定等待首因。",
+    "未执行受控链；不复写原自然GREEN、第二次首次文档FAIL/interrupt、安装403纠正历史。",
+    "用户真实卡死首因仍UNKNOWN；未改产品，不签任务完成。"
+  ]
+}

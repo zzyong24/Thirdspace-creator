@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "父表预锁由 ROW SHARE NOWAIT 提升为 SHARE NOWAIT，能够在最终证明窗口阻止 projects、content_outputs、artifacts 的 INSERT/UPDATE/DELETE，关闭缺失父行在第二次扫描后出现的 phantom；既有 FOR SHARE/FOR UPDATE 所需 ROW SHARE 与该表锁兼容，冲突 DML 仍通过 55P03 整轮回滚重试。未发现新增问题。",
+  "findings": []
+}

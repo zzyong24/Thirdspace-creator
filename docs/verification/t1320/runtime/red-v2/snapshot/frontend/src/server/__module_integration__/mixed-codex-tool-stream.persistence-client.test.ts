@@ -1,0 +1,45 @@
+// @vitest-environment node
+import {it,expect,vi} from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {ENDPOINTS,type Endpoint,type RequestContext} from '@creatoros/contract';
+import {aiTasks,aiTaskResults,aiMessages,executionTasks,executionCalls,executionStreamEvents,eq,asc,type Db} from '@creatoros/backend';
+const owned=vi.hoisted(()=>({root:'',db:null as Db|null,host:null as any,errors:[] as any[],ports:[] as any[]}));
+vi.mock('@creatoros/backend',async original=>{const actual=await original<typeof import('@creatoros/backend')>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const opened=await actual.createConfiguredDb(...args);owned.db=opened.db;return opened;}};});
+vi.mock('@creatoros/backend/modules/assets',async original=>{const actual=await original<typeof import('@creatoros/backend/modules/assets')>();return {...actual,migrateStorageRoot:async()=>{throw Error('T1320_USER_MEDIA_MIGRATION_FORBIDDEN');},createLocalFsObjectStorage:(...args:Parameters<typeof actual.createLocalFsObjectStorage>)=>actual.createLocalFsObjectStorage({...args[0],rootPath:path.join(owned.root,'media')},args[1])};});
+vi.mock('@/server/activation/client-config.server',async original=>({...await original<typeof import('@/server/activation/client-config.server')>(),readChannelModelAuthority:async()=>({authority:'local'})}));
+// 唯一供应商可用性边界是合成Codex安装/模型列表；不访问用户认证。
+vi.mock('@creatoros/backend/modules/ai-runtime',async original=>{const actual=await original<typeof import('@creatoros/backend/modules/ai-runtime')>();const status={engine:'codex' as const,installed:true,available:true,version:'0.159.3',defaultModelId:'t1320-fixture-model',availableModels:[{id:'t1320-fixture-model',inputModalities:['text']}],loginStatus:'authenticated' as const,capabilities:{text:true,imageUnderstanding:false,imageGeneration:false,imageEditing:'unavailable' as const}};return {...actual,createLocalCodexStatusService:()=>({read:async()=>structuredClone(status),peek:()=>structuredClone(status),stop:async()=>{}})};});
+vi.mock('@/server/execution-worker-path',async original=>({...await original<typeof import('@/server/execution-worker-path')>(),resolveExecutionWorkerPath:()=>path.resolve('../docs/verification/t1320/runtime/worker-entry.fixture.cjs')}));
+vi.mock('../../../../backend/src/modules/execution/model-worker-dispatcher',async original=>{const actual=await original<typeof import('../../../../backend/src/modules/execution/model-worker-dispatcher')>();return {...actual,createChatWorkerDispatcher:(...args:Parameters<typeof actual.createChatWorkerDispatcher>)=>{const host=actual.createChatWorkerDispatcher(...args);owned.host=host;return {...host,start:()=>{}};}};});
+// 透明观察原host invoke，原validate/节点/账本/投影均不替换。
+vi.mock('../../../../backend/src/modules/execution/worker-supervisor',async original=>{const actual=await original<typeof import('../../../../backend/src/modules/execution/worker-supervisor')>();return {...actual,createWorkerSupervisor:(options:Parameters<typeof actual.createWorkerSupervisor>[0])=>actual.createWorkerSupervisor({...options,extraEnv:{...options.extraEnv,T1320_FIXTURE_ROOT:owned.root,CODEX_HOME:path.join(owned.root,'empty-codex-home'),TMPDIR:path.join(owned.root,'tmp'),TEMP:path.join(owned.root,'tmp'),TMP:path.join(owned.root,'tmp')},ports:{...options.ports,async invoke(ref,port,input){owned.ports.push({phase:'invoke',port,attempt:ref.attempt,callId:(input as any)?.callId??null});try{const result=await options.ports.invoke(ref,port,input);owned.ports.push({phase:'receipt',port,attempt:ref.attempt,callId:(result as any)?.callId??null,status:(result as any)?.status??null});return result;}catch(error){const e=error as Error;owned.errors.push({port,attempt:ref.attempt,callId:(input as any)?.callId??null,name:e.name,message:e.message,stack:(e.stack??'').split('\n').filter((x,i)=>i===0||x.includes('/backend/src/')).slice(0,12)});throw error;}}}})};});
+import {compositeTransport,getChatRuntime,__resetPersistenceForTests} from '@/server/persistence-client';
+import {canonicalDataset} from '@/fixtures/canonical';
+const runtime=path.resolve('../docs/verification/t1320/runtime');
+const hash=(x:unknown)=>createHash('sha256').update(typeof x==='string'?x:JSON.stringify(x)).digest('hex');
+const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(owned.root,name+'.json'),JSON.stringify(value,null,2)+'\n');
+const scenarios:Record<string,string[]>={main:['system_features','topic_generate'],reverse:['topic_generate','system_features'],interleaved:['system_features','topic_generate','system_features','topic_generate'],'proposal-before':['system_action_propose','system_features','topic_generate'],'proposal-after':['system_features','topic_generate','system_action_propose']};
+const selected=(process.env.T1320_CASES??'main').split(',');
+it.each(selected)('完整公开v2混流 %s',async name=>{
+ const sequence=scenarios[name];expect(sequence).toBeDefined();
+ owned.root=path.join(runtime,'cases',process.env.T1320_RUN_ID??'unbound',name);fs.mkdirSync(owned.root,{recursive:true});fs.mkdirSync(path.join(owned.root,'tmp'),{recursive:true});fs.mkdirSync(path.join(owned.root,'empty-codex-home'),{recursive:true});
+ owned.errors=[];owned.ports=[];owned.host=null;owned.db=null;
+ const binding=JSON.parse(fs.readFileSync(path.join(runtime,'WORKER_BINDING.json'),'utf8')),bytes=fs.readFileSync(binding.executionWorkerPath);expect(bytes.length).toBe(binding.bytes);expect(createHash('sha256').update(bytes).digest('hex')).toBe(binding.sha256);
+ save('scenario',{name,sequence,kind:'normal',realExternalModels:0});
+ for(const [key,value] of Object.entries({DATABASE_URL:'',PGLITE_DATA_DIR:path.join(owned.root,'db'),CREATOROS_STORAGE:'local',CREATOROS_MEDIA_ROOT:path.join(owned.root,'media'),CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_CLIENT_CONFIG_PULL_ENABLED:'0',CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH:path.join(owned.root,'missing-seed')}))vi.stubEnv(key,value);
+ __resetPersistenceForTests();let ctx:RequestContext={userId:canonicalDataset.user.id,accountId:null,requestId:'t1320-owned',source:'user'};let taskId='';
+ async function call(endpoint:Endpoint,body?:unknown,params?:unknown,query?:unknown){return (await compositeTransport.request(endpoint,{body,params,query} as never,ctx) as {data:any}).data;}
+ const snapshot=async(label:string)=>{if(!owned.db||!taskId)return;const db=owned.db;const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,taskId));const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,business!.executionTaskId!));const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task!.id)).orderBy(asc(executionCalls.sequence));const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task!.id)).orderBy(asc(executionStreamEvents.sequence));const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,(business!.inputData as any).conversationId));const results=await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,taskId));const value={label,business,task:{...task,fenceToken:task?.fenceToken?hash(task.fenceToken):null},calls,events,messages,results,firstThrow:owned.errors[0]??null,errors:owned.errors,ports:owned.ports};save(label,value);return value;};
+ try{
+  await getChatRuntime();const group=await call(ENDPOINTS.createAccountGroup,{name:'混流受控组',idempotencyKey:'t1320-'+name});ctx={...ctx,groupId:group.id,groupVersion:group.version};
+  const routing=await call(ENDPOINTS.getModelRouting);await call(ENDPOINTS.putModelRouting,{schemaVersion:1,expectedRevision:routing.revision,choices:{text:'codex',vision:'official',image:'official',video:'official',audio:'official',embed:'official'}});
+  const conversation=await call(ENDPOINTS.createConversation,{title:'受控混流回合',scope:'global'});const message=await call(ENDPOINTS.createMessage,{content:'先查看真实系统能力，再生成一条基于定位的工作记录选题；只准备候选，不自动采纳。',executionEngine:'codex'},{conversationId:conversation.id});taskId=message.modelMetadata.chatTaskId;save('public-submission',{group,routing,conversation,message});expect(taskId).toBeTruthy();expect(owned.host).toBeTruthy();
+  await owned.host.drainOnce();const final=await snapshot('after-drain');
+  expect(final?.task?.status,JSON.stringify({firstThrow:owned.errors[0],status:final?.task?.status})).toBe('succeeded');
+  expect(final?.business.status).toBe('succeeded');expect(final?.messages.filter(m=>m.role==='assistant')).toHaveLength(1);expect(final?.events.filter(e=>e.chunk.type==='finish')).toHaveLength(1);expect(owned.errors).toEqual([]);
+ }finally{
+  await snapshot('before-cleanup').catch(()=>{});await owned.host?.stop();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();vi.unstubAllEnvs();save('cleanup',{ownChatHostStopped:true,ownPersistenceDisposed:true,liveCandidateTouched:false,realExternalModels:0});
+ }
+},3600000);

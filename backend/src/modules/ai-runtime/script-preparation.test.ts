@@ -151,3 +151,17 @@ it("资料篡改先于上下文读取失败", async () => {
 
 // T959 无来源的指令同样必须进入生成上下文。
 describe("T959 无来源指令",()=>{it("不因sourceSnapshots缺失丢弃instruction",()=>{expect(readFrozenScriptSources({instruction:"只改开头"}).instruction).toBe("只改开头");});});
+
+it("转换只使用冻结来源与约束，重试不读今日项目、定位和知识",async()=>{
+ const d=deps(),body="仅选中的正文";
+ const task={projectId:"p",inputData:{artifactId:"art",outputId:"video",topic:"冻结主题",instruction:"转为脚本并保留事实约束",
+  conversion:{request:{sourceOutputId:"image",sourceVersionId:"v",targetType:"video",mode:"whole",clientRequestId:"context-conversion",reuseImages:[]},
+   sourceAnchor:{kind:"output_version",sourceOutputId:"image",artifactId:"graphic",versionId:"v",sourceType:"image",selectionDigest:"a".repeat(64),selection:{mode:"whole"}}},
+  conversionConstraints:{factItems:[],sourceRefs:[],ruleSnapshotRef:null},
+  sourceSnapshots:[{sourceType:"project_text",sourceId:"frozen",label:"来源",order:0,charCount:body.length,sha256:hash(body),body,complete:true}]}};
+ const first=await prepareScriptDraftContext(ctx,task,d);
+ expect(d.positioning.getPositioningCenter).not.toHaveBeenCalled();
+ const second=await prepareScriptDraftContext(ctx,structuredClone(task),d);
+ expect(second).toEqual(first);
+ if(first.mode==="generate"){expect(first.nodeInput.sourceMaterialsBrief).toContain(body);expect(first.nodeInput.positioningBrief).toBe("");}
+});

@@ -1,0 +1,40 @@
+{
+  "schema": "t1310-controlled-diagnosis-handoff/v1",
+  "agent": "/root/sol_initial_review_t1307_t1308",
+  "task": "T-1310:diagnosis",
+  "spec": "docs/features/t1310-topic-chat-completion-conflict-diagnosis.md",
+  "inputLock": "docs/verification/t1310/INPUT_LOCK.json",
+  "scope": "v2 Codex external topic.generate 首个完成冲突有界受控定位；不实施产品",
+  "workerBinding": "docs/verification/t1310/WORKER_BINDING.json",
+  "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+  "writeSet": [
+    "docs/verification/t1310/runtime/**",
+    "docs/verification/t1310/DIAGNOSIS_RESULT.md"
+  ],
+  "modelsAndCurrentBusinessRequests": 0,
+  "liveService": "C继续原controller94030，仅监督；诊断不得请求当前65353、打开活动DB或停止服务",
+  "originalTask": "execution-task-4e3e9dfc-2db7-419d-9dbf-9c4561b2fc5a cancelled保留，不恢复/重发；公开calls=[]不等内部零调用",
+  "targetFamilies": [
+    "常规有效v2 Codex external topic.generate子回执完整worker-host",
+    "partial或结构修复及全部实际strict receipt字段，先捕首个异常，未证不预设totals为根因",
+    "原生只读恢复的原authority/proof/fence/call一致性；仅受控provider/Codex协议替身，不读用户真实线程或借认证发模型"
+  ],
+  "harnessBoundary": [
+    "真实原schema/SDK/worker/host/ledger链按实际组合记录，不能只spy/helper；scope中已有旧legacy其它工具不代主目标",
+    "仅新owned临时DB/fixture/provider替身；受控原生读证明不冒当前公共真Codex/真HTTP实测",
+    "fork时用已实核现dc46 worker，禁止旧beforeAll build写ai-worker/dist；额外派生路径先报",
+    "不改生产/原tests/contract/worker/guard/maxAttempts/continuous/恢复权/原任务状态；找到产品根因先独立精确SPEC审批"
+  ],
+  "budgets": {
+    "testMs": 180000,
+    "hookMs": 180000,
+    "minRequestProbeMs": 120000,
+    "outerSeconds": 86400,
+    "workers": 1,
+    "retry": 0,
+    "higherOriginalPreserved": true
+  },
+  "startCondition": "真实lease已预备；本C及T1309复审报告窗完成并RELEASE后，Root明确放行才执行，不能因claim直接并写",
+  "report": "原案已证/缺失、源码候选、各受控fixture步骤/首错/调用状态/替身与尚未复现分列；诊断完成不是产品PASS/父完成；保存原失败",
+  "privateData": "当前session/凭据不需要读取；日志只必要安全ID/hash/类型/裁剪stack"
+}

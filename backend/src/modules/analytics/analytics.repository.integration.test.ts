@@ -150,7 +150,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
     expect(empty.rows).toEqual([]);
   });
 
-  it("getDashboardRollup: sums across pubs, takes each pub's latest, averages ctr/finish (user-scoped)", async () => {
+  it("getDashboardRollup: sums across pubs, takes each pub's latest, weights ctr/finish (user-scoped)", async () => {
     const repo = makeRepo(db);
     await repo.seedSnapshots([
       // pub-1: older snapshot (should be IGNORED in favor of the newer one)
@@ -167,7 +167,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
         userId: "user-a",
         publicationId: "pub-1",
         capturedAt: "2026-06-12T10:00:00.000Z",
-        rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6 },
+        rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6,ctr_denominator:100,finish_rate_denominator:100,ctr_definition:"test",finish_rate_definition:"test" },
       }),
       // pub-2: single snapshot
       snapshotRow({
@@ -175,7 +175,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
         userId: "user-a",
         publicationId: "pub-2",
         capturedAt: "2026-06-11T10:00:00.000Z",
-        rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8 },
+        rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8,ctr_denominator:50,finish_rate_denominator:50,ctr_definition:"test",finish_rate_definition:"test" },
       }),
       // user-b: must NOT leak into user-a's rollup
       snapshotRow({
@@ -197,8 +197,8 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
     expect(r.favorites).toBe(10);
     expect(r.followerGain).toBe(10);
     // averages: ctr (0.2+0.4)/2, finish (0.6+0.8)/2
-    expect(r.ctrAvg).toBeCloseTo(0.3, 10);
-    expect(r.finishAvg).toBeCloseTo(0.7, 10);
+    expect(r.ctrAvg).toBeCloseTo((0.2*100+0.4*50)/150, 10);
+    expect(r.finishAvg).toBeCloseTo((0.6*100+0.8*50)/150, 10);
   });
 
   it("getDashboardRollup: numeric-string detail metrics still count as detail snapshots", async () => {
@@ -215,7 +215,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
           comments: "5",
           shares: "2",
           follower_gain: "3",
-          ctr: "20.5",
+          ctr: "20.5",ctr_denominator:"100",finish_rate_denominator:"100",ctr_definition:"test",finish_rate_definition:"test",
           finish_rate: "12.5",
         },
       }),
@@ -227,7 +227,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
         rawMetrics: {
           views: "50",
           follower_gain: "7",
-          ctr: "40.5",
+          ctr: "40.5",ctr_denominator:"50",finish_rate_denominator:"50",ctr_definition:"test",finish_rate_definition:"test",
           finish_rate: "17.5",
         },
       }),
@@ -239,28 +239,103 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
     expect(r.likes).toBe(10);
     expect(r.followerGain).toBe(10);
     expect(r.finishCount).toBe(2);
-    expect(r.ctrAvg).toBeCloseTo(30.5, 10);
-    expect(r.finishAvg).toBeCloseTo(15, 10);
+    expect(r.ctrAvg).toBeCloseTo((20.5*100+40.5*50)/150, 10);
+    expect(r.finishAvg).toBeCloseTo((12.5*100+17.5*50)/150, 10);
   });
 
-  it("getDashboardRollup: no snapshots → all-zero rollup, snapshotCount 0 (no throw)", async () => {
+  it("getDashboardRollup: no snapshots → unknown metrics rollup, snapshotCount 0 (no throw)", async () => {
     const repo = makeRepo(db);
     const r = await repo.getDashboardRollup("user-empty", ACCT);
-    expect(r).toEqual({
-      plays: 0,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      favorites: 0,
-      followerGain: 0,
-      ctrAvg: 0,
-      finishAvg: 0,
+    expect(r).toMatchObject({
+      plays: null,
+      likes: null,
+      comments: null,
+      shares: null,
+      favorites: null,
+      followerGain: null,
+      ctrAvg: null,
+      finishAvg: null,
       finishCount: 0,
       snapshotCount: 0,
     });
   });
 
+  it("来源同时含 views=0 和 plays 时保留真实零，与作品目录口径一致", async () => {
+    const repo = makeRepo(db, "zero-play");
+    await repo.seedSnapshots([
+      snapshotRow({ id: "zero-view-baseline", userId: "user-a",
+        capturedAt: "2026-06-19T10:00:00.000Z", rawMetrics: { views: 0, plays: 23 } }),
+      snapshotRow({ id: "zero-view", userId: "user-a",
+        capturedAt: "2026-06-20T10:00:00.000Z", rawMetrics: { views: 0, plays: 23 } }),
+    ]);
+    expect((await repo.getDashboardRollup("user-a", ACCT)).plays).toBe(0);
+    expect(await repo.getDailyPlayTrend("user-a", ACCT, undefined, 7))
+      .toEqual([{ day: "2026-06-20", plays: 0 }]);
+  });
+
   // [T-332 S2] 采集 stamp(strict):appendSnapshot 的 accountId 必填 → metric_snapshots /
+  it("T1106 最后快照在列表与明细间轮换时仍使用两日共同的实测系列", async () => {
+    const repo = makeRepo(db, "series");
+    await repo.seedSnapshots([
+      snapshotRow({id:"series-v1",userId:"user-a",source:"ingestion",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{views:100}}),
+      snapshotRow({id:"series-p1",userId:"user-a",source:"ingestion",capturedAt:"2026-06-19T10:00:00.001Z",rawMetrics:{plays:101}}),
+      snapshotRow({id:"series-v2",userId:"user-a",source:"ingestion",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:150}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,undefined,7)).toEqual([{day:"2026-06-20",plays:50}]);
+  });
+
+  it("T1106 JSON窗口结构相同可比，平台、来源、键和窗口不一致保持未知",async()=>{
+    const repo=makeRepo(db,"window");
+    const cases=[
+      {id:"same",a:{views:100,metric_window:{from:1,to:2}},b:{views:120,metric_window:{to:2,from:1}},source:"platform_api",expected:20},
+      {id:"window",a:{views:100,metric_window:{from:1}},b:{views:120,metric_window:{from:2}},source:"platform_api",expected:null},
+      {id:"platform",a:{views:100,_platform:"douyin"},b:{views:120,_platform:"bilibili"},source:"platform_api",expected:null},
+      {id:"source",a:{views:100},b:{views:120},source:"ingestion",expected:null},
+      {id:"key",a:{views:100},b:{plays:120},source:"platform_api",expected:null},
+    ];
+    for(const c of cases){await repo.seedSnapshots([
+      snapshotRow({id:c.id+"-a",publicationId:c.id,userId:"user-a",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:c.a}),
+      snapshotRow({id:c.id+"-b",publicationId:c.id,userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",source:c.source,rawMetrics:c.b}),
+    ]);expect((await repo.getDailyPlayTrend("user-a",ACCT,[c.id],7))[0]?.plays).toBe(c.expected);}
+  });
+
+  it("T1106 缺失日不压缩日期，也不跨空档把多日累计当当日新增",async()=>{
+    const repo=makeRepo(db,"calendar");
+    for(const [day,views] of [[19,100],[20,150],[22,200]] as const)await repo.seedSnapshots([
+      snapshotRow({id:"calendar-"+day,userId:"user-a",capturedAt:`2026-06-${day}T10:00:00Z`,rawMetrics:{views}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,undefined,2)).toEqual([
+      {day:"2026-06-20",plays:50},
+      {day:"2026-06-21",plays:null,complete:false,sampleCount:0,correction:null},
+      {day:"2026-06-22",plays:null,complete:false,sampleCount:0,correction:null},
+    ]);
+  });
+
+  it("T1106 同刻不同快照的差分冲突与新增作品无基线均不显示部分总量",async()=>{
+    const repo=makeRepo(db,"coverage");
+    for(const [source,last] of [["ingestion",120],["platform_api",130]] as const)await repo.seedSnapshots([
+      snapshotRow({id:source+"-a",publicationId:"conflict",userId:"user-a",source,capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{views:100}}),
+      snapshotRow({id:source+"-b",publicationId:"conflict",userId:"user-a",source,capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:last}}),
+    ]);
+    expect((await repo.getDailyPlayTrend("user-a",ACCT,["conflict"],7))[0]?.plays).toBeNull();
+    await repo.seedSnapshots([
+      snapshotRow({id:"old-a",publicationId:"old",userId:"user-a",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{views:100}}),
+      snapshotRow({id:"old-b",publicationId:"old",userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:120}}),
+      snapshotRow({id:"new-b",publicationId:"new",userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:500}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,["old","new"],7)).toEqual([{day:"2026-06-20",plays:null,complete:false,sampleCount:1,correction:null}]);
+  });
+
+  it("T1106 同日无效快照不盖掉有效plays，非有限views回落真实plays",async()=>{
+    const repo=makeRepo(db,"valid-series");
+    await repo.seedSnapshots([
+      snapshotRow({id:"valid-a",userId:"user-a",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{plays:100}}),
+      snapshotRow({id:"null-a",userId:"user-a",capturedAt:"2026-06-19T11:00:00Z",rawMetrics:{plays:null}}),
+      snapshotRow({id:"valid-b",userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:"1e309",plays:150}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,undefined,7)).toEqual([{day:"2026-06-20",plays:50}]);
+  });
+
   //   metric_values 出生即归号,不存在「无号落 NULL」写路径(schema 已 NOT NULL)。
   it("appendSnapshot stamps account_id onto snapshot and its metric_values (strict)", async () => {
     const repo = makeRepo(db);
@@ -374,15 +449,15 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
       const repo = makeRepo(db);
       await seedTwoAccounts(repo);
       const r = await repo.getDashboardRollup("user-a", "acct-empty");
-      expect(r).toEqual({
-        plays: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        favorites: 0,
-        followerGain: 0,
-        ctrAvg: 0,
-        finishAvg: 0,
+      expect(r).toMatchObject({
+        plays: null,
+        likes: null,
+        comments: null,
+        shares: null,
+        favorites: null,
+        followerGain: null,
+        ctrAvg: null,
+        finishAvg: null,
         finishCount: 0,
         snapshotCount: 0,
       });

@@ -1,0 +1,22 @@
+--- deploy-t246.py:r2
++++ deploy-t246-r3.py
+@@ -249,7 +249,18 @@
+     expect(path, expected_sha)
+     evidence = json.loads(Path(path).read_text())
+     asset = m["asset"]
+-    if evidence.get("url") != asset["url"] or evidence.get("sha256") != asset["sha256"] or evidence.get("bytes") != asset["bytes"] or evidence.get("tlsVerified") is not True or evidence.get("externalToOriginHost") is not True or evidence.get("collectorSourceSHA256") != m["externalCollectorSHA256"] or evidence.get("curlRemoteIP") != m["originIP"] or evidence.get("curlVerifyResult") != 0 or evidence.get("httpStatus") != 200 or evidence.get("collectorHostPlatform") != "Darwin":
++    if evidence.get("url") != asset["url"] or evidence.get("sha256") != asset["sha256"] or evidence.get("bytes") != asset["bytes"] or evidence.get("tlsVerified") is not True or evidence.get("externalToOriginHost") is not True or evidence.get("collectorSourceSHA256") != m["externalCollectorSHA256"] or evidence.get("curlRemoteIP") != m["originIP"] or evidence.get("curlVerifyResult") != 0 or evidence.get("collectorHostPlatform") != "Darwin":
++        raise Stop("EXTERNAL_DOWNLOAD_RECEIPT_INVALID")
++    if m.get("externalCollectorMode") == "range-resume":
++        resume = m["externalResume"]
++        offset = resume["partialBytes"]
++        valid_digest = lambda value: isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
++        if type(offset) is not int or not 0 < offset < asset["bytes"] or not valid_digest(resume["partialSHA256"]) or not valid_digest(resume["priorExecutionSHA256"]):
++            raise Stop("RESUME_MANIFEST_NOT_FROZEN")
++        elapsed = evidence.get("cumulativeElapsedSeconds")
++        if evidence.get("httpStatus") != 206 or evidence.get("transferMode") != "range-resume" or evidence.get("rangeStart") != offset or type(evidence.get("rangeStart")) is not int or evidence.get("contentRange") != f'bytes {offset}-{asset["bytes"]-1}/{asset["bytes"]}' or evidence.get("ifRangeETag") != resume["ifRangeETag"] or evidence.get("initialPartialSHA256") != resume["partialSHA256"] or evidence.get("originalFailureExecutionSHA256") != resume["priorExecutionSHA256"] or evidence.get("originalPartialPreserved") is not True or evidence.get("cumulativeBudgetSeconds") != 2400 or type(elapsed) not in (int, float) or not 0 <= elapsed <= 2400:
++            raise Stop("EXTERNAL_RANGE_RECEIPT_INVALID")
++    elif evidence.get("httpStatus") != 200:
+         raise Stop("EXTERNAL_DOWNLOAD_RECEIPT_INVALID")
+     return expected_sha
+ 

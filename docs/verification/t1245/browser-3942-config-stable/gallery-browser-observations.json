@@ -1,0 +1,40 @@
+{
+  "recordCount": 394,
+  "checkpointImages": 54,
+  "opened": [
+    {
+      "status": "passed",
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1244/browser-3938/original-common-pass.png",
+      "decoded": true
+    },
+    {
+      "status": "failed",
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1245/browser-3939-original/original-common-failure.png",
+      "decoded": true
+    },
+    {
+      "status": "failed",
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1245/browser-3940-filters/original-common-failure.png",
+      "decoded": true
+    },
+    {
+      "status": "passed",
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1245/browser-3941-final/original-common-pass.png",
+      "decoded": true
+    },
+    {
+      "status": "passed",
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1207/screenshots/automations-run-now-public--组内真实作业通过立即运行准入并保原任务显示待扫码--4c83cfc4891336584a6d18f5f6f9fe57ea7c6fb261be338409a5cc32a0cbfed9.png",
+      "decoded": true
+    }
+  ],
+  "nonFileAttempts": [],
+  "scope": "本地证据页真实打开与原图解码，不重新执行产品功能",
+  "automationStatuses": [
+    "passed",
+    "failed",
+    "failed",
+    "passed",
+    "passed"
+  ]
+}

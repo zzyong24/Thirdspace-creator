@@ -1,0 +1,35 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+> vitest run src/modules/production/production-editor-plan.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor-plan.test.ts (7 tests | 1 failed) 19ms
+     × 只改字幕文字不因旧合法素材超出结尾而整单失败 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor-plan.test.ts > T-1037 稳定制作片段与结构编辑 > 只改字幕文字不因旧合法素材超出结尾而整单失败
+ConflictError: 素材超出视频时长，请缩短或移动片段
+ ❯ validateTimes src/modules/production/production-editor-plan.ts:46:96
+     44|   const duration=props.talkingHead.durationSec;
+     45|   if(props.captions.some(c=>c.end>duration+0.05)) throw new ConflictEr…
+     46|   if(props.broll.some(b=>b.durationSec!==undefined && b.at+b.durationS…
+       |                                                                                                ^
+     47| }
+     48|
+ ❯ applyEditorEdits src/modules/production/production-editor-plan.ts:109:3
+ ❯ src/modules/production/production-editor-plan.test.ts:60:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  16:09:07
+   Duration  3.86s (transform 2.24s, setup 0ms, import 3.42s, tests 19ms, environment 0ms)
+
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/production/production-editor-plan.test.ts`
+Exit status 1

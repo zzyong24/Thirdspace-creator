@@ -39,10 +39,12 @@ import {
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
-import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
+import {useCreationScope,creationScopeKey,readCreationScope} from "@/lib/creation-workspace-scope";
+import { useDraftChatRequest,editorCanonical } from "@/features/draft-workbench/draft-chat-request";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { htmlToSections } from "./script-editor-bridge";
 import { subscribeScriptWrite } from "./script-write-signal";
+import {useForegroundActivity} from "@/lib/foreground-activity";
 
 type SaveStatus = "saved" | "saving" | "dirty";
 
@@ -191,11 +193,16 @@ export function ScriptRichEditor({
   onEditorReady,
 }: ScriptRichEditorProps) {
   const router = useRouter();
+  const creationScope=useCreationScope(),scriptScopeKey=creationScopeKey(creationScope);
   // [T-108 v2] 稿面对话请求 context —— 编辑器把 flushSave 注册进去,让审核/盲预测按钮
   // 自动发前先 flush 保存最新内容(审最新版,非 DB 旧版)。稿面外(无 Provider)返回 no-op。
-  const { registerFlush } = useDraftChatRequest();
+  const { registerFlush,registerScript } = useDraftChatRequest();
+  const artifactIdRef=React.useRef<string|null>(artifactId);
+  const generationRef=React.useRef(0);
+  const savedVersionRef=React.useRef<string|null>(null);
   const [pending, startTransition] = React.useTransition();
   const [saveStatus, setSaveStatus] = React.useState<SaveStatus>("saved");
+  useForegroundActivity(saveStatus==="saving"?"脚本正在保存":"脚本有未保存的修改",saveStatus!=="saved");
   const [wordCount, setWordCount] = React.useState(0);
   // saveStatus 的 ref 镜像 —— flush 闭包读最新态(dirty 才真存,saved 则 no-op)。
   const saveStatusRef = React.useRef<SaveStatus>("saved");
@@ -222,6 +229,7 @@ export function ScriptRichEditor({
       },
     },
     onUpdate: ({ editor: ed }) => {
+      generationRef.current++;
       saveStatusRef.current = "dirty";
       setSaveStatus("dirty");
       setWordCount(ed.getText().length);
@@ -305,6 +313,9 @@ export function ScriptRichEditor({
   //   ② [T-108 v2] flushSave(审核/盲预测自动发前 await 它,确保审最新版)。
   // 无 artifactId 且无 projectId(结构测试)→ 仅本地翻「已保存」,不打契约(与原行为一致)。
   const pendingSaveRef = React.useRef<Promise<void> | null>(null);
+  const saveIntentRef=React.useRef<{targetId:string;html:string;contentText:string;contentData:{html:string;sections:ReturnType<typeof htmlToSections>}}|null>(null);
+  async function recoverUnknownScript(){const intent=saveIntentRef.current;if(!intent)return null;const artifact=await client.getArtifact({params:{artifactId:intent.targetId},query:undefined,body:undefined});let exact:{id:string;artifactId:string;contentText:string;contentData:Record<string,unknown>}|undefined;for(let page=1;page<=20&&!exact;page++){const response=await client.listArtifactVersions({params:{artifactId:intent.targetId},query:{page,pageSize:100},body:undefined});const rows=(Array.isArray(response)?response:[]) as Array<{id:string;artifactId:string;contentText:string;contentData:Record<string,unknown>}>;exact=rows.find(row=>row.id===artifact.currentVersionId);if(rows.length<100)break;}if(!exact||exact.contentText!==intent.contentText||editorCanonical(exact.contentData)!==editorCanonical(intent.contentData))throw Error("原脚本保存结果尚未确认，请保留当前稿并恢复原回执，未重复追加版本。");savedVersionRef.current=exact.id;saveIntentRef.current=null;return intent;}
+
   const performSave = React.useCallback(async (): Promise<void> => {
     if (pendingSaveRef.current) return pendingSaveRef.current;
     if (!editor) throw new Error("编辑器尚未准备好");
@@ -315,6 +326,7 @@ export function ScriptRichEditor({
         setSaveStatus("saved");
         return;
       }
+      if(saveIntentRef.current){const recovered=await recoverUnknownScript();if(recovered&&editor.getHTML()!==recovered.html)throw Error("原保存已确认，期间的新输入保留，请再次保存当前修改。");saveStatusRef.current="saved";setSaveStatus("saved");return;}
       const sections = htmlToSections(html);
       setSaveStatus("saving");
       // T-024 ②:进入保存在途态 + 记刚存 html —— 抑制此期间(及之后异步回流的)refresh echo
@@ -324,13 +336,15 @@ export function ScriptRichEditor({
       try {
         // [T-053 断点①] 真项目还没有脚本 artifact → 首存时 getOrCreate 再落库
         // (消掉「显示已保存但什么都没存」的假保存)。
-        let targetId = artifactId;
+        let targetId = artifactIdRef.current;
         if (!targetId && projectId) {
           const ensured = await ensureScriptArtifact(projectId, null);
           targetId = ensured.artifactId as string;
+          artifactIdRef.current=targetId;
         }
         if (!targetId) throw new Error("no script artifact target");
-        await client.createArtifactVersion({
+        saveIntentRef.current={targetId,html,contentText,contentData:{html,sections}};
+        const saved=await client.createArtifactVersion({
           params: { artifactId: targetId },
           query: undefined,
           body: {
@@ -340,6 +354,7 @@ export function ScriptRichEditor({
             changeSummary: "编辑脚本",
           },
         });
+        savedVersionRef.current=saved.id;saveIntentRef.current=null;
         if (editor.getHTML() !== html) throw new Error("保存期间稿件有新修改，请重试诊断。");
         saveStatusRef.current = "saved";
         setSaveStatus("saved");
@@ -365,6 +380,26 @@ export function ScriptRichEditor({
     }
   }, [artifactId, projectId, editor, router]);
 
+  const prepareScriptRef=React.useRef<()=>Promise<{kind:"project_script";id:string;versionId:string}>>(async()=>{throw Error("脚本尚未准备好");});
+  React.useLayoutEffect(()=>{artifactIdRef.current=artifactId??artifactIdRef.current;prepareScriptRef.current=async()=>{
+    if(!editor||!projectId)throw Error("请先打开项目脚本。");
+    const frozenScope=scriptScopeKey;const check=()=>{if(creationScopeKey(readCreationScope())!==frozenScope)throw Error("工作区已切换，原脚本保存回执保留。");};check();
+    const html=editor.getHTML(),text=editor.getText();
+    if(!text.trim())throw Error("请先填写并确认脚本。");
+    if(pendingSaveRef.current)await pendingSaveRef.current;
+    if(!artifactIdRef.current||saveStatusRef.current!=="saved"||!savedVersionRef.current)await performSave();
+    check();const id=artifactIdRef.current;if(!id)throw Error("脚本尚未保存。");
+    const artifact=await client.getArtifact({params:{artifactId:id},query:undefined,body:undefined});
+    if(artifact.projectId!==projectId||artifact.id!==id)throw Error("脚本保存目标不属于当前项目。");
+    const versionId=savedVersionRef.current??artifact.currentVersionId;
+    if(artifact.currentVersionId!==versionId)throw Error("脚本已被并发更新，请核对后重试。");
+    let exact:{id:string;artifactId:string;contentText:string;contentData:Record<string,unknown>}|undefined;
+    for(let page=1;page<=20&&!exact;page++){const response=await client.listArtifactVersions({params:{artifactId:id},query:{page,pageSize:100},body:undefined});const rows=(Array.isArray(response)?response:[]) as Array<{id:string;artifactId:string;contentText:string;contentData:Record<string,unknown>}>;exact=rows.find(row=>row.id===versionId);if(rows.length<100)break;}
+    if(!exact||exact.artifactId!==id||exact.contentText!==text||exact.contentData.html!==html)throw Error("当前脚本与保存版本读回不一致，请先保存并核对。");
+    check();if(editor.getHTML()!==html||saveStatusRef.current!=="saved")throw Error("脚本在保存期间已改变，本次未生成。");
+    return {kind:"project_script",id,versionId};
+  };},[artifactId,editor,projectId,performSave,scriptScopeKey]);
+  React.useEffect(()=>registerScript({readState:()=>({generation:generationRef.current}),prepareForCreation:()=>prepareScriptRef.current()}),[registerScript,editor,projectId,scriptScopeKey]);
   const handleSave = React.useCallback(() => {
     startTransition(() => {
       void performSave().catch(() => {});

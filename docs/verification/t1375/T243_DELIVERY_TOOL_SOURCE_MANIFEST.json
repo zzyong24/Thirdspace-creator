@@ -1,0 +1,105 @@
+{
+  "schema": "t1375-historical-tool-selection/v1",
+  "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+  "wholeCommitMerged": false,
+  "executed": false,
+  "rows": [
+    {
+      "path": "docs/build/growth-t246/manual-ui-r2/browser-preview-r2.mjs",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "96fdefeee41bfc4423ff2ea4068267219893d7dfe2b7e4223ba0e2bb79d84cf3",
+      "bytes": 2341
+    },
+    {
+      "path": "docs/build/growth-t246/production-activate-r3/browser-buy-production-r5.mjs",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "0ecf798e753c91d6e6f5f64b1c53cf711891aedd0bb2080d1297bb4a15588a1f",
+      "bytes": 2708
+    },
+    {
+      "path": "docs/build/growth-t246/production-activate-r3/browser-download-click-r7.mjs",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "8eb8dd721bb106b67258504cbe0721430411185a62c4dd24a942736329932b06",
+      "bytes": 1590
+    },
+    {
+      "path": "docs/build/growth-t246/production-activate-r3/browser-production-r4.mjs",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "e2ffce653f7475e2ede839808230a6232a740bd63b5f43f7e3b12841e698b041",
+      "bytes": 2197
+    },
+    {
+      "path": "docs/build/growth-t246/release/candidates/authority.diff",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "9094bb3ddf2a0f59c7c235bd581214ae56a54535597eb6486445e3c6fc07def6",
+      "bytes": 1524
+    },
+    {
+      "path": "docs/build/growth-t246/release/candidates/index.diff",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "4161f67a8a8c2b2f0c60a0ea62067c752a92500c18cf972a54c0fa4d78a32689",
+      "bytes": 2057
+    },
+    {
+      "path": "docs/build/growth-t246/release/candidates/index.html",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "3d0e2ee33f4b0188deef007609d61da5753409a361d044404a17c485eba7f2e8",
+      "bytes": 81185
+    },
+    {
+      "path": "docs/build/growth-t246/release/candidates/production.diff",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "e11a3a3c14e18414beb911b5d37d2e0db14e8654e692d411b7d5c5ac37b608b9",
+      "bytes": 1526
+    },
+    {
+      "path": "docs/build/growth-t246/release/collect-external-download-resume-r3.py",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "45dd46d16cb8c5c38a0f6b776b5f76b90018550438a74b2a13d748e5fd1c5905",
+      "bytes": 7618
+    },
+    {
+      "path": "docs/build/growth-t246/release/collect-external-download.py",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "849a848b023d0154d2c198f47cdf8155d3569bd26a4d749f8a16594cb39a5342",
+      "bytes": 2951
+    },
+    {
+      "path": "docs/build/growth-t246/release/deploy-t246-r3.diff",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "31b6fd471c4c5e572bf1120e157f0f90c08bf5c988eec10287478ec8b9852c17",
+      "bytes": 2527
+    },
+    {
+      "path": "docs/build/growth-t246/release/deploy-t246-r3.py",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "0fe74d9008229b9840c62f8d901841352ab7def95dbffc744c735a5a22b6cd63",
+      "bytes": 18479
+    },
+    {
+      "path": "docs/build/growth-t246/release/deploy-t246.py",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "865ed8a871caf5195ab54880e1ae5ff057b4f06ac68ea531fe714302805d8aa8",
+      "bytes": 17181
+    },
+    {
+      "path": "docs/build/growth-t246/release/history/deploy-t246-r1.py",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "c7f28cf147702e55cf10341a0d5cda09aea899d6b974f91a2fc03706b808445d",
+      "bytes": 14924
+    },
+    {
+      "path": "docs/build/growth-t246/release/test_deploy_t246.py",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "f7da90dc440571ec213c6d4e380b6bdc1e68314fa84dbc54036dbca0017c1c66",
+      "bytes": 11700
+    },
+    {
+      "path": "docs/build/growth-t246/release/test_download_resume_r3.py",
+      "sourceCommit": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "sha256": "3cb6c2245cfcdf623115e049ff76bf318172707d37a53e82d186485286dc72b6",
+      "bytes": 6973
+    }
+  ],
+  "excluded": "原截图/log/生产回执/production pending manifest与配置快照不复制；历史工具可能依赖原外部夹具，不代表可直接重跑或部署。"
+}

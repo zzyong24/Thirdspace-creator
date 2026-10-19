@@ -1,3 +1,8 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["p", "u", "a"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {createDb} from "@creatoros/backend";
 import {ENDPOINTS, type RequestContext} from "@creatoros/contract";
@@ -11,7 +16,7 @@ const ctx: RequestContext = {userId:"u",accountId:"a",requestId:"r",source:"user
 const text = "开头😀\r\n这是目标原句。\r\n尾声保持原样。";
 const originalText = "这是目标原句。";
 let service: ReturnType<typeof createArtifactsService>;
-beforeEach(async()=>{const {db}=await createDb();let n=0;service=createArtifactsService({db,now:()=>"2026-09-12T00:00:00.000Z",nextId:p=>`${p}-${++n}`});});
+beforeEach(async()=>{const {db}=await createDb();await seedOwnedProjects(db);let n=0;service=createArtifactsService({db,now:()=>"2026-09-12T00:00:00.000Z",nextId:p=>`${p}-${++n}`});});
 async function seed(family="transcript") {
  const artifact=await service.createArtifact(ctx,{projectId:"p",title:"旧稿",artifactType:"output_script",stage:"script"});
  const source=await service.createVersion(ctx,artifact.id,{contentText:family==="contentText"?text:"",contentData:{...(family!=="contentText"?{[family]:text}:{}),metadata:{keep:true},html:"<p>旧稿</p>"},changeSummary:"原稿"});
@@ -21,7 +26,7 @@ function reader(){return createCurrentArtifactReader({projectsService:{getProjec
 async function tools(){return buildChatTools(["context.artifact.text","script.patch"],{boundProjectId:"p",getArtifactText:()=>reader()(ctx,"p","output_script")} as unknown as ChatToolDeps);}
 async function execute(tool: unknown,input: unknown){return (tool as {execute:(input:unknown,options:unknown)=>Promise<any>}).execute(input,{toolCallId:"test",messages:[]});}
 const transport=()=>createArtifactsTransport(()=>service);
-async function apply(artifactId:string,body:unknown,context=ctx){return transport().request(ENDPOINTS.applyScriptPatch,{params:{artifactId},body:ENDPOINTS.applyScriptPatch.body.parse(body)},context);}
+async function apply(artifactId:string,body:unknown,context=ctx){return transport().request(ENDPOINTS.applyScriptPatch,{params:{artifactId},query:undefined,body:ENDPOINTS.applyScriptPatch.body.parse(body)},context);}
 describe("T957 纯文稿读取→候选→公开采纳→重读→撤销",()=>{
  it.each(["transcript","contentText","body"])("%s 保留 CRLF、emoji 和前后文；只在采纳后新增版本",async family=>{
   const {artifact,source}=await seed(family);const before=await service.listVersions(ctx,artifact.id);const t=await tools();

@@ -1,3 +1,6 @@
+import type {MediaProbeControl} from "../ai";
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
+
 // runExecutionTask —— 执行层编排(T-255a,live dispatch 范式:persistence-client 在
 // execution.tasks.create 后 `void runExecutionTask(...)` 后台跑,HTTP 立即返回,UI 轮询)。
 //
@@ -17,6 +20,7 @@ import {
 import type { ExecutorRegistry } from "./executor-registry";
 
 export interface ExecutionAiPort {
+  probeControl?: MediaProbeControl;
   recordExecutionPlan?(ctx: RequestContext, taskId: string, plan: Record<string, unknown>): Promise<void>;
   markRunning(ctx: RequestContext, taskId: string): Promise<void>;
   recordStep(
@@ -41,6 +45,7 @@ export interface ExecutionAssetsReadPort {
     ctx: RequestContext,
     assetId: string,
     destinationPath: string,
+    exact?: {assetFileId?:string;fileDigest?:string},
   ): Promise<{ size: number; mimeType: string } | null>;
 }
 
@@ -49,6 +54,8 @@ export interface RunExecutionTaskDeps {
   assets: ExecutionAssetsReadPort;
   registry: ExecutorRegistry;
   workspacesRoot: string;
+  /** 视频模型子阶段沿用原任务创建/启动时冻结的绝对期限，不能在审核时续期。 */
+  bindModelExecutionScope?(ctx:RequestContext,input:{taskId:string;deadlineAt:number|null}):Promise<{deadlineAt:number|null}>;
 }
 
 // in-flight 中止表:taskId → AbortController。discard(丢弃在跑任务)经
@@ -56,11 +63,10 @@ export interface RunExecutionTaskDeps {
 const inflight = new Map<string, AbortController>();
 
 /** 丢弃在跑任务时中止其 executor。返回是否命中 in-flight。 */
-export function abortExecutionTask(taskId: string): boolean {
-  const controller = inflight.get(taskId);
-  if (!controller) return false;
-  controller.abort(new Error("用户丢弃任务,执行已中止"));
-  return true;
+export function abortExecutionTask(taskId: string,generation?:number): boolean {
+  let found=false;
+  for(const [key,controller] of inflight)if(generation === undefined ? (key===taskId||key.startsWith(`${taskId}:probe:`)) : key===`${taskId}:probe:${generation}`){controller.abort(new Error("用户丢弃任务,执行已中止"));found=true;}
+  return found;
 }
 
 class ExecutionTimeoutError extends Error {
@@ -78,6 +84,7 @@ async function withExecutionDeadline<T>(
   work: Promise<T>,
   timeoutSec: number | null,
   controller: AbortController,
+  deadlineAt?: number | null,
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout =
@@ -85,10 +92,10 @@ async function withExecutionDeadline<T>(
       ? null
       : new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
-            const err = new ExecutionTimeoutError(timeoutSec);
+            const err = new ExecutionTimeoutError(executionTimeoutMs(timeoutSec * 1000) / 1000);
             controller.abort(err);
             reject(err);
-          }, timeoutSec * 1000);
+          }, deadlineAt === undefined || deadlineAt === null ? executionTimeoutMs(timeoutSec * 1000) : Math.max(0, deadlineAt - Date.now()));
         });
   // 丢弃中止:executor 若不响应 signal(挂死),这条 race 腿保证编排立即收尾
   // (任务由 discard 落 cancelled;悬空的 work promise 无人等待,进程内自然回收)。
@@ -117,26 +124,33 @@ function abortReason(signal: AbortSignal): Error {
 
 export async function runExecutionTask(
   ctx: RequestContext,
-  task: { id: string; inputData: Record<string, unknown> },
+  task: { id: string; inputData: Record<string, unknown>; deterministicGeneration?: number },
   deps: RunExecutionTaskDeps,
 ): Promise<void> {
   const taskId = task.id;
+  const probe = (task.inputData.spec as {taskType?:string}|undefined)?.taskType === "media.probe";
+  const generation = task.deterministicGeneration ?? 0;
+  const probeControl = probe ? deps.ai.probeControl : undefined;
+  const runKey = probe ? `${taskId}:probe:${generation}` : taskId;
+  const sandboxId = probe ? `${taskId}-probe-${generation}` : taskId;
+  let claimed=false;
   let stepNo = 0;
   const step = async (text: string, kind = "step"): Promise<void> => {
     stepNo += 1;
     // 步骤流 best-effort:上报失败不打断执行主链。
-    await deps.ai
-      .recordStep(ctx, taskId, { stepNo, kind, text, toolCalls: [] })
-      .catch(() => {});
+    const input={stepNo,kind,text,toolCalls:[]};
+    await (probeControl ? probeControl.recordStep(ctx,taskId,generation,input) : deps.ai.recordStep(ctx,taskId,input)).catch(()=>{});
   };
 
   // 幂等防抖:createTask 的 in-flight dedup 可能让同一 taskId 被二次 dispatch —— 已在跑
   // 就直接返回,绝不并行双跑同一沙箱。
-  if (inflight.has(taskId)) return;
+  if (inflight.has(runKey)) return;
   const controller = new AbortController();
-  inflight.set(taskId, controller);
+  inflight.set(runKey, controller);
   let sandboxCreated = false;
   try {
+    if(probeControl){if(!await probeControl.claim(ctx,taskId,generation))return;claimed=true;}
+    else if(probe)throw new Error("媒体处理恢复围栏尚未接入");
     // 1) 任务契约校验(脑→手的门)。
     const parsed = executionTaskSpec.safeParse(task.inputData.spec);
     if (!parsed.success) {
@@ -181,7 +195,12 @@ export async function runExecutionTask(
       );
     }
 
-    await deps.ai.markRunning(ctx, taskId);
+    if(!probeControl)await deps.ai.markRunning(ctx, taskId);
+    let deadlineAt = spec.constraints.timeoutSec === null ? null : Date.now() + executionTimeoutMs(spec.constraints.timeoutSec * 1000);
+    if(spec.taskType === "video.render" && deps.bindModelExecutionScope) ({deadlineAt}=await deps.bindModelExecutionScope(ctx,{taskId,deadlineAt}));
+    if(spec.taskType === "video.render" && deadlineAt !== null && deadlineAt <= Date.now()) {
+      const error=new ExecutionTimeoutError(executionTimeoutMs((spec.constraints.timeoutSec ?? 0)*1000)/1000);controller.abort(error);throw error;
+    }
 
     // network: deny 的降级明示(诚实,不宣称 OS 级隔离):记进步骤流,用户可见。
     await step(
@@ -192,14 +211,14 @@ export async function runExecutionTask(
 
     // 3) 建沙箱 + 物化 inputs(只读)。
     await step(`建沙箱 workspaces/${taskId}/`);
-    const sandbox = await createSandbox(deps.workspacesRoot, taskId);
+    const sandbox = await createSandbox(deps.workspacesRoot, sandboxId);
     sandboxCreated = true;
     await step(`物化输入 ${spec.inputs.length} 项(只读)`);
     const inputs = await materializeInputs(
       sandbox,
       spec.inputs,
-      (assetId, destinationPath) =>
-        deps.assets.materializeAsset(ctx, assetId, destinationPath),
+      (assetId, destinationPath, exact) =>
+        deps.assets.materializeAsset(ctx, assetId, destinationPath, exact),
     );
 
     // 4) executor 执行(可选总超时 + abort 贯通)。goal 透传进 params 供 demo/日志用,
@@ -207,7 +226,7 @@ export async function runExecutionTask(
     await step(
       spec.constraints.timeoutSec === null
         ? `执行 ${spec.taskType}(无固定总超时，可由用户取消)`
-        : `执行 ${spec.taskType}(超时 ${spec.constraints.timeoutSec}s)`,
+        : `执行 ${spec.taskType}(超时 ${executionTimeoutMs(spec.constraints.timeoutSec * 1000) / 1000}s)`,
     );
     const result = await withExecutionDeadline(
       executor.run(
@@ -215,16 +234,18 @@ export async function runExecutionTask(
         { goal: spec.goal, ...params },
         // [T-256b] ctx additive 透传:agentic executor 用它解析 model-config + 用户域端口;
         // 确定性 executor(echo/video.render)忽略此字段。
-        { signal: controller.signal, reportStep: (text) => step(text), ctx },
+        { signal: controller.signal, reportStep: (text) => step(text), ctx, deadlineAt },
       ),
       spec.constraints.timeoutSec,
       controller,
+      spec.taskType === "video.render" ? deadlineAt : undefined,
     );
 
+    if(probe&&(result.meta?.dryRunPlan||result.meta?.proposals))throw new Error("媒体探针不能返回预演或创作候选");
     if (result.meta?.dryRunPlan && typeof result.meta.dryRunPlan === "object") {
       if (!deps.ai.recordExecutionPlan) throw new Error("预演结果服务尚未接入");
       await deps.ai.recordExecutionPlan(ctx, taskId, {taskType:spec.taskType,...result.meta.dryRunPlan as object});
-      await cleanupSandbox(deps.workspacesRoot, taskId).catch(() => {});
+      await cleanupSandbox(deps.workspacesRoot, sandboxId).catch(() => {});
       await step("预演完成，未产生领域写入", "final");
       return;
     }
@@ -234,7 +255,7 @@ export async function runExecutionTask(
       if (proposals.some(proposal => proposal.source.taskId !== taskId)) throw new Error("候选来源与执行任务不一致");
       await deps.ai.recordCandidate(ctx, taskId, { resultType: "agentic_proposals",
         resultData: { taskType: spec.taskType, proposals, summary: result.summary ?? "", meta: result.meta } });
-      await cleanupSandbox(deps.workspacesRoot, taskId).catch(() => {});
+      await cleanupSandbox(deps.workspacesRoot, sandboxId).catch(() => {});
       await step(`完成:${proposals.length} 条建议待确认`, "final");
       return;
     }
@@ -248,15 +269,15 @@ export async function runExecutionTask(
       taskType: spec.taskType,
       artifacts,
       summary: result.summary ?? "",
-      meta: result.meta ?? {},
+      meta: {...result.meta,...(probe ? {deterministicGeneration:generation} : {})},
     };
-    await deps.ai.recordCandidate(ctx, taskId, {
-      resultType: "execution_manifest",
-      resultData: { manifest },
-    });
+    const candidate={resultType:"execution_manifest",resultData:{manifest}};
+    if(probeControl)await probeControl.recordCandidate(ctx,taskId,generation,candidate);
+    else await deps.ai.recordCandidate(ctx,taskId,candidate);
     // 候选的唯一可确认实体都在 out/。输入副本、逐帧图、转码文件与 render_raw
     // 不再参与确认，立即删除；最终成片继续留在 out/，采纳/丢弃后再清整个沙箱。
-    await pruneSandboxIntermediates(deps.workspacesRoot, taskId).catch((error) => {
+    if(probe)await cleanupSandbox(deps.workspacesRoot,sandboxId).catch(()=>{});
+    else await pruneSandboxIntermediates(deps.workspacesRoot, sandboxId).catch((error) => {
       console.warn(`[run-execution-task] task ${taskId} 中间文件清理失败，将在启动时重试:`, error);
     });
     await step(`完成:${artifacts.length} 个产物待确认`, "final");
@@ -270,12 +291,13 @@ export async function runExecutionTask(
     );
     await step(`失败:${message}`, "final");
     // 诚实终态。若任务已被 discard(cancelled),markFailed 的状态机守卫会 no-op。
-    await deps.ai.markFailed(ctx, taskId, message).catch(() => {});
+    if(probeControl){if(claimed)await probeControl.markFailed(ctx,taskId,generation,message).catch(()=>{});}
+    else if(!probe)await deps.ai.markFailed(ctx, taskId, message).catch(() => {});
     // 失败沙箱无保留价值 → 立清(孤儿 sweep 只是兜底)。
     if (sandboxCreated) {
-      await cleanupSandbox(deps.workspacesRoot, taskId).catch(() => {});
+      await cleanupSandbox(deps.workspacesRoot, sandboxId).catch(() => {});
     }
   } finally {
-    inflight.delete(taskId);
+    inflight.delete(runKey);
   }
 }

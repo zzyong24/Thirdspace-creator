@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：当前T1161已准确收口为误读诊断，不修改产品。完整源码显示微信转组位于账号管理折叠区、AccountRow无平台隐藏、最后账号保护仍在；保持每行仅查看数据为直接动作，不恢复重复顶部按钮。modules产品/测试/runner写集为空，仅复用现有组件与T1159 Chrome核实展开、对话框打开后取消；不代签真人微信、AC-LIVE或全局Gate。此前私有CONCERNS因非法evidence_kind被reviewctl拒绝，未产生正式历史，本packet为当前字节的真实initial。",
+  "findings": []
+}

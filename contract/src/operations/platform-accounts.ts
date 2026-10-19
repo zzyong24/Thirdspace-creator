@@ -1,18 +1,32 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import {
   id,
   paginationQuery,
   platformId,
   platformAccountStatus,
 } from "../primitives";
-import { platformAccountResource } from "../resources/platform-accounts";
+import { platformAccountResource, accountCollectionPlanReadinessResource, platformAccountCapabilitiesResource,accountBindingStart,accountBindingResource } from "../resources/platform-accounts";
+
+import {wechatNavigationDiagnosisResource} from '../internal/wechat-navigation-diagnosis';
 
 const accountParams = z.object({ accountId: id });
+// New platforms require T-1020's identity-verified bind flow. The legacy manual
+// create operation remains limited to the platforms its backend supports.
+const legacyManualPlatformId = platformId.exclude(["wechatOfficialAccount"]);
 
 // SPEC §13 "平台账号 (platform-account)" group (七步 §7.1, contract v0.4).
 // Stores a secret *reference*, never a raw token.
 export const platformAccountOperations = {
+  diagnoseWechatNavigation: defineEndpoint({id:'accounts.wechatNavigation.diagnose',method:'POST',path:'/accounts/:accountId/wechat-navigation-diagnosis',params:z.object({accountId:id}).strict(),body:z.object({}).strict(),response:wechatNavigationDiagnosisResource,fr:['FR1364-6','FR1364-12']}),
+  getAccountCollectionPlanReadiness: defineEndpoint({
+    id: "accounts.collectionPlanReadiness", method: "GET", path: "/accounts/:accountId/collection-plan-readiness",
+    params: accountParams, response: accountCollectionPlanReadinessResource, fr: ["FR-ACCOUNT-COLLECTION-PLAN-READINESS"],
+  }),
+  startAccountBinding:defineEndpoint({id:"accounts.bind.start",method:"POST",path:"/accounts/bindings",body:accountBindingStart,response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
+  getAccountBinding:defineEndpoint({id:"accounts.bind.status",method:"GET",path:"/accounts/bindings/:runId",params:z.object({runId:id}),response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
+  cancelAccountBinding:defineEndpoint({id:"accounts.bind.cancel",method:"POST",path:"/accounts/bindings/:runId/cancel",params:z.object({runId:id}),response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
+  getPlatformAccountCapabilities:defineEndpoint({id:"accounts.bindingCapabilities",method:"GET",path:"/accounts/binding-capabilities",response:platformAccountCapabilitiesResource,isList:true,fr:["FR-ACCOUNT-CAPABILITIES"]}),
   listAccounts: defineEndpoint({
     id: "accounts.list",
     method: "GET",
@@ -27,8 +41,9 @@ export const platformAccountOperations = {
     method: "POST",
     path: "/accounts",
     body: z.object({
-      platform: platformId,
+      platform: legacyManualPlatformId,
       accountHandle: z.string().min(1),
+      idempotencyKey:z.string().min(1).max(160).optional(),
       secretReference: z.string().optional(),
       followerBaseline: z.number().int().min(0).optional(),
     }),

@@ -1,3 +1,6 @@
+import { assessAudienceTask } from "../candidate";
+import { topicSourceRead, type TopicRecommendationContext } from "@creatoros/contract";
+import { z } from "zod";
 import type { RequestContext } from "@creatoros/contract";
 import { structuredGenerationInputSchema } from "@creatoros/contract/execution-worker";
 import {
@@ -32,6 +35,7 @@ export interface TopicGeneratePrepareDeps extends ContextDeps {
     listEnabledSources(ctx: RequestContext): Promise<TrendSourceProjection[]>;
   };
   now?: () => string;
+  topicWorkspace?: {getContext(ctx:RequestContext,projectId:string|null):Promise<TopicRecommendationContext>};
 }
 export async function prepareTopicGenerateContext(
   ctx: RequestContext,
@@ -81,6 +85,7 @@ export async function prepareTopicGenerateContext(
   }
   return topicGenerateFrozenSchema.parse({
     version: 1,
+    // T-1074：新任务不再默认消费退役的网格；旧冻结输入仍由既有投影兼容。
     ...(options.mode ? {mode:options.mode} : {}),
     basis,
     projectId,
@@ -107,7 +112,7 @@ export function topicAdditionalCalls(facets:Readonly<Record<string,string|undefi
   if(facets.__dailyTopic && dailyTopicInputSchema.parse(JSON.parse(facets.__dailyTopic)).skipReason)return 0;
   const frozen=topicGenerateFrozenSchema.parse(JSON.parse(facets.__topicGenerate??'null'));
   if(frozen.basis!=='trend'&&frozen.mode!=='daily')return 0;
-  return 1+frozen.trendSources.reduce((sum,source)=>sum+(source.sourceType==='web'?2:1),0);
+  return 1+(frozen.audienceTaskContext?1:0)+frozen.trendSources.reduce((sum,source)=>sum+(source.sourceType==='web'?2:1),0);
 }
 export function createTopicGenerateBusinessAdapter(
   deps: TopicGeneratePrepareDeps,
@@ -141,12 +146,18 @@ export function createTopicGenerateBusinessAdapter(
         input.capability !== "topic.generate"
       )
         throw new Error("选题冻结任务类型不一致");
-      topicGenerateFrozenSchema.parse(
+      const frozen=topicGenerateFrozenSchema.parse(
         JSON.parse(input.facets.__topicGenerate ?? "null"),
       );
       const items = normalizeTopics(topicArraySchema.parse(object).topics);
       if (!items.length) throw new Error("选题未返回可用候选");
-      return { resultType: "candidate_list", resultData: { items } };
+      const projected=projectAudienceTopicItems(items,object,frozen);
+      return {resultType:"candidate_list",resultData:{items:projected,...(frozen.audienceTaskContext?{originalAudienceItems:projected}:{})}};
     },
   };
+}
+
+export function projectAudienceTopicItems(items:ReturnType<typeof normalizeTopics>,object:unknown,frozen:TopicGenerateFrozen){
+ const reads=z.array(topicSourceRead).parse((object as {sourceReads?:unknown}).sourceReads??[]);
+ return items.map((item,index)=>({...item,...(frozen.audienceTaskContext?{proposalId:`proposal:${index}`,audienceTask:assessAudienceTask(item.audienceTask??{},frozen.audienceTaskContext,frozen.qualityNow,reads)}:{})}));
 }

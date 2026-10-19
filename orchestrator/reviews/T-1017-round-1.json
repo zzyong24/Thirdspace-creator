@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立复审当前 T-1017 SPEC：已明确 rewrite_only 与旧完整 evidence 的兼容联合、无定位通用改写、服务端冻结定位与来源快照、未知调用复用同一幂等键恢复、Candidate/Project 写入的显式边界，以及无策略 Project script.draft 的继续路径。复审未发现阻止进入实现的契约缺口；不代表实现或运行验收通过。",
+  "findings": []
+}

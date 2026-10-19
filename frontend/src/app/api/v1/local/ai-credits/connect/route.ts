@@ -51,7 +51,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   try {
-    const link = await createAiCreditPortalLink();
+    const link = await createAiCreditPortalLink({ signal: request.signal });
     // 成功日志只记录固定用户端路由类型，绝不写入 fragment code、ticket 或完整 URL。
     const pathname = new URL(link.openUrl).pathname;
     const flow = pathname === "/credits/launch" ? "launch" : "connect";

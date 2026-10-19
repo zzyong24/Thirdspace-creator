@@ -1,0 +1,5 @@
+{
+  "markdown": "[危险](javascript:alert(1)) [编码](javascript&#58;alert(1)) [数据](data:text/html;base64,PHNjcmlwdD4=)\n\n<script>window.hacked=1</script><u onclick=\"window.hacked=2\">原HTML</u><img src=x onerror=\"window.hacked=3\">",
+  "previewText": "\n\n  石墨极简风\n  格式稿\n  \n\n[危险](javascript:alert(1)) [编码](javascript:alert(1)) [数据](data:text/html;base64,PHNjcmlwdD4=)\n<script>window.hacked=1</script><u onclick=\"window.hacked=2\">原HTML</u><img src=x onerror=\"window.hacked=3\">\n",
+  "exportText": "\n\n  石墨极简风\n  格式稿\n  \n\n[危险](javascript:alert(1)) [编码](javascript:alert(1)) [数据](data:text/html;base64,PHNjcmlwdD4=)\n<script>window.hacked=1</script><u onclick=\"window.hacked=2\">原HTML</u><img src=x onerror=\"window.hacked=3\">\n"
+}

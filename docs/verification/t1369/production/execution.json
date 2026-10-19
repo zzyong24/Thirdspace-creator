@@ -1,0 +1,14 @@
+{
+  "outerTimeout": false,
+  "resourceLimit": false,
+  "preflightExitCode": 0,
+  "ownedRunnerPid": 21003,
+  "exitCode": 1,
+  "durationSeconds": 5.155582667037379,
+  "endedAtUnix": 1792391590.575209,
+  "ownedPortListenersAfter": {
+    "41387": [],
+    "41388": [],
+    "41389": []
+  }
+}

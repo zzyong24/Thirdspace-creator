@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { createDb, executionTasks, eq } from "@creatoros/backend";
+import { createDb, executionTasks, userPreferences, eq } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
+import { createContinuousExecutionBudget,createExecutionRoute } from "@creatoros/contract/execution-worker";
 import {
   createPersistentTaskService,
   type PersistentTaskService,
@@ -64,6 +65,41 @@ it("大量历史任务分页不会读出全部payload并破坏后续数据库查
 },30000);
 
 describe("T-482 持久执行任务状态机", () => {
+  it("[T-1022] 无调用账本的连续选题任务可自动等待并沿原任务再次领取", async () => {
+    const { db, client } = await createDb();
+    const f = fixture();
+    const service = createPersistentTaskService(db, { now: () => f.clock.value, nextId: f.nextId });
+    try {
+      const task = await service.enqueue(ctxA, {
+        kind: "topic_preview",
+        ownerType: "transform",
+        ownerId: "transform-recovery",
+        idempotencyKey: "topic-recovery",
+        payload: {},
+        executionBudget: createContinuousExecutionBudget(),
+      });
+      const first = await service.claimTask({ taskId: task.id, workerId: "topic-worker", leaseSeconds: 30 });
+      expect(first).not.toBeNull();
+      const waiting = await service.finish({
+        taskId: task.id,
+        workerId: "topic-worker",
+        attempt: first!.lease.attempt,
+        fenceToken: first!.lease.fenceToken,
+        status: "retry_wait",
+        retryAfterMs: 1_000,
+        errorCode: "TOPIC_PREVIEW_TIMEOUT",
+        errorMessage: "模型响应超时，系统正在自动恢复",
+      });
+      expect(waiting).toMatchObject({ status: "queued", runtimeStatus: "retry_wait" });
+      expect(await service.claimTask({ taskId: task.id, workerId: "too-early" })).toBeNull();
+      f.clock.value = "2026-07-23T12:00:01.000Z";
+      const resumed = await service.claimTask({ taskId: task.id, workerId: "topic-worker-next" });
+      expect(resumed?.task.id).toBe(task.id);
+      expect(resumed?.lease.attempt).toBe(2);
+    } finally {
+      await client.close();
+    }
+  });
   it("研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等",async()=>{
     const {db,client}=await createDb();const service=createPersistentTaskService(db);
     const input={kind:"ai_task" as const,ownerType:"ai_task" as const,ownerId:"research-resume",idempotencyKey:"research-resume",payload:{modelInput:{kind:"agentic.run",goal:"冻结目标"}}};
@@ -74,7 +110,7 @@ describe("T-482 持久执行任务状态机", () => {
       await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,task.id));
       await service.command(ctxA,{taskIds:[task.id],command:"resume",idempotencyKey:"explicit-resume"});
       const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
-      expect(stored?.payload).toEqual({...input.payload,researchBlockedAcknowledgedThroughSequence:0,researchBlockedAcknowledgedCallIds:[]});
+      expect(stored?.payload).toEqual({...input.payload,executionRoute:createExecutionRoute("pi"),researchBlockedAcknowledgedThroughSequence:0,researchBlockedAcknowledgedCallIds:[]});
       expect((await service.enqueue(ctxA,input)).id).toBe(task.id);
       await expect(service.enqueue(ctxA,{...input,payload:{modelInput:{kind:"agentic.run",goal:"篡改目标"}}})).rejects.toMatchObject({name:"ConflictError"});
     }finally{await client.close();}
@@ -289,6 +325,15 @@ describe("T-482 持久执行任务状态机", () => {
         idempotencyKey: "retry-1",
       });
       expect(retried?.status).toBe("queued");
+      const retryInput={taskIds:[failedTask.id],command:"retry" as const,idempotencyKey:"retry-1"};
+      expect(await service.command(ctxA,retryInput)).toEqual([retried]);
+      await expect(service.command(ctxA,{...retryInput,command:"cancel"})).rejects.toMatchObject({name:"ConflictError"});
+      const secondClaim=await service.claimNext({workerId:"worker-a",leaseSeconds:30});
+      if(!secondClaim||secondClaim.task.id!==failedTask.id)throw Error("重试原任务未被领取");
+      await service.finish({taskId:failedTask.id,workerId:"worker-a",attempt:secondClaim.task.attempt,status:"failed",errorCode:"UPSTREAM_TIMEOUT",errorMessage:"再次超时"});
+      expect(await service.command(ctxA,retryInput)).toEqual([retried]);
+      expect((await service.get(ctxA,failedTask.id)).status).toBe("failed");
+      await expect(service.command(ctxB,retryInput)).rejects.toMatchObject({name:"OwnershipError"});
     } finally {
       await client.close();
     }
@@ -378,3 +423,25 @@ it("领取过滤精确到用户和账号，剩余任务仍按真实优先级领�
   await expect(tasks.claimNext({...filter,excludeAccounts:[{userId:ctxA.userId,accountId:''}]})).rejects.toThrow('完整属主');
  }finally{await client.close();}
 });
+
+it('默认路由冻结不破坏原入队幂等；切偏好保持原任务，显式换引擎拒绝',async()=>{
+ const {db,client}=await createDb(),service=createPersistentTaskService(db),input={kind:'source_sync' as const,ownerType:'source' as const,ownerId:'route-owner',idempotencyKey:'frozen-route',payload:{page:1}};
+ try{
+  const original=await service.enqueue(ctxA,input);
+  await db.insert(userPreferences).values({userId:ctxA.userId,defaultHome:'dashboard',defaultCreationMode:'guided',defaultVisibility:'private',assistantExecutionEngine:'codex'}).onConflictDoUpdate({target:userPreferences.userId,set:{assistantExecutionEngine:'codex'}});
+  expect((await service.enqueue(ctxA,input)).id).toBe(original.id);
+  const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,original.id));expect((stored!.payload as {executionRoute:unknown}).executionRoute).toEqual(createExecutionRoute('pi'));
+  await expect(service.enqueue(ctxA,{...input,payload:{...input.payload,executionRoute:createExecutionRoute('codex')}})).rejects.toMatchObject({name:'ConflictError'});
+ }finally{await client.close();}
+},180000);
+
+it('持久模型新根在事务前prepare，事务内只核；重放和显式冻结不调用新prepare',async()=>{
+ const {db,client}=await createDb();const events:string[]=[];let allow=false;
+ const service=createPersistentTaskService(db,{prepareModelAuthority:async()=>{events.push('fresh');return async tx=>{expect(tx).not.toBe(db);events.push('check');if(!allow)throw Error('合成授权变化');};}});
+ const input={kind:'topic_preview' as const,ownerType:'transform' as const,ownerId:'renew-owner',idempotencyKey:'renew-preflight',payload:{}};
+ try{
+  await expect(service.enqueue(ctxA,input)).rejects.toThrow('合成授权变化');expect(await db.select().from(executionTasks)).toHaveLength(0);expect(events).toEqual(['fresh','check']);
+  allow=true;const first=await service.enqueue(ctxA,input);expect((await service.enqueue(ctxA,input)).id).toBe(first.id);expect(events).toEqual(['fresh','check','fresh','check','check']);
+  await service.enqueue(ctxA,{...input,idempotencyKey:'known-route',payload:{executionRoute:createExecutionRoute('pi')}});expect(events).toEqual(['fresh','check','fresh','check','check']);
+ }finally{await client.close();}
+},180000);

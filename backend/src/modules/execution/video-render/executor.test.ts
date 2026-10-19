@@ -183,6 +183,42 @@ afterEach(async () => {
 });
 
 describe("createVideoRenderExecutor", () => {
+  it.each([true,false])("T1284 无clips旧V1尊重hasAudio=%s，不依赖raw渲染器保声",async(hasAudio)=>{
+    const calls:EngineCalls={ffmpegArgs:[],probed:[],rendered:[]};
+    const input=props();input.talkingHead.hasAudio=hasAudio;
+    const before=structuredClone(input);
+    await createVideoRenderExecutor(fakeEngine(calls)).run(sandbox,{props:input},runOpts([]));
+    const command=calls.ffmpegArgs.at(-1)!;
+    if(hasAudio){
+      expect(command).toContain('-filter_complex');
+      expect(command[command.indexOf('-filter_complex')+1]).toContain('atrim=start=0:duration=12');
+      expect(command).toContain('[main_audio]');
+      expect(command.join(' ')).toContain('-c:v copy -c:a aac');
+      expect(command.filter(arg=>arg==='-i')).toHaveLength(2);
+    }else{
+      expect(command).not.toContain('-filter_complex');
+      expect(command.filter(arg=>arg==='-i')).toHaveLength(1);
+    }
+    expect(input).toEqual(before);
+    const html=await fs.readFile(path.join(calls.rendered[0]!.projectDir,'index.html'),'utf8');
+    expect(html).not.toContain('data-media-start=');
+  });
+  it.each([true,false])("T1343 裸主轨经过物化/解码后进入真实模板与原音轨整理 hasAudio=%s",async(hasAudio)=>{
+    const calls:EngineCalls={ffmpegArgs:[],probed:[],rendered:[]};
+    const input=props();input.captions=[];input.broll=[];input.scenes[0]!.cards=[];input.talkingHead.hasAudio=hasAudio;
+    const before=structuredClone(input);
+    await createVideoRenderExecutor(fakeEngine(calls)).run(sandbox,{props:input},runOpts([]));
+    expect(calls.rendered).toHaveLength(1);expect(calls.probed).toContain('th.mp4');
+    const html=await fs.readFile(path.join(calls.rendered[0]!.projectDir,'index.html'),'utf8');
+    expect(html).toMatch(/id="th"[^>]+left:0px;top:0px;width:1920px;height:1080px/);
+    expect(html).toContain('object-fit:contain');expect(html).not.toContain('landscape-gap-content');
+    const command=calls.ffmpegArgs.at(-1)!;expect(command.includes('[main_audio]')).toBe(hasAudio);expect(input).toEqual(before);
+  });
+  it("T1343 裸主轨不存在于真实sandbox仍在渲染前拒绝",async()=>{
+    const calls:EngineCalls={ffmpegArgs:[],probed:[],rendered:[]};const input=props();input.captions=[];input.broll=[];input.scenes[0]!.cards=[];input.talkingHead.file='missing.mp4';
+    await expect(createVideoRenderExecutor(fakeEngine(calls)).run(sandbox,{props:input},runOpts([]))).rejects.toThrow(/未物化到沙箱/);
+    expect(calls.rendered).toEqual([]);
+  });
   it("[T-853] FFmpeg 诊断同时保留启动首部与真正失败尾部", () => {
     const stderr = [
       "ffmpeg version 6.0 Copyright (c) FFmpeg developers",
@@ -324,9 +360,9 @@ describe("createVideoRenderExecutor", () => {
     expect(calls.rendered[0]!.videoFrameFormat).toBe("png");
     expect(calls.rendered[0]!.ffmpegPath).toBe("/fake/ffmpeg");
     expect(calls.rendered[0]!.ffprobePath).toBe("/fake/ffprobe");
-    // final 只整理容器，不再发生第二次视频编码。
+    // final 保持视频stream copy，主声音按原范围从输入编译，不依赖外部引擎保声。
     const delivery = calls.ffmpegArgs.at(-1)!;
-    expect(delivery.join(" ")).toContain("-c copy");
+    expect(delivery.join(" ")).toContain("-c:v copy");
     expect(delivery.join(" ")).not.toContain("libx264");
     expect(delivery.join(" ")).not.toContain("libx265");
     expect(delivery.join(" ")).toContain("-movflags +faststart");
@@ -720,7 +756,10 @@ describe("createVideoRenderExecutor", () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     const steps: string[] = [];
     const executor = createVideoRenderExecutor(fakeEngine(calls), {
-      reviewVisuals: async (_ctx, input) => {
+      reviewVisuals: async (_ctx, input, scope) => {
+        expect(scope.parentTaskId).toBe(sandbox.taskId);
+        expect(scope.deadlineAt).toBe(1893456000000);
+        expect(scope.signal).toBeInstanceOf(AbortSignal);
         expect(input.mimeType).toBe("image/jpeg");
         expect(input.bytes.byteLength).toBeGreaterThan(0);
         expect(input.prompt).toContain("遮挡或切掉人物脸");
@@ -737,7 +776,7 @@ describe("createVideoRenderExecutor", () => {
     const result = await executor.run(
       sandbox,
       { goal: "渲染", props: props() },
-      { ...runOpts(steps), ctx: requestContext },
+      { ...runOpts(steps), ctx: requestContext, deadlineAt: 1893456000000 },
     );
 
     expect(executor.networkPosture).toBe("brain-ports");
@@ -771,7 +810,7 @@ describe("createVideoRenderExecutor", () => {
     });
   });
 
-  it("[T-546] 图片 B-roll 按已物化 MIME 直拷，不交给 ffprobe 当视频探测", async () => {
+  it.each(["legacy", "stable"] as const)("[T-1037/T-546] %s 图片 B-roll 引用在物化改名后仍按 MIME 和正确时间渲染", async (mode) => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     const executor = createVideoRenderExecutor(fakeEngine(calls));
     const screenshotAssetId = "asset-screenshot-without-extension";
@@ -793,7 +832,7 @@ describe("createVideoRenderExecutor", () => {
     };
     const imageBrollProps = videoRenderProps.parse({
       ...props(),
-      broll: [{ at: 4, file: screenshotAssetId, label: "官网截图" }],
+      broll: [{ id: mode === "stable" ? "stable-broll" : undefined, at: 4, file: screenshotAssetId, label: "官网截图" }],
       scenes: props().scenes.map((scene) => ({ ...scene, cards: [] })),
       direction: {
         motionThesis: "真实截图在声明拍点接管主视觉。",
@@ -803,7 +842,7 @@ describe("createVideoRenderExecutor", () => {
             sceneIdx: 0,
             startSec: 5,
             endSec: 8,
-            subject: { kind: "broll", ref: `broll:${screenshotAssetId}` },
+            subject: { kind: "broll", ref: `broll:${mode === "stable" ? "stable-broll" : screenshotAssetId}` },
             startState: "off_canvas",
             endState: "takeover",
             motionVerb: "enter",

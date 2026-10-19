@@ -1,0 +1,81 @@
+{
+  "reads": [
+    {
+      "operation": "pages.groupOverview.get",
+      "method": "installed public CLI / explicit group",
+      "startedAtUnix": 1792388565.6129532,
+      "completeParseDurationMs": 990.362,
+      "outerExecutionTimeoutSeconds": 900,
+      "status": "parsed",
+      "exitCode": 0,
+      "ok": true,
+      "topLevelKeys": [
+        "ok",
+        "operation",
+        "requestId",
+        "groupId",
+        "accountId",
+        "data",
+        "meta",
+        "error"
+      ],
+      "rawPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-installed-read-vr95gx7b/pages.groupOverview.get.json",
+      "rawBytes": 11704,
+      "rawSha256": "f71dedb59ac721999aa9fba82a86b72baad59b54dbc2e84d9181270c83b90976",
+      "requestQuery": {
+        "platform": "xiaohongshu",
+        "startDate": "2026-09-20",
+        "endDate": "2026-10-19"
+      },
+      "groupIdSha256": "9a72d3429b5145ffb37b1f02bca0d465d9e0911f53805ef6906ea03e63fdf17e",
+      "workspaceCount": 1,
+      "scopeMatches": true,
+      "workspaceSummary": {
+        "platform": "xiaohongshu",
+        "accountId": null,
+        "startDate": "2026-09-20",
+        "endDate": "2026-10-19",
+        "publicationCount": 0,
+        "contentCount": 0,
+        "totalAccounts": 1,
+        "collectedAccounts": 0,
+        "videoViews": null,
+        "browseViews": null,
+        "articleReads": null,
+        "metricMode": "published_and_collected_in_period_cumulative"
+      },
+      "collectedSummary": {
+        "state": "ready",
+        "catalogWorkCount": 0,
+        "unattributableWorkCount": 0,
+        "deduplicatedWorkCount": 0
+      }
+    },
+    {
+      "operation": "settings.get",
+      "method": "installed public CLI / explicit group",
+      "startedAtUnix": 1792388566.604458,
+      "completeParseDurationMs": 1437.754,
+      "outerExecutionTimeoutSeconds": 900,
+      "status": "parsed",
+      "exitCode": 0,
+      "ok": true,
+      "topLevelKeys": [
+        "ok",
+        "operation",
+        "requestId",
+        "groupId",
+        "accountId",
+        "data",
+        "meta",
+        "error"
+      ],
+      "rawPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-installed-read-vr95gx7b/settings.get.json",
+      "rawBytes": 454,
+      "rawSha256": "ea4e63a3133dab1f7132194fb7531f4a46e5e57993eec8b3ace084d0e68b6a62",
+      "requestQuery": null,
+      "groupIdSha256": "9a72d3429b5145ffb37b1f02bca0d465d9e0911f53805ef6906ea03e63fdf17e"
+    }
+  ],
+  "boundary": "每op唯一一次；单调时钟从子进程前到完整JSON parse；含CLI启动/本机传输/服务/parse总时，不冒服务单阶段。原响应仅0700私有目录600文件，不Git。无模型/写/采集/站点访问。"
+}

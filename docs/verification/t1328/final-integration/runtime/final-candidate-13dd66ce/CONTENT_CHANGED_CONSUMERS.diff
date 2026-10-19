@@ -1,0 +1,39 @@
+diff --git a/frontend/src/features/copilot/ai-copilot-content.tsx b/frontend/src/features/copilot/ai-copilot-content.tsx
+index 2fc085b72..13a559c81 100644
+--- a/frontend/src/features/copilot/ai-copilot-content.tsx
++++ b/frontend/src/features/copilot/ai-copilot-content.tsx
+@@ -3600,10 +3600,10 @@ export function AICopilotContent({
+                 <Sparkles className="size-4" aria-hidden="true" />
+               </span>
+               <p className="text-[13px] font-medium text-foreground">
+-                描述你的目标，我来帮你规划下一步
++                {embeddedContentOwner ? "告诉我这份成稿需要怎么调整" : "描述你的目标，我来帮你规划下一步"}
+               </p>
+               <p className="text-xs text-muted-foreground">
+-                试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。
++                {embeddedContentOwner ? "可以调整表达、结构或重点，审阅候选后再采纳。" : "试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。"}
+               </p>
+             </div>
+           )}
+diff --git a/frontend/src/server/persistence-client.ts b/frontend/src/server/persistence-client.ts
+index ac0666619..d1b1d63df 100644
+--- a/frontend/src/server/persistence-client.ts
++++ b/frontend/src/server/persistence-client.ts
+@@ -3432,7 +3432,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
+   const workScriptsFor=(store:typeof db):import("@creatoros/backend/modules/output-scripts").OutputScriptsService=>createOutputScriptsService({...outputScriptOwnerPorts,projects:workProjectsFor(store),artifacts:workArtifactsFor(store)});
+   const workMomentsFor: (store:typeof db)=>import("@creatoros/backend/modules/moments").MomentsService = store=>createMomentsService({db:store,...deps,ports:{
+     artifacts:workArtifactsFor,
+-    assertProjectOwned:async(c,id,tx,lock)=>{await workProjectsFor(tx).getProject(c,id,lock);},
++    assertProjectOwned:async(c,id,tx,lock)=>workProjectsFor(tx).getProject(c,id,lock),
+     assertFile:async(c,projectId,file,tx)=>{await workSourceService.assertFile(c,projectId,file,tx);},
+     assertSource:async(c,projectId,ref,tx)=>{await workSourceService.read(c,projectId,ref,tx);},
+   }});
+@@ -3473,7 +3473,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
+   const workMaterialAdapters={moments:createMomentsMaterialPorts(workMomentsFor),article:createArticleMaterialPorts(workArticlesFor),image:createGraphicMaterialPorts(workGraphicFor)};
+   const workMaterialsFor=(store:typeof db)=>createWorkMaterialsService({db:store,...deps,ports:{
+     canvasAvailable:async()=>Boolean(creativeCanvasRoot.transport),
+-    assertComposition:async(c,id,tx,lock)=>{await workCompositionsFor(tx).assertCompositionOwned(c,id,lock);},
++    assertComposition:async(c,id,tx,lock)=>workCompositionsFor(tx).readWorkspaceAuthority(c,id,lock),
+     lockMember:(c,id,member,tx)=>workCompositionsFor(tx).lockMember(c,id,member),
+     assertFile:async(c,projectId,file,tx,touch)=>{
+       if(touch?.member.kind==="video"&&touch.target.kind==="video_material"&&touch.member.outputId===touch.target.outputId){

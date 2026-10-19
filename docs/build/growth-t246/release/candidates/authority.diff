@@ -1,0 +1,24 @@
+--- authority/products/creatoros.json
++++ authority/products/creatoros.json
+@@ -125,16 +125,16 @@
+     "redemptionUnavailableCopy": "购买码兑换服务正在接入，暂未开放。"
+   },
+   "downloadSection": {
+-    "subtitle": "根据你的电脑选择对应版本，两个入口都会打开 CreatorOS 飞书下载与安装指南。",
+-    "note": "安装后打开 CreatorOS，输入本站交付的正式激活码。购买码与激活码用途不同，请勿混用。"
++    "subtitle": "Apple 芯片 Mac 提供本轮验收包；Windows 下载与安装说明保留飞书入口。",
++    "note": "安装后输入本站交付的正式激活码，购买码与激活码请勿混用。有效正式授权包含官方套餐额度，已有账户按原额度和余额复用；所有版本都可自由切换自配。"
+   },
+   "downloads": [
+     {
+       "platform": "MACOS · APPLE SILICON",
+       "title": "Apple 芯片 Mac",
+-      "copy": "适用于 M1、M2、M3、M4 等 Apple 芯片设备。Intel Mac 暂不支持。",
+-      "href": "https://my.feishu.cn/wiki/GaHrwmGHHiU8MQkovQZcNjxMnpe?from=from_copylink",
+-      "buttonLabel": "前往飞书下载",
++      "copy": "适用于 Apple 芯片 Mac，需 macOS 13.5 及以上。此为本轮 ad-hoc 签名、未公证的验收包；Intel Mac 暂不支持。",
++      "href": "https://creatoros.aitongban.cloud/updates/CreatorOS_1.2.0_e3151ce89_macos-arm64.dmg",
++      "buttonLabel": "下载 Mac 验收包",
+       "unavailableLabel": "正式下载准备中"
+     },
+     {

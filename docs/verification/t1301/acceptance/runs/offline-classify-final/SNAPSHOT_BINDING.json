@@ -1,0 +1,20 @@
+{
+  "originalRoot": "/private/tmp/t1300-candidate-Co1DpL",
+  "originalDb": "/private/tmp/t1300-candidate-Co1DpL/db",
+  "copyRoot": "/private/tmp/t1301-offline-jvxzd48b",
+  "copyDb": "/private/tmp/t1301-offline-jvxzd48b/db",
+  "originalOwnerSha256": "348589431543008bc094ab989e27fed2c9edcdf8b34c3577f6633a54643120cf",
+  "originalFileCount": 2229,
+  "stableObservationsEqual": true,
+  "originalBeforeAfterCopyEqual": true,
+  "originalGracefulFlushProven": false,
+  "originalExit": 143,
+  "mode": "静止副本恢复一致性取证；只副本可自然恢复，原库不开",
+  "queryScope": {
+    "asset": "asset-e2aea52e-49",
+    "file": "afile-e2aea52e-53",
+    "task": "ai-task-e2aea52e-55",
+    "execution": "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+    "group": "grp-e2aea52e-6"
+  }
+}

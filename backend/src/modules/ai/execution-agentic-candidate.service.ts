@@ -1,7 +1,8 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {createHash} from "node:crypto";
 import {and,asc,eq,aiTasks,aiTaskResults,executionTasks,executionCalls,type Db} from "@creatoros/backend";
 import {agenticProposal,type AgenticProposal} from "@creatoros/contract";
-import {agenticCommitReceiptSchema,agenticWorkerInputSchema,agenticToolOutcomeSchema,workerProviderReceiptSchema,workerToolResultReceiptSchema,checkpointToolCallSchema,executionCheckpointSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {agenticCommitReceiptSchema,agenticWorkerInputSchema,agenticToolOutcomeSchema,workerProviderReceiptSchema,workerToolResultReceiptSchema,checkpointToolCallSchema,executionCheckpointSchema,workerPortInputSchemas,frozenExecutionEngine,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
 import {ConflictError} from "../execution/execution.errors";
 import {verifyExecutionKnowledgeSource} from "./agentic-proposal-staging.service";
@@ -19,13 +20,31 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
       const requestDigest=digest({lastModelCallId:request.lastModelCallId,toolCallIds:[...request.toolCallIds].sort(),stopReason:request.stopReason});
       return leases.withLease(ref,"settlement",async({tx,task,context})=>{
         if(task.kind!=="ai_task" || task.ownerType!=="ai_task")throw new ConflictError("当前执行不是AI业务任务");
-        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
         if(!business)throw new ConflictError("AI任务映射或归属不一致");
         const frozen=agenticWorkerInputSchema.parse(object(task.payload).modelInput);
         if(`exec.${frozen.taskType}`!==business.taskType)throw new ConflictError("冻结任务类型不一致");
+        const engine=frozenExecutionEngine(task.payload);
+        if(request.actualEngine!==engine)throw new ConflictError("结果引擎与任务冻结身份不符");
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
         const lastModel=calls.filter(call=>call.kind==="model").at(-1);
         if(!lastModel || lastModel.id!==request.lastModelCallId || lastModel.status!=="settled" || !lastModel.providerResult)throw new ConflictError("最后模型调用不是当前已确认回执");
+        let nativeMeta:Record<string,unknown>={};
+        if(engine==='codex'){
+          const roots=calls.filter(call=>call.kind==='model'&&!call.parentCallId);
+          if(roots.length!==1||roots[0]?.id!==lastModel.id)throw new ConflictError('原生Agent回合账本不唯一');
+          const binding=object(object(object(task.payload).codexCalls)[lastModel.id]);
+          const receipt=workerProviderReceiptSchema.parse(lastModel.providerResult),meta=object(object(receipt.providerMetadata).codex);
+          if(typeof binding.threadId!=='string'||typeof binding.turnId!=='string'||meta.threadId!==binding.threadId||meta.turnId!==binding.turnId||meta.completionStatus!=='completed'||meta.projection!=='native-turn-v1'||receipt.finishReason.raw!=='completed')throw new ConflictError('原生Agent最终回执缺少原线程回合完成事实');
+          const tools=object(binding.tools),facts=receipt.content.filter(part=>object(part).type==='tool-call').map(part=>checkpointToolCallSchema.parse(part));
+          if(facts.length!==Object.keys(tools).length||new Set(facts.map(fact=>fact.toolCallId)).size!==facts.length)throw new ConflictError('原生Agent工具事实不完整或重复');
+          for(const fact of facts){
+            const owned=object(tools[fact.toolCallId]);
+            if(owned.toolCallId!==fact.toolCallId||owned.toolName!==fact.toolName||owned.input!==fact.input)throw new ConflictError('原生Agent工具参数与原回合记录不符');
+          }
+          // SEMANTIC_BOUNDARY_ALLOW: 身份只来自已结算真实回执；缺失模型或用量保留未知，不参与创作取舍。
+          nativeMeta={threadId:binding.threadId,turnId:binding.turnId,model:typeof meta.model==='string'?meta.model:null,modelProvider:typeof meta.modelProvider==='string'?meta.modelProvider:null};
+        }
         const [existing]=await tx.select().from(aiTaskResults).where(eq(aiTaskResults.executionCallId,lastModel.id));
         if(existing){
           if(existing.aiTaskId!==business.id || lastModel.resultRef!==existing.id || object(existing.resultData).executionCommitDigest!==requestDigest)throw new ConflictError("候选提交回执不一致");
@@ -95,7 +114,7 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
         const lastReceipt=workerProviderReceiptSchema.parse(lastModel.providerResult);
         const summary=lastReceipt.content.filter(part=>object(part).type==="text").map(part=>object(part).text).filter((text):text is string=>typeof text==="string").join("\n").slice(0,10000);
         const partial=request.stopReason!=="completed";const resultId=`ai-agentic-result:${lastModel.id}`;
-        const meta={engine:"pi",actualEngine:"pi",completeness:partial?"partial":"completed",stopReason:request.stopReason,
+        const meta={engine,actualEngine:engine,...nativeMeta,completeness:partial?"partial":"completed",stopReason:request.stopReason,
           checkpointRef:`execution-checkpoint:${task.id}:${checkpoint.revision}`,usageRef:`execution-calls:${task.id}`,
           tokensUsed:settled.some(call=>call.totalTokens===null)?null:settled.reduce((sum,call)=>sum+(call.totalTokens ?? 0),0)};
         if(frozen.taskType==="agentic.collect" && !frozen.dryRun){
@@ -119,7 +138,7 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
           await tx.update(executionTasks).set({status:"failed",leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,retryAt:null,retryOfCallId:null,lastErrorCode:errorCode,lastErrorMessage:errorMessage,updatedAt:stamp}).where(eq(executionTasks.id,task.id));
           return agenticCommitReceiptSchema.parse({outcome:"failed",resultId,aiTaskId:business.id,errorCode});
         }
-        const resultData={taskType:frozen.taskType,summary,executionCommitDigest:requestDigest,stopReason:request.stopReason,meta,...(frozen.dryRun?{engine:"pi",output:{plans},dryRun:true}:{proposals})};
+        const resultData={taskType:frozen.taskType,summary,executionCommitDigest:requestDigest,stopReason:request.stopReason,meta,...(frozen.dryRun?{engine,output:{plans},dryRun:true}:{proposals})};
         await tx.insert(aiTaskResults).values({id:resultId,executionCallId:lastModel.id,aiTaskId:business.id,resultType:frozen.dryRun?"execution_plan":"agentic_proposals",resultData});
         await tx.update(aiTasks).set({status:frozen.dryRun?"succeeded":"awaiting_confirmation",completedAt:frozen.dryRun?stamp:null,errorMessage:null,leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,business.id));
         await tx.update(executionCalls).set({resultRef:resultId,updatedAt:stamp}).where(eq(executionCalls.id,lastModel.id));

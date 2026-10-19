@@ -1,6 +1,7 @@
+import {asrTranscriptSchema} from "@creatoros/contract/execution-worker";
 import { z } from 'zod';
 import { AsrExecutionInterruption, isAsrExecutionControlError, throwIfAsrAborted, type AsrRequest, type ExecuteAsrRequest } from '../runtime/asr-request';
-const resultSchema = z.object({ text: z.string(), language: z.string().optional() }).strict();
+const resultSchema=asrTranscriptSchema;
 export interface DurableAsrPorts {
     reserve(input: {
         operationKey: string;

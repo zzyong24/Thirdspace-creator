@@ -96,3 +96,11 @@ Skill 做创作语义判断。确定性相似度只可用于去重、协议纠�
 backend/src/application 按页面查询、聊天读取、创作上下文与采集能力组合既有领域 service。该层可组合多个 service，但不取得第二套任务权或凭据管理权；纯解析叶子与浏览器进程分离，实际浏览器、文件下载等宿主资源通过窄端口注入。根入口负责配置、资源和生命周期，具体拆分进度以 T-930 交付证据为准。
 
 缺 Pi 标记的旧聊天非终态进入明确升级受阻，不自动重发；已 Pi 冻结任务继续按原账本恢复。旧终态及产物仍可读取。该边界以本机所有旧聊天已终态为前提，不声明其它安装环境无损自动迁移。
+
+## T-1004 多步 Agent 的宿主端口（2026-09-19）
+
+用户目标进入现有 Pi 聊天循环；`execution_tasks` 仍持有唯一任务权、费用与恢复真相。`contract/src/internal/agent-workbench.ts` 定义能力、调用、计划、文件、命令、浏览器租约和产物协议。模型只能提交 `workbenchInvocation`；账号、taskId、attempt、fence、operationId 和宿主权限由 backend 的可信执行上下文注入，不能从模型参数读取。业务正式实体继续由 backend service 在用户采纳后写入。
+
+通用能力适配器住 `ai-worker/src/capabilities/`，通过 backend service port 结算回执及产物；门卫 R5 禁止该目录直接引入 PG/Drizzle。桌面 Rust 宿主只持有浏览器进程、任务文件授权及子进程树，不直接写业务数据库。Worker 经受限本机端口调用宿主。浏览器 profile 的生命周期所有者只能有一个：交接前旧 Playwright 持有时 Rust 不得启动相同 profile；交接后旧采集器经受管连接或逐动作迁移，不能并行自启动同一目录。账号身份域与任务 Lane 分开；取消仅结束对应租约，epoch 改变后元素引用失效。
+
+NomiFun 浏览器依赖锁定来源与完整 Cargo 闭包，见 `docs/verification/t1004-nomifun-dependency.md`；安装包内提供所需运行时，不读取开发机上的 NomiFun 路径。此节只冻结所有权和端口，实际交接及双端包验收分别由 T-1008/T-1013 证明。

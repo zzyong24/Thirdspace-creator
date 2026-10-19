@@ -45,6 +45,8 @@ vi.mock("next/link", () => ({
 // `useRouter()`. Stub `next/navigation` so the component tree renders without a
 // real Next.js router runtime.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
 }));
 
@@ -106,6 +108,15 @@ describe("ProjectsPage", () => {
     expect(heading.textContent ?? "").toMatch(/项目/);
   });
 
+  it("项目列表只保留新建项目入口，不显示直接创作作品", async () => {
+    await renderProjects();
+    expect(screen.queryByRole("link", { name: /直接创作作品/ })).toBeNull();
+    expect(screen.getByRole("link", { name: /新建项目/ })).toHaveAttribute(
+      "href",
+      "/projects/new",
+    );
+  });
+
   // [T-332 S4·§6.2] 新号零项目:诚实空态 + 「新建项目 / 从选题立项」引导,不渲空表格。
   it("零项目 → 空态引导(新建项目 + 从选题立项),不渲染空列表表头", async () => {
     const { buildProjectsViewModel } = await import("@/fixtures/selectors");
@@ -120,6 +131,8 @@ describe("ProjectsPage", () => {
     ) as HTMLAnchorElement;
     expect(newLink).not.toBeNull();
     expect(newLink.getAttribute("href")).toBe("/projects/new");
+    expect(newLink).toHaveTextContent("新建项目");
+    expect(screen.queryByRole("link", { name: /直接创作作品/ })).toBeNull();
     const topicsLink = container.querySelector(
       '[data-slot="projects-empty-topics"]',
     ) as HTMLAnchorElement;
@@ -553,4 +566,14 @@ describe("ProjectsPage", () => {
       reviewingRow.querySelector('[data-slot="project-schedule-trigger"]'),
     ).toBeNull();
   });
+});
+
+it("账号组空项目口径允许继续创作，不再声称按抖音号隔离",async()=>{
+ const {buildProjectsViewModel}=await import("@/fixtures/selectors");await renderProjects({viewModel:buildProjectsViewModel([]),groupId:"real-group"});expect(screen.getByText("这个账号组还没有项目")).toBeInTheDocument();expect(screen.getByText(/项目属于当前账号组/)).toBeInTheDocument();expect(screen.queryByText(/项目按抖音号隔离/)).toBeNull();
+});
+
+it('T1362项目保原列表并提供独立已采集作品入口',async()=>{
+ const {container}=await renderProjects();
+ expect(screen.getByRole('link',{name:'已采集作品'})).toHaveAttribute('href','/accounts/works');
+ expect(container.querySelector('[data-slot="project-list"]')).toBeTruthy();
 });

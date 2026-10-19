@@ -1,0 +1,4 @@
+import {fileURLToPath}from'node:url';import path from'node:path';
+const here=path.dirname(fileURLToPath(import.meta.url)),repo=path.resolve(here,'../../../../..');
+const phase=process.env.T1334_PHASE_ROOT??'/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/red-v1';
+export default{root:path.join(repo,'frontend'),resolve:{tsconfigPaths:true},cacheDir:path.join(phase,'cache'),test:{environment:'node',include:['src/server/__module_integration__/agentic-task-tool-visibility.persistence-client.test.ts'],exclude:['**/node_modules/**'],setupFiles:[],alias:{'server-only':path.join(repo,'frontend/src/test/empty-module.ts'),'client-only':path.join(repo,'frontend/src/test/empty-module.ts')},testTimeout:28800000,hookTimeout:180000,globalTimeout:86760000,maxWorkers:1,fileParallelism:false,retry:0,reporters:['default',['json',{outputFile:path.join(phase,'vitest-result.json')}]]}};

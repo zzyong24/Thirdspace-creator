@@ -1,0 +1,5 @@
+# T1321 实际注册
+
+Root正式104源/两worker/SDK/binary/Node初审findings为空，经reviewctl实际PASS REV:271af53ebf46后注册diagnosis。沿正式MODULE_SCOPE产品/测试W与既有无无关done前置合同；只额外列本任务新review及C控制交接件为R，不新增生产消费者或产品权限。原pending模块文件与源锁均不覆盖。
+
+final-common timeout-v1并行期间仅共享控制面变更；其BEFORE_INPUTS中的modules/progress会发生合法控制漂移，产品源/受测test必须单独逐项相等，不能声称全部前快照零变。

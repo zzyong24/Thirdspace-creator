@@ -1,0 +1,818 @@
+{
+  "schema": "t1375-actual-gates/v1",
+  "results": [
+    {
+      "stage": "asr-root-final-green",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/persistence-client.model-benefit-recovery.test.ts",
+          "src/server/activation/model-benefit.server.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 0,
+        "seconds": 58.65506625000853,
+        "logSHA256": "c1c0a50b509d582d95ff642957d1b5de44fe4ae7b13071a4822d162d5ea6dede"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 27
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/asr-root-final-green.log",
+      "logBytes": 543
+    },
+    {
+      "stage": "asr-root-green",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/persistence-client.model-benefit-recovery.test.ts",
+          "src/server/activation/model-benefit.server.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 1,
+        "seconds": 97.59164816699922,
+        "logSHA256": "99ac198844e827ec2e430bde12072c22b657763483a6f89826ed7174873fa79e"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 25,
+        "failed": 1
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/asr-root-green.log",
+      "logBytes": 2179
+    },
+    {
+      "stage": "asr-root-green02",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/persistence-client.model-benefit-recovery.test.ts",
+          "src/server/activation/model-benefit.server.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 0,
+        "seconds": 57.71922441595234,
+        "logSHA256": "1ddb3683cfaeafeffd0fbaf6e75c9aa2bde73f747c98b9942cb5f2dea7cc14b8"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 26
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/asr-root-green02.log",
+      "logBytes": 545
+    },
+    {
+      "stage": "asr-root-red",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/persistence-client.model-benefit-recovery.test.ts",
+          "-t",
+          "T1375",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 1,
+        "seconds": 35.6768896249705,
+        "logSHA256": "1881001b94a173151857859e0efe06dea3a80f1994a46fd79571d72355bfd4e5"
+      },
+      "countsParsedFromActualSummary": {
+        "failed": 2,
+        "skipped": 3
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/asr-root-red.log",
+      "logBytes": 3908
+    },
+    {
+      "stage": "asr-typed-final-green",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/persistence-client.model-benefit-recovery.test.ts",
+          "src/server/activation/model-benefit.server.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 0,
+        "seconds": 29.50642983301077,
+        "logSHA256": "6427f4e9ec6b9de0f08b7ceeefece97ae250f02d85e1033761a9433489c506f3",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "a040bd5cb44c8e194c9d1ece39ac91702721ab3c644123c6677f034699e5a6f8"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 27
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/asr-typed-final-green.log",
+      "logBytes": 544
+    },
+    {
+      "stage": "backend-focused",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "vitest",
+          "run",
+          "src/modules/ai-runtime/asset-business-execution.service.test.ts",
+          "src/modules/ai-runtime/transcribe-business-execution.service.test.ts",
+          "src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "src/modules/execution/execution-cover-series.test.ts",
+          "src/modules/execution/persistent-task.service.test.ts",
+          "src/modules/moments/moments-model.integration.test.ts",
+          "src/modules/production/production-rough-cut.integration.test.ts",
+          "src/modules/review/work-reviews.service.test.ts",
+          "src/modules/ai-runtime/multimodal/resolve.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 0,
+        "seconds": 381.97181354201166,
+        "logSHA256": "4225d53da0e089cba2f5514497fefa218e33d315265a3c744b279e4d62471d34",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "22817f098bcf98c57d549ce83bce4e8282b81458c0431d0ba1f60df0d23221bb"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 156,
+        "skipped": 8
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/backend-focused.log",
+      "logBytes": 256
+    },
+    {
+      "stage": "backend-types",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "tsc",
+          "--noEmit",
+          "--pretty",
+          "false",
+          "--incremental",
+          "false"
+        ],
+        "exitCode": 2,
+        "seconds": 40.50203904201044,
+        "logSHA256": "db9aa34394de7fe5d70aaee09a72d9965e14bad66dbed1b9aed8714ac30f1ebc",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "511fda9e20a2ed1f878c3136d9dc49a0b9f7205e0f6c8df20e442e9c66d2e10c"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/backend-types.log",
+      "logBytes": 1255
+    },
+    {
+      "stage": "backend-types-green",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "tsc",
+          "--noEmit",
+          "--pretty",
+          "false",
+          "--incremental",
+          "false"
+        ],
+        "exitCode": 0,
+        "seconds": 42.144359084020834,
+        "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "a040bd5cb44c8e194c9d1ece39ac91702721ab3c644123c6677f034699e5a6f8"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/backend-types-green.log",
+      "logBytes": 0
+    },
+    {
+      "stage": "boundary",
+      "exit": {
+        "command": [
+          "node",
+          "orchestrator/process/boundary-scan.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.4683909580344334,
+        "logSHA256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "511fda9e20a2ed1f878c3136d9dc49a0b9f7205e0f6c8df20e442e9c66d2e10c"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/boundary.log",
+      "logBytes": 779
+    },
+    {
+      "stage": "capsule-budget-red",
+      "exit": {
+        "command": [
+          "node",
+          "--test",
+          "--test-name-pattern",
+          "T1375",
+          "tools/windows-closure-rat/signed-sidecar-capsule.test.mjs"
+        ],
+        "exitCode": 1,
+        "seconds": 0.4541421250323765,
+        "logSHA256": "d1e53a71a8e2aa64ee425f6564c83e2ba64f76af374968e76edb24df51139ff0"
+      },
+      "countsParsedFromActualSummary": {
+        "node_pass": 0,
+        "node_fail": 1,
+        "node_skipped": 0
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/capsule-budget-red.log",
+      "logBytes": 977
+    },
+    {
+      "stage": "cover-cancel-fixture-green",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "vitest",
+          "run",
+          "src/modules/execution/execution-cover-series.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 0,
+        "seconds": 3.0740879999939352,
+        "logSHA256": "a90032f9c07a63b85aca81258fcdebe7b4f8d19a2d28288d635ca038eca9c2ce",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "a040bd5cb44c8e194c9d1ece39ac91702721ab3c644123c6677f034699e5a6f8"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 5
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/cover-cancel-fixture-green.log",
+      "logBytes": 234
+    },
+    {
+      "stage": "diff-check",
+      "exit": {
+        "command": [
+          "git",
+          "diff",
+          "--check",
+          "HEAD"
+        ],
+        "exitCode": 0,
+        "seconds": 0.1300654590013437,
+        "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "511fda9e20a2ed1f878c3136d9dc49a0b9f7205e0f6c8df20e442e9c66d2e10c"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/diff-check.log",
+      "logBytes": 0
+    },
+    {
+      "stage": "frontend-focused",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/activation/client-config.server.test.ts",
+          "src/server/activation/client-config.t243-consumer.test.ts",
+          "src/server/activation/model-benefit.server.test.ts",
+          "src/app/api/v1/local/client-config/route.test.ts",
+          "src/features/settings/settings-interactive-region.test.tsx",
+          "src/app/activate/activate-form.test.tsx",
+          "src/features/copilot/chat-api-error.test.ts",
+          "src/features/copilot/chat-task-control.test.ts",
+          "src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+          "src/server/chat-observation-recovery.integration.test.ts",
+          "src/server/persistence-client.model-benefit-recovery.test.ts",
+          "src/server/prepare-chat-reply.test.ts",
+          "src/app/api/chat/route.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 0,
+        "seconds": 153.23541054100497,
+        "logSHA256": "04d533c33adec3c4afe18127a38310b7053159b1dce08f79a98aca80e7794ead"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 418,
+        "skipped": 1
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/frontend-focused.log",
+      "logBytes": 2063
+    },
+    {
+      "stage": "frontend-original-consumer",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/activation/client-config.t243-consumer.test.ts",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 1,
+        "seconds": 6.395598749979399,
+        "logSHA256": "ac924ca2fe9d028a33cc9a3e536645f2100ad0dcac409ced09855cf74d73c84e"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 81,
+        "failed": 1
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/frontend-original-consumer.log",
+      "logBytes": 1451
+    },
+    {
+      "stage": "frontend-types",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "tsc",
+          "--noEmit",
+          "--pretty",
+          "false",
+          "--incremental",
+          "false"
+        ],
+        "exitCode": 2,
+        "seconds": 47.25213966699084,
+        "logSHA256": "8a0618d5775bd0ba89ecbcf2e483b70a3f59697b4f4a81e659b47160e6e51200",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "22817f098bcf98c57d549ce83bce4e8282b81458c0431d0ba1f60df0d23221bb"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/frontend-types.log",
+      "logBytes": 90
+    },
+    {
+      "stage": "frontend-types-green",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "tsc",
+          "--noEmit",
+          "--pretty",
+          "false",
+          "--incremental",
+          "false"
+        ],
+        "exitCode": 0,
+        "seconds": 47.233427833009046,
+        "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "511fda9e20a2ed1f878c3136d9dc49a0b9f7205e0f6c8df20e442e9c66d2e10c"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/frontend-types-green.log",
+      "logBytes": 0
+    },
+    {
+      "stage": "installer-budget-green",
+      "exit": {
+        "command": [
+          "python3",
+          "-B",
+          "tools/windows-closure-rat/private-draft-installer-relay.test.py"
+        ],
+        "exitCode": 0,
+        "seconds": 0.44857645797310397,
+        "logSHA256": "37df0157bac79beddd93b64c9a10ed439b42300e2de211fed393ed5713dec179"
+      },
+      "countsParsedFromActualSummary": {
+        "python_tests": 11
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/installer-budget-green.log",
+      "logBytes": 590
+    },
+    {
+      "stage": "installer-budget-red",
+      "exit": {
+        "command": [
+          "python3",
+          "-B",
+          "tools/windows-closure-rat/private-draft-installer-relay.test.py",
+          "InstallerUploadBudgetTests",
+          "InstallerRelayTests.test_download_uses_installer_ID_and_no_token_on_blob"
+        ],
+        "exitCode": 1,
+        "seconds": 0.1846000839723274,
+        "logSHA256": "ba9051376e2702fba4cd3c3b5cc8d9b8cb0424327ba35c075dcb482c77aadb97"
+      },
+      "countsParsedFromActualSummary": {
+        "python_tests": 2
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/installer-budget-red.log",
+      "logBytes": 1648
+    },
+    {
+      "stage": "per-request-red",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "vitest",
+          "run",
+          "src/modules/ai-runtime/multimodal/resolve.test.ts",
+          "-t",
+          "T-763",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 1,
+        "seconds": 1.9020153330056928,
+        "logSHA256": "9b43ca01a07e4e3f1f5ed7d6a6cc95d010167ef98b08f4c2f31908b9c4fd9189"
+      },
+      "countsParsedFromActualSummary": {
+        "failed": 1,
+        "skipped": 27
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/per-request-red.log",
+      "logBytes": 1078
+    },
+    {
+      "stage": "relay-budget-green",
+      "exit": {
+        "command": [
+          "python3",
+          "-B",
+          "tools/windows-closure-rat/private-draft-artifact-relay.test.py"
+        ],
+        "exitCode": 0,
+        "seconds": 0.24961641698610038,
+        "logSHA256": "94a62cad5a4bbc4def633019b84b7ceeb71f910910e4185687f7132582d08443"
+      },
+      "countsParsedFromActualSummary": {
+        "python_tests": 27
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/relay-budget-green.log",
+      "logBytes": 3776
+    },
+    {
+      "stage": "relay-budget-red",
+      "exit": {
+        "command": [
+          "python3",
+          "-B",
+          "tools/windows-closure-rat/private-draft-artifact-relay.test.py",
+          "TransportBudgetTests"
+        ],
+        "exitCode": 1,
+        "seconds": 0.28523079195292667,
+        "logSHA256": "339cf90d6fe054b8916e1acbbdc1e383d88e45f91f4647cfc67ef4a3c5bcf24b"
+      },
+      "countsParsedFromActualSummary": {
+        "python_tests": 3
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/relay-budget-red.log",
+      "logBytes": 2889
+    },
+    {
+      "stage": "rust-activation-budget-offline",
+      "exit": {
+        "command": [
+          "env",
+          "CARGO_BUILD_JOBS=1",
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "--manifest-path",
+          "frontend/src-tauri/Cargo.toml",
+          "--lib",
+          "activation_credit_wait_does_not_change_other_refresh_budgets"
+        ],
+        "exitCode": 101,
+        "seconds": 12.703809499973431,
+        "logSHA256": "4e0e1329af98911612449076be0362aba35e6a2a85e40ba6fa72154edc0d19a6",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "a040bd5cb44c8e194c9d1ece39ac91702721ab3c644123c6677f034699e5a6f8"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/rust-activation-budget-offline.log",
+      "logBytes": 4534
+    },
+    {
+      "stage": "rust-debug-unit-resources",
+      "exit": {
+        "command": [
+          "env",
+          "CARGO_BUILD_JOBS=1",
+          "TAURI_CONFIG={\"bundle\":{\"resources\":[]}}",
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "--manifest-path",
+          "frontend/src-tauri/Cargo.toml",
+          "--lib",
+          "activation_credit_wait_does_not_change_other_refresh_budgets"
+        ],
+        "exitCode": 0,
+        "seconds": 27.185938792012166,
+        "logSHA256": "d4021113c831801dd3d757f2fdbd81d1c18c7388116d30629c4265c528a55153",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "a040bd5cb44c8e194c9d1ece39ac91702721ab3c644123c6677f034699e5a6f8"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 1,
+        "failed": 0,
+        "filtered": 291
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/rust-debug-unit-resources.log",
+      "logBytes": 9959
+    },
+    {
+      "stage": "security-object-red",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/server/activation/model-benefit.server.test.ts",
+          "-t",
+          "T1375 fresh",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 1,
+        "seconds": 10.173255791014526,
+        "logSHA256": "22b14b72d2c5add27956b1e7ba12ef2deae51e77ab4c166e3ce01bb7b791e572"
+      },
+      "countsParsedFromActualSummary": {
+        "failed": 1,
+        "skipped": 21
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/security-object-red.log",
+      "logBytes": 1224
+    },
+    {
+      "stage": "semantic",
+      "exit": {
+        "command": [
+          "node",
+          "orchestrator/process/semantic-boundary-scan.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.3115431250189431,
+        "logSHA256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "511fda9e20a2ed1f878c3136d9dc49a0b9f7205e0f6c8df20e442e9c66d2e10c"
+      },
+      "countsParsedFromActualSummary": {},
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/semantic.log",
+      "logBytes": 86
+    },
+    {
+      "stage": "timeout-policy-sandbox",
+      "exit": {
+        "command": [
+          "/usr/bin/sandbox-exec",
+          "-p",
+          "(version 1) (allow default) (deny network*) (deny file-write* (subpath \"/Users/zyongzhu/.hyperframes\"))",
+          "env",
+          "HYPERFRAMES_NO_TELEMETRY=1",
+          "HYPERFRAMES_NO_AUTO_INSTALL=1",
+          "node",
+          "tools/timeout-policy/verify.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 35.243429250025656,
+        "logSHA256": "f635b9ceeb22e0be02e14b860129ad8a9c96b95b906c45e4611593904b867d2f",
+        "sourcesUnchanged": true,
+        "sourceFreezeSHA256": "a040bd5cb44c8e194c9d1ece39ac91702721ab3c644123c6677f034699e5a6f8"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 5,
+        "node_pass": 16,
+        "node_fail": 0,
+        "node_skipped": 0
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/timeout-policy-sandbox.log",
+      "logBytes": 5674
+    },
+    {
+      "stage": "windows-focused",
+      "exit": {
+        "command": [
+          "node",
+          "--test",
+          "tools/windows-closure-rat/signed-sidecar-capsule.test.mjs",
+          "tools/windows-closure-rat/build-production-closure.test.mjs",
+          "tools/windows-closure-rat/worker-dependency-graph.test.mjs",
+          "frontend/scripts/desktop/sign-sidecar.node.test.mjs",
+          "frontend/scripts/desktop/windows-runtime-config.test.mjs"
+        ],
+        "exitCode": 1,
+        "seconds": 35.723682083014864,
+        "logSHA256": "231c1d344813ceea376b6b226dd7f1934b703218f34eb4a415a247c84e909a3c"
+      },
+      "countsParsedFromActualSummary": {
+        "node_pass": 53,
+        "node_fail": 18,
+        "node_skipped": 1
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/windows-focused.log",
+      "logBytes": 35805
+    },
+    {
+      "stage": "windows-node-green02",
+      "exit": {
+        "command": [
+          "node",
+          "--test",
+          "tools/windows-closure-rat/signed-sidecar-capsule.test.mjs",
+          "tools/windows-closure-rat/build-production-closure.test.mjs",
+          "tools/windows-closure-rat/worker-dependency-graph.test.mjs",
+          "frontend/scripts/desktop/sign-sidecar.node.test.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 20.427306499972474,
+        "logSHA256": "92b46183f1d9a1e95f50d97831efbc1f8135f4a00335cb56d005c664879d992e"
+      },
+      "countsParsedFromActualSummary": {
+        "node_pass": 70,
+        "node_fail": 0,
+        "node_skipped": 1
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/windows-node-green02.log",
+      "logBytes": 6387
+    },
+    {
+      "stage": "windows-vitest-green",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "scripts/desktop/windows-runtime-config.test.mjs",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 1,
+        "seconds": 2.939019332989119,
+        "logSHA256": "c6f9240d604dd8dad448ad3dd87c2940c3c0107d6dc397ca2c1d2066911c568b"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 10,
+        "failed": 6
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/windows-vitest-green.log",
+      "logBytes": 7310
+    },
+    {
+      "stage": "windows-vitest-green02",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "scripts/desktop/windows-runtime-config.test.mjs",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 1,
+        "seconds": 2.661105833016336,
+        "logSHA256": "3c668acb7d22b1e20b397b791dc5f39b20a0d4be1429946465970553b7b522b9"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 10,
+        "failed": 6
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/windows-vitest-green02.log",
+      "logBytes": 6730
+    },
+    {
+      "stage": "windows-vitest-green03",
+      "exit": {
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "scripts/desktop/windows-runtime-config.test.mjs",
+          "--maxWorkers=1",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "exitCode": 0,
+        "seconds": 14.076903167006094,
+        "logSHA256": "333c3a1ebca0d21f640702fb50b22aa481792ee4933446eddda7503416645d4d"
+      },
+      "countsParsedFromActualSummary": {
+        "passed": 16
+      },
+      "privateLog": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1375-checks-fue_jp1_/windows-vitest-green03.log",
+      "logBytes": 394
+    }
+  ],
+  "finalRelevantResults": {
+    "frontendOriginalFocused": "418PASS/1外部旧v3向量skip；缺fixture首FAIL保",
+    "asrTypedFinal": "27PASS，最终retryable=false与fresh security_error对象当前源",
+    "backendFocused": "156PASS/8原真实PG锁观察skip；PGlite功能族已验；per_request原消费者GREEN",
+    "coverTypedFixture": "5PASS，补原budget后测试",
+    "windowsNode": "70PASS/1Windows UNC专属skip（本机macOS）",
+    "windowsVitest": "16PASS；原fileURL/VM导入FAIL保；原生Node>=24加载仅受控提取件，CAS spy有效",
+    "pythonRelays": "27+11PASS，仅mock传输/合成归档",
+    "timeoutPolicy": "174PASS+静态0，原8组命令外包原生sandbox禁网络/.hyperframes写及两原生开关",
+    "types": "frontend/backend最终0；各首编译错误及修正保",
+    "boundary": "0，仍原5无新增",
+    "semantic": "0",
+    "diff": "0",
+    "rust": "最终离线debug单目标exit0/27.185938792s：1PASS/291filtered；仅本次TAURI_CONFIG bundle.resources=[]，不改源码/正式配置、不造资源/运行App；原资源缺失exit101保"
+  },
+  "legacyEvidenceProtection": {
+    "originalExisted": true,
+    "originalSHA256": "caaa5734bb3bd6d119c243f33c65730b361a682ed8019a6bf1f8fdd321f4a2de",
+    "currentRunOutputSHA256": "88520231920b66aa49ec1e9391435d66cf63b192e54cf9289fc2118455daa380",
+    "priorRestoredByteExact": true
+  },
+  "full": "NOT-RUN；T1373既有危险预检阻断，旧58不当本轮结果",
+  "productionVerification": false,
+  "push": "HOLD：历史证据含真实/未判定运行凭据；安全origin/main父候选待完整扫描/审查，未push/未邀请"
+}

@@ -1,0 +1,6 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),{createRequire}=require('node:module');
+if(!process.env.T1298_BINDING)throw Error('EXPLICIT_OWNED_BINDING_REQUIRED');const b=JSON.parse(fs.readFileSync(process.env.T1298_BINDING,'utf8'));
+const marker=JSON.parse(fs.readFileSync(path.join(b.ownedRoot,'owner.json'),'utf8'));if(marker.uid!==process.getuid()||marker.task!=='T-1298')throw Error('OWNED_BINDING_REQUIRED');
+const pw=createRequire(path.join(b.sourceRoot,'frontend/package.json'))('@playwright/test');
+module.exports=pw.defineConfig({testDir:path.join(b.sourceRoot,'frontend/tests'),testMatch:'e2e/t1298-script-first-live-acceptance.spec.ts',fullyParallel:false,workers:1,retries:0,forbidOnly:true,timeout:1_800_000,globalTimeout:0,expect:{timeout:120_000},outputDir:path.join(b.evidenceRoot,'artifacts'),reporter:[['list'],['json',{outputFile:path.join(b.evidenceRoot,'playwright.json')}]],use:{baseURL:b.baseURL,channel:'chrome',headless:true,locale:'zh-CN',timezoneId:'Asia/Shanghai',viewport:{width:1536,height:1024},serviceWorkers:'block',reducedMotion:'reduce',actionTimeout:120_000,navigationTimeout:300_000,trace:'retain-on-failure',screenshot:'only-on-failure',launchOptions:{timeout:180_000}}});

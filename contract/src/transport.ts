@@ -8,6 +8,8 @@ export type EndpointInput<E extends Endpoint> = {
   body: E["body"] extends z.ZodTypeAny ? z.infer<E["body"]> : undefined;
 };
 
+/** 仅服务器从真实HTTP和gateway构造；不属于公开input。 */
+export interface RequestControls {readonly signal:AbortSignal;readonly trustedInvocationId:string;}
 export interface Transport {
   // `ctx` is OPTIONAL on the contract type so the browser-side typed client
   // (which has no RequestContext — it just POSTs to /api/v1/dispatch, where the
@@ -18,5 +20,6 @@ export interface Transport {
     endpoint: E,
     input: EndpointInput<E>,
     ctx?: RequestContext,
+    controls?: RequestControls,
   ): Promise<unknown>;
 }

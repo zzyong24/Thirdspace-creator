@@ -84,6 +84,16 @@ describe("candidate service", () => {
     ports = makePorts();
     svc = makeService(db, ports);
   });
+  it("T1074 选题锁读仅限实际事务并保持原DTO与用户/工作区过滤", async () => {
+    const candidate = await svc.createCandidate(ctx,{title:"锁读选题",angle:"保留原字段"});
+    await expect(svc.getCandidateForUpdate(ctx,candidate.id)).rejects.toThrow(/事务/);
+    await db.transaction(async tx => {
+      const owner = makeService(tx as unknown as Db,ports);
+      expect(await owner.getCandidateForUpdate(ctx,candidate.id)).toEqual(candidate);
+      await expect(owner.getCandidateForUpdate({...ctx,userId:"other-user"},candidate.id)).rejects.toThrow();
+      await expect(owner.getCandidateForUpdate({...ctx,accountId:"other-account"},candidate.id)).rejects.toThrow();
+    });
+  });
 
   it("createCandidate(idea) lands in pool with positioningFit from the gate port", async () => {
     const c = await svc.createCandidate(ctx, {

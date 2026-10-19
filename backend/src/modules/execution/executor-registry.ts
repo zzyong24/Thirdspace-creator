@@ -5,6 +5,7 @@
 //
 // executor **只见沙箱文件面**:输入=input/ 只读物化文件,输出=写 out/;绝不直连
 // PGlite/资产库/网络配置(数据壁垒留脑侧,SPEC §2)。
+import {createMediaProbeExecutor} from "./media-probe";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { z } from "zod";
@@ -21,6 +22,8 @@ import { assertLoopType, classifyLoopType, type LoopType } from "./agentic/loop-
 export interface ExecutorRunOpts {
   /** 超时/丢弃中止贯通(T-239c 模式):executor 应尽早响应 abort。 */
   signal: AbortSignal;
+  /** 原任务冻结的绝对期限；null为原任务明确无固定总期限。 */
+  deadlineAt?: number | null;
   /** 步骤流上报(落 ai_task_steps,喂前端步骤日志)。 */
   reportStep: (text: string) => Promise<void>;
   /**
@@ -150,6 +153,7 @@ export function registerBuiltinExecutors(
   },
 ): void {
   registry.register(createEchoManifestExecutor());
+  registry.register(createMediaProbeExecutor());
   // [T-254a] video.render(HyperFrames 确定性渲染)。构造零 IO(工具链检测在 run 内)。
   registry.register(
     createVideoRenderExecutor(

@@ -1,0 +1,100 @@
+{
+  "schema": "t1375-safe-main-preparation/v1",
+  "sourceLocalCommit": "59940d23df047a6bd6e675b771838e0716752f45",
+  "preservedLocalRef": "codex/t1375-preserved-local-history-59940d23d",
+  "soleParent": "1963e4ebe48f15ec084a1efe7dac2f195675b92f",
+  "strategy": "正常origin/main父快照；不携本地污染祖先，不reset/force，不改远端T247",
+  "excludedSensitiveRawWholeFiles": [
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v3/results.json",
+      "blob": "a7e191952ed519b6d4afef086f44c8ee8bf65c83"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4-guard/results.json",
+      "blob": "db5a059b6331dd562703339522e06c9c3e405a6a"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4/results.json",
+      "blob": "5b58872bc6a7389566ecc5d84cbbe80807236f32"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit/results.json",
+      "blob": "1dcc7f7a402108dc7e5f6f30a37bad736b6803c1"
+    },
+    {
+      "path": "docs/verification/t1246/list-dr005/results.json",
+      "blob": "34a30ea8527684c3e08f09e680fd4336b622b08b"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/results.json",
+      "blob": "e85f073fa3b2f5a47ded6d3c06f05ac8f7192209"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-ready/results.json",
+      "blob": "fed4df695c744a0f42affa151f82cf0f1b8834b0"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original/results.json",
+      "blob": "2f24d39d0d0ec23105659c7bd509a52e5bcfbf7d"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/preflight-list-output/runtime-list-v2-results.json",
+      "blob": "7b18e7ca9a46086104168b1c23dbe1bb8106566b"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/results.json",
+      "blob": "9fc2cd086e06df1cb2d15f8040f88b31c1b1b007"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/independent-after-process-snapshot.txt",
+      "blob": "2ae7b3db41948834f15240eea2f955a58620b030"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-process-snapshot.txt",
+      "blob": "463a743f6dbb3f55e89479a04e549ef8fc5a88ed"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-final-source-audit-v5-51423dea25343a726d94758a/raw-private/actual-final-process-snapshot.txt",
+      "blob": "11570956bca6f8654b4e36d0db20c192ff0ec215"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-final-process-snapshot.txt",
+      "blob": "067d192222f5baa38fff67d5499b8c49394f1ccf"
+    }
+  ],
+  "generatedUntrackedAndPrivateArtifactsImported": false,
+  "allRemainingTreeBlobsByteExactBeforeSafeMetadataUpdate": true,
+  "remainingBlobCount": 44510,
+  "observedSourceHashesEqual": 83,
+  "auditMetadataUpdate": "FINDING_CLASSIFICATION_SAFE.json只更新最终分类说明；不含值",
+  "candidateFullScan": "PENDING_FINAL_TREE",
+  "push": false,
+  "collaboratorInvited": false,
+  "oldRemoteT247": "保留未改；协作仍HOLD直到用户风险决定",
+  "preparationRef": "codex/t1375-safe-main",
+  "finalExclusionManifest": "PRECISE_GENERATED_EXCLUSIONS_SAFE.json",
+  "additionalGeneratedOrExactDuplicateExclusions": 17726,
+  "protectedCurrentFileDependencies": 39,
+  "sourceHashIntersectionsWithExclusions": 0,
+  "canonicalDuplicateChecks": {
+    "count": 1086,
+    "allCanonicalPathsRetainedWithSameBlob": true
+  },
+  "currentTaskSafeManifestExceptions": [
+    "docs/verification/t1375/REF_CLASSIFICATION.json",
+    "docs/verification/t1375/STASH_CLASSIFICATION.json",
+    "docs/verification/t1375/T243_DELIVERY_TOOL_SOURCE_MANIFEST.json"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：真实安装版 HTTP400 与既有单测 RED 均定位到同一准备顺序缺陷；SPEC 的单文件产品修复在内层旧业务工具装配时排除尚未注入的 Workbench 声明，并在外层原型注入后保留完整目录的最终严格校验。写集、旧快照兼容、租约边界、漂移拒绝和安装版复验均已明确，无需扩展公共契约、数据库、UI 或执行机制。",
+  "findings": []
+}

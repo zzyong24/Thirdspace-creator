@@ -1,0 +1,78 @@
+{
+  "surface": "browser",
+  "mode": "non-fixture",
+  "witnesses": {
+    "groupId": "grp-a65785f2-4199",
+    "projectId": "project-a65785f2-4201",
+    "canvasId": "ee258750-20ad-4904-8e2b-c457fefa9e4d",
+    "reference": {
+      "id": "asset-a65785f2-4213",
+      "userId": "user-a65785f2-1",
+      "currentFileId": "afile-a65785f2-4217",
+      "assetType": "image",
+      "name": "中性人物示意图.png",
+      "description": "",
+      "status": "active",
+      "isFavorite": false,
+      "mimeType": "image/png",
+      "fileSize": 1952233,
+      "width": 1086,
+      "height": 1448,
+      "durationMs": null,
+      "extractStatus": null,
+      "materialSummary": null,
+      "extractedText": null,
+      "sourceUrl": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-10T17:08:34.947Z",
+      "updatedAt": "2026-10-10T17:08:34.947Z"
+    }
+  },
+  "capabilityFixture": true,
+  "errorFixture": {
+    "operation": "canvas.save",
+    "count": 1,
+    "status": 503,
+    "successfulWritesReplaced": false
+  },
+  "modelCalled": false,
+  "originalRevision": 2,
+  "unifiedRevision": 3,
+  "savedRevision": 4,
+  "modeRefusalPreserved": true,
+  "refresh": true,
+  "back": true,
+  "repeat": true,
+  "captures": [
+    {
+      "name": "mode-rejected",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "节点设置\n名称\n生成描述\n模式\n文生图\n参考图生图\n\n参考图片\n\n已选素材\n\n移除当前素材\n画幅\n1:1 · 公众号次条 · 方形封面\n3:4 · 小红书 · 竖版封面\n16:9 · B站 · 横版视频\n9:16 · 抖音 · 全屏竖版\n2:3 · 竖版海报\n3:2 · 横版照片\n4:3 · 横版图文\n4:5 · 竖版图文\n5:4 · 横版海报\n21:9 · 公众号头图底稿\n选择画幅会同步这组的全部图片生成页。\n\n当前模型：参考能力合成样本\n\n生成删除节点\n编导建议\n刷新\n和编导讨论这张画布\n连线\n第一张图片 → 另一组图片\n移除\n生成历史\n\n暂无生成任务",
+      "check_ids": [
+        "AC-CAPABILITY",
+        "AC-AVAILABILITY"
+      ],
+      "referenceReady": {
+        "naturalWidth": 1086,
+        "naturalHeight": 1448,
+        "complete": true
+      }
+    },
+    {
+      "name": "save-error-keeps-input",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "节点设置\n名称\n生成描述\n模式\n文生图\n参考图生图\n画幅\n1:1 · 公众号次条 · 方形封面\n3:4 · 小红书 · 竖版封面\n16:9 · B站 · 横版视频\n9:16 · 抖音 · 全屏竖版\n2:3 · 竖版海报\n3:2 · 横版照片\n4:3 · 横版图文\n4:5 · 竖版图文\n5:4 · 横版海报\n21:9 · 公众号头图底稿\n选择画幅会同步这组的全部图片生成页。\n\n当前模型：文字能力合成样本\n\n生成删除节点\n编导建议\n刷新\n和编导讨论这张画布\n连线\n第一张图片 → 另一组图片\n移除\n生成历史\n\n暂无生成任务",
+      "check_ids": [
+        "AC-CAPABILITY",
+        "AC-AVAILABILITY"
+      ],
+      "referenceReady": null
+    }
+  ]
+}

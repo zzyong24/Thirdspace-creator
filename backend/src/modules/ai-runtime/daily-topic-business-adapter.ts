@@ -2,13 +2,13 @@ import {structuredGenerationInputSchema} from '@creatoros/contract/execution-wor
 import type {RequestContext} from '@creatoros/contract';
 import {topicFacets,normalizeTopics,topicArraySchema,dailyTopicInputSchema,topicGenerateFrozenSchema} from '@creatoros/ai-worker';
 import type {ActivePreference} from '../candidate/topic-preference-guardrail';
-import {prepareTopicGenerateContext,topicAdditionalCalls,type TopicGeneratePrepareDeps} from './topic-business-adapter';
+import {prepareTopicGenerateContext,projectAudienceTopicItems,topicAdditionalCalls,type TopicGeneratePrepareDeps} from './topic-business-adapter';
 import {renderSignalQualityBrief} from './signal-quality';
 import type {StructuredBusinessAdapter} from './structured-business-execution.service';
 export interface DailyTopicPrepareDeps extends TopicGeneratePrepareDeps {
  resolveRun(ctx:RequestContext,aiTaskId:string):Promise<{jobId:string;jobRunId:string;dayKey:string}>;
  countCandidatesForDay(ctx:RequestContext,dayKey:string):Promise<number>;
- hasConfiguredModel(ctx:RequestContext):Promise<boolean>;
+ hasConfiguredModel(ctx:RequestContext,owner:{aiTaskId:string}):Promise<boolean>;
  listActivePreferences(ctx:RequestContext):Promise<ActivePreference[]>;
  dailyLimit?:number;
 }
@@ -26,7 +26,7 @@ export function createDailyTopicBusinessAdapter(deps:DailyTopicPrepareDeps):Stru
    if(!Number.isSafeInteger(count)||count<0)throw new Error('每日候选计数无效');
    const base={...run,dayKey:rankingNow.slice(0,10),dailyLimit,rankingNow,preferences:[] as ActivePreference[]};
    if(count>=dailyLimit)return {__dailyTopic:JSON.stringify(dailyTopicInputSchema.parse({...base,skipReason:'quota',observedCount:count}))};
-   if(!await deps.hasConfiguredModel(ctx))return {__dailyTopic:JSON.stringify(dailyTopicInputSchema.parse({...base,skipReason:'model_unconfigured'}))};
+   if(!await deps.hasConfiguredModel(ctx,{aiTaskId:task.id}))return {__dailyTopic:JSON.stringify(dailyTopicInputSchema.parse({...base,skipReason:'model_unconfigured'}))};
    const frozen=await prepareTopicGenerateContext(ctx,{projectId:null,inputData:{}},deps,{mode:'daily'});
    let preferences:ActivePreference[]=[];
    try{preferences=await deps.listActivePreferences(ctx);}catch{/* 原偏好读失败时调整为0。 */}
@@ -39,7 +39,7 @@ export function createDailyTopicBusinessAdapter(deps:DailyTopicPrepareDeps):Stru
    const daily=dailyTopicInputSchema.parse(JSON.parse(input.facets.__dailyTopic??'null'));
    const topic=topicGenerateFrozenSchema.parse(JSON.parse(input.facets.__topicGenerate??'null'));
    if(daily.skipReason||topic.mode!=='daily'||topic.basis!=='positioning')throw new Error('每日选题冻结准备模式不符');
-   const items=normalizeTopics(topicArraySchema.parse(object).topics);
+   const items=projectAudienceTopicItems(normalizeTopics(topicArraySchema.parse(object).topics),object,topic);
    return {resultType:'candidate_list',resultData:{items}};
   },
  };

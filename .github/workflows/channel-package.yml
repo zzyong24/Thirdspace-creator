@@ -364,7 +364,7 @@ jobs:
           }
           if (-not $app.HasExited) {
             $null = $app.CloseMainWindow()
-            if (-not $app.WaitForExit(10000)) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }
+            if (-not $app.WaitForExit(120000)) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }
           }
           $uninstaller = Get-ChildItem $installDir -Recurse -File -Filter "uninstall.exe" | Select-Object -First 1
           if (-not $uninstaller) { throw "安装后缺卸载器" }

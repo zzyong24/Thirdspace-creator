@@ -1,0 +1,18 @@
+{
+  "fixtureIdentityVerified": true,
+  "elapsedMs": 75.131,
+  "exitCode": 0,
+  "snapshot": {
+    "activity": [
+      {
+        "state": "idle",
+        "wait_event_type": "Client",
+        "wait_event": "ClientRead",
+        "count": 11
+      }
+    ],
+    "ungrantedLocks": 0
+  },
+  "stderrBytes": 0,
+  "boundary": "本轮唯一私有PG聚合只读；排除本采样连接，不读取SQL正文/参数；只证明当时连接/锁状态。"
+}

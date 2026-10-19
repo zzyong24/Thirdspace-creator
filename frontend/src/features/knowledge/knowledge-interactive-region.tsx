@@ -45,7 +45,6 @@ import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
 import { KnowledgeGraphView } from "./knowledge-graph-view";
 import { KnowledgeTagManager } from "./knowledge-tag-manager";
-import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
@@ -133,8 +132,10 @@ function writeUrlQuery(next: string): void {
 
 export function KnowledgeInteractiveRegion({
   viewModel,
+  captureTools,
 }: {
   readonly viewModel: KnowledgeViewModel;
+  readonly captureTools?: React.ReactNode;
 }) {
   // Initialise the query from the URL `?q=` when one is present. We read
   // the URL directly (not via `useRouter`/`useSearchParams`) so the
@@ -156,12 +157,7 @@ export function KnowledgeInteractiveRegion({
   //   - `?tag=` 生效(KNOW-13)→ 「全部」:标签过滤作用在时间流列表,不是图/地图;
   //   - VM 不带 graph/atlas(旧 fixture / 测试 override)→ 该视图不出现,回落既有行为。
   const graph = viewModel.graph ?? null;
-  const [view, setView] = React.useState<"graph" | "atlas" | "all">(() => {
-    if (viewModel.activeTag) return "all";
-    if (graph !== null) return "graph";
-    if (atlas !== null) return "atlas";
-    return "all";
-  });
+  const [view, setView] = React.useState<"graph" | "atlas" | "all">("all");
 
   // [T-093] AI 搜索(回车触发 hybrid;输入即时过滤手感不动):
   // null = 未搜;phase 区分加载/结果/错误;结果卡点开走 selectedId 详情预览。
@@ -318,18 +314,6 @@ export function KnowledgeInteractiveRegion({
 
   return (
     <>
-      {/* T-079c / T-260a 视图切换:关系图 / 观点地图 / 全部。有 graph 或 atlas 才渲切换器
-          (旧 VM 无图/地图可切 → 只有「全部」,不摆单选切换器)。 */}
-      {graph !== null || atlas !== null ? (
-        <KnowledgeViewSwitch
-          view={view}
-          onViewChange={setView}
-          hasGraph={graph !== null}
-          hasAtlas={atlas !== null}
-        />
-      ) : null}
-      {/* [T-093] 搜索入口醒目化:工具栏在三视图常驻(输入即时=客户端过滤不动;
-          回车=服务端 hybrid AI 搜索);类型 chips 只作用于「全部」列表。 */}
       <KnowledgeToolbar
         query={query}
         onQueryChange={handleSearchChange}
@@ -338,6 +322,12 @@ export function KnowledgeInteractiveRegion({
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         showChips={view === "all"}
+        viewSwitch={graph !== null || atlas !== null ? (
+          <KnowledgeViewSwitch view={view} onViewChange={setView}
+            hasGraph={graph !== null} hasAtlas={atlas !== null} />
+        ) : null}
+        captureTools={captureTools}
+        metrics={<KnowledgeMetrics metrics={viewModel.metrics} />}
       />
       {aiSearch !== null ? (
         <KnowledgeAiSearchResults
@@ -346,13 +336,12 @@ export function KnowledgeInteractiveRegion({
           onClose={() => setAiSearch(null)}
         />
       ) : null}
-      <KnowledgeMetrics metrics={viewModel.metrics} />
       {/* [T-260a 复原] 力导向关系图探索主面:填满可用高度(min-h,不再固定 480 塞底);
           点节点 → 复用下方详情预览;「AI 找关联」建边 + 图面删边都在视图内。 */}
       {view === "graph" && graph !== null ? (
         <div
           data-slot="knowledge-graph-region"
-          className="flex min-h-[560px] flex-col"
+          className="flex min-h-[480px] flex-1 flex-col rounded-panel border border-border bg-surface"
         >
           <KnowledgeGraphView
             graph={graph}
@@ -383,7 +372,7 @@ export function KnowledgeInteractiveRegion({
             </span>
           </span>
           <Link
-            href="/knowledge"
+            href={query ? `/knowledge?view=advanced&q=${encodeURIComponent(query)}` : "/knowledge?view=advanced"}
             data-slot="knowledge-tag-filter-clear"
             className="text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
@@ -405,6 +394,7 @@ export function KnowledgeInteractiveRegion({
           totalPages={viewModel.recentTotalPages ?? 1}
           total={viewModel.recentTotal ?? filteredRecent.length}
           activeTag={viewModel.activeTag ?? null}
+          query={query}
         />
       ) : null}
 
@@ -655,7 +645,7 @@ function KnowledgeViewSwitch({
   const options = [
     ...(hasGraph ? [{ id: "graph" as const, label: "关系图" }] : []),
     ...(hasAtlas ? [{ id: "atlas" as const, label: "观点地图" }] : []),
-    { id: "all" as const, label: "全部" },
+    { id: "all" as const, label: "资料列表" },
   ];
   return (
     <div
@@ -703,7 +693,13 @@ function KnowledgeToolbar({
   activeFilter,
   onFilterChange,
   showChips,
+  viewSwitch,
+  captureTools,
+  metrics,
 }: {
+  readonly viewSwitch?: React.ReactNode;
+  readonly captureTools?: React.ReactNode;
+  readonly metrics?: React.ReactNode;
   readonly query: string;
   readonly onQueryChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   /** [T-093] 回车 = 服务端 hybrid AI 搜索(输入即时过滤手感不动)。 */
@@ -717,15 +713,17 @@ function KnowledgeToolbar({
     <div
       data-slot="knowledge-toolbar"
       aria-label="知识库工具栏"
-      className="flex flex-wrap items-center gap-2 border-b border-border pb-2"
+      className="flex shrink-0 flex-col gap-3"
     >
+      <div className="flex flex-wrap items-center gap-3">
+      {viewSwitch}
       <label className="sr-only" htmlFor="knowledge-search">
         搜索知识
       </label>
       <input
         id="knowledge-search"
         type="search"
-        placeholder="搜索知识原子,回车用 AI 语义搜索"
+        placeholder="搜索资料与经验，回车用 AI 检索"
         data-slot="knowledge-search-input"
         value={query}
         onChange={onQueryChange}
@@ -735,8 +733,11 @@ function KnowledgeToolbar({
             onSubmit();
           }
         }}
-        className="h-8 w-72 rounded-md border border-border bg-surface px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="h-9 min-w-48 flex-1 rounded-control border border-border bg-surface px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       />
+      {captureTools}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
       <div
         data-slot="knowledge-filter-chips"
         className="flex flex-wrap items-center gap-0.5"
@@ -763,6 +764,8 @@ function KnowledgeToolbar({
             </button>
           );
         })}
+      </div>
+      {metrics}
       </div>
     </div>
   );
@@ -875,28 +878,12 @@ function KnowledgeAiSearchResults({
 // KnowledgeMetrics — 5 cards in a single row (presentational)
 // ---------------------------------------------------------------------------
 
-function KnowledgeMetrics({
-  metrics,
-}: {
-  metrics: ReadonlyArray<MetricCardVm>;
-}) {
+function KnowledgeMetrics({ metrics }: { metrics: ReadonlyArray<MetricCardVm> }) {
   return (
-    <section
-      data-slot="knowledge-metrics"
-      aria-label="知识统计"
-      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-4"
-    >
-      {metrics.map((metric) => (
-        <MetricCard
-          key={metric.id}
-          id={metric.id}
-          label={metric.label}
-          value={metric.value}
-          delta={metric.delta}
-          trend={metric.trend}
-          tone={metric.tone}
-        />
-      ))}
+    <section data-slot="knowledge-metrics" aria-label="知识统计" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+      {metrics.map((metric) => <span key={metric.id} data-slot="knowledge-count">
+        {metric.label} <strong className="ml-1 font-semibold tabular-nums text-foreground">{metric.value}</strong>
+      </span>)}
     </section>
   );
 }
@@ -918,6 +905,7 @@ function KnowledgeGrid({
   totalPages,
   total,
   activeTag,
+  query,
 }: {
   readonly categories: ReadonlyArray<KnowledgeCategory>;
   readonly recent: ReadonlyArray<KnowledgeRow>;
@@ -933,14 +921,14 @@ function KnowledgeGrid({
   readonly total: number;
   // [T-119] `?tag=` 生效时分页需保留标签参数(经 buildPageHref 拼)。
   readonly activeTag: string | null;
+  readonly query: string;
 }) {
   return (
     <div
       data-slot="knowledge-grid"
-      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[220px_minmax(0,1fr)_300px]"
+      className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden rounded-panel border border-border bg-surface lg:grid-cols-[minmax(0,1fr)_280px]"
     >
-      <CategoryPanel categories={categories} />
-      <div className="flex flex-col gap-card-gap">
+      <div className="flex min-w-0 flex-col gap-3">
         <RecentKnowledgeTable
           rows={recent}
           selectedId={selectedId}
@@ -951,14 +939,16 @@ function KnowledgeGrid({
           totalPages={totalPages}
           total={total}
           activeTag={activeTag}
+          query={query}
         />
       </div>
-      <InsightRail
-        popularTags={popularTags}
-        memoryInsights={memoryInsights}
-        unsorted={unsorted}
-        snippets={snippets}
-      />
+      <aside className="min-w-0 border-t border-border p-4 lg:border-t-0 lg:border-l" aria-label="知识整理">
+        <details className="mb-4 border-b border-border pb-4">
+          <summary className="cursor-pointer text-sm font-medium">资料分类</summary>
+          <div className="mt-3"><CategoryPanel categories={categories} /></div>
+        </details>
+        <InsightRail popularTags={popularTags} memoryInsights={memoryInsights} unsorted={unsorted} snippets={snippets} />
+      </aside>
     </div>
   );
 }
@@ -969,8 +959,9 @@ function KnowledgeGrid({
 //   单页(totalPages<=1)不渲(诚实:没有可翻的页不摆控件)。
 // ---------------------------------------------------------------------------
 
-function buildPageHref(page: number, activeTag: string | null): string {
-  const params = new URLSearchParams();
+function buildPageHref(page: number, activeTag: string | null, query: string): string {
+  const params = new URLSearchParams({ view: "advanced" });
+  if (query) params.set("q", query);
   if (activeTag) params.set("tag", activeTag);
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
@@ -982,11 +973,13 @@ function RecentPagination({
   totalPages,
   total,
   activeTag,
+  query,
 }: {
   readonly page: number;
   readonly totalPages: number;
   readonly total: number;
   readonly activeTag: string | null;
+  readonly query: string;
 }) {
   if (totalPages <= 1) return null;
   const hasPrev = page > 1;
@@ -1004,7 +997,7 @@ function RecentPagination({
         {hasPrev ? (
           <Link
             data-slot="recent-pagination-prev"
-            href={buildPageHref(page - 1, activeTag)}
+            href={buildPageHref(page - 1, activeTag, query)}
             className="rounded-md border border-border bg-surface px-2 py-1 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             上一页
@@ -1022,7 +1015,7 @@ function RecentPagination({
         {hasNext ? (
           <Link
             data-slot="recent-pagination-next"
-            href={buildPageHref(page + 1, activeTag)}
+            href={buildPageHref(page + 1, activeTag, query)}
             className="rounded-md border border-border bg-surface px-2 py-1 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             下一页
@@ -1053,7 +1046,7 @@ function CategoryPanel({
 }) {
   return (
     <div data-slot="category-panel">
-      <SectionCard title="知识分类" description="按类型组织">
+      <KnowledgeOrganizerSection title="知识分类" description="按类型组织">
         <ul
           data-slot="category-list"
           className="flex flex-col gap-0.5"
@@ -1089,7 +1082,7 @@ function CategoryPanel({
             </li>
           ))}
         </ul>
-      </SectionCard>
+      </KnowledgeOrganizerSection>
     </div>
   );
 }
@@ -1108,19 +1101,19 @@ function RecentKnowledgeTable({
   onSelectRow: (id: string) => void;
 }) {
   return (
-    <div data-slot="recent-knowledge-table-wrapper">
-      <SectionCard title="最近更新" description="最新写入在前">
+    <div data-slot="recent-knowledge-table-wrapper" className="min-h-96 flex-1">
+      <SectionCard title="资料与已验证经验" className="h-full rounded-none border-0 shadow-none">
         <table
           data-slot="recent-knowledge-table"
-          className="w-full text-[13px]"
+          className="w-full table-fixed text-sm"
           aria-label="最近知识条目"
         >
           <thead>
             <tr className="border-b border-border text-[11px] text-muted-foreground">
-              <th className="py-1.5 text-left font-medium">标题</th>
+              <th className="w-[46%] py-3 text-left font-medium">标题</th>
               <th className="py-1.5 text-left font-medium">类型</th>
               <th className="py-1.5 text-left font-medium">标签</th>
-              <th className="py-1.5 text-right font-medium">时间</th>
+              <th className="w-24 py-3 text-right font-medium">时间</th>
             </tr>
           </thead>
           <tbody>
@@ -1229,7 +1222,10 @@ function InsightRail({
     >
       <PopularTags tags={popularTags} />
       <MemoryInsights items={memoryInsights} />
-      <UnsortedItems items={unsorted} />
+      <details className="border-b border-border pb-4">
+        <summary className="cursor-pointer text-sm font-medium">未整理 <span className="ml-1 text-muted-foreground">{unsorted.length}</span></summary>
+        <div className="mt-3"><UnsortedItems items={unsorted} /></div>
+      </details>
       <ReusableSnippets items={snippets} />
     </div>
   );
@@ -1240,7 +1236,7 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
     // [T-248 批B] action 槽挂「管理标签」小面板入口:全量标签列表 + 重命名
     // (taxonomy.tags.patch)+ 删除确认门(taxonomy.tags.delete)+ 挂载移除
     // (taxonomy.entityTags.remove)。写侧三 op 的首个前端消费者。
-    <SectionCard
+    <KnowledgeOrganizerSection
       title="热门标签"
       description="使用频率最高的标签"
       action={<KnowledgeTagManager />}
@@ -1267,7 +1263,7 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
             {/* KNOW-13:`?tag=` 已被读侧真消费(route page → knowledge-data 用
                 taxonomy.entityTags 过滤 recent 列表),chip 链回 `?tag=`。 */}
             <Link
-              href={`/knowledge?tag=${encodeURIComponent(tag.name)}`}
+              href={`/knowledge?view=advanced&tag=${encodeURIComponent(tag.name)}`}
               className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <TagChip label={tag.name} tone={tag.tone} size="sm" />
@@ -1275,7 +1271,7 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
           </li>
         ))}
       </ul>
-    </SectionCard>
+    </KnowledgeOrganizerSection>
   );
 }
 
@@ -1285,7 +1281,8 @@ function MemoryInsights({
   items: ReadonlyArray<KnowledgeInsight>;
 }) {
   return (
-    <SectionCard title="记忆洞察" description="系统从知识库中提炼的要点">
+    <KnowledgeOrganizerSection title="记忆洞察" description="系统从知识库中提炼的要点">
+      {items.length === 0 ? <p className="text-sm text-muted-foreground">暂无已验证的洞察</p> : null}
       <ul
         data-slot="memory-insights"
         className="flex flex-col gap-1.5"
@@ -1305,7 +1302,7 @@ function MemoryInsights({
           </li>
         ))}
       </ul>
-    </SectionCard>
+    </KnowledgeOrganizerSection>
   );
 }
 
@@ -1315,7 +1312,7 @@ function UnsortedItems({
   items: ReadonlyArray<KnowledgeUnsorted>;
 }) {
   return (
-    <SectionCard title="未整理" description="尚未归类的知识条目">
+    <KnowledgeOrganizerSection title="未整理" description="尚未归类的知识条目">
       <ul
         data-slot="unsorted-items"
         className="flex flex-col gap-0.5"
@@ -1343,7 +1340,7 @@ function UnsortedItems({
           </li>
         ))}
       </ul>
-    </SectionCard>
+    </KnowledgeOrganizerSection>
   );
 }
 
@@ -1353,7 +1350,7 @@ function ReusableSnippets({
   items: ReadonlyArray<KnowledgeSnippet>;
 }) {
   return (
-    <SectionCard title="可复用片段" description="快速插入到脚本的模板">
+    <KnowledgeOrganizerSection title="可复用片段" description="快速插入到脚本的模板">
       <ul
         data-slot="reusable-snippets"
         className="flex flex-col gap-1.5"
@@ -1381,6 +1378,16 @@ function ReusableSnippets({
           </li>
         ))}
       </ul>
-    </SectionCard>
+    </KnowledgeOrganizerSection>
   );
+}
+
+/** 整理侧栏的平面分区，避免卡片再套卡片。 */
+function KnowledgeOrganizerSection({ title, action, children }: {
+  title: string; description?: string; action?: React.ReactNode; children: React.ReactNode;
+}) {
+  return <section className="border-b border-border pb-4 last:border-b-0 last:pb-0">
+    <div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">{title}</h3>{action}</div>
+    {children}
+  </section>;
 }

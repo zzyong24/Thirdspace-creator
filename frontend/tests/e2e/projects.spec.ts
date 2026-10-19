@@ -79,21 +79,24 @@ test.describe("项目排期闭环（T-599）", () => {
     await expect(trigger).toHaveAttribute("data-scheduled", "false");
     await expect(trigger).toContainText("排期");
 
-    // 新增：日期控件只能从账号时区的今天开始，保存后使用服务端回读值。
+    // 新增：通过实际日历选择未来日期，保存后使用服务端回读值。
+    const dateKey = (offsetDays: number) => new Date(Date.now() + offsetDays * 86_400_000)
+      .toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
+    const firstDate = dateKey(3);
+    const secondDate = dateKey(4);
     await trigger.click();
-    const dateInput = page.getByRole("textbox", { name: "计划发布日期" });
-    await expect(dateInput).toHaveAttribute("min", /^\d{4}-\d{2}-\d{2}$/);
-    await dateInput.fill("2099-12-31");
+    await page.getByRole("button", { name: "计划发布日期" }).click();
+    await page.locator(`td[title="${firstDate}"]`).click();
     await page.getByRole("button", { name: "确认排期" }).click();
     await expect(trigger).toHaveAttribute("data-scheduled", "true");
-    await expect(trigger).toContainText("12月31日");
+    await expect(trigger).toContainText(`${Number(firstDate.slice(5, 7))}月${Number(firstDate.slice(8, 10))}日`);
 
     // 改期：仍从同一个项目行入口完成。
     await trigger.click();
-    await expect(dateInput).toHaveValue("2099-12-31");
-    await dateInput.fill("2099-12-30");
+    await page.getByRole("button", { name: "计划发布日期" }).click();
+    await page.locator(`td[title="${secondDate}"]`).click();
     await page.getByRole("button", { name: "保存改期" }).click();
-    await expect(trigger).toContainText("12月30日");
+    await expect(trigger).toContainText(`${Number(secondDate.slice(5, 7))}月${Number(secondDate.slice(8, 10))}日`);
 
     // 取消：二次确认后，排期从项目、发布日历和首页提醒的共同真值中删除。
     await trigger.click();

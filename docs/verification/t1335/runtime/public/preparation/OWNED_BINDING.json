@@ -1,0 +1,24 @@
+{
+  "ownedRoot": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d",
+  "phase": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1",
+  "worker": {
+    "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/worker.cjs",
+    "bytes": 1540654,
+    "sha256": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709"
+  },
+  "links": [
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/node_modules/jsdom",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/jsdom@29.1.1_@noble+hashes@1.8.0/node_modules/jsdom"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/node_modules/@mozilla/readability",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@mozilla+readability@0.6.0/node_modules/@mozilla/readability"
+    }
+  ],
+  "oldDatabasesTouched": false,
+  "supplierModels": 0,
+  "oldTraceCopied": false,
+  "sameKnownNeutralSourceAndArguments": true,
+  "fixtureEnvProtocol": "T1334_*仅继承测试内部变量名；其值全部新T1335 owned路径/新runId，非旧root续用"
+}

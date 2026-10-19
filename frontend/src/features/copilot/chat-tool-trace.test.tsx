@@ -4,6 +4,18 @@ import { describe, expect, it, vi } from "vitest";
 import { ChatToolTrace } from "./chat-tool-trace";
 
 describe("工具详情按需呈现", () => {
+  it.each([
+    ["error", "none", "未完成"],
+    ["blocked", "none", "需要处理"],
+    ["partial", "none", "部分完成"],
+    ["ok", "proposal", "候选待采用"],
+    ["ok", "none", "读取完成"],
+  ])("%s 回执显示真实状态，失败不冒充零条成功", (status, sideEffect, text) => {
+    render(<ChatToolTrace label="读取项目库" input={{}} output={{total:0,items:[],__creatorosOutcome:{schemaVersion:1,callId:"call-real",status,sideEffect,summary:"真实回执",error:status==="error"||status==="blocked"?{code:"permission",retryable:false,recovery:"重新选择有权限的账号组"}:null,continuation:null}}}/>);
+    expect(screen.getByText(new RegExp(text))).toBeVisible();
+    expect(screen.queryByText(/已调用/)).toBeNull();
+    if(status==="error"||status==="blocked")expect(screen.queryByText(/共 0 条/)).toBeNull();
+  });
   it("折叠及重渲染不序列化；展开才读取结果，收起后不重复读取", async () => {
     const input = { toJSON: vi.fn(() => ({ query: "热点" })) };
     const output = { total: 12, toJSON: vi.fn(() => ({ result: "真实工具结果" })) };

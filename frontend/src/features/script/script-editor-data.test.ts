@@ -25,6 +25,7 @@ vi.mock("@/lib/contract-client.server", () => ({
 import {
   loadPlanningOutline,
   loadScriptEditorSections,
+  loadScriptEditorData,
   resolveScriptArtifactIdFromDb,
 } from "./script-editor-data";
 import type { ScriptDataClient } from "./script-editor-data";
@@ -217,12 +218,12 @@ describe("loadScriptEditorSections — T-387b visual 读回", () => {
 });
 
 describe("resolveScriptArtifactIdFromDb — 空壳脚本兼容", () => {
-  it("空 output_script 不遮住有正文的 master_script", async () => {
+  it("明确预留 output_script 不遮住有正文的 master_script", async () => {
     const client: ScriptDataClient = {
       async listArtifacts() {
         return [
-          { id: "output-empty", artifactType: "output_script", stage: "script" },
-          { id: "master-full", artifactType: "master_script", stage: "script" },
+          { id: "output-empty", artifactType: "output_script", stage: "script",currentVersionId:"output-v1",currentVersionIsReserved:true },
+          { id: "master-full", artifactType: "master_script", stage: "script",currentVersionId:"master-v2" },
         ];
       },
       async getArtifact({ params }) {
@@ -261,8 +262,8 @@ describe("resolveScriptArtifactIdFromDb — 空壳脚本兼容", () => {
     const client: ScriptDataClient = {
       async listArtifacts() {
         return [
-          { id: "output-empty", artifactType: "output_script", stage: "script" },
-          { id: "master-empty", artifactType: "master_script", stage: "script" },
+          { id: "output-empty", artifactType: "output_script", stage: "script",currentVersionId:"output-empty-v1",currentVersionIsReserved:false },
+          { id: "master-empty", artifactType: "master_script", stage: "script",currentVersionId:"master-empty-v1" },
         ];
       },
       async getArtifact({ params }) {
@@ -284,4 +285,10 @@ describe("resolveScriptArtifactIdFromDb — 空壳脚本兼容", () => {
       resolveScriptArtifactIdFromDb("project-empty", client),
     ).resolves.toBe("output-empty");
   });
+});
+
+it("公开读失败与损坏current不可冒无稿；正式空稿仍返回真实版本",async()=>{
+ const failed:ScriptDataClient={listArtifacts:async()=>{throw Error("原读失败");},getArtifact:async()=>({currentVersionId:"missing"}),listArtifactVersions:async()=>[{id:"v1",versionNumber:1,contentText:""}]};
+ await expect(resolveScriptArtifactIdFromDb("owned-project",failed)).rejects.toThrow("原读失败");await expect(loadScriptEditorData("owned-artifact",failed)).rejects.toThrow("版本指针");
+ const empty={...failed,getArtifact:async()=>({currentVersionId:"v1"})};expect(await loadScriptEditorData("owned-artifact",empty)).toMatchObject({currentVersionId:"v1",sections:null,editorHtml:null});
 });

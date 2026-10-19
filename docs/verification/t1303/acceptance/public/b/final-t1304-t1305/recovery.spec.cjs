@@ -1,0 +1,153 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {test,expect,session,binding}=require('../../../../../t1304/acceptance/candidate/driver/public-fixture.cjs');
+const root=path.join(binding.sourceRoot,'docs/verification/t1303/acceptance/runs/final-t1304-t1305/b');
+fs.mkdirSync(root,{recursive:true,mode:0o700});
+const save=(name,value)=>fs.writeFileSync(path.join(root,name+'.json'),JSON.stringify(value,(_key,v)=>typeof v==='string'?v.split(session.handshake).join('[REDACTED_OWNED_TEST_HANDSHAKE]'):v,2)+'\n',{mode:0o600});
+const uuid=()=>crypto.randomUUID();
+function op(request){try{return new URL(request.url()).pathname==='/api/v1/dispatch'?request.postDataJSON()?.id:null;}catch{return null;}}
+const canonical=value=>JSON.stringify(value,(_k,v)=>v&&!Array.isArray(v)&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+let groupId,projectId,scriptId;const turns={};const network=[];let modelPosts=0;let phase='resume';
+const safeCode=value=>typeof value==='string'&&/^[A-Za-z0-9_.:-]{1,120}$/.test(value)?value:'UNAVAILABLE';
+// Never propagate Playwright transport errors: they may carry request headers.
+async function rpcReply(page,id,input={}){
+ let response;try{response=await page.request.post('/api/v1/dispatch',{timeout:900000,headers:groupId?{'x-group-id':groupId}:{},data:{id,input}});}catch{throw new Error('PUBLIC_RPC_TRANSPORT_FAILURE operation='+safeCode(id));}
+ let body;try{body=await response.json();}catch{throw new Error('PUBLIC_RPC_INVALID_JSON operation='+safeCode(id)+' status='+response.status());}
+ if(!response.ok()||body.success===false)throw new Error('PUBLIC_RPC_REJECTED operation='+safeCode(id)+' status='+response.status()+' code='+safeCode(body.error?.code??body.code));
+ return body;
+}
+const rpc=async(page,id,input={})=>(await rpcReply(page,id,input)).data;
+async function safeRouteFetch(route,operation){try{return await route.fetch({timeout:900000});}catch{throw new Error('PUBLIC_ROUTE_FETCH_FAILURE operation='+safeCode(operation));}}
+
+const isWrite=id=>/\.(create|put|save|adopt|apply|update|delete|bind|attach)$/.test(id??'');
+const writes=()=>network.filter(x=>['articles.versions.create','graphicPosts.versions.create'].includes(x.id));
+async function scriptVersions(page){
+ const all=[],ids=new Set();let pageNumber=1,total;
+ do{const reply=await rpcReply(page,'artifacts.versions.list',{params:{artifactId:scriptId},query:{page:pageNumber,pageSize:100}});expect(Array.isArray(reply.data)).toBe(true);total=reply.meta?.total;expect(Number.isSafeInteger(total)&&total>=0,'完整版本列表须有真实total').toBe(true);
+ for(const item of reply.data){expect(ids.has(item.id),'分页不能重复版本').toBe(false);ids.add(item.id);all.push(item);}expect(all.length).toBeLessThanOrEqual(total);if(all.length<total)expect(reply.data.length,'仍有后续页时必须前进').toBeGreaterThan(0);pageNumber++;
+ }while(all.length<total);
+ expect(all).toHaveLength(total);return all;
+}
+const scriptState=async page=>({artifact:await rpc(page,'artifacts.get',{params:{artifactId:scriptId}}),versions:await scriptVersions(page)});
+
+async function resource(page,kind,turn){expect(turn,'所有资源读取必须显式绑定候选目标').toBeTruthy();const outputId=kind==='article'?turn.articleId:turn.graphicId;expect(outputId).toBeTruthy();const value=await rpc(page,kind==='article'?'articles.get':'graphicPosts.get',{params:{outputId}});expect(value.outputId).toBe(outputId);return value;}
+async function snapshot(page,info,label){
+ const png=path.join(root,label+'.png');await page.screenshot({path:png,fullPage:true,animations:'disabled',caret:'hide',timeout:120000});
+ fs.writeFileSync(path.join(root,label+'.html'),await page.content(),{mode:0o600});
+ save(label+'-counts',{phase,modelPosts,ownerSavePosts:writes().length,operations:network.map(n=>({id:n.id,at:n.at,phase:n.phase})),url:page.url(),viewport:page.viewportSize(),at:new Date().toISOString()});
+ await info.attach(label,{path:png,contentType:'image/png'});
+}
+async function openAssistant(page){
+ const mobile=page.getByRole('button',{name:'打开编导',exact:true}),rail=page.getByRole('button',{name:'展开编导栏',exact:true});
+ if(await mobile.isVisible())await mobile.click();else if(await rail.isVisible())await rail.click();
+ await expect(page.getByRole('button',{name:'历史记录',exact:true})).toBeVisible();
+}
+async function history(page,turn){
+ await openAssistant(page);await page.getByRole('button',{name:'历史记录',exact:true}).click();
+ const item=page.locator(`[data-slot="copilot-history-item"][data-conversation-id="${turn.ids.conversationId}"]`);await expect(item).toHaveCount(1);await item.click();
+ const card=page.getByRole('region',{name:turn.kind==='editor'?'编导编辑候选':'文章和图文联合候选',exact:true});await expect(card).toHaveCount(1);await expect(card).toBeVisible();return card;
+}
+async function owner(page,kind,turn,{navigate=true,dirty=false,width=1366}={}){
+ if(navigate){await page.setViewportSize({width,height:900});await page.goto(kind==='article'?`/projects/${projectId}/article?outputId=${turn.articleId}`:`/projects/${projectId}/outputs/${turn.graphicId}/image`);}
+ const main=page.locator(`[data-page="${kind==='article'?'article':'graphic-post'}-workbench"]`);await expect(main).toBeVisible();
+ await expect(main.getByText(dirty?'已承接脚本，开始对话或导出时保存':'当前成稿已保存',{exact:true})).toBeVisible();
+ await expect(main.getByRole('button',{name:kind==='article'?'复制公众号文章':'导出分页 ZIP',exact:true})).toBeEnabled();
+ const region=await history(page,turn);
+ await expect(page.getByRole('textbox',{name:'我能帮你做什么',exact:true})).toHaveAttribute('placeholder',kind==='article'?'告诉我这篇文章需要怎么调整':'告诉我这份图文需要怎么调整');
+ return {main,region};
+}
+function member(page,region,kind){return region.locator('article').filter({has:page.getByRole('heading',{name:kind==='article'?'文章候选':'图文候选',exact:true})});}
+async function modal(page,card,kind,editor=false){
+ await card.getByRole('button',{name:editor?'预览改动':'预览候选',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:editor?(kind==='article'?'文章改动预览':'图文改动预览'):(kind==='article'?'文章候选预览':'图文候选预览'),exact:true});
+ await expect(dialog).toBeVisible();await expect(dialog.getByRole('button',{name:kind==='article'?'复制公众号文章':'导出分页 ZIP',exact:true})).toBeEnabled();return dialog;
+}
+async function expand(page,dialog){const summary=dialog.locator('summary').filter({hasText:/^本次采纳选择$/});await expect(summary).toHaveCount(1);await summary.click();await expect(dialog.getByRole('region',{name:'本次采纳选择',exact:true})).toBeVisible();return dialog.getByRole('region',{name:'本次采纳选择',exact:true});}
+async function close(dialog){await dialog.getByRole('button',{name:'关闭',exact:true}).click();await expect(dialog).toBeHidden();}
+async function settle(page,response,label,kind){
+ const headers=response.headers();const ids={conversationId:headers['x-conversation-id'],sourceMessageId:headers['x-source-message-id'],aiTaskId:headers['x-ai-task-id'],executionTaskId:headers['x-execution-task-id']};
+ save(label+'-submission',{ids,httpStatus:response.status(),request:response.request().postDataJSON(),at:new Date().toISOString()});expect(response.status()).toBe(200);for(const value of Object.values(ids))expect(value).toBeTruthy();
+ return observeOriginal(page,ids,label,kind);
+}
+async function observeOriginal(page,ids,label,kind){
+ let task;await expect.poll(async()=>{task=await rpc(page,'execution.tasks.get',{params:{taskId:ids.executionTaskId}});save(label+'-task',{ids,task,at:new Date().toISOString()});return ['succeeded','failed','blocked','waiting_user','unknown_result','paused','cancelled','partial'].includes(task.runtimeStatus??task.status);},{timeout:1800000,intervals:[2000,5000]}).toBe(true);
+ expect(task.runtimeStatus??task.status,'原任务终态，失败/未知不自动重发').toBe('succeeded');
+ const messages=await rpc(page,'ai.conversations.messages.list',{params:{conversationId:ids.conversationId}});save(label+'-messages',messages);
+ const assistant=messages.find(m=>m.role==='assistant'&&m.modelMetadata?.sourceMessageId===ids.sourceMessageId);expect(assistant).toBeTruthy();expect(assistant.modelMetadata.actualEngine).toBe('codex');
+ const proposals=assistant.parts.map(p=>({...p,output:p.output?.data??p.output})).filter(p=>p.output?.kind===(kind==='editor'?'work.editor.candidate':'work.creation.propose')&&p.output.error===null);expect(proposals,'新独立会话只应有可精确对应的一张目标候选').toHaveLength(1);
+ const part=proposals[0],value=part.output;const turn={label,kind,ids,assistantId:assistant.id,toolCallId:part.toolCallId,value,articleId:kind==='editor'?value.target.outputId:value.target.articleMember.outputId,graphicId:kind==='editor'?turns.cleanJoint.graphicId:value.target.graphicMember.outputId};
+ save(label+'-candidate',turn);return turn;
+}
+async function generateCleanJoint(page,previous){
+ phase='cleanJoint-public-generate';
+ const article=await resource(page,'article',previous),graphic=await resource(page,'image',previous),scripts=await scriptVersions(page);
+ const composition=await rpc(page,'workCompositions.get',{params:{compositionId:previous.value.target.compositionId}});
+ expect(composition.projectId).toBe(projectId);const target={schemaVersion:1,clientRequestId:uuid(),projectId,writingContext:previous.value.target.writingContext,compositionId:composition.compositionId,compositionRevision:composition.currentRevision,scriptSourceRef:previous.value.target.scriptSourceRef};
+ for(const [kind,doc,key] of [['article',article,'articleMember'],['image',graphic,'graphicMember']]){const member=composition.memberCurrent.find(m=>m.member.kind===kind&&m.member.outputId===doc.outputId);expect(member?.availability).toBe('available');expect(member.currentVersion.kind).toBe('artifact');expect(member.currentVersion.versionId).toBe(doc.currentVersionId);target[key]={kind,outputId:doc.outputId,artifactId:member.currentVersion.artifactId,baseVersionId:doc.currentVersionId};await exactCurrent(page,kind,doc.currentVersionId,previous);}
+ expect(scripts.at(-1).id).toBe(target.scriptSourceRef.versionId);expect(scripts.at(-1).contentData.sections.map(x=>x.body).join('\n\n')).toBe(readFixture().original);
+ const conversation=await rpc(page,'ai.conversations.create',{body:{title:'T1303 已保存两稿公共生成',projectId,scope:'project:'+projectId}});
+ const request={params:{conversationId:conversation.id},body:{content:'请先读取这对当前已保存文章和图文及已确认原稿，保留事实、经历和图片；只重新组织表达，给一份完整文章和图文联合候选供我分别预览采纳，不保存，不生成其他媒体。请使用work.creation.read后work.creation.propose。',executionEngine:'codex',chatContext:{creationTarget:target}}};
+ expect('scriptConfirmation' in target).toBe(false);save('cleanJoint-public-request',{operation:'ai.conversations.messages.create',request,composition,article,graphic,scripts,at:new Date().toISOString()});
+ modelPosts++;save('model-posts',{count:modelPosts,phase,operation:'ai.conversations.messages.create',at:new Date().toISOString()});
+ const source=await rpc(page,'ai.conversations.messages.create',request);save('cleanJoint-public-source-response',source);expect(source.conversationId).toBe(conversation.id);expect(source.role).toBe('user');expect(source.modelMetadata.chatTaskId).toBeTruthy();
+ const aiTask=await rpc(page,'ai.tasks.get',{params:{taskId:source.modelMetadata.chatTaskId}});save('cleanJoint-public-ai-task',aiTask);
+ const ids={conversationId:conversation.id,sourceMessageId:source.id,aiTaskId:aiTask.id,executionTaskId:aiTask.executionTaskId};save('cleanJoint-public-submission',{ids,transport:'public RPC returned message -> ai.tasks.get; no SSE headers',at:new Date().toISOString()});for(const v of Object.values(ids))expect(v).toBeTruthy();
+ const turn=await observeOriginal(page,ids,'cleanJoint','joint');expect(turn.articleId).toBe(previous.articleId);expect(turn.graphicId).toBe(previous.graphicId);expect(turn.value.target.clientRequestId).toBe(target.clientRequestId);expect(turn.value.target.scriptConfirmation).toEqual({confirmedBy:'user',source:'public-request'});turn.scriptBaseline=scripts;turns.cleanJoint=turn;save('turns-index',turns);expect(await scriptVersions(page)).toEqual(scripts);return turn;
+}
+const readFixture=()=>JSON.parse(fs.readFileSync(path.join(root,'fixture.json'),'utf8'));
+async function exactCurrent(page,kind,versionId,turn){const current=await resource(page,kind,turn);const exact=await rpc(page,kind==='article'?'articles.versions.get':'graphicPosts.versions.get',{params:{outputId:current.outputId,versionId}});expect(exact.versionId).toBe(versionId);expect(current.currentVersionId).toBe(versionId);expect(current.current).toEqual(exact.document);return current;}
+async function adoptNormal(page,info,turn,kind,{dirty=false,partial=false}={}){
+ phase=turn.label+'-'+kind+'-normal';const before=await resource(page,kind,turn),other=await resource(page,kind==='article'?'image':'article',turn),scripts=await scriptState(page),saveCount=writes().length;
+ save(phase+'-isolation-before',{other,scripts});const {main,region}=await owner(page,kind,turn,{dirty}),card=turn.kind==='editor'?region:member(page,region,kind);await expect(card).toHaveCount(1);
+ expect(writes()).toHaveLength(saveCount);expect(before.currentVersionId).toBe(kind==='article'?turn.value.target.articleMember.baseVersionId:turn.value.target.graphicMember.baseVersionId);
+ await snapshot(page,info,phase+'-owner-before');const dialog=await modal(page,card,kind);await expect(dialog.getByRole('region',{name:'本次采纳选择',exact:true})).toHaveCount(0);await snapshot(page,info,phase+'-modal-default-collapsed');const selection=await expand(page,dialog);
+ save(phase+'-defaults',await selection.getByRole('checkbox').evaluateAll(nodes=>nodes.map(n=>({label:n.parentElement.textContent,checked:n.checked,disabled:n.disabled}))));
+ if(partial){for(const field of ['标题','摘要','标签']){const input=selection.getByRole('checkbox',{name:new RegExp('^采用候选'+field)});if(await input.count())await input.setChecked(field==='标题');}if(kind==='article')await selection.getByRole('checkbox',{name:/替换为联合候选事实/}).check();}
+ await snapshot(page,info,phase+'-selection');await close(dialog);expect(writes()).toHaveLength(saveCount);
+ await card.getByRole('button',{name:kind==='article'?'采纳文章':'采纳图文',exact:true}).click();await expect(card.getByRole('status')).toContainText('已保存');await expect(main.getByText('当前成稿已保存',{exact:true})).toBeVisible();
+ const after=await resource(page,kind,turn);expect(after.currentVersionId).not.toBe(before.currentVersionId);await exactCurrent(page,kind,after.currentVersionId,turn);expect(await resource(page,kind==='article'?'image':'article',turn)).toEqual(other);expect(await scriptState(page)).toEqual(scripts);expect(writes()).toHaveLength(saveCount+1);save(phase+'-result',{before,after,otherUnchanged:true,scriptsUnchanged:true,request:writes().at(-1),ownerConfirmedBy:'main+dirty/clean+registered-specific-placeholder+native-ready+no-prior-save'});
+ const posted=modelPosts,posts=writes().length,url=page.url();await page.reload();expect(page.url()).toBe(url);const reopened=await owner(page,kind,turn,{navigate:false});const old=member(page,reopened.region,kind);await expect(old.getByText('这份内容已保存，仍是当前成稿。',{exact:true})).toBeVisible();await snapshot(page,info,phase+'-confirmed-natural-reload');const confirmDialog=await modal(page,old,kind);await expect(confirmDialog.getByRole('status')).toContainText('仍是当前成稿');await expect(confirmDialog.getByRole('region',{name:'本次采纳选择',exact:true})).toHaveCount(0);await snapshot(page,info,phase+'-confirmed-modal-collapsed');const locked=await expand(page,confirmDialog);for(const input of await locked.getByRole('checkbox').all())await expect(input).toBeDisabled();await close(confirmDialog);expect(modelPosts).toBe(posted);expect(writes()).toHaveLength(posts);expect(await resource(page,kind==='article'?'image':'article',turn)).toEqual(other);expect(await scriptState(page)).toEqual(scripts);save(phase+'-isolation-after',{other:await resource(page,kind==='article'?'image':'article',turn),scripts:await scriptState(page)});return after;
+}
+async function loseAndRecover(page,info,turn,kind,{dirty=false}={}){
+ phase=turn.label+'-'+kind+'-loss';const before=await resource(page,kind,turn),other=await resource(page,kind==='article'?'image':'article',turn),scripts=await scriptState(page);save(phase+'-isolation-before',{other,scripts});const {region}=await owner(page,kind,turn,{dirty});let card=turn.kind==='editor'?region:member(page,region,kind),dialog=await modal(page,card,kind,turn.kind==='editor');
+ await expect(dialog.getByRole('region',{name:'本次采纳选择',exact:true})).toHaveCount(0);const controls=await expand(page,dialog);if(kind==='article'){for(const field of ['标题','摘要','标签']){const input=controls.getByRole('checkbox',{name:new RegExp('^采用候选'+field)});if(await input.count())await input.setChecked(field==='标题');}}
+ await close(dialog);const operation=kind==='article'?'articles.versions.create':'graphicPosts.versions.create',requests=[];let dropped=false;const modelBefore=modelPosts;
+ const handler=async route=>{const request=route.request(),input=request.postDataJSON()?.input;if(op(request)===operation&&input?.params?.outputId===before.outputId&&input.body.adoptionMode==='assistant'){requests.push(input);save(phase+'-requests',requests);if(!dropped){dropped=true;const response=await safeRouteFetch(route,operation),body=await response.json();save(phase+'-actual-response-loss',{injection:'真实服务器返回200之后，仅客户端响应丢弃；非自然服务器故障',status:response.status(),body,input,at:new Date().toISOString()});expect(response.status()).toBe(200);expect(body.data.versionId).toBeTruthy();await route.abort('connectionfailed');return;}}await route.continue();};
+ await page.route('**/api/v1/dispatch',handler);await card.getByRole('button',{name:turn.kind==='editor'?'采纳到当前作品':kind==='article'?'采纳文章':'采纳图文',exact:true}).click();await expect(card.getByRole('alert')).toBeVisible();await expect(card.getByText('原采用请求待核对，请继续恢复原请求。',{exact:true})).toBeVisible();const committed=await resource(page,kind,turn);expect(committed.currentVersionId).not.toBe(before.currentVersionId);await exactCurrent(page,kind,committed.currentVersionId,turn);await snapshot(page,info,phase+'-pending-before-reload');
+ const url=page.url(),preReloadCount=requests.length;await page.reload();expect(page.url()).toBe(url);const reopened=await owner(page,kind,turn,{navigate:false});card=turn.kind==='editor'?reopened.region:member(page,reopened.region,kind);await expect(card.getByText('原采用请求待核对，请继续恢复原请求。',{exact:true})).toBeVisible();await expect(card.getByRole('button',{name:turn.kind==='editor'?'恢复 / 采纳原请求':'恢复原采纳请求',exact:true})).toBeVisible();expect(requests).toHaveLength(preReloadCount);await snapshot(page,info,phase+'-pending-natural-reload-before-preview');
+ dialog=await modal(page,card,kind,turn.kind==='editor');await expect(dialog.getByRole('status')).toContainText('原采用请求待核对');await expect(dialog.getByRole('region',{name:'本次采纳选择',exact:true})).toHaveCount(0);await snapshot(page,info,phase+'-pending-modal-collapsed');const locked=await expand(page,dialog);for(const input of await locked.getByRole('checkbox').all())await expect(input).toBeDisabled();await close(dialog);
+ await card.getByRole('button',{name:turn.kind==='editor'?'恢复 / 采纳原请求':'恢复原采纳请求',exact:true}).click();await expect(card.getByRole('status')).toContainText('已保存');expect(requests).toHaveLength(2);expect(requests[1]).toEqual(requests[0]);expect((await resource(page,kind,turn)).current).toEqual(committed.current);expect((await resource(page,kind,turn)).currentVersionId).toBe(committed.currentVersionId);await page.unroute('**/api/v1/dispatch',handler);
+ await page.reload();await owner(page,kind,turn,{navigate:false});card=turn.kind==='editor'?page.getByRole('region',{name:'编导编辑候选',exact:true}):member(page,page.getByRole('region',{name:'文章和图文联合候选',exact:true}),kind);await expect(card.getByText('这份内容已保存，仍是当前成稿。',{exact:true})).toBeVisible();await snapshot(page,info,phase+'-confirmed-natural-reload-before-preview');dialog=await modal(page,card,kind,turn.kind==='editor');await expect(dialog.getByRole('status')).toContainText('仍是当前成稿');await expect(dialog.getByRole('region',{name:'本次采纳选择',exact:true})).toHaveCount(0);await snapshot(page,info,phase+'-confirmed-modal-collapsed');await close(dialog);
+ expect(modelPosts).toBe(modelBefore);expect(await resource(page,kind==='article'?'image':'article',turn)).toEqual(other);expect(await scriptState(page)).toEqual(scripts);save(phase+'-result',{status:'PASS',before,committed,requests,onlyExplicitRecovery:true,naturalSamePageReload:true,otherUnchanged:true,scriptUnchanged:true});save(phase+'-isolation-after',{other:await resource(page,kind==='article'?'image':'article',turn),scripts:await scriptState(page)});return committed;
+}
+
+async function generateInitial(page){
+ phase='joint1-ui-generate';await page.goto(`/projects/${projectId}`);await openAssistant(page);await page.getByRole('button',{name:'新对话',exact:true}).click();
+ const before=await scriptVersions(page);save('joint1-script-before-button',before);const promise=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/chat'&&r.request().method()==='POST',{timeout:1800000});await page.getByRole('button',{name:'一键生成文章和图文',exact:true}).click();const response=await promise;
+ const request=response.request().postDataJSON(),target=request.chatContext.creationTarget;save('joint1-frozen-target',target);const confirmed=await scriptVersions(page);save('joint1-script-confirmed-baseline',confirmed);expect(confirmed.slice(0,before.length)).toEqual(before);expect(confirmed.at(-1).id).toBe(target.scriptSourceRef.versionId);expect(confirmed.at(-1).contentData.sections.map(s=>s.body).join('\n\n')).toBe(readFixture().original);
+ const turn=await settle(page,response,'joint1','joint');turn.scriptBaseline=confirmed;turns.joint1=turn;save('turns-index',turns);expect(await scriptVersions(page)).toEqual(confirmed);return turn;
+}
+async function verifyHistorical(page,info,turn,kinds,label){
+ phase=label;const saveBefore=writes().length,modelBefore=modelPosts,scripts=await scriptState(page),both={article:await resource(page,'article',turn),graphic:await resource(page,'image',turn)};save(label+'-isolation-before',{both,scripts});
+ for(const kind of kinds){const current=await resource(page,kind,turn);const {region}=await owner(page,kind,turn,{width:1280});const card=member(page,region,kind);await expect(card.getByText('这份内容已保存，当前成稿已有后续版本。',{exact:true})).toBeVisible();await snapshot(page,info,phase+'-'+kind+'-outside');const dialog=await modal(page,card,kind);await expect(dialog.getByRole('status')).toContainText('已有后续版本');await expect(dialog.getByRole('region',{name:'本次采纳选择',exact:true})).toHaveCount(0);await snapshot(page,info,phase+'-'+kind+'-modal-collapsed');const locked=await expand(page,dialog);for(const input of await locked.getByRole('checkbox').all())await expect(input).toBeDisabled();await close(dialog);expect(await resource(page,kind,turn)).toEqual(current);}
+ expect(writes()).toHaveLength(saveBefore);expect(modelPosts).toBe(modelBefore);expect(await scriptState(page)).toEqual(scripts);expect(await resource(page,'article',turn)).toEqual(both.article);expect(await resource(page,'image',turn)).toEqual(both.graphic);save(label+'-isolation-after',{both:{article:await resource(page,'article',turn),graphic:await resource(page,'image',turn)},scripts:await scriptState(page)});save(label+'-result',{status:'PASS',zeroSavePosts:true,zeroModels:true,scriptsUnchanged:true,counts:{ownerSavePosts:saveBefore,modelPosts:modelBefore}});
+}
+test('T1303 final三真实turn 两owner自然采纳恢复与完整隔离',async({page},info)=>{
+ test.setTimeout(28800000);expect(binding.sourceHead).toBe('cfbaf1ee021ef6904440ffd78afe3f82c4381ed6');save('binding-reference',{path:'docs/verification/t1304/acceptance/candidate/candidate-binding.json',sha256:crypto.createHash('sha256').update(fs.readFileSync(session.candidateBinding)).digest('hex'),sourceHead:binding.sourceHead,baseURL:session.baseURL});
+ page.on('request',request=>{const id=op(request);if(id){network.push({phase,id,input:request.postDataJSON()?.input,at:new Date().toISOString()});save('network',network);}if(new URL(request.url()).pathname==='/api/chat'&&request.method()==='POST'){modelPosts++;save('model-posts',{count:modelPosts,phase,request:request.postDataJSON(),at:new Date().toISOString()});}});
+ page.on('response',response=>{if(new URL(response.url()).pathname==='/api/chat'&&response.request().method()==='POST'){const h=response.headers();save(phase+'-immediate-response-ids',{httpStatus:response.status(),ids:{conversationId:h['x-conversation-id'],sourceMessageId:h['x-source-message-id'],aiTaskId:h['x-ai-task-id'],executionTaskId:h['x-execution-task-id']},at:new Date().toISOString()});}});
+ page.on('console',msg=>{if(msg.type()==='error')save('last-browser-console-error',{text:msg.text(),at:new Date().toISOString()});});
+ try{
+  phase='setup';const group=await rpc(page,'accountGroups.create',{body:{name:'T1303-FINAL-B-'+uuid(),idempotencyKey:uuid()}});groupId=group.id;save('owned',{task:'T-1303',groupId,sourceHead:binding.sourceHead,baseURL:session.baseURL,freshRoot:true,businessStorageCopied:false});
+  await page.context().addCookies([{name:'creatoros_current_group',value:encodeURIComponent(groupId),url:session.baseURL}]);await page.addInitScript(id=>{localStorage.setItem('creatoros:current-group',id);localStorage.removeItem('creatoros:current-account');localStorage.setItem('creatoros:onboarding:hidden','1');},groupId);
+  await page.goto('/settings?highlight=assistant-engine');save('cfg-before',await rpc(page,'settings.modelRouting.get'));await page.getByLabel('文本创作与结构化模型来源',{exact:true}).selectOption('codex');const settings=page.waitForResponse(r=>op(r.request())==='settings.modelRouting.put',{timeout:900000});await page.getByRole('button',{name:'保存模型来源',exact:true}).click();expect((await settings).status()).toBe(200);await expect(page.getByRole('status').filter({hasText:'已保存并读回当前设置'})).toBeVisible();const cfg=await rpc(page,'settings.modelRouting.get');save('cfg-after',cfg);expect(cfg.choices.text).toBe('codex');
+  const project=await rpc(page,'projects.create',{body:{title:'先写问题，再记录方法',brief:'中性测试资料：仅依据原稿表达，不增加统计数字或个人经历。',contentType:'article',targetPlatforms:['wechatOfficialAccount','xiaohongshu']}});projectId=project.id;const script=await rpc(page,'artifacts.create',{params:{projectId},body:{title:'T1303 fresh隔离脚本',artifactType:'output_script',stage:'script'}});scriptId=script.id;
+  const original='我整理笔记时，先写清楚要解决的问题，再记下实际做过的步骤，最后检查结果。例如整理一份阅读笔记，我会先问这次阅读解决了什么疑问，然后写下试过的方法和还没有想明白的地方。这里没有统计数据，也不承诺效率一定提高。我想保留一个习惯，每次结束工作，记下一个仍然值得追问的问题。先把问题写清楚，再决定下一步。';save('fixture',{groupId,projectId,scriptId,original});await page.goto(`/projects/${projectId}`);const scriptEditor=page.locator('[data-slot="script-document"] [contenteditable="true"]');await expect(scriptEditor).toBeVisible();await scriptEditor.fill(original);await page.locator('[data-slot="editor-save-button"]').click();await expect(page.locator('[data-slot="editor-status-save-status"]')).toHaveText('已保存');const savedScripts=await scriptVersions(page);expect(savedScripts.at(-1).contentData.sections.map(x=>x.body).join('\n\n')).toBe(original);save('script-ui-saved',savedScripts);await snapshot(page,info,'setup-script-ui');
+  const joint1=await generateInitial(page);expect(modelPosts).toBe(1);for(const kind of ['article','image'])await adoptNormal(page,info,joint1,kind,{dirty:true,partial:kind==='article'});save('joint1-complete',{status:'PASS',modelPosts});
+  const clean=await generateCleanJoint(page,joint1);expect(modelPosts).toBe(2);await adoptNormal(page,info,clean,'article',{dirty:false});await loseAndRecover(page,info,clean,'image');save('cleanJoint-complete',{status:'PASS',modelPosts,generationEntry:'public API',articleAdoption:'real owner UI normal200',graphicAdoption:'real owner UI server200 then client-response-loss explicit original request recovery'});
+  await verifyHistorical(page,info,joint1,['article','image'],'joint1-history-newer');
+  phase='editor-generate';await owner(page,'article',clean);await page.getByRole('button',{name:'新对话',exact:true}).click();const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/chat'&&r.request().method()==='POST',{timeout:1800000});await page.getByRole('textbox',{name:'我能帮你做什么',exact:true}).fill('请先读取当前已采纳文章，将最后一句改为“下一步，先记录一个值得追问的问题。”。保留其他正文、事实和图片，不增加经历或数字，不修改脚本或其他平台。请用work.editor.propose给一份完整可预览采纳的文章编辑候选，先不要保存，只出一份。');await page.getByRole('button',{name:'提交提示给 Copilot',exact:true}).click();turns.editor=await settle(page,await response,'editor','editor');expect(turns.editor.articleId).toBe(clean.articleId);save('turns-index',turns);expect(modelPosts).toBe(3);await loseAndRecover(page,info,turns.editor,'article');save('editor-complete',{status:'PASS',modelPosts});
+  await verifyHistorical(page,info,clean,['article'],'cleanJoint-article-history-newer');
+  save('BUSINESS_RESULT',{status:'PASS',turns:Object.fromEntries(Object.entries(turns).map(([k,v])=>[k,{ids:v.ids,assistantId:v.assistantId,toolCallId:v.toolCallId,articleId:v.articleId,graphicId:v.graphicId}])),modelPosts,groupId,projectId,scriptId,naturalSinglePageAndContext:true,businessStorageCopied:false,originalBodyKey:true,metadataWrites:false,oldRunsReadOnlyHistoricalNotReplayed:true,at:new Date().toISOString()});
+ }catch(error){const safe=new Error(String(error).split(session.handshake).join('[REDACTED_OWNED_TEST_HANDSHAKE]'));save('FAILURE',{phase,modelPosts,turns:Object.fromEntries(Object.entries(turns).map(([k,v])=>[k,{ids:v.ids,toolCallId:v.toolCallId}])),error:String(safe),stack:safe.stack,at:new Date().toISOString()});await snapshot(page,info,'failure-'+phase).catch(()=>{});throw safe;}
+});

@@ -1,0 +1,23 @@
+{
+  "command": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "--config=playwright.t1369.config.ts",
+    "--project=t1369-normal",
+    "--workers=1",
+    "--retries=0"
+  ],
+  "mode": "response",
+  "project": "t1369-normal",
+  "wrapperDeadlineSeconds": 10620,
+  "privateRoot": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-supplement-2hh4e9nc",
+  "specSha256": "c65c28741b68a3b152b72a96e5c431149c7cf985ffba5236fbf920038c981e40",
+  "configSha256": "042e03dedf47a3055392a7c2d90378ba9717b1afa554559b14a584939cbd2bc5",
+  "approvedSpecSha256": "152fccf53a18e74bd0fe544f7ed424fa804f5cd323358a0c3ea40f37ec59327a",
+  "review": "3f5c80979bef",
+  "startedAt": 1792389970.1377301
+}

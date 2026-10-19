@@ -1,0 +1,474 @@
+{
+  "before": {
+    "at": 1792388508.0714712,
+    "processes": [
+      {
+        "pid": 55420,
+        "ppid": 1,
+        "etime": "04:40:55",
+        "cpuPercent": 4.8,
+        "rssKiB": 116832,
+        "comm": "/Applications/CreatorOS.app/Contents/MacOS/CreatorOS"
+      },
+      {
+        "pid": 55508,
+        "ppid": 55420,
+        "etime": "04:40:54",
+        "cpuPercent": 98.7,
+        "rssKiB": 1069232,
+        "comm": "next-server (v16.2.9)"
+      }
+    ]
+  },
+  "after": {
+    "at": 1792388513.5110872,
+    "processes": [
+      {
+        "pid": 55420,
+        "ppid": 1,
+        "etime": "04:41:00",
+        "cpuPercent": 2.0,
+        "rssKiB": 117104,
+        "comm": "/Applications/CreatorOS.app/Contents/MacOS/CreatorOS"
+      },
+      {
+        "pid": 55508,
+        "ppid": 55420,
+        "etime": "04:40:59",
+        "cpuPercent": 78.5,
+        "rssKiB": 1070224,
+        "comm": "next-server (v16.2.9)"
+      }
+    ]
+  },
+  "sampleExitCode": 0,
+  "samplingWindowSeconds": 5,
+  "outerExecutionTimeoutSeconds": 180,
+  "rawPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-installed-sample-7gxyu0aq/installed-next-55508.sample.txt",
+  "rawSha256": "ac3909f067cd561bf156adfa03fa5ad7bb5adda2d4930ee9d65138531c3bf1f0",
+  "rawBytes": 922722,
+  "selectedSymbolOccurrenceCounts": {
+    "CaptureSimpleStackTrace": 17,
+    "GatherAsyncStackTrace": 0,
+    "PromiseFulfillReactionJob": 6,
+    "StackTrace": 33,
+    "Scavenge": 71,
+    "MarkCompact": 0,
+    "uv_run": 3,
+    "getaddrinfo": 0,
+    "pthread_mutex_lock": 0,
+    "pg": 0,
+    "SQL": 3
+  },
+  "boundary": "唯一正式App子进程单次OS只读sample；无kill/restart/inspect端口或args/用户正文输出。原native符号不冒精确JS归因。",
+  "selectedFrameWeights": [
+    {
+      "symbol": "PromiseFulfillReactionJob",
+      "prefixNumericTokens": [
+        "1151"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "4"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "3"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "PromiseFulfillReactionJob",
+      "prefixNumericTokens": [
+        "295"
+      ]
+    },
+    {
+      "symbol": "PromiseFulfillReactionJob",
+      "prefixNumericTokens": [
+        "1217"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "PromiseFulfillReactionJob",
+      "prefixNumericTokens": [
+        "37"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "PromiseFulfillReactionJob",
+      "prefixNumericTokens": [
+        "12"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "2"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "1"
+      ]
+    },
+    {
+      "symbol": "CaptureSimpleStackTrace",
+      "prefixNumericTokens": [
+        "13"
+      ]
+    },
+    {
+      "symbol": "PromiseFulfillReactionJob",
+      "prefixNumericTokens": [
+        "5"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "5"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "5"
+      ]
+    },
+    {
+      "symbol": "Scavenge",
+      "prefixNumericTokens": [
+        "5"
+      ]
+    }
+  ]
+}

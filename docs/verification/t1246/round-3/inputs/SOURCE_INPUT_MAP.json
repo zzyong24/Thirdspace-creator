@@ -1,0 +1,1461 @@
+{
+  "schema": "T1246-round3-input-source-map/v1",
+  "task": "T-1261",
+  "baseHead": "50c7be39afb61b179bc599763f2b0f452fd6bf69",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "rows": [
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/README.md",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/README.md",
+      "sourceSha256": "478e161796fc8cb29606cee055683d2a0c021a9c7ad960bc5087be299a84d585",
+      "sha256": "478e161796fc8cb29606cee055683d2a0c021a9c7ad960bc5087be299a84d585",
+      "size": 2337,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/budget-consumers.json",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/budget-consumers.json",
+      "sourceSha256": "d41408b2ec0134d7fad9a727f2889c64688e85ec7ffa8fc2708578352d46fbc1",
+      "sha256": "d41408b2ec0134d7fad9a727f2889c64688e85ec7ffa8fc2708578352d46fbc1",
+      "size": 27311,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/changes.diff",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/changes.diff",
+      "sourceSha256": "6716cbb53aa2069f9e453f86786d2a22279cfb3597d46bc028f2a197a2e22bd7",
+      "sha256": "6716cbb53aa2069f9e453f86786d2a22279cfb3597d46bc028f2a197a2e22bd7",
+      "size": 231412,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/launch.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/browser-original/launch.cjs",
+      "sourceSha256": "a8f01bfe19fb3e18ca12a1e6238ba8f912124e00e5a66799de73b3c02a56449d",
+      "sha256": "a8f01bfe19fb3e18ca12a1e6238ba8f912124e00e5a66799de73b3c02a56449d",
+      "size": 32953,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/playwright.config.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts",
+      "sourceSha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe",
+      "sha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe",
+      "size": 3353,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/prepare-browser-driver.cjs",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+      "sourceSha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091",
+      "sha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091",
+      "size": 20236,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/prepare-runtime.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/browser-original/prepare-runtime.cjs",
+      "sourceSha256": "dbb46c0742242407d66c610956116b594d144ed10669e9e0167a92a1b389867e",
+      "sha256": "13d040c7b32600e7173cb03b695fc0ff7321690ed4307776cffb1fec700a7380",
+      "size": 14062,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/runtime-closure.json",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/runtime-closure.json",
+      "sourceSha256": "350d1e8febe75ba228a36e81a80e3fc89aeae3cb3b63b336f94e79b493666240",
+      "sha256": "350d1e8febe75ba228a36e81a80e3fc89aeae3cb3b63b336f94e79b493666240",
+      "size": 2239,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/verify-binding.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/browser-original/verify-binding.cjs",
+      "sourceSha256": "233ee60a423f26fa86ef898f76759122a009f7f359ddb6d203dc03aa818e8686",
+      "sha256": "233ee60a423f26fa86ef898f76759122a009f7f359ddb6d203dc03aa818e8686",
+      "size": 10841,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/accessibility/all-pages.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/accessibility/all-pages.spec.ts",
+      "sourceSha256": "414ac84466582e23ca10a212caee92251e52511f2219bc25523772cb9c3cb7e8",
+      "sha256": "414ac84466582e23ca10a212caee92251e52511f2219bc25523772cb9c3cb7e8",
+      "size": 1749,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/ai-copilot.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/ai-copilot.spec.ts",
+      "sourceSha256": "844f38a0a77d3c424993fa749bf9402fd537c682185283e3bea4b1be9bd5a267",
+      "sha256": "844f38a0a77d3c424993fa749bf9402fd537c682185283e3bea4b1be9bd5a267",
+      "size": 5564,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/ai-nonblocking-recovery.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/ai-nonblocking-recovery.spec.ts",
+      "sourceSha256": "2a9d68d17fe423efa0787def232bddf4f9c39171e1438bfc1caeaad6decc205a",
+      "sha256": "2a9d68d17fe423efa0787def232bddf4f9c39171e1438bfc1caeaad6decc205a",
+      "size": 10270,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/ai-recovery-guidance.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/ai-recovery-guidance.spec.ts",
+      "sourceSha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc",
+      "sha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc",
+      "size": 8693,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/ai-reliability-recovery.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/ai-reliability-recovery.spec.ts",
+      "sourceSha256": "e5899edc568ec835cba009540550995316a4da01d6d2b5c3cf818228effa05fa",
+      "sha256": "e5899edc568ec835cba009540550995316a4da01d6d2b5c3cf818228effa05fa",
+      "size": 8255,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/all-routes.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/all-routes.spec.ts",
+      "sourceSha256": "2c898414cb2bca08fb676c358e2905fe244f7c9fb5e351c2de0a695b97a59eb5",
+      "sha256": "48424da2fc2760afa0027c1676dbbb9017a0fd2f7b785c8703134410416f72d4",
+      "size": 5989,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/app-shell.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/app-shell.spec.ts",
+      "sourceSha256": "0d885b11e3b0e731cfe9ddfaeb646e47825d6bb247f183f50a78b1cce9c25087",
+      "sha256": "0d885b11e3b0e731cfe9ddfaeb646e47825d6bb247f183f50a78b1cce9c25087",
+      "size": 7625,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/asr-configuration.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/asr-configuration.spec.ts",
+      "sourceSha256": "6bf428d04821ac81c9944efba3c804e66625512d1d732cba37e0d60f0ef45a2d",
+      "sha256": "6bf428d04821ac81c9944efba3c804e66625512d1d732cba37e0d60f0ef45a2d",
+      "size": 3961,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/assets.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/assets.spec.ts",
+      "sourceSha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f",
+      "sha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f",
+      "size": 22434,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/audience-task-topics.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/audience-task-topics.spec.ts",
+      "sourceSha256": "1ea2f8303ada072132c83cfd35370a4430d41cce4ff620302de0659da35ed641",
+      "sha256": "1ea2f8303ada072132c83cfd35370a4430d41cce4ff620302de0659da35ed641",
+      "size": 2139,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/automations-group-media-jobs.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "sourceSha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e",
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e",
+      "size": 11483,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/automations-run-now-public.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/automations-run-now-public.spec.ts",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "sha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "size": 24064,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/built-in-ip-course.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/built-in-ip-course.spec.ts",
+      "sourceSha256": "fddfb0cf1007237ff143aac1a29227ff1dba3e2f2a09411cf34a147f13008cc5",
+      "sha256": "fddfb0cf1007237ff143aac1a29227ff1dba3e2f2a09411cf34a147f13008cc5",
+      "size": 4800,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/channel-public-links.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/channel-public-links.spec.ts",
+      "sourceSha256": "4871c33511849543061482a52e7a84f826f91bf476f298f197ead91b68eceee9",
+      "sha256": "4871c33511849543061482a52e7a84f826f91bf476f298f197ead91b68eceee9",
+      "size": 2922,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/content-radar-one-click-project.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/content-radar-one-click-project.spec.ts",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "sha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "size": 40632,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/copilot-project-reference.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/copilot-project-reference.spec.ts",
+      "sourceSha256": "2c3c7f31326213c8006c10242d5f8cc325303baa05328e4ba7ec2637b6f9b5b7",
+      "sha256": "2c3c7f31326213c8006c10242d5f8cc325303baa05328e4ba7ec2637b6f9b5b7",
+      "size": 4759,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/creative-canvas.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "size": 58462,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/draft-ammo-media-preview.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/draft-ammo-media-preview.spec.ts",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "sha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "size": 9192,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/experience.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/experience.spec.ts",
+      "sourceSha256": "ba47f5b03f8985d52e84c242a8343f6deab527ab9f19b978fb80ee4368876eec",
+      "sha256": "ba47f5b03f8985d52e84c242a8343f6deab527ab9f19b978fb80ee4368876eec",
+      "size": 4127,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/group-skill-customization.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "sourceSha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb",
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb",
+      "size": 80381,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/knowledge-library.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/knowledge-library.spec.ts",
+      "sourceSha256": "1c53cf9c4939bc438aaa94ef14f748701e6433b648d8588c04ee157fe458a774",
+      "sha256": "1c53cf9c4939bc438aaa94ef14f748701e6433b648d8588c04ee157fe458a774",
+      "size": 25596,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/media-root-isolation.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/media-root-isolation.spec.ts",
+      "sourceSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "sha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "size": 10963,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/new-project.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/new-project.spec.ts",
+      "sourceSha256": "0e0c43e23149af34703243dcb85e464b9055df9a78f3061ca390b0bfc98edcf7",
+      "sha256": "0e0c43e23149af34703243dcb85e464b9055df9a78f3061ca390b0bfc98edcf7",
+      "size": 6589,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/onboarding-and-small-sidebar.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/onboarding-and-small-sidebar.spec.ts",
+      "sourceSha256": "71600b432afa5296737a1175510cf4bc0978539bc2a68d34302699b7919bcd8b",
+      "sha256": "71600b432afa5296737a1175510cf4bc0978539bc2a68d34302699b7919bcd8b",
+      "size": 7623,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/overlay-routing.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/overlay-routing.spec.ts",
+      "sourceSha256": "02ea5021383e87328a603b9d2d0913f62ed66d710d7eef4dbcbca65c524c672e",
+      "sha256": "02ea5021383e87328a603b9d2d0913f62ed66d710d7eef4dbcbca65c524c672e",
+      "size": 4047,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/platform-work-catalog.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/platform-work-catalog.spec.ts",
+      "sourceSha256": "5ab7b0722c84698f0853a5737f9d03742167892b74aa39b3c1d28e2038b5ad51",
+      "sha256": "5ab7b0722c84698f0853a5737f9d03742167892b74aa39b3c1d28e2038b5ad51",
+      "size": 9227,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/production-broll-remove.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/production-broll-remove.spec.ts",
+      "sourceSha256": "0e73385fc3135c8c3b929f8cbd5ede748fa25ecfeb4bff96bafca04f97df058e",
+      "sha256": "0e73385fc3135c8c3b929f8cbd5ede748fa25ecfeb4bff96bafca04f97df058e",
+      "size": 8361,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/production-empty-workbench.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/production-empty-workbench.spec.ts",
+      "sourceSha256": "79a128d841b96d8ee29521681d08da6e77dd1abc297c219f682aeed7dec7ceff",
+      "sha256": "79a128d841b96d8ee29521681d08da6e77dd1abc297c219f682aeed7dec7ceff",
+      "size": 3036,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/projects.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/projects.spec.ts",
+      "sourceSha256": "8ddfc7b6d9f65083f660f468c06e88da0b8d9ebdf14070baa59283444de3ec71",
+      "sha256": "8ddfc7b6d9f65083f660f468c06e88da0b8d9ebdf14070baa59283444de3ec71",
+      "size": 4183,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/publish-package-readback.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/publish-package-readback.spec.ts",
+      "sourceSha256": "00f36b2ffbc3986e6733514885320a2fb043f7577e8086fa8f1ef3dbbfb5159f",
+      "sha256": "00f36b2ffbc3986e6733514885320a2fb043f7577e8086fa8f1ef3dbbfb5159f",
+      "size": 6836,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/publishing-center.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/publishing-center.spec.ts",
+      "sourceSha256": "ea23c2175b333750794ed30cec7e7e7cedd8bdcd755af17fc5f69e65bffa41a4",
+      "sha256": "ea23c2175b333750794ed30cec7e7e7cedd8bdcd755af17fc5f69e65bffa41a4",
+      "size": 5114,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/publishing-workspace.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/publishing-workspace.spec.ts",
+      "sourceSha256": "774f887d8560276d66bdfe36515b91e9ca32c6b30c61d470f36baf20c25442ec",
+      "sha256": "774f887d8560276d66bdfe36515b91e9ca32c6b30c61d470f36baf20c25442ec",
+      "size": 1987,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/qwen-asr-configuration.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/qwen-asr-configuration.spec.ts",
+      "sourceSha256": "070089167df46eb922d822450f7eca0a4fa98224245d0fd27ff147af0690815e",
+      "sha256": "070089167df46eb922d822450f7eca0a4fa98224245d0fd27ff147af0690815e",
+      "size": 1489,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/recent-data-safety.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/recent-data-safety.spec.ts",
+      "sourceSha256": "300e8182766e1306460f2af094cc8557ac4f49a5df9a6fad8fe80b19c1cdb2e1",
+      "sha256": "300e8182766e1306460f2af094cc8557ac4f49a5df9a6fad8fe80b19c1cdb2e1",
+      "size": 10485,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/review-empty-diagnosis-entry.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/review-empty-diagnosis-entry.spec.ts",
+      "sourceSha256": "5f1b39bf8697b214b0a79a2b6c633c3be33722ccd5cd952dccdf722028396407",
+      "sha256": "5f1b39bf8697b214b0a79a2b6c633c3be33722ccd5cd952dccdf722028396407",
+      "size": 13315,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/review-history.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/review-history.spec.ts",
+      "sourceSha256": "c63763db44201933497d5bd1c5a90c0ca9cc03eb7f0fc1daf8380cb8626d1270",
+      "sha256": "c63763db44201933497d5bd1c5a90c0ca9cc03eb7f0fc1daf8380cb8626d1270",
+      "size": 4270,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/search.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/search.spec.ts",
+      "sourceSha256": "b8ea3a45c2b416dd056a91f742bad97c6f794e7db1d733b7ac1faabd92723b20",
+      "sha256": "b8ea3a45c2b416dd056a91f742bad97c6f794e7db1d733b7ac1faabd92723b20",
+      "size": 6067,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/semantic-material-generation.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/semantic-material-generation.spec.ts",
+      "sourceSha256": "02defd8b59971efb7ba28da91739d398975aafd05b5677d07cb6990378022197",
+      "sha256": "02defd8b59971efb7ba28da91739d398975aafd05b5677d07cb6990378022197",
+      "size": 6741,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/settings-responsive-layout.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/settings-responsive-layout.spec.ts",
+      "sourceSha256": "1374710abec3ff66590e77a70ac906fae6e3d2847e4c9c1b9347b91a77ec8edf",
+      "sha256": "1374710abec3ff66590e77a70ac906fae6e3d2847e4c9c1b9347b91a77ec8edf",
+      "size": 18356,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/settings.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/settings.spec.ts",
+      "sourceSha256": "e543dc995ae65d48aadc860b105ffcb67a0b66725df1fdebd5d7f0d9c4f02e9f",
+      "sha256": "e543dc995ae65d48aadc860b105ffcb67a0b66725df1fdebd5d7f0d9c4f02e9f",
+      "size": 23789,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/shared-resource-lifecycle.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/shared-resource-lifecycle.spec.ts",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "sha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "size": 3714,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/smoke.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/smoke.spec.ts",
+      "sourceSha256": "f3012ed68fc5609655f9a6b1ee0de374b81608247965e67aaed4b92de796173b",
+      "sha256": "f3012ed68fc5609655f9a6b1ee0de374b81608247965e67aaed4b92de796173b",
+      "size": 510,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1062-group-native-rough.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1062-group-native-rough.spec.ts",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "sha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "size": 73869,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1069-asset-picker.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1069-asset-picker.spec.ts",
+      "sourceSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "sha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "size": 6736,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1069-media-tab-session.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1069-media-tab-session.spec.ts",
+      "sourceSha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "sha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "size": 6189,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1070-director-editor.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1070-director-editor.spec.ts",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "sha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "size": 10935,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1136-calendar-dialog-layout.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1136-calendar-dialog-layout.spec.ts",
+      "sourceSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "sha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "size": 18093,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1140-picker-low-height.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1140-picker-low-height.spec.ts",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "sha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "size": 17882,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1149-cover-aspect-group.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1149-cover-aspect-group.spec.ts",
+      "sourceSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "sha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "size": 15048,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1159-wechat-native-report.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1159-wechat-native-report.spec.ts",
+      "sourceSha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8",
+      "sha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8",
+      "size": 8846,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t1207-supplemental-route-matrix.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t1207-supplemental-route-matrix.spec.ts",
+      "sourceSha256": "7b06d1ec3778b3f3590ef6f1059a10799f3b176e733d04569f1af778470359e6",
+      "sha256": "7b06d1ec3778b3f3590ef6f1059a10799f3b176e733d04569f1af778470359e6",
+      "size": 9213,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/t954-director-review.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/t954-director-review.spec.ts",
+      "sourceSha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba",
+      "sha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba",
+      "size": 4163,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/web-material-read-save.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/web-material-read-save.spec.ts",
+      "sourceSha256": "564a3bb64a074497e83496426744d691252c31e737362e8b368ec2c09ebea417",
+      "sha256": "564a3bb64a074497e83496426744d691252c31e737362e8b368ec2c09ebea417",
+      "size": 10472,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/wechat-article-workbench.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/wechat-article-workbench.spec.ts",
+      "sourceSha256": "707c2b3d39522ad5cd2134822c4407aa59588ca5728eb21fd7c8ecf3c4b86ed2",
+      "sha256": "707c2b3d39522ad5cd2134822c4407aa59588ca5728eb21fd7c8ecf3c4b86ed2",
+      "size": 20295,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/zz-account-isolation.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/zz-account-isolation.spec.ts",
+      "sourceSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "sha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "size": 7536,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/fixtures/routes.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/fixtures/routes.ts",
+      "sourceSha256": "7ae9222d9ccaef5d8c1cd316a2eef05f39780d20b5ea816c8894e75b7ebc2624",
+      "sha256": "7ae9222d9ccaef5d8c1cd316a2eef05f39780d20b5ea816c8894e75b7ebc2624",
+      "size": 5819,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/helpers/fixed-evidence-clock.cjs",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/helpers/fixed-evidence-clock.cjs",
+      "sourceSha256": "8d594c674802effb72b9b5a0ac45d5e9c704ecfb387bd34daa5d00b4bf7cf2de",
+      "sha256": "8d594c674802effb72b9b5a0ac45d5e9c704ecfb387bd34daa5d00b4bf7cf2de",
+      "size": 202,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/helpers/network-policy.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/helpers/network-policy.ts",
+      "sourceSha256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+      "sha256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+      "size": 873,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/helpers/test-environment.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/helpers/test-environment.ts",
+      "sourceSha256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82",
+      "sha256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82",
+      "size": 6129,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/INSTALL-MANIFEST.json",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/INSTALL-MANIFEST.json",
+      "sourceSha256": "4535e67610a61b70150759aaac2f7f0ec7f2c626bf66e5fbf46788b1bdd8af34",
+      "sha256": "4535e67610a61b70150759aaac2f7f0ec7f2c626bf66e5fbf46788b1bdd8af34",
+      "size": 7566,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/README.md",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/README.md",
+      "sourceSha256": "7e0cf9d70e734dcc86ecd22a090f6dc8eaf31db9831500e3af5d5e0ea73aa8cc",
+      "sha256": "7e0cf9d70e734dcc86ecd22a090f6dc8eaf31db9831500e3af5d5e0ea73aa8cc",
+      "size": 3563,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-ai-copilot-overlay.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-ai-copilot-overlay.png",
+      "sourceSha256": "fda68da9f7a96d8c07f626bee03baeba889149de3e0eabf3e76805b9020cd6fc",
+      "sha256": "fda68da9f7a96d8c07f626bee03baeba889149de3e0eabf3e76805b9020cd6fc",
+      "size": 1489620,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-analytics-review.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-analytics-review.png",
+      "sourceSha256": "b2636a275b328b96495d2f2a280e709111ecffe45f2f6649f5a8d2dd5fae4c59",
+      "sha256": "b2636a275b328b96495d2f2a280e709111ecffe45f2f6649f5a8d2dd5fae4c59",
+      "size": 1387177,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-assets.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-assets.png",
+      "sourceSha256": "a3336cd1388ba223b4879cf93078c5b78c2f886c791abc17a0b2b153d7ba2402",
+      "sha256": "a3336cd1388ba223b4879cf93078c5b78c2f886c791abc17a0b2b153d7ba2402",
+      "size": 1466435,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-dashboard.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-dashboard.png",
+      "sourceSha256": "7a1fb9a5d07050f6744231fb16d49f1c26a0bf953441c214d780bbb0e1247bab",
+      "sha256": "7a1fb9a5d07050f6744231fb16d49f1c26a0bf953441c214d780bbb0e1247bab",
+      "size": 1366754,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-experience.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-experience.png",
+      "sourceSha256": "609023b1435725b22b4e95c9ad3b68844c3562ad74b28575a9225ecfa46ba0bb",
+      "sha256": "609023b1435725b22b4e95c9ad3b68844c3562ad74b28575a9225ecfa46ba0bb",
+      "size": 1397865,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-knowledge.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-knowledge.png",
+      "sourceSha256": "85c96a181b9113ff9e638b3d14b6309e0a3ed556887471f99f6dddc7cea6c82b",
+      "sha256": "85c96a181b9113ff9e638b3d14b6309e0a3ed556887471f99f6dddc7cea6c82b",
+      "size": 1331495,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-new-project-overlay.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-new-project-overlay.png",
+      "sourceSha256": "7c4e2a42c9d26b662bcfd4f47e9034068e38fc95abf7cf240ecbc57316db1bb4",
+      "sha256": "7c4e2a42c9d26b662bcfd4f47e9034068e38fc95abf7cf240ecbc57316db1bb4",
+      "size": 1444614,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-planning-workspace.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-planning-workspace.png",
+      "sourceSha256": "079e097e2641f9b805129ab377da08e8266a51c58516793bc22af74e3ae26ca9",
+      "sha256": "079e097e2641f9b805129ab377da08e8266a51c58516793bc22af74e3ae26ca9",
+      "size": 1377780,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-production-workspace.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-production-workspace.png",
+      "sourceSha256": "f73dff930936ab4eba1024c3f9dea0a96f6336c7901e39858589255aae9edf21",
+      "sha256": "f73dff930936ab4eba1024c3f9dea0a96f6336c7901e39858589255aae9edf21",
+      "size": 1455081,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-project-overview.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-project-overview.png",
+      "sourceSha256": "e599bfe55f3db65bfe5c98489502ebbb818ba67033bcc898bdc8764e11af37fa",
+      "sha256": "e599bfe55f3db65bfe5c98489502ebbb818ba67033bcc898bdc8764e11af37fa",
+      "size": 1250980,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-projects.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-projects.png",
+      "sourceSha256": "fbabec5271523484fbedce5a8e0b31f4a741fe55708a8064f03a1cc85ccfe083",
+      "sha256": "fbabec5271523484fbedce5a8e0b31f4a741fe55708a8064f03a1cc85ccfe083",
+      "size": 1238924,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-publishing-center.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-publishing-center.png",
+      "sourceSha256": "5c678851e540b151c9e6c50dc5d956cd99a35b8ffdca5866a2863c796629967a",
+      "sha256": "5c678851e540b151c9e6c50dc5d956cd99a35b8ffdca5866a2863c796629967a",
+      "size": 1411248,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-publishing-workspace.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-publishing-workspace.png",
+      "sourceSha256": "46385cfd85ac360d83ab0bcd799646f81eb633ffefca2a370dc5f8e5c2638e5f",
+      "sha256": "46385cfd85ac360d83ab0bcd799646f81eb633ffefca2a370dc5f8e5c2638e5f",
+      "size": 1357420,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-research-workspace.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-research-workspace.png",
+      "sourceSha256": "5ea16c42268955de0196e5827f3a47a5badfb4b0454ca28a1002ede6f041032b",
+      "sha256": "5ea16c42268955de0196e5827f3a47a5badfb4b0454ca28a1002ede6f041032b",
+      "size": 1349126,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-script-workspace.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-script-workspace.png",
+      "sourceSha256": "5f3ba4c96a1ced43a250b5ed2c5e9611aafb0ad079864d34238d1887173aa5df",
+      "sha256": "5f3ba4c96a1ced43a250b5ed2c5e9611aafb0ad079864d34238d1887173aa5df",
+      "size": 1374965,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-search.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-search.png",
+      "sourceSha256": "e384830beb6b9b1e341e357cab5a27ca2aeb19b7fa91933a17d9a99da4d511ec",
+      "sha256": "e384830beb6b9b1e341e357cab5a27ca2aeb19b7fa91933a17d9a99da4d511ec",
+      "size": 1428574,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__screenshots__/reference-images/reference-settings.png",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__screenshots__/reference-images/reference-settings.png",
+      "sourceSha256": "ab32cc156f193da770064434f8b6313a39cede2eb2c656292fe3c5ba7bcef094",
+      "sha256": "ab32cc156f193da770064434f8b6313a39cede2eb2c656292fe3c5ba7bcef094",
+      "size": 1223598,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__setup__.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__setup__.ts",
+      "sourceSha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d",
+      "sha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d",
+      "size": 960,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/__teardown__.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__teardown__.ts",
+      "sourceSha256": "6f7ffe6c1b9db88ec43d65c917b4e9a6d7176e1fbb9b444e501322dbdb86cb12",
+      "sha256": "6f7ffe6c1b9db88ec43d65c917b4e9a6d7176e1fbb9b444e501322dbdb86cb12",
+      "size": 960,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/all-pages.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/all-pages.spec.ts",
+      "sourceSha256": "921cfdb7c1274fbdddf0f30e34be38b101cda1d5b4f8dbbab827875ec395af77",
+      "sha256": "921cfdb7c1274fbdddf0f30e34be38b101cda1d5b4f8dbbab827875ec395af77",
+      "size": 2566,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/__screenshots__/publishing-center.spec.ts-snapshots/.gitkeep",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/__screenshots__/publishing-center.spec.ts-snapshots/.gitkeep",
+      "sourceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/ai-copilot.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/ai-copilot.spec.ts",
+      "sourceSha256": "d1a61a2dabfe385cfc736dce7063c8c1f3db82817b5da52b5b7b0e69ed04f278",
+      "sha256": "d1a61a2dabfe385cfc736dce7063c8c1f3db82817b5da52b5b7b0e69ed04f278",
+      "size": 2199,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/analytics-review.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/analytics-review.spec.ts",
+      "sourceSha256": "5f59cd2c4b843345d941f3736b01fa62437dcd2c22fa878cc10fc489bafa95c5",
+      "sha256": "5f59cd2c4b843345d941f3736b01fa62437dcd2c22fa878cc10fc489bafa95c5",
+      "size": 4563,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/assets.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/assets.spec.ts",
+      "sourceSha256": "8e226a444170b0b8188faa56f22c973842404fbceed21e16f18f30f2222277a3",
+      "sha256": "8e226a444170b0b8188faa56f22c973842404fbceed21e16f18f30f2222277a3",
+      "size": 5219,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/dashboard.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/dashboard.spec.ts",
+      "sourceSha256": "7634cd6eb83bec44195f93e169414a096bcc00bab88a72ee35afd258d374b922",
+      "sha256": "7634cd6eb83bec44195f93e169414a096bcc00bab88a72ee35afd258d374b922",
+      "size": 2599,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/experience.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/experience.spec.ts",
+      "sourceSha256": "514992c904b2ed93416fb304fd27a16e96f253737419bbda1f93655c26abb625",
+      "sha256": "514992c904b2ed93416fb304fd27a16e96f253737419bbda1f93655c26abb625",
+      "size": 3251,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/intelligence-dark.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/intelligence-dark.spec.ts",
+      "sourceSha256": "0dba3d920ca86c55b46a87d07afd8a7f6a84d9d50d50c2c105df7c41627490a5",
+      "sha256": "0dba3d920ca86c55b46a87d07afd8a7f6a84d9d50d50c2c105df7c41627490a5",
+      "size": 4403,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/knowledge.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/knowledge.spec.ts",
+      "sourceSha256": "a5f6537fee18ed241746a1d32075650313b3f2d01b946a1f75b424959d3d0a76",
+      "sha256": "a5f6537fee18ed241746a1d32075650313b3f2d01b946a1f75b424959d3d0a76",
+      "size": 5038,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/new-project-overlay.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/new-project-overlay.spec.ts",
+      "sourceSha256": "c1d08b087e18c2ea645fa6b738a7501488d54bd011263eee4a6820172adaa913",
+      "sha256": "c1d08b087e18c2ea645fa6b738a7501488d54bd011263eee4a6820172adaa913",
+      "size": 2084,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/planning.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/planning.spec.ts",
+      "sourceSha256": "ded98e4bd7ffcf9fc9ba0a430c6a06340cf691c7f4476e5d0d11667bba4f1690",
+      "sha256": "ded98e4bd7ffcf9fc9ba0a430c6a06340cf691c7f4476e5d0d11667bba4f1690",
+      "size": 3936,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/project-overview.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/project-overview.spec.ts",
+      "sourceSha256": "a3b8b890db10f73a146db8072d735257e51080a8a51bc54d802bd79b2c48660c",
+      "sha256": "a3b8b890db10f73a146db8072d735257e51080a8a51bc54d802bd79b2c48660c",
+      "size": 2947,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/projects.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/projects.spec.ts",
+      "sourceSha256": "992670f3fb75382262ad63a6c343fd708790233a33df7e235c2588d8a66bb369",
+      "sha256": "992670f3fb75382262ad63a6c343fd708790233a33df7e235c2588d8a66bb369",
+      "size": 3461,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/publishing-center.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/publishing-center.spec.ts",
+      "sourceSha256": "84dbc1c1cc2d48a672287c2ae6a0506bc28674e04237e1e98d6070ad69036938",
+      "sha256": "84dbc1c1cc2d48a672287c2ae6a0506bc28674e04237e1e98d6070ad69036938",
+      "size": 4555,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/publishing-workspace.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/publishing-workspace.spec.ts",
+      "sourceSha256": "a4d865c4ceddb6f9091eec8cc83b8375a47af2f73eb26f7bbefddf03744cd715",
+      "sha256": "a4d865c4ceddb6f9091eec8cc83b8375a47af2f73eb26f7bbefddf03744cd715",
+      "size": 3698,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/research.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/research.spec.ts",
+      "sourceSha256": "945a3db7b7775c8fb9aeec35e84a5b615a742bab2b7fce19a595f72cac6a9dc3",
+      "sha256": "945a3db7b7775c8fb9aeec35e84a5b615a742bab2b7fce19a595f72cac6a9dc3",
+      "size": 4059,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/script.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/script.spec.ts",
+      "sourceSha256": "2e171d24413c5f5e0b1fe43d684ba465393891e208c5523cd1d6bad754dffdb2",
+      "sha256": "2e171d24413c5f5e0b1fe43d684ba465393891e208c5523cd1d6bad754dffdb2",
+      "size": 4374,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/search.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/search.spec.ts",
+      "sourceSha256": "91e34ba69a3f6337d2127c49733d5b752979db921092744c422c17bce6b2aca5",
+      "sha256": "91e34ba69a3f6337d2127c49733d5b752979db921092744c422c17bce6b2aca5",
+      "size": 4860,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/pages/settings.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/pages/settings.spec.ts",
+      "sourceSha256": "a564c0c6e65677f0004682d950e8f2a526ce989ccd8b0b373f407df934365bd2",
+      "sha256": "a564c0c6e65677f0004682d950e8f2a526ce989ccd8b0b373f407df934365bd2",
+      "size": 3073,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/visual/visual-lifecycle.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/visual-lifecycle.ts",
+      "sourceSha256": "7378e72afbf34ace113bfc5f3c6bcd0e30667d394b497cc744cd1067b97b813b",
+      "sha256": "7378e72afbf34ace113bfc5f3c6bcd0e30667d394b497cc744cd1067b97b813b",
+      "size": 1337,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/complete-run.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/complete-run.cjs",
+      "sourceSha256": "45b47b7d516c2350ff543976ced966a47aa483710b950056899efd43d1794122",
+      "sha256": "45b47b7d516c2350ff543976ced966a47aa483710b950056899efd43d1794122",
+      "size": 6496,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/driver-types.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/driver-types.cjs",
+      "sourceSha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "size": 1166,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/launch.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/launch.cjs",
+      "sourceSha256": "4ff8ac0f2b9d21048a850300092f6e42371e5cb8cede6faefeb1a24c4da4f6df",
+      "sha256": "4ff8ac0f2b9d21048a850300092f6e42371e5cb8cede6faefeb1a24c4da4f6df",
+      "size": 41438,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/playwright.config.ts",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/playwright.config.ts",
+      "sourceSha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69",
+      "sha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69",
+      "size": 902,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/prepare-runtime.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/prepare-runtime.cjs",
+      "sourceSha256": "56ee05cedb8b1e69d693f47bb5a1adcc16aca0d2309b628b189c5de9a688e277",
+      "sha256": "56ee05cedb8b1e69d693f47bb5a1adcc16aca0d2309b628b189c5de9a688e277",
+      "size": 12592,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/reporter-attachment.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/reporter-attachment.cjs",
+      "sourceSha256": "a696a340369b6888aa6db9ae66b6fdfa1099534719e4fb9969883ebb46e0c320",
+      "sha256": "a696a340369b6888aa6db9ae66b6fdfa1099534719e4fb9969883ebb46e0c320",
+      "size": 4181,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/runtime-dyld.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/runtime-dyld.cjs",
+      "sourceSha256": "2a872b3ffef2cf10c4d43f08312ceb52568a2d8cfcb2e3ae3d51d52ae8bf6aaa",
+      "sha256": "2a872b3ffef2cf10c4d43f08312ceb52568a2d8cfcb2e3ae3d51d52ae8bf6aaa",
+      "size": 10749,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/seal.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/seal.cjs",
+      "sourceSha256": "c2c28b15544d20633e5d719e36d154cd02807cdd87e7416c2a8b2da349cfd42a",
+      "sha256": "c2c28b15544d20633e5d719e36d154cd02807cdd87e7416c2a8b2da349cfd42a",
+      "size": 7760,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/verify-binding.cjs",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/driver/verify-binding.cjs",
+      "sourceSha256": "044dd5003a1eda8595f76a4328e30d41e8a4851bc9d0927bb7d62b46357c7c08",
+      "sha256": "044dd5003a1eda8595f76a4328e30d41e8a4851bc9d0927bb7d62b46357c7c08",
+      "size": 17414,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/source/doocs-public.spec.ts",
+      "source": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/doocs-public.spec.ts",
+      "sourceSha256": "f57be4caca5497ad38e60a6fee4eaefd8826c7e9afa8ab60bb62c3cc24bc5478",
+      "sha256": "f57be4caca5497ad38e60a6fee4eaefd8826c7e9afa8ab60bb62c3cc24bc5478",
+      "size": 10796,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/lineage/original-b994-manifest.json",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/lineage/original-b994-manifest.json",
+      "sourceSha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+      "sha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+      "size": 1183546,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/README.md",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/README.md",
+      "sourceSha256": "84c849be9139aa265f372c27a257786336fb22d8cc926ed30216f3fce0336564",
+      "sha256": "84c849be9139aa265f372c27a257786336fb22d8cc926ed30216f3fce0336564",
+      "size": 4754,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/budget-consumers.json",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/budget-consumers.json",
+      "sourceSha256": "5aaadbe196fa55f601aba12f78de962b67915a95bacab42acf9d1d37f27086bb",
+      "sha256": "5aaadbe196fa55f601aba12f78de962b67915a95bacab42acf9d1d37f27086bb",
+      "size": 160043,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/coverage-mapping.json",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/coverage-mapping.json",
+      "sourceSha256": "d26ceefc81b4329fe73dc53e1a11d3fd662cb77edabfff3c216351e088f2f7b4",
+      "sha256": "d26ceefc81b4329fe73dc53e1a11d3fd662cb77edabfff3c216351e088f2f7b4",
+      "size": 145333,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/new-v3/launch.cjs",
+      "sourceSha256": "7950425e71161d021e15ac13a5e1f405cb6fa5f5b46d850bc34095ffa9befaa2",
+      "sha256": "27c789896bd1424636e5c9078e9c0c9d45546771961cd9385d8763727892cb62",
+      "size": 42670,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/playwright.config.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/playwright.config.ts",
+      "sourceSha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e",
+      "sha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e",
+      "size": 1387,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/prepare-runtime.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/new-v3/prepare-runtime.cjs",
+      "sourceSha256": "889a953841cf97294044d5ab1ebb4161e2e5bd1518c1ace03dc7d5c5137641c7",
+      "sha256": "54630c8a3ad49280aac8f737132f828aad59ea332c06448d8ad1fc84cb59ee67",
+      "size": 16479,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/runtime-closure.json",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/runtime-closure.json",
+      "sourceSha256": "36268470200b452b2e2ae45c2deefa5c044330aeb1fbb3d3661541e0b39c28c2",
+      "sha256": "36268470200b452b2e2ae45c2deefa5c044330aeb1fbb3d3661541e0b39c28c2",
+      "size": 80604,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/verify-binding.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/new-v3/verify-binding.cjs",
+      "sourceSha256": "b59cda1363fa4061b57532f0f36426be87d3c608b073105ac2eb4b3444af01b9",
+      "sha256": "b59cda1363fa4061b57532f0f36426be87d3c608b073105ac2eb4b3444af01b9",
+      "size": 8602,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "sourceSha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1",
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "size": 20082,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "sourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "size": 12685,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "sourceSha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "size": 22409,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "sourceSha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8",
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "size": 27169,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "sourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sha256": "b816261a31992f3fb860ecd2b62ca492b9b26e4101c6a41a544d30e9e4d1b4f6",
+      "size": 7790,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-routes.spec.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+      "sourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "size": 13500,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/pi-support.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "sourceSha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c",
+      "sha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c",
+      "size": 3166,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "sourceSha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865",
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "size": 13659,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/fixtures/codex-protocol.cjs",
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+      "sourceSha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453",
+      "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453",
+      "size": 10930,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/LEGACY_INPUT_SNAPSHOT.json",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/LEGACY_INPUT_SNAPSHOT.json",
+      "sourceSha256": "606121b451a27b09599f4c6717f0571f1c3c6013913ab26827e8a1d72afb9112",
+      "sha256": "606121b451a27b09599f4c6717f0571f1c3c6013913ab26827e8a1d72afb9112",
+      "size": 7079,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/common.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/common.cjs",
+      "sourceSha256": "eb290d71d16e27e8f1a01b7afec72ab89b4e814ee7211ec535008777a2926034",
+      "sha256": "c73f58cd3dc9b419f3bf05d7c6761c701be16b582848c6d8fd558519b302fca5",
+      "size": 22768,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/discover-joint-pairs.py",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/discover-joint-pairs.py",
+      "sourceSha256": "3324eb3f4bf006349e56f85ba17248b3b04c5f1b1a91423ea9ef782d17937845",
+      "sha256": "3324eb3f4bf006349e56f85ba17248b3b04c5f1b1a91423ea9ef782d17937845",
+      "size": 13768,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/owned-dyld.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/owned-dyld.cjs",
+      "sourceSha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "size": 10866,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/prepare-joint-dyld.py",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/prepare-joint-dyld.py",
+      "sourceSha256": "0430982cd69814dcd76ddfe0289d93a6254dc01dbecca8731a5dc809216d2c4a",
+      "sha256": "0430982cd69814dcd76ddfe0289d93a6254dc01dbecca8731a5dc809216d2c4a",
+      "size": 16810,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/prepare-metadata-input.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/prepare-metadata-input.cjs",
+      "sourceSha256": "b5bf7f6b63d8065c1c9615f0cf661c537ba71156b20b783f86cc58790b93238d",
+      "sha256": "b5bf7f6b63d8065c1c9615f0cf661c537ba71156b20b783f86cc58790b93238d",
+      "size": 5297,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/reseal-legacy253-lineage.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/reseal-legacy253-lineage.cjs",
+      "sourceSha256": "6a02bf0d71afac553fcf54006941cc692579a211d29794a73fe2db0af8175c27",
+      "sha256": "2fe4b03088166138dbc93a37b1a5821eed5a3d906413e2227cbf16eada041231",
+      "size": 16796,
+      "byteEqual": false
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/reseal.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/reseal.cjs",
+      "sourceSha256": "05825374a61c5c10e95d8f0d4319994da804dac289638b21745f8d42610495bb",
+      "sha256": "05825374a61c5c10e95d8f0d4319994da804dac289638b21745f8d42610495bb",
+      "size": 14591,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/run.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/run.cjs",
+      "sourceSha256": "cee6b6f445124d98c8939c21f28897bcdbf26013ff72cf50f2ee26a9a732f48e",
+      "sha256": "cee6b6f445124d98c8939c21f28897bcdbf26013ff72cf50f2ee26a9a732f48e",
+      "size": 10937,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/supervise.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/supervise.cjs",
+      "sourceSha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4",
+      "sha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4",
+      "size": 4385,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/types-noemit.cjs",
+      "source": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/types-noemit.cjs",
+      "sourceSha256": "dd1296980dd7374ff9c91437f3d6a4f2efb18c15b863958703b64d85a4a0ee53",
+      "sha256": "dd1296980dd7374ff9c91437f3d6a4f2efb18c15b863958703b64d85a4a0ee53",
+      "size": 3293,
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/prepare-dispatch-inputs.cjs",
+      "source": "T1261-new-round3-source",
+      "sourceSha256": null,
+      "sha256": "46943772b7b2ca6cce7842c82e1c39908937f549a244e1fccc1d7dc8149042a2",
+      "size": 6053,
+      "byteEqual": false,
+      "newSource": true
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/dispatch-once.cjs",
+      "source": "T1261-new-round3-source",
+      "sourceSha256": null,
+      "sha256": "71d895c9a4c8b7ce4207a20ddca2186f6f9d4af305f723fedce1b9ee6e194c26",
+      "size": 4725,
+      "byteEqual": false,
+      "newSource": true
+    }
+  ],
+  "denominators": {
+    "original": 170,
+    "official": 103,
+    "protocol": 7,
+    "pi": 1,
+    "doocs": 2
+  },
+  "officialSplit": {
+    "generation": 49,
+    "nonGenerate": 7,
+    "routes": 38,
+    "settings": 7,
+    "T1097": 2
+  },
+  "oldRound1Round2Written": false,
+  "runtimeRelativeTestNamesPreserved": true,
+  "sourceNotRuntimePass": true,
+  "freshHeadPackageApprovalRequired": true,
+  "offsetOriginalMediaStillMissingNotSubstituted": true,
+  "separateGenericFourSecondFixtureUnchanged": true,
+  "candidateSources": [
+    {
+      "path": "/private/tmp/t1246-engine-fixture-schema-candidate-jp9fn3u9/PRIVATE_CANDIDATE_SOURCE_FACTS.json",
+      "sha256": "8e9258df0550d0525f672fa953d825e76bf7575b636abc1bc27077d4293cb6f4"
+    },
+    {
+      "path": "/private/tmp/t1246-native-chat-source-fixture-v2-c_c36j86/PRIVATE_CANDIDATE_FACTS.json",
+      "sha256": "decf74f0e17bf794b7af3ceec12795c059fc1b759097c84667ccc0da7a408dce"
+    },
+    {
+      "path": "/private/tmp/t1246-original-routes-public-fixture-w4uuuyau/PRIVATE_CANDIDATE_SOURCE_AND_ASSERTION_FACTS.json",
+      "sha256": "eb828609e1a7582e97bbd8e71c45c9c2ecaf161a3bafbc573d7671a3cdf846b6"
+    },
+    {
+      "path": "/private/tmp/t1246-pg-short-socket-candidate-gxb8h74h/FINAL_SOCKET_CANDIDATE_ACTUAL_FACTS.json",
+      "sha256": "051691434716955977feff7729ef900f2b6c7a2061c53562ca9b079ac75f2939"
+    },
+    {
+      "path": "/private/tmp/t1246-portable-chat-ready-candidate-umgt6upz/PRIVATE_PORTABLE_SOURCE_AND_BUDGET_FACTS.json",
+      "sha256": "a3d496a7c727a499d630fac60d7adbb9a05bb590217d8fb9b72efc599bb0688a"
+    },
+    {
+      "path": "/private/tmp/t1254-doocs-private-tool-fix-vpnktlem/SOURCE_AND_PURE_ACTUAL_FACTS.json",
+      "sha256": "da0eec486950ff394964256bb4ad408b618f5f242b1c83f329c65ae6454c7179"
+    }
+  ],
+  "normalSnapshotReadyAndDiagnosticSourcePreserved": true,
+  "legacyOriginalGeneratedShaArrayPreservedSeparately": true,
+  "runtimeMappedTestsCheckedBeforeAndAfter": true,
+  "diffs": [
+    {
+      "path": "docs/verification/t1246/round-3/diffs/browser-original__driver__prepare-runtime.cjs.diff",
+      "sha256": "3f3a5aa802c55b8222df0964df75de85e16bc64724d50af34122a5fa46b984be",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/browser-original/prepare-runtime.cjs",
+      "beforeSha256": "dbb46c0742242407d66c610956116b594d144ed10669e9e0167a92a1b389867e",
+      "currentSource": "docs/verification/t1246/round-3/browser-original/driver/prepare-runtime.cjs",
+      "currentSha256": "13d040c7b32600e7173cb03b695fc0ff7321690ed4307776cffb1fec700a7380",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/browser-original__driver__prepare-runtime.cjs.inverse.diff",
+      "sha256": "6f3e314d3708a22f9fb8b871a82520ae8a75f42679d153c318e11f9c98c38bda",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/browser-original/prepare-runtime.cjs",
+      "beforeSha256": "dbb46c0742242407d66c610956116b594d144ed10669e9e0167a92a1b389867e",
+      "currentSource": "docs/verification/t1246/round-3/browser-original/driver/prepare-runtime.cjs",
+      "currentSha256": "13d040c7b32600e7173cb03b695fc0ff7321690ed4307776cffb1fec700a7380",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/browser-original__source__e2e__all-routes.spec.ts.diff",
+      "sha256": "72c79d88682c08675fdd65637ce4ebfc4684c6e60c582770a3c3921be9206a63",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/all-routes.spec.ts",
+      "beforeSha256": "2c898414cb2bca08fb676c358e2905fe244f7c9fb5e351c2de0a695b97a59eb5",
+      "currentSource": "docs/verification/t1246/round-3/browser-original/source/e2e/all-routes.spec.ts",
+      "currentSha256": "48424da2fc2760afa0027c1676dbbb9017a0fd2f7b785c8703134410416f72d4",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/browser-original__source__e2e__all-routes.spec.ts.inverse.diff",
+      "sha256": "aa72050147bacb57f8da2122d3ea6dce067d1db76a0498778e56d6945d42bbf1",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/e2e/all-routes.spec.ts",
+      "beforeSha256": "2c898414cb2bca08fb676c358e2905fe244f7c9fb5e351c2de0a695b97a59eb5",
+      "currentSource": "docs/verification/t1246/round-3/browser-original/source/e2e/all-routes.spec.ts",
+      "currentSha256": "48424da2fc2760afa0027c1676dbbb9017a0fd2f7b785c8703134410416f72d4",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__driver__launch.cjs.diff",
+      "sha256": "4b683c1ca09928af4126aff5c340f4ef064389f87f6ce87fdc24d086f96f445e",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/new-v3/launch.cjs",
+      "beforeSha256": "7950425e71161d021e15ac13a5e1f405cb6fa5f5b46d850bc34095ffa9befaa2",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+      "currentSha256": "27c789896bd1424636e5c9078e9c0c9d45546771961cd9385d8763727892cb62",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__driver__launch.cjs.inverse.diff",
+      "sha256": "4e150d8a687b78f4061866233c77f79becd3d5d1ca33a34d18d18f832320e8e6",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/new-v3/launch.cjs",
+      "beforeSha256": "7950425e71161d021e15ac13a5e1f405cb6fa5f5b46d850bc34095ffa9befaa2",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+      "currentSha256": "27c789896bd1424636e5c9078e9c0c9d45546771961cd9385d8763727892cb62",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__driver__prepare-runtime.cjs.diff",
+      "sha256": "74a703bc1b670fb31abc8c72a100cca778f31d529c3b2572dff354c6a392466d",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/new-v3/prepare-runtime.cjs",
+      "beforeSha256": "889a953841cf97294044d5ab1ebb4161e2e5bd1518c1ace03dc7d5c5137641c7",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/driver/prepare-runtime.cjs",
+      "currentSha256": "54630c8a3ad49280aac8f737132f828aad59ea332c06448d8ad1fc84cb59ee67",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__driver__prepare-runtime.cjs.inverse.diff",
+      "sha256": "2c98c154c5c41757f16137b4422f56f58c6c7c98d7a20e247520b4302d393bc5",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/new-v3/prepare-runtime.cjs",
+      "beforeSha256": "889a953841cf97294044d5ab1ebb4161e2e5bd1518c1ace03dc7d5c5137641c7",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/driver/prepare-runtime.cjs",
+      "currentSha256": "54630c8a3ad49280aac8f737132f828aad59ea332c06448d8ad1fc84cb59ee67",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__acceptance-support.ts.diff",
+      "sha256": "100bf0a156d1d2d858333f7319a2a99d85dfbb1dbc44fae65c1b6f3cfac54d77",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "beforeSha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "currentSha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__acceptance-support.ts.inverse.diff",
+      "sha256": "13187a4299e100e116a5a7dc5dd30caa6c944f4bd7066cb75321d66c5aef7199",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "beforeSha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "currentSha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__integrated-browser.spec.ts.diff",
+      "sha256": "eeb1dc533b95093e2b8d63e9bb76dcc9f5043e6e22ac943020d4e8163272abe4",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "beforeSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "currentSha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__integrated-browser.spec.ts.inverse.diff",
+      "sha256": "57f6a2555efb296e10de92a963164156dc0b4d6df9523fe71d01129d6f91d023",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "beforeSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "currentSha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__integrated-native.spec.ts.diff",
+      "sha256": "35027fc18d96fc9d01c628d7ca79cfeaf58881d25ea18ab28104bf5cd917380d",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "beforeSha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "currentSha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__integrated-native.spec.ts.inverse.diff",
+      "sha256": "b8c3f77784def61ed6f63bea7a9324775e1bba5fa86606ca82b4780708101128",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "beforeSha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "currentSha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__integrated-protocol.spec.ts.diff",
+      "sha256": "be7b141352a87db9147a2befb1ff7f77b306ebf103d8e33593483eea0fcbf191",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "beforeSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "currentSha256": "b816261a31992f3fb860ecd2b62ca492b9b26e4101c6a41a544d30e9e4d1b4f6",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__integrated-protocol.spec.ts.inverse.diff",
+      "sha256": "7dc5f88f1155887f26fd38fddb5253d7985105f9dc3d01c611b6da3a744ebbef",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "beforeSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "currentSha256": "b816261a31992f3fb860ecd2b62ca492b9b26e4101c6a41a544d30e9e4d1b4f6",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__protocol-support.ts.diff",
+      "sha256": "1cedc607abe08eec1f5d212898011b94e0cb8cd4f7e9fa7c004497c227703421",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "beforeSha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "currentSha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/new-v3__source__e2e__protocol-support.ts.inverse.diff",
+      "sha256": "147a9eff32e7684002b3ed89766dd60d6384ce37878cad09684f3e98989700c2",
+      "beforeSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "beforeSha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865",
+      "currentSource": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "currentSha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/tool__common.cjs.diff",
+      "sha256": "1c886af5f60a64e921f91d47f513b10b1c406679bb146a7384bb975161b05f93",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/common.cjs",
+      "beforeSha256": "eb290d71d16e27e8f1a01b7afec72ab89b4e814ee7211ec535008777a2926034",
+      "currentSource": "docs/verification/t1246/round-3/tool/common.cjs",
+      "currentSha256": "c73f58cd3dc9b419f3bf05d7c6761c701be16b582848c6d8fd558519b302fca5",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/tool__common.cjs.inverse.diff",
+      "sha256": "9ba03ad1de56e39e6e85ef1cfbfeb58cbd56a766628f4109f02c46aaa744c50c",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/common.cjs",
+      "beforeSha256": "eb290d71d16e27e8f1a01b7afec72ab89b4e814ee7211ec535008777a2926034",
+      "currentSource": "docs/verification/t1246/round-3/tool/common.cjs",
+      "currentSha256": "c73f58cd3dc9b419f3bf05d7c6761c701be16b582848c6d8fd558519b302fca5",
+      "direction": "inverse"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/tool__reseal-legacy253-lineage.cjs.diff",
+      "sha256": "b53a9d217347ead8d9ef1b648647c3dc4157f6de7bc7852bfd83a4dac71a98f4",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/reseal-legacy253-lineage.cjs",
+      "beforeSha256": "6a02bf0d71afac553fcf54006941cc692579a211d29794a73fe2db0af8175c27",
+      "currentSource": "docs/verification/t1246/round-3/tool/reseal-legacy253-lineage.cjs",
+      "currentSha256": "2fe4b03088166138dbc93a37b1a5821eed5a3d906413e2227cbf16eada041231",
+      "direction": "forward"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/diffs/tool__reseal-legacy253-lineage.cjs.inverse.diff",
+      "sha256": "ee961b083cfe2fde77ca23c17daf50ac1845baa6973ac1d61f752fd76a70da98",
+      "beforeSource": "/private/tmp/t1246-next-capture-private-3fh6nw_f/tool/reseal-legacy253-lineage.cjs",
+      "beforeSha256": "6a02bf0d71afac553fcf54006941cc692579a211d29794a73fe2db0af8175c27",
+      "currentSource": "docs/verification/t1246/round-3/tool/reseal-legacy253-lineage.cjs",
+      "currentSha256": "2fe4b03088166138dbc93a37b1a5821eed5a3d906413e2227cbf16eada041231",
+      "direction": "inverse"
+    }
+  ],
+  "runtimeSnapshotOldFailureNotRewritten": true,
+  "round3ToolChangesNotAllFeaturesPass": true
+}

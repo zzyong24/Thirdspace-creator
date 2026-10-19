@@ -1,0 +1,12 @@
+diff --git a/frontend/src/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.ts b/frontend/src/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.ts
+index b8532309c..cae50ca4d 100644
+--- a/frontend/src/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.ts
++++ b/frontend/src/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.ts
+@@ -37,6 +37,7 @@ export async function GET(
+     ctx = await resolveRequestContext(
+       readSessionCookie(req),
+       readRequestAccountId(req),
++      { groupId: readRequestGroupId(req) },
+     );
+   } catch {
+     return NextResponse.json({ error: "unauthorized" }, { status: 401 });

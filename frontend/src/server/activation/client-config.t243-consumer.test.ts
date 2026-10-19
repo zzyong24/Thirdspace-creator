@@ -1,0 +1,1944 @@
+import {
+  createCipheriv,
+  createHash,
+  generateKeyPairSync,
+  randomBytes,
+  sign,
+  type KeyObject,
+} from "node:crypto";
+import { readFileSync, promises as fsPromises } from "node:fs";
+import {
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// T1259：保留真实文件写/加密/rename/回读，仅重现Windows目录fsync权限语义。
+const diskFault = { windowsDirectorySync: false, fileSync: false, directorySyncCalls: 0, fileSyncCalls: 0 };
+async function interceptDiskSync(directory: string) {
+  const probe = await fsPromises.open(join(directory, ".sync-probe"), "wx", 0o600);
+  const prototype = Object.getPrototypeOf(probe) as typeof probe;
+  const original = prototype.sync;
+  await probe.close();
+  const spy = vi.spyOn(prototype, "sync").mockImplementation(async function (this: typeof probe) {
+    const directory = (await this.stat()).isDirectory();
+    if (directory) diskFault.directorySyncCalls++;
+    else diskFault.fileSyncCalls++;
+    if ((directory && diskFault.windowsDirectorySync) || (!directory && diskFault.fileSync))
+      throw Object.assign(new Error("隔离模拟fsync拒绝"), { code: "EPERM", syscall: "fsync" });
+    return original.call(this);
+  });
+  return () => spy.mockRestore();
+}
+
+import { DEFAULT_LICENSE_BASE_URL } from "./activation-config";
+import {
+  ClientConfigPullError,
+  ClientConfigCacheSecurityError,
+  EncryptedClientConfigStore,
+  readChannelModelAuthority,
+  refreshClientConfig,
+  requestFreshClientConfigAccess,
+  fulfillActivationIncludedCredit,
+  type ClientConfigCacheRecord,
+  type ClientConfigStore,
+  type SignedClientConfigBundle,
+} from "./client-config.server";
+
+const NOW = new Date("2026-07-28T12:10:00.000Z");
+const AM_ORIGIN = "https://activity.example";
+const GROWTH_ORIGIN = "https://growth.example";
+
+function canonical(value: unknown): string {
+  if (value === null || typeof value === "boolean") return JSON.stringify(value);
+  if (typeof value === "string") return JSON.stringify(value);
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(canonical).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => `${JSON.stringify(key)}:${canonical(child)}`)
+      .join(",")}}`;
+  }
+  throw new TypeError("unsupported JSON");
+}
+
+function rawPublicKey(key: KeyObject): string {
+  return key
+    .export({ format: "der", type: "spki" })
+    .subarray(-32)
+    .toString("base64");
+}
+
+function signedBundle(
+  privateKey: KeyObject,
+  overrides: Record<string, unknown> = {},
+): SignedClientConfigBundle {
+  const semantic = {
+    contractVersion: "growth-client-config-bundle-v1",
+    bundleVersion: 42,
+    projectKey: "creatoros",
+    channelRef: "agent-42",
+    clientId: "creatoros.desktop",
+    environment: "production",
+    issuedAt: "2026-07-28T12:00:00.000Z",
+    softExpiresAt: "2026-07-29T12:00:00.000Z",
+    hardExpiresAt: "2026-08-04T12:00:00.000Z",
+    channelConfig: {
+      revision: 17,
+      payload: {
+        brandName: "星河工作室",
+        purchaseUrl: "https://growth.example/buy",
+        renewalUrl: "https://growth.example/renew",
+        channelSupportUrl: "https://growth.example/support",
+        bugFeedbackUrl: "https://growth.example/feedback",
+        downloadUrl: "https://growth.example/download",
+      },
+    },
+    extensions: [
+      {
+        extensionKey: "creatoros.model-config",
+        protocolVersion: "creatoros-model-config-v1",
+        revision: 3,
+        payload: {
+          provider: "openai-compatible",
+          baseURL: "https://models.example/v1",
+          apiKey: ["test", "only", "channel"].join("-"),
+          model: "test-model",
+          unknownField: { kept: true },
+        },
+      },
+    ],
+    ...overrides,
+  };
+  const bundleDigest = `sha256:${createHash("sha256")
+    .update(canonical(semantic))
+    .digest("hex")}`;
+  const keyId = "growth-config-test-01";
+  const signature = sign(
+    null,
+    Buffer.from(canonical({ ...semantic, bundleDigest, keyId }), "utf8"),
+    privateKey,
+  ).toString("base64url");
+  return {
+    ...semantic,
+    bundleDigest,
+    keyId,
+    signature,
+  } as unknown as SignedClientConfigBundle;
+}
+
+function signedAmResponse(
+  privateKey: KeyObject,
+  body: unknown,
+  status = 200,
+  requestHost = "activity.example",
+) {
+  const bytes = Buffer.from(JSON.stringify(body));
+  const date = "Tue, 28 Jul 2026 12:10:00 GMT";
+  const digest = `SHA-256=${createHash("sha256").update(bytes).digest("base64")}`;
+  const signing = `post /api/license/client-config-tickets\n${requestHost}\n${date}\n${digest}`;
+  const signature = sign(null, Buffer.from(signing), privateKey).toString(
+    "base64",
+  );
+  return new Response(bytes, {
+    status,
+    headers: {
+      "cache-control": "no-store",
+      "content-type": "application/json",
+      "x-license-date": date,
+      "x-license-digest": digest,
+      "x-license-signature": signature,
+    },
+  });
+}
+
+class MemoryStore implements ClientConfigStore {
+  record: ClientConfigCacheRecord | null = null;
+
+  async load() {
+    return this.record;
+  }
+
+  async save(record: ClientConfigCacheRecord) {
+    this.record = structuredClone(record);
+  }
+}
+
+function configuredRecord(
+  bundle: SignedClientConfigBundle,
+  checkedAt = "2026-07-28T12:09:00.000Z",
+): ClientConfigCacheRecord {
+  const extension = bundle.extensions[0]!;
+  return {
+    state: "channel",
+    outcome: "configured",
+    checkedAt,
+    bundle,
+    channel: {
+      projectKey: bundle.projectKey,
+      channelRef: bundle.channelRef,
+      bundleVersion: bundle.bundleVersion,
+      bundleDigest: bundle.bundleDigest,
+      extensionRevision: extension.revision,
+      payload: extension.payload as Record<string, never>,
+    },
+  };
+}
+
+function encryptedEnvelope(key: Buffer, envelope: unknown): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([
+    cipher.update(Buffer.from(JSON.stringify(envelope))),
+    cipher.final(),
+  ]);
+  return `enc:v1:${Buffer.concat([
+    iv,
+    cipher.getAuthTag(),
+    ciphertext,
+  ]).toString("base64")}\n`;
+}
+
+const verdict = {
+  v: 1,
+  allowed: true,
+  status: "active",
+  code: "LOCAL-ONLY-ACTIVATION-CODE",
+  machineId: "device-opaque-id",
+  projectKey: "creatoros",
+  channelRef: "agent-42",
+};
+
+const ticketFixtureBytes = readFileSync(
+  join(
+    process.cwd(),
+    "..",
+    "docs",
+    "contracts",
+    "fixtures",
+    "config-access-ticket-v2.vector.json",
+  ),
+);
+const growthFixtureBytes = readFileSync(
+  join(
+    process.cwd(),
+    "..",
+    "docs",
+    "contracts",
+    "fixtures",
+    "growth-client-config-bundle-v1.vector.json",
+  ),
+);
+const growthCanonicalFixture = JSON.parse(
+  growthFixtureBytes.toString("utf8"),
+).responseBody as SignedClientConfigBundle;
+const clientVersion = JSON.parse(
+  readFileSync(join(process.cwd(), "package.json"), "utf8"),
+).version as string;
+
+describe("T-575 config.pull Creator consumer", () => {
+  const amKeys = generateKeyPairSync("ed25519");
+  const growthKeys = generateKeyPairSync("ed25519");
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  function env() {
+    return {
+      CREATOROS_CLIENT_CONFIG_PULL_ENABLED: "1",
+      CREATOROS_LICENSE_BASE_URL: AM_ORIGIN,
+      CREATOROS_LICENSE_PUBLIC_KEY_B64: rawPublicKey(amKeys.publicKey),
+      CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN: GROWTH_ORIGIN,
+      CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: rawPublicKey(
+        growthKeys.publicKey,
+      ),
+      CREATOROS_GROWTH_CONFIG_KEY_ID: "growth-config-test-01",
+    };
+  }
+
+  function successfulFetch(
+    bundle = signedBundle(growthKeys.privateKey),
+    active = verdict,
+    amOrigin = AM_ORIGIN,
+  ) {
+    return vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url === `${amOrigin}/api/license/client-config-tickets`) {
+        expect(JSON.parse(String(init?.body))).toEqual({
+          contractVersion: "config-access-ticket-v3",
+          projectKey: active.projectKey,
+          code: active.code,
+          machineId: active.machineId,
+          nonce: "nonce-client-config-0001",
+        });
+        return signedAmResponse(
+          amKeys.privateKey,
+          {
+            contractVersion: "config-access-ticket-v3",
+            configAccessTicket: "header.payload.signature",
+            expiresAt: "2026-07-28T12:15:00.000Z",
+            nonce: "nonce-client-config-0001",
+          },
+          200,
+          new URL(amOrigin).host,
+        );
+      }
+      expect(url).toBe(
+        `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=${encodeURIComponent(clientVersion)}&accept=creatoros.model-config%40creatoros-model-config-v1`,
+      );
+      expect(init?.headers).toMatchObject({
+        Authorization: "Bearer header.payload.signature",
+      });
+      const requestBody = JSON.stringify(init?.body ?? "");
+      expect(requestBody).not.toMatch(/channelRef|feedbackPriority|projectKey/);
+      return Response.json(bundle, {
+        status: 200,
+        headers: {
+          etag: `"${bundle.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": String(bundle.bundleVersion),
+          "x-config-key-id": String(bundle.keyId),
+          "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        },
+      });
+    });
+  }
+
+  it("Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "t1259-config-win-"));
+    const restoreDisk = await interceptDiskSync(directory);
+    const descriptor = Object.getOwnPropertyDescriptor(process, "platform")!;
+    const encrypted = new EncryptedClientConfigStore(join(directory, ".channel-model-config"), Buffer.alloc(32, 19));
+    const bundle = signedBundle(growthKeys.privateKey);
+    const refresh = (fetchImpl: typeof fetch) => refreshClientConfig({
+      env: env(), now: () => NOW, nonce: () => "nonce-client-config-0001",
+      fetchImpl, readVerdict: async () => ({ state: "ready", verdict }), store: encrypted,
+    });
+    Object.defineProperty(process, "platform", { ...descriptor, value: "win32" });
+    diskFault.windowsDirectorySync = true;
+    diskFault.directorySyncCalls = 0;
+    diskFault.fileSyncCalls = 0;
+    try {
+      await expect(refresh(successfulFetch(bundle))).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+      expect(await encrypted.load()).toMatchObject({ state: "channel", bundle });
+      const unchangedBase = successfulFetch(bundle);
+      const unchanged: typeof fetch = async (input, init) => String(input).startsWith(GROWTH_ORIGIN)
+        ? new Response(null, { status: 304, headers: {
+          etag: `"${bundle.bundleDigest}"`, "cache-control": "private, no-store",
+          "x-config-bundle-version": String(bundle.bundleVersion), "x-config-key-id": bundle.keyId,
+          "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        } }) : unchangedBase(input, init);
+      await expect(refresh(unchanged)).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+      const invalidBase = successfulFetch(bundle);
+      const invalid: typeof fetch = async (input, init) => String(input).startsWith(GROWTH_ORIGIN)
+        ? new Response("not-json", { status: 200, headers: {
+          "cache-control": "private, no-store", "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        } }) : invalidBase(input, init);
+      await expect(refresh(invalid)).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+      expect(await encrypted.load()).toMatchObject({ state: "quarantined", outcome: "security_error" });
+      expect(diskFault.fileSyncCalls).toBe(3);
+      expect(diskFault.directorySyncCalls).toBe(0);
+      expect(await readFile(join(directory, ".channel-model-config"), "utf8")).toMatch(/^enc:v1:/);
+    } finally {
+      restoreDisk();
+      Object.defineProperty(process, "platform", descriptor);
+      diskFault.windowsDirectorySync = false;
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  it("POSIX目录fsync保留，Windows真实文件sync失败仍拒绝配置成功", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "t1259-config-disk-"));
+    const restoreDisk = await interceptDiskSync(directory);
+    const descriptor = Object.getOwnPropertyDescriptor(process, "platform")!;
+    const encrypted = new EncryptedClientConfigStore(join(directory, ".channel-model-config"), Buffer.alloc(32, 20));
+    const record: ClientConfigCacheRecord = { state: "local", outcome: "not_configured", checkedAt: NOW.toISOString(), bundle: null, channel: null };
+    diskFault.directorySyncCalls = 0;
+    try {
+      Object.defineProperty(process, "platform", { ...descriptor, value: "darwin" });
+      await encrypted.save(record);
+      expect(diskFault.directorySyncCalls).toBe(1);
+      diskFault.windowsDirectorySync = true;
+      await expect(encrypted.save(record)).rejects.toMatchObject({ code: "EPERM", syscall: "fsync" });
+      diskFault.windowsDirectorySync = false;
+      Object.defineProperty(process, "platform", { ...descriptor, value: "win32" });
+      diskFault.fileSync = true;
+      await expect(encrypted.save(record)).rejects.toMatchObject({ code: "EPERM", syscall: "fsync" });
+    } finally {
+      restoreDisk();
+      Object.defineProperty(process, "platform", descriptor);
+      diskFault.fileSync = false;
+      diskFault.windowsDirectorySync = false;
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  it("拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影", async () => {
+    const fetchImpl = successfulFetch();
+    const result = await refreshClientConfig({
+      env: env(),
+      now: () => NOW,
+      nonce: () => "nonce-client-config-0001",
+      fetchImpl,
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+    });
+
+    expect(result).toEqual({
+      authority: "channel",
+      outcome: "configured",
+      action: "渠道模型正在使用",
+      retryable: false,
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(store.record?.state).toBe("channel");
+    expect(store.record?.channel?.payload).toMatchObject({
+      provider: "openai-compatible",
+      unknownField: { kept: true },
+    });
+  });
+
+  it("T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值", async () => {
+    const packagedEnv: Record<string, string | undefined> = { ...env() };
+    delete packagedEnv.CREATOROS_LICENSE_BASE_URL;
+    const fetchImpl = successfulFetch(
+      signedBundle(growthKeys.privateKey),
+      verdict,
+      DEFAULT_LICENSE_BASE_URL,
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: packagedEnv,
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "channel",
+      outcome: "configured",
+    });
+    expect(fetchImpl).toHaveBeenNthCalledWith(
+      1,
+      `${DEFAULT_LICENSE_BASE_URL}/api/license/client-config-tickets`,
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it('原模型scope不符时，在生成新ticket之前拒绝，零外部请求',async()=>{
+    const fetchImpl=vi.fn<typeof fetch>(async()=>{throw Error('原scope不符不得请求票据');});
+    await expect(requestFreshClientConfigAccess({env:env(),now:()=>NOW,nonce:()=> 'original-scope-nonce',readVerdict:async()=>({state:'ready',verdict}),fetchImpl,expectedScopeId:'not-the-original-scope'})).rejects.toMatchObject({code:'MODEL_ROUTE_IDENTITY_CHANGED'});
+    expect(fetchImpl).not.toHaveBeenCalled();
+  },180_000);
+
+  it("T-715 为额度入口申请全新 ticket，且只在 server 内存返回", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      expect(String(input)).toBe(
+        `${AM_ORIGIN}/api/license/client-config-tickets`,
+      );
+      expect(JSON.parse(String(init?.body))).toEqual({
+        contractVersion: "config-access-ticket-v3",
+        projectKey: verdict.projectKey,
+        code: verdict.code,
+        machineId: verdict.machineId,
+        nonce: "nonce-ai-credit-0001",
+      });
+      return signedAmResponse(amKeys.privateKey, {
+        contractVersion: "config-access-ticket-v3",
+        configAccessTicket: "fresh.ticket.signature",
+        expiresAt: "2026-07-28T12:15:00.000Z",
+        nonce: "nonce-ai-credit-0001",
+      });
+    });
+
+    await expect(
+      requestFreshClientConfigAccess({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-ai-credit-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+      }),
+    ).resolves.toEqual({
+      configAccessTicket: "fresh.ticket.signature",
+      expiresAt: "2026-07-28T12:15:00.000Z",
+      growthOrigin: "https://growth.example/",
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("T-706 显式注入非 HTTPS 授权 origin 时继续失败关闭且不出网", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+
+    await expect(
+      refreshClientConfig({
+        env: {
+          ...env(),
+          CREATOROS_LICENSE_BASE_URL: "http://activity.invalid",
+        },
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).rejects.toEqual(
+      new ClientConfigPullError(
+        "CLIENT_CONFIG_PENDING",
+        "授权服务配置无效",
+        false,
+      ),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("T-701 已授权但缺签名 channelRef 时稳定失败关闭且零出网、零缓存改写", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        fetchImpl,
+        readVerdict: async () => ({
+          state: "ready",
+          verdict: { ...verdict, channelRef: null },
+        }),
+        store,
+      }),
+    ).rejects.toEqual(
+      new ClientConfigPullError(
+        "CLIENT_CONFIG_ACTIVATION_SCOPE_MISSING",
+        "授权缺少渠道信息，无法同步受管模型",
+        false,
+      ),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(store.record).toBeNull();
+  });
+
+  it("T-701 authority 读面把缺签名 channelRef 投影为 activation_scope_missing", async () => {
+    await expect(
+      readChannelModelAuthority({
+        env: env(),
+        readVerdict: async () => ({
+          state: "ready",
+          verdict: { ...verdict, channelRef: null },
+        }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "activation_scope_missing",
+      payload: null,
+    });
+  });
+
+
+  // 原跨仓v3向量未随源码归档；仅显式提供受控合成向量时执行，不以缺失样例冒PASS。
+  it.skipIf(!process.env.T243_VECTOR_FILE)('T243 Growth实际签名旧自配→官方目录→真实Creator安全存Key（需T243_VECTOR_FILE合成向量）', async () => {
+    const vector=JSON.parse(readFileSync(process.env.T243_VECTOR_FILE!, 'utf8'));
+    let bundle=vector.old as SignedClientConfigBundle;
+    const putManagedCredential=vi.fn(async()=>undefined);
+    const localEnv={...env(),CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64:vector.publicKeyBase64};
+    const credentialRequests:string[]=[];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      const url=String(input);
+      if(url.includes('/api/license/client-config-tickets'))return signedAmResponse(amKeys.privateKey,{
+        contractVersion:'config-access-ticket-v3',configAccessTicket:'header.payload.signature',
+        expiresAt:'2026-07-28T12:15:00.000Z',nonce:'nonce-client-config-0001'});
+      if(url.includes('/managed-credentials/current')){
+        expect(init?.headers).toMatchObject({Authorization:'Bearer header.payload.signature'});
+        credentialRequests.push(url);
+        expect(url).toMatch(/activationFulfillment=1|existingOnly=1/);
+        return Response.json(url.includes('activationFulfillment=1')?vector.credential:vector.pulled,
+          {headers:{'cache-control':'private, no-store',pragma:'no-cache'}});
+      }
+      return Response.json(bundle,{headers:{etag:`"${bundle.bundleDigest}"`,'cache-control':'private, no-store',
+        'x-config-bundle-version':String(bundle.bundleVersion),'x-config-key-id':bundle.keyId,
+        'x-correlation-id':'cor_0123456789abcdef0123456789abcdef'}});
+    });
+    const deps={env:localEnv,now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,
+      readVerdict:async()=>({state:'ready' as const,verdict}),store,putManagedCredential};
+    await expect(fulfillActivationIncludedCredit(deps)).resolves.toMatchObject({status:'ready'});
+    await expect(refreshClientConfig(deps)).resolves.toMatchObject({authority:'channel',outcome:'configured'});
+    expect(putManagedCredential).not.toHaveBeenCalled();
+    bundle=vector[process.env.T243_VECTOR_MODE || 'new'];
+    await expect(refreshClientConfig(deps)).resolves.toMatchObject({authority:'channel',outcome:'configured'});
+    expect(putManagedCredential).toHaveBeenCalledWith(expect.stringMatching(/^[a-f0-9]{64}$/),
+      'omnihi-main',vector.pulled.credential.token);
+    expect(credentialRequests.filter(x=>x.includes('existingOnly=1'))).toHaveLength(1);
+    expect(JSON.stringify(store.record)).not.toContain(vector.pulled.credential.token);
+    const payload=store.record?.channel?.payload as unknown as {models:{default:Array<{model:string,isDefault:boolean}>}};
+    expect(payload.models.default.filter(x=>x.isDefault).map(x=>x.model)).toEqual(['minimax-m3']);
+  },180_000);
+
+  it("T-701/T-679 已签名 status 带 channelRef 后拉 bundle 与 activation_managed 子 Key", async () => {
+    const managedPayload = {
+      services: [
+        {
+          id: "omnihi-main",
+          name: "OmniHi 模型服务",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            allowMultiple: false,
+          },
+        },
+      ],
+      connections: [],
+      models: {},
+    };
+    const bundle = signedBundle(growthKeys.privateKey, {
+      extensions: [
+        {
+          extensionKey: "creatoros.model-config",
+          protocolVersion: "creatoros-model-config-v1",
+          revision: 4,
+          payload: managedPayload,
+        },
+      ],
+    });
+    const putManagedCredential = vi.fn(async () => undefined);
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url === `${AM_ORIGIN}/api/license/client-config-tickets`) {
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v3",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+        });
+      }
+      expect(init?.headers).toMatchObject({
+        Authorization: "Bearer header.payload.signature",
+      });
+      if (url.includes("/managed-credentials/current?serviceId=omnihi-main")) {
+        return Response.json(
+          {
+            contractVersion: "growth-managed-model-credential-v1",
+            serviceId: "omnihi-main",
+            credential: { type: "api_key", token: "omnihi-child-secret", tokenPrefix: "om***" },
+            includedCredit: { amount: "30.00000000", currency: "CNY" },
+          },
+          { headers: { "cache-control": "private, no-store", pragma: "no-cache" } },
+        );
+      }
+      return Response.json(bundle, {
+        headers: {
+          etag: `"${bundle.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": String(bundle.bundleVersion),
+          "x-config-key-id": bundle.keyId,
+          "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        },
+      });
+    });
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+        putManagedCredential,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+    expect(putManagedCredential).toHaveBeenCalledWith(
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+      "omnihi-main",
+      "omnihi-child-secret",
+    );
+    expect(JSON.stringify(store.record)).not.toContain("omnihi-child-secret");
+  });
+
+  it("T-679 不会为未登记的 activation_managed service 请求或保存子 Key", async () => {
+    const managedPayload = {
+      services: [
+        {
+          id: "unexpected-managed-service",
+          name: "未登记受管服务",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            allowMultiple: false,
+          },
+        },
+      ],
+      connections: [],
+      models: {},
+    };
+    const bundle = signedBundle(growthKeys.privateKey, {
+      extensions: [
+        {
+          extensionKey: "creatoros.model-config",
+          protocolVersion: "creatoros-model-config-v1",
+          revision: 5,
+          payload: managedPayload,
+        },
+      ],
+    });
+    const putManagedCredential = vi.fn(async () => undefined);
+    const fetchImpl = successfulFetch(bundle);
+
+    await refreshClientConfig({
+      env: env(),
+      now: () => NOW,
+      nonce: () => "nonce-client-config-0001",
+      fetchImpl,
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+      putManagedCredential,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(putManagedCredential).not.toHaveBeenCalled();
+  });
+
+  it("逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest", async () => {
+    expect(createHash("sha256").update(ticketFixtureBytes).digest("hex")).toBe(
+      "58218645dc8e90df44aaef2d63688ef4173e5300e50450c5a8d222debff8b538",
+    );
+    expect(createHash("sha256").update(growthFixtureBytes).digest("hex")).toBe(
+      "5a2db6c963a16c06b47956579c7974dba02f73df7fef389d90a515b1ee8f3251",
+    );
+    const fixtureEnv = {
+      ...env(),
+      CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64:
+        "2inpWwLgD/oVZFd1+x0roiKhlDOV7qBrlOLAV7e+adA=",
+    };
+    const result = await refreshClientConfig({
+      env: fixtureEnv,
+      now: () => NOW,
+      nonce: () => "nonce-client-config-0001",
+      fetchImpl: successfulFetch(growthCanonicalFixture),
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+    });
+    expect(result.authority).toBe("channel");
+    expect(result.outcome).toBe("configured");
+  });
+
+  it("坏签名、额外 envelope 字段和未知产品协议均 fail-closed", async () => {
+    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const tampered = structuredClone(
+      signedBundle(growthKeys.privateKey),
+    ) as unknown as {
+      extensions: Array<{ payload: Record<string, unknown> }>;
+    };
+    tampered.extensions[0]!.payload.profileKey = "evil";
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(
+          tampered as unknown as SignedClientConfigBundle,
+        ),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+
+    const extra = signedBundle(growthKeys.privateKey, { unexpected: true });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(extra),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+
+    const unknownProtocol = signedBundle(growthKeys.privateKey, {
+      extensions: [
+        {
+          extensionKey: "creatoros.model-config",
+          protocolVersion: "creatoros-model-config-v2",
+          revision: 4,
+          payload: {},
+        },
+      ],
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(unknownProtocol),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record?.state).toBe("quarantined");
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /^\[client-config\] \{"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_[A-Z_]+","retryable":false\}$/,
+      ),
+    );
+    log.mockRestore();
+  });
+
+  it("Activity/Growth exact response headers 漂移时 fail-closed", async () => {
+    const missingAmNoStore = successfulFetch();
+    missingAmNoStore.mockImplementationOnce(async () => {
+      const response = signedAmResponse(amKeys.privateKey, {
+        contractVersion: "config-access-ticket-v3",
+        configAccessTicket: "header.payload.signature",
+        expiresAt: "2026-07-28T12:15:00.000Z",
+        nonce: "nonce-client-config-0001",
+      });
+      response.headers.delete("cache-control");
+      return response;
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: missingAmNoStore,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(missingAmNoStore).toHaveBeenCalledTimes(1);
+
+    const missingGrowthCorrelation = successfulFetch();
+    missingGrowthCorrelation.mockImplementationOnce(async () =>
+      signedAmResponse(amKeys.privateKey, {
+        contractVersion: "config-access-ticket-v3",
+        configAccessTicket: "header.payload.signature",
+        expiresAt: "2026-07-28T12:15:00.000Z",
+        nonce: "nonce-client-config-0001",
+      }),
+    );
+    missingGrowthCorrelation.mockImplementationOnce(async () =>
+      Response.json(signedBundle(growthKeys.privateKey), {
+        status: 200,
+        headers: {
+          etag:
+            '"sha256:cddab7e8a859a4925ce6a353ebee47c46824cb06a3c066e87e47fd2482fcb4ba"',
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": "42",
+          "x-config-key-id": "growth-config-test-01",
+        },
+      }),
+    );
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: missingGrowthCorrelation,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+  });
+
+  it("低版本与同版本不同 digest 隔离，历史密文保留但不激活", async () => {
+    const current = signedBundle(growthKeys.privateKey, { bundleVersion: 43 });
+    store.record = configuredRecord(current);
+    const previous = structuredClone(store.record);
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(
+          signedBundle(growthKeys.privateKey, { bundleVersion: 42 }),
+        ),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record).toMatchObject({
+      state: "quarantined",
+      channel: previous.channel,
+    });
+    store.record = previous;
+
+    const collision = signedBundle(growthKeys.privateKey, {
+      bundleVersion: 43,
+      extensions: [
+        {
+          extensionKey: "creatoros.model-config",
+          protocolVersion: "creatoros-model-config-v1",
+          revision: 4,
+          payload: {
+            serviceMode: "byok_required",
+            profileKey: "quality",
+            capabilityRoutes: {},
+          },
+        },
+      ],
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(collision),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record).toMatchObject({
+      state: "quarantined",
+      channel: previous.channel,
+    });
+  });
+
+  it("304 仍核对签名 LKG 的版本、digest、keyId 与在线 correlation", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    store.record = configuredRecord(current);
+    const fetchImpl = successfulFetch();
+    fetchImpl.mockImplementationOnce(async () =>
+      signedAmResponse(amKeys.privateKey, {
+        contractVersion: "config-access-ticket-v3",
+        configAccessTicket: "header.payload.signature",
+        expiresAt: "2026-07-28T12:15:00.000Z",
+        nonce: "nonce-client-config-0001",
+      }),
+    );
+    fetchImpl.mockImplementationOnce(async (_input, init) => {
+      expect(init?.headers).toMatchObject({
+        "If-None-Match": `"${current.bundleDigest}"`,
+      });
+      return new Response(null, {
+        status: 304,
+        headers: {
+          etag: `"${current.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": String(current.bundleVersion),
+          "x-config-key-id": current.keyId,
+          "x-correlation-id": "cor_abcdef0123456789abcdef0123456789",
+        },
+      });
+    });
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "channel",
+      outcome: "configured",
+    });
+    expect(store.record).toMatchObject({
+      state: "channel",
+      checkedAt: NOW.toISOString(),
+    });
+  });
+
+  it("304 遇到缓存 payload 与签名 bundle 不一致时隔离并使用本地", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    const configured = configuredRecord(current);
+    store.record = {
+      ...configured,
+      channel: {
+        ...configured.channel!,
+        payload: { provider: "tampered-cache-payload" },
+      },
+    };
+    const fetchImpl = successfulFetch();
+    fetchImpl.mockImplementationOnce(async () =>
+      signedAmResponse(amKeys.privateKey, {
+        contractVersion: "config-access-ticket-v3",
+        configAccessTicket: "header.payload.signature",
+        expiresAt: "2026-07-28T12:15:00.000Z",
+        nonce: "nonce-client-config-0001",
+      }),
+    );
+    fetchImpl.mockImplementationOnce(async () =>
+      new Response(null, {
+        status: 304,
+        headers: {
+          etag: `"${current.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": String(current.bundleVersion),
+          "x-config-key-id": current.keyId,
+          "x-correlation-id": "cor_abcdef0123456789abcdef0123456789",
+        },
+      }),
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record).toMatchObject({
+      state: "quarantined",
+      outcome: "security_error",
+    });
+  });
+
+  it("明确无 extension 时保留历史渠道密文但切到本地", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    store.record = configuredRecord(current);
+    const withoutExtension = signedBundle(growthKeys.privateKey, {
+      bundleVersion: current.bundleVersion + 1,
+      extensions: [],
+    });
+    const result = await refreshClientConfig({
+      env: env(),
+      now: () => NOW,
+      nonce: () => "nonce-client-config-0001",
+      fetchImpl: successfulFetch(withoutExtension),
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+    });
+    expect(result).toMatchObject({
+      authority: "local",
+      outcome: "not_configured",
+    });
+    expect(store.record).toMatchObject({
+      state: "local",
+      outcome: "not_configured",
+      channel: configuredRecord(current).channel,
+    });
+    await expect(
+      readChannelModelAuthority({
+        env: env(),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "not_configured",
+      payload: null,
+    });
+  });
+
+  it("网络/authority 不可用立即停用历史渠道密文并使用本地", async () => {
+    store.record = configuredRecord(
+      signedBundle(growthKeys.privateKey),
+      "2026-07-27T12:10:00.001Z",
+    );
+    const offline = await refreshClientConfig({
+      env: env(),
+      now: () => NOW,
+      nonce: () => "nonce-client-config-0001",
+      fetchImpl: vi.fn<typeof fetch>(async () => {
+        throw new TypeError("offline");
+      }),
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+    });
+    expect(offline).toMatchObject({
+      authority: "local",
+      outcome: "unreachable",
+    });
+    expect(store.record).toMatchObject({
+      state: "local",
+      outcome: "unreachable",
+    });
+    expect(store.record?.channel).not.toBeNull();
+  });
+
+  it.each([200,304])('T1278 目录%s缺单项官方账户仍保存目录，固定existingOnly且不领Key',async(status)=>{
+    const bundle=signedBundle(growthKeys.privateKey,{extensions:[{extensionKey:'creatoros.model-config',protocolVersion:'creatoros-model-config-v1',revision:4,payload:{services:[{id:'omnihi-main',provider:'omnihi',credential:{type:'api_key',source:'activation_managed',allowMultiple:false}}],connections:[],models:{}}}]});
+    if(status===304)store.record=configuredRecord(bundle);
+    const base=successfulFetch(bundle),put=vi.fn(async()=>{}),queries:string[]=[];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      const url=new URL(String(input));
+      if(url.pathname.includes('managed-credentials')){queries.push(url.search);expect(store.record?.bundle).toEqual(bundle);return Response.json({error:{code:'MODEL_CREDENTIAL_NOT_CONFIGURED',message:'not configured'}},{status:404,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});}
+      if(status===304&&url.pathname.includes('bundles'))return new Response(null,{status:304,headers:{etag:`"${bundle.bundleDigest}"`,'cache-control':'private, no-store','x-config-bundle-version':String(bundle.bundleVersion),'x-config-key-id':bundle.keyId,'x-correlation-id':'cor_0123456789abcdef0123456789abcdef'}});
+      return base(input,init);
+    });
+    expect(await refreshClientConfig({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready',verdict}),store,putManagedCredential:put})).toMatchObject({authority:'channel',outcome:'configured'});
+    expect(queries).toEqual(['?serviceId=omnihi-main&existingOnly=1']);expect(put).not.toHaveBeenCalled();
+    expect(store.record).toMatchObject({state:'channel',bundle,channel:{managedCredentials:{'omnihi-main':{status:'not_configured',reasonCode:'MODEL_CREDENTIAL_NOT_CONFIGURED'}}}});
+    expect(await readChannelModelAuthority({env:env(),store,readVerdict:async()=>({state:'ready',verdict})})).toMatchObject({authority:'channel',managedCredentials:{'omnihi-main':{status:'not_configured'}}});
+  },180_000);
+
+  it.each([200,304])('T1278 existingOnly %s 的真实409 bootstrap pending保签名目录与原操作、不provision，默认fresh仍v3',async(status)=>{
+    const bundle=signedBundle(growthKeys.privateKey,{extensions:[{extensionKey:'creatoros.model-config',protocolVersion:'creatoros-model-config-v1',revision:4,payload:{services:[{id:'omnihi-main',provider:'omnihi',credential:{type:'api_key',source:'activation_managed',allowMultiple:false}}],connections:[],models:{}}}]});
+    if(status===304)store.record=configuredRecord(bundle);
+    const base=successfulFetch(bundle),put=vi.fn(async()=>{}),queries:string[]=[];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      const url=new URL(String(input));
+      if(url.pathname.includes('managed-credentials')){
+        queries.push(url.search);expect(init?.method).toBe('GET');expect(init?.body).toBeUndefined();expect(init?.headers).toMatchObject({Authorization:'Bearer header.payload.signature'});
+        expect(store.record?.bundle).toEqual(bundle);
+        return Response.json({error:{code:'AI_CREDIT_BOOTSTRAP_PENDING',message:'private-original-operation-no-funds-or-new-key'}},{status:409,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});
+      }
+      if(status===304&&url.pathname.includes('bundles'))return new Response(null,{status:304,headers:{etag:`"${bundle.bundleDigest}"`,'cache-control':'private, no-store','x-config-bundle-version':String(bundle.bundleVersion),'x-config-key-id':bundle.keyId,'x-correlation-id':'cor_0123456789abcdef0123456789abcdef'}});
+      return base(input,init);
+    });
+    const deps={env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready' as const,verdict}),store};
+    expect(await refreshClientConfig({...deps,putManagedCredential:put})).toMatchObject({authority:'channel',outcome:'configured'});
+    expect(queries).toEqual(['?serviceId=omnihi-main&existingOnly=1']);expect(put).not.toHaveBeenCalled();
+    expect(store.record).toMatchObject({state:'channel',outcome:'configured',bundle,channel:{managedCredentials:{'omnihi-main':{status:'unverified',reasonCode:'AI_CREDIT_BOOTSTRAP_PENDING'}}}});
+    const authority=await readChannelModelAuthority(deps);expect(authority).toMatchObject({authority:'channel',payload:bundle.extensions[0]!.payload,managedCredentials:{'omnihi-main':{status:'unverified',reasonCode:'AI_CREDIT_BOOTSTRAP_PENDING'}}});
+    if(authority.authority!=='channel')throw Error('原签名目录应保持可读');
+    expect(authority.managedCredentials?.['omnihi-main']).not.toHaveProperty('accountStatus');expect(JSON.stringify(store.record?.channel?.managedCredentials)).not.toContain('private-original-operation');
+    await expect(requestFreshClientConfigAccess(deps)).resolves.toMatchObject({configAccessTicket:'header.payload.signature'});
+    const posts=fetchImpl.mock.calls.filter(([,init])=>init?.method==='POST');expect(posts).toHaveLength(2);
+    for(const [url,init] of posts){expect(String(url)).toBe(`${AM_ORIGIN}/api/license/client-config-tickets`);expect(JSON.parse(String(init?.body)).contractVersion).toBe('config-access-ticket-v3');}
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  },180_000);
+
+  it.each([['AI_CREDIT_BOOTSTRAP_PENDING',401],['AI_CREDIT_BOOTSTRAP_PENDING',403],['AI_CREDIT_BOOTSTRAP_PENDING',503],['UNKNOWN_BOOTSTRAP_STATE',409]] as const)('T1278 pending非原pair %s/%s 不作为已知未就绪',async(code,httpStatus)=>{
+    const bundle=signedBundle(growthKeys.privateKey,{extensions:[{extensionKey:'creatoros.model-config',protocolVersion:'creatoros-model-config-v1',revision:4,payload:{services:[{id:'omnihi-main',provider:'omnihi',credential:{type:'api_key',source:'activation_managed',allowMultiple:false}}],connections:[],models:{}}}]});
+    const base=successfulFetch(bundle),put=vi.fn(async()=>{});
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>String(input).includes('managed-credentials')?Response.json({error:{code,message:'untrusted-private-error'}},{status:httpStatus,headers:{'cache-control':'private, no-store',pragma:'no-cache'}}):base(input,init));
+    const deps={env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready' as const,verdict}),store};
+    if(httpStatus===401)await expect(refreshClientConfig({...deps,putManagedCredential:put})).rejects.toMatchObject({code:'CLIENT_CONFIG_ACCESS_DENIED'});
+    else expect(await refreshClientConfig({...deps,putManagedCredential:put})).toMatchObject({authority:'local',outcome:httpStatus===503?'unreachable':'security_error'});
+    expect(await readChannelModelAuthority(deps)).toMatchObject({authority:'local',payload:null});expect(put).not.toHaveBeenCalled();expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(store.record?.channel?.managedCredentials).toBeUndefined();
+  },180_000);
+
+  it('T1278 普通同机旧码仅签名422后以新nonce申请v2目录，paid fresh仍v3',async()=>{
+    const base=successfulFetch(),requests:Record<string,unknown>[]=[],nonces=['nonce-client-config-0001','nonce-client-config-0002'];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      if(String(input).startsWith(AM_ORIGIN)){
+        const body=JSON.parse(String(init?.body));requests.push(body);
+        if(body.contractVersion==='config-access-ticket-v3')return signedAmResponse(amKeys.privateKey,{success:false,error:{code:'CONFIG_TICKET_REQUEST_INVALID',message:'v3 not eligible'}},422);
+        return signedAmResponse(amKeys.privateKey,{contractVersion:'config-access-ticket-v2',configAccessTicket:'original.v2.ticket',expiresAt:'2026-07-28T12:15:00.000Z',nonce:body.nonce});
+      }
+      return base(input,{...init,headers:{Authorization:'Bearer header.payload.signature'}});
+    });
+    expect(await refreshClientConfig({env:env(),now:()=>NOW,nonce:()=>nonces.shift()!,fetchImpl,store,readVerdict:async()=>({state:'ready',verdict:{...verdict,licenseMode:'TIME'}})})).toMatchObject({authority:'channel',outcome:'configured'});
+    expect(requests.map(x=>[x.contractVersion,x.nonce])).toEqual([['config-access-ticket-v3','nonce-client-config-0001'],['config-access-ticket-v2','nonce-client-config-0002']]);
+    expect(requests[1]).toMatchObject({code:verdict.code,machineId:verdict.machineId,projectKey:verdict.projectKey});
+    requests.length=0;
+    await expect(requestFreshClientConfigAccess({env:env(),now:()=>NOW,nonce:()=> 'nonce-paid-only',fetchImpl,readVerdict:async()=>({state:'ready',verdict:{...verdict,licenseMode:'TIME'}})})).rejects.toMatchObject({code:'CLIENT_CONFIG_NOT_APPLICABLE'});
+    expect(requests.map(x=>x.contractVersion)).toEqual(['config-access-ticket-v3']);
+  },180_000);
+
+  it.each(['TRIAL','DEVICE_TRIAL',undefined])('T1278 licenseMode=%s不推测普通旧码且不降级',async(licenseMode)=>{
+    const fetchImpl=vi.fn<typeof fetch>(async()=>signedAmResponse(amKeys.privateKey,{success:false,error:{code:'CONFIG_TICKET_REQUEST_INVALID',message:'v3 not eligible'}},422));
+    expect(await refreshClientConfig({env:env(),now:()=>NOW,nonce:()=> 'nonce-original-only',fetchImpl,store,readVerdict:async()=>({state:'ready',verdict:{...verdict,licenseMode}})})).toMatchObject({authority:'local',outcome:'not_configured'});
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  },180_000);
+
+
+  it.each(["ai-credit-bootstrap", "ai-credit-link"] as const)("T1278 private fresh %s 普通旧码只在验签精确422后取新nonce v2", async (purpose) => {
+    const requests: Record<string, unknown>[] = []; const nonces = ["fresh-purpose-v3", "fresh-purpose-v2"];
+    const fetchImpl = vi.fn<typeof fetch>(async (_input, init) => {
+      const body = JSON.parse(String(init?.body)); requests.push(body);
+      return body.contractVersion === "config-access-ticket-v3"
+        ? signedAmResponse(amKeys.privateKey, { success: false, error: { code: "CONFIG_TICKET_REQUEST_INVALID", message: "v3 not eligible" } }, 422)
+        : signedAmResponse(amKeys.privateKey, { contractVersion: "config-access-ticket-v2", configAccessTicket: "bootstrap.fresh.v2", expiresAt: "2026-07-28T12:15:00.000Z", nonce: body.nonce });
+    });
+    expect(await requestFreshClientConfigAccess({ purpose, env: env(), now: () => NOW, nonce: () => nonces.shift()!, fetchImpl, readVerdict: async () => ({ state: "ready", verdict: { ...verdict, licenseMode: "TIME" } }) })).toEqual({ growthOrigin: `${GROWTH_ORIGIN}/`, configAccessTicket: "bootstrap.fresh.v2", expiresAt: "2026-07-28T12:15:00.000Z" });
+    expect(requests.map(row => [row.contractVersion, row.nonce])).toEqual([["config-access-ticket-v3", "fresh-purpose-v3"], ["config-access-ticket-v2", "fresh-purpose-v2"]]);
+    expect(requests[1]).toMatchObject({ code: verdict.code, machineId: verdict.machineId, projectKey: verdict.projectKey });
+  }, 180_000);
+
+  it.each(["TRIAL", "DEVICE_TRIAL", undefined])("T1278 bootstrap private purpose 不把 %s 当普通旧码", async (licenseMode) => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => signedAmResponse(amKeys.privateKey, { success: false, error: { code: "CONFIG_TICKET_REQUEST_INVALID", message: "v3 not eligible" } }, 422));
+    await expect(requestFreshClientConfigAccess({ purpose: "ai-credit-bootstrap", env: env(), now: () => NOW, nonce: () => "fresh-trial-nonce", fetchImpl, readVerdict: async () => ({ state: "ready", verdict: { ...verdict, licenseMode } }) })).rejects.toMatchObject({ code: "CLIENT_CONFIG_NOT_APPLICABLE" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  }, 180_000);
+
+  it.each(["wrong-error", "bad-signature", "wrong-scope", "server-error"])("T1278 bootstrap private purpose %s 零v2", async (fault) => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => {
+      if (fault === "server-error") return new Response("unavailable", { status: 503 });
+      if (fault === "bad-signature") return Response.json({ success: false, error: { code: "CONFIG_TICKET_REQUEST_INVALID", message: "untrusted" } }, { status: 422 });
+      return signedAmResponse(amKeys.privateKey, { success: false, error: { code: fault === "wrong-error" ? "CONFIG_ACCESS_DENIED" : "CONFIG_TICKET_REQUEST_INVALID", message: "denied" } }, 422);
+    });
+    await expect(requestFreshClientConfigAccess({ purpose: "ai-credit-bootstrap", env: env(), now: () => NOW, nonce: () => "fresh-negative", fetchImpl, expectedScopeId: fault === "wrong-scope" ? "other-scope" : undefined, readVerdict: async () => ({ state: "ready", verdict: { ...verdict, licenseMode: "TIME" } }) })).rejects.toBeDefined();
+    expect(fetchImpl).toHaveBeenCalledTimes(fault === "wrong-scope" ? 0 : 1);
+  }, 180_000);
+
+
+  it.each([
+    ["真实账户余额0", { linked: true, availableUnits: 0, referenceId: "AICA-T1278ACCOUNT0001" }, "ready"],
+    ["明确无账户", { linked: false, availableUnits: null, referenceId: null }, "not_configured"],
+    ["旧响应无wallet", undefined, "unverified"],
+    ["假reference", { linked: true, availableUnits: 100, referenceId: "OTHER-ACCOUNT" }, "unverified"],
+    ["缺金额", { linked: true, availableUnits: null, referenceId: "AICA-T1278ACCOUNT0001" }, "unverified"],
+    ["额外字段", { linked: true, availableUnits: 100, referenceId: "AICA-T1278ACCOUNT0001", token: "not-public" }, "unverified"],
+  ] as const)("T1278 accountStatus 只由严格已验证wallet投影：%s", async (_name, wallet, accountStatus) => {
+    const bundle = signedBundle(growthKeys.privateKey, { extensions: [{ extensionKey: "creatoros.model-config", protocolVersion: "creatoros-model-config-v1", revision: 4, payload: { services: [{ id: "omnihi-main", provider: "omnihi", credential: { type: "api_key", source: "activation_managed", allowMultiple: false } }], connections: [], models: {} } }] });
+    const base = successfulFetch(bundle); const put = vi.fn(async () => {});
+    const fetchImpl = vi.fn<typeof fetch>(async (url, init) => {
+      if (String(url).includes("managed-credentials")) return Response.json({ contractVersion: "growth-managed-model-credential-v1", serviceId: "omnihi-main", credential: { type: "api_key", token: "private-test-only-key" }, ...(wallet === undefined ? {} : { wallet }) }, { headers: { "cache-control": "private, no-store", pragma: "no-cache" } });
+      return base(url, init);
+    });
+    expect(await refreshClientConfig({ env: env(), now: () => NOW, nonce: () => "nonce-client-config-0001", fetchImpl, readVerdict: async () => ({ state: "ready", verdict }), store, putManagedCredential: put })).toMatchObject({ authority: "channel", outcome: "configured" });
+    expect(put).toHaveBeenCalledTimes(1);
+    const authority = await readChannelModelAuthority({ env: env(), store, readVerdict: async () => ({ state: "ready", verdict }) });
+    expect(authority).toMatchObject({ authority: "channel", managedCredentials: { "omnihi-main": { status: "ready", reasonCode: null, accountStatus } } });
+    expect(store.record?.channel?.managedCredentials?.["omnihi-main"]).toEqual({ status: "ready", reasonCode: null, accountStatus });
+    const persistedStatus = JSON.stringify(store.record?.channel?.managedCredentials);
+    expect(persistedStatus).not.toContain("AICA-"); expect(persistedStatus).not.toContain("availableUnits"); expect(persistedStatus).not.toContain("private-test-only-key");
+  }, 180_000);
+
+  it("T1278 existingOnly404只证明无有效凭据，不能把token/目录或旧缓存猜成账户事实", async () => {
+    const bundle = signedBundle(growthKeys.privateKey, { extensions: [{ extensionKey: "creatoros.model-config", protocolVersion: "creatoros-model-config-v1", revision: 4, payload: { services: [{ id: "omnihi-main", provider: "omnihi", credential: { type: "api_key", source: "activation_managed", allowMultiple: false } }], connections: [], models: {} } }] });
+    const base = successfulFetch(bundle); const put = vi.fn(async () => {});
+    const fetchImpl = vi.fn<typeof fetch>(async (url, init) => String(url).includes("managed-credentials") ? Response.json({ error: { code: "MODEL_CREDENTIAL_NOT_CONFIGURED", message: "no active credential" } }, { status: 404, headers: { "cache-control": "private, no-store", pragma: "no-cache" } }) : base(url, init));
+    await refreshClientConfig({ env: env(), now: () => NOW, nonce: () => "nonce-client-config-0001", fetchImpl, readVerdict: async () => ({ state: "ready", verdict }), store, putManagedCredential: put });
+    const current = await readChannelModelAuthority({ env: env(), store, readVerdict: async () => ({ state: "ready", verdict }) });
+    expect(current).toMatchObject({ authority: "channel", managedCredentials: { "omnihi-main": { status: "not_configured" } } });
+    if (current.authority !== "channel") throw new Error("fixture authority missing");
+    expect(current.managedCredentials?.["omnihi-main"].accountStatus ?? "unverified").toBe("unverified");
+    expect(put).not.toHaveBeenCalled();
+    // 加密旧记录没有此字段仍合法回读，不补造账户ready。
+    const originalCache = store.record!; // 来自上面真实签名 refresh，保原 activeLocator 与 bundle/channel 四元组。
+    store.record = { ...originalCache, channel: { ...originalCache.channel!, managedCredentials: { "omnihi-main": { status: "ready", reasonCode: null } } } };
+    const legacy = await readChannelModelAuthority({ env: env(), store, readVerdict: async () => ({ state: "ready", verdict }) });
+    expect(legacy).toMatchObject({ authority: "channel", managedCredentials: { "omnihi-main": { status: "ready" } } });
+    if (legacy.authority !== "channel") throw new Error("fixture legacy authority missing");
+    expect(legacy.managedCredentials?.["omnihi-main"].accountStatus ?? "unverified").toBe("unverified");
+  }, 180_000);
+
+  it("T1278 实际加密缓存允许新账户状态与旧省略字段，拒绝伪造ready值", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "creatoros-account-state-"));
+    const disk = new EncryptedClientConfigStore(join(directory, "state.enc"), Buffer.alloc(32, 7));
+    const base = configuredRecord(signedBundle(growthKeys.privateKey));
+    try {
+      for (const row of [{ status: "ready" as const, reasonCode: null }, { status: "ready" as const, reasonCode: null, accountStatus: "ready" as const }]) {
+        const record = { ...base, channel: { ...base.channel!, managedCredentials: { "omnihi-main": row } } };
+        await disk.save(record);
+        const loaded = await disk.load();
+        expect(loaded?.channel?.managedCredentials?.["omnihi-main"]).toEqual(row);
+      }
+      const invalid = { ...base, channel: { ...base.channel!, managedCredentials: { "omnihi-main": { status: "ready", reasonCode: null, accountStatus: "guessed-from-token" } } } } as unknown as ClientConfigCacheRecord;
+      await expect(disk.save(invalid)).rejects.toBeInstanceOf(ClientConfigCacheSecurityError);
+      await writeFile(join(directory, "state.enc"), encryptedEnvelope(Buffer.alloc(32, 7), { schemaVersion: "creatoros-channel-model-config-cache-v1", record: invalid }), "utf8");
+      await expect(disk.load()).rejects.toBeInstanceOf(ClientConfigCacheSecurityError);
+    } finally { await rm(directory, { recursive: true, force: true }); }
+  }, 180_000);
+
+  it("T-733 试用不降级v2，v3不适用仍按未配置处理", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    store.record = {
+      ...configuredRecord(current),
+      state: "blocked",
+      outcome: "security_error",
+      reason: "authorization_changed",
+    };
+    const fetchImpl = vi.fn<typeof fetch>(async () =>
+      signedAmResponse(
+        amKeys.privateKey,
+        {
+          success: false,
+          error: {
+            code: "CONFIG_TICKET_REQUEST_INVALID",
+            message: "activation unit is not eligible for v3 tickets",
+          },
+        },
+        422,
+      ),
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict: {...verdict,licenseMode:'TRIAL'} }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "not_configured",
+      action: "本地模型正在使用 · 渠道未配置",
+      retryable: false,
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(store.record).toMatchObject({
+      state: "local",
+      outcome: "not_configured",
+      bundle: current,
+      channel: configuredRecord(current).channel,
+    });
+    expect(store.record).not.toHaveProperty("reason");
+  });
+
+  it("Activity/Growth 明确撤权、过期或重放拒绝时禁止 LKG，且保存阻断态", async () => {
+    store.record = configuredRecord(signedBundle(growthKeys.privateKey));
+    const fetchImpl = successfulFetch();
+    fetchImpl.mockImplementationOnce(async () =>
+      signedAmResponse(
+        amKeys.privateKey,
+        {
+          success: false,
+          error: { code: "LICENSE_REVOKED", message: "revoked" },
+        },
+        403,
+      ),
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).rejects.toMatchObject({
+      code: "CLIENT_CONFIG_ACCESS_REVOKED",
+      message: "当前授权已失效，请重新激活后重试",
+    });
+    expect(store.record).toMatchObject({
+      state: "blocked",
+      reason: "authorization_changed",
+    });
+  });
+
+  it("能力开关、origin 或公钥缺失时保持 pending 且零出网", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    await expect(
+      refreshClientConfig({
+        env: {},
+        now: () => NOW,
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).rejects.toEqual(
+      new ClientConfigPullError(
+        "CLIENT_CONFIG_PENDING",
+        "渠道配置同步尚未启用",
+        false,
+      ),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("原生主密钥降级时拒绝创建普通文件缓存，且零出网", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "creatoros-client-config-"));
+    const fetchImpl = vi.fn<typeof fetch>();
+    try {
+      await expect(
+        refreshClientConfig({
+          env: {
+            ...env(),
+            CREATOROS_LICENSE_FILE: join(directory, ".license"),
+          },
+          now: () => NOW,
+          fetchImpl,
+          readVerdict: async () => ({ state: "ready", verdict }),
+        }),
+      ).rejects.toMatchObject({
+        code: "CLIENT_CONFIG_STORAGE_UNAVAILABLE",
+        message: "本机配置存储尚未就绪",
+      });
+      expect(fetchImpl).not.toHaveBeenCalled();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("真实文件 store 使用 AES-256-GCM 原子 LKG，密文不含产品配置明文", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "creatoros-client-config-"));
+    const licenseFile = join(directory, ".license");
+    const fileEnv = {
+      ...env(),
+      CREATOROS_LICENSE_FILE: licenseFile,
+      CREATOROS_MASTER_KEY: Buffer.alloc(32, 17).toString("base64"),
+    };
+    try {
+      await refreshClientConfig({
+        env: fileEnv,
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(),
+        readVerdict: async () => ({ state: "ready", verdict }),
+      });
+      const encrypted = await readFile(
+        join(directory, ".channel-model-config"),
+        "utf8",
+      );
+      expect(encrypted).toMatch(/^enc:v1:/);
+      expect(encrypted).not.toMatch(
+        /test-model|models\.example|agent-42|growth-client-config-bundle-v1/,
+      );
+
+      await expect(
+        refreshClientConfig({
+          env: fileEnv,
+          now: () => new Date("2026-07-28T12:11:00.000Z"),
+          nonce: () => "nonce-client-config-0002",
+          fetchImpl: vi.fn<typeof fetch>(async () => {
+            throw new TypeError("offline");
+          }),
+          readVerdict: async () => ({ state: "ready", verdict }),
+        }),
+      ).resolves.toMatchObject({
+        authority: "local",
+        outcome: "unreachable",
+      });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界", async () => {
+    const bundleA = signedBundle(growthKeys.privateKey, {
+      bundleVersion: 42,
+    });
+    const verdictB = {
+      ...verdict,
+      projectKey: "creatoros-b",
+      channelRef: "agent-b",
+    };
+    const bundleB1 = signedBundle(growthKeys.privateKey, {
+      bundleVersion: 1,
+      projectKey: verdictB.projectKey,
+      channelRef: verdictB.channelRef,
+    });
+
+    store.record = configuredRecord(bundleA);
+    const fetchB1 = successfulFetch(bundleB1, verdictB);
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: fetchB1,
+        readVerdict: async () => ({ state: "ready", verdict: verdictB }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+    expect(fetchB1.mock.calls[1]?.[1]?.headers).not.toMatchObject({
+      "If-None-Match": expect.anything(),
+    });
+    expect(store.record).toMatchObject({
+      activeLocator: {
+        projectKey: "creatoros-b",
+        channelRef: "agent-b",
+        clientId: "creatoros.desktop",
+      },
+      bundle: { bundleVersion: 1 },
+      inactiveLocators: [
+        {
+          locator: {
+            projectKey: "creatoros",
+            channelRef: "agent-42",
+            clientId: "creatoros.desktop",
+          },
+        },
+      ],
+    });
+
+    // A42 与 B42 是不同序列；同版本不同 digest 也必须接受，不能碰撞。
+    store.record = configuredRecord(bundleA);
+    const bundleB42 = signedBundle(growthKeys.privateKey, {
+      bundleVersion: 42,
+      projectKey: verdictB.projectKey,
+      channelRef: verdictB.channelRef,
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(bundleB42, verdictB),
+        readVerdict: async () => ({ state: "ready", verdict: verdictB }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+
+    // B 不可达时 A 密文只留在 inactive，不得被重新激活。
+    store.record = configuredRecord(bundleA);
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: vi.fn<typeof fetch>(async () => {
+          throw new TypeError("dns failed");
+        }),
+        readVerdict: async () => ({ state: "ready", verdict: verdictB }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "local", outcome: "unreachable" });
+    expect(store.record).toMatchObject({
+      state: "local",
+      activeLocator: {
+        projectKey: "creatoros-b",
+        channelRef: "agent-b",
+      },
+      bundle: null,
+      inactiveLocators: [{ bundle: { bundleVersion: 42 } }],
+    });
+
+    // 切回 A 后才可发送 A 的 ETag；Growth 304 验证通过后重新激活 A。
+    const switchBack = vi.fn<typeof fetch>(async (input, init) => {
+      if (String(input).startsWith(AM_ORIGIN)) {
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v3",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+        });
+      }
+      expect(init?.headers).toMatchObject({
+        "If-None-Match": `"${bundleA.bundleDigest}"`,
+      });
+      return new Response(null, {
+        status: 304,
+        headers: {
+          etag: `"${bundleA.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": "42",
+          "x-config-key-id": bundleA.keyId,
+          "x-correlation-id": "cor_abcdef0123456789abcdef0123456789",
+        },
+      });
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: switchBack,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+
+    // Activity 所有 5xx（含未知正文）都是 authority unavailable，不是安全攻击。
+    for (const status of [500, 502, 503, 599]) {
+      store.record = configuredRecord(signedBundle(growthKeys.privateKey));
+      const fetchImpl = vi.fn<typeof fetch>(async () =>
+        Response.json({ unknown: "body-must-not-matter" }, { status }),
+      );
+      await expect(
+        refreshClientConfig({
+          env: env(),
+          now: () => NOW,
+          nonce: () => "nonce-client-config-0001",
+          fetchImpl,
+          readVerdict: async () => ({ state: "ready", verdict }),
+          store,
+        }),
+      ).resolves.toMatchObject({ authority: "local", outcome: "unreachable" });
+      expect(store.record).toMatchObject({
+        state: "local",
+        outcome: "unreachable",
+        channel: expect.any(Object),
+      });
+    }
+
+    // Growth 所有 5xx（含未知 code）同样只停用渠道，不隔离历史密文。
+    for (const status of [500, 502, 503, 599]) {
+      store.record = configuredRecord(signedBundle(growthKeys.privateKey));
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          signedAmResponse(amKeys.privateKey, {
+            contractVersion: "config-access-ticket-v3",
+            configAccessTicket: "header.payload.signature",
+            expiresAt: "2026-07-28T12:15:00.000Z",
+            nonce: "nonce-client-config-0001",
+          }),
+        )
+        .mockResolvedValueOnce(
+          Response.json(
+            { error: { code: "UNKNOWN_5XX", message: "opaque" } },
+            { status },
+          ),
+        );
+      await expect(
+        refreshClientConfig({
+          env: env(),
+          now: () => NOW,
+          nonce: () => "nonce-client-config-0001",
+          fetchImpl,
+          readVerdict: async () => ({ state: "ready", verdict }),
+          store,
+        }),
+      ).resolves.toMatchObject({ authority: "local", outcome: "unreachable" });
+      expect(store.record).toMatchObject({
+        state: "local",
+        outcome: "unreachable",
+        channel: expect.any(Object),
+      });
+    }
+
+    for (const kind of [
+      "prefix",
+      "gcm-tag",
+      "wrong-key",
+      "schema",
+      "structure",
+    ]) {
+      const directory = await mkdtemp(
+        join(tmpdir(), "creatoros-client-config-corrupt-"),
+      );
+      const path = join(directory, ".channel-model-config");
+      const key = Buffer.alloc(32, 7);
+      const bundle = signedBundle(growthKeys.privateKey);
+      const configured = configuredRecord(bundle);
+      const validRecord: ClientConfigCacheRecord = {
+        state: configured.state,
+        outcome: configured.outcome,
+        checkedAt: configured.checkedAt,
+        activeLocator: {
+          projectKey: bundle.projectKey,
+          channelRef: bundle.channelRef,
+          clientId: "creatoros.desktop",
+        },
+        bundle: configured.bundle,
+        channel: configured.channel,
+        inactiveLocators: [],
+      };
+      try {
+        if (kind === "prefix") {
+          await writeFile(path, "plaintext-cache\n", "utf8");
+        } else if (kind === "gcm-tag") {
+          const valid = encryptedEnvelope(key, {
+            schemaVersion: "creatoros-channel-model-config-cache-v1",
+            record: validRecord,
+          });
+          const packed = Buffer.from(valid.trim().slice("enc:v1:".length), "base64");
+          packed[12] = packed[12]! ^ 0xff;
+          await writeFile(path, `enc:v1:${packed.toString("base64")}\n`, "utf8");
+        } else if (kind === "wrong-key") {
+          await new EncryptedClientConfigStore(path, Buffer.alloc(32, 8)).save(
+            validRecord,
+          );
+        } else if (kind === "schema") {
+          await writeFile(
+            path,
+            encryptedEnvelope(key, {
+              schemaVersion: "unknown-schema",
+              record: validRecord,
+            }),
+            "utf8",
+          );
+        } else {
+          await writeFile(
+            path,
+            encryptedEnvelope(key, {
+              schemaVersion: "creatoros-channel-model-config-cache-v1",
+              record: { state: "channel", injected: "opaque" },
+            }),
+            "utf8",
+          );
+        }
+        await expect(
+          new EncryptedClientConfigStore(path, key).load(),
+        ).rejects.toBeInstanceOf(ClientConfigCacheSecurityError);
+        expect(await readdir(directory)).toEqual([
+          expect.stringMatching(/^\.channel-model-config\.corrupt\./),
+        ]);
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    }
+
+    {
+    // v3 response 是 closed schema：Activity 多发 clientId 也必须 fail-closed，且不得请求 Growth。
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      if (String(input).startsWith(AM_ORIGIN)) {
+        expect(JSON.parse(String(init?.body))).not.toHaveProperty("clientId");
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v3",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+          clientId: "untrusted-legacy-value",
+        });
+      }
+      throw new Error("额外 locator 被接受后才会错误触达 Growth");
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    }
+
+    {
+    // 旧 v1 response 即使字段看似完整也必须 fail-closed，不能静默兼容。
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).startsWith(AM_ORIGIN)) {
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v1",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+        });
+      }
+      throw new Error("旧 v1 被接受后才会错误触达 Growth");
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    }
+
+    {
+    // Growth registry 签入错误 clientId 时安全失败。
+    const wrongClient = signedBundle(growthKeys.privateKey, {
+      clientId: "other.desktop",
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(wrongClient),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+    expect(store.record?.state).toBe("quarantined");
+    }
+
+    {
+    // runtime authority 还必须匹配 active locator，不能仅凭 bundle/channel 字段激活。
+    const bundle = signedBundle(growthKeys.privateKey);
+    store.record = {
+      ...configuredRecord(bundle),
+      activeLocator: {
+        projectKey: "other-project",
+        channelRef: "other-channel",
+        clientId: "creatoros.desktop",
+      },
+      inactiveLocators: [],
+    };
+    await expect(
+      readChannelModelAuthority({
+        env: env(),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "unreachable",
+      payload: null,
+    });
+    }
+  });
+
+  it.each([[200,'ready'],[409,'pending'],[422,'not_eligible']] as const)('T238 独立已含权益履约 %s 只用严格v3和显式API265且不泄密',async(status,wanted)=>{
+    const base=successfulFetch(),calls:string[]=[];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      calls.push(String(input));if(String(input).includes('client-config-tickets'))return base(input,init);
+      expect(String(input)).toBe(`${GROWTH_ORIGIN}/api/client-config/managed-credentials/current?serviceId=omnihi-main&activationFulfillment=1`);
+      expect(init?.method).toBe('GET');expect(init?.headers).toMatchObject({Authorization:'Bearer header.payload.signature'});
+      return Response.json(status===200?{contractVersion:'growth-managed-model-credential-v1',serviceId:'omnihi-main',credential:{type:'api_key',token:'private-included-key'},wallet:{linked:true,referenceId:'AICA-T238TESTACCOUNT',availableUnits:250000}}:{error:{code:status===409?'MODEL_PROVIDER_CREATION_UNKNOWN':'ACTIVATION_UNIT_UNSUPPORTED',message:'private-upstream'}},{status,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});
+    });
+    const result=await fulfillActivationIncludedCredit({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready',verdict})});
+    expect(result.status).toBe(wanted);expect(calls).toHaveLength(2);expect(JSON.stringify(result)).not.toMatch(/private-included-key|header.payload|private-upstream/);
+  },180_000);
+  it('T238 旧服务器不认识显式动作时不去参数重试隐式赠额',async()=>{
+    const base=successfulFetch(),urls:string[]=[];const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      urls.push(String(input));if(String(input).includes('client-config-tickets'))return base(input,init);
+      return Response.json({error:{code:'CLIENT_EXTENSION_INVALID',message:'old-server'}},{status:422,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});
+    });
+    const result=await fulfillActivationIncludedCredit({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready',verdict})});
+    expect(result.status).toBe('unavailable');expect(urls).toHaveLength(2);expect(urls[1]).toContain('activationFulfillment=1');
+  },180_000);
+
+  it('T238 取消票据观察后不发下一个额度履约请求',async()=>{
+    const controller=new AbortController(),base=successfulFetch();let calls=0;
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{calls++;const response=await base(input,init);controller.abort();return response;});
+    await expect(fulfillActivationIncludedCredit({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,signal:controller.signal,readVerdict:async()=>({state:'ready',verdict})})).rejects.toMatchObject({name:'AbortError'});
+    expect(calls).toBe(1);
+  },180_000);
+});
+
+describe("T1278 bootstrap 原 server/route 消费者", () => {
+  const code = `AICR-${"x".repeat(43)}`;
+  const operationRef = "AICLE-T1278TEST0001";
+  const access = () => Promise.resolve({ growthOrigin: "https://growth.example/", configAccessTicket: "private-bootstrap-ticket", expiresAt: "2026-10-14T12:05:00.000Z" });
+  const operation = (status = "pending", overrides = {}) => ({ contractVersion: "growth-ai-credit-bootstrap-v1", operationRef, status, creditUnits: 123, expiresAt: "2026-10-14T12:30:00+00:00", ...overrides });
+  const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "private, no-store" } });
+
+  it("真实首次POST→GET原operation→resume同operation，closed body/no-store，零后台重发", async () => {
+    const { reserveAiCreditBootstrap, readAiCreditBootstrap, resumeAiCreditBootstrap } = await import("./ai-credit-link.server");
+    let callCount = 0;
+    const fetchImpl = vi.fn<typeof fetch>(async (_url, init) => {
+      callCount++;
+      return reply(operation(init?.method === "GET" ? "provider_unknown" : callCount === 3 ? "applied" : "pending"), init?.method === "GET" ? 200 : 201);
+    });
+    const dependencies = { requestAccess: access, fetchImpl };
+    expect(await reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, dependencies)).toEqual(operation());
+    expect(await readAiCreditBootstrap(operationRef, dependencies)).toEqual(operation("provider_unknown"));
+    expect(await resumeAiCreditBootstrap(operationRef, dependencies)).toEqual(operation("applied"));
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(fetchImpl.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://growth.example/api/client-config/ai-credit-bootstrap-redemptions",
+      `https://growth.example/api/client-config/ai-credit-bootstrap-redemptions/${operationRef}`,
+      `https://growth.example/api/client-config/ai-credit-bootstrap-redemptions/${operationRef}/resume`,
+    ]);
+    const [first, read, resume] = fetchImpl.mock.calls.map(([, init]) => init!);
+    expect(JSON.parse(String(first.body))).toEqual({ serviceId: "omnihi-main", code });
+    expect(first.headers).toMatchObject({ Authorization: "Bearer private-bootstrap-ticket", "Idempotency-Key": "bootstrap-original-key" });
+    expect(read.body).toBeUndefined(); expect(resume.body).toBe("{}");
+    for (const init of [first, read, resume]) { expect(init.cache).toBe("no-store"); expect(init.redirect).toBe("manual"); expect(init.signal).toBeDefined(); }
+  }, 180_000);
+
+  it.each(["other-ref", "secret-field", "unsafe-units", "bad-status", "cache"])("服务端实际读回拒绝 %s 且不回传秘密", async (fault) => {
+    const { readAiCreditBootstrap } = await import("./ai-credit-link.server");
+    const body = operation("pending", fault === "other-ref" ? { operationRef: "AICLE-OTHER0001" } : fault === "secret-field" ? { token: "secret-must-not-cross" } : fault === "unsafe-units" ? { creditUnits: -1 } : fault === "bad-status" ? { status: "ready" } : {});
+    const fetchImpl = vi.fn<typeof fetch>(async () => fault === "cache" ? Response.json(body) : reply(body));
+    await expect(readAiCreditBootstrap(operationRef, { requestAccess: access, fetchImpl })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_INVALID" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  }, 180_000);
+
+  it("provider未知/网络断开只报告原不确定提交，零自动第二POST；已有账户明确沿额度中心", async () => {
+    const { reserveAiCreditBootstrap } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => { throw new TypeError("private-code-ticket-must-not-be-logged"); });
+    await expect(reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: true });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const existing = vi.fn<typeof fetch>(async () => reply({ error: { code: "AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", message: "private upstream content" } }, 409));
+    await expect(reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl: existing })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", uncertain: false, message: "已有官方额度账户，请打开额度中心沿原流程充值" });
+    expect(existing).toHaveBeenCalledTimes(1);
+  }, 180_000);
+
+  it("三个实际local route守loopback/session/closed请求，查询恢复仍绑定原ref", async () => {
+    const fresh = await import("./client-config.server");
+    const requestAccess = vi.spyOn(fresh, "requestFreshClientConfigAccess").mockImplementation(access);
+    const context = vi.fn(async () => ({ userId: "fixture-local-user", accountId: null }));
+    vi.doMock("@/lib/request-context.server", () => ({ resolveRequestWorkspaceContext: context }));
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => reply(operation("provider_unknown")));
+    const envBefore = process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN;
+    process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN = "fixture-local-handshake";
+    try {
+      const reserve = await import("@/app/api/v1/local/ai-credits/bootstrap/route");
+      const read = await import("@/app/api/v1/local/ai-credits/bootstrap/[operationRef]/route");
+      const resume = await import("@/app/api/v1/local/ai-credits/bootstrap/[operationRef]/resume/route");
+      const headers = { "content-type": "application/json", "x-creatoros-handshake": "fixture-local-handshake", "Idempotency-Key": "bootstrap-original-key" };
+      const base = "http://127.0.0.1:3000/api/v1/local/ai-credits/bootstrap";
+      const invalid = [
+        new Request(base, { method: "POST", headers: { ...headers, Origin: "https://attacker.example" }, body: JSON.stringify({ serviceId: "omnihi-main", code }) }),
+        new Request(base, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ serviceId: "omnihi-main", code }) }),
+        new Request(base, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code, amount: 1 }) }),
+        new Request(`${base}?channelRef=other`, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code }) }),
+      ];
+      for (const req of invalid) expect((await reserve.POST(req)).status).toBeGreaterThanOrEqual(400);
+      expect(requestAccess).not.toHaveBeenCalled(); expect(fetchMock).not.toHaveBeenCalled();
+      const reserved = await reserve.POST(new Request(base, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code }) }));
+      expect(reserved.status).toBe(202); expect(await reserved.json()).toEqual(operation("provider_unknown"));
+      expect(reserved.headers.get("cache-control")).toContain("no-store");
+      const params = { params: Promise.resolve({ operationRef }) };
+      expect((await read.GET(new Request(`${base}/${operationRef}`, { headers }), params)).status).toBe(202);
+      expect((await resume.POST(new Request(`${base}/${operationRef}/resume`, { method: "POST", headers, body: "{}" }), params)).status).toBe(202);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(context).toHaveBeenCalledWith(null, expect.any(Request), { rejectInvalidToken: true, groupSelectionMode: "reject" });
+      expect(requestAccess).toHaveBeenCalledWith({ purpose: "ai-credit-bootstrap" });
+      context.mockRejectedValueOnce(new Error("bad session"));
+      expect((await reserve.POST(new Request(base, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code }) }))).status).toBe(401);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    } finally {
+      if (envBefore === undefined) delete process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN; else process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN = envBefore;
+      requestAccess.mockRestore(); fetchMock.mockRestore(); vi.doUnmock("@/lib/request-context.server");
+    }
+  }, 180_000);
+  it.each([
+    ["AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", 409],
+    ["AI_CREDIT_CODE_UNAVAILABLE", 409],
+    ["AI_CREDIT_INPUT_INVALID", 422],
+    ["AI_CREDIT_BOOTSTRAP_NOT_FOUND", 404],
+  ] as const)("原Growth状态与code准确pair %s/%s 才是确定拒绝", async (errorCode, httpStatus) => {
+    const { reserveAiCreditBootstrap, aiCreditBootstrapLocalFailure } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => reply({ error: { code: errorCode, message: "secret-ticket-code-account-must-not-cross" } }, httpStatus));
+    const cause = await reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl }).catch(error => error);
+    expect(cause).toMatchObject({ code: errorCode, uncertain: false, retryable: false });
+    const local = aiCreditBootstrapLocalFailure(cause);expect(local.body).toMatchObject({ code: errorCode, uncertain: false, retryable: false });
+    expect(JSON.stringify(local)).not.toContain("secret-ticket-code-account-must-not-cross");expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(fetchImpl.mock.calls[0]![1]).toMatchObject({ method: "POST", cache: "no-store", redirect: "manual", headers: { "Idempotency-Key": "bootstrap-original-key" } });
+  }, 180_000);
+
+  it.each([
+    ["AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", 503],
+    ["AI_CREDIT_CODE_UNAVAILABLE", 503],
+    ["AI_CREDIT_INPUT_INVALID", 503],
+    ["AI_CREDIT_BOOTSTRAP_NOT_FOUND", 503],
+    ["AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", 422],
+    ["AI_CREDIT_CODE_UNAVAILABLE", 404],
+    ["AI_CREDIT_INPUT_INVALID", 409],
+    ["AI_CREDIT_BOOTSTRAP_NOT_FOUND", 409],
+  ] as const)("reserve非原pair %s/%s 保原幂等不确定且无第二POST", async (errorCode, httpStatus) => {
+    const { reserveAiCreditBootstrap, aiCreditBootstrapLocalFailure } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => reply({ error: { code: errorCode, message: "secret-ticket-code-account-must-not-cross" } }, httpStatus));
+    const cause = await reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl }).catch(error => error);
+    expect(cause).toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: true, retryable: true });
+    const local = aiCreditBootstrapLocalFailure(cause);expect(local).toMatchObject({ status: 503, body: { code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: true, retryable: true } });
+    expect(JSON.stringify(local)).not.toContain("secret-ticket-code-account-must-not-cross");expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(fetchImpl.mock.calls[0]![1]).toMatchObject({ method: "POST", cache: "no-store", redirect: "manual", headers: { "Idempotency-Key": "bootstrap-original-key" } });
+  }, 180_000);
+
+  it.each(["read", "resume"] as const)("%s非原NOT_FOUND pair仅报告原ref查询失败，不换操作或重发reserve", async action => {
+    const { readAiCreditBootstrap, resumeAiCreditBootstrap } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => reply({ error: { code: "AI_CREDIT_BOOTSTRAP_NOT_FOUND", message: "private upstream" } }, 503));
+    await expect((action === "read" ? readAiCreditBootstrap : resumeAiCreditBootstrap)(operationRef, { requestAccess: access, fetchImpl })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: false, retryable: true });
+    expect(fetchImpl).toHaveBeenCalledOnce();expect(String(fetchImpl.mock.calls[0]![0])).toBe(`https://growth.example/api/client-config/ai-credit-bootstrap-redemptions/${operationRef}${action === "resume" ? "/resume" : ""}`);
+    const init=fetchImpl.mock.calls[0]![1]!;expect(init).toMatchObject({ method: action === "read" ? "GET" : "POST", cache: "no-store", redirect: "manual" });expect(init.headers).not.toHaveProperty("Idempotency-Key");
+  }, 180_000);
+
+});

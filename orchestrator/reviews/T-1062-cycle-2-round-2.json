@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "完整复审当前T-1062 SPEC候选SHA256 0862053580d275458d434265e950d097332a894509af3c290d97fb6cdc5fed38（before 2ec2896b9aa8489e1f938ee68278c0864c033d81bc080e06a8d1215710fbf732，纯追加）及R6固定技术方案8a1a8bc0657f93fc65116639ca30e19f25a672ffdade269ba897647ec6abe2ac。实际既有b6全packet/frame数组与原MP4只读ISO解析同证S716393/D_dec716800，701packet/700frame逐PTS和pos/size对应，单末帧L617、真实discard缺失、仅407呈现域外覆盖；不推断静音。新独立strict证据族必须保留旧v1/R5形状，保存S/D_dec/absent，完整音频不trim/pad，actual N由全部resampler/WAV/PCM取得且验N=ceil(D_dec/3)，每个词BigInt映射同时守S与视频范围，未知全文降级。六既有路径与592/586+1/801/214/8/31/414/12不扩，normal word/原声20、offset全文手工保存、22case及原18argv/顺序/预算不减。missing旧TMP权威保留历史，CURRENT构建/lock/ASR须新当场字节及独评后重绑。本轮同一团队继承上下文子Agent独审，cycle2已有round1无finding，本packet合法recheck空findings，不伪造跨模型或新cycle。仅有限允许同六实现及后续实际R6验证，输出N尚未实测，b6旧FAIL不销账，未签真实模型/Original18/安装/用户验收。完整独评路径/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-r6-spec-independent-review-rrvitfm7/r6-spec-static-review.json，SHA256 a29b69619408937916896393892a2f1a0e1c4476dd882fe42c3ff2fcc5649da2。",
+  "findings": []
+}

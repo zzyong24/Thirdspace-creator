@@ -1,0 +1,281 @@
+{
+  "version": 1,
+  "title": "CreatorOS 双模板库方案预览",
+  "notice": "尚未接入 CreatorOS；收藏仅保存于本浏览器，图文样图为三页风格预览板。",
+  "industries": [
+    "通用",
+    "教育学习",
+    "科技数码",
+    "美妆护肤",
+    "时尚穿搭",
+    "餐饮美食",
+    "旅行户外",
+    "家居装修",
+    "运动健康",
+    "母婴亲子",
+    "职场成长",
+    "商业服务",
+    "宠物生活"
+  ],
+  "templates": [
+    {
+      "id": "evidence-cards",
+      "name": "证据卡片",
+      "method": "知识解释",
+      "libraryKind": "cover",
+      "industries": [
+        "教育学习",
+        "科技数码",
+        "商业服务"
+      ],
+      "visualMode": "graphic",
+      "preview": "assets/evidence-cards.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI样图",
+      "private": false,
+      "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n暖白纸面、深蓝主标题、铜橙强调；标题与知识卡分开，关系图清楚，只用本期真实证据。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+      "requiredInputs": [],
+      "pageRecipes": []
+    },
+    {
+      "id": "editorial-type",
+      "name": "杂志大字",
+      "method": "观点表达",
+      "libraryKind": "cover",
+      "industries": [
+        "通用",
+        "时尚穿搭",
+        "职场成长"
+      ],
+      "visualMode": "graphic",
+      "preview": "assets/editorial-type.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI样图",
+      "private": false,
+      "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n红底与奶白大字形成强对比，标题只表达一个明确观点；用少量主题物件、留白与字级建立顺序。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+      "requiredInputs": [],
+      "pageRecipes": []
+    },
+    {
+      "id": "comparison",
+      "name": "对比结果",
+      "method": "案例对比",
+      "libraryKind": "cover",
+      "industries": [
+        "科技数码",
+        "商业服务",
+        "家居装修"
+      ],
+      "visualMode": "graphic",
+      "preview": "assets/comparison.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI样图",
+      "private": false,
+      "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n左右对比、结果优先、单一视觉路径；实际对比必须使用用户提供的同条件素材，禁止把示例当成绩。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+      "requiredInputs": [],
+      "pageRecipes": []
+    },
+    {
+      "id": "handdrawn-notes",
+      "name": "手绘笔记",
+      "method": "经验清单",
+      "libraryKind": "cover",
+      "industries": [
+        "教育学习",
+        "职场成长",
+        "通用"
+      ],
+      "visualMode": "graphic",
+      "preview": "assets/handdrawn-notes.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI样图",
+      "private": false,
+      "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n暖纸质感、手写主标题、克制图示与标记；每卡只放一个要点，正文可读。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+      "requiredInputs": [],
+      "pageRecipes": []
+    },
+    {
+      "id": "cinematic-desk",
+      "name": "纪实叙事",
+      "method": "物件与光影",
+      "libraryKind": "cover",
+      "industries": [
+        "职场成长",
+        "商业服务",
+        "通用"
+      ],
+      "visualMode": "ai_concept",
+      "preview": "assets/cinematic-desk.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI样图",
+      "private": false,
+      "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n自然光影、桌面主物件和简洁大标题。用户有实拍时使用实拍；没有素材则明确标记AI示意。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+      "requiredInputs": [],
+      "pageRecipes": []
+    },
+    {
+      "id": "three-dimensional",
+      "name": "立体产品",
+      "method": "产品主视觉",
+      "libraryKind": "cover",
+      "industries": [
+        "科技数码",
+        "商业服务",
+        "通用"
+      ],
+      "visualMode": "ai_concept",
+      "preview": "assets/three-dimensional.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI样图",
+      "private": false,
+      "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n一个明确的立体主物件、大色块、少量文字。产品形状和功能只来自本期素材，概念画面标注为示意。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+      "requiredInputs": [],
+      "pageRecipes": []
+    },
+    {
+      "id": "xhs-learning",
+      "name": "步骤笔记",
+      "method": "首图＋正文页＋配文",
+      "libraryKind": "xhs",
+      "industries": [
+        "教育学习"
+      ],
+      "visualMode": "graphic",
+      "preview": "assets/xhs-learning.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI预览板 · 非独立正文成品",
+      "private": false,
+      "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n暖白、深蓝、薄荷绿；手写笔记与图解。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+      "requiredInputs": [
+        "本期内容",
+        "实拍素材（如使用实拍模式）"
+      ],
+      "pageRecipes": [
+        "首图：说明本期要学会什么",
+        "正文：用具体例子解释一个概念",
+        "正文：写清可执行步骤与观察结果"
+      ]
+    },
+    {
+      "id": "xhs-food",
+      "name": "探店记录",
+      "method": "首图＋正文页＋配文",
+      "libraryKind": "xhs",
+      "industries": [
+        "餐饮美食"
+      ],
+      "visualMode": "ai_concept",
+      "preview": "assets/xhs-food.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI预览板 · 非独立正文成品",
+      "private": false,
+      "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n暖棕、奶白、自然窗光；大照片与简洁衬线标题。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+      "requiredInputs": [
+        "本期内容",
+        "实拍素材（如使用实拍模式）"
+      ],
+      "pageRecipes": [
+        "首图：店名与本期观察",
+        "正文：空间、光线与座位",
+        "正文：真实菜品、香气与口感"
+      ]
+    },
+    {
+      "id": "xhs-travel",
+      "name": "路线手帐",
+      "method": "首图＋正文页＋配文",
+      "libraryKind": "xhs",
+      "industries": [
+        "旅行户外"
+      ],
+      "visualMode": "ai_concept",
+      "preview": "assets/xhs-travel.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI预览板 · 非独立正文成品",
+      "private": false,
+      "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n森林绿、纸感拼贴、真实沿途照片；少量手绘标注。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+      "requiredInputs": [
+        "本期内容",
+        "实拍素材（如使用实拍模式）"
+      ],
+      "pageRecipes": [
+        "首图：目的地与行程主题",
+        "正文：天气、装备与准备",
+        "正文：真实路线节点和沿途观察"
+      ]
+    },
+    {
+      "id": "xhs-beauty",
+      "name": "使用记录",
+      "method": "首图＋正文页＋配文",
+      "libraryKind": "xhs",
+      "industries": [
+        "美妆护肤"
+      ],
+      "visualMode": "ai_concept",
+      "preview": "assets/xhs-beauty.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI预览板 · 非独立正文成品",
+      "private": false,
+      "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n奶白、淡粉、质感产品特写与记录本；不做虚假功效对比。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+      "requiredInputs": [
+        "本期内容",
+        "实拍素材（如使用实拍模式）"
+      ],
+      "pageRecipes": [
+        "首图：产品与使用目的",
+        "正文：用户实际质地与使用体验",
+        "正文：实际日期、观察和局限"
+      ]
+    },
+    {
+      "id": "xhs-home",
+      "name": "空间案例",
+      "method": "首图＋正文页＋配文",
+      "libraryKind": "xhs",
+      "industries": [
+        "家居装修"
+      ],
+      "visualMode": "ai_concept",
+      "preview": "assets/xhs-home.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI预览板 · 非独立正文成品",
+      "private": false,
+      "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n燕麦白、鼠尾草绿、木色；真实空间照片与安静留白。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+      "requiredInputs": [
+        "本期内容",
+        "实拍素材（如使用实拍模式）"
+      ],
+      "pageRecipes": [
+        "首图：空间问题与整理目标",
+        "正文：实际物件分类和动线",
+        "正文：整理后的真实使用体验"
+      ]
+    },
+    {
+      "id": "xhs-career",
+      "name": "案例拆解",
+      "method": "首图＋正文页＋配文",
+      "libraryKind": "xhs",
+      "industries": [
+        "职场成长",
+        "商业服务"
+      ],
+      "visualMode": "graphic",
+      "preview": "assets/xhs-career.png",
+      "aspectRatio": "3:4",
+      "sampleKind": "原创AI预览板 · 非独立正文成品",
+      "private": false,
+      "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n浅蓝白、清楚标题与流程笔记；有序卡片和工作记录。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+      "requiredInputs": [
+        "本期内容",
+        "实拍素材（如使用实拍模式）"
+      ],
+      "pageRecipes": [
+        "首图：工作场景与核心问题",
+        "正文：目标、关键步骤、预期交付",
+        "正文：实际过程、复盘与可复用方法"
+      ]
+    }
+  ]
+}

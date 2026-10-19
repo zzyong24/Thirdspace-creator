@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import type { RequestContext } from "@creatoros/contract";
-import { assembleCreativeContext, type ContextDeps } from "./creative-context";
+import {outputConversionContext,type RequestContext} from "@creatoros/contract";
+import { assembleCreativeContext, type ContextDeps,type CreativeContext } from "./creative-context";
 
 export interface FrozenScriptSource {
   sourceType: "message" | "attachment" | "project_text";
@@ -142,11 +142,16 @@ export async function prepareScriptDraftContext(
   const frozenSources = readFrozenScriptSources(task.inputData);
   const topic =
     typeof task.inputData.topic === "string" ? task.inputData.topic : "";
-  const context = await assembleCreativeContext(
-    ctx,
-    { projectId: task.projectId, topic },
-    deps,
-  );
+  const conversion=task.inputData.conversion===undefined?null:outputConversionContext.parse(task.inputData.conversion);
+  if(conversion && (conversion.request.targetType!=="video" || !frozenSources.sources.length || !task.inputData.conversionConstraints))
+    throw new Error("转换脚本缺少冻结来源与事实约束");
+  // 转换明确只读冻结选区；普通写稿仍读取现有项目上下文。未冻结的背景诚实为空，重试不能偷换今日规则。
+  const context:CreativeContext=conversion?{
+    positioningBrief:"",learningsBrief:"",orientationHint:"",assetsBrief:"",accountsBrief:"",signalsBrief:"",knowledgeBrief:"",
+    thesisBrief:"",contractBrief:"",outlineBrief:"",projectBriefHard:"",benchmarkRefBrief:"",projectIntelligenceBrief:"",
+    reviewTitle:"",reviewScript:"",reviewMetrics:"",reviewComments:"",userMaterialHardBrief:"",userMaterialRefBrief:"",userMaterialQueryTerms:[],
+    topic:{title:topic,angle:""},projectId:task.projectId,
+  }:await assembleCreativeContext(ctx,{projectId:task.projectId,topic},deps);
   const nodeInput = {
     positioningBrief: context.positioningBrief,
     learningsBrief: context.learningsBrief,

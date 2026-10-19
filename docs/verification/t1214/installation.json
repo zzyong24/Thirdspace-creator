@@ -1,0 +1,57 @@
+{
+  "startedAt": "2026-10-11T03:31:04.488Z",
+  "finishedAt": "2026-10-11T03:31:05.232Z",
+  "sourceHead": "a091de271aed5185678da82d51baae0eb7025248",
+  "artifactSha256": "501bfc6744929702f0500179965000e36cb23b00ff5965f0ab636994a5db226b",
+  "runtimeTarSha256": "80ff6c84cb3b0c6cb972030c1a203b03c290f334650ab35a87a75a05c9c79e10",
+  "oldNativePids": "90836",
+  "skipped": false,
+  "appPath": "/Applications/CreatorOS.app",
+  "processId": "7259",
+  "noBackup": true,
+  "commands": [
+    {
+      "command": "osascript",
+      "args": [
+        "-e",
+        "tell application \"CreatorOS\" to quit"
+      ],
+      "status": 0
+    },
+    {
+      "command": "pkill",
+      "args": [
+        "-x",
+        "CreatorOS"
+      ],
+      "status": 0
+    },
+    {
+      "command": "ditto",
+      "args": [
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+        "/Applications/.CreatorOS.app.installing-7159"
+      ],
+      "status": 0
+    },
+    {
+      "command": "open",
+      "args": [
+        "--stdout",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/native.stdout.log",
+        "--stderr",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214/native.stderr.log",
+        "/Applications/CreatorOS.app"
+      ],
+      "status": 0
+    },
+    {
+      "command": "pgrep",
+      "args": [
+        "-f",
+        "/Applications/CreatorOS.app/Contents/MacOS/CreatorOS"
+      ],
+      "status": 0
+    }
+  ]
+}

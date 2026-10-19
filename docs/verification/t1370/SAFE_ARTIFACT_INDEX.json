@@ -1,0 +1,97 @@
+{
+  "schema": "safe-artifact-index/v1",
+  "taskId": "T-1370",
+  "scope": "明确白名单安全报告/哈希/退出/受控合成图与源码seed；raw日志、trace、witness nonce、私有root/用户图不Git",
+  "files": [
+    {
+      "path": "docs/verification/t1370/REPORT.md",
+      "sha256": "503edc0d646de526b4160376819377fbacfd291121339e6b4bcf416952ccd2d0",
+      "bytes": 3870
+    },
+    {
+      "path": "docs/verification/t1370/SAFE_SUMMARY.json",
+      "sha256": "4da4f4a9e39f4bab4cf0c7bae57a41946d95f8ce312f597fa42983f6d8b638bf",
+      "bytes": 6261
+    },
+    {
+      "path": "docs/verification/t1370/control/FINAL_IMPLEMENTATION_REVIEW.md",
+      "sha256": "611418bf5719f05993150ee93aef3e52dc106b3015d3d1e6acee443038ef9358",
+      "bytes": 823
+    },
+    {
+      "path": "docs/verification/t1370/STATIC_GATES.json",
+      "sha256": "f8b04cc6ffcd6369c648c5e80bed0daf3badf11707ece732dd380efa8f08cf39",
+      "bytes": 1465
+    },
+    {
+      "path": "docs/verification/t1370/DEPENDENCY_PREPARATION.json",
+      "sha256": "cfe4863016cb872d43c589231dc1fc4d703fff9b22304d9a942017563db64fb2",
+      "bytes": 1894
+    },
+    {
+      "path": "docs/verification/t1370/visual/before-normal.png",
+      "sha256": "f3f2b8409aa3fc7a559b02078d4e3f9de6006c5a2fe372e19f97f22c2f60d417",
+      "bytes": 128559
+    },
+    {
+      "path": "docs/verification/t1370/visual/after-normal.png",
+      "sha256": "4d9cb032d1841c9b842c3b239d6f372caeab76960ffa3a67c58a3581509d3e3f",
+      "bytes": 143619
+    },
+    {
+      "path": "docs/verification/t1370/visual/after-minimum.png",
+      "sha256": "df8694f5023289d1e5112ba07aabea5d00a8374768e7610a34d09089ebe3488c",
+      "bytes": 106093
+    },
+    {
+      "path": "docs/verification/t1370/control/PAGE_SPEC.md",
+      "sha256": "167ec6c647091c2046dc9f1654596a2ac7c408f942d70961903561d351dd8b77",
+      "bytes": 2764
+    },
+    {
+      "path": "docs/verification/t1370/control/SPEC_REVIEW_INITIAL.json",
+      "sha256": "4fa6eedf53945b1001dee5d32a60f05b7e09995e77a48966f5f1eee65b33c7ef",
+      "bytes": 1033
+    },
+    {
+      "path": "docs/verification/t1370/control/FRONTEND_REPORT.md",
+      "sha256": "deac4c8faea8f9cb075d2234a6af812cff85f900eb3cd775853ac80422c4e949",
+      "bytes": 14093
+    },
+    {
+      "path": "docs/verification/t1370/control/VISIBLE_COPY.json",
+      "sha256": "0070b5c5b2c6f43057f1e1c23b28f308b1e1fee9dfaa7706a64d3df1d0cdecbd",
+      "bytes": 39827
+    },
+    {
+      "path": "docs/verification/t1370/control/FINAL_STRICT_REVIEW.md",
+      "sha256": "c2d859f583345bc819b32cd39b722be83d6f33e402eee776117bf8b7d45b5130",
+      "bytes": 800
+    },
+    {
+      "path": "docs/verification/t1370/strict-final01/SAFE_SUMMARY.json",
+      "sha256": "180d98df3749d0fca5de6a9408fbe4b5dd77412b90478859a667db8ae513ae2f",
+      "bytes": 4190
+    },
+    {
+      "path": "docs/verification/t1370/strict-final01/EXIT.json",
+      "sha256": "bba6d9fd7eed2763979c97f3976e9841dd72a62c30a7563784e8ed93f67ea523",
+      "bytes": 250
+    },
+    {
+      "path": "docs/verification/t1370/control/run-frozen-ui.mjs",
+      "sha256": "cb399e9dae469d0b0431dfd23c0bd8fb5fed9661b1d3cdc5c0b719c7954aa9b7",
+      "bytes": 2973
+    },
+    {
+      "path": "docs/verification/t1370/control/FROZEN_CANDIDATE.json",
+      "sha256": "002e29fb45c4c81bef291fb2e11364ebfbe5381c140c78a6746334799525b95f",
+      "bytes": 362
+    },
+    {
+      "path": "docs/verification/t1370/control/INTEGRATION_PROTECTION.json",
+      "sha256": "50738616660562d2d011c614a7ba52f98d8acae59abac9ec33edc8de3c41cbfb",
+      "bytes": 2728
+    }
+  ]
+}

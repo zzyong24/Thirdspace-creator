@@ -1,0 +1,304 @@
+diff --git a/frontend/src/features/copilot/chat-work-creation-card.test.tsx b/frontend/src/features/copilot/chat-work-creation-card.test.tsx
+index 12d65267a..a352f9efb 100644
+--- a/frontend/src/features/copilot/chat-work-creation-card.test.tsx
++++ b/frontend/src/features/copilot/chat-work-creation-card.test.tsx
+@@ -277,3 +277,10 @@ it.each(['pending','confirmed'] as const)('REFINEMENT creation真实%s重挂后m
+  fireEvent.click(within(view.container.querySelectorAll('article')[0]).getByRole('button',{name:'预览候选'}));await screen.findByTestId('wechat-preview');const modal=screen.getByRole('dialog');expect(within(modal).getByRole('status')).toHaveTextContent(mode==='pending'?'原采用请求待核对，请继续恢复原请求。':'这份内容已保存，仍是当前成稿。');expect(within(modal).queryByRole('checkbox')).toBeNull();
+  saveRefinement('creation-'+mode+'-collapsed-modal.html',document.body.innerHTML);await openSelection();for(const input of within(modal).getAllByRole('checkbox'))expect(input).toBeDisabled();expect(api.createArticleVersion).toHaveBeenCalledOnce();
+ });
++
++it('T1305 creation来源身份/候选不符保具体提示，无新增网络恢复资格',async()=>{
++ api.readWorkCandidateSource.mockResolvedValue({assistantSource:{taskId:'source-task',callId:'source-call',toolCallId:'tool-real',candidateDigest:'sha256:'+'d'.repeat(64)},candidate:{...result,article:{...article,title:'不符候选'}}});
++ render(<ChatWorkCreationCard result={result} toolCallId="tool-real" location={{conversationId:'t1305-mismatch',sourceMessageId:'source',toolCallId:'tool-real'}}/>);
++ for(const index of [0,1]){const trigger=screen.getAllByRole('button',{name:'预览候选'})[index];fireEvent.click(trigger);expect(await screen.findByRole('alert',undefined,{timeout:120000})).toHaveTextContent('来源读回与正在显示的原候选不一致');fireEvent.click(screen.getByRole('button',{name:'关闭'}));const count=api.readWorkCandidateSource.mock.calls.length;fireEvent.click(trigger);expect(await screen.findByRole('alert',undefined,{timeout:120000})).toHaveTextContent('来源读回与正在显示的原候选不一致');expect(api.readWorkCandidateSource).toHaveBeenCalledTimes(count);fireEvent.click(screen.getByRole('button',{name:'关闭'}));}
++ expect(api.createArticleVersion).not.toHaveBeenCalled();expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
++});
+diff --git a/frontend/src/features/copilot/chat-work-creation-card.tsx b/frontend/src/features/copilot/chat-work-creation-card.tsx
+index 6b5d5e257..cf1cd1c2e 100644
+--- a/frontend/src/features/copilot/chat-work-creation-card.tsx
++++ b/frontend/src/features/copilot/chat-work-creation-card.tsx
+@@ -103,6 +103,23 @@ function CreationMember({
+     [status, setStatus] = React.useState<string | null>(null),
+     [error, setError] = React.useState<string | null>(null),
+     [saved, setSaved] = React.useState(false);
++  const retryAfterClose=React.useRef<typeof review.sourceFailure>(null),
++    consumedFailure=React.useRef<typeof review.sourceFailure>(null);
++  React.useEffect(()=>{retryAfterClose.current=null;consumedFailure.current=null;},[review.identity]);
++  function previewOpenChange(nextOpen:boolean){
++    if(nextOpen&&!expanded){
++      const eligible=retryAfterClose.current;
++      retryAfterClose.current=null;
++      if(eligible&&eligible===review.sourceFailure&&eligible!==consumedFailure.current){
++        consumedFailure.current=eligible;
++        review.retry();
++      }
++    }else if(!nextOpen&&expanded){
++      // 只有当前打开预览已显示的同一来源错误，才能授予下一次显式重开的资格。
++      retryAfterClose.current=review.sourceFailure!==consumedFailure.current?review.sourceFailure:null;
++    }
++    setExpanded(nextOpen);
++  }
+   const alive = React.useRef(true);
+   React.useEffect(() => {
+     alive.current = true;
+@@ -178,7 +195,7 @@ function CreationMember({
+       {review.confirmed&&!saved&&<p role="status" className="text-sm text-success">{review.confirmationMessage}</p>}
+       {review.pending&&!saved&&!busy&&<p className="text-sm text-muted-foreground">原采用请求待核对，请继续恢复原请求。</p>}
+       <div className="flex flex-wrap gap-2">
+-        <Dialog open={expanded} onOpenChange={setExpanded}>
++        <Dialog open={expanded} onOpenChange={previewOpenChange}>
+           <DialogTrigger asChild><Button size="sm" variant="outline">预览候选</Button></DialogTrigger>
+           <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto sm:max-w-5xl">
+             <DialogTitle>{kind === "article" ? "文章候选预览" : "图文候选预览"}</DialogTitle>
+diff --git a/frontend/src/features/copilot/chat-work-editor-card.test.tsx b/frontend/src/features/copilot/chat-work-editor-card.test.tsx
+index e29c8a17e..d0dfc3367 100644
+--- a/frontend/src/features/copilot/chat-work-editor-card.test.tsx
++++ b/frontend/src/features/copilot/chat-work-editor-card.test.tsx
+@@ -321,3 +321,35 @@ it.each(['pending','confirmed'] as const)('REFINEMENT editor真实%s重挂后mod
+  if(mode==='pending')await screen.findByText('refinement回执未知');else await screen.findByText('已保存并采用。可继续微调。');
+  view.unmount();view=render(element);await screen.findByText(mode==='pending'?'原采用请求待核对，请继续恢复原请求。':'这份内容已保存，仍是当前成稿。');fireEvent.click(screen.getByRole('button',{name:'预览改动'}));await screen.findByTestId('preview');const modal=screen.getByRole('dialog');expect(within(modal).getByRole('status')).toHaveTextContent(mode==='pending'?'原采用请求待核对，请继续恢复原请求。':'这份内容已保存，仍是当前成稿。');expect(within(modal).queryByRole('checkbox')).toBeNull();await openSelection();for(const input of within(modal).getAllByRole('checkbox'))expect(input).toBeDisabled();expect(api.createArticleVersion).toHaveBeenCalledOnce();
+ });
++
++function SourceFailureProbe({id,scopeKey='group:g'}:{id:string;scopeKey?:string}){
++ const review=useAssistedWorkReview(api,result,historyLocation(id),scopeKey);
++ return <p data-testid="source-failure-probe" data-network={String(Boolean((review as any).sourceFailure))}>{review.ready?'已核对':review.error??'读取中'}</p>;
++}
++for(const mode of ['source','receipt-mechanical','exact','typed-status','abort','abort-error'] as const){
++ it(`T1305 hook窄await类型边界 ${mode}`,async()=>{
++  prepareHistory();const cause=new TypeError('opaque type '+mode),message=cause.message;
++  if(mode==='source')api.readWorkCandidateSource.mockRejectedValue(cause);
++  if(mode==='typed-status')api.readWorkCandidateSource.mockRejectedValue(Object.assign(cause,{status:503,code:'SERVER_SPECIFIC'}));
++  if(mode==='abort'){const abort=new DOMException(message,'AbortError');console.info('T1305 AbortError fixture',JSON.stringify({constructor:abort.constructor.name,name:abort.name,instanceofError:abort instanceof Error}));api.readWorkCandidateSource.mockRejectedValue(abort);}
++  if(mode==='abort-error')api.readWorkCandidateSource.mockRejectedValue(Object.assign(new Error(message),{name:'AbortError'}));
++  if(mode==='receipt-mechanical')api.readWorkCandidateSource.mockResolvedValue({get candidate(){throw cause;}});
++  if(mode==='exact')api.getArticleVersion.mockRejectedValue(cause);
++  render(<SourceFailureProbe id={'t1305-boundary-'+mode}/>);
++  const probe=screen.getByTestId('source-failure-probe');await waitFor(()=>expect(probe).toHaveTextContent(mode==='source'?'候选来源暂时读取失败，请关闭预览后重新打开。':mode==='abort'?'来源读取未完成':message),{timeout:120000});
++  expect(probe).toHaveAttribute('data-network',String(mode==='source'));expect(api.createArticleVersion).not.toHaveBeenCalled();
++ });
++}
++it('T1305 共享promise同次失败向两个subscriber传机械类型，失败entry清除可恢复',async()=>{
++ prepareHistory();let reject!:(cause:unknown)=>void;api.readWorkCandidateSource.mockImplementationOnce(()=>new Promise((_resolve,no)=>{reject=no;}));
++ const view=render(<><SourceFailureProbe id="t1305-shared"/><SourceFailureProbe id="t1305-shared"/></>);await waitFor(()=>expect(api.readWorkCandidateSource).toHaveBeenCalledOnce(),{timeout:120000});
++ await act(async()=>reject(new TypeError('opaque shared read')));for(const probe of screen.getAllByTestId('source-failure-probe')){expect(probe).toHaveTextContent('候选来源暂时读取失败，请关闭预览后重新打开。');expect(probe).toHaveAttribute('data-network','true');}
++ view.unmount();prepareHistory();render(<SourceFailureProbe id="t1305-shared"/>);await screen.findByText('已核对',undefined,{timeout:120000});expect(api.readWorkCandidateSource).toHaveBeenCalledTimes(2);expect(api.createArticleVersion).not.toHaveBeenCalled();
++});
++it('T1305 source读取完成后的save TypeError保UNKNOWN原body/key，不冒source恢复',async()=>{
++ prepareHistory();api.createArticleVersion.mockRejectedValue(new TypeError('save response lost'));
++ render(<ChatWorkEditorCard result={result} toolCallId="tool-real" location={historyLocation('t1305-save')}/>);fireEvent.click(screen.getByRole('button',{name:'预览改动'}));await screen.findByText('本次采纳选择',{selector:'summary'},{timeout:120000});fireEvent.click(screen.getByRole('button',{name:'关闭'}));fireEvent.click(screen.getByRole('button',{name:'采纳到当前作品'}));await screen.findByText('save response lost',undefined,{timeout:120000});
++ const storage=Object.keys(sessionStorage).map(key=>[key,sessionStorage.getItem(key)]),request=api.createArticleVersion.mock.calls[0][0],sourceCount=api.readWorkCandidateSource.mock.calls.length;
++ fireEvent.click(screen.getByRole('button',{name:'预览改动'}));await screen.findByText('本次采纳选择',{selector:'summary'},{timeout:120000});fireEvent.click(screen.getByRole('button',{name:'关闭'}));
++ expect(api.readWorkCandidateSource).toHaveBeenCalledTimes(sourceCount);expect(api.createArticleVersion).toHaveBeenCalledTimes(1);expect(api.createArticleVersion.mock.calls[0][0]).toEqual(request);expect(Object.keys(sessionStorage).map(key=>[key,sessionStorage.getItem(key)])).toEqual(storage);expect(screen.queryByText('候选来源暂时读取失败，请关闭预览后重新打开。')).toBeNull();
++});
+diff --git a/frontend/src/features/copilot/chat-work-editor-card.tsx b/frontend/src/features/copilot/chat-work-editor-card.tsx
+index ff269cd9b..98d9d9767 100644
+--- a/frontend/src/features/copilot/chat-work-editor-card.tsx
++++ b/frontend/src/features/copilot/chat-work-editor-card.tsx
+@@ -43,6 +43,13 @@ export function previewAssistedWorkDocument(base:any,candidate:any,fields:string
+  return output;
+ }
+ type CandidateReviewRead = { document: any; assistantSource: import("@creatoros/contract").WorkAssistantSource };
++// 仅标记来源 await 的网络异常；标记随共享 promise 传播，不进入请求或本地记录。
++class CandidateSourceNetworkError extends Error {
++  constructor(readonly original: TypeError) {
++    super('候选来源暂时读取失败，请关闭预览后重新打开。');
++    this.name = 'CandidateSourceNetworkError';
++  }
++}
+ type CandidateReviewEntry = { promise: Promise<CandidateReviewRead>; readers: number; settled: boolean };
+ const candidateReviewReads = new WeakMap<object, Map<string, CandidateReviewEntry>>();
+ const MAX_CANDIDATE_REVIEW_READS = 32;
+@@ -97,6 +104,7 @@ export function useAssistedWorkReview(client:any,result:EditorSaveCandidate|null
+  const [base,setBase]=React.useState<any>(null),[source,setSource]=React.useState<import('@creatoros/contract').WorkAssistantSource|null>(null),[fields,setFields]=React.useState<string[]>([]),[facts,setFacts]=React.useState<'keep'|'replace'>('keep'),[error,setError]=React.useState<string|null>(null),[pending,setPending]=React.useState(false),[locked,setLocked]=React.useState(false),[confirmed,setConfirmed]=React.useState<string|null>(null),[confirmedCurrent,setConfirmedCurrent]=React.useState<boolean|null>(null);
+  const originalBytes=editorCanonical(originalCandidate),storageKey=`creatoros:t1097:adopt:${scopeKey}:${outputId}:${location?.toolCallId??''}:${versionId}`;
+  const identity=editorCanonical([scopeKey,outputId,versionId,article,location,originalCandidate]);
++ const [sourceFailure,setSourceFailure]=React.useState<{identity:string;cause:CandidateSourceNetworkError}|null>(null);
+  const [loadedIdentity,setLoadedIdentity]=React.useState<string|null>(null),[revision,retry]=React.useReducer((n:number)=>n+1,0);
+  const liveIdentity=React.useRef(identity);liveIdentity.current=identity;
+  function readRecord():FrozenAdoption|null{
+@@ -118,7 +126,7 @@ export function useAssistedWorkReview(client:any,result:EditorSaveCandidate|null
+  }
+  React.useEffect(()=>{
+   let active=true;
+-  setBase(null);setSource(null);setError(null);setLoadedIdentity(null);setPending(false);setLocked(false);setConfirmed(null);setConfirmedCurrent(null);
++  setBase(null);setSource(null);setError(null);setSourceFailure(null);setLoadedIdentity(null);setPending(false);setLocked(false);setConfirmed(null);setConfirmedCurrent(null);
+   if(!enabled)return;
+   let record:FrozenAdoption|null=null;
+   try{record=readRecord();if(record){setFields(record.body.fieldSelection);setFacts(record.body.factSelection?.mode??'keep');setPending(true);setLocked(true);}}
+@@ -141,7 +149,13 @@ export function useAssistedWorkReview(client:any,result:EditorSaveCandidate|null
+   }
+   const load=async()=>{
+     if(!location?.conversationId||!location.sourceMessageId)throw Error('这份候选缺少原会话消息来源，不能用最新一轮补造。');
+-    const receipt=await client.readWorkCandidateSource({params:{conversationId:location.conversationId},query:{sourceMessageId:location.sourceMessageId,toolCallId:location.toolCallId},body:undefined});
++    let receipt;
++    try {
++      receipt=await client.readWorkCandidateSource({params:{conversationId:location.conversationId},query:{sourceMessageId:location.sourceMessageId,toolCallId:location.toolCallId},body:undefined});
++    } catch(cause) {
++      if(cause instanceof TypeError&&cause.name==='TypeError'&&!('status' in cause)&&!('code' in cause))throw new CandidateSourceNetworkError(cause);
++      throw cause;
++    }
+     if(editorCanonical(receipt.candidate)!==originalBytes)throw Error('来源读回与正在显示的原候选不一致，候选保留。');
+     const exact=await client[article?'getArticleVersion':'getGraphicPostVersion']({params:{outputId,versionId},query:undefined,body:undefined});
+     if(exact.versionId!==versionId)throw Error('原稿版本读回不符');
+@@ -163,7 +177,7 @@ export function useAssistedWorkReview(client:any,result:EditorSaveCandidate|null
+       }else{setFields(['title','summary','tags'].filter(key=>Object.hasOwn(proposed??{},key)&&(Array.isArray(exact[key])?exact[key].length===0:!exact[key]?.trim())));setFacts('keep');}
+       if(active){setBase(exact);setSource(assistantSource);setLoadedIdentity(identity);}
+     }catch(cause){if(active)setError(cause instanceof Error?cause.message:'来源读取未完成');}
+-  },cause=>{if(active)setError(cause instanceof Error?cause.message:'来源读取未完成');});
++  },cause=>{if(active){setError(cause instanceof Error?cause.message:'来源读取未完成');setSourceFailure(cause instanceof CandidateSourceNetworkError?{identity,cause}:null);}});
+   return()=>{active=false;read.release();};
+  },[client,enabled,requested,identity,revision,originalBytes,outputId,versionId,location?.conversationId,location?.sourceMessageId,location?.toolCallId,storageKey]);
+  const document=base&&proposed?previewAssistedWorkDocument(base,proposed,fields,facts,Boolean(article)):proposed;
+@@ -185,7 +199,7 @@ export function useAssistedWorkReview(client:any,result:EditorSaveCandidate|null
+   if(liveIdentity.current===identity){setConfirmed(receipt.versionId);setConfirmedCurrent(currentMatches);setPending(false);}
+   return {receipt,exact,current,currentMatches};
+  }
+- return {enabled,requested,retry,ready:!enabled||Boolean(requested&&loadedIdentity===identity&&source&&base&&!error),base,proposed,document,fields,setFields,facts,setFacts,error,pending,locked,confirmed,confirmationMessage:confirmed?(confirmedCurrent?"这份内容已保存，仍是当前成稿。":"这份内容已保存，当前成稿已有后续版本。"):null,article:Boolean(article),joint:result?.kind==='work.creation.member',save};
++ return {enabled,requested,retry,identity,sourceFailure:sourceFailure?.identity===identity?sourceFailure:null,ready:!enabled||Boolean(requested&&loadedIdentity===identity&&source&&base&&!error),base,proposed,document,fields,setFields,facts,setFacts,error,pending,locked,confirmed,confirmationMessage:confirmed?(confirmedCurrent?"这份内容已保存，仍是当前成稿。":"这份内容已保存，当前成稿已有后续版本。"):null,article:Boolean(article),joint:result?.kind==='work.creation.member',save};
+ }
+ // SEMANTIC_BOUNDARY_ALLOW: 只把协议来源类型与数量转为可读文案，不解析ID、补名称或判断创作来源。
+ const workSourceLabels: Record<string, string> = {
+diff --git a/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx b/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx
+index c19068135..50491ca47 100644
+--- a/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx
++++ b/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx
+@@ -9,6 +9,7 @@ import {ArticleWorkbench} from '@/features/article/article-workbench';
+ import {GraphicPostWorkbench} from '@/features/projects/graphic-post-workbench';
+ import {ChatWorkCreationCard} from './chat-work-creation-card';
+ import {ChatWorkEditorCard} from './chat-work-editor-card';
++import {useCreationClient} from '@/lib/creation-workspace-scope';
+ import userEvent from '@testing-library/user-event';
+ import {StageChatWrapper} from '@/app/(creator)/projects/[projectId]/stage-chat-wrapper';
+ // 真实 Provider/scope/owner/card/review/NoteRelay；只替代 dispatch 与 native surface 外部执行边界。
+@@ -32,7 +33,7 @@ type Owner='article'|'image';
+ let fixture:ReturnType<typeof makeFixture>;
+ let chat:ReturnType<typeof useDraftChatRequest>;
+ function Witness(){chat=useDraftChatRequest();return <output data-testid="dirty-state">{String(chat.readEditorState()?.dirty)}</output>;}
+-function makeFixture(empty:boolean){
++function makeFixture(empty:boolean,groupId='t1303-owned'){
+  const emptyArticle=articleDocument.parse({...article,title:'',sections:[]});
+  const emptyGraphic=graphicPostDocument.parse({...graphic,title:'',body:'',sourceRefs:[],cardBriefs:[]});
+  const bases={article:empty?emptyArticle:{...article,title:'原文章',sections:[{...article.sections[0],body:'原文章正文'}]},image:empty?emptyGraphic:{...graphic,title:'原图文',body:'原图文正文'}};
+@@ -42,7 +43,7 @@ function makeFixture(empty:boolean){
+  const versions=new Map<string,any>([['article-base',bases.article],['graphic-base',bases.image]]);
+  const writes:any[]=[];const reads:any[]=[];let candidate:any=joint;let loseResponse=false;
+  return {bases,current,versions,writes,reads,resource,setCandidate:(value:any)=>{candidate=value;},loseNext:()=>{loseResponse=true;},async dispatch(_url:any,options:any,scope:any){
+-  expect(scope).toEqual({groupId:'t1303-owned',accountId:null});
++  expect(scope).toEqual({groupId,accountId:null});
+   const {id,input}=JSON.parse(options.body);reads.push({id,input});
+   let data:any;
+   const kind:Owner=id.startsWith('articles.')?'article':'image';
+@@ -195,3 +196,113 @@ it('editor旧UNKNOWN只有显式恢复才同body/key写，确认刷新零额外P
+ it('完整联合article部分fields与fact replace，UNKNOWN重挂保原body/key和另一平台',async()=>{
+  fixture=makeFixture(false);const kept={id:'kept',text:'原已确认事实',sourceRefs:[script],reviewState:'confirmed' as const};fixture.bases.article.factItems=[kept];const value=workCreationProposalResult.parse({...joint,article:{...article,factItems:[kept,{id:'new',text:'',sourceRefs:[],reviewState:'confirmed'}]}});fixture.setCandidate(value);fixture.loseNext();const other=editorCanonical(fixture.current.image);let view=render(tree('article',undefined,value));await preview('article');fireEvent.click(within(row('article')).getByRole('button',{name:'预览候选'}));const choices=await openSelection();fireEvent.click(within(choices).getByLabelText(/采用候选标题/));fireEvent.click(within(choices).getByLabelText(/采用候选摘要/));fireEvent.click(within(choices).getByLabelText(/替换为联合候选事实/));fireEvent.click(screen.getByRole('button',{name:'关闭'}));fireEvent.click(within(row('article')).getByRole('button',{name:'采纳文章'}));await within(row('article')).findByText('原成功响应丢失');const original=structuredClone(fixture.writes[0]);expect(original.input.body).toMatchObject({adoptionMode:'assistant',fieldSelection:['title'],factSelection:{mode:'replace',expectedBeforeDigest:expect.stringMatching(/^sha256:/),proposedFactsDigest:expect.stringMatching(/^sha256:/)}});view.unmount();view=render(tree('article',undefined,value));await within(row('article')).findByText('原采用请求待核对，请继续恢复原请求。');await preview('article');fireEvent.click(within(row('article')).getByRole('button',{name:'恢复原采纳请求'}));await within(row('article')).findByRole('status');expect(fixture.writes[1]).toEqual(original);expect(fixture.current.article.current.factItems[1].reviewState).toBe('needs_confirmation');expect(editorCanonical(fixture.current.image)).toBe(other);expect(fixture.current.article.scriptContext.scriptText).toBe('逐字脚本原稿');
+ });
++
++// T1305：只在真实 workspace 冻结 transport 的 fetchCreatorApi 外边界注入来源失败。
++function sourceCalls(){return h.rpc.mock.calls.filter(call=>JSON.parse(call[1].body).id==='ai.workCandidates.source');}
++function failSourceReads(count:number,cause:unknown){
++ let left=count;
++ h.rpc.mockImplementation((...args:any[])=>{
++  if(JSON.parse(args[1].body).id==='ai.workCandidates.source'&&left-->0)return Promise.reject(cause);
++  return fixture.dispatch(...args as [any,any,any]);
++ });
++}
++function sourceEvidence(name:string,extra:unknown={}){keyboardEvidence(name,{sourceCalls:sourceCalls().map(call=>({url:call[0],body:JSON.parse(call[1].body),scope:call[2],signalAborted:call[1].signal.aborted})),writes:fixture.writes,extra});}
++async function openSourcePreview(family:'editor-article'|'creation-article'|'creation-graphic'){
++ const owner=family==='creation-graphic'?'image':'article';
++ const trigger=family==='editor-article'?screen.getByRole('button',{name:'预览改动'}):within(row(owner)).getByRole('button',{name:'预览候选'});
++ fireEvent.click(trigger);return screen.findByRole('dialog',{name:family==='editor-article'?'文章改动预览':owner==='article'?'文章候选预览':'图文候选预览'},{timeout:120000});
++}
++for(const family of ['editor-article','creation-article','creation-graphic'] as const){
++ it(`T1305 RED 中文 ${family}: source读取网络错误给出中文原因及原位恢复动作`,async()=>{
++  fixture=makeFixture(false);const editor=family==='editor-article',candidate=editor?editorFixture():undefined;if(candidate)fixture.setCandidate(candidate);
++  const cause=new TypeError('opaque transport '+family);failSourceReads(editor?1:2,cause);
++  render(tree(family==='creation-graphic'?'image':'article',candidate));
++  const dialog=await openSourcePreview(family),alert=await within(dialog).findByRole('alert',undefined,{timeout:120000});
++  sourceEvidence('red-guidance-'+family,{injectedConstructor:cause.constructor.name,injectedName:cause.name,visibleAlert:alert.textContent});
++  expect(alert).toHaveTextContent('候选来源暂时读取失败，请关闭预览后重新打开。');
++  expect(fixture.writes).toHaveLength(0);
++ });
++}
++for(const owner of ['article','image'] as const){
++ it(`T1305 RED 恢复 creation-${owner}: 已见来源错误后明确关闭重开读取同一来源`,async()=>{
++  fixture=makeFixture(false);failSourceReads(2,new TypeError('unavailable '+owner));const before=editorCanonical(fixture.current);render(tree(owner));
++  const family=owner==='article'?'creation-article':'creation-graphic';
++  const dialog=await openSourcePreview(family);await within(dialog).findByRole('alert',undefined,{timeout:120000});
++  const beforeCount=sourceCalls().length,original=JSON.parse(sourceCalls()[0][1].body);
++  fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull(),{timeout:120000});
++  await openSourcePreview(family);await act(async()=>{await Promise.resolve();});
++  sourceEvidence('red-recovery-'+owner,{beforeCount,afterCount:sourceCalls().length});
++  // 独立恢复RED：先走完真实关闭/重开，不能被中文断言提前截断。
++  expect(sourceCalls()).toHaveLength(beforeCount+1);
++  expect(JSON.parse(sourceCalls().at(-1)![1].body)).toEqual(original);
++  await within(screen.getByRole('dialog')).findByText('本次采纳选择',{selector:'summary'},{timeout:120000});
++  expect(fixture.writes).toHaveLength(0);expect(editorCanonical(fixture.current)).toBe(before);expect(sessionStorage.length).toBe(0);
++ });
++}
++
++it('T1305 实际workspace冻结transport及contract保真原TypeError，hook原链显示该失败',async()=>{
++ fixture=makeFixture(false);const candidate=editorFixture();fixture.setCandidate(candidate);const cause=new TypeError('opaque original cause');failSourceReads(2,cause);
++ let client!:ReturnType<typeof useCreationClient>;function ClientWitness(){client=useCreationClient();return null;}
++ render(<><ClientWitness/>{tree('article',candidate)}</>);
++ let observed:unknown;try{await client.readWorkCandidateSource({params:{conversationId:location.conversationId},query:{sourceMessageId:location.sourceMessageId,toolCallId:location.toolCallId},body:undefined});}catch(error){observed=error;}
++ expect(observed).toBe(cause);expect(observed).toBeInstanceOf(TypeError);expect((observed as Error).name).toBe('TypeError');
++ const dialog=await openSourcePreview('editor-article');const alert=await within(dialog).findByRole('alert',undefined,{timeout:120000});
++ sourceEvidence('type-error-chain',{sameInstance:observed===cause,constructor:(observed as Error).constructor.name,name:(observed as Error).name,hookAlert:alert.textContent});
++ expect(fixture.writes).toHaveLength(0);
++});
++for(const owner of ['article','image'] as const){
++ const family=owner==='article'?'creation-article':'creation-graphic';
++ it(`T1305 creation ${owner} 首次open不授重试，成功后开关不多读`,async()=>{
++  fixture=makeFixture(false);failSourceReads(2,new TypeError('first open'));render(tree(owner));await act(async()=>{await Promise.resolve();});
++  const before=sourceCalls().length;expect(before).toBe(2);const dialog=await openSourcePreview(family);await within(dialog).findByRole('alert',undefined,{timeout:120000});expect(sourceCalls()).toHaveLength(before);
++  fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));const ready=await openSourcePreview(family);await within(ready).findByText('本次采纳选择',{selector:'summary'},{timeout:120000});
++  expect(sourceCalls()).toHaveLength(before+1);fireEvent.click(within(ready).getByRole('button',{name:'关闭'}));await openSourcePreview(family);expect(sourceCalls()).toHaveLength(before+1);expect(fixture.writes).toHaveLength(0);
++ });
++ it(`T1305 creation ${owner} loading先关闭后迟到error，首次重开不读`,async()=>{
++  fixture=makeFixture(false);const rejects:((cause:unknown)=>void)[]=[];
++  h.rpc.mockImplementation((...args:any[])=>JSON.parse(args[1].body).id==='ai.workCandidates.source'?new Promise((_resolve,reject)=>rejects.push(reject)):fixture.dispatch(...args as [any,any,any]));
++  render(tree(owner));const dialog=await openSourcePreview(family);await within(dialog).findByText('正在核对原候选来源与稿件版本…',undefined,{timeout:120000});
++  fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));await act(async()=>{rejects.forEach(reject=>reject(new TypeError('late read failure')));});
++  h.rpc.mockImplementation((...args:any[])=>fixture.dispatch(...args as [any,any,any]));const count=sourceCalls().length;
++  const reopened=await openSourcePreview(family);await within(reopened).findByRole('alert',undefined,{timeout:120000});expect(sourceCalls()).toHaveLength(count);
++  fireEvent.click(within(reopened).getByRole('button',{name:'关闭'}));const ready=await openSourcePreview(family);await within(ready).findByText('本次采纳选择',{selector:'summary'},{timeout:120000});expect(sourceCalls()).toHaveLength(count+1);expect(fixture.writes).toHaveLength(0);
++ });
++ it(`T1305 creation ${owner} 消费资格后在途反复关开不叠来源请求`,async()=>{
++  fixture=makeFixture(false);failSourceReads(2,new TypeError('initial source failure'));render(tree(owner));let dialog=await openSourcePreview(family);await within(dialog).findByRole('alert',undefined,{timeout:120000});
++  let finish!:()=>void;h.rpc.mockImplementation((...args:any[])=>JSON.parse(args[1].body).id==='ai.workCandidates.source'?new Promise(resolve=>{finish=()=>{void fixture.dispatch(...args as [any,any,any]).then(resolve);};}):fixture.dispatch(...args as [any,any,any]));
++  fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));dialog=await openSourcePreview(family);await within(dialog).findByText('正在核对原候选来源与稿件版本…',undefined,{timeout:120000});const count=sourceCalls().length;expect(count).toBe(3);
++  for(let i=0;i<2;i++){fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));dialog=await openSourcePreview(family);}
++  expect(sourceCalls()).toHaveLength(count);await act(async()=>finish());await within(dialog).findByText('本次采纳选择',{selector:'summary'},{timeout:120000});expect(fixture.writes).toHaveLength(0);
++ });
++ it(`T1305 creation ${owner} 关闭错误后换candidate不借旧资格，卸载不复活`,async()=>{
++  fixture=makeFixture(false);h.rpc.mockImplementation((...args:any[])=>JSON.parse(args[1].body).id==='ai.workCandidates.source'?Promise.reject(new TypeError('identity failure')):fixture.dispatch(...args as [any,any,any]));
++  const view=render(tree(owner));let dialog=await openSourcePreview(family);await within(dialog).findByRole('alert',undefined,{timeout:120000});fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));
++  const changed={...joint,article:{...joint.article,title:'另一候选标题'},graphic:{...joint.graphic,title:'另一候选标题'}};fixture.setCandidate(changed);view.rerender(tree(owner,undefined,changed));await act(async()=>{await Promise.resolve();});const count=sourceCalls().length;
++  dialog=await openSourcePreview(family);await within(dialog).findByRole('alert',undefined,{timeout:120000});expect(sourceCalls()).toHaveLength(count);fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));view.unmount();
++  const remount=render(tree(owner,undefined,changed));await act(async()=>{await Promise.resolve();});const freshCount=sourceCalls().length;dialog=await openSourcePreview(family);await within(dialog).findByRole('alert',undefined,{timeout:120000});expect(sourceCalls()).toHaveLength(freshCount);remount.unmount();expect(fixture.writes).toHaveLength(0);
++ });
++}
++for(const mode of ['http','abort','exact'] as const){
++ it(`T1305 实际workspace ${mode}具体错误保原，creation关开无source新增资格`,async()=>{
++  fixture=makeFixture(false);const message='具体错误 '+mode;
++  h.rpc.mockImplementation((...args:any[])=>{
++   const id=JSON.parse(args[1].body).id;
++   if(id==='ai.workCandidates.source'&&mode==='http')return Promise.resolve(new Response(JSON.stringify({error:{message,code:'SOURCE_READ_DENIED',details:{retained:true}}}),{status:403,headers:{'content-type':'application/json'}}));
++   if(id==='ai.workCandidates.source'&&mode==='abort'){const abort=new DOMException(message,'AbortError');sourceEvidence('abort-fixture-shape',{constructor:abort.constructor.name,name:abort.name,instanceofError:abort instanceof Error});return Promise.reject(abort);}
++   if(id.endsWith('versions.get')&&mode==='exact')return Promise.reject(new TypeError(message));
++   return fixture.dispatch(...args as [any,any,any]);
++  });
++  render(tree('article'));let dialog=await openSourcePreview('creation-article');expect(await within(dialog).findByRole('alert',undefined,{timeout:120000})).toHaveTextContent(mode==='abort'?'来源读取未完成':message);
++  const count=sourceCalls().length;fireEvent.click(within(dialog).getByRole('button',{name:'关闭'}));dialog=await openSourcePreview('creation-article');expect(await within(dialog).findByRole('alert',undefined,{timeout:120000})).toHaveTextContent(mode==='abort'?'来源读取未完成':message);expect(sourceCalls()).toHaveLength(count);expect(fixture.writes).toHaveLength(0);
++ });
++}
++it('T1305 实际scope切换与卸载后旧source reject不回写新身份',async()=>{
++ fixture=makeFixture(false);let rejectOld!:(cause:unknown)=>void;h.rpc.mockImplementation((...args:any[])=>JSON.parse(args[1].body).id==='ai.workCandidates.source'?new Promise((_resolve,reject)=>{rejectOld=reject;}):fixture.dispatch(...args as [any,any,any]));
++ const candidate=editorFixture();fixture.setCandidate(candidate);const view=render(tree('article',candidate));await openSourcePreview('editor-article');
++ const oldSignal=sourceCalls()[0][1].signal;fixture=makeFixture(false,'t1305-other');fixture.setCandidate(candidate);
++ h.rpc.mockImplementation((...args:any[])=>fixture.dispatch(...args as [any,any,any]));
++ await act(async()=>{localStorage.setItem('creatoros:current-group','t1305-other');window.dispatchEvent(new Event('creatoros:accounts-changed'));});
++ await act(async()=>rejectOld(new TypeError('old scope failure')));expect(screen.queryByText('old scope failure')).toBeNull();expect(screen.queryByText('候选来源暂时读取失败，请关闭预览后重新打开。')).toBeNull();
++ expect(oldSignal.aborted).toBe(true);view.unmount();fixture=makeFixture(false);fixture.setCandidate(candidate);await act(async()=>{localStorage.setItem('creatoros:current-group','t1303-owned');window.dispatchEvent(new Event('creatoros:accounts-changed'));});
++ render(tree('article',candidate));const dialog=await openSourcePreview('editor-article');await within(dialog).findByText('本次采纳选择',{selector:'summary'},{timeout:120000});expect(fixture.writes).toHaveLength(0);
++});

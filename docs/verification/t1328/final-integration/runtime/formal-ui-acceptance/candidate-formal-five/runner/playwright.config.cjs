@@ -1,0 +1,3 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),collect=process.env.C_FIVE_FORMAL_COLLECTION_ONLY==='1',b=collect?null:JSON.parse(fs.readFileSync(process.env.C_FIVE_FORMAL_BINDING));
+module.exports={testDir:__dirname,testMatch:'journey.spec.cjs',workers:1,retries:0,fullyParallel:false,timeout:28800000,globalTimeout:30600000,expect:{timeout:120000},outputDir:b?path.join(b.outputDirectory,'playwright-assets'):path.resolve(__dirname,'../NOT_RUN_OUTPUT'),reporter:b?[['json',{outputFile:path.join(b.outputDirectory,'playwright-result.json')}]]:'list',use:{actionTimeout:120000,navigationTimeout:300000,trace:'off',video:'off',screenshot:'off'}};

@@ -34,7 +34,7 @@ async function main(): Promise<void> {
         },
   );
 
-  const server = createCreatorOsMcpServer({ dispatchClient });
+  const server = createCreatorOsMcpServer({ dispatchClient,defaultGroupId:process.env.CREATOROS_GROUP_ID,defaultAccountId:process.env.CREATOROS_ACCOUNT_ID });
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // stdio server 的一切日志走 stderr(stdout 是 JSON-RPC 通道,不能污染)。

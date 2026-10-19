@@ -1,0 +1,51 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract
+
+ ❯ tests/registry.test.ts (3 tests | 1 failed) 27ms
+     × registers no routes outside SPEC §13 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13
+AssertionError: unexpected: GET /outputs/:outputId/production/editor, PUT /outputs/:outputId/production/editor, POST /outputs/:outputId/production/editor/apply, POST /outputs/:outputId/production/editor/restore, GET /outputs/:outputId/production/editor/versions, GET /outputs/:outputId/production/editor/versions/:revision, GET /outputs/:outputId/production/editor/receipts/:requestId, POST /outputs/:outputId/production/editor/render, GET /outputs/:outputId/production/editor/renders, PUT /outputs/:outputId/production/editing-plan/broll/remove, POST /intelligence/projects/enqueue, GET /settings/onboarding/:accountId, PATCH /settings/onboarding/:accountId, GET /settings/redfox, PUT /settings/redfox, DELETE /settings/redfox, GET /analytics/daily-report: expected [ …(17) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "GET /outputs/:outputId/production/editor",
++   "PUT /outputs/:outputId/production/editor",
++   "POST /outputs/:outputId/production/editor/apply",
++   "POST /outputs/:outputId/production/editor/restore",
++   "GET /outputs/:outputId/production/editor/versions",
++   "GET /outputs/:outputId/production/editor/versions/:revision",
++   "GET /outputs/:outputId/production/editor/receipts/:requestId",
++   "POST /outputs/:outputId/production/editor/render",
++   "GET /outputs/:outputId/production/editor/renders",
++   "PUT /outputs/:outputId/production/editing-plan/broll/remove",
++   "POST /intelligence/projects/enqueue",
++   "GET /settings/onboarding/:accountId",
++   "PATCH /settings/onboarding/:accountId",
++   "GET /settings/redfox",
++   "PUT /settings/redfox",
++   "DELETE /settings/redfox",
++   "GET /analytics/daily-report",
++ ]
+
+ ❯ tests/registry.test.ts:355:54
+    353|     const allowed = new Set(SPEC_13.map(([m, p]) => `${m} ${p}`));
+    354|     const extra = registered.filter((r) => !allowed.has(r));
+    355|     expect(extra, `unexpected: ${extra.join(", ")}`).toEqual([]);
+       |                                                      ^
+    356|   });
+    357|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 22 passed (23)
+   Start at  19:02:43
+   Duration  1.28s (transform 1.26s, setup 0ms, import 2.09s, tests 86ms, environment 0ms)
+

@@ -1,0 +1,71 @@
+{
+  "schema": "t1368-single-gate-safe-summary/v1",
+  "status": "EXACT_DIAGNOSIS_COMPLETE_BOTH_CURRENT_GATES_PASS",
+  "sourceCommit": "665508e66ee4bf46a6ebe3267ce4887c92964e18",
+  "specSha256": "d27a03352a6d641786410eecc1203578b3a270b65ff8d9ef7d2289c91881b408",
+  "packetSha256": "147d08188196e94fcf3905915effb0a8ada19c341aadbf1bdac6895401ccc582",
+  "gateResults": [
+    {
+      "lesson": "LED-053",
+      "topLevelAttempts": 1,
+      "exitCode": 0,
+      "signal": null,
+      "elapsedSeconds": 37.62602424999932,
+      "command": "node tools/timeout-policy/verify.mjs",
+      "exitReceipt": "LED-053_EXIT.json",
+      "outputMeta": "LED-053_OUTPUT_META.json",
+      "result": "PASS",
+      "passedTests": 174,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "scope": "静态扫描与原八组串行检查；OS禁止全部网络和用户HyperFrames配置写入，关闭遥测/自动安装"
+    },
+    {
+      "lesson": "LED-060",
+      "topLevelAttempts": 1,
+      "exitCode": 0,
+      "signal": null,
+      "elapsedSeconds": 23.30674404196907,
+      "command": "pnpm --dir ai-worker run build && pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0",
+      "exitReceipt": "LED-060_EXIT.json",
+      "outputMeta": "LED-060_OUTPUT_META.json",
+      "result": "PASS",
+      "passedTests": 71,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "scope": "原构建&&模型响应19项&&后端公共链52项；合成loopback HTTP与内存PGlite"
+    }
+  ],
+  "protection": {
+    "sourceShaStable": true,
+    "candidateClean": true,
+    "hyperframesCliShaStable": true,
+    "hyperframesUserMetadataUnchanged": true,
+    "ownedProcessGroupsRemaining": 0,
+    "productTestDependencyEdits": false,
+    "cacheDeletedOrMoved": false,
+    "realPlatformOperation": false,
+    "realUserDbOrProfileOperation": false,
+    "fullRerun": false,
+    "privateRawLogsIncludedInSafeArtifacts": false
+  },
+  "originalFull": {
+    "attempts": 1,
+    "errors": 58,
+    "warnings": 0,
+    "childExitCode": null,
+    "wrapperExitCode": 1,
+    "twoNewFireOriginalCause": "UNKNOWN",
+    "boundary": "后验不同运行/LED053不同隔离环境；不倒填原退出码、首因或原full结论。"
+  },
+  "consumerAuditRef": "CONSUMER_AUDIT.json",
+  "postflightRef": "POSTFLIGHT.json",
+  "acceptanceBoundary": "仅T1368诊断后验与消费者分类闭合；T1354旧宽收据失效保留；T1367真实恢复UNKNOWN且site-safety受阻，不完成/打包/安装/collect/诊断。",
+  "limits": [
+    "LED053禁止网络及用户HyperFrames配置写入的隔离差异明确，不称原full同环境。",
+    "LED060由实际测试合成端点、服务注入和请求次数断言证明公共链，未做系统级全进程网络抓包。",
+    "用户HyperFrames目录仅比对mode/size/mtime/inode/symlink元数据，不读取配置正文。"
+  ],
+  "executionReportRef": "REPORT.md",
+  "captureRunnerSha256": "99734e967ca2054044cceb4c2309195f8bebed4a1c4496aad586a1a492743a60"
+}

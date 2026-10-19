@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：DEC-031 已按旧 spec/constitution hash 授权 cycle 2。当前完整规格中，REV-003 对无 session 生成补齐了最小 discovery session 的原子创建或复用、稳定 idempotencyKey 作用域、规范化 input manifest 指纹、同键同输入单次模型调用与同键异输入冲突；REV-004 补齐了产品人群结构在采纳事务中的不可变 snapshot、版本恢复、账号隔离和下游同版本读取，并明确纯人设等场景为合法不适用。按当前完整 SPEC 与 docs/产品定位.md 复核候选/采纳边界、当前定位真值、并发版本、backend/AI 所有权、账号隔离、幂等恢复和可证伪验收，未发现仍需登记的 blocker、major 或 minor。",
+  "findings": []
+}

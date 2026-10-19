@@ -201,11 +201,13 @@ export function EmptyState({
  */
 export function CrossAccountEmptyState({
   entityLabel = "内容",
+  groupId,
   backHref,
   backLabel,
 }: {
   /** 实体名(「项目」「作品」…),拼进主文案。 */
   readonly entityLabel?: string;
+  readonly groupId?: string|null;
   /** 回列表深链(如 /projects)。 */
   readonly backHref: string;
   readonly backLabel: string;
@@ -223,11 +225,12 @@ export function CrossAccountEmptyState({
         ∅
       </span>
       <p className="text-sm font-medium text-foreground">
-        未找到该{entityLabel},或它不属于当前账号
+        未找到该{entityLabel},或它不属于当前{groupId?"账号组":"账号"}
       </p>
       <p className="max-w-md text-[12px] text-muted-foreground">
+        {groupId?`切换账号组会切换工作区。其他组的${entityLabel}在当前账号组下不可见；请在左下角进入原账号组后再打开。`:<>
         切换抖音号 = 切换整个工作区:另一个账号的{entityLabel}
-        在当前账号下不可见。若这条链接来自别的账号,请先在左下角切换到对应账号后再打开。
+        在当前账号下不可见。若这条链接来自别的账号,请先在左下角切换到对应账号后再打开。</>}
       </p>
       <a
         href={backHref}

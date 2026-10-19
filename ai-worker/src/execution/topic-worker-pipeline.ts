@@ -1,3 +1,6 @@
+import { topicSourceRead, type TopicSourceRead } from "@creatoros/contract";
+import type { TopicReadTarget as ContractTopicReadTarget } from "@creatoros/contract/execution-worker";
+import { topicQueryPlanSchema } from "../prompt/templates/topic-query-plan";
 import { StructuredOutputError } from "../nodes/structured-output-error";
 import { findGenerationFailure } from "./generation-error";
 import type { LanguageModel } from "ai";
@@ -14,9 +17,9 @@ import {
 import { topicArraySchema } from "../prompt/templates/topic-generate";
 import { trendExtractSchema } from "../prompt/templates/trend-extract";
 import { parseFeed } from "../runtime/search-rss";
-export type TopicReadTarget =
-  { kind: "search" } | { kind: "source"; sourceId: string };
+export type TopicReadTarget = ContractTopicReadTarget;
 export type TopicReadData =
+  | {kind:"error"; code:string}
   | {
       kind: "search";
       results: Array<{ title: string; url: string; snippet: string }>;
@@ -37,17 +40,32 @@ export async function runTopicWorkerPipeline(
     { signal } = deps;
   let basisBrief = input.basisBrief;
   let trend = { sourceCount: 0, signalCount: 0 };
+  const reads:TopicSourceRead[]=input.trendSources.map(s=>({id:s.id,name:s.name,url:s.url,status:"not_called",note:"未调用",readAt:null}));
+  let plannedQuery:string|undefined;
+  if(input.audienceTaskContext&&(input.basis==="trend"||input.mode==="daily")){
+    const config=input.audienceTaskContext.config;
+    // 私人作者材料及非公开问题不进入公开检索规划。
+    const publicCells=[...config.audienceGrid,...config.industryGrid].filter(c=>c.publicQueryAllowed).map(c=>({id:c.id,text:c.text}));
+    const planned=await runStructuredNode({model:deps.model,template:getEffectiveTemplate("topic.query-plan"),facets:{publicTaskContext:JSON.stringify({audience:config.audience,platform:config.platform,cells:publicCells,problems:config.problems.filter(p=>p.publicStatus==="public")}),sources:JSON.stringify(input.trendSources)},outputSchema:topicQueryPlanSchema,maxOutputTokens:deps.maxOutputTokens,timeoutMs:deps.timeoutMs,signal});
+    plannedQuery=topicQueryPlanSchema.parse(planned.object).query;
+  }
   signal.throwIfAborted();
   if (input.basis === "trend" || input.mode === "daily") {
     const signals: TrendSourceSignal[] = [];
     // 固定顺序保证中间模型调用序号跨恢复稳定。单个已知失败由read落回执后返回空。
-    const search = await deps.read({ kind: "search" });
+    const search = await deps.read({ kind: "search", ...(input.audienceTaskContext?{query:plannedQuery,allowPartial:true}:{}) });
+    reads.push({id:"web-search",name:"公开任务搜索",url:null,status:search&&search.kind!=="error"?"partial":search?.kind==="error"&&["PERMISSION","NEEDS_LOGIN","CAPTCHA"].includes(search.code)?"permission_denied":"failed",note:search&&search.kind!=="error"?"只读取搜索摘要，正文与观众入口仍待核验":"未取得搜索结果",readAt:new Date().toISOString()});
     signal.throwIfAborted();
     for (const source of input.trendSources) {
       signal.throwIfAborted();
-      const page = await deps.read({ kind: "source", sourceId: source.id });
+      const page = await deps.read({ kind: "source", sourceId: source.id, ...(input.audienceTaskContext?{allowPartial:true}:{}) });
+      const status=reads.find(r=>r.id===source.id)!;
+      status.readAt=new Date().toISOString();
+      status.status=page&&page.kind!=="error"?"success":page?.kind==="error"&&["PERMISSION","NEEDS_LOGIN","CAPTCHA"].includes(page.code)?"permission_denied":"failed";
+      status.note=status.status==="success"?"已读取来源正文":"未取得正文";
       signal.throwIfAborted();
-      if (!page || page.kind === "search") continue;
+      if (!page || page.kind === "search" || page.kind === "error") continue;
+      if(page.text.length>=1500000){status.status="partial";status.note="正文已截断";}
       if (source.sourceType === "rss") {
         for (const row of parseFeed(page.text, source.domain).slice(0, 8))
           signals.push({
@@ -60,6 +78,7 @@ export async function runTopicWorkerPipeline(
         continue;
       }
       const pageText = page.text.slice(0, 40000).trim();
+      if(page.text.length>40000){status.status="partial";status.note="仅分析前40000字符";}
       if (!pageText) continue;
       try {
         const result = await runStructuredNode({
@@ -86,6 +105,7 @@ export async function runTopicWorkerPipeline(
       } catch (error) {
         signal.throwIfAborted();
         // 已确认格式失败保留旧单源降级；预算、鉴权和任何未知供应商结果必须停止。
+        status.status="partial";status.note="已读取，条目提取失败";
         const knownFailure=findGenerationFailure(error);
         if(knownFailure)throw knownFailure;
         if (!(
@@ -106,10 +126,10 @@ export async function runTopicWorkerPipeline(
     };
   }
   signal.throwIfAborted();
-  return runStructuredNode({
+  const result=await runStructuredNode({
     model: deps.model,
     template: getEffectiveTemplate("topic.generate"),
-    facets: topicFacets(
+    facets: {audienceTaskContext:input.audienceTaskContext?JSON.stringify(input.audienceTaskContext):"",sourceReads:JSON.stringify(reads),...topicFacets(
       input.context.positioningBrief,
       input.basis,
       basisBrief,
@@ -118,10 +138,11 @@ export async function runTopicWorkerPipeline(
         : input.context.knowledgeBrief || undefined,
       input.context.learningsBrief || undefined,
       renderSignalQualityBrief({ ...input.qualityProfile, trend }),
-    ),
+    )},
     outputSchema: topicArraySchema,
     maxOutputTokens: deps.maxOutputTokens,
     timeoutMs: deps.timeoutMs,
     signal,
   });
+  return {...result,object:{...result.object as object,...(input.audienceTaskContext?{sourceReads:reads.map(r=>topicSourceRead.parse(r))}:{})}};
 }

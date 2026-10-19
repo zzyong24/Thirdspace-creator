@@ -1,0 +1,99 @@
+{
+  "state": "READY_FOR_ROOT_ASSEMBLY_REVIEW_NOT_RUN",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/vitest.config.mts",
+      "bytes": 1006,
+      "sha256": "978595e0362dc8c33c42d7d1436fa168c5c1f7bae04419d57571c9836721a6cf"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/run.py",
+      "bytes": 7055,
+      "sha256": "bc4102542a191558b0523f88a1cd9da5b23dd3d4c4bd8a4279be7ec436171874"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/check.py",
+      "bytes": 1800,
+      "sha256": "00448bec70ca2a6ed7c90b6628d4fcc5aeb84a0c0a85bdb65d616bb843b2d335"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/ASSEMBLY.md",
+      "bytes": 4614,
+      "sha256": "eda54190b2a537fcce9540a82a571342a897fab1f840d2d658bbac8197031296"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/SYNTAX_RESULT.json",
+      "bytes": 657,
+      "sha256": "957262d660909b2836d5cbae8d3bfeb03e46b68ba9b3e8de75fa380deecb41b5"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/UNIT_TEST_DELTA.diff",
+      "bytes": 4709,
+      "sha256": "807f6b4a9a41289922e4d977ce2c888d38d40bef44864841cbb110404047a87a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/freeze.py",
+      "bytes": 4050,
+      "sha256": "e290f22a8f805c8744ba148a1222f2e474a39a0566015a159946db66f806e3cf"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/SERVICE_BASELINE.json",
+      "bytes": 169,
+      "sha256": "0325af5acc61b3f063b8834ebefc5b375722956e6ce9aca21010884af4a75517"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/calibration-missing-actual.persistence-client.test.ts",
+      "bytes": 13904,
+      "sha256": "2c829e70547b058e3c5bc8fb0c3b84157ca3e71f344c1e495ed33341a139e537"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/calibration/calibration.service.test.ts",
+      "bytes": 18302,
+      "sha256": "4672b04921749b415c1bd5e493a20633c5597275d13a08c78861766af3e40c4c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/calibration/calibration.acceptance.test.ts",
+      "bytes": 11435,
+      "sha256": "12e0e93e717d4324db3d3418fc93dcfe4e052279e7ab9e48d18345e0406c9d8a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/features/t1339-calibration-missing-actual-deviation-observation.md",
+      "bytes": 7928,
+      "sha256": "42fe69d60a3939c9b0af74f8af7a4cd4189c2fafe3d52fe1a048aa77f99acd22"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/control/OWNED_RUNTIME_AUTHORIZATION.json",
+      "bytes": 589,
+      "sha256": "dbf972951161c920fd71a9009ee973aee3fcba2de63ab8745d1ff0c615d0562a"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/collection.log",
+      "bytes": 179,
+      "sha256": "2747a5a02acd571a43ab9453de1f568800b6a498dcdde667b37a18bb83bb16f1"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/collection-RESULT.json",
+      "bytes": 714,
+      "sha256": "cf1513753c07603c87107f12eb27b47ff2fd9244d28a85cac1eb559ab937fc53"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/frontend-type.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/frontend-type-RESULT.json",
+      "bytes": 743,
+      "sha256": "d21fc25a1232c25e01445fdb60844f01b892700afe70d1dd939bba40889e86ca"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/PRE_RUN_LOCK.json",
+      "bytes": 9989020,
+      "sha256": "72ba66a969180befefca2f92cc2acfcad3d400c343d265c0c5400ecb69b839b5"
+    }
+  ],
+  "paidModels": 0,
+  "executedIts": 0,
+  "productionWrites": 0,
+  "command": "T1339_PUBLIC_APPROVED=1 python3 docs/verification/t1339/runtime/preparation/run.py red-v1"
+}

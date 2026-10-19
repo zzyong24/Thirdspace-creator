@@ -1,0 +1,69 @@
+{
+  "schema": "creatoros-playwright-safe-summary/v1",
+  "rawSource": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1348/strict-attempt01/e2e-results.json",
+  "rawSha256": "a576c39a5f5f27ebe411846e057dea7c708267b55a48fd7e00bf0a5151ddcd1d",
+  "stats": {
+    "startTime": "2026-10-18T14:55:23.647Z",
+    "duration": 109738.38799999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "切组真实连续旅程 1280×800",
+      "project": "t1346",
+      "status": "passed",
+      "startTime": "2026-10-18T14:55:50.782Z",
+      "duration": 60836,
+      "errors": [],
+      "attachments": [
+        {
+          "name": "witness",
+          "contentType": "application/json",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1280×800-t1346/attachments/witness-5e4d5219887d079063b557e276609518b1bc837e.json"
+        },
+        {
+          "name": "trace",
+          "contentType": "application/zip",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1280×800-t1346/trace.zip"
+        }
+      ]
+    },
+    {
+      "title": "切组真实连续旅程 1024×680",
+      "project": "t1346",
+      "status": "failed",
+      "startTime": "2026-10-18T14:56:54.297Z",
+      "duration": 17150,
+      "errors": [
+        {
+          "message": "Error: apiRequestContext.post: read ECONNRESET\nCall log:\n\u001b[2m  - → POST http://127.0.0.1:3956/api/v1/dispatch\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\u001b[2m    - content-type: application/json\u001b[22m\n\u001b[2m    - content-length: 78\u001b[22m\n\u001b[2m    - cookie: creatoros_current_group=grp-0a91b7b4-342\u001b[22m\n\n\n   8 |\n   9 | async function dispatch<T>(page:Page,id:string,input:unknown,groupId?:string):Promise<T>{\n> 10 |   const response=await page.request.post(\"/api/v1/dispatch\",{timeout:120_000,headers:{...(groupId?{\"x-group-id\":groupId}:{})},data:{id,input}});\n     |                                     ^\n  11 |   expect(response.ok(),`${id}: ${response.status()} ${await response.text()}`).toBe(true);\n  12 |   return (await response.json()).data as T;\n  13 | }\n    at dispatch (/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/frontend/tests/e2e/t1346-account-group-switch.spec.ts:10:37)\n    at /Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/frontend/tests/e2e/t1346-account-group-switch.spec.ts:143:11",
+          "location": {
+            "file": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/frontend/tests/e2e/t1346-account-group-switch.spec.ts",
+            "column": 37,
+            "line": 10
+          }
+        }
+      ],
+      "attachments": [
+        {
+          "name": "screenshot",
+          "contentType": "image/png",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1024×680-t1346/test-failed-1.png"
+        },
+        {
+          "name": "error-context",
+          "contentType": "text/markdown",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1024×680-t1346/error-context.md"
+        },
+        {
+          "name": "trace",
+          "contentType": "application/zip",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1346/e2e-artifacts/t1346-account-group-switch-切组真实连续旅程-1024×680-t1346/trace.zip"
+        }
+      ]
+    }
+  ]
+}

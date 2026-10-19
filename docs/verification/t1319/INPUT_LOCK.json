@@ -1,0 +1,160 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1319",
+  "baseHead": "977348e96a5791afb21276ee4ed75da47a6abfa3",
+  "frozenAt": "2026-10-16T11:27:17.224210+00:00",
+  "specPath": "docs/features/t1319-agentic-collect-public-admission.md",
+  "specSha256": "195991cb7eba1f306ffdb6dcad1be095f2ee127662d1ca053242290db113d0ac",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6819,
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "bytes": 67379,
+      "sha256": "18c615b1c857aecff94804ac27671d4dd972b8d3c22d5acb525fcafd6c2d46d4"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.service.ts",
+      "bytes": 14543,
+      "sha256": "b3cc28576842960a6b2420eea674c1fd5f849278aa3682be19b7f4803e4d83f8"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "bytes": 3372,
+      "sha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "docs/verification/t1313/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "c7be348612b2d9cc105a84c2dcca84a5a8b252c7cc4a49be38b03d357fd6b152"
+    },
+    {
+      "path": "docs/verification/t1300/FUNCTION_MATRIX.md",
+      "bytes": 24390,
+      "sha256": "c4d57cf7fbb4025d91c03d84f69f24795b5b4e421d93a4e7df6a5453984ec577"
+    },
+    {
+      "path": "docs/verification/t1315/runs/final-0e1dc6228/BUG_FINDINGS.md",
+      "bytes": 5799,
+      "sha256": "df5d428f01aea9421b475b3d7fa35de054cb9b69d20d1914dc7b2c92c51008ab"
+    },
+    {
+      "path": "backend/src/modules/execution/executor-registry.ts",
+      "bytes": 6930,
+      "sha256": "a464fbefde73e4c267844ecec9a7eefe1583066bc3bd881430f9656dedabeb58"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.transport.ts",
+      "bytes": 6436,
+      "sha256": "bfaf3d3df43cfb4cfc89e07a745ee1c6152498cdb46058140186ddfea277f6f1"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.ts",
+      "bytes": 6875,
+      "sha256": "168a966a2ba914e3a989b12bbe311062876055e09281a142d0b55a8b253c403b"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.test.ts",
+      "bytes": 10071,
+      "sha256": "ded378285eb7e15de65d696cfbc9513a4ff14997ca87b681a143f47099614db9"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-collection-tools.ts",
+      "bytes": 3679,
+      "sha256": "68abbce16a25a657b1dac170ae9944172976afb9106a414b2837459d51331757"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "docs/verification/t1315/runs/final-0e1dc6228/rss-collect-attempt01/0004-execution-tasks-create.json",
+      "bytes": 1140,
+      "sha256": "58a3a15559bbfb84bc42e86cfd5c5d9e09a9f56b695a05c900b774555d38db89"
+    },
+    {
+      "path": "docs/verification/t1315/runs/final-0e1dc6228/rss-collect-attempt01/source-created.json",
+      "bytes": 813,
+      "sha256": "ad0845f6a9a6f599ea0b7bb3f5675bae23cf4b61690a820837426daf82661b16"
+    },
+    {
+      "path": "docs/verification/t1319/DEC.md",
+      "bytes": 462,
+      "sha256": "fd94cac15bb2d19d13881fe9f40a2250fb73564f3eeaad30eb245de92fc6f383"
+    },
+    {
+      "path": "docs/verification/t1319/MODULE_SCOPE.json",
+      "bytes": 3113,
+      "sha256": "c6e77d48d4222fc7bdb2f19c5eb2a0e0b8863dd622acd9ff8b6b4b918d38376d"
+    }
+  ],
+  "immutableWorker": {
+    "path": "/private/tmp/t1300-artifact-940jy2at/sidecar/frontend/runtime/execution-worker.cjs",
+    "bytes": 5618216,
+    "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+  }
+}

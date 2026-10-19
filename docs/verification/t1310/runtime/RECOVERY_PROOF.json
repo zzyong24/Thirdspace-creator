@@ -1,0 +1,502 @@
+[
+  {
+    "case": "codex-group-recovery-native",
+    "evidence": "docs/verification/t1310/runtime/cases/attempt05/codex-group-recovery-native",
+    "beforeChild": {
+      "id": "call_fe384b5f-5f51-45e9-b6bf-984842bcd846",
+      "status": "started",
+      "providerResult": null,
+      "totalTokens": 12,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5
+      }
+    },
+    "afterChild": {
+      "id": "call_fe384b5f-5f51-45e9-b6bf-984842bcd846",
+      "executionTaskId": "t1310-codex-group-recovery-native-execution-task-5",
+      "sequence": 3,
+      "operationKey": "structured:call_1a5a4be0-9487-42a8-95d0-baa61337836b:f531827422ef94f4d25fffc2333eb41e934a6e7a2f7fba78c0e7dbe2a7a63a3a/model/1",
+      "retryOfCallId": null,
+      "parentCallId": "call_1a5a4be0-9487-42a8-95d0-baa61337836b",
+      "kind": "model",
+      "inputDigest": "sha256:2aa257486bcebb5dfcb974160e6aea8fa9fb8ab7f9f204311db0068cc08279ee",
+      "status": "settled",
+      "reservedTokens": 18306,
+      "accountingBasis": "tokens",
+      "startedAttempt": 1,
+      "toolExecutionClaimId": null,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5,
+        "inputTokenDetails": {},
+        "outputTokenDetails": {}
+      },
+      "resultText": null,
+      "providerResult": {
+        "sha256": "5f1a57c2d3137a30d2449d2bbb6ff5c116373536700867c0a572ecd8c6230d2f",
+        "usage": {
+          "inputTokens": {},
+          "outputTokens": {}
+        },
+        "providerMetadata": {
+          "codex": {
+            "model": null,
+            "turnId": "fixture-turn-fixture-thread-2",
+            "threadId": "fixture-thread-2",
+            "modelProvider": null
+          }
+        }
+      },
+      "providerJob": null,
+      "rejectionCode": null,
+      "totalTokens": 12,
+      "resultRef": null,
+      "createdAt": "2026-10-16T06:26:28.557Z",
+      "updatedAt": "2026-10-16T06:27:28.800Z"
+    },
+    "callIdsUnchanged": true,
+    "operationKeysUnchanged": true,
+    "fenceChanged": true,
+    "attemptBefore": 1,
+    "attemptAfter": 2,
+    "nativeReads": [
+      {
+        "method": "fixture-read-original-turn",
+        "threadId": "fixture-thread-2",
+        "turnId": "fixture-turn-fixture-thread-2",
+        "role": "child",
+        "status": "completed",
+        "pid": 6465
+      },
+      {
+        "method": "fixture-read-original-turn",
+        "threadId": "fixture-thread-1",
+        "turnId": "fixture-turn-fixture-thread-1",
+        "role": "root",
+        "status": "inProgress",
+        "pid": 6458
+      }
+    ],
+    "totalTurnStarts": 2,
+    "bindingProofByCapturedHash": [
+      {
+        "data": {
+          "callId": "call_0966775b-bc71-4bdd-91b8-c6307b89d6e5",
+          "threadId": "fixture-thread-1",
+          "turnId": "fixture-turn-fixture-thread-1"
+        },
+        "sha256": "2ba6f8af85722a42ef468e451ed2dd94c5dc310101cc9b95158db76d2b2ecdd6",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_fe384b5f-5f51-45e9-b6bf-984842bcd846",
+          "threadId": "fixture-thread-2"
+        },
+        "sha256": "f6cdbb20f29bc9821b05fe8650fec9d477af13f1e7e9faf5bd2e7b863cd50992",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_fe384b5f-5f51-45e9-b6bf-984842bcd846",
+          "turnId": "fixture-turn-fixture-thread-2"
+        },
+        "sha256": "b6228ba9bd7f3f11678c016793e596de4539b5058d3efdf1bca7499a8c0000bc",
+        "actualBindPortHashMatches": true
+      }
+    ],
+    "finalStatus": "unknown_result"
+  },
+  {
+    "case": "codex-group-recovery-settled",
+    "evidence": "docs/verification/t1310/runtime/cases/attempt05/codex-group-recovery-settled",
+    "beforeChild": {
+      "id": "call_9f45bea8-0dde-422a-9649-1011af9f025f",
+      "status": "settled",
+      "providerResult": {
+        "sha256": "443e0dacc2a186d4fca5729b0a429c1356bf9d2aba83d0b1c8781dd83ccda9b5",
+        "usage": {
+          "inputTokens": {
+            "total": 7,
+            "cacheRead": 0
+          },
+          "outputTokens": {
+            "total": 5,
+            "reasoning": 0
+          }
+        },
+        "providerMetadata": {
+          "codex": {
+            "model": "t1310-fixture-model",
+            "turnId": "fixture-turn-fixture-thread-2",
+            "threadId": "fixture-thread-2",
+            "modelProvider": "synthetic"
+          }
+        }
+      },
+      "totalTokens": 12,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5,
+        "inputTokenDetails": {
+          "cacheReadTokens": 0
+        },
+        "outputTokenDetails": {
+          "reasoningTokens": 0
+        }
+      }
+    },
+    "afterChild": {
+      "id": "call_9f45bea8-0dde-422a-9649-1011af9f025f",
+      "executionTaskId": "t1310-codex-group-recovery-settled-execution-task-5",
+      "sequence": 3,
+      "operationKey": "structured:call_41352104-377d-48fe-9578-dafa65bacd80:64394df4bb13f73a21fc7c069224fb80f9a633a7ed1c7f4ad7ed6248ecf4d6a9/model/1",
+      "retryOfCallId": null,
+      "parentCallId": "call_41352104-377d-48fe-9578-dafa65bacd80",
+      "kind": "model",
+      "inputDigest": "sha256:2aa257486bcebb5dfcb974160e6aea8fa9fb8ab7f9f204311db0068cc08279ee",
+      "status": "settled",
+      "reservedTokens": 18306,
+      "accountingBasis": "tokens",
+      "startedAttempt": 1,
+      "toolExecutionClaimId": null,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5,
+        "inputTokenDetails": {
+          "cacheReadTokens": 0
+        },
+        "outputTokenDetails": {
+          "reasoningTokens": 0
+        }
+      },
+      "resultText": null,
+      "providerResult": {
+        "sha256": "443e0dacc2a186d4fca5729b0a429c1356bf9d2aba83d0b1c8781dd83ccda9b5",
+        "usage": {
+          "inputTokens": {
+            "total": 7,
+            "cacheRead": 0
+          },
+          "outputTokens": {
+            "total": 5,
+            "reasoning": 0
+          }
+        },
+        "providerMetadata": {
+          "codex": {
+            "model": "t1310-fixture-model",
+            "turnId": "fixture-turn-fixture-thread-2",
+            "threadId": "fixture-thread-2",
+            "modelProvider": "synthetic"
+          }
+        }
+      },
+      "providerJob": null,
+      "rejectionCode": null,
+      "totalTokens": 12,
+      "resultRef": null,
+      "createdAt": "2026-10-16T06:26:19.819Z",
+      "updatedAt": "2026-10-16T06:26:20.236Z"
+    },
+    "callIdsUnchanged": true,
+    "operationKeysUnchanged": true,
+    "fenceChanged": true,
+    "attemptBefore": 1,
+    "attemptAfter": 2,
+    "nativeReads": [
+      {
+        "method": "fixture-read-original-turn",
+        "threadId": "fixture-thread-1",
+        "turnId": "fixture-turn-fixture-thread-1",
+        "role": "root",
+        "status": "inProgress",
+        "pid": 6235
+      }
+    ],
+    "totalTurnStarts": 2,
+    "bindingProofByCapturedHash": [
+      {
+        "data": {
+          "callId": "call_353305dd-1342-4601-848f-7f8dfdf4e35f",
+          "threadId": "fixture-thread-1",
+          "turnId": "fixture-turn-fixture-thread-1"
+        },
+        "sha256": "9eaf420255ba920aa9e221ee6b3b7c5a4218f07a9bb85ad11cd2935ebd7bcb55",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_9f45bea8-0dde-422a-9649-1011af9f025f",
+          "threadId": "fixture-thread-2"
+        },
+        "sha256": "33004635aa9a25ca34c99272a6ad32c23dd68b2c434c8d3045513e7ab7249d15",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_9f45bea8-0dde-422a-9649-1011af9f025f",
+          "turnId": "fixture-turn-fixture-thread-2"
+        },
+        "sha256": "695a853219d51986c9cb8ccf8f2a3fb7c60e11014ed2d3ec42eb03de4bc589d4",
+        "actualBindPortHashMatches": true
+      }
+    ],
+    "finalStatus": "unknown_result"
+  },
+  {
+    "case": "codex-legacy-recovery-native",
+    "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-recovery-native",
+    "beforeChild": {
+      "id": "call_b34bdb1d-e027-4fb7-9330-e1835a93f280",
+      "status": "started",
+      "providerResult": null,
+      "totalTokens": 12,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5
+      }
+    },
+    "afterChild": {
+      "id": "call_b34bdb1d-e027-4fb7-9330-e1835a93f280",
+      "executionTaskId": "t1310-codex-legacy-recovery-native-execution-task-5",
+      "sequence": 3,
+      "operationKey": "structured:call_1a2266ec-657c-49c5-8417-9234b3590121:68b6762363837b40bc713a3b26a0cc222db651634f739b0cca4dfebb31979467/model/1",
+      "retryOfCallId": null,
+      "parentCallId": "call_1a2266ec-657c-49c5-8417-9234b3590121",
+      "kind": "model",
+      "inputDigest": "sha256:2aa257486bcebb5dfcb974160e6aea8fa9fb8ab7f9f204311db0068cc08279ee",
+      "status": "settled",
+      "reservedTokens": 18306,
+      "accountingBasis": "tokens",
+      "startedAttempt": 1,
+      "toolExecutionClaimId": null,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5,
+        "inputTokenDetails": {},
+        "outputTokenDetails": {}
+      },
+      "resultText": null,
+      "providerResult": {
+        "sha256": "5f1a57c2d3137a30d2449d2bbb6ff5c116373536700867c0a572ecd8c6230d2f",
+        "usage": {
+          "inputTokens": {},
+          "outputTokens": {}
+        },
+        "providerMetadata": {
+          "codex": {
+            "model": null,
+            "turnId": "fixture-turn-fixture-thread-2",
+            "threadId": "fixture-thread-2",
+            "modelProvider": null
+          }
+        }
+      },
+      "providerJob": null,
+      "rejectionCode": null,
+      "totalTokens": 12,
+      "resultRef": null,
+      "createdAt": "2026-10-16T06:28:17.749Z",
+      "updatedAt": "2026-10-16T06:29:18.134Z"
+    },
+    "callIdsUnchanged": true,
+    "operationKeysUnchanged": true,
+    "fenceChanged": true,
+    "attemptBefore": 1,
+    "attemptAfter": 2,
+    "nativeReads": [
+      {
+        "method": "fixture-read-original-turn",
+        "threadId": "fixture-thread-2",
+        "turnId": "fixture-turn-fixture-thread-2",
+        "role": "child",
+        "status": "completed",
+        "pid": 7269
+      },
+      {
+        "method": "fixture-read-original-turn",
+        "threadId": "fixture-thread-1",
+        "turnId": "fixture-turn-fixture-thread-1",
+        "role": "root",
+        "status": "inProgress",
+        "pid": 7265
+      }
+    ],
+    "totalTurnStarts": 2,
+    "bindingProofByCapturedHash": [
+      {
+        "data": {
+          "callId": "call_5a4c8a8d-5ecb-466e-bd90-128f89b288ba",
+          "threadId": "fixture-thread-1",
+          "turnId": "fixture-turn-fixture-thread-1"
+        },
+        "sha256": "38a6d0969354a2f86f003491ec6b8fa8bfc470fb7d333cfe808d367733fe212c",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_b34bdb1d-e027-4fb7-9330-e1835a93f280",
+          "threadId": "fixture-thread-2"
+        },
+        "sha256": "8dfd2973c1b60893d8c6e2e08c043e0704736e54f94012c13ed64ac010e169c9",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_b34bdb1d-e027-4fb7-9330-e1835a93f280",
+          "turnId": "fixture-turn-fixture-thread-2"
+        },
+        "sha256": "ad062502b50662fec249aad96bf0312764f887c6cf9fb3e11141a53e926fe5ed",
+        "actualBindPortHashMatches": true
+      }
+    ],
+    "finalStatus": "unknown_result"
+  },
+  {
+    "case": "codex-legacy-recovery-settled",
+    "evidence": "docs/verification/t1310/runtime/cases/attempt06/codex-legacy-recovery-settled",
+    "beforeChild": {
+      "id": "call_4946cfbb-4523-4b14-8f8d-eb342a9235c2",
+      "status": "settled",
+      "providerResult": {
+        "sha256": "443e0dacc2a186d4fca5729b0a429c1356bf9d2aba83d0b1c8781dd83ccda9b5",
+        "usage": {
+          "inputTokens": {
+            "total": 7,
+            "cacheRead": 0
+          },
+          "outputTokens": {
+            "total": 5,
+            "reasoning": 0
+          }
+        },
+        "providerMetadata": {
+          "codex": {
+            "model": "t1310-fixture-model",
+            "turnId": "fixture-turn-fixture-thread-2",
+            "threadId": "fixture-thread-2",
+            "modelProvider": "synthetic"
+          }
+        }
+      },
+      "totalTokens": 12,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5,
+        "inputTokenDetails": {
+          "cacheReadTokens": 0
+        },
+        "outputTokenDetails": {
+          "reasoningTokens": 0
+        }
+      }
+    },
+    "afterChild": {
+      "id": "call_4946cfbb-4523-4b14-8f8d-eb342a9235c2",
+      "executionTaskId": "t1310-codex-legacy-recovery-settled-execution-task-5",
+      "sequence": 3,
+      "operationKey": "structured:call_29b69d8a-3152-4b0d-b89b-be2ad46d9392:f10608f931b313e3f485c39dd0d6068ad29f5ec4d67436022f7c287f97b0f726/model/1",
+      "retryOfCallId": null,
+      "parentCallId": "call_29b69d8a-3152-4b0d-b89b-be2ad46d9392",
+      "kind": "model",
+      "inputDigest": "sha256:2aa257486bcebb5dfcb974160e6aea8fa9fb8ab7f9f204311db0068cc08279ee",
+      "status": "settled",
+      "reservedTokens": 18306,
+      "accountingBasis": "tokens",
+      "startedAttempt": 1,
+      "toolExecutionClaimId": null,
+      "usage": {
+        "inputTokens": 7,
+        "totalTokens": 12,
+        "outputTokens": 5,
+        "inputTokenDetails": {
+          "cacheReadTokens": 0
+        },
+        "outputTokenDetails": {
+          "reasoningTokens": 0
+        }
+      },
+      "resultText": null,
+      "providerResult": {
+        "sha256": "443e0dacc2a186d4fca5729b0a429c1356bf9d2aba83d0b1c8781dd83ccda9b5",
+        "usage": {
+          "inputTokens": {
+            "total": 7,
+            "cacheRead": 0
+          },
+          "outputTokens": {
+            "total": 5,
+            "reasoning": 0
+          }
+        },
+        "providerMetadata": {
+          "codex": {
+            "model": "t1310-fixture-model",
+            "turnId": "fixture-turn-fixture-thread-2",
+            "threadId": "fixture-thread-2",
+            "modelProvider": "synthetic"
+          }
+        }
+      },
+      "providerJob": null,
+      "rejectionCode": null,
+      "totalTokens": 12,
+      "resultRef": null,
+      "createdAt": "2026-10-16T06:28:08.764Z",
+      "updatedAt": "2026-10-16T06:28:09.251Z"
+    },
+    "callIdsUnchanged": true,
+    "operationKeysUnchanged": true,
+    "fenceChanged": true,
+    "attemptBefore": 1,
+    "attemptAfter": 2,
+    "nativeReads": [
+      {
+        "method": "fixture-read-original-turn",
+        "threadId": "fixture-thread-1",
+        "turnId": "fixture-turn-fixture-thread-1",
+        "role": "root",
+        "status": "inProgress",
+        "pid": 7054
+      }
+    ],
+    "totalTurnStarts": 2,
+    "bindingProofByCapturedHash": [
+      {
+        "data": {
+          "callId": "call_e5c391d5-8491-41ca-bc22-d2b49889fda4",
+          "threadId": "fixture-thread-1",
+          "turnId": "fixture-turn-fixture-thread-1"
+        },
+        "sha256": "5d94f05dc3ff60f01d3fd2b6eca422d310b1276e40548090f8ffd2c8df010a1c",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_4946cfbb-4523-4b14-8f8d-eb342a9235c2",
+          "threadId": "fixture-thread-2"
+        },
+        "sha256": "84727baced814411e759dad74f4af625946587eeaba39ed5b1ae6635808b5fea",
+        "actualBindPortHashMatches": true
+      },
+      {
+        "data": {
+          "callId": "call_4946cfbb-4523-4b14-8f8d-eb342a9235c2",
+          "turnId": "fixture-turn-fixture-thread-2"
+        },
+        "sha256": "f09d040fd22b8123aa9ba864376c40b840b41cd2eefde870384840cccd2da5ce",
+        "actualBindPortHashMatches": true
+      }
+    ],
+    "finalStatus": "unknown_result"
+  }
+]

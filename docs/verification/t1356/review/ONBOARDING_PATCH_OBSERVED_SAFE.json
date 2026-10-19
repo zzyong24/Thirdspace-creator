@@ -1,0 +1,113 @@
+{
+  "commit": "1a9de37e4",
+  "rawTraceLocalOnly": true,
+  "scope": "formal04 normal actual dispatch POST bodies, synthetic groups only",
+  "writes": [
+    {
+      "id": "settings.onboarding.group.patch",
+      "input": {
+        "params": {
+          "groupId": "grp-t1356-89dfee74-c6d3-46f0-a05e-0146be4c20b4"
+        },
+        "body": {
+          "completedSteps": [
+            "import-account",
+            "confirm-origin"
+          ],
+          "origin": "existing"
+        }
+      },
+      "scenario": "primary"
+    },
+    {
+      "id": "settings.onboarding.group.patch",
+      "input": {
+        "params": {
+          "groupId": "grp-t1356-fba21c7d-5eba-4719-a439-bed128214e46"
+        },
+        "body": {
+          "completedSteps": [
+            "import-account"
+          ],
+          "origin": null
+        }
+      },
+      "scenario": "browseZero"
+    },
+    {
+      "id": "settings.onboarding.group.patch",
+      "input": {
+        "params": {
+          "groupId": "grp-t1356-78fe9c77-12ab-4422-b24d-2682a6d80c6c"
+        },
+        "body": {
+          "completedSteps": [
+            "import-account"
+          ],
+          "origin": null
+        }
+      },
+      "scenario": "latestUnavailable"
+    },
+    {
+      "id": "settings.onboarding.group.patch",
+      "input": {
+        "params": {
+          "groupId": "grp-t1356-431a795a-fa33-458a-baf8-c66d86ffe90a"
+        },
+        "body": {
+          "completedSteps": [
+            "import-account"
+          ],
+          "origin": null
+        }
+      },
+      "scenario": "noMetric"
+    },
+    {
+      "id": "settings.onboarding.group.patch",
+      "input": {
+        "params": {
+          "groupId": "grp-t1356-8d5e2bb3-864d-4107-8100-cb6193eb1e51"
+        },
+        "body": {
+          "completedSteps": [
+            "import-account"
+          ],
+          "origin": null
+        }
+      },
+      "scenario": "ksOutside"
+    },
+    {
+      "id": "settings.onboarding.group.patch",
+      "input": {
+        "params": {
+          "groupId": "grp-t1356-fd8093bd-56ba-42bd-9611-6035cba6a4b6"
+        },
+        "body": {
+          "completedSteps": [
+            "confirm-origin"
+          ],
+          "origin": "existing"
+        }
+      },
+      "scenario": "transferA"
+    },
+    {
+      "id": "settings.onboarding.group.patch",
+      "input": {
+        "params": {
+          "groupId": "grp-t1356-74aa207c-71f8-4e46-b6c3-c9c8e6559552"
+        },
+        "body": {
+          "completedSteps": [
+            "import-account"
+          ],
+          "origin": null
+        }
+      },
+      "scenario": "transferB"
+    }
+  ]
+}

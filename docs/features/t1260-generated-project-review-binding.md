@@ -1,0 +1,7 @@
+# T-1260 生成项目记忆与审核绑定漂移
+
+2026-10-13 T1259完整reconcile实测26ERROR：25条与docs/verification/t1238/reconcile-final.txt逐字一致，另外T1255审核receipt的constitution hash已变化。T1255最后真实review event绑定constitution_path=PROJECT.md，该文件由pmem sync自动生成，包含HEAD和整个开放任务队列，普通任务/同步就可能改变全文SHA。原receipt绑定15c177f592797eaf1873492aa7d45b55e2e2cc2cc1a4739b63fd85e3e789a56a。
+
+本轮遵照项目要求确实执行pmem sync，没有伪造任何旧审核；尚未证明具体是哪次同步第一次使收据失效，不能当作原业务规格被修改。该控制面漂移在既有开放T1255任务，不是T1259两个实现缺陷的Gate失败；不修改原hash/event来洗PASS。下一步只读核constitution目标、项目生成段与稳定规范的边界，再对需要的当前SPEC和稳定宪法实际独立评审记录新链；若改变审核/发布标准须DEC与用户确认。保旧回执、当前FAIL与T1255部署/密钥/双端验收欠项。
+
+证据：docs/verification/t1259/reconcile.txt及reconcile-disposition.json。本任务仅登记，未开工或宣称消除漂移。

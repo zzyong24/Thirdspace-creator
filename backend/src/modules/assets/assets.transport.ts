@@ -1,3 +1,4 @@
+import {VISUAL_TEMPLATE_OP_IDS} from "./visual-template.transport";
 import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
@@ -28,8 +29,11 @@ import type { MaterialLinkResource } from "@creatoros/contract";
 // PERSISTED_OPS from ASSET_OP_IDS (adding the module = registering it).
 
 export const ASSET_OP_IDS = [
+  ...VISUAL_TEMPLATE_OP_IDS,
   "assets.downloadUrl",
+  "assets.fileDownloadUrl",
   "assets.list",
+  "assets.search",
   "assets.uploads.create",
   "assets.uploads.complete",
   "assets.get",
@@ -44,7 +48,7 @@ export const ASSET_OP_IDS = [
 // [T-061] file: the asset's CURRENT asset_file row (投影 mimeType/fileSize/尺寸/时长
 // 进 assetResource;此前 list 不带 → 前端 fixture 兜底显示 octet-stream/0B)。null =
 // headless row(无文件)→ 字段落 null,诚实不编。
-function toAssetResource(row: AssetRow, file: AssetFileRow | null): AssetResource {
+function toAssetResource(row: AssetRow, file: AssetFileRow | null, tags: Array<{id:string;name:string}>|null): AssetResource {
   return {
     id: row.id,
     userId: row.userId,
@@ -56,6 +60,7 @@ function toAssetResource(row: AssetRow, file: AssetFileRow | null): AssetResourc
     assetType: row.assetType as AssetResource["assetType"],
     name: row.name,
     description: row.description,
+    tags,
     status: row.status as AssetResource["status"],
     isFavorite: row.isFavorite ?? false,
     mimeType: file?.mimeType ?? null,
@@ -135,6 +140,7 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 export function createAssetsTransport(
   serviceFactory: (ctx: RequestContext) => AssetsService,
+  projection: {readAssetTags?:(ctx:RequestContext,assetIds:string[])=>Promise<Record<string,Array<{id:string;name:string}>>>} = {},
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -142,16 +148,21 @@ export function createAssetsTransport(
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory(ctx);
+      const withTags=async(rows:AssetRow[],files:Map<string,AssetFileRow>):Promise<AssetResource[]>=>{
+        let labels:Record<string,Array<{id:string;name:string}>>|null=null;
+        if(rows.length&&projection.readAssetTags){try{labels=await projection.readAssetTags(ctx,rows.map(row=>row.id));}catch(error){console.warn("[assets] tag-read-unavailable",{name:error instanceof Error?error.name:"Other"});}}
+        return rows.map(row=>{const value=labels?.[row.id],tags=Array.isArray(value)&&value.every(tag=>tag&&typeof tag.id==="string"&&tag.id.length>0&&typeof tag.name==="string")?value.map(({id,name})=>({id,name})):null;return toAssetResource(row,row.currentFileId?files.get(row.currentFileId)??null:null,tags);});
+      };
       // [T-061] Resolve one asset row's current file for the 投影(单行 case 共用)。
       const withFile = async (row: AssetRow): Promise<AssetResource> => {
         const files = row.currentFileId
           ? await service.listFilesByIds(ctx, [row.currentFileId])
           : [];
-        return toAssetResource(row, files[0] ?? null);
+        return (await withTags([row],new Map(files.map(file=>[file.id,file]))))[0]!;
       };
 
       const { params, query, body } = (input ?? {}) as Input;
-      const p = (params ?? {}) as { assetId?: string; uploadId?: string };
+      const p = (params ?? {}) as { assetId?: string; assetFileId?: string; uploadId?: string };
       const q = (query ?? {}) as {
         page?: number;
         pageSize?: number;
@@ -160,6 +171,13 @@ export function createAssetsTransport(
       };
 
       switch (endpoint.id) {
+        case "assets.search": {
+          const input=(query??{}) as {query?:string;limit?:number;cursor?:string|null;assetTypes?:Array<"image"|"video"|"audio"|"document"|"subtitle">};
+          const result=await service.searchAssets(ctx,{query:input.query??"",limit:input.limit??24,cursor:input.cursor,assetTypes:input.assetTypes});
+          const ids=result.rows.map(row=>row.currentFileId).filter((id):id is string=>Boolean(id));
+          const files=new Map((await service.listFilesByIds(ctx,ids)).map(file=>[file.id,file]));
+          return {data:{items:await withTags(result.rows,files),nextCursor:result.nextCursor},meta:{requestId:ctx.requestId}};
+        }
         case "assets.list": {
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 20;
@@ -179,9 +197,7 @@ export function createAssetsTransport(
             ),
           );
           return {
-            data: rows.map((r) =>
-              toAssetResource(r, r.currentFileId ? filesById.get(r.currentFileId) ?? null : null),
-            ),
+            data: await withTags(rows,filesById),
             meta: {
               requestId: ctx.requestId,
               page,
@@ -212,6 +228,10 @@ export function createAssetsTransport(
         case "assets.downloadUrl": {
           // [T-055d SPEC §7.2] 下载 = 复制:签名 GET URL + 建议保存名。
           const dto = await service.getDownloadUrl(ctx, p.assetId ?? "");
+          return { data: dto, meta: { requestId: ctx.requestId } };
+        }
+        case "assets.fileDownloadUrl": {
+          const dto = await service.getAssetFileDownloadUrl(ctx, p.assetId ?? "", p.assetFileId ?? "");
           return { data: dto, meta: { requestId: ctx.requestId } };
         }
         case "assets.get": {

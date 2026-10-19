@@ -1,0 +1,71 @@
+diff --git a/backend/src/modules/execution/workbench-plan.service.ts b/backend/src/modules/execution/workbench-plan.service.ts
+index 103788738..ee813686e 100644
+--- a/backend/src/modules/execution/workbench-plan.service.ts
++++ b/backend/src/modules/execution/workbench-plan.service.ts
+@@ -2,7 +2,8 @@ import type {createAgenticToolBinding} from "./agentic-tool-binding";
+ import {canonicalJson} from "../ai/canonical-json";
+ import { isDeepStrictEqual } from "node:util";
+ import { createHash } from "node:crypto";
+-import { and, eq, executionCalls, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
++import { and, eq, isNull, executionCalls, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
++import {createPersistentTaskService} from "./persistent-task.service";
+ import type { RequestContext } from "@creatoros/contract";
+ import { workbenchArtifactSchema, workbenchPlanSchema, type WorkbenchPlan } from "@creatoros/contract/agent-workbench";
+ import { agenticToolOutcomeSchema, executionRefSchema, workerPortInputSchemas, workerReservationSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+@@ -294,7 +295,8 @@ export function createWorkbenchPlanService(db: Db, deps: {
+       });
+     },
+     async read(ctx: RequestContext, taskId: string): Promise<WorkbenchPlan | null> {
+-      const [task] = await db.select().from(executionTasks).where(and(eq(executionTasks.id, taskId), eq(executionTasks.userId, ctx.userId), eq(executionTasks.accountId, ctx.accountId ?? "")));
++      const frozen=await createPersistentTaskService(db).get(ctx,taskId);
++      const [task] = await db.select().from(executionTasks).where(and(eq(executionTasks.id, taskId), eq(executionTasks.userId, frozen.userId), frozen.groupId?eq(executionTasks.groupId,frozen.groupId):isNull(executionTasks.groupId), frozen.accountId?eq(executionTasks.accountId,frozen.accountId):isNull(executionTasks.accountId)));
+       if (!task) throw new OwnershipError("执行任务不存在");
+       return storedPlan(task.payload);
+     },
+diff --git a/backend/src/modules/execution/workbench-public.service.ts b/backend/src/modules/execution/workbench-public.service.ts
+index b3be597fa..3c1853afa 100644
+--- a/backend/src/modules/execution/workbench-public.service.ts
++++ b/backend/src/modules/execution/workbench-public.service.ts
+@@ -32,7 +32,7 @@ export function createWorkbenchPublicService(db:Db){
+    async inspect(ctx:RequestContext,taskId:string,input:{afterSequence:number;limit:number}){
+     const task=await tasks.get(ctx,taskId);
+     const plan=await plans.read(ctx,taskId);
+-    const [frozen]=await db.select({conversationId:sql<string|null>`${executionTasks.payload}->'modelInput'->>'conversationId'`,sourceMessageId:sql<string|null>`${executionTasks.payload}->'modelInput'->>'sourceMessageId'`,capabilities:sql<unknown>`${executionTasks.payload}->'modelInput'->'workbenchCapabilities'`,tools:sql<unknown>`${executionTasks.payload}->'modelInput'->'tools'`}).from(executionTasks).where(and(eq(executionTasks.id,task.id),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,ctx.accountId!)));
++    const [frozen]=await db.select({conversationId:sql<string|null>`${executionTasks.payload}->'modelInput'->>'conversationId'`,sourceMessageId:sql<string|null>`${executionTasks.payload}->'modelInput'->>'sourceMessageId'`,capabilities:sql<unknown>`${executionTasks.payload}->'modelInput'->'workbenchCapabilities'`,tools:sql<unknown>`${executionTasks.payload}->'modelInput'->'tools'`}).from(executionTasks).where(and(eq(executionTasks.id,task.id),eq(executionTasks.userId,task.userId),task.groupId?eq(executionTasks.groupId,task.groupId):isNull(executionTasks.groupId),task.accountId?eq(executionTasks.accountId,task.accountId):isNull(executionTasks.accountId)));
+     const frozenCapabilities=z.array(workbenchCapabilitySchema).parse(frozen?.capabilities??[]);
+     const frozenTools=z.array(z.object({name:z.string(),version:z.string(),effect:z.string().optional(),execution:z.string().optional()})).parse(frozen?.tools??[]).map(t=>({...t,effect:t.effect??null,execution:t.execution??null}));
+     const c=executionCalls;
+diff --git a/backend/src/modules/execution/workbench-public.test.ts b/backend/src/modules/execution/workbench-public.test.ts
+index 2ee493cf7..8973427de 100644
+--- a/backend/src/modules/execution/workbench-public.test.ts
++++ b/backend/src/modules/execution/workbench-public.test.ts
+@@ -97,3 +97,16 @@ it("异常模型提案经正式 transport 保留诊断，分页仍能找到前
+   expect(JSON.stringify(next)).not.toContain("not-current-page");
+  }finally{await client.close();}
+ });
++
++
++it("冻结来源/能力/计划原样读取，公共响应不输出payload与fence",async()=>{
++ const {db,client}=await createDb();
++ try{
++  const {chatWorkbenchPlanCapability}=await import('../ai-runtime/chat-workbench-plan-tool');
++  const plan={planRevision:1,steps:[]};
++  const task=await createPersistentTaskService(db).enqueue(ctx,{kind:'ai_task',ownerType:'ai_task',ownerId:'frozen-reader',idempotencyKey:'frozen-reader',payload:{modelInput:{conversationId:'owned-conversation',sourceMessageId:'owned-message',workbenchCapabilities:[chatWorkbenchPlanCapability],tools:[{name:'plan.update',version:'frozen-plan-v1',effect:'committed',execution:'host'}]},workbenchPlan:plan}});
++  const service=createWorkbenchPublicService(db),result=await service.inspect(ctx,task.id,{afterSequence:0,limit:2});
++  expect(result).toMatchObject({conversationId:'owned-conversation',sourceMessageId:'owned-message',plan,frozenTools:[{name:'plan.update',version:'frozen-plan-v1',effect:'committed',execution:'host'}]});
++  expect(result.frozenCapabilities).toEqual([chatWorkbenchPlanCapability]);expect(JSON.stringify(result)).not.toContain('fenceToken');expect(result).not.toHaveProperty('payload');
++ }finally{await client.close();}
++});
+diff --git a/backend/src/modules/execution/workbench-public.transport.ts b/backend/src/modules/execution/workbench-public.transport.ts
+index 0b7674ff0..74c3db09a 100644
+--- a/backend/src/modules/execution/workbench-public.transport.ts
++++ b/backend/src/modules/execution/workbench-public.transport.ts
+@@ -15,7 +15,7 @@ export function createWorkbenchPublicTransport(deps:{
+   reconcileFile?:(ctx:RequestContext,taskId:string,operationId:string)=>Promise<unknown>;
+ }):Transport{return {async request(endpoint,input,ctx){
+   if(!ctx)throw new AuthenticationError();
+-  if(!ctx.accountId&&!((endpoint.id==="workbench.capabilities.list"||endpoint.id==="workbench.modelCalls.summary")&&ctx.groupId))throw new OwnershipError("当前账号不存在");
++  if(!ctx.accountId&&!((endpoint.id==="workbench.capabilities.list"||endpoint.id==="workbench.modelCalls.summary"||endpoint.id==="workbench.tasks.inspect"||endpoint.id==="workbench.tasks.events")&&ctx.groupId))throw new OwnershipError("当前账号不存在");
+   const i=(input??{}) as {params?:unknown;query?:unknown;body?:unknown};
+   let data:unknown;
+   switch(endpoint.id){

@@ -4,8 +4,8 @@ import { POST as registerPOST } from "./register/route";
 import { POST as logoutPOST } from "./logout/route";
 import { GET as meGET } from "./me/route";
 import { resetStore } from "@/server/mock-backend/index";
-import { __resetPersistenceForTests } from "@/server/persistence-client";
-import { CANONICAL_USER_ID } from "@creatoros/backend/modules/identity";
+import { getIdentityService, __resetPersistenceForTests } from "@/server/persistence-client";
+let localUserId: string;
 
 // Module 00, Task 9 — the three bare auth routes (foundation §2, SPEC §13):
 //   POST /api/v1/auth/login   — email+password → set httpOnly session cookie
@@ -16,7 +16,7 @@ import { CANONICAL_USER_ID } from "@creatoros/backend/modules/identity";
 
 // [用户裁决 2026-07-06] canonical 用户属性不 seed(email/displayName 空)→ canonical 不能
 // email-login。故 email-login 端点(login/valid-cookie)改用**注册的专用测试用户**覆盖;
-// 免登录路径(无/坏 cookie 直通本机主用户 = canonical seed)仍以 CANONICAL_USER_ID 断言。
+// 免登录路径(无/坏 cookie 直通本机主用户 = canonical seed)通过真实 resolveLocalContext 核本例主用户。
 const TEST_EMAIL = "tester@creatoros.local";
 const TEST_PASSWORD = "test-pass-123";
 
@@ -66,9 +66,10 @@ async function registerTestUser(): Promise<{ id: string; cookie?: string }> {
   return { id: json.data.id, cookie: sessionCookieFrom(res) };
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   resetStore();
   __resetPersistenceForTests();
+  localUserId = (await (await getIdentityService()).resolveLocalContext()).userId;
 });
 
 describe("POST /api/v1/auth/login", () => {
@@ -129,14 +130,14 @@ describe("GET /api/v1/auth/me", () => {
     expect(json.data.email).toBe(TEST_EMAIL);
   });
 
-  // [T-046 单机免登录] 无/坏 cookie 不再 401,以本机主用户(最早创建 = canonical seed)直通。
+  // [T-046 单机免登录] 无/坏 cookie 不再 401,以本机主用户(最早创建的真实本机主用户)直通。
   it("without a cookie → 200 直通本机主用户(T-046 单机免登录)", async () => {
     const res = await meGET(
       withCookie("http://localhost/api/v1/auth/me", "GET"),
     );
     expect(res.status).toBe(200);
     const json = (await res.json()) as { data: { id: string } };
-    expect(json.data.id).toBe(CANONICAL_USER_ID);
+    expect(json.data.id).toBe(localUserId);
   });
 
   it("with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)", async () => {
@@ -149,7 +150,7 @@ describe("GET /api/v1/auth/me", () => {
     );
     expect(res.status).toBe(200);
     const json = (await res.json()) as { data: { id: string } };
-    expect(json.data.id).toBe(CANONICAL_USER_ID);
+    expect(json.data.id).toBe(localUserId);
   });
 });
 
@@ -175,7 +176,7 @@ describe("POST /api/v1/auth/logout", () => {
     );
     expect(me.status).toBe(200);
     const meJson = (await me.json()) as { data: { id: string } };
-    expect(meJson.data.id).toBe(CANONICAL_USER_ID);
+    expect(meJson.data.id).toBe(localUserId);
   });
 
   it("is idempotent — logout with no cookie → 200", async () => {

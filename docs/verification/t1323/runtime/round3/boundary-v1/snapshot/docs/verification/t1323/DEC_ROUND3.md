@@ -1,0 +1,5 @@
+# T1323 round3 精确授权
+
+Root基于ordinary-source-red-v1真实保护FAIL与R草案b236acbd明确授权dispatcher唯一新增W，仅连接实际getChatTools/ref map/原binder的只读同步validator；checkpoint现有W与同一新增组合test/runtime不变。原树/费用/UNKNOWN/恢复/权限无新语义。三项明确：non-native/空树不额外取tools、解析在lease外而同tx校当前全calls、native幂等save早回前也验证；新增输入名单以ROUND3 lock为准。
+
+旧SPEC ba137、旧46/兄弟52锁、原REV6c5误导入限制与round2 PASS都保持。此次真实FAIL是修后保护，不追作原主前RED。C1325主完整两链已结束且backend消费者不调用dispatcher；若后续新dispatcher改动仅chat checkpoint边界，必须独立实际diff核定旧非chat媒体结果引用，不能拿巨文件hash当全量作废或冒新源已测。Root无新用户确认缺项，仍需B同lineage独审、真实工具record/新scope/lease/packet才实施增量。

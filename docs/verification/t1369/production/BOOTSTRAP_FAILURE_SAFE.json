@@ -1,0 +1,29 @@
+{
+  "primaryPhase": "T1355 fixture tsx CLI bootstrap",
+  "error": "listen EINVAL",
+  "socketPathBytes": 119,
+  "macosUnixSocketPathLimitBytes": 103,
+  "pathExceedsLimit": true,
+  "socketPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-production-control-s1qfucy1/tsx-501/21023.pipe",
+  "fixtureOwnerCreated": false,
+  "fixtureReadyCreated": false,
+  "productionServerPhaseFileExists": false,
+  "buildStarted": false,
+  "tokenGenerated": false,
+  "productionNavigationExecuted": false,
+  "execution": {
+    "outerTimeout": false,
+    "resourceLimit": false,
+    "preflightExitCode": 0,
+    "ownedRunnerPid": 21003,
+    "exitCode": 1,
+    "durationSeconds": 5.155582667037379,
+    "endedAtUnix": 1792391590.575209,
+    "ownedPortListenersAfter": {
+      "41387": [],
+      "41388": [],
+      "41389": []
+    }
+  },
+  "boundary": "已证长Unix IPC路径；未证明SBPL对短私有Unix IPC是否允许。原FAIL不改，未自动再跑，不归为产品RED。"
+}

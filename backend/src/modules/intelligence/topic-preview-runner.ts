@@ -22,6 +22,10 @@ export interface TopicPreviewGeneratorPort {
     onCheckpoint: (checkpoint: TopicPreviewCheckpoint) => Promise<void>,
     claim?:PersistentTaskClaim,
   ): Promise<{
+    generationMode: "rewrite_only";
+    adaptedDraft: string;
+  } | {
+    generationMode?: "strategy_backed";
     hook: string;
     structureSteps: string[];
     coreClaims: string[];
@@ -77,7 +81,7 @@ export type TopicPreviewCandidate = {
 export type TopicPreviewCheckpoint =
   | { stage: "decomposition"; value: TopicPreviewDecomposition }
   | { stage: "topic"; value: TopicPreviewCandidate }
-  | { stage: "draft"; value: { contentText: string } };
+  | { stage: "draft"; value: { contentText: string; templateVersion?: string } };
 
 export interface TopicPreviewRunnerDeps {
   tasks: PersistentTaskService;
@@ -131,10 +135,10 @@ export function classifyTopicPreviewFailure(error: unknown): {
     break;
   }
   const signal = parts.join(" ").toLowerCase();
-  if (/401|403|api.?key|credential|unauthori|鉴权|密钥/.test(signal)) {
+  if (/401|403|api.?key|credential|unauthori|鉴权|密钥|model[_\s-]*(?:not[_\s-]*)?configured|模型.{0,8}(?:未配置|没有配置)/.test(signal)) {
     return {
       category: "credential",
-      message: "模型配置不可用，请在设置中检查后重试",
+      message: "还没有可用的 AI 模型，请完成模型设置后继续原任务",
     };
   }
   if (/positioning|定位/.test(signal)) {
@@ -146,7 +150,8 @@ export function classifyTopicPreviewFailure(error: unknown): {
   if (/timeout|timed.?out|abort(?:ed)?|超时/.test(signal)) {
     return {
       category: "timeout",
-      message: "模型响应超时，请重试生成选题卡",
+      message: "模型响应超时，系统正在自动恢复",
+
     };
   }
   if (
@@ -156,18 +161,19 @@ export function classifyTopicPreviewFailure(error: unknown): {
   ) {
     return {
       category: "output_invalid",
-      message: "模型输出不完整，请重试生成选题卡",
+      message: "模型输出不完整，系统正在继续生成选题卡",
+
     };
   }
   if (/502|503|504|network|econn|fetch failed|网络/.test(signal)) {
     return {
       category: "network",
-      message: "模型服务暂时不可用，请稍后重试",
+      message: "模型服务暂时不可用，系统正在自动恢复",
     };
   }
   return {
     category: "unknown",
-    message: "生成选题卡失败，请重试",
+    message: "生成改写稿失败，请重试",
   };
 }
 
@@ -191,15 +197,18 @@ export async function runIntelligenceTopicPreviewTask(
     taskId: input.taskId,
     workerId: claim.lease.workerId,
     attempt: claim.lease.attempt,
+    fenceToken: claim.lease.fenceToken,
   };
   let pendingStage: TopicPreviewCheckpoint["stage"] = "decomposition";
   let targetTransformId: string | null = null;
+  const rewriteDraftCheckpoint: { value: { contentText: string } | null } = { value: null };
   try {
     const target = await deps.intelligence.getTopicPreviewForExecution(
       ctx,
       input.taskId,
     );
     targetTransformId = target.transformId;
+    if (target.generationMode === "rewrite_only") pendingStage = "draft";
     input.signal?.throwIfAborted();
     const generated = await deps.generator.generate(
       ctx,
@@ -215,6 +224,9 @@ export async function runIntelligenceTopicPreviewTask(
             transcriptHash: target.transcript.hash,
           },
         );
+        if (target.generationMode === "rewrite_only" && checkpoint.stage === "draft") {
+          rewriteDraftCheckpoint.value = { contentText: checkpoint.value.contentText };
+        }
         await deps.tasks.heartbeat({
           ...lease,
           leaseSeconds: TOPIC_PREVIEW_LEASE_SECONDS,
@@ -232,11 +244,13 @@ export async function runIntelligenceTopicPreviewTask(
     await deps.intelligence.finishTopicPreview(
       ctx,
       target.transformId,
-      {
-        ...generated,
-        sourceUrl: target.item.canonicalUrl,
-        transcriptHash: target.transcript.hash,
-      },
+      generated.generationMode === "rewrite_only"
+        ? generated
+        : {
+            ...generated,
+            sourceUrl: target.item.canonicalUrl,
+            transcriptHash: target.transcript.hash,
+          },
     );
     await deps.tasks.finish({
       ...lease,
@@ -245,13 +259,29 @@ export async function runIntelligenceTopicPreviewTask(
   } catch (error) {
     if(input.signal?.aborted)return;
     if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
+    if (targetTransformId && rewriteDraftCheckpoint.value) {
+      try {
+        await deps.intelligence.finishTopicPreview(ctx, targetTransformId, {
+          generationMode: "rewrite_only",
+          adaptedDraft: rewriteDraftCheckpoint.value.contentText,
+        });
+        await deps.tasks.finish({ ...lease, status: "succeeded" });
+        return;
+      } catch {
+        // 保存的 checkpoint 只有在来源与逐字稿证明仍有效时才可收敛为成功；
+        // 若租约已失效或证据变动，继续报告原任务状态。
+      }
+    }
     const failure = classifyTopicPreviewFailure(error);
-    const blocked =
+    const waitingForUser =
       failure.category === "positioning" || failure.category === "credential";
+    const recoverable = ["timeout", "output_invalid", "network"].includes(
+      failure.category,
+    );
     console.warn(
       `[intelligence-topic] generation_failed category=${failure.category}`,
     );
-    if (targetTransformId) {
+    if (targetTransformId && !waitingForUser && !recoverable) {
       try {
         await deps.intelligence.markTopicPreviewStageFailed(
           ctx,
@@ -269,13 +299,23 @@ export async function runIntelligenceTopicPreviewTask(
     }
     await deps.tasks.finish({
       ...lease,
-      status: blocked ? "blocked" : "failed",
+      status: waitingForUser
+        ? "waiting_user"
+        : recoverable
+          ? "retry_wait"
+          : "failed",
       errorCode:
         failure.category === "positioning"
           ? "POSITIONING_MISSING"
           : failure.category === "credential"
             ? "MODEL_CONFIGURATION_REQUIRED"
-            : "TOPIC_PREVIEW_FAILED",
+            : failure.category === "timeout"
+              ? "TOPIC_PREVIEW_TIMEOUT"
+              : failure.category === "output_invalid"
+                ? "TOPIC_PREVIEW_OUTPUT_INVALID"
+                : failure.category === "network"
+                  ? "TOPIC_PREVIEW_NETWORK"
+                  : "TOPIC_PREVIEW_FAILED",
       errorMessage: failure.message,
     });
   }
@@ -310,7 +350,7 @@ export async function drainIntelligenceTopicPreviewQueue(
     if (!claim || isTaskDrainStopping(options)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
-      accountId: claim.task.accountId,
+      accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined,
       requestId: `execution:${claim.task.id}`,
       source: "user",
     };

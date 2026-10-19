@@ -1,3 +1,8 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["project-1", "user-1", "acct-1"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import {
@@ -36,6 +41,7 @@ let transport: Transport;
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedOwnedProjects(db);
   let seq = 0;
   const service = createArtifactsService({
     db,
@@ -168,4 +174,15 @@ describe("artifacts.transport — 8-op contract conformance", () => {
     expect(parsed.data.relationType).toBe("references");
     expect(parsed.data.sourceArtifactId).toBe(source);
   });
+});
+
+it('只读预留投影不可由公开create/version请求伪造，私有指针始终不外泄',async()=>{
+ const {createScriptDraftTargetService}=await import('./script-draft-target.service');let seq=0;
+ const reservedId=await db.transaction(tx=>createScriptDraftTargetService({now:()=>new Date().toISOString(),nextId:prefix=>`reserved-t1331-${prefix}-${++seq}`}).ensure(tx as unknown as Db,ctx,'project-1'));
+ const reserved=(await call('artifacts.get',{params:{artifactId:reservedId}})) as {data:Record<string,unknown>};expect(reserved.data.currentVersionIsReserved).toBe(true);expect(reserved.data).not.toHaveProperty('scriptDraftReservationVersionId');
+ const forged=(await call('artifacts.create',{params:{projectId:'project-1'},body:{title:'正式公开空稿',artifactType:'output_script',stage:'script',currentVersionIsReserved:true,scriptDraftReservationVersionId:reserved.data.currentVersionId}})) as {data:Record<string,unknown>};
+ expect(forged.data.currentVersionIsReserved).toBe(false);expect(forged.data).not.toHaveProperty('scriptDraftReservationVersionId');
+ await call('artifacts.versions.create',{params:{artifactId:reservedId},body:{contentText:'',currentVersionIsReserved:true,scriptDraftReservationVersionId:reserved.data.currentVersionId}});
+ const confirmed=(await call('artifacts.get',{params:{artifactId:reservedId}})) as {data:Record<string,unknown>};expect(confirmed.data.currentVersionIsReserved).toBe(false);expect(confirmed.data).not.toHaveProperty('scriptDraftReservationVersionId');
+ const {currentVersionIsReserved:ignored,...oldDto}=confirmed.data;expect(()=>artifactResource.parse(oldDto)).not.toThrow();
 });

@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -57,9 +58,9 @@ export async function assertScriptPartialAdoptable(
       and(
         eq(aiTasks.id, input.taskId),
         eq(aiTasks.userId, context.userId),
-        eq(aiTasks.accountId, context.accountId),
+        workspaceFilter(aiTasks,context),
         eq(executionTasks.userId, context.userId),
-        eq(executionTasks.accountId, context.accountId),
+        workspaceFilter(executionTasks,context),
       ),
     );
   if (

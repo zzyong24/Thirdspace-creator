@@ -2,7 +2,7 @@
  * 共用上传链(T-146 抽取):把一个文件上传到「当前项目」的弹药库。
  *
  * 原本这套 createUpload → PUT uploadUrl → completeUpload → materialLinks →
- * 确定性标签 → fire-and-forget AI 归类/文档抽取 的流程内联在 `ammo-dump-zone.tsx`
+ * 确定性标签 → best-effort，等待本次范围检查 AI 归类/文档抽取 的流程内联在 `ammo-dump-zone.tsx`
  * 的 `uploadOne` 里。T-146 要在稿面「写之前先备料」CTA 加「＋上传素材」按钮(PR/接商单
  * 场景:上传自己的 PDF/Word/MD 资料进当前项目弹药库),两处走同一条链——故抽成本模块,
  * AmmoDumpZone 与 CreationFlowCtas 共用,不重造上传逻辑。
@@ -16,7 +16,7 @@
  *   - document 额外触发 material.extract(抽全文 + AI 要点卡,T-146 后端已做)。
  */
 
-import { client } from "@/lib/contract-client";
+import {createCreationWorkspace,readCreationScope,type CreationOperation} from "@/lib/creation-workspace-scope";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { classifyFile } from "./classify-asset";
 import { assignTagsBestEffort } from "./ammo-dump-zone";
@@ -38,10 +38,16 @@ export interface UploadedCreatorAsset {
 export async function uploadFileForCopilot(
   file: File,
   projectId?: string | null,
+  captured?: CreationOperation,
 ): Promise<UploadedCreatorAsset | null> {
+  const workspace=captured?null:createCreationWorkspace(readCreationScope());
+  workspace?.activate();
+  const operation=captured??workspace!.capture(),api=operation.client;
+  try {
+  operation.assertCurrent();
   const mimeType = file.type || "application/octet-stream";
   const { assetType, tags } = classifyFile(file.name, mimeType);
-  const upload = (await client.createUpload({
+  const upload = (await api.createUpload({
     params: undefined,
     query: undefined,
     body: {
@@ -52,23 +58,29 @@ export async function uploadFileForCopilot(
       fileName: file.name,
     },
   })) as unknown as { uploadId: string; uploadUrl: string; assetId: string };
+  operation.assertCurrent();
   if (!upload.uploadUrl.startsWith("mock://")) {
     const put = await fetch(upload.uploadUrl, {
       method: "PUT",
       headers: { "content-type": mimeType },
       body: file,
+      signal: operation.signal,
     });
+    operation.assertCurrent();
     if (!put.ok) throw new Error(`PUT ${put.status}`);
   }
-  const asset = (await client.completeUpload({
+  operation.assertCurrent();
+  const asset = (await api.completeUpload({
     params: { uploadId: upload.uploadId },
     query: undefined,
     body: { name: file.name },
   })) as unknown as { id: string };
+  operation.assertCurrent();
   if (!asset?.id) return null;
   const deduplicated = Boolean(upload.assetId && upload.assetId !== asset.id);
   if (projectId) {
-    await client.createMaterialLink({
+    operation.assertCurrent();
+    await api.createMaterialLink({
       params: undefined,
       query: undefined,
       body: {
@@ -80,9 +92,11 @@ export async function uploadFileForCopilot(
       },
     });
   }
-  if (!deduplicated) await assignTagsBestEffort(asset.id, tags);
+  operation.assertCurrent();
+  if (!deduplicated) await assignTagsBestEffort(asset.id, tags,operation);
+  operation.assertCurrent();
   // AI 归类排队慢跑(未配视觉模型 → runner 诚实跳过)。
-  if (!deduplicated) void client
+  if (!deduplicated) await api
     .createAITask({
       params: undefined,
       query: undefined,
@@ -92,11 +106,11 @@ export async function uploadFileForCopilot(
         inputData: { assetId: asset.id },
       },
     })
-    .catch(() => undefined);
-  // [T-146] document 上传完成 → fire-and-forget 文档抽取(抽全文 + AI 要点卡)。
+    .catch(() => {operation.assertCurrent();});
+  // [T-146] document 上传完成 → best-effort，等待本次范围检查 文档抽取(抽全文 + AI 要点卡)。
   // 只对 document 触发;fileName 传给 runner 做 mimeType 分派兜底(File.type 常为空)。
   if (assetType === "document" && !deduplicated) {
-    void client
+    await api
       .createAITask({
         params: undefined,
         query: undefined,
@@ -106,8 +120,9 @@ export async function uploadFileForCopilot(
           inputData: { assetId: asset.id, fileName: file.name },
         },
       })
-      .catch(() => undefined);
+      .catch(() => {operation.assertCurrent();});
   }
+  operation.assertCurrent();
   return {
     assetId: asset.id,
     name: file.name,
@@ -115,12 +130,14 @@ export async function uploadFileForCopilot(
     assetType,
     deduplicated,
   };
+  } finally {workspace?.dispose();}
 }
 
 export async function uploadFileToProject(
   projectId: string,
   file: File,
+  operation?: CreationOperation,
 ): Promise<{ assetId: string } | null> {
-  const uploaded = await uploadFileForCopilot(file, projectId);
+  const uploaded = await uploadFileForCopilot(file, projectId,operation);
   return uploaded ? { assetId: uploaded.assetId } : null;
 }

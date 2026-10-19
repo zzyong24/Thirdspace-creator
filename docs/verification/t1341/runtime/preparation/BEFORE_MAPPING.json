@@ -1,0 +1,132 @@
+{
+  "head": "fb532c241615c24c0d3f15d903531c9bbe74a33c",
+  "files": [
+    {
+      "path": "contract/src/resources/assets.ts",
+      "bytes": 3609,
+      "sha256": "b77549ee2e86ae5370105ba95ceb343035819c63972d4bf184c70af66d2d22a6",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/contract/src/resources/assets.ts",
+      "headBlob": "0f018d8c1a9cd51dd18f26c6a67ddc3e8de4b0cb"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.repository.ts",
+      "bytes": 31913,
+      "sha256": "260238185895035f8ed767edcf28af186dc39e181315301015c600f84403783d",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/assets/assets.repository.ts",
+      "headBlob": "a55b6fa03e8840d8766c8fddb15e92a16b9d0400"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.service.ts",
+      "bytes": 41738,
+      "sha256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/assets/assets.service.ts",
+      "headBlob": "d420f5b7d0b923f5e28700977ff60c9d88c39029"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.transport.ts",
+      "bytes": 11878,
+      "sha256": "705d27c26c9c53a749058b979c3edc966d3709508af581ee02fd11c376f14843",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/assets/assets.transport.ts",
+      "headBlob": "6bacb50bebc5a57730b8a7031712647a567a18d5"
+    },
+    {
+      "path": "backend/src/modules/taxonomy/taxonomy.repository.ts",
+      "bytes": 12286,
+      "sha256": "973ec9472523a4c2f6130716b90f3c44f4543b59af4812bc2b19b7f6767b8c81",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/taxonomy/taxonomy.repository.ts",
+      "headBlob": "30e51477dbf2d7816ce9a2a463208c0a6d78edba"
+    },
+    {
+      "path": "backend/src/modules/taxonomy/taxonomy.service.ts",
+      "bytes": 7793,
+      "sha256": "9e2b85e91cdb33a510511aba12e4a9c8e6c71ebe69e3fee74b2ae394811dbbc1",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/taxonomy/taxonomy.service.ts",
+      "headBlob": "20e16a9f6514fc3dab0a88e969a24384a4935e19"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 474818,
+      "sha256": "0a0550e1a142a9869c6c4a18b178e6234e812346473c25c14fc674f613926c86",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/server/persistence-client.ts",
+      "headBlob": "d1b1d63dff7c573a67c0f059ef7097ce8049e9d7"
+    },
+    {
+      "path": "frontend/src/fixtures/selectors/assets.ts",
+      "bytes": 9238,
+      "sha256": "e185c477d69a7f4dad9e26c1bdd9897b00c1dc975dcd478f77b4ac1556f6d43d",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/fixtures/selectors/assets.ts",
+      "headBlob": "1f773430df33e1b581a8da1aeafa235effd4fac2"
+    },
+    {
+      "path": "frontend/src/features/assets/assets-page.tsx",
+      "bytes": 26200,
+      "sha256": "7cc5815c9f1ac773656f0092d141fe76fc089cc67dc251a6f939e796011271c8",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/features/assets/assets-page.tsx",
+      "headBlob": "79e81e7552cbb67adad36540d9410015f9b50808"
+    },
+    {
+      "path": "frontend/src/components/resources/asset-detail-panel.tsx",
+      "bytes": 12179,
+      "sha256": "acd896faa4ba534d34942f292db6acb37458934d5d33d0100a090d423c1e0cb1",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/components/resources/asset-detail-panel.tsx",
+      "headBlob": "9f3fedef5745875c4fbbd8d5d25a2d3a55febad8"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.repository.integration.test.ts",
+      "bytes": 20171,
+      "sha256": "75a0606a83b69fe190db7f4d135c287f9821901c9cacbd640b108e1d04e12e48",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/assets/assets.repository.integration.test.ts",
+      "headBlob": "4fb849d8198a0e88e131af0e7f43e38c9b83d05b"
+    },
+    {
+      "path": "backend/src/modules/taxonomy/taxonomy.repository.integration.test.ts",
+      "bytes": 4816,
+      "sha256": "cd61a5fbd217b3edb923521ed3646fddcb5dd42bad0c5956284785af4d9ec1ee",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/taxonomy/taxonomy.repository.integration.test.ts",
+      "headBlob": "58c2d738b7a16f9864687ca4649c7e305f756d58"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.contract.test.ts",
+      "bytes": 7063,
+      "sha256": "bd42ab30d92f56ef0598256930215a7b234036786e42736f3f8c304068b1754c",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/backend/src/modules/assets/assets.contract.test.ts",
+      "headBlob": "8aae636647b5e062dfe8e26263222af524a0a51d"
+    },
+    {
+      "path": "frontend/src/features/assets/assets-data.test.ts",
+      "bytes": 14475,
+      "sha256": "f948a67d7c4d209137c932323b212227cf2ea4682034cc255605dac84e3692ca",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/features/assets/assets-data.test.ts",
+      "headBlob": "5b83c8bb1acd6e5276176f7625ec1894e9641123"
+    },
+    {
+      "path": "frontend/src/features/assets/assets-page.test.tsx",
+      "bytes": 18181,
+      "sha256": "569f2190c249f52e75bf3f0b244d87262b42a1a1e3570a3cb713783394f5d64d",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/features/assets/assets-page.test.tsx",
+      "headBlob": "c7dbeb8a3b577a39f830bc0862c539328ccf1d35"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/agentic-task-tool-visibility.persistence-client.test.ts",
+      "bytes": 26096,
+      "sha256": "0a75f28926e3abd1d8647d5bb2723b87d9bd896bf59e6bf1baef85bd14287681",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/server/__module_integration__/agentic-task-tool-visibility.persistence-client.test.ts",
+      "headBlob": "70f629e0959aa9731fe40816090eb8ba387eb80a"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/agentic-knowledge-native-binding.persistence-client.test.ts",
+      "bytes": 27304,
+      "sha256": "6807cf390956eb44ffe102100037adb950b2023505c02afc340d82c63a99e4b8",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/server/__module_integration__/agentic-knowledge-native-binding.persistence-client.test.ts",
+      "headBlob": "00fcd3fe97c9a7854593d39f4be0b2bf83d84688"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/agentic-skill-catalog-isolation.persistence-client.test.ts",
+      "bytes": 27954,
+      "sha256": "ad63d2b07614e2eb33fd62e002fd0965e844032fb8a200a56e55cd6080d04fe4",
+      "snapshot": "docs/verification/t1341/runtime/preparation/before/frontend/src/server/__module_integration__/agentic-skill-catalog-isolation.persistence-client.test.ts",
+      "headBlob": "d656850006727648ff08b45e209d21765892a17d"
+    }
+  ],
+  "historicalEvidence": "旧输出与索引只读；当前3维护test来源由完整snapshot和HEAD blob保留。"
+}

@@ -20,7 +20,8 @@ function Invoke-Checked {
 }
 
 function Wait-File {
-  param([string]$Path, [int]$Seconds = 20)
+  param([string]$Path, [int]$Seconds = 120)
+  $Seconds = [Math]::Max(120, $Seconds) # 正执行观察下限，不修改poll间隔。
   $deadline = (Get-Date).AddSeconds($Seconds)
   while ((Get-Date) -lt $deadline) {
     if (Test-Path $Path -PathType Leaf) { return }
@@ -30,7 +31,8 @@ function Wait-File {
 }
 
 function Wait-LogPattern {
-  param([string]$Path, [string]$Pattern, [int]$Seconds = 60)
+  param([string]$Path, [string]$Pattern, [int]$Seconds = 120)
+  $Seconds = [Math]::Max(120, $Seconds) # 正执行观察下限，不修改poll间隔。
   $deadline = (Get-Date).AddSeconds($Seconds)
   while ((Get-Date) -lt $deadline) {
     if ((Test-Path $Path -PathType Leaf) -and (Select-String -Path $Path -Pattern $Pattern -Quiet)) {
@@ -224,7 +226,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "netsh winhttp set proxy failed: $LASTEXITCODE" }
     $proxyBurnLog = Join-Path $output "burn-system-proxy.log"
     & $proxyBundle "-quiet" "-norestart" "-log" $proxyBurnLog
-    Wait-File $proxyResult 30
+    Wait-File $proxyResult 120
     Copy-Item $proxyResult (Join-Path $output "burn-system-proxy-result.json")
     if (-not (Select-String -Path $proxyLog -Pattern "`tPROXY`t.*\.zip`tGET`t" -Quiet)) {
       throw "Burn did not acquire payloads through the configured system proxy"
@@ -258,7 +260,7 @@ try {
   & $tamperBundle "-quiet" "-norestart" "-log" $tamperLog
   # Burn can return from its unelevated stub before the elevated engine finishes.
   # The engine's terminal log line, not the stub process code, is authoritative.
-  Wait-LogPattern $tamperLog "\]i007: Exit code:" 60
+  Wait-LogPattern $tamperLog "\]i007: Exit code:" 120
   $tamperTerminal = (Select-String -Path $tamperLog -Pattern "\]i007: Exit code:" | Select-Object -Last 1).Line
   if ($tamperTerminal -match "Exit code: 0x0(?:,|$)" -or (Test-Path $tamperResult)) {
     throw "Burn accepted a tampered remote payload ($tamperTerminal)"

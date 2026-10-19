@@ -63,7 +63,7 @@ function thumbnailTokenFor(assetType: AssetType, assetId: string): string {
 // list op does not join `asset_files`, so file-derived fields (mimeType /
 // fileSize / dimensions / duration) are resolved from the canonical files when a
 // matching `currentFileId` is seeded, else fall back to deterministic defaults.
-// Tags come from canonical entity_tags (Taxonomy-owned; decorative this wave).
+// 真实资源标签只读DTO；缺省/null为未知，明确演示builder独立保留canonical数据。
 export interface AssetListRow {
   readonly id: string;
   readonly currentFileId: string;
@@ -91,6 +91,7 @@ export interface AssetListRow {
   } | null;
   readonly extractedText?: string | null;
   readonly sourceUrl?: string | null;
+  readonly tags?: ReadonlyArray<{readonly id:string;readonly name:string}> | null;
 }
 
 export function buildAssetSummariesFromResources(
@@ -101,10 +102,7 @@ export function buildAssetSummariesFromResources(
   );
   return rows.map<AssetSummary>((asset) => {
     const file = filesById.get(asset.currentFileId);
-    const tagsForAsset = canonicalDataset.entityTags
-      .filter((row) => row.entityType === "asset" && row.entityId === asset.id)
-      .map((row) => canonicalDataset.tags.find((tag) => tag.id === row.tagId)?.name)
-      .filter((name): name is string => Boolean(name));
+    const tagsForAsset = asset.tags?.map(tag=>tag.name) ?? [];
     return {
       id: asset.id,
       name: asset.name,
@@ -117,6 +115,7 @@ export function buildAssetSummariesFromResources(
       height: asset.height ?? file?.height ?? null,
       durationMs: asset.durationMs ?? file?.durationMs ?? null,
       tags: tagsForAsset,
+      tagsReadState:Array.isArray(asset.tags)?"known":"unavailable",
       thumbnailToken: thumbnailTokenFor(asset.assetType, asset.id),
       updatedAt: asset.updatedAt,
       // [T-381] 入库时间透传(统一「按新旧」排序键;op 行必带,缺省回退 updatedAt)。

@@ -1,3 +1,7 @@
+import type {ExecutionRoute} from '@creatoros/contract/execution-worker';
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
+import {workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
+import {requireAccountId} from "./benchmark.errors";
 import {createHash,randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {and,asc,eq,isNull,aiTasks,benchmarkWorks,executionTasks,type Db} from '@creatoros/backend';
@@ -17,6 +21,9 @@ import type {TranscribeResourceBinding} from '../execution/transcribe-execution-
 
 export interface BenchmarkTranscriptionDeps extends Omit<ClaimedAsrStageDeps,'bindResource'|'runWorker'> {
  ai:Pick<AiService,'createTask'>;entryPath:string|(()=>string);wake?:()=>void;
+ /** 同一原快照；此端口不得领按次Key或调用模型。 */
+ captureConfiguration(ctx:RequestContext):Promise<{configuration:ReturnType<typeof transcribeConfiguration>;executionRoute:ExecutionRoute}>;
+ createTaskWithRoute(ctx:RequestContext,body:Parameters<AiService['createTask']>[1],route:ExecutionRoute):ReturnType<AiService['createTask']>;
 }
 export class BenchmarkTranscriptionPending extends Error {
  readonly code='BENCHMARK_TRANSCRIPTION_PENDING';
@@ -27,8 +34,8 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
  const tasks=createPersistentTaskService(db,deps),authority=createExecutionAuthorityService(db,deps),leases=createExecutionLeaseService(db,deps);
  const ledger=createExecutionCallLedgerService(db,deps),outcomes=createExecutionWorkerOutcomeService(db,deps),supervision=createClaimedWorkerSupervision(deps);
  const shutdown=new AbortController(),runs=new Map<string,Promise<void>>(),now=deps.now??(()=>new Date().toISOString());
- const workWhere=(ctx:RequestContext,id:string)=>and(eq(benchmarkWorks.id,id),eq(benchmarkWorks.userId,ctx.userId),eq(benchmarkWorks.accountId,ctx.accountId??''));
- const taskWhere=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??''));
+ const workWhere=(ctx:RequestContext,id:string)=>and(eq(benchmarkWorks.id,id),eq(benchmarkWorks.userId,ctx.userId),workspaceFilter(benchmarkWorks,ctx));
+ const taskWhere=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
  const bindResource:TranscribeResourceBinding=async(scope,awemeId)=>{
   const payload=scope.task.payload as Record<string,unknown>,input=benchmarkTranscribeTaskInputSchema.parse(payload.modelInput);
   const [business]=await scope.tx.select().from(aiTasks).where(taskWhere(scope.context,scope.task.ownerId));
@@ -40,6 +47,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
  async function prepare(ctx:RequestContext,id:string){
   const [task]=await db.select().from(aiTasks).where(taskWhere(ctx,id));
   if(!task||task.taskType!=='benchmark.transcribe')throw new Error('BENCHMARK_TRANSCRIPT_TASK_NOT_FOUND');
+  ctx={...ctx,groupId:task.groupId??undefined,accountId:task.accountId,membershipVersion:task.membershipVersion??undefined,groupVersion:task.groupVersion??undefined};
   const input=benchmarkTranscribeTaskInputSchema.parse(task.inputData);
   const [work]=await db.select().from(benchmarkWorks).where(workWhere(ctx,input.workId));
   if(!work||work.awemeId!==input.awemeId||work.sourceId!==input.sourceId||work.sourceExternalAccountId!==input.sourceExternalAccountId)throw new Error('BENCHMARK_TRANSCRIPT_SOURCE_CHANGED');
@@ -52,7 +60,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
  }
  async function consume(claim:PersistentTaskClaim){
   const ref:ExecutionRef={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
-  const ctx:RequestContext={userId:claim.task.userId,accountId:claim.task.accountId,requestId:`benchmark-transcribe:${claim.task.id}`,source:'user'};
+  const ctx:RequestContext={userId:claim.task.userId,groupId:claim.task.groupId??undefined,accountId:claim.task.accountId,membershipVersion:claim.task.membershipVersion??undefined,groupVersion:claim.task.groupVersion??undefined,requestId:`benchmark-transcribe:${claim.task.id}`,source:'user'};
   const input=await leases.withLease(ref,"admission",async({task})=>benchmarkTranscribeTaskInputSchema.parse((task.payload as Record<string,unknown>).modelInput));
   let checking=false,finished=false;
   const verify=()=>leases.withLease(ref,'admission',async scope=>{shutdown.signal.throwIfAborted();return bindResource(scope,input.awemeId);});
@@ -83,12 +91,13 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
  const service={
   prepare,
   async submit(ctx:RequestContext,workId:string){
+   requireAccountId(ctx.accountId,"真实转写凭据账号");await assertWritableWorkspace(db,ctx);
    shutdown.signal.throwIfAborted();
    const [work]=await db.select().from(benchmarkWorks).where(workWhere(ctx,workId));if(!work)throw new Error('BENCHMARK_WORK_NOT_FOUND');
-   const configuration=transcribeConfiguration(await deps.resolveSpec(ctx));
+   const {configuration,executionRoute}=await deps.captureConfiguration(ctx);
    const input=benchmarkTranscribeTaskInputSchema.parse({kind:'benchmark.transcribe',workId,awemeId:work.awemeId,sourceId:work.sourceId,sourceExternalAccountId:work.sourceExternalAccountId,configuration});
    const attemptId=`benchmark-transcribe:${createHash('sha256').update(canonicalJson(input)).digest('hex')}`;
-   const task=await deps.ai.createTask(ctx,{taskType:'benchmark.transcribe',attemptId,inputData:input});
+   const task=await deps.createTaskWithRoute(ctx,{taskType:'benchmark.transcribe',attemptId,inputData:input},executionRoute);
    const mapped=await prepare(ctx,task.id);return mapped;
   },
   async run(ctx:RequestContext,aiTaskId:string){
@@ -99,7 +108,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
    const [work]=await db.select().from(benchmarkWorks).where(workWhere(ctx,workId));if(!work)throw new Error('BENCHMARK_WORK_NOT_FOUND');
    if(work.transcript?.trim())return {status:'reused' as const,transcript:work.transcript};
    const mapped=await service.submit(ctx,workId);if(deps.wake)deps.wake();else void service.run(ctx,mapped.aiTaskId).catch(()=>{});
-   const expires=Date.now()+Math.max(0,options.waitMs??120000);
+   const expires=Date.now()+executionTimeoutMs(options.waitMs);
    while(!shutdown.signal.aborted){
     const task=await tasks.get(ctx,mapped.executionTaskId);
     if(task.status==='succeeded'){
@@ -114,7 +123,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
   },
   async recoverQueued(){
    const rows=await db.select().from(aiTasks).where(and(eq(aiTasks.taskType,'benchmark.transcribe'),eq(aiTasks.status,'queued'),isNull(aiTasks.executionTaskId))).orderBy(asc(aiTasks.requestedAt));
-   for(const row of rows){if(shutdown.signal.aborted)return;try{await prepare({userId:row.userId,accountId:row.accountId,requestId:`benchmark-recover:${row.id}`,source:'user'},row.id);}catch{/* 保留原任务及冻结输入供诊断，不另造任务。 */}}
+   for(const row of rows){if(shutdown.signal.aborted)return;try{await prepare({userId:row.userId,groupId:row.groupId??undefined,accountId:row.accountId,membershipVersion:row.membershipVersion??undefined,groupVersion:row.groupVersion??undefined,requestId:`benchmark-recover:${row.id}`,source:'user'},row.id);}catch{/* 保留原任务及冻结输入供诊断，不另造任务。 */}}
   },
   async drain(maxTasks=10){let count=0;while(!shutdown.signal.aborted&&count<maxTasks){const claim=await tasks.claimNext({kinds:['ai_task'],executionMode:'benchmark.transcribe',workerId:`benchmark-asr-drain:${randomUUID()}`,leaseSeconds:300});if(!claim)break;await track(claim.task.id,()=>consume(claim));count++;}return count;},
   async stop(){shutdown.abort();await supervision.stop();await Promise.allSettled([...runs.values()]);},

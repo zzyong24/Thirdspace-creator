@@ -10,6 +10,8 @@
 // NUL;收割时 lstat 跳过 symlink(拦「out/ 里放一个指向 /etc 的软链」)。敏感文件
 // denylist 见 sensitive-files.ts(T-253 共库)。
 import * as fs from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {createReadStream} from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExecutionArtifact, ExecutionTaskInput } from "@creatoros/contract";
@@ -117,6 +119,7 @@ export async function materializeInputs(
   materializeAsset: (
     assetId: string,
     destinationPath: string,
+    exact?: {assetFileId?:string;fileDigest?:string},
   ) => Promise<{ size: number; mimeType: string } | null>,
 ): Promise<MaterializedInput[]> {
   const materialized: MaterializedInput[] = [];
@@ -128,11 +131,13 @@ export async function materializeInputs(
       );
     }
     await fs.mkdir(path.dirname(abs), { recursive: true });
-    const loaded = await materializeAsset(input.assetId, abs);
+    const loaded = await materializeAsset(input.assetId, abs,input.assetFileId||input.fileDigest?{assetFileId:input.assetFileId,fileDigest:input.fileDigest}:undefined);
     const stat = await fs.lstat(abs).catch(() => null);
     if (!loaded || !stat || !stat.isFile() || stat.size === 0) {
       throw new Error(`输入资产读取失败(assetId=${input.assetId})`);
     }
+    // SEMANTIC_BOUNDARY_ALLOW: 流式字节摘要仅验证冻结源身份，不判断媒体内容。
+    if(input.fileDigest){const hash=createHash("sha256");for await(const chunk of createReadStream(abs))hash.update(chunk);if(hash.digest("hex")!==input.fileDigest)throw new Error("冻结媒体字节已变化，请重新读取原始文件");}
     await fs.chmod(abs, 0o444);
     materialized.push({
       assetId: input.assetId,

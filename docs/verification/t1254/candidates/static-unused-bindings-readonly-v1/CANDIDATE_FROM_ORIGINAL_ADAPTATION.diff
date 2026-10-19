@@ -1,0 +1,21 @@
+--- original-static-adaptation/EditorPanel.vue
++++ candidate/EditorPanel.vue
+@@ -62,17 +62,14 @@
+ }
+ 
+ const { editor } = storeToRefs(editorStore)
+-const { isDark, showAIToolbox } = storeToRefs(uiStore)
++const { isDark } = storeToRefs(uiStore)
+ const { posts, currentPostIndex, currentPost } = storeToRefs(postStore)
+ const {
+-  isMobile,
+   enableImageReupload,
+   viewMode,
+ } = storeToRefs(uiStore)
+ 
+ const { toggleShowUploadImgDialog } = uiStore
+-
+-const showEditor = computed(() => viewMode.value !== `preview`)
+ 
+ const codeMirrorView = shallowRef<EditorView | null>(null)
+ const themeCompartment = new Compartment()

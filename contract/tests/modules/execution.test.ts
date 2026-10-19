@@ -125,6 +125,7 @@ describe("executionOperations", () => {
       "execution.tasks.create",
       "execution.tasks.list",
       "execution.tasks.command",
+      "execution.tasks.transcribeCommand.v1",
       "execution.tasks.get",
       "execution.tasks.confirm",
       "execution.tasks.discard",

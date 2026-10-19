@@ -1,3 +1,4 @@
+import {executionTimeoutMs, completionWaitMs} from "@creatoros/contract/timeout-policy";
 import { randomUUID } from "node:crypto";
 import type { Page, JSHandle } from "@playwright/test";
 import {
@@ -16,6 +17,8 @@ export function createBrowserWorkerSession(deps: {
   guardUrl: (url: string) => Promise<void>;
 }) {
   const { page, sessionId, guardUrl } = deps;
+  page.setDefaultTimeout?.(executionTimeoutMs());
+  page.setDefaultNavigationTimeout?.(executionTimeoutMs());
   let tracker: JSHandle<any> | undefined,
     latest: Observation | undefined,
     closed = false;
@@ -39,7 +42,7 @@ export function createBrowserWorkerSession(deps: {
         new Promise<never>((_, reject) => {
           abort = () => reject(new Error("cancelled"));
           signal.addEventListener("abort", abort, { once: true });
-          timer = setTimeout(() => reject(new Error("deadline")), 5000);
+          timer = setTimeout(() => reject(new Error("deadline")), completionWaitMs([executionTimeoutMs()]));
         }),
       ]);
     } finally {
@@ -428,7 +431,7 @@ export function createBrowserWorkerSession(deps: {
             await bounded(
               () =>
                 page.waitForURL((url) => url.href !== latest!.url, {
-                  timeout: 5000,
+                  timeout: executionTimeoutMs(),
                   waitUntil: "domcontentloaded",
                 }),
               signal,
@@ -438,7 +441,7 @@ export function createBrowserWorkerSession(deps: {
               await bounded(
                 () =>
                   page.waitForURL((url) => url.href === input.value, {
-                    timeout: 5000,
+                    timeout: executionTimeoutMs(),
                     waitUntil: "domcontentloaded",
                   }),
                 signal,
@@ -459,7 +462,7 @@ export function createBrowserWorkerSession(deps: {
                           return reject(new Error("stale"));
                         const box = node.getBoundingClientRect();
                         if (box.width > 0 && box.height > 0) return resolve();
-                        if (Date.now() - started > 4500)
+                        if (Date.now() - started > 120_000)
                           return reject(new Error("timeout"));
                         setTimeout(check, 25);
                       };

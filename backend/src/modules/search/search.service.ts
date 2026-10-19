@@ -1,3 +1,4 @@
+import {requireWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId } from "@creatoros/backend";
 import type {
@@ -85,6 +86,8 @@ export interface HybridSearchOpts {
    * 纯关键词路径——诚实降级,不静默装 AI)。
    */
   queryEmbedding?: number[] | null;
+  /** undefined沿原v1；v2仅比较本次冻结模型与实际维度。 */
+  embeddingConfigDigest?:string;
 }
 
 // [T-093] 语义命中阈值:余弦低于它的候选直接截断(不足额不硬凑,SPEC §3.1)。
@@ -109,8 +112,8 @@ export function cosineSimilarity(
 }
 
 export interface SearchService {
-  listMissingEmbeddings(ctx: RequestContext, entityType: string, limit: number): Promise<SearchDocumentResource[]>;
-  fillMissingEmbedding(ctx: RequestContext, snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal): Promise<boolean>;
+  listMissingEmbeddings(ctx: RequestContext, entityType: string, limit: number, embeddingConfigDigest?:string): Promise<EmbeddingSnapshot[]>;
+  fillMissingEmbedding(ctx: RequestContext, snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal, embeddingConfigDigest?:string): Promise<boolean>;
   upsertDocument(ctx: RequestContext, input: UpsertInput): Promise<SearchDocumentResource>;
   removeDocument(ctx: RequestContext, entityType: string, entityId: string): Promise<void>;
   search(ctx: RequestContext, query: string, opts?: SearchOpts): Promise<SearchDocumentResource[]>;
@@ -202,7 +205,7 @@ export function createSearchService(
   // rebuildSearchIndexSystem(search.seed.ts),不经这里。
   return {
     async upsertDocument(ctx, input) {
-      requireAccountId(ctx.accountId, "search.upsertDocument");
+      requireWorkspace(ctx);
       const repo = repoForCtx(ctx);
       const row = await repo.upsertDocument({
         entityType: input.entityType,
@@ -216,20 +219,20 @@ export function createSearchService(
     },
 
     async removeDocument(ctx, entityType, entityId) {
-      requireAccountId(ctx.accountId, "search.removeDocument");
+      requireWorkspace(ctx);
       // Idempotent: the repo DELETE is a no-op when the (user-scoped) doc is
       // absent. Removal of DERIVED data never errors on "not found".
       await repoForCtx(ctx).removeDocument(entityType, entityId);
     },
 
     async search(ctx, query, opts) {
-      requireAccountId(ctx.accountId, "search.search");
+      requireWorkspace(ctx);
       const rows = await repoForCtx(ctx).search(query, opts);
       return rows.map(toResource);
     },
 
     async hybridSearch(ctx, query, opts) {
-      requireAccountId(ctx.accountId, "search.hybridSearch");
+      requireWorkspace(ctx);
       const trimmed = query.trim();
       if (trimmed === "") return [];
       const repo = repoForCtx(ctx);
@@ -247,6 +250,7 @@ export function createSearchService(
       // 语义层(方案 B 核心):调用方注入 queryEmbedding(可配 capability 算出);
       // 未注入 = 未配置模型 → 纯关键词返回(诚实降级,调用方渲提示条)。
       const queryEmbedding = opts?.queryEmbedding ?? null;
+      if(opts?.embeddingConfigDigest!==undefined&&!/^sha256:[a-f0-9]{64}$/.test(opts.embeddingConfigDigest))throw new Error("向量模型身份摘要无效");
       if (queryEmbedding && queryEmbedding.length > 0 && entityType) {
         const seen = new Set(exactRows.map((r) => r.id));
         const all = await repo.listByEntityType(entityType);
@@ -255,6 +259,8 @@ export function createSearchService(
           if (seen.has(row.id)) continue;
           const emb = row.embedding as number[] | null;
           if (!Array.isArray(emb) || emb.length === 0) continue;
+          const identity=row.embeddingIdentity;
+          if(opts?.embeddingConfigDigest!==undefined&&(!identity||identity.schemaVersion!==1||identity.configDigest!==opts.embeddingConfigDigest||identity.dimensions!==queryEmbedding.length||identity.dimensions!==emb.length))continue;
           const score = cosineSimilarity(queryEmbedding, emb);
           // 阈值截断:低分不进结果(不足额不硬凑)。
           if (score === null || score < SEMANTIC_MIN_SCORE) continue;
@@ -273,25 +279,25 @@ export function createSearchService(
       return hits.slice(0, limit);
     },
 
-    async listMissingEmbeddings(ctx, entityType, limit) {
-      requireAccountId(ctx.accountId, "search.listMissingEmbeddings");
+    async listMissingEmbeddings(ctx, entityType, limit, embeddingConfigDigest) {
+      requireWorkspace(ctx);
       if (!Number.isInteger(limit) || limit < 1 || limit > 16) throw new Error("索引补算批次必须为 1–16 条");
-      return (await repoForCtx(ctx).listMissingEmbeddings(entityType, limit)).map(toResource);
+      return repoForCtx(ctx).listMissingEmbeddings(entityType, limit, embeddingConfigDigest);
     },
-    async fillMissingEmbedding(ctx, snapshot, embedding, signal) {
-      requireAccountId(ctx.accountId, "search.fillMissingEmbedding");
+    async fillMissingEmbedding(ctx, snapshot, embedding, signal, embeddingConfigDigest) {
+      requireWorkspace(ctx);
       signal?.throwIfAborted();
       if (!embedding.length || !embedding.every(Number.isFinite)) throw new Error("向量结果无效");
-      return repoForCtx(ctx).fillMissingEmbedding({...snapshot}, [...embedding], signal);
+      return repoForCtx(ctx).fillMissingEmbedding(structuredClone(snapshot), [...embedding], signal, embeddingConfigDigest);
     },
     async listDocumentsByEntityType(ctx, entityType) {
-      requireAccountId(ctx.accountId, "search.listDocumentsByEntityType");
+      requireWorkspace(ctx);
       const rows = await repoForCtx(ctx).listByEntityType(entityType);
       return rows.map(toResource);
     },
 
     async facets(ctx, query) {
-      requireAccountId(ctx.accountId, "search.facets");
+      requireWorkspace(ctx);
       const normalized = query.trim();
       // Empty/whitespace query ⇒ all buckets empty (mirrors search()'s guard;
       // the repo also short-circuits, so this is belt-and-suspenders).
@@ -318,7 +324,7 @@ export function createSearchService(
     },
 
     async recordSearch(ctx, input) {
-      requireAccountId(ctx.accountId, "search.recordSearch");
+      requireWorkspace(ctx);
       // Index/history failure must NEVER roll back the owning module's write
       // (SPEC §16/§11). Swallow the repo error into a retryable record instead of
       // throwing — the caller (the read transport) ignores the outcome and the
@@ -340,7 +346,7 @@ export function createSearchService(
     },
 
     async rebuildUserIndex(ctx, docs) {
-      requireAccountId(ctx.accountId, "search.rebuildUserIndex");
+      requireWorkspace(ctx);
       const repo = repoForCtx(ctx);
       // [T-332 S2] 语义收窄:strict repo 下这里重建的是**当前号**的索引切片(删当前号
       // 文档、以当前号 stamp 重播)。跨全用户的多号重建走 rebuildSearchIndexSystem。
@@ -359,7 +365,7 @@ export function createSearchService(
     },
 
     async listHistory(ctx, limit) {
-      requireAccountId(ctx.accountId, "search.listHistory");
+      requireWorkspace(ctx);
       return repoForCtx(ctx).listHistory(limit);
     },
   };

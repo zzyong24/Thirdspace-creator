@@ -1,0 +1,624 @@
+[
+  {
+    "observedAt": "2026-10-11T02:45:57.074531+00:00",
+    "elapsedSeconds": 9.13,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:42:51.727Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:45:53.349Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "fetch",
+          "processed": 0,
+          "total": null,
+          "message": "抓取完整作品目录（尚未入库）",
+          "updatedAt": "2026-10-11T02:45:28.503Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:46:43.897936+00:00",
+    "elapsedSeconds": 55.95,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:42:51.727Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:46:33.840Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:47:30.314435+00:00",
+    "elapsedSeconds": 102.37,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:42:51.727Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:47:25.140Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:48:17.085643+00:00",
+    "elapsedSeconds": 149.14,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "running",
+        "attempt": 12,
+        "heartbeatAt": "2026-10-11T02:48:14.748Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:48:04.844Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:48:16.001Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:49:03.404782+00:00",
+    "elapsedSeconds": 195.46,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:48:56.786Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:49:49.983517+00:00",
+    "elapsedSeconds": 242.04,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:49:47.732Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:50:36.303331+00:00",
+    "elapsedSeconds": 288.35,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:50:28.785Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:51:22.790424+00:00",
+    "elapsedSeconds": 334.84,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:51:19.893Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:52:09.095560+00:00",
+    "elapsedSeconds": 381.15,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:52:00.712Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:52:55.559281+00:00",
+    "elapsedSeconds": 427.61,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:52:51.821Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:53:41.897190+00:00",
+    "elapsedSeconds": 473.95,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:53:32.469Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:54:28.324002+00:00",
+    "elapsedSeconds": 520.37,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:54:23.549Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:55:14.644701+00:00",
+    "elapsedSeconds": 566.69,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:55:04.810Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  },
+  {
+    "observedAt": "2026-10-11T02:56:01.038653+00:00",
+    "elapsedSeconds": 613.09,
+    "rows": [
+      {
+        "group": "thirdspace",
+        "executionId": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+        "runId": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+        "executionStatus": "succeeded",
+        "attempt": 12,
+        "heartbeatAt": null,
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "succeeded",
+        "runError": null,
+        "progress": null,
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": "2026-10-11T02:48:55.581Z"
+      },
+      {
+        "group": "moonlit",
+        "executionId": "exec_14478623-987f-42d8-b2c6-e072e6a4e8a8",
+        "runId": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+        "executionStatus": "running",
+        "attempt": 11,
+        "heartbeatAt": "2026-10-11T02:55:56.265Z",
+        "errorCode": null,
+        "errorMessage": null,
+        "runStatus": "running",
+        "runError": null,
+        "progress": {
+          "stage": "export",
+          "processed": 0,
+          "total": null,
+          "message": "导出作品明细数据",
+          "updatedAt": "2026-10-11T02:46:31.393Z"
+        },
+        "itemsNew": 0,
+        "itemsUpdated": 0,
+        "finishedAt": null
+      }
+    ]
+  }
+]

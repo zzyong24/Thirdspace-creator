@@ -1,0 +1,21 @@
+{
+  "versions": {
+    "package": "1.2.0",
+    "tauri": "1.2.0",
+    "Cargo.toml": "1.2.0",
+    "Cargo.lock": "1.2.0"
+  },
+  "originChangedFileCount": 28864,
+  "suspiciousSecretPaths": [],
+  "actualCurrentHandshakeHits": [],
+  "rollbackRoot": "/private/tmp/t1313-before-build-gnmnl57j",
+  "rollbackDmgSha256": "16bb553a1d526f393febfab8b4a96e2b9a0cddbf7fb5410cd55461169a9550b7",
+  "oldArtifactPreserved": "/private/tmp/t1300-artifact-bcz9nlt5",
+  "installedAppReadonlyHashes": {
+    "binarySha256": "a097febbe991e0fd99eadf51fe7ba8e2d0394f18ce3a88348c91b6a1d62c14b3",
+    "sidecarTarSha256": "13081d30468ffb538c3db4ec9c983226f97ac358d74460136d265a8eae572f5e"
+  },
+  "sourceHead": "0e1dc6228f1fa3dc02f2b1c7a1cee77ab18d650a",
+  "versionBumpRequested": false,
+  "preflightAttempt1": "仅检查脚本错误假定Cargo package name=creatoros，未运行build，按真实creatoros-desktop机械修正后检查"
+}

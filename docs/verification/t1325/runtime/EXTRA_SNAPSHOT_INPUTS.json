@@ -1,0 +1,6 @@
+[
+  "docs/verification/t1325/REVIEW_HANDOFF.json",
+  "docs/verification/t1325/SPEC_REVIEW.json",
+  "backend/src/modules/articles/articles.text-results.ts",
+  "docs/verification/t1325/runtime/ARTICLE_TEXT_OWNER_READ_DELTA.json"
+]

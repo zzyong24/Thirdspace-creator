@@ -18,13 +18,16 @@
  */
 
 import * as React from "react";
+import {VideoStageChatDock} from "@/features/draft-workbench/stage-chat-dock";
+import {ProjectVideoSessionContext} from "@/features/reference-editors/project-video-session-registry";
 import { usePathname } from "next/navigation";
 
+import {Button} from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DraftChatRail } from "@/features/draft-workbench/draft-chat-rail";
 import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 
-const STAGE_SEGMENTS = /\/projects\/[^/]+\/(review|production)(\/|$)/;
+const STAGE_SEGMENTS = /\/projects\/[^/]+\/(review|production|article|outputs\/[^/]+\/image)(\/|$)/;
 
 // [T-297] 阶段编导栏宽度:独立持久键(不与稿面 creatoros:draft:rail-width 串味);
 // 默认 = 最大 640(与稿面 MAX_RAIL 对齐);拖拽/键盘钳到 [300,640]。
@@ -35,30 +38,68 @@ const DEFAULT_RAIL = 640;
 const MIN_RAIL = 300;
 const MAX_RAIL = 640;
 const KEY_STEP = 16;
+const MIN_EDITOR_WIDTH = 720;
+const RESIZE_HANDLE_WIDTH = 6;
 
 function clampRail(n: number): number {
   if (!Number.isFinite(n)) return DEFAULT_RAIL;
   return Math.max(MIN_RAIL, Math.min(MAX_RAIL, Math.round(n)));
 }
 
-export function StageChatWrapper({
+function StandardStageChatWrapper({
   projectId,
   projectTitle,
-  children,
+  children,active,
 }: {
   readonly projectId: string | null;
   readonly projectTitle: string | null;
   readonly children: React.ReactNode;
+  readonly active?:boolean;
 }) {
   const pathname = usePathname() ?? "";
-  const isStagePage = STAGE_SEGMENTS.test(pathname);
+  const hosted=React.useContext(ProjectVideoSessionContext);
+  const isStagePage = STAGE_SEGMENTS.test(pathname)&&(active??(!hosted||!pathname.includes("/production")));
+  const showRail=isStagePage&&Boolean(projectId&&projectTitle);
 
   // Hooks 必须无条件调用(早返回在其后)。SSR 默认 640,挂载后读回持久宽度(避免 hydration 闪)。
   const [railWidth, setRailWidth] = React.useState<number>(DEFAULT_RAIL);
   // [T-411] 折叠态(镜像稿面 DraftResizableLayout)。SSR/首帧默认展开避免 hydration 闪。
   const [collapsed, setCollapsed] = React.useState(false);
+  const mobileTrigger=React.useRef<HTMLButtonElement>(null),mobilePanel=React.useRef<HTMLElement>(null);
+  const [viewportNarrow,setViewportNarrow]=React.useState(false),[mobileOpen,setMobileOpen]=React.useState(false);
+  React.useEffect(()=>{const media=window.matchMedia("(max-width: 1279px)");const sync=()=>setViewportNarrow(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync);},[]);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [availableWidth,setAvailableWidth]=React.useState(0);
+  React.useLayoutEffect(()=>{
+    const container=containerRef.current;if(!container)return;
+    const measure=()=>{const width=Math.floor(container.getBoundingClientRect().width);if(width>0)setAvailableWidth(width);};
+    measure();
+    const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(measure):null;
+    observer?.observe(container);window.addEventListener("resize",measure);
+    return()=>{observer?.disconnect();window.removeEventListener("resize",measure);};
+  },[showRail]);
+  // Preserve the original width preference. Only the rendered width adapts;
+  // if both editor and minimum rail cannot fit, use the same local dialog.
+  const narrow=viewportNarrow||(availableWidth>0&&availableWidth<MIN_EDITOR_WIDTH+MIN_RAIL+RESIZE_HANDLE_WIDTH);
+  const maxAvailableRail=availableWidth>0?Math.min(MAX_RAIL,Math.max(MIN_RAIL,availableWidth-MIN_EDITOR_WIDTH-RESIZE_HANDLE_WIDTH)):MAX_RAIL;
+  const actualRailWidth=Math.min(railWidth,maxAvailableRail);
+  React.useEffect(()=>{if(narrow&&mobileOpen)requestAnimationFrame(()=>mobilePanel.current?.querySelector<HTMLButtonElement>('button')?.focus());},[narrow,mobileOpen]);
+  function closeMobile(){setMobileOpen(false);requestAnimationFrame(()=>mobileTrigger.current?.focus());}
+  function mobileKeys(event:React.KeyboardEvent<HTMLElement>){
+    const panel=mobilePanel.current,target=event.target;
+    if(!narrow||event.defaultPrevented||!panel||event.currentTarget!==panel||!panel.isConnected)return;
+    // Portal 仍沿 React 树冒泡；键盘只归当前面板的物理 DOM 与最近 dialog owner。
+    if(!(target instanceof Element)||!panel.contains(target)||target.closest('dialog,[role="dialog"],[role="alertdialog"]')!==panel)return;
+    if(event.key==='Escape'){event.preventDefault();closeMobile();return;}
+    if(event.key!=='Tab')return;
+    const nodes=Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),textarea:not([disabled]),[tabindex="0"]')).filter(node=>node.offsetParent!==null);
+    const first=nodes[0],last=nodes.at(-1);
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  }
+
   const draggingRef = React.useRef(false);
+  const dragChangedRef = React.useRef(false);
 
   React.useEffect(() => {
     try {
@@ -108,13 +149,14 @@ export function StageChatWrapper({
     const prev = lastNonceRef.current;
     lastNonceRef.current = nonce;
     if (nonce !== null && nonce !== prev) {
-      setCollapsed(false);
+      setCollapsed(false);setMobileOpen(true);
     }
   }, [nonce]);
 
   const onPointerDown = React.useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     draggingRef.current = true;
+    dragChangedRef.current = false;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -128,8 +170,9 @@ export function StageChatWrapper({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     // 右栏宽 = 容器右缘 - 指针 x(拖左 → 变宽,拖右 → 变窄)。
-    setRailWidth(clampRail(rect.right - e.clientX));
-  }, []);
+    const next=Math.min(clampRail(rect.right-e.clientX),maxAvailableRail);
+    setRailWidth(w=>{if(next!==Math.min(w,maxAvailableRail)){dragChangedRef.current=true;return next;}return w;});
+  }, [maxAvailableRail]);
 
   const endDrag = React.useCallback(
     (e: React.PointerEvent) => {
@@ -142,11 +185,12 @@ export function StageChatWrapper({
       }
       document.body.style.userSelect = "";
       setRailWidth((w) => {
-        persist(w);
-        return w;
+        if(!dragChangedRef.current)return w;
+        const actual=Math.min(w,maxAvailableRail);persist(actual);
+        return actual;
       });
     },
-    [persist],
+    [persist,maxAvailableRail],
   );
 
   const onKeyDown = React.useCallback(
@@ -158,33 +202,38 @@ export function StageChatWrapper({
       else return;
       e.preventDefault();
       setRailWidth((w) => {
-        const n = clampRail(w + delta);
+        const actual=Math.min(w,maxAvailableRail);
+        const n = Math.min(clampRail(actual + delta),maxAvailableRail);
+        if(n===actual)return w;
         persist(n);
         return n;
       });
     },
-    [persist],
+    [persist,maxAvailableRail],
   );
 
-  if (!isStagePage || !projectId || !projectTitle) return <>{children}</>;
+  // 稿面已有自己的有界分栏；透传才能保留它与宿主之间的 flex 高度链。
+  // 多包一层普通 block 会让长候选撑高聊天，发送区落到隐藏视口之外。
+  // 显式 active 的常驻剪辑宿主始终保留相同祖先，切页只隐藏编导栏。
+  if(!showRail && active===undefined)return <>{children}</>;
 
   return (
     <div
       ref={containerRef}
       className="flex min-h-0 flex-1 items-stretch gap-0"
     >
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1" inert={narrow&&mobileOpen} aria-hidden={narrow&&mobileOpen||undefined}>{children}</div>
 
       {/* [T-297] 拖拽分隔条(pointer 拖 + 键盘 ←/→,role=separator);仅 xl+ 右栏可见时显示。
           [T-411] 收起态整条隐藏(连同右栏)。 */}
-      {!collapsed ? (
+      {showRail&&!collapsed&&!narrow ? (
         <div
           role="separator"
           aria-orientation="vertical"
           aria-label="调整编导栏宽度"
-          aria-valuenow={railWidth}
+          aria-valuenow={actualRailWidth}
           aria-valuemin={MIN_RAIL}
-          aria-valuemax={MAX_RAIL}
+          aria-valuemax={maxAvailableRail}
           tabIndex={0}
           data-slot="stage-rail-resize-handle"
           data-testid="stage-rail-resize-handle"
@@ -200,13 +249,14 @@ export function StageChatWrapper({
         />
       ) : null}
 
-      {!collapsed ? (
-        <aside
+      {showRail && narrow && !mobileOpen ? <Button ref={mobileTrigger} variant="outline" className="fixed bottom-5 right-5 z-40" onClick={()=>setMobileOpen(true)}>打开编导</Button> : null}
+      {showRail ? (!(narrow?!mobileOpen:collapsed) ? (
+        <aside ref={mobilePanel} role={narrow?"dialog":undefined} aria-modal={narrow?true:undefined} aria-label="编导对话" onKeyDown={mobileKeys}
           data-slot="stage-chat-rail"
-          style={{ width: railWidth }}
-          className="hidden shrink-0 border-l border-border bg-surface xl:block"
+          style={{ width: narrow?"min(100vw, 640px)":actualRailWidth }}
+          className={cn("shrink-0 border-l border-border bg-surface",narrow?"fixed inset-y-0 right-0 z-50 shadow-lg":"block")}
         >
-          <div className="sticky top-0 flex h-[calc(100vh-4rem)] flex-col">
+          <div className={cn("flex flex-col",narrow?"h-full overflow-y-auto":"sticky top-0 h-[calc(100vh-4rem)]")}>
             {/* [T-411] 右栏头部:显眼的「收起编导」开关(与稿面一致)。 */}
             <div
               data-slot="stage-rail-header"
@@ -217,7 +267,7 @@ export function StageChatWrapper({
                 data-slot="stage-rail-collapse-toggle"
                 data-testid="stage-rail-collapse-toggle"
                 aria-label="收起编导栏"
-                onClick={() => setCollapsedPersisted(true)}
+                onClick={() => {setCollapsedPersisted(true);closeMobile();}}
                 className={cn(
                   "flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs text-text-subtle transition-colors",
                   "hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40",
@@ -228,7 +278,7 @@ export function StageChatWrapper({
               </button>
             </div>
             <div className="min-h-0 flex-1">
-              <DraftChatRail projectId={projectId} projectTitle={projectTitle} />
+              <DraftChatRail projectId={projectId!} projectTitle={projectTitle!} />
             </div>
           </div>
         </aside>
@@ -252,7 +302,12 @@ export function StageChatWrapper({
             <span className="[writing-mode:vertical-rl]">编导</span>
           </button>
         </div>
-      )}
+      )) : null}
     </div>
   );
+}
+
+/** 常驻视频只停靠一个编导实例；其它阶段沿用已有宽度/弹层行为。 */
+export function StageChatWrapper(props:Parameters<typeof StandardStageChatWrapper>[0]){
+ return props.active!==undefined?<VideoStageChatDock {...props}/>:<StandardStageChatWrapper {...props}/>;
 }

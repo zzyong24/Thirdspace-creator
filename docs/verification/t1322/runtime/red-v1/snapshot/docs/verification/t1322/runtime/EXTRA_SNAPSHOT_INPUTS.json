@@ -1,0 +1,23 @@
+[
+  "backend/src/application/generation/creative-post.ts",
+  "backend/src/application/generation/discovery.ts",
+  "backend/src/application/generation/task-wake.ts",
+  "backend/src/modules/ai-runtime/cover-business-adapter.ts",
+  "backend/src/modules/ai-runtime/frozen-cover-context.ts",
+  "backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+  "backend/src/modules/assets/pending-generated-asset.service.ts",
+  "backend/src/modules/articles/articles.service.ts",
+  "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+  "ai-worker/src/prompt/templates/graphic-card-brief.ts",
+  "ai-worker/src/execution/codex-app-server.ts",
+  "ai-worker/src/execution/codex-app-server-protocol.ts",
+  "ai-worker/src/runtime/graphic-card-plan.ts",
+  "ai-worker/src/runtime/provider-factory.ts",
+  "contract/src/internal/asset-generation.ts",
+  "contract/src/internal/execution-engine.ts",
+  "backend/src/secret-crypto.ts",
+  "contract/src/operations/assets.ts",
+  "contract/src/resources/graphic-posts.ts",
+  "contract/src/operations/graphic-posts.ts",
+  "backend/src/modules/assets/assets.service.ts"
+]

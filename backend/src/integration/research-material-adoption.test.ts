@@ -1,3 +1,5 @@
+import {platformAccounts as originalAccounts,type Db as OwnedFixtureDb} from "@creatoros/backend";
+import {createAccountGroupService} from "../modules/platform-account/account-group.service";
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 import {
   createDb,
@@ -39,6 +41,8 @@ let failLink = false;
 let legacyAi: ReturnType<typeof createAiService>;
 beforeEach(async () => {
   f = await createDb();
+  await seedOwnedKnowledgeAccount(f.db,"u","a");
+  await seedOwnedKnowledgeAccount(f.db,"u","other");
   serial = 0;
   failLink = false;
   await f.db
@@ -48,6 +52,7 @@ beforeEach(async () => {
         id,
         userId: "u",
         accountId: id === "project" ? "a" : "other",
+        groupId: `grp_legacy_${id === "project" ? "a" : "other"}`,
         title: id,
         creationMode: "manual",
         status: "active",
@@ -134,12 +139,20 @@ const item = {
 async function task(
   items: unknown[] = [item],
   projectId: string | null = "project",
+  historicalForeign = false,
 ) {
-  const t = await ai.createTask(ctx, {
-    taskType: "research.gather_material",
-    attemptId: nextId("research-material-attempt"),
-    inputData: { topic: "主题", projectId },
-  });
+  // 旧数据回读族：明确历史未采纳任务，不冒充当前公共创建可越权。
+  const input={taskType:"research.gather_material",attemptId:nextId("research-material-attempt"),inputData:{topic:"主题",projectId}};
+  let t;
+  if(historicalForeign){
+    const before=await f.db.select().from(aiTasks);
+    await expect(ai.createTask(ctx,input)).rejects.toThrow();
+    expect(await f.db.select().from(aiTasks)).toEqual(before);
+    expect(await f.db.select().from(knowledgeItems)).toHaveLength(0);expect(await f.db.select().from(materialLinks)).toHaveLength(0);
+    const id=nextId("historical-unadopted-task");
+    await f.db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,groupId:`grp_legacy_${ctx.accountId}`,projectId,taskType:input.taskType,status:"queued",inputData:input.inputData,attemptId:input.attemptId,idempotencyKey:id,requestedAt:now()});
+    t=await ai.getTask(ctx,id);
+  }else t=await ai.createTask(ctx,input);
   await ai.markRunning(ctx, t.id);
   await ai.recordCandidate(ctx, t.id, {
     resultType: "material_list",
@@ -168,7 +181,7 @@ it("空候选不可假成功", async () => {
 });
 
 it("跨账号项目拒绝且知识和链接均为零", async () => {
-  const t = await task([item], "foreign");
+  const t = await task([item], "foreign",true);
   await expect(ai.confirmTask(ctx, t.id)).rejects.toThrow();
   expect(await f.db.select().from(knowledgeItems)).toHaveLength(0);
   expect(await f.db.select().from(materialLinks)).toHaveLength(0);
@@ -271,3 +284,9 @@ it("无合法冻结来源不可采纳", async () => {
   await expect(ai.confirmTask(ctx, t.id)).rejects.toThrow("冻结");
   expect(await f.db.select().from(knowledgeItems)).toHaveLength(0);
 });
+
+async function seedOwnedKnowledgeAccount(db:OwnedFixtureDb,userId:string,accountId:string){
+ const stamp="2026-06-21T00:00:00.000Z";
+ await db.insert(originalAccounts).values({id:accountId,userId,platform:'douyin',accountHandle:accountId,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing();
+ await createAccountGroupService({db,now:()=>stamp,nextId:prefix=>`${prefix}-${accountId}-fixture`}).ensureLegacyGroups({userId,requestId:'original-knowledge-fixture',source:'user'});
+}

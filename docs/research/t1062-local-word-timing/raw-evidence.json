@@ -1,0 +1,522 @@
+{
+  "schema": "t1062-aac-research-readonly-evidence/v1",
+  "preserved_at": "2026-10-06T01:00:13.418590+00:00",
+  "files": [
+    {
+      "key": "t1062-aac-physical-mapping-experiment/normal-decode16k.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/normal-decode16k.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/normal-decode16k.stderr",
+      "sha256": "8c5da006e4ee1252bf34d64a59fd74d3d871e30c72902f6d3c1142d6a42f98b0",
+      "bytes": 1201
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/normal-decode16k.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/normal-decode16k.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/normal-decode16k.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/normal-output-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/normal-output-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/normal-output-probe.stderr",
+      "sha256": "d17513af5c616e151467dd6d8d5621687968b60062b69889fb0bf32e995959ae",
+      "bytes": 85
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/normal-output-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/normal-output-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/normal-output-probe.stdout",
+      "sha256": "8e1d794b49e35ea828279c6a8c95282bbb9a0787cf5c9385256c2cc9d17baeb7",
+      "bytes": 5
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/normal-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/normal-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/normal-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/normal-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/normal-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/normal-probe.stdout",
+      "sha256": "ba798d8a25389105bbb87651d3de296e13d40781eca58011e8e808a999575471",
+      "bytes": 483330
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/offset-decode16k.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/offset-decode16k.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/offset-decode16k.stderr",
+      "sha256": "60b32474a1cb11975079c0d7e022a5729d41fde66002cd6232f09eeff08e013a",
+      "bytes": 1231
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/offset-decode16k.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/offset-decode16k.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/offset-decode16k.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/offset-output-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/offset-output-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/offset-output-probe.stderr",
+      "sha256": "9c7928c1d65462a4ce03326a2ffe68ba996dfef658926b5e1e41095a5f124353",
+      "bytes": 85
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/offset-output-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/offset-output-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/offset-output-probe.stdout",
+      "sha256": "8e1d794b49e35ea828279c6a8c95282bbb9a0787cf5c9385256c2cc9d17baeb7",
+      "bytes": 5
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/offset-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/offset-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/offset-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/offset-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/offset-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/offset-probe.stdout",
+      "sha256": "bf0c20a17e7030a4b5b9148a47bc250e2330f1a9f3f5eefb270f714ebffbe50b",
+      "bytes": 483705
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/pcm_control-decode16k.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/pcm_control-decode16k.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/pcm_control-decode16k.stderr",
+      "sha256": "d5bbca699f416dcd28fbbb2efa2aa241b4b3cb55e2f0a4f352bdb62a7f83e826",
+      "bytes": 791
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/pcm_control-decode16k.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/pcm_control-decode16k.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/pcm_control-decode16k.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/pcm_control-output-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/pcm_control-output-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/pcm_control-output-probe.stderr",
+      "sha256": "e843636b1e998dded924a482057cd99bd9e197de79e44ce8a7ac11dbde97a783",
+      "bytes": 90
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/pcm_control-output-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/pcm_control-output-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/pcm_control-output-probe.stdout",
+      "sha256": "8e1d794b49e35ea828279c6a8c95282bbb9a0787cf5c9385256c2cc9d17baeb7",
+      "bytes": 5
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/pcm_control-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/pcm_control-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/pcm_control-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment/pcm_control-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment/pcm_control-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment/pcm_control-probe.stdout",
+      "sha256": "d9490e0cd7629c77bdcb5506b49a2db10846d6d6d879cc6394cddfaf88d86245",
+      "bytes": 121574
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/manifest.json",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/manifest.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/manifest.json",
+      "sha256": "c641c1318fb9cb53fe6d98f28f9d9ac41519efd0c511b8f2c096616e8e2b5420",
+      "bytes": 9146
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/normal-16k.wav",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/normal-16k.wav",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/normal-16k.wav",
+      "sha256": "b5eaa80678d6d26ed90f155a13e637115becfa0091c49dbbc4fcd34d48c8803e",
+      "bytes": 477674
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/normal-decode16k.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/normal-decode16k.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/normal-decode16k.stderr",
+      "sha256": "c91aac57f133f394560c56cd6d698025c6633c8851f7d1fcbe708333b6268c20",
+      "bytes": 124664
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/normal-decode16k.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/normal-decode16k.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/normal-decode16k.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/normal-output-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/normal-output-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/normal-output-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/normal-output-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/normal-output-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/normal-output-probe.stdout",
+      "sha256": "055c576905f7c3df49d582cbf78ab6289119bae425cad23a9d53d66f3791a738",
+      "bytes": 44520
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/normal-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/normal-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/normal-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/normal-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/normal-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/normal-probe.stdout",
+      "sha256": "ba798d8a25389105bbb87651d3de296e13d40781eca58011e8e808a999575471",
+      "bytes": 483330
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/offset-16k.wav",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/offset-16k.wav",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/offset-16k.wav",
+      "sha256": "fc0ac3a5991be6c3755e3ce5ac4614bd0ba652c1e2877b585655e94c1c26e293",
+      "bytes": 478628
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/offset-decode16k.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/offset-decode16k.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/offset-decode16k.stderr",
+      "sha256": "321cf557c065d52ba6fbb2578787cbd8813b91406fe9953bcf21e294e1ba5f92",
+      "bytes": 124839
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/offset-decode16k.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/offset-decode16k.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/offset-decode16k.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/offset-output-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/offset-output-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/offset-output-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/offset-output-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/offset-output-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/offset-output-probe.stdout",
+      "sha256": "2c19dabb297bb1428bb83b38f4803c050fb4a67b01324c873924629514ad397c",
+      "bytes": 44520
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/offset-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/offset-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/offset-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/offset-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/offset-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/offset-probe.stdout",
+      "sha256": "bf0c20a17e7030a4b5b9148a47bc250e2330f1a9f3f5eefb270f714ebffbe50b",
+      "bytes": 483705
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/pcm_control-16k.wav",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/pcm_control-16k.wav",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/pcm_control-16k.wav",
+      "sha256": "12fa6c2d801b5d6e858e7f62277d3cea10105d988ef6ec66b3da61dfa0af10dc",
+      "bytes": 477674
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/pcm_control-decode16k.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/pcm_control-decode16k.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/pcm_control-decode16k.stderr",
+      "sha256": "bfbbe4a79164fd4f2707dbcf942688bd6db70cc0fd4658e7db73ac94cdc139a8",
+      "bytes": 31963
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/pcm_control-decode16k.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/pcm_control-decode16k.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/pcm_control-decode16k.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/pcm_control-output-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/pcm_control-output-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/pcm_control-output-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/pcm_control-output-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/pcm_control-output-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/pcm_control-output-probe.stdout",
+      "sha256": "055c576905f7c3df49d582cbf78ab6289119bae425cad23a9d53d66f3791a738",
+      "bytes": 44520
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/pcm_control-probe.stderr",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/pcm_control-probe.stderr",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/pcm_control-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "key": "t1062-aac-physical-mapping-experiment-r2/pcm_control-probe.stdout",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-r2/pcm_control-probe.stdout",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/t1062-aac-physical-mapping-experiment-r2/pcm_control-probe.stdout",
+      "sha256": "d9490e0cd7629c77bdcb5506b49a2db10846d6d6d879cc6394cddfaf88d86245",
+      "bytes": 121574
+    },
+    {
+      "key": "reports/t1062-aac-physical-mapping-experiment-result.json",
+      "source_path": "/tmp/t1062-aac-physical-mapping-experiment-result.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-physical-mapping-experiment-result.json",
+      "sha256": "bf3021053cc65132e31eca83f08150d2b4991243b84b055ef26fc766e40d28bd",
+      "bytes": 4945
+    },
+    {
+      "key": "reports/t1062-mp4-edit-list-readonly.json",
+      "source_path": "/tmp/t1062-mp4-edit-list-readonly.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-mp4-edit-list-readonly.json",
+      "sha256": "62393de494cb79fc3d72d31ca13ec2e182cbd64481a9793da5152934d5911b2c",
+      "bytes": 5606
+    },
+    {
+      "key": "reports/t1062-aac-zero-start-asr-mapping-research.json",
+      "source_path": "/tmp/t1062-aac-zero-start-asr-mapping-research.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-zero-start-asr-mapping-research.json",
+      "sha256": "8e14e5fdb6df15dfae0adb93ae47a35f90a275a6870f1d13733124debace8326",
+      "bytes": 12282
+    },
+    {
+      "key": "reports/t1062-aac-v2-static-admission-design.json",
+      "source_path": "/tmp/t1062-aac-v2-static-admission-design.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-v2-static-admission-design.json",
+      "sha256": "a428a0db2cbe3b94f8ead57674ee91340f7d7f45c2210a89c7ba8542365a64a6",
+      "bytes": 8972
+    },
+    {
+      "key": "reports/t1062-aac-v2-static-admission-design-r2.json",
+      "source_path": "/tmp/t1062-aac-v2-static-admission-design-r2.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-v2-static-admission-design-r2.json",
+      "sha256": "246517a3f6df9bdf758b7bf48965e006106686d4e2867678c583cf14884dc64e",
+      "bytes": 9420
+    },
+    {
+      "key": "reports/t1062-aac-v2-static-admission-design-r3.json",
+      "source_path": "/tmp/t1062-aac-v2-static-admission-design-r3.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-v2-static-admission-design-r3.json",
+      "sha256": "c4a17a0b7553665e81d2a5f5c5d936e830f85acd1615481c53f380fdb1da3d64",
+      "bytes": 11464
+    },
+    {
+      "key": "reports/t1062-aac-v2-static-admission-design-r4.json",
+      "source_path": "/tmp/t1062-aac-v2-static-admission-design-r4.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-v2-static-admission-design-r4.json",
+      "sha256": "59270941b0cb865f454fec22d5344408c60e0d40508892a51af662d149166a7a",
+      "bytes": 13449
+    },
+    {
+      "key": "reports/t1062-aac-v2-static-endpoint-independent-review.json",
+      "source_path": "/tmp/t1062-aac-v2-static-endpoint-independent-review.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-v2-static-endpoint-independent-review.json",
+      "sha256": "df07d398b2d9e00f6712031c2bdd873d98f17b9f3b0deece33121d832a50e91b",
+      "bytes": 10099
+    },
+    {
+      "key": "reports/t1062-aac-v2-r4-independent-static-review.json",
+      "source_path": "/tmp/t1062-aac-v2-r4-independent-static-review.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-v2-r4-independent-static-review.json",
+      "sha256": "8e0a386a54865d79e581ee98d7fdb6d12e50c562001896957860f31142d2291f",
+      "bytes": 9880
+    },
+    {
+      "key": "reports/t1062-aac-mapping-scope-and-acceptance-independent-review-r2.json",
+      "source_path": "/tmp/t1062-aac-mapping-scope-and-acceptance-independent-review-r2.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-mapping-scope-and-acceptance-independent-review-r2.json",
+      "sha256": "c7cf0149a538c8626cf9b035b0a717ec83df8ec03107b4c2e370f9d7857e46e4",
+      "bytes": 19376
+    },
+    {
+      "key": "public/diagnostic-report.json",
+      "source_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/diagnostic-report.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/public/diagnostic-report.json",
+      "sha256": "e69cb4750be148b955c95ed70a2728238e9f01d942306bdf50c697d34848ca6b",
+      "bytes": 5308
+    },
+    {
+      "key": "public/public-timing-diagnostic.json",
+      "source_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/public-timing-diagnostic.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/public/public-timing-diagnostic.json",
+      "sha256": "c800a45879790bc97a343be264c77abd49363c9ec17e89db642742fbfdb3fea5",
+      "bytes": 7204
+    },
+    {
+      "key": "public/audio-and-r6-control-observation.json",
+      "source_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/audio-and-r6-control-observation.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/public/audio-and-r6-control-observation.json",
+      "sha256": "171d76061f7f3cfddaeca8e20e92bce1176376182217464eae3f290701b5da0e",
+      "bytes": 2565
+    },
+    {
+      "key": "public/source-read-hash-manifest.json",
+      "source_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/source-read-hash-manifest.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/public/source-read-hash-manifest.json",
+      "sha256": "c4afbd9517f20d85dfb301e8e4a306359ff8a609267686e6990d751b39a33cf9",
+      "bytes": 1888
+    },
+    {
+      "key": "public/after-integrity.json",
+      "source_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/after-integrity.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/public/after-integrity.json",
+      "sha256": "5fd8e953fc8cbb9ffbd01b3b8d663a171581c7f0d7b4e39d65dec05188a22bfa",
+      "bytes": 1443
+    },
+    {
+      "key": "public/hash-manifest.json",
+      "source_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/hash-manifest.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/public/hash-manifest.json",
+      "sha256": "3015c64d89d757277ffa8097f7a583a496905aa2a58e0db098a55460cd9c2a03",
+      "bytes": 4772
+    },
+    {
+      "key": "inputs/neutral-original-speed.mp4",
+      "source_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp/neutral-original-speed.mp4",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/inputs/neutral-original-speed.mp4",
+      "sha256": "e6c0f4e72741e8f37b369d9511311569df8ef6c4e07009f3c746c632fb0e2073",
+      "bytes": 232847
+    },
+    {
+      "key": "inputs/neutral-clock-offset.mp4",
+      "source_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp/neutral-clock-offset.mp4",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/inputs/neutral-clock-offset.mp4",
+      "sha256": "0b22998e8238f35c9c3447c01234ce03f0ee03770db229c53f1e3de9f6905914",
+      "bytes": 232875
+    },
+    {
+      "key": "inputs/neutral-full.wav",
+      "source_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp/neutral-full.wav",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/inputs/neutral-full.wav",
+      "sha256": "f6a03da1ff973b8a9dfaf29850a8b1eb1311b030157070967986407a53d46ca1",
+      "bytes": 1432864
+    },
+    {
+      "key": "actual-mp3/objkey-fa5f28bc-874-transcribe.mp3",
+      "source_path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-wkYQfz/creatoros-playwright-7p4IpW/t1062-neutral-media/groups/grp-fa5f28bc-798/execution-inputs/uploads/objkey-fa5f28bc-874-transcribe.mp3",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/actual-mp3/objkey-fa5f28bc-874-transcribe.mp3",
+      "sha256": "cb6ebf25b298447554f53e85ebef37d86253b04adf70bdc57d42685d75e1fb26",
+      "bytes": 120531
+    },
+    {
+      "key": "actual-mp3/objkey-fa5f28bc-960-transcribe.mp3",
+      "source_path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-wkYQfz/creatoros-playwright-7p4IpW/t1062-neutral-media/groups/grp-fa5f28bc-886/execution-inputs/uploads/objkey-fa5f28bc-960-transcribe.mp3",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/actual-mp3/objkey-fa5f28bc-960-transcribe.mp3",
+      "sha256": "ad3e3e7a944fbdbff0c7c3e4163e34cc13919fecfcd381f818cbbd11e0f96e4b",
+      "bytes": 120819
+    },
+    {
+      "key": "source-baseline/backend/src/modules/production/production-asr-pcm.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/backend/src/modules/production/production-asr-pcm.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/backend/src/modules/production/production-asr-pcm.ts",
+      "sha256": "2ec13ab3d6e4d3517132d2457b060561e1a75514d1e6a27f36e2241d3745298a",
+      "bytes": 6660
+    },
+    {
+      "key": "source-baseline/backend/src/modules/production/production-asset-asr-media.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/backend/src/modules/production/production-asset-asr-media.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/backend/src/modules/production/production-asset-asr-media.ts",
+      "sha256": "495de43a5f9d5e5601dd4e60bcfa44b2c59e6233c052a724c8311971721175c9",
+      "bytes": 5870
+    },
+    {
+      "key": "source-baseline/backend/src/modules/production/production-asr-timing.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/backend/src/modules/production/production-asr-timing.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/backend/src/modules/production/production-asr-timing.ts",
+      "sha256": "604f7bbcae1af4cdf66564508934fabdc33e9995709f838f11fcd282ddfbbb39",
+      "bytes": 4939
+    },
+    {
+      "key": "source-baseline/backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "sha256": "35034ad868a909de7fd5234573a8cd308f9e58a6522a61c517dd2efaaf63c3c8",
+      "bytes": 5653
+    },
+    {
+      "key": "source-baseline/backend/src/modules/execution/asset-asr-owner.service.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/backend/src/modules/execution/asset-asr-owner.service.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/backend/src/modules/execution/asset-asr-owner.service.ts",
+      "sha256": "ca84613f0d8989eb514cf7fb321173e9f0485fd5bc4882bf94718d95be5a8206",
+      "bytes": 26083
+    },
+    {
+      "key": "source-baseline/ai-worker/src/execution/asset-asr-worker-run.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/ai-worker/src/execution/asset-asr-worker-run.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/ai-worker/src/execution/asset-asr-worker-run.ts",
+      "sha256": "861fce9445d3227cbb2989e68ef8ab17f7b7ed39eb76ab96d82e166643e0a4b6",
+      "bytes": 2763
+    },
+    {
+      "key": "source-baseline/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9",
+      "bytes": 37829
+    },
+    {
+      "key": "source-baseline/ai-worker/src/runtime/asr-provider-timing.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/ai-worker/src/runtime/asr-provider-timing.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/ai-worker/src/runtime/asr-provider-timing.ts",
+      "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62",
+      "bytes": 2659
+    },
+    {
+      "key": "source-baseline/contract/src/internal/asset-asr-timing.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/contract/src/internal/asset-asr-timing.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/contract/src/internal/asset-asr-timing.ts",
+      "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568",
+      "bytes": 6010
+    },
+    {
+      "key": "source-baseline/contract/src/internal/execution-asr.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/contract/src/internal/execution-asr.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/contract/src/internal/execution-asr.ts",
+      "sha256": "bdbea8ec07754984859cf3950e4c2075a351c174484c98819c37acee78e74434",
+      "bytes": 3661
+    },
+    {
+      "key": "source-baseline/contract/src/internal/asset-asr.ts",
+      "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/contract/src/internal/asset-asr.ts",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/source-baseline/contract/src/internal/asset-asr.ts",
+      "sha256": "50a4ad3f7ac6bff1b87faed01e0a5c278ddba534e18bea0aff0afbc68f83fde7",
+      "bytes": 5323
+    },
+    {
+      "key": "reports/t1062-aac-v2-static-admission-design-r5.json",
+      "source_path": "/tmp/t1062-aac-v2-static-admission-design-r5.json",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/reports/t1062-aac-v2-static-admission-design-r5.json",
+      "sha256": "d08ba1461156f6d12a08e9bd5cda04e868c03cb5d5b169c448be40937c2039fa",
+      "bytes": 17680
+    }
+  ],
+  "model_calls": 0,
+  "db_calls": 0,
+  "production_changes": false,
+  "original18_passed": false,
+  "installed_passed": false
+}

@@ -46,6 +46,7 @@ function toArtifactResource(row: ArtifactRow): ArtifactResource {
     // fully-formed artifact always has it set. Coerce the rare pre-link null to ""
     // so the wire shape (non-null id) stays valid.
     currentVersionId: row.currentVersionId ?? "",
+    currentVersionIsReserved:row.currentVersionIsReserved??false,
     stage: row.stage as ArtifactResource["stage"],
     artifactType: row.artifactType as ArtifactResource["artifactType"],
     title: row.title,

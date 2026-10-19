@@ -30,3 +30,13 @@ it('版本读取失败/运行中版本变化/非用户读取不缓存',async()=>
  await readCachedPageValue(failure);await readCachedPageValue(failure);expect(read).toHaveBeenCalledTimes(4);
  await readCachedPageValue({...opts,ctx:{...ctx,source:'agent'}});await readCachedPageValue({...opts,ctx:{...ctx,source:'agent'}});expect(read).toHaveBeenCalledTimes(6);
 });
+it('T1364仅新诊断转发可信第四参，旧读写始终三参',async()=>{
+ const request=vi.fn(async(..._args:unknown[])=>({}));const transport=withPageReadInvalidation({request} as never);
+ const controls={signal:new AbortController().signal,trustedInvocationId:'trusted'};
+ await transport.request(ENDPOINTS.diagnoseWechatNavigation,{params:{accountId:'owned'},query:undefined,body:{}},ctx,controls);
+ expect(request.mock.calls.at(-1)).toHaveLength(4);expect(request.mock.calls.at(-1)![3]).toBe(controls);
+ await transport.request(ENDPOINTS.listAccounts,{params:undefined,query:{page:1,pageSize:100},body:undefined},ctx,controls);
+ expect(request.mock.calls.at(-1)).toHaveLength(3);
+ await transport.request(ENDPOINTS.archiveAccount,{params:{accountId:'owned'},query:undefined,body:undefined},ctx,controls);
+ expect(request.mock.calls.at(-1)).toHaveLength(3);
+});

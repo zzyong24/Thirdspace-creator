@@ -1,3 +1,6 @@
+import type {RequestContext} from "@creatoros/contract";
+import type {Db} from "@creatoros/backend";
+import {projects as originalProjects} from "../../schema/projects";
 import {randomUUID} from "node:crypto";
 import {expect,it} from "vitest";
 import {createDb,eq,learnings} from "@creatoros/backend";
@@ -6,6 +9,7 @@ const ctx={userId:"adopt-user",accountId:"adopt-account",requestId:"test",source
 it("领域提交回执丢失和并发重投只创建同一经验，保留真实来源与状态",async()=>{
  const f=await createDb();try{
   const service=createLearningsService({db:f.db,now:()=>"2026-09-05T00:00:00.000Z",nextId:p=>`${p}-${randomUUID()}`,projects:{assertOwnsProject:async()=>{},recordActivity:async()=>{}}});
+  await seedOriginalProject(f.db,ctx,"source-project","2026-09-05T00:00:00.000Z");
   for(const evidenceStrength of [null,"grounded"] as const){
    const input={title:"真实经验",insight:"实际候选内容",projectId:"source-project",evidenceStrength,adoptionKey:`candidate:${evidenceStrength}`};
    await service.createLearning(ctx,input); // 已提交，但调用者没有保存该回执。
@@ -29,3 +33,7 @@ it("稳定项键按用户账号隔离，未提供项键保持原创建语义",as
   const a=await service.createLearning(ctx,{title:"手工重复"}),b=await service.createLearning(ctx,{title:"手工重复"});expect(a.id).not.toBe(b.id);
  }finally{await f.client.close();}
 });
+
+async function seedOriginalProject(db:Db,owner:RequestContext,id:string,stamp:string){
+ await db.insert(originalProjects).values({id,userId:owner.userId,accountId:owner.accountId??null,groupId:owner.groupId??null,title:'原用例真实父项目',creationMode:'free',status:'active',currentStage:'review',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+}

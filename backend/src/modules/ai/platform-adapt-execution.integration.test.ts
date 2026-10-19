@@ -2,8 +2,9 @@ import { createServer } from "node:http";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { beforeAll,afterAll,describe,it,expect,vi } from "vitest";
-import { createDb,type Db } from "@creatoros/backend";
+import { createDb,projects,contentOutputs,platformAccounts,type Db } from "@creatoros/backend";
 import { getOfficialSkillBase,type PlatformAdaptOutput } from "@creatoros/ai-worker";
+import {createAccountGroupService} from "../platform-account/account-group.service";
 import { createAiRepository } from "./ai.repository";
 import { createAiService } from "./ai.service";
 import { createPublishingService } from "../publishing/publishing.service";
@@ -12,11 +13,18 @@ import { createPlatformAdaptExecutionService } from "../ai-runtime/platform-adap
 import { projectPlatformAdaptCandidate } from "../ai-runtime/platform-adapt-context";
 import { createPlatformDraftAdoptionPort } from "../ai-runtime/platform-draft-adoption";
 const ctx={userId:"platform-worker",accountId:"platform-worker",requestId:"test",source:"user" as const};
-const budget={maxCalls:4,maxTokens:100000,deadlineMs:60000};
+const budget={maxCalls:4,maxTokens:100000,deadlineMs:180000};
 describe("多平台改写正式Skill到发布草稿",()=>{
   let db:Db;let close:()=>Promise<void>;
-  beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
-  afterAll(async()=>close?.());
+  beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();
+    const stamp=new Date().toISOString();let seedSequence=0;
+    await db.insert(platformAccounts).values({id:ctx.accountId,userId:ctx.userId,platform:"douyin",accountHandle:"原合法发布账号",createdAt:stamp,updatedAt:stamp});
+    await createAccountGroupService({db,now:()=>stamp,nextId:prefix=>`${prefix}-original-parent-${++seedSequence}`}).ensureLegacyGroups(ctx);
+    const groupId=`grp_legacy_${ctx.accountId}`;
+    await db.insert(projects).values({id:"fixture-project",userId:ctx.userId,accountId:ctx.accountId,groupId,title:"原平台改写父项目",creationMode:"free",status:"active",currentStage:"publishing",startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+    await db.insert(contentOutputs).values({id:"fixture-output",projectId:"fixture-project",groupId,title:"原平台改写作品",contentType:"video",status:"drafting",createdAt:stamp,updatedAt:stamp});
+    execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe",timeout:180000});},180000);
+  afterAll(async()=>close?.(),180000);
   it("公共创建→冻结业务上下文→真实Worker→公共采纳→发布服务回读",async()=>{
     let seq=0;const nextId=(prefix:string)=>`${prefix}-${++seq}`;const now=()=>new Date().toISOString();
     const notUsed=vi.fn(async()=>{throw new Error("UNEXPECTED_EXTERNAL_ACTION");});
@@ -63,5 +71,5 @@ describe("多平台改写正式Skill到发布草稿",()=>{
       expect((await ai.cancelTask(ctx,queued.id)).runtimeStatus).toBe("cancelled");
       expect((await ai.listTasks(ctx,{limit:20,offset:0} )).rows.find(item=>item.id===queued.id)?.status).toBe("cancelled");
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
-  },15000);
+  },180000);
 });

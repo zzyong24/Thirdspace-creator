@@ -1,0 +1,46 @@
+{
+  "failures": [
+    {
+      "label": "foreignUser",
+      "name": "OwnershipError",
+      "message": "账号组不可用，请重新选择"
+    },
+    {
+      "label": "foreignGroup",
+      "name": "OwnershipError",
+      "message": "OwnershipError: task not found: ai-task-a5e77605-15"
+    },
+    {
+      "label": "wrongLegacyAccount",
+      "name": "OwnershipError",
+      "message": "OwnershipError: task not found: ai-task-a5e77605-15"
+    },
+    {
+      "label": "原候选内容篡改",
+      "name": "ConflictError",
+      "message": "论点候选与原确认内容不符"
+    },
+    {
+      "label": "cancelled",
+      "name": "ConflictError",
+      "message": "AI task ai-task-a5e77605-15 is not awaiting confirmation (status: cancelled)"
+    },
+    {
+      "label": "原项目映射篡改",
+      "name": "Error",
+      "message": "planning.thesis adoption state mismatch: awaiting_confirmation"
+    },
+    {
+      "label": "SQL rollback artifacts",
+      "name": "Error",
+      "message": "T1318_OWN_SQL_FAILURE:artifacts"
+    },
+    {
+      "label": "SQL rollback artifact_versions",
+      "name": "Error",
+      "message": "T1318_OWN_SQL_FAILURE:artifact_versions"
+    }
+  ],
+  "rollbackRowsByteEqual": true,
+  "candidateUnchanged": true
+}

@@ -1,0 +1,37 @@
+--- spec-9b2ccd38
++++ final-spec
+@@ -27,7 +27,7 @@
+ 
+ 只在verifyExecutionKnowledgeSource的native知识分支规范比较，不改变调用方、DTO、provider、全局schema或数据库迁移。
+ 
+-1. 沿原executionTask/model/binding读取、frozen knowledge.write唯一性、原thread/turn及根model检查。原record中若**存在callId字段**，先验证它是非空字符串且逐字等于当前model.id；null/错误类型/foreign ID必须拒绝。缺省才属于受控兼容的旧无内部callId事实，不能把显式无效值当缺省。
++1. 沿原executionTask/model/binding读取、frozen knowledge.write唯一性、原thread/turn及根model检查。仍以 `tools[input.toolCallId]` 精确map key取值，且记录toolCallId必须逐字等于该key；不得通过Object.values扫描捡alias。原record中若**存在callId字段**，先验证它是非空字符串且逐字等于当前model.id；null/错误类型/foreign ID必须拒绝。缺省才属于受控兼容的旧无内部callId事实，不能把显式无效值当缺省。
+ 2. 原binding与匹配的settled receipt工具事实都先经原checkpointToolCallSchema验证。canonical若带callId也必须与当前model.id一致；不能用规范投影隐藏冲突的已声明来源身份。
+ 3. 明确构造双方 `{type,toolCallId,toolName,input}` 四字段，再严格比较，不能删除原持久callId、改worker事实、只比toolName或重新序列化input来掩盖参数变化。原record有callId并已验证归属后，它不参与这四字段相等判断。兼容原record没有callId的旧合法四字段事实，不伪造缺省callId或写回历史数据。
+ 4. 保持canonical匹配恰1条、正确knowledge.write/toolCallId、唯一原生根模型、started/settled状态与requireCurrentModel规则；started准备可以形成原暂存提案，settled最终再核。非原生Pi分支保持原逻辑。
+@@ -51,14 +51,14 @@
+ 
+ ## 局部边界回归
+ 
+-复用原 `agentic-proposal-staging.service.test.ts` 与 `execution-agentic-candidate.service.test.ts` 装配，优先让positive从真实recordCodexToolCall端口保存完整incoming，使用原worker四字段投影与真实staging/settlement/commit/confirm服务，不以手种结果或mock commit成功代组合。
++复用原 `agentic-proposal-staging.service.test.ts` 与 `execution-codex-agentic-candidate.test.ts` 原生组合装配；原 `execution-agentic-candidate.service.test.ts` 保只读Pi回归，优先让positive从真实recordCodexToolCall端口保存完整incoming，使用原worker四字段投影与真实staging/settlement/commit/confirm服务，不以手种结果或mock commit成功代组合。
+ 
+ | 输入族 | 必须断言 |
+ | --- | --- |
+ | 当前完整record含正确callId | started阶段真实stage；settled四字段receipt再校验、正式commit与confirm成功；原持久record不删callId。 |
+ | 旧record缺省callId | 原合法四字段族保持成功；不是迁移或补写历史。 |
+ | record/canonical显式foreign callId、null、非字符串 | 来源拒绝且0半写；不能被四字段投影忽略。 |
+-| wrong/duplicate toolCallId、wrong toolName、input正文改动 | 严格来源比较拒绝，原暂存/最终候选/知识/修订不新增。 |
++| wrong map key/alias、wrong或duplicate toolCallId、wrong toolName、input正文改动 | 严格来源比较拒绝，原暂存/最终候选/知识/修订不新增。 |
+ | foreign task/model/组或缺原thread/turn | 原归属/唯一性检查拒绝；原root/回执不复用为新根。 |
+ | foreign/未settled/时间在后evidence，sourceNote非来源URL | 原证据与顺序门继续拒绝，不加伪证据或改域名守卫。 |
+ | 同意图重读/同confirm、已有正式result | 同原ID回执/知识/修订数不增；异意图/版本或归属变化按原门拒绝。 |
+@@ -79,7 +79,7 @@
+ 独审通过后由C另授，当前不是implementation授权：
+ 
+ - 唯一生产：`backend/src/modules/ai/agentic-proposal-staging.service.ts`。
+-- 两既有测试：`backend/src/modules/ai/agentic-proposal-staging.service.test.ts`、`backend/src/modules/ai/execution-agentic-candidate.service.test.ts`。
++- 两既有测试：`backend/src/modules/ai/agentic-proposal-staging.service.test.ts`、`backend/src/modules/ai/execution-codex-agentic-candidate.test.ts`。
+ - 新公共测试：`frontend/src/server/__module_integration__/agentic-knowledge-native-binding.persistence-client.test.ts`。
+ - 本任务控制、helper与小型结果：`docs/verification/t1335/control/**`、`docs/verification/t1335/runtime/**`。外盘只作明确owned运行数据，不把绝对路径塞repo write_set或改guard。
+ 

@@ -1,0 +1,48 @@
+# T-1009 HTML 到 PNG/PDF 的用户导出链路
+
+## 用户可见行为
+
+对话里的已登记 HTML 产物有“导出原文件”“导出 PNG”“导出 PDF”三个选项。PNG/PDF 由桌面本机的受控浏览器从当前版本的静态页面生成；用户在原生面板选择保存位置。取消面板不会显示保存成功。预览仍显示隔离后的 HTML，原文件导出仍返回登记时的原字节。
+
+```mermaid
+flowchart LR
+  A[点击 HTML 产物的 PNG/PDF] --> B[会话与账号核实]
+  B --> C[任务、产物版本与原字节哈希回读]
+  C --> D[相对 PNG 同任务回读并安全内联]
+  D --> E[离线 Chromium 生成真实字节]
+  E --> F[响应 MIME、大小、哈希与源哈希]
+  F --> G[客户端复核并打开原生保存面板]
+```
+
+## 实现边界
+
+- `GET /api/v1/workbench-preview/{taskId}/{artifactId}/{version}?format=png|pdf` 先执行既有 loopback、session、账号和后端产物读取校验。仅已登记 `text/html` 可转换；原 HTML 限 4 MiB，生成文件限 20 MiB。无效 UTF-8 返回 422，非 HTML 返回 415，版本/归属错误返回 404，浏览器运行时缺失返回 503，渲染并发超限返回 429；不会返回占位文件。
+- 转换使用预览同一套 HTML 清理和相对 PNG 回读。只接受同账号、同任务正式登记且哈希有效的相对 PNG，最多 12 张、图片总原始字节最多 2 MiB。外部链接、脚本、文件地址及失效图片不会进入渲染。渲染端口同时最多执行 2 个 Chromium；启动、页面加载和输出分别有超时上限。
+- 成功响应的 `Content-Type`、`X-Workbench-Mime`、`X-Workbench-Hash`、`X-Workbench-Size`、`X-Workbench-Filename` 对应实际 PNG/PDF 字节，`X-Workbench-Source-Hash` 对应已登记的 HTML 原版本。默认预览与 `format=raw` 原有行为保留。
+- 客户端只访问当前产物的同源路径，核对来源哈希、响应格式、大小、字节 SHA-256 和文件签名，20 MiB 以上流式拒绝；之后才调用既有 `export_workbench_artifact` 原生命令。卡片连点只发起一次导出，卸载或账号/版本切换会取消在途读取并忽略旧回执。原生文件面板打开后无法由网页 AbortSignal 强制关闭；此时全局只允许一个保存面板，切换账号不会把旧回执显示在新卡片。
+
+## 当场验证
+
+- `pnpm --dir frontend exec vitest run 'src/app/api/v1/workbench-preview/[taskId]/[artifactId]/[version]/route.test.ts' src/features/copilot/workbench-artifact-card.test.tsx src/features/copilot/workbench-artifact-export.test.ts src/server/workbench-artifact-render.test.ts --retry=0`：4 文件、24/24 通过。真实 PGlite 登记和本地对象存储贯通 HTTP 端口；Chromium 输出 PNG 像素与可解析 PDF；核对 PNG/PDF 元数据、原文件保真、跨账号拒绝、无效编码、运行时缺失及并发预算。
+- `pnpm --dir frontend exec tsc --noEmit --pretty false`、上述文件的定向 ESLint：通过；`git diff --check` 在提交前复核。
+- LED-047 助手、弹层导航、详情和慢轮询回归：8 文件、157/157 通过。
+- `CREATOROS_DESKTOP=1 pnpm --dir frontend build`：本地 Next standalone 构建通过，动态预览 route 列入产物；构建有既有 NFT 全项目追踪警告。生成的路由 NFT 列出 `jsdom` 与 `@playwright/test`，standalone 中有 `jsdom` 包与 Playwright 包目录。单独检查 standalone 时，`@playwright/test` 的入口未完整落盘；现有 `frontend/scripts/desktop/build-sidecar.mjs` 的 `bundlePlaywright()` 会补拷完整 Playwright 闭包，但本次没有运行桌面打包脚本，故不能把 standalone 构建当作安装包运行证据。
+- `node orchestrator/process/boundary-scan.mjs` 仍失败：`live-chat-session.ts` 的 `@ai-sdk/react` 与 `ai` 两条 R2 导入已存在于起点 `11901acd`，本次未触及该文件，也未新增本写集违规。全局门卫不能写成通过。
+
+## 待安装版验收
+
+Mac/Windows 安装版的 CfT 路径、原生保存对话框取消/覆盖、实际文件打开及升级保留仍待 T-1013 真机验证。本工作树未打包、安装或发布。
+
+## 2026-09-20 真实 Mac 宿主串联补验
+
+在 [T-1007 记录](t1007-files-command.md#2026-09-20-同一真实文件产物的两版渲染补验)所述 opt-in 用例中，先由真实数据库租约和 Mac Rust 私有 socket 写入两个 HTML 文件，登记同一产物的版本 1、2；Blob 按版本回读的字节和哈希分别正确，Chromium 导出的 PDF 保留各自版本正文，新版 PNG 签名有效。随后本地模型协议夹具经真实 Worker 依次请求 `files.write`、`artifact.register`，两个工具调用均结算，真实任务文件登记成 Blob，PDF 含其正文。定向用例 **1/1 通过**，frontend typecheck 通过。
+
+该夹具验证模型调用协议到真实 Mac 宿主、产物和渲染的连接，不代表真实模型自主选择工具，也未触发安装版 UI 或原生保存面板。跨回合版本仍待补充规格的用户确认与实施。
+
+## 2026-09-20 真实模型单回合尝试与实际阻断
+
+同一 opt-in 用例另提供 `CREATOROS_T1012_REAL_MODEL=1`：真实 Worker 使用显式模型配置发起请求，模型需自行选择 `files.write` 与 `artifact.register`，之后仍核对原调用账本、临时任务文件、Blob 和 PDF。测试只用随机测试账号与临时目录；密钥从环境变量读取，不写入文件或输出。
+
+本机 `MINIMAX_API_KEY` 存在，但以仓库已用的 MiniMax-M3 Anthropic 兼容配置尝试中国区与全球区端点各一次，均得到供应商 `auth_401`。任务终态 `waiting_user`，原账本仅有一条 `model/rejected`，**没有工具调用、文件登记或可验收的真实模型产物**。因此不能宣称真实模型自主执行通过，也不能把认证失败误判为工具链失败。安装版公开 CLI 同时返回 `CONNECTION_EXPIRED`，需在应用设置中重新开启本次访问后才能做安装版业务验收。
+
+测试入口现允许显式设置 `CREATOROS_T1012_MODEL_TOKEN`、`CREATOROS_T1012_MODEL_BASE_URL`、`CREATOROS_T1012_MODEL_NAME` 与 `CREATOROS_T1012_MODEL_API_FORMAT`；未提供时使用环境中的 `MINIMAX_API_KEY` 和 MiniMax-M3 全球端点。获得有效且匹配区域的测试凭据后，复用同一用例即可取得真实模型工具账本与产物证据。恢复本地协议夹具后，Mac socket 定向用例 **1/1 通过**，frontend typecheck 通过。跨回合实现仍待用户确认，未在此轮修改。

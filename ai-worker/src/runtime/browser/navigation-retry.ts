@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 /** gotoWithRetry 只依赖 page 的 goto + waitForTimeout(三处调用点的 page 接口都满足;
  *  fake page 单测同样只需这两件事)。 */
 export interface GotoCapablePage {
@@ -33,7 +34,7 @@ export async function gotoWithRetry(
   opts: GotoWithRetryOptions = {},
 ): Promise<void> {
   const retries = opts.retries ?? 3;
-  const timeoutMs = opts.timeoutMs ?? 60_000;
+  const timeoutMs = executionTimeoutMs(opts.timeoutMs);
   const backoff = opts.backoffMs ?? [2_000, 5_000, 10_000];
   const waitUntil = opts.waitUntil ?? "domcontentloaded";
   const label = opts.label ?? url;

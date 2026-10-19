@@ -1,0 +1,95 @@
+{
+  "schema": "t1062-attempt13-word-timing-root-cause.v1",
+  "observed_utc": "2026-10-06T00:43:47.806141+00:00",
+  "finding_id": "T1062-ASR-ATT13-001",
+  "conclusion": "前置实际AAC→MP3unverified回退已确定；mappingReceipt缺失使Worker不传timingAudio，真实默认adapter无法交付timing。无需继续Whisper探针来确认这一前置阻断。",
+  "public_evidence": {
+    "path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/public-timing-diagnostic.json",
+    "sha256": "c800a45879790bc97a343be264c77abd49363c9ec17e89db642742fbfdb3fea5",
+    "tasks": 2,
+    "input_and_plan_timestampMode": "word",
+    "execution_status": "succeeded",
+    "ai_status": "awaiting_confirmation",
+    "aggregate_hasTiming": false,
+    "granularity": "text"
+  },
+  "actual_audio_evidence": {
+    "path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/audio-and-r6-control-observation.json",
+    "sha256": "171d76061f7f3cfddaeca8e20e92bce1176376182217464eae3f290701b5da0e",
+    "audio": [
+      {
+        "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-wkYQfz/creatoros-playwright-7p4IpW/t1062-neutral-media/groups/grp-fa5f28bc-798/execution-inputs/uploads/objkey-fa5f28bc-874-transcribe.mp3",
+        "sha256": "cb6ebf25b298447554f53e85ebef37d86253b04adf70bdc57d42685d75e1fb26",
+        "bytes": 120531,
+        "first16hex": "49443304000000000109545858580000",
+        "container_evidence": "ID3 header; original production fallback is MP3, not verified WAV"
+      },
+      {
+        "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-wkYQfz/creatoros-playwright-7p4IpW/t1062-neutral-media/groups/grp-fa5f28bc-886/execution-inputs/uploads/objkey-fa5f28bc-960-transcribe.mp3",
+        "sha256": "ad3e3e7a944fbdbff0c7c3e4163e34cc13919fecfcd381f818cbbd11e0f96e4b",
+        "bytes": 120819,
+        "first16hex": "49443304000000000109545858580000",
+        "container_evidence": "ID3 header; original production fallback is MP3, not verified WAV"
+      }
+    ]
+  },
+  "chain": [
+    {
+      "path": "backend/src/modules/production/production-asr-pcm.ts",
+      "line": 15,
+      "fact": "AAC codec不符合PCM-only正则，return null"
+    },
+    {
+      "path": "backend/src/modules/production/production-asset-asr-media.ts",
+      "line": 22,
+      "fact": "MP3真实抽音与mappingStatus unverified，无mappingReceipt"
+    },
+    {
+      "path": "ai-worker/src/execution/asset-asr-worker-run.ts",
+      "line": 10,
+      "fact": "only verified+receipt才构造timingAudio"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "line": 217,
+      "fact": "timingAudio16k/decodedSampleCount必须对应；缺失则timing null"
+    },
+    {
+      "path": "backend/src/modules/execution/asset-asr-owner.service.ts",
+      "line": 52,
+      "fact": "单一call无timing时aggregate全文；若仅下游mapping拒绝但timing存在，aggregate仍会保timing"
+    },
+    {
+      "path": "contract/src/internal/asset-asr-timing.ts",
+      "line": 36,
+      "fact": "v1只同采样率/无skip/trim，不能直接支持48k AAC到16k"
+    }
+  ],
+  "counts": {
+    "actual_public_read_final_test": 1,
+    "pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "calibration_first": {
+      "test": 1,
+      "fail": 1,
+      "reason": "AI状态本来awaiting_confirmation，首次诊断helper错误要求succeeded，未到读取结果；原日志保留，不当产品RED"
+    },
+    "model_or_asr_calls": 0,
+    "new_extract_experiments": 0
+  },
+  "scope": "最小生产3 existing protected paths加1existing test，asset-asr-media为仅确需调用变更时的conditional；当前586/795未获这些写权限，只提方案不patch。",
+  "constraints": "原6用例/word/20原声检查不改，PCM v1历史/R6不同输入/nonzero降级保留，不跳过ResearchGate，不自审实现。",
+  "design_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/minimal-aac-internal-mapping-design.json",
+  "design_sha256": "60214e427f0b829e4824543d676284e3beee602599553b98dafbb8fdf8f474e0",
+  "experiment_plan_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/bounded-physical-experiment-plan.json",
+  "experiment_plan_sha256": "d2eae8ac57231cf4b9edf79b71166e06ce643239172d8d53c658ff1276007941",
+  "research_card_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/research-card-v2-candidate.json",
+  "research_card_sha256": "45517d311c2ce39327e765e4cd6e5f635f28d4741ca12c291ef77084145cbfee",
+  "card_state": "researching，真实区分实验/项目证据/verify_key/DEC均待ROOT，不签validated或resume",
+  "integrity_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/after-integrity.json",
+  "integrity_sha256": "5fd8e953fc8cbb9ffbd01b3b8d663a171581c7f0d7b4e39d65dec05188a22bfa",
+  "source_manifest_path": "/tmp/t1062-attempt13-public-timing-read-5ne042oq/source-read-hash-manifest.json",
+  "source_manifest_sha256": "c4afbd9517f20d85dfb301e8e4a306359ff8a609267686e6990d751b39a33cf9",
+  "limitations": "这轮无真实provider raw/chunks持久证据，不能证明当前Whisper raw word有效或具体物理guard全部通过；现存R6只真实PCM控制。前置映射修复之后若仍text，再按bounded研究观察provider，当前不多跑模型。"
+}

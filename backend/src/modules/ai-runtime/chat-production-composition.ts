@@ -1,7 +1,15 @@
+import type {WorkEditorPorts} from "./work-editor-candidate";
+import type {ChatWorkCreationToolPorts} from "./chat-work-creation-tool-host";
 import type {Db} from "@creatoros/backend";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
 import {createChatProductionRuntime} from "./chat-production-runtime";
+import {createChatCanvasToolHost} from "./chat-canvas-tool-host";
+import {createChatSystemToolHost,type ChatSystemToolPorts} from './chat-system-tool-host';
 import {createChatTaskToolHost} from "./chat-task-tool-host";
+import {createChatWorkbenchPlanToolHost} from "./chat-workbench-plan-tool-host";
+import {createChatWorkbenchCapabilityHost,type ChatWorkbenchCapabilityHost} from "./chat-workbench-capability-host";
+import {createExecutionLeaseService} from "../execution/execution-lease.service";
+import {createExecutionStreamService} from "../execution/execution-stream.service";
 import {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 import {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
@@ -35,9 +43,15 @@ export interface ChatProductionServicePorts extends ChatIngestionToolPorts {
  getPositioningDiscovery:RequiredTaskPorts["structured"]["getPositioningDiscovery"];
 }
 export interface ChatProductionCompositionDeps {
+ assistantSystem?:ChatSystemToolPorts;
+ editor?:WorkEditorPorts;
+ creation?:ChatWorkCreationToolPorts;
+ canvas?:Parameters<typeof createChatCanvasToolHost>[1];
+ externalImageStorage?:ProductionDeps["externalImageStorage"];
  entryPath:string;
  runtime:ChatProductionServicePorts;
  now?:()=>string;
+ topicWorkspace?:import("./topic-business-adapter").TopicGeneratePrepareDeps["topicWorkspace"];
  assertProject:ProductionDeps["assertProject"];
  resolveModelCredential:ProductionDeps["resolveModelCredential"];
  resolveFallbackModelCredential?:ProductionDeps["resolveFallbackModelCredential"];
@@ -45,14 +59,19 @@ export interface ChatProductionCompositionDeps {
  trend:ChatTrendReadDeps;
  webRead:ProductionDeps["webRead"];
  onError?:ProductionDeps["onError"];
+ workbenchHost?:ChatWorkbenchCapabilityHost;
+ resolveWorkbenchScreenshot?:ProductionDeps["resolveWorkbenchScreenshot"];
+ verifyWorkbenchArtifacts?: (scope:{userId:string;accountId:string;taskId:string},refs:string[])=>Promise<boolean>;
 }
 /** 装配原持久聊天运行时与全部真实工具；不增加运行时或任务账本。 */
 export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
  const chatRuntime=deps.runtime;
  const hostReader=createChatHostContextReader(db);
+ const canvasTools=deps.canvas?createChatCanvasToolHost(hostReader,deps.canvas):null;
+ const systemTools=deps.assistantSystem?createChatSystemToolHost(hostReader,deps.assistantSystem):null;
  const ingestionTools=createChatIngestionTaskToolHost(hostReader,chatRuntime);
  const taskTools=createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
-  webRead:true,research:true,
+  webRead:true,research:true,editor:deps.editor,creation:deps.creation,
   cover:{prepareTaskCommit:deps.prepareTaskCommit,wakeTask:chatRuntime.wakeChatCoverTask},
   agenticResearch:{prepareTaskCommit:deps.prepareTaskCommit,wakeTask:chatRuntime.wakeChatResearchTask},
   planning:{prepareTaskCommit:deps.prepareTaskCommit,wakeTask:chatRuntime.wakeChatPlanningTask},
@@ -68,6 +87,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
     readCurrentScript:chatRuntime.readCurrentScript,
     business:createChatBusinessGenerationPreparation({
       ...chatRuntime.context,
+      topicWorkspace:deps.topicWorkspace,
       sourceReader:{listEnabledSources:deps.trend.listEnabledSources},
       now:deps.now,
       async assertProject(c,id){await deps.assertProject(c,id);},
@@ -77,15 +97,23 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
     getPositioningDiscovery:(c,id)=>chatRuntime.getPositioningDiscovery(c,id),
   },
  });
- return createChatProductionRuntime(db,{
+ const planTools=createChatWorkbenchPlanToolHost(db,{verifyArtifacts:deps.verifyWorkbenchArtifacts});
+ const leases=createExecutionLeaseService(db,{now:deps.now});
+ const workbenchProgress=createExecutionStreamService(db,{now:deps.now});
+ const workbenchTools=deps.workbenchHost?createChatWorkbenchCapabilityHost(deps.workbenchHost,ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),(ref,callId,progress)=>workbenchProgress.appendWorkbenchProgress(ref,callId,progress)):null;
+ const durable=createChatProductionRuntime(db,{
   resolveRedfoxCredential:chatRuntime.resolveRedfoxCredential,
   entryPath:deps.entryPath,workerId:`chat-worker-${process.pid}`,
   budget:{maxCalls:48,maxTokens:1000000,deadlineMs:600000},modelConcurrency:2,
   assertProject:deps.assertProject,
   resolveModelCredential:deps.resolveModelCredential,
   resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
-  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal)),
-  webRead:deps.webRead,
+  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal),await planTools(c,input,ref,signal),workbenchTools?await workbenchTools(c,input,ref,signal):{},canvasTools?await canvasTools(c,input,ref,signal):{},systemTools?await systemTools(c,input,ref,signal):{}),
+  webRead:deps.webRead,externalImageStorage:deps.externalImageStorage,
+  resolveWorkbenchScreenshot:deps.resolveWorkbenchScreenshot,
   onError:deps.onError,
+
  });
+ // 提交准备与执行解析共用同一装配对象；未注入时没有可冻结的生产能力。
+ return Object.assign(durable,{workbenchHost:deps.workbenchHost});
 }

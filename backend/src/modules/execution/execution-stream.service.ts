@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { isDeepStrictEqual } from "node:util";
 import {
   and,
@@ -6,6 +7,7 @@ import {
   desc,
   gte,
   lt,
+  sql,
   executionTasks,
   executionCalls,
   executionStreamEvents,
@@ -13,6 +15,7 @@ import {
   type Db,
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
+import { workbenchResultSchema, type WorkbenchResult } from "@creatoros/contract/agent-workbench";
 import {
   chatWorkerInputSchema, appendExecutionStreamSchema,
   readExecutionStreamSchema,
@@ -28,6 +31,41 @@ export function createExecutionStreamService(
   const now = deps.now ?? (() => new Date().toISOString()),
     leases = createExecutionLeaseService(db, { now });
   return {
+    /** 仅供 backend 宿主调用；Worker 的 appendStreamEvents 端口不得接收工具进度。 */
+    async appendWorkbenchProgress(ref: ExecutionRef, callId: string, raw: unknown) {
+      const parsed = workbenchResultSchema.parse(raw);
+      if (parsed.status !== "running" || parsed.operationId !== callId ||
+        Buffer.byteLength(JSON.stringify(parsed), "utf8") > 4096)
+        throw new ConflictError("工具进度内容或调用标识无效");
+      const progress: Extract<WorkbenchResult, {status:"running"}> = parsed;
+      const chunk = {type:"data-workbench-progress", id:callId, data:{
+        operationId:callId, progressCursor:progress.progressCursor, content:progress.content,
+      }};
+      return leases.withLease(ref, "admission", async ({tx,task}) => {
+        const [call] = await tx.select().from(executionCalls).where(and(
+          eq(executionCalls.id,callId), eq(executionCalls.executionTaskId,task.id),
+        ));
+        if (!call || call.kind !== "tool" || call.parentCallId || call.status !== "started" ||
+          call.startedAttempt !== ref.attempt || !call.toolExecutionClaimId)
+          throw new ConflictError("当前调用不是已启动的宿主工具");
+        const [duplicate] = await tx.select().from(executionStreamEvents)
+          .where(and(eq(executionStreamEvents.callId,callId),
+            sql`${executionStreamEvents.chunk} = ${JSON.stringify(chunk)}::jsonb`)).limit(1);
+        if (duplicate) return {nextIndex:duplicate.callIndex+1,lastSequence:duplicate.sequence};
+        const [lastCall] = await tx.select().from(executionStreamEvents)
+          .where(eq(executionStreamEvents.callId,callId))
+          .orderBy(desc(executionStreamEvents.callIndex)).limit(1);
+        const [last] = await tx.select().from(executionStreamEvents)
+          .where(eq(executionStreamEvents.executionTaskId,task.id))
+          .orderBy(desc(executionStreamEvents.sequence)).limit(1);
+        const callIndex = lastCall?.callIndex ?? -1;
+        const sequence = (last?.sequence ?? 0)+1;
+        await tx.insert(executionStreamEvents).values({
+          executionTaskId:task.id,sequence,callId,callIndex:callIndex+1,chunk,createdAt:now(),
+        });
+        return {nextIndex:callIndex+2,lastSequence:sequence};
+      });
+    },
     async append(ref: ExecutionRef, raw: unknown) {
       const input = appendExecutionStreamSchema.parse(raw),
         end = input.startIndex + input.chunks.length;
@@ -118,7 +156,7 @@ export function createExecutionStreamService(
             and(
               eq(executionTasks.id, taskId),
               eq(executionTasks.userId, ctx.userId),
-              eq(executionTasks.accountId, ctx.accountId ?? ""),
+              workspaceFilter(executionTasks,ctx),
             ),
           )
           .for("share");

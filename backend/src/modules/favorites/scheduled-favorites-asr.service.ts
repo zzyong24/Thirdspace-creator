@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {z} from 'zod';
 import {and,eq,executionTasks,executionCalls,favoritesItems,favoritesFolders,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
@@ -17,8 +18,8 @@ export function createScheduledFavoritesAsrService(db:Db,deps:ScheduledFavorites
  async function owned(scope:TranscribeExecutionScope,itemId:string,awemeId:string){
   const bound=await bindScheduledFlywheel(scope);
   if(bound.business.taskType!=='scheduled.favorites')throw new Error('FAVORITES_ASR_SOURCE_KIND_MISMATCH');
-  const [item]=await scope.tx.select().from(favoritesItems).where(and(eq(favoritesItems.id,itemId),eq(favoritesItems.userId,scope.context.userId),eq(favoritesItems.accountId,scope.context.accountId!)));
-  const [folder]=item?await scope.tx.select().from(favoritesFolders).where(and(eq(favoritesFolders.id,item.folderId),eq(favoritesFolders.userId,scope.context.userId),eq(favoritesFolders.accountId,scope.context.accountId!))):[];
+  const [item]=await scope.tx.select().from(favoritesItems).where(and(eq(favoritesItems.id,itemId),eq(favoritesItems.userId,scope.context.userId),workspaceFilter(favoritesItems,scope.context),eq(favoritesItems.accountId,scope.context.accountId!)));
+  const [folder]=item?await scope.tx.select().from(favoritesFolders).where(and(eq(favoritesFolders.id,item.folderId),eq(favoritesFolders.userId,scope.context.userId),workspaceFilter(favoritesFolders,scope.context),eq(favoritesFolders.accountId,scope.context.accountId!))):[];
   if(!item||item.awemeId!==awemeId||!folder||!folder.enabled)throw new Error('FAVORITES_ASR_ITEM_OWNER_MISMATCH');
   return {...bound,item};
  }
@@ -31,14 +32,14 @@ export function createScheduledFavoritesAsrService(db:Db,deps:ScheduledFavorites
  const stage=createClaimedAsrStageService(db,{...deps,bindResource});
  return {async transcribe(ref:ExecutionRef,ctx:RequestContext,input:{itemId:string;awemeId:string},signal:AbortSignal):Promise<string|null>{
   const verify=()=>leases.withLease(ref,'admission',async scope=>{
-   signal.throwIfAborted();if(scope.context.userId!==ctx.userId||scope.context.accountId!==ctx.accountId)throw new Error('FAVORITES_ASR_ACCOUNT_MISMATCH');
+   signal.throwIfAborted();if(scope.context.userId!==ctx.userId||scope.context.accountId!==ctx.accountId||scope.context.groupId!==ctx.groupId)throw new Error('FAVORITES_ASR_ACCOUNT_MISMATCH');
    return owned(scope,input.itemId,input.awemeId);
   });
   const initial=await verify();
   const existing=(initial.payload.favoritesAsrResources as Record<string,unknown>|undefined)?.[input.awemeId];
   if(!existing){
    if(initial.item.transcript?.trim())return initial.item.transcript;
-   const configuration=transcribeConfiguration(await deps.resolveSpec(ctx));signal.throwIfAborted();
+   const configuration=transcribeConfiguration(await deps.resolveSpec(ctx,{ref}));signal.throwIfAborted();
    await leases.withLease(ref,'admission',async scope=>{
     signal.throwIfAborted();const bound=await owned(scope,input.itemId,input.awemeId),resources=(bound.payload.favoritesAsrResources??{}) as Record<string,unknown>;
     if(resources[input.awemeId])return;

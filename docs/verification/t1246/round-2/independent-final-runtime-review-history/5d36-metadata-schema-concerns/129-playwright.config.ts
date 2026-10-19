@@ -1,0 +1,10 @@
+import {defineConfig} from '@playwright/test';
+import {resolve} from 'node:path';
+const profile=process.env.CREATOROS_T1246_PROFILE;
+const listOnly=process.env.CREATOROS_T1246_LIST_ONLY==='1';
+if(!listOnly&&!['official','protocol','pi'].includes(profile??''))throw Error('Explicit reviewed profile required');
+const testDir=process.env.CREATOROS_T1246_TEST_ROOT??resolve(__dirname,'../source');
+const run=process.env.CREATOROS_T1246_RUN_DIR;
+if(!listOnly&&!run)throw Error('Fresh owned evidence root required');
+const all=[{name:'official',testMatch:/e2e\/(?:integrated-(?:browser|native|dependent|routes)|settings-return|t1097-assisted-work-candidate-adoption)\.spec\.ts/},{name:'protocol',testMatch:/e2e\/integrated-protocol\.spec\.ts/,grep:/INT-RECOVERY/},{name:'pi',testMatch:/e2e\/integrated-protocol\.spec\.ts/,grep:/INT-PI/}];
+export default defineConfig({testDir,fullyParallel:false,workers:1,retries:0,timeout:72000000,globalTimeout:0,expect:{timeout:120000},outputDir:run?resolve(run,'artifacts'):resolve(__dirname,'../reviews/list-artifacts'),reporter:listOnly?[['list']]:[['line'],['json',{outputFile:resolve(run!,'results.json')}]],use:{baseURL:`http://127.0.0.1:${process.env.CREATOROS_TEST_PORT??'61347'}`,browserName:'chromium',actionTimeout:120000,navigationTimeout:120000,trace:'on',screenshot:'on',video:'off'},projects:listOnly?all:all.filter(p=>p.name===profile)});

@@ -1,0 +1,9 @@
+# DEC-T1303-01：真实采纳恢复根因与串行实施授权
+
+来源为用户本轮已授权恢复Codex功能和完整候选采纳，Root根据新candidate真实dirty拒绝、成功后误待核对与lazy外卡发现性失败作范围裁决；不是新的用户数据迁移或新保存授权。当前仅登记待审方案，未改产品/测试。Root总控，既有Sol high执行，不自称核验极速开关。
+
+最小五生产/七测试，只读owner首次派生证明及原请求确认呈现，保原body/key/base/source/CAS和用户编辑。confirmed只证明本客户端收到真实回执并exact版本存在，不是服务端任意requestId签名；旧only-body记录仍UNKNOWN，只能用户原key恢复，不新增HTTP/DB。
+
+严格串行：先T1303初审→B完整组合前置RED→恢复实现/冻结/独评；再以B新card字节锁T1302简洁预览和折叠增量，原lineage recheck后A纯展示实施。两个卡交叉写集不并审冒旧closure，不重置T1300 round3。T1302最终acceptance依赖T1303 acceptance；T1303实现仅依赖已done T1302 implementation，DAG无环。
+
+本候选源2168294及旧失败全部保留。原controller退出143无flush；限定静止副本恢复READ ONLY补证不冒原root优雅关闭，不重发任何旧task。T1301源/注解证据已补齐，完整组合前置RED历史缺项未获用户accepted-risk真实答复，仍不完成T1301、不claim父矩阵。

@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立读取冻结SPEC、任务包、物理架构、原生审计和现有source/rough/bridge合同。唯一native事实、真实来源/ASR settlement、BigInt时间、基础局部与rich review_only、精确实例/main ripple触点、CAS/历史和缺模型降级方向成立；发现2个采用确认及桥覆盖窗口的阻断边界缺口。仅合同审查，未跑模型/实现/真机。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "T-1046-NATIVE-IMPACT-CONFIRM",
+        "quote": "候选采用前展示实际受影响项与本次仅闭合主轨的说明；用户明确选择后才采用"
+      },
+      "acceptance_anchor": {
+        "id": "T-1046-AC-CAS-REBIND",
+        "quote": "单项/多项/继续采用、CAS/rebind/unknown ACK/切作品"
+      },
+      "where": "SPEC合同第6/7条；/tmp/t1046-native-audit.md nativeImpact与adopt字段约定",
+      "failure_mode": "nativeImpact按单suggestion且按get时当前工程生成，而adopt仅含suggestionIds、expectedRevision、主轨touch rebind。独立叠层/BGM在候选展示后被修改，主轨touch不变；显式rebind到新revision仍可采用，用户确认的是旧受影响项。多项采用实际删除窗口union与ripple也可能不同于单项impact的简单拼接，尚未规定确认实际选中集合的合并影响。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/features/t1046-native-ai-rough-cut.md合同6/7；/tmp/t1046-native-audit.md字段约定nativeImpact.suggestions；contract/src/resources/production-rough-cut.ts productionRoughCutAdoptBody",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "T1046初次独立合同评审",
+      "suggestion": "冻结/返回所选suggestionIds在当前owner revision的合并删除窗口与独立项影响；采用绑定该preview revision及impactDigest（或等价原请求确认身份）。后端采用时重算同集合并验证；相关独立项变化、集合变化或此前采用导致mapping变化时要求重新展示/确认，不因主轨touch未变而跳过。无须新执行器，补原get/adopt服务合同和相应回归。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "T-1046-NATIVE-BRIDGE-PRESERVE",
+        "quote": "apply-tracks核对before主轨和scene/owner，再以一次原生命令更新tracks，保留undo/redo、媒体和播放头"
+      },
+      "acceptance_anchor": {
+        "id": "T-1046-AC-NATIVE-UNDO",
+        "quote": "同一时间轴→撤销/保存/刷新/MP4"
+      },
+      "where": "SPEC合同第9条与apply-tracks beforeTracks/afterTracks约定",
+      "failure_mode": "apply-tracks会更新tracks（包含overlay/audio），但明确校验仅before主轨；合同未锁定后台采用至bridge应用窗口的原生编辑，也未要求核对全部即将覆盖字段。iframe可在后台CAS成功、bridge应用前修改独立文字/声音，主轨未变，整tracks更新将覆盖合法本地编辑。仅父iframe pointer-events-none不能阻止已焦点键盘、晚到素材导入或原生命令。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/features/t1046-native-ai-rough-cut.md合同9；/tmp/t1046-native-audit.md apply-tracks {sceneId,expectedBeforeDigest,beforeTracks,afterTracks}；frontend/src/features/reference-editors/reference-editor-frame.tsx disabled为pointer-events-none",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "T1046初次独立合同评审",
+      "suggestion": "明确选一个可执行边界：bridge仅以当前tracks克隆替换经before主轨完整核验的main，overlay/audio逐字段保持最新本地值并将dirty保留；或采用期间原生层锁编辑/导入并按完整beforeTracks检查所有将覆盖字段（不能只靠父pointer-events），不符返回typed冲突保存本地稿并读回owner回执。owner revision/receipt与session必须一起校验；同一未知ACK请求重播只恢复原ack，不能执行第二次command或在用户undo后再次写回。增加采用flight中独立轨键盘编辑/晚导入/未知ack重复的回归。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "label": "wechatVideo",
+  "startedAtUnix": 1792390713.493551,
+  "commandOuterSeconds": 8520,
+  "cliNormalObservationMs": 8280000,
+  "boundary": "公开CLI正常安装身份机制；未读取连接凭据；无apply/idempotency-key/collect/model/site；含CLI启动/本机传输/服务到完整JSON解析，不冒服务单阶段。",
+  "exitCode": 0,
+  "status": "parsed",
+  "ok": true,
+  "groupIdSha256": "9a72d3429b5145ffb37b1f02bca0d465d9e0911f53805ef6906ea03e63fdf17e",
+  "requestQuery": {
+    "startDate": "2026-09-20",
+    "endDate": "2026-10-19",
+    "platform": "wechatVideo"
+  },
+  "scopeMatches": true,
+  "workspaceStatus": "active",
+  "catalog": {
+    "state": "ready",
+    "catalogWorkCount": 0,
+    "unattributableWorkCount": 0,
+    "deduplicatedWorkCount": 0
+  },
+  "metricKnown": [
+    {
+      "platform": "wechatVideo",
+      "metricKey": "play_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "view_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "read_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "like_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "comment_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "share_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "favorite_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "wechatVideo",
+      "metricKey": "follower_count",
+      "scope": "account",
+      "knownCount": 0,
+      "eligibleCount": 1
+    }
+  ],
+  "workspaceCounts": {
+    "totalAccounts": 1,
+    "collectedAccounts": 0,
+    "contentCount": 0,
+    "publicationCount": 0
+  },
+  "metaKeys": [
+    "requestId"
+  ],
+  "errorCode": null,
+  "completeParseDurationMs": 1002.831,
+  "endedAtUnix": 1792390714.4963892,
+  "rawPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-platform-read-fxx4e0ni/wechatVideo.json",
+  "rawBytes": 11716,
+  "rawSha256": "681820575b05efe526c4d81287c2b2f1f4f0d738b40a2dc9a6e90a2f256f1906",
+  "stderrBytes": 0
+}

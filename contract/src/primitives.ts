@@ -40,7 +40,11 @@ export const platformId = z.enum([
   "bilibili",
   "douyin",
   "xiaohongshu",
+  "kuaishou",
   "wechatVideo",
+  "wechatOfficial",
+  "kuaishou",
+  "wechatOfficialAccount",
   "x",
 ]);
 
@@ -102,6 +106,7 @@ export const aiTaskStatus = z.enum([
   "succeeded",
   "failed",
   "cancelled",
+  "partial",
 ]);
 
 // ── contract v0.4 (seven-step) enums ───────────────────────────────────────

@@ -15,6 +15,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import {resolveAssetPreviewUrl,invalidateAssetPreviewUrl} from "@/components/resources/asset-preview-url";
+
 import { client } from "@/lib/contract-client";
 
 export interface ChatScreenshotAsset {
@@ -37,12 +39,22 @@ export function ChatScreenshotCard({
   asset,
   error,
   projectId,
+  kind = "screenshot",
 }: {
   asset: ChatScreenshotAsset | null;
   error: string | null;
   projectId: string | null;
+  kind?: "screenshot" | "generated";
 }) {
   const router = useRouter();
+  const [resolvedPreview,setResolvedPreview] = React.useState<{id:string;url:string|null}|null>(null);
+  React.useEffect(()=>{
+    if(kind !== "generated" || !asset || asset.previewUrl) return;
+    let active = true;
+    void resolveAssetPreviewUrl(asset.id).then(url=>{if(active)setResolvedPreview({id:asset.id,url});});
+    return ()=>{active=false;};
+  },[kind,asset?.id,asset?.previewUrl]);
+  const previewUrl=asset?.previewUrl ?? (resolvedPreview?.id===asset?.id ? resolvedPreview?.url : null);
   // [T-219] 存入素材库(确认门①):pending → active。
   const [saveState, setSaveState] = React.useState<
     "idle" | "saving" | "saved" | "error"
@@ -116,13 +128,14 @@ export function ChatScreenshotCard({
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        网页截图 · 真证据 ·{" "}
+        {kind === "generated" ? "生成图片 · " : "网页截图 · 真证据 · "}
         {saveState === "saved" ? "已存素材库" : "待确认存入"}
       </span>
-      {asset.previewUrl ? (
+      {previewUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={asset.previewUrl}
+          src={previewUrl}
+          onError={()=>{invalidateAssetPreviewUrl(asset.id);setResolvedPreview({id:asset.id,url:null});}}
           alt={asset.name}
           data-slot="chat-screenshot-thumb"
           className="max-h-64 w-full rounded-md border border-border object-contain bg-surface-subtle"
@@ -136,7 +149,7 @@ export function ChatScreenshotCard({
         {asset.name}
       </div>
       <div className="flex items-center justify-between gap-2">
-        <a
+        {asset.sourceUrl ? <a
           href={asset.sourceUrl}
           target="_blank"
           rel="noreferrer"
@@ -145,7 +158,7 @@ export function ChatScreenshotCard({
           title={asset.sourceUrl}
         >
           🔗 {domainOf(asset.sourceUrl)}
-        </a>
+        </a> : null}
         {/* [T-219] 确认门①:未存入 → 「存入素材库」(pending→active);存入后 → 若有项目再露
             确认门②「加入弹药」(挂用料链),否则显「已存素材库」。 */}
         {saveState === "saved" ? (
@@ -192,7 +205,7 @@ export function ChatScreenshotCard({
       </div>
       {saveState === "saved" && !projectId ? (
         <p className="text-[11px] text-text-subtle">
-          已进素材库 —— 输入 @ 引用一个项目后可把截图加进它的弹药。
+          已进素材库 —— 输入 @ 引用一个项目后可把图片加进它的弹药。
         </p>
       ) : null}
     </div>

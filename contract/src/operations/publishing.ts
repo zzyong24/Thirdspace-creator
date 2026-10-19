@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, iso8601, paginationQuery } from "../primitives";
 import {
   publicationResource,
@@ -11,6 +11,7 @@ const publicationParams = z.object({ publicationId: id });
 
 // SPEC §13 "发布" group.
 export const publishingOperations = {
+  exportPublicationVisualNote:defineEndpoint({id:"publications.visualNotes.export",method:"POST",path:"/publications/:publicationId/visual-note/export",params:publicationParams,body:z.object({revisionId:id,pageIndex:z.number().int().min(0).max(19).optional()}),response:z.object({caption:z.string(),files:z.array(z.object({assetId:id,url:z.string(),fileName:z.string()}))}),fr:["FR-PUBLISHING-VISUAL-EXPORT"]}),
   listPublications: defineEndpoint({
     id: "outputs.publications.list",
     method: "GET",
@@ -29,6 +30,8 @@ export const publishingOperations = {
     params: outputParams,
     body: z.object({
       platform: z.string().min(1),
+      accountId:id.optional(),
+      expectedMembershipVersion:z.number().int().positive().optional(),
       accountReference: z.string().min(1),
     }),
     response: publicationResource,
@@ -85,6 +88,8 @@ export const publishingOperations = {
     //   - externalUrl 规范化:trim + 合法 URL（前端粘链接场景防前后空白/半截串)。
     body: z.object({
       platform: z.string().min(1),
+      accountId:id.optional(),
+      expectedMembershipVersion:z.number().int().positive().optional(),
       externalId: z.string().min(1),
       externalUrl: z.string().trim().url().nullable().optional(),
       publishedAt: iso8601.nullable().optional(),

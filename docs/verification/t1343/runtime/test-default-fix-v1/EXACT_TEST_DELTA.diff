@@ -1,0 +1,20 @@
+--- original/template.test.ts
++++ current/template.test.ts
+@@ -1971,7 +1971,7 @@
+     expect(html.match(/<video id="th"/g)).toHaveLength(1);expect(props).toEqual(before);
+   });
+   it("局部主视觉前后都恢复原片，同right状态不能吞掉box切换",()=>{
+-    const props=bare();props.broll=[{at:1,file:"evidence.png",label:"原证据",durationSec:2,presentation:"large_stage",sourceWidth:720,sourceHeight:1280}];
++    const props=bare();props.broll=[{at:1,file:"evidence.png",label:"原证据",durationSec:2,big:false,presentation:"large_stage",sourceWidth:720,sourceHeight:1280}];
+     expect(()=>assertVideoLayoutSafety(props)).not.toThrow();
+     const html=generateVideoRenderHtml(props,{imageFiles:new Set(['evidence.png'])});
+     const full='tl.set("#th",{left:0,top:0,width:1920,height:1080,borderRadius:0,zIndex:900,autoAlpha:1},';
+@@ -1980,7 +1980,7 @@
+     expect(html).toContain('object-fit:contain');
+   });
+   it("全屏主视觉期间仍隐藏，结束后恢复原片",()=>{
+-    const props=bare();props.broll=[{at:1,file:"screen.mp4",label:"录屏",durationSec:2,presentation:"full_frame",visualRole:"screen_recording",speakerMode:"hidden"}];
++    const props=bare();props.broll=[{at:1,file:"screen.mp4",label:"录屏",durationSec:2,big:false,presentation:"full_frame",visualRole:"screen_recording",speakerMode:"hidden"}];
+     expect(()=>assertVideoLayoutSafety(props)).not.toThrow();const html=generateVideoRenderHtml(props);
+     expect(html).toContain('tl.set("#th",{autoAlpha:0},1.00);');
+     expect(html).toContain('width:1920,height:1080,borderRadius:0,zIndex:900,autoAlpha:1},3.00);');

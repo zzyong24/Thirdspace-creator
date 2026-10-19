@@ -1,0 +1,5 @@
+import {fileURLToPath}from'node:url';import path from'node:path';import fs from'node:fs';
+let repo=path.dirname(fileURLToPath(import.meta.url));while(!fs.existsSync(path.join(repo,'backend/package.json'))){const next=path.dirname(repo);if(next===repo)throw Error('REPOSITORY_ROOT_NOT_FOUND');repo=next;}
+const root='/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1';
+const count=Number(process.env.T1339_UNIT_COUNT??0);if(!Number.isInteger(count)||count<0)throw Error('UNIT_COUNT_INVALID');
+export default{root:path.join(repo,'backend'),cacheDir:path.join(root,'cache'),test:{environment:'node',include:['src/modules/calibration/calibration.service.test.ts','src/modules/calibration/calibration.acceptance.test.ts','src/modules/calibration/calibration.contract.test.ts','src/modules/calibration/calibration.repository.integration.test.ts','src/modules/calibration/default-rubric.test.ts'],testTimeout:180000,hookTimeout:180000,globalTimeout:count?count*540000+600000:undefined,maxWorkers:1,fileParallelism:false,retry:0,reporters:['default',['json',{outputFile:path.join(root,'vitest-result.json')}]]}};

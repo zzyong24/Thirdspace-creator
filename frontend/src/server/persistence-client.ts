@@ -1,6 +1,51 @@
+import {createWechatNavigationDiagnosis} from '@creatoros/backend/application/collection/wechat-navigation-diagnosis';
+import {createSelectedModelSnapshotReader,freezeSelectedModelRoutes,type SelectedModelSnapshot,resolveFrozenModelCredential,type FrozenModelCredential,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner,type MultimodalSpec,CapabilityModelRoutingError} from '@creatoros/backend/modules/ai-runtime';
+import {modelRouteCatalog,projectFrozenModelSettings,frozenExecutionRoute,readFrozenModelRoute,type ExecutionRoute,type FrozenModelRoute,type ModelRouteMode} from '@creatoros/contract/execution-worker';
+import {activeEncryptedLogSession} from "./feedback/encrypted-log-upload.server";
+import {createObservabilityCollector,createObservabilityTaskLedger} from "@creatoros/backend/modules/observability";
+import {createObservabilityHost,resolveObservabilityAppVersion} from "./observability-host.server";
+import {createWorkCandidateAdoption,createWorkCandidateSourceService} from '@creatoros/backend/application/generation/work-candidate-adoption';
+import {createWorkWritingContext} from '@creatoros/backend/application/generation/work-writing-context';
+import {createKnowledgeGenerationService,createKnowledgeGenerationBusinessAdapters} from '@creatoros/backend/modules/ai-runtime';
+import {codexCapabilityReasonSchema,createExecutionRoute,codexExecutionSpec,frozenExecutionEngine,type CodexModelSpec,type executionModelSpecSchema} from '@creatoros/contract/execution-worker';
+import {readFrozenChatExecutionEngine} from '@creatoros/backend/modules/execution';
+import {createExecutionVideoVisualReviewService} from '@creatoros/backend/modules/execution';
+import {resolveVideoVisualReviewWorkerPath} from './execution-worker-path';
+import {createAccountCollectionQueue} from '@creatoros/backend/application/scheduling/account-collection-queue';
+import {createPlatformMetricsCollector,PlatformCollectionNeedsAuthError} from '@creatoros/backend/application/scheduling/platform-collector';
+import { remainingDeadlineMs,executionTimeoutMs } from "@creatoros/contract/timeout-policy";
+import {runAccountGroupStartup} from '@creatoros/backend/application/workspace/startup';
+import {hasLegacyDouyinCredentialEvidence} from '@creatoros/backend/application/workspace/credential-evidence';
+import {createTaxonomyEntityAccess} from "@creatoros/backend/application/taxonomy-entity-access";
+import {workspaceKey} from "@creatoros/backend";
+import {createDouyinAccountBindingStage,createLocalPlatformAccountBindingStage} from "@/server/ingestion/account-binding-stage";
+import {createAccountBindingService,createAccountBindingTransport} from "@creatoros/backend/modules/platform-account";
+import {createUnassignedDraftRetainer} from "@creatoros/backend/application/publishing-retain-unassigned";
+import {createMembershipLockService} from "@creatoros/backend/modules/platform-account";
+import {createWechatNativeCollector} from "@creatoros/backend/application/collection/wechat-native-collector";
+import {createGroupWorkspaceApplication} from "@creatoros/backend/application/queries/group-workspace";
+import {createWorkspaceBlobService} from "@creatoros/backend/modules/assets";
+import { createProjectScriptSource } from "@creatoros/backend/application/project-script-source";
+import {createWorkCreationRoot} from "@creatoros/backend/application/generation/work-creation-root";
+import {createWorkEditorCandidateService,type WorkEditorPorts} from "@creatoros/backend/modules/ai-runtime";
+import type {WorkCreationTarget,WorkEditorTarget} from "@creatoros/contract";
+import {createCreativeCanvasRoot} from "@creatoros/backend/application/generation/creative-canvas-root";
+import {createMomentsModelRoot,createPublicMomentsAiAdapter} from "@creatoros/backend/application/generation/moments-model-root";
+import {createMomentsModelService,type MomentsModelPorts} from "@creatoros/backend/modules/moments";
+import {createWorkMomentsLineageService} from "@creatoros/backend/modules/work-compositions";
+import {createAssetAsrOwner} from '@creatoros/backend/modules/execution';
+import {createProductionRoughCutReservations,createProductionRoughCutBusinessAdapter,createProductionTranscripts,createProductionAsrExactReader,extractProductionAsrAudio} from '@creatoros/backend/modules/production';
+import {transcribeConfiguration} from '@creatoros/backend/modules/ai-runtime';
+import {createExecutionLeaseService,createExecutionAuthorityService} from '@creatoros/backend/modules/execution';
+import {canonical,hash} from '@creatoros/backend/modules/production';
+import {createWorkbenchPublicService,createWorkbenchPublicTransport,createWorkbenchPublicStreamService,WORKBENCH_OP_IDS} from "@creatoros/backend/modules/execution";
+import {selectBuiltinWorkbenchCapabilities,workbenchBuiltins,workbenchDependencyLock} from "./workbench-builtin-manifest";
+import {createWorkbenchArtifactRepresentation} from "./workbench-artifact-representation";
 import {createOperationsSyncCollector} from '@creatoros/backend/application/collection/operations-sync';
 import {hostBrowserShutdownScope} from '@creatoros/ai-worker/browser/browser-shutdown-scope';
 import {createBrowserHostDisposer} from './browser-host-dispose';
+import {shouldEnsureDouyinCollectionJobs} from './douyin-collection-job-eligibility';
+import {createPeriodicPlatformCollection} from '@creatoros/backend/application/platform-collection/periodic';
 import {startTrafficCollection} from "@creatoros/backend/application/scheduling/traffic-start";
 import { recoverTrafficQueues } from "@creatoros/backend/application/scheduling/traffic-wake";
 import {triggerScheduledJob} from '@creatoros/backend/modules/ai-runtime';
@@ -15,6 +60,11 @@ import {createCollectionExecution} from "@creatoros/backend/application/scheduli
 import {createIntelligenceApplicationTransport} from "@creatoros/backend/application/intelligence/transport";
 import {createDiscoveryBusinessAdapters} from "@creatoros/backend/application/generation/discovery";
 import {createWritingBusinessAdapters} from "@creatoros/backend/application/generation/writing";
+import {createGenerationTaskWake} from "@creatoros/backend/application/generation/task-wake";
+import {createGraphicPostBusinessAdapters, createGraphicCardBusinessAdapters, createGraphicCoverContextSnapshotter, createWechatArticleTextBusinessAdapters, createPublicationTextBusinessAdapters} from "@creatoros/backend/application/generation/creative-post";
+import {createOutputScriptsService, createOutputScriptCreativeResultAdapter} from "@creatoros/backend/modules/output-scripts";
+import {resolveContextDeps} from "@creatoros/backend/application/context/registry";
+import {getTemplate} from "@creatoros/ai-worker";
 import {createMediaBusinessAdapters} from "@creatoros/backend/application/generation/media";
 
 import {createCalibrationScoreReaders} from "@creatoros/backend/application/context/calibration-score";
@@ -22,6 +72,7 @@ import {createCalibrationDiagnoseReaders} from "@creatoros/backend/application/c
 import {createChatIngestionTasks} from "@creatoros/backend/application/chat/ingestion-tasks";
 import {createChatGenerationTasks} from "@creatoros/backend/application/chat/generation-tasks";
 import {createChatPreparationTasks} from "@creatoros/backend/application/chat/preparation-tasks";
+import {createConfirmedProjectScriptReader,createConfirmedProjectReviewScriptReader} from "@creatoros/backend/application/context/confirmed-project-script";
 import {createCurrentArtifactReader,extractArtifactText} from "@creatoros/backend/application/context/current-artifact";
 import {createCurrentScriptSelectionReader} from "@creatoros/backend/application/context/current-script-selection";
 import {downloadDouyinImage} from "./ingestion/douyin-cover-backfill";
@@ -55,7 +106,7 @@ import { createKnowledgeApplication } from "@creatoros/backend/application/knowl
 import { configureHostBrowserProfileLifecycle } from "./ingestion/host-browser-profile-lifecycle";
 import { createHostBrowserProfileLifecycle, createDesktopHostProcessRecovery } from "@creatoros/backend/modules/execution";
 import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
-import { composeChatProduction, createChatProductionRuntime } from "@creatoros/backend/modules/ai-runtime";
+import { composeChatProduction, createChatProductionRuntime, createLocalCodexStatusService, type ChatProductionCompositionDeps } from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
 
 import { createScriptDraftTargetService } from "@creatoros/backend/modules/artifacts";
@@ -68,6 +119,7 @@ import { createBrowserProfileAuthority, lockAccountForSupply } from "@creatoros/
 
 import { createTopicCandidateAdoptionService } from "@creatoros/backend/modules/ai";
 import { createDailyTopicBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+import {createPredictionLockService} from "@creatoros/backend/modules/ai";
 import { createCalibrationPositioningAdoptionService } from "@creatoros/backend/modules/ai";
 import { lockPositioningAdoptionAccount } from "@creatoros/backend/modules/positioning";
 
@@ -76,26 +128,33 @@ import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modul
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath, resolveCodexStatusWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
+import { createNativeFilesWorkbenchHost } from "./workbench-native-host";
+import { createNativeFileRecoveryService } from "./workbench-file-recovery";
+import { createWorkbenchArtifactHost } from "./workbench-artifact-host";
+import { createWorkbenchBrowserHost } from "./workbench-browser-host";
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 
-import { createConfiguredDb, createCliInvocationService, resolveMasterKey,
+import { createConfiguredDb, createCliInvocationService, resolveMasterKey, sql,
 // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
 requireAccountId, type Db, type CliInvocationService,
 // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
 // 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
 restorePreservedUserAssets } from "@creatoros/backend";
-import { type Transport, type RequestContext } from "@creatoros/contract";
+import { type Transport, type RequestContext, type CollectionPageCommit, type CollectionRunResource, type OutputConversionSourceAnchor } from "@creatoros/contract";
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
+import {createAssistantSystemRoot,createAssistantActionOwners} from "@creatoros/backend/application/chat/assistant-system-root";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
-import { readChannelModelAuthority } from "@/server/activation/client-config.server";
+import {ensureModelBenefitAuthority} from "@/server/activation/model-benefit.server";
+import { ClientConfigPullError,requestFreshClientConfigAccess,readChannelModelAuthority } from "@/server/activation/client-config.server";
+import {requestManagedAsrLease} from "@/server/activation/managed-credential-lease.server";
 import { prepareManagedTranscribeSpec } from "@/server/activation/managed-asr.server";
 import { getScriptReviewBlockReason } from "@/server/script-review-readiness";
 import { contentRadarDraftSeedOf, selectReadableProjectScriptArtifact } from "@/server/project-script-truth";
@@ -124,17 +183,27 @@ type HybridSearchHit } from "@creatoros/backend/modules/search";
 
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
-import { createOnboardingState, createIntegrationCredentials, createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
+import { SECRET_DECRYPT_FAIL_SENTINEL, createOnboardingState, createIntegrationCredentials, createReportingLocal, createSettingsRepository, createSettingsService, effectiveModelRouting, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
 import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
-import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
-import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
+import { createKnowledgeRepository, createKnowledgeService, createKnowledgeTransport } from "@creatoros/backend/modules/knowledge";
+import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createVisualTemplateService, createVisualTemplateTransport, VISUAL_TEMPLATE_OP_IDS, ConflictError as AssetConflictError, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, createWorkbenchBlobService, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
-import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
-import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
-import { createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
+import {createMomentsService,createMomentsTransport} from "@creatoros/backend/modules/moments";
+import {createWorkReviewRoot} from "@creatoros/backend/application/generation/work-review-root";
+import {createTransactionalTaskRuntimeResolver} from "@creatoros/backend/application/generation/transactional-task-runtime";
+import {createWorkCompositionsService,createWorkCompositionsTransport,createWorkSourcesTransport,createWorkMemberPorts,createWorkSourceService,createWorkSourcePortsFactory,createWorkMaterialsService,createPublicationCoverMaterialPorts,createMomentsMaterialPorts,createArticleMaterialPorts,createGraphicMaterialPorts,createVideoMaterialPorts} from "@creatoros/backend/modules/work-compositions";
+import {createIntelligenceSnapshotReader} from "@creatoros/backend/modules/intelligence";
+import { createArticlesService, createArticlesTransport, createArticleTextResultsService, createArticleCreativeResultAdapter } from "@creatoros/backend/modules/articles";
+import { createGraphicPostsService, createGraphicPostsTransport, createGraphicPostCreativeResultAdapter } from "@creatoros/backend/modules/graphic-posts";
+import { createOutputConversionsService,createConversionSourceService, createCreativeResultsService, createCreativeResultsTransport, createGraphicPostMediaAdapter, combineGraphicPostResultAdapters, createArticleCoverMediaAdapter, combineArticleResultAdapters } from "@creatoros/backend/modules/creative-results";
+import {createProductionWithNativeFileCapture} from "@creatoros/backend/application/generation/production-native-binding-coordinator";
+import { createProductionOverlayCapture,createProductionVideoMaterials,createProductionFileBindingsService,createProductionService, createProductionTransport, ConflictError as ProductionConflictError } from "@creatoros/backend/modules/production";
+import { createPublishingService, createPublicationCoverService, withPublicationManualRevisionLock, type PublicationCoverSavePorts, createPublishingTransport, createUnavailablePublisher, createVisualMaterialAdoptionService, createPublicationResultsService, createPublicationCreativeResultAdapter, createPublicationCoverCreativeResultAdapter, combinePublicationResultAdapters } from "@creatoros/backend/modules/publishing";
+import { createCommentDiagnosisService, createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
+import { createCommentDiagnosisHost } from "./ingestion/douyin-cdp-comment-diagnosis";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
 import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
 // T-086 文案审核门(review_rules + script_review_reports)。
@@ -142,14 +211,15 @@ import { createReviewsService, createReviewsTransport } from "@creatoros/backend
 import { createReviewGateService, createReviewGateTransport, buildReviewRuleSeedRows, createReviewGateRepository } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
 
-import { createEmbeddingIoService, createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
+import { createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
 import { createLearningsService, createLearningsTransport } from "@creatoros/backend/modules/learnings";
 import { createAiService, createAiTransport, createAiRepository, buildAiModelConfigs, buildAiAgentConfigs, type AiService } from "@creatoros/backend/modules/ai";
+import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creatoros/backend/modules/creative-canvas";
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, registerPersistentTaskObserver, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -256,7 +326,8 @@ import { sweepStaleAiTasks } from "@creatoros/backend/modules/ai-runtime";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
 //   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
 //   DEFAULT_JOBS(只建不触发)。
-import { ensureCollectionJobs } from "@creatoros/backend/modules/ai-runtime";
+import { ensureCollectionJobs,collectionJobDefaultsForPlatform,DAILY_COLLECTION_JOB_DEFAULTS } from "@creatoros/backend/modules/ai-runtime";
+import {PRIVATE_COLLECTION_SOURCE_KINDS} from "@creatoros/backend/modules/scheduling";
 
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
@@ -322,8 +393,10 @@ const PLATFORM_POLICY_TEXT = [
   "工具只允许使用 effective Skill 白名单与当前账号授权范围的交集。",
 ].join("\n");
 import { createCandidateService, createCandidateTransport } from "@creatoros/backend/modules/candidate";
-import { createCalibrationService, createCalibrationTransport, createCalibrationRepository, type RubricRow as CalibrationRubricRow, type RubricVersionRow as CalibrationRubricVersionRow } from "@creatoros/backend/modules/calibration";
-import { createPlatformAccountService, createPlatformAccountTransport, type PlatformAccountService } from "@creatoros/backend/modules/platform-account";
+import { createCalibrationService, createCalibrationTransport } from "@creatoros/backend/modules/calibration";
+import {createAccountGroupService,createGroupMigrationService,createGroupResourceAccessService,createAccountGroupTransport,type AccountGroupService,ACCOUNT_GROUP_OP_IDS} from "@creatoros/backend/modules/platform-account";
+import { createPlatformAccountService, createPlatformAccountTransport,createVerifiedAccountBindingPort, type PlatformAccountService } from "@creatoros/backend/modules/platform-account";
+import { createPlatformCollectionService, createPlatformCollectionTransport } from "@creatoros/backend/modules/platform-collection";
 import { createContentCalendarService, createContentCalendarTransport, type ContentCalendarService } from "@creatoros/backend/modules/content-calendar";
 import { createMaterialLinksService, createMaterialLinksTransport } from "@creatoros/backend/modules/material-links";
 // [T-212a] 对标源 + 对标作品(选题/对标强化)。
@@ -562,14 +635,6 @@ export async function mergeDouyinPlaceholders(
   }
 }
 
-// [T-332 S2] canonical 变现加权 Rubric 改为 **per-account** 种子(SPEC §3.2:rubrics 是
-// per-account 域、每号一套打分口径,account_id NOT NULL 后不能再有「系统级 null 号」rubric)。
-// id 约定 = `rubric-canonical:<accountId>`;seed(逐 active 号)与所有运行时解析点
-// (复盘回流轨B / 编导评分 worker / ChatBox context)都经本 helper 达成同一把 key。
-// ctx 未选号 → 返回不可能命中的哨兵 id,调用方 lookup 失败走各自的诚实空态(null/回退)。
-const canonicalRubricIdFor = (ctx: RequestContext): string =>
-  `rubric-canonical:${ctx.accountId ?? "__no-account__"}`;
-
 // [T-277] 可审整稿的最短正文阈值 —— 低于此视作「还没有整稿」(空稿/占位/整稿未落地)。一份
 // 6-10 镜的真实分镜脚本正文恒在数百字级,25 字级的陈旧占位稿会被这道门拦下,不进审核。
 const MIN_REVIEWABLE_SCRIPT_CHARS = 40;
@@ -600,6 +665,9 @@ const FAVORITES_PROMOTE_PER_RUN = 50;
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  observability: ReturnType<typeof createObservabilityCollector>;
+  observabilityHost: ReturnType<typeof createObservabilityHost>;
+  reportingLocal: ReturnType<typeof createReportingLocal>;
   projectListCoverIds: (ctx: RequestContext, projectIds: readonly string[]) => Promise<Record<string, string | null>>;
   readPageRevision: () => Promise<string>;
   cliInvocations: CliInvocationService;
@@ -611,6 +679,15 @@ interface PersistenceBundle {
   knowledge: Transport;
   assets: Transport;
   artifacts: Transport;
+  articles: Transport;
+  graphicPosts: Transport;
+  moments: Transport;
+  workCompositions: Transport;
+  workSources: Transport;
+  workReviews: Transport;
+  creativeCanvas: Transport;
+  creativeResults: Transport;
+  assistantActions: Transport;
   production: Transport;
   publishing: Transport;
   analytics: Transport;
@@ -623,6 +700,8 @@ interface PersistenceBundle {
   // [T-255a] 执行层 transport(execution.tasks.*,存储复用 ai_tasks)。
   execution: Transport;
   browserTaskAuthorizationRuntime: { grant(ctx:RequestContext,taskId:string,input:unknown):Promise<{status:"granted"|"denied"}>; prepare(ctx:RequestContext,taskId:string):Promise<void> };
+  workbenchPreviewRuntime: ReturnType<typeof createWorkbenchArtifactReadService>;
+  workbenchArtifactRecoveryRuntime: {reconcile:ReturnType<typeof startWorkbenchArtifactReconciler>["reconcile"]};
   executionPreviewRuntime: {
     readVideo(
       ctx: RequestContext,
@@ -636,6 +715,10 @@ interface PersistenceBundle {
   candidate: Transport;
   calibration: Transport;
   platformAccount: Transport;
+  wechatNavigationDiagnosis:ReturnType<typeof createWechatNavigationDiagnosis>;
+  accountBinding:Transport;
+  accountGroup: Transport;
+  platformCollection: Transport;
   scheduling: Transport;
   contentCalendar: Transport;
   /** T-599：无新增公开 operation 的服务端月历/首页组合端口。 */
@@ -663,6 +746,8 @@ interface PersistenceBundle {
   // 在解析 ctx 时对 x-account-id header 做属主硬校验(getAccount 域内查号,不属主抛 404 → 降级
   // null)。与 identity/settingsService 同款「无 dispatch endpoint 的 route 直调服务」逃生口。
   platformAccountService: PlatformAccountService;
+  accountGroupService: AccountGroupService;
+  workspaceBlobService:ReturnType<typeof createWorkspaceBlobService>;
   // item B — exposed so the blob route (no dispatch endpoint) can resolve the
   // request user's media root, the same root uploads were minted against.
   settingsService: SettingsService;
@@ -737,9 +822,20 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  /** 捕获一次无秘密模型元数据；engine仅装配工具，freeze等待真实capability/mode。 */
+  prepareChatRouting?:(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"},signal?:AbortSignal)=>Promise<{
+    executionEngine:"pi"|"codex";
+    engineForMode:(mode:"text"|"vision")=>"pi"|"codex";
+    freeze:(capability:string,mode:"text"|"vision")=>Promise<ExecutionRoute>;
+  }>;
+  resolveWritingContext?: (ctx:RequestContext,projectId:string,selection:import("@creatoros/contract").WritingContext)=>Promise<import("@creatoros/contract").ResolvedWritingContext>;
+  readCreationTarget?: (ctx:RequestContext,target:WorkCreationTarget)=>Promise<WorkCreationTarget>;
+  readEditorTarget?: (ctx:RequestContext,target:WorkEditorTarget)=>Promise<WorkEditorTarget>;
+  workbenchHost?: ChatProductionCompositionDeps["workbenchHost"];
   resolveRedfoxCredential: ReturnType<typeof createIntegrationCredentials>["resolve"];
-  readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>ReturnType<ReturnType<typeof createCurrentArtifactReader>>;
+  readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>Promise<{projectId:string;artifactId:string;currentVersionId:string;contentHash:string;fullText:string}|null>;
   durable: ReturnType<typeof createChatProductionRuntime>;
+  localCodexStatus?:ReturnType<typeof createLocalCodexStatusService>["read"];
   ai: AiService;
   // [T-513] 每轮对话在服务端按当前 user/account 解析不可变 Effective Skill。
   // route 只传受控的 official skill id，不接收客户端自带 prompt/policy。
@@ -753,15 +849,12 @@ export interface ChatRuntime {
     requiredSkillIds: readonly string[],
     execute: () => Promise<T>,
   ) => Promise<T>;
+  runKnowledgeGeneration:ReturnType<typeof createKnowledgeGenerationService>["runKnowledgeGeneration"];
   resolveModelSpec: (
     ctx: RequestContext,
     capability: string,
-  ) => Promise<{
-    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
-    baseUrl: string | null;
-    model: string;
-    token: string;
-  }>;
+    owner?:{aiTaskId:string;mode?:ModelRouteMode},
+  ) => Promise<import("@creatoros/ai-worker").ModelSpec>;
   /** [T-652] Copilot 生成定位卡前读取最新前采真值，避免旧 revision 候选。 */
   getPositioningDiscovery: (
     ctx: RequestContext,
@@ -803,6 +896,7 @@ export interface ChatRuntime {
     extractedText: string | null;
     bytes: Uint8Array;
   }>;
+  assistantSystem?:Awaited<ReturnType<typeof createAssistantSystemRoot>>["preparation"];
   context: ChatContextDeps;
   // 只读 context 工具(context.projects / context.knowledge / context.materials)的真数据读端口。
   // 与 `context`(CreativeContext facet reader,进 system 的记忆)不同:这些是「用户问才实时拉」的
@@ -845,7 +939,7 @@ export interface ChatRuntime {
   // [T-239c] input.signal(additive):用户中断本轮 → 带登录态浏览器导航/抽取提前退出。
   readWebUrl: (
     ctx: RequestContext,
-    input: { url: string; signal?: AbortSignal },
+    input: { url: string; signal?: AbortSignal; refresh?: boolean },
   ) => Promise<
     | {
         needLogin: false;
@@ -955,7 +1049,8 @@ export interface ChatRuntime {
   // ai.tasks.create,交由持久素材执行入口，旧提交事实沿原对账路径),立即返回 taskId(不阻塞对话回合)。
   dispatchGenerateAsset: (
     ctx: RequestContext,
-    input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
+    input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string;
+      referenceAssetId?:string;articleImageAnchor?: {outputId: string; versionId: string; sectionId: string} },
   ) => Promise<{ taskId: string }>;
   // [T-103b] review.script 端口 —— dispatch 既有 script.review ai_task(reviewGateService.triggerReview,
   // 复用 T-086 审核链路 L1 lint + L2 语义审 → 落 script_review_reports),立即返回 taskId。对话审核工具
@@ -1070,6 +1165,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const getChannelModelCredential = async (
     ctx: RequestContext,
     serviceId: string,
+    store?:Db,
   ): Promise<string | null> => {
     const pinnedScopeId = taskModelAuthorityScope.currentScopeId();
     let scopeId: string | null;
@@ -1083,11 +1179,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if (!readStoredChannelModelCredential) {
       throw new Error("渠道模型凭据存储尚未初始化");
     }
-    return readStoredChannelModelCredential(ctx, scopeId, serviceId);
+    return store?settingsServiceFor(store).getChannelModelCredential(ctx,scopeId,serviceId):readStoredChannelModelCredential(ctx, scopeId, serviceId);
   };
   const getChannelModelSelection = async (
     ctx: RequestContext,
     capability: string,
+    store?:Db,
   ): Promise<string | null> => {
     const pinnedScopeId = taskModelAuthorityScope.currentScopeId();
     const authority = pinnedScopeId === undefined
@@ -1099,11 +1196,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ? authority.scopeId
         : null;
     if (!scopeId || !readStoredChannelModelCredential) return null;
-    const stored = await readStoredChannelModelCredential(
-      ctx,
-      scopeId,
-      `__model_selection__:${capability}`,
-    );
+    const stored = await (store?settingsServiceFor(store).getChannelModelCredential(ctx,scopeId,`__model_selection__:${capability}`):readStoredChannelModelCredential(ctx,scopeId,`__model_selection__:${capability}`));
     if (!stored) return null;
     try {
       const value = JSON.parse(stored) as { id?: unknown };
@@ -1122,12 +1215,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 主动调(singleton 跟随进程生命周期),保留以备未来显式 teardown。
   const { db, driver, dispose } = await createConfiguredDb();
   let stopExecutionWorker: (()=>Promise<void>) | undefined;
+  let disposeWorkbenchBrowserHost: (()=>Promise<void>) | undefined;
+  let disposeCommentDiagnosisHost: (()=>Promise<void>) | undefined;
+  let stopWorkbenchArtifactReconciler:(()=>void)|undefined;
+  const backgroundControl = new AbortController();
+  let stopAutomation: (()=>Promise<void>) | undefined;
+  let sweepTimer: ReturnType<typeof setInterval> | undefined;
+  let sweepInFlight: Promise<unknown> | undefined;
+  const stopBackground = async () => {
+    backgroundControl.abort();
+    if (sweepTimer) clearInterval(sweepTimer);
+    sweepTimer = undefined;
+    await Promise.all([stopAutomation?.(), sweepInFlight]);
+  };
   // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
   //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
   //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
-    createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{await stopExecutionWorker?.();},disposeDatabase:dispose});
+    createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{
+      stopWorkbenchArtifactReconciler?.();await Promise.all([stopBackground(),stopExecutionWorker?.()]);await disposeWorkbenchBrowserHost?.();await disposeCommentDiagnosisHost?.();
+    },disposeDatabase:dispose});
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
   // (reset-preserve.ts 单一真值:users/sessions/模型配置/skill 定制/激活态…)从最新
@@ -1163,7 +1271,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const douyinAuthDirBase =
     process.env.CREATOROS_DOUYIN_AUTH_DIR ??
     nodePath.join(process.cwd(), ".auth", "douyin");
-  const profileAuthority=createBrowserProfileAuthority(db,douyinAuthDirBase);
+  const webAuthDirBase =
+    process.env.CREATOROS_WEB_AUTH_DIR ??
+    nodePath.join(process.cwd(), ".auth", "web");
+  const platformProfileRoot=nodePath.join(nodePath.dirname(webAuthDirBase),"platforms");
+  const profileAuthority=createBrowserProfileAuthority(db,douyinAuthDirBase,{localPlatformRoot:platformProfileRoot});
   const hostProfileLifecycle=createHostBrowserProfileLifecycle(db,{resolveProfile:profileAuthority.resolveProfile,recovery:createDesktopHostProcessRecovery()});
   configureHostBrowserProfileLifecycle(hostProfileLifecycle.acquire,profileAuthority.resolveProfile);
   const douyinAuthDirFor = async (accountId?: string | null, signal?: AbortSignal,userId?:string): Promise<string> => {
@@ -1186,9 +1298,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   (CREATOROS_WEB_AUTH_DIR,lib.rs 注 appDataDir 顶层跨版本持久,复用 T-205 注入机制)或
   //   默认项目内 `.auth/web`(cookie 只在本机、不入 Git —— `.auth/` 已在 .gitignore)。per-user
   //   全局归属(ChatGPT/知乎登录与抖音号无关),不按 accountId 分。
-  const webAuthDirBase =
-    process.env.CREATOROS_WEB_AUTH_DIR ??
-    nodePath.join(process.cwd(), ".auth", "web");
+
   // [B-01] domain → 目录路径的纵深防御(FS 边界二次校验,不信任任何上游):
   //   ① 白名单校验(assertSafeWebDomain 拒 `..`/分隔符/编码分隔符/绝对路径/非法字符);
   //   ② containment:path.resolve 后必须严格位于 webAuthDirBase 之内(path.relative 非空、
@@ -1229,6 +1339,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const identityRepo = createIdentityRepository(db, deps);
   const identity = createIdentityService(identityRepo, deps);
   const localUser = await ensureLocalUser(identityRepo, deps);
+  const observabilityCtx:RequestContext={userId:localUser.id,requestId:"observability-host",source:"ingestion"};
+  let observabilityHost:ReturnType<typeof createObservabilityHost>|undefined;
+  const observability=createObservabilityCollector(db,{
+    now:deps.now,uploadAvailable:()=>Boolean(process.env.CREATOROS_LOG_DIR),
+    onRevoke:()=>observabilityHost?.pause(),
+    logSessionId:()=>process.env.CREATOROS_LOG_DIR?activeEncryptedLogSession(process.env.CREATOROS_LOG_DIR):Promise.resolve(null),
+    // Rust原stderr tee先脱敏再以原公钥封帧；服务器不存明文异常副本。
+    writeEncryptedContext:event=>console.error(`[observability-exception] ${JSON.stringify(event)}`),
+  });
+  const observabilityLedger=createObservabilityTaskLedger(db,observability);
+  const observabilityObserver=registerPersistentTaskObserver(db,{observeAttempt:async event=>{observabilityHost?.pause();await observabilityLedger.observeAttempt(event);},observeSettlement:observabilityLedger.observeSettlement});
+  (globalThis as {__creatorosCaptureException?:(event:unknown)=>void}).__creatorosCaptureException=event=>{
+    void observability.recordException(observabilityCtx,event).catch(()=>{});
+  };
+
 
   // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
   // 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):
@@ -1331,6 +1456,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const projectsBaseTransport = createProjectsTransport(() => ({
     service: projectsService,
     repo: projectsRepo,
+    createArticleOutput: (ctx, projectId, input) => articlesService.createOutput(ctx, projectId, input),
+    createGraphicPostOutput: (ctx, projectId, input) => graphicPostsService.createOutput(ctx, projectId, input),
   }));
   // [全局搜索修复①] 项目写路径的搜索索引 fan-out(composition root 组合,projects 模块
   // 不反向依赖 search)。projects 是四大实体里唯一漏接搜索索引的 —— createProject/
@@ -1408,8 +1535,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Ids/clock share the deterministic `deps` (createSeq above keeps tag ids
   // collision-free across requests).
   const taxonomyRepo = createTaxonomyRepository(db, deps);
+  const taxonomyAccess = createTaxonomyEntityAccess(db, {
+    project: (ctx,id)=>projectsService.getProject(ctx,id),
+    artifact: async(ctx,id)=>{const row=await artifactsService.getArtifact(ctx,id);await projectsService.getProject(ctx,row.projectId);return row;},
+    asset: (ctx,id)=>assetsService.getAsset(ctx,id),
+    knowledge: (ctx,id)=>knowledgeService.getKnowledge(ctx,id),
+    learning: (ctx,id)=>learningsService.getLearning(ctx,id),
+    publication: (ctx,id)=>publishingService.getPublication(ctx,id),
+  });
+  const assetTagReadService=createTaxonomyService(taxonomyRepo,{...taxonomyAccess,readableAssetIds:(ctx,ids)=>assetsService.listReadableAssetIds(ctx,ids)});
   const taxonomy = createTaxonomyTransport(() =>
-    createTaxonomyService(taxonomyRepo),
+    createTaxonomyService(taxonomyRepo, taxonomyAccess),
   );
 
   // Notifications (module 01): one repository over the shared db; its transport
@@ -1422,8 +1558,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
 
   const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles}=createKnowledgeApplication(db,deps,{
-    resolveEmbedSpec:c=>resolveEmbedSpec(c),
-    embedTexts:(c,spec,texts,signal)=>embedTexts(c,spec,texts,signal),
+    assertAssetReadable:async(c,id)=>{const asset=await assetsService.getAsset(c,id);if(asset.status!=="active")throw new OwnershipError("原文件不可用");return asset;},
+    resolveEmbedSpec:async()=>null,
+    embedTexts:async()=>{throw new Error('KNOWLEDGE_EMBEDDING_DISABLED');},
   });
 
   // Assets (module 07): one user-scoped repository over the shared db (the repo
@@ -1435,6 +1572,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Clock/ids share the deterministic `deps`; the mock's nextKey reuses createSeq
   // so storage keys stay collision-free across requests.
   const assetsRepo = createAssetRepository(db, deps);
+  const workspaceBlobService=createWorkspaceBlobService(db,deps.now);
   // item B — per-ctx object-storage factory (硬决策 2). AssetsService no longer
   // holds a singleton adapter: each storage-touching method resolves the adapter
   // for the REQUEST's ctx. The choice reads that user's storage_config (via the
@@ -1466,18 +1604,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // path so storage keys stay collision-free.
   const mockStorage = process.env.NODE_ENV === "test" && process.env.CREATOROS_STORAGE !== "local"
     ? createMockObjectStorage({ nextKey }) : null;
-  const objectStorageForCtx: ObjectStorageForCtx = async (ctx) => {
+  const objectStorageForStore=(store:typeof db):ObjectStorageForCtx=>async (ctx) => {
     // 内存适配器只用于隔离测试；正式上传必须取得真实存储。
     if(mockStorage)return mockStorage;
-    const svc = settingsService as SettingsService | undefined;
+    const svc = (store===db?settingsService:settingsServiceFor(store)) as SettingsService | undefined;
     if (!svc) throw new Error("存储设置服务未就绪");
     const backend = await svc.resolveStorageBackend(ctx);
     if (backend === "s3" && s3Cfg) {
       return createS3ObjectStorage(s3Cfg, { nextKey });
     }
     const rootPath = await svc.resolveStorageRoot(ctx);
-    return createLocalFsObjectStorage({ rootPath, publicBaseUrl: "/api/v1/blob" },{ nextKey });
+    const blobService = store===db ? workspaceBlobService : createWorkspaceBlobService(store,deps.now);
+    return createLocalFsObjectStorage({ rootPath, publicBaseUrl: "/api/v1/blob",scope:ctx,onMint:(key,exp)=>blobService.register(ctx,key,new Date(exp).toISOString()) },{ nextKey });
   };
+
+  const objectStorageForCtx=objectStorageForStore(db);
 
   // [T-055d SPEC §7.1] 项目目录名:projects/<safe-title>-<id 后 6 位>。safe-title = 去
   // 文件系统非法字符 + 截 24 字;目录名以创建时标题为准(改名不追改,storageKey 即映射)。
@@ -1516,11 +1657,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       assetId: string,
     ): Promise<string | null> => {
       const asset = await assetsService.getAsset(ctx, assetId); // OwnershipError → 上抛
-      // [T-332 S2] asset_files 经父 asset 号门透传:未选号 → AccountRequiredError。
+      // 文件读取沿用刚验证的工作区，空组与共享引用不要求制造平台账号。
       const files = await assetsRepo.listAssetFiles(
         ctx.userId,
         assetId,
-        requireAccountId(ctx.accountId, "assets.listAssetFiles"),
+        workspaceKey(ctx),
       );
       const current =
         files.find((f) => f.id === (asset as { currentFileId?: string | null }).currentFileId) ??
@@ -1822,7 +1963,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       close: () => handle.release(),
     };
   };
-  const assets = createAssetsTransport(() => assetsService);
+  const resolveFrozenImage=async(c:RequestContext,id:string,fileId?:string,checksum?:string)=>{
+    const asset=await assetsService.getAsset(c,id);
+    if(asset.assetType!=="image"||asset.status==="deleted")throw new OwnershipError("图片素材不存在");
+    const reference=await assetsService.getAssetReference(c,id,fileId);
+    if(!reference)throw new AssetConflictError("图片文件暂时无法读取，请检查素材后重试");
+    if(checksum&&reference.checksum!==checksum)throw new AssetConflictError("图片文件已变化，请重新选择");
+    return {fileId:reference.fileId,checksum:reference.checksum};
+  };
+  const visualTemplateService=createVisualTemplateService(db,{now:deps.now,assertImageReference:(c,ref)=>resolveFrozenImage(c,ref.assetId,ref.fileId,ref.checksum)});
+  const visualTemplates=createVisualTemplateTransport(visualTemplateService),originalAssets=createAssetsTransport(() => assetsService,{readAssetTags:(ctx,ids)=>assetTagReadService.listAssetTagSummaries(ctx,ids)}),visualTemplateIds=new Set<string>(VISUAL_TEMPLATE_OP_IDS);
+  const assets:Transport={request:(endpoint,input,ctx)=>visualTemplateIds.has(endpoint.id)?visualTemplates.request(endpoint,input,ctx):originalAssets.request(endpoint,input,ctx)};
 
   // Artifacts (module 08): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). The
@@ -1839,9 +1990,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     searchUpsert: (ctx, input) => searchService.upsertDocument(ctx, input),
     assertKnowledgeOwned: (ctx, id) => knowledgeService.getKnowledge(ctx, id),
     assertAssetOwned: (ctx, id) => assetsService.getAsset(ctx, id),
-    assertProjectOwned: async (ctx, projectId) => {
-      await projectsService.listOutputIdsByProject(ctx, projectId);
-    },
+    assertProjectOwned:(ctx,projectId)=>projectsService.getProject(ctx,projectId),
     resolveOutputProjectId: (ctx, outputId) =>
       projectsService.getProjectIdByOutput(ctx, outputId),
     // [T-183] 改稿 delta → 品味信号 best-effort seam。Lazy 箭头:`learningsService` 在下方
@@ -1865,10 +2014,97 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   - searchIndexAsset → searchService.upsertDocument (best-effort post-commit).
   // Clock/ids share the deterministic `deps` (createSeq keeps production/segment/
   // export ids collision-free across requests).
-  const productionService = createProductionService({
+  const assertProductionEditorAsset:NonNullable<Parameters<typeof createProductionService>[0]["assertEditorAsset"]>=async (ctx,{projectId,assetId,assetFileId,fileDigest},transaction) => {
+      // 事务里的跨模块读取复用同一连接，避免PGlite等待自身事务外的查询。
+      // 各模块公开service保留真实归属校验；不打开第二个数据库。
+      const scopedAssets=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForStore(transaction),deps):assetsService;
+      const scopedLinks=transaction?createMaterialLinksService({db:transaction,...deps,
+        assertProjectOwned:(context,id)=>createProjectsService(createProjectRepository(transaction),deps).getProject(context,id),
+      }):materialLinksService;
+      await scopedAssets.getAsset(ctx,assetId);
+      if(assetFileId){await scopedAssets.assertAssetFileOwned(ctx,assetId,assetFileId,false);}
+      for(let page=1;;page++) {
+        const batch=await scopedLinks.list(ctx,{projectId,page,pageSize:100});
+        if(batch.rows.some(link=>link.entityType==="asset" && link.entityId===assetId)){
+          if(assetFileId&&fileDigest)await scopedAssets.readMediaFile(ctx,assetId,assetFileId,fileDigest);
+          return;
+        }
+        if(page*100>=batch.total || batch.rows.length===0)break;
+      }
+      throw new ProductionConflictError("请先将该素材加入当前项目，再插入视频作品");
+    };
+
+  let productionOverlayCapture:ReturnType<typeof createProductionOverlayCapture>;
+  let productionRoughCut:ReturnType<typeof createProductionRoughCutReservations>;
+  let productionTranscripts:ReturnType<typeof createProductionTranscripts>;
+  // exact 文件元数据来自原素材属主；不读取模型/native payload 自报的时长。
+  const readNativeEditorMedia=async(c:RequestContext,input:{projectId:string;assetId:string;assetFileId:string},transaction?:typeof db):ReturnType<WorkEditorPorts['readMedia']>=>{
+    await assertProductionEditorAsset(c,input,transaction);
+    const scoped=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForStore(transaction),deps):assetsService;
+    await scoped.assertAssetFileOwned(c,input.assetId,input.assetFileId,false);
+    const asset=await scoped.getAsset(c,input.assetId);
+    const [file]=await scoped.listFilesByIds(c,[input.assetFileId]);
+    if(asset.status!=="active"||!file||file.assetId!==input.assetId)throw new ProductionConflictError("真实素材文件不可读取，原工程保留");
+    const kind=file.mimeType.startsWith("video/")?"video":file.mimeType.startsWith("audio/")?"audio":file.mimeType.startsWith("image/")?"image":null;
+    if(!kind)throw new ProductionConflictError("当前文件不是可编辑媒体");
+    const durationTick=kind==="image"||file.durationMs===null?null:file.durationMs*120;
+    if(durationTick!==null&&(!Number.isSafeInteger(durationTick)||durationTick<=0))throw new ProductionConflictError("真实媒体时长不可核验");
+    return {kind,durationTick};
+  };
+  const productionOwnerDeps:Parameters<typeof createProductionService>[0] = {
+    readNativeEditorMedia,
+    roughCut:()=>productionRoughCut,
+    transcripts:()=>productionTranscripts,
     db,
+    assertOutputOwned:(ctx,id)=>projectsService.getOutput(ctx,id),
+    assertAssetOwned:(ctx,id)=>assetsService.getAsset(ctx,id),
     now: deps.now,
     nextId: deps.nextId,
+    assertEditorAsset:assertProductionEditorAsset,
+    // 可选审核捕获用同一保存连接/savepoint；失败不反杀旧合法保存，也不留半条ledger。
+    onVersionSaved:async(c,event,tx)=>{
+      try{await tx.transaction(t=>productionOverlayCapture.captureSavedVersion(c,event,t as unknown as typeof db));}
+      catch(error){console.warn("[production-overlay-capture] 原保存成功；可选精确素材证明暂不可用",{outputId:event.outputId,revision:event.version.revision,message:error instanceof Error?error.message:"捕获失败"});}
+    },
+    readEditorOverlayBindings:(c,input,tx)=>productionOverlayCapture.readBindings(c,input,tx??db),
+    conversionPorts:{readLegacyMain:async(ctx,input,transaction)=>{
+      const rendered=input.plan.renderProps as {talkingHead?:{file?:unknown}}|undefined;
+      const assetId=rendered?.talkingHead?.file;
+      if(typeof assetId!=="string"||!assetId)throw new ProductionConflictError("旧原片没有可核验的素材身份，请明确选择更换原片");
+      const scoped=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForStore(transaction),deps):assetsService;
+      const asset=await scoped.getAsset(ctx,assetId);
+      if(asset.status!=="active"||asset.assetType!=="video"||!asset.currentFileId)throw new ProductionConflictError("旧原片当前文件不可读取，原方案保留");
+      await assertProductionEditorAsset(ctx,{projectId:input.projectId,assetId,assetFileId:asset.currentFileId},transaction);
+      await scoped.assertAssetFileOwned(ctx,assetId,asset.currentFileId,false);
+      return{assetId,assetFileId:asset.currentFileId};
+    }},
+    sourcePorts:{assertTaskSettled:(ctx,id,generation,digest,tx)=>aiService.probeControl.assertSettled(ctx,id,generation,digest,tx),readMediaFile:async(ctx,input,transaction)=>{
+      await assertProductionEditorAsset(ctx,{...input,fileDigest:undefined},transaction);
+      const scoped=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForStore(transaction),deps):assetsService;
+      return scoped.readMediaFile(ctx,input.assetId,input.assetFileId,input.fileDigest);
+    },createTask:async(ctx,body,tx)=>{if(tx)return createExecutionService({ai:workReviewAiFor(tx),assets:{createGeneratedAsset:async(c,input)=>({id:(await assetsService.createGeneratedAsset(c,input)).id})},hasExecutor:t=>executorRegistry.has(t),loopTypeOf:t=>executorRegistry.loopTypeOf(t),workspacesRoot:executionWorkspacesRoot,abortRun:abortExecutionTask,resolveOutputProjectId:(c,id)=>createProjectsService(createProjectRepository(tx),deps).getProjectIdByOutput(c,id)}).create(ctx,body);const response=await execution.request(ENDPOINTS.createExecutionTask,{params:undefined,query:undefined,body},ctx) as {data:{id:string}};return response.data;},dispatchTask:async(c,id)=>{const task=await executionService.get(c,id);if(task.status==='queued')dispatchExecution(c,task);},readTask:(ctx,id)=>executionService.get(ctx,id),retryTask:async(ctx,input)=>{await aiService.probeControl.retry(ctx,input);const task=await executionService.get(ctx,input.taskId);if(task.status === "queued")dispatchExecution(ctx,task);}},
+    resolveEditorMedia:async(ctx,input)=>{
+      await assertProductionEditorAsset(ctx,input);
+      if(input.assetFileId){const media=await assetsService.readMediaFile(ctx,input.assetId,input.assetFileId,input.fileDigest);return {url:media.url,mimeType:media.mimeType};}
+      const asset=await assetsService.getAsset(ctx,input.assetId);
+      if(asset.status!=="active" || !asset.currentFileId)throw new ProductionConflictError("素材尚未确认可用，请先完成上传或采纳");
+      const [file]=await assetsService.listFilesByIds(ctx,[asset.currentFileId]);
+      if(!file || file.assetId!==asset.id)throw new ProductionConflictError("素材文件暂时不可读取");
+      const download=await assetsService.getAssetFileDownloadUrl(ctx,asset.id,file.id);
+      return {url:download.url,mimeType:file.mimeType};
+    },
+    createEditorRender:async (ctx,body)=>{
+      const response=await execution.request(ENDPOINTS.createExecutionTask,{params:undefined,query:undefined,body},ctx) as {data:{id:string}};
+      return response.data;
+    },
+    readEditorRenderAsset:async (ctx,taskId)=>{
+      const task=await executionService.get(ctx,taskId);
+      for(const assetId of task.adoptedAssetIds) {
+        const asset=await assetsService.getAsset(ctx,assetId);
+        if(asset.assetType==="video")return {assetId};
+      }
+      return {assetId:null};
+    },
     setPrimaryOutputAsset: (ctx, input) =>
       projectsService.patchOutput(ctx, input.outputId, {
         primaryAssetId: input.assetId,
@@ -1954,8 +2190,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         },
       },
     },
-  });
-  const production = createProductionTransport(() => productionService);
+  };
+  const productionService = createProductionService(productionOwnerDeps);
+  const productionOverlayPorts={
+    production:(tx:typeof db)=>createProductionService({...productionOwnerDeps,db:tx}),
+    readExactFile:async(c:RequestContext,projectId:string,file:import("@creatoros/contract").WorkAssetFile,tx:typeof db)=>{
+      await assertProductionEditorAsset(c,{projectId,...file},tx);
+      const assets=createAssetsService(createAssetRepository(tx,deps),objectStorageForStore(tx),deps);
+      const original=(await assets.listFilesByIds(c,[file.assetFileId])).find(row=>row.assetId===file.assetId&&row.id===file.assetFileId);
+      const checksum=original?.checksum?.replace(/^sha256:/,"");
+      if(!checksum||!/^([a-f0-9]{64})$/.test(checksum))throw new ProductionConflictError("所选精确素材缺少原文件摘要，请核对原上传文件");
+      return assets.readMediaFile(c,file.assetId,file.assetFileId,checksum);
+    },
+  };
+  productionOverlayCapture=createProductionOverlayCapture({db,...deps,ports:productionOverlayPorts});
+  const production = createProductionTransport(() => createProductionWithNativeFileCapture({
+    owner:productionService,bindings:workProductionFileBindings,
+    onWarning:(_c,warning)=>console.warn("[production-file-binding] 原操作已成功；精确审核账本未登记",warning),
+  }));
 
   // Publishing (module 10): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). The
@@ -1971,11 +2223,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Production module likewise wired only the seams with a concrete peer method.
   // Clock/ids share the deterministic `deps` (createSeq keeps pub/rev ids
   // collision-free across requests).
-  const publishingService = createPublishingService({
+  const publishingOwnerDeps:Parameters<typeof createPublishingService>[0] = {
     db,
     now: deps.now,
     nextId: deps.nextId,
     publisher: createUnavailablePublisher(),
+    membership:createMembershipLockService(db),
+    assertTargetAccount:async(ctx,target)=>platformAccountService.assertOwnedAccount(ctx,target.accountId,target.platform),
+    retainUnassignedDraft:createUnassignedDraftRetainer({db,...deps}),
     // [全局搜索修复③] video/publication tab 对齐:publishing.service 发布时投影
     // entity_type='publication',但读侧 search.transport 的 video tab 查的是
     // entity_type='video'(启动 seed 亦投影成 video)→ 已发布作品在 video tab 恒搜不到。
@@ -1987,6 +2242,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         entityType: input.entityType === "publication" ? "video" : input.entityType,
       }),
     assertCoverOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+    getFrozenImageDownload:async(c,id,fileId,checksum)=>{await resolveFrozenImage(c,id,fileId,checksum);return assetsService.getAssetFileDownloadUrl(c,id,fileId);},
     isCoverAvailable: (ctx, id) => assetsService.isAssetFileAvailable(ctx, id),
     // Project→ContentOutput-ids resolver — drives Analytics' project metric read
     // (publishing.listPublicationIdsByProject → analytics.projects.get) without an
@@ -2005,7 +2261,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       projectsService.getOutputOwnerSummary(ctx, outputId),
     reconcileImportedProjections: (ctx, input) =>
       projectsService.reconcileImportedProjections(ctx, input),
+  };
+  const publishingOriginalFor=(store:typeof db)=>createPublishingService({...publishingOwnerDeps,db:store,
+    assertTargetAccount:(c,target)=>createPlatformAccountService({db:store,...deps}).assertOwnedAccount(c,target.accountId,target.platform),
+    resolveOutputOwner:(c,id)=>workProjectsFor(store).getOutputOwnerSummary(c,id),
+    assertCoverOwned:(c,id)=>workAssetsFor(store).getAsset(c,id),
+    isCoverAvailable:(c,id)=>workAssetsFor(store).isAssetFileAvailable(c,id),
+    listOutputIdsByProject:(c,id)=>workProjectsFor(store).listOutputIdsByProject(c,id),
+    reconcileImportedProjections:(c,input)=>workProjectsFor(store).reconcileImportedProjections(c,input),
+    markOwnerProjectPublished:async(c,id)=>{const projectId=await workProjectsFor(store).getProjectIdByOutput(c,id);if(projectId)await workProjectsFor(store).markPublished(c,projectId);},
   });
+  const publicationCoverPorts:PublicationCoverSavePorts={
+    projects:store=>workProjectsFor(store),publishing:publishingOriginalFor,
+    async readExactImageFile(c,projectId,file,tx){
+      await workSourceService.assertFile(c,projectId,file,tx);
+      const owner=workAssetsFor(tx),asset=await owner.getAsset(c,file.assetId);
+      if(asset.assetType!=="image"||asset.status!=="active")throw new ProductionConflictError("发布封面必须为已确认的图片素材");
+      await owner.assertAssetFileOwned(c,file.assetId,file.assetFileId,true);
+      const exact=await owner.readMediaFile(c,file.assetId,file.assetFileId);
+      return {...file,checksum:exact.fileDigest};
+    },
+  };
+  const publishingService = withPublicationManualRevisionLock(db,publicationCoverPorts,publishingOriginalFor);
   const publishing = createPublishingTransport(() => publishingService);
 
   // 数据底座(SPEC §1.4)「优先读真」接线 —— composition root 是唯一允许跨模块组合读的层。
@@ -2047,6 +2324,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const startTrafficJob=async(ctx:RequestContext)=>{
     return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:async()=>{const job=await ensureTrafficJob(ctx);return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);},fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
   };
+  const commentDiagnosisHost=createCommentDiagnosisHost({
+    open:async(identity,signal)=>(await loadDouyinCdp()).openCommentDiagnosisSession(await douyinAuthDirFor(identity.accountId,signal,identity.userId),signal),
+    acquire:()=>douyinGateway.acquire('creator-center'),
+    throttled:()=>douyinGateway.report('creator-center','throttled'),
+  });
+  disposeCommentDiagnosisHost=()=>commentDiagnosisHost.dispose();
+  const commentDiagnosisService=createCommentDiagnosisService({host:commentDiagnosisHost,assertPublication:(ctx,id)=>trafficService.assertPublication(ctx,id)});
   const analytics = createAnalyticsTransport(() => analyticsService,{
     getProject:(ctx,id)=>trafficService.getProject(ctx,id),
     refresh:async(ctx,id)=>{
@@ -2055,7 +2339,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if(!(await trafficService.pending(ctx,1)).length)return {queued,jobRunId:null,aiTaskId:null};
       const run=await startTrafficJob(ctx);return {queued,jobRunId:run.jobRunId||null,aiTaskId:run.aiTaskId||null};
     },
-  });
+  },publicationSyncService,commentDiagnosisService);
 
   // Ingestion (module 12): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). It
@@ -2073,16 +2357,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // deterministic `deps`. The MockIngestionSource is the deterministic producer
   // (foundation §4) used by dev/seeds — not on the dispatch path.
   const ingestionService = createIngestionService({
-    deps,
+    deps:{...deps,membership:createMembershipLockService(db),assertCollectionAccount:async(ctx)=>{const account=await platformAccountService.getAccount(ctx,ctx.accountId!);await platformAccountService.assertOwnedAccount(ctx,account.id,account.platform);}},
     db,
     // [T-189a] 绑定成功回调:fire-and-forget 触发组合根 bootstrap(建 job + 初始化)。
     onDouyinBound: (ctx) => {
       void bootstrapDouyinOnBind(ctx).catch((error) =>
         console.error("[persistence-client] 绑定后初始化失败:", error),
       );
+      if (ctx.accountId) void reportingLocal.captureAccountState(ctx,ctx.accountId,"connected",ctx.requestId,deps.now()).catch(()=>{});
     },
     ports: {
       publishing: {
+        resolveCollectedPublication:(ctx,ref)=>publishingService.resolveCollectedPublication(ctx,ref),
+        listCollectedExternalIds:(ctx,platform)=>publishingService.listCollectedExternalIds(ctx,platform),
         resolvePublication: (ctx, ref) =>
           publishingService.resolvePublication(ctx, ref),
         // 数据底座(SPEC §1.3):导入作品落 published publication(external_id=aweme_id)。
@@ -2115,6 +2402,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       analytics: {
         appendSnapshot: (ctx, input) =>
           analyticsService.appendSnapshot(ctx, input),
+      },
+      // T-1020: 已确认的抖音导入继续写原 Project/Publication/Analytics，
+      // 同时经 backend service port 映射到账号级历史目录。目录仍标记为部分记录；
+      // 此闭包在组合根全部装配完毕后才执行。
+      platformCollection: {
+        recordConfirmedLegacyImport: (ctx, input) =>
+          platformCollectionService.recordConfirmedLegacyImport(ctx, input),
       },
       knowledge: {
         ingest: (ctx, input) =>
@@ -2388,6 +2682,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // The transport returns this ONE shared service. Clock/ids share the deterministic
   // `deps` (createSeq keeps learning/learning-app ids collision-free).
   const learningsService = createLearningsService({
+    assertReviewOwned:(ctx,id)=>reviewsService.getReview(ctx,id),
+    assertArtifactOwned:(ctx,id)=>artifactsService.getArtifact(ctx,id),
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -2424,17 +2720,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // to 当前号的 canonical rubric(`rubric-canonical:<accountId>`,[T-332 S2] per-account)
     // when the user can read it; null(→ honest ConflictError)when no rubric exists.
     calibration: {
-      resolveCurrentRubricId: async (ctx) => {
-        try {
-          const rubric = await calibrationService.getRubric(
-            ctx,
-            canonicalRubricIdFor(ctx),
-          );
-          return rubric.id;
-        } catch {
-          return null;
-        }
-      },
+      resolveCurrentRubricId: async ctx => (await calibrationService.ensureDefaultRubric(ctx)).id,
       createSuggestion: (ctx, input) =>
         calibrationService.createRuleSuggestion(ctx, input),
     },
@@ -2466,7 +2752,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txAssets=createAssetsService(createAssetRepository(txDb,deps),objectStorageForCtx,deps);
       return createMaterialLinksService({db:txDb,...deps,
-        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertProjectOwned:(context,id)=>txProjects.getProject(context,id),
         assertAssetOwned:async(context,id)=>{
           const asset=await txAssets.getAsset(context,id);
           if(asset.status!=="active")throw new Error("素材已不可用，请重新选择素材");
@@ -2485,6 +2771,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     link:linkAdoptedMaterial,
   },deps.now);
+  let predictionLocks:ReturnType<typeof createPredictionLockService>;
+  const predictionCalibrationFor=(store:Db)=>createCalibrationService({db:store,...deps,
+    assertLearningOwned:(context,id)=>learningsService.getLearning(context,id),
+    assertSubjectOwned:async(context,subject)=>subject.subjectType==="publication"?createPublishingService({db:store,...deps,publisher:createUnavailablePublisher()}).getPublication(context,subject.subjectId):createProjectsService(createProjectRepository(store),deps).getOutput(context,subject.subjectId),
+    ingestion:{assertRunExists:async(context,id)=>{await ingestionService.getRun(context,id);},ensureManualRun:(context,key)=>ingestionService.ensureManualRun(context,key)},
+    learnings:{adjustConfidence:async()=>{}},
+  });
   const calibrationPositioningAdoption=createCalibrationPositioningAdoptionService(db,{
     async assertSubject(c,type,id,tx){
       const txDb=tx as unknown as Db;
@@ -2493,12 +2786,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if(!owner)throw new OwnershipError("诊断作品不存在");
       return owner;
     },
-    createDraftPrediction(c,input,tx){
-      return createCalibrationService({db:tx as unknown as Db,...deps,
-        ingestion:{assertRunExists:async(context,id)=>{await ingestionService.getRun(context,id);},ensureManualRun:(context,key)=>ingestionService.ensureManualRun(context,key)},
-        learnings:{adjustConfidence:async()=>{}},
-      }).createDraftPrediction(c,input);
-    },
+    createDraftPrediction:(c,input,tx)=>predictionCalibrationFor(tx as unknown as Db).createDraftPrediction(c,input),
+    lockPrediction:(c,id,tx)=>predictionCalibrationFor(tx as unknown as Db).lockPrediction(c,id),
+    predictionLocks:{confirmBound:(c,id,apply)=>predictionLocks.confirmBound(c,id,apply)},
     lockPositioning:lockPositioningAdoptionAccount,
     upsertProfile(c,input,tx){
       return createPositioningService({db:tx as unknown as Db,...deps,projects:{getProjectSubject:async(context,id)=>{
@@ -2519,7 +2809,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txKnowledge=createKnowledgeService(createKnowledgeRepository(txDb,deps));
       return createMaterialLinksService({db:txDb,...deps,
-        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertProjectOwned:(context,id)=>txProjects.getProject(context,id),
         assertKnowledgeOwned:(context,id)=>txKnowledge.getKnowledge(context,id),
       }).create(c,input);
     },
@@ -2529,6 +2819,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txPositioning=createPositioningService({db:txDb,...deps,projects:{getProjectSubject:async(context,id)=>{const row=await txProjects.getProjectOverviewCore(context,id);return {title:row.project.title,brief:row.project.brief};}}});
       return createCandidateService({db:txDb,...deps,
+        topicWorkspace:{assertProject:(context,id)=>txProjects.getProject(context,id),currentPositioningVersion:async context=>(await txPositioning.readPositioningCenter(context)).currentStatement?.id??null},
         projects:{createProject:(context,value)=>txProjects.createProject(context,value)},
         ingestion:{assertRunExists:async(context,id)=>{await ingestionService.getRun(context,id);}},
         positioning:{evaluateFit:async(context,subject)=>{
@@ -2540,11 +2831,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     assertProject(c,id,tx){return createProjectsService(createProjectRepository(tx as unknown as Db),deps).getProjectOverviewCore(c,id);},
     createFromAIResult:createTopicCandidateInTransaction,
   },deps.now);
-  const aiService = createAiService({
-    prepareChatReply:(ctx,snapshot)=>{
+  const aiOwnerDeps:Parameters<typeof createAiService>[0] = {
+    prepareChatReply:(ctx,snapshot,options,explicit)=>{
       if(stoppingPreparation)throw new Error("应用正在停止，无法启动新聊天");
       void chatRuntime.durable;
-      return prepareChatReply(chatRuntime,ctx,snapshot);
+      return prepareChatReply(chatRuntime,ctx,snapshot,{
+        executionEngine:explicit?explicit.executionEngine:options.executionEngine,
+        legacyExecutionEngine:options.executionEngine,
+        ...(options.chatContext?{chatContext:{...options.chatContext,surface:'project',projectId:snapshot.conversation.projectId}}:{}),
+      });
     },
     assertChatProject:(ctx,id)=>projectsService.getProjectOverviewCore(ctx,id),
     projectTranscriptionTargets:createProjectTranscriptionTargetService(),
@@ -2558,23 +2853,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     db,
     now: deps.now,
     nextId: deps.nextId,
-    resolveTaskRuntimeData: async (ctx, taskType, inputData) => {
+    resolveTaskRuntimeData: async (ctx, taskType, inputData,trustedRoute) => {
+      const family:RoutingFamily=taskType==="benchmark.transcribe"?"audio":taskType==="asset.generate"?((inputData as {kind?:unknown}).kind==="video"?"video":"image"):"text";
+      const executionRoute=await resolveRootExecutionRoute(ctx,db,trustedRoute,family);
       // 纯 ASR 使用业务提交冻结的音源/配置及按次凭据，不申请文本 Skill。
-      if(taskType==="benchmark.transcribe")return {};
+      if(taskType==="benchmark.transcribe")return {executionRoute};
       if (!resolveEffectiveSkillSnapshotForRuntime) {
         throw new Error(
           "[T-513] Effective Skill snapshot resolver 尚未完成装配",
         );
       }
       const requiredSkillIds = requiredSkillIdsForTask(taskType, inputData);
+      const skillSnapshot=await resolveEffectiveSkillSnapshotForRuntime(ctx,requiredSkillIds);
+      if(executionRoute.schemaVersion===2||frozenExecutionEngine({executionRoute})==='codex')return {skillSnapshot,executionRoute};
       const modelAuthority = pinModelAuthority(
         await readChannelModelAuthority(),
       );
       return {
-        skillSnapshot: await resolveEffectiveSkillSnapshotForRuntime(
-          ctx,
-          requiredSkillIds,
-        ),
+        skillSnapshot,executionRoute,
         modelAuthority: modelAuthority.authority,
         modelAuthorityDigest: modelAuthority.digest,
       };
@@ -2668,7 +2964,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           (a) => a.id,
         ),
     },
-  });
+  };
+  const aiService = createAiService({...aiOwnerDeps,readWorkCandidateSource:async(c,input)=>{const result=await workCandidateSource.read(c,input);return import("@creatoros/contract").then(m=>m.workCandidateSourceResult.parse(result));}});
+  const predictionRubric=(value:Awaited<ReturnType<ReturnType<typeof predictionCalibrationFor>["getRubricVersion"]>>)=>({id:value.id,dimensions:structuredClone(value.dimensions)});
+  predictionLocks=createPredictionLockService(db,{
+    getOutput:(c,id,store)=>createProjectsService(createProjectRepository(store),deps).getOutput(c,id),
+    readConfirmedScript:(c,id,store)=>createConfirmedProjectScriptReader({projectsService:workProjectsFor(store),artifactsService:workArtifactsFor(store)})(c,id),
+    ensureRubric:async(c,store)=>predictionRubric((await predictionCalibrationFor(store).ensureDefaultRubric(c)).currentVersion),
+    getRubric:async(c,id,store)=>predictionRubric(await predictionCalibrationFor(store).getRubricVersion(c,id)),
+    getPrediction:(c,id,store)=>predictionCalibrationFor(store).getPrediction(c,id),
+    prepareRuntime:c=>aiOwnerDeps.resolveTaskRuntimeData!(c,"calibration.diagnose",Object.freeze({})),
+    createChild:(c,input,attemptId,runtime,store)=>createAiService({...aiOwnerDeps,db:store,predictionLockSource:input.predictionLockSource as Record<string,unknown>,resolveTaskRuntimeData:async()=>runtime}).createTask(c,{taskType:"calibration.diagnose",inputData:input,attemptId}),
+  },deps.now);
   const runWithResolvedEffectiveSkills = async <T>(
     ctx: RequestContext,
     requiredSkillIds: readonly string[],
@@ -2708,20 +3015,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         `[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`,
       );
     }
-    const liveModelAuthority = pinModelAuthority(
-      await readChannelModelAuthority(),
-    );
-    if (
-      !matchesPinnedModelAuthority(runtimeData, liveModelAuthority)
-    ) {
-      await aiService.cancelTask(
-        ctx,
-        taskId,
-        "模型配置已变化，请重新发起",
-      );
-      return;
-    }
-    await taskModelAuthorityScope.run(liveModelAuthority, () =>
+    const authorityMatched = await taskModelAuthorityScope.runFrozen(
+      runtimeData, readChannelModelAuthority, () =>
       runWithEffectiveSkillSnapshot(skillSnapshot, async () => {
       const execution = await aiService.runClaimedTaskExecution(
         ctx,
@@ -2734,24 +3029,611 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (!execution.claimed) return;
       }),
     );
+    if (!authorityMatched) {
+      await aiService.cancelTask(ctx, taskId, "模型配置已变化，请重新发起");
+    }
   };
-  const aiBase = createAiTransport(() => aiService);
+  // 确定性执行使用真实任务冻结归属；collection的signal-only闭包仍沿上方原ctx wrapper。
+  const runExecutionWithFrozenSkills=async(ctx:RequestContext,taskId:string,
+    execute:(signal:AbortSignal,executionContext:RequestContext)=>Promise<void>):Promise<void>=>{
+    const {owner,runtimeData}=await aiService.getTaskExecutionRuntime(ctx,taskId);
+    // SEMANTIC_BOUNDARY_ALLOW:只核真实服务已授权的旧账号范围，不推断内容或当前成员归属。
+    const legacy=!ctx.groupId&&!!ctx.accountId&&owner.accountId===ctx.accountId&&
+      (owner.groupId===null||owner.groupId===`grp_legacy_${owner.accountId}`);
+    const executionContext:RequestContext={userId:owner.userId,accountId:owner.accountId,
+      requestId:ctx.requestId,source:ctx.source,
+      ...(legacy?{}:{groupId:owner.groupId,groupVersion:owner.groupVersion??undefined,membershipVersion:owner.membershipVersion??undefined})};
+    try{
+      const raw=runtimeData.skillSnapshot;
+      if(!raw)throw new Error(`[T-513] AI task ${taskId} 缺少冻结的 Skill snapshot`);
+      const snapshot=parseEffectiveSkillSnapshot(JSON.stringify(raw));
+      const mismatch=()=>{throw new Error(`[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`);};
+      if(snapshot.userId!==owner.userId||snapshot.accountId!==owner.accountId)mismatch();
+      const stamp=snapshot as EffectiveSkillSnapshotV1 & Record<string,unknown>;
+      const validVersion=(value:unknown)=>value===null||(typeof value==="number"&&Number.isSafeInteger(value)&&value>0);
+      if(legacy){
+        if(stamp.groupId!=null&&stamp.groupId!==owner.groupId)mismatch();
+        for(const field of ["groupVersion","membershipVersion"] as const){
+          if(Object.hasOwn(stamp,field)&&stamp[field]!==undefined&&!validVersion(stamp[field]))mismatch();
+          if(stamp[field]!=null&&stamp[field]!==owner[field])mismatch();
+        }
+      }else{
+        if(!owner.groupId||!Object.hasOwn(stamp,"groupId")||stamp.groupId!==owner.groupId||
+          !Object.hasOwn(stamp,"groupVersion")||!Object.hasOwn(stamp,"membershipVersion")||
+          !validVersion(stamp.groupVersion)||stamp.groupVersion===null||stamp.groupVersion!==owner.groupVersion||
+          !validVersion(stamp.membershipVersion)||stamp.membershipVersion!==owner.membershipVersion)mismatch();
+      }
+      const authorityMatched=await taskModelAuthorityScope.runFrozen(runtimeData,readChannelModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
+        const execution=await aiService.runClaimedTaskExecution(executionContext,taskId,async({signal})=>execute(signal,executionContext));
+        if(!execution.claimed)return;
+      }));
+      if(!authorityMatched)await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");
+    }catch(error){
+      const message=error instanceof Error?error.message:String(error);
+      await aiService.markFailed(executionContext,taskId,message).catch(()=>undefined);
+    }
+  };
+  const aiBase = createAiTransport(() => createPublicMomentsAiAdapter(aiService),()=>predictionLocks);
+  function assertOutputVersionSource(context:RequestContext, ref:OutputConversionSourceAnchor, projectId:string):Promise<void> {
+    return createConversionSourceService({projects:projectsService,articles:articlesService,graphicPosts:graphicPostsService,
+      outputScripts:outputScriptsService}).assertReference(context,ref,projectId);
+  }
+  const resumeModelExecution=createFrozenModelRetryPort({
+    readTask:(context,id)=>aiService.getTask(context,id),
+    execution:{get:(context,id)=>persistentTaskService.get(context,id),command:(context,input)=>persistentTaskService.command(context,input)},
+    wake:()=>{modelWorker?.start();},
+  });
+  const readConfirmedProjectScript=createConfirmedProjectScriptReader({projectsService,artifactsService});
+  const readConfirmedProjectReviewScript=createConfirmedProjectReviewScriptReader({projectsService,artifactsService});
+  const projectScriptSource = createProjectScriptSource({projects:projectsService,artifacts:artifactsService,publishing:publishingService,assets:assetsService});
+  const projectScriptPorts = {
+    readProjectScript: projectScriptSource.read,
+    assertProjectScriptSource: projectScriptSource.assert,
+    readProjectScriptContext:projectScriptSource.readContext,
+    assertScriptMetadataSource:projectScriptSource.assertMetadata,
+    readProjectImageLibrary:projectScriptSource.readImages,
+    assertProjectImageFile:projectScriptSource.assertImage,
+  };
+  const articleOwnerPorts: import("@creatoros/backend/modules/articles").ArticlePeerPorts & typeof deps = {
+    resolveConversionSource: (context,input):Promise<import("@creatoros/backend/modules/creative-results").FrozenConversionSource>=>
+      createConversionSourceService({projects:projectsService,articles:articlesService,graphicPosts:graphicPostsService,
+        outputScripts:outputScriptsService}).restore(context,input.request,input.sourceAnchor),
+    findGenerationByAttempt: (context,attemptId)=>aiService.findTaskByAttempt(context,"wechat.article-draft",attemptId),
+    assertOutputVersionSource,
+    ...projectScriptPorts,
+    ...deps,
+    projects: (store) => createProjectsService(createProjectRepository(store), deps),
+    artifacts: (store) => {
+      const projectPort = createProjectsService(createProjectRepository(store), deps);
+      return createArtifactsService({
+        db: store, now: deps.now, nextId: deps.nextId,
+        assertProjectOwned: async (context, projectId) => { await projectPort.getProject(context, projectId); },
+        resolveOutputProjectId: (context, outputId) => projectPort.getProjectIdByOutput(context, outputId),
+      });
+    },
+    assertAssetFile: (context, assetId, fileId, active) => assetsService.assertAssetFileOwned(context, assetId, fileId, active),
+    async resolveDocumentSource(context, projectId, assetId, fileId) {
+      let linked = false;
+      for (let page = 1; ; page++) {
+        const batch = await materialLinksService.list(context, {projectId, page, pageSize: 100});
+        linked = batch.rows.some((link) => link.projectId === projectId && link.entityType === "asset" && link.entityId === assetId);
+        if (linked) break;
+        if (page * 100 >= batch.total) return null;
+      }
+      return assetsService.readDocumentFileSource(context, assetId, fileId);
+    },
+    async resolveSelectedBrand(context, versionId) {
+      const center = await positioningService.readPositioningCenter(context);
+      const profile = center.profile;
+      const selected = center.currentStatement;
+      if (!profile || !selected || selected.id !== versionId || selected.profileId !== profile.id || !selected.masterSnapshot) return null;
+      const master = selected.masterSnapshot;
+      const guidance = JSON.stringify({oneLiner: selected.oneLiner, persona: master.persona, field: master.field,
+        audience: master.audience, differentiation: master.differentiation, capabilities: master.capabilities,
+        facets: master.facets, downstreamRules: master.downstreamRules});
+      return {profileId: profile.id, versionId: selected.id, guidance};
+    },
+    async submitGeneration(context, input) {
+      const result = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "wechat.article-draft", attemptId: input.attemptId, inputData: input.inputData,...(input.retryOfTaskId?{retryOfTaskId:input.retryOfTaskId}:{})}}, context);
+      const task = (result as {data: {id: string; status: string}}).data;
+      return {id: task.id, status: task.status};
+    },
+    resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"wechat.article-draft"}),
+    async readGeneration(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {taskType: task.taskType, status: task.status, inputData: task.inputData,executionTaskId:task.executionTaskId,
+        results: (await aiService.listResults(context, taskId)).map((result) => ({resultType: result.resultType, resultData: result.resultData}))};
+    },
+  };
+  const articlesService = createArticlesService(db, articleOwnerPorts);
+  const articles = createArticlesTransport(() => articlesService,(c,id,body)=>workCandidateAdoption.adopt(c,'article',id,body));
+  const graphicOwnerPorts: import("@creatoros/backend/modules/graphic-posts").GraphicPostPeerPorts & {now:()=>string} = {
+    resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"graphic.post-text"}),
+    resolveConversionSource: (context,input):Promise<import("@creatoros/backend/modules/creative-results").FrozenConversionSource>=>
+      createConversionSourceService({projects:projectsService,articles:articlesService,graphicPosts:graphicPostsService,
+        outputScripts:outputScriptsService}).restore(context,input.request,input.sourceAnchor),
+    findGenerationByAttempt: (context,attemptId)=>aiService.findTaskByAttempt(context,"graphic.post-text",attemptId),
+    assertOutputVersionSource,
+    ...projectScriptPorts,
+    now: deps.now,
+    projects: (store) => createProjectsService(createProjectRepository(store), deps),
+    artifacts: (store) => {
+      const projectPort = createProjectsService(createProjectRepository(store), deps);
+      return createArtifactsService({
+        db: store, now: deps.now, nextId: deps.nextId,
+        assertProjectOwned: async (context, projectId) => { await projectPort.getProject(context, projectId); },
+        resolveOutputProjectId: (context, outputId) => projectPort.getProjectIdByOutput(context, outputId),
+      });
+    },
+    assertAssetFile: (context, assetId, fileId, active) => assetsService.assertAssetFileOwned(context, assetId, fileId, active),
+    async resolveSourceItem(context, sourceItemId) {
+      const detail = await intelligenceService.getItem(context, sourceItemId);
+      const snapshot = [...detail.snapshots].sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))
+        .find((item) => item.safeExtract?.trim());
+      if (snapshot?.safeExtract?.trim()) {
+        return {ref: {kind: "intelligence" as const, id: sourceItemId, versionId: snapshot.id},
+          label: snapshot.title ?? detail.item.title ?? "雷达来源", text: snapshot.safeExtract};
+      }
+      if (detail.transcript.status === "done" && detail.transcript.text?.trim() && detail.transcript.completedAt) {
+        return {ref: {kind: "intelligence" as const, id: sourceItemId, versionId: detail.transcript.completedAt},
+          label: detail.item.title ?? "雷达逐字稿", text: detail.transcript.text};
+      }
+      return null;
+    },
+    async assertIntelligenceSourceRef(context, ref) {
+      if (ref.kind !== "intelligence") throw new Error("雷达来源类型不匹配");
+      const detail = await intelligenceService.getItem(context, ref.id);
+      const snapshot = detail.snapshots.some((item) => item.id === ref.versionId && item.safeExtract?.trim());
+      const transcript = detail.transcript.status === "done" && detail.transcript.completedAt === ref.versionId
+        && Boolean(detail.transcript.text?.trim());
+      if (!snapshot && !transcript) throw new Error("雷达来源版本不存在或正文不可用");
+    },
+    async resolveCurrentRules(context) {
+      const center = await positioningService.readPositioningCenter(context);
+      const selected = center.currentStatement;
+      if (!selected?.masterSnapshot) return null;
+      return {versionId: selected.id, guidance: JSON.stringify({
+        oneLiner: selected.oneLiner, persona: selected.masterSnapshot.persona,
+        audience: selected.masterSnapshot.audience, differentiation: selected.masterSnapshot.differentiation,
+        downstreamRules: selected.masterSnapshot.downstreamRules,
+      })};
+    },
+    async assertRuleSnapshotRef(context, versionId) {
+      // 候选冻结旧版规则后，用户修改当前规则不应抹掉旧候选；只验该版本
+      // 仍属于当前账号，由 positioning service 自身实施账号作用域。
+      await positioningService.getStatement(context, versionId);
+    },
+    async submitTextGeneration(context, input) {
+      const result = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "graphic.post-text", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (result as {data: {id: string; status: string}}).data;
+      return {id: task.id, status: task.status};
+    },
+    async readTextGeneration(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {taskType: task.taskType, status: task.status, inputData: task.inputData,executionTaskId:task.executionTaskId,
+        results: (await aiService.listResults(context, taskId)).map((result) => ({resultType: result.resultType, resultData: result.resultData}))};
+    },
+  };
+  const graphicPostsService = createGraphicPostsService(db, graphicOwnerPorts);
+  const graphicPosts = createGraphicPostsTransport(() => graphicPostsService,(c,id,body)=>workCandidateAdoption.adopt(c,'graphic',id,body));
+  const articleTextResultsService = createArticleTextResultsService(db, {
+    resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"wechat.article-text"}),
+    articles: articlesService,
+    projects: projectsService,
+    now: deps.now,
+    nextId: deps.nextId,
+    async submitGeneration(context, input) {
+      const response = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "wechat.article-text", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (response as {data: {id: string; status: string}}).data;
+      return {id: task.id, status: task.status};
+    },
+    async readGeneration(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {taskType: task.taskType, status: task.status, inputData: task.inputData,executionTaskId:task.executionTaskId,
+        results: (await aiService.listResults(context, taskId)).map((result) => ({resultType: result.resultType, resultData: result.resultData}))};
+    },
+    async resolveCurrentRules(context) {
+      const center = await positioningService.readPositioningCenter(context);
+      const selected = center.currentStatement;
+      if (!selected?.masterSnapshot) return null;
+      return {versionId: selected.id, guidance: JSON.stringify({oneLiner: selected.oneLiner,
+        audience: selected.masterSnapshot.audience, persona: selected.masterSnapshot.persona,
+        downstreamRules: selected.masterSnapshot.downstreamRules})};
+    },
+    async assertRuleSnapshotRef(context, versionId) {
+      await positioningService.getStatement(context, versionId);
+    },
+  });
+  const graphicPostTextAdapter = createGraphicPostCreativeResultAdapter({
+    service: graphicPostsService,
+    async probeTextGeneration(context) {
+      try {
+        await resolveModelSpec(context, "copy.generate");
+        return {ready: true, lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      }
+    },
+  });
+  const graphicPostMediaAdapter = createGraphicPostMediaAdapter({
+    db,
+    findTaskByAttempt:(context,taskType,attemptId)=>aiService.findTaskByAttempt(context,taskType,attemptId),
+    graphicPosts: graphicPostsService,
+    projects: projectsService,
+    assets: assetsService,
+    now: deps.now,
+    nextId: () => deps.nextId("output-media-attempt"),
+    freezeCoverContext: (context, input) => createGraphicCoverContextSnapshotter({
+      ...resolveContextDeps(getTemplate("cover.brief").contextRequirements, makeGenerationReaders().contextReaderRegistry),
+      positioning: generationContext.positioning,
+    })(context, input),
+    async submitCover(context, input) {
+      const response = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "cover.generate", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (response as {data: {id: string; status: string}}).data;
+      return {id: task.id, status: task.status};
+    },
+    async submitCard(context, input) {
+      const response = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "graphic.card.generate", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (response as {data: {id: string; status: string}}).data;
+      return {id: task.id, status: task.status};
+    },
+    async readTask(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {id: task.id, taskType: task.taskType, status: task.status,executionTaskId:task.executionTaskId, projectId: task.projectId,
+        contentOutputId: task.contentOutputId, inputData: task.inputData};
+    },
+    async listResults(context, taskId) {
+      return (await aiService.listResults(context, taskId)).map((result) => ({
+        resultType: result.resultType, assetId: result.assetId, resultData: result.resultData,
+      }));
+    },
+    confirmTask: (context, taskId) => aiService.confirmTask(context, taskId),
+    async probeCover(context) {
+      try {
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
+        return {ready: true, lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      }
+    },
+    async probeCard(context) {
+      try {
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
+        return {ready: true, lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      }
+    },
+  });
+  const articleCoverMediaAdapter = createArticleCoverMediaAdapter({
+    db,
+    articles: articlesService,
+    projects: projectsService,
+    assets: assetsService,
+    now: deps.now,
+    nextId: () => deps.nextId("output-media-attempt"),
+    freezeCoverContext: (context, input) => createGraphicCoverContextSnapshotter({
+      ...resolveContextDeps(getTemplate("cover.brief").contextRequirements, makeGenerationReaders().contextReaderRegistry),
+      positioning: generationContext.positioning,
+    })(context, input),
+    async submitCover(context, input) {
+      const response = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "cover.generate", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (response as {data: {id: string; status: string}}).data;
+      return {id: task.id, status: task.status};
+    },
+    async submitCard(context, input) {
+      const response = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "graphic.card.generate", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (response as {data: {id: string; status: string}}).data;
+      return {id: task.id, status: task.status};
+    },
+    async readTask(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {id: task.id, taskType: task.taskType, status: task.status, projectId: task.projectId,
+        contentOutputId: task.contentOutputId, inputData: task.inputData};
+    },
+    async listResults(context, taskId) {
+      return (await aiService.listResults(context, taskId)).map((result) => ({
+        resultType: result.resultType, assetId: result.assetId, resultData: result.resultData,
+      }));
+    },
+    confirmTask: (context, taskId) => aiService.confirmTask(context, taskId),
+    async probeCover(context) {
+      try {
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
+        return {ready: true, lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      }
+    },
+    async probeCard(context) {
+      try {
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
+        return {ready: true, lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      }
+    },
+  });
+  const outputScriptOwnerPorts: import("@creatoros/backend/modules/output-scripts").OutputScriptPorts = {
+    resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"script.draft"}),
+    resolveConversionSource: (context,input)=>createConversionSourceService({projects:projectsService,articles:articlesService,
+      graphicPosts:graphicPostsService,outputScripts:outputScriptsService}).restore(context,input.request,input.sourceAnchor),
+    findGenerationByAttempt: (context,attemptId)=>aiService.findTaskByAttempt(context,"script.draft",attemptId),
+    assertOutputVersionSource,
+    projects: projectsService,
+    artifacts: artifactsService,
+    async resolveVideoSource(context, sourceItemId) {
+      const detail = await intelligenceService.getItem(context, sourceItemId);
+      if (detail.item.type !== "video" || detail.transcript.status !== "done" ||
+          !detail.transcript.text?.trim() || !detail.transcript.completedAt) return null;
+      return {id: detail.item.id, versionId: detail.transcript.completedAt,
+        label: detail.item.title || "雷达逐字稿", transcript: detail.transcript.text};
+    },
+    async submitScriptDraft(context, input) {
+      const task = await aiService.createScriptDraftTask(context, {
+        projectId: input.projectId, outputId: input.outputId, attemptId: input.attemptId, topic: input.topic,
+        ...(input.extraBrief ? {extraBrief: input.extraBrief} : {}),
+        ...(input.instruction ? {instruction: input.instruction} : {}),
+        ...(input.sourceSnapshots ? {sourceSnapshots: input.sourceSnapshots} : {}),
+        ...(input.conversion ? {conversion:input.conversion,conversionConstraints:input.conversionConstraints} : {}),
+      });
+      await wakeBusinessTask(context, task.id, "script.draft");
+      return {id: task.id};
+    },
+    async readTask(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {id: task.id, taskType: task.taskType, status: task.status,executionTaskId:task.executionTaskId, projectId: task.projectId,
+        inputData: task.inputData,
+        results: (await aiService.listResults(context, taskId)).map((result) => ({
+          resultType: result.resultType, artifactId: result.artifactId, resultData: result.resultData,
+        }))};
+    },
+    readTaskRuntimeData: (context, taskId) => aiService.getTaskRuntimeData(context, taskId),
+    async retryScriptDraft(context, input) {
+      const task = await aiService.createTask(context, {taskType: "script.draft", attemptId: input.attemptId,
+        retryOfTaskId: input.retryOfTaskId, inputData: input.inputData});
+      await wakeBusinessTask(context, task.id, "script.draft");
+      return {id: task.id};
+    },
+  };
+  const outputScriptsService = createOutputScriptsService(outputScriptOwnerPorts);
+  const workKnowledgeFor=(store:typeof db)=>createKnowledgeService(createKnowledgeRepository(store,deps));
+  const workProjectsFor=(store:typeof db)=>createProjectsService(createProjectRepository(store),deps);
+  const workAssetsFor=(store:typeof db)=>createAssetsService(createAssetRepository(store,deps),objectStorageForStore(store),deps);
+  const workArtifactsFor=(store:typeof db,deferred?:Array<()=>Promise<void>>)=>createArtifactsService({db:store,...deps,
+    ...(deferred?{searchUpsert:(c:RequestContext,input:Parameters<NonNullable<Parameters<typeof createArtifactsService>[0]['searchUpsert']>>[1])=>{deferred.push(async()=>{await searchService.upsertDocument(c,input);});return Promise.resolve();},
+      recordEditDelta:(c:RequestContext,input:Parameters<NonNullable<Parameters<typeof createArtifactsService>[0]['recordEditDelta']>>[1])=>{deferred.push(async()=>{await learningsService.captureEditDelta(c,input);});return Promise.resolve();}}:{}),
+    assertKnowledgeOwned:(c,id)=>workKnowledgeFor(store).getKnowledge(c,id),assertAssetOwned:(c,id)=>workAssetsFor(store).getAsset(c,id),
+    assertProjectOwned:async(c,id)=>{await workProjectsFor(store).getProject(c,id);},resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id)});
+  const workPublishingFor=(store:typeof db)=>withPublicationManualRevisionLock(store,publicationCoverPorts,publishingOriginalFor);
+  const workProjectScriptPortsFor=(store:typeof db)=>{
+    const source=createProjectScriptSource({projects:workProjectsFor(store),artifacts:workArtifactsFor(store),publishing:workPublishingFor(store),assets:workAssetsFor(store)});
+    return {readProjectScript:source.read,assertProjectScriptSource:source.assert,
+      readProjectScriptContext:source.readContext,assertScriptMetadataSource:source.assertMetadata,
+      readProjectImageLibrary:source.readImages,assertProjectImageFile:source.assertImage};
+  };
+  const workConversionFor=(store:typeof db)=>createConversionSourceService({projects:workProjectsFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),outputScripts:workScriptsFor(store)});
+  const workArticlesFor=(store:typeof db):import("@creatoros/backend/modules/articles").ArticlesService=>createArticlesService(store,{...articleOwnerPorts,...workProjectScriptPortsFor(store),
+    assertOutputVersionSource:(c,ref,id)=>workConversionFor(store).assertReference(c,ref,id),
+    assertAssetFile:(c,id,file,active)=>workAssetsFor(store).assertAssetFileOwned(c,id,file,active),
+    assertWorkSource:async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,store);}});
+  const workGraphicFor=(store:typeof db):import("@creatoros/backend/modules/graphic-posts").GraphicPostsService=>createGraphicPostsService(store,{...graphicOwnerPorts,...workProjectScriptPortsFor(store),
+    assertOutputVersionSource:(c,ref,id)=>workConversionFor(store).assertReference(c,ref,id),
+    async assertIntelligenceSourceRef(c,ref){
+      if(ref.kind!=="intelligence")throw new Error("雷达来源类型不匹配");
+      const detail=await createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now,resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx)})}).getItem(c,ref.id);
+      if(!detail.snapshots.some(row=>row.id===ref.versionId&&row.safeExtract?.trim())&&!(detail.transcript.status==="done"&&detail.transcript.completedAt===ref.versionId&&detail.transcript.text?.trim()))throw new Error("雷达来源版本不存在或正文不可用");
+    },
+    assertRuleSnapshotRef:async(c,id)=>{await workPositioningFor(store).getStatement(c,id);},
+    assertAssetFile:(c,id,file,active)=>workAssetsFor(store).assertAssetFileOwned(c,id,file,active),
+    assertWorkSource:async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,store);}});
+  const workScriptsFor=(store:typeof db):import("@creatoros/backend/modules/output-scripts").OutputScriptsService=>createOutputScriptsService({...outputScriptOwnerPorts,projects:workProjectsFor(store),artifacts:workArtifactsFor(store)});
+  const workMomentsFor: (store:typeof db)=>import("@creatoros/backend/modules/moments").MomentsService = store=>createMomentsService({db:store,...deps,ports:{
+    artifacts:workArtifactsFor,
+    assertProjectOwned:async(c,id,tx,lock)=>workProjectsFor(tx).getProject(c,id,lock),
+    assertFile:async(c,projectId,file,tx)=>{await workSourceService.assertFile(c,projectId,file,tx);},
+    assertSource:async(c,projectId,ref,tx)=>{await workSourceService.read(c,projectId,ref,tx);},
+  }});
+  const workProductionFor=(store:typeof db)=>createProductionService({...productionOwnerDeps,db:store});
+  const workPublicationCoverFor=(store:typeof db)=>createPublicationCoverService({db:store,...deps,ports:publicationCoverPorts});
+  const workMemberPorts=createWorkMemberPorts(store=>({projects:workProjectsFor(store??db),articles:workArticlesFor(store??db),graphicPosts:workGraphicFor(store??db),moments:workMomentsFor(store??db),outputScripts:workScriptsFor(store??db),production:workProductionFor(store??db)}));
+  const workCompositionsFor:(store:typeof db)=>import("@creatoros/backend/modules/work-compositions").WorkCompositionsService=store=>createWorkCompositionsService({db:store,...deps,ports:{...workMemberPorts,artifacts:workArtifactsFor,
+    assertSource:async(c,projectId,ref,tx)=>{await workSourceService.read(c,projectId,ref,tx);},
+    assertRule:async(c,_projectId,versionId,tx)=>{await createPositioningService({...positioningOwnerDeps,db:tx}).getStatement(c,versionId);},
+  }});
+  const workSourceService=createWorkSourceService(createWorkSourcePortsFactory({projects:workProjectsFor,assets:workAssetsFor,
+    readProjectScriptVersion:store=>createProjectScriptSource({projects:workProjectsFor(store),artifacts:workArtifactsFor(store)}).readVersion,
+    materialLinks:store=>createMaterialLinksService({db:store,...deps,assertProjectOwned:(c,id)=>workProjectsFor(store).getProject(c,id),resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id),assertKnowledgeOwned:(c,id)=>workKnowledgeFor(store).getKnowledge(c,id),assertAssetOwned:(c,id)=>workAssetsFor(store).getAsset(c,id)}),
+    moments:workMomentsFor,compositions:workCompositionsFor,
+    conversion:store=>({projects:workProjectsFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),outputScripts:workScriptsFor(store)}),
+    pureIntelligenceSnapshot:createIntelligenceSnapshotReader,
+  }));
+  articleOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
+  graphicOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
+  const workCandidateSource=createWorkCandidateSourceService(db);
+  const workCandidateAdoption=createWorkCandidateAdoption(db,{source:workCandidateSource,articles:workArticlesFor,graphic:workGraphicFor,lockArtifact:(c,id,tx)=>workArtifactsFor(tx).getArtifact(c,id,true)});
+  const workWritingContext=createWorkWritingContext({assertProject:(c,id)=>projectsService.getProject(c,id),readDocument:articleOwnerPorts.resolveDocumentSource!,readCenter:c=>positioningService.readPositioningCenter(c),readStatement:(c,id)=>positioningService.getStatement(c,id)});
+  const workCreationRoot=createWorkCreationRoot({compositions:workCompositionsFor(db),articles:articlesService,graphicPosts:graphicPostsService,script:projectScriptSource});
+  const workEditorPorts:WorkEditorPorts={
+    readArticle:(c,id)=>articlesService.getArticle(c,id),
+    readGraphicPost:(c,id)=>graphicPostsService.getGraphicPost(c,id),
+    readProduction:(c,id)=>productionService.getEditor(c,id),
+    readMedia:readNativeEditorMedia,
+  };
+  const workEditorCandidate=createWorkEditorCandidateService(workEditorPorts);
+  const workSources=createWorkSourcesTransport(()=>workSourceService,db);
+  let moments=createMomentsTransport(()=>workMomentsFor(db));
+  const workPublicationCoverMaterial=createPublicationCoverMaterialPorts(workPublicationCoverFor);
+  const workVideoMaterial=createVideoMaterialPorts(tx=>createProductionVideoMaterials({db:tx,...deps,ports:{
+    ...productionOverlayPorts,production:workProductionFor,
+    readOriginalFrozenBinding:(c,input,store)=>workProductionFileBindings.readFrozenFileBinding(c,input,store),
+  }}));
+  const workMaterialAdapters={moments:createMomentsMaterialPorts(workMomentsFor),article:createArticleMaterialPorts(workArticlesFor),image:createGraphicMaterialPorts(workGraphicFor)};
+  const workMaterialsFor=(store:typeof db)=>createWorkMaterialsService({db:store,...deps,ports:{
+    canvasAvailable:async()=>Boolean(creativeCanvasRoot.transport),
+    assertComposition:async(c,id,tx,lock)=>workCompositionsFor(tx).readWorkspaceAuthority(c,id,lock),
+    lockMember:(c,id,member,tx)=>workCompositionsFor(tx).lockMember(c,id,member),
+    assertFile:async(c,projectId,file,tx,touch)=>{
+      if(touch?.member.kind==="video"&&touch.target.kind==="video_material"&&touch.member.outputId===touch.target.outputId){
+        await productionOverlayPorts.readExactFile(c,projectId,file,tx);
+        return;
+      }
+      await workSourceService.assertFile(c,projectId,file,tx);
+    },
+    assertSource:async(c,projectId,ref,tx)=>{await workSourceService.read(c,projectId,ref,tx);},
+    sourceRules:async(c,projectId,ref,tx)=>{const rule=(await workSourceService.read(c,projectId,ref,tx)).constraints.ruleSnapshotRef;return rule===null?[]:Array.isArray(rule)?rule:[rule];},
+    readTarget:(c,member,target,tx)=>{if(target.kind==="publication_cover")return workPublicationCoverMaterial.readTarget(c,member,target,tx);if(member.kind==="video")return workVideoMaterial.readTarget(c,member,target,tx);return workMaterialAdapters[member.kind].readTarget(c,member,target,tx);},
+    writeTarget:(c,input,tx)=>{if(input.target.kind==="publication_cover")return workPublicationCoverMaterial.writeTarget(c,input,tx);if(input.member.kind==="video")return workVideoMaterial.writeTarget(c,input,tx);return workMaterialAdapters[input.member.kind].writeTarget(c,input,tx);},
+  }});
+  const workMaterials=workMaterialsFor(db);
+  const workProductionFileBindings=createProductionFileBindingsService({db,...deps,ports:{
+    production:workProductionFor,assets:workAssetsFor,
+    assertFileProject:(c,projectId,file,tx)=>workSourceService.assertFile(c,projectId,file,tx),
+    readFrozenCaptureProof:(c,input,tx)=>productionOverlayCapture.readFrozenCaptureProof(c,input,tx),
+  }});
+  const workCompositions=createWorkCompositionsTransport(()=>workCompositionsFor(db),()=>workMaterials);
+  const publicationResultsService = createPublicationResultsService(db, {
+    projects: projectsService,
+    assertCoverAssetFile: (context, assetId, fileId) => assetsService.assertAssetFileOwned(context, assetId, fileId, true),
+    now: deps.now,
+    nextId: deps.nextId,
+    async submitGeneration(context, input) {
+      const response = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "publication.text", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (response as {data: {id: string}}).data;
+      return {id: task.id};
+    },
+    async readGeneration(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {taskType: task.taskType, status: task.status, inputData: task.inputData,
+        results: (await aiService.listResults(context, taskId)).map((result) => ({resultType: result.resultType, resultData: result.resultData}))};
+    },
+    async resolveCurrentRules(context) {
+      const center = await positioningService.readPositioningCenter(context);
+      const selected = center.currentStatement;
+      if (!selected?.masterSnapshot) return null;
+      return {versionId: selected.id, guidance: JSON.stringify({oneLiner: selected.oneLiner,
+        audience: selected.masterSnapshot.audience, persona: selected.masterSnapshot.persona,
+        downstreamRules: selected.masterSnapshot.downstreamRules})};
+    },
+    async assertRuleSnapshotRef(context, versionId) { await positioningService.getStatement(context, versionId); },
+  });
+  const publicationCoverAdapter = createPublicationCoverCreativeResultAdapter({
+    db,
+    owner: publicationResultsService,
+    assets: assetsService,
+    now: deps.now,
+    nextId: () => deps.nextId("output-media-attempt"),
+    async resolveCoverSource(context, input) {
+      const output = await projectsService.getOutput(context, input.outputId);
+      if (input.outputType === "image") {
+        const post = await graphicPostsService.getGraphicPost(context, input.outputId);
+        return {topic: post.current.title || output.title,
+          fullText: [post.current.title, post.current.body, post.current.summary].filter(Boolean).join("\n\n"),
+          artifactId: post.artifactId, versionId: post.currentVersionId};
+      }
+      const artifacts = await artifactsService.listProjectArtifacts(context, output.projectId);
+      const script = artifacts.find((artifact) => artifact.contentOutputId === input.outputId && artifact.artifactType === "output_script");
+      if (!script?.currentVersionId) return {topic: output.title, fullText: ""};
+      const versions = await artifactsService.listVersions(context, script.id);
+      const current = versions.find((version) => version.id === script.currentVersionId);
+      if (!current) throw new Error("视频作品脚本当前版本不可读");
+      return {topic: output.title, fullText: current.contentText ?? "",
+        artifactId: script.id, versionId: current.id};
+    },
+    freezeCoverContext: (context, input) => createGraphicCoverContextSnapshotter({
+      ...resolveContextDeps(getTemplate("cover.brief").contextRequirements, makeGenerationReaders().contextReaderRegistry),
+      positioning: generationContext.positioning,
+    })(context, input),
+    async submitCover(context, input) {
+      const response = await ai.request(ENDPOINTS.createAITask, {params: undefined, query: undefined,
+        body: {taskType: "cover.generate", attemptId: input.attemptId, inputData: input.inputData}}, context);
+      const task = (response as {data: {id: string}}).data;
+      return {id: task.id};
+    },
+    async readTask(context, taskId) {
+      const task = await aiService.getTask(context, taskId);
+      return {id: task.id, taskType: task.taskType, status: task.status, projectId: task.projectId,
+        contentOutputId: task.contentOutputId, inputData: task.inputData};
+    },
+    async listResults(context, taskId) {
+      return (await aiService.listResults(context, taskId)).map((result) => ({
+        resultType: result.resultType, assetId: result.assetId, resultData: result.resultData,
+      }));
+    },
+    confirmTask: (context, taskId) => aiService.confirmTask(context, taskId),
+    async probeCover(context) {
+      try {
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
+        return {ready: true, lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      }
+    },
+  });
+  const creativeResultsService = createCreativeResultsService(db, {
+    projects: projectsService,
+    adapters: {
+      graphic_post: combineGraphicPostResultAdapters(graphicPostTextAdapter, graphicPostMediaAdapter),
+      wechat_article: combineArticleResultAdapters(createArticleCreativeResultAdapter({
+        service: articleTextResultsService,
+        articles:articlesService,
+        readTaskType:async(context,id)=>(await aiService.getTask(context,id)).taskType,
+        async probeTextGeneration(context) {
+          try {
+            await resolveModelSpec(context, "copy.generate");
+            return {ready: true, lastVerifiedAt: deps.now()};
+          } catch (error) {
+            return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+          }
+        },
+      }), articleCoverMediaAdapter),
+      output_script: createOutputScriptCreativeResultAdapter({
+        service: outputScriptsService,
+        async probeScriptGeneration(context) {
+          try {
+            await resolveModelSpec(context, "script.draft");
+            return {ready: true, lastVerifiedAt: deps.now()};
+          } catch (error) {
+            return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+          }
+        },
+      }),
+      publication: combinePublicationResultAdapters(createPublicationCreativeResultAdapter({
+        service: publicationResultsService,
+        async probeTextGeneration(context) {
+          try {
+            await resolveModelSpec(context, "copy.generate");
+            return {ready: true, lastVerifiedAt: deps.now()};
+          } catch (error) {
+            return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+          }
+        },
+      }), publicationCoverAdapter),
+    },
+    now: deps.now,
+  });
+  const outputConversionsService=createOutputConversionsService(db,{projects:projectsService,articles:articlesService,graphicPosts:graphicPostsService,
+    source:createConversionSourceService({projects:projectsService,articles:articlesService,graphicPosts:graphicPostsService,outputScripts:outputScriptsService}),
+    results:creativeResultsService,assertReuseImageFile:(context,assetId,fileId)=>assetsService.assertAssetFileOwned(context,assetId,fileId,true),now:deps.now,nextId:()=>deps.nextId("conversion-bundle")});
+  const creativeResults = createCreativeResultsTransport(() => creativeResultsService,()=>outputConversionsService);
 
   const readCurrentScriptRefForReview = async (
     ctx: RequestContext,
     projectId: string,
   ): Promise<{ artifactId: string | null; artifactVersion: number }> => {
-    const artifacts = await artifactsService.listProjectArtifacts(ctx, projectId);
-    const target = selectReadableProjectScriptArtifact(artifacts);
-    if (!target) return { artifactId: null, artifactVersion: 0 };
-    const versions = await artifactsService.listVersions(ctx, target.id);
-    const current = versions
-      .slice()
-      .sort((a, b) => b.versionNumber - a.versionNumber)[0];
-    return {
-      artifactId: target.id,
-      artifactVersion: current?.versionNumber ?? 0,
-    };
+    const script=await readConfirmedProjectScript(ctx,projectId);
+    if(script===null)return {artifactId:null,artifactVersion:0};
+    const version=(await artifactsService.listVersions(ctx,script.artifactId)).find(row=>row.id===script.versionId);
+    if(!version)throw new Error("确认稿版本不存在");
+    return {artifactId:script.artifactId,artifactVersion:version.versionNumber};
   };
 
   // T-086 审核门 service + transport(reviewRules.* + scriptReviews.*)。scriptReviews.trigger
@@ -2799,7 +3681,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // closed.) positioning owns no candidate state machine (C-3). Clock/ids share the
   // deterministic `deps`
   // (createSeq keeps profile/posstmt ids collision-free across requests).
-  const positioningService = createPositioningService({
+  const positioningOwnerDeps:Parameters<typeof createPositioningService>[0] = {
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -2829,7 +3711,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     auditLegacyStatusNoteCleanup: (event) => {
       process.stdout.write(`[positioning-audit] ${JSON.stringify(event)}\n`);
     },
-  });
+  };
+  const workPositioningFor=(store:typeof db)=>createPositioningService({...positioningOwnerDeps,db:store,projects:{
+    getProjectSubject:async(c,id)=>{const row=await workProjectsFor(store).getProject(c,id);return {title:row.title,brief:row.brief};},
+    listWorkIds:async c=>(await createProjectRepository(store).list(c)).map(row=>row.id),
+  }});
+  const positioningService = createPositioningService(positioningOwnerDeps);
   const positioning = createPositioningTransport(() => positioningService);
 
   // [T-081②/T-521] 通用最近项目分页读：Project 提供 source/lifecycle，Publishing 窄读
@@ -2875,7 +3762,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // artifact(与 reconstruct-runner 的 getTranscript 同法),数据走 analytics 最新 snapshot rawMetrics
   // (播放优先 views 回退 plays,与 dashboard 同口径),评论走 candidateService.listSignals 里 source
   // 含 comment 的信号。绑到 creative-context 的 ReviewSubjectReader 端口。
-  const makeReviewSubjectReader = () => createReviewSubjectContext({trafficService,projectsService,publishingService,analyticsService,candidateService,artifactsService,selectReadableProjectScriptArtifact,readProjectRadarDraftSeed});
+  const makeReviewSubjectReader = () => createReviewSubjectContext({trafficService,projectsService,publishingService,analyticsService,candidateService,artifactsService,selectReadableProjectScriptArtifact,readConfirmedProjectReviewScript,readProjectRadarDraftSeed});
 
   // [T-270] 立项 Brief reader 工厂(单一真值)—— 读项目 brief_detail jsonb 的全核心字段(画幅 +
   // 核心信息/内容目标/内容形式/目标受众/成功标准),供 creative-context 渲成立项硬锚段。dispatch 路径
@@ -2899,8 +3786,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const ai: Transport = {
     async request(endpoint, input, ctx) {
       const res = await aiBase.request(endpoint, input, ctx);
-      if (endpoint.id === "ai.tasks.create" && ctx) {
-        const task = (res as { data?: Record<string, unknown> }).data;
+      if ((endpoint.id === "ai.tasks.create" || endpoint.id === "ai.predictionLocks.start") && ctx) {
+        const data=(res as { data?: Record<string, unknown> }).data;
+        const task=endpoint.id==="ai.predictionLocks.start"?data?.task as Record<string,unknown>|null|undefined:data;
         if (
           !task ||
           (typeof task.id !== "string" && typeof task.id !== "number")
@@ -2947,6 +3835,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // caller)。executor 注册表:demo `echo.manifest` 先行(框架自检),T-254a 在
   // registerBuiltinExecutors 追加 video.render。
   const executorRegistry = createExecutorRegistry();
+  // 请求期只读已完成装配的真实定义；初始化期间不提前访问后置服务。
+  let supportsAgenticPublicTask = (_taskType: string): boolean => false;
+  const videoVisualReviewService=createExecutionVideoVisualReviewService(db,{now:deps.now,entryPath:resolveVideoVisualReviewWorkerPath,
+    resolvePiModelSpec:async(c,owner)=>{
+      const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId),route=readFrozenModelRoute(runtime,'vision','asset.classify');
+      if(route){if(route.readiness==='unavailable')return null;return resolveFrozenExecutionSpec(c,route);}
+      const authority=pinModelAuthority(await readChannelModelAuthority());
+      if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error('MODEL_AUTHORITY_CHANGED'),{code:'MODEL_AUTHORITY_CHANGED'});
+      try{return await taskModelAuthorityScope.run(authority,async()=>{
+        const spec=await resolveMultimodalSpec(c,'asset.classify');
+        return {apiFormat:'openai_chat' as const,baseUrl:spec.baseUrl??'https://api.siliconflow.cn/v1',token:spec.token,model:spec.model};
+      });}catch(err){if(err instanceof Error&&err.name==='MultimodalConfigError')return null;throw err;}
+    },
+  });
   // [T-281] 注入 Chromium 下载器:未装时 video.render 自动 `playwright install chromium`
   //   (复用 douyin 的 frontend-context 实现,解析基准对;executor 在 backend chunk 里 resolve
   //   playwright 会「too dynamic」运行时崩)。下载 ~340MB 前后回步骤流报诚实进度,装过秒过。
@@ -2958,31 +3860,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     // [T-712] 成片抽帧视觉审核复用既有 asset.classify/vision.default。只在已配置时
     // 调一次受控 VLM 端口；未配置返回 null，executor 记录 skipped 且不阻断成片。
-    videoVisualReview: async (c, input) => {
-      let spec;
-      try {
-        spec = await resolveMultimodalSpecFn(c, "asset.classify", {
-          getModelConfig: (cc: RequestContext, cap: string) =>
-            settingsService.getModelConfig(cc, cap),
-          env: process.env,
-          getChannelModelConfig,
-          getChannelModelCredential: (serviceId) =>
-            getChannelModelCredential(c, serviceId),
-          getChannelModelSelection: (capability) =>
-            getChannelModelSelection(c, capability),
-        });
-      } catch (err) {
-        if (err instanceof Error && err.name === "MultimodalConfigError") return null;
-        throw err;
-      }
-      const { describeImageOpenAICompatible } = await import(
-        "@creatoros/ai-worker"
-      );
-      return describeImageOpenAICompatible(spec, input);
-    },
+    videoVisualReview:videoVisualReviewService.review,
   });
   const executionWorkspacesRoot = resolveWorkspacesRoot();
   const executionService = createExecutionService({
+    resolveOutputProjectId:(ctx,outputId)=>projectsService.getProjectIdByOutput(ctx,outputId),
     ai: {
       createTask: (c, body) => aiService.createTask(c, body),
       getTask: (c, taskId) => aiService.getTask(c, taskId),
@@ -3001,48 +3883,39 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         return { id: row.id };
       },
     },
-    hasExecutor: (t) => executorRegistry.has(t),
+    hasExecutor: (t) => executorRegistry.has(t) || supportsAgenticPublicTask(t),
     // [T-256b] 判定规则建任务端 gate:taskType 命名判定的循环类型必须与其 executor 声明一致
-    // (agentic 执行器在下方配置解析就绪后追加注册；请求期才读取)。
-    loopTypeOf: (t) => executorRegistry.loopTypeOf(t),
+    // (agentic 定义在下方装配完成后供请求期读取，不改确定性 registry)。
+    loopTypeOf: (t) => supportsAgenticPublicTask(t) ? "agentic" : executorRegistry.loopTypeOf(t),
     workspacesRoot: executionWorkspacesRoot,
     // 丢弃在跑任务 → 中止其 executor(abort signal 贯通,T-239c 模式)。
     abortRun: abortExecutionTask,
   });
   const persistentTaskService = createPersistentTaskService(db, {
+    prepareModelAuthority:async(c,input)=>{
+      let family:RoutingFamily|null=input.kind==='transcribe'?'audio':input.kind==='topic_preview'||input.kind==='script_candidate'?'text':null;
+      // 仅明确授权的转写父步骤需要audio；纯分享/采集/数据库任务不访问官方模型。
+      if(input.kind==='share_import'&&input.payload.transcribeAfterImport===true)family='audio';
+      if(input.kind==='radar_project_upgrade'){
+        const detail=await intelligenceService.getItem(c,input.ownerId);
+        if(detail.transcript.status!=='done'||!detail.transcript.text?.trim())family='audio';
+      }
+      return family?prepareModelAuthority(c,family):undefined;
+    },
+    resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx),
     now: deps.now,
     nextId: deps.nextId,
   });
   // T-482 startup recovery：上次进程退出时仍持有租约的任务，按 checkpoint / attempt
   // 预算回到队列或诚实失败；控制请求则收敛到 paused / cancelled。
-  await persistentTaskService.recoverExpiredLeases();
+  // 启动时一次性把旧版本遗留的无副作用模型 unknown_result 沿原调用键续跑；
+  // 带外部副作用的未知调用仍保持待对账，不做盲重放。
+  await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true});
   const executionBase = createExecutionTransport(
     () => executionService,
     () => persistentTaskService,
   );
-  let createTopicFromIntelligence: (
-    ctx: RequestContext,
-    input: {
-      title: string;
-      angle: string;
-      contentRole?: "traffic" | "trust" | "conversion" | null;
-      card?: {
-        oneLiner?: string;
-        hook?: string;
-        contentStructure?: string[];
-        materialBasis?: string;
-        riskNote?: string;
-        proposal?: string;
-      };
-      sourceReferences?: Array<{
-        kind: "original_video" | "source_page";
-        platform: string;
-        label: string;
-        url: string;
-        intelligenceItemId?: string;
-      }>;
-    },
-  ) => Promise<{ id: string }> = async () => {
+  let createTopicFromIntelligence: NonNullable<Parameters<typeof createIntelligenceService>[1]["topics"]>["create"] = async () => {
     throw new Error("CandidateServiceNotReady");
   };
   let platformAccountServiceForCollectors: PlatformAccountService | null =
@@ -3067,6 +3940,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           id: statement.id,
           oneLiner: statement.oneLiner,
           keywords: statement.keywords,
+        };
+      },
+      getCurrentSnapshot: async (ctx) => {
+        const center = await positioningService.readPositioningCenter(ctx);
+        const statement = center.currentStatement;
+        const masterSnapshot = statement?.masterSnapshot;
+        if (!statement || !masterSnapshot) return null;
+        return {
+          id: statement.id,
+          oneLiner: statement.oneLiner,
+          keywords: statement.keywords,
+          masterSnapshot: {
+            persona: masterSnapshot.persona,
+            field: masterSnapshot.field,
+            audience: masterSnapshot.audience,
+            differentiation: masterSnapshot.differentiation,
+            capabilities: masterSnapshot.capabilities,
+            facets: masterSnapshot.facets,
+            downstreamRules: masterSnapshot.downstreamRules,
+          },
         };
       },
     },
@@ -3145,7 +4038,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }),
   });
   const intelligenceGeneration=createIntelligenceGenerationBridge(db,{
-    entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability)=>resolveModelSpec(c,capability),
+    entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability,owner)=>resolveModelSpec(c,capability,owner),
     resolveSkillSnapshot:(c,ids)=>{
       if(!resolveEffectiveSkillSnapshotForRuntime)throw new Error("Skill 服务未就绪");
       return resolveEffectiveSkillSnapshotForRuntime(c,ids);
@@ -3177,7 +4070,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     let current = url;
     let discoveredFeed = false;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15_000);
+    const timer = setTimeout(() => controller.abort(), executionTimeoutMs(15_000));
     try {
       for (let hop = 0; hop <= 6; hop += 1) {
         await assertUrlAllowed(current);
@@ -3384,6 +4277,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }
   };
   const intelligence: Transport = createIntelligenceApplicationTransport({intelligenceBase,
+assertWorkspaceReadable:(ctx)=>intelligenceService.assertWorkspaceReadable(ctx),
+assertCollectorEligible:(ctx,id)=>intelligenceService.assertCollectorEligible(ctx,id),
 getCollectorAccount:(ctx,id)=>requirePlatformAccountServiceForCollectors().getAccount(ctx,id),
 previewProfile:async (collectorAccountId:string, externalAccountId:string, canonicalUrl:string)=>(
           await loadDouyinCdp()
@@ -3418,29 +4313,25 @@ dispatchIntelligenceRun});
 
   // live dispatch 范式(MEMORY 铁律):create 落 queued 后 fire-and-forget 后台编排,
   // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
-  const execution: Transport = {
-    async request(endpoint, input, ctx) {
-      const res = await executionBase.request(endpoint, input, ctx);
-      if(endpoint.id==="execution.tasks.command")recoveryWake?.wake();
-      if (endpoint.id === "execution.tasks.create" && ctx) {
-        const task = (
-          res as { data?: { id?: string; status?: string; spec?: unknown } }
-        ).data;
-        if (task && typeof task.id === "string" && task.status === "queued") {
-          const executionTaskId = task.id;
-          const pending=agenticBusiness.supports(`exec.${(task.spec as {taskType?:string}|undefined)?.taskType}`)
+  const dispatchExecution=(ctx:RequestContext,task:{id?:string;spec?:unknown;deterministicGeneration?:number})=>{
+          const executionTaskId = task.id!;
+          const probe=(task.spec as {taskType?:string})?.taskType==="media.probe";
+          const agentic=agenticBusiness.supports(`exec.${(task.spec as {taskType?:string}|undefined)?.taskType}`);
+          const runDeterministic=()=>runExecutionTask(ctx,{id:executionTaskId,inputData:{spec:task.spec},deterministicGeneration:task.deterministicGeneration},{ai:aiService,assets:{materializeAsset:(c,id,path,exact)=>assetsService.materializeAsset(c,id,path,exact)},registry:executorRegistry,workspacesRoot:executionWorkspacesRoot});
+          const pending=probe ? runDeterministic() : agentic
             ? (agenticWorker ? agenticBusiness.prepare(ctx,executionTaskId).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
-            : runTaskWithEffectiveSkillSnapshot(ctx, executionTaskId, () =>
+            : runExecutionWithFrozenSkills(ctx, executionTaskId, (_signal,executionContext) =>
             runExecutionTask(
-              ctx,
-              { id: executionTaskId, inputData: { spec: task.spec } },
+              executionContext,
+              { id: executionTaskId, inputData: { spec: task.spec },deterministicGeneration:task.deterministicGeneration },
               {
                 ai: aiService,
                 assets: {
-                  materializeAsset: (c, assetId, destinationPath) =>
-                    assetsService.materializeAsset(c, assetId, destinationPath),
+                  materializeAsset: (c, assetId, destinationPath, exact) =>
+                    assetsService.materializeAsset(c, assetId, destinationPath, exact),
                 },
                 registry: executorRegistry,
+                bindModelExecutionScope:videoVisualReviewService.freezeParentDeadline,
                 workspacesRoot: executionWorkspacesRoot,
               },
             ),
@@ -3448,10 +4339,23 @@ dispatchIntelligenceRun});
           void pending.catch(async (error) => {
             const message =
               error instanceof Error ? error.message : String(error);
-            await aiService
-              .markFailed(ctx, executionTaskId, message)
-              .catch(() => undefined);
+            if(probe)await aiService.probeControl.markFailed(ctx,executionTaskId,task.deterministicGeneration ?? 0,message).catch(()=>undefined);
+            else if(agentic)await aiService.markFailed(ctx,executionTaskId,message).catch(()=>undefined);
+            else console.error("[execution] 冻结任务归属读取失败，未以当前筛选写入任务",message);
           });
+  };
+  let workbenchPublic:Transport;
+  const execution: Transport = {
+    async request(endpoint, input, ctx) {
+      if((WORKBENCH_OP_IDS as readonly string[]).includes(endpoint.id))return workbenchPublic.request(endpoint,input,ctx);
+      const res = await executionBase.request(endpoint, input, ctx);
+      if(endpoint.id==="execution.tasks.command")recoveryWake?.wake();
+      if (endpoint.id === "execution.tasks.create" && ctx) {
+        const task = (
+          res as { data?: { id?: string; status?: string; spec?: unknown; deterministicGeneration?:number } }
+        ).data;
+        if (task && typeof task.id === "string" && task.status === "queued") {
+          dispatchExecution(ctx,task);
         }
       }
       return res;
@@ -3477,6 +4381,8 @@ dispatchIntelligenceRun});
   // Clock/ids share the deterministic `deps` (createSeq keeps cand/sig/promo ids
   // collision-free across requests).
   const candidateService = createCandidateService({
+    resolveCollectedPublication:async(ctx,id)=>{const row=await publishingService.resolveCollectedPublicationById(ctx,id);return row?{groupId:row.groupId??null,accountId:row.accountId}:null;},
+    topicWorkspace:{assertProject:(c,id)=>projectsService.getProject(c,id),currentPositioningVersion:async c=>(await positioningService.readPositioningCenter(c)).currentStatement?.id??null},
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -3560,6 +4466,7 @@ dispatchIntelligenceRun});
   });
   createTopicFromIntelligence = async (ctx, input) => {
     const candidate = await candidateService.createCandidate(ctx, {
+      intelligenceTransformId: input.intelligenceTransformId,
       title: input.title,
       angle: input.angle,
       source: "benchmark",
@@ -3567,7 +4474,7 @@ dispatchIntelligenceRun});
       card: input.card,
       sourceReferences: input.sourceReferences,
     });
-    return { id: candidate.id };
+    return { id: candidate.id, adoptedTitle: candidate.title, adoptedDraftContentText: candidate.card.adaptedDraft?.contentText };
   };
   const candidateBase = createCandidateTransport(() => candidateService);
   // 内容雷达候选沿用现有 Candidate→Project 主链；promote 成功后，同步把
@@ -3611,6 +4518,8 @@ dispatchIntelligenceRun});
   // Clock/ids share the deterministic `deps` (createSeq keeps rubric/rubricver/pred/
   // calibres ids collision-free across requests).
   const calibrationService = createCalibrationService({
+    assertLearningOwned:(ctx,id)=>learningsService.getLearning(ctx,id),
+    assertSubjectOwned:async(ctx,subject)=>{if(subject.subjectType==="publication")return publishingService.getPublication(ctx,subject.subjectId);return projectsService.getOutput(ctx,subject.subjectId);},
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -3719,15 +4628,421 @@ dispatchIntelligenceRun});
   // Publishing/Projects call before stamping accountId (through index.ts, no cross-module
   // repo import). Clock/ids share the deterministic `deps` (createSeq keeps acct ids
   // collision-free across requests).
+  const accountGroupService = createAccountGroupService({db, now: deps.now, nextId: deps.nextId});
+  const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}));
+  const localBindingStages:NonNullable<Parameters<typeof createAccountBindingService>[0]["localStages"]>={};
+  const wechatWitnesses=(await import('@creatoros/ai-worker/platform/wechat-dom-witness')).createVerifiedWechatDomWitnesses();
+  // 本机开发排障可选配置；图像仅由worker保存在受信私有/tmp目录，默认关闭。
+  const privateFailureImageDir=process.env.NODE_ENV==='development'?process.env.CREATOROS_WECHAT_PRIVATE_FAILURE_IMAGE_DIR:undefined;
+  const wechatSource=(await import('@creatoros/ai-worker/platform/wechat-browser-source')).createWechatBrowserSource({...wechatWitnesses,...(privateFailureImageDir?{privateFailureImageDir}:{})});
+  const localBindingAvailable=(platform:string)=>['xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(platform)&&!!localBindingStages[platform as keyof typeof localBindingStages];
+  // 与启动使用同一现存证明，公开只读不触发采集或任务恢复。
+  const collectionPlanEvidence = async (c:RequestContext, account:{id:string;platform:string}) => {
+    if(await accountGroupService.hasVerifiedBinding(c,account.id))return true;
+    if((account.platform==='kuaishou'||account.platform==='xiaohongshu')&&await platformCollectionService.hasCredentialEvidence(c,account.id))return true;
+    return account.platform==='douyin'&&await hasLegacyDouyinCredentialEvidence(await douyinAuthDirFor(account.id,undefined,c.userId));
+  };
   const platformAccountService = createPlatformAccountService({
+    collectionPlanEvidence,
+    bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:(platform==="douyin"||localBindingAvailable(platform))?{available:true,reason:"已接入平台登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin"||localBindingAvailable(platform),reason:(platform==="douyin"||localBindingAvailable(platform))?(platform==="wechatVideo"||platform==="wechatOfficial"?"已接入后台原生报表采集":"已接入作品与明细采集"):"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
     db,
     now: deps.now,
     nextId: deps.nextId,
   });
   platformAccountServiceForCollectors = platformAccountService;
-  const platformAccount = createPlatformAccountTransport(
-    () => platformAccountService,
-  );
+  // 可信宿主环境配置，默认off；HTTP input不能指定授权、账号、目录或源码身份。
+  const wechatNavigationDiagnosis=createWechatNavigationDiagnosis({
+    configuration:()=>process.env.CREATOROS_WECHAT_NAVIGATION_DIAGNOSIS_CONFIG,
+    assertOwnedAccount:(ctx,id,platform)=>platformAccountService.assertOwnedAccount(ctx,id,platform),
+    readAccount:(ctx,id)=>platformAccountService.getAccount(ctx,id),readGroup:(ctx,id)=>accountGroupService.get(ctx,id),readMembership:(ctx,id)=>accountGroupService.forAccount(ctx,id),
+    authorizeProfile:(ctx,id)=>profileAuthority.authorizeBindingTarget(ctx,id,(c,target)=>platformAccountService.getAccount(c,target)),
+    acquireProfile:(directory,signal)=>hostProfileLifecycle.acquire(directory,signal),
+    observeNavigation:(directory,identity,controls)=>wechatSource.observeNavigation(directory,identity,controls),
+    onStopUnconfirmed:retry=>{hostBrowserShutdownScope.register(retry);},
+  });
+  const platformAccount = createPlatformAccountTransport(()=>platformAccountService,wechatNavigationDiagnosis);
+  // T-1021: worker owns the local browser; this composition root only binds
+  // its verified observations to the backend service port. Kuaishou stays
+  // unavailable until its actual creator-page identity and fields are sampled.
+
+  const xhsCatalogSource = "/api/galaxy/v2/creator/note/user/posted";
+  const xhsReady = (["bind", "workCatalog", "workMetrics"] as const).map((capability) => ({
+    platform: "xiaohongshu" as const, capability, supported: true,
+    authState: "pending" as const, runtimeState: "ready" as const,
+    reasonCode: null, lastVerifiedAt: null,
+  }));
+  const kuaishouReady = (["bind", "accountOverview", "workCatalog", "workMetrics"] as const).map((capability) => ({
+    platform: "kuaishou" as const, capability, supported: true,
+    authState: "pending" as const, runtimeState: "ready" as const,
+    reasonCode: null, lastVerifiedAt: null,
+  }));
+  const nativeReportMembership=createMembershipLockService(db);
+  const wechatNativeCapabilities=(platform:'wechatOfficial'|'wechatVideo')=>wechatSource.configured?(['bind','nativeReports'] as const).map(capability=>({platform,capability,supported:true,authState:'pending' as const,runtimeState:'ready' as const,reasonCode:null,lastVerifiedAt:null})):[];
+  const platformCollectionService = createPlatformCollectionService({
+    db,
+    readScheduledOwner: (ctx, taskId, accountId) => aiService.readScheduledCollectionOwner(ctx, taskId, accountId),
+    now: deps.now,
+    nextId: deps.nextId,
+    nativeReportOwnership:{freeze:(tx,c,accountId)=>nativeReportMembership.lock(tx,{...c,accountId}),assert:(tx,frozen)=>nativeReportMembership.assertFrozen(tx,frozen)},
+    sourceAdapters: { xiaohongshu: xhsReady, kuaishou: kuaishouReady, wechatOfficial:wechatNativeCapabilities('wechatOfficial'),wechatVideo:wechatNativeCapabilities('wechatVideo') },
+    metricDictionary: { xiaohongshu: {
+      view_count: { metricKey: "view_count", unit: "count" },
+      likes: { metricKey: "like_count", unit: "count" },
+      comments_count: { metricKey: "comment_count", unit: "count" },
+      collected_count: { metricKey: "favorite_count", unit: "count" },
+      shared_count: { metricKey: "share_count", unit: "count" },
+    }, kuaishou: {
+      fansCnt: { metricKey: "follower_count", unit: "count" },
+      playCount: { metricKey: "play_count", unit: "count" },
+      likeCount: { metricKey: "like_count", unit: "count" },
+      commentCount: { metricKey: "comment_count", unit: "count" },
+    } },
+    accountBindingPort: createVerifiedAccountBindingPort({
+      now: deps.now,
+      nextId: deps.nextId,
+      allowedPlatforms: new Set<string>(["xiaohongshu", "kuaishou"]),
+    }),
+    revokeTemporaryProfile: async (bindAttemptId, attempt) => {
+      if (attempt.platform === "kuaishou") {
+        const { kuaishouProfilePaths, promoteKuaishouProfile } = await import("@creatoros/ai-worker/platform/kuaishou-browser-source");
+        const paths = kuaishouProfilePaths(platformProfileRoot, attempt.userId, bindAttemptId,
+          attempt.platformIdentity ?? undefined);
+        if (attempt.status === "bound" && paths.permanent) {
+          if (existsSync(paths.temporary)) await promoteKuaishouProfile(paths.temporary, paths.permanent);
+          if (!existsSync(paths.permanent)) throw new Error("快手登录档案未保存，请重新扫码");
+        } else {
+          const { rm } = await import("node:fs/promises");
+          await rm(paths.temporary, { recursive: true, force: true });
+        }
+        return;
+      }
+      if (attempt.platform !== "xiaohongshu") return;
+      const { xhsProfilePaths, promoteXhsProfile } = await import("@creatoros/ai-worker/platform/xhs-browser-source");
+      const paths = xhsProfilePaths(platformProfileRoot, attempt.userId, bindAttemptId,
+        attempt.platformIdentity ?? undefined);
+      if (attempt.status === "bound" && paths.permanent) {
+        if (existsSync(paths.temporary)) await promoteXhsProfile(paths.temporary, paths.permanent);
+        if (!existsSync(paths.permanent)) throw new Error("小红书登录档案未保存，请重新扫码");
+      } else {
+        const { rm } = await import("node:fs/promises");
+        await rm(paths.temporary, { recursive: true, force: true });
+      }
+    },
+  });
+  const pendingWechatStops=new Map<string,()=>Promise<void>>();
+  const executeWechatNative=createWechatNativeCollector({
+    workerId:deps.nextId('wechat-native-worker'),now:()=>Date.parse(deps.now()),
+    claimLease:(attemptId,workerId)=>platformCollectionService.claim(attemptId,workerId),
+    renewLease:(attemptId,generation,leaseToken)=>platformCollectionService.renewLease(attemptId,generation,leaseToken),
+    commitPage:page=>platformCollectionService.commitPage(page),
+    failRun:(attemptId,generation,leaseToken,status,reason)=>platformCollectionService.failRun(attemptId,generation,leaseToken,status,reason),
+    authorizeProfile:async(c,lease,signal)=>{signal.throwIfAborted();return profileAuthority.authorizeBindingTarget(c,lease.accountId,(scope,id)=>platformAccountService.getAccount(scope,id));},
+    acquireProfile:(authDir,signal)=>hostProfileLifecycle.acquire(authDir,signal),
+    parseReport:async input=>(await import('@creatoros/ai-worker/platform/wechat-native-report-parser')).parseWechatNativeReport(input),
+    collectReports:async options=>{await wechatSource.collectNativeReports(options.platform,options.directory,options.expectedPlatformIdentity,{signal:options.signal,deadlineAt:new Date(options.deadlineAt).toISOString(),onStopped:options.onStopped,onStopUnconfirmed:options.onStopUnconfirmed,onDiagnostic:event=>console.warn('[wechat-native-report]',{...event,attemptId:options.attemptId})},report=>options.onReport({...report,platform:options.platform}));},
+    onStopUnconfirmed:(attemptId,retry)=>{pendingWechatStops.set(attemptId,retry);hostBrowserShutdownScope.register(async()=>{await retry();pendingWechatStops.delete(attemptId);});},
+  });
+  const executeWechatCollection=async(c:RequestContext,run:CollectionRunResource,signal?:AbortSignal)=>{
+    if(run.status==='partial'&&run.reasonCode==='TASK_TIMEOUT')return;
+    const retry=pendingWechatStops.get(run.attemptId);if(retry){await retry();pendingWechatStops.delete(run.attemptId);}
+    await executeWechatNative(c,run,signal);
+  };
+  const activeXhsCollections = new Map<string, Promise<void>>();
+  const enqueuePlatformCollection=createAccountCollectionQueue();
+  const executeKuaishouCollection = async (ctx: RequestContext, run: CollectionRunResource, signal?:AbortSignal) => {
+    signal?.throwIfAborted();
+    const lease = await platformCollectionService.claim(run.attemptId, `kuaishou-local-${process.pid}`);
+    const renewal = setInterval(() => {
+      void platformCollectionService.renewLease(lease.attemptId, lease.generation, lease.leaseToken).catch(() => {});
+    }, 20_000);
+    try {
+      const { kuaishouProfilePaths, readKuaishouCreatorIdentity, collectKuaishouCreatorCatalog } =
+        await import("@creatoros/ai-worker/platform/kuaishou-browser-source");
+      const { kuaishouSourceWorks, KS_WORK_SOURCE, KS_IDENTITY_SOURCE } =
+        await import("@creatoros/ai-worker/platform/kuaishou-creator-normalizer");
+      const directory = kuaishouProfilePaths(platformProfileRoot, ctx.userId, run.attemptId,
+        lease.expectedPlatformIdentity).permanent!;
+      if (lease.capability === "accountOverview") {
+        const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
+        const identity = await readKuaishouCreatorIdentity(directory, lease.expectedPlatformIdentity,{signal,onStopped:checkout.onStopped});
+        const observedAt = new Date().toISOString();
+        await platformCollectionService.commitPage({
+          attemptId: lease.attemptId, accountId: lease.accountId, platform: "kuaishou",
+          expectedPlatformIdentity: lease.expectedPlatformIdentity, capability: "accountOverview",
+          generation: lease.generation, leaseToken: lease.leaseToken, sourceSnapshotKey: null,
+          scanPass: 1, platformReportedTotal: null, totalSource: null, totalObservedAt: null,
+          terminalEvidence: { kind: "platformHasMoreFalse", source: KS_IDENTITY_SOURCE, observedAt },
+          pageIndex: 0, requestCursor: null, nextCursor: null, pageDigest: `identity:${run.attemptId}`,
+          hasMore: false, observedAt, works: [], workMetrics: [],
+          accountMetrics: [{ externalWorkId: null, sourceField: "fansCnt", sourceUnit: "count",
+            value: identity.followerCount, availability: identity.followerCount === null ? "sourceMissing" : "available",
+            window: { kind: "lifetime" }, source: KS_IDENTITY_SOURCE, capturedAt: observedAt, observedAt }],
+        } satisfies CollectionPageCommit);
+        return;
+      }
+      const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
+      const { first, second } = await collectKuaishouCreatorCatalog(directory, lease.expectedPlatformIdentity,{signal,onStopped:checkout.onStopped});
+      if (lease.capability === "workMetrics") {
+        const observedAt = new Date().toISOString();
+        const fields = [
+          ["playCount", "playCount"], ["likeCount", "likeCount"], ["commentCount", "commentCount"],
+        ] as const;
+        await platformCollectionService.commitPage({
+          attemptId: lease.attemptId, accountId: lease.accountId, platform: "kuaishou",
+          expectedPlatformIdentity: lease.expectedPlatformIdentity, capability: "workMetrics",
+          generation: lease.generation, leaseToken: lease.leaseToken, sourceSnapshotKey: null,
+          scanPass: 1, platformReportedTotal: null, totalSource: null, totalObservedAt: null,
+          terminalEvidence: { kind: "platformHasMoreFalse", source: "kuaishou_verified_catalog_batch", observedAt },
+          pageIndex: 0, requestCursor: null, nextCursor: null, pageDigest: `scan:${run.attemptId}`,
+          hasMore: false, observedAt, works: [], accountMetrics: [],
+          workMetrics: first.flatMap((page) => page.works.flatMap((work) => fields.map(([sourceField, field]) => ({
+            externalWorkId: work.externalId, sourceField, sourceUnit: "count",
+            value: work[field], availability: work[field] === null ? "sourceMissing" as const : "available" as const,
+            window: { kind: "lifetime" as const }, source: KS_WORK_SOURCE,
+            capturedAt: page.observedAt, observedAt: page.observedAt,
+          })))),
+        } satisfies CollectionPageCommit);
+      } else if (lease.capability === "workCatalog") {
+        for (const [passIndex, pages] of [first, second].entries()) {
+          for (const [pageIndex, page] of pages.entries()) {
+            await platformCollectionService.renewLease(lease.attemptId, lease.generation, lease.leaseToken);
+            const terminal = pageIndex === pages.length - 1;
+            await platformCollectionService.commitPage({
+              attemptId: lease.attemptId, accountId: lease.accountId, platform: "kuaishou",
+              expectedPlatformIdentity: lease.expectedPlatformIdentity, capability: "workCatalog",
+              generation: lease.generation, leaseToken: lease.leaseToken, sourceSnapshotKey: null,
+              scanPass: (passIndex + 1) as 1 | 2, platformReportedTotal: pages[0]!.reportedTotal,
+              totalSource: KS_WORK_SOURCE, totalObservedAt: pages[0]!.observedAt,
+              terminalEvidence: terminal ? { kind: "platformHasMoreFalse", source: KS_WORK_SOURCE,
+                observedAt: page.observedAt } : null,
+              pageIndex, requestCursor: page.requestCursor, nextCursor: page.nextCursor,
+              pageDigest: page.responseDigest, hasMore: !terminal, observedAt: page.observedAt,
+              works: kuaishouSourceWorks(page), accountMetrics: [], workMetrics: [],
+            } satisfies CollectionPageCommit);
+          }
+        }
+        const completed = await platformCollectionService.status(ctx, lease.accountId, lease.attemptId);
+        if (completed.status !== "complete"||signal) return;
+        const metricsRun = await platformCollectionService.start(ctx, { accountId: lease.accountId,
+          capability: "workMetrics", clientRequestId: `${run.attemptId}-metrics` });
+        scheduleXhsCollection(ctx, metricsRun);
+        const overviewRun = await platformCollectionService.start(ctx, { accountId: lease.accountId,
+          capability: "accountOverview", clientRequestId: `${run.attemptId}-overview` });
+        scheduleXhsCollection(ctx, overviewRun);
+      }
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error &&
+        typeof error.code === "string" ? error.code : error instanceof Error ? error.message : "SOURCE_UNAVAILABLE";
+      const state = code === "LOGIN_REQUIRED" || code === "IDENTITY_MISMATCH" ? "needsAuth" :
+        code === "INCOMPLETE_CATALOG" || code === "SOURCE_TIMEOUT" || code === "BROWSER_PROFILE_BUSY" || signal?.aborted ? "partial" : "failed";
+      await platformCollectionService.failRun(lease.attemptId, lease.generation, lease.leaseToken,
+        state, code.slice(0, 100)).catch(() => {});
+      console.error("[platform-collection] 快手采集未完成", { attemptId: lease.attemptId, code, error });
+    } finally { clearInterval(renewal); }
+  };
+  const executeXhsCollection = async (ctx: RequestContext, run: CollectionRunResource, signal?:AbortSignal) => {
+    signal?.throwIfAborted();
+    const lease = await platformCollectionService.claim(run.attemptId, `xhs-local-${process.pid}`);
+    if (lease.platform !== "xiaohongshu" || !["workCatalog", "workMetrics"].includes(lease.capability)) {
+      await platformCollectionService.failRun(lease.attemptId, lease.generation, lease.leaseToken,
+        "failed", "SOURCE_UNMAPPED");
+      return;
+    }
+    const renewal = setInterval(() => {
+      void platformCollectionService.renewLease(lease.attemptId, lease.generation, lease.leaseToken)
+        .catch(() => {});
+    }, 20_000);
+    try {
+      const { xhsProfilePaths, collectXhsCreatorCatalog } = await import("@creatoros/ai-worker/platform/xhs-browser-source");
+      const { xhsSourceWorks } = await import("@creatoros/ai-worker/platform/xhs-creator-normalizer");
+      const directory = xhsProfilePaths(platformProfileRoot, ctx.userId, run.attemptId,
+        lease.expectedPlatformIdentity).permanent!;
+      const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
+      const [first, second] = await collectXhsCreatorCatalog(directory, lease.expectedPlatformIdentity,signal,{onStopped:checkout.onStopped});
+      if (lease.capability === "workMetrics") {
+        const mappings = ["view_count", "likes", "comments_count", "collected_count", "shared_count"] as const;
+        const observedAt = new Date().toISOString();
+        await platformCollectionService.commitPage({
+          attemptId: lease.attemptId, accountId: lease.accountId,
+          platform: "xiaohongshu", expectedPlatformIdentity: lease.expectedPlatformIdentity,
+          capability: "workMetrics", generation: lease.generation, leaseToken: lease.leaseToken,
+          sourceSnapshotKey: null, scanPass: 1, platformReportedTotal: null, totalSource: null,
+          totalObservedAt: null, terminalEvidence: { kind: "platformHasMoreFalse",
+            source: "xhs_verified_catalog_batch", observedAt },
+          pageIndex: 0, requestCursor: null, nextCursor: null, pageDigest: `scan:${run.attemptId}`,
+          hasMore: false, observedAt, works: [], accountMetrics: [],
+          workMetrics: first.pages.flatMap((page) => page.records.flatMap((record) => mappings.map((sourceField) => ({
+            externalWorkId: record.externalId, sourceField, sourceUnit: "count",
+            value: record.counts[sourceField],
+            availability: record.counts[sourceField] === null ? "sourceMissing" as const : "available" as const,
+            window: { kind: "lifetime" as const }, source: xhsCatalogSource,
+            capturedAt: page.observedAt, observedAt: page.observedAt,
+          })))),
+        } satisfies CollectionPageCommit);
+      } else {
+        for (const [passIndex, scan] of [first, second].entries()) {
+          const pages = scan.pages;
+          for (const [pageIndex, page] of pages.entries()) {
+          await platformCollectionService.renewLease(lease.attemptId, lease.generation, lease.leaseToken);
+          const terminal = pageIndex === pages.length - 1;
+          const common = {
+            attemptId: lease.attemptId, accountId: lease.accountId,
+            platform: "xiaohongshu" as const, expectedPlatformIdentity: lease.expectedPlatformIdentity,
+            capability: lease.capability, generation: lease.generation, leaseToken: lease.leaseToken,
+            sourceSnapshotKey: null, scanPass: (passIndex + 1) as 1 | 2,
+            platformReportedTotal: pages[0]!.reportedTotal,
+            totalSource: pages[0]!.reportedTotal === null ? null : xhsCatalogSource,
+            totalObservedAt: pages[0]!.reportedTotal === null ? null : pages[0]!.observedAt,
+            terminalEvidence: terminal ? scan.terminalEvidence : null,
+            pageIndex, requestCursor: page.requestCursor, nextCursor: page.nextCursor,
+            pageDigest: page.responseDigest, hasMore: !terminal, observedAt: page.observedAt,
+          };
+          await platformCollectionService.commitPage({ ...common, capability: "workCatalog",
+            works: xhsSourceWorks(page), accountMetrics: [], workMetrics: [],
+          } satisfies CollectionPageCommit);
+          }
+        }
+      }
+      if (lease.capability === "workCatalog") {
+        const completed = await platformCollectionService.status(ctx, lease.accountId, lease.attemptId);
+        if (completed.status !== "complete"||signal) return;
+        const metricsRun = await platformCollectionService.start(ctx, { accountId: lease.accountId,
+          capability: "workMetrics", clientRequestId: `${run.attemptId}-metrics` });
+        scheduleXhsCollection(ctx, metricsRun);
+      }
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error &&
+        typeof error.code === "string" ? error.code : "SOURCE_UNAVAILABLE";
+      const state = code === "LOGIN_REQUIRED" || code === "IDENTITY_MISMATCH" ? "needsAuth" :
+        code === "INCOMPLETE_CATALOG" || code === "SOURCE_TIMEOUT" || code === "BROWSER_PROFILE_BUSY" || signal?.aborted ? "partial" : "failed";
+      await platformCollectionService.failRun(lease.attemptId, lease.generation, lease.leaseToken,
+        state, code).catch(() => {});
+      console.error("[platform-collection] 小红书采集未完成", { attemptId: lease.attemptId, code, error });
+    } finally {
+      clearInterval(renewal);
+    }
+  };
+  const scheduleXhsCollection = (ctx: RequestContext, run: CollectionRunResource,signal?:AbortSignal):Promise<void> => {
+    const operation=(async()=>{
+    const scoped={...ctx,accountId:run.accountId};
+    // 无信号扫描只读调度归属，不进入去重/账号队列，不抢占原调度的真实执行。
+    if(!signal&&await platformCollectionService.scheduledOwnerTaskId(scoped,run.accountId,run.attemptId)){
+      await platformCollectionService.releaseTerminatedScheduledRuns(scoped,run.accountId);
+      return;
+    }
+    const active=activeXhsCollections.get(run.attemptId);if(active)return active;
+    if (!["queued", "running", "partial"].includes(run.status)) return Promise.resolve();
+    const task = enqueuePlatformCollection(scoped,async () => {
+      signal?.throwIfAborted();
+      const account = await platformAccountService.getAccount(scoped, run.accountId);
+      return account.platform==='wechatOfficial'||account.platform==='wechatVideo'?executeWechatCollection(scoped,run,signal):account.platform === "kuaishou" ? executeKuaishouCollection(scoped, run,signal) : executeXhsCollection(scoped, run,signal);
+    },signal).finally(() => {
+      activeXhsCollections.delete(run.attemptId);
+    });
+    activeXhsCollections.set(run.attemptId, task);
+    return task;
+    })();
+    // 非等待式触发也接住完整operation的拒绝；调度await仍收到原失败。
+    void operation.catch((error) => console.error("[platform-collection] 任务启动失败", { attemptId: run.attemptId, error }));
+    return operation;
+  };
+  const initializeBoundCollection=async(ctx:RequestContext,accountId:string,bindId:string)=>{
+    try{
+      const member=await accountGroupService.forAccount(ctx,accountId).catch(()=>null);
+      if(member){await bootstrapDouyinOnBind({...ctx,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion'});return;}
+      // 旧显式绑定接口没有组：保留原一次性初始化，不新建周期producer、不自动归组。
+      const run=await platformCollectionService.start({...ctx,accountId},{accountId,capability:'workCatalog',clientRequestId:bindId+'-catalog'});void scheduleXhsCollection({...ctx,accountId},run);
+    }catch(error){console.warn('[platform-binding] 绑定已保存，初始化采集待恢复',error);}
+  };
+  const platformCollection = createPlatformCollectionTransport(() => platformCollectionService, {
+    afterBindBegin: async (ctx, attempt) => {
+      if (attempt.platform === "kuaishou") {
+        if (attempt.status === "bound") return attempt;
+        const { kuaishouProfilePaths, loginKuaishouCreator } =
+          await import("@creatoros/ai-worker/platform/kuaishou-browser-source");
+        const paths = kuaishouProfilePaths(platformProfileRoot, ctx.userId, attempt.bindAttemptId);
+        try {
+          const identity = await loginKuaishouCreator(paths.temporary);
+          await platformCollectionService.recordVerifiedIdentity({
+            bindAttemptId: attempt.bindAttemptId, platform: "kuaishou",
+            platformIdentity: identity.platformIdentity, proofSource: identity.source,
+            scopes: ["accountOverview", "workCatalog", "workMetrics"],
+            verifiedAt: deps.now(), expiresAt: null,
+          });
+          const bound = await platformCollectionService.bindConfirm(ctx, { bindAttemptId: attempt.bindAttemptId });
+          if (!await platformCollectionService.retryBindCleanup(attempt.bindAttemptId)) {
+            throw new Error("快手登录档案保存失败，请重试绑定");
+          }
+          if (bound.accountId) {
+            await initializeBoundCollection(ctx,bound.accountId,attempt.bindAttemptId);
+          }
+          return bound;
+        } catch (error) {
+          await platformCollectionService.bindCancel(ctx, { bindAttemptId: attempt.bindAttemptId }).catch(() => {});
+          throw error;
+        }
+      }
+      if (attempt.platform !== "xiaohongshu" || attempt.status === "bound") return attempt;
+      const { xhsProfilePaths, loginXhsCreator } = await import("@creatoros/ai-worker/platform/xhs-browser-source");
+      const paths = xhsProfilePaths(platformProfileRoot, ctx.userId, attempt.bindAttemptId);
+      try {
+        const identity = await loginXhsCreator(paths.temporary);
+        await platformCollectionService.recordVerifiedIdentity({
+          bindAttemptId: attempt.bindAttemptId, platform: "xiaohongshu",
+          platformIdentity: identity.platformIdentity, proofSource: identity.source,
+          scopes: ["workCatalog", "workMetrics"], verifiedAt: deps.now(), expiresAt: null,
+        });
+        const bound = await platformCollectionService.bindConfirm(ctx, { bindAttemptId: attempt.bindAttemptId });
+        if (!await platformCollectionService.retryBindCleanup(attempt.bindAttemptId)) {
+          throw new Error("小红书登录档案保存失败，请重试绑定");
+        }
+        if (bound.accountId) {
+            await initializeBoundCollection(ctx,bound.accountId,attempt.bindAttemptId);
+        }
+        return bound;
+      } catch (error) {
+        await platformCollectionService.bindCancel(ctx, { bindAttemptId: attempt.bindAttemptId }).catch(() => {});
+        throw error;
+      }
+    },
+    afterCollectionStart: scheduleXhsCollection,
+    afterCollectionGet: scheduleXhsCollection,
+  });
+  const periodicPlatformCollection = createPeriodicPlatformCollection({
+    recoveryOnly:true,
+    contextForAccount:async(c,account)=>{if(account.platform!=='wechatVideo'&&account.platform!=='wechatOfficial')return {...c,accountId:account.id};const member=await accountGroupService.forAccount({...c,accountId:account.id},account.id);return {...c,accountId:account.id,groupId:member.groupId,membershipVersion:member.version};},
+    listAccounts: (ctx, query) => platformAccountService.listAccounts(ctx, query),
+    latestRun: (ctx, accountId, capability) => platformCollectionService.latestRun(ctx, accountId, capability),
+    start: (ctx, input) => platformCollectionService.start(ctx, input),
+    resume: scheduleXhsCollection,
+    onError: (accountId, error) => console.warn("[platform-collection] 定期采集暂未启动", {
+      accountId, code: error instanceof Error ? error.name : "UnknownError",
+    }),
+    now: deps.now,
+  });
+
+  localBindingStages.xiaohongshu=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform:'xiaohongshu',scopes:['workCatalog','workMetrics'],loadLogin:async()=>{const source=await import('@creatoros/ai-worker/platform/xhs-browser-source');return (directory,controls)=>source.loginXhsCreator(directory,controls.signal,controls);},commitAuthorization:async(tx,c,accountId,identity)=>{if(!identity.collectionProof)throw Error('平台身份证明尚未读取');await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform:'xiaohongshu',platformIdentity:identity.externalAccountId,...identity.collectionProof});}});
+  localBindingStages.kuaishou=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform:'kuaishou',scopes:['accountOverview','workCatalog','workMetrics'],loadLogin:async()=>{const source=await import('@creatoros/ai-worker/platform/kuaishou-browser-source');return (directory,controls)=>source.loginKuaishouCreator(directory,controls);},commitAuthorization:async(tx,c,accountId,identity)=>{if(!identity.collectionProof)throw Error('平台身份证明尚未读取');await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform:'kuaishou',platformIdentity:identity.externalAccountId,...identity.collectionProof});}});
+  if(wechatSource.configured)for(const platform of ['wechatOfficial','wechatVideo'] as const){
+    localBindingStages[platform]=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform,scopes:['nativeReports'],loadLogin:async()=>((directory,controls)=>wechatSource.login(platform,directory,{...controls,onDiagnostic:event=>console.warn('[wechat-binding]',event)})),commitAuthorization:async(tx,c,accountId,identity)=>{
+      if(!identity.collectionProof)throw Error('平台身份证明尚未读取');
+      await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform,platformIdentity:identity.externalAccountId,...identity.collectionProof});
+    }});
+  }
+  const accountBindingService=createAccountBindingService({db,...deps,localStages:localBindingStages,
+    stage:createDouyinAccountBindingStage({db,base:douyinAuthDirBase,authority:profileAuthority,lifecycle:hostProfileLifecycle,...deps,loadCdp:loadDouyinCdp}),
+    capabilities:ctx=>platformAccountService.getBindingCapabilities(ctx),
+    wake:()=>recoveryWake?.wake('account_binding'),
+    onProfileCleanupError:()=>console.error('[account-binding] 登录目录备份清理未完成，请保留恢复文件'),
+    onBound:async(c,accountId,runId)=>{
+      if(!await accountGroupService.hasVerifiedBinding(c,accountId))throw new Error('绑定成功回执尚未完成，请保留原扫码任务');
+      const member=await accountGroupService.forAccount(c,accountId);
+      const account=await platformAccountService.getAccount(c,accountId),frozen={...c,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion' as const};
+      if(['douyin','xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(account.platform))await bootstrapDouyinOnBind(frozen);
+    },
+    onBoundError:()=>console.warn('[account-binding] 账号已绑定，默认采集计划补齐未完成，下次启动会按真实账号重试'),
+  });
+  const accountBinding=createAccountBindingTransport(()=>accountBindingService);
 
   // Scheduling (module 23, T-007 / data-source-pipeline §4): the service builds a
   // per-ctx user-scoped repo over the shared db (repo bakes userId in). No external
@@ -3761,6 +5076,9 @@ dispatchIntelligenceRun});
   // [T-235c] 指定收藏夹服务(收藏夹跟拍信号源)。collectors["favorites"] 用它读 enabled 登记夹 +
   //   落台账/进池流转;composite 用它服务 4 个登记 CRUD op。clock/ids 共享 deterministic deps。
   const favoritesService: FavoritesService = createFavoritesService({
+    membership:createMembershipLockService(db),
+    assertCollectionAccount:async(ctx)=>{const a=await platformAccountService.getAccount(ctx,ctx.accountId!);await platformAccountService.assertOwnedAccount(ctx,a.id,a.platform);},
+    assertCandidateOwned:(ctx,id)=>candidateService.getCandidate(ctx,id),
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -3771,6 +5089,8 @@ dispatchIntelligenceRun});
   //   [gate-F1] 与 learnings 零接触:独立表 topic_attributions,由发布实绩触发。
   const topicAttributionService: TopicAttributionService =
     createTopicAttributionService({
+      resolvePublication:(ctx,id)=>publishingService.getPublication(ctx,id),
+      resolveProject:(ctx,id)=>projectsService.listOutputIdsByProject(ctx,id),
       db,
       now: deps.now,
       nextId: deps.nextId,
@@ -3797,8 +5117,8 @@ dispatchIntelligenceRun});
     // ASR 最小分片限额(Qwen) raw=2,324,982；MP3 帧≤1,441 B，2 GiB 输入≤925片。
     // 2048覆盖925云请求+1本地回退并留同规模恢复余量；原token/时限与已冻结预算不重置。
     budget:{maxCalls:2048,maxTokens:1_000_000,deadlineMs:1_800_000},objectStorageForCtx,now:deps.now,
-    resolveSpec:c=>resolveTranscribeRuntimeSpec(c),
-    prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
+    resolveSpec:(c,owner)=>resolveTranscribeRuntimeSpec(c,owner),
+    prepareSpec:prepareOwnedTranscribeSpec,
     async readSource(c,awemeId,signal){
       const cdp=await loadDouyinCdp();
       const source=await cdp.fetchDouyinVideoSource({awemeId,authDir:await douyinAuthDirFor(c.accountId,signal,c.userId),gateway:douyinGateway,signal});
@@ -3807,11 +5127,11 @@ dispatchIntelligenceRun});
     extractAudio:async(playUrl,signal)=>(await loadDouyinCdp()).streamAudioFromVideo(playUrl,undefined,signal),
   };
   const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{...asrResourceDeps,entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService});
-  const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath,wake:()=>recoveryWake?.wake("benchmark")});
+  const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,captureConfiguration:captureAsrConfiguration,createTaskWithRoute:createTaskWithFrozenRouting,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath,wake:()=>recoveryWake?.wake("benchmark")});
   const scheduledSignals=new AsyncLocalStorage<AbortSignal>();
   const checkScheduledSignal=()=>scheduledSignals.getStore()?.throwIfAborted();
   const scheduledFlywheel=createScheduledFlywheelExecutionService(db,{
-    entryPath:resolveFlywheelWorkerPath,resolveModelSpec:(c,capability)=>resolveModelSpec(c,capability),
+    entryPath:resolveFlywheelWorkerPath,resolveModelSpec:(c,capability,owner)=>resolveModelSpec(c,capability,owner),
     // 收藏每轮 3 条 × 至多 29 个知识分块；预算同时覆盖 ASR、判库与结构修复。
     // 每轮最多 3 条收藏；覆盖音频分片、知识分块和有界修复，仍服从 token/截止时间。
     budget:{maxCalls:6144,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
@@ -3882,7 +5202,7 @@ positioningService,
 now:deps.now,
 models:scheduledFlywheel.models,
 checkScheduledSignal,
-assertAttributionConfigured:c=>resolveModelSpec(c,"topic.attribution"),
+assertAttributionConfigured:c=>scheduledFlywheel.assertModelConfigured(c,'topic.attribution'),
 makeReviewSubjectReader,
 ai,
 createAiTaskAttemptId,
@@ -3896,10 +5216,14 @@ readMetrics: async (ctx: RequestContext, capturedAt: string) => (await loadDouyi
         // 公开恢复必须能重新发现，不能被当前库里的 knownAwemeIds 提前截断。
         knownAwemeIds: undefined,
       }),
-readExport: async (ctx: RequestContext) => (await loadDouyinCdp()).fetchDouyinWorkListExport(
-          { signal:scheduledSignals.getStore(), authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId) }, // [T-136] 按当前号登录态
-          { gateway: douyinGateway },
-        ),
+readExport: async (ctx, onProgress) => {
+          // 准备也走原采集进度；回调为内部同步report，不另开任务或浏览器。
+          try { void Promise.resolve(onProgress?.("prepare")).catch(() => {}); } catch { /* 诊断不阻断原导出 */ }
+          return (await loadDouyinCdp()).fetchDouyinWorkListExport(
+            { signal:scheduledSignals.getStore(), authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), onProgress },
+            { gateway: douyinGateway },
+          );
+        },
 readCachedCovers: (ctx,externalIds)=>intelligenceService.findCachedCovers(ctx,{platform:"douyin",externalIds}),
 readCover: async (ctx: RequestContext, awemeId: string) => (await loadDouyinCdp()).fetchDouyinCoverUrl({
               signal:scheduledSignals.getStore(),
@@ -4007,7 +5331,15 @@ FAVORITES_PROMOTE_PER_RUN
 }),
   };
 
-  scheduledCollectors["self.metrics"]=createOperationsSyncCollector({
+  const reportingLocal = createReportingLocal(db, masterKeyDegraded ? null : masterKey, {
+    getAccount: (ctx,id) => platformAccountService.getAccount(ctx,id),
+    listAccounts: (ctx,page) => platformAccountService.listAccounts(ctx,page),
+    listWorks: (ctx,page) => publishingService.listPublicationsForUser(ctx,page),
+    latestSnapshots: (ctx,ids) => analyticsService.listLatestSnapshotsByPublicationIds(ctx,ids),
+  },deps.now);
+  void reportingLocal.prune().catch(()=>{});
+
+  const douyinOperationsCollector=createOperationsSyncCollector({
     failures:(c,capabilities)=>publicationSyncService.failures(c,capabilities),
     metrics:(c,t,r,e)=>scheduledCollectors["self.detail"]!(c,t,r,e),
     comments:(c,t,r,e)=>scheduledCollectors.comments!(c,t,r,e),
@@ -4015,10 +5347,16 @@ FAVORITES_PROMOTE_PER_RUN
     checkSignal:checkScheduledSignal,isNotLoggedIn:error=>error instanceof DouyinNotLoggedInError,
   });
 
+  const platformMetricsCollector=createPlatformMetricsCollector({account:(c,id)=>platformAccountService.getAccount(c,id),start:(c,input)=>platformCollectionService.start(c,input),status:(c,id,attempt)=>platformCollectionService.status(c,id,attempt),schedule:scheduleXhsCollection,resumeAuthorization:(c,id,attempt,task)=>platformCollectionService.resumeScheduledAuthorization(c,id,attempt,task)});
+  scheduledCollectors['self.metrics']=async(c,t,r,e)=>{
+    const account=await platformAccountService.getAccount(c,c.accountId!);
+    return account.platform==='douyin'?douyinOperationsCollector(c,t,r,e):platformMetricsCollector(c,(()=>{if(!e?.taskId)throw Error('采集缺少原持久任务ID');return e.taskId;})(),scheduledSignals.getStore());
+  };
+
   // 后端统一协调同账号串行与跨账号入场；此处仅装配采集器和唤醒入口。
   // 请求网关继续独立限制每次网络请求的并发与节奏。
   const wakeScheduledFlywheel=()=>recoveryWake?.wake("flywheel");
-  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
+  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,afterSuccessfulMetricsCollection:async ctx=>{if(ctx.accountId)await reportingLocal.captureAccountMetrics(ctx,ctx.accountId);},afterSuccessfulCollection:async(ctx,id)=>{if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,"collection_succeeded",id,deps.now());},afterFailedCollection:async(ctx,id,status)=>{await reportingLocal.captureDiagnostic(ctx,"collection_failed",id,deps.now());if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,status==="waiting_user"?"needs_reconnect":"collection_failed",id,deps.now());},isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError||error instanceof PlatformCollectionNeedsAuthError});
 
   // 调度器沿用身份服务已确认的本机真实主用户，不使用fixture默认身份。
   // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
@@ -4033,7 +5371,7 @@ FAVORITES_PROMOTE_PER_RUN
   // (D5,scheduledJobs.runNow)共用同一份执行端口。
   // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
   // dispatchScheduledCollection。
-  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
+  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({assertCommentPublications:async(ctx,ids)=>{for(const id of ids)await trafficService.assertPublication(ctx,id);},aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureDefaultRubric:c=>calibrationService.ensureDefaultRubric(c),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
       try {
         const fromDir = await douyinAuthDirFor(null,undefined,ctx.userId); // _default
         const toDir = await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId);
@@ -4069,17 +5407,25 @@ FAVORITES_PROMOTE_PER_RUN
     //   listRunningTasksSystem(跨号、只 running、不经 requireAccountId),不再用
     //   用户面 listTasks(S2 已 strict 按号,无号会抛 AccountRequiredError)。
     listRunningTasks: async (c: RequestContext) => {
+      backgroundControl.signal.throwIfAborted();
       return aiService.listRunningTasksSystem(c);
     },
-    markFailed: (c: RequestContext, taskId: string, msg: string) =>
-      aiService.markFailed(c, taskId, msg),
+    markFailed: (c: RequestContext, taskId: string, msg: string) => {
+      backgroundControl.signal.throwIfAborted();
+      return aiService.markFailed(c, taskId, msg);
+    },
     ctx: schedulerCtx,
     now: deps.now,
     staleMs: envMsOf("CREATOROS_STALE_AI_TASK_MS", 2 * 60 * 60 * 1000),
   };
-  void sweepStaleAiTasks(sweepAiTaskDeps).catch((e) =>
-    console.error("[scheduler] 启动扫僵尸 ai_task 失败:", e),
-  );
+  const runAiTaskSweep = (processStartedAt?: string) => {
+    if (backgroundControl.signal.aborted || sweepInFlight) return;
+    const work = sweepStaleAiTasks({...sweepAiTaskDeps, ...(processStartedAt ? {processStartedAt} : {})})
+      .catch(e => {if (!backgroundControl.signal.aborted) console.error("[scheduler] 清扫僵尸 ai_task 失败:", e);})
+      .finally(() => {if (sweepInFlight === work) sweepInFlight = undefined;});
+    sweepInFlight = work;
+  };
+  runAiTaskSweep();
   // [T-389] 低频周期复扫(默认 30min,CREATOROS_AI_TASK_SWEEP_INTERVAL_MS 可配):兜
   // 「启动扫单条 markFailed 失败」与「本进程运行期悬挂超阈值」的残留。带 processStartedAt
   // 锚 → 进程内类型只判上一进程遗留,本进程正在跑的活任务不误杀(落回年龄门)。
@@ -4089,12 +5435,9 @@ FAVORITES_PROMOTE_PER_RUN
     !(process.env.NODE_ENV === "test" || process.env.VITEST || process.env.CI)
   ) {
     const processStartedAt = deps.now();
-    const sweepTimer = setInterval(() => {
-      void sweepStaleAiTasks({ ...sweepAiTaskDeps, processStartedAt }).catch(
-        (e) => console.error("[scheduler] 周期复扫僵尸 ai_task 失败:", e),
-      );
-    }, envMsOf("CREATOROS_AI_TASK_SWEEP_INTERVAL_MS", 30 * 60 * 1000));
-    sweepTimer.unref?.();
+    if (!backgroundControl.signal.aborted) sweepTimer = setInterval(() => runAiTaskSweep(processStartedAt),
+      envMsOf("CREATOROS_AI_TASK_SWEEP_INTERVAL_MS", 30 * 60 * 1000));
+    sweepTimer?.unref?.();
   }
 
   // [T-255a] 启动清扫孤儿沙箱(T-207 sweep 兜底同族):采纳/丢弃/失败本会清沙箱,
@@ -4114,7 +5457,7 @@ FAVORITES_PROMOTE_PER_RUN
 
   // [T-517] 单一持久自动化 driver：scheduled_job 只供 due producer 读取；
   // execution_tasks/PersistentTaskService 才是 lease/attempt/recovery 唯一真值。
-  const {start:startUnifiedAutomationDriver}=createSchedulingAutomation({
+  const {start:startUnifiedAutomationDriver,stop:stopUnifiedAutomationDriver}=createSchedulingAutomation({
     aiService,schedulingService,schedulerCtx,
     syncDailyExecutionRuns:(ctx)=>dailyTopicRuns.syncExecutionRuns(ctx),
     syncCollectionExecutionRuns:(ctx)=>collectionRunState.syncExecutionRuns(ctx),
@@ -4123,6 +5466,8 @@ FAVORITES_PROMOTE_PER_RUN
     scheduledChildren:createExecutionScheduledChildService(db,{now:deps.now}),
     wakeDelegated:()=>{modelWorker?.start();wakeScheduledFlywheel();},
   });
+  stopAutomation = stopUnifiedAutomationDriver;
+  if (backgroundControl.signal.aborted) await stopUnifiedAutomationDriver();
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
   // repo over the shared db; peer modules are reached ONLY through narrow injected
@@ -4134,19 +5479,19 @@ FAVORITES_PROMOTE_PER_RUN
   // which throws OwnershipError when absent — we never create a Candidate here);
   // notifications.notify is the 断更 seam (best-effort no-op until a public
   // create-notification op lands — mirrors the learnings.adjustConfidence seam below).
-  const contentCalendarService: ContentCalendarService =
+  const calendarFor=(store:typeof db):ContentCalendarService=>
     createContentCalendarService({
-      db,
+      db:store,
       now: deps.now,
       nextId: deps.nextId,
       clock: { now: deps.now },
       platformAccounts: {
         getAccount: (ctx, accountId) =>
-          platformAccountService.getAccount(ctx, accountId),
+          createPlatformAccountService({db:store,...deps}).getAccount(ctx, accountId),
       },
       publishing: {
         isOutputPublished: async (ctx, contentOutputId) => {
-          const pubs = await publishingService.listPublications(
+          const pubs = await workPublishingFor(store).listPublications(
             ctx,
             contentOutputId,
             { limit: 100, offset: 0 },
@@ -4157,7 +5502,7 @@ FAVORITES_PROMOTE_PER_RUN
       candidates: {
         exists: async (ctx, candidateId) => {
           try {
-            await candidateService.getCandidate(ctx, candidateId);
+            await assistantCandidateFor(store).getCandidate(ctx, candidateId);
             return true;
           } catch {
             return false;
@@ -4172,17 +5517,18 @@ FAVORITES_PROMOTE_PER_RUN
       },
       identity: {
         getEffectiveTimezone: async (ctx) =>
-          (await identity.getCurrentUser(ctx)).timezone,
+          (await createIdentityService(createIdentityRepository(store,deps),deps).getCurrentUser(ctx)).timezone,
       },
       projects: {
         getScheduleProject: (ctx, projectId) =>
-          projectsService.getScheduleProject(ctx, projectId),
+          workProjectsFor(store).getScheduleProject(ctx, projectId),
       },
       schedulePublishing: {
         getProjectPublicationFact: (ctx, projectId) =>
-          publishingService.getProjectPublicationFact(ctx, projectId),
+          workPublishingFor(store).getProjectPublicationFact(ctx, projectId),
       },
     });
+  const contentCalendarService=calendarFor(db);
   const contentCalendar = createContentCalendarTransport(
     () => contentCalendarService,
   );
@@ -4198,9 +5544,7 @@ FAVORITES_PROMOTE_PER_RUN
     db,
     now: deps.now,
     nextId: deps.nextId,
-    assertProjectOwned: async (ctx, projectId) => {
-      await projectsService.listOutputIdsByProject(ctx, projectId);
-    },
+    assertProjectOwned:(ctx,projectId)=>projectsService.getProject(ctx,projectId),
     resolveOutputProjectId: (ctx, outputId) =>
       projectsService.getProjectIdByOutput(ctx, outputId),
     assertKnowledgeOwned: (ctx, knowledgeId) =>
@@ -4321,7 +5665,7 @@ FAVORITES_PROMOTE_PER_RUN
 
   const dailyReportQuery = createDailyReportApplication({
     now: deps.now, projectsService, publishingService, analyticsService, trafficService,
-    readAccountName: async ctx => ctx.accountId ? (await platformAccountService.getAccount(ctx, ctx.accountId)).accountHandle : null,
+    readAccountName: async ctx => ctx.groupId ? (await accountGroupService.get(ctx,ctx.groupId)).name : ctx.accountId ? (await platformAccountService.getAccount(ctx, ctx.accountId)).accountHandle : null,
     readAccountProfileUrl: async ctx => {
       if (!ctx.accountId) return null;
       const account = await platformAccountService.getAccount(ctx, ctx.accountId);
@@ -4331,12 +5675,8 @@ FAVORITES_PROMOTE_PER_RUN
     },
     readPositioningOneLiner: async ctx => (await positioningService.readPositioningCenter(ctx)).currentStatement?.oneLiner?.trim() || null,
     readScript: async (ctx, projectId) => {
-      const rows = await artifactsService.listProjectArtifacts(ctx, projectId);
-      const artifact = selectReadableProjectScriptArtifact(rows);
-      if (artifact?.currentVersionId) {
-        const current = await readCurrentArtifactTruth(ctx, projectId, artifact.artifactType);
-        return current?.fullText ?? null;
-      }
+      const script=await readConfirmedProjectScript(ctx,projectId);
+      if(script!==null)return script.fullText;
       return readProjectRadarDraftSeed(ctx, projectId);
     },
     readPositioning: async ctx => {
@@ -4345,7 +5685,9 @@ FAVORITES_PROMOTE_PER_RUN
       return [center.currentStatement?.oneLiner, profile?.field, profile?.audience, profile?.differentiation].filter(Boolean).join("\n") || null;
     },
   });
+  const groupOverviewQuery=createGroupWorkspaceApplication({groups:accountGroupService,projects:projectsService,publishing:publishingService,analytics:analyticsService,nativeReports:platformCollectionService,collectedMetrics:{readDashboardSummary:(ctx,input)=>platformCollectionService.readDashboardSummary(ctx,input,accountGroupService.readMembershipEvidence)},dashboard:dashboardQuery,now:deps.now});
   const queryServices = createQueryServicesTransport({
+    groupOverview:groupOverviewQuery,
     dailyReport: dailyReportQuery,
     dashboard: dashboardQuery,
     overview: overviewQuery,
@@ -4357,137 +5699,36 @@ FAVORITES_PROMOTE_PER_RUN
 
   // 本机用户已在装配入口经identity初始化；此处不再种固定身份或演示项目。
 
-  // [User] win-video-tutor 22 节课程 → canonical user 知识库(knowledge_items reference 类型,
-  // 整篇 markdown 入 content)。**替代 T-135 退役的金句假内容**,让知识库开箱就有真东西。
-  // Idempotent(查 sourceMetadata.origin);文件缺失/异常 → 安静 no-op(该 skill 没装到本机是合法状态,
-  // 绝不能因此炸 buildPersistence)。用户首次开 app 触发一次,后续 build/install 跳过。
-  // [T-211] 课程保留作预设(读法 B),只去品牌前缀:seed 内部标题模板已去「Win 短视频私教 · 」,
-  // 存量带前缀条目由下方 fixupWinVideoTutorTitles 幂等改名。
-  try {
-    // [T-218] tag 写侧 service:与 taxonomy transport 同一 repo/db,给 seed 挂 module
-    // tag + 给存量回填(tags 是 user 级词表,C-04,不随号切)。
-    const canonTaxonomyService = createTaxonomyService(taxonomyRepo);
-    // [T-332 S2] 知识库按号独立(SPEC C-01,strict + NOT NULL):课程预设按 active 账号
-    // **逐号**种入(每号一套知识库,一套预设;seed 幂等判据 origin 是 per-account ctx 读的,
-    // 每号各判各的)。0 账号 → 跳过(引导态无处落号;绑号后下次启动自动补种)。
-    const wvtSeedCtx: RequestContext = {
-      userId: localUser.id,
-      requestId: "seed-win-video-tutor",
-      source: "ingestion",
-    };
-    const { rows: wvtAccounts } = await platformAccountService.listAccounts(
-      wvtSeedCtx,
-      { limit: 100, offset: 0 },
-    );
-    for (const wvtAcct of wvtAccounts.filter((a) => a.status === "active")) {
-      const acctCtx = { userId: localUser.id, accountId: wvtAcct.id };
-      const seeded = await seedWinVideoTutor(knowledgeService, acctCtx, {
-        taxonomyService: canonTaxonomyService,
-      });
-      if (seeded > 0) {
-        console.log(
-          `[seed] win-video-tutor 课程已写入 ${seeded} 节到账号 ${wvtAcct.id} 的知识库`,
-        );
-      }
-      // [T-218] 存量按 module 挂 tag 回填:seed 早于 T-218 的装机(现网 22/23 条)只有
-      // knowledge item、无 tag → 观点地图(默认视图,按 tag 聚类)开箱即空。这里对已存在的
-      // origin=win-video-tutor 条目按 sourceMetadata.module 幂等补挂 module tag,用户不用
-      // reset、下次启动观点地图即填充。幂等(tag 名 per-user 唯一 + entity_tags 唯一)。
-      const backfilledTags = await fixupWinVideoTutorModuleTags(
-        knowledgeService,
-        canonTaxonomyService,
-        acctCtx,
-      );
-      if (backfilledTags > 0) {
-        console.log(
-          `[seed] win-video-tutor ${backfilledTags} 条存量已按 module 回填 tag(观点地图,账号 ${wvtAcct.id})`,
-        );
-      }
-    }
-    // [T-211] 存量去前缀 fixup:已装机(seed 早于本改动)的条目标题仍带「Win 短视频私教 · 」
-    // 前缀 —— 经仓储幂等 strip(drizzle 留在后端,不在前端引 drizzle-orm)。安全边界:
-    // ①仅 canonical user 名下(System 方法 userId 收窄);②仅 sourceMetadata.origin=
-    // 'win-video-tutor' 的 seed 条目(不碰用户自己的笔记);③仅标题仍带旧前缀者(已去过
-    // 的跳过 → 幂等,重启不重复动)。renameTitleSystem 只改 title + updatedAt(不动 content/
-    // revision/status)。[T-332 S2 · ISO-06] 种子巡检跨号扫描走显式 *System 方法(组合根
-    // 种子维护语义),不是隐式全量读退化。
-    const renamed=await repairSeedTitles(localUser.id,"win-video-tutor",WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX);
-    if (renamed > 0) {
-      console.log(
-        `[seed] win-video-tutor ${renamed} 条存量标题已去「Win 短视频私教 · 」前缀`,
-      );
-    }
-  } catch (seedErr) {
-    console.error(
-      "[seed] win-video-tutor 知识库 seed 失败(已 ignore,app 仍可启动):",
-      seedErr instanceof Error ? seedErr.message : seedErr,
-    );
-  }
-
-  // [T-332 S2] T-220「启动认领存量无号 asset」已随 claimOrphans 全链退役(SPEC §4.4):
-  //   strict + NOT NULL 世界不存在无号 asset(写侧 chat route / 截图端口已治本 stamp 真号),
-  //   存量污染走「设置 → 重置工作区」(S5),不再有任何启动期归属改写。
-
-  // [T-227] 启动幂等 ensure 全部 DEFAULT_JOBS(存量账号回填缺失采集 job)。根因:collection-
-  //   bootstrap 只在**绑定抖音时**跑一次 —— 账号绑定早于新 job 模板上线(T-212 benchmark /
-  //   T-235a topic.daily)的存量号,模板后加的 job 永远缺(真机曾现「还没有对标采集作业」)。
-  //   修:启动时对 active 账号跑 ensureCollectionJobs(有则跳无则建,**只建不触发** —— 新 job 等
-  //   下一次到点跑,不在每次启动拉一轮采集)。
-  //   [T-332 S2] 账号全域隔离后 scheduled_job strict 按号:**逐个** active 账号各自 ensure
-  //   (listJobs 在该号 ctx 下只见该号 job → 每号缺啥补啥,job 出生即带号)。0 号 → 跳过。
-  //   best-effort:失败只告警,不阻断启动。
-  try {
-    const ensureJobsCtx: RequestContext = {
-      userId: localUser.id,
-      requestId: "startup-collection-ensure",
-      source: "ingestion",
-    };
-    const { rows: ensureAccounts } = await platformAccountService.listAccounts(
-      ensureJobsCtx,
-      { limit: 100, offset: 0 },
-    );
-    const activeForEnsure = ensureAccounts.filter((a) => a.status === "active");
-    for (const ensureAcct of activeForEnsure) {
-      const { created } = await ensureCollectionJobs(
-        { ...ensureJobsCtx, accountId: ensureAcct.id },
-        {
-          listJobsBySourceKind: async (c, sourceKind) => {
-            const { rows } = await schedulingService.listJobs(c, {
-              sourceKind,
-              limit: 1,
-              offset: 0,
-            });
-            return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null }));
-          },
-          createJob: async (c, input) => {
-            const job = await schedulingService.createJob(c, {
-              name: input.name,
-              prompt: input.prompt,
-              sourceKind: input.sourceKind,
-              schedule: input.schedule,
-              target: input.target,
-              // [T-359] 启动兜底补建同样分层:默认关的补建即 disabled。
-              enabled: input.enabled,
-              systemManaged: input.systemManaged === true || input.sourceKind === "intelligence.sync",
-            });
-            return { id: job.id };
-          },
-          // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与 bootstrap 一致)。
-          target: {},
-        },
-      );
-      if (created.length > 0) {
-        console.log(
-          `[T-227] 启动回填缺失采集 job(账号 ${ensureAcct.id}):${created.join(", ")}`,
-        );
-      }
-    }
-  } catch (ensureErr) {
-    console.warn(
-      "[T-227] 启动 ensure 采集 job 失败(已 ignore,app 仍可启动):",
-      ensureErr instanceof Error ? ensureErr.message : ensureErr,
-    );
-  }
+  // T-1022：共享知识/选题/雷达按当前组幂等；私有采集只为真实具备绑定证据的账号回填。
+  // 这里只建计划，不触发浏览器或外网；组归档不等价于隐藏活跃平台账号。
+  const startupTaxonomy=createTaxonomyService(taxonomyRepo,taxonomyAccess);
+  const ensureStartupJobs=async(ctx:RequestContext,privateCollector:boolean,platform='douyin')=>{
+    await ensureCollectionJobs(ctx,{
+      defaults:collectionJobDefaultsForPlatform(platform).filter(tpl=>PRIVATE_COLLECTION_SOURCE_KINDS.has(tpl.sourceKind)===privateCollector),
+      listJobsBySourceKind:async(c,sourceKind)=>{
+        const {rows}=await schedulingService.listJobs(c,{sourceKind,...(privateCollector?{accountId:c.accountId}:{}),limit:1,offset:0});
+        return rows.map(row=>({id:row.id,accountId:row.accountId??null,enabled:row.enabled,target:row.target??{}}));
+      },
+      createJob:async(c,input)=>{
+        const job=await schedulingService.createJob(c,{...input,systemManaged:privateCollector||input.systemManaged===true||input.sourceKind==='intelligence.sync'},privateCollector?{backgroundCollector:true}:undefined);
+        return {id:job.id};
+      },target:{},
+    });
+  };
+  try{
+    await runAccountGroupStartup({userId:localUser.id,requestId:'startup-account-groups',source:'ingestion'},{
+      listAccounts:(c,q)=>platformAccountService.listAccounts(c,q),
+      membership:(c,id)=>accountGroupService.forAccount(c,id),
+      group:(c,id)=>accountGroupService.get(c,id),
+      capabilities:c=>platformAccountService.getBindingCapabilities(c),
+      hasCredentialEvidence:collectionPlanEvidence,
+      seedGroup:async c=>{await seedWinVideoTutor(knowledgeService,c,{taxonomyService:startupTaxonomy});await fixupWinVideoTutorModuleTags(knowledgeService,startupTaxonomy,c);},
+      ensureSharedJobs:c=>ensureStartupJobs(c,false),
+      ensurePrivateJobs:(c,a)=>ensureStartupJobs(c,true,a.platform),
+      warn:(stage,error,accountId)=>console.warn(`[startup] ${stage}未完成${accountId?`(账号 ${accountId})`:''}，其余工作区继续启动：`,error instanceof Error?error.message:error),
+    });
+    await repairSeedTitles(localUser.id,'win-video-tutor',WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX);
+  }catch(error){console.warn('[startup] 账号组默认内容与采集计划补齐未完成，app仍可启动：',error instanceof Error?error.message:error);}
 
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。
@@ -4518,8 +5759,8 @@ FAVORITES_PROMOTE_PER_RUN
   // 读出透明解密。web 路径永不崩(降级 key)。
   const settingsRepo = createSettingsRepository(db, { ...deps, masterKey });
   const redfoxCredentials = createIntegrationCredentials(db, masterKey);
-  const settingsService = createSettingsService(
-    () => settingsRepo,
+  const settingsServiceFor=(store:typeof db)=>createSettingsService(
+    () => store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey}),
     (ctx) => identity.getCurrentUser(ctx),
     // Account profile WRITE (`PATCH /me`) — delegated to Identity's
     // updateProfile, the same boundary as the read above. Settings owns no
@@ -4551,11 +5792,133 @@ FAVORITES_PROMOTE_PER_RUN
           }));
       },
     },
+    undefined,
+    async(ctx,write)=>store.transaction(async tx=>{
+      // SEMANTIC_BOUNDARY_ALLOW:用户级偏好写锁，串行原对象写入；缺行首次插入也受保护。
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('creatoros:preferences'),hashtext(${ctx.userId}))`);
+      return write(createSettingsRepository(tx as unknown as typeof db,{...deps,masterKey}));
+    }),
+    async(ctx,value,options)=>{
+      const choices=effectiveModelRouting(value),snapshot=await captureSelectedModelSnapshot(ctx,store,Object.values(choices),undefined,options?.checkCodex?'check':'peek'),read=createSelectedModelSnapshotReader(snapshot);
+      const capabilities=await Promise.all(modelRouteCatalog.map(async entry=>{
+        const source=choices[entry.family],metadata=source==='codex'&&!snapshot.codex?{status:'unverified' as const,reasonCode:'CODEX_STATUS_UNAVAILABLE'}:await read(entry,source);
+        return {capability:entry.capability,mode:entry.mode,source,status:metadata.status,reasonCode:metadata.reasonCode??null};
+      }));
+      return {effectiveChoices:choices,capabilities};
+    },
   );
+  const settingsService=settingsServiceFor(db);
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
-  const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id));
-  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState);
+  type RoutingFamily=keyof ReturnType<typeof effectiveModelRouting>;
+  async function ensureOfficialAuthority(ctx:RequestContext,signal?:AbortSignal,expectedScopeId?:string){
+    if(process.env.CREATOROS_MODEL_BENEFITS_ENABLED!=="1")return readChannelModelAuthority();
+    return ensureModelBenefitAuthority({signal,expectedScopeId,
+      putManagedCredential:(scopeId,serviceId,token)=>settingsService.setChannelModelCredential(ctx,scopeId,serviceId,token).then(()=>undefined),
+    },async scopeId=>{const token=await settingsRepo.getChannelModelCredential(ctx,scopeId,"omnihi-main");return !!token&&token!==SECRET_DECRYPT_FAIL_SENTINEL;});
+  }
+  /** 正式owner锁前准备；返回值不出网，只核本事务自己的偏好、授权scope/epoch和Key。 */
+  async function prepareModelAuthority(ctx:RequestContext,family:RoutingFamily,signal?:AbortSignal):Promise<(store:Db)=>Promise<void>>{
+    if(process.env.CREATOROS_MODEL_BENEFITS_ENABLED!=="1")return async()=>undefined;
+    const preference=await settingsRepo.getPreferences(ctx),revision=preference?.modelRoutingRevision??0;
+    const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'});
+    if(choices[family]!=="official")return async()=>undefined;
+    let authority:Awaited<ReturnType<typeof ensureOfficialAuthority>>;
+    try{authority=await ensureOfficialAuthority(ctx,signal);}
+    catch(error){
+      signal?.throwIfAborted();
+      // SEMANTIC_BOUNDARY_ALLOW: 仅落实原ASR协议的availability回退；认证/签名/归属/取消不降级。
+      if(family==='audio'&&error instanceof ClientConfigPullError&&['MODEL_CREDENTIAL_NOT_CONFIGURED','MODEL_CREDENTIAL_PROVISIONING','AI_CREDIT_BOOTSTRAP_PENDING','CLIENT_CONFIG_NETWORK_UNAVAILABLE','MODEL_BENEFIT_REFRESH_PENDING'].includes(error.code))return async()=>undefined;
+      throw error;
+    }
+    signal?.throwIfAborted();
+    if(authority.authority!=="channel"){
+      if(authority.outcome==='security_error')throw new ClientConfigPullError('CLIENT_CONFIG_INVALID','官方模型目录或授权身份无法验证',false);
+      // 随后原snapshot reader仍冻结official unavailable + existing-local-asr身份，不改用户选择。
+      if(family==='audio'&&authority.outcome==='unreachable')return async()=>undefined;
+      throw new CapabilityModelRoutingError('MODEL_CREDENTIAL_UNAVAILABLE',family);
+    }
+    return async store=>{
+      signal?.throwIfAborted();
+      const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey}),current=await repo.getPreferences(ctx);
+      const currentChoices=effectiveModelRouting({choices:current?.modelRouting??null,legacyExecutionEngine:current?.assistantExecutionEngine==='codex'?'codex':'pi'});
+      const token=await repo.getChannelModelCredential(ctx,authority.scopeId,"omnihi-main"),live=await readChannelModelAuthority();
+      if((current?.modelRoutingRevision??0)!==revision||currentChoices[family]!=="official"||live.authority!=="channel"||live.scopeId!==authority.scopeId||!token||token===SECRET_DECRYPT_FAIL_SENTINEL)
+        throw new CapabilityModelRoutingError('MODEL_ROUTE_IDENTITY_CHANGED',family);
+      signal?.throwIfAborted();
+    };
+  }
+  function familyForCapability(capability:string):RoutingFamily{
+    if(capability==='asset.classify')return 'vision';
+    if(capability==='image.generate'||capability==='image.edit')return 'image';
+    if(capability==='video.generate')return 'video';
+    if(capability==='transcribe.audio')return 'audio';
+    if(capability==='knowledge.search.embed')return 'embed';
+    return 'text';
+  }
+  async function captureSelectedModelSnapshot(ctx:RequestContext,store:Db,sources:readonly string[],signal?:AbortSignal,purpose:'read'|'peek'|'check'='read'):Promise<SelectedModelSnapshot>{
+    signal?.throwIfAborted();
+    const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
+    const [rows,authority,codex]=await Promise.all([
+      repo.listModels(ctx),
+      sources.includes('official')?readChannelModelAuthority():Promise.resolve(null),
+      sources.includes('codex')?(purpose==='peek'?Promise.resolve(localCodexStatus.peek(ctx)):localCodexStatus.read(ctx,signal,purpose==='check').catch(error=>{signal?.throwIfAborted();if(purpose==='check')throw error;return null;})):Promise.resolve(null),
+    ]);
+    signal?.throwIfAborted();
+    let official:SelectedModelSnapshot['official']=null;
+    if(authority?.authority==='channel'&&authority.bundleDigest){
+      const selections:Record<string,string|null>={},credentialAvailable:Record<string,boolean>={},selectionErrors:Record<string,boolean>={};
+      const capabilities=new Set(['default',...modelRouteCatalog.map(entry=>entry.mode==='vision'?'asset.classify':entry.capability)]);
+      // 同一个store/同一个验签scope；不从root连接重读tx配置，不申请按次Key。
+      for(const capability of capabilities){
+        let raw:string|null;
+        try{raw=await repo.getChannelModelCredential(ctx,authority.scopeId,`__model_selection__:${capability}`);}
+        catch{selectionErrors[capability]=true;selections[capability]=null;continue;}
+        if(!raw)selections[capability]=null;
+        else try{const value=JSON.parse(raw) as {id?:unknown};selections[capability]=typeof value?.id==='string'&&value.id.trim()?value.id.trim():null;}
+        catch{selections[capability]=raw.trim()||null;}
+      }
+      for(const capability of capabilities){
+        const models=authority.payload.models;
+        const selectionCapability=models&&typeof models==='object'&&!Array.isArray(models)&&Object.hasOwn(models,capability)?capability:'default';
+        let route:ReturnType<typeof resolveChannelCapabilityRoute>;
+        try{route=resolveChannelCapabilityRoute(authority.payload,capability,{allowDefaultFallback:true,selectedOptionId:selections[selectionCapability]});}
+        catch{continue;} // 未用目录项的错误由该项reader投影unavailable，不能阻断其它合法能力。
+        if(route?.serviceId&&!Object.hasOwn(credentialAvailable,route.serviceId)){
+          let token:string|null;
+          try{token=await repo.getChannelModelCredential(ctx,authority.scopeId,route.serviceId);}catch{token=null;}
+          const observed=authority.managedCredentials?.[route.serviceId];
+          credentialAvailable[route.serviceId]=!!token&&token!==SECRET_DECRYPT_FAIL_SENTINEL&&observed?.status!=='not_configured'&&observed?.status!=='unavailable';
+        }
+      }
+      official={scopeId:authority.scopeId,bundleDigest:authority.bundleDigest,payload:authority.payload,selections,credentialAvailable,selectionErrors};
+    }
+    return {ctx,rows:rows.map(row=>({...row,settings:row.settings&&typeof row.settings==='object'&&!Array.isArray(row.settings)?row.settings as Record<string,unknown>:{}})),env:{...process.env},official,codex};
+  }
+  async function resolveRootExecutionRoute(ctx:RequestContext,store:Db,trustedRoute?:ExecutionRoute,family?:RoutingFamily):Promise<ExecutionRoute>{
+    if(trustedRoute)return frozenExecutionRoute({executionRoute:trustedRoute});
+    if(store===db&&family){const check=await prepareModelAuthority(ctx,family);await check(db);}
+    const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
+    const preference=await repo.getPreferences(ctx);
+    const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'});
+    const snapshot=await captureSelectedModelSnapshot(ctx,store,Object.values(choices));
+    // 通用任务还未由业务adapter产生真实模型步骤；这里只冻结完整map，实际消费者再核自己的项。
+    return freezeSelectedModelRoutes({choices,revision:preference?.modelRoutingRevision??0,read:createSelectedModelSnapshotReader(snapshot)});
+  }
+  async function prepareChatRouting(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"},signal?:AbortSignal){
+    signal?.throwIfAborted();
+    if(input.executionEngine!=='codex'){const check=await prepareModelAuthority(ctx,input.mode,signal);await check(db);}
+    const preference=await settingsRepo.getPreferences(ctx);
+    const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'}),revision=preference?.modelRoutingRevision??0;
+    const snapshot=await captureSelectedModelSnapshot(ctx,db,[...Object.values(choices),...(input.executionEngine==='codex'?['codex']:[])],signal);
+    const read=createSelectedModelSnapshotReader(snapshot);
+    const engineForMode=(mode:'text'|'vision'):'pi'|'codex'=>input.executionEngine==='codex'||choices[mode]==='codex'?'codex':'pi';
+    // 不提前以text可用性拦截vision；显式pi冲突由真实主route的freeze准确拒绝。
+    return {executionEngine:engineForMode(input.mode),engineForMode,
+      freeze:(capability:string,mode:'text'|'vision')=>freezeSelectedModelRoutes({choices,revision,main:{mode,capability},explicitEngine:input.executionEngine,read})};
+  }
+  const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id), (ctx, id) => accountGroupService.get(ctx, id));
+  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState,reportingLocal,observability);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
       officialSkills: {
@@ -4566,12 +5929,73 @@ FAVORITES_PROMOTE_PER_RUN
           text: PLATFORM_POLICY_TEXT,
         }),
       },
+      groupOverlays:{listBySkillIds:(ctx,skillIds)=>settingsRepo.listAccountSkillOverlays(ctx,skillIds)},
       accountOverlays: {
         listBySkillIds: (ctx, skillIds) =>
           settingsRepo.listAccountSkillOverlays(ctx, skillIds),
       },
       now: deps.now,
     });
+
+  // T1045 审核根使用同tx原owner。task runtime不可捕获根Settings repo；无需第二队列。
+  const workReviewAiFor=(store:typeof db)=>createAiService({...aiOwnerDeps,db:store,
+    resolveTaskRuntimeData:createTransactionalTaskRuntimeResolver(store,{...deps,masterKey,
+      resolveExecutionRoute:(c,tx)=>resolveRootExecutionRoute(c,tx),
+      officialSkills:{get:getOfficialSkillBase,list:listOfficialSkillBases,
+        platformPolicy:()=>({version:PLATFORM_POLICY_VERSION,text:PLATFORM_POLICY_TEXT})},
+      readPinnedAuthority:async()=>pinModelAuthority(await readChannelModelAuthority()),
+    }),
+  });
+  // T1042：画布组合原owner，同tx的AI runtime Settings/Assets/Projects均用传入连接。
+  let assistantSystemRoot!:Awaited<ReturnType<typeof createAssistantSystemRoot>>;
+  const creativeCanvasRoot=createCreativeCanvasRoot(db,deps,{
+    ai:workReviewAiFor,assets:workAssetsFor,projects:workProjectsFor,
+    prepareModelAuthority:(c,capability)=>prepareModelAuthority(c,familyForCapability(capability)),
+    resolveTemplateRequirement:(c,id,version,tx)=>tx?createVisualTemplateService(tx,{assertImageReference:async(context,ref)=>{const owner=workAssetsFor(tx),asset=await owner.getAsset(context,ref.assetId);if(asset.assetType!=="image"||asset.status!=="active")throw new AssetConflictError("参考图片不是可用素材");const exact=await owner.readImageReference(context,ref.assetId,ref.fileId);if(exact.checksum!==ref.checksum)throw new AssetConflictError("图片文件已变化，请重新选择");return {fileId:exact.fileId,checksum:exact.checksum};}}).resolveRequirement(c,id,version):visualTemplateService.resolveRequirement(c,id,version),
+    resolveCapability:async(c,capability,store)=>{const spec=capability==="video.generate"?await resolveMultimodalSpec(c,capability,store):await assertImageCapability(c,capability,store);return "engine" in spec?spec:{provider:spec.provider,model:spec.model};},
+    assetLimit:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},
+    assertProposalAdmission:(c,input,store)=>assistantSystemRoot.service.assertGenerationAdmission(c,input,store),
+    wake:(c,id)=>wakeBusinessTask(c,id,"asset.generate"),
+    projectCandidate:(_c,input)=>businessExecution.projectCandidate(input),
+  });
+
+  const workReviewRoot=createWorkReviewRoot(db,deps,{
+    owners:store=>({projects:workProjectsFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),
+      moments:workMomentsFor(store),compositions:workCompositionsFor(store),assets:workAssetsFor(store),
+      production:workProductionFor(store),outputScripts:workScriptsFor(store),publishing:workPublishingFor(store)}),
+    artifacts:workArtifactsFor,ai:workReviewAiFor,prepareModelAuthority:c=>prepareModelAuthority(c,'text'),
+    positioning:store=>createPositioningService({...positioningOwnerDeps,db:store}),
+    materials:workMaterialsFor,sources:workSourceService,
+    // root先装配真实Production frozen-file owner；其历史capture缺证据必须null，不读currentFile。
+    frozenProductionFiles:workProductionFileBindings,
+    wake:(c,id)=>wakeBusinessTask(c,id,"work.review"),
+  });
+  const workReviews=workReviewRoot.transport;
+
+  // T1045：朋友圈模型只产候选；正式稿与组合血缘在原owner同一事务采纳。
+  const momentsModelPorts:MomentsModelPorts={
+    moments:workMomentsFor,ai:workReviewAiFor,prepareModelAuthority:c=>prepareModelAuthority(c,'text'),
+    readSource:(c,id,ref,tx)=>workSourceService.read(c,id,ref,tx),
+    readRule:(c,ref,tx)=>createPositioningService({...positioningOwnerDeps,db:tx}).getStatement(c,ref.versionId),
+    async readAllowedFile(c,projectId,file,tx){
+      await workSourceService.assertFile(c,projectId,file,tx);
+      const owner=workAssetsFor(tx),asset=await owner.getAsset(c,file.assetId);
+      if(asset.assetType!=="image"||asset.status!=="active")throw Object.assign(new Error("朋友圈允许配图必须为已确认的图片素材"),{code:"ConflictError"});
+      await owner.assertAssetFileOwned(c,file.assetId,file.assetFileId,true);
+      const exact=await owner.readMediaFile(c,file.assetId,file.assetFileId);
+      return {...file,checksum:exact.fileDigest};
+    },
+    async lockMoments(c,id,tx){const current=await workMomentsFor(tx).get(c,id);await workProjectsFor(tx).getProject(c,current.projectId,true);await workArtifactsFor(tx).getArtifact(c,current.artifactId,true);},
+    wake:(c,id)=>wakeBusinessTask(c,id,"moments.draft"),
+    resumeOriginalExecution:resumeModelExecution,
+    recordMomentsFieldAdoption:(c,input,tx)=>createWorkMomentsLineageService({...deps,moments:workMomentsFor,compositions:workCompositionsFor,
+      assertProject:async(context,id,store,lock)=>{await workProjectsFor(store).getProject(context,id,lock);},
+      readAdoption:(context,id,requestId,store)=>createMomentsModelService({db:store,...deps,ports:momentsModelPorts}).readAdoptionReceipt(context,id,requestId),
+    }).record(c,input,tx),
+  };
+  const momentsModelRoot=createMomentsModelRoot(db,deps,momentsModelPorts,()=>workMomentsFor(db));
+  moments=momentsModelRoot.transport;
+
 
   // T-147 P5 — 装配一机一码激活门 service(复用上面解析的 masterKey 加密激活码,同 db)。
   // web/dev 装了不触发(门控前置 isDesktopRuntime 判 false 直接放行);桌面态才真 check/activate。
@@ -4581,8 +6005,60 @@ FAVORITES_PROMOTE_PER_RUN
     env: process.env,
   });
 
-  // 只解析冻结模型配置；实际模型调用归独立 Worker。
-  const resolveModelSpec = async (ctx: RequestContext, capability: string) => {
+  const assertCodexCapability=async(ctx:RequestContext,capability:'text'|'imageUnderstanding'|'imageGeneration')=>{
+    const status=await localCodexStatus.read(ctx);
+    if(!status.available||status.capabilities?.[capability]!==true)throw Object.assign(new Error(capability==='imageGeneration'?status.capabilities?.imageErrorCode??status.errorCode??'CODEX_IMAGE_CAPABILITY_UNAVAILABLE':status.errorCode??'CODEX_CAPABILITY_UNAVAILABLE'),{code:capability==='imageGeneration'?status.capabilities?.imageErrorCode??status.errorCode??'CODEX_IMAGE_CAPABILITY_UNAVAILABLE':status.errorCode??'CODEX_CAPABILITY_UNAVAILABLE'});
+  };
+  type ModelRuntimeOwner={aiTaskId?:string;executionTaskId?:string;ref?:import('@creatoros/contract/execution-worker').ExecutionRef;mode?:ModelRouteMode};
+  async function readOwnedModelRuntime(c:RequestContext,owner:ModelRuntimeOwner):Promise<Record<string,unknown>>{
+    if(owner.ref)return createExecutionLeaseService(db,{now:deps.now}).withLease(owner.ref,'admission',async scope=>{
+      if(scope.context.userId!==c.userId||(scope.context.accountId??null)!==(c.accountId??null)||(scope.context.groupId??null)!==(c.groupId??null))throw new OwnershipError('原模型执行归属不符');
+      if(owner.aiTaskId&&scope.task.ownerId!==owner.aiTaskId)throw new OwnershipError('原模型业务任务不符');
+      return structuredClone(scope.task.payload as Record<string,unknown>);
+    });
+    if(!owner.aiTaskId)throw new OwnershipError('模型解析缺少原任务');
+    if(owner.executionTaskId&&(await aiService.getTask(c,owner.aiTaskId)).executionTaskId!==owner.executionTaskId)throw new OwnershipError('模型执行与原业务任务不符');
+    return aiService.getTaskRuntimeData(c,owner.aiTaskId);
+  }
+  async function resolveFrozenExecutionSpec(c:RequestContext,route:FrozenModelRoute,signal?:AbortSignal){
+    const value=await resolveFrozenCredential(c,route,false,signal);
+    if(value.kind==='codex')return value.spec;
+    if(value.kind!=='api')throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    const spec=value.spec;
+    if(!['anthropic','openai_chat','openai_responses'].includes(spec.apiFormat))throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    return {apiFormat:spec.apiFormat as 'anthropic'|'openai_chat'|'openai_responses',authStyle:spec.authStyle,baseUrl:spec.baseUrl,model:spec.model,token:spec.token,
+      ...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(typeof spec.settings.structuredOutputs==='boolean'?{structuredOutputs:spec.settings.structuredOutputs}:{})};
+  }
+  async function resolveFrozenAssetSpec(c:RequestContext,route:FrozenModelRoute,store:typeof db=db,signal?:AbortSignal):Promise<MultimodalSpec|(CodexModelSpec&{kind:'image'})>{
+    const value=await resolveFrozenCredential(c,route,false,signal,store);
+    if(value.kind==='codex')return {...value.spec,kind:'image'};
+    if(value.kind!=='api'||!['image','video','vision'].includes(route.mode))throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    const spec=value.spec;
+    return {kind:route.mode==='video'?'video':route.mode==='vision'?'vision':'image',provider:spec.provider,model:spec.model,baseUrl:spec.baseUrl,token:spec.token,settings:spec.settings,apiFormat:spec.apiFormat,
+      ...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(spec.serviceId?{serviceId:spec.serviceId}:{}),...(spec.credentialLifecycle?{credentialLifecycle:spec.credentialLifecycle}:{})};
+  }
+  const assertImageCapability=async(ctx:RequestContext,capability:'image.generate'|'image.edit'|'asset.classify',store?:typeof db)=>{
+    const executionRoute=await resolveRootExecutionRoute(ctx,store??db,undefined,familyForCapability(capability)),route=readFrozenModelRoute({executionRoute},capability==='asset.classify'?'vision':'image',capability);
+    if(route)return resolveFrozenAssetSpec(ctx,route,store??db);
+    if(frozenExecutionEngine({executionRoute})==='codex'){
+      await assertCodexCapability(ctx,capability==='asset.classify'?'imageUnderstanding':'imageGeneration');
+      return codexExecutionSpec();
+    }
+    return resolveMultimodalSpec(ctx,capability,store);
+  };
+  // 无任务的公开准备读取一次新根；原任务和后台步骤只消费原冻结route。
+  const resolveModelSpec = async (ctx: RequestContext, capability: string,owner?:ModelRuntimeOwner) => {
+    const runtime=owner?await readOwnedModelRuntime(ctx,owner):{executionRoute:await resolveRootExecutionRoute(ctx,db,undefined,familyForCapability(capability))};
+    const route=readFrozenModelRoute(runtime,owner?.mode??(capability==='asset.classify'?'vision':'structured'),capability);
+    if(route)return resolveFrozenExecutionSpec(ctx,route);
+    if(frozenExecutionEngine(runtime)==='codex'){
+      if(!owner)await assertCodexCapability(ctx,capability==='asset.classify'?'imageUnderstanding':'text');
+      return codexExecutionSpec();
+    }
+    return resolvePiModelSpec(ctx,capability);
+  };
+  // 仅由已经核实原任务冻结Pi的宿主分支调用；当前偏好不参与历史凭据解析。
+  const resolvePiModelSpec=async(ctx:RequestContext,capability:string)=>{
     const cfg = await resolveLlmConfig(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
@@ -4607,7 +6083,11 @@ FAVORITES_PROMOTE_PER_RUN
     };
   };
 
-  const resolveChatFallbackCredential=async(ctx:RequestContext)=>{
+  const resolveChatFallbackCredential=async(ctx:RequestContext,owner?:{ref:import('@creatoros/contract/execution-worker').ExecutionRef;signal?:AbortSignal})=>{
+    if(owner){
+      const runtime=await readOwnedModelRuntime(ctx,owner),route=readFrozenModelRoute(runtime,'text','chat.fallback');
+      if(route){if(route.readiness==='unavailable'||route.source==='codex')return null;return resolveFrozenExecutionSpec(ctx,route,owner.signal);}
+    }
     const cfg=await resolveDedicatedLlmConfig(ctx,"chat.fallback",{
       getModelConfig:(c,cap)=>settingsService.getModelConfig(c,cap),env:process.env,
       getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(ctx,serviceId),
@@ -4618,34 +6098,26 @@ FAVORITES_PROMOTE_PER_RUN
       ...(cfg.displayModelKey?{displayModelKey:cfg.displayModelKey}:{})};
   };
 
-  const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:600_000};
+  const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000};
   const {readArtifactContentData,thesisReader,contractReader,outlineReader,artifactOriginReader}=createArtifactContextReaders(artifactsService);
   const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.readPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
   const reviewScriptSource: Parameters<typeof prepareScriptReviewContext>[2]["scriptSource"] = {
         getLatestScript: async (c, projectId) => {
-          const artifacts = await artifactsService.listProjectArtifacts(
-            c,
-            projectId,
-          );
-          const scriptArtifacts = artifacts.filter((a) => a.stage === "script");
-          const target =
-            scriptArtifacts.find((a) => a.artifactType === "output_script") ??
-            scriptArtifacts.find((a) => a.artifactType === "master_script");
-          if (target) {
-            const versions = await artifactsService.listVersions(c, target.id);
-            if (versions.length > 0) {
-              const current = versions
-                .slice()
-                .sort((a, b) => b.versionNumber - a.versionNumber)[0]!;
-              return {
-                artifactId: target.id,
-                version: current.versionNumber,
-                text: extractArtifactText(
-                  current.contentText,
-                  current.contentData,
-                ),
-              };
+          const confirmed = await readConfirmedProjectScript(c, projectId);
+          if (confirmed !== null) {
+            const versions = await artifactsService.listVersions(c, confirmed.artifactId);
+            const current = versions.find(
+              (version) => version.id === confirmed.versionId &&
+                version.artifactId === confirmed.artifactId,
+            );
+            if (!current || !Number.isSafeInteger(current.versionNumber)) {
+              throw new Error("确认稿版本记录已失效，请刷新后重新审核");
             }
+            return {
+              artifactId: confirmed.artifactId,
+              version: current.versionNumber,
+              text: confirmed.fullText,
+            };
           }
           const seed = await readProjectRadarDraftSeed(c, projectId);
           return seed
@@ -4653,12 +6125,13 @@ FAVORITES_PROMOTE_PER_RUN
             : null;
         },
       };
-  const calibrationDiagnoseReaders = createCalibrationDiagnoseReaders({projectsService,publishingService,calibrationService,canonicalRubricIdFor,readCurrentScript:(c,projectId)=>createCurrentArtifactReader({projectsService,artifactsService})(c,projectId,"output_script")});
+  const calibrationDiagnoseReaders = createCalibrationDiagnoseReaders({projectsService,publishingService,calibrationService,readCurrentScript:readConfirmedProjectScript,predictionLocks});
   const calibrationScoreReaders = createCalibrationScoreReaders({projectsService,publishingService,analyticsService,calibrationService});
   const dailyTopicRuns=createDailyTopicRunService(db,{now:deps.now});
   const collectionRunState=createCollectionRunStateService(db,{now:deps.now});
   const dailyTopicRunIntents=createDailyTopicRunIntentService(db,deps);
   const dailyTopicAdapter=createDailyTopicBusinessAdapter({
+        topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},
         positioning: {
           getPositioningCenter: (c) =>
             positioningService.readPositioningCenter(c),
@@ -4706,36 +6179,184 @@ FAVORITES_PROMOTE_PER_RUN
     sourceReader:{listEnabledSources:c=>trendSourcesService.listEnabledSources(c)},
     resolveRun:async(c,id)=>{await dailyTopicRunIntents.ensureRunForTask(c,id);return dailyTopicRuns.resolveRun(c,id);},
     countCandidatesForDay:(c,day)=>countCandidatesForDay(db,c,day),
-    async hasConfiguredModel(c){try{await resolveModelSpec(c,"topic.generate");return true;}catch{return false;}},
+    async hasConfiguredModel(c,owner){try{await resolveModelSpec(c,"topic.generate",owner);return true;}catch{return false;}},
     dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
   });
-  const assetProcessingPreparation={assets:assetsService,async isModelConfigured(c:RequestContext,taskType:"asset.classify"|"material.extract"){
-    try{if(taskType==="asset.classify")await resolveMultimodalSpec(c,"asset.classify");else await resolveModelSpec(c,"script.draft");return true;}
+  const assetProcessingPreparation={assets:assetsService,async isModelConfigured(c:RequestContext,taskType:"asset.classify"|"material.extract",owner:{aiTaskId:string}){
+    const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
+    const route=readFrozenModelRoute(runtime,taskType==='asset.classify'?'vision':'structured',taskType==='asset.classify'?'asset.classify':'script.draft');
+    if(route){
+      if(route.readiness==='unavailable')return false;
+      try{await resolveFrozenExecutionSpec(c,route);return true;}
+      catch(error){if(error instanceof CapabilityModelRoutingError&&['MODEL_NOT_CONFIGURED','MODEL_CREDENTIAL_UNAVAILABLE','MODEL_CONFIGURATION_UNAVAILABLE'].includes(error.details.domainCode))return false;throw error;}
+    }
+    if(frozenExecutionEngine(runtime)==='codex')return true;
+    const authority=pinModelAuthority(await readChannelModelAuthority());
+    if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error('MODEL_AUTHORITY_CHANGED'),{code:'MODEL_AUTHORITY_CHANGED'});
+    try{await taskModelAuthorityScope.run(authority,()=>taskType==='asset.classify'?resolveMultimodalSpec(c,'asset.classify'):resolveModelSpec(c,'script.draft',owner));return true;}
     catch(error){if(error instanceof LlmCredentialError || (error instanceof Error && error.name==="MultimodalConfigError"))return false;throw error;}
   }};
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    ...createKnowledgeGenerationBusinessAdapters({
+      readAtoms:async(c,ids)=>Promise.all(ids.map(async id=>{const atom=await knowledgeService.getKnowledge(c,id);if(atom.status!=='active')throw new Error('知识节点不可用');return {id:atom.id,title:atom.title,knowledgeType:atom.knowledgeType,sourceNote:atom.sourceNote??null};})),
+      readComments:async(c,ids)=>{
+        const remaining=new Set(ids),found: Array<{signalId:string;rawText:string;likeCount:number|null}>=[];
+        for(let page=1;remaining.size;page++){
+          const result=await candidateService.listSignals(c,{offset:(page-1)*200,limit:200,source:'comment'});
+          for(const row of result.rows)if(remaining.delete(row.id))found.push({signalId:row.id,rawText:row.rawText,likeCount:row.likeCount??null});
+          if(page*200>=result.total||!result.rows.length)break;
+        }
+        if(remaining.size)throw new Error('评论不存在或不属于当前工作区');return found;
+      },
+    }),
+    'production.rough-cut.propose':createProductionRoughCutBusinessAdapter(()=>productionRoughCut),
     ...createDiscoveryBusinessAdapters({projectsService,candidateService,trendSourcesService,deps,aiService,persistentTaskService,projectIntelligenceReferences,generationContext,makeGenerationReaders,makeProjectMaterialsReader,calibrationDiagnoseReaders,calibrationScoreReaders,dailyTopicAdapter,positioningWorksReader}),
 
     ...createMediaBusinessAdapters({projectsService,publishingService,analyticsService,assetsService,artifactsService,materialLinksService,resolveModelSpec,aiService,assetProcessingPreparation,generationContext,makeGenerationReaders,readArtifactContentData}),
 
-    ...createWritingBusinessAdapters({projectsService,artifactsService,db,generationContext,makeGenerationReaders,makeBriefReader,makeReviewSubjectReader,artifactOriginReader,contractReader,reviewScriptSource,reviewGateService}),
+    ...createWritingBusinessAdapters({projectsService,artifactsService,articlesService,db,generationContext,makeGenerationReaders,makeBriefReader,makeReviewSubjectReader,artifactOriginReader,contractReader,reviewScriptSource,reviewGateService}),
+    ...createGraphicPostBusinessAdapters({graphicPostsService}),
+    ...createGraphicCardBusinessAdapters({graphicPostsService, articlesService}),
+    ...createWechatArticleTextBusinessAdapters({articlesService}),
+    ...createPublicationTextBusinessAdapters({publicationResultsService}),
+    ...workReviewRoot.businessAdapters,
+    ...momentsModelRoot.businessAdapters,
 
   }});
+  const knowledgeGeneration=createKnowledgeGenerationService(db,{ai:aiService,prepareTask:(c,id)=>businessExecution.prepare(c,id),wakeWorker:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();}});
   const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{console.error("EXECUTION_WORKER_BUILD_MISSING");return null;}})();
-  const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string})=>{
-      const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
+  const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string;mode?:ModelRouteMode;signal?:AbortSignal})=>{
+      const runtime=await readOwnedModelRuntime(c,owner);
+      const route=readFrozenModelRoute(runtime,owner.mode??(capability==='asset.classify'?'vision':'structured'),capability);
+      if(route)return resolveFrozenExecutionSpec(c,route,owner.signal);
+      if(frozenExecutionEngine(runtime)==="codex")return codexExecutionSpec();
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error("MODEL_AUTHORITY_CHANGED"),{code:"MODEL_AUTHORITY_CHANGED"});
       try{return await taskModelAuthorityScope.run(authority,async()=>{
-        if(capability!=="asset.classify")return resolveModelSpec(c,capability);
+        if(capability!=="asset.classify")return resolvePiModelSpec(c,capability);
         const spec=await resolveMultimodalSpec(c,"asset.classify");
         return {apiFormat:"openai_chat" as const,baseUrl:spec.baseUrl??"https://api.siliconflow.cn/v1",model:spec.model,token:spec.token};
       });}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
-  function resolveTranscribeRuntimeSpec(c:RequestContext){
-    return resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)});
+  async function readOriginalAsrRuntime(c:RequestContext,owner:TranscribeModelOwner):Promise<Record<string,unknown>>{
+    if('executionRoute' in owner)return {executionRoute:frozenExecutionRoute(owner)};
+    if('aiTaskId' in owner)return aiService.getTaskRuntimeData(c,owner.aiTaskId);
+    return createExecutionLeaseService(db,{now:deps.now}).withLease(owner.ref,'admission',async scope=>{
+      if(scope.context.userId!==c.userId||(scope.context.accountId??null)!==(c.accountId??null)||(scope.context.groupId??null)!==(c.groupId??null))throw new OwnershipError('原ASR执行归属不符');
+      return structuredClone(scope.task.payload as Record<string,unknown>);
+    });
   }
+  async function resolveFrozenCredential(c:RequestContext,route:FrozenModelRoute,deferAsrPerRequest=false,signal?:AbortSignal,store:typeof db=db):Promise<FrozenModelCredential>{
+    if(store===db&&route.source==='official'&&route.readiness==='configured')await ensureOfficialAuthority(c,signal,route.identity.scopeId);
+    return resolveFrozenModelCredential(c,route,{
+      ...(deferAsrPerRequest?{deferAsrPerRequest:true as const}:{}),
+      readSnapshot:()=>captureSelectedModelSnapshot(c,store,[route.source],signal),
+      readOfficialPersistent:(_c,identity)=>(store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey})).getChannelModelCredential(c,identity.scopeId,identity.serviceId),
+      // ASR在原prepareSpec持真实音频/intent后经既有租约端口领取，其它能力没有按次Key协议。
+      acquireOfficialPerRequest:async()=>{throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);},
+    },signal);
+  }
+  async function resolveTranscribeRuntimeSpec(c:RequestContext,owner:TranscribeModelOwner,signal?:AbortSignal):Promise<MultimodalSpec>{
+    const runtime=await readOriginalAsrRuntime(c,owner),route=readFrozenModelRoute(runtime,'asr','transcribe.audio');
+    if(!route)return resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)});
+    if(route.source==='local'||route.readiness==='unavailable')return frozenTranscribeLocalSpec(runtime);
+    let value:FrozenModelCredential;
+    try{value=await resolveFrozenCredential(c,route,true,signal);}
+    catch(error){signal?.throwIfAborted();if(isFrozenAsrRoutingError(error))throw error;return frozenTranscribeLocalSpec(runtime);}
+
+    if(value.kind==='codex')throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    if(value.kind==='local')return value.spec;
+    const spec=value.spec;
+    return {kind:'audio',provider:spec.provider,model:spec.model,baseUrl:spec.baseUrl,token:spec.token,settings:spec.settings,apiFormat:spec.apiFormat,...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(spec.serviceId?{serviceId:spec.serviceId}:{}),...(spec.credentialLifecycle?{credentialLifecycle:spec.credentialLifecycle}:{})};
+  }
+  async function prepareOwnedTranscribeSpec(c:RequestContext,spec:MultimodalSpec,input:{audioBytes:Uint8Array;intentId:string},owner:TranscribeModelOwner,signal?:AbortSignal):Promise<MultimodalSpec>{
+    signal?.throwIfAborted();const original=await readOriginalAsrRuntime(c,owner),route=readFrozenModelRoute(original,'asr','transcribe.audio');
+    signal?.throwIfAborted();
+    const routeKey=route?.routeKey??'asr:transcribe.audio';
+    if(spec.provider==='whisper-local')return route?frozenTranscribeLocalSpec(original):spec;
+    // 申请短效Key之前再核原选中身份；当前choices/option选择不参与。
+    const fresh=await resolveTranscribeRuntimeSpec(c,owner);
+    signal?.throwIfAborted();
+    // 凭据在两次读取之间丢失时，resolveSpec已经核对原允许的本地安全路径。
+    // 远端是否已开始仍由原ASR owner/plan处理，不能在此重发远端或更换来源。
+    if(fresh.provider==='whisper-local')return route?frozenTranscribeLocalSpec(original):fresh;
+    if(canonical(transcribeConfiguration(fresh))!==canonical(transcribeConfiguration(spec)))throw new CapabilityModelRoutingError('MODEL_ROUTE_IDENTITY_CHANGED',routeKey);
+    let requestLease:Parameters<typeof prepareManagedTranscribeSpec>[3];
+    if(fresh.credentialLifecycle==='per_request'){
+      if(!('ref' in owner))throw new CapabilityModelRoutingError('ASR_EXECUTION_REF_REQUIRED',routeKey);
+      const deadlineAt=await createExecutionLeaseService(db,{now:deps.now}).withLease(owner.ref,'admission',async scope=>scope.task.deadlineAt);
+      signal?.throwIfAborted();
+      const remainingMs=remainingDeadlineMs(deadlineAt===null?null:Date.parse(deadlineAt));
+      if(remainingMs===0)throw new CapabilityModelRoutingError('EXECUTION_BUDGET_EXHAUSTED',routeKey);
+      // 原绝对期限只创建一次，覆盖票据与租约完整串行，不能由内层两分钟下限续期。
+      const deadlineSignal=remainingMs===undefined?undefined:AbortSignal.timeout(remainingMs);
+      const originalSignal=signal&&deadlineSignal?AbortSignal.any([signal,deadlineSignal]):signal??deadlineSignal;
+      const assertDispatch=async()=>{
+        originalSignal?.throwIfAborted();await readOriginalAsrRuntime(c,owner);
+        if(route)await resolveFrozenCredential(c,route,true,originalSignal);
+        else{
+          const current=await resolveTranscribeRuntimeSpec(c,owner);
+          if(canonical(transcribeConfiguration(current))!==canonical(transcribeConfiguration(fresh)))throw new CapabilityModelRoutingError('MODEL_ROUTE_IDENTITY_CHANGED',routeKey);
+        }
+        originalSignal?.throwIfAborted();
+      };
+      const fetchForOriginal:typeof fetch=async(resource,init)=>{
+        await assertDispatch();
+        const requestSignal=init?.signal&&originalSignal?AbortSignal.any([init.signal,originalSignal]):init?.signal??originalSignal;
+        requestSignal?.throwIfAborted();return fetch(resource,{...init,signal:requestSignal});
+      };
+      requestLease={requestLease:leaseInput=>requestManagedAsrLease(leaseInput,{
+        requestAccess:async()=>{
+          await assertDispatch();
+          return requestFreshClientConfigAccess({fetchImpl:fetchForOriginal,...(route?.source==='official'&&route.readiness==='configured'?{expectedScopeId:route.identity.scopeId}:{})});
+        },
+        fetchImpl:fetchForOriginal,
+      })};
+    }
+    signal?.throwIfAborted();
+    const prepared=await prepareManagedTranscribeSpec(c,fresh,input,requestLease);signal?.throwIfAborted();
+    // Key回复后重核租约与选中身份；迟到回复不会改变原plan或调用权。
+    await readOriginalAsrRuntime(c,owner);if(route)await resolveFrozenCredential(c,route,true,signal);signal?.throwIfAborted();
+    return route&&prepared.provider==='whisper-local'?frozenTranscribeLocalSpec(original):prepared;
+  }
+  async function captureAsrConfiguration(c:RequestContext){
+    const executionRoute=await resolveRootExecutionRoute(c,db,undefined,'audio');
+    let spec:MultimodalSpec;
+    try{spec=await resolveTranscribeRuntimeSpec(c,{executionRoute});}
+    catch(error){if(isFrozenAsrRoutingError(error))throw error;spec=frozenTranscribeLocalSpec({executionRoute});}
+    return {configuration:transcribeConfiguration(spec),executionRoute};
+  }
+  function createTaskWithFrozenRouting(c:RequestContext,body:Parameters<AiService['createTask']>[1],route?:ExecutionRoute){
+    if(!route)return aiService.createTask(c,body);
+    return createAiService({...aiOwnerDeps,resolveTaskRuntimeData:(ctx,type,input)=>aiOwnerDeps.resolveTaskRuntimeData!(ctx,type,input,route)}).createTask(c,body);
+  }
+
+  const productionExactAsrFile=createProductionAsrExactReader({assets:(_c,tx)=>tx?createAssetsService(createAssetRepository(tx,deps),objectStorageForStore(tx),deps):assetsService,assertProjectAsset:assertProductionEditorAsset});
+  const assetAsrOwner=createAssetAsrOwner(db,{...deps,assertProductionReservation:(c,proof,tx)=>productionService.assertAssetAsrReservation(c,proof,tx),budget:workerBudget,objectStorageForCtx,readExactFile:(c,input,signal)=>productionExactAsrFile(c,input,undefined,signal),extractAudio:extractProductionAsrAudio,prepareSpec:async(c,configuration,intentId,audioBytes,owner,signal)=>{const spec=await resolveTranscribeRuntimeSpec(c,owner);if(spec.provider!=='whisper-local'&&canonical(transcribeConfiguration(spec))!==canonical(configuration))throw new ProductionConflictError("冻结转写配置已变化，不能替换原执行");return prepareOwnedTranscribeSpec(c,spec,{intentId,audioBytes},owner,signal);}});
+  productionRoughCut=createProductionRoughCutReservations(db,{
+    ...deps,prepareModelAuthority:c=>prepareModelAuthority(c,'text'),onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 粗剪原预约恢复失败，请核对原请求"),
+    readAuthoritativeScript:async(c,projectId,outputId)=>{const script=await outputScriptsService.getSavedScript(c,outputId);if(script&&script.projectId!==projectId)throw new Error("粗剪权威稿归属不符");return script;},
+    async assertExactSources(c,projectId,plan,tx){
+      const scoped=tx?createAssetsService(createAssetRepository(tx,deps),objectStorageForStore(tx),deps):assetsService;
+      for(const source of plan.mainTrack.sources){
+        await assertProductionEditorAsset(c,{projectId,assetId:source.assetId,assetFileId:source.assetFileId,fileDigest:source.fileDigest},tx);
+        await scoped.readMediaFile(c,source.assetId,source.assetFileId,source.fileDigest);
+      }
+    },
+    createTask:(c,body,tx,protocolVersion)=>tx?createAiService({...aiOwnerDeps,db:tx,
+      resolveTaskRuntimeData:createTransactionalTaskRuntimeResolver(tx,{...deps,masterKey,
+        resolveExecutionRoute:(c,store)=>resolveRootExecutionRoute(c,store),
+        officialSkills:{get:id=>getOfficialSkillBase(id,protocolVersion===3?{protocolVersion:3}:undefined),list:listOfficialSkillBases,platformPolicy:()=>({version:PLATFORM_POLICY_VERSION,text:PLATFORM_POLICY_TEXT})},
+        readPinnedAuthority:async()=>pinModelAuthority(await readChannelModelAuthority()),
+      }),
+    }).createTask(c,body):aiService.createTask(c,body),
+    readExactSource:(c,projectId,source,tx)=>productionExactAsrFile(c,{projectId,source:{assetId:source.assetId,assetFileId:source.assetFileId,fileDigest:source.fileDigest}},tx),
+    async readTask(c,id,tx){const store=tx??db,task=await(tx?createAiService({...aiOwnerDeps,db:tx}):aiService).getTask(c,id),origin=await store.query.aiTasks.findFirst({where:(row,{and,eq})=>and(eq(row.id,id),eq(row.userId,c.userId))});if(!origin)throw new OwnershipError('原粗剪AI任务不存在');return{...task,accountId:origin.accountId,groupId:origin.groupId,groupVersion:origin.groupVersion,membershipVersion:origin.membershipVersion};},
+    readResults:(c,id,tx)=>(tx?createAiService({...aiOwnerDeps,db:tx}):aiService).listResults(c,id),
+    async bindExecution(c,id){const bound=await businessExecution.prepare(c,id);if(!stoppingPreparation)modelWorker?.start();return bound;},
+  });
+  productionTranscripts=createProductionTranscripts(db,{...deps,onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 资产转写预约恢复失败，请从原请求核对"),asr:assetAsrOwner,readAiTaskState:(c,id)=>aiService.getTask(c,id),resolveConfiguration:captureAsrConfiguration,readExactFile:productionExactAsrFile,aiCreateTask:createTaskWithFrozenRouting,bindExecution:async(c,id)=>{const actual=await assetAsrOwner.readAggregate(c,id),task=await aiService.getTask(c,id);const bound=await createExecutionAuthorityService(db,{now:deps.now}).bindAiTask(c,id,{requestFingerprint:task.requestFingerprint,modelInput:actual.input,budget:workerBudget});if(!stoppingPreparation)modelWorker?.start();return bound;}});
   const transcribeBusiness=createTranscribeBusinessExecutionService(db,{
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
     resolveSpec:resolveTranscribeRuntimeSpec,
@@ -4747,20 +6368,31 @@ FAVORITES_PROMOTE_PER_RUN
     if(!stoppingPreparation)modelWorker.start();
   }
   const coverExecutionPorts={
-    async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string){
+    async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string,signal?:AbortSignal){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      const route=readFrozenModelRoute(runtime,'image',capability);
+      if(route)return resolveFrozenAssetSpec(c,route,db,signal);
+      if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
       return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
     },
-    getReferenceBytes:(c:RequestContext,assetId:string)=>assetsService.getAssetBytes(c,assetId),
+    getReferenceBytes:(c:RequestContext,assetId:string,assetFileId?:string)=>assetFileId?assetsService.readImageReference(c,assetId,assetFileId):assetsService.getAssetBytes(c,assetId),
   };
   const coverBusiness=createExecutionCoverService(db,{...coverExecutionPorts,budget:workerBudget,now:deps.now});
   const assetBusiness=createAssetBusinessExecutionService(db,{
+    assertCanvasInput:creativeCanvasRoot.assertCanvasInput,
+    getReference:(c,id,file)=>workAssetsFor(db).readImageReference(c,id,file),
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
-    async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
-    async resolveSpec(c,capability,taskId){
+    async assertProject(c,id,store,lock){
+      if(store)await workProjectsFor(store).getProject(c,id,lock);
+      else await projectsService.getProjectOverviewCore(c,id);
+    },
+    async resolveSpec(c,capability,taskId,signal){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      const route=readFrozenModelRoute(runtime,capability==='video.generate'?'video':'image',capability);
+      if(route)return resolveFrozenAssetSpec(c,route,db,signal);
+      if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
       return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
@@ -4827,13 +6459,17 @@ FAVORITES_PROMOTE_PER_RUN
     },
     fail:(c,id,message)=>aiService.markFailed(c,id,message),
   });
-  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"|"script.review"|"script.draft"|"publish.platform_adapt"|"cover.generate"){
-    const task=await aiService.getTask(c,id);
-    if(task.taskType!==taskType)throw new Error("聊天唤醒任务类型不符");
-    if(task.status!=="queued")return;
-    if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
-    await submittedPreparation.prepare(c,id);
-    if(!stoppingPreparation)modelWorker.start();
+  const generationTaskWake=createGenerationTaskWake({
+    readTask:(c,id)=>aiService.getTask(c,id),
+    readRuntime:(c,id)=>aiService.getTaskRuntimeData(c,id),
+    submitted:submittedPreparation,business:businessExecution,assets:assetBusiness,
+    getWorker:()=>modelWorker,isStopping:()=>stoppingPreparation,
+  });
+  async function wakeBusinessTask(c:RequestContext,id:string,taskType:Parameters<typeof generationTaskWake>[2]){
+    await generationTaskWake(c,id,taskType,"business");
+  }
+  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:Parameters<typeof generationTaskWake>[2]){
+    await generationTaskWake(c,id,taskType,"submitted");
   }
   async function readTranscribePostprocessContext(c:RequestContext,awemeId:string,signal?:AbortSignal){
     signal?.throwIfAborted();
@@ -4848,15 +6484,16 @@ FAVORITES_PROMOTE_PER_RUN
     };
   }
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
-    recoverPendingPreparation:signal=>submittedPreparation.recover(signal),
+    recoverPendingPreparation:async signal=>{await submittedPreparation.recover(signal);await productionTranscripts.recoverPending(signal);await productionRoughCut.recoverPending(signal);},
     dailyTopicPorts:{
       validateRun:(c,input,tx)=>dailyTopicRuns.validateRun(c,input,tx),
       finishRun:(c,input,tx)=>dailyTopicRuns.finishRun(c,input,tx),
-      lockAccount:async(c,tx)=>{await lockAccountForSupply(tx,c);await lockCandidateSupply(tx,{userId:c.userId,accountId:c.accountId!});},
+      lockAccount:async(c,tx)=>{if(!c.groupId)await lockAccountForSupply(tx,c);await lockCandidateSupply(tx,{userId:c.userId,groupId:c.groupId,accountId:c.accountId});},
       countCandidatesForDay:(c,day,tx)=>countCandidatesForDay(tx,c,day),
       createCandidate:createTopicCandidateInTransaction,
     },
     browserSessions:browserSessionsService,
+    assetAsr:assetAsrOwner,
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
     video:{resolveModelSpec},
@@ -4883,13 +6520,16 @@ FAVORITES_PROMOTE_PER_RUN
     },
     transcribePreparation:{
       resolveSpec:resolveTranscribeRuntimeSpec,
-      prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
+      prepareSpec:prepareOwnedTranscribeSpec,
     },
     cover:coverExecutionPorts,
+    readAssetReference:creativeCanvasRoot.readAssetReference,
     assetStorage:objectStorageForCtx,resolveAssetCredential:async(c,owner)=>{
       const task=await aiService.getTask(c,owner.aiTaskId);
-      return task.taskType==="cover.generate"?coverBusiness.resolveCredential(c,owner):assetBusiness.resolveCredential(c,owner);
+      return task.taskType==="cover.generate" || task.taskType==="graphic.card.generate"
+        ? coverBusiness.resolveCredential(c,owner):assetBusiness.resolveCredential(c,owner);
     },
+    commitProductionRoughCandidate:(c,proof,tx)=>productionRoughCut.commitRoughCandidate(c,proof,tx),
     projectCandidate(_c,input){return businessExecution.projectCandidate(input);},
     onError:code=>console.error(`[execution-worker] ${code}`),
   }) : null;
@@ -4913,7 +6553,7 @@ FAVORITES_PROMOTE_PER_RUN
         },
       }),
   });
-  const agenticBudget={maxCalls:8,maxTokens:20000,deadlineMs:600_000};
+  const agenticBudget={maxCalls:8,maxTokens:20000,deadlineMs:1_800_000};
   const agenticBusiness=createAgenticBusinessExecutionService(db,{
     definitions:{
       "exec.agentic.collect":{taskType:"agentic.collect",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.collect",tools:collectionWorkerTools.definitions},
@@ -4929,6 +6569,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
     async validateInputs(c,inputs){for(const input of inputs)await assetsService.getAsset(c,input.assetId);},
   });
+  supportsAgenticPublicTask = taskType => agenticBusiness.supports(`exec.${taskType}`);
   const agenticEntry=(()=>{try{return resolveAgenticWorkerPath();}catch{console.error("AGENTIC_WORKER_BUILD_MISSING");return null;}})();
   const agenticWorker=agenticEntry ? createAgenticWorkerDispatcher(db,{
     entryPath:agenticEntry,workerId:`agentic-worker-${process.pid}`,budget:agenticBudget,modelConcurrency:1,
@@ -4936,6 +6577,7 @@ FAVORITES_PROMOTE_PER_RUN
     onError:code=>console.error(`[agentic-worker] ${code}`),
   }) : null;
   let chatWorker: ReturnType<typeof createChatProductionRuntime> | undefined;
+  const localCodexStatus=createLocalCodexStatusService({entryPath:resolveCodexStatusWorkerPath});
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
@@ -4944,7 +6586,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{observabilityHost?.stop();stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);await observabilityObserver.drain();observabilityObserver.dispose();};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -4961,70 +6603,8 @@ FAVORITES_PROMOTE_PER_RUN
     }
   };
 
-  // ── [T-093] 知识库 AI 搜索:可配 embedding 管线 ─────────────────────────────
-  // capability "knowledge.search.embed" **只认专配行,不回退 default 聊天模型**
-  // (把 chat LLM 当 embedding 用是错的;未配 = 诚实降级纯关键词,前端渲提示条)。
-  const resolveEnvSecretRef = (secretRef: string | undefined): string => {
-    if (!secretRef) return "";
-    const m = /^env:(.+)$/.exec(secretRef.trim());
-    if (!m) return "";
-    return (process.env[m[1]!] ?? "").trim();
-  };
-  const resolveEmbedSpec = async (
-    ctx: RequestContext,
-  ): Promise<{
-    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
-    baseUrl: string | null;
-    model: string;
-    token: string;
-  } | null> => {
-    const channel = await getChannelModelConfig();
-    if (channel) {
-      const route = resolveChannelCapabilityRoute(
-        channel,
-        "knowledge.search.embed",
-      );
-      if (route) {
-        const credential = route.serviceId
-          ? await getChannelModelCredential(ctx, route.serviceId)
-          : null;
-        const cfg = channelLlmConfigFromRoute(route, credential);
-        return {
-          apiFormat: cfg.apiFormat,
-          baseUrl: cfg.baseUrl,
-          model: cfg.model,
-          token: cfg.token,
-          ...(cfg.displayModelKey
-            ? { displayModelKey: cfg.displayModelKey }
-            : {}),
-        };
-      }
-    }
-    const row = await settingsService.getModelConfig(
-      ctx,
-      "knowledge.search.embed",
-    );
-    if (!row) return null;
-    const token =
-      row.secretValue?.trim() || resolveEnvSecretRef(row.secretReference);
-    if (!token) return null;
-    return {
-      apiFormat: row.apiFormat,
-      baseUrl: row.baseUrl ?? null,
-      model: row.modelName,
-      token,
-    };
-  };
-
-  // 交互向量请求复用 IO Worker；领域权限与索引写入仍由当前 service 负责。
+  // 文本/图片连接测试保留原IO；知识搜索已使用关键词，不装配向量凭据或Worker。
   const modelProbeIo = createModelProbeIoService({entryPath:resolveModelProbeWorkerPath});
-  const embeddingIo = createEmbeddingIoService({entryPath:resolveEmbeddingWorkerPath});
-  const embedTexts = async (
-    ctx: RequestContext,
-    spec: NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>,
-    texts: string[],
-    signal?: AbortSignal,
-  ): Promise<number[][]> => embeddingIo.embed(ctx, spec, texts, signal);
 
   // resolveMultimodalSpec — L5 asset.generate 的多模态解析(SPEC 2026-07-01 §2.2 / M2),与文本
   // 层 resolveModelSpec 并列:复用同一套 getModelConfig(settings 拥有 model_configurations)+
@@ -5033,15 +6613,16 @@ FAVORITES_PROMOTE_PER_RUN
   const resolveMultimodalSpec = (
     ctx: RequestContext,
     capability: "image.generate" | "image.edit" | "video.generate" | "asset.classify",
+    store?:typeof db,
   ) =>
     resolveMultimodalSpecFn(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => (store?settingsServiceFor(store):settingsService).getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
       getChannelModelCredential: (serviceId) =>
-        getChannelModelCredential(ctx, serviceId),
+        getChannelModelCredential(ctx, serviceId,store),
       getChannelModelSelection: (selectedCapability) =>
-        getChannelModelSelection(ctx, selectedCapability),
+        getChannelModelSelection(ctx, selectedCapability,store),
     });
 
   // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────
@@ -5188,10 +6769,7 @@ FAVORITES_PROMOTE_PER_RUN
         getChannelModelSelection: (selectedCapability) =>
           getChannelModelSelection(ctx, selectedCapability),
       }),
-    resolveEmbed: (ctx) =>
-      resolveEmbedSpec(ctx).then((spec) =>
-        spec ? { ...spec, authStyle: "bearer" as const } : null,
-      ),
+    resolveEmbed: async () => null,
     resolveSearch: (ctx) => resolveSearchSpec(ctx),
     generateImageMinimal: (spec,c) => modelProbeIo.probeImage(c,spec),
     // 真实最小检索(count=1;bocha/tavily/serpapi 消耗少量额度)。
@@ -5275,111 +6853,7 @@ FAVORITES_PROMOTE_PER_RUN
   // 口吻的假选题「用 RAG 把内部文档变成问答助手」等)。/topics 选题候选池开箱空;真实候选由
   // 用户从热点/需求/想法生成(ChatBox 选题、AI 选题一键岛)后落库。
 
-  // Seed the canonical 变现加权 rubric (module 20): one Rubric + its immutable v1
-  // RubricVersion (五维: hook 强度 / 利他性 / 人群匹配 / CTA 清晰度 / 为产品铺路程度,
-  // weights sum to 1.0), so the calibration FE surface + the Candidate 变现加权 ranking
-  // resolve a real current RubricVersion under the seeded login (foundation §2).
-  // [T-332 S2] rubrics 是 per-account 域(SPEC §3.2:每号一套打分口径,NOT NULL):默认
-  // rubric 改为**逐 active 号**种入(id = rubric-canonical:<accountId>,运行时经
-  // canonicalRubricIdFor(ctx) 解析);0 号 → 跳过(绑号时 bootstrapDouyinOnBind 即时补种,
-  // 兜底下次启动再补)。Deterministic ids/clock (deps.now());seed* onConflictDoNothing
-  // → 重建单例/重复绑定不双写。version 先种,currentVersionId 才解析得到。
-  const canonicalRubricDimensions = [
-      {
-        key: "hook",
-        label: "钩子强度",
-        weight: 0.2,
-        description:
-          "前3秒能否逼观众看下去 30 秒。0=通用开场「大家好今天聊聊」；3=反直觉断言/具体承诺；5=无法停止处理的具体场景或断言",
-      },
-      {
-        key: "emotion",
-        label: "情感共鸣",
-        weight: 0.2,
-        description:
-          "前30秒能否触发具体、可命名的情感。0=纯信息无钩子；3=一般共鸣「我也有过」；5=锐利到观众不愿承认的自我识别「这就是我」",
-      },
-      {
-        key: "product_path",
-        label: "为产品铺路",
-        weight: 0.2,
-        description:
-          "内容能否支撑信任/转化、为产品铺路（不只追播放）。0=纯流量噱头；3=隐约关联产品价值；5=自然把观众引向信任与下一步转化",
-      },
-      {
-        key: "social",
-        label: "社会共振",
-        weight: 0.15,
-        description:
-          "是否触及当下有争议/结构性的社会模式。0=纯个人；3=公认社会现象无新视角；5=命名一个观众认识但没有语言形容的结构性模式",
-      },
-      {
-        key: "cta",
-        label: "CTA 清晰度",
-        weight: 0.15,
-        description:
-          "行动召唤是否清晰且不突兀。0=无 CTA；3=结尾生硬喊一句；5=CTA 与内容价值自然衔接、观众想点",
-      },
-      {
-        key: "quotable",
-        label: "金句密度",
-        weight: 0.1,
-        description:
-          "有几句能被截图、离开视频独立传播。0=全叙述无金句；3=结尾一句；5=多句分布开场/中间/结尾、能在评论与转发里独立存活",
-      },
-  ];
-  // [T-332 S2] 按号幂等 ensure 默认 rubric(启动逐 active 号 + 绑定编排即时调;两处同一实体)。
-  //   id 约定与 canonicalRubricIdFor(ctx) 恒一致;onConflictDoNothing 幂等。
-  const ensureCanonicalRubricForAccount = async (
-    accountId: string,
-  ): Promise<void> => {
-    const calibrationSeedRepo = createCalibrationRepository(db, {
-      ...deps,
-      userId: localUser.id,
-      accountId,
-    });
-    const versionRow: CalibrationRubricVersionRow = {
-      id: `rubricver-canonical-1:${accountId}`,
-      userId: localUser.id,
-      accountId, // per-account stamp(NOT NULL 终态)
-      rubricId: `rubric-canonical:${accountId}`,
-      versionNumber: 1,
-      dimensions: canonicalRubricDimensions,
-      changeSummary:
-        "v2 借鉴 cheat-on-content 的已校准 rubric：合并传播驱动（钩子/情感/社会/金句）与变现维度（为产品铺路/CTA），每维带 0/3/5 锚点",
-      createdAt: deps.now(),
-    };
-    const rubricRow: CalibrationRubricRow = {
-      id: `rubric-canonical:${accountId}`,
-      userId: localUser.id,
-      accountId, // per-account stamp(NOT NULL 终态)
-      name: "变现加权评分标准",
-      currentVersionId: versionRow.id,
-      createdAt: deps.now(),
-    };
-    await calibrationSeedRepo.seedRubricVersions([versionRow]);
-    await calibrationSeedRepo.seedRubrics([rubricRow]);
-  };
-  // 启动:逐 active 号补种(存量号/重启幂等);0 号 → 静默跳过(引导态)。best-effort。
-  try {
-    const rubricSeedCtx: RequestContext = {
-      userId: localUser.id,
-      requestId: "seed-canonical-rubric",
-      source: "ingestion",
-    };
-    const { rows: rubricAccounts } = await platformAccountService.listAccounts(
-      rubricSeedCtx,
-      { limit: 100, offset: 0 },
-    );
-    for (const acct of rubricAccounts.filter((a) => a.status === "active")) {
-      await ensureCanonicalRubricForAccount(acct.id);
-    }
-  } catch (rubricSeedErr) {
-    console.warn(
-      "[seed] canonical rubric 按号种入失败(已 ignore,app 仍可启动):",
-      rubricSeedErr instanceof Error ? rubricSeedErr.message : rubricSeedErr,
-    );
-  }
+  // 默认量表由backend同一服务按真实ctx初始化；启动不枚举账号造根。
 
   // [T-050][T-332 S2] canonical 盲预测/回流结果种子已随 demo 数据整体退役,其残留的
   // calUser/calRubricVer/predDimensions/predMetrics 死代码本次一并清除(calRubricVer 曾
@@ -5425,9 +6899,99 @@ FAVORITES_PROMOTE_PER_RUN
       return task;
     },
   });
+  const creativeCanvasService=creativeCanvasRoot.service;
+  const visualMaterialAdoption=createVisualMaterialAdoptionService({
+    canvas:creativeCanvasService,publishing:publishingService,
+    confirmGeneratedTask:(c,taskId)=>aiService.confirmTask(c,taskId),
+    assertFrozenImage:resolveFrozenImage,
+    assertOutputProject:async(c,outputId,projectId)=>{await projectsService.getProject(c,projectId);const output=await projectsService.getOutput(c,outputId);if(output.projectId!==projectId)throw new OwnershipError("稿件不属于目标作品");},
+  });
+  const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService,visualMaterialAdoption);
+  const assistantCandidateFor=(store:typeof db)=>createCandidateService({db:store,...deps,
+    projects:{createProject:(c,input)=>workProjectsFor(store).createProject(c,input)},
+    topicWorkspace:{assertProject:(c,id)=>workProjectsFor(store).getProject(c,id),currentPositioningVersion:async c=>(await workPositioningFor(store).readPositioningCenter(c)).currentStatement?.id??null},
+    resolveCollectedPublication:async(c,id)=>{const row=await workPublishingFor(store).resolveCollectedPublicationById(c,id);return row?{groupId:row.groupId??null,accountId:row.accountId}:null;},
+    ingestion:{assertRunExists:async()=>{throw new Error("该有限动作不开放采集信号写入");}},
+    positioning:{evaluateFit:async(c,subject)=>{try{return (await workPositioningFor(store).evaluateGate(c,{subjectType:"candidate",subjectId:"candidate-inline",candidate:{title:subject.title,angle:subject.angle,contentRole:subject.contentRole??undefined,productAnchorId:subject.productAnchorId??undefined}})).positioningFit;}catch{return null;}}},
+  });
+  const assistantActions=createAssistantActionOwners(db,{
+    binding:accountBindingService,assetTags:assetTagProposalAdoption,
+    forStore:(store,deferred)=>{
+      const projects=workProjectsFor(store),artifacts=workArtifactsFor(store,deferred),knowledge=workKnowledgeFor(store),publishing=workPublishingFor(store);
+      return {projects,artifacts,knowledge,candidates:assistantCandidateFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),
+        intelligence:store===db?intelligenceService:createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now,resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx)})}),
+        positioning:workPositioningFor(store),groups:createAccountGroupService({db:store,...deps}),accounts:store===db?platformAccountService:createPlatformAccountService({db:store,...deps}),
+        calendar:calendarFor(store),scheduling:createSchedulingService({db:store,...deps}),settings:settingsServiceFor(store),
+        writes:{projects:createProjectsTransport(()=>({service:projects,repo:createProjectRepository(store)})),artifacts:createArtifactsTransport(()=>artifacts),knowledge:createKnowledgeTransport(()=>knowledge),publishing:createPublishingTransport(()=>publishing)},
+      };
+    },
+    async afterCommit(c,action,result){
+      if(action.kind==="project.create")await indexProjectBestEffort(c,result as Parameters<typeof indexProjectBestEffort>[1]);
+      if(action.kind==="knowledge.create")await knowledgeSearchRuntime.indexKnowledgeDocumentBestEffort(c,(result as {id:string}).id);
+    },
+  });
+  assistantSystemRoot=await createAssistantSystemRoot(db,{canvas:creativeCanvasRoot.service,generation:creativeCanvasRoot.generation,actions:assistantActions,assetTags:assetTagProposalAdoption,
+    read:async(c,endpoint,input)=>await compositeTransport.request(endpoint,{params:input.params,query:input.query,body:undefined} as never,c) as {data:unknown;meta?:unknown},
+  },deps);
+  const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
+  const fileRecovery=createNativeFileRecoveryService(db,{now:deps.now,shouldStop:()=>stoppingPreparation,
+    afterReconciled:async(taskId,control)=>{
+      if(stoppingPreparation||control?.shouldStop())return;
+      const report=await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true,taskId});
+      if(report.requeued&&!stoppingPreparation&&!control?.shouldStop())chatWorker?.start();
+    },
+  });
+  const workbenchBlobs=createWorkbenchBlobService(objectStorageForCtx);
+  const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:workbenchBlobs,now:deps.now});
+  const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:workbenchBlobs}):undefined;
+  const artifactReconciler=startWorkbenchArtifactReconciler(db,createWorkbenchArtifactService(db,{blobs:workbenchBlobs,now:deps.now}),{
+    afterReconciled:async(taskId)=>{await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true,taskId});recoveryWake?.wake();},
+    onError:()=>{},
+  });
+  stopWorkbenchArtifactReconciler=()=>artifactReconciler.stop();
+  const screenshotMedia=createWorkbenchScreenshotMediaService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
+  const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now,media:screenshotMedia});
+  disposeWorkbenchBrowserHost=async()=>{await browserWorkbenchHost?.dispose();};
+  const workbenchHosts=[fileWorkbenchHost,artifactWorkbenchHost,browserWorkbenchHost]
+    .filter((host):host is NonNullable<ChatProductionCompositionDeps["workbenchHost"]>=>Boolean(host));
+  const workbenchHost:ChatProductionCompositionDeps["workbenchHost"]=workbenchHosts.length?{
+    catalog:workbenchHosts.flatMap(host=>host.catalog),platform:workbenchHosts[0].platform,
+    legacyFrozenCapabilities:workbenchHosts.flatMap(host=>host.legacyFrozenCapabilities??[]),
+    capabilities:[...new Set(workbenchHosts.flatMap(host=>host.capabilities))],
+    dispatch:(call,options)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      if(!host)throw new Error("WORKBENCH_CAPABILITY_UNAVAILABLE");
+      return host.dispatch(call,options);
+    },
+    commitAndSettle:async(call,input)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      if(!host?.commitAndSettle)throw new Error("WORKBENCH_ATOMIC_COMMIT_UNAVAILABLE");
+      return host.commitAndSettle(call,input);
+    },
+    markUnknown:async(call,input)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      await host?.markUnknown?.(call,input);
+    },
+  }:undefined;
+  workbenchPublic=createWorkbenchPublicTransport({
+    tasks:createWorkbenchPublicService(db),stream:createWorkbenchPublicStreamService(db),artifacts:workbenchPreviewRuntime,
+    capabilities:()=>({platform:workbenchHost?.platform??null,capabilities:selectBuiltinWorkbenchCapabilities(workbenchHost),builtins:workbenchBuiltins,dependencyLock:workbenchDependencyLock}),
+    render:(ctx,taskId,artifactId,version,format)=>createWorkbenchArtifactRepresentation(workbenchPreviewRuntime,ctx,taskId,artifactId,version,format),
+    reconcile:artifactReconciler.reconcile,
+    reconcileFile:fileRecovery.reconcile,
+  });
   const chatRuntime: ChatRuntime = {
+    prepareChatRouting,
+    assistantSystem:assistantSystemRoot.preparation,
+
+    resolveWritingContext:(c,id,selection)=>workWritingContext.resolve(c,id,selection),
+    readCreationTarget:async(c,target)=>(await workCreationRoot.read(c,target)).target,
+    readEditorTarget:(c,target)=>workEditorCandidate.readTarget(c,target),
+    runKnowledgeGeneration:knowledgeGeneration.runKnowledgeGeneration,
+    localCodexStatus:localCodexStatus.read,
+    ...(workbenchHost?{workbenchHost}:{}),
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
-    readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
+    readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readConfirmedProjectScript(c,projectId);signal?.throwIfAborted();return result?{projectId:result.projectId,artifactId:result.artifactId,currentVersionId:result.versionId,contentHash:result.sha256,fullText:result.fullText}:null;},
     get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
     ai: aiService,
     resolveEffectiveSkillSnapshot: async (ctx, requiredSkillIds) => {
@@ -5544,10 +7108,11 @@ FAVORITES_PROMOTE_PER_RUN
     // 现成读端口,不新造 repo 方法)。诚实说明:knowledge 的 query 仍是内存 contains 过滤；materials 已走领域分页检索
     // (list 本身不带全文检索);projects 无真实 publishedAt(那在 publication 上)→ 不塞、留空。
     contextReaders: {
+getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputId),
 ...createChatProjectsReaders({projectsService,publishingService,artifactsService,listRecentProjects,searchProjects: (c,opts)=>searchProjectsWithPublicationFacts(c,opts,{listProjects: ctx=>projectsService.listProjectsForComposition(ctx),listOutputRefsByProjects: (ctx,ids)=>projectsService.listOutputRefsByProjects(ctx,ids),listPublicationsByOutputIds: (ctx,ids)=>publishingService.listPublicationsByOutputIds(ctx,ids)}),contentRadarDraftSeedOf,extractArtifactText,makeReviewSubjectReader,readProjectRadarDraftSeed,readCurrentArtifactTruth}),
 ...createChatLifecycleReaders({projectsService,publishingService,analyticsService,assetsService,artifactsService,materialLinksService,reviewGateService,extractArtifactText,isLegacyIncompleteReview}),
 ...createChatEvidenceReaders({assetsService,knowledgeService}),
-...createChatPerformanceReaders({projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService,positioningService,calibrationService,canonicalRubricIdFor})
+...createChatPerformanceReaders({projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService,positioningService,calibrationService})
 },
     // [T-084a] 联网检索端口 —— gatherMaterials 前置检索 + honestyBlock/工具动态描述探测。
     probeSearchConfigured,
@@ -5630,7 +7195,7 @@ FAVORITES_PROMOTE_PER_RUN
     // 读取与备用来源编排由 Worker 所属模块统一维护；本装配只注入既有宿主/领域端口。
     readWebUrl: async (
       context: RequestContext,
-      input: { url: string; signal?: AbortSignal },
+      input: { url: string; signal?: AbortSignal; refresh?: boolean },
     ) => {
       const ctx = { ...context };
       return readWebDocument(input, {
@@ -5705,7 +7270,9 @@ FAVORITES_PROMOTE_PER_RUN
     listAuthorizedDirs: async (ctx: RequestContext) => {
       return { dirs: listLocalReadAlwaysDirs(ctx.userId) };
     },
-    ...createChatGenerationTasks({aiService,projectsService,reviewGateService,chatTaskSubmissions,readCurrentArtifactTruth,createAiTaskAttemptId,makeReviewSubjectReader,assertReviewableChatScript,ai}),
+    ...createChatGenerationTasks({aiService,projectsService,reviewGateService,chatTaskSubmissions,readCurrentArtifactTruth,
+      getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputId),
+      createAiTaskAttemptId,makeReviewSubjectReader,assertReviewableChatScript,ai}),
     ...createChatPreparationTasks({aiService,projectsService,makeReviewSubjectReader,assertReviewableChatScript,readCurrentScriptRefForReview,wakeSubmittedTask,agenticBusiness,getAgenticWorker:()=>agenticWorker,isStopping:()=>stoppingPreparation}),
     ...createChatIngestionTasks({createAiTaskAttemptId,intelligenceService,wakeShareImport:()=>recoveryWake?.wake("share_import"),projectsWithTranscribe}),
     prepareVideoEdit: createVideoEditCandidatePreparer({projectsService,productionService,materialLinksService,assetsService}),
@@ -5713,9 +7280,28 @@ FAVORITES_PROMOTE_PER_RUN
 
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
-      entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
+      assistantSystem:assistantSystemRoot.host,editor:workEditorPorts,creation:workCreationRoot,
+      entryPath:workerEntry,runtime:chatRuntime,now:deps.now,externalImageStorage:objectStorageForCtx,
+      topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},
+      canvas:{read:(c,id)=>creativeCanvasRoot.service.get(c,id),propose:(c,id,revision,operations)=>creativeCanvasRoot.service.propose(c,id,revision,operations)},
+      ...(workbenchHost?{workbenchHost}:{}),
+      ...(browserWorkbenchHost?{resolveWorkbenchScreenshot:screenshotMedia.resolve}:{}),
+      ...(artifactWorkbenchHost?{verifyWorkbenchArtifacts:artifactWorkbenchHost.verifyArtifacts}:{}),
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
-      resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
+      resolveModelCredential:async(c,capability,owner)=>{
+        const engine=await readFrozenChatExecutionEngine(db,c,owner);
+        const runtime=await readOwnedModelRuntime(c,owner),mode=owner.mode??(runtime.chatModelMode==='vision'?'vision':'text');
+        const route=readFrozenModelRoute(runtime,mode,capability);
+        if(owner.readonlyCodexRecovery){
+          // 该私有标记来自原父工具的精确只读恢复名单，Worker端口不接收此字段。
+          if(!owner.chatParentCallId||!route||route.readiness!=='configured'||route.source!=='codex')throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',`${mode}:${capability}`);
+          owner.signal?.throwIfAborted();const status=await localCodexStatus.read(c,owner.signal);owner.signal?.throwIfAborted();
+          if(!status.available||status.version!==route.identity.runtimeVersion)throw new CapabilityModelRoutingError(status.errorCode??'CODEX_LOGIN_REQUIRED',route.routeKey);
+          return {engine:'codex' as const,...route.identity};
+        }
+        if(route)return resolveFrozenExecutionSpec(c,route,owner.signal);
+        return engine==='codex'?codexExecutionSpec():resolvePiModelSpec(c,capability);
+      },
       resolveFallbackModelCredential:resolveChatFallbackCredential,
       prepareTaskCommit:aiService.prepareTaskCommit,
       trend:{
@@ -5728,9 +7314,20 @@ FAVORITES_PROMOTE_PER_RUN
     chatWorker.start();
   }
 
+  let lastPlatformCollectionTick = Number.NEGATIVE_INFINITY;
   recoveryWake=createRecoveryWakeCoordinator({
     intervalMs:2000,
     lanes:{
+      account_binding:control=>accountBindingService.drainAccountBindingQueue(control,{waitForCompletion:false}),
+      async platform_collection(control){
+        if(control.shouldStop() || process.env.CREATOROS_DISABLE_SCHEDULER === "1" ||
+          process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS === "1") return;
+        const current = Date.parse(deps.now());
+        if (!Number.isFinite(current) || current - lastPlatformCollectionTick < 60_000) return;
+        lastPlatformCollectionTick = current;
+        await periodicPlatformCollection({userId:localUser.id,accountId:null,requestId:"platform-periodic",source:"ingestion"});
+      },
+      workbench_files:control=>fileRecovery.scan(control),
       radar_project_upgrade: control => radarProjectQueue.tick(control),
       script_candidate:control=>drainProjectScriptCandidateQueue(projectScriptRunnerDeps,5,control),
       topic_preview:control=>drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps,{...control,maxTasks:5}),
@@ -5751,7 +7348,7 @@ FAVORITES_PROMOTE_PER_RUN
   if(stoppingPreparation)await recoveryWake.stop();else recoveryWake.start();
 
   // 所有模型、每日任务回执与恢复消费者装配完成后才启动自动化，避免首轮 tick 读取未初始化服务。
-  if (!stoppingPreparation && process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS !== "1") {
+  if (!stoppingPreparation && !backgroundControl.signal.aborted && process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS !== "1") {
     void startUnifiedAutomationDriver().catch(error =>
       console.error("[automation-driver] 启动失败:", error),
     );
@@ -5772,7 +7369,15 @@ FAVORITES_PROMOTE_PER_RUN
   agenticWorker?.start();
   modelWorker?.start();
 
+  observabilityHost=createObservabilityHost({ctx:observabilityCtx,collector:observability,ledger:observabilityLedger,
+    logDir:process.env.CREATOROS_LOG_DIR??null,appVersion:resolveObservabilityAppVersion(),
+    osName:process.platform==="darwin"?"macos":process.platform==="win32"?"windows":"linux",
+    online:()=>process.env.CREATOROS_OFFLINE!=="1",
+  });
+  if(process.env.CREATOROS_DESKTOP==="1"&&process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS!=="1")observabilityHost.start();
   return {
+    observability,observabilityHost,
+    reportingLocal,
     readPageRevision: createPageReadRevisionReader(db),
     projectListCoverIds: (ctx, projectIds) => readProjectListCoverIds(ctx, projectIds, { projects: projectsService, publishing: publishingService }),
     cliInvocations,
@@ -5785,6 +7390,15 @@ FAVORITES_PROMOTE_PER_RUN
     knowledge,
     assets,
     artifacts,
+    articles,
+    graphicPosts,
+    moments,
+    workCompositions,
+    workSources,
+    workReviews,
+    creativeCanvas,
+    creativeResults,
+    assistantActions:assistantSystemRoot.transport,
     production,
     publishing,
     analytics,
@@ -5809,6 +7423,8 @@ FAVORITES_PROMOTE_PER_RUN
         return result;
       },
     },
+    workbenchPreviewRuntime,
+    workbenchArtifactRecoveryRuntime:{reconcile:artifactReconciler.reconcile},
     executionPreviewRuntime: {
       readVideo: (ctx, taskId, artifactPath) =>
         executionService.previewArtifact(ctx, taskId, artifactPath),
@@ -5817,7 +7433,11 @@ FAVORITES_PROMOTE_PER_RUN
     positioning,
     candidate,
     calibration,
+    accountGroup,
+    accountBinding,
     platformAccount,
+    wechatNavigationDiagnosis,
+    platformCollection,
     scheduling: schedulingWithRunNow, // wrap:透传 CRUD + 拦 scheduledJobs.runNow(D5)
     contentCalendar,
     contentCalendarService,
@@ -5841,6 +7461,8 @@ FAVORITES_PROMOTE_PER_RUN
     queryServices,
     publishingCenter,
     identity,
+    accountGroupService,
+    workspaceBlobService,
     platformAccountService,
     settingsService,
     activationService,
@@ -5966,6 +7588,14 @@ export async function getSettingsService(): Promise<SettingsService> {
   return (await getBundle()).settingsService;
 }
 
+/** 仅供可信服务端故障边界写入已授权的结构化诊断；浏览器无此端口。 */
+export async function getObservabilityCollector(){return (await getBundle()).observability;}
+export async function setObservabilityConnectivity(online:boolean){(await getBundle()).observabilityHost.setConnectivity(online);}
+
+export async function getReportingLocal() {
+  return (await getBundle()).reportingLocal;
+}
+
 /**
  * [T-136 切片 a] platform-account service,bound to the same pglite store。
  * `resolveRequestContext` 用它对 x-account-id header 做属主硬校验(gate BLOCKER-1):
@@ -6012,6 +7642,16 @@ export async function getLocalFileRuntime(): Promise<
   return (await getBundle()).localFileRuntime;
 }
 
+/** T-1009：已登记任务产物的只读预览，复用公共归属和版本校验服务。 */
+export async function getWorkbenchPreviewRuntime(): Promise<PersistenceBundle["workbenchPreviewRuntime"]> {
+  return (await getBundle()).workbenchPreviewRuntime;
+}
+
+/** T-1009：按原 operationId 触发持久对账，不创建新工具调用。 */
+export async function getWorkbenchArtifactRecoveryRuntime(): Promise<PersistenceBundle["workbenchArtifactRecoveryRuntime"]> {
+  return (await getBundle()).workbenchArtifactRecoveryRuntime;
+}
+
 /** T-703：待确认执行产物的只读临时预览，采纳/丢弃后 service 自动返回 404。 */
 export async function getExecutionPreviewRuntime(): Promise<
   PersistenceBundle["executionPreviewRuntime"]
@@ -6045,7 +7685,24 @@ export async function getWebSessionRuntime(): Promise<
 // Used by BOTH the server pages (contract-client.server) and the /api/v1 route,
 // so server reads and island writes share one pglite store — island mutations
 // persist and a router.refresh() reflects them.
-export const compositeTransport: Transport = withPageReadInvalidation(createApplicationTransport(getBundle));
+const observedApplicationTransport=createApplicationTransport(getBundle);
+export const compositeTransport:Transport=withPageReadInvalidation({
+  async request(endpoint,input,ctx,controls){
+    const exclude=endpoint.id.startsWith("settings.logReporting.")||endpoint.id.startsWith("observability.");
+    const start=performance.now();
+    if(!exclude&&endpoint.method!=="GET"){
+      (await getBundle()).observabilityHost.pause();
+    }
+    try{
+      const result=await (endpoint.id==='accounts.wechatNavigation.diagnose'?observedApplicationTransport.request(endpoint,input,ctx,controls):observedApplicationTransport.request(endpoint,input,ctx));
+      if(ctx&&!exclude)void getBundle().then(bundle=>bundle.observability.recordOutcome(ctx,{eventId:crypto.randomUUID(),operationId:endpoint.id,measurement:"request",result:"success",occurredAt:new Date().toISOString(),executionSeconds:(performance.now()-start)/1000})).catch(()=>{});
+      return result;
+    }catch(error){
+      if(ctx&&!exclude)void getBundle().then(bundle=>bundle.observability.recordOutcome(ctx,{eventId:crypto.randomUUID(),operationId:endpoint.id,measurement:"request",result:"failed",occurredAt:new Date().toISOString(),executionSeconds:(performance.now()-start)/1000})).catch(()=>{});
+      throw error;
+    }
+  },
+});
 
 // Test hook: drop the pglite singleton so each test starts from a fresh seed.
 export function __resetPersistenceForTests(): void {
@@ -6067,3 +7724,10 @@ export async function readPageRevision(): Promise<string> {
 export async function getProjectListCoverIds(ctx: RequestContext, projectIds: readonly string[]): Promise<Record<string, string | null>> {
   return (await getBundle()).projectListCoverIds(ctx, projectIds);
 }
+
+export async function getAccountGroupService():Promise<AccountGroupService>{return (await getBundle()).accountGroupService;}
+
+export async function getWorkspaceBlobService(){return (await getBundle()).workspaceBlobService;}
+
+/** 同一个backend端口复核CLI缓存，frontend不复制账号/成员判断。 */
+export async function getWechatNavigationDiagnosis(){return (await getBundle()).wechatNavigationDiagnosis;}

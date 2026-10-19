@@ -1,3 +1,8 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["project-t730", "user-t730", "account-t730"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
 import { afterEach, describe, expect, it } from "vitest";
 import { createDb } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -20,6 +25,7 @@ afterEach(async () => {
 describe("T-730 artifact 版本并发门", () => {
   it("拒绝旧页面用 stale currentVersionId 追加论点版本", async () => {
     const { db, client } = await createDb();
+    await seedOwnedProjects(db);
     clients.push(client);
     let sequence = 0;
     const service = createArtifactsService({

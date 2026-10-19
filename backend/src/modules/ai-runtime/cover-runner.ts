@@ -21,6 +21,7 @@ import {
   safeModelFailureMessage,
 } from "./error-diagnostics";
 import { retryExplicitRejectedSubmit } from "./multimodal/retry-submit";
+import { readFrozenCoverContext } from "./frozen-cover-context";
 
 // 封面 runner (cover.generate node) —— [T-271] 制作封面链 0→1。
 //
@@ -126,11 +127,11 @@ export async function runCoverGenerate(
       typeof task.inputData.visualRequirements === "string"
         ? clip(task.inputData.visualRequirements, COVER_VISUAL_REQUIREMENTS_MAX)
         : "";
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: task.projectId, topic },
-      deps,
-    );
+    const frozenCover = readFrozenCoverContext(task.inputData);
+    if (["cover", "publish_cover"].includes(String(task.inputData.kind)) && task.inputData.outputId && !frozenCover) {
+      throw new Error("COVER_CONTEXT_SNAPSHOT_REQUIRED");
+    }
+    const context = frozenCover ?? await assembleCreativeContext(ctx, { projectId: task.projectId, topic }, deps);
     // T-816：dispatch 时冻结的 currentVersion 快照优先于随后装配出的旧 Brief/派生脚本。
     // runner 仍会使用材料做事实诚实门，但“这条内容在说什么”先信当前确认稿正文。
     const frozenScriptSnapshot =
@@ -151,7 +152,7 @@ export async function runCoverGenerate(
 
     // 1) 结构化封面方案(文案接地）—— 复用 copy.generate 文本模型 + cover.brief 模板(硬锚 brief+script）。
     const spec = await deps.resolveModelSpec(ctx, "copy.generate");
-    channelManaged ||= spec.displayModelKey === "channel-managed";
+    channelManaged ||= !("engine" in spec) && spec.displayModelKey === "channel-managed";
     const {
       modelFor,
       runStructuredNode,

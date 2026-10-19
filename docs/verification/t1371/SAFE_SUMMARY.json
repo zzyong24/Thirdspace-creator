@@ -1,0 +1,309 @@
+{
+  "schema": "t1371-safe-verification/v1",
+  "boundary": "真实service私有合成保存→真实Next/HTTP/现总览；非安装恢复、真人collect或实际发布E2E。unknown/冻结证据不提升公开资格。",
+  "source": {
+    "head": "72f167cd2a04f64ea0e3881a7d58d6ed90fcf2bf",
+    "sha256": {
+      "frontend/src/features/platform-account/account-group-manager.tsx": "172c5dc1bbd555f2353e5a2900de47d9183db468e222fb27e3975af334622a1c",
+      "frontend/src/features/platform-account/account-group-manager.test.tsx": "e773ae6996e2d7ef3dbd95315ca3dbdfc15d99d258549cd4048e9aa16d5d8918",
+      "frontend/tests/e2e/t1370-platform-capability-inline-binding.spec.ts": "f88e81bcd7744b804a9c465d1887d903745d38fa3226a3387f71708cec243fb1",
+      "frontend/playwright.t1370.config.ts": "2366a459d8dc6596222f52a8fa56b41cdf15b712935fd951375504e1c3c3c42d",
+      "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+      "backend/src/application/queries/dashboard-collected-metrics.test.ts": "3d27b2d9619b393725778f297e410adafd20ccc3463c183b529e3ef1a27f4da0",
+      "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+      "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "05ef5855e96b5f098f83f33cb86518e6fdd84556a279d4b915cb4e4d87dc9f7d",
+      "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "9f617dcfbe53dd57321f6cd461c913b90c1c033e0e577fc65ccb5b6bc1ed73d2"
+    },
+    "dirtyDiffSha256": "9b9173a9e94dca14fb6c5f7c398e31d818e03ceb0b223bb66e95910f9358fb8a",
+    "command": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "playwright",
+      "test",
+      "--config=playwright.t1371.config.ts",
+      "--workers=1",
+      "--retries=0"
+    ]
+  },
+  "publicRun": {
+    "childExit": 0,
+    "seconds": 56.846
+  },
+  "sourceStable": true,
+  "viewports": [
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 680
+      },
+      "completed": true,
+      "pageErrors": 0,
+      "semanticMutationRequests": 0,
+      "readbacks": [
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 999,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 1,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-09-01",
+            "endDate": "2026-09-01"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 0,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 1,
+          "query": {
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-07",
+            "platform": "xiaohongshu"
+          }
+        },
+        {
+          "browseViews": null,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 1,
+          "query": {
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-07",
+            "platform": "xiaohongshu"
+          }
+        },
+        {
+          "browseViews": null,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 0,
+          "query": {
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-07",
+            "platform": "xiaohongshu"
+          }
+        }
+      ],
+      "rawWitness": "docs/verification/t1371/e2e-artifacts/t1371-xiaohongshu-unknown--b25c1-n目录经真实Next→总览入口、筛选、返回刷新与双视口-t1371-minimum/witness.json",
+      "rawSha256": "5acf48e5b9c86565b729ca05844b949b0f4445baffabe32bc881757d07a9a120"
+    },
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "completed": true,
+      "pageErrors": 0,
+      "semanticMutationRequests": 0,
+      "readbacks": [
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 999,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 1,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-09-01",
+            "endDate": "2026-09-01"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 123,
+          "contentCount": 1,
+          "publicationCount": 1,
+          "catalogWorkCount": 11,
+          "query": {
+            "platform": "xiaohongshu",
+            "startDate": "2026-10-03",
+            "endDate": "2026-10-03"
+          }
+        },
+        {
+          "browseViews": 0,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 1,
+          "query": {
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-07",
+            "platform": "xiaohongshu"
+          }
+        },
+        {
+          "browseViews": null,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 1,
+          "query": {
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-07",
+            "platform": "xiaohongshu"
+          }
+        },
+        {
+          "browseViews": null,
+          "contentCount": 0,
+          "publicationCount": 0,
+          "catalogWorkCount": 0,
+          "query": {
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-07",
+            "platform": "xiaohongshu"
+          }
+        }
+      ],
+      "rawWitness": "docs/verification/t1371/e2e-artifacts/t1371-xiaohongshu-unknown--b25c1-n目录经真实Next→总览入口、筛选、返回刷新与双视口-t1371-normal/witness.json",
+      "rawSha256": "0f33606dcb5fb1391eed160c3394621e082f247dd3fc0dc6dba1a94f3e6d4c9f"
+    }
+  ],
+  "visualInspection": {
+    "actuallyViewed": [
+      "current-unknown-normal.png",
+      "current-unknown-minimum.png"
+    ],
+    "result": "真实123/日期/平台范围可读，1024沿旧响应式卡片自然分列，原筛选与表格保持。"
+  },
+  "formalStrict": {
+    "head": "10238309c46f557b0c92d9d008cb466f7974c594",
+    "childExit": 0,
+    "seconds": 56.434,
+    "results": [
+      {
+        "title": "T1371 已完成unknown目录经真实Next→总览入口、筛选、返回刷新与双视口",
+        "project": "t1371-normal",
+        "expectedStatus": "passed",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 15398,
+            "errorCount": 0
+          }
+        ]
+      },
+      {
+        "title": "T1371 已完成unknown目录经真实Next→总览入口、筛选、返回刷新与双视口",
+        "project": "t1371-minimum",
+        "expectedStatus": "passed",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 9358,
+            "errorCount": 0
+          }
+        ]
+      }
+    ],
+    "actualReceipt": "d5729ef84fe8",
+    "evidenceRef": "docs/verification/t1371/strict-final01/SAFE_SUMMARY.json",
+    "source": "新独立strict输出，不覆盖初轮证据"
+  },
+  "currentFull": {
+    "started": false,
+    "status": "PREFLIGHT_BLOCKED",
+    "causeRef": "docs/verification/t1373/PREFLIGHT_BLOCKER.json",
+    "rootDisposition": "已审为范围外验证器欠债，本任务适用门与实际strict通过后完成；不称全局全绿"
+  },
+  "installedApp": "仍为2d旧源，未替换"
+}

@@ -1,0 +1,283 @@
+{
+  "schema": "t1300-current-reconcile-comparison/v1",
+  "actualResult": {
+    "label": "reconcile",
+    "command": [
+      "node",
+      "orchestrator/process/reconcile.mjs"
+    ],
+    "exitCode": 1,
+    "expired": false,
+    "durationSeconds": 1573.0932428329834
+  },
+  "baselinePath": "docs/verification/t1296/GLOBAL_RECONCILE_COMPARISON.json",
+  "baselineSha256": "664424bc2f9d14fb4129742005c9e91f42d65ea672e29bb6b9223fe39cff79da",
+  "baseline29Keys": [
+    "LED-006",
+    "LED-018",
+    "LED-031",
+    "LED-041",
+    "LED-046",
+    "LED-051",
+    "LED-052",
+    "LED-058",
+    "T-1021",
+    "T-1072-owned-devices",
+    "T-1255",
+    "T-635",
+    "T-642",
+    "T-645",
+    "T-652",
+    "T-656",
+    "T-691",
+    "T-694",
+    "T-703",
+    "T-707",
+    "T-726",
+    "T-768",
+    "T-816",
+    "T-819",
+    "T-824",
+    "T-858",
+    "T-859",
+    "T-915",
+    "backlog-health"
+  ],
+  "errors": [
+    {
+      "key": "backlog-health",
+      "message": "backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-1255",
+      "message": "review receipt: T-1255: review receipt 已过期：constitution hash 已变化",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-1072-owned-devices",
+      "message": "review receipt: T-1072-owned-devices: review receipt 缺少任务 T-1072-owned-devices 的 hash-chained event",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-1021",
+      "message": "review receipt: T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-915",
+      "message": "review receipt: T-915: BACKLOG review receipt 692283b8bace 与 snapshot ad76cf555129 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-859",
+      "message": "review receipt: T-859: BACKLOG review receipt 9895a91a63a8 与 snapshot 5818394813ca 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-858",
+      "message": "review receipt: T-858: BACKLOG review receipt 2521be715a0a 与 snapshot c76009a5586c 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-824",
+      "message": "review receipt: T-824: BACKLOG review receipt 18361dc8c3c3 与 snapshot f0e215103ddf 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-819",
+      "message": "review receipt: T-819: BACKLOG review receipt 0425ab7b87b8 与 snapshot a8879edf798f 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-816",
+      "message": "review receipt: T-816: BACKLOG review receipt fb03de3a57d7 与 snapshot 7896d566ccf8 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-768",
+      "message": "review receipt: T-768: BACKLOG review receipt 3eb18966ea59 与 snapshot 64f8010b2045 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-726",
+      "message": "review receipt: T-726: BACKLOG review receipt 2809820bf64a 与 snapshot 39e3f41ca866 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-707",
+      "message": "review receipt: T-707: BACKLOG review receipt 06867c4bf60c 与 snapshot 87de34262527 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-703",
+      "message": "review receipt: T-703: BACKLOG review receipt c1a3920aea71 与 snapshot 0662dafac8fa 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-691",
+      "message": "review receipt: T-691: BACKLOG review receipt 9444ca5b32a9 与 snapshot 2f2a131519e7 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-694",
+      "message": "review receipt: T-694: BACKLOG review receipt 2c7be136aea0 与 snapshot 171b7c9ad2f2 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-656",
+      "message": "review receipt: T-656: BACKLOG review receipt 5f6970ac76f2 与 snapshot bd8a6ac135f0 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-652",
+      "message": "review receipt: T-652: 审核列为「待审」；存在未销账问题，不得开工",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-645",
+      "message": "review receipt: T-645: BACKLOG review receipt 5dfe24b42eb7 与 snapshot 7ff0c3cb1906 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-642",
+      "message": "review receipt: T-642: BACKLOG review receipt 7728c9ed44bd 与 snapshot 9002b8dbeb4d 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-635",
+      "message": "review receipt: T-635: BACKLOG review receipt b8add273a494 与 snapshot 84661017fde5 不一致",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "T-1298",
+      "message": "frontend receipt: T-1298: receipt commit 之后 watched_paths 代码已变化，receipt 失效:",
+      "identityInOriginal29": false
+    },
+    {
+      "key": "T-1296",
+      "message": "frontend receipt: T-1296: receipt commit 之后 watched_paths 代码已变化，receipt 失效:",
+      "identityInOriginal29": false
+    },
+    {
+      "key": "T-1294",
+      "message": "frontend receipt: T-1294: receipt commit 之后 watched_paths 代码已变化，receipt 失效:",
+      "identityInOriginal29": false
+    },
+    {
+      "key": "LED-052",
+      "message": "lesson LED-052 RECURRED — 归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "LED-006",
+      "message": "lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "LED-018",
+      "message": "lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "LED-031",
+      "message": "lesson LED-031 RECURRED — 分层运行时消费门回归：正式 HyperFrames argv 必须显式 --require 随包 creatoros-module-resolver.cjs，并保持 NODE_OPTIONS 禁用；生产 argv 与 RAT 真渲染必须使用同一解析契约。",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "LED-041",
+      "message": "lesson LED-041 RECURRED — Whisper 分层消费门回归：生产 worker 必须显式加载随包 creatoros-module-resolver 并绑定同一 runtime root；传统 runtime 兼容；Windows closure 必须用随包 Node 启动真实 worker consumer，主进程 import 不能替代。",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "LED-046",
+      "message": "lesson LED-046 RECURRED — 修复真实安装布局的Worker入口、依赖文件与解析器；先短验证再正式构建，不放宽功能门或盲目重试。",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "LED-051",
+      "message": "lesson LED-051 RECURRED — 检查实际子进程预算传播；禁止关闭类型检查、无限加内存或污染安装后运行时。",
+      "identityInOriginal29": true
+    },
+    {
+      "key": "LED-058",
+      "message": "lesson LED-058 RECURRED — 恢复模型候选的 superseded→retry_wait→同任务重试链；保留预算、检查点和原对话。只有无模型配置进入设置引导；用户取消与外部副作用 unknown 继续禁止自动重放。",
+      "identityInOriginal29": true
+    }
+  ],
+  "actualErrorLines": 32,
+  "currentUniqueKeys": [
+    "LED-006",
+    "LED-018",
+    "LED-031",
+    "LED-041",
+    "LED-046",
+    "LED-051",
+    "LED-052",
+    "LED-058",
+    "T-1021",
+    "T-1072-owned-devices",
+    "T-1255",
+    "T-1294",
+    "T-1296",
+    "T-1298",
+    "T-635",
+    "T-642",
+    "T-645",
+    "T-652",
+    "T-656",
+    "T-691",
+    "T-694",
+    "T-703",
+    "T-707",
+    "T-726",
+    "T-768",
+    "T-816",
+    "T-819",
+    "T-824",
+    "T-858",
+    "T-859",
+    "T-915",
+    "backlog-health"
+  ],
+  "sameIdentityAsOriginal29": [
+    "LED-006",
+    "LED-018",
+    "LED-031",
+    "LED-041",
+    "LED-046",
+    "LED-051",
+    "LED-052",
+    "LED-058",
+    "T-1021",
+    "T-1072-owned-devices",
+    "T-1255",
+    "T-635",
+    "T-642",
+    "T-645",
+    "T-652",
+    "T-656",
+    "T-691",
+    "T-694",
+    "T-703",
+    "T-707",
+    "T-726",
+    "T-768",
+    "T-816",
+    "T-819",
+    "T-824",
+    "T-858",
+    "T-859",
+    "T-915",
+    "backlog-health"
+  ],
+  "notReportedOriginalKeys": [],
+  "newIdentityKeys": [
+    "T-1294",
+    "T-1296",
+    "T-1298"
+  ],
+  "sameIdentityDoesNotProveSameCause": true,
+  "subcommandFailureDetailLimit": "原reconcile execSync stdio=ignore，不新增重跑来补造原失败细节",
+  "taskCompletion": "不批量complete；新增身份逐项说明/登记，原29不抹"
+}

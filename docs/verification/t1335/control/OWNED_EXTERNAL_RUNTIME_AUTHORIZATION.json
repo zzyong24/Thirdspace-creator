@@ -1,0 +1,11 @@
+{
+  "recordedAt": "2026-10-17T07:14:12.947583+00:00",
+  "ownedRoot": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d",
+  "parentRealPath": "/Volumes/T7-MacData/CodexBuilds",
+  "didNotExistBefore": true,
+  "symlink": false,
+  "mode": "0700",
+  "authorizedUse": "T1335 owned worker小copy+两锁定package links/DB/cache/tmp/media/log/PID；不复制SDK/完整源码/旧DB，不shared dist",
+  "productionWritesAuthorized": false,
+  "publicRedExecutionRequiresRootAssemblyReview": true
+}

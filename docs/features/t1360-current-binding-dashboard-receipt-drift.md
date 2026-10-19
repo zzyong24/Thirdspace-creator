@@ -1,0 +1,9 @@
+# T1360 本轮绑定与首页修改导致的旧宽路径验收收据失配
+
+2026-10-19本轮完整reconcile自然exit1，41ERROR/0WARN。新增两份旧收据T1345/T1347失配明确由本轮绑定组件/首页契约与投影新字节触发，不能归入开工旧32项；旧七项T1343/42/41/38/30/28/24由此前批次登记T1353，本轮persistence追加接线也扩大相关全文件字节差异，需按实际消费者分类，不能称旧任务重新全程通过。
+
+本任务只登记失配根因，未独审/未开工。真实绑定原能力由T1355当前public commit/成员分页/连续绑定合同覆盖，首页指标/独立趋势消费者由T1356当前合同与保留原生日图回归覆盖。仍须相应正式及strict实际通过，不能用新合同自动替旧所有输入族。公开数据路径不放宽归属，不为收据hash洗旧PASS或机械重跑模型/全部历史任务。
+
+原日志docs/verification/t1355/control/RECONCILE_FINAL_SOURCE.txt；分类摘要RECONCILE_SCOPE_CLASSIFICATION.json。当前8条lesson失败身份与旧相同，但原reconcile忽略子输出，不能断言本次首因相同。LED061本轮guard holds仅该次命令结果，不改写上次UNKNOWN。
+
+最终721受验源码完整对账自然exit1，44ERROR/0WARN：前41项身份逐字保留，新增T1348/T1346/T1350三份旧frontend收据失配，直接由本批T1361二阶段导航收尾及T1362作品URL参数清理改变公共account-switcher和两个测试文件触发。这三项不是开工旧债，纳本任务根因边界；原三个PASS与历史功能证据不篡改，也不称已重新全族验收。现公共消费者由T1361真实Next两窗14点、T1362作品入口两窗28点及55/57定向组件与LED047分层保护；随后仍执行本批当前strict。最终分类见docs/verification/t1362/control/RECONCILE_FINAL_SCOPE_CLASSIFICATION.json，44=32+7+2+3；主树foreign与clean候选范围分证，原log私有保留。八个lesson fire身份与前次相同，不能推首因相同；本次LED061/047/050/053/062实际guard holds。

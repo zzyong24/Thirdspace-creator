@@ -1,0 +1,20 @@
+--- SPEC_ROUND1.md
++++ docs/features/t1318-group-planning-thesis-adoption.md
+@@ -7,7 +7,7 @@
+ 
+ 
+ ## 实施合同
+-仅thesis-adoption工作单元沿真实workspace授权/锁读取项目与任务，AiRepository装配携原完整scope，保原项目→任务顺序和同tx原子artifact/version/task终态。先实际workspace锁，沿原冻结membership/原候选/lease等真实存在校验，不新增current-group-version拒绝。group/filter项目属组时accountnull，不自动选账号/伪legacyctx。新建ArtifactsService的assertProjectOwned窄端口来自本tx已锁真实项目证明，保原通用artifact归属guard，不跨root连接。无量表/contract-outline/通用workspace改动。
++仅thesis-adoption工作单元沿真实workspace授权/锁读取项目与任务，AiRepository装配携原完整scope，保原项目→任务顺序和同tx原子artifact/version/task终态。在本UoW同一transaction最外，先从原任务读出完整冻结user/group/account/groupVersion/membershipVersion并沿既有冻结membership锁A→member→G（pureG仅G），随后原project→task锁，锁后重新核同冻结身份及全部原候选/lease/状态映射。AiService.confirmTask外部短tx已释放，不代本UoW锁；外层读取身份后变更须锁后复核拒绝，不能凭未锁读写入。不新增current-group-version或页面筛选B可用性硬门，不把页面filterB伪装原taskA。业务artifact沿原合法group/filter或legacy范围；不更改positioning/其它采纳锁序。group/filter项目属组时accountnull，不自动选账号/伪legacyctx。新建ArtifactsService的assertProjectOwned窄端口来自本tx已锁真实项目证明，保原通用artifact归属guard，不跨root连接。无量表/contract-outline/通用workspace改动。
+ 
+ ## 当场RED及回归
+ 新完整公开projects.create→ai.tasks.create planning.thesis→真实prepare/immutable worker/settled ledger→原结果→ai.tasks.confirm前RED，基线428 AccountRequiredError；改产品前冻结源/完整测试/config/worker/父行/call结果/exit。GREEN从同公开链获得thesis_tree artifact/version与原task succeeded，重复confirm只读原版本不重复铸造。纯G/G+filter/legacy三族；外user/group/错account、原映射/原候选被改、已有版本响应丢失同key重放、artifact或version SQL失败真实rollback/无孤儿、归档取消等实际原门。后续ArtifactsService缺assertProjectOwned是已核第二门，完整绿必须真实写artifact而非stub采纳。
+@@ -25,3 +25,8 @@
+ - frontend/src/server/__module_integration__/group-thesis-adoption.persistence-client.test.ts
+ 
+ 自有docs/verification/t1318/runtime/**与IMPLEMENTATION_RESULT.md，后续acceptance/**及REPORT.md；无contract/schema/通用权限/guard修改。精确MODULE_SCOPE与INPUT_LOCK为本轮初审输入。受影响type/boundary/semantic/timeout与当场完整业务回归必做；原PG无环境按实际缺测/skip，不冒PGlite多连接PG。最终pmem/reconcile/taskctl按实际统一收尾，不签未发生的前RED/新包/原生壳或整父功能。
++
++## Round2锁序增量
++完整公开confirm入口记录实际SQL锁轨迹，证实冻结workspace锁在project→task前、同tx无另一页面B锁；纯G、冻结A而页面filterB、合法legacy、错owner/转组/取消和SQL回滚覆盖。锁图源码不冒PG已观察死锁；PGlite只证明真实消费者顺序与rollback。原初审PASS保留，本轮是已审方向的可执行精化，生产仍一文件。
++
++固定timeout-policy原Gate最终由C独占一次执行，三路只引用实际当时源码与原结果/五缓存footprint；本任务其余受控test用own config/cache，不在并行时重复共享Gate。未发生的Gate保持待验。

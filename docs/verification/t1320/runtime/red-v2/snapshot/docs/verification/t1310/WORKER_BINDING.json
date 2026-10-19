@@ -1,0 +1,13 @@
+{
+  "schema": "task-readonly-worker-binding/v1",
+  "candidateSource": "dc46cfa700ec9c9cbada47fb76237d0b50d10a67",
+  "candidateBinding": "docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+  "candidateBindingSha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5",
+  "executionWorkerPath": "/private/tmp/t1300-artifact-bcz9nlt5/sidecar/frontend/runtime/execution-worker.cjs",
+  "bytes": 5618216,
+  "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454",
+  "actualFileHashVerified": true,
+  "sourceBuildDuringPreparation": false,
+  "scope": "只读已冻结dc46真实worker产物；新owned受控harness不继承当前controller/session/用户模型认证；provider结果受控替身，无真实模型",
+  "outputPolicy": "仅本任务runtime与新owned临时DB输出。不得原样执行旧beforeAll build到ai-worker/dist；任何额外派生输出先报精确路径/授权，不私扩写集。"
+}

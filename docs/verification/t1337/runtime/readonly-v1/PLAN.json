@@ -1,0 +1,99 @@
+{
+  "state": "ROOT_APPROVED_READONLY_SCOPE_ASSEMBLY_NOT_RUN",
+  "rootAuthorization": "同包initialize/config-read/skills-list；无thread/turn/account/模型；config.toml仅mcp_servers键内存读取，原值不落盘。",
+  "scopeReceipt": "docs/verification/t1328/final-integration/runtime/final-candidate-7f1d4ec9/control/T1337_READONLY_SCOPE_RESULT.json",
+  "command": [
+    "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/readonly-v1/observe.cjs"
+  ],
+  "envControl": "T1337_READONLY_APPROVED=1；原HOME/CODEX_HOME/proxy仅内存继承，TMPDIR为C授权T1337新root/tmp；RUST_LOG=off/log_dir新cwd/logs。",
+  "ownedExternalRoot": "/Volumes/T7-MacData/CodexBuilds/t1337-readonly-config-20261017-20897702",
+  "methods": [
+    "initialize",
+    "config/read",
+    "skills/list"
+  ],
+  "initializedNotification": true,
+  "forbidden": [
+    "thread/start",
+    "thread/read",
+    "turn/start",
+    "turn/interrupt",
+    "account/read",
+    "model/list",
+    "config/write",
+    "任何模型请求"
+  ],
+  "startupPolicy": "原disabled features/plugins全部false，taskTools functions direct_only；实际config.toml全局及profiles内mcp_servers键逐键enabledfalse；读取后未知/未禁MCP拒绝skills。只记服务端请求方法头，意外请求FAIL并停止ownedprocess。",
+  "budgets": {
+    "startupSeconds": 120,
+    "eachRequestSeconds": 120,
+    "requestCount": 3,
+    "cleanupSeconds": 120,
+    "executionCoverageSeconds": 600,
+    "setupHashReportReserveSeconds": 300,
+    "outerSeconds": 900,
+    "retry": 0
+  },
+  "cleanup": "EOF原stdin1s宽限，TERM身份匹配独立PGID至清理总deadline前2s，再必要KILL；总cleanup120s，不累加宽限，closed/PIDidentity/PGID真实读回。clear所有race timer，不假进程退出。",
+  "outputPolicy": "仅字段存在、指令chars/bytes/SHA；skills count+scope/enabled/描述字符合计，不输出名称/path/description；0rawframe/配置/auth/secret/完整prompt，stderr drain不落日志。",
+  "evidenceLimits": "仅此时同binary新cwd配置/skills metadata，不冒原三个回合实际模型视图/default base字节或修复有效性；schema last/total仅类型无语义说明。",
+  "actualSyntaxExitCode": 0,
+  "implementation": {
+    "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1337/runtime/readonly-v1/observe.cjs",
+    "bytes": 12340,
+    "sha256": "86d053c7d2847dacfc8644338913c4e83684d4ddb6701f1fed1d880aced140d4"
+  },
+  "readOnlySourceRefs": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "bytes": 10008,
+      "sha256": "837e3ca7c28d35d90d90941de9013dfc0721b418778cc396a67a50319dd258af"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "bytes": 6804,
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-native-turn.ts",
+      "bytes": 10467,
+      "sha256": "cde306b3311304239e6e02a4ce9adf9d8a1aab4c56efd91d26f2576ccbdebc8e"
+    }
+  ],
+  "schemaRefs": [
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/t1300-candidate-A5DZUu/tmp/t1337-schema-readonly-f16jz4na/v2/ThreadStartParams.json",
+      "bytes": 13453,
+      "sha256": "80a40a7fac15b4bf70efb7f893fb353acc0a0d30c68f54aee4f01923deca85de"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/t1300-candidate-A5DZUu/tmp/t1337-schema-readonly-f16jz4na/v2/ConfigReadParams.json",
+      "bytes": 495,
+      "sha256": "257c54a423b47c1d209ff1076765a1564d82322fd5161670fd489a2874de1bac"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/t1300-candidate-A5DZUu/tmp/t1337-schema-readonly-f16jz4na/v2/ConfigReadResponse.json",
+      "bytes": 28667,
+      "sha256": "4ec77e1a3eed746037149799c3b6bb8fe7b4b593e5930fc9f410e6282de9df50"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/t1300-candidate-A5DZUu/tmp/t1337-schema-readonly-f16jz4na/v2/SkillsListParams.json",
+      "bytes": 453,
+      "sha256": "1d245374e64c5acc9739dfc68a4fe5114c6c9147af04c480886f1846d2ca6239"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/t1300-candidate-A5DZUu/tmp/t1337-schema-readonly-f16jz4na/v2/SkillsListResponse.json",
+      "bytes": 5295,
+      "sha256": "230f125d6c36ec1b1514018a0bb6d0627f7308ea82f1ef04cad85490de482bae"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/t1300-candidate-A5DZUu/tmp/t1337-schema-readonly-f16jz4na/v2/ThreadTokenUsageUpdatedNotification.json",
+      "bytes": 1727,
+      "sha256": "aba4f6c7e4a19b2b842c08ee793b57000c07dafd57b922ad0d8e7c76609108c2"
+    }
+  ],
+  "modelsStarted": 0,
+  "stateMutations": 0,
+  "createdAt": "2026-10-17T08:30:02.927359+00:00"
+}

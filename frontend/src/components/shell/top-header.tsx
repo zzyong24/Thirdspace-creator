@@ -16,6 +16,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import {AiCreditEntry} from "@/features/settings/ai-credit-entry";
 
 import { buttonVariants } from "@/components/ui/button";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
@@ -78,6 +79,7 @@ export interface TopHeaderProps {
 export type TopHeaderStage = {
   readonly id: string;
   readonly label: string;
+  readonly href?: string;
   readonly status: "pending" | "in_progress" | "completed" | "skipped";
 };
 
@@ -160,6 +162,7 @@ export function TopHeader({
         notifications={notifications}
         primaryActionLabel={primaryActionLabel}
       />
+      <AiCreditEntry/>
     </header>
   );
 }
@@ -221,7 +224,9 @@ function ProjectIdentityBlock({
   // (projectWorkspaceHref(id, "script") 也指回它)→ 阶段条高亮与实际渲染面同源:
   // 无子段即视为 "script",不再让 stepper 退回「按 status(项目成熟度)高亮」
   // ——那会把已发布项目(currentStage=review)的稿面高亮成「复盘」。
-  const currentStage = segments[2] ?? "script";
+  const currentStage = segments[2] === "outputs"
+    ? segments[4] === "image" ? "image" : "script"
+    : segments[2] ?? "script";
   return (
     <div
       data-slot="header-project-identity"
@@ -262,7 +267,7 @@ function ProjectIdentityBlock({
           ) : null}
         </div>
       ) : (
-        <div className="flex w-64 min-w-0 shrink-0 flex-col">
+        <div className="flex w-32 min-w-0 shrink-0 flex-col lg:w-64">
           {/* [T-089④] 超长标题(导入作品曾把整篇文案当 title)truncate + title 悬停看全名。 */}
           <span
             className="truncate text-sm font-medium text-foreground"
@@ -428,18 +433,18 @@ function DashboardHeaderActions({
   return (
     <div
       data-slot="header-actions"
-      className="pointer-events-auto flex shrink-0 items-center gap-3"
+      className="pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"
     >
       <Link
         href="/search"
         aria-label="搜索"
-        className="flex h-9 w-72 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm text-muted-foreground shadow-sm"
+        className="flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"
       >
         <SearchIcon className="size-4" aria-hidden="true" />
-        <span className="flex-1">搜索项目、内容、素材...</span>
+        <span className="hidden flex-1 md:block">搜索项目、内容、素材...</span>
         {/* [T-051 2c] ⌘K 已接真:GlobalSearchHotkey(layout 挂载)监听 ⌘K/Ctrl+K
             → /search,与此提示言行一致。 */}
-        <kbd className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px]">
+        <kbd className="hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block">
           ⌘ K
         </kbd>
       </Link>
@@ -461,18 +466,18 @@ function ProjectsHeaderActions() {
   return (
     <div
       data-slot="header-actions"
-      className="pointer-events-auto flex shrink-0 items-center gap-3"
+      className="pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"
     >
       <Link
         href="/search"
         aria-label="搜索项目"
-        className="flex h-10 w-72 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm text-muted-foreground shadow-sm"
+        className="flex h-10 w-10 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"
       >
         <SearchIcon className="size-4" aria-hidden="true" />
-        <span className="flex-1">搜索项目名称、关键词...</span>
+        <span className="hidden flex-1 md:block">搜索项目名称、关键词...</span>
         {/* §348 ⌘K kbd hint — decorative per roadmap §4 (intentionally inert:
             no keydown listener; the Link itself navigates to /search). */}
-        <kbd className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px]">
+        <kbd className="hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block">
           ⌘ K
         </kbd>
       </Link>

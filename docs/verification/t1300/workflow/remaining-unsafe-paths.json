@@ -1,0 +1,12 @@
+[
+  {
+    "id": "T-1294",
+    "field": "write_set",
+    "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance*"
+  },
+  {
+    "id": "T-1295",
+    "field": "write_set",
+    "path": "docs/features/t1295-desktop-csp-wasm-video*"
+  }
+]

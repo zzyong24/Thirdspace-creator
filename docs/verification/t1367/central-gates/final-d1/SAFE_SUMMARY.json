@@ -1,0 +1,39 @@
+{
+  "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+  "fiveFileSha256": {
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+    "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+    "ai-worker/src/runtime/platform/wechat-channels-entry.integration.test.ts": "66d27f152f05251a74b785c765caf76cb647207dfff2efcc7723e7708419d363"
+  },
+  "results": [
+    {
+      "gate": "boundary-scan",
+      "exitCode": 0,
+      "seconds": 0.397,
+      "bytesStable": true
+    },
+    {
+      "gate": "semantic-boundary-scan",
+      "exitCode": 0,
+      "seconds": 0.246,
+      "bytesStable": true
+    },
+    {
+      "gate": "orphan-scan",
+      "exitCode": 0,
+      "seconds": 0.094,
+      "bytesStable": true
+    }
+  ],
+  "foreign9AndT1255Unchanged": true,
+  "baseline": {
+    "boundaryRemaining": 5,
+    "orphanWarnings": 100
+  },
+  "old89d6ScansPreserved": true,
+  "fullReconcileRun": false,
+  "realPlatformActions": 0,
+  "taskComplete": false
+}

@@ -19,7 +19,7 @@ try{
  await first.db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"exec.agentic.research",status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:new Date().toISOString()});
  const claim=await tasks.claimTask({taskId:task.id,workerId:"first"});assert.ok(claim);
  const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
- const deps={budget:{maxCalls:30,maxTokens:100000,deadlineMs:60000},tools:{"web.read":{version:"1",effect:"none" as const,parameters:z.object({url:z.string(),offset:z.number().int().nonnegative().default(0),snapshotId:z.string().optional(),evidenceRef:z.string().optional()})}}};
+ const deps={budget:{maxCalls:30,maxTokens:100000,deadlineMs:120_000},tools:{"web.read":{version:"1",effect:"none" as const,parameters:z.object({url:z.string(),offset:z.number().int().nonnegative().default(0),snapshotId:z.string().optional(),evidenceRef:z.string().optional()})}}};
  const ledger=createExecutionCallLedgerService(first.db,deps),ports=createExecutionAgenticToolPorts(first.db,deps);
  const services=[first,second].map(connection=>createExecutionResearchEvidenceService(connection.db,deps));
  async function read(input:Record<string,unknown>){

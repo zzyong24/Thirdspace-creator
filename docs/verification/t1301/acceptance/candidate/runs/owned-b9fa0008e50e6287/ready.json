@@ -1,0 +1,29 @@
+{
+  "schema": "t1300-candidate-ready/v1",
+  "testAuthorizationMode": "production candidate sidecar，真实build_smoke测试token；非真实激活或原生壳",
+  "candidateBinding": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1301/acceptance/candidate/candidate-binding.json",
+  "sourceHead": "2168294fef3f62bc8e0b4ca3254652b935daeb0d",
+  "port": 64881,
+  "baseURL": "http://127.0.0.1:64881",
+  "sessionPath": "/private/tmp/t1300-candidate-Co1DpL/session.json",
+  "ownedRoot": "/private/tmp/t1300-candidate-Co1DpL",
+  "evidenceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1301/acceptance/candidate/runs/owned-b9fa0008e50e6287",
+  "pid": 727,
+  "controllerPid": 719,
+  "startupVerified": true,
+  "rootStatus": 200,
+  "missingHandshakeStatus": 403,
+  "seedPresentInSidecarEnv": false,
+  "devBypass": false,
+  "nativeShellStarted": false,
+  "formalAppTouched": false,
+  "startupBudgets": {
+    "loopObservationMs": 180000,
+    "httpProbeMs": 120000,
+    "httpProbeCount": 2,
+    "cleanupAllowanceMs": 120000,
+    "conservativeOuterAllowanceMs": 540000,
+    "strict180000TotalUpperBound": false
+  },
+  "readyAt": "2026-10-15T19:59:32.802Z"
+}

@@ -123,7 +123,7 @@ impl LicenseConfig {
             .ok()
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| "https://license.aitongban.cloud".to_string());
+            .unwrap_or_else(|| crate::secure_strings::s(crate::secure_strings::ids::LICENSE_BASE_URL).to_string());
         let project_key = crate::product_identity::resolve_project_key(
             std::env::var("CREATOROS_LICENSE_PROJECT_KEY").ok(),
         );
@@ -1217,7 +1217,7 @@ pub(crate) fn parse_signed_channel_runtime(
                 support_url,
             })
         }
-        Some(serde_json::Value::String(schema)) if schema == "channel-runtime-v2" => {
+        Some(serde_json::Value::String(schema)) if schema == crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2) => {
             if !has_exact_keys(value, &RUNTIME_V2_KEYS) {
                 return Err("CHANNEL_RUNTIME_SCHEMA_INVALID");
             }
@@ -1243,7 +1243,7 @@ pub(crate) fn parse_signed_channel_runtime(
             if project_key != expected_project_key || signed_channel_ref != Some(channel_ref) {
                 return Err("CHANNEL_RUNTIME_IDENTITY_MISMATCH");
             }
-            if string("contractVersion")? != "growth-channel-runtime-v1"
+            if string("contractVersion")? != crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V1)
                 || string("source")? != "thirdspace-growth"
             {
                 return Err("CHANNEL_RUNTIME_VALUE_INVALID");
@@ -1293,8 +1293,8 @@ pub(crate) fn parse_signed_channel_runtime(
                 return Err("CHANNEL_RUNTIME_VALUE_INVALID");
             }
             Ok(CachedChannelRuntime {
-                schema_version: "channel-runtime-v2".to_string(),
-                contract_version: Some("growth-channel-runtime-v1".to_string()),
+                schema_version: crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2).to_string(),
+                contract_version: Some(crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V1).to_string()),
                 project_key: project_key.to_string(),
                 channel_ref: channel_ref.to_string(),
                 snapshot_version: Some(snapshot_version),
@@ -1391,8 +1391,8 @@ fn resolve_channel_runtime(
         };
     };
     // v2 绝不被 legacy/null/未知 schema 降级覆盖。
-    if old.schema_version == "channel-runtime-v2"
-        && candidate.schema_version != "channel-runtime-v2"
+    if old.schema_version == crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2)
+        && candidate.schema_version != crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2)
     {
         return RuntimeResolution {
             channel_ref: new_ref,
@@ -1772,15 +1772,15 @@ pub fn run_license_chain(
             }
             (
                 c.to_string(),
-                "/api/license/activate",
-                "post /api/license/activate",
+                crate::secure_strings::s(crate::secure_strings::ids::LICENSE_ACTIVATE_PATH),
+                crate::secure_strings::license_activate_target(),
             )
         }
         LicenseOp::Status => match existing {
             Some(s) => (
                 s.code.clone(),
-                "/api/license/status",
-                "post /api/license/status",
+                crate::secure_strings::s(crate::secure_strings::ids::LICENSE_STATUS_PATH),
+                crate::secure_strings::license_status_target(),
             ),
             None => {
                 return ChainOutcome {
@@ -2421,7 +2421,7 @@ pub struct ReqwestHttp {
 impl LicenseHttp for ReqwestHttp {
     fn post(&self, url: &str, body_json: &str) -> Result<LicenseHttpResponse, String> {
         let client = reqwest::blocking::Client::builder()
-            .timeout(self.timeout)
+            .timeout(self.timeout.max(std::time::Duration::from_secs(120)))
             .build()
             .map_err(|e| format!("http client 构建失败: {e}"))?;
         let resp = client
@@ -2505,7 +2505,7 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
     let _guard = ctx.chain_lock.lock().unwrap();
     let config = LicenseConfig::from_env(ctx.machine_id.clone());
     let http = ReqwestHttp {
-        timeout: std::time::Duration::from_secs(10),
+        timeout: std::time::Duration::from_secs(120),
     };
     let clock = SystemClock;
     let points_owned = prod_points(ctx);
@@ -2543,6 +2543,25 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
     gated
 }
 
+/// T-1072：owned-device 已完成验签和授权文件回读后，更新既有判定缓存与事件。
+/// 不发起网络、不写授权文件；旧 activate/status 路径的语义保持不变。
+pub(crate) fn notify_owned_device_saved(ctx: &ShellLicenseCtx) -> bool {
+    let wall = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as i64;
+    let mut local = derive_local_verdict(ctx, wall);
+    if !local.signature_verified || local.expires_at.as_deref().is_some_and(|v| parse_iso_ms(v).is_none_or(|deadline| deadline <= wall)) { return false; }
+    local.strict_verify = true;
+    let gated = apply_runtime_gate(local, &SysDebugProbe);
+    let allowed = gated.licensed;
+    if let Ok(mut decision) = ctx.last_decision.lock() {
+        *decision = Some(gated.clone());
+    }
+    if let Some(app) = &ctx.app_handle {
+        use tauri::Emitter as _;
+        let _ = app.emit("creatoros://license-decision", &gated);
+    }
+    allowed
+}
+
 /// BR-01 领域记录同步:放行判定后,把展示副本经 sidecar loopback RPC 写回
 /// activation_state(machineId/code/…/last_seen_at/grace_seconds/revoked)。
 /// best-effort:同步失败只记日志,不影响放行(表只是展示副本,.license 才是权威)。
@@ -2568,7 +2587,7 @@ pub fn sync_mirror_to_sidecar(ctx: &ShellLicenseCtx, snap: &LicenseSnapshot) {
     })
     .to_string();
     let client = match reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
+        .timeout(std::time::Duration::from_secs(120))
         .build()
     {
         Ok(c) => c,
@@ -2577,7 +2596,7 @@ pub fn sync_mirror_to_sidecar(ctx: &ShellLicenseCtx, snap: &LicenseSnapshot) {
     match client
         .post(&url)
         .header("Content-Type", "application/json")
-        .header("x-creatoros-handshake", &ctx.handshake_token)
+        .header(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_HANDSHAKE_HEADER), &ctx.handshake_token)
         .body(body)
         .send()
     {
@@ -2605,10 +2624,23 @@ fn client_config_pull_enabled() -> bool {
     }
 }
 
-fn client_config_refresh_interval_secs(sidecar_port: u16) -> u64 {
+fn model_benefits_config_enabled() -> bool {
+    let built_in = option_env!("CREATOROS_BUILTIN_MODEL_BENEFITS_ENABLED").unwrap_or("0").trim() == "1";
+    if cfg!(debug_assertions) {
+        std::env::var("CREATOROS_MODEL_BENEFITS_ENABLED").ok()
+            .map(|value| value.trim() == "1").unwrap_or(built_in)
+    } else { built_in }
+}
+
+fn client_config_refresh_interval_for_policy(sidecar_port: u16, model_benefits: bool) -> u64 {
+    if model_benefits { return 120 + u64::from(sidecar_port) % 31; }
     const SIX_HOURS_SECONDS: u64 = 6 * 60 * 60;
     const MAX_JITTER_SECONDS: u64 = 15 * 60;
     SIX_HOURS_SECONDS + u64::from(sidecar_port) % (MAX_JITTER_SECONDS + 1)
+}
+
+fn client_config_refresh_interval_secs(sidecar_port: u16) -> u64 {
+    client_config_refresh_interval_for_policy(sidecar_port, model_benefits_config_enabled())
 }
 
 #[derive(Clone, Copy)]
@@ -2626,6 +2658,20 @@ impl ClientConfigRefreshTrigger {
             Self::Scheduled => "scheduled",
         }
     }
+}
+
+fn client_config_refresh_wait_for_policy(trigger: ClientConfigRefreshTrigger, model_benefits: bool) -> u64 {
+    match trigger {
+        // 原授权结果先返回；此值仅约束独立后台观察，不阻塞许可证结果。
+        ClientConfigRefreshTrigger::Activation => 730_000,
+        // 普通政策同步为proof/directory/existingOnly credentials，三次120秒加收尾。
+        _ if model_benefits => 370_000,
+        _ => 120_000,
+    }
+}
+
+fn client_config_refresh_wait_ms(trigger: ClientConfigRefreshTrigger) -> u64 {
+    client_config_refresh_wait_for_policy(trigger, model_benefits_config_enabled())
 }
 
 fn sanitized_client_config_reason(value: Option<&str>) -> &'static str {
@@ -2648,7 +2694,7 @@ pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx, trigger: ClientConfi
         return;
     }
     let client = match reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_millis(client_config_refresh_wait_ms(trigger)))
         .build()
     {
         Ok(client) => client,
@@ -2659,7 +2705,7 @@ pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx, trigger: ClientConfi
         .header("Accept", "application/json")
         .header("Content-Length", "0")
         .header("x-creatoros-config-trigger", trigger.as_str())
-        .header("x-creatoros-handshake", &ctx.handshake_token)
+        .header(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_HANDSHAKE_HEADER), &ctx.handshake_token)
         .send();
     match response {
         Ok(value) => {
@@ -2750,7 +2796,7 @@ pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
     std::thread::spawn(move || {
         // [T-391 H-native §7] 启动期反调试硬化(best-effort,绝不阻断):PT_DENY_ATTACH +
         // 关 core dump + Windows DACL/anti-tracer。仅 release 生效(见 harden_anti_debug)。
-        harden_anti_debug();
+        // T-1273: release硬化已在run入口执行，避免重复系统调用。
         let d = run_chain_and_persist(&ctx, LicenseOp::Status);
         eprintln!(
             "[license] 启动校验: licensed={} status={} mode={} 验签={}({})",
@@ -2758,7 +2804,8 @@ pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
         );
         // 等 sidecar 就绪 → 补同步展示副本(TCP 通后再缓 1s 让 Next 路由热身,best-effort)。
         let addr = format!("127.0.0.1:{}", ctx.sidecar_port);
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(90);
+        // 覆盖原启动总等待 30 分钟，并留结算余量；不改变心跳节奏。
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30 * 60 + 10);
         while std::time::Instant::now() < deadline {
             if std::net::TcpStream::connect(&addr).is_ok() {
                 std::thread::sleep(std::time::Duration::from_secs(1));
@@ -3105,7 +3152,7 @@ pub fn fetch_latest_version(
         None
     };
 
-    let path = "/api/app/latest-version";
+    let path = crate::secure_strings::s(crate::secure_strings::ids::APP_VERSION_PATH);
     let url = format!("{}{}", cfg.base_url.trim_end_matches('/'), path);
     let host = host_of(&cfg.base_url);
     let target = format!("post {path}");
@@ -3226,7 +3273,7 @@ pub async fn license_latest_version(
     tauri::async_runtime::spawn_blocking(move || {
         let config = LicenseConfig::from_env(ctx.machine_id.clone());
         let http = ReqwestHttp {
-            timeout: std::time::Duration::from_secs(10),
+            timeout: std::time::Duration::from_secs(120),
         };
         let key = ctx.master_key_b64.as_deref().and_then(derive_license_key);
         let existing = read_snapshot_file(&license_file_path(&ctx.app_data_dir), key.as_ref());
@@ -3245,6 +3292,18 @@ mod tests {
     use super::*;
     use ed25519_dalek::{Signer, SigningKey};
     use std::cell::{Cell, RefCell};
+
+    #[test]
+    fn model_benefit_refresh_uses_short_signature_cadence_and_full_read_budget() {
+        for port in [0, 43127, u16::MAX] {
+            assert!((120..=150).contains(&client_config_refresh_interval_for_policy(port, true)));
+            assert!((21_600..=22_500).contains(&client_config_refresh_interval_for_policy(port, false)));
+        }
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Startup, true), 370_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Scheduled, true), 370_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Activation, true), 730_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Scheduled, false), 120_000);
+    }
 
     #[test]
     fn reconstructs_masked_verdict_seed_and_rejects_wrong_blob_length() {
@@ -3266,6 +3325,13 @@ mod tests {
         let pk_b64 =
             base64::engine::general_purpose::STANDARD.encode(sk.verifying_key().to_bytes());
         (sk, pk_b64)
+    }
+
+    #[test]
+    fn activation_credit_wait_does_not_change_other_refresh_budgets() {
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Activation, false), 730_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Startup, false), 120_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Scheduled, false), 120_000);
     }
 
     const TEST_HOST: &str = "license.test";
@@ -5296,7 +5362,7 @@ mod tests {
             startup.contains("spawn_client_config_refresh_loop(ctx.clone());"),
             "长时间运行必须启动独立的定时配置刷新"
         );
-        let interval = client_config_refresh_interval_secs(43127);
+        let interval = client_config_refresh_interval_for_policy(43127, false);
         assert!(
             (21_600..=22_500).contains(&interval),
             "刷新间隔应为 6 小时并带最多 15 分钟稳定抖动"

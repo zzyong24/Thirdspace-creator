@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 
 import { client } from "@/lib/contract-client";
 
@@ -147,6 +148,8 @@ export function ChatDouyinShareCard({
   /** 测试可缩短；生产默认 4 秒。 */
   pollIntervalMs?: number;
 }) {
+  const observation = useTaskObservation(taskId);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [parent, setParent] = React.useState<WirePersistentTask | null>(null);
   const [child, setChild] = React.useState<WirePersistentTask | null>(null);
   const [checkpoint, setCheckpoint] = React.useState<ImportCheckpoint>({
@@ -160,8 +163,10 @@ export function ChatDouyinShareCard({
     if (!taskId || !ownerId || error) return;
     let abandoned = false;
     void (async () => {
-      for (let attempt = 0; attempt < MAX_POLLS; attempt += 1) {
-        if (abandoned) return;
+      const isCurrent = captureObservation();
+      for (let attempt = 0; ; attempt += 1) {
+        if (attempt > 0 && attempt % MAX_POLLS === 0 && !await pauseObservation()) return;
+        if (abandoned || !isCurrent()) return;
         try {
           const parentRows = (await client.listExecutionTasks({
             params: undefined,
@@ -175,7 +180,7 @@ export function ChatDouyinShareCard({
           })) as unknown as WirePersistentTask[];
           const currentParent =
             parentRows.find((task) => task.id === taskId) ?? null;
-          if (abandoned) return;
+          if (abandoned || !isCurrent()) return;
           if (currentParent) {
             setParent(currentParent);
             const parsed = parseImportCheckpoint(currentParent.checkpoint);
@@ -202,7 +207,7 @@ export function ChatDouyinShareCard({
                       parsed.transcriptTaskIds.includes(task.id),
                     )
                   : childRows[0]) ?? null;
-              if (abandoned) return;
+              if (abandoned || !isCurrent()) return;
               setChild(currentChild);
               if (currentChild && isTerminal(currentChild.status)) {
                 return;
@@ -223,12 +228,11 @@ export function ChatDouyinShareCard({
         }
         await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
       }
-      if (!abandoned) setQueryFailed(true);
     })();
     return () => {
       abandoned = true;
     };
-  }, [action, error, ownerId, pollIntervalMs, taskId]);
+  }, [action, error, ownerId, pollIntervalMs, taskId, pauseObservation, captureObservation]);
 
   const failedTask =
     parent && ["failed", "blocked", "cancelled"].includes(parent.status)
@@ -329,6 +333,7 @@ export function ChatDouyinShareCard({
         </div>
       ) : null}
 
+      <TaskObservationNotice {...observation} />
       {queryFailed ? (
         <p data-slot="chat-douyin-query-error" className="text-warning">
           暂时读不到后台任务状态；任务已经持久化，可稍后回到这里查看。

@@ -1,4 +1,24 @@
+import {freezeSelectedModelRoutes} from '../ai-runtime/capability-model-routing';
+import {modelRouteCatalog} from '@creatoros/contract';
+it('T1300 56实际目录键逐键冻结，无供应商文本配置不阻断所选Codex族，独立能力不偷换',async()=>{
+ const choices={text:'codex',vision:'codex',image:'codex',video:'official',audio:'local',embed:'self'} as const;
+ const seen:string[]=[];
+ const route=await freezeSelectedModelRoutes({choices,revision:7,main:{mode:'text',capability:'copilot.assist'},read:async(entry,source)=>{
+  seen.push(entry.routeKey);
+  return source==='codex'&&entry.capability!=='chat.fallback'?{status:'ready',identity:{protocolKind:'codex-app-server',runtimeVersion:'0.159.3',requestedModel:'neutral-catalog-fixture'}}:{status:'unavailable',reasonCode:entry.capability==='chat.fallback'?'MODEL_ROUTE_UNSUPPORTED':'MODEL_NOT_CONFIGURED'};
+ }});
+ expect(modelRouteCatalog).toHaveLength(56);expect(new Set(seen).size).toBe(56);
+ expect(Object.keys(route.routes).sort()).toEqual(modelRouteCatalog.map(entry=>entry.routeKey).sort());
+ for(const entry of modelRouteCatalog){
+  const frozen=route.routes[entry.routeKey]!;
+  expect(frozen).toMatchObject({routeKey:entry.routeKey,capability:entry.capability,mode:entry.mode,source:choices[entry.family]});
+  expect(frozen.readiness).toBe(choices[entry.family]==='codex'&&entry.capability!=='chat.fallback'?'configured':'unavailable');
+ }
+ expect(route.orchestrator.engine).toBe('codex');
+});
+import {createSettingsRepository} from '../settings';
 import { createChatHostContextReader } from "./chat-host-context.service";
+import type { ChatHostContext } from "./chat-host-context";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { createDb, aiTasks, aiMessages, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createAiRepository } from "./ai.repository";
@@ -20,15 +40,53 @@ async function fixture(){
   const rows=async()=>({tasks:await db.select().from(aiTasks).where(eq(aiTasks.accountId,ctx.accountId)),executions:await db.select().from(executionTasks).where(eq(executionTasks.accountId,ctx.accountId))});
   return {ctx,repo,conversation,source,request,assemble,service,message,rows};
 }
+it.each([undefined,"codex"] as const)("装配前解析真实引擎 %s，冻结工具与策略一致且重放不重新装配",async executionEngine=>{
+  const f=await fixture(),engine=executionEngine??"pi";
+  const assemble=vi.fn(async(ctx:typeof f.ctx,snapshot:ChatTurnSnapshot,options?:{executionEngine?:"pi"|"codex"})=>({
+    ...await f.assemble(ctx,snapshot),system:`目录来自 ${options?.executionEngine??"missing"}`,
+    tools:[{name:options?.executionEngine==="codex"?"canvas.read":"context.projects",version:"1",description:"真实已装配工具",parameters:{type:"object"},effect:"none" as const}],
+  }));
+  const service=createChatTurnSubmissionService(db,{now,nextId,assemble});
+  const result=await service.submit(f.ctx,{...f.request,...(executionEngine?{executionEngine}:{})});
+  expect(assemble.mock.calls[0]?.[2]).toEqual({executionEngine:engine});
+  const saved=(await f.rows()).executions[0]!.payload as {modelInput:Record<string,unknown>};
+  expect(saved.modelInput).toMatchObject({executionEngine:engine,system:`目录来自 ${engine}`,tools:[{name:engine==="codex"?"canvas.read":"context.projects"}]});
+  const frozen=JSON.stringify(saved);
+  expect(await service.submit(f.ctx,{...f.request,...(executionEngine?{executionEngine}:{})})).toMatchObject({...result,replayed:true});
+  expect(assemble).toHaveBeenCalledTimes(1);
+  expect(JSON.stringify((await f.rows()).executions[0]!.payload)).toBe(frozen);
+});
 it("同源消息并发提交只产生一个完整绑定，冻结真实历史且不吞后续消息",async()=>{
   const f=await fixture();await f.message("user","后续问题");
   const [a,b]=await Promise.all([f.service.submit(f.ctx,f.request),f.service.submit(f.ctx,f.request)]);
   expect(a.taskId).toBe(b.taskId);expect(a.executionTaskId).toBe(b.executionTaskId);expect([a.replayed,b.replayed].sort()).toEqual([false,true]);
   const state=await f.rows();expect(state.tasks).toHaveLength(1);expect(state.executions).toHaveLength(1);
   expect(state.tasks[0]).toMatchObject({executionTaskId:a.executionTaskId,taskType:"copilot.assist",status:"queued",inputData:{sourceMessageId:f.source.id}});
-  expect(state.executions[0]).toMatchObject({ownerId:a.taskId,status:"queued",payload:{aiTaskId:a.taskId,modelInput:{kind:"chat.run",userId:f.ctx.userId,accountId:f.ctx.accountId,sourceMessageId:f.source.id,messages:[{role:"user",content:"历史问题"},{role:"assistant",content:"历史回答"},{role:"user",content:"本轮问题"}]}}});
+  expect(state.executions[0]).toMatchObject({ownerId:a.taskId,status:"queued",payload:{aiTaskId:a.taskId,artifactProtocolVersion:2,modelInput:{kind:"chat.run",userId:f.ctx.userId,accountId:f.ctx.accountId,sourceMessageId:f.source.id,messages:[{role:"user",content:"历史问题"},{role:"assistant",content:"历史回答"},{role:"user",content:"本轮问题"}]}}});
   const [saved]=await db.select().from(aiMessages).where(eq(aiMessages.id,f.source.id));expect(saved!.modelMetadata).toEqual({existing:"保留",chatTaskId:a.taskId});
   const count=f.assemble.mock.calls.length;expect(await f.service.submit(f.ctx,f.request)).toMatchObject({...a,replayed:true});expect(f.assemble).toHaveBeenCalledTimes(count);
+});
+it("新提交冻结具体纠错格式；旧绑定回放不补标记或改变任何冻结字节",async()=>{
+  const f=await fixture(),created=await f.service.submit(f.ctx,f.request);
+  const first=(await f.rows()).executions[0]!;
+  expect(first.payload).toMatchObject({toolValidationRecoveryVersion:1});
+  // 只在隔离库构造已存在的旧格式；没有模型或工具调用，不迁移实际用户任务。
+  const legacy={...(first.payload as Record<string,unknown>)};delete legacy.toolValidationRecoveryVersion;
+  await db.update(executionTasks).set({payload:legacy}).where(eq(executionTasks.id,created.executionTaskId));
+  const before=JSON.stringify(await f.rows()),count=f.assemble.mock.calls.length;
+  expect(await f.service.submit(f.ctx,f.request)).toEqual({...created,replayed:true});
+  expect(f.assemble).toHaveBeenCalledTimes(count);
+  expect(JSON.stringify(await f.rows())).toBe(before);
+});
+it('T1099 安全业务错误格式只冻入新执行外层，已有缺标记绑定逐字回放',async()=>{
+ const f=await fixture(),created=await f.service.submit(f.ctx,f.request),first=(await f.rows()).executions[0]!;
+ expect(first.payload).toMatchObject({toolFailureReceiptVersion:1});
+ expect((first.payload as Record<string,unknown>).modelInput).not.toHaveProperty('toolFailureReceiptVersion');
+ const legacy={...(first.payload as Record<string,unknown>)};delete legacy.toolFailureReceiptVersion;
+ await db.update(executionTasks).set({payload:legacy}).where(eq(executionTasks.id,created.executionTaskId));
+ const before=JSON.stringify(await f.rows()),count=f.assemble.mock.calls.length;
+ expect(await f.service.submit(f.ctx,f.request)).toEqual({...created,replayed:true});
+ expect(f.assemble).toHaveBeenCalledTimes(count);expect(JSON.stringify(await f.rows())).toBe(before);
 });
 it("跨账号、别的会话消息和非用户源消息在装配前拒绝",async()=>{
   const f=await fixture(),other=await fixture();
@@ -77,7 +135,7 @@ it("已有旧公开入口回复绑定的源消息不能再创建第二份聊天�
   expect(f.assemble).not.toHaveBeenCalled();expect(await f.rows()).toEqual({tasks:[],executions:[]});
 });
 
-function hostContext(ctx:{userId:string;accountId:string}) {
+function hostContext(ctx:{userId:string;accountId:string}):ChatHostContext {
   return {schemaVersion:1 as const,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1 as const,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"chatbox.topic",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"固定策略",template:"模板",tools:["context.projects"],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
 }
 it("宿主上下文与执行原子保存，重放不换Skill或选区",async()=>{
@@ -156,7 +214,10 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  const {createChatHostContextReader}=await import("./chat-host-context.service");
  const {createPersistentTaskService}=await import("../execution/persistent-task.service");
  const f=await fixture(),frozen=hostContext(f.ctx);
- frozen.skillSnapshot.skills.push({skillId:"creatoros.guide",baseVersion:"v1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"提交时产品说明",template:"模板",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});
+ const {registerAllTemplates,getOfficialSkillBase}=await import("@creatoros/ai-worker");registerAllTemplates();
+ const official=getOfficialSkillBase("creatoros.guide")!;
+ frozen.skillSnapshot.skills.push({skillId:"creatoros.guide",baseVersion:official.baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem:official.methodSystem,template:official.template,tools:official.tools??[],requiredFacets:official.requiredFacets??[],contextRequirements:official.contextRequirements??[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});
+
  const prototypes=buildChatTools(["creatoros.guide","context.projects"],{} as Parameters<typeof buildChatTools>[1]);
  const definitions=(await prepareChatToolDefinitions(prototypes)).definitions;
  const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),tools:definitions,hostContext:frozen})});
@@ -170,7 +231,8 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  expect(Object.keys(tools)).toEqual(["creatoros.guide","context.projects"]);
  expect(listProjects).not.toHaveBeenCalled();
  const guide=await getChatToolNativeExecutor(tools["creatoros.guide"]!)!({},{});
- expect(JSON.stringify(guide)).toContain("提交时产品说明");expect(JSON.stringify(guide)).not.toContain("后来的配置");
+ expect(guide).toMatchObject({guide:official.methodSystem});expect(guide).not.toHaveProperty("error");expect(JSON.stringify(guide)).not.toContain("后来的配置");
+
  await getChatToolNativeExecutor(tools["context.projects"]!)!({},{});
  expect(listProjects).toHaveBeenLastCalledWith(expect.objectContaining({accountId:f.ctx.accountId}),expect.anything());
  await expect(resolve({...f.ctx,accountId:"other"},ref)).rejects.toThrow();
@@ -232,3 +294,38 @@ it("宿主上下文可选 undefined 也按数据库 JSON 形态保存摘要",asy
  const submitted=await service.submit(f.ctx,f.request);
  expect(await service.submit(f.ctx,f.request)).toMatchObject({...submitted,replayed:true});
 });
+
+it("新Codex任务冻结ACP工件，重放不切版本或协议",async()=>{
+ const f=await fixture();await f.service.submit(f.ctx,{...f.request,executionEngine:"codex"});
+ const rows=await f.rows();expect(rows.executions[0]!.payload).toMatchObject({modelInput:{externalAgentBinding:{protocolKind:"acp",adapterVersion:"2.1.1",runtimeVersion:"0.159.3",policy:"creatoros-acp-readonly-v2"}}});
+ await expect(f.service.submit(f.ctx,{...f.request,executionEngine:"pi"})).rejects.toThrow("引擎");
+});
+
+it('编导target原子冻结与原digest同租约恢复；后来改选区不改任务，篡改原target拒绝',async()=>{
+ const f=await fixture(),{aiConversations}=await import('@creatoros/backend');
+ await db.update(aiConversations).set({projectId:'editor-project'}).where(eq(aiConversations.id,f.conversation.id));
+ const target:import('@creatoros/contract').WorkEditorTarget={schemaVersion:1,projectId:'editor-project',outputId:'editor-output',owner:'wechat_article',contentType:'article',savedBase:{kind:'artifact',artifactId:'editor-artifact',versionId:'editor-version'},documentDigest:`sha256:${'b'.repeat(64)}`,selection:{kind:'article_sections',sectionIds:['original-section']}};
+ const frozen={...hostContext(f.ctx),chatContext:{surface:'project',projectId:'editor-project',editorTarget:target}};
+ const service=createChatTurnSubmissionService(db,{now,nextId,assertProject:async()=>{},assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:frozen})});
+ const submitted=await service.submit(f.ctx,f.request);target.selection.sectionIds[0]='later-section';
+ expect((await f.rows()).executions[0]!.payload).toMatchObject({hostContext:{chatContext:{editorTarget:{selection:{sectionIds:['original-section']}}}}});
+ expect(await service.submit(f.ctx,f.request)).toMatchObject({...submitted,replayed:true});
+ const {createPersistentTaskService}=await import('../execution/persistent-task.service');
+ const claimed=(await createPersistentTaskService(db,{now,nextId}).claimTask({taskId:submitted.executionTaskId,workerId:'editor-worker'}))!,ref={executionTaskId:submitted.executionTaskId,attempt:claimed.lease.attempt,fenceToken:claimed.lease.fenceToken};
+ const reader=createChatHostContextReader(db,{now});expect((await reader.read(ref)).hostContext.chatContext.editorTarget?.selection).toMatchObject({sectionIds:['original-section']});
+ const payload=structuredClone((await f.rows()).executions[0]!.payload) as {hostContext:typeof frozen};payload.hostContext.chatContext.editorTarget.savedBase.versionId='tampered';
+ await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,submitted.executionTaskId));await expect(reader.read(ref)).rejects.toThrow('摘要');
+},120000);
+
+it('未显式engine的v2聊天不强填pi，AI与execution同事务保存主模式和完整map，重放不换图',async()=>{
+ const f=await fixture(),choices={text:'codex',vision:'self',image:'self',video:'self',audio:'local',embed:'self'} as const;
+ await createSettingsRepository(db,{now,nextId}).setModelRouting(f.ctx,choices,0);
+ const executionRoute=await freezeSelectedModelRoutes({choices,revision:1,main:{mode:'text',capability:'copilot.assist'},read:async(_entry,source)=>source==='codex'?{status:'ready',identity:{protocolKind:'codex-app-server',runtimeVersion:'0.159.3',requestedModel:'fixture-actual-default'}}:{status:'not_configured',reasonCode:'MODEL_NOT_CONFIGURED'}});
+ const assemble=vi.fn(async(c:typeof f.ctx,s:ChatTurnSnapshot,_options?:{executionEngine?:'pi'|'codex'})=>({...await f.assemble(c,s),executionEngine:'codex' as const,executionRoute,chatModelMode:'text' as const}));
+ const service=createChatTurnSubmissionService(db,{now,nextId,assemble}),submitted=await service.submit(f.ctx,f.request),saved=await f.rows();
+ expect(assemble.mock.calls[0]![2]).toEqual({executionEngine:undefined});
+ expect(saved.tasks[0]!.runtimeData).toEqual({executionRoute,chatModelMode:'text'});expect(saved.executions[0]!.payload).toMatchObject({executionRoute,chatModelMode:'text',modelInput:{executionEngine:'codex'}});
+ expect((saved.executions[0]!.payload as Record<string,unknown>).modelInput).not.toHaveProperty('executionRoute');
+ expect(await service.submit(f.ctx,f.request)).toEqual({...submitted,replayed:true});expect(assemble).toHaveBeenCalledTimes(1);
+ await db.update(aiTasks).set({runtimeData:{}}).where(eq(aiTasks.id,submitted.taskId));await expect(service.submit(f.ctx,f.request)).rejects.toThrow();expect(assemble).toHaveBeenCalledTimes(1);
+},180_000);

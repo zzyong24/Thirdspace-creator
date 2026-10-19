@@ -122,3 +122,15 @@ describe("resolveOrigin", () => {
     expect(resolveOrigin(null, { douyinLoggedIn: true })).toBeNull();
   });
 });
+
+it('T1345首用户优先创建组，已有组优先扫码，旧账号主线保持',()=>{
+ expect(deriveGuidedSteps({needsFirstGroup:true} as any)[0]).toMatchObject({title:'创建第一个账号组',ctaLabel:'去创建',href:'/accounts'});
+ expect(deriveGuidedSteps({groupId:'g',memberCount:0})[0].why).toContain('扫码');
+ expect(deriveGuidedSteps({accountId:'legacy'})[0].title).toBe('绑定你的抖音号');
+});
+
+it('T1362组内已采集作品进入真实目录，旧账号历史项目路径保持',()=>{
+ const group=deriveGuidedSteps({groupId:'g',memberCount:1,origin:'existing',hasImportedWorks:false});
+ expect(group.find(step=>step.key==='review-imported-projects')).toMatchObject({href:'/accounts/works',ctaLabel:'查看已采集作品'});
+ expect(deriveGuidedSteps({accountId:'legacy',origin:'existing'}).find(step=>step.key==='review-imported-projects')?.href).toBe('/projects');
+});

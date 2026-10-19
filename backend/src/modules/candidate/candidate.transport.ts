@@ -21,6 +21,9 @@ import type { CandidateService } from "./candidate.service";
 // write op here (C-4): writes ride Ingestion's intake (ingestAudienceSignal).
 
 export const CANDIDATE_OP_IDS = [
+  "topics.workspace.get",
+  "topics.workspace.save",
+  "topics.proposals.feedback",
   "candidates.list",
   "candidates.create",
   "candidates.get",
@@ -50,6 +53,9 @@ export function createCandidateTransport(
       };
 
       switch (endpoint.id) {
+        case "topics.workspace.get": return {data:await service.getTopicWorkspace(ctx),meta:{requestId}};
+        case "topics.workspace.save": return {data:await service.saveTopicWorkspace(ctx,body),meta:{requestId}};
+        case "topics.proposals.feedback": return {data:await service.saveTopicProposalFeedback(ctx,body),meta:{requestId}};
         case "candidates.list": {
           const q = (query ?? {}) as {
             page?: number;

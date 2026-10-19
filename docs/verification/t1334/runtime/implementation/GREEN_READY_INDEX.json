@@ -1,0 +1,70 @@
+{
+  "meaning": "同链GREEN准备；非业务运行结果",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/implementation/ASSEMBLY.md",
+      "bytes": 1369,
+      "sha256": "389022a47b31a82b15c55d29282ca1bb5507d325b093c17b4609ac7bdca3012e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/implementation/freeze-green.py",
+      "bytes": 2442,
+      "sha256": "36288415861924cc41827183361407f9fd441069b81566bf3f41b2dc75e5c815"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/implementation/CHECKS.json",
+      "bytes": 4312,
+      "sha256": "3eaa5977c4d493ba2cee0c67d3d0e7106b3c2615edad09ff487493eb0b86e806"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/implementation/BASELINE.json",
+      "bytes": 943,
+      "sha256": "b3b46c484be8c2ba814af97e2a54f9aa95bf803f54638ee6d602a84bd777bc3f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/implementation/build-owned-worker.mjs",
+      "bytes": 2632,
+      "sha256": "04b0b472c3fd380c5a8220d2193a543c86f75c0e15f2de3a60dfe53206e0e254"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/implementation/OWNED_ROOT.json",
+      "bytes": 798,
+      "sha256": "114e7dbcea6665acdfc884f59fa9357af90ca4fad38252b09ea28f202419aee7"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/implementation/MINIMAL_DIFF.diff",
+      "bytes": 3016,
+      "sha256": "f427a436648b6a7c5cdf9239606becbb861c0c96fe722c6337dd653d5e0efc52"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-v1/PRE_RUN_LOCK.json",
+      "bytes": 10234599,
+      "sha256": "a43d43365bbf67c219fcbc079bc1c1347dd6a68d40bc0c72bf1ea226814210cc"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-v1/WORKER_BINDING.json",
+      "bytes": 64099,
+      "sha256": "5c53ca928efdeb4d76dd5fa11fb677ca23a9ceaa1ccbcd3bb5f4d25fcd0bd1dd"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/worker-green.cjs",
+      "bytes": 1540654,
+      "sha256": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/worker-green.metafile.json",
+      "bytes": 234336,
+      "sha256": "1b48d305cf5ee8efd6f3d2bf4fd6f8b090ae9dd60d2d043e3bf0d87c2df31656"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "bytes": 12004,
+      "sha256": "d28578f7b79c70156ee15e827c6b4d7673084ed6d8e1eae0ebf42281b24d6439"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-agentic-worker-run.test.ts",
+      "bytes": 11586,
+      "sha256": "64da5146869bd2958e1df241d154d47fc8153c9648e9b6c27e2a6c02c145e882"
+    }
+  ]
+}

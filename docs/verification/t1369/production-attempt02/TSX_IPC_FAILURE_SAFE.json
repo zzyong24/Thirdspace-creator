@@ -1,0 +1,14 @@
+{
+  "errorLines": [
+    "Error: listen EPERM: operation not permitted /private/tmp/c1369-2y133yus/tsx-501/22752.pipe",
+    "  code: 'EPERM',",
+    "  errno: -1,",
+    "  syscall: 'listen',",
+    "  address: '/private/tmp/c1369-2y133yus/tsx-501/22752.pipe',"
+  ],
+  "productionExecuted": false,
+  "buildStarted": false,
+  "policyUnchanged": true,
+  "rootAndModeVerified": true,
+  "boundary": "短TMPDIR同SBPL探针失败，按Root授权停止；不放宽规则、不启动production、不自动重试。"
+}

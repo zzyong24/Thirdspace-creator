@@ -282,6 +282,6 @@ T-459 已加护栏 `requiresSerializableFunctionSource(code)`(regex 检测 `.eva
 
 **信号识别**:CI 报 `resource path ... doesn't exist` 且路径指向 `binaries/` 或 `sidecar.tar.gz` → 看该步在 workflow 里的**位置**,不是看测试内容。开发机复现不出来是因为本地 `binaries/` 里已躺着上次构建的产物(mac 上是 `creatoros-server-aarch64-apple-darwin`),build.rs 不 panic —— **本机绿 ≠ CI 绿,差别就是这个 gitignored 目录**。干净 worktree 能复现:panic 换成 darwin 那个文件名。
 
-**正解**(T-992):撤掉该步。这组测试是纯 `std` 临时目录测试,不需要真实 Windows 也不需要发布流水线,留在本地 / reconcile LED-052 guard 即可。若确实要进 CI,必须排在 closure 构建**之后**。**同时**:撤步后要回头改 LESSON_LEDGER 里「Windows 流水线必须用原生独占文件句柄复现」那句 —— 步骤没了,声明就成了假的;`reconcile.config.json` 那条同名 check 也脆(任何没有 `binaries/` + `sidecar.tar.gz` 的干净检出跑它都会 panic,reconcile 会报 "LED-052 RECURRED" 假红)。
+**正解**(T-992):撤掉该步。这组测试是纯 `std` 临时目录测试,不需要真实 Windows 也不需要发布流水线,留在本地 / reconcile LED-057 guard 即可。若确实要进 CI,必须排在 closure 构建**之后**。**同时**:撤步后要回头改 LESSON_LEDGER 里「Windows 流水线必须用原生独占文件句柄复现」那句 —— 步骤没了,声明就成了假的;`reconcile.config.json` 那条同名 check 也脆(任何没有 `binaries/` + `sidecar.tar.gz` 的干净检出跑它都会 panic,reconcile 会报 "LED-057 RECURRED" 假红)。
 
 **教训**:**给一个修复加守护时,守护自身的依赖前置条件要跟着排序**。「加个测试步骤总不会错」是错的 —— 在有构建产物依赖的流水线里,步骤位置和测试内容同等重要。另一条:**声明和机制要同步改**。ledger / config 里写「流水线必须 X」,当 X 被撤掉时那句话不会自己失效,它会变成一条误导后人的假证据。

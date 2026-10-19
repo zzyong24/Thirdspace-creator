@@ -1,0 +1,2 @@
+import base from "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/vitest.config.ts";
+export default {...base,root:"/Users/zyongzhu/Workbase/Thirdspace-creator/frontend",cacheDir:"/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13/protection/cache-frontend",test:{...base.test,include:["src/features/assets/assets-data.test.ts", "src/features/assets/assets-page.test.tsx", "src/features/assets/assets-interactions.test.tsx"],testTimeout:180000,hookTimeout:180000,globalTimeout:28140000,maxWorkers:1,fileParallelism:false,retry:0}};

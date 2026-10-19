@@ -39,6 +39,8 @@ import type { ReactNode } from "react";
 // AssetsInteractiveRegion, module 07 E2–E6) can call `useRouter()` without an
 // App Router provider mounted in the unit test.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({
     refresh: vi.fn(),
     replace: vi.fn(),
@@ -438,4 +440,16 @@ describe("AssetsPage", () => {
     expect(total).not.toBeNull();
     expect(total.textContent).toBe(vm.assets.length.toLocaleString("en-US"));
   });
+});
+
+
+describe('T1341 原详情标签consumer三态',()=>{
+ afterEach(()=>cleanup());
+ it.each([{state:'known' as const,tags:[],text:'—'},{state:'known' as const,tags:['中文真实','原图保真'],text:'中文真实'},{state:'unavailable' as const,tags:[],text:'标签暂不可用'}])('原panel状态 $state $text 保预览/下载操作',async family=>{
+  const {buildAssetsViewModel}=await import('@/fixtures/selectors');const vm=buildAssetsViewModel(),original=vm.assets[0]!;const asset={...original,tags:family.tags,tagsReadState:family.state};
+  const {AssetDetailPanel}=await import('@/components/resources/asset-detail-panel');const {container}=render(<AssetDetailPanel asset={asset} usageHistory={[]}/>);const section=container.querySelector('[data-slot="asset-tags"]')!;expect(section.textContent).toContain(family.text);expect(container.querySelector('[data-slot="asset-detail-panel"]')?.getAttribute('data-asset-id')).toBe(asset.id);expect(container.querySelector('button[aria-label*="下载"],button[title*="下载"]')??screen.getByText('下载')).toBeTruthy();
+ },180000);
+ it('真实标签值参与既有q搜索且保同一详情标签',async()=>{
+  const {buildAssetsViewModel}=await import('@/fixtures/selectors');const vm=buildAssetsViewModel(),first=vm.assets[0]!;const asset={...first,name:'没有搜索词的素材',description:'',tags:['T1341真实标签搜索'],tagsReadState:'known' as const};const {container}=await renderAssets({viewModel:{...vm,assets:[asset]},q:'T1341真实标签搜索'});expect(container.querySelector(`[data-asset-id="${asset.id}"]`)).toBeTruthy();expect(container.querySelector('[data-slot="asset-tags"]')?.textContent).toContain('T1341真实标签搜索');
+ },180000);
 });

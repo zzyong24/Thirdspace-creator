@@ -1,0 +1,20 @@
+import {it,expect} from 'vitest';
+import {readProductionNativeScene} from '@creatoros/contract';
+import {buildProductionPauseGaps,productionPauseGapRange} from './production-pause-gaps';
+const hash='sha256:'+'a'.repeat(64),timingReceipt={callId:'call',durableReceiptId:'call',rawResponseDigest:hash,extractionReceiptId:'extract',extractionDigest:hash,mappingDigest:hash};
+const source={sourceId:'s',assetId:'a',assetFileId:'f',fileDigest:'a'.repeat(64),probeDigest:'b'.repeat(64),timebase:{num:3,den:1000},durationTicks:1000,hasAudio:true};
+const plan=()=>({editorVersion:3,referenceEditor:{editor:'opencut-classic',revision:'c'.repeat(40),mediaRefs:[{mediaId:'m',assetId:'a',assetFileId:'f'}],nativeDocument:{version:31,metadata:{id:'o'},currentSceneId:'scene',scenes:[{id:'scene',tracks:{main:{id:'main',type:'video',elements:[{id:'c',type:'video',mediaId:'m',startTime:120000,duration:360000,trimStart:0,trimEnd:0,params:{}}]},overlay:[],audio:[]}}]}},nativeSources:[{mediaId:'m',source}],sourceTranscripts:[{transcriptId:'t',sourceId:'s',assetFileId:'f',audioDigest:'d'.repeat(64),providerReceiptId:'receipt',text:'完整表达',providerEvidence:{timingReceipt},granularity:'word',tokens:[{tokenId:'l',text:'左',startTicks:0,endTicks:100},{tokenId:'r',text:'右',startTicks:500,endTicks:600}]}]});
+it('相邻真token与完整证据枚举间隙，有理num3格点精确保前删后',()=>{const p=plan(),[gap]=buildProductionPauseGaps(p,'scene',['c']);expect(gap).toMatchObject({sourceStartTicks:100,sourceEndTicks:500,sourceTimebase:{num:3,den:1000}});expect(productionPauseGapRange(p,'scene',{suggestionId:'review',decision:'review',target:{kind:'pause_gap',clipId:'c',transcriptId:'t',gapId:gap!.gapId,retainedTicks:100},reason:'缩短',uncertainty:'听审呼吸'},[gap!])).toEqual({startTick:192000,endTick:300000});});
+it('无timing/rich/retime/trim不造gap，伪ID/摘要/空删除拒绝且不改原方案',()=>{for(const variant of ['timing','rich','speed','trim']){const p=plan(),e=p.referenceEditor.nativeDocument.scenes[0]!.tracks.main.elements[0]!;if(variant==='timing')Reflect.deleteProperty(p.sourceTranscripts[0]!.providerEvidence,"timingReceipt");if(variant==='rich')Object.assign(e,{effects:[{id:'effect'}]});if(variant==='speed')Object.assign(e,{retime:{rate:1.13}});if(variant==='trim')e.trimStart=100000;expect(buildProductionPauseGaps(p,'scene',['c'])).toEqual([]);}const p=plan(),[g]=buildProductionPauseGaps(p,'scene',['c']),before=JSON.stringify(p);for(const retainedTicks of [400,401])expect(()=>productionPauseGapRange(p,'scene',{suggestionId:'x',decision:'review',target:{kind:'pause_gap',clipId:'c',transcriptId:'t',gapId:g!.gapId,retainedTicks},reason:'r',uncertainty:'u'},[g!])).toThrow();expect(JSON.stringify(p)).toBe(before);});
+it('原生混合词句与听审停顿共用删除union与一次ripple，原方案与后续片段身份保留',async()=>{
+ const {nativeRoughImpact,applyNativeRoughSuggestions}=await import('./production-native-rough');
+ const p=plan(),scene=p.referenceEditor.nativeDocument.scenes[0]!;
+ scene.tracks.main.elements.push({...scene.tracks.main.elements[0]!,id:'next',startTime:480000,duration:120000});
+ const [gap]=buildProductionPauseGaps(p,'scene',['c']);if(!gap)throw new Error('fixture gap missing');
+ const chosen=[{suggestionId:'word',decision:'remove' as const,target:{kind:'tokens' as const,clipId:'c',transcriptId:'t',tokenIds:['l']},reason:'废弃口误',uncertainty:''},{suggestionId:'pause',decision:'review' as const,target:{kind:'pause_gap' as const,clipId:'c',transcriptId:'t',gapId:gap.gapId,retainedTicks:100},reason:'缩短',uncertainty:'用户需听审'}];
+ const impact=nativeRoughImpact(p,'scene',chosen,p,[gap]);expect(impact.suggestions[1]?.removedRanges).toEqual([{startTick:192000,endTick:300000}]);
+ let sequence=0;const applied=applyNativeRoughSuggestions(p,'scene',chosen,()=>`child-${++sequence}`,p,[gap]);
+ const actualScene=readProductionNativeScene(applied,'scene');if(!actualScene)throw new Error('fixture applied scene missing');const main=actualScene.tracks.main.elements;
+ expect(main.map(e=>[e.startTime,e.duration,e.trimStart])).toEqual([[120000,36000,36000],[156000,180000,180000],[336000,120000,0]]);
+ expect(p.referenceEditor.nativeDocument.scenes[0]!.tracks.main.elements).toHaveLength(2);
+});

@@ -1,3 +1,4 @@
+import {readableMediaProbeGeneration} from "./ai-media-probe-control";
 import { readBrowserTaskGrant } from "../execution/browser-task-grant";
 // AI module schema surface — the contract Zod DTOs this module produces (foundation
 // §5: "<module>.schema.ts — re-export/usage of the contract Zod DTOs for this module").
@@ -38,6 +39,7 @@ export function toConversationDto(row: ConversationRow): AIConversationResource 
   return {
     id: row.id,
     userId: row.userId,
+    groupId: row.groupId??null,
     projectId: row.projectId ?? null,
     // T-096 会话作用域(入口级隔离)。老行经迁移 backfill 后必有值;'global' 兜底防御。
     scope: row.scope ?? "global",
@@ -79,12 +81,16 @@ export function toResultDto(row: ResultRow): AITaskResultResource {
 }
 
 export function toTaskDto(row: TaskRow): AITaskResource {
+  const generation=row.taskType==="exec.media.probe"?readableMediaProbeGeneration(row):undefined;
   return {
     id: row.id,
     userId: row.userId,
+    groupId: row.groupId??null,
+    groupVersion:row.groupVersion??null,membershipVersion:row.membershipVersion??null,
     projectId: row.projectId ?? null,
     contentOutputId: row.contentOutputId ?? null,
     taskType: row.taskType,
+    ...(generation===undefined?{}:{deterministicGeneration:generation}),
     status: row.status as AITaskResource["status"],
     ...(!row.executionTaskId && row.status === "queued" && row.taskType === "exec.agentic.research" && (row.inputData as {spec?:{params?:Record<string,unknown>}})?.spec?.params?.browserAuthorization !== undefined ? {authorizationStatus:readBrowserTaskGrant(row) ? "authorized_pending" as const : "awaiting_authorization" as const} : {}),
     inputData: (row.inputData ?? {}) as Record<string, unknown>,

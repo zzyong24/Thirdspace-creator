@@ -11,6 +11,15 @@ const existsIn =
     hits.includes(candidate);
 
 describe("resolveExecutablePath", () => {
+  it("ESM 调用未注入文件检查器时可读取真实可执行文件", () => {
+    expect(
+      resolveExecutablePath("node", {
+        env: { PATH: "" },
+        preferredPaths: [process.execPath],
+      }),
+    ).toBe(process.execPath);
+  });
+
   it("显式工具路径最高优先，配置错误时不静默回落", () => {
     expect(
       resolveExecutablePath("ffprobe", {

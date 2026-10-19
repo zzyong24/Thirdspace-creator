@@ -1,0 +1,58 @@
+[
+  {
+    "name": "attempt01",
+    "exit": 0,
+    "elapsedSeconds": 7.808924198150635,
+    "testSummary": "Tests  12 skipped (12)",
+    "hasInputSnapshot": false
+  },
+  {
+    "name": "attempt02",
+    "exit": 1,
+    "elapsedSeconds": 14.268792867660522,
+    "testSummary": "Tests  1 failed | 11 skipped (12)",
+    "hasInputSnapshot": true
+  },
+  {
+    "name": "attempt03",
+    "exit": 0,
+    "elapsedSeconds": 15.934753894805908,
+    "testSummary": "Tests  1 passed | 11 skipped (12)",
+    "hasInputSnapshot": true
+  },
+  {
+    "name": "attempt04",
+    "exit": 1,
+    "elapsedSeconds": 21.26798391342163,
+    "testSummary": "Tests  2 failed | 12 skipped (14)",
+    "hasInputSnapshot": true
+  },
+  {
+    "name": "attempt05",
+    "exit": 0,
+    "elapsedSeconds": 26.973977088928223,
+    "testSummary": "Tests  2 passed | 12 skipped (14)",
+    "hasInputSnapshot": true
+  },
+  {
+    "name": "attempt06",
+    "exit": 0,
+    "elapsedSeconds": 89.97433018684387,
+    "testSummary": "Tests  11 passed | 3 skipped (14)",
+    "hasInputSnapshot": true
+  },
+  {
+    "name": "attempt07",
+    "exit": 0,
+    "elapsedSeconds": 15.832427024841309,
+    "testSummary": "Tests  1 passed | 13 skipped (14)",
+    "hasInputSnapshot": true
+  },
+  {
+    "name": "attempt08",
+    "exit": 0,
+    "elapsedSeconds": 23.13231110572815,
+    "testSummary": "Tests  2 passed | 12 skipped (14)",
+    "hasInputSnapshot": true
+  }
+]

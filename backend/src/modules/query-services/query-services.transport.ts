@@ -27,6 +27,8 @@ import type {
 
 export const QUERY_SERVICES_OP_IDS = [
   "pages.dashboard.get",
+  "pages.groupOverview.get",
+  "pages.groupTrend.get",
   "pages.dailyReport.get",
   "pages.projectOverview.get",
   "pages.search.get",
@@ -36,6 +38,7 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 export interface QueryServicesTransportDeps {
   dashboard: DashboardQueryService;
+  groupOverview?:{get(ctx:RequestContext,groupId:string,query:unknown):Promise<unknown>;getTrend?(ctx:RequestContext,groupId:string,query:unknown):Promise<unknown>};
   dailyReport?: {getDailyReport(ctx: RequestContext, query?: {date?: string;startDate?: string;endDate?: string}): Promise<unknown>};
   overview: ProjectOverviewQueryService;
   search: GlobalSearchQueryService;
@@ -53,6 +56,14 @@ export function createQueryServicesTransport(
       const { params, query } = (input ?? {}) as Input;
 
       switch (endpoint.id) {
+        case "pages.groupTrend.get": {
+          if(!deps.groupOverview?.getTrend)throw new UnsupportedOperationError(endpoint.id);
+          return wrap(await deps.groupOverview.getTrend(ctx,(params as {groupId:string}).groupId,query??{}),ctx);
+        }
+        case "pages.groupOverview.get": {
+          if(!deps.groupOverview)throw new UnsupportedOperationError(endpoint.id);
+          return wrap(await deps.groupOverview.get(ctx,(params as {groupId:string}).groupId,query??{}),ctx);
+        }
         case "pages.dailyReport.get": {
           if (!deps.dailyReport) throw new UnsupportedOperationError(endpoint.id);
           const q = (query ?? {}) as {date?: string;startDate?: string;endDate?: string};

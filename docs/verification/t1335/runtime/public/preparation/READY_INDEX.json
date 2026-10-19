@@ -1,0 +1,120 @@
+{
+  "state": "NOT_RUN_T1335_PUBLIC_RED_ASSEMBLY",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/ASSEMBLY.md",
+      "bytes": 2084,
+      "sha256": "45cb0405012953997d4888375c923c0b8fd931f520924b6339047ac503f7a5f3"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/CHECKS.json",
+      "bytes": 2709,
+      "sha256": "c6daa371db16e63863b3fb6b3ccdc24c4db4b0b45c4a71d6f78fd507ff02f460"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/OWNED_BINDING.json",
+      "bytes": 1277,
+      "sha256": "b17838dbd2e6cfe568fa1eb6ecc7e7681f7511674962b73b0e190097c0a90ccb"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/PRODUCTION_BASELINE.json",
+      "bytes": 1090,
+      "sha256": "32fcd645c903c87ed0dd2007f45664a37c8fc10d823e48e0b6a1b0adc79308ac"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/PUBLIC_REUSE_DELTA.diff",
+      "bytes": 14326,
+      "sha256": "e5c40f2ef18b2707d3ad6136b8f3d79ffc2dca78f3da16bdc9491c7cf2e3db9d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/WORKER_SAFE_HEADER_DELTA.diff",
+      "bytes": 3089,
+      "sha256": "12e40d4a841326b6aa065b36c4641154797c7a3c230b024ee8aef1d93a1dbc27"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/codex-cli.fixture.cjs",
+      "bytes": 7412,
+      "sha256": "dd6f6d89fe3dfa2ba1e5a1bfc6d802908c60ae53c51c32142215c644e1831e8b"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/freeze.py",
+      "bytes": 2746,
+      "sha256": "ab0b8f3d3ff22b7127632ac9778e4128a827f7e534b0f5194b4ae337944717a0"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/run.py",
+      "bytes": 6893,
+      "sha256": "16b2d3db56489ed4b8e13f57549cfcf7e6e55ea091af59f5043c983bbc39588f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/vitest.config.mts",
+      "bytes": 1032,
+      "sha256": "52cda782d18c71ae022a28d367638007ea74fd7477ea241ba34f2f56d88d861f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/public/preparation/worker-entry.fixture.cjs",
+      "bytes": 6771,
+      "sha256": "ad35244a93dfdaee69adf20eb1c002974bf2055a2c5babf4def592e6591b84ab"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/agentic-knowledge-native-binding.persistence-client.test.ts",
+      "bytes": 27304,
+      "sha256": "6807cf390956eb44ffe102100037adb950b2023505c02afc340d82c63a99e4b8"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/PRE_RUN_LOCK.json",
+      "bytes": 10249264,
+      "sha256": "13b2a97ce4f3497ad0223d1f31e07d9541856e9e3207ab2aead9dd875dee5d85"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/WORKER_BINDING.json",
+      "bytes": 64238,
+      "sha256": "88a02a7d3a36abe1451016d43047c7638f3f46061ad717f7b3d9f3e592cf3058"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/collection.json",
+      "bytes": 588,
+      "sha256": "71971bab5ce4fe4e1634232387c791d3e86651ca0ad2bf68c426fb9c82ae72ac"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/collection.log",
+      "bytes": 144,
+      "sha256": "5a361f728520fefdd4b2cb2b45b3148652c2460d1a32a6ead94a195d2e172abd"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/frontend-type.json",
+      "bytes": 610,
+      "sha256": "7d6d7576ba50a9fc94e8549b03e6aabafe8d16477704ddf832e7e79842f99e4e"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/frontend-type.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/syntax-codex-cli.fixture.cjs.json",
+      "bytes": 524,
+      "sha256": "9725475d8a25e20543cb6ecb82ec5387a517fba5e93e4986e21641321578c31f"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/syntax-codex-cli.fixture.cjs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/syntax-worker-entry.fixture.cjs.json",
+      "bytes": 535,
+      "sha256": "12f0e473cd28c38d8bf006580b9e50c2b3d8c2779a682e66ec801e88d3609042"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/syntax-worker-entry.fixture.cjs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/red-v1/worker.cjs",
+      "bytes": 1540654,
+      "sha256": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709"
+    }
+  ]
+}

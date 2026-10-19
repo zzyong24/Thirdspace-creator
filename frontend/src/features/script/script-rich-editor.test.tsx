@@ -18,6 +18,8 @@ import type { Editor } from "@tiptap/react";
 
 import { DraftChatRequestProvider, useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 import { ScriptRichEditor } from "./script-rich-editor";
+import {AccountSwitcher} from "@/components/shell/account-switcher";
+import {beginForegroundActivity,hasForegroundActivity,listForegroundActivities,resetForegroundActivitiesForTest} from "@/lib/foreground-activity";
 
 const mockRouter = {
   refresh: vi.fn(),
@@ -31,6 +33,9 @@ const mockCreateArtifactVersion = vi.fn(
   (input: unknown): Promise<unknown> => Promise.resolve({ id: "av-new", input }),
 );
 // [T-247] 偏好读(autosaveEnabled → 失焦自动保存)。缺省 false = 不自动保存。
+const mockGetArtifact=vi.fn(),mockListArtifactVersions=vi.fn();
+const mockEnsureScript=vi.hoisted(()=>vi.fn());
+vi.mock('./ensure-script-artifact',()=>({ensureScriptArtifact:(...args:unknown[])=>mockEnsureScript(...args)}));
 const mockGetPreferences = vi.fn(
   (): Promise<unknown> => Promise.resolve({ autosaveEnabled: false }),
 );
@@ -39,13 +44,17 @@ vi.mock("@/lib/contract-client", () => ({
     createArtifactVersion: (input: unknown) =>
       mockCreateArtifactVersion(input),
     getPreferences: () => mockGetPreferences(),
+    getArtifact:(input:unknown)=>mockGetArtifact(input),listArtifactVersions:(input:unknown)=>mockListArtifactVersions(input),
   },
 }));
 
 afterEach(() => cleanup());
 beforeEach(() => {
+  resetForegroundActivitiesForTest();
+  localStorage.clear();
   mockRouter.refresh.mockClear();
-  mockCreateArtifactVersion.mockClear();
+  mockCreateArtifactVersion.mockReset();
+  mockCreateArtifactVersion.mockImplementation((input:unknown)=>Promise.resolve({id:"av-new",input}));
   mockGetPreferences.mockClear();
   mockGetPreferences.mockResolvedValue({ autosaveEnabled: false });
 });
@@ -64,6 +73,31 @@ async function findProseMirror(): Promise<HTMLElement> {
 }
 
 describe("ScriptRichEditor (TipTap)", () => {
+  it("dirty与保存在途登记离开保护，保存或卸载只释放自己的活动",async()=>{
+    let editor:Editor|null=null,finish!:(value:unknown)=>void;
+    mockCreateArtifactVersion.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+    const mounted=render(<ScriptRichEditor initialHtml="<p>原稿</p>" artifactId="guard-artifact" onEditorReady={value=>{editor=value;}}/>);
+    await findProseMirror();await waitFor(()=>expect(editor).not.toBeNull());expect(hasForegroundActivity()).toBe(false);
+    act(()=>{editor!.commands.insertContent("新输入");});await waitFor(()=>expect(hasForegroundActivity()).toBe(true));
+    const endOther=beginForegroundActivity("另一个操作");await userEvent.setup().click(screen.getByRole("button",{name:"保存"}));
+    await waitFor(()=>expect(listForegroundActivities()).toContain("脚本正在保存"));
+    await act(async()=>finish({id:"guard-saved-version"}));await waitFor(()=>expect(listForegroundActivities()).toEqual(["另一个操作"]));
+    act(()=>{editor!.commands.insertContent("继续编辑");});await waitFor(()=>expect(listForegroundActivities()).toHaveLength(2));
+    mounted.unmount();expect(listForegroundActivities()).toEqual(["另一个操作"]);endOther();expect(hasForegroundActivity()).toBe(false);
+  });
+  it("关闭自动保存的真实编辑器切组先确认，取消保原稿原scope且不偷偷保存",async()=>{
+    const group=(id:string)=>({id,userId:"u",name:`组${id}`,status:"active",version:1,createdAt:"2026-10-18T00:00:00Z",updatedAt:"2026-10-18T00:00:00Z",members:[]});
+    localStorage.setItem("creatoros:current-group","a");window.history.replaceState(null,"","/");
+    vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify({data:[group("a"),group("b")],meta:{requestId:"guard",page:1,pageSize:100,total:2}}),{status:200})));
+    try{
+      let editor:Editor|null=null;render(<><AccountSwitcher collapsed={false}/><ScriptRichEditor initialHtml="<p>原稿</p>" artifactId="guard-artifact" onEditorReady={value=>{editor=value;}}/></>);
+      await findProseMirror();await screen.findByRole("button",{name:"当前账号组：组a"});await waitFor(()=>expect(editor).not.toBeNull());
+      act(()=>{editor!.commands.insertContent("逐字保留的新输入");});const text=editor!.getText();const user=userEvent.setup();
+      await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));
+      expect(screen.getByTestId("account-switch-confirm")).toBeVisible();expect(localStorage.getItem("creatoros:current-group")).toBe("a");
+      await user.click(screen.getByTestId("account-switch-cancel"));expect(editor!.getText()).toBe(text);expect(localStorage.getItem("creatoros:current-group")).toBe("a");expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
+    }finally{vi.unstubAllGlobals();}
+  });
   it("mounts a ProseMirror contenteditable seeded with the initial HTML", async () => {
     render(<ScriptRichEditor initialHtml={INITIAL_HTML} />);
     const pm = await findProseMirror();
@@ -414,9 +448,23 @@ describe("ScriptRichEditor (TipTap)", () => {
 });
 
 let strictFlush: () => Promise<void>;
-function FlushProbe() { strictFlush = useDraftChatRequest().flushSaveStrict; return null; }
+let prepareScript:ReturnType<typeof useDraftChatRequest>['prepareScriptForCreation'];
+function FlushProbe() { const port=useDraftChatRequest();strictFlush = port.flushSaveStrict;prepareScript=port.prepareScriptForCreation; return null; }
 describe("真实富文本编辑器严格保存", () => {
-  it("实际落库失败向调用者 reject，保留正文并可重试", async () => {
+  it('联合按钮首次ensure真实ID保留在ref，每次冻结当前HTML并读回精确版本',async()=>{
+    mockEnsureScript.mockResolvedValue({artifactId:'first-real'});mockCreateArtifactVersion.mockImplementation(async()=>({id:'version-real'}));
+    mockGetArtifact.mockResolvedValue({id:'first-real',projectId:'project-real',currentVersionId:'version-real'});
+    mockListArtifactVersions.mockImplementation(async()=>{const input=mockCreateArtifactVersion.mock.calls.at(-1)![0] as any;return [{id:'version-real',artifactId:'first-real',contentText:input.body.contentText,contentData:input.body.contentData}];});
+    let editor:Editor|null=null;
+    render(<DraftChatRequestProvider><FlushProbe/><ScriptRichEditor projectId="project-real" initialHtml="<p>脚本当前真值</p>" onEditorReady={e=>{editor=e;}}/></DraftChatRequestProvider>);
+    await findProseMirror();let source:unknown;
+    await act(async()=>{source=await prepareScript();});expect(source).toEqual({kind:'project_script',id:'first-real',versionId:'version-real'});
+    await act(async()=>{editor!.commands.insertContent('下一次修改');source=await prepareScript();});
+    expect(mockEnsureScript).toHaveBeenCalledOnce();expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
+    expect(mockCreateArtifactVersion.mock.calls[1][0]).toMatchObject({params:{artifactId:'first-real'},body:{contentData:{html:editor!.getHTML()},contentText:editor!.getText()}});
+    expect(mockGetArtifact).toHaveBeenCalledWith({params:{artifactId:'first-real'},query:undefined,body:undefined});
+  });
+  it("落库响应未知保留正文，读取原版本恢复且不重复追加", async () => {
     let editor: Editor | null = null;
     render(<DraftChatRequestProvider><FlushProbe /><ScriptRichEditor artifactId="a1" initialHtml="<p>原稿</p>" onEditorReady={e => { editor = e; }} /></DraftChatRequestProvider>);
     await findProseMirror();
@@ -425,8 +473,10 @@ describe("真实富文本编辑器严格保存", () => {
     await act(async () => { await expect(strictFlush()).rejects.toThrow("写库失败"); });
     expect(editor!.getText()).toContain("尚未保存");
     expect(document.querySelector('[data-save-status="dirty"]')).not.toBeNull();
+    const frozen=(mockCreateArtifactVersion.mock.calls[0][0] as any).body;
+    mockGetArtifact.mockResolvedValue({id:'a1',currentVersionId:'saved-original'});mockListArtifactVersions.mockResolvedValue([{id:'saved-original',artifactId:'a1',contentText:frozen.contentText,contentData:frozen.contentData}]);
     await act(async () => { await strictFlush(); });
-    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1);
     expect(document.querySelector('[data-save-status="saved"]')).not.toBeNull();
   });
   it("保存中再次 flush 等待同一次写入，期间新增文字保留且拒绝旧稿诊断", async () => {

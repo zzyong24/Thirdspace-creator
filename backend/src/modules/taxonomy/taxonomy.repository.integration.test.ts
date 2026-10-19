@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -143,3 +143,19 @@ describe("taxonomy.repository (pglite)", () => {
     expect(await repo.listEntityTagsForTag(ctxA, tag.id, {})).toHaveLength(0);
   });
 });
+
+
+it("T1341 真实标签批量JOIN只读该user/asset/指定ID，空0查询/200常数有界",async()=>{
+ const store=await createDb();let id=0;const repo=createTaxonomyRepository(store.db,{now:()=>FIXED_NOW,nextId:p=>`t1341-${p}-${++id}`});
+ try{
+  const one=await repo.insertTag(ctxA,{name:'中文真实'}),foreign=await repo.insertTag(ctxB,{name:'中文真实'});
+  await repo.insertEntityTag(ctxA,{tagId:one.id,entityType:'asset',entityId:'asset-one'});
+  await repo.insertEntityTag(ctxA,{tagId:one.id,entityType:'project',entityId:'wrong-type'});
+  await repo.insertEntityTag(ctxA,{tagId:foreign.id,entityType:'asset',entityId:'asset-foreign-tag'});
+  await repo.insertEntityTag(ctxB,{tagId:foreign.id,entityType:'asset',entityId:'asset-one'});
+  const query=vi.spyOn(store.client,'query');query.mockClear();expect(await repo.listAssetTagSummaries(ctxA,[])).toEqual([]);expect(query).not.toHaveBeenCalled();
+  const ids=['asset-one','wrong-type','asset-foreign-tag'];query.mockClear();expect(await repo.listAssetTagSummaries(ctxA,ids)).toEqual([{entityId:'asset-one',id:one.id,name:one.name}]);expect(query).toHaveBeenCalledTimes(1);
+  query.mockClear();expect(await repo.listAssetTagSummaries(ctxA,Array.from({length:200},(_,i)=>i?'none-'+i:'asset-one'))).toEqual([{entityId:'asset-one',id:one.id,name:one.name}]);expect(query).toHaveBeenCalledTimes(1);
+  query.mockClear();await expect(repo.listAssetTagSummaries(ctxA,Array.from({length:201},(_,i)=>'overflow-'+i))).rejects.toThrow();expect(query).not.toHaveBeenCalled();
+ }finally{await store.client.close();}
+},180000);

@@ -1,0 +1,402 @@
+{
+  "verification": "formal-codex-saved-script-content-followup-cancel",
+  "observedAt": "2026-10-04T12:52:28.587Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/continue-codex/business-u6ui8V",
+  "model": "original default; no sessionModel override",
+  "adopted": false,
+  "published": false,
+  "articleWorkbenchEntryVerified": false,
+  "graphicWorkbenchEntryVerified": false,
+  "rounds": [
+    {
+      "label": "initial",
+      "events": [
+        "reserveExternalChatTurn",
+        "listExternalTaskTools",
+        "listExternalTaskTools",
+        "listExternalTaskTools",
+        "startExternalChatTurn",
+        "recordExternalChatProviderTurn",
+        "executeExternalTaskTool",
+        "executeExternalTaskTool",
+        "settleExternalChatTurn"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "context.project.detail",
+          "toolCallId": "2",
+          "input": {},
+          "result": {
+            "turnCallId": "call_d6e17d82-9e31-4b10-b9bd-029166cabd40",
+            "toolCallId": "2",
+            "callId": "call_b92df8b9-a36b-4a80-84fd-f177c9435891",
+            "status": "settled",
+            "outcome": {
+              "status": "ok",
+              "summary": "已读取当前工具结果",
+              "evidence": [],
+              "data": {
+                "kind": "context.project.detail",
+                "found": true,
+                "project": {
+                  "id": "project-t1060-22e22236-5293-4923-bf5e-a97b1af5cee0",
+                  "title": "夜航灯塔 · cfb0540c",
+                  "stage": "brief",
+                  "status": "active",
+                  "publish": {
+                    "published": false,
+                    "platform": null,
+                    "publishedAt": null
+                  },
+                  "brief": {
+                    "targetPlatforms": []
+                  },
+                  "artifacts": [
+                    {
+                      "artifactType": "output_script",
+                      "versionCount": 1,
+                      "updatedAt": "2026-10-04T12:52:28.647Z",
+                      "charCount": 161
+                    }
+                  ],
+                  "metricsSummary": ""
+                }
+              },
+              "error": null,
+              "continuation": null,
+              "sideEffect": "none"
+            }
+          }
+        },
+        {
+          "toolName": "context.artifact.text",
+          "toolCallId": "3",
+          "input": {
+            "artifactType": "output_script"
+          },
+          "result": {
+            "turnCallId": "call_d6e17d82-9e31-4b10-b9bd-029166cabd40",
+            "toolCallId": "3",
+            "callId": "call_509cb057-b096-4448-83d1-ad3e4fe07170",
+            "status": "settled",
+            "outcome": {
+              "status": "ok",
+              "summary": "已读取当前工具结果",
+              "evidence": [],
+              "data": {
+                "kind": "context.artifact.text",
+                "found": true,
+                "artifactType": "output_script",
+                "projectId": "project-t1060-22e22236-5293-4923-bf5e-a97b1af5cee0",
+                "artifactId": "artifact-t1060-5337841a-911f-45c3-aecf-bc19fb573f1e",
+                "currentVersionId": "artifactversion-t1060-1009e906-67a2-4f02-8a60-ef54efc25edf",
+                "versionNumber": 1,
+                "updatedAt": "2026-10-04T12:52:28.647Z",
+                "contentHash": "da882279662369a1c155af78582069291f9adbe4f4200e0ef2ad459a3cb8aeaa",
+                "truthPriority": "current_confirmed_script",
+                "sections": [],
+                "text": "标题：夜航灯塔 · cfb0540c\n简介：用灯塔与夜航说明先确认内容，再衍生成文章和图文。\n标签：夜航、内容创作\n\n第一段：小船在夜里出航。海面是蓝的，灯塔的光是暖橙色的。\n第二段：船长先确认航线，文章和图文如同不同航图，来自同一份已确认脚本。\n第三段：抵达前还要检查航图。AI给出候选，人可以继续修改，不代表已经发布。",
+                "offset": 0,
+                "totalChars": 161,
+                "hasMore": false
+              },
+              "error": null,
+              "continuation": null,
+              "sideEffect": "none"
+            }
+          }
+        }
+      ],
+      "cancelRequested": false,
+      "startedAt": "2026-10-04T12:52:28.670Z",
+      "executionTaskId": "execution-task-a880f4d5-9673-4123-b06c-028e3b65122e",
+      "businessTaskId": "ai-task-a09981a4-a68e-43db-9651-6d782840b829",
+      "historyMessageCount": 1,
+      "elapsedMs": 36801,
+      "receipt": {
+        "callId": "call_d6e17d82-9e31-4b10-b9bd-029166cabd40",
+        "sessionId": "01a106f9-21d9-7a22-a15b-872824301658",
+        "providerTurnId": "01a106f9-3010-7ca2-8037-98d623c4a381",
+        "stopReason": "end_turn"
+      },
+      "committed": {
+        "resultId": "chat:ai-task-a09981a4-a68e-43db-9651-6d782840b829",
+        "aiTaskId": "ai-task-a09981a4-a68e-43db-9651-6d782840b829",
+        "messageId": "chat:ai-msg-t1060-52f9108d-d701-48be-a96b-b1c0e4d4455d",
+        "outcome": "succeeded"
+      },
+      "executionStatus": "succeeded",
+      "assistantText": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n我会先查看当前项目的产物类型，再读取已保存脚本，据此生成仅供聊天编辑的候选。\n{\n  \"metadata\": {\n    \"title\": \"夜航灯塔 · cfb0540c\",\n    \"summary\": \"用灯塔与夜航说明先确认内容，再衍生成文章和图文。\",\n    \"tags\": [\"夜航\", \"内容创作\"]\n  },\n  \"articleSections\": [\n    {\n      \"heading\": \"夜里的小船与灯塔\",\n      \"body\": \"小船在夜里出航。海面是蓝的，灯塔的光是暖橙色的。\"\n    },\n    {\n      \"heading\": \"先确认航线，再衍生航图\",\n      \"body\": \"船长先确认航线。文章和图文如同不同航图，来自同一份已确认脚本。\"\n    },\n    {\n      \"heading\": \"候选仍可继续修改\",\n      \"body\": \"抵达前还要检查航图。AI给出候选，人可以继续修改，不代表已经发布。\"\n    }\n  ],\n  \"graphicPages\": [\n    {\n      \"title\": \"夜航与灯塔\",\n      \"text\": \"小船在夜里出航。蓝色的海面上，灯塔的光是暖橙色的。\"\n    },\n    {\n      \"title\": \"同一份脚本，不同航图\",\n      \"text\": \"船长先确认航线。文章和图文如同不同航图，来自同一份已确认脚本。\"\n    },\n    {\n      \"title\": \"检查航图，继续修改\",\n      \"text\": \"抵达前还要检查航图。AI给出候选，人可以继续修改，不代表已经发布。\"\n    }\n  ]\n}",
+      "draft": {
+        "metadata": {
+          "title": "夜航灯塔 · cfb0540c",
+          "summary": "用灯塔与夜航说明先确认内容，再衍生成文章和图文。",
+          "tags": [
+            "夜航",
+            "内容创作"
+          ]
+        },
+        "articleSections": [
+          {
+            "heading": "夜里的小船与灯塔",
+            "body": "小船在夜里出航。海面是蓝的，灯塔的光是暖橙色的。"
+          },
+          {
+            "heading": "先确认航线，再衍生航图",
+            "body": "船长先确认航线。文章和图文如同不同航图，来自同一份已确认脚本。"
+          },
+          {
+            "heading": "候选仍可继续修改",
+            "body": "抵达前还要检查航图。AI给出候选，人可以继续修改，不代表已经发布。"
+          }
+        ],
+        "graphicPages": [
+          {
+            "title": "夜航与灯塔",
+            "text": "小船在夜里出航。蓝色的海面上，灯塔的光是暖橙色的。"
+          },
+          {
+            "title": "同一份脚本，不同航图",
+            "text": "船长先确认航线。文章和图文如同不同航图，来自同一份已确认脚本。"
+          },
+          {
+            "title": "检查航图，继续修改",
+            "text": "抵达前还要检查航图。AI给出候选，人可以继续修改，不代表已经发布。"
+          }
+        ]
+      },
+      "checks": {
+        "realSavedScriptRead": true,
+        "exactMetadataInherited": true,
+        "articleSectionsNonempty": true,
+        "graphicPageCount": 3,
+        "assistantPersisted": true,
+        "originalSourceUnchanged": true
+      },
+      "outcome": "passed",
+      "finishedAt": "2026-10-04T12:53:05.545Z"
+    },
+    {
+      "label": "followup",
+      "events": [
+        "reserveExternalChatTurn",
+        "listExternalTaskTools",
+        "listExternalTaskTools",
+        "listExternalTaskTools",
+        "startExternalChatTurn",
+        "recordExternalChatProviderTurn",
+        "executeExternalTaskTool",
+        "executeExternalTaskTool",
+        "settleExternalChatTurn"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "context.project.detail",
+          "toolCallId": "2",
+          "input": {},
+          "result": {
+            "turnCallId": "call_0459b0fb-e192-4f06-a54c-3d3f06e62d08",
+            "toolCallId": "2",
+            "callId": "call_32947f05-2a36-4c4e-8ccc-db44a5a9d180",
+            "status": "settled",
+            "outcome": {
+              "status": "ok",
+              "summary": "已读取当前工具结果",
+              "evidence": [],
+              "data": {
+                "kind": "context.project.detail",
+                "found": true,
+                "project": {
+                  "id": "project-t1060-22e22236-5293-4923-bf5e-a97b1af5cee0",
+                  "title": "夜航灯塔 · cfb0540c",
+                  "stage": "brief",
+                  "status": "active",
+                  "publish": {
+                    "published": false,
+                    "platform": null,
+                    "publishedAt": null
+                  },
+                  "brief": {
+                    "targetPlatforms": []
+                  },
+                  "artifacts": [
+                    {
+                      "artifactType": "output_script",
+                      "versionCount": 1,
+                      "updatedAt": "2026-10-04T12:52:28.647Z",
+                      "charCount": 161
+                    }
+                  ],
+                  "metricsSummary": ""
+                }
+              },
+              "error": null,
+              "continuation": null,
+              "sideEffect": "none"
+            }
+          }
+        },
+        {
+          "toolName": "context.artifact.text",
+          "toolCallId": "3",
+          "input": {
+            "artifactType": "output_script",
+            "maxChars": 4000,
+            "offset": 0
+          },
+          "result": {
+            "turnCallId": "call_0459b0fb-e192-4f06-a54c-3d3f06e62d08",
+            "toolCallId": "3",
+            "callId": "call_4fb27adb-0a52-44d7-906c-06b4dd4852f8",
+            "status": "settled",
+            "outcome": {
+              "status": "ok",
+              "summary": "已读取当前工具结果",
+              "evidence": [],
+              "data": {
+                "kind": "context.artifact.text",
+                "found": true,
+                "artifactType": "output_script",
+                "projectId": "project-t1060-22e22236-5293-4923-bf5e-a97b1af5cee0",
+                "artifactId": "artifact-t1060-5337841a-911f-45c3-aecf-bc19fb573f1e",
+                "currentVersionId": "artifactversion-t1060-1009e906-67a2-4f02-8a60-ef54efc25edf",
+                "versionNumber": 1,
+                "updatedAt": "2026-10-04T12:52:28.647Z",
+                "contentHash": "da882279662369a1c155af78582069291f9adbe4f4200e0ef2ad459a3cb8aeaa",
+                "truthPriority": "current_confirmed_script",
+                "sections": [],
+                "text": "标题：夜航灯塔 · cfb0540c\n简介：用灯塔与夜航说明先确认内容，再衍生成文章和图文。\n标签：夜航、内容创作\n\n第一段：小船在夜里出航。海面是蓝的，灯塔的光是暖橙色的。\n第二段：船长先确认航线，文章和图文如同不同航图，来自同一份已确认脚本。\n第三段：抵达前还要检查航图。AI给出候选，人可以继续修改，不代表已经发布。",
+                "offset": 0,
+                "totalChars": 161,
+                "hasMore": false
+              },
+              "error": null,
+              "continuation": null,
+              "sideEffect": "none"
+            }
+          }
+        }
+      ],
+      "cancelRequested": false,
+      "startedAt": "2026-10-04T12:53:05.546Z",
+      "executionTaskId": "execution-task-b321c6b2-aa1d-4789-81e3-d95b506a92d2",
+      "businessTaskId": "ai-task-f664a99d-837c-441d-8336-8642f0230a8f",
+      "historyMessageCount": 3,
+      "elapsedMs": 33238,
+      "receipt": {
+        "callId": "call_0459b0fb-e192-4f06-a54c-3d3f06e62d08",
+        "sessionId": "01a106f9-b08f-7300-942a-3da56ef76257",
+        "providerTurnId": "01a106f9-b160-79f0-9eb6-43a882218974",
+        "stopReason": "end_turn"
+      },
+      "committed": {
+        "resultId": "chat:ai-task-f664a99d-837c-441d-8336-8642f0230a8f",
+        "aiTaskId": "ai-task-f664a99d-837c-441d-8336-8642f0230a8f",
+        "messageId": "chat:ai-msg-t1060-0c94930f-c315-4f0a-8080-b8d709777f07",
+        "outcome": "succeeded"
+      },
+      "executionStatus": "succeeded",
+      "assistantText": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n{\n  \"metadata\": {\n    \"title\": \"夜航灯塔 · cfb0540c\",\n    \"summary\": \"用灯塔与夜航说明先确认内容，再衍生成文章和图文。\",\n    \"tags\": [\"夜航\", \"内容创作\"]\n  },\n  \"articleSections\": [\n    {\n      \"heading\": \"先把航线确认好\",\n      \"body\": \"小船在夜里出航，海面是蓝的，灯塔亮着暖橙色的光。船长得先确认航线。做内容也一样，先确认脚本，再把它变成文章和图文，就像照着同一条航线画出不同的航图。\"\n    },\n    {\n      \"heading\": \"候选出来了，还能接着改\",\n      \"body\": \"快抵达时，航图还得再检查一下。AI给出候选后，你也可以继续修改。这些文章和图文只是聊天里的候选，不代表已经保存成正式稿或发布。\"\n    }\n  ],\n  \"graphicPages\": [\n    {\n      \"title\": \"先确认航线，再画航图\",\n      \"text\": \"小船夜里出航，蓝色海面上亮着灯塔暖橙色的光。船长先确认航线，文章和图文也从同一份已确认脚本出发。\"\n    },\n    {\n      \"title\": \"AI给候选，你可以接着改\",\n      \"text\": \"抵达前还要检查航图。AI给出的文章和图文候选，你可以继续修改；聊天里的候选不代表已保存成正式稿或发布。\"\n    }\n  ]\n}",
+      "draft": {
+        "metadata": {
+          "title": "夜航灯塔 · cfb0540c",
+          "summary": "用灯塔与夜航说明先确认内容，再衍生成文章和图文。",
+          "tags": [
+            "夜航",
+            "内容创作"
+          ]
+        },
+        "articleSections": [
+          {
+            "heading": "先把航线确认好",
+            "body": "小船在夜里出航，海面是蓝的，灯塔亮着暖橙色的光。船长得先确认航线。做内容也一样，先确认脚本，再把它变成文章和图文，就像照着同一条航线画出不同的航图。"
+          },
+          {
+            "heading": "候选出来了，还能接着改",
+            "body": "快抵达时，航图还得再检查一下。AI给出候选后，你也可以继续修改。这些文章和图文只是聊天里的候选，不代表已经保存成正式稿或发布。"
+          }
+        ],
+        "graphicPages": [
+          {
+            "title": "先确认航线，再画航图",
+            "text": "小船夜里出航，蓝色海面上亮着灯塔暖橙色的光。船长先确认航线，文章和图文也从同一份已确认脚本出发。"
+          },
+          {
+            "title": "AI给候选，你可以接着改",
+            "text": "抵达前还要检查航图。AI给出的文章和图文候选，你可以继续修改；聊天里的候选不代表已保存成正式稿或发布。"
+          }
+        ]
+      },
+      "checks": {
+        "realSavedScriptRead": true,
+        "exactMetadataInherited": true,
+        "articleSectionsNonempty": true,
+        "graphicPageCount": 2,
+        "assistantPersisted": true,
+        "originalSourceUnchanged": true
+      },
+      "outcome": "passed",
+      "finishedAt": "2026-10-04T12:53:38.849Z"
+    },
+    {
+      "label": "cancel",
+      "events": [
+        "reserveExternalChatTurn",
+        "listExternalTaskTools",
+        "startExternalChatTurn",
+        "recordExternalChatProviderTurn",
+        "settleExternalChatTurn"
+      ],
+      "toolCalls": [],
+      "cancelRequested": true,
+      "startedAt": "2026-10-04T12:53:38.850Z",
+      "executionTaskId": "execution-task-a80e7f43-5d30-484f-aea7-8246ddd6bc21",
+      "businessTaskId": "ai-task-e09fcfcd-db1e-4375-b467-ae2190bc8cbe",
+      "historyMessageCount": 5,
+      "cancelAt": "2026-10-04T12:53:43.374Z",
+      "elapsedMs": 4725,
+      "errorCode": "CODEX_ACP_HOST_FAILED",
+      "receipt": {
+        "callId": "call_0402d70f-9dbb-4ae2-9ea5-f2f43e08fd59",
+        "sessionId": "01a106fa-328e-7db3-b7dc-5f56f73a8cf3",
+        "providerTurnId": "01a106fa-3342-7f62-b2b8-341363426563",
+        "callStatus": "unknown"
+      },
+      "replay": {
+        "errorCode": "CODEX_ACP_RESTORE_REQUIRES_RECONCILIATION",
+        "events": [
+          "reserveExternalChatTurn"
+        ],
+        "providerResent": false,
+        "callCount": 1
+      },
+      "remoteCancellationConfirmed": false,
+      "receivedText": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n",
+      "outcome": "passed",
+      "finishedAt": "2026-10-04T12:53:43.611Z"
+    }
+  ],
+  "projectId": "project-t1060-22e22236-5293-4923-bf5e-a97b1af5cee0",
+  "artifactId": "artifact-t1060-5337841a-911f-45c3-aecf-bc19fb573f1e",
+  "sourceVersionId": "artifactversion-t1060-1009e906-67a2-4f02-8a60-ef54efc25edf",
+  "expectedMetadata": {
+    "title": "夜航灯塔 · cfb0540c",
+    "summary": "用灯塔与夜航说明先确认内容，再衍生成文章和图文。",
+    "tags": [
+      "夜航",
+      "内容创作"
+    ]
+  },
+  "outcome": "passed",
+  "checks": {
+    "formalExecutionRoute": true,
+    "defaultRealModel": true,
+    "savedScriptImmutable": true,
+    "originalVersionCount": 1,
+    "consecutiveChatContext": true,
+    "cancelPreservedUnknown": true,
+    "noUnknownReplay": true,
+    "adopted": false,
+    "published": false
+  }
+}

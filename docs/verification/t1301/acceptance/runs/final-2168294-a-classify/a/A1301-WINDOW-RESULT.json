@@ -1,0 +1,94 @@
+{
+  "acceptanceTask": "T-1301",
+  "sourceHead": "2168294fef3f62bc8e0b4ca3254652b935daeb0d",
+  "groupId": "grp-e2aea52e-6",
+  "assetId": "asset-e2aea52e-49",
+  "currentFileId": "afile-e2aea52e-53",
+  "aiTaskId": "ai-task-e2aea52e-55",
+  "executionTaskId": "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+  "attemptId": "cedb41b6-02d6-48ed-80ba-cacb16e42cb9",
+  "configuredSource": "codex",
+  "taskModelKey": "codex",
+  "status": "succeeded",
+  "classification": {
+    "tags": [
+      "B-roll"
+    ],
+    "description": "浅色背景上蓝色圆形与橙色方形，可用于形状或色彩对比讲解"
+  },
+  "tags": [
+    {
+      "id": "tag_b9d11dd922856aab28681eb76031d647d785e402bfd929c0751fda02be032370",
+      "userId": "user-e2aea52e-1",
+      "name": "B-roll",
+      "color": "#888888",
+      "kind": "asset-usage",
+      "usageCount": 1,
+      "createdAt": "2026-10-15T20:06:51.443Z",
+      "updatedAt": "2026-10-15T20:06:51.454Z"
+    }
+  ],
+  "originalFileSHA256Unchanged": true,
+  "oneAutomaticClassification": true,
+  "resubmissions": 0,
+  "visionChatSubmissions": 0,
+  "foreignGroupId": "grp-e2aea52e-43",
+  "crossGroupDenied": true,
+  "metadataBoundary": "公共assets.get未投影asset_files.mediaMetadata；description字段不冒aiDescription。原分类result只证明结果回执，存储注解需Root/C受权只读补证。",
+  "callBoundary": "公共workbench.modelCalls.summary若非chat映射409保原响应，不填calls空。",
+  "listenerErrors": [],
+  "observedAt": "2026-10-15T20:06:55.892Z",
+  "verdict": "分类公开闭环PASS；通知DOM未捕获，内部call及raw媒体注解直接证据未取",
+  "scope": "T1301公共设置与一次新上传自动分类，仅此子窗口",
+  "taskComplete": false,
+  "settingsRevision": 1,
+  "commands": [
+    {
+      "case": "A1301CFG",
+      "workerPID": 2181,
+      "exitCode": 0,
+      "testsPassed": 1
+    },
+    {
+      "case": "A1301CLASSIFY-attempt1",
+      "workerPID": 2410,
+      "exitCode": 1,
+      "stage": "dispatch helper export缺失，上传前，无task提交"
+    },
+    {
+      "case": "A1301CLASSIFY-attempt2",
+      "workerPID": 2769,
+      "exitCode": 0,
+      "testsPassed": 1,
+      "durationSeconds": 22.3
+    },
+    {
+      "case": "timeout-policy/verify",
+      "PID": 3764,
+      "exitCode": 0,
+      "testsPassed": 174,
+      "staticScannedFiles": 2839
+    }
+  ],
+  "unavailableEvidence": {
+    "notificationDOM": "观察器已安装，实际[]，不签PASS",
+    "publicSteps": "实际[]",
+    "nonChatCallSummary": 409,
+    "rawMediaMetadata": "公共资产DTO未投影；不打开活动DB"
+  },
+  "cleanup": {
+    "browserExited": true,
+    "modelTaskTerminal": "succeeded",
+    "testProcessesExited": true,
+    "controllerStopped": false,
+    "ownedDataPreserved": true,
+    "oldUnknownResubmitted": false
+  },
+  "release": {
+    "writer": true,
+    "browser": true,
+    "model": true,
+    "nextScopeRequiresCLease": true
+  },
+  "recordedAt": "2026-10-15T20:11:03.482202+00:00"
+}

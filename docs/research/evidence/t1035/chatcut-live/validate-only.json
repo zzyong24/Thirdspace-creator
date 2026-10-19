@@ -1,0 +1,13 @@
+{
+  "adds": [],
+  "deletes": [],
+  "updates": [
+    {
+      "id": "be3e2aba-07b8-4c55-80a2-7ef28aae82c2",
+      "type": "motion-graphic",
+      "updated": {
+        "startFrame": 0
+      }
+    }
+  ]
+}

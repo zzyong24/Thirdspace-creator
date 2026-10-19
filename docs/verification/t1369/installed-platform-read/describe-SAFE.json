@@ -1,0 +1,21 @@
+{
+  "label": "describe",
+  "startedAtUnix": 1792390688.725833,
+  "commandOuterSeconds": 8520,
+  "cliNormalObservationMs": 8280000,
+  "boundary": "公开CLI正常安装身份机制；未读取连接凭据；无apply/idempotency-key/collect/model/site；含CLI启动/本机传输/服务到完整JSON解析，不冒服务单阶段。",
+  "exitCode": 0,
+  "status": "parsed",
+  "ok": true,
+  "operation": "pages.groupOverview.get",
+  "effect": "read",
+  "method": "GET",
+  "idempotency": "not_applicable",
+  "confirmation": "none",
+  "completeParseDurationMs": 364.214,
+  "endedAtUnix": 1792390689.090058,
+  "rawPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-platform-read-fxx4e0ni/describe.json",
+  "rawBytes": 30049,
+  "rawSha256": "537527b4fb15b1c530af1d2bfe0f00255928a935052cc5351f73e635cba7723e",
+  "stderrBytes": 0
+}

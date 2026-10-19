@@ -1,0 +1,3 @@
+'use strict';
+const path=require('node:path');const attempt=process.env.T1316_PERF_RUN||'tabs-v2';const {defineConfig}=require('@playwright/test');
+module.exports=defineConfig({testDir:__dirname,testMatch:'performance.spec.cjs',workers:1,retries:0,fullyParallel:false,timeout:28800000,expect:{timeout:120000},outputDir:path.resolve(__dirname,'../../../runs/local-performance-7790/'+attempt+'/browser-artifacts'),reporter:[['line'],['json',{outputFile:path.resolve(__dirname,'../../../runs/local-performance-7790/'+attempt+'/playwright-tabs-result.json')}]],use:{actionTimeout:120000,navigationTimeout:300000,trace:'off',video:'off',screenshot:'off'}});

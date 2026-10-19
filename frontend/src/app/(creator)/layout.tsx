@@ -1,3 +1,4 @@
+import {ObservabilityClient} from "@/lib/observability-client";
 /**
  * (creator) segment layout — the single shell wrapping every authenticated
  * CreatorOS page, and (Module 00, Task 11) the SESSION GUARD.
@@ -30,6 +31,7 @@ import * as React from "react";
 import { redirect } from "next/navigation";
 
 import { ShellRouter, type ShellUser } from "./shell-router";
+import { WorkspaceInitializationProvider, WorkspaceInitializationBoundary } from "@/components/shell/workspace-initialization";
 import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
 import { LicenseHeartbeatBridge } from "@/components/shell/license-heartbeat-bridge";
 import { ChannelConfigBootstrap } from "@/components/shell/channel-config-bootstrap";
@@ -41,10 +43,7 @@ import {
 } from "@/lib/package-brand";
 import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
 import { isDesktopRuntime } from "@/server/activation/is-desktop";
-import {
-  ZeroAccountGuidance,
-  isZeroAccountAllowedPath,
-} from "@/components/shell/zero-account-guidance";
+import { ZeroAccountRouteGuard } from "@/components/shell/zero-account-route-guard";
 import { resolveSession, currentPathname } from "@/lib/session.server";
 // T-147 P5 桌面激活授权 —— 桌面态未激活/到期则弹回 /activate;web/dev 永远放行(门不触发)。
 import { isActivationAllowed } from "@/lib/activation-gate.server";
@@ -126,7 +125,7 @@ export default async function CreatorLayout({
     initials: initialsFromName(session.user.displayName),
   };
 
-  // [T-332 S4 / T-348] 0 号全局引导守卫(SPEC §4.2):该 user 名下没有任何 active 抖音号 →
+  // [T-332 S4 / T-348 / T-1023] 0 号全局引导守卫:该 user 名下没有任何 active 平台账号 →
   // per-account 创作域页面整页替换为绑定引导(壳/侧栏保留);账号管理/设置等 user 级
   // 页面放行(白名单),否则用户没入口去绑号。
   //   [T-348] **首页 `/` 现在也放行**:首页承接完整引导流(OnboardingCard,绑号=高亮
@@ -136,14 +135,13 @@ export default async function CreatorLayout({
   // 守卫是引导,不是安全门(安全边界在 backend strict 门),绝不能因一次读失败把整个 app 锁死。
   // [T-909] 激活门通过后，路径、账号守卫、通知和渠道品牌互不依赖，必须并行读取。
   // 原实现四段串行 await，会把每一段延迟相加并阻塞所有页面/账号切换。
-  const [pathname, hasActiveAccount, notifications, channelRuntime] =
+  const [hasActiveAccount, notifications, channelRuntime] =
     await Promise.all([
-      currentPathname(),
       (async () => {
         try {
           const accounts = (await createServerClient(session.ctx).listAccounts({
             params: undefined,
-            query: { page: 1, pageSize: 100, platform: "douyin" },
+            query: { page: 1, pageSize: 100 },
             body: undefined,
           })) as unknown as ReadonlyArray<{
             status: "active" | "archived";
@@ -158,8 +156,6 @@ export default async function CreatorLayout({
       ),
       readChannelRuntime().catch(() => null),
     ]);
-  const zeroAccountGuarded =
-    !hasActiveAccount && !isZeroAccountAllowedPath(pathname);
 
   // [T-530/T-534] 渠道品牌名只从已验证加密 runtime 读取。
   // 读失败/未激活/未配置 → runtime 为 null，Sidebar 使用构建期包品牌；Growth 已验签
@@ -169,6 +165,7 @@ export default async function CreatorLayout({
 
   return (
     <>
+    <ObservabilityClient />
       {/* [T-051 2c] ⌘K 全局热键 → /search(让 TopHeader 的 kbd 提示言行一致)。 */}
       <GlobalSearchHotkey />
       {/* [T-372 L3] 授权心跳桥:Rust 心跳(内测 60min/买断 30d)判定 licensed=false 时
@@ -180,6 +177,7 @@ export default async function CreatorLayout({
       {/* [T-257] 外链处理已上移到根 layout(app/layout.tsx),覆盖 (creator) 外的页面;此处不再重复挂,避免双监听外链开两次。 */}
       {/* [T-530] 品牌名经 Provider 注入(server → client 只读;props 链被 ShellRouter
           隔断,沿 CurrentProjectProvider 同款上下文注入模式)。 */}
+      <WorkspaceInitializationProvider initialScope={{groupId:session.ctx.groupId??null,accountId:session.ctx.groupId?null:session.ctx.accountId??null}}>
       <SidebarBrandNameProvider
         brandName={brandName}
         bugFeedbackUrl={bugFeedbackUrl}
@@ -189,13 +187,14 @@ export default async function CreatorLayout({
         <ShellRouter user={user} notifications={notifications}>
           {/* [T-332 S4] 0 号 → per-account 页面整页绑定引导(不渲染 children,防各页
               读 per-account op 撞 AccountRequiredError 的裸错;白名单页照常)。 */}
-          {zeroAccountGuarded ? <ZeroAccountGuidance /> : children}
+          <ZeroAccountRouteGuard hasActiveAccount={hasActiveAccount || Boolean(session.ctx.groupId)}>{children}</ZeroAccountRouteGuard>
         </ShellRouter>
       </SidebarBrandNameProvider>
       {/* The @modal parallel slot renders intercepting-route overlays
           (currently `/projects/new`). It is rendered above the AppShell
           so the dialog appears above the page chrome. */}
-      {modal}
+      <WorkspaceInitializationBoundary surface="overlay">{modal}</WorkspaceInitializationBoundary>
+      </WorkspaceInitializationProvider>
     </>
   );
 }

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": "index.ts",
+      "upstreamSha256": null,
+      "currentSha256": "00ca2f4950081d9f8fb57a97fe59960c2759b7ce7696f03f0e165cd64a1ef3cd",
+      "reason": "严格类型非空证明/现有测试fixture或导出入口；未引入任务/会话存储"
+    },
+    {
+      "path": "src/acp/auth-env.ts",
+      "upstreamSha256": "d03f290435460c7d84d380e641927022444f940368461a419a07787bff4362af",
+      "currentSha256": "2f4cd8cb7cbefa226dae475d37a2edb5c07bbb6c3bee1f00ec135f2720059f48",
+      "reason": "只使用宿主明确白名单的子环境"
+    },
+    {
+      "path": "src/acp/client-process.ts",
+      "upstreamSha256": "3d2fd50ed5f1898d2fbf772dd9b25c8147331f164f76e6ca9b057f8403ab2acb",
+      "currentSha256": "bf513cd0bdc90a071dc8d01135239651fd84f6985180314cf58941a5ddfe642b",
+      "reason": "严格类型非空证明/现有测试fixture或导出入口；未引入任务/会话存储"
+    },
+    {
+      "path": "src/acp/client.ts",
+      "upstreamSha256": "2d41420725b3c745542ffe5e20095dfd58036fcd839ceec7f85ad548ddc1ef3d",
+      "currentSha256": "ab138af49f86bb632d10c14488c949fb4a961875394ce7e6d50b586624d19978",
+      "reason": "审批回调异常取消请求；复用原通知等待，不另写客户端"
+    },
+    {
+      "path": "src/acp/model-support.ts",
+      "upstreamSha256": "42e7d6af096d68d7c7328d91e7d936e7f83f0e80ecad491eb1aec7f1afbb15bc",
+      "currentSha256": "d19aa9d5df69715a29344a597aff06d640af39fa75237948b968bae4cd8a217d",
+      "reason": "严格类型非空证明/现有测试fixture或导出入口；未引入任务/会话存储"
+    },
+    {
+      "path": "src/acp/terminal-manager.ts",
+      "upstreamSha256": "f07ad56115fc3f43fa056393cbfb3cd337b6794dd44d5726a54db5710f7a3d6b",
+      "currentSha256": "f73f8db68e69cc4da6f8418744a5811b78d209576e1a49cf8bc0b1ba76f838ec",
+      "reason": "严格类型非空证明/现有测试fixture或导出入口；未引入任务/会话存储"
+    },
+    {
+      "path": "src/agent-registry.ts",
+      "upstreamSha256": "5d71c2edcd97e674a0a751f709f6692d4bceb69c801f9e784ca58439c9990add",
+      "currentSha256": "815d75d89c7e178ac8f8dda275c1047532ad0e9ffc0acfdf1758b7e260e3a6de",
+      "reason": "严格类型非空证明/现有测试fixture或导出入口；未引入任务/会话存储"
+    },
+    {
+      "path": "src/permissions.ts",
+      "upstreamSha256": "7cc4d4cec200b8e43b89a1e22db8caa9721c3d199f91c0ab0dcbd5bcd4f458b2",
+      "currentSha256": "1ddb84adf5ff5abf505c093331d95663f2259dae4f8b77b2b6b9c999541efd9d",
+      "reason": "空选项取消，严格类型下显式守原非空边界"
+    },
+    {
+      "path": "src/process-identity.ts",
+      "upstreamSha256": "09e50670090a49b461c3b34b285f01a3e4b83dc2dfea26f0275ca63e5091d0c1",
+      "currentSha256": "ed81ddb91453c40403cae6d3e0553bf1e4fa14615dd45b0123db3ec3d23fa330",
+      "reason": "严格类型非空证明/现有测试fixture或导出入口；未引入任务/会话存储"
+    },
+    {
+      "path": "src/version.ts",
+      "upstreamSha256": "404c86a1eefd6e5c7d19d53f816cf594d3533b416dee7d7dda3645fbfbf1bd35",
+      "currentSha256": "74d7a6567c56cea800b82a086c6338d4e28a03f8293afb8e5dada7db6574a412",
+      "reason": "CJS导入兼容及固定0.19.4来源身份"
+    },
+    {
+      "path": "test-fixtures/upstream-mock-agent.ts",
+      "upstreamSha256": null,
+      "currentSha256": "18f7584018705d66eaeccedf0dc461eaa9fd4da4b107472c055a801369b4f2ee",
+      "reason": "严格类型非空证明/现有测试fixture或导出入口；未引入任务/会话存储"
+    }
+  ],
+  "notes": "原许可与固定上游摘要保留。app-server生成类型只用于上游完整类型检查，当前构建取运行闭包，不宣称适配器完整tsc已通过。"
+}

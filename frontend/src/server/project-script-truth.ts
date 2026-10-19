@@ -42,9 +42,10 @@ export function selectReadableProjectScriptArtifact<
   T extends {
     readonly artifactType: string;
     readonly currentVersionId?: string | null;
+    readonly currentVersionIsReserved?:boolean;
   },
 >(artifacts: readonly T[]): T | null {
-  const versioned = (artifact: T) => Boolean(artifact.currentVersionId);
+  const versioned = (artifact: T) => Boolean(artifact.currentVersionId) && artifact.currentVersionIsReserved!==true;
   return (
     artifacts.find(
       (artifact) =>

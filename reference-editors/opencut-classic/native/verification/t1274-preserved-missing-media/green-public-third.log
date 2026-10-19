@@ -1,0 +1,22 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+ 8 | import { REGIONS, REGION_GROUPS } from "./countries-data";
+ 9 | import type { CountryRecord, RegionId } from "./countries-data";
+10 | 
+11 | const FLAGS_PROVIDER_ID = "flags";
+12 | const DEFAULT_SEARCH_LIMIT = 100;
+13 | const DEFAULT_FLAGS_BASE_URL = new URL("./flags", location.href).href;
+                                                       ^
+ReferenceError: location is not defined
+      at /private/tmp/creatoros-t1274-preview-isolated/apps/web/src/stickers/providers/flags.ts:13:51
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [22.00ms]

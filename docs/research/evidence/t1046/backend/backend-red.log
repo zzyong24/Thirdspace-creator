@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/backend
+
+ ❯ src/modules/production/production-native-rough.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-native-rough.test.ts [ src/modules/production/production-native-rough.test.ts ]
+Error: Cannot find module './production-native-rough' imported from /private/tmp/t1046-backend-work/backend/src/modules/production/production-native-rough.test.ts
+ ❯ src/modules/production/production-native-rough.test.ts:2:1
+      1| import {it,expect} from 'vitest';
+      2| import {applyNativeRoughSuggestions,nativeRoughImpact,nativeSuggestion…
+       | ^
+      3| import {plan} from '../../../../contract/tests/production-native-rough…
+      4| const suggestion=(id:string)=>({suggestionId:id,decision:'remove' as c…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  23:10:41
+   Duration  457ms (transform 109ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/private/tmp/t1046-backend-work/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/production/production-native-rough.test.ts

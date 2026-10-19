@@ -1,0 +1,105 @@
+{
+  "denied": [],
+  "ops": [
+    {
+      "operation": "accountGroups.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:57.550Z"
+    },
+    {
+      "operation": "outputs.production.editor.get",
+      "method": "POST",
+      "at": "2026-10-16T15:41:57.644Z"
+    },
+    {
+      "operation": "settings.modelRouting.get",
+      "method": "POST",
+      "at": "2026-10-16T15:41:57.648Z"
+    },
+    {
+      "operation": "ai.conversations.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:57.649Z"
+    },
+    {
+      "operation": "ai.tasks.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:57.649Z"
+    },
+    {
+      "operation": "materialLinks.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:57.693Z"
+    },
+    {
+      "operation": "outputs.get",
+      "method": "POST",
+      "at": "2026-10-16T15:41:57.695Z"
+    },
+    {
+      "operation": "ai.conversations.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:58.734Z"
+    },
+    {
+      "operation": "ai.tasks.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:58.735Z"
+    },
+    {
+      "operation": "articles.get",
+      "method": "POST",
+      "at": "2026-10-16T15:41:58.934Z"
+    },
+    {
+      "operation": "ai.conversations.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:58.934Z"
+    },
+    {
+      "operation": "ai.tasks.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:58.935Z"
+    },
+    {
+      "operation": "creativeCapabilities.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:58.973Z"
+    },
+    {
+      "operation": "creativeResults.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:58.974Z"
+    },
+    {
+      "operation": "creativeCapabilities.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:59.401Z"
+    },
+    {
+      "operation": "creativeResults.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:59.401Z"
+    },
+    {
+      "operation": "creativeResults.bundles.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:59.405Z"
+    },
+    {
+      "operation": "analytics.traffic.get",
+      "method": "POST",
+      "at": "2026-10-16T15:41:59.722Z"
+    },
+    {
+      "operation": "calibration.suggestions.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:59.722Z"
+    },
+    {
+      "operation": "topics.attributions.list",
+      "method": "POST",
+      "at": "2026-10-16T15:41:59.723Z"
+    }
+  ]
+}

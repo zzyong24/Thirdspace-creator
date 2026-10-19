@@ -1,0 +1,37 @@
+{
+  "method": "TypeScript完整有序AST kind/identifier/literal/isTypeOnly递归序列，去position/trivia；全部四源先核等后写入",
+  "files": [
+    {
+      "file": "backend/src/modules/calibration/default-rubric.ts",
+      "beforeSha256": "05a1c34aacc49ba2b9b692bb746bb9535a6f81f83eed4dfa5453c7760a562773",
+      "afterSha256": "52f25957b6502de1160530daff1618a9475b86c35e3de6d40b08239df9837af7",
+      "beforeAstSha256": "e9d434eb116773758bbc4542a6801058af9cb9736f6d04009fea0374150b5405",
+      "afterAstSha256": "e9d434eb116773758bbc4542a6801058af9cb9736f6d04009fea0374150b5405",
+      "astEqual": true
+    },
+    {
+      "file": "backend/src/modules/calibration/calibration.repository.ts",
+      "beforeSha256": "113e884acfdd9752e782815785a1653ea1f75ebc238c11f78ed4b261c12d2392",
+      "afterSha256": "29c360a540fc09da89fbf00ee6409f12f61234f6565f7717c1d0ececf394fa2a",
+      "beforeAstSha256": "d78d4fc3fa4ca3d36022dee6e29c015a7642338ba69b128b7d632b04eb1f5b3e",
+      "afterAstSha256": "d78d4fc3fa4ca3d36022dee6e29c015a7642338ba69b128b7d632b04eb1f5b3e",
+      "astEqual": true
+    },
+    {
+      "file": "backend/src/modules/calibration/calibration.service.ts",
+      "beforeSha256": "40d7021b0908fbc6eb0e8712c1c37107a56c39e30ad1608b1687281072d80c25",
+      "afterSha256": "1b8552867b15067bd3c4729e141938cba6110633e95a8389589a6ca9a64380ee",
+      "beforeAstSha256": "453d14707399d496055515b4d3fdbe79d517965286c56dc74d622ede9899cf37",
+      "afterAstSha256": "453d14707399d496055515b4d3fdbe79d517965286c56dc74d622ede9899cf37",
+      "astEqual": true
+    },
+    {
+      "file": "backend/src/modules/ai/calibration-positioning-adoption.service.ts",
+      "beforeSha256": "c911da3f67c7cfd5e9e7bbad91076788003d5844353cc70f314013a18a29713d",
+      "afterSha256": "06daee04f86dff76afb01152239ef20df68e8d50e51d85545202416c027d72b9",
+      "beforeAstSha256": "1406fdf19e025832b1e48ba364ec7602f2ee12a3974c02ea2816f22636b07aa1",
+      "afterAstSha256": "1406fdf19e025832b1e48ba364ec7602f2ee12a3974c02ea2816f22636b07aa1",
+      "astEqual": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# 最终三类自主任务执行副本（NOT_RUN）
+
+这是已审四根driver的独立测试副本，只执行collect/material/research各一次，U35由R接同一个真实collect条目在原UI唯一入队。旧12件、原意图及806失败原件不变；未绑定最终新包，也未联网、提交或打开session。
+
+仅cases.cjs删去自动第四U35循环，collect成功即导出COLLECT_HANDOFF_FOR_R原source/item/snapshot/run/positioning与候选身份供Root/R核对；保三族原业务断言/确认流程。旧u35函数与合同collection条目仍留在副本中，但无调用入口，不冒它们已执行。CASE_RESULTS明确委派。
+
+imports仍指精确原冻结contract/binding/harness/fixture，无重写这些消费者。原binding严格要求maximumRootSubmissions=4及四个原intents，副本保该历史上限形状，但实际循环只有三根、collection明确maximumNewRootSubmissions=3；不把未使用第四intent当已提交。原24h outer、58,200秒旧覆盖floor和各根1,800秒期限保持，不为少一根缩原长预算。执行输出仍是原binding要求的新T1315 runtime目录，原run.py由本副本启动，cases实际入口改本副本。
+
+真正执行前Root/B/R须核本控制流差分、最终实际binding与输入锁（含本副本两个入口文件和原helpers）。不重开806/UNKNOWN、不重新执行旧失败root、不替R造item或manual transcript。若collect未完成则无交接文件，R保持依赖未就绪。

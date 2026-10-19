@@ -1,0 +1,109 @@
+{
+  "installedAt": "2026-06-14T06:44:13.643Z",
+  "installedBy": "scripts/visual/install-baselines.mjs",
+  "note": "These PNGs are the Controller-approved visual regression baseline. Subagents must NOT regenerate them with --update-snapshots.",
+  "entries": [
+    {
+      "id": "dashboard",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Dashboard.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-dashboard.png",
+      "sha256": "7a1fb9a5d07050f6744231fb16d49f1c26a0bf953441c214d780bbb0e1247bab"
+    },
+    {
+      "id": "projects",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Projects.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-projects.png",
+      "sha256": "fbabec5271523484fbedce5a8e0b31f4a741fe55708a8064f03a1cc85ccfe083"
+    },
+    {
+      "id": "project-overview",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Project Overview.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-project-overview.png",
+      "sha256": "e599bfe55f3db65bfe5c98489502ebbb818ba67033bcc898bdc8764e11af37fa"
+    },
+    {
+      "id": "research-workspace",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Research Workspace.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-research-workspace.png",
+      "sha256": "5ea16c42268955de0196e5827f3a47a5badfb4b0454ca28a1002ede6f041032b"
+    },
+    {
+      "id": "planning-workspace",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Planning Workspace.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-planning-workspace.png",
+      "sha256": "079e097e2641f9b805129ab377da08e8266a51c58516793bc22af74e3ae26ca9"
+    },
+    {
+      "id": "script-workspace",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Script Workspace.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-script-workspace.png",
+      "sha256": "5f3ba4c96a1ced43a250b5ed2c5e9611aafb0ad079864d34238d1887173aa5df"
+    },
+    {
+      "id": "production-workspace",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Production Workspace.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-production-workspace.png",
+      "sha256": "f73dff930936ab4eba1024c3f9dea0a96f6336c7901e39858589255aae9edf21"
+    },
+    {
+      "id": "publishing-workspace",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Publishing Workspace.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-publishing-workspace.png",
+      "sha256": "46385cfd85ac360d83ab0bcd799646f81eb633ffefca2a370dc5f8e5c2638e5f"
+    },
+    {
+      "id": "analytics-review",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Analytics & Review.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-analytics-review.png",
+      "sha256": "b2636a275b328b96495d2f2a280e709111ecffe45f2f6649f5a8d2dd5fae4c59"
+    },
+    {
+      "id": "knowledge",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Knowledge & Memory.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-knowledge.png",
+      "sha256": "85c96a181b9113ff9e638b3d14b6309e0a3ed556887471f99f6dddc7cea6c82b"
+    },
+    {
+      "id": "assets",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Assets Center.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-assets.png",
+      "sha256": "a3336cd1388ba223b4879cf93078c5b78c2f886c791abc17a0b2b153d7ba2402"
+    },
+    {
+      "id": "publishing-center",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Publishing Center.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-publishing-center.png",
+      "sha256": "5c678851e540b151c9e6c50dc5d956cd99a35b8ffdca5866a2863c796629967a"
+    },
+    {
+      "id": "experience",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Experience Center.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-experience.png",
+      "sha256": "609023b1435725b22b4e95c9ad3b68844c3562ad74b28575a9225ecfa46ba0bb"
+    },
+    {
+      "id": "search",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/search.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-search.png",
+      "sha256": "e384830beb6b9b1e341e357cab5a27ca2aeb19b7fa91933a17d9a99da4d511ec"
+    },
+    {
+      "id": "settings",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/Settings.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-settings.png",
+      "sha256": "ab32cc156f193da770064434f8b6313a39cede2eb2c656292fe3c5ba7bcef094"
+    },
+    {
+      "id": "new-project-overlay",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/New Project.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-new-project-overlay.png",
+      "sha256": "7c4e2a42c9d26b662bcfd4f47e9034068e38fc95abf7cf240ecbc57316db1bb4"
+    },
+    {
+      "id": "ai-copilot-overlay",
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/ui/AIchat.png",
+      "baseline": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktrees/frontend-implementation/frontend/tests/visual/__screenshots__/reference-images/reference-ai-copilot-overlay.png",
+      "sha256": "fda68da9f7a96d8c07f626bee03baeba889149de3e0eabf3e76805b9020cd6fc"
+    }
+  ]
+}

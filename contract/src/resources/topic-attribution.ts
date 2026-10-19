@@ -14,6 +14,7 @@ import { id, iso8601 } from "../primitives";
 export const topicAttributionResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
   accountId: id.nullable(), // 按抖音号隔离
   publicationId: id, // 归因锚(一条发布作品至多一条归因)
   projectId: id.nullable(), // 溯源(与 learnings 的关联锚;导入作品可能缺项目 → null)

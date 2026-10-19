@@ -125,10 +125,11 @@ export function ActivateForm(): React.JSX.Element {
       className="flex w-full flex-col gap-4"
     >
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="activate-code" className="text-sm font-medium">
+        <label htmlFor="activate-code" className="text-base font-medium">
           激活码
         </label>
         <Input
+          className="text-base md:text-base"
           id="activate-code"
           name="code"
           type="text"
@@ -145,12 +146,12 @@ export function ActivateForm(): React.JSX.Element {
       </div>
 
       {error ? (
-        <p id="activate-error" role="alert" className="text-sm text-destructive">
+        <p id="activate-error" role="alert" className="text-base text-destructive">
           {error}
         </p>
       ) : null}
 
-      <Button type="submit" disabled={submitting} className="w-full">
+      <Button type="submit" disabled={submitting} className="w-full text-base">
         {submitting ? "激活中…" : "激活"}
       </Button>
     </form>

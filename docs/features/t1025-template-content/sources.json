@@ -1,0 +1,127 @@
+{
+  "generated": [
+    {
+      "id": "product-coffee",
+      "file": "product-coffee.png",
+      "source": "image_gen built-in",
+      "prompt": "制作单张3:4竖版产品照片封面模板预览，高级生活杂志摄影质感。主题是无品牌的奶白色陶瓷咖啡杯，晨光里的杯子放在暖木桌上，真实材质、柔和侧光、漂亮但不浮夸。左上大号深棕中文精确写“每天用的杯子\n怎么选”，小副标题“手感 · 容量 · 清洁”；下半部大比例杯子，与同色咖啡豆/布料少量搭配；右侧三条简洁注释只写“握持”“容量”“杯口”，不写任何虚构尺寸、价格或评价。燕麦白、深咖啡、焦糖色，标题与商品照片互不遮挡，四周6%安全留白，首图在手机里很清楚。底部准确写“AI示意 · 实拍模板”，说明这是AI构图示例而非真实拍摄，不要把这行藏起来。没有人物、商标、水印、虚假品牌，不是UI截图，不是多页拼贴。",
+      "sha256": "c1becb01c5624fb19edbe737ca791a3a8a76ba26bc687b92b51fb1e6601347b0",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    },
+    {
+      "id": "product-tech",
+      "file": "product-tech.png",
+      "source": "image_gen built-in",
+      "prompt": "单张3:4竖版产品实拍封面风格预览，精致清爽的数码桌面摄影构图。主物件是一副无品牌银白无线头戴耳机，完整耳机自然放在浅灰蓝桌面上，磨砂金属与皮革质感逼真，左侧柔和窗光、清楚安静阴影；背景极简纸白。一眼可读的深蓝大标题精确写“选耳机\n先看这三点”，副标题“佩戴 · 操作 · 收纳”。底部少量三张窄小注释卡与产品形成清楚对应，只写“佩戴”“操作”“收纳”，不添加频响、价格、评分、时长等虚构指标。蓝白杂志封面风，不霓虹，不网格酷炫，不虚构商标，不放人物，不拼多张封面。产品放下半区，标题留上半区，四周6%安全边距。底端明确可读写“AI示意 · 实拍模板”。成品位图里有标题，摄影质感但明确AI示意。",
+      "sha256": "46ceaf70f40879f7364e5a9839e9fa7efa66ff4de8a65415212f0801fdd7b0f1",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    },
+    {
+      "id": "product-beauty",
+      "file": "product-beauty.png",
+      "source": "image_gen built-in",
+      "prompt": "生成单张3:4竖版美妆产品照片封面风格预览，明亮高级护肤品杂志静物摄影。无品牌磨砂淡琥珀色滴管瓶置于奶白石台，旁有一小块乳白色质地示意与杏色柔布。没有文字标签的虚构产品，材质、玻璃透光与柔和窗光精致自然。上方清楚大号深棕标题精确写“护肤品怎么选\n先看使用场景”，副标题“质地 · 包装 · 使用方法”。右下小注释只有“质地”“包装”，不声称改善肤质、不写疗效、天数、成分含量或测试数据，不虚构品牌认证。配色暖白、淡杏、低饱和陶土，少量细线。下方大比例商品，标题与瓶子互不遮挡，6%安全边距。底部明确可读“AI示意 · 实拍模板”。一张完整封面，有可读中文，不是多图拼贴，不放人物，不水印，不假医学证明。",
+      "sha256": "50451a72c14ba93dc5494feafef6e379deb66317b0a052f2849c1e3a060b1148",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    },
+    {
+      "id": "public-person-notes",
+      "file": "public-person-notes.png",
+      "source": "image_gen built-in",
+      "prompt": "生成一张3:4竖版真人知识封面公共模板样图。主体是一名虚构的亚裔女性知识讲解者，三十岁左右，短黑发、圆框眼镜、米色衬衫，自然明亮半身摄影质感，不能使用或模仿对话中任何真实人脸；这张图只展示真人封面构图，实际用户会替换自己照片。上半清晰大号深蓝中文标题精确写“讲清一个问题\n胜过堆满知识”，铜橙强调“讲清”；副标题“观点 · 证据 · 方法”。人物在右下，左下三块暖白知识便签“观点”“证据”“方法”，克制简洁、文字准确。暖白紙感细网格、深蓝大字、小面积铜橙，自然光，四边留6%。底部必须清楚写“AI人物示意 · 换成你的照片”。不虚构成绩，不品牌，不是UI，不含陌生男性真实身份，不是多页拼板，单张完整可读封面。",
+      "sha256": "377acafbf7ceb430f498f99b23b7a6e2178ac75a1ce45a2af7ba0b341b60bf6b",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    },
+    {
+      "id": "public-person-wide",
+      "file": "public-person-wide.png",
+      "source": "image_gen built-in",
+      "prompt": "制作一张16:9横版真人讲解封面公共构图示意。主体为完全虚构的亚裔女性讲师，短黑发圆框眼镜米色衬衫，写实自然摄影质感，不能模仿对话里的真实人物。左侧40%深蓝超大中文标题精确写“复杂的事\n拆成三步”，铜橙强调“三步”，副标题“先理解，再动手”。中间一张暖白知识板有三个独立框“目标 → 动作 → 检查”，体现讲解步骤而非伪造数据；右侧女性半身自然微笑，脸完整清楚、五官自然，不能压住标题和板。亮色暖白纸感细网格、深蓝与铜橙，克制干净，四边6%安全区。底端明确写“AI人物示意 · 换成你的照片”。这是一张完整模板预览，实际选用时用户替换本人照片，单张封面，不拼多张，不机器人、不霓虹。",
+      "sha256": "69f5af085dd8d01989a516c124680b01b96d2a67efff107e88f5672813721b54",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    },
+    {
+      "id": "xhs-family",
+      "file": "xhs-family.png",
+      "source": "image_gen built-in",
+      "prompt": "生成一张3:4竖版小红书亲子共读首图风格样例。水彩与纸拼贴插画，奶油白、鼠尾草绿、暖杏色，安静明亮的儿童阅读角，一本打开的无品牌绘本、软垫、亲子两双手指向书页（不是写实身份，人物只局部插画）。上方大字中文精确写“亲子共读\n从提问开始”，小副标题“三个问题，让阅读有来有往”。下方三张小圆角纸便签只写“看到了什么？”“你怎么想？”“还想知道什么？”。标题很清楚，留白充足，主题图和问题便签有层级，四周6%安全边距，不编育儿效果、医学结论或孩子数据，不用虚构品牌与真人照片。底部清楚写“AI示意 · 图文首图”。这是一張完整首图，不多页拼贴、不UI截图，准确中文。",
+      "sha256": "565a1f7a8a7c61b72d364f03d7b424ac0f02940eadf985eb28da85cb8758f893",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    },
+    {
+      "id": "xhs-pet",
+      "file": "xhs-pet.png",
+      "source": "image_gen built-in",
+      "prompt": "生成一张3:4竖版小红书宠物生活知识首图样例。柔和奶油白与浅燕麦绿，暖木地板上有一只AI示意的可爱橘白猫、简单无品牌猫窝、水碗和抓板，写实自然照片质感，布局干净不过度可爱装饰。上半部深墨绿清楚大号中文精确写“猫咪新家\n先备好这几样”，副标题“休息 · 喝水 · 磨爪”。下方三个小标签分别指向“猫窝”“水碗”“抓板”，不给药、不医学、不虚构使用效果、不编猫咪具体身份和年龄。四周6%安全边距，大标题和猫脸均完整、不遮挡。底部清楚写“AI示意 · 图文首图”。一張完整封面，不拼贴多页，不品牌水印，不做界面截图，所有中文字清楚。",
+      "sha256": "6f117969885af9f9f2f409a348395032ba2d12d1ae12b922bf503c42b5b7108c",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    },
+    {
+      "id": "xhs-sport",
+      "file": "xhs-sport.png",
+      "source": "image_gen built-in",
+      "prompt": "单张3:4竖版小红书运动生活图文首图风格样例，浅奶油白底、活力但克制的珊瑚橙和墨蓝，真实自然静物摄影质感。下半部放一双无品牌浅灰运动鞋、一条折叠毛巾、简洁水杯及卷起的深灰瑜伽垫，柔和晨光；不要真人，不商标。上半部清楚大字中文精确写“把运动\n放进日常”，副标题“从可坚持的小安排开始”。三个小型清楚标签“选时段”“备装备”“做记录”，可以有日程便签但不编训练成绩、减重数字、医学建议或运动处方。足够留白、有杂志排版层级，四边6%安全区，中文精确、手机一眼可读，不多页拼板，不霓虹，不UI。底部清楚标“AI示意 · 图文首图”。成品是一张带完整中文标题的首图。",
+      "sha256": "9da5aa1d4b45c685cd78a0743976e636cf0db2668f0c7915ec6049f36ae83eed",
+      "declaration": "AI生成的模板示意，非实拍或真实成绩"
+    }
+  ],
+  "github": {
+    "repository": "https://github.com/larashero3-dotcom/lieflat-html-design",
+    "commit": "313369de067d27372ddfdb4407e92051d22196ad",
+    "license": "MIT",
+    "images": [
+      {
+        "filename": "xhs-cover-dot-matrix.png",
+        "repository_path": "previews/zh/xhs-cover-dot-matrix.png",
+        "source_url": "https://raw.githubusercontent.com/larashero3-dotcom/lieflat-html-design/313369de067d27372ddfdb4407e92051d22196ad/previews/zh/xhs-cover-dot-matrix.png",
+        "sha256": "7dc09a5df7faf9c04b22274e854e5e0511517e40c75fb6ed1fcaac9990d499ee",
+        "width": 1200,
+        "height": 1600
+      },
+      {
+        "filename": "xhs-cover-consulting-report.png",
+        "repository_path": "previews/zh/xhs-cover-consulting-report.png",
+        "source_url": "https://raw.githubusercontent.com/larashero3-dotcom/lieflat-html-design/313369de067d27372ddfdb4407e92051d22196ad/previews/zh/xhs-cover-consulting-report.png",
+        "sha256": "0fffad051fc5977a0ff81d04fc02bc8da1e7e91337259e4935fb16585040f569",
+        "width": 1200,
+        "height": 1600
+      },
+      {
+        "filename": "xhs-cover-editorial.png",
+        "repository_path": "previews/zh/xhs-cover-editorial.png",
+        "source_url": "https://raw.githubusercontent.com/larashero3-dotcom/lieflat-html-design/313369de067d27372ddfdb4407e92051d22196ad/previews/zh/xhs-cover-editorial.png",
+        "sha256": "4b2b071117c4fa65d8003dd056aca10736538bf113871f6ee4e54475dab06607",
+        "width": 1200,
+        "height": 1600
+      },
+      {
+        "filename": "xhs-cover-rain-notes.png",
+        "repository_path": "previews/zh/xhs-cover-rain-notes.png",
+        "source_url": "https://raw.githubusercontent.com/larashero3-dotcom/lieflat-html-design/313369de067d27372ddfdb4407e92051d22196ad/previews/zh/xhs-cover-rain-notes.png",
+        "sha256": "3f97236bb44fe4fdfd00529e223a3334e70f5074e4dd335afba1fa1e3f4e1611",
+        "width": 1200,
+        "height": 1600
+      },
+      {
+        "filename": "xhs-cover-shiny-tiles.png",
+        "repository_path": "previews/zh/xhs-cover-shiny-tiles.png",
+        "source_url": "https://raw.githubusercontent.com/larashero3-dotcom/lieflat-html-design/313369de067d27372ddfdb4407e92051d22196ad/previews/zh/xhs-cover-shiny-tiles.png",
+        "sha256": "d7ada23d59a24e6562dd86e79e79ea1b2203dac91f107471af045f136d45d996",
+        "width": 1200,
+        "height": 1600
+      },
+      {
+        "filename": "xhs-cover-sunrise.png",
+        "repository_path": "previews/zh/xhs-cover-sunrise.png",
+        "source_url": "https://raw.githubusercontent.com/larashero3-dotcom/lieflat-html-design/313369de067d27372ddfdb4407e92051d22196ad/previews/zh/xhs-cover-sunrise.png",
+        "sha256": "ef81fe873ebf3e70c6e631a06cdd2b669d82460cb778d674517cbf5a06528d96",
+        "width": 1200,
+        "height": 1600
+      }
+    ],
+    "notes": [
+      "仅接入6张完整封面预览，长文首屏不作为成品。每种视觉分别提供封面和图文配方；图文预览沿用同风格首图，不冒称已生成全部正文页。",
+      "开源示例文字、指标、日期和产品仅是原作者示例，生成本期内容时必须全部替换。"
+    ]
+  }
+}

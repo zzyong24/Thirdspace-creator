@@ -12,6 +12,7 @@
 import { notFound } from "next/navigation";
 
 import { DraftWorkbenchPage } from "@/features/draft-workbench/draft-workbench-page";
+import { ProjectOutputHome, type ProjectWorkOutput } from "@/features/projects/project-output-home";
 import {
   buildDraftWorkbenchVm,
   type DraftWorkbenchClient,
@@ -19,17 +20,19 @@ import {
 import { isOwnershipError } from "@/features/project-overview/project-overview-workspace-data";
 import { CrossAccountEmptyState } from "@/components/state/page-state";
 import { resolveSession } from "@/lib/session.server";
-import { createServerClient, client } from "@/lib/contract-client.server";
+import { createServerClient } from "@/lib/contract-client.server";
 
 interface DraftWorkbenchRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
+  readonly searchParams?: Promise<{ readonly view?: string }>;
 }
 
 export default async function DraftWorkbenchRoute({
   params,
+  searchParams,
 }: DraftWorkbenchRouteProps) {
   const { projectId } = await params;
-  const resolvedId = await resolveProjectIdParam(projectId);
+  const { view } = (await searchParams) ?? {};
 
   const session = await resolveSession();
   if (!session) {
@@ -37,7 +40,31 @@ export default async function DraftWorkbenchRoute({
     notFound();
   }
 
-  const scoped = createServerClient(session.ctx) as unknown as DraftWorkbenchClient;
+  const sessionClient = createServerClient({...session.ctx,accountId:session.ctx.groupId?null:session.ctx.accountId});
+  const resolvedId = await resolveProjectIdParam(projectId, sessionClient);
+  const scoped = sessionClient as unknown as DraftWorkbenchClient;
+  if (view === "works") {
+    let overview: { projectId: string; projectTitle: string; outputs: ProjectWorkOutput[] } | null = null;
+    let crossAccountOverview = false;
+    let accountPlatform: string | null = null;
+    try {
+      const project = await scoped.getProject({ params: { projectId: resolvedId }, query: undefined, body: undefined }) as { id: string; title: string };
+      const outputs = await scoped.listOutputs({ params: { projectId: project.id }, query: undefined, body: undefined }) as unknown as ProjectWorkOutput[];
+      overview = { projectId: project.id, projectTitle: project.title, outputs };
+    } catch (err) {
+      if (isOwnershipError(err)) crossAccountOverview = true;
+      else notFound();
+    }
+    if (crossAccountOverview) return <main data-page="project-cross-account-404" className="flex flex-col gap-card-gap"><CrossAccountEmptyState entityLabel="项目" backHref="/projects" backLabel="回项目列表" /></main>;
+    if (!overview) notFound();
+    if (session.ctx.accountId) {
+      try {
+        const account = await sessionClient.getAccount({ params: { accountId: session.ctx.accountId }, query: undefined, body: undefined });
+        accountPlatform = account.platform;
+      } catch { /* 项目仍可创作，平台须由用户明确选择。 */ }
+    }
+    return <ProjectOutputHome projectId={overview.projectId} projectTitle={overview.projectTitle} initialOutputs={overview.outputs} accountId={session.ctx.groupId?null:session.ctx.accountId} accountPlatform={accountPlatform} />;
+  }
   let vm: Awaited<ReturnType<typeof buildDraftWorkbenchVm>> | null = null;
   let crossAccount = false;
   try {
@@ -62,6 +89,7 @@ export default async function DraftWorkbenchRoute({
         className="flex flex-col gap-card-gap"
       >
         <CrossAccountEmptyState
+            groupId={session.ctx.groupId}
           entityLabel="项目"
           backHref="/projects"
           backLabel="回项目列表"
@@ -79,10 +107,10 @@ export default async function DraftWorkbenchRoute({
  * URL `[projectId]` 段 → canonical 项目 id(沿用旧总览页的解析:完整 id 直通,
  * kebab 化标题兜底;都不中回原参 → 上层 404)。
  */
-async function resolveProjectIdParam(param: string): Promise<string> {
+async function resolveProjectIdParam(param: string, scoped: Pick<ReturnType<typeof createServerClient>, "listProjects">): Promise<string> {
   if (!param) return param;
   try {
-    const projects = (await client.listProjects({
+    const projects = (await scoped.listProjects({
       params: undefined,
       query: { page: 1, pageSize: 100 },
       body: undefined,

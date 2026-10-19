@@ -1,0 +1,276 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1312",
+  "reviewKind": "recheck",
+  "baseHead": "f08a20f11112aab2c87c2e5e14b731d5f2593a5c",
+  "frozenAt": "2026-10-16T09:18:22.671815+00:00",
+  "inputs": [
+    {
+      "path": "backend/src/modules/calibration/calibration.service.ts",
+      "bytes": 42671,
+      "sha256": "40d7021b0908fbc6eb0e8712c1c37107a56c39e30ad1608b1687281072d80c25"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.repository.ts",
+      "bytes": 35305,
+      "sha256": "49234adbdb74b0691a4698d064412d8ce2ec50e35c5aae8daf90dd485407918d"
+    },
+    {
+      "path": "backend/src/modules/calibration/index.ts",
+      "bytes": 2829,
+      "sha256": "4cdc3efb2b10a4a6c341af96aef39a878c2be41e71e92ecfe018c0d314ea404e"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 472734,
+      "sha256": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de"
+    },
+    {
+      "path": "backend/src/application/context/calibration-diagnose.ts",
+      "bytes": 3105,
+      "sha256": "b9fc6295d7f59176f4f76cb2e834fa5892d57a47f4ec428e5ee946075736c87d"
+    },
+    {
+      "path": "backend/src/application/chat/performance-readers.ts",
+      "bytes": 17881,
+      "sha256": "b6d37b9f9433df435229e3edec446f7504432657250e13562094b0bd3f5024da"
+    },
+    {
+      "path": "backend/src/application/scheduling/controls.ts",
+      "bytes": 13561,
+      "sha256": "84937173927ce25bbf78ab29a41a4c34b01b83e42d29a58ffa1655b0e859bfbf"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.service.test.ts",
+      "bytes": 16556,
+      "sha256": "0787e94b7ed6ef80917214ffe85a94338186f0b53e14a116dbe22b15fca9fb7f"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.repository.integration.test.ts",
+      "bytes": 12955,
+      "sha256": "b66f57eebd707e25a4654160bb022bad5231576371dcfd4f203a90b79f29ee4b"
+    },
+    {
+      "path": "backend/src/application/context/calibration-diagnose.test.ts",
+      "bytes": 2963,
+      "sha256": "366f3010cd86f5ca5940d394b65a6b2b101f4df2a772d810638feb1e92ff833f"
+    },
+    {
+      "path": "backend/src/application/scheduling/controls.test.ts",
+      "bytes": 13754,
+      "sha256": "1c4adac505906af0d92e6d303a179ae955eadc117366996d744a476f056e6702"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "backend/src/modules/platform-account/platform-account.service.ts",
+      "bytes": 10914,
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.db-schema.ts",
+      "bytes": 642,
+      "sha256": "9bf46f891ecffedd9cbc376467f6a59cfc3c6666bca68f8de55ee2dbf49d2aad"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.transport.ts",
+      "bytes": 7274,
+      "sha256": "c653a9d90865f354db885d037e10ba3939d364947eaee5babf9fc8e51a755e85"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/calibration-positioning-business-adapters.ts",
+      "bytes": 5183,
+      "sha256": "b2c34aa60c2655a77c704c095cdf8572667a6f473885d1aecc9411beef6d0c93"
+    },
+    {
+      "path": "backend/src/application/context/calibration-score.ts",
+      "bytes": 8048,
+      "sha256": "e1461084281793cf4e7a5e44560e441bf3f55ad935e93ee450f8440848da1ec3"
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings.service.ts",
+      "bytes": 27021,
+      "sha256": "7510818e6897c2328635c611bead75e154a79be76c7ab389fb37ad7e711c829c"
+    },
+    {
+      "path": "backend/src/modules/execution/calibration-positioning-worker.integration.test.ts",
+      "bytes": 8128,
+      "sha256": "61c026b01ff3bbf3b75545bcce3da986ca0d89c69f76de5b524c8d69befe766c"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "contract/src/operations/calibration.ts",
+      "bytes": 5972,
+      "sha256": "a3d2fe02fc679c70f292f8317b9a8ce24127b64991badaba1d5f167736f8b353"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "contract/src/internal/model-routing.ts",
+      "bytes": 9594,
+      "sha256": "0f9d54aad9eb92c5f7580e956d78f316b60c86c3747db9fd98e83ed00a81cd03"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/features/t1312-group-calibration-default-rubric.md",
+      "bytes": 11556,
+      "sha256": "ac6bbab4b8065abbf33a432f3fd61b8213fea373ddbf40d905c049b0a90dcfdd"
+    },
+    {
+      "path": "docs/verification/t1312/DEC.md",
+      "bytes": 1567,
+      "sha256": "bc0e0a32b89e22622eb81f817a0f66ac01c262ad88ce7304b2659fd225b9fb16"
+    },
+    {
+      "path": "docs/verification/t1312/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "backend/src/modules/ai/calibration-positioning-adoption.service.ts",
+      "bytes": 9080,
+      "sha256": "5f41ff09a4f057d707f90232105152cdade1e729fffe373bdfa2728736414453"
+    },
+    {
+      "path": "backend/src/integration/calibration-positioning-adoption.test.ts",
+      "bytes": 11158,
+      "sha256": "8a970e081f4a0230c786066338c475e7da7e43534ee0f8cce0ae1f31273d9247"
+    },
+    {
+      "path": "contract/src/primitives.ts",
+      "bytes": 7711,
+      "sha256": "23ee12e08ebe60e826172b5211a3a12be613119ebce1ea466caa79caa0d0b4c8"
+    },
+    {
+      "path": "contract/src/resources/platform-accounts.ts",
+      "bytes": 2500,
+      "sha256": "dc9510c917245cc0f71d9e91783fb166d9a68444de05c9baf80ee576dead2dab"
+    },
+    {
+      "path": "backend/src/schema/platform-account.ts",
+      "bytes": 5210,
+      "sha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d"
+    },
+    {
+      "path": "docs/verification/t1312/MODULE_SCOPE_ROUND2.json",
+      "bytes": 11452,
+      "sha256": "2daff38aba644058c11eed0258d41cc0fd6ee0807404f218a281f15602c8ae7f"
+    },
+    {
+      "path": "backend/src/modules/calibration/default-rubric.ts",
+      "bytes": 2790,
+      "sha256": "05a1c34aacc49ba2b9b692bb746bb9535a6f81f83eed4dfa5453c7760a562773"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/group-default-rubric.persistence-client.test.ts",
+      "bytes": 22018,
+      "sha256": "57682f2c6ba474d6b2f9edd7ae087afc22e1949c890bb40012d05dca94f0b676"
+    },
+    {
+      "path": "backend/src/integration/group-default-rubric.integration.test.ts",
+      "bytes": 13702,
+      "sha256": "c594c0e67e8f5bd43aa4edc8d73bc4a7f7cb836536e023cf46ddbb5cb43f0f83"
+    },
+    {
+      "path": "docs/verification/t1312/MODULE_SCOPE_ROUND3.json",
+      "bytes": 11691,
+      "sha256": "1f9d022fa55458da2acccb924816e2dffea2cfa79ca6877e3287bf03a4010e76"
+    },
+    {
+      "path": "docs/verification/t1312/TEST_SCOPE_ADDENDUM.json",
+      "bytes": 1030,
+      "sha256": "8f0eae5c775c5be95964671796846b332cae41164f2b8eb1ddc04962fc8c8f01"
+    },
+    {
+      "path": "docs/verification/t1312/INPUT_LOCK_TEST_ADDENDUM.json",
+      "bytes": 881,
+      "sha256": "2b5c5216b476e4b49ec9439f567097b83157334fadd1a1c7b46b12f5ba905053"
+    },
+    {
+      "path": "docs/verification/t1312/runtime/legacy-public-v3/legacy-v2-confirm-scope.json",
+      "bytes": 186200,
+      "sha256": "1ea0ea732c44411faa961413285bc6e9b8780f2f8ce20f4557781d24d00f5cba"
+    },
+    {
+      "path": "docs/verification/t1312/runtime/legacy-public-v3.json",
+      "bytes": 642,
+      "sha256": "35f9fe75fc9409542aba60409e3654a8d1bf74275c6f44518d50dfb8821e93dd"
+    },
+    {
+      "path": "docs/verification/t1312/runtime/legacy-public-v3.log",
+      "bytes": 2334,
+      "sha256": "7c075fac7560f34932eff8b28b2a4f57805ecaab70021b66570a71ae9b1c42a7"
+    },
+    {
+      "path": "docs/verification/t1312/runtime/legacy-v3-snapshots/INDEX.json",
+      "bytes": 18123,
+      "sha256": "cda7019bfe099c0a452c2a30cebe61323822320b163097a2a3938932a5797293"
+    },
+    {
+      "path": "backend/src/integration/scheduled-export-progress.test.ts",
+      "bytes": 15098,
+      "sha256": "df088d2e34af73c2ac690d8a86c4ce2c61c2db7369280c074b10a4a8977b1e27"
+    },
+    {
+      "path": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "bytes": 20205,
+      "sha256": "46fda84fe512beef7518e2f7cf9b59a2887e010e569ed0d878aeb33ca546cc2a"
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "bytes": 19528,
+      "sha256": "8ebf492627d1cc35e84a6f3d7d0072879b8a88acaf85f09bdc1d40dae54c323d"
+    }
+  ],
+  "scope": "第9源本轮引入的真实legacy产物不可读回归之最小A；当前B中途冻结字节非最终实现PASS",
+  "priorSpecSha256": "f29b5f7ae04304a52b6b9564bc6fafb1cf0feedad318ab5df4aa092504546c4a"
+}

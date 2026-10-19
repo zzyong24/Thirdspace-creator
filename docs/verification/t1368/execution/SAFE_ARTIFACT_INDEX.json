@@ -1,0 +1,79 @@
+{
+  "schema": "t1368-safe-artifact-index/v1",
+  "safeArtifacts": [
+    {
+      "path": ".gitignore",
+      "bytes": 10,
+      "sha256": "c0844c7670c89257f8f01e2f81a011a8cf7cfd6582860b465b05682b895bb0a3"
+    },
+    {
+      "path": "CONSUMER_AUDIT.json",
+      "bytes": 3399,
+      "sha256": "65cc1a7766389e81d50b509b97292b62f4f6f073e27585c8765d3d470226bdf9"
+    },
+    {
+      "path": "LED-053_EXIT.json",
+      "bytes": 343,
+      "sha256": "a0afa13a8506a47a9b80ea8ac6e290bae1dd852c70eddd8e1045e739925334f2"
+    },
+    {
+      "path": "LED-053_OUTPUT_META.json",
+      "bytes": 216,
+      "sha256": "9720b5a15abbf7c196a412c3ac51426dff6da4cf92f7b073eec76b5fc1b95363"
+    },
+    {
+      "path": "LED-053_START.json",
+      "bytes": 2462,
+      "sha256": "2d83b2d378d35d8e7fd9bdb0dad5ea6e2b9c4b349f502dc7241caf57c88f3bb0"
+    },
+    {
+      "path": "LED-060_EXIT.json",
+      "bytes": 343,
+      "sha256": "3cbf69b4b2eb5fc61b687c4daa97ca5914961d985eccf5f9802b0d13e5e0e41d"
+    },
+    {
+      "path": "LED-060_OUTPUT_META.json",
+      "bytes": 216,
+      "sha256": "ae446cb20dbfffb83516beb08d8cde4f410fb36b6eafb6a9ed9a1dd8b229b8a6"
+    },
+    {
+      "path": "LED-060_START.json",
+      "bytes": 2809,
+      "sha256": "5aea085e0c1c1cf76cf456d3a3a34d8a5fcaddbad474eadb8c2b9953f710176b"
+    },
+    {
+      "path": "POSTFLIGHT.json",
+      "bytes": 3764,
+      "sha256": "a82f955b65073030e0270bd0db83cceb47f7535f046d2319e52d36916353e7f1"
+    },
+    {
+      "path": "PREFLIGHT.json",
+      "bytes": 2858,
+      "sha256": "aa24965b780e58fb74d8adac81eca5c21df7aa32db9dd907127f991c5a480217"
+    },
+    {
+      "path": "PROCESS_RECEIPTS.json",
+      "bytes": 885,
+      "sha256": "9812b9ef5e03f97a31b35c2398f01f6e17aac9e89bdaf8fd823535e95ef3305e"
+    },
+    {
+      "path": "REPORT.md",
+      "bytes": 5831,
+      "sha256": "856706edacea86e1d29e1427039bb3bac8e2935490db992f5fea4a676a0f4c6f"
+    },
+    {
+      "path": "SAFE_SUMMARY.json",
+      "bytes": 3185,
+      "sha256": "e6d5f3f1bcb8f3a2c9fd6b32755f5c3725dc443bc4ed4f4d6375e6eab6c4bcb9"
+    },
+    {
+      "path": "run-gate.py",
+      "bytes": 3209,
+      "sha256": "99734e967ca2054044cceb4c2309195f8bebed4a1c4496aad586a1a492743a60"
+    }
+  ],
+  "privateExcluded": [
+    "private/"
+  ],
+  "boundary": "仅上述安全文件可供精确Git纳入；private原始输出及用户目录metadata不纳Git。"
+}

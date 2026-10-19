@@ -1,0 +1,7 @@
+{
+  "executionWorkerPath": "/private/tmp/t1300-artifact-940jy2at/sidecar/frontend/runtime/agentic-worker.cjs",
+  "bytes": 1538258,
+  "sha256": "24c1e7d8eb385e87ed7c69bc5d9b5f4d180df61abe09afe561335a30804a8728",
+  "kind": "agentic-worker",
+  "buildPerformed": false
+}

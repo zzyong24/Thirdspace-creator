@@ -1,0 +1,22 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-resources.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+1 | /* @ts-self-types="./opencut_wasm.d.ts" */
+2 | 
+3 | import * as wasm from "./opencut_wasm_bg.wasm";
+4 | import { __wbg_set_wasm } from "./opencut_wasm_bg.js";
+5 | __wbg_set_wasm(wasm);
+6 | wasm.__wbindgen_start();
+         ^
+TypeError: wasm.__wbindgen_start is not a function. (In 'wasm.__wbindgen_start()', 'wasm.__wbindgen_start' is undefined)
+      at /private/tmp/creatoros-t1274-native-isolated/node_modules/.bun/opencut-wasm@0.2.10/node_modules/opencut-wasm/opencut_wasm.js:6:6
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [4.07s]

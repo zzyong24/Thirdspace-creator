@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import {
@@ -51,7 +52,7 @@ export function createExecutionScriptCheckpointService(
             !frozen.facets.__scriptFingerprint ||
             !skill ||
             frozen.skillSnapshot.userId !== context.userId ||
-            frozen.skillSnapshot.accountId !== context.accountId
+            frozen.skillSnapshot.accountId !== (context.accountId??null) || (frozen.skillSnapshot.groupId??null)!==(context.groupId??null)
           )
             throw new ConflictError("口播断点缺少冻结执行依据");
           const [call] = await tx
@@ -154,7 +155,7 @@ export function createExecutionScriptCheckpointService(
                 eq(aiTasks.id, task.ownerId),
                 eq(aiTasks.executionTaskId, task.id),
                 eq(aiTasks.userId, context.userId),
-                eq(aiTasks.accountId, context.accountId!),
+                workspaceFilter(aiTasks,context),
               ),
             )
             .for("update");
@@ -204,7 +205,7 @@ export function createExecutionScriptCheckpointService(
           and(
             eq(aiTasks.id, taskId),
             eq(aiTasks.userId, context.userId),
-            eq(aiTasks.accountId, context.accountId ?? ""),
+            workspaceFilter(aiTasks,context),
           ),
         );
       if (!business || business.taskType !== "script.draft")
@@ -219,7 +220,7 @@ export function createExecutionScriptCheckpointService(
             eq(executionTasks.id, business.executionTaskId),
             eq(executionTasks.ownerId, business.id),
             eq(executionTasks.userId, context.userId),
-            eq(executionTasks.accountId, context.accountId!),
+            workspaceFilter(executionTasks,context),
           ),
         );
       if (!execution) throw new ConflictError("口播恢复执行映射不符");
@@ -261,7 +262,7 @@ export function createExecutionScriptCheckpointService(
         };
       if (
         calls.some(
-          (call) => call.kind === "model" && call.status !== "rejected",
+          (call) => call.kind === "model" && !["rejected","superseded"].includes(call.status),
         )
       )
         throw new ConflictError(

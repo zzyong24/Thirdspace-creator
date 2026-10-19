@@ -1,0 +1,153 @@
+{
+  "originalOpened": false,
+  "originalExit": 143,
+  "originalGracefulFlushProven": false,
+  "mode": "静止副本自然恢复一致性取证",
+  "scope": {
+    "asset": "asset-e2aea52e-49",
+    "file": "afile-e2aea52e-53",
+    "task": "ai-task-e2aea52e-55",
+    "execution": "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+    "group": "grp-e2aea52e-6"
+  },
+  "queries": [
+    {
+      "name": "execution",
+      "sql": "SELECT id,group_id,kind,owner_type,owner_id,status,attempt,last_error_code,created_at,updated_at,\n   payload->'modelInput'->>'kind' AS input_kind,payload->'modelInput'->>'skillId' AS skill_id,payload->'modelInput'->>'capability' AS capability,\n   payload->'executionRoute'->>'schemaVersion' AS route_schema,\n   payload->'executionRoute'->'routes'->'vision:asset.classify'->>'source' AS vision_source,\n   payload->'executionRoute'->'routes'->'vision:asset.classify'->'identity'->>'protocolKind' AS vision_protocol,\n   payload->'executionRoute'->'routes'->'vision:asset.classify'->'identity'->>'runtimeVersion' AS vision_runtime,\n   payload->'executionRoute'->'routes'->'vision:asset.classify'->'identity'->>'requestedModel' AS vision_requested_model,\n   payload->'modelIdentity'->>'engine' AS pinned_engine,payload->'modelIdentity'->>'protocolKind' AS pinned_protocol,\n   payload->'modelIdentity'->>'runtimeVersion' AS pinned_runtime,payload->'modelIdentity'->>'requestedModel' AS pinned_requested_model,\n   payload->'modelIdentity'->>'capability' AS pinned_capability\n   FROM execution_tasks WHERE id=$1 AND group_id=$2 AND owner_id=$3",
+      "parameters": [
+        "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+        "grp-e2aea52e-6",
+        "ai-task-e2aea52e-55"
+      ]
+    },
+    {
+      "name": "businessTask",
+      "sql": "SELECT id,execution_task_id,group_id,status,requested_at,started_at,model_call_started_at,completed_at FROM ai_tasks WHERE id=$1 AND execution_task_id=$2 AND group_id=$3",
+      "parameters": [
+        "ai-task-e2aea52e-55",
+        "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+        "grp-e2aea52e-6"
+      ]
+    },
+    {
+      "name": "calls",
+      "sql": "SELECT id,sequence,kind,status,parent_call_id,rejection_code,total_tokens,created_at,updated_at FROM execution_calls WHERE execution_task_id=$1 ORDER BY sequence LIMIT 16",
+      "parameters": [
+        "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0"
+      ]
+    },
+    {
+      "name": "nativeCallIdentity",
+      "sql": "SELECT c.id AS call_id,c.status AS call_status,n.value->>'threadId' AS thread_id,n.value->>'turnId' AS turn_id,\n   n.value->'modelFacts'->>'model' AS actual_model,n.value->'modelFacts'->>'modelProvider' AS actual_provider\n   FROM execution_tasks t CROSS JOIN LATERAL jsonb_each(COALESCE(t.payload->'codexCalls','{}'::jsonb)) n\n   JOIN execution_calls c ON c.id=n.key AND c.execution_task_id=t.id\n   WHERE t.id=$1 AND t.group_id=$2 ORDER BY c.sequence LIMIT 16",
+      "parameters": [
+        "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+        "grp-e2aea52e-6"
+      ]
+    },
+    {
+      "name": "assetFile",
+      "sql": "SELECT a.id AS asset_id,a.group_id,a.current_file_id,a.description,f.id AS file_id,f.asset_id AS file_asset_id,f.checksum,f.mime_type,f.file_size,\n   f.media_metadata->>'aiDescription' AS file_ai_description\n   FROM assets a JOIN asset_files f ON f.asset_id=a.id AND f.id=a.current_file_id\n   WHERE a.id=$1 AND f.id=$2 AND a.group_id=$3",
+      "parameters": [
+        "asset-e2aea52e-49",
+        "afile-e2aea52e-53",
+        "grp-e2aea52e-6"
+      ]
+    },
+    {
+      "name": "tags",
+      "sql": "SELECT t.name,t.kind FROM entity_tags e JOIN tags t ON t.id=e.tag_id AND t.user_id=e.user_id\n   JOIN assets a ON a.id=e.entity_id AND a.user_id=e.user_id\n   WHERE e.entity_id=$1 AND a.group_id=$2 ORDER BY t.name",
+      "parameters": [
+        "asset-e2aea52e-49",
+        "grp-e2aea52e-6"
+      ]
+    }
+  ],
+  "rows": {
+    "execution": [
+      {
+        "id": "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+        "group_id": "grp-e2aea52e-6",
+        "kind": "ai_task",
+        "owner_type": "ai_task",
+        "owner_id": "ai-task-e2aea52e-55",
+        "status": "succeeded",
+        "attempt": 1,
+        "last_error_code": null,
+        "created_at": "2026-10-15T20:06:37.833Z",
+        "updated_at": "2026-10-15T20:06:51.459Z",
+        "input_kind": "model.structured",
+        "skill_id": "asset.classify",
+        "capability": "asset.classify",
+        "route_schema": "2",
+        "vision_source": "codex",
+        "vision_protocol": "codex-app-server",
+        "vision_runtime": "0.159.3",
+        "vision_requested_model": "gpt-6.1-sol",
+        "pinned_engine": "codex",
+        "pinned_protocol": "codex-app-server",
+        "pinned_runtime": "0.159.3",
+        "pinned_requested_model": "gpt-6.1-sol",
+        "pinned_capability": "asset.classify"
+      }
+    ],
+    "businessTask": [
+      {
+        "id": "ai-task-e2aea52e-55",
+        "execution_task_id": "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+        "group_id": "grp-e2aea52e-6",
+        "status": "succeeded",
+        "requested_at": "2026-10-15T20:06:37.792Z",
+        "started_at": null,
+        "model_call_started_at": null,
+        "completed_at": "2026-10-15T20:06:51.459Z"
+      }
+    ],
+    "calls": [
+      {
+        "id": "call_fce1d4de-ba71-4758-a916-6bb8a94be711",
+        "sequence": 1,
+        "kind": "model",
+        "status": "settled",
+        "parent_call_id": null,
+        "rejection_code": null,
+        "total_tokens": 20705,
+        "created_at": "2026-10-15T20:06:39.708Z",
+        "updated_at": "2026-10-15T20:06:51.459Z"
+      }
+    ],
+    "nativeCallIdentity": [
+      {
+        "call_id": "call_fce1d4de-ba71-4758-a916-6bb8a94be711",
+        "call_status": "settled",
+        "thread_id": "01a1412c-8f9a-7302-9910-b772da5c5d14",
+        "turn_id": "01a1412c-9c0e-72f2-8394-10d4f5b8c0c5",
+        "actual_model": "gpt-6.1-sol",
+        "actual_provider": "openai"
+      }
+    ],
+    "assetFile": [
+      {
+        "asset_id": "asset-e2aea52e-49",
+        "group_id": "grp-e2aea52e-6",
+        "current_file_id": "afile-e2aea52e-53",
+        "description": "",
+        "file_id": "afile-e2aea52e-53",
+        "file_asset_id": "asset-e2aea52e-49",
+        "checksum": "28e3ba6c252242ef9886b290cd089fb97f494fc644dee5b0323502a9e54bf8a2",
+        "mime_type": "image/png",
+        "file_size": 838,
+        "file_ai_description": "浅色背景上蓝色圆形与橙色方形，可用于形状或色彩对比讲解"
+      }
+    ],
+    "tags": [
+      {
+        "name": "B-roll",
+        "kind": "asset-usage"
+      }
+    ]
+  },
+  "readOnly": true,
+  "rolledBack": true,
+  "closed": true,
+  "observedAt": "2026-10-15T20:45:50.028Z"
+}

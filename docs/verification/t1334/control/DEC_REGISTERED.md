@@ -1,0 +1,5 @@
+# DEC-T1334：自主任务既有动态工具暴露
+
+Root独立初审PASS绑定SPEC706cfbe7dd82b168b3ed6aa3753c93cf2f442d563f5e307ee82432bd1ca9818f、REV:e9426246ed94，实际审者/root、精确底层模型未公开（工具登记unknown-host-model）。用户已有本轮修复及新中性真实模型验收授权持续有效；不冒用户单独逐字段确认。
+
+仅原agentic caller显式开启现成functions namespace为候选方案，不改全局默认/权限/契约；原174/204/225真实零工具失败保留，不追签taskTools为其已证首因。当前精确test/runtime装配W，生产0W；Root装配独审和真实目标公共RED保存并复核后才授唯一生产路径。最终新包/真实模型仍待验。

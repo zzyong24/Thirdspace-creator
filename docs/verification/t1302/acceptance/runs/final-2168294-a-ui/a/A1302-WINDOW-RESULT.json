@@ -1,0 +1,221 @@
+{
+  "acceptanceTask": "T-1302",
+  "sourceHead": "2168294fef3f62bc8e0b4ca3254652b935daeb0d",
+  "controlHead": "817616d5caab85e408153859df73d967487a536a",
+  "packetSHA256": "c46d3f76196ae8749a9b61535376c11e1e3d896db96d54315d7a9fa062ab006f",
+  "verdict": "待修；不能签整体PASS或任务完成",
+  "taskComplete": false,
+  "groupId": "grp-e2aea52e-6",
+  "fixture": {
+    "task": "T-1300",
+    "sourceHead": "2168294fef3f62bc8e0b4ca3254652b935daeb0d",
+    "candidateBinding": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1301/acceptance/candidate/candidate-binding.json",
+    "baseURL": "http://127.0.0.1:64881",
+    "groupId": "grp-e2aea52e-6",
+    "acceptanceTask": "T-1302",
+    "reusedClassificationAsset": "asset-e2aea52e-49",
+    "reusedClassificationFile": "afile-e2aea52e-53",
+    "projectId": "project-e2aea52e-83",
+    "scriptId": "artifact-e2aea52e-96",
+    "original": "我整理笔记时，先写清楚要解决的问题，再记下实际做过的步骤，最后检查结果。\n\n例如整理一份阅读笔记，我会先问：这次阅读解决了什么疑问？然后写下我试过的方法，以及还没有想明白的地方。这里没有统计数据，也不承诺效率一定提高。\n\n我想保留一个习惯：每次结束工作，记下一个仍然值得追问的问题。先把问题写清楚，再决定下一步。",
+    "assetId": "asset-e2aea52e-49",
+    "fileId": "afile-e2aea52e-53",
+    "articleId": "output-e2aea52e-130",
+    "graphicId": "output-e2aea52e-143"
+  },
+  "caseRuns": [
+    {
+      "evidence": "A1302ADOPT-attempt1-result.json",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "durationMs": 124866.631,
+      "exitCode": 1,
+      "workerPIDs": [
+        "7566"
+      ]
+    },
+    {
+      "evidence": "A1302EDIT-article-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 52184.592,
+      "exitCode": 0,
+      "workerPIDs": [
+        "9726"
+      ]
+    },
+    {
+      "evidence": "A1302EDIT-graphic-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 39602.668000000005,
+      "exitCode": 0,
+      "workerPIDs": [
+        "12541"
+      ]
+    },
+    {
+      "evidence": "A1302EDITADOPT-article-attempt1-result.json",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "durationMs": 4787.968000000001,
+      "exitCode": 1,
+      "workerPIDs": [
+        "10784"
+      ]
+    },
+    {
+      "evidence": "A1302EDITRECOVER-article-attempt1-result.json",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "durationMs": 126796.44900000001,
+      "exitCode": 1,
+      "workerPIDs": [
+        "11424"
+      ]
+    },
+    {
+      "evidence": "A1302EDITRECOVER-graphic-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 6763.821999999999,
+      "exitCode": 0,
+      "workerPIDs": [
+        "13207"
+      ]
+    },
+    {
+      "evidence": "A1302EFFECTIVE200-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 5608.956,
+      "exitCode": 0,
+      "workerPIDs": [
+        "15322"
+      ]
+    },
+    {
+      "evidence": "A1302JOINT-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 83179.879,
+      "exitCode": 0,
+      "workerPIDs": [
+        "6693"
+      ]
+    },
+    {
+      "evidence": "A1302RECOVER-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 14380.319000000001,
+      "exitCode": 0,
+      "workerPIDs": [
+        "9360"
+      ]
+    },
+    {
+      "evidence": "A1302RESPONSIVE-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 9899.226,
+      "exitCode": 0,
+      "workerPIDs": [
+        "13688"
+      ]
+    },
+    {
+      "evidence": "A1302STORAGE-attempt1-result.json",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 5065.327,
+      "exitCode": 0,
+      "workerPIDs": [
+        "13439"
+      ]
+    }
+  ],
+  "passed": 8,
+  "failed": 3,
+  "realModelTasks": [
+    {
+      "httpStatus": 200,
+      "conversationId": "ai-conv-e2aea52e-154",
+      "sourceMessageId": "ai-msg-e2aea52e-155",
+      "aiTaskId": "ai-task-399cb821-13c0-4f28-a633-0107bd853b6f",
+      "executionTaskId": "execution-task-828eed61-64ec-483a-b1c0-600cbc683d40",
+      "observedAt": "2026-10-15T20:15:09.628Z",
+      "status": "succeeded"
+    },
+    {
+      "httpStatus": 200,
+      "conversationId": "ai-conv-e2aea52e-154",
+      "sourceMessageId": "ai-msg-e2aea52e-333",
+      "aiTaskId": "ai-task-d8fbdf53-c487-47d7-b088-8063f9088b7c",
+      "executionTaskId": "execution-task-d19717a6-5bdc-4dda-9225-28db66b243e0",
+      "observedAt": "2026-10-15T20:21:12.858Z",
+      "status": "succeeded"
+    },
+    {
+      "httpStatus": 200,
+      "conversationId": "ai-conv-e2aea52e-154",
+      "sourceMessageId": "ai-msg-e2aea52e-437",
+      "aiTaskId": "ai-task-a469855e-81e7-4d44-a25f-51430b84d7ef",
+      "executionTaskId": "execution-task-5d7b01a7-0b89-4ada-aaa7-7510ea66a6a4",
+      "observedAt": "2026-10-15T20:27:00.682Z",
+      "status": "succeeded"
+    }
+  ],
+  "modelResubmissions": 0,
+  "newUploadsOrClassifications": 0,
+  "descriptionEvidence": "原work.creation.read images合并/截断投影逐字等于分类description，不冒raw媒体注解/原分类call",
+  "issues": [
+    "联合文章ready预览6模板占位、同稿采用后0，nativeLayout为空",
+    "成功采纳联合历史卡刷新仍显示待核对/恢复",
+    "editor lazy首次刷新未预览时缺pending恢复提示，真实120s FAIL",
+    "首次dirty阻挡与窄窗runner假设失败均保留"
+  ],
+  "recoveryProof": "creation自然同context刷新同body/key；editor独立case明示注入原失败storage快照后同body/key幂等，不能替代自然reload发现性FAIL",
+  "viewportEvidence": {
+    "narrowCSS": [
+      640,
+      900
+    ],
+    "cssZoom2": "实际裁切保留，不能冒native/browser菜单200%",
+    "effectiveCSS": [
+      683,
+      450
+    ],
+    "effectiveNoCSSZoom": true,
+    "titleCloseKeyboardAccessible": true,
+    "nativeOrBrowserMenu200Percent": "未验"
+  },
+  "callsBoundary": "3个chat公开summary HTTP200/calls[]保真；assistant metadata actualEngine codex，未推断零成本或直接provider/model详情",
+  "timeoutGate": "遵C指令复用同candidate T1301原174PASS/2839静态文件，不重跑整组",
+  "cleanup": {
+    "allModelTasksTerminal": true,
+    "browserAndTestsExited": true,
+    "controllerStopped": false,
+    "ownedDataPreserved": true,
+    "productDiffEmpty": true,
+    "commitMade": false,
+    "metadataChanged": false
+  },
+  "release": {
+    "writer": true,
+    "browser": true,
+    "model": true
+  },
+  "recordedAt": "2026-10-15T20:34:31.632335+00:00"
+}

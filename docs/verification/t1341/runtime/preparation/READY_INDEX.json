@@ -1,0 +1,111 @@
+{
+  "state": "READY_PUBLIC_RED_NOT_RUN",
+  "productionWriteCount": 0,
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/ASSEMBLY.md",
+      "bytes": 1421,
+      "sha256": "010b2ff9469da237419cade32dbbd88458b6e196e8d7ff6a3e683c8f4944369c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/run.py",
+      "bytes": 6917,
+      "sha256": "4b294afb1ffc5732689b697b4305fae144b013228bdcaad03c99e1986f75f976"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/launch.py",
+      "bytes": 2149,
+      "sha256": "98ce7a768ddfdf9e0d13f7cdf708c52380aa213b6402edf26584a7075c75d62e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/freeze.py",
+      "bytes": 3744,
+      "sha256": "49e988ce10e6e755e7c1076c4e1234a1440b2b1efc2bcd98bfd2f4a4fe185d25"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/vitest.config.mts",
+      "bytes": 1010,
+      "sha256": "098950e91a8b538302cbf0cbccc647e3d453dc6127c2d00d79b9db162e706783"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/BEFORE_MAPPING.json",
+      "bytes": 7124,
+      "sha256": "36cfbe50f0161deaf11b35db3469b273405a942678f7e98f4b5ded5b4e9dddf4"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/SYNTAX_AND_BASELINE.json",
+      "bytes": 255,
+      "sha256": "1bf6cdd0e74e5b2ac936cc021ee8bd7ccc14637215c13d7d279ba51753d215f4"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/VM_CONSUMER_CORRECTION.json",
+      "bytes": 635,
+      "sha256": "36d838947bb64b458018eb783c146552e2c2413cd98eebb46ce7c97058458216"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/MAINTENANCE_DIFF.diff",
+      "bytes": 22219,
+      "sha256": "8f9b855d4de9745e2af2cb0043ddb1261c1fb4c966130ad4c9b70e9388c2a6d9"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13/red-v1/PRE_RUN_LOCK.json",
+      "bytes": 10001016,
+      "sha256": "95b13624466bae448986a1166fc17676b9ddb4dedb2a43140a1ee4f5c4bbc0d5"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13/red-v1/collection-RESULT.json",
+      "bytes": 554,
+      "sha256": "44926497dba501d1028a564b562a95e2d9b994c591ef8f5be3cddc937e6a9961"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13/red-v1/collection.log",
+      "bytes": 536,
+      "sha256": "87f5c3a164b9a0aaaa3aab8022abcae97e0b73b2f80ab590bc59fcfa799622bc"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13/red-v1/frontend-type-RESULT.json",
+      "bytes": 535,
+      "sha256": "55917d1a7a63abddae90374b3afbe3ec8d115f05b9155ad8659d12c3035bc3e8"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13/red-v1/frontend-type.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/asset-taxonomy-read-projection.persistence-client.test.ts",
+      "bytes": 15478,
+      "sha256": "8e63971a960dd33683c377a8a026e0b5598474e80f6e9c9fd02ad248269d6d36"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/agentic-task-tool-visibility.persistence-client.test.ts",
+      "bytes": 27033,
+      "sha256": "be039dd030ab4f386bd91832f5dafc1eab313b5d314cfb66345bcae8e18da275"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/agentic-knowledge-native-binding.persistence-client.test.ts",
+      "bytes": 28241,
+      "sha256": "d5239ac93afa728925d040a440439da312219e654525523ecdc0b5df9cc16f3d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/agentic-skill-catalog-isolation.persistence-client.test.ts",
+      "bytes": 28891,
+      "sha256": "abe17520780cb2373bf22c05981590ea0388f4f1712ba4710c171830110a1b2d"
+    }
+  ],
+  "command": [
+    "python3",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/preparation/launch.py"
+  ],
+  "budget": {
+    "cases": 2,
+    "caseSeconds": 3600,
+    "hookSeconds": 180,
+    "innerGlobalSeconds": 8280,
+    "childSeconds": 9000,
+    "outerSeconds": 10800,
+    "outerCleanupReserveSeconds": 600,
+    "actualWatchdogTotalSeconds": 11400,
+    "retry": 0
+  }
+}

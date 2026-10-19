@@ -67,6 +67,20 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
   },
 ];
 
+/** T1101：平台协议能力决定模板；只对缺失任务应用默认错峰，不重写用户计划。 */
+export function collectionJobDefaultsForPlatform(platform:string):readonly CollectionJobDefault[]{
+ if(platform==='douyin')return DAILY_COLLECTION_JOB_DEFAULTS;
+ // SEMANTIC_BOUNDARY_ALLOW: 只装配已支持平台的协议任务与时刻，不判断创作内容。
+ const templates:Record<string,{name:string;minute:number}>= {
+  xiaohongshu:{name:'小红书作品数据同步',minute:5},
+  kuaishou:{name:'快手作品数据同步',minute:10},
+  wechatVideo:{name:'视频号后台数据同步',minute:15},
+  wechatOfficial:{name:'公众号后台数据同步',minute:20},
+ };
+ const template=templates[platform];if(!template)return [];
+ return [{sourceKind:'self.metrics',name:template.name,prompt:platform==='wechatVideo'||platform==='wechatOfficial'?'同步已绑定账号的原生后台报表':'同步已绑定账号的作品目录与真实指标',schedule:`${template.minute} */2 * * *`,enabledByDefault:true},...DAILY_COLLECTION_JOB_DEFAULTS.filter(t=>t.sourceKind==='topic.daily'||t.sourceKind==='intelligence.sync')];
+}
+
 // [T-433 S3] 跨账号错峰窗口(分钟):per-account 偏移打散范围。基准 9:00–9:50 + 偏移 [0,180) →
 //   实际起跑落 9:00–12:49 早间窗口(不越天,不排夜里)。窗口越大跨号碰撞越少(生日界 √180≈13 号
 //   才可能同分钟);采集本已 gate-F5 串行 + gateway 限流兜底,偏移只为打散「同刻爆发」这一峰值。
@@ -152,6 +166,7 @@ export interface CollectionBootstrapDeps {
   //   不存在「先落 NULL 再认领」的窗口;绑定第二个号不再改动任何既有行归属(ISO-08)。
   /** 各 job 的 target(默认 {} —— 采集器空 target 时自 ensureDouyinSource 兜底解析源)。 */
   target?: Record<string, unknown>;
+  defaults?:readonly CollectionJobDefault[];
 }
 
 export interface CollectionBootstrapResult {
@@ -165,7 +180,7 @@ export interface CollectionBootstrapResult {
 export type EnsureCollectionJobsDeps = Pick<
   CollectionBootstrapDeps,
   "listJobsBySourceKind" | "createJob" | "target"
->;
+> & {defaults?:readonly CollectionJobDefault[]};
 
 export interface EnsureCollectionJobsResult {
   /** 本次**新建**的 job 的 sourceKind(既有复用的不列入)。 */
@@ -196,7 +211,7 @@ export async function ensureCollectionJobs(
 ): Promise<EnsureCollectionJobsResult> {
   const created: string[] = [];
   const jobsInOrder: EnsureCollectionJobsResult["jobsInOrder"] = [];
-  for (const tpl of DAILY_COLLECTION_JOB_DEFAULTS) {
+  for (const tpl of deps.defaults??DAILY_COLLECTION_JOB_DEFAULTS) {
     const target: Record<string, unknown> = tpl.sourceKind === "self.metrics"?{...(deps.target??{}),__skipHeavyBackfill:true,__operationsSync:true}:tpl.sourceKind==='self.detail'?{...(deps.target??{}),__backfillOnly:true,__skipMetricRefresh:true,__operationsSync:true}:{...(deps.target??{})};
     if (["self.metrics", "self.traffic", "comments", "self.detail"].includes(tpl.sourceKind)) {
       // 时区写进计划，避免跟随运行设备时区而在错误小时触发。

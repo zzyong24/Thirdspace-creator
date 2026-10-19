@@ -235,3 +235,11 @@ describe("mimeForFileName", () => {
     expect(mimeForFileName("a.weird")).toBeNull();
   });
 });
+it("T-850 沙箱透传精确文件并核验实际字节摘要",async()=>{
+ const {createHash}=await import("node:crypto");const data=bytesOf("原始冻结视频"),fileDigest=createHash("sha256").update(data).digest("hex");
+ const sandbox=await createSandbox(root,"frozen-media");let received:unknown;
+ const input={assetId:"a",assetFileId:"history-file",fileDigest,mountAs:"instance.mp4"};
+ await materializeInputs(sandbox,[input],async(_id,dest,exact)=>{received=exact;await fs.writeFile(dest,data);return {size:data.length,mimeType:"video/mp4"};});
+ expect(received).toEqual({assetFileId:"history-file",fileDigest});
+ await expect(materializeInputs(sandbox,[{...input,mountAs:"corrupt.mp4"}],async(_id,dest)=>{await fs.writeFile(dest,"不同文件");return {size:12,mimeType:"video/mp4"};})).rejects.toThrow("字节");
+});

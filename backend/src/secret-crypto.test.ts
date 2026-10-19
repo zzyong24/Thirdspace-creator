@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { createHash } from "node:crypto";
-import { closeSync, mkdtempSync, openSync, writeFileSync } from "node:fs";
+import { closeSync, mkdtempSync, openSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -266,3 +266,10 @@ describe("[T-425] .master-key 文件兜底 —— 与 Rust 同源反混淆", () 
     expect(res.source).toBe("dev-fallback");
   });
 });
+
+it('空文件的真实 EOF 不缓存空结果，保留 fd→env 优先级',()=>{
+ const directory=mkdtempSync(join(tmpdir(),'creatoros-empty-fd-'));const path=join(directory,'fake-key');writeFileSync(path,'');const fd=openSync(path,'r');
+ try{const first=resolveMasterKey({CREATOROS_MASTER_KEY_FD:String(fd),CREATOROS_MASTER_KEY:KEY_B64});expect(first.source).toBe('env');expect(first.key.equals(KEY)).toBe(true);
+  writeFileSync(path,KEY_B64+'\n');const later=resolveMasterKey({CREATOROS_MASTER_KEY_FD:String(fd)});expect(later.source).toBe('fd');expect(later.key.equals(KEY)).toBe(true);
+ }finally{closeSync(fd);rmSync(directory,{recursive:true,force:true});}
+},120000);

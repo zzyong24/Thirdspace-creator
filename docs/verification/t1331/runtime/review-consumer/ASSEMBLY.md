@@ -1,0 +1,15 @@
+# 正式审核当前稿公共受控装配
+
+本轮仅依据已审SPEC95d83及用户专门额外一次cycle（cycle2/round1/REV8f4b55338fc3）。旧报告289ae、原315项索引和所有旧RED/GREEN只读；本目录仍未执行任何case。R只写新公共测试及本目录；C独占persistence组合端口，必须目标RED独审后才产品W。
+
+两个独立it分别创建全新PGlite/媒体根，不复用历史UNKNOWN或用户库。每个case由run.py <label> <restore|reserved>精确testNamePattern单独执行；collection共2项，每次执行仅1项。restore族公开master空v1→用户保存v2/v3→restore非最高v2，真实scriptReviews.trigger冻结version2。reserved族公开创建视频output→creativeResults.generate→原script.draft两阶段至真实awaiting_confirmation（不采纳），核实际预留output与原master，然后同正式审核入口。私有marker不种库，不为避免队列消费而暂停/取消/替换dispatcher。
+
+复用T1311原完整公开review装配：真实Settings路由text=self、真实prepareScriptReviewContext/执行权/原3851结构化worker/ledger/报告完成服务。外部模型仅loopback HTTP合成响应，按真实response_format.json_schema.properties识别voiceover/shots/verdict协议字段，不读语义、不替产品读正文。未知schema计fixture错误，不冒产品RED。transparent包装createStructuredBusinessExecutionService.prepare仅记录原参数taskId、原返回或原异常，再原样传递。正常trigger拒绝亦保存真实回执/前后任务集合；成功取得业务ID后观察原prepare的执行绑定或真实terminal，不能硬等不存在executionId。合法当前稿的成功预期在原prepare失败时自然RED；不把预期拒绝写PASS、不重发。
+
+每case test28800000ms（8h）、global30600000ms（8h30）、hook180000ms，runner正执行31800s、独立外层32400s（9h）、清理保留600s；两个case串行总外层上限64800s（18h）。当前setup/cleanup在it内亦由8h覆盖；global仍覆盖导入、启动和可能两个180s hook，8h30高于8h+360s，不照抄8h5。原持久task的截止由生产dispatcher/worker继承，测试不改deadline、不续期；准备观察单task最多120s且保更早原deadline，deadline null不转换NaN。retry0，单worker，独立cache；不使用上一case任务期限约束后续case。
+
+worker引用本仓库原不可变5618216B，SHA3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454，来源7790；node_modules链接仍为/private/tmp/t1300-artifact-v6mrof2a/sidecar/frontend/node_modules，目标已实际核存在。无35__yqfm依赖，无binary复制/共享dist构建。当前主源码含T1329 agentic adapter等并行已实现差分，固定3851只消费model structured分支，不把此旧worker冒最终包。
+
+run.py复用已实际验证清理机制：先检查label锁files/links/absence；START、run目录不覆写。worker在真实fork入口登记run nonce/PID/PGID/lstart+comm。正常与异常退出均逐身份重读、TERM/等待/KILL/等待；不限定pid==pgid、不全局pkill、不停止C/B控制服务；保存残余PGID与全部after drift。test保存首故障并对各资源独立清理（final证据、dispatcher、persistence、server、reset），每项记录完成/拒绝/不存在，不把未调用写true。application master key仅该新run进程内随机，不复制认证，不持久化key，不声称该DB可后续恢复执行。
+
+GREEN应额外证实真实冻结__reviewSnapshot的artifact/version/body、实际HTTP包含正确全文、1settled review call、正式报告artifactVersion2与call.resultRef、刷新相同报告及母稿原版本不变。reserved前置独立记2个synthetic模型调用；RED review预计0、GREEN review各1；合计GREEN4loopback/0付费，不以预计计数代实际。最高current/正式空/无稿seed/损坏/foreign/提交后真稿变化保护继承未改原script-review-context与准备回归，按最小受影响门复验；本夹具不替最终包U18真实Codex。

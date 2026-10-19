@@ -1,0 +1,9 @@
+{
+  "ownedRoot": "/Volumes/T7-MacData/CodexBuilds/t1338-legacy-work-parent-20261017-11c9cca0",
+  "authorization": {
+    "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1338/control/OWNED_RUNTIME_AUTHORIZATION.json",
+    "sha256": "fcc418cb30a435d27bef85077e4317a8f7d6467086fca8b933e70866f91ef27a"
+  },
+  "generatedMasterKey": "per fresh case 0600; same original key for completed DB continuation",
+  "productionWriteAuthorized": false
+}

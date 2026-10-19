@@ -150,6 +150,15 @@ function baseState(): FakeAiState {
 }
 
 describe("create", () => {
+  it("作品级请求透传真实目标与 attemptId，项目冲突和越权在建任务前拒绝",async()=>{
+    const state=baseState();
+    const {service}=makeService(state,{resolveOutputProjectId:async(_ctx,id)=>id==="video-a"?"project-a":null});
+    await service.create(ctx,{spec:{taskType:"echo.manifest",goal:"自检"},projectId:"project-a",contentOutputId:"video-a",attemptId:"production-attempt-0001"});
+    expect(state.created[0]).toMatchObject({attemptId:"production-attempt-0001",inputData:{projectId:"project-a",contentOutputId:"video-a"}});
+    await expect(service.create(ctx,{spec:{taskType:"echo.manifest",goal:"自检"},projectId:"other-project",contentOutputId:"video-a",attemptId:"production-attempt-0002"})).rejects.toThrow();
+    await expect(service.create(ctx,{spec:{taskType:"echo.manifest",goal:"自检"},contentOutputId:"foreign-video",attemptId:"production-attempt-0003"})).rejects.toThrow();
+    expect(state.created).toHaveLength(1);
+  });
   it("validates the spec and creates an exec.* namespaced ai_task", async () => {
     const state = baseState();
     const { service } = makeService(state);

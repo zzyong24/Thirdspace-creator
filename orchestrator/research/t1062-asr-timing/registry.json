@@ -1,0 +1,101 @@
+{
+  "schema": "t1062-asr-timing-observation-plan/v1",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "observedHead": "75131fb489962e50d483fe21baccab39e0350e89",
+  "originDirectory": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005",
+  "wavSHA256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+  "sourceMovSHA256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+  "validSampleCount": 306587,
+  "sampleRate": 16000,
+  "maxCaptureBytes": 134217728,
+  "maxTokens": 448,
+  "maxSourceFrames": 1500,
+  "maxBatch": 1,
+  "modelFiles": [
+    {
+      "path": "Xenova/whisper-small/config.json",
+      "sha256": "5a6429d21d7a3379dd0861b74510f9f7076f32b563bffc9fcb072482d55ab3be",
+      "bytes": 2232
+    },
+    {
+      "path": "Xenova/whisper-small/generation_config.json",
+      "sha256": "0b7407a4e53a677f826e03c75d409e6f830663932bf43dda3b08c5efa2223279",
+      "bytes": 3837
+    },
+    {
+      "path": "Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx",
+      "sha256": "fcfc6100dc7339e7507e10f8b274350be7c4f8d8b575f0293f94cc0e156d6d24",
+      "bytes": 156780950
+    },
+    {
+      "path": "Xenova/whisper-small/onnx/encoder_model_quantized.onnx",
+      "sha256": "969f5ac12974340386bf7a02ea6626003e5e2dee396ffc6ab0eec282bf55ba06",
+      "bytes": 92324809
+    },
+    {
+      "path": "Xenova/whisper-small/preprocessor_config.json",
+      "sha256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d",
+      "bytes": 339
+    },
+    {
+      "path": "Xenova/whisper-small/tokenizer.json",
+      "sha256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566",
+      "bytes": 2480466
+    },
+    {
+      "path": "Xenova/whisper-small/tokenizer_config.json",
+      "sha256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce",
+      "bytes": 282683
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-provider-timing.ts",
+      "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-request.ts",
+      "sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9"
+    },
+    {
+      "path": "ai-worker/scripts/pi-runtime-bundle.mjs",
+      "sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c"
+    },
+    {
+      "path": "contract/src/internal/asset-asr-timing.ts",
+      "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/package.json",
+      "sha256": "0d605ca8d31ccbcff74729534f6f5e2f722d047c534cef6f53fafd22ef0b4c3d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/models.js",
+      "sha256": "1eb492e7d2cc425c27a596639a46a2c61b9aed9e4f8f6ea4c917421189ba503d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+      "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/tokenizers.js",
+      "sha256": "9828ebbdb3fe70cad3a3a4e19f7c423841debf752202e39d0f2a34b594ea3ed1"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/processors.js",
+      "sha256": "06583f94a1b5b672078094c96baeca6dc38d22dedab26ef55835966ec9ec1992"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/utils/tensor.js",
+      "sha256": "ef43bbc7aabe7fa2fdd124e8351dd0e2b977db07276ecc6283fb80d7caac2f8d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/utils/maths.js",
+      "sha256": "5272ec4d9e6f976dd5781bb65917d3381dd46711823fa6cee5acda89b7f7dcf9"
+    }
+  ]
+}

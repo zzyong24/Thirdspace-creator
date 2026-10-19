@@ -1,9 +1,12 @@
 "use client";
+import {useSettingsReturn} from "@/components/shell/settings-return-context";
+import { OwnedDeviceConnection } from "./owned-device-connection";
 
 /** 设置入口负责页签与账号、外观、存储；模型配置由独立区域维护。 */
 
 import { SettingsFormRow } from "./settings-form-row";
-import { RedfoxConfiguration } from "./redfox-configuration";
+import {EncryptedLogReportingCard} from "./encrypted-log-reporting-card";
+import { ReportingConsentCard } from "./reporting-consent-card";
 import { SettingsModelRegion } from "./settings-model-region";
 import { useSettingsMutation } from "./use-settings-mutation";
 
@@ -86,6 +89,7 @@ import { ActivationResetControl } from "./activation-reset-control";
 import { CliAccessCard } from "./cli-access-card";
 import type { SkillItem } from "./skills-data";
 import { SkillsSection } from "./skills-section";
+import { skillsWorkspaceKey } from "./skills-data";
 
 // ---------------------------------------------------------------------------
 // Local appearance persistence (GAP-SET-1 — theme/density made真持久)
@@ -175,7 +179,6 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
   { id: "preferences", label: "偏好", icon: SlidersHorizontal },
   { id: "appearance", label: "外观", icon: Palette },
   { id: "models", label: "模型配置", icon: Cpu },
-  { id: "data-services", label: "数据服务", icon: KeyRound },
   // T-077a:技能管理页签(SPEC 2026-07-03 §1.1)—— 列出 REGISTRY 全部 Skill,查看/定制
   // system/template(settings.prompts.put 热生效)。
   { id: "skills", label: "技能", icon: Sparkles },
@@ -186,7 +189,9 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
 // /settings?highlight=<stepKey>,弹窗据此先切到对应页签、再滚动+高亮那张卡。未列出的
 // stepKey(或缺省 highlight)→ 无副作用(不切页签、不报错)。
 const HIGHLIGHT_TAB: Record<string, string> = {
-  "redfox": "data-services",
+  "redfox": "models",
+  "ai-credits": "models",
+  "assistant-engine": "models",
   "text-model": "models",
   "image-model": "models",
   "video-model": "models",
@@ -222,6 +227,8 @@ export function SettingsDialog({
   channelLinks?: ChannelLinksState;
 }) {
   const router = useRouter();
+  const settingsReturn=useSettingsReturn();
+  const closing=React.useRef(false),entryGeneration=settingsReturn?.generation??0;
   const searchParams = useSearchParams();
   const highlight = searchParams?.get("highlight") ?? null;
   const [open, setOpen] = React.useState(true);
@@ -231,20 +238,14 @@ export function SettingsDialog({
       SETTINGS_DIALOG_TABS[0]!.id,
   );
 
-  // 关闭弹窗:回上一页(回到打开设置之前的位置),没有历史时兜底回首页。
-  const handleOpenChange = React.useCallback(
-    (next: boolean) => {
-      setOpen(next);
-      if(!next) {
-        if(typeof window !== "undefined" && window.history.length > 1) {
-          router.back();
-        } else {
-          router.push("/");
-        }
-      }
-    },
-    [router],
-  );
+  React.useEffect(()=>{closing.current=false;setOpen(true);},[entryGeneration]);
+  // 同一次关闭只消费一次实际站内来源；直达或失效来源明确回首页。
+  const handleOpenChange=React.useCallback((next:boolean)=>{
+    if(next){if(!closing.current)setOpen(true);return;}
+    if(closing.current)return;closing.current=true;setOpen(false);
+    const target=settingsReturn?.consume();
+    router.replace(target?.href??"/",{scroll:false});
+  },[router,settingsReturn]);
 
   // [T-132] ?highlight=<stepKey> 深链落地定位(非逐步 tour,只是把 onboarding「去配置」
   // 的深链滚到对应卡)。先切到该卡所在页签,下一帧找 [data-highlight=<key>] 元素滚到
@@ -278,6 +279,7 @@ export function SettingsDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton
+        onCloseAutoFocus={event=>event.preventDefault()}
         data-slot="settings-dialog"
         className="flex h-[85vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl"
       >
@@ -288,12 +290,12 @@ export function SettingsDialog({
         </div>
 
         {/* 主体:左竖 Tab 栏 + 右内容区 (各自框内滚动). */}
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           {/* 左侧竖向 Tab 栏. */}
           <nav
             data-slot="settings-tabs"
             aria-label="设置分类导航"
-            className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/70 bg-surface-subtle/40 p-2"
+            className="grid w-full shrink-0 grid-cols-2 gap-0.5 overflow-y-auto border-b border-border/70 bg-surface-subtle/40 p-2 sm:grid-cols-3 md:flex md:w-44 md:flex-col md:border-r md:border-b-0"
           >
             {SETTINGS_DIALOG_TABS.map((t) => {
               const TabIcon = t.icon;
@@ -308,7 +310,7 @@ export function SettingsDialog({
                   data-active={active}
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                    "flex min-w-0 items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium whitespace-nowrap transition-colors",
                     active
                       ? "bg-brand-soft text-brand"
                       : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
@@ -324,7 +326,7 @@ export function SettingsDialog({
           {/* 右侧内容区:每个 Tab panel 各自框内滚动 (不是一屏铺满). */}
           <div
             data-slot="settings-panels"
-            className="min-w-0 flex-1 overflow-y-auto px-6 py-5"
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-5"
           >
             <SettingsPanel tabId="account" active={tab}>
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
@@ -359,7 +361,11 @@ export function SettingsDialog({
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
-              <PreferenceSettingsCard viewModel={viewModel} />
+              <div className="flex flex-col gap-card-gap">
+                <PreferenceSettingsCard viewModel={viewModel} />
+                <EncryptedLogReportingCard />
+                <ReportingConsentCard />
+              </div>
             </SettingsPanel>
             <SettingsPanel tabId="appearance" active={tab}>
               <SystemSettingsCard viewModel={viewModel} />
@@ -367,14 +373,11 @@ export function SettingsDialog({
             <SettingsPanel tabId="models" active={tab}>
               <SettingsModelRegion viewModel={viewModel} modelAuthority={modelAuthority} highlight={highlight} />
             </SettingsPanel>
-            <SettingsPanel tabId="data-services" active={tab}>
-              {tab === "data-services" && <div data-highlight="redfox"><RedfoxConfiguration /></div>}
-            </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
               <SkillsSection
                 // [T-513] 切号必须销毁展开行、草稿、pending/error 等本地状态；不能让旧账号
                 // textarea 在新账号目录上复用。服务端读写仍以 RequestContext 做最终归属门。
-                key={skills[0]?.accountId ?? "__no-account-skill-catalog__"}
+                key={skillsWorkspaceKey(skills)}
                 skills={skills}
               />
             </SettingsPanel>
@@ -1002,7 +1005,7 @@ function ActivationStatusCard({
     return (
       <SectionCard
         title="激活"
-        description="桌面端一机一码激活授权"
+        description="查看当前产品授权与账号设备连接"
         action={
           <Badge
             data-slot="activation-status-badge"
@@ -1043,7 +1046,7 @@ function ActivationStatusCard({
   return (
     <SectionCard
       title="激活"
-      description="桌面端一机一码激活授权"
+      description="查看当前产品授权与账号设备连接"
       action={
         <Badge
           data-slot="activation-status-badge"
@@ -1208,6 +1211,7 @@ function ActivationStatusCard({
             ) : null}
           </div>
         </div>
+        <OwnedDeviceConnection visible={activation.status !== "inactive"} />
         <ActivationResetControl visible={activation.status !== "inactive"} />
       </div>
     </SectionCard>

@@ -1,0 +1,217 @@
+diff --git a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx
+index e1bd896bd..51d73f753 100644
+--- a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx
++++ b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx
+@@ -6,13 +6,14 @@ import {
+   DraftChatRequestProvider,
+   useDraftChatRequest,
+ } from "@/features/draft-workbench/draft-chat-request";
+-const route = vi.hoisted(() => ({ path: "/projects/p/article" }));
++const route = vi.hoisted(() => ({ path: "/projects/p/article", extra: null as null | (() => React.ReactNode) }));
+ vi.mock("next/navigation", () => ({ usePathname: () => route.path }));
+ vi.mock("@/features/draft-workbench/draft-chat-rail", () => ({
+   DraftChatRail: ({ projectId }: { projectId: string }) => (
+     <div data-testid="director">
+       project:{projectId}
+       <button>对话动作</button><input aria-label="未发送的编导输入" defaultValue=""/>
++      {route.extra?.()}
+     </div>
+   ),
+ }));
+@@ -23,6 +24,7 @@ beforeEach(() => {
+   window.matchMedia = vi.fn((query) => ({ matches: false, media: query,
+     addEventListener: vi.fn(), removeEventListener: vi.fn() }) as any);
+   route.path = "/projects/p/article";
++  route.extra = null;
+ });
+ afterEach(() => vi.unstubAllGlobals());
+ function measuredContainer(initialWidth:number) {
+@@ -172,6 +174,59 @@ it("窄屏新请求展开本地栏，无整页导航", async () => {
+   expect(await screen.findByRole("dialog", { name: "编导对话" })).toBeVisible();
+ });
+ 
++function narrowKeyboardHost(extra?:()=>React.ReactNode){
++ window.matchMedia=vi.fn(query=>({matches:true,media:query,addEventListener:vi.fn(),removeEventListener:vi.fn()}) as any);
++ // jsdom 无布局；仅补 offsetParent 可见性，不改事件、Portal 或 defaultPrevented。
++ vi.spyOn(HTMLElement.prototype,'offsetParent','get').mockImplementation(function(this:HTMLElement){return this.parentElement;});
++ route.extra=extra??null;
++ const view=render(<StageChatWrapper projectId="p" projectTitle="项目"><p>稿件</p></StageChatWrapper>);
++ fireEvent.click(screen.getByRole('button',{name:'打开编导'}));
++ return {view,outer:screen.getByRole('dialog',{name:'编导对话'})};
++}
++it('T1304 外栏自有Tab及ShiftTab仍在真实首尾循环',()=>{
++ const {outer}=narrowKeyboardHost();
++ const first=screen.getByRole('button',{name:'收起编导栏'}),last=screen.getByRole('textbox',{name:'未发送的编导输入'});
++ last.focus();fireEvent.keyDown(last,{key:'Tab'});expect(first).toHaveFocus();
++ fireEvent.keyDown(first,{key:'Tab',shiftKey:true});expect(last).toHaveFocus();
++ fireEvent.keyDown(outer,{key:'Escape'});expect(screen.queryByRole('dialog',{name:'编导对话'})).toBeNull();
++});
++it.each(['Escape','Tab'])('T1304 子控件实际消费%s后外栏不再次处理',key=>{
++ const {outer}=narrowKeyboardHost(()=> <input aria-label="已有键盘处理" onKeyDown={event=>event.preventDefault()}/>);
++ const input=screen.getByRole('textbox',{name:'已有键盘处理'});input.focus();
++ fireEvent.keyDown(input,{key});
++ expect(screen.queryByRole('dialog',{name:'编导对话'})).toBe(outer);expect(input).toHaveFocus();
++});
++it.each([['dialog','Escape'],['dialog','Tab'],['alertdialog','Escape'],['alertdialog','Tab']] as const)('T1304 inline嵌套%s拥有自己的%s，不由外栏消费',(role,key)=>{
++ const {outer}=narrowKeyboardHost(()=> <section role={role} aria-label="内联任务"><input aria-label="内联任务输入"/></section>);
++ const input=screen.getByRole('textbox',{name:'内联任务输入'});input.focus();
++ const nativeEvent=new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true});
++ fireEvent(input,nativeEvent);
++ expect(nativeEvent.defaultPrevented).toBe(false);
++ expect(screen.queryByRole('dialog',{name:'编导对话'})).toBe(outer);expect(input).toHaveFocus();
++});
++it('T1304 外栏关闭后卸载不回焦点到已失效节点',async()=>{
++ const {view,outer}=narrowKeyboardHost();
++ fireEvent.keyDown(outer,{key:'Escape'});view.unmount();
++ await act(async()=>{await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));});
++ expect(document.activeElement?.isConnected).toBe(true);expect(screen.queryByRole('dialog')).toBeNull();
++});
++it('T1304 关闭后离开阶段再切对象，焦点只落在仍挂载的当前入口',async()=>{
++ const {view,outer}=narrowKeyboardHost();fireEvent.keyDown(outer,{key:'Escape'});
++ route.path='/projects/p';view.rerender(<StageChatWrapper projectId="p" projectTitle="原项目"><p>原稿面</p></StageChatWrapper>);
++ await act(async()=>{await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));});
++ expect(screen.queryByRole('button',{name:'打开编导'})).toBeNull();expect(document.activeElement?.isConnected).toBe(true);
++ route.path='/projects/q/outputs/new-image/image';view.rerender(<StageChatWrapper projectId="q" projectTitle="新项目"><p>新作品</p></StageChatWrapper>);
++ fireEvent.click(screen.getByRole('button',{name:'打开编导'}));expect(screen.getByTestId('director')).toHaveTextContent('project:q');
++ fireEvent.keyDown(screen.getByRole('dialog',{name:'编导对话'}),{key:'Escape'});
++ await waitFor(()=>expect(screen.getByRole('button',{name:'打开编导'})).toHaveFocus(),{timeout:120000});
++});
++it('T1304 宽栏自身Escape与Tab保持原本不接管行为',()=>{
++ measuredContainer(1500);render(<StageChatWrapper projectId="p" projectTitle="项目"><p>稿件</p></StageChatWrapper>);
++ const rail=screen.getByLabelText('编导对话'),input=screen.getByRole('textbox',{name:'未发送的编导输入'});input.focus();
++ fireEvent.keyDown(input,{key:'Escape'});fireEvent.keyDown(input,{key:'Tab'});
++ expect(screen.getByLabelText('编导对话')).toBe(rail);expect(input).toHaveFocus();
++});
++
+ type SessionHandle = { readDraft: () => string };
+ function SessionProbe({ handleRef, mounted, unmounted }: {
+   handleRef: React.RefObject<SessionHandle | null>;
+diff --git a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx
+index 194866b7f..42ea89175 100644
+--- a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx
++++ b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx
+@@ -85,7 +85,18 @@ function StandardStageChatWrapper({
+   const actualRailWidth=Math.min(railWidth,maxAvailableRail);
+   React.useEffect(()=>{if(narrow&&mobileOpen)requestAnimationFrame(()=>mobilePanel.current?.querySelector<HTMLButtonElement>('button')?.focus());},[narrow,mobileOpen]);
+   function closeMobile(){setMobileOpen(false);requestAnimationFrame(()=>mobileTrigger.current?.focus());}
+-  function mobileKeys(event:React.KeyboardEvent<HTMLElement>){if(!narrow)return;if(event.key==='Escape'){event.preventDefault();closeMobile();return;}if(event.key!=='Tab')return;const nodes=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),textarea:not([disabled]),[tabindex="0"]')).filter(node=>node.offsetParent!==null);const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}
++  function mobileKeys(event:React.KeyboardEvent<HTMLElement>){
++    const panel=mobilePanel.current,target=event.target;
++    if(!narrow||event.defaultPrevented||!panel||event.currentTarget!==panel||!panel.isConnected)return;
++    // Portal 仍沿 React 树冒泡；键盘只归当前面板的物理 DOM 与最近 dialog owner。
++    if(!(target instanceof Element)||!panel.contains(target)||target.closest('dialog,[role="dialog"],[role="alertdialog"]')!==panel)return;
++    if(event.key==='Escape'){event.preventDefault();closeMobile();return;}
++    if(event.key!=='Tab')return;
++    const nodes=Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),textarea:not([disabled]),[tabindex="0"]')).filter(node=>node.offsetParent!==null);
++    const first=nodes[0],last=nodes.at(-1);
++    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
++    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
++  }
+ 
+   const draggingRef = React.useRef(false);
+   const dragChangedRef = React.useRef(false);
+diff --git a/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx b/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx
+index fe9aaf7e2..c19068135 100644
+--- a/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx
++++ b/frontend/src/features/copilot/work-candidate-adoption.ui.integration.test.tsx
+@@ -9,10 +9,14 @@ import {ArticleWorkbench} from '@/features/article/article-workbench';
+ import {GraphicPostWorkbench} from '@/features/projects/graphic-post-workbench';
+ import {ChatWorkCreationCard} from './chat-work-creation-card';
+ import {ChatWorkEditorCard} from './chat-work-editor-card';
++import userEvent from '@testing-library/user-event';
++import {StageChatWrapper} from '@/app/(creator)/projects/[projectId]/stage-chat-wrapper';
+ // 真实 Provider/scope/owner/card/review/NoteRelay；只替代 dispatch 与 native surface 外部执行边界。
+-const h=vi.hoisted(()=>({rpc:vi.fn(),native:vi.fn(),refresh:vi.fn()}));
++const h=vi.hoisted(()=>({rpc:vi.fn(),native:vi.fn(),refresh:vi.fn(),path:'/projects/p/article',renderRail:null as null|(()=>React.ReactNode)}));
+ vi.mock('@/lib/http-transport',async original=>({...await original<any>(),fetchCreatorApi:(...args:any[])=>h.rpc(...args)}));
+-vi.mock('next/navigation',()=>({useRouter:()=>({refresh:h.refresh,push:vi.fn(),replace:vi.fn()}),usePathname:()=>'/projects/p/article',useSearchParams:()=>new URLSearchParams()}));
++vi.mock('next/navigation',()=>({useRouter:()=>({refresh:h.refresh,push:vi.fn(),replace:vi.fn()}),usePathname:()=>h.path,useSearchParams:()=>new URLSearchParams()}));
++// 仅替换 rail 装配插槽，真实卡仍在 wrapper 的 React 子树；不替换 Portal/键盘事件路径。
++vi.mock('@/features/draft-workbench/draft-chat-rail',()=>({DraftChatRail:()=>h.renderRail?.()??null}));
+ vi.mock('@/features/reference-editors/native-editor-surface',()=>({NativeEditorSurface:React.forwardRef(function Surface(props:any,ref:any){
+  React.useImperativeHandle(ref,()=>({request:(op:string,input:any)=>h.native(op,input,props.owner)}),[props.owner]);
+  React.useEffect(()=>{props.onReady();},[]);
+@@ -66,7 +70,7 @@ async function preview(owner:Owner){fireEvent.click(within(row(owner)).getByRole
+ 
+ async function openSelection(){const summary=await screen.findByText('本次采纳选择',{selector:'summary'});if(!summary.closest('details')!.open)fireEvent.click(summary);return screen.findByRole('region',{name:'本次采纳选择'});}
+ 
+-beforeEach(()=>{sessionStorage.clear();localStorage.clear();localStorage.setItem('creatoros:current-group','t1303-owned');h.native.mockImplementation(async(op:string)=>op==='load'?{themes:[],images:[],selectedImage:'',pageIndex:0,pageCount:1}:{});h.rpc.mockImplementation((...args:any[])=>fixture.dispatch(...args as [any,any,any]));});
++beforeEach(()=>{h.path='/projects/p/article';h.renderRail=null;sessionStorage.clear();localStorage.clear();localStorage.setItem('creatoros:current-group','t1303-owned');h.native.mockImplementation(async(op:string)=>op==='load'?{themes:[],images:[],selectedImage:'',pageIndex:0,pageCount:1}:{});h.rpc.mockImplementation((...args:any[])=>fixture.dispatch(...args as [any,any,any]));});
+ afterEach(context=>{if(process.env.T1303_DOM_DIR){const dir=resolve(process.env.T1303_DOM_DIR);mkdirSync(dir,{recursive:true});writeFileSync(resolve(dir,context.task.name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g,'_')+'.html'),document.body.innerHTML);}cleanup();vi.clearAllMocks();});
+ for(const owner of ['article','image'] as const){
+  it(`RED-derived-${owner}: 完整owner自动承接→候选preview→原请求采纳`,async()=>{
+@@ -84,6 +88,74 @@ it('RED-lazy: 真实editor卡成功响应丢失→新整树未预览也可发现
+ });
+ 
+ function editorFixture(){const base={kind:'artifact',artifactId:'article-artifact',versionId:'article-base'};const candidate=workEditorCandidate.parse({kind:'work.editor.candidate',schemaVersion:1,target:{schemaVersion:1,projectId:'p',outputId:'article-real',owner:'wechat_article',contentType:'article',savedBase:base,documentDigest:'sha256:'+'a'.repeat(64),selection:{kind:'article',sectionIds:[]}},base,baseDigest:'sha256:'+'a'.repeat(64),candidateDigest:'sha256:'+'b'.repeat(64),summary:'真实编辑候选',candidate:{kind:'article',document:article},changes:[],apply:{operation:'createArticleVersion',outputId:'article-real',body:{expectedCurrentVersionId:'article-base',document:article}},imageRequest:null,failureCode:null,error:null});return candidate;}
++
++function KeyboardRail({children}:{children:React.ReactNode}){
++ const [input,setInput]=React.useState('');
++ return <><input aria-label="未发送的编导输入" value={input} onChange={event=>setInput(event.target.value)}/>{children}</>;
++}
++function keyboardTree(owner:Owner,editorCandidate?:ReturnType<typeof editorFixture>){
++ h.path=owner==='article'?'/projects/p/article':'/projects/p/outputs/image-real/image';
++ h.renderRail=()=> <KeyboardRail>{editorCandidate?<ChatWorkEditorCard result={editorCandidate} toolCallId="tool-real" location={location}/>:<ChatWorkCreationCard result={joint} toolCallId="tool-real" location={location}/>}</KeyboardRail>;
++ return <DraftChatRequestProvider><Witness/><StageChatWrapper projectId="p" projectTitle="项目">{owner==='article'?<ArticleWorkbench projectId="p" projectTitle="项目" accountId={null} initialOutputs={[{id:'article-real',title:'文章'}]} initialOutputId="article-real"/>:<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId={null} initial={fixture.current.image as any}/>}</StageChatWrapper></DraftChatRequestProvider>;
++}
++function keyboardEvidence(name:string,value:unknown){
++ if(!process.env.T1303_DOM_DIR)return;
++ const dir=resolve(process.env.T1303_DOM_DIR);mkdirSync(dir,{recursive:true});
++ writeFileSync(resolve(dir,name+'.json'),JSON.stringify(value,null,2)+'\n');
++ writeFileSync(resolve(dir,name+'.html'),document.body.innerHTML);
++}
++for(const family of ['creation-article','creation-graphic','editor-article'] as const){
++ it(`T1304 RED portal ${family}: 内层Escape保外栏焦点选择与未发送输入`,async()=>{
++  fixture=makeFixture(false);const owner=family==='creation-graphic'?'image':'article';
++  const candidate=family==='editor-article'?editorFixture():undefined;if(candidate)fixture.setCandidate(candidate);
++  vi.spyOn(window,'matchMedia').mockImplementation(query=>({matches:true,media:query,addEventListener:vi.fn(),removeEventListener:vi.fn()}) as any);
++  const before=editorCanonical(fixture.current),user=userEvent.setup();render(keyboardTree(owner,candidate));
++  await user.click(await screen.findByRole('button',{name:'打开编导'},{timeout:120000}));
++  const outer=screen.getByRole('dialog',{name:'编导对话'}),input=within(outer).getByRole('textbox',{name:'未发送的编导输入'});
++  await waitFor(()=>expect(within(outer).getByRole('button',{name:'收起编导栏'})).toHaveFocus(),{timeout:120000});
++  await user.type(input,'还未发送，保留此句');
++  const trigger=candidate?within(outer).getByRole('button',{name:'预览改动'}):within(row(owner)).getByRole('button',{name:'预览候选'});
++  trigger.focus();expect(trigger).toHaveFocus();await user.keyboard('{Enter}');
++  const inner=await screen.findByRole('dialog',{name:candidate?'文章改动预览':owner==='article'?'文章候选预览':'图文候选预览'},{timeout:120000});
++  expect(outer.contains(inner)).toBe(false);
++  await waitFor(()=>expect(within(inner).getByRole('button',{name:owner==='article'?'复制公众号文章':'导出分页 ZIP'})).not.toBeDisabled(),{timeout:120000});
++  await user.click(within(inner).getByText('本次采纳选择',{selector:'summary'}));
++  const choice=within(inner).getByRole('checkbox',{name:/采用候选标题/});await user.click(choice);
++  const checked=(choice as HTMLInputElement).checked;
++  await user.keyboard('{Escape}');
++  keyboardEvidence(family+'-after-escape',{outerConnected:outer.isConnected,innerConnected:inner.isConnected,triggerConnected:trigger.isConnected,activeElement:{tag:document.activeElement?.tagName,text:document.activeElement?.textContent},writes:fixture.writes,checked,inputValue:(input as HTMLInputElement).value});
++  // 目标RED：原实现会把整栏与触发器一并卸载，不能把模块/夹具错当成这条失败。
++  expect(screen.queryByRole('dialog',{name:'编导对话'})).toBe(outer);
++  expect(screen.queryByRole('dialog',{name:candidate?'文章改动预览':owner==='article'?'文章候选预览':'图文候选预览'})).toBeNull();
++  await waitFor(()=>expect(trigger).toHaveFocus(),{timeout:120000});
++  expect(within(outer).getByRole('textbox',{name:'未发送的编导输入'})).toBe(input);expect(input).toHaveValue('还未发送，保留此句');
++  await user.keyboard('{Enter}');
++  const reopened=await screen.findByRole('dialog',{name:candidate?'文章改动预览':owner==='article'?'文章候选预览':'图文候选预览'},{timeout:120000});
++  await user.click(within(reopened).getByText('本次采纳选择',{selector:'summary'}));
++  expect(within(reopened).getByRole('checkbox',{name:/采用候选标题/})).toHaveProperty('checked',checked);
++  await user.keyboard('{Escape}');await waitFor(()=>expect(trigger).toHaveFocus(),{timeout:120000});
++  expect(fixture.writes).toHaveLength(0);expect(editorCanonical(fixture.current)).toBe(before);expect(sessionStorage.length).toBe(0);
++  await user.keyboard('{Escape}');await waitFor(()=>expect(screen.queryByRole('dialog',{name:'编导对话'})).toBeNull(),{timeout:120000});
++  await waitFor(()=>expect(screen.getByRole('button',{name:'打开编导'})).toHaveFocus(),{timeout:120000});
++ });
++ it(`T1304 portal Tab ${family}: 正反向由真实Radix内层循环`,async()=>{
++  fixture=makeFixture(false);const owner=family==='creation-graphic'?'image':'article',candidate=family==='editor-article'?editorFixture():undefined;if(candidate)fixture.setCandidate(candidate);
++  vi.spyOn(window,'matchMedia').mockImplementation(query=>({matches:true,media:query,addEventListener:vi.fn(),removeEventListener:vi.fn()}) as any);
++  const user=userEvent.setup(),before=editorCanonical(fixture.current);render(keyboardTree(owner,candidate));
++  await user.click(screen.getByRole('button',{name:'打开编导'}));const outer=screen.getByRole('dialog',{name:'编导对话'});
++  await waitFor(()=>expect(within(outer).getByRole('button',{name:'收起编导栏'})).toHaveFocus(),{timeout:120000});
++  const trigger=candidate?within(outer).getByRole('button',{name:'预览改动'}):within(row(owner)).getByRole('button',{name:'预览候选'});trigger.focus();expect(trigger).toHaveFocus();
++  keyboardEvidence('tab-'+family+'-before-enter',{focusOnTrigger:document.activeElement===trigger,outerConnected:outer.isConnected});
++  await user.keyboard('{Enter}');
++  keyboardEvidence('tab-'+family+'-after-enter',{outerConnected:outer.isConnected,dialogs:Array.from(document.querySelectorAll('[role="dialog"]')).map(node=>({name:node.getAttribute('aria-label'),labelledBy:node.getAttribute('aria-labelledby')}))});
++  const inner=await screen.findByRole('dialog',{name:candidate?'文章改动预览':owner==='article'?'文章候选预览':'图文候选预览'},{timeout:120000});
++  const summary=await within(inner).findByText('本次采纳选择',{selector:'summary'},{timeout:120000});
++  const close=within(inner).getByRole('button',{name:'关闭'});close.focus();await user.tab();expect(inner.contains(document.activeElement)).toBe(true);expect(outer.contains(document.activeElement)).toBe(false);
++  summary.focus();await user.tab({shift:true});expect(inner.contains(document.activeElement)).toBe(true);expect(outer.contains(document.activeElement)).toBe(false);
++  await user.click(close);await waitFor(()=>expect(trigger).toHaveFocus(),{timeout:120000});expect(screen.getByRole('dialog',{name:'编导对话'})).toBe(outer);
++  expect(fixture.writes).toHaveLength(0);expect(editorCanonical(fixture.current)).toBe(before);
++ });
++}
+ async function previewEditor(){fireEvent.click(screen.getByRole('button',{name:'预览改动'}));await screen.findByRole('dialog');await waitFor(()=>expect(within(screen.getByRole('dialog')).getByRole('button',{name:'复制公众号文章'})).not.toBeDisabled());fireEvent.click(screen.getByRole('button',{name:'关闭'}));await waitFor(()=>expect(screen.getByRole('button',{name:'采纳到当前作品'})).not.toBeDisabled());}
+ 
+ it('RED-increment-editor-confirmed: editor成功后新整树未preview核精确版本不预取source',async()=>{

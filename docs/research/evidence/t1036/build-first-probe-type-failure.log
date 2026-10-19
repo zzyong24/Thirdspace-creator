@@ -1,0 +1,22 @@
+▲ Next.js 16.2.9 (webpack)
+- Experiments (use with caution):
+  ✓ externalDir
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.1s
+  Running TypeScript ...
+
+  We detected TypeScript in your project and created a tsconfig.json file for you.
+Failed to type check.
+
+./app/probe.tsx:5:97
+Type error: Object literal may only specify known properties, and 'disableMove' does not exist in type 'TimelineAction'.
+
+  [90m3 |[0m ...[32mcy/react-timeline-editor'[0m;
+  [90m4 |[0m ...[32mengine'[0m;
+[31m[1m>[0m [90m5 |[0m ...d:[32m'video-1'[0m,start:[35m0[0m,end:[35m32[0m,effectId:[32m'plain'[0m,disableMove:[36mtrue[0m,disableResize:[36mtrue[0m}]},{id:[32m'...[0m
+  [90m  |[0m                                                [31m[1m^[0m
+  [90m6 |[0m ...
+  [90m7 |[0m ...ted,setSelected]=useState([32m'broll-1'[0m);[36mconst[0m [time,setTime]=useState([35m10[0m);[36mconst[0m [start,setS...
+  [90m8 |[0m ...rame=useRef<[33mHTMLIFrameElement[0m>([36mnull[0m);[36mconst[0m drawAt=useRef(performance.now());[36mconst[0m effect...
+Next.js build worker exited with code: 1 and signal: null

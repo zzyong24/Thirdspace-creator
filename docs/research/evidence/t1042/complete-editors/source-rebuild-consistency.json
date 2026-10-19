@@ -1,0 +1,24 @@
+{
+  "result": "PASS",
+  "scope": "Vite generated file names and bytes, before packaging README",
+  "sourceScan": "tailwindcss source(none); @source ../ from src/app/globals.css",
+  "builds": [
+    "existing dist present",
+    "repeat existing dist",
+    "independent path clean (same installed lock dependency tree)"
+  ],
+  "files": {
+    "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+    "THIRD_PARTY_LICENSES.json": "338bb99042530ddfd459018b129270e9b69388e38b055795d29143610542e2a2",
+    "THIRD_PARTY_LICENSES.txt": "ce641ac40a6b6f80f49e2adde74bc049fbc011c99ab71139ce3bc64c3cfffe51",
+    "assets/index-BWk2A5SJ.css": "69213a74bc128f480ced6d8242f75b4cd6d3e2a7d935911271e66e3f1f95173a",
+    "assets/index-CDMRpP8y.js": "779b74b841453d679d5e3505d525080598ac28c98b64a56f9768400408b2eec6",
+    "assets/opencut_wasm_bg-BWSypKWK.wasm": "e7720e0d3fc46e06fd8aa10aa2c1a29121722e3c1b1d909945ed72a35581ec67",
+    "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+    "index.html": "84b3de69637d88692b7f7e4ebb9aadc33ea073edccf5734419a3f4550f754c63"
+  },
+  "previousRootVerifiedJsCss": [
+    "index-CDMRpP8y.js",
+    "index-BWk2A5SJ.css"
+  ]
+}

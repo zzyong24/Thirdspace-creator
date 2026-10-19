@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "4-build"               # 3.9.0 v3 五阶段映射；具体切片仍由 BACKLOG 唯一排序
   frontier: "4-build"                    # 既有产品持续 BUILD，SHIP 仍受真实安装版/生产 E2E 门约束
-  updated_at: "2026-08-11"
+  updated_at: "2026-10-19"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -63,8 +63,13 @@ stages:
     gate_status: "pass"
     confirmation_required: false
     artifacts:
+      - existing: "docs/features/t1274-chatcut-editing-redesign.md"
+      - existing: "docs/features/t1274-chatcut-editing-redesign/layout.html"
       - existing: "frontend/src"
-    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。"
+      - existing: "docs/features/t1075-knowledge-redesign/RESEARCH.md"
+      - existing: "docs/features/t1075-knowledge-redesign/style-explorer.html"
+      - existing: "docs/verification/t1075/DESIGN_REVIEW.md"
+    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。T-1075仅完成研究和A/B方向小样，候选待用户选择；未进入生产实现，未独立视觉评分，不继承本行历史passed为新设计PASS。T-1274统一剪辑IA及Markdown候选范围已获用户确认，SPEC独评55a3f14a70a5；BUILD进行中。真实媒体、窄屏操作与CLI/MCP专项已有证据，整体AC/Gate未完成；独立视觉末轮8.2，具体限度见t1274/RESULT。"
 
   "4-build":
     status: "draft"
@@ -72,6 +77,21 @@ stages:
     gate_status: "not-run"
     confirmation_required: false
     artifacts:
+      - existing: "docs/features/t1354-official-account-binding-completion.md (独审R2事实补录REV:e7684a0a668b；受控导航RED/worker131GREEN与最终721两窗真实strict PASS:98f1613ba0d2；原1726首因UNKNOWN，非真人扫码)"
+      - existing: "docs/features/t1355-binding-dialog-completion.md (独审REV:cebfffea8899；82组件、局部视觉来源映射及最终721两窗真实strict PASS:fff9f5e92b3b；真实提交后自动回位/原run恢复保，不冒已安装)"
+      - existing: "docs/features/t1356-bound-platform-data-visibility.md (R3原规范及REV:34c4a0a3a50f保；d8ea两视口各28点及最终721真实strict PASS:f09f084b6785；typed/SQL降级恢复123/真实200分证，作品入口另T1362)"
+      - existing: "docs/features/t1361-pending-filter-workspace-refresh.md (独审REV:2d84a61178d6；真void/Suspense RED→55GREEN与最终721两窗真实strict PASS:0cbb9f0efcf7；原A200晚于首B且最终真实B范围完成，旧失败保)"
+      - existing: "docs/features/t1362-account-detail-workspace-data.md (用户已采集作品入口；R1/R2独审、真实4业务RED与URL残留RED→68/57分轮GREEN；正式04两窗28点/独立60PNG及最终721 strict PASS:df3766632db6，实体不伪造)"
+      - existing: "docs/features/t1363-wechat-video-report-entry-diagnosis.md (原prepare/report入口失败与受控晚到缺陷分证；R2独审、真实120312ms RED→27公共GREEN/139/38/183保护及最终六源SHA闭合；原1499未知/未重发，真人采集仍未恢复)"
+      - existing: "docs/verification/t1350/FRONTEND_VALIDATION.md (T-1350独审1afc240894ea；真实RED/96GREEN及3b公共两视口与strict通过，PASS:d4f53bce217b；原失败保)"
+      - existing: "docs/verification/t1348/FRONTEND_VALIDATION.md (T-1348独审48204769400b；53GREEN/真实两稿保护与3b strict02通过，PASS:8e89f8d4e355；strict01断连UNKNOWN另保)"
+      - existing: "docs/verification/t1345/FRONTEND_VALIDATION.md (T-1345独审094b725a8c9a；240局部/受控宿主六run/3b真实零组首屏与单层管理/strict通过，PASS:ba353eb53958；不冒真人扫码)"
+      - existing: "docs/verification/t1346/FRONTEND_VALIDATION.md (T-1346独审1d234f9e4af4；3b两视口实际晚到ABA/详情出口/公开页/strict通过，PASS:9c5c35009d43)"
+      - existing: "docs/verification/t1347/FRONTEND_VALIDATION.md (T-1347独审c36ecd428d21；真实私有日报八族、单卡/0/null/最小/暗色/200与真实键盘3b strict通过，PASS:239fe5624fde)"
+      - existing: "docs/features/t1074-remove-topic-grid.md"
+      - existing: "docs/verification/t1074/REPORT.md"
+      - existing: "docs/features/t1022-account-group-workspace.md (原版增补页面约束独立复核PASS[REV:2f179f8d9380]；历史归属迁移待确认，未进入生产实现)"
+      - existing: "docs/features/t1022-account-group-workspace/style-explorer.html (现状与用户指定的原版增补预览；A/B退出候选，非产品UI验收PASS)"
       - existing: "backend/src"
       - existing: "frontend/src"
       - existing: "ai-worker"
@@ -89,7 +109,7 @@ stages:
       - existing: "orchestrator/GATE-T767-BUILD.md (同版本重审同步与改稿后重新盲预测证据)"
       - existing: "docs/superpowers/specs/2026-08-11-creatoros-meta-skill.md (T-770 PASS[REV:74f673ffb555])"
       - existing: "orchestrator/GATE-T770-BUILD.md (低误触发元 Skill、真实模型 15/15 与聚焦门禁证据)"
-    notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。T-726 与 T-730 均已完成各自业务实现与真实页面验收，但共享工作区 watched_paths 仍存在并行任务漂移，保持 draft 且不伪造 strict receipt。"
+    notes: "当前真实阶段；任务状态与顺序以 BACKLOG.md 为唯一真相。本批T1354/1355/1356/1361/1362五项721严格门真实执行完成，T1357后台/契约及T1363受控公共链完成；产品eb19124ed；T1359已将同产品树e676本机安装/连续120.399秒观察与14项清旧完成，视频号唯一新281失败由T1364继续诊断。最终全局44ERROR按32+7+2+3分证，旧T1353和本批T1360保留，不冒全局通过；旧3b五任务与40ERROR原证据保。T-916 已修复历史 SPEC review receipt 漂移并通过 reviewctl 审计，但更广泛的工程对账任务仍在进行；BUILD 保持 draft，不把回执修复冒充发布完成。"
 
   "5-ship":
     status: "draft"
@@ -97,8 +117,11 @@ stages:
     gate_status: "not-run"
     confirmation_required: true
     artifacts:
+      - existing: "docs/verification/t1364/control/INTEGRATED_CONTROLLED_RESULT.json (受控导航能力独审与精确27变更/28清单整合；原public04六例与最终错误两负族分别保，真实诊断未执行；T1365 exact2d构建396.891秒/正式安装/连续120.430秒25点/14路径清旧已实际完成；T1364另获单次真实只读导航授权，结果待Root看图判断，未签恢复)"
+      - existing: "docs/verification/t1359/REPORT.md (七产品任务与五frontend strict原件保；e676固定入口构建426.822秒/正式安装/连续120.399秒观察/14项精确清旧完成；真实视频281失败分证，T1364未完成，未冒全平台恢复)"
+      - existing: "docs/features/t1352-current-candidate-local-package-install.md (T-1352用户既有本机安装授权/Root确认，五产品strict后已start；唯一受验产品3b，固定入口产包/正式App安装及128.875秒同源启动通过，13旧缓存+旧App备份已精确清理；docs/verification/t1352/REPORT.md)"
       - existing: "orchestrator/GATE-T575-BUILD.md"
-    notes: "Windows 真机、安装版和跨系统生产 E2E 未全部闭环，禁止宣称发布完成。"
+    notes: "前批本机macOS 3b安装与精确清旧保原；本批T1359承接已有本机安装授权，e676独立构建/安装/精确清旧已完成，不复用旧3b结果；原生像素/dirty/采集close仍UNKNOWN，真实视频号281失败由T1364继续诊断，全局44ERROR保留。Windows真机和跨系统生产E2E未全部闭环，SHIP全局保持draft，禁止宣称全平台发布完成。"
 
   "00-intake":
     status: "passed"
@@ -655,6 +678,28 @@ stages:
       仍被 T-635/T-639/T-638/T-637/T-634 的既有过期回执阻断，已在 Gate 诚实记录。
 
 
+  "T-1238-4-build":
+    status: "passed"
+    gate: "T1238 scoped tests + public Codex + settings journey + types + boundary + orphan"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/features/t1238-codex-unified-text-image-engine.md"
+      - existing: "docs/verification/t1238/COVERAGE.md"
+      - existing: "docs/verification/t1238/FINAL_REVIEW.md"
+      - existing: "docs/verification/t1238/PENDING_GUARD_REVIEW.md"
+      - existing: "docs/verification/t1238/ui-final.json"
+      - existing: "docs/verification/t1238/FRONTEND_REPORT.md"
+      - existing: "docs/verification/t1238/GATES.md"
+      - existing: "docs/verification/t1238/public-native-ledger.json"
+    notes: >
+      DEC-T1238-001确认文本、图片理解与内置生图统一范围；独评合同REV6b70a2a85595。
+      已真实执行Codex结构化文本、无独立key生图与参考编辑、原组采纳下载及设置双窗操作。
+      未签所有功能官方账户逐族真机或安装版发布；图片理解真实公共链路已成功；恢复原回合独立26项、整合31项、设置10项通过。
+      原全量32ERROR中的本任务评审链与相关夹具回归已实际修复，LED054/058/059/061完整组通过。
+      超时范围外22条静态失败、缺隔离PG/真实打包资源及控制面欠债由T1204保留，不能伪称全局全绿。
+      最终完整25ERROR包含已单项修验的记录日期；其余24项原清单保留，不代签完整24ERROR回执。
+
 stage_defaults:
   valid_statuses:
     - "not-started"
@@ -825,3 +870,40 @@ open_items:
     owner: "user+agent"
     revisit_trigger: "Before release: user authorizes a real New API model call, or explicitly accepts the external E2E risk."
     status: "open"
+
+# T-1003 局部规格不改变全局历史阶段结论。
+agent_workbench_change:
+  task_id: T-1003
+  spec: docs/features/t1003-agent-workbench.md
+  status: passed
+  gate_status: pass
+  review: docs/features/t1003-agent-workbench.review.md
+  implementation_status: not-started
+  acceptance_status: not-started
+  global_reconcile: "fail: 233 existing errors; docs/verification/t1003-reconcile.log; T-916 tracks governance drift"
+  notes: "用户已确认多步执行与NomiFun迁移方向；本轮仅SPEC和任务拆分，独立规格评审PASS（hash回执见review文件），不是实现验收通过。"
+
+chatcut_editing_change:
+  task_id: T-1274
+  spec: docs/features/t1274-chatcut-editing-redesign.md
+  review: docs/features/t1274-chatcut-editing-redesign.review.md
+  user_confirmation: "用户：整体上是认可的；DEC-T1274"
+  implementation_status: in-progress
+  acceptance_status: in-progress
+  gate_status: fail
+  evidence: docs/verification/t1274/RESULT.md
+  notes: "T1274集成b6f133456/a76563099/f131f3344；真实完整媒体旅程、390独立操作及三项复验、Fit控件、CLI/MCP各自read/propose/apply/同ID重放与错组拒绝通过。视觉6.5/7.7/8.2，生产build通过；真实模型/ASR准备完成待执行，全输入族与完整对账待闭合，保持in-progress/fail，不替换安装。"
+
+script_first_workspaces_change:
+  task_id: T-1296
+  spec: docs/features/t1296-script-first-content-workspaces.md
+  review: docs/features/t1296-script-first-content-workspaces.T-1296.review.md
+  user_confirmation: "脚本是原稿，各平台成稿独立调整；DEC-129601"
+  implementation_status: passed
+  acceptance_status: passed
+  gate_status: pass
+  evidence: docs/verification/t1298/T1296_FRONTEND_VALIDATION.md
+  live_acceptance_task: T-1298
+  live_acceptance_evidence: docs/verification/t1298/FRONTEND_VALIDATION.md
+  global_reconcile: "fail: 原完整33ERROR/0WARN保留；新增4项已通过实际回归及当前receipt静态核销账，其余29项身份与既有基线相同，由T1292跟踪；未宣称新完整门全绿。"
+  notes: "当前8dbccad6a两项公共旅程与taskctl正式门通过，覆盖脚本承接、平台独立保存、全高助手采纳/刷新及MP4交付；T1298另完成真实Codex四轮重组/校正及正式门再次四轮，脚本与另一平台不变。T1294当前10项公共回归及正式门通过。生图/ASR、安装版仍未验，未替换用户App；图文第二页视觉未单独检查，全文由精确版本逐字核验；旧slider键盘问题保留T1297。派生progress入口仍被既有T1111 unsafe write_set阻断，canonical三任务完成以BACKLOG/taskctl事件为准，不伪造派生完成。"

@@ -136,6 +136,41 @@ describe("真实模型调度宿主",()=>{
     }finally{release();await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
 
+  it("空队列启动后两个槽不会永久退出一个，后来任务仍受双槽限额并行",async()=>{
+    let emptyClaims=0;let sawEmpty!:()=>void;
+    const initialEmpty=new Promise<void>(resolve=>{sawEmpty=resolve;});
+    const observedDb=new Proxy(db,{get(target,property){
+      if(property==="transaction")return async (...args:Parameters<Db["transaction"]>)=>{
+        const result=await target.transaction(...args);
+        if(result===null&&++emptyClaims===2)sawEmpty();
+        return result;
+      };
+      return Reflect.get(target,property,target);
+    }});
+    const responses:import("node:http").ServerResponse[]=[];let live=0,peak=0,closed=0;
+    const server=createServer((req,res)=>{req.resume();responses.push(res);live++;peak=Math.max(peak,live);res.on("close",()=>{live--;closed++;});res.writeHead(200,{"content-type":"text/event-stream"});res.write(': waiting\n\n');});
+    await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
+    const host=dispatcher((server.address() as {port:number}).port,observedDb),persistent=createPersistentTaskService(db);
+    try{
+      host.start();await initialEmpty;
+      const first=await prepare("empty-pool-first");
+      await vi.waitFor(()=>expect(responses).toHaveLength(1),{timeout:4000});
+      const second=await prepare("empty-pool-second");
+      const third=await prepare("empty-pool-third");
+      await vi.waitFor(()=>expect(responses).toHaveLength(2),{timeout:2500});
+      expect((await persistent.get(ctx,first.executionTaskId)).status).toBe("running");
+      expect((await persistent.get(ctx,second.executionTaskId)).status).toBe("running");
+      expect((await persistent.get(ctx,third.executionTaskId)).status).toBe("queued");
+      expect(peak).toBe(2);
+      await persistent.command(ctx,{taskIds:[first.executionTaskId],command:"cancel",idempotencyKey:"empty-pool-cancel"});
+      await vi.waitFor(()=>expect(responses).toHaveLength(3),{timeout:4000});
+      expect((await persistent.get(ctx,second.executionTaskId)).status).toBe("running");
+      expect((await persistent.get(ctx,first.executionTaskId)).status).toBe("cancelled");
+      expect(peak).toBe(2);
+      await host.stop();await vi.waitFor(()=>expect(closed).toBe(3));
+    }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+  },15000);
+
   it("停止发生在截止时间读取期间，也不会再启动模型请求",async()=>{
     const mapped=await prepare("stop-before-start");
     const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));

@@ -1,0 +1,215 @@
+{
+  "execution": {
+    "exitCode": 1,
+    "durationSeconds": 122.566
+  },
+  "selectedGroupNotReached": true,
+  "platformSidebarChainNotReached": true,
+  "failurePhase": "public-account-page",
+  "readRequestsAtOriginalFailure": [
+    {
+      "id": 45,
+      "operation": "accountGroups.list",
+      "startedAt": 1792388987907,
+      "observedForMsAtFailure": 120103,
+      "headersBeforeFailure": [
+        {
+          "id": 45,
+          "event": "headers",
+          "at": 1792388987915,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {},
+          "status": 403
+        }
+      ],
+      "terminalBeforeFailure": [
+        {
+          "id": 45,
+          "event": "finished",
+          "at": 1792388987920,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {}
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "operation": "accounts.bindingCapabilities",
+      "startedAt": 1792388987908,
+      "observedForMsAtFailure": 120102,
+      "headersBeforeFailure": [
+        {
+          "id": 46,
+          "event": "headers",
+          "at": 1792388987917,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {},
+          "status": 403
+        }
+      ],
+      "terminalBeforeFailure": [
+        {
+          "id": 46,
+          "event": "finished",
+          "at": 1792388987920,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {}
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "operation": "accountGroups.list",
+      "startedAt": 1792388987908,
+      "observedForMsAtFailure": 120102,
+      "headersBeforeFailure": [
+        {
+          "id": 47,
+          "event": "headers",
+          "at": 1792388987918,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {},
+          "status": 403
+        }
+      ],
+      "terminalBeforeFailure": [
+        {
+          "id": 47,
+          "event": "finished",
+          "at": 1792388987920,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {}
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "operation": "accounts.list",
+      "startedAt": 1792388987909,
+      "observedForMsAtFailure": 120101,
+      "headersBeforeFailure": [
+        {
+          "id": 48,
+          "event": "headers",
+          "at": 1792388987919,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {},
+          "status": 403
+        }
+      ],
+      "terminalBeforeFailure": [
+        {
+          "id": 48,
+          "event": "finished",
+          "at": 1792388987921,
+          "phase": "public-account-page",
+          "origin": "http://127.0.0.1:50617",
+          "path": "/api/v1/dispatch",
+          "query": {}
+        }
+      ]
+    }
+  ],
+  "document200AndFinished": true,
+  "blocked": [
+    {
+      "method": "POST",
+      "path": "/api/v1/local/observability",
+      "operation": null,
+      "reason": "not-declared-read"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/local/client-config",
+      "operation": null,
+      "reason": "not-declared-read"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/local/client-config",
+      "operation": null,
+      "reason": "not-declared-read"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/local/client-config",
+      "operation": null,
+      "reason": "not-declared-read"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/local/client-config",
+      "operation": null,
+      "reason": "not-declared-read"
+    }
+  ],
+  "pageErrors": [],
+  "rawRoot": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-installed-ui-igyHjE",
+  "rawTrace": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-installed-ui-igyHjE/trace.zip",
+    "sha256": "2ac6b3728b989589c645d79ae66a5c1dd9240bb344d6d0438f8b4a20894a31c7"
+  },
+  "executedObserverSnapshot": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-installed-ui-igyHjE/EXECUTED_OBSERVER.mjs",
+    "sha256": "3bc5b0684e797382745732533dc9fe86f7da1a9bbe24596fab4f8471168bd2b9"
+  },
+  "boundary": "公开HTTP四个read原请求已迅速403并finished；120秒是目标菜单项缺失等待。统一local-application拒答不区分具体guard分支；原始图/trace/身份正文仅本次私有根，不据此判用户卡死首因。visiblePages空数组只证无可见data-page匹配，不冒整页空白。",
+  "public403Errors": [
+    {
+      "status": 403,
+      "path": "/api/v1/dispatch",
+      "responseResourceSha1": "d19d8ee7f3c258a70606b3d2b9547f8a7f34253e.json",
+      "errorCode": null,
+      "responseTopLevelKeys": [
+        "error"
+      ]
+    },
+    {
+      "status": 403,
+      "path": "/api/v1/dispatch",
+      "responseResourceSha1": "d19d8ee7f3c258a70606b3d2b9547f8a7f34253e.json",
+      "errorCode": null,
+      "responseTopLevelKeys": [
+        "error"
+      ]
+    },
+    {
+      "status": 403,
+      "path": "/api/v1/dispatch",
+      "responseResourceSha1": "d19d8ee7f3c258a70606b3d2b9547f8a7f34253e.json",
+      "errorCode": null,
+      "responseTopLevelKeys": [
+        "error"
+      ]
+    },
+    {
+      "status": 403,
+      "path": "/api/v1/dispatch",
+      "responseResourceSha1": "d19d8ee7f3c258a70606b3d2b9547f8a7f34253e.json",
+      "errorCode": null,
+      "responseTopLevelKeys": [
+        "error"
+      ]
+    }
+  ],
+  "interpretationCorrection": "先前仅筛有operation的started事件而未关联ID，错误称pending；完整原件证四read均403且finished约8–12ms，120s是菜单目标缺失等待。明确撤回pending/初始化推断，不按其改产品。",
+  "priorIncorrectBoundary": {
+    "path": "docs/verification/t1369/INSTALLED_UI_FAILURE_INTERPRETATION_BEFORE_BOUNDARY_CORRECTION.json",
+    "sha256": "b17ecfed4c72c445525995c35cbdb0ad83995cb1057f65c4505312996d638922",
+    "correction": "保原boundary写法错误，当前按完整requestId关联纠正。"
+  }
+}

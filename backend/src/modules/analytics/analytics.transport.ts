@@ -1,4 +1,5 @@
 import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
+import {ENDPOINTS as analyticsOperations} from '@creatoros/contract';
 import {
   AuthenticationError,
   UnsupportedOperationError,
@@ -19,6 +20,9 @@ import type { MetricSnapshotResource } from "./analytics.schema";
 // PERSISTED_OPS from ANALYTICS_OP_IDS (adding the module = registering it).
 
 export const ANALYTICS_OP_IDS = [
+  "analytics.comments.diagnose",
+  "analytics.comments.failures.list",
+  "analytics.comments.retry",
   "analytics.publications.get",
   "analytics.traffic.get",
   "analytics.traffic.refresh",
@@ -31,6 +35,7 @@ function toSnapshotResource(row: MetricSnapshotRow): MetricSnapshotResource {
   return {
     id: row.id,
     publicationId: row.publicationId,
+    accountId:row.accountId,groupId:row.groupId??null,
     ingestionRunId: row.ingestionRunId ?? null,
     capturedAt: row.capturedAt,
     source: row.source,
@@ -51,6 +56,8 @@ function paginationFrom(query: unknown): { page: number; pageSize: number } {
 export function createAnalyticsTransport(
   serviceFactory: () => AnalyticsService,
   traffic?: {getProject:import('./traffic.service').TrafficService['getProject'];refresh:(ctx:RequestContext,projectId:string)=>Promise<{queued:number;jobRunId:string|null;aiTaskId:string|null}>},
+  comments?:Pick<import('./sync-state.service').PublicationSyncService,'listCommentFailures'|'retryComments'>,
+  diagnosis?:ReturnType<typeof import('./comment-diagnosis.service').createCommentDiagnosisService>,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -59,7 +66,7 @@ export function createAnalyticsTransport(
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
-      const { params, query } = (input ?? {}) as Input;
+      const { params, query, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as {
         publicationId?: string;
         projectId?: string;
@@ -67,6 +74,18 @@ export function createAnalyticsTransport(
       const { page, pageSize } = paginationFrom(query);
 
       switch (endpoint.id) {
+        case 'analytics.comments.diagnose':
+          if(!diagnosis)throw new Error('评论诊断服务尚未接入');
+          return {data:await diagnosis.diagnose(ctx,body),meta:{requestId}};
+        case 'analytics.comments.failures.list':{
+          if(!comments)throw new Error('评论重试服务尚未接入');
+          const paging=analyticsOperations.listCommentFailures.query.parse(query??{});
+          const result=await comments.listCommentFailures(ctx,paging);
+          return {data:result.rows,meta:{requestId,...paging,total:result.total}};
+        }
+        case 'analytics.comments.retry':
+          if(!comments)throw new Error('评论重试服务尚未接入');
+          return {data:await comments.retryComments(ctx,analyticsOperations.retryComments.body.parse(body)),meta:{requestId}};
         case 'analytics.traffic.get':
           if(!traffic)throw new Error('流量来源服务尚未接入');
           return {data:await traffic.getProject(ctx,p.projectId??''),meta:{requestId}};

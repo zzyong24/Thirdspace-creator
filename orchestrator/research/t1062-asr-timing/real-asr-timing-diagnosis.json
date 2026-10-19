@@ -1,0 +1,305 @@
+{
+  "schema": "t1062-bounded-readonly-real-asr-timing-diagnosis/v1",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "75131fb489962e50d483fe21baccab39e0350e89",
+  "auditMode": "read_existing_json_source_and_wav_header_only",
+  "newAsrRuns": 0,
+  "newDecodes": 0,
+  "modelOrNetworkCalls": 0,
+  "repositoryWrites": 0,
+  "strictTimingSuccesses": 0,
+  "strictTimingCases": 4,
+  "observations": [
+    {
+      "directory": "/tmp/creatoros-t1062-asr-preflight",
+      "mode": "segment",
+      "wavHeader": {
+        "sampleRate": 16000,
+        "channels": 1,
+        "sampleWidthBytes": 2,
+        "validSampleCount": 228939,
+        "durationRational": "228939/16000"
+      },
+      "driverDecodedSampleCount": 228939,
+      "sampleCountMatchesWavHeader": true,
+      "textLength": 62,
+      "providerChunkCount": 2,
+      "driverTimingProvided": false,
+      "pipelineOptionsAfterCall": null,
+      "rawEndViolations": [
+        {
+          "index": 1,
+          "text": "恩,这一句我重新说,先把内容讲清楚,再把它做成一组图片,最后检查每一张图是否连管。",
+          "timestampSeconds": [
+            4.6,
+            14.6
+          ],
+          "startSample": 73600,
+          "endSample": 233600,
+          "excessSamples": 4661,
+          "excessSeconds": "4661/16000"
+        }
+      ]
+    },
+    {
+      "directory": "/tmp/creatoros-t1062-asr-preflight",
+      "mode": "word",
+      "wavHeader": {
+        "sampleRate": 16000,
+        "channels": 1,
+        "sampleWidthBytes": 2,
+        "validSampleCount": 228939,
+        "durationRational": "228939/16000"
+      },
+      "driverDecodedSampleCount": 228939,
+      "sampleCountMatchesWavHeader": true,
+      "textLength": 62,
+      "providerChunkCount": 50,
+      "driverTimingProvided": false,
+      "pipelineOptionsAfterCall": null,
+      "rawEndViolations": [
+        {
+          "index": 49,
+          "text": "管。",
+          "timestampSeconds": [
+            13.96,
+            17.14
+          ],
+          "startSample": 223360,
+          "endSample": 274240,
+          "excessSamples": 45301,
+          "excessSeconds": "45301/16000"
+        }
+      ]
+    },
+    {
+      "directory": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005",
+      "mode": "segment",
+      "wavHeader": {
+        "sampleRate": 16000,
+        "channels": 1,
+        "sampleWidthBytes": 2,
+        "validSampleCount": 306587,
+        "durationRational": "306587/16000"
+      },
+      "driverDecodedSampleCount": 306587,
+      "sampleCountMatchesWavHeader": true,
+      "textLength": 85,
+      "providerChunkCount": 2,
+      "driverTimingProvided": false,
+      "pipelineOptionsAfterCall": {
+        "return_timestamps": true,
+        "chunk_length_s": 30,
+        "stride_length_s": 5,
+        "forced_decoder_ids": [
+          [
+            1,
+            50260
+          ],
+          [
+            2,
+            50359
+          ]
+        ],
+        "num_frames": 1916
+      },
+      "rawEndViolations": [
+        {
+          "index": 1,
+          "text": "下午我們會核對日期核名稱,確認沒有遺漏之後,再保存這一份整理結果。謝謝大家。",
+          "timestampSeconds": [
+            10.56,
+            19.56
+          ],
+          "startSample": 168960,
+          "endSample": 312960,
+          "excessSamples": 6373,
+          "excessSeconds": "6373/16000"
+        }
+      ]
+    },
+    {
+      "directory": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005",
+      "mode": "word",
+      "wavHeader": {
+        "sampleRate": 16000,
+        "channels": 1,
+        "sampleWidthBytes": 2,
+        "validSampleCount": 306587,
+        "durationRational": "306587/16000"
+      },
+      "driverDecodedSampleCount": 306587,
+      "sampleCountMatchesWavHeader": true,
+      "textLength": 85,
+      "providerChunkCount": 65,
+      "driverTimingProvided": false,
+      "pipelineOptionsAfterCall": {
+        "return_timestamps": "word",
+        "chunk_length_s": 30,
+        "stride_length_s": 5,
+        "return_token_timestamps": true,
+        "forced_decoder_ids": [
+          [
+            1,
+            50260
+          ],
+          [
+            2,
+            50359
+          ]
+        ],
+        "num_frames": 1916
+      },
+      "rawEndViolations": [
+        {
+          "index": 64,
+          "text": "大家。",
+          "timestampSeconds": [
+            18.36,
+            19.4
+          ],
+          "startSample": 293760,
+          "endSample": 310400,
+          "excessSamples": 3813,
+          "excessSeconds": "3813/16000"
+        }
+      ]
+    }
+  ],
+  "determinations": {
+    "rawProviderPipelineOutOfBounds": "confirmed_before_application_mapping",
+    "applicationExactSampleConversionBug": "not_observed; timestamps multiply exactly to integer samples",
+    "inputSamplingRateOrCountMismatch": "not_observed; mono16k PCM header matches driver counts in both artifacts",
+    "sourceClockMismatch": "not_observed_for_alternate native PCM start_pts=0/time_base=1/16000; full source-to-editor mapping remains unverified",
+    "wordCapabilityDisabled": "ruled_out_in_observed_alternate_call; return_token_timestamps true and alignment_heads present",
+    "dependencyWordFrameCropMismatch": "strong_static_candidate; pipeline counts 10ms hop frames, DTW crop consumes them as 20ms cross-attention positions; runtime tensor dimensions not recorded",
+    "soleRootCause": "unknown; segment timestamps come from generated timestamp tokens and are also out of bounds"
+  },
+  "unknowns": [
+    "actual decoder sequences/timestamp tokens and cross-attention tensor dimensions were not preserved",
+    "exact word DTW influence of feature padding and frame crop is not measured",
+    "no same-input dependency correction replay or acoustic alignment accuracy check exists",
+    "no real public group/execution/receipt/native editor timing handoff was exercised by these direct probes"
+  ],
+  "nextMinimumExperiment": {
+    "runNow": false,
+    "sameImmutableInputRequired": true,
+    "preferredSource": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/audio.wav",
+    "firstStep": "Review model stride/output metadata and add read-only instrumentation at model.generate/DTW/tokenizer; verify frame units before selecting a fix",
+    "boundedInferenceIfLaterAuthorized": "one same-input word inference capturing sequences, cross-attentions/dims, num_frames, token_timestamps and generated timestamp tokens; then replay captured tensors/tokens offline through current and physically justified crop without another decode/model call",
+    "acceptance": "all actual raw units pass unchanged strict bounds/order/id contract on same source; retain negative modes; no clamp/round/silence/audio extension/sample selection",
+    "segmentLimit": "word frame crop does not automatically repair generated segment token overshoot; retain segment negative and diagnose separately"
+  },
+  "safeDegradation": {
+    "allowed": "preserve text and original media, review_only/manual listen and explicit source in/out editing or lawful whole-clip rough cut",
+    "notAllowed": "claim verified word/segment timing, infer cuts or pause_gap from character length, clamp or trim timestamps, add silence to make bounds pass",
+    "coverage": "manual/whole-clip availability only; automatic word cut/pause/subtitle synchronization acceptance remains missing"
+  },
+  "evidence": [
+    {
+      "path": "/tmp/creatoros-t1062-asr-preflight/audio.wav",
+      "sha256": "d1bef350b9ec1ff9da234e61269e440574397a9da2ed9120e617eefde2753446",
+      "bytes": 457956
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-preflight/source.mov",
+      "sha256": "2375aacd786e3c64eb47a94229821bae6ef94f688377c4fccd4f3dbe0b283def",
+      "bytes": 470680
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-preflight/probe.mts",
+      "sha256": "052b5b875924372b145a024540a8226e43a3d1bb467242da582e7ab950d04e8a",
+      "bytes": 1665
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-preflight/segment-result.json",
+      "sha256": "f364e6fb5cd0ba4d525099094f3a18e9a79d055b84f083608b1ac582e1d9e699",
+      "bytes": 966
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-preflight/word-result.json",
+      "sha256": "0af1d30589779bc8e4cb98a98d6aea928be051a2fb33ea3a3eb4bade1aafbfbe",
+      "bytes": 5828
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/audio.wav",
+      "sha256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+      "bytes": 613252
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/source.mov",
+      "sha256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+      "bytes": 613859
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/probe.mts",
+      "sha256": "28db6ad41ddf83ff056ab98f8eae5c680c913fcae3801b0c01ad21579024fbc9",
+      "bytes": 5264
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-result.json",
+      "sha256": "4f0c79eed7b62b4ec18a8e0678d2f48708c85f7a877f2cdd75dd21d6a43634aa",
+      "bytes": 3434
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-result.json",
+      "sha256": "37a8031436109396494df19ad02fed789ccc97bf17b298b58449c0051e5a712c",
+      "bytes": 23059
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-raw-provider.json",
+      "sha256": "35a8f63e8fba7b7f914f8db19bd0b1f92bd664f53786f1ff6e9422ce6bd25099",
+      "bytes": 585
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-raw-provider.json",
+      "sha256": "95c84e54199db8e8df63ec35409981dce0bcd92d769487792454e487a5edc44d",
+      "bytes": 2880
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52",
+      "bytes": 32482
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/asr-provider-timing.ts",
+      "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62",
+      "bytes": 2659
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/internal/asset-asr-timing.ts",
+      "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568",
+      "bytes": 6010
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+      "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031",
+      "bytes": 136931
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/src/models.js",
+      "sha256": "1eb492e7d2cc425c27a596639a46a2c61b9aed9e4f8f6ea4c917421189ba503d",
+      "bytes": 246793
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/src/tokenizers.js",
+      "sha256": "9828ebbdb3fe70cad3a3a4e19f7c423841debf752202e39d0f2a34b594ea3ed1",
+      "bytes": 168126
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/src/processors.js",
+      "sha256": "06583f94a1b5b672078094c96baeca6dc38d22dedab26ef55835966ec9ec1992",
+      "bytes": 87108
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/src/utils/tensor.js",
+      "sha256": "ef43bbc7aabe7fa2fdd124e8351dd0e2b977db07276ecc6283fb80d7caac2f8d",
+      "bytes": 39936
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/package.json",
+      "sha256": "0d605ca8d31ccbcff74729534f6f5e2f722d047c534cef6f53fafd22ef0b4c3d",
+      "bytes": 2506
+    }
+  ]
+}

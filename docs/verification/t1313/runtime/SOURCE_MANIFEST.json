@@ -1,0 +1,39 @@
+{
+  "baseHead": "9e596ec1d18b9a9cbad940c11dc50e7de20d2465",
+  "productionSources": [
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 19412,
+      "sha256": "0757799b32bf814add665ecab5719de21f546cc585808fb83e7d8083bea681e5"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 2079,
+      "sha256": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.ts",
+      "bytes": 3497,
+      "sha256": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016"
+    }
+  ],
+  "tests": [
+    {
+      "path": "backend/src/modules/review/work-reviews.service.test.ts",
+      "bytes": 43433,
+      "sha256": "5649c7b2e3becb2a57c6a8aadbdc6aa0a9f2aa580951655412effc6704e0273e"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 26477,
+      "sha256": "3f4cfb4b76141b2666f91f5c42247f72ae68205282dffcdfa9b5db6194767a33"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/legacy-work-review-preparation.persistence-client.test.ts",
+      "bytes": 22246,
+      "sha256": "d86a6b37832d5f27c393c886541068d4a61654f26fed908bbd32bd9313c86afd"
+    }
+  ],
+  "freeze": "deadline-v6/SNAPSHOT.json",
+  "drift": []
+}

@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {
   topicReadReservationSchema,
   topicReadReceiptSchema,
@@ -87,7 +88,7 @@ export function createTopicWorkerReads(deps: {
           Accept:
             "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
         },
-        signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
+        signal: AbortSignal.any([signal, AbortSignal.timeout(executionTimeoutMs())]),
       });
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get("location");
@@ -220,6 +221,7 @@ export function createTopicWorkerReads(deps: {
           return receipt.kind === "search"
             ? { kind: "search", results: receipt.data.results }
             : { kind: receipt.kind, ...receipt.data };
+        if (target.allowPartial && ["NEEDS_LOGIN","CAPTCHA","PERMISSION","BROWSER_RUNTIME_UNAVAILABLE"].includes(receipt.error.code)) return {kind:"error",code:receipt.error.code};
         if (
           ["NEEDS_LOGIN", "CAPTCHA", "BROWSER_RUNTIME_UNAVAILABLE"].includes(
             receipt.error.code,
@@ -236,7 +238,7 @@ export function createTopicWorkerReads(deps: {
           !receipt.error.retryable ||
           ordinal === 2
         )
-          return null;
+          return target.allowPartial ? {kind:"error",code:receipt.error.code} : null;
       }
       return null;
     },

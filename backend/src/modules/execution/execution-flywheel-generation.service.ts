@@ -1,8 +1,10 @@
+import {frozenExecutionEngine,codexExecutionSpec,readFrozenModelRoute} from '@creatoros/contract/execution-worker';
+import {createExecutionCodexCallService} from './execution-codex-call.service';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {z} from 'zod';
 import {eq,executionTasks,type Db} from '@creatoros/backend';
-import {workerPortInputSchemas,structuredGenerationInputSchema,workerModelSpecSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
+import {workerPortInputSchemas,structuredGenerationInputSchema,executionModelSpecSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
 import {flywheelOutputSchema} from '@creatoros/ai-worker';
 import {createExecutionLeaseService} from './execution-lease.service';
@@ -19,7 +21,7 @@ const json=(value:unknown)=>z.json().parse(JSON.parse(JSON.stringify(value)));
 export type FlywheelCapability='benchmark.teardown'|'topic.attribution'|'favorites.triage'|'knowledge.distill';
 export interface FlywheelGenerationDeps {
  entryPath:string|(()=>string);
- resolveModelSpec(ctx:RequestContext,capability:FlywheelCapability):Promise<unknown>;
+ resolveModelSpec(ctx:RequestContext,capability:FlywheelCapability,owner:{ref:ExecutionRef;mode:'structured'}):Promise<unknown>;
  budget:Parameters<typeof createExecutionCallLedgerService>[1]["budget"];
  now?:()=>string;
 }
@@ -28,12 +30,18 @@ export function createExecutionFlywheelGenerationService(db:Db,deps:FlywheelGene
  const leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,deps),calls=createExecutionWorkerCallPorts(db,deps),outcomes=createExecutionWorkerOutcomeService(db,deps),supervision=createClaimedWorkerSupervision({entryPath:deps.entryPath});
  return {
  runWorker:supervision.run,
+ async assertConfiguration(ref:ExecutionRef,capability:FlywheelCapability){
+  const bound=await leases.withLease(ref,'admission',scope=>bindScheduledFlywheel(scope));
+  const allowed:Record<string,readonly FlywheelCapability[]>={benchmark:['benchmark.teardown'],'self.detail':['topic.attribution'],'self.metrics':['topic.attribution'],favorites:['favorites.triage','knowledge.distill']};
+  if(!allowed[bound.input.sourceKind]?.includes(capability))throw new Error('飞轮能力超出原调度范围');
+  return executionModelSpecSchema.parse(!readFrozenModelRoute(bound.task.payload,'structured',capability)&&frozenExecutionEngine(bound.task.payload)==='codex'?codexExecutionSpec():await deps.resolveModelSpec(bound.context,capability,{ref,mode:'structured'}));
+ },
  async generate(ref:ExecutionRef,capability:FlywheelCapability,resourceId:string,facets:Record<string,string|undefined>){
   const verify=()=>leases.withLease(ref,'admission',scope=>bindScheduledFlywheel(scope));
   const bound=await verify(),stageKey=`${capability==='benchmark.teardown'?'benchmark':capability}:${resourceId}`,operationKey=`flywheel:${hash(stageKey)}`,outputSchema=flywheelOutputSchema(capability);
   const allowed:Record<string,readonly FlywheelCapability[]>={benchmark:['benchmark.teardown'],'self.detail':['topic.attribution'],'self.metrics':['topic.attribution'],favorites:['favorites.triage','knowledge.distill']};
   if(!allowed[bound.input.sourceKind]?.includes(capability))throw new Error('飞轮能力超出原调度范围');
-  const spec=workerModelSpecSchema.parse(await deps.resolveModelSpec(bound.context,capability));
+  const spec=executionModelSpecSchema.parse(!readFrozenModelRoute(bound.task.payload,'structured',capability)&&frozenExecutionEngine(bound.task.payload)==='codex'?codexExecutionSpec():await deps.resolveModelSpec(bound.context,capability,{ref,mode:'structured'}));
   const identity=json(prepareExecutionModelIdentity(capability,spec).identity);
   const saved=frozenSchema.parse(await leases.withLease(ref,'admission',async scope=>{
    const {payload,input}=await bindScheduledFlywheel(scope),stages=(payload.flywheelStages??{}) as Record<string,unknown>;
@@ -50,6 +58,7 @@ export function createExecutionFlywheelGenerationService(db:Db,deps:FlywheelGene
    await supervision.run({ref,deadlineAt:budget.deadlineAt === null ? null : Date.parse(budget.deadlineAt),verify,isClosed:()=>closed,close:()=>{closed=true;},hasDurableOutcome:()=>result!==undefined||persisted!==undefined,ports:{
     async validate(current,kind){if(closed||!isDeepStrictEqual(current,ref))throw new Error('FLYWHEEL_EXECUTION_CLOSED');await leases.withLease(ref,kind,scope=>bindScheduledFlywheel(scope));},
     async invoke(_current,port,raw){
+      if(port==='bindCodexCall'||port==='readCodexCall'||port==='recordCodexToolCall')return createExecutionCodexCallService(db).invoke(_current,port,raw);
      if(port==='readTaskContext'){await verify();return saved.input;}
      if(port==='resolveModelCredential'){await verify();if(workerPortInputSchemas.resolveModelCredential.parse(raw).capability!==capability)throw new Error('FLYWHEEL_CAPABILITY_INVALID');return spec;}
      if(port==='heartbeat'){await verify();return {ok:true};}

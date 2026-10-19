@@ -1,3 +1,4 @@
+import { topicRecommendationContext } from "@creatoros/contract";
 import { z } from "zod";
 const optionalText = z.string().optional();
 const count = z.number().int().nonnegative();
@@ -6,6 +7,7 @@ const ratio = z.number().min(0).max(1);
 export const topicGenerateFrozenSchema = z
   .object({
     version: z.literal(1),
+    audienceTaskContext: topicRecommendationContext.optional(),
     mode: z.literal("daily").optional(),
     basis: z.enum(["positioning", "comments", "knowledge", "trend"]),
     projectId: z.string().min(1).nullable(),

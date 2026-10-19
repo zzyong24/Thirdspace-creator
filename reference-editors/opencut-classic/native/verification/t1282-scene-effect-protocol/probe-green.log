@@ -1,0 +1,165 @@
+[
+  {
+    "name": "no-effects",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "3b416c76a8623ac4f3bf0b00eca15e1c8f79cc2668b1eb5237b9d0316872010f",
+    "redPixel": [
+      233,
+      35,
+      55,
+      255
+    ],
+    "edgePixel": [
+      233,
+      35,
+      55,
+      255
+    ]
+  },
+  {
+    "name": "layer-effects",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "13dfa03f97f0138c918f5896feacfab4b3de550cd13a8df5715190cb708ebea9",
+    "redPixel": [
+      233,
+      35,
+      55,
+      255
+    ],
+    "edgePixel": [
+      231,
+      35,
+      57,
+      255
+    ]
+  },
+  {
+    "name": "scene-empty",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "3b416c76a8623ac4f3bf0b00eca15e1c8f79cc2668b1eb5237b9d0316872010f",
+    "redPixel": [
+      233,
+      35,
+      55,
+      255
+    ],
+    "edgePixel": [
+      233,
+      35,
+      55,
+      255
+    ]
+  },
+  {
+    "name": "scene-single-group",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "13dfa03f97f0138c918f5896feacfab4b3de550cd13a8df5715190cb708ebea9",
+    "redPixel": [
+      233,
+      35,
+      55,
+      255
+    ],
+    "edgePixel": [
+      231,
+      35,
+      57,
+      255
+    ]
+  },
+  {
+    "name": "scene-multiple-groups",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "65625e41efeb9048b46813de140c4be63a7e7918bfdb1485287baa392b14242d",
+    "redPixel": [
+      235,
+      47,
+      52,
+      255
+    ],
+    "edgePixel": [
+      235,
+      48,
+      52,
+      255
+    ]
+  },
+  {
+    "name": "mixed-layers-scenes-mask-transform-opacity-blend",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "e831fe86b9311d951607e1a52eed72b92f99cc3229672832b069374755c2b6bb",
+    "redPixel": [
+      228,
+      43,
+      52,
+      255
+    ],
+    "edgePixel": [
+      223,
+      47,
+      55,
+      255
+    ]
+  },
+  {
+    "name": "mixed-reordered-control",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "7d89f5f5a23f1ef91d681c581b252537a4f460c375d30b7d44bc3e8433c47e32",
+    "redPixel": [
+      228,
+      43,
+      52,
+      255
+    ],
+    "edgePixel": [
+      223,
+      47,
+      55,
+      255
+    ]
+  },
+  {
+    "name": "empty-scene-preserves-pixels",
+    "status": "pass",
+    "expectedEqual": true,
+    "actualEqual": true
+  },
+  {
+    "name": "single-scene-matches-layer",
+    "status": "pass",
+    "expectedEqual": true,
+    "actualEqual": true
+  },
+  {
+    "name": "blur-changes-pixels",
+    "status": "pass",
+    "expectedEqual": false,
+    "actualEqual": false
+  },
+  {
+    "name": "multiple-groups-change-pixels",
+    "status": "pass",
+    "expectedEqual": false,
+    "actualEqual": false
+  },
+  {
+    "name": "mixed-item-order-is-observable",
+    "status": "pass",
+    "expectedEqual": false,
+    "actualEqual": false
+  }
+]

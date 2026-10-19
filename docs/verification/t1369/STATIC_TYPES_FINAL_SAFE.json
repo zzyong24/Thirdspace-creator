@@ -1,0 +1,6 @@
+{
+  "command": "pnpm --dir frontend exec tsc --noEmit --pretty false --incremental false",
+  "exitCode": 0,
+  "durationSeconds": 45.089925415988546,
+  "production04Executed": false
+}

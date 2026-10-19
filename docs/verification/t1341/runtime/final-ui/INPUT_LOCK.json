@@ -1,0 +1,39 @@
+{
+  "state": "PREPARATION_EMPTY_ASIDE_FIX_NOT_EXECUTION_BINDING",
+  "confirmed": false,
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/observe.cjs",
+      "bytes": 16235,
+      "sha256": "69547938d094c06a5309456ed7494f9dea92aa4340198cf5ab418033df5965fd"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/run.py",
+      "bytes": 7795,
+      "sha256": "c0eab60d7ce161669870a1b5442beebeb1d68163e55877871ee482bf26a829f6"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/command.py",
+      "bytes": 4461,
+      "sha256": "572aa38f88a0a993b332d8ae88e667649e5e035c2c43087c0094f98f70ff6533"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1341/runtime/final-ui/PLAN.json",
+      "bytes": 2409,
+      "sha256": "a0836ccd5600156bf538bb1ddf48580272e789b6c98401a716e9457e494f2743"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1313/final-package-combined/runner/contract.cjs",
+      "bytes": 1133,
+      "sha256": "df2d0dc9755b12a7ddecad92894a1390a1b66b06244e20860b3ffe6b6130873c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/runtime/implementation/working/final-u08-u10/runner/register-owned.cjs",
+      "bytes": 810,
+      "sha256": "c2c15db52dc6b52c5546b5dd3a1b2f9cc8c7f44af2e15144567645d6b2956ca1"
+    }
+  ],
+  "links": [],
+  "absentPaths": [],
+  "limit": "不含session/用户认证/数据库；实际package13launch/deps/实例/fixture/合同需C新包绑定FINAL_UI_INPUTS，当前0浏览器/模型/业务。"
+}

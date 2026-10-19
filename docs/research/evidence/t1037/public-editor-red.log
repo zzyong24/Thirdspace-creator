@@ -1,0 +1,73 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor.integration.test.ts (5 tests | 5 failed) 4812ms
+     × 纯读不创建工程，保存→公共读回→重新装配，未知字段与另一作品保持独立 1365ms
+     × 同请求重试返回原回执，即使最新稿已变化；异 payload 拒绝 864ms
+     × 并发同一前值只成功一次，历史分页与恢复追加新版本 845ms
+     × 双账号、非视频读写拒绝，重试也重新鉴权 829ms
+     × 局部应用与回执共享版本，通用 put 不能覆盖新版工程 909ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 纯读不创建工程，保存→公共读回→重新装配，未知字段与另一作品保持独立
+TypeError: s.getEditor is not a function
+ ❯ src/modules/production/production-editor.integration.test.ts:28:39
+     26| describe("T-1037 公共制作工程与持久版本",()=>{
+     27|   it("纯读不创建工程，保存→公共读回→重新装配，未知字段与另一作品保持独立",async()=>{
+     28|     const s=service();expect((await s.getEditor(ctx,"video-a")).state)…
+       |                                       ^
+     29|     expect(await s.readProduction(ctx,"video-a")).toBeNull();
+     30|     const result=await s.saveEditor(ctx,"video-a",save("request-save-0…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 同请求重试返回原回执，即使最新稿已变化；异 payload 拒绝
+TypeError: s.saveEditor is not a function
+ ❯ src/modules/production/production-editor.integration.test.ts:38:41
+     36|   });
+     37|   it("同请求重试返回原回执，即使最新稿已变化；异 payload 拒绝",async()=>{
+     38|     const s=service(), original=await s.saveEditor(ctx,"video-a",save(…
+       |                                         ^
+     39|     await s.saveEditor(ctx,"video-a",{...save("request-save-0002",1),p…
+     40|     expect(await s.saveEditor(ctx,"video-a",save("request-save-0001"))…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 并发同一前值只成功一次，历史分页与恢复追加新版本
+TypeError: s.saveEditor is not a function
+ ❯ src/modules/production/production-editor.integration.test.ts:45:31
+     43|   });
+     44|   it("并发同一前值只成功一次，历史分页与恢复追加新版本",async()=>{
+     45|     const s=service();await s.saveEditor(ctx,"video-a",save("request-s…
+       |                               ^
+     46|     const results=await Promise.allSettled([s.saveEditor(ctx,"video-a"…
+     47|     expect(results.filter(r=>r.status==="fulfilled")).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 双账号、非视频读写拒绝，重试也重新鉴权
+TypeError: s.saveEditor is not a function
+ ❯ src/modules/production/production-editor.integration.test.ts:53:31
+     51|   });
+     52|   it("双账号、非视频读写拒绝，重试也重新鉴权",async()=>{
+     53|     const s=service();await s.saveEditor(ctx,"video-a",save("request-s…
+       |                               ^
+     54|     await expect(s.getEditor({...ctx,accountId:"account-b"},"video-a")…
+     55|     await expect(s.saveEditor({...ctx,accountId:"account-b"},"video-a"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 局部应用与回执共享版本，通用 put 不能覆盖新版工程
+TypeError: s.saveEditor is not a function
+ ❯ src/modules/production/production-editor.integration.test.ts:60:40
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  18:32:27
+   Duration  6.06s (transform 577ms, setup 0ms, import 1.09s, tests 4.81s, environment 0ms)
+

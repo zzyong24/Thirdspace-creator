@@ -1,0 +1,147 @@
+--- a/frontend/src/server/workbench-file-recovery.test.ts
++++ b/frontend/src/server/workbench-file-recovery.test.ts
+@@ -35,16 +35,17 @@
+ afterAll(async()=>close?.());
+ const hash=(v:string)=>createHash("sha256").update(v).digest("hex");
+ const budget={maxCalls:20,maxTokens:100000,deadlineMs:60000};
+-async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="paused",pauseBeforeClaim=false,priorSameParameters=false){
++async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="paused",pauseBeforeClaim=false,priorSameParameters=false,initialBudget?:typeof budget){
+  const id=randomUUID(),ctx={userId:id,accountId:id,requestId:id,source:"user" as const};
+  const cap=nativeFileCapabilities.find(c=>c.name==="files.edit")!;
+  const setup=await prepareChatToolDefinitions({"files.edit":defineWorkbenchChatTool(cap,async()=>{throw Error("unused");})},{workbenchCapabilities:[cap]});
+  const input=chatWorkerInputSchema.parse({kind:"chat.run",executionEngine:"pi",operationKey:id,capability:"copilot.assist",userId:id,accountId:id,conversationId:id,sourceMessageId:id,
+   system:"修复文件",messages:[{role:"user",content:"修复报告"}],maxSteps:8,maxOutputTokens:128,tools:setup.definitions,workbenchCapabilities:[cap],workbenchPlatform:"macos"});
+- const tasks=createPersistentTaskService(db),task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{aiTaskId:id,modelInput:input}});
++ const tasks=createPersistentTaskService(db),task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,...(initialBudget?{executionBudget:initialBudget}:{}),payload:{aiTaskId:id,modelInput:input}});
+  await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:"copilot.assist",status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:new Date().toISOString(),inputData:{modelInputDigest:chatInputDigest(input)}});
++ const initialBirth=initialBudget?(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]:undefined;
+  const claim=(await tasks.claimTask({taskId:task.id,workerId:id}))!,ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+- const ledger=createExecutionCallLedgerService(db,{budget}),model=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:10});
++ const ledger=createExecutionCallLedgerService(db,{budget:initialBudget??budget}),model=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:10});
+  await ledger.start(ref,model.id);
+  await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:5},providerResult:{content:[...(priorSameParameters?[{type:"tool-call",toolCallId:"prior",toolName:"files_edit",input:JSON.stringify({path:"报告.html",content:"完整目标🙂",expectedVersion:3})}]:[]),{type:"tool-call",toolCallId:"write",toolName:"files_edit",input:JSON.stringify({path:"报告.html",content:"完整目标🙂",expectedVersion:3})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:3},outputTokens:{total:2}},warnings:[]}});
+  const write=vi.fn(async()=>{if(priorSameParameters)return {status:"ok" as const,summary:"同参旧操作已确认",evidence:[],error:null,continuation:null,sideEffect:"committed" as const};throw Error("reply lost after Native write");});
+@@ -72,7 +73,7 @@
+   const resolveTools=createChatWorkbenchCapabilityHost(host,r=>leases.withLease(r,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async()=>{});
+   tools=await resolveTools(ctx,input,ref,new AbortController().signal);
+  }
+- const ports=createExecutionChatToolPorts(db,{budget,tools});
++ const ports=createExecutionChatToolPorts(db,{budget:initialBudget??budget,tools});
+  if(priorSameParameters){const prior=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"prior"});await ports.start(ref,{callId:prior.callId});await ports.execute(ref,{callId:prior.callId});}
+  const call=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"write"});await ports.start(ref,{callId:call.callId});
+  if(pauseBeforeClaim)await tasks.command(ctx,{taskIds:[task.id],command:"pause",idempotencyKey:randomUUID()});
+@@ -94,7 +95,7 @@
+  const calls=()=>db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
+  const readTask=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
+  expect((await calls()).find(row=>row.id===call.callId)).toMatchObject({status:"unknown",toolExecutionClaimId:pauseBeforeClaim?null:expect.any(String)});
+- return {ctx,task,ref,calls,readTask,callId:call.callId,write,ports,tasks,native};
++ return {ctx,task,ref,calls,readTask,callId:call.callId,write,ports,tasks,native,initialBirth};
+ }
+ function committed(q:FileReceiptQuery){
+  const scopeKey=[q.scope.userId,q.scope.accountId,q.scope.taskId].map(hash).join(":");
+@@ -476,3 +477,105 @@
+  await expect(service.reconcile(f.ctx,f.task.id,f.callId,{signal:aborted.signal,shouldStop:()=>true})).rejects.toThrow("before readonly admission");
+  expect(read).toHaveBeenCalledTimes(1);expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(taskBefore);
+ },1800000);
++
++
++// T1252: 新出生有限预算；原60秒journal八HTTP用例保持原数据与body，不给旧任务续期。
++it.skipIf(process.platform!=="darwin"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE)("T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",async()=>{
++ const dir=await mkdtemp(join(tmpdir(),"t1252-native-born-public-")),ready=join(dir,"ready"),done=join(dir,"done"),root=join(dir,"tasks");await mkdir(root);
++ const binary=resolve(process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE!);
++ // 实际main-lock b88二进制/原ignore filter由私有工具SHA、实际list和本轮父归属守门；不运行cargo或App。
++ const child=spawn(binary,["ipc::tests::external_node_file_journal_fixture","--exact","--ignored","--nocapture"],{env:{...process.env,
++  CREATOROS_FILES_E2E_NODE_PID:String(process.pid),CREATOROS_FILES_E2E_READY_FILE:ready,CREATOROS_FILES_E2E_DONE_FILE:done,CREATOROS_FILES_E2E_TASK_ROOT:root},stdio:["ignore","pipe","pipe"]});
++ let log="";child.stdout.on("data",chunk=>log+=chunk);child.stderr.on("data",chunk=>log+=chunk);
++ const exited=new Promise<number|null>((resolve,reject)=>{child.once("error",reject);child.once("close",resolve);});
++ const observeExit=async()=>{let timer:ReturnType<typeof setTimeout>|undefined;try{return await Promise.race([exited,new Promise<never>((_resolve,reject)=>{timer=setTimeout(()=>reject(Error("OWNED_NATIVE_FINITE_CLOSE_UNKNOWN")),120000);})]);}finally{clearTimeout(timer);}};
++ let cli:Awaited<ReturnType<typeof startLoopbackCliFixture>>|undefined,queueTimer:ReturnType<typeof setTimeout>|undefined;
++ try{
++  let socket="";await vi.waitFor(async()=>{expect(child.exitCode,log).toBeNull();socket=await readFile(ready,"utf8");expect(socket).toBeTruthy();},{timeout:120000,interval:25});
++  const finiteBornBudget={maxCalls:20,maxTokens:100000,deadlineMs:36000000};
++  const f=await fixture(socket,"paused",false,false,finiteBornBudget),before=await f.calls(),taskBefore=await f.readTask();
++  expect(f.initialBirth).toMatchObject({executionBudget:finiteBornBudget,deadlineAt:expect.any(String)});
++  const originalDeadline=f.initialBirth!.deadlineAt!;
++  expect(Date.parse(originalDeadline)-Date.parse(f.initialBirth!.createdAt)).toBe(finiteBornBudget.deadlineMs);
++  expect(taskBefore).toMatchObject({id:f.task.id,status:"paused",deadlineAt:originalDeadline,executionBudget:finiteBornBudget});
++  expect(before).toHaveLength(2);expect(before[1]).toMatchObject({id:f.callId,status:"unknown",totalTokens:null,resultText:null,toolExecutionClaimId:expect.any(String)});
++  const recovery=createNativeFileRecoveryService(db,{platform:"darwin",desktop:true,socketPath:socket});
++  shared.transport=createWorkbenchPublicTransport({reconcileFile:recovery.reconcile} as Parameters<typeof createWorkbenchPublicTransport>[0]);shared.ctx=f.ctx;
++  shared.gateway=createCliInvocationService({db,masterKey:Buffer.alloc(32,7),now:()=>new Date().toISOString(),nextId:()=>randomUUID()});
++  let queues=0;const queueEvents:Array<{taskId:string;callId:string;requestId:string;deadlineAt:string;startedMs:number;endedMs:number}> = [];
++  const key=`slow-original-${randomUUID()}`;
++  cli=await startLoopbackCliFixture({accessToken:"owned-slow-native",post:async request=>{
++   if(queues++===0){
++    expect(request.headers.get("x-account-id")).toBe(f.ctx.accountId);expect(request.headers.get("x-idempotency-key")).toBe(key);
++    expect(await request.clone().json()).toEqual({id:"workbench.files.reconcile",input:{params:{taskId:f.task.id},body:{operationId:f.callId}}});
++    expect(await f.readTask()).toEqual(taskBefore);expect(await f.calls()).toEqual(before);
++    const startedMs=performance.now();await new Promise<void>(resolve=>{queueTimer=setTimeout(resolve,310000);});
++    // 只有自然队列结束才交原POST；没有提前写业务成功、改DB deadline或假Native回执。
++    expect(await f.readTask()).toEqual(taskBefore);expect(await f.calls()).toEqual(before);
++    queueEvents.push({taskId:f.task.id,callId:f.callId,requestId:key,deadlineAt:originalDeadline,startedMs,endedMs:performance.now()});
++   }
++   return POST(request);
++  }});
++  const args=["call","workbench.files.reconcile","--input",JSON.stringify({params:{taskId:f.task.id},body:{operationId:f.callId}}),"--account",f.ctx.accountId,"--apply","--idempotency-key",key];
++  const started=performance.now(),result=await cli.run(args) as {data:unknown};
++  expect(performance.now()-started).toBeGreaterThan(300000);expect(queueEvents).toHaveLength(1);expect(queueEvents[0]!.endedMs-queueEvents[0]!.startedMs).toBeGreaterThanOrEqual(310000);
++  expect(result).toMatchObject({data:{taskId:f.task.id,operationId:f.callId,status:"settled",verificationKind:"native_receipt",version:4,hash:`sha256:${hash("完整目标🙂")}`,size:Buffer.byteLength("完整目标🙂")}});
++  expect(await f.readTask()).toEqual(taskBefore);const after=await f.calls();expect(after).toHaveLength(2);expect(after[0]).toEqual(before[0]);
++  expect(after[1]).toMatchObject({id:f.callId,status:"settled",operationKey:before[1]!.operationKey,inputDigest:before[1]!.inputDigest,toolExecutionClaimId:before[1]!.toolExecutionClaimId,totalTokens:0});
++  const receipt=JSON.parse(after[1]!.resultText!);expect(receipt.output.data.recoveryEvidence.originalSnapshot).toMatchObject({status:"unknown",resultText:null,toolExecutionClaimId:before[1]!.toolExecutionClaimId});
++  expect(await cli.run(args)).toEqual(result);expect(await f.calls()).toEqual(after);
++  const foreign=[...args];foreign[5]="foreign-native-slow-account";foreign[8]=`foreign-${key}`;await expect(cli.run(foreign)).rejects.toMatchObject({status:404});
++  expect(cli.requests()).toBe(3);expect(queues).toBe(3);expect(await f.calls()).toEqual(after);expect((await f.readTask()).deadlineAt).toBe(originalDeadline);
++  await writeFile(done,"done");expect(await observeExit(),log).toBe(0);
++  await f.tasks.command(f.ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:`resume-${key}`});
++  const resumed=(await f.tasks.claimTask({taskId:f.task.id,workerId:"slow-native-owned-resume"}))!;
++  expect(await f.ports.execute({executionTaskId:f.task.id,attempt:resumed.lease.attempt,fenceToken:resumed.lease.fenceToken},{callId:f.callId})).toEqual(receipt.output);
++  expect(await f.calls()).toEqual(after);expect((await f.readTask()).deadlineAt).toBe(originalDeadline);
++  const file=join(root,"users",hash(f.ctx.userId),"accounts",hash(f.ctx.accountId),hash(f.task.id),"报告.html");expect(await readFile(file,"utf8")).toBe("完整目标🙂");
++ }finally{
++  clearTimeout(queueTimer);await cli?.close();await writeFile(done,"done").catch(()=>{});
++  // 私有执行器393f绑定本binary及本组；任何未闭合Native归属保UNKNOWN非零，由其完整收尾，不signal未知PID。
++  try{await observeExit();}catch(error){if(child.exitCode===null){child.unref();child.stdout.destroy();child.stderr.destroy();}throw error;}await rm(dir,{recursive:true,force:true});
++ }
++},36000000);
++
++
++it('T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节',async()=>{
++ const {createPersistentTaskService,createWorkbenchArtifactReadService,createWorkbenchPublicService,createWorkbenchPublicStreamService}=await import('@creatoros/backend/modules/execution');
++ const {createWorkbenchArtifactHost}=await import('./workbench-artifact-host'),{createWorkbenchArtifactRepresentation}=await import('./workbench-artifact-representation');
++ const {chromium}=await import('@playwright/test'),{PNG}=await import('pngjs'),{PDFParse}=await import('pdf-parse');
++ const nonce=randomUUID(),owner={userId:`public-render-${nonce}`,accountId:`public-render-account-${nonce}`,requestId:nonce,source:'user' as const};
++ const bornBudget={maxCalls:20,maxTokens:100000,deadlineMs:36000000},tasks=createPersistentTaskService(db);
++ const task=await tasks.enqueue(owner,{kind:'ai_task',ownerType:'ai_task',ownerId:nonce,idempotencyKey:nonce,executionBudget:bornBudget,payload:{}});
++ const readOriginalTask=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
++ const born=await readOriginalTask();expect(born.deadlineAt).toBeTruthy();const originalDeadline=born.deadlineAt!;expect(Date.parse(originalDeadline)-Date.parse(born.createdAt)).toBe(bornBudget.deadlineMs);
++ const claim=(await tasks.claimTask({taskId:task.id,workerId:`render-owner-${nonce}`}))!;expect((await readOriginalTask()).deadlineAt).toBe(originalDeadline);
++ const bytes=Buffer.from('<style>body{margin:0;background:#df2828}</style><h1>Owned slow public original report</h1>'),objects=new Map<string,Uint8Array>(),digest=(v:Uint8Array)=>createHash('sha256').update(v).digest('hex');
++ // 与原T1250公共35s用例相同的controlled file source/blobs；实际注册/版本事务与Chromium均真实，非模型生成。
++ const blobs={submit:async(_ctx:unknown,input:{operationId:string;bytes:Uint8Array})=>{const hash=digest(input.bytes);objects.set(`${input.operationId}:${hash}`,new Uint8Array(input.bytes));return {hash,size:input.bytes.byteLength};},read:async(_ctx:unknown,input:{operationId:string;hash:string})=>{const value=objects.get(`${input.operationId}:${input.hash}`);if(!value)throw Error('MISSING_OWNED_BLOB');return new Uint8Array(value);}};
++ const host=createWorkbenchArtifactHost(db,{platform:'darwin',desktop:true,socketPath:'private-controlled-file-source.sock',blobs,filePort:async(_ref,_operationId,action)=>{if(action.kind==='stat')return {isDirectory:false,size:bytes.length,version:1};if(action.kind==='read')return {contentBase64:bytes.subarray(action.offset,action.offset+action.limit).toString('base64'),total:bytes.length,version:1};throw Error('UNEXPECTED_FILE_ACTION');}})!;
++ const registered=await host.dispatch({context:{userId:owner.userId,accountId:owner.accountId,taskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:`render-owner-${nonce}`,operationId:nonce},invocation:{name:'artifact.register',schemaVersion:1,input:{path:'owned/report.html',mime:'text/html'}}},{signal:new AbortController().signal,onProgress:()=>{}});
++ expect(registered.status).toBe('succeeded');if(registered.status!=='succeeded')throw Error(JSON.stringify(registered));const metadata=JSON.parse(registered.content.find(part=>part.type==='text')!.text) as {artifactId:string;version:number;hash:string};expect(metadata).toMatchObject({version:1,hash:digest(bytes)});
++ const artifacts=createWorkbenchArtifactReadService(db,{blobs});shared.transport=createWorkbenchPublicTransport({tasks:createWorkbenchPublicService(db),stream:createWorkbenchPublicStreamService(db),artifacts,capabilities:()=>({}),render:(ctx,taskId,artifactId,version,format)=>createWorkbenchArtifactRepresentation(artifacts,ctx,taskId,artifactId,version,format),reconcile:async()=>{throw Error('NO_FILE_RECONCILE_IN_RENDER_CASE');}});shared.ctx=owner;
++ shared.gateway=createCliInvocationService({db,masterKey:Buffer.alloc(32,7),now:()=>new Date().toISOString(),nextId:()=>randomUUID()});
++ const stages:Array<{kind:string;elapsedMs:number}>=[],timers=new Set<ReturnType<typeof setTimeout>>();
++ const stage=async<T,>(kind:string,work:()=>Promise<T>):Promise<T>=>{const start=performance.now();let timer:ReturnType<typeof setTimeout>|undefined;try{const delay=new Promise<void>(resolve=>{timer=setTimeout(resolve,110000);timers.add(timer);});const [value]=await Promise.all([work(),delay]);stages.push({kind,elapsedMs:performance.now()-start});return value;}finally{if(timer){clearTimeout(timer);timers.delete(timer);}}};
++ // 原真实SDK立即开始，与固定110s延迟并行；每stage仍在原120s独立phase内，不把120sSDK与110s串行相加。
++ const launch=chromium.launch.bind(chromium),spy=vi.spyOn(chromium,'launch').mockImplementation(async options=>{const browser=await stage('launch',()=>launch(options)),newContext=browser.newContext.bind(browser);vi.spyOn(browser,'newContext').mockImplementation(async options=>{const context=await stage('context',()=>newContext(options)),newPage=context.newPage.bind(context);vi.spyOn(context,'newPage').mockImplementation(()=>stage('page',()=>newPage()));return context;});return browser;});
++ const cli=await startLoopbackCliFixture({post:POST,accessToken:'owned-slow-render'});
++ try{
++  for(const format of ['png','pdf'] as const){
++   const input={params:{taskId:task.id,artifactId:metadata.artifactId,version:1},query:{format}},started=performance.now(),envelope=await cli.run(['call','workbench.artifacts.render','--input',JSON.stringify(input),'--account',owner.accountId]) as {data:unknown};
++   const result=ENDPOINTS.renderWorkbenchArtifact.response.parse(envelope.data),output=Buffer.from(result.data,'base64');
++   expect(performance.now()-started).toBeGreaterThan(300000);expect(result).toMatchObject({sourceHash:metadata.hash,metadata:{artifactId:metadata.artifactId,version:1,hash:metadata.hash},size:output.length,hash:digest(output),mime:format==='png'?'image/png':'application/pdf'});
++   if(format==='png'){const png=PNG.sync.read(output);expect([...png.data.subarray(0,4)]).toEqual([223,40,40,255]);}else{const parser=new PDFParse({data:output});try{expect((await parser.getText()).text).toContain('Owned slow public original report');}finally{await parser.destroy();}}
++   expect((await readOriginalTask()).deadlineAt).toBe(originalDeadline);
++  }
++  expect(stages.map(s=>s.kind)).toEqual(['launch','context','page','launch','context','page']);for(const observed of stages)expect(observed.elapsedMs).toBeGreaterThanOrEqual(110000);
++  expect((await artifacts.readAll(owner,task.id,metadata.artifactId,1)).bytes).toEqual(new Uint8Array(bytes));
++  const args=['call','workbench.artifacts.render','--input',JSON.stringify({params:{taskId:task.id,artifactId:metadata.artifactId,version:1},query:{format:'png'}}),'--account',owner.accountId];
++  const foreign=[...args];foreign[5]='foreign-owned-render-account';await expect(cli.run(foreign)).rejects.toMatchObject({status:404});
++  const wrongVersion=[...args];wrongVersion[3]=JSON.stringify({params:{taskId:task.id,artifactId:metadata.artifactId,version:2},query:{format:'png'}});await expect(cli.run(wrongVersion)).rejects.toThrow();
++  expect(cli.requests()).toBe(4);expect(spy).toHaveBeenCalledTimes(2);expect((await readOriginalTask()).deadlineAt).toBe(originalDeadline);
++ }finally{spy.mockRestore();for(const timer of timers)clearTimeout(timer);await cli.close();}
++},42000000);

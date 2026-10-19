@@ -12,10 +12,9 @@ learningsService: Pick<ReturnType<typeof import("../../modules/learnings").creat
 candidateService: Pick<ReturnType<typeof import("../../modules/candidate").createCandidateService>, "listSignals" | "listCandidates">;
 platformAccountService: Pick<ReturnType<typeof import("../../modules/platform-account").createPlatformAccountService>, "listAccounts">;
 positioningService: Pick<ReturnType<typeof import("../../modules/positioning").createPositioningService>, "readPositioningCenter">;
-calibrationService: Pick<ReturnType<typeof import("../../modules/calibration").createCalibrationService>, "getCurrentRubricVersion" | "getOverview">;
-canonicalRubricIdFor: (ctx: RequestContext) => string;
+calibrationService: Pick<ReturnType<typeof import("../../modules/calibration").createCalibrationService>, "getDefaultRubricVersion" | "getOverview">;
 }): Pick<ContextReaders,"listComments" | "getPositioningDetail" | "listPublications" | "getMetrics" | "listLearnings" | "listCandidates" | "getPredictions"> {
- const {projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService,positioningService,calibrationService,canonicalRubricIdFor}=ports;
+ const {projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService,positioningService,calibrationService}=ports;
 const readProject = async (ctx: RequestContext, id: string) => await projectsService.getProject(ctx,id);
 const readOutput = (ctx: RequestContext, id: string) => projectsService.getOutput(ctx, id);
 
@@ -387,15 +386,12 @@ getPredictions: async (c: RequestContext, opts: { limit: number }) => {
           dimensionCount: number;
         } | null = null;
         try {
-          const version = await calibrationService.getCurrentRubricVersion(
-            c,
-            canonicalRubricIdFor(c), // [T-332 S2] per-account 默认 rubric
-          );
-          rubric = {
+          const version = await calibrationService.getDefaultRubricVersion(c);
+          rubric = version ? {
             name: "校准评分标准",
             versionNumber: version.versionNumber,
             dimensionCount: version.dimensions.length,
-          };
+          } : null;
         } catch {
           rubric = null; // 母版未建 / 读不到 → 诚实空(不编版本号)
         }

@@ -1,0 +1,35 @@
+{
+  "state": "APPROVED_TWO_SOURCE_MINIMAL_IMPLEMENTATION_STABLE_NOT_YET_GREEN",
+  "files": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "bytes": 10591,
+      "sha256": "d20919c1b68c93c4c736d1714356d3214bc99edb654eaad3cf47631c82067631"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "bytes": 12009,
+      "sha256": "662b64e511db6b217fcde9e443c4d81fe0ffe450ef901f0a7cbf550ea2efec6f"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.test.ts",
+      "bytes": 6372,
+      "sha256": "0cd4f3aabf0e30f3ba802bce1e87cd181c40dfcd2da3eb6107c2e25413e05014"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-account-precheck.test.ts",
+      "bytes": 18789,
+      "sha256": "3990baca7e4ce388c670099c40b2f37dc7270281cb7751a331ffbb0fe74cc2dd"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-agentic-worker-run.test.ts",
+      "bytes": 11704,
+      "sha256": "267a3d5165ab0aec482454a9615b19f9686f0ff89562527700cfd6ec9a36db77"
+    }
+  ],
+  "otherCallersChanged": false,
+  "defaultBehaviorChanged": false,
+  "businessSkillGoalToolsBudgetChanged": false,
+  "productionWriteCount": 2,
+  "testsChanged": 3
+}

@@ -1185,10 +1185,16 @@ type FakeResponseHandler = (resp: FakeResponse) => void;
  *  - page.off 摘监听(模拟真 Page.off,验证逐作品清理监听不复用旧 handler);
  *  - loggedIn=false 时 cookies 返空 → 触发 DouyinNotLoggedInError。
  */
-function makeFakeCommentContext(loggedIn: boolean) {
+function makeFakeCommentContext(loggedIn: boolean,options:{payload?:unknown;noResponse?:boolean;invalidJson?:boolean;pendingJson?:boolean;responses?:Array<{url?:string;payload:unknown}>;responseQuery?:string}={}) {
   const calls = { openContext: 0, close: 0, goto: 0 };
   const gotoUrls: string[] = [];
   let handlers: FakeResponseHandler[] = [];
+  let responseIndex=0,currentAweme='';
+  const emitNext=()=>{
+    const next=options.responses?.[responseIndex++];if(!next)return;
+    const resp:FakeResponse={url:()=>next.url??`https://x/aweme/v1/web/comment/list/?item_id=${currentAweme}`,json:async()=>next.payload};
+    for(const h of handlers)h(resp);
+  };
 
   const page = {
     on(_event: "response", cb: FakeResponseHandler) {
@@ -1203,6 +1209,8 @@ function makeFakeCommentContext(loggedIn: boolean) {
       // 从 ?item_id=<aweme> 取当前作品 id(评论管理页每作品 item_id 过滤)。
       const m = /item_id=([^&]+)/.exec(url);
       const aweme = m ? decodeURIComponent(m[1]!) : "";
+      currentAweme=aweme;responseIndex=0;
+      if(options.responses){emitNext();return;}
       // 触发一次评论 list XHR(命中 hint),payload 每作品一条评论(cid/text 按 aweme 派生)。
       const payload = {
         comments: [
@@ -1215,11 +1223,11 @@ function makeFakeCommentContext(loggedIn: boolean) {
         ],
       };
       const resp: FakeResponse = {
-        url: () => "https://x/aweme/v1/web/comment/list/?count=20",
-        json: () => Promise.resolve(payload),
+        url: () => `https://x/aweme/v1/web/comment/list/?count=20&${options.responseQuery??`item_id=${aweme}`}`,
+        json: () => options.pendingJson?new Promise<unknown>(()=>{}):options.invalidJson?Promise.reject(new Error('PRIVATE_COOKIE_OR_BODY')):Promise.resolve(options.payload??payload),
       };
       // 只喂给当前注册的 handler(off 后旧 handler 不在册 → 不会被重复喂)。
-      for (const h of handlers) h(resp);
+      if(!options.noResponse)for (const h of handlers) h(resp);
       return undefined;
     },
     async waitForTimeout() {
@@ -1227,6 +1235,7 @@ function makeFakeCommentContext(loggedIn: boolean) {
       return undefined;
     },
     async evaluate() {
+      emitNext();
       return undefined as unknown;
     },
     mouse: {
@@ -1269,6 +1278,90 @@ function makeFakeCommentContext(loggedIn: boolean) {
   return { calls, gotoUrls, openContext };
 }
 
+it('历史错误响应不压制后续明确分页结束，保留错误计数',async()=>{
+ const f=makeFakeCommentContext(true,{responses:[{payload:{status_code:8,comments:[]}},{payload:{status_code:0,comments:[],has_more:0}}]});
+ const result=await fetchDouyinCommentsForWorks(['B'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]).toMatchObject({complete:true,diagnostics:{matchedResponses:2,invalidResponses:1,validResponses:1,reason:'pagination_exhausted'}});
+});
+
+it('has_more=1 的空页即便连续稳定也不能确认为读完',async()=>{
+ const f=makeFakeCommentContext(true,{payload:{status_code:0,comments:[],has_more:1}});
+ const result=await fetchDouyinCommentsForWorks(['B'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]).toMatchObject({complete:false,diagnostics:{validResponses:1,reason:'more_pages_pending'}});
+});
+
+it('复用页面迟到A响应不可default归属B，也不作为B的完成证据',async()=>{
+ const f=makeFakeCommentContext(true,{responseQuery:'item_id=A',payload:{status_code:0,comments:[{cid:'a-comment',text:'A的评论'}],has_more:0}});
+ const result=await fetchDouyinCommentsForWorks(['A','B'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]?.records[0]?.awemeId).toBe('A');
+ expect(result.works[1]).toMatchObject({complete:false,records:[],diagnostics:{validResponses:0,parsedComments:0,ignoredResponses:1,reason:'response_identity_unverified'}});
+});
+
+it('无请求作品ID且空列表不可证明当前作品完成',async()=>{
+ const f=makeFakeCommentContext(true,{responseQuery:'count=20',payload:{status_code:0,comments:[],has_more:0}});
+ const result=await fetchDouyinCommentsForWorks(['B'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]).toMatchObject({complete:false,diagnostics:{validResponses:0,reason:'response_identity_unverified'}});
+});
+
+it('后页成功不能清除前页尚未恢复的失败',async()=>{
+ const url=(cursor:number)=>`https://x/aweme/v1/web/comment/list/?item_id=B&cursor=${cursor}`;
+ const f=makeFakeCommentContext(true,{responses:[{url:url(0),payload:{status_code:8,comments:[]}},{url:url(20),payload:{status_code:0,comments:[],has_more:0}}]});
+ const result=await fetchDouyinCommentsForWorks(['B'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]).toMatchObject({complete:false,diagnostics:{invalidResponses:1,validResponses:1,reason:'invalid_response'}});
+});
+
+it.each([false,true])('已验证首屏后的混合归属页必须同页恢复，恢复=%s',async(recover)=>{
+ const url=(cursor:number)=>`https://x/aweme/v1/web/comment/list/?item_id=B&cursor=${cursor}`;
+ const own={cid:'b20',aweme_id:'B',text:'own'};
+ const f=makeFakeCommentContext(true,{responses:[
+  {url:url(0),payload:{status_code:0,comments:[{cid:'b0',aweme_id:'B',text:'first'}]}},
+  {url:url(20),payload:{status_code:0,comments:[own,{cid:'a20',aweme_id:'A',text:'foreign'}],has_more:1}},
+  ...(recover?[{url:url(20),payload:{status_code:0,comments:[own],has_more:0}}]:[]),
+ ]});
+ const result=await fetchDouyinCommentsForWorks(['B'],{authDir:'/fake/.auth',maxPages:5},{openContext:f.openContext});
+ expect(result.works[0]?.records.map(record=>record.commentId)).toEqual(['b0','b20']);
+ expect(result.works[0]).toMatchObject({complete:recover,diagnostics:{ignoredResponses:1,reason:recover?'pagination_exhausted':'response_identity_unverified'}});
+});
+
+it('请求无作品ID时保留记录明确归属的数据，冲突或无归属记录不补猜',async()=>{
+ const f=makeFakeCommentContext(true,{responseQuery:'count=20',payload:{status_code:0,comments:[
+  {cid:'own',aweme_id:'B',text:'自己的'},
+  {cid:'foreign',aweme_id:'A',text:'其他作品'},
+  {cid:'conflict',aweme_id:'B',item_id:'A',text:'冲突'},
+  {cid:'unknown',text:'无作品ID'},
+ ],has_more:0}});
+ const result=await fetchDouyinCommentsForWorks(['B'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]?.records.map(record=>record.commentId)).toEqual(['own']);
+ expect(result.works[0]).toMatchObject({complete:false,diagnostics:{validResponses:0,parsedComments:1,reason:'response_identity_unverified'}});
+});
+
+it('请求无作品ID但每条记录明确属于当前作品时仍保留合法结果',async()=>{
+ const f=makeFakeCommentContext(true,{responseQuery:'count=20',payload:{status_code:0,comments:[{cid:'own',aweme_id:'B',text:'自己的'}],has_more:0}});
+ const result=await fetchDouyinCommentsForWorks(['B'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]).toMatchObject({complete:true,records:[{awemeId:'B',commentId:'own'}],diagnostics:{validResponses:1,reason:'pagination_exhausted'}});
+});
+
+it('A的迟到JSON及旧请求response都不能污染B，新handler仍可接受B自己的成功响应',async()=>{
+ let handlers:FakeResponseHandler[]=[];
+ let resolveA!:(payload:unknown)=>void;
+ const delayedA=new Promise<unknown>(resolve=>{resolveA=resolve;});
+ const aResponse={url:()=> 'https://x/aweme/v1/web/comment/list/?item_id=A',json:()=>delayedA};
+ const page={on:(_event:string,h:FakeResponseHandler)=>{handlers.push(h);},off:(_event:string,h:FakeResponseHandler)=>{handlers=handlers.filter(item=>item!==h);},
+  goto:async(url:string)=>{
+   if(new URL(url).searchParams.get('item_id')==='A'){for(const h of handlers)h(aResponse);return;}
+   resolveA({status_code:0,comments:[{cid:'A-comment',text:'A'}],has_more:0});
+   await Promise.resolve();
+   for(const h of handlers)h(aResponse);
+   await Promise.resolve();
+   for(const h of handlers)h({url:()=> 'https://x/aweme/v1/web/comment/list/?aweme_id=B',json:async()=>({status_code:0,comments:[{cid:'B-comment',text:'B'}],has_more:0})});
+  },waitForTimeout:async()=>{},evaluate:async<R>()=>undefined as R,mouse:{wheel:async()=>{}}};
+ const close=vi.fn(async()=>{});
+ const result=await fetchDouyinCommentsForWorks(['A','B'],{authDir:'/fake/.auth',maxPages:4},{openContext:async()=>({pages:()=>[page],newPage:async()=>page,cookies:async()=>[{name:'sessionid'}],close})});
+ expect(result.works[0]).toMatchObject({complete:false,records:[],diagnostics:{reason:'response_pending'}});
+ expect(result.works[1]).toMatchObject({complete:true,records:[{awemeId:'B',commentId:'B-comment'}],diagnostics:{matchedResponses:2,ignoredResponses:1,validResponses:1,parsedComments:1,reason:'pagination_exhausted'}});
+ expect(handlers).toHaveLength(0);expect(close).toHaveBeenCalledOnce();
+});
+
 it("评论翻页上限不能冒充读完；稳定结束才返回complete",async()=>{
  const short=makeFakeCommentContext(true);
  const limited=await fetchDouyinCommentsForWorks(["7401"],{authDir:"/fake/.auth",maxPages:1},{openContext:short.openContext});
@@ -1276,6 +1369,32 @@ it("评论翻页上限不能冒充读完；稳定结束才返回complete",async(
  const full=makeFakeCommentContext(true);
  const completed=await fetchDouyinCommentsForWorks(["7401"],{authDir:"/fake/.auth",maxPages:4},{openContext:full.openContext});
  expect(completed.works[0]?.complete).toBe(true);
+});
+
+it.each([
+ {options:{noResponse:true},complete:false,reason:'no_matching_response',matchedResponses:0,validResponses:0,invalidResponses:0,parsedComments:0,pendingResponses:0},
+ {options:{payload:{status_code:0,comments:[]}},complete:true,reason:'stable_end',matchedResponses:1,validResponses:1,invalidResponses:0,parsedComments:0,pendingResponses:0},
+ {options:{payload:{status_code:8,comments:[],message:'PRIVATE_COOKIE_OR_BODY'}},complete:false,reason:'no_valid_response',matchedResponses:1,validResponses:0,invalidResponses:1,parsedComments:0,pendingResponses:0},
+ {options:{payload:{status_code:0,message:'PRIVATE_COOKIE_OR_BODY'}},complete:false,reason:'no_valid_response',matchedResponses:1,validResponses:0,invalidResponses:1,parsedComments:0,pendingResponses:0},
+ {options:{invalidJson:true},complete:false,reason:'no_valid_response',matchedResponses:1,validResponses:0,invalidResponses:1,parsedComments:0,pendingResponses:0},
+ {options:{pendingJson:true},complete:false,reason:'response_pending',matchedResponses:1,validResponses:0,invalidResponses:0,parsedComments:0,pendingResponses:1},
+ {options:{payload:{comments:[{cid:'broken',text:''}]}},complete:false,reason:'unparseable_records',matchedResponses:1,validResponses:1,invalidResponses:0,parsedComments:0,pendingResponses:0},
+])('评论读取诊断 $reason：区分完整空结果与未确认响应',async({options,complete,reason,...counts})=>{
+ const f=makeFakeCommentContext(true,options);
+ const result=await fetchDouyinCommentsForWorks(['7401'],{authDir:'/fake/.auth',maxPages:4},{openContext:f.openContext});
+ expect(result.works[0]).toMatchObject({complete,diagnostics:{...counts,reason}});
+ expect(JSON.stringify(result.works[0]?.diagnostics)).not.toContain('PRIVATE_COOKIE_OR_BODY');
+ expect(f.calls).toMatchObject({openContext:1,close:1,goto:1});
+});
+
+it('评论解析与翻页上限诊断逐作品独立，保留已经取得的正文',async()=>{
+ const f=makeFakeCommentContext(true);
+ const result=await fetchDouyinCommentsForWorks(['7401','7402'],{authDir:'/fake/.auth',maxPages:1},{openContext:f.openContext});
+ for(const work of result.works){
+  expect(work).toMatchObject({complete:false,diagnostics:{matchedResponses:1,validResponses:1,parsedComments:1,reason:'page_limit'}});
+  expect(work.records).toHaveLength(1);expect(work.records[0]?.awemeId).toBe(work.awemeId);
+ }
+ expect(f.calls).toMatchObject({openContext:1,close:1,goto:2});
 });
 
 describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () => {
@@ -1420,9 +1539,10 @@ type FakeComment = {
 function makeFakePagingCommentContext(pages: FakeComment[][], loggedIn = true) {
   const calls = { openContext: 0, close: 0, goto: 0, wheel: 0 };
   let handlers: FakeResponseHandler[] = [];
+  let targetId='';
   const emit = (comments: FakeComment[]) => {
     const resp: FakeResponse = {
-      url: () => "https://x/aweme/v1/web/comment/list/?count=20",
+      url: () => `https://x/aweme/v1/web/comment/list/?count=20&item_id=${targetId}&cursor=${calls.wheel}`,
       json: () => Promise.resolve({ comments }),
     };
     for (const h of handlers) h(resp);
@@ -1434,8 +1554,9 @@ function makeFakePagingCommentContext(pages: FakeComment[][], loggedIn = true) {
     off(_event: "response", cb: FakeResponseHandler) {
       handlers = handlers.filter((h) => h !== cb);
     },
-    async goto() {
+    async goto(url:string) {
       calls.goto += 1;
+      targetId=new URL(url).searchParams.get('item_id')??'';
       if (pages[0]) emit(pages[0]); // 首屏(第 0 页)
       return undefined;
     },
@@ -2354,10 +2475,10 @@ describe("[T-202] gotoWithRetry 导航退避重试", () => {
     await gotoWithRetry(page, "https://creator.douyin.com/x", { retries: 3 });
     expect(gotoCalls).toHaveLength(1);
     expect(waits).toHaveLength(0);
-    // 透传 waitUntil/timeout 到底层 goto(默认 domcontentloaded / 60000)。
+    // 透传 waitUntil/timeout 到底层 goto(默认 domcontentloaded / 120000)。
     expect(gotoCalls[0]!.opts).toMatchObject({
       waitUntil: "domcontentloaded",
-      timeout: 60000,
+      timeout: 120000,
     });
   });
 

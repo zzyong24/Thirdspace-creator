@@ -1,14 +1,8 @@
-/**
- * [T-247] 设置「偏好 · 默认创作模式」→ 新建项目弹窗预选(假设置清算:接消费)。
- *
- *  - 偏好为非默认值(flexible/freeform)→ 弹窗读 settings.preferences.get 后
- *    表单预选该模式;
- *  - 偏好读失败(op 缺失 / transport 挂)→ 保持内置默认 guided,不报错。
- */
+/** T1050 已批准退役创作模式偏好。新建项目由用户明确多选作品形式；旧偏好不再读取或覆盖选择。 */
 
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
 
 // next/navigation mock — 弹窗只用到 usePathname / useRouter。
 const mockRouter = {
@@ -50,37 +44,30 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-function creationModeRadio(value: string): HTMLInputElement {
-  const input = document.querySelector(
-    `input[name="creation-mode"][value="${value}"]`,
-  );
-  expect(input).not.toBeNull();
-  return input as HTMLInputElement;
-}
-
-describe("NewProjectDialog × 偏好默认创作模式 (T-247)", () => {
-  it("偏好 defaultCreationMode=flexible → 表单预选 AI 协作创作", async () => {
-    mockClient.getPreferences.mockResolvedValue({
-      defaultCreationMode: "flexible",
-      autosaveEnabled: true,
-    });
+describe("NewProjectDialog × 已退役的创作模式偏好", () => {
+  it("旧 flexible 偏好不读取；默认视频且用户可明确多选文章", () => {
+    mockClient.getPreferences.mockResolvedValue({defaultCreationMode:"flexible",autosaveEnabled:true});
     render(<NewProjectDialog />);
-    // 弹窗即时渲染(不等偏好),先是内置默认。
-    expect(screen.getByRole("dialog", { name: /新建项目/i })).toBeInTheDocument();
-    // 偏好回读后,creation-mode 预选翻成 flexible。
-    await waitFor(() => {
-      expect(creationModeRadio("flexible").checked).toBe(true);
-    });
-    expect(creationModeRadio("guided").checked).toBe(false);
-    expect(mockClient.getPreferences).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("dialog", {name:/新建项目/})).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", {name:/^视频/})).toBeChecked();
+    expect(screen.getByRole("checkbox", {name:/^文章/})).not.toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", {name:/^文章/}));
+    expect(screen.getByRole("checkbox", {name:/^文章/})).toBeChecked();
+    expect(screen.getByRole("checkbox", {name:/^视频/})).toBeChecked();
+    expect(document.querySelector('input[name="creation-mode"]')).toBeNull();
+    expect(mockClient.getPreferences).not.toHaveBeenCalled();
+    expect(mockClient.createProject).not.toHaveBeenCalled();
   });
-
-  it("偏好读失败 → 保持内置默认 guided,不报错", async () => {
-    mockClient.getPreferences.mockRejectedValue(new Error("no preferences"));
+  it("不可用旧偏好不阻塞表单；用户仍可明确从视频改选图文", () => {
+    mockClient.getPreferences.mockImplementation(()=>{throw new Error("no preferences");});
     render(<NewProjectDialog />);
-    await waitFor(() =>
-      expect(mockClient.getPreferences).toHaveBeenCalledTimes(1),
-    );
-    expect(creationModeRadio("guided").checked).toBe(true);
+    expect(screen.getByRole("checkbox", {name:/^视频/})).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", {name:/^视频/}));
+    fireEvent.click(screen.getByRole("checkbox", {name:/^图文/}));
+    expect(screen.getByRole("checkbox", {name:/^视频/})).not.toBeChecked();
+    expect(screen.getByRole("checkbox", {name:/^图文/})).toBeChecked();
+    expect(document.querySelector('input[name="creation-mode"]')).toBeNull();
+    expect(mockClient.getPreferences).not.toHaveBeenCalled();
+    expect(mockClient.createProject).not.toHaveBeenCalled();
   });
 });

@@ -321,6 +321,7 @@ describe("[T-367] createJob 幂等 + 唯一索引 + 迁移 dedup", () => {
     );
     const jobRow = (over: Partial<ScheduledJobRow>): ScheduledJobRow => ({
       id: "job-x",
+      groupId:null,groupVersion:null,membershipVersion:null,
       userId: "user-a",
       accountId: "acct-a",
       name: "n",
@@ -339,6 +340,7 @@ describe("[T-367] createJob 幂等 + 唯一索引 + 迁移 dedup", () => {
     });
     const runRow = (over: Partial<JobRunRow>): JobRunRow => ({
       id: "run-x",
+      groupId:null,groupVersion:null,membershipVersion:null,
       userId: "user-a",
       jobId: "job-x",
       scheduledFor: null,

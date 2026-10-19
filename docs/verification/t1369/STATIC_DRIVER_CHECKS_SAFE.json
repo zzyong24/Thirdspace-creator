@@ -1,0 +1,37 @@
+{
+  "atUnix": 1792392943.410471,
+  "nodeSyntax": {
+    "server.mjs": 0,
+    "preflight.mjs": 0
+  },
+  "pythonCompile": {
+    "run.py": 0,
+    "environment.py": 0
+  },
+  "eslint": {
+    "exitCode": 0,
+    "scope": "三个T1369测试/config文件"
+  },
+  "typescript": {
+    "command": "pnpm --dir frontend exec tsc --noEmit --pretty false --incremental false",
+    "exitCode": 0,
+    "durationSeconds": 45.089925415988546,
+    "production04Executed": false
+  },
+  "production04Executed": false,
+  "production04DirectoryExists": false,
+  "ports": {
+    "41377": [],
+    "41378": [],
+    "41379": [],
+    "41387": [],
+    "41388": [],
+    "41389": []
+  },
+  "productionSourceSha256": {
+    "frontend/src/features/group-workspace/group-workspace-filters.tsx": "4c4f0ea6546c2efcdc87592c7e4c5bc06bc32f430f951883acc7448768c5fa3a",
+    "frontend/src/components/shell/use-primary-navigation.ts": "883d305ab5a78a676018b1e930de453b187e8a6d937a5236aba3908c6cabea17"
+  },
+  "formalNewCycleExecuted": false,
+  "boundary": "静态测试/审查不代新cycle/生产公共验收，不签任务完成。"
+}

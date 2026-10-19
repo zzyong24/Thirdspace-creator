@@ -1,5 +1,6 @@
+import {projects as parentProjects,contentOutputs as parentOutputs,publications as parentPublications,reviews as parentReviews} from "@creatoros/backend";
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, eq, type Db } from "@creatoros/backend";
+import { createDb, eq, OwnershipError, type Db } from "@creatoros/backend";
 import {
   reviews,
   reviewInsights,
@@ -40,6 +41,12 @@ describe("reviews schema round-trip (Step 1)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-1"].map(id=>({id,userId:"user-a",accountId:"acct-default",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+    await db.insert(parentOutputs).values([{id:"out-1",projectId:"project-1",title:"真实作品",contentType:"video",status:"draft",createdAt:NOW,updatedAt:NOW}]);
+    await db.insert(parentPublications).values({id:"pub-1",userId:"user-a",accountId:"acct-default",contentOutputId:"out-1",platform:"douyin",accountReference:"acct-default",status:"published",createdAt:NOW,updatedAt:NOW});
+    await db.insert(parentProjects).values([{id:"proj-a",accountId:"account-a"},{id:"proj-b",accountId:"account-b"}].map(row=>({...row,userId:"user-a",title:row.id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW})));
+
   });
 
   it("round-trips a review row with defaults + nullable columns intact", async () => {
@@ -118,6 +125,12 @@ describe("reviews repository (user-scoped, Step 2)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-1"].map(id=>({id,userId:"user-a",accountId:"acct-default",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+    await db.insert(parentOutputs).values([{id:"out-1",projectId:"project-1",title:"真实作品",contentType:"video",status:"draft",createdAt:NOW,updatedAt:NOW}]);
+    await db.insert(parentPublications).values({id:"pub-1",userId:"user-a",accountId:"acct-default",contentOutputId:"out-1",platform:"douyin",accountReference:"acct-default",status:"published",createdAt:NOW,updatedAt:NOW});
+    await db.insert(parentProjects).values([{id:"proj-a",accountId:"account-a"},{id:"proj-b",accountId:"account-b"}].map(row=>({...row,userId:"user-a",title:row.id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW})));
+
   });
 
   it("isolates a review by user_id (A's review invisible to B)", async () => {
@@ -156,7 +169,7 @@ describe("reviews repository (user-scoped, Step 2)", () => {
         evidence: {},
         priority: 0,
       }),
-    ).rejects.toThrow(/OwnershipError/);
+    ).rejects.toBeInstanceOf(OwnershipError);
   });
 
   it("listInsights returns in priority order regardless of insert order", async () => {
@@ -255,18 +268,18 @@ describe("reviews repository (user-scoped, Step 2)", () => {
     const repoA = makeRepo(db, "user-a", "acc-a", "account-a");
     const repoB = makeRepo(db, "user-a", "acc-b", "account-b");
 
-    const rA = await repoA.createReview(mk("proj-shared"));
-    const rB = await repoB.createReview(mk("proj-shared"));
+    const rA = await repoA.createReview(mk("proj-a"));
+    const rB = await repoB.createReview(mk("proj-b"));
     // create stamp。
     expect(rA.accountId).toBe("account-a");
     expect(rB.accountId).toBe("account-b");
 
-    // listReviewsByProject 号门收窄:同一 projectId,各号只见本号。
+    // listReviewsByProject 按真实父项目与账号收窄，各号只见本号。
     expect(
-      (await repoA.listReviewsByProject("proj-shared")).map((r) => r.id),
+      (await repoA.listReviewsByProject("proj-a")).map((r) => r.id),
     ).toEqual([rA.id]);
     expect(
-      (await repoB.listReviewsByProject("proj-shared")).map((r) => r.id),
+      (await repoB.listReviewsByProject("proj-b")).map((r) => r.id),
     ).toEqual([rB.id]);
     // 跨号 get → 404。
     await expect(repoB.getReview(rA.id)).rejects.toThrow();

@@ -1,11 +1,11 @@
 import {z} from "zod";
 import {isDeepStrictEqual} from "node:util";
-import {videoFrozenSchema,videoSkillSchema,structuredGenerationInputSchema} from "@creatoros/contract/execution-worker";
+import {codexExecutionSpec,frozenExecutionEngine,readFrozenModelRoute,videoFrozenSchema,videoSkillSchema,structuredGenerationInputSchema} from "@creatoros/contract/execution-worker";
 import {prepareExecutionModelIdentity} from "../execution/execution-model-identity.service";
 import type {StructuredBusinessAdapter} from "./structured-business-execution.service";
 import type {VideoDecisionsDeps} from "./video-decisions-runner";
 import {parseSrt} from "./srt";
-export function createVideoDecisionsBusinessAdapter(deps:Pick<VideoDecisionsDeps,"resolveModelSpec"|"listBrollInventory"|"readStoryboard">&{getTaskRuntimeData:VideoDecisionsDeps["ai"]["getTaskRuntimeData"]}):StructuredBusinessAdapter{
+export function createVideoDecisionsBusinessAdapter(deps:Pick<VideoDecisionsDeps,"listBrollInventory"|"readStoryboard">&{resolveModelSpec(ctx:Parameters<VideoDecisionsDeps['resolveModelSpec']>[0],skillId:string,owner:{aiTaskId:string}):Promise<unknown>;getTaskRuntimeData:VideoDecisionsDeps["ai"]["getTaskRuntimeData"]}):StructuredBusinessAdapter{
  return {skillId:"video.scenes",capability:"video.scenes",additionalCalls:facets=>32+Math.ceil(parseSrt(String(JSON.parse(facets.__videoDecisions??"{}").task?.inputData?.srtText??"")).length/40),
   async prepare(ctx,task){
    if(!task.projectId)throw new Error("视频决策缺少项目范围");
@@ -15,7 +15,8 @@ export function createVideoDecisionsBusinessAdapter(deps:Pick<VideoDecisionsDeps
    const retryRuntime=previous.videoDecisionsCheckpoint?{videoDecisionsCheckpoint:previous.videoDecisionsCheckpoint}:{};
    const skills=task.inputData.adjustmentMode==="materials"?["material.match" as const]:videoSkillSchema.options;
    const modelIdentities:Record<string,unknown>={};
-   for(const skill of skills){try{modelIdentities[skill]=prepareExecutionModelIdentity(skill,await deps.resolveModelSpec(ctx,skill)).identity;}catch{modelIdentities[skill]={unavailable:true};}}
+   const runtime=await deps.getTaskRuntimeData(ctx,task.id),engine=frozenExecutionEngine(runtime);
+   for(const skill of skills){try{modelIdentities[skill]=prepareExecutionModelIdentity(skill,!readFrozenModelRoute(runtime,'structured',skill)&&engine==='codex'?codexExecutionSpec():await deps.resolveModelSpec(ctx,skill,{aiTaskId:task.id})).identity;}catch{modelIdentities[skill]={unavailable:true};}}
    const frozen=videoFrozenSchema.parse(JSON.parse(JSON.stringify({task:{id:task.id,projectId:task.projectId,retryOfTaskId:task.retryOfTaskId,inputData:task.inputData},inventory,storyboard,retryRuntime,modelIdentities})));
    return {__videoDecisions:JSON.stringify(frozen)};
   },

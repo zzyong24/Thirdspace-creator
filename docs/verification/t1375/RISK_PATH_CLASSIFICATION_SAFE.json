@@ -1,0 +1,245 @@
+{
+  "schema": "t1375-risk-path-source-classification/v1",
+  "range": "1963e4ebe48f15ec084a1efe7dac2f195675b92f..f530722c25f627c8c59740aebfecfd6be2c05185",
+  "path_count": 38,
+  "blob_count": 30,
+  "tree_count": 8,
+  "rows": [
+    {
+      "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/source/workbench/vendor/nomifun/crates/agent/nomi-browser-engine/src/profile.rs",
+      "oid": "398499cb59f8cce009a7a93f377e727522a2354b",
+      "object_type": "blob",
+      "classification": "nomifun-source-and-redaction-fixture"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/source/workbench/vendor/nomifun/crates/agent/nomi-browser-engine/tests/fixtures/secrets.html",
+      "oid": "1a4e1b7bf0c930f3ca4f2c4e229b21e9a4dc0b08",
+      "object_type": "blob",
+      "classification": "nomifun-source-and-redaction-fixture"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/actual-list-proof.json",
+      "oid": "dafaee9a9ed7e4b2d55b560ab378f270e2d9c1ae",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/actual-list.json",
+      "oid": "2dd23d89361c5bce705f4f4bc9e1bc187ee0a918",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-0-child.json",
+      "oid": "74716ee8553841ec2dfe3573904915b009f7c408",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-0-proof.json",
+      "oid": "64d8a2f4cbfb2d1a24ef36689c740ab14a82a63b",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-0-tests.json",
+      "oid": "7ef5ab6b5d30d01739eb0891916ba3aca8f3b1fe",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-0",
+      "oid": "5f22703d391a8a71d35154d7587bceab79502752",
+      "object_type": "tree",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-0/vitest.config.mts",
+      "oid": "19d7cf9151d51a00d1ccaaf744c552dd0573c3ff",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-1-child.json",
+      "oid": "4443282c3529886c03fe422137e78ac8abf7e9f4",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-1-proof.json",
+      "oid": "e7216cbf5af2e6b3acf4da3657941f455a97b76a",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-1-tests.json",
+      "oid": "935d35983cc920a599cfe7c4374b1072acdf3a93",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-1",
+      "oid": "9a0233c5dca0c744fa13656cd5d01ffc9ed0fcde",
+      "object_type": "tree",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-1/vitest.config.mts",
+      "oid": "00cf83d7cfd65a2d7399192ad89914bcb00810a1",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-2-child.json",
+      "oid": "6eb23b050254bbbb63fe3eab7962d82d9e4a9651",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-2-proof.json",
+      "oid": "284e42a98b7ffaacdf1baf7fd2fe5245ec597de7",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-2-tests.json",
+      "oid": "4b5bce47c27362584954b19789b422efc2714e89",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-2",
+      "oid": "3f37e1173599c54a33582543c9375a40a3d60f61",
+      "object_type": "tree",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/case-2/vitest.config.mts",
+      "oid": "0b968c33aadac2b1c6d1abb467f270282e092724",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/final.json",
+      "oid": "b13e49e2edbb93c24f4a98f8d6fdbcdea30196fb",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/list-child.json",
+      "oid": "cbea7a7fbef94ce8258b5ce7fd8b34bfd0f0f608",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/list",
+      "oid": "5a533179d20893dcd2d504c6ee217326826a5f9c",
+      "object_type": "tree",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/list/vitest.config.mts",
+      "oid": "fa5c0f8a715dfc078823914fc22d4ff1890ec279",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/public-native-render.test.ts",
+      "oid": "8583ad321135ed0341775754c18a96025f5711e1",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-three-body-green/raw/start.json",
+      "oid": "d85d0f94e352b21de44a9d95207f798027f9eaf2",
+      "object_type": "blob",
+      "classification": "t1252-public-synthetic-test"
+    },
+    {
+      "path": "docs/verification/t1254/browser-review-history/tool29b3-approved-source/source/private/tmp",
+      "oid": "a188ce3fd13d5572ae9fab03b0d68303ac62f68f",
+      "object_type": "tree",
+      "classification": "t1254-source-directory"
+    },
+    {
+      "path": "docs/verification/t1254/browser-review-history/tool29b3-approved-source/source/private/tmp/t1254-browser-dyld-7l0dxkzf",
+      "oid": "7b780743a25d6a443c82d2504dbb85d2f0a1b67e",
+      "object_type": "tree",
+      "classification": "t1254-source-directory"
+    },
+    {
+      "path": "docs/verification/t1254/browser-review-history/tool6816-budget-concerns/source/private/tmp",
+      "oid": "14a480a4b0e2d320dcef9729c824a2cf6a4c7de9",
+      "object_type": "tree",
+      "classification": "t1254-source-directory"
+    },
+    {
+      "path": "docs/verification/t1254/browser-review-history/tool6816-budget-concerns/source/private/tmp/t1254-browser-dyld-7l0dxkzf",
+      "oid": "aee8d451aa3f31b24d297cba1a11dc56f7ab39ce",
+      "object_type": "tree",
+      "classification": "t1254-source-directory"
+    },
+    {
+      "path": "docs/verification/t1271/raw/GREEN-r2.txt",
+      "oid": "20a92a2b225abc050b925e2c40658258c4656f7d",
+      "object_type": "blob",
+      "classification": "t1271-engineering-stdout"
+    },
+    {
+      "path": "docs/verification/t1271/raw/GREEN.txt",
+      "oid": "9fb664ec1495a712cba9b5eb97c9f6ffd265746b",
+      "object_type": "blob",
+      "classification": "t1271-engineering-stdout"
+    },
+    {
+      "path": "docs/verification/t1271/raw/RED.txt",
+      "oid": "d1d50fe9b90a00c5151491cc131ea67e3202f917",
+      "object_type": "blob",
+      "classification": "t1271-engineering-stdout"
+    },
+    {
+      "path": "docs/verification/t1271/raw/owned-build.txt",
+      "oid": "67377207d18367c8580bc232f581635c607f69c4",
+      "object_type": "blob",
+      "classification": "t1271-engineering-stdout"
+    },
+    {
+      "path": "docs/verification/t1271/raw/owned-tests.txt",
+      "oid": "4ca291c2f3fec60e587475ddaf6dbe71205904e9",
+      "object_type": "blob",
+      "classification": "t1271-engineering-stdout"
+    },
+    {
+      "path": "docs/verification/t1271/raw/owned-typecheck.txt",
+      "oid": "2d26c22932b2a357cfff6d75bf6435994bb8424c",
+      "object_type": "blob",
+      "classification": "t1271-engineering-stdout"
+    },
+    {
+      "path": "docs/verification/t1271/raw/timeout-policy.txt",
+      "oid": "6f98e4800a16348842b27a43acb6ddce520295ce",
+      "object_type": "blob",
+      "classification": "t1271-engineering-stdout"
+    },
+    {
+      "path": "docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional/actions/U09-positioning-adopt-refresh/profile.json",
+      "oid": "a49be9c0380905cf7bdd9f066a9d6460256a21a0",
+      "object_type": "blob",
+      "classification": "t1300-owned-verification-profile"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/profile.rs",
+      "oid": "a5301570c1a1a1faf24a37d75b69705577cd5499",
+      "object_type": "blob",
+      "classification": "nomifun-source-and-redaction-fixture"
+    }
+  ],
+  "evidence": {
+    "t1252-public-synthetic-test": "Owned synthetic public rendering test start/final/child/config/source receipts; no installed App or official model. Raw is engineering receipt directory label, not raw user database. start/final checked no credential headers or PEM private key. All blobs also enter full-rule gitleaks input.",
+    "t1254-source-directory": "Four tree objects only under copied source/private/tmp; not file contents or a copy of user private data.",
+    "t1271-engineering-stdout": "Seven vitest/build/types/timeout stdout logs; real PASS/FAIL retained, no cookie headers observed. Not user content records.",
+    "t1300-owned-verification-profile": "T1300 SPEC line13 and bound task packet require fresh owned group/project/DB/media; runner binds T1300_SESSION isolated candidate. Profile user ID test prefix and verification sample text; not read from installed user DB.",
+    "nomifun-source-and-redaction-fixture": "Three source/test paths, including fixture secrets.html; synthetic redaction sample tokens in tests, not runtime credentials."
+  },
+  "limits": "Path-name scan and provenance review complement secret scanning; do not claim all repository bytes contain no personal information merely from zero scanner findings. d443 delivery raw not included by source-only cherry selection."
+}

@@ -1,7 +1,8 @@
+import {frozenTranscribeLocalSpec} from '../ai-runtime/transcribe-business-execution.service';
+import {workspaceFilter} from "../../workspace-scope";
 import {bindTranscribeAudioExecution,type TranscribeResourceBinding} from './transcribe-execution-binding';
 import {readTranscribeAsrPlan} from './transcribe-asr-plan';
 import {asrExecutionIdentity} from '@creatoros/ai-worker/asr-identity';
-import {localWhisperSpec} from '@creatoros/ai-worker';
 import {assembleAsrTranscript} from '@creatoros/ai-worker/asr-transcript';
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -30,7 +31,7 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
         if(plan){const audio=transcribeAudioReceiptSchema.parse((payload.transcribeAudioInputs as Record<string,unknown>)?.[awemeId]);if(audio.audioDigest!==plan.audioDigest||audio.audioByteLength!==plan.audioByteLength)throw new ConflictError("实际识别身份与原音频不符");}
         if(!legacy.success){if(!resource)await bindTranscribeAudioExecution(scope,awemeId);if(!input.awemeIds.includes(awemeId))throw new ConflictError("ASR 输入与领域资源不符");}
         else {
-        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!)));
+        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context)));
         const raw = business?.inputData as {
             awemeIds?: unknown;
             awemeId?: unknown;
@@ -84,7 +85,7 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
                 }
                 if(!rejected&&assembleAsrTranscript(bound.input.identity,parts).text.trim()){if(onlyIfProven)return null;throw new ConflictError('云端已有正文，无需改走本地');}
                 if(!state.budget||(state.budget.maxCalls!==null&&state.calls.length>=state.budget.maxCalls)||(state.deadlineAt!==null&&Date.parse(state.deadlineAt)<=Date.parse((deps.now??(()=>new Date().toISOString()))())))throw new ExecutionBudgetError('原执行预算不足，不能另开本地识别');
-                const plan=transcribeAsrPlanSchema.parse({...selected.primary,identity:asrExecutionIdentity(localWhisperSpec(),selected.primary.identity.language)});
+                const plan=transcribeAsrPlanSchema.parse({...selected.primary,identity:asrExecutionIdentity(frozenTranscribeLocalSpec(bound.payload),selected.primary.identity.language)});
                 await scope.tx.update(executionTasks).set({payload:{...bound.payload,transcribeLocalFallbacks:{...selected.fallbacks,[awemeId]:{plan,sourceCallIds:sources.map(call=>call.id),reason:rejected?'rejected':'empty'}}}}).where(eq(executionTasks.id,scope.task.id));
                 return plan;
             });

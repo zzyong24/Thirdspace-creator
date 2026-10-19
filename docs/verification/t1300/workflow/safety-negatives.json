@@ -1,0 +1,73 @@
+{
+  "schema": "t1300-original-path-guard-negatives/v1",
+  "results": [
+    {
+      "case": "exact-repo-file",
+      "exit": 0,
+      "expected": "allowed"
+    },
+    {
+      "case": "unix-absolute",
+      "pattern": "/tmp/escape.ts",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "safe: write_set must contain only safe repo-relative files or terminal /** prefixes"
+    },
+    {
+      "case": "windows-absolute",
+      "pattern": "C:\\escape.ts",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "safe: write_set must contain only safe repo-relative files or terminal /** prefixes"
+    },
+    {
+      "case": "parent-traversal",
+      "pattern": "../escape.ts",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "safe: write_set must contain only safe repo-relative files or terminal /** prefixes"
+    },
+    {
+      "case": "embedded-traversal",
+      "pattern": "src/../escape.ts",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "safe: write_set must contain only safe repo-relative files or terminal /** prefixes"
+    },
+    {
+      "case": "tail-star",
+      "pattern": "docs/file*",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "safe: write_set must contain only safe repo-relative files or terminal /** prefixes"
+    },
+    {
+      "case": "middle-glob",
+      "pattern": "src/*/file.ts",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "safe: write_set must contain only safe repo-relative files or terminal /** prefixes"
+    },
+    {
+      "case": "nonterminal-recursive",
+      "pattern": "src/**/file.ts",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "safe: write_set must contain only safe repo-relative files or terminal /** prefixes"
+    },
+    {
+      "case": "symlink-outside-project",
+      "exit": 2,
+      "expected": "rejected",
+      "diagnostic": "✗ baseline source must stay inside project root; path escape rejected: docs/escape.md",
+      "scope": "既有governance源路径真实realpath边界；没有baseline-apply或库外写"
+    }
+  ],
+  "temporaryRemoved": true,
+  "sourceGuardsModified": false,
+  "guardHashes": {
+    "progress": "1677a9b1aef9cc04cd77f88b3d832abce7c69b4884089a1a74ef9687949a2423",
+    "governance": "de06cdb13af2e73b20cd1beea9c4bb5705443d652fdc50170df677f1d3664eaf"
+  },
+  "reservedControlPaths": "原57例完整环境化验证中candidate validation reserved control path负例PASS，未改其源码/断言"
+}

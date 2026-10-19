@@ -10,10 +10,14 @@
 use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+static OBSERVABILITY_EXIT_EXPECTED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
 use std::time::Duration;
 
 // [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
 mod license;
+mod secure_strings;
+#[cfg(not(debug_assertions))]
+mod release_integrity;
 // [T-746] 产品内只清本机激活态：固定白名单、无网络、保留全部业务数据。
 mod activation_reset;
 // [T-635] 编译期 ProductManifest / projectKey / strict verify 的统一产品身份入口。
@@ -21,6 +25,7 @@ mod product_identity;
 mod cli_access;
 // [T-575] Growth device authorization → OS protected pending-consume → AM signed consume。
 mod entitlement_claim;
+mod owned_devices;
 // [T-399b] 蜜罐授权门:纯诱饵,零真实引用(真链一行不碰),仅 #[used] 强制进二进制过 DCE。
 //   故意重放明文命名的教科书假验签门,诱逆向 AR 的 nm/strings 撞它而非 obfstr 藏起的真门(见 decoy_gate.rs)。
 mod decoy_gate;
@@ -34,6 +39,9 @@ mod win_job;
 mod sidecar_process;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
 mod workspace_reset;
+// T-1007: native files use PID-bound private IPC on macOS and Windows.
+// No workbench command is registered in generate_handler (WebView remains out).
+mod workbench;
 
 use base64::Engine as _;
 // [T-391 H-key] master key 传递加固:SecretString 包裹 base64 key(Drop 时 zeroize,不进 Debug/log),
@@ -87,9 +95,6 @@ const KEYCHAIN_KEY_NAME: &str = "master-key";
 // [T-181] Skill 远程下发(prompt-bundle):sidecar 的 remote-prompt-bundle.ts 拉签名 bundle.json
 //   + 内置公钥验签。URL 与公钥都是**公开的**(非密钥),硬编码进壳、注入 sidecar env。
 //   私钥在产品方(~/.creatoros/prompt-bundle.key,签 bundle 时用,绝不进客户端/git)。
-const PROMPT_BUNDLE_URL: &str = "https://creatoros.aitongban.cloud/prompts/bundle.json";
-const PROMPT_BUNDLE_PUBLIC_KEY: &str =
-    "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEArmDGPC34VMSU2Isf3X+gULIwOH+5X3GBHwlXYFbgjg4=\n-----END PUBLIC KEY-----\n";
 
 /// [T-372 W-core W4] 壳 → sidecar 的停机哨兵(Windows 用):Node 在 Windows 收不到真
 /// SIGTERM(process.kill 的 'SIGTERM' 实为无条件 TerminateProcess)→ 壳的优雅停机改为
@@ -172,6 +177,169 @@ async fn export_daily_report_csv(
         std::fs::write(path, content).map_err(|_| "保存 CSV 失败，请检查目录权限后重试。".to_string())?;
         Ok(true)
     }).await.map_err(|_| "保存 CSV 未完成，请重试。".to_string())?
+}
+
+const MAX_ARTIFACT_EXPORT_BYTES: usize = 100 * 1024 * 1024;
+
+#[derive(Clone, Copy)]
+enum NativeArtifactFormat {
+    Html,
+    Markdown,
+    Csv,
+    Png,
+    Pdf,
+}
+
+impl NativeArtifactFormat {
+    fn from_mime(mime: &str) -> Result<Self, String> {
+        let mut parts = mime.split(';');
+        let media = parts.next().unwrap_or("").trim();
+        let format = if media.eq_ignore_ascii_case("text/html") {
+            Self::Html
+        } else if media.eq_ignore_ascii_case("text/markdown") {
+            Self::Markdown
+        } else if media.eq_ignore_ascii_case("text/csv") {
+            Self::Csv
+        } else if media.eq_ignore_ascii_case("image/png") {
+            Self::Png
+        } else if media.eq_ignore_ascii_case("application/pdf") {
+            Self::Pdf
+        } else {
+            return Err("不支持的产物类型。".to_string());
+        };
+        if let Some(parameter) = parts.next() {
+            if parts.next().is_some()
+                || !matches!(format, Self::Html | Self::Markdown | Self::Csv)
+                || !parameter.trim().eq_ignore_ascii_case("charset=utf-8")
+            {
+                return Err("产物 MIME 参数无效。".to_string());
+            }
+        }
+        Ok(format)
+    }
+
+    fn extensions(self) -> &'static [&'static str] {
+        match self {
+            Self::Html => &["html", "htm"],
+            Self::Markdown => &["md", "markdown"],
+            Self::Csv => &["csv"],
+            Self::Png => &["png"],
+            Self::Pdf => &["pdf"],
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Html => "HTML 网页",
+            Self::Markdown => "Markdown 文档",
+            Self::Csv => "CSV 数据文件",
+            Self::Png => "PNG 图片",
+            Self::Pdf => "PDF 文档",
+        }
+    }
+
+    fn accepts_path(self, path: &Path) -> bool {
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| {
+                self.extensions()
+                    .iter()
+                    .any(|allowed| extension.eq_ignore_ascii_case(allowed))
+            })
+    }
+}
+
+struct NativeArtifactPayload {
+    format: NativeArtifactFormat,
+    suggested_name: String,
+    bytes: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+enum NativeArtifactExportOutcome {
+    Saved,
+    Cancelled,
+}
+
+fn validate_artifact_export_size(size: usize) -> Result<(), String> {
+    if size > MAX_ARTIFACT_EXPORT_BYTES {
+        return Err("产物超过单次导出大小限制。".to_string());
+    }
+    Ok(())
+}
+
+fn prepare_artifact_export(
+    bytes_base64: &str,
+    mime: &str,
+    suggested_name: &str,
+) -> Result<NativeArtifactPayload, String> {
+    let format = NativeArtifactFormat::from_mime(mime)?;
+    let portable_name =
+        workbench::files::validate_relative(suggested_name).is_ok_and(|parts| parts.len() == 1);
+    if suggested_name.is_empty()
+        || suggested_name.chars().count() > 160
+        || suggested_name.trim() != suggested_name
+        || !portable_name
+        || !format.accepts_path(Path::new(suggested_name))
+    {
+        return Err("导出文件名或扩展名无效。".to_string());
+    }
+    if bytes_base64.len() > MAX_ARTIFACT_EXPORT_BYTES.div_ceil(3) * 4 {
+        return Err("产物超过单次导出大小限制。".to_string());
+    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(bytes_base64)
+        .map_err(|_| "产物 base64 内容无效。".to_string())?;
+    validate_artifact_export_size(bytes.len())?;
+    Ok(NativeArtifactPayload {
+        format,
+        suggested_name: suggested_name.to_string(),
+        bytes,
+    })
+}
+
+fn write_selected_artifact(
+    selected: Option<PathBuf>,
+    payload: &NativeArtifactPayload,
+) -> Result<NativeArtifactExportOutcome, String> {
+    let Some(path) = selected else {
+        return Ok(NativeArtifactExportOutcome::Cancelled);
+    };
+    if !path.is_absolute() || !payload.format.accepts_path(&path) {
+        return Err("请选择与产物类型一致的文件扩展名。".to_string());
+    }
+    std::fs::write(&path, &payload.bytes)
+        .map_err(|_| "保存产物失败，请检查目录权限后重试。".to_string())?;
+    Ok(NativeArtifactExportOutcome::Saved)
+}
+
+/// 用户在系统保存面板中选址后，原样写出已校验的产物字节；取消不落盘。
+#[tauri::command]
+async fn export_workbench_artifact(
+    app: AppHandle,
+    bytes_base64: String,
+    mime: String,
+    suggested_name: String,
+) -> Result<NativeArtifactExportOutcome, String> {
+    let payload = prepare_artifact_export(&bytes_base64, &mime, &suggested_name)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let selected = app
+            .dialog()
+            .file()
+            .add_filter(payload.format.label(), payload.format.extensions())
+            .set_file_name(payload.suggested_name.clone())
+            .blocking_save_file();
+        let path = selected
+            .map(|file| {
+                file.into_path()
+                    .map_err(|_| "无法读取所选保存位置。".to_string())
+            })
+            .transpose()?;
+        write_selected_artifact(path, &payload)
+    })
+    .await
+    .map_err(|_| "保存产物未完成，请重试。".to_string())?
 }
 
 /// [T-391 H-key] `.master-key` 文件兜底的**混淆存储**。SPEC §9:未签名下 keychain 不持久,文件兜底
@@ -529,7 +697,7 @@ impl SidecarChild {
                 let mut child = child;
                 let _ = child.write(format!("{SIDECAR_SHUTDOWN_SENTINEL}\n").as_bytes());
                 match job {
-                    Some(job) => job.shutdown(5_000),
+                    Some(job) => job.shutdown(130_000),
                     None => {
                         child
                             .kill()
@@ -623,7 +791,7 @@ const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";
 // 避免旧实现每 2 秒取消并重发完整 SSR 请求，把慢机器拖成永久转圈。
 const STARTUP_IDLE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 const STARTUP_MAX_TIMEOUT: Duration = Duration::from_secs(30 * 60);
-const STARTUP_PROBE_TIMEOUT: Duration = Duration::from_secs(15);
+const STARTUP_PROBE_TIMEOUT: Duration = Duration::from_secs(120);
 const STARTUP_PROBE_INTERVAL: Duration = Duration::from_millis(750);
 
 #[derive(Clone, Debug)]
@@ -672,7 +840,10 @@ fn build_sidecar_probe_client(
     timeout: Duration,
 ) -> Result<reqwest::blocking::Client, reqwest::Error> {
     reqwest::blocking::Client::builder()
-        .timeout(timeout)
+        // 本地启动探测必须直连，避免系统/环境代理把正常首页变成代理502。
+        // 此client只用于固定127.0.0.1探测，不改变其它网络请求的代理设置。
+        .no_proxy()
+        .timeout(timeout.max(Duration::from_secs(120)))
         .redirect(reqwest::redirect::Policy::limited(2))
         .build()
 }
@@ -839,6 +1010,7 @@ fn verify_file_sha256(path: &std::path::Path, expected: &str, label: &str) -> Re
     Ok(())
 }
 
+#[cfg(debug_assertions)]
 fn verify_sidecar_tarball(tarball: &std::path::Path) -> Result<(), String> {
     // build.rs 恒注入该 env:打包构建 = tarball 真哈希;dev(无 tarball)= 空串。
     let expected = env!("CREATOROS_SIDECAR_SHA256");
@@ -1168,7 +1340,10 @@ fn materialize_windows_runtime(install_dir: &std::path::Path) -> Result<PathBuf,
         "[installer] 正在校验离线运行环境: {}",
         tarball.display()
     ));
+    #[cfg(debug_assertions)]
     verify_sidecar_tarball(&tarball)?;
+    #[cfg(not(debug_assertions))]
+    verify_release_signature(&tarball)?;
     runtime_progress("[installer] 离线运行环境校验完成，开始展开…");
 
     let tar_hash = env!("CREATOROS_SIDECAR_SHA256");
@@ -1571,6 +1746,47 @@ where
     candidates.pop()
 }
 
+fn format_sidecar_io_error(stage: &str, error: &std::io::Error) -> String {
+    // tar 的 Display 只有外层路径；根 I/O 原因保存在 get_ref/source 中。
+    // 这里只保留有限机械诊断，不按文字猜原因或决定是否重试。
+    let mut causes = Vec::new();
+    let mut next: Option<&(dyn std::error::Error + 'static)> = Some(error);
+    for _ in 0..8 {
+        let Some(cause) = next else { break };
+        let message = cause.to_string();
+        let mut chars = message.chars();
+        let mut limited: String = chars.by_ref().take(1024).collect();
+        if chars.next().is_some() {
+            limited.push_str("…[消息已截断]");
+        }
+        if let Some(io) = cause.downcast_ref::<std::io::Error>() {
+            limited.push_str(&format!(
+                " [I/O kind={:?}, raw_os_error={:?}]",
+                io.kind(),
+                io.raw_os_error()
+            ));
+            next = io
+                .get_ref()
+                .map(|inner| inner as &(dyn std::error::Error + 'static))
+                .or_else(|| cause.source());
+        } else {
+            next = cause.source();
+        }
+        causes.push(limited);
+    }
+    if next.is_some() {
+        causes.push("[错误链超过8层，已截断]".to_string());
+    }
+    format!("{stage}: {}", causes.join("；原因: "))
+}
+
+fn cleanup_failed_sidecar_extraction(temp: &std::path::Path) -> String {
+    match std::fs::remove_dir_all(temp) {
+        Ok(()) => "已清理临时目录".to_string(),
+        Err(error) => format_sidecar_io_error("临时目录清理失败", &error),
+    }
+}
+
 fn extract_sidecar_tarball(
     tarball: &std::path::Path,
     dest: &std::path::Path,
@@ -1621,21 +1837,28 @@ fn extract_sidecar_tarball(
     // [T-485] 不调用系统 `tar`：用户机可能没有、GUI PATH 也可能找不到。Rust tar::Archive
     // 自带路径穿越防护(unpack 内部拒绝 `..`/绝对路径)，同样保留 pnpm 相对 symlink。
     let unpack_result = (|| -> Result<(), String> {
-        let file = std::fs::File::open(tarball)
-            .map_err(|e| format!("打开 sidecar.tar.gz 失败 {}: {e}", tarball.display()))?;
+        let mut file = std::fs::File::open(tarball).map_err(|e| {
+            format_sidecar_io_error(
+                &format!("打开 sidecar.tar.gz 失败 {}", tarball.display()),
+                &e,
+            )
+        })?;
+        #[cfg(not(debug_assertions))]
+        release_integrity::verify_extraction_file(&mut file, &RELEASE_SIDECAR_BLAKE3)?;
         let decoder = flate2::read::GzDecoder::new(file);
         let mut archive = tar::Archive::new(decoder);
         let entries = archive
             .entries()
-            .map_err(|e| format!("读取 sidecar.tar.gz 条目失败: {e}"))?;
+            .map_err(|e| format_sidecar_io_error("读取 sidecar.tar.gz 条目失败", &e))?;
         let mut files = 0_u64;
         let mut bytes = 0_u64;
         for entry in entries {
-            let mut entry = entry.map_err(|e| format!("读取 sidecar tar 条目失败: {e}"))?;
+            let mut entry =
+                entry.map_err(|e| format_sidecar_io_error("读取 sidecar tar 条目失败", &e))?;
             bytes = bytes.saturating_add(entry.header().size().unwrap_or(0));
             let unpacked = entry
                 .unpack_in(&temp)
-                .map_err(|e| format!("展开 sidecar tar 条目失败: {e}"))?;
+                .map_err(|e| format_sidecar_io_error("展开 sidecar tar 条目失败", &e))?;
             if !unpacked {
                 return Err("sidecar tar 含越界路径，已拒绝展开".to_string());
             }
@@ -1656,19 +1879,19 @@ fn extract_sidecar_tarball(
         Ok(())
     })();
     if let Err(e) = unpack_result {
-        let _ = std::fs::remove_dir_all(&temp);
+        let cleanup = cleanup_failed_sidecar_extraction(&temp);
         return Err(format!(
-            "sidecar 解压失败({e})，已清理临时目录；tarball={}",
+            "sidecar 解压失败({e})，{cleanup}；tarball={}",
             tarball.display(),
         ));
     }
     if !temp.join("frontend").join("server.js").is_file() {
-        let _ = std::fs::remove_dir_all(&temp);
-        return Err("sidecar 解压结果缺 frontend/server.js，已清理临时目录".to_string());
+        let cleanup = cleanup_failed_sidecar_extraction(&temp);
+        return Err(format!("sidecar 解压结果缺 frontend/server.js，{cleanup}"));
     }
     if let Err(e) = std::fs::write(temp.join(".tarball-stamp"), stamp_value) {
-        let _ = std::fs::remove_dir_all(&temp);
-        return Err(format!("写 sidecar 完成标记失败，已清理临时目录: {e}"));
+        let cleanup = cleanup_failed_sidecar_extraction(&temp);
+        return Err(format!("写 sidecar 完成标记失败: {e}，{cleanup}"));
     }
 
     match promote_extracted_sidecar_with(
@@ -1717,6 +1940,7 @@ fn splash_status(app: &AppHandle, msg: &str) {
 /// [T-372 L2] 返回 Err = 入口完整性校验失败 → 上层**拒绝 spawn**(不再静默把被篡改的
 /// sidecar 跑起来)。其余路径语义不变。
 fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    #[cfg(debug_assertions)]
     if let Ok(dir) = std::env::var("CREATOROS_SIDECAR_DIR") {
         let p = PathBuf::from(dir);
         if p.exists() {
@@ -1737,6 +1961,12 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
             return Ok(dev_dir);
         }
     }
+    #[cfg(not(debug_assertions))]
+    let release_tarball = {
+        let tarball = resolve_bundled_sidecar_tarball(app)?;
+        verify_release_signature(&tarball)?;
+        tarball
+    };
     // [T-487] Windows 正式安装优先直读 NSIS 安装期已物化并校验的 runtime。路径跟随
     // 用户在安装器目录页选择的 $INSTDIR（可为 D/E 盘），首次启动不再复制/解压到 AppData。
     // 当前仍保留下方 tar → appData 的兼容兜底；只有原生 Windows 安装验收通过后才删除。
@@ -1783,7 +2013,10 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     // [T-454/T-487] 兼容路径：新 Windows 安装应在上方命中安装期 runtime；旧安装包、
     // macOS 与 Linux 仍可从单文件 tar 在 appData 原子解压。解压使用 Rust flate2/tar，
     // 不依赖用户电脑 PATH 或额外安装 tar/7-Zip。
+    #[cfg(debug_assertions)]
     let tarball = resolve_bundled_sidecar_tarball(app)?;
+    #[cfg(not(debug_assertions))]
+    let tarball = release_tarball;
     if !tarball.is_file() {
         #[cfg(windows)]
         if let Some(installed_error) = installed_runtime_error {
@@ -1792,6 +2025,7 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
         return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string());
     }
     splash_status(app, "正在校验安装包完整性…");
+    #[cfg(debug_assertions)]
     verify_sidecar_tarball(&tarball)?;
     let version = app.package_info().version.to_string();
     let data_dir = app
@@ -1838,7 +2072,8 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     }
     splash_status(app, "资源展开完成,正在启动服务…");
 
-    // [T-450] tar 整体 hash 只在**解压前**校验一次(verify_sidecar_tarball);之后
+    // [T-1273] 首次展开核验同一tar句柄；已完成cache保留原抽样，tar整体BLAKE3在主页加载后核验。
+    // [T-450] 既有解包缓存仍需抽样；之后
     //   .tarball-stamp 复用机制让攻击者可直接 patch 已解压的 .jsc,下次启动 stamp 命中
     //   跳过重解压 → hash 完全绕过。补抽样(每次启动都跑),把「解压后的运行时目录」也纳入
     //   完整性防线。开销 §调研 §5:冷 66-360ms,热 12-18ms。
@@ -1965,6 +2200,8 @@ fn cleanup_stale_runtimes(runtime_root: &std::path::Path, keep_version: &str) ->
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
 pub fn run() {
+    #[cfg(not(debug_assertions))]
+    license::harden_anti_debug();
     // [T-557] PREUNINSTALL 时主程序尚未被 NSIS 删除，先由 Rust 清理长路径 runtime；
     // updater 的 /UPDATE 路径不会调用该入口，只服务用户主动卸载。
     #[cfg(windows)]
@@ -2062,6 +2299,10 @@ pub fn run() {
             entitlement_claim::entitlement_claim_start,
             entitlement_claim::entitlement_claim_poll,
             entitlement_claim::entitlement_claim_resume,
+            owned_devices::owned_device_start,
+            owned_devices::owned_device_poll,
+            owned_devices::owned_device_resume,
+            owned_devices::owned_device_cancel,
             // [T-372 L3] 最近判定只读口(零网络):前端桥初始态 + 设置页宽限倒计时。
             license::license_last_decision,
             // [T-396c] 版本检查(latest-version 端点 + 渠道 downloadUrl,替代 updater check)。
@@ -2070,6 +2311,7 @@ pub fn run() {
             // 兼容性标识 `MacIntel` 当作实体芯片。
             runtime_system_info,
             export_daily_report_csv,
+            export_workbench_artifact,
             cli_access::cli_access_status,
             cli_access::cli_access_enable,
             cli_access::cli_access_revoke
@@ -2078,6 +2320,12 @@ pub fn run() {
         .manage(cli_access::CliAccessState::default())
         .setup(|app| {
             let handle = app.handle().clone();
+            #[cfg(target_os = "macos")]
+            app.manage(workbench::ipc::BridgeState::default());
+            #[cfg(windows)]
+            app.manage(workbench::ipc_windows::BridgeState::default());
+            #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
+            app.manage(workbench::browser_ipc::BrowserBridgeState::default());
 
             // [T-457] **头部立即建主窗口 + splash + 注入 handshake token** —— 移到 setup 头部,
             //   先于所有慢操作(sidecar tarball 首启解压 5-15min / master key 生成 / DB 迁移 /
@@ -2097,6 +2345,7 @@ pub fn run() {
                 "main",
                 WebviewUrl::App("index.html".into()),
             )
+            .devtools(cfg!(debug_assertions))
             .title(product_identity::package_display_name())
             .inner_size(1440.0, 900.0)
             .min_inner_size(1024.0, 680.0)
@@ -2112,7 +2361,7 @@ pub fn run() {
             // Wry 会通过 CoreWebView2EnvironmentOptions 显式写入自己的默认参数，Windows
             // WebView2 的同名环境变量因此不会自动生效。显式合并官方变量，供真包 RAT 打开
             // 本机调试端口读取实际 DOM；普通用户没有该变量，仍走 Wry 默认参数。
-            #[cfg(windows)]
+            #[cfg(all(windows, debug_assertions))]
             let main_window_builder = if let Ok(extra_browser_args) =
                 std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
             {
@@ -2124,10 +2373,14 @@ pub fn run() {
                 main_window_builder
             };
             let _splash_win = main_window_builder
-                .on_page_load(|_window, payload| {
+                .on_page_load(|window, payload| {
+                    #[cfg(debug_assertions)]
+                    let _ = window;
                     if payload.event() == PageLoadEvent::Finished
                         && matches!(payload.url().host_str(), Some("127.0.0.1" | "localhost"))
                     {
+                        #[cfg(not(debug_assertions))]
+                        start_release_background_check(window.app_handle(), payload.url());
                         eprintln!(
                             "[CreatorOS] MAIN_PAGE_LOAD_FINISHED {}",
                             payload.url()
@@ -2166,6 +2419,9 @@ pub fn run() {
             // 初始化前 panic，用户只得到白窗且没有可交付证据。
             let logs_dir = app_data_dir.join("logs");
             let logger = logging::init_sidecar_logger(&logs_dir);
+            #[cfg(not(debug_assertions))]
+            if let Some(logger) = &logger { let _ = RELEASE_LOGGER.set(logger.clone()); }
+            if let Some(panic_logger) = logger.clone() {logging::install_exception_panic_hook(panic_logger);}
             let log_dir_str = logs_dir.to_string_lossy().to_string();
 
             // [T-332 S5] 「重置工作区」归档 —— **必须在 spawn sidecar 之前、建 db 目录之前**:
@@ -2195,6 +2451,8 @@ pub fn run() {
 
             // 2) 空闲端口 + sidecar 环境。
             let port = find_free_port();
+            #[cfg(not(debug_assertions))]
+            RELEASE_MAIN_PORT.store(port, std::sync::atomic::Ordering::Release);
             let port_str = port.to_string();
             let cli_connection_dir =
                 cli_access::default_connection_dir(product_identity::product_ref());
@@ -2399,16 +2657,24 @@ pub fn run() {
                 option_env!("CREATOROS_BUILTIN_FEEDBACK_OFFICIAL_ORIGINS").unwrap_or(""),
             );
             let entitlement_claim_enabled = packaged_binary_flag(
-                "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+                crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_ENTITLEMENT_CLAIM_ENABLED),
                 option_env!("CREATOROS_BUILTIN_ENTITLEMENT_CLAIM_ENABLED").unwrap_or("0"),
             );
+            let owned_devices_enabled = packaged_binary_flag(
+                "CREATOROS_OWNED_DEVICES_ENABLED",
+                option_env!("CREATOROS_BUILTIN_OWNED_DEVICES_ENABLED").unwrap_or("0"),
+            );
             let product_feedback_submit_enabled = packaged_binary_flag(
-                "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED),
                 option_env!("CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED").unwrap_or("0"),
             );
             let client_config_pull_enabled = packaged_binary_flag(
                 "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                 option_env!("CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED").unwrap_or("0"),
+            );
+            let model_benefits_enabled = packaged_binary_flag(
+                "CREATOROS_MODEL_BENEFITS_ENABLED",
+                option_env!("CREATOROS_BUILTIN_MODEL_BENEFITS_ENABLED").unwrap_or("0"),
             );
             let model_configuration_authority = packaged_text(
                 "CREATOROS_MODEL_CONFIGURATION_AUTHORITY",
@@ -2421,11 +2687,11 @@ pub fn run() {
             );
             let growth_config_public_key_b64 = packaged_text(
                 "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
-                option_env!("CREATOROS_BUILTIN_GROWTH_CONFIG_PUBLIC_KEY_B64").unwrap_or(""),
+                crate::secure_strings::s(crate::secure_strings::ids::GROWTH_CONFIG_PUBKEY_B64),
             );
             let growth_config_key_id = packaged_text(
                 "CREATOROS_GROWTH_CONFIG_KEY_ID",
-                option_env!("CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID").unwrap_or(""),
+                crate::secure_strings::s(crate::secure_strings::ids::GROWTH_CONFIG_KEY_ID),
             );
 
             // [T-372 L2] 壳层许可上下文:决策链(license.rs)经 Tauri command / 启动线程使用。
@@ -2530,6 +2796,47 @@ pub fn run() {
                 use std::io::{BufRead, BufReader};
                 use std::process::Stdio;
 
+                // A fresh 0700 directory contains this 0600 socket. The pathname
+                // grants no authority: the listener also checks LOCAL_PEERPID
+                // against the actual Child returned by spawn below.
+                let private_bridge = match workbench::command::RuntimeRegistry::from_sidecar(&sidecar_dir) {
+                    Ok(runtimes) => match workbench::ipc::PendingBridge::bind() {
+                        Ok(bridge) => Some((bridge, runtimes)),
+                        Err(error) => {
+                            eprintln!("[shell] workbench private socket unavailable: {error}");
+                            None
+                        }
+                    },
+                    Err(error) => {
+                        eprintln!("[shell] workbench runtime unavailable: {error:?}");
+                        None
+                    }
+                };
+                // Advertise this capability only when the pinned CfT executable
+                // for this Mac target can actually be launched. NomiFun's binary
+                // override would bypass that guarantee, so reject it here too.
+                #[cfg(feature = "workbench-browser")]
+                let workbench_cft_root =
+                    sidecar_dir.join("layers/browser/workbench-cft/149.0.7827.155");
+                #[cfg(feature = "workbench-browser")]
+                let private_browser_bridge = if workbench::browser::BrowserHost::packaged_chrome_available(
+                    &workbench_cft_root,
+                ) && std::env::var_os(crate::secure_strings::s(crate::secure_strings::ids::NOMIFUN_CHROME_BINARY_ENV)).is_none()
+                {
+                    // This PID-bound socket grants no file/command authorization
+                    // and is never registered as a WebView command.
+                    match workbench::browser_ipc::PendingBrowserBridge::bind() {
+                        Ok(bridge) => Some(bridge),
+                        Err(error) => {
+                            eprintln!("[shell] browser private socket unavailable: {error}");
+                            None
+                        }
+                    }
+                } else {
+                    eprintln!("[shell] pinned workbench CfT unavailable; browser bridge disabled");
+                    None
+                };
+
                 // server.app 内层二进制(build-sidecar.mjs 在 sidecar/server.app 里产出;随 tarball 解压到位)。
                 let inner_bin = sidecar_dir
                     .join("server.app")
@@ -2556,6 +2863,8 @@ pub fn run() {
                 //   改用 node 内置的 144 个根证书(不依赖任何外部文件)。隔离实证:移走 cert.pem 后
                 //   默认 fetch = `unable to get local issuer certificate`,加本标志 = HTTP 200。
                 //   (企业自签 CA 场景仍可用 NODE_EXTRA_CA_CERTS 追加,不受影响。)
+                #[cfg(not(debug_assertions))]
+                cmd.env(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_HANDSHAKE_REQUIRED), "1");
                 cmd.arg("--use-bundled-ca")
                     .arg(&server_js_str)
                     .env("PORT", &port_str)
@@ -2566,16 +2875,18 @@ pub fn run() {
                     .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
                     .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
-                    .env("CREATOROS_DESKTOP", "1")
+                    .env(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_DESKTOP_ENV), "1")
                     // [T-181] Skill 远程下发端点 + 验签公钥。
-                    .env("PROMPT_BUNDLE_URL", PROMPT_BUNDLE_URL)
-                    .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
+                    .env("PROMPT_BUNDLE_URL", crate::secure_strings::s(crate::secure_strings::ids::PROMPT_BUNDLE_URL))
+                    .env("PROMPT_BUNDLE_PUBLIC_KEY", crate::secure_strings::s(crate::secure_strings::ids::PROMPT_BUNDLE_PUBKEY))
                     // [T-205] 抖音登录态落稳定 appDataDir/.auth/douyin(跨版本持久,免更新后重扫)。
                     .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
                     // [T-217a] 网站登录态落稳定 appDataDir/.auth/web(跨版本持久,免更新后重登)。
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
+                    .env("CREATOROS_APP_VERSION", app.package_info().version.to_string())
+                    .env("CREATOROS_LOG_SESSION_ID",logger.as_ref().map(|l|l.session_id().to_string()).unwrap_or_default())
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(见上方注释)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_CLI_ACCESS_FILE", &cli_access_file_str)
@@ -2595,21 +2906,23 @@ pub fn run() {
                         &feedback_official_origins,
                     )
                     .env(
-                        "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+                        crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_ENTITLEMENT_CLAIM_ENABLED),
                         &entitlement_claim_enabled,
                     )
+                    .env("CREATOROS_OWNED_DEVICES_ENABLED", &owned_devices_enabled)
                     .env(
-                        "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED),
                         &product_feedback_submit_enabled,
                     )
                     .env(
-                        "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        crate::secure_strings::product_feedback_public_env(),
                         &product_feedback_submit_enabled,
                     )
                     .env(
                         "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                         &client_config_pull_enabled,
                     )
+                    .env("CREATOROS_MODEL_BENEFITS_ENABLED", &model_benefits_enabled)
                     .env(
                         "CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY",
                         &model_configuration_authority,
@@ -2647,6 +2960,13 @@ pub fn run() {
                 if let Some(t) = &verdict_token {
                     cmd.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t);
                 }
+                if let Some((bridge, _)) = &private_bridge {
+                    cmd.env("CREATOROS_WORKBENCH_SOCKET", bridge.socket_path());
+                }
+                #[cfg(feature = "workbench-browser")]
+                if let Some(bridge) = &private_browser_bridge {
+                    cmd.env("CREATOROS_WORKBENCH_BROWSER_SOCKET", bridge.socket_path());
+                }
 
                 // [T-259] spawn 失败也落日志(排障用)再 panic —— 打包态用户拿不到 stderr,靠文件看死因。
                 let mut child = match cmd.spawn() {
@@ -2658,6 +2978,21 @@ pub fn run() {
                         panic!("启动 creatoros-server sidecar(server.app 内层二进制)失败: {e}");
                     }
                 };
+                if let Some((bridge, runtimes)) = private_bridge {
+                    let running = bridge.start(child.id(), app_data_dir.join("workbench"), runtimes);
+                    app.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
+                #[cfg(feature = "workbench-browser")]
+                if let Some(bridge) = private_browser_bridge {
+                    let running = bridge.start(
+                        child.id(),
+                        app_data_dir.join("nomifun-browser"),
+                        workbench_cft_root,
+                    );
+                    app.state::<workbench::browser_ipc::BrowserBridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
 
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar,然后**关闭
                 //   stdin(drop → EOF)**,node 侧读到换行/ EOF 即停。写完立即 zeroize 临时明文 buffer。
@@ -2706,11 +3041,20 @@ pub fn run() {
                     std::sync::Arc::new(sidecar_process::OwnedSidecar::new(child));
                 let watched_child = shared_child.clone();
                 let startup_tx_exit = startup_tx.clone();
+                let bridge_handle = handle.clone();
+                let exit_logger = logger.clone();
                 std::thread::spawn(move || {
                     let reason = match watched_child.watch_exit() {
                         Ok(()) => "sidecar 已退出，受控进程组已停止".to_string(),
                         Err(error) => format!("sidecar 退出状态读取失败({error})"),
                     };
+                    if !OBSERVABILITY_EXIT_EXPECTED.load(std::sync::atomic::Ordering::Acquire) {if let Some(l) = &exit_logger {l.capture_exception("SIDECAR_EXIT", &reason);}}
+                    // Close the listener before the child PID could ever be reused.
+                    bridge_handle.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().take();
+                    #[cfg(feature = "workbench-browser")]
+                    bridge_handle.state::<workbench::browser_ipc::BrowserBridgeState>()
+                        .0.lock().unwrap().take();
                     let _ = startup_tx_exit.send(StartupSignal::Exited(reason));
                 });
 
@@ -2724,6 +3068,14 @@ pub fn run() {
 
             #[cfg(not(target_os = "macos"))]
             {
+                #[cfg(windows)]
+                let private_bridge = match workbench::ipc_windows::PendingBridge::bind() {
+                    Ok(bridge) => Some(bridge),
+                    Err(error) => {
+                        eprintln!("[shell] Windows workbench private pipe unavailable: {error}");
+                        None
+                    }
+                };
                 let sidecar = app
                     .shell()
                     .sidecar("creatoros-server")
@@ -2743,16 +3095,18 @@ pub fn run() {
                     .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
                     .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
-                    .env("CREATOROS_DESKTOP", "1")
+                    .env(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_DESKTOP_ENV), "1")
                     // [T-181] Skill 远程下发端点 + 验签公钥(Win/Linux 同 macOS)。
-                    .env("PROMPT_BUNDLE_URL", PROMPT_BUNDLE_URL)
-                    .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
+                    .env("PROMPT_BUNDLE_URL", crate::secure_strings::s(crate::secure_strings::ids::PROMPT_BUNDLE_URL))
+                    .env("PROMPT_BUNDLE_PUBLIC_KEY", crate::secure_strings::s(crate::secure_strings::ids::PROMPT_BUNDLE_PUBKEY))
                     // [T-205] 抖音登录态落稳定 appDataDir/.auth/douyin(跨版本持久,免更新后重扫)。
                     .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
                     // [T-217a] 网站登录态落稳定 appDataDir/.auth/web(跨版本持久,免更新后重登)。
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
+                    .env("CREATOROS_APP_VERSION", app.package_info().version.to_string())
+                    .env("CREATOROS_LOG_SESSION_ID",logger.as_ref().map(|l|l.session_id().to_string()).unwrap_or_default())
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(与 macOS 分支一致)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_CLI_ACCESS_FILE", &cli_access_file_str)
@@ -2772,21 +3126,23 @@ pub fn run() {
                         &feedback_official_origins,
                     )
                     .env(
-                        "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+                        crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_ENTITLEMENT_CLAIM_ENABLED),
                         &entitlement_claim_enabled,
                     )
+                    .env("CREATOROS_OWNED_DEVICES_ENABLED", &owned_devices_enabled)
                     .env(
-                        "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED),
                         &product_feedback_submit_enabled,
                     )
                     .env(
-                        "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        crate::secure_strings::product_feedback_public_env(),
                         &product_feedback_submit_enabled,
                     )
                     .env(
                         "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                         &client_config_pull_enabled,
                     )
+                    .env("CREATOROS_MODEL_BENEFITS_ENABLED", &model_benefits_enabled)
                     .env(
                         "CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY",
                         &model_configuration_authority,
@@ -2825,7 +3181,14 @@ pub fn run() {
                     Some(t) => sidecar.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t),
                     None => sidecar,
                 };
+                #[cfg(windows)]
+                let sidecar = match &private_bridge {
+                    Some(bridge) => sidecar.env("CREATOROS_WORKBENCH_SOCKET", bridge.pipe_name()),
+                    None => sidecar,
+                };
 
+                #[cfg(not(debug_assertions))]
+                let sidecar = sidecar.env(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_HANDSHAKE_REQUIRED), "1");
                 // [T-259] spawn 失败也落日志再 panic(打包态排障)。
                 let (mut rx, mut child) = match sidecar.spawn() {
                     Ok(pair) => pair,
@@ -2836,6 +3199,12 @@ pub fn run() {
                         panic!("启动 creatoros-server sidecar 失败: {e}");
                     }
                 };
+                #[cfg(windows)]
+                if let Some(bridge) = private_bridge {
+                    let running = bridge.start(child.pid(), app_data_dir.join("workbench"));
+                    app.state::<workbench::ipc_windows::BridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
 
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar。写完立即
                 //   zeroize 临时明文 buffer。注意:tauri-plugin-shell 的 CommandChild 不暴露关闭 stdin
@@ -2874,6 +3243,8 @@ pub fn run() {
                 // (打包态排障)。terminated 亦落盘(sidecar 意外退出的死因)。
                 let logger = logger.clone();
                 let startup_tx_events = startup_tx.clone();
+                #[cfg(windows)]
+                let bridge_handle = handle.clone();
                 tauri::async_runtime::spawn(async move {
                     while let Some(event) = rx.recv().await {
                         match event {
@@ -2897,9 +3268,12 @@ pub fn run() {
                                 }
                             }
                             CommandEvent::Terminated(payload) => {
+                                #[cfg(windows)]
+                                bridge_handle.state::<workbench::ipc_windows::BridgeState>()
+                                    .0.lock().unwrap().take();
                                 eprintln!("[sidecar] terminated: {payload:?}");
                                 if let Some(l) = &logger {
-                                    l.log("shell", &format!("sidecar terminated: {payload:?}"));
+                                    if !OBSERVABILITY_EXIT_EXPECTED.load(std::sync::atomic::Ordering::Acquire) {l.capture_exception("SIDECAR_EXIT", &format!("sidecar terminated: {payload:?}"));}
                                 }
                                 let _ = startup_tx_events.send(StartupSignal::Exited(format!(
                                     "sidecar 已退出({payload:?})"
@@ -3038,7 +3412,18 @@ pub fn run() {
             //   take() 幂等,两处都到也只 kill 一次。崩溃/强退(SIGKILL 壳)两者都不到 —— 由
             //   sidecar 侧孤儿自检(instrumentation 轮询 ppid==1 优雅自退)兜底,双保险。
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
+                #[cfg(not(debug_assertions))]
+                RELEASE_BACKGROUND.cancel();
+                OBSERVABILITY_EXIT_EXPECTED.store(true,std::sync::atomic::Ordering::Release);
                 cli_access::revoke_on_exit(&app_handle.state::<cli_access::CliAccessState>());
+                #[cfg(target_os = "macos")]
+                app_handle.state::<workbench::ipc::BridgeState>().0.lock().unwrap().take();
+                #[cfg(windows)]
+                app_handle.state::<workbench::ipc_windows::BridgeState>()
+                    .0.lock().unwrap().take();
+                #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
+                app_handle.state::<workbench::browser_ipc::BrowserBridgeState>()
+                    .0.lock().unwrap().take();
                 if let Some(child) = app_handle.state::<SidecarHandle>().0.lock().unwrap().take() {
                     child.kill();
                 }
@@ -3654,6 +4039,220 @@ mod runtime_cleanup_tests {
     }
 
     #[test]
+    fn 展开诊断保留嵌套真实io码而不推断首次原因() {
+        // 合成码只验证序列化；不是用户首次启动 ENOSPC 的证明。
+        let native = std::io::Error::from_raw_os_error(28);
+        let kind = native.kind();
+        let wrapped = std::io::Error::new(kind, std::io::Error::new(kind, native));
+        let diagnostic = super::format_sidecar_io_error("合成诊断", &wrapped);
+        assert!(diagnostic.contains("raw_os_error=None"), "{diagnostic}");
+        assert!(diagnostic.contains("raw_os_error=Some(28)"), "{diagnostic}");
+        assert!(
+            diagnostic.contains(&format!("I/O kind={kind:?}")),
+            "{diagnostic}"
+        );
+    }
+
+    #[test]
+    fn 展开诊断按unicode截断单层并限制循环错误链() {
+        let long_error = std::io::Error::other("字".repeat(2048));
+        let diagnostic = super::format_sidecar_io_error("有界诊断", &long_error);
+        assert!(diagnostic.contains(&"字".repeat(1024)));
+        assert!(!diagnostic.contains(&"字".repeat(1025)));
+        assert!(diagnostic.contains("[消息已截断]"));
+
+        #[derive(Debug)]
+        struct RepeatedCause;
+        impl std::fmt::Display for RepeatedCause {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("循环错误")
+            }
+        }
+        impl std::error::Error for RepeatedCause {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                Some(self)
+            }
+        }
+        let repeated = std::io::Error::other(RepeatedCause);
+        let diagnostic = super::format_sidecar_io_error("有界诊断", &repeated);
+        assert_eq!(diagnostic.matches("循环错误").count(), 8);
+        assert!(diagnostic.contains("[错误链超过8层，已截断]"));
+    }
+
+    #[test]
+    fn 失败展开的临时清理成功只删除本例目录() {
+        let root = temp_runtime_root("extract-cleanup-success-diagnostic");
+        let temp = root.join("sidecar.extracting-owned");
+        std::fs::create_dir(&temp).unwrap();
+        std::fs::write(temp.join("partial-file"), "partial").unwrap();
+        std::fs::write(root.join("keep"), "keep").unwrap();
+        assert_eq!(
+            super::cleanup_failed_sidecar_extraction(&temp),
+            "已清理临时目录"
+        );
+        assert!(!temp.exists());
+        assert_eq!(std::fs::read_to_string(root.join("keep")).unwrap(), "keep");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 失败展开的真实非目录清理拒绝不冒称成功() {
+        let root = temp_runtime_root("extract-cleanup-failure-diagnostic");
+        let temp = root.join("file-instead-of-directory");
+        std::fs::write(&temp, "keep").unwrap();
+        let expected = std::fs::remove_dir_all(&temp).unwrap_err();
+        let diagnostic = super::cleanup_failed_sidecar_extraction(&temp);
+        assert!(diagnostic.starts_with("临时目录清理失败:"), "{diagnostic}");
+        assert!(!diagnostic.contains("已清理临时目录"), "{diagnostic}");
+        assert!(
+            diagnostic.contains(&format!("raw_os_error={:?}", expected.raw_os_error())),
+            "{diagnostic}"
+        );
+        assert_eq!(std::fs::read_to_string(&temp).unwrap(), "keep");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 实际tar越界条目拒绝且保留旧运行时与外部文件() {
+        let root = temp_runtime_root("extract-path-rejection-diagnostic");
+        let dest = root.join("runtime").join("sidecar");
+        std::fs::create_dir_all(dest.join("frontend")).unwrap();
+        std::fs::write(dest.join("frontend/server.js"), "old-runtime").unwrap();
+        std::fs::write(dest.join(".tarball-stamp"), "sha256:old").unwrap();
+        let outside = dest.parent().unwrap().join("out-of-scope.txt");
+        std::fs::write(&outside, "keep").unwrap();
+        let tarball = root.join("sidecar.tar.gz");
+        let encoder = flate2::write::GzEncoder::new(
+            std::fs::File::create(&tarball).unwrap(),
+            flate2::Compression::default(),
+        );
+        let mut builder = tar::Builder::new(encoder);
+        let mut header = tar::Header::new_gnu();
+        header.set_mode(0o644);
+        header.set_size(3);
+        header.set_entry_type(tar::EntryType::Regular);
+        // 只在合成归档中构造 unsafe header，实际 unpack_in 必须拒绝它。
+        let path = b"../out-of-scope.txt";
+        header.as_mut_bytes()[..path.len()].copy_from_slice(path);
+        header.set_cksum();
+        builder.append(&header, b"bad".as_slice()).unwrap();
+        builder.into_inner().unwrap().finish().unwrap();
+        let error = super::extract_sidecar_tarball(&tarball, &dest, "sha256:new", false, |_| false)
+            .unwrap_err();
+        assert!(error.contains("含越界路径，已拒绝展开"), "{error}");
+        assert_eq!(std::fs::read_to_string(&outside).unwrap(), "keep");
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend/server.js")).unwrap(),
+            "old-runtime"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join(".tarball-stamp")).unwrap(),
+            "sha256:old"
+        );
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 中途展开真实条目冲突保留底层错误与旧运行时() {
+        let root = temp_runtime_root("extract-collision-diagnostic");
+        let dest = root.join("runtime").join("sidecar");
+        std::fs::create_dir_all(dest.join("frontend")).unwrap();
+        std::fs::write(dest.join("frontend/server.js"), "old-runtime").unwrap();
+        std::fs::write(dest.join(".tarball-stamp"), "sha256:old").unwrap();
+
+        let tarball = root.join("sidecar.tar.gz");
+        let encoder = flate2::write::GzEncoder::new(
+            std::fs::File::create(&tarball).unwrap(),
+            flate2::Compression::default(),
+        );
+        let mut builder = tar::Builder::new(encoder);
+        for (path, entry_type, data) in [
+            (
+                "frontend/server.js",
+                tar::EntryType::Regular,
+                b"new-runtime".as_slice(),
+            ),
+            (
+                "fixture/collision",
+                tar::EntryType::Directory,
+                b"".as_slice(),
+            ),
+            (
+                "fixture/collision",
+                tar::EntryType::Regular,
+                b"x".as_slice(),
+            ),
+        ] {
+            let mut header = tar::Header::new_gnu();
+            header.set_mode(0o755);
+            header.set_entry_type(entry_type);
+            header.set_size(data.len() as u64);
+            header.set_cksum();
+            builder.append_data(&mut header, path, data).unwrap();
+        }
+        builder.into_inner().unwrap().finish().unwrap();
+
+        // 与 tar 的同名普通文件替换步骤一致，取得本平台真实码，不写死 macOS errno。
+        let probe_dir = root.join("probe-directory");
+        std::fs::create_dir(&probe_dir).unwrap();
+        let expected_code = std::fs::remove_file(&probe_dir)
+            .unwrap_err()
+            .raw_os_error()
+            .unwrap();
+        let error = super::extract_sidecar_tarball(&tarball, &dest, "sha256:new", false, |_| false)
+            .unwrap_err();
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend/server.js")).unwrap(),
+            "old-runtime"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join(".tarball-stamp")).unwrap(),
+            "sha256:old"
+        );
+        assert!(!dest
+            .parent()
+            .unwrap()
+            .join(format!("sidecar.extracting-{}", std::process::id()))
+            .exists());
+        assert!(error.contains("展开 sidecar tar 条目失败"), "{error}");
+        assert!(
+            error.contains(&format!("raw_os_error=Some({expected_code})")),
+            "{error}"
+        );
+        assert!(error.contains("已清理临时目录"), "{error}");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 坏gzip读取保留真实诊断且不覆盖旧运行时() {
+        let root = temp_runtime_root("extract-invalid-gzip-diagnostic");
+        let dest = root.join("runtime").join("sidecar");
+        std::fs::create_dir_all(dest.join("frontend")).unwrap();
+        std::fs::write(dest.join("frontend/server.js"), "old-runtime").unwrap();
+        std::fs::write(dest.join(".tarball-stamp"), "sha256:old").unwrap();
+        let tarball = root.join("sidecar.tar.gz");
+        std::fs::write(&tarball, b"not a gzip stream").unwrap();
+        let error = super::extract_sidecar_tarball(&tarball, &dest, "sha256:new", false, |_| false)
+            .unwrap_err();
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend/server.js")).unwrap(),
+            "old-runtime"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join(".tarball-stamp")).unwrap(),
+            "sha256:old"
+        );
+        assert!(!dest
+            .parent()
+            .unwrap()
+            .join(format!("sidecar.extracting-{}", std::process::id()))
+            .exists());
+        assert!(error.contains("读取 sidecar tar 条目失败"), "{error}");
+        assert!(error.contains("I/O kind="), "{error}");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
     fn 原子解压失败不留下最终目录或完成标记() {
         let root = temp_runtime_root("extract-failure");
         let missing_tar = root.join("missing.tar.gz");
@@ -3803,6 +4402,75 @@ mod runtime_cleanup_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn native_artifact_export_preserves_bytes_and_checks_format_size() {
+        for (mime, name, bytes) in [
+            (
+                "text/html; charset=utf-8",
+                "报告.html",
+                b"<h1>0</h1>".as_slice(),
+            ),
+            ("text/markdown", "笔记.md", b"# 0".as_slice()),
+            ("text/csv", "数据.csv", b"count,0\n".as_slice()),
+            ("image/png", "图.png", b"\x89PNG\r\n\x1a\n".as_slice()),
+            ("application/pdf", "图.pdf", b"%PDF-1.7\n".as_slice()),
+        ] {
+            let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+            let payload = prepare_artifact_export(&encoded, mime, name).unwrap();
+            assert_eq!(payload.bytes, bytes);
+        }
+        let encoded = base64::engine::general_purpose::STANDARD.encode(b"content");
+        for (mime, name) in [
+            ("application/octet-stream", "report.html"),
+            ("text/html", "report.pdf"),
+            ("text/html", "../report.html"),
+            ("text/html", "CON.html"),
+            ("text/html", "COM¹.html"),
+            ("image/png; charset=utf-8", "image.png"),
+        ] {
+            assert!(prepare_artifact_export(&encoded, mime, name).is_err());
+        }
+        assert!(prepare_artifact_export("%%%", "text/html", "report.html").is_err());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES).is_ok());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES + 1).is_err());
+    }
+
+    #[test]
+    fn native_artifact_export_cancel_overwrite_and_write_failure_are_distinct() {
+        let root = std::env::temp_dir().join(format!("creatoros-t1009-{}", rand::random::<u64>()));
+        std::fs::create_dir(&root).unwrap();
+        let payload = prepare_artifact_export(
+            &base64::engine::general_purpose::STANDARD.encode(b"new"),
+            "text/html",
+            "report.html",
+        )
+        .unwrap();
+        let target = root.join("report.html");
+        assert_eq!(
+            write_selected_artifact(None, &payload).unwrap(),
+            NativeArtifactExportOutcome::Cancelled
+        );
+        assert_eq!(
+            serde_json::to_string(&NativeArtifactExportOutcome::Cancelled).unwrap(),
+            "\"cancelled\""
+        );
+        assert!(!target.exists());
+        std::fs::write(&target, b"old").unwrap();
+        assert_eq!(
+            write_selected_artifact(Some(target.clone()), &payload).unwrap(),
+            NativeArtifactExportOutcome::Saved
+        );
+        assert_eq!(
+            serde_json::to_string(&NativeArtifactExportOutcome::Saved).unwrap(),
+            "\"saved\""
+        );
+        assert_eq!(std::fs::read(&target).unwrap(), b"new");
+        assert!(write_selected_artifact(Some(root.join("wrong.pdf")), &payload).is_err());
+        assert!(!root.join("wrong.pdf").exists());
+        assert!(write_selected_artifact(Some(root.clone()), &payload).is_err());
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn bundled_resource_candidates_follow_installed_app_layout() {
@@ -4070,5 +4738,54 @@ mod tests {
             !plist.contains("<key>com.apple.security.cs.get-task-allow</key>"),
             "entitlements 不该含 get-task-allow(debug entitlement)"
         );
+    }
+}
+
+#[cfg(not(debug_assertions))]
+include!(concat!(env!("OUT_DIR"), "/release-integrity.generated.rs"));
+#[cfg(not(debug_assertions))]
+static RELEASE_BACKGROUND: release_integrity::BackgroundCheck = release_integrity::BackgroundCheck::new();
+#[cfg(not(debug_assertions))]
+static RELEASE_MAIN_PORT: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(0);
+#[cfg(not(debug_assertions))]
+static RELEASE_LOGGER: std::sync::OnceLock<logging::SidecarLogger> = std::sync::OnceLock::new();
+
+#[cfg(not(debug_assertions))]
+fn verify_release_signature(tarball: &std::path::Path) -> Result<(), String> {
+    release_integrity::verify_signature_file(
+        &tarball.with_file_name("sidecar.tar.gz.sig"),
+        &RELEASE_SIDECAR_BLAKE3,
+        &RELEASE_SIDECAR_ROOT,
+        crate::secure_strings::s(crate::secure_strings::ids::UPDATE_TRUST_ROOT_KEY_ID),
+    )
+}
+
+#[cfg(not(debug_assertions))]
+fn start_release_background_check(app: &AppHandle, url: &url::Url) {
+    let port = RELEASE_MAIN_PORT.load(std::sync::atomic::Ordering::Acquire);
+    if port == 0 || url.scheme() != "http" || url.host_str() != Some("127.0.0.1")
+        || url.port() != Some(port) || !RELEASE_BACKGROUND.claim() { return; }
+    let handle = app.clone();
+    let on_failure = |app: &AppHandle, error: String| {
+        if RELEASE_BACKGROUND.cancelled.load(std::sync::atomic::Ordering::Acquire) { return; }
+        eprintln!("[shell] 后台安装资源校验失败：{error}");
+        if let Some(logger) = RELEASE_LOGGER.get() {
+            logger.log("shell", &format!("后台安装资源校验失败：{error}"));
+        }
+        // 沿原ExitRequested/Exit清理受管sidecar整棵树，不直接process::exit。
+        app.exit(43);
+    };
+    let worker_app = handle.clone();
+    if let Err(error) = std::thread::Builder::new().name("release-integrity".into()).spawn(move || {
+        let result = resolve_bundled_sidecar_tarball(&worker_app).and_then(|tarball| {
+            release_integrity::verify_tarball(&tarball, &RELEASE_SIDECAR_BLAKE3, &RELEASE_BACKGROUND.cancelled)
+        });
+        match result {
+            Ok(true) => { if let Some(logger) = RELEASE_LOGGER.get() { logger.log("shell", "后台安装资源完整性校验完成"); } },
+            Ok(false) => {}, // 应用已退出：取消，不报成PASS。
+            Err(error) => on_failure(&worker_app, error),
+        }
+    }) {
+        on_failure(&handle, format!("无法启动后台校验线程：{error}"));
     }
 }

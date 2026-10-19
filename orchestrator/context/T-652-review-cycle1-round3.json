@@ -1,0 +1,142 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "CONCERNS：上一轮三个 finding 保持 resolved；本轮 changed_line_refs 引入两项 major。其一，新增产品与人群结构缺少进入正式不可变定位版本的明确数据映射，无法保证版本恢复、账号隔离及下游读取同一快照。其二，无 discovery session 的可采纳候选与必须携带 sessionId 的原子确认契约冲突。联网退出主链、证据来源分级及 scratch 隔离未发现新的 blocker/major。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "R-POSITIONING",
+        "quote": "版本不可覆盖历史；每账号只有一个当前 profile 语义"
+      },
+      "acceptance_anchor": {
+        "id": "AC-10",
+        "quote": "只有用户确认后才追加版本并切换正式定位母版"
+      },
+      "where": "第 8、10、11 节的 positioning.discovery.confirm 与母版切换语义",
+      "failure_mode": "当前文本只要求“追加版本并原子切换”，未规定重复确认、并发确认或基于过期候选确认时的唯一结果。两个合理实现可能分别创建重复版本，或让较早打开的旧候选覆盖用户刚采纳的新母版，破坏单一当前 profile 和历史完整性。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md#11-与新建定位母版旧语义的冲突",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定 confirm 的唯一事务后置条件、幂等结果和过期候选并发守卫，并将重复确认与交错确认绑定到验收。",
+      "resolution_evidence": "当前 SPEC 第 10 节第 325—333 行规定 confirm 的唯一事务后置条件、幂等结果、候选 revision 与当前 statement 前置版本校验、过期候选冲突、事务回滚及交错确认结果；第 12 节第 366—367 行以 AC-15 验收重复确认、交错确认和半采纳记录。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "§3.3",
+        "quote": "选择后，旧作品和旧定位不进入候选生成的约束上下文，只可在用户主动打开时作参考"
+      },
+      "acceptance_anchor": {
+        "id": "AC-2",
+        "quote": "从零开始路径不把旧定位/旧作品注入候选生成上下文"
+      },
+      "where": "第 3.3、4.1、5、7、8 节的旧资料引用与候选生成上下文边界",
+      "failure_mode": "SPEC 同时允许用户主动打开旧资料作参考、把证据实时放入证据板，并要求从零开始时旧资料不得进入候选上下文，但未定义“打开”“引用”“进入证据板”是否会改变生成输入。实现可以合理地把已打开旧作品随证据板一并提交，从而违反从零开始的已确认隔离结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md#3-产品原则",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确从零开始时旧母版和旧作品的展示、引用、证据板状态与生成输入之间的唯一边界，并提供可检查的候选输入证据证明其未被注入。",
+      "resolution_evidence": "当前 SPEC 第 4.1 节第 87—96 行将“从零开始”定义为物理输入边界，明确只读查看不加入证据板或改变生成输入、切换起点后才可纳入旧作品，并要求保存可检查的 input manifest；第 12 节第 364—365 行以 AC-14 验收旧 profile/work 引用为空及只读查看不改变 manifest。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "§13.2",
+        "quote": "前采尽量让用户从多个可见选项中选择，并保留自定义补充"
+      },
+      "acceptance_anchor": {
+        "id": "AC-12",
+        "quote": "normal/minimum viewport 均能完成核心访谈、查看证据和采纳方向"
+      },
+      "where": "第 4.4、9、12、13 节的题型规则与验收标准",
+      "failure_mode": "正文要求每题保留“其他，我补充”，并将可见选项设为默认交互，但验收只证明旅程可完成和视口可用；一个把多数问题实现为自由输入、或丢失自定义补充的实现仍可能满足现有 12 条验收，导致用户已确认的交互结果无法被拒收。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md#12-验收标准",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "增加结果级验收：适用问题默认展示多个普通语言选项，保留自定义补充，选择与补充均可保存、恢复、修改并进入证据板；在 normal/minimum viewport 验证。",
+      "resolution_evidence": "当前 SPEC 第 12 节第 361—363 行新增 AC-13，要求适合选项回答的问题默认展示至少两个普通语言选项及适用的补充入口，并验收单选、多选、自定义补充的保存、刷新恢复、修改、证据板同步和 normal/minimum viewport。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "§4.5/§8",
+        "quote": "产品、人群、痛点、顾虑和证明必须结构化沉淀，并在采纳后进入正式定位版本供下游读取"
+      },
+      "acceptance_anchor": {
+        "id": "AC-21",
+        "quote": "采纳定位后，选题、写稿、审核、项目 Copilot 均从同一定位版本读取产品、人群、痛点、顾虑和证明"
+      },
+      "where": "第 4.5、8、10 节的 PositioningProductAudienceDraft、正式版本映射与下游版本快照",
+      "failure_mode": "新增结构仅定义为归属 session/revision 的 PositioningProductAudienceDraft，但正式真相仍限定为现有 profile + statement/version，且未定义主推产品、核心/高潜人群、场景、痛点链、顾虑和证明如何进入不可变 master snapshot。合理实现可能把这些字段压入不同字符串、继续读取可变草稿，或在切换/恢复历史版本后丢失它们；因此无法保证 AC-21 所要求的同一定位版本，也无法对正式数据执行稳定的账号隔离与版本回归。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md:228-253,314-333,366-374,445",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:445:26b27e8c0386d4d2",
+      "suggestion": "定义产品与人群正式版本的唯一结构和字段映射，将其随 confirm 在同一事务写入不可变 statement/master snapshot；版本切换、历史恢复及所有下游都按该 statement 读取。验收覆盖采纳、恢复旧版本、跨账号不可见及下游请求字段一致性。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-005",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "§3.7/§10.1",
+        "quote": "AI 只产候选；用户确认后由 backend 原子追加版本并切换当前母版"
+      },
+      "acceptance_anchor": {
+        "id": "AC-18",
+        "quote": "没有 discovery session 时也可生成并返回可采纳定位卡"
+      },
+      "where": "第 10 节 positioning.generate、positioning.discovery.confirm 与 AC-18 的无 session 生成采纳路径",
+      "failure_mode": "positioning.generate 被改为可不绑定 session/revision，AC-18 又要求这种结果可采纳；但唯一声明的原子确认请求强制携带 sessionId、candidateId 和 candidateRevision，并校验 session/candidate 归属。规格没有说明无 session 候选如何获得这些标识。实现只能在采纳时拒绝该卡、临时创建缺乏明确归属与前置版本的 session，或退回分步写 profile/statement；三者分别违反“可采纳”、账号归属或原子版本切换契约。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md:382,399-407,442",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:442:cd67aee70a548766",
+      "suggestion": "规定无 session 调用 positioning.generate 时由 backend 原子创建或复用当前账号的最小 discovery session，并返回 sessionId、candidateId、candidateRevision；随后统一走现有 confirm。补充无 session 生成后采纳、重复确认、并发冲突和跨账号候选拒绝验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

@@ -145,6 +145,7 @@ export interface AssetSummary {
   readonly height: number | null;
   readonly durationMs: number | null;
   readonly tags: ReadonlyArray<string>;
+  readonly tagsReadState?: "known" | "unavailable";
   readonly thumbnailToken: string;
   readonly updatedAt: string;
   // [T-381] 入库时间(assetResource.createdAt)—— 素材中心统一「按新旧」排序的键

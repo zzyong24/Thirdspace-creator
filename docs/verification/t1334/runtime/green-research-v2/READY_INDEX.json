@@ -1,0 +1,66 @@
+{
+  "state": "NOT_RUN_RESEARCH_ONLY",
+  "businessChanges": 0,
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/green-research-v2/CHECKS.json",
+      "bytes": 1110,
+      "sha256": "639eb9b0fef9b7948462dbcd324e54981db98c129393d385a215ecb75b4aacd6"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/green-research-v2/DEPENDENCY_DELTA.json",
+      "bytes": 1327,
+      "sha256": "5520e24e84ff1903b52142b73b76a72af1b5988d0193b755d9ce631faf8a3034"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/green-research-v2/WRAPPER_ONLY_DELTA.diff",
+      "bytes": 1540,
+      "sha256": "5769580042327da24755b8a68bce45d4600fe7d9c18f3a0949942c6b78e6c32a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/green-research-v2/freeze.py",
+      "bytes": 1949,
+      "sha256": "9fc8feb64b9ad9ac6b53ca2e2f42d792330696f4de99859ea8593c83553091af"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/green-research-v2/run.py",
+      "bytes": 6771,
+      "sha256": "103f32af26dd8c7e075bb1fc9ccdfa29b343d53c0bab763b5216336215859140"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1334/runtime/green-research-v2/vitest.config.mts",
+      "bytes": 901,
+      "sha256": "f962a91ebf3a78ad0fe9bed8dbc23da93ecd2477989723420045b1584927b816"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-research-v2/PRE_RUN_LOCK.json",
+      "bytes": 10238311,
+      "sha256": "950f6e6a2818ce4af9db3f8f2243a3cf8402a621115d2d65dccbc54ac4ed0356"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-research-v2/WORKER_BINDING.json",
+      "bytes": 64221,
+      "sha256": "0fda69673c161c905abbd07e58a6f5b9f28061569a265e2b53d52a9c8d71c7bf"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-research-v2/collection.log",
+      "bytes": 150,
+      "sha256": "4000c36b54d35831c48dd50badd867e7d5bf2a06f2437f79b40d7943fc077e25"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-research-v2/diagnostic-esm-resolution.mjs",
+      "bytes": 170,
+      "sha256": "041a7d4fbf968c3ecd01f17d25b2847af0748d72902f40a7e5b73d2af9a0c680"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-research-v2/esm.log",
+      "bytes": 270,
+      "sha256": "5d7083cc7fd120d76b5d98e84b858b19b68e2df9195c9f7d0f2894c99dfee384"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-research-v2/worker.cjs",
+      "bytes": 1540654,
+      "sha256": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709"
+    }
+  ]
+}

@@ -1,0 +1,314 @@
+import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
+import {ConflictError as MembershipConflictError} from "../platform-account";
+import {IntelligenceConflictError,OwnershipError} from "./intelligence.errors";
+import type { RequestContext } from "@creatoros/contract";
+import type {
+  PersistentTaskClaim,
+  PersistentTaskService,
+} from "../execution";
+import type {
+  IntelligenceAdapterEnvelope,
+  IntelligenceService,
+} from "./intelligence.service";
+
+export interface IntelligenceSourceAdapterPort {
+  run(
+    ctx: RequestContext,
+    input: Awaited<
+      ReturnType<IntelligenceService["getSourceExecutionInput"]>
+    > & { checkpoint: unknown | null; signal?: AbortSignal },
+  ): Promise<IntelligenceAdapterEnvelope>;
+}
+
+export interface RunIntelligenceSourceTaskDeps {
+  tasks: PersistentTaskService;
+  intelligence: IntelligenceService;
+  adapter: IntelligenceSourceAdapterPort;
+  now?: () => string;
+  workerId?: () => string;
+}
+
+const SOURCE_SYNC_LEASE_SECONDS = 90;
+const SOURCE_SYNC_HEARTBEAT_MS = 25_000;
+
+/** 只接真实领域类型；临时 SQL/transport 或同名异常不构成确定准入拒绝。 */
+function isSourceAdmissionRejected(error:unknown):boolean {
+ return error instanceof OwnershipError||error instanceof IntelligenceConflictError||error instanceof MembershipConflictError;
+}
+
+/** 只收口本 claim；不可信来源关系不得挑一个业务 run 写入。控制先于 blocked。 */
+async function closeRejectedSourceClaim(ctx:RequestContext,claim:PersistentTaskClaim,deps:RunIntelligenceSourceTaskDeps):Promise<void>{
+ const lease={taskId:claim.task.id,workerId:claim.lease.workerId,attempt:claim.lease.attempt};
+ const current=await deps.tasks.get(ctx,claim.task.id);
+ if(current.leaseOwner!==lease.workerId||current.attempt!==lease.attempt||!current.leaseExpiresAt||Date.parse(current.leaseExpiresAt)<=Date.parse(deps.now?.()??new Date().toISOString()))return;
+ if(current.status==='pause_requested'||current.status==='cancel_requested'){await deps.tasks.acknowledgeControl(lease).catch(()=>{});return;}
+ if(current.status!=='running'||current.runtimeStatus)return;
+ try{await deps.tasks.finish({...lease,fenceToken:claim.lease.fenceToken,status:'blocked',errorCode:'SOURCE_SYNC_ADMISSION_REJECTED',errorMessage:'来源任务的工作区或原执行绑定已改变，请保留原任务并检查账号组'});}
+ catch{
+  // finish(blocked) 仅 running CAS；get 与更新之间的控制竞争不能转 failed 再试。
+  const after=await deps.tasks.get(ctx,claim.task.id);
+  if(after.leaseOwner===lease.workerId&&after.attempt===lease.attempt&&(after.status==='pause_requested'||after.status==='cancel_requested'))await deps.tasks.acknowledgeControl(lease).catch(()=>{});
+ }
+}
+
+function adapterName(
+  type: Awaited<
+    ReturnType<IntelligenceService["getSourceExecutionInput"]>
+  >["source"]["type"],
+): IntelligenceAdapterEnvelope["upstreamEvidence"]["adapter"] {
+  switch (type) {
+    case "creator_profile":
+      return "douyin_profile";
+    case "favorites_folder":
+      return "douyin_favorites";
+    case "web":
+      return "web";
+    case "rss":
+      return "rss";
+    case "darkhorse_query":
+      return "douhot_darkhorse";
+  }
+}
+
+function failureEnvelope(
+  source: Awaited<
+    ReturnType<IntelligenceService["getSourceExecutionInput"]>
+  >["source"],
+  now: string,
+  error: unknown,
+): IntelligenceAdapterEnvelope {
+  const identities: Array<{ name: string; code: string | null }> = [];
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  for (let depth = 0; depth < 8 && current && !seen.has(current); depth += 1) {
+    seen.add(current);
+    if (typeof current !== "object") break;
+    const value = current as {
+      name?: unknown;
+      code?: unknown;
+      cause?: unknown;
+    };
+    identities.push({
+      name: typeof value.name === "string" ? value.name : "UnknownError",
+      code: typeof value.code === "string" ? value.code : null,
+    });
+    current = value.cause;
+  }
+  if (identities.length === 0) {
+    identities.push({ name: "UnknownError", code: null });
+  }
+  const signals = identities
+    .flatMap(({ name, code }) => [name, code])
+    .filter((value): value is string => Boolean(value));
+  const matches = (pattern: RegExp) =>
+    signals.some((value) => pattern.test(value));
+  const login = matches(
+    /^(DOUYIN_FAVORITES_SESSION_EXPIRED|DouyinNotLoggedInError|DOUHOT_(?:OAUTH|LOGIN|AUTH)(?:_REQUIRED|_EXPIRED)?|Douhot.*(?:OAuth|Login|Auth).*Error)$|LoginRequired|NotLoggedIn/i,
+  );
+  const captcha = matches(
+    /^(DOUYIN_FAVORITES_CAPTCHA|.*Captcha.*Error)$/i,
+  );
+  let errorCode: NonNullable<IntelligenceAdapterEnvelope["errorCode"]> =
+    "NO_VALID_RESPONSE";
+  if (matches(/^(BROWSER_PROFILE_BUSY|BrowserProfileBusyError)$/i)) {
+    errorCode = "BROWSER_PROFILE_BUSY";
+  } else if (captcha) {
+    errorCode = "CAPTCHA";
+  } else if (login) {
+    errorCode = "LOGIN_REQUIRED";
+  } else if (matches(/^FOLDER_MISSING$/i)) {
+    errorCode = "FOLDER_MISSING";
+  } else if (
+    matches(
+      /^(DOUYIN_FAVORITES_INVALID_RESPONSE|DouhotResponseShapeChangedError|DouhotSearchInputUnavailableError)$/i,
+    ) ||
+    matches(/responseshapechanged/i)
+  ) {
+    errorCode = "RESPONSE_SHAPE_CHANGED";
+  } else if (
+    matches(/^(DOUYIN_FAVORITES_(?:NETWORK|UPSTREAM)|.*HttpError)$/i) ||
+    matches(/httperror/i)
+  ) {
+    errorCode = "HTTP_ERROR";
+  } else if (matches(/urlblocked|unsafeurl/i)) {
+    errorCode = "UNSAFE_URL";
+  } else if (matches(/responsetoolarge/i)) {
+    errorCode = "RESPONSE_TOO_LARGE";
+  } else if (matches(/timeout|aborterror/i)) {
+    errorCode = "TIMEOUT";
+  }
+  return {
+    adapterStatus: login || captcha ? "blocked" : "failed",
+    upstreamEvidence: {
+      adapter: adapterName(source.type),
+      responseShape: "adapter-exception",
+      capturedAt: now,
+      ...(source.canonicalUrl ? { finalUrl: source.canonicalUrl } : {}),
+      listValid: false,
+    },
+    items: [],
+    checkpoint: null,
+    errorCode,
+    // 只记录异常类型；message 及 cause.message 可能含 URL 查询或短时签名。
+    safeDiagnostics: { errorName: identities[0]?.name ?? "UnknownError" },
+  };
+}
+
+export async function runIntelligenceSourceTask(
+  ctx: RequestContext,
+  input: {
+    sourceId: string;
+    runId: string;
+    taskId: string;
+    existingClaim?: PersistentTaskClaim;
+    signal?: AbortSignal;
+    cancelOnAbort?:boolean;
+  },
+  deps: RunIntelligenceSourceTaskDeps,
+): Promise<void> {
+  if (input.signal?.aborted && !input.existingClaim) return;
+  const workerId =
+    deps.workerId?.() ??
+    `intelligence-source:${input.taskId}:${Date.now().toString(36)}`;
+  const claim =
+    input.existingClaim ??
+    (await deps.tasks.claimTask({
+      taskId: input.taskId,
+      workerId,
+      leaseSeconds: SOURCE_SYNC_LEASE_SECONDS,
+    }));
+  if (!claim) return;
+
+  const control = new AbortController();
+  let leaseLost = false;
+  let heartbeatStopped = false;
+  let heartbeatInFlight: Promise<void> | undefined;
+  let parentCancellation: Promise<void> | undefined;
+  let adapterPending:Promise<IntelligenceAdapterEnvelope>|undefined;
+  let rejected=false;
+  const leaseInput = {taskId: input.taskId, workerId: claim.lease.workerId, attempt: claim.lease.attempt};
+  const onParentAbort = () => {
+    control.abort(input.signal?.reason);
+    if(input.cancelOnAbort===false)return;
+    parentCancellation ??= (async () => {
+      // Persist cancellation even when abort raced the claim response.
+      try {
+        await deps.tasks.command(ctx, {
+          taskIds: [input.taskId], command: "cancel",
+          idempotencyKey: `source-parent-cancel:${input.taskId}:${claim.lease.attempt}`,
+        });
+      } catch (error) {
+        const current = await deps.tasks.get(ctx, input.taskId);
+        if (!["cancelled", "succeeded", "failed", "blocked"].includes(current.status)) throw error;
+      }
+    })();
+    // The final cleanup awaits and surfaces failures; avoid an unhandled rejection meanwhile.
+    void parentCancellation.catch(() => {});
+  };
+  input.signal?.addEventListener("abort", onParentAbort, {once: true});
+  if (input.signal?.aborted) onParentAbort();
+  const heartbeatTimer = setInterval(() => {
+    if (heartbeatStopped || heartbeatInFlight || control.signal.aborted) return;
+    // 慢数据库心跳只占一个在途槽；跳过的间隔不形成待执行 Promise 链。
+    heartbeatInFlight = (async () => {
+      try {
+        const task = await deps.tasks.heartbeat({...leaseInput, leaseSeconds: SOURCE_SYNC_LEASE_SECONDS});
+        if (!heartbeatStopped && (task.status === "pause_requested" || task.status === "cancel_requested")) control.abort();
+      } catch {
+        if (!heartbeatStopped) {leaseLost = true; control.abort();}
+      }
+    })().finally(() => {heartbeatInFlight = undefined;});
+  }, SOURCE_SYNC_HEARTBEAT_MS);
+  let abortListener: (() => void) | undefined;
+  try {
+    control.signal.throwIfAborted();
+    const boundRun=await deps.intelligence.getRunByTaskForExecution(ctx,input.taskId);
+    if(boundRun.id!==input.runId||boundRun.sourceId!==input.sourceId)throw new OwnershipError('来源任务与原运行不符');
+    const sourceInput = await deps.intelligence.getSourceExecutionInput(ctx, input.sourceId);
+    control.signal.throwIfAborted();
+    // A non-cooperative adapter may finish late; it cannot hold a cancelled lease or write results.
+    const aborted = new Promise<never>((_resolve, reject) => {
+      abortListener = () => reject(control.signal.reason);
+      control.signal.addEventListener("abort", abortListener, {once: true});
+    });
+    let envelope: IntelligenceAdapterEnvelope;
+    try {
+      adapterPending=deps.adapter.run(ctx,{...sourceInput,checkpoint:claim.task.checkpoint,signal:control.signal});
+      envelope = await Promise.race([adapterPending,aborted]);
+    } catch (error) {
+      if (control.signal.aborted) return;
+      envelope = failureEnvelope(sourceInput.source, deps.now?.() ?? new Date().toISOString(), error);
+    }
+    if (heartbeatInFlight) await new Promise<void>(resolve => {
+      const done = () => {control.signal.removeEventListener("abort", done); resolve();};
+      control.signal.addEventListener("abort", done, {once: true});
+      void heartbeatInFlight!.then(done);
+      if (control.signal.aborted) done();
+    });
+    if (control.signal.aborted || leaseLost) return;
+    await deps.intelligence.applyAdapterBatch(ctx, {
+      runId: input.runId, lease: claim.lease, expectedFence:claim.lease.fenceToken,envelope, terminal: true,
+    });
+  } catch (error) {
+    if (!control.signal.aborted) {rejected=isSourceAdmissionRejected(error);throw error;}
+  } finally {
+    heartbeatStopped = true;
+    clearInterval(heartbeatTimer);
+    input.signal?.removeEventListener("abort", onParentAbort);
+    if (abortListener) control.signal.removeEventListener("abort", abortListener);
+    if(input.cancelOnAbort===false&&adapterPending)await adapterPending.catch(()=>{});
+    // 明确取消可以先确认原租约终态；已发出的 DB 查询不能物理中断，但不会再触发新心跳。
+    // 准入拒绝的收口等已发心跳；用户明确取消保持原即时确认，迟到心跳不再驱动控制。
+    if(rejected||!control.signal.aborted||input.cancelOnAbort===false)await heartbeatInFlight;
+    if (parentCancellation) await parentCancellation;
+    if (control.signal.aborted && !leaseLost) {
+      const current = await deps.tasks.get(ctx, input.taskId);
+      if (current.status === "pause_requested" || current.status === "cancel_requested") {
+        await deps.tasks.acknowledgeControl(leaseInput);
+      }
+    }
+    if(rejected)await closeRejectedSourceClaim(ctx,claim,deps);
+  }
+}
+
+/** Startup/idle drain: recovers queued source tasks from the real DB after restart. */
+export async function drainIntelligenceSourceQueue(
+  deps: RunIntelligenceSourceTaskDeps,
+  maxTasks = 20,
+  control:TaskDrainControl = {},
+): Promise<number> {
+  let processed = 0;
+  for (; processed < maxTasks && !isTaskDrainStopping(control); processed += 1) {
+    const claim = await deps.tasks.claimNext({
+      workerId:
+        deps.workerId?.() ??
+        `intelligence-drain:${Date.now().toString(36)}:${processed}`,
+      kinds: ["source_sync"],
+      leaseSeconds: 90,
+    });
+    if (!claim || isTaskDrainStopping(control)) break;
+    const ctx: RequestContext = {
+      userId: claim.task.userId,
+      accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined,
+      requestId: `execution:${claim.task.id}`,
+      source: "ingestion",
+      ingestionRunId: claim.task.id,
+    };
+    let run:Awaited<ReturnType<IntelligenceService['getRunByTaskForExecution']>>;
+    try{run=await deps.intelligence.getRunByTaskForExecution(ctx,claim.task.id);}
+    catch(error){if(isSourceAdmissionRejected(error))await closeRejectedSourceClaim(ctx,claim,deps);throw error;}
+    await runIntelligenceSourceTask(
+      ctx,
+      {
+        sourceId: run.sourceId,
+        runId: run.id,
+        taskId: claim.task.id,
+        existingClaim: claim,
+        signal:control.signal,
+        cancelOnAbort:false,
+      },
+      deps,
+    );
+  }
+  return processed;
+}

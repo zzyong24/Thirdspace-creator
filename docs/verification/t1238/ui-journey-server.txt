@@ -1,0 +1,70 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://127.0.0.1:49410
+- Network:       http://127.0.0.1:49410
+- Environments: .env.local
+✓ Ready in 274ms
+
+  We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+  	- include was updated to add '.next/creatoros-t1238-settings-ZSjhav/types/**/*.ts'
+  	- include was updated to add '.next/creatoros-t1238-settings-ZSjhav/types/**/*.ts'
+
+[CreatorOS] SIDECAR_STARTUP_VERIFIED
+
+○ Compiling /api/v1/dispatch ...
+ POST /api/v1/dispatch 200 in 18.4s (next.js: 9.9s, proxy.ts: 140ms, application-code: 8.4s)
+○ Compiling /settings ...
+ GET /settings 200 in 28.7s (next.js: 25.8s, proxy.ts: 6ms, application-code: 3.0s)
+ POST /api/v1/dispatch 200 in 81ms (next.js: 17ms, proxy.ts: 22ms, application-code: 42ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 107ms (next.js: 70ms, proxy.ts: 24ms, application-code: 13ms)
+ POST /api/v1/dispatch 200 in 180ms (next.js: 91ms, proxy.ts: 63ms, application-code: 26ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 196ms (next.js: 85ms, proxy.ts: 93ms, application-code: 18ms)
+ POST /api/v1/dispatch 200 in 155ms (next.js: 24ms, proxy.ts: 109ms, application-code: 22ms)
+ POST /api/v1/dispatch 200 in 88ms (next.js: 3ms, proxy.ts: 74ms, application-code: 11ms)
+ POST /api/v1/dispatch 200 in 20ms (next.js: 2ms, proxy.ts: 4ms, application-code: 14ms)
+ POST /api/v1/dispatch 200 in 18ms (next.js: 5ms, proxy.ts: 4ms, application-code: 10ms)
+ GET /settings 200 in 610ms (next.js: 5ms, proxy.ts: 33ms, application-code: 573ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 27ms (next.js: 13ms, proxy.ts: 5ms, application-code: 9ms)
+ POST /api/v1/dispatch 200 in 55ms (next.js: 23ms, proxy.ts: 6ms, application-code: 26ms)
+ POST /api/v1/dispatch 200 in 63ms (next.js: 49ms, proxy.ts: 8ms, application-code: 5ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 75ms (next.js: 44ms, proxy.ts: 24ms, application-code: 7ms)
+ POST /api/v1/dispatch 200 in 33ms (next.js: 4ms, proxy.ts: 15ms, application-code: 14ms)
+ POST /api/v1/dispatch 200 in 30ms (next.js: 5ms, proxy.ts: 8ms, application-code: 17ms)
+ GET /settings 200 in 728ms (next.js: 3ms, proxy.ts: 2ms, application-code: 723ms)
+ POST /api/v1/dispatch 200 in 18ms (next.js: 4ms, proxy.ts: 5ms, application-code: 8ms)
+ POST /api/v1/dispatch 200 in 35ms (next.js: 13ms, proxy.ts: 8ms, application-code: 15ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 44ms (next.js: 31ms, proxy.ts: 8ms, application-code: 5ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 38ms (next.js: 7ms, proxy.ts: 23ms, application-code: 7ms)
+ POST /api/v1/dispatch 200 in 78ms (next.js: 14ms, proxy.ts: 23ms, application-code: 40ms)
+○ Compiling /api/web-session ...
+ POST /api/v1/dispatch 200 in 29ms (next.js: 4ms, proxy.ts: 4ms, application-code: 20ms)
+ POST /api/v1/dispatch 200 in 29ms (next.js: 9ms, proxy.ts: 5ms, application-code: 15ms)
+ POST /api/v1/dispatch 200 in 22ms (next.js: 3ms, proxy.ts: 4ms, application-code: 16ms)
+ POST /api/web-session 200 in 1551ms (next.js: 1490ms, proxy.ts: 24ms, application-code: 37ms)
+ POST /api/web-session 200 in 1599ms (next.js: 1572ms, proxy.ts: 4ms, application-code: 23ms)
+ GET /settings 200 in 768ms (next.js: 4ms, proxy.ts: 4ms, application-code: 760ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 20ms (next.js: 8ms, proxy.ts: 7ms, application-code: 5ms)
+ POST /api/v1/dispatch 200 in 44ms (next.js: 18ms, proxy.ts: 8ms, application-code: 18ms)
+ POST /api/v1/dispatch 200 in 64ms (next.js: 37ms, proxy.ts: 10ms, application-code: 17ms)
+ POST /api/web-session 200 in 67ms (next.js: 13ms, proxy.ts: 7ms, application-code: 47ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 79ms (next.js: 58ms, proxy.ts: 10ms, application-code: 11ms)
+ POST /api/web-session 200 in 21ms (next.js: 4ms, proxy.ts: 4ms, application-code: 12ms)
+ POST /api/v1/dispatch 200 in 45ms (next.js: 21ms, proxy.ts: 5ms, application-code: 19ms)
+ GET /api/chat/engines 200 in 9.3s (next.js: 216ms, proxy.ts: 5ms, application-code: 9.0s)
+ GET /api/chat/engines 200 in 3.4s (next.js: 2ms, proxy.ts: 3ms, application-code: 3.4s)
+ GET /api/chat/engines 200 in 3.5s (next.js: 6ms, proxy.ts: 7ms, application-code: 3.5s)
+ GET /api/chat/engines 200 in 219ms (next.js: 3ms, proxy.ts: 4ms, application-code: 212ms)
+ POST /api/v1/dispatch 200 in 16ms (next.js: 4ms, proxy.ts: 5ms, application-code: 7ms)
+ POST /api/v1/dispatch 200 in 26ms (next.js: 8ms, proxy.ts: 6ms, application-code: 11ms)
+ POST /api/v1/dispatch 200 in 24ms (next.js: 3ms, proxy.ts: 9ms, application-code: 12ms)
+ GET /api/chat/engines 200 in 4.5s (next.js: 4ms, proxy.ts: 15ms, application-code: 4.5s)
+ GET /api/chat/engines 200 in 388ms (next.js: 2ms, proxy.ts: 3ms, application-code: 383ms)

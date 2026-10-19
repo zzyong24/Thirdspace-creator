@@ -1,0 +1,26 @@
+--- a/docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md
++++ b/docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md
+@@ -213,6 +213,14 @@
+ 
+ 运行输出显式携带 actualEngine、stopReason、usageRef、checkpointRef、completeness 和类型化候选。正常完成为 succeeded；仍有可用业务候选但预算/外部来源不足为 partial；只有诊断且无业务结果时，不可恢复错误映射 failed，配置/登录阻断映射 waiting_user，未知提交映射 unknown_result，不制造 agentic-result.json 候选。blocked 只保留为工具结果与旧公共状态，不是新执行终态。历史 blocked 记录保持回读；仅依据持久化错误码与实际恢复动作映射，缺原因时保留原记录并要求诊断，禁止猜成可重试。partial 候选保留来源与未完成说明，支持安全采纳已有结果。确定性回退不得额外调用 LLM 后忽略其决定；缺 Pi 时仅回退到已验证的既有功能，能力不足在调模型前说明，不伪报 Agent 已完成。
+ 
++转写领域增量候选（本段未应用，须独立准确规范裁决）：映射 transcribe.douyin 的真实部分稿须保留并提供本人原任务逐件回读、当前可读稿项目入口与未完成说明。宿主在原完整 receipt/calls/fence 事务核实至少一件真实非图集稿且另有明确 failed 后，execution partial 经原公共 succeeded/runtimeStatus partial 投影；completeTranscribeTask 与旧 Worker 的 succeeded/failed enum 不变。existing receipt 不能单凭状态当真稿，须重验同 owner/workspace/source 当前工件。没有稿的失败来源不能因整批公共 succeeded 隐藏核对/恢复入口；读失败不得自动获得新任务提交权。
++
++转写结果只沿现 ai.tasks.get/list 与 results.list 的业务 ID 受控回读；不借 execution.tasks.get 的 exec namespace，不暴露 execution payload。results.list 的候选 transcribe_summary 复用原结果槽，resultData 仅 items/counts；items 按原冻结 awemeIds 顺序，字段 awemeId/status/projectId/artifactId/hasUsableTranscript/error，status 为原五 receipt 状态或只读 pending，引用须由当前本人真稿验证。缺完整历史绑定不补造成功，其它候选采纳与三 validation 字段守卫保留；此 summary 不产生采纳副作用。
++
++transcribe-only partial 恢复候选仅处理原任务明确 failed 子集，沿原 execution.tasks.command retry strict body，不放宽通用 partial retry；重验双向 task/source/owner/workspace/membership、原 calls 全部已核对、deadline/attempt/累计预算足够。保原模型/音频/operationKey/已结算结果及已保存稿；成功件和其它非 failed receipt 不重新执行。原 payload 中最小私有 transcribeRecoveryRequests[commandKey]={command:'retry',sourceIds:<受理时准确failed子集>,acceptedAt:<服务端时间>} 与 queued 原子提交；同 key 只回原 task，不再排队，不重置预算/截止。unknown/在途或缺回执不得新 admission。UI 明示只恢复未完成件及可能再次调用/费用，ACK 丢失先回读原 task，不自动换 key。
++
++普通 projects.transcribe 提交还须准确阻断同 scope/source 跨 batch 在途或未知结果，不只同 project 单件合并；准确来源锁、事务顺序、receipt 重放与原新意图区分需独立核。现 no-project 导入后补存、耗尽预算后的新收费意图、缺历史证据恢复不属于 partial retry 隐含许可，另行规范，不能通过新 attempt 绕过原 calls/预算。逐件结果查看、对应项目编辑、返回/刷新与准确原任务恢复共同通过才算完成，不以 public succeeded 替代用户验收。
++
+ 所有生产入口纳入同一 scheduler/恢复：ai.tasks.create 的各 runner、execution.tasks.create、旧 conversation.messages.create、新 /api/chat、source/transcript/share-import/topic-preview/script-candidate、automation scheduled_collection、reviewGate dispatchScriptReview，以及采集后的归因/蒸馏模型调用。流式 HTTP 保持现有卡片协议，通过 Worker 事件适配；断开订阅不自动取消持久任务，显式取消才生效。每一迁移项列出新 owner、消费者与旧出口删除证据，不能只迁一个 dispatch 闭包。
+ 
+ 正式装配删除 createMockPublisher、未注册操作 mock 兜底与 canonical 默认身份；测试 fixtures 独立。已授权手工发布登记仍可用，真实自动发布未实现则给真实能力状态，不造 published。超大文件按服务装配、模型运行、宿主适配、UI 区域抽出清晰 owner；用调用者与类型检查证明无用再删，不按文件名或行数判断死代码。
+@@ -259,7 +267,7 @@
+ | AC-04 | 多工具一轮、预算已耗尽、取消后迟到 Worker | 调用前拦截；预算不可重置；旧 fence 不能启动动作、写候选或覆盖终态；已执行调用仍可结算；每 root/child/fallback model call 宿主冻结身份与原operation/inputDigest/parent绑定，Worker/client不可自报；unknown计量null且禁止fallback/新尝试；内部managed身份不进入任何公开nested出口 |
+ | AC-05 | 杀 Worker/父进程、检查点与提交窗口中断 | 恢复消息/预算/工具事实；无重复候选；ai/execution 投影一致；浏览器重新观察；旧 sweep 不判死新任务；暂停中无新 admission，在途调用可结算；暂停后重启不自启，恢复保持预算/重试额度/deadline/operationKey；相同显式locator并发、首轮响应丢失/返回刷新仅一canonical conversation/source/task，异输入或scope409；旧成功metadata/resultData/finish深比较与无v1原形保留，新v1只按持久回读；取消无assistant经ai.tasks.get业务taskId回读安全usage，跨owner/group拒绝 |
+ | AC-06 | 浏览器过期定位、排队取消、登录阻断 | 新观察后改目标；取消排队不启动；搜索取消不启动后续 fallback；动作后回读证据；登录不反复撞墙 |
+-| AC-07 | Pi 异常/缺失、partial、纯诊断 | actualEngine 真实；可用部分保留；诊断不冒充成功；有效旧路径安全降级 |
++| AC-07 | Pi 异常/缺失、partial、纯诊断 | actualEngine 真实；可用部分保留；诊断不冒充成功；有效旧路径安全降级；转写真实 partial 的逐件结果/对应稿面交接与原 task 安全恢复、失败源无稿不可隐藏、unknown/跨 batch 不重提、旧 complete wire兼容均真实验收 |
+ | AC-08 | 所有 R-05 入口及旧数据 | 每入口路由至唯一执行权；正常生成无额外规划模型；流式卡片、采纳、取消与选区改稿兼容；迁移可重跑；submit新locator属明示新意图，regenerate仍原source恢复；再次请求原assistant引用必须server核succeeded无候选，预填/取消零调用，unknown在途零新任务；新可选wire不强制旧客户端，request映射/可空identity迁移前向重跑不改旧行，兼容回退不DROP新增事实；S5价格配置和成本角标仍须原验收 |
+ | AC-09 | 性能基线与故障样本 | R-03 同条件 P50/P95 和模型调用数；全部故障分类符合预期；重复副作用为 0，取消生效后的新 admission 为 0 |
+ | AC-10 | 正式装配、边界与旧路径退役 | 无生产 mock 发布/transport 和默认身份；backend 不 import frontend；SDK 只在 worker/runtime；Worker 不打开 DB；手工登记回归 |

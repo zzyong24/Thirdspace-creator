@@ -1,0 +1,9 @@
+# T1107 当前main实际验收
+
+产品零改动；已独评两测试精确写集和当前事实合同后正式record/start。公共探针保原C09断言，实际1FAIL/18skip，同时正式API证实A完整DTO未变、B新记录ID/account/output独立。先前误诊及勘误原报告保留，不当成安全缺口已修复。
+
+修正过期账号目录5→精确六ID，并校准旧user级外部ID假设。所有原跨账号404、CRUD与身份断言保留；新增A完整DTO不变、B真实目标、A不可读B新事实，同账号另项目409且B DTO不变。正式三文件公共链retry0全部通过；publishing第一命令实际仅service文件44例通过：另外两个路径不存在，Vitest仍exit0，独立复核已发现；不冒称三文件已过，原错误命令回执保留。仓内真实repository.integration/contract/acceptance正在补跑。具体数量见原日志，不把retry造成的409当成隔离成功。
+
+全局reconcile与统一安装待验；完成前保存当前独立实施报告和实际Gates，不补历史TDD、访问真实库或新模型调用。
+
+补充真实发布模块验证：repository.integration/contract/acceptance三个现存文件实际3files/27PASS，exit0，397.738秒；与原service单文件44PASS的真实并集合计4files/71测试。保留早先不存在文件命令与一文件回执，不把它算三文件。当前独立最终有限复核PASS；类型与全局、安装仍以独立实际记录为准。

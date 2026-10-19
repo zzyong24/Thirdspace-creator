@@ -1,4 +1,6 @@
+import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
+import {rubricVersionResource as versionSchema} from '@creatoros/contract';
 import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createCalibrationRepository,
@@ -21,6 +23,7 @@ import {
   type CalibrationRuleSuggestionResource,
 } from "./calibration.schema";
 import {
+  OwnershipError,
   ConflictError,
   ImmutableError,
   ValidationError,
@@ -146,6 +149,8 @@ export interface ServiceDeps {
   // SOFT dep — the cross-module aggregates for calibration.overview (待校准内容 + 经验沉淀).
   // Absent ⇒ those lists report [] (honest, never fabricated).
   overview?: CalibrationOverviewPort;
+  assertSubjectOwned?(ctx:RequestContext,subject:{subjectType:string;subjectId:string}):Promise<unknown>;
+  assertLearningOwned?(ctx:RequestContext,learningId:string):Promise<unknown>;
 }
 
 // --- Command inputs ---
@@ -202,6 +207,8 @@ export interface CreateRuleSuggestionInput {
 }
 
 export interface CalibrationService {
+  getDefaultRubricVersion(ctx:RequestContext):Promise<RubricVersionResource|null>;
+  ensureDefaultRubric(ctx:RequestContext):Promise<RubricResource>;
   createRubric(
     ctx: RequestContext,
     input: CreateRubricInput,
@@ -349,8 +356,7 @@ function deriveScore(
   return Math.round(score * 10000) / 10000;
 }
 
-// Compute deviation per metric key (actual - predicted) over the union of keys, plus a
-// `_score` aggregate magnitude. Deterministic.
+// SEMANTIC_BOUNDARY_ALLOW: 同key有限数值的存在性与机械相减；不评价内容，不以缺失冒0。
 function computeDeviation(
   predictedMetrics: Record<string, unknown>,
   predictedConversion: Record<string, unknown>,
@@ -381,9 +387,9 @@ function computeDeviation(
   for (const key of keys) {
     const p = predicted[key];
     const a = actualMetrics[key];
-    const pv = typeof p === "number" && Number.isFinite(p) ? p : 0;
-    const av = typeof a === "number" && Number.isFinite(a) ? a : 0;
-    deviation[key] = Math.round((av - pv) * 10000) / 10000;
+    if (typeof p !== "number" || !Number.isFinite(p) ||
+        typeof a !== "number" || !Number.isFinite(a)) continue;
+    deviation[key] = Math.round((a - p) * 10000) / 10000;
   }
   return deviation;
 }
@@ -400,15 +406,29 @@ export function createCalibrationService(
       now,
       nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(workspaceKey(ctx)),
+      context:ctx,
     };
     return createCalibrationRepository(db, repoDeps);
   }
 
   return {
+    async getDefaultRubricVersion(ctx) {
+      const current = await repoFor(ctx, "calibration.default.read").getDefaultRubric();
+      if (!current) return null;
+      const version = versionSchema.parse(toRubricVersionDto(current.version));
+      validateDimensions(version.dimensions);
+      return version;
+    },
+    async ensureDefaultRubric(ctx) {
+      const current = await repoFor(ctx, "calibration.default.ensure").ensureDefaultRubric();
+      const version = versionSchema.parse(toRubricVersionDto(current.version));
+      validateDimensions(version.dimensions);
+      return toRubricDto(current.root, current.version);
+    },
     async createRubric(ctx, input) {
       validateDimensions(input.dimensions);
-      const repo = repoFor(ctx, "calibration.createRubric");
+      return repoFor(ctx,"calibration.createRubric").withWrite(async repo=>{
       // First-insert circular-FK order (§7.5): rubric (NULL currentVersionId) → v1 →
       // patch currentVersionId.
       const rubric = await repo.createRubric({ name: input.name });
@@ -420,14 +440,14 @@ export function createCalibrationService(
       });
       const patched = await repo.setRubricCurrentVersion(rubric.id, v1.id);
       return toRubricDto(patched, v1);
+      });
     },
 
     async bumpRubricVersion(ctx, rubricId, input) {
       validateDimensions(input.dimensions);
-      const repo = repoFor(ctx, "calibration.bumpRubricVersion");
+      return repoFor(ctx,"calibration.bumpRubricVersion").withRubricWrite(rubricId,async repo=>{
       await repo.getRubric(rubricId); // ownership gate
-      // versionNumber = current count + 1 (assigned under the scoped read — §7.5
-      // concurrency: the (rubric_id, version_number) UNIQUE rejects a racing duplicate).
+      // 在真实rubric UPDATE锁内分配连续版本号并提交current指针。
       const versionNumber = (await repo.countRubricVersions(rubricId)) + 1;
       const version = await repo.insertRubricVersion({
         rubricId,
@@ -437,6 +457,7 @@ export function createCalibrationService(
       });
       await repo.setRubricCurrentVersion(rubricId, version.id); // old rows untouched
       return toRubricVersionDto(version);
+      });
     },
 
     async getRubric(ctx, rubricId) {
@@ -457,12 +478,14 @@ export function createCalibrationService(
     },
 
     async createDraftPrediction(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertSubjectOwned)throw new OwnershipError("校准内容归属校验不可用");await deps.assertSubjectOwned(ctx,input);}
       // Identical to createPrediction (deterministic 变现加权 weighted sum over the rubric
       // version's dimensions), but reached from the AI confirm seam rather than the contract
       // op. The status starts 'draft' (the user reviews + locks the 盲预测 themselves; the AI
       // never auto-locks — 盲预测不可改 only kicks in after the user locks).
       const repo = repoFor(ctx, "calibration.createDraftPrediction");
-      const version = await repo.getRubricVersion(input.rubricVersionId); // ownership gate
+      const version = await repo.getDefaultOrOwnedRubricVersion(input.rubricVersionId); // exact default parent exception; ordinary versions keep original scope
       const dimensions = (version.dimensions ?? []) as RubricDimension[];
       const predictedScore = deriveScore(
         dimensions,
@@ -487,6 +510,16 @@ export function createCalibrationService(
       // these real rows (零造假 — a metric with no backing row is 0 / "" / [] / "none").
       const predictionRows = await repo.listAllPredictions();
       const resultRows = await repo.listAllResults();
+      const predById = new Map(predictionRows.map((p) => [p.id, p]));
+      // 旧结果只做读投影，不回写原actual/deviation；所有派生展示共用此值。
+      const comparableResults = resultRows.map((row) => {
+        const prediction = predById.get(row.predictionId);
+        return {...row, deviation: prediction ? computeDeviation(
+          (prediction.predictedMetrics ?? {}) as Record<string, unknown>,
+          (prediction.predictedConversion ?? {}) as Record<string, unknown>,
+          (row.actualMetrics ?? {}) as Record<string, unknown>,
+        ) : {}};
+      });
 
       // SOFT cross-module reads (待校准内容 subjects + 经验沉淀 learnings). An absent /
       // rejecting port degrades to [] — never blocks or fabricates.
@@ -510,7 +543,7 @@ export function createCalibrationService(
       const completedReflows = resultRows.length;
       // avgDeviation = mean of each result's mean-absolute-deviation, bucketed to 低/中/高.
       //   no results → "none" (无回流, 没有偏差信号; never fabricated as 低).
-      const perResultMeans = resultRows
+      const perResultMeans = comparableResults
         .map((r) =>
           meanAbsDeviationOf((r.deviation ?? {}) as Record<string, unknown>),
         )
@@ -522,7 +555,7 @@ export function createCalibrationService(
       const avgDeviationBand = deviationBand(avgDeviation);
       // latestFinding = the most-recent result's largest-deviation dimension, one line.
       //   "" when there is no result OR the latest result's deviation map is empty.
-      const latestFinding = describeLatestFinding(resultRows);
+      const latestFinding = describeLatestFinding(comparableResults);
 
       // --- 待校准内容 (pendingSubjects) ---
       // A subject (content_output / publication) keyed by `${subjectType}:${subjectId}`.
@@ -558,7 +591,6 @@ export function createCalibrationService(
       }
 
       // --- 发布后回流对照 (reflowRows) — join each result with its locked prediction. ---
-      const predById = new Map(predictionRows.map((p) => [p.id, p]));
       // Resolve the rubric-version dimension labels for each prediction in a reflow (the key
       // → 中文 label map the 对照表 shows). Fetched once per distinct version (ownership-gated
       // read; a version we cannot see degrades to an empty label map → falls back to key).
@@ -579,7 +611,7 @@ export function createCalibrationService(
         return map;
       }
       const reflowRows: CalibrationOverviewResource["reflowRows"] = [];
-      for (const r of resultRows) {
+      for (const r of comparableResults) {
         const pred = predById.get(r.predictionId);
         if (!pred) continue; // a result whose prediction we cannot see (defensive) — skip.
         // The 维度评分 lives in predictedConversion.dimensions (维度评分约定). Each row pairs
@@ -606,9 +638,7 @@ export function createCalibrationService(
           const deviation =
             typeof devRaw === "number" && Number.isFinite(devRaw)
               ? devRaw
-              : predicted !== null && actual !== null
-                ? Math.round((actual - predicted) * 10000) / 10000
-                : null;
+              : null;
           return {
             key,
             label: rubricDims.get(key) ?? key,
@@ -645,9 +675,11 @@ export function createCalibrationService(
     },
 
     async createPrediction(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertSubjectOwned)throw new OwnershipError("校准内容归属校验不可用");await deps.assertSubjectOwned(ctx,input);}
       const repo = repoFor(ctx, "calibration.createPrediction");
       // Ownership: the rubric version must be owned (cross-user → OwnershipError → 404).
-      const version = await repo.getRubricVersion(input.rubricVersionId);
+      const version = await repo.getDefaultOrOwnedRubricVersion(input.rubricVersionId);
       const dimensions = (version.dimensions ?? []) as RubricDimension[];
       // Derive predictedScore (the body omits it) — deterministic 变现加权 weighted sum.
       const predictedScore = deriveScore(
@@ -668,7 +700,7 @@ export function createCalibrationService(
     },
 
     async lockPrediction(ctx, predictionId) {
-      const repo = repoFor(ctx, "calibration.lockPrediction");
+      return repoFor(ctx,"calibration.lockPrediction").withPredictionWrite(predictionId,async repo=>{
       const current = await repo.getPrediction(predictionId); // ownership gate
       // Idempotent: an already-locked prediction returns its existing row WITHOUT
       // re-stamping lockedAt (mirrors Reviews `complete` idempotency). The盲预测 is never
@@ -678,6 +710,7 @@ export function createCalibrationService(
       }
       const locked = await repo.lockPrediction(predictionId);
       return toPredictionDto(locked);
+      });
     },
 
     async getPrediction(ctx, predictionId) {
@@ -733,31 +766,45 @@ export function createCalibrationService(
       //    best-effort (a bridge failure must NOT roll back the result fact, SPEC §11).
       if (!existing) {
         const scoreDeviation = deriveScoreDeviation(deviation);
-        const delta = scoreDeviation <= DEVIATION_BUMP_THRESHOLD ? 5 : -5;
-        try {
-          await learnings.adjustConfidence(ctx, {
-            delta,
-            reason: `calibration:${predictionId}`,
-          });
-        } catch {
-          // intentionally swallowed — the confidence nudge is non-critical feedback.
+        if (scoreDeviation !== null) {
+          const delta = scoreDeviation <= DEVIATION_BUMP_THRESHOLD ? 5 : -5;
+          try {
+            await learnings.adjustConfidence(ctx, {
+              delta,
+              reason: `calibration:${predictionId}`,
+            });
+          } catch {
+            // intentionally swallowed — the confidence nudge is non-critical feedback.
+          }
         }
       }
-      return toCalibrationResultDto(row);
+      // 重放使用原持久actual，不使用本次不同body；历史原row不被更新。
+      return toCalibrationResultDto({...row, deviation: computeDeviation(
+        (prediction.predictedMetrics ?? {}) as Record<string, unknown>,
+        (prediction.predictedConversion ?? {}) as Record<string, unknown>,
+        (row.actualMetrics ?? {}) as Record<string, unknown>,
+      )});
     },
 
     async createRuleSuggestion(ctx, input) {
+      await assertWritableWorkspace(db, ctx);
+      if (ctx.groupId) {
+        if (!deps.assertLearningOwned) throw new OwnershipError("经验归属校验不可用");
+        await deps.assertLearningOwned(ctx, input.learningId);
+      }
       const repo = repoFor(ctx, "calibration.createRuleSuggestion");
-      // Ownership gate on the target Rubric (cross-user / unknown → OwnershipError → 404)
-      // BEFORE any suggestion row is written.
-      await repo.getRubric(input.rubricId);
-      const row = await repo.createRuleSuggestion({
-        learningId: input.learningId,
-        rubricId: input.rubricId,
-        proposedDimension: input.proposedDimension,
-        rationale: input.rationale,
+      return repo.withRubricWrite(input.rubricId, async (repo) => {
+        // Ownership gate on the target Rubric (cross-user / unknown → OwnershipError → 404)
+        // BEFORE any suggestion row is written.
+        await repo.getRubric(input.rubricId);
+        const row = await repo.createRuleSuggestion({
+          learningId: input.learningId,
+          rubricId: input.rubricId,
+          proposedDimension: input.proposedDimension,
+          rationale: input.rationale,
+        });
+        return toRuleSuggestionDto(row);
       });
-      return toRuleSuggestionDto(row);
     },
 
     async listRuleSuggestions(ctx, page) {
@@ -767,7 +814,7 @@ export function createCalibrationService(
     },
 
     async adoptRuleSuggestion(ctx, suggestionId) {
-      const repo = repoFor(ctx, "calibration.adoptRuleSuggestion");
+      return repoFor(ctx,"calibration.adoptRuleSuggestion").withSuggestionWrite(suggestionId,async repo=>{
       // 1. Ownership + terminal guard: the suggestion must be PENDING (a re-adopt of an
       //    already 采纳/dismissed suggestion → ConflictError; never double-bumps the rubric).
       const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
@@ -804,12 +851,13 @@ export function createCalibrationService(
         adoptedVersionId: version.id,
       });
       return toRubricVersionDto(version);
+      });
     },
 
     // [T-063e] 忽略一条回流建议:pending 守卫后标记 dismissed(终态),不碰 rubric 版本链。
     // adoptedVersionId 留 null(没有采纳产物),adoptedAt 记录裁决时间(终态时间戳复用同列)。
     async dismissRuleSuggestion(ctx, suggestionId) {
-      const repo = repoFor(ctx, "calibration.dismissRuleSuggestion");
+      return repoFor(ctx,"calibration.dismissRuleSuggestion").withSuggestionWrite(suggestionId,async repo=>{
       const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
       if (suggestion.status !== "pending") {
         throw new ConflictError(
@@ -821,6 +869,7 @@ export function createCalibrationService(
         adoptedVersionId: null,
       });
       return toRuleSuggestionDto(row);
+      });
     },
   };
 }
@@ -869,9 +918,9 @@ function renormalizeWeights(dims: RubricDimension[]): RubricDimension[] {
 
 // A single deviation magnitude (normalized) used to decide the confidence nudge / bump
 // suggestion. Deterministic: mean absolute deviation across keys, scaled to [0, ∞).
-function deriveScoreDeviation(deviation: Record<string, number>): number {
+function deriveScoreDeviation(deviation: Record<string, number>): number | null {
   const values = Object.values(deviation);
-  if (values.length === 0) return 0;
+  if (values.length === 0) return null;
   const total = values.reduce((acc, v) => acc + Math.abs(v), 0);
   return total / values.length;
 }

@@ -1,0 +1,283 @@
+[
+  {
+    "kind": "ui-joint-action-start",
+    "at": "2026-10-16T04:14:29.824Z",
+    "monotonicMs": 1888.451041,
+    "phase": "setup"
+  },
+  {
+    "kind": "public-save-post-issued",
+    "operation": "artifacts.versions.create",
+    "at": "2026-10-16T04:14:30.594Z",
+    "monotonicMs": 2658.026333,
+    "phase": "joint1-ui-generate"
+  },
+  {
+    "kind": "model-post-issued",
+    "ordinal": 1,
+    "at": "2026-10-16T04:14:31.163Z",
+    "monotonicMs": 3227.8565,
+    "phase": "joint1-ui-generate"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "候选",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:14:31.338Z",
+    "monotonicMs": 3402.060666,
+    "phase": "joint1-ui-generate"
+  },
+  {
+    "kind": "chat-response-headers",
+    "httpStatus": 200,
+    "ids": {
+      "conversationId": "ai-conv-bcda7005-107",
+      "sourceMessageId": "ai-msg-bcda7005-108",
+      "aiTaskId": "ai-task-ca4869c5-4b7b-4e80-bcda-0728da805a67",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    "at": "2026-10-16T04:14:31.551Z",
+    "monotonicMs": 3615.437916,
+    "phase": "joint1-ui-generate"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "读取",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:14:45.686Z",
+    "monotonicMs": 17750.155291,
+    "phase": "joint1-ui-generate"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "完成",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:14:45.686Z",
+    "monotonicMs": 17750.847541,
+    "phase": "joint1-ui-generate"
+  },
+  {
+    "kind": "original-task-terminal",
+    "label": "joint1",
+    "ids": {
+      "conversationId": "ai-conv-bcda7005-107",
+      "sourceMessageId": "ai-msg-bcda7005-108",
+      "aiTaskId": "ai-task-ca4869c5-4b7b-4e80-bcda-0728da805a67",
+      "executionTaskId": "execution-task-0247fb0a-8222-4f26-b33a-3b446f6d54ec"
+    },
+    "status": "succeeded",
+    "attempt": 1,
+    "at": "2026-10-16T04:15:18.904Z",
+    "monotonicMs": 50968.132666,
+    "phase": "joint1-ui-generate"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "读取",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:18.938Z",
+    "monotonicMs": 51002.4795,
+    "phase": "joint1-article"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "候选",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:18.939Z",
+    "monotonicMs": 51002.74625,
+    "phase": "joint1-article"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "完成",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:18.939Z",
+    "monotonicMs": 51002.861291,
+    "phase": "joint1-article"
+  },
+  {
+    "kind": "public-save-post-issued",
+    "operation": "articles.versions.create",
+    "at": "2026-10-16T04:15:22.037Z",
+    "monotonicMs": 54101.08275,
+    "phase": "joint1-article"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "已保存",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:22.451Z",
+    "monotonicMs": 54515.048708,
+    "phase": "joint1-article"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "读取",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:24.491Z",
+    "monotonicMs": 56555.32275,
+    "phase": "joint1-image"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "候选",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:24.492Z",
+    "monotonicMs": 56555.57725,
+    "phase": "joint1-image"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "完成",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:24.492Z",
+    "monotonicMs": 56555.724333,
+    "phase": "joint1-image"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "已保存",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:24.744Z",
+    "monotonicMs": 56807.789416,
+    "phase": "joint1-image"
+  },
+  {
+    "kind": "public-save-post-issued",
+    "operation": "graphicPosts.versions.create",
+    "at": "2026-10-16T04:15:26.529Z",
+    "monotonicMs": 58592.703333,
+    "phase": "joint1-image"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "读取",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:29.045Z",
+    "monotonicMs": 61108.743708,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "候选",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:29.045Z",
+    "monotonicMs": 61109.445625,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "完成",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:29.046Z",
+    "monotonicMs": 61109.770875,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "已保存",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:29.263Z",
+    "monotonicMs": 61326.491166,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "ui-editor-submit-start",
+    "at": "2026-10-16T04:15:29.286Z",
+    "monotonicMs": 61350.321083,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "model-post-issued",
+    "ordinal": 2,
+    "at": "2026-10-16T04:15:29.361Z",
+    "monotonicMs": 61425.102625,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "chat-response-headers",
+    "httpStatus": 200,
+    "ids": {
+      "conversationId": "ai-conv-bcda7005-361",
+      "sourceMessageId": "ai-msg-bcda7005-362",
+      "aiTaskId": "ai-task-ca802cf8-2917-4dce-b3f9-e64cb2e1b5fd",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    },
+    "at": "2026-10-16T04:15:29.583Z",
+    "monotonicMs": 61647.078166,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "original-task-terminal",
+    "label": "editor",
+    "ids": {
+      "conversationId": "ai-conv-bcda7005-361",
+      "sourceMessageId": "ai-msg-bcda7005-362",
+      "aiTaskId": "ai-task-ca802cf8-2917-4dce-b3f9-e64cb2e1b5fd",
+      "executionTaskId": "execution-task-89c53992-c117-4692-90d9-fe5577df4e45"
+    },
+    "status": "succeeded",
+    "attempt": 1,
+    "at": "2026-10-16T04:15:52.442Z",
+    "monotonicMs": 84506.153375,
+    "phase": "editor-prepare-ui"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "读取",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:52.938Z",
+    "monotonicMs": 85001.303333,
+    "phase": "editor-article"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "候选",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:52.938Z",
+    "monotonicMs": 85001.617083,
+    "phase": "editor-article"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "完成",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:52.938Z",
+    "monotonicMs": 85001.753375,
+    "phase": "editor-article"
+  },
+  {
+    "kind": "public-save-post-issued",
+    "operation": "articles.versions.create",
+    "at": "2026-10-16T04:15:55.699Z",
+    "monotonicMs": 87763.210083,
+    "phase": "editor-article"
+  },
+  {
+    "kind": "browser-first-visible-text-family",
+    "label": "已保存",
+    "pollIntervalMs": 250,
+    "exactTTI": false,
+    "at": "2026-10-16T04:15:55.940Z",
+    "monotonicMs": 88003.4615,
+    "phase": "editor-article"
+  }
+]

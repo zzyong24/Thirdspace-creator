@@ -1,0 +1,74 @@
+import { t as e } from "./chunk-X3CZISLH-CyeAZ9SC.js";
+import { g as t, t as n } from "./mermaid-parser.core-GHfTH9tR.js";
+import { n as r } from "./chunk-Y2CYZVJY-BAmSaPLl.js";
+import "./chunk-O7XYJQB3-CuTSgmsg.js";
+import { n as i, r as a, t as o } from "./chunk-GTNCS2PH-CTLJQYrh.js";
+import { t as s } from "./chunk-JWPE2WC7-BCoTUzKK.js";
+import "./mermaid.core-DsMCwKuT.js";
+var c = t().Railroad.parser.LangiumParser, l = /* @__PURE__ */ r((e) => {
+	switch (e.$type) {
+		case "RailroadTerminalExpr": return {
+			type: "terminal",
+			value: e.value
+		};
+		case "RailroadNonTerminalExpr": return {
+			type: "nonterminal",
+			name: e.name
+		};
+		case "RailroadSpecialExpr": return {
+			type: "special",
+			text: e.text
+		};
+		case "RailroadSequenceExpr": {
+			let t = e.elements.map(l);
+			return t.length === 1 ? t[0] : {
+				type: "sequence",
+				elements: t
+			};
+		}
+		case "RailroadChoiceExpr": {
+			let t = e.alternatives.map(l);
+			return t.length === 1 ? t[0] : {
+				type: "choice",
+				alternatives: t
+			};
+		}
+		case "RailroadOptionalExpr": return {
+			type: "optional",
+			element: l(e.element)
+		};
+		case "RailroadOneOrMoreExpr": return {
+			type: "repetition",
+			element: l(e.element),
+			min: 1,
+			max: Infinity
+		};
+		case "RailroadZeroOrMoreExpr": return {
+			type: "repetition",
+			element: l(e.element),
+			min: 0,
+			max: Infinity
+		};
+		default: throw Error(`Unsupported railroad expression: ${e.$type}`);
+	}
+}, "transformExpression"), u = /* @__PURE__ */ r((e) => ({
+	name: e.name,
+	definition: l(e.definition)
+}), "transformRule"), d = /* @__PURE__ */ r((e) => {
+	s(e, o), e.title && o.setTitle(e.title), e.rules.map((e) => o.addRule(u(e)));
+}, "populateDb"), f = {
+	parser: {
+		parse: /* @__PURE__ */ r((t) => {
+			o.clear(), e.debug("[Railroad Parser] Starting Langium parse");
+			let r = c.parse(t);
+			if (r.lexerErrors.length > 0 || r.parserErrors.length > 0) throw new n(r);
+			let i = r.value;
+			e.debug("[Railroad Parser] Parsed rules:", i.rules.length), d(i), e.debug("[Railroad Parser] Parse complete");
+		}, "parse"),
+		parser: { yy: o }
+	},
+	db: o,
+	renderer: a,
+	styles: i
+};
+export { f as diagram };

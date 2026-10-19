@@ -1,0 +1,276 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1325",
+  "baseHead": "77c70a50d4012acd2424e05437bc139011476716",
+  "specPath": "docs/features/t1325-generated-candidate-adoption-readiness.md",
+  "specSha256": "d7ec8201a4ac98bdad597db8ddc299cf44e0c37d14c3530a781237e84db30a9b",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6819,
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "frontend/src/server/execution-worker-path.ts",
+      "bytes": 2464,
+      "sha256": "032509a0cd3900b541d4c3aa55170bb07c61435f00030ef4fc3edbffdb4aa3a2"
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.transport.ts",
+      "bytes": 3287,
+      "sha256": "9cab989b44078c14abf9a8165a470859fc83a68ebc6b4cbe2ea311ce01db5ca9"
+    },
+    {
+      "path": "backend/src/modules/creative-results/article-cover-media.adapter.ts",
+      "bytes": 23599,
+      "sha256": "1b973b2f865c8ab269ee59135b6da710239a63332af5590d14a0cf9dbc67aae2"
+    },
+    {
+      "path": "backend/src/modules/creative-results/graphic-post-media.adapter.ts",
+      "bytes": 29670,
+      "sha256": "8bdc78965097a1791a535fcb5e88ace9f7042266ab522f888053ac2c6c19ed45"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.creative-adapter.ts",
+      "bytes": 7197,
+      "sha256": "7655bdd09c7a8c82fa9caa033ff77679f506626b6f3bb6052e0d3f9c2086571c"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.creative-adapter.ts",
+      "bytes": 3408,
+      "sha256": "b0bdedcf13fc21f6848f09e3513567f7d6934b287e387eedd8bbcd642adfdd34"
+    },
+    {
+      "path": "backend/src/modules/output-scripts/output-scripts.creative-adapter.ts",
+      "bytes": 2390,
+      "sha256": "c0e90f831318c1ba05c7bdb052b27f264e76914dca30b68f4a5ef07bda4e7326"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-results.creative-adapter.ts",
+      "bytes": 4381,
+      "sha256": "c2f2abbc9ccd1a6aa7879aa9dc953bb97eebe8654c62802e88680135438cddaa"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-cover.creative-adapter.ts",
+      "bytes": 13823,
+      "sha256": "b4a5f14639786eba2eaf02853c4e5fdf7f8716fbe2749e71b9f8cb3262ec9482"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "bytes": 48581,
+      "sha256": "494a2087bc7bf255397f656b8c88abb49a2d1b9a5ed9c58a061513c9d8fb33af"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "bytes": 47317,
+      "sha256": "acef744823fc8c268f1ef5c006da43584ae632ea09b12519f70a574bad63255d"
+    },
+    {
+      "path": "backend/src/modules/output-scripts/output-scripts.service.ts",
+      "bytes": 16368,
+      "sha256": "5d7bad8bcb6991feffff02261fcbf95f478fa817f18460cbe9a5e9737ec2d106"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-results.service.ts",
+      "bytes": 23847,
+      "sha256": "b220fddcaeaaf82320595012b6b911f11a3173656f9914d580825fe14ab12b62"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-cover.service.ts",
+      "bytes": 8352,
+      "sha256": "6e939583b6061fe1951a47081489d26746a667952c107cea4bdb58dd36d06a48"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.service.ts",
+      "bytes": 41738,
+      "sha256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b"
+    },
+    {
+      "path": "backend/src/modules/projects/projects.service.ts",
+      "bytes": 78916,
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "bytes": 105648,
+      "sha256": "0652de58e942e55864dd5fb6d4b0daa1e508695d58405807a979b5ede331706f"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "bytes": 43201,
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-model-identity.service.ts",
+      "bytes": 18728,
+      "sha256": "67b63f0067ed84a7e34f734665a0b558b504464f76556b32825570b406b26e4a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-cover.service.ts",
+      "bytes": 16924,
+      "sha256": "afe00267f5a74eb1754b118af9f10dcb76d020ab960b89b85f73263a5013728c"
+    },
+    {
+      "path": "backend/src/modules/execution/cover-execution-binding.ts",
+      "bytes": 2393,
+      "sha256": "1af4b33f4790824032f50111a1bd245ed77b2bacbdda6ce98ce06b109246573f"
+    },
+    {
+      "path": "backend/src/modules/execution/asset-execution-binding.ts",
+      "bytes": 4189,
+      "sha256": "48227fe1a1610fa0378d868acfaade3c8da212187ab919fcf98d42ae3c782d53"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-asset-ports.service.ts",
+      "bytes": 6871,
+      "sha256": "5cd730b178bc030cbb2ca45803026288f97b54cac9ce27c868600e1ccf069fa3"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "ai-worker/src/execution/cover-worker-run.ts",
+      "bytes": 3892,
+      "sha256": "1e162c201b8764b29bbb9ed17c2c30e4eb908c04f1febdd7125a999f87c19d6c"
+    },
+    {
+      "path": "ai-worker/src/execution/asset-worker-run.ts",
+      "bytes": 9376,
+      "sha256": "8a070521270ec5117078ed1f4b783830aa557d4e7fa52d2d9672ce9e91efb055"
+    },
+    {
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "bytes": 6092,
+      "sha256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff"
+    },
+    {
+      "path": "contract/src/operations/creative-results.ts",
+      "bytes": 5348,
+      "sha256": "4ee02fb5de478d3bad17a7275376d788fc715671fce4023d1bfd9fe1f783a238"
+    },
+    {
+      "path": "contract/src/resources/creative-results.ts",
+      "bytes": 2481,
+      "sha256": "2762c0033c47ec9b38ae47683d5eddb14e4c3e0a295ac425e5b99de7844f3ca0"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/cover-card-codex-identity.persistence-client.test.ts",
+      "bytes": 28732,
+      "sha256": "5750416893ac145987286df1d403a92005ff4c28b6233195e86894f77ac91c7f"
+    },
+    {
+      "path": "docs/verification/t1322/runtime/WORKER_BINDING.json",
+      "bytes": 241,
+      "sha256": "7f7158f280ce9b18c7f3611693261fdc6f5b1362ba52874cbd12da0f68c1a279"
+    },
+    {
+      "path": "docs/verification/t1322/runtime/protection-v6/execution-result.json",
+      "bytes": 547,
+      "sha256": "e4548d76352f5371986e956e875855eacc2f7c22019e9100261242515f790693"
+    },
+    {
+      "path": "docs/verification/t1322/runtime/protection-v6/output.log",
+      "bytes": 3731,
+      "sha256": "7fa76e2af5f0fc2d605beb0b08b5da6e94630945c2f5cb6a5dd377778d9fa379"
+    },
+    {
+      "path": "docs/verification/t1325/ANALYSIS.md",
+      "bytes": 3520,
+      "sha256": "11fbfe243dab7419584829df88af77adb401edeba8655884622320f0831d2c03"
+    },
+    {
+      "path": "docs/verification/t1325/INITIAL_REVIEW.md",
+      "bytes": 8140,
+      "sha256": "4e9830d579d30a3ce3db0a5a7245de75fb7c66c33e3547a32deec3d4f4f172cf"
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.integration.test.ts",
+      "bytes": 23557,
+      "sha256": "bb17f22e74cb8b97e86c660e043721dd81dd4e3780fc4e94b7270ef157ae4921"
+    },
+    {
+      "path": "backend/src/modules/creative-results/media-adoption.integration.test.ts",
+      "bytes": 13307,
+      "sha256": "118a33ae806b639544d7381670931f84cea7587cb02951e43ec5da9085fcdb96"
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.service.ts",
+      "bytes": 41043,
+      "sha256": "b794d931d4bf3cc50eafd7a1690706d0389cda1712968117ac68b01aa2dbe4d8"
+    },
+    {
+      "path": "docs/features/t1325-generated-candidate-adoption-readiness.md",
+      "bytes": 6843,
+      "sha256": "d7ec8201a4ac98bdad597db8ddc299cf44e0c37d14c3530a781237e84db30a9b"
+    },
+    {
+      "path": "docs/verification/t1325/MODULE_SCOPE.json",
+      "bytes": 4698,
+      "sha256": "f81d2d030520ee7270ec8667ebc4d4a59308ba25ec974ab50d456fa623c7c514"
+    },
+    {
+      "path": "docs/verification/t1325/DEC.md",
+      "bytes": 1157,
+      "sha256": "12fe1d036439cef4d877b43b907b55883c638e730f74ef9eaf5a148aca6ba370"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 473072,
+      "sha256": "ffb864d34c4546b3d53813cd88d437cb54cf98731a6dfd9a2fc641c55e16757a"
+    }
+  ],
+  "immutableWorker": {
+    "path": "/private/tmp/t1300-artifact-940jy2at/sidecar/frontend/runtime/execution-worker.cjs",
+    "bytes": 5618216,
+    "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+  },
+  "plannedNewTest": "frontend/src/server/__module_integration__/creative-result-adoption-readiness.persistence-client.test.ts",
+  "bindingNote": "T1319已freeze/release的受测根最终字节；其代码尚待Root独立终审/精确整合，baseHead仅当前已提交控制基线，不冒已包含该根改动。原partial51 inventory保留。"
+}

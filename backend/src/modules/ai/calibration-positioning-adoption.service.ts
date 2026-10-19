@@ -1,3 +1,5 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {
   and,
   eq,
@@ -23,6 +25,8 @@ export interface CalibrationPositioningAdoptionPorts {
     input: Parameters<AiCalibrationPort["createDraftPrediction"]>[1],
     tx: Tx,
   ): Promise<unknown>;
+  predictionLocks?: {confirmBound(ctx:RequestContext,id:string,apply:(tx:Tx)=>Promise<{resultId:string;predictionId:string}|undefined>):Promise<boolean>};
+  lockPrediction?(ctx:RequestContext,id:string,tx:Tx):Promise<{id:string;status:string}>;
   lockPositioning(ctx: RequestContext, tx: Tx): Promise<unknown>;
   upsertProfile(
     ctx: RequestContext,
@@ -50,13 +54,8 @@ export function createCalibrationPositioningAdoptionService(
   ports: CalibrationPositioningAdoptionPorts,
   now = () => new Date().toISOString(),
 ) {
-  return {
-    async confirmTask(ctx: RequestContext, id: string) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "ai.confirmCalibrationPositioning",
-      );
-      await db.transaction(async (tx) => {
+  async function confirm(ctx:RequestContext,id:string,tx:Tx,bound=false){
+        let lockedReceipt:{resultId:string;predictionId:string}|undefined;
         const [task] = await tx
           .select()
           .from(aiTasks)
@@ -64,11 +63,12 @@ export function createCalibrationPositioningAdoptionService(
             and(
               eq(aiTasks.id, id),
               eq(aiTasks.userId, ctx.userId),
-              eq(aiTasks.accountId, accountId),
+              workspaceFilter(aiTasks,ctx),
             ),
           )
           .for("update");
         if (!task) throw new OwnershipError("候选任务不存在");
+        await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
         if (
           !["calibration.diagnose", "positioning.generate"].includes(
             task.taskType,
@@ -90,7 +90,7 @@ export function createCalibrationPositioningAdoptionService(
               eq(aiTaskResults.aiTaskId, id),
               eq(aiTaskResults.resultType, type),
             ),
-          );
+          ).for("update");
         if (rows.length !== 1) throw new ConflictError("候选批次不唯一");
         const data = record(rows[0]!.resultData),
           input = record(task.inputData);
@@ -118,7 +118,7 @@ export function createCalibrationPositioningAdoptionService(
                 and(
                   eq(executionTasks.id, task.executionTaskId),
                   eq(executionTasks.userId, ctx.userId),
-                  eq(executionTasks.accountId, accountId),
+                  workspaceFilter(executionTasks,ctx),
                 ),
               );
             if (
@@ -164,8 +164,24 @@ export function createCalibrationPositioningAdoptionService(
             tx,
           );
           const perf = record(d.performance);
-          await ports.createDraftPrediction(
-            ctx,
+          // 已有task归属与冻结member锁证明同一真实legacy账号；保留旧入口叶子account scope。
+          const actualLegacy =
+            !ctx.groupId &&
+            !!ctx.accountId &&
+            task.userId === ctx.userId &&
+            task.accountId === ctx.accountId &&
+            (task.groupId === null || task.groupId === `grp_legacy_${ctx.accountId}`);
+          const prediction=await ports.createDraftPrediction(
+            actualLegacy
+              ? ctx
+              : {
+                  ...ctx,
+                  userId: task.userId,
+                  groupId: task.groupId,
+                  accountId: task.accountId,
+                  groupVersion: task.groupVersion ?? undefined,
+                  membershipVersion: task.membershipVersion ?? undefined,
+                },
             {
               subjectType: subjectType as "content_output" | "publication",
               subjectId,
@@ -184,13 +200,17 @@ export function createCalibrationPositioningAdoptionService(
                   priorityFixes: arr(d.priorityFixes),
                 },
               },
-              confidence:
-                d.confidence === "high" || d.confidence === "low"
-                  ? d.confidence
-                  : "med",
+              confidence: d.confidence === "high" || d.confidence === "low" ? d.confidence : "med",
             },
             tx,
           );
+          if(bound){
+            const predictionId=str(record(prediction).id);
+            if(!predictionId||!ports.lockPrediction)throw new ConflictError("原卡预测锁定端口缺失");
+            const locked=await ports.lockPrediction(ctx,predictionId,tx);
+            if(locked.id!==predictionId||locked.status!=="locked")throw new ConflictError("原卡预测未锁定");
+            lockedReceipt={resultId:rows[0]!.id,predictionId};
+          }
         } else {
           const s = record(data.suggestion),
             rawRules = record(s.downstreamRules),
@@ -234,7 +254,11 @@ export function createCalibrationPositioningAdoptionService(
           .update(aiTasks)
           .set({ status: "succeeded", completedAt: now() })
           .where(eq(aiTasks.id, id));
-      });
-    },
-  };
+        return lockedReceipt;
+  }
+  return {async confirmTask(ctx:RequestContext,id:string){
+    await assertWritableWorkspace(db,ctx);requireWorkspace(ctx);
+    if(await ports.predictionLocks?.confirmBound(ctx,id,tx=>confirm(ctx,id,tx,true)))return;
+    await db.transaction(tx=>confirm(ctx,id,tx));
+  }};
 }

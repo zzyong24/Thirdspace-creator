@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：registry多出的五条route均有既有正式授权与当前消费者；四条assistant/canvas系统操作来自T1074并保持group scope、可信来源、owner与幂等边界，一条owner-only model-call摘要来自T1114。允许仅在registry.test中逐条手写method/path，保留extra拒绝、nativeReports/current-group组合与contract type；不代表T1159、安装、全局Gate或真人微信通过。",
+  "findings": []
+}

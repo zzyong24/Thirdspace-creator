@@ -1,0 +1,7 @@
+"use strict";
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');const {doocsRunnerBudgets,requireFutureSlot}=require('../driver/verify-binding.cjs');
+const m={expectedBodies:{doocs:2},expectedTitles:['1366','390']},b=doocsRunnerBudgets(m).doocs;
+assert.equal(b.outerMs,374580000);assert.equal(b.perBodyMs,72000000);assert.equal(b.serialBodySumMs,144000000);assert.equal(b.separatePerBodyFixtureHookAllowanceMs,144720000);assert.equal(b.cleanupFullMs,4800000);
+const failures=[];for(const [name,v]of [['one-body',{...m,expectedBodies:{doocs:1}}],['three-bodies',{...m,expectedBodies:{doocs:3}}],['extra-profile',{...m,expectedBodies:{doocs:2,official:103}}],['duplicate-title',{...m,expectedTitles:['x','x']}],['missing-title',{...m,expectedTitles:['x']}]] ){assert.throws(()=>doocsRunnerBudgets(v));failures.push(name);}
+assert.equal(requireFutureSlot(100,80,20),80);for(const [name,args]of [['1ms-under',[100,81,20]],['elapsed',[100,1,100]],['invalid-deadline',[NaN,1,0]],['negative-reserve',[100,-1,0]]]){assert.throws(()=>requireFutureSlot(...args));failures.push(name);}
+fs.writeFileSync(path.join(__dirname,'budget-result.json'),JSON.stringify({at:new Date().toISOString(),kind:'pure-guard-static-only',budgets:b,negativeChecks:failures,noService:true,noBrowser:true,noSQL:true,notActualTypesOrListOrBodies:true},null,2)+'\n',{flag:'wx'});console.log(JSON.stringify({pureChecks:failures.length+7,outerMs:b.outerMs,noService:true}));

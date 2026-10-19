@@ -1,0 +1,112 @@
+- main:
+  - heading "T-1036 · 开源时间轴兼容探针" [level=1]
+  - paragraph: React 19.2.4 / Next 16.2.9 / @xzdarcy 1.0.0 · 仅合成测试素材，不读用户数据
+  - iframe:
+    - generic: “
+    - generic: 预览和最终生成使用同一份模板
+    - generic: 时间轴操作会传出稳定片段 ID。
+    - generic: TEST / 非用户媒体
+  - status: 合成器播放头 7.00s · 图片 8–16s
+  - generic: 原模板 SHA256：1369efbf57b2744b3c157a534bd29c5f60b8e0cfa5378846d207a2dbad8f48ed
+  - complementary:
+    - heading "真实回调与选中项" [level=2]
+    - status: broll-1
+    - text: 开始秒
+    - textbox "开始秒": "8"
+    - text: 结束秒
+    - textbox "结束秒": "16"
+    - button "落实明确时间"
+    - paragraph:
+      - text: 初绘观察：
+      - status: 140.0ms
+    - button "1000 项 / 10 分钟样例"
+    - text: 时间轴缩放
+    - combobox "时间轴缩放":
+      - option "1×"
+      - option "2×" [selected]
+  - text: 播放头
+  - slider "播放头": "7"
+  - status: 7.00s
+  - grid "grid":
+    - row "0 4 8 12 16 20 24":
+      - gridcell "0":
+        - generic: "0"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "4":
+        - generic: "4"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "8":
+        - generic: "8"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "12":
+        - generic: "12"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "16":
+        - generic: "16"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "20":
+        - generic: "20"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "24":
+        - generic: "24"
+      - gridcell
+  - grid "grid" [active]:
+    - row "video-1 broll-1 card-1 cap-1 cap-2 cap-3":
+      - generic: video-1
+      - generic: broll-1
+      - generic: card-1
+      - generic: cap-1
+      - generic: cap-2
+      - generic: cap-3
+  - paragraph: 长片模式只验证 1000 项时间轴，预览保持 32 秒测试样例。
+  - heading "观察记录（真实 UI 回调）" [level=2]
+  - generic: 90033.3ms moveEnd broll-1 8.00–16.00 90033.2ms onChange broll-1 89959.7ms moveStart broll-1 61238.9ms 缩放 2 40262.2ms 参数应用 broll-1 6–14 40262.2ms onChange broll-1
+- alert

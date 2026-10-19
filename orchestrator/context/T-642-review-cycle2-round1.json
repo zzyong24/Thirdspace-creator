@@ -1,0 +1,49 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "上一周期 REV-002 的跨模块原子性风险已被当前 SPEC 实质化解：promotion 只把 provenance 绑定的 adaptedDraftSeed 与 Project/reference 同次写入，不再创建 output_script；首次保存作为独立 artifact 操作，失败时 seed 仍可读且幂等重试后恰有一个第一版。账号归属、promotion 成功重放、失败恢复和用户主动确认边界已有明确约束。当前完整规格仍有 2 项 major 自相矛盾：辅助字段是否阻断采纳/立项，以及改编策略究竟只读还是可由客户端编辑。",
+  "findings": [
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {"id": "DEC-RADAR-048", "quote": "只要存在带真实 provenance 的非空“我的改写初稿”，即可采纳为选题或创建 Project；辅助字段及四组改写规则均可后补，不得禁用主动作。"},
+      "acceptance_anchor": {"id": "T-642-§5.2/§7", "quote": "创建 Project 前若目标观众、内容目标、内容形式或核心信息为空，明确阻止并引导补全；新生成候选的完整选题字段、四段改编策略、来源拆解和改写初稿均非空。"},
+      "where": "当前 SPEC §2.1 与 §5.2、§7 的采纳和立项完整性门。",
+      "failure_mode": "§2.1 按用户最新决定把 targetAudience、audiencePain、coreConflict、format 等字段及四组策略定义为可后补项，并明确不得禁用“采纳为选题/创建 Project”；但 §5.2 仍要求这些字段为空时阻止创建 Project，§7 又要求完整字段和四段策略均非空。实现和验收可据后两处保留旧完整度硬门，使已有真实来源与 provenance 的非空改写初稿仍无法采纳或立项，直接违反已确认的最小创作门槛。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md#§2.1,§5.2,§7；orchestrator/DECISION_LOG.md#DEC-RADAR-048",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "统一删除 §5.2 和 §7 对辅助字段、四段策略非空的立项硬门；明确两个主动作只以当前账号归属、真实可点击来源、当前 transform/逐字稿哈希、带完整 strategy/hash/template provenance 的非空 adaptedDraft、真实标题回退及幂等一致性为硬门，并加入缺辅助字段仍可确认和 promotion 的验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {"id": "T-642-§2.2", "quote": "改写规则 keep / replace / add / avoid 为只读；若要换转换方向，回到内容雷达重新生成并采纳新选题卡。"},
+      "acceptance_anchor": {"id": "AC-CR-010", "quote": "Project 来源引用、逐字稿哈希、结构拆解、定位版本及生成 provenance 必须保持可追溯一致。"},
+      "where": "当前 SPEC §2.2、§4.2 intelligence.transforms.confirmTopic 与 §7 阶段 C 失败验收。",
+      "failure_mode": "§2.2 和 §5.1 把四段改写策略定义为只读，但 §4.2 又把 AdaptationStrategy 放入客户端提交的 editedCandidate，且服务端保留清单没有明确从 transform 重取或拒绝篡改策略；§7 还写成“选题和策略仍可见、可编辑”。实现可接受客户端改写策略，同时继续沿用原 adaptedDraft.strategyHash，造成候选、Project seed、只读 transform 与 provenance 哈希不一致，也形成规格禁止的第二种换策略路径。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md#§2.2,§4.2,§5.1,§7",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "把 confirmTopic 的客户端可编辑输入收窄为 TopicBriefCandidate；AdaptationStrategy 必须由服务端按 transform 读取并与 strategyHash 一起冻结，客户端携带时只能做完全一致校验。将 §7 改为“选题可编辑、策略只读可见”；若产品确需改策略，则必须通过重新生成产生新的 transform/strategyHash，而不是在确认请求中覆盖。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

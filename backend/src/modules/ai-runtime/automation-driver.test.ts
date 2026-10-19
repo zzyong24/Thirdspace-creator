@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { RequestContext } from "@creatoros/contract";
+import {createDb} from "@creatoros/backend";
+import {createPersistentTaskService} from "../execution/persistent-task.service";
 import type {
   PersistentTaskClaim,
   PersistentTaskService,
@@ -8,8 +10,12 @@ import type {
 import {
   createAutomationHandlerRegistry,
   runAutomationDriverTick,
+  startAutomationDriver,
   type AutomationDriverJob,
 } from "./automation-driver";
+
+const scheduled = vi.hoisted(() => ({ callback: undefined as (() => void) | undefined, stop: vi.fn(), destroy: vi.fn() }));
+vi.mock("node-cron", () => ({ validate: () => true, schedule: vi.fn((_pattern, callback) => { scheduled.callback = callback; return { stop: scheduled.stop, destroy: scheduled.destroy }; }) }));
 
 const ctx: RequestContext = {
   userId: "user-1",
@@ -63,6 +69,60 @@ function taskFixture() {
 }
 
 describe("T-517 automation driver", () => {
+  it.each([
+    ["10 */2 * * *","2026-09-12T16:05:00Z","2026-09-12T14:10:00.000Z"],
+    ["10 */5 * * *","2026-09-12T16:05:00Z","2026-09-12T12:10:00.000Z"],
+    ["10 */5 * * *","2026-09-13T02:05:00Z","2026-09-12T21:10:00.000Z"],
+    ["10 */24 * * *","2026-09-13T16:05:00Z","2026-09-12T16:10:00.000Z"],
+    ["10 */48 * * *","2026-09-13T16:05:00Z","2026-09-12T16:10:00.000Z"],
+  ])("T1106 步长%s每日重置且跨午夜取最近slot",async(schedule,now,anchor)=>{
+    const enqueue=vi.fn(async()=>taskFixture().task);
+    const tasks={recoverExpiredLeases:async()=>({requeued:0,failed:0,paused:0,cancelled:0}),enqueue,claimNext:async()=>null} as unknown as PersistentTaskService;
+    await runAutomationDriverTick({ctx,tasks,registry:createAutomationHandlerRegistry().register("scheduled_collection",async()=>{}).seal(),listRunnableJobs:async()=>[{...dueJob,schedule,target:{scheduleTimezone:"Asia/Shanghai"}}],now:()=>now,workerId:"t1106",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+    expect(enqueue).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({idempotencyKey:`scheduled-job:job-1:${anchor}`}));
+  });
+
+  it("T1106 精确cron分钟已有实际尝试也不能创建新自动任务",async()=>{
+    const enqueue=vi.fn(async()=>taskFixture().task);
+    const tasks={recoverExpiredLeases:async()=>({requeued:0,failed:0,paused:0,cancelled:0}),enqueue,claimNext:async()=>null} as unknown as PersistentTaskService;
+    const now="2026-09-13T02:00:30Z";
+    await runAutomationDriverTick({ctx,tasks,registry:createAutomationHandlerRegistry().register("scheduled_collection",async()=>{}).seal(),listRunnableJobs:async()=>[{...dueJob,schedule:"0 */2 * * *",lastRunStartedAt:"2026-09-13T02:00:10Z",target:{scheduleTimezone:"Asia/Shanghai"}}],now:()=>now,workerId:"t1106",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it("T1106 漏跑恢复先结算原在途任务，owner防重不创建第二份",async()=>{
+    const f=await createDb();try{
+      const now=()=>"2026-09-13T02:07:00Z",tasks=createPersistentTaskService(f.db,{now});
+      const job={...dueJob,schedule:"0 */2 * * *",target:{scheduleTimezone:"Asia/Shanghai"}};
+      const original=await tasks.enqueue(ctx,{kind:"automation_sync",ownerType:"scheduled_job",ownerId:job.id,idempotencyKey:"t1106-existing",payload:{handler:"scheduled_collection",job,scheduledFor:"2026-09-13T00:00:00Z"},maxAttempts:3});
+      const handler=vi.fn(async()=>{});
+      const result=await runAutomationDriverTick({ctx,tasks,registry:createAutomationHandlerRegistry().register("scheduled_collection",handler).seal(),listRunnableJobs:async()=>[job],now,workerId:"t1106",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+      expect(result).toMatchObject({overlapped:1,enqueued:0,succeeded:1});
+      expect(await tasks.get(ctx,original.id)).toMatchObject({id:original.id,attempt:1,status:"succeeded"});expect((await tasks.list(ctx,{kind:"automation_sync"})).total).toBe(1);
+    }finally{await f.client.close();}
+  });
+
+  it("T1106 默认两小时错过一分钟后补最近slot，持久幂等及已尝试防重保留",async()=>{
+    const f=await createDb();try{
+      let now="2026-09-13T02:07:20Z";
+      let job:AutomationDriverJob={...dueJob,schedule:"0 */2 * * *",target:{scheduleTimezone:"Asia/Shanghai"}};
+      const tasks=createPersistentTaskService(f.db,{now:()=>now});
+      const handler=vi.fn(async()=>{job={...job,lastRunStartedAt:now};});
+      const registry=createAutomationHandlerRegistry().register("scheduled_collection",handler).seal();
+      const tick=()=>runAutomationDriverTick({ctx,tasks,registry,listRunnableJobs:async()=>[job],now:()=>now,workerId:"t1106-worker",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+      expect(await tick()).toMatchObject({enqueued:1,succeeded:1});
+      const {rows}=await tasks.list(ctx,{kind:"automation_sync"});
+      expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({attempt:1,idempotencyKey:"scheduled-job:job-1:2026-09-13T02:00:00.000Z"});
+      now="2026-09-13T02:08:20Z";expect(await tick()).toMatchObject({enqueued:0});expect(handler).toHaveBeenCalledTimes(1);
+      job={...job,lastRunStartedAt:null};await tick();expect(handler).toHaveBeenCalledTimes(1);
+      expect((await tasks.list(ctx,{kind:"automation_sync"})).rows[0]?.id).toBe(rows[0]?.id);
+      // 10点错过后已手动/失败尝试也不能再次补；停用与非metrics不扩大。
+      job={...job,lastRunStartedAt:"2026-09-13T02:01:00Z"};expect(await tick()).toMatchObject({enqueued:0});
+      job={...job,lastRunStartedAt:null,enabled:false};expect(await tick()).toMatchObject({enqueued:0});
+      job={...job,enabled:true,sourceKind:"comments"};expect(await tick()).toMatchObject({enqueued:0});
+    }finally{await f.client.close();}
+  });
+
   it("registry seal 后不可追加 handler，未知 handler 诚实拒绝", () => {
     const registry = createAutomationHandlerRegistry();
     registry.register("scheduled_collection", async () => undefined);
@@ -305,3 +365,97 @@ it('真实子任务委派释放分钟driver，不提前finish父任务；下一t
  const next=await runAutomationDriverTick({ctx,tasks,registry,listRunnableJobs:async()=>[],now:()=>new Date().toISOString(),workerId:'w',cron:{validate:()=>true},scheduledChildren:{attach,reconcile:async()=>({succeeded:1,failed:0,pending:0})}});expect(next.succeeded).toBe(1);
 });
 it('child已创建但attach回执丢失时不写父成功或失败，等待原幂等触发恢复',async()=>{const {claim}=taskFixture();const finish=vi.fn();const registry=createAutomationHandlerRegistry().register('scheduled_collection',async()=>({executionTaskId:'existing-child'})).seal();const tasks={recoverExpiredLeases:async()=>({requeued:0,failed:0}),claimNext:vi.fn().mockResolvedValueOnce(claim).mockResolvedValue(null),heartbeat:vi.fn(),finish} as unknown as PersistentTaskService;await runAutomationDriverTick({ctx,tasks,registry,listRunnableJobs:async()=>[],now:()=>new Date().toISOString(),workerId:'w',cron:{validate:()=>true},scheduledChildren:{attach:async()=>{throw Error('reply lost')},reconcile:async()=>({succeeded:0,failed:0,pending:0})}});expect(finish).not.toHaveBeenCalled();});
+
+
+describe("T-1073 正式自动化 driver 生命周期", () => {
+  const flush = async () => { for (let n = 0; n < 30; n++) await Promise.resolve(); };
+  function allowRuntime() {
+    for (const [name, value] of Object.entries({ NODE_ENV: "production", VITEST: "", CI: "", NEXT_PHASE: "", CREATOROS_DISABLE_SCHEDULER: "" })) vi.stubEnv(name, value);
+    scheduled.callback = undefined; scheduled.stop.mockClear(); scheduled.destroy.mockClear();
+  }
+  function options(listRunnableJobs: () => Promise<AutomationDriverJob[]>) {
+    const tasks = { recoverExpiredLeases: async () => ({requeued: 0, unknownResult: 0, failed: 0, paused: 0, cancelled: 0}), claimNext: async () => null } as unknown as PersistentTaskService;
+    return {ctx, tasks, registry: createAutomationHandlerRegistry().register("scheduled_collection", async () => {}).seal(), listRunnableJobs, now: () => "2026-10-07T10:00:00Z", workerId: "t1073-driver"};
+  }
+  async function open(input: Parameters<typeof startAutomationDriver>[0]) {
+    const value = startAutomationDriver(input);
+    const control = value as unknown as {ready?: Promise<void>; stop?: () => Promise<void>};
+    await (control.ready ?? value);
+    return control;
+  }
+  async function cleanup(control: {stop?: () => Promise<void>} | undefined) {
+    await control?.stop?.();
+    globalThis.__creatorosAutomationDriverStarted = false;
+    vi.unstubAllEnvs();
+  }
+
+  it("十次分钟唤醒只有一份在途，结束后补一次合并读取", async () => {
+    allowRuntime(); let release!: () => void;
+    const gate = new Promise<void>(r => { release = r; });
+    let calls = 0, active = 0, peak = 0;
+    const list = vi.fn(async () => { calls++; if (calls === 1) return []; active++; peak = Math.max(peak, active); if (calls === 2) await gate; active--; return []; });
+    let control: Awaited<ReturnType<typeof open>> | undefined;
+    try {
+      control = await open(options(list));
+      for (let i = 0; i < 10; i++) scheduled.callback!();
+      await flush();
+      process.stdout.write(JSON.stringify({witness: "T-1073 scheduler 慢窗口", wakeups: 10, active, peak, calls}) + "\n");
+      expect(peak).toBe(1); expect(active).toBe(1); expect(calls).toBe(2);
+      release(); await flush();
+      expect(calls).toBe(3); expect(active).toBe(0);
+    } finally { release(); await flush(); await cleanup(control); }
+  });
+
+  it("失败后下一次唤醒可恢复；stop 清理 cron，停止后不再读业务端口", async () => {
+    allowRuntime(); const failure = vi.spyOn(console, "error").mockImplementation(() => {});
+    const list = vi.fn().mockResolvedValueOnce([]).mockRejectedValueOnce(Error("合成数据库暂不可用")).mockResolvedValue([]);
+    let control: Awaited<ReturnType<typeof open>> | undefined;
+    try {
+      control = await open(options(list)); scheduled.callback!(); await flush();
+      expect(failure).toHaveBeenCalled(); scheduled.callback!(); await flush();
+      expect(list).toHaveBeenCalledTimes(3);
+      expect(control.stop).toBeTypeOf("function"); await control.stop!();
+      expect(scheduled.stop).toHaveBeenCalledOnce(); expect(scheduled.destroy).toHaveBeenCalledOnce();
+      scheduled.callback!(); await flush(); expect(list).toHaveBeenCalledTimes(3);
+    } finally { await cleanup(control); failure.mockRestore(); }
+  });
+
+
+  it("十次慢唤醒后仍领取并结算原有两份持久任务，原ID/attempt不变", async () => {
+    allowRuntime(); const {db, client} = await createDb();
+    const now = () => "2026-10-07T10:00:00Z", tasks = createPersistentTaskService(db, {now});
+    let release!: () => void; const gate = new Promise<void>(r => {release = r;});
+    let count = 0, active = 0, peak = 0;
+    const registry = createAutomationHandlerRegistry().register("scheduled_collection", async () => {
+      count++; active++; peak = Math.max(peak, active); if(count === 1) await gate; active--;
+    }).seal();
+    let control: Awaited<ReturnType<typeof open>> | undefined;
+    try {
+      control = await open({...options(async () => []), tasks, registry, now, maxClaims: 1});
+      const originals: Array<Awaited<ReturnType<typeof tasks.enqueue>>> = [];
+      for(let index=0; index<2; index++) originals.push(await tasks.enqueue(ctx, {kind: "automation_sync", ownerType: "scheduled_job", ownerId: `isolated-job-${index}`, idempotencyKey: `t1073-existing-${index}`, maxAttempts: 3,
+        payload: {handler: "scheduled_collection", scheduledFor: now(), job: {...dueJob, id: `isolated-job-${index}`}}}));
+      scheduled.callback!(); await vi.waitFor(() => expect(count).toBe(1), {timeout: 120000});
+      for(let index=0; index<9; index++) scheduled.callback!();
+      expect(peak).toBe(1); release();
+      await vi.waitFor(async () => {for(const task of originals) expect((await tasks.get(ctx, task.id)).status).toBe("succeeded");}, {timeout: 120000});
+      expect(count).toBe(2); expect(peak).toBe(1);
+      for(const original of originals) expect(await tasks.get(ctx, original.id)).toMatchObject({id: original.id, attempt: 1, status: "succeeded", leaseOwner: null});
+      process.stdout.write(JSON.stringify({witness: "T-1073 durable automation", originalIds: originals.map(task => task.id), callbacks: 10, handlers: count, peak, status: "succeeded", attempts: [1, 1]}) + "\n");
+    } finally {release(); await cleanup(control); await client.close();}
+  });
+
+  it("stop 等当前查询结束并丢弃合并唤醒，不再领取下一份持久任务", async () => {
+    allowRuntime(); let release!: () => void; const gate = new Promise<void>(r => {release = r;});
+    const list = vi.fn().mockResolvedValueOnce([]).mockImplementationOnce(async () => {await gate; return [];});
+    const input = options(list), claim = vi.spyOn(input.tasks, "claimNext");
+    let control: Awaited<ReturnType<typeof open>> | undefined;
+    try {
+      control = await open(input); scheduled.callback!(); await flush(); scheduled.callback!();
+      expect(control.stop).toBeTypeOf("function");
+      let stopped = false; const stopping = control.stop!().then(() => {stopped = true;});
+      await flush(); expect(stopped).toBe(false);
+      release(); await stopping; expect(claim).toHaveBeenCalledTimes(1); expect(list).toHaveBeenCalledTimes(2);
+    } finally {release(); await flush(); await cleanup(control);}
+  });
+});

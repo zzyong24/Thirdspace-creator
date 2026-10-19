@@ -13,6 +13,9 @@
  */
 
 import * as React from "react";
+import {AssetPicker} from "@/components/media/asset-picker";
+import {mediaIdentity,type MediaChoice} from "@/components/media/asset-picker.types";
+import {useCreationWorkspace,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 
 import type {
   VideoDecisions,
@@ -92,6 +95,25 @@ export function VideoDecisionPreview({
   confirming = false,
   adjustingMaterials = false,
 }: VideoDecisionPreviewProps) {
+  const scope=useCreationScope(),workspace=useCreationWorkspace(scope);
+  const [previewFiles,setPreviewFiles]=React.useState<Record<string,ReturnType<typeof mediaIdentity>>>({});
+  const inventoryKey=JSON.stringify(inventory.map(asset=>asset.assetId));
+  React.useEffect(()=>{
+    let cancelled=false;setPreviewFiles({});
+    if(!scope.groupId&&!scope.accountId)return;
+    const operation=workspace.capture();let index=0;
+    async function worker(){
+      while(!cancelled&&index<inventory.length){
+        const item=inventory[index++];
+        try{const asset=await operation.client.getAsset({params:{assetId:item.assetId},query:undefined,body:undefined});operation.assertCurrent();
+          if(!cancelled)setPreviewFiles(previous=>({...previous,[item.assetId]:mediaIdentity(asset)}));
+        }catch{/* 旧快照仍可人工选择；预览失败不改选材范围或assetId合同。 */}
+      }
+    }
+    void Promise.all(Array.from({length:Math.min(4,inventory.length)},worker));
+    return()=>{cancelled=true;};
+  },[inventoryKey,creationScopeKey(scope),workspace]);
+  const choices:MediaChoice<BrollAssetRef>[]=inventory.map(asset=>({choiceKey:asset.assetId,value:asset,name:asset.label,identity:previewFiles[asset.assetId]??null,assetType:asset.kind==='image'||asset.kind==='video'||asset.kind==='audio'?asset.kind:undefined}));
   // 可编辑的两轴:删卡(cards)/ B-roll 换选与移除(broll)。场景/字幕本期只读展示。
   const [cards, setCards] = React.useState(decisions.cards);
   const [broll, setBroll] = React.useState(decisions.broll);
@@ -353,48 +375,19 @@ export function VideoDecisionPreview({
                         B-roll
                       </span>
                       {/* 换选:选项集 = 决策同源的素材清单快照(真实 assetId,禁编造) */}
-                      <select
-                        disabled={!canEditMaterials}
-                        aria-label={`B-roll 素材(当前:${labelOf(pick.assetId)})`}
-                        className="h-6 min-w-0 flex-1 rounded-control border border-border bg-surface px-1"
-                        value={pick.assetId}
-                        onChange={(e) => {
-                          const next = e.target.value;
-                          if (next === pick.assetId) return;
-                          setBroll((prev) =>
-                            prev.map((b, j) =>
-                              j === i ? { ...b, assetId: next } : b,
-                            ),
-                          );
-                          const scene = decisions.scenes[pick.sceneIdx];
-                          if (scene) {
-                            setManualAssignments((previous) => [
-                              ...previous.filter((item) => item.assetId !== next),
-                              {
-                                assetId: next,
-                                sceneIdx: pick.sceneIdx,
-                                sceneTitle: scene.title,
-                                sceneSummary: scene.summary,
-                              },
-                            ]);
-                          }
-                        }}
-                      >
-                        {Object.prototype.hasOwnProperty.call(
-                          unavailableAssetLabels,
-                          pick.assetId,
-                        ) ? (
-                          <option value={pick.assetId} disabled>
-                            {labelOf(pick.assetId)}（素材已不可用）
-                          </option>
-                        ) : null}
-                        {inventory.map((a) => (
-                          <option key={a.assetId} value={a.assetId}>
-                            {a.label}
-                            {a.kind ? `（${a.kind}）` : ""}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="min-w-0 flex-1"><AssetPicker
+                        ownerKey={`${creationScopeKey(scope)}:${inventoryKey}:${sceneIdx}:${i}:${pick.assetId}`}
+                        label={`B-roll 素材(当前:${labelOf(pick.assetId)})`}
+                        disabled={!canEditMaterials||confirming||adjustingMaterials}
+                        source={{kind:"bounded",key:inventoryKey,label:"本次分镜素材",allowedTypes:["image","video","audio"],items:choices,completeness:"complete"}}
+                        value={choices.find(choice=>choice.value.assetId===pick.assetId)??{choiceKey:pick.assetId,value:{assetId:pick.assetId,label:labelOf(pick.assetId),kind:"",description:""},name:`${labelOf(pick.assetId)}（素材已不可用）`,identity:null}}
+                        confirmLabel="替换这一段素材"
+                        onConfirm={choice=>{
+                          const next=choice.value.assetId;if(next===pick.assetId)return;
+                          setBroll(previous=>previous.map((item,index)=>index===i?{...item,assetId:next}:item));
+                          const scene=decisions.scenes[pick.sceneIdx];
+                          if(scene)setManualAssignments(previous=>[...previous.filter(item=>item.assetId!==next),{assetId:next,sceneIdx:pick.sceneIdx,sceneTitle:scene.title,sceneSummary:scene.summary}]);
+                        }}/></div>
                       <span className="shrink-0 text-muted-foreground">
                         @{fmtSec(pick.at)} · {fmtSec(pick.durationSec)}
                       </span>

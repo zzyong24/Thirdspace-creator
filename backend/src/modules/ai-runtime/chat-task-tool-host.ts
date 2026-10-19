@@ -1,3 +1,6 @@
+import {createChatWorkEditorToolHost} from "./chat-work-editor-tool-host";
+import type {WorkEditorPorts} from "./work-editor-candidate";
+import {createChatWorkCreationToolHost,type ChatWorkCreationToolPorts} from "./chat-work-creation-tool-host";
 import {createChatRedfoxTaskToolHost} from "./chat-redfox-tool-host";
 import {createChatCoverTaskHost,type ChatCoverTaskPorts} from "./chat-cover-task-host";
 import {createChatAgenticResearchTaskHost,type ChatAgenticResearchTaskPorts} from "./chat-agentic-research-task-host";
@@ -24,8 +27,9 @@ import {createChatCandidateTaskToolHost} from "./chat-candidate-tool-host";
 export function createChatTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
  readers:ContextReaders,
- ports:{cover?:ChatCoverTaskPorts;agenticResearch?:ChatAgenticResearchTaskPorts;publish?:ChatPublishTaskPorts;scriptDraft?:ChatScriptDraftTaskPorts;videoEdit?:ChatVideoEditPorts;review?:ChatReviewTaskPorts;scriptPatch?:ChatScriptPatchPorts;webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;material?:ChatMaterialTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
+ ports:{editor?:WorkEditorPorts;creation?:ChatWorkCreationToolPorts;cover?:ChatCoverTaskPorts;agenticResearch?:ChatAgenticResearchTaskPorts;publish?:ChatPublishTaskPorts;scriptDraft?:ChatScriptDraftTaskPorts;videoEdit?:ChatVideoEditPorts;review?:ChatReviewTaskPorts;scriptPatch?:ChatScriptPatchPorts;webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;material?:ChatMaterialTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
+ const editor=ports.editor?createChatWorkEditorToolHost(reader,ports.editor):null,creation=ports.creation?createChatWorkCreationToolHost(reader,ports.creation):null;
  const agenticResearch=ports.agenticResearch?createChatAgenticResearchTaskHost(reader,ports.agenticResearch):null;
  const publish=ports.publish?createChatPublishTaskHost(reader,ports.publish):null;
  const scriptDraft=ports.scriptDraft?createChatScriptDraftTaskHost(reader,ports.scriptDraft):null;
@@ -43,6 +47,7 @@ export function createChatTaskToolHost(
  const material=ports.material?createChatMaterialTaskHost(reader,readers,ports.material):null;
  return async(context,input,execution,signal)=>{
   const groups=await Promise.all([redfox(context,input,execution,signal),cover?.(context,input,execution,signal)??{},agenticResearch?.(context,input,execution,signal)??{},review?.(context,input,execution,signal)??{},scriptPatch(context,input,execution,signal),webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},material?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
+  groups.push(await editor?.(context,input,execution,signal)??{},await creation?.(context,input,execution,signal)??{});
   groups.push(await publish?.(context,input,execution,signal)??{});
   groups.push(await scriptDraft?.(context,input,execution,signal)??{});
   groups.push(await videoEdit?.(context,input,execution,signal)??{});

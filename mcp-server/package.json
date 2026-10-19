@@ -26,6 +26,7 @@
     "@creatoros/contract": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "tsx": "^4.19.2",
+    "undici": "7.27.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {

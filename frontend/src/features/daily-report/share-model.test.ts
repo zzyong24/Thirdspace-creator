@@ -15,3 +15,7 @@ it('真实零与未采集严格区分，不把缺失关注冒充零',()=>{
  expect(buildShareModel(fixture([{views:0,follower_gain:0}])).followers.value).toBe(0);
  expect(buildShareModel(fixture([]))).toMatchObject({count:0,highlights:[],views:{value:null},followers:{value:null}});
 });
+it('跨平台阅读与播放分开汇总，平台名称保留且未知不是零',()=>{
+ const report=fixture([{views:10},{views:20},{}]);report.groupId='g1';report.works[0].platform='douyin';report.works[1].platform='wechatOfficial';report.works[2].platform='kuaishou';
+ const model=buildShareModel(report);expect(model.views.value).toBe(10);expect(model.reads.value).toBe(20);expect(model.highlights.find(w=>w.title==='作品 1')).toMatchObject({platform:'公众号',reads:20,views:null});
+});

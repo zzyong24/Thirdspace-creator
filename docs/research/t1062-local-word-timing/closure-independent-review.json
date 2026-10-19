@@ -1,0 +1,139 @@
+{
+  "schema": "t1062-aac-research-closure-independent-review.v1",
+  "reviewed_utc": "2026-10-06T01:06:33.461258+00:00",
+  "verdict": "BOUNDED_GO_RESEARCH_MECHANISM_CLOSURE_ONLY",
+  "blocking_findings": [],
+  "review_scope": "只读Research关闭候选/73原证据/R5窄族设计；实际仅执行两条纯fs/assert verifier，不修改repo、不跑FFmpeg/模型/ASR/DB/第三实验。",
+  "reviewed_inputs": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/research/t1062-local-word-timing/RESEARCH.md",
+      "sha256": "e3a986e75c120a5977717d86ed38b1b82a4f856c7bad9b7963b125a431fa82f4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/research/t1062-local-word-timing/verify-evidence.mjs",
+      "sha256": "709f5bd1edbc019ae5a0ed8c163e48e51530b30c6b11a3d692100b5cb9d33cbd"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/research/t1062-local-word-timing/raw-evidence.json",
+      "sha256": "96c96802174c1dbf50ab388009edb9ded23dd54819cb61449f1cdcba6218c2b6"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/research/t1062-local-word-timing/verification-result.json",
+      "sha256": "c488e9f51cfa0c21986a8009d6d491736002f273e4c8a88deb3ea86de9e7e5c2"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/research/t1062-local-word-timing/aac-v2-design-r5.json",
+      "sha256": "d08ba1461156f6d12a08e9bd5cda04e868c03cb5d5b169c448be40937c2039fa"
+    }
+  ],
+  "criteria": [
+    {
+      "name": "定位前置映射机制",
+      "conclusion": "闭合当前前置丢timing机制",
+      "basis": "两真实public input/plan均word；AI awaiting_confirmation、execution succeeded；single settled call，无aggregate timing。actual audio与plan digest/byte count相符且ID3 MP3；source11真实基线源码PCM-only→MP3unverified→worker不传timingAudio→adapter no timing。并已核source11当前Writer字节仍相等。",
+      "boundary": "这不是当前provider raw词码/wordTimingValidated为true的证明；只确定早于词级映射的AAC阻断。"
+    },
+    {
+      "name": "物理机制与安全窄族定义",
+      "conclusion": "闭合实际物理机制及可审查安全窄族设计",
+      "basis": "73exact私有副本哈希/size、原源文件存在者同SHA。normal packet priming1024、side-data与直接ISO elst/decoded0三方对应；700decoded帧S716393、701resampler帧N238798（含flush）、234WAV重新分帧/PCM字节总数同证。offset empty edit与非零原点明确不准入。",
+      "boundary": "N*3=716394超过源S716393；不pin/trim。任一provider boundary仍须按有理数精确到source tick、同时不越audioS和video duration域。只是物理机制，不签真实provider词级或全量旅程。"
+    }
+  ],
+  "r5_assessment": {
+    "sha256": "d08ba1461156f6d12a08e9bd5cda04e868c03cb5d5b169c448be40937c2039fa",
+    "verdict": "SUFFICIENT_FOR_NARROW_SPEC_SCOPE_REVIEW",
+    "closed_points": [
+      "参数化D/S/N窄族；例值不当固定白名单",
+      "完整音频保留，不atrim、不terminal pin、不量化/丢单token；全部word任一点失败全文降级",
+      "v1原schema/export行为保持；独立v2与asset-asr.ts显式strict union消费，不隐式重定义v1",
+      "实际resolved ffmpeg/ffprobe各自realpath/SHA/version/argv及pair冻结；身份不单独授予verified",
+      "每次真实packet/edit/decoded/resampler/WAV行为全证明；不同工具若行为支持才允许，未知/缺字段/失败仍text/manual",
+      "不以/opt/homebrew或9.0.1版本作为产品白名单；静态b6.0/其它平台/安装工具兼容尚未证明",
+      "原PCM、gap/offset/缺证据与原UI归属/CAS/采纳/word断言保持"
+    ],
+    "scope_consumer_correction": "先前我的3path方案仅早期候选；本R5正确补contract/src/internal/asset-asr.ts，形成4必要生产路径。media仅真实入口变动必要时conditional，worker/Whisper无需为此自动扩大写权。",
+    "future_controls": "研究resume只退回正常任务实施；ROOT之后仍须SPEC/DEC/精确scope与独评、lease治理，再实现及真正回归。不能将research decision_impacts none当作内部contract写入授权。"
+  },
+  "actual_readonly_runs": [
+    {
+      "argv": [
+        "node",
+        "docs/research/t1062-local-word-timing/verify-evidence.mjs",
+        "cause"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "started_utc": "2026-10-06T01:04:45.612179+00:00",
+      "finished_utc": "2026-10-06T01:04:45.757398+00:00",
+      "exit": 0,
+      "stdout_sha256": "f916c4e154e4902cf182195dabf4e18d7d66afed7c5ae3207d3f3be0ad01691e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"result\":\"PASS_RECORDED_PUBLIC_ROOT_CAUSE\",\"tasks\":2,\"source_baselines\":11,\"model_calls\":0,\"production_or_acceptance_pass\":false}\n",
+      "stderr": "",
+      "pure_readonly": true
+    },
+    {
+      "argv": [
+        "node",
+        "docs/research/t1062-local-word-timing/verify-evidence.mjs",
+        "physics"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "started_utc": "2026-10-06T01:04:45.758270+00:00",
+      "finished_utc": "2026-10-06T01:04:45.890906+00:00",
+      "exit": 0,
+      "stdout_sha256": "67a499e693f4a6496a1145cc3a09baad6d9198b193ec727b91fcd7ff6d04b581",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"result\":\"PASS_RECORDED_PHYSICAL_MECHANISM\",\"source_frames\":700,\"resampler_frames\":701,\"wav_frames\":234,\"S\":716393,\"N\":238798,\"offset_supported\":false,\"model_calls\":0,\"production_or_acceptance_pass\":false}\n",
+      "stderr": "",
+      "pure_readonly": true
+    }
+  ],
+  "counts": {
+    "private_raw_evidence": 73,
+    "source_baselines": 11,
+    "verifier_commands": 2,
+    "exit0": 2,
+    "exit_nonzero": 0,
+    "new_test_or_model_or_ffmpeg_or_db_experiments": 0,
+    "skip": "不适用：此轮仅只读verifier，未跑测试套件"
+  },
+  "preserved_failures": {
+    "attempt13_original18": "真实20PASS/2FAIL继续保留，不改写关闭证据为18PASS",
+    "physical_calibration": "不支持resampler=swresample枚举的原失败stderr和空/无效输出已包含73证据，成功r2不替换历史",
+    "verifier_calibration": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/verifier-calibration-failure.json",
+      "sha256": "213725ffa44f7f24791b27baf1fb0fec6fe8c4f11f5e3733d4895ec79e855083",
+      "exit": 1,
+      "reason": "只读checker单引号假设不匹配实际双引号；原失败保留，regex双引号校准无产品改动，不当产品RED"
+    },
+    "public_read_calibration": "AI期待succeeded与真实awaiting_confirmation的首1FAIL保持历史，不当产品RED"
+  },
+  "config_delta": {
+    "only_added_readonly_commands": {
+      "t1062-aac-delivery-cause": "node docs/research/t1062-local-word-timing/verify-evidence.mjs cause",
+      "t1062-aac-delivery-physics": "node docs/research/t1062-local-word-timing/verify-evidence.mjs physics"
+    },
+    "old_commands_preserved": true,
+    "other_config_fields_unchanged": true
+  },
+  "integrity": {
+    "before_path": "/tmp/t1062-aac-research-closure-independent-reflpbma/before-hashes.json",
+    "before_sha256": "1b2932da1616736ca0a8893e95200b41733ef3fe4c72984dcf52b4bdeb387635",
+    "after_path": "/tmp/t1062-aac-research-closure-independent-reflpbma/after-hashes.json",
+    "after_sha256": "a8a4b4fd5fd582dad914f7f3324fac48046a8ecd5e170cb543cb6118bd8a6a66",
+    "reviewed_repo_files_drift": 0,
+    "private73_drift": 0,
+    "source_copy_original_mismatches": []
+  },
+  "not_claimed": [
+    "future implementation PASS",
+    "current raw provider all-word validity",
+    "canonical AAC public chain PASS",
+    "Original18 PASS",
+    "installed/packaged tool compatibility PASS",
+    "user hearing PASS",
+    "all AAC or nonzero offset word mapping support"
+  ],
+  "final_note": "当前研究卡validated限于根因与物理机制；支持ROOT执行登记的research resume，不授予未来源码/范围写入。"
+}

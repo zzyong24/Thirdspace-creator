@@ -1,10 +1,15 @@
 import { type UIMessage } from "ai";
-import type { RequestContext } from "@creatoros/contract";
+import type {ArticleImageReadable} from "./material-generation-preparation";
+import type { WorkEditorTarget,WorkCreationTarget,RequestContext } from "@creatoros/contract";
 import { type ContextDeps } from "./creative-context";
 import { type ChatContext, type RecentTaskTruth } from "./chat-context";
 import { type ProjectDetailRaw, type ProjectLifecycleRaw, type ReviewReportRaw, type PositioningDetailRaw, type KnowledgeDetailRaw, type ArtifactListRaw, type ArtifactTextRaw, type KnowledgeTextRaw, type PublicationsListRaw, type MetricsRaw, type LearningsListRaw, type CandidatesListRaw, type PredictionsRaw, type VerbatimSource } from "./chat-tools";
 /** 聊天准备只读取上下文及工具配置，不持有模型或提交端口。 */
 export interface AssembleChatDeps extends ContextDeps {
+    resolveWritingContext?:(ctx:RequestContext,projectId:string,selection:import('@creatoros/contract').WritingContext)=>Promise<import('@creatoros/contract').ResolvedWritingContext>;
+    assistantSystem?:import('./chat-tools').ChatToolDeps['assistantSystem'];
+    readEditorTarget?:(ctx:RequestContext,target:WorkEditorTarget)=>Promise<WorkEditorTarget>;
+    readCreationTarget?:(ctx:RequestContext,target:WorkCreationTarget)=>Promise<WorkCreationTarget>;
     humanizeError: (err: unknown) => {
         message: string;
         suggestSwitchModel: boolean;
@@ -169,6 +174,8 @@ export interface ContextReaders {
         projectId: string;
         artifactType: string;
     }) => Promise<ArtifactTextRaw | null>;
+    /** T-1023：文章配图执行时按当前账号重读专用文章 output，不从视频脚本猜正文。 */
+    getArticleForImage?: (ctx: RequestContext, opts: {outputId: string}) => Promise<ArticleImageReadable>;
     /**
      * [T-099c] context.knowledge.text —— 某知识条目长文正文全文(transcript/reference/note 当前修订正文,
      * 与 knowledge.detail 的 note 同读法)。**返回原始全文**;窗口截断(§3)在工具 execute 侧强制。
@@ -225,6 +232,7 @@ export interface ContextReaders {
     }) => Promise<PredictionsRaw>;
 }
 export interface ChatTurnInput {
+    executionEngine?: "pi" | "codex";
     messages: UIMessage[];
     chatContext: ChatContext;
     trustedScriptSources?: readonly VerbatimSource[];

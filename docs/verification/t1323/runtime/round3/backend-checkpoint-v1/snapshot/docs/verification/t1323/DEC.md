@@ -1,0 +1,7 @@
+# T1323 独立范围与授权
+
+Root用户原全功能恢复授权下另立检查点修复，不扩大T1320源范围。R为作者/后续实施者，B独立设计评审两稿原件全保：初读2CONCERNS、修订复核2resolved，均明确不是正式工具收据或完整输入锁。此次正式锁在两稿之后实际发生，不追称早期已冻结。
+
+B指出ANALYSIS :144选择字段误记，C仅机械改为真实modelRoutingVersion===2；外层另核Codex executionEngine。原49a5…稿另存，不改旧review文本。原两finding仅要求活动attempt2准入窗口的精确树拒因和真实v2消费者绑定，未扩生产W。正式review JSON必须由B给出，C只执行实际reviewctl，不自填verdict。
+
+生产仅checkpoint service，新test/ownruntime，不修改通用partition/worker/投影或费用/未知。原T1320恢复FAIL及旧825首因未知保留，完整前RED必须本任务新owned真实公开链当场发生。统一timeout Gate由C最终独占实际运行，未发生不得签过。并行B1322可能改identity read-set；本任务claim前后核精确输入，相关source变化必须重绑定，不冒旧锁字节。

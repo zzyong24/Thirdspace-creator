@@ -1,3 +1,12 @@
+import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob} from './private-collector-admission.service';
+import {assertWritableWorkspace} from "../../workspace-scope";
+import {workspaceFilter} from '../../workspace-scope';
+import {and,eq} from 'drizzle-orm';
+import {isDeepStrictEqual} from 'node:util';
+import {requireAccountId,OwnershipError} from '../../errors';
+import {ConflictError} from '../execution/execution.errors';
+import {lockWorkspaceMembership} from '../platform-account/membership-lock.service';
+import {scheduledJobs} from '../../schema/scheduling';
 import { createScheduledRunIntentService } from "./daily-topic-run-intent.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
@@ -61,6 +70,8 @@ export interface UpdateJobInput {
 
 export interface ListJobsQuery {
   sourceKind?: string;
+  /** 内部账号采集bootstrap筛选，公开组列表不自动叠号。 */
+  accountId?: string | null;
   enabled?: boolean;
   limit: number;
   offset: number;
@@ -83,6 +94,8 @@ export interface UpdateRunInput {
 }
 
 export interface SchedulingService {
+  createDraftIfAbsent(ctx:RequestContext,input:Pick<CreateJobInput,'name'|'prompt'|'schedule'>&{sourceKind:'topic.daily'|'self.metrics'|'comments'}):Promise<ScheduledJobResource>;
+  setEnabledIfUnchanged(ctx:RequestContext,jobId:string,enabled:boolean,expected:ScheduledJobResource):Promise<ScheduledJobResource>;
   listJobs(
     ctx: RequestContext,
     query: ListJobsQuery,
@@ -90,6 +103,7 @@ export interface SchedulingService {
   createJob(
     ctx: RequestContext,
     input: CreateJobInput,
+    options?: {backgroundCollector?:boolean},
   ): Promise<ScheduledJobResource>;
   getJob(ctx: RequestContext, jobId: string): Promise<ScheduledJobResource>;
   updateJob(
@@ -152,25 +166,49 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     return target;
   };
 
-  function repoFor(ctx: RequestContext): SchedulingRepository {
+  function repoFor(ctx: RequestContext,backgroundCollector=false): SchedulingRepository {
     // [T-332 S2] accountId 透传进 repo(strict 双维门在 repo 内落地:用户路径未选号 → 抛
     //   AccountRequiredError;null 仅系统 daemon 路径合法,见 RepoDeps 注释)。
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: ctx.accountId ?? null,
+      accountId: ctx.accountId ?? null,groupId:ctx.groupId,membershipVersion:ctx.membershipVersion,backgroundCollector,
     };
     return createSchedulingRepository(db, repoDeps);
   }
 
   return {
+    async createDraftIfAbsent(ctx,input){
+      if(!['topic.daily','self.metrics','comments'].includes(input.sourceKind))throw new ValidationError('该自动化不在当前草稿范围');
+      const target=input.sourceKind==='topic.daily'?null:requireAccountId(ctx.accountId,'自动化真实目标');
+      return db.transaction(async tx=>{
+        await lockWorkspaceMembership(tx,ctx);
+        // SEMANTIC_BOUNDARY_ALLOW:沿原workspace/kind/target持久身份防重复，不选择任务或内容。
+        const [existing]=await tx.select().from(scheduledJobs).where(and(eq(scheduledJobs.userId,ctx.userId),workspaceFilter(scheduledJobs,ctx),eq(scheduledJobs.sourceKind,input.sourceKind),input.sourceKind==='topic.daily'?undefined:eq(scheduledJobs.accountId,target!))).limit(1).for('update');
+        if(existing)throw Object.assign(new ConflictError('同一目标已有自动化，请查看原任务并确认启用状态'),{existingJobId:existing.id,readOperationId:'scheduledJobs.get',enableOperationId:'scheduledJobs.setEnabled'});
+        return createSchedulingService({...deps,db:tx as unknown as Db}).createJob(ctx,{...input,target:{},toolGrants:[],enabled:false});
+      });
+    },
+    async setEnabledIfUnchanged(ctx,jobId,enabled,expected){
+      if((ctx.accountId??null)!==expected.accountId)throw new ConflictError('自动化目标与原候选不一致，请重新读取真实目标');
+      return db.transaction(async tx=>{
+        await lockWorkspaceMembership(tx,ctx);
+        const [current]=await tx.select().from(scheduledJobs).where(and(eq(scheduledJobs.userId,ctx.userId),workspaceFilter(scheduledJobs,ctx),eq(scheduledJobs.id,jobId))).for('update');
+        if(!current)throw new OwnershipError('自动化不存在或不属于当前工作区');
+        if(!isDeepStrictEqual(toScheduledJobDto(current),expected))throw new ConflictError('自动化已改变，请重新读取并确认启用状态');
+        return createSchedulingService({...deps,db:tx as unknown as Db}).setEnabled(ctx,jobId,enabled);
+      });
+    },
     async listJobs(ctx, query) {
       const { rows, total } = await repoFor(ctx).listJobs(query);
       return { rows: rows.map(toScheduledJobDto), total };
     },
 
-    async createJob(ctx, input) {
+    async createJob(ctx, input,options) {
+      const backgroundCollector=options?.backgroundCollector===true&&ctx.source==="ingestion"&&input.systemManaged===true&&!!ctx.accountId&&!!ctx.groupId&&PRIVATE_COLLECTION_SOURCE_KINDS.has(input.sourceKind);
+      if(options?.backgroundCollector&&!backgroundCollector)throw new ValidationError("后台采集授权只允许实际账号私有系统任务");
+      await assertWritableWorkspace(db,ctx,{allowArchived:backgroundCollector});
       if (retiredSourceKinds.has(input.sourceKind)&&!(input.systemManaged===true&&isBackfill(input.sourceKind,input.target))) {
         throw new ValidationError(
           "该兼容任务已退役，请使用作品数据同步或内容雷达",
@@ -184,7 +222,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
           "该采集任务由系统按账号管理，不能手动新建",
         );
       }
-      const row = await repoFor(ctx).createJob({
+      const row = await repoFor(ctx,backgroundCollector).createJob({
         name: input.name,
         prompt: input.prompt ?? "",
         sourceKind: input.sourceKind,
@@ -209,6 +247,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async updateJob(ctx, jobId, patch) {
+      await assertWritableWorkspace(db,ctx);
       const current = await repoFor(ctx).getJob(jobId);
       if ((current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中编辑对应能力");
       if (retiredSourceKinds.has(current.sourceKind)&&!isBackfill(current.sourceKind,current.target as Record<string,unknown>)) {
@@ -237,6 +276,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async setEnabled(ctx, jobId, enabled) {
+      await assertWritableWorkspace(db,ctx);
       const current=await repoFor(ctx).getJob(jobId);
       if(enabled&&(current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中开启对应能力");
       if (enabled) {
@@ -250,6 +290,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async createRun(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
       if (input.aiTaskId && (await repoFor(ctx).getJob(input.jobId)).sourceKind === "self.traffic") {
         // 与崩溃恢复共用 task→job 行锁，两个同时触发只产生原 task 的一条 run。
         const row = await createScheduledRunIntentService(db, { now, nextId }, ["self.traffic"]).ensureRunForTask(ctx, input.aiTaskId);
@@ -284,7 +325,14 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async updateRun(ctx, runId, patch) {
-      const row = await repoFor(ctx).updateRun(runId, patch);
+      const repo=repoFor(ctx),run=await repo.getRun(runId);
+      let privateAdmission=false;
+      if(ctx.source==='ingestion'&&ctx.groupId&&ctx.accountId){
+        const job=await repo.getJob(run.jobId);
+        if(PRIVATE_COLLECTION_SOURCE_KINDS.has(job.sourceKind)){await assertPrivateCollectorJob(db,ctx,job.id,job.sourceKind);privateAdmission=true;}
+      }
+      await assertWritableWorkspace(db,ctx,{allowArchived:privateAdmission});
+      const row = await repo.updateRun(runId, patch);
       return toJobRunDto(row);
     },
   };

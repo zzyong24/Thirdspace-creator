@@ -1,0 +1,3972 @@
+{
+  "scope": "组件隔离harness，非生产/安装PASS",
+  "tag": "final-source",
+  "results": [
+    {
+      "tag": "final-source",
+      "scenario": "prepare",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "zoom": "100%",
+      "at": "2026-10-10T03:25:32.662Z",
+      "browserVersion": "148.0.7778.96",
+      "executablePath": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "steps": [
+        {
+          "at": "2026-10-10T03:25:33.275Z",
+          "action": "访问隔离真实组件"
+        },
+        {
+          "at": "2026-10-10T03:25:33.376Z",
+          "action": "输入原话：这次明确修改"
+        },
+        {
+          "at": "2026-10-10T03:25:33.431Z",
+          "action": "点真实产品发送按钮"
+        },
+        {
+          "at": "2026-10-10T03:25:33.508Z",
+          "action": "只将外部EditorPort.prepareForTurn夹具设为可用"
+        },
+        {
+          "at": "2026-10-10T03:25:33.555Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：引擎就绪",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 509.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 635.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:33.556Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：检查结束",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 643.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 769.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:33.557Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "新对话",
+            "slot": "ai-copilot-new",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 844,
+              "y": 100.25,
+              "width": 69,
+              "height": 28,
+              "right": 913,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:33.558Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "历史记录",
+            "slot": "ai-copilot-history",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 919,
+              "y": 100.25,
+              "width": 80,
+              "height": 28,
+              "right": 999,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:33.565Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "在画布中打开",
+            "slot": null,
+            "href": "/canvases?projectId=protocol-project",
+            "rect": {
+              "x": 423,
+              "y": 144.5,
+              "width": 94,
+              "height": 26,
+              "right": 517,
+              "bottom": 170.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:33.567Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "继续本轮",
+            "slot": "copilot-error-retry",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 309,
+              "y": 285,
+              "width": 70,
+              "height": 32,
+              "right": 379,
+              "bottom": 317,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:33.618Z",
+          "action": "Enter一次触发真实继续本轮按钮"
+        }
+      ],
+      "checkpoints": [
+        {
+          "label": "failed-before-recovery",
+          "at": "2026-10-10T03:25:33.435Z",
+          "evidence": {
+            "scenario": "prepare",
+            "originalText": "这次明确修改",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 1,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "这次明确修改",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：首消息准备拒绝\n隔离夹具：准备拒绝\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":1,\"postCalls\":0,\"creationSubmission\":[],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n稿件尚未准备好\n本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 1280,
+            "innerHeight": 800,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 1280,
+            "rootScrollWidth": 1280,
+            "bodyScrollWidth": 1280,
+            "prompt": {
+              "x": 294,
+              "y": 612,
+              "width": 692,
+              "height": 52,
+              "top": 612,
+              "bottom": 664,
+              "right": 986,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 309,
+              "y": 285,
+              "width": 70,
+              "height": 32,
+              "top": 285,
+              "bottom": 317,
+              "right": 379,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：首消息准备拒绝隔离夹具：准备拒绝隔离夹具：引擎就绪隔离夹具：检查结束{\"prepareCalls\":1,\"postCalls\":0,\"creationSubmission\":[],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开稿件尚未准备好本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。继续本轮这次明确修改添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1280,
+              "height": 800,
+              "top": 0,
+              "bottom": 800,
+              "right": 1280,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": false,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": false,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": false,
+              "slot": "submit-button"
+            }
+          ]
+        },
+        {
+          "label": "ready-no-automatic-post",
+          "at": "2026-10-10T03:25:33.508Z",
+          "evidence": {
+            "scenario": "prepare",
+            "originalText": "这次明确修改",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 1,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": false
+            }
+          },
+          "prompt": "这次明确修改",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：首消息准备拒绝\n隔离夹具：准备就绪\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":1,\"postCalls\":0,\"creationSubmission\":[],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n稿件尚未准备好\n本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 1280,
+            "innerHeight": 800,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 1280,
+            "rootScrollWidth": 1280,
+            "bodyScrollWidth": 1280,
+            "prompt": {
+              "x": 294,
+              "y": 612,
+              "width": 692,
+              "height": 52,
+              "top": 612,
+              "bottom": 664,
+              "right": 986,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 309,
+              "y": 285,
+              "width": 70,
+              "height": 32,
+              "top": 285,
+              "bottom": 317,
+              "right": 379,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：准备就绪",
+            "slot": null,
+            "rect": {
+              "x": 375.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "top": 12,
+              "bottom": 40,
+              "right": 501.375,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": false,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": false,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": false,
+              "slot": "submit-button"
+            }
+          ]
+        },
+        {
+          "label": "continued-sdk-post-503",
+          "at": "2026-10-10T03:25:34.926Z",
+          "evidence": {
+            "scenario": "prepare",
+            "originalText": "这次明确修改",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 2,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [
+              {
+                "at": "2026-10-10T03:25:33.616Z",
+                "url": "/api/chat",
+                "method": "POST",
+                "body": {
+                  "chatContext": {
+                    "surface": "project",
+                    "scope": "project:protocol-project",
+                    "projectId": "protocol-project",
+                    "selection": {
+                      "kind": "project",
+                      "ids": [
+                        "protocol-project"
+                      ],
+                      "label": "实际项目"
+                    },
+                    "editorTarget": {
+                      "schemaVersion": 1,
+                      "projectId": "protocol-project",
+                      "outputId": "actual-article",
+                      "owner": "wechat_article",
+                      "contentType": "article",
+                      "savedBase": {
+                        "kind": "artifact",
+                        "artifactId": "actual-artifact",
+                        "versionId": "saved-base"
+                      },
+                      "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "selection": {
+                        "kind": "article_sections",
+                        "sectionIds": [
+                          "actual-section"
+                        ]
+                      }
+                    }
+                  },
+                  "attachmentIds": [],
+                  "executionEngine": "pi",
+                  "id": "[null,\"project:protocol-project\"]",
+                  "messages": [
+                    {
+                      "parts": [
+                        {
+                          "type": "text",
+                          "text": "这次明确修改"
+                        }
+                      ],
+                      "id": "XXU7RfrYpCNNSbzE",
+                      "role": "user"
+                    }
+                  ],
+                  "trigger": "submit-message"
+                }
+              }
+            ],
+            "blockedNetwork": [],
+            "creationSubmission": [],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": false
+            }
+          },
+          "prompt": "这次明确修改",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：首消息准备拒绝\n隔离夹具：准备就绪\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":2,\"postCalls\":1,\"creationSubmission\":[],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n这次明确修改\n原请求结果待确认\n原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。\n核对原请求\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 1280,
+            "innerHeight": 800,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 1280,
+            "rootScrollWidth": 1280,
+            "bodyScrollWidth": 1280,
+            "prompt": {
+              "x": 294,
+              "y": 612,
+              "width": 692,
+              "height": 52,
+              "top": 612,
+              "bottom": 664,
+              "right": 986,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 309,
+              "y": 311.296875,
+              "width": 81,
+              "height": 32,
+              "top": 311.296875,
+              "bottom": 343.296875,
+              "right": 390,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：首消息准备拒绝隔离夹具：准备就绪隔离夹具：引擎就绪隔离夹具：检查结束{\"prepareCalls\":2,\"postCalls\":1,\"creationSubmission\":[],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开这次明确修改原请求结果待确认原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。核对原请求这次明确修改添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1280,
+              "height": 800,
+              "top": 0,
+              "bottom": 800,
+              "right": 1280,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "核对原请求",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": false,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": false,
+              "slot": "submit-button"
+            }
+          ]
+        }
+      ],
+      "screenshots": [
+        "final-source-walk-prepare-1280x800-failed.png",
+        "final-source-walk-prepare-1280x800-ready.png",
+        "final-source-walk-prepare-1280x800-continue-keyboard-focus.png",
+        "final-source-walk-prepare-1280x800-submitted-unknown.png"
+      ],
+      "blocked": [],
+      "errors": [],
+      "consoleLogs": [
+        {
+          "type": "info",
+          "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+        }
+      ],
+      "requests": [
+        {
+          "url": "http://127.0.0.1:31591/?scenario=prepare",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/theme.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.js",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-117-wght-normal-FZFR6BH4.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-119-wght-normal-V76REE4F.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-latin-wght-normal-YK4EAJ2N.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-116-wght-normal-PSDL3XM5.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-115-wght-normal-2SKNA73H.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-112-wght-normal-JWH2TGZ7.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-118-wght-normal-7JNFWFRI.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-111-wght-normal-H46IZEG6.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-108-wght-normal-RR6E3LPK.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-107-wght-normal-UIHDLU5Q.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-114-wght-normal-JSFSLINJ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-110-wght-normal-ZOZESFTB.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-113-wght-normal-LDIXJUIZ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-90-wght-normal-DL4USQPB.woff2",
+          "method": "GET"
+        }
+      ],
+      "status": "passed-in-isolated-component-boundary",
+      "finishedAt": "2026-10-10T03:25:34.966Z"
+    },
+    {
+      "tag": "final-source",
+      "scenario": "prepare",
+      "viewport": {
+        "width": 900,
+        "height": 600
+      },
+      "zoom": "100%",
+      "at": "2026-10-10T03:25:34.988Z",
+      "browserVersion": "148.0.7778.96",
+      "executablePath": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "steps": [
+        {
+          "at": "2026-10-10T03:25:35.524Z",
+          "action": "访问隔离真实组件"
+        },
+        {
+          "at": "2026-10-10T03:25:35.618Z",
+          "action": "输入原话：这次明确修改"
+        },
+        {
+          "at": "2026-10-10T03:25:35.668Z",
+          "action": "点真实产品发送按钮"
+        },
+        {
+          "at": "2026-10-10T03:25:35.737Z",
+          "action": "只将外部EditorPort.prepareForTurn夹具设为可用"
+        },
+        {
+          "at": "2026-10-10T03:25:35.798Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：引擎就绪",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 509.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 635.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:35.800Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：检查结束",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 643.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 769.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:35.801Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "新对话",
+            "slot": "ai-copilot-new",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 654,
+              "y": 100.25,
+              "width": 69,
+              "height": 28,
+              "right": 723,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:35.802Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "历史记录",
+            "slot": "ai-copilot-history",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 729,
+              "y": 100.25,
+              "width": 80,
+              "height": 28,
+              "right": 809,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:35.816Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "在画布中打开",
+            "slot": null,
+            "href": "/canvases?projectId=protocol-project",
+            "rect": {
+              "x": 233,
+              "y": 144.5,
+              "width": 94,
+              "height": 26,
+              "right": 327,
+              "bottom": 170.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:35.818Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "继续本轮",
+            "slot": "copilot-error-retry",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 119,
+              "y": 285,
+              "width": 70,
+              "height": 32,
+              "right": 189,
+              "bottom": 317,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:35.871Z",
+          "action": "Enter一次触发真实继续本轮按钮"
+        }
+      ],
+      "checkpoints": [
+        {
+          "label": "failed-before-recovery",
+          "at": "2026-10-10T03:25:35.671Z",
+          "evidence": {
+            "scenario": "prepare",
+            "originalText": "这次明确修改",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 1,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "这次明确修改",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：首消息准备拒绝\n隔离夹具：准备拒绝\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":1,\"postCalls\":0,\"creationSubmission\":[],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n稿件尚未准备好\n本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 900,
+            "innerHeight": 600,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 900,
+            "rootScrollWidth": 900,
+            "bodyScrollWidth": 900,
+            "prompt": {
+              "x": 104,
+              "y": 412,
+              "width": 692,
+              "height": 52,
+              "top": 412,
+              "bottom": 464,
+              "right": 796,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 119,
+              "y": 285,
+              "width": 70,
+              "height": 32,
+              "top": 285,
+              "bottom": 317,
+              "right": 189,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：首消息准备拒绝隔离夹具：准备拒绝隔离夹具：引擎就绪隔离夹具：检查结束{\"prepareCalls\":1,\"postCalls\":0,\"creationSubmission\":[],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开稿件尚未准备好本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。继续本轮这次明确修改添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 900,
+              "height": 600,
+              "top": 0,
+              "bottom": 600,
+              "right": 900,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": false,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": false,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": false,
+              "slot": "submit-button"
+            }
+          ]
+        },
+        {
+          "label": "ready-no-automatic-post",
+          "at": "2026-10-10T03:25:35.738Z",
+          "evidence": {
+            "scenario": "prepare",
+            "originalText": "这次明确修改",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 1,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": false
+            }
+          },
+          "prompt": "这次明确修改",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：首消息准备拒绝\n隔离夹具：准备就绪\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":1,\"postCalls\":0,\"creationSubmission\":[],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n稿件尚未准备好\n本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 900,
+            "innerHeight": 600,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 900,
+            "rootScrollWidth": 900,
+            "bodyScrollWidth": 900,
+            "prompt": {
+              "x": 104,
+              "y": 412,
+              "width": 692,
+              "height": 52,
+              "top": 412,
+              "bottom": 464,
+              "right": 796,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 119,
+              "y": 285,
+              "width": 70,
+              "height": 32,
+              "top": 285,
+              "bottom": 317,
+              "right": 189,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：准备就绪",
+            "slot": null,
+            "rect": {
+              "x": 375.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "top": 12,
+              "bottom": 40,
+              "right": 501.375,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": false,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": false,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": false,
+              "slot": "submit-button"
+            }
+          ]
+        },
+        {
+          "label": "continued-sdk-post-503",
+          "at": "2026-10-10T03:25:37.175Z",
+          "evidence": {
+            "scenario": "prepare",
+            "originalText": "这次明确修改",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 2,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [
+              {
+                "at": "2026-10-10T03:25:35.867Z",
+                "url": "/api/chat",
+                "method": "POST",
+                "body": {
+                  "chatContext": {
+                    "surface": "project",
+                    "scope": "project:protocol-project",
+                    "projectId": "protocol-project",
+                    "selection": {
+                      "kind": "project",
+                      "ids": [
+                        "protocol-project"
+                      ],
+                      "label": "实际项目"
+                    },
+                    "editorTarget": {
+                      "schemaVersion": 1,
+                      "projectId": "protocol-project",
+                      "outputId": "actual-article",
+                      "owner": "wechat_article",
+                      "contentType": "article",
+                      "savedBase": {
+                        "kind": "artifact",
+                        "artifactId": "actual-artifact",
+                        "versionId": "saved-base"
+                      },
+                      "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "selection": {
+                        "kind": "article_sections",
+                        "sectionIds": [
+                          "actual-section"
+                        ]
+                      }
+                    }
+                  },
+                  "attachmentIds": [],
+                  "executionEngine": "pi",
+                  "id": "[null,\"project:protocol-project\"]",
+                  "messages": [
+                    {
+                      "parts": [
+                        {
+                          "type": "text",
+                          "text": "这次明确修改"
+                        }
+                      ],
+                      "id": "ZjD6JS4m2zuc1CPu",
+                      "role": "user"
+                    }
+                  ],
+                  "trigger": "submit-message"
+                }
+              }
+            ],
+            "blockedNetwork": [],
+            "creationSubmission": [],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": false
+            }
+          },
+          "prompt": "这次明确修改",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：首消息准备拒绝\n隔离夹具：准备就绪\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":2,\"postCalls\":1,\"creationSubmission\":[],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n这次明确修改\n原请求结果待确认\n原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。\n核对原请求\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 900,
+            "innerHeight": 600,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 900,
+            "rootScrollWidth": 900,
+            "bodyScrollWidth": 900,
+            "prompt": {
+              "x": 104,
+              "y": 412,
+              "width": 692,
+              "height": 52,
+              "top": 412,
+              "bottom": 464,
+              "right": 796,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 119,
+              "y": 311.296875,
+              "width": 81,
+              "height": 32,
+              "top": 311.296875,
+              "bottom": 343.296875,
+              "right": 200,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：首消息准备拒绝隔离夹具：准备就绪隔离夹具：引擎就绪隔离夹具：检查结束{\"prepareCalls\":2,\"postCalls\":1,\"creationSubmission\":[],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开这次明确修改原请求结果待确认原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。核对原请求这次明确修改添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 900,
+              "height": 600,
+              "top": 0,
+              "bottom": 600,
+              "right": 900,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "核对原请求",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": false,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": false,
+              "slot": "submit-button"
+            }
+          ]
+        }
+      ],
+      "screenshots": [
+        "final-source-walk-prepare-900x600-failed.png",
+        "final-source-walk-prepare-900x600-ready.png",
+        "final-source-walk-prepare-900x600-continue-keyboard-focus.png",
+        "final-source-walk-prepare-900x600-submitted-unknown.png"
+      ],
+      "blocked": [],
+      "errors": [],
+      "consoleLogs": [
+        {
+          "type": "info",
+          "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+        }
+      ],
+      "requests": [
+        {
+          "url": "http://127.0.0.1:31591/?scenario=prepare",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/theme.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.js",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-117-wght-normal-FZFR6BH4.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-119-wght-normal-V76REE4F.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-latin-wght-normal-YK4EAJ2N.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-116-wght-normal-PSDL3XM5.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-115-wght-normal-2SKNA73H.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-112-wght-normal-JWH2TGZ7.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-118-wght-normal-7JNFWFRI.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-111-wght-normal-H46IZEG6.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-108-wght-normal-RR6E3LPK.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-107-wght-normal-UIHDLU5Q.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-114-wght-normal-JSFSLINJ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-110-wght-normal-ZOZESFTB.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-113-wght-normal-LDIXJUIZ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-90-wght-normal-DL4USQPB.woff2",
+          "method": "GET"
+        }
+      ],
+      "status": "passed-in-isolated-component-boundary",
+      "finishedAt": "2026-10-10T03:25:37.202Z"
+    },
+    {
+      "tag": "final-source",
+      "scenario": "creation",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "zoom": "100%",
+      "at": "2026-10-10T03:25:37.222Z",
+      "browserVersion": "148.0.7778.96",
+      "executablePath": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "steps": [
+        {
+          "at": "2026-10-10T03:25:37.756Z",
+          "action": "访问隔离真实组件"
+        },
+        {
+          "at": "2026-10-10T03:25:37.909Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：准备拒绝",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 399.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 525.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:37.910Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：引擎不可用",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 533.375,
+              "y": 12,
+              "width": 138,
+              "height": 28,
+              "right": 671.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:37.912Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：检查结束",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 679.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 805.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:37.914Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "新对话",
+            "slot": "ai-copilot-new",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 844,
+              "y": 100.25,
+              "width": 69,
+              "height": 28,
+              "right": 913,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:37.915Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "历史记录",
+            "slot": "ai-copilot-history",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 919,
+              "y": 100.25,
+              "width": 80,
+              "height": 28,
+              "right": 999,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:37.924Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "在画布中打开",
+            "slot": null,
+            "href": "/canvases?projectId=protocol-project",
+            "rect": {
+              "x": 423,
+              "y": 144.5,
+              "width": 94,
+              "height": 26,
+              "right": 517,
+              "bottom": 170.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:37.926Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "检查编导引擎",
+            "slot": "copilot-error-engine-settings-link",
+            "href": "/settings?highlight=assistant-engine",
+            "rect": {
+              "x": 309,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "right": 399,
+              "bottom": 297.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:37.957Z",
+          "action": "Enter触发真实组件设置入口，由next/link宿主记录而不导航"
+        },
+        {
+          "at": "2026-10-10T03:25:38.010Z",
+          "action": "只将外部引擎输入夹具设ready"
+        },
+        {
+          "at": "2026-10-10T03:25:38.057Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：检查结束",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 667.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 793.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:38.060Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "新对话",
+            "slot": "ai-copilot-new",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 844,
+              "y": 100.25,
+              "width": 69,
+              "height": 28,
+              "right": 913,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:38.068Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "历史记录",
+            "slot": "ai-copilot-history",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 919,
+              "y": 100.25,
+              "width": 80,
+              "height": 28,
+              "right": 999,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:38.105Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "在画布中打开",
+            "slot": null,
+            "href": "/canvases?projectId=protocol-project",
+            "rect": {
+              "x": 423,
+              "y": 144.5,
+              "width": 94,
+              "height": 26,
+              "right": 517,
+              "bottom": 170.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:38.124Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "检查编导引擎",
+            "slot": "copilot-error-engine-settings-link",
+            "href": "/settings?highlight=assistant-engine",
+            "rect": {
+              "x": 309,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "right": 399,
+              "bottom": 297.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:38.142Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "继续本轮",
+            "slot": "copilot-error-retry",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 407,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "right": 477,
+              "bottom": 297.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:38.209Z",
+          "action": "Enter一次触发真实继续本轮按钮"
+        }
+      ],
+      "checkpoints": [
+        {
+          "label": "failed-before-recovery",
+          "at": "2026-10-10T03:25:37.869Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted"
+            ],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": false,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎不可用\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n编导引擎尚未就绪\n本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。\n检查编导引擎\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 1280,
+            "innerHeight": 800,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 1280,
+            "rootScrollWidth": 1280,
+            "bodyScrollWidth": 1280,
+            "prompt": {
+              "x": 294,
+              "y": 612,
+              "width": 692,
+              "height": 52,
+              "top": 612,
+              "bottom": 664,
+              "right": 986,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 407,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 477,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": {
+              "x": 309,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 399,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：联合创作引擎不可用隔离夹具：准备拒绝隔离夹具：引擎不可用隔离夹具：检查结束{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开编导引擎尚未就绪本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。检查编导引擎继续本轮添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1280,
+              "height": 800,
+              "top": 0,
+              "bottom": 800,
+              "right": 1280,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎不可用",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ],
+          "settingsHref": "/settings?highlight=assistant-engine"
+        },
+        {
+          "label": "settings-link-activated",
+          "at": "2026-10-10T03:25:37.958Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted"
+            ],
+            "navigation": [
+              {
+                "method": "link",
+                "href": "/settings?highlight=assistant-engine"
+              }
+            ],
+            "config": {
+              "engine": "pi",
+              "available": false,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎不可用\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n编导引擎尚未就绪\n本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。\n检查编导引擎\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 1280,
+            "innerHeight": 800,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 1280,
+            "rootScrollWidth": 1280,
+            "bodyScrollWidth": 1280,
+            "prompt": {
+              "x": 294,
+              "y": 612,
+              "width": 692,
+              "height": 52,
+              "top": 612,
+              "bottom": 664,
+              "right": 986,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 407,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 477,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": {
+              "x": 309,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 399,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "active": {
+            "tag": "A",
+            "name": "检查编导引擎",
+            "slot": "copilot-error-engine-settings-link",
+            "rect": {
+              "x": 309,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 399,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎不可用",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ],
+          "settingsHref": "/settings?highlight=assistant-engine"
+        },
+        {
+          "label": "ready-no-automatic-post",
+          "at": "2026-10-10T03:25:38.013Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted"
+            ],
+            "navigation": [
+              {
+                "method": "link",
+                "href": "/settings?highlight=assistant-engine"
+              }
+            ],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n编导引擎已就绪\n本轮尚未发送，原请求和附件已保留。点击继续本轮即可按当前设置发送。\n检查编导引擎\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 1280,
+            "innerHeight": 800,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 1280,
+            "rootScrollWidth": 1280,
+            "bodyScrollWidth": 1280,
+            "prompt": {
+              "x": 294,
+              "y": 612,
+              "width": 692,
+              "height": 52,
+              "top": 612,
+              "bottom": 664,
+              "right": 986,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 407,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 477,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": {
+              "x": 309,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 399,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：引擎就绪",
+            "slot": null,
+            "rect": {
+              "x": 533.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "top": 12,
+              "bottom": 40,
+              "right": 659.375,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": false,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ],
+          "settingsHref": "/settings?highlight=assistant-engine"
+        },
+        {
+          "label": "continued-sdk-post-503",
+          "at": "2026-10-10T03:25:39.512Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [
+              {
+                "at": "2026-10-10T03:25:38.199Z",
+                "url": "/api/chat",
+                "method": "POST",
+                "body": {
+                  "chatContext": {
+                    "surface": "project",
+                    "scope": "project:protocol-project",
+                    "projectId": "protocol-project",
+                    "selection": {
+                      "kind": "project",
+                      "ids": [
+                        "protocol-project"
+                      ],
+                      "label": "实际项目"
+                    },
+                    "creationTarget": {
+                      "clientRequestId": "original-pair",
+                      "projectId": "protocol-project",
+                      "scriptSourceRef": {
+                        "kind": "project_script",
+                        "id": "script",
+                        "versionId": "frozen-script-v"
+                      }
+                    }
+                  },
+                  "attachmentIds": [],
+                  "executionEngine": "pi",
+                  "id": "[null,\"project:protocol-project\"]",
+                  "messages": [
+                    {
+                      "parts": [
+                        {
+                          "type": "text",
+                          "text": "生成原文章图文候选"
+                        }
+                      ],
+                      "id": "yMTvlpO6fYijOaMe",
+                      "role": "user"
+                    }
+                  ],
+                  "trigger": "submit-message"
+                }
+              }
+            ],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted",
+              "submitted-unknown"
+            ],
+            "navigation": [
+              {
+                "method": "link",
+                "href": "/settings?highlight=assistant-engine"
+              }
+            ],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":1,\"creationSubmission\":[\"not-submitted\",\"submitted-unknown\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n生成原文章图文候选\n原请求结果待确认\n原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。\n核对原请求\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 1280,
+            "innerHeight": 800,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 1280,
+            "rootScrollWidth": 1280,
+            "bodyScrollWidth": 1280,
+            "prompt": {
+              "x": 294,
+              "y": 612,
+              "width": 692,
+              "height": 52,
+              "top": 612,
+              "bottom": 664,
+              "right": 986,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 309,
+              "y": 311.296875,
+              "width": 81,
+              "height": 32,
+              "top": 311.296875,
+              "bottom": 343.296875,
+              "right": 390,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：联合创作引擎不可用隔离夹具：准备拒绝隔离夹具：引擎就绪隔离夹具：检查结束{\"prepareCalls\":0,\"postCalls\":1,\"creationSubmission\":[\"not-submitted\",\"submitted-unknown\"],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开生成原文章图文候选原请求结果待确认原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。核对原请求添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1280,
+              "height": 800,
+              "top": 0,
+              "bottom": 800,
+              "right": 1280,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "核对原请求",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ]
+        }
+      ],
+      "screenshots": [
+        "final-source-walk-creation-1280x800-failed.png",
+        "final-source-walk-creation-1280x800-settings-keyboard-focus.png",
+        "final-source-walk-creation-1280x800-ready.png",
+        "final-source-walk-creation-1280x800-continue-keyboard-focus.png",
+        "final-source-walk-creation-1280x800-submitted-unknown.png"
+      ],
+      "blocked": [],
+      "errors": [],
+      "consoleLogs": [
+        {
+          "type": "info",
+          "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+        },
+        {
+          "type": "info",
+          "text": "[T-716][script.patch] composer request started {nonce: 1, functionKey: undefined, selectionKind: null, sectionIndex: null, messageCountBefore: 0}"
+        }
+      ],
+      "requests": [
+        {
+          "url": "http://127.0.0.1:31591/?scenario=creation",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/theme.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.js",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-117-wght-normal-FZFR6BH4.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-119-wght-normal-V76REE4F.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-latin-wght-normal-YK4EAJ2N.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-116-wght-normal-PSDL3XM5.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-115-wght-normal-2SKNA73H.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-112-wght-normal-JWH2TGZ7.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-118-wght-normal-7JNFWFRI.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-107-wght-normal-UIHDLU5Q.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-111-wght-normal-H46IZEG6.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-114-wght-normal-JSFSLINJ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-110-wght-normal-ZOZESFTB.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-113-wght-normal-LDIXJUIZ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-90-wght-normal-DL4USQPB.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-108-wght-normal-RR6E3LPK.woff2",
+          "method": "GET"
+        }
+      ],
+      "status": "passed-in-isolated-component-boundary",
+      "finishedAt": "2026-10-10T03:25:39.542Z"
+    },
+    {
+      "tag": "final-source",
+      "scenario": "creation",
+      "viewport": {
+        "width": 900,
+        "height": 600
+      },
+      "zoom": "100%",
+      "at": "2026-10-10T03:25:39.566Z",
+      "browserVersion": "148.0.7778.96",
+      "executablePath": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "steps": [
+        {
+          "at": "2026-10-10T03:25:40.099Z",
+          "action": "访问隔离真实组件"
+        },
+        {
+          "at": "2026-10-10T03:25:40.250Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：准备拒绝",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 399.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 525.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.252Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：引擎不可用",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 533.375,
+              "y": 12,
+              "width": 138,
+              "height": 28,
+              "right": 671.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.253Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：检查结束",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 679.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 805.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.254Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "新对话",
+            "slot": "ai-copilot-new",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 654,
+              "y": 100.25,
+              "width": 69,
+              "height": 28,
+              "right": 723,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.254Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "历史记录",
+            "slot": "ai-copilot-history",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 729,
+              "y": 100.25,
+              "width": 80,
+              "height": 28,
+              "right": 809,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.274Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "在画布中打开",
+            "slot": null,
+            "href": "/canvases?projectId=protocol-project",
+            "rect": {
+              "x": 233,
+              "y": 144.5,
+              "width": 94,
+              "height": 26,
+              "right": 327,
+              "bottom": 170.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.277Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "检查编导引擎",
+            "slot": "copilot-error-engine-settings-link",
+            "href": "/settings?highlight=assistant-engine",
+            "rect": {
+              "x": 119,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "right": 209,
+              "bottom": 297.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.310Z",
+          "action": "Enter触发真实组件设置入口，由next/link宿主记录而不导航"
+        },
+        {
+          "at": "2026-10-10T03:25:40.331Z",
+          "action": "只将外部引擎输入夹具设ready"
+        },
+        {
+          "at": "2026-10-10T03:25:40.391Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：检查结束",
+            "slot": null,
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 667.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "right": 793.375,
+              "bottom": 40,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.392Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "新对话",
+            "slot": "ai-copilot-new",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 654,
+              "y": 100.25,
+              "width": 69,
+              "height": 28,
+              "right": 723,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.393Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "历史记录",
+            "slot": "ai-copilot-history",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 729,
+              "y": 100.25,
+              "width": 80,
+              "height": 28,
+              "right": 809,
+              "bottom": 128.25,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.400Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "在画布中打开",
+            "slot": null,
+            "href": "/canvases?projectId=protocol-project",
+            "rect": {
+              "x": 233,
+              "y": 144.5,
+              "width": 94,
+              "height": 26,
+              "right": 327,
+              "bottom": 170.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.402Z",
+          "action": "Tab",
+          "active": {
+            "tag": "A",
+            "name": "检查编导引擎",
+            "slot": "copilot-error-engine-settings-link",
+            "href": "/settings?highlight=assistant-engine",
+            "rect": {
+              "x": 119,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "right": 209,
+              "bottom": 297.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.405Z",
+          "action": "Tab",
+          "active": {
+            "tag": "BUTTON",
+            "name": "继续本轮",
+            "slot": "copilot-error-retry",
+            "href": null,
+            "disabled": false,
+            "rect": {
+              "x": 217,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "right": 287,
+              "bottom": 297.5,
+              "withinViewport": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-10T03:25:40.438Z",
+          "action": "Enter一次触发真实继续本轮按钮"
+        }
+      ],
+      "checkpoints": [
+        {
+          "label": "failed-before-recovery",
+          "at": "2026-10-10T03:25:40.209Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted"
+            ],
+            "navigation": [],
+            "config": {
+              "engine": "pi",
+              "available": false,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎不可用\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n编导引擎尚未就绪\n本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。\n检查编导引擎\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 900,
+            "innerHeight": 600,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 900,
+            "rootScrollWidth": 900,
+            "bodyScrollWidth": 900,
+            "prompt": {
+              "x": 104,
+              "y": 412,
+              "width": 692,
+              "height": 52,
+              "top": 412,
+              "bottom": 464,
+              "right": 796,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 217,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 287,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": {
+              "x": 119,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 209,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：联合创作引擎不可用隔离夹具：准备拒绝隔离夹具：引擎不可用隔离夹具：检查结束{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开编导引擎尚未就绪本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。检查编导引擎继续本轮添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 900,
+              "height": 600,
+              "top": 0,
+              "bottom": 600,
+              "right": 900,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎不可用",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ],
+          "settingsHref": "/settings?highlight=assistant-engine"
+        },
+        {
+          "label": "settings-link-activated",
+          "at": "2026-10-10T03:25:40.311Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted"
+            ],
+            "navigation": [
+              {
+                "method": "link",
+                "href": "/settings?highlight=assistant-engine"
+              }
+            ],
+            "config": {
+              "engine": "pi",
+              "available": false,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎不可用\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n编导引擎尚未就绪\n本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。\n检查编导引擎\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 900,
+            "innerHeight": 600,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 900,
+            "rootScrollWidth": 900,
+            "bodyScrollWidth": 900,
+            "prompt": {
+              "x": 104,
+              "y": 412,
+              "width": 692,
+              "height": 52,
+              "top": 412,
+              "bottom": 464,
+              "right": 796,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 217,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 287,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": {
+              "x": 119,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 209,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "active": {
+            "tag": "A",
+            "name": "检查编导引擎",
+            "slot": "copilot-error-engine-settings-link",
+            "rect": {
+              "x": 119,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 209,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎不可用",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ],
+          "settingsHref": "/settings?highlight=assistant-engine"
+        },
+        {
+          "label": "ready-no-automatic-post",
+          "at": "2026-10-10T03:25:40.354Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted"
+            ],
+            "navigation": [
+              {
+                "method": "link",
+                "href": "/settings?highlight=assistant-engine"
+              }
+            ],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":0,\"creationSubmission\":[\"not-submitted\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n编导引擎已就绪\n本轮尚未发送，原请求和附件已保留。点击继续本轮即可按当前设置发送。\n检查编导引擎\n继续本轮\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 900,
+            "innerHeight": 600,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 900,
+            "rootScrollWidth": 900,
+            "bodyScrollWidth": 900,
+            "prompt": {
+              "x": 104,
+              "y": 412,
+              "width": 692,
+              "height": 52,
+              "top": 412,
+              "bottom": 464,
+              "right": 796,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 217,
+              "y": 265.5,
+              "width": 70,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 287,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": {
+              "x": 119,
+              "y": 265.5,
+              "width": 90,
+              "height": 32,
+              "top": 265.5,
+              "bottom": 297.5,
+              "right": 209,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "active": {
+            "tag": "BUTTON",
+            "name": "隔离夹具：引擎就绪",
+            "slot": null,
+            "rect": {
+              "x": 533.375,
+              "y": 12,
+              "width": 126,
+              "height": 28,
+              "top": 12,
+              "bottom": 40,
+              "right": 659.375,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "继续本轮",
+              "disabled": false,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ],
+          "settingsHref": "/settings?highlight=assistant-engine"
+        },
+        {
+          "label": "continued-sdk-post-503",
+          "at": "2026-10-10T03:25:41.741Z",
+          "evidence": {
+            "scenario": "creation",
+            "originalText": "生成原文章图文候选",
+            "target": {
+              "schemaVersion": 1,
+              "projectId": "protocol-project",
+              "outputId": "actual-article",
+              "owner": "wechat_article",
+              "contentType": "article",
+              "savedBase": {
+                "kind": "artifact",
+                "artifactId": "actual-artifact",
+                "versionId": "saved-base"
+              },
+              "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "selection": {
+                "kind": "article_sections",
+                "sectionIds": [
+                  "actual-section"
+                ]
+              }
+            },
+            "creationTarget": {
+              "clientRequestId": "original-pair",
+              "projectId": "protocol-project",
+              "scriptSourceRef": {
+                "kind": "project_script",
+                "id": "script",
+                "versionId": "frozen-script-v"
+              }
+            },
+            "prepareCalls": 0,
+            "readCalls": [
+              {
+                "name": "listConversations",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 1,
+                      "scope": "project:protocol-project"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "listAITasks",
+                "args": [
+                  {
+                    "query": {
+                      "page": 1,
+                      "pageSize": 24
+                    }
+                  }
+                ]
+              }
+            ],
+            "postCalls": [
+              {
+                "at": "2026-10-10T03:25:40.437Z",
+                "url": "/api/chat",
+                "method": "POST",
+                "body": {
+                  "chatContext": {
+                    "surface": "project",
+                    "scope": "project:protocol-project",
+                    "projectId": "protocol-project",
+                    "selection": {
+                      "kind": "project",
+                      "ids": [
+                        "protocol-project"
+                      ],
+                      "label": "实际项目"
+                    },
+                    "creationTarget": {
+                      "clientRequestId": "original-pair",
+                      "projectId": "protocol-project",
+                      "scriptSourceRef": {
+                        "kind": "project_script",
+                        "id": "script",
+                        "versionId": "frozen-script-v"
+                      }
+                    }
+                  },
+                  "attachmentIds": [],
+                  "executionEngine": "pi",
+                  "id": "[null,\"project:protocol-project\"]",
+                  "messages": [
+                    {
+                      "parts": [
+                        {
+                          "type": "text",
+                          "text": "生成原文章图文候选"
+                        }
+                      ],
+                      "id": "p4hDLP22ToDivAcH",
+                      "role": "user"
+                    }
+                  ],
+                  "trigger": "submit-message"
+                }
+              }
+            ],
+            "blockedNetwork": [],
+            "creationSubmission": [
+              "not-submitted",
+              "submitted-unknown"
+            ],
+            "navigation": [
+              {
+                "method": "link",
+                "href": "/settings?highlight=assistant-engine"
+              }
+            ],
+            "config": {
+              "engine": "pi",
+              "available": true,
+              "checking": false,
+              "prepareReject": true
+            }
+          },
+          "prompt": "",
+          "text": "组件隔离 harness · 非生产/安装验收\n场景：联合创作引擎不可用\n隔离夹具：准备拒绝\n隔离夹具：引擎就绪\n隔离夹具：检查结束\n{\"prepareCalls\":0,\"postCalls\":1,\"creationSubmission\":[\"not-submitted\",\"submitted-unknown\"],\"blockedNetwork\":0}\n编导对话\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n实际项目\n在画布中打开\n生成原文章图文候选\n原请求结果待确认\n原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。\n核对原请求\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+          "geometry": {
+            "innerWidth": 900,
+            "innerHeight": 600,
+            "devicePixelRatio": 1,
+            "rootClientWidth": 900,
+            "rootScrollWidth": 900,
+            "bodyScrollWidth": 900,
+            "prompt": {
+              "x": 104,
+              "y": 412,
+              "width": 692,
+              "height": 52,
+              "top": 412,
+              "bottom": 464,
+              "right": 796,
+              "visible": true,
+              "withinViewport": true
+            },
+            "retry": {
+              "x": 119,
+              "y": 311.296875,
+              "width": 81,
+              "height": 32,
+              "top": 311.296875,
+              "bottom": 343.296875,
+              "right": 200,
+              "visible": true,
+              "withinViewport": true
+            },
+            "settings": null
+          },
+          "active": {
+            "tag": "BODY",
+            "name": "组件隔离 harness · 非生产/安装验收场景：联合创作引擎不可用隔离夹具：准备拒绝隔离夹具：引擎就绪隔离夹具：检查结束{\"prepareCalls\":0,\"postCalls\":1,\"creationSubmission\":[\"not-submitted\",\"submitted-unknown\"],\"blockedNetwork\":0}编导对话描述你的目标，我来帮你规划下一步新对话历史记录项目·实际项目在画布中打开生成原文章图文候选原请求结果待确认原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。核对原请求添加文件或图片也可拖到这里；图片识别效果取决于当前模型⌘/Ctrl ↩ 发送 · Enter 换行清空生成\n",
+            "slot": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 900,
+              "height": 600,
+              "top": 0,
+              "bottom": 600,
+              "right": 900,
+              "visible": true,
+              "withinViewport": true
+            }
+          },
+          "buttons": [
+            {
+              "name": "隔离夹具：准备拒绝",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：引擎就绪",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "隔离夹具：检查结束",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "新对话",
+              "disabled": false,
+              "slot": "ai-copilot-new"
+            },
+            {
+              "name": "历史记录",
+              "disabled": false,
+              "slot": "ai-copilot-history"
+            },
+            {
+              "name": "核对原请求",
+              "disabled": true,
+              "slot": "copilot-error-retry"
+            },
+            {
+              "name": "添加文件或图片",
+              "disabled": false,
+              "slot": null
+            },
+            {
+              "name": "清空输入",
+              "disabled": true,
+              "slot": "prompt-clear"
+            },
+            {
+              "name": "提交提示给 Copilot",
+              "disabled": true,
+              "slot": "submit-button"
+            }
+          ]
+        }
+      ],
+      "screenshots": [
+        "final-source-walk-creation-900x600-failed.png",
+        "final-source-walk-creation-900x600-settings-keyboard-focus.png",
+        "final-source-walk-creation-900x600-ready.png",
+        "final-source-walk-creation-900x600-continue-keyboard-focus.png",
+        "final-source-walk-creation-900x600-submitted-unknown.png"
+      ],
+      "blocked": [],
+      "errors": [],
+      "consoleLogs": [
+        {
+          "type": "info",
+          "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+        },
+        {
+          "type": "info",
+          "text": "[T-716][script.patch] composer request started {nonce: 1, functionKey: undefined, selectionKind: null, sectionIndex: null, messageCountBefore: 0}"
+        }
+      ],
+      "requests": [
+        {
+          "url": "http://127.0.0.1:31591/?scenario=creation",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/theme.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.css",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/app.js",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-117-wght-normal-FZFR6BH4.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-119-wght-normal-V76REE4F.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-latin-wght-normal-YK4EAJ2N.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-116-wght-normal-PSDL3XM5.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-115-wght-normal-2SKNA73H.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-112-wght-normal-JWH2TGZ7.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-118-wght-normal-7JNFWFRI.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-107-wght-normal-UIHDLU5Q.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-111-wght-normal-H46IZEG6.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-114-wght-normal-JSFSLINJ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-110-wght-normal-ZOZESFTB.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-113-wght-normal-LDIXJUIZ.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-90-wght-normal-DL4USQPB.woff2",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:31591/noto-sans-sc-108-wght-normal-RR6E3LPK.woff2",
+          "method": "GET"
+        }
+      ],
+      "status": "passed-in-isolated-component-boundary",
+      "finishedAt": "2026-10-10T03:25:41.778Z"
+    }
+  ]
+}

@@ -1,4 +1,11 @@
 import type { ExecutionTaskResourceV2 } from "@creatoros/contract";
+export interface RadarScope { groupId?: string; accountId?: string; }
+export type RadarScopeInput = RadarScope | string;
+export function radarScope(input: RadarScopeInput): RadarScope { return typeof input === "string" ? {accountId: input} : input; }
+export function radarScopeKey(input: RadarScopeInput): string { const scope=radarScope(input); return scope.groupId ? `group:${scope.groupId}` : `account:${scope.accountId ?? ""}`; }
+export function radarTaskInScope(task: {groupId?: string | null; accountId?: string | null}, input: RadarScopeInput): boolean { const scope=radarScope(input); return scope.groupId ? task.groupId === scope.groupId : (!task.groupId || task.groupId === `grp_legacy_${scope.accountId}`) && task.accountId === scope.accountId; }
+export function radarAccountInput(scope: RadarScope): {accountId?: string} { return !scope.groupId && scope.accountId ? {accountId:scope.accountId} : {}; }
+
 export interface RadarCollection {
   id: string;
   parentId: string | null;
@@ -20,7 +27,7 @@ export interface RadarSource {
   displayName: string;
   canonicalUrl: string | null;
   collector: {
-    accountId: string;
+    accountId: string|null;
     accountHandle: string | null;
     platform: "douyin" | null;
     availability: "active" | "archived" | "missing";
@@ -160,6 +167,8 @@ export interface RadarItemDetail {
   };
   transforms: Array<{
     id: string;
+    idempotencyKey?: string;
+    sourceSnapshotId?: string;
     status: "candidate" | "confirmed" | "cancelled";
     taskStatus?: ExecutionTaskResourceV2["status"] | null;
     executionTaskId?: string | null;
@@ -167,6 +176,8 @@ export interface RadarItemDetail {
     taskErrorCode?: string | null;
     taskErrorMessage?: string | null;
     outputSnapshot: {
+      generationMode?: "rewrite_only";
+      personalizationStatus?: "applied" | "not_applied";
       hook?: string;
       structureSteps?: string[];
       coreClaims?: string[];
@@ -189,18 +200,30 @@ export interface RadarItemDetail {
         add: string[];
         avoid: string[];
       };
-      adaptedDraft?: {
-        contentText: string;
-        generatedFromTranscriptHash: string;
-        strategyHash: string;
-        templateVersion: string;
-      };
+      adaptedDraft?:
+        | {
+            generationMode?: never;
+            contentText: string;
+            generatedFromTranscriptHash: string;
+            strategyHash: string;
+            templateVersion: string;
+          }
+        | {
+            generationMode: "rewrite_only";
+            contentText: string;
+            sourceSnapshotId: string;
+            generatedFromTranscriptHash: string;
+            positioningVersionId?: string;
+            personalizationStatus: "applied" | "not_applied";
+            templateVersion: string;
+          };
+      adoptedDraftContentText?: string;
       sourceUrl?: string;
       transcriptHash?: string;
       decompositionVersion?: string;
       generationProgress?: Partial<
         Record<
-          "decomposition" | "topic" | "draft",
+          "decomposition" | "topic" | "draft" | "rewriteDraft",
           { status: "pending" | "running" | "completed" | "failed"; completedAt?: string }
         >
       >;
@@ -256,10 +279,11 @@ export interface StartRunResult {
 
 export interface RadarApi {
   enqueueProjectUpgrades?(input:{itemIds:string[];positioningVersionId:string;idempotencyKey:string}):Promise<{tasks:ExecutionTaskResourceV2[]}>;
-  listProjectUpgrades?(input:{accountId:string;page:number}):Promise<{tasks:ExecutionTaskResourceV2[];total:number}>;
-  listShareImportTasks?(input: {accountId: string; ownerId?: string; page?: number}): Promise<ExecutionTaskResourceV2[]>;
+  listProjectUpgrades?(input:RadarScope & {page:number}):Promise<{tasks:ExecutionTaskResourceV2[];total:number}>;
+  getProjectUpgrade?(task:Pick<ExecutionTaskResourceV2,"id"|"ownerId">):Promise<ExecutionTaskResourceV2>;
+  listShareImportTasks?(input: RadarScope & {ownerId?: string; page?: number}): Promise<ExecutionTaskResourceV2[]>;
   commandTask?(input:{taskId:string;command:"resume"|"cancel"|"retry";idempotencyKey:string}):Promise<void>;
-  listCollectors(input: { accountId: string }): Promise<
+  listCollectors(input: RadarScope): Promise<
     Array<{
       accountId: string;
       accountHandle: string;
@@ -267,7 +291,8 @@ export interface RadarApi {
     }>
   >;
   previewProfile(input: {
-    accountId: string;
+    accountId?: string;
+    groupId?: string;
     collectorAccountId: string;
     url: string;
   }): Promise<{
@@ -278,7 +303,8 @@ export interface RadarApi {
     visibleWorkCount: number | null;
   }>;
   previewWeb(input: {
-    accountId: string;
+    accountId?: string;
+    groupId?: string;
     url: string;
     instruction: string;
   }): Promise<{
@@ -291,17 +317,20 @@ export interface RadarApi {
     browserSessionRef: string | null;
   }>;
   listFavoriteFolders(input: {
-    accountId: string;
+    accountId?: string;
+    groupId?: string;
     collectorAccountId: string;
   }): Promise<Array<{ id: string; name: string; itemCount: number | null }>>;
   createCollection(input: {
-    accountId: string;
+    accountId?: string;
+    groupId?: string;
     name: string;
     parentId: string | null;
     idempotencyKey: string;
   }): Promise<unknown>;
   createSource(input: {
-    accountId: string;
+    accountId?: string;
+    groupId?: string;
     collectionId: string | null;
     type: RadarSource["type"];
     config: Record<string, unknown>;
@@ -327,7 +356,8 @@ export interface RadarApi {
     status: RadarSource["status"] | "deleted";
   }>;
   importDouyinShare(input: {
-    accountId: string;
+    accountId?: string;
+    groupId?: string;
     collectionId: string | null;
     shareInput: string;
     idempotencyKey: string;
@@ -346,7 +376,8 @@ export interface RadarApi {
     events: RadarRunEvent[];
   }>;
   listItems(input: {
-    accountId: string;
+    accountId?: string;
+    groupId?: string;
     page?: number;
     pageSize?: number;
     collectionId?: string;
@@ -388,30 +419,37 @@ export interface RadarApi {
   previewTopic(input: {
     itemId: string;
     sourceSnapshotId: string;
-    positioningVersionId: string;
+    positioningVersionId?: string;
     idempotencyKey: string;
   }): Promise<RadarTopicPreviewStart>;
-  confirmTopic(input: {
-    transformId: string;
-    editedCandidate: {
-      title: string;
-      angle: string;
-      differentiation: string;
-      sourceSummary: string;
-      targetAudience: string;
-      audiencePain: string;
-      coreConflict: string;
-      format: string;
-      contentRole?: "traffic" | "trust" | "conversion" | null;
-      adaptationStrategy: {
-        keep: string[];
-        replace: string[];
-        add: string[];
-        avoid: string[];
-      };
-    };
-    idempotencyKey: string;
-  }): Promise<{ topicId: string }>;
+  confirmTopic(input:
+    | {
+        transformId: string;
+        editedCandidate: {
+          title: string;
+          angle: string;
+          differentiation: string;
+          sourceSummary: string;
+          targetAudience: string;
+          audiencePain: string;
+          coreConflict: string;
+          format: string;
+          contentRole?: "traffic" | "trust" | "conversion" | null;
+          adaptationStrategy: {
+            keep: string[];
+            replace: string[];
+            add: string[];
+            avoid: string[];
+          };
+        };
+        idempotencyKey: string;
+      }
+    | {
+        transformId: string;
+        editedDraftContentText?: string;
+        idempotencyKey: string;
+      }
+  ): Promise<{ topicId: string }>;
   promoteCandidate(input: {
     candidateId: string;
   }): Promise<{ projectId: string }>;

@@ -1,0 +1,830 @@
+--- a/mcp-server/src/dispatch.ts
++++ b/mcp-server/src/dispatch.ts
+@@ -8,8 +8,15 @@
+ // 仍完整实现以对齐鉴权语义。
+ 
+ import { randomUUID } from "node:crypto";
++import { Agent, type Dispatcher } from "undici";
++
++/** 仅可信CLI/MCP宿主的本地观察控制，不进入公开input或工具参数。 */
++export interface DispatchControl { signal?: AbortSignal; observationMs?: number; }
+ 
+ export interface DispatchClientOptions {
++  /** 私有CLI装配控制；既有API参数与公开flags不变。 */
++  control?: DispatchControl;
++  cancelOnProcessSignal?: boolean;
+   /** 运行中 CreatorOS 根地址。正式模式由 connection descriptor 提供。 */
+   baseUrl: string;
+   /** 登录邮箱(缺省 = 免登录模式,不带 cookie 裸调 dispatch) */
+@@ -116,6 +123,44 @@
+   return "unknown error";
+ }
+ 
++// SEMANTIC_BOUNDARY_ALLOW: 仅合成已批准的HTTP观察槽；不判断业务语义、不续原任务期限。
++const POST_WAIT_MS = 8_100_000;
++const LOGIN_WAIT_MS = 780_000;
++const CLEANUP_WAIT_MS = 120_000;
++const FINAL_MARGIN_MS = 60_000;
++const MAX_TIMER_MS = 2_147_483_647;
++export function dispatchObservationMs(hasCredentials: boolean): number {
++  return (hasCredentials ? 2 * POST_WAIT_MS + 2 * LOGIN_WAIT_MS : POST_WAIT_MS)
++    + CLEANUP_WAIT_MS + FINAL_MARGIN_MS;
++}
++
++export class DispatchObservationError extends Error {
++  readonly code = "CLI_HTTP_OBSERVATION_FAILED";
++  constructor(readonly opId: string, readonly phase: "before_request" | "request_sent" | "body_read",
++    readonly outcomeUnknown: boolean) {
++    super(outcomeUnknown ? `调用 ${opId} 的回执尚未确认；请核对原调用，不要重新发送。`
++      : `调用 ${opId} 的本地观察已停止；没有新的业务回执。`);
++    this.name = "DispatchObservationError";
++  }
++}
++
++type Scope = {
++  agent: Agent;
++  controller: AbortController;
++  deadline: number;
++  postMs: number;
++  phase: "before_request" | "request_sent" | "body_read";
++  businessState: "not_sent" | "sent" | "known_response";
++};
++type HttpReply = { status: number; ok: boolean; headers: Headers; body: unknown };
++function bounded<T>(promise: Promise<T>, milliseconds: number): Promise<T> {
++  if (milliseconds <= 0) return Promise.reject(Error("HTTP_PHASE_EXHAUSTED"));
++  let timer: ReturnType<typeof setTimeout>;
++  return Promise.race([promise, new Promise<never>((_resolve, reject) => {
++    timer = setTimeout(() => reject(Error("HTTP_PHASE_EXHAUSTED")), milliseconds);
++  })]).finally(() => clearTimeout(timer));
++}
++
+ export class DispatchClient {
+   private readonly baseUrl: string;
+   private readonly email: string | undefined;
+@@ -127,6 +172,8 @@
+   private readonly productId: string | undefined;
+   private readonly packageId: string | undefined;
+   private readonly launchNonce: string | undefined;
++  private readonly control: DispatchControl;
++  private readonly cancelOnProcessSignal: boolean;
+   private sessionCookie: string | null = null;
+   private loggedIn = false;
+ 
+@@ -141,68 +188,157 @@
+     this.productId = options.productId;
+     this.packageId = options.packageId;
+     this.launchNonce = options.launchNonce;
+-  }
+-
+-  /** 是否配置了登录凭据(否则走 T-046 免登录裸调)。 */
+-  get hasCredentials(): boolean {
+-    return Boolean(this.email && this.password);
+-  }
+-
+-  /** POST /api/v1/auth/login 拿 session cookie。凭据缺失时为 no-op。 */
+-  async login(): Promise<void> {
++    this.control = options.control ?? {};
++    this.cancelOnProcessSignal = options.cancelOnProcessSignal === true;
++  }
++
++  get hasCredentials(): boolean { return Boolean(this.email && this.password); }
++
++  private async observe<T>(opId: string, control: DispatchControl, work: (scope: Scope) => Promise<T>): Promise<T> {
++    const baseline = dispatchObservationMs(this.hasCredentials);
++    // per-call SDK signal不得丢失原constructor可信较长观察，也不替换原父signal。
++    const supplied = [this.control.observationMs, control.observationMs].filter((value): value is number => value !== undefined);
++    if (supplied.some(value => !Number.isSafeInteger(value) || value < baseline || value > MAX_TIMER_MS))
++      throw new RangeError("CLI_HTTP_OBSERVATION_BUDGET_INVALID");
++    const observationMs = Math.max(baseline, ...supplied);
++    const signals = [this.control.signal, control.signal].filter((value): value is AbortSignal => value !== undefined);
++    const originalSignal = signals.length > 1 ? AbortSignal.any(signals) : signals[0];
++    if (originalSignal?.aborted) throw new DispatchObservationError(opId, "before_request", false);
++    const entered = performance.now();
++    const controller = new AbortController();
++    // 原60秒余量属于正序列衔接/JSON/装配；只保留完整cleanup120秒。
++    const workMs = observationMs - CLEANUP_WAIT_MS;
++    const postMs = POST_WAIT_MS + Math.floor((observationMs - baseline) / (this.hasCredentials ? 2 : 1));
++    const agent = new Agent({ connect: { timeout: 120_000 }, headersTimeout: postMs,
++      bodyTimeout: postMs, pipelining: 0 });
++    const scope: Scope = { agent, controller, deadline: entered + workMs, postMs,
++      phase: "before_request", businessState: "not_sent" };
++    const abort = () => controller.abort(originalSignal?.reason ?? Error("LOCAL_HTTP_OBSERVATION_CANCELLED"));
++    const processAbort = () => controller.abort(Error("LOCAL_CLI_SIGNAL"));
++    originalSignal?.addEventListener("abort", abort, { once: true });
++    if (originalSignal?.aborted) abort();
++    if (this.cancelOnProcessSignal) {
++      process.once("SIGINT", processAbort); process.once("SIGTERM", processAbort);
++    }
++    const timer = setTimeout(() => controller.abort(Error("COMPLETE_HTTP_OBSERVATION_EXHAUSTED")), workMs);
++    try {
++      return await work(scope);
++    } catch (error) {
++      if (error instanceof DispatchError) throw error;
++      throw new DispatchObservationError(opId, scope.phase, scope.businessState === "sent");
++    } finally {
++      clearTimeout(timer);
++      originalSignal?.removeEventListener("abort", abort);
++      if (this.cancelOnProcessSignal) {
++        process.removeListener("SIGINT", processAbort); process.removeListener("SIGTERM", processAbort);
++      }
++      // 业务成功/错误已经决定。cleanup不可从finally抛出、覆写回执或暗示重发。
++      const cleanupDeadline = performance.now() + CLEANUP_WAIT_MS;
++      let confirmed = false;
++      try {
++        await bounded(agent.close(), cleanupDeadline - performance.now()); confirmed = true;
++      } catch {
++        try {
++          const destroying = agent.destroy();
++          try { await bounded(destroying, cleanupDeadline - performance.now()); confirmed = true; }
++          catch { void destroying.catch(() => undefined); }
++        } catch { /* 清理同步异常也不能覆盖可信业务结果。 */ }
++      }
++      if (!confirmed) try { console.error("CREATOROS_HTTP_CLEANUP_UNCONFIRMED", { opId, phase: "cleanup", code: "OWN_AGENT_CLOSE_UNCONFIRMED" }); }
++      catch { /* 诊断观察者不能更改业务交付。 */ }
++    }
++  }
++
++  private async http(scope: Scope, opId: string, endpoint: "login" | "dispatch", init: RequestInit): Promise<HttpReply> {
++    scope.controller.signal.throwIfAborted();
++    const remaining = scope.deadline - performance.now();
++    const phaseMs = endpoint === "login" ? LOGIN_WAIT_MS : scope.postMs;
++    if (remaining < phaseMs) {
++      scope.phase = "before_request";
++      throw Error("COMPLETE_HTTP_SLOT_UNAVAILABLE");
++    }
++    const phaseController = new AbortController();
++    const abort = () => phaseController.abort(scope.controller.signal.reason);
++    scope.controller.signal.addEventListener("abort", abort, { once: true });
++    if (scope.controller.signal.aborted) abort();
++    const phaseDeadline = performance.now() + phaseMs;
++    const check = () => {
++      phaseController.signal.throwIfAborted();
++      if (performance.now() >= phaseDeadline || performance.now() >= scope.deadline) {
++        phaseController.abort(Error("COMPLETE_HTTP_PHASE_EXHAUSTED"));
++        phaseController.signal.throwIfAborted();
++      }
++    };
++    const timer = setTimeout(() => phaseController.abort(Error("COMPLETE_HTTP_PHASE_EXHAUSTED")), phaseMs);
++    let rejectAborted!: (reason: unknown) => void;
++    const aborted = new Promise<never>((_resolve, reject) => { rejectAborted = reject; });
++    const onAbort = () => rejectAborted(phaseController.signal.reason);
++    phaseController.signal.addEventListener("abort", onAbort, { once: true });
++    try {
++      check();
++      scope.phase = endpoint === "dispatch" ? "request_sent" : "before_request";
++      if (endpoint === "dispatch") scope.businessState = "sent";
++      const url = `${this.baseUrl}/api/v1/${endpoint === "login" ? "auth/login" : "dispatch"}`;
++      const complete = (async () => {
++        const response = await this.fetchImpl(url, { ...init, signal: phaseController.signal,
++          dispatcher: scope.agent } as RequestInit & { dispatcher: Dispatcher });
++        check();
++        if (endpoint === "dispatch") scope.phase = "body_read";
++        let body: unknown;
++        if (endpoint === "login") {
++          // 原合法auth允许raw/empty：只读完body EOF，不新增JSON质量门。
++          const text = await response.text();
++          check();
++          try { body = JSON.parse(text); } catch { body = null; }
++        } else {
++          // 保原Response.json单次消费者；流失败不等于完整非JSON错误正文。
++          try { body = await response.json(); }
++          catch (error) { if (!response.ok && error instanceof SyntaxError) body = null; else throw error; }
++        }
++        check();
++        if (endpoint === "dispatch") scope.businessState = "known_response";
++        return { status: response.status, ok: response.ok, headers: response.headers, body };
++      })();
++      return await Promise.race([complete, aborted]);
++    } finally {
++      clearTimeout(timer);
++      scope.controller.signal.removeEventListener("abort", abort);
++      phaseController.signal.removeEventListener("abort", onAbort);
++    }
++  }
++
++  private async loginWithin(scope: Scope): Promise<void> {
+     if (!this.hasCredentials) return;
+-    const res = await this.fetchImpl(`${this.baseUrl}/api/v1/auth/login`, {
+-      method: "POST",
+-      headers: { "content-type": "application/json" },
++    const reply = await this.http(scope, "auth.login", "login", {
++      method: "POST", headers: { "content-type": "application/json" },
+       body: JSON.stringify({ email: this.email, password: this.password }),
+     });
+-    if (!res.ok) {
+-      let message = "unknown error";
+-      try {
+-        message = extractErrorMessage(await res.json());
+-      } catch {
+-        /* 非 JSON body,忽略 */
++    if (!reply.ok) throw new DispatchError(reply.status, "auth.login", extractErrorMessage(reply.body));
++    this.sessionCookie = parseSessionCookie(reply.headers.get("set-cookie"));
++    this.loggedIn = true;
++  }
++
++  async login(control: DispatchControl = this.control): Promise<void> {
++    if (!this.hasCredentials) return;
++    await this.observe("auth.login", control, scope => this.loginWithin(scope));
++  }
++
++  async dispatch(opId: string, input: DispatchInput = {}, callOptions: DispatchCallOptions = {},
++    control: DispatchControl = this.control): Promise<unknown> {
++    return this.observe(opId, control, async scope => {
++      if (!this.loggedIn && this.hasCredentials) await this.loginWithin(scope);
++      const reply = await this.post(scope, opId, input, callOptions);
++      if (reply.status === 401 && this.hasCredentials) {
++        await this.loginWithin(scope);
++        return this.unwrap(await this.post(scope, opId, input, callOptions), opId);
+       }
+-      throw new DispatchError(res.status, "auth.login", message);
+-    }
+-    this.sessionCookie = parseSessionCookie(res.headers.get("set-cookie"));
+-    this.loggedIn = true;
+-  }
+-
+-  /**
+-   * 调用一个 contract op。失败时抛 DispatchError;401 且配了凭据时自动重登一次再重试
+-   * (session 失效自愈)。返回 contract envelope 原样({ data, meta } 或 list 形)。
+-   */
+-  async dispatch(
+-    opId: string,
+-    input: DispatchInput = {},
+-    callOptions: DispatchCallOptions = {},
+-  ): Promise<unknown> {
+-    // 懒登录:首次调用先 login(免登录模式下是 no-op)。
+-    if (!this.loggedIn && this.hasCredentials) {
+-      await this.login();
+-    }
+-    const res = await this.post(opId, input, callOptions);
+-    if (res.status === 401 && this.hasCredentials) {
+-      // session 失效 → 重登一次再试。
+-      await this.login();
+-      const retry = await this.post(opId, input, callOptions);
+-      return this.unwrap(retry, opId);
+-    }
+-    return this.unwrap(res, opId);
+-  }
+-
+-  private async post(
+-    opId: string,
+-    input: DispatchInput,
+-    callOptions: DispatchCallOptions,
+-  ): Promise<Response> {
+-    const headers: Record<string, string> = {
+-      "content-type": "application/json",
+-    };
+-    if (this.sessionCookie) {
+-      headers.cookie = `${SESSION_COOKIE}=${encodeURIComponent(this.sessionCookie)}`;
+-    }
++      return this.unwrap(reply, opId);
++    });
++  }
++
++  private post(scope: Scope, opId: string, input: DispatchInput, callOptions: DispatchCallOptions): Promise<HttpReply> {
++    const headers: Record<string, string> = { "content-type": "application/json" };
++    if (this.sessionCookie) headers.cookie = `${SESSION_COOKIE}=${encodeURIComponent(this.sessionCookie)}`;
+     if (this.handshakeToken) headers["x-creatoros-handshake"] = this.handshakeToken;
+     if (this.cliAccessToken) headers["x-creatoros-cli-access"] = this.cliAccessToken;
+     if (this.cliAccessToken) headers["x-creatoros-cli-client-id"] = this.clientId;
+@@ -211,36 +347,19 @@
+     if (this.launchNonce) headers["x-creatoros-cli-launch-nonce"] = this.launchNonce;
+     if (callOptions.groupId) headers["x-group-id"] = callOptions.groupId;
+     if (callOptions.accountId) headers["x-account-id"] = callOptions.accountId;
+-    if (callOptions.idempotencyKey) {
+-      headers["x-idempotency-key"] = callOptions.idempotencyKey;
+-    }
++    if (callOptions.idempotencyKey) headers["x-idempotency-key"] = callOptions.idempotencyKey;
+     if (callOptions.apply) headers["x-creatoros-cli-apply"] = "1";
+-    if (callOptions.confirmImpact) {
+-      headers["x-creatoros-cli-confirm-impact"] = callOptions.confirmImpact;
+-    }
+-    return this.fetchImpl(`${this.baseUrl}/api/v1/dispatch`, {
+-      method: "POST",
+-      headers,
+-      body: JSON.stringify({ id: opId, input }),
+-    });
+-  }
+-
+-  private async unwrap(res: Response, opId: string): Promise<unknown> {
+-    if (!res.ok) {
+-      let message = "unknown error";
+-      let receipt: ReturnType<typeof invocationReceipt>;
+-      try {
+-        const body: unknown = await res.json();
+-        receipt = invocationReceipt(body);
+-        message = extractErrorMessage(body);
+-        if (receipt && message === "unknown error") {
+-          message = `原调用状态为 ${receipt.status}，请求编号 ${receipt.requestId}。`;
+-        }
+-      } catch {
+-        /* 非 JSON body,忽略 */
+-      }
+-      throw new DispatchError(res.status, opId, message, receipt);
+-    }
+-    return res.json();
+-  }
+-}
++    if (callOptions.confirmImpact) headers["x-creatoros-cli-confirm-impact"] = callOptions.confirmImpact;
++    return this.http(scope, opId, "dispatch", { method: "POST", headers, body: JSON.stringify({ id: opId, input }) });
++  }
++
++  private unwrap(reply: HttpReply, opId: string): unknown {
++    if (!reply.ok) {
++      const receipt = invocationReceipt(reply.body);
++      let message = extractErrorMessage(reply.body);
++      if (receipt && message === "unknown error") message = `原调用状态为 ${receipt.status}，请求编号 ${receipt.requestId}。`;
++      throw new DispatchError(reply.status, opId, message, receipt);
++    }
++    return reply.body;
++  }
++}
+--- a/mcp-server/src/cli.ts
++++ b/mcp-server/src/cli.ts
+@@ -7,7 +7,7 @@
+   type Endpoint,
+ } from "@creatoros/contract";
+ import { createCreatorOsMcpServer } from "./server";
+-import { DispatchClient, DispatchError, invocationReceipt, type DispatchInput } from "./dispatch";
++import { DispatchClient, DispatchError, DispatchObservationError, invocationReceipt, type DispatchInput, type DispatchControl } from "./dispatch";
+ import {
+   ConnectionError,
+   discoverConnection,
+@@ -256,7 +256,7 @@
+   }
+ }
+ 
+-async function clientFor(args: string[]): Promise<{
++async function clientFor(args: string[], control: DispatchControl = {}): Promise<{
+   client: DispatchClient;
+   connection: Awaited<ReturnType<typeof discoverConnection>> | null;
+ }> {
+@@ -265,6 +265,7 @@
+     return {
+       connection: null,
+       client: new DispatchClient({
++        control, cancelOnProcessSignal: true,
+         baseUrl: explicitDevBaseUrl,
+         email: process.env.CREATOROS_EMAIL,
+         password: process.env.CREATOROS_PASSWORD,
+@@ -279,6 +280,7 @@
+   return {
+     connection,
+     client: new DispatchClient({
++        control, cancelOnProcessSignal: true,
+       baseUrl: connection.baseUrl,
+       handshakeToken: connection.handshakeToken,
+       cliAccessToken: connection.cliAccessToken,
+@@ -342,7 +344,7 @@
+ }
+ const ARTIFACT_EXPORT_USAGE = "artifacts export <taskId> --artifact <artifactId> --artifact-version <positiveInt> --format raw|preview|png|pdf --output <localPath> --account <id>";
+ 
+-export async function runCliCommand(args: string[]): Promise<unknown> {
++export async function runCliCommand(args: string[], control: DispatchControl = {}): Promise<unknown> {
+   assertKnownFlags(args);
+   const [group, action, target] = positional(args);
+   if (group === "help" || hasFlag(args, "--help")) {
+@@ -380,7 +382,7 @@
+     return { ok: true, ...operationMetadata(endpoint) };
+   }
+   if (group === "status") {
+-    const { connection } = await clientFor(args);
++    const { connection } = await clientFor(args, control);
+     return {
+       ok: true,
+       mode: connection ? "installed" : "explicit-dev",
+@@ -393,7 +395,7 @@
+     };
+   }
+   if (group === "access" && action === "status") {
+-    const { connection } = await clientFor(args);
++    const { connection } = await clientFor(args, control);
+     return {
+       ok: true,
+       enabled: connection !== null,
+@@ -403,7 +405,7 @@
+     };
+   }
+   if (group === "access" && action === "revoke") {
+-    const { connection } = await clientFor(args);
++    const { connection } = await clientFor(args, control);
+     if (!connection) throw new Error("显式开发模式不能通过 CLI 撤销，请移除开发环境变量。");
+     await revokeConnection(connection);
+     return { ok: true, enabled: false, revoked: true };
+@@ -412,13 +414,13 @@
+     return {ok:true, groupId:await readDefaultGroupId()};
+   }
+   if (group === "groups" && action === "list") {
+-    const {client}=await clientFor(args);
++    const {client}=await clientFor(args, control);
+     const envelope=await client.dispatch("accountGroups.list", {query:{}});
+     return {ok:true,operation:"accountGroups.list",data:envelopeData(envelope),meta:envelopeMeta(envelope),...envelopeReceiptFields(envelope)};
+   }
+   if (group === "groups" && action === "use") {
+     if (!target) throw new Error("groups use 缺少 groupId。");
+-    const {client}=await clientFor(args);
++    const {client}=await clientFor(args, control);
+     await client.dispatch("accountGroups.get", {params:{groupId:target}}, {groupId:target});
+     await writeDefaultGroupId(target);
+     return {ok:true,groupId:target};
+@@ -427,7 +429,7 @@
+     return { ok: true, accountId: await readDefaultAccountId() };
+   }
+   if (group === "accounts" && action === "list") {
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const envelope = await client.dispatch("accounts.list", { query: {} });
+     return {
+       ok: true,
+@@ -442,7 +444,7 @@
+   }
+   if (group === "accounts" && action === "use") {
+     if (!target) throw new Error("accounts use 缺少 accountId。");
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     await client.dispatch(
+       "accounts.get",
+       { params: { accountId: target } },
+@@ -455,7 +457,7 @@
+     const accountId = await selectedAccountId(args);
+     const groupId = await selectedGroupId(args);
+     if (!accountId) throw new Error("douyin status 必须显式 --account <accountId>。");
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const envelope = await client.dispatch(
+       "ingestion.douyin.status",
+       { query: { accountId } },
+@@ -479,7 +481,7 @@
+     requireExecutionFlags(operation, policy, args);
+     const accountId = await selectedAccountId(args);
+     const groupId = await selectedGroupId(args);
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const envelope = await client.dispatch(
+       operation,
+       { body: { ...(accountId ? { accountId } : {}), forceNew: hasFlag(args, "--force-new") } },
+@@ -513,7 +515,7 @@
+     const shareInput = flagValue(args, "--share");
+     if (!shareInput) throw new Error("douyin import 必须提供 --share <抖音分享链接或分享文本>。");
+     const idempotencyKey = flagValue(args, "--idempotency-key")!;
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const envelope = await client.dispatch(
+       operation,
+       {
+@@ -551,7 +553,7 @@
+     const accountId = await selectedAccountId(args);
+     const groupId = await selectedGroupId(args);
+     if (!accountId) throw new Error("douyin refresh 必须显式 --account <accountId>。");
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const listed = await client.dispatch(
+       "scheduledJobs.list",
+       { query: { page: 1, pageSize: 100, sourceKind: "self.detail" } },
+@@ -611,7 +613,7 @@
+     const output = requiredFlag("--output");
+     const accountId = requiredFlag("--account");
+     const operation = "workbench.artifacts.render";
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const envelope = await client.dispatch(
+       operation,
+       { params: { taskId: target, artifactId, version }, query: { format } },
+@@ -634,7 +636,7 @@
+     const policy = getCliOperationPolicy(endpoint.id);
+     if (!policy) throw new Error(`operation 缺 CLI policy: ${endpoint.id}`);
+     requireExecutionFlags(endpoint.id, policy, args);
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const input = await parseInput(flagValue(args, "--input"));
+     const accountId = await selectedAccountId(args);
+     const groupId = await selectedGroupId(args);
+@@ -659,7 +661,7 @@
+   }
+   if (group === "tasks" && (action === "get" || action === "wait")) {
+     if (!target) throw new Error(`tasks ${action} 缺少 taskId。`);
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const accountId = await selectedAccountId(args);
+     const groupId = await selectedGroupId(args);
+     const result = action === "wait"
+@@ -677,7 +679,7 @@
+     };
+   }
+   if (group === "mcp" && action === "serve") {
+-    const { client } = await clientFor(args);
++    const { client } = await clientFor(args, control);
+     const server = createCreatorOsMcpServer({ dispatchClient: client,defaultGroupId:await selectedGroupId(args),defaultAccountId:await selectedAccountId(args) });
+     await serveMcpStdio(server, new StdioServerTransport());
+     return undefined;
+@@ -696,7 +698,9 @@
+       ? error.code
+       : error instanceof DispatchError
+         ? `HTTP_${error.status}`
+-        : "CLI_ERROR";
++        : error instanceof DispatchObservationError
++          ? error.code
++          : "CLI_ERROR";
+     const message = error instanceof Error ? error.message : String(error);
+     process.stdout.write(`${JSON.stringify({ ok: false, error: { code, message }, ...(error instanceof DispatchError ? envelopeReceiptFields(error) : {}) }, null, 2)}\n`);
+     process.exitCode = error instanceof ConnectionError ? 3 : error instanceof DispatchError ? 4 : 2;
+--- a/mcp-server/src/server.ts
++++ b/mcp-server/src/server.ts
+@@ -12,6 +12,7 @@
+ import {
+   DispatchClient,
+   DispatchError,
++  DispatchObservationError,
+   type DispatchCallOptions,
+   type DispatchInput,
+ } from "./dispatch";
+@@ -46,7 +47,7 @@
+     })),
+   }));
+ 
+-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
++  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+     const tool = toolsByName.get(request.params.name);
+     if (!tool) {
+       return {
+@@ -79,7 +80,7 @@
+       const groupId=_creatoros?.groupId ?? options.defaultGroupId;
+       // 显式切组时不把启动时原组的真实平台目标带过去。
+       const accountId=_creatoros?.accountId ?? (_creatoros?.groupId && _creatoros.groupId!==options.defaultGroupId ? undefined : options.defaultAccountId);
+-      const envelope = await dispatchClient.dispatch(tool.opId, input, {..._creatoros,groupId,accountId});
++      const envelope = await dispatchClient.dispatch(tool.opId, input, {..._creatoros,groupId,accountId}, {signal:extra.signal});
+       return {
+         content: [
+           { type: "text" as const, text: JSON.stringify(envelope, null, 2) },
+@@ -89,7 +90,7 @@
+       // dispatch 层错误(4xx/5xx/网络)转成 MCP tool error,而非协议级异常 ——
+       // 让调用方 AI 拿到可读的失败原因继续推理。
+       const message =
+-        err instanceof DispatchError
++        err instanceof DispatchError || err instanceof DispatchObservationError
+           ? err.message
+           : err instanceof Error
+             ? `dispatch ${tool.opId} 失败:${err.message}(dev server 是否在运行?CREATOROS_BASE_URL 是否正确?)`
+--- a/mcp-server/package.json
++++ b/mcp-server/package.json
+@@ -26,6 +26,7 @@
+     "@creatoros/contract": "workspace:*",
+     "@modelcontextprotocol/sdk": "^1.29.0",
+     "tsx": "^4.19.2",
++    "undici": "7.27.2",
+     "zod": "^4.4.3"
+   },
+   "devDependencies": {
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -415,6 +415,9 @@
+       tsx:
+         specifier: ^4.19.2
+         version: 4.22.4
++      undici:
++        specifier: 7.27.2
++        version: 7.27.2
+       zod:
+         specifier: ^4.4.3
+         version: 4.4.3
+--- a/tools/timeout-policy/check.mjs
++++ b/tools/timeout-policy/check.mjs
+@@ -80,7 +80,7 @@
+  function walk(node){
+   if(ts.isPropertyAssignment(node)){
+    const key=node.name.getText(file).replace(/^['"]|['"]$/g,'');
+-   if(['timeout','timeoutMs','deadlineMs'].includes(key)&&!idleSchedulingOption(node))add(node,numeric(node.initializer),key);
++   if(['timeout','timeoutMs','deadlineMs','headersTimeout','bodyTimeout','connectTimeout'].includes(key)&&!idleSchedulingOption(node))add(node,numeric(node.initializer),key);
+   }
+   if(ts.isCallExpression(node)){
+    const name=node.expression.getText(file),leaf=name.split('.').at(-1);
+--- a/mcp-server/tests/dispatch.test.ts
++++ b/mcp-server/tests/dispatch.test.ts
+@@ -1,9 +1,12 @@
+ // DispatchClient 单测(mock fetch):登录拿 cookie、dispatch 带 cookie、401 自动重登
+ // 重试、免登录裸调、错误信息抽取、Set-Cookie 解析。
+ import { describe, expect, it, vi } from "vitest";
++import { Agent } from "undici";
+ import {
+   DispatchClient,
+   DispatchError,
++  DispatchObservationError,
++  dispatchObservationMs,
+   parseSessionCookie,
+ } from "../src/dispatch";
+ 
+@@ -236,3 +239,156 @@
+     });
+   });
+ });
++
++describe("T1252 私有HTTP完整观察与原回执", () => {
++  it("完整默认串行不漏原401路径，非法/不足预算网络前拒绝", async () => {
++    expect(dispatchObservationMs(false)).toBe(8_280_000);
++    expect(dispatchObservationMs(true)).toBe(17_940_000);
++    const fetchImpl = vi.fn(async () => jsonResponse({ data: "real" }));
++    const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch });
++    for (const observationMs of [0, NaN, Infinity, -1, 120_000, 2_147_483_648])
++      await expect(client.dispatch("projects.list", {}, {}, { observationMs })).rejects.toThrow("BUDGET_INVALID");
++    expect(fetchImpl).not.toHaveBeenCalled();
++  });
++
++  it("每个dispatch独立Agent及有限signal，全headers和原scope/key保持", async () => {
++    const fetchImpl = vi.fn(async (_url: unknown, _init?: RequestInit) => jsonResponse({ data: "real" }));
++    const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch,
++      handshakeToken: "h", cliAccessToken: "a", clientId: "client", productId: "p", packageId: "pkg", launchNonce: "launch" });
++    const opts = { groupId: "group", accountId: "account", idempotencyKey: "key", apply: true, confirmImpact: "impact" };
++    await client.dispatch("projects.create", { body: { name: "original" } }, opts);
++    await client.dispatch("projects.create", { body: { name: "original" } }, opts);
++    const first = fetchImpl.mock.calls[0]![1] as RequestInit & { dispatcher: Agent };
++    const second = fetchImpl.mock.calls[1]![1] as RequestInit & { dispatcher: Agent };
++    expect(first.dispatcher).toBeInstanceOf(Agent); expect(first.dispatcher).not.toBe(second.dispatcher);
++    expect(first.signal).toBeInstanceOf(AbortSignal);
++    expect(first.headers).toMatchObject({ "x-group-id": "group", "x-account-id": "account", "x-idempotency-key": "key",
++      "x-creatoros-cli-apply": "1", "x-creatoros-cli-confirm-impact": "impact", "x-creatoros-handshake": "h",
++      "x-creatoros-cli-access": "a", "x-creatoros-cli-client-id": "client", "x-creatoros-cli-product-id": "p",
++      "x-creatoros-cli-package-id": "pkg", "x-creatoros-cli-launch-nonce": "launch" });
++  });
++
++  it("网络前取消0请求，已发取消保本地未知并且不走login/retry", async () => {
++    const stopped = new AbortController(); stopped.abort();
++    const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => await new Promise<Response>((_resolve, reject) => {
++      init!.signal!.addEventListener("abort", () => reject(Error("aborted")), { once: true });
++    }));
++    const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch });
++    await expect(client.dispatch("projects.create", {}, { idempotencyKey: "same-key" }, { signal: stopped.signal })).rejects.toMatchObject({ name: "DispatchObservationError", phase: "before_request", outcomeUnknown: false });
++    expect(fetchImpl).toHaveBeenCalledTimes(0);
++    const active = new AbortController();
++    const pending = client.dispatch("projects.create", {}, { idempotencyKey: "same-key" }, { signal: active.signal });
++    const rejected = expect(pending).rejects.toMatchObject({ name: "DispatchObservationError", phase: "request_sent", outcomeUnknown: true });
++    active.abort(); await rejected; expect(await pending.catch(error => error)).toBeInstanceOf(DispatchObservationError); expect(fetchImpl).toHaveBeenCalledTimes(1);
++  });
++
++  it("已headers未EOF仍等待原body；取消不把partial JSON当成功", async () => {
++    let body!: ReadableStreamDefaultController<Uint8Array>;
++    const active = new AbortController();
++    const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
++      const stream = new ReadableStream<Uint8Array>({ start(controller) { body = controller; controller.enqueue(new TextEncoder().encode('{"data":')); } });
++      init!.signal!.addEventListener("abort", () => body.error(Error("owned read cancelled")), { once: true });
++      return new Response(stream, { status: 200 });
++    });
++    const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch });
++    const pending = client.dispatch("projects.list", {}, {}, { signal: active.signal });
++    const rejected = expect(pending).rejects.toMatchObject({ name: "DispatchObservationError", phase: "body_read", outcomeUnknown: true });
++    await Promise.resolve(); await Promise.resolve(); active.abort(); await rejected;
++    expect(fetchImpl).toHaveBeenCalledTimes(1);
++  });
++
++  it("login成功raw/empty body及401都先EOF，原cookie合同不新增JSON质量门", async () => {
++    const bodies: string[] = [], stages: string[] = [];
++    const fetchImpl = vi.fn(async (url: unknown) => {
++      const index = fetchImpl.mock.calls.length;
++      const text = index === 1 ? "raw legal login" : index === 2 ? '{"error":"unauthorized"}' : index === 3 ? "" : '{"data":"original"}';
++      const res = new Response(text, { status: index === 2 ? 401 : 200, headers: { "set-cookie": LOGIN_COOKIE } });
++      const read = res.text.bind(res), parse = res.json.bind(res);
++      res.text = async () => { stages.push("login-eof"); const out = await read(); bodies.push(out); return out; };
++      res.json = async () => { stages.push("post-eof"); const out = await parse(); bodies.push(text); return out; };
++      return res;
++    });
++    const client = new DispatchClient({ baseUrl: "http://localhost", email: "user", password: "password", fetchImpl: fetchImpl as typeof fetch });
++    expect(await client.dispatch("projects.list")).toEqual({ data: "original" });
++    expect(fetchImpl).toHaveBeenCalledTimes(4); expect(stages).toEqual(["login-eof", "post-eof", "login-eof", "post-eof"]);
++    expect(bodies).toEqual(["raw legal login", '{"error":"unauthorized"}', "", '{"data":"original"}']);
++  });
++
++  it.each(["success", "error"] as const)("%s完整JSON不被cleanup同步异常/诊断异常覆写", async kind => {
++    const receipt = { duplicate: true, requestId: "original-request", status: "outcome_unknown", taskId: "task",
++      targetRefs: [], resultExpired: false, outcomeUnknown: true, manualReconcileRequired: true };
++    const fetchImpl = vi.fn(async () => jsonResponse(kind === "success" ? { data: "delivered" } : { error: "original-error", receipt }, { status: kind === "success" ? 200 : 409 }));
++    const close = vi.spyOn(Agent.prototype, "close").mockRejectedValueOnce(Error("private close failure"));
++    const destroy = vi.spyOn(Agent.prototype, "destroy").mockImplementationOnce(() => { throw Error("private destroy failure"); });
++    const diagnostic = vi.spyOn(console, "error").mockImplementation(() => { throw Error("private logger failure"); });
++    try {
++      const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch });
++      if (kind === "success") expect(await client.dispatch("projects.create", {}, { idempotencyKey: "key" })).toEqual({ data: "delivered" });
++      else await expect(client.dispatch("projects.create", {}, { idempotencyKey: "key" })).rejects.toMatchObject({ name: "DispatchError", status: 409, requestId: "original-request", receipt });
++      expect(fetchImpl).toHaveBeenCalledTimes(1);
++      expect(diagnostic).toHaveBeenCalledWith("CREATOROS_HTTP_CLEANUP_UNCONFIRMED", { opId: "projects.create", phase: "cleanup", code: "OWN_AGENT_CLOSE_UNCONFIRMED" });
++    } finally { close.mockRestore(); destroy.mockRestore(); diagnostic.mockRestore(); }
++  });
++});
++
++it("T1252 partial-body字节不续一次绝对HTTP观察", async () => {
++  vi.useFakeTimers();
++  let body!: ReadableStreamDefaultController<Uint8Array>;
++  const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
++    const stream = new ReadableStream<Uint8Array>({ start(controller) { body = controller; controller.enqueue(new TextEncoder().encode('{"data":"')); } });
++    init!.signal!.addEventListener("abort", () => body.error(Error("original deadline exhausted")), { once: true });
++    return new Response(stream, { status: 200 });
++  });
++  try {
++    const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch });
++    const pending = client.dispatch("projects.list");
++    const rejected = expect(pending).rejects.toMatchObject({ name: "DispatchObservationError", phase: "body_read", outcomeUnknown: true });
++    await Promise.resolve(); await Promise.resolve();
++    await vi.advanceTimersByTimeAsync(4_000_000); body.enqueue(new TextEncoder().encode("partial"));
++    await vi.advanceTimersByTimeAsync(4_100_001); await rejected;
++    expect(fetchImpl).toHaveBeenCalledTimes(1);
++  } finally { vi.useRealTimers(); }
++});
++
++it("T1252取消一个并发dispatch不销毁另一私有Agent或消费其body", async () => {
++  const first = new AbortController();
++  const seen: Array<RequestInit & { dispatcher: Agent }> = [];
++  let release!: () => void;
++  const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
++    seen.push(init as RequestInit & { dispatcher: Agent });
++    if (seen.length === 1) return await new Promise<Response>((_resolve, reject) => init!.signal!.addEventListener("abort", () => reject(Error("cancelled first")), { once: true }));
++    return await new Promise<Response>(resolve => { release = () => resolve(jsonResponse({ data: "second-original" })); });
++  });
++  const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch });
++  const a = client.dispatch("projects.list", {}, {}, { signal: first.signal });
++  const rejected = expect(a).rejects.toMatchObject({ outcomeUnknown: true });
++  const b = client.dispatch("projects.list");
++  first.abort(); await rejected;
++  expect(seen[0]!.dispatcher).not.toBe(seen[1]!.dispatcher);
++  expect(seen[1]!.signal!.aborted).toBe(false);
++  release(); expect(await b).toEqual({ data: "second-original" }); expect(fetchImpl).toHaveBeenCalledTimes(2);
++});
++
++it("T1252每call SDK signal保constructor较长观察及原父取消", async () => {
++  vi.useFakeTimers();
++  const parent = new AbortController(), child = new AbortController();
++  let release!: () => void, signal!: AbortSignal;
++  const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
++    signal = init!.signal!;
++    return await new Promise<Response>((resolve, reject) => {
++      release = () => resolve(jsonResponse({ data: "original-long-observation" }));
++      signal.addEventListener("abort", () => reject(Error("owned cancelled")), { once: true });
++    });
++  });
++  const client = new DispatchClient({ baseUrl: "http://localhost", fetchImpl: fetchImpl as typeof fetch,
++    control: { signal: parent.signal, observationMs: 9_000_000 } });
++  try {
++    const pending = client.dispatch("projects.list", {}, {}, { signal: child.signal });
++    // per-call只带signal，原较长post8820000仍合法，不能回退8100000。
++    await vi.advanceTimersByTimeAsync(8_200_000); expect(signal.aborted).toBe(false);
++    release(); expect(await pending).toEqual({ data: "original-long-observation" });
++    const next = client.dispatch("projects.list", {}, {}, { signal: child.signal });
++    const rejected = expect(next).rejects.toMatchObject({ name: "DispatchObservationError", outcomeUnknown: true });
++    parent.abort(); await rejected; expect(fetchImpl).toHaveBeenCalledTimes(2);
++  } finally { vi.useRealTimers(); }
++});
+--- a/mcp-server/tests/cli.test.ts
++++ b/mcp-server/tests/cli.test.ts
+@@ -414,3 +414,19 @@
+   expect(server.close).toHaveBeenCalledTimes(1);
+   expect(signals.listenerCount("SIGTERM")).toBe(0);
+ });
++
++it("T1252 runCliCommand私有signal传到真实client，取消后原POST只一次", async () => {
++  const oldBase = process.env.CREATOROS_BASE_URL, oldFetch = globalThis.fetch;
++  const controller = new AbortController();
++  const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => await new Promise<Response>((_resolve, reject) => {
++    init!.signal!.addEventListener("abort", () => reject(Error("private caller cancelled")), { once: true });
++  }));
++  process.env.CREATOROS_BASE_URL = "http://127.0.0.1:43127";
++  globalThis.fetch = fetchImpl as typeof fetch;
++  try {
++    const promise = runCliCommand(["call", "projects.list", "--input", "{}"], { signal: controller.signal });
++    const rejected = expect(promise).rejects.toMatchObject({ name: "DispatchObservationError", outcomeUnknown: true });
++    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(1), { timeout: 120_000 });
++    controller.abort(); await rejected; expect(fetchImpl).toHaveBeenCalledTimes(1);
++  } finally { globalThis.fetch = oldFetch; if (oldBase === undefined) delete process.env.CREATOROS_BASE_URL; else process.env.CREATOROS_BASE_URL = oldBase; }
++}, 180_000);
+--- a/mcp-server/tests/group-mcp-context.test.ts
++++ b/mcp-server/tests/group-mcp-context.test.ts
+@@ -10,3 +10,21 @@
+  await client.callTool({name:'projects_list',arguments:{_creatoros:{groupId:'group-b'}}});expect(fetchImpl.mock.calls[1]?.[1]?.headers).toMatchObject({'x-group-id':'group-b'});expect(fetchImpl.mock.calls[1]?.[1]?.headers).not.toHaveProperty('x-account-id');}
+  finally{await client.close();await server.close()}
+ })});
++
++it('T1252 MCP SDK取消沿原scope私有signal，不重发或扩大组权限',async()=>{
++ const {Agent}=await import('undici');
++ let received!:AbortSignal;
++ const fetchImpl=vi.fn(async(_url:unknown,init?:RequestInit)=>{
++  received=init!.signal!;
++  expect(init!.headers).toMatchObject({'x-group-id':'group-original','x-account-id':'account-original'});
++  expect((init as RequestInit&{dispatcher:unknown}).dispatcher).toBeInstanceOf(Agent);
++  return await new Promise<Response>((_resolve,reject)=>received.addEventListener('abort',()=>reject(Error('SDK cancel')),{once:true}));
++ });
++ const server=createCreatorOsMcpServer({dispatchClient:new DispatchClient({baseUrl:'http://localhost',fetchImpl:fetchImpl as typeof fetch}),defaultGroupId:'group-original',defaultAccountId:'account-original'});
++ const client=new Client({name:'cancel-scope',version:'1'}),[a,b]=InMemoryTransport.createLinkedPair();const controller=new AbortController();
++ try{await server.connect(a);await client.connect(b);
++  const pending=client.callTool({name:'projects_list',arguments:{}},undefined,{signal:controller.signal,timeout:120000});
++  const rejected=expect(pending).rejects.toBeTruthy();await vi.waitFor(()=>expect(fetchImpl).toHaveBeenCalledTimes(1),{timeout:120000});controller.abort();await rejected;
++  await vi.waitFor(()=>expect(received.aborted).toBe(true),{timeout:120000});expect(fetchImpl).toHaveBeenCalledTimes(1);
++ }finally{await client.close();await server.close();}
++},180000);
+--- a/tools/timeout-policy/check.test.mjs
++++ b/tools/timeout-policy/check.test.mjs
+@@ -43,3 +43,10 @@
+   'const WAIT=1000;switch(type){case 0:let WAIT=120000;page.goto(url,{timeout:WAIT});}page.goto(url,{timeout:WAIT});',
+  ])assert.equal(inspectSource(code).length,1,code);
+ });
++
++// T1252：Undici每个实际网络观察选项进入既有正预算门。
++test('T1252 headers/body/connect短门不被父case或未知dispatcher掩盖',()=>{
++ assert.equal(inspectSource('const SHORT=30000;new Agent({headersTimeout:SHORT,bodyTimeout:30000,connectTimeout:10000});').length,3);
++ assert.deepEqual(inspectSource('const WAIT=8100000;new Agent({headersTimeout:WAIT,bodyTimeout:WAIT,connect:{timeout:120000}});'),[]);
++ assert.equal(inspectSource('const WAIT=120000;function call(){const WAIT=1000;new Agent({bodyTimeout:WAIT});}').length,1);
++});

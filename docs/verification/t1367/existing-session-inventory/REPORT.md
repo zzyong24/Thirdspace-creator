@@ -1,0 +1,13 @@
+# T1367 现有会话只读库存
+
+未找到本轮可确认并可受控读取的已登录视频号后台会话。
+
+CUA已启用库存中有两个Chrome实例，各有一个既有视频号标签；当前都属于登录页路由。路由本身不证明完全登出，也不能证明已登录，故登录态记UNKNOWN。没有保存原URL、标题、其它标签内容或身份。
+
+第一次尝试只读绑定首个既有视频号标签时，浏览器站点安全策略明确拒绝目标页面观测，未触发Auto-review或许可提示，未返回目标正文。已停止内容读取，没有尝试第二浏览器、Ego、CDP或间接接口绕过；不为此登录、打开页面或换profile。
+
+安装版仅做公开CLI status/operations list元数据核对。compact列举成功，但初探针没有提取相关条目，空数组不能证明所有内部接口均不存在。当前暴露MCP目录及已验2d契约中的相关接口为browserSessions.clear、browserSessions.openLogin及accounts.wechatNavigation.diagnose，均不是直接盘点/读取已有标签DOM的只读接口，未调用。没有借已消耗的T1364诊断授权重新执行。
+
+结论限于当前可访问表面：有两个视频号登录路由标签，后台登录状态未确认且内容读取被拒绝，不能据此给T1367真实DOM或selector。没有新profile/TaskSpace/标签页、复制或解密profile、登录/绑定/诊断/collect、App重启、env配置变更、私有日志泛扫或中央写入。
+
+工具完整安全拒绝原文与已知/未知边界见TOOL_REFUSAL_SAFE.md、REFUSAL_BOUNDARY_SAFE.json；不把该拒绝猜成特定内部分类或可换表面绕过。安全机器库存见SAFE_INVENTORY.json。本目录局部.gitignore使所有盘点工件忽略，不修改中央.gitignore。

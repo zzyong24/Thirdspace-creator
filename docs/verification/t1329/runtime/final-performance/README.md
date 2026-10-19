@@ -1,0 +1,15 @@
+# 最终包独占普通聊天与Tab计时准备
+
+当前仅准备，NOT_RUN。唯一执行入口 `python3 run.py`；`--collect` 不读取会话、不联网、不启动浏览器。旧plain-performance原件不执行，旧本目录准备字节见before-completion-and-tabs。
+
+最终binding经C/Root核真实包后才生成，环境为T1300_FINAL_PERFORMANCE_BINDING绝对路径、T1300_PERFORMANCE_EXCLUSIVE=1。要求runId与RUN_INTENT一致、executionAuthorized=true、mode=EXECUTION、exclusiveModelWindow=true、dataMode=FRESH_OWNED_ROOT_NO_UNKNOWN_DATABASE_REOPEN、maximumRootSubmissions=1；不接受未绑定null。nodePath/frontendPackageJson均实际绝对路径。runnerSha256锁run.py/run.cjs/metrics.cjs/tabs.cjs四文件。
+
+finalCandidateBinding必须含真实sourceHead/packageSha256/packagePath/baseURL/ownedRoot/sessionPath；packagePath为可SHA的最终交付包文件（DMG，不将.app目录当文件）。launchReceipt/candidatePreflightReceipt/beforeSnapshotReceipt均真实path/SHA，confirmed=true且上述source/packageSHA/baseURL/ownedRoot/sessionPath五身份一致。session0600仅内存使用，禁止写token。expectedRuntimeVersion/expectedModelId/routing和ownedScope为实际读回。
+
+absoluteObservationDeadlineAt必须finite，首次2分钟至8小时；每次请求、页面观察随剩余窗，原task有限deadline仅收紧不续期，null/undefined不转Date.parse；observer也重设收紧。现有操作不会因剩余不足两分钟而提前终止；下一次Tab正操作需完整两分钟才能开始。外层9小时=31800秒执行+600秒清理，记录本次spawn真实PID/PGID/启动身份，发SIGKILL后仍实际等待PID身份消失，再记录remaining；只清本run仍匹配的子进程，不取消业务task。
+
+普通空组先分页核0tasks/0conversations，真实新对话UI只点一次，唯一锁文件禁止二次执行。SSE首个非空delta、DOM首个可见正文、SSE finish后累计正文完整出现分别记同document performance时钟。完整正文比较只归一空白，不做语义打分。实际ChatMarkdown使用react-markdown+remarkGfm，因此合法Markdown的流原文可能与DOM textContent不同；原任务成功且stream结束后再给120秒DOM收尾观察（受原剩余期限裁切），仍不全等时完整可见指标置null并明确MEASUREMENT_UNAVAILABLE，不等待8小时、不将合法模型结果判业务失败，整体为FUNCTION_PASS_WITH_MEASUREMENT_GAP而非完整指标PASS、不把采样时点冒首完整正文。首delta与首可见字指标继续保留。若终态失败/未知，保原ID，不重发。先保存CHAT_RESULT；Tab后失败不抹聊天时点。
+
+tabTiming必须最终真实owned projectId/groupId/initialStage/initialURL及五个stage的readiness{main,content,control}，由实际DOM和本包源码核绑定，不接受占位选择器。五个工作面script/article/image/production/review依次正常点击，每面1样本，检查同document、原唯一控件、明确关键内容及可用控件。只称click→visible，不称TTI/p95，也不以0业务写声称覆盖其它互动。
+
+最末模型独占窗口未开始；没有任何实测结果或性能改善百分比。

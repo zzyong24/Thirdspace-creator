@@ -115,12 +115,14 @@ export async function resolveDedicatedLlmConfig(
   ctx: RequestContext,
   capability: string,
   deps: ResolveDeps,
+  source?:'official'|'self',
 ): Promise<ResolvedLlmConfig | null> {
-  const channel = await deps.getChannelModelConfig?.();
+  const channel = source==='self'?null:await deps.getChannelModelConfig?.();
   if (channel) {
     const managed = await channelConfigFor(deps, channel, capability, false);
     if (managed) return managed;
   }
+  if(source==='official')return null;
   return tryDbRow(await deps.getModelConfig(ctx, capability), deps.env);
 }
 
@@ -128,13 +130,15 @@ export async function resolveLlmConfig(
   ctx: RequestContext,
   capability: string,
   deps: ResolveDeps,
+  source?:'official'|'self',
 ): Promise<ResolvedLlmConfig> {
   const { env } = deps;
-  const channel = await deps.getChannelModelConfig?.();
+  const channel = source==='self'?null:await deps.getChannelModelConfig?.();
   if (channel) {
     const managed = await channelConfigFor(deps, channel, capability, true);
     if (managed) return managed;
   }
+  if(source==='official')throw new LlmCredentialError('所选官方文本模型尚未配置或当前不可用，请检查官方模型与额度；来源未切换。');
 
   // Tier 1 — the user-configured DB row. Prefer the per-capability row, then the
   // global "default" row. A stored secretValue wins; else the env-ref resolves.

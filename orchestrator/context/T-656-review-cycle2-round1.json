@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "新周期完整评审未发现 blocker 或 major。发现 2 项 minor：打包 Sidecar 的 dev 豁免仍可仅由调用者可控环境变量触发；Windows production closure 与安装验收把 verdict signing seed 暴露给超出 SPEC 允许清单的子进程。现有已批准 THREAT-REL-001 仅绑定 AC-694-08，不能支持将这两项提升为 security major/blocker。",
+  "findings": [
+    {
+      "id": "REV-005",
+      "status": "open",
+      "severity": "minor",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "SEC-656-01",
+        "quote": "NODE_ENV=production 时不存在环境变量旁路；缺少合法 token 必须退出。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-656-01",
+        "quote": "生产环境设置历史 bypass 变量后，缺 token仍退出；源码及最终 sidecar tar grep 不到该变量名。"
+      },
+      "where": "SPEC §3.1 保留的 dev 豁免及当前 frontend/src/server/verdict-token-gate.ts 启动门。",
+      "failure_mode": "打包进 Sidecar 的同一校验代码仍在 NODE_ENV!=production 且 CREATOROS_DEV_MODE=1 时无 token 直接返回。直接启动已安装 Sidecar 的调用者可以同时设置这两个环境变量，使保留的 dev 分支在正式产物中成为另一条纯环境变量旁路；现有 AC 只验证旧 bypass 名消失和 NODE_ENV=production，不证明正式产物无法进入 dev 豁免。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md:32-40,106,128；frontend/src/server/verdict-token-gate.ts:23-29；frontend/scripts/desktop/startup-safety-contract.test.mjs:36-38",
+      "risk_class": "security",
+      "disposition": "future",
+      "remedy_type": "future",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "让 dev 豁免只存在于不会进入正式 Sidecar 的开发入口或不可由运行时环境变量伪造的开发构建中；正式产物扫描和启动测试应证明即使同时设置 NODE_ENV=development 与 CREATOROS_DEV_MODE=1，缺 token 仍退出。若要把本地直接启动者作为当前阻断威胁，先在 THREAT_MODEL.json 由用户批准并绑定本验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-006",
+      "status": "open",
+      "severity": "minor",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "SEC-656-03",
+        "quote": "Sidecar 只含公钥；签名 seed 只进入 smoke 驱动、Cargo 构建和 Rust shell 的掩码 blob，实际 Sidecar child env 不得继承。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-656-06",
+        "quote": "打包脚本的普通子进程继续拿不到私钥；只有 smoke 驱动进程和 Cargo/Tauri 编译得到。"
+      },
+      "where": "SPEC §3.2/SEC-656-03/AC-656-06 与 Windows production closure、安装候选验收的环境变量传播。",
+      "failure_mode": "正式 Windows workflow 把 CREATOROS_VERDICT_SIGNING_KEY_B64 交给整个 build-production-closure 进程；该进程再通过 ...process.env 传给 Next build、NCC、Pi bundle、runtime 组装等普通子进程。安装验收步骤也在携带 seed 的 PowerShell 环境中启动 setup.exe 和诊断程序。由此，当前生产链违反“只有 smoke 驱动和 Cargo/Tauri 得到私钥”的冻结边界，而现有 AC 没有盘点这些 Windows 子进程的实际 env。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md:59-61,108,133；.github/workflows/desktop-release.yml:376-386,506-524,1030-1034,1072-1100；tools/windows-closure-rat/build-production-closure.mjs:156-169",
+      "risk_class": "security",
+      "disposition": "future",
+      "remedy_type": "future",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "把 Windows closure 的默认子进程环境改为剥离 signing seed，仅对真实 verdict smoke 的专用进程显式放行；安装 setup 与普通诊断在无 seed 环境运行，安装完成后的泄漏扫描拆成最小专用进程并在 SPEC 中明确其只读密钥作用域。增加 workflow/closure 测试，枚举每个生产子进程并断言除获准进程外均无 seed。若要据此阻断发布，先批准与 AC-656-06 绑定的具体供应链攻击者模型。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

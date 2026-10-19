@@ -1,0 +1,254 @@
+[
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1246/round-1/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/native-runs/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/target/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/target/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/next-env.d.ts",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/binaries/",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/gen/",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/sidecar.tar.gz",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/target/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "mcp-server/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "relativePath": "node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": ".DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "ai-worker/dist/",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "ai-worker/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "backend/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "contract/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "docs/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "frontend/.next/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "frontend/next-env.d.ts",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "frontend/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "mcp-server/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "relativePath": "node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": ".DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "ai-worker/dist/",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "ai-worker/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "backend/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "contract/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "docs/.DS_Store",
+    "reason": "Finder目录元数据",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/binaries/",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/gen/",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "frontend/src-tauri/sidecar.tar.gz",
+    "reason": "原build.mjs/build-sidecar/Tauri/Next派生产物；最终Main包保留后可重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "mcp-server/node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "relativePath": "node_modules/",
+    "reason": "依赖/编译缓存可由已合并源码重建",
+    "removed": true
+  }
+]

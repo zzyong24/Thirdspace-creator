@@ -25,6 +25,8 @@ const BASE = "http://localhost:3000";
   });
   if (!login.ok()) throw new Error("login failed: " + login.status());
   const page = await context.newPage();
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   await page.goto(BASE + route, { waitUntil: "networkidle" });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: outfile, fullPage: true });

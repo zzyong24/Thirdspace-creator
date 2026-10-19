@@ -1,3 +1,4 @@
+import {readActualProviderTiming} from "./asr-provider-timing";
 import {createHash} from "node:crypto";
 import {snapshotAsrInput,type AsrRequest} from "./asr-request";
 // 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— 实现
@@ -61,14 +62,53 @@ export function whisperModelId(level: WhisperLevel): `Xenova/whisper-${WhisperLe
 
 /** ASR pipeline 的最小调用形状(只用到我们需要的:传 Float32Array PCM → { text })。
  *  真实现是 @xenova/transformers 的 `pipeline('automatic-speech-recognition', modelId)` 返回值。 */
+export type AsrPipelineOutput={wordTimingValidated?:boolean;text:string;chunks?:Array<{text:string;timestamp:[number,number|null]}>};
 export type AsrPipeline = (
   audio: Float32Array,
   options?: Record<string, unknown>,
   signal?: AbortSignal,
-) => Promise<{ text: string } | { text: string }[]>;
+) => Promise<AsrPipelineOutput | AsrPipelineOutput[]>;
+
+/** SEMANTIC_BOUNDARY_ALLOW: 仅把实际特征/encoder/attention的物理单位转换为原提取函数crop，不识别内容、不修改最终时间码。 */
+export function guardWhisperPipeline(raw:AsrPipeline):AsrPipeline {
+ const record=(v:unknown):Record<string,unknown>|null=>v!==null&&(typeof v==='object'||typeof v==='function')?v as Record<string,unknown>:null;
+ const dimensions=(v:unknown):number[]|null=>{const d=record(v)?.dims;return Array.isArray(d)&&d.length>0&&Array.from(d).every(n=>Number.isSafeInteger(n)&&n>0)?d:null;};
+ // 模型对象来自现有pipeline，运行时验证最小方法形状；不增加provider/IPC或更换模型。
+ const model=record(record(raw)?.model??(typeof raw==='function'?Object.getOwnPropertyDescriptor(raw,'model')?.value:null));
+ let queue:Promise<unknown>=Promise.resolve();
+ return (audio,options,signal)=>{
+  const job=async()=>{
+   signal?.throwIfAborted();
+   if(options?.return_timestamps!=='word')return raw(audio,options,signal);
+   const config=record(model?.config),originalProcessor=Object.getOwnPropertyDescriptor(raw,'processor')?.value,processor=record(originalProcessor),pre=record(record(processor?.feature_extractor)?.config);
+   const generate=model?.generate,forward=model?.forward,extract=model?._extract_token_timestamps;
+   if(!model||typeof generate!=='function'||typeof forward!=='function'||typeof extract!=='function'||!pre||!config||typeof originalProcessor!=='function'){const result=await raw(audio,options,signal);return Array.isArray(result)?result:{...result,wordTimingValidated:false};}
+   const chunks=new WeakMap<object,number>();let sampleCount:number|null=null,feature:number[]|null=null,encoder:number[]|null=null,verified=true,extractions=0;
+   const wrappedProcessor=async function(this:unknown,...args:unknown[]){const input=args[0],result:unknown=await Reflect.apply(originalProcessor,this,args),tensor=record(record(result)?.input_features);if(input instanceof Float32Array&&input.length>0&&input.buffer===audio.buffer&&input.byteOffset>=audio.byteOffset&&input.byteOffset+input.byteLength<=audio.byteOffset+audio.byteLength&&tensor)chunks.set(tensor,input.length);return result;};
+   Object.setPrototypeOf(wrappedProcessor,Object.getPrototypeOf(originalProcessor));
+   Object.defineProperties(wrappedProcessor,Object.getOwnPropertyDescriptors(originalProcessor));
+   record(raw)!.processor=wrappedProcessor;
+   model.generate=async function(this:unknown,...args:unknown[]){feature=dimensions(args[0]);sampleCount=record(args[0])?chunks.get(record(args[0])!)??null:null;encoder=null;return generate.apply(this,args);};
+   model.forward=async function(this:unknown,...args:unknown[]){const result:unknown=await forward.apply(this,args),actual=dimensions(record(result)?.encoder_outputs);if(!actual||encoder&&JSON.stringify(encoder)!==JSON.stringify(actual))verified=false;else encoder=actual;return result;};
+   model._extract_token_timestamps=function(this:unknown,...args:unknown[]){
+    extractions++;const out=record(args[0]),attention=out?.cross_attentions;
+    const batches=Array.isArray(attention)?attention:[],all=batches.flatMap(x=>Array.isArray(x)?x:[]).flatMap(x=>Array.isArray(x)?x:[]),dims=all.map(dimensions),a=dims[0];
+    const f=feature,e=encoder,hop=pre.hop_length,rate=pre.sampling_rate,window=pre.n_samples,chunk=pre.chunk_length,frames=args[2],precision=args[3]??0.02;
+    const physical=f?.length===3&&e?.length===3&&a?.length===4&&f[0]===1&&e[0]===1&&a[0]===1&&batches.length===1&&Array.isArray(batches[0])&&batches[0].length>0&&batches[0].every(layers=>Array.isArray(layers)&&layers.length===config.decoder_layers)&&dims.length>0&&dims.every(d=>d?.length===4&&d[0]===1&&d[1]===config.decoder_attention_heads&&d[3]===a[3])&&a[3]===e[1]&&f[2]===pre.nb_max_frames&&a[3]===config.max_source_positions&&typeof hop==='number'&&Number.isSafeInteger(hop)&&hop>0&&typeof rate==='number'&&rate===16000&&typeof window==='number'&&window===Number(chunk)*rate&&window/hop===f[2]&&sampleCount!==null&&sampleCount<=window&&Number.isInteger(f[2]!/e[1]!)&&Number(chunk)/a[3]! ===hop*(f[2]!/e[1]!)/rate&&precision===Number(chunk)/a[3]! &&frames===Math.floor(sampleCount/hop);
+    const crop=physical&&sampleCount!==null?Math.floor(sampleCount*e![1]!/(Number(hop)*f![2]!)):0;
+    if(!physical||crop<=0||crop>a![3]!)verified=false;
+    return extract.apply(this,physical&&crop>0&&crop<=a![3]!?[args[0],args[1],crop,...args.slice(3)]:args);
+   };
+   try{const result=await raw(audio,options,signal);return Array.isArray(result)?result:{...result,wordTimingValidated:verified&&extractions>0};}
+   finally{record(raw)!.processor=originalProcessor;model.generate=generate;model.forward=forward;model._extract_token_timestamps=extract;}
+  };
+  const pending=queue.then(job,job);queue=pending.catch(()=>{});return pending;
+ };
+}
 
 /** 可注入副作用(测试零成本:注 fake pipeline/fake decode;真跑走默认 transformers + ffmpeg)。 */
 export interface WhisperLocalAdapterDeps {
+  close?(): Promise<void>;
   /** 惰性拿到某级别的 ASR pipeline。**必须自身幂等**:同一级别第二次调用复用首次实例
    *  (不重下模型)。真实现见 createDefaultPipelineProvider(内部 memo by level)。 */
   getPipeline: (modelId: string, signal?: AbortSignal) => Promise<AsrPipeline>;
@@ -137,7 +177,9 @@ async function transcribeAudio(
     );
   }
 
-  let result: { text: string } | { text: string }[];
+  // Worker 转移 PCM 的底层缓冲区后原 view 会 detached，必须在推理前冻结真实样本数。
+  const decodedSampleCount = pcm.length;
+  let result: AsrPipelineOutput | AsrPipelineOutput[];
   try {
     // language:whisper 支持 language 提示(默认自动检测)。传 language 时映射到 whisper 的
     // language 选项(如 "zh"→中文)。
@@ -146,6 +188,7 @@ async function transcribeAudio(
     //   口播逐字稿全被砍成 ~30s(avg 165 字)。30s 分块 + 5s 滑窗重叠是官方 long-form 推荐,
     //   分块间用重叠区对齐去重,拼出全长转写。
     const pipelineOptions: Record<string, unknown> = {
+      ...(opts.timestampMode?{return_timestamps:opts.timestampMode==="word"?"word":true}:{}),
       chunk_length_s: 30,
       stride_length_s: 5,
       ...(opts.language ? { language: opts.language, task: "transcribe" } : {}),
@@ -172,7 +215,8 @@ async function transcribeAudio(
       { reference: "LOCAL_WHISPER_TRANSCRIPT_EMPTY", retryable: false },
     );
   }
-  return { text };
+  const timing=!Array.isArray(result)&&opts.timestampMode&&(opts.timestampMode!=="word"||result.wordTimingValidated===true)&&opts.timingAudio?.sampleRate===16000&&decodedSampleCount===opts.timingAudio.validSampleCount?readActualProviderTiming({rawResponse:JSON.stringify(result),response:result,audioBytes:opts.audioBytes,granularity:opts.timestampMode,...opts.timingAudio,local:true}):null;
+  return { text,...(timing?{timing}:{}) };
 }
 
 /** 构造本地 whisper 适配器。deps 可注入(测试零成本);默认走真 transformers pipeline + ffmpeg 解码。
@@ -181,13 +225,14 @@ export function createWhisperLocalAdapter(
   deps: WhisperLocalAdapterDeps,
 ): MultimodalProviderAdapter {
   return {
+    close: () => deps.close?.() ?? Promise.resolve(),
     async transcribeAudio(spec, opts) {
       // 冻结输入后再等待回执；回放已确认正文时不启动解码、模型加载或推理。
       const frozen = snapshotAsrInput(spec, opts);
       if (!opts.executeRequest) return transcribeAudio(frozen.spec, frozen.opts, deps);
       const audioDigest=`sha256:${createHash('sha256').update(frozen.opts.audioBytes).digest('hex')}`;
       const audioByteLength=frozen.opts.audioBytes.byteLength;
-      const request:AsrRequest={protocol:'whisper-local.v1',provider:'whisper-local',model:whisperModelId(whisperLevelFromSpec(frozen.spec)),endpointDigest:null,language:frozen.opts.language??null,audioDigest,audioByteLength,chunks:[{digest:audioDigest,byteLength:audioByteLength}],chunkDigest:audioDigest,chunkByteLength:audioByteLength,chunkIndex:0,chunkCount:1};
+      const request:AsrRequest={...(frozen.opts.timestampMode?{timestampMode:frozen.opts.timestampMode}:{}),protocol:'whisper-local.v1',provider:'whisper-local',model:whisperModelId(whisperLevelFromSpec(frozen.spec)),endpointDigest:null,language:frozen.opts.language??null,audioDigest,audioByteLength,chunks:[{digest:audioDigest,byteLength:audioByteLength}],chunkDigest:audioDigest,chunkByteLength:audioByteLength,chunkIndex:0,chunkCount:1};
       const result=await opts.executeRequest(request,()=>transcribeAudio(frozen.spec,frozen.opts,deps));
       throwIfAborted(opts.signal);
       return result;
@@ -243,7 +288,7 @@ export function createDefaultPipelineProvider(): (
       // 缓存目录 → ~/CreatorOS/models/whisper(SPEC §3.3);允许本地缓存命中不重下。
       env.cacheDir = defaultCacheDir();
       env.allowLocalModels = true;
-      return pipeline("automatic-speech-recognition", modelId);
+      return guardWhisperPipeline(await pipeline("automatic-speech-recognition", modelId));
     })();
     memo.set(modelId, p);
     // 若加载失败,清掉 memo 让下次可重试(不把一次失败永久钉死)。
@@ -454,6 +499,7 @@ export function createFfmpegPcmDecoder(
  *  协议:主线程发 { id, modelId, cacheDir, pcm: ArrayBuffer, options } →
  *  worker 回 { id, ok: true, text } 或 { id, ok: false, error }。 */
 const WHISPER_WORKER_SOURCE = `
+const guardWhisperPipeline = (${guardWhisperPipeline.toString()});
 const { parentPort, workerData } = require("node:worker_threads");
 const { createRequire } = require("node:module");
 const req = createRequire(workerData.requireBase);
@@ -474,7 +520,7 @@ function getPipeline(modelId, cacheDir) {
     const { pipeline, env } = req("@xenova/transformers");
     env.cacheDir = cacheDir;
     env.allowLocalModels = true;
-    return pipeline("automatic-speech-recognition", modelId);
+    return guardWhisperPipeline(await pipeline("automatic-speech-recognition", modelId));
   })();
   memo.set(modelId, p);
   p.catch(() => memo.delete(modelId));
@@ -506,7 +552,7 @@ parentPort.on("message", async (msg) => {
     const pcm = new Float32Array(msg.pcm);
     const result = await pipe(pcm, msg.options);
     const text = Array.isArray(result) ? result.map((r) => r.text).join("") : result.text;
-    parentPort.postMessage({ id: msg.id, ok: true, text });
+    parentPort.postMessage({ id: msg.id, ok: true, text,...(!Array.isArray(result)&&Array.isArray(result.chunks)?{chunks:result.chunks}:{}),...(!Array.isArray(result)&&typeof result.wordTimingValidated==='boolean'?{wordTimingValidated:result.wordTimingValidated}:{}) });
   } catch (err) {
     parentPort.postMessage({
       id: msg.id,
@@ -528,6 +574,7 @@ export function resolveWhisperWorkerRuntime(
   options: {
     cwd?: string;
     fileExists?: (path: string) => boolean;
+    resolveDependency?: (specifier: string) => string;
   } = {},
 ): WhisperWorkerRuntime {
   // worker 的模块根必须与 sidecar 的真实 cwd 一致。Windows 分层包的 cwd 固定为
@@ -540,12 +587,20 @@ export function resolveWhisperWorkerRuntime(
   const requireBase = path.join(cwd, "package.json");
   const moduleResolverPath = path.join(cwd, "creatoros-module-resolver.cjs");
   const exists = options.fileExists ?? fs.existsSync;
-  if (!exists(moduleResolverPath)) return { requireBase };
-  return {
+  if (exists(moduleResolverPath)) return {
     requireBase,
     moduleResolverPath,
     runtimeRoot: path.resolve(cwd, ".."),
   };
+  // Web 从 frontend cwd fork Worker；依赖属于 ai-worker。用当前模块真正解析到的
+  // 入口作为 eval Worker 的模块根，不依赖宿主恰好也安装了本地模型运行时。
+  // 传统包或旧运行布局无法解析时，仍保留原 cwd 的兼容查找路径。
+  try {
+    const dependencyPath = (options.resolveDependency ?? ((specifier: string) => require.resolve(specifier)))("@xenova/transformers");
+    return { requireBase: dependencyPath };
+  } catch {
+    return { requireBase };
+  }
 }
 
 /** worker 句柄可注入面(单测注 fake worker,不真加载 transformers)。 */
@@ -557,6 +612,8 @@ export interface WhisperWorkerLike {
       id: number;
       ok: boolean;
       text?: string;
+      chunks?:AsrPipelineOutput["chunks"];
+      wordTimingValidated?:boolean;
       error?: string;
       errorCode?: string;
     }) => void,
@@ -585,14 +642,28 @@ export function createWhisperWorker(
  */
 export function createWorkerPipelineProvider(
   spawnWorker?: () => WhisperWorkerLike,
-): (modelId: string) => Promise<AsrPipeline> {
+) {
   let worker: WhisperWorkerLike | null = null;
   let nextId = 1;
-  type Pending = { owner: WhisperWorkerLike; resolve: (text: string) => void; reject: (err: Error) => void };
+  type Pending = { owner: WhisperWorkerLike; resolve: (text: string,chunks?:AsrPipelineOutput["chunks"],wordTimingValidated?:boolean) => void; reject: (err: Error) => void };
   const pending = new Map<number, Pending>();
   const exits = new WeakMap<WhisperWorkerLike, Promise<number>>();
+  const owners = new Set<WhisperWorkerLike>();
+  const stoppingOwners = new WeakMap<WhisperWorkerLike, Promise<number>>();
+  const shutdown = new AbortController();
+  let closing: Promise<void> | undefined;
   let queue: Promise<unknown> = Promise.resolve();
   const spawn = spawnWorker ?? (() => createWhisperWorker());
+
+  function stopWorker(owner: WhisperWorkerLike): Promise<number> {
+    let stopping = stoppingOwners.get(owner);
+    if (!stopping) {
+      // terminate 拒绝不等于已退出；保留真实 exit 屏障，不启动替代资源。
+      stopping = Promise.resolve().then(() => owner.terminate()).catch(() => exits.get(owner)!).then(code => {owners.delete(owner); return code;});
+      stoppingOwners.set(owner, stopping);
+    }
+    return stopping;
+  }
 
   function failPending(owner: WhisperWorkerLike, err: Error): void {
     if (worker === owner) worker = null;
@@ -604,25 +675,31 @@ export function createWorkerPipelineProvider(
   }
 
   function ensureWorker(): WhisperWorkerLike {
+    shutdown.signal.throwIfAborted();
     if (worker) return worker;
     const w = spawn();
     let confirmExit!: (code: number) => void;
     exits.set(w, new Promise<number>((resolve) => { confirmExit = resolve; }));
+    owners.add(w);
     w.on("message", (msg) => {
       const p = pending.get(msg.id);
       if (!p || p.owner !== w) return;
       pending.delete(msg.id);
-      if (msg.ok && typeof msg.text === "string") p.resolve(msg.text);
+      if (msg.ok && typeof msg.text === "string") p.resolve(msg.text,msg.chunks,msg.wordTimingValidated);
       else p.reject(new MultimodalGenerationError(
         `whisper-local(worker)执行失败: ${msg.error ?? "未知错误"}`,
         { reference: msg.errorCode ?? "LOCAL_WHISPER_WORKER_UNKNOWN", retryable: true },
       ));
     });
-    w.on("error", (err) => failPending(w, new MultimodalGenerationError(
-      `whisper-local worker 崩溃: ${err.message}`,
-      { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
-    )));
+    w.on("error", (err) => {
+      // error 通知先于 exit；不能让队列在旧线程退出确认前启动替代线程。
+      void stopWorker(w).then(() => failPending(w, new MultimodalGenerationError(
+        `whisper-local worker 崩溃: ${err.message}`,
+        { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
+      )));
+    });
     w.on("exit", (code) => {
+      owners.delete(w);
       confirmExit(code);
       failPending(w, new MultimodalGenerationError(
         `whisper-local worker 退出 (code=${code})`,
@@ -633,31 +710,33 @@ export function createWorkerPipelineProvider(
     return w;
   }
 
-  return async (modelId: string) => {
+  const provider = async (modelId: string) => {
+    shutdown.signal.throwIfAborted();
     const proxy: AsrPipeline = (audio, options, signal) => {
       const job = async () => {
-        throwIfAborted(signal);
+        const combined = signal ? AbortSignal.any([signal, shutdown.signal]) : shutdown.signal;
+        throwIfAborted(combined);
         const w = ensureWorker();
         const id = nextId++;
         let stopping: Promise<number> | undefined;
-        const result = new Promise<{ text: string }>((resolve, reject) => {
+        const result = new Promise<AsrPipelineOutput>((resolve, reject) => {
           const cancel = () => {
             // 删除 pending，使 terminate 引发的 exit/error 不会提前放行队列。
             pending.delete(id);
             if (worker === w) worker = null;
             // terminate 自身也可能失败；同步抛错和异步拒绝都不能算退出确认。
             // 此时继续等待该 owner 的 exit，期间队列保留屏障，不创建替代 worker。
-            stopping = Promise.resolve().then(() => w.terminate()).catch(() => exits.get(w)!);
+            stopping = stopWorker(w);
             stopping.then(() => reject(abortError()), reject);
           };
-          const cleanup = () => signal?.removeEventListener("abort", cancel);
+          const cleanup = () => combined.removeEventListener("abort", cancel);
           pending.set(id, {
             owner: w,
-            resolve: (text) => { cleanup(); resolve({ text }); },
+            resolve: (text,chunks,wordTimingValidated) => { cleanup(); resolve({ text,...(chunks?{chunks}:{}),...(typeof wordTimingValidated==='boolean'?{wordTimingValidated}:{}) }); },
             reject: (err) => { cleanup(); reject(err); },
           });
-          signal?.addEventListener("abort", cancel, { once: true });
-          if (signal?.aborted) { cancel(); return; }
+          combined.addEventListener("abort", cancel, { once: true });
+          if (combined.aborted) { cancel(); return; }
           try {
             // 有偏移或共享底层存储时复制有效范围，避免传入其它音频/哨兵数据。
             const buf = audio.byteOffset === 0 && audio.byteLength === audio.buffer.byteLength && audio.buffer instanceof ArrayBuffer
@@ -682,14 +761,25 @@ export function createWorkerPipelineProvider(
     };
     return proxy;
   };
+  return Object.assign(provider, {
+    close(): Promise<void> {
+      return closing ??= (async () => {
+        shutdown.abort(abortError());
+        await Promise.all([...owners].map(stopWorker));
+        await queue;
+      })();
+    },
+  });
 }
 
 /** 便捷装配:host 默认 deps(真 transformers pipeline + 真 ffmpeg 解码)。测试**不用**这个,
  *  而是给 createWhisperLocalAdapter 注 fake deps。
  *  [T-356] 推理走 worker 化 provider(常驻单 worker + 串行队列)—— 主线程永不被推理阻塞。 */
 export function createDefaultWhisperLocalAdapter(): MultimodalProviderAdapter {
+  const provider = createWorkerPipelineProvider();
   return createWhisperLocalAdapter({
-    getPipeline: createWorkerPipelineProvider(),
+    getPipeline: provider,
+    close: () => provider.close(),
     decodeAudioToFloat32: createFfmpegPcmDecoder(),
   });
 }

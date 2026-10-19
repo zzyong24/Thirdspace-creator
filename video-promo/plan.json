@@ -1,0 +1,189 @@
+{
+  "demo": false,
+  "product": "CreatorOS",
+  "style": "repo",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 47,
+  "repo": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "footer": "CreatorOS · 本地优先的编导式桌面生产系统",
+  "audioRequired": true,
+  "sfxRequired": true,
+  "typography": {
+    "mode": "bilingual",
+    "zhFont": "PingFang SC, Noto Sans CJK SC, Microsoft YaHei, sans-serif",
+    "enFont": "Helvetica Neue, Inter, sans-serif",
+    "zhStyle": "sans-serif"
+  },
+  "audio": {
+    "ducking": {
+      "enabled": true
+    },
+    "music": {
+      "file": "assets/music.wav",
+      "gain": 0.65
+    },
+    "cues": [
+      { "at": 4.35, "actionId": "overview-nav", "file": "assets/sfx/pop.wav", "gain": 0.7, "role": "sfx", "kind": "pop" },
+      { "at": 11.3, "actionId": "positioning-card", "file": "assets/sfx/pop.wav", "gain": 0.7, "role": "sfx", "kind": "pop" },
+      { "at": 16.3, "actionId": "topics-list", "file": "assets/sfx/pop.wav", "gain": 0.7, "role": "sfx", "kind": "pop" },
+      { "at": 22.3, "actionId": "script-stage", "file": "assets/sfx/click.wav", "gain": 0.75, "role": "sfx", "kind": "click" },
+      { "at": 29.3, "actionId": "production-assets", "file": "assets/sfx/click.wav", "gain": 0.75, "role": "sfx", "kind": "click" },
+      { "at": 35.3, "actionId": "review-metrics", "file": "assets/sfx/success.wav", "gain": 0.7, "role": "sfx", "kind": "success" },
+      { "at": 42.0, "actionId": "end-enter", "file": "assets/sfx/ding-dong.wav", "gain": 0.7, "role": "sfx", "kind": "ding-dong" }
+    ]
+  },
+  "shots": [
+    {
+      "id": "intro",
+      "start": 0,
+      "end": 4,
+      "type": "title",
+      "eyebrow": "CREATOROS",
+      "headlineEn": "CreatorOS",
+      "headline": "让下一条内容，比上一条更有依据",
+      "description": "面向中文口播 / 观点视频创作者的本地优先编导工作区。",
+      "descriptionAt": 0,
+      "claim": false,
+      "source": [],
+      "plainExplanation": "品牌开场：一句话点明产品定位与目标用户，不展开具体功能。",
+      "actions": [
+        { "id": "intro-enter", "at": 0, "action": "copy enters", "soundRequired": false }
+      ],
+      "component": null
+    },
+    {
+      "id": "overview",
+      "start": 4,
+      "end": 11,
+      "type": "detail",
+      "eyebrow": "01 · 工作台",
+      "headlineEn": "One workspace",
+      "headline": "一个工作区，跑完全部创作",
+      "description": "定位、选题、稿面、成片、发布、复盘——数据在同一条飞轮里流转，形成复利。",
+      "descriptionAt": 0,
+      "claim": true,
+      "source": ["repo:frontend/src/components/shell/sidebar.tsx", "repo:frontend/src/fixtures/canonical.ts"],
+      "plainExplanation": "CreatorOS 一级导航覆盖定位中心、内容雷达、选题、项目、知识库、素材中心、发布中心、运营分析、自动化、设置；产品飞轮为 定位→选题→稿面→成片→发布→复盘。",
+      "actions": [
+        { "id": "overview-enter", "at": 0, "action": "copy enters", "soundRequired": false },
+        { "id": "overview-nav", "at": 0.35, "action": "nav grid appears", "soundRequired": true }
+      ],
+      "component": "src/presentations.jsx"
+    },
+    {
+      "id": "positioning",
+      "start": 11,
+      "end": 16,
+      "type": "detail",
+      "eyebrow": "02 · 定位",
+      "headlineEn": "Know your audience",
+      "headline": "先搞清楚你在为谁做内容",
+      "description": "账号定位是上游约束：后续选题、脚本、复盘都跟着它走，不串味。",
+      "descriptionAt": 0,
+      "claim": true,
+      "source": ["repo:frontend/src/components/project/section-card.tsx", "repo:frontend/src/fixtures/canonical.ts"],
+      "plainExplanation": "定位中心承载账号定位，作为选题与脚本的上游约束来源；账号是数据归属而非筛选器。",
+      "actions": [
+        { "id": "positioning-enter", "at": 0, "action": "copy enters", "soundRequired": false },
+        { "id": "positioning-card", "at": 0.3, "action": "positioning card appears", "soundRequired": true }
+      ],
+      "component": "src/presentations.jsx"
+    },
+    {
+      "id": "topics",
+      "start": 16,
+      "end": 22,
+      "type": "detail",
+      "eyebrow": "03 · 选题",
+      "headlineEn": "Evidence-based topics",
+      "headline": "选题有依据，不再拍脑袋",
+      "description": "评论、热点、对标、收藏汇成候选，评分排序，一键立项进项目。",
+      "descriptionAt": 0,
+      "claim": true,
+      "source": ["repo:frontend/src/components/project/section-card.tsx", "repo:frontend/src/components/content/tag-chip.tsx"],
+      "plainExplanation": "选题候选池聚合评论、热点、对标、收藏等来源，按综合评分排序，promotion 原子立项为项目。",
+      "actions": [
+        { "id": "topics-enter", "at": 0, "action": "copy enters", "soundRequired": false },
+        { "id": "topics-list", "at": 0.3, "action": "candidate list appears", "soundRequired": true }
+      ],
+      "component": "src/presentations.jsx"
+    },
+    {
+      "id": "script",
+      "start": 22,
+      "end": 29,
+      "type": "detail",
+      "eyebrow": "04 · 稿面",
+      "headlineEn": "AI drafts, you decide",
+      "headline": "AI 干重活，你来做判断",
+      "description": "Brief、结构、脚本、审核、盲预测——每个版本都可追溯，AI 只产候选。",
+      "descriptionAt": 0,
+      "claim": true,
+      "source": ["repo:frontend/src/components/project/section-card.tsx", "repo:frontend/src/features/dashboard/todo-card.tsx"],
+      "plainExplanation": "项目与稿面承载 Brief、脚本版本、审核与发布前盲预测；AI 候选须经人工确认门才进领域数据。",
+      "actions": [
+        { "id": "script-enter", "at": 0, "action": "copy enters", "soundRequired": false },
+        { "id": "script-stage", "at": 0.3, "action": "stage chips appear", "soundRequired": true }
+      ],
+      "component": "src/presentations.jsx"
+    },
+    {
+      "id": "production",
+      "start": 29,
+      "end": 35,
+      "type": "detail",
+      "eyebrow": "05 · 成片",
+      "headlineEn": "Guided production",
+      "headline": "口播稿到成片，受控又省心",
+      "description": "不是通用剪辑器：粗剪、字幕、B-roll，加四项编导决策，受控渲染。",
+      "descriptionAt": 0,
+      "claim": true,
+      "source": ["repo:frontend/src/components/project/section-card.tsx", "repo:frontend/src/features/dashboard/todo-card.tsx"],
+      "plainExplanation": "受控成片基于脚本、粗剪、字幕、素材与编导决策渲染，任务切页/刷新/重启可恢复，不做通用 NLE。",
+      "actions": [
+        { "id": "production-enter", "at": 0, "action": "copy enters", "soundRequired": false },
+        { "id": "production-assets", "at": 0.3, "action": "asset chips appear", "soundRequired": true }
+      ],
+      "component": "src/presentations.jsx"
+    },
+    {
+      "id": "review",
+      "start": 35,
+      "end": 42,
+      "type": "detail",
+      "eyebrow": "06 · 复盘",
+      "headlineEn": "Learn from data",
+      "headline": "真实数据回流，经验越滚越多",
+      "description": "发布前预测对照真实指标，偏差沉淀成可验证经验，回到下一条内容。",
+      "descriptionAt": 0,
+      "claim": true,
+      "source": ["repo:frontend/src/fixtures/canonical.ts", "repo:frontend/src/components/project/section-card.tsx"],
+      "plainExplanation": "发布后采集真实指标与评论，与锁定预测对照完成复盘，形成有证据、人工确认的经验并回流到后续项目。",
+      "actions": [
+        { "id": "review-enter", "at": 0, "action": "copy enters", "soundRequired": false },
+        { "id": "review-metrics", "at": 0.3, "action": "metrics appear", "soundRequired": true }
+      ],
+      "component": "src/presentations.jsx"
+    },
+    {
+      "id": "end",
+      "start": 42,
+      "end": 47,
+      "type": "end",
+      "eyebrow": "CREATOROS",
+      "headlineEn": "CreatorOS",
+      "headline": "本地优先，数据主权在你手里",
+      "description": "项目、作品、评论、指标、经验默认只存本机。AI 干重活，人做判断。",
+      "descriptionAt": 0,
+      "claim": false,
+      "source": [],
+      "plainExplanation": "品牌收尾：重申本地数据主权与「AI 干重活，人做判断」的核心承诺。",
+      "actions": [
+        { "id": "end-enter", "at": 0, "action": "copy enters", "soundRequired": true }
+      ],
+      "component": null
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { readSessionCookie } from "../../../../auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 import { getExecutionPreviewRuntime } from "@/server/persistence-client";
 
@@ -36,6 +37,7 @@ export async function GET(
     ctx = await resolveRequestContext(
       readSessionCookie(req),
       readRequestAccountId(req),
+      { groupId: readRequestGroupId(req) },
     );
   } catch {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });

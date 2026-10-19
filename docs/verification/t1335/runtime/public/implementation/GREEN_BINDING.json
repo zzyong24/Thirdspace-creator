@@ -1,0 +1,21 @@
+{
+  "phase": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/green-v1",
+  "worker": {
+    "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/green-v1/worker.cjs",
+    "bytes": 1540654,
+    "sha256": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709"
+  },
+  "links": [
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/green-v1/node_modules/jsdom",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/jsdom@29.1.1_@noble+hashes@1.8.0/node_modules/jsdom"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1335-knowledge-native-binding-20261017-5f1a8e6d/green-v1/node_modules/@mozilla/readability",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@mozilla+readability@0.6.0/node_modules/@mozilla/readability"
+    }
+  ],
+  "publicTestUnchangedSHA": "6807cf390956eb44ffe102100037adb950b2023505c02afc340d82c63a99e4b8",
+  "originalRedPreserved": true,
+  "backendSourceSHA": "5bc83bb61e9907b56b9dc5de2597e8b38a20209beb6acf53537e3fff4a6701cd"
+}

@@ -1,0 +1,76 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{createRequire}=require('node:module');
+const {test:base,expect,session,binding,dispatch}=require('../../../../../t1304/acceptance/candidate/driver/public-fixture.cjs');
+const test=base.extend({context:async({},use)=>{
+ const {chromium}=createRequire(path.join(binding.sourceRoot,'frontend/package.json'))('@playwright/test');
+ const context=await chromium.launchPersistentContext('',{channel:'chromium',headless:true,timeout:180000,baseURL:session.baseURL,viewport:{width:1600,height:1000},extraHTTPHeaders:{'x-creatoros-handshake':session.handshake}});
+ context.setDefaultTimeout(120000);context.setDefaultNavigationTimeout(300000);
+ try{await use(context);}finally{await context.close();}
+}});
+const root=path.join(binding.sourceRoot,'docs/verification/t1305/acceptance/runs/final-t1304-t1305/a');
+const handoffPath=path.join(binding.sourceRoot,'docs/verification/t1303/acceptance/runs/final-t1304-t1305/b/HANDOFF.json');
+const handoff=JSON.parse(fs.readFileSync(handoffPath,'utf8'));const checks=[];let phase='setup';
+const clean=x=>typeof x==='string'?x.split(session.handshake).join('[REDACTED_OWNED_TEST_HANDSHAKE]'):x;
+function save(name,value){fs.writeFileSync(path.join(root,name+'.json'),JSON.stringify(value,(_key,v)=>clean(v),2)+'\n',{mode:0o600});}
+async function snap(page,name){await page.screenshot({path:path.join(root,name+'.png'),animations:'disabled',caret:'hide',timeout:120000});fs.writeFileSync(path.join(root,name+'.html'),clean(await page.content()),{mode:0o600});fs.writeFileSync(path.join(root,name+'.aria.txt'),clean(await page.locator('body').ariaSnapshot()),{mode:0o600});save(name+'-meta',{at:new Date().toISOString(),phase,url:page.url(),viewport:page.viewportSize()});}
+async function metrics(page,cdp,name){const cdpMetrics=await cdp.send('Page.getLayoutMetrics');const dom=await page.evaluate(()=>({innerWidth,innerHeight,devicePixelRatio,rootZoom:getComputedStyle(document.documentElement).zoom,bodyZoom:getComputedStyle(document.body).zoom,visualViewport:{width:visualViewport.width,height:visualViewport.height,scale:visualViewport.scale}}));save(name,{cdp:cdpMetrics,dom});return {cdp:cdpMetrics,dom};}
+async function readAll(page){const rpc=(id,input)=>dispatch(page,id,input,handoff.groupId);const versions=[];let pageIndex=1;for(;;){const items=await rpc('artifacts.versions.list',{params:{artifactId:handoff.scriptId},query:{page:pageIndex,pageSize:100}});expect(Array.isArray(items)).toBe(true);versions.push(...items);if(items.length<100)break;pageIndex++;}return {article:await rpc('articles.get',{params:{outputId:handoff.turns.joint1.articleId}}),graphic:await rpc('graphicPosts.get',{params:{outputId:handoff.turns.joint1.graphicId}}),script:await rpc('artifacts.get',{params:{artifactId:handoff.scriptId}}),scriptVersions:versions,scriptVersionPages:pageIndex};}
+async function openOwner(page,family,viewport){
+ await page.setViewportSize(viewport);const kind=family==='creation-graphic'?'graphic':'article';await page.goto(handoff.ownerURLs[kind]);
+ await expect(page.locator(`[data-page="${kind==='graphic'?'graphic-post':'article'}-workbench"]`)).toBeVisible();
+ const mobile=page.getByRole('button',{name:'打开编导',exact:true}),expand=page.getByRole('button',{name:'展开编导栏',exact:true});
+ if(await mobile.isVisible()){await mobile.click();await expect(page.getByRole('button',{name:'收起编导栏',exact:true})).toBeFocused();}else if(await expand.isVisible())await expand.click();
+ const outer=page.locator('aside[data-slot="stage-chat-rail"]');await expect(outer).toBeVisible();
+ await outer.getByRole('button',{name:'历史记录',exact:true}).click();const turn=handoff.turns[family==='editor-article'?'editor':'joint1'];
+ await page.locator(`[data-slot="copilot-history-item"][data-conversation-id="${turn.ids.conversationId}"]`).click();
+ const region=outer.getByRole('region',{name:family==='editor-article'?'编导编辑候选':'文章和图文联合候选',exact:true});await expect(region).toBeVisible();
+ const card=family==='editor-article'?region:region.locator('article').filter({has:page.getByRole('heading',{name:kind==='article'?'文章候选':'图文候选',exact:true})});await expect(card).toHaveCount(1);
+ return {outer,card,mobile:await outer.getAttribute('role')==='dialog',turn};
+}
+
+const COPY='候选来源暂时读取失败，请关闭预览后重新打开。';
+const forbidden=new Set(['articles.versions.create','graphicPosts.versions.create','artifacts.versions.create','artifacts.scriptPatches.apply','ai.conversations.messages.create']);
+function sourceMatch(request,turn){try{if(new URL(request.url()).origin!==new URL(session.baseURL).origin)return false;const post=request.postDataJSON();return post?.id==='ai.workCandidates.source'&&JSON.stringify(post.input)===JSON.stringify(turn.sourceRead.input);}catch{return false;}}
+async function openDialog(page,card,family){const trigger=card.getByRole('button',{name:family==='editor-article'?'预览改动':'预览候选',exact:true});await trigger.focus();await expect(trigger).toBeFocused();await page.keyboard.press('Enter');const dialog=page.getByRole('dialog',{name:family==='editor-article'?'文章改动预览':family==='creation-graphic'?'图文候选预览':'文章候选预览',exact:true});await expect(dialog).toBeVisible();return {dialog,trigger};}
+function detailsState(page){return page.locator('[role="dialog"] input[type="checkbox"]').evaluateAll(nodes=>nodes.map(n=>({label:n.parentElement.textContent,checked:n.checked,disabled:n.disabled})));}
+for(const family of ['creation-article','creation-graphic','editor-article']){
+ test('T1305 '+family+' 真实source暂持中断与原位恢复',async({page,context},info)=>{
+  phase=family;const events=[],attemptedWrites=[],sourceRequests=[],sourceResponses=[],held=[];const turn=handoff.turns[family==='editor-article'?'editor':'joint1'];let release;const gate=new Promise(resolve=>{release=resolve;});
+  const record=()=>save(family+'-network',{events,attemptedWrites,sourceRequests,sourceResponses,held});
+  context.on('request',request=>{try{const u=new URL(request.url());if(u.pathname==='/api/v1/dispatch')events.push({id:request.postDataJSON()?.id,input:request.postDataJSON()?.input});else if(u.pathname==='/api/chat')events.push({id:'/api/chat',method:request.method()});if(sourceMatch(request,turn)){sourceRequests.push({url:request.url(),body:request.postDataJSON()});}record();}catch{}});
+  page.on('response',async response=>{if(sourceMatch(response.request(),turn)){try{sourceResponses.push({status:response.status(),url:response.url(),body:await response.json()});record();}catch(error){save(family+'-response-read-error',{error:clean(String(error))});}}});
+  await context.route('**/api/v1/dispatch',route=>{const id=route.request().postDataJSON()?.id;if(forbidden.has(id)){attemptedWrites.push({id});record();return route.abort('blockedbyclient');}return route.fallback();});
+  await context.route('**/api/chat',route=>{attemptedWrites.push({id:'/api/chat'});record();return route.abort('blockedbyclient');});
+  await context.addCookies([{name:'creatoros_current_group',value:encodeURIComponent(handoff.groupId),url:session.baseURL}]);await context.addInitScript(id=>{localStorage.setItem('creatoros:current-group',id);localStorage.removeItem('creatoros:current-account');localStorage.setItem('creatoros:onboarding:hidden','1');},handoff.groupId);
+  save(family+'-binding',{sourceHead:binding.sourceHead,controlHead:'148a7da951a31ea3e3f94fcb8b42956f5daf6f2d',bindingSha256:crypto.createHash('sha256').update(fs.readFileSync(session.candidateBinding)).digest('hex'),handoffSha256:crypto.createHash('sha256').update(fs.readFileSync(handoffPath)).digest('hex'),browserVersion:context.browser().version(),temporaryPersistentProfile:true,freshContext:true,businessStorageCopied:false,sourceInput:turn.sourceRead.input});
+  const before=await readAll(page);save(family+'-business-before',before);
+  const handler=async route=>{if(!sourceMatch(route.request(),turn))return route.fallback();held.push({body:route.request().postDataJSON(),groupHeader:await route.request().headerValue('x-group-id'),accountHeader:await route.request().headerValue('x-account-id'),classification:'同源匿名fresh请求，不按顺序分配article/graphic身份'});record();await gate;try{await route.abort('connectionfailed');}catch(error){save(family+'-abort-cleanup-error',{error:clean(String(error))});}};
+  await page.route('**/api/v1/dispatch',handler);
+  try{
+   const {outer,card}=await openOwner(page,family,{width:1600,height:1000});const prompt=outer.locator('#ai-copilot-prompt'),unsent='T1305未发送输入 '+family;await prompt.fill(unsent);await expect(prompt).toHaveValue(unsent);
+   const {dialog,trigger}=await openDialog(page,card,family);const initialExpected=family==='editor-article'?1:2;await expect.poll(()=>held.length,{timeout:120000}).toBe(initialExpected);expect(sourceRequests).toHaveLength(initialExpected);
+   for(const request of held){expect(request.body.input).toEqual(turn.sourceRead.input);expect(request.groupHeader).toBe(handoff.groupId);expect(request.accountHeader).toBeNull();}
+   await expect(dialog.getByText('正在核对原候选来源与稿件版本…',{exact:true})).toBeVisible();await expect(dialog.getByRole('region',{name:'本次采纳选择',exact:true})).toHaveCount(0);await expect(prompt).toHaveValue(unsent);await snap(page,family+'-source-loading');
+   release();await expect(dialog.getByRole('alert')).toHaveText(COPY);await expect(prompt).toHaveValue(unsent);await snap(page,family+'-source-error');expect(sourceRequests).toHaveLength(initialExpected);expect(sourceResponses).toHaveLength(0);
+   await page.unroute('**/api/v1/dispatch',handler);await dialog.getByRole('button',{name:'关闭',exact:true}).click();await expect(dialog).toBeHidden();await expect(trigger).toBeFocused();await expect(prompt).toHaveValue(unsent);await snap(page,family+'-error-closed');
+   await trigger.focus();await page.keyboard.press('Enter');await expect(dialog).toBeVisible();const summary=dialog.locator('summary').filter({hasText:/^本次采纳选择$/});await expect(summary).toBeVisible();await expect.poll(()=>sourceResponses.length,{timeout:120000}).toBe(1);expect(sourceResponses[0].status).toBe(200);expect(sourceRequests).toHaveLength(initialExpected+1);await expect(prompt).toHaveValue(unsent);await snap(page,family+'-source-recovered-default');
+   const receipt=sourceResponses[0].body.data,candidate=receipt.candidate;const member=family==='editor-article'?null:family==='creation-article'?candidate.target.articleMember:candidate.target.graphicMember;
+   const outputId=member?.outputId??candidate.target.outputId,versionId=member?.baseVersionId??candidate.base.versionId,article=family!=='creation-graphic';
+   const exact=await dispatch(page,article?'articles.versions.get':'graphicPosts.versions.get',{params:{outputId,versionId}},handoff.groupId);expect(exact.versionId).toBe(versionId);save(family+'-actual-base',{outputId,versionId,exact});
+   const proposed=family==='editor-article'?candidate.candidate.document:article?candidate.article:candidate.graphic;
+   await summary.focus();await page.keyboard.press('Enter');const selection=dialog.getByRole('region',{name:'本次采纳选择',exact:true});await expect(selection).toBeVisible();const expectedFields={};
+   // SEMANTIC_BOUNDARY_ALLOW: 仅核当前协议默认字段，不替人选择创作内容。
+   for(const field of ['title','summary','tags'].filter(field=>Object.hasOwn(proposed,field))){const name='采用候选'+({title:'标题',summary:'摘要',tags:'标签'}[field]);const box=selection.getByRole('checkbox',{name:new RegExp(name)});const value=exact.document[field],expected=Array.isArray(value)?value.length===0:!value?.trim();expectedFields[field]=expected;await expect(box).toBeChecked({checked:expected});}
+   const defaults=await detailsState(page);const first=selection.getByRole('checkbox',{name:/采用候选标题/});await expect(first).toBeEnabled();await first.focus();await page.keyboard.press('Space');const chosen=await detailsState(page);expect(chosen[0].checked).not.toBe(defaults[0].checked);await snap(page,family+'-recovered-user-selection');
+   await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(trigger).toBeFocused();await expect(prompt).toHaveValue(unsent);await page.keyboard.press('Enter');await expect(dialog).toBeVisible();await summary.focus();await page.keyboard.press('Enter');await expect(selection).toBeVisible();expect(await detailsState(page)).toEqual(chosen);expect(sourceRequests).toHaveLength(initialExpected+1);await snap(page,family+'-selection-reopened');await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(prompt).toHaveValue(unsent);
+   let otherState=null;if(family!=='editor-article'){
+    const otherKind=family==='creation-article'?'图文候选':'文章候选';const region=outer.getByRole('region',{name:'文章和图文联合候选',exact:true});const other=region.locator('article').filter({has:page.getByRole('heading',{name:otherKind,exact:true})});
+    const targetAdopt=card.getByRole('button',{name:family==='creation-article'?'采纳文章':'采纳图文',exact:true}),otherAdopt=other.getByRole('button',{name:family==='creation-article'?'采纳图文':'采纳文章',exact:true});await expect(targetAdopt).toBeEnabled();await expect(otherAdopt).toBeDisabled();
+    const otherFamily=family==='creation-article'?'creation-graphic':'creation-article';const {dialog:otherDialog}=await openDialog(page,other,otherFamily);await expect(otherDialog.getByRole('alert')).toHaveText(COPY);expect(sourceRequests).toHaveLength(initialExpected+1);await snap(page,family+'-other-member-still-error');await otherDialog.getByRole('button',{name:'关闭',exact:true}).click();await expect(otherDialog).toBeHidden();otherState={firstOpenedAfterTargetRecovery:true,visibleSourceError:COPY,extraReads:0,closedWithoutReopeningAgain:true};
+   }
+   await expect(prompt).toHaveValue(unsent);save(family+'-result',{family,initialAnonymousMatchedRequests:initialExpected,initialWireIdentical:held.every(x=>JSON.stringify(x.body.input)===JSON.stringify(turn.sourceRead.input)),targetActualOpenedAndSawError:true,recoveryAddedReads:1,recoveryStatus:sourceResponses[0].status,recoveryWireSame:JSON.stringify(sourceRequests.at(-1).body.input)===JSON.stringify(turn.sourceRead.input),otherState,promptRetainedThroughLoadingErrorCloseRecovery:true,preFailureManualSelection:false,defaultFieldsVerifiedAgainstActualBase:expectedFields,defaults,userSelected:chosen,selectionRetainedAfterReadyOrdinaryReopen:true,noExtraReadAfterReadyReopen:true});
+   checks.push({family,status:'PASS'});save('checks',checks);console.log(JSON.stringify(checks.at(-1)));
+  }catch(error){checks.push({family,status:'FAIL',error:clean(String(error)),stack:clean(error.stack)});save('checks',checks);await snap(page,family+'-failure').catch(()=>{});throw error;}
+  finally{release();await page.unroute('**/api/v1/dispatch',handler);const after=await readAll(page);save(family+'-business-after',after);expect(after).toEqual(before);expect(attemptedWrites).toEqual([]);expect(events.filter(event=>forbidden.has(event.id)||event.id==='/api/chat')).toEqual([]);record();}
+ });
+}

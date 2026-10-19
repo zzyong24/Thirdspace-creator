@@ -1,0 +1,39 @@
+{
+  "startedAtUnix": 1792391995.076828,
+  "outerSeconds": 18300,
+  "command": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "--config=playwright.t1369.production.config.ts",
+    "--project=t1369-normal",
+    "--workers=1",
+    "--retries=0"
+  ],
+  "fixtureRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-production-nrelvzu3",
+  "controlRoot": "/private/tmp/c1369-6oqhvnwq",
+  "ports": [
+    41387,
+    41388,
+    41389
+  ],
+  "policySha256": "5cd42c928b4211f5502db1e4e2faae4bfc8f8f006526a45583a7c27bfe3aba67",
+  "sources": {
+    "frontend/tests/e2e/t1369-dashboard-filter-sidebar-navigation.spec.ts": "6ffb2d65a78cb026b60ce0c08fd8f8626568419faea443b28ff6bb93d09a1ca8",
+    "frontend/playwright.t1369.production.config.ts": "5f812899fb0004b051fde42d33b2318d312b3d935bd93fc4d58c77a7841513e1",
+    "docs/verification/t1369/production/server.mjs": "1fd45777059309137c94524ab6ebd5d46a24c7f69c4d96fcabba17c5151cd32f",
+    "docs/verification/t1369/production/run.py": "107da3b606371d1696a8fa1ba929209fac2c6328df44016ed41bef0a41095a1e",
+    "docs/verification/t1369/production/preflight.mjs": "219b3f7081f15c49f0aa4ef4407d12588f596d35dbd2118f13385a901f3f4ccc",
+    "docs/verification/t1369/production/environment.py": "b576452fe400fda622b5889a35e6ab38f812f30e66345f515b66407d090aead2",
+    "docs/verification/t1369/production/bootstrap_probe.py": "e32d6e21ac7993c405c6a11e662b2257418a7dba5e1315570fe8740d5fd019aa",
+    "docs/verification/t1369/production/loader-probe.mts": "da8160baa8a96311acd2ae0720d9ddf7754b5f96dd748152de630698199cb278"
+  },
+  "approvedSpecSha256": "6f8114cc1f5fbc686abed00a695c4f2ffb8b33d389e47f964cf45d38d36078cb",
+  "proposalSha256": "c74d22eb0366e98fe9a0cdebfaac3292ae46c5b057438c01dcfed727b3a66729",
+  "review": "e8916b9b3f96",
+  "entryFreeBytes": 10458796032,
+  "cacheDeleted": false
+}

@@ -1,0 +1,22 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview.test.ts:
+(pass) preview-scene public 命令使用候选独立 frozen 实际编码端口，活动工程/撤销/选区/epoch不变 [13.87ms]
+(pass) preview-scene owner拒绝在编码前，保留活动稿件 [1.98ms]
+(pass) preview-scene epoch拒绝在编码前，保留活动稿件 [0.60ms]
+(pass) preview-scene before拒绝在编码前，保留活动稿件 [1.06ms]
+(pass) preview-scene candidate拒绝在编码前，保留活动稿件 [0.96ms]
+(pass) preview-scene scene拒绝在编码前，保留活动稿件 [0.58ms]
+(pass) preview-scene file拒绝在编码前，保留活动稿件 [0.62ms]
+(pass) preview-scene duplicate media拒绝在编码前，保留活动稿件 [0.52ms]
+(pass) preview-scene missing media拒绝在编码前，保留活动稿件 [0.75ms]
+(pass) preview-scene request期间取消，迟到buffer不得返回且URL释放 [2.38ms]
+(pass) preview-scene selection epoch期间取消，迟到buffer不得返回且URL释放 [1.58ms]
+(pass) preview-scene owner lifetime期间取消，迟到buffer不得返回且URL释放 [1.42ms]
+(pass) preview-scene 编码失败不能伪造Blob，临时URL释放且旧seek/read命令仍可达 [0.92ms]
+(pass) 原公共load/context/snapshot/seek/apply-tracks/export仍沿真实controller命令入口成功 [1.80ms]
+
+ 14 pass
+ 0 fail
+ 67 expect() calls
+Ran 14 tests across 1 file. [49.00ms]

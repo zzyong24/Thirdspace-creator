@@ -1,11 +1,24 @@
-import {executionBudgetSchema, executionBudgetDeadline, isContinuousExecutionBudget, executionAttemptAvailable, type ExecutionBudget} from "@creatoros/contract/execution-worker";
+import {inheritExecutionRoute,frozenExecutionRoute,type ExecutionRoute} from '@creatoros/contract/execution-worker';
+import {userPreferences,intelligenceSyncRuns,itemSourceObservations} from '@creatoros/backend';
+import {createExecutionRoute} from '@creatoros/contract/execution-worker';
+import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob,assertExecutionTaskWorkspaceAdmission} from '../scheduling';
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
+import {lockWorkspaceMembership,assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {executionBudgetSchema, newExecutionBudgetDeadline, isContinuousExecutionBudget, executionAttemptAvailable, type ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {recoverableAssetCalls} from "./asset-execution-recovery";
 import {executionEvidence} from "../../schema/intelligence";
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
+import {recoverableWorkbenchPlanCalls} from "./workbench-plan-recovery";
+import {recoverableBrowserObservationFailures} from "./workbench-browser-observation-recovery";
+import {recoverableCodexModelCalls,unconfirmedModelCalls,resumableChatModelCalls,recoverableChatModelRetryAnchor,isChatReplayRecoveryError} from "./model-call-recovery";
+import {codexReadDeadlineAvailable} from './codex-read-recovery';
+import {recoverableCodexProposalParents} from './chat-generation-recovery';
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import {withWorkspaceWrite,type WorkspaceWriteTx} from "../../workspace-write";
+import {TRANSCRIBE_COMMAND_RECEIPTS,isTranscribeCommandInput,inspectTranscribeCommand,routeTranscribeCommand,readTranscribeCommandBinding,isTranscribeCommandReplay,appendTranscribeCommandReceipt} from "./transcribe-command-receipt";
 
 import {
   and,
@@ -20,6 +33,7 @@ import {
 import {
   requireAccountId,
   executionTasks,
+  executionControlReceipts,
   executionCalls,
   OwnershipError,
 } from "@creatoros/backend";
@@ -39,7 +53,8 @@ export type PersistentTaskKind =
   | "radar_project_upgrade"
   | "script_candidate"
   | "automation_sync"
-  | "migration";
+  | "migration"
+  | "account_binding";
 export type PersistentTaskOwnerType =
   | "ai_task"
   | "source"
@@ -48,18 +63,62 @@ export type PersistentTaskOwnerType =
   | "transform"
   | "project"
   | "scheduled_job"
-  | "migration";
+  | "migration"
+  | "account_binding";
 export type PersistentTaskStatus = ExecutionTaskResourceV2["status"];
 export type PersistentTaskCommand = "pause" | "resume" | "cancel" | "retry";
 
 type TaskRow = typeof executionTasks.$inferSelect;
 
 export interface PersistentTaskServiceDeps {
+ prepareModelAuthority?(ctx:RequestContext,input:EnqueuePersistentTaskInput):Promise<((tx:Db)=>Promise<void>)|undefined>;
+  /** 私有同store根快照；已有payload/可信父优先，重放不捕获当前选择。 */
+  resolveRootExecutionRoute?(ctx:RequestContext,input:EnqueuePersistentTaskInput,tx:Db):Promise<ExecutionRoute>;
+  observeSettlement?: (event:{taskId:string;userId:string;attempt:number;kind:string;status:string;occurredAt:string})=>Promise<void>;
+  observeAttempt?: (event: PersistentTaskAttemptObservation) => Promise<void>;
   now?: () => string;
   nextId?: (prefix: string) => string;
 }
 
+export type PersistentTaskAttemptObservation = { taskId:string; userId:string; attempt:number; createdAt:string; startedAt:string };
+export type PersistentTaskSettlementObservation = { taskId:string; userId:string; attempt:number; kind:string; status:string; occurredAt:string };
+type TaskObserver = Pick<PersistentTaskServiceDeps, "observeAttempt" | "observeSettlement">;
+type ObserverRegistration = { observer:TaskObserver; pending:Map<string,Promise<void>> };
+const taskObservers = new WeakMap<Db, ObserverRegistration>();
+/** 由正式装配按Db绑定可选typed事实端口；其它Db/事务不会继承或提前观察。 */
+export function registerPersistentTaskObserver(db:Db, observer:TaskObserver) {
+  const registration = { observer, pending:new Map<string,Promise<void>>() };
+  taskObservers.set(db,registration);
+  return {
+    drain:async()=>{await Promise.all([...registration.pending.values()]);},
+    dispose:()=>{if(taskObservers.get(db)===registration)taskObservers.delete(db);},
+  };
+}
+function queueTaskObservation(db:Db, key:string, invoke:()=>Promise<void>|undefined) {
+  const registration = taskObservers.get(db);
+  let pending:Promise<void>;
+  try {
+    const previous = registration?.pending.get(key);
+    // 首个claim立即调用端口，可同步pause上报；同attempt结算等待其记录，业务不等待。
+    pending = (previous ? previous.then(invoke) : Promise.resolve(invoke())).then(()=>{}).catch(()=>{});
+  } catch { return; }
+  if(registration) {
+    registration.pending.set(key,pending);
+    void pending.then(()=>{if(registration.pending.get(key)===pending)registration.pending.delete(key);});
+  }
+}
+export function observeCommittedTaskAttempt(db:Db,event:PersistentTaskAttemptObservation,explicit?:PersistentTaskServiceDeps["observeAttempt"]) {
+  const observe = explicit ?? taskObservers.get(db)?.observer.observeAttempt;
+  if(observe)queueTaskObservation(db,`${event.taskId}:${event.attempt}`,()=>observe(event));
+}
+export function observeCommittedTaskSettlement(db:Db,event:PersistentTaskSettlementObservation,explicit?:PersistentTaskServiceDeps["observeSettlement"]) {
+  const observe = explicit ?? taskObservers.get(db)?.observer.observeSettlement;
+  if(observe)queueTaskObservation(db,`${event.taskId}:${event.attempt}`,()=>observe(event));
+}
+
 export interface EnqueuePersistentTaskInput {
+  /** 私有宿主父执行权，不进入公共enqueue DTO。缺fence仅兼容原share_import内部lease。 */
+  modelRouteParent?:{taskId:string;workerId:string;attempt:number;fenceToken?:string};
   kind: PersistentTaskKind;
   ownerType: PersistentTaskOwnerType;
   ownerId: string;
@@ -83,6 +142,9 @@ export interface PersistentTaskClaim {
 }
 
 export interface PersistentTaskService {
+  hasActiveTasks(ctx:RequestContext):Promise<boolean>;
+  readObservabilityLedger(ctx:RequestContext,cursor:{updatedAt:string;taskId:string}):Promise<Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>>;
+
   enqueue(
     ctx: RequestContext,
     input: EnqueuePersistentTaskInput,
@@ -107,6 +169,8 @@ export interface PersistentTaskService {
       taskIds: string[];
       command: PersistentTaskCommand;
       idempotencyKey: string;
+      /** 仅版本端点内部设置；不是客户端授权事实。 */
+      receiptProtocol?: "transcribe-command-v1";
     },
   ): Promise<ExecutionTaskResourceV2[]>;
   /** Worker-only internal port. It returns one opaque lease, never an arbitrary account listing. */
@@ -116,7 +180,7 @@ export interface PersistentTaskService {
     executionMode?: "model.generate" | "model" | "agentic.run" | "chat.run" | "scheduled.flywheel" | "benchmark.transcribe";
     leaseSeconds?: number;
     /** 仅 worker 内部入场协调：跳过本消费者正在执行的精确属主。 */
-    excludeAccounts?: ReadonlyArray<{userId:string;accountId:string}>;
+    excludeAccounts?: ReadonlyArray<{userId:string;accountId:string|null;groupId?:string|null}>;
   }): Promise<PersistentTaskClaim | null>;
   claimTask(input: {
     taskId: string;
@@ -150,7 +214,7 @@ export interface PersistentTaskService {
     errorCode?: string | null;
     errorMessage?: string | null;
   }): Promise<ExecutionTaskResourceV2>;
-  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[]}): Promise<{
+  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[];includeSafeUnknownResults?:boolean;taskId?:string}): Promise<{
     requeued: number;
     unknownResult: number;
     failed: number;
@@ -175,6 +239,7 @@ function toResource(row: TaskRow): ExecutionTaskResourceV2 {
     id: row.id,
     userId: row.userId,
     accountId: row.accountId,
+    groupId:row.groupId??null,groupVersion:row.groupVersion??null,membershipVersion:row.membershipVersion??null,
     kind: row.kind as PersistentTaskKind,
     ownerType: row.ownerType as PersistentTaskOwnerType,
     ownerId: row.ownerId,
@@ -233,9 +298,10 @@ function claimableAt(stamp: string) {
     AND (${executionTasks.deadlineAt} IS NULL OR ${executionTasks.deadlineAt} > ${stamp})`;
 }
 
-function recoveryDueAt(stamp: string) {
-  return sql`((${executionTasks.status} IN ('running','pause_requested','cancel_requested') AND ${executionTasks.leaseExpiresAt} < ${stamp})
+function recoveryDueAt(stamp: string, includeSafeUnknownResults=false) {
+  const due=sql`((${executionTasks.status} IN ('running','pause_requested','cancel_requested') AND ${executionTasks.leaseExpiresAt} < ${stamp})
     OR (${executionTasks.status} IN ('queued','retry_wait') AND ${executionTasks.deadlineAt} <= ${stamp}))`;
+  return includeSafeUnknownResults?sql`(${due} OR ${executionTasks.status} = 'unknown_result')`:due;
 }
 
 function commandTarget(
@@ -280,7 +346,7 @@ export function createPersistentTaskService(
     taskId: string,
     op: string,
   ): Promise<TaskRow> {
-    const accountId = requireAccountId(ctx.accountId, op);
+    requireWorkspace(ctx);
     const [row] = await db
       .select()
       .from(executionTasks)
@@ -288,7 +354,7 @@ export function createPersistentTaskService(
         and(
           eq(executionTasks.id, taskId),
           eq(executionTasks.userId, ctx.userId),
-          eq(executionTasks.accountId, accountId),
+          workspaceFilter(executionTasks,ctx),
         ),
       )
       .limit(1);
@@ -308,38 +374,102 @@ export function createPersistentTaskService(
   }
 
   return {
+    async hasActiveTasks(ctx){return (await db.execute(sql`SELECT id FROM execution_tasks WHERE user_id=${ctx.userId} AND status IN('running','pause_requested','cancel_requested') LIMIT 1`)).rows.length>0;},
+    async readObservabilityLedger(ctx,cursor){return (await db.execute(sql`SELECT id,user_id,kind,status,attempt,created_at,updated_at FROM execution_tasks WHERE user_id=${ctx.userId} AND (updated_at>${cursor.updatedAt} OR (updated_at=${cursor.updatedAt} AND id>${cursor.taskId})) ORDER BY updated_at,id LIMIT 100`)).rows as Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>;},
     async enqueue(ctx, input) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "execution.tasks.enqueue",
-      );
+      requireWorkspace(ctx);
+      // 精确重放与可信父路由无需捕获当前模型；只在无路由的新根进行锁前准备。
+      const priorRoot=await db.select({id:executionTasks.id}).from(executionTasks).where(and(eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx),eq(executionTasks.kind,input.kind),eq(executionTasks.idempotencyKey,input.idempotencyKey))).limit(1);
+      const checkModelAuthority=!priorRoot.length&&!input.modelRouteParent&&input.payload.executionRoute===undefined?await deps.prepareModelAuthority?.(ctx,input):undefined;
+      return db.transaction(async tx => {
+      const jobPayload=input.payload.job as {id?:string;sourceKind?:string}|undefined;
+      const privateAdmission=input.kind==="automation_sync"&&input.ownerType==="scheduled_job"&&ctx.source==="ingestion"&&!!ctx.groupId&&!!ctx.accountId&&jobPayload?.id===input.ownerId&&PRIVATE_COLLECTION_SOURCE_KINDS.has(jobPayload?.sourceKind??"");
+      const frozen=await lockWorkspaceMembership(tx,ctx,{allowArchived:privateAdmission});
+      if(privateAdmission){const actual=await assertPrivateCollectorJob(tx as unknown as Db,ctx,input.ownerId,jobPayload!.sourceKind);input={...input,payload:{...input.payload,job:{id:actual.id,accountId:actual.accountId,groupId:actual.groupId,groupVersion:actual.groupVersion,membershipVersion:actual.membershipVersion,sourceKind:actual.sourceKind,target:actual.target??{},schedule:actual.schedule,enabled:actual.enabled}}};}
       if (!input.ownerId || !input.idempotencyKey) {
         throw new ExecutionValidationError(
           "ownerId 与 idempotencyKey 不能为空",
         );
       }
-      if (Object.hasOwn(input.payload, "modelIdentity") || Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
+      if (input.kind === "ai_task" && isTranscribeCommandInput(input.payload) && Object.hasOwn(input.payload, TRANSCRIBE_COMMAND_RECEIPTS)) throw new ExecutionValidationError("转写控制回执只能由宿主受理写入");
+      if (Object.hasOwn(input.payload, "filePredispatchRecoveries") || Object.hasOwn(input.payload, "modelIdentity") || Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
         throw new ExecutionValidationError("宿主运行字段不能由入队请求指定");
       }
       const maxAttempts = input.maxAttempts ?? 3;
       if (!Number.isInteger(maxAttempts) || maxAttempts <= 0) {
         throw new ExecutionValidationError("maxAttempts 必须是正整数");
       }
+      const replay=(existing:typeof executionTasks.$inferSelect)=>{
+        // 模型身份、恢复认可等宿主执行状态不改变最初入队请求的幂等身份。
+        const existingRequestPayload = {...asPayload(existing?.payload)};
+        delete existingRequestPayload.modelIdentity;
+        // 宿主补的默认冻结值不改变原入队请求；显式父路由仍逐字核验。
+        if(input.payload.executionRoute===undefined)delete existingRequestPayload.executionRoute;
+        delete existingRequestPayload.filePredispatchRecoveries;
+        delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
+        delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
+        delete existingRequestPayload.__scheduledChild;
+        delete existingRequestPayload.parentExecutionTaskId;
+        if (input.kind === "ai_task" && isTranscribeCommandInput(input.payload)) delete existingRequestPayload[TRANSCRIBE_COMMAND_RECEIPTS];
+        if (
+          !existing ||
+          existing.ownerType !== input.ownerType ||
+          existing.ownerId !== input.ownerId ||
+          stableJson(existingRequestPayload) !== stableJson(input.payload) ||
+          existing.priority !== (input.priority ?? 0) ||
+          existing.maxAttempts !== maxAttempts ||
+          stableJson(existing.costEstimate) !==
+            stableJson(input.costEstimate ?? null)
+        ) {
+          throw new ConflictError(
+            "idempotencyKey 已被另一份任务请求使用",
+          );
+        }
+        return toResource(existing);
+      };
+      const [prior]=await tx.select().from(executionTasks).where(and(eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx),eq(executionTasks.kind,input.kind),eq(executionTasks.idempotencyKey,input.idempotencyKey))).limit(1);
+      if(prior)return replay(prior);
       const stamp = now();
       const executionBudget = input.executionBudget === undefined ? null : executionBudgetSchema.parse(isContinuousExecutionBudget(input.executionBudget)&&input.maxAttempts!==undefined?{...input.executionBudget,maxAttempts:input.maxAttempts}:input.executionBudget);
+      let executionRoute=input.payload.executionRoute===undefined?undefined:frozenExecutionRoute(input.payload);
+      if(input.modelRouteParent){
+        const proof=input.modelRouteParent;
+        const [parent]=await tx.select().from(executionTasks).where(eq(executionTasks.id,proof.taskId)).for('update');
+        if(!parent||parent.userId!==ctx.userId||parent.accountId!==frozen.accountId||parent.groupId!==frozen.groupId||parent.groupVersion!==frozen.groupVersion||parent.membershipVersion!==frozen.membershipVersion||parent.status!=='running'||parent.attempt!==proof.attempt||parent.leaseOwner!==proof.workerId||!parent.leaseExpiresAt||!Number.isFinite(Date.parse(parent.leaseExpiresAt))||Date.parse(parent.leaseExpiresAt)<=Date.parse(stamp)||(proof.fenceToken!==undefined?parent.fenceToken!==proof.fenceToken:parent.kind!=='share_import'))throw new ExecutionValidationError('原父执行权失效，不能创建转写子任务');
+        if(input.kind!=='transcribe'||input.ownerType!=='item'||!['share_import','radar_project_upgrade'].includes(parent.kind))throw new ExecutionValidationError('父执行与转写子任务类型不符');
+        if(parent.deadlineAt!==null&&(!Number.isFinite(Date.parse(parent.deadlineAt))||Date.parse(parent.deadlineAt)<=Date.parse(stamp)))throw new ExecutionValidationError('原父执行期限已耗尽');
+        const parentPayload=asPayload(parent.payload);
+        if(input.payload.itemId!==input.ownerId)throw new ExecutionValidationError('转写作品与原请求不符');
+        if(parent.kind==='radar_project_upgrade'){
+          if(parent.ownerType!=='item'||parent.ownerId!==input.ownerId||parentPayload.itemId!==input.ownerId)throw new ExecutionValidationError('雷达父任务与转写作品不符');
+        }else{
+          if(parent.ownerType!=='item_import'||parentPayload.transcribeAfterImport!==true)throw new ExecutionValidationError('原分享任务没有转录授权');
+          // 原同步运行/作品观察是导入事实，不能从链接文本或幂等前缀猜作品。
+          const observations=await tx.select({id:itemSourceObservations.id}).from(itemSourceObservations).innerJoin(intelligenceSyncRuns,and(eq(itemSourceObservations.runId,intelligenceSyncRuns.id),eq(itemSourceObservations.sourceId,intelligenceSyncRuns.sourceId))).where(and(eq(intelligenceSyncRuns.executionTaskId,parent.id),eq(intelligenceSyncRuns.userId,parent.userId),workspaceFilter(intelligenceSyncRuns,{accountId:parent.accountId,groupId:parent.groupId}),eq(itemSourceObservations.userId,parent.userId),workspaceFilter(itemSourceObservations,{accountId:parent.accountId,groupId:parent.groupId}),eq(itemSourceObservations.itemId,input.ownerId))).limit(1);
+          if(!observations.length)throw new ExecutionValidationError('原分享任务尚未导入此转写作品');
+        }
+        executionRoute=inheritExecutionRoute(parent.payload);
+        if(input.payload.executionRoute!==undefined&&stableJson(input.payload.executionRoute)!==stableJson(executionRoute))throw new ConflictError('指定路由与原父执行不符');
+      }
+      if(!executionRoute){
+        await checkModelAuthority?.(tx as unknown as Db);
+        if(deps.resolveRootExecutionRoute)executionRoute=frozenExecutionRoute({executionRoute:await deps.resolveRootExecutionRoute(ctx,input,tx as unknown as Db)});
+        else{const [preference]=await tx.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId));executionRoute=createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');}
+      }
+      await checkModelAuthority?.(tx as unknown as Db);
       const row = {
         executionBudget,
-        deadlineAt: executionBudget === null ? null : executionBudgetDeadline(executionBudget, stamp),
+        deadlineAt: executionBudget === null ? null : newExecutionBudgetDeadline(executionBudget, stamp),
         id: nextId("execution-task"),
         userId: ctx.userId,
-        accountId,
+        accountId:frozen.accountId,groupId:frozen.groupId,groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion,
         kind: input.kind,
         ownerType: input.ownerType,
         ownerId: input.ownerId,
         status: "queued",
         priority: input.priority ?? 0,
         idempotencyKey: input.idempotencyKey,
-        payload: input.payload,
+        payload: {...input.payload,executionRoute},
         checkpoint: null,
         leaseOwner: null,
         leaseExpiresAt: null,
@@ -352,20 +482,20 @@ export function createPersistentTaskService(
         createdAt: stamp,
         updatedAt: stamp,
       };
-      const [inserted] = await db
+      const [inserted] = await tx
         .insert(executionTasks)
         .values(row)
         .onConflictDoNothing()
         .returning();
       if (inserted) return toResource(inserted);
 
-      const [existing] = await db
+      const [existing] = await tx
         .select()
         .from(executionTasks)
         .where(
           and(
             eq(executionTasks.userId, ctx.userId),
-            eq(executionTasks.accountId, accountId),
+            workspaceFilter(executionTasks,ctx),
             eq(executionTasks.kind, input.kind),
             eq(executionTasks.idempotencyKey, input.idempotencyKey),
           ),
@@ -375,13 +505,13 @@ export function createPersistentTaskService(
         // source_sync 有 active-owner 部分唯一索引。手动点击与定时 tick 可能用
         // 不同 idempotencyKey 同时排队；唯一冲突后复用赢家，而不是把正常并发
         // 误报为 500。run 层随后也会按 executionTaskId 复用同一条运行记录。
-        const [activeOwnerTask] = await db
+        const [activeOwnerTask] = await tx
           .select()
           .from(executionTasks)
           .where(
             and(
               eq(executionTasks.userId, ctx.userId),
-              eq(executionTasks.accountId, accountId),
+              workspaceFilter(executionTasks,ctx),
               eq(executionTasks.kind, input.kind),
               eq(executionTasks.ownerType, input.ownerType),
               eq(executionTasks.ownerId, input.ownerId),
@@ -397,28 +527,9 @@ export function createPersistentTaskService(
           .limit(1);
         if (activeOwnerTask) return toResource(activeOwnerTask);
       }
-      // 模型身份、恢复认可等宿主执行状态不改变最初入队请求的幂等身份。
-      const existingRequestPayload = {...asPayload(existing?.payload)};
-      delete existingRequestPayload.modelIdentity;
-      delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
-      delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
-      delete existingRequestPayload.__scheduledChild;
-      delete existingRequestPayload.parentExecutionTaskId;
-      if (
-        !existing ||
-        existing.ownerType !== input.ownerType ||
-        existing.ownerId !== input.ownerId ||
-        stableJson(existingRequestPayload) !== stableJson(input.payload) ||
-        existing.priority !== (input.priority ?? 0) ||
-        existing.maxAttempts !== maxAttempts ||
-        stableJson(existing.costEstimate) !==
-          stableJson(input.costEstimate ?? null)
-      ) {
-        throw new ConflictError(
-          "idempotencyKey 已被另一份任务请求使用",
-        );
-      }
-      return toResource(existing);
+      if(!existing)throw new ConflictError('idempotencyKey 已被另一份任务请求使用');
+      return replay(existing);
+      });
     },
 
     async get(ctx, taskId) {
@@ -428,13 +539,10 @@ export function createPersistentTaskService(
     },
 
     async list(ctx, query = {}) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "execution.tasks.listPersistent",
-      );
+      requireWorkspace(ctx);
       const filters = [
         eq(executionTasks.userId, ctx.userId),
-        eq(executionTasks.accountId, accountId),
+        workspaceFilter(executionTasks,ctx),
       ];
       if (query.kind) filters.push(eq(executionTasks.kind, query.kind));
       if (query.ownerId) {
@@ -462,10 +570,11 @@ export function createPersistentTaskService(
     },
 
     async command(ctx, input) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "execution.tasks.command",
-      );
+      if (input.receiptProtocol !== undefined && input.receiptProtocol !== "transcribe-command-v1") {
+        throw new ExecutionValidationError("不支持的转写控制恢复协议");
+      }
+      await assertWritableWorkspace(db,ctx);
+      requireWorkspace(ctx);
       const taskIds = [...new Set(input.taskIds)];
       if (
         taskIds.length === 0 ||
@@ -476,8 +585,24 @@ export function createPersistentTaskService(
           "taskIds 必须非空且不得重复，idempotencyKey 不能为空",
         );
       }
-      return db.transaction(async (tx) => {
-        const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,accountId)));
+      if (input.receiptProtocol === "transcribe-command-v1" && taskIds.length !== 1) {
+        throw new ExecutionValidationError("转写控制恢复协议仅支持单个直接转写任务");
+      }
+      // SEMANTIC_BOUNDARY_ALLOW: 摘要只核验用户明确命令和目标 ID，不做创作选择。
+      const requestDigest=createHash("sha256").update(JSON.stringify({command:input.command,taskIds:[...taskIds].sort()})).digest("hex");
+      const accountId=ctx.accountId??null;
+      const receiptWhere=and(eq(executionControlReceipts.userId,ctx.userId),accountId?eq(executionControlReceipts.accountId,accountId):sql`false`,eq(executionControlReceipts.idempotencyKey,input.idempotencyKey));
+      const restore=(receipt:typeof executionControlReceipts.$inferSelect)=>{
+        if(receipt.requestDigest!==requestDigest)throw new ConflictError("同一命令请求号对应不同输入");
+        const resources=receipt.result as ExecutionTaskResourceV2[];
+        return taskIds.map(id=>{const resource=resources.find(item=>item.id===id);if(!resource)throw new ConflictError("原命令回执缺少目标");return resource;});
+      };
+      const routeRows=await db.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
+      const workspaceWrite=await routeTranscribeCommand(db,ctx,routeRows,taskIds,input.idempotencyKey);
+      let committedChanges:TaskRow[]=[];
+      const execute=async(tx:WorkspaceWriteTx)=>{
+        committedChanges=[];
+        const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
         const lockIds=[...new Set([...taskIds,...discovered.map(scheduledChildId).filter((id):id is string=>Boolean(id))])];
         const rows = await tx
           .select()
@@ -486,7 +611,7 @@ export function createPersistentTaskService(
             and(
               inArray(executionTasks.id, lockIds),
               eq(executionTasks.userId, ctx.userId),
-              eq(executionTasks.accountId, accountId),
+              workspaceFilter(executionTasks,ctx),
             ),
           ).orderBy(asc(executionTasks.id)).for("update");
         if (rows.length !== lockIds.length) {
@@ -496,6 +621,28 @@ export function createPersistentTaskService(
         const parents=rows.filter(row=>taskIds.includes(row.id)&&scheduledChildId(row));
         for(const parent of parents){const child=rows.find(row=>row.id===scheduledChildId(parent));if(!child||asPayload(child.payload).parentExecutionTaskId!==parent.id)throw new ConflictError('调度链接变更，请重新执行控制命令');assertScheduledChild(parent,child);}
         const effectiveIds=[...new Set(taskIds.map(id=>scheduledChildId(rows.find(row=>row.id===id)!)??id))];
+        const transcribeBindings=new Map<string,NonNullable<Awaited<ReturnType<typeof readTranscribeCommandBinding>>>>();
+        for(const row of rows){if(!inspectTranscribeCommand(row,taskIds,input.idempotencyKey))continue;const bound=await readTranscribeCommandBinding(tx,row,ctx);if(bound)transcribeBindings.set(row.id,bound);}
+        const receiptTaskId=taskIds.length===1&&effectiveIds.length===1&&effectiveIds[0]===taskIds[0]&&!parents.length&&!transcribeBindings.get(taskIds[0]!)?.delegated&&transcribeBindings.has(taskIds[0]!)?taskIds[0]:undefined;
+        // 先核新协议的真实适用域，再回放已有原意图。
+        if (input.receiptProtocol === "transcribe-command-v1" && !receiptTaskId) {
+          throw new ExecutionValidationError("转写控制恢复协议仅支持单个直接转写任务");
+        }
+        // mixed输入若包含已受理原任务，完整target摘要必须一致；不能借批量绕回执。
+        for(const bound of transcribeBindings.values()){
+          if(isTranscribeCommandReplay(bound,input.idempotencyKey,input.command,taskIds)){if(!workspaceWrite)throw new ConflictError("转写控制回执已改变，请沿原任务回读同一意图");return taskIds.map(target=>toResource(rows.find(row=>row.id===target)!));}
+        }
+        // 若预查询后真实绑定改变，不在未受workspace写锁保护的事务里新建受理。
+        if(receiptTaskId&&!workspaceWrite)throw new ConflictError('转写控制绑定已改变，请沿原任务重试同一意图');
+        const [receipt]=await tx.select().from(executionControlReceipts).where(receiptWhere);
+        if(receipt){
+          if(input.receiptProtocol==="transcribe-command-v1")throw new ConflictError("原转写命令未保存此版本的受理回执，请保留原任务核对");
+          return restore(receipt);
+        }
+        // 绑定只有开始、核对和取消协议；重开必须终态后用新意图，不借通用控制平行执行扫码。
+        if(input.command!=="cancel"&&rows.some(row=>effectiveIds.includes(row.id)&&row.kind==="account_binding")){
+          throw new ExecutionValidationError("扫码绑定仅允许取消；完成停止后请重新发起绑定，不支持暂停、继续或重试");
+        }
         // 旧素材核对态没有可证明的模型输入/回执，不能通过通用继续或重试获得执行权。
         // 同时覆盖升级前已保存为 waiting_user 的记录；已有候选采纳不经过此控制端口。
         if(input.command==='resume'||input.command==='retry'){
@@ -504,9 +651,31 @@ export function createPersistentTaskService(
             if(recovery?.mode==='review')throw new ConflictError('旧素材提交结果待核对，仅允许取消或采纳已有候选，不能继续或重试');
           }
         }
+        const resumeModels=new Map<string,typeof executionCalls.$inferSelect[]>();
+        const resumeAnchors=new Map<string,string>();
+        const codexReadOnlyResume=new Set<string>();
+        const blockedCodexResume=new Set<string>();
+        if(input.command==="resume"){
+          for(const row of rows.filter(row=>effectiveIds.includes(row.id)&&["paused","unknown_result"].includes(row.status))){
+            const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).orderBy(asc(executionCalls.sequence));
+            const originalNative=recoverableCodexModelCalls(row,calls),pending=calls.filter(call=>['started','unknown'].includes(call.status));
+            const codexParents=recoverableCodexProposalParents(row,calls);
+            // 未知工具动作不能借模型恢复许可重放；原预算/期限/尝试次数仍守同一任务。
+            if(originalNative.length&&!calls.some(call=>call.status==='reserved')&&pending.every(call=>originalNative.some(native=>native.id===call.id)||codexParents.includes(call.id))&&
+              row.leaseOwner===null&&row.leaseExpiresAt===null&&executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts)&&
+              codexReadDeadlineAvailable(row,now()))codexReadOnlyResume.add(row.id);
+            const frozen=asPayload(row.payload),engine=(frozen.executionRoute as {engine?:string}|undefined)?.engine??(frozen.modelInput as {executionEngine?:string}|undefined)?.executionEngine;
+            if(engine==='codex'&&pending.length&&!codexReadOnlyResume.has(row.id))blockedCodexResume.add(row.id);
+            const safe=resumableChatModelCalls(row,calls);
+            if(safe.length)resumeModels.set(row.id,safe);
+            else {const anchor=recoverableChatModelRetryAnchor(row,calls);if(anchor)resumeAnchors.set(row.id,anchor.id);}
+          }
+        }
         const targetById = new Map(
           rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,
+            blockedCodexResume.has(row.id) ? row.status as PersistentTaskStatus :
+            input.command==='resume' && ['paused','unknown_result'].includes(row.status) && (resumeModels.has(row.id)||resumeAnchors.has(row.id)||codexReadOnlyResume.has(row.id)) ? 'queued' :
             (input.command==='pause' && row.status==='queued' && (parents.some(parent=>scheduledChildId(parent)===row.id) || ['self.traffic','self.metrics'].includes((asPayload(row.payload).modelInput as {kind?:string;sourceKind?:string}|undefined)?.sourceKind??''))) ? 'paused' : commandTarget(
               row.status as PersistentTaskStatus,
               input.command,
@@ -522,6 +691,11 @@ export function createPersistentTaskService(
           const target = targetById.get(taskId);
           if (!target) throw new OwnershipError("Execution task not found");
           const previous = rows.find(row => row.id === taskId)!;
+          const recoveredModels=resumeModels.get(taskId);
+          // 不结算未知费用；保留原调用、预留预算及摘要，新租约通过 retryOfCallId 沿原操作键重试。
+          if(recoveredModels){
+            for(const call of recoveredModels)await tx.update(executionCalls).set({status:"superseded",updatedAt:stamp}).where(eq(executionCalls.id,call.id));
+          }
           if(input.command==='retry')await dailyRuns.reopenForExecutionRetry(ctx,taskId,tx);
           let acknowledgedPayload: Record<string, unknown> | undefined;
           if (input.command === "resume" && previous.status === "waiting_user") {
@@ -531,6 +705,9 @@ export function createPersistentTaskService(
             acknowledgedPayload = {...asPayload(previous.payload), researchBlockedAcknowledgedThroughSequence: calls.at(-1)?.sequence ?? 0,
               researchBlockedAcknowledgedCallIds: calls.filter(isAcknowledgableResearchBlock).map(call => call.id)};
           }
+          if(taskId===receiptTaskId){
+            acknowledgedPayload=appendTranscribeCommandReceipt(transcribeBindings.get(taskId)!,acknowledgedPayload??asPayload(previous.payload),input.idempotencyKey,input.command,taskIds,previous.attempt,stamp);
+          }
           const clearLease =
             target === "queued" ||
             target === "cancelled" ||
@@ -539,6 +716,9 @@ export function createPersistentTaskService(
             .update(executionTasks)
             .set({
               status: target,
+              ...(recoveredModels ? {retryOfCallId:recoveredModels.at(-1)!.id,lastErrorCode:null,lastErrorMessage:null} : {}),
+              ...(resumeAnchors.has(taskId)?{retryOfCallId:resumeAnchors.get(taskId)!,lastErrorCode:null,lastErrorMessage:null}:{}),
+              ...(codexReadOnlyResume.has(taskId)?{lastErrorCode:null,lastErrorMessage:null}:{}),
               ...(acknowledgedPayload ? {payload: acknowledgedPayload} : {}),
               ...(clearLease
                 ? {
@@ -561,8 +741,28 @@ export function createPersistentTaskService(
           updated.push(row);
         }
         for(const parent of parents){const child=updated.find(row=>row.id===scheduledChildId(parent))!;const [projected]=await tx.update(executionTasks).set({...scheduledParentProjection(child),updatedAt:stamp}).where(eq(executionTasks.id,parent.id)).returning();updated.push(projected!);}
-        return taskIds.map(id=>toResource(updated.find(row=>row.id===id)!));
-      });
+        committedChanges=updated;
+        const result=taskIds.map(id=>toResource(updated.find(row=>row.id===id)!));
+        if(accountId)await tx.insert(executionControlReceipts).values({id:nextId("control-receipt"),userId:ctx.userId,accountId,idempotencyKey:input.idempotencyKey,requestDigest,result,createdAt:stamp});
+        return result;
+      };
+      const committed=async(operation:()=>Promise<ExecutionTaskResourceV2[]>)=>{
+        const result=await operation();
+        for(const row of committedChanges)observeCommittedTaskSettlement(db,{taskId:row.id,userId:row.userId,attempt:row.attempt,kind:row.kind,status:row.status,occurredAt:row.updatedAt},deps.observeSettlement);
+        return result;
+      };
+      try{return await committed(()=>workspaceWrite?withWorkspaceWrite(db,ctx,execute):db.transaction(execute));}catch(error){
+        // 唯一冲突后事务已回滚；重新鉴权再恢复真实赢家，不重复执行命令。
+        const owned=await db.select({id:executionTasks.id}).from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
+        if(owned.length!==taskIds.length)throw new OwnershipError("Execution task not found");
+        const [winner]=await db.select().from(executionControlReceipts).where(receiptWhere);
+        if(winner){
+          if(workspaceWrite)return committed(()=>withWorkspaceWrite(db,ctx,execute));
+          if(input.receiptProtocol==="transcribe-command-v1")return committed(()=>db.transaction(execute));
+          return restore(winner);
+        }
+        throw error;
+      }
     },
 
     async claimNext(input) {
@@ -575,14 +775,14 @@ export function createPersistentTaskService(
       return db.transaction(async (tx) => {
         const filters = [claimableAt(stamp)];
         for(const owner of input.excludeAccounts??[]){
-          if(!owner.userId||!owner.accountId)throw new ExecutionValidationError("排除账号必须有完整属主");
-          filters.push(sql`NOT (${executionTasks.userId} = ${owner.userId} AND ${executionTasks.accountId} = ${owner.accountId})`);
+          if(!owner.userId||(!owner.accountId&&!owner.groupId))throw new ExecutionValidationError("排除账号必须有完整属主");
+          filters.push(sql`NOT (${executionTasks.userId} = ${owner.userId} AND ${workspaceFilter(executionTasks,{accountId:owner.accountId,groupId:owner.groupId})})`);
         }
         if (input.executionMode === "benchmark.transcribe") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'benchmark.transcribe'`);
         if (input.executionMode === "scheduled.flywheel") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'scheduled.flywheel'`);
         if (input.executionMode === "chat.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'chat.run'`);
         if (input.executionMode === "agentic.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'agentic.run'`);
-        if (input.executionMode === "model") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' IN ('model.generate','model.structured','asset.generate','transcribe.douyin')`);
+        if (input.executionMode === "model") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' IN ('model.generate','model.structured','asset.generate','transcribe.douyin','asset.asr')`);
         if (input.executionMode === "model.generate") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'model.generate'`);
         if (input.kinds) {
           filters.push(inArray(executionTasks.kind, input.kinds));
@@ -601,9 +801,9 @@ export function createPersistentTaskService(
           .from(executionTasks)
           .where(and(...filters))
           .orderBy(desc(executionTasks.priority), asc(executionTasks.createdAt), asc(executionTasks.id))
-          .limit(1)
-          .for("update", {skipLocked: true});
+          .limit(1);
         for (const candidate of candidates) {
+          try{await assertExecutionTaskWorkspaceAdmission(tx,candidate);}catch(error){await tx.update(executionTasks).set({status:"blocked",lastErrorCode:"STALE_WORKSPACE_MEMBERSHIP",lastErrorMessage:error instanceof Error?error.message:"任务归属已失效",updatedAt:stamp}).where(eq(executionTasks.id,candidate.id));continue;}
           const [claimed] = await tx
             .update(executionTasks)
             .set({
@@ -635,7 +835,7 @@ export function createPersistentTaskService(
           }
         }
         return null;
-      });
+      }).then(result=>{if(result){observeCommittedTaskAttempt(db,{taskId:result.task.id,userId:result.task.userId,attempt:result.lease.attempt,createdAt:result.task.createdAt,startedAt:stamp},deps.observeAttempt);}return result;});
     },
 
     async claimTask(input) {
@@ -646,7 +846,11 @@ export function createPersistentTaskService(
           "taskId 与 workerId 不能为空",
         );
       }
-      const [claimed] = await db
+      return db.transaction(async tx=>{
+      const [snapshot]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,input.taskId),claimableAt(stamp)));
+      if(!snapshot)return null;
+      try{await assertExecutionTaskWorkspaceAdmission(tx,snapshot);}catch(error){await tx.update(executionTasks).set({status:"blocked",lastErrorCode:"STALE_WORKSPACE_MEMBERSHIP",lastErrorMessage:error instanceof Error?error.message:"任务归属已失效",updatedAt:stamp}).where(eq(executionTasks.id,snapshot.id));return null;}
+      const [claimed] = await tx
         .update(executionTasks)
         .set({
           status: "running",
@@ -674,6 +878,7 @@ export function createPersistentTaskService(
           fenceToken: claimed.fenceToken!,
         },
       };
+      }).then(result=>{if(result){observeCommittedTaskAttempt(db,{taskId:result.task.id,userId:result.task.userId,attempt:result.lease.attempt,createdAt:result.task.createdAt,startedAt:stamp},deps.observeAttempt);}return result;});
     },
 
     async heartbeat(input) {
@@ -763,23 +968,28 @@ export function createPersistentTaskService(
       if (!updated) {
         throw new ConflictError("控制命令确认时租约或任务状态已变化");
       }
+      observeCommittedTaskSettlement(db,{taskId:updated.id,userId:updated.userId,attempt:updated.attempt,kind:updated.kind,status:updated.status,occurredAt:updated.updatedAt},deps.observeSettlement);
       return toResource(updated);
     },
 
     async finish(input) {
       const current = await getWorkerRow(input);
       if(input.status==='waiting_user'||input.status==='retry_wait'){
-        // 非模型等待门：来源读取，或只串联持久子任务的雷达父项；有调用账本一律不走此门。
+        // 无调用账本等待门：来源读取、雷达父项，以及尚未发出模型调用的连续生成任务。
+        // 生成一旦有调用事实，必须走 execution-worker-outcome 的拒绝/未知判定，不能绕账本重试。
         return db.transaction(async tx=>{
           const [row]=await tx.select().from(executionTasks).where(eq(executionTasks.id,input.taskId)).for('update');
           const stamp=now();
-          if(!row||!((row.kind==='share_import'&&row.ownerType==='item_import')||(row.kind==='radar_project_upgrade'&&row.ownerType==='item'))||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('任务等待恢复缺少当前执行凭证');
+          const sourceRead=row?.kind==='share_import'&&row.ownerType==='item_import';
+          const radarParent=row?.kind==='radar_project_upgrade'&&row.ownerType==='item';
+          const continuousGeneration=Boolean(row&&((row.kind==='topic_preview'&&row.ownerType==='transform')||(row.kind==='script_candidate'&&row.ownerType==='project'))&&isContinuousExecutionBudget(row.executionBudget));
+          if(!row||!(sourceRead||radarParent||continuousGeneration)||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('任务等待恢复缺少当前执行凭证');
           const calls=await tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).limit(1);
           if(calls.length)throw new ConflictError('存在调用账本的任务不能走无副作用读取重试');
           let status:string=input.status,retryAt:string|null=null;
           if(input.status==='retry_wait'){
             if(input.retryAfterMs!==undefined&&(!Number.isFinite(input.retryAfterMs)||input.retryAfterMs<0))throw new ConflictError('任务恢复等待时间非法');
-            const delay=row.kind==='radar_project_upgrade'?Math.max(1000,input.retryAfterMs??2000):Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
+            const delay=row.kind==='radar_project_upgrade'||continuousGeneration?Math.max(1000,input.retryAfterMs??1000):Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
             const next=Date.parse(stamp)+delay;
             const maxCalls=(row.executionBudget as {maxCalls?:number}|null)?.maxCalls;
             const limit=typeof maxCalls==='number'&&Number.isInteger(maxCalls)&&maxCalls>0?Math.min(row.maxAttempts,maxCalls):row.maxAttempts;
@@ -787,11 +997,11 @@ export function createPersistentTaskService(
             else retryAt=new Date(next).toISOString();
           }
           const [updated]=await tx.update(executionTasks).set({status,retryAt,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,
-            lastErrorCode:status==='failed'?'SHARE_READ_RETRY_EXHAUSTED':input.errorCode??null,
-            lastErrorMessage:status==='failed'?'分享读取重试次数已用尽，请检查网络或原链接':input.errorMessage??null,updatedAt:stamp,
+            lastErrorCode:status==='failed'?(continuousGeneration?'GENERATION_RECOVERY_EXHAUSTED':'SHARE_READ_RETRY_EXHAUSTED'):input.errorCode??null,
+            lastErrorMessage:status==='failed'?(continuousGeneration?'生成恢复策略已停止，请保留原任务并查看诊断':'分享读取重试次数已用尽，请检查网络或原链接'):input.errorMessage??null,updatedAt:stamp,
           }).where(and(eq(executionTasks.id,row.id),eq(executionTasks.fenceToken,input.fenceToken))).returning();
           if(!updated)throw new ConflictError('分享读取恢复时执行凭证已变化');return toResource(updated);
-        });
+        }).then(result=>{observeCommittedTaskSettlement(db,{taskId:result.id,userId:result.userId,attempt:result.attempt,kind:result.kind,status:result.runtimeStatus??result.status,occurredAt:result.updatedAt},deps.observeSettlement);return result;});
       }
       if(input.fenceToken&&input.fenceToken!==current.fenceToken)throw new ConflictError("任务完成时 fence 已变化");
       const legal =
@@ -828,6 +1038,7 @@ export function createPersistentTaskService(
         )
         .returning();
       if (!updated) throw new ConflictError("任务完成时租约已变化");
+      observeCommittedTaskSettlement(db,{taskId:updated.id,userId:updated.userId,attempt:updated.attempt,kind:updated.kind,status:updated.status,occurredAt:updated.updatedAt},deps.observeSettlement);
       return toResource(updated);
     },
 
@@ -840,29 +1051,86 @@ export function createPersistentTaskService(
         paused: 0,
         cancelled: 0,
       };
+      const recoveredChanges:PersistentTaskSettlementObservation[]=[];
       await db.transaction(async (tx) => {
         const expired = await tx
           .select()
           .from(executionTasks)
           .where(
-            and(recoveryDueAt(stamp), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined),
+            and(recoveryDueAt(stamp,input.includeSafeUnknownResults), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined, input.taskId ? eq(executionTasks.id,input.taskId) : undefined),
           ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
+          // 绑定取消须由专属恢复端口确认 owned staging 窗口停止及清理，不能按租约期限假报已取消。
+          if(row.kind === "account_binding")continue;
           let target: PersistentTaskStatus | "unknown_result";
-          const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          const calls = ["ai_task","topic_preview","script_candidate"].includes(row.kind) ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          // 丢锚路径在专用helper核验租约；不以该新增门替代计划/产物等既有专用恢复证明。
+          const retryAnchor=recoverableChatModelRetryAnchor(row,calls);
+          const lastPhysical=calls.slice().sort((a,b)=>a.sequence-b.sequence).at(-1);
+          const needsChatAnchor=(asPayload(row.payload).modelInput as {kind?:string}|undefined)?.kind==="chat.run"&&
+            (isChatReplayRecoveryError(row.lastErrorCode)||(lastPhysical?.kind==="model"&&lastPhysical.status==="superseded"));
+          // 已有started/unknown继续走下方原专用恢复；本门只处理不再有在途事实的丢锚族。
+          if(row.status==="unknown_result"&&needsChatAnchor&&!retryAnchor&&!calls.some(call=>call.status==="started"||call.status==="unknown"))continue;
+          // Only proven observation protocols can close a missing read receipt.
+          // Preserve the original call and unknown evidence; never repeat I/O.
+          for(const recovered of await recoverableBrowserObservationFailures(row,calls,stamp)){
+            const patch={status:"settled",resultText:recovered.resultText,totalTokens:0,usage:{totalTokens:0},updatedAt:stamp};
+            const [updated]=await tx.update(executionCalls).set(patch).where(and(eq(executionCalls.id,recovered.call.id),
+              eq(executionCalls.executionTaskId,row.id),eq(executionCalls.status,recovered.call.status),
+              eq(executionCalls.toolExecutionClaimId,recovered.call.toolExecutionClaimId!),eq(executionCalls.inputDigest,recovered.call.inputDigest))).returning();
+            if(updated)Object.assign(recovered.call,updated);
+          }
           const atomicPending=uncommittedChatTaskCalls(row,calls);
           // 子任务与回执严格同事务；只回收尚未提交的纯事务工具，不重置调用或预算。
           for(const callId of atomicPending){
             await tx.update(executionCalls).set({status:"reserved",startedAttempt:null,updatedAt:stamp}).where(eq(executionCalls.id,callId));
             calls.find(call=>call.id===callId)!.status="reserved";
           }
-          const recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
-          const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
-          const completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          // 计划只有本地 CAS 写入；严格核对冻结定义、原模型提案与现存计划后，
+          // 由新租约沿原调用重放。清除旧执行 claim，其他未知工具保持待对账。
+          for(const callId of await recoverableWorkbenchPlanCalls(row,calls,stamp)){
+            const patch={status:"reserved",startedAttempt:null,toolExecutionClaimId:null,updatedAt:stamp};
+            await tx.update(executionCalls).set(patch).where(eq(executionCalls.id,callId));
+            Object.assign(calls.find(call=>call.id===callId)!,patch);
+          }
+          // 文本模型只产候选，没有业务副作用。进程退出时未能结算的模型调用可在
+          // 原操作键上记为 superseded，再由重试预算控制续跑；工具和异步 provider job
+          // 仍须保持未知并按原键对账。
+          const originalRetryOfCallId=row.retryOfCallId;
+          const safeModels=["running","unknown_result"].includes(row.status)?unconfirmedModelCalls(row,calls):[];
+          const safeModelStatuses=new Map(safeModels.map(call=>[call.id,call.status]));
+          const safeModelIds=new Set(safeModels.map(call=>call.id));
+          for(const call of safeModels)call.status="superseded";
+          if(safeModels.length)row.retryOfCallId=safeModels.sort((a,b)=>a.sequence-b.sequence).at(-1)!.id;
+          let recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
+          const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,groupId:row.groupId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
+          let completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          const unsafeUnknown=calls.some(call=>(call.status==="started"||call.status==="unknown")&&!safeModelIds.has(call.id)&&!completedParents.includes(call.id));
+          const recoveredModels=safeModels.length>0&&!unsafeUnknown;
+          if(recoveredModels){
+            for(const call of safeModels)await tx.update(executionCalls).set({status:"superseded",updatedAt:stamp}).where(eq(executionCalls.id,call.id));
+          }else if(safeModels.length){
+            for(const call of safeModels)call.status=safeModelStatuses.get(call.id)!;
+            row.retryOfCallId=originalRetryOfCallId;
+            recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
+            completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          }
+          // 外部副作用仍有 started/unknown 回执时继续等待专用对账。专用对账已经把原调用
+          // 结算后，允许同一任务重新入队；否则产物虽已恢复，Agent loop 仍会永久停住。
+          const unresolvedCalls=calls.some(call=>call.status==="started"||call.status==="unknown");
+          const nativeReads=recoverableCodexModelCalls(row,calls);
+          const nativeReadIds=new Set(nativeReads.map(call=>call.id));
+          const codexParents=recoverableCodexProposalParents(row,calls);
+          const codexReadOnly=nativeReads.length>0&&!calls.some(call=>call.status==='reserved')&&calls.every(call=>!['started','unknown'].includes(call.status)||nativeReadIds.has(call.id)||codexParents.includes(call.id)||completedParents.includes(call.id))&&
+            codexReadDeadlineAvailable(row,stamp)&&executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts);
+          if(row.status==="unknown_result"&&!recoveredModels&&unresolvedCalls&&!codexReadOnly)continue;
+
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {
             target = "cancelled";
+          } else if (codexReadOnly) {
+            target="queued";
           } else if (calls.some(call => (call.status === "started" && !completedParents.includes(call.id)) || (call.status === "unknown" && !assetCalls.includes(call.id)))) {
             target = "unknown_result";
           } else if (row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp)) {
@@ -885,6 +1153,8 @@ export function createPersistentTaskService(
               leaseOwner: null,
               leaseExpiresAt: null,
               heartbeatAt: null,
+              ...(target === "queued" && recoveredModels ? {retryOfCallId:row.retryOfCallId,lastErrorCode:null,lastErrorMessage:null} : {}),
+              ...(target === "queued" && retryAnchor ? {retryOfCallId:retryAnchor.id,lastErrorCode:null,lastErrorMessage:null} : {}),
               ...(target === "unknown_result" ? {lastErrorCode:"CALL_RESULT_UNKNOWN",lastErrorMessage:"已有调用提交结果未知，须同键对账"} : {}),
               ...(target === "failed"
                 ? {
@@ -899,10 +1169,11 @@ export function createPersistentTaskService(
                 eq(executionTasks.id, row.id),
                 eq(executionTasks.status, row.status),
                 eq(executionTasks.attempt, row.attempt),
-                recoveryDueAt(stamp),
+                recoveryDueAt(stamp,input.includeSafeUnknownResults),
               ),
             ).returning({id: executionTasks.id});
           if (updated.length) {
+            recoveredChanges.push({taskId:row.id,userId:row.userId,attempt:row.attempt,kind:row.kind,status:target,occurredAt:stamp});
             if (target === "queued") report.requeued++;
             else if (target === "paused") report.paused++;
             else if (target === "cancelled") report.cancelled++;
@@ -911,6 +1182,7 @@ export function createPersistentTaskService(
           }
         }
       });
+      for(const event of recoveredChanges)observeCommittedTaskSettlement(db,event,deps.observeSettlement);
       return report;
     },
   };

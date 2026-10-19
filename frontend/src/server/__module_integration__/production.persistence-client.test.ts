@@ -6,6 +6,7 @@ import {
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { PRODUCTION_OP_IDS } from "@creatoros/backend/modules/production";
+import { productionOperations } from "../../../../contract/src/operations/production";
 
 // Step 4/6 — the 5 production ops are registered into the composite
 // (PERSISTED_OPS) and the get → put → segments → export → complete chain
@@ -55,6 +56,26 @@ async function createRealOutput(owner: RequestContext): Promise<string> {
   return output.data.id;
 }
 
+// 正式上传/完成端口与同一隔离库；对象字节及媒体探测由原 mock storage 提供。
+async function createResultAsset(owner: RequestContext): Promise<string> {
+  const upload = (await compositeTransport.request(ep("assets.uploads.create"), {
+    params: undefined, query: undefined,
+    body: { assetType: "video", mimeType: "video/mp4", fileSize: 1024 },
+  } as never, owner)) as { data: { uploadId: string } };
+  const completed = (await compositeTransport.request(ep("assets.uploads.complete"), {
+    params: { uploadId: upload.data.uploadId }, query: undefined,
+    body: { name: "制作导出中性测试视频" },
+  } as never, owner)) as { data: { id: string } };
+  return completed.data.id;
+}
+
+async function readPrimaryAsset(owner: RequestContext, outputId: string): Promise<string | null> {
+  const output = (await compositeTransport.request(ep("outputs.get"), {
+    params: { outputId }, query: undefined, body: undefined,
+  } as never, owner)) as { data: { primaryAssetId: string | null } };
+  return output.data.primaryAssetId;
+}
+
 describe("production ops registered in the composite transport", () => {
   it("all production op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
@@ -64,8 +85,11 @@ describe("production ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    // 素材包导出、剪辑方案确认与 B-roll 原子删除均已进入 production 持久化注册表。
-    expect(PRODUCTION_OP_IDS).toHaveLength(9);
+    // 契约与后端独立登记逐项相等，不能用自比较或过期数量掩盖新增操作遗漏。
+    const contractIds = Object.values(productionOperations).map(operation => operation.id);
+    expect(new Set(PRODUCTION_OP_IDS).size).toBe(PRODUCTION_OP_IDS.length);
+    expect(new Set(contractIds).size).toBe(contractIds.length);
+    expect([...PRODUCTION_OP_IDS].sort()).toEqual([...contractIds].sort());
   });
 
   it("get → put → segment → export → complete round-trips over the shared store", async () => {
@@ -118,19 +142,54 @@ describe("production ops registered in the composite transport", () => {
     )) as { data: { id: string; status: string } };
     expect(exp.data.status).toBe("queued");
 
-    // POST complete (导出视频 phase 2) → ready + cross-module primary-asset link。
-    // resultAssetId 只作事实落库(fan-out 副作用失败会被吞,SPEC §11),不校验存在性。
+    // POST complete → ready，并从正式输出读回同owner真实结果资产。
+    const resultAssetId = await createResultAsset(owner);
     const done = (await compositeTransport.request(
       ep("exports.complete"),
       {
         params: { exportId: exp.data.id },
         query: undefined,
-        body: { resultAssetId: "asset-export-e2e" },
+        body: { resultAssetId },
       } as never,
       owner,
     )) as { data: { status: string; resultAssetId: string } };
     expect(done.data.status).toBe("ready");
-    expect(done.data.resultAssetId).toBe("asset-export-e2e");
+    expect(done.data.resultAssetId).toBe(resultAssetId);
+    expect(await readPrimaryAsset(owner, OUTPUT_ID)).toBe(resultAssetId);
+  });
+
+  it("不存在或异账号结果被拒绝后，原导出仍可正常完成且重放不改绑", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const outputId = await createRealOutput(owner);
+    const production = (await compositeTransport.request(ep("outputs.production.get"), {
+      params: { outputId }, query: undefined, body: undefined,
+    } as never, owner)) as { data: { id: string } };
+    const exported = (await compositeTransport.request(ep("productions.exports.create"), {
+      params: { productionId: production.data.id }, query: undefined,
+      body: { format: "mp4", resolution: "1080p", aspectRatio: "16:9" },
+    } as never, owner)) as { data: { id: string; status: string } };
+    expect(exported.data.status).toBe("queued");
+    const complete = (resultAssetId: string) => compositeTransport.request(ep("exports.complete"), {
+      params: { exportId: exported.data.id }, query: undefined, body: { resultAssetId },
+    } as never, owner) as Promise<{ data: { status: string; resultAssetId: string } }>;
+
+    await expect(complete("asset-export-does-not-exist")).rejects.toThrow("Asset not found");
+    expect(await readPrimaryAsset(owner, outputId)).toBeNull();
+    const foreign = ctx(owner.userId, "acct-production-result-other");
+    const foreignAssetId = await createResultAsset(foreign);
+    await expect(complete(foreignAssetId)).rejects.toThrow("Asset not found");
+    expect(await readPrimaryAsset(owner, outputId)).toBeNull();
+
+    const resultAssetId = await createResultAsset(owner);
+    const completed = await complete(resultAssetId);
+    expect(completed.data.status).toBe("ready");
+    expect(completed.data.resultAssetId).toBe(resultAssetId);
+    expect(await readPrimaryAsset(owner, outputId)).toBe(resultAssetId);
+
+    const otherOwnedAssetId = await createResultAsset(owner);
+    expect(otherOwnedAssetId).not.toBe(resultAssetId);
+    expect((await complete(otherOwnedAssetId)).data.resultAssetId).toBe(resultAssetId);
+    expect(await readPrimaryAsset(owner, outputId)).toBe(resultAssetId);
   });
 
   // [T-721] 素材包统一导出:真实 wiring 全链(materialLinks 聚合 → 本地 zip →

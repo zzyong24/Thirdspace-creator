@@ -195,3 +195,17 @@ describe("conversation-persistence: [T-239e] token 用量累计", () => {
     expect(sumStreamedUsage(messages)).toEqual({ inputTokens: 500, outputTokens: 90 });
   });
 });
+
+describe('账号组对话指针隔离',()=>{
+ it('全局入口切组后不会读到另一组指针，原组晚到回执仍写原桶',()=>{
+  window.localStorage.setItem('creatoros:current-group','group-a');
+  writeStoredConversationId('global','conversation-a');
+  window.localStorage.setItem('creatoros:current-group','group-b');
+  expect(readStoredConversationId('global')).toBeNull();
+  writeStoredConversationId('global','conversation-b');
+  writeStoredConversationId('global','late-a','group:group-a');
+  expect(readStoredConversationId('global')).toBe('conversation-b');
+  window.localStorage.setItem('creatoros:current-group','group-a');
+  expect(readStoredConversationId('global')).toBe('late-a');
+ });
+});

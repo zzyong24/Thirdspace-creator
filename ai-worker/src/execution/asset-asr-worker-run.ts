@@ -1,0 +1,13 @@
+import {transcribeAudio,type MultimodalProviderRegistry} from '../runtime/multimodal-factory';
+import {createDurableAsrRequestExecutor as durable} from './durable-asr-request';
+import {createTranscribeAsrRegistry} from './transcribe-asr-registry';
+import {assetAsrPortOutputs,type AssetAsrInput,type WorkerPort} from '@creatoros/contract/execution-worker';
+import type {z} from 'zod';
+type Call=(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>;
+export async function runAssetAsrInWorker(_input:AssetAsrInput,signal:AbortSignal,call:Call,registry:MultimodalProviderRegistry=createTranscribeAsrRegistry()){
+ const read=async<T>(schema:z.ZodType<T>,port:WorkerPort,data:unknown,settlement=false)=>{if(!settlement)signal.throwIfAborted();return schema.parse(await call(port,data,settlement?undefined:signal));};
+ await read(assetAsrPortOutputs.prepareAssetAsrAudio,'prepareAssetAsrAudio',{});let prepared=await read(assetAsrPortOutputs.prepareAssetAsr,'prepareAssetAsr',{});
+ const run=()=>prepared.spec===null?Promise.resolve(prepared.result):transcribeAudio(prepared.spec,{audioBytes:prepared.audio.bytes,...(prepared.plan.timestampMode!=="text"?{timestampMode:prepared.plan.timestampMode,...(prepared.audio.evidence.mappingStatus==="verified"&&prepared.audio.evidence.mappingReceipt?{timingAudio:{sampleRate:prepared.audio.evidence.mappingReceipt.outputSampleRate,validSampleCount:prepared.audio.evidence.mappingReceipt.outputValidSampleCount}}:{})}:{}),language:prepared.plan.identity.language??undefined,signal,executeRequest:durable({operationKey:'asset-asr',signal,ports:{reserve:({request})=>read(assetAsrPortOutputs.reserveAssetAsrRequest,'reserveAssetAsrRequest',{request}),start:async callId=>{await read(assetAsrPortOutputs.startAssetAsrRequest,'startAssetAsrRequest',{callId});},settle:async(callId,value)=>{await read(assetAsrPortOutputs.settleAssetAsrRequest,'settleAssetAsrRequest',{callId,...value},true);}}})},registry);
+ try{const result=await run();if(!result.text.trim()&&prepared.plan.identity.protocol!=='whisper-local.v1'){await read(assetAsrPortOutputs.selectAssetAsrLocalFallback,'selectAssetAsrLocalFallback',{});prepared=await read(assetAsrPortOutputs.prepareAssetAsr,'prepareAssetAsr',{});await run();}}catch(error){if(prepared.plan.identity.protocol==='whisper-local.v1')throw error;const code=(error as {statusCode?:unknown}).statusCode;if(![400,401,402,403,404,405,413,415,422,429].includes(code as number))throw error;await read(assetAsrPortOutputs.selectAssetAsrLocalFallback,'selectAssetAsrLocalFallback',{});prepared=await read(assetAsrPortOutputs.prepareAssetAsr,'prepareAssetAsr',{});await run();}
+ await read(assetAsrPortOutputs.completeAssetAsr,'completeAssetAsr',{});return{status:'succeeded' as const};
+}

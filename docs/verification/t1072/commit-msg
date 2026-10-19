@@ -1,0 +1,41 @@
+#!/bin/sh
+# 全局分发仅使用当前仓库的 Lefthook 配置，不借用其它项目依赖。
+if [ "${LEFTHOOK_VERBOSE:-}" = "1" ] || [ "${LEFTHOOK_VERBOSE:-}" = "true" ]; then
+  set -x
+fi
+
+# 保留用户明确设置的退出开关；本脚本不自动设置它。
+if [ "${LEFTHOOK:-}" = "0" ]; then
+  exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel) || exit $?
+configured=0
+if [ -n "${LEFTHOOK_CONFIG:-}" ]; then
+  configured=1
+fi
+for stem in lefthook .lefthook .config/lefthook lefthook-local .lefthook-local .config/lefthook-local; do
+  for extension in yml yaml toml json jsonc; do
+    if [ -f "$repo_root/$stem.$extension" ]; then
+      configured=1
+      break 2
+    fi
+  done
+done
+if [ "$configured" = "0" ]; then
+  exit 0
+fi
+
+# 只禁自动重装共享钩子，不禁当前项目配置的实际检查。
+if [ -n "${LEFTHOOK_BIN:-}" ]; then
+  exec "$LEFTHOOK_BIN" run --no-auto-install commit-msg -- "$@"
+fi
+if [ -x "$repo_root/node_modules/.bin/lefthook" ]; then
+  exec "$repo_root/node_modules/.bin/lefthook" run --no-auto-install commit-msg -- "$@"
+fi
+if command -v lefthook >/dev/null 2>&1; then
+  exec lefthook run --no-auto-install commit-msg -- "$@"
+fi
+
+printf '%s\n' '当前仓库已配置 Lefthook，但找不到可执行工具；请安装项目依赖或设置 LEFTHOOK_BIN。提交检查未执行。' >&2
+exit 127

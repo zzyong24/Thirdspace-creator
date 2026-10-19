@@ -1,5 +1,8 @@
+import {PRIVATE_COLLECTION_SOURCE_KINDS} from '../../modules/scheduling';
 import type {RequestContext,Transport} from "@creatoros/contract";
-import {triggerScheduledJob,runJobNow,bootstrapDouyinCollectionJobs,type TriggerDeps} from "../../modules/ai-runtime";
+import {ENDPOINTS} from '@creatoros/contract';
+import {ConflictError,ValidationError} from '../../modules/publishing';
+import {triggerScheduledJob,runJobNow,collectionJobDefaultsForPlatform,bootstrapDouyinCollectionJobs,type TriggerDeps} from "../../modules/ai-runtime";
 /** 绑定初始化、立即运行与自动化共用同一触发协议。 */
 export function createSchedulingControls(ports:{aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"createTask"|"getTask">;
 schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"getRunScheduledFor"|"getJob"|"createRun"|"listRunsByJob"|"updateRun"|"listJobs"|"createJob">;
@@ -8,14 +11,16 @@ dispatchScheduledCollection:ReturnType<typeof import("./collection-execution").c
 deps:{now:()=>string};
 ensureDailyRun:ReturnType<typeof import("../../modules/scheduling").createDailyTopicRunIntentService>["ensureRunForTask"];
 ensureCollectionRun:ReturnType<typeof import("../../modules/ai-runtime").createScheduledFlywheelExecutionService>["ensureRunForTask"];
-ensureCanonicalRubricForAccount:(accountId:string)=>Promise<void>;
+ensureDefaultRubric:(ctx:RequestContext)=>Promise<unknown>;
 migrateProfile:(ctx:RequestContext)=>Promise<void>;
+assertCommentPublications?:(ctx:RequestContext,ids:readonly string[])=>Promise<void>;
 scheduling:Transport;}){
-const {aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun,ensureCollectionRun,ensureCanonicalRubricForAccount,migrateProfile,scheduling}=ports;
+const {aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun,ensureCollectionRun,ensureDefaultRubric,migrateProfile,scheduling}=ports;
   const triggerDeps: TriggerDeps = {
     ai: {
       createTask: async (c, body) => {
-        const t = await aiService.createTask(c, body);
+        const privateCollector=!!c.groupId&&!!c.accountId&&body.taskType.startsWith("scheduled.")&&PRIVATE_COLLECTION_SOURCE_KINDS.has(body.taskType.slice(10))&&typeof body.inputData?.jobId==="string";
+        const t = await aiService.createTask(privateCollector?{...c,source:"ingestion"}:c, body,privateCollector?{scheduledCollectorJobId:body.inputData!.jobId as string}:undefined);
         return { id: t.id, status: t.status };
       },
     },
@@ -75,21 +80,25 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
     //   「重新扫码」;初始采集按号也读 `<id>`(空)→ 采不到。**在触发采集前**(此刻 `<id>` 目录尚未被
     //   采集建成空壳)把 `_default` 登录态迁到 `<id>` 目录 → 登录态与不可变 id 锚点一致(单号现实;
     //   多号各自扫码 = T-136 §D)。同步 renameSync(同目录基址、原子);best-effort,失败不阻断建 job/采集。
-    await migrateProfile(ctx);
-    // [T-332 S2] 新号绑定即补种该号的默认变现加权 rubric(rubrics 是 per-account 域,
-    //   NOT NULL;不种则该号校准/编导评分无默认口径,要等下次启动)。幂等
-    //   (onConflictDoNothing);fire-and-forget,失败不阻断绑定。
-    //   注:ensureCanonicalRubricForAccount 在本工厂靠后定义 —— 绑定回调只在构造完成后
-    //   触发,无 TDZ 风险(与 calibrationService lazy thunk 同款模式)。
-    if (ctx.accountId) {
-      void ensureCanonicalRubricForAccount(ctx.accountId).catch((err) =>
+    if(!ctx.accountId)throw new ValidationError('绑定初始化缺少真实账号');
+    const account=await platformAccountService.getAccount(ctx,ctx.accountId);
+    const defaults=collectionJobDefaultsForPlatform(account.platform);
+    if(!defaults.length)return;
+    if(account.platform==='douyin')await migrateProfile(ctx);
+    // 保留真实绑定成功后的best-effort默认初始化；完整ctx交同一backend服务核权限。
+    if (ctx.accountId&&account.platform==='douyin') {
+      void ensureDefaultRubric(ctx).catch((err) =>
         console.warn("[seed] 绑定补种默认 rubric 失败(不阻断绑定):", err),
       );
     }
-    void bootstrapDouyinCollectionJobs(ctx, {
+    await bootstrapDouyinCollectionJobs(ctx, {
+      defaults,
       listJobsBySourceKind: async (c, sourceKind) => {
-        const { rows } = await schedulingService.listJobs(c, {
+        const privateCollector=PRIVATE_COLLECTION_SOURCE_KINDS.has(sourceKind);
+        const scoped=privateCollector||!c.groupId?c:{...c,accountId:null,membershipVersion:undefined};
+        const { rows } = await schedulingService.listJobs(scoped, {
           sourceKind,
+          ...(privateCollector?{accountId:c.accountId}:{}),
           limit: 1,
           offset: 0,
         });
@@ -97,7 +106,9 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
         return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null,enabled:r.enabled,target:r.target??{} }));
       },
       createJob: async (c, input) => {
-        const job = await schedulingService.createJob(c, {
+        const privateCollector=PRIVATE_COLLECTION_SOURCE_KINDS.has(input.sourceKind);
+        const scoped={...c,source:"ingestion" as const,...(!privateCollector&&c.groupId?{accountId:null,membershipVersion:undefined}:{})};
+        const job = await schedulingService.createJob(scoped, {
           name: input.name,
           prompt: input.prompt,
           sourceKind: input.sourceKind,
@@ -105,14 +116,15 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
           target: input.target,
           // [T-359] 分层启用透传:默认关的模板建即 disabled(缺省 undefined = service 默认 true)。
           enabled: input.enabled,
-          systemManaged: input.sourceKind === "intelligence.sync",
-        });
+          systemManaged: input.systemManaged===true||privateCollector||input.sourceKind === "intelligence.sync",
+        },privateCollector&&c.groupId?{backgroundCollector:true}:undefined);
         return { id: job.id };
       },
       // 初始化触发复用 triggerScheduledJob(与 cron 到点 / 「立即运行」同一幂等双闸 + 触发点)。
       //   [T-433 S1] 透传 options(绑号 self.detail 带 skipHeavyBackfill,重活延后次日)。
       trigger: async (c, job, options) => {
-        await triggerScheduledJob(c, job, triggerDeps, options);
+        const actual=await schedulingService.getJob(c,job.id);
+        await triggerScheduledJob(c,{...job,groupId:actual.groupId,groupVersion:actual.groupVersion,membershipVersion:actual.membershipVersion},triggerDeps,options);
       },
       // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)接线已全链退役
       //   (SPEC §4.4):strict + NOT NULL 世界不存在无号存量,绑定 = 只建号绑定 job + 初始化
@@ -120,7 +132,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
       // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与手动建的 job 一致)。
       target: {},
     }).catch((err) =>
-      console.error("[persistence-client] 绑定抖音 bootstrap 建 job/初始化失败:", err),
+      console.error("[persistence-client] 平台绑定 bootstrap 建 job/初始化失败:", err),
     );
   };
 
@@ -133,31 +145,66 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
     async request(endpoint, input, ctx) {
       if (endpoint.id === "scheduledJobs.runNow") {
         if (!ctx) throw new Error("AuthenticationError: runNow requires ctx");
-        const { params } = (input ?? {}) as { params?: { jobId?: string } };
+        const { params,body } = (input ?? {}) as { params?: { jobId?: string };body?:unknown };
+        const requested=ENDPOINTS.runScheduledJobNow.body.parse(body)?.publicationIds;
         const jobId = params?.jobId ?? "";
+        let commentJob=false,expectedSelection:string[]|null=null;
+        const selectionOf=(target:unknown):string[]|null=>{
+          if(!target||typeof target!=='object'||Array.isArray(target))throw new ConflictError('无法确认已有运行的作品范围');
+          const selection=(target as Record<string,unknown>).publicationIds;
+          if(selection===undefined)return null;
+          const parsed=ENDPOINTS.runScheduledJobNow.body.safeParse({publicationIds:selection});
+          if(!parsed.success)throw new ConflictError('无法确认已有运行的作品范围');
+          return [...parsed.data!.publicationIds!].sort();
+        };
+        const assertTaskSelection=async(taskId:string,jobRunId?:string)=>{
+          if(!commentJob)return;
+          const task=await aiService.getTask(ctx,taskId);
+          const details={aiTaskId:taskId,...(jobRunId?{jobRunId}:{})};
+          let actual:string[]|null;
+          try{actual=selectionOf(task.inputData.target);}catch{throw new ConflictError('无法确认已有运行的作品范围，请先核对原任务',details);}
+          if(task.inputData.jobId!==jobId||JSON.stringify(actual)!==JSON.stringify(expectedSelection))throw new ConflictError('已有运行的作品范围不同，请等待原任务完成后再运行',details);
+        };
         const result = await runJobNow(ctx, jobId, {
           ...triggerDeps,
+          ai:{createTask:async(c,taskInput)=>{
+            const task=await triggerDeps.ai.createTask(c,taskInput);
+            // createTask 自身也可能命中旧 queued/running task，必须在ensureRun/dispatch前核对持久范围。
+            await assertTaskSelection(task.id);
+            return task;
+          }},
           job: {
             getJob: async (c, id) => {
               const j = await schedulingService.getJob(c, id);
+              commentJob=j.sourceKind==='comments';
+              if(requested&&!commentJob)throw new ValidationError('publicationIds 仅适用于 comments 作业');
+              const target=requested?{...j.target,publicationIds:[...requested].sort()}:j.target;
+              if(commentJob){
+                expectedSelection=selectionOf(target);
+                if(expectedSelection){
+                  if(!ports.assertCommentPublications)throw new ValidationError('作品范围校验服务尚未接入');
+                  await ports.assertCommentPublications(c,expectedSelection);
+                }
+              }
               // [T-200] 带 job 属主号:触发采集 ctx.accountId 由此派生(与 cron/bind 三路统一)。
               return {
                 id: j.id,
                 enabled: j.enabled,
                 sourceKind: j.sourceKind,
-                target: j.target,
-                accountId: j.accountId ?? null,
+                target,
+                accountId: j.accountId ?? null,groupId:j.groupId,groupVersion:j.groupVersion,membershipVersion:j.membershipVersion,
               };
             },
           },
         });
+        if(result.deduped)await assertTaskSelection(result.aiTaskId,result.jobRunId);
         // [T-201d] 归属号已隐藏(status 非 active)→ triggerScheduledJob 跳过不产 run,
         //   jobRunId 为空串。runNow response 契约要求 jobRunId 非空(id=min(1)),且此路是用户
         //   手动「立即运行」→ 诚实抛错告知(账号已隐藏,先恢复再运行),不假装产了 run。
         //   (与既有 getJob ownership 错误传播同款:runNow 本就可抛。)
         if (result.skippedReason) {
           throw new Error(
-            `AccountHiddenError: ${result.skippedReason}。请先在账号管理恢复该抖音号后再运行。`,
+            `AccountHiddenError: ${result.skippedReason}。请先在账号管理恢复该平台账号后再运行。`,
           );
         }
         return {

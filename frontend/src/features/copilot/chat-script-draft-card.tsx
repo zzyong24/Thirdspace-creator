@@ -20,6 +20,8 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -35,7 +37,7 @@ const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 90; // ~6 分钟 —— 整稿生成可达分钟级(弱模型更慢)
 const VERBATIM_PREVIEW_CHARS = 1_200;
 
-type Phase = "running" | "review" | "done" | "error";
+type Phase = "running" | "review" | "done" | "error" | "partial";
 
 const LEGACY_VALIDATION_ERROR =
   "这个旧候选缺少完整性校验，已禁止采纳。请重新生成后再写入稿面。";
@@ -122,6 +124,8 @@ export function ChatScriptDraftCard({
   pollIntervalMs?: number;
 }) {
   const router = useRouter();
+  const observation = useTaskObservation(taskId);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<Phase>(
     error || !taskId ? "error" : "running",
   );
@@ -144,10 +148,12 @@ export function ChatScriptDraftCard({
     if (!taskId || error) return;
     let abandoned = false;
     void (async () => {
-      for (let i = 0; i < MAX_POLLS; i++) {
-        if (abandoned) return;
+      const isCurrent = captureObservation();
+      for (let i = 0; ; i++) {
+        if (i > 0 && i % MAX_POLLS === 0 && !await pauseObservation()) return;
+        if (abandoned || !isCurrent()) return;
         await new Promise((r) => setTimeout(r, pollIntervalMs));
-        if (abandoned) return;
+        if (abandoned || !isCurrent()) return;
         let status: string;
         let taskError: string | null = null;
         try {
@@ -156,6 +162,7 @@ export function ChatScriptDraftCard({
             query: undefined,
             body: undefined,
           })) as { status: string; errorMessage?: string | null };
+          if (abandoned || !isCurrent()) return;
           status = t.status;
           taskError =
             typeof t.errorMessage === "string" && t.errorMessage.trim()
@@ -164,6 +171,8 @@ export function ChatScriptDraftCard({
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if (status === "partial") { setPhase("partial"); return; }
+        if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
             // contract-client 的泛型目前没有把 isList 投影成数组，运行时端点返回的确是
@@ -181,7 +190,7 @@ export function ChatScriptDraftCard({
             const gate = last
               ? readAdoptionGate(last.resultData)
               : { canAdopt: false, errors: [LEGACY_VALIDATION_ERROR] };
-            if (abandoned) return;
+            if (abandoned || !isCurrent()) return;
             const resultMode = last?.resultData.draftMode;
             if (resultMode === "verbatim") {
               setDraftMode("verbatim");
@@ -209,12 +218,12 @@ export function ChatScriptDraftCard({
             );
             setPhase("review");
           } catch {
-            if (!abandoned) setPhase("error");
+            if (!abandoned && isCurrent()) setPhase("error");
           }
           return;
         }
         if (status === "cancelled" || status === "failed") {
-          if (!abandoned) {
+          if (!abandoned && isCurrent()) {
             setTerminalError(
               taskError || "本次整稿生成没有完成，请重新生成。",
             );
@@ -223,13 +232,12 @@ export function ChatScriptDraftCard({
           return;
         }
       }
-      if (!abandoned) setPhase("error"); // 轮询预算耗尽
     })();
     return () => {
       abandoned = true;
     };
     // taskId 稳定;错误态不轮询。
-  }, [taskId, error, pollIntervalMs]);
+  }, [taskId, error, pollIntervalMs, pauseObservation, captureObservation]);
 
   const adopt = React.useCallback(async () => {
     if (!taskId || !canAdopt || sections.length === 0) return;
@@ -270,7 +278,9 @@ export function ChatScriptDraftCard({
           : "整稿分镜脚本 · 采纳后写入稿面"}
       </span>
 
-      {phase === "running" ? (
+      <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
+      {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-script-running"
           className="flex items-center gap-2 text-[12px] text-muted-foreground"

@@ -1,0 +1,137 @@
+{
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "startedAt": "2026-10-10T01:41:35.177Z",
+  "failedAt": "2026-10-10T01:43:52.666Z",
+  "observed": {
+    "httpStatus": 200,
+    "renderedUrl": "http://127.0.0.1:58237/",
+    "executablePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "executableSha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "isolatedGroupCreatedThroughUI": true,
+    "network": [
+      {
+        "operation": "assets.uploads.create",
+        "status": 200,
+        "groupId": "grp-6e3e2afa-13",
+        "accountId": null,
+        "input": {
+          "body": {
+            "assetType": "image",
+            "mimeType": "image/png",
+            "fileSize": 178,
+            "fileName": "t1179-neutral.png"
+          }
+        }
+      },
+      {
+        "operation": "bytes.put",
+        "status": 200,
+        "pathname": "/api/v1/blob/groups/grp-6e3e2afa-13/inbox/uploads/objkey-6e3e2afa-39-t1179-neutral.png",
+        "requestBodyAvailable": false,
+        "bytes": null,
+        "sha256": null
+      },
+      {
+        "operation": "assets.uploads.complete",
+        "status": 200,
+        "groupId": "grp-6e3e2afa-13",
+        "accountId": null,
+        "input": {
+          "params": {
+            "uploadId": "upload-6e3e2afa-41"
+          },
+          "body": {
+            "name": "t1179-neutral.png"
+          }
+        }
+      }
+    ],
+    "uploadResponses": [
+      {
+        "id": "asset-6e3e2afa-40",
+        "userId": "user-6e3e2afa-1",
+        "currentFileId": "afile-6e3e2afa-44",
+        "assetType": "image",
+        "name": "t1179-neutral.png",
+        "description": "",
+        "status": "active",
+        "isFavorite": false,
+        "mimeType": "image/png",
+        "fileSize": 178,
+        "width": 64,
+        "height": 64,
+        "durationMs": null,
+        "extractStatus": null,
+        "materialSummary": null,
+        "extractedText": null,
+        "sourceUrl": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-10T01:41:52.496Z",
+        "updatedAt": "2026-10-10T01:41:52.496Z"
+      }
+    ],
+    "files": [
+      {
+        "name": "t1179-neutral.png",
+        "bytes": 178,
+        "sha256": "0dd2d6f81631af889719ef0b4c9d46943db1448ec3a5340a17c7274a0774e46f"
+      },
+      {
+        "name": "t1179-neutral.mp4",
+        "bytes": 2936,
+        "sha256": "36a6d275f2c41ae55a3a6c03c29ee21def57b6250b26bae7464d8d88bb255574"
+      }
+    ],
+    "beforeListWait": [
+      {
+        "file": "t1179-neutral.png",
+        "url": "http://127.0.0.1:58237/assets",
+        "publicListStatus": 200,
+        "publicList": [
+          {
+            "id": "asset-6e3e2afa-40",
+            "userId": "user-6e3e2afa-1",
+            "currentFileId": "afile-6e3e2afa-44",
+            "assetType": "image",
+            "name": "t1179-neutral.png",
+            "description": "",
+            "status": "active",
+            "isFavorite": false,
+            "mimeType": "image/png",
+            "fileSize": 178,
+            "width": 64,
+            "height": 64,
+            "durationMs": null,
+            "extractStatus": null,
+            "materialSummary": null,
+            "extractedText": null,
+            "sourceUrl": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-10T01:41:52.496Z",
+            "updatedAt": "2026-10-10T01:41:52.496Z"
+          }
+        ],
+        "domCards": [],
+        "exactMatches": []
+      }
+    ],
+    "fileChooserSelections": [
+      {
+        "file": "t1179-neutral.png",
+        "buttonDisabledBeforeClick": false,
+        "actualButtonClick": true,
+        "forcedClick": false,
+        "fileChooserObserved": true,
+        "selectedThroughChooser": true,
+        "buttonDisabledAfterSelection": true
+      }
+    ],
+    "failure": {
+      "message": "locator.waitFor: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('t1179-neutral.png', { exact: true }).first() to be visible\u001b[22m\n",
+      "stack": "locator.waitFor: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('t1179-neutral.png', { exact: true }).first() to be visible\u001b[22m\n\n    at /Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1182-real-button-control.mjs:59:56"
+    }
+  },
+  "isolationRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1182-real-button-control-recovery-isolation-ML1uhK",
+  "nativeApp": false,
+  "realUserDataUsed": false
+}

@@ -51,3 +51,13 @@ export {
   type PublicationResource,
   type PublicationRevisionResource,
 } from "./publishing.schema";
+
+export {createVisualMaterialAdoptionService,type VisualMaterialAdoptionService,type VisualMaterialAdoptionDeps,type CanvasVisualMaterialPort} from "./visual-material-adoption.service";
+export type {AdoptPublicationDraftInput,AdoptVisualRevisionInput} from "./publication-draft-adoption.service";
+export {createPublicationResultsService,type PublicationResultsService} from "./publication-results.service";
+export {createPublicationCreativeResultAdapter,combinePublicationResultAdapters} from "./publication-results.creative-adapter";
+export {createPublicationCoverCreativeResultAdapter,type PublicationCoverPorts} from "./publication-cover.creative-adapter";
+
+export {createPublicationCoverService,type PublicationCoverService} from "./publication-cover.service";
+export type {PublicationCoverSavePorts} from "./publication-cover.ports";
+export {withPublicationManualRevisionLock} from "./publication-cover.manual-lock";

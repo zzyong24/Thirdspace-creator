@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:84785) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx (13 tests | 1 failed) 297ms
+   × 补上此前无图的首个页也按明确页序保存，旧无绑定照片保留 36ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 补上此前无图的首个页也按明确页序保存，旧无绑定照片保留
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 补上此前无图的首个页也按明确页序保存，旧无绑定照片保留
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 补上此前无图的首个页也按明确页序保存，旧无绑定照片保留
+AssertionError: expected [ 'other', 'legacy', 'new' ] to deeply equal [ 'new', 'other', 'legacy' ]
+
+- Expected
++ Received
+
+  [
+-   "new",
+    "other",
+    "legacy",
++   "new",
+  ]
+
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:32:848
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)
+   Start at  03:47:54
+   Duration  1.70s (transform 510ms, setup 128ms, import 712ms, tests 297ms, environment 404ms)
+

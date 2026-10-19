@@ -1,0 +1,60 @@
+{
+  "task": "T-1361",
+  "commit": "721dfacf7b3bcbe82eb9c39b61acf1fb1df367d2",
+  "command": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1361",
+    "--evidence",
+    "docs/verification/t1361/control/FRONTEND_REPORT.md"
+  ],
+  "startedAt": "2026-10-18T21:05:07.583Z",
+  "durationMs": 64328,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "reportSha256": "0cbb9f0efcf7a44f5aa6dee2099457cd7afa147101e7381803cfcacf1aff6726",
+  "rawLogSha256": "6b0367bfea919dd40870ec0b4e6a2a8969a0aa49ea7f761d51a238d7b770c548",
+  "tests": [
+    {
+      "title": "待完成筛选与切组使用真实Next收尾并排除旧响应",
+      "projectName": "t1361-normal",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 16303,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1361/e2e-artifacts/t1361-pending-filter-works-cdfaf-sh-待完成筛选与切组使用真实Next收尾并排除旧响应-t1361-normal/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "待完成筛选与切组使用真实Next收尾并排除旧响应",
+      "projectName": "t1361-minimum",
+      "expectedStatus": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 14392,
+          "errorCount": 0,
+          "attachments": [
+            {
+              "name": "trace",
+              "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1361/e2e-artifacts/t1361-pending-filter-works-cdfaf-sh-待完成筛选与切组使用真实Next收尾并排除旧响应-t1361-minimum/trace.zip"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "boundary": "原始 Playwright JSON/config/env 只保本地私有0600；本摘要仅白名单用例终态。实际执行由既有taskctl负责，非静态报告生成。",
+  "resultsFresh": true,
+  "resultsRawSha256": "0193dfee5cd1d4040c6ee691fd3327bf8139e2d2106769c4f173db614d26ca55"
+}

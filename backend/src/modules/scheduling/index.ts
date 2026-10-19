@@ -50,3 +50,4 @@ export {createDailyTopicRunService,type DailyTopicRunRef} from "./daily-topic-ru
 
 export {createDailyTopicRunIntentService} from "./daily-topic-run-intent.service";
 export {createCollectionRunStateService} from "./collection-run-state.service";
+export {supportsPrivateCollection,PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob,assertAiTaskWorkspaceAdmission,assertExecutionTaskWorkspaceAdmission} from './private-collector-admission.service';

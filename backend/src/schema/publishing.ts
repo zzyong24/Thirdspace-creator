@@ -12,7 +12,7 @@ import { pgTable, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core"
 // `Publication` is an external fact-of-record (SPEC §13.3/§22): there is no
 // internal publish queue — statuses mirror external platform reality and the
 // actual side-effect is mocked behind MockPublisher (foundation §4). The
-// (platform, external_id) partial-unique index is the idempotency anchor
+// (user_id, account_id, platform, external_id) partial-unique index is the idempotency anchor
 // (data-model line 865 / rule 10): a re-publish to the same platform reuses the
 // row, never duplicates.
 //
@@ -34,6 +34,9 @@ export const publications = pgTable("publications", {
   userId: text("user_id").notNull(),
   // [T-136 多账号 · SPEC §D/§6] 按号隔离(激活 platform-account.ts DDL 预留的 account_id 列;
   //   非本文件新增列)。采集导入作品 stamp 归号;nullable 稳定终态(存量 / 未选号兜底)。
+  groupId: text("group_id"),
+  groupVersion: integer("group_version"),
+  membershipVersion: integer("membership_version"),
   accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042;lenient→strict)
   contentOutputId: text("content_output_id").notNull(),
   platform: text("platform").notNull(),
@@ -66,18 +69,21 @@ export const publicationRevisions = pgTable("publication_revisions", {
   userId: text("user_id").notNull(),
   publicationId: text("publication_id").notNull(),
   revisionNumber: integer("revision_number").notNull().default(1),
+  visualAdoptionKey: text("visual_adoption_key"),
+  visualAdoptionDigest: text("visual_adoption_digest"),
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
   coverAssetId: text("cover_asset_id"), // nullable — validated via AssetsService
+  coverAssetFileId: text("cover_asset_file_id"), // immutable selected file for result-first cover
   category: text("category").notNull().default(""),
   series: text("series").notNull().default(""),
   platformTags: jsonb("platform_tags").notNull().default([]),
   platformSettings: jsonb("platform_settings").notNull().default({}),
   createdAt: text("created_at").notNull(),
-});
+},table=>[uniqueIndex("publication_revisions_visual_adoption_ux").on(table.publicationId,table.visualAdoptionKey)]);
 
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
-//   - publications_external_ux: PARTIAL unique on (platform, external_id) WHERE
+//   - publications_external_account_ux: PARTIAL unique on (user_id, account_id, platform, external_id) WHERE
 //     external_id IS NOT NULL (data-model line 865 / rule 10) — the idempotency
 //     anchor for re-publish.
 //   - publications_user_ix / publications_output_ix: user-scoped + per-output
@@ -106,7 +112,7 @@ CREATE TABLE IF NOT EXISTS publications (
 -- 的 account_id 同款 ALTER 兜底,幂等)。
 ALTER TABLE publications ADD COLUMN IF NOT EXISTS hidden_at TEXT;
 ALTER TABLE publications ADD COLUMN IF NOT EXISTS platform_status TEXT;
-CREATE UNIQUE INDEX IF NOT EXISTS publications_external_ux ON publications(platform, external_id) WHERE external_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS publications_external_account_ux ON publications(user_id, account_id, platform, external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS publications_user_ix ON publications(user_id);
 CREATE INDEX IF NOT EXISTS publications_output_ix ON publications(content_output_id);
 CREATE TABLE IF NOT EXISTS publication_revisions (

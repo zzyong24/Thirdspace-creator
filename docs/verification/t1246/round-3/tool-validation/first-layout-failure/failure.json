@@ -1,0 +1,4 @@
+{
+  "error": "Error: Cannot find module 'playwright'\nRequire stack:\n- /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/package.json",
+  "modelsOrServicesStarted": false
+}

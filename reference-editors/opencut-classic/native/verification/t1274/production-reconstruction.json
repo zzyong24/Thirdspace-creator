@@ -1,0 +1,48 @@
+{
+  "sameSevenProductionBytes": true,
+  "fixturePublished": false,
+  "files": {
+    "native.css": {
+      "initial": "a3d29c27a4cf8d665bb4b28d9f9893cc2334947c9b2075c5b64e65030d2e79bd",
+      "archiveRebuild": "a3d29c27a4cf8d665bb4b28d9f9893cc2334947c9b2075c5b64e65030d2e79bd",
+      "reference": "a3d29c27a4cf8d665bb4b28d9f9893cc2334947c9b2075c5b64e65030d2e79bd",
+      "public": "a3d29c27a4cf8d665bb4b28d9f9893cc2334947c9b2075c5b64e65030d2e79bd"
+    },
+    "native.js": {
+      "initial": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9",
+      "archiveRebuild": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9",
+      "reference": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9",
+      "public": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9"
+    },
+    "NATIVE_BUILD_GRAPH.json": {
+      "initial": "ceb3371580b32db9b53e41f977ca4a89384566be25a2c7914ba10b53e3595a71",
+      "archiveRebuild": "ceb3371580b32db9b53e41f977ca4a89384566be25a2c7914ba10b53e3595a71",
+      "reference": "ceb3371580b32db9b53e41f977ca4a89384566be25a2c7914ba10b53e3595a71",
+      "public": "ceb3371580b32db9b53e41f977ca4a89384566be25a2c7914ba10b53e3595a71"
+    },
+    "THIRD_PARTY_LICENSES.txt": {
+      "initial": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "archiveRebuild": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "reference": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "public": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f"
+    },
+    "THIRD_PARTY_LICENSES.json": {
+      "initial": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "archiveRebuild": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "reference": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "public": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad"
+    },
+    "LICENSE.opencut": {
+      "initial": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "archiveRebuild": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "reference": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "public": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d"
+    },
+    "effects/preview.jpg": {
+      "initial": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "archiveRebuild": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "reference": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "public": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    }
+  }
+}

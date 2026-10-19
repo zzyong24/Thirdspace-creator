@@ -1,0 +1,113 @@
+{
+  "sourceSha256": "4dc147ea912c0cdd654686b38f38bdcac17e79e053e27a22f6f25df87f497edd",
+  "equivalentSha256": "0f16e5d38c7286c6629b5c0202f3115c4038cc0c1580d705bc1f3c6fe58a64b9",
+  "normalizationByteEqual": true,
+  "expectCountOriginal": 16,
+  "expectCountEquivalent": 16,
+  "replacements": [
+    {
+      "kind": "remove-unique-build",
+      "before": "  execFileSync(process.execPath,[resolve('../ai-worker/scripts/build.mjs')],{stdio:'pipe'});\n",
+      "after": "",
+      "count": 1
+    },
+    {
+      "kind": "worker-binding",
+      "before": "resolve('../ai-worker/dist/execution-worker.cjs')",
+      "after": "\"/private/tmp/t1300-artifact-bcz9nlt5/sidecar/frontend/runtime/execution-worker.cjs\"",
+      "count": 2
+    },
+    {
+      "kind": "local-case-budget",
+      "before": "},30000);",
+      "after": "},900000);",
+      "count": 2
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/ai-runtime/automation-driver",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/automation-driver",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/ai-runtime/daily-topic-business-adapter",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/daily-topic-business-adapter",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/ai-runtime/scheduled-collection-scheduler",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/scheduled-collection-scheduler",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/ai-runtime/structured-business-execution.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/structured-business-execution.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/ai/ai.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/ai.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/candidate/candidate-supply-lock",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/candidate/candidate-supply-lock",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/candidate/candidate.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/candidate/candidate.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/execution/execution-scheduled-child.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-scheduled-child.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/execution/execution-topic-read.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-topic-read.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/execution/model-worker-dispatcher",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/execution/persistent-task.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/persistent-task.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/scheduling/daily-topic-run-intent.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/scheduling/daily-topic-run-intent.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/scheduling/daily-topic-run.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/scheduling/daily-topic-run.service",
+      "count": 1
+    },
+    {
+      "kind": "same-target-import",
+      "before": "../modules/scheduling/scheduling.service",
+      "after": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/scheduling/scheduling.service",
+      "count": 1
+    }
+  ],
+  "extraAssertions": "config只读worker SHA/bytes断言及环境owned约束，不插入两it业务",
+  "workerSha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+}

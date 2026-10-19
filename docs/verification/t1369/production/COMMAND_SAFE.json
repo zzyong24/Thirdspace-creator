@@ -1,0 +1,36 @@
+{
+  "startedAtUnix": 1792391585.419631,
+  "outerSeconds": 18300,
+  "command": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "--config=playwright.t1369.production.config.ts",
+    "--project=t1369-normal",
+    "--workers=1",
+    "--retries=0"
+  ],
+  "fixtureRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-production-6_8i9w_y",
+  "controlRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-production-control-s1qfucy1",
+  "ports": [
+    41387,
+    41388,
+    41389
+  ],
+  "policySha256": "5cd42c928b4211f5502db1e4e2faae4bfc8f8f006526a45583a7c27bfe3aba67",
+  "sources": {
+    "frontend/tests/e2e/t1369-dashboard-filter-sidebar-navigation.spec.ts": "6ffb2d65a78cb026b60ce0c08fd8f8626568419faea443b28ff6bb93d09a1ca8",
+    "frontend/playwright.t1369.production.config.ts": "e103a174360bfd059e245cee66116b4af5b17ba43f77319acaaf8fa8ab722928",
+    "docs/verification/t1369/production/server.mjs": "a1307d92c0bfdfe7723cff0625285dbb35094973b3ecc5a1d352cf7f771ff979",
+    "docs/verification/t1369/production/run.py": "3290111fea96362312bd710c88712bd5d49b8c3e91a51c2b2bee8d165fa40cf9",
+    "docs/verification/t1369/production/preflight.mjs": "219b3f7081f15c49f0aa4ef4407d12588f596d35dbd2118f13385a901f3f4ccc"
+  },
+  "approvedSpecSha256": "6f8114cc1f5fbc686abed00a695c4f2ffb8b33d389e47f964cf45d38d36078cb",
+  "proposalSha256": "c74d22eb0366e98fe9a0cdebfaac3292ae46c5b057438c01dcfed727b3a66729",
+  "review": "e8916b9b3f96",
+  "entryFreeBytes": 10473095168,
+  "cacheDeleted": false
+}

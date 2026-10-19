@@ -256,7 +256,12 @@ describe("KnowledgeGraphView", () => {
         container.querySelector('[data-slot="knowledge-graph-error"]'),
       ).not.toBeNull();
     });
-    expect(getByText("无可用 LLM 凭据")).toBeTruthy();
+    const alert = container.querySelector('[data-slot="knowledge-graph-error"]');
+    expect(alert?.textContent).toBe("还没有可用的 AI 模型。完成设置后，回到这里即可继续。");
+    expect(alert?.textContent).not.toContain("凭据");
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(createKnowledgeRelation).not.toHaveBeenCalled();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
 
   it("[T-260b] 图面删边:「已建关联」清单点删除 → removeKnowledgeRelation(source/target/type)+ refresh", async () => {

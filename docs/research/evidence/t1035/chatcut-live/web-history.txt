@@ -1,0 +1,124 @@
+- main:
+  - region "Notifications alt+T"
+  - button "项目":
+  - button "下载桌面应用":
+    - generic: 桌面版
+  - textbox "重命名项目":
+    - /placeholder: 未命名项目
+    - text: Git 与 GitHub 录屏｜粗剪与复盘
+  - button "邀请协作者一起编辑此项目":
+  - button "撤销" [disabled]:
+  - button "重做" [disabled]:
+  - button "历史版本" [expanded]:
+  - button "工作区":
+  - button "导出" [disabled]
+  - button "升级 4.9折":
+    - text: 升级
+    - generic: 4.9折
+  - button "0 zhiyong zhu":
+    - generic: "0"
+    - img "zhiyong zhu"
+  - button "报告问题或发送反馈":
+  - generic: AI
+  - generic: 我的素材
+  - generic: 资源库
+  - generic: 剪口播
+  - generic: 预览
+  - button "拖拽媒体到这里":
+    - paragraph: 拖拽媒体到这里
+  - generic: 时间线
+  - button "新建时间线":
+  - button "选择模式 (V)":
+  - button "修剪编辑模式 (N)" [pressed]:
+  - button "刀片编辑模式 (B)":
+  - button "分割" [disabled]:
+  - button "关闭吸附" [pressed]:
+  - button "录制旁白":
+  - button "录制设置":
+  - button "播放":
+  - generic "00:00.00":
+    - generic: "0"
+    - generic: "0"
+    - generic: ":"
+    - generic: "0"
+    - generic: "0"
+    - generic: .
+    - generic: "0"
+    - generic: "0"
+  - button "缩小":
+  - generic "缩放":
+    - slider
+  - button "放大":
+  - button "适配视图":
+  - button "画幅比例":
+  - button "显示字幕":
+    - generic: 关闭
+  - button "字幕样式菜单" [disabled]:
+  - button "进入全屏":
+  - button "时间线操作":
+  - generic: "0"
+  - generic: "0"
+  - generic: ":"
+  - generic: "0"
+  - generic: "0"
+  - generic: ":"
+  - generic: "0"
+  - generic: "0"
+  - generic "标记层"
+  - button:
+  - heading "今天想创作什么？" [level=2]
+  - button "口播剪辑":
+    - generic: 口播剪辑
+  - button "MG动画":
+    - generic: MG动画
+  - button "Seedance 2.5":
+    - generic: PRO
+    - generic: Seedance 2.5
+  - button "音色克隆":
+    - generic: NEW
+    - generic: 音色克隆
+  - button "数字人口播视频":
+    - generic: NEW
+    - generic: 数字人口播视频
+  - button "带货视频":
+    - generic: 带货视频
+  - button "AI 电影感短片":
+    - generic: AI 电影感短片
+  - button "视频复刻":
+    - generic: 视频复刻
+  - button "录屏剪辑解说":
+    - generic: NEW
+    - generic: 录屏剪辑解说
+  - generic: 场景第 1 页，共 1 页
+  - button "更多":
+    - generic: 更多
+  - textbox "描述你想要创建的内容..."
+  - generic: 描述你想要创建的内容...
+  - button "Agent":
+    - generic: Agent
+  - button "Agent 设置":
+  - button "添加":
+  - button "设计风格":
+  - button "技能":
+  - button "选择模式":
+  - button "发送消息" [disabled]:
+  - textbox "搜索媒体":
+    - /placeholder: 搜索
+  - button "上传":
+  - button "新建文件夹":
+  - button "切换到列表视图":
+  - button "排序媒体":
+  - button "筛选媒体":
+  - paragraph: 这个文件夹是空的
+  - paragraph: 拖拽文件以上传
+  - paragraph: 导入媒体或把素材拖到这里。
+  - paragraph: 拖拽文件以上传
+- dialog:
+  - heading [level=2]: 项目库
+- dialog:
+  - textbox "搜索历史版本…" [active]
+  - generic: 历史版本
+  - button "历史版本如何保存":
+  - status: 暂无历史版本
+  - button "保存当前版本":
+    - text: 保存当前版本

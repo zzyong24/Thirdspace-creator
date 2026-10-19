@@ -21,7 +21,7 @@ export interface RadarProjectQueueDeps {
   intelligence: IntelligenceService;
   recoverSourceCooldown?(ctx:RequestContext,taskId:string):Promise<boolean>;
   assertPositioning(ctx: RequestContext, id: string): Promise<unknown>;
-  projects: { ensureRadarProject(ctx: RequestContext, input: {queueTaskId: string; title: string; briefDetail: BriefDetail}): Promise<{id: string}> };
+  projects: { ensureRadarProject(ctx: RequestContext, input: {queueTaskId: string; attempt: number; fenceToken: string; workerId: string; itemId: string; topicTaskId: string; transformId: string; title: string; briefDetail: BriefDetail}): Promise<{id: string}> };
 }
 
 /** 持久父任务只处理协议与依赖，创作判断仍由既有 topic_preview Skill/Pi 负责。 */
@@ -56,7 +56,7 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
       await deps.tasks.recoverExpiredLeases({kinds: ["radar_project_upgrade"]});
       const claim = await deps.tasks.claimNext({kinds: ["radar_project_upgrade"], workerId: `radar-project:${Date.now()}`, leaseSeconds: 60});
       if (!claim) return;
-      const ctx: RequestContext = {userId: claim.task.userId, accountId: claim.task.accountId, requestId: `radar:${claim.task.id}`, source: "user"};
+      const ctx: RequestContext = {userId: claim.task.userId, accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined, requestId: `radar:${claim.task.id}`, source: "user"};
       const lease = {taskId: claim.task.id, workerId: claim.lease.workerId, attempt: claim.lease.attempt, fenceToken: claim.lease.fenceToken};
       let checkpoint: Checkpoint = {stage: "queued", ...claim.task.checkpoint as Partial<Checkpoint>};
       const live = async () => {
@@ -105,7 +105,7 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
           let childId = checkpoint.transcriptTaskId ?? detail.transcript.executionTaskId ?? undefined;
           if (!childId) {
             if (!await live()) return;
-            const dispatched = await deps.intelligence.enqueueTranscripts(ctx, {itemIds: [itemId], idempotencyKey: `${claim.task.id}:transcribe`});
+            const dispatched = await deps.intelligence.enqueueTranscripts(ctx, {itemIds: [itemId], idempotencyKey: `${claim.task.id}:transcribe`},{taskId:claim.task.id,workerId:claim.lease.workerId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken});
             childId = dispatched.tasks[0]?.id;
             if (!childId) childId = (await deps.intelligence.getItem(ctx, itemId)).transcript.executionTaskId ?? undefined;
           }
@@ -119,18 +119,38 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
           const sourceSnapshotId = detail.snapshots[0]?.id;
           if (!sourceSnapshotId) throw new Error("作品缺少来源快照");
           if (!await live()) return;
-          const preview = await deps.intelligence.startTopicPreview(ctx, {itemId, sourceSnapshotId, positioningVersionId: String(claim.payload.positioningVersionId), idempotencyKey: `${claim.task.id}:preview`});
+          const preview = await deps.intelligence.startTopicPreview(ctx, {itemId, sourceSnapshotId, positioningVersionId: String(claim.payload.positioningVersionId), strategyBacked: true, idempotencyKey: `${claim.task.id}:preview`});
           await save({stage: "generating", topicTaskId: preview.task.id, transformId: preview.transform.id});
         }
         if (!await childReady(checkpoint.topicTaskId!)) return;
+        const topicChild = await deps.tasks.get(ctx, checkpoint.topicTaskId!);
         detail = await deps.intelligence.getItem(ctx, itemId);
         const transform = detail.transforms.find(row => row.id === checkpoint.transformId);
+        const previewKey = `${claim.task.id}:preview`;
+        const sameScope = (row: {userId: string; accountId: string | null; groupId?: string | null}) =>
+          row.userId === ctx.userId && row.accountId === (ctx.accountId ?? null) &&
+          ((row.groupId ?? null) === (ctx.groupId ?? null) || (!ctx.groupId && !!ctx.accountId && row.groupId === `grp_legacy_${ctx.accountId}`));
+        if (!sameScope(topicChild) || topicChild.id !== checkpoint.topicTaskId || topicChild.kind !== "topic_preview" || topicChild.ownerType !== "transform" || topicChild.ownerId !== itemId ||
+            topicChild.idempotencyKey !== previewKey || topicChild.status !== "succeeded" || topicChild.runtimeStatus === "partial" || topicChild.runtimeStatus === "unknown_result" ||
+            (ctx.groupId && (topicChild.membershipVersion ?? null) !== (ctx.membershipVersion ?? null)) ||
+            !sameScope(detail.item) || !transform || !sameScope(transform) || transform.itemId !== itemId || transform.aiTaskId !== topicChild.id || transform.idempotencyKey !== previewKey ||
+            transform.positioningVersionId !== claim.payload.positioningVersionId || !detail.snapshots.some(row => row.id === transform.sourceSnapshotId && row.itemId === itemId)) {
+          throw new IntelligenceValidationError("雷达选题子任务、来源或冻结工作区不符");
+        }
         const output = transform?.outputSnapshot as Record<string, any> | undefined;
+        if (output?.generationMode !== undefined && output.generationMode !== "strategy_backed") throw new IntelligenceValidationError("雷达项目需要原策略选题候选");
+        // generationProgress只是可选历史观测；不新增三阶段/非空质量门，不补写旧输出。
         if (!output?.adaptedDraft?.contentText || !output?.adaptationStrategy || !output?.hook) throw new Error("选题任务完成但文案候选尚不可用");
         if (!await live()) return;
         await save({stage: "creating_project"});
         const project = await deps.projects.ensureRadarProject(ctx, {
           queueTaskId: claim.task.id,
+          attempt: claim.lease.attempt,
+          fenceToken: claim.lease.fenceToken,
+          workerId: claim.lease.workerId,
+          itemId,
+          topicTaskId: topicChild.id,
+          transformId: transform.id,
           title: typeof output.title === "string" && output.title.trim() ? output.title : detail.item.title,
           briefDetail: {
             targetAudience: output.targetAudience,

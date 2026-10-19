@@ -1,3 +1,4 @@
+import {workspaceFilter,type WorkspaceKey} from "../../workspace-scope";
 import {
   and,
   eq,
@@ -25,10 +26,10 @@ import { OwnershipError } from "./notifications.errors";
 //   - ctx 无号   → 只见 `account_id IS NULL`(引导态也要能收系统通知,0 号可用)。
 // markRead 的可见集同语义:跨号的业务通知 by-id → OwnershipError(404,不泄露存在)。
 
-export type NotificationRow = typeof notifications.$inferSelect;
+export type NotificationRow = Omit<typeof notifications.$inferSelect,"groupId"> & {groupId?:string|null};
 
 // 读方视角的号维度:string = 当前号;null = 未选号(只见系统级)。
-export type NotificationAccountScope = string | null;
+export type NotificationAccountScope = string | WorkspaceKey | null;
 
 export interface NotificationRepository {
   // Seed helper for the canonical dataset (singleton build). Idempotent against a
@@ -58,13 +59,10 @@ export interface NotificationRepository {
 export function createNotificationRepository(db: Db): NotificationRepository {
   // [T-332 S2 · C-02] 账号可见集谓词(设计性 OR-NULL,非存量兼容,全仓唯一例外):
   // 有号 → 当前号事件 + 系统级(NULL);无号 → 只见系统级(NULL)。
-  const accountVisibility = (accountId: NotificationAccountScope) =>
-    accountId
-      ? or(
-          eq(notifications.accountId, accountId),
-          isNull(notifications.accountId),
-        )
-      : isNull(notifications.accountId);
+  const accountVisibility = (scope: NotificationAccountScope) => {
+    const system = and(isNull(notifications.accountId),isNull(notifications.groupId));
+    return scope ? or(workspaceFilter(notifications,scope),system) : system;
+  };
 
   return {
     async seed(rows) {

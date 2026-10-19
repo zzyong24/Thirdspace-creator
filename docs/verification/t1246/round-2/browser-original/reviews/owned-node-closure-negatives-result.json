@@ -1,0 +1,63 @@
+{
+  "at": "2026-10-11T19:56:42.913Z",
+  "checks": [
+    {
+      "name": "missing",
+      "status": "PASS_REFUSED_BEFORE_RUNTIME"
+    },
+    {
+      "name": "NaN",
+      "status": "PASS_REFUSED_BEFORE_RUNTIME"
+    },
+    {
+      "name": "zero",
+      "status": "PASS_REFUSED_BEFORE_RUNTIME"
+    },
+    {
+      "name": "short",
+      "status": "PASS_REFUSED_BEFORE_RUNTIME"
+    },
+    {
+      "name": "missing-body",
+      "status": "PASS_REFUSED_BEFORE_RUNTIME"
+    },
+    {
+      "name": "bad-file",
+      "status": "PASS_REFUSED_BEFORE_RUNTIME"
+    },
+    {
+      "name": "valid-actual-170-budget",
+      "status": "PASS_VALIDATED"
+    },
+    {
+      "name": "real-owned-hung-readonly-phase",
+      "status": "PASS_TIMEOUT_KEPT_UNKNOWN_NOT_SUCCESS",
+      "watchdogMs": 120000,
+      "elapsedMs": 120005.01449999999,
+      "pid": 43522,
+      "birth": "Mon Oct 12 03:54:42 2026",
+      "timeoutReceipt": {
+        "label": "readonly-phase-negative",
+        "budgetMs": 120000,
+        "at": "2026-10-11T19:56:42.777Z"
+      },
+      "signal": {
+        "sent": true
+      },
+      "closed": {
+        "code": null,
+        "signal": "SIGTERM",
+        "exitAt": "2026-10-11T19:56:42.853Z",
+        "error": null,
+        "closeAt": "2026-10-11T19:56:42.853Z",
+        "stdioClosed": true,
+        "logClosedAt": "2026-10-11T19:56:42.853Z"
+      }
+    }
+  ],
+  "toolSha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c",
+  "budgetValidatorSha256": "9ad0cc232a7743c9887b4dd77478144b8c7128d0d9c4dfab6c1816132deb64d4",
+  "manifestSha256": "6f02f10a9fb6c88883aa1173e072a437cacf2b48e42d181166fabb40178a7a9c",
+  "fixtureScope": "真实自有Node等待负向+严格预算metadata反例；没有数据库/服务/模型/浏览器；不签实际ledger成功",
+  "ownedSurvivors": []
+}

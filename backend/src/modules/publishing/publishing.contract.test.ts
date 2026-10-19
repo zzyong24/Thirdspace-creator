@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import {
@@ -40,6 +41,7 @@ let service: PublishingService;
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedAdjacentContent(db,ctx,["output-1","output-imp"]);
   let seq = 0;
   service = createPublishingService({
     db,

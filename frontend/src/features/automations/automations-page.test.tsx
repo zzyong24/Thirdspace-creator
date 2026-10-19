@@ -21,3 +21,14 @@ it('T987 作业慢读时账号读取已启动，不把独立查询串行',async(
  try { expect(listAccounts).toHaveBeenCalledTimes(1); }
  finally {resolveJobs([]);await read;}
 });
+it('T1199 纯组任务超过100条仍全部读取，不退化为当前媒体',async()=>{
+ const batch=Array.from({length:100},(_,i)=>({id:`job-${i}`,sourceKind:'self.metrics',target:{},accountId:i%2?'xhs':'dy'})) as ScheduledJobResource[];
+ const listScheduledJobs=vi.fn(async({query}:any)=>query.page===1?batch:[{id:'job-100',sourceKind:'self.metrics',target:{},accountId:'xhs'}]);
+ const getAccountGroup=vi.fn(async()=>({id:'g',name:'真实组',members:[]}));
+ const html=renderToStaticMarkup(await AutomationsPage({scope:{groupId:'g',accountId:null},client:{listScheduledJobs,getAccountGroup,listAccounts:vi.fn(),getAccountCollectionPlanReadiness:vi.fn()} as any}));
+ expect(html).toContain('job-100');expect(listScheduledJobs).toHaveBeenCalledTimes(2);expect(listScheduledJobs.mock.calls.map(([input])=>input.query.page)).toEqual([1,2]);expect(getAccountGroup).toHaveBeenCalledWith({params:{groupId:'g'},query:undefined,body:undefined});
+});
+it('T1199 组或任务读取失败不伪装空组',async()=>{
+ const broken={listScheduledJobs:vi.fn(async()=>{throw new Error('真实任务读取失败')}),getAccountGroup:vi.fn(async()=>null),listAccounts:vi.fn(),getAccountCollectionPlanReadiness:vi.fn()} as any;
+ await expect(AutomationsPage({scope:{groupId:'g'},client:broken})).rejects.toThrow('真实任务读取失败');
+});

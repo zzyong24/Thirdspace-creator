@@ -1,0 +1,70 @@
+[
+  {
+    "file": "candidate-available-image-missing-overlay.mp4",
+    "old": "old-available-image-missing-overlay.mp4",
+    "all12FramesRgbBytesEqual": true,
+    "rgbBytes": 147456,
+    "rgbSha256": "207b5a8c9ce233eca203c96962dc8e07663ef5ee9fba2b264c43ef6d038d8b90",
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 64,
+        "height": 64,
+        "nb_frames": "12",
+        "duration": "0.500000"
+      }
+    ]
+  },
+  {
+    "file": "candidate-missing-main-color.mp4",
+    "old": "old-missing-main-color.mp4",
+    "all12FramesRgbBytesEqual": true,
+    "rgbBytes": 147456,
+    "rgbSha256": "3361cc4b66527b9f6de02f1f8f8ac491a2275f3cbd80e9fa0e3f6f7fb13f1244",
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 64,
+        "height": 64,
+        "nb_frames": "12",
+        "duration": "0.500000"
+      }
+    ]
+  },
+  {
+    "file": "candidate-missing-main-text.mp4",
+    "old": "old-missing-main-text.mp4",
+    "all12FramesRgbBytesEqual": true,
+    "rgbBytes": 147456,
+    "rgbSha256": "82d9b7d1564975e1bbe8e612c723ea023491f8f8376b0813b21fb8d482713bfa",
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 64,
+        "height": 64,
+        "nb_frames": "12",
+        "duration": "0.500000"
+      }
+    ]
+  },
+  {
+    "file": "candidate-missing-upload-audio.mp4",
+    "old": "old-missing-upload-audio.mp4",
+    "all12FramesRgbBytesEqual": true,
+    "rgbBytes": 147456,
+    "rgbSha256": "207b5a8c9ce233eca203c96962dc8e07663ef5ee9fba2b264c43ef6d038d8b90",
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 64,
+        "height": 64,
+        "nb_frames": "12",
+        "duration": "0.500000"
+      }
+    ]
+  }
+]

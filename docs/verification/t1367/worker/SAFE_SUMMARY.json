@@ -1,0 +1,501 @@
+{
+  "syntheticOnly": true,
+  "realPlatformRecovery": "UNKNOWN",
+  "results": [
+    {
+      "attempt": "RED_PUBLIC_01",
+      "exitCode": 1,
+      "sourceVersion": "2d原生产",
+      "timingMode": "原菜单真实墙钟",
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "skipped": 25
+      },
+      "durationSeconds": 128.35,
+      "logSha256": "41d3888508cd726751e47a0cc885caba3222111e1468a3bae4e782a1026b9df8"
+    },
+    {
+      "attempt": "AUX_GREEN_01",
+      "exitCode": 1,
+      "sourceVersion": "76781b初版",
+      "timingMode": "辅助受控时钟",
+      "counts": {
+        "passed": 20,
+        "failed": 5,
+        "skipped": 26
+      },
+      "durationSeconds": 80.89,
+      "logSha256": "0a19a9da23b71cf59fbc3354624d17c0306a571d104a5bdadb769202c1a53b60"
+    },
+    {
+      "attempt": "AUX_GREEN_02",
+      "exitCode": 1,
+      "sourceVersion": "6400cc中版",
+      "timingMode": "辅助受控时钟",
+      "counts": {
+        "passed": 26,
+        "failed": 1,
+        "skipped": 26
+      },
+      "durationSeconds": 85.76,
+      "logSha256": "47f6d67d2b25f0e5dc4c0805f8425b9cbfc483d5df65da456c980a1ec94240a1"
+    },
+    {
+      "attempt": "AUX_GREEN_03",
+      "exitCode": 0,
+      "sourceVersion": "89d6ea88",
+      "timingMode": "辅助受控时钟",
+      "counts": {
+        "passed": 34,
+        "failed": 0,
+        "skipped": 26
+      },
+      "durationSeconds": 106.02,
+      "logSha256": "ac7d5fca413a6873abfa3456a9fbbbdf5e1003029772bb333495471e847ee1a1"
+    },
+    {
+      "attempt": "FINAL_PUBLIC_ALL_01",
+      "exitCode": 0,
+      "sourceVersion": "89d6ea88",
+      "timingMode": "主真实墙钟+辅助受控时钟",
+      "counts": {
+        "passed": 60,
+        "failed": 0,
+        "skipped": 0
+      },
+      "durationSeconds": 304.05,
+      "logSha256": "4df5af18b3d4e0e30219d3e81f1d0f863715ac1a29a97472221f90b95288c242"
+    },
+    {
+      "attempt": "IMPL001_RED_01",
+      "exitCode": 1,
+      "sourceVersion": "89d6ea88",
+      "timingMode": "同步遮挡导致hover自身超时；不算后置RED",
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "skipped": 60
+      },
+      "durationSeconds": 128.04,
+      "logSha256": "e0355b4ed9eac55c9ab28c14772af3689251501fe425a15832a2e87c6c928a9c"
+    },
+    {
+      "attempt": "IMPL001_RED_02",
+      "exitCode": 1,
+      "sourceVersion": "89d6ea88",
+      "timingMode": "真实hover后DOM barrier；合格后置RED",
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "skipped": 60
+      },
+      "durationSeconds": 7.87,
+      "logSha256": "a1215dfe5b1deaa47c56770b0831a6622af7f33aedd00faa94ee0986bfd819f0"
+    },
+    {
+      "attempt": "IMPL001_GREEN_01",
+      "exitCode": 0,
+      "sourceVersion": "d1c0df98",
+      "timingMode": "真实hover后DOM barrier；受控时钟",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 60
+      },
+      "durationSeconds": 8.67,
+      "logSha256": "ec2de51332a79e9f14b495395dda847adbe2a0472eaf92920cf91cdbfa1b7c31"
+    },
+    {
+      "attempt": "FINAL_POST_IMPL001_PUBLIC_01",
+      "exitCode": 0,
+      "sourceVersion": "d1c0df98",
+      "timingMode": "辅助受控时钟；唯一skip为89d6真实120秒主族",
+      "counts": {
+        "passed": 60,
+        "failed": 0,
+        "skipped": 1
+      },
+      "durationSeconds": 182.81,
+      "logSha256": "93170fae2c0c524e949c5215628e1f7e9ce88d538710cebd09912a7fad2d7023"
+    }
+  ],
+  "frozenSha256": {
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+    "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+    "ai-worker/src/runtime/platform/wechat-channels-entry.integration.test.ts": "66d27f152f05251a74b785c765caf76cb647207dfff2efcc7723e7708419d363"
+  },
+  "inputBytesStable": true,
+  "mainWallClockEvidence": {
+    "executedWitness": "89d6ea88a11a1b7e40aab24f09f61c79411fdb23c86172e237c0d3e8c6867f5e",
+    "inheritedForFinal": "只继承未改原菜单观察时序，不冒d1全61实跑",
+    "safe": {
+      "status": "complete",
+      "reasonCode": null,
+      "elapsedMs": 121374,
+      "hoverWallMs": [
+        120322
+      ],
+      "events": [
+        "phase:recover_owner",
+        "phase:hover_owner",
+        "hover",
+        "phase:wait_associated_entry",
+        "entry",
+        "followers",
+        "entry"
+      ],
+      "physical": {
+        "opened": 1,
+        "closed": 1,
+        "released": 1,
+        "downloads": 3,
+        "held": false,
+        "physicalConfirmed": 1,
+        "physicalStoppedAt": 129011.190333,
+        "leaseReleasedAt": 129013.059875,
+        "pendingStop": false
+      },
+      "diagnostics": []
+    }
+  },
+  "finalLegacyEvidence": {
+    "count": 25,
+    "allExplicitHoverZero": true,
+    "cases": [
+      {
+        "mode": "lateDirect",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "direct",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "centre",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "lateCentre",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "both",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "directDuplicateCentre",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "lateDirectDuplicateCentre",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "beforeCentreClick",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "direct",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": true,
+        "status": "complete",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 3
+      },
+      {
+        "mode": "missing",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "hidden",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "duplicateEntry",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "duplicateCentre",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "missingAfterCentre",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "direct",
+        "identity": "wrong",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "direct",
+        "identity": "login",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "needsAuth",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "direct",
+        "identity": "foreign",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "lateDirect",
+        "identity": "valid",
+        "cancelAt": "wait",
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "cancelled",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "centre",
+        "identity": "valid",
+        "cancelAt": "centreClick",
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "cancelled",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "direct",
+        "identity": "valid",
+        "cancelAt": "entryClick",
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "cancelled",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "direct",
+        "identity": "valid",
+        "cancelAt": "route",
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "cancelled",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "lateDirect",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": "wait",
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "centre",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": "centreClick",
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "direct",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": "route",
+        "worksAlreadyTarget": false,
+        "status": "failed",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 1,
+        "released": 1,
+        "held": false,
+        "downloads": 0
+      },
+      {
+        "mode": "duplicateEntry",
+        "identity": "valid",
+        "cancelAt": null,
+        "expireAt": null,
+        "worksAlreadyTarget": false,
+        "status": "partial",
+        "hoverActionCount": 0,
+        "physicalConfirmed": 0,
+        "released": 0,
+        "held": true,
+        "downloads": 0
+      }
+    ]
+  },
+  "finalControlledStatus": "PUBLIC_CONTROLLED_PASS_REAL_RECOVERY_UNKNOWN",
+  "processReceipts": {
+    "file": "PROCESS_RECEIPTS.json",
+    "sha256": "757665fd3bf636f31c85a5c2d06277362e8d68ac4c0abd113d1b1dce85e53055",
+    "exitCodesFrom": "实际tools.write_stdin完成返回，非Tests结果推断"
+  }
+}

@@ -1,0 +1,203 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: 21-editor-adopt.spec.cjs >> A1302EDITADOPT-article 原编辑候选预览采纳刷新与真实状态
+- Location: ../docs/verification/t1302/acceptance/public/a/21-editor-adopt.spec.cjs:4:41
+
+# Error details
+
+```
+Error: page.evaluate: TypeError: Cannot read properties of null (reading 'getBoundingClientRect')
+    at eval (eval at evaluate (:302:30), <anonymous>:13:17)
+    at eval (eval at evaluate (:302:30), <anonymous>:21:9)
+    at UtilityScript.evaluate (<anonymous>:304:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - complementary "主侧栏" [ref=e4]:
+      - generic [ref=e5]:
+        - img [ref=e8]
+        - button "展开侧栏" [pressed] [ref=e11]:
+          - img [ref=e12]
+      - navigation "主要导航" [ref=e16]:
+        - link "首页" [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img [ref=e18]
+        - link "创作者总览" [ref=e23] [cursor=pointer]:
+          - /url: /overview
+          - img [ref=e24]
+        - link "定位中心" [ref=e26] [cursor=pointer]:
+          - /url: /positioning
+          - img [ref=e27]
+        - link "内容雷达" [ref=e29] [cursor=pointer]:
+          - /url: /intelligence
+          - img [ref=e30]
+        - link "选题" [ref=e37] [cursor=pointer]:
+          - /url: /topics
+          - img [ref=e38]
+        - link "项目" [ref=e41] [cursor=pointer]:
+          - /url: /projects
+          - img [ref=e42]
+        - link "知识库" [ref=e44] [cursor=pointer]:
+          - /url: /knowledge
+          - img [ref=e45]
+        - link "素材中心" [ref=e47] [cursor=pointer]:
+          - /url: /assets
+          - img [ref=e48]
+        - link "创作画布" [ref=e53] [cursor=pointer]:
+          - /url: /canvases
+          - img [ref=e54]
+        - link "发布中心" [ref=e58] [cursor=pointer]:
+          - /url: /publishing
+          - img [ref=e59]
+        - link "运营分析" [ref=e62] [cursor=pointer]:
+          - /url: /daily-report
+          - img [ref=e63]
+        - link "自动化" [ref=e65] [cursor=pointer]:
+          - /url: /automations
+          - img [ref=e66]
+        - link "设置" [ref=e70] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e71]
+      - generic [ref=e74]:
+        - button "帮助与反馈" [ref=e75]:
+          - img [ref=e76]
+        - button "当前账号组：T1301-A-5f885d39-bf36-4ec3-9988-84cc561584a9" [ref=e86] [cursor=pointer]:
+          - img [ref=e88]
+        - generic "创作者" [ref=e92]:
+          - generic [ref=e94]: "?"
+    - generic [ref=e95]:
+      - banner [ref=e96]:
+        - generic [ref=e97]:
+          - generic "先写问题，再记录方法" [ref=e99]
+          - list "项目工作面":
+            - listitem [ref=e100]:
+              - link "脚本" [ref=e101] [cursor=pointer]:
+                - /url: /projects/project-e2aea52e-83
+            - listitem [ref=e102]:
+              - link "文章" [ref=e103] [cursor=pointer]:
+                - /url: /projects/project-e2aea52e-83/article?outputId=output-e2aea52e-130
+            - listitem [ref=e104]:
+              - link "图文" [ref=e105] [cursor=pointer]:
+                - /url: /projects/project-e2aea52e-83/outputs/output-e2aea52e-143/image
+            - listitem [ref=e106]:
+              - link "复盘" [ref=e107] [cursor=pointer]:
+                - /url: /projects/project-e2aea52e-83/review
+        - link "搜索" [ref=e109] [cursor=pointer]:
+          - /url: /search
+          - img
+        - button "充值" [ref=e111]
+      - generic [ref=e117]:
+        - main [ref=e119]:
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - heading "公众号成稿" [level=1] [ref=e122]
+              - paragraph [ref=e123]: 原稿来自脚本，在对话中调整这篇文章。
+            - button "重新组织内容" [ref=e124]
+          - generic [ref=e125]:
+            - generic [ref=e126]: 当前成稿已保存
+            - link "查看脚本原稿" [ref=e127] [cursor=pointer]:
+              - /url: /projects/project-e2aea52e-83
+          - region "NoteRelay 排版预览" [ref=e128]:
+            - generic [ref=e129]:
+              - heading "成稿预览" [level=2] [ref=e131]
+              - generic [ref=e132]:
+                - button "复制公众号文章" [ref=e133]
+                - group [ref=e134]:
+                  - generic "更多导出" [ref=e135] [cursor=pointer]
+            - generic "公众号排版编辑器" [ref=e138]:
+              - article [ref=e141]:
+                - generic [ref=e143]:
+                  - generic [ref=e144]:
+                    - paragraph [ref=e145]: 石墨极简风
+                    - heading "先写问题，再记录方法" [level=1] [ref=e146]
+                  - generic [ref=e148]:
+                    - paragraph [ref=e149]: "01"
+                    - heading "先写清楚，这份笔记要解决什么" [level=3] [ref=e151]
+                  - paragraph [ref=e152]:
+                    - generic [ref=e153]: 我整理笔记时
+                    - text: ，会先写清楚要解决的问题，再记下实际做过的步骤，最后检查结果。
+                  - paragraph [ref=e154]:
+                    - generic [ref=e155]: 这个顺序
+                    - text: ，可以从笔记开头的一句话开始：这次，我想弄明白什么？
+                  - paragraph [ref=e156]:
+                    - generic [ref=e157]: 先把问题放在这里
+                    - text: ，后面记录的方法就有了对应的对象。回头看时，也能沿着这个问题，检查自己做过什么，还有哪里需要继续想。
+                  - generic [ref=e159]:
+                    - paragraph [ref=e160]: "02"
+                    - heading "记录实际做过的步骤" [level=3] [ref=e162]
+                  - paragraph [ref=e163]:
+                    - generic [ref=e164]: 问题写下来之后
+                    - text: ，接着记实际尝试过的方法。
+                  - paragraph [ref=e165]:
+                    - generic [ref=e166]: 这一部分可以写得具体一些
+                    - text: ：为了回答这个问题，我做了什么？先尝试了哪一步，接下来又做了什么？
+                  - paragraph [ref=e167]:
+                    - generic [ref=e168]: 如果某一步还没有做
+                    - text: ，就留作下一步。这样，已经发生的尝试和准备继续做的事情，都能在笔记里找到各自的位置。
+                  - generic [ref=e170]:
+                    - paragraph [ref=e171]: "03"
+                    - heading "以一份阅读笔记为例" [level=3] [ref=e173]
+                  - paragraph [ref=e174]:
+                    - generic [ref=e175]: 例如整理一份阅读笔记
+                    - text: ，我会先问：这次阅读解决了什么疑问？然后写下我试过的方法，以及还没有想明白的地方。
+                  - paragraph [ref=e176]:
+                    - generic [ref=e177]: 沿着这个顺序
+                    - text: ，一份阅读笔记可以留下四项内容：
+                  - generic [ref=e178]:
+                    - generic [ref=e179]:
+                      - generic [ref=e180]: •
+                      - paragraph [ref=e181]: 问题：这次阅读想弄明白什么？
+                    - generic [ref=e182]:
+                      - generic [ref=e183]: •
+                      - paragraph [ref=e184]: 尝试：围绕这个问题，实际做过哪些步骤？
+                    - generic [ref=e185]:
+                      - generic [ref=e186]: •
+                      - paragraph [ref=e187]: 结果：现在能回答到哪一步？
+                    - generic [ref=e188]:
+                      - generic [ref=e189]: •
+                      - paragraph [ref=e190]: 未解：还有什么地方没有想明白？
+                  - paragraph [ref=e191]:
+                    - generic [ref=e192]: 这是一份可填写的记录提纲
+                    - text: 。每一项都按实际情况写；暂时没有答案的地方，也可以直接留下疑问。
+                  - generic [ref=e194]:
+                    - paragraph [ref=e195]: "04"
+                    - heading "回到最初的问题，检查结果" [level=3] [ref=e197]
+                  - paragraph [ref=e198]:
+                    - generic [ref=e199]: 记完方法之后
+                    - text: ，再回来看最初的问题。
+                  - paragraph [ref=e200]:
+                    - generic [ref=e201]: 哪些地方已经有了答案
+                    - text: ？哪些地方只是试过，还不能下结论？哪些疑问仍然值得继续追问？把这些状态写清楚，下一次再打开笔记时，就有一个继续思考的起点。
+                  - paragraph [ref=e202]:
+                    - generic [ref=e203]: 这里没有统计数据
+                    - text: ，也不承诺按这个顺序记录，效率就一定提高。它是我想保留的一种整理习惯：让问题、尝试和结果在同一份记录里对应起来。
+                  - generic [ref=e205]:
+                    - paragraph [ref=e206]: "05"
+                    - heading "结束时，留下一个值得追问的问题" [level=3] [ref=e208]
+                  - paragraph [ref=e209]:
+                    - generic [ref=e210]: 我想保留一个习惯
+                    - text: ：每次结束工作，记下一个仍然值得追问的问题。
+                  - paragraph [ref=e211]:
+                    - generic [ref=e212]: 可以在笔记最后留一行
+                    - text: ：接下来，我还想弄明白什么？
+                  - paragraph [ref=e213]:
+                    - generic [ref=e214]: 这个问题暂时不需要有答案
+                    - text: 。先把它写清楚，再决定下一步。
+            - group [ref=e215]:
+              - generic "开源来源与许可" [ref=e216] [cursor=pointer]
+          - group [ref=e217]:
+            - generic "历史版本" [ref=e218] [cursor=pointer]
+        - button "打开编导" [ref=e219]
+  - alert [ref=e222]
+```

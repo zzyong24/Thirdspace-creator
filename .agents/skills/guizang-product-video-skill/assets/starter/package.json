@@ -1,0 +1,7 @@
+{
+  "name": "software-update-film",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "node build.mjs", "preview": "node preview.mjs", "render": "node render.mjs"},
+  "devDependencies": {"esbuild": "0.27.3", "playwright": "1.58.1", "react": "19.2.3", "react-dom": "19.2.3"}
+}

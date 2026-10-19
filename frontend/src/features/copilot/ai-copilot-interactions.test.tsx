@@ -11,8 +11,9 @@
  */
 
 import * as React from "react";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import {loadAssistantEngine,loadModelRouting,writeAssistantEngine} from "./assistant-engine";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listTasks = vi.fn();
@@ -22,6 +23,9 @@ const listMessages = vi.fn();
 const listConversations = vi.fn();
 // T-039b @项目引用:输入 @ 弹项目列表走这个只读 op。
 const listProjects = vi.fn();
+const getPreferences = vi.fn();
+const getModelRouting = vi.fn();
+const patchPreferences = vi.fn();
 
 // 「继续」 routing uses next/navigation's useRouter; mock it so the island mounts
 // under the test renderer (no real app-router provider).
@@ -58,6 +62,9 @@ vi.mock("@/lib/contract-client", () => ({
     listConversations: (...args: unknown[]) => listConversations(...args),
     // T-039b @项目引用:项目补全下拉的数据源。
     listProjects: (...args: unknown[]) => listProjects(...args),
+    getPreferences: (...args: unknown[]) => getPreferences(...args),
+    getModelRouting: (...args: unknown[]) => getModelRouting(...args),
+    patchPreferences: (...args: unknown[]) => patchPreferences(...args),
   },
 }));
 
@@ -75,16 +82,24 @@ let mockStatus = "ready";
 // [T-231⑩] error/regenerate 可注入:断言「出错 → 重试按钮 → regenerate()」通路。
 const regenerate = vi.fn();
 let mockError: Error | null = null;
+let mockCurrentTaskId: string | null = null;
 let initialChatTransport: { body?: unknown } | null = null;
 // T-954：真实组件已改用持久 Chat 会话；替身仍保留首个 transport 检查发送时上下文。
 let mockedLiveSession: object | null = null;
 vi.mock("./live-chat-session", () => ({
+  acquireLiveChatSession: () => () => {},
   getLiveChatSession: () => {
     mockedLiveSession ??= {
-      chat: { messages: [], status: "ready" },
-      control: { fetch: vi.fn(), cancel: vi.fn(async () => {}) },
+      chat: { messages: [], status: "ready", stop },
+      control: {
+        fetch: vi.fn(),
+        cancel: vi.fn(async () => true),
+        currentTaskId: vi.fn(() => mockCurrentTaskId),
+      },
       conversationId: null,
       epoch: 0,
+      executionEngine: "pi",
+      sourceEngines: new Map(),
       get transport() { return initialChatTransport; },
       set transport(value: { body?: unknown } | null) { initialChatTransport ??= value; },
     };
@@ -136,7 +151,19 @@ const VM: CopilotContentViewModel = {
   smartRecommendations: [],
 };
 
-beforeEach(() => {
+beforeEach(async () => {
+  // 引擎偏好以真实后端读/写回执为准；每例从明确Pi服务值开始，不借本地缓存造就绪。
+  getPreferences.mockReset();
+  getPreferences.mockResolvedValue({assistantExecutionEngine:'pi'});
+  getModelRouting.mockReset();
+  // 原持久偏好投影：choices仍null，不造v2能力或改变legacy请求engine。
+  getModelRouting.mockImplementation(async()=>({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:(await getPreferences()).assistantExecutionEngine,effectiveChoices:{},capabilities:[]}));
+  patchPreferences.mockReset();
+  patchPreferences.mockImplementation(async (request: {body: {assistantExecutionEngine: 'pi'|'codex'}}) => {
+    const result={assistantExecutionEngine:request.body.assistantExecutionEngine};
+    getPreferences.mockResolvedValue(result);
+    return result;
+  });
   mockedLiveSession = null;
   listTasks.mockReset();
   listTasks.mockResolvedValue([]);
@@ -161,16 +188,80 @@ beforeEach(() => {
   mockSearch = "copilot=open";
   regenerate.mockReset();
   mockError = null;
+  mockCurrentTaskId = null;
   initialChatTransport = null;
   // 每个用例从干净的会话存档起步(前一个用例可能写过 localStorage)。
   try {
     window.localStorage.clear();
+    // 本文件发送用例使用合法空组前提；服务/引擎仍是明示fixture，不代真实授权。
+    window.localStorage.setItem("creatoros:current-group", "fixture-valid-empty-group");
   } catch {
     /* noop */
   }
+  await loadModelRouting(true);
+  await loadAssistantEngine(true);
 });
 
 describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
+  it("[T-1055] 编导输入区不显示引擎选择和重查控件", () => {
+    render(<AICopilotContent viewModel={VM} />);
+    expect(screen.queryByRole("combobox", {name: "编导引擎"})).toBeNull();
+    expect(screen.queryByRole("button", {name: "重新检查"})).toBeNull();
+  });
+
+  it("[T-1055] CreatorOS 默认引擎不触发本地 Codex 检测", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockRejectedValue(Error("检测替身"));
+    render(<AICopilotContent viewModel={VM} />);
+    await act(async () => {});
+    expect(fetchMock.mock.calls.filter(([input]) => String(input) === "/api/chat/engines")).toHaveLength(0);
+  });
+
+  it("[T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: true, version: "0.159.3", loginStatus: "authenticated"}]}), {status: 200}));
+    const view = render(<AICopilotContent viewModel={VM} />);
+    const transport = initialChatTransport as unknown as {prepareSendMessagesRequest: (input: Record<string, unknown>) => {body: {executionEngine?: string}}};
+    const prepare = (id: string, trigger = "submit-message") => transport.prepareSendMessagesRequest({body: {}, id: "chat", messages: [{id, role: "user", parts: []}], trigger}).body;
+    expect(prepare("original").executionEngine).toBe("pi");
+    mockStatus = "streaming";
+    view.rerender(<AICopilotContent viewModel={VM} />);
+    await act(async () => {await writeAssistantEngine("codex");});
+    expect(patchPreferences).toHaveBeenCalledWith({params:undefined,query:undefined,body:{assistantExecutionEngine:'codex'}});
+    await waitFor(() => expect((mockedLiveSession as {executionEngine: string}).executionEngine).toBe("codex"));
+    expect(initialChatTransport).toBe(transport);
+    expect(stop).not.toHaveBeenCalled();
+    expect(prepare("original", "regenerate-message").executionEngine).toBe("pi");
+    expect(prepare("new").executionEngine).toBe("codex");
+  });
+
+  it("[T-1055] Codex 不可用时保留输入并指向真实设置卡", async () => {
+    window.localStorage.setItem("creatoros:assistant-engine:v1", "codex");
+    getPreferences.mockResolvedValue({assistantExecutionEngine:'codex'});
+    const choices={text:'codex',vision:'codex',image:'codex',video:'official',audio:'official',embed:'official'};
+    getModelRouting.mockResolvedValue({schemaVersion:1,revision:1,choices,legacyExecutionEngine:'codex',effectiveChoices:choices,capabilities:[{mode:'text',capability:'copilot.assist',source:'codex',status:'unavailable',reasonCode:'CODEX_VERSION_UNSUPPORTED'}]});
+    await loadModelRouting(true);
+    const probe=vi.spyOn(globalThis, "fetch");
+    const user = userEvent.setup();
+    render(<AICopilotContent viewModel={VM} />);
+    await user.type(screen.getByLabelText("我能帮你做什么"), "保留我的输入");
+    await waitFor(() => expect(screen.getByLabelText("提交提示给 Copilot")).toBeDisabled());
+    expect(screen.getByRole("link", {name: "模型设置"})).toHaveAttribute("href", "/settings?highlight=assistant-engine");
+    expect(probe).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("保留我的输入");
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it("文章配图深链在已有会话仍预填，并提交可信文章与段落锚点", async () => {
+    mockMessages = [{id: "earlier", role: "assistant", parts: [{type: "text", text: "上一轮答复"}]}];
+    mockSearch = "copilot=open&surface=project&fn=material.generate.image&selKind=article_section&selId=section-1" +
+      "&selOutputId=output-1&selVersionId=version-2&selProjectId=project-1" +
+      "&scope=project%3Aproject-1&prefill=" + encodeURIComponent("为此段生成图片");
+    render(<AICopilotContent viewModel={VM} />);
+    await waitFor(() => expect((screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement).value).toBe("为此段生成图片"));
+    const body = await (initialChatTransport!.body as () => Record<string, unknown>)();
+    expect(body).toMatchObject({chatContext: {projectId: "project-1", selection: {
+      kind: "article_section", ids: ["section-1"], outputId: "output-1", versionId: "version-2",
+    }}});
+  });
   it("[T-473] 深链/嵌入 functionKey 只消费一次，新命令到来才重新武装", () => {
     const command = createOneShotFunctionKey("topic.enrich");
     expect(command.consume()).toBe("topic.enrich");
@@ -301,6 +392,37 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
         }),
       );
     });
+  });
+
+  it("同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用",async()=>{
+    // 本例保持原legacy account-only归属，不由默认空组替代。
+    window.localStorage.removeItem("creatoros:current-group");
+    window.localStorage.setItem("creatoros:current-account","account-1");
+    const plan={planRevision:1,steps:[{stepId:"report",title:"生成 HTML 报告",dependsOn:[],status:"succeeded",
+      operationRefs:["call-1"],artifactRefs:["wa-valid@1"]}]};
+    const artifact={artifactId:"wa-valid",version:1,mime:"text/html",size:12,hash:"a".repeat(64),
+      relativePath:"报告/分析.html",taskId:"task-1",provenance:[]};
+    const result=(operationId:string,payload:unknown,refs:string[]=[])=>({status:"succeeded",operationId,
+      artifactRefs:refs,progressCursor:null,content:[{type:"text",text:JSON.stringify(payload)}]});
+    mockMessages=[{id:"workbench-1",role:"assistant",parts:[
+      {type:"data-workbench-progress",id:"artifact-1",data:{operationId:"artifact-1",progressCursor:"p1",
+        content:[{type:"text",text:"正在整理旧快照"}]}},
+      {type:"data-workbench-progress",id:"artifact-1",data:{operationId:"artifact-1",progressCursor:"p2",
+        content:[{type:"text",text:"正在保存报告"}]}},
+      {type:"tool-plan.update",toolCallId:"plan-1",state:"output-available",input:{},
+        output:{status:"ok",data:{workbench:result("plan-1",plan)}}},
+      {type:"tool-artifact.register",toolCallId:"artifact-1",state:"output-available",input:{path:"报告/分析.html"},
+        output:{kind:"workbench.result",result:result("artifact-1",artifact,["wa-valid@1"])}},
+      {type:"tool-artifact.register",toolCallId:"artifact-forged",state:"output-available",input:{path:"假.html"},
+        output:{kind:"workbench.result",result:result("artifact-forged",{...artifact,artifactId:"wa-forged"},["wa-other@1"])}},
+    ]}];
+    render(<AICopilotContent viewModel={VM}/>);
+    expect(screen.getByText("生成 HTML 报告")).toBeTruthy();
+    expect(screen.getByText("已完成 1/1 步")).toBeTruthy();
+    expect(screen.getByText("正在保存报告")).toBeTruthy();
+    expect(screen.queryByText("正在整理旧快照")).toBeNull();
+    expect(screen.getByRole("region",{name:"产物 分析.html 第 1 版"})).toBeTruthy();
+    expect(screen.getAllByRole("button",{name:"预览"})).toHaveLength(1);
   });
 
   it("[T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定", async () => {
@@ -715,15 +837,15 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     ];
     mockError = new Error("provider stream interrupted");
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
-    expect(await screen.findByText(/目标段落已保留/)).toBeInTheDocument();
+    expect(await screen.findByText(/沿原任务自动恢复/)).toBeInTheDocument();
     expect(
       document.querySelector(
         '[data-slot="context-chip"][data-kind="script_section"]',
       ),
     ).not.toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "重试" }));
-    expect(regenerate).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "重试" })).not.toBeInTheDocument();
+    await waitFor(() => expect(regenerate).toHaveBeenCalledTimes(1), { timeout: 2_000 });
     const retryResolver = initialChatTransport?.body;
     expect(typeof retryResolver).toBe("function");
     const retryBody = await (
@@ -834,7 +956,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     ];
     mockError = new Error("provider stream interrupted");
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
-    expect(await screen.findByText(/目标段落已保留/)).toBeInTheDocument();
+    expect(await screen.findByText(/沿原任务自动恢复/)).toBeInTheDocument();
 
     const textarea = screen.getByLabelText("我能帮你做什么");
     await user.type(textarea, "先不要改这一段，改为生成完整稿。");
@@ -894,7 +1016,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
 
     expect(
-      await screen.findByText(/没有生成可采纳的局部改稿候选/),
+      await screen.findByText(/沿原任务补全结果/),
     ).toBeInTheDocument();
     expect(
       document.querySelector(
@@ -949,7 +1071,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
     await waitFor(() =>
       expect(
-        screen.queryByText(/没有生成可采纳的局部改稿候选/),
+        screen.queryByText(/沿原任务补全结果/),
       ).not.toBeInTheDocument(),
     );
     await waitFor(() =>
@@ -1173,21 +1295,100 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  it("[T-231⑩] 对话出错 → 渲「重试」按钮,点击走 regenerate()(重发最后一轮)", async () => {
-    const user = userEvent.setup();
+  it("[T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户", async () => {
+    vi.useFakeTimers();
     mockError = new Error("boom");
     mockMessages = [
       { id: "u1", role: "user", parts: [{ type: "text", text: "你好" }] },
     ];
     render(<AICopilotContent viewModel={VM} />);
-    expect(screen.getByText("这次没有生成成功")).toBeInTheDocument();
-    expect(screen.getByText("刚才输入的内容还在，可以直接再试一次。")).toBeInTheDocument();
-    const retry = document.querySelector(
-      '[data-slot="copilot-error-retry"]',
-    ) as HTMLButtonElement;
-    expect(retry).not.toBeNull();
-    await user.click(retry);
+    expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+    expect(screen.getByText("输入和已完成内容已保留，系统正在沿原任务自动恢复。")).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+    expect(document.querySelector('[data-slot="copilot-error-auto-recovery"]')).not.toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
     expect(regenerate).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("[T-1022] 模型断流沿原任务自动恢复", async () => {
+    vi.useFakeTimers();
+    mockError = new Error("CHAT_MODEL_RESPONSE_INTERRUPTED");
+    mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", text: "继续生成" }] }];
+    render(<AICopilotContent viewModel={VM} />);
+    expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+    expect(screen.getByText(/系统正在沿原任务自动恢复/)).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
+    expect(regenerate).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("[T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈", async () => {
+    vi.useFakeTimers();
+    mockError = new Error("temporary upstream failure");
+    mockMessages = [
+      { id: "u-stalled", role: "user", parts: [{ type: "text", text: "生成可视化文件" }] },
+    ];
+    regenerate.mockResolvedValue(undefined);
+
+    render(<AICopilotContent viewModel={VM} />);
+    expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(7_100);
+    });
+
+    expect(regenerate).toHaveBeenCalledTimes(3);
+    expect(screen.getByText("自动恢复暂未取得进展")).toBeInTheDocument();
+    const continueButton = screen.getByRole("button", { name: "继续恢复" });
+    expect(continueButton).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="copilot-error-auto-recovery"]')).toBeNull();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(regenerate).toHaveBeenCalledTimes(3);
+
+    fireEvent.click(continueButton);
+    expect(regenerate).toHaveBeenCalledTimes(4);
+    vi.useRealTimers();
+  });
+
+  it("[TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败", async () => {
+    vi.useFakeTimers();
+    mockCurrentTaskId = "execution-original";
+    mockError = new Error("聊天事件连接中断，已完成内容仍保存在原任务中。");
+    mockMessages = [
+      { id: "u-durable", role: "user", parts: [{ type: "text", text: "继续生成报告" }] },
+    ];
+    regenerate.mockResolvedValue(undefined);
+
+    render(<AICopilotContent viewModel={VM} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(7_100);
+    });
+
+    expect(screen.getByText("自动恢复暂未取得进展")).toBeInTheDocument();
+    expect(screen.getByText(/后台任务和已完成内容都已保留/)).toBeInTheDocument();
+    expect(screen.queryByText(/任务失败/)).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("[T-1023] 组件卸载后清理恢复计时器，不在后台继续发请求", async () => {
+    vi.useFakeTimers();
+    mockError = new Error("temporary upstream failure");
+    mockMessages = [
+      { id: "u-unmount", role: "user", parts: [{ type: "text", text: "生成报告" }] },
+    ];
+    const view = render(<AICopilotContent viewModel={VM} />);
+    view.unmount();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(regenerate).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it.each(["CHAT_RESULT_UNCONFIRMED", "本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。"])("[T-957] 原任务结果未知时不显示重新提交按钮：%s", (message) => {
@@ -1238,14 +1439,17 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
+    // 页面还有独立的引擎状态读取，不能消耗充值接口的回执。
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      if (String(input) === "/api/v1/local/ai-credits/connect") {
+        return new Response(JSON.stringify({
           openUrl: "https://growth.example/credits/launch#PORTAL_CODE_123",
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
-    );
+        }), {status: 200, headers: {"content-type": "application/json"}});
+      }
+      return new Response(JSON.stringify({engines: []}), {
+        status: 200, headers: {"content-type": "application/json"},
+      });
+    });
     const user = userEvent.setup();
     mockError = new Error("AI 额度不足，请充值后再试。");
     mockMessages = [
@@ -1263,7 +1467,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/v1/local/ai-credits/connect",
-        { method: "POST", headers: {} },
+        { method: "POST", headers: {}, cache: "no-store", redirect: "manual", signal: expect.any(AbortSignal) },
       ),
     );
     await waitFor(() =>
@@ -1274,6 +1478,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     // 预置该 scope(裸打开 = global,不再借 topics 桶)的指针 + 后端返回两条历史消息。
     window.localStorage.setItem("copilot:conv:global", "conv-restore");
     listMessages.mockResolvedValueOnce([
@@ -1307,6 +1513,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     window.localStorage.setItem("copilot:conv:global", "conv-gone");
     listMessages.mockRejectedValueOnce(new Error("404 conversation not found"));
     render(<AICopilotContent viewModel={VM} />);
@@ -1328,6 +1536,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     // 无任何本地指针;服务端该 scope 有一条最近会话 → 自动恢复它的消息。
     listConversations.mockResolvedValueOnce([
       { id: "conv-latest", title: "上次的全局对话", createdAt: "2026-07-01T08:00:00.000Z" },
@@ -1359,6 +1569,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     const user = userEvent.setup();
     // 左下角(global)已有延续中的会话指针;当前面板从选题岛打开(surface=topics)。
     window.localStorage.setItem("copilot:conv:global", "conv-global-keep");
@@ -1425,6 +1637,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     const user = userEvent.setup();
     window.localStorage.setItem("copilot:conv:global", "conv-existing");
     render(<AICopilotContent viewModel={VM} />);

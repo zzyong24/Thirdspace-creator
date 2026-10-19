@@ -1,0 +1,11 @@
+import {defineConfig} from '../../../../backend/node_modules/vitest/dist/config.js';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {createRequire} from 'node:module';
+import {dirname,join} from 'node:path';
+const require=createRequire(new URL('../../../../backend/package.json',import.meta.url));
+const binding=JSON.parse(readFileSync(new URL('../WORKER_BINDING.json',import.meta.url),'utf8'));
+const bytes=readFileSync(binding.executionWorkerPath);
+if(bytes.length!==binding.bytes||createHash('sha256').update(bytes).digest('hex')!==binding.sha256)throw Error('immutable worker绑定不符');
+if(process.env.DATABASE_URL||process.env.PGLITE_DATA_DIR)throw Error('等价回归不得继承外部数据库路径');
+export default defineConfig({root:new URL('../../../../backend',import.meta.url).pathname,cacheDir:new URL('./vite-automation',import.meta.url).pathname,resolve:{alias:[{find:/^vitest$/,replacement:join(dirname(require.resolve('vitest/package.json')),'dist/index.js')},{find:/^@creatoros\/backend$/,replacement:require.resolve('@creatoros/backend')},{find:/^@creatoros\/ai-worker$/,replacement:require.resolve('@creatoros/ai-worker')}]},test:{include:[new URL('./automation-equivalent.test.ts',import.meta.url).pathname],retry:0,maxWorkers:1,testTimeout:900000,hookTimeout:180000}});

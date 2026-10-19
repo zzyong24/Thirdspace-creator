@@ -1,0 +1,228 @@
+{
+  "timestamp": "2026-10-04T16:09:28.987775+00:00",
+  "environment": "隔离本地 PGlite 与媒体目录；公共 HTTP；没有浏览器自动化",
+  "accountId": "acct-ef4eab23-41",
+  "rpc": [
+    {
+      "operation": "projects.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "assets.uploads.create",
+      "status": 200
+    },
+    {
+      "operation": "assets.uploads.complete",
+      "status": 200
+    },
+    {
+      "operation": "assets.fileDownloadUrl",
+      "status": 200
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 409
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 409
+    },
+    {
+      "operation": "graphicPosts.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.get",
+      "status": 200
+    }
+  ],
+  "projectId": "project-f73ddd4a-50",
+  "assetId": "asset-f73ddd4a-68",
+  "assetFileId": "afile-f73ddd4a-72",
+  "exactAssetSha256": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+  "article": {
+    "outputId": "output-f73ddd4a-76",
+    "versionId": "artifactversion-f73ddd4a-86",
+    "saveReadback": true,
+    "historyReadback": true,
+    "idempotency": true,
+    "staleCasRejected": true
+  },
+  "image": {
+    "outputId": "output-f73ddd4a-92",
+    "versionId": "artifactversion-f73ddd4a-102",
+    "saveReadback": true,
+    "historyReadback": true,
+    "idempotency": true,
+    "staleCasRejected": true
+  },
+  "nativeGraphicPublicService": {
+    "realExactImageRefPreserved": true,
+    "designReadback": true,
+    "versionId": "artifactversion-f73ddd4a-109",
+    "browserEnginePath": "未运行，服务夹具不冒充浏览器编辑/导出"
+  },
+  "doocsPublicService": {
+    "oldLayoutAndStableSectionsPreserved": true,
+    "versionId": "artifactversion-f73ddd4a-113",
+    "browserEnginePath": "未运行，服务夹具不冒充原CodeMirror交互"
+  },
+  "pages": [
+    {
+      "path": "/projects/project-f73ddd4a-50",
+      "status": 200,
+      "bytes": 178259,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/projects/project-f73ddd4a-50/article?outputId=output-f73ddd4a-76",
+      "status": 200,
+      "bytes": 84872,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/projects/project-f73ddd4a-50/outputs/output-f73ddd4a-92/image",
+      "status": 200,
+      "bytes": 113476,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/noterelay/native/native.js",
+      "status": 200,
+      "bytes": 623006,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/noterelay/native/native.css",
+      "status": 200,
+      "bytes": 29017,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/doocs-md/native/native.js",
+      "status": 200,
+      "bytes": 112304,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/doocs-md/native/native.css",
+      "status": 200,
+      "bytes": 133873,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/kuaitu/native/native.js",
+      "status": 200,
+      "bytes": 3662150,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/kuaitu/native/native.css",
+      "status": 200,
+      "bytes": 3295999,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/opencut-classic/native/native.js",
+      "status": 200,
+      "bytes": 6605600,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/opencut-classic/native/native.css",
+      "status": 200,
+      "bytes": 127770,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/reference-editors/sources/noterelay/source.zip",
+      "status": 200,
+      "bytes": 164837,
+      "containsLegacyNoteRelayEntry": false
+    },
+    {
+      "path": "/projects/project-ef4eab23-166",
+      "status": 200,
+      "bytes": 157964,
+      "containsLegacyNoteRelayEntry": false
+    }
+  ],
+  "unverified": [
+    "真实浏览器像素与 PNG 捕获",
+    "系统剪贴板写入与公众号粘贴",
+    "真实模型生成",
+    "平台发布"
+  ]
+}

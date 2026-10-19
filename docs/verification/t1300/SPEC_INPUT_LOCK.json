@@ -1,0 +1,15 @@
+{
+  "schema": "t1300-spec-review-input-lock/v1",
+  "sourceHead": "4eb101161fa25f1a446fd84a67817cd904497d65",
+  "inputs": {
+    "docs/verification/t1300/FUNCTION_MATRIX.md": "c4d57cf7fbb4025d91c03d84f69f24795b5b4e421d93a4e7df6a5453984ec577",
+    "docs/verification/t1300/FRONTEND_ANALYSIS.md": "12adef40e2964400d23664c7f121a55993cb45fda5c9f15b6466c13da65ab5c0",
+    "docs/verification/t1300/INSTALLED_SOURCE_IDENTITY.json": "953916203a24985ff3336e28dca175c72518688aa6dbcc435955449dac280130",
+    "docs/verification/t1300/RUNTIME_DESIGN.md": "944732eceac9fe35637a8545fb836182d29662b43c017f1dee066a8a7a9182b3",
+    "docs/verification/t1300/CODEX_RUNTIME_MATRIX.md": "6ed3b408bbc5257459c5ad17f32ab6efbf6ac0f4395e18572cae4d0d39c81c64",
+    "docs/verification/t1300/workflow-preflight.json": "a7d09b97d25350ce0d5ce065fe9820a8777cc1a16967e7922263263b5d7d5766",
+    "docs/features/t1300-codex-functionality-and-performance.md": "220aa12786f59be04d81391eadb496c671674d1bdfa6ace98cb0f6a9b3f94b7a"
+  },
+  "scope": "仅锁定独立评审输入，不代写结论，不授权未评审生产修改",
+  "state": "awaiting-independent-review"
+}

@@ -1,0 +1,37 @@
+{
+  "recordedAt": "2026-10-19T04:11:07.659740+00:00",
+  "candidateHead": "665508e66ee4bf46a6ebe3267ce4887c92964e18",
+  "candidateStatus": "",
+  "commands": {
+    "LED-053": "node tools/timeout-policy/verify.mjs",
+    "LED-060": "pnpm --dir ai-worker run build && pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0"
+  },
+  "sourceSha256": {
+    "orchestrator/process/reconcile.config.json": "e7f3f9a5832ea5bb6e7d9c9dc598d038017c5760b130afab71a8509c654acd95",
+    "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+    "tools/timeout-policy/hyperframes.test.mjs": "988e1cdb67cf68a9cc7225c8007e6b2078f1402f7dc632e1fed3de67d383db38",
+    "ai-worker/scripts/build.mjs": "8ab8b672e2c73e5085fc91522d4ca13568159313bdaec4e53027f6cdba763ae8",
+    "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+    "backend/package.json": "ee9db46bbe172a6d8f6f634b30733321cbf2c64409659c746991484da356e9bf",
+    "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+    "backend/vitest.config.ts": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07",
+    "ai-worker/src/runtime/pi-provider-json-compat.test.ts": "52e86e653b3c82bff11678f48c85da2c57198df41afb290a1f43bfd083adaa03",
+    "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts": "c13f386703d8d8822411412e691b1057756922afb65e1cf164bc54fe9b46c7b3",
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": "f544222dff4de2e8d1420328c75642e1bd933c6a149e5221c8e8441fedb3aecd",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+    "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+    "pnpm-lock.yaml": "a66f5c971699f96c73e7ec3285657697b2b8b786622de8de9ec1db3847b06b8c"
+  },
+  "specSha256": "d27a03352a6d641786410eecc1203578b3a270b65ff8d9ef7d2289c91881b408",
+  "packetSha256": "147d08188196e94fcf3905915effb0a8ada19c341aadbf1bdac6895401ccc582",
+  "hyperframesCliSha256": "1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b",
+  "optionalEvidenceEnvPresent": false,
+  "relatedProcesses": [],
+  "diskFreeGiB": {
+    "/": 21.99,
+    "/Volumes/T7-MacData": 832.7
+  },
+  "hyperframesUserTreeMetadataEntryCount": 132,
+  "privatePreflightRef": "private/PREFLIGHT_PRIVATE.json"
+}

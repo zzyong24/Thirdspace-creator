@@ -1,0 +1,410 @@
+{
+  "driver": "postgres",
+  "baselineRed": false,
+  "formalScope": "FINAL_R_SOURCE_BOUND_RUN_ONLY",
+  "formalGate": "NO_MODEL_OR_FUNDS_CLAIM",
+  "records": [
+    {
+      "case": "fresh",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 0,
+        "ledgerSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "catalogSha256": "5a493a9bc8e79c9a379e6f8d59b4ca4ee2f4944ee673d528c60ee6ac47998359",
+        "appSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "after": {
+        "ledgerCount": 111,
+        "ledgerSha256": "fa327f691dc35ac3cf7eccdbd075c3f008c20524d979d527e8334a94b069d57f",
+        "catalogSha256": "0e0faba82d0dc88ffb5ac3afa39709ff7bdc401222de7a93af6650e609bb23d7",
+        "appSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "actualError": null,
+      "originalPrefixUnchanged": true,
+      "originalAppUnchanged": true,
+      "secondPublicOpenUnchanged": true,
+      "status": "PROTOTYPE_SUCCESS_VERIFIED"
+    },
+    {
+      "case": "main109",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 109,
+        "ledgerSha256": "7f631ae4d67fe3cd98a9dafe3082649a7272a50759834ba4a34d02ceffa71945",
+        "catalogSha256": "63b0c18ee00d852b22c3f7ac431d818a06ddc9e0342a5cb96bd8feb14e8c24ac",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 112,
+        "ledgerSha256": "3784d8c0d7bd2770b589df7886c7948e33463ca6c1e75f5b3ea7bd9dc74893a6",
+        "catalogSha256": "93cc0f353db187ce1a4529851390a8a6a2028be9b8d577ced90f154cd094c451",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": null,
+      "originalPrefixUnchanged": true,
+      "originalAppUnchanged": true,
+      "secondPublicOpenUnchanged": true,
+      "status": "PROTOTYPE_SUCCESS_VERIFIED"
+    },
+    {
+      "case": "w110",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 111,
+        "ledgerSha256": "fa327f691dc35ac3cf7eccdbd075c3f008c20524d979d527e8334a94b069d57f",
+        "catalogSha256": "93cc0f353db187ce1a4529851390a8a6a2028be9b8d577ced90f154cd094c451",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": null,
+      "originalPrefixUnchanged": true,
+      "originalAppUnchanged": true,
+      "secondPublicOpenUnchanged": true,
+      "status": "PROTOTYPE_SUCCESS_VERIFIED"
+    },
+    {
+      "case": "w110-compatible-partial-table",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "e1349669a84af675af1541418c5f516af57d7d00ee3db1d8a2e429f5f64c13f8",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 111,
+        "ledgerSha256": "fa327f691dc35ac3cf7eccdbd075c3f008c20524d979d527e8334a94b069d57f",
+        "catalogSha256": "93cc0f353db187ce1a4529851390a8a6a2028be9b8d577ced90f154cd094c451",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": null,
+      "originalPrefixUnchanged": true,
+      "originalAppUnchanged": true,
+      "secondPublicOpenUnchanged": true,
+      "status": "PROTOTYPE_SUCCESS_VERIFIED"
+    },
+    {
+      "case": "w110-bad-column",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "3d84261d5ec7d24f2cb4e422921be6044facbdc2d44085763369fe4e2a418f6a",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "3d84261d5ec7d24f2cb4e422921be6044facbdc2d44085763369fe4e2a418f6a",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-missing-column",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "223537e15618e09dc3c55d4c302fe46fc6abfad8bd29d1ac227ab1c2631e399a",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "223537e15618e09dc3c55d4c302fe46fc6abfad8bd29d1ac227ab1c2631e399a",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-bad-constraint",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "ba3d4984b9c752324479743b7e046cb0ac160b43e664abfb4c626ca74dd401d4",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "ba3d4984b9c752324479743b7e046cb0ac160b43e664abfb4c626ca74dd401d4",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标constraints不兼容",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-index-wrong-table",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "86bf386e7fce0a48514d16950f291264564303d623a63897bb5c9957b6aa9cca",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "86bf386e7fce0a48514d16950f291264564303d623a63897bb5c9957b6aa9cca",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-index-wrong-definition",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "4f46d2b62a4fdc4d470ce4af37dbdfe3df9b81380bca3793a9e0f4fc693d7966",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "4f46d2b62a4fdc4d470ce4af37dbdfe3df9b81380bca3793a9e0f4fc693d7966",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-view-collision",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "aa28c8e9d496b55600325ce3082bd5e5d23311baf978c53fb4195a81071195ed",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "aa28c8e9d496b55600325ce3082bd5e5d23311baf978c53fb4195a81071195ed",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-type-collision",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "46defd082814fb13842baab92d989d3ea474df1bc53cd5c78063996758ed144b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "46defd082814fb13842baab92d989d3ea474df1bc53cd5c78063996758ed144b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w111-recorded-bridge-missing-table",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 111,
+        "ledgerSha256": "fa327f691dc35ac3cf7eccdbd075c3f008c20524d979d527e8334a94b069d57f",
+        "catalogSha256": "aad991c5d14ef99f15c7e929b2573c260495bd2c285929859f8c9cb3ae3cdf21",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 111,
+        "ledgerSha256": "fa327f691dc35ac3cf7eccdbd075c3f008c20524d979d527e8334a94b069d57f",
+        "catalogSha256": "aad991c5d14ef99f15c7e929b2573c260495bd2c285929859f8c9cb3ae3cdf21",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 缺少已记账表 observability_installation",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-unknown-hash",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 111,
+        "ledgerSha256": "06f2be244036f8537e50916952373c284aabadbb7d87c6400dcadfc462b11fc4",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 111,
+        "ledgerSha256": "06f2be244036f8537e50916952373c284aabadbb7d87c6400dcadfc462b11fc4",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-wrong-when",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "2c95a2774fbd4c7fcd7d177e04015e87ea98e5f6a6311048dce4a3f4582f7637",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 110,
+        "ledgerSha256": "2c95a2774fbd4c7fcd7d177e04015e87ea98e5f6a6311048dce4a3f4582f7637",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "w110-broken-prefix",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 109,
+        "ledgerSha256": "8ea40b673e2f5f8515b175809318b1d2ac2f3f1477598d1cbc10e9a7988d0ec9",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "after": {
+        "ledgerCount": 109,
+        "ledgerSha256": "8ea40b673e2f5f8515b175809318b1d2ac2f3f1477598d1cbc10e9a7988d0ec9",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": "CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0136向量身份缺真实0135前置回执",
+      "ledgerUnchanged": true,
+      "catalogUnchanged": true,
+      "appUnchanged": true,
+      "status": "PROTOTYPE_NEGATIVE_VERIFIED"
+    },
+    {
+      "case": "fresh-concurrent",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 0,
+        "ledgerSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "catalogSha256": "5a493a9bc8e79c9a379e6f8d59b4ca4ee2f4944ee673d528c60ee6ac47998359",
+        "appSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "concurrentPublicOpeners": 2,
+      "bothPublicOpenersSucceeded": true,
+      "after": {
+        "ledgerCount": 111,
+        "ledgerSha256": "fa327f691dc35ac3cf7eccdbd075c3f008c20524d979d527e8334a94b069d57f",
+        "catalogSha256": "0e0faba82d0dc88ffb5ac3afa39709ff7bdc401222de7a93af6650e609bb23d7",
+        "appSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "actualError": null,
+      "originalPrefixUnchanged": true,
+      "originalAppUnchanged": true,
+      "secondPublicOpenUnchanged": true,
+      "status": "PROTOTYPE_SUCCESS_VERIFIED"
+    },
+    {
+      "case": "main109-concurrent",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 109,
+        "ledgerSha256": "7f631ae4d67fe3cd98a9dafe3082649a7272a50759834ba4a34d02ceffa71945",
+        "catalogSha256": "63b0c18ee00d852b22c3f7ac431d818a06ddc9e0342a5cb96bd8feb14e8c24ac",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "concurrentPublicOpeners": 2,
+      "bothPublicOpenersSucceeded": true,
+      "after": {
+        "ledgerCount": 112,
+        "ledgerSha256": "3784d8c0d7bd2770b589df7886c7948e33463ca6c1e75f5b3ea7bd9dc74893a6",
+        "catalogSha256": "93cc0f353db187ce1a4529851390a8a6a2028be9b8d577ced90f154cd094c451",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": null,
+      "originalPrefixUnchanged": true,
+      "originalAppUnchanged": true,
+      "secondPublicOpenUnchanged": true,
+      "status": "PROTOTYPE_SUCCESS_VERIFIED"
+    },
+    {
+      "case": "w110-concurrent",
+      "driver": "postgres",
+      "sourceSha256": "45a81e2ff1ec425b09e3b4a62cb23ac1911a2aaaf8f9ef6e0b7d6acca66f4ea8",
+      "before": {
+        "ledgerCount": 110,
+        "ledgerSha256": "3cfddb977433f4fc7de7469b4b5c95e724a4c6018f07482af6fa33ef55fd753f",
+        "catalogSha256": "7e90f1741fd44d185c753a553f24016b4c459cccb1afc87f76ca1fc531995d5b",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "concurrentPublicOpeners": 2,
+      "bothPublicOpenersSucceeded": true,
+      "after": {
+        "ledgerCount": 111,
+        "ledgerSha256": "fa327f691dc35ac3cf7eccdbd075c3f008c20524d979d527e8334a94b069d57f",
+        "catalogSha256": "93cc0f353db187ce1a4529851390a8a6a2028be9b8d577ced90f154cd094c451",
+        "appSha256": "c8789e8e630f1d43754bf2e359236a48d731695831016318f46a73566b41d520"
+      },
+      "actualError": null,
+      "originalPrefixUnchanged": true,
+      "originalAppUnchanged": true,
+      "secondPublicOpenUnchanged": true,
+      "status": "PROTOTYPE_SUCCESS_VERIFIED"
+    }
+  ]
+}

@@ -1,13 +1,15 @@
 import type {RequestContext} from "@creatoros/contract";
 import type {Db} from "../db";
-import {requireAccountId} from "../errors";
+import {workspaceStamp} from "../workspace-scope";
 import type {Transport} from "@creatoros/contract";
 import {createKnowledgeRepository,createKnowledgeService,createKnowledgeTransport} from "../modules/knowledge";
 import {createSearchRepository,createSearchService,createSearchTransport,createKnowledgeSearchRuntime} from "../modules/search";
 
 /** 知识写入与派生搜索索引的应用边界；宿主仅提供向量 IO 和配置解析。 */
 export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof createKnowledgeRepository>[1]&Parameters<typeof createSearchService>[1],ports:{
+ assertAssetReadable?: (ctx:RequestContext,assetId:string)=>Promise<unknown>;
  resolveEmbedSpec:(ctx:RequestContext)=>Promise<Spec|null>;
+ embeddingConfigDigest?:(spec:Spec)=>string|undefined;
  embedTexts:(ctx:RequestContext,spec:Spec,texts:string[],signal?:AbortSignal)=>Promise<number[][]>;
 }){
   // Search (module 02): the composed `pages.search.get` read served over the
@@ -22,7 +24,7 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
         userId: ctx.userId,
         // [T-332 S2] strict:搜索投影/检索是 per-account 域(跨号搜到=串味),未选号 →
         //   AccountRequiredError(引导态);「未选号=全局视图」退化已废除(SPEC §4.2)。
-        accountId: requireAccountId(ctx.accountId, "search.repo"),
+        ...workspaceStamp(ctx),
       }),
     deps,
   );
@@ -35,11 +37,11 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
   // the deterministic `deps` (createSeq keeps knowledge/revision/relation ids
   // collision-free across requests).
   const knowledgeRepo = createKnowledgeRepository(db, deps);
-  const knowledgeService = createKnowledgeService(knowledgeRepo);
+  const knowledgeService = createKnowledgeService(knowledgeRepo, {assertAssetReadable:ports.assertAssetReadable});
   const knowledgeBaseTransport = createKnowledgeTransport(() => knowledgeService);
   const knowledgeSearchRuntime=createKnowledgeSearchRuntime({
     knowledge:knowledgeService,search:searchService,
-    resolveEmbedSpec:ports.resolveEmbedSpec,embedTexts:ports.embedTexts,
+    resolveEmbedSpec:ports.resolveEmbedSpec,embeddingConfigDigest:ports.embeddingConfigDigest,embedTexts:ports.embedTexts,
   });
   const {indexKnowledgeDocumentBestEffort}=knowledgeSearchRuntime;
   // [T-093] 知识写路径的搜索索引 fan-out(composition root 组合,knowledge 模块不反向

@@ -1,0 +1,13 @@
+{
+  "base": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7",
+  "baseRealpath": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7",
+  "mode": 448,
+  "phase": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-v1",
+  "executionWorkerPath": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/worker-green.cjs",
+  "bytes": 1540654,
+  "sha256": "7727daf3def469a3c564de54c245384a4bc93e007bbedd0a28f383678899e709",
+  "bindingPath": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/green-v1/WORKER_BINDING.json",
+  "buildMetafile": "/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7/worker-green.metafile.json",
+  "sourceInputs": 281,
+  "sharedDistWrites": 0
+}

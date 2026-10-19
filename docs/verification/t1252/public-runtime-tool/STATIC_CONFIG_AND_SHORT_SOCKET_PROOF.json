@@ -1,0 +1,22 @@
+{
+  "scope": "纯VM cooked-template/实际Vite merge+final override/TypeScript解析，不执行launcher/native/body/server/PG/browser",
+  "toolSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+  "actualConfigSha256": "f72adf2b43d0a79d546a980b9980cc25fc4bb022c77b7181e77575c9c1796b00",
+  "parseDiagnostics": 0,
+  "actualMergedFinalInclude": [
+    "/private/tmp/t1252p-static-owned/public-native-render.test.ts"
+  ],
+  "originalBaseIncludeStillIntact": [
+    "src/**/*.{test,spec}.{ts,tsx}",
+    "scripts/**/*.{test,spec}.mjs"
+  ],
+  "exactListFileArgument": true,
+  "exactRunFileArgument": true,
+  "privateEnvDir": "/private/tmp/t1252p-static-owned/case-0",
+  "privateCacheDir": "/private/tmp/t1252p-static-owned/case-0/vite-cache",
+  "realViteImplementation": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/index.js",
+  "literal": "[a](+)?$",
+  "escaped": "\\[a\\]\\(\\+\\)\\?\\$",
+  "futureRustSocketBytes": 90,
+  "futureRustSocketLimit": 104
+}

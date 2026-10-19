@@ -1,0 +1,47 @@
+{
+  "groupId": "grp-e2aea52e-6",
+  "ownedRoot": "/private/tmp/t1300-candidate-Co1DpL",
+  "sourceHead": "2168294fef3f62bc8e0b4ca3254652b935daeb0d",
+  "rows": [
+    {
+      "aiTaskId": "ai-task-e2aea52e-55",
+      "expectedExecutionTaskId": "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+      "executionTaskId": "exec_12266621-afc5-43bf-bf8e-8dcb2438d5e0",
+      "status": "succeeded",
+      "runtimeStatus": "succeeded",
+      "attempt": null,
+      "observedAt": "2026-10-15T20:39:06.484Z"
+    },
+    {
+      "aiTaskId": "ai-task-399cb821-13c0-4f28-a633-0107bd853b6f",
+      "expectedExecutionTaskId": "execution-task-828eed61-64ec-483a-b1c0-600cbc683d40",
+      "executionTaskId": "execution-task-828eed61-64ec-483a-b1c0-600cbc683d40",
+      "status": "succeeded",
+      "runtimeStatus": "succeeded",
+      "attempt": null,
+      "observedAt": "2026-10-15T20:39:06.506Z"
+    },
+    {
+      "aiTaskId": "ai-task-d8fbdf53-c487-47d7-b088-8063f9088b7c",
+      "expectedExecutionTaskId": "execution-task-d19717a6-5bdc-4dda-9225-28db66b243e0",
+      "executionTaskId": "execution-task-d19717a6-5bdc-4dda-9225-28db66b243e0",
+      "status": "succeeded",
+      "runtimeStatus": "succeeded",
+      "attempt": null,
+      "observedAt": "2026-10-15T20:39:06.525Z"
+    },
+    {
+      "aiTaskId": "ai-task-a469855e-81e7-4d44-a25f-51430b84d7ef",
+      "expectedExecutionTaskId": "execution-task-5d7b01a7-0b89-4ada-aaa7-7510ea66a6a4",
+      "executionTaskId": "execution-task-5d7b01a7-0b89-4ada-aaa7-7510ea66a6a4",
+      "status": "succeeded",
+      "runtimeStatus": "succeeded",
+      "attempt": null,
+      "observedAt": "2026-10-15T20:39:06.542Z"
+    }
+  ],
+  "allFourSucceeded": true,
+  "newTasksCreated": 0,
+  "oldUnknownResubmitted": false,
+  "controllerStopped": false
+}

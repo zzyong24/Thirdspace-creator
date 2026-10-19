@@ -1,0 +1,113 @@
+{
+  "surface": "browser",
+  "mode": "non-fixture",
+  "witnesses": {
+    "groupId": "grp-a65785f2-3962",
+    "projectId": "project-a65785f2-3976",
+    "entryId": "cal-a65785f2-3990"
+  },
+  "finalEntry": {
+    "id": "cal-a65785f2-3990",
+    "userId": "user-a65785f2-1",
+    "accountId": null,
+    "groupId": "grp-a65785f2-3962",
+    "membershipVersion": null,
+    "targetStatus": "unassigned",
+    "projectId": "project-a65785f2-3976",
+    "plannedDate": "2026-10-11",
+    "plannedAt": "2026-10-11T12:00:00.000Z",
+    "contentOutputId": null,
+    "candidateId": null,
+    "status": "planned",
+    "note": "",
+    "publishedAt": null,
+    "createdAt": "2026-10-10T17:07:49.898Z",
+    "updatedAt": "2026-10-10T17:08:01.446Z"
+  },
+  "faultFixture": {
+    "operation": "calendar.entries.target",
+    "http": 409,
+    "count": 1,
+    "successfulWritesReplaced": false
+  },
+  "captures": [
+    {
+      "name": "calendar-save-error-900",
+      "url": "http://127.0.0.1:3887/publishing",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 900,
+        "left": 226,
+        "right": 674,
+        "width": 448,
+        "scrollWidth": 448,
+        "clientWidth": 448,
+        "maxWidth": "448px",
+        "gridTemplateColumns": "416px",
+        "controls": [
+          {
+            "label": "发布目标（可选）",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "取消",
+            "left": 522,
+            "right": 572,
+            "width": 50
+          },
+          {
+            "label": "保存计划",
+            "left": 580,
+            "right": 658,
+            "width": 78
+          }
+        ]
+      },
+      "text": "选择发布目标\n\n计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。\n\n发布目标（可选）\n稍后选择平台账号\n小红书 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_2\n\n保存失败。项目可能已发布或账号归属已改变，请检查选择后重试。\n\n取消\n保存计划\n关闭"
+    },
+    {
+      "name": "calendar-empty-target-900",
+      "url": "http://127.0.0.1:3887/publishing",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 900,
+        "left": 226,
+        "right": 674,
+        "width": 448,
+        "scrollWidth": 448,
+        "clientWidth": 448,
+        "maxWidth": "448px",
+        "gridTemplateColumns": "416px",
+        "controls": [
+          {
+            "label": "发布目标（可选）",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "取消",
+            "left": 522,
+            "right": 572,
+            "width": 50
+          },
+          {
+            "label": "保存计划",
+            "left": 580,
+            "right": 658,
+            "width": 78
+          }
+        ]
+      },
+      "text": "选择发布目标\n\n计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。\n\n发布目标（可选）\n稍后选择平台账号\n\n当前组未绑定平台账号，可先安排创作。\n\n取消\n保存计划\n关闭"
+    }
+  ]
+}

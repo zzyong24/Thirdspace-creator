@@ -1,0 +1,1 @@
+import{i as e,t}from"./md-dist-es-BF7jfjOV.js";export{t as EventStreamSerde,e as eventStreamSerdeProvider};

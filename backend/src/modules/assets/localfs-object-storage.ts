@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // Local-filesystem object storage (item B) — the same `ObjectStoragePort` as the
 // mock / S3 adapters (foundation §4 swap-seam), backing media bytes with files on
 // the user's disk under a configurable `rootPath`. Bytes really land at
@@ -24,7 +25,7 @@ import type {
   PresignedUpload,
 } from "./object-storage";
 import { accountKeyPrefix } from "./object-storage";
-import { safeJoin, signBlobToken } from "./blob-security";
+import { safeJoin, signBlobToken,signWorkspaceBlobToken,encodeWorkspaceBlobScope,type WorkspaceBlobScope } from "./blob-security";
 import { extForMime } from "../../lib/mime-ext";
 import { copyFileCopyOnWrite } from "../../lib/copy-file-copy-on-write";
 
@@ -42,6 +43,8 @@ async function publishFile(filePath: string, value: Uint8Array | string) {
 export interface LocalFsObjectStorageConfig {
   // The resolved absolute media root (the service resolves `~`/default first).
   rootPath: string;
+  scope?:WorkspaceBlobScope;
+  onMint?:(key:string,exp:number)=>Promise<void>;
   // The public base path the blob route serves, e.g. "/api/v1/blob" (relative).
   publicBaseUrl: string;
   // Presigned URL TTL in ms (default 15 min).
@@ -94,7 +97,7 @@ function probeMedia(ffprobe: string, absKey: string): Promise<ProbedMedia> {
       ffprobe,
       ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", absKey],
       // [T-372 W5] windowsHide 同上(ffprobe 黑窗抑制;mac/Linux 无操作)。
-      { maxBuffer: 8 * 1024 * 1024, timeout: 15000, windowsHide: true },
+      { maxBuffer: 8 * 1024 * 1024, timeout: executionTimeoutMs(), windowsHide: true },
       (err, stdout) => {
         if (err) return resolve(EMPTY_PROBE);
         try {
@@ -125,13 +128,15 @@ function blobUrl(
   storageKey: string,
   method: "PUT" | "GET",
   exp: number,
+  scope?:WorkspaceBlobScope,
 ): string {
   const encoded = storageKey
     .split("/")
     .map((seg) => encodeURIComponent(seg))
     .join("/");
-  const token = signBlobToken(method, storageKey, exp);
-  return `${publicBaseUrl}/${encoded}?exp=${exp}&token=${token}`;
+  const scoped=scope?encodeWorkspaceBlobScope(scope):null;
+  const token = scoped?signWorkspaceBlobToken(method,storageKey,exp,scoped):signBlobToken(method,storageKey,exp);
+  return `${publicBaseUrl}/${encoded}?exp=${exp}&token=${token}${scoped?`&scope=${scoped}`:""}`;
 }
 
 export function createLocalFsObjectStorage(
@@ -152,6 +157,7 @@ export function createLocalFsObjectStorage(
       mimeType,
       fileSize,
       accountId,
+      groupId,
       folder,
       fileName,
     }) {
@@ -162,7 +168,7 @@ export function createLocalFsObjectStorage(
         ? fileName.replace(/[/\\]/g, "_").replace(/^\.+/, "_").slice(0, 120)
         : null;
       // [T-157] 账号分区前缀:两种 key 规则都套 `<accountId ?? _default>/`(数据落盘按号隔离)。
-      const prefix = accountKeyPrefix(accountId);
+      const prefix = groupId ? `groups/${accountKeyPrefix(groupId)}` : accountKeyPrefix(accountId);
       // [Bug-1 T-014] 不带 folder+fileName 分支,按 mimeType 拼 ext → 磁盘文件有真 ext,
       // Mac Finder / 文件夹预览靠 ext(MIME 没写到文件名 → 系统识别不出);folder+fileName
       // 分支 safeName 已带原名 ext,不再叠(会变 foo.png.png)。unknown mime → 不拼(诚实
@@ -187,9 +193,10 @@ export function createLocalFsObjectStorage(
       };
       await fs.writeFile(sidecarPath(absKey), JSON.stringify(meta), "utf8");
       const exp = now() + expiresInMs;
+      await cfg.onMint?.(storageKey,exp);
       return {
         storageKey,
-        uploadUrl: blobUrl(cfg.publicBaseUrl, storageKey, "PUT", exp),
+        uploadUrl: blobUrl(cfg.publicBaseUrl, storageKey, "PUT", exp,cfg.scope),
       } satisfies PresignedUpload;
     },
 
@@ -304,7 +311,8 @@ export function createLocalFsObjectStorage(
 
     async getSignedUrl(storageKey) {
       const exp = now() + expiresInMs;
-      return blobUrl(cfg.publicBaseUrl, storageKey, "GET", exp);
+      await cfg.onMint?.(storageKey,exp);
+      return blobUrl(cfg.publicBaseUrl, storageKey, "GET", exp,cfg.scope);
     },
   };
 }

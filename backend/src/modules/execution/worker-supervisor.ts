@@ -1,6 +1,8 @@
+import {exceptionCapture} from "@creatoros/contract";
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { fork, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { workerMessageSchema, workerPortInputSchemas, sameExecution, type ExecutionRef, type HostMessage, type WorkerPort } from "@creatoros/contract/execution-worker";
+import { workerMessageSchema, workerPortInputSchemas, sameExecution, workerCallRequestId, type ExecutionRef, type HostMessage, type WorkerPort } from "@creatoros/contract/execution-worker";
 import { buildChildEnv } from "./child-env";
 import { killWorkerProcessTree } from "./worker-process-tree";
 
@@ -12,6 +14,7 @@ export interface WorkerSupervisorPorts {
 }
 export interface WorkerSupervisorOptions {
   entryPath: string;
+  extraEnv?:Record<string,string>;
   ports: WorkerSupervisorPorts;
   onText?: (execution: ExecutionRef, text: string) => void;
   shutdownGraceMs?: number;
@@ -23,8 +26,9 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
   let child: ChildProcess | undefined;
   let ready: Promise<string[]> | undefined;
   let stopping = false;
-  let current: {execution: ExecutionRef; resolve(reason: string): void; reject(error: Error): void; lastSeq: number; cancelTimer?: ReturnType<typeof setTimeout>; deadlineTimer?: ReturnType<typeof setTimeout>} | undefined;
-  const replies = new Map<string, Promise<HostMessage>>();
+  let receiptProtocol = false;
+  let current: {execution: ExecutionRef; resolve(reason: string): void; reject(error: Error): void; lastSeq: number; receiptProtocol:boolean;lastCallSeq:number;consumedThrough:number;consumedRanges:Array<{fromSeq:number;toSeq:number}>; cancelTimer?: ReturnType<typeof setTimeout>; deadlineTimer?: ReturnType<typeof setTimeout>} | undefined;
+  const replies = new Map<string, {reply:Promise<HostMessage>;callSeq?:number}>();
   const cleanups = new Map<ChildProcess, Promise<void>>();
   let cleanupFailure: Error | undefined;
   const stoppedTrees = new WeakSet<ChildProcess>();
@@ -53,7 +57,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
   const send = (message: HostMessage) => {
     if (!child?.connected) throw new Error("WORKER_DISCONNECTED");
     const handle = child;
-    handle.send(message, error => {if (error && child === handle) void forceStop(handle).catch(() => {});});
+    handle.send(message, error => {if (error && child === handle && !stopping) void forceStop(handle).catch(() => {});});
   };
   const cancel = (execution: ExecutionRef) => {
     if (!current || !sameExecution(current.execution, execution)) return;
@@ -62,36 +66,57 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
     const run = current;
     if (!current.cancelTimer) current.cancelTimer = setTimeout(() => {
       if (child === handle && current === run) void forceStop(handle).catch(() => {});
-    }, options.shutdownGraceMs ?? 5000);
+    }, executionTimeoutMs(options.shutdownGraceMs));
   };
+  const captureObservation=(event:unknown)=>{const parsed=exceptionCapture.safeParse(event);if(!parsed.success)return;try{(globalThis as {__creatorosCaptureException?:(event:unknown)=>void}).__creatorosCaptureException?.(parsed.data);}catch{/* 保原任务与IPC */}};
   const start = (): Promise<string[]> => {
     if (cleanupFailure) return Promise.reject(cleanupFailure);
     if (cleanups.size) return Promise.all([...cleanups.values()]).then(() => start());
     if (ready) return ready;
     stopping = false;
-    const processHandle = fork(options.entryPath, [], {serialization:"advanced", env: buildChildEnv(), execArgv: [], stdio: ["ignore", "ignore", "ignore", "ipc"]});
+    const processHandle = fork(options.entryPath, [], {serialization:"advanced", env: buildChildEnv(options.extraEnv), execArgv: [], stdio: ["ignore", "ignore", "ignore", "ipc"]});
     child = processHandle;
     ready = new Promise((resolve, reject) => {
       let startupTimedOut = false;
       const startupTimer = setTimeout(() => {
         startupTimedOut = true;
         void forceStop(processHandle).then(() => reject(new Error("WORKER_START_TIMEOUT")), reject);
-      }, options.startupTimeoutMs ?? 15000);
+      }, executionTimeoutMs(options.startupTimeoutMs));
       processHandle.on("error", () => {clearTimeout(startupTimer); reject(new Error("WORKER_START_FAILED"));});
       processHandle.on("exit", () => {
         clearTimeout(startupTimer);
         if (!startupTimedOut) reject(new Error("WORKER_EXITED"));
         if (child !== processHandle) return;
+        if(!stopping)captureObservation({eventId:randomUUID(),module:"worker",code:"WORKER_EXITED",occurredAt:new Date().toISOString(),referenceId:current?.execution.executionTaskId??null,stack:"",message:"执行进程意外退出"});
         current?.reject(new Error(stopping ? "WORKER_STOPPED" : "WORKER_EXITED"));
-        clearRun(); ready = undefined; child = undefined;
+        clearRun(); ready = undefined; child = undefined; receiptProtocol = false;
       });
       processHandle.on("message", raw => {
         if (child !== processHandle) return;
+        if(raw&&typeof raw==="object"&&(raw as {version?:unknown}).version===1&&(raw as {type?:unknown}).type==="observability"){
+          const event=exceptionCapture.safeParse((raw as {event?:unknown}).event);
+          if(event.success&&event.data.module==="worker"&&(event.data.referenceId===null||event.data.referenceId===current?.execution.executionTaskId))captureObservation(event.data);return;
+        }
         const parsed = workerMessageSchema.safeParse(raw);
         if (!parsed.success) return;
         const message = parsed.data;
-        if (message.type === "ready") {if (startupTimedOut) return; clearTimeout(startupTimer); resolve(message.capabilities); return;}
+        if (message.type === "ready") {if (startupTimedOut) return; clearTimeout(startupTimer); receiptProtocol=message.receiptProtocol==='consumed-v1';resolve(message.capabilities); return;}
         if (!current || !sameExecution(current.execution, message.execution)) return;
+        if(message.type==='consumed'){
+          if(!current.receiptProtocol || message.throughSeq>current.lastCallSeq || message.consumedRanges?.some(range=>range.toSeq>current!.lastCallSeq))return;
+          let throughSeq=Math.max(current.consumedThrough,message.throughSeq);
+          const merged:Array<{fromSeq:number;toSeq:number}>=[];
+          for(const range of [...current.consumedRanges,...(message.consumedRanges??[])].sort((a,b)=>a.fromSeq-b.fromSeq)){
+            if(range.toSeq<=throughSeq)continue;
+            if(range.fromSeq<=throughSeq+1){throughSeq=range.toSeq;continue;}
+            const last=merged.at(-1);
+            if(last && range.fromSeq<=last.toSeq+1)last.toSeq=Math.max(last.toSeq,range.toSeq);
+            else merged.push({...range});
+          }
+          current.consumedThrough=throughSeq;current.consumedRanges=merged;
+          for(const [id,record] of replies)if(record.callSeq!<=throughSeq || merged.some(range=>record.callSeq!>=range.fromSeq && record.callSeq!<=range.toSeq))replies.delete(id);
+          return;
+        }
         if (message.type === "progress") {
           if (message.seq > current.lastSeq && !current.cancelTimer) {
             current.lastSeq = message.seq;
@@ -100,17 +125,30 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
           return;
         }
         if (message.type === "stopped") {current.resolve(message.reason); clearRun(); return;}
-        let reply = replies.get(message.requestId);
-        if (!reply) {
+        const sendReply=(response:HostMessage)=>{
+          if(processHandle.connected)processHandle.send(response,error=>{if(error && child===processHandle && !stopping)void forceStop(processHandle).catch(()=>{});});
+        };
+        const identity=current.receiptProtocol?{execution:message.execution,callSeq:message.callSeq}:{};
+        let record = replies.get(message.requestId);
+        if(current.receiptProtocol){
+          // IPC 有序发送：新调用必须紧接序列；已确认历史仅由水位识别，绝不重新 invoke。
+          const sequence=message.callSeq;
+          const consumed=sequence && (sequence<=current.consumedThrough || current.consumedRanges.some(range=>sequence>=range.fromSeq && sequence<=range.toSeq));
+          const errorCode=!sequence?'IPC_SEQUENCE_REQUIRED':message.requestId!==workerCallRequestId(message.execution,sequence)?'IPC_REQUEST_ID_MISMATCH':consumed?'IPC_RECEIPT_CONSUMED':record?record.callSeq!==sequence?'IPC_SEQUENCE_MISMATCH':undefined:sequence!==current.lastCallSeq+1?'IPC_SEQUENCE_INVALID':undefined;
+          if(errorCode){sendReply({version:1,type:'reply',requestId:message.requestId,ok:false,errorCode,...identity});return;}
+          if(!record)current.lastCallSeq=sequence!;
+        }
+        if (!record) {
+          let reply:Promise<HostMessage>;
           reply = (async (): Promise<HostMessage> => {
             try {
               const input = workerPortInputSchemas[message.port].parse(message.data);
-              const settlement = ["completeAssetProcessing","settleCoverModel","settleTranscribePostprocess","settleAsrRequest","settleAssetCall","saveAssetResult","recoverAssetResult","recordAssetProviderJob"].includes(message.port) || message.port === "readChatWebReadCache" || message.port === "failChatWebRead" || message.port === "completeChatWebRead" || message.port === "settleChatResearch" || message.port === "failChatGeneration" || message.port === "settleChatGenerationModel" || message.port === "failChatHooks" || message.port === "settleChatHooksModel" || message.port === "commitChatResult" || message.port === "appendStreamEvents" || message.port === "settleTopicRead" || message.port === "settleCall" || message.port === "settleGenerationCall" || message.port === "settleAgenticTool" || message.port === "settleResearchRead" || message.port === "settleBrowserObservation" || message.port === "acknowledgeControl";
+              const settlement = ["completeAssetProcessing","settleCoverModel","settleTranscribePostprocess","settleAssetAsrRequest","settleAsrRequest","settleAssetCall","saveAssetResult","recoverAssetResult","recordAssetProviderJob"].includes(message.port) || message.port === "readChatWebReadCache" || message.port === "failChatWebRead" || message.port === "completeChatWebRead" || message.port === "settleChatResearch" || message.port === "failChatGeneration" || message.port === "settleChatGenerationModel" || message.port === "failChatHooks" || message.port === "settleChatHooksModel" || message.port === "commitChatResult" || message.port === "appendStreamEvents" || message.port === "settleTopicRead" || message.port === "settleCall" || message.port === "settleGenerationCall" || message.port === "settleAgenticTool" || message.port === "settleResearchRead" || message.port === "settleBrowserObservation" || message.port === "acknowledgeControl";
               await options.ports.validate(message.execution, settlement ? "settlement" : "admission");
               // 校验期间可能取消/换租约；本地控制也必须再次检查。
               if (!current || !sameExecution(current.execution, message.execution) || (!settlement && current.cancelTimer)) throw new Error("STALE_EXECUTION");
               const data = await options.ports.invoke(message.execution, message.port, input);
-              return {version: 1, type: "reply", requestId: message.requestId, ok: true, data};
+              return {version: 1, type: "reply", requestId: message.requestId, ok: true, data,...identity};
             } catch(error) {
               const code=error && typeof error === "object" ? (error as {code?:unknown}).code : undefined;
               const name=error instanceof Error && ["ZodError","ConflictError","OwnershipError","AuthenticationError"].includes(error.name)?error.name:"Error";
@@ -128,14 +166,13 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
                   code === "MODEL_CREDENTIAL_UNAVAILABLE" ||
                   (error instanceof Error && error.name === "LlmCredentialError"));
               const errorCode=message.port==="reserveTopicRead" && error && typeof error==="object" && (error as {budgetCode?:unknown}).budgetCode==="EXECUTION_BUDGET_EXHAUSTED" ? "EXECUTION_BUDGET_EXHAUSTED" : credentialUnavailable ? typeof code === "string" && ["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(code) ? code : "MODEL_CREDENTIAL_UNAVAILABLE" : "HOST_PORT_REJECTED";
-              return {version:1,type:"reply",requestId:message.requestId,ok:false,errorCode};
+              return {version:1,type:"reply",requestId:message.requestId,ok:false,errorCode,...identity};
             }
           })();
-          replies.set(message.requestId, reply);
+          record={reply,callSeq:message.callSeq};
+          replies.set(message.requestId, record);
         }
-        void reply.then(response => {
-          if (processHandle.connected) processHandle.send(response, error => {if (error && child === processHandle) void forceStop(processHandle).catch(() => {});});
-        });
+        void record.reply.then(sendReply);
       });
     });
     return ready;
@@ -159,9 +196,9 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
         executionHandles.set(bindingKey, handle);
         latestExecution.set(handle, bindingKey);
         while (executionHandles.size > 256) executionHandles.delete(executionHandles.keys().next().value!);
-        current = {execution:boundExecution, resolve, reject, lastSeq: -1};
+        current = {execution:boundExecution, resolve, reject, lastSeq: -1,receiptProtocol,lastCallSeq:0,consumedThrough:0,consumedRanges:[]};
         if (deadlineAt !== null) current.deadlineTimer = setTimeout(() => cancel(boundExecution), Math.max(0, deadlineAt-Date.now()));
-        try {send({version: 1, type: "run", requestId: randomUUID(), execution: boundExecution, deadlineAt});}
+        try {send({version: 1, type: "run", requestId: randomUUID(), execution: boundExecution, deadlineAt,...(receiptProtocol?{receiptProtocol:'consumed-v1' as const}:{})});}
         catch {clearRun(); reject(new Error("WORKER_DISCONNECTED"));}
       });
     },
@@ -194,7 +231,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
       let rejectCleanup!: (error: Error) => void;
       const failed = new Promise<never>((_resolve, reject) => { rejectCleanup = reject; });
       let cleanup: Promise<void> | undefined;
-      const killTimer = setTimeout(() => { cleanup = forceStop(handle); void cleanup.catch(rejectCleanup); }, options.shutdownGraceMs ?? 5000);
+      const killTimer = setTimeout(() => { cleanup = forceStop(handle); void cleanup.catch(rejectCleanup); }, executionTimeoutMs(options.shutdownGraceMs));
       try { await Promise.race([exited, failed]); await cleanup; await Promise.all([...cleanups.values()]); if (cleanupFailure) throw cleanupFailure; }
       finally { clearTimeout(killTimer); }
     },

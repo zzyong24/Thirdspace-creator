@@ -1,0 +1,224 @@
+import { z } from "zod";
+
+export const id = z.string().min(1);
+
+// ISO-8601 UTC timestamp (e.g. 2026-06-13T02:00:00.000Z). Validated with a
+// regex so the schema is independent of zod's evolving string-format API.
+export const iso8601 = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/);
+
+function isRealGregorianDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+// T-599: a date-only publication plan. It deliberately carries no timezone or
+// time-of-day; services interpret "today" using the identity-owned timezone.
+export const calendarDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(isRealGregorianDate, { message: "Invalid Gregorian calendar date" });
+
+export const paginationQuery = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).default(20),
+});
+
+// Enums below mirror frontend/src/types/domain.ts exactly (the source of truth).
+export const platformId = z.enum([
+  "youtube",
+  "bilibili",
+  "douyin",
+  "xiaohongshu",
+  "kuaishou",
+  "wechatVideo",
+  "wechatOfficial",
+  "kuaishou",
+  "wechatOfficialAccount",
+  "x",
+]);
+
+export const projectStatus = z.enum([
+  "active",
+  "paused",
+  "archived",
+  "completed",
+]);
+
+export const projectStageName = z.enum([
+  // 立项 Brief 地基(项目工作流补真 ②):brief 是项目的第一个阶段 —— 新建/选题立项
+  // 的项目从 brief 起,在立项工作台填齐结构化 Brief(目标受众/内容目标/内容形式/
+  // 目标平台/核心信息)后,经 gate 校验才能离开 brief 进 research。存量项目的
+  // current_stage 不被改写(多在 research,仍合法),只影响新建项目的起点。
+  "brief",
+  "research",
+  "planning",
+  "script",
+  "production",
+  "publishing",
+  "review",
+]);
+
+export const stageStatus = z.enum([
+  "pending",
+  "in_progress",
+  // §16 内容门禁:一个阶段「声称完成」但 gate 未过(核心交付物缺失)时停在
+  // needs_review,等补齐交付物后再 → completed(而不是带空输入进下一阶段)。
+  "needs_review",
+  "completed",
+  "skipped",
+]);
+
+export const creationMode = z.enum(["guided", "flexible", "freeform"]);
+
+export const contentType = z.enum(["video", "image", "audio", "article"]);
+
+export const assetType = z.enum([
+  "image",
+  "video",
+  "audio",
+  "document",
+  "subtitle",
+]);
+
+export const publicationStatus = z.enum([
+  "draft",
+  "scheduled",
+  "published",
+  "removed",
+  "failed",
+]);
+
+export const aiTaskStatus = z.enum([
+  "queued",
+  "running",
+  "awaiting_confirmation",
+  "succeeded",
+  "failed",
+  "cancelled",
+  "partial",
+]);
+
+// ── contract v0.4 (seven-step) enums ───────────────────────────────────────
+// content_role is the §4.4 意图层 intent label, shared by Projects, Monetization
+// and Candidate. It is already defined locally in resources/projects.ts as
+// `contentRole`; the canonical enum lives here so the new modules import one
+// source of truth. (Both spell the same three values.)
+export const contentRole = z.enum(["traffic", "trust", "conversion"]);
+
+// §3 positioning — gate subject + statement authorship.
+export const positioningSubjectType = z.enum(["candidate", "project"]);
+export const statementAuthorType = z.enum(["human", "ai"]);
+
+// §4 monetization.
+export const productStatus = z.enum(["active", "retired"]);
+export const offerStatus = z.enum(["active", "expired"]);
+export const leadSource = z.enum(["survey", "manual", "entry_code", "wecom"]);
+export const attributionMethod = z.enum([
+  "entry_code",
+  "survey",
+  "self_report",
+  "inferred",
+  "manual",
+]);
+export const attributionConfidence = z.enum(["high", "med", "low"]);
+export const leadStatus = z.enum(["new", "qualified", "won", "lost"]);
+export const conversionEventType = z.enum([
+  "profile_visit",
+  "follow",
+  "lead",
+  "inquiry",
+  "signup",
+  "purchase",
+  "repurchase",
+]);
+export const attributionModelType = z.enum([
+  "time_decay",
+  "position_based",
+  "last_touch",
+]);
+
+// §5 candidate.
+// [T-235c] favorites:指定抖音收藏夹采集进池的跟拍候选(用户收藏 = 人肉选题信号)。
+export const candidateSource = z.enum([
+  "trend",
+  "benchmark",
+  "demand",
+  "idea",
+  "favorites",
+]);
+export const candidateStatus = z.enum(["pool", "promoted", "dropped"]);
+export const audienceSignalSource = z.enum([
+  "comment",
+  "dm",
+  "consultation",
+  "review",
+]);
+
+// §6 calibration.
+export const predictionStatus = z.enum(["draft", "locked"]);
+export const calibrationConfidence = z.enum(["high", "med", "low"]);
+export const calibrationSubjectType = z.enum([
+  "content_output",
+  "publication",
+]);
+
+// §7.1 platform account.
+export const platformAccountStatus = z.enum(["active", "archived"]);
+
+// §7.2 content calendar.
+export const calendarEntryStatus = z.enum(["planned", "published", "missed"]);
+export const cadenceFrequency = z.enum([
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
+  "custom",
+]);
+
+// T-007 调度 Agent 作业(data-source-pipeline-design §4)。ScheduledJob 的数据源类别:
+// `self.metrics`=周期性刷自己主页作品+指标(复用 fetchDouyinMetrics),`comments`=周期性
+// 抓评论落 audience_signals(D2),`self.detail`=周期性拉创作者后台作品明细导出(16 字段:完播/
+// 封面CTR/5s完播/2s跳出/平均时长/主页访问/粉丝增量…)喂复盘核心指标(T-030-D8a,SPEC §9b)。
+// contract Zod 是唯一真值,backend 表 source_kind 存 text、由这个 enum 校验。
+// [T-222] "benchmark"(对标他号爆款采集)自 T-212 起是真实调度源:collection-bootstrap 绑定抖音
+//   时幂等建每天的 benchmark 采集 job,collector 已接(persistence-client scheduledCollectors.benchmark)。
+//   补进枚举修复漂移 —— 否则 listScheduledJobs(sourceKind:"benchmark")/ 响应校验放不过这些真实存在的 job。
+// [T-235a] "topic.daily"(每天自动出题):每日定时多依据合并出题(定位+评论信号+知识库+热点 brief)
+//   → 护栏排序(T-212d 探索位)→ candidates 落 pool(防灌库 ≤N/天)。collection-bootstrap 模板 9:40
+//   错峰(benchmark 9:30 后,当天新拆解可入引用);collector 见 persistence-client scheduledCollectors。
+// [T-258] "favorites"(指定收藏夹采集):T-235c 起是真实调度源 —— collection-bootstrap 建每天 favorites
+//   采集 job(DAILY_COLLECTION_JOB_DEFAULTS 9:50 错峰),collector 已接(persistence-client
+//   scheduledCollectors.favorites)。补进枚举修复漂移 —— 否则 favorites job 的创建(UI 模板卡走
+//   scheduledJobs.create 校验)与读回(listScheduledJobs/get 响应校验)都被 enum 拦下(bootstrap 经
+//   service 层建 job 绕过 enum,故 job 已在库却读不回),对齐后 favorites 创建/调度/采集端到端合法。
+export const scheduledJobSourceKind = z.enum([
+  "self.metrics",
+  "self.traffic",
+  "comments",
+  "self.detail",
+  "benchmark",
+  "topic.daily",
+  "favorites",
+  "intelligence.sync",
+]);
+
+// JobRun 的调度触发记录状态(§4)。running=进行中;succeeded/failed=终态;
+// needs_reconnect=headless 复刷遇登录态过期(DouyinNotLoggedInError,§6),停跑等用户
+// 扫码重连,非普通失败。
+export const jobRunStatus = z.enum([
+  "running",
+  "succeeded",
+  "failed",
+  "needs_reconnect",
+]);

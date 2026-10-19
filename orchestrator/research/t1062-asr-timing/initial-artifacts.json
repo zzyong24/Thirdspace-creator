@@ -1,0 +1,85 @@
+{
+  "status": "actual_observation_and_initial_harness_failures_preserved",
+  "files": [
+    {
+      "path": "orchestrator/research/t1062-asr-timing/prepared-manifest.json",
+      "sha256": "2c1e87a10570958f8327ed1c1a880ad645b48a82dfa3f8ba73df9abb5dc48546",
+      "bytes": 1452
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/registry.json",
+      "sha256": "63d10d75ac2d33239806ba5ab9105786b1ae6c1fea21efea3e1f0c8cd82f394f",
+      "bytes": 3924
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/common.mjs",
+      "sha256": "9a4540ee768bd67b070a5cc885df12b03312ec46815c96e1830dff583f35e311",
+      "bytes": 4038
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/observe.mjs",
+      "sha256": "e252ca1e341481966572e657c9cf6f20a4d90ce45142b8a1ca6d69fd6babcfeb",
+      "bytes": 9879
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/verify.mjs",
+      "sha256": "0312653b0ba75040f815ffe9382b521fd8709bef0068c431e0d88688b0c28abc",
+      "bytes": 5799
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/build.mjs",
+      "sha256": "0514a4b483b2136cacb36a4394997fd8660a61704d789757aad2f477739956d1",
+      "bytes": 1061
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/initial-execution-result.json",
+      "sha256": "d221de236b1facc3b1e7b1446a5aa22cd6bc06589a6df8842a3028054d26dda1",
+      "bytes": 3409
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/build-result.json",
+      "sha256": "25111125157a188525668f58cad4b661aa2c8c29204c1a05cc9edd2fe5577d4e",
+      "bytes": 840
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/build.stdout.log",
+      "sha256": "1bf5f35bbe09aad9ed01be313c82d7dd4122058a2de5d5079c6445e0c54ca01c",
+      "bytes": 61
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/build.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/observe.stdout.log",
+      "sha256": "c5407d21c39ff164e38abc2d6944352b611cfb5365715d959a1728184edac215",
+      "bytes": 620
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/observe.stderr.log",
+      "sha256": "ee433f5b78105d5a70db523caf2322088ffe85c715c77d73fbddeb056c4f7ad1",
+      "bytes": 65809
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/evidence.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/evidence.stderr.log",
+      "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+      "bytes": 557
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/timing.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "orchestrator/research/t1062-asr-timing/timing.stderr.log",
+      "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+      "bytes": 557
+    }
+  ]
+}

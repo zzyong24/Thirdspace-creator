@@ -1,3 +1,7 @@
+#[path = "src/release_integrity.rs"]
+#[allow(dead_code)]
+mod release_integrity;
+mod secure_strings_build;
 use base64::Engine as _;
 use rand::RngCore as _;
 use zeroize::Zeroize as _;
@@ -74,10 +78,12 @@ fn main() {
     // 生产后门。
     for name in [
         "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+        "CREATOROS_OWNED_DEVICES_ENABLED",
         "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
         "GROWTH_ENTITLEMENT_API_ORIGIN",
         "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
         "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
+        "CREATOROS_MODEL_BENEFITS_ENABLED",
         "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
         "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
         "CREATOROS_GROWTH_CONFIG_KEY_ID",
@@ -97,6 +103,10 @@ fn main() {
             "0"
         }
     };
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_OWNED_DEVICES_ENABLED={}",
+        build_flag("CREATOROS_OWNED_DEVICES_ENABLED")
+    );
     let requested_claim_enabled = build_flag("CREATOROS_ENTITLEMENT_CLAIM_ENABLED");
     if !debug_build && requested_claim_enabled != "0" {
         panic!(
@@ -118,6 +128,10 @@ fn main() {
     let client_config_pull_enabled = build_flag("CREATOROS_CLIENT_CONFIG_PULL_ENABLED");
     println!(
         "cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED={client_config_pull_enabled}"
+    );
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_MODEL_BENEFITS_ENABLED={}",
+        build_flag("CREATOROS_MODEL_BENEFITS_ENABLED")
     );
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
     let requested_authority = std::env::var("CREATOROS_MODEL_CONFIGURATION_AUTHORITY")
@@ -208,6 +222,16 @@ fn main() {
         panic!("T-679: 开启渠道配置拉取时 CREATOROS_GROWTH_CONFIG_KEY_ID 不能为空");
     }
     println!("cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID={growth_config_key_id}");
+    // T-1273：只在release构建使用随机mask；dev无需随机材料或运行时解码。
+    println!("cargo:rerun-if-changed=secure_strings_build.rs");
+    let secure_strings_out = std::path::PathBuf::from(
+        std::env::var_os("OUT_DIR").expect("Cargo必须提供OUT_DIR"));
+    let mut secure_strings_key = [0u8; 32];
+    if !debug_build { rand::rngs::OsRng.fill_bytes(&mut secure_strings_key); }
+    secure_strings_build::write_secure_strings(&secure_strings_out, debug_build,
+        &growth_config_public_key, &growth_config_key_id, secure_strings_key);
+    secure_strings_key.zeroize();
+
 
     // [T-656] 签名 seed 只在 build.rs 内严格解析，壳只 include OUT_DIR 的 mask + XOR blob。
     // release/release-fast 缺失或非法均 fail-closed；debug 无 key 保留本地开发能力。
@@ -313,6 +337,8 @@ fn main() {
     )
     .expect("T-635: 写入编译期 ProductManifest 失败");
 
+    write_release_integrity(&out_dir, debug_build);
+
     // [T-372 L2 / T-487 RAT-PKG-05] sidecar 入口完整性:全平台构建期都对
     // src-tauri/sidecar.tar.gz 算 SHA-256,
     // 经 rustc-env 编进二进制(lib.rs 解压前比对,不匹配拒绝 spawn)。
@@ -353,6 +379,7 @@ fn main() {
     // 当前生产配置与 build-sidecar 均为全平台 tar。Windows 不能再注入空哈希，否则安装包
     // 虽携带 tar，运行时却会把正式构建误判成 dev 并跳过完整性校验。
     let hash = sha256_file(&tarball);
+    if !debug_build && hash.is_empty() { panic!("T-1273: release必须固化既有SHA缓存戳，不允许空hash降级"); }
     println!("cargo:rustc-env=CREATOROS_SIDECAR_SHA256={hash}");
     println!("cargo:rerun-if-changed=sidecar.tar.gz");
 
@@ -387,6 +414,24 @@ fn main() {
     // 2026-07-18 真机实锤)。app 命令的权限不会自动存在——必须在此声明,tauri-build 才会
     // 自动生成 `allow-<command>` / `deny-<command>` 权限,供 capabilities/remote-sidecar.json
     // 显式引用放行。此处命令集必须与 generate_handler 的远程页可调用子集保持一致。
+    if debug_build {
+        // 裸cargo check/test也不要求release签名文件；保留其它资源与调用方配置。
+        let mut overrides: serde_json::Value = std::env::var("TAURI_CONFIG")
+            .map(|json| serde_json::from_str(&json).expect("TAURI_CONFIG必须是合法JSON"))
+            .unwrap_or_else(|_| serde_json::json!({}));
+        let base: serde_json::Value = serde_json::from_str(include_str!("tauri.conf.json"))
+            .expect("Tauri基础配置必须是合法JSON");
+        let mut resources = overrides.pointer("/bundle/resources").cloned()
+            .unwrap_or_else(|| base["bundle"]["resources"].clone());
+        if let Some(paths) = resources.as_array_mut() {
+            paths.retain(|path| path.as_str() != Some("sidecar.tar.gz.sig"));
+            if overrides.get("bundle").is_none() || overrides["bundle"].is_null() {
+                overrides["bundle"] = serde_json::json!({});
+            }
+            overrides["bundle"]["resources"] = resources;
+            std::env::set_var("TAURI_CONFIG", overrides.to_string());
+        }
+    }
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "license_activate",
@@ -667,4 +712,31 @@ fn write_empty_manifest(path: &std::path::Path) {
     if let Ok(mut f) = std::fs::File::create(path) {
         let _ = f.write_all(&buf);
     }
+}
+
+// 复用同一个严验协议；这里只读公开根，签名私钥不进入Cargo或OUT_DIR。
+fn write_release_integrity(out_dir: &std::path::Path, debug_build: bool) {
+    if debug_build { return; }
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let public_path = manifest.join("../branding/trust/creatoros-update-root-20260805.pub.pem");
+    let pem = std::fs::read_to_string(&public_path).expect("T-1273: 缺少既有更新根公钥");
+    let encoded: String = pem.lines().filter(|line| !line.starts_with("-----")).collect();
+    let der = base64::engine::general_purpose::STANDARD.decode(encoded).expect("T-1273: 更新根公钥base64无效");
+    const ED25519_SPKI_PREFIX: &[u8] = &[0x30,0x2a,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x03,0x21,0x00];
+    assert!(der.len() == 44 && der.starts_with(ED25519_SPKI_PREFIX), "T-1273: 更新根必须为canonical Ed25519 SPKI");
+    let root: [u8; 32] = der[12..].try_into().unwrap();
+    let tarball = manifest.join("sidecar.tar.gz");
+    let signature = manifest.join("sidecar.tar.gz.sig");
+    let digest = release_integrity::hash_file(&tarball, &std::sync::atomic::AtomicBool::new(false))
+        .expect("T-1273: 无法计算最终sidecar BLAKE3")
+        .expect("T-1273: 构建摘要不允许取消");
+    release_integrity::verify_signature_file(&signature, &digest, &root, "creatoros-update-root-20260805-01")
+        .expect("T-1273: 最终sidecar签名无效");
+    let generated = format!("const RELEASE_SIDECAR_BLAKE3: [u8; 32] = {digest:?};\nconst RELEASE_SIDECAR_ROOT: [u8; 32] = {root:?};\n");
+    std::fs::write(out_dir.join("release-integrity.generated.rs"), generated)
+        .expect("T-1273: 无法固化已验签资源摘要");
+    println!("cargo:rerun-if-changed={}", public_path.display());
+    println!("cargo:rerun-if-changed=sidecar.tar.gz");
+    println!("cargo:rerun-if-changed=sidecar.tar.gz.sig");
+    println!("cargo:rerun-if-changed=src/release_integrity.rs");
 }

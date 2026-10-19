@@ -1,0 +1,48 @@
+--- /tmp/t1254-readonly/fetch-budget-candidate.ts
++++ /tmp/t1254-readonly/fetch-budget-candidate-v2.ts
+@@ -44,27 +44,27 @@
+   }
+   let timer = setTimeout(abortAtDeadline, Math.min(timeout, maxTimerDelay))
+ 
+-  let body: BodyInit | undefined
+-  if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
+-    if (typeof FormData !== `undefined` && config.data instanceof FormData) {
+-      body = config.data
+-      // Browser sets multipart boundary; drop explicit multipart Content-Type
+-      for (const key of Object.keys(headers)) {
+-        if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
+-          delete headers[key]
++  try {
++    let body: BodyInit | undefined
++    if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
++      if (typeof FormData !== `undefined` && config.data instanceof FormData) {
++        body = config.data
++        // Browser sets multipart boundary; drop explicit multipart Content-Type
++        for (const key of Object.keys(headers)) {
++          if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
++            delete headers[key]
++        }
++      }
++      else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
++        body = JSON.stringify(config.data)
++        if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
++          headers[`Content-Type`] = `application/json`
++      }
++      else {
++        body = config.data as BodyInit
+       }
+     }
+-    else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
+-      body = JSON.stringify(config.data)
+-      if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
+-        headers[`Content-Type`] = `application/json`
+-    }
+-    else {
+-      body = config.data as BodyInit
+-    }
+-  }
+ 
+-  try {
+     const res = await globalThis.fetch(url, {
+       method,
+       headers,

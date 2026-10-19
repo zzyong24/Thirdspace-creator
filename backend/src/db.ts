@@ -1,6 +1,18 @@
+import * as observabilitySchema from "./schema/observability";
+import {repairConvergenceSchema,inspectMigrationConvergence} from './migration-convergence';
+import {backupBeforeGroupUpgrade,backupPostgresBeforeGroupUpgrade,verifyGroupUpgradeCounts} from "./group-upgrade-backup";
+import * as publicationCoverSchema from "./schema/publication-cover";
+import * as creativeCanvasSchema from "./schema/creative-canvas";
+import {inspectCanvasMigrationLineage,assertCanvasMigrationConverged} from "./creative-canvas-migration-lineage";
+import * as momentsModelSchema from "./schema/moments-model";
+import * as workReviewsSchema from "./schema/work-reviews";
+import * as workMaterialsSchema from "./schema/work-materials";
+import * as workCompositionsSchema from "./schema/work-compositions";
+import * as momentsSchema from "./schema/moments";
 import * as executionStreamSchema from "./schema/execution-stream";
 import * as pendingDocumentCommitsSchema from "./schema/pending-document-commits";
 import * as pendingGeneratedAssetCommitsSchema from "./schema/pending-generated-asset-commits";
+import * as visualTemplatesSchema from "./schema/visual-templates";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import * as projectsSchema from "./schema/projects";
@@ -12,8 +24,10 @@ import * as settingsSchema from "./schema/settings";
 import * as knowledgeSchema from "./schema/knowledge";
 import * as assetsSchema from "./schema/assets";
 import * as artifactsSchema from "./schema/artifacts";
+import * as productionFileBindingsSchema from "./schema/production-file-bindings";
 import * as productionSchema from "./schema/production";
 import * as publishingSchema from "./schema/publishing";
+import * as publicationResultsSchema from "./modules/publishing/publication-results.schema";
 import * as analyticsSchema from "./schema/analytics";
 import * as ingestionSchema from "./schema/ingestion";
 import * as reviewsSchema from "./schema/reviews";
@@ -26,6 +40,8 @@ import * as positioningSchema from "./schema/positioning";
 // 迁移基线里的 products 等表留存无害,schema 联合不再覆盖它们。
 import * as candidateSchema from "./schema/candidate";
 import * as calibrationSchema from "./schema/calibration";
+import * as accountGroupsSchema from "./schema/account-groups";
+import * as resourceAccessSchema from "./schema/resource-access";
 import * as platformAccountSchema from "./schema/platform-account";
 import * as contentCalendarSchema from "./schema/content-calendar";
 import * as materialLinksSchema from "./schema/material-links";
@@ -47,6 +63,11 @@ import * as intelligenceSchema from "./schema/intelligence";
 import * as executionBrowserProfileLeasesSchema from "./schema/execution-browser-profile-leases";
 import * as proposalAdoptionsSchema from "./schema/proposal-adoptions";
 import * as cliInvocationsSchema from "./schema/cli-invocations";
+import * as platformCollectionSchema from "./schema/platform-collection";
+import * as articlesSchema from "./schema/articles";
+import * as creativeResultsSchema from "./schema/creative-results";
+import * as graphicPostsSchema from "./modules/graphic-posts/graphic-posts.schema";
+import * as workbenchArtifactsSchema from "./schema/workbench-artifacts";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -67,8 +88,18 @@ const MIGRATIONS_FOLDER = resolve(
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
 const schema = {
+  ...observabilitySchema,
+  ...publicationCoverSchema,
+  ...creativeCanvasSchema,
+  ...workCompositionsSchema,
+  ...workMaterialsSchema,
+  ...workReviewsSchema,
+  ...momentsSchema,
+  ...momentsModelSchema,
   ...pendingDocumentCommitsSchema,
   ...pendingGeneratedAssetCommitsSchema,
+  ...creativeCanvasSchema,
+  ...visualTemplatesSchema,
   ...executionStreamSchema,
   ...projectsSchema,
   ...identitySchema,
@@ -80,7 +111,9 @@ const schema = {
   ...assetsSchema,
   ...artifactsSchema,
   ...productionSchema,
+  ...productionFileBindingsSchema,
   ...publishingSchema,
+  ...publicationResultsSchema,
   ...analyticsSchema,
   ...ingestionSchema,
   ...reviewsSchema,
@@ -91,6 +124,8 @@ const schema = {
   ...candidateSchema,
   ...calibrationSchema,
   ...platformAccountSchema,
+  ...accountGroupsSchema,
+  ...resourceAccessSchema,
   ...contentCalendarSchema,
   ...materialLinksSchema,
   ...schedulingSchema,
@@ -102,8 +137,13 @@ const schema = {
   ...browserSessionsSchema,
   ...intelligenceSchema,
   ...cliInvocationsSchema,
+  ...platformCollectionSchema,
+  ...articlesSchema,
+  ...creativeResultsSchema,
+  ...graphicPostsSchema,
   ...proposalAdoptionsSchema,
   ...executionBrowserProfileLeasesSchema,
+  ...workbenchArtifactsSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -169,83 +209,10 @@ async function migrateOpenedDb(client: PGlite): Promise<Db> {
   // Apply the same versioned migrations the runtime uses. pglite is Postgres-WASM, so the
   // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
   // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
+  await inspectCanvasMigrationLineage(db, MIGRATIONS_FOLDER);
   await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
-    // [T-033 fixup] 老 pglite(< 2026-07-08 build 前的 .dmg 装的)schema 不带 publications.platform_status 列,
-    // 旧 journal 也没记 0029 → migrator 不会跑 → 启动 SSR list 报「column 不存在」500。
-    // 这里用 information_schema 查列存不存在,缺就 ALTER TABLE 加(IF NOT EXISTS 兜幂等)。
-    // 不动 journal(保留 migrator 单一真源),这是 T-033 加列后的启动兼容层。
-    const colCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'publications' AND column_name = 'platform_status') AS exists",
-    );
-    if (!colCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE publications ADD COLUMN IF NOT EXISTS platform_status TEXT",
-      );
-    }
-    // [T-200 fixup] 同款兜底:老 pglite 无 scheduled_job.account_id 列(0030 前的装机),
-    // migrator 若因 journal 不同步没跑 0030 → 建/读 job 报「column 不存在」。缺就补(幂等)。
-    const acctColCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'scheduled_job' AND column_name = 'account_id') AS exists",
-    );
-    if (!acctColCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE scheduled_job ADD COLUMN IF NOT EXISTS account_id TEXT",
-      );
-    }
-    // [T-201b fixup] 同款兜底:老 pglite 无 platform_accounts.external_account_id 列(0031 前装机),
-    // migrator 若因 journal 不同步没跑 0031 → 身份解析读该列报「column 不存在」。缺就补(幂等);
-    // 并把旧 handle 唯一索引换成 sec_uid 身份唯一(与 0031 一致,幂等 DROP/CREATE IF)。
-    const extColCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'platform_accounts' AND column_name = 'external_account_id') AS exists",
-    );
-    if (!extColCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE platform_accounts ADD COLUMN IF NOT EXISTS external_account_id TEXT",
-      );
-      await client.exec("DROP INDEX IF EXISTS platform_accounts_handle_ux");
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS platform_accounts_external_ux ON platform_accounts(user_id, platform, external_account_id)",
-      );
-    }
-    // [T-235d-distill fixup] 同款兜底:老 pglite 无 favorites_items 蒸馏链三列(0039 前装机),
-    // migrator 若因 journal 不同步没跑 0039 → 收藏夹蒸馏链读写报「column 不存在」。缺就补(幂等)。
-    const favDistillColCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'favorites_items' AND column_name = 'distill_status') AS exists",
-    );
-    if (!favDistillColCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS transcript TEXT",
-      );
-      await client.exec(
-        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS distill_status TEXT",
-      );
-      await client.exec(
-        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS distill_result JSONB NOT NULL DEFAULT '{}'::jsonb",
-      );
-      await client.exec(
-        "CREATE INDEX IF NOT EXISTS ix_favorites_items_distill ON favorites_items (user_id, distill_status)",
-      );
-    }
-    // [T-326 DATA-H02 fixup] 同款兜底:老装机若因 journal 不同步没跑 0041(账号维度唯一键),
-    // 代码侧 onConflict target 已改为含 account_id → PG 报「no unique or exclusion constraint
-    // matching the ON CONFLICT specification」。缺 _v2 索引就补(先建新后删旧,与 0041 同序、幂等)。
-    const acctUxCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'ux_topic_preferences_identity_v2') AS exists",
-    );
-    if (!acctUxCheck.rows[0]?.exists) {
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_folders_identity_v2 ON favorites_folders (user_id, account_id, name) NULLS NOT DISTINCT",
-      );
-      await client.exec("DROP INDEX IF EXISTS ux_favorites_folders_identity");
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_items_identity_v2 ON favorites_items (user_id, account_id, aweme_id) NULLS NOT DISTINCT",
-      );
-      await client.exec("DROP INDEX IF EXISTS ux_favorites_items_identity");
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS ux_topic_preferences_identity_v2 ON topic_preferences (user_id, account_id, keyword, direction) NULLS NOT DISTINCT",
-      );
-      await client.exec("DROP INDEX IF EXISTS ux_topic_preferences_identity");
-    }
+  await repairConvergenceSchema(db,MIGRATIONS_FOLDER);
+  await assertCanvasMigrationConverged(db, MIGRATIONS_FOLDER);
   return db;
 }
 
@@ -298,7 +265,11 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
 
   // ── 迁移阶段 ────────────────────────────────────────────────────────────────
   try {
+    const probe=drizzle(client,{schema});
+    const upgrade=await inspectMigrationConvergence(probe,MIGRATIONS_FOLDER);
+    const backup=await backupBeforeGroupUpgrade(client,{dataDir,convergence:upgrade.needsUpgrade});
     const db = await migrateOpenedDb(client);
+    if(backup)await verifyGroupUpgradeCounts(client,backup);
     return { db, client };
   } catch (migErr) {
     // 半开的 client 关掉释放句柄。库已成功打开 → 这**不是**损坏:如实上抛,绝不隔离 + 空库。
@@ -355,7 +326,24 @@ export async function createRuntimeDb(
   }
   const pool = new Pool({ connectionString });
   const db = drizzlePg(pool, { schema });
-  await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
+  const guard=await pool.connect();
+  try{
+    // 同一库的并发启动共用升级互斥；保持同一个连接直到备份、迁移与计数校验完成。
+    await guard.query("SELECT pg_advisory_lock(1022,1)");
+    const upgradeDb=drizzlePg(guard,{schema});
+    const upgrade=await inspectMigrationConvergence(upgradeDb as unknown as Db,MIGRATIONS_FOLDER);
+    const client={query:async<T>(query:string)=>{const result=await guard.query(query);return {rows:result.rows as T[]};}};
+    const backup=await backupPostgresBeforeGroupUpgrade(client as never,connectionString,{convergence:upgrade.needsUpgrade});
+    await inspectCanvasMigrationLineage(upgradeDb as unknown as Db, MIGRATIONS_FOLDER);
+    await migratePg(upgradeDb, { migrationsFolder: MIGRATIONS_FOLDER });
+    await repairConvergenceSchema(upgradeDb as unknown as Db,MIGRATIONS_FOLDER);
+    await assertCanvasMigrationConverged(upgradeDb as unknown as Db,MIGRATIONS_FOLDER);
+    if(backup)await verifyGroupUpgradeCounts(client as never,backup);
+  }catch(error){
+    try{await guard.query("SELECT pg_advisory_unlock(1022,1)");}finally{guard.release();}
+    await pool.end();throw error;
+  }
+  try{await guard.query("SELECT pg_advisory_unlock(1022,1)");}finally{guard.release();}
   return { db: db as unknown as Db, pool };
 }
 

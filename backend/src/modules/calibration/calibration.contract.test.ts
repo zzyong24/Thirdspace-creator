@@ -1,3 +1,5 @@
+import {learnings} from "../../schema/learnings";
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type {
@@ -95,6 +97,8 @@ describe("calibration contract (each of 7 ops validates against its DTO)", () =>
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctx,["output-1","output-2","o"]);
+    await db.insert(learnings).values({id:"learning-1",userId:ctx.userId,accountId:ctx.accountId,title:"真实人工确认经验",createdAt:"2026-06-21T00:00:00.000Z",updatedAt:"2026-06-21T00:00:00.000Z"});
   });
 
   it("calibration.rubrics.create → rubricResource (embedded currentVersion, versionNumber 1)", async () => {

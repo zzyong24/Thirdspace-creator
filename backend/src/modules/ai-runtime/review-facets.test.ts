@@ -63,10 +63,10 @@ describe("reviewFacets — 复盘作品真材料映射进 review.insights facets
     expect(facets.subject).toContain("按这个账号的整体表现");
   });
 
-  it("空文案/数据/评论 → 对应块为空串(prompt 里该块省略,不硬塞空占位)", () => {
+  it("空文案/指标明确证据边界，空评论仍省略，不虚构材料", () => {
     const facets = reviewFacets(makeContext({ reviewTitle: "只有标题" }));
-    expect(facets.reviewScriptBlock).toBe("");
-    expect(facets.reviewMetricsBlock).toBe("");
+    expect(facets.reviewScriptBlock).toBe("\n【本次复盘作品·文案】未取得真实稿件，不能评价具体开头台词、段落或叙事结构。\n");
+    expect(facets.reviewMetricsBlock).toBe("\n【本次复盘作品·真实数据】未取得发布指标，不能归因传播或成交效果。\n");
     expect(facets.reviewCommentsBlock).toBe("");
   });
 });

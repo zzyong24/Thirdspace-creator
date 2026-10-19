@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {
   createCipheriv,
   createDecipheriv,
@@ -119,7 +120,7 @@ function sleepSyncMs(ms: number): void {
 // [T-408 fd 竞态修复] Rust 在 spawn sidecar 后**异步**往 stdin(fd 0)写 master key + 换行;若
 //   sidecar 首个消费者(DB 初始化)抢先在 Rust 写入前读 fd,非阻塞读连吃 EAGAIN → 4096 次微秒级
 //   空转后拿空 → 降级 → .license 解不开 → **偶发跳转激活页**(真机实测 ~1/4 启动会中招)。
-//   修:①EAGAIN / 未就绪的 0 返回时**同步小睡后重试**(给 Rust 写入留最多 3s 窗口,而非微秒空转);
+//   修:①真正未就绪的 EAGAIN 按原有限执行预算同步小睡后重试；0 是 EOF，立即交既有兜底。
 //   ②**空结果不缓存**(key 仍在管道,允许后续消费者——如激活门——重读到)。已读到主体后的
 //   EAGAIN/EOF 视为 key 结束正常收尾。
 // [T-460 后修 2026-07-22] Windows tauri-plugin-shell:stdin 是**阻塞管道**,readSync 一次会
@@ -138,14 +139,14 @@ function readMasterKeyFromFd(fd: number): string {
   //   attached to console)。真机实证:sidecar 启动早期主线程被 pin 6+ 分钟,Next server listen
   //   却不处理请求 → webview 白屏。修:Windows 直接不走 fd 通道,让上层降到文件兜底(T-425 已在)。
   //   mac/Linux 分支下 Rust 用 std::process::Command::stdin + write_all + drop(close),fd 0 是真
-  //   pipe,readSync EAGAIN 语义正常 —— 保留 3s 循环。
+  //   pipe,readSync EAGAIN 语义正常 —— 保留有界读取循环。
   if (process.platform === "win32") {
     fdKeyCache.set(fd, ""); // 缓存空,不再重试;上层会走 CREATOROS_MASTER_KEY_FILE 文件兜底
     return "";
   }
   const bytes: number[] = [];
   const one = Buffer.alloc(1);
-  const deadline = Date.now() + 3000;
+  const deadline = Date.now() + executionTimeoutMs();
   let sawData = false;
   while (Date.now() < deadline) {
     let n = 0;
@@ -159,11 +160,7 @@ function readMasterKeyFromFd(fd: number): string {
       }
       break; // 其它错误 → 停(交由上层降级)
     }
-    if (n === 0) {
-      if (sawData) break; // 真 EOF(key 已读完)
-      sleepSyncMs(10); // 写端尚未就绪的 0 返回 → 等一下重试
-      continue;
-    }
+    if (n === 0) break; // 真 EOF：已关闭的管道不会再来数据，立即走原兜底。
     sawData = true;
     const b = one.readUInt8(0);
     if (b === 0x0a) break; // 换行 → key 结束

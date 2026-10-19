@@ -1,0 +1,1 @@
+仅delivery源码草稿，未审/未执行/未产品应用。相对v1 static增加953Graph对应的严格pathname membership TypeScript AST协议；build单出生移到任何FS验证前，仍须补完整实际source/installed dependency/dyld before-each-after绑定及最终archive/manifest schema，不可将此早稿当可交付。v1保原。

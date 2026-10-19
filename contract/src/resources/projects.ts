@@ -7,11 +7,13 @@ import {
   stageStatus,
   creationMode,
   contentType,
+  platformId,
 } from "../primitives";
 import {
   adaptationStrategy,
-  adaptedDraftCandidate,
   candidateSourceReference,
+  legacyAdaptedDraftCandidate,
+  rewriteOnlyAdaptedDraftCandidate,
   sourceDecomposition,
 } from "./candidate";
 
@@ -57,15 +59,28 @@ export const projectBriefDetail = z.object({
   durationEstimate: z.string().optional(), // 预估时长
   coreMessage: z.string().optional(), // 核心信息(一句话主张)
   successCriteria: z.string().optional(), // 成功标准
-  // [T-642] 内容雷达立项时冻结的创作依据。普通项目不带此字段；雷达项目必须保留来源、
-  // 拆解和改写策略，标准 script.draft 链路据此生成，而不是退化成只读定位。
+  // 内容雷达证据保留完整旧版 strategy-backed shape，并接受新 rewrite_only seed。
+  // 新变体只记录实际存在的来源和生成凭据；不要求或补造拆解、策略与 strategyHash。
   contentRadarEvidence: z
-    .object({
-      sourceReferences: z.array(candidateSourceReference).min(1).max(10),
-      decomposition: sourceDecomposition,
-      strategy: adaptationStrategy,
-      adaptedDraftSeed: adaptedDraftCandidate,
-    })
+    .union([
+      z.object({
+        generationMode: z.literal("rewrite_only"),
+        sourceReferences: z.array(candidateSourceReference).min(1).max(10),
+        sourceSnapshotId: id,
+        generatedFromTranscriptHash: z.string().min(1),
+        adaptedDraftSeed: rewriteOnlyAdaptedDraftCandidate,
+        positioningVersionId: id.optional(),
+        personalizationStatus: z.enum(["applied", "not_applied"]).optional(),
+        // Candidate 上的 aiTaskId 指向真实执行/模型调用账本；为空时不虚构回执。
+        aiTaskId: id.optional(),
+      }),
+      z.object({
+        sourceReferences: z.array(candidateSourceReference).min(1).max(10),
+        decomposition: sourceDecomposition,
+        strategy: adaptationStrategy,
+        adaptedDraftSeed: legacyAdaptedDraftCandidate,
+      }),
+    ])
     .optional(),
 });
 export type ProjectBriefDetail = z.infer<typeof projectBriefDetail>;
@@ -129,6 +144,7 @@ export const contentOutputResource = z.object({
   projectId: id,
   title: z.string(),
   contentType,
+  targetPlatform: platformId.nullable().optional(),
   format: z.string(),
   aspectRatio: z.string(),
   targetDurationSeconds: z.number(),

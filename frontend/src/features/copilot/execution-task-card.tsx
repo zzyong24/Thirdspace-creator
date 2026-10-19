@@ -19,6 +19,7 @@
 import * as React from "react";
 import { BrowserTaskAuthorizationCard } from "./browser-task-authorization-card";
 import type { AgenticProposal } from "@creatoros/contract";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 
 import { client } from "@/lib/contract-client";
 
@@ -49,7 +50,8 @@ interface WireExecutionTask {
     | "awaiting_confirmation"
     | "succeeded"
     | "failed"
-    | "cancelled";
+    | "cancelled"
+    | "partial";
   execType: string;
   spec: {
     taskType: string;
@@ -275,7 +277,7 @@ function ExecutionTaskCardBody({
   }, [task, taskId, retryFeedback, projectId, onTaskIdChange]);
 
   const runtimeStatus = task?.executionTaskId ? task.runtimeStatus : undefined;
-  const status = task?.authorizationStatus ? task.authorizationStatus : runtimeStatus && ["paused", "waiting_user", "unknown_result", "blocked", "pause_requested", "cancel_requested"].includes(runtimeStatus) ? runtimeStatus : task?.status ?? "queued";
+  const status = task?.authorizationStatus ? task.authorizationStatus : runtimeStatus && ["paused", "waiting_user", "unknown_result", "blocked", "pause_requested", "cancel_requested", "partial"].includes(runtimeStatus) ? runtimeStatus : task?.status ?? "queued";
   const artifacts = task?.manifest?.artifacts ?? [];
   const proposals = task?.manifest?.proposals ?? [];
   const videoArtifacts = artifacts.filter((artifact) =>
@@ -328,6 +330,9 @@ function ExecutionTaskCardBody({
           {lastStep ?? (status === "queued" ? "排队中…" : "执行中…")}
         </div>
       ) : null}
+
+      <TaskPartialNotice visible={status === "partial"} />
+      {status === "partial" && task?.manifest?.summary ? <p className="whitespace-pre-wrap break-words text-sm text-foreground">{task.manifest.summary}</p> : null}
 
       {status === "awaiting_confirmation" ? (
         <div data-slot="execution-task-review" className="flex flex-col gap-1.5">

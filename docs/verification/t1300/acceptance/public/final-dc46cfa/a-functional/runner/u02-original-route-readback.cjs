@@ -1,0 +1,8 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),{createRequire}=require('node:module');const req=createRequire(path.resolve('frontend/package.json'));const {request}=req('@playwright/test');
+const session=JSON.parse(fs.readFileSync('/private/tmp/t1300-candidate-MhP4pW/session.json','utf8'));
+const root=path.resolve('docs/verification/t1300/acceptance/runs/final-dc46cfa/a-functional');
+function save(name,value){const text=JSON.stringify(value,null,2);if(text.includes(session.handshake))throw Error('SECRET_NOT_PERSISTED');fs.writeFileSync(path.join(root,name+'.json'),text+'\n',{mode:0o600});}
+(async()=>{const ctx=await request.newContext({baseURL:session.baseURL,extraHTTPHeaders:{'x-creatoros-handshake':session.handshake,'x-group-id':'grp-bcda7005-6'},timeout:900000});async function rpc(id,input){const r=await ctx.post('/api/v1/dispatch',{data:{id,input}});let b;try{b=await r.json();}catch{throw Error('INVALID_JSON '+id+' '+r.status());}if(!r.ok()||b.success===false)throw Error('RPC_REJECTED '+id+' '+r.status()+' '+(b.error?.code??'UNKNOWN'));return b.data;}
+try{const task=await rpc('ai.tasks.get',{params:{taskId:'ai-task-0b0dcc54-12f2-4589-844d-f0a9d8fdaa5c'}}),execution=await rpc('execution.tasks.get',{params:{taskId:'execution-task-9743df88-d22f-4bc3-8a6e-985a9417f8a2'}}),messages=await rpc('ai.conversations.messages.list',{params:{conversationId:'ai-conv-bcda7005-951'}});save('U02-original-public-route-input-readback',{at:new Date().toISOString(),task,execution,messages,noNewModel:true,knownFilenameCue:true});
+process.stdout.write('READ_ONLY_ORIGINAL_IDS_CAPTURED\n');}finally{await ctx.dispose();}})().catch(e=>{process.stderr.write(e.message+'\n');process.exitCode=1});

@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { resolve } from "node:path";
+import { desktopReleaseHeaders } from "./scripts/desktop/desktop-csp.mjs";
 
 // [T-147 P1] 桌面壳(Tauri)只在打桌面包时才需要 standalone 产物;设 CREATOROS_DESKTOP=1
 // 触发。additive:web 运行(pnpm dev / pnpm build)不设该 env,行为完全不变。
@@ -41,6 +42,13 @@ const desktopFeedbackOfficialOrigins = isDesktopBuild
   : "";
 
 const nextConfig: NextConfig = {
+  ...(isDesktopBuild && process.env.CREATOROS_SIDECAR_SIGNING_REQUIRED === "1"
+    ? { headers: async () => desktopReleaseHeaders(process.env) }
+    : {}),
+  // T-1063：安装制品只要求真实编译成功；类型验证独立运行，不阻断出包。
+  ...(isDesktopBuild && process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1"
+    ? { typescript: { ignoreBuildErrors: true } }
+    : {}),
   turbopack: {
     root: resolve(import.meta.dirname, ".."),
   },

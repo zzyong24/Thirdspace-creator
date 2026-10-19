@@ -1,6 +1,9 @@
 import {ENDPOINTS,type RequestContext,type Transport} from "@creatoros/contract";
 
 import { preparePublishPackageTaskInput } from "../../modules/ai-runtime";
+import {readCurrentArticleImageSnapshot,type ArticleImageAnchor,type ArticleImageReadable} from "../../modules/ai-runtime/material-generation-preparation";
+import {z} from "zod";
+const articleImageAnchorSchema=z.object({outputId:z.string().min(1),versionId:z.string().min(1),sectionId:z.string().min(1)}).strict();
 /** 复用正式提交、快照冻结与唤醒，保持原任务身份。 */
 export function createChatGenerationTasks(ports:{
 aiService: Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"prepareScriptDraftTaskCommit"|"prepareTaskCommit"|"getTask"|"createScriptDraftTask">;
@@ -8,24 +11,31 @@ projectsService: Pick<import("../../modules/projects").ProjectsService,"listOutp
 reviewGateService: Pick<ReturnType<typeof import("../../modules/review").createReviewGateService>,"triggerReview">;
 chatTaskSubmissions: ReturnType<typeof import("../../modules/ai").createAiTaskSubmissionService>;
 readCurrentArtifactTruth: ReturnType<typeof import("../context/current-artifact").createCurrentArtifactReader>;
+getArticleForImage?: (ctx:RequestContext,opts:{outputId:string})=>Promise<ArticleImageReadable>;
 createAiTaskAttemptId: ()=>string;
 makeReviewSubjectReader: ()=>import("../../modules/ai-runtime").ReviewSubjectReader;
 assertReviewableChatScript: (ctx:RequestContext,input:{projectId:string})=>Promise<void>;
 ai: Transport;
 }){
-const {aiService,projectsService,reviewGateService,chatTaskSubmissions,readCurrentArtifactTruth,createAiTaskAttemptId,makeReviewSubjectReader,assertReviewableChatScript,ai}=ports;
+const {aiService,projectsService,reviewGateService,chatTaskSubmissions,readCurrentArtifactTruth,getArticleForImage,createAiTaskAttemptId,makeReviewSubjectReader,assertReviewableChatScript,ai}=ports;
 return {
 dispatchGenerateAsset: async (
       ctx: RequestContext,
-      input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
+      input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string; referenceAssetId?:string;articleImageAnchor?:ArticleImageAnchor },
     ) => {
       const task=await chatTaskSubmissions.submit(ctx,{
         taskType:"asset.generate",attemptId:input.attemptId??createAiTaskAttemptId(),
-        inputData:{kind:input.kind,prompt:input.prompt,...(input.projectId?{projectId:input.projectId}:{})},
+        inputData:{kind:input.kind,prompt:input.prompt,...(input.projectId?{projectId:input.projectId}:{}),...(input.referenceAssetId?{referenceAssetId:input.referenceAssetId}:{}),...(input.articleImageAnchor?{articleImageAnchor:articleImageAnchorSchema.parse(input.articleImageAnchor)}:{})},
       },{
-        snapshotKeys:["scriptSnapshot"],
+        snapshotKeys:["scriptSnapshot","articleSnapshot"],
         prepareSnapshot:async(context,inputData)=>{
           const projectId=typeof inputData.projectId==="string"?inputData.projectId:null;
+          if(inputData.articleImageAnchor!==undefined){
+            if(!projectId||!getArticleForImage||inputData.kind!=="image")throw new Error("文章配图目标不完整");
+            const anchor=articleImageAnchorSchema.parse(inputData.articleImageAnchor);
+            const articleSnapshot=await readCurrentArticleImageSnapshot({projectId,anchor,getArticleForImage:query=>getArticleForImage(context,query)});
+            return {articleSnapshot};
+          }
           const scriptSnapshot=projectId?await readCurrentArtifactTruth(context,projectId,"output_script").catch(()=>null):null;
           return scriptSnapshot?{scriptSnapshot}:{};
         },

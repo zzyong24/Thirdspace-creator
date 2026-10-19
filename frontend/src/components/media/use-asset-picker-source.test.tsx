@@ -1,0 +1,21 @@
+import {act,cleanup,renderHook,waitFor} from '@testing-library/react';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {useAssetPickerSource} from './use-asset-picker-source';
+import {assetChoice,type AssetPickerSource} from './asset-picker.types';
+const h=vi.hoisted(()=>({search:vi.fn(),dispose:vi.fn(),capture:vi.fn()}));
+vi.mock('@/lib/creation-workspace-scope',()=>({useCreationScope:()=>({groupId:'fixture',accountId:null}),creationScopeKey:()=> 'group:fixture',createCreationWorkspace:()=>({activate:vi.fn(),dispose:h.dispose,capture:()=>({client:{searchAssets:h.search},signal:new AbortController().signal,assertCurrent:vi.fn()})})}));
+const asset={id:'photo',currentFileId:'version',name:'照片.png',assetType:'image'};
+const source=(types:('image'|'video')[]):AssetPickerSource<typeof asset>=>({kind:'library',key:'same-library',label:'素材',allowedTypes:types,map:assetChoice});
+beforeEach(()=>{vi.clearAllMocks();h.search.mockReset();h.search.mockResolvedValue({items:[asset],nextCursor:null});});
+afterEach(cleanup);
+it('素材类型范围改变后立即隐藏旧页面，并读取新范围',async()=>{
+ const view=renderHook(({types})=>useAssetPickerSource(source(types),true,'','all','same-owner'),{initialProps:{types:['image'] as ('image'|'video')[]}});
+ await waitFor(()=>expect(view.result.current.items).toHaveLength(1));
+ let resolve!:(value:unknown)=>void;h.search.mockImplementationOnce(()=>new Promise(r=>{resolve=r;}));
+ view.rerender({types:['video']});
+ expect(view.result.current.items).toEqual([]);
+ await waitFor(()=>expect(h.search).toHaveBeenCalledTimes(2));
+ await act(async()=>resolve({items:[],nextCursor:null}));
+ await waitFor(()=>expect(view.result.current.loading).toBe(false));expect(view.result.current.items).toEqual([]);
+ expect(h.search.mock.calls[1][0].query.assetTypes).toEqual(['video']);
+});

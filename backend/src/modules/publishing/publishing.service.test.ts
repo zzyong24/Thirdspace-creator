@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -70,6 +71,8 @@ function build(db: Db) {
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedAdjacentContent(db,ctx,["output-1","output-2","output-3","output-A","output-B","output-X","output-any","output-archived","output-cover","output-heal","output-hidden","output-legacy-unknown","output-manual","output-mine","output-new","output-private","output-shell","output-visible",...Array.from({length:12},(_,i)=>`output-${i}`)]);
+  await seedAdjacentContent(db,{...ctx,accountId:"acct-2"},["output-other-account"]);
   build(db);
 });
 
@@ -1080,4 +1083,19 @@ describe("registerOwnerPublication ([T-323] 重锚 + 归档空壳)", () => {
       }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+});
+
+
+it("手工登记索引失败保 published；同外部锚补偿原 ID 并使用准确目标账号",async()=>{
+ let sequence=0;const projected:Array<{owner:RequestContext;input:Record<string,unknown>}>=[];
+ const svc=createPublishingService({db,now:()=>NOW,nextId:p=>`${p}-search-${++sequence}`,publisher:createMockPublisher(),searchIndex:async(owner,input)=>{projected.push({owner,input});if(projected.length===1)throw Error("隔离索引暂时不可用");}});
+ const input={platform:"douyin",externalId:"same-search-anchor",accountId:"acct-2"};
+ const first=await svc.registerOwnerPublication({...ctx,accountId:"acct-2"},"output-other-account",input);
+ expect(first.status).toBe("published");expect(first.externalId).toBe(input.externalId);
+ const again=await svc.registerOwnerPublication({...ctx,accountId:"acct-2"},"output-other-account",input);
+ expect(again.id).toBe(first.id);expect(again.status).toBe("published");
+ expect(projected).toHaveLength(2);
+ expect(projected).toEqual([1,2].map(()=>({owner:{...ctx,accountId:"acct-2"},input:{entityType:"publication",entityId:first.id,title:"douyin 发布",body:first.accountReference}})));
+ expect((await svc.listPublications({...ctx,accountId:"acct-2"},"output-other-account",{limit:100,offset:0})).filter(row=>row.externalId===input.externalId)).toHaveLength(1);
+ await expect(svc.getPublication(ctx,first.id)).rejects.toThrow(OwnershipError);
 });

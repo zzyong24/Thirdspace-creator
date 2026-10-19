@@ -83,6 +83,30 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+it("解析partial且无可用正文停止等待，原文件保留且不写知识库", async () => {
+  vi.useFakeTimers();
+  const { act } = await import("@testing-library/react");
+  try {
+    getAsset.mockResolvedValue({ id: "asset-1", extractStatus: "running", extractedText: null });
+    getTask.mockResolvedValue({ id: "task-1", status: "partial" });
+    fetchMock.mockResolvedValue({ ok: true });
+    const { container } = render(<KnowledgeDumpZone/>);
+    fireEvent.change(container.querySelector('input[type="file"]')!, { target: { files: [new File(["PDF"], "部分资料.pdf", {type: "application/pdf"})] } });
+    fireEvent.click(container.querySelector('[data-slot="knowledge-import-confirm"]')!);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1200000); });
+    expect(getTask).toHaveBeenCalledTimes(1);
+    expect(createUpload).toHaveBeenCalledTimes(1); expect(createAITask).toHaveBeenCalledTimes(1);
+    expect(createKnowledge).not.toHaveBeenCalled();
+    const result = container.querySelector('[data-slot="knowledge-import-result-dialog"]');
+    expect(result?.textContent).toContain("部分完成");
+    expect(result?.textContent).toContain("原文件已保存在素材库，未加入知识库");
+  } finally {
+    getAsset.mockResolvedValue({ id: "asset-1", extractStatus: "done", extractedText: "解析出的文档正文" });
+    getTask.mockResolvedValue({ id: "task-1", status: "succeeded", errorMessage: null });
+    vi.useRealTimers();
+  }
+});
+
 function q<T extends Element>(container: HTMLElement, slot: string): T | null {
   return container.querySelector<T>(`[data-slot="${slot}"]`);
 }
@@ -342,4 +366,28 @@ describe("KnowledgeDumpZone — 文件导入闭环(T-547)", () => {
     expect(createKnowledge).not.toHaveBeenCalled();
     expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
+});
+
+it("T-1066 两分钟观察结束保留文件与任务，继续查询不重复上传和解析", async () => {
+  vi.useFakeTimers();
+  const { act, screen } = await import("@testing-library/react");
+  try {
+    getAsset.mockResolvedValue({ id: "asset-slow", extractStatus: "running", extractedText: null });
+    getTask.mockResolvedValue({ id: "task-1", status: "running" });
+    const { container } = render(<KnowledgeDumpZone />);
+    const file = new File(["slow PDF"], "慢解析.pdf", { type: "application/pdf" });
+    fireEvent.change(container.querySelector('input[type="file"]')!, { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: /确认导入|开始导入/ }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(120_000); });
+    expect(screen.getByRole("button", { name: "继续查询原任务" })).toBeTruthy();
+    expect(container.textContent).not.toContain("正文解析超时");
+    expect(createAITask).toHaveBeenCalledTimes(1);
+    expect(createUpload).toHaveBeenCalledTimes(1);
+    getAsset.mockResolvedValue({ id: "asset-slow", extractStatus: "done", extractedText: "迟到正文" });
+    fireEvent.click(screen.getByRole("button", { name: "继续查询原任务" }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+    expect(createKnowledge).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({ content: "迟到正文" }) }));
+    expect(createAITask).toHaveBeenCalledTimes(1);
+    expect(createUpload).toHaveBeenCalledTimes(1);
+  } finally { vi.useRealTimers(); }
 });

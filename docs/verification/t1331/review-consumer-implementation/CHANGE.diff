@@ -1,0 +1,46 @@
+--- persistence-client.BEFORE.ts
++++ frontend/src/server/persistence-client.ts
+@@ -6030,29 +6030,21 @@
+   const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.readPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
+   const reviewScriptSource: Parameters<typeof prepareScriptReviewContext>[2]["scriptSource"] = {
+         getLatestScript: async (c, projectId) => {
+-          const artifacts = await artifactsService.listProjectArtifacts(
+-            c,
+-            projectId,
+-          );
+-          const scriptArtifacts = artifacts.filter((a) => a.stage === "script");
+-          const target =
+-            scriptArtifacts.find((a) => a.artifactType === "output_script") ??
+-            scriptArtifacts.find((a) => a.artifactType === "master_script");
+-          if (target) {
+-            const versions = await artifactsService.listVersions(c, target.id);
+-            if (versions.length > 0) {
+-              const current = versions
+-                .slice()
+-                .sort((a, b) => b.versionNumber - a.versionNumber)[0]!;
+-              return {
+-                artifactId: target.id,
+-                version: current.versionNumber,
+-                text: extractArtifactText(
+-                  current.contentText,
+-                  current.contentData,
+-                ),
+-              };
++          const confirmed = await readConfirmedProjectScript(c, projectId);
++          if (confirmed !== null) {
++            const versions = await artifactsService.listVersions(c, confirmed.artifactId);
++            const current = versions.find(
++              (version) => version.id === confirmed.versionId &&
++                version.artifactId === confirmed.artifactId,
++            );
++            if (!current || !Number.isSafeInteger(current.versionNumber)) {
++              throw new Error("确认稿版本记录已失效，请刷新后重新审核");
+             }
++            return {
++              artifactId: confirmed.artifactId,
++              version: current.versionNumber,
++              text: confirmed.fullText,
++            };
+           }
+           const seed = await readProjectRadarDraftSeed(c, projectId);
+           return seed

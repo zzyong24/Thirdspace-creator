@@ -1,0 +1,25 @@
+{
+  "at": 1792390620.0619462,
+  "ports": {
+    "41377": {
+      "listenerPids": [],
+      "lsofExitCode": 1
+    },
+    "41378": {
+      "listenerPids": [],
+      "lsofExitCode": 1
+    },
+    "41379": {
+      "listenerPids": [],
+      "lsofExitCode": 1
+    }
+  },
+  "runnerExitCode": 1,
+  "ownedNextPid7539Exists": false,
+  "ownedChildPid7562Exists": false,
+  "logTerminalLines": [
+    "    Error: PREWARM_ABSOLUTE_DEADLINE_600000",
+    "    ../docs/verification/t1369/response-supplement03/artifacts/t1369-dashboard-filter-sid-ffb73-on-真实首页筛选后立即侧栏导航，保完整响应和最终页面-t1369-normal/test-failed-1.png",
+    "  1 failed"
+  ]
+}

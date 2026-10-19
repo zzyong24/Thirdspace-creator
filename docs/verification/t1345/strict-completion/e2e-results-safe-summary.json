@@ -1,0 +1,27 @@
+{
+  "rawSha256": "c6990e89032cef582137cd239700272cb94b55b54ea1499ec7c4bbb650b0900a",
+  "stats": {
+    "startTime": "2026-10-18T15:12:18.119Z",
+    "duration": 95655.01299999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "T1345 首用户真实建组与单层管理、平台一次点击未知恢复",
+      "status": "passed",
+      "startTime": "2026-10-18T15:12:54.158Z",
+      "duration": 57045,
+      "errors": [],
+      "attachments": [
+        {
+          "name": "trace",
+          "contentType": "application/zip",
+          "path": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator/docs/verification/t1345/e2e-artifacts/t1345-account-binding-guidance-T1345-首用户真实建组与单层管理、平台一次点击未知恢复-t1345/trace.zip"
+        }
+      ]
+    }
+  ]
+}

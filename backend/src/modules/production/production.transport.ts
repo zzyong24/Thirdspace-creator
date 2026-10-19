@@ -1,4 +1,4 @@
-import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
+import { ENDPOINTS, type Endpoint, type RequestContext, type Transport } from "@creatoros/contract";
 import { AuthenticationError, UnsupportedOperationError } from "./production.errors";
 import type { ProductionService } from "./production.service";
 import type {
@@ -24,6 +24,22 @@ import type {
 // PERSISTED_OPS from PRODUCTION_OP_IDS (adding the module = registering it).
 
 export const PRODUCTION_OP_IDS = [
+ 'outputs.production.editor.script.read','outputs.production.editor.script.propose',
+ 'outputs.production.editor.rough-cut.create','outputs.production.editor.rough-cut.get','outputs.production.editor.rough-cut.adopt',
+ "outputs.production.editor.convert.prepare","outputs.production.editor.convert.get","outputs.production.editor.convert.adopt",
+ "outputs.production.editor.sources.retry",
+ "outputs.production.editor.transcripts.create","outputs.production.editor.transcripts.get","outputs.production.editor.transcripts.adopt",
+ "outputs.production.editor.sources.prepare","outputs.production.editor.sources.get","outputs.production.editor.sources.adopt",
+  "outputs.production.editor.preview",
+  "outputs.production.editor.get",
+  "outputs.production.editor.save",
+  "outputs.production.editor.apply",
+  "outputs.production.editor.restore",
+  "outputs.production.editor.versions.list",
+  "outputs.production.editor.versions.get",
+  "outputs.production.editor.receipt.get",
+  "outputs.production.editor.render",
+  "outputs.production.editor.renders.list",
   "outputs.production.get",
   "outputs.production.put",
   "outputs.production.editingPlan.confirm",
@@ -99,14 +115,41 @@ export function createProductionTransport(
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
 
-      const { params, body } = (input ?? {}) as Input;
+      const { params, body, query } = (input ?? {}) as Input;
       const p = (params ?? {}) as {
         outputId?: string;
         productionId?: string;
         exportId?: string;
+        revision?:number;
+        requestId?:string;
       };
 
       switch (endpoint.id) {
+        case 'outputs.production.editor.script.read':return {data:await service.readEditorScript(ctx,p.outputId??'',body),meta:{requestId}};
+        case 'outputs.production.editor.script.propose':return {data:await service.proposeEditorScript(ctx,p.outputId??'',body),meta:{requestId}};
+        case 'outputs.production.editor.rough-cut.create':return{data:await service.createRoughCut(ctx,p.outputId??'',ENDPOINTS.createProductionRoughCut.body.parse(body)),meta:{requestId}};
+        case 'outputs.production.editor.rough-cut.get':return{data:await service.getRoughCut(ctx,p.outputId??'',p.requestId??''),meta:{requestId}};
+        case 'outputs.production.editor.rough-cut.adopt':return{data:await service.adoptRoughCut(ctx,p.outputId??'',ENDPOINTS.adoptProductionRoughCut.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.preview":return {data:await service.previewEditor(ctx,p.outputId??"",ENDPOINTS.previewProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.get":return {data:await service.getEditor(ctx,p.outputId??""),meta:{requestId}};
+        case "outputs.production.editor.save":return {data:await service.saveEditor(ctx,p.outputId??"",ENDPOINTS.saveProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.apply":return {data:await service.applyEditor(ctx,p.outputId??"",ENDPOINTS.applyProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.restore":return {data:await service.restoreEditor(ctx,p.outputId??"",ENDPOINTS.restoreProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.versions.list":return {data:await service.listEditorVersions(ctx,p.outputId??"",ENDPOINTS.listProductionEditorVersions.query.parse(query??{})),meta:{requestId}};
+        case "outputs.production.editor.versions.get":return {data:await service.getEditorVersion(ctx,p.outputId??"",ENDPOINTS.getProductionEditorVersion.params.parse(params).revision),meta:{requestId}};
+        case "outputs.production.editor.receipt.get":return {data:await service.getEditorReceipt(ctx,p.outputId??"",ENDPOINTS.getProductionEditorReceipt.params.parse(params).requestId),meta:{requestId}};
+        case "outputs.production.editor.sources.retry":return {data:await service.retryEditorSource(ctx,p.outputId??"",body),meta:{requestId}};
+        case "outputs.production.editor.convert.prepare":return {data:await service.prepareEditorConversion(ctx,p.outputId??"",body),meta:{requestId}};
+        case "outputs.production.editor.convert.get":return {data:await service.getEditorConversion(ctx,p.outputId??"",p.requestId??""),meta:{requestId}};
+        case "outputs.production.editor.convert.adopt":return {data:await service.adoptEditorConversion(ctx,p.outputId??"",body),meta:{requestId}};
+        case "outputs.production.editor.transcripts.create":return {data:await service.createEditorTranscript(ctx,p.outputId??"",body),meta:{requestId}};
+        case "outputs.production.editor.transcripts.get":return {data:await service.getEditorTranscript(ctx,p.outputId??"",p.requestId??""),meta:{requestId}};
+        case "outputs.production.editor.transcripts.adopt":return {data:await service.adoptEditorTranscript(ctx,p.outputId??"",body),meta:{requestId}};
+        case "outputs.production.editor.sources.prepare":return {data:await service.prepareEditorSource(ctx,p.outputId??"",body),meta:{requestId}};
+        case "outputs.production.editor.sources.get":return {data:await service.getEditorSource(ctx,p.outputId??"",p.requestId??""),meta:{requestId}};
+        case "outputs.production.editor.sources.adopt":return {data:await service.adoptEditorSource(ctx,p.outputId??"",body),meta:{requestId}};
+        case "outputs.production.editor.render":return {data:await service.renderEditor(ctx,p.outputId??"",ENDPOINTS.renderProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.renders.list":return {data:await service.listEditorRenders(ctx,p.outputId??"",ENDPOINTS.listProductionEditorRenders.query.parse(query??{})),meta:{requestId}};
         case "outputs.production.get": {
           const row = await service.getProduction(ctx, p.outputId ?? "");
           return { data: toProductionResource(row), meta: { requestId } };

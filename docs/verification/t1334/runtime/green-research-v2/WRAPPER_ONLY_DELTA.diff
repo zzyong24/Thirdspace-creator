@@ -1,0 +1,20 @@
+--- preparation-v3/run.py
++++ green-research-v2/run.py
+@@ -5,7 +5,7 @@
+ repo=runtime.parents[4]
+ external=Path('/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7')
+ label=sys.argv[1]
+-assert label in ['red-v3','green-v1']
++assert label in ['green-research-v2']
+ assert os.environ.get('T1334_APPROVED')=='1','独立装配审未通过，不运行'
+ phase=external/label
+ lock=json.loads((phase/'PRE_RUN_LOCK.json').read_text())
+@@ -24,7 +24,7 @@
+ (run/'BEFORE_INPUTS.json').write_text(json.dumps(lock,ensure_ascii=False,indent=2)+'\n')
+ binding=json.loads((phase/'WORKER_BINDING.json').read_text())
+ runner_tmp=phase/'runner-tmp';runner_tmp.mkdir(mode=0o700)
+-env=os.environ.copy();env.update(TMPDIR=str(runner_tmp),TMP=str(runner_tmp),TEMP=str(runner_tmp),T1334_PHASE_ROOT=str(phase),T1334_RUN_ID=str(uuid.uuid4()),T1334_CASES='collect,material,research',T1334_CHROMIUM_EXECUTABLE=binding['chromiumExecutable'])
++env=os.environ.copy();env.update(TMPDIR=str(runner_tmp),TMP=str(runner_tmp),TEMP=str(runner_tmp),T1334_PHASE_ROOT=str(phase),T1334_RUN_ID=str(uuid.uuid4()),T1334_CASES='research',T1334_CHROMIUM_EXECUTABLE=binding['chromiumExecutable'])
+ cmd=[binding['nodePath'],str(repo/'frontend/node_modules/vitest/vitest.mjs'),'run','--config',str(runtime/'vitest.config.mts'),'--reporter=json','--outputFile='+str(run/'vitest-result.json')]
+ start=time.monotonic();proc=None;expired=False;error=None;cleanup=[]
+ def write(name,value):(run/(name+'.json')).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')

@@ -1,0 +1,26 @@
+import fs from 'node:fs/promises';
+import {createReadStream,constants} from 'node:fs';
+import {createHash} from 'node:crypto';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {piRuntimeInitializationPlugin} from '/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/scripts/pi-runtime-bundle.mjs';
+const dir='/tmp/t1062-default-worker-preflight';
+const sha=async file=>{const h=createHash('sha256');for await(const b of createReadStream(file))h.update(b);return h.digest('hex');};
+const originalManifest=path.join(dir,'prepared-manifest.json');
+if(await sha(originalManifest)!=='d43a3d610c07c4e7c4754129c1b38a06eb36305e9ca165682e75c1ba27e78bfc')throw Error('original manifest changed');
+const original=JSON.parse(await fs.readFile(originalManifest,'utf8'));
+for(const file of original.sourceFiles)if(await sha(path.join(original.registry.sourceRoot,file.path))!==file.sha256)throw Error('ROOT reviewed source changed: '+file.path);
+const output=path.join(dir,'run-two'),cacheRoot=path.join(output,'cache'),cwd=path.join(output,'runtime','frontend');
+await fs.mkdir(cwd,{recursive:true});
+for(const f of original.registry.modelFiles){const source=path.join(original.registry.originDirectory,f.path),target=path.join(cacheRoot,f.path);if(await sha(source)!==f.sha256)throw Error('original model SHA changed');await fs.mkdir(path.dirname(target),{recursive:true});await fs.copyFile(source,target,constants.COPYFILE_EXCL);if(await sha(target)!==f.sha256)throw Error('fresh independent cache copy SHA mismatch');}
+if(await sha(path.join(original.registry.originDirectory,'audio.wav'))!==original.registry.wavSHA256)throw Error('original WAV SHA changed');
+await fs.writeFile(path.join(cwd,'package.json'),JSON.stringify({private:true}),{flag:'wx'});
+await fs.copyFile(path.join(dir,'bootstrap-template.cjs'),path.join(cwd,'creatoros-module-resolver.cjs'),constants.COPYFILE_EXCL);
+const manifest={...original,harnessRevision:'r2-canonical-path-identity',priorPreparedManifestSHA256:await sha(originalManifest),priorFailureEvidenceSHA256:await sha(path.join(dir,'execution-evidence.json')),cacheRoot,cwd};
+await fs.writeFile(path.join(dir,'prepared-manifest-r2.json'),JSON.stringify(manifest,null,2)+'\n',{flag:'wx'});
+const req=createRequire(original.registry.sourceRoot+'/ai-worker/package.json'),{build}=req('esbuild');
+await build({entryPoints:[path.join(dir,'run-r2.mjs')],outfile:path.join(dir,'run-r2.cjs'),bundle:true,platform:'node',target:'node24',format:'cjs',plugins:[piRuntimeInitializationPlugin()],external:['@xenova/transformers'],logLevel:'warning'});
+const names=['run.mjs','run.cjs','prepared-manifest.json','run.stdout.log','run.stderr.log','run-one/unknown.json','run-one/one-attempt.lock','run-r2.mjs','run-r2.cjs','build-r2.mjs','bootstrap-template.cjs','prepared-manifest-r2.json'];
+const artifacts=[];for(const name of names)artifacts.push({path:path.join(dir,name),sha256:await sha(path.join(dir,name))});
+const record={status:'r2_prepared_not_executed',modelCalls:0,decodeCalls:0,buildTarget:'node24',runtimeVersion:process.version,execPath:process.execPath,preparedManifestSHA256:await sha(path.join(dir,'prepared-manifest-r2.json')),sourceFiles:manifest.sourceFiles,artifacts};
+await fs.writeFile(path.join(dir,'build-r2-result.json'),JSON.stringify(record,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify(record));

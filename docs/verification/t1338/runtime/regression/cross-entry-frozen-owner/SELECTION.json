@@ -1,0 +1,7 @@
+{
+  "totalExpected": 1,
+  "names": [
+    "T1338 原account审核create跨正常legacy组入口拒绝冻结owner变化，零新增任务"
+  ],
+  "pattern": "^T1338\\ 原account审核create跨正常legacy组入口拒绝冻结owner变化，零新增任务$"
+}

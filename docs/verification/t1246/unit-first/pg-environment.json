@@ -1,0 +1,161 @@
+{
+  "task": "T-1246",
+  "recordedAt": "2026-10-11T14:30:53.060Z",
+  "root": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA",
+  "dataDir": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/data",
+  "socketDir": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/socket",
+  "port": 50028,
+  "database": "creatoros_test_t1246_5065b5d197b1469b9604d1560007a131",
+  "adminRole": "t1246_admin",
+  "host": "127.0.0.1",
+  "commandBudgetMs": 240000,
+  "pgCtlInnerBudgetSeconds": 120,
+  "status": "ready_with_original_port_guard_gap",
+  "entries": [
+    {
+      "id": "initdb",
+      "file": "/opt/homebrew/bin/initdb",
+      "args": [
+        "-D",
+        "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/data",
+        "--auth-local=trust",
+        "--auth-host=trust",
+        "--username=t1246_admin",
+        "--no-instructions"
+      ],
+      "startedAt": "2026-10-11T14:30:53.061Z",
+      "elapsedMs": 608,
+      "exitCode": 0,
+      "stdout": "The files belonging to this database system will be owned by user \"zyongzhu\".\nThis user must also own the server process.\n\nThe database cluster will be initialized with locale \"C.UTF-8\".\nThe default database encoding has accordingly been set to \"UTF8\".\nThe default text search configuration will be set to \"english\".\n\nData page checksums are disabled.\n\ncreating directory /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/data ... ok\ncreating subdirectories ... ok\nselecting dynamic shared memory implementation ... posix\nselecting default max_connections ... 100\nselecting default shared_buffers ... 128MB\nselecting default time zone ... Asia/Shanghai\ncreating configuration files ... ok\nrunning bootstrap script ... ok\nperforming post-bootstrap initialization ... ok\nsyncing data to disk ... ok\n",
+      "stderr": ""
+    },
+    {
+      "id": "start",
+      "file": "/opt/homebrew/bin/pg_ctl",
+      "args": [
+        "start",
+        "-D",
+        "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/data",
+        "-l",
+        "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 50028 -k /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/socket",
+        "-w",
+        "-t",
+        "120"
+      ],
+      "startedAt": "2026-10-11T14:30:53.669Z",
+      "elapsedMs": 153,
+      "exitCode": 0,
+      "stdout": "waiting for server to start.... done\nserver started\n",
+      "stderr": ""
+    },
+    {
+      "id": "create-test-db",
+      "file": "/opt/homebrew/bin/psql",
+      "args": [
+        "-X",
+        "-h",
+        "127.0.0.1",
+        "-p",
+        "50028",
+        "-U",
+        "t1246_admin",
+        "-d",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-c",
+        "CREATE DATABASE creatoros_test_t1246_5065b5d197b1469b9604d1560007a131;"
+      ],
+      "startedAt": "2026-10-11T14:30:53.824Z",
+      "elapsedMs": 214,
+      "exitCode": 0,
+      "stdout": "CREATE DATABASE\n",
+      "stderr": ""
+    },
+    {
+      "id": "create-t1074-role",
+      "file": "/opt/homebrew/bin/psql",
+      "args": [
+        "-X",
+        "-h",
+        "127.0.0.1",
+        "-p",
+        "50028",
+        "-U",
+        "t1246_admin",
+        "-d",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-c",
+        "CREATE ROLE creatoros_t1074 LOGIN SUPERUSER;"
+      ],
+      "startedAt": "2026-10-11T14:30:54.038Z",
+      "elapsedMs": 60,
+      "exitCode": 0,
+      "stdout": "CREATE ROLE\n",
+      "stderr": ""
+    },
+    {
+      "id": "server-proof",
+      "file": "/opt/homebrew/bin/psql",
+      "args": [
+        "-X",
+        "-h",
+        "127.0.0.1",
+        "-p",
+        "50028",
+        "-U",
+        "t1246_admin",
+        "-d",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-At",
+        "-c",
+        "SELECT json_build_object('port',current_setting('port'),'listen',current_setting('listen_addresses'),'data_directory',current_setting('data_directory'),'database',current_database(),'user',current_user); "
+      ],
+      "startedAt": "2026-10-11T14:30:54.098Z",
+      "elapsedMs": 60,
+      "exitCode": 0,
+      "stdout": "{\"port\" : \"50028\", \"listen\" : \"127.0.0.1\", \"data_directory\" : \"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/data\", \"database\" : \"postgres\", \"user\" : \"t1246_admin\"}\n",
+      "stderr": ""
+    },
+    {
+      "id": "database-proof",
+      "file": "/opt/homebrew/bin/psql",
+      "args": [
+        "-X",
+        "-h",
+        "127.0.0.1",
+        "-p",
+        "50028",
+        "-U",
+        "t1246_admin",
+        "-d",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-At",
+        "-c",
+        "SELECT json_build_object('name',datname,'owner',pg_get_userbyid(datdba)) FROM pg_database WHERE datname='creatoros_test_t1246_5065b5d197b1469b9604d1560007a131';"
+      ],
+      "startedAt": "2026-10-11T14:30:54.158Z",
+      "elapsedMs": 56,
+      "exitCode": 0,
+      "stdout": "{\"name\" : \"creatoros_test_t1246_5065b5d197b1469b9604d1560007a131\", \"owner\" : \"t1246_admin\"}\n",
+      "stderr": ""
+    }
+  ],
+  "existing55422": "既有监听PID52177，未连接或停止；本轮不使用该端口",
+  "startupPid": 74714,
+  "serverProof": "{\"port\" : \"50028\", \"listen\" : \"127.0.0.1\", \"data_directory\" : \"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-pg-Kh5gfA/data\", \"database\" : \"postgres\", \"user\" : \"t1246_admin\"}",
+  "databaseProof": "{\"name\" : \"creatoros_test_t1246_5065b5d197b1469b9604d1560007a131\", \"owner\" : \"t1246_admin\"}",
+  "environment": {
+    "TEST_DATABASE_URL": "postgresql://t1246_admin@127.0.0.1:50028/creatoros_test_t1246_5065b5d197b1469b9604d1560007a131",
+    "CREATOROS_T1074_ISOLATED_PG_URL": "postgresql://creatoros_t1074@127.0.0.1:50028/postgres"
+  },
+  "guardLimit": "CREATOROS_TEST_POSTGRES_URL/CREATOROS_ISOLATED_PG_URL多个原消费者强制55422，暂不填入不符合guard的新端口；migration-convergence另硬编码55422，完整backend启动准入待主线程处理归属。"
+}

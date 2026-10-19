@@ -1,0 +1,278 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1323",
+  "baseHead": "77c70a50d4012acd2424e05437bc139011476716",
+  "specPath": "docs/features/t1323-codex-mixed-tool-checkpoint-read.md",
+  "specSha256": "ba137d0729b46c31f48c63918cb78fc4524fa828971cba77dd2dbe8a4610f03c",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6819,
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 473072,
+      "sha256": "ffb864d34c4546b3d53813cd88d437cb54cf98731a6dfd9a2fc641c55e16757a"
+    },
+    {
+      "path": "frontend/src/server/execution-worker-path.ts",
+      "bytes": 2464,
+      "sha256": "032509a0cd3900b541d4c3aa55170bb07c61435f00030ef4fc3edbffdb4aa3a2"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-tree.ts",
+      "bytes": 1202,
+      "sha256": "f7199e6960648d1e8ffd17e6b4e08c6ab23a1a95f94308f41b084d010311f879"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-codex-call.service.ts",
+      "bytes": 6221,
+      "sha256": "3afaf6c557d64d79efc070a0ed80a9deca5a90481bf2dac842087584f9c29d82"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-model-identity.service.ts",
+      "bytes": 18728,
+      "sha256": "67b63f0067ed84a7e34f734665a0b558b504464f76556b32825570b406b26e4a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-model-identity.service.ts",
+      "bytes": 7626,
+      "sha256": "31030384aa7f6ef6fddd2e7cc7aac0da24b2efc7b2d90cd5af9800d0d8bbbfe7"
+    },
+    {
+      "path": "backend/src/modules/execution/codex-read-recovery.ts",
+      "bytes": 7126,
+      "sha256": "258399f3529c963ac89d0fa93e65e35a6ccc35d26fd753de639216601e1221c3"
+    },
+    {
+      "path": "backend/src/modules/execution/agentic-tool-binding.ts",
+      "bytes": 10506,
+      "sha256": "4314d1a8304ea5607ae1fa2d36c2817104cf955e9e3bfc09bfc8dac9d5d30ee4"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+      "bytes": 15715,
+      "sha256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+      "bytes": 16077,
+      "sha256": "33168684e7b3a74504d6d446e99038239c1580c0e9187f2582e4dd4da6ee4da9"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-tool-stream-chunks.ts",
+      "bytes": 8781,
+      "sha256": "115f2bd5b01edd1996e998da2dd97ec31e3f8baf7cd2d0ec0b84cac899ce359a"
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-call-tree.ts",
+      "bytes": 4112,
+      "sha256": "92cf1becdc4e897755879d875eaa0e2273f815e8f531dc52b3e6563cfd544b78"
+    },
+    {
+      "path": "backend/src/modules/ai/external-task-tool.service.ts",
+      "bytes": 13451,
+      "sha256": "b4fa4407eaf2c9cd788b5de85cf6b309c442b7ba36a4edb37dda0c9908e84b58"
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-turn.service.ts",
+      "bytes": 32803,
+      "sha256": "e91690846a17288b3285e254ccd2ec610520b78deefba8cf0b3f78085a3571c1"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "bytes": 14697,
+      "sha256": "d37825952088d4475661cf87acaa928bb820ae3d1c47f20cd326684ee2035a25"
+    },
+    {
+      "path": "backend/src/application/chat/assistant-system-root.ts",
+      "bytes": 40707,
+      "sha256": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+      "bytes": 7096,
+      "sha256": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "bytes": 17104,
+      "sha256": "49725da1f9c2b8dff298470ccb9b178a63b891bb83b195afb026ab504ce61996"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-recovery.ts",
+      "bytes": 2313,
+      "sha256": "88e3f8476ad9e9f58df062342e71256ad8c9432c7cba9f61c61d81ef0a231363"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-native-turn.ts",
+      "bytes": 10467,
+      "sha256": "cde306b3311304239e6e02a4ce9adf9d8a1aab4c56efd91d26f2576ccbdebc8e"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "bytes": 10008,
+      "sha256": "837e3ca7c28d35d90d90941de9013dfc0721b418778cc396a67a50319dd258af"
+    },
+    {
+      "path": "ai-worker/src/execution/chat-generation-worker.ts",
+      "bytes": 3161,
+      "sha256": "de1a62340a7ec38d7b1a51fa00bce27acfcd9af86f679f504c0faf44b2a1b273"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "bytes": 19084,
+      "sha256": "a5ecf2558bf1d40fa61e4407c4f3b7b5f88e1a76a27bebae3d6d080cc2fa28fa"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/WORKER_BINDING.json",
+      "bytes": 267,
+      "sha256": "c5cccc34d1030cdb43b400c56140f7990aae5d312577e456283671fd87c5f12c"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/codex-cli.fixture.cjs",
+      "bytes": 5879,
+      "sha256": "ecf387d0089e789fed55b35559a14e3fbc085d26d47245945c6203b5f0e8b410"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/worker-entry.fixture.cjs",
+      "bytes": 1776,
+      "sha256": "8ca33476d187d0c1eaa1540aa61e554fcc76bba8164e303e92f9ecce1ba49010"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/vitest.config.ts",
+      "bytes": 643,
+      "sha256": "b67716b7bfc602d380b0e102b076963f4153e39867c47206575340d23d618092"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/run-owned.py",
+      "bytes": 2071,
+      "sha256": "3ac042d4cdd3e0fb5b6b5f25e0a02eeda3911f65e2907ce2fe802abc6febcd26"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/RECOVERY_LIMITATION.json",
+      "bytes": 2646,
+      "sha256": "feed9249db4b2ea673530424b67aaf9e0a958f219ca939a21c4cf9b9f0cd6b0b"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v2/execution-result.json",
+      "bytes": 517,
+      "sha256": "10d661a6ce1d76854f07a2155654a6ef0ddc6178236341f592ece72eb10f833e"
+    },
+    {
+      "path": "docs/verification/t1320/IMPLEMENTATION_RESULT.md",
+      "bytes": 6716,
+      "sha256": "1a63e17e2465ee6bf23d74dfb2f4b5f7eb1ef53bf7fcd2aa475a6a447ac99706"
+    },
+    {
+      "path": "docs/verification/t1323/INITIAL_REVIEW.md",
+      "bytes": 5572,
+      "sha256": "2ac9e64786ebe3f18765fee546743583d0c33f772340b0a7503e6a6e6a2ab4d7"
+    },
+    {
+      "path": "docs/verification/t1323/RECHECK_REVIEW.md",
+      "bytes": 4646,
+      "sha256": "5ccdbcbcb9b0777b54fc745b6a7a07cb3cad4594bd78f28abfb88d4670c94dcb"
+    },
+    {
+      "path": "docs/verification/t1323/ANALYSIS.md",
+      "bytes": 2650,
+      "sha256": "3440a96dd2832642db95e529dd4f1240b4f1cb29fbfeec49611bda33f024245b"
+    },
+    {
+      "path": "docs/features/t1323-codex-mixed-tool-checkpoint-read.md",
+      "bytes": 7319,
+      "sha256": "ba137d0729b46c31f48c63918cb78fc4524fa828971cba77dd2dbe8a4610f03c"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-checkpoint.service.ts",
+      "bytes": 12048,
+      "sha256": "fccafb9872cae58a293d6883d20b649eb33914860a5c5a349666593200cf29ae"
+    },
+    {
+      "path": "docs/verification/t1323/MODULE_SCOPE.json",
+      "bytes": 4073,
+      "sha256": "378ae38eec471deb41dcbe24110463469faae12636dd2c202c8fb30adab43270"
+    },
+    {
+      "path": "docs/verification/t1323/DEC.md",
+      "bytes": 1154,
+      "sha256": "68ae9b87675b56b1de54f197021d6b02b289d84e7830cdd2b1760ae4f6fa927e"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-checkpoint.service.test.ts",
+      "bytes": 26302,
+      "sha256": "bf159c439b536799fc581839150d24554124f18b123c3923b56e8bd7cc04ddf6"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "bytes": 19084,
+      "sha256": "a5ecf2558bf1d40fa61e4407c4f3b7b5f88e1a76a27bebae3d6d080cc2fa28fa"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v2/snapshot/docs/verification/t1320/runtime/codex-cli.fixture.cjs",
+      "bytes": 5879,
+      "sha256": "ecf387d0089e789fed55b35559a14e3fbc085d26d47245945c6203b5f0e8b410"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v2/snapshot/docs/verification/t1320/runtime/worker-entry.fixture.cjs",
+      "bytes": 1776,
+      "sha256": "8ca33476d187d0c1eaa1540aa61e554fcc76bba8164e303e92f9ecce1ba49010"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v2/snapshot/docs/verification/t1320/runtime/WORKER_BINDING.json",
+      "bytes": 267,
+      "sha256": "c5cccc34d1030cdb43b400c56140f7990aae5d312577e456283671fd87c5f12c"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v2/snapshot/immutable-execution-worker.cjs",
+      "bytes": 5618216,
+      "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+    }
+  ],
+  "immutableWorker": {
+    "path": "/private/tmp/t1300-artifact-940jy2at/sidecar/frontend/runtime/execution-worker.cjs",
+    "bytes": 5618216,
+    "sha256": "3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454"
+  },
+  "plannedNewTest": "frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+  "originalInputLock": "docs/verification/t1323/INPUT_LOCK.json",
+  "originalInputLockSha256": "3d110983b4feab82d1a8f892257bca080380c7c0d9b0a6c6361dc62ff1fba25d",
+  "bindingNote": "原46锁与REV3cd654786cc5保持；本次真实两项兄弟源rebind与6只读测试/事前夹具锚，不改SPEC/生产W/保护语义。根受测freeze但尚待Root精确提交。"
+}

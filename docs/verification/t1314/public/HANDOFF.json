@@ -1,0 +1,54 @@
+{
+  "schema": "t1300-content-runner-handoff/v1",
+  "mode": "AUTHORIZED_PENDING_ROOT_START",
+  "task": "T-1314",
+  "agent": "/root/sol_daily_implementation_current",
+  "runName": "final-0e1dc6228",
+  "sourceHead": "0e1dc6228f1fa3dc02f2b1c7a1cee77ab18d650a",
+  "sourceCommit": "0e1dc6228f1fa3dc02f2b1c7a1cee77ab18d650a",
+  "sourceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "candidateBinding": "docs/verification/t1313/acceptance/candidate/candidate-binding.json",
+  "candidateBindingId": "docs/verification/t1313/acceptance/candidate/candidate-binding.json",
+  "candidateBindingSha256": "c7be348612b2d9cc105a84c2dcca84a5a8b252c7cc4a49be38b03d357fd6b152",
+  "ready": "docs/verification/t1313/acceptance/candidate/runs/owned-99edaa682ba77d54/ready.json",
+  "readySha256": "cf1fea2c8ac947435e9d550e55bef7528157afcfebbaffd7c38ef25720cfd9f1",
+  "privateSessionPath": "/private/tmp/t1300-candidate-qyb5ZR/session.json",
+  "sessionRef": "/private/tmp/t1300-candidate-qyb5ZR/session.json",
+  "baseURL": "http://127.0.0.1:50727",
+  "ownedRoot": "/private/tmp/t1300-candidate-qyb5ZR",
+  "controllerSession": 32328,
+  "groupId": "grp-e80980cf-12",
+  "groupIds": {
+    "content-positioning-daily": "grp-e80980cf-12",
+    "content-script-review": "grp-e80980cf-14",
+    "content-knowledge": "grp-e80980cf-16"
+  },
+  "foreignGroupId": "grp-e80980cf-22",
+  "foreignPolicy": "C唯一写者，仅当前空组只读共享；B/R不得写入",
+  "ownerContext": {
+    "groupId": "grp-e80980cf-12",
+    "accountId": null
+  },
+  "outputRoot": "docs/verification/t1314/runs/final-0e1dc6228",
+  "routing": {
+    "revision": 1,
+    "choices": {
+      "text": "codex",
+      "vision": "codex",
+      "image": "codex",
+      "video": "official",
+      "audio": "local",
+      "embed": "official"
+    }
+  },
+  "routeRevision": 1,
+  "executionGrant": "Root授权纯验证与必要新owned fixture/真实模型/采纳；无产品/共享控制/全局设置写",
+  "requestMs": 900000,
+  "observationMs": 1800000,
+  "outerMs": 86400000,
+  "temporaryDraft": "/private/tmp/t1300-content-prep-ol2hqoon",
+  "spec": "docs/features/t1314-content-public-verification.md",
+  "crossGroupIdentity": "仅同root独立owned组拒绝对照，不跨组复用candidate/profile/历史ID；可复用中性文字但不冒血缘",
+  "privateSessionPrinted": false,
+  "fixedDriver": "docs/verification/t1314/public/playwright.config.cjs"
+}

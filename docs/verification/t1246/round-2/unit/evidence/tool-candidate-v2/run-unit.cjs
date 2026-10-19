@@ -1,0 +1,41 @@
+'use strict';
+// 首轮不覆盖；工具独评绑定后，每次 fresh nonce、一次执行、不重试、不 bail。
+const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process');
+const runtime=require('./owned-pg-runtime.cjs'),source=require('./verify-source.cjs'),root=path.resolve(__dirname,'../../../../..');
+const index=process.argv.indexOf('--review'),reviewPath=index<0?null:process.argv[index+1],execute=process.argv.includes('--execute'),targetedPg=process.argv.includes('--targeted-pg');
+const mode=targetedPg?'targeted-pg-27':'full-four-packages',packageBudgetMs=43200000,typeBudgetMs=1800000,buildBudgetMs=1800000,startBudgetMs=1380000,stopBudgetMs=720000,cleanupReserveMs=720000;
+const phaseCount=targetedPg?6:13,totalBudgetMs=(targetedPg?1:4)*packageBudgetMs+(targetedPg?1:5)*typeBudgetMs+buildBudgetMs+startBudgetMs+stopBudgetMs+phaseCount*(runtime.GROUP_TERM_GRACE_MS+runtime.GROUP_KILL_GRACE_MS)+cleanupReserveMs;
+async function main(){
+ const binding=source.verify();if(!execute){console.log(JSON.stringify({status:'reviewable_only_no_pg_started',mode,totalBudgetMs,toolManifestSha256:binding.toolManifestSha256,sourceSnapshotDigest:binding.sourceSnapshotDigest,runtimeRoot:root,reviewContract:{approved:true,scope:'owned-pg-unit',toolManifestSha256:binding.toolManifestSha256,sourceSnapshotDigest:binding.sourceSnapshotDigest,runtimeRoot:root,runtimeDistExclusive:true,mode}},null,2));return;}
+ if(!reviewPath)throw Error('T1246_OWNED_TOOL_REVIEW_REQUIRED');const reviewBytes=fs.readFileSync(reviewPath),review=JSON.parse(reviewBytes);
+ if(review.approved!==true||review.scope!=='owned-pg-unit'||review.toolManifestSha256!==binding.toolManifestSha256||review.sourceSnapshotDigest!==binding.sourceSnapshotDigest||review.runtimeRoot!==root||review.runtimeDistExclusive!==true||review.mode!==mode)throw Error('T1246_OWNED_TOOL_REVIEW_NOT_BOUND');
+ const packages=targetedPg?['backend']:['contract','ai-worker','backend','frontend'],manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'manifest.json'),'utf8')),pgFiles=manifest.originalConsumers.map(row=>row.file.replace(/^backend\//,''));if(pgFiles.length!==27)throw Error('T1246_TARGETED_PG_SCOPE_DRIFT');
+ const controller=new AbortController(),overallStarted=Date.now(),totalTimer=setTimeout(()=>controller.abort(Error('T1246_TOTAL_OUTER_BUDGET_EXHAUSTED')),totalBudgetMs);let state;const results=[];let overall=0;
+ try{
+  state=await runtime.start({workspace:root,evidenceRoot:path.join(__dirname,'evidence'),signal:controller.signal});fs.writeFileSync(path.join(state.out,'source-before.json'),JSON.stringify({...binding,mode,totalBudgetMs,outerDeadlineAt:new Date(overallStarted+totalBudgetMs).toISOString()},null,2));fs.writeFileSync(path.join(state.out,'review-binding.json'),JSON.stringify({...review,reviewSha256:runtime.sha(reviewBytes)},null,2));
+  const env={...state.env};for(const key of Object.keys(env))if(/^(CREATOROS_|S3_|AWS_|OPENAI_|ANTHROPIC_|AZURE_OPENAI_|GOOGLE_API_)/.test(key)||key==='PGLITE_DATA_DIR')delete env[key];
+  Object.assign(env,{CREATOROS_OWNED_PG_MARKER:state.markerPath,CREATOROS_OWNED_PG_NONCE:state.nonce,CREATOROS_TEST_POSTGRES_URL:state.env.CREATOROS_TEST_POSTGRES_URL,CREATOROS_ISOLATED_PG_URL:state.env.CREATOROS_ISOLATED_PG_URL});
+  const dirs={app:'CREATOROS_APP_DATA_DIR',db:'CREATOROS_DB_DIR',media:'CREATOROS_MEDIA_ROOT',browser:'CREATOROS_BROWSER_POOL_DIR',workbench:'CREATOROS_WORKBENCH_ROOT',backups:'CREATOROS_DATABASE_BACKUP_DIR',douyin:'CREATOROS_DOUYIN_AUTH_DIR',web:'CREATOROS_WEB_AUTH_DIR'};
+  for(const [name,key]of Object.entries(dirs)){const directory=path.join(state.root,'test-runtime',name);fs.mkdirSync(directory,{recursive:true});env[key]=directory;}
+  Object.assign(env,{NODE_ENV:'test',CI:'1',T1246_OWNED_PG_PRELOAD:'1',NODE_OPTIONS:'--require '+path.join(__dirname,'owned-pg-runtime.cjs')});
+  if(Object.hasOwn(env,'NODE_PG_FORCE_NATIVE')||Object.hasOwn(env,'PGSERVICE')||Object.hasOwn(env,'PGSERVICEFILE'))throw Error('T1246_NATIVE_OR_SERVICE_NOT_CLEARED');
+  const native=JSON.parse(cp.execFileSync(process.execPath,['-e',"console.log(JSON.stringify({nativeAbsent:!Object.hasOwn(process.env,'NODE_PG_FORCE_NATIVE'),serviceAbsent:!Object.hasOwn(process.env,'PGSERVICE')&&!Object.hasOwn(process.env,'PGSERVICEFILE'),preloadBound:require('node:net').Socket.prototype.connect.name==='t1246OwnedPgConnect',marker:process.env.CREATOROS_OWNED_PG_MARKER}))"],{cwd:root,env,encoding:'utf8',timeout:180000}));if(!native.nativeAbsent||!native.serviceAbsent||!native.preloadBound)throw Error('T1246_PRELOAD_BINDING_FAILED');fs.writeFileSync(path.join(state.out,'native-binding.json'),JSON.stringify(native,null,2));
+  const build=await runtime.run('pnpm',['--filter','@creatoros/ai-worker','build'],{cwd:root,env,budgetMs:buildBudgetMs,signal:controller.signal});fs.writeFileSync(path.join(state.out,'worker-build.json'),JSON.stringify(build,null,2));
+  const dist=cp.execFileSync('rg',['--files','ai-worker/dist'],{cwd:root,encoding:'utf8',timeout:180000}).trim().split('\n').sort().map(file=>({file,sha256:runtime.sha(fs.readFileSync(path.join(root,file)))}));fs.writeFileSync(path.join(state.out,'worker-dist-source.json'),JSON.stringify(dist,null,2));
+  for(const pkg of packages){
+   controller.signal.throwIfAborted();const cli=fs.realpathSync(path.join(root,pkg,'node_modules/vitest/vitest.mjs')),result=path.join(state.out,pkg+'.json'),log=path.join(state.out,pkg+'.log');
+   const args=[cli,'run',...(targetedPg?pgFiles:[]),'--testTimeout=180000','--hookTimeout=180000','--teardownTimeout=180000','--retry=0','--bail=0','--allowOnly=false','--no-file-parallelism','--maxWorkers=2','--maxConcurrency=1','--reporter=default','--reporter=json','--outputFile.json='+result];
+   const record=await processRun(process.execPath,args,{cwd:path.join(root,pkg),env,log,budgetMs:packageBudgetMs,signal:controller.signal});record.package=pkg;results.push(record);overall||=failedReceipt(record)?1:0;fs.writeFileSync(path.join(state.out,pkg+'-exit.json'),JSON.stringify(record,null,2));
+  }
+  for(const pkg of packages){
+   controller.signal.throwIfAborted();if(pkg==='frontend'){const generated=await processRun('pnpm',['exec','next','typegen'],{cwd:path.join(root,pkg),env,log:path.join(state.out,'frontend-typegen.log'),budgetMs:typeBudgetMs,signal:controller.signal});results.push({package:pkg,kind:'typegen',...generated});overall||=failedReceipt(generated)?1:0;}
+   const record=await processRun('pnpm',['exec','tsc','--noEmit'],{cwd:path.join(root,pkg),env,log:path.join(state.out,pkg+'-typecheck.log'),budgetMs:typeBudgetMs,signal:controller.signal});results.push({package:pkg,kind:'typecheck',...record});overall||=failedReceipt(record)?1:0;
+  }
+  const after=source.snapshot();fs.writeFileSync(path.join(state.out,'source-after.json'),JSON.stringify(after,null,2));if(after.sourceSnapshotDigest!==binding.sourceSnapshotDigest){overall=1;fs.writeFileSync(path.join(state.out,'source-drift.json'),JSON.stringify({before:binding.sourceSnapshotDigest,after:after.sourceSnapshotDigest,pass:false},null,2));}
+ }catch(error){overall=1;if(state)fs.writeFileSync(path.join(state.out,'runner-error.json'),JSON.stringify({message:error.message,receipt:error.receipt??null},null,2));else throw error;}
+ finally{if(state){try{await runtime.stop(state);}catch(error){overall=1;fs.writeFileSync(path.join(state.out,'cleanup-failure.json'),JSON.stringify({message:error.message,ownedRootRetained:state.root},null,2));}if(controller.signal.aborted)overall=1;fs.writeFileSync(path.join(state.out,'summary.json'),JSON.stringify({task:'T-1246',nonce:state.nonce,mode,totalBudgetMs,outerStartedAt:new Date(overallStarted).toISOString(),outerDeadlineAt:new Date(overallStarted+totalBudgetMs).toISOString(),outerBudgetExhausted:controller.signal.aborted,results,exitCode:overall,retry:0,firstEvidencePreserved:true,nativeAppAcceptance:false},null,2));}clearTimeout(totalTimer);}
+ process.exitCode=overall;
+}
+function failedReceipt(receipt){return receipt.code!==0||receipt.budgetExhausted||!receipt.processClosed||receipt.remainingOwnedGroupMembers.length>0;}
+async function processRun(file,args,options){return runtime.boundedProcess(file,args,options);}
+main().catch(error=>{console.error(error.stack);process.exitCode=1;});

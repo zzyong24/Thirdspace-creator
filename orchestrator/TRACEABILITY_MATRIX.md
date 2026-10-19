@@ -192,3 +192,29 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | DEC-VIDEO-056 | NONE | NONE | NONE | API-VIDEO-902 | TEST-VIDEO-902 | OK |
 | DEC-MODEL-057 | NONE | NONE | NONE | API-MODEL-904 | TEST-MODEL-904 | OK |
 ```
+
+## T-1003 多步 Agent（PLANNED）
+
+| 需求 | 任务 | 协议/实现/测试 | 状态 |
+|---|---|---|---|
+| FR-AW-01/08 | T-1005/1012 | 计划、循环、恢复；AC-AW-01/03 | PLANNED |
+| FR-AW-02 | T-1004/1006/1012 | 能力协议、网关；AC-AW-03/08 | PLANNED |
+| FR-AW-03/04 | T-1007/1012 | 文件、命令；AC-AW-02/06 | PLANNED |
+| FR-AW-05 | T-1008/1012 | 浏览器与采集；AC-AW-04/05 | PLANNED |
+| FR-AW-06 | T-1010/1012 | 方法和扩展；AC-AW-01/08 | PLANNED |
+| FR-AW-07 | T-1009/1011/1013 | 产物、交互、双端；AC-AW-02/06/07/09 | PLANNED |
+
+规格及AC完整编号见 [SPEC](../docs/features/t1003-agent-workbench.md)。上述 API/测试为待实现职责，不是已通过证据。
+
+## T1274 / T1276 当前剪辑实现（PLANNED）
+
+| 需求 | 页面/API | 测试 | 状态 |
+|---|---|---|---|
+| FR-1274-01 | PAGE-1274-WORKSPACE, API-1274-SCRIPT | TEST-1274-PUBLIC, TEST-1274-JOURNEY | PLANNED |
+| FR-1274-02 | PAGE-1274-WORKSPACE | TEST-1274-JOURNEY | PLANNED |
+| FR-1274-03 | PAGE-1274-WORKSPACE | TEST-1274-JOURNEY | PLANNED |
+| FR-1274-04 | API-1274-SCRIPT | TEST-1274-PROTECTION, TEST-1274-JOURNEY | PLANNED |
+| FR-1276-01 | API-1276-ORIGINAL-SOURCE | TEST-1276-GROUP-SOURCE | PLANNED |
+| FR-1276-02 | API-1276-ORIGINAL-SOURCE | TEST-1276-GROUP-SOURCE | PLANNED |
+
+完整旅程未验时保留PLANNED；来源事务恢复及候选完整媒体仅属各自实际证据，不扩成全范围PASS。

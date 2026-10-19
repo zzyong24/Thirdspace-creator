@@ -1,0 +1,820 @@
+{
+  "schema": "t1375-all-discovered-sensitive-scope-v1",
+  "source_classification_sha256": "35a3526ebab8cf0c75eba7eb05e906e3b81febf44e81784cbd5426bd22adff59",
+  "sensitive_findings": 54,
+  "sensitive_blob_count": 17,
+  "sensitive_rows": [
+    {
+      "path": "docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-final-process-snapshot.txt",
+      "blob": "067d192222f5baa38fff67d5499b8c49394f1ccf",
+      "type": "generic-api-key",
+      "line": 267,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/067d192222f5baa38fff67d5499b8c49394f1ccf/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-final-process-snapshot.txt:generic-api-key:267",
+      "value_length": 64,
+      "value_sha256": "5d195653fba798684df3c53d26117e03aab9575dc9d1b6e1c7b2a1d4c2c8bd56",
+      "classification": "BLOCK_REAL_PROCESS_AUTH_ARGUMENT",
+      "evidence": "真实Antigravity进程命令行host_bridge_token；64hex为原值不是哈希字段；同原始进程行另含csrf参数，整份raw排除。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-final-source-audit-v5-51423dea25343a726d94758a/raw-private/actual-final-process-snapshot.txt",
+      "blob": "11570956bca6f8654b4e36d0db20c192ff0ec215",
+      "type": "generic-api-key",
+      "line": 267,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/11570956bca6f8654b4e36d0db20c192ff0ec215/docs/verification/t1246/round-2/actual-final-source-audit-v5-51423dea25343a726d94758a/raw-private/actual-final-process-snapshot.txt:generic-api-key:267",
+      "value_length": 64,
+      "value_sha256": "5d195653fba798684df3c53d26117e03aab9575dc9d1b6e1c7b2a1d4c2c8bd56",
+      "classification": "BLOCK_REAL_PROCESS_AUTH_ARGUMENT",
+      "evidence": "真实Antigravity进程命令行host_bridge_token；64hex为原值不是哈希字段；同原始进程行另含csrf参数，整份raw排除。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit/results.json",
+      "blob": "1dcc7f7a402108dc7e5f6f30a37bad736b6803c1",
+      "type": "generic-api-key",
+      "line": 99,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/1dcc7f7a402108dc7e5f6f30a37bad736b6803c1/docs/verification/t1246/list-audit/results.json:generic-api-key:99",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit/results.json",
+      "blob": "1dcc7f7a402108dc7e5f6f30a37bad736b6803c1",
+      "type": "generic-api-key",
+      "line": 100,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/1dcc7f7a402108dc7e5f6f30a37bad736b6803c1/docs/verification/t1246/list-audit/results.json:generic-api-key:100",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 210,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:210",
+      "value_length": 64,
+      "value_sha256": "9a029714fc5faa758ad88284b38bccc2965eb99326faaae111f4fba96af0086f",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 213,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:213",
+      "value_length": 64,
+      "value_sha256": "6747b2f6f3aec4603001abf53e0d3414d02782287614db8884b1d8fb0491bc38",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 243,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:243",
+      "value_length": 64,
+      "value_sha256": "ae3fc88b1200e9a8a0c14c1f14d6a3a5c9f7da82c99470c40394fd98b1a88a21",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 250,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:250",
+      "value_length": 64,
+      "value_sha256": "7d3dc07951527b13ca5ed57503a645b30b7fcb9ff9d7fbb75d916a932061e664",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 264,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:264",
+      "value_length": 64,
+      "value_sha256": "a191ed08e1e682a997476fd5e4c9be567c97e0b01ed27042174b40ce1eebd5f4",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 265,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:265",
+      "value_length": 64,
+      "value_sha256": "8f45a7208932c679cef06cb89ceaee1c82cbd9632b628109c3c04e82a103bdfb",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 536,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:536",
+      "value_length": 64,
+      "value_sha256": "bb884f349efc674f524dfbffbb6676fc1738d07f5660611c467d997eca981ad9",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 552,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:552",
+      "value_length": 64,
+      "value_sha256": "8649cea0749949f4ef875ed100c7368d4e7f101744868db42d9e8da3b34e763b",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 611,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:611",
+      "value_length": 64,
+      "value_sha256": "9f151eb37e4ed99d27b060e154462b289a906d4e323aa6baca7e0a3efbaae317",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 619,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:619",
+      "value_length": 64,
+      "value_sha256": "f396886e5894dfce2059fa49d9d90b841ead3430a11679a38b502fb367e8f340",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462",
+      "type": "generic-api-key",
+      "line": 636,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2c431d5bace44a39d1119af579a3223cf6782462/docs/verification/t1021/home/logs/t1021-home-e2e.txt:generic-api-key:636",
+      "value_length": 64,
+      "value_sha256": "a7b54a1bc510f2c051d6c689f1dba221f26d40ec992bb4701fad24370025f5ff",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/independent-after-process-snapshot.txt",
+      "blob": "2ae7b3db41948834f15240eea2f955a58620b030",
+      "type": "generic-api-key",
+      "line": 259,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2ae7b3db41948834f15240eea2f955a58620b030/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/independent-after-process-snapshot.txt:generic-api-key:259",
+      "value_length": 64,
+      "value_sha256": "5d195653fba798684df3c53d26117e03aab9575dc9d1b6e1c7b2a1d4c2c8bd56",
+      "classification": "BLOCK_REAL_PROCESS_AUTH_ARGUMENT",
+      "evidence": "真实Antigravity进程命令行host_bridge_token；64hex为原值不是哈希字段；同原始进程行另含csrf参数，整份raw排除。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original/results.json",
+      "blob": "2f24d39d0d0ec23105659c7bd509a52e5bcfbf7d",
+      "type": "generic-api-key",
+      "line": 99,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2f24d39d0d0ec23105659c7bd509a52e5bcfbf7d/docs/verification/t1246/round-1/533224f/browser-original/results.json:generic-api-key:99",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original/results.json",
+      "blob": "2f24d39d0d0ec23105659c7bd509a52e5bcfbf7d",
+      "type": "generic-api-key",
+      "line": 100,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/2f24d39d0d0ec23105659c7bd509a52e5bcfbf7d/docs/verification/t1246/round-1/533224f/browser-original/results.json:generic-api-key:100",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 235,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:235",
+      "value_length": 64,
+      "value_sha256": "70d579bb3b0381067c5aa4af74e9d4b44872af938c61e033c11e338055dd5858",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 238,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:238",
+      "value_length": 64,
+      "value_sha256": "ce47faa470f00771f5257fd297cebf231d209db908ba6a65843a03e1c078dbc4",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 268,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:268",
+      "value_length": 64,
+      "value_sha256": "e6b384f5eeb4e8872c7dcc4f197cb9852cfa08f188342a9f1b882c12eccd94a2",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 275,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:275",
+      "value_length": 64,
+      "value_sha256": "ad110d67d43d0aa5ce0319cedc846a991d7ca4ced75c11d2795615bbeab968cc",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 289,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:289",
+      "value_length": 64,
+      "value_sha256": "530925f3292abd6fa1204750be8a8b91110c3f85a17d976ec684a6a009b04046",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 290,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:290",
+      "value_length": 64,
+      "value_sha256": "ab44a1a99e51d57d123da387a1fcb292ad2e121f105bbd3ddc189aa8668fd7db",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 371,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:371",
+      "value_length": 64,
+      "value_sha256": "76e9d681ef412ad642db97711ba98bea1bc0cd4a237f27753de1252aa7eeee7d",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 387,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:387",
+      "value_length": 64,
+      "value_sha256": "e502f6d1ca960d00ff850a3ca763ac6f517d92e1b8394adf7fd17eb035243d39",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 446,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:446",
+      "value_length": 64,
+      "value_sha256": "bd87ffb963c0b60ee6fab0348a4c6f8b0dd3b7c796a29c64743255da4e096b33",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 454,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:454",
+      "value_length": 64,
+      "value_sha256": "1fae3030a01ae371ab36a5e3c6ea2156609e8f859d4aee193ee1240282e15807",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4",
+      "type": "generic-api-key",
+      "line": 471,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/3046579a175067925488d3756e5ad0e42c44fec4/docs/verification/t1021/home/logs/t1021-home-e2e-final.txt:generic-api-key:471",
+      "value_length": 64,
+      "value_sha256": "9821d268a298a293295902d6eef937c900f2c7388ae37ee91345ae0a65ad4406",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1246/list-dr005/results.json",
+      "blob": "34a30ea8527684c3e08f09e680fd4336b622b08b",
+      "type": "generic-api-key",
+      "line": 99,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/34a30ea8527684c3e08f09e680fd4336b622b08b/docs/verification/t1246/list-dr005/results.json:generic-api-key:99",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/list-dr005/results.json",
+      "blob": "34a30ea8527684c3e08f09e680fd4336b622b08b",
+      "type": "generic-api-key",
+      "line": 100,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/34a30ea8527684c3e08f09e680fd4336b622b08b/docs/verification/t1246/list-dr005/results.json:generic-api-key:100",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-process-snapshot.txt",
+      "blob": "463a743f6dbb3f55e89479a04e549ef8fc5a88ed",
+      "type": "generic-api-key",
+      "line": 256,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/463a743f6dbb3f55e89479a04e549ef8fc5a88ed/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-process-snapshot.txt:generic-api-key:256",
+      "value_length": 64,
+      "value_sha256": "5d195653fba798684df3c53d26117e03aab9575dc9d1b6e1c7b2a1d4c2c8bd56",
+      "classification": "BLOCK_REAL_PROCESS_AUTH_ARGUMENT",
+      "evidence": "真实Antigravity进程命令行host_bridge_token；64hex为原值不是哈希字段；同原始进程行另含csrf参数，整份raw排除。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4/results.json",
+      "blob": "5b58872bc6a7389566ecc5d84cbbe80807236f32",
+      "type": "generic-api-key",
+      "line": 99,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/5b58872bc6a7389566ecc5d84cbbe80807236f32/docs/verification/t1246/list-audit-v4/results.json:generic-api-key:99",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4/results.json",
+      "blob": "5b58872bc6a7389566ecc5d84cbbe80807236f32",
+      "type": "generic-api-key",
+      "line": 100,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/5b58872bc6a7389566ecc5d84cbbe80807236f32/docs/verification/t1246/list-audit-v4/results.json:generic-api-key:100",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/preflight-list-output/runtime-list-v2-results.json",
+      "blob": "7b18e7ca9a46086104168b1c23dbe1bb8106566b",
+      "type": "generic-api-key",
+      "line": 71,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/7b18e7ca9a46086104168b1c23dbe1bb8106566b/docs/verification/t1246/round-1/new-native-v2/runtime-evidence/preflight-list-output/runtime-list-v2-results.json:generic-api-key:71",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/preflight-list-output/runtime-list-v2-results.json",
+      "blob": "7b18e7ca9a46086104168b1c23dbe1bb8106566b",
+      "type": "generic-api-key",
+      "line": 72,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/7b18e7ca9a46086104168b1c23dbe1bb8106566b/docs/verification/t1246/round-1/new-native-v2/runtime-evidence/preflight-list-output/runtime-list-v2-results.json:generic-api-key:72",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/results.json",
+      "blob": "9fc2cd086e06df1cb2d15f8040f88b31c1b1b007",
+      "type": "generic-api-key",
+      "line": 75,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/9fc2cd086e06df1cb2d15f8040f88b31c1b1b007/docs/verification/t1246/round-1/new-native-v2/runtime-evidence/results.json:generic-api-key:75",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/results.json",
+      "blob": "9fc2cd086e06df1cb2d15f8040f88b31c1b1b007",
+      "type": "generic-api-key",
+      "line": 76,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/9fc2cd086e06df1cb2d15f8040f88b31c1b1b007/docs/verification/t1246/round-1/new-native-v2/runtime-evidence/results.json:generic-api-key:76",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v3/results.json",
+      "blob": "a7e191952ed519b6d4afef086f44c8ee8bf65c83",
+      "type": "generic-api-key",
+      "line": 99,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/a7e191952ed519b6d4afef086f44c8ee8bf65c83/docs/verification/t1246/list-audit-v3/results.json:generic-api-key:99",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v3/results.json",
+      "blob": "a7e191952ed519b6d4afef086f44c8ee8bf65c83",
+      "type": "generic-api-key",
+      "line": 100,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/a7e191952ed519b6d4afef086f44c8ee8bf65c83/docs/verification/t1246/list-audit-v3/results.json:generic-api-key:100",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4-guard/results.json",
+      "blob": "db5a059b6331dd562703339522e06c9c3e405a6a",
+      "type": "generic-api-key",
+      "line": 99,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/db5a059b6331dd562703339522e06c9c3e405a6a/docs/verification/t1246/list-audit-v4-guard/results.json:generic-api-key:99",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4-guard/results.json",
+      "blob": "db5a059b6331dd562703339522e06c9c3e405a6a",
+      "type": "generic-api-key",
+      "line": 100,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/db5a059b6331dd562703339522e06c9c3e405a6a/docs/verification/t1246/list-audit-v4-guard/results.json:generic-api-key:100",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/results.json",
+      "blob": "e85f073fa3b2f5a47ded6d3c06f05ac8f7192209",
+      "type": "generic-api-key",
+      "line": 107,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/e85f073fa3b2f5a47ded6d3c06f05ac8f7192209/docs/verification/t1246/round-1/533224f/browser-original-dr005/results.json:generic-api-key:107",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/results.json",
+      "blob": "e85f073fa3b2f5a47ded6d3c06f05ac8f7192209",
+      "type": "generic-api-key",
+      "line": 108,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/e85f073fa3b2f5a47ded6d3c06f05ac8f7192209/docs/verification/t1246/round-1/533224f/browser-original-dr005/results.json:generic-api-key:108",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 182,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:182",
+      "value_length": 64,
+      "value_sha256": "ce4713722af1b6cba0d77c465d5a4afc4a70ea931ba16f98f526a6bff4bda5bd",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 185,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:185",
+      "value_length": 64,
+      "value_sha256": "a1baaca51a505806701401fa2a5203b86c10b26156092db4ce81603ffa6a6890",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 209,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:209",
+      "value_length": 64,
+      "value_sha256": "861186d9eeb5f17d49807833d18f91d09c1340092fec0250b5e2c5d5d6828db9",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 216,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:216",
+      "value_length": 64,
+      "value_sha256": "b70dd2e5983d433a130794ea99e956d20cb21de7998f06ca4822fc52bbf96710",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 230,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:230",
+      "value_length": 64,
+      "value_sha256": "3b2d748a9c56cbe826d816666e73f0834e5d7bf9f8a614419480e9f39107ae00",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 231,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:231",
+      "value_length": 64,
+      "value_sha256": "e095fd115f8922f0872e3381731984e374c8bb3932ba584f9180dc31468e3d35",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 427,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:427",
+      "value_length": 64,
+      "value_sha256": "0fdcb5faa92c5855eff2b27bb993fc0de8e8b02c90589d8cca81c8b49ab689a1",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+      "type": "generic-api-key",
+      "line": 443,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/eeedfa77a1b5a82fed0da67fb1daa8d9c4603030/docs/verification/t1021/logs/canvas-baseline-final.txt:generic-api-key:443",
+      "value_length": 64,
+      "value_sha256": "bbc9e6a96937f9119e078a3a22b94fa58cdd48a51930412da585144db7a846aa",
+      "classification": "BLOCK_RUNTIME_UPLOAD_AUTH_QUERY",
+      "evidence": "真实E2E日志PUT资源URL授权token；64hex原值不是哈希字段，排除或脱敏原日志。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-ready/results.json",
+      "blob": "fed4df695c744a0f42affa151f82cf0f1b8834b0",
+      "type": "generic-api-key",
+      "line": 107,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/fed4df695c744a0f42affa151f82cf0f1b8834b0/docs/verification/t1246/round-1/533224f/browser-original-ready/results.json:generic-api-key:107",
+      "value_length": 35,
+      "value_sha256": "0cf8bab459c7d24f862ea3196132065cdb6db2c7272e79f9e7e830e7126bbae2",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-ready/results.json",
+      "blob": "fed4df695c744a0f42affa151f82cf0f1b8834b0",
+      "type": "generic-api-key",
+      "line": 108,
+      "fingerprint": "/private/tmp/t1375-unique-gitleaks-t80rfsec/source/fed4df695c744a0f42affa151f82cf0f1b8834b0/docs/verification/t1246/round-1/533224f/browser-original-ready/results.json:generic-api-key:108",
+      "value_length": 60,
+      "value_sha256": "3fe474268ce50ef5c18813dfe50f38667448fe10705bb036e74b5d90ea6a9a76",
+      "classification": "BLOCK_CREDENTIAL_ENV",
+      "evidence": "真实Playwright配置webServer.env中的凭据/身份字段；未证合成，不试效。"
+    }
+  ],
+  "refs": [
+    {
+      "ref": "refs/remotes/origin/HEAD",
+      "oid": "1963e4ebe48f15ec084a1efe7dac2f195675b92f",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/growth-activity-product-identity",
+      "oid": "a8c1d4724a9700c678a4b7edcabf3953a60068d4",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/release-1.2",
+      "oid": "33dad57a69334dc0bbda8d50dc40b99585acac06",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t1063-release-pipeline",
+      "oid": "6636e4faf506dcdd417004354637feb7801ee020",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t247-windows-e315-build-20261017",
+      "oid": "8e39d20a77baa5317aa1082609f71beb37f48c14",
+      "sensitive_blobs": [
+        "067d192222f5baa38fff67d5499b8c49394f1ccf",
+        "11570956bca6f8654b4e36d0db20c192ff0ec215",
+        "1dcc7f7a402108dc7e5f6f30a37bad736b6803c1",
+        "2ae7b3db41948834f15240eea2f955a58620b030",
+        "2c431d5bace44a39d1119af579a3223cf6782462",
+        "2f24d39d0d0ec23105659c7bd509a52e5bcfbf7d",
+        "3046579a175067925488d3756e5ad0e42c44fec4",
+        "34a30ea8527684c3e08f09e680fd4336b622b08b",
+        "463a743f6dbb3f55e89479a04e549ef8fc5a88ed",
+        "5b58872bc6a7389566ecc5d84cbbe80807236f32",
+        "7b18e7ca9a46086104168b1c23dbe1bb8106566b",
+        "9fc2cd086e06df1cb2d15f8040f88b31c1b1b007",
+        "a7e191952ed519b6d4afef086f44c8ee8bf65c83",
+        "db5a059b6331dd562703339522e06c9c3e405a6a",
+        "e85f073fa3b2f5a47ded6d3c06f05ac8f7192209",
+        "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030",
+        "fed4df695c744a0f42affa151f82cf0f1b8834b0"
+      ]
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t675-windows-production-closure",
+      "oid": "44a104ac365dae5b92a93f09d35ceb6d3a23b191",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t793-local-package",
+      "oid": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t859-managed-media-reliability",
+      "oid": "83509234cd9c483e82987351bfc1717b007713f0",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t974-windows-package",
+      "oid": "c4b377459eed034f2980bd8310ef96eae3c7a03e",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t980-release",
+      "oid": "fe5332cd91141071885732c3844da80430cf7f63",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t990-release",
+      "oid": "7e27960364a5bae392f8a07d73f4f765119e670b",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t991-windows-memory",
+      "oid": "5a5f61dd5859d9e31723202954651d4a3b3849a6",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/t992-windows-runtime",
+      "oid": "92a8d326c3f26f626ae753a2eb2621fb17e4f0ca",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/v1-security-rollback",
+      "oid": "3ac3739f5fce0e1ac1df07e32279a49bc8d75d49",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/codex/v1.0-candidate",
+      "oid": "b81e2627389cfbeb4d0d92818d1207475f2b16c5",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/remotes/origin/main",
+      "oid": "1963e4ebe48f15ec084a1efe7dac2f195675b92f",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/archive/t517-contract-20260728",
+      "oid": "61f32640c613e9ef2c6605419c5d6bea9dc0a6b5",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/archive/t519-contract-20260728",
+      "oid": "966b66f08fe823ec7dd7f2c5cb5faebe0f348b3b",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/archive/t519-release-20260728",
+      "oid": "241ac955371624b750f3c03ccb12002c0d55110c",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/archive/t537-contract-20260728",
+      "oid": "7cd65aac327b7f5c4b15b710d8db9d8982317799",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/pre-t076-live-20260727",
+      "oid": "690867100eb2b7fcb46d664adbb951423dbe16d2",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/v0.1.0-pre-pi",
+      "oid": "66154923f67b71435a839361ed7fc536780d59e6",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/v0.2.1-beta.1",
+      "oid": "3fa803aa2880d42ffb254011d11cebcd865b3cfd",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/v0.2.1-beta.2",
+      "oid": "12d2232e6db7b8334659e9748262426a3ac7dbd9",
+      "sensitive_blobs": []
+    },
+    {
+      "ref": "refs/tags/v1.0.0",
+      "oid": "8e691eac58e3324a98ac88ed0f85050e1f902849",
+      "sensitive_blobs": []
+    }
+  ],
+  "current_head": "698eba4b94727a95c7f0de696e386fc7d535e94d",
+  "current_sensitive_tree_entries": [
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e-final.txt",
+      "blob": "3046579a175067925488d3756e5ad0e42c44fec4"
+    },
+    {
+      "path": "docs/verification/t1021/home/logs/t1021-home-e2e.txt",
+      "blob": "2c431d5bace44a39d1119af579a3223cf6782462"
+    },
+    {
+      "path": "docs/verification/t1021/logs/canvas-baseline-final.txt",
+      "blob": "eeedfa77a1b5a82fed0da67fb1daa8d9c4603030"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v3/results.json",
+      "blob": "a7e191952ed519b6d4afef086f44c8ee8bf65c83"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4-guard/results.json",
+      "blob": "db5a059b6331dd562703339522e06c9c3e405a6a"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit-v4/results.json",
+      "blob": "5b58872bc6a7389566ecc5d84cbbe80807236f32"
+    },
+    {
+      "path": "docs/verification/t1246/list-audit/results.json",
+      "blob": "1dcc7f7a402108dc7e5f6f30a37bad736b6803c1"
+    },
+    {
+      "path": "docs/verification/t1246/list-dr005/results.json",
+      "blob": "34a30ea8527684c3e08f09e680fd4336b622b08b"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/results.json",
+      "blob": "e85f073fa3b2f5a47ded6d3c06f05ac8f7192209"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-ready/results.json",
+      "blob": "fed4df695c744a0f42affa151f82cf0f1b8834b0"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original/results.json",
+      "blob": "2f24d39d0d0ec23105659c7bd509a52e5bcfbf7d"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/preflight-list-output/runtime-list-v2-results.json",
+      "blob": "7b18e7ca9a46086104168b1c23dbe1bb8106566b"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/runtime-evidence/results.json",
+      "blob": "9fc2cd086e06df1cb2d15f8040f88b31c1b1b007"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/independent-after-process-snapshot.txt",
+      "blob": "2ae7b3db41948834f15240eea2f955a58620b030"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-process-snapshot.txt",
+      "blob": "463a743f6dbb3f55e89479a04e549ef8fc5a88ed"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-final-source-audit-v5-51423dea25343a726d94758a/raw-private/actual-final-process-snapshot.txt",
+      "blob": "11570956bca6f8654b4e36d0db20c192ff0ec215"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-final-process-snapshot.txt",
+      "blob": "067d192222f5baa38fff67d5499b8c49394f1ccf"
+    }
+  ],
+  "elapsed_seconds": 2.896,
+  "remote_names_and_four_published_tags_crosschecked_by": "sol_navigation_diagnosis: ls-remote heads/tags actual exit0; all published OIDs match fetched local refs; no credential contents/API validation"
+}

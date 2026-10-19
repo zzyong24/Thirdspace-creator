@@ -1,0 +1,255 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-1140",
+  "commit_sha": "efe9f1ce8a9695354724aad2815cb96304108367",
+  "captures": [
+    {
+      "checkpoint": "portrait-1366x900",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "landscape-1366x900",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "portrait-1024x680",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 680
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "landscape-1024x680",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 680
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "portrait-683x450",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 683,
+        "height": 450
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "landscape-683x450",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 683,
+        "height": 450
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "portrait-390x900",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "landscape-390x900",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "portrait-390x450",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 450
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "landscape-390x450",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 450
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "portrait-512x340",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 512,
+        "height": 340
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "landscape-512x340",
+      "check_ids": [
+        "AC-LAYOUT",
+        "AC-CANCEL"
+      ],
+      "viewport": {
+        "width": 512,
+        "height": 340
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "exact-before-confirm",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 680
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "gallery-preview-1366x900",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "从素材库选用\n\n预览后选用，或拖到画布。\n\n全部\n图片\n视频\n放到画布\n放到画布\n关闭预览"
+    },
+    {
+      "checkpoint": "gallery-preview-1024x680",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 680
+      },
+      "text": "从素材库选用\n\n预览后选用，或拖到画布。\n\n全部\n图片\n视频\n放到画布\n放到画布\n关闭预览"
+    },
+    {
+      "checkpoint": "gallery-preview-683x450",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 683,
+        "height": 450
+      },
+      "text": "从素材库选用\n\n预览后选用，或拖到画布。\n\n全部\n图片\n视频\n放到画布\n放到画布\n关闭预览"
+    },
+    {
+      "checkpoint": "gallery-preview-390x900",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "从素材库选用\n\n预览后选用，或拖到画布。\n\n全部\n图片\n视频\n放到画布\n放到画布\n关闭预览"
+    },
+    {
+      "checkpoint": "gallery-preview-390x450",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 450
+      },
+      "text": "从素材库选用\n\n预览后选用，或拖到画布。\n\n全部\n图片\n视频\n放到画布\n放到画布\n关闭预览"
+    },
+    {
+      "checkpoint": "gallery-preview-512x340",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 512,
+        "height": 340
+      },
+      "text": "从素材库选用\n\n预览后选用，或拖到画布。\n\n全部\n图片\n视频\n放到画布\n放到画布\n关闭预览"
+    },
+    {
+      "checkpoint": "read-error",
+      "check_ids": [
+        "AC-EXACT",
+        "AC-SHARED",
+        "AC-STATES"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 680
+      },
+      "text": "参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n素材读取暂时失败，请重试\n\n重新读取\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    }
+  ]
+}

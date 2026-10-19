@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import * as fs from "node:fs/promises";
 import {
   safeJoin,
-  verifyBlobToken,
+  verifyBlobToken,verifyWorkspaceBlobToken,decodeWorkspaceBlobScope,
   PathTraversalError,
   type BlobMethod,
 } from "@creatoros/backend/modules/assets";
-import { getStorageRootForRequest } from "@/server/persistence-client";
+import { getWorkspaceBlobService,getStorageRootForRequest } from "@/server/persistence-client";
 import { readSessionCookie } from "../../auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import { resolveRequestWorkspaceContext,verifyGroupSelection } from "@/lib/request-context.server";
 import { streamBlobToFile } from "@/server/blob-upload";
 
 // Local-fs blob route (item B). The local-fs object-storage adapter mints
@@ -33,17 +33,6 @@ function decodeKey(segments: string[]): string {
   return segments.map((s) => decodeURIComponent(s)).join("/");
 }
 
-async function resolveRoot(req: Request): Promise<string | null> {
-  // [T-046 单机免登录] 有 session cookie 验 token,无/失效 cookie 以本机主用户直通,
-  // 解析其配置的 media root。HMAC token + path-traversal 两道硬门不变(仍是唯一真门)。
-  const rawToken = readSessionCookie(req);
-  try {
-    const ctx = await resolveRequestContext(rawToken);
-    return await getStorageRootForRequest(ctx);
-  } catch {
-    return null;
-  }
-}
 
 function forbidden(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 403 });
@@ -65,11 +54,22 @@ async function gate(
   const exp = Number(url.searchParams.get("exp"));
   const token = url.searchParams.get("token");
 
-  const verdict = verifyBlobToken(method, storageKey, exp, token);
+  const scopeToken=url.searchParams.get("scope");
+  const verdict = scopeToken?verifyWorkspaceBlobToken(method, storageKey, exp, token,scopeToken):verifyBlobToken(method, storageKey, exp, token);
   if (!verdict.ok) return forbidden(`blob token rejected: ${verdict.reason}`);
 
-  const root = await resolveRoot(req);
-  if (!root) return forbidden("not authenticated");
+  let root:string;
+  try{
+    let ctx=await resolveRequestWorkspaceContext(readSessionCookie(req),req);
+    if(scopeToken){
+      const scope=decodeWorkspaceBlobScope(scopeToken);
+      if(!scope||scope.userId!==ctx.userId)return forbidden("文件凭证不属于当前用户");
+      if(ctx.groupId&&scope.groupId!==ctx.groupId)return forbidden("文件凭证属于其他账号组");
+      ctx=await verifyGroupSelection({...ctx,accountId:scope.accountId},scope.groupId,"reject");
+    }
+    await (await getWorkspaceBlobService()).authorize(ctx,storageKey,method);
+    root=await getStorageRootForRequest(ctx);
+  }catch{return forbidden("当前工作区没有文件访问权限");}
 
   let absKey: string;
   try {

@@ -1,3 +1,6 @@
+import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
+import { createTopicWorkspaceService, type TopicWorkspaceDeps } from "./topic-workspace.service";
+import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import {and,eq,gte,lt,sql,type Db} from "@creatoros/backend";
 import {candidates} from "./candidate.db-schema";
@@ -19,6 +22,7 @@ import {
   type TopicsOverviewResource,
 } from "./candidate.schema";
 import {
+  OwnershipError,
   CandidateTitleError,
   PromoteStateError,
   DanglingRunError,
@@ -106,10 +110,25 @@ export interface CandidateProjectsPort {
           适配本账号建议?: string;
         };
         contentRadarEvidence?: {
+          generationMode: "rewrite_only";
+          sourceReferences: NonNullable<CandidateResource["card"]["sourceReferences"]>;
+          sourceSnapshotId: string;
+          generatedFromTranscriptHash: string;
+          adaptedDraftSeed: Extract<
+            NonNullable<CandidateResource["card"]["adaptedDraft"]>,
+            { generationMode: "rewrite_only" }
+          >;
+          positioningVersionId?: string;
+          personalizationStatus?: "applied" | "not_applied";
+          aiTaskId?: string;
+        } | {
           sourceReferences: NonNullable<CandidateResource["card"]["sourceReferences"]>;
           decomposition: NonNullable<CandidateResource["card"]["sourceDecomposition"]>;
           strategy: NonNullable<CandidateResource["card"]["adaptationStrategy"]>;
-          adaptedDraftSeed: NonNullable<CandidateResource["card"]["adaptedDraft"]>;
+          adaptedDraftSeed: Exclude<
+            NonNullable<CandidateResource["card"]["adaptedDraft"]>,
+            { generationMode: "rewrite_only" }
+          >;
         };
       };
       contentType?: string;
@@ -155,6 +174,8 @@ export interface CandidateOverviewPort {
 }
 
 export interface ServiceDeps {
+  resolveCollectedPublication?: (ctx:RequestContext,id:string)=>Promise<{groupId:string|null;accountId:string}|null>;
+  topicWorkspace?: Pick<TopicWorkspaceDeps,"assertProject"|"currentPositioningVersion">;
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
@@ -171,6 +192,8 @@ export interface ServiceDeps {
 }
 
 export interface CreateCandidateInput {
+  /** 服务端已校验 transform 的身份；公共 create 不接收。 */
+  intelligenceTransformId?: string;
   title: string;
   angle?: string;
   // 人确认门的来源标注:默认 idea(手动新建);对话内 AI 出题(topic.generate)无 ai_task、
@@ -253,6 +276,7 @@ export interface CandidateAIResult {
     contentRole?: "traffic" | "trust" | "conversion" | null;
     productAnchorId?: string | null;
     predictedScore?: number | null;
+    card?: Partial<CandidateResource["card"]>;
   };
 }
 
@@ -276,6 +300,10 @@ export interface IngestSignalInput {
 }
 
 export interface CandidateService {
+  getTopicWorkspace: ReturnType<typeof createTopicWorkspaceService>["get"];
+  saveTopicWorkspace: ReturnType<typeof createTopicWorkspaceService>["save"];
+  getTopicRecommendationContext: ReturnType<typeof createTopicWorkspaceService>["recommendationContext"];
+  saveTopicProposalFeedback: ReturnType<typeof createTopicWorkspaceService>["feedback"];
   listCandidates(
     ctx: RequestContext,
     query: ListCandidatesQuery,
@@ -288,6 +316,8 @@ export interface CandidateService {
     ctx: RequestContext,
     candidateId: string,
   ): Promise<CandidateResource>;
+  /** 应用组合的同事务锁读，不是模型写入或公共API。 */
+  getCandidateForUpdate(ctx: RequestContext, candidateId: string): Promise<CandidateResource>;
   patchCandidate(
     ctx: RequestContext,
     candidateId: string,
@@ -380,7 +410,8 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       userId: ctx.userId,
       // [T-332 S2] 未选号 = 引导态,创作域禁读写(SPEC §4.2)—— 读写同门,
       // ctx.accountId 缺失直接抛 AccountRequiredError,不存在「null = 全局视图」退化。
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(workspaceKey(ctx)),
+      accountId: ctx.accountId ?? null,
     };
     return createCandidateRepository(db, repoDeps);
   }
@@ -469,7 +500,12 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     };
   }
 
+  const workspace = createTopicWorkspaceService({db:deps.db,now:deps.now,...deps.topicWorkspace});
   return {
+    getTopicWorkspace: workspace.get,
+    saveTopicWorkspace: workspace.save,
+    getTopicRecommendationContext: workspace.recommendationContext,
+    saveTopicProposalFeedback: workspace.feedback,
     async listCandidates(ctx, query) {
       // [T-216] sort=guardrail → 走护栏排序(rankTopicsWithGuardrails),复用 list seam 不新增 op。
       // 护栏只排 pool 候选,返回偏好注入后分序 + 探索位;RankedTopicResource 是 CandidateResource
@@ -491,7 +527,13 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async createCandidate(ctx, input) {
-      assertCandidateTitle(input.title);
+      let title = input.title;
+      if (input.intelligenceTransformId) {
+        // SEMANTIC_BOUNDARY_ALLOW: 仅纠正候选标题的协议长度/格式，不选择选题或改写正文；真实来源标题仍保存在来源快照。
+        title = title.trim().slice(0, CANDIDATE_TITLE_MAX_CHARS);
+        try { assertCandidateTitle(title); } catch { title = "改写稿"; }
+      }
+      assertCandidateTitle(title);
       const repo = repoFor(ctx, "candidate.createCandidate");
       const angle = input.angle ?? "";
       const card = pickCardFields({
@@ -501,13 +543,14 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
           : {}),
       });
       const positioningFit = await fitFor(ctx, {
-        title: input.title,
+        title,
         angle,
         contentRole: input.contentRole ?? null,
         productAnchorId: input.productAnchorId ?? null,
       });
       const row = await repo.createCandidate({
-        title: input.title,
+        ...(input.intelligenceTransformId ? { idempotentId: `cand-radar-${createHash("sha256").update(JSON.stringify([ctx.userId, workspaceKey(ctx), input.intelligenceTransformId])).digest("hex")}` } : {}),
+        title,
         angle,
         // 默认 idea(手动新建);对话内 AI 出题采纳透传真实 AI 渠道(T-149 — 无 ai_task 的
         // topic.generate 走不通 createFromAIResult,只能落这条门,故这里保住其 source)。
@@ -526,6 +569,15 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     async getCandidate(ctx, candidateId) {
       return toCandidateDto(await repoFor(ctx, "candidate.getCandidate").getCandidate(candidateId));
     },
+    async getCandidateForUpdate(ctx, candidateId) {
+      if (typeof (db as unknown as {rollback?:unknown}).rollback !== "function")
+        throw new Error("选题锁读必须绑定实际事务");
+      const [row] = await db.select().from(candidates).where(and(
+        eq(candidates.id,candidateId),eq(candidates.userId,ctx.userId),workspaceFilter(candidates,ctx),
+      )).limit(1).for("update");
+      if (!row) throw new OwnershipError("选题不存在或不属于当前工作区");
+      return toCandidateDto(row);
+    },
 
     async patchCandidate(ctx, candidateId, patch) {
       if (patch.title !== undefined) assertCandidateTitle(patch.title);
@@ -535,8 +587,9 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       let cleaned: typeof patch = patch;
       if (patch.card !== undefined) {
         const editableCard = pickCardFields(patch.card);
-        // [T-642] 来源拆解、改写策略与初稿 provenance 只能由 intelligence.confirmTopic
-        // 的内部 create seam 写入；普通候选编辑不得伪造或覆盖这三段创作依据。
+        // [T-642] 来源引用、拆解、改写策略与初稿 provenance 只能由服务端确认路径
+        // 写入；普通候选编辑不得伪造或覆盖这些创作依据。
+        delete editableCard.sourceReferences;
         delete editableCard.sourceDecomposition;
         delete editableCard.adaptationStrategy;
         delete editableCard.adaptedDraft;
@@ -576,6 +629,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       //     source         → 来源标注(写进 brief 文本,便于追溯)
       const dto = toCandidateDto(cand);
       const card = dto.card;
+      if (card.audienceTask) await workspace.assertCurrent(ctx,card.audienceTask);
       // [T-284a] 复刻补链 G1:若被立项的候选带原爆款拆解要素(card.teardown,即 benchmark 复刻选题),
       //   把它复制进新 project 的 briefDetail.benchmarkRef —— 「这条复刻自某爆款,原爆款拆解在此」,
       //   供 creative-context 回流写稿。非 benchmark 候选(无 card.teardown)→ 不写(普通创作不携带、不污染)。
@@ -591,21 +645,45 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         contentFormat: card.format,
         coreMessage: card.oneLiner ?? (dto.angle || undefined),
       };
+      if (card.audienceTask) {
+        briefDraft.targetAudience=card.audienceTask.audience;
+        briefDraft.coreMessage=card.audienceTask.job;
+        briefDraft.successCriteria=card.audienceTask.acceptance;
+      }
       if (card.teardown) {
         briefDraft.benchmarkRef = card.teardown;
       }
-      if (
-        card.sourceReferences?.length &&
-        card.sourceDecomposition &&
-        card.adaptationStrategy &&
-        card.adaptedDraft
-      ) {
-        briefDraft.contentRadarEvidence = {
-          sourceReferences: card.sourceReferences,
-          decomposition: card.sourceDecomposition,
-          strategy: card.adaptationStrategy,
-          adaptedDraftSeed: card.adaptedDraft,
-        };
+      if (card.sourceReferences?.length && card.adaptedDraft) {
+        if (
+          "generationMode" in card.adaptedDraft &&
+          card.adaptedDraft.generationMode === "rewrite_only"
+        ) {
+          briefDraft.contentRadarEvidence = {
+            generationMode: "rewrite_only",
+            sourceReferences: card.sourceReferences,
+            sourceSnapshotId: card.adaptedDraft.sourceSnapshotId,
+            generatedFromTranscriptHash: card.adaptedDraft.generatedFromTranscriptHash,
+            adaptedDraftSeed: card.adaptedDraft,
+            ...(card.adaptedDraft.positioningVersionId
+              ? { positioningVersionId: card.adaptedDraft.positioningVersionId }
+              : {}),
+            personalizationStatus: card.adaptedDraft.personalizationStatus,
+            ...(card.adaptedDraft.aiTaskId
+              ? { aiTaskId: card.adaptedDraft.aiTaskId }
+              : {}),
+          };
+        } else if (
+          !("generationMode" in card.adaptedDraft) &&
+          card.sourceDecomposition &&
+          card.adaptationStrategy
+        ) {
+          briefDraft.contentRadarEvidence = {
+            sourceReferences: card.sourceReferences,
+            decomposition: card.sourceDecomposition,
+            strategy: card.adaptationStrategy,
+            adaptedDraftSeed: card.adaptedDraft,
+          };
+        }
       }
       const SOURCE_LABELS: Record<string, string> = {
         trend: "行业热点",
@@ -622,7 +700,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       //    ProjectsService stamps ctx.userId + sets current_stage=brief internally.
       const project = await projects.createProject(ctx, {
         title: cand.title,
-        brief: briefText,
+        brief: [briefText,card.audienceTask ? `观众任务：${card.audienceTask.job}\n输入：${card.audienceTask.input}\n操作：${card.audienceTask.steps.join("；")}\n输出：${card.audienceTask.output}\n验收：${card.audienceTask.acceptance}\n入口：${card.audienceTask.entryUrl}\n限制：${card.audienceTask.costAndLimits}\n实测计划：${JSON.stringify(card.audienceTask.testPlan)}\n状态：${card.audienceTask.route}` : ""].filter(Boolean).join("\n"),
         briefDetail: briefDraft,
       });
       // 2. flip the candidate to promoted + 3. write the topic_promotions row.
@@ -638,11 +716,14 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async createFromAIResult(ctx, result) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){const owner=await db.execute(sql`SELECT id FROM ai_tasks WHERE id=${result.aiTaskId.split("#")[0]} AND user_id=${ctx.userId} AND group_id=${ctx.groupId}`);if(!owner.rows.length)throw new OwnershipError("候选任务不属于当前账号组");}
       assertCandidateTitle(result.resultData.title);
       const repo = repoFor(ctx, "candidate.createFromAIResult");
       // Idempotent on aiTaskId — confirmResult may retry; never duplicate.
       const existing = await repo.findCandidateByAiTaskId(result.aiTaskId);
       if (existing) return toCandidateDto(existing);
+      if (result.resultData.card?.audienceTask) await workspace.assertCurrent(ctx, result.resultData.card.audienceTask);
       const { resultData } = result;
       const angle = resultData.angle ?? "";
       const positioningFit = await fitFor(ctx, {
@@ -659,6 +740,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         productAnchorId: resultData.productAnchorId ?? null,
         positioningFit,
         predictedScore: resultData.predictedScore ?? null,
+        card: resultData.card ? toCardDto(resultData.card) as unknown as Record<string,unknown> : undefined,
         aiTaskId: result.aiTaskId, // provenance; status stays 'pool' (no parallel machine)
       });
       return toCandidateDto(row);
@@ -672,6 +754,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       const current = toCandidateDto(await repo.getCandidate(candidateId));
       const cleaned = toCardDto({
         ...card,
+        audienceTask: current.card.audienceTask,
         // AI 补全整卡不拥有来源证据；未显式带回时沿用领域中已经确认的真实来源。
         sourceReferences:
           (card as { sourceReferences?: unknown }).sourceReferences ??
@@ -692,8 +775,23 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // RISK-005 — the run must be a REAL IngestionRun (cross-user / unknown →
       // OwnershipError) BEFORE any signal row references it.
       await ingestion.assertRunExists(ctx, runId);
-      const repo = repoFor(ctx, "candidate.ingestAudienceSignal");
+      let factCtx=ctx;
+      let verifiedCollection: {groupId:string|null;accountId:string}|undefined;
+      if(ctx.groupId && ctx.source!=="ingestion")throw new OwnershipError("组采集入口需要已验证采集来源");
+      if(record.publicationId && (ctx.groupId || deps.resolveCollectedPublication)){
+        if(!deps.resolveCollectedPublication)throw new OwnershipError("发布事实校验不可用");
+        const publication=await deps.resolveCollectedPublication(ctx,record.publicationId);
+        if(!publication || publication.accountId!==ctx.accountId)throw new OwnershipError("发布记录不属于真实采集账号");
+        verifiedCollection={groupId:publication.groupId,accountId:publication.accountId};
+        factCtx={...ctx,groupId:publication.groupId,accountId:publication.accountId};
+      }else if(ctx.groupId){
+        if(!ctx.accountId)throw new OwnershipError("采集信号需要真实平台账号");
+        verifiedCollection={groupId:ctx.groupId,accountId:ctx.accountId};
+      }
+      const repo = repoFor(factCtx, "candidate.ingestAudienceSignal");
+      if(record.linkedCandidateRef)await repo.getCandidate(record.linkedCandidateRef);
       const { row: signal, inserted } = await repo.createSignal({
+        verifiedCollection,
         source: record.source,
         rawText: record.rawText,
         demandTag: record.demandTag ?? null,
@@ -711,7 +809,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       if (inserted && record.linkedCandidateRef) {
         // bump the linked Candidate's demand_count (recompute keeps it honest;
         // 幂等跳过的写不重复计数,T-065)。
-        await repo.recomputeDemandCount(record.linkedCandidateRef);
+        await repo.recomputeDemandCount(record.linkedCandidateRef,!!verifiedCollection);
       }
       return { ...toAudienceSignalDto(signal), inserted };
     },
@@ -852,18 +950,18 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
 
 /** 完整UTC日供给计数；不限分页、不按pool状态排除已被使用的当日供给。 */
 export async function countCandidatesForDay(db:Db|Parameters<Parameters<Db["transaction"]>[0]>[0],ctx:RequestContext,day:string):Promise<number>{
- const accountId=requireAccountId(ctx.accountId,"candidate.countCandidatesForDay");
+ const scope=workspaceKey(ctx);
  const start=`${day}T00:00:00.000Z`,stamp=Date.parse(start);
  if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Number.isFinite(stamp)||new Date(stamp).toISOString()!==start)throw new Error("UTC日期无效");
  const end=new Date(stamp+86400000).toISOString();
- const [row]=await db.select({total:sql<number>`count(*)::int`}).from(candidates).where(and(eq(candidates.userId,ctx.userId),eq(candidates.accountId,accountId),gte(candidates.createdAt,start),lt(candidates.createdAt,end)));
+ const [row]=await db.select({total:sql<number>`count(*)::int`}).from(candidates).where(and(eq(candidates.userId,ctx.userId),workspaceFilter(candidates,scope),gte(candidates.createdAt,start),lt(candidates.createdAt,end)));
  return row?.total??0;
 }
 
 /** 事务调用者复用同一偏好护栏，不依赖项目、采集等无关端口。 */
 export async function upsertDistilledTopicPreference(db:Db,ctx:RequestContext,input:{keyword:string;direction:"avoid"|"prefer";signal:string;exampleCount:number;weight?:number},deps:{now:()=>string;nextId:(prefix:string)=>string}){
- const accountId=requireAccountId(ctx.accountId,"candidate.upsertTopicPreference");
- return createCandidateRepository(db,{...deps,userId:ctx.userId,accountId}).upsertTopicPreference({
+ await assertWritableWorkspace(db,ctx);const scope=workspaceKey(ctx);
+ return createCandidateRepository(db,{...deps,userId:ctx.userId,...workspaceStamp(scope)}).upsertTopicPreference({
   keyword:input.keyword,direction:input.direction,signal:input.signal,exampleCount:input.exampleCount,
   weight:Math.abs(clampPreferenceWeight(input.weight??input.exampleCount*3)),status:isHardPreference(input.exampleCount)?"active":"candidate",
  });
@@ -871,8 +969,8 @@ export async function upsertDistilledTopicPreference(db:Db,ctx:RequestContext,in
 
 /** 锁住真实原因来源；旧快照完成只记结果，不覆盖更新后的偏好。 */
 export async function topicPreferenceSourceIsCurrent(db:Db,ctx:RequestContext,reasons:string[]){
- const accountId=requireAccountId(ctx.accountId,"candidate.preferenceSource");
- await db.select({id:candidates.id}).from(candidates).where(and(eq(candidates.userId,ctx.userId),eq(candidates.accountId,accountId))).orderBy(candidates.id).for("update");
- const current=await createCandidateRepository(db,{userId:ctx.userId,accountId,now:()=>new Date().toISOString(),nextId:()=>{throw new Error("只读来源不生成ID");}}).listDropReasons();
+ const scope=workspaceKey(ctx);
+ await db.select({id:candidates.id}).from(candidates).where(and(eq(candidates.userId,ctx.userId),workspaceFilter(candidates,scope))).orderBy(candidates.id).for("update");
+ const current=await createCandidateRepository(db,{userId:ctx.userId,...workspaceStamp(scope),now:()=>new Date().toISOString(),nextId:()=>{throw new Error("只读来源不生成ID");}}).listDropReasons();
  return JSON.stringify(current.slice(0,50))===JSON.stringify(reasons);
 }

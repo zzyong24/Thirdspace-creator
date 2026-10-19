@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import {
   id,
   iso8601,
@@ -65,6 +65,12 @@ const createEntryBody = z
 
 // SPEC §13 "内容日历 (content-calendar)" group (七步 §7.2, contract v0.4).
 export const contentCalendarOperations = {
+  listGroupCalendar: defineEndpoint({id:"group.calendar.list",method:"GET",path:"/account-groups/:groupId/calendar",params:z.object({groupId:id}),query:windowQuery.extend(paginationQuery.shape),response:contentCalendarEntryResource,isList:true,fr:["FR-GROUP-CALENDAR"]}),
+  createGroupEntry: defineEndpoint({id:"group.calendar.entries.create",method:"POST",path:"/account-groups/:groupId/calendar/entries",params:z.object({groupId:id}),body:z.object({projectId:id,plannedDate:calendarDate,targetAccountId:id.nullable().optional(),note:z.string().optional()}),response:contentCalendarEntryResource,fr:["FR-GROUP-CALENDAR"]}),
+  setCalendarEntryTarget: defineEndpoint({id:"calendar.entries.target",method:"PUT",path:"/calendar/entries/:entryId/target",params:entryParams,body:z.object({targetAccountId:id.nullable()}),response:contentCalendarEntryResource,fr:["FR-GROUP-CALENDAR"]}),
+  getGroupCadence: defineEndpoint({id:"group.cadence.get",method:"GET",path:"/account-groups/:groupId/cadence",params:z.object({groupId:id}),response:publishingCadenceResource.nullable(),fr:["FR-GROUP-CALENDAR"]}),
+  upsertGroupCadence: defineEndpoint({id:"group.cadence.upsert",method:"PUT",path:"/account-groups/:groupId/cadence",params:z.object({groupId:id}),body:z.object({frequency:cadenceFrequency,preferredSlots:preferredSlots.default([])}),response:publishingCadenceResource,fr:["FR-GROUP-CALENDAR"]}),
+  getGroupCadenceAttainment: defineEndpoint({id:"group.cadence.attainment",method:"GET",path:"/account-groups/:groupId/cadence/attainment",params:z.object({groupId:id}),query:windowQuery,response:cadenceAttainmentResource,fr:["FR-GROUP-CALENDAR"]}),
   listCalendar: defineEndpoint({
     id: "accounts.calendar.list",
     method: "GET",

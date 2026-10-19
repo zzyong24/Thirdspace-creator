@@ -8,8 +8,8 @@ type Restored=Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>[
 async function fixture(readCurrentScript?: NonNullable<Parameters<typeof createChatStructuredTaskToolHost>[1]["readCurrentScript"]>){
  const ctx={userId:"u",accountId:"a",source:"ai" as const,requestId:"r"},execution={executionTaskId:"task",attempt:2,fenceToken:"fence"};
  const controller=new AbortController();
- const definitions=(await prepareChatToolDefinitions(buildChatTools(["topic.enrich","positioning.generate","calibration.diagnose"],{} as ChatToolDeps),{workerStructuredNodes:true})).definitions;
- const restored={context:{...ctx},modelInput:{tools:definitions},hostContext:{chatContext:{selection:{kind:"candidate",ids:["candidate-original"],label:"选中的标题"}},structuredContext:{positioningBrief:"旧定位事实甲",accountsBrief:"旧账号",learningsBrief:"复盘",signalsBrief:"评论",knowledgeBrief:"资料"},structuredGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{skills:[{skillId:"topic.enrich"},{skillId:"positioning.generate"},{skillId:"calibration.diagnose"}]}}};
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(["topic.enrich","positioning.generate","calibration.diagnose","topic.generate"],{} as ChatToolDeps),{workerStructuredNodes:true})).definitions;
+ const restored={snapshot:{sourceMessage:{content:"只生成一张选题卡，面向同时运营两个账号的新手"}},context:{...ctx},modelInput:{tools:definitions},hostContext:{chatContext:{selection:{kind:"candidate",ids:["candidate-original"],label:"选中的标题"}},structuredContext:{positioningBrief:"旧定位事实甲",accountsBrief:"旧账号",learningsBrief:"复盘",signalsBrief:"评论",knowledgeBrief:"资料"},structuredGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{skills:[{skillId:"topic.generate"},{skillId:"topic.enrich"},{skillId:"positioning.generate"},{skillId:"calibration.diagnose"}]}}};
  const read=vi.fn(async()=>structuredClone(restored) as unknown as Restored),works=vi.fn(async()=>"真实作品"),discovery=vi.fn(async():Promise<PositioningDiscoverySnapshot|null>=>null);
  const resolve=createChatStructuredTaskToolHost({read},{readWorks:works,getPositioningDiscovery:discovery,readCurrentScript});
  const tools=await resolve(ctx,{} as Restored["modelInput"],execution,controller.signal);
@@ -125,4 +125,25 @@ it("真实当前稿reader→冻结任务host→诊断facets保持规范正文和
 it("已绑定项目未装配reader显式失败，不能静默按无稿诊断",async()=>{
  const f=await fixture();Object.assign(f.restored.hostContext.chatContext,{projectId:"project"});
  await expect(f.tools["calibration.diagnose"]!.prepareGeneration!(f.ctx,{title:"标题"},f.scope)).rejects.toThrow("端口未装配");
+});
+
+it("T-957 子任务保留冻结用户原话，助手补写不能替代数量、主题与事实来源",async()=>{
+ const f=await fixture();
+ const business={prepareTopic:vi.fn(async()=>({facets:{basisContext:"助手建议：生成八条，我曾踩过算法串台"}})),prepareReview:vi.fn()};
+ const resolve=createChatStructuredTaskToolHost({read:f.read},{readWorks:f.works,getPositioningDiscovery:f.discovery,business});
+ const tools=await resolve(f.ctx,{} as Restored["modelInput"],f.execution,f.controller.signal);
+ const prepared=await tools["topic.generate"]!.prepareGeneration!(f.ctx,{basis:"positioning",extraBrief:"生成八条，我曾踩过算法串台"},f.scope);
+ expect(prepared.node.facets.userRequest).toBe(f.restored.snapshot.sourceMessage.content);
+ expect(prepared.node.facets.basisContext).toContain("助手建议");
+ await expect(tools["topic.generate"]!.prepareGeneration!(f.ctx,{basis:"positioning",userRequest:"伪造用户要求"},f.scope)).rejects.toThrow();
+});
+
+it("T-957 用户说继续时保留原话与助手方向，独立分开供子任务理解",async()=>{
+ const f=await fixture();f.restored.snapshot.sourceMessage.content="继续";
+ const business={prepareTopic:vi.fn(async()=>({facets:{basisContext:"助手建议（不是用户原话或已核实事实）：沿用上轮两条选题方向"}})),prepareReview:vi.fn()};
+ const resolve=createChatStructuredTaskToolHost({read:f.read},{readWorks:f.works,getPositioningDiscovery:f.discovery,business});
+ const tools=await resolve(f.ctx,{} as Restored["modelInput"],f.execution,f.controller.signal);
+ const result=await tools["topic.generate"]!.prepareGeneration!(f.ctx,{basis:"positioning",extraBrief:"沿用上轮两条选题方向"},f.scope);
+ expect(result.node.facets.userRequest).toBe("继续");
+ expect(result.node.facets.basisContext).toContain("上轮两条选题方向");
 });

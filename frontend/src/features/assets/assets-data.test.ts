@@ -378,3 +378,10 @@ describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
     expect(projects).toEqual([]);
   });
 });
+
+
+it.each([undefined,null,[],[{id:'real-tag',name:'真实中文标签'}]])('T1341 真实DTO标签不被同ID canonical污染，null/旧缺省是unknown：%j',async tags=>{
+ const row={id:firstAsset.id,currentFileId:firstFile.id,assetType:'image' as const,name:'真正公口资源',description:'',updatedAt:'2026-10-17T00:00:00Z',...(tags===undefined?{}:{tags})};
+ const result=await buildAssetsViewModelReal(fakeClient({assets:[row]}));expect(result.state).toBe('ready');const asset=result.viewModel.assets[0]!;
+ expect(asset.tags).toEqual(tags?.map(t=>t.name)??[]);expect(asset.tagsReadState).toBe(Array.isArray(tags)?'known':'unavailable');
+},180000);

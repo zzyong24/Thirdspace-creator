@@ -4,5 +4,8 @@
     "security": {
       "csp": null
     }
+  },
+  "bundle": {
+    "resources": ["sidecar.tar.gz", "THIRD_PARTY_NOTICES.md"]
   }
 }

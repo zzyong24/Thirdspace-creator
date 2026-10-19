@@ -17,9 +17,9 @@ export interface ChatPublishTaskPorts {
 /** 原始工具参数与权限复用，模型运行由子任务的既有调度器承担。 */
 export function createChatPublishTaskHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,ports:ChatPublishTaskPorts):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  async function current(ctx:RequestContext,ref:ExecutionRef,signal?:AbortSignal){
-  const owner={userId:ctx.userId,accountId:ctx.accountId};signal?.throwIfAborted();
+  const owner={userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null};signal?.throwIfAborted();
   const restored=await reader.read({...ref});signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("发布物料工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("发布物料工具账号与原任务不符");
   const frozen=restored.modelInput.tools.find(tool=>tool.name==="publish.package");
   if(!frozen || frozen.execution!=="host.task-submit")return null;
   const prototypes=buildChatTools(["publish.package"],{} as ChatToolDeps);

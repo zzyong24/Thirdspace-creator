@@ -1,0 +1,98 @@
+{
+  "label": "douyin",
+  "startedAtUnix": 1792390709.927799,
+  "commandOuterSeconds": 8520,
+  "cliNormalObservationMs": 8280000,
+  "boundary": "公开CLI正常安装身份机制；未读取连接凭据；无apply/idempotency-key/collect/model/site；含CLI启动/本机传输/服务到完整JSON解析，不冒服务单阶段。",
+  "exitCode": 0,
+  "status": "parsed",
+  "ok": true,
+  "groupIdSha256": "9a72d3429b5145ffb37b1f02bca0d465d9e0911f53805ef6906ea03e63fdf17e",
+  "requestQuery": {
+    "startDate": "2026-09-20",
+    "endDate": "2026-10-19",
+    "platform": "douyin"
+  },
+  "scopeMatches": true,
+  "workspaceStatus": "active",
+  "catalog": {
+    "state": "ready",
+    "catalogWorkCount": 0,
+    "unattributableWorkCount": 0,
+    "deduplicatedWorkCount": 0
+  },
+  "metricKnown": [
+    {
+      "platform": "douyin",
+      "metricKey": "play_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "view_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "read_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "like_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "comment_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "share_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "favorite_count",
+      "scope": "work",
+      "knownCount": 0,
+      "eligibleCount": 0
+    },
+    {
+      "platform": "douyin",
+      "metricKey": "follower_count",
+      "scope": "account",
+      "knownCount": 0,
+      "eligibleCount": 1
+    }
+  ],
+  "workspaceCounts": {
+    "totalAccounts": 1,
+    "collectedAccounts": 1,
+    "contentCount": 11,
+    "publicationCount": 11
+  },
+  "metaKeys": [
+    "requestId"
+  ],
+  "errorCode": null,
+  "completeParseDurationMs": 708.507,
+  "endedAtUnix": 1792390710.6363158,
+  "rawPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1369-platform-read-fxx4e0ni/douyin.json",
+  "rawBytes": 13460,
+  "rawSha256": "69b37c3e5a9f5b8a995c258a60e843b94983129561c198bdf228445c6cf77707",
+  "stderrBytes": 0
+}

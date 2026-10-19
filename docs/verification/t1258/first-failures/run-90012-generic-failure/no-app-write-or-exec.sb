@@ -1,0 +1,6 @@
+(version 1)
+(allow default)
+(deny file-write* (subpath "/Applications/CreatorOS.app"))
+(deny process-exec (subpath "/Applications/CreatorOS.app"))
+(deny process-exec (subpath "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app"))
+(deny file-write* (regex #"^/Applications/\\.CreatorOS\\.app\\.installing-"))

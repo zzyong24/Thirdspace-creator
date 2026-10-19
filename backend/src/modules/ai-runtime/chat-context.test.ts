@@ -18,6 +18,7 @@ import {
 describe("resolveSkillForSurface — 页面层(surface → 基础 skill)", () => {
   it("各工作台 surface 选对应对话编导 skill(slice 2 补齐四面)", () => {
     expect(resolveSkillForSurface("topics")).toBe("chatbox.topic");
+    expect(resolveSkillForSurface("canvas")).toBe("chatbox.canvas");
     expect(resolveSkillForSurface("calibration")).toBe("chatbox.calibration");
     expect(resolveSkillForSurface("positioning")).toBe("chatbox.positioning");
     expect(resolveSkillForSurface("review")).toBe("chatbox.review");

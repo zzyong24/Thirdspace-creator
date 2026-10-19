@@ -1,0 +1,171 @@
+{
+  "name": "@creatoros/ai-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./model-identity": {
+      "types": "./src/runtime/provider-identity.ts",
+      "default": "./src/runtime/provider-identity.ts"
+    },
+    "./retry-policy": {
+      "types": "./src/runtime/retry-policy.ts",
+      "default": "./src/runtime/retry-policy.ts"
+    },
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./durable-generation": {
+      "types": "./src/execution/durable-generation-model.ts",
+      "default": "./src/execution/durable-generation-model.ts"
+    },
+    "./agentic-runtime": {
+      "types": "./src/runtime/agentic/index.ts",
+      "default": "./src/runtime/agentic/index.ts"
+    },
+    "./durable-agentic-tool": {
+      "types": "./src/execution/durable-agentic-tool.ts",
+      "default": "./src/execution/durable-agentic-tool.ts"
+    },
+    "./durable-pi-stream": {
+      "types": "./src/execution/durable-pi-stream.ts",
+      "default": "./src/execution/durable-pi-stream.ts"
+    },
+    "./agentic-run": {
+      "types": "./src/execution/agentic-worker-run.ts",
+      "default": "./src/execution/agentic-worker-run.ts"
+    },
+    "./browser": {
+      "types": "./src/runtime/browser/index.ts",
+      "default": "./src/runtime/browser/index.ts"
+    },
+    "./browser/*": {
+      "types": "./src/runtime/browser/*.ts",
+      "default": "./src/runtime/browser/*.ts"
+    },
+    "./platform/*": {
+      "types": "./src/runtime/platform/*.ts",
+      "default": "./src/runtime/platform/*.ts"
+    },
+    "./durable-stream": {
+      "types": "./src/execution/durable-stream-model.ts",
+      "default": "./src/execution/durable-stream-model.ts"
+    },
+    "./chat": {
+      "types": "./src/runtime/chat/index.ts",
+      "default": "./src/runtime/chat/index.ts"
+    },
+    "./chat-worker-run": {
+      "types": "./src/execution/chat-worker-run.ts",
+      "default": "./src/execution/chat-worker-run.ts"
+    },
+    "./asr-identity": {
+      "types": "./src/runtime/asr-execution-identity.ts",
+      "default": "./src/runtime/asr-execution-identity.ts"
+    },
+    "./asr-transcript": {
+      "types": "./src/runtime/asr-transcript.ts",
+      "default": "./src/runtime/asr-transcript.ts"
+    },
+    "./douyin-transcribe-source": {
+      "types": "./src/runtime/douyin-transcribe-source.ts",
+      "default": "./src/runtime/douyin-transcribe-source.ts"
+    },
+    "./douyin-transcribe-detail": {
+      "types": "./src/runtime/douyin-transcribe-detail.ts",
+      "default": "./src/runtime/douyin-transcribe-detail.ts"
+    },
+    "./douyin-errors": {
+      "types": "./src/runtime/douyin-errors.ts",
+      "default": "./src/runtime/douyin-errors.ts"
+    },
+    "./transcript-postprocess": {
+      "types": "./src/runtime/transcript-postprocess.ts",
+      "default": "./src/runtime/transcript-postprocess.ts"
+    },
+    "./cover": {
+      "types": "./src/runtime/cover-plan.ts",
+      "default": "./src/runtime/cover-plan.ts"
+    },
+    "./video-decisions-runner": {
+      "types": "./src/runtime/video-decisions-runner.ts",
+      "default": "./src/runtime/video-decisions-runner.ts"
+    },
+    "./srt": {
+      "types": "./src/runtime/srt.ts",
+      "default": "./src/runtime/srt.ts"
+    },
+    "./chunk-and-merge": {
+      "types": "./src/runtime/chunk-and-merge.ts",
+      "default": "./src/runtime/chunk-and-merge.ts"
+    },
+    "./error-diagnostics": {
+      "types": "./src/runtime/error-diagnostics.ts",
+      "default": "./src/runtime/error-diagnostics.ts"
+    },
+    "./xhs-creator-normalizer": {
+      "types": "./src/runtime/platform/xhs-creator-normalizer.ts",
+      "default": "./src/runtime/platform/xhs-creator-normalizer.ts"
+    },
+    "./wechat-article-candidate": {
+      "types": "./src/runtime/wechat-article-candidate.ts",
+      "default": "./src/runtime/wechat-article-candidate.ts"
+    },
+    "./graphic-post-text": {
+      "types": "./src/runtime/graphic-post-text.ts",
+      "default": "./src/runtime/graphic-post-text.ts"
+    },
+    "./wechat-article-text": {
+      "types": "./src/runtime/wechat-article-text.ts",
+      "default": "./src/runtime/wechat-article-text.ts"
+    },
+    "./graphic-card-brief": {
+      "types": "./src/prompt/templates/graphic-card-brief.ts",
+      "default": "./src/prompt/templates/graphic-card-brief.ts"
+    },
+    "./graphic-card-plan": {
+      "types": "./src/runtime/graphic-card-plan.ts",
+      "default": "./src/runtime/graphic-card-plan.ts"
+    },
+    "./publication-text": {
+      "types": "./src/runtime/publication-text.ts",
+      "default": "./src/runtime/publication-text.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@creatoros/contract": "workspace:*",
+    "@earendil-works/pi-ai": "0.80.7",
+    "@earendil-works/pi-coding-agent": "0.80.7",
+    "@mozilla/readability": "0.6.0",
+    "@openai/codex": "0.159.3",
+    "@playwright/test": "1.60.0",
+    "@xenova/transformers": "^2.17.2",
+    "ai": "^7.0.4",
+    "ajv": "^8.20.0",
+    "jsdom": "29.1.1",
+    "mammoth": "^1.12.0",
+    "pdf-parse": "^2.4.5",
+    "zod": "^4.4.3",
+    "@agentclientprotocol/sdk": "1.5.1",
+    "@openclaw/fs-safe": "0.21.3",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "diff": "9.0.0",
+    "open": "11.0.1",
+    "vscode-jsonrpc": "9.0.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@ai-sdk/provider": "^4.0.0",
+    "@types/jsdom": "28.0.3",
+    "@types/node": "20.19.43",
+    "esbuild": "0.28.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.8"
+  }
+}

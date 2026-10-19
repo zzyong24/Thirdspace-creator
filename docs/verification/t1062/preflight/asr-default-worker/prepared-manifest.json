@@ -1,0 +1,140 @@
+{
+  "schema": "t1062-default-worker-prepared/v1",
+  "registry": {
+    "schema": "t1062-default-worker-plan/v1",
+    "sourceRoot": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+    "observedHead": "75131fb489962e50d483fe21baccab39e0350e89",
+    "originDirectory": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005",
+    "wavSHA256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+    "sourceMovSHA256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+    "validSampleCount": 306587,
+    "sampleRate": 16000,
+    "maxCaptureBytes": 134217728,
+    "maxTokens": 448,
+    "maxSourceFrames": 1500,
+    "maxBatch": 1,
+    "modelFiles": [
+      {
+        "path": "Xenova/whisper-small/config.json",
+        "sha256": "5a6429d21d7a3379dd0861b74510f9f7076f32b563bffc9fcb072482d55ab3be",
+        "bytes": 2232
+      },
+      {
+        "path": "Xenova/whisper-small/generation_config.json",
+        "sha256": "0b7407a4e53a677f826e03c75d409e6f830663932bf43dda3b08c5efa2223279",
+        "bytes": 3837
+      },
+      {
+        "path": "Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx",
+        "sha256": "fcfc6100dc7339e7507e10f8b274350be7c4f8d8b575f0293f94cc0e156d6d24",
+        "bytes": 156780950
+      },
+      {
+        "path": "Xenova/whisper-small/onnx/encoder_model_quantized.onnx",
+        "sha256": "969f5ac12974340386bf7a02ea6626003e5e2dee396ffc6ab0eec282bf55ba06",
+        "bytes": 92324809
+      },
+      {
+        "path": "Xenova/whisper-small/preprocessor_config.json",
+        "sha256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d",
+        "bytes": 339
+      },
+      {
+        "path": "Xenova/whisper-small/tokenizer.json",
+        "sha256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566",
+        "bytes": 2480466
+      },
+      {
+        "path": "Xenova/whisper-small/tokenizer_config.json",
+        "sha256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce",
+        "bytes": 282683
+      }
+    ],
+    "sourceFiles": [],
+    "fourRuntimeTestPaths": [
+      "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts"
+    ],
+    "sourcePaths": [
+      "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+      "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "ai-worker/src/runtime/asr-provider-timing.ts",
+      "ai-worker/src/runtime/asr-request.ts",
+      "ai-worker/scripts/pi-runtime-bundle.mjs",
+      "contract/src/internal/asset-asr-timing.ts",
+      "ai-worker/node_modules/@xenova/transformers/package.json",
+      "ai-worker/node_modules/@xenova/transformers/src/transformers.js",
+      "ai-worker/node_modules/@xenova/transformers/src/models.js",
+      "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+      "ai-worker/node_modules/@xenova/transformers/src/processors.js"
+    ],
+    "sourceSHAApproval": "pending ROOT freeze confirmation; build snapshot alone is not execution authorization"
+  },
+  "sourceFiles": [
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "3ec9a752cf72dec6df0765e2eac983db4a64ab0713f5207b81098c2c3b9fbc9e"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "sha256": "653c2cac55a874fc1652620b89b9469073ec782d9a667ca211830871b154920e"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "sha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+      "sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "sha256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-provider-timing.ts",
+      "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-request.ts",
+      "sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9"
+    },
+    {
+      "path": "ai-worker/scripts/pi-runtime-bundle.mjs",
+      "sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c"
+    },
+    {
+      "path": "contract/src/internal/asset-asr-timing.ts",
+      "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/package.json",
+      "sha256": "0d605ca8d31ccbcff74729534f6f5e2f722d047c534cef6f53fafd22ef0b4c3d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/transformers.js",
+      "sha256": "f6a0528f691f3e81602c8b7a765e71b56aa06a7e06116e90eddf110a71a36256"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/models.js",
+      "sha256": "1eb492e7d2cc425c27a596639a46a2c61b9aed9e4f8f6ea4c917421189ba503d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+      "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/processors.js",
+      "sha256": "06583f94a1b5b672078094c96baeca6dc38d22dedab26ef55835966ec9ec1992"
+    }
+  ],
+  "cacheRoot": "/tmp/t1062-default-worker-preflight/run-one/cache",
+  "cwd": "/tmp/t1062-default-worker-preflight/run-one/runtime/frontend",
+  "modelCallsDuringPreparation": 0,
+  "decodeCallsDuringPreparation": 0
+}

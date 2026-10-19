@@ -1,0 +1,12 @@
+{
+  "beforeService": true,
+  "failures": [
+    "TypeError: PosixPath + PosixPath",
+    "SyntaxError: path-expression quote",
+    "following Node precheck ENOENT because manifest not produced"
+  ],
+  "cause": "生成manifest路径表达式错误",
+  "UI": 0,
+  "modelRoots": 0,
+  "corrected": "明确run/business Path变量，独立语法核后生成"
+}

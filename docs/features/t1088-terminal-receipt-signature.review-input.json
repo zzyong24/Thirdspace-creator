@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "静态 SPEC GO：T1088 当前澄清后完整 SPEC SHA256=0326ca44cb50c3712d452ba1c2036c2d2b47986b641d678c41e91cb951ed1e77；7个源码及2个原日志SHA均实读精确匹配。inputDigest包含model/toolCall身份，不能作跨调用同参摘要；方案复用原active scope冻结tools，completion事务内用实际task/calls对每条候选forCall完整核原operationKey/model receipt/定义/inputDigest，再核receipt身份与validationOutcome，以canonical bound.input和tool/version/effect/execution/error事实分组。3必需产品+1仅类型表达条件路径、3必需测试+1dispatcher逻辑条件测试范围可行，无新增worker可信input/contract/API/DB。新同参例按原partial合同校准两tasks及metadata=partial/stopReason=stop，原不同参succeeded及原四旅程不变；澄清已在当前SPEC，无finding。原真实Worker日志4PASS/1FAIL、两commit HOST_PORT_REJECTED/120秒running与Pi协议31PASS保留；新RED/GREEN、零写拒绝、完整Gate及安装验证仍pending。本次仅只读评审及写两指定工件，未运行测试/业务/模型/DB/构建/App，未改产品测试或reviewctl/任务事件。",
+  "findings": []
+}

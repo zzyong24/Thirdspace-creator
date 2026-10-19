@@ -1,3 +1,5 @@
+import {recoverableCodexProposalParents,recoverableCodexSettledProposalParents} from './chat-generation-recovery';
+import {workspaceFilter} from "../../workspace-scope";
 import {createExecutionChatRedfoxService} from "./execution-chat-redfox.service";
 import {createExecutionChatScriptDraftService} from "./execution-chat-script-draft.service";
 import {createExecutionChatWebReadService} from "./execution-chat-web-read.service";
@@ -14,7 +16,7 @@ import type { RequestContext } from "@creatoros/contract";
 import { agenticToolOutcomeSchema, workerToolResultReceiptSchema, chatWorkerInputSchema, chatToolApprovalReceiptSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { chatInputDigest } from "../ai/chat-turn-submission.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
-import { createAgenticToolBinding, type AgenticBackendTool } from "./agentic-tool-binding";
+import { latestAgenticRootCall,agenticToolOperationKey,createAgenticToolBinding, type AgenticBackendTool } from "./agentic-tool-binding";
 import { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.service";
 import { ConflictError } from "./execution.errors";
 type Approval=z.infer<typeof chatToolApprovalReceiptSchema>;
@@ -32,8 +34,8 @@ const object=(value:unknown):Record<string,unknown>=>value && typeof value==="ob
 export async function readExecutionChatTask(db:Db,ref:ExecutionRef,now?:()=>string){
   return createExecutionLeaseService(db,{now}).withLease(ref,"admission",async({tx,task,context})=>{
    const input=chatWorkerInputSchema.parse(object(task.payload).modelInput);
-   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
-   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || !["queued","running"].includes(business.status) || business.taskType!=="copilot.assist" || object(task.payload).aiTaskId!==business.id || object(business.inputData).modelInputDigest!==chatInputDigest(input) || input.userId!==context.userId || input.accountId!==context.accountId)throw new ConflictError("聊天工具任务映射无效");
+   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
+   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || !["queued","running"].includes(business.status) || business.taskType!=="copilot.assist" || object(task.payload).aiTaskId!==business.id || object(business.inputData).modelInputDigest!==chatInputDigest(input) || input.userId!==context.userId || input.accountId!==(context.accountId??null) || (input.groupId??null)!==(context.groupId??null))throw new ConflictError("聊天工具任务映射无效");
    return {context,input};
   });
 }
@@ -49,10 +51,12 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   await validateTask(ref);
   return leases.withLease(ref,"admission",async({tx,task,context})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
-   const bound=binding.bind(task,calls,request);
+   const original=calls.find(call=>call.operationKey===agenticToolOperationKey(request.modelCallId,request.toolCallId));
+   const readonlyRecovery=original&&[...recoverableCodexProposalParents(task,calls),...recoverableCodexSettledProposalParents(task,calls)].includes(original.id);
+   const bound=binding.bind(task,calls,request,readonlyRecovery?{readonlyRecovery:true}:undefined);
    // 回放已确认工具允许读取原授权结果；未执行工具只能来自当前模型回合。
    const previous=calls.find(call=>call.operationKey===bound.operationKey);
-   if(previous?.status!=="settled" && calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新授权");
+   if(previous?.status!=="settled" && latestAgenticRootCall(calls)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新授权");
    return {bound,context,previous};
   });
  }
@@ -96,7 +100,8 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   executionScope.signal.throwIfAborted();return tool.execute!(context,input,executionScope);
  }} satisfies AgenticBackendTool]));
  const project=createChatToolStreamProjection(db,deps);
- const tools=createExecutionAgenticToolPorts(db,{...deps,tools:guardedTools});
+ // 新只读调用代表新的观察，即使参数相同且本任务没有写入，外部状态也可能变化。
+ const tools=createExecutionAgenticToolPorts(db,{...deps,tools:guardedTools,reuseReadResults:false});
  async function settle(ref:ExecutionRef,raw:unknown){
   const request=workerPortInputSchemas.settleAgenticTool.parse(raw);
   const state=await leases.withLease(ref,"settlement",async({tx,task})=>{

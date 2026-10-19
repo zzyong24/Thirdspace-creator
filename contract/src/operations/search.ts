@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { searchFacetsResource } from "../resources/search";
 
 // SPEC §13 exposes the composed `GET /search` (served by the GlobalSearchQueryService,

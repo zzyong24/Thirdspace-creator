@@ -1,0 +1,31 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-lifecycle.test.ts:
+(pass) 取消后不发布慢操作的结果；销毁等待原操作到达不可写状态 [1.53ms]
+(pass) 同文档lease交接必须等旧实例关闭；排队取消不取得资源 [0.40ms]
+
+src/embedded/__tests__/native-command.test.ts:
+(pass) 采纳命令跨scene撤销只恢复目标scene，其他scene最新编辑、选区和播放头保留 [1.33ms]
+(pass) 已闭合的after不被原生ripple二次重排独立图层 [0.17ms]
+(pass) 完整beforeTracks包含独立轨；后来文字修改时零Command且原输入保留 [2.81ms]
+(pass) 相同ACK重播一次Command，撤销后重播不重新写入after [2.42ms]
+(pass) 错owner/scene回执均不写时间轴 [0.76ms]
+(pass) 原采纳摘要异步核对期间取消请求，零Command且完整轨道保留 [0.67ms]
+
+src/embedded/__tests__/host-boundary.test.ts:
+(pass) 原生变更直接报告host回调；不建立窗口消息监听 [0.18ms]
+(pass) storage holds one current output and snapshots without runtime binaries/URLs [1.31ms]
+(pass) export returns the exact frozen render document and rejects delayed imported edits [1.34ms]
+(pass) failed export releases editing and pending import replies cannot write during the freeze [0.63ms]
+(pass) load baseline suppresses autosave timestamps and identical snapshots but preserves editorial changes [1.63ms]
+(pass) T1062 同组平台owner key稳定，实际native-context变化同步abort旧范围且未产生试听确认 [0.11ms]
+(pass) T1062 原storage相同内容/时间戳save不假造新的context epoch [0.39ms]
+(pass) T1062 实际context relay连续播放帧不刷epoch；离散seek/state/selection/真实document各一次，重复storage通知无新增 [0.44ms]
+(pass) T1062 context显式pause先触发实际playing失效再返回暂停后epoch；原声playing保护零read且不暗暂停 [0.26ms]
+(pass) T1062 显式pause保留Abort；已暂停再次pause不伪造新epoch，取消不得继续read [0.25ms]
+(pass) T1069 隐藏工作台不接管快捷键事件，重新可见保持同一owner [0.13ms]
+
+ 19 pass
+ 0 fail
+ 116 expect() calls
+Ran 19 tests across 3 files. [680.00ms]

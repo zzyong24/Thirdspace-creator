@@ -1,0 +1,5 @@
+# T1314 后续内容脚本准备边界
+
+Root已授权在原纯验证任务内准备下一候选脚本。当前仅收窄verification读写边界，原总W、原已登记依赖和既有验收原件保持，不新增产品功能或新审核。B仍使用本任务支持租约；重新release/claim留真实记录。现为准备而非新包执行。
+
+仅两个新目录可写；活backend/root/dispatcher/checkpoint不在本窗口R，避免与R的T1323产品写交叉。固定0e1 UI可用git show只读参考，不能当未来实际source绑定。HANDOFF的finalCandidateBinding=null具有拒绝业务执行含义；将来必须由C基于真实新包、实际输入和当前consumer重新冻结执行读集/packet与owned scope，性能先独占，后功能。当前不改原task步骤状态，不运行timeout Gate，不写REPORT或旧index。

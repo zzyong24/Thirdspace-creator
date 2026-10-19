@@ -3,6 +3,8 @@ import {
   createHttpTransport,
   CURRENT_ACCOUNT_KEY,
   CURRENT_ACCOUNT_COOKIE,
+  CURRENT_GROUP_KEY,
+  creatorApiHeaders,
   HttpTransportError,
   isAccountRequiredError,
   fetchCreatorApi,
@@ -66,6 +68,23 @@ describe("createHttpTransport", () => {
     vi.stubGlobal("fetch", fetchMock);
     await createHttpTransport().request(endpoint, {} as never);
     expect(headersOf(fetchMock)["x-account-id"]).toBe("acct-42");
+  });
+
+  it("账号列表和新绑定忽略失效的当前号，按账号读取仍带号", async () => {
+    stubLocalStorage({ [CURRENT_ACCOUNT_KEY]: "acct-stale" });
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) =>
+      new Response(JSON.stringify({ data: [] }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const transport = createHttpTransport();
+    for (const id of ["accounts.list", "platforms.bind.begin", "ingestion.douyin.login"]) {
+      await transport.request({ id } as Endpoint,
+        id === "ingestion.douyin.login" ? { body: { forceNew: true } } as never : {} as never);
+    }
+    for (const call of fetchMock.mock.calls) {
+      expect(((call[1] as RequestInit).headers as Record<string, string>)["x-account-id"]).toBeUndefined();
+    }
+    await transport.request(endpoint, {} as never);
+    expect(((fetchMock.mock.calls.at(-1)![1] as RequestInit).headers as Record<string, string>)["x-account-id"]).toBe("acct-stale");
   });
 
   it("localStorage 无当前号 → 不带 x-account-id header(server 退化全局)", async () => {
@@ -269,5 +288,33 @@ describe("fetchCreatorApi — 直连 API 统一账号上下文", () => {
 
     const [, init] = fetchMock.mock.calls[0]!;
     expect(new Headers(init?.headers).has("x-account-id")).toBe(false);
+  });
+});
+
+
+describe("冻结账号组请求", () => {
+  it("A创建的请求在切B后仍用A，不带B账号，也不回写B cookie", async () => {
+    const store = { [CURRENT_GROUP_KEY]: "group-a", [CURRENT_ACCOUNT_KEY]: "account-a" };
+    stubLocalStorage(store);
+    const doc = { cookie: "creatoros_current_group=group-b; creatoros_current_account=account-b" };
+    vi.stubGlobal("document", doc);
+    const scope = { groupId: "group-a", accountId: null };
+    const transport = createHttpTransport("/api/v1", scope);
+    scope.groupId = "group-mutated";
+    store[CURRENT_GROUP_KEY] = "group-b";
+    store[CURRENT_ACCOUNT_KEY] = "account-b";
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({data: []}), {status:200}));
+    vi.stubGlobal("fetch", fetchMock);
+    await transport.request(endpoint, {} as never);
+    expect(headersOf(fetchMock)["x-group-id"]).toBe("group-a");
+    expect(headersOf(fetchMock)["x-account-id"]).toBeUndefined();
+    expect(doc.cookie).toBe("creatoros_current_group=group-b; creatoros_current_account=account-b");
+    expect(creatorApiHeaders({"x-group-id":"stale", "x-account-id":"stale"}, {})).not.toHaveProperty("x-account-id");
+    expect(creatorApiHeaders({"x-group-id":"stale"}, {})).not.toHaveProperty("x-group-id");
+  });
+  it("私有采集只附带已冻结的真实collector账号", () => {
+    stubLocalStorage({[CURRENT_GROUP_KEY]:"group-b", [CURRENT_ACCOUNT_KEY]:"account-b"});
+    const headers = creatorApiHeaders(undefined, {groupId:"group-a", accountId:"real-collector"});
+    expect(headers).toMatchObject({"x-group-id":"group-a", "x-account-id":"real-collector"});
   });
 });

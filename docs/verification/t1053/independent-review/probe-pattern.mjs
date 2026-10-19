@@ -1,0 +1,18 @@
+import {createRequire} from 'node:module';
+import {build} from '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/node_modules/esbuild/lib/main.js';
+const require=createRequire('/tmp/t1053-native-canvas/source/package.json');
+const {JSDOM}=require('jsdom');
+const dom=new JSDOM('<main></main>',{url:'http://creatoros.test',runScripts:'outside-only'});
+for(const name of ['window','document','Document','HTMLDocument','Element','HTMLElement','ShadowRoot','Node','File','Blob','DOMParser'])globalThis[name]=dom.window[name];
+const compiled=await build({entryPoints:['/tmp/t1053-native-canvas/source/src/native-controller.ts'],format:'cjs',bundle:true,platform:'node',write:false});
+const module={exports:{}};new Function('module','exports',compiled.outputFiles[0].text)(module,module.exports);
+const {NativeController}=module.exports;
+const root=document.createElement('div'),portal=document.createElement('div');document.body.append(root,portal);
+let loaded;const host=new NativeController(root,{owner:{accountId:'a',outputId:'o',sourceVersionId:'v'},theme:{mode:'light',tokens:{},fontFamily:'sans-serif',fontSize:'14px',density:'comfortable'},portalContainer:portal,signal:new AbortController().signal,onChanged(){},onError(){},importMedia:async()=>({mediaId:'m'})});
+const canvas={on(){},off(){},getObjects(){return []}};
+host.attach({fabricCanvas:canvas,getJson:()=>loaded??{objects:[]},loadJSON:(doc,cb)=>{loaded=doc;cb()},getPlugin:()=>({clearAndSaveState(){}})},root);
+const input={objects:[{type:'rect',id:'layer',fill:{source:'https://fixture.invalid/pattern.png',repeat:'repeat'}}]};
+await host.loadDocument(input,false);
+const {fabric}=require('fabric');const requested=[];fabric.util.loadImage=(src,cb)=>{requested.push(src);cb({src})};
+fabric.util.enlivenPatterns([loaded.objects[0].fill],()=>{});
+console.log(JSON.stringify({input,postSanitize:loaded,actualFabricRequested:requested}));host.close();dom.window.close();

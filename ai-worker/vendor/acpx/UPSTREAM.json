@@ -1,0 +1,157 @@
+{
+  "repository": "https://github.com/openclaw/acpx",
+  "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "src/acp/agent-command.ts",
+      "sha256": "a462eee1d52ad25271f793f218acd10a43b1097ee35df027c4657556b50aff91",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/agent-command.ts"
+    },
+    {
+      "path": "src/acp/agent-session-id.ts",
+      "sha256": "718fd63fecf4cfed94f8e27df83e1f6ace1ec5893e1f60332b11696ad1e0b4d3",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/agent-session-id.ts"
+    },
+    {
+      "path": "src/acp/auth-env.ts",
+      "sha256": "d03f290435460c7d84d380e641927022444f940368461a419a07787bff4362af",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/auth-env.ts"
+    },
+    {
+      "path": "src/acp/client-process.ts",
+      "sha256": "3d2fd50ed5f1898d2fbf772dd9b25c8147331f164f76e6ca9b057f8403ab2acb",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client-process.ts"
+    },
+    {
+      "path": "src/acp/client-protocol.ts",
+      "sha256": "4a564fbf10a4a300a35b967fb5f1fe01b1057bf8191731493fb65d08728ce6f3",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client-protocol.ts"
+    },
+    {
+      "path": "src/acp/client.ts",
+      "sha256": "2d41420725b3c745542ffe5e20095dfd58036fcd839ceec7f85ad548ddc1ef3d",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts"
+    },
+    {
+      "path": "src/acp/codex-compat.ts",
+      "sha256": "788fa15f4c27b23aca62453ae7f33f037576b22489b95d0330312b9e7075c8db",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/codex-compat.ts"
+    },
+    {
+      "path": "src/acp/command-probe.ts",
+      "sha256": "ce83d60b10319fbf419dbe514a7ffd443a358239acca09fdf6114b62847125b7",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/command-probe.ts"
+    },
+    {
+      "path": "src/acp/error-shapes.ts",
+      "sha256": "081a42937361010866c8dcb18a52d9c1dcbda2c12d6c0d40a496673d50979b28",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/error-shapes.ts"
+    },
+    {
+      "path": "src/acp/jsonrpc.ts",
+      "sha256": "6a30dc1a0eacbef8966a6c23da934eaa73edfb58a7242f81a43aca2b1881ccd8",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/jsonrpc.ts"
+    },
+    {
+      "path": "src/acp/model-config-state.ts",
+      "sha256": "7db4b9c3d72f14f7d3898067b8c6cadf8599d48813b3e8362343f7f9123f09dd",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/model-config-state.ts"
+    },
+    {
+      "path": "src/acp/model-support.ts",
+      "sha256": "42e7d6af096d68d7c7328d91e7d936e7f83f0e80ecad491eb1aec7f1afbb15bc",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/model-support.ts"
+    },
+    {
+      "path": "src/acp/ndjson-stream.ts",
+      "sha256": "77831d0e218f539565a0f4dd8b5d0c149b660c0bbcd2598a0c91ebcdc31e273b",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/ndjson-stream.ts"
+    },
+    {
+      "path": "src/acp/observed-stream.ts",
+      "sha256": "a42bf823467ab5c896455f9d33249311b5f7be4596274c8a03e232ccf589bbdd",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/observed-stream.ts"
+    },
+    {
+      "path": "src/acp/process-descendants.ts",
+      "sha256": "585e4ca9fdf65294cb9942f0bcac5fb948ab31b347c19f05a7b6a3b140807897",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/process-descendants.ts"
+    },
+    {
+      "path": "src/acp/session-control-errors.ts",
+      "sha256": "f371ff551fc07a6741efadb1682ba35e04104346ceb49fcb305d1e7fd027622f",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/session-control-errors.ts"
+    },
+    {
+      "path": "src/acp/terminal-manager.ts",
+      "sha256": "f07ad56115fc3f43fa056393cbfb3cd337b6794dd44d5726a54db5710f7a3d6b",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/terminal-manager.ts"
+    },
+    {
+      "path": "src/agent-registry.ts",
+      "sha256": "5d71c2edcd97e674a0a751f709f6692d4bceb69c801f9e784ca58439c9990add",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/agent-registry.ts"
+    },
+    {
+      "path": "src/async-control.ts",
+      "sha256": "4fdf0a85ac240e12300d23ee9e7c4abf70c0fa03b5fabd8c63dd2d816594fc7c",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/async-control.ts"
+    },
+    {
+      "path": "src/errors.ts",
+      "sha256": "5ea30a461c469b3f33111e1af7ad037fd5887e95e1a63a769571f414615c3e43",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/errors.ts"
+    },
+    {
+      "path": "src/file-read-window.ts",
+      "sha256": "d6422669bf309eea89c55f6a60d845cde6bc48a3c753b6236d65291db4eea1c3",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/file-read-window.ts"
+    },
+    {
+      "path": "src/filesystem.ts",
+      "sha256": "1fb1fab982019c49e45bedc5126fc38adef0d9d41d283b5979a44e340a21f0c6",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/filesystem.ts"
+    },
+    {
+      "path": "src/permission-prompt.ts",
+      "sha256": "97e1fec8fab55685caa9f8fbd4ae07bb28f4b49e4b551bcb9eae43281ae3c349",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/permission-prompt.ts"
+    },
+    {
+      "path": "src/permissions.ts",
+      "sha256": "7cc4d4cec200b8e43b89a1e22db8caa9721c3d199f91c0ab0dcbd5bcd4f458b2",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/permissions.ts"
+    },
+    {
+      "path": "src/process-identity.ts",
+      "sha256": "09e50670090a49b461c3b34b285f01a3e4b83dc2dfea26f0275ca63e5091d0c1",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/process-identity.ts"
+    },
+    {
+      "path": "src/process-liveness.ts",
+      "sha256": "6f0cd62bdc401afe63cbd288972e17f925c3ca43752b9746ac0f7a085ca9e730",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/process-liveness.ts"
+    },
+    {
+      "path": "src/prompt-content.ts",
+      "sha256": "a02bcf1c3a78f59d28d326c1f60997aff4a8f67ec21637c11040a61fc58185c1",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/prompt-content.ts"
+    },
+    {
+      "path": "src/spawn-command-options.ts",
+      "sha256": "a1e6221922fbdcbef4dd1046dc234cf28d2fff51d1b129db6757e63b6b28b9ca",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/spawn-command-options.ts"
+    },
+    {
+      "path": "src/types.ts",
+      "sha256": "3e0dbd9b07ecbd9f4a64e13f67206a482477729539dbf17aeb1c81002a10a2ec",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/types.ts"
+    },
+    {
+      "path": "src/version.ts",
+      "sha256": "404c86a1eefd6e5c7d19d53f816cf594d3533b416dee7d7dda3645fbfbf1bd35",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/version.ts"
+    }
+  ]
+}

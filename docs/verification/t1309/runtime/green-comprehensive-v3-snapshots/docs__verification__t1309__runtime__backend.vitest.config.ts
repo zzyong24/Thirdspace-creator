@@ -1,0 +1,2 @@
+import {defineConfig} from '../../../../backend/node_modules/vitest/dist/config.js';
+export default defineConfig({root:new URL('../../../../backend',import.meta.url).pathname,cacheDir:new URL('./vite-backend',import.meta.url).pathname,test:{include:['src/modules/ai/daily-topic-completion.service.test.ts','src/integration/daily-topic-completion.test.ts','src/integration/daily-candidate-supply.test.ts','src/modules/scheduling/daily-topic-run.service.test.ts'],retry:0,maxWorkers:1,testTimeout:180000,hookTimeout:180000}});

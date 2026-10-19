@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import {
   id,
   paginationQuery,
@@ -127,6 +127,9 @@ export const projectsOperations = {
     body: z.object({
       title: z.string().min(1),
       contentRole: contentRole.optional(),
+      contentType: z.enum(["video", "article", "image"]).optional(),
+      targetPlatform: platformId.optional(),
+      clientRequestId: z.string().min(8).max(128).optional(),
     }),
     response: contentOutputResource,
     fr: ["FR-OUTPUT-CREATE"],

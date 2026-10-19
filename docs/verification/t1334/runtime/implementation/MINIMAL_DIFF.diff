@@ -1,0 +1,26 @@
+diff --git a/ai-worker/src/execution/codex-agentic-worker-run.test.ts b/ai-worker/src/execution/codex-agentic-worker-run.test.ts
+index 072ea1858..2f36546ed 100644
+--- a/ai-worker/src/execution/codex-agentic-worker-run.test.ts
++++ b/ai-worker/src/execution/codex-agentic-worker-run.test.ts
+@@ -86,7 +86,7 @@ describe('Codex原生Agent持久闭环',()=>{
+  it('T1329普通名字原样保留，多个工具声明顺序与完整schema不变',async()=>{
+   const f=ports();const many={...input,tools:[input.tools[0]!,{...input.tools[0]!,name:'safe_tool-name',description:'完整第二说明',parameters:{type:'object',properties:{nested:{type:'object',properties:{value:{type:'string',enum:['a','b']}}}},required:['nested'],additionalProperties:false}}]};
+   native.start.mockImplementation(async options=>{expect(options.tools).toEqual(many.tools.map(tool=>({name:tool.name==='web.read'?'web_read':tool.name,description:tool.description,inputSchema:tool.parameters})));await options.onThread('thread-1');await options.onTurn('turn-1');return result;});
+-  await runCodexAgenticInWorker(many,spec,new AbortController().signal,f.call);expect(native.session.mock.calls[0]).toHaveLength(2);
++  await runCodexAgenticInWorker(many,spec,new AbortController().signal,f.call);expect(native.session.mock.calls[0]).toHaveLength(5);expect(native.session).toHaveBeenCalledWith(expect.any(String),expect.any(AbortSignal),undefined,false,true);
+   expect(f.call.mock.calls.find(([port])=>port==='reserveAgenticModel')?.[1]).toMatchObject({request:{tools:expect.arrayContaining([expect.objectContaining({name:'web.read'}),expect.objectContaining({name:'safe_tool-name'})])}});
+  });
+ 
+diff --git a/ai-worker/src/execution/codex-agentic-worker-run.ts b/ai-worker/src/execution/codex-agentic-worker-run.ts
+index 6c0c80d72..9d95bc323 100644
+--- a/ai-worker/src/execution/codex-agentic-worker-run.ts
++++ b/ai-worker/src/execution/codex-agentic-worker-run.ts
+@@ -48,7 +48,7 @@ export async function runCodexAgenticInWorker(input:z.infer<typeof agenticWorker
+  let cwd:string|undefined,session:Awaited<ReturnType<typeof createControlledCodexSession>>|undefined,started=recovering,failure:GenerationFailure|undefined;
+  try{
+   cwd=await mkdtemp(join(tmpdir(),'creatoros-codex-agentic-'));
+-  session=await createControlledCodexSession(cwd,signal);
++  session=await createControlledCodexSession(cwd,signal,undefined,false,true);
+   if(!recovering&&!session.authenticated)throw new CodexHostError('CODEX_LOGIN_REQUIRED');
+   if(!recovering){const start=workerStartReceiptSchema.parse(await call('startCall',{callId},signal));if(start.callId!==callId)throw new GenerationFailure('unknown_result','CODEX_AGENT_START_UNKNOWN');started=true;}
+   const result=recovering?await recoverCodexNativeTurn(session.rpc,savedBinding!.data!.threadId,savedBinding!.data!.turnId,signal):await runCodexNativeTurn({rpc:session.rpc,mcpNames:session.mcpNames,cwd,signal,prompt:JSON.stringify({system:input.systemPrompt,goal:input.goal}),model:spec.requestedModel,

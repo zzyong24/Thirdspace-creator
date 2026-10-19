@@ -1,0 +1,27 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview.test.ts:
+(pass) preview-scene public 命令使用候选独立 frozen 实际编码端口，活动工程/撤销/选区/epoch不变 [15.22ms]
+(pass) preview-scene owner拒绝在编码前，保留活动稿件 [1.13ms]
+(pass) preview-scene epoch拒绝在编码前，保留活动稿件 [1.06ms]
+(pass) preview-scene before拒绝在编码前，保留活动稿件 [1.09ms]
+(pass) preview-scene candidate拒绝在编码前，保留活动稿件 [1.26ms]
+(pass) preview-scene scene拒绝在编码前，保留活动稿件 [0.87ms]
+(pass) preview-scene file拒绝在编码前，保留活动稿件 [1.43ms]
+(pass) preview-scene duplicate media拒绝在编码前，保留活动稿件 [1.13ms]
+(pass) preview-scene missing media拒绝在编码前，保留活动稿件 [1.23ms]
+(pass) preview-scene request期间取消，迟到buffer不得返回且URL释放 [2.80ms]
+(pass) preview-scene selection epoch期间取消，迟到buffer不得返回且URL释放 [1.99ms]
+(pass) preview-scene owner lifetime期间取消，迟到buffer不得返回且URL释放 [2.02ms]
+(pass) preview-scene 编码失败不能伪造Blob，临时URL释放且旧seek/read命令仍可达 [2.01ms]
+(pass) 原公共load/context/snapshot/seek/apply-tracks/export仍沿真实controller命令入口成功 [4.94ms]
+(pass) preview-scene保留旧未知只读层、无时间字段扩展和其他scene，不按未知内容猜媒体 [2.77ms]
+(pass) preview-scene public 支持原video及其已分离upload原声音轨，仅改主轨时音轨完整保留 [1.89ms]
+(pass) preview-scene public audio-image继续拒绝不兼容媒体类型 [2.22ms]
+(pass) preview-scene public video-audio继续拒绝不兼容媒体类型 [1.02ms]
+(pass) preview-scene public image-video继续拒绝不兼容媒体类型 [1.07ms]
+
+ 19 pass
+ 0 fail
+ 85 expect() calls
+Ran 19 tests across 1 file. [74.00ms]

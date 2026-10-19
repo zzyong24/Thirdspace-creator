@@ -1,0 +1,11 @@
+--- /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1335/runtime/backend-tests/NATIVE_RED_V1_SOURCE.ts	2026-10-17 15:30:04
++++ /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/execution-codex-agentic-candidate.test.ts	2026-10-17 15:30:04
+@@ -162,7 +162,7 @@
+   const f=await knowledgeFixture('native-evidence-'+mode);await settleKnowledge(f);
+   if(mode==='unsettled-read')await db.update(executionCalls).set({status:'started'}).where(eq(executionCalls.id,f.read.callId));
+   if(mode==='future-read')await db.update(executionCalls).set({sequence:9}).where(eq(executionCalls.id,f.read.callId));
+-  if(mode==='foreign-evidence'){const evidenceId=f.input.evidenceRefs[0];if(!evidenceId)throw Error('原evidenceRef缺失');await db.update(executionEvidence).set({executionTaskId:'foreign-owned-execution'}).where(eq(executionEvidence.id,evidenceId));}
++  if(mode==='foreign-evidence'){const evidenceId=f.input.evidenceRefs[0];if(!evidenceId)throw Error('原evidenceRef缺失');const foreign=await fixture('foreign-owned-execution');expect(foreign.ref.executionTaskId).not.toBe(f.ref.executionTaskId);await db.update(executionEvidence).set({executionTaskId:foreign.ref.executionTaskId}).where(eq(executionEvidence.id,evidenceId));}
+   await expectStageRejectedWithoutWrite(f);
+  });
+ });

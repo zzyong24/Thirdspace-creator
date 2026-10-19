@@ -1,3 +1,9 @@
+import {frozenExecutionEngine} from '@creatoros/contract/execution-worker';
+import {PRIVATE_COLLECTION_SOURCE_KINDS} from '../scheduling';
+import {withWorkspaceParentWrite} from "../../workspace-write";
+import {requireWorkspace,workspaceKey,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
+import {assertFrozenWorkspaceMembership,lockWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {createMediaProbeControl,type MediaProbeControl} from "./ai-media-probe-control";
 import { chatHistoryDigest, createChatTurnSubmissionService, type ChatTurnAssembly, type ChatTurnSnapshot } from "./chat-turn-submission.service";
 import {submitProjectTranscription,type ProjectTranscriptionSubmission} from "./project-transcription-submission";
 import {prepareScriptDraftTaskSubmission,type ScriptDraftSubmissionInput} from "./script-draft-task-submission";
@@ -8,7 +14,8 @@ import { projectExecutionTasks } from "./execution-task-projection";
 import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { RequestContext } from "@creatoros/contract";
-import { and, eq, aiTasks, aiTaskResults, aiMessages, aiConversations, requireAccountId, type Db } from "@creatoros/backend";
+import {aiPublicMessageBody,type AiPublicMessageBody,type AiPublicChatPrepareOptions} from '@creatoros/contract';
+import { and, eq, aiTasks, executionTasks, aiTaskResults, aiMessages, aiConversations, requireAccountId, type Db } from "@creatoros/backend";
 import {
   createAiRepository,
   type AiRepository,
@@ -108,6 +115,7 @@ export interface AiCandidatePort {
         contentRole?: "traffic" | "trust" | "conversion" | null;
         productAnchorId?: string | null;
         predictedScore?: number | null;
+        card?: Record<string,unknown>;
       };
     },
   ): Promise<unknown>;
@@ -129,7 +137,7 @@ export interface AiLearningsPort {
     ctx: RequestContext,
     // [T-118a gate-F3] additive projectId:review.analyze 采纳时带上任务的来源作品,让复盘页能
     // 读「本作品的 candidate learnings」。手录/无项目上下文来源省略 → null(旧行为)。
-    body: { title: string; insight?: string; projectId?: string | null; adoptionKey?: string },
+    body: { title: string; insight?: string; projectId?: string | null; adoptionKey?: string; sourceTaskId?: string },
   ): Promise<unknown>;
 }
 
@@ -231,10 +239,11 @@ export interface AiAssetLibraryPort {
 }
 
 export interface ServiceDeps {
-  prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot)=>Promise<ChatTurnAssembly>;
+  readWorkCandidateSource?:(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;toolCallId:string})=>Promise<import("@creatoros/contract").WorkCandidateSourceResult>;
+  prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot,options:AiPublicChatPrepareOptions,explicit?:{executionEngine?:'pi'|'codex'})=>Promise<ChatTurnAssembly>;
   assertChatProject?: (ctx:RequestContext,projectId:string)=>Promise<unknown>;
   projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
-  scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string):Promise<string>};
+  scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string,outputId?:string):Promise<string>};
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
@@ -254,12 +263,15 @@ export interface ServiceDeps {
   generatedAssets?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void>; cancelTask(ctx: RequestContext, taskId: string, errorMessage?: string): Promise<void> };
   structuredTargets?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   agenticProposals?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
+  /** 仅同tx来源服务可装配；公开service从不设置此字段。 */
+  predictionLockSource?: Record<string, unknown>;
   // T-513 composition seam: skill resolver injects immutable, server-only task state.
   // The public create body never accepts runtimeData.
   resolveTaskRuntimeData?: (
     ctx: RequestContext,
     taskType: string,
     inputData: Readonly<Record<string, unknown>>,
+    trustedRoute?: import("@creatoros/contract/execution-worker").ExecutionRoute,
   ) => Promise<Record<string, unknown>>;
 }
 
@@ -291,6 +303,7 @@ export type ClaimedTaskExecutionResult<T> =
   | { claimed: true; value: T };
 
 export interface AiService {
+  readonly probeControl: MediaProbeControl;
   getExecutionLeaseReference(ctx: RequestContext, taskId: string): { leaseToken: string };
   recordExecutionPlan(ctx: RequestContext, taskId: string, plan: Record<string, unknown>): Promise<void>;
   // T-096:page.scope 传了只列该作用域(入口级历史隔离);不传全量(旧调用不破)。
@@ -309,7 +322,7 @@ export interface AiService {
     conversationId: string,
   ): Promise<AIConversationResource>;
   /** 旧公开对话入口：用户消息与可恢复回复任务同事务保存。 */
-  createMessageWithReplyTask(ctx:RequestContext,conversationId:string,body:{content:string;attachments?:string[]}):Promise<AIMessageResource>;
+  createMessageWithReplyTask(ctx:RequestContext,conversationId:string,body:AiPublicMessageBody):Promise<AIMessageResource>;
   createMessage(
     ctx: RequestContext,
     conversationId: string,
@@ -341,6 +354,7 @@ export interface AiService {
       modelKey?: string | null;
     },
   ): Promise<AIMessageResource>;
+  readWorkCandidateSource(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;toolCallId:string}):Promise<import("@creatoros/contract").WorkCandidateSourceResult>;
   listMessages(
     ctx: RequestContext,
     conversationId: string,
@@ -369,12 +383,13 @@ export interface AiService {
   ): Promise<
     {
       id: string;
-      accountId: string;
+      accountId: string|null;
+      groupId?:string|null;
       taskType: string;
       startedAt: string | null;
     }[]
   >;
-  createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
+  createTask(ctx: RequestContext, body: CreateTaskInput, options?: {scheduledCollectorJobId?:string}): Promise<AITaskResource>;
   createProjectTranscriptionTask(ctx:RequestContext,input:ProjectTranscriptionSubmission):Promise<AITaskResource>;
   createScriptDraftTask(ctx:RequestContext,input:ScriptDraftSubmissionInput):Promise<AITaskResource>;
   prepareScriptDraftTaskCommit(ctx:RequestContext,input:ScriptDraftSubmissionInput):Promise<PreparedAiTaskCommit>;
@@ -436,6 +451,9 @@ export interface AiService {
   // 只清 pending(已采纳 active 绝不误动);越权/不存在 → 静默 no-op(best-effort 语义)。
   discardGeneratedAsset(ctx: RequestContext, assetId: string): Promise<void>;
   getTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  /** 内部恢复诊断：按同用户/真实账号读取原调度执行状态，不授权新的跨组读写。 */
+  readScheduledCollectionOwner(ctx:RequestContext,taskId:string,accountId:string):Promise<{status:string}|null>;
+  getAssetResultProof(ctx:RequestContext,input:{taskId:string;resultId:string}):Promise<{task:AITaskResource;result:AITaskResultResource;executionCallId:string|null}>;
   /** 宿主恢复提交时回读首次输入；保持账号隔离，不暴露运行配置。 */
   findTaskByAttempt(ctx: RequestContext, taskType: string, attemptId: string): Promise<AITaskResource | null>;
   /** T-513 server-only worker seam. Never expose this value through DTO/transport/contract. */
@@ -443,6 +461,11 @@ export interface AiService {
     ctx: RequestContext,
     taskId: string,
   ): Promise<Record<string, unknown>>;
+  /** 仅server-only：同一次真实任务读取的冻结归属与运行快照，不进入DTO/transport。 */
+  getTaskExecutionRuntime(ctx:RequestContext,taskId:string):Promise<{
+    owner:{userId:string;accountId:string|null;groupId:string|null;groupVersion:number|null;membershipVersion:number|null};
+    runtimeData:Record<string,unknown>;
+  }>;
   /**
    * T-735 server-only：保存异步多模态 provider checkpoint。固定键写入，不能覆盖
    * skillSnapshot/modelAuthority，也不通过 transport/DTO 暴露。
@@ -625,6 +648,10 @@ const CANDIDATE_RESULT_TYPES = new Set([
   "calibration_score",
   "candidate",
   "candidate_list",
+  "wechat_article_candidate",
+  "wechat_article_text_candidate",
+  "graphic_post_text_candidate",
+  "publication_text_candidate",
   "execution_manifest",
   "generated_asset",
   "learning_list",
@@ -649,7 +676,8 @@ const TERMINAL_TASK_STATUSES = new Set(["succeeded", "failed", "cancelled"]);
 interface ExecutionLeaseScope {
   serviceId: symbol;
   userId: string;
-  accountId: string;
+  accountId: string|null;
+  groupId?:string|null;
   taskId: string;
   task: AITaskResource;
   leaseToken: string;
@@ -683,17 +711,19 @@ function runnerUsageForLog(value: unknown): Record<string, number> | null {
 
 export function createAiService(deps: ServiceDeps): AiService {
   const serviceId = Symbol("AiServiceExecutionLease");
+  const probeControl = createMediaProbeControl(deps);
 
   // [T-332 S2 · SPEC §4.2/C-07] 每个经 ctx 的入口都经此建 repo:未选号(0 号 / 引导态)
   // → AccountRequiredError(前端译成「绑定抖音号后开始」,禁建会话/任务、禁读历史)。
   // 系统路径(runner / 调度链)不受影响:其 ctx.accountId 由 ai_tasks / scheduled_job 行
   // 派生(ISO-06,恒有号),requireAccountId 恰好放行。
-  function repoFor(ctx: RequestContext, op: string): AiRepository {
+  function repoFor(ctx: RequestContext, op: string, scheduledCollectorJobId?:string): AiRepository {
     return createAiRepository(deps.db, {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      accountId: (requireWorkspace(ctx),ctx.accountId??null),
+      groupId:ctx.groupId, membershipVersion:ctx.membershipVersion, scheduledCollectorJobId,
     });
   }
 
@@ -758,7 +788,8 @@ export function createAiService(deps: ServiceDeps): AiService {
       !scope ||
       scope.serviceId !== serviceId ||
       scope.userId !== ctx.userId ||
-      scope.accountId !== ctx.accountId ||
+      scope.accountId !== (ctx.accountId??null) ||
+      scope.groupId !== ctx.groupId ||
       scope.taskId !== taskId
     ) {
       return null;
@@ -780,12 +811,14 @@ export function createAiService(deps: ServiceDeps): AiService {
   }
 
   return {
+    probeControl,
     async listConversations(ctx, page) {
       const { rows, total } = await repoFor(ctx, "ai.listConversations").listConversations(page);
       return { rows: rows.map(toConversationDto), total };
     },
 
     async createConversation(ctx, body) {
+      await assertWritableWorkspace(deps.db,ctx);
       // C-07:0 号禁建 AI 会话(repoFor 内 requireAccountId 抛 AccountRequiredError)。
       const row = await repoFor(ctx, "ai.createConversation").createConversation({
         title: body.title,
@@ -795,6 +828,10 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toConversationDto(row);
     },
 
+    async readWorkCandidateSource(ctx,input){
+      if(!deps.readWorkCandidateSource)throw new ConflictError('候选来源读取服务尚未装配');
+      return deps.readWorkCandidateSource(ctx,input);
+    },
     async getConversation(ctx, conversationId) {
       // T-096:ownership 门复用 requireConversation(跨用户/未知 id → OwnershipError → 404,
       // 不泄漏存在性)。路由用它做续接的 scope 一致性校验。
@@ -803,6 +840,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async createMessageWithReplyTask(ctx,conversationId,body){
+      await assertWritableWorkspace(deps.db,ctx);
       const repo=repoFor(ctx,"ai.createMessageWithReplyTask");
       const conversation=await repo.requireConversation(conversationId);
       if(!deps.prepareChatReply)throw new ConflictError("聊天执行服务未装配");
@@ -810,31 +848,47 @@ export function createAiService(deps: ServiceDeps): AiService {
         if(!deps.assertChatProject)throw new ConflictError("项目归属验证端口未装配");
         await deps.assertChatProject(ctx,conversation.projectId);
       }
+      const parsed=aiPublicMessageBody.parse(body);
+      const options:AiPublicChatPrepareOptions={executionEngine:parsed.executionEngine??'pi'};
+      if(parsed.chatContext){
+        const target='editorTarget' in parsed.chatContext?parsed.chatContext.editorTarget:parsed.chatContext.creationTarget;
+        if(!conversation.projectId||target.projectId!==conversation.projectId)throw new ConflictError('作品目标必须属于当前会话的项目');
+        if('editorTarget' in parsed.chatContext){
+          options.chatContext={editorTarget:parsed.chatContext.editorTarget};
+        }else{
+          if(ctx.source!=='user')throw new ConflictError('联合创作必须由用户选择已保存脚本与作品');
+          options.chatContext={creationTarget:{...parsed.chatContext.creationTarget,scriptConfirmation:{confirmedBy:'user',source:'public-request'}}};
+        }
+      }
       const history=await repo.listMessages(conversationId);
       const sourceMessage:ChatTurnSnapshot["sourceMessage"]={
-        id:deps.nextId("ai-msg"),conversationId,role:"user",content:body.content,
-        parts:[],attachments:body.attachments??[],modelMetadata:{},inputTokens:null,outputTokens:null,cachedTokens:null,modelKey:null,createdAt:deps.now(),
+        id:deps.nextId("ai-msg"),conversationId,role:"user",content:parsed.content,
+        parts:[],attachments:parsed.attachments??[],modelMetadata:{},inputTokens:null,outputTokens:null,cachedTokens:null,modelKey:null,createdAt:deps.now(),
       };
       const snapshot={conversation,messages:[...history,sourceMessage],sourceMessage};
       // 所有跨服务读取在事务外完成；PGlite 单连接不能在锁内等待全局读取。
-      const assembly=await deps.prepareChatReply(ctx,structuredClone(snapshot));
-      return deps.db.transaction(async tx=>{
-        const accountId=requireAccountId(ctx.accountId,"ai.createMessageWithReplyTask");
-        const [current]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),eq(aiConversations.accountId,accountId))).for("update");
+      const assembly=await deps.prepareChatReply(ctx,structuredClone(snapshot),options,{executionEngine:parsed.executionEngine});
+      return deps.db.transaction(async membershipTx=>{
+        await lockWorkspaceMembership(membershipTx,ctx);
+        return withWorkspaceParentWrite(membershipTx as unknown as Db,ctx,{table:aiConversations,id:aiConversations.id,userId:aiConversations.userId,groupId:aiConversations.groupId,accountId:aiConversations.accountId,lock:"update"},[conversationId],async tx=>{
+        const accountId=(requireWorkspace(ctx),ctx.accountId??null);
+        const [current]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),workspaceFilter(aiConversations,ctx))).for("update");
         if(!current)throw new ConflictError("会话已不可用");
         const txDb=tx as unknown as Db;
-        const currentHistory=await createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId}).listMessages(conversationId);
+        const currentHistory=await createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId,groupId:ctx.groupId}).listMessages(conversationId);
         if(chatHistoryDigest({conversation:current,messages:[...currentHistory,sourceMessage],sourceMessage})!==chatHistoryDigest(snapshot))throw new ConflictError("会话在准备期间改变，请重试");
         await tx.insert(aiMessages).values(sourceMessage);
-        await tx.update(aiConversations).set({updatedAt:sourceMessage.createdAt}).where(eq(aiConversations.id,conversationId));
+        await tx.update(aiConversations).set({updatedAt:sourceMessage.createdAt}).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),workspaceFilter(aiConversations,ctx)));
         const submitted=await createChatTurnSubmissionService(txDb,{
           now:deps.now,nextId:deps.nextId,assemble:async()=>assembly,assertProject:async()=>undefined,
-        }).submit(ctx,{conversationId,sourceMessageId:sourceMessage.id});
+        }).submit(ctx,{conversationId,sourceMessageId:sourceMessage.id,executionEngine:options.executionEngine});
         return toMessageDto({...sourceMessage,modelMetadata:{chatTaskId:submitted.taskId}});
+      });
       });
     },
 
     async createMessage(ctx, conversationId, body) {
+      await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx, "ai.createMessage");
       // 流式对话只保存输入；旧公开入口使用原子消息任务方法。
       const userRow = await repo.createMessage(conversationId, {
@@ -847,6 +901,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async appendAssistantMessage(ctx, conversationId, content, parts, opts) {
+      await assertWritableWorkspace(deps.db,ctx);
       const row = await repoFor(ctx, "ai.appendAssistantMessage").createMessage(conversationId, {
         role: "assistant",
         content,
@@ -872,20 +927,26 @@ export function createAiService(deps: ServiceDeps): AiService {
     prepareScriptDraftTaskCommit:(ctx,input)=>prepareScriptDraftTaskSubmission(deps,ctx,input),
     async createScriptDraftTask(ctx,input){const prepared=await prepareScriptDraftTaskSubmission(deps,ctx,input);return deps.db.transaction(tx=>prepared.commit(tx));},
 
-    async createTask(ctx, body) {
-      const accountId = requireAccountId(ctx.accountId, "ai.createTask");
-      const repo = repoFor(ctx, "ai.createTask");
+    async createTask(ctx, body, options) {
+      const collectorKind=body.taskType.startsWith("scheduled.")?body.taskType.slice(10):"";
+      const scheduledCollectorJobId=options?.scheduledCollectorJobId;
+      const privateAdmission=!!scheduledCollectorJobId&&ctx.source==="ingestion"&&!!ctx.groupId&&!!ctx.accountId&&PRIVATE_COLLECTION_SOURCE_KINDS.has(collectorKind)&&body.inputData?.jobId===scheduledCollectorJobId;
+      if(scheduledCollectorJobId&&!privateAdmission)throw new ConflictError("后台采集授权与真实调度作业不符");
+      await assertWritableWorkspace(deps.db,ctx,{allowArchived:privateAdmission});
+      const accountId = ctx.accountId??null;
+      const workspaceId=workspaceKey(ctx).id;
+      const repo = repoFor(ctx, "ai.createTask", privateAdmission?scheduledCollectorJobId:undefined);
       const inputData = body.inputData ?? {};
-      const reservedFields = ["skillSnapshot", "platformPolicy"].filter((key) =>
+      const reservedFields = ["skillSnapshot", "platformPolicy", "executionRoute", "predictionLockSource"].filter((key) =>
         Object.prototype.hasOwnProperty.call(inputData, key),
       );
-      if (reservedFields.length > 0) {
+      if (reservedFields.length > 0 && !(reservedFields.length===1 && reservedFields[0]==="predictionLockSource" && deps.predictionLockSource && canonicalJson(inputData.predictionLockSource)===canonicalJson(deps.predictionLockSource))) {
         throw new ReservedInputFieldError(reservedFields);
       }
 
       const legacySeed = stableHash([
         ctx.userId,
-        accountId,
+        accountId??"",ctx.groupId??"",
         body.taskType,
         canonicalJson(inputData),
       ]);
@@ -897,12 +958,12 @@ export function createAiService(deps: ServiceDeps): AiService {
 
       const fingerprint = requestFingerprint({
         userId: ctx.userId,
-        accountId,
+        accountId,groupId:ctx.groupId??null,
         taskType: body.taskType,
         inputData,
         retryOfTaskId: body.retryOfTaskId ?? null,
       });
-      const idempotencyKey = `${accountId}:${body.taskType}:${attemptId}`;
+      const idempotencyKey = `${workspaceKey(ctx).kind}:${workspaceId}:${body.taskType}:${attemptId}`;
       const existing = await repo.findTaskByAttempt(body.taskType, attemptId);
       if (existing) {
         if (existing.requestFingerprint !== fingerprint) {
@@ -953,6 +1014,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       // 记录稳定展示值，既不回读本地默认模型冒充渠道模型，也不把 Growth 下发的 model 泄露
       // 到 task DTO / 日志。
       const modelKey =
+        frozenExecutionEngine(runtimeData)==="codex" ? "codex" :
         runtimeData.modelAuthority === "channel-managed"
           ? "channel-managed"
           : (await repo.getModelConfig(body.taskType))?.modelName ??
@@ -1037,10 +1099,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const scope: ExecutionLeaseScope = {
         serviceId,
         userId: ctx.userId,
-        accountId: requireAccountId(
-          ctx.accountId,
-          "ai.runClaimedTaskExecution",
-        ),
+        accountId:ctx.accountId??null,groupId:ctx.groupId,
         taskId,
         task: toTaskDto(claim.task),
         leaseToken,
@@ -1113,7 +1172,10 @@ export function createAiService(deps: ServiceDeps): AiService {
 
     async beginModelCall(ctx, taskId, leaseToken) {
       if (!leaseToken) return false;
-      return repoFor(ctx, "ai.beginModelCall").beginModelCall(taskId, leaseToken);
+      const repo=repoFor(ctx,"ai.beginModelCall");
+      await repo.requireTask(taskId);
+      // repository 在动作写入同一事务内验证归档窄口，旧 runClaimedTaskExecution 也共享此门。
+      return repo.beginModelCall(taskId,leaseToken);
     },
 
     async renewAiTaskExecution(
@@ -1162,9 +1224,14 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async confirmTask(ctx, taskId) {
-      const accountId = requireAccountId(ctx.accountId, "ai.confirmTask");
+      await assertWritableWorkspace(deps.db,ctx);
+      const accountId = (requireWorkspace(ctx),ctx.accountId??null);
       const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
+      await deps.db.transaction(tx=>assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion}));
+      if(task.taskType==="script.draft" && typeof (task.inputData as Record<string,unknown>)?.outputId==="string") {
+        throw new ConflictError("作品级视频脚本请在作品工作台采纳，确保版本并发校验");
+      }
       if ((await repo.listResults(taskId)).some(result => result.resultType === "agentic_proposals")) {
         if (!deps.agenticProposals) throw new ConflictError("自主候选采纳服务尚未接入");
         await deps.agenticProposals.confirmTask(ctx, taskId);
@@ -1204,7 +1271,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       // ai_tasks.account_id 落库,确认 ctx 必须同号。requireTask 的 strict 门已保证跨号
       // 任务 404(结构性挡住);此断言是防御层——若门语义未来变化/数据被旁路写坏,
       // 在物化前显式拒绝,提示切回任务归属号,绝不静默跨号落库。
-      if (task.accountId !== accountId) {
+      if (!ctx.groupId && task.accountId !== accountId) {
         throw new ConflictError(
           `AI task ${taskId} belongs to account ${task.accountId}; switch to that account before confirming`,
         );
@@ -1638,6 +1705,7 @@ export function createAiService(deps: ServiceDeps): AiService {
             insight,
             projectId,
             adoptionKey: `ai-result:${candidate.id}:${key}`,
+            sourceTaskId: task.id,
           });
           await markAdopted(key);
         }
@@ -1812,6 +1880,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async cancelTask(ctx, taskId, errorMessage) {
+      await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx, "ai.cancelTask");
       const scope = leaseScopeFor(ctx, taskId);
       if (scope) {
@@ -1904,7 +1973,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const rows = await repo.listRunningTasksSystem();
       return rows.map((r) => ({
         id: r.id,
-        accountId: r.accountId,
+        accountId: r.accountId,groupId:r.groupId,
         taskType: r.taskType, // [T-389] 透传给 sweep 做类型感知判死
         startedAt: r.startedAt ?? r.requestedAt,
       }));
@@ -1930,32 +1999,46 @@ export function createAiService(deps: ServiceDeps): AiService {
       return (task.runtimeData ?? {}) as Record<string, unknown>;
     },
 
+    async readScheduledCollectionOwner(ctx,taskId,accountId) {
+      const [task]=await deps.db.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),
+        eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,accountId),eq(aiTasks.taskType,'scheduled.self.metrics')));
+      if(!task?.executionTaskId)return null;
+      const [execution]=await deps.db.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),
+        eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,accountId),eq(executionTasks.kind,'ai_task'),
+        eq(executionTasks.ownerType,'ai_task'),eq(executionTasks.ownerId,task.id)));
+      if(!execution||execution.groupId!==task.groupId)return null;
+      const input=(execution.payload as Record<string,unknown>)?.modelInput as Record<string,unknown>|undefined;
+      const original=task.inputData as Record<string,unknown>;
+      // SEMANTIC_BOUNDARY_ALLOW: 精确验证宿主冻结的调度协议和原job绑定，不做语义判断。
+      if(input?.kind!=='scheduled.flywheel'||input.sourceKind!=='self.metrics'||typeof original.jobId!=='string'||
+        input.jobId!==original.jobId||typeof input.jobRunId!=='string'||!input.jobRunId)return null;
+      return {status:execution.status};
+    },
+
+    async getTaskExecutionRuntime(ctx,taskId) {
+      const task=await repoFor(ctx,"ai.getTaskExecutionRuntime").requireTask(taskId);
+      return {owner:{userId:task.userId,accountId:task.accountId??null,groupId:task.groupId??null,
+        groupVersion:task.groupVersion??null,membershipVersion:task.membershipVersion??null},
+        runtimeData:(task.runtimeData??{}) as Record<string,unknown>};
+    },
+
     async putMultimodalProviderCheckpoint(ctx, taskId, checkpoint) {
       const repo = repoFor(ctx, "ai.putMultimodalProviderCheckpoint");
-      const task = await repo.requireTask(taskId);
-      const current = (task.runtimeData ?? {}) as Record<string, unknown>;
-      await repo.updateTaskRuntimeData(taskId, {
-        ...current,
+      await repo.patchTaskRuntimeData(taskId, {
         multimodalProviderCheckpoint: { ...checkpoint },
       });
     },
 
     async putVideoDecisionsCheckpoint(ctx, taskId, checkpoint) {
       const repo = repoFor(ctx, "ai.putVideoDecisionsCheckpoint");
-      const task = await repo.requireTask(taskId);
-      const current = (task.runtimeData ?? {}) as Record<string, unknown>;
-      await repo.updateTaskRuntimeData(taskId, {
-        ...current,
+      await repo.patchTaskRuntimeData(taskId, {
         videoDecisionsCheckpoint: { ...checkpoint },
       });
     },
 
     async putScriptDraftCheckpoint(ctx, taskId, checkpoint) {
       const repo = repoFor(ctx, "ai.putScriptDraftCheckpoint");
-      const task = await repo.requireTask(taskId);
-      const current = (task.runtimeData ?? {}) as Record<string, unknown>;
-      await repo.updateTaskRuntimeData(taskId, {
-        ...current,
+      await repo.patchTaskRuntimeData(taskId, {
         scriptDraftCheckpoint: { ...checkpoint },
       });
     },
@@ -2039,6 +2122,15 @@ export function createAiService(deps: ServiceDeps): AiService {
       if(updated)await logRunnerState(repo, taskId);
     },
 
+    async getAssetResultProof(ctx,input) {
+      const repo=repoFor(ctx,"ai.getAssetResultProof");
+      const task=await repo.requireTask(input.taskId);
+      const rows=await repo.listResults(input.taskId);
+      const row=rows.find(value=>value.id===input.resultId);
+      if(!row || row.aiTaskId!==task.id || row.resultType!=="generated_asset")throw new ConflictError("生成结果不属于原任务");
+      return {task:(await projectExecutionTasks(deps.db,ctx,[task]))[0]!,result:toResultDto(row),executionCallId:row.executionCallId??null};
+    },
+
     async listResults(ctx, taskId) {
       const repo = repoFor(ctx, "ai.listResults");
       await repo.requireTask(taskId); // ownership gate (404 on cross-user)
@@ -2047,7 +2139,22 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async patchResultItems(ctx, taskId, items) {
+      await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx, "ai.patchResultItems");
+      const task=await repo.requireTask(taskId);
+      if(task.taskType==="topic.generate"){
+        const results=await repo.listResults(taskId);
+        const data=results.find(r=>r.resultType==="candidate_list")?.resultData as {originalAudienceItems?:Array<Record<string,unknown>>}|undefined;
+        if(data?.originalAudienceItems){
+          const seen=new Set<string>();
+          for(const value of items){
+            const item=value as Record<string,unknown>,id=String(item.proposalId??"");
+            const original=data.originalAudienceItems.find(o=>o.proposalId===id);
+            if(!original||seen.has(id)||JSON.stringify(item.audienceTask)!==JSON.stringify(original.audienceTask))throw new ConflictError("任务审读与来源证据不能由客户端改写");
+            seen.add(id);
+          }
+        }
+      }
       const row = await repo.patchLatestResultItems(taskId, items);
       return toResultDto(row);
     },
@@ -2063,7 +2170,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       if (!scope) throw new ConflictError("缺少当前任务执行租约");
       assertLease(scope);
       await deps.db.transaction(async tx => {
-        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,requireAccountId(ctx.accountId,"ai.executionPlan")))).for("update");
+        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, taskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx))).for("update");
         if (!task || task.executionTaskId || task.status !== "running" || task.leaseToken !== scope.leaseToken || !task.leaseExpiresAt || task.leaseExpiresAt <= deps.now()) throw loseLease(scope);
         await tx.insert(aiTaskResults).values({id:deps.nextId("ai-result"),aiTaskId:taskId,resultType:"execution_plan",resultData:plan});
         await tx.update(aiTasks).set({status:"succeeded",completedAt:deps.now(),leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,taskId));

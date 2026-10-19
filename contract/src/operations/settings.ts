@@ -1,8 +1,11 @@
+import {logReportingStatus,logReportingConsent,exceptionCapture} from "../observability";
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
+import {modelRoutingPutSchema,modelRoutingResourceSchema} from '../internal/model-routing';
 import {
   onboardingPatchResource,
   onboardingStateResource,
+  groupOnboardingStateResource,
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
@@ -17,7 +20,41 @@ import {
 // authenticated user (not a collection); the remaining operations mutate the
 // user's preferences, per-capability model config, and agent configs.
 const redfoxStatus=z.object({provider:z.literal("redfox"),configured:z.boolean(),updatedAt:z.string().nullable()});
+// A checked suggestion is never an authorization. Only setReportingConsent can
+// create a grant for the exact scope and account named in its strict body.
+// V1 is local-only; remote delivery requires a new version and fresh consent.
+export const reportingConsentVersion = 1;
+const reportingScope = z.enum(["diagnostics", "creator"]);
+const reportingConsentState = z.object({
+  scope: reportingScope,
+  accountId: z.string().nullable(),
+  accountLabel: z.string().nullable(),
+  platform: z.string().nullable(),
+  accountActive: z.boolean(),
+  enabled: z.boolean(),
+  needsReconsent: z.boolean(),
+  consentEpoch: z.number().int().nonnegative(),
+  changedAt: z.string().nullable(),
+  queuedCount: z.number().int().nonnegative(),
+}).strict();
+export const reportingStatusResource = z.object({
+  consentVersion: z.literal(reportingConsentVersion),
+  diagnostics: reportingConsentState,
+  accounts: z.array(reportingConsentState),
+  preparationAvailable: z.boolean(),
+  uploadAvailable: z.boolean(),
+}).strict();
 export const settingsOperations = {
+ getModelRouting:defineEndpoint({id:'settings.modelRouting.get',method:'GET',path:'/settings/model-routing',response:modelRoutingResourceSchema,fr:['FR-1278-2','FR-1278-6']}),
+ putModelRouting:defineEndpoint({id:'settings.modelRouting.put',method:'PUT',path:'/settings/model-routing',body:modelRoutingPutSchema,response:modelRoutingResourceSchema,fr:['FR-1278-2','FR-1278-6']}),
+ getLogReporting:defineEndpoint({id:"settings.logReporting.get",method:"GET",path:"/settings/log-reporting",response:logReportingStatus,fr:["FR-REPORTING-CONSENT"]}),
+ setLogReporting:defineEndpoint({id:"settings.logReporting.set",method:"PUT",path:"/settings/log-reporting",body:logReportingConsent,response:logReportingStatus,fr:["FR-REPORTING-CONSENT"]}),
+ captureObservabilityException:defineEndpoint({id:"observability.exceptions.capture",method:"POST",path:"/local/observability",body:exceptionCapture,response:z.object({captured:z.boolean()}).strict(),fr:["FR-REPORTING-CONSENT"]}),
+ getGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.get",method:"GET",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
+ patchGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.patch",method:"PATCH",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
+ getReportingStatus:defineEndpoint({id:"settings.reporting.get",method:"GET",path:"/settings/reporting",response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),
+ setReportingConsent:defineEndpoint({id:"settings.reporting.consent.set",method:"PUT",path:"/settings/reporting/consent",body:z.object({scope:reportingScope,accountId:z.string().min(1).max(128).optional(),enabled:z.boolean(),consentVersion:z.literal(reportingConsentVersion),consentChangeId:z.string().uuid()}).strict(),response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),
+ clearReportingPending:defineEndpoint({id:"settings.reporting.pending.clear",method:"POST",path:"/settings/reporting/pending/clear",body:z.object({scope:reportingScope,accountId:z.string().min(1).max(128).optional()}).strict(),response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),
  getOnboarding: defineEndpoint({id:"settings.onboarding.get",method:"GET",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  patchOnboarding: defineEndpoint({id:"settings.onboarding.patch",method:"PATCH",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  getRedfox:defineEndpoint({id:"settings.redfox.get",method:"GET",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),
@@ -52,6 +89,8 @@ export const settingsOperations = {
       autosaveEnabled: z.boolean().optional(),
       fileNamingRule: z.string().optional(),
       analyticsEnabled: z.boolean().optional(),
+      assistantExecutionEngine: z.enum(["pi", "codex"]).optional(),
+      initializeAssistantExecutionEngine: z.literal(true).optional(),
     }),
     response: userPreferenceResource,
     fr: ["FR-SETTINGS-PREFERENCES-UPDATE"],

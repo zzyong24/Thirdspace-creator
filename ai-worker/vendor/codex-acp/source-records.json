@@ -1,0 +1,838 @@
+[
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "package.json",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/package.json",
+    "sha256": "4c792564680304b0d4cd604baa41a67a0dd50768b6afe15ca982aefce647962f",
+    "fetched_at": "2026-10-04T08:22:42.973076+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/package.json",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/package.json"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ACPSessionConnection.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ACPSessionConnection.ts",
+    "sha256": "42ccc27bde47ce2f3d1e65e7bb427b923da4c0ece4006369c4a4d633ea49adcb",
+    "fetched_at": "2026-10-04T08:22:41.987782+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ACPSessionConnection.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ACPSessionConnection.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/AcpExtensions.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AcpExtensions.ts",
+    "sha256": "c813a157d1df753a3c4e3c3f1d552f8cfb77a0fe114e3b9d4a2cce53c4beb611",
+    "fetched_at": "2026-10-04T08:22:44.242783+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/AcpExtensions.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/AcpExtensions.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/AcpSessionExtensions.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AcpSessionExtensions.ts",
+    "sha256": "8d1117df0291ec5e4bcedf8f55fd891fc51803ed68891c33ca98f31604e112c9",
+    "fetched_at": "2026-10-04T08:22:43.495286+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/AcpSessionExtensions.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/AcpSessionExtensions.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/AgentFileChangeReport.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentFileChangeReport.ts",
+    "sha256": "c3d73b6a2c27c734547d18b423488d7ffb1c3fe4dc853eb1e86d362075213c03",
+    "fetched_at": "2026-10-04T08:22:43.347832+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/AgentFileChangeReport.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/AgentFileChangeReport.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/AgentMode.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentMode.ts",
+    "sha256": "16870850683665fca2b2df7dc1f4b426c7b9bb746ea0f8672cafa17aebcccf64",
+    "fetched_at": "2026-10-04T08:22:44.558466+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/AgentMode.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/AgentMode.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/AirExtension.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AirExtension.ts",
+    "sha256": "9fb550b515e02dc99e40c054850c28b2b617440c1b11d2cbe72e401f9a8a8f32",
+    "fetched_at": "2026-10-04T08:22:45.908574+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/AirExtension.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/AirExtension.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/AuthStatusMeta.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AuthStatusMeta.ts",
+    "sha256": "b316a29a6db8608ff3cd7740f165297649c3c75a16b9da86a7599817e3e4f0c4",
+    "fetched_at": "2026-10-04T08:22:44.537801+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/AuthStatusMeta.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/AuthStatusMeta.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexAcpClient.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts",
+    "sha256": "5315c083f0d75340574e808d93775081673616deda907ae14c360b66301afabe",
+    "fetched_at": "2026-10-04T08:22:45.622373+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexAcpClient.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexAcpServer.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpServer.ts",
+    "sha256": "e8f907106e3e4f975eb9d8b9085e0b02844767ab21c317e0f2dba134f5e280a0",
+    "fetched_at": "2026-10-04T08:22:46.092915+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpServer.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexAcpServer.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexAppServerClient.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAppServerClient.ts",
+    "sha256": "986691d78d4d4b4a6097d6295a5a74c30fed61168dfe70a7ef9cc34bc7db0835",
+    "fetched_at": "2026-10-04T08:22:46.106075+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexAppServerClient.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexAppServerClient.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexAuthMethod.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAuthMethod.ts",
+    "sha256": "1ccba2fd911f3af01d1e66da7a9b572e22785503439894822dc34e6511a67035",
+    "fetched_at": "2026-10-04T08:22:45.875504+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexAuthMethod.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexAuthMethod.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexCli.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexCli.ts",
+    "sha256": "7eb720413f4207b6e805a8acbfd16d4012efccb94fdf32e6bf984594d1778247",
+    "fetched_at": "2026-10-04T08:22:46.842317+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexCli.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexCli.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexCommands.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexCommands.ts",
+    "sha256": "d2dd6a1a3bdbfae90ba550961556c2ea308bd4d67b11a7775976d34ce0cedab3",
+    "fetched_at": "2026-10-04T08:22:47.088921+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexCommands.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexCommands.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexElicitationHandler.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexElicitationHandler.ts",
+    "sha256": "36cd147a5c0d090e2d3be5ef707efbd92dc2a7222f97549289a31db88ccd8b24",
+    "fetched_at": "2026-10-04T08:22:47.487143+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexElicitationHandler.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexElicitationHandler.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexEventHandler.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexEventHandler.ts",
+    "sha256": "46bd2098d039bcef76a2353d0f5f9786c2b8b62dd88bacb34c3cb478b3f95c02",
+    "fetched_at": "2026-10-04T08:22:47.669025+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexEventHandler.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexEventHandler.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexJsonRpcConnection.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexJsonRpcConnection.ts",
+    "sha256": "47a2aedbe704b49b850cc61ec29c3653b4d7282a703ca71905e085edb2048529",
+    "fetched_at": "2026-10-04T08:22:48.742924+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexJsonRpcConnection.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexJsonRpcConnection.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexPlanStream.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexPlanStream.ts",
+    "sha256": "83d562826b0125410f1cd87558f37f655b8e33925f828389bfa291d4c87e20c6",
+    "fetched_at": "2026-10-04T08:22:48.602659+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexPlanStream.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexPlanStream.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexSessionCompactions.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexSessionCompactions.ts",
+    "sha256": "e0ad5a88be76f0bcf51f33c7cea39bb22e0dffa5772951487eadb55b7b65016d",
+    "fetched_at": "2026-10-04T08:22:48.212649+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexSessionCompactions.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexSessionCompactions.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CodexThreadErrors.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexThreadErrors.ts",
+    "sha256": "ec46e830ad75e970431a8978112fd721fea892c720ec1c6438c4623120a0ebeb",
+    "fetched_at": "2026-10-04T08:22:48.602486+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CodexThreadErrors.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexThreadErrors.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CollaborationModeConfig.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CollaborationModeConfig.ts",
+    "sha256": "3c5236f57f6b198ef92f7ffb7970ddd38e9c3506d0bdc1fca2754575dd3db020",
+    "fetched_at": "2026-10-04T08:22:48.477983+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CollaborationModeConfig.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CollaborationModeConfig.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/CommandUtils.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CommandUtils.ts",
+    "sha256": "ca8042763f4bb36a2cbf9641beb647fed95338a4f4f827ddecaeb143b2628890",
+    "fetched_at": "2026-10-04T08:22:48.742789+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/CommandUtils.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CommandUtils.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ContentChunks.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ContentChunks.ts",
+    "sha256": "cd8b02982bb5db1062543157ebe16c6982dcbf8f60d7f6d0cc78a744e5dfeb31",
+    "fetched_at": "2026-10-04T08:22:50.294450+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ContentChunks.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ContentChunks.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ContextCompactionMeta.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ContextCompactionMeta.ts",
+    "sha256": "997cdbe902896138113c2f901e526c59acab50b2ef18ba966310f4f3b62a4c16",
+    "fetched_at": "2026-10-04T08:22:51.961129+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ContextCompactionMeta.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ContextCompactionMeta.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/DesktopAttachmentHistory.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/DesktopAttachmentHistory.ts",
+    "sha256": "4953e5c2dd8c668414bdf27607e7835a9737030e5bf62a5418808090fa413a12",
+    "fetched_at": "2026-10-04T08:22:51.227214+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/DesktopAttachmentHistory.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/DesktopAttachmentHistory.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ElicitationCapabilities.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ElicitationCapabilities.ts",
+    "sha256": "59451f34ac06203aaf6330f300f1a991f210130477641ec85a6215855f99dbd5",
+    "fetched_at": "2026-10-04T08:22:51.261388+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ElicitationCapabilities.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ElicitationCapabilities.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/FastModeConfig.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/FastModeConfig.ts",
+    "sha256": "e375c8b749c4b2b4fc15de286c107803aacde481f915f323e61d0aa9762fcc19",
+    "fetched_at": "2026-10-04T08:22:53.184178+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/FastModeConfig.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/FastModeConfig.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/GitPatch.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/GitPatch.ts",
+    "sha256": "880fc3d5714976e2969bcbf5df65b41d1a893c62dec35fe23689dd76fd09c0db",
+    "fetched_at": "2026-10-04T08:22:52.292277+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/GitPatch.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/GitPatch.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/GoalExtension.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/GoalExtension.ts",
+    "sha256": "64e883f2dfce45a86eba7672337f6e401aaaf612aa07034c97cd2bed0f6e6bba",
+    "fetched_at": "2026-10-04T08:22:52.619257+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/GoalExtension.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/GoalExtension.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/JBUtils.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/JBUtils.ts",
+    "sha256": "b1662df2b38168f62ae82672834ee03ba9d10a97034136b79d184898a79d4256",
+    "fetched_at": "2026-10-04T08:22:52.775020+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/JBUtils.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/JBUtils.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/Logger.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/Logger.ts",
+    "sha256": "73e8a5441a721082417053639490f7301d1fa4a2a7374854f61a32623d4028be",
+    "fetched_at": "2026-10-04T08:22:52.367417+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/Logger.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/Logger.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/McpServerName.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/McpServerName.ts",
+    "sha256": "fa33f2d5db78b70ab958962d0435dfcbdc3cce536a9d7e9fc34cac9691ddba77",
+    "fetched_at": "2026-10-04T08:22:52.969525+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/McpServerName.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/McpServerName.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ModelConfigOption.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ModelConfigOption.ts",
+    "sha256": "bbc6e350be537be036390950a940c3c17b021e3757061a071f01484220b6862b",
+    "fetched_at": "2026-10-04T08:22:53.175546+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ModelConfigOption.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ModelConfigOption.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ModelId.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ModelId.ts",
+    "sha256": "765c1956546e9bd9af90a85d6b8d2215857a7b1b9d268357399ba983ac46cdb4",
+    "fetched_at": "2026-10-04T08:22:56.820697+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ModelId.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ModelId.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/PathUtils.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/PathUtils.ts",
+    "sha256": "b6102e0bf05c01ef95bbafb0fc4fd8bf503ed4a6045953e4365ca48bae6babc0",
+    "fetched_at": "2026-10-04T08:22:53.716472+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/PathUtils.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/PathUtils.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/RateLimitsMap.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/RateLimitsMap.ts",
+    "sha256": "801e5cb8f689eb3f7fe245bf5a786f4b8ae8de3caf716c0d11beed2036a0b6c4",
+    "fetched_at": "2026-10-04T08:22:53.982154+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/RateLimitsMap.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/RateLimitsMap.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ServiceErrorMessage.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ServiceErrorMessage.ts",
+    "sha256": "4f119e7dde212ac60a0650a64d33811058d5b5662b46005a074c52587b681df4",
+    "fetched_at": "2026-10-04T08:22:55.075059+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ServiceErrorMessage.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ServiceErrorMessage.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/SessionFork.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/SessionFork.ts",
+    "sha256": "afeed77c24eeed5eed28fe090f0c229633cba44fb3a34584f1cce5bbd36023af",
+    "fetched_at": "2026-10-04T08:22:55.782698+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/SessionFork.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/SessionFork.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/SessionNotice.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/SessionNotice.ts",
+    "sha256": "73fd6ab13ba2de730648fc47f8a3c1e6571d2931bd1f13880b131f6618edb414",
+    "fetched_at": "2026-10-04T08:22:56.002974+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/SessionNotice.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/SessionNotice.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/StdUtils.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/StdUtils.ts",
+    "sha256": "f668306225aa91c61c6128f7eb1dba3a7079a9cf9d712fc092a91394f61d9689",
+    "fetched_at": "2026-10-04T08:22:55.022913+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/StdUtils.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/StdUtils.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/SteeringQueue.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/SteeringQueue.ts",
+    "sha256": "c652c8fe2e1e03409000920892b14941849aad5f916082a38df39b1cb261ea9d",
+    "fetched_at": "2026-10-04T08:22:59.235862+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/SteeringQueue.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/SteeringQueue.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ThreadGoalSnapshot.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ThreadGoalSnapshot.ts",
+    "sha256": "37e904a30488596476e7d3cae6bbb963a4339b80ba56181ba91ea2c3e0820c41",
+    "fetched_at": "2026-10-04T08:22:57.910165+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ThreadGoalSnapshot.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ThreadGoalSnapshot.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/TitleGenerator.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/TitleGenerator.ts",
+    "sha256": "cb7df0485999f2042bea16df7c760056db6f724a8b6c156317dae1b6180cbd5d",
+    "fetched_at": "2026-10-04T08:22:57.233510+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/TitleGenerator.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/TitleGenerator.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/TokenCount.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/TokenCount.ts",
+    "sha256": "8d6c56be046f98357288caccebddbb465b496065be5fa0335930ee4d834a5168",
+    "fetched_at": "2026-10-04T08:22:56.939905+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/TokenCount.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/TokenCount.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ToolCallName.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ToolCallName.ts",
+    "sha256": "bcb11f1d63825b89d801bfd85eaa5d8651f32db42b80742b0013fca07cadfdda",
+    "fetched_at": "2026-10-04T08:22:56.873077+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ToolCallName.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ToolCallName.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ToolCallReportingConnection.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ToolCallReportingConnection.ts",
+    "sha256": "b89301728ada78a40fe9323f849c7037ccbb5f5483c261e38519a5e1b936ff3a",
+    "fetched_at": "2026-10-04T08:22:57.717191+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ToolCallReportingConnection.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ToolCallReportingConnection.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/ToolCallReports.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/ToolCallReports.ts",
+    "sha256": "b10ac996d54d1b437f8706fa145f4a7b567e67f45e15e4c00b342b1131873948",
+    "fetched_at": "2026-10-04T08:22:57.961815+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/ToolCallReports.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/ToolCallReports.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/async-tasks/AsyncTaskExtension.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/async-tasks/AsyncTaskExtension.ts",
+    "sha256": "d258dc48ec9d05bb5c54dff8a022611b8ff056a1f952c2b93a54b5af26832f5f",
+    "fetched_at": "2026-10-04T08:28:12.623259+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/async-tasks/AsyncTaskExtension.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/async-tasks/AsyncTaskExtension.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/async-tasks/CodexBackgroundTerminalTasks.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/async-tasks/CodexBackgroundTerminalTasks.ts",
+    "sha256": "907023133fbfa8776c0131d59916b5afc0ba9ba5b0ffe25ac5cc53fd83c9b789",
+    "fetched_at": "2026-10-04T08:28:13.488077+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/async-tasks/CodexBackgroundTerminalTasks.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/async-tasks/CodexBackgroundTerminalTasks.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/index.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/index.ts",
+    "sha256": "c9cddb3bd3bb653079785debde08991d521cf68e8eded15586b05681280d4693",
+    "fetched_at": "2026-10-04T08:28:14.360771+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/index.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/index.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/login.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/login.ts",
+    "sha256": "e4300f14d684f4ed9a250533add627cf6514d35b71e068268bce126988992b66",
+    "fetched_at": "2026-10-04T08:28:13.647305+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/login.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/login.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/CodexApprovalHandler.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/CodexApprovalHandler.ts",
+    "sha256": "dd9273edab156721199a481123a01e90302124b19b155ee545d4e57bac30154a",
+    "fetched_at": "2026-10-04T08:28:13.647465+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/CodexApprovalHandler.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/CodexApprovalHandler.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/command-decision-contract.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/command-decision-contract.ts",
+    "sha256": "16de764ada35019fe22eedc8855b5743471abfc2d28b3bb950f9c99c228a9277",
+    "fetched_at": "2026-10-04T08:28:14.146211+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/command-decision-contract.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/command-decision-contract.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/json.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/json.ts",
+    "sha256": "bfa5b7dfaf165ada7a94e2cbd269a45aba7bfd371ede7607c0e0d23562aa3a78",
+    "fetched_at": "2026-10-04T08:28:16.178140+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/json.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/json.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/lifecycle.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/lifecycle.ts",
+    "sha256": "718a668aa098979a8288996941382aba0616703b6c34e5997836171906eb411c",
+    "fetched_at": "2026-10-04T08:28:14.507533+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/lifecycle.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/lifecycle.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/mcp.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/mcp.ts",
+    "sha256": "e25dcfab043c35585c7d14aad421994ca64353bb5d87524abe70567c4ca072ce",
+    "fetched_at": "2026-10-04T08:28:14.970018+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/mcp.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/mcp.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/metadata.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/metadata.ts",
+    "sha256": "6af8c6eac5603d4c5c98d6ee75cf9c8e6db81db35fb65426f61936306e935d92",
+    "fetched_at": "2026-10-04T08:28:14.690811+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/metadata.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/metadata.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/option-ids.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/option-ids.ts",
+    "sha256": "f201668e94eae4275adc59cd33b0b6c9858bd9a7ea099f1de85ee5ca4e29e5ea",
+    "fetched_at": "2026-10-04T08:28:16.177536+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/option-ids.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/option-ids.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/permissions/options.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/options.ts",
+    "sha256": "f23d018ebd41640b4b95cce49b9c6f16d519344e45180dd65e962d266ec2af8d",
+    "fetched_at": "2026-10-04T08:28:16.858159+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/permissions/options.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/options.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/subagents/AcpSubagents.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/subagents/AcpSubagents.ts",
+    "sha256": "d8918e21042250306de7faf598703f338fb3d81d3d6f9b6b722e46eee148a2fd",
+    "fetched_at": "2026-10-04T08:28:15.653907+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/subagents/AcpSubagents.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/subagents/AcpSubagents.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/subagents/CodexAgentPath.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/subagents/CodexAgentPath.ts",
+    "sha256": "c6b19e124a13ca12a2a6723c74853f376d5f90967e3ddce8a0921137bf46256e",
+    "fetched_at": "2026-10-04T08:28:15.658803+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/subagents/CodexAgentPath.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/subagents/CodexAgentPath.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/subagents/CodexSubagentEventRouter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/subagents/CodexSubagentEventRouter.ts",
+    "sha256": "5119cea86d60f168d318c1de2e5e9efdc5c18c27ead16e5e9b4635c7ba00c8d4",
+    "fetched_at": "2026-10-04T08:28:17.229334+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/subagents/CodexSubagentEventRouter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/subagents/CodexSubagentEventRouter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/subagents/CodexSubagentSubscriptions.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/subagents/CodexSubagentSubscriptions.ts",
+    "sha256": "98beb95ad0d55ff2614c7c8b1f0309767d544e0f47ce3c058acca46934ec37bc",
+    "fetched_at": "2026-10-04T08:28:17.790584+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/subagents/CodexSubagentSubscriptions.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/subagents/CodexSubagentSubscriptions.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/subagents/PendingNotificationBuffer.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/subagents/PendingNotificationBuffer.ts",
+    "sha256": "f9aedc0dc1b2b5cc298320ac641e4b4b177628933ea075278d62611b79597538",
+    "fetched_at": "2026-10-04T08:28:17.126261+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/subagents/PendingNotificationBuffer.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/subagents/PendingNotificationBuffer.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/AcpToolCallRenderer.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/AcpToolCallRenderer.ts",
+    "sha256": "613d7b0b9d11228b7446ea9333791084ec6a6535a611f787a4218ef56527ae89",
+    "fetched_at": "2026-10-04T08:28:19.289123+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/AcpToolCallRenderer.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/AcpToolCallRenderer.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/ClientCapabilities.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/ClientCapabilities.ts",
+    "sha256": "905ec03a3827b2a220d232a84477420ab70db70134cec3e68d122aa290b9963c",
+    "fetched_at": "2026-10-04T08:28:18.499947+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/ClientCapabilities.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/ClientCapabilities.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/CollabAgentReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/CollabAgentReporter.ts",
+    "sha256": "4b2bc038f77e0602f8c0e2327ba25232c9af114a3828f052815742c10e48a5d7",
+    "fetched_at": "2026-10-04T08:28:18.303248+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/CollabAgentReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/CollabAgentReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/CommandReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/CommandReporter.ts",
+    "sha256": "717a823d627bd6ff49539f64d226f1380e79bda7661383978d48b7d35a05a2cd",
+    "fetched_at": "2026-10-04T08:28:20.939692+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/CommandReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/CommandReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/CompactionReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/CompactionReporter.ts",
+    "sha256": "eb8dab859a2c1bbd4a7be758b3a568cf2ec9930ee4d0cffcbf171b80fd122835",
+    "fetched_at": "2026-10-04T08:28:18.871218+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/CompactionReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/CompactionReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/DynamicToolReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/DynamicToolReporter.ts",
+    "sha256": "ea1517e3ae5d9bae5a6eeb2e05f593ad606a46a184d4c3dbfbe829fe4f9374e1",
+    "fetched_at": "2026-10-04T08:28:20.506858+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/DynamicToolReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/DynamicToolReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/ElicitationReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/ElicitationReporter.ts",
+    "sha256": "c619492dc82c0fa14fed4bcdee78eafa3bce49eb4012467f0894002b10e6654a",
+    "fetched_at": "2026-10-04T08:28:20.668736+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/ElicitationReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/ElicitationReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/FileChangeReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/FileChangeReporter.ts",
+    "sha256": "89d25538559a5eb1fe873b4b8de55f20a88cba8a872f5617df182372308af929",
+    "fetched_at": "2026-10-04T08:28:20.076511+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/FileChangeReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/FileChangeReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/FuzzySearchReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/FuzzySearchReporter.ts",
+    "sha256": "ddb99f27aa13a9b4aa5bd63fffbdf788c0839d680634bd87549c75277e781fff",
+    "fetched_at": "2026-10-04T08:28:20.528495+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/FuzzySearchReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/FuzzySearchReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/GuardianReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/GuardianReporter.ts",
+    "sha256": "179ab7e3d475255df2be9a435d3cdf193783f5197d0a618aabc94e45e94bdaa7",
+    "fetched_at": "2026-10-04T08:28:21.306058+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/GuardianReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/GuardianReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/ImageGenerationReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/ImageGenerationReporter.ts",
+    "sha256": "e467e509a675b98cde3f194729edcf3675282a6dc0f35b7d0d9062bfd284dab1",
+    "fetched_at": "2026-10-04T08:28:22.425574+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/ImageGenerationReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/ImageGenerationReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/ImageViewReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/ImageViewReporter.ts",
+    "sha256": "08f282bce3cd4d046362a94e83a14d462e6d2ac0a0e1d94c98d98fb0e17be774",
+    "fetched_at": "2026-10-04T08:28:23.464935+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/ImageViewReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/ImageViewReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/McpStartupReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/McpStartupReporter.ts",
+    "sha256": "f5b2be9608fa979b4e1256f7e9a395ab1264a1503be11dbe59496adfa2a2cd2b",
+    "fetched_at": "2026-10-04T08:28:21.614871+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/McpStartupReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/McpStartupReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/McpToolReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/McpToolReporter.ts",
+    "sha256": "5c7142a3c1d48aa8dd0bc559ef99bd31eb19c7cd249082e484bf472f4d99176f",
+    "fetched_at": "2026-10-04T08:28:22.557000+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/McpToolReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/McpToolReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/PlanReviewReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/PlanReviewReporter.ts",
+    "sha256": "a7d6f9ad48c3f8d64f93430fa2ab7857ace9ead652c0f0c9d3ef6a5a941ebbd2",
+    "fetched_at": "2026-10-04T08:28:23.028206+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/PlanReviewReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/PlanReviewReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/SandboxPermissionReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/SandboxPermissionReporter.ts",
+    "sha256": "2d4346db9f61d2a24a02f081ee9b93de401f20d77ae399528e831e0798a2953b",
+    "fetched_at": "2026-10-04T08:28:23.293033+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/SandboxPermissionReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/SandboxPermissionReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/SubagentActivityReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/SubagentActivityReporter.ts",
+    "sha256": "7e713c6f1e23ccc3c6c21fd34cf730db4beddb0084da187861e69e17f52c5546",
+    "fetched_at": "2026-10-04T08:28:22.950434+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/SubagentActivityReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/SubagentActivityReporter.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/ToolStatus.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/ToolStatus.ts",
+    "sha256": "c4b5ba354b652143a5edb40726d96d7add43b876fa8f0a1b99f01ea744aa7dd1",
+    "fetched_at": "2026-10-04T08:28:23.427997+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/ToolStatus.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/ToolStatus.ts"
+  },
+  {
+    "repo": "agentclientprotocol/codex-acp",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "path": "src/tool-calls/reporters/WebSearchReporter.ts",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/WebSearchReporter.ts",
+    "sha256": "b36746539b7c7dec07d1edabb2ad1b77302786e0545f002f3a860327b9a8465b",
+    "fetched_at": "2026-10-04T08:28:23.479276+00:00",
+    "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/WebSearchReporter.ts",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/WebSearchReporter.ts"
+  },
+  {
+    "path": "LICENSE",
+    "sha256": "72ea310b40e1ee2c4aa61935d22065155c50bfde288b114c9cfd3e1fa34f8049",
+    "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/LICENSE",
+    "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/LICENSE"
+  }
+]

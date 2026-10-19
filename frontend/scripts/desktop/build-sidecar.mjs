@@ -28,7 +28,11 @@ import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerEx
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
+import { runSidecarSigning, sidecarSigningRequired } from "./sign-sidecar.mjs";
+const SIDECAR_CLEAN_POLICY = "t1273-clean-no-obfuscation-v2";
+// 只由专用签名子进程接收；直接release构建也不向Next/tar/编译器继承此路径。
+const sidecarSigningEnv = { CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH: process.env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH };
+import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, statSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync, openSync, readSync, closeSync, renameSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -140,8 +144,48 @@ export function assertNoPackagedBuildArtifacts(runtimeRoot) {
  * 会变成 signed `server.app` 内的新增文件，AMFI 随即用 SIGKILL 拦截 sidecar。 */
 export function portableTarEnv(baseEnv = process.env, targetPlatform = platform) {
   return targetPlatform === "darwin"
-    ? { ...baseEnv, COPYFILE_DISABLE: "1" }
-    : { ...baseEnv };
+    ? { ...nonSigningBuildEnv(baseEnv), COPYFILE_DISABLE: "1" }
+    : nonSigningBuildEnv(baseEnv);
+}
+
+export function nonSigningBuildEnv(baseEnv = process.env) {
+  const env = { ...baseEnv };
+  delete env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH;
+  return env;
+}
+
+// SEMANTIC_BOUNDARY_ALLOW: 构建缓存按字节绑定，防止复用历史混淆/字节码/诱饵；不做内容或创作选择。
+function cleanSidecarDigest(root) {
+  const hash = createHash("sha256");
+  const visit = (dir) => {
+    for (const name of readdirSync(dir).sort()) {
+      const path = join(dir, name);
+      const stat = lstatSync(path);
+      if (stat.isSymbolicLink() || name === "node_modules") continue;
+      if (stat.isDirectory()) visit(path);
+      else if (/\.(?:js|mjs|cjs|jsc)$/.test(name)) {
+        const rel = relative(root, path).replaceAll("\\", "/");
+        hash.update(JSON.stringify(rel) + "\n");
+        hash.update(createHash("sha256").update(readFileSync(path)).digest());
+      }
+    }
+  };
+  visit(root);
+  return hash.digest("hex");
+}
+
+export function writeCleanSidecarPolicy(root, env = process.env) {
+  writeFileSync(join(root, ".creatoros-clean-policy"), JSON.stringify({
+    policy: SIDECAR_CLEAN_POLICY, releaseCsp: sidecarSigningRequired(env), digest: cleanSidecarDigest(root),
+  }));
+}
+
+export function cleanSidecarReusable(root) {
+  try {
+    const marker = JSON.parse(readFileSync(join(root, ".creatoros-clean-policy"), "utf8"));
+    return marker.policy === SIDECAR_CLEAN_POLICY && marker.releaseCsp === true
+      && marker.digest === cleanSidecarDigest(root);
+  } catch { return false; }
 }
 
 function collectPortableMetadataFiles(root) {
@@ -207,7 +251,7 @@ export function assertNoAppleDoubleTarEntries(tarball, tarBin = "tar") {
 }
 
 function verifyMacSidecarSignatureAfterTar(tarball, tarBin) {
-  if (platform !== "darwin") return;
+  if (platform !== "darwin" || process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") return;
   const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-signature-"));
   try {
     // 用 COPYFILE_DISABLE=1 模拟 Rust tar：AppleDouble 不会被“聪明地”还原成 xattr，
@@ -253,7 +297,8 @@ function targetTriple() {
 
 function run(cmd, args, opts = {}) {
   console.log(`[build-sidecar] $ ${cmd} ${args.join(" ")}`);
-  const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, ...opts });
+  const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, ...opts,
+    env: nonSigningBuildEnv(opts.env ?? process.env) });
   if (r.status !== 0) {
     // status=null = 进程被信号杀/未能 spawn(非正常退出码);把 signal/error 一并暴露,
     // 否则「exit null」无从诊断(Windows 首次构建曾因此看不出崩因)。
@@ -454,7 +499,9 @@ function packSidecarTarball() {
   assertNoPackagedBuildArtifacts(SIDECAR_RUNTIME);
   assertCreatorOsCliRuntime(SIDECAR_RUNTIME);
   assertExecutionWorkerRuntime(SIDECAR_RUNTIME);
-  assertWorkerExternalPackages(SIDECAR_RUNTIME);
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") {
+    assertWorkerExternalPackages(SIDECAR_RUNTIME);
+  }
   const prunedPortableMetadata = prunePortableMetadataFiles(SIDECAR_RUNTIME);
   if (prunedPortableMetadata.length > 0) {
     console.log(
@@ -507,6 +554,13 @@ function packSidecarTarball() {
   });
   if (r.status !== 0) throw new Error(`[build-sidecar] tar 打包失败(exit ${r.status})`);
   assertNoAppleDoubleTarEntries(tarball, tarBin);
+  // 最终tar唯一出口覆盖普通构建和skip/reuse；dev不要求签名。
+  if (sidecarSigningRequired()) {
+    const signed = runSidecarSigning({ tarball, env: sidecarSigningEnv });
+    console.log(`[build-sidecar] sidecar签名104B digest=${signed.digest}`);
+  } else {
+    rmSync(`${tarball}.sig`, { force: true });
+  }
   verifyMacSidecarSignatureAfterTar(tarball, tarBin);
   console.log(`[build-sidecar]   → ${tarball}`);
 }
@@ -707,6 +761,10 @@ export function bundlePlaywright() {
   } else {
     bundleChromiumBrowser();
   }
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // 自检①:sidecar node 从 frontend/ 能否解析 @playwright/test。
   const check = spawnSync(
     process.execPath,
@@ -798,10 +856,14 @@ export function bundleRenderDeps() {
     "dist",
     "cli.js",
   );
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] gsap 与 HyperFrames 资源已组装；CLI 启动自检未运行。");
+    return;
+  }
   const cliCheck = spawnSync(process.execPath, [hyperframesCli, "--help"], {
     cwd: join(SIDECAR_RUNTIME, "frontend"),
     encoding: "utf8",
-    timeout: 20_000,
+    timeout: 120_000,
   });
   if (cliCheck.status !== 0) {
     throw new Error(
@@ -1041,11 +1103,21 @@ export function materializeHoistedEntryClosure(
 // 可能只留下 pdf-parse 的 JS，安装包读 PDF 才报模块/原生 binding 缺失。这里从 pnpm 的真实依赖
 // 图补齐整个闭包，并给 sidecar/frontend 建立 Node 可解析的顶层锚点。不是按版本硬编码文件名，
 // 依赖升级后仍从 package.json 真身识别。
-export function findPnpmEntryForPackage(srcPnpm, packageName) {
+export function findPnpmEntryForPackage(srcPnpm, packageName, expectedVersion) {
   if (!existsSync(srcPnpm)) return null;
+  // SEMANTIC_BOUNDARY_ALLOW: Codex 平台 alias 只按锁定来源版本及真实 name/os/cpu 定位原 entry。
+  const codexTarget = /^@openai\/codex-(darwin|linux|win32)-(arm64|x64)$/.exec(packageName);
+  if (codexTarget && (!expectedVersion || !expectedVersion.endsWith(`-${codexTarget[1]}-${codexTarget[2]}`))) return null;
+  const actualName = codexTarget ? "@openai/codex" : packageName;
   for (const entry of readdirSync(srcPnpm)) {
     try {
-      if (resolveEntryPackage(srcPnpm, entry).name === packageName) return entry;
+      const body = resolveEntryPackage(srcPnpm, entry);
+      if (body.name !== actualName) continue;
+      const identity = JSON.parse(readFileSync(join(body.dir, "package.json"), "utf8"));
+      if (expectedVersion && identity.version !== expectedVersion) continue;
+      if (codexTarget && (identity.os?.length !== 1 || identity.os[0] !== codexTarget[1] ||
+          identity.cpu?.length !== 1 || identity.cpu[0] !== codexTarget[2])) continue;
+      return entry;
     } catch {
       // .pnpm 中允许存在 lock/元数据目录；它们不是包 entry，跳过即可。
     }
@@ -1097,8 +1169,23 @@ export function materializeRuntimePackageClosure({
 function bundleWorkerExternalPackages() {
   const srcPnpm = join(REPO, "node_modules", ".pnpm");
   const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
-  for (const packageName of workerExternalPackages) {
-    const entry = findPnpmEntryForPackage(srcPnpm, packageName);
+  const declared = JSON.parse(readFileSync(join(REPO, "ai-worker/package.json"), "utf8")).dependencies;
+  for (const request of workerExternalPackages) {
+    const packageName = request.replace(/\/package\.json$/, "");
+    const codexNative = packageName === `@openai/codex-${platform}-${arch}`;
+    const version = declared["@openai/codex"];
+    const expectedVersion = codexNative && /^\d+\.\d+\.\d+$/.test(version ?? "")
+      ? `${version}-${platform}-${arch}`
+      : /^\d+\.\d+\.\d+$/.test(declared[packageName] ?? "") ? declared[packageName] : undefined;
+    if (codexNative) {
+      const ownerEntry = findPnpmEntryForPackage(srcPnpm, "@openai/codex", version);
+      if (!ownerEntry) throw new Error("[build-sidecar] Codex 根包缺失或版本不匹配");
+      const nativeOwner = JSON.parse(readFileSync(join(resolveEntryPackage(srcPnpm, ownerEntry).dir, "package.json"), "utf8"));
+      if (!expectedVersion || nativeOwner.optionalDependencies?.[packageName] !== `npm:@openai/codex@${expectedVersion}`) {
+        throw new Error(`[build-sidecar] Codex npm alias 声明不匹配：${packageName}`);
+      }
+    }
+    const entry = findPnpmEntryForPackage(srcPnpm, packageName, expectedVersion);
     if (!entry) throw new Error(`[build-sidecar] Worker 必备依赖缺失：${packageName}`);
     const anchor = join(SIDECAR_RUNTIME, "frontend/node_modules", ...packageName.split("/"));
     rmSync(anchor, { recursive: true, force: true });
@@ -1155,6 +1242,10 @@ function bundlePdfAttachmentRuntime() {
     }
   }
 
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // 真 import，而不是只看文件存在：会连带加载平台 .node binding。缺原生包时构建当场失败，
   // 不把“开发环境能读 PDF、安装包不能读”的假绿包交给用户。
   const probe = spawnSync(
@@ -1348,6 +1439,10 @@ function materializeStandaloneWin() {
   );
   // [T-426 补] 再物化 .next/node_modules/ 下 Turbopack external 的 hash symlink（pglite-*/pg-* → 死链）。
   materializeNextExternalsWin();
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // ③ 硬自检:sidecar 内真 require next + react/react-dom(server.js 启动关键路径)。失败即 build 炸,
   //    不出必白屏的包(教训同 playwright/xenova 自检②:只拷不验会假通过,装机才暴露)。
   const check = spawnSync(
@@ -1444,6 +1539,10 @@ function bundlePiEngine() {
     console.log("[build-sidecar]   ✓ photon-node photon_rs_bg.wasm 到位");
   }
 
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟 + CreatorOS 会用的三种 wire API,
   //   断言 createAgentSession / provider factory 都是函数。这条同时验证:
   //   ①闭包完整(任一 entry 漏 → 相对 symlink 悬空 → import 崩)②剪枝安全(cut 的 provider 不在静态图)。
@@ -1594,6 +1693,10 @@ function bundleXenovaTransformers() {
         "(@xenova dist 浏览器资产仍保留)",
     );
   }
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // ③ HARD 自检:worker 同路径真加载(见函数头注释③)。
   const selfCheck = `
     const { createRequire } = require('node:module');
@@ -1663,6 +1766,69 @@ export function copyPortableBundleTree(src, dest) {
     dereference: false,
     verbatimSymlinks: true,
   });
+}
+
+// NomiFun 冻结引擎固定使用此 CfT 版本。构建机下载、校验后随安装包携带；
+// 运行时不能依赖构建机缓存、用户系统 Chrome 或 NomiFun 原仓。
+const WORKBENCH_CHROME_VERSION = "149.0.7827.155";
+const WORKBENCH_CHROME_ARCHIVES = Object.freeze({
+  "aarch64-apple-darwin": {platform:"mac-arm64",sha256:"135b697c49a375025ba6540a9d963d803d0b80b01f497c77ef5fd8296e4f36c7",
+    binary:"chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"},
+  "x86_64-apple-darwin": {platform:"mac-x64",sha256:"070fad79f1c67266cc5a5bb804cc70c712c763fd703ec46cfd97f0396e664eca",
+    binary:"chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"},
+  "x86_64-pc-windows-msvc": {platform:"win64",sha256:"efe7aa100a593ef35916be068d670d5c88c4a15a4e7de308a799b0bfc0cd4ca3",
+    binary:"chrome-win64/chrome.exe"},
+});
+
+function sha256File(file) {
+  const hash=createHash("sha256"),fd=openSync(file,"r"),chunk=Buffer.allocUnsafe(1024*1024);
+  try { for (;;) { const count=readSync(fd,chunk,0,chunk.length,null);if (!count) break;hash.update(chunk.subarray(0,count)); } }
+  finally { closeSync(fd); }
+  return hash.digest("hex");
+}
+
+/** 可用显式归档供离线构建，但仍必须与冻结 SHA-256 完全一致。 */
+export function stageWorkbenchBrowserArchive(triple,archive,destination) {
+  const spec=WORKBENCH_CHROME_ARCHIVES[triple];
+  if (!spec) throw new Error(`[build-sidecar] 无工作台浏览器资产映射:${triple}`);
+  if (sha256File(archive)!==spec.sha256) throw new Error(`[build-sidecar] 工作台 CfT ${spec.platform} SHA-256 不符`);
+  rmSync(destination,{recursive:true,force:true});mkdirSync(destination,{recursive:true});
+  const extracted=spawnSync("tar",["-xf",archive,"-C",destination],{stdio:"pipe",encoding:"utf8"});
+  if (extracted.status!==0) {
+    rmSync(destination,{recursive:true,force:true});
+    throw new Error(`[build-sidecar] 工作台 CfT 解压失败:${extracted.stderr||extracted.error||extracted.status}`);
+  }
+  const binary=join(destination,spec.binary);
+  if (!existsSync(binary)) {
+    rmSync(destination,{recursive:true,force:true});
+    throw new Error(`[build-sidecar] 工作台 CfT 缺少预期可执行文件:${spec.binary}`);
+  }
+  return binary;
+}
+
+export function bundleWorkbenchBrowser(triple=targetTriple()) {
+  const spec=WORKBENCH_CHROME_ARCHIVES[triple];
+  if (!spec) { console.warn(`[build-sidecar] 工作台浏览器尚无 ${triple} 资产，保持该能力不可用`);return false; }
+  const cache=join(homedir(),".cache","creatoros","workbench-cft",WORKBENCH_CHROME_VERSION,`${spec.platform}.zip`);
+  const explicit=process.env.CREATOROS_WORKBENCH_CHROME_ARCHIVE?.trim();
+  const source=explicit||cache;
+  if (!explicit && existsSync(cache) && sha256File(cache)!==spec.sha256) {
+    console.warn(`[build-sidecar] 工作台 CfT ${spec.platform} 缓存校验失败，重新下载`);
+    rmSync(cache,{force:true});
+  }
+  if (!existsSync(source)) {
+    mkdirSync(dirname(cache),{recursive:true});
+    const url=`https://storage.googleapis.com/chrome-for-testing-public/${WORKBENCH_CHROME_VERSION}/${spec.platform}/chrome-${spec.platform}.zip`;
+    const part=`${cache}.part`;rmSync(part,{force:true});
+    const fetched=spawnSync("curl",["-fL","--retry","2","--retry-delay","2","-o",part,url],{stdio:"inherit"});
+    if (fetched.status!==0) {rmSync(part,{force:true});throw new Error(`[build-sidecar] 工作台 CfT 下载失败:${spec.platform}`);}
+    if (sha256File(part)!==spec.sha256) {rmSync(part,{force:true});throw new Error(`[build-sidecar] 工作台 CfT 下载校验失败:${spec.platform}`);}
+    renameSync(part,cache);
+  }
+  const destination=join(SIDECAR_RUNTIME,"layers","browser","workbench-cft",WORKBENCH_CHROME_VERSION);
+  const binary=stageWorkbenchBrowserArchive(triple,source,destination);
+  console.log(`[build-sidecar] ✓ 工作台 CfT ${WORKBENCH_CHROME_VERSION} 已随包放入 ${relative(SIDECAR_RUNTIME,binary)}`);
+  return true;
 }
 
 function bundleChromiumBrowser() {
@@ -2120,10 +2286,10 @@ function bundleMediaTools(triple) {
     rmSync(dest, { force: true });
     copyFileSync(src, dest);
     if (!isWinTarget) chmodSync(dest, 0o755);
-    if (!existsSync(dest)) {
-      throw new Error(`[build-sidecar] 自检失败[T-485]:${tool} 实拷后不存在(${dest})`);
+    if (!existsSync(dest) || !statSync(dest).isFile() || statSync(dest).size === 0) {
+      throw new Error(`[build-sidecar] 自检失败[T-485]:${tool} 实拷后不是非空普通文件(${dest})`);
     }
-    if (triple === hostTriple) {
+    if (triple === hostTriple && process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") {
       const r = spawnSync(dest, ["-version"], { encoding: "utf8" });
       if (r.status !== 0 || !`${r.stdout}`.startsWith(`${tool} version`)) {
         throw new Error(
@@ -2135,13 +2301,14 @@ function bundleMediaTools(triple) {
       );
     } else {
       console.log(
-        `[build-sidecar]   ✓ [T-485] 静态 ${tool} 已实拷(交叉 target ${triple},-version 冒烟留待目标机验证)`,
+        `[build-sidecar]   [T-485] 静态 ${tool} 已实拷(target ${triple},-version 冒烟未运行，待独立验证)`,
       );
     }
   }
 }
 
 function main() {
+  delete process.env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH;
   if (process.env.CREATOROS_SKIP_PI === "1") {
     throw new Error("[build-sidecar] CREATOROS_SKIP_PI 不再允许：独立 Agent Worker 必须随包提供 Pi");
   }
@@ -2195,7 +2362,11 @@ function main() {
   //   build-sidecar + obfuscate,故此阶段注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让本脚本短路
   //   (保住已混淆的 sidecar)。前提:sidecar 已存在(package.mjs 保证步1先建)。
   //   直接 `pnpm desktop:build` / `desktop:dev`(不经 package.mjs)不设此 env → 照常重建。
-  if (process.env.CREATOROS_SKIP_SIDECAR_REBUILD === "1") {
+  // 发布重活前校验key；正式skip只能复用本版本clean来源。
+  if (sidecarSigningRequired() && process.env.CREATOROS_SKIP_TARBALL !== "1") runSidecarSigning({ preflight: true, env: sidecarSigningEnv });
+  const cleanPolicyPath = join(SIDECAR_RUNTIME, ".creatoros-clean-policy");
+  const cleanReusable = !sidecarSigningRequired() || cleanSidecarReusable(SIDECAR_RUNTIME);
+  if (process.env.CREATOROS_SKIP_SIDECAR_REBUILD === "1" && cleanReusable) {
     const existing = join(SIDECAR_RUNTIME, "frontend", "server.js");
     if (existsSync(existing)) {
       assertBakedVerdictPublicKey();
@@ -2229,7 +2400,9 @@ function main() {
     "courses",
     "xuehui-ip-practical-course",
   );
-  run(process.execPath, [builtInCourseVerifier, "--asset-root", builtInCourseSource]);
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") {
+    run(process.execPath, [builtInCourseVerifier, "--asset-root", builtInCourseSource]);
+  }
 
   // 1) next standalone build(桌面模式)。
   //    直接 spawn node + next 的 JS 入口(同 package.mjs 跑 tauri.js 的惯例),不走
@@ -2238,7 +2411,8 @@ function main() {
   console.log("[build-sidecar] 1/3 next standalone build (CREATOROS_DESKTOP=1)…");
   const nextBin = join(FRONTEND, "node_modules", "next", "dist", "bin", "next");
   run(process.execPath, [nextBin, "build"], {
-    env: { ...process.env, CREATOROS_DESKTOP: "1" },
+    env: { ...process.env, CREATOROS_DESKTOP: "1",
+      ...(sidecarSigningRequired() ? { CREATOROS_SIDECAR_SIGNING_REQUIRED: "1" } : {}) },
   });
   if (!existsSync(join(STANDALONE_SRC, "frontend", "server.js"))) {
     throw new Error(
@@ -2286,7 +2460,7 @@ function main() {
   }
   // [T-663] 再校验一次最终 sidecar 中实际随包的 public 资产，防止复制/裁剪阶段
   // 截断但仍生成安装包。
-  run(process.execPath, [
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") run(process.execPath, [
     builtInCourseVerifier,
     "--asset-root",
     join(
@@ -2398,6 +2572,23 @@ function main() {
     bundlePlaywright();
   }
 
+  // 独立于旧 Playwright 浏览器；旧采集不能因新浏览器下载失败而失去打包能力。
+  if (process.env.CREATOROS_SKIP_WORKBENCH_BROWSER === "1") {
+    if (process.env.CREATOROS_REQUIRE_WORKBENCH_BROWSER === "1")
+      throw new Error("[build-sidecar] 工作台浏览器不能同时要求随包并跳过");
+    console.log("[build-sidecar] 工作台浏览器已显式跳过；安装版不声明该能力");
+  } else {
+    try {
+      const bundled=bundleWorkbenchBrowser(targetTriple());
+      if (!bundled && process.env.CREATOROS_REQUIRE_WORKBENCH_BROWSER === "1")
+        throw new Error("[build-sidecar] 当前平台没有工作台浏览器资产");
+    }
+    catch (error) {
+      if (process.env.CREATOROS_REQUIRE_WORKBENCH_BROWSER === "1") throw error;
+      console.warn(`[build-sidecar] 工作台浏览器未能随包安装，仅此能力不可用:${error.message}`);
+    }
+  }
+
   // [T-289] 实拷 gsap/hyperframes 完整包(补 Next tracing 漏的 dist/cli.js/gsap.min.js)——
   //   视频渲染「生成合成模板」步的依赖,不补齐必崩(见 bundleRenderDeps 注释)。放打 tarball 前。
   // [T-452] CREATOROS_SKIP_RENDER=1 跳,省 30-60 秒;视频渲染功能会失效。
@@ -2464,6 +2655,8 @@ function main() {
     identity: process.env.APPLE_SIGNING_IDENTITY,
     jitEntitlementsPath: join(SRC_TAURI, "runtime-jit-entitlements.plist"),
   });
+
+  writeCleanSidecarPolicy(SIDECAR_RUNTIME);
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。

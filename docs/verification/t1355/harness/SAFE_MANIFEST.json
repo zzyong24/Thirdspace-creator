@@ -1,0 +1,121 @@
+{
+  "schema": "t1355-binding-harness-freeze/v1",
+  "frozenAt": "2026-10-18T17:27:02.558599+00:00",
+  "helperSha256": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+  "sources": [
+    {
+      "path": "docs/verification/t1355/harness/binding-fixture-server.mts",
+      "sha256": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "sha256": "6f123299ea111a17db56a690c5b9e53f3cb3736bfcc73b9e8ef5ecf9a65e5a36"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "sha256": "eb22acc8cfc9115f5a20c0f2b104eb91d7e7100ddd83cd63d23cd48c4dfe2d52"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "sha256": "f010077fdc6d08790417f53a64333aeb0f1e5da4f25d342696beebca23db040f"
+    },
+    {
+      "path": "backend/src/modules/platform-account/local-platform-binding-stage.ts",
+      "sha256": "f5cc1e3f9c994aabfe07627c49d15fdfee4f82ee16ec77aefb16a091a2ab9c49"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding-commit.ts",
+      "sha256": "b164ec033d3de850e8666405b9f4b9868292729c6f4f5a43adf889e82fb8cbcd"
+    }
+  ],
+  "selftests": [
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt01.json",
+      "sha256": "ce6954baf76034d1abecd3af6d88ca7e7413c69e76f3d388dbb7f3e01cfa48a3",
+      "passed": false,
+      "exitCode": 1,
+      "pgPid": null,
+      "pgPidCurrentlyExists": false
+    },
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt02.json",
+      "sha256": "0d69e9a0922e453b62ca92a0c73cfc11eb426b9c18544059a8c9b621ced1e23a",
+      "passed": false,
+      "exitCode": 1,
+      "pgPid": null,
+      "pgPidCurrentlyExists": false
+    },
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt03.json",
+      "sha256": "68a77b4fc088814e5fd49d96b09c2503c744f8a24557e5e065d7cf5caf78694d",
+      "passed": false,
+      "exitCode": 1,
+      "pgPid": 76218,
+      "pgPidCurrentlyExists": false
+    },
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt04.json",
+      "sha256": "cc7563835e91a89ce3b1aad18bb900ea6a5494e4c836a366e5d9b5b5a7599632",
+      "passed": false,
+      "exitCode": 0,
+      "pgPid": 76617,
+      "pgPidCurrentlyExists": false
+    },
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt05.json",
+      "sha256": "a4ba5057ad4cf78e6b27032bb1e5c093ceabdd251f3a521e42d2ca696d475371",
+      "passed": true,
+      "exitCode": 0,
+      "pgPid": 76916,
+      "pgPidCurrentlyExists": false
+    },
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt06.json",
+      "sha256": "4ea3339d1bb018052e5e5b62cc8e5212798e250f9e5d5ce7dca1a16e5a7bdf1c",
+      "passed": true,
+      "exitCode": 0,
+      "pgPid": 77463,
+      "pgPidCurrentlyExists": false
+    },
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt07.json",
+      "sha256": "75638aca941f1740e68ec31fea24782d754c08987d16e2c25d5890d19829a0ad",
+      "passed": true,
+      "exitCode": 0,
+      "pgPid": 78830,
+      "pgPidCurrentlyExists": false
+    },
+    {
+      "path": "docs/verification/t1355/harness/selftest-attempt08.json",
+      "sha256": "b4b0baa27783c19c1d847b3376c9048b3b48cfc7d017476825c2c554e39e916e",
+      "passed": true,
+      "exitCode": 0,
+      "pgPid": 80074,
+      "pgPidCurrentlyExists": false
+    }
+  ],
+  "publicChecks": [
+    "真实PG与ensureLocalUser",
+    "空当前组/独立组100账号",
+    "真实新账号101+分页",
+    "受控失败保原run",
+    "local失败/取消后释放profile且无phantom门",
+    "第二组run按真实回执冻结组读取",
+    "实际DB health",
+    "公众号真实DOM/source/witness/navigation-context-loss到同ID持久绑定",
+    "正常SIGTERM/binding.stop/pool.end/精确PG正常stop"
+  ],
+  "remaining": [
+    "真实Next同PG与SSR/UI最终旅程由control执行",
+    "双视口/200%/视觉评审",
+    "helper只证明受控平台宿主，不是真人登录"
+  ],
+  "safety": {
+    "userRuntimeTouched": false,
+    "productionEdited": false,
+    "frontendTestsEdited": false,
+    "workflowEdited": false,
+    "privateRootsRetained": true,
+    "networkClaim": "仅官方合成BrowserContext route请求观测；其它未装配adapter属配置事实"
+  }
+}

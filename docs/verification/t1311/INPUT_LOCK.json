@@ -1,0 +1,173 @@
+{
+  "schema": "task-input-lock/v1",
+  "task": "T-1311",
+  "frozenAt": "2026-10-16T07:39:25.410240+00:00",
+  "baseHead": "e5cc16f8d1e7258cd0c0554f351952bb4ff3cdbe",
+  "inputs": [
+    {
+      "path": "backend/src/modules/review/execution-review-report.service.ts",
+      "bytes": 6354,
+      "sha256": "a29e343602de220e0602d0ef1f26047426b90b58518918936172af1f31935a5b"
+    },
+    {
+      "path": "backend/src/modules/review/execution-work-review.service.ts",
+      "bytes": 6439,
+      "sha256": "5c71d028774ba1931930b76efaf4fe0c107177734d063612f1650930eb4a55f5"
+    },
+    {
+      "path": "backend/src/modules/review/execution-review-report.service.test.ts",
+      "bytes": 11476,
+      "sha256": "5fe15a105d3e12f64d4a02f2af55739e2e6b2b7277c3957d9451d75e0aefe126"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "bytes": 8130,
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "bytes": 15949,
+      "sha256": "3852abe7044a1cb2532974b1cbd4cc9c3568465e14ee4e21e196e84c6c91dfcc"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-task-adapter.ts",
+      "bytes": 1943,
+      "sha256": "f05f3eab6686639e039011b804df7bd50105ae512f32323b1ffd57f2ba74eff0"
+    },
+    {
+      "path": "backend/src/modules/review/review-gate.service.ts",
+      "bytes": 8079,
+      "sha256": "204a3d910d8b216666ce4c47a2cb9334fb55eacb153472b68b7c7716918fbd1d"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.ts",
+      "bytes": 3471,
+      "sha256": "ec3c0c7600b07886b5eafbc14b9867b2cca2cbe6b01d7bec0f19658f3799c8d1"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.test.ts",
+      "bytes": 23857,
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-review-task-host.ts",
+      "bytes": 4969,
+      "sha256": "e242740b592649b00103cfb9beaebf8d733fc382c9c9d8ff5a42184a786de34b"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "bytes": 6436,
+      "sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/script-review-preparation.integration.test.ts",
+      "bytes": 3755,
+      "sha256": "3f535ca4ba9079ebcf569fc8e3b1ef7a28a0f4fc258b7efd846d8f6c73b4d09c"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "bytes": 3434,
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "bytes": 56096,
+      "sha256": "91f1ac7402e6567b8c254769b2c3202e4ffe4e6d04f7c6e1ff2b7f350ceb08db"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "bytes": 18559,
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-group.service.ts",
+      "bytes": 13283,
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "bytes": 7098,
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "bytes": 3061,
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "bytes": 3143,
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/src/schema/ai.ts",
+      "bytes": 13804,
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "backend/src/schema/work-reviews.ts",
+      "bytes": 3138,
+      "sha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "bytes": 47332,
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "bytes": 5338,
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "bytes": 478496,
+      "sha256": "ae54433150e2bc86151d2742481e9c8d4b46a9ce164e54917b80171a93c2b40f"
+    },
+    {
+      "path": "frontend/src/server/chat-task-submission.integration.test.ts",
+      "bytes": 23882,
+      "sha256": "2cfceb5b64791020cf7353163087718e037de3b95d44769a19604c0828ea6b04"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "bytes": 285,
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "bytes": 1628,
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "docs/verification/t1311/WORKER_BINDING.json",
+      "bytes": 960,
+      "sha256": "90e21b8b277976d9aa7e11d45fb6c0530dda3e1a2c5f4ed92f3c01844ee42064"
+    },
+    {
+      "path": "docs/verification/t1307/acceptance/candidate/candidate-binding.json",
+      "bytes": 3296,
+      "sha256": "d82fcbe6bbccae7f99197a0ce20deb3bd2520c459dded17e6f322f13dcf859e5"
+    },
+    {
+      "path": "docs/verification/t1311/DEC.md",
+      "bytes": 524,
+      "sha256": "25f10b15ae53570505439a20d6be7e18bac4b72b6d3376ea4fb3b434a9b2c66d"
+    },
+    {
+      "path": "docs/features/t1311-group-review-completion.md",
+      "bytes": 4702,
+      "sha256": "b18a90231677832beeab9064e92e0af650948e125e923c90811c84a0585bf042"
+    },
+    {
+      "path": "docs/verification/t1311/MODULE_SCOPE.json",
+      "bytes": 7829,
+      "sha256": "8826fb2587c45c9ca52ee985e6dbb49c547044cbcab905a1d7f0a454e74a25b0"
+    }
+  ],
+  "allowedNewTests": [
+    "backend/src/modules/review/execution-work-review.service.test.ts",
+    "frontend/src/server/__module_integration__/group-review-completion.persistence-client.test.ts"
+  ],
+  "phase": "独立initial前冻结；未执行测试/产品"
+}

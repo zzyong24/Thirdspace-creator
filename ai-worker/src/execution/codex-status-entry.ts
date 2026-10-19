@@ -1,0 +1,45 @@
+import {mkdtemp,rm} from 'node:fs/promises';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {localCodexStatusRequestSchema,localCodexStatusSchema} from '@creatoros/contract/execution-worker';
+import {createControlledCodexSession,resolveBundledCodex,CODEX_RUNTIME_VERSION,CodexHostError} from './codex-app-server';
+if(!process.send)throw Error('LOCAL_CODEX_STATUS_PRIVATE_IPC_REQUIRED');
+const active=new Map<string,AbortController>();
+process.on('message',async raw=>{
+ const parsed=localCodexStatusRequestSchema.safeParse(raw);if(!parsed.success)return;
+ const request=parsed.data;
+ if(request.type==='cancel'){active.get(request.requestId)?.abort();return;}
+ if(active.size>=2||active.has(request.requestId))return;
+ const controller=new AbortController();active.set(request.requestId,controller);
+ const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(Math.max(1,request.deadlineAt-Date.now()))]);
+ let reply:unknown;
+ let installed=false,owned:Awaited<ReturnType<typeof createControlledCodexSession>>|undefined,cwd:string|undefined;
+ try{
+  await resolveBundledCodex();installed=true;signal.throwIfAborted();
+  cwd=await mkdtemp(join(tmpdir(),'creatoros-codex-status-'));
+  owned=await createControlledCodexSession(cwd,signal);
+  let defaultModelId:string|undefined,availableModels:Array<{id:string;inputModalities:string[]}>|undefined;
+  const capabilities={imageEditing:owned.authenticated?'unverified' as const:'unavailable' as const,text:owned.authenticated,imageUnderstanding:false,imageGeneration:false,...(!owned.authenticated?{imageErrorCode:'CODEX_LOGIN_REQUIRED'}:{})};
+  if(owned.authenticated){
+    const models=await owned.rpc.request('model/list',{includeHidden:false}) as {data?:Array<{id?:string;isDefault?:boolean;inputModalities?:string[]}>};
+    availableModels=models.data?.filter(model=>typeof model.id==='string'&&model.id.length>0).map(model=>({id:model.id!,inputModalities:(model.inputModalities??[]).filter((value):value is string=>typeof value==='string')}));
+    const defaults=models.data?.filter(model=>model.isDefault&&typeof model.id==='string'&&model.id.length>0)??[];
+    const defaultModel=defaults.length===1?defaults[0]:undefined;
+    defaultModelId=defaultModel?.id;
+    capabilities.imageUnderstanding=!!defaultModel?.inputModalities?.includes('image');
+    let images:Awaited<ReturnType<typeof createControlledCodexSession>>|undefined;
+    try{images=await createControlledCodexSession(cwd,signal,undefined,true);capabilities.imageGeneration=images.authenticated;}
+    catch(error){capabilities.imageErrorCode=error instanceof CodexHostError?error.code:'CODEX_IMAGE_CAPABILITY_UNAVAILABLE';}
+    finally{await images?.rpc.close();}
+  }
+  reply={type:'result',requestId:request.requestId,value:localCodexStatusSchema.parse({engine:'codex',installed,available:owned.authenticated,version:CODEX_RUNTIME_VERSION,loginStatus:owned.loginStatus,...(defaultModelId?{defaultModelId}:{}),...(availableModels?{availableModels}:{}),capabilities,...(!owned.authenticated?{errorCode:'CODEX_LOGIN_REQUIRED'}:{})})};
+ }catch(error){
+  reply={type:'result',requestId:request.requestId,value:{engine:'codex',installed,available:false,version:installed?CODEX_RUNTIME_VERSION:null,loginStatus:'unchecked',errorCode:error instanceof CodexHostError?error.code:signal.aborted?'CODEX_STATUS_CANCELLED':'CODEX_STATUS_UNAVAILABLE'}};
+ }finally{
+  // The parent pumps the next FIFO request on result; retain the slot until owned cleanup completes.
+  await owned?.rpc.close();if(cwd)await rm(cwd,{recursive:true,force:true});active.delete(request.requestId);
+ }
+ if(process.connected&&reply)process.send!(reply as never);
+});
+process.on('disconnect',()=>{for(const controller of active.values())controller.abort();setTimeout(()=>process.exit(0),1200).unref();});
+process.send!({type:'ready'});

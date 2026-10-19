@@ -1,0 +1,200 @@
+{
+  "schema": "t1374-static-gates/v1",
+  "stages": [
+    {
+      "stage": "frontend-types",
+      "exit": {
+        "childExitCode": 0,
+        "durationSeconds": 45.310175791964866,
+        "timedOutByOuter": false
+      },
+      "sourceFreeze": {
+        "head": "10238309c46f557b0c92d9d008cb466f7974c594",
+        "command": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "tsc",
+          "--noEmit",
+          "--pretty",
+          "false",
+          "--incremental",
+          "false"
+        ],
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "dirtyDiffSha256": "840966067bcb850d9befec5843b128567b66d2752da64cf58579eab2cbf3b696"
+      },
+      "postflight": {
+        "sourceHashesUnchanged": true,
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logBytes": 0
+      },
+      "rawLogPrivatePath": "/Users/zyongzhu/.codex/worktrees/t1370-t1371-ui-data/Thirdspace-creator/docs/verification/t1374/static-attempt01/frontend-types/RAW_PRIVATE.log",
+      "baselineViolations": null,
+      "newViolations": null
+    },
+    {
+      "stage": "backend-types",
+      "exit": {
+        "childExitCode": 0,
+        "durationSeconds": 38.280413583968766,
+        "timedOutByOuter": false
+      },
+      "sourceFreeze": {
+        "head": "10238309c46f557b0c92d9d008cb466f7974c594",
+        "command": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "tsc",
+          "--noEmit",
+          "--pretty",
+          "false",
+          "--incremental",
+          "false"
+        ],
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "dirtyDiffSha256": "840966067bcb850d9befec5843b128567b66d2752da64cf58579eab2cbf3b696"
+      },
+      "postflight": {
+        "sourceHashesUnchanged": true,
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logBytes": 0
+      },
+      "rawLogPrivatePath": "/Users/zyongzhu/.codex/worktrees/t1370-t1371-ui-data/Thirdspace-creator/docs/verification/t1374/static-attempt01/backend-types/RAW_PRIVATE.log",
+      "baselineViolations": null,
+      "newViolations": null
+    },
+    {
+      "stage": "boundary",
+      "exit": {
+        "childExitCode": 0,
+        "durationSeconds": 0.240426792006474,
+        "timedOutByOuter": false
+      },
+      "sourceFreeze": {
+        "head": "10238309c46f557b0c92d9d008cb466f7974c594",
+        "command": [
+          "node",
+          "orchestrator/process/boundary-scan.mjs"
+        ],
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "dirtyDiffSha256": "840966067bcb850d9befec5843b128567b66d2752da64cf58579eab2cbf3b696"
+      },
+      "postflight": {
+        "sourceHashesUnchanged": true,
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+        "logBytes": 779
+      },
+      "rawLogPrivatePath": "/Users/zyongzhu/.codex/worktrees/t1370-t1371-ui-data/Thirdspace-creator/docs/verification/t1374/static-attempt01/boundary/RAW_PRIVATE.log",
+      "baselineViolations": 5,
+      "newViolations": 0
+    },
+    {
+      "stage": "diff-check",
+      "exit": {
+        "childExitCode": 0,
+        "durationSeconds": 0.08276216697413474,
+        "timedOutByOuter": false
+      },
+      "sourceFreeze": {
+        "head": "10238309c46f557b0c92d9d008cb466f7974c594",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "dirtyDiffSha256": "840966067bcb850d9befec5843b128567b66d2752da64cf58579eab2cbf3b696"
+      },
+      "postflight": {
+        "sourceHashesUnchanged": true,
+        "sources": {
+          "backend/src/application/queries/dashboard-collected-metrics.test.ts": "36c349c022197e290efb0730f33bbc6a62b61aa8e6a6944be9ab6fcbaddeadb8",
+          "docs/verification/t1371/harness/seed-unknown-dashboard.mts": "f2aa6d2cab092d32ac5d1aef2cedaba855a64b6b6cf559c4d5280e41f687605e",
+          "frontend/tests/e2e/t1371-xiaohongshu-unknown-dashboard.spec.ts": "a603ddba6ac73e4cd15eed5e1de2e17174b9143a5192ae9eca68c4c726fbe855",
+          "backend/src/modules/platform-collection/platform-collection.service.ts": "2ae48fd73e65849bd4727a2d13baef4fd036916127df54a9e003785704fdc6ee",
+          "frontend/playwright.t1371.config.ts": "656cd6853aa7a0ea66fbb9a5c65c357d7925b1b0c46b7d9d7dd798a2d225f735",
+          "ai-worker/src/runtime/platform/kuaishou-creator-normalizer.ts": "87cf5bc15a068689f3484ba874307e81f5fabbe9cc0d8a2d3406c21292097e50",
+          "docs/verification/t1355/harness/binding-fixture-server.mts": "e04d30586a60947aa0f34d45260f0f084736650d70b06cb73ed796d860e63f13",
+          "docs/verification/t1356/harness/seed-collected-dashboard.mts": "e9ecee3bac3ce6f9d3a5faed8df8f08d5c3c93f5e64c9b44ad24fca7583c97df"
+        },
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logBytes": 0
+      },
+      "rawLogPrivatePath": "/Users/zyongzhu/.codex/worktrees/t1370-t1371-ui-data/Thirdspace-creator/docs/verification/t1374/static-attempt01/diff-check/RAW_PRIVATE.log",
+      "baselineViolations": null,
+      "newViolations": null
+    }
+  ],
+  "fullExecuted": false,
+  "boundaryInterpretation": "原5基线内，无新增；不是全量对账结果"
+}

@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "runtimeVersion": "0.159.3",
+  "officialCommit": "01fc69f4026735edfdf6789820549727a4867b11",
+  "probeKind": "随包官方experimental JSON schema生成及只读源码核对",
+  "modelTurnSent": false,
+  "credentialsRead": false,
+  "homeChanged": false,
+  "productFilesChanged": false,
+  "schemaCommand": "pnpm --dir ai-worker exec codex app-server generate-json-schema --experimental --out ../orchestrator/probes/T-1238/protocol-schema/json",
+  "facts": {
+    "outputSchema": {
+      "description": "Optional JSON Schema used to constrain the final assistant message for this turn."
+    },
+    "userInputKinds": [
+      "text",
+      "image",
+      "localImage",
+      "audio",
+      "localAudio",
+      "skill",
+      "mention"
+    ],
+    "nativeImageCompletedItem": {
+      "properties": {
+        "failure": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ImageGenerationFailure"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "revisedPrompt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "savedPath": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AbsolutePathBuf"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "transparentBackground": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "type": {
+          "enum": [
+            "imageGeneration"
+          ],
+          "title": "ImageGenerationThreadItemType",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "result",
+        "status",
+        "type"
+      ],
+      "title": "ImageGenerationThreadItem",
+      "type": "object"
+    },
+    "nativeImagePersistedItem": {
+      "properties": {
+        "failure": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ImageGenerationFailure"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "revisedPrompt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "savedPath": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AbsolutePathBuf"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "transparentBackground": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "type": {
+          "enum": [
+            "imageGeneration"
+          ],
+          "title": "ImageGenerationThreadItemType",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "result",
+        "status",
+        "type"
+      ],
+      "title": "ImageGenerationThreadItem",
+      "type": "object"
+    },
+    "providerCapabilities": {
+      "imageGeneration": {
+        "type": "boolean"
+      },
+      "namespaceTools": {
+        "type": "boolean"
+      },
+      "webSearch": {
+        "type": "boolean"
+      }
+    },
+    "modelIdentityFields": [
+      "model",
+      "modelProvider",
+      "reasoningEffort"
+    ],
+    "rerouteFields": [
+      "fromModel",
+      "reason",
+      "threadId",
+      "toModel",
+      "turnId"
+    ],
+    "threadReadModelIsPerTurnTelemetry": false
+  },
+  "sourceFindings": [
+    {
+      "source": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/tool.rs",
+      "finding": "内置image_gen.imagegen作为Direct扩展工具提供，不依赖shell；官方实现内部使用Codex自己的图片backend与登录provider。"
+    },
+    {
+      "source": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/extensions.rs",
+      "finding": "原生app-server固定图片save_root为config.codex_home；改cwd不能把原生产生路径限定在任务暂存。"
+    },
+    {
+      "source": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/tests/suite/v2/imagegen_extension.rs",
+      "finding": "官方mock链测试使用ChatGPT auth且移除OPENAI_API_KEY，覆盖内置图片生成、thread/read持久结果及失败；这是源码证据，非本机真实生图通过。"
+    },
+    {
+      "source": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/extension.rs",
+      "finding": "工具可用条件是OpenAI provider/需要OpenAI auth/actor auth；自定义provider不保证生图可用。"
+    },
+    {
+      "source": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/spec_plan.rs",
+      "finding": "内置生图实际Gate：flag开启、非Free、provider支持图片和namespace、模型image模态、actor auth或Codex backend登录；仅authenticated不足。"
+    },
+    {
+      "source": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/features/src/lib.rs",
+      "finding": "omit_app_server_notification_media默认false，但用户配置可覆盖；新路由应显式冻结false或具备安全受控路径回收。"
+    }
+  ],
+  "implementationCautions": [
+    "生产native当前禁用image_generation；ACP启用但只冻结聊天账本。",
+    "native结果含base64与savedPath；ACP reporter将同一结果包装为image块和rawOutput.savedPath。",
+    "优先从经thread/turn/item绑定的base64写入任务暂存再经backend service保存；不要读取任意Codex home savedPath。",
+    "图像额度失败有usageLimitExceeded/limitId/resetsAt；应诚实返回原引擎原因，不API回退。",
+    "当前CodexRpcSession白名单缺少model/list、modelProvider/capabilities/read及分页读取方法；默认RPC15秒与abort interrupt1秒待与LED053核对。",
+    "thread模型标识并非每轮执行遥测；捕获model/rerouted，未知usage保留null。",
+    "原native RPC单帧限制4MB，而图片消费者允许30MB；开启内置生图前必须协调有界帧/产物限额与完成聚合，多图片可能让turn/completed超过限额。",
+    "原native completedResult要求非空text，图片独立任务可能只有image item，须将图片真实产物纳入结算判定。",
+    "原externalChat imageOwner及settle明确只准ACP+externalAgentBinding，不能直接给native非聊天任务复用而绕过服务归属。",
+    "官方schema展示ThreadReadResponse含图片字段，但当前官方persisted测试只断言透明度，不代表本机断连可恢复完整base64已验证。"
+  ],
+  "schemaHashes": {
+    "json/v2/TurnStartParams.json": "07771223642e1b61bd9aac0069fc0f98143a1c047724ca02c7ceb13653442738",
+    "json/v2/TurnCompletedNotification.json": "016870158603b0f84bd9f8f65f927161c9fd5128e5ec632087616462dc44e085",
+    "json/v2/ThreadReadResponse.json": "2af6b987644cfb23e6f408f3cfb29e73ad6255ba2294366d36d56aeabe3854da",
+    "json/v2/ModelListResponse.json": "bfbb3ee9f6e203e0b767587c17de94b9cb42f712d0d8168afbbbc3fcb4492f30",
+    "json/v2/ModelProviderCapabilitiesReadResponse.json": "5c42590f728289daaa441b947617398a0ca3aa17479013b3c564a5d314a3c9cf"
+  }
+}

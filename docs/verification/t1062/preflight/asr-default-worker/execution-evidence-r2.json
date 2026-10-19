@@ -1,0 +1,136 @@
+{
+  "schema": "t1062-default-worker-r2-execution-evidence/v1",
+  "status": "Unknown_actual_worker_inference_failed_before_generate",
+  "authorizationFile": {
+    "path": "/tmp/t1062-default-worker-preflight/root-r2-authorization.json",
+    "sha256": "0ae312b0f842efd763d125357547e4798ff9c693c1f57b97d5fd21567d159862"
+  },
+  "argv": [
+    "/opt/homebrew/bin/node",
+    "--max-old-space-size=2048",
+    "/tmp/t1062-default-worker-preflight/run-r2.cjs",
+    "523a1f680b4ab0b282a0964aa89634a99322b3ac22626920f5e85af6c0e2e02f"
+  ],
+  "exit": 1,
+  "artifacts": [
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.stderr.log",
+      "sha256": "c28ebc2257f50e15cf844578f134860a2ad9ee32ed40cc15c5ef258a84208442",
+      "bytes": 66389
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-two/unknown.json",
+      "sha256": "871072056a8de6c65c64ebf641cf64820c9e30dfc31aca3e72f307639ebf18d9",
+      "bytes": 13845
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-two/worker-counts.json",
+      "sha256": "fd396621fd05340439f8932dc2148ddb1044e92e2cdd28a2e101809836e98907",
+      "bytes": 782
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-two/one-attempt.lock",
+      "sha256": "3733829b339103bd9b97a9b00682d053875f35bc2c3eea3f26570dfcd71c8859",
+      "bytes": 24
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.mjs",
+      "sha256": "3a0a57e0ed6aea9cf5a96438186bb4b6d63c0f34781446ad9c932987a3802b92",
+      "bytes": 7198
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.cjs",
+      "sha256": "f206a9ceb496e0e10536fba2b86c17a2504b8188b502418213ee4a671d7d0a60",
+      "bytes": 790790
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-manifest-r2.json",
+      "sha256": "523a1f680b4ab0b282a0964aa89634a99322b3ac22626920f5e85af6c0e2e02f",
+      "bytes": 6223
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/bootstrap-template.cjs",
+      "sha256": "b61d4e052fa423d2986dd041ff683cefe42804545e6dbf2b611b98015535d7cc",
+      "bytes": 2385
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/execution-evidence.json",
+      "sha256": "b0a1b568918a9aac9ebec3cd574e74a7561bf716291a82af8811c27b68da71e1",
+      "bytes": 2385
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r2-initial-preparation-failure.json",
+      "sha256": "987e49590e4142641dec330e5e86d3851d440ac9dbf1fe575e628171d2f1e7e3",
+      "bytes": 2111
+    }
+  ],
+  "sourceBeforeAfterSHAEqual": true,
+  "actualRuntime": {
+    "requireBase": "/private/tmp/t1062-default-worker-preflight/run-two/runtime/frontend/package.json",
+    "moduleResolverPath": "/private/tmp/t1062-default-worker-preflight/run-two/runtime/frontend/creatoros-module-resolver.cjs",
+    "runtimeRoot": "/private/tmp/t1062-default-worker-preflight/run-two/runtime"
+  },
+  "nativeDecode": {
+    "calls": 1,
+    "sampleCount": 306587,
+    "commandAndArgs": {
+      "command": "/opt/homebrew/bin/ffmpeg",
+      "args": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-i",
+        "pipe:0",
+        "-f",
+        "f32le",
+        "-acodec",
+        "pcm_f32le",
+        "-ar",
+        "16000",
+        "-ac",
+        "1",
+        "pipe:1"
+      ]
+    }
+  },
+  "worker": {
+    "assembly": "actual default eval worker; temporary module-resolver bootstrap",
+    "factoryCalls": 1,
+    "pipelineCalls": 1,
+    "modelCalls": 0,
+    "networkAttempts": 0,
+    "actualDependencyEntry": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js",
+    "runtimeVersion": "v25.9.0",
+    "env": {
+      "allowRemoteModels": false,
+      "allowLocalModels": true,
+      "localModelPath": "/tmp/t1062-default-worker-preflight/run-two/cache/",
+      "useFSCache": false
+    },
+    "actualPcmSampleCount": 306587,
+    "optionsBefore": {
+      "return_timestamps": "word",
+      "chunk_length_s": 30,
+      "stride_length_s": 5,
+      "language": "zh",
+      "task": "transcribe"
+    }
+  },
+  "parentNetworkAttempts": 0,
+  "runtimeVersion": "v25.9.0",
+  "execPath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "buildTarget": "node24",
+  "actualError": "MultimodalGenerationError: whisper-local(worker)\u6267\u884c\u5931\u8d25: inference failed",
+  "strictTiming": "Unknown: no adapter transcript returned",
+  "underlyingError": "Unknown: actual worker production catch only emits inference failed",
+  "retryPerformed": false,
+  "repositoryWrites": 0,
+  "publicReserveSettleVerified": false,
+  "installedAppVerified": false,
+  "roughCutVerified": false
+}

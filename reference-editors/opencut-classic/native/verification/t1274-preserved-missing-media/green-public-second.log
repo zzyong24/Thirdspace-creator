@@ -1,0 +1,14 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+SyntaxError: Export named 'ImageNode' not found in module '/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/services/renderer/nodes/image-node.ts'.
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [19.00ms]

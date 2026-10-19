@@ -1,0 +1,5 @@
+# DEC-T1304-01：窄屏嵌套候选键盘归属独立窄修
+
+Root依据用户恢复功能与分模块实测授权，以及T1303实际新production候选1024文章Esc同时关闭内外两层、120秒焦点自然FAIL，批准T1304独立SPEC初审。仅StageChatWrapper内尊重defaultPrevented和DOM/owner归属，Escape与Tab共同保护；保外层自身原键盘行为，不给两卡散加stopPropagation，不混T1297 slider或错误提示文案。生产1/现存测试2，三个真卡组合目标RED必须先于产品修改。
+
+T1303 acceptance后续仅依赖T1304 implementation冻结，不依其acceptance；T1304 implementation只依已done T1303 implementation，自己的acceptance仅依自己的实现。允许同一新包/run原证据串行引用，拒绝两个acceptance互等。T1303仍未通过、T1301历史风险无用户答复，T1300父不claim。Root总控，Sol high执行，单writer，先独评再产品。没有新用户审批点，不变产品方向/数据归属/契约。

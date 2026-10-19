@@ -1,0 +1,260 @@
+diff --git a/backend/src/application/chat/assistant-system-root.integration.test.ts b/backend/src/application/chat/assistant-system-root.integration.test.ts
+index ff7c22d6d..46e8480dd 100644
+--- a/backend/src/application/chat/assistant-system-root.integration.test.ts
++++ b/backend/src/application/chat/assistant-system-root.integration.test.ts
+@@ -41,25 +41,40 @@ import {createExecutionChatToolPorts} from "../../modules/execution/execution-ch
+ import {prepareChatToolParameters} from "../../modules/ai-runtime/chat-tool-parameters";
+ import type {ChatHostContext} from "../../modules/ai/chat-host-context";
+ import {randomUUID,createHash} from 'node:crypto';
+-import {Pool} from 'pg';
++import {OwnedPostgresPool as Pool,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
+ import {drizzle as drizzlePg} from 'drizzle-orm/node-postgres';
+ import {createRuntimeDb} from '../../db';
+ 
+ let db:Db,close:()=>Promise<void>,seq=0;
+-let pgPool:Pool|undefined,pgUrl:string|undefined;
++let pgPool:import("pg").Pool|undefined,pgUrl:string|undefined;
++const isolatedPgUrl=process.env.CREATOROS_T1074_ISOLATED_PG_URL??process.env.CREATOROS_TEST_POSTGRES_URL;
+ const now=()=>"2026-10-08T02:00:00.000Z",budget={maxCalls:12,maxTokens:10000,deadlineMs:120000};
+ beforeAll(async()=>{
+- const url=process.env.CREATOROS_T1074_ISOLATED_PG_URL;
++ const url=isolatedPgUrl;
+  if(!url){const f=await createDb();db=f.db;close=()=>f.client.close();return;}
+  const parsed=new URL(url);
+- if(parsed.hostname!=='127.0.0.1'||parsed.username!=='creatoros_t1074'||parsed.pathname!=='/postgres')throw Error('只允许本轮明确的隔离PG服务');
++ assertOwnedPostgresUrl(parsed.toString());
+  const name=`t1074_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});
+  await admin.query(`CREATE DATABASE ${name}`);parsed.pathname=`/${name}`;pgUrl=parsed.toString();
+  try{const runtime=await createRuntimeDb({connectionString:pgUrl});db=runtime.db;pgPool=runtime.pool;
+   close=async()=>{await runtime.pool.end();await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();};
+  }catch(error){await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();throw error;}
+-},120000);
+-afterAll(async()=>close());
++},180000);
++
++it('T1248 合法action→read子集保持原次序；实际stored冻结顺序篡改拒绝采用且无正式写入',async()=>{
++ const f=await fixture(true,false,{discoverReads:true,actionVersion:1,action:assistantActionInputSchema.parse({kind:'preferences.update',autosaveEnabled:false})});
++ expect(f.frozen.modelInput.tools.map(tool=>tool.name)).toEqual(['system.action.propose','system.read']);
++ const adoptOwner=vi.spyOn(f.actualOwners['preferences.update']!,'adopt');
++ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.submitted.executionTaskId));
++ const original=structuredClone(task!.payload),before=await f.actionServices(db).settings.getPreferences(f.ctx),call=(await f.state()).call;
++ const changed=structuredClone(original) as {modelInput:{tools:unknown[]}};changed.modelInput.tools.reverse();
++ await db.update(executionTasks).set({payload:changed}).where(eq(executionTasks.id,task!.id));
++ await expect(f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never})).rejects.toThrow('冻结输入映射');
++ expect(adoptOwner).not.toHaveBeenCalled();expect(await f.actionServices(db).settings.getPreferences(f.ctx)).toEqual(before);expect((await f.state()).results).toHaveLength(0);expect((await f.state()).call).toEqual(call);
++ await db.update(executionTasks).set({payload:original}).where(eq(executionTasks.id,task!.id));
++ expect((await f.source.read(f.ctx,f.reference)).source).toEqual(f.reference);
++},180000);
++afterAll(async()=>close?.(),180000);
+ it('生产动作组合公开全部19个原owner适配器，而非只在工具目录声明',async()=>{
+  const module=await import('./assistant-system-root');
+  expect(module).toHaveProperty('createAssistantActionOwners',expect.any(Function));
+@@ -82,7 +97,7 @@ it('功能发现按真实域或完整读取/动作ID精确定位，不把操作I
+  const unavailable=await unbound.root.host.features(unbound.ctx,{feature:'project.create',offset:0,limit:20},unbound.frozen) as {rows:unknown[];total:number};
+  expect(unavailable.rows).toEqual([]);expect(unavailable.total).toBe(0);
+ });
+-async function fixture(group=false,generate=false,options:{discoverReads?:boolean;parentDeadlineMs?:number;runtimeDelayMs?:number;wakeFailure?:boolean;attachDelayMs?:number;receiptDelayMs?:number;action?:AssistantActionInput;derivedFailure?:boolean;tagAssets?:boolean;observeTags?:boolean;tagObservationRace?:boolean;workAction?:'script.patch'|'article.save'|'graphic.save';workflowAction?:'publication.prepare'|'calendar.plan'|'account.bind.start';assignedCalendar?:boolean;ownerAction?:'topic.promote'|'radar.collection.create';radarParent?:boolean;beforePromotionCreate?:()=>Promise<void>;currentEditor?:boolean;readKind?:'knowledge.list'|'projects.list'|'artifacts.list'|'artifacts.versions.list'|'candidates.list'|'outputs.publications.list'|'publications.revisions.list'}={}){
++async function fixture(group=false,generate=false,options:{actionVersion?:1|2;discoverReads?:boolean;parentDeadlineMs?:number;runtimeDelayMs?:number;wakeFailure?:boolean;attachDelayMs?:number;receiptDelayMs?:number;action?:AssistantActionInput;derivedFailure?:boolean;tagAssets?:boolean;observeTags?:boolean;tagObservationRace?:boolean;workAction?:'script.patch'|'article.save'|'graphic.save';workflowAction?:'publication.prepare'|'calendar.plan'|'account.bind.start';assignedCalendar?:boolean;ownerAction?:'topic.promote'|'radar.collection.create';radarParent?:boolean;beforePromotionCreate?:()=>Promise<void>;currentEditor?:boolean;readKind?:'knowledge.list'|'projects.list'|'artifacts.list'|'artifacts.versions.list'|'candidates.list'|'outputs.publications.list'|'publications.revisions.list'}={}){
+  let clock=Date.parse(now());const clockNow=()=>new Date(clock).toISOString();
+  const wake=vi.fn(async()=>{if(options.wakeFailure)throw Error('提交后唤醒失败');});
+ 
+@@ -157,7 +172,7 @@ async function fixture(group=false,generate=false,options:{discoverReads?:boolea
+   const job=await actionServices(db).scheduling.createJob(ctx,{name:'中性原自动化',sourceKind:'topic.daily',prompt:'读取中性选题',schedule:'0 9 * * *',enabled:false});
+   action={...action,jobId:job.id};
+  }
+- const actualOwners=action?createAssistantActionOwners(db,{afterCommit,forStore:(store,deferred)=>{
++ const actualOwners:Partial<ReturnType<typeof createAssistantActionOwners>>=action?createAssistantActionOwners(db,{afterCommit,forStore:(store,deferred)=>{
+   if(options.derivedFailure&&deferred){deferred.push(async()=>{throw Error('搜索索引派生失败');},derivedEffect);}
+   return actionServices(store) as never;
+  },binding:binding??{reserveInTransaction:failPort,wakeReserved:()=>{throw Error('该中性例不发起扫码');}},assetTags}):{};
+@@ -207,7 +222,7 @@ async function fixture(group=false,generate=false,options:{discoverReads?:boolea
+   }
+   readInput={request:{kind,...(params?{params}:{}),query:{page:1,pageSize:1}},offset:0,limit:1};
+  }
+- const name=readInput?'system.read':action?'system.action.propose':generate?'canvas.generate.propose':'canvas.create.propose',definitions=(await prepareChatToolDefinitions(buildChatTools([name,...(options.discoverReads?['system.read']:[])],{} as never))).definitions;
++ const name=readInput?'system.read':action?'system.action.propose':generate?'canvas.generate.propose':'canvas.create.propose',definitions=(await prepareChatToolDefinitions(buildChatTools([name,...(options.discoverReads?['system.read']:[])],{assistantActionCatalogVersion:options.actionVersion??2} as never))).definitions;
+  const definition=definitions[0]!,version=definition.version,parameterSchema=definition.parameters;
+  const createRequest={title:"AI中性画布",document:{...emptyCanvasDocument,nodes:[{id:"note-1",type:"text" as const,label:"主旨",text:"中性验收说明",position:{x:0,y:0}}]}};
+  const request=readInput??(action?{action:assistantActionInputSchema.parse(action)}:generate?{baseRevision:existingCanvas!.revision,nodeId:'image-node'}:createRequest);
+@@ -240,7 +255,7 @@ async function fixture(group=false,generate=false,options:{discoverReads?:boolea
+  const adoption=root.service,client=createClient(ENDPOINTS,root.transport,ctx);
+  const state=async()=>({canvases:await canvas.list(ctx),results:await db.select().from(aiTaskResults).where(eq(aiTaskResults.executionCallId,call.callId)),call:(await db.select().from(executionCalls).where(eq(executionCalls.id,call.callId)))[0]!});
+  const businessFor=(patch:Partial<Parameters<typeof createAssetBusinessExecutionService>[1]>={})=>createAssetBusinessExecutionService(db,{now:clockNow,budget:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},resolveSpec:async()=>({kind:'image',provider:'openai',model:'fixture-image',baseUrl:null,token:'test-only-secret'}),assertProject:failPort,assertCanvasInput:canvas.assertFrozenGenerationInput,...patch});
+- return {ctx,canvas,adoption,source,reference,output,host,frozen,client,transport:root.transport,state,call,submitted,existingCanvas,wake,clockNow,advance:(ms:number)=>{clock+=ms;},businessFor,aiFor,root,derivedEffect,afterCommit,actionServices,action,readInput,workflowProjectId,binding,bindingWake,bindingStage,assetTags,observeTagTargets};
++ return {actualOwners,ctx,canvas,adoption,source,reference,output,host,frozen,client,transport:root.transport,state,call,submitted,existingCanvas,wake,clockNow,advance:(ms:number)=>{clock+=ms;},businessFor,aiFor,root,derivedEffect,afterCommit,actionServices,action,readInput,workflowProjectId,binding,bindingWake,bindingStage,assetTags,observeTagTargets};
+ }
+ it.each([false,true])('真实宿主工具→执行账本→公共采用transport，组范围=%s保存完整画布并可读回',async group=>{
+  const f=await fixture(group),source=f.reference as Parameters<typeof f.client.adoptCanvasCreate>[0]['body'];
+@@ -583,16 +598,16 @@ it('有父雷达公共prepare只读原分类；父版本变化拒绝采用且没
+  expect(await rows()).toHaveLength(1);expect((await f.state()).results).toHaveLength(0);
+ });
+ function raceGate(){let release!:()=>void;const promise=new Promise<void>(resolve=>{release=resolve;});return {promise,release};}
+-async function waitPgLock(applicationName:string|null,table:string,done:()=>boolean){
++async function waitPgLock(applicationName:string|null,table:string,done:()=>boolean,blockingPid?:number){
+  if(!pgPool)throw Error('缺实际隔离PG连接');const until=Date.now()+120000;
+  while(Date.now()<until){
+-  const result=await pgPool.query("SELECT query FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND ($1::text IS NULL OR application_name=$1)",[applicationName]);
+-  if(result.rows.some(row=>String(row.query).includes(table)))return true;
++  const result=await pgPool.query("SELECT query,pg_blocking_pids(pid) AS blocking_pids FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND ($1::text IS NULL OR application_name=$1)",[applicationName]);
++  if(result.rows.some(row=>String(row.query).includes(table)&&(blockingPid===undefined||(row.blocking_pids as number[]).includes(blockingPid))))return true;
+   if(done())return false;await new Promise(resolve=>setTimeout(resolve,20));
+  }
+  throw Error('原SQL没有完成或进入行锁等待');
+ }
+-it.runIf(Boolean(process.env.CREATOROS_T1074_ISOLATED_PG_URL))('PG T1074 普通选题编辑先持锁，公共采用等待真实候选行并拒绝已变选题',async()=>{
++it.runIf(Boolean(isolatedPgUrl))('PG T1074 普通选题编辑先持锁，公共采用等待真实候选行并拒绝已变选题',async()=>{
+  const f=await fixture(true,false,{ownerAction:'topic.promote'}),action=f.action!;
+  if(action.kind!=='topic.promote')throw Error('夹具错误');
+  const writer=new Pool({connectionString:pgUrl,max:1,application_name:'t1074-candidate-writer'}),writerDb=drizzlePg(writer) as unknown as Db,hold=raceGate(),ready=raceGate();
+@@ -607,7 +622,7 @@ it.runIf(Boolean(process.env.CREATOROS_T1074_ISOLATED_PG_URL))('PG T1074 普通
+   expect((await f.state()).results).toHaveLength(0);expect((await f.state()).call).toEqual(original);
+  }finally{hold.release();await editing;await writer.end();}
+ });
+-it.runIf(Boolean(process.env.CREATOROS_T1074_ISOLATED_PG_URL))('PG T1074 公共采用先锁候选，普通编辑等待到项目和同行回执提交',async()=>{
++it.runIf(Boolean(isolatedPgUrl))('PG T1074 公共采用先锁候选，普通编辑等待到项目和同行回执提交',async()=>{
+  const hold=raceGate(),ready=raceGate(),f=await fixture(true,false,{ownerAction:'topic.promote',beforePromotionCreate:async()=>{ready.release();await hold.promise;}}),action=f.action!;
+  if(action.kind!=='topic.promote')throw Error('夹具错误');
+  const writer=new Pool({connectionString:pgUrl,max:1,application_name:'t1074-candidate-writer'}),writerDb=drizzlePg(writer) as unknown as Db;
+@@ -623,15 +638,16 @@ it.runIf(Boolean(process.env.CREATOROS_T1074_ISOLATED_PG_URL))('PG T1074 公共
+   expect((await f.state()).results).toHaveLength(1);
+  }finally{hold.release();await adoption.catch(()=>{});await writer.end();}
+ });
+-it.runIf(Boolean(process.env.CREATOROS_T1074_ISOLATED_PG_URL))('PG T1074 原owner删除父分类先持锁，公共采用等待后拒绝，不遗留孤儿或回执',async()=>{
++it.runIf(Boolean(isolatedPgUrl))('PG T1074 原owner删除父分类先持锁，公共采用等待后拒绝，不遗留孤儿或回执',async()=>{
+  const f=await fixture(true,false,{ownerAction:'radar.collection.create',radarParent:true}),action=f.action!;
+  if(action.kind!=='radar.collection.create'||!action.parentId)throw Error('夹具错误');
+  const writer=new Pool({connectionString:pgUrl,max:1,application_name:'t1074-radar-writer'}),writerDb=drizzlePg(writer) as unknown as Db,hold=raceGate(),ready=raceGate();let adoptionDone=false;
++ const writerIdentity=await writer.query('SELECT pg_backend_pid() AS pid'),writerPid=Number(writerIdentity.rows[0].pid);
+  const deleting=writerDb.transaction(async tx=>{await f.actionServices(tx as unknown as Db).intelligence.deleteCollection(f.ctx,action.parentId!,{mode:'unlink'});ready.release();await hold.promise;});
+  try{
+   await ready.promise;
+   const adoption=f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never}).then(value=>{adoptionDone=true;return {value,error:null};},error=>{adoptionDone=true;return {value:null,error};});
+-  expect(await waitPgLock(null,'intelligence_collections',()=>adoptionDone)).toBe(true);expect(adoptionDone).toBe(false);
++  expect(await waitPgLock(null,'account_groups',()=>adoptionDone,writerPid)).toBe(true);expect(adoptionDone).toBe(false);
+   hold.release();await deleting;const result=await adoption;expect(result.value).toBeNull();expect(result.error).toBeTruthy();
+   expect(await db.select().from(intelligenceCollections).where(eq(intelligenceCollections.groupId,f.ctx.groupId!))).toHaveLength(0);
+   expect((await f.state()).results).toHaveLength(0);
+@@ -792,3 +808,19 @@ it('T1086 原output/production父归组损坏保持原拒绝，错误原owner响
+  await expect(redirected.host.read(f.ctx,request as never,f.frozen)).rejects.toThrow('工程与当前真实作品或项目不同');
+  expect(await f.state()).toEqual(before);
+ },1200000);
++
++it.each([1,2] as const)('T1248 旧/当前action%s真实host→seal→settled→公开采用，原call与回执重放不变',async actionVersion=>{
++ const action=assistantActionInputSchema.parse({kind:'preferences.update',autosaveEnabled:false,...(actionVersion===2?{assistantExecutionEngine:'codex'}:{})});
++ const f=await fixture(true,false,{action,actionVersion}),original=(await f.state()).call,definitions=structuredClone(f.frozen.modelInput.tools),before=await f.actionServices(db).settings.getPreferences(f.ctx);
++ expect(f.output).toMatchObject({status:'ok',sideEffect:'proposal',data:{source:f.reference}});
++ expect(definitions[0]!.version).toBe(actionVersion===1?'chat-tools-system-director-v1:8d426601cbc7f539a36cfc31d032feb46b6541b182653c610b229996a4255767':'chat-tools-system-director-v1:ea89720c41e36fe55f9fc756a3cca8f8d2616dcdd27744c044134188dcb9ae8c');
++ const read=await f.source.read(f.ctx,f.reference);expect(read.call.id).toBe(f.call.callId);expect(read.source).toEqual(f.reference);
++ await expect(createClient(ENDPOINTS,f.transport,{...f.ctx,groupId:'foreign'}).adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never})).rejects.toThrow();
++ await expect(f.client.adoptAssistantAction({params:undefined,query:undefined,body:{...(f.reference as object),assistantActionCatalogVersion:actionVersion} as never})).rejects.toThrow();
++ expect((await f.state()).results).toHaveLength(0);expect(await f.actionServices(db).settings.getPreferences(f.ctx)).toEqual(before);
++ const receipt=await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never});
++ expect(receipt).toMatchObject({status:'adopted',operationId:'settings.preferences.patch'});
++ expect(await f.actionServices(db).settings.getPreferences(f.ctx)).toMatchObject({autosaveEnabled:false,...(actionVersion===2?{assistantExecutionEngine:'codex'}:{assistantExecutionEngine:before.assistantExecutionEngine})});
++ expect(await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never})).toEqual(receipt);
++ expect((await f.state()).results).toHaveLength(1);expect((await f.state()).call).toEqual(original);expect(f.frozen.modelInput.tools).toEqual(definitions);
++},180000);
+diff --git a/backend/src/modules/ai-runtime/chat-system-tool-host.test.ts b/backend/src/modules/ai-runtime/chat-system-tool-host.test.ts
+index b3caeeace..d3ce45812 100644
+--- a/backend/src/modules/ai-runtime/chat-system-tool-host.test.ts
++++ b/backend/src/modules/ai-runtime/chat-system-tool-host.test.ts
+@@ -89,3 +89,49 @@ it.each([1,2] as const)('T1086 V%s schema/描述/版本/副作用/其它系统
+   expect(read).not.toHaveBeenCalled();
+  }
+ },120000);
++
++const historicalAction=JSON.parse(readFileSync(new URL('../../../../docs/verification/t1248/system-action-v1.definition.json',import.meta.url),'utf8'));
++it('T1248 真实旧action golden恢复，原冻结完整定义不更新',async()=>{
++ const definitions=[structuredClone(historicalAction)],before=structuredClone(definitions);
++ const reader={read:async()=>({context:systemCtx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:'topics'}}})};
++ const tools=await createChatSystemToolHost(reader as never,{features:vi.fn(),read:vi.fn(),propose:vi.fn(),createCanvas:vi.fn()} as never)(systemCtx,{} as never,systemRef,new AbortController().signal);
++ expect((await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{assistantActionCatalogVersion:1} as never))).definitions).toEqual(definitions);
++ expect(tools['system.action.propose']!.version).toBe(historicalAction.version);expect(definitions).toEqual(before);
++},120000);
++
++import {matchFrozenAssistantReadCatalog,matchFrozenAssistantSystemCatalog} from './chat-system-tool-host';
++it.each([[1,1],[1,2],[2,1],[2,2]] as const)('T1248 已知完整read%s/action%s组合与合法子集保持定义、范围与参数严格性',async(readVersion,actionVersion)=>{
++ const names=['system.features','system.read','system.action.propose','canvas.create.propose','canvas.generate.propose'];
++ const definitions=(await prepareChatToolDefinitions(buildChatTools(names,{assistantReadCatalogVersion:readVersion,assistantActionCatalogVersion:actionVersion} as never))).definitions,before=structuredClone(definitions);
++ const read=vi.fn(async()=>({kind:'system.read',text:'[]'})),propose=vi.fn(async()=>({schemaVersion:1,kind:'system.action.proposal',request:{action:{kind:'preferences.update',autosaveEnabled:false}},observations:{}}));
++ const reader={read:async()=>({context:systemCtx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:'topics'}}})};
++ expect(await matchFrozenAssistantReadCatalog(definitions)).toBe(readVersion);
++ expect(await matchFrozenAssistantSystemCatalog(definitions)).toEqual({assistantReadCatalogVersion:readVersion,assistantActionCatalogVersion:actionVersion});
++ const host=createChatSystemToolHost(reader as never,{read,propose,features:vi.fn(),createCanvas:vi.fn(),generateCanvas:vi.fn()} as never);
++ const tools=await host(systemCtx,{} as never,systemRef,new AbortController().signal),scope={execution:systemRef,aiTaskId:'known-task',callId:'known-call',toolCallId:'known-tool',signal:new AbortController().signal};
++ for(const extra of [{unknown:true},...(actionVersion===1?[{assistantExecutionEngine:'codex'},{initializeAssistantExecutionEngine:true}]:[])]){
++  const outcome=await tools['system.action.propose']!.execute!(systemCtx,JSON.parse(JSON.stringify({action:{kind:'preferences.update',autosaveEnabled:false,...extra}})),scope);expect(outcome.status).toBe('error');expect(propose).not.toHaveBeenCalled();
++ }
++ expect(await tools['system.read']!.execute!(systemCtx,{request:{kind:'projects.outputs.list',params:{projectId:'original-project'}}},scope)).toMatchObject({status:'ok',sideEffect:'none'});expect(read).toHaveBeenCalledTimes(1);
++ await expect(host({...systemCtx,userId:'foreign'},{} as never,systemRef,scope.signal)).rejects.toThrow('范围');expect(propose).not.toHaveBeenCalled();
++ expect(definitions).toEqual(before);
++ const actionOnly=definitions.filter(d=>d.name==='system.action.propose');expect((await matchFrozenAssistantSystemCatalog(actionOnly)).assistantActionCatalogVersion).toBe(actionVersion);
++ for(const mutate of [
++  (d:typeof definitions)=>{d[2]!.description+='tampered';},(d:typeof definitions)=>{d[2]!.version+='tampered';},
++  (d:typeof definitions)=>{d[2]!.effect='none';},(d:typeof definitions)=>{d[2]!.execution='worker.web-read';},
++  (d:typeof definitions)=>{d[2]!.parameters={...d[2]!.parameters,additionalProperties:true};},
++  (d:typeof definitions)=>{d[2]!.name='system.unknown';},(d:typeof definitions)=>{d.push(structuredClone(d[2]!));},
++ ]){const changed=structuredClone(definitions);mutate(changed);await expect(matchFrozenAssistantSystemCatalog(changed)).rejects.toThrow('定义');}
++},120000);
++
++it('T1248 unknown-only整套显式拒绝，正常non-system空子集仍按原earlyreturn且owner0',async()=>{
++ const definition=(await prepareChatToolDefinitions(buildChatTools(['system.read'],{} as never))).definitions[0]!;
++ const read=vi.fn(),propose=vi.fn(),features=vi.fn(),createCanvas=vi.fn();
++ const ports={read,propose,features,createCanvas};
++ const reader=(tools:typeof definition[])=>({read:async()=>({context:systemCtx,modelInput:{tools},hostContext:{chatContext:{surface:'topics'}}})});
++ const normal=createChatSystemToolHost(reader([{...definition,name:'context.project.detail'}]) as never,ports as never);
++ expect(await normal(systemCtx,{} as never,systemRef,new AbortController().signal)).toEqual({});
++ const unknown=createChatSystemToolHost(reader([{...definition,name:'system.unknown'}]) as never,ports as never);
++ await expect(unknown(systemCtx,{} as never,systemRef,new AbortController().signal)).rejects.toThrow('定义');
++ for(const owner of [read,propose,features,createCanvas])expect(owner).not.toHaveBeenCalled();
++},180000);
+diff --git a/backend/src/modules/ai-runtime/chat-system-tool-host.ts b/backend/src/modules/ai-runtime/chat-system-tool-host.ts
+index 6a827c50f..7363b2a9a 100644
+--- a/backend/src/modules/ai-runtime/chat-system-tool-host.ts
++++ b/backend/src/modules/ai-runtime/chat-system-tool-host.ts
+@@ -1,4 +1,4 @@
+-import type {RequestContext,AssistantReadCatalogVersion} from '@creatoros/contract';
++import type {RequestContext,AssistantReadCatalogVersion,AssistantActionCatalogVersion} from '@creatoros/contract';
+ import {assistantActionCandidateSchema,canvasCreateCandidateSchema,canvasGenerateUnsignedCandidateSchema} from '@creatoros/contract';
+ import type {ExecutionRef} from '@creatoros/contract/execution-worker';
+ import {agenticToolOutcomeSchema} from '@creatoros/contract/execution-worker';
+@@ -16,16 +16,23 @@ type Host=Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>['rea
+ type Ports=NonNullable<ChatToolDeps['assistantSystem']>;
+ export type ChatSystemToolPorts={ [K in keyof Ports]:Ports[K] extends ((input:infer I)=>Promise<infer R>)|undefined?(ctx:RequestContext,input:I,host:Host)=>Promise<R>:never };
+ /** SEMANTIC_BOUNDARY_ALLOW:固定已知原型的完整协议身份相等；不从任务 schema 造执行器或授予新权限。 */
+-export async function matchFrozenAssistantReadCatalog(all:Host['modelInput']['tools']):Promise<AssistantReadCatalogVersion|null>{
++export async function matchFrozenAssistantSystemCatalog(all:Host['modelInput']['tools']):Promise<{assistantReadCatalogVersion:AssistantReadCatalogVersion|null;assistantActionCatalogVersion:AssistantActionCatalogVersion}>{
++ if(all.some(tool=>tool.name.startsWith('system.')&&!Object.hasOwn(ASSISTANT_SYSTEM_TOOL_EFFECTS,tool.name)))throw Error('系统工具定义与冻结任务不符');
+  const definitions=all.filter(tool=>Object.hasOwn(ASSISTANT_SYSTEM_TOOL_EFFECTS,tool.name));
+- if(!definitions.length)return null;
+- for(const assistantReadCatalogVersion of [2,1] as const){
+-  const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantReadCatalogVersion} as unknown as ChatToolDeps);
++ const names=definitions.map(tool=>tool.name),knownOrder=Object.keys(ASSISTANT_SYSTEM_TOOL_EFFECTS).filter(name=>names.includes(name));
++ if(canonicalJson(names)!==canonicalJson(knownOrder))throw Error('系统工具定义与冻结任务不符');
++ if(!definitions.length)return {assistantReadCatalogVersion:null,assistantActionCatalogVersion:2};
++ for(const assistantReadCatalogVersion of [2,1] as const)for(const assistantActionCatalogVersion of [2,1] as const){
++  const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantReadCatalogVersion,assistantActionCatalogVersion} as unknown as ChatToolDeps);
+   const current=(await prepareChatToolDefinitions(tools)).definitions;
+-  if(canonicalJson(current)===canonicalJson(definitions))return definitions.some(tool=>tool.name==='system.read')?assistantReadCatalogVersion:null;
++  if(canonicalJson(current)===canonicalJson(definitions))return {assistantReadCatalogVersion:definitions.some(tool=>tool.name==='system.read')?assistantReadCatalogVersion:null,assistantActionCatalogVersion};
+  }
+  throw Error('系统工具定义与冻结任务不符');
+ }
++/** 保持原read消费者接口，仍先验证完整已知系统工具组合。 */
++export async function matchFrozenAssistantReadCatalog(all:Host['modelInput']['tools']):Promise<AssistantReadCatalogVersion|null>{
++ return (await matchFrozenAssistantSystemCatalog(all)).assistantReadCatalogVersion;
++}
+ /** 真实冻结宿主上下文与原业务端口；仅新候选从执行scope盖来源。 */
+ export function createChatSystemToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,'read'>,ports:ChatSystemToolPorts):NonNullable<ChatWorkerDispatcherDeps['resolveTools']>{
+  async function resolve(ctx:RequestContext,execution:ExecutionRef,signal?:AbortSignal){
+@@ -38,8 +45,8 @@ export function createChatSystemToolHost(reader:Pick<ReturnType<typeof createCha
+    propose:input=>ports.propose(host.context,input,host),createCanvas:input=>ports.createCanvas(host.context,input,host),
+    ...(ports.generateCanvas?{generateCanvas:(input:Parameters<NonNullable<Ports['generateCanvas']>>[0])=>ports.generateCanvas!(host.context,input,host)}:{}),
+   };
+-  const assistantReadCatalogVersion=await matchFrozenAssistantReadCatalog(host.modelInput.tools);
+-  const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantSystem,assistantReadCatalogVersion:assistantReadCatalogVersion??2} as unknown as ChatToolDeps);
++  const catalog=await matchFrozenAssistantSystemCatalog(host.modelInput.tools);
++  const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantSystem,assistantReadCatalogVersion:catalog.assistantReadCatalogVersion??2,assistantActionCatalogVersion:catalog.assistantActionCatalogVersion} as unknown as ChatToolDeps);
+   const current=(await prepareChatToolDefinitions(tools)).definitions;
+   if(canonicalJson(current)!==canonicalJson(definitions))throw Error('系统工具定义与冻结任务不符');
+   signal?.throwIfAborted();return tools;

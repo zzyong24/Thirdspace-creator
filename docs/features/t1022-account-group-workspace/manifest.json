@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "project": "CreatorOS 账号组工作区",
+  "brief": "保留用户认可的原版工作台；图表补完整数值/日期坐标与单位，撤下缺明细的历史折线，最高/最低只作已知范围边界。作品比较仅用原截图真实四条样本。",
+  "round": "04",
+  "candidates": [
+    {
+      "id": "baseline",
+      "name": "当前首页",
+      "concept": "用户提供的现有首页；单抖音账号切换、五指标与三列卡片。",
+      "typography": "现有中文界面字体",
+      "palette": [
+        "#6d4aff",
+        "#f8f9fc",
+        "#171a25"
+      ],
+      "traits": [
+        "用户截图",
+        "现状基线"
+      ],
+      "kind": "image",
+      "source": "baseline.png",
+      "baseline": true
+    },
+    {
+      "id": "original",
+      "name": "原版增补（用户指定）",
+      "concept": "保留原版丰富的信息和卡片；账号组总览与平台切换补在原工作台。",
+      "typography": "保留中文系统字体、标题26px、正文14–16px、等宽数字",
+      "palette": [
+        "#6d4aff",
+        "#f8f9fc",
+        "#171a25"
+      ],
+      "traits": [
+        "原版五指标与三列六卡",
+        "账号组与多平台切换",
+        "统一趋势与作品比较图"
+      ],
+      "kind": "html",
+      "source": "original-home.html",
+      "interactive": true
+    }
+  ]
+}

@@ -1,0 +1,4306 @@
+{
+  "name": "system.action.propose",
+  "version": "chat-tools-system-director-v1:8d426601cbc7f539a36cfc31d032feb46b6541b182653c610b229996a4255767",
+  "description": "参数为{action:{kind,...严格字段}}，一次准备一个可预览改动；先通过system.read读取真实对象/版本。此工具不写正式数据、不绑定成功、不启用自动化、不发布。用户采用后原服务执行。当前文章/图文编辑器精调使用work.editor.propose，保护未保存输入。",
+  "parameters": {
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "required": [
+      "action"
+    ],
+    "properties": {
+      "action": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "title",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "project.create"
+              },
+              "brief": {
+                "type": "string",
+                "default": ""
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "briefDetail": {
+                "type": "object",
+                "properties": {
+                  "contentGoal": {
+                    "type": "string"
+                  },
+                  "coreMessage": {
+                    "type": "string"
+                  },
+                  "orientation": {
+                    "enum": [
+                      "landscape",
+                      "portrait"
+                    ],
+                    "type": "string"
+                  },
+                  "contentFormat": {
+                    "type": "string"
+                  },
+                  "targetAudience": {
+                    "type": "string"
+                  },
+                  "successCriteria": {
+                    "type": "string"
+                  },
+                  "targetPlatforms": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "durationEstimate": {
+                    "type": "string"
+                  },
+                  "contentRadarEvidence": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "generationMode",
+                          "sourceReferences",
+                          "sourceSnapshotId",
+                          "generatedFromTranscriptHash",
+                          "adaptedDraftSeed"
+                        ],
+                        "properties": {
+                          "aiTaskId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "generationMode": {
+                            "type": "string",
+                            "const": "rewrite_only"
+                          },
+                          "adaptedDraftSeed": {
+                            "type": "object",
+                            "required": [
+                              "generationMode",
+                              "contentText",
+                              "sourceSnapshotId",
+                              "generatedFromTranscriptHash",
+                              "personalizationStatus",
+                              "templateVersion"
+                            ],
+                            "properties": {
+                              "aiTaskId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "contentText": {
+                                "type": "string",
+                                "maxLength": 50000,
+                                "minLength": 1
+                              },
+                              "generationMode": {
+                                "type": "string",
+                                "const": "rewrite_only"
+                              },
+                              "templateVersion": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "sourceSnapshotId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "positioningVersionId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "personalizationStatus": {
+                                "enum": [
+                                  "applied",
+                                  "not_applied"
+                                ],
+                                "type": "string"
+                              },
+                              "generatedFromTranscriptHash": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "sourceReferences": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "platform",
+                                "label",
+                                "url"
+                              ],
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "original_video",
+                                    "source_page"
+                                  ],
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "platform": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "intelligenceItemId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "maxItems": 10,
+                            "minItems": 1
+                          },
+                          "sourceSnapshotId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "positioningVersionId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "personalizationStatus": {
+                            "enum": [
+                              "applied",
+                              "not_applied"
+                            ],
+                            "type": "string"
+                          },
+                          "generatedFromTranscriptHash": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "sourceReferences",
+                          "decomposition",
+                          "strategy",
+                          "adaptedDraftSeed"
+                        ],
+                        "properties": {
+                          "strategy": {
+                            "type": "object",
+                            "properties": {
+                              "add": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "default": [],
+                                "maxItems": 8
+                              },
+                              "keep": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "default": [],
+                                "maxItems": 8
+                              },
+                              "avoid": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "default": [],
+                                "maxItems": 8
+                              },
+                              "replace": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "default": [],
+                                "maxItems": 8
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "decomposition": {
+                            "type": "object",
+                            "required": [
+                              "hook",
+                              "structureSteps",
+                              "coreClaims",
+                              "reusablePattern"
+                            ],
+                            "properties": {
+                              "hook": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "factRisks": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "default": [],
+                                "maxItems": 12
+                              },
+                              "coreClaims": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "maxItems": 8,
+                                "minItems": 1
+                              },
+                              "structureSteps": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "maxItems": 8,
+                                "minItems": 2
+                              },
+                              "reusablePattern": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "adaptedDraftSeed": {
+                            "type": "object",
+                            "required": [
+                              "contentText",
+                              "generatedFromTranscriptHash",
+                              "strategyHash",
+                              "templateVersion"
+                            ],
+                            "properties": {
+                              "contentText": {
+                                "type": "string",
+                                "maxLength": 50000,
+                                "minLength": 1
+                              },
+                              "strategyHash": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "templateVersion": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "generatedFromTranscriptHash": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "sourceReferences": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "platform",
+                                "label",
+                                "url"
+                              ],
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "original_video",
+                                    "source_page"
+                                  ],
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "platform": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "intelligenceItemId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "maxItems": 10,
+                            "minItems": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "contentType": {
+                "enum": [
+                  "video",
+                  "image",
+                  "audio",
+                  "article"
+                ],
+                "type": "string"
+              },
+              "creationMode": {
+                "enum": [
+                  "guided",
+                  "flexible",
+                  "freeform"
+                ],
+                "type": "string"
+              },
+              "targetPlatforms": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "youtube",
+                    "bilibili",
+                    "douyin",
+                    "xiaohongshu",
+                    "kuaishou",
+                    "wechatVideo",
+                    "wechatOfficial",
+                    "wechatOfficialAccount",
+                    "x"
+                  ],
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "title",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "topic.create"
+              },
+              "angle": {
+                "type": "string",
+                "default": ""
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "enum": [
+                  "trend",
+                  "benchmark",
+                  "demand",
+                  "idea",
+                  "favorites"
+                ],
+                "type": "string",
+                "default": "idea"
+              },
+              "contentRole": {
+                "enum": [
+                  "traffic",
+                  "trust",
+                  "conversion"
+                ],
+                "type": "string"
+              },
+              "productAnchorId": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "candidateId"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "topic.promote"
+              },
+              "candidateId": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "expectedVersionId",
+              "sectionId",
+              "expectedOriginalText",
+              "replacementText",
+              "kind",
+              "artifactId"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "script.patch"
+              },
+              "sectionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifactId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "changeSummary": {
+                "type": "string",
+                "default": "Copilot 局部改稿"
+              },
+              "replacementText": {
+                "type": "string",
+                "maxLength": 12000,
+                "minLength": 1
+              },
+              "expectedVersionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expectedOriginalText": {
+                "type": "string",
+                "maxLength": 12000,
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "expectedCurrentVersionId",
+              "document",
+              "kind",
+              "outputId"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "article.save"
+              },
+              "document": {
+                "type": "object",
+                "required": [
+                  "schemaVersion",
+                  "title",
+                  "summary",
+                  "sections",
+                  "factItems",
+                  "visualBriefs",
+                  "imageUses"
+                ],
+                "properties": {
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "sections": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "sectionId",
+                        "order",
+                        "heading",
+                        "body"
+                      ],
+                      "properties": {
+                        "body": {
+                          "type": "string"
+                        },
+                        "order": {
+                          "type": "integer",
+                          "maximum": 9007199254740991,
+                          "minimum": 0
+                        },
+                        "heading": {
+                          "type": "string"
+                        },
+                        "sectionId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "sourceRefs": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "versionId"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "kind": {
+                                    "enum": [
+                                      "project",
+                                      "asset"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "sourceOutputId",
+                                  "artifactId",
+                                  "versionId",
+                                  "sourceType",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "output_version"
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "sourceSectionIds",
+                                          "sourceFields",
+                                          "textRanges"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "textRanges": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "field",
+                                                "start",
+                                                "end",
+                                                "textDigest"
+                                              ],
+                                              "properties": {
+                                                "end": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "field": {
+                                                  "enum": [
+                                                    "body",
+                                                    "script"
+                                                  ],
+                                                  "type": "string"
+                                                },
+                                                "start": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "textDigest": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-f0-9]{64}$"
+                                                }
+                                              },
+                                              "additionalProperties": false
+                                            }
+                                          },
+                                          "sourceFields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "title",
+                                                "body",
+                                                "summary",
+                                                "tags",
+                                                "script"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "sourceSectionIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "sourceType": {
+                                    "enum": [
+                                      "image",
+                                      "video",
+                                      "article"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "sourceOutputId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "momentsId",
+                                  "artifactId",
+                                  "versionId",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "moments_version"
+                                  },
+                                  "momentsId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "fields",
+                                          "textRanges"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "fields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "text",
+                                                "imageUses"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "textRanges": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "start",
+                                                "end",
+                                                "textDigest"
+                                              ],
+                                              "properties": {
+                                                "end": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "start": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "textDigest": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-f0-9]{64}$"
+                                                }
+                                              },
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "compositionId",
+                                  "artifactId",
+                                  "versionId",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "work_basis_version"
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "fields",
+                                          "claimIds",
+                                          "factItemIds"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "fields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "topic",
+                                                "claims",
+                                                "factItems"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "claimIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          },
+                                          "factItemIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "compositionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "versionId"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "project_script"
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "default": []
+                        },
+                        "headingLevel": {
+                          "type": "integer",
+                          "default": 2,
+                          "maximum": 6,
+                          "minimum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "factItems": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "text",
+                        "reviewState"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "sourceRefs": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "versionId"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "kind": {
+                                    "enum": [
+                                      "project",
+                                      "asset"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "sourceOutputId",
+                                  "artifactId",
+                                  "versionId",
+                                  "sourceType",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "output_version"
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "sourceSectionIds",
+                                          "sourceFields",
+                                          "textRanges"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "textRanges": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "field",
+                                                "start",
+                                                "end",
+                                                "textDigest"
+                                              ],
+                                              "properties": {
+                                                "end": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "field": {
+                                                  "enum": [
+                                                    "body",
+                                                    "script"
+                                                  ],
+                                                  "type": "string"
+                                                },
+                                                "start": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "textDigest": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-f0-9]{64}$"
+                                                }
+                                              },
+                                              "additionalProperties": false
+                                            }
+                                          },
+                                          "sourceFields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "title",
+                                                "body",
+                                                "summary",
+                                                "tags",
+                                                "script"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "sourceSectionIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "sourceType": {
+                                    "enum": [
+                                      "image",
+                                      "video",
+                                      "article"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "sourceOutputId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "momentsId",
+                                  "artifactId",
+                                  "versionId",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "moments_version"
+                                  },
+                                  "momentsId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "fields",
+                                          "textRanges"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "fields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "text",
+                                                "imageUses"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "textRanges": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "start",
+                                                "end",
+                                                "textDigest"
+                                              ],
+                                              "properties": {
+                                                "end": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "start": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "textDigest": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-f0-9]{64}$"
+                                                }
+                                              },
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "compositionId",
+                                  "artifactId",
+                                  "versionId",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "work_basis_version"
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "fields",
+                                          "claimIds",
+                                          "factItemIds"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "fields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "topic",
+                                                "claims",
+                                                "factItems"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "claimIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          },
+                                          "factItemIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "compositionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "versionId"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "project_script"
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "default": []
+                        },
+                        "reviewState": {
+                          "enum": [
+                            "needs_confirmation",
+                            "confirmed"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "imageUses": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "sectionId",
+                        "assetId",
+                        "assetFileId",
+                        "sourceKind",
+                        "reviewState"
+                      ],
+                      "properties": {
+                        "assetId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "sectionId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "sourceKind": {
+                          "enum": [
+                            "existing",
+                            "generated",
+                            "screenshot"
+                          ],
+                          "type": "string"
+                        },
+                        "assetFileId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "reviewState": {
+                          "type": "string",
+                          "const": "selected"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "nativeLayout": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "schemaVersion",
+                          "editor",
+                          "editorCommit",
+                          "themeId",
+                          "themeSettings",
+                          "customCss",
+                          "exportOptions"
+                        ],
+                        "properties": {
+                          "editor": {
+                            "type": "string",
+                            "const": "doocs-md"
+                          },
+                          "themeId": {
+                            "type": "string",
+                            "maxLength": 128,
+                            "minLength": 1
+                          },
+                          "customCss": {
+                            "type": "string"
+                          },
+                          "editorCommit": {
+                            "type": "string",
+                            "const": "a7c17fc4cda92e3c13aa7e24f06615cfa4219b31"
+                          },
+                          "exportOptions": {
+                            "type": "object",
+                            "required": [
+                              "useIndent",
+                              "useJustify"
+                            ],
+                            "properties": {
+                              "useIndent": {
+                                "type": "boolean"
+                              },
+                              "useJustify": {
+                                "type": "boolean"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "schemaVersion": {
+                            "type": "number",
+                            "const": 1
+                          },
+                          "themeSettings": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "schemaVersion",
+                          "editor",
+                          "editorVersion",
+                          "themeId",
+                          "authorName",
+                          "authorBio",
+                          "variables",
+                          "fontSize",
+                          "splitHeading",
+                          "templateId",
+                          "imageWidths",
+                          "imageRadii"
+                        ],
+                        "properties": {
+                          "editor": {
+                            "type": "string",
+                            "const": "noterelay"
+                          },
+                          "themeId": {
+                            "type": "string",
+                            "maxLength": 128,
+                            "minLength": 1
+                          },
+                          "fontSize": {
+                            "type": "integer",
+                            "maximum": 32,
+                            "minimum": 12
+                          },
+                          "authorBio": {
+                            "type": "string",
+                            "maxLength": 500
+                          },
+                          "variables": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "maxLength": 64,
+                              "minLength": 1
+                            },
+                            "additionalProperties": false
+                          },
+                          "authorName": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "imageRadii": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "maxLength": 512,
+                              "minLength": 1
+                            },
+                            "additionalProperties": false
+                          },
+                          "templateId": {
+                            "enum": [
+                              "default",
+                              "notes"
+                            ],
+                            "type": "string"
+                          },
+                          "imageWidths": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "maxLength": 512,
+                              "minLength": 1
+                            },
+                            "additionalProperties": false
+                          },
+                          "splitHeading": {
+                            "anyOf": [
+                              {
+                                "type": "number",
+                                "const": 1
+                              },
+                              {
+                                "type": "number",
+                                "const": 2
+                              }
+                            ]
+                          },
+                          "editorVersion": {
+                            "type": "string",
+                            "const": "0.1.8"
+                          },
+                          "schemaVersion": {
+                            "type": "number",
+                            "const": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "visualBriefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "sectionId",
+                        "brief"
+                      ],
+                      "properties": {
+                        "brief": {
+                          "type": "string"
+                        },
+                        "sectionId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "proposedAssetId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "proposedAssetFileId": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "coverImageUse": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "assetId",
+                          "assetFileId",
+                          "sourceKind",
+                          "reviewState"
+                        ],
+                        "properties": {
+                          "assetId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "sourceKind": {
+                            "enum": [
+                              "existing",
+                              "generated",
+                              "screenshot"
+                            ],
+                            "type": "string"
+                          },
+                          "assetFileId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reviewState": {
+                            "type": "string",
+                            "const": "selected"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "schemaVersion": {
+                    "type": "number",
+                    "const": 1
+                  },
+                  "metadataSource": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "projectId",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "project"
+                          },
+                          "projectId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "projectId",
+                          "sourceOutputId",
+                          "publicationId",
+                          "revisionId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "publication_revision"
+                          },
+                          "projectId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "revisionId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "publicationId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "sourceOutputId": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "titleSourceRefs": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "id",
+                            "versionId"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "enum": [
+                                "project",
+                                "asset"
+                              ],
+                              "type": "string"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "sourceOutputId",
+                            "artifactId",
+                            "versionId",
+                            "sourceType",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "output_version"
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "sourceSectionIds",
+                                    "sourceFields",
+                                    "textRanges"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "textRanges": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "field",
+                                          "start",
+                                          "end",
+                                          "textDigest"
+                                        ],
+                                        "properties": {
+                                          "end": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "field": {
+                                            "enum": [
+                                              "body",
+                                              "script"
+                                            ],
+                                            "type": "string"
+                                          },
+                                          "start": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "textDigest": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{64}$"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "sourceFields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "title",
+                                          "body",
+                                          "summary",
+                                          "tags",
+                                          "script"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "sourceSectionIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "sourceType": {
+                              "enum": [
+                                "image",
+                                "video",
+                                "article"
+                              ],
+                              "type": "string"
+                            },
+                            "sourceOutputId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "momentsId",
+                            "artifactId",
+                            "versionId",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "moments_version"
+                            },
+                            "momentsId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "fields",
+                                    "textRanges"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "fields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "text",
+                                          "imageUses"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "textRanges": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "start",
+                                          "end",
+                                          "textDigest"
+                                        ],
+                                        "properties": {
+                                          "end": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "start": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "textDigest": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{64}$"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "compositionId",
+                            "artifactId",
+                            "versionId",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "work_basis_version"
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "fields",
+                                    "claimIds",
+                                    "factItemIds"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "fields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "topic",
+                                          "claims",
+                                          "factItems"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "claimIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "factItemIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "compositionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "id",
+                            "versionId"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "const": "project_script"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "summarySourceRefs": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "id",
+                            "versionId"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "enum": [
+                                "project",
+                                "asset"
+                              ],
+                              "type": "string"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "sourceOutputId",
+                            "artifactId",
+                            "versionId",
+                            "sourceType",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "output_version"
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "sourceSectionIds",
+                                    "sourceFields",
+                                    "textRanges"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "textRanges": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "field",
+                                          "start",
+                                          "end",
+                                          "textDigest"
+                                        ],
+                                        "properties": {
+                                          "end": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "field": {
+                                            "enum": [
+                                              "body",
+                                              "script"
+                                            ],
+                                            "type": "string"
+                                          },
+                                          "start": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "textDigest": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{64}$"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "sourceFields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "title",
+                                          "body",
+                                          "summary",
+                                          "tags",
+                                          "script"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "sourceSectionIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "sourceType": {
+                              "enum": [
+                                "image",
+                                "video",
+                                "article"
+                              ],
+                              "type": "string"
+                            },
+                            "sourceOutputId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "momentsId",
+                            "artifactId",
+                            "versionId",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "moments_version"
+                            },
+                            "momentsId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "fields",
+                                    "textRanges"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "fields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "text",
+                                          "imageUses"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "textRanges": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "start",
+                                          "end",
+                                          "textDigest"
+                                        ],
+                                        "properties": {
+                                          "end": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "start": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "textDigest": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{64}$"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "compositionId",
+                            "artifactId",
+                            "versionId",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "work_basis_version"
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "fields",
+                                    "claimIds",
+                                    "factItemIds"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "fields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "topic",
+                                          "claims",
+                                          "factItems"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "claimIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "factItemIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "compositionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "id",
+                            "versionId"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "const": "project_script"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "imageMatchWarnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "outputId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expectedCurrentVersionId": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "expectedCurrentVersionId",
+              "document",
+              "kind",
+              "outputId"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "graphic.save"
+              },
+              "document": {
+                "type": "object",
+                "required": [
+                  "schemaVersion",
+                  "title",
+                  "body",
+                  "summary",
+                  "tags",
+                  "imageUses",
+                  "sourceRefs",
+                  "ruleSnapshotRef"
+                ],
+                "properties": {
+                  "body": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "designs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "target",
+                        "document"
+                      ],
+                      "properties": {
+                        "target": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "kind"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "cover"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "cardId"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "card"
+                                },
+                                "cardId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          ]
+                        },
+                        "document": {
+                          "type": "object",
+                          "required": [
+                            "editor",
+                            "revision",
+                            "nativeDocument",
+                            "mediaRefs"
+                          ],
+                          "properties": {
+                            "editor": {
+                              "enum": [
+                                "kuaitu",
+                                "opencut-classic"
+                              ],
+                              "type": "string"
+                            },
+                            "revision": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{40}$"
+                            },
+                            "mediaRefs": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "mediaId",
+                                  "assetId",
+                                  "assetFileId"
+                                ],
+                                "properties": {
+                                  "assetId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "mediaId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "assetFileId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "maxItems": 10000
+                            },
+                            "nativeDocument": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "maxItems": 100
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "imageUses": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "assetId",
+                        "assetFileId",
+                        "order",
+                        "role"
+                      ],
+                      "properties": {
+                        "role": {
+                          "enum": [
+                            "cover",
+                            "card"
+                          ],
+                          "type": "string"
+                        },
+                        "order": {
+                          "type": "integer",
+                          "maximum": 9007199254740991,
+                          "minimum": 0
+                        },
+                        "cardId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "assetId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "assetFileId": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "cardBriefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "cardId",
+                        "title",
+                        "body",
+                        "sourceRefs"
+                      ],
+                      "properties": {
+                        "body": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "cardId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "sourceRefs": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "versionId"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "kind": {
+                                    "enum": [
+                                      "project",
+                                      "asset",
+                                      "intelligence"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "sourceOutputId",
+                                  "artifactId",
+                                  "versionId",
+                                  "sourceType",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "output_version"
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "sourceSectionIds",
+                                          "sourceFields",
+                                          "textRanges"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "textRanges": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "field",
+                                                "start",
+                                                "end",
+                                                "textDigest"
+                                              ],
+                                              "properties": {
+                                                "end": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "field": {
+                                                  "enum": [
+                                                    "body",
+                                                    "script"
+                                                  ],
+                                                  "type": "string"
+                                                },
+                                                "start": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "textDigest": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-f0-9]{64}$"
+                                                }
+                                              },
+                                              "additionalProperties": false
+                                            }
+                                          },
+                                          "sourceFields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "title",
+                                                "body",
+                                                "summary",
+                                                "tags",
+                                                "script"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "sourceSectionIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "sourceType": {
+                                    "enum": [
+                                      "image",
+                                      "video",
+                                      "article"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "sourceOutputId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "momentsId",
+                                  "artifactId",
+                                  "versionId",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "moments_version"
+                                  },
+                                  "momentsId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "fields",
+                                          "textRanges"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "fields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "text",
+                                                "imageUses"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "textRanges": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "start",
+                                                "end",
+                                                "textDigest"
+                                              ],
+                                              "properties": {
+                                                "end": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "start": {
+                                                  "type": "integer",
+                                                  "maximum": 9007199254740991,
+                                                  "minimum": 0
+                                                },
+                                                "textDigest": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-f0-9]{64}$"
+                                                }
+                                              },
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "compositionId",
+                                  "artifactId",
+                                  "versionId",
+                                  "selectionDigest",
+                                  "selection"
+                                ],
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "work_basis_version"
+                                  },
+                                  "selection": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "whole"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "required": [
+                                          "mode",
+                                          "fields",
+                                          "claimIds",
+                                          "factItemIds"
+                                        ],
+                                        "properties": {
+                                          "mode": {
+                                            "type": "string",
+                                            "const": "selected"
+                                          },
+                                          "fields": {
+                                            "type": "array",
+                                            "items": {
+                                              "enum": [
+                                                "topic",
+                                                "claims",
+                                                "factItems"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "claimIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          },
+                                          "factItemIds": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    ]
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "artifactId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "compositionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "selectionDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "versionId"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "project_script"
+                                  },
+                                  "versionId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        },
+                        "visualBrief": {
+                          "type": "string",
+                          "maxLength": 10000
+                        },
+                        "proposedImage": {
+                          "type": "object",
+                          "required": [
+                            "assetId",
+                            "assetFileId"
+                          ],
+                          "properties": {
+                            "assetId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "assetFileId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "sourceRefs": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "id",
+                            "versionId"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "enum": [
+                                "project",
+                                "asset",
+                                "intelligence"
+                              ],
+                              "type": "string"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "sourceOutputId",
+                            "artifactId",
+                            "versionId",
+                            "sourceType",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "output_version"
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "sourceSectionIds",
+                                    "sourceFields",
+                                    "textRanges"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "textRanges": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "field",
+                                          "start",
+                                          "end",
+                                          "textDigest"
+                                        ],
+                                        "properties": {
+                                          "end": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "field": {
+                                            "enum": [
+                                              "body",
+                                              "script"
+                                            ],
+                                            "type": "string"
+                                          },
+                                          "start": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "textDigest": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{64}$"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "sourceFields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "title",
+                                          "body",
+                                          "summary",
+                                          "tags",
+                                          "script"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "sourceSectionIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "sourceType": {
+                              "enum": [
+                                "image",
+                                "video",
+                                "article"
+                              ],
+                              "type": "string"
+                            },
+                            "sourceOutputId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "momentsId",
+                            "artifactId",
+                            "versionId",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "moments_version"
+                            },
+                            "momentsId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "fields",
+                                    "textRanges"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "fields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "text",
+                                          "imageUses"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "textRanges": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "start",
+                                          "end",
+                                          "textDigest"
+                                        ],
+                                        "properties": {
+                                          "end": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "start": {
+                                            "type": "integer",
+                                            "maximum": 9007199254740991,
+                                            "minimum": 0
+                                          },
+                                          "textDigest": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{64}$"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "compositionId",
+                            "artifactId",
+                            "versionId",
+                            "selectionDigest",
+                            "selection"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "work_basis_version"
+                            },
+                            "selection": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "whole"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "mode",
+                                    "fields",
+                                    "claimIds",
+                                    "factItemIds"
+                                  ],
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "const": "selected"
+                                    },
+                                    "fields": {
+                                      "type": "array",
+                                      "items": {
+                                        "enum": [
+                                          "topic",
+                                          "claims",
+                                          "factItems"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "claimIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "factItemIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "artifactId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "compositionId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "selectionDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "id",
+                            "versionId"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "const": "project_script"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "nativeLayout": {
+                    "type": "object",
+                    "required": [
+                      "schemaVersion",
+                      "editor",
+                      "editorVersion",
+                      "themeId",
+                      "authorName",
+                      "authorBio",
+                      "variables",
+                      "fontSize",
+                      "splitHeading",
+                      "templateId",
+                      "imageWidths",
+                      "imageRadii"
+                    ],
+                    "properties": {
+                      "editor": {
+                        "type": "string",
+                        "const": "noterelay"
+                      },
+                      "themeId": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "minLength": 1
+                      },
+                      "fontSize": {
+                        "type": "integer",
+                        "maximum": 32,
+                        "minimum": 12
+                      },
+                      "authorBio": {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      "variables": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "maxLength": 64,
+                          "minLength": 1
+                        },
+                        "additionalProperties": false
+                      },
+                      "authorName": {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      "imageRadii": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "maxLength": 512,
+                          "minLength": 1
+                        },
+                        "additionalProperties": false
+                      },
+                      "templateId": {
+                        "enum": [
+                          "default",
+                          "notes"
+                        ],
+                        "type": "string"
+                      },
+                      "imageWidths": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "maxLength": 512,
+                          "minLength": 1
+                        },
+                        "additionalProperties": false
+                      },
+                      "splitHeading": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "const": 1
+                          },
+                          {
+                            "type": "number",
+                            "const": 2
+                          }
+                        ]
+                      },
+                      "editorVersion": {
+                        "type": "string",
+                        "const": "0.1.8"
+                      },
+                      "schemaVersion": {
+                        "type": "number",
+                        "const": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "schemaVersion": {
+                    "type": "number",
+                    "const": 1
+                  },
+                  "seriesProfile": {
+                    "type": "object",
+                    "required": [
+                      "visualDirection",
+                      "aspectRatio"
+                    ],
+                    "properties": {
+                      "aspectRatio": {
+                        "type": "string",
+                        "maxLength": 32
+                      },
+                      "referenceImage": {
+                        "type": "object",
+                        "required": [
+                          "assetId",
+                          "assetFileId"
+                        ],
+                        "properties": {
+                          "assetId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "assetFileId": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "visualDirection": {
+                        "type": "string",
+                        "maxLength": 10000
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "metadataSource": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "projectId",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "project"
+                          },
+                          "projectId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "projectId",
+                          "sourceOutputId",
+                          "publicationId",
+                          "revisionId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "publication_revision"
+                          },
+                          "projectId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "revisionId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "publicationId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "sourceOutputId": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "ruleSnapshotRef": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "versionId"
+                        ],
+                        "properties": {
+                          "versionId": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "imageMatchWarnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "outputId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expectedCurrentVersionId": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "targets",
+              "tag"
+            ],
+            "properties": {
+              "tag": {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "const": "asset.tag"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "assetId",
+                    "expectedVersion"
+                  ],
+                  "properties": {
+                    "assetId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "expectedVersion": {
+                      "type": "string",
+                      "maxLength": 256,
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 100,
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "title",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "knowledge.create"
+              },
+              "note": {
+                "type": "string",
+                "default": ""
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "folderId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sourceNote": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "name",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "knowledge.folder.create"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              "parentId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "name"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "radar.collection.create"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "parentId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "positioning.save"
+              },
+              "field": {
+                "type": "string",
+                "default": ""
+              },
+              "facets": {
+                "type": "object",
+                "properties": {
+                  "tone": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "avoid": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "corePain": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "coreValue": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "statusNote": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "contentScope": {
+                    "type": "string",
+                    "default": ""
+                  }
+                },
+                "additionalProperties": false
+              },
+              "persona": {
+                "type": "string",
+                "default": ""
+              },
+              "audience": {
+                "type": "string",
+                "default": ""
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "differentiation": {
+                "type": "string",
+                "default": ""
+              },
+              "downstreamRules": {
+                "type": "object",
+                "properties": {
+                  "topicRule": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "forbidRule": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "scriptRule": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "projectRule": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "expressionRule": {
+                    "type": "string",
+                    "default": ""
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "name"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "group.create"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "name",
+              "expectedVersion"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "group.rename"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              "expectedVersion": {
+                "type": "integer",
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "platform",
+              "expectedGroupVersion"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "account.bind.start"
+              },
+              "platform": {
+                "enum": [
+                  "youtube",
+                  "bilibili",
+                  "douyin",
+                  "xiaohongshu",
+                  "kuaishou",
+                  "wechatVideo",
+                  "wechatOfficial",
+                  "wechatOfficialAccount",
+                  "x"
+                ],
+                "type": "string"
+              },
+              "expectedGroupVersion": {
+                "type": "integer",
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "platform",
+              "accountReference",
+              "kind",
+              "outputId"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "publication.prepare"
+              },
+              "outputId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "platform": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accountReference": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expectedMembershipVersion": {
+                "type": "integer",
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "projectId",
+              "plannedDate",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "calendar.plan"
+              },
+              "note": {
+                "type": "string"
+              },
+              "projectId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "plannedDate": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "targetAccountId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "name",
+              "schedule",
+              "kind",
+              "sourceKind",
+              "targetAccountId"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "automation.createDraft"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "prompt": {
+                "type": "string",
+                "default": ""
+              },
+              "schedule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceKind": {
+                "enum": [
+                  "topic.daily",
+                  "self.metrics",
+                  "comments"
+                ],
+                "type": "string"
+              },
+              "targetAccountId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "jobId",
+              "enabled"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "automation.enable"
+              },
+              "jobId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "preferences.update"
+              },
+              "defaultHome": {
+                "type": "string"
+              },
+              "fileNamingRule": {
+                "type": "string"
+              },
+              "autosaveEnabled": {
+                "type": "boolean"
+              },
+              "analyticsEnabled": {
+                "type": "boolean"
+              },
+              "defaultVisibility": {
+                "enum": [
+                  "private",
+                  "unlisted",
+                  "public"
+                ],
+                "type": "string"
+              },
+              "defaultCreationMode": {
+                "enum": [
+                  "guided",
+                  "flexible",
+                  "freeform"
+                ],
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "definitions": {
+      "__schema0": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/__schema0"
+            }
+          },
+          {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "__schema1": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/__schema1"
+            }
+          },
+          {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "additionalProperties": false
+  },
+  "effect": "proposal"
+}

@@ -1,0 +1,8 @@
+file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/scripts/verify-native-editors.mjs:21
+ const entry=manifest[editor]?.native;if(!entry)throw Error(`原生构建清单缺失：${editor}`);
+                                                      ^
+
+Error: 原生构建清单缺失：doocs-md
+    at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/scripts/verify-native-editors.mjs:21:55
+
+Node.js v25.9.0

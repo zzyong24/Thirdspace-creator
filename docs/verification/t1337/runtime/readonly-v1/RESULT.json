@@ -1,0 +1,170 @@
+{
+  "state": "READONLY_CONFIG_AND_SKILLS_METADATA_COMPLETE",
+  "budgets": {
+    "startupMs": 120000,
+    "requestMs": 120000,
+    "cleanupMs": 120000,
+    "executionMs": 600000,
+    "outerMs": 900000,
+    "retry": 0
+  },
+  "startedAt": "2026-10-17T08:31:17.062Z",
+  "runtimeRoots": {
+    "root": "/Volumes/T7-MacData/CodexBuilds/t1337-readonly-config-20261017-20897702",
+    "cwd": "/Volumes/T7-MacData/CodexBuilds/t1337-readonly-config-20261017-20897702/tmp/codex-cwd-tnHWH3",
+    "logs": "/Volumes/T7-MacData/CodexBuilds/t1337-readonly-config-20261017-20897702/tmp/codex-cwd-tnHWH3/logs"
+  },
+  "methods": [
+    {
+      "method": "initialize",
+      "startedAt": "2026-10-17T08:31:17.821Z",
+      "status": "fulfilled",
+      "timeoutMs": 120000,
+      "finishedAt": "2026-10-17T08:31:17.926Z"
+    },
+    {
+      "method": "config/read",
+      "startedAt": "2026-10-17T08:31:17.926Z",
+      "status": "fulfilled",
+      "timeoutMs": 120000,
+      "finishedAt": "2026-10-17T08:31:17.958Z"
+    },
+    {
+      "method": "skills/list",
+      "startedAt": "2026-10-17T08:31:17.960Z",
+      "status": "fulfilled",
+      "timeoutMs": 120000,
+      "finishedAt": "2026-10-17T08:31:18.139Z"
+    }
+  ],
+  "notifications": {
+    "remoteControl/status/changed": 1
+  },
+  "serverRequests": [],
+  "modelsStarted": 0,
+  "threadStartCalls": 0,
+  "turnStartCalls": 0,
+  "accountReads": 0,
+  "authFilesRead": 0,
+  "configurationWrites": 0,
+  "rawFramesPersisted": false,
+  "original68FilesModified": false,
+  "userConfig": {
+    "exists": true,
+    "mcpKeysReadOnlyInMemory": true,
+    "mcpKeyCount": 6,
+    "valuesRecorded": false
+  },
+  "startupPolicy": {
+    "binaryBytes": 240351424,
+    "binarySha256": "4d210f7c5a18fd0386434df23b5bdbb8c0e7257d3e8a2b30b0769c8bbe99a878",
+    "sourceSha256": "837e3ca7c28d35d90d90941de9013dfc0721b418778cc396a67a50319dd258af",
+    "argvSha256": "939c93a0b67ea32fea76ddeafca6e5262e85ffa50d6ef0c8e794b2522fa1f878",
+    "disabledFeatures": [
+      "apps",
+      "plugins",
+      "hooks",
+      "multi_agent",
+      "multi_agent_v2",
+      "image_generation",
+      "browser_use",
+      "computer_use",
+      "code_mode",
+      "code_mode_host",
+      "tool_suggest",
+      "shell_tool",
+      "unified_exec",
+      "view_image",
+      "skill_search",
+      "skill_mcp_dependency_install"
+    ],
+    "mcpKeysDisabled": 6,
+    "taskToolsDirectNamespace": [
+      "functions"
+    ],
+    "logDirOverrideOwned": true
+  },
+  "child": {
+    "pid": 71470,
+    "initial": {
+      "pgid": 71470,
+      "identity": "Sat Oct 17 16:31:17 2026     /Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/node_modules/.pnpm/@openai+codex@0.159.3-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex"
+    }
+  },
+  "config": {
+    "instructions": {
+      "present": false,
+      "type": "null"
+    },
+    "developerInstructions": {
+      "present": false,
+      "type": "null"
+    },
+    "modelInstructionsFile": {
+      "present": false,
+      "type": "null"
+    },
+    "projectDocMaxBytes": 32768,
+    "projectDocFallbackFilenameCount": 0,
+    "skillsConfigPresent": true,
+    "skillsConfigType": "object",
+    "mcpCount": 6,
+    "allMcpDisabled": true,
+    "unknownMcpCount": 0,
+    "webSearch": "disabled",
+    "directNamespaces": [
+      "functions"
+    ],
+    "features": {
+      "apps": false,
+      "plugins": false,
+      "hooks": false,
+      "multi_agent": false,
+      "multi_agent_v2": false,
+      "image_generation": false,
+      "browser_use": false,
+      "computer_use": false,
+      "code_mode": false,
+      "code_mode_host": false,
+      "tool_suggest": false,
+      "shell_tool": false,
+      "unified_exec": false,
+      "view_image": false,
+      "skill_search": false,
+      "skill_mcp_dependency_install": false
+    },
+    "logDirOwned": true,
+    "baseInstructionsPropertyPresent": false,
+    "defaultBaseInstructionsActuallyObserved": false
+  },
+  "skills": {
+    "entryCount": 1,
+    "count": 181,
+    "scopeCounts": {
+      "user": 176,
+      "system": 5
+    },
+    "enabledCounts": {
+      "user": 147,
+      "system": 5
+    },
+    "descriptionChars": 44839,
+    "nameChars": 3176,
+    "scanErrors": 2,
+    "metadataOnly": true,
+    "individualNamesPathsOrDescriptionsRecorded": false,
+    "modelActuallySawSkills": "NOT_PROVEN_WITHOUT_THREAD_OR_TURN"
+  },
+  "childClose": {
+    "code": 0,
+    "signal": null,
+    "at": "2026-10-17T08:31:18.149Z"
+  },
+  "cleanup": {
+    "actions": [],
+    "actualIdentityAfter": null,
+    "remainingOwnedGroup": [],
+    "closedObserved": true
+  },
+  "finishedAt": "2026-10-17T08:31:18.206Z"
+}

@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-10-17T07:18:21.236096+00:00",
+  "ownedRoot": "/Volumes/T7-MacData/CodexBuilds/t1335-backend-boundaries-20261017-8cb8e94d",
+  "parentRealpath": "/Volumes/T7-MacData/CodexBuilds",
+  "didNotExistBefore": true,
+  "mode": "0700",
+  "agent": "/root/sol_media_resumed",
+  "allowedUse": [
+    "T1335 backend测试独立Vitecache",
+    "TMPDIR",
+    "进程日志"
+  ],
+  "database": "createDb纯内存，无disk DB/worker build/SDK复制",
+  "productionWritesAuthorized": false,
+  "executionRequiresRootAssemblyApproval": true
+}

@@ -1,0 +1,231 @@
+import * as React from "react";
+import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
+import {cleanup,fireEvent,render,screen,waitFor,act} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+const router=vi.hoisted(()=>({refresh:vi.fn(),replace:vi.fn()}));
+const route=vi.hoisted(()=>({path:"/projects/p/article"}));
+vi.mock("next/navigation",()=>({useRouter:()=>router,usePathname:()=>route.path}));
+import {AccountSwitcher,WORKSPACE_INITIALIZATION_TIMEOUT_MS} from "./account-switcher";
+import {WorkspaceInitializationProvider,WorkspaceInitializationBoundary} from "./workspace-initialization";
+import {CURRENT_ACCOUNT_KEY,CURRENT_GROUP_KEY,CURRENT_GROUP_COOKIE,CURRENT_ACCOUNT_COOKIE,writeCurrentGroupId} from "@/lib/http-transport";
+import {useCreationClient,readCreationScope,type CreationScope} from "@/lib/creation-workspace-scope";
+import {notifyAccountsChanged} from "@/lib/account-events";
+const fetcher=vi.fn();
+const group=(id:string,accountId?:string)=>({id,userId:"u",name:`组${id}`,status:"active",version:1,createdAt:"2026-10-05T00:00:00Z",updatedAt:"2026-10-05T00:00:00Z",members:accountId?[{id:`m-${id}`,accountId,groupId:id,platform:"douyin",accountHandle:"legacy",status:"active",version:1,joinedAt:"2026-10-05T00:00:00Z",leftAt:null}]:[]});
+const outputResponse=()=>new Response(JSON.stringify({data:{id:"output-actual-contract",projectId:"p",title:"新文章",contentType:"article",format:"",aspectRatio:"",targetDurationSeconds:0,status:"drafting",primaryAssetId:null,createdAt:"2026-10-05T00:00:00Z",updatedAt:"2026-10-05T00:00:00Z"},meta:{requestId:"r"}}),{status:200});
+const envelope=(rows:unknown[],total=rows.length,page=1)=>new Response(JSON.stringify({data:rows,meta:{requestId:"r",page,pageSize:100,total}}),{status:200});
+function watchReload(){const originalWindow=window,reloadPage=vi.fn();vi.stubGlobal("window",new Proxy(originalWindow,{get(target,key){return key==="location"?{...originalWindow.location,pathname:route.path,reload:reloadPage}:Reflect.get(target,key,target);}}));return {reloadPage,restore:()=>vi.stubGlobal("window",originalWindow)};}
+let mounts=0,unmounts=0;
+function Creator(){const client=useCreationClient();const [dirty,setDirty]=React.useState(false);React.useEffect(()=>{mounts++;return()=>{unmounts++;};},[]);return <div data-testid="native-instance"><input aria-label="脏稿" onChange={()=>setDirty(true)}/><span>{dirty?"dirty":"clean"}</span><button onClick={()=>void client.createOutput({params:{projectId:"p"},query:undefined,body:{title:"新文章",contentType:"article",clientRequestId:"same-request-123"}})}>创建调用</button></div>;}
+function mount(scope:CreationScope={groupId:null,accountId:null},strict=false,autoCommit=true){
+ let commitServer!:(scope:CreationScope)=>void;let latestRefresh=0;
+ const previousRefresh=router.refresh;
+ const actualRefresh=vi.fn(async()=>{
+  const serial=++latestRefresh,frozen={...readCreationScope()};
+  await previousRefresh();
+  if(autoCommit&&serial===latestRefresh)commitServer(frozen);
+ });
+ router.refresh=actualRefresh;
+ function ServerFixture(){
+  const [serverScope,setServerScope]=React.useState(scope);React.useLayoutEffect(()=>{commitServer=setServerScope;},[]);
+  return <WorkspaceInitializationProvider initialScope={serverScope}><AccountSwitcher collapsed={false}/><WorkspaceInitializationBoundary allowRecovery><Creator/></WorkspaceInitializationBoundary><WorkspaceInitializationBoundary surface="overlay"><button>Copilot创建</button></WorkspaceInitializationBoundary><WorkspaceInitializationBoundary surface="overlay"><button>modal创建</button></WorkspaceInitializationBoundary></WorkspaceInitializationProvider>;
+ }
+ const tree=<ServerFixture/>,mounted=render(strict?<React.StrictMode>{tree}</React.StrictMode>:tree);
+ return {...mounted,commitServer:(next:CreationScope)=>commitServer(next),unmount:()=>{mounted.unmount();if(router.refresh===actualRefresh)router.refresh=previousRefresh;}};
+}
+beforeEach(()=>{router.refresh.mockReset();router.replace.mockReset();vi.clearAllMocks();vi.stubGlobal("fetch",async(...args:Parameters<typeof fetch>)=>{const response=await fetcher(...args);return response.clone();});localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;document.cookie=`${CURRENT_ACCOUNT_COOKIE}=; Path=/; Max-Age=0`;route.path="/projects/p/article";mounts=0;unmounts=0;fetcher.mockReset();});
+afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.useRealTimers();});
+describe("真实Shell首载范围就绪",()=>{
+ it.each(["forbidden: request must originate from the local application",{code:"FORBIDDEN",message:"forbidden: request must originate from the local application"}])("公共403恢复态给中文反馈，原重试读取成功才开放 %j",async error=>{
+  fetcher.mockResolvedValueOnce(new Response(JSON.stringify({error}),{status:403})).mockResolvedValueOnce(envelope([group("a")]));
+  mount();
+  const recovery=await screen.findByTestId("workspace-initialization-error");
+  expect(recovery).toHaveTextContent("登录状态已失效或没有权限,请重新登录后再试。");
+  expect(recovery).not.toHaveTextContent("forbidden");
+  expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button",{name:"重试打开工作区"}));
+  await screen.findByRole("button",{name:"创建调用"});
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(JSON.parse(fetcher.mock.calls[1][1].body).id).toBe("accountGroups.list");
+  expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");
+  expect(screen.queryByTestId("workspace-initialization-error")).toBeNull();
+ });
+ it("未知技术错误显示工作区中文兜底且保留恢复入口",async()=>{
+  fetcher.mockRejectedValueOnce(new Error("ERR_WORKSPACE_INTERNAL_DETAIL"));mount();
+  const recovery=await screen.findByTestId("workspace-initialization-error");
+  expect(recovery).toHaveTextContent("工作区页面暂不可用，请重试。");
+  expect(recovery).not.toHaveTextContent("ERR_WORKSPACE_INTERNAL_DETAIL");
+  expect(screen.getByRole("button",{name:"重试打开工作区"})).toBeEnabled();
+  expect(screen.getByRole("link",{name:"账号组与绑定账号"})).toHaveAttribute("href","/accounts");
+  expect(screen.getByRole("link",{name:"设置"})).toHaveAttribute("href","/settings");
+ });
+ it("已可读的中文业务反馈保留原文",async()=>{
+  fetcher.mockRejectedValueOnce(new Error("账号组列表未完整返回，请重试。"));mount();
+  expect(await screen.findByTestId("workspace-initialization-error")).toHaveTextContent("账号组列表未完整返回，请重试。");
+  expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+ });
+ it("延迟公共组读取期间没有页面/Copilot/modal创建，完成真实归一后才开放",async()=>{let resolve!:(r:Response)=>void;fetcher.mockImplementationOnce(()=>new Promise(r=>{resolve=r;})).mockResolvedValue(outputResponse());mount();expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();expect(screen.queryByRole("button",{name:"Copilot创建"})).toBeNull();expect(screen.queryByRole("button",{name:"modal创建"})).toBeNull();expect(mounts).toBe(0);await act(async()=>resolve(envelope([group("a")])));await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");fireEvent.click(screen.getByRole("button",{name:"创建调用"}));await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));expect(JSON.parse(fetcher.mock.calls[1][1].body).id).toBe("projects.outputs.create");expect(new Headers(fetcher.mock.calls[1][1].headers).get("x-group-id")).toBe("a");});
+ it("按actual total读完100+1分页而非首100猜归属",async()=>{localStorage.setItem(CURRENT_ACCOUNT_KEY,"old");fetcher.mockResolvedValueOnce(envelope(Array.from({length:100},(_,i)=>group(`x${i}`)),101)).mockResolvedValueOnce(envelope([group("real","old")],101,2));mount({groupId:null,accountId:"old"});await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("real");expect(fetcher).toHaveBeenCalledTimes(2);});
+ it.each([{groupId:"a",accountId:null},{groupId:null,accountId:"old"}])("真实错误沿认证会话冻结同根意图fail-open并保有效retry %j",async scope=>{if(scope.groupId)localStorage.setItem(CURRENT_GROUP_KEY,scope.groupId);else localStorage.setItem(CURRENT_ACCOUNT_KEY,scope.accountId!);fetcher.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(envelope([group("different")]));mount(scope);await screen.findByRole("button",{name:"创建调用"});const node=screen.getByTestId("native-instance");fireEvent.change(screen.getByLabelText("脏稿"),{target:{value:"保留"}});fireEvent.click(screen.getByRole("button",{name:"重试"}));await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));expect(screen.getByTestId("native-instance")).toBe(node);expect(unmounts).toBe(0);expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe(scope.groupId);expect(localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe(scope.accountId);});
+ it("没有会话冻结根意图时错误给真实retry，成功后开放",async()=>{fetcher.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(envelope([group("a")]));mount();await screen.findByTestId("workspace-initialization-error");expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();fireEvent.click(screen.getByRole("button",{name:"重试打开工作区"}));await screen.findByRole("button",{name:"创建调用"});expect(fetcher).toHaveBeenCalledTimes(2);});
+ it("空组列表完成而非无限loading，保留原合法旧account",async()=>{localStorage.setItem(CURRENT_ACCOUNT_KEY,"old");fetcher.mockResolvedValue(envelope([]));mount({groupId:null,accountId:"old"});await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("old");expect(screen.queryByTestId("workspace-initialization-loading")).toBeNull();});
+ it("已ready同组筛选/列表reload不卸载实例或脏稿",async()=>{localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a")]));mount({groupId:"a",accountId:null});await screen.findByRole("button",{name:"创建调用"});const node=screen.getByTestId("native-instance");fireEvent.change(screen.getByLabelText("脏稿"),{target:{value:"dirty"}});localStorage.setItem(CURRENT_ACCOUNT_KEY,"filter");act(()=>notifyAccountsChanged());await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));expect(screen.getByTestId("native-instance")).toBe(node);expect(screen.getByText("dirty")).toBeVisible();expect(unmounts).toBe(0);expect(router.refresh).not.toHaveBeenCalled();});
+ it("管理/设置恢复页可用但Copilot/modal始终不能绕过未ready",async()=>{route.path="/settings/models";fetcher.mockImplementation(()=>new Promise(()=>{}));const mounted=mount();expect(screen.getByRole("button",{name:"创建调用"})).toBeVisible();expect(screen.queryByRole("button",{name:"Copilot创建"})).toBeNull();expect(screen.queryByRole("button",{name:"modal创建"})).toBeNull();mounted.unmount();});
+ it("超时真实abort并结束loading，同根fallback可保存且有效retry",async()=>{vi.useFakeTimers();localStorage.setItem(CURRENT_GROUP_KEY,"a");let signal!:AbortSignal;fetcher.mockImplementationOnce((_url,init)=>{signal=init.signal;return new Promise((_resolve,reject)=>signal.addEventListener("abort",()=>reject(signal.reason),{once:true}));}).mockResolvedValueOnce(envelope([group("b")]));mount({groupId:"a",accountId:null});expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});expect(signal.aborted).toBe(true);expect(screen.getByRole("button",{name:"创建调用"})).toBeVisible();fireEvent.click(screen.getByRole("button",{name:"重试"}));await act(async()=>{await Promise.resolve();await Promise.resolve();});expect(fetcher).toHaveBeenCalledTimes(2);expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");});
+ it("真实React refresh transition未完成不放行，完成后开放",async()=>{let finish!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{finish=r;}));fetcher.mockResolvedValue(envelope([group("a")]));mount();await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();await act(async()=>finish());await screen.findByRole("button",{name:"创建调用"});});
+ it("StrictMode的旧query真实abort，晚回执不能归一旧组",async()=>{let old!:(r:Response)=>void;let signal!:AbortSignal;fetcher.mockImplementationOnce((_url,init)=>{signal=init.signal;return new Promise(r=>{old=r;});}).mockResolvedValue(envelope([group("fresh")]));const mounted=mount({groupId:null,accountId:null},true);expect(signal.aborted).toBe(true);await act(async()=>old(envelope([group("old")])));await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("fresh");mounted.unmount();expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("fresh");});
+ it("stored archive只按真实active列表归一，非法旧root不fail-open",async()=>{localStorage.setItem(CURRENT_GROUP_KEY,"archived");fetcher.mockResolvedValue(envelope([{...group("archived"),status:"archived"},group("active")]));mount({groupId:null,accountId:null});await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("active");});
+
+ it("refresh超时给整页重试，旧transition晚完成不能提前放行",async()=>{vi.useFakeTimers();let old!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;}));fetcher.mockResolvedValue(envelope([group("a")]));const mounted=mount();await act(async()=>{await vi.advanceTimersByTimeAsync(1);});await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});expect(screen.getByTestId("workspace-initialization-error")).toBeVisible();const {reloadPage,restore}=watchReload();fireEvent.click(screen.getByRole("button",{name:"重试打开工作区"}));expect(reloadPage).toHaveBeenCalledTimes(1);expect(router.refresh).toHaveBeenCalledTimes(1);await act(async()=>old());expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();mounted.unmount();restore();vi.useRealTimers();mount({groupId:"a",accountId:null});await screen.findByRole("button",{name:"创建调用"});expect(fetcher).toHaveBeenCalledTimes(2);expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");});
+
+ it("失效组选中且无activegroup不删除会话冻结的合法旧账号入口",async()=>{localStorage.setItem(CURRENT_GROUP_KEY,"gone");localStorage.setItem(CURRENT_ACCOUNT_KEY,"old");fetcher.mockResolvedValue(envelope([]));mount({groupId:null,accountId:"old"});await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBeNull();expect(localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("old");});
+
+ it("首次同步未完成时真实菜单切B，新刷新完成独立放行而旧完成/超时不回写",async()=>{let old!:()=>void,next!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;})).mockImplementationOnce(()=>new Promise<void>(r=>{next=r;}));fetcher.mockResolvedValue(envelope([group("a"),group("b")]));mount();await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));const user=userEvent.setup();await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(await screen.findByRole("menuitem",{name:"组b"}));await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(2));expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("b");expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();await act(async()=>next());await screen.findByRole("button",{name:"创建调用"});const node=screen.getByTestId("native-instance");vi.useFakeTimers();await act(async()=>{old();await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});expect(screen.getByTestId("native-instance")).toBe(node);expect(screen.queryByTestId("workspace-initialization-error")).toBeNull();expect(screen.queryByTestId("account-switcher-error")).toBeNull();expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("b");});
+ it("首次菜单切组的刷新超时可整页重试，旧根和超时轮晚完成不提前放行",async()=>{vi.useFakeTimers();let old!:()=>void,switched!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;})).mockImplementationOnce(()=>new Promise<void>(r=>{switched=r;}));fetcher.mockResolvedValue(envelope([group("a"),group("b")]));const mounted=mount();await act(async()=>{await vi.advanceTimersByTimeAsync(1);});fireEvent.pointerDown(screen.getByTestId("account-switcher-trigger"),{button:0,ctrlKey:false,pointerType:"mouse"});fireEvent.click(screen.getByRole("menuitem",{name:"组b"}));await act(async()=>{await vi.advanceTimersByTimeAsync(20);});expect(router.refresh).toHaveBeenCalledTimes(2);await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});expect(screen.getByTestId("workspace-initialization-error")).toBeVisible();const {reloadPage,restore}=watchReload();fireEvent.click(screen.getByRole("button",{name:"重试打开工作区"}));expect(reloadPage).toHaveBeenCalledTimes(1);expect(router.refresh).toHaveBeenCalledTimes(2);await act(async()=>{old();switched();});expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();mounted.unmount();restore();vi.useRealTimers();mount({groupId:"b",accountId:null});await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("b");});
+
+ it("已ready获准切组立即收起旧页及所有弹层，实际新组提交后重新挂载",async()=>{
+  let finish!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{finish=r;}));
+  localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));mount({groupId:"a",accountId:null});
+  await screen.findByRole("button",{name:"创建调用"});const node=screen.getByTestId("native-instance");
+  const user=userEvent.setup();await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));
+  expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("b");expect(screen.queryByTestId("native-instance")).toBeNull();
+  expect(screen.getByTestId("workspace-initialization-loading")).toBeVisible();
+  expect(screen.queryByRole("button",{name:"Copilot创建"})).toBeNull();expect(screen.queryByRole("button",{name:"modal创建"})).toBeNull();
+  await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));await act(async()=>finish());await screen.findByRole("button",{name:"创建调用"});
+  expect(screen.getByTestId("native-instance")).not.toBe(node);expect(unmounts).toBe(1);
+ });
+ it.each(["/accounts","/settings/models"])("已ready恢复页%s切组不能绕过范围屏障",async pathname=>{
+  let finish!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{finish=r;}));
+  route.path=pathname;localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));mount({groupId:"a",accountId:null});
+  await screen.findByRole("button",{name:"Copilot创建"});
+  const user=userEvent.setup();await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));
+  expect(screen.queryByTestId("native-instance")).toBeNull();expect(screen.getByTestId("workspace-initialization-loading")).toBeVisible();
+  await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));await act(async()=>finish());await screen.findByRole("button",{name:"创建调用"});
+ });
+ it("已ready切组仍等待真实服务端scope，旧RSC不能放行",async()=>{
+  localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));const mounted=mount({groupId:"a",accountId:null},false,false);
+  await screen.findByRole("button",{name:"创建调用"});const user=userEvent.setup();await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));
+  await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));expect(screen.queryByTestId("native-instance")).toBeNull();
+  await act(async()=>mounted.commitServer({groupId:"a",accountId:null}));expect(screen.queryByTestId("native-instance")).toBeNull();
+  await act(async()=>mounted.commitServer({groupId:"b",accountId:null}));await screen.findByRole("button",{name:"创建调用"});
+ });
+ it("管理入口外部切组也立即收起旧页，只在对应RSC交付后开放",async()=>{
+  route.path="/accounts";localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));const mounted=mount({groupId:"a",accountId:null},false,false);
+  await screen.findByRole("button",{name:"Copilot创建"});await act(async()=>writeCurrentGroupId("b"));
+  expect(screen.queryByTestId("native-instance")).toBeNull();expect(screen.queryByRole("button",{name:"Copilot创建"})).toBeNull();
+  await act(async()=>mounted.commitServer({groupId:"b",accountId:null}));await screen.findByRole("button",{name:"创建调用"});
+ });
+ it("菜单失效读取不取消已获准切组的RSC等待",async()=>{
+  let finish!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{finish=r;}));
+  localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));mount({groupId:"a",accountId:null});
+  await screen.findByRole("button",{name:"创建调用"});const user=userEvent.setup();await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));
+  await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));act(()=>notifyAccountsChanged());await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));
+  expect(screen.queryByTestId("native-instance")).toBeNull();await act(async()=>finish());await screen.findByRole("button",{name:"创建调用"});expect(router.refresh).toHaveBeenCalledTimes(1);
+ });
+ it("新组layout先提交而页面仍悬挂时超时不能fail-open，原位重读恢复菜单与整页",async()=>{
+  vi.useFakeTimers();
+  let old!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;})).mockResolvedValueOnce(undefined);
+  localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));const mounted=mount({groupId:"a",accountId:null},false,false);
+  await act(async()=>{await vi.advanceTimersByTimeAsync(1);});fireEvent.pointerDown(screen.getByTestId("account-switcher-trigger"),{button:0,ctrlKey:false,pointerType:"mouse"});fireEvent.click(screen.getByRole("menuitem",{name:"组b"}));await act(async()=>{await vi.advanceTimersByTimeAsync(20);});expect(router.refresh).toHaveBeenCalledTimes(1);
+  await act(async()=>mounted.commitServer({groupId:"b",accountId:null}));expect(screen.queryByTestId("native-instance")).toBeNull();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});
+  expect(screen.getByTestId("workspace-initialization-error")).toBeVisible();expect(screen.queryByTestId("native-instance")).toBeNull();
+  fireEvent.click(screen.getByRole("button",{name:"重试打开工作区"}));await act(async()=>{await vi.advanceTimersByTimeAsync(1);});
+  expect(router.refresh).toHaveBeenCalledTimes(2);expect(screen.getByRole("button",{name:"当前账号组：组b"})).toBeVisible();expect(screen.getByRole("button",{name:"创建调用"})).toBeVisible();
+  await act(async()=>old());expect(screen.queryByTestId("workspace-initialization-error")).toBeNull();
+ });
+ it("已ready A到B到A以最后刷新完成为准，旧B完成和定时器不回写",async()=>{
+  let old!:()=>void,next!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;})).mockImplementationOnce(()=>new Promise<void>(r=>{next=r;}));
+  localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));mount({groupId:"a",accountId:null});await screen.findByRole("button",{name:"创建调用"});
+  const user=userEvent.setup();await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));
+  await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组a"}));await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(2));expect(screen.queryByTestId("native-instance")).toBeNull();
+  await act(async()=>next());await screen.findByRole("button",{name:"创建调用"});const node=screen.getByTestId("native-instance");
+  vi.useFakeTimers();await act(async()=>{old();await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});expect(screen.getByTestId("native-instance")).toBe(node);expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");expect(screen.queryByTestId("account-switcher-error")).toBeNull();
+ });
+ it("首次刷新永不交付时timeout的显式retry发整页reload，不能再排队refresh",async()=>{vi.useFakeTimers();let finish!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{finish=r;}));fetcher.mockResolvedValue(envelope([group("a")]));mount();await act(async()=>{await vi.advanceTimersByTimeAsync(1);});await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});expect(screen.getByTestId("workspace-initialization-error")).toBeVisible();const {reloadPage}=watchReload();fireEvent.click(screen.getByRole("button",{name:"重试打开工作区"}));expect(reloadPage).toHaveBeenCalledTimes(1);expect(fetcher).toHaveBeenCalledTimes(1);expect(router.refresh).toHaveBeenCalledTimes(1);await act(async()=>finish());expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();});
+
+ it("刷新timeout同根fail-open后重试只list，保实例脏稿且不整页reload",async()=>{vi.useFakeTimers();localStorage.setItem(CURRENT_GROUP_KEY,"removed");let old!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;}));fetcher.mockResolvedValue(envelope([group("a")]));mount({groupId:"a",accountId:null});await act(async()=>{await vi.advanceTimersByTimeAsync(1);});await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});const node=screen.getByTestId("native-instance");fireEvent.change(screen.getByLabelText("脏稿"),{target:{value:"保存原任务"}});const {reloadPage}=watchReload();fireEvent.click(screen.getByRole("button",{name:"重试"}));await act(async()=>{await vi.advanceTimersByTimeAsync(1);});expect(fetcher).toHaveBeenCalledTimes(2);expect(router.refresh).toHaveBeenCalledTimes(1);expect(reloadPage).not.toHaveBeenCalled();expect(screen.getByTestId("native-instance")).toBe(node);expect(screen.getByText("dirty")).toBeVisible();expect(unmounts).toBe(0);await act(async()=>old());});
+ it.each(["/accounts","/settings/models"])("恢复页%s已挂载任务在刷新timeout后重试不重载或卸载",async pathname=>{vi.useFakeTimers();route.path=pathname;let old!:()=>void,next!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;})).mockImplementationOnce(()=>new Promise<void>(r=>{next=r;}));fetcher.mockResolvedValue(envelope([group("a")]));mount();const node=screen.getByTestId("native-instance");fireEvent.change(screen.getByLabelText("脏稿"),{target:{value:"配置未保存"}});await act(async()=>{await vi.advanceTimersByTimeAsync(1);});await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});const {reloadPage}=watchReload();fireEvent.click(screen.getByRole("button",{name:"重试"}));await act(async()=>{await vi.advanceTimersByTimeAsync(1);});expect(reloadPage).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(2);expect(screen.getByTestId("native-instance")).toBe(node);expect(screen.getByText("dirty")).toBeVisible();expect(unmounts).toBe(0);await act(async()=>{old();next();});});
+
+});
+
+it("T1246 首载合法本地组B与SSR组A不一致时，refresh返回也不能替代真实SSR提交",async()=>{
+ localStorage.setItem(CURRENT_GROUP_KEY,"b");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));
+ const mounted=mount({groupId:"a",accountId:null},false,false);
+ await screen.findByRole("button",{name:"当前账号组：组b"},{timeout:120000});
+ await act(async()=>{await Promise.resolve();await Promise.resolve();});
+ expect(router.refresh).toHaveBeenCalledTimes(1);
+ expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+ await act(async()=>mounted.commitServer({groupId:"a",accountId:null}));
+ expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+ await act(async()=>mounted.commitServer({groupId:"b",accountId:null}));
+ expect(screen.getByRole("button",{name:"创建调用"})).toBeVisible();
+ expect(fetcher).toHaveBeenCalledTimes(1);expect(mounts).toBe(1);expect(unmounts).toBe(0);
+});
+
+function mountVoidRouter(scopeA:CreationScope){
+ const navigations:Array<(scope:CreationScope)=>void>=[],refreshes:Array<(scope:CreationScope)=>void>=[];
+ let update!:(scope:CreationScope|Promise<CreationScope>)=>void;
+ function NextCommitFixture(){
+  const [snapshot,setSnapshot]=React.useState<CreationScope|Promise<CreationScope>>(scopeA);React.useLayoutEffect(()=>{update=setSnapshot;},[]);
+  const scope=snapshot instanceof Promise?React.use(snapshot):snapshot;
+  return <WorkspaceInitializationProvider initialScope={scope}><AccountSwitcher collapsed={false}/><WorkspaceInitializationBoundary><Creator/></WorkspaceInitializationBoundary></WorkspaceInitializationProvider>;
+ }
+ // 与真实公开API一致：返回void，生命周期由上层React提交控制，不由Promise返回值或手动latestRefresh完成。
+ router.replace.mockImplementation(()=>{const navigation=new Promise<CreationScope>(resolve=>navigations.push(resolve));React.startTransition(()=>update(navigation));});
+ router.refresh.mockImplementation(()=>{const refresh=new Promise<CreationScope>(resolve=>refreshes.push(resolve));React.startTransition(()=>update(refresh));});
+ const mounted=render(<React.Suspense fallback={<p>路由首次打开</p>}><NextCommitFixture/></React.Suspense>);
+ return {...mounted,navigations,refreshes};
+}
+
+it("T1361 真实void导航在React Suspense提交后才刷新，同一切组不提前排第二个未完成动作",async()=>{
+ window.history.replaceState(null,"","/?startDate=2026-10-01&endDate=2026-10-07");
+ localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));
+ const scopeA:CreationScope={groupId:"a",accountId:null},scopeB:CreationScope={groupId:"b",accountId:null};
+ const mounted=mountVoidRouter(scopeA);
+ try{
+  await screen.findByRole("button",{name:"创建调用"});
+  const user=userEvent.setup();await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));
+  await waitFor(()=>expect(router.replace).toHaveBeenCalledWith("/"));
+  expect(router.refresh).not.toHaveBeenCalled();
+  expect(screen.queryByTestId("native-instance")).toBeNull();
+  await act(async()=>mounted.navigations[0]!(scopeA));
+  await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));
+  expect(screen.queryByTestId("native-instance")).toBeNull();
+  await act(async()=>mounted.refreshes[0]!(scopeB));
+  await screen.findByRole("button",{name:"创建调用"});
+  expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("b");
+  expect(screen.queryByTestId("workspace-initialization-loading")).toBeNull();
+ }finally{await act(async()=>{mounted.navigations.forEach(resolve=>resolve(scopeA));mounted.refreshes.forEach(resolve=>resolve(scopeB));});mounted.unmount();window.history.replaceState(null,"","/");}
+});
+
+it("T1361 导航耗尽原预算后晚提交不再发第二步refresh或延长等待",async()=>{
+ vi.useFakeTimers();window.history.replaceState(null,"","/");
+ localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));
+ const scopeA:CreationScope={groupId:"a",accountId:null};const mounted=mountVoidRouter(scopeA);
+ await act(async()=>{await vi.advanceTimersByTimeAsync(1);});
+ fireEvent.pointerDown(screen.getByTestId("account-switcher-trigger"),{button:0,ctrlKey:false,pointerType:"mouse"});fireEvent.click(screen.getByRole("menuitem",{name:"组b"}));
+ await act(async()=>{await vi.advanceTimersByTimeAsync(20);});
+ expect(router.replace).toHaveBeenCalledWith("/");expect(router.refresh).not.toHaveBeenCalled();
+ await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS);});
+ expect(screen.getByTestId("workspace-initialization-error")).toBeVisible();
+ await act(async()=>mounted.navigations[0]!(scopeA));
+ expect(router.refresh).not.toHaveBeenCalled();expect(screen.getByTestId("workspace-initialization-error")).toBeVisible();
+ expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("b");mounted.unmount();
+});
+
+it("T1361 快速反向的新导航提交前旧导航完成不能触发后续refresh",async()=>{
+ window.history.replaceState(null,"","/");localStorage.setItem(CURRENT_GROUP_KEY,"a");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));
+ const scopeA:CreationScope={groupId:"a",accountId:null};const mounted=mountVoidRouter(scopeA);
+ await screen.findByRole("button",{name:"创建调用"});const user=userEvent.setup();
+ await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组b"}));
+ await waitFor(()=>expect(router.replace).toHaveBeenCalledTimes(1));
+ await user.click(screen.getByTestId("account-switcher-trigger"));await user.click(screen.getByRole("menuitem",{name:"组a"}));
+ await waitFor(()=>expect(router.replace).toHaveBeenCalledTimes(2));
+ await act(async()=>mounted.navigations[0]!({groupId:"b",accountId:null}));
+ expect(router.refresh).not.toHaveBeenCalled();expect(screen.queryByTestId("native-instance")).toBeNull();
+ await act(async()=>mounted.navigations[1]!(scopeA));await waitFor(()=>expect(router.refresh).toHaveBeenCalledTimes(1));
+ await act(async()=>mounted.refreshes[0]!(scopeA));await screen.findByRole("button",{name:"创建调用"});
+ expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");mounted.unmount();
+});

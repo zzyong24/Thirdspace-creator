@@ -27,6 +27,7 @@ import {
   type CompletionPolicyV1,
   type EffectiveSkillSnapshotV1,
 } from "./effective-skill-runtime";
+import { USER_FACING_RESPONSE_POLICY } from "./user-facing-response-policy";
 
 const policy = {
   schemaVersion: 1 as const,
@@ -141,7 +142,7 @@ describe("[T-513] effective Skill snapshot server runtime", () => {
         accountId: `acct-${result.marker}`,
         platformPolicy: `immutable:${result.marker}`,
         frozen: true,
-        method: `method-${result.marker}`,
+        method: `method-${result.marker}\n\n${USER_FACING_RESPONSE_POLICY}`,
         template: `{{positioning}}-${result.marker}`,
         tools: [`tool-${result.marker}`],
         required: [`required_${result.marker}`],

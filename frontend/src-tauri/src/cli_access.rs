@@ -2,12 +2,14 @@
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const CONNECTION_SCHEMA: &str = "creatoros-cli-connection/v1";
 const CREDENTIAL_SCHEMA: &str = "creatoros-cli-credential/v1";
 const ACCESS_LIFETIME_MS: u64 = 24 * 60 * 60 * 1000;
+const ACCESS_RENEW_WINDOW_MS: u64 = 60 * 60 * 1000;
+const ACCESS_CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
 
 #[derive(Clone)]
 pub struct CliAccessRuntime {
@@ -23,7 +25,7 @@ pub struct CliAccessRuntime {
 }
 
 #[derive(Default)]
-pub struct CliAccessState(pub Mutex<Option<CliAccessRuntime>>);
+pub struct CliAccessState(pub Arc<Mutex<Option<CliAccessRuntime>>>);
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -93,8 +95,37 @@ pub struct CliAccessStatus {
     product_id: Option<String>,
     expires_at: Option<u64>,
     command_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mcp_launch: Option<McpLaunch>,
     active_connections: u32,
     last_invocation_at: Option<u64>,
+}
+
+
+/// 非秘密宿主启动参数；WorkBuddy 自己负责首次信任和实际工具调用。
+#[derive(Serialize)]
+pub struct McpLaunch {
+    command: String,
+    args: Vec<String>,
+    env: std::collections::BTreeMap<String, String>,
+}
+
+// SEMANTIC_BOUNDARY_ALLOW: 只落实原生宿主的真实启动路径及安装身份，不推断项目或创作意图。
+fn mcp_launch(runtime: &CliAccessRuntime, enabled: bool) -> Option<McpLaunch> {
+    if !enabled || !runtime.cli_node.is_file() || !runtime.cli_script.is_file() {
+        return None;
+    }
+    let descriptor = connection_path(runtime);
+    let paths = [&runtime.cli_node, &runtime.cli_script, &descriptor];
+    if paths.iter().any(|path| !path.is_absolute()) { return None; }
+    let strings = paths.iter().map(|path| path.to_str()).collect::<Option<Vec<_>>>()?;
+    if strings.iter().any(|value| value.contains(['\0', '\n', '\r'])) { return None; }
+    Some(McpLaunch {
+        command: strings[0].to_string(),
+        args: vec![strings[1].to_string(), "mcp".into(), "serve".into(),
+            "--connection-file".into(), strings[2].to_string()],
+        env: std::collections::BTreeMap::from([("CREATOROS_BASE_URL".into(), String::new())]),
+    })
 }
 
 #[derive(Serialize, Deserialize)]
@@ -145,11 +176,19 @@ fn stored_access_matches(
     credential: &StoredCredential,
     now: u64,
 ) -> bool {
+    descriptor.expires_at > now && stored_identity_matches(runtime, descriptor, credential)
+}
+
+// SEMANTIC_BOUNDARY_ALLOW: 仅校验当前启动的凭据身份，不做创作或意图判断。
+fn stored_identity_matches(
+    runtime: &CliAccessRuntime,
+    descriptor: &StoredConnectionDescriptor,
+    credential: &StoredCredential,
+) -> bool {
     descriptor.schema == CONNECTION_SCHEMA
         && descriptor.product_id == runtime.product_id
         && descriptor.package_id == runtime.package_id
         && descriptor.pid == std::process::id()
-        && descriptor.expires_at > now
         && descriptor.credential_file == "credential.json"
         && descriptor.launch_nonce_sha256 == launch_nonce_sha256(&runtime.launch_nonce)
         && credential.schema == CREDENTIAL_SCHEMA
@@ -321,7 +360,7 @@ fn set_windows_user_path_directory(directory: &Path, present: bool) -> Result<()
                 0,
                 environment.as_ptr() as isize,
                 SMTO_ABORTIFHUNG,
-                5_000,
+                120_000,
                 &mut broadcast_result,
             );
         }
@@ -445,19 +484,7 @@ fn enable_runtime(runtime: &CliAccessRuntime) -> Result<CliAccessStatus, String>
         cli_access_token: &runtime.cli_access_token,
         launch_nonce: &runtime.launch_nonce,
     })?;
-    if let Err(error) = write_json_atomic(&connection_path(runtime), &ConnectionDescriptor {
-        schema: CONNECTION_SCHEMA,
-        product_id: &runtime.product_id,
-        package_id: &runtime.package_id,
-        protocol_version: 1,
-        pid: std::process::id(),
-        port: runtime.port,
-        issued_at,
-        expires_at,
-        access: "full",
-        credential_file: "credential.json",
-        launch_nonce_sha256: launch_nonce_sha256(&runtime.launch_nonce),
-    }) {
+    if let Err(error) = write_connection(runtime, issued_at) {
         revoke_runtime(runtime);
         return Err(error);
     }
@@ -469,9 +496,65 @@ fn enable_runtime(runtime: &CliAccessRuntime) -> Result<CliAccessStatus, String>
         product_id: Some(runtime.product_id.clone()),
         expires_at: Some(expires_at),
         command_path: Some(command_path.to_string_lossy().to_string()),
+        mcp_launch: mcp_launch(runtime, true),
         active_connections: 0,
         last_invocation_at: None,
     })
+}
+
+fn write_connection(runtime: &CliAccessRuntime, issued_at: u64) -> Result<(), String> {
+    write_json_atomic(&connection_path(runtime), &ConnectionDescriptor {
+        schema: CONNECTION_SCHEMA,
+        product_id: &runtime.product_id,
+        package_id: &runtime.package_id,
+        protocol_version: 1,
+        pid: std::process::id(),
+        port: runtime.port,
+        issued_at,
+        expires_at: issued_at.saturating_add(ACCESS_LIFETIME_MS),
+        access: "full",
+        credential_file: "credential.json",
+        launch_nonce_sha256: launch_nonce_sha256(&runtime.launch_nonce),
+    })
+}
+
+// 只由持有 state 锁的壳层调用；不创建凭据，不把过期连接放行给 CLI。
+fn renew_runtime(runtime: &CliAccessRuntime, now: u64) -> Result<bool, String> {
+    if !auto_access_enabled(runtime)? { return Ok(false); }
+    let descriptor = std::fs::read(connection_path(runtime)).ok()
+        .and_then(|bytes| serde_json::from_slice::<StoredConnectionDescriptor>(&bytes).ok());
+    let credential = std::fs::read(credential_path(runtime)).ok()
+        .and_then(|bytes| serde_json::from_slice::<StoredCredential>(&bytes).ok());
+    let (Some(descriptor), Some(credential)) = (descriptor, credential) else { return Ok(false); };
+    if !stored_identity_matches(runtime, &descriptor, &credential)
+        || descriptor.expires_at > now.saturating_add(ACCESS_RENEW_WINDOW_MS) {
+        return Ok(false);
+    }
+    // 唤醒可能已跨过租期，仍必须证明是本进程持有的同次启动凭据。
+    write_connection(runtime, now)?;
+    Ok(true)
+}
+
+fn start_renewal(state: &CliAccessState) {
+    let weak = Arc::downgrade(&state.0);
+    std::thread::spawn(move || {
+        let mut last_error = None;
+        loop {
+            std::thread::sleep(ACCESS_CHECK_INTERVAL);
+            let Some(state) = weak.upgrade() else { break; };
+            let Ok(guard) = state.lock() else { break; };
+            let Some(runtime) = guard.as_ref() else { break; };
+            match renew_runtime(runtime, epoch_ms()) {
+                Ok(_) => last_error = None,
+                Err(error) => {
+                    if last_error.as_ref() != Some(&error) {
+                        eprintln!("[shell] CLI 连接续期失败: {error}");
+                    }
+                    last_error = Some(error);
+                }
+            }
+        }
+    });
 }
 
 pub fn initialize(state: &CliAccessState, runtime: CliAccessRuntime) {
@@ -488,6 +571,7 @@ pub fn initialize(state: &CliAccessState, runtime: CliAccessRuntime) {
         Err(error) => eprintln!("[shell] CLI 保持关闭: {error}"),
     }
     *state.0.lock().unwrap() = Some(runtime);
+    start_renewal(state);
 }
 
 #[tauri::command]
@@ -502,6 +586,7 @@ pub fn cli_access_status(state: tauri::State<'_, CliAccessState>) -> CliAccessSt
             product_id: None,
             expires_at: None,
             command_path: None,
+            mcp_launch: None,
             active_connections: 0,
             last_invocation_at: None,
         };
@@ -525,6 +610,7 @@ pub fn cli_access_status(state: tauri::State<'_, CliAccessState>) -> CliAccessSt
         installed: launcher_path().is_file(),
         enabled: descriptor.is_some(),
         product_id: Some(runtime.product_id.clone()),
+        mcp_launch: mcp_launch(runtime, descriptor.is_some()),
         expires_at: descriptor.map(|value| value.expires_at),
         command_path: Some(launcher_path().to_string_lossy().to_string()),
         active_connections: activity.as_ref().map(|value| value.active_connections).unwrap_or(0),
@@ -558,18 +644,131 @@ pub fn cli_access_revoke(state: tauri::State<'_, CliAccessState>) -> Result<CliA
         product_id: Some(runtime.product_id.clone()),
         expires_at: None,
         command_path: Some(launcher_path().to_string_lossy().to_string()),
+        mcp_launch: None,
         active_connections: 0,
         last_invocation_at: None,
     })
 }
 
 pub fn revoke_on_exit(state: &CliAccessState) {
-    if let Some(runtime) = state.0.lock().unwrap().as_ref() { revoke_runtime(runtime); }
+    if let Some(runtime) = state.0.lock().unwrap().take() { revoke_runtime(&runtime); }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct RenewalFixture(CliAccessRuntime);
+    impl RenewalFixture {
+        fn new(name: &str) -> Self {
+            let dir = std::env::temp_dir().join(format!("creatoros-renew-{name}-{}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&dir);
+            let runtime = CliAccessRuntime {
+                dir, product_id: "test".into(), package_id: "test.package".into(), port: 1234,
+                handshake_token: "test-handshake".into(), cli_access_token: "test-access".into(),
+                launch_nonce: "test-nonce".into(), cli_node: "unused-node".into(), cli_script: "unused-cli".into(),
+            };
+            save_auto_access(&runtime, true).unwrap();
+            write_json_atomic(&credential_path(&runtime), &Credential {
+                schema: CREDENTIAL_SCHEMA, product_id: &runtime.product_id, package_id: &runtime.package_id,
+                handshake_token: &runtime.handshake_token, cli_access_token: &runtime.cli_access_token,
+                launch_nonce: &runtime.launch_nonce,
+            }).unwrap();
+            write_connection(&runtime, 1_000).unwrap();
+            Self(runtime)
+        }
+        fn descriptor(&self) -> StoredConnectionDescriptor {
+            serde_json::from_slice(&std::fs::read(connection_path(&self.0)).unwrap()).unwrap()
+        }
+    }
+    impl Drop for RenewalFixture {
+        fn drop(&mut self) { let _ = std::fs::remove_dir_all(&self.0.dir); }
+    }
+
+    #[test]
+    fn renewal_preserves_credentials_and_skips_healthy_lease() {
+        let f = RenewalFixture::new("healthy");
+        let before = std::fs::read(connection_path(&f.0)).unwrap();
+        let secret = std::fs::read(credential_path(&f.0)).unwrap();
+        assert!(!renew_runtime(&f.0, 1_001).unwrap());
+        assert_eq!(std::fs::read(connection_path(&f.0)).unwrap(), before);
+        let now = 1_000 + ACCESS_LIFETIME_MS - ACCESS_RENEW_WINDOW_MS;
+        assert!(renew_runtime(&f.0, now).unwrap());
+        assert_eq!(f.descriptor().expires_at, now + ACCESS_LIFETIME_MS);
+        assert_eq!(std::fs::read(credential_path(&f.0)).unwrap(), secret);
+        assert!(!renew_runtime(&f.0, now + 1).unwrap());
+    }
+
+    #[test]
+    fn renewal_recovers_same_launch_after_sleep_beyond_expiry() {
+        let f = RenewalFixture::new("sleep");
+        let now = 1_000 + 3 * ACCESS_LIFETIME_MS;
+        assert!(renew_runtime(&f.0, now).unwrap());
+        assert_eq!(f.descriptor().expires_at, now + ACCESS_LIFETIME_MS);
+        let credential = serde_json::from_slice(&std::fs::read(credential_path(&f.0)).unwrap()).unwrap();
+        assert!(stored_access_matches(&f.0, &f.descriptor(), &credential, now));
+        assert!(!stored_access_matches(&f.0, &f.descriptor(), &credential, now + ACCESS_LIFETIME_MS));
+    }
+
+    #[test]
+    fn renewal_cannot_restore_disabled_or_revoked_access() {
+        for name in ["disabled", "connection", "credential", "both", "corrupt-preference"] {
+            let f = RenewalFixture::new(name);
+            match name {
+                "disabled" => save_auto_access(&f.0, false).unwrap(),
+                "connection" => std::fs::remove_file(connection_path(&f.0)).unwrap(),
+                "credential" => std::fs::remove_file(credential_path(&f.0)).unwrap(),
+                "both" => revoke_runtime(&f.0),
+                _ => std::fs::write(f.0.dir.join("preference.json"), b"broken").unwrap(),
+            }
+            let before = std::fs::read(connection_path(&f.0)).ok();
+            assert!(!renew_runtime(&f.0, 3 * ACCESS_LIFETIME_MS).unwrap_or(false), "{name}");
+            assert_eq!(std::fs::read(connection_path(&f.0)).ok(), before, "{name}");
+            if matches!(name, "credential" | "both") { assert!(!credential_path(&f.0).exists()); }
+        }
+    }
+
+    #[test]
+    fn renewal_rejects_corrupt_and_foreign_connection_identity() {
+        for (file, field, value) in [
+            ("connection.json", "schema", serde_json::json!("other")),
+            ("connection.json", "productId", serde_json::json!("other")),
+            ("connection.json", "packageId", serde_json::json!("other")),
+            ("connection.json", "pid", serde_json::json!(0)),
+            ("connection.json", "launchNonceSha256", serde_json::json!("other")),
+            ("connection.json", "credentialFile", serde_json::json!("other.json")),
+            ("credential.json", "schema", serde_json::json!("other")),
+            ("credential.json", "packageId", serde_json::json!("other")),
+            ("credential.json", "productId", serde_json::json!("other")),
+            ("credential.json", "handshakeToken", serde_json::json!("other")),
+            ("credential.json", "cliAccessToken", serde_json::json!("other")),
+            ("credential.json", "launchNonce", serde_json::json!("other")),
+        ] {
+            let f = RenewalFixture::new("identity");
+            let path = f.0.dir.join(file);
+            let mut body: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+            body[field] = value;
+            write_json_atomic(&path, &body).unwrap();
+            let before = std::fs::read(connection_path(&f.0)).unwrap();
+            assert!(!renew_runtime(&f.0, 3 * ACCESS_LIFETIME_MS).unwrap(), "{file}/{field}");
+            assert_eq!(std::fs::read(connection_path(&f.0)).unwrap(), before);
+            std::fs::write(path, b"broken").unwrap();
+            assert!(!renew_runtime(&f.0, 3 * ACCESS_LIFETIME_MS).unwrap());
+        }
+    }
+
+    #[test]
+    fn exit_removes_runtime_so_renewal_cannot_resurrect_access() {
+        let f = RenewalFixture::new("exit");
+        let state = CliAccessState::default();
+        *state.0.lock().unwrap() = Some(f.0.clone());
+        revoke_on_exit(&state);
+        assert!(state.0.lock().unwrap().is_none());
+        assert!(!connection_path(&f.0).exists());
+        assert!(!credential_path(&f.0).exists());
+        assert!(auto_access_enabled(&f.0).unwrap());
+        revoke_on_exit(&state);
+    }
 
     #[test]
     fn auto_access_remembers_choice_without_retaining_credentials() {
@@ -678,4 +877,39 @@ mod tests {
             100,
         ));
     }
+
+    #[test]
+    fn workbuddy_mcp_launch_is_exact_bundled_argv_without_credentials() {
+        let root = std::env::temp_dir().join(format!("creatoros-mcp-launch-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        let node = root.join("Node 运行时.exe");
+        let script = root.join("CreatorOS CLI.cjs");
+        std::fs::write(&node, b"fixture executable").unwrap();
+        std::fs::write(&script, b"fixture bundle").unwrap();
+        let runtime = CliAccessRuntime {
+            dir: root.join("channel cli"), product_id: "channel-product".into(),
+            package_id: "test.channel".into(), port: 43127,
+            handshake_token: "never-export-handshake".into(),
+            cli_access_token: "never-export-access".into(), launch_nonce: "never-export-nonce".into(),
+            cli_node: node.clone(), cli_script: script.clone(),
+        };
+        let launch = mcp_launch(&runtime, true).expect("enabled runtime has a launch configuration");
+        let value = serde_json::to_value(launch).unwrap();
+        assert_eq!(value["command"], node.to_string_lossy().as_ref());
+        assert_eq!(value["args"], serde_json::json!([
+            script.to_string_lossy(), "mcp", "serve", "--connection-file",
+            runtime.dir.join("connection.json").to_string_lossy(),
+        ]));
+        assert_eq!(value["env"], serde_json::json!({"CREATOROS_BASE_URL": ""}));
+        let json = value.to_string();
+        for secret in ["never-export-handshake", "never-export-access", "never-export-nonce", "43127", "credential.json"] {
+            assert!(!json.contains(secret), "MCP config exported {secret}");
+        }
+        assert!(mcp_launch(&runtime, false).is_none());
+        std::fs::remove_file(&node).unwrap();
+        assert!(mcp_launch(&runtime, true).is_none());
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
 }

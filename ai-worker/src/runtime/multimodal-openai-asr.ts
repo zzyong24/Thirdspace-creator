@@ -1,3 +1,4 @@
+import {readActualProviderTiming} from "./asr-provider-timing";
 import {createAsrRequestExecutor, snapshotAsrInput} from "./asr-request";
 // OpenAI 兼容 ASR 适配器(T-030-D1,SPEC §5.1 / D-d)—— 实现 MultimodalProviderAdapter 的
 // `transcribeAudio`,直连 OpenAI 兼容的 `POST {baseUrl}/v1/audio/transcriptions`(multipart
@@ -63,6 +64,7 @@ async function transcribeAudio(
   });
   form.append("file", blob, "audio.mp3");
   form.append("model", spec.model);
+  if(opts.timestampMode){form.append("response_format","verbose_json");form.append("timestamp_granularities[]",opts.timestampMode==="word"?"word":"segment");}
   if (opts.language) form.append("language", opts.language);
 
   const res = await deps.fetch(transcriptionsUrl(spec), {
@@ -79,7 +81,8 @@ async function transcribeAudio(
       `ASR audio/transcriptions HTTP ${res.status}: ${await safeText(res)}`,
     ),{statusCode:res.status});
   }
-  const json = (await res.json()) as OpenaiTranscriptionResponse;
+  const rawResponse=await res.text(),json=JSON.parse(rawResponse) as OpenaiTranscriptionResponse;
+  const timing=opts.timestampMode&&opts.timingAudio?readActualProviderTiming({rawResponse,response:json,audioBytes:opts.audioBytes,granularity:opts.timestampMode,...opts.timingAudio}):null;
   // OpenAI 兼容转写(默认 response_format=json)返 `{ text, language? }`。
   if (typeof json.text !== "string") {
     throw new MultimodalGenerationError(
@@ -87,7 +90,7 @@ async function transcribeAudio(
     );
   }
   return {
-    text: json.text,
+    text: json.text,...(timing?{timing}:{}),
     ...(typeof json.language === "string" ? { language: json.language } : {}),
   };
   });

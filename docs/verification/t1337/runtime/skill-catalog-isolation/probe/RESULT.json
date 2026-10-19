@@ -1,0 +1,150 @@
+{
+  "state": "ACTUAL_AUTOMATIC_SKILL_CATALOG_FALSE_CONFIRMED",
+  "budgets": {
+    "startupMs": 120000,
+    "requestMs": 120000,
+    "cleanupMs": 120000,
+    "executionMs": 600000,
+    "outerMs": 900000,
+    "retry": 0
+  },
+  "startedAt": "2026-10-17T09:09:15.993Z",
+  "runtimeRoots": {
+    "root": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/probe",
+    "cwd": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/probe/tmp/codex-cwd-XnvoHu",
+    "logs": "/Volumes/T7-MacData/CodexBuilds/t1337-skill-catalog-isolation-20261017-df9381d3/probe/tmp/codex-cwd-XnvoHu/logs"
+  },
+  "methods": [
+    {
+      "method": "initialize",
+      "startedAt": "2026-10-17T09:09:16.235Z",
+      "status": "fulfilled",
+      "timeoutMs": 120000,
+      "finishedAt": "2026-10-17T09:09:16.321Z"
+    },
+    {
+      "method": "config/read",
+      "startedAt": "2026-10-17T09:09:16.321Z",
+      "status": "fulfilled",
+      "timeoutMs": 120000,
+      "finishedAt": "2026-10-17T09:09:16.331Z"
+    }
+  ],
+  "notifications": {
+    "remoteControl/status/changed": 1
+  },
+  "serverRequests": [],
+  "modelsStarted": 0,
+  "threadStartCalls": 0,
+  "turnStartCalls": 0,
+  "accountReads": 0,
+  "authFilesRead": 0,
+  "configurationWrites": 0,
+  "rawFramesPersisted": false,
+  "original68FilesModified": false,
+  "userConfig": {
+    "exists": true,
+    "mcpKeysReadOnlyInMemory": true,
+    "mcpKeyCount": 6,
+    "valuesRecorded": false
+  },
+  "startupPolicy": {
+    "binaryBytes": 240351424,
+    "binarySha256": "4d210f7c5a18fd0386434df23b5bdbb8c0e7257d3e8a2b30b0769c8bbe99a878",
+    "sourceSha256": "837e3ca7c28d35d90d90941de9013dfc0721b418778cc396a67a50319dd258af",
+    "argvSha256": "63029b1d6966ed4f8dc8ae2e2172a7db6711d1040c9148c5cf1da4a31c245223",
+    "disabledFeatures": [
+      "apps",
+      "plugins",
+      "hooks",
+      "multi_agent",
+      "multi_agent_v2",
+      "image_generation",
+      "browser_use",
+      "computer_use",
+      "code_mode",
+      "code_mode_host",
+      "tool_suggest",
+      "shell_tool",
+      "unified_exec",
+      "view_image",
+      "skill_search",
+      "skill_mcp_dependency_install"
+    ],
+    "mcpKeysDisabled": 6,
+    "taskToolsDirectNamespace": [
+      "functions"
+    ],
+    "automaticSkillInstructionsOverride": "skills.include_instructions=false",
+    "logDirOverrideOwned": true
+  },
+  "child": {
+    "pid": 959,
+    "initial": {
+      "pgid": 959,
+      "identity": "Sat Oct 17 17:09:16 2026     /Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-1334-b8fc27fb53d2/candidate/sidecar/node_modules/.pnpm/@openai+codex@0.159.3-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex"
+    }
+  },
+  "config": {
+    "instructions": {
+      "present": false,
+      "type": "null"
+    },
+    "developerInstructions": {
+      "present": false,
+      "type": "null"
+    },
+    "modelInstructionsFile": {
+      "present": false,
+      "type": "null"
+    },
+    "projectDocMaxBytes": 32768,
+    "projectDocFallbackFilenameCount": 0,
+    "skillsConfigPresent": true,
+    "skillsConfigType": "object",
+    "automaticSkillInstructions": {
+      "type": "boolean",
+      "value": false
+    },
+    "mcpCount": 6,
+    "allMcpDisabled": true,
+    "unknownMcpCount": 0,
+    "webSearch": "disabled",
+    "directNamespaces": [
+      "functions"
+    ],
+    "features": {
+      "apps": false,
+      "plugins": false,
+      "hooks": false,
+      "multi_agent": false,
+      "multi_agent_v2": false,
+      "image_generation": false,
+      "browser_use": false,
+      "computer_use": false,
+      "code_mode": false,
+      "code_mode_host": false,
+      "tool_suggest": false,
+      "shell_tool": false,
+      "unified_exec": false,
+      "view_image": false,
+      "skill_search": false,
+      "skill_mcp_dependency_install": false
+    },
+    "logDirOwned": true,
+    "baseInstructionsPropertyPresent": false,
+    "defaultBaseInstructionsActuallyObserved": false
+  },
+  "childClose": {
+    "code": 0,
+    "signal": null,
+    "at": "2026-10-17T09:09:16.338Z"
+  },
+  "cleanup": {
+    "actions": [],
+    "actualIdentityAfter": null,
+    "remainingOwnedGroup": [],
+    "closedObserved": true
+  },
+  "finishedAt": "2026-10-17T09:09:16.383Z"
+}

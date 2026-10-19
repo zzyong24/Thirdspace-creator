@@ -1,0 +1,67 @@
+{
+  "schema": "t1300-workflow-preflight/v1",
+  "sourceConfigSha256": "94c3f63200526a88a00dec075903329ddb269629dd1de4264fdb42215635a04a",
+  "sourceConfigBytes": 722340,
+  "candidates": [
+    {
+      "id": "T-1111",
+      "moduleCanonicalSha256": "0e0ef94456e85ee147dc932cae77e1a8a39c41b1d9e3b038b7e566cedb7d1b66",
+      "lastEventLine": 1272,
+      "lastEvent": {
+        "ts": "2026-10-09T06:03:34.815Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1111",
+        "evidence": "94c80195；私有helper 30453915→49c810e8，原freeze exit1保留；正式独评recheck PASS、实施有限PASS；同一入口freeze-green真实exit0/1.688秒，clean main四版本1.2.0与87已审源一致；仅辅助复核状态读取，原resolved历史/Gate/安全/产品未改；不签构建安装或全仓。",
+        "sha_before": "de12e2baba78",
+        "sha_after": "5e010a1c96c5"
+      },
+      "lastEventRawSha256": "1f934df4fe4be1a16686cb24007702431af576cb9005682507b5388839102b9c",
+      "canonicalRows": [
+        {
+          "file": "BACKLOG-archive.md",
+          "line": 1072,
+          "row": "| T-1111 | 修正本地冻结辅助校验把已解决复核项误判为阻断 | ✅ 待办 | PASS[REV:be761523cfcf] | — | [SPEC](docs/features/t1111-freeze-resolved-review.md) | 当前main文档已提交，冻结预检退出1：T1107有限PASS报告保留IMP-001 resolved，被辅助脚本findings==[]误拒。只修本机私有校验的机械状态读取，未解决/未知状态仍拒；保原报告/失败/产品字节，不改仓库构建、Gate或用户数据。 |"
+        }
+      ],
+      "inboundModuleReferences": [],
+      "progressVerticals": [],
+      "progressLeases": []
+    },
+    {
+      "id": "T-1125",
+      "moduleCanonicalSha256": "04657474d53f869b32ecf648806893b28a10b540a427fbada7a71a635c5c9749",
+      "lastEventLine": 1300,
+      "lastEvent": {
+        "ts": "2026-10-09T12:12:33.201Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1125",
+        "evidence": "docs/verification/t1125/CURRENT_VALIDATION.md",
+        "sha_before": "53885ef6ee03",
+        "sha_after": "a708ad063fe7"
+      },
+      "lastEventRawSha256": "ac3122022d01f2d64e88926549235dad98380815cbf024352911b310b3cbe294",
+      "canonicalRows": [
+        {
+          "file": "BACKLOG-archive.md",
+          "line": 1062,
+          "row": "| T-1125 | 修正本机出包冻结辅助检查把脱敏测试夹具误报为真实密钥 | ✅ 待办 | PASS[REV:d9e25d4f31e7] | — | [SPEC](docs/features/t1125-package-private-preflight-fixture.md) | ec5冻结全扫描321秒exit1，三Rust测试模块4类命中皆脱敏合成夹具；保原RED并先独评仅准确path/sourceSHA/逐值SHA分类，未知仍拒，原规则全扫描不删。只改私有helper，不改vendor/build；当前45基本PASS不代签出包。 |"
+        }
+      ],
+      "inboundModuleReferences": [],
+      "progressVerticals": [],
+      "progressLeases": []
+    }
+  ],
+  "scope": "只读证明，无归档或状态变更；不替独审/真实generate与compile",
+  "consumerReadEvidence": [
+    "progress.mjs:104 reads .modules; validates all before commands",
+    "context-plan.mjs:349-351 reads modules object",
+    "context-compile.mjs:269-272 reads modules object",
+    "governance-guard.mjs:146 reads .modules",
+    "parallel-isolation.mjs:232 validates modules object",
+    "delivery-phase.mjs:86 reads .modules",
+    "autonomy-guard.mjs:107 reads module config"
+  ]
+}

@@ -42,10 +42,12 @@ export const EFFECTIVE_SKILL_SNAPSHOT_MAX_BYTES = 256 * 1024;
  */
 export const REGISTERED_SKILL_TASK_TYPES = [
   "agentic.research", "agentic.material", "agentic.collect",
-  "asset.classify", "material.extract",
+  "asset.classify",
+  "material.extract",
   "benchmark.teardown",
   "calibration.diagnose",
   "calibration.score",
+  "chatbox.canvas",
   "chatbox.calibration",
   "chatbox.distill",
   "chatbox.positioning",
@@ -63,6 +65,7 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "knowledge.distill",
   "knowledge.relate",
   "material.match",
+  "moments.compose",
   "planning.contract",
   "planning.outline",
   "planning.thesis",
@@ -86,12 +89,22 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "video.director",
   "video.scenes",
   "video.subtitles",
+  "wechat.article-draft",
+  "wechat.article-text",
+  "graphic.post-text",
+  "graphic.card-brief",
+  "publication.text",
+  "work.review",
+  "production.rough-cut",
 ] as const;
 
 const REGISTERED_SKILLS = new Set<string>(REGISTERED_SKILL_TASK_TYPES);
 const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  "production.rough-cut.propose": ["production.rough-cut"],
+  "moments.draft": ["moments.compose"],
   "review.analyze": ["review.insights"],
   "cover.generate": ["cover.brief"],
+  "graphic.card.generate": ["graphic.card-brief"],
   "publish.platform_adapt": ["platform.adapt"],
   "research.gather_material": ["research.gather"],
   "script.generate": [
@@ -121,9 +134,11 @@ const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
   // T-600 后 self.metrics 委托 canonical self.detail collector，必须冻结同一归因 Skill；
   // 否则采集主体成功、尾部 topic attribution 全部报 snapshot incomplete。
   "scheduled.self.metrics": ["topic.attribution"],
-  "scheduled.topic.daily": ["topic.generate", "trend.extract"],
+  "scheduled.topic.daily": ["topic.generate", "topic.query-plan", "trend.extract"],
 };
 const NON_SKILL_TASK_TYPES = new Set([
+  // 原资产音频识别透传事实，不执行创作选择；配置、预算与供应商证明仍由原ASR执行核验。
+  "asset.asr",
   "scheduled.self.traffic",
   "agentic.research",
   "asset.classify",
@@ -135,6 +150,9 @@ const NON_SKILL_TASK_TYPES = new Set([
   "exec.agentic.research",
   "exec.echo.manifest",
   "exec.video.render",
+  // 真实媒体探针只读文件元数据，不调用模型或进行创作判断。
+  "exec.media.probe",
+  "media.probe",
   "material.extract",
   "scheduled.comments",
   // 内容雷达聚合作业只扫描到期来源并排 source_sync 持久子任务，本身不调用 Skill。
@@ -156,8 +174,9 @@ const VIDEO_KIND_TO_SKILL: Readonly<Record<string, string>> = {
   scenes: "video.scenes",
   subtitles: "video.subtitles",
 };
-export const CHAT_METHOD_SKILL_IDS = ["method.research", "method.positioning", "method.topic", "method.planning", "method.writing", "method.visual", "method.publishing", "method.review", "method.knowledge", "method.guide", "method.redfox.topic-research", "method.redfox.benchmark", "method.operations.review"] as const;
+export const CHAT_METHOD_SKILL_IDS = ["method.research", "method.positioning", "method.topic", "method.planning", "method.writing", "method.visual", "method.publishing", "method.review", "method.knowledge", "method.guide", "method.report", "method.redfox.topic-research", "method.redfox.benchmark", "method.operations.review"] as const;
 const CHAT_SURFACE_TO_SKILL: Readonly<Record<string, string>> = {
+  canvas:"chatbox.canvas",
   calibration: "chatbox.calibration",
   distill: "chatbox.distill",
   "knowledge-distill": "chatbox.distill",
@@ -188,7 +207,7 @@ export function requiredSkillIdsForTask(
   taskType: string,
   inputData: Readonly<Record<string, unknown>>,
 ): readonly string[] {
-  if (taskType === "topic.generate" && inputData.basis === "trend") return ["topic.generate", "trend.extract"];
+  if (taskType === "topic.generate" && inputData.basis === "trend") return ["topic.generate", "topic.query-plan", "trend.extract"];
   if (taskType === "script.draft") {
     return [
       "script.draft",
@@ -249,7 +268,8 @@ export interface OfficialSkillProvider {
 
 export interface AccountSkillOverlayRuntimeRow {
   userId: string;
-  accountId: string;
+  accountId: string | null;
+  groupId?: string | null;
   skillId: string;
   rowRevision: number;
   observedBaseVersion: string;
@@ -267,6 +287,7 @@ export interface AccountSkillOverlayReader {
 export interface EffectiveSkillSnapshotResolverDeps {
   officialSkills: OfficialSkillProvider;
   accountOverlays: AccountSkillOverlayReader;
+  groupOverlays?: AccountSkillOverlayReader;
   now?: () => string;
 }
 
@@ -538,8 +559,9 @@ export function createEffectiveSkillSnapshotResolver(
   deps: EffectiveSkillSnapshotResolverDeps,
 ): EffectiveSkillSnapshotResolver {
   return async (ctx, requiredSkillIds) => {
-    const accountId = ctx.accountId?.trim();
-    if (!ctx.userId.trim() || !accountId) {
+    const accountId = ctx.accountId?.trim() ?? null;
+    const groupId = ctx.groupId?.trim() ?? null;
+    if (!ctx.userId.trim() || (!accountId && !groupId)) {
       return accountMismatch("解析 Skill snapshot 缺少有效 user/account owner", {
         userId: ctx.userId,
         accountId: ctx.accountId ?? null,
@@ -559,13 +581,13 @@ export function createEffectiveSkillSnapshotResolver(
     const rows =
       skillIds.length === 0
         ? []
-        : await deps.accountOverlays.listBySkillIds(ctx, skillIds);
+        : groupId ? await deps.groupOverlays?.listBySkillIds(ctx, skillIds) ?? [] : await deps.accountOverlays.listBySkillIds(ctx, skillIds);
     const requested = new Set(skillIds);
     const rowBySkill = new Map<string, AccountSkillOverlayRuntimeRow>();
     for (const row of rows) {
       if (
         row.userId !== ctx.userId ||
-        row.accountId !== accountId ||
+        (groupId ? row.groupId !== groupId : row.accountId !== accountId) ||
         !requested.has(row.skillId)
       ) {
         return accountMismatch("overlay reader 返回了跨属主或非请求 Skill 行", {
@@ -602,7 +624,7 @@ export function createEffectiveSkillSnapshotResolver(
     const snapshot: EffectiveSkillSnapshotV1 = {
       snapshotVersion: 1,
       userId: ctx.userId,
-      accountId,
+      accountId,groupId,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,
       resolvedAt: (deps.now ?? (() => new Date().toISOString()))(),
       platformPolicyVersion: policy.version,
       platformPolicy: policy.text,
@@ -639,8 +661,8 @@ function assertSnapshot(
     value.snapshotVersion !== 1 ||
     typeof value.userId !== "string" ||
     !value.userId.trim() ||
-    typeof value.accountId !== "string" ||
-    !value.accountId.trim() ||
+    (value.accountId !== null && (typeof value.accountId !== "string" || !value.accountId.trim())) ||
+    (!(typeof value.groupId === "string" && value.groupId.trim()) && !value.accountId) ||
     typeof value.resolvedAt !== "string" ||
     Number.isNaN(Date.parse(value.resolvedAt)) ||
     typeof value.platformPolicyVersion !== "string" ||

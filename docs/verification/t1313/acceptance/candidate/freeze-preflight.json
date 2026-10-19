@@ -1,0 +1,19 @@
+{
+  "sourceHead": "0e1dc6228f1fa3dc02f2b1c7a1cee77ab18d650a",
+  "workingTreeClean": true,
+  "branch": "main",
+  "fixedCommand": "CREATOROS_LOCAL_SKIP_INSTALL=1 pnpm -C frontend desktop:package-local",
+  "sourceHashes": {
+    "backend/src/modules/review/work-reviews.service.ts": "0757799b32bf814add665ecab5719de21f546cc585808fb83e7d8083bea681e5",
+    "backend/src/modules/review/work-review-task-adapter.ts": "00ef2d2f27d34ff87914f5598db56ea00279ef5bc3b09dba2c2094bfdd594ad3",
+    "backend/src/application/generation/work-review-root.ts": "e37b7c46ba172b1a3ae6e59fe20bcf52cfe7023470565bb6329524eb4575a016",
+    "frontend/src/server/persistence-client.ts": "2503085236dcdace8d8f5368faaab44bd1a40ed938294fe25fa00c8088faa0de",
+    "backend/src/modules/calibration/default-rubric.ts": "52f25957b6502de1160530daff1618a9475b86c35e3de6d40b08239df9837af7"
+  },
+  "T1313ProductCommit": "61de58c711f825e02de46dc3b9475a8cedaec4b2",
+  "T1312ProductCommit": "4e73d0f59be2bd44eaace8b2be9253106480b326",
+  "T1312CorrectionReceipt": "docs/verification/t1312/control/DONE_COMMIT_CORRECTION_RECEIPT.json",
+  "formalAppChangesAllowed": false,
+  "newOwnedRoot": true,
+  "oldControllerKept": 94030
+}

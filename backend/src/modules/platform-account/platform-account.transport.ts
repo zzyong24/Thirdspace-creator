@@ -1,3 +1,5 @@
+import {ENDPOINTS} from "@creatoros/contract";
+import type {RequestControls,WechatNavigationDiagnosisResource} from "@creatoros/contract";
 import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
@@ -18,7 +20,10 @@ import type { PlatformAccountService } from "./platform-account.service";
 // PERSISTED_OPS from PLATFORM_ACCOUNT_OP_IDS (adding the module = registering it).
 
 export const PLATFORM_ACCOUNT_OP_IDS = [
+  "accounts.wechatNavigation.diagnose",
   "accounts.list",
+  "accounts.collectionPlanReadiness",
+  "accounts.bindingCapabilities",
   "accounts.create",
   "accounts.get",
   "accounts.update",
@@ -29,9 +34,10 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 export function createPlatformAccountTransport(
   serviceFactory: () => PlatformAccountService,
+  navigation?:{diagnose(ctx:RequestContext,accountId:string,controls?:RequestControls):Promise<WechatNavigationDiagnosisResource>},
 ): Transport {
   return {
-    async request(endpoint: Endpoint, input, ctx) {
+    async request(endpoint: Endpoint, input, ctx,controls) {
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
@@ -39,6 +45,19 @@ export function createPlatformAccountTransport(
       const p = (params ?? {}) as { accountId?: string };
 
       switch (endpoint.id) {
+        case "accounts.wechatNavigation.diagnose": {
+          const operation=ENDPOINTS.diagnoseWechatNavigation;
+          const target=operation.params!.parse(params);
+          operation.body!.parse(body);
+          if(query!==undefined)throw new Error('WECHAT_NAVIGATION_QUERY_FORBIDDEN');
+          if(!navigation)throw new Error('WECHAT_NAVIGATION_DISABLED');
+          return {data:await navigation.diagnose(ctx,target.accountId,controls),meta:{requestId}};
+        }
+        case "accounts.collectionPlanReadiness": {
+          const data = await service.getCollectionPlanReadiness(ctx, p.accountId ?? "");
+          return {data, meta: {requestId}};
+        }
+        case "accounts.bindingCapabilities":{const data=await service.getBindingCapabilities(ctx);return {data,meta:{requestId,page:1,pageSize:Math.max(1,data.length),total:data.length}};}
         case "accounts.list": {
           const q = (query ?? {}) as {
             page?: number;
@@ -58,12 +77,14 @@ export function createPlatformAccountTransport(
           const b = (body ?? {}) as {
             platform: string;
             accountHandle: string;
+            idempotencyKey?:string;
             secretReference?: string;
             followerBaseline?: number;
           };
           const created = await service.createAccount(ctx, {
             platform: b.platform,
             accountHandle: b.accountHandle,
+            idempotencyKey: b.idempotencyKey,
             secretReference: b.secretReference ?? null,
             followerBaseline: b.followerBaseline,
           });

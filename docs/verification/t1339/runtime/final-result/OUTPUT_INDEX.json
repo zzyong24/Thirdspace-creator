@@ -1,0 +1,577 @@
+{
+  "state": "FROZEN_T1339_LOCAL_RESULT",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/calibration/calibration.acceptance.test.ts",
+      "bytes": 11435,
+      "sha256": "12e0e93e717d4324db3d3418fc93dcfe4e052279e7ab9e48d18345e0406c9d8a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/calibration/calibration.service.test.ts",
+      "bytes": 18302,
+      "sha256": "4672b04921749b415c1bd5e493a20633c5597275d13a08c78861766af3e40c4c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/calibration/calibration.service.ts",
+      "bytes": 43623,
+      "sha256": "77f4ef94e0bf192462b7f5657ae9a1e659283bfea09b17b9f3a4d7c4d346d917"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/features/t1339-calibration-missing-actual-deviation-observation.md",
+      "bytes": 7928,
+      "sha256": "42fe69d60a3939c9b0af74f8af7a4cd4189c2fafe3d52fe1a048aa77f99acd22"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/01.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/02.log",
+      "bytes": 5676,
+      "sha256": "94f53908b1e7c8b558cafdc101b9de37037fe0d5b50cb009607d3466f7a41b34"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/03.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/04.log",
+      "bytes": 15862,
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/05.log",
+      "bytes": 86,
+      "sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/AFTER_INPUTS.json",
+      "bytes": 10688,
+      "sha256": "f011bf1ad05f2458e6666314f2c2a2a60db401894214337e77e75d7b7bc58a5b"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/BEFORE_INPUTS.json",
+      "bytes": 10688,
+      "sha256": "f011bf1ad05f2458e6666314f2c2a2a60db401894214337e77e75d7b7bc58a5b"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/IN_PROGRESS.json",
+      "bytes": 2057,
+      "sha256": "c5a66e60534c7327678da54f51aadff162438f386e95f197420cef7c76b69314"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/OUTPUT_INDEX.json",
+      "bytes": 2060,
+      "sha256": "03ac9494c23f956e471718312b37536d5e223128569394aca67ffcfda44e1238"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1328/final-integration/runtime/final-four-task-static-gates-v1/RESULT.json",
+      "bytes": 2490,
+      "sha256": "43640e359abb2ccce26e6dcb3e7e9281a91d4b831f2aeeeabe3030c76306e6e4"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/control/APPROVED_PRODUCT_SCOPE_RESULT.json",
+      "bytes": 1861,
+      "sha256": "f7c3af7db110e8e783d64683d1134357b75379246f886d4f16a1ed1d3e0cf494"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/control/OWNED_RUNTIME_AUTHORIZATION.json",
+      "bytes": 589,
+      "sha256": "dbf972951161c920fd71a9009ee973aee3fcba2de63ab8745d1ff0c615d0562a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/final-result/RESULT.json",
+      "bytes": 9310,
+      "sha256": "518080f2229b60deec3239aca001f91a4cdd403424c594249072069f4f238286"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/final-result/RESULT.md",
+      "bytes": 1929,
+      "sha256": "529fae9dc768a1c958eec21b7081b155590da32f1ba42f9e64775db5954df95c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/green-public-result/OUTPUT_INDEX.json",
+      "bytes": 8052,
+      "sha256": "a5d95f948d6fcccea88c84e9d8744c139e2267acb08dba1819ed0341a164873c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/green-public-result/RESULT.json",
+      "bytes": 10606,
+      "sha256": "776f85148024060bc19d2ae9e0d847d3c4e4dc5ac79d3b4584e6e46b5c792530"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/BACKEND_TYPE_EXTRA_BEFORE.json",
+      "bytes": 414,
+      "sha256": "a5c49ad2ab64810b2f062c56896a9998230764fdae368e7c3dc678882cb0fa93"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/BACKEND_TYPE_SHARED.json",
+      "bytes": 3584,
+      "sha256": "ea954762bbaa7a5886c10094a4acd9591bdbb08fa37b1b9aeaee3bae014f613c"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/CONCURRENT_PRODUCT_DELTA.json",
+      "bytes": 682,
+      "sha256": "dfb0df00bdd13a8759d79fd833ceaf8b01268fa778ccd88497f3afd0abd61d63"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/FRONTEND_TYPE_SHARED.json",
+      "bytes": 2012,
+      "sha256": "b1646ef1c9ed8529e2defb4bb24c0552ec418dd6fcf2c80584653512f1afa29a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/GREEN_READY_INDEX.json",
+      "bytes": 6819,
+      "sha256": "d7f39888283f8e9fefa7adbb63114f877f8072c0dbb9deeae6091c8a5d9115a3"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/HARNESS_SYNTAX.json",
+      "bytes": 474,
+      "sha256": "898031aaa4cc46673e2c3797571b715f5de633b8240ad202b0e60baabf3bd02e"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/PLANNED_SERVICE.diff",
+      "bytes": 6497,
+      "sha256": "61ed2c0c8f0d61977b0800cbba1d0d76a5e5e3700df651741e0a154654cf8e9d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/PLANNED_SERVICE_SOURCE.json",
+      "bytes": 369,
+      "sha256": "9568c3639a394144ec7ce3e41e0965bec1487da85e21ae6842c406422aacc88b"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/PRODUCT_DIFF.diff",
+      "bytes": 6497,
+      "sha256": "61ed2c0c8f0d61977b0800cbba1d0d76a5e5e3700df651741e0a154654cf8e9d"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/PRODUCT_SOURCE.json",
+      "bytes": 322,
+      "sha256": "0a76e4982a3badf1f09b2acead70e4e5831e8678a6c940ce1459bd3d60a7587a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/TYPE_CONSUMERS_BEFORE.json",
+      "bytes": 1251,
+      "sha256": "059b4acb850b9123ce2040963acf84f86eb0b5ffdb0e0052ea100af440f4d164"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/freeze-green.py",
+      "bytes": 3073,
+      "sha256": "90032be0b3aa7debccc76aaa030221edee588b24f5001f5c2c66940aa03ea55a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/launch.py",
+      "bytes": 2519,
+      "sha256": "315c843e987a280a9beb8226e6bb2e9555053f2eb57b882ec5b115543c60498f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/unit-collect.py",
+      "bytes": 1594,
+      "sha256": "565d1d35d893abd5d02d7b79099c4fa8d9d75347a2c7a53e8b0d2b0f1a5de5f0"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/unit-run.py",
+      "bytes": 6936,
+      "sha256": "238d3ebcf41f5ccfdc9db791ccf540e2c0bb63ac3bfdd09e18a9090fb57cc1ab"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/implementation/unit.config.mts",
+      "bytes": 1134,
+      "sha256": "83c1787137c9130b232e61ffe3e5b6605aa35eb5d77e92366b72c30ca1242973"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/launch-red-v1.py",
+      "bytes": 2088,
+      "sha256": "3402d30c74f6c65b1393603d190d3babdecf9d5c0a6d0fb793f9b40ee07c94d0"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/ASSEMBLY.md",
+      "bytes": 4614,
+      "sha256": "eda54190b2a537fcce9540a82a571342a897fab1f840d2d658bbac8197031296"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/READY_INDEX.json",
+      "bytes": 4541,
+      "sha256": "46d801a421f874b552847cf4ac310697aedb2d4e39bc28931380390d20ec450f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/SERVICE_BASELINE.json",
+      "bytes": 169,
+      "sha256": "0325af5acc61b3f063b8834ebefc5b375722956e6ce9aca21010884af4a75517"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/SYNTAX_RESULT.json",
+      "bytes": 657,
+      "sha256": "957262d660909b2836d5cbae8d3bfeb03e46b68ba9b3e8de75fa380deecb41b5"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/UNIT_TEST_DELTA.diff",
+      "bytes": 4709,
+      "sha256": "807f6b4a9a41289922e4d977ce2c888d38d40bef44864841cbb110404047a87a"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/check.py",
+      "bytes": 1800,
+      "sha256": "00448bec70ca2a6ed7c90b6628d4fcc5aeb84a0c0a85bdb65d616bb843b2d335"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/freeze.py",
+      "bytes": 4050,
+      "sha256": "e290f22a8f805c8744ba148a1222f2e474a39a0566015a159946db66f806e3cf"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/run.py",
+      "bytes": 7055,
+      "sha256": "bc4102542a191558b0523f88a1cd9da5b23dd3d4c4bd8a4279be7ec436171874"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/preparation/vitest.config.mts",
+      "bytes": 1006,
+      "sha256": "978595e0362dc8c33c42d7d1436fa168c5c1f7bae04419d57571c9836721a6cf"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/red-result/OUTPUT_INDEX.json",
+      "bytes": 6111,
+      "sha256": "dde71b9d8e8784203fc0daffdca5b7b2f65c13c3637869ef783ac470fb7de253"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1339/runtime/red-result/RESULT.json",
+      "bytes": 8768,
+      "sha256": "cb8fe1429eb006c448c89a549928742ace6c51e50b094138023e78a01bf7c37f"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/__module_integration__/calibration-missing-actual.persistence-client.test.ts",
+      "bytes": 13904,
+      "sha256": "2c829e70547b058e3c5bc8fb0c3b84157ca3e71f344c1e495ed33341a139e537"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/CLEANUP.json",
+      "bytes": 155,
+      "sha256": "5b2bd4b31d4fe17979b07d51d2e4ecd5d8af83da62b3882067edc8a0a2bc9d37"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/DOMAIN_FINAL.json",
+      "bytes": 7423,
+      "sha256": "bd09b6829eb02c5a5dbde210ce7e3bd066c708d59feb00884c3ccc4c2e7e5aed"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/FIXTURE.json",
+      "bytes": 18532,
+      "sha256": "e9391496e079c8dcab50bfbec9b92bbec86f4ca0aee6621409e9cc4913f18b31"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/HISTORY_CLEANUP.json",
+      "bytes": 153,
+      "sha256": "a4f90fb286253a10ac5e43c0ef92c037de487fd40a3b810703b78c1e2824dec3"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/HISTORY_DOMAIN_FINAL.json",
+      "bytes": 7563,
+      "sha256": "01b36a95a95eebbe73772fcb2093aa29da36d548e340964cdf55cebf67380ef4"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/HISTORY_IMMUTABILITY.json",
+      "bytes": 16544,
+      "sha256": "f00ba3e679cf0b3b257016bc4aee6e113bc6c1b0df4d2919aa0282c72b7e6c71"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/HISTORY_PUBLIC_REQUESTS.json",
+      "bytes": 6163,
+      "sha256": "8b5a4787b5aeadbd32d7267453d3e7751f6e24e99e2426702fbe95bf5a69cff6"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/HISTORY_ZERO_MODEL.json",
+      "bytes": 112,
+      "sha256": "0eb21eec63f970665118375ea1063119352b05a3233f3ad86847576561ec6ef0"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/OUTER_WATCHDOG.json",
+      "bytes": 821,
+      "sha256": "305511d275b942b650eb3606a3eccac8a29d00e2d22ee6d690692e4f55de31f6"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/PRE_RUN_LOCK.json",
+      "bytes": 9995649,
+      "sha256": "6c0ef5c8a3df5ed7997157445618ee599ae047dc27a85dbc5fb144cb0689a348"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/PUBLIC_REQUESTS.json",
+      "bytes": 30183,
+      "sha256": "d2f1755132d1db36dc362c26e9673095eb49e5954eacc7393df348b4af57d8cc"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/ZERO_MODEL.json",
+      "bytes": 762,
+      "sha256": "8c4c6098b4cab356775c07dc43029dfb53771c271c0af1b7d0f3ad4cff33c726"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/backend-type-RESULT.json",
+      "bytes": 742,
+      "sha256": "bdbae59735b2e38e3fe65cd0a80def180e1aef74f2463357629854ebb2920491"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/backend-type.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/collection-RESULT.json",
+      "bytes": 718,
+      "sha256": "ea802811b8044d19ed626d63e8a819993d030546fea2b2a79e95bbfeefee84e3"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/collection.log",
+      "bytes": 352,
+      "sha256": "6e17bc1ef0e2780b363cc140482676051409da0ceec0f60577d555da718115eb"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/empty-MEDIA_ROOT.json",
+      "bytes": 216,
+      "sha256": "38eab24c7d0832b3057d89df649ab09d45d242b2559ecaf3f586d7991f968fe9"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/empty-proof.json",
+      "bytes": 17256,
+      "sha256": "f412a3f33a94e42351a5567b522e9f2eb6ef7b74e6aa9dd33e14488a6e9feba9"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/frontend-type-RESULT.json",
+      "bytes": 746,
+      "sha256": "d54c5fdb1620fab904b30587bdfb1d270c15f792472a4df08a18fd7177498948"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/frontend-type.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/history-empty.json",
+      "bytes": 4266,
+      "sha256": "2e2f05df50eb896eaaa8261758b5dd4c3b218c911ff49020e2ff532cfdd5f7b5"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/history-partial.json",
+      "bytes": 4344,
+      "sha256": "6fcc21aa9a784e031a25167568ad7ce9c2d07d9b903df36d472752714ec7a321"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/history-zero.json",
+      "bytes": 4464,
+      "sha256": "9ca3c3358d5c52f5201bafbd5f663001984ca2ff7d298c3b9dedc7dc8fa90c98"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/partial-MEDIA_ROOT.json",
+      "bytes": 216,
+      "sha256": "38eab24c7d0832b3057d89df649ab09d45d242b2559ecaf3f586d7991f968fe9"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/partial-proof.json",
+      "bytes": 17288,
+      "sha256": "f61559aeb2e279bc9afe1ced9d988f4c9d8011211d5061d14a16c650628f28c2"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/run/BEFORE_INPUTS.json",
+      "bytes": 9995649,
+      "sha256": "6c0ef5c8a3df5ed7997157445618ee599ae047dc27a85dbc5fb144cb0689a348"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/run/RUNNER_CHILD.json",
+      "bytes": 150,
+      "sha256": "ba60fddddcefbd78fad4983a5958cf239be890f4ba4e0f8059c2dfcf7890dcde"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/run/execution-result.json",
+      "bytes": 679,
+      "sha256": "b69a2b178199483310e836ef0325b6679dc317386eb6828cc2d4a8983159372c"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/run/execution-start.json",
+      "bytes": 797,
+      "sha256": "4aa2c571a43adcb95ad05fd3183b911ad8c9baf8346916c482173f5ff8b46592"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/run/output.log",
+      "bytes": 122,
+      "sha256": "a7b59f0549b48eb1dff991d7d232f98cbb0097bb943318ba62aea9e20fc5ba87"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/vitest-result.json",
+      "bytes": 1350,
+      "sha256": "bebb61c531f6eeeb9158b630e1549cdc99eb74ce6f52ee2bdd6e0300a84530c8"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/zero-MEDIA_ROOT.json",
+      "bytes": 216,
+      "sha256": "38eab24c7d0832b3057d89df649ab09d45d242b2559ecaf3f586d7991f968fe9"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/green-v1/zero-proof.json",
+      "bytes": 17375,
+      "sha256": "14e3b6b0b7a8ed92be4612323bf065094da1aaaaf2fc0779d6238bb83eb16ae2"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/CLEANUP.json",
+      "bytes": 153,
+      "sha256": "a4f90fb286253a10ac5e43c0ef92c037de487fd40a3b810703b78c1e2824dec3"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/DOMAIN_FINAL.json",
+      "bytes": 7563,
+      "sha256": "01b36a95a95eebbe73772fcb2093aa29da36d548e340964cdf55cebf67380ef4"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/FIXTURE.json",
+      "bytes": 18838,
+      "sha256": "8f0be2a242dfdc49b484e89ba90975edce4e98fc0d802a44ac98cd67ae0f456b"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/OUTER_WATCHDOG.json",
+      "bytes": 815,
+      "sha256": "61bccf7ca01ddf3dde246b57c9b04928c518fbfec7513ac9636af42991ba1b9a"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/PRE_RUN_LOCK.json",
+      "bytes": 9989020,
+      "sha256": "72ba66a969180befefca2f92cc2acfcad3d400c343d265c0c5400ecb69b839b5"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/PUBLIC_REQUESTS.json",
+      "bytes": 30556,
+      "sha256": "43130ffa89596a3950fd28e84c0484444d2955e83a3bcb19d93f29c5355ce72b"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/ZERO_MODEL.json",
+      "bytes": 1088,
+      "sha256": "63301e6f7835e89a3cf49e0b42622cf719a621c1b5f131b050a62a5c89e25c36"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/collection-RESULT.json",
+      "bytes": 714,
+      "sha256": "cf1513753c07603c87107f12eb27b47ff2fd9244d28a85cac1eb559ab937fc53"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/collection.log",
+      "bytes": 179,
+      "sha256": "2747a5a02acd571a43ab9453de1f568800b6a498dcdde667b37a18bb83bb16f1"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/empty-MEDIA_ROOT.json",
+      "bytes": 212,
+      "sha256": "caa3a1f594a9c262b8041437bc7ca32bef29ce2b7cd7d4a45d9693c5b7a29499"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/empty-proof.json",
+      "bytes": 17675,
+      "sha256": "4192edaf48187d557eb29acfba331e4d6c93959e2e4eed228d52d90e1aa187f1"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/frontend-type-RESULT.json",
+      "bytes": 743,
+      "sha256": "d21fc25a1232c25e01445fdb60844f01b892700afe70d1dd939bba40889e86ca"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/frontend-type.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/partial-MEDIA_ROOT.json",
+      "bytes": 212,
+      "sha256": "caa3a1f594a9c262b8041437bc7ca32bef29ce2b7cd7d4a45d9693c5b7a29499"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/partial-proof.json",
+      "bytes": 17689,
+      "sha256": "253c08331154dc3eb554a2edb83dcf56f0ce4c5931db21e0db0e1db93246e690"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/run/BEFORE_INPUTS.json",
+      "bytes": 9989020,
+      "sha256": "72ba66a969180befefca2f92cc2acfcad3d400c343d265c0c5400ecb69b839b5"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/run/RUNNER_CHILD.json",
+      "bytes": 150,
+      "sha256": "893f9fa30891e8df833b98dca491b0c3c85f696aa54069b3d4b43afe1e4ddeda"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/run/execution-result.json",
+      "bytes": 678,
+      "sha256": "937f63249e7b9f4d30f36200d7aaf6317e3ee47d9faae2175b38ae2334cb2903"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/run/execution-start.json",
+      "bytes": 794,
+      "sha256": "480d48f633a5e1a1a631606ee96695b3dd5e00308cc1cdefad0161a1c41b8fbb"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/run/output.log",
+      "bytes": 120,
+      "sha256": "5810842ddc42b7aa20ce92010d57698c67ab61a447e122406671c00f9b2ef067"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/vitest-result.json",
+      "bytes": 15069,
+      "sha256": "e0b07405db299bda8acb02a693725cf19305b427510c4b2e976c07b84fd07e26"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/zero-MEDIA_ROOT.json",
+      "bytes": 212,
+      "sha256": "caa3a1f594a9c262b8041437bc7ca32bef29ce2b7cd7d4a45d9693c5b7a29499"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/red-v1/zero-proof.json",
+      "bytes": 17706,
+      "sha256": "c1d90e31be5ac983255aa5eb20e60a5683e4a37eb3ba7c1ba4abd18dcc532bf0"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/COLLECTION_RESULT.json",
+      "bytes": 10888,
+      "sha256": "6d745790558ab86549d1a1f250700c221d82dba1aa2bce68b996e3cd3ed61f17"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/OUTER_WATCHDOG.json",
+      "bytes": 827,
+      "sha256": "2c54f2d11532a59a30dd9d88f74bf1e372f73edeb8783930b55a625662b57500"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/collection.log",
+      "bytes": 9786,
+      "sha256": "3158e4b5a35891c159185ff8160d2d80797568ac9c2772fc4638f7b139d81a31"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/run/BEFORE_INPUTS.json",
+      "bytes": 9995649,
+      "sha256": "6c0ef5c8a3df5ed7997157445618ee599ae047dc27a85dbc5fb144cb0689a348"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/run/RUNNER_CHILD.json",
+      "bytes": 150,
+      "sha256": "99f5202f7a2338a1300e7f285bb96893019bf7776dc74959866a99a57006259d"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/run/execution-result.json",
+      "bytes": 446,
+      "sha256": "8e3f7c4fa74ddf36e30facfec6c8fda266604259fb2ecf80cc3eab8a687cba2c"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/run/execution-start.json",
+      "bytes": 796,
+      "sha256": "457ae5e3b3f3bae25e2b7383c280af61ac01609c133d8dd4c217962f43e00aa6"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/run/output.log",
+      "bytes": 121,
+      "sha256": "33e23ff18aea6fbd1912d9b5773e78202bfa629a4722a7f76ffe46dc1f1c45dc"
+    },
+    {
+      "path": "/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6/unit-v1/vitest-result.json",
+      "bytes": 22129,
+      "sha256": "056ed390346719e79b2d9e9d7e9d8f78b51df53971839c2b586c72b9b2dc5f73"
+    }
+  ],
+  "databaseOrKeyCopied": false,
+  "sourceWindowReleased": true
+}

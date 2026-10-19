@@ -15,9 +15,9 @@ export interface ChatAgenticResearchTaskPorts {
 /** 仅创建 exec.agentic.research 子任务；Pi 循环、预算和浏览器授权继续由既有持久执行承担。 */
 export function createChatAgenticResearchTaskHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,ports:ChatAgenticResearchTaskPorts):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  async function current(ctx:RequestContext,ref:ExecutionRef,signal?:AbortSignal){
-  const owner={userId:ctx.userId,accountId:ctx.accountId};signal?.throwIfAborted();
+  const owner={userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null};signal?.throwIfAborted();
   const restored=await reader.read({...ref});signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("自主调研工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("自主调研工具账号与原任务不符");
   const frozen=restored.modelInput.tools.find(tool=>tool.name==="research.autonomous");
   if(!frozen || frozen.execution!=="host.task-submit")return null;
   const prototypes=buildChatTools(["research.autonomous"],{} as ChatToolDeps);

@@ -1,0 +1,62 @@
+{
+  "question": "conindid排除条件是否遗漏外键引用的独立唯一索引，而不是缺唯一约束或FK排序问题",
+  "sourceProbeSHA256": "1b1d77af7c301838aef571dddd7e5929f19d525812f66e02d70c60a1cb667a6f",
+  "results": [
+    {
+      "engine": "pglite",
+      "oldMissedReferencedUnique": true,
+      "fixedKeptReferencedUnique": true,
+      "fixedKeptPredicateIndex": true,
+      "ownedUniqueConstraintIndexExcluded": true,
+      "foreignKeyInsert": true,
+      "duplicateStillDenied": true,
+      "old": [
+        {
+          "table_name": "parent",
+          "name": "parent_user_partial",
+          "definition": "CREATE INDEX parent_user_partial ON public.parent USING btree (user_id) WHERE (user_id IS NOT NULL)"
+        }
+      ],
+      "fixed": [
+        {
+          "table_name": "parent",
+          "name": "parent_owner_idx",
+          "definition": "CREATE UNIQUE INDEX parent_owner_idx ON public.parent USING btree (id, user_id)"
+        },
+        {
+          "table_name": "parent",
+          "name": "parent_user_partial",
+          "definition": "CREATE INDEX parent_user_partial ON public.parent USING btree (user_id) WHERE (user_id IS NOT NULL)"
+        }
+      ]
+    },
+    {
+      "engine": "postgres",
+      "oldMissedReferencedUnique": true,
+      "fixedKeptReferencedUnique": true,
+      "fixedKeptPredicateIndex": true,
+      "ownedUniqueConstraintIndexExcluded": true,
+      "foreignKeyInsert": true,
+      "duplicateStillDenied": true,
+      "old": [
+        {
+          "table_name": "parent",
+          "name": "parent_user_partial",
+          "definition": "CREATE INDEX parent_user_partial ON public.parent USING btree (user_id) WHERE (user_id IS NOT NULL)"
+        }
+      ],
+      "fixed": [
+        {
+          "table_name": "parent",
+          "name": "parent_owner_idx",
+          "definition": "CREATE UNIQUE INDEX parent_owner_idx ON public.parent USING btree (id, user_id)"
+        },
+        {
+          "table_name": "parent",
+          "name": "parent_user_partial",
+          "definition": "CREATE INDEX parent_user_partial ON public.parent USING btree (user_id) WHERE (user_id IS NOT NULL)"
+        }
+      ]
+    }
+  ]
+}

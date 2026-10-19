@@ -1,0 +1,99 @@
+
+> @creatoros/backend@0.1.0 test /private/tmp/t1046-backend-work/backend
+> vitest run src/modules/production/production-native-rough.test.ts src/modules/production/production-rough-cut.integration.test.ts
+
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/backend
+
+ ❯ src/modules/production/production-native-rough.test.ts (8 tests | 3 failed) 56ms
+   × 采用后更新原生派生duration，默认第一scene最大尾点，其他metadata不隐藏且输入不改 10ms
+   × duration按isMain选择scene并计入全部overlay/audio，不用当前scene或其他scene总和 2ms
+   × 清空所有主轨且无独立项时派生duration为0；保留独立轨时仍以其真实尾点计时 1ms
+ ❯ src/modules/production/production-rough-cut.integration.test.ts (9 tests | 1 failed) 22502ms
+   × 真实Source→原Skill/Worker/结算冻结公共链（native） 2607ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-native-rough.test.ts > 采用后更新原生派生duration，默认第一scene最大尾点，其他metadata不隐藏且输入不改
+AssertionError: expected { id: 'video', duration: 720000, …(3) } to deeply equal { id: 'video', duration: 600000, …(3) }
+
+- Expected
++ Received
+
+  {
+    "custom": {
+      "keep": true,
+    },
+-   "duration": 600000,
++   "duration": 720000,
+    "id": "video",
+    "name": "保留题名",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+  }
+
+ ❯ src/modules/production/production-native-rough.test.ts:17:54
+     15|  const p=plan();(p.referenceEditor.nativeDocument as any).metadata={id…
+     16|  const before=structuredClone(p),out=applyNativeRoughSuggestions(p,'sc…
+     17|  expect(out.referenceEditor.nativeDocument.metadata).toEqual({...befor…
+       |                                                      ^
+     18| });
+     19| it('duration按isMain选择scene并计入全部overlay/audio，不用当前scene或其他scene总和',()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/production/production-native-rough.test.ts > duration按isMain选择scene并计入全部overlay/audio，不用当前scene或其他scene总和
+AssertionError: expected 9999999 to be 1080000 // Object.is equality
+
+- Expected
++ Received
+
+- 1080000
++ 9999999
+
+ ❯ src/modules/production/production-native-rough.test.ts:25:72
+     23|  p.referenceEditor.nativeDocument.scenes.push(mainScene);(p.referenceE…
+     24|  const before=structuredClone(mainScene),out=applyNativeRoughSuggestio…
+     25|  expect((out.referenceEditor.nativeDocument.metadata as any).duration)…
+       |                                                                        ^
+     26| });
+     27| it('清空所有主轨且无独立项时派生duration为0；保留独立轨时仍以其真实尾点计时',()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/production/production-native-rough.test.ts > 清空所有主轨且无独立项时派生duration为0；保留独立轨时仍以其真实尾点计时
+AssertionError: expected 720000 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 720000
+
+ ❯ src/modules/production/production-native-rough.test.ts:29:182
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/production/production-rough-cut.integration.test.ts > 真实Source→原Skill/Worker/结算冻结公共链（native）
+AssertionError: expected undefined to be 360000 // Object.is equality
+
+- Expected:
+360000
+
++ Received:
+undefined
+
+ ❯ src/modules/production/production-rough-cut.integration.test.ts:88:823
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 13 passed (17)
+   Start at  00:48:17
+   Duration  31.51s (transform 7.49s, setup 0ms, import 11.11s, tests 22.56s, environment 0ms)
+
+/private/tmp/t1046-backend-work/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/production/production-native-rough.test.ts src/modules/production/production-rough-cut.integration.test.ts`
+Exit status 1

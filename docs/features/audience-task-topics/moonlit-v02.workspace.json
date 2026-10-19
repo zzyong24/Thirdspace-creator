@@ -1,0 +1,482 @@
+{
+  "audience": "技术小白，用AI把手头的事做成",
+  "platform": "抖音",
+  "preparationMinutes": 240,
+  "gridVersion": 2,
+  "audienceCenter": "技术小白，用AI把手头的事做成",
+  "industryCenter": "普通人能用的AI工具与做事方法",
+  "audienceGrid": [
+    {
+      "id": "audience:work_handoff",
+      "text": "上班交差：汇报、会议、方案；把零散材料交成一份能用的东西",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260912-004",
+        "work:W-20260912-007"
+      ],
+      "version": 2,
+      "position": 0,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "audience:learn_apply",
+      "text": "学习提升：读书、课程、技能；学完能做一步，而不是继续收藏",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260324-001",
+        "work:W-20260327-003"
+      ],
+      "version": 2,
+      "position": 1,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "audience:digital_order",
+      "text": "数字生活整理：文件、截图、AI对话；找回、归档、下次接着用",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260317-001",
+        "work:W-20260528-001"
+      ],
+      "version": 2,
+      "position": 2,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "audience:content_create",
+      "text": "表达与创作：图文、短视频、讲解；把想法做成别人看得懂的内容",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260912-011",
+        "work:W-20260914-001"
+      ],
+      "version": 2,
+      "position": 3,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "audience:side_project",
+      "text": "副业与接单：作品展示、小需求、交付；先做出一个可展示的小成果",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260912-009",
+        "work:W-20260913-001"
+      ],
+      "version": 2,
+      "position": 5,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "audience:family_records",
+      "text": "家庭与成长记录：照片、声音、生活片段；把散落的记录做成时间线与纪念册",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260909-001",
+        "work:W-20260911-002"
+      ],
+      "version": 2,
+      "position": 6,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "audience:life_planning",
+      "text": "生活安排与选择：出游、办事、信息比较；把信息变成能执行的安排",
+      "evidence": "hypothesis",
+      "sourceRefs": [],
+      "version": 2,
+      "position": 7,
+      "basis": "用户允许更广生活兴趣；本格为相邻生活场景的编辑拓展，不推断本人旅行经历",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "audience:creative_play",
+      "text": "兴趣与娱乐：角色、小互动、小游戏；从喜欢的一张图做出自己的小作品",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260906-001",
+        "work:W-20260904-001"
+      ],
+      "version": 2,
+      "position": 8,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    }
+  ],
+  "industryGrid": [
+    {
+      "id": "industry:extract",
+      "text": "AI读资料：读图、转写、提取、核对",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260327-003",
+        "trend-gradio-20260910"
+      ],
+      "version": 2,
+      "position": 0,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "industry:write",
+      "text": "AI写与改：口述成稿、提纲、去AI味",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260914-001"
+      ],
+      "version": 2,
+      "position": 1,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "industry:visualize",
+      "text": "AI画图与修图：配图、抠图、改背景、一致性",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260906-001",
+        "trend-gradio-20260910"
+      ],
+      "version": 2,
+      "position": 2,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "industry:present",
+      "text": "AI做演示：PPT、解释图、一页讲清",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260912-007"
+      ],
+      "version": 2,
+      "position": 3,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "industry:produce",
+      "text": "AI做视频与声音：素材、配音、字幕、剪辑、迭代",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260912-011",
+        "trend-tts-20260930"
+      ],
+      "version": 2,
+      "position": 5,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "industry:remember",
+      "text": "AI知识库与记忆：检索、引用、记录、接续",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260528-001",
+        "work:W-20260909-001",
+        "trend-earlyn-20261002"
+      ],
+      "version": 2,
+      "position": 6,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "industry:automate",
+      "text": "AI自动干活：批处理、流程、Agent、Skill",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260912-004",
+        "work:W-20260912-008",
+        "trend-holo4-20260928"
+      ],
+      "version": 2,
+      "position": 7,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    },
+    {
+      "id": "industry:build",
+      "text": "AI做网页与小工具：作品页、表单、小应用、小游戏",
+      "evidence": "hypothesis",
+      "sourceRefs": [
+        "work:W-20260906-001",
+        "work:W-20260912-010"
+      ],
+      "version": 2,
+      "position": 8,
+      "basis": "已登记作品与本人项目索引支持作者可讲材料；具体观众需求按题验证",
+      "publicQueryAllowed": true
+    }
+  ],
+  "problems": [
+    {
+      "id": "trend-tts-20260930",
+      "text": "Open TTS Leaderboard，按语言比较与试听；中文教程效果须实测",
+      "role": "industry_material",
+      "sourceUrl": "https://huggingface.co/blog/open-tts-leaderboard",
+      "sourceRef": "月明当前版交接：https://huggingface.co/blog/open-tts-leaderboard",
+      "capturedAt": "2026-10-02T00:00:00.000Z",
+      "eventAt": "2026-09-30T00:00:00.000Z",
+      "readScope": "交接文档所载原始发布线索；本任务未自行网络复验，不证明工具效果",
+      "publicStatus": "public",
+      "projectId": null
+    },
+    {
+      "id": "trend-earlyn-20261002",
+      "text": "Earlyn 本地屏幕/会议记忆，限定 Mac，中文与入口须实测",
+      "role": "industry_material",
+      "sourceUrl": "https://www.producthunt.com/products/earlyn",
+      "sourceRef": "月明当前版交接：https://www.producthunt.com/products/earlyn",
+      "capturedAt": "2026-10-02T00:00:00.000Z",
+      "eventAt": "2026-10-02T00:00:00.000Z",
+      "readScope": "交接文档所载原始发布线索；本任务未自行网络复验，不证明工具效果",
+      "publicStatus": "public",
+      "projectId": null
+    },
+    {
+      "id": "trend-holo4-20260928",
+      "text": "Holo4 计算机操作模型，作者研究线索，不等于小白入口",
+      "role": "industry_material",
+      "sourceUrl": "https://huggingface.co/blog/Hcompany/holo4",
+      "sourceRef": "月明当前版交接：https://huggingface.co/blog/Hcompany/holo4",
+      "capturedAt": "2026-10-02T00:00:00.000Z",
+      "eventAt": "2026-09-28T00:00:00.000Z",
+      "readScope": "交接文档所载原始发布线索；本任务未自行网络复验，不证明工具效果",
+      "publicStatus": "public",
+      "projectId": null
+    },
+    {
+      "id": "trend-gradio-20260910",
+      "text": "Gradio Workflow1111 浏览器图像流程，使用用户配额，状态与费用须实测",
+      "role": "industry_material",
+      "sourceUrl": "https://huggingface.co/blog/gradio-workflow-1111",
+      "sourceRef": "月明当前版交接：https://huggingface.co/blog/gradio-workflow-1111",
+      "capturedAt": "2026-10-02T00:00:00.000Z",
+      "eventAt": "2026-09-10T00:00:00.000Z",
+      "readScope": "交接文档所载原始发布线索；本任务未自行网络复验，不证明工具效果",
+      "publicStatus": "public",
+      "projectId": null
+    }
+  ],
+  "authorMaterials": [
+    {
+      "id": "work:W-20260912-004",
+      "text": "我把豆包塞进真实业务流，提效的不是工具而是流程；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260912-004-我把豆包塞进真实业务流提效的不是工具而是流程/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260912-007",
+      "text": "AI把PPT变好看了，可你的业务汇报为什么还是没人听？；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260912-007-ai把ppt变好看了可你的业务汇报为什么还是没人/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260324-001",
+      "text": "✨ 从阅读到行动，让知识真正落地！#读书 #成长；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260324-001-从阅读到行动让知识真正落地读书-成长/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260327-003",
+      "text": "为什么你刷了那么多知识视频却什么也没学到？文本才是答案；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260327-003-为什么你刷了那么多知识视频却什么也没学到文本才是/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260317-001",
+      "text": "朋友们，我想做个多端互通的工具，能随时记灵感、关联创作想法，还能整理感兴趣的知识；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260317-001-朋友们我想做个多端互通的工具能随时记灵感关联创作/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260528-001",
+      "text": "我把自己的知识库系统开源了 以前知识库是文件夹，现在它可以是一个由 Agent；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260528-001-我把自己的知识库系统开源了-以前知识库是文件夹现/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260912-011",
+      "text": "我把一条AI视频拆成了7张工艺卡，按抄顺序排好,你拿走就能开始第一条；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260912-011-我把一条ai视频拆成了7张工艺卡按抄顺序排好你拿/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260914-001",
+      "text": "把零散灵感变成可复用的方法；当前登记状态 ready。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260914-001-把零散灵感变成方法/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260912-009",
+      "text": "我用一套'听完就改'的流程，把AI小产品的首版反馈跑通了；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260912-009-我用一套听完就改的流程把ai小产品的首版反馈跑通/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260913-001",
+      "text": "在职做 AI 副业半年，哪些项目真的收到了钱？；当前登记状态 drafting。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260913-001-在职做AI副业半年复盘/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260909-001",
+      "text": "AI时代，孩子的上下文从出生开始；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260909-001-禾安成长日记/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260911-002",
+      "text": "孩子不记录也会长大，那为什么还要记录？ 孩子不记录也会长大，那为什么还要记录？传；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260911-002-孩子不记录也会长大那为什么还要记录-孩子不记录也/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260906-001",
+      "text": "从一张图到 2D 肉鸽游戏；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260906-001-从一张图到2D肉鸽游戏/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260904-001",
+      "text": "NomiFun 数字伙伴；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260904-001-NomiFun数字伙伴/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260912-008",
+      "text": "AI 项目跑通过一次就别再手维护 Skill：让模型自己当配置管家；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260912-008-ai-项目跑通过一次就别再手维护-skill让模/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    },
+    {
+      "id": "work:W-20260912-010",
+      "text": "老板让我一周搭个AI工具，我没写一行代码；当前登记状态 published。本轮核对元数据，用于定位材料，不代表完整视频/结果已复审",
+      "sourceRef": "moonlit-creator/works/2026/W-20260912-010-老板让我一周搭个ai工具我没写一行代码/work.json",
+      "projectId": null,
+      "contextRef": null,
+      "entryVerification": null,
+      "result": null
+    }
+  ],
+  "contextMaterialIds": [
+    "work:W-20260912-004",
+    "work:W-20260324-001",
+    "work:W-20260528-001",
+    "work:W-20260912-011",
+    "work:W-20260914-001",
+    "work:W-20260912-009",
+    "work:W-20260909-001",
+    "work:W-20260906-001"
+  ],
+  "semanticPairs": [
+    {
+      "id": "ai_build",
+      "audienceCellId": "audience:work_handoff",
+      "industryCellId": "industry:present",
+      "task": "把一段工作记录整理成三页汇报：做了什么、结果证据、下一步",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    },
+    {
+      "id": "knowledge_action",
+      "audienceCellId": "audience:learn_apply",
+      "industryCellId": "industry:remember",
+      "task": "选一条已收藏教程，整理输入、步骤、完成标准，并做出一个练习结果",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    },
+    {
+      "id": "agent_context",
+      "audienceCellId": "audience:digital_order",
+      "industryCellId": "industry:automate",
+      "task": "对一批演示文件建立可搜索索引，记录来源，并比较人工查找与AI查找",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    },
+    {
+      "id": "creator_workflow",
+      "audienceCellId": "audience:content_create",
+      "industryCellId": "industry:produce",
+      "task": "把一段演示录屏整理成带准确字幕、操作重点和可回看步骤的短教程",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    },
+    {
+      "id": "micro_product",
+      "audienceCellId": "audience:side_project",
+      "industryCellId": "industry:build",
+      "task": "用公开的模拟需求做一页服务展示页，检查手机查看和按钮行为",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    },
+    {
+      "id": "family_records",
+      "audienceCellId": "audience:family_records",
+      "industryCellId": "industry:write",
+      "task": "把一组演示照片、日期和口述整理成有来源的旅行或成长记录页",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    },
+    {
+      "id": "life_choices",
+      "audienceCellId": "audience:life_planning",
+      "industryCellId": "industry:extract",
+      "task": "把三份公开出游资料整理成按日期核验的路线和行前清单",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    },
+    {
+      "id": "creative_play",
+      "audienceCellId": "audience:creative_play",
+      "industryCellId": "industry:visualize",
+      "task": "从一张获准参考图做三张风格一致的角色素材，并检查主体变化",
+      "reason": "围绕本格具体任务，选择能交付该结果的行业能力；不是关键词相同或已观察高频需求"
+    }
+  ],
+  "editorialPolicy": "{\"author_basis_policy\": \"从作品和项目里选择自己的案例；不把研究索引推定为完整人生、不推断家庭身份或客户成功\", \"mix_policy\": {\"core\": [\"work_handoff\", \"learn_apply\", \"content_create\", \"digital_order\"], \"secondary\": [\"side_project\", \"family_records\", \"life_planning\"], \"exploration\": [\"creative_play\"], \"selection\": \"一次三题通常优先两条主线与一条生活/兴趣拓展；实际有材料和观众收益的题优先，不为配比凑题\"}, \"combination_policy\": \"先语义判断一对格子的任务关系，再用当期线索、真实案例和可验证结果形成选题；不机械生成64个标题\", \"status\": \"user_approved\", \"approval\": {\"date\": \"2026-10-02\", \"source\": \"当前会话用户认可并要求集成：可以啊 这个思路就很OK呀。我们的选题skill赶紧把这个能力集成进去。\", \"scope\": \"双九宫格v02及持续出题方法，作为本账号默认；不等于选择所有示例选题、认可工具实测结果或授权发布\", \"attribution\": \"user_statement\"}, \"selection_method\": {\"mode\": \"paired_grids\", \"default_for_topic_requests\": true, \"require_grid_pair\": true, \"basis\": \"用户2026-10-02当前会话认可并要求集成\", \"rule_owner\": \"moonlit-topic-engine/references/paired-grids.md\"}}"
+}

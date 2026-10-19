@@ -3,7 +3,7 @@
  *
  * These tests lock the AppShell invariants:
  *  - exactly one Sidebar and one TopHeader per page,
- *  - the primary nav lists all seven approved entries,
+ *  - the primary nav lists the approved entries with real destinations,
  *  - the active nav item is derived from the current pathname,
  *  - the lower contextual card supports both `assistant` and `storage`
  *    variants on a single component (D-003),
@@ -22,7 +22,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import type React from "react";
+import * as React from "react";
 
 import "@/styles/tokens.css";
 
@@ -55,6 +55,8 @@ function readRootVar(name: string): string {
 // the bell's "全部标记为已读" handler asks the router to revalidate). The shell
 // tests don't exercise the mutation; this just satisfies the hook.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({
     refresh: vi.fn(),
     replace: vi.fn(),
@@ -87,6 +89,22 @@ vi.mock("next/link", () => ({
 
 type AppShellProps = React.ComponentProps<typeof import("./app-shell").AppShell>;
 
+const approvedNavigation = [
+  ["首页", "/"],
+  ["创作者总览", "/overview"],
+  ["定位中心", "/positioning"],
+  ["内容雷达", "/intelligence"],
+  ["选题", "/topics"],
+  ["项目", "/projects"],
+  ["知识库", "/knowledge"],
+  ["素材中心", "/assets"],
+  ["创作画布", "/canvases"],
+  ["发布中心", "/publishing"],
+  ["运营分析", "/daily-report"],
+  ["自动化", "/automations"],
+  ["设置", "/settings"],
+] as const;
+
 async function renderShell(overrides: Partial<AppShellProps> = {}) {
   const { AppShell } = await import("./app-shell");
   return render(
@@ -107,6 +125,17 @@ describe("AppShell", () => {
     const headers = container.querySelectorAll('[data-slot="app-top-header"]');
     expect(sidebars).toHaveLength(1);
     expect(headers).toHaveLength(1);
+  });
+
+  it("新项目弹层关闭回原页，焦点返回点击入口", async () => {
+    const {AppShell}=await import("./app-shell");
+    const view=render(<AppShell pathname="/"><div>首页正文</div></AppShell>);
+    const trigger=view.container.querySelector<HTMLAnchorElement>('header a[href="/projects/new"]')!;
+    trigger.focus();fireEvent.click(trigger);
+    view.rerender(<AppShell pathname="/projects/new"><button>对话框关闭</button></AppShell>);
+    screen.getByRole("button",{name:"对话框关闭"}).focus();
+    view.rerender(<AppShell pathname="/"><div>首页正文</div></AppShell>);
+    await waitFor(()=>expect(document.activeElement).toBe(view.container.querySelector('header a[href="/projects/new"]')));
   });
 
   it("[T-718] 激活前使用包级品牌名和品牌图标，Growth 品牌可在激活后覆盖名称", async () => {
@@ -162,33 +191,25 @@ describe("AppShell", () => {
     });
   });
 
-  it("renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②)", async () => {
+  it("按现有顺序呈现全部导航名称与真实目的地，包含创作画布", async () => {
     await renderShell();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const items = within(nav).getAllByRole("link");
-    const labels = items.map((item) => item.textContent?.trim() ?? "");
     // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd. 选题 sits right
     // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
-    expect(labels).toEqual([
-      "首页",
-      "定位中心",
-      "内容雷达",
-      "选题",
-      "项目",
-      "知识库",
-      "素材中心",
-      "发布中心",
-      "运营分析",
-      "自动化",
-      "设置",
-    ]);
+    expect(items.map((item) => [item.textContent?.trim(), item.getAttribute("href")]))
+      .toEqual(approvedNavigation);
   });
 
   it("[T-987] 展开与收拢导航不预取未点击页面，仍保留真实链接", async () => {
     await renderShell();
     const assertLinks = () => {
       const links = within(screen.getByRole("navigation", { name: "主要导航" })).getAllByRole("link");
-      expect(links).toHaveLength(11);
+      expect(links).toHaveLength(13);
+      for (const [label, href] of approvedNavigation) {
+        expect(within(screen.getByRole("navigation", { name: "主要导航" }))
+          .getByRole("link", { name: label })).toHaveAttribute("href", href);
+      }
       for (const link of links) {
         expect(link).toHaveAttribute("data-prefetch", "false");
         expect(link.getAttribute("href")).toMatch(/^\//);
@@ -350,12 +371,20 @@ describe("AppShell", () => {
     expect(scroll?.contains(content)).toBe(true);
   });
 
-  it("contentFill mode renders a fixed-height fill region without the PageScrollArea (no double scrollbar)", async () => {
+  it("填满模式保留唯一滚动容器，禁止外层滚动而保留页面内部滚动", async () => {
     const { container } = await renderShell({ contentFill: true });
-    // 填满模式：不套 PageScrollArea (避免外层整页滚 + 列内滚的双滚动条)。
-    expect(
-      container.querySelector('[data-slot="page-scroll-area"]'),
-    ).toBeNull();
+    // T1069稳定宿主：只切滚动CSS，不能通过换树卸载未保存的工程。
+    const scrolls = container.querySelectorAll('[data-slot="page-scroll-area"]');
+    expect(scrolls).toHaveLength(1);
+    const scroll = scrolls[0]!;
+    expect(scroll).toHaveAttribute("data-fill", "true");
+    expect(scroll).toHaveClass(
+      "[&>[data-slot=scroll-area-viewport]]:!overflow-hidden",
+      "[&>[data-slot=scroll-area-viewport]>div]:h-full",
+      "[&>[data-slot=scroll-area-viewport]>div]:min-h-0",
+      "[&>[data-slot=scroll-area-scrollbar]]:hidden",
+    );
+    expect(scroll.querySelector(':scope > [data-slot="scroll-area-viewport"]')).not.toBeNull();
     const fill = container.querySelector(
       '[data-slot="app-page-content"][data-fill="true"]',
     ) as HTMLElement | null;
@@ -370,6 +399,33 @@ describe("AppShell", () => {
     );
     // children 仍渲染在填满区里。
     expect(fill?.contains(screen.getByTestId("page-content"))).toBe(true);
+  });
+
+  it.each([false, true])("从填满=%s双向切换时保留容器与未保存子状态", async (initial) => {
+    const { AppShell } = await import("./app-shell");
+    const mounted = vi.fn(), unmounted = vi.fn();
+    function Draft() {
+      const [value, setValue] = React.useState("原稿");
+      React.useEffect(() => { mounted(); return unmounted; }, []);
+      return <input aria-label="未保存工程名" value={value} onChange={event => setValue(event.target.value)} />;
+    }
+    const view = (fill: boolean) => <AppShell pathname="/projects/example" contentFill={fill}><Draft /></AppShell>;
+    const tree = render(view(initial));
+    const draft = screen.getByRole("textbox", { name: "未保存工程名" });
+    const scroll = tree.container.querySelector('[data-slot="page-scroll-area"]');
+    const viewport = scroll?.querySelector(':scope > [data-slot="scroll-area-viewport"]');
+    expect(scroll).not.toBeNull(); expect(viewport).not.toBeNull();
+    fireEvent.change(draft, { target: { value: "未保存剪辑" } });
+    for (const fill of [!initial, initial]) {
+      tree.rerender(view(fill));
+      expect(tree.container.querySelectorAll('[data-slot="page-scroll-area"]')).toHaveLength(1);
+      expect(tree.container.querySelector('[data-slot="page-scroll-area"]')).toBe(scroll);
+      expect(scroll?.querySelector(':scope > [data-slot="scroll-area-viewport"]')).toBe(viewport);
+      expect(scroll).toHaveAttribute("data-fill", String(fill));
+      expect(screen.getByRole("textbox", { name: "未保存工程名" })).toBe(draft);
+      expect(draft).toHaveValue("未保存剪辑");
+      expect(mounted).toHaveBeenCalledTimes(1); expect(unmounted).not.toHaveBeenCalled();
+    }
   });
 
   it("applies the shared page gutter and section gap tokens", async () => {
@@ -554,6 +610,21 @@ describe("AppShell", () => {
 // ---------------------------------------------------------------------------
 
 describe("Sidebar 折叠 (T-129)", () => {
+  it("窄窗口自动收起，恢复宽窗口时保留桌面展开偏好", async () => {
+    let listener: ((event: MediaQueryListEvent) => void) | undefined;
+    const original = window.matchMedia;
+    window.localStorage.setItem("creatoros:sidebar:collapsed", "0");
+    window.matchMedia = vi.fn((query: string) => ({matches:query === "(max-width: 1024px)",media:query,addEventListener:(_type:string,fn: typeof listener)=>{if(query === "(max-width: 1024px)")listener=fn;},removeEventListener:vi.fn(),addListener:vi.fn(),removeListener:vi.fn(),dispatchEvent:()=>true,onchange:null}) as MediaQueryList);
+    try {
+      await renderShell();
+      const sidebar=screen.getByRole("complementary",{name:/主侧栏/});
+      await waitFor(()=>expect(sidebar).toHaveAttribute("data-collapsed","true"));
+      expect(window.localStorage.getItem("creatoros:sidebar:collapsed")).toBe("0");
+      const {act}=await import("@testing-library/react");
+      act(()=>listener?.({matches:false} as MediaQueryListEvent));
+      await waitFor(()=>expect(sidebar).toHaveAttribute("data-collapsed","false"));
+    } finally { cleanup(); window.matchMedia=original; }
+  });
   afterEach(() => {
     cleanup();
     try {

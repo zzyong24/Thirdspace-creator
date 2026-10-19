@@ -1,0 +1,6 @@
+{
+  "scope": "private memory overlay; actual undici7.27.2 declarations; not standard production typecheck; no install/emit/sharedbuild/server",
+  "typescript": "5.9.3",
+  "rootNames": 19,
+  "diagnostics": []
+}

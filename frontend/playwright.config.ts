@@ -45,8 +45,15 @@ const PLAYWRIGHT_DATA_ROOT =
     join(tmpdir(), "creatoros-playwright-"),
   ));
 const PLAYWRIGHT_DATA_DIR = join(PLAYWRIGHT_DATA_ROOT, "pglite");
+// Match the settings default and authenticated blob route to a private directory
+// inside this run's isolated root. This replaces any inherited real media path.
+const PLAYWRIGHT_MEDIA_ROOT = join(PLAYWRIGHT_DATA_ROOT, "media");
+process.env.CREATOROS_MEDIA_ROOT = PLAYWRIGHT_MEDIA_ROOT;
 console.log(
   `[playwright.config] Isolated test data root: ${PLAYWRIGHT_DATA_ROOT}`,
+);
+console.log(
+  `[playwright.config] Isolated media root: ${PLAYWRIGHT_MEDIA_ROOT}`,
 );
 if (BASELINE_FINGERPRINT.count > 0) {
   console.log(
@@ -156,6 +163,7 @@ export default defineConfig({
       PATH: TEST_RUNTIME_PATH,
       DATABASE_URL: "",
       PGLITE_DATA_DIR: PLAYWRIGHT_DATA_DIR,
+      CREATOROS_MEDIA_ROOT: PLAYWRIGHT_MEDIA_ROOT,
       CREATOROS_DOUYIN_AUTH_DIR: join(PLAYWRIGHT_DATA_ROOT, "auth-douyin"),
       CREATOROS_WEB_AUTH_DIR: join(PLAYWRIGHT_DATA_ROOT, "auth-web"),
       CREATOROS_DISABLE_SCHEDULER: "1",

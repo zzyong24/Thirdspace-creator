@@ -1458,7 +1458,7 @@
 ## T-633
 原始表头：ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话
 
-| T-633 | 根治内容雷达生成选题卡失败并恢复创作者中心自动扫码【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | 既有内容雷达与抖音登录契约 | 按最新日志修复 `topic_preview` 真实失败链；首次扫码直接打开创作者中心二维码页并复用同一按账号登录态，不再把普通抖音首页当默认入口。 |
+| T-633 | 恢复创作者中心自动扫码登录【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | 既有抖音登录契约 | 首次扫码直接打开创作者中心二维码页并复用同一按账号登录态，不再把普通抖音首页当默认入口；内容雷达改写可用性已由 T-1017 单独承接。 |
 
 <a id="t-631"></a>
 ## T-631
@@ -1507,3 +1507,1066 @@
 原始表头：ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话
 
 | T-536 | 根治“我的收藏”同步错误分类与浏览器档案锁恢复【bug·多账号采集·用户 2026-07-26】 | 🔨 待真实账号只读验收 | — | 待验 | 无 SPEC（既有收藏读取链故障） | 代码已提交 `85312bd2`：跨 chunk 错误按稳定 code 恢复、无活 context 才精准清锁且只重试一次、诊断脱敏、UI 给恢复动作；定向 130 tests、typecheck、build、boundary 通过，待有效登录态做真实收藏只读验收。 |
+
+## t-915-triage-history
+
+T-1014仅迁移原看板说明，状态和验收不变：
+
+用户明确以系统减重、AI 延迟与可靠性、搜索和浏览器自我循环为核心；建议模块化单体、独立执行 Worker、统一工具和持久任务恢复，Pi 负责策略循环，生成保留短路径。先建立耗时/失败基线，接通真实工具并退役重复实现；用户已回复“认可”；架构方向确认见 DEC-RUNTIME-055，具体契约已独立评审通过；已代码接通正式聊天、Pi研究/素材/采集、封面与批量转写Worker；旧聊天流和宿主Agent装配已删除；同条件聊天准备依赖构建减小5.6%。登录资源物理迁移、剩余R-05入口、备用模型切换和运行验收仍未完成。记忆进化和任意脚本修改不在本轮。 用户 2026-09-07 要求优先交付自主规划、搜索/浏览器循环与失败恢复，暂缓自动测试与重复全局对账，由用户实测；未验证不得记为已验收。用户进一步授权破坏式代码更新，删除已替代旧实现并按既定 Worker/后端服务边界拆分，加速落地；要求高内聚低耦合，并通过有界消融对比判断删除收益。
+
+## t-997-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+ai/script-partial-adoption.service.ts 反向 import ai-runtime，打破 ai 与 ai-runtime 分层；依赖下沉或改走端口，不新增跨层穿透。
+
+## t-919-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆盖在途内容。补充素材意图纠偏：以用户当前意图和已提供全文制定检索需求、阅读并关联素材用途；无关结果不算完成，不把改关键词交回用户；与旧复盘请求解耦。补充用户截图与对话：消除普通对话完成通知刷屏、修复搜索来源链接并让独立检索继续读正文；修复有证据的根因，保留用户数据，沿用用户暂缓业务自动测试授权，未验证不得标为通过。
+
+## t-916-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+reconcile 实测 210 errors：模块 write_set/verify、自治声明、旧看板和 receipt 漂移；LED-024 预览缺指定 Playwright 浏览器。按当前事实校准配置和验收环境，不补造历史 PASS，不以降低门槛销账。T-930 收尾另实测 progress 被既有 T-923 write_set 通配路径拒绝，过程步骤未推进。 T-944 收尾复核保留全局对账、7 条边界违规、backend 13 个旧类型错误及雷达 5 项基线失败，证据见 docs/features/t944-director-prompts.md。
+
+## t-917-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留。本次聊天测试已移除迁移 API、仅配置隔离数据库和临时媒体根并阻断迁移，整链通过；其余测试是否存在类似真实默认目录访问仍需专项核查，不宣称全项目测试隔离已完成。
+
+## t-908-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计 CreatorOS 当前实现，区分抖音上游变化、环境安装问题与实现缺陷，只有真实失败证据证明需要时才修改 Skill，并保留可复现测试。
+
+## t-905-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+这是独立于 CreatorOS 的新产品探索，不是 CreatorOS 手机版，也不把核心能力定义为传统数字人：用户首次录入行业、人设与对标，系统持续生成多种文案/风格供选择；有灵感时直接输入或口述，由 AI 协作成稿并进入手机拍摄；另研究用户只实拍“123321”等占位内容后，保留真人机位、身体动作和背景，仅用目标声音重新驱动口型的技术链。同步对照“开拍”等手机口播产品，比较供应商 API、自建云端 GPU 与混合部署，测算文案、音频、口型、包装、存储、渠道抽成、闲置算力和用户用量下的单位成本、毛利与盈亏平衡；方向确认前不进入实现。
+
+## t-884-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+解析用户提供的 `sidecar-2026-08-18.log.enc`，对齐同一次转写任务、输入媒体、ASR provider/模型、配置与错误链，区分密钥/权限、上游连接、媒体格式、运行时依赖、队列状态和回读映射；先只读，不重跑、不改配置、不改用户数据，给出可复现根因和是否属于代码缺陷。
+
+## t-883-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.yml` 的双平台矩阵并跟踪同一 run。不得夹带主工作区未提交渠道配置或 CLI 导出目录，不创建 tag/Release、不修改下载地址或放量配置。
+
+## t-878-triage-description
+
+T-1014仅迁移看板原说明，状态和验收未改：
+
+当前真实生图适配器已把 401 分类为 authentication，但 `settings.models.test` 的 `image.generate` catch 丢弃错误类型，统一记录 `provider_error` 并提示检查网络和接口地址，导致用户无法知道应更换密钥。必须复用现有 `isAuthenticationFailure` 和安全日志 allowlist，让 401/403 显示“密钥无效或无权限”，其他网络、参数和响应错误继续分层且不泄上游正文、Key 或内部实现；先用真实 `MultimodalGenerationError auth_401` 形状补红测，再覆盖设置页读回与脱敏门禁。不调用真实模型、不修改用户配置。
+
+<a id="t-1077"></a>
+### T-1077 · 修复采纳与作品素材读取的项目返回值
+
+- 原文档：[SPEC](docs/features/t1077-material-parent-port.md)
+- 任务详情：新b640原401保留404项目不存在；真实项目可读，三个MaterialLinks私有适配丢弃Projects返回值。先精确独评、公共链RED→GREEN，保留原事务/归属/文件和原401，不重发生图；继续打包安装恢复，不push发布。 当前仅3产品行修复、正确owner公共RED4/2→GREEN6、原素材真实隔离PG18/0skip和最终类型0，独立实施限定PASS；错误同组账号拒绝断言与旧全局红如实保留。新包、原401保留/放画布和完整功能仍待验，不完成。
+
+<a id="t-1075"></a>
+### T-1075 · 修复安装验收发现的素材标签观察与纯组生图证明
+
+- 原文档：[SPEC](docs/features/t1075-installed-ai-observation-gaps.md)
+- 任务详情：用户全功能可用性稳定性验证的实际缺陷；真实Pi391缺标签版本观察，画布401纯组NULL被证明读取误拒；先精确独评，再RED→GREEN，沿原任务恢复，不重发生图、不改真实内容。 当前8路径源码独评PASS、真实RED及87私有PG通过保留；b640新DMG实际构建44基本/镜像/签名通过。T1076清理后原完整新鲜备份9步/安装12步均0，Native82283/CLI full；新Pi170真实标签候选→正式采纳→读回、原401证明available/原PNG全解码与剪辑rev5深等通过。原401保留操作404项目不存在，仍pending未放画布、不重发生图；完整功能仍待验，不完成。
+
+<a id="t-1074"></a>
+### T-1074 · 全面验收与补齐AI助手系统操作、工具开放性和功能提示词
+
+- 原文档：[SPEC](docs/features/t1074-ai-system-operations.md)
+- 任务详情：用户2026-10-08要求深度调研Coze X/Coze Code及优秀开源实践，并落地全功能AI操作，重点画布创建、生图、自然语言剪辑；先核真实工具/权限/提示词与公共调用链，记录具体缺口并补精确范围独评后实现，不以泛称“不支持”结束；保留真实归属、用户采纳、合法任务和原保存导出，不push或发布。  9文件补充复核已获用户明确授权并通过b19144c34cab；四API组登记、原编辑器正式来源桥接/脏稿/新输入保护、选题行锁和有父雷达纯读已实现。真实私有PG最新66通过含3项两连接行锁竞态及7个分页族，来源/host176通过，前端67/LED047167通过，前端/contract/worker/mcp类型通过；后端仅原2测试错误。1366/1024实际输入保留；核心独评原CORE-001分页已修复并复核关闭，原FAIL保留；源码cacf4d26/冻结74883948新DMG实际出包并备份安装0；Native81735/CLI full与409目录、5组3账号/原稿工程深等、旧8.16成片下载解码通过。新安装版真实Pi画布候选→采纳→精确读回/原source幂等/跨组及摘要拒绝通过；Codex右栏、生图、7视频及全功能原生仍待验，不完成任务。 用户追加“全功能可用性稳定性验证”，本轮沿T1074/T1062原完整范围扩展当前安装版中性公共读写、取消/恢复/回放、素材持久化与性能观察；不改真实内容或代签原生验收。 当前安装748新增中性output133真实导入/手工分段裁切删段重排/8秒预览/render195原执行确认/1080p30fps240帧全解码/来源时标核对/历史restore至rev5/同key回放及跨组拒绝通过；这是公共手工链，不代签右侧Codex/七类AI剪辑或原生。b640包随后经原完整新鲜备份已实际安装；最新15类公开读取全通过、工程rev5深等、标签Pi候选采纳/读回及原401证明恢复通过；原图保留404、原生/两引擎全功能仍待验，不完成。 旧748公共手工视频链限定独评PASS/0开放问题，506引用；不代签新包、AI剪辑或全功能。 新b640真实Pi文章/图文局部精调task205完成但工具参数空数组/null填错，最后文章占位候选未采纳；原221/242完整DTO深等不变。9次内存HTTP codec穿透probe未见空值/换行变形，下一步用原typed_patch精调公共链补验，不签模型成功。
+
+<a id="t-1071"></a>
+### T-1071 · 修复账号绑定和页面Tab切换卡顿
+
+- 原文档：[SPEC](docs/features/t1071-navigation-latency.md)
+- 任务详情：用户2026-10-07反馈点击账号组与绑定账号以及任何Tab都特别卡；优先只读测量当前安装版及当前源的点击、请求、查询和渲染，确定共同慢点后补精确范围独评，保留未保存稿件/剪辑、组隔离和原丰富UI；修复验证后纳入新本地包，不push或发布。 当前四前端窄修真实RED5→GREEN35、LED047162/类型通过；实际native切四Tab与账号管理保持同句柄/X11，六步工程GET12→0，Undo/Redo/保存rev9/5秒MP4解码通过；原生200%按钮、安装版和新冻结包仍待验，后台未改。 源修复a2b803ed已提交；全局实际37错误/1告警与824原ERROR集合完全一致、原T1018/T1015保留；尚不完成任务。 新冻结5e6d025c本地DMG真实exit0、44打包/镜像/双签/1082资源核验通过；新包经dntvfwhr新备份和独评0eb2f安装器实际安装0，CLI恢复full，5组/3账号深等、工程rev6/文章233/图文258及8.16秒原成片下载解码通过；浏览器来源403与桌面自动化权限缺失保留，原生首页/切页待用户实际反馈，不完成任务。
+
+<a id="t-1070"></a>
+### T-1070 · 打通Codex执行与编导精调，脚本一键生成文章和图文
+
+- 原文档：[SPEC](docs/features/t1070-director-script-workflow.md)
+- 任务详情：用户2026-10-07实际验收反馈：Codex引擎不能执行、编导不能自然语言剪辑；对照ChatCut，用户随后明确不做自动视频初稿；确认脚本后按钮一键生成文章/图文，再用编导持续调整；视频只导入录像并自然语言精剪；移除偏离主链的快剪集成/快速转换入口，保留既有作品和合法保存导出；先只读复现与契约盘点，补精确范围并独评后实现，不push或发布。 2026-10-07核心修复已提交f25c0098及原生纹理版本cdd3b1dc；真实Codex分镜联合5章/5卡和文章/图文指定字段精调、预览/CAS/刷新/HTML或4页ZIP通过；原持久native候选97实际warm首frame24、一次CAS/Undo/Redo/手工保存/切Tab刷新/5秒MP4解码通过，保留原AAC尾minor；53原生回归/710重建/双build独评通过。新本地包及安装版逐项验收继续，不代签字幕/变速/替换真模型或整个任务。
+
+<a id="t-1062"></a>
+### T-1062 · 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪
+
+- 原文档：[SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) · [安装渲染修复补充](docs/features/t1062-installed-render-skill-owner.md)
+- 任务详情：用户2026-10-05授权汇总提交、本地打包及逐功能验证；盘点账号组、画布模板、文章图文、Codex与剪辑分支，核对ChatCut粗剪流程；不push或公开发布，不代签用户验收。 用户随后确认使用当前 macOS 登录用户与现有 App 直接验收；先备份应用和当前数据，再安装本地候选，只创建中性验收夹具，不重置激活或自动归组真实资料。
+
+<a id="t-1022"></a>
+### T-1022 · 按账号组统一多平台工作区、绑定管理、首页与复盘
+
+- 原文档：[SPEC](docs/features/t1022-account-group-workspace.md)
+- 任务详情：用户2026-10-04要求先调研并全面设计；全局切换账号组、组内筛选抖音/快手/视频号/公众号/小红书，共享内容分发与数据可见；使用用户提供的oil-ui-pro 0.10.0并纳入页面规范；用户否定A/B并明确保留原版丰富布局，只补总览和多平台切换；用户已认可原版增补，追加要求图表更美观；用户再次指出图表缺坐标；保留布局，补数值/日期轴与单位，缺明细不画日折线，用户已回复ok开始执行；正式接入已评审的显式归组与迁移预览方案，真实库执行先备份校验。2026-10-05正式组工作区及原版页面已接入，1366/1024真实保存/冲突/切组旅程通过；启动/调度及归档执行增量已独立复核关闭；后台362条、真实18检查点再次通过。receipt因混合工作树不能绑定HEAD，真实平台及安装版仍待验。
+
+<a id="t-1015"></a>
+### T-1015 · 核实剩余教训失败并校准过期回归断言
+
+- 原文档：[实测清单](docs/verification/t1014-reconcile-triage.md)
+- 任务详情：从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 本轮T-1022收尾reconcile仍15项既有LED失败，日志docs/verification/t1022/logs/reconcile-final.log；新增LED-052及LED-047通过。 本轮T-1063按受支持方式升级至3.27.3后，原对账实测35错误/1警告；完整结果及原失败见[维护证据](docs/verification/t1063/tool-upgrade-result.json)。LED-052缺显式隔离PG环境不得skip，LED-049需按原命令继续核因；范围内问题由T-1062修复验收，未改基线或旧回执。 2026-10-06 T-1067 收尾实际36错误/1告警，完整原始记录见T-1062验收表；T-734旧字符串断言在67b基点同样失败，六输入字节相同，未删断言；T-1067固定8路径之外，全局各失败保留核因。
+
+<a id="t-916"></a>
+### T-916 · 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】
+
+- 原文档：[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md)
+- 任务详情：reconcile 实测 210 errors：模块 write_set/verify、自治声明、旧看板和 receipt 漂移；LED-0；[原说明](BACKLOG-details.md#t-916-triage-description)。 本轮T-1022收尾对账33错误/1告警，其中17项历史回执/链接漂移，见docs/verification/t1022/logs/reconcile-final.log。
+
+<a id="t-883"></a>
+### T-883 · 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】
+
+- 原文档：复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md)
+- 任务详情：只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.ym；[原说明](BACKLOG-details.md#t-883-triage-description)。
+
+<a id="t-1073"></a>
+### T-1073 · 修复全面排查确认的8处资源浪费与内存泄漏
+
+- 原文档：[SPEC](docs/features/t1073-resource-memory-fixes.md)
+- 任务详情：8处源码修复已本地整合提交，生命周期301/301及独立复核通过，原任务/幂等/跨页回复和合法输出保留；最终reconcile仍34个既有错误/1告警、逐行无新增，根因T916/T1015/T1018保留；正式安装版与像素未验，不安装/推送/发布。详[修复报告](docs/verification/t1073/REPORT.md)。
+
+<a id="t-1071-resource-audit"></a>
+### T-1071-resource-audit · 全系统排查资源浪费与内存泄漏并隔离复现
+
+- 原文档：[排查范围](docs/verification/t1071-resource-memory-audit.md)
+- 任务详情：已隔离复现8项资源缺陷并登记6个根因整改任务；成功Whisper线程1→2→3、IPC50MiB回执保留、SSE缓冲及前端/后台重复工作，详[报告](docs/verification/t1071/REPORT.md)；本轮只诊断，未修改产品代码/安装版或真实数据，UI交付验收不适用。 来源workbase原T-1071-resource-audit，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1068-radar-transcription"></a>
+### T-1068-radar-transcription · 隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因
+
+- 原文档：[诊断范围](docs/verification/t1068-radar-transcription.md)
+- 任务详情：用户2026-10-07明确不考虑真实账号，直接复现；使用隔离数据与本地HTTP故障服务跑实际Worker/模型链，核对已识别原文、后处理、账本与暂停状态，不重发用户任务，未实证不声称根治。 来源workbase原T-1068-radar-transcription，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1066-timeout-policy"></a>
+### T-1066-timeout-policy · 全系统统一两分钟超时下限、嵌套预算与Skill防复发
+
+- 原文档：[SPEC](docs/features/t1066-timeout-policy.md)
+- 任务详情：用户2026-10-06授权按T-1065完整清单修复全部超时策略，单次执行/结果等待最低2分钟，外层预算覆盖内层及清理余量，长任务继承持久任务预算；规范与Skill沉淀并加回归门，不推送发布或改真实数据。 来源workbase原T-1066-timeout-policy，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1067-skill-verification"></a>
+### T-1067-skill-verification · 清理通用产品流程Skill既有公开分发校验债务
+
+- 原文档：[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md)
+- 任务详情：本轮实际复测3.27.3与3.27.4均6错误31告警，涉及历史个人路径、宿主旧文字及README安装说明；新增超时规则及selfcheck通过，不删除历史或把旧失败标绿，不属于本轮超时行为整改。 来源workbase原T-1067-skill-verification，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1018"></a>
+### T-1018 · 清理本轮测试暴露的全局类型与边界欠债
+
+- 原文档：[实测证据](docs/verification/t1017-rewrite-first.md)
+- 任务详情：后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 本轮T-1066-timeout-policy隔离树再次实测同12个后端类型/3个契约/2个live-chat SDK边界既有失败，详docs/verification/t1066/REPORT.md。 T-1069-completion-json/T-1070-transcript-reliability保留同12类型/2边界旧失败，generation-replay旧断言在HEAD归档基线与当前均9/10通过；见docs/verification/t1069/generation-replay-baseline.log。
+
+
+<a id="t1080-retained-row-80e4d3ffb5f9172c"></a>
+
+### 本轮保留的 T-1068 完整原行
+
+```text
+| T-1068 | 排查并修复本地客户端启动超时，交付可启动测试包 | ✅ 待办 | PASS[REV:8abc34b1f775] | — | [SPEC](docs/features/t1068-local-client-startup.md) | 用户2026-10-06启动超时报错已定位本机probe经过代理502；专用client.no_proxy窄修69b6be8f及17回归独评通过。1.2.0新包实际构建/镜像/深签名/277资源0，新鲜备份7i4su后固定入口自动安装（非planned installer）；安装内容精确核同源，两次原生HTTP首页加载+公开CLI/首页200/粗剪工程及已导出任务资产深等成功；用户已明确已显示正常首页。T734旧合同及全局旧红保留，不代签T1062完整功能。仅宿主逻辑无UI重设计，独评纠正验收类型—；未push或发布。
+```
+
+<a id="t1080-retained-row-c9ebcc41ffd59f36"></a>
+
+### 本轮保留的 T-1024 完整原行
+
+```text
+| T-1024 | 紧急排查充值50元后Growth受管Omni模型仍报余额不足 | 🔨 待办 | — | 待验 | [排查范围](docs/verification/t1024-managed-credit-diagnosis.md) | 充值及Omni额度同步已实证正常；两份Windows日志定位21:08/21:11/21:15选题聊天约352万粗估且未收敛、约1.5秒报AI_CREDIT_EXHAUSTED；已验证单轮裁剪缺口与图片base64粗估歧义，原始供应商错误/模型/附件类型仍待对齐，不改账、不重发原大请求。 |
+```
+
+<a id="t1080-retained-row-32643c4cf546ed76"></a>
+
+### 本轮保留的 T-1069-completion-json 完整原行
+
+```text
+| T-1069-completion-json | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 用户2026-10-07授权根治T-1068-radar-transcription复现缺陷；同一请求完整JSON兼容，保留断流未知与幂等，不重发原任务、不改安装版。 来源workbase原T-1069-completion-json，历史状态与原回执仅保留来源，不冒称本轮验收。 |
+```
+
+<a id="t1080-retained-row-e350e6053e05749b"></a>
+
+### 本轮保留的 T-1069 完整原行
+
+```text
+| T-1069 | 修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口 | 🔨 待办 | PASS[REV:19bad8ef6f93] | 待验 | [SPEC](docs/features/t1069-installed-media-and-binding.md) | 用户2026-10-06实际截图验收；查分段性能和素材持久化；用户追加模板照片选择，同类入口共用缩略图/搜索/预览选择器，保留原版紫色丰富布局并使用oil-ui-pro；核对已装配小红书登录与组绑定，其他平台按真实能力；先只读核因，精确实现补充独评后开工，不push/发布。 |
+```
+
+<a id="t1080-retained-row-ef8386b2a0a060cc"></a>
+
+### 本轮保留的 T-1063 完整原行
+
+```text
+| T-1063 | 修正流程工具误拒合法字面方括号文件路径 | 🔨 待办 | PASS[REV:4d99824da112] | 待验 | [SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md) | T-1062已准入前端范围含7个Next动态路由文件；3.27.2的progress及candidate校验误将字面方括号当glob，阻断必要整合。保持精确路径及原隔离边界，经独立评审、公共工具回归和受支持技能升级后解除，不扩目录通配符、不公开发布。 |
+```
+
+<a id="t1080-retained-row-e05ce3185fe7853c"></a>
+
+### 本轮保留的 T-1070-transcript-reliability 完整原行
+
+```text
+| T-1070-transcript-reliability | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 用户2026-10-07授权同轮修复；共享validator与实际后端保存回归，确认的原文安全降级，未知账本不伪造成功。 来源workbase原T-1070-transcript-reliability，历史状态与原回执仅保留来源，不冒称本轮验收。 |
+```
+
+<a id="t1080-retained-row-ab507299fb3fcd91"></a>
+
+### 本轮保留的 T-878 完整原行
+
+```text
+| T-878 | 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】 | 📋 待办 | — | — | [T-877 脱敏诊断](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md) | 当前真实生图适配器已把 401 分类为 authentication，但 `settings.models.test` 的 `image.g；[原说明](BACKLOG-details.md#t-878-triage-description)。 |
+```
+
+<a id="t1080-retained-row-15d0c7dabac4150e"></a>
+
+### 本轮保留的 T-884 完整原行
+
+```text
+| T-884 | 只读诊断用户加密日志中的 ASR 转写失败【用户日志·2026-08-18】 | ⏸️ 待办 | — | — | 复用 T-768 ASR 通用回退、T-639 MiMo ASR 与 T-676 逐字稿队列契约 | 解析用户提供的 `sidecar-2026-08-18.log.enc`，对齐同一次转写任务、输入媒体、ASR provider/模型、配置；[原说明](BACKLOG-details.md#t-884-triage-description)。 |
+```
+
+<a id="t1080-retained-row-916d71382f9f6b24"></a>
+
+### 本轮保留的 T-905 完整原行
+
+```text
+| T-905 | 调研独立的极简手机口播创作产品，以人设选稿、灵感写稿、实拍与“123321”真人换口型为核心【产品可能性探索·用户 2026-08-20】 | 📋 待办 | — | — | — | 这是独立于 CreatorOS 的新产品探索，不是 CreatorOS 手机版，也不把核心能力定义为传统数字人：用户首次录入行业、人设与对标；[原说明](BACKLOG-details.md#t-905-triage-description)。 |
+```
+
+<a id="t1080-retained-row-0d6e5afae67dc6b3"></a>
+
+### 本轮保留的 T-908 完整原行
+
+```text
+| T-908 | 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】 | 📋 待办 | — | — | — | 隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计 ；[原说明](BACKLOG-details.md#t-908-triage-description)。 |
+```
+
+<a id="t1080-retained-row-125af640cc5d45f9"></a>
+
+### 本轮保留的 T-919 完整原行
+
+```text
+| T-919 | 定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞【用户运行反馈】 | 🔨 待办 | — | — | 复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆；[原说明](BACKLOG-details.md#t-919-triage-description)。 |
+```
+
+<a id="t1080-retained-row-2eb38b106511cdb8"></a>
+
+### 本轮保留的 T-997 完整原行
+
+```text
+| T-997 | 修复 ai→ai-runtime 反向依赖边界违反 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | ai/script-partial-adoption.service.ts 反向 import ai-runtime，打破 ai 与 ai-；[原说明](BACKLOG-details.md#t-997-triage-description)。 |
+```
+
+<a id="t1080-retained-row-43eab6d6e3e39443"></a>
+
+### 本轮保留的 T-906 完整原行
+
+```text
+| T-906 | 放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆【用户反馈·2026-08-20】 | ⏸️ 待办 | — | 待验 | — | AI 助手默认窗口应明显大于当前尺寸，用户可从右下角手柄拖拽调整大小；每次调整后的宽高保存在本机，下次启动自动恢复，并受最小尺寸与当前屏幕可见范围约束，避免内容不可用或换屏后窗口超出视口。 |
+```
+
+<a id="t1080-retained-row-0808de95d80d8a23"></a>
+
+### 本轮保留的 T-1076 完整原行
+
+```text
+| T-1076 | 清理旧安装包与本轮临时构建垃圾 | ✅ 待办 | — | — | [SPEC](docs/features/t1076-clean-obsolete-local-packages.md) | 用户明确授权清理旧包/垃圾以释放新包安装空间；只删本会话确认过期的DMG与未占用可重建缓存，保留新b640包、当前App、全部回滚备份/素材/原证据；记录精确SHA清单与实际空间，维护不改产品、不push发布。 |
+```
+
+<a id="t1080-retained-row-e5c1f0d53099b701"></a>
+
+### 本轮保留的 T-1064 完整原行
+
+```text
+| T-1064 | 只读诊断本机作品升级/提取 AbortError | ✅ 待办 | — | — | [排查记录](docs/verification/t1064-aborterror-diagnosis.md) | 用户2026-10-06提供王温特“做数字人，你到底要不要花钱”卡片截图；对齐最新本机日志、真实版本与原请求，查明中止来源；不重发任务、不改用户数据或安装版，流水线T-1063-release-pipeline仍待推送授权。 |
+```
+
+<a id="t1080-retained-row-e2b40696b7cb6d4c"></a>
+
+### 本轮保留的 T-1024-runtime-liveness 完整原行
+
+```text
+| T-1024-runtime-liveness | 根治聊天生成占用数据通道与重启后 unknown_result 卡死 | ✅ | — | — | [SPEC](docs/features/t1024-chat-runtime-liveness.md) | 真实安装版生成期间查询被阻塞，重启后原任务停在 unknown_result；释放长调用期间的数据通道，并让 agent loop 沿原任务安全恢复或明确收口。 本地main原任务T-1024的来源别名，原事件/验收证据不改写。 |
+```
+
+<a id="t1080-retained-row-d0c6d059440fcd70"></a>
+
+### 本轮保留的 T-1021 完整原行
+
+```text
+| T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | 🔨 待办 | PASS[REV:f0f3fa0ff91b] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 用户认可复用发布链，补充宿主为无限画布；补画板/图文页组、固定工具面板、比例与缩放分离及发布引用方案；当前分支尚未定位画布入口，已询问位置。旧SPEC评审不覆盖本补充，生产未接入。 |
+```
+
+<a id="t1080-retained-row-b6ea894360489899"></a>
+
+### 本轮保留的 T-1063-release-pipeline 完整原行
+
+```text
+| T-1063-release-pipeline | 取消双端出包人为超时与阻断检查并重跑 Windows 流水线 | ✅ 待办 | PASS[REV:245946205971] | — | [SPEC](docs/features/t1063-release-pipeline.md) | 用户2026-10-06独立委派；先核对“1.12版本”真实失败运行；仅修改流水线和必要打包脚本，生成制品与额外验证分离；重跑Windows并核实安装包，不新增版本/tag/Release，不触碰T-1062与真实用户数据。 |
+```
+
+<a id="t1080-retained-row-aed1560bebc24ab1"></a>
+
+### 本轮保留的 T-1072-owned-devices 完整原行
+
+```text
+| T-1072-owned-devices | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:eb8de221287b] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 用户已采纳并授权与Growth T-188一起实施；仅隔离本地改造，原码首台不变，第二电脑本人确认后登记同一授权，不重复期限或额度；保留本机素材与项目，正式包双电脑验收与生产操作尚未授权。 |
+```
+
+<a id="t1080-retained-row-f6abe467486ee90c"></a>
+
+### 本轮保留的 T-1072 完整原行
+
+```text
+| T-1072 | 修复全局Git钩子误用失效Lefthook路径 | ✅ 待办 | — | — | [SPEC](docs/features/t1072-global-git-hook.md) | 用户2026-10-08授权修复；先备份当前全局钩子并核对归属，按真实仓库配置运行项目钩子，保留检查失败语义；验证CreatorOS真实提交及隔离配置仓库成功/失败，不改客户端、不push、不发布。 |
+```
+
+<a id="t1080-retained-row-d6ce9166621c4243"></a>
+
+### 本轮保留的 T-1066 完整原行
+
+```text
+| T-1066 | 落实本地客户端优先出包并移除人为构建超时 | ⏸️ 待办 | PASS[REV:0d40d8466937] | — | [SPEC](docs/features/t1066-local-package-build-only.md) | 用户2026-10-06明确Windows和Mac均优先生成安装包；精确移植本地打包8路径，独立执行额外质量验证，保留真实编译、资源、凭证和路径校验；不push、不发布、不改变T-1062粗剪与原18验收。 |
+```
+
+<a id="t1080-retained-row-6b5c0536610c48a8"></a>
+
+### 本轮保留的 T-1023-agent-recovery 完整原行
+
+```text
+| T-1023-agent-recovery | 根治 AI 助手自动恢复无限卡死并证明后台进展 | ✅ | — | PASS:87c802e61bbe | [SPEC](docs/features/t1023-agent-recovery-liveness.md) | 区分已持久化任务续跑与提交前网络失败；恢复必须有进展证据，持续无进展自动收口为可继续操作的状态，禁止永久转圈。 本地main原任务T-1023的来源别名，原事件/验收证据不改写。 |
+```
+
+<a id="t1080-retained-row-00c1555a12c0e894"></a>
+
+### 本轮保留的 T-1017 完整原行
+
+```text
+| T-1017 | 简化内容雷达：按账号定位一键生成可编辑改写稿 | 🔨 待办 | PASS[REV:d2fb4541c82d] | 待验 | [SPEC](docs/features/t1017-content-radar-rewrite-first.md) | 把“基于对标文案与当前定位快速改写”作为主结果；拆解、策略和选题卡字段改为可选补充，不得阻断首稿；[自动化实测](docs/verification/t1017-rewrite-first.md)，真实桌面/供应商待验。 |
+```
+
+<a id="t1080-retained-row-37095e929dd176d6"></a>
+
+### 本轮保留的 T-1065 完整原行
+
+```text
+| T-1065 | 全盘审计系统所有超时限制与固定30秒上限 | ✅ 待办 | — | — | [范围](docs/features/t1065-timeout-audit.md) | 用户2026-10-06要求覆盖全部系统逻辑；只读盘点生产代码、桌面层、模型/浏览器/IPC及构建脚本，统计真实超时策略与30秒上限，不混入延时、轮询或测试，不修改真实任务和安装版。 |
+```
+
+<a id="t1080-retained-row-6ad5b71dceb239e1"></a>
+
+### 本轮保留的 T-954 完整原行
+
+```text
+| T-954 | 接入抖音流量来源并以专家方法改进编导交互【用户要求小改动】 | 🔨 待办 | — | — | [SPEC](docs/features/t954-director-content-loop.md) | 已落实来源方法、稿面诊断和独立流量队列；1005 条隔离恢复与真实页面 smoke 通过。真实模型效果对照、保留样本迁移和安装版验收待完成；明细失败不阻断基础采集。 |
+```
+
+<a id="t1080-retained-row-67204c9b2c9efc87"></a>
+
+### 本轮保留的 T-1026 完整原行
+
+```text
+| T-1026 | 补齐新增 Agent 功能的公开 CLI 并逐项验收安装版 | 🔨 | — | — | [SPEC](docs/features/t1026-agent-cli-acceptance.md) | 用户要求所有新增功能通过 CLI 实测；核对计划、工具、文件、命令、浏览器、Skill、产物、恢复与旧功能；修复已实测的取消/跳过步骤被误报完成，再安装版复验。 |
+```
+
+<a id="t1080-retained-row-eee9f25319e1abe5"></a>
+
+### 本轮保留的 T-1022-agent-recovery 完整原行
+
+```text
+| T-1022-agent-recovery | 禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复 | ✅ | — | PASS:06eb90bb86b5 | [SPEC](docs/features/t1022-nonblocking-agent-recovery.md) | 覆盖内容雷达与 AI 助手；仅无可用模型时引导配置，其他可恢复失败沿原任务自动续跑、修复或降级。 本地main原任务T-1022的来源别名，原事件/验收证据不改写。 |
+```
+
+<a id="t1080-retained-row-fbe6a3f4e58bcafa"></a>
+
+### 本轮保留的 T-1025 完整原行
+
+```text
+| T-1025 | 重新核验 constitution 变更后的历史评审与前端验收回执 | 📋 | — | — | [SPEC](docs/features/t1025-receipt-drift-revalidation.md) | reconcile 已确认运行门全部通过，但 T-703/T-691/T-656/T-645/T-635 的旧评审回执和 T-1022 前端验收回执已因当前真相变化失效；按现状重新评审，禁止补拍历史 PASS。 |
+```
+
+<a id="t1080-retained-row-3eba29be37ce0174"></a>
+
+### 本轮保留的 T-1023 完整原行
+
+```text
+| T-1023 | 修正既有任务绑定glob导致的progress生成阻断 | 📋 待办 | — | — | [证据](docs/features/t1022-account-group-workspace/VERIFICATION.md) | T-1022注册时progress generate被既有T-1003的非terminal wildcard write_set拒绝；核对安全范围并按真实文件或terminal目录规则校准，不扩大写集，不丢其他任务和lease。 |
+```
+
+<a id="t1080-retained-row-25094b544f740169"></a>
+
+### 本轮保留的 T-1067 完整原行
+
+```text
+| T-1067 | 落实本地客户端优先出包并移除人为构建超时 | ✅ 待办 | PASS[REV:ebe1b789bc56] | — | [SPEC](docs/features/t1067-local-package-build-only.md) | 用户已授权双端优先出包；并行会话T-1066同号后本地8路径补充单独使用本编号，原本地评审/事件保留；T-1062原18和候选提交后顺序实施，不push、不发布。 |
+```
+
+<a id="t1080-retained-row-9b2048cb81450808"></a>
+
+### 本轮保留的 T-934 完整原行
+
+```text
+| T-934 | 统一 CLI 与页面的持久聊天工具入口【T-933 真机验收发现】 | 🔨 待办 | — | — | [实现与验收](docs/verification/t934-cli-chat-unification.md) | CLI 仍走通用回复任务，实际没有搜索和正文回执；复用页面持久聊天装配与 Pi 工具循环，保留归属、幂等和历史，真实搜集复验后方可验收。 |
+```
+
+<a id="t1080-retained-row-d8c8c522ea52c213"></a>
+
+### 本轮保留的 T-957 完整原行
+
+```text
+| T-957 | 排查 AI 失败、全场景验收并优化 Agent 提示词【用户截图】 | 🔨 待办 | — | — | [SPEC](docs/features/t957-ai-real-acceptance.md) | d18b44d2第五包已安装；双账号同站点等待48.5秒后均读全，隔离/数据保留通过；模型计算、数量稳定性和内部参数表达仍待整改，不标完成。 |
+```
+
+<a id="t1080-retained-row-e6765fb61ec296f6"></a>
+
+### 本轮保留的 T-1020 完整原行
+
+```text
+| T-1020 | 统一可视化推荐、作品承接与科学运营观测 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/creator-operations/README.md) | 用户2026-10-02补充；依赖T-1019验收，复用采集/analytics/review及独立本地投影后台，不复制UI/调度；逐平台区分发布/草稿，null与未关联保真。 |
+```
+
+<a id="t1080-retained-row-e3d09dce7e422bbe"></a>
+
+### 本轮保留的 T-933 完整原行
+
+```text
+| T-933 | 安装并验收本轮Agent Runtime桌面版【用户要求自行检查】 | 🔨 待办 | — | — | [T-932交付](docs/verification/t932-runtime-alignment.md) | 核对已安装候选与签名、启动及实际页面/Skill/聊天链路；通过公开CLI操作，未获本次启动授权前不绕过访问；保留真实验收结果。 |
+```
+
+<a id="t1080-retained-row-20ca3c0dceb6f8f4"></a>
+
+### 本轮保留的 T-917 完整原行
+
+```text
+| T-917 | 记录 T-915 媒体测试事故并防止测试再次访问真实媒体根【用户接受数据清理，解除恢复前置】 | 📋 待办 | — | — | [事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md) | 用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留；[原说明](BACKLOG-details.md#t-917-triage-description)。 |
+```
+
+<a id="t1080-retained-row-6da40b9d211687ae"></a>
+
+### 本轮保留的 T-943 完整原行
+
+```text
+| T-943 | 拉取并跑通 JY_IPAgent，调研数字人 API 与 CreatorOS 接入【用户指定仓库】 | ⏸️ 待办 | — | — | [SPEC](docs/features/t943-jy-ipagent-research.md) | 独立部署参考项目，确认数字人实际供应商与本地模型依赖；优先 API 路径，以真实启动和生成证据区分已验证与待凭据。 |
+```
+
+<a id="t1080-retained-row-b9b5a6896b2aaf0b"></a>
+
+### 本轮保留的 T-998 完整原行
+
+```text
+| T-998 | 收敛业务代码硬编码模型名 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 区分 provider 适配器(合理)与业务逻辑硬编码(抽配置)；cover-runner、channel-model-config、prompt 模板里散落的模型名收敛为可配。 |
+```
+
+<a id="t1080-retained-row-e93a45cb55075893"></a>
+
+### 本轮保留的 T-915 完整原行
+
+```text
+| T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:692283b8bace] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。 |
+```
+
+<a id="t1080-retained-row-5172365e85a2cee2"></a>
+
+### 本轮保留的 T-986 完整原行
+
+```text
+| T-986 | 修复新绑定账号默认采集任务系统标记透传 | 📋 待办 | — | — | [SPEC](docs/features/t986-bind-collection-flag.md) | 只读审查发现绑定装配丢失 systemManaged，可能导致流量和内容任务待重启才补齐；本轮不扩大改动，待隔离复现与修复。 |
+```
+
+<a id="t1080-retained-row-9f66fc6ba1d2a7e1"></a>
+
+### 本轮保留的 T-979 完整原行
+
+```text
+| T-979 | 自动化页面慢轮询与切换对象回写防护 | ⬜ 待办 | — | — | [SPEC](docs/features/t979-automation-polling.md) | T-978 排查发现运行历史、步骤和列表轮询未限制在途请求；补慢网与切换对象回归，修复请求堆积及旧响应覆盖风险。 |
+```
+
+<a id="t1080-retained-row-6f28905ece9e4a7b"></a>
+
+### 本轮保留的 T-993 完整原行
+
+```text
+| T-993 | 同步 main 分支到最新(落后 origin/main 573 提交) | 📋 待办 | — | — | — | 本地 main=f330473f 落后 origin/main(77eabca3)573 提交；核清原因后同步，保留 codex/t793-local-package 进行中未提交改动。 |
+```
+
+<a id="t1080-retained-row-d62221da75f2c693"></a>
+
+### 本轮保留的 T-1071-scheduler 完整原行
+
+```text
+| T-1071-scheduler | 修复后台调度重叠并补停止清理与心跳在途防护 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-2052423e231a8ccf"></a>
+
+### 本轮保留的 T-1071-polling 完整原行
+
+```text
+| T-1071-polling | 修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-9ee728d6794951d7"></a>
+
+### 本轮保留的 T-1071-cache 完整原行
+
+```text
+| T-1071-cache | 为完成聊天会话和预览元数据增加安全淘汰 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-3e6fddab175311d1"></a>
+
+### 本轮保留的 T-1071-worker-memory 完整原行
+
+```text
+| T-1071-worker-memory | 收敛宿主IPC历史回执与音频字节保留 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-b61a9e0e1e4b28e3"></a>
+
+### 本轮保留的 T-1071-stream 完整原行
+
+```text
+| T-1071-stream | 补齐聊天响应背压与缓冲容量策略 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-a99ff608d0b49e76"></a>
+
+### 本轮保留的 T-1071-whisper 完整原行
+
+```text
+| T-1071-whisper | 修复本地转录成功后遗留Whisper线程 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-0e3dd393b702a707"></a>
+
+### 本轮保留的 T-940 完整原行
+
+```text
+| T-940 | 补齐应用内签名远程更新闭环【糯米饭对标待落地】 | 📋 待办 | — | — | [缺口与范围](docs/features/t939-positioning-release.md) | 接通包级签名制品托管、下载验签、安装重启与双端升级验收；不把全量更新称为差分，不擅自公开发布。 |
+```
+
+<a id="t1080-retained-row-79f5cc742488451b"></a>
+
+### 本轮保留的 T-1066-tooling 完整原行
+
+```text
+| T-1066-tooling | 构建CI及运维工具超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066-timeout-policy同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
+```
+
+<a id="t1080-retained-row-00e46835d1567ae8"></a>
+
+### 本轮保留的 T-1066-frontend 完整原行
+
+```text
+| T-1066-frontend | 前端与桌面原生层超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066-timeout-policy同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
+```
+
+<a id="t1080-retained-row-7ac9ae31a324c3ee"></a>
+
+### 本轮保留的 T-1066-worker 完整原行
+
+```text
+| T-1066-worker | 执行Worker及后端超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066-timeout-policy同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
+```
+
+<a id="t1080-retained-row-f9f6ea5f8246191a"></a>
+
+### 本轮保留的 T-633 完整原行
+
+```text
+| T-633 | 恢复创作者中心自动扫码登录【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-633) | 内容雷达改写可用性由 T-1017 收口；本任务仅保留首次扫码直达创作者中心二维码页及账号登录态复用。 |
+```
+
+## T1062 本地main安装验收续跑（2026-10-08）
+
+用户本轮继续此前全功能验收；沿当前用户/已安装App及本地main新包验收授权，实际包源0480、收尾main0bc810。已完成本地构建和镜像/深签名/内层运行时校验，当前准备使用现有安装函数安装并启动，继续公开CLI和实际页面链路；不重建，不创建构建App/数据备份，不推送或发布。主SPEC原历史备份记录保留，新包本轮行为单独记实证，不冒称原备份/全部Gate通过；用户资料/激活不清理，当前工作区选择保留。仅在原中性验收组/原项目/原任务执行授权验收，不修改真实账号作品，不重新生成原未知图。全局T1081/T1082/T1083失败不影响既有合法安装和验证。
+
+<a id="t-1108"></a>
+### T-1108 · 核对画布连线引用保存回读及浏览器短观察窗口
+
+- 原文档：[实际缺陷](docs/features/t1108-canvas-public-observation.md)
+- 任务详情：main188c当前Chrome实际1PASS/1FAIL，连线referenceFileId回读undefined且默认poll5秒超时；此前main同产品旅程2PASS保留。先核trace/save/API及LED053真实消费者，规范观察至少120秒后仍失败则修产品；不删保存断言或伪造已有引用。
+
+<a id="t-1103"></a>
+### T-1103 · 排查Pi联合提案反复遗漏完整图文参数
+
+- 原文档：[实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md)
+- 任务详情：T1099安装源码070287真实Pi task272只读成功，3次提案仅digest/文章，图文始终缺失，收到具体错误却重复同参；真实partial、零候选、原稿不变。保原ID/调用/期限；两实验已用尽：完整分片3PASS，截断3PASS/2FAIL；宽容解析保真缺口已复现，task272原wire未知，先兼容设计独评，不放宽schema或新键重发。T1099/T1095仍待实际候选。
+
+<a id="t-1102"></a>
+### T-1102 · 排查并恢复本地安装首次运行时展开失败
+
+- 原文档：[诊断与边界](docs/features/t1102-installed-runtime-extraction.md)
+- 任务详情：T1099源码070287新DMG校验/签名/安装成功，但首次展开Chrome框架条目失败，落tauri错误页且CLI无连接。原日志已保存，根因未确认；同包一次温和重启已恢复HTTP61596/CLI，首次根因仍UNKNOWN；另立T1104修确定的错误链/清理诊断缺口，不删原runtime/数据、不重发AI。
+
+<a id="t-1094"></a>
+### T-1094 · 修复部分完成AI任务公开查询状态合同缺口
+
+- 原文档：[SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md)
+- 任务详情：源码e71022ff新包装入当前App，原task200get/list真实partial，正常重启后10原任务/原键/稿件一致。新增公共链/消费者与安装恢复通过；正式相关9+6旧失败登记T1096、全局原42仍保留，不complete，不重发或采纳。
+
+<a id="t-1099"></a>
+### T-1099 · 修复工具明确业务拒绝回执缺失与末次失败被算成功
+
+- 原文档：[SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md)
+- 任务详情：070287新包已无备份安装，同包一次恢复首页/CLI、11任务/4DTO/22读取对照通过；真实Pi272 read成功但3次缺图文，partial零候选，原稿不变，taskctl因T1103阻断。源码正式291PASS/原42逐字保留；不完成或盲重发。
+
+<a id="t-1095"></a>
+### T-1095 · 验证Pi联合创作必填nullable字段遵循与原任务恢复方法
+
+- 原文档：[SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md)
+- 任务详情：用户要求问题及时建task修复；原task200三次nullable填参失败。独评后冻结新任务纠错格式，旧回执不变；正式121PASS/类型/架构门通过，完整原42逐字一致及timeout原27保留。68dff新包已安装、首页/10原任务/4对象对照通过；真实Pi task222静态结构纠正后领域来源拒绝且错误被吞/结束假成功，登记T1099。无候选或采纳，不complete。
+
+<a id="t-1091"></a>
+### T-1091 · 补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收
+
+- 原文档：[SPEC](docs/features/t1091-public-director-context.md)
+- 任务详情：用户继续全面验证；安装公开消息仅content/attachments，实际owner固定Pi，无法从正式CLI验收已实现的编辑/联合创作。仅加可选引擎及严格已保存目标，保默认Pi和原任务/owner/候选采纳；先独评和真实RED/GREEN，再main无备份出包/公开Codex实测，不绕过本地来源保护。
+
+<a id="t1173-t1018-global-debt-history"></a>
+
+### T1173保留：T-1018全局类型与边界欠债重复行及八列原文
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:56；原行SHA256 `26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af`。
+
+```text
+|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)|见详情。|
+```
+
+原路径/行：BACKLOG.md:80；原行SHA256 `510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad`。
+
+```text
+|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md)|后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。|2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。|
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:121；原行SHA256 `da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b`。
+
+```text
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) | 见详情。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:152；原行SHA256 `16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4`。
+
+```text
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。 | 2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:56`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:80`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:121`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:152`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4`。
+
+<a id="t1173-t-1017-source-31eb30d3-durable-chat-original"></a>
+
+### T1173保留：T-1017-source-31eb30d3-durable-chat 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1014；原行SHA256 `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。
+
+```text
+| T-1017 | 按持久执行链重建聊天路由回归 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1014`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1014`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。
+
+<a id="t1173-t-1018-source-31eb30d3-portrait-timeline-original"></a>
+
+### T1173保留：T-1018-source-31eb30d3-portrait-timeline 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1015；原行SHA256 `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。
+
+```text
+| T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1015`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1015`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。
+
+<a id="t1173-t-1019-source-31eb30d3-confirm-candidate-original"></a>
+
+### T1173保留：T-1019-source-31eb30d3-confirm-candidate 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1016；原行SHA256 `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。
+
+```text
+| T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1016`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1016`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。
+
+<a id="t1173-t-1020-source-da970ced-guide-fixture-original"></a>
+
+### T1173保留：T-1020-source-da970ced-guide-fixture 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1017；原行SHA256 `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。
+
+```text
+| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1017`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1017`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。
+
+<a id="t1173-t-1021-source-526070b3-mac-artifact-original"></a>
+
+### T1173保留：T-1021-source-526070b3-mac-artifact 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1018；原行SHA256 `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。
+
+```text
+| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1018`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1018`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。
+
+<a id="t1173-t-1016-source-3d5dc732-sdk-boundary-original"></a>
+
+### T1173保留：T-1016-source-3d5dc732-sdk-boundary 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1013；原行SHA256 `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。
+
+```text
+| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1013`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1013`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。
+
+<a id="t1173-t-1004-same-identity-history"></a>
+
+### T1173保留：T-1004 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:82；原行SHA256 `261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09`。
+
+```text
+|T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|
+```
+
+原路径/行：BACKLOG-archive.md:1019；原行SHA256 `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。
+
+```text
+| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:156；原行SHA256 `4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875`。
+
+```text
+| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:82`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1019`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:156`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1019`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。
+
+<a id="t1173-t-1006-same-identity-history"></a>
+
+### T1173保留：T-1006 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:84；原行SHA256 `481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07`。
+
+```text
+|T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|
+```
+
+原路径/行：BACKLOG-archive.md:1020；原行SHA256 `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。
+
+```text
+| T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:158；原行SHA256 `f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7`。
+
+```text
+| T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:84`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1020`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:158`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1020`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。
+
+<a id="t1173-t-1009-same-identity-history"></a>
+
+### T1173保留：T-1009 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:87；原行SHA256 `fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47`。
+
+```text
+|T-1009|实现产物版本、隔离预览与原生导出|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。|
+```
+
+原路径/行：BACKLOG-archive.md:1021；原行SHA256 `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。
+
+```text
+| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:161；原行SHA256 `4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9`。
+
+```text
+| T-1009 | 实现产物版本、隔离预览与原生导出 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:87`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1021`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:161`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1021`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。
+
+<a id="t1173-t-1015-same-identity-history"></a>
+
+### T1173保留：T-1015 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:81；原行SHA256 `edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357`。
+
+```text
+|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)|见详情。|
+```
+
+原路径/行：BACKLOG-archive.md:1012；原行SHA256 `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。
+
+```text
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | ✅ 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:155；原行SHA256 `a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd`。
+
+```text
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) | 见详情。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:81`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1012`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:155`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1012`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。
+
+<a id="t1173-t-916-same-identity-history"></a>
+
+### T1173保留：T-916 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:116；原行SHA256 `a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961`。
+
+```text
+|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)|见详情。|
+```
+
+原路径/行：BACKLOG-archive.md:1027；原行SHA256 `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。
+
+```text
+|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|✅|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。|
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:190；原行SHA256 `8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb`。
+
+```text
+| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916) | 见详情。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:116`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1027`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:190`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1027`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。
+
+<a id="t1173-t1014-identical-archive-history"></a>
+
+### T1173保留：T-1014相同归档原行
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1011；原行SHA256 `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+
+```text
+| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1011`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1107`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:154`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1011`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+
+<a id="b-43efc28c7f95"></a>
+
+## T-1223 2026-10-11 压缩前完整条目
+
+|T-1223|修复截图总览把历史运行记录当用例数及重复锚点|🔨 待办|—|待验|[范围与验收](docs/features/t1223-verification-gallery-record-identity.md)|3912FAIL与3913PASS同testId实际保留，但generator按每行标cases且同HTML id；只修报告计数/唯一锚点，保全历史状态和原图，待独评。|
+
+
+<a id="b-7cb36965e02b"></a>
+
+## T-1222 2026-10-11 压缩前完整条目
+
+|T-1222|核对文章图文编导的空态与功能指引脱离当前稿件|📋 待办|—|待验|[截图与范围](docs/features/t1222-director-context-guidance.md)|3911实际文章和图文编导截图仍提示最近评论出选题；当前组件空态/placeholder通用写死。先核正式稿件target与功能目录，按oil原tokens统一上下文指引和实际可用动作，不能只改文案冒签AI工具可用。|
+
+
+<a id="b-5c5bdde4c800"></a>
+
+## T-1221 2026-10-11 压缩前完整条目
+
+|T-1221|校准双工作区切换端到端旧账号选择器|🔨 待办|—|—|[范围与验收](docs/features/t1221-group-switch-e2e.md)|原T1207 A项目可见后data-account-id超时；仅按T1022真实members/data-group-id/组镜像校准，保两账号原公共创建、跨组无残影与返回刷新回读，不改权限或掩盖兼容缺陷。|
+
+
+<a id="b-7f8c12919103"></a>
+
+## T-1217 2026-10-11 压缩前完整条目
+
+|T-1217|修复内容雷达来源任务在旧账号和冻结组范围间卡住|🔨 待办|—|—|[诊断与验收](docs/features/t1217-source-sync-workspace.md)|3901公共来源创建后恢复实际OwnershipError，旧source/run的NULL组与execution冻结legacy组不一致；先隔离完整链RED，独评精确写集，保跨组/转组/停控/原ID。|
+
+
+<a id="b-50cf413f8280"></a>
+
+## T-1207 2026-10-11 压缩前完整条目
+
+|T-1207|用 Playwright/App 自动化对全功能建立逐项验收并留图|🔨 待办|—|待验|[验收范围与路径](docs/features/t1207-full-feature-acceptance.md)|用户要求以需求/验收标准驱动AI编写流程与用例、子Agent实际跑E2E、每个可达页面和场景留截图供明日复核。覆盖现有46个浏览器E2E及全路由截图；桌面原生须按真实Appium/宿主能力单列，报告外部平台/模型动作限制与所有失败，不触碰真实账号或用户数据。|
+
+
+<a id="b-ba8271fca89d"></a>
+
+## T-1208 2026-10-11 压缩前完整条目
+
+|T-1208|复核T-1207暴露的浏览器功能失败并修复确认缺陷|🔨 待办|—|待验|[复核范围与验收标准](docs/features/t1208-t1207-e2e-failure-triage.md)|T1207基线120例中39失败、8超时；专项修正后T1069/T954/T1159通过。已确认并修复无视频作品剪辑页卡在恢复态，组件与隔离浏览器回归通过；其余定位中心、内容雷达、项目、账号/作品、发布日历、剪辑、画布等继续按逐例索引和截图复现定因。|
+
+
+<a id="b-577cb0da68f4"></a>
+
+## T-1204 2026-10-11 压缩前完整条目
+
+|T-1204|核对本轮全局对账29项失败及新增触发项|🔨 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|T1199/T1200本轮完整reconcile --concise实际exit1，29ERROR/0WARN；输出仅保前5项，其余24未打印，不能猜成旧24项。保原日志与统计，核看板过大、旧receipt及LED041/057等真实失败，不修改门卫或洗绿；父任务仍待验。|
+
+<a id="b-331e63446d8d"></a>
+
+|T-1224|校准内容雷达公共旅程的短测试预算与证据输出|🔨 待办|—|待验|[范围与验收](docs/features/t1224-radar-e2e-budget-evidence.md)|原transform等待60秒/导航30秒未被overlay覆盖；窄校准后重跑完整来源到项目旅程，保旧失败和独立证据，不改产品或断言。|
+
+<a id="b-f2fe4887cb75"></a>
+
+|T-1217|修复内容雷达来源任务在旧账号和冻结组范围间卡住|🔨 待办|—|—|[诊断与验收](docs/features/t1217-source-sync-workspace.md)|旧NULL来源与冻结组不一致；30例通过后扩大旧回归暴露取消/防丢保护/删除父闭包，修复中。 [原记录](BACKLOG-details.md#b-7f8c12919103)|
+
+<a id="b-2a871e9f9f38"></a>
+
+|T-1101|修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集|🔨|PASS[REV:146ff2046c2c]|待验|[SPEC](docs/features/t1101-canvas-binding-collection.md)|用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。|
+
+<a id="b-da2102ce12ea"></a>
+### T-1110 原执行记录
+
+原行 SHA256 `da2102ce12ea3ad08f27af7c5e1adb68303c59cf4e9f55f6bf5edc29bb412a92`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1110|核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态|📋 待办|—|—|[实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md)|用户要求有问题建task；fa09真实两条旅程0PASS/2FAIL，绑定页ChunkLoadError无法加载，第一例旧状态被仍运行页面自动保存覆盖。原trace/log保留；后者在T1108原范围先离开再准备，前者根因未知，核真实静态响应/开发缓存和并发，不删断言或用旧PASS代签。|
+
+<a id="b-2d26eed11574"></a>
+### T-1081 原执行记录
+
+原行 SHA256 `2d26eed11574bc21c19bdc5ac03deaf286eaa35f2e3e7a0df3e3803ecb593ef4`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1081|核对整合后原主线的14处短执行预算与超时扫描误报|📋 待办|—|待验|[根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json)|完整超时门实际exit1：14条既有短执行/有限观察来自原main/client，另13条为冻结编辑器调度/动画、已取消清理、TTL或已归一消费者；先按真实消费者复核，不改vendor洗绿、不延长取消。来源与原失败留存；本轮优先合并和出包，此任务尚未实施。|
+
+<a id="b-e634c6a1c42a"></a>
+### T-1097 原执行记录
+
+原行 SHA256 `e634c6a1c42a608e3efd0a5680fdfc20256098b6b912474cd7a6c0ebecb17205`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1097|修复文章编导参考资料与候选审读保护缺口|📋|—|—|[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)|用户要求有问题及时建task修复；T1096确认身份/文档只接不可触达旧generate，当前联合未接；事实替换对照及未请求元数据保护也需当前链实证。核真实来源与审读后独评闭合，不恢复旧快转，不把旧恢复/checkbox测试当新链通过。|
+
+<a id="b-bc5cecd384c8"></a>
+### T-1107 原执行记录
+
+原行 SHA256 `bc5cecd384c89bac64fdc110be7f5563b997370e6a525b59b6a334b5b6035477`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1107|核对平台公共接口新增操作与发布归属回归失败|🔨|PASS[REV:9c9181db2c1c]|待验|[实际缺陷](docs/features/t1107-platform-public-regression.md)|全功能验收额外公共真链24例实际22PASS/2FAIL：账号操作数5变6，发布锚冲突首轮200而旧断言期待拒绝；重试又409。先核main合并前基线与真实组/项目归属，再独评修复产品或过期夹具；保原断言/失败/权限，不删除历史洗绿。|
+
+<a id="b-024c8af10ce0"></a>
+### T-1092 原执行记录
+
+原行 SHA256 `024c8af10ce08e3566ff632d721646bb5780e333148fc42d034da6e36bce46bf`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1092|核对联合创作旧集成测试未解包可信回执的契约漂移|📋|—|—|[当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)|T1091扩大回归154PASS/2FAIL，旧main隔离同2FAIL；原第104行严格parse含__creatorosOutcome的展示投影，页面先经原解包器。先独评实际旧断言/回执协议再校准，保可信元数据与两稿内容断言，不改生产schema或洗掉失败。本轮不实施。|
+
+<a id="b-4b6be3609803"></a>
+### T-1182 原执行记录
+
+原行 SHA256 `4b6be3609803d0bdb602ca26d9f61a58af271905243335c8c3875d79905edbbc`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1182|区分隐藏文件注入与真实上传按钮的刷新等待|🔨 待办|PASS[REV:456a0d53bb41]|—|[实验SPEC](docs/features/t1182-real-upload-button-control.md) · [研究卡](docs/research/t1182-upload-ui-refresh.md)|T1181两次MP4完成后公开库存有文件而列表等120秒不可见；原探针直接注入隐藏input，可能绕过真实按钮pending。冻结失败，一次已观测加一次真实按钮/filechooser区分实验，不改产品/权限/预算、不盲重跑或代签根因。|
+
+<a id="b-bc11f0a7b5b2"></a>
+### T-1196 原执行记录
+
+原行 SHA256 `bc11f0a7b5b2c1496fafa24f75a9a78068080c1eb8bddff27fae86b05e7bbc81`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|T1194新包真启动HTTP首页正常、CLI连接正常；同时日志CHANNEL_RUNTIME_DIGEST_MISMATCH、展示副本同步502、config_sync blocked502。保失败和已激活事实，核真实同步消费者/返回来源，不猜网络或绕过摘要/验签，不重置激活。|
+
+<a id="b-3158c3fcebbd"></a>
+### T-1093 原执行记录
+
+原行 SHA256 `3158c3fcebbdbefc305f9ee4e5d318c582475093cc8abbb5b2d37c8074473842`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|T1091真实安装6候选通过/2失败；Pi整数发字符串被拒后仍称就绪、联合首读猜错可省略digest。只改功能方法提示，不放宽schema/回执/owner/旧任务或重发未知；正式独评后RED/GREEN及新包真实Pi复验，旧失败保留。|
+
+<a id="b-26577d4c923f"></a>
+### T-1116 原执行记录
+
+原行 SHA256 `26577d4c923fef3ae591b376df4a1293c4829684c7f15f86b2bfc1b29a3317c9`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1116|核对稿件并发保存回归在本轮完整对账中的再次失败|🔨 待办|—|—|[实际诊断](docs/features/t1116-artifact-cas-global-regression.md)|T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。|
+
+<a id="b-609973ed4950"></a>
+### T-1083 原执行记录
+
+原行 SHA256 `609973ed4950823ad8842c1db91fb224ec7e9d56618884fe172b1ff6a5be3f71`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1083|复核流程升级后的旧任务写集通配符兼容缺口|📋 待办|—|—|[根因证据](docs/verification/t1080/post-package-progress-block-failure.json)|progress原block命令实际exit2：T1026的docs/verification/t1026*被3.29路径校验拒绝，未写进度；taskctl已真实记T1080阻断。先盘点旧glob实际允许写集、独立复核等价迁移，不放宽guard或手改状态，本轮未实施。|
+
+<a id="b-19048143f3aa"></a>
+### T-1096 原执行记录
+
+原行 SHA256 `19048143f3aa8244da6a89dc75a603d45cc35a5042cf38da5f14f2b14835444f`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1096|核对文章工作流与任务父归属旧回归断言的实际漂移|📋|—|—|[当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md)|T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。|
+
+<a id="b-32f22df52b82"></a>
+### T-1098 原执行记录
+
+原行 SHA256 `32f22df52b820b1f90579369f64feea959430d600ab15f77b24f34046eeab6db`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1098|核对安装重启后的定期同步失败与采集未启动|📋|—|—|[缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md)|用户要求发现问题及时建task；T1095真启动日志两scheduled.intelligence.sync为failed，另账号定期采集Error。保原ID与真实失败，先核公开归属/原回执/启动前事实后独评修复，不猜关联、清历史或重发。|

@@ -1,11 +1,11 @@
 import { createModels,createProvider,lazyApi,envApiKeyAuth,type Model,type Api,type AssistantMessageEvent } from "@earendil-works/pi-ai";
 import type { LanguageModelV4,LanguageModelV4CallOptions,LanguageModelV4StreamPart } from "@ai-sdk/provider";
-import type { ModelSpec } from "./provider-factory";
+import type { ApiModelSpec } from "./provider-factory";
 import { piProviderDiagnostic } from "./pi-provider-diagnostic";
 import { providerIdentityFor } from "./provider-identity";
 import { toPiContext,fromPiMessage,piPayload } from "./pi-provider-codec";
 
-export function createPiProviderModel(spec:ModelSpec,classifyRejection?:(facts:{statusCode:number;responseHeaders:Record<string,string>;message:string})=>Error):LanguageModelV4{
+export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(facts:{statusCode:number;responseHeaders:Record<string,string>;message:string})=>Error):LanguageModelV4{
   const api=spec.apiFormat==="anthropic"?"anthropic-messages":spec.apiFormat==="openai_chat"?"openai-completions":"openai-responses";
   const baseUrl=(spec.apiFormat==="anthropic" && spec.baseUrl ? spec.baseUrl.replace(/\/v1\/?$/,"") : spec.baseUrl)??(spec.apiFormat==="anthropic"?"https://api.anthropic.com":"https://api.openai.com/v1");
   const model:Model<Api>={id:spec.model,name:spec.model,api,provider:"creatoros-pi",baseUrl,reasoning:false,input:["text","image"],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:200000,maxTokens:32768};
@@ -47,7 +47,7 @@ export function createPiProviderModel(spec:ModelSpec,classifyRejection?:(facts:{
       }
     })();
   };
-  const convert=(event:AssistantMessageEvent):LanguageModelV4StreamPart[]=>{
+  const convert=(event:AssistantMessageEvent,toolInputs:Map<number,"started"|"suppressed">):LanguageModelV4StreamPart[]=>{
     if(event.type==="start")return [{type:"stream-start",warnings:[]}];
     if(event.type==="text_start" || event.type==="thinking_start")return [{type:event.type==="text_start"?"text-start":"reasoning-start",id:String(event.contentIndex)}];
     if(event.type==="text_delta" || event.type==="thinking_delta")return [{type:event.type==="text_delta"?"text-delta":"reasoning-delta",id:String(event.contentIndex),delta:event.delta}];
@@ -55,7 +55,24 @@ export function createPiProviderModel(spec:ModelSpec,classifyRejection?:(facts:{
       const part=fromPiMessage(event.partial).content[event.contentIndex];
       return [{type:event.type==="text_end"?"text-end":"reasoning-end",id:String(event.contentIndex),...(part?.providerMetadata?{providerMetadata:part.providerMetadata}:{})}];
     }
-    if(event.type==="toolcall_end")return [{type:"tool-call",toolCallId:event.toolCall.id,toolName:event.toolCall.name,input:JSON.stringify(event.toolCall.arguments),...(event.toolCall.thoughtSignature?{providerMetadata:{pi:{thoughtSignature:event.toolCall.thoughtSignature}}}:{})}];
+    if(event.type==="toolcall_start" || event.type==="toolcall_delta"){
+      const call=event.partial.content[event.contentIndex];
+      if(toolInputs.get(event.contentIndex)==="suppressed")return [];
+      if(call?.type!=="toolCall" || !call.id || !call.name){
+        // Pi 支持晚到身份。已有非空参数但无真实身份时省略整个可选参数流，保留最终完整调用。
+        if(event.type==="toolcall_delta" && event.delta!=="")toolInputs.set(event.contentIndex,"suppressed");
+        return [];
+      }
+      // 只前送供应商的参数流活性；完整调用仍由 durable 在 finish 和结算后释放。
+      const parts:LanguageModelV4StreamPart[]=[];
+      if(!toolInputs.has(event.contentIndex)){toolInputs.set(event.contentIndex,"started");parts.push({type:"tool-input-start",id:call.id,toolName:call.name});}
+      if(event.type==="toolcall_delta" && event.delta!=="")parts.push({type:"tool-input-delta",id:call.id,delta:event.delta});
+      return parts;
+    }
+    if(event.type==="toolcall_end"){
+      const started=toolInputs.get(event.contentIndex)==="started";toolInputs.delete(event.contentIndex);
+      return [...(started?[{type:"tool-input-end" as const,id:event.toolCall.id}]:[]),{type:"tool-call",toolCallId:event.toolCall.id,toolName:event.toolCall.name,input:JSON.stringify(event.toolCall.arguments),...(event.toolCall.thoughtSignature?{providerMetadata:{pi:{thoughtSignature:event.toolCall.thoughtSignature}}}:{})}];
+    }
     if(event.type==="done"){const result=fromPiMessage(event.message);return [{type:"response-metadata",...result.response},{type:"finish",finishReason:result.finishReason,usage:result.usage,providerMetadata:result.providerMetadata}];}
     return [];
   };
@@ -63,11 +80,12 @@ export function createPiProviderModel(spec:ModelSpec,classifyRejection?:(facts:{
     async doGenerate(request){let final;for await(const event of events(request))if(event.type==="done")final=fromPiMessage(event.message);if(!final)throw Error("PI_MODEL_RESULT_INCOMPLETE");return final;},
     async doStream(request){
       const networkAbort=new AbortController();
+      const toolInputs=new Map<number,"started"|"suppressed">();
       const iterator=events({...request,abortSignal:request.abortSignal?AbortSignal.any([request.abortSignal,networkAbort.signal]):networkAbort.signal}),buffer:LanguageModelV4StreamPart[]=[];
       // 等待首个实际输出或明确拒绝，使账本在尚未出流时仍能识别 401/429/5xx。
-      while(true){const next=await iterator.next();if(next.done)throw Error("PI_MODEL_RESULT_INCOMPLETE");buffer.push(...convert(next.value));if(next.value.type!=="start")break;}
+      while(true){const next=await iterator.next();if(next.done)throw Error("PI_MODEL_RESULT_INCOMPLETE");buffer.push(...convert(next.value,toolInputs));if(next.value.type!=="start")break;}
       return {stream:new ReadableStream<LanguageModelV4StreamPart>({
-        async pull(controller){try{if(buffer.length){controller.enqueue(buffer.shift()!);return;}while(true){const next=await iterator.next();if(next.done){controller.close();return;}const parts=convert(next.value);if(parts.length){buffer.push(...parts);controller.enqueue(buffer.shift()!);return;}}}catch(error){controller.error(error);}},
+        async pull(controller){try{if(buffer.length){controller.enqueue(buffer.shift()!);return;}while(true){const next=await iterator.next();if(next.done){controller.close();return;}const parts=convert(next.value,toolInputs);if(parts.length){buffer.push(...parts);controller.enqueue(buffer.shift()!);return;}}}catch(error){controller.error(error);}},
         async cancel(){networkAbort.abort();await iterator.return(undefined);},
       })};
     },

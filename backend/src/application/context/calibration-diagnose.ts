@@ -1,13 +1,14 @@
 import type {RequestContext} from "@creatoros/contract";
 
 /** 校准业务读取；沿原预测锁定与归属规则。 */
-export function createCalibrationDiagnoseReaders(ports:{projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getOutput">;
+export function createCalibrationDiagnoseReaders(ports:{predictionLocks?:Pick<ReturnType<typeof import("../../modules/ai").createPredictionLockService>,"readFrozen">;projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"getPublication" | "listRevisions">;
-calibrationService: Pick<ReturnType<typeof import("../../modules/calibration").createCalibrationService>,"getCurrentRubricVersion">;
-readCurrentScript:(ctx:RequestContext,projectId:string)=>ReturnType<ReturnType<typeof import("./current-artifact").createCurrentArtifactReader>>;
-canonicalRubricIdFor:(ctx:RequestContext)=>string;}){
-const {projectsService,publishingService,calibrationService,canonicalRubricIdFor,readCurrentScript}=ports;
+calibrationService: Pick<ReturnType<typeof import("../../modules/calibration").createCalibrationService>,"ensureDefaultRubric">;
+readCurrentScript:(ctx:RequestContext,projectId:string)=>Promise<import("./confirmed-project-script").ConfirmedProjectScript|null>;
+}){
+const {projectsService,publishingService,calibrationService,readCurrentScript}=ports;
 return {
+              predictionLocks:ports.predictionLocks,
               subject: {
                 get: async (
                   c: RequestContext,
@@ -43,10 +44,7 @@ return {
                   // The creator's default 变现加权 rubric (canonical seed id) — its current
                   // version's dimensions are exactly what the agent scores. 这里固定读取当前默认版本，不接受模型或客户端覆盖评分标准。
                   // [T-332 S2] per-account 默认 rubric(当前号的 canonical id)。
-                  const v = await calibrationService.getCurrentRubricVersion(
-                    c,
-                    canonicalRubricIdFor(c),
-                  );
+                  const v = (await calibrationService.ensureDefaultRubric(c)).currentVersion;
                   return {
                     rubricVersionId: v.id,
                     dimensions: v.dimensions.map((d) => ({

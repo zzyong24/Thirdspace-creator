@@ -18,13 +18,22 @@ import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
 import { isAccountRequiredError } from "@/lib/http-transport";
 import type { DashboardViewModel } from "@/types/view-models";
+import {GroupWorkspaceFilters} from "@/features/group-workspace/group-workspace-filters";
+import {workspaceQueryFromSearch} from "@/features/group-workspace/workspace-query";
 
-export default async function Page() {
+export default async function Page({searchParams}: {searchParams?:Promise<Record<string,string|string[]|undefined>>}={}) {
   const session = await resolveSession();
   if (!session) {
     // No session (the (creator) layout guard redirects on a real request).
     // Render the fixture-composed fallback so SSR never crashes.
     return <DashboardPage />;
+  }
+
+  if(session.ctx.groupId){
+    const data=await createServerClient(session.ctx).getGroupOverview({body:undefined,params:{groupId:session.ctx.groupId},query:workspaceQueryFromSearch(await searchParams??{})});
+    const w=data.workspace;
+    const query={...workspaceQueryFromSearch(await searchParams??{}),startDate:w.startDate,endDate:w.endDate};
+    return <DashboardPage viewModel={data} greetingName={session.user.displayName} dateRange={{startDate:w.startDate,endDate:w.endDate}} trendSource={{groupId:w.groupId,query,latestCapturedAt:w.latestCapturedAt}} filters={<GroupWorkspaceFilters workspace={w}/>}/>;
   }
 
   // [T-348] 0 号(未绑号)首页现放行守卫(见 zero-account-guidance 白名单)→ 首页自己承接

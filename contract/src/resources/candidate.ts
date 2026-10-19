@@ -1,3 +1,4 @@
+import { audienceTaskAssessment } from "./audience-task";
 import { z } from "zod";
 import {
   id,
@@ -56,12 +57,31 @@ export const adaptationStrategy = z.object({
 });
 export type AdaptationStrategy = z.infer<typeof adaptationStrategy>;
 
-export const adaptedDraftCandidate = z.object({
+export const legacyAdaptedDraftCandidate = z.object({
   contentText: z.string().min(1).max(50_000),
   generatedFromTranscriptHash: z.string().min(1),
   strategyHash: z.string().min(1),
   templateVersion: z.string().min(1),
 });
+
+// rewrite_only 首稿只有正文和服务端核验的来源 provenance；拆解与策略没有生成时
+// 必须保持缺省，不能用空策略来伪装 legacy shape。
+export const rewriteOnlyAdaptedDraftCandidate = z.object({
+  generationMode: z.literal("rewrite_only"),
+  contentText: z.string().min(1).max(50_000),
+  sourceSnapshotId: id,
+  generatedFromTranscriptHash: z.string().min(1),
+  aiTaskId: id.optional(),
+  positioningVersionId: id.optional(),
+  personalizationStatus: z.enum(["applied", "not_applied"]),
+  templateVersion: z.string().min(1),
+});
+
+// Strategy-backed 历史记录继续要求原有 strategyHash；新变体由 generationMode 区分。
+export const adaptedDraftCandidate = z.union([
+  legacyAdaptedDraftCandidate,
+  rewriteOnlyAdaptedDraftCandidate,
+]);
 export type AdaptedDraftCandidate = z.infer<typeof adaptedDraftCandidate>;
 
 // 选题卡 (topic.enrich, 选题中心大改) — the AI-filled 详情 (一句话/观众/痛点/冲突/Hook/
@@ -69,6 +89,7 @@ export type AdaptedDraftCandidate = z.infer<typeof adaptedDraftCandidate>;
 // topic.enrich task formalizes it. EVERY field is optional/default so a bare `{}` is a
 // valid card (待评估), and the editable patch only sets the fields the user touches.
 export const candidateCard = z.object({
+  audienceTask: audienceTaskAssessment.optional(),
   // 详情
   oneLiner: z.string().optional(), // 一句话选题
   targetAudience: z.string().optional(), // 目标观众

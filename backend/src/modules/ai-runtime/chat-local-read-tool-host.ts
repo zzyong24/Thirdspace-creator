@@ -16,9 +16,9 @@ const blocked=(summary:string,data:unknown)=>agenticToolOutcomeSchema.parse({sta
 /** 本机短读取由宿主执行；一次授权属于副作用，必须经执行账本保存回执后才能回放。 */
 export function createChatLocalReadTaskToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,ports:ChatLocalReadPorts):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  async function current(context:RequestContext,execution:ExecutionRef,signal?:AbortSignal){
-  const owner={userId:context.userId,accountId:context.accountId};signal?.throwIfAborted();
+  const owner={userId:context.userId,accountId:context.accountId??null,groupId:context.groupId??null};signal?.throwIfAborted();
   const restored=structuredClone(await reader.read({...execution}));signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("本地读取账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("本地读取账号与原任务不符");
   const frozen=restored.modelInput.tools.find(tool=>tool.name==="local.read");if(!frozen)return null;
   const prototype=buildChatTools(["local.read"],{
    decideLocalRead:async input=>{signal?.throwIfAborted();const decision=await ports.decideLocalReadAccess(restored.context,input);signal?.throwIfAborted();return decision;},

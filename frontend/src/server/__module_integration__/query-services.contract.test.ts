@@ -86,7 +86,8 @@ describe("query-services ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(QUERY_SERVICES_OP_IDS).toHaveLength(3);
+    // T1246：逐ID核真实视觉模板/组日历/视觉导出/组概览与日报所有者；保原无ctx逐项拒绝。
+    expect(QUERY_SERVICES_OP_IDS).toEqual(["pages.dashboard.get", "pages.groupOverview.get", "pages.groupTrend.get", "pages.dailyReport.get", "pages.projectOverview.get", "pages.search.get"]);
   });
 
   it("pages.dashboard.get → valid dashboardPage, kind=dashboard", async () => {

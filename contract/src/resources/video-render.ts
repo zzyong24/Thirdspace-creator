@@ -197,6 +197,10 @@ export const videoRenderTalkingHead = z.object({
   /** 粗剪人物视频时长(秒)= 成片总时长。 */
   durationSec: z.number().positive(),
   hasAudio: z.boolean().default(true),
+  /** 服务端按冻结主轨编译；每个实例使用独立媒体挂载，保留源音画偏移。 */
+  clips: z.array(z.object({clipId:z.string().min(1),file:z.string().min(1),
+    startSec:z.number().nonnegative(),endSec:z.number().positive(),sourceInSec:z.number().nonnegative(),hasAudio:z.boolean()}).strict()
+    .refine(c=>c.endSec>c.startSec)).min(1).optional(),
 });
 export type VideoRenderTalkingHead = z.infer<typeof videoRenderTalkingHead>;
 
@@ -214,6 +218,8 @@ export type VideoSubtitleEmphasis = z.infer<typeof videoSubtitleEmphasis>;
 
 export const videoRenderCaption = z
   .object({
+    /** T-1037：旧方案可缺；制作工程首次明确保存后持久化稳定片段身份。 */
+    id: z.string().min(1).optional(),
     start: z.number().nonnegative(),
     end: z.number().positive(),
     /** 中文行(主)。 */
@@ -327,8 +333,10 @@ export type VideoRenderDirection = z.infer<typeof videoRenderDirection>;
 // at 落在所属场景区间内)。卡片从 at 出现,持续到场景结束。
 
 const cardBase = {
+  id: z.string().min(1).optional(),
   /** 出现时刻(绝对秒)。 */
   at: z.number().nonnegative(),
+  endSec: z.number().positive().optional(),
   /** [T-295] 动画意图(决策层可选产出;缺省 template 按 kind 派生富动画)。 */
   motion: videoCardMotion.optional(),
   /** [T-794] AI 已声明的内容关系与原文部件；渲染器不得二次猜语义。 */
@@ -498,12 +506,14 @@ export type VideoBrollVisualRole = z.infer<typeof videoBrollVisualRole>;
 
 // B-roll 插点(素材来自项目资产,决策侧硬规则:精确匹配被讲对象禁近似替代)。
 export const videoRenderBroll = z.object({
+  id: z.string().min(1).optional(),
   /** 插入时刻(绝对秒)。 */
   at: z.number().nonnegative(),
   /** 沙箱 input/ 的 mountAs 相对路径(视频素材)。 */
   file: z.string().min(1),
   /** 展示时长(秒);缺省播到所属场景结束。 */
   durationSec: z.number().positive().optional(),
+  mediaStartSec: z.number().nonnegative().optional(),
   /** 画面上的证据标签(禁内部词)。 */
   label: z.string().min(1),
   /** 大幅展示(证据主角);否则中幅卡。 */
@@ -632,8 +642,11 @@ export const videoRenderProps = z
     if (props.direction) {
       const expectedRefs = new Map<string, { kind: "card" | "broll"; path: (string | number)[] }>();
       props.scenes.forEach((scene, sceneIdx) => {
-        scene.cards.forEach((_card, ordinal) => {
-          expectedRefs.set(`card:${sceneIdx}:${ordinal}`, {
+        scene.cards.forEach((card, ordinal) => {
+          const stable = card.id ? `card:${card.id}` : undefined;
+          const ref = stable && props.direction!.beatGraph.some(beat => beat.subject.kind === "card" && beat.subject.ref === stable)
+            ? stable : `card:${sceneIdx}:${ordinal}`;
+          expectedRefs.set(ref, {
             kind: "card",
             path: ["scenes", sceneIdx, "cards", ordinal],
           });
@@ -641,7 +654,10 @@ export const videoRenderProps = z
       });
       props.broll.forEach((broll, index) => {
         if (broll.presentation === "overlay") return;
-        expectedRefs.set(`broll:${broll.file}`, {
+        const stable = broll.id ? `broll:${broll.id}` : undefined;
+        const ref = stable && props.direction!.beatGraph.some(beat => beat.subject.kind === "broll" && beat.subject.ref === stable)
+          ? stable : `broll:${broll.file}`;
+        expectedRefs.set(ref, {
           kind: "broll",
           path: ["broll", index],
         });

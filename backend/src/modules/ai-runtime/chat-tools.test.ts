@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
 // [T-263] HITL 授权门装配(local.read needsApproval → toolApproval 映射)。
-import { buildChatToolApproval } from "./chat-tool-gate";
+import { buildChatToolApproval, UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE } from "./chat-tool-gate";
 import {
   buildChatTools,
   allChatTools,
@@ -674,8 +674,9 @@ describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
 
     expect(result).toMatchObject({
       kind: "creatoros.guide",
-      error: expect.stringContaining("CREATOROS_GUIDE_UNAVAILABLE"),
+      error: "CreatorOS 官方产品说明当前不可读取，本轮无法依据它回答。",
     });
+    expect(JSON.stringify(result)).not.toContain("CREATOROS_GUIDE_UNAVAILABLE");
   });
 });
 
@@ -1157,7 +1158,7 @@ describe("[T-084b] material.screenshot 工具 — 自动化截图", () => {
       url: "https://paywalled.example.com",
     })) as { asset: unknown; error: string | null };
     expect(result.asset).toBeNull();
-    expect(result.error).toContain("需要登录");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 
   it("空 URL → 诚实报错,不调截图端口", async () => {
@@ -1220,7 +1221,7 @@ describe("[T-217c] web.read 工具 — 带登录态读网页正文", () => {
       url: "https://dead.example.com",
     })) as { asset: unknown; needLogin: unknown; error: string | null };
     expect(result.asset).toBeNull();
-    expect(result.error).toContain("HTTP 404");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 
   it("空 URL → 诚实报错,不调读取端口", async () => {
@@ -1391,7 +1392,7 @@ describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () =>
       prompt: "一张配图",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1441,7 +1442,7 @@ describe("[T-350a] publish.package 工具 — 发布物料生成(单平台抖音
       error: string | null;
     };
     expect(result.taskId).toBeNull();
-    expect(result.error).toBe("空稿门:先写整稿");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1495,7 +1496,7 @@ describe("[T-703] video.edit.render 工具 — 只产可确认剪辑候选", () 
 
     expect(result.kind).toBe("video.edit");
     expect(result.renderProps).toBeNull();
-    expect(result.error).toContain("尚未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1555,7 +1556,7 @@ describe("[T-385] project.transcribe 工具 — 对话内一键抓逐字稿", ()
       error: string | null;
     };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("没有关联抖音作品");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1681,7 +1682,7 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
       projectId: "proj-1",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1882,7 +1883,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       error: string | null;
     };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("稿面");
+    expect(result.error).toBe("整稿要落进具体项目的稿面 —— 请在项目稿面右栏让我写脚本。");
   });
 
   it("dispatch 抛错 → 不抛,taskId=null + error(诚实降级,不裸机器码)", async () => {
@@ -1896,7 +1897,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       topic: "x",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 
   it("[T-727] verbatim 只传 sourceRef，由服务端恢复完整原文/hash 后 dispatch，绝不塞 extraBrief 摘要", async () => {
@@ -2045,7 +2046,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       authorized: false,
       startAnchor: "我们的编导智能体支持写稿。",
       endAnchor: null,
-      reason: "当前只是在发送稿件，还没有要求写入稿面。",
+      reason: "内部语义门诊断细节不应向用户展示。",
     });
     dispatch.mockClear();
     const denied = (await runExecute(tools["script.draft"]!, {
@@ -2053,7 +2054,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       sourceRef: "user:0:0",
     })) as { taskId: string | null; error: string | null };
     expect(denied.taskId).toBeNull();
-    expect(denied.error).toContain("还没有要求写入稿面");
+    expect(denied.error).toContain("还没有明确要求写入稿面");
     expect(dispatch).not.toHaveBeenCalled();
   });
 });
@@ -3464,7 +3465,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
     expect(result.originalText).toBe("一段被平台审核拦截的原文");
   });
 
-  it("未知错误 → error 回落原始 message(诚实,不装懂),不建议换模型", async () => {
+  it("未知错误 → 使用中性错误文案,不泄漏底层地址且不建议换模型", async () => {
     const { deps } = makeDeps();
     deps.distillKnowledge = async () => {
       throw new Error("ECONNREFUSED 127.0.0.1:11434");
@@ -3473,7 +3474,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
     const result = (await runExecute(tools["knowledge.distill"]!, {
       content: "原文",
     })) as { error: string | null; suggestSwitchModel: boolean };
-    expect(result.error).toBe("ECONNREFUSED 127.0.0.1:11434");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
     expect(result.suggestSwitchModel).toBe(false);
   });
 
@@ -3969,7 +3970,7 @@ describe("[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安
     const result = (await runExecute(tools["local.read"]!, {
       path: "/Users/u/nope.md",
     })) as { error: string | null; needApproval: unknown };
-    expect(result.error).toContain("不存在");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
     expect(result.needApproval).toBeNull();
   });
 
@@ -4334,10 +4335,10 @@ describe("[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记", () => {
     expect(result.window?.total).toBe(5000);
     expect(result.hasMore).toBe(true);
     expect(result.serpNote).toBe(WEB_READ_SERP_NOTE);
-    // 注记内容:是结果列表页摘要非正文 + 指路 material.gather / 具体文章 URL。
+    // 用户注记只说明页面类型和具体文章下一步，工具操作放在description。
     // [T-390] 措辞已覆盖站内搜索列表页(「搜索结果列表页」)。
     expect(WEB_READ_SERP_NOTE).toContain("搜索结果列表页");
-    expect(WEB_READ_SERP_NOTE).toContain("material.gather");
+    expect(WEB_READ_SERP_NOTE).toContain("具体文章");
   });
 
   it("SERP 上模型请求 maxChars=12000 也被封顶 1500(cap 同压,绕不过)", async () => {
@@ -4416,9 +4417,9 @@ describe("[T-390] material.screenshot — 结果列表页硬拒 + 首屏默认",
     expect(captureScreenshot).not.toHaveBeenCalled();
     expect(result.asset).toBeNull();
     expect(result.error).toBe(MATERIAL_SCREENSHOT_SERP_ERROR);
-    // 拒绝文案本身给出正确路径:点进单篇 + material.gather。
-    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("单篇");
-    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("material.gather");
+    // 拒绝文案给用户普通语言的下一步，不暴露工具名称。
+    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("具体文章");
+    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("再截图");
   });
 
   it("引擎 SERP 同样硬拒(bing 结果页)", async () => {
@@ -4483,8 +4484,8 @@ describe("[T-390] web.read 被拒多路回退 — blocked → error + alternates
     expect(result.alternates).toHaveLength(2);
     expect(result.alternates?.[0]?.url).toBe("https://other.example.com/a");
     // 指引本身:挑一条再读 + 不编内容。
-    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("web.read");
-    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("绝不编内容");
+    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("继续读取并核对");
+    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("尚未取得原网页正文");
   });
 
   it("blocked 但替代来源为空 → error 带诚实到底指引,不带 alternates 字段", async () => {
@@ -4503,7 +4504,7 @@ describe("[T-390] web.read 被拒多路回退 — blocked → error + alternates
     expect(result.error).toContain("HTTP 500");
     expect(result.error).toContain(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE.trim());
     expect(result.alternates).toBeUndefined();
-    expect(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE).toContain("绝不编内容");
+    expect(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE).toContain("没有取得可用的替代来源");
   });
 
   it("站内搜索列表页正文同样窗口压缩 + serpNote(T-371 扩展到站内搜索)", async () => {
@@ -4544,12 +4545,23 @@ it("T-915 同查询失败后可重新执行，不缓存拒绝结果", async () =
 });
 
 it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建立真实宿主校验",async mode=>{
+ const canvasSample={baseRevision:1,operations:[{type:"moveNode",operationId:"operation-neutral",nodeId:"node-neutral",position:{x:0,y:0}}]};
+ // 严格联合、字面量和正数合同用明确中性样本；不调用工具执行器或猜领域归属。
+ const typedSamples:Record<string,unknown>={
+  "canvas.propose":canvasSample,
+  "system.read":{request:{kind:"accountGroups.get",params:{groupId:"group-neutral"}},offset:0,limit:20},
+  "system.action.propose":{action:{kind:"group.create",name:"中性账号组"}},
+  "canvas.create.propose":{title:"中性画布",projectId:null,document:{schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[],edges:[]}},
+  "canvas.generate.propose":{baseRevision:1,nodeId:"node-neutral"},
+ };
  const tools=allChatTools(makeDeps(mode==="selected"?{scriptPatchAnchor:{artifactId:"a",versionId:"v",sectionId:"s",originalText:"原文"}}:{boundProjectId:"p"}).deps);
  expect(Object.keys(tools).sort()).toEqual([...ALL_CHAT_TOOL_NAMES].sort());
  const preparedDefinitions=await prepareChatToolDefinitions(tools);
  expect(chatWorkerInputSchema.shape.tools.parse(preparedDefinitions.definitions)).toEqual(preparedDefinitions.definitions);
  expect(preparedDefinitions.definitions.map(tool=>tool.name)).toEqual(Object.keys(tools));
  for(const [name,tool] of Object.entries(tools)){
+  // 四个typed作品工具由独立真实参数/公共链测试覆盖；旧通用样本生成器不支持discriminated unions。
+  if(["work.editor.read","work.editor.propose","work.creation.read","work.creation.propose"].includes(name))continue;
   expect(tool.inputSchema,name).toBeDefined();
   const {schema,parameters}=await prepareChatToolParameters(tool.inputSchema!);
   const sample=(node:Record<string,unknown>):unknown=>{
@@ -4561,9 +4573,99 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
    if(node.type==="boolean")return false;
    return null;
   };
-  const legal=sample(schema);expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
+  // redfox.query 用 action 判别联合；把所有动作的字段塞进同一对象是非法样本。
+  const legal=name==="redfox.query"
+   ? {action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02"}
+   : Object.hasOwn(typedSamples,name)?typedSamples[name]:sample(schema);
+  expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
+  if(name==="redfox.query")expect(parameters.safeParse({action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02",keyword:"跨动作字段"}).success).toBe(false);
+  if(name==="canvas.propose"){
+   expect(parameters.safeParse({...canvasSample,baseRevision:0}).success).toBe(false);
+   expect(parameters.safeParse({...canvasSample,operations:[{type:"unknown",operationId:"operation-neutral",nodeId:"node-neutral"}]}).success).toBe(false);
+   expect(parameters.safeParse({...canvasSample,operations:[]}).success).toBe(false);
+  }
+  if(name==="system.read")expect(parameters.safeParse({request:{kind:"unknown.operation"},offset:0,limit:20}).success).toBe(false);
+  if(name==="system.action.propose")expect(parameters.safeParse({action:{kind:"unknown.operation"}}).success).toBe(false);
   expect(parameters.safeParse("非对象").success,name).toBe(false);
   expect(parameters.safeParse({}).success,name).toBe(!Array.isArray(schema.required) || schema.required.length===0);
   if(schema.additionalProperties===false)expect(parameters.safeParse({__unexpected:true}).success,name).toBe(false);
  }
 });
+
+it("T-957 重新读取标志只透传首窗，翻窗仍复用原正文",async()=>{
+ const {deps}=makeDeps();
+ await runExecute(buildChatTools(["web.read"],deps)["web.read"]!,{url:"https://example.com/old",refresh:true});
+ expect(deps.readWeb).toHaveBeenLastCalledWith(expect.objectContaining({refresh:true}));
+ await runExecute(buildChatTools(["web.read"],deps)["web.read"]!,{url:"https://example.com/old",refresh:true,offset:1000});
+ expect(deps.readWeb).toHaveBeenLastCalledWith({url:"https://example.com/old",signal:undefined});
+});
+
+describe("T-957 最终地址仅供展示，旧端口不能泄露凭据或可执行协议", () => {
+  it.each([undefined, "javascript:alert(1)", "data:text/html,test", "https://name:secret@example.org/"])("非法或未知最终地址缺省：%s", async finalUrl => {
+    const {deps} = makeDeps({readWeb:async()=>({needLogin:false as const,assetId:"final-url-asset",name:"正文",previewUrl:null,sourceUrl:"https://example.com/source",finalUrl,title:"标题",excerpt:"正文",extractor:"readability",fullText:"正文"})});
+    const result = await runExecute(buildChatTools(["web.read"],deps)["web.read"]!,{url:"https://example.com/source"});
+    expect(result).toMatchObject({kind:"web.read",error:null,asset:{sourceUrl:"https://example.com/source"}});
+    expect(result).not.toHaveProperty("asset.finalUrl");
+  });
+  it("保留真实最终地址且回执阅读器明确字符口径", async () => {
+    const {deps} = makeDeps({readWeb:async()=>({needLogin:false as const,assetId:"final-url-asset",name:"正文",previewUrl:null,sourceUrl:"https://example.com/source",finalUrl:"https://docs.example.org/final#part",title:"标题",excerpt:"正文",extractor:"readability",fullText:"正文"})});
+    const tools=buildChatTools(["web.read","tool.result.read"],deps);
+    expect(await runExecute(tools["web.read"]!,{url:"https://example.com/source"})).toHaveProperty("asset.finalUrl","https://docs.example.org/final#part");
+    expect(tools["tool.result.read"]!.description).toContain("不是网页正文总长或阅读进度");
+  });
+});
+
+describe("T-957 网页失败的用户提示",()=>{
+ it.each([401,403,404,429,500,503])("HTTP %i 按实际状态给登录建议，不把内部操作写进错误文案",async(status)=>{
+  const {deps}=makeDeps({readWeb:async()=>({blocked:true as const,status,message:"fixture",alternates:[]})});
+  const tools=buildChatTools(["web.read"],deps);
+  const result=await runExecute(tools["web.read"]!,{url:"https://example.com/page"}) as {error:string;loginSuggested:boolean;httpStatus:number};
+  expect(result.httpStatus).toBe(status);
+  expect(result.loginSuggested).toBe(status===401||status===403);
+  expect(result.error).not.toMatch(/material\.gather|web\.read|alternates|如实告诉用户|绝不编内容/);
+  expect(result.error).toContain("没有取得可用的替代来源");
+ });
+ it("有替代来源和列表页的用户提示不包含内部工具名称",()=>{
+  for(const value of [WEB_READ_SERP_NOTE,MATERIAL_SCREENSHOT_SERP_ERROR,WEB_READ_BLOCKED_ALTERNATES_NOTE])expect(value).not.toMatch(/material\.gather|web\.read|alternates|如实告诉用户|绝不编内容/);
+ });
+});
+
+it("画布候选工具先读真实版本，只写候选而不直接改画布",async()=>{
+ const readCanvas=vi.fn(async()=>({id:"canvas-1",title:"分镜",projectId:null,revision:7,document:{nodes:[{id:"node-1",type:"text",text:"旁白"}],edges:[]}}));
+ const proposeCanvas=vi.fn(async(baseRevision:number,operations:unknown)=>({id:"proposal-1",canvasId:"canvas-1",baseRevision,operations:operations as unknown[]}));
+ const {deps}=makeDeps({boundCanvasId:"canvas-1",readCanvas,proposeCanvas});
+ const tools=buildChatTools(["canvas.read","canvas.propose"],deps);
+ expect(await runExecute(tools["canvas.read"]!,{})).toMatchObject({canvasId:"canvas-1",revision:7,nodes:[{id:"node-1"}]});
+ expect(await runExecute(tools["canvas.propose"]!,{baseRevision:7,operations:[{type:"deleteNode",operationId:"op-1",nodeId:"node-1"}]})).toMatchObject({proposalId:"proposal-1",baseRevision:7});
+ expect(proposeCanvas).toHaveBeenCalledTimes(1);
+});
+
+it('T1070四工具只经冻结target的真实短端口读/提案，缺target错误无可用候选',async()=>{
+ const {getChatToolNativeExecutor}=await import('./chat-tool-gate');
+ const target={schemaVersion:1,projectId:'p',outputId:'o',owner:'wechat_article',contentType:'article',savedBase:{kind:'artifact',artifactId:'a',versionId:'v'},documentDigest:'sha256:'+'a'.repeat(64),selection:{kind:'article_sections',sectionIds:['s']}};
+ const returned={kind:'work.editor.context',document:{body:'全文'},error:null};const calls:unknown[]=[];
+ const tools=allChatTools({...makeDeps().deps,editorTarget:target as any,readWorkEditor:async input=>{calls.push(input);return returned as any;}});
+ expect(await getChatToolNativeExecutor(tools['work.editor.read']!)!({view:'selection'})).toEqual(returned);expect(calls).toEqual([{view:'selection'}]);
+ const missing=allChatTools(makeDeps().deps);expect(await runExecute(missing['work.editor.propose']!,{})).toMatchObject({kind:'work.editor.candidate',candidate:null,apply:null,changes:[]});
+});
+
+it('编导冻结工具说明提供真正的typed操作名，原错误op不能通过参数门',async()=>{
+ const tool=buildChatTools(['work.editor.propose'],makeDeps().deps)['work.editor.propose']!;
+ const {definitions}=await prepareChatToolDefinitions({'work.editor.propose':tool});
+ const {parameters}=await prepareChatToolParameters(tool.inputSchema!);
+ const base={kind:'production',productionId:'real-production',revision:3},baseDigest='sha256:'+'1'.repeat(64);
+ const edit={type:'patchNativeElement',trackId:'real-track',elementId:'real-element',expectedElementDigest:'sha256:'+'2'.repeat(64),patch:{trimStart:120000,duration:600000,startTime:0}};
+ const request={base,baseDigest,summary:'按用户明确要求修改原片段',candidate:{kind:'typed_patch',owner:'production',sceneId:'real-scene',edits:[edit]}};
+ expect(parameters.parse(request)).toEqual(request);
+ expect(parameters.safeParse({...request,candidate:{...request.candidate,edits:[{...edit,type:undefined,op:'update_element'}]}}).success).toBe(false);
+ for(const name of ['patchNativeElement','expectedElementDigest','patchArticleSection','expectedSectionDigest','patchGraphicCard','expectedCardDigest'])expect(definitions[0]!.description).toContain(name);
+});
+
+it('T1248 当前与旧action独立固定原型，默认新合同不随恢复改动',async()=>{
+ const {readFileSync}=await import('node:fs');const {prepareChatToolDefinitions}=await import('./chat-tool-definitions');
+ const golden=JSON.parse(readFileSync(new URL('../../../../docs/verification/t1248/system-action-v1.definition.json',import.meta.url),'utf8'));
+ const old=(await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{assistantActionCatalogVersion:1} as never))).definitions[0];
+ const current=(await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{} as never))).definitions[0];
+ expect(old).toEqual(golden);expect(current!.version).toBe('chat-tools-system-director-v1:ea89720c41e36fe55f9fc756a3cca8f8d2616dcdd27744c044134188dcb9ae8c');
+ expect((await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{assistantActionCatalogVersion:2} as never))).definitions[0]).toEqual(current);
+},120000);

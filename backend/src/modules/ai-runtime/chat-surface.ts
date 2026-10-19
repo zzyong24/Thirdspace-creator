@@ -1,4 +1,5 @@
 const SURFACE_SKILL: Record<string, string> = {
+  canvas:"chatbox.canvas",
   topics: "chatbox.topic",
   calibration: "chatbox.calibration",
   positioning: "chatbox.positioning",

@@ -420,7 +420,7 @@ update origins/releaseTrustRootKeyId/releaseTrustRootPublicKeySha256`，由 Taur
 - secret scan：清单/staging/bundle/manifest/attestation/log 的扫描报告命中数为 0；
 - Skill forward test：三组样例均由新会话只读 Skill 后调用同一仓库入口，结果满足 FR-694-06。
 
-## 12. 已采用的发行决策（待用户确认）
+## 12. 已确认并采用的发行决策（DEC-REL-036）
 
 1. **集中签名**：所有渠道包由 CreatorOS 发布方构建和签名，渠道不持有 updater/runtime 私钥；
 2. **独立壳、共享 runtime**：渠道拥有独立 latest/shell/full 路径，相同 runtime chunks 全渠道复用；

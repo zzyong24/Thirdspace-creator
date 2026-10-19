@@ -1,0 +1,36 @@
+{
+  "timelines": [
+    {
+      "active": false,
+      "compositionHeight": 1080,
+      "compositionWidth": 1668,
+      "hidden": false,
+      "id": "61ae5292a1",
+      "name": "V1 自动清理版"
+    },
+    {
+      "active": false,
+      "compositionHeight": 1080,
+      "compositionWidth": 1668,
+      "hidden": false,
+      "id": "0ff5432147",
+      "name": "V2 语义粗剪"
+    },
+    {
+      "active": false,
+      "compositionHeight": 1080,
+      "compositionWidth": 1668,
+      "hidden": false,
+      "id": "2e95e87496",
+      "name": "V3 1.2倍节奏版"
+    },
+    {
+      "active": true,
+      "compositionHeight": 1080,
+      "compositionWidth": 1668,
+      "hidden": false,
+      "id": "1baf6ea4ca",
+      "name": "V4 画面音频字幕版"
+    }
+  ]
+}

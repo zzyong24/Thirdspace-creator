@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, iso8601, paginationQuery, assetType } from "../primitives";
 import { assetResource, assetFileResource } from "../resources/assets";
+import {assetDeleteImpactPreview} from "../resources/account-groups";
 import { materialLinkResource } from "../resources/material-links";
 
 const assetParams = z.object({ assetId: id });
@@ -18,6 +19,13 @@ const assetUpload = z.object({
 
 // SPEC §13 "素材库" (assets) group.
 export const assetsOperations = {
+  previewAssetDelete:defineEndpoint({id:'assets.previewDelete',method:'POST',path:'/assets/:assetId/delete-preview',params:assetParams,response:assetDeleteImpactPreview,fr:['FR-ASSETS-DELETE-IMPACT']}),
+  searchAssets: defineEndpoint({
+    id: "assets.search", method: "GET", path: "/assets/search",
+    query: z.object({query:z.string().trim().max(500).default(""),limit:z.coerce.number().int().min(1).max(100).default(24),cursor:z.string().max(2048).nullable().optional(),assetTypes:z.array(assetType).min(1).max(5).optional()}).strict(),
+    response:z.object({items:z.array(assetResource),nextCursor:z.string().nullable()}),
+    fr:["FR-ASSETS-SEARCH"],
+  }),
   listAssets: defineEndpoint({
     id: "assets.list",
     method: "GET",
@@ -40,6 +48,14 @@ export const assetsOperations = {
     path: "/assets/:assetId/download-url",
     params: z.object({ assetId: id }),
     response: z.object({ url: z.string(), fileName: z.string() }),
+    fr: ["FR-ASSETS-DOWNLOAD-URL"],
+  }),
+  getAssetFileDownloadUrl: defineEndpoint({
+    id: "assets.fileDownloadUrl",
+    method: "GET",
+    path: "/assets/:assetId/files/:assetFileId/download-url",
+    params: z.object({assetId: id, assetFileId: id}),
+    response: z.object({url: z.string(), fileName: z.string()}),
     fr: ["FR-ASSETS-DOWNLOAD-URL"],
   }),
   createUpload: defineEndpoint({

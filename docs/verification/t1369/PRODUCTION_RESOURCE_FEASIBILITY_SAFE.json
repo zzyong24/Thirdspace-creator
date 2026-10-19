@@ -1,0 +1,20 @@
+{
+  "atUnix": 1792391262.64861,
+  "head": "10cab133f97821cface88f9d1c0f8426acad763a",
+  "availableBytes": 10480287744,
+  "cache": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator/frontend/.next/dev",
+    "realpath": "/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator/frontend/.next/dev",
+    "uidMatches": true,
+    "symlink": false,
+    "allocatedKiB": 923316,
+    "lockExists": false
+  },
+  "tracePrivateCopyVerified": true,
+  "traceSha256": "d47794c2f3a4942b24dafd389cb37a34ac099aee8d7a535107fdfe3672a2cf53",
+  "sandboxExecutableExists": true,
+  "productionExecuted": false,
+  "cacheDeleted": false,
+  "newKeysGenerated": false,
+  "proposalSha256": "c74d22eb0366e98fe9a0cdebfaac3292ae46c5b057438c01dcfed727b3a66729"
+}

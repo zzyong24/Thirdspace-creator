@@ -1,0 +1,3 @@
+# T1311 范围与授权
+
+用户原授权恢复Codex全部功能；Root明确同意两个review完成查询独立窄修、完整组合先RED。只改原冻结身份NULL安全；不新增active admission或锁，归档已有settlement沿原ref/lease/deadline，原取消等门保留。R只读核work skillSnapshot group为optional nullable，report版本默认null，不新增current版本规则。当前未开工、未发生RED、未声称公共根因已复现。方案由独立初审决定，Root方向不代审核结论。

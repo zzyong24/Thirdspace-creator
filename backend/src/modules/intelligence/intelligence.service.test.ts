@@ -14,6 +14,7 @@ import {
   intelligenceSyncRunEvents,
   intelligenceSyncRuns,
   intelligenceMigrationLedgers,
+  intelligenceCollections,
   itemSourceObservations,
   itemMetricSnapshots,
   itemTranscripts,
@@ -85,6 +86,28 @@ function deps() {
 }
 
 describe("T-482 内容雷达领域主链", () => {
+  it("T1074 读取父分类不初始化/恢复任务，锁读必须同事务，归档/跨用户/跨工作区拒绝", async () => {
+    const {db,client}=await createDb(),d=deps();
+    const tasks=createPersistentTaskService(db,d),service=createIntelligenceService(db,{...d,tasks});
+    try {
+      const parent=await service.createCollection(ctx,{name:"纯读父分类",parentId:null,idempotencyKey:"parent"});
+      const before=await db.select().from(intelligenceCollections),taskBefore=await db.select().from(executionTasks);
+      expect(await service.readCollection(ctx,parent.id)).toEqual(parent);
+      expect(await db.select().from(intelligenceCollections)).toEqual(before);
+      expect(await db.select().from(executionTasks)).toEqual(taskBefore);
+      await expect(service.readCollection({...ctx,userId:"other"},parent.id)).rejects.toThrow();
+      await expect(service.readCollection(ctxAccount2,parent.id)).rejects.toThrow();
+      await expect(service.readCollection(ctx,parent.id,{forUpdate:true})).rejects.toThrow(/事务/);
+      await db.transaction(async tx=>{
+        const owner=createIntelligenceService(tx as any,{...d,tasks});
+        expect(await owner.readCollection(ctx,parent.id,{forUpdate:true})).toEqual(parent);
+      });
+      await db.update(intelligenceCollections).set({archivedAt:d.now()}).where(eq(intelligenceCollections.id,parent.id));
+      await expect(service.readCollection(ctx,parent.id)).rejects.toThrow();
+      await expect(service.createCollection(ctx,{name:"不得挂在归档父项",parentId:parent.id,idempotencyKey:"child"})).rejects.toThrow();
+      expect(await db.select().from(intelligenceCollections)).toHaveLength(1);
+    } finally {await client.close();}
+  });
   it("[T-546] 旧收藏来源缺 collectorAccountId 时从受控 browserSessionRef 恢复并可手动同步", async () => {
     const { db, client } = await createDb();
     const d = deps();
@@ -1739,9 +1762,12 @@ describe("T-482 内容雷达领域主链", () => {
         preservedSnapshots: 2,
         status: "deleted",
       });
-      expect(
-        (await db.select().from(intelligenceSources)).map((row) => row.id),
-      ).toEqual(["source-keep"]);
+      // T1217：永久删除仍业务不可见；只留下已保护 snapshot 所需的不可执行父证据壳。
+      const storedSources=await db.select().from(intelligenceSources);
+      expect(storedSources.map(row=>row.id).sort()).toEqual(["source-delete","source-keep"]);
+      expect(storedSources.find(row=>row.id==="source-delete")).toMatchObject({status:"archived",monitorEnabled:false,nextRunAt:null,collectionId:null,browserSessionRef:null,extractionInstruction:null,externalKey:"__creatoros_deleted_source__:source-delete",adapterConfig:{__creatorosProvenanceOnly:1,originalExternalKey:"delete"}});
+      expect((await service.listSources(ctx,{})).rows.map(row=>row.id)).toEqual(["source-keep"]);
+      expect((await db.select().from(intelligenceSyncRuns)).map(row=>row.id)).toEqual(["run-delete","run-keep"]);
       expect(
         (await db.select().from(intelligenceItems)).map((row) => row.id),
       ).toEqual(["item-shared", "item-project", "item-topic"]);

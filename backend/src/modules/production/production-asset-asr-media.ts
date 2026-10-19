@@ -1,0 +1,29 @@
+import {extractVerifiedNativePcm} from "./production-asr-pcm";
+import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+import {resolveFfmpegPath,resolveFfprobePath} from '@creatoros/ai-worker';
+import type {RequestContext} from '@creatoros/contract';
+import type {AssetAsrInput} from '@creatoros/contract/execution-worker';
+import type {Db} from '@creatoros/backend';
+import type {AssetsService} from '../assets/assets.service';
+import {buildChildEnv} from '../execution/child-env';
+import {byteHash,hash} from './production-mechanical-digest';
+/** Existing Assets owner materializes the exact immutable file through its original objectStorage port. */
+export function createProductionAsrExactReader(deps:{assets(ctx:RequestContext,tx?:Db):Pick<AssetsService,'assertAssetFileOwned'|'materializeAsset'>;assertProjectAsset(ctx:RequestContext,input:{projectId:string;assetId:string;assetFileId:string;fileDigest:string},tx?:Db):Promise<void>}){return async(ctx:RequestContext,input:{projectId:AssetAsrInput["projectId"];source:Pick<AssetAsrInput["source"],"assetId"|"assetFileId"|"fileDigest">},tx?:Db,signal?:AbortSignal)=>{signal?.throwIfAborted();await deps.assertProjectAsset(ctx,{projectId:input.projectId,...input.source},tx);const assets=deps.assets(ctx,tx);await assets.assertAssetFileOwned(ctx,input.source.assetId,input.source.assetFileId,false);const root=await mkdtemp(join(tmpdir(),'creatoros-asr-exact-'));try{const path=join(root,'original');const loaded=await assets.materializeAsset(ctx,input.source.assetId,path,{assetFileId:input.source.assetFileId,fileDigest:input.source.fileDigest});signal?.throwIfAborted();if(!loaded)throw Error('冻结原片不可读取');const bytes=await readFile(path);if(byteHash(bytes)!==input.source.fileDigest)throw Error('冻结原片字节已改变');return bytes;}finally{await rm(root,{recursive:true,force:true});}};}
+const command=promisify(execFile);
+/** Actual ffprobe witnesses are recorded; incomplete timestamp mapping remains unverified and text-only. */
+export async function extractProductionAsrAudio(bytes:Uint8Array,input:AssetAsrInput,signal?:AbortSignal,precisionOptions?:{precisionProbeMaxBufferBytes?:number}){signal?.throwIfAborted();if(byteHash(bytes)!==input.source.fileDigest)throw Error('抽音原片身份改变');const root=await mkdtemp(join(tmpdir(),'creatoros-asr-audio-'));try{const path=join(root,'original'),audioPath=join(root,'audio.mp3');await writeFile(path,bytes);if(input.timestampMode!=="text"){
+ // SEMANTIC_BOUNDARY_ALLOW: 仅附加精度证据失败降级原抽音；不把未知时码猜成词边界，不重新提交原任务。
+ try{const pcm=await extractVerifiedNativePcm(path,root,input,signal,precisionOptions?.precisionProbeMaxBufferBytes);if(pcm)return pcm;}
+ catch(error){signal?.throwIfAborted();const code=typeof error==='object'&&error!==null&&'code' in error?String(error.code):'';if(code==='EACCES'||code==='EPERM'||code==='ABORT_ERR'||error instanceof Error&&error.name==='AbortError')throw error;}
+ }const ffmpeg=resolveFfmpegPath(),ffprobe=resolveFfprobePath(),options={signal,env:buildChildEnv(),windowsHide:true,maxBuffer:64*1024*1024};const probe=async(file:string)=>JSON.parse((await command(ffprobe,['-v','error','-show_streams','-show_frames','-select_streams','a:0','-of','json',file],options)).stdout);const source=await probe(path),stream=source.streams?.[0],first=source.frames?.[0];if(!stream||!first||!Number.isSafeInteger(stream.index)||!Number.isSafeInteger(first.pts))throw Error('原片无可验真的音轨帧');const args=['-v','error','-i',path,'-map',`0:${stream.index}`,'-vn','-ar','16000','-ac','1','-b:a','64k','-f','mp3','-y',audioPath];await command(ffmpeg,args,options);const audio=await readFile(audioPath),decoded=await probe(audioPath);signal?.throwIfAborted();const [num,den]=String(stream.time_base).split('/').map(Number);if(num===undefined||den===undefined||!Number.isSafeInteger(num)||!Number.isSafeInteger(den)||num<=0||den<=0||!audio.length)throw Error('原音轨时间基或抽音输出损坏');const pts=(value:number)=>({num:String(BigInt(value)*BigInt(num)),den:String(den)});return{bytes:audio,evidence:{schemaVersion:1,assetFileId:input.source.assetFileId,fileDigest:byteHash(bytes),sourceStreamIndex:stream.index,sourceClockOrigin:Number.isSafeInteger(stream.start_pts)?pts(stream.start_pts):null,firstDecodedSamplePts:pts(first.pts),sampleRate:Number(decoded.streams?.[0]?.sample_rate),decodedValidSampleCount:decoded.frames.reduce((count:number,frame:{nb_samples:number})=>count+frame.nb_samples,0),initialSkipSamples:null,trailingDiscardSamples:null,probeEvidenceDigest:hash({source,decoded}),extractorArgumentsDigest:hash(args.map(v=>v===path?'exact-original':v===audioPath?'audio-output':v)),audioDigest:`sha256:${byteHash(audio)}`,audioByteLength:audio.length,mappingStatus:'unverified',reason:'真实原音轨与抽音帧已读取；编码延迟/尾裁切及provider时钟尚未完整验证，仅提供全文'}};}finally{await rm(root,{recursive:true,force:true});}}
+/** SEMANTIC_BOUNDARY_ALLOW: 原片字节和实际音轨解码决定能否听审；不判断间隙静音、不改变转写或时间码。 */
+export async function canDecodeProductionReviewAudio(bytes:Uint8Array,fileDigest:string):Promise<boolean>{
+ if(byteHash(bytes)!==fileDigest)return false;
+ const root=await mkdtemp(join(tmpdir(),'creatoros-rough-audio-review-'));
+ try{const path=join(root,'original');await writeFile(path,bytes);await command(resolveFfmpegPath(),['-v','error','-i',path,'-map','0:a:0','-frames:a','1','-f','null','-'],{env:buildChildEnv(),windowsHide:true,maxBuffer:1024*1024});return true;}
+ catch{return false;}finally{await rm(root,{recursive:true,force:true});}
+}

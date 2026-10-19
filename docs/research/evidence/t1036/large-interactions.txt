@@ -1,0 +1,1162 @@
+- main:
+  - heading "T-1036 · 开源时间轴兼容探针" [level=1]
+  - paragraph: React 19.2.4 / Next 16.2.9 / @xzdarcy 1.0.0 · 仅合成测试素材，不读用户数据
+  - iframe:
+    - img "测试图片 · broll-1"
+    - generic: 时间轴操作会传出稳定片段 ID。
+    - generic: 图片时间由用户明确修改。
+    - generic: 这是测试工程，尚未接入客户端。
+    - generic: TEST / 非用户媒体
+  - status: 合成器播放头 15.00s · 图片 8–18s
+  - generic: 原模板 SHA256：af8b8ce7682553d46d072f00c9584e48f414c76118276b0937eb6de87e6401dc
+  - complementary:
+    - heading "真实回调与选中项" [level=2]
+    - status: long-0-1
+    - text: 开始秒
+    - textbox "开始秒": "6"
+    - text: 结束秒
+    - textbox "结束秒": "10"
+    - button "落实明确时间"
+    - paragraph:
+      - text: 初绘观察：
+      - status: 186.2ms
+    - button "恢复短片样例"
+    - text: 时间轴缩放
+    - combobox "时间轴缩放":
+      - option "1×" [selected]
+      - option "2×"
+  - text: 播放头
+  - slider "播放头": "15"
+  - status: 15.00s
+  - grid "grid":
+    - row "0 30 60 90 120 150 180 210 240 270 300 330":
+      - gridcell "0":
+        - generic: "0"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "30":
+        - generic: "30"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "60":
+        - generic: "60"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "90":
+        - generic: "90"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "120":
+        - generic: "120"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "150":
+        - generic: "150"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "180":
+        - generic: "180"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "210":
+        - generic: "210"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "240":
+        - generic: "240"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "270":
+        - generic: "270"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "300":
+        - generic: "300"
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell
+      - gridcell "330":
+        - generic: "330"
+      - gridcell
+      - gridcell
+  - grid "grid" [active]:
+    - row:
+      - generic: long-0-0
+      - generic: long-0-1
+      - generic: long-0-2
+      - generic: long-0-3
+      - generic: long-0-4
+      - generic: long-0-5
+      - generic: long-0-6
+      - generic: long-0-7
+      - generic: long-0-8
+      - generic: long-0-9
+      - generic: long-0-10
+      - generic: long-0-11
+      - generic: long-0-12
+      - generic: long-0-13
+      - generic: long-0-14
+      - generic: long-0-15
+      - generic: long-0-16
+      - generic: long-0-17
+      - generic: long-0-18
+      - generic: long-0-19
+      - generic: long-0-20
+      - generic: long-0-21
+      - generic: long-0-22
+      - generic: long-0-23
+      - generic: long-0-24
+      - generic: long-0-25
+      - generic: long-0-26
+      - generic: long-0-27
+      - generic: long-0-28
+      - generic: long-0-29
+      - generic: long-0-30
+      - generic: long-0-31
+      - generic: long-0-32
+      - generic: long-0-33
+      - generic: long-0-34
+      - generic: long-0-35
+      - generic: long-0-36
+      - generic: long-0-37
+      - generic: long-0-38
+      - generic: long-0-39
+      - generic: long-0-40
+      - generic: long-0-41
+      - generic: long-0-42
+      - generic: long-0-43
+      - generic: long-0-44
+      - generic: long-0-45
+      - generic: long-0-46
+      - generic: long-0-47
+      - generic: long-0-48
+      - generic: long-0-49
+      - generic: long-0-50
+      - generic: long-0-51
+      - generic: long-0-52
+      - generic: long-0-53
+      - generic: long-0-54
+      - generic: long-0-55
+      - generic: long-0-56
+      - generic: long-0-57
+      - generic: long-0-58
+      - generic: long-0-59
+      - generic: long-0-60
+      - generic: long-0-61
+      - generic: long-0-62
+      - generic: long-0-63
+      - generic: long-0-64
+      - generic: long-0-65
+      - generic: long-0-66
+      - generic: long-0-67
+      - generic: long-0-68
+      - generic: long-0-69
+      - generic: long-0-70
+      - generic: long-0-71
+      - generic: long-0-72
+      - generic: long-0-73
+      - generic: long-0-74
+      - generic: long-0-75
+      - generic: long-0-76
+      - generic: long-0-77
+      - generic: long-0-78
+      - generic: long-0-79
+      - generic: long-0-80
+      - generic: long-0-81
+      - generic: long-0-82
+      - generic: long-0-83
+      - generic: long-0-84
+      - generic: long-0-85
+      - generic: long-0-86
+      - generic: long-0-87
+      - generic: long-0-88
+      - generic: long-0-89
+      - generic: long-0-90
+      - generic: long-0-91
+      - generic: long-0-92
+      - generic: long-0-93
+      - generic: long-0-94
+      - generic: long-0-95
+      - generic: long-0-96
+      - generic: long-0-97
+      - generic: long-0-98
+      - generic: long-0-99
+      - generic: long-1-0
+      - generic: long-1-1
+      - generic: long-1-2
+      - generic: long-1-3
+      - generic: long-1-4
+      - generic: long-1-5
+      - generic: long-1-6
+      - generic: long-1-7
+      - generic: long-1-8
+      - generic: long-1-9
+      - generic: long-1-10
+      - generic: long-1-11
+      - generic: long-1-12
+      - generic: long-1-13
+      - generic: long-1-14
+      - generic: long-1-15
+      - generic: long-1-16
+      - generic: long-1-17
+      - generic: long-1-18
+      - generic: long-1-19
+      - generic: long-1-20
+      - generic: long-1-21
+      - generic: long-1-22
+      - generic: long-1-23
+      - generic: long-1-24
+      - generic: long-1-25
+      - generic: long-1-26
+      - generic: long-1-27
+      - generic: long-1-28
+      - generic: long-1-29
+      - generic: long-1-30
+      - generic: long-1-31
+      - generic: long-1-32
+      - generic: long-1-33
+      - generic: long-1-34
+      - generic: long-1-35
+      - generic: long-1-36
+      - generic: long-1-37
+      - generic: long-1-38
+      - generic: long-1-39
+      - generic: long-1-40
+      - generic: long-1-41
+      - generic: long-1-42
+      - generic: long-1-43
+      - generic: long-1-44
+      - generic: long-1-45
+      - generic: long-1-46
+      - generic: long-1-47
+      - generic: long-1-48
+      - generic: long-1-49
+      - generic: long-1-50
+      - generic: long-1-51
+      - generic: long-1-52
+      - generic: long-1-53
+      - generic: long-1-54
+      - generic: long-1-55
+      - generic: long-1-56
+      - generic: long-1-57
+      - generic: long-1-58
+      - generic: long-1-59
+      - generic: long-1-60
+      - generic: long-1-61
+      - generic: long-1-62
+      - generic: long-1-63
+      - generic: long-1-64
+      - generic: long-1-65
+      - generic: long-1-66
+      - generic: long-1-67
+      - generic: long-1-68
+      - generic: long-1-69
+      - generic: long-1-70
+      - generic: long-1-71
+      - generic: long-1-72
+      - generic: long-1-73
+      - generic: long-1-74
+      - generic: long-1-75
+      - generic: long-1-76
+      - generic: long-1-77
+      - generic: long-1-78
+      - generic: long-1-79
+      - generic: long-1-80
+      - generic: long-1-81
+      - generic: long-1-82
+      - generic: long-1-83
+      - generic: long-1-84
+      - generic: long-1-85
+      - generic: long-1-86
+      - generic: long-1-87
+      - generic: long-1-88
+      - generic: long-1-89
+      - generic: long-1-90
+      - generic: long-1-91
+      - generic: long-1-92
+      - generic: long-1-93
+      - generic: long-1-94
+      - generic: long-1-95
+      - generic: long-1-96
+      - generic: long-1-97
+      - generic: long-1-98
+      - generic: long-1-99
+      - generic: long-2-0
+      - generic: long-2-1
+      - generic: long-2-2
+      - generic: long-2-3
+      - generic: long-2-4
+      - generic: long-2-5
+      - generic: long-2-6
+      - generic: long-2-7
+      - generic: long-2-8
+      - generic: long-2-9
+      - generic: long-2-10
+      - generic: long-2-11
+      - generic: long-2-12
+      - generic: long-2-13
+      - generic: long-2-14
+      - generic: long-2-15
+      - generic: long-2-16
+      - generic: long-2-17
+      - generic: long-2-18
+      - generic: long-2-19
+      - generic: long-2-20
+      - generic: long-2-21
+      - generic: long-2-22
+      - generic: long-2-23
+      - generic: long-2-24
+      - generic: long-2-25
+      - generic: long-2-26
+      - generic: long-2-27
+      - generic: long-2-28
+      - generic: long-2-29
+      - generic: long-2-30
+      - generic: long-2-31
+      - generic: long-2-32
+      - generic: long-2-33
+      - generic: long-2-34
+      - generic: long-2-35
+      - generic: long-2-36
+      - generic: long-2-37
+      - generic: long-2-38
+      - generic: long-2-39
+      - generic: long-2-40
+      - generic: long-2-41
+      - generic: long-2-42
+      - generic: long-2-43
+      - generic: long-2-44
+      - generic: long-2-45
+      - generic: long-2-46
+      - generic: long-2-47
+      - generic: long-2-48
+      - generic: long-2-49
+      - generic: long-2-50
+      - generic: long-2-51
+      - generic: long-2-52
+      - generic: long-2-53
+      - generic: long-2-54
+      - generic: long-2-55
+      - generic: long-2-56
+      - generic: long-2-57
+      - generic: long-2-58
+      - generic: long-2-59
+      - generic: long-2-60
+      - generic: long-2-61
+      - generic: long-2-62
+      - generic: long-2-63
+      - generic: long-2-64
+      - generic: long-2-65
+      - generic: long-2-66
+      - generic: long-2-67
+      - generic: long-2-68
+      - generic: long-2-69
+      - generic: long-2-70
+      - generic: long-2-71
+      - generic: long-2-72
+      - generic: long-2-73
+      - generic: long-2-74
+      - generic: long-2-75
+      - generic: long-2-76
+      - generic: long-2-77
+      - generic: long-2-78
+      - generic: long-2-79
+      - generic: long-2-80
+      - generic: long-2-81
+      - generic: long-2-82
+      - generic: long-2-83
+      - generic: long-2-84
+      - generic: long-2-85
+      - generic: long-2-86
+      - generic: long-2-87
+      - generic: long-2-88
+      - generic: long-2-89
+      - generic: long-2-90
+      - generic: long-2-91
+      - generic: long-2-92
+      - generic: long-2-93
+      - generic: long-2-94
+      - generic: long-2-95
+      - generic: long-2-96
+      - generic: long-2-97
+      - generic: long-2-98
+      - generic: long-2-99
+      - generic: long-3-0
+      - generic: long-3-1
+      - generic: long-3-2
+      - generic: long-3-3
+      - generic: long-3-4
+      - generic: long-3-5
+      - generic: long-3-6
+      - generic: long-3-7
+      - generic: long-3-8
+      - generic: long-3-9
+      - generic: long-3-10
+      - generic: long-3-11
+      - generic: long-3-12
+      - generic: long-3-13
+      - generic: long-3-14
+      - generic: long-3-15
+      - generic: long-3-16
+      - generic: long-3-17
+      - generic: long-3-18
+      - generic: long-3-19
+      - generic: long-3-20
+      - generic: long-3-21
+      - generic: long-3-22
+      - generic: long-3-23
+      - generic: long-3-24
+      - generic: long-3-25
+      - generic: long-3-26
+      - generic: long-3-27
+      - generic: long-3-28
+      - generic: long-3-29
+      - generic: long-3-30
+      - generic: long-3-31
+      - generic: long-3-32
+      - generic: long-3-33
+      - generic: long-3-34
+      - generic: long-3-35
+      - generic: long-3-36
+      - generic: long-3-37
+      - generic: long-3-38
+      - generic: long-3-39
+      - generic: long-3-40
+      - generic: long-3-41
+      - generic: long-3-42
+      - generic: long-3-43
+      - generic: long-3-44
+      - generic: long-3-45
+      - generic: long-3-46
+      - generic: long-3-47
+      - generic: long-3-48
+      - generic: long-3-49
+      - generic: long-3-50
+      - generic: long-3-51
+      - generic: long-3-52
+      - generic: long-3-53
+      - generic: long-3-54
+      - generic: long-3-55
+      - generic: long-3-56
+      - generic: long-3-57
+      - generic: long-3-58
+      - generic: long-3-59
+      - generic: long-3-60
+      - generic: long-3-61
+      - generic: long-3-62
+      - generic: long-3-63
+      - generic: long-3-64
+      - generic: long-3-65
+      - generic: long-3-66
+      - generic: long-3-67
+      - generic: long-3-68
+      - generic: long-3-69
+      - generic: long-3-70
+      - generic: long-3-71
+      - generic: long-3-72
+      - generic: long-3-73
+      - generic: long-3-74
+      - generic: long-3-75
+      - generic: long-3-76
+      - generic: long-3-77
+      - generic: long-3-78
+      - generic: long-3-79
+      - generic: long-3-80
+      - generic: long-3-81
+      - generic: long-3-82
+      - generic: long-3-83
+      - generic: long-3-84
+      - generic: long-3-85
+      - generic: long-3-86
+      - generic: long-3-87
+      - generic: long-3-88
+      - generic: long-3-89
+      - generic: long-3-90
+      - generic: long-3-91
+      - generic: long-3-92
+      - generic: long-3-93
+      - generic: long-3-94
+      - generic: long-3-95
+      - generic: long-3-96
+      - generic: long-3-97
+      - generic: long-3-98
+      - generic: long-3-99
+      - generic: long-4-0
+      - generic: long-4-1
+      - generic: long-4-2
+      - generic: long-4-3
+      - generic: long-4-4
+      - generic: long-4-5
+      - generic: long-4-6
+      - generic: long-4-7
+      - generic: long-4-8
+      - generic: long-4-9
+      - generic: long-4-10
+      - generic: long-4-11
+      - generic: long-4-12
+      - generic: long-4-13
+      - generic: long-4-14
+      - generic: long-4-15
+      - generic: long-4-16
+      - generic: long-4-17
+      - generic: long-4-18
+      - generic: long-4-19
+      - generic: long-4-20
+      - generic: long-4-21
+      - generic: long-4-22
+      - generic: long-4-23
+      - generic: long-4-24
+      - generic: long-4-25
+      - generic: long-4-26
+      - generic: long-4-27
+      - generic: long-4-28
+      - generic: long-4-29
+      - generic: long-4-30
+      - generic: long-4-31
+      - generic: long-4-32
+      - generic: long-4-33
+      - generic: long-4-34
+      - generic: long-4-35
+      - generic: long-4-36
+      - generic: long-4-37
+      - generic: long-4-38
+      - generic: long-4-39
+      - generic: long-4-40
+      - generic: long-4-41
+      - generic: long-4-42
+      - generic: long-4-43
+      - generic: long-4-44
+      - generic: long-4-45
+      - generic: long-4-46
+      - generic: long-4-47
+      - generic: long-4-48
+      - generic: long-4-49
+      - generic: long-4-50
+      - generic: long-4-51
+      - generic: long-4-52
+      - generic: long-4-53
+      - generic: long-4-54
+      - generic: long-4-55
+      - generic: long-4-56
+      - generic: long-4-57
+      - generic: long-4-58
+      - generic: long-4-59
+      - generic: long-4-60
+      - generic: long-4-61
+      - generic: long-4-62
+      - generic: long-4-63
+      - generic: long-4-64
+      - generic: long-4-65
+      - generic: long-4-66
+      - generic: long-4-67
+      - generic: long-4-68
+      - generic: long-4-69
+      - generic: long-4-70
+      - generic: long-4-71
+      - generic: long-4-72
+      - generic: long-4-73
+      - generic: long-4-74
+      - generic: long-4-75
+      - generic: long-4-76
+      - generic: long-4-77
+      - generic: long-4-78
+      - generic: long-4-79
+      - generic: long-4-80
+      - generic: long-4-81
+      - generic: long-4-82
+      - generic: long-4-83
+      - generic: long-4-84
+      - generic: long-4-85
+      - generic: long-4-86
+      - generic: long-4-87
+      - generic: long-4-88
+      - generic: long-4-89
+      - generic: long-4-90
+      - generic: long-4-91
+      - generic: long-4-92
+      - generic: long-4-93
+      - generic: long-4-94
+      - generic: long-4-95
+      - generic: long-4-96
+      - generic: long-4-97
+      - generic: long-4-98
+      - generic: long-4-99
+      - generic: long-5-0
+      - generic: long-5-1
+      - generic: long-5-2
+      - generic: long-5-3
+      - generic: long-5-4
+      - generic: long-5-5
+      - generic: long-5-6
+      - generic: long-5-7
+      - generic: long-5-8
+      - generic: long-5-9
+      - generic: long-5-10
+      - generic: long-5-11
+      - generic: long-5-12
+      - generic: long-5-13
+      - generic: long-5-14
+      - generic: long-5-15
+      - generic: long-5-16
+      - generic: long-5-17
+      - generic: long-5-18
+      - generic: long-5-19
+      - generic: long-5-20
+      - generic: long-5-21
+      - generic: long-5-22
+      - generic: long-5-23
+      - generic: long-5-24
+      - generic: long-5-25
+      - generic: long-5-26
+      - generic: long-5-27
+      - generic: long-5-28
+      - generic: long-5-29
+      - generic: long-5-30
+      - generic: long-5-31
+      - generic: long-5-32
+      - generic: long-5-33
+      - generic: long-5-34
+      - generic: long-5-35
+      - generic: long-5-36
+      - generic: long-5-37
+      - generic: long-5-38
+      - generic: long-5-39
+      - generic: long-5-40
+      - generic: long-5-41
+      - generic: long-5-42
+      - generic: long-5-43
+      - generic: long-5-44
+      - generic: long-5-45
+      - generic: long-5-46
+      - generic: long-5-47
+      - generic: long-5-48
+      - generic: long-5-49
+      - generic: long-5-50
+      - generic: long-5-51
+      - generic: long-5-52
+      - generic: long-5-53
+      - generic: long-5-54
+      - generic: long-5-55
+      - generic: long-5-56
+      - generic: long-5-57
+      - generic: long-5-58
+      - generic: long-5-59
+      - generic: long-5-60
+      - generic: long-5-61
+      - generic: long-5-62
+      - generic: long-5-63
+      - generic: long-5-64
+      - generic: long-5-65
+      - generic: long-5-66
+      - generic: long-5-67
+      - generic: long-5-68
+      - generic: long-5-69
+      - generic: long-5-70
+      - generic: long-5-71
+      - generic: long-5-72
+      - generic: long-5-73
+      - generic: long-5-74
+      - generic: long-5-75
+      - generic: long-5-76
+      - generic: long-5-77
+      - generic: long-5-78
+      - generic: long-5-79
+      - generic: long-5-80
+      - generic: long-5-81
+      - generic: long-5-82
+      - generic: long-5-83
+      - generic: long-5-84
+      - generic: long-5-85
+      - generic: long-5-86
+      - generic: long-5-87
+      - generic: long-5-88
+      - generic: long-5-89
+      - generic: long-5-90
+      - generic: long-5-91
+      - generic: long-5-92
+      - generic: long-5-93
+      - generic: long-5-94
+      - generic: long-5-95
+      - generic: long-5-96
+      - generic: long-5-97
+      - generic: long-5-98
+      - generic: long-5-99
+      - generic: long-6-0
+      - generic: long-6-1
+      - generic: long-6-2
+      - generic: long-6-3
+      - generic: long-6-4
+      - generic: long-6-5
+      - generic: long-6-6
+      - generic: long-6-7
+      - generic: long-6-8
+      - generic: long-6-9
+      - generic: long-6-10
+      - generic: long-6-11
+      - generic: long-6-12
+      - generic: long-6-13
+      - generic: long-6-14
+      - generic: long-6-15
+      - generic: long-6-16
+      - generic: long-6-17
+      - generic: long-6-18
+      - generic: long-6-19
+      - generic: long-6-20
+      - generic: long-6-21
+      - generic: long-6-22
+      - generic: long-6-23
+      - generic: long-6-24
+      - generic: long-6-25
+      - generic: long-6-26
+      - generic: long-6-27
+      - generic: long-6-28
+      - generic: long-6-29
+      - generic: long-6-30
+      - generic: long-6-31
+      - generic: long-6-32
+      - generic: long-6-33
+      - generic: long-6-34
+      - generic: long-6-35
+      - generic: long-6-36
+      - generic: long-6-37
+      - generic: long-6-38
+      - generic: long-6-39
+      - generic: long-6-40
+      - generic: long-6-41
+      - generic: long-6-42
+      - generic: long-6-43
+      - generic: long-6-44
+      - generic: long-6-45
+      - generic: long-6-46
+      - generic: long-6-47
+      - generic: long-6-48
+      - generic: long-6-49
+      - generic: long-6-50
+      - generic: long-6-51
+      - generic: long-6-52
+      - generic: long-6-53
+      - generic: long-6-54
+      - generic: long-6-55
+      - generic: long-6-56
+      - generic: long-6-57
+      - generic: long-6-58
+      - generic: long-6-59
+      - generic: long-6-60
+      - generic: long-6-61
+      - generic: long-6-62
+      - generic: long-6-63
+      - generic: long-6-64
+      - generic: long-6-65
+      - generic: long-6-66
+      - generic: long-6-67
+      - generic: long-6-68
+      - generic: long-6-69
+      - generic: long-6-70
+      - generic: long-6-71
+      - generic: long-6-72
+      - generic: long-6-73
+      - generic: long-6-74
+      - generic: long-6-75
+      - generic: long-6-76
+      - generic: long-6-77
+      - generic: long-6-78
+      - generic: long-6-79
+      - generic: long-6-80
+      - generic: long-6-81
+      - generic: long-6-82
+      - generic: long-6-83
+      - generic: long-6-84
+      - generic: long-6-85
+      - generic: long-6-86
+      - generic: long-6-87
+      - generic: long-6-88
+      - generic: long-6-89
+      - generic: long-6-90
+      - generic: long-6-91
+      - generic: long-6-92
+      - generic: long-6-93
+      - generic: long-6-94
+      - generic: long-6-95
+      - generic: long-6-96
+      - generic: long-6-97
+      - generic: long-6-98
+      - generic: long-6-99
+      - generic: long-7-0
+      - generic: long-7-1
+      - generic: long-7-2
+      - generic: long-7-3
+      - generic: long-7-4
+      - generic: long-7-5
+      - generic: long-7-6
+      - generic: long-7-7
+      - generic: long-7-8
+      - generic: long-7-9
+      - generic: long-7-10
+      - generic: long-7-11
+      - generic: long-7-12
+      - generic: long-7-13
+      - generic: long-7-14
+      - generic: long-7-15
+      - generic: long-7-16
+      - generic: long-7-17
+      - generic: long-7-18
+      - generic: long-7-19
+      - generic: long-7-20
+      - generic: long-7-21
+      - generic: long-7-22
+      - generic: long-7-23
+      - generic: long-7-24
+      - generic: long-7-25
+      - generic: long-7-26
+      - generic: long-7-27
+      - generic: long-7-28
+      - generic: long-7-29
+      - generic: long-7-30
+      - generic: long-7-31
+      - generic: long-7-32
+      - generic: long-7-33
+      - generic: long-7-34
+      - generic: long-7-35
+      - generic: long-7-36
+      - generic: long-7-37
+      - generic: long-7-38
+      - generic: long-7-39
+      - generic: long-7-40
+      - generic: long-7-41
+      - generic: long-7-42
+      - generic: long-7-43
+      - generic: long-7-44
+      - generic: long-7-45
+      - generic: long-7-46
+      - generic: long-7-47
+      - generic: long-7-48
+      - generic: long-7-49
+      - generic: long-7-50
+      - generic: long-7-51
+      - generic: long-7-52
+      - generic: long-7-53
+      - generic: long-7-54
+      - generic: long-7-55
+      - generic: long-7-56
+      - generic: long-7-57
+      - generic: long-7-58
+      - generic: long-7-59
+      - generic: long-7-60
+      - generic: long-7-61
+      - generic: long-7-62
+      - generic: long-7-63
+      - generic: long-7-64
+      - generic: long-7-65
+      - generic: long-7-66
+      - generic: long-7-67
+      - generic: long-7-68
+      - generic: long-7-69
+      - generic: long-7-70
+      - generic: long-7-71
+      - generic: long-7-72
+      - generic: long-7-73
+      - generic: long-7-74
+      - generic: long-7-75
+      - generic: long-7-76
+      - generic: long-7-77
+      - generic: long-7-78
+      - generic: long-7-79
+      - generic: long-7-80
+      - generic: long-7-81
+      - generic: long-7-82
+      - generic: long-7-83
+      - generic: long-7-84
+      - generic: long-7-85
+      - generic: long-7-86
+      - generic: long-7-87
+      - generic: long-7-88
+      - generic: long-7-89
+      - generic: long-7-90
+      - generic: long-7-91
+      - generic: long-7-92
+      - generic: long-7-93
+      - generic: long-7-94
+      - generic: long-7-95
+      - generic: long-7-96
+      - generic: long-7-97
+      - generic: long-7-98
+      - generic: long-7-99
+      - generic: long-8-0
+      - generic: long-8-1
+      - generic: long-8-2
+      - generic: long-8-3
+      - generic: long-8-4
+      - generic: long-8-5
+      - generic: long-8-6
+      - generic: long-8-7
+      - generic: long-8-8
+      - generic: long-8-9
+      - generic: long-8-10
+      - generic: long-8-11
+      - generic: long-8-12
+      - generic: long-8-13
+      - generic: long-8-14
+      - generic: long-8-15
+      - generic: long-8-16
+      - generic: long-8-17
+      - generic: long-8-18
+      - generic: long-8-19
+      - generic: long-8-20
+      - generic: long-8-21
+      - generic: long-8-22
+      - generic: long-8-23
+      - generic: long-8-24
+      - generic: long-8-25
+      - generic: long-8-26
+      - generic: long-8-27
+      - generic: long-8-28
+      - generic: long-8-29
+      - generic: long-8-30
+      - generic: long-8-31
+      - generic: long-8-32
+      - generic: long-8-33
+      - generic: long-8-34
+      - generic: long-8-35
+      - generic: long-8-36
+      - generic: long-8-37
+      - generic: long-8-38
+      - generic: long-8-39
+      - generic: long-8-40
+      - generic: long-8-41
+      - generic: long-8-42
+      - generic: long-8-43
+      - generic: long-8-44
+      - generic: long-8-45
+      - generic: long-8-46
+      - generic: long-8-47
+      - generic: long-8-48
+      - generic: long-8-49
+      - generic: long-8-50
+      - generic: long-8-51
+      - generic: long-8-52
+      - generic: long-8-53
+      - generic: long-8-54
+      - generic: long-8-55
+      - generic: long-8-56
+      - generic: long-8-57
+      - generic: long-8-58
+      - generic: long-8-59
+      - generic: long-8-60
+      - generic: long-8-61
+      - generic: long-8-62
+      - generic: long-8-63
+      - generic: long-8-64
+      - generic: long-8-65
+      - generic: long-8-66
+      - generic: long-8-67
+      - generic: long-8-68
+      - generic: long-8-69
+      - generic: long-8-70
+      - generic: long-8-71
+      - generic: long-8-72
+      - generic: long-8-73
+      - generic: long-8-74
+      - generic: long-8-75
+      - generic: long-8-76
+      - generic: long-8-77
+      - generic: long-8-78
+      - generic: long-8-79
+      - generic: long-8-80
+      - generic: long-8-81
+      - generic: long-8-82
+      - generic: long-8-83
+      - generic: long-8-84
+      - generic: long-8-85
+      - generic: long-8-86
+      - generic: long-8-87
+      - generic: long-8-88
+      - generic: long-8-89
+      - generic: long-8-90
+      - generic: long-8-91
+      - generic: long-8-92
+      - generic: long-8-93
+      - generic: long-8-94
+      - generic: long-8-95
+      - generic: long-8-96
+      - generic: long-8-97
+      - generic: long-8-98
+      - generic: long-8-99
+      - generic: long-9-0
+      - generic: long-9-1
+      - generic: long-9-2
+      - generic: long-9-3
+      - generic: long-9-4
+      - generic: long-9-5
+      - generic: long-9-6
+      - generic: long-9-7
+      - generic: long-9-8
+      - generic: long-9-9
+      - generic: long-9-10
+      - generic: long-9-11
+      - generic: long-9-12
+      - generic: long-9-13
+      - generic: long-9-14
+      - generic: long-9-15
+      - generic: long-9-16
+      - generic: long-9-17
+      - generic: long-9-18
+      - generic: long-9-19
+      - generic: long-9-20
+      - generic: long-9-21
+      - generic: long-9-22
+      - generic: long-9-23
+      - generic: long-9-24
+      - generic: long-9-25
+      - generic: long-9-26
+      - generic: long-9-27
+      - generic: long-9-28
+      - generic: long-9-29
+      - generic: long-9-30
+      - generic: long-9-31
+      - generic: long-9-32
+      - generic: long-9-33
+      - generic: long-9-34
+      - generic: long-9-35
+      - generic: long-9-36
+      - generic: long-9-37
+      - generic: long-9-38
+      - generic: long-9-39
+      - generic: long-9-40
+      - generic: long-9-41
+      - generic: long-9-42
+      - generic: long-9-43
+      - generic: long-9-44
+      - generic: long-9-45
+      - generic: long-9-46
+      - generic: long-9-47
+      - generic: long-9-48
+      - generic: long-9-49
+      - generic: long-9-50
+      - generic: long-9-51
+      - generic: long-9-52
+      - generic: long-9-53
+      - generic: long-9-54
+      - generic: long-9-55
+      - generic: long-9-56
+      - generic: long-9-57
+      - generic: long-9-58
+      - generic: long-9-59
+      - generic: long-9-60
+      - generic: long-9-61
+      - generic: long-9-62
+      - generic: long-9-63
+      - generic: long-9-64
+      - generic: long-9-65
+      - generic: long-9-66
+      - generic: long-9-67
+      - generic: long-9-68
+      - generic: long-9-69
+      - generic: long-9-70
+      - generic: long-9-71
+      - generic: long-9-72
+      - generic: long-9-73
+      - generic: long-9-74
+      - generic: long-9-75
+      - generic: long-9-76
+      - generic: long-9-77
+      - generic: long-9-78
+      - generic: long-9-79
+      - generic: long-9-80
+      - generic: long-9-81
+      - generic: long-9-82
+      - generic: long-9-83
+      - generic: long-9-84
+      - generic: long-9-85
+      - generic: long-9-86
+      - generic: long-9-87
+      - generic: long-9-88
+      - generic: long-9-89
+      - generic: long-9-90
+      - generic: long-9-91
+      - generic: long-9-92
+      - generic: long-9-93
+      - generic: long-9-94
+      - generic: long-9-95
+      - generic: long-9-96
+      - generic: long-9-97
+      - generic: long-9-98
+      - generic: long-9-99
+  - heading "观察记录（真实 UI 回调）" [level=2]
+  - generic: 306734.9ms moveEnd long-0-3 24.00–34.00 306734.3ms onChange long-0-1 263269.1ms resizeEnd long-0-3 18.00–28.00 263268.6ms onChange long-0-1 189237.0ms 选择 long-0-1 time=9.00 177453.1ms 载入 1000 项 / 600 秒 145763.0ms 选择 broll-1 time=17.90 145757.3ms resizeEnd broll-1 8.00–18.00 145757.2ms onChange broll-1 112707.1ms 选择 broll-1 time=11.27 112703.4ms moveEnd broll-1 8.00–16.00 112703.4ms onChange broll-1 35249.6ms 参数应用 broll-1 6–14 35249.6ms onChange broll-1 25017.4ms 选择 broll-1 time=8.93
+- alert

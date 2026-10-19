@@ -1,0 +1,144 @@
+{
+  "schema": "t1062-aac-v2-r4-independent-static-review/v1",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-06T00:55:46.077976+00:00",
+  "conclusion": "GO_FOR_EXACT_R4_NARROW_RESEARCH_DESIGN_AND_SPEC_MODULE_ADMISSION_ONLY",
+  "candidate": {
+    "path": "/tmp/t1062-aac-v2-static-admission-design-r4.json",
+    "sha256": "59270941b0cb865f454fec22d5344408c60e0d40508892a51af662d149166a7a",
+    "implementation_or_test_pass": false
+  },
+  "proof": {
+    "path": "/tmp/t1062-mp4-edit-list-readonly.json",
+    "sha256": "62393de494cb79fc3d72d31ca13ec2e182cbd64481a9793da5152934d5911b2c",
+    "method": "Read existing neutral MP4 bytes and independently verify all claimed box offset/size/type/version/mvhd-mdhd timescale/tkhd track_id/hdlr handler/elst entries directly; no ffmpeg/ASR/model command.",
+    "normal_input_sha256": "e6c0f4e72741e8f37b369d9511311569df8ef6c4e07009f3c746c632fb0e2073",
+    "offset_input_sha256": "0b22998e8238f35c9c3447c01234ce03f0ee03770db229c53f1e3de9f6905914",
+    "normal_box_fields_verified": 11,
+    "offset_box_fields_verified": 11,
+    "all_claimed_fields_equal_actual_bytes": true,
+    "normal_audio_edit": {
+      "movie_timescale": 48000,
+      "audio_media_timescale": 48000,
+      "entries": 1,
+      "segment_duration": 716393,
+      "media_time": 1024,
+      "rate_integer": 1,
+      "rate_fraction": 0
+    },
+    "normal_video_edit": {
+      "movie_timescale": 48000,
+      "video_media_timescale": 12800,
+      "segment_duration_movie_ticks": 716160,
+      "media_time": 0,
+      "rate_integer": 1,
+      "rate_fraction": 0,
+      "video_duration_source_ticks": 190976,
+      "movie_span_matches_source_clock_exactly": true
+    },
+    "offset_audio_edit": {
+      "entries": 2,
+      "has_empty_edit": true,
+      "movie_timescale": 192000,
+      "audio_media_timescale": 48000,
+      "empty_edit_duration": 211904,
+      "empty_media_time": -1,
+      "media_edit_duration": 2869668,
+      "media_edit_time": 0,
+      "admitted": false
+    }
+  },
+  "closed_findings": [
+    {
+      "id": "TERMINAL_PIN",
+      "result": "CLOSED_IN_R4",
+      "evidence": "Every provider boundary uses exact original resample clock; N=238798 maps716394, remains beyond source716393 and is rejected, not pinned. Real output bytes/count remain complete; no atrim/floor."
+    },
+    {
+      "id": "EDIT_LIST_UNKNOWN",
+      "result": "CLOSED_FOR_OBSERVED_CANONICAL_FAMILY",
+      "evidence": "Actual standard one-entry audio priming media_time1024 and durationS716393 close with packet skip1024 and decoded firstPTS0. Offset empty edit is explicitly excluded; no missing metadata inferred as absence."
+    },
+    {
+      "id": "SOURCE_OUTPUT_FRAME_CONFUSION",
+      "result": "CLOSED_IN_R4",
+      "evidence": "700 effective source frames,701 resampler output frames including flush17 and234 WAV redecoded frames have distinct provenance; only totalN and actual PCM identity should agree between two output witnesses, not their frame partition."
+    },
+    {
+      "id": "DOUBLE_SKIP",
+      "result": "CLOSED_IN_R4",
+      "evidence": "S716393 counts actual already-decoded effective frames. skip1024/discard407 are raw priming witness fields; no second subtraction or synthesized trim."
+    },
+    {
+      "id": "AUDIO_END_VS_VIDEO",
+      "result": "CLOSED_IN_R4",
+      "evidence": "Complete audio domain S48000 and output N16000 remain valid extraction evidence even though normal audio end exceeds video190976/12800. Each provider unit independently must fit both source-effective-audio and frozen editable-video domains; invalid unit causes whole word-to-text fallback."
+    }
+  ],
+  "parameterized_admission": {
+    "D": "Actual last packet effective duration1..1024, matching side-data discard1024-D and actual decoded final frame",
+    "S": "Sum of all decoded effective frames, independently agrees with actual packet effective end and standard edit presentation duration; never fixed716393 in runtime",
+    "N": "Actual sum of all resampler frames and independent PCM decode count, verified ceil(S/3); never synthesized from duration or fixed238798 in runtime",
+    "family": "Only exact described AAC-LC mono48kHz MOV/MP4 and zero effective presentation origin with one standard rate1 priming edit and complete verified clocks/side-data/toolchain; other families return original full-text/manual.",
+    "runtime_input_identity": "Frozen backend-owned asset/file/probe/stream/project/group source must match actual per-input bytes and physical witness. Do not use known neutral filename, semantic labels or global fixed fixture digest to admit inputs."
+  },
+  "required_exact_contract_and_implementation_checks": [
+    "Preserve original v1 schema/export/old PCM behavior/receipt digests and replay unchanged; add independent strict v2 and explicit union consumer in contract/internal/asset-asr.ts",
+    "Full packet/decoded/resampler/edit-list evidence must be present as bounded canonical arrays or an immutable owner-readable raw witness; digests cannot be accepted without actual underlying verification",
+    "Keep resampler-side continuous full frames and independent WAV encoding/rate/count/probe/bytes confirmation; field prose is not a license to omit outputSampleRate/outputEncoding/format/channel validation",
+    "Bind actual sourceTimebase/sourceDurationTicks and both video/audio presentation origins; relevant track selection, ISO box bounds, versions/timescales/rates and unsupported edit structures fail closed. Normal actual video rate1/media0 entry is evidence, not permission to guess arbitrary other edits",
+    "Source packets and frames already consume priming once; verify per-input closure and never subtract skip twice",
+    "Keep allN bytes/samples and exact n*Rs/Ro clock. For EVERY provider start/end verify identity/raw original timing/sample bounds, sourceEffectiveDomainS, editableVideoDomainduration, exact integer safe ticks and ordered nonoverlap. One failure downgrades the entire timing result; never crop, clamp, drop bad units or change text",
+    "Provider quantization supports a hypothesis only; real word endpoints remain unchecked until actual execution and must pass runtime verification or produce original text/no tokens",
+    "Existing ownership/readonly/archive/cancel/fence/lease/requestId/CAS/raw provider/full-text/native manual save behavior retain their public checks; no new permission or semantic decision algorithm"
+  ],
+  "scope_and_user_authorization": {
+    "reference": "/tmp/t1062-aac-mapping-scope-and-acceptance-independent-review-r2.json",
+    "sha256": "c7cf0149a538c8626cf9b035b0a717ec83df8ec03107b4c2e370f9d7857e46e4",
+    "within_prior_user_ChatCut_rough_cut_authorization": true,
+    "scope_only": "Four necessary potential production paths(twointernalcontract+backendpcm/timing),twoexistingprecise tests and existing owned groupE2E; mediacaller only if exact call diff requires. ROOT independently freezes actual SPEC/DEC/module and lease-safe sequence; no blanket backend permission.",
+    "normal_case": "Originalword184/>1actualtokens/truegap/full20audio gates/explicitadoption/dirty/revision/digest/reference/native save+reload all stay strict.",
+    "offset_case": "Real requestedword can produce truthfully succeededtext/no tokens/no fakegap; explicitmanual warning/zero semantic candidate or automatic adoption/exactsource/CAS/realmanual edit+save+reloadfullplan/revision/refs/source digest.",
+    "original_suite": "22browsercases/original18argv/order/timeouts unchanged. Any changed formal source/metadata invalidates stale future ledger candidate and requires new exact review."
+  },
+  "Research_Gate_judgment": {
+    "mechanism_located": true,
+    "strict_canonical_guard_defined": true,
+    "safe_fallback_defined": true,
+    "unknown_other_AAC_families_require_general_research_before_narrow_scope": false,
+    "design_sufficient_for_narrow_SPEC_module_admission": true,
+    "actual_resume_authorized_by_this_report_alone": false,
+    "resume_condition": "ROOT records current bounded evidence/registered executable verification criteria and real successful Research resume plus independently reviewed exact controls before implementation. This report approves the design and scope rationale, not a tool outcome.",
+    "experiments": "Only existing failed/successful ffmpeg experiment history used; ISO byte-field crosscheck is read-only validation of existing source bytes. No third ffmpeg/ASR/model experiment executed or authorized.",
+    "unknown_mandatory_runtime_witness": "That specific input remains unverified/text/manual; normal real acceptance failure must remain failure if its witness or provider endpoints do not meet guards."
+  },
+  "pending": [
+    "Exact internal contract/source implementation and independent review/red-green public regressions",
+    "True default ASR word mapping for originalnormalAAC and OFFSET-B complete real browser journey",
+    "Fresh unchanged complete Original18",
+    "Local package installation/audio listening/user acceptance"
+  ],
+  "historical_review_preservation": [
+    {
+      "path": "/tmp/t1062-aac-v2-static-endpoint-independent-review.json",
+      "sha256": "df07d398b2d9e00f6712031c2bdd873d98f17b9f3b0deece33121d832a50e91b",
+      "history": "R1endpinCHANGES_REQUIRED/R2narrowGO remain immutable, not rewritten as fullPASS"
+    },
+    {
+      "path": "/tmp/t1062-aac-v2-static-admission-design.json",
+      "sha256": "a428a0db2cbe3b94f8ead57674ee91340f7d7f45c2210a89c7ba8542365a64a6",
+      "status": "historical failed endpin design not current admission"
+    }
+  ],
+  "remaining_static_scope_blockers": [],
+  "reviewer_execution": {
+    "repo_mutation": false,
+    "live_database": false,
+    "browser": false,
+    "model": false,
+    "ffmpeg_or_ASR_probe": false,
+    "implementation_applied": false,
+    "Original18_PASS_claimed": false,
+    "installed_PASS_claimed": false
+  }
+}

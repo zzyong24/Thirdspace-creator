@@ -1,3 +1,5 @@
+import {platformAccounts as originalAccounts,type Db as OwnedFixtureDb} from "@creatoros/backend";
+import {createAccountGroupService} from "../platform-account/account-group.service";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb, assets, knowledgeItems, knowledgeAdoptions, assetTagAdoptions, entityTags, aiTasks, eq } from "@creatoros/backend";
 import type { RequestContext, AgenticProposal } from "@creatoros/contract";
@@ -26,7 +28,7 @@ describe("公开AI确认入口的自主候选原子采纳", () => {
   let failAfterKnowledge = false;
   const now = () => "2026-09-05T12:00:00.000Z";
   beforeEach(async () => {
-    fixture = await createDb(); let serial = 0;
+    fixture = await createDb(); await seedOwnedKnowledgeAccount(fixture.db,ctx.userId,ctx.accountId!); let serial = 0;
     const nextId = (prefix: string) => `${prefix}-${++serial}`;
     const notUsed = vi.fn(async (): Promise<never> => { throw new Error("UNEXPECTED_EXTERNAL_ACTION"); });
     const knowledge = createKnowledgeProposalAdoptionService(fixture.db, now);
@@ -108,3 +110,9 @@ describe("公开AI确认入口的自主候选原子采纳", () => {
   });
 
 });
+
+async function seedOwnedKnowledgeAccount(db:OwnedFixtureDb,userId:string,accountId:string){
+ const stamp="2026-06-21T00:00:00.000Z";
+ await db.insert(originalAccounts).values({id:accountId,userId,platform:'douyin',accountHandle:accountId,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing();
+ await createAccountGroupService({db,now:()=>stamp,nextId:prefix=>`${prefix}-${accountId}-fixture`}).ensureLegacyGroups({userId,requestId:'original-knowledge-fixture',source:'user'});
+}

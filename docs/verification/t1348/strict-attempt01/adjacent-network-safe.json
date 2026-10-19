@@ -1,0 +1,167 @@
+{
+  "note": "仅浏览器network白名单，APIRequest fetch另在trace保13.6ms ECONNRESET；不输出headers/env/payload。",
+  "lastRequests": [
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:06.305Z",
+      "time": 50.159,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:06.307Z",
+      "time": 61.844,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:06.307Z",
+      "time": 73.96600000000001,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:06.392Z",
+      "time": 1509.4730000000002,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:06.487Z",
+      "time": 1518.125,
+      "method": "GET",
+      "path": "/_next/static/media/noto-sans-sc-112-wght-normal.1gfxlf5xsert6.woff2",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:06.769Z",
+      "time": 1546.682,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:06.780Z",
+      "time": 3380.509,
+      "method": "GET",
+      "path": "/?_rsc=mvo5Sh5k9eqPRspE",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:07.112Z",
+      "time": 1513.115,
+      "method": "GET",
+      "path": "/?_rsc=mvo5Sh5k9eqPRspE",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:07.193Z",
+      "time": 1505.462,
+      "method": "GET",
+      "path": "/__nextjs_font/geist-latin.woff2",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:08.693Z",
+      "time": 1526.239,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:08.694Z",
+      "time": -1,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": -1,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:08.696Z",
+      "time": 1523.654,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:10.210Z",
+      "time": 45.555,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:10.210Z",
+      "time": 49.317,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:10.210Z",
+      "time": 59.253,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:10.210Z",
+      "time": 90.12799999999999,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:10.256Z",
+      "time": -1,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": -1,
+      "failure": null
+    },
+    {
+      "file": "0-trace.network",
+      "startedDateTime": "2026-10-18T14:57:10.300Z",
+      "time": 23.992,
+      "method": "POST",
+      "path": "/api/v1/dispatch",
+      "status": 200,
+      "failure": null
+    }
+  ]
+}

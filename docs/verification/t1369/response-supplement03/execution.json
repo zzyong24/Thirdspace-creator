@@ -1,0 +1,8 @@
+{
+  "diagnostic": "DEC-136903 supplement of previously unexecuted controlled chain",
+  "outerTimeout": false,
+  "ownedPid": 7328,
+  "exitCode": 1,
+  "durationSeconds": 630.2005673340173,
+  "endedAt": 1792390600.3347561
+}

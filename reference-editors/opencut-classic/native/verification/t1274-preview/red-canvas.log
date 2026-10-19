@@ -1,0 +1,27 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-canvas.test.ts:
+10 | mock.module('@/services/renderer/compositor/frame-descriptor',()=>({buildFrameDescriptor:async()=>({frame:{id:selectedFrame},textures:[]})}));
+11 | mock.module('@/services/renderer/resolve',()=>({resolveRenderTree:async({time}:any)=>{selectedFrame=time;}}));
+12 | mock.module('@/services/renderer/compositor/wasm-compositor',()=>({wasmCompositor:{ensureInitialized(){},getCanvas:()=>shared,syncTextures(){},render:(frame:any)=>{compositorFrame=frame.id;shared.frame=compositorFrame;}}}));
+13 | mock.module('@/diagnostics/render-perf',()=>({measureSpanAsync:async({fn}:any)=>fn(),measureSpanSync:({fn}:any)=>fn(),onRenderPerfFrameComplete(){}}));
+14 | const {CanvasRenderer}=await import('@/services/renderer/canvas-renderer');
+15 | test('活动预览和候选编码输出画布实例不同，后续render不覆盖前一实例完成帧',async()=>{const a=new CanvasRenderer({width:10,height:10,fps:{numerator:24,denominator:1}}),b=new CanvasRenderer({width:10,height:10,fps:{numerator:30,denominator:1}});const ac=a.getOutputCanvas() as any,bc=b.getOutputCanvas() as any;expect(ac).not.toBe(bc);expect(ac).not.toBe(shared);await a.render({node:{} as any,time:17});expect(ac.frame).toBe(17);await b.render({node:{} as any,time:240017});expect(bc.frame).toBe(240017);expect(ac.frame).toBe(17);});
+
+error: expect(received).not.toBe(expected)
+
+Expected: not Canvas {
+  width: 10,
+  height: 10,
+  frame: 0,
+  getContext: [Function: getContext],
+  remove: [Function: remove],
+}
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-baseline/apps/web/src/embedded/__tests__/native-preview-canvas.test.ts:15:294)
+(fail) 活动预览和候选编码输出画布实例不同，后续render不覆盖前一实例完成帧 [11.24ms]
+
+ 0 pass
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [76.00ms]

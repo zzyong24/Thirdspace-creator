@@ -780,10 +780,155 @@ T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗�
 
 执行：`node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs`。
 
-## LED-052 — 干净安装通过不代表 Windows 保留目录下的首次启动可用
+## LED-052 — 归档执行豁免不能只判断账号ID存在
+
+- **Date**: 2026-10-05 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 新建普通任务已拒绝归档组，但归档前排队或已认领的普通写稿/source_sync仍可claim并进入lease admission。独立真实PG探针实证该缺口，131条绿测未覆盖反例。
+- **RootCause**: 创建口验证真实私有作业，认领/模型/lease口却用 accountId 存在放行归档，未共享同一权限证明。
+- **GuardRule**: 所有新动作与claim在同一事务重验冻结成员；仅四类私有collector且真实job、账号、组、owner、membershipVersion一致时可继续。普通队列不执行；已有同键调用的安全settlement仍可幂等结算，不能取消合法采集或反杀已发生用量。
+- **GuardCheck**: `node docs/verification/t1022/run-archive-guard.mjs`；缺隔离PG配置必须失败，不能skip成绿。
+- **Outcome(T+N)**: 当场负向RED 3 FAIL/4 PASS后修复，作者86条及追加56条通过；增量及test-only按SHA集成，独立最终复验B1 PASS，4个不同测试文件62条通过（两次PG运行不累加），组合22文件ROOT/候选匹配；原FAIL证据保留。
+- **Ref**: T-1022；docs/verification/t1022/startup-permission-review-initial-fail.md；archive-admission-freeze.json。
+
+<!-- T1080：下列为本地main独有原记录，来源main12288cef；重复教训编号见整合报告 -->
+## LED-055 — 回放历史模型请求不能混入最新计划
+
+- **Date**: 2026-09-22 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
+- **WhatFailed**: 原综合任务重启续跑时，模型未知已安全superseded，但没有下一次新调用，最终CHAT_MODEL_REQUEST_REPLAY_MISMATCH。
+- **RootCause**: 宿主在历史stop之后生成的续行读了当前计划；当年rev3的文本被当前rev4多出的步骤改变，完整模型请求指纹因此不再一致。真实Pi/durable/SDK脱敏回放已复现。
+- **GuardRule**: 参与模型请求的宿主派生上下文必须按该历史模型调用读取当时已证明的快照；顺序和真实结算事实均须校验。不得用最新状态替代历史，不得忽略digest或覆盖旧费用/回执；历史证据缺失必须明确诊断，不能编造。新增证据门同时覆盖历史成功公共链，避免不相关未来状态反杀可用性。
+- **GuardCheck**: reconcile LED-055覆盖正式plan历史读取、原请求严格匹配与worker续行回放；具体运行结果另记当前验收，不以门存在代表已通过。
+- **Outcome(T+N)**: 第七安装实测发现，修复与新安装原任务复验进行中。
+- **Ref**: T-1026；docs/verification/t1026-cli-acceptance.md。
+
+
+## LED-054 — 外部 I/O 不能占住任务数据库事务
+
+- **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 聊天 Agent 调用浏览器或本机命令时，任务查询、心跳、取消和恢复全部等待；产物自动
+  对账也会卡住全部数据库读取。重启后即使原产物已完成对账，任务仍停在 `unknown_result`，页面长期
+  显示“自动恢复中”。
+- **RootCause**: PGlite 使用单连接，宿主把 execution lease 数据库事务跨越到 socket/原生 I/O；产物
+  结算又在独占事务内经根连接读取对象存储设置，形成自等待。对账完成后没有把同一任务重新入队，
+  纯模型进程退出后的未知候选也缺少安全续跑路径。
+- **GuardRule**: 外部 I/O 必须使用“短事务读取可信身份 → 事务外调用 → 短事务复核租约”；禁止在 lease
+  回调内等待 socket、浏览器、命令、网络或会再次查询根数据库的存储端口。无外部副作用且没有 provider
+  job/回执的纯模型未知调用可标记 `superseded`，在同一任务、同一 operation key 和既有预算内续跑；
+  工具副作用未知继续等待同键对账，对账结算后必须自动把原任务重新入队。长度截断有限续写后以已生成
+  内容 `partial` 收口。
+- **GuardCheck**: `reconcile.config.json` 的 LED-054 运行数据库活性、租约复核和模型未知恢复回归。
+- **Outcome(T+N)**: 红测复现浏览器等待及产物对账读取存储设置时 PGlite 查询阻塞；绿测验证前台读取
+  在 1 秒门内完成、原产物调用同键结算、同一任务从 `unknown_result` 自动回到队列，外部工具未知不盲重放。
+- **Ref**: T-1024-runtime-liveness。
+
+---
+
+
+## LED-059 — 自动恢复必须有进展证据，内置工具必须经过真实聊天装配
+
+- **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: Mac 内置浏览器工具声明了合法的 `format: "uri"`，聊天参数桥在创建持久任务前拒绝
+  整轮请求；页面没有任务回执却持续显示“自动恢复中”，形成无限请求和永久转圈。
+- **RootCause**: 工具目录与参数桥只分别做了局部测试，没有用真实内置 Schema 跑聊天装配；前端恢复循环
+  没有连续无进展预算，也没有区分“已有持久任务”和“任务尚未建立”。
+- **GuardRule**: 内置工具 Schema 必须通过真实聊天装配并执行其约束，未知约束继续 fail-closed。前端只有在
+  有持久任务回执或有限提交预算内才能显示自动恢复；三次无进展后停止自动请求、保留原轮并提供继续恢复。
+- **GuardCheck**: `reconcile.config.json` 的 LED-059 运行工具参数桥、真实工具装配、任务回执和恢复活性回归。
+- **Outcome(T+N)**: 红测复现 `format` 阻断；绿测覆盖 URI 执行校验、未知格式拒绝、真实 `browser.navigate`
+  装配、同轮手动继续、持续 503 请求停止、持久任务提示和卸载清理。
+- **Ref**: T-1023-agent-recovery。
+
+---
+
+
+## LED-058 — 模型断流和格式不完整不能把恢复责任推给用户
+
+- **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 内容雷达在逐字稿拆解后因模型输出不完整显示手动重试，AI 助手在模型断流后显示
+  “这次没有生成成功”；原任务、输入和部分结果仍在，却被页面变成阻断终态。
+- **RootCause**: 模型连接中断统一进入未知结果冻结，格式不完整直接映射失败；调用账本没有区分可废弃的
+  模型候选与可能有外部副作用的未知调用，页面又把普通临时错误交给用户重新提交。
+- **GuardRule**: timeout、可重试 HTTP、网络断流及模型候选不完整必须保留同一任务和检查点，由 Agent
+  loop 退避、修复或续跑；废弃模型调用继续保守占用预算。只有没有可用模型时引导设置。用户取消保持
+  停止，工具、发布等外部副作用结果未知仍先对账，禁止盲目重放。
+- **GuardCheck**: `reconcile.config.json` 的 LED-058 运行模型流、账本、原任务恢复、内容雷达和助手界面回归。
+- **Outcome(T+N)**: 单元与集成回归覆盖模型流缺 finish、流内 error、429、网络断开、持久任务重领、同键
+  重试、最终聊天提交、配置缺失入口及页面无手动重试；安装版证据见 T-1022-agent-recovery 验证记录。
+- **Ref**: T-1022-agent-recovery；DEC-AI-037。
+
+---
+
+
+## LED-056 — 工具宿主有实现不代表新任务能调用
+
+- **Date**: 2026-09-22 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
+- **WhatFailed**: artifact.copy扩展到v2后，安装CLI能力目录只剩20项，真实新任务完全拿不到copy；宿主复制测试通过仍无法交付。
+- **RootCause**: 生产内置目录selector固定所有工具schemaVersion1，过滤了新copy@2；此前测试直接注入host.catalog，绕过实际装配。
+- **GuardRule**: 工具版本变更必须经过同一生产selector、公开capabilities投影、prepareChatReply与正式任务冻结、真实宿主/账本结算验收。各工具明确当前版本，不泛化接受未知版本，不把新定义伪装旧v1；旧任务完整冻结定义和历史执行语义保留。
+- **GuardCheck**: reconcile LED-056运行真实目录→新任务→copy@2执行/同键重放及旧v1兼容，非被测工具夹具明确fail-fast且零调用。
+- **Outcome(T+N)**: 第八安装实际失败已记录，精确目录红后绿；新包CLI复制仍待通过，不以回归存在或任务succeeded冒充交付。
+- **Ref**: T-1026；docs/verification/t1026-cli-acceptance.md。
+
+LED055追加（第八实际恢复）：历史上下文修正后，原task256仍因MODEL_CALL_REQUIRES_RECONCILIATION停止。正式PGlite/SDK链确认后续unknown准备失败会清空既有安全根模型retry锚，启动恢复又未重建；不是再次摘要漂移。保留/重建锚必须持同任务锁，证明完整已确认前缀与唯一无外部结果逻辑尾，原reserve继续严格摘要/预算，不修改历史账本，不解除未知工具。LED055追加model retry-anchor与pause恢复门；第九安装原任务仍待复验。
+
+
+## LED-057 — 干净安装通过不代表 Windows 保留目录下的首次启动可用
 
 T992：Windows 卸载会保留 AppData 中的业务数据和可再生成运行环境。新包完整解压后，目录切换仍可能因暂时占用返回拒绝访问；干净 CI 没有这类现场状态，把原子改名失败直接作为启动失败会让合法安装无法使用。
 
 防复发：安装期继续严格写入并校验正式运行目录；启动期只有在解压已经完成、版本标记匹配、入口哈希和完整性检查全部通过时，才允许从隔离目录继续运行。后续启动可复用重新校验通过的隔离目录，损坏候选必须跳过。诊断保留操作阶段、来源、目标、原始系统错误和回滚结果。跨平台容忍路径由 `runtime_cleanup_tests::windows_*` 守护；原生独占句柄复现带 `#[cfg(target_os = "windows")]`，只在 Windows 开发机上编译进这组测试，macOS 上不参与。该组测试不进发布流水线——它在 sidecar 与 externalBin 产出前会让 tauri_build 资源校验 panic。Windows 流水线继续执行安装、启动、首页加载和卸载验收；禁止靠清空 AppData、关闭校验或重复构建掩盖问题。
 
 执行：`cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features`（本地/reconcile guard）。前置条件:`frontend/src-tauri/binaries/` 与 `sidecar.tar.gz` 必须已存在,否则 build.rs 在 tauri_build 资源校验处 panic,与测试本身无关。
+
+<!-- T1080：下面保留workbase6b1322af独有决定/教训；撞号映射见resource-control-resolution。 -->
+## LED-053 — 执行预算必须从完整内部流程向外计算
+
+- **Date**: 2026-10-06 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 安装版素材准备约31秒失败；Worker固定30秒普通宿主等待包住匿名请求、登录导航、重试与抽音。前端观察窗口到期又把后台仍运行的任务显示为失败。
+- **RootCause**: 把端口等待、业务总预算、观察窗口和库默认混用；只改外部配置不能覆盖SDK内部30秒默认。新增预算没有在正式持久创建口首次冻结下限。
+- **GuardRule**: 新正执行/有限观察至少120秒，原长预算保留；独立外层大于全部内部墙钟预算，计入串行尝试、退避、排队、启动和清理余量。同一原绝对deadline向内传播且到期立即结束，历史不续期；continuous沿原归属、取消和心跳。观察结束保留原ID，不能伪造失败或重建任务。间隔/授权TTL/输入长度和取消后强杀宽限分开。依赖默认及单位、0禁用逐消费者检查。
+- **GuardCheck**: `node tools/timeout-policy/verify.mjs`；reconcile.config.json LED-053。含正式Worker→ASR准备、真实沙箱执行、PGlite持久入队/历史claim、前端原任务观察、CLI等待、依赖补丁及真实CLI解析；完整渲染导出证据另存。
+- **Outcome(T+N)**: 当场旧30秒红测失败；修复后31秒、125秒和超过10分钟continuous慢成功，取消/原deadline仍停止。新持久入队1秒旧预算红测失败，修复后冻结两分钟且历史过期不认领。依赖公共CLI实际隔离导出成功。全部222条原清单有归属；真实供应商、Windows与安装版未冒充通过，全局既有Gate失败保留。
+- **Ref**: docs/engineering/timeout-policy.md；docs/verification/t1066/REPORT.md；通用Skill 3.27.4。
+
+
+## LED-060 — 完整模型响应与转录回放必须在同一真实链路验收
+
+- **Date**: 2026-10-07 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: T-1068-radar-transcription实际HTTP证明完整Chat Completion JSON被SSE消费者误判未知；转录共享节点裸jsonSchema在text模式没有validator，尚未请求模型即阻断真实后端回放/保存。
+- **RootCause**: 完整JSON与SSE的wire形状未兼容；只有发给模型的schema，没有回放/文本模式实际消费的validator；单测只注入结构化返回，未覆盖真实business port。
+- **GuardRule**: 同一次完整JSON响应仅在明确结束事实和可验证形状下映射原流消费者；保留正文、reasoning、工具参数和真实usage，不增加请求、不制造结束码。共享schema必须提供严格validator，wire schema与冻结摘要保持兼容；最终稿由真实后端回执回放决定，明确失败沿原文降级。started/unknown、取消、旧fence与原deadline耗尽不能伪造成功或获得重发资格。至少覆盖真实Worker/Pi/HTTP/账本终态和后处理全部业务端口、artifact写后读回。
+- **GuardCheck**: reconcile.config.json LED-060；pi-provider-json-compat、radar-model-result-unknown.repro与transcribe-postprocess.integration实际回归。
+- **Outcome(T+N)**: 修复前协议6失败/8通过；真实后处理9失败/1通过。补丁和validator修复后最终自包含构建门协议19、原复现8、真实后端集成13共40通过；另有相关后端53通过及正式bundle旅程，保留异常/断流/取消对照。全局reconcile34错误/1告警与原基线逐项一致；具体日志在docs/verification/t1069与t1070，不代称真实供应商或安装版验收。
+
+
+## LED-061 — 资源释放必须走实际消费者并保持原任务归属
+
+- **Date**: 2026-10-08 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 转录成功遗留Whisper线程；宿主累积已消费音频；聊天提前读完整历史；完成会话/预览无界缓存；稿面与Radar重复读取；成功任务卡反复观察；后台调度/心跳叠加。独立复核还发现无审批等待误淘汰，以及显式停止后running元数据永久保护。
+- **RootCause**: 创建和释放没有同一归属、缺背压/终态映射/单在途屏障；缓存未关联实际任务状态和当前turn。
+- **GuardRule**: 每任务finally等待自己的线程退出；双向协商消费确认并用单调水位/紧凑区间释放已消费字节，旧peer保持原协议兼容；流只按pull读取当前有限页；只淘汰无观察者的完成会话，真实等待状态按原任务ID保护；停止接受只释放对应turn本地引用，不伪造cancelled；同一读取/调度/心跳最多一份，重复唤醒有界合并，dispose关闭入口并等待清理。保持原execution/attempt/fence/deadline、幂等收费、完整历史、合法大输出与跨页回复。
+- **GuardCheck**: `node docs/verification/t1073/verify-resource-lifecycle.mjs`；已登记reconcile.config.json，覆盖全部8处实际消费者。单测/hook各120秒；没有整套watchdog，不冒称整组有总上限。
+- **Outcome(T+N)**: 各根因当场正确行为RED后同测GREEN保留。整合聚合301/301通过（7+83+62+121+28）；无消费者SSE读0页、100份已消费音频liveBuffers=0、线程归属退出、慢读取peak=1、根dispose计时器为0。无审批等待、原任务停止和最终确认经真实隔离持久服务/SDK链23项及独立复跑通过。真实模型容量、安装版RSS和浏览器像素证据未验证，全局历史失败保留。内存探针新输出写本次门日志并还原旧证据；失败后的旧字节不得视为新观测。
+- **Ref**: DEC-T1073；docs/features/t1073-resource-memory-fixes.md；docs/verification/t1073/REPORT.md。
+
+
+## LED-062 — 主动关闭事件不能提前释放登录档案
+
+- **Date**: 2026-10-13 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 主动ctx.close仍等待时同步/异步close事件使onStopped提前执行，目录搬移可以抢先；原close最后失败也已被标记释放。
+- **RootCause**: 把close事件等同完整停止，且closing Promise右值启动时字段尚未赋值。
+- **GuardRule**: 调用原close之前同步置主动关闭标记；完整close成功后释放原宿主租约和队列，失败保留占用和原清理能力；外部独立关闭事件保持正常释放，不靠超时夺取活档案。
+- **GuardCheck**: reconcile.config.json LED-062；guard-close-order + guard-lifecycle实际回归。
+- **Outcome(T+N)**: 3例当场RED，修后守卫/共享会话31例、shutdown5例通过；真实临时Chromium停止→宿主真实租约释放→搬移→重开Cookie通过。Windows真锁/用户扫码尚未验。
+- **Ref**: docs/verification/t1259/REPORT.md。
+
+## LED-063 — 文件持久化必须核对目标系统的目录同步能力
+
+- **Date**: 2026-10-13 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: Windows只读目录handle.sync调用FlushFileBuffers，缺写权限，使已写配置仍失败；安全错误隔离保存还可遮住原校验结果。
+- **RootCause**: POSIX目录fsync语义直接复制到Windows，测试只有mac实际文件与内存store。
+- **GuardRule**: Windows只跳不适用目录sync，保文件fsync/原子rename/认证读回；POSIX目录sync和真实权限、磁盘、认证错误继续拒绝，不能宽泛catch吞错。
+- **GuardCheck**: reconcile.config.json LED-063；真实密文store经public refresh的200/304/invalid隔离及存储错误回归。
+- **Outcome(T+N)**: 公共refresh模拟Windows目录EPERM当场RED；修后前端64项通过，含POSIX目录错误与Windows文件sync错误继续拒绝。模拟不代签Windows实机。
+- **Ref**: docs/verification/t1259/REPORT.md；Microsoft FlushFileBuffers与libuv固定版本官方源码。

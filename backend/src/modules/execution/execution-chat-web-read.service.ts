@@ -10,11 +10,13 @@ import { chatWebReadFailureSchema, chatWebReadSessionSaveSchema, chatWebReadCall
 import { executionEvidence } from "../../schema/intelligence";
 import { createWebDocumentCacheService, createPendingDocumentService, type AssetsService, type ObjectStorageForCtx } from "../assets";
 import { createChatHostContextReader } from "../ai/chat-host-context.service";
-import { chatWebReadDigest as digest, readChatWebReadEvidence } from "./chat-web-read-evidence";
+import { chatWebReadDigest as digest, readChatWebReadEvidence, readChatWebReadPageEvidence } from "./chat-web-read-evidence";
 import { normalizeWebReadUrl } from "../ai-runtime/chat-context";
+import { ChatToolUserError } from "../ai-runtime/chat-tool-errors";
+import { formatErrorDiagnostic } from "../ai-runtime/error-diagnostics";
 import { buildChatTools, type ChatToolDeps } from "../ai-runtime/chat-tools";
 import { getChatToolNativeExecutor } from "../ai-runtime/chat-tool-gate";
-import { createAgenticToolBinding } from "./agentic-tool-binding";
+import { latestAgenticRootCall,createAgenticToolBinding } from "./agentic-tool-binding";
 import type { ChatBackendTool } from "./execution-chat-tool-ports.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -48,7 +50,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       if (bound.validationOutcome || bound.executionToolName !== "web.read" || bound.execution !== "worker.web-read" || bound.effect !== "committed") throw new ConflictError("网页观察不属于当前冻结工具");
       let url: string | null = null;
       if (restored) {
-        if (calls.filter((call) => call.kind === "model" && !call.parentCallId).at(-1)?.id !== bound.modelCallId) throw new ConflictError("旧模型回合不能上传新网页观察");
+        if (latestAgenticRootCall(calls)?.id !== bound.modelCallId) throw new ConflictError("旧模型回合不能上传新网页观察");
         const modelUrl = z.object({ url: z.string() }).parse(bound.input).url;
         url = normalizeWebReadUrl(restored.hostContext.chatContext.webReadUrl ?? modelUrl);
         if (!url || new URL(url).username || new URL(url).password) throw new ConflictError("冻结网页 URL 无效");
@@ -70,6 +72,36 @@ export function createExecutionChatWebReadService(db: Db, deps: {
     const data=z.json().parse(JSON.parse(JSON.stringify(await getChatToolNativeExecutor(prototype)!({...input as Record<string,unknown>,url},{}))));
     const projected=z.object({text:z.string(),window:z.object({offset:z.number(),length:z.number(),total:z.number()}),hasMore:z.boolean()}).parse(data);
     return agenticToolOutcomeSchema.parse({status:"ok",summary,evidence:[{entityId:row.id,version:row.contentHash,sourceUrl:url,title:row.title,text:projected.text}],data,error:null,continuation:projected.hasMore?{evidenceRef:row.id,nextOffset:projected.window.offset+projected.window.length,totalChars:projected.window.total}:null,sideEffect:"committed"});
+  }
+  async function previousPage(state: State) {
+    const requested = state.bound.input as {offset?:unknown};
+    if (typeof requested.offset !== "number" || requested.offset <= 0) return null;
+    const pageData = z.object({kind:z.literal("web.read"),asset:z.object({id:z.string(),name:z.string(),previewUrl:z.string().nullable(),sourceUrl:z.string(),title:z.string(),excerpt:z.string(),extractor:z.string(),turnCount:z.number().nullable().optional(),extraction:z.string().nullable().optional()})});
+    // 只消费当前任务更早的成功调用，较晚的并发刷新不能改写已读版本。
+    for (const call of [...state.calls].reverse()) {
+      if (call.sequence >= state.parent.sequence || call.kind !== "tool" || call.parentCallId || call.status !== "settled" || !call.resultText) continue;
+      if (binding.forCall(state.task,state.calls,call).executionToolName !== "web.read") continue;
+      const previous = receipt(call);
+      if (previous.status !== "ok" || previous.error || !previous.evidence.length) continue;
+      const data = pageData.safeParse(previous.data);
+      if (!data.success || data.data.asset.sourceUrl !== state.url) continue;
+      const ref = z.object({entityId:z.string().min(1),version:z.string().min(1)}).parse(previous.evidence[0]);
+      const [row] = await state.tx.select().from(executionEvidence).where(and(eq(executionEvidence.executionTaskId,state.task.id),eq(executionEvidence.id,ref.entityId)));
+      if (!row) throw new ConflictError("网页分页原证据缺失");
+      const origin = state.calls.find(candidate=>candidate.id===row.originCallId);
+      if (!origin || origin.sequence > call.sequence || origin.status !== "settled") throw new ConflictError("网页分页原调用无效");
+      const bound = binding.forCall(state.task,state.calls,origin);
+      if (bound.executionToolName !== "web.read" || bound.validationOutcome) throw new ConflictError("网页分页原工具无效");
+      const fullText = readChatWebReadPageEvidence(row,{taskId:state.task.id,callId:origin.id,inputDigest:bound.inputDigest,url:state.url!,version:ref.version});
+      // 从最初回执恢复元数据，避免分页说明一页页累加。
+      const asset = pageData.parse(receipt(origin).data).asset;
+      // 页面正文已验证原观察摘要；缓存证据的 sourceUrl 只是请求地址，不冒充最终地址。
+      const finalUrl = (row.metadata as {kind?:string})?.kind === "chat.web.read" ? row.sourceUrl : undefined;
+      if (asset.sourceUrl !== state.url) throw new ConflictError("网页分页来源不符");
+      const output = await projectSuccess(state.bound.input,state.url!,{...asset,finalUrl,assetId:asset.id,needLogin:false,fullText,fromCache:true,extraction:`沿用本任务已读正文版本；素材信息为读取时快照。${asset.extraction ?? ""}`},row,"已继续读取本任务同一版本的网页正文");
+      return agenticToolOutcomeSchema.parse({...output,sideEffect:"none"});
+    }
+    return null;
   }
   return {
     async resolveSearch(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
@@ -93,9 +125,23 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       const previous=await replay();if(previous)return previous;
       signal?.throwIfAborted();
       try {
+        const page = await access(ref,callId,"admission",async state=>{
+          signal?.throwIfAborted();started(state,ref);
+          if(await stored(state))return null;
+          const output=await previousPage(state);
+          if(!output)return null;
+          signal?.throwIfAborted();
+          const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:state.bound.toolCallId,toolName:state.bound.toolName,output}));
+          const settled=await createExecutionCallLedgerService(state.tx as unknown as Db,deps).settle(ref,callId,{status:"settled",usage:{totalTokens:0},resultText});
+          signal?.throwIfAborted();return {status:"hit" as const,output:receipt(settled)};
+        });
+        if(page)return page;
         const before=await access(ref,callId,"admission",async state=>{
           signal?.throwIfAborted();started(state,ref);
           if(await stored(state))return null;
+          // 显式重新读取只影响第一页；回执重放仍优先，翻窗仍复用已读版本。
+          const requested = state.bound.input as { refresh?: unknown; offset?: unknown };
+          if (requested.refresh === true && (requested.offset == null || (typeof requested.offset === "number" && requested.offset <= 0))) return null;
           return {context:state.context,url:state.url!,inputDigest:state.bound.inputDigest};
         });
         if(!before)return {status:"miss" as const};
@@ -132,15 +178,16 @@ export function createExecutionChatWebReadService(db: Db, deps: {
         if(state.calls.some(call=>call.parentCallId===callId) || await stored(state))throw new ConflictError("网页已有成功事实或内部调用，不能降级失败");
         // settlement 只读取原冻结上下文；不重新访问网页、搜索或提交素材。
         const restored=await createChatHostContextReader(state.tx as unknown as Db,{now}).read(ref,"settlement");
-        if(state.calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==state.bound.modelCallId)throw new ConflictError("旧模型回合不能提交新失败");
+        if(latestAgenticRootCall(state.calls)?.id!==state.bound.modelCallId)throw new ConflictError("旧模型回合不能提交新失败");
         const url=normalizeWebReadUrl(restored.hostContext.chatContext.webReadUrl ?? z.object({url:z.string()}).parse(state.bound.input).url);
         if(!url || new URL(url).username || new URL(url).password)throw new ConflictError("冻结网页 URL 无效");
-        const domain=assertSafeWebDomain(webDomainFromUrl(url));
-        const summary=failure.kind==="needs_login"?"来源需要登录或人工验证":failure.kind==="browser_runtime_unavailable"?"浏览器运行环境不可用":failure.message;
+        const domain=assertSafeWebDomain(failure.kind==="needs_login" && failure.domain!==undefined ? failure.domain : webDomainFromUrl(url));
+        if ("message" in failure) console.error("[chat-web-read-failure]", formatErrorDiagnostic(new Error(failure.message)));
+        const summary=failure.kind==="needs_login"?"来源需要登录或人工验证":failure.kind==="browser_runtime_unavailable"?"浏览器运行环境不可用":failure.kind==="http_blocked"?`网页读取未完成（HTTP ${failure.status}）。`:failure.code==="permission"?"此地址不在可读取范围，请使用有权限的公开网页。":failure.code==="no_evidence"?"这次未取得可用的网页正文。":"这次网页读取未完成，可稍后重试或换一个公开来源。";
         const prototype=buildChatTools(["web.read"],{readWeb:async()=>{
           if(failure.kind==="needs_login")return {needLogin:true,domain};
           if(failure.kind==="http_blocked")return {blocked:true,status:failure.status,message:failure.message,alternates:failure.alternates};
-          throw new Error(summary);
+          throw new ChatToolUserError(summary);
         }} as unknown as ChatToolDeps)["web.read"]!;
         const projected=z.json().parse(JSON.parse(JSON.stringify(await getChatToolNativeExecutor(prototype)!({...state.bound.input as Record<string,unknown>,url},{}))));
         const blocked=failure.kind==="needs_login" || failure.kind==="browser_runtime_unavailable" || (failure.kind==="read_error" && failure.code==="permission");
@@ -247,7 +294,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       } else {
         const previewUrl = await deps.assets.getDownloadUrl(state.context, saved.assetId).then((result) => result.url).catch(() => null);
         const read = state.observation;
-        output = await projectSuccess(state.bound.input,state.row.requestedUrl,{ needLogin: false, assetId: saved.assetId, name: current.name, previewUrl, sourceUrl: state.row.requestedUrl, title: read.title, excerpt: read.text.slice(0, 280), extractor: read.extractor, turnCount: read.turnCount, extraction: read.turnCount === null ? null : read.extractPath === "ssr" ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)` : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`, fullText: read.text, fromCache: false },state.row,"已读取网页正文，素材待用户确认");
+        output = await projectSuccess(state.bound.input,state.row.requestedUrl,{ needLogin: false, assetId: saved.assetId, name: current.name, previewUrl, sourceUrl: state.row.requestedUrl, finalUrl: read.finalUrl, title: read.title, excerpt: read.text.slice(0, 280), extractor: read.extractor, turnCount: read.turnCount, extraction: read.turnCount === null ? null : read.extractPath === "ssr" ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)` : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`, fullText: read.text, fromCache: false },state.row,"已读取网页正文，素材待用户确认");
       }
       const resultText = JSON.stringify(workerToolResultReceiptSchema.parse({ schemaVersion: 1, kind: "tool", toolCallId: state.bound.toolCallId, toolName: state.bound.toolName, output }));
       return await access(ref, callId, "settlement", async (latest) => {

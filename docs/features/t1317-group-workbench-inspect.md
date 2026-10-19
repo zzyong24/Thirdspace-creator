@@ -1,0 +1,32 @@
+# T-1317：恢复纯组任务公开详情读取
+
+## 当前真实失败
+定位任务ai-task-e80980cf-227 / exec_4e493141-4522-4541-9426-06c0e29ae886已生成候选，但公开workbench.tasks.inspect返回404 OwnershipError。任务生成成功不代详情可读。
+
+新不可变包source 0e1dc6228f1fa3dc02f2b1c7a1cee77ab18d650a，owned-root qyb5ZR/50727；原失败、任务与响应保留，证据见docs/verification/t1317/OBSERVATION_INDEX.json。不用后续task succeeded覆盖单操作拒绝。
+
+
+## 实施合同
+公开入口仅workbench-public.transport允许合法group的inspect/events两项只读操作（原capabilities/modelCalls保留）；其它artifact/read/render/reconcile/files入口沿原门，不整批放开。下游execution-stream.read现已按user+workspaceFilter/share lock取任务及分页events，本次只读依赖不改。其后workbench-plan.service.read和workbench-public.service.inspect的冻结读取谓词：先保留实际persistent tasks.get公开权限核验，再按真实task冻结user/group/account空值安全取其plan/frozen投影；组入口允许合法同组filter而task.accountnull，不能拿页面filter account当原owner。无group legacy保原账号合同。不得仅eq(user,id)扩大读取，不改plan其它写入/分页/工具展示或公共tasks.get，不额外暴露payload/模型原文/租约/密钥。两个现读点同时闭合，不能只修plans让frozenCapabilities/tools/来源静默变空。
+
+## 当场RED及回归
+新增专用完整public contract→真实prepare/immutable worker/ledger→候选→workbench.tasks.inspect，纯组与group+filter核原task/source/plan/frozen工具真实字段；校正：原227请求无x-account且accountnull，实际首门是transport的“当前账号不存在”404；initial曾把plans.read当现场首因是静态推断错误，原SPEC/审核保留。新的完整基线RED应如实停在transport，不能称SQL已实际到达。两处SQL是源码已证后续确定门，GREEN须穿过transport→tasks.get→plan→非空frozen。events另按原825真实404保留，修后核真实分页/隔离与原下游授权，不扩大stream生产W。另原public service组合fixture核分页、plan、非空frozen来源、工具参数截断/脱敏及legacy。原plan大suite有build worker/dist入口，只能R参考不原样执行。跨user/group、错误legacyaccount、缺任务/归档后既有读政策、重放和完整原tasks.get门不能削弱。完整GREEN须原两读点都实际有字段；旧公开失败不覆写。
+
+## 授权、范围与执行顺序
+用户全功能修复授权及Root本轮明确窄修裁决覆盖本范围；现时尚未改生产/跑本任务RED。正式独评PASS与合法lease/packet后，准确W内一次完成当场完整RED→最小实现→GREEN/Gates/报告，正常RED命中已审范围可直接继续，意外新范围/语义停报，不为每一步重复求批准。三任务分别审核、保原initial与旧失败，不重置T1300审核/不改FUNCTION_MATRIX。现候选三路不换包、不重发旧任务；最终合包和必要真实公共复验由C统一。
+
+## 测试与派生边界
+外部Codex协议只在新owned loopback替身，真实服务/dispatcher/immutable worker/SDK/ledger不mock；以已绑定worker 3851b4fb132035f1b03528d68b0fa1c5ab86bda8134d8b98795252295c5a6454（5618216B）实核，禁止测试beforeAll重build ai-worker/dist或写W外源码。新专用test以独立config明确include唯一目标、不merge默认include，cacheDir仅own runtime；固定timeout-policy原Gate的五包node_modules/.vite/vitest结果缓存按真实footprint登记，不能改guard/shim。所有正执行/观察>=120000ms、保原更长；新test/hook至少180000、全链test3600000、外层86400s覆盖启动串行清理；不缩/续持久任务deadline，未知保原taskID。
+
+产品仅下述精确路径，原其它tests只读参考/有build或短预算的suite不原样run：
+- backend/src/modules/execution/workbench-public.transport.ts
+- backend/src/modules/execution/workbench-plan.service.ts
+- backend/src/modules/execution/workbench-public.service.ts
+
+测试W：
+- backend/src/modules/execution/workbench-public.test.ts
+- frontend/src/server/__module_integration__/group-workbench-inspection.persistence-client.test.ts
+
+自有docs/verification/t1317/runtime/**与IMPLEMENTATION_RESULT.md，后续acceptance/**及REPORT.md；无contract/schema/通用权限/guard修改。精确MODULE_SCOPE与INPUT_LOCK为本轮初审输入。受影响type/boundary/semantic/timeout与当场完整业务回归必做；原PG无环境按实际缺测/skip，不冒PGlite多连接PG。最终pmem/reconcile/taskctl按实际统一收尾，不签未发生的前RED/新包/原生壳或整父功能。
+
+固定timeout-policy原Gate最终由C独占一次执行，三路只引用实际当时源码与原结果/五缓存footprint；本任务其余受控test用own config/cache，不在并行时重复共享Gate。未发生的Gate保持待验。

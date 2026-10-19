@@ -1,0 +1,257 @@
+{
+  "status": "ASSIGNED_MODULE_VALIDATION_COMPLETE_FOR_LISTED_BYTES",
+  "recordedAt": "2026-10-19T01:51:56.842962+00:00",
+  "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+  "currentSha256": {
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+    "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+    "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+    "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329"
+  },
+  "results": [
+    {
+      "attempt": "old-consumers-attempt01",
+      "exitCode": 0,
+      "durationSeconds": 5.676326250017155,
+      "timedOut": false,
+      "inputBytesStable": true,
+      "resultSha256": "4109dde2b2b137c184a6bc06120a64fae902bcca5ea8d85d3112150df760105e",
+      "logSha256": "b21c51fd81885d34fc884e6060df4a42ff4b912b721c22cbad5075ed37d4f29f"
+    },
+    {
+      "attempt": "worker-typecheck-attempt01",
+      "exitCode": 2,
+      "durationSeconds": 26.881170624983497,
+      "timedOut": false,
+      "inputBytesStable": true,
+      "resultSha256": "cdcf6e8445197db7a32eadd4b8538bdddb1202e04bbaaa3c2e7e6b88cbb5ab37",
+      "logSha256": "6a6ec3c177e68f1ba35aa56c5d991a870b9b478c3d53483d1e1778de05eb921a"
+    },
+    {
+      "attempt": "timeout-verify-attempt01",
+      "exitCode": 0,
+      "durationSeconds": 35.44162804202642,
+      "timedOut": false,
+      "inputBytesStable": true,
+      "resultSha256": "9f5f79e7e7b8567bba0c25f831f97d0ac029d7f08690a89303de4d1d0b508496",
+      "logSha256": "fb94bc2a8ea00efd8e958e679c1dd8738fb8f286dde56d80ccd43fd6ab0ad909"
+    },
+    {
+      "attempt": "witness-consumers-attempt01",
+      "exitCode": 0,
+      "durationSeconds": 5.454648625047412,
+      "timedOut": false,
+      "inputBytesStable": true,
+      "resultSha256": "e012e8c3f5bdb9aca3b8b2f5a88c849dc70b0970eb7f8e7f87d70ab544ec9403",
+      "logSha256": "57f33f47992d690fe0e1b0a5618a91400f482394a98f026ed21bfd1453f64327"
+    },
+    {
+      "attempt": "worker-typecheck-attempt02",
+      "exitCode": 0,
+      "durationSeconds": 26.115306666994,
+      "timedOut": false,
+      "inputBytesStable": true,
+      "resultSha256": "4162a26be70d262c9e635631ed880cf426849ef7a63d7d5b6c52e4a1576f826b",
+      "logSha256": "546105b0b4b763b341a422fbd93f8bef30e8f85ea38abe9f354380b1a8cef8d2"
+    },
+    {
+      "attempt": "timeout-static-attempt01",
+      "exitCode": 0,
+      "durationSeconds": 14.161553500045557,
+      "timedOut": false,
+      "inputBytesStable": true,
+      "resultSha256": "8305c0a93b9b6d9d0ac6bdde2217980ac1bd2d17e132f0c77ea2590d0f6ba777",
+      "logSha256": "2b05e6971d1bdead65a7715d0ec5d262baa7e9c37c1e56a365b65b70f212a355"
+    }
+  ],
+  "counts": {
+    "initialOldConsumerFiles": 4,
+    "initialOldConsumerPass": 145,
+    "revalidatedWitnessConsumerFiles": 3,
+    "revalidatedWitnessConsumerPass": 59,
+    "completeTimeoutPass": 174
+  },
+  "failureHistory": {
+    "workerTypecheckAttempt01": "exit2，本轮witness有6个Node/Element类型错误；作者修后attempt02 exit0；原日志和FAIL不覆盖"
+  },
+  "inheritance": "完整timeout原19脚本/测试消费者hash再核未变，继承174PASS；最终d1 witness已补59PASS/types/static，新cdf source测试89PASS。本报告不依初版witness或旧source.test签新版。",
+  "scope": "本地受控回归；真实Chromium公众号fixture全route拦截，DNS禁外连；其它合成Page/jsdom/受控时钟。没有真实账号、profile、业务库、平台读写、安装或App重启。",
+  "limits": [
+    "主视频号真实Chromium公共RED/GREEN由probe负责，本报告不代签",
+    "没有执行完整reconcile",
+    "实际平台owner/真实恢复UNKNOWN，site-safety阻止仍有效",
+    "本报告不支持build/install/真实诊断/collect或taskctl complete"
+  ],
+  "mutationBoundary": "执行器仅写本目录证据，没有改产品/测试/中央或依赖",
+  "finalResults": [
+    {
+      "attempt": "source-phase-attempt01",
+      "exitCode": 0,
+      "durationSeconds": 1.3052813750109635,
+      "inputBytesStable": true,
+      "before": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "after": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "resultSha256": "ab863f2450a4d10dbea28f4c155b3d3ca6568109a1dc2d0944fc3031132987b5",
+      "logSha256": "4ac4fc47a07689a2fc04cb3e80a00ee78c6ad0dcf05819ae581219ec8e935f0e"
+    },
+    {
+      "attempt": "witness-consumers-attempt02",
+      "exitCode": 0,
+      "durationSeconds": 5.5734141250140965,
+      "inputBytesStable": true,
+      "before": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "after": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "resultSha256": "8738c4b7ec81e68ca6cc0f1961747be0afca65e7f90231f4dae8e60837b7896c",
+      "logSha256": "ddf90fcd793c9b1ebe08f42b57232a1d307d55c54364982ead14c5a8460a2cc0"
+    },
+    {
+      "attempt": "worker-typecheck-attempt03",
+      "exitCode": 0,
+      "durationSeconds": 26.571424041001592,
+      "inputBytesStable": true,
+      "before": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "after": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "resultSha256": "c934302ddb2cac01ba8b79b6a46aaa5ccf12196a6012a402072c4a0dcb716ec0",
+      "logSha256": "546105b0b4b763b341a422fbd93f8bef30e8f85ea38abe9f354380b1a8cef8d2"
+    },
+    {
+      "attempt": "timeout-static-attempt02",
+      "exitCode": 0,
+      "durationSeconds": 14.436289666045923,
+      "inputBytesStable": true,
+      "before": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "after": {
+        "head": "00b7b21ae0bb505aabed3edeb6b4f71ded3f3f94",
+        "sha256": {
+          "ai-worker/src/runtime/platform/wechat-browser-source.ts": "b694b4145fd7819e659a4a6d204a834827958a5d5e1d951d7dce4e47bfa6ee72",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "d1c0df986c22e0938e6083324057d27b55bb29f9622810feca8af59229a20f6b",
+          "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "cdf44c6b21d535fb235b0fc7d9658071a44f11c02e3d16d51fee7ff048d16d44",
+          "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "aaa5c61c38eec8aaf75c293cf354c8513c086df48cf4a077b1f0a7f7e888ad6a",
+          "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+          "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts": "f3a3e5ffb025ff5cca11bbdacf9ffb07036ad7d35e8c348d7f8a7c0226494329",
+          "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+          "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+          "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b",
+          "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+          "tools/timeout-policy/check.mjs": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+        }
+      },
+      "resultSha256": "a47d134de658858132147206fc34c25a1aad3bcde06aeb404b2d9aaa325e4514",
+      "logSha256": "2b05e6971d1bdead65a7715d0ec5d262baa7e9c37c1e56a365b65b70f212a355"
+    }
+  ],
+  "finalCounts": {
+    "sourcePhaseAndBudgetPass": 89,
+    "witnessConsumerFiles": 3,
+    "witnessConsumerPass": 59,
+    "completeTimeoutInheritedPass": 174
+  },
+  "finalScope": "IMPL001由probe记录窄公共RED/GREEN；本模块只核其最终d1候选与cdf测试消费者，不冒签旧89d6公共主120秒或新60例结果。"
+}

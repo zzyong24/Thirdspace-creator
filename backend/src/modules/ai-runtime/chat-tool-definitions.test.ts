@@ -2,9 +2,30 @@ import { describe, expect, it } from "vitest";
 import { jsonSchema, tool } from "ai";
 import { CHAT_TOOL_EFFECTS, prepareChatToolDefinitions } from "./chat-tool-definitions";
 import { ALL_CHAT_TOOL_NAMES } from "./chat-tools";
+import {readFileSync} from 'node:fs';
+import {gunzipSync} from 'node:zlib';
 import { defineChatTool } from "./chat-tool-gate";
+import { defineWorkbenchChatTool, getChatToolNativeExecutor } from "./chat-tool-gate";
+import type { WorkbenchCapability, WorkbenchResult } from "@creatoros/contract/agent-workbench";
 const schema = { type: "object", properties: { q: { type: "string" } }, additionalProperties: false } as const;
 const make = (name: string, input = schema, description = "测试") => defineChatTool(name, { description, inputSchema: jsonSchema(input), execute: () => ({ kind: name }) });
+it('T1300 三种旧协议与改动前完整冻结定义逐字节值相同，新owner互异且不带无关族',async()=>{
+ const {buildChatTools}=await import('./chat-tools');
+ const old=JSON.parse(gunzipSync(readFileSync(new URL('../../../../docs/verification/t1300/runtime/legacy-definitions.json.gz',import.meta.url))).toString());
+ for(const protocol of ['director-v1','director-v2','markdown-v1']){
+  const options={legacyWorkEditorProtocol:protocol!=='markdown-v1',workWritingContext:protocol==='director-v2'};
+  expect((await prepareChatToolDefinitions(buildChatTools(['work.editor.read','work.editor.propose'],{humanizeError:()=>null,...options} as never),options)).definitions).toEqual(old[protocol]);
+ }
+ for(const owner of ['wechat_article','graphic_post','production'] as const){
+  const options={workEditorOwner:owner};
+  const prepared=await prepareChatToolDefinitions(buildChatTools(['work.editor.read','work.editor.propose'],{humanizeError:()=>null,...options} as never),options);
+  for(const definition of prepared.definitions)expect(definition.version).toMatch(new RegExp(`^chat-tools-work-editor-owner-v1-${owner}:`));
+  const bytes=JSON.stringify(prepared.definitions[1]!.parameters);
+  if(owner!=='production')expect(bytes).not.toContain('patchNativeElement');
+  if(owner!=='wechat_article')expect(bytes).not.toContain('patchArticleSection');
+  if(owner!=='graphic_post')expect(bytes).not.toContain('patchGraphicCard');
+ }
+});
 
 describe("真实聊天工具定义", () => {
   it("副作用覆盖所有正式工具，未知名称没有默认值", () => {
@@ -50,4 +71,67 @@ it("Worker 开场版本独立，未启用时原定义不变，其它工具不改
  expect(worker.definitions[0]).toMatchObject({execution:"worker.script-hooks",parameters:legacy.definitions[0]!.parameters,description:legacy.definitions[0]!.description,effect:"proposal"});
  expect(worker.definitions[0]!.version).not.toBe(legacy.definitions[0]!.version);
  expect(worker.definitions[1]).toEqual(legacy.definitions[1]);
+});
+
+it('T1070四个精确工具native参数效应与实现revision严格冻结',async()=>{
+ const {buildChatTools}=await import('./chat-tools');const names=['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'];const prepared=await prepareChatToolDefinitions(buildChatTools(names,{humanizeError:()=>null} as any));
+ expect(prepared.definitions.map(d=>[d.name,d.effect])).toEqual([['work.editor.read','none'],['work.editor.propose','proposal'],['work.creation.read','none'],['work.creation.propose','proposal']]);for(const d of prepared.definitions){expect(d.version).toMatch(d.name.startsWith('work.editor.')?/^chat-tools-work-editor-markdown-v1:/:/^chat-tools-work-director-v1:/);expect(d.execution).toBeUndefined();expect(d.parameters.type).toBe('object');}
+ expect(prepared.parameters['work.editor.read']!.parameters.safeParse({view:'field_window'}).success).toBe(false);expect(prepared.parameters['work.editor.propose']!.parameters.safeParse({candidate:{outputId:'invented'}}).success).toBe(false);
+});
+
+it('真实creation参数校验接收sectionId/cardId协议，拒绝真模型出现的id/page/type/text与伪metadataSource',async()=>{
+ const {buildChatTools}=await import('./chat-tools');
+ const prepared=await prepareChatToolDefinitions(buildChatTools(['work.creation.propose'],{humanizeError:()=>null} as never));
+ const validator=prepared.parameters['work.creation.propose']!.parameters;
+ const ref={kind:'project_script',id:'script',versionId:'saved-script-version'};
+ const article={schemaVersion:1,title:'中性标题',summary:'中性摘要',sections:[{sectionId:'section-1',order:0,heading:'开头',headingLevel:2,body:'中性正文',sourceRefs:[ref]}],factItems:[],visualBriefs:[],imageUses:[],metadataSource:{kind:'project',projectId:'project',updatedAt:'2026-10-07T00:00:00.000Z'}};
+ const graphic={schemaVersion:1,title:'中性图文',body:'中性正文',summary:'中性摘要',tags:[],imageUses:[],sourceRefs:[ref],ruleSnapshotRef:null,cardBriefs:[{cardId:'card-1',title:'中性页',body:'页正文',sourceRefs:[ref]}],metadataSource:article.metadataSource};
+ const valid={targetDigest:'a'.repeat(64),article,graphic};expect(validator.safeParse(valid).success).toBe(true);
+ expect(validator.safeParse({...valid,article:{...article,sections:[{id:'section-1',type:'text',text:'中性正文',sourceRefs:[ref]}]}}).success).toBe(false);
+ expect(validator.safeParse({...valid,graphic:{...graphic,cardBriefs:[{id:'card-1',page:1,type:'text',title:'中性页',body:'页正文',sourceRefs:[ref]}]}}).success).toBe(false);
+ expect(validator.safeParse({...valid,article:{...article,metadataSource:{titleSourceRefs:[ref],summarySourceRefs:[ref]}}}).success).toBe(false);
+});
+
+const workbenchCapability: WorkbenchCapability = {
+  name: "files.read", schemaVersion: 1, description: "读取任务文件",
+  inputSchema: { type: "object", properties: { path: { type: "string" } }, required: ["path"], additionalProperties: false },
+  resultSchema: { type: "object" }, effects: ["read"], requiredCapabilities: ["task.files"], platforms: ["macos"],
+};
+const workbenchResult: WorkbenchResult = { status: "succeeded", operationId: "op", content: [{ type: "text", text: "a".repeat(80000) }], artifactRefs: [], progressCursor: null };
+
+it("Workbench 目录由可信描述冻结副作用与版本；原执行入口保留完整回执供原 tool.result.read", async () => {
+  const built = defineWorkbenchChatTool(workbenchCapability, async () => workbenchResult);
+  const prepared = await prepareChatToolDefinitions({ "files.read": built }, { workbenchCapabilities: [workbenchCapability] });
+  expect(prepared.definitions[0]).toMatchObject({ name: "files.read", effect: "none", parameters: workbenchCapability.inputSchema });
+  expect(await getChatToolNativeExecutor(built)!({ path: "a.txt" })).toEqual({ kind: "workbench.result", result: workbenchResult });
+  const direct = await built.execute!({ path: "a.txt" }, {} as never) as { result: WorkbenchResult };
+  expect(JSON.stringify(direct).length).toBeLessThan(JSON.stringify({ kind: "workbench.result", result: workbenchResult }).length);
+  const changed = { ...workbenchCapability, schemaVersion: 2 };
+  const changedTool = defineWorkbenchChatTool(changed, async () => workbenchResult);
+  const newer = await prepareChatToolDefinitions({ "files.read": changedTool }, { workbenchCapabilities: [changed] });
+  expect(newer.definitions[0]!.version).not.toBe(prepared.definitions[0]!.version);
+  await expect(prepareChatToolDefinitions({ "files.read": built })).rejects.toThrow();
+  await expect(prepareChatToolDefinitions({ "files.read": built }, { workbenchCapabilities: [changed] })).rejects.toThrow();
+});
+
+it("Workbench 副作用按声明最大值映射，未知效果不被默认为只读", async () => {
+  const write = { ...workbenchCapability, name: "files.write", effects: ["task_write"] as WorkbenchCapability["effects"] };
+  const built = defineWorkbenchChatTool(write, async () => workbenchResult);
+  const prepared = await prepareChatToolDefinitions({ "files.write": built }, { workbenchCapabilities: [write] });
+  expect(prepared.definitions[0]!.effect).toBe("committed");
+});
+
+it("已装配的通用能力与冻结目录一致，未装配的目录项不暴露", async () => {
+  const built = defineWorkbenchChatTool(workbenchCapability, async () => workbenchResult);
+  const prepared = await prepareChatToolDefinitions({ "files.read": built }, { workbenchCapabilities: [workbenchCapability] });
+  expect(prepared.definitions[0]).toMatchObject({ name: "files.read", effect: "none", parameters: workbenchCapability.inputSchema });
+  await expect(prepareChatToolDefinitions({}, { workbenchCapabilities: [workbenchCapability] })).rejects.toThrow();
+
+});
+
+it('T1097同定义字节旧任务仍v1，只有显式写作上下文四工具变v2且hash完全不变',async()=>{
+ const prototypes=Object.fromEntries(['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'].map(name=>[name,make(name)]));
+ const old=await prepareChatToolDefinitions(prototypes,{legacyWorkEditorProtocol:true}),explicitOld=await prepareChatToolDefinitions(prototypes,{legacyWorkEditorProtocol:true,workWritingContext:false}),next=await prepareChatToolDefinitions(prototypes,{legacyWorkEditorProtocol:true,workWritingContext:true});
+ expect(old.definitions).toEqual(explicitOld.definitions);
+ old.definitions.forEach((row,i)=>{expect(row.version).toMatch(/^chat-tools-work-director-v1:/);expect(next.definitions[i]!.version).toBe(row.version.replace('director-v1:','director-v2:'));expect({...next.definitions[i],version:row.version}).toEqual(row);});
 });

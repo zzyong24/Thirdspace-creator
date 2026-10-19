@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { z } from "zod";
 import { getDomain } from "tldts";
 import { and, asc, eq, aiTasks, executionCalls, type Db } from "@creatoros/backend";
@@ -45,7 +46,7 @@ export function createExecutionBrowserSessionService(db:Db,deps:{tools:Record<st
   async function scoped<T>(ref:ExecutionRef,callId:string,action:(scope:{tx:Transaction;context:import("@creatoros/contract").RequestContext;domain:string;url:URL})=>Promise<T>):Promise<T>{
     return leases.withLease(ref,"admission",async({tx,task,context})=>{
       if(task.kind!=="ai_task" || task.ownerType!=="ai_task")throw new ConflictError("浏览器会话缺少AI执行归属");
-      const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+      const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
       if(!business || !["queued","running"].includes(business.status))throw new ConflictError("浏览器会话的AI归属映射或状态不符");
       const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
       const call=calls.find(candidate=>candidate.id===callId);if(!call || call.status!=="started" || call.startedAttempt!==ref.attempt || call.toolExecutionClaimId)throw new ConflictError("浏览器调用未获当前独占执行许可");
