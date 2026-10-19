@@ -54,3 +54,15 @@ flowchart LR
 旧远端T247敏感历史未改；Root已向用户说明API密钥/会话令牌风险并提出具体知情选择，当前待答，masx-commits未邀请，T1375不complete。本节之后若有纯安全收据metadata提交，不改上述产品快照/扫描绑定。
 
 等待用户风险答复期间，taskctl实际exit0将T1375登记⏸️并写事件，pmem sync实际exit0；本次不触发T1373危险full，也未改变其它产品任务。四份安全审计附件与本节只属收尾metadata，后续作差集检查，不重跑产品门。
+
+## 用户知情继续（DEC-137504）
+
+用户已明确选择“了解历史风险，仍立即邀请”，本次邀请HOLD解除；旧远端T247不改，也不冒密钥已撤销。taskctl start因当前⏸实际拒绝，按正式resume契约恢复🔨实际exit0并写事件。指定Sol正在执行原标准write邀请，当前段不预签GitHub成功；实际结果以随后安全回执为准。本轮只改控制metadata，不重测产品或重跑完整扫描。
+
+## 实际协作邀请完成
+
+知情授权后，指定Sol仅一次PUT标准push权限，GitHub实际HTTP201/命令exit0；邀请`338488946`读回为write、expired=false，创建于2026-10-19T10:28:54Z。当前为pending_acceptance，有效permission仍none，未冒已接受/已生效成员权限，未给admin。详见[COLLABORATOR_INVITATION_SAFE.json](COLLABORATOR_INVITATION_SAFE.json)，邀请入口：https://github.com/zzyong24/Thirdspace-creator/invitations 。
+
+用户请求的代码整合/普通main推送与标准协作邀请均已实际执行；无需等待对方接受才登记本任务交付。旧T247保持原状，本轮不重测83源码、不重扫全树/历史、不安装/采集/发布；完整reconcile沿T1373安全预检阻断未跑，不能称全局全绿。其他产品任务状态保持。
+
+实际正式状态：taskctl resume与complete均exit0，T1375✅且事件已写；完成前后pmem sync均exit0。start对⏸的拒绝为真实工具边界，未手改状态。收尾仅有限控制metadata，未再运行全树安全扫描、历史扫描或产品回归。

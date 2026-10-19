@@ -9,9 +9,6 @@
   "pushOnly": "refs/heads/main",
   "forceUsed": false,
   "remoteT247Changed": false,
-  "collaboratorInvited": false,
-  "collaboratorStatus": "HOLD；Root已向用户询问旧T247凭据/会话访问风险，待真实回答",
-  "taskCompleted": false,
   "preservedOriginalMain": "59940d23df047a6bd6e675b771838e0716752f45",
   "preservedLocalRef": "codex/t1375-original-main-preserved",
   "preexistingUncommittedFiles": 12,
@@ -41,8 +38,25 @@
     }
   ],
   "otherProductTasksChanged": false,
-  "taskState": "⏸️",
   "taskctlBlockActualExit": 0,
   "pmemSyncActualExit": 0,
-  "taskBlockReason": "安全main已推送；仅协作者访问旧远端敏感历史待用户知情决定"
+  "historicalStateBeforeUserRiskDecision": {
+    "collaboratorInvited": false,
+    "collaboratorStatus": "HOLD；Root已向用户询问旧T247凭据/会话访问风险，待真实回答",
+    "taskCompleted": false,
+    "taskState": "⏸️",
+    "taskBlockReason": "安全main已推送；仅协作者访问旧远端敏感历史待用户知情决定"
+  },
+  "collaboratorInvited": true,
+  "collaboratorStatus": "pending_acceptance",
+  "effectivePermission": "none",
+  "taskCompleted": true,
+  "taskState": "✅",
+  "userDecision": "了解历史风险，仍立即邀请",
+  "currentInvitationEvidence": "COLLABORATOR_INVITATION_SAFE.json",
+  "invitationId": 338488946,
+  "invitationPermission": "write",
+  "taskResumeActualExit": 0,
+  "taskCompleteActualExit": 0,
+  "pmemSyncAfterCompleteActualExit": 0
 }

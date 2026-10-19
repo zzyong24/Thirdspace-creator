@@ -1,0 +1,33 @@
+{
+  "schema": "t1375-collaborator-invitation/v1",
+  "userDecision": "了解历史风险，仍立即邀请",
+  "decisionReference": "DEC-137504",
+  "repository": "zzyong24/Thirdspace-creator",
+  "repositoryPrivate": true,
+  "repositoryId": 1267662658,
+  "login": "masx-commits",
+  "githubUserId": 340904025,
+  "requestCount": 1,
+  "requestPermission": "push",
+  "actualHTTPStatus": 201,
+  "actualCommandExit": 0,
+  "invitationId": 338488946,
+  "returnedPermission": "write",
+  "adminGranted": false,
+  "createdAt": "2026-10-19T10:28:54Z",
+  "readBack": {
+    "allPages": true,
+    "sameInvitationId": 338488946,
+    "permission": "write",
+    "expired": false,
+    "actualCommandExit": 0
+  },
+  "status": "pending_acceptance",
+  "effectivePermission": "none",
+  "invitationURL": "https://github.com/zzyong24/Thirdspace-creator/invitations",
+  "accepted": false,
+  "remoteT247Modified": false,
+  "productCodeChanged": false,
+  "newInstallationOrCollection": false,
+  "reconcile": "NOT-RUN；T1373既有安全预检阻断，不冒全局全绿"
+}

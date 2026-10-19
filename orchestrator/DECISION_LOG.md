@@ -5808,3 +5808,12 @@ Root转交用户真实答复：对“只为这次测试环境调整新增一轮�
 **Owner**：user（全代码整合及正常推送授权），Root落实安全边界。原始正常merge `59940d23df047a6bd6e675b771838e0716752f45`与全部本地历史保存在`codex/t1375-preserved-local-history-59940d23d`及原分支/工作树/stash；不reset、force或删除原件。远端main采用唯一父`1963e4ebe48f15ec084a1efe7dac2f195675b92f`的新安全快照后普通FF，仅推main，不传播本地敏感祖先。17份敏感raw整件及精确生成/同blob复制排除清单的路径/hash可追溯；有效产品/工具保持原字节，83项冻结一致，不声称所有旧tip都成main祖先。
 
 旧远端T247已暴露敏感历史，未改该ref；安全main不消除此历史风险。masx-commits邀请继续HOLD，须用户对凭据撤销或历史风险作知情决定；T1375未完成。没有安装、真实采集、发布或production04，T1369用户已授权单次cycle但04未执行的事实保持。
+
+
+## DEC-137504（2026-10-19）：知情后立即邀请标准write协作者
+
+**Owner**：user。用户在Root说明旧远端T247敏感历史访问风险、提供暂停/已撤销继续/知情仍继续三项选择后，明确答复：“了解历史风险，仍立即邀请”。该真实答复解除本次邀请HOLD，继续向`masx-commits`发送标准write/push协作邀请，不授admin，不再重复确认。旧远端T247保持原状，不从这次知情决定推导凭据已撤销/验证有效性或远端历史已重写。
+
+安全main产品快照c8b96与收尾4458a52已普通推送。本轮仅GitHub权限与控制metadata：taskctl start实际因⏸状态拒绝，按真实契约resume实际0恢复🔨并写事件；等待真实邀请/读回后方complete。无产品改动、不重测83源码、不跑T1373已预检阻断的full，不动其余产品任务或原12在途文件。
+
+**实际收尾**：一次标准push邀请实际HTTP201/exit0，邀请338488946读回write/expired=false，pending_acceptance，有效permission仍none。taskctl resume0、complete0及pmem sync0均真实留事件；本任务交付完成不等待对方接受，不冒已生效成员权限。完整reconcile沿T1373安全限制未跑，其他产品任务不改。
