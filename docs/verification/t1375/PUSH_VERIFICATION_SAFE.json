@@ -40,5 +40,9 @@
       "sha256": "b798e205b20a9b9b03db5c52e4e37ace0810fd2d79f1494a0426c33fe14f1de2"
     }
   ],
-  "otherProductTasksChanged": false
+  "otherProductTasksChanged": false,
+  "taskState": "⏸️",
+  "taskctlBlockActualExit": 0,
+  "pmemSyncActualExit": 0,
+  "taskBlockReason": "安全main已推送；仅协作者访问旧远端敏感历史待用户知情决定"
 }

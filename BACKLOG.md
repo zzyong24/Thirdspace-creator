@@ -9,7 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1375|整合全部未合并现有代码到main并推送及添加协作者|🔨|—|—|[既有代码整合范围](docs/features/t1375-integrate-all-code-main-collaborator.md)|安全产品快照c8b96（唯一父origin/main1963）已完整审计并普通FF push；83源码/工具及12原未提交文件保持，599原历史私有保全。旧远端T247敏感历史未改，masx邀请等待用户知情决定，T1375不complete；未安装/发布/真实采集。|
+|T-1375|整合全部未合并现有代码到main并推送及添加协作者|⏸️|—|—|[既有代码整合范围](docs/features/t1375-integrate-all-code-main-collaborator.md)|安全产品快照c8b96（唯一父origin/main1963）已完整审计并普通FF push；83源码/工具及12原未提交文件保持，599原历史私有保全。旧远端T247敏感历史未改，masx邀请等待用户知情决定，T1375不complete；未安装/发布/真实采集。|
 |T-1374|查明并恢复所有已绑定媒体的既有数据展示|⏸️|PASS[REV:16648a3ea984]|待验|[逐平台完整恢复范围](docs/features/t1374-all-bound-platform-data-recovery.md)|本轮仅补三测试/seed，52+3+双窗2通过、prod0改；安装仍旧2d未交付，视频号原EXPORT_FAILED/0页且native0/site-safety受阻，已block不冒全部恢复；full未跑/T1373保。|
 |T-1372|删除项目OilUI技能与强制接入并回归既有风格|✅|—|—|[精确删除范围](docs/features/t1372-remove-project-oil-ui-workflow.md)|用户撤销OilUI，精确删项目17文件及当前强制引用；沿旧tokens/组件，不改全局技能或历史证据，三产品问题继续。|
 |T-1369|修复首页平台筛选后的连续侧栏导航卡死|🔨|PASS[REV:e8916b9b3f96]|待验|[连续导航范围](docs/features/t1369-dashboard-filter-sidebar-navigation.md)|旧R3收据仅绑定6f8114；用户已明确允许本次新夹具单次cycle，真实DEC136909保，正式新cycle尚未记录；production01–03均前置FAIL、03残PG已后清理，04未执行/未证修复，本轮先整合代码。|

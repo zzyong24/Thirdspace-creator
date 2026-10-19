@@ -1729,3 +1729,4 @@
 {"ts":"2026-10-19T07:11:59.365Z","actor":"taskctl","action":"start","task":"T-1374","sha_before":"6b73b659bc48","sha_after":"6987a0fb1a94"}
 {"ts":"2026-10-19T07:39:06.271Z","actor":"taskctl","action":"block","task":"T-1374","reason":"本轮现通用源码跨平台回归52+3+2通过，零新产品变更；当前安装仍2d3826ef未交付本修复。视频号原已知采集fresh get仍EXPORT_FAILED/0页、nativeReports0，非latest，真实站点观测受既有site-safety明确拒绝限制，不绕行或新collect。未证全部媒体安装恢复，不能complete；full本轮未运行，T1373原安全预检阻断保留。","sha_before":"641f96160f57","sha_after":"86ccddd6a36f"}
 {"ts":"2026-10-19T07:58:25.699Z","actor":"taskctl","action":"start","task":"T-1375","sha_before":"4c4547427e71","sha_after":"da2c5f4272ae"}
+{"ts":"2026-10-19T09:11:13.877Z","actor":"taskctl","action":"block","task":"T-1375","reason":"安全main已完整审计并普通FF推送c8b96；有效代码与原未提交文件保全。仅masx-commits协作者访问旧远端T247敏感历史待用户知情决定；未邀请、不complete，不改其它产品任务。","sha_before":"76192262dbbb","sha_after":"0d617d0b558f"}
