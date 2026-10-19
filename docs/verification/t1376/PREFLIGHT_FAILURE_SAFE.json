@@ -1,0 +1,62 @@
+{
+  "schema": "t1376-packaging-preflight-failure/v1",
+  "sourceCommit": "0b823f65442701d7b4d5731cd221513a9bc7e84d",
+  "reviewReceipt": "7639dd591a9e",
+  "sourceWorktree": "/Volumes/T7-MacData/CodexBuilds/T1376-20261019-923_wag6/source",
+  "candidateCleanBeforeAndAfter": true,
+  "versions": {
+    "frontend": "1.2.0",
+    "tauri": "1.2.0",
+    "cargo": "1.2.0",
+    "cargoLock": "1.2.0"
+  },
+  "dependencyPreparation": {
+    "actualExit": 0,
+    "seconds": 56.13122083299095,
+    "moduleRootsCopied": 6,
+    "workspaceLinksOwn": 7,
+    "generatedRelocations": 264,
+    "priorCargoTargetCopied": false
+  },
+  "basicTests": {
+    "actualCommand": [
+      "pnpm",
+      "-C",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "scripts/desktop/package-local.test.mjs",
+      "scripts/desktop/desktop-release-workflow.test.mjs",
+      "scripts/desktop/notarize.test.mjs",
+      "scripts/desktop/tauri-signing-config.test.mjs",
+      "--maxWorkers=1",
+      "--retry=0",
+      "--testTimeout=120000",
+      "--hookTimeout=120000"
+    ],
+    "actualExit": 1,
+    "seconds": 10.143696542014368,
+    "filesPassed": 3,
+    "filesFailed": 1,
+    "testsPassed": 44,
+    "testsFailed": 1,
+    "logSHA256": "4d52c6063d87025f16154a65bcf0f2acc97b70095af0cda29857c8c900549088",
+    "privateLog": "/Volumes/T7-MacData/CodexBuilds/T1376-20261019-923_wag6/private/basic-packaging.log",
+    "outerTimeout": false
+  },
+  "failure": {
+    "test": "desktop-release-workflow.test.mjs:12",
+    "title": "T-1063 两端出包无项目超时，额外验收显式选择且不阻断上传",
+    "assertion": "整个workflow不得匹配timeout-minutes",
+    "actualWorkflow": "独立t247-private-asset-relay job第1828行timeout-minutes:150",
+    "rootCauseClassification": "既有工作流测试断言范围与新独立relay预算冲突；不是本机产包/安装实际失败"
+  },
+  "packageStarted": false,
+  "oldAppQuitAttempted": false,
+  "oldAppReplaced": false,
+  "userDataTouchedByThisTask": false,
+  "sourceOrTestModifiedToPass": false,
+  "automaticRetry": false,
+  "nextAction": "按打包技能预检失败停止，原FAIL保留；由Root裁定独立修复范围，不在包装冻结期改断言/脚本"
+}

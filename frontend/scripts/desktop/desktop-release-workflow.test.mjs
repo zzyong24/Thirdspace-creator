@@ -7,9 +7,35 @@ const workflow = readFileSync(
   "utf8",
 );
 
+// 仅豁免已批准的独立中转 job 声明；保留其余整份 workflow 的原禁超时规则。
+function withoutApprovedRelayTimeout(source) {
+  const jobsStart = source.search(/^jobs:[ \t]*$/m);
+  if (jobsStart < 0) throw new Error("缺少 jobs block");
+  const jobs = [...source.slice(jobsStart).matchAll(/^  ([A-Za-z0-9_-]+):[ \t]*(?:#.*)?$/gm)];
+  const relays = jobs.filter(job => job[1] === "t247-private-asset-relay");
+  if (relays.length !== 1) throw new Error("必须有唯一独立中转 job");
+  const relay = relays[0];
+  const index = jobs.indexOf(relay);
+  const start = jobsStart + relay.index;
+  const end = index + 1 < jobs.length ? jobsStart + jobs[index + 1].index : source.length;
+  const block = source.slice(start, end);
+  const declarations = [...block.matchAll(/^    timeout-minutes:[^\r\n]*$/gm)];
+  if (declarations.length !== 1 || declarations[0][0] !== "    timeout-minutes: 150") {
+    throw new Error("独立中转只能有唯一已批准的150分钟job声明");
+  }
+  const offset = start + declarations[0].index;
+  return source.slice(0, offset) + source.slice(offset + declarations[0][0].length);
+}
+
+function expectUnapprovedTimeoutRejected(source) {
+  expect(() => {
+    expect(withoutApprovedRelayTimeout(source)).not.toMatch(/^\s+timeout-minutes:/m);
+  }).toThrow();
+}
+
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
   it("T-1063 两端出包无项目超时，额外验收显式选择且不阻断上传", () => {
-    expect(workflow).not.toMatch(/^\s+timeout-minutes:/m);
+    expect(withoutApprovedRelayTimeout(workflow)).not.toMatch(/^\s+timeout-minutes:/m);
     expect(workflow).toContain('cancel-in-progress: false');
     expect(workflow).toContain('CREATOROS_PACKAGE_BUILD_ONLY: "1"');
     expect(workflow).toContain('build-production-closure.mjs --prepare-package --build-only');
@@ -25,6 +51,46 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       expect(step, name).toContain("continue-on-error: true");
       expect(build.indexOf(upload)).toBeLessThan(build.indexOf(step));
     }
+  });
+
+  it.each(["plan", "build", "windows-runtime-rat", "windows-closure-rat", "draft-release"])(
+    "T1377 非relay job %s 新增超时仍拒绝",
+    job => {
+      const marker = `  ${job}:\n`;
+      expect(workflow).toContain(marker);
+      expectUnapprovedTimeoutRejected(workflow.replace(marker, `${marker}    timeout-minutes: 150\n`));
+    },
+  );
+
+  it.each(["build", "t247-private-asset-relay"])("T1377 %s 子step新增超时仍拒绝", job => {
+    const start = workflow.indexOf(`  ${job}:\n`);
+    const steps = workflow.indexOf("    steps:\n", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(steps).toBeGreaterThan(start);
+    const offset = steps + "    steps:\n".length;
+    const injected = "      - name: T1377 negative fixture\n        run: true\n        timeout-minutes: 150\n";
+    expectUnapprovedTimeoutRejected(workflow.slice(0, offset) + injected + workflow.slice(offset));
+  });
+
+  it.each([
+    ["缺失", ""],
+    ["变149", "    timeout-minutes: 149\n"],
+    ["变120", "    timeout-minutes: 120\n"],
+    ["重复", "    timeout-minutes: 150\n    timeout-minutes: 150\n"],
+  ])("T1377 relay批准声明%s不放行", (_name, replacement) => {
+    const approved = "    timeout-minutes: 150\n";
+    expect(workflow.split(approved)).toHaveLength(2);
+    expectUnapprovedTimeoutRejected(workflow.replace(approved, replacement));
+  });
+
+  it("T1377 relay声明移到build或近似job名不放行", () => {
+    const approved = "    timeout-minutes: 150\n";
+    expectUnapprovedTimeoutRejected(workflow.replace(approved, "").replace("  build:\n", `  build:\n${approved}`));
+    expectUnapprovedTimeoutRejected(workflow.replace("  t247-private-asset-relay:\n", "  t247-private-asset-relay-copy:\n"));
+  });
+
+  it("T1377 relay之后新增job的超时仍拒绝", () => {
+    expectUnapprovedTimeoutRejected(`${workflow}\n  t1377-unapproved-job:\n    runs-on: ubuntu-latest\n    timeout-minutes: 150\n    steps:\n      - run: true\n`);
   });
 
   it("桌面版本权威统一为 1.2.0，且不直接覆盖公共更新清单", () => {

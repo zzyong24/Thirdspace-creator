@@ -1,0 +1,41 @@
+{
+  "command": [
+    "pnpm",
+    "-C",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "scripts/desktop/desktop-release-workflow.test.mjs",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "actualExit": 0,
+  "elapsedSeconds": 1.7460152910207398,
+  "sourceBefore": {
+    "frontend/scripts/desktop/desktop-release-workflow.test.mjs": "2b6b9889fb62b48ef329e9bf96cc41d017bfecfb707fe0300e2d59eb1d16ccd6",
+    ".github/workflows/desktop-release.yml": "53b44c36b33314f488d8365b3565ec35b5d41b1d2e08837299039bf8c440f576",
+    "tools/windows-closure-rat/private-draft-artifact-relay.py": "a1ab0ceb9f5681aa89201ea3cacb095e80721e7fe01e2fb322d2cb22270b53a5",
+    "tools/windows-closure-rat/private-draft-installer-relay.py": "09f7d0611fa8856dc4ecb478538defc22bed940cfd3db1ba358c6dd1f2989571"
+  },
+  "sourceAfter": {
+    "frontend/scripts/desktop/desktop-release-workflow.test.mjs": "2b6b9889fb62b48ef329e9bf96cc41d017bfecfb707fe0300e2d59eb1d16ccd6",
+    ".github/workflows/desktop-release.yml": "53b44c36b33314f488d8365b3565ec35b5d41b1d2e08837299039bf8c440f576",
+    "tools/windows-closure-rat/private-draft-artifact-relay.py": "a1ab0ceb9f5681aa89201ea3cacb095e80721e7fe01e2fb322d2cb22270b53a5",
+    "tools/windows-closure-rat/private-draft-installer-relay.py": "09f7d0611fa8856dc4ecb478538defc22bed940cfd3db1ba358c6dd1f2989571"
+  },
+  "sourceUnchangedDuringExecution": true,
+  "logSHA256": "0e2eb1b292369ccae609d789ec70b8fe20ceae1a69ab844b204181cdf4d803ac",
+  "logBytes": 460,
+  "originalT1376FailurePreserved": true,
+  "productionOrWorkflowChanged": false,
+  "schema": "t1377-targeted-verification/v1",
+  "actualTestsPassed": 39,
+  "testsFailed": 0,
+  "privateLog": "/private/tmp/t1377-validation-zpclyfnt/target.log",
+  "originalT1376FailureLogSHA256": "4d52c6063d87025f16154a65bcf0f2acc97b70095af0cda29857c8c900549088",
+  "onlyBehaviorFile": "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+  "diffCheckActualExit": 0
+}
