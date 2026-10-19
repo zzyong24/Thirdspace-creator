@@ -44,3 +44,11 @@ flowchart LR
 最终安全投影另按独审精确清单排17,726项：16,640生成运行输出及1,086与canonical当前源同blob的复制件；保全部独有代码、39项当前显式文件依赖及额外静态相对资源。83源码与排除表交集为0并逐SHA相等。旧独立验收原件只在本地保全历史，不以移出分享树回签历史。
 
 本轮REF_CLASSIFICATION/STASH_CLASSIFICATION/T243_DELIVERY_TOOL_SOURCE_MANIFEST为已审安全来源清单，精确恢复原599 blob，作为排除表三项保留例外，报告链接保持有效。
+
+## 实际安全main交付
+
+独立[最终审结](FINAL_REVIEW_SAFE.json)、[全树扫描收据](FINAL_TREE_SCAN_SAFE.json)、[输入manifest](INPUT_MANIFEST_SAFE.json)与[投影证明](PROJECTION_PROOF_SAFE.json)已逐字纳入。最终产品快照`c8b96fd916ee66b3fca56d85076ef48e90accc21`唯一父为origin/main `1963e4ebe48f15ec084a1efe7dac2f195675b92f`；完整规则扫描117.192秒，已知34敏感值0匹配，465命中全部有限分类、未决0。扫描沿原生二进制/archive处理，并单独补四symlink文本，不声称二进制逐字文本规则。
+
+普通FF push实际exit0，仅main/no force/no tags；fresh远端main与本地主目录main均为该快照，原12未提交/未跟踪文件切换后逐SHA保持，83项代码/工具仍一致。应用/工具主目录相对原59940d无字节变化，未部署/安装。详见[PUSH_VERIFICATION_SAFE.json](PUSH_VERIFICATION_SAFE.json)。
+
+旧远端T247敏感历史未改；Root已向用户说明API密钥/会话令牌风险并提出具体知情选择，当前待答，masx-commits未邀请，T1375不complete。本节之后若有纯安全收据metadata提交，不改上述产品快照/扫描绑定。

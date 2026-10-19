@@ -1,0 +1,29 @@
+{
+  "schema": "t1375-final-projection-proof/v1",
+  "original_local_commit": "59940d23df047a6bd6e675b771838e0716752f45",
+  "target": "c8b96fd916ee66b3fca56d85076ef48e90accc21",
+  "original_paths": 44527,
+  "final_paths": 26786,
+  "removed_paths": 17743,
+  "expected_remove_paths": 17743,
+  "unexpected_removed": [],
+  "expected_but_not_removed": [],
+  "restored_safe_attachments": [
+    "docs/verification/t1375/REF_CLASSIFICATION.json",
+    "docs/verification/t1375/STASH_CLASSIFICATION.json",
+    "docs/verification/t1375/T243_DELIVERY_TOOL_SOURCE_MANIFEST.json"
+  ],
+  "retained_changed_paths": [
+    "BACKLOG.md",
+    "docs/verification/t1375/FINDING_CLASSIFICATION_SAFE.json",
+    "docs/verification/t1375/REPORT.md",
+    "orchestrator/DECISION_LOG.md"
+  ],
+  "new_paths": [
+    "docs/verification/t1375/PRECISE_GENERATED_EXCLUSIONS_SAFE.json",
+    "docs/verification/t1375/SAFE_TREE_PREPARATION.json"
+  ],
+  "canonical_count": 1086,
+  "canonical_missing_or_changed": [],
+  "pass": true
+}

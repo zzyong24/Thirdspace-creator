@@ -1,0 +1,44 @@
+{
+  "schema": "t1375-safe-main-delivery/v1",
+  "productSnapshot": "c8b96fd916ee66b3fca56d85076ef48e90accc21",
+  "snapshotSoleParent": "1963e4ebe48f15ec084a1efe7dac2f195675b92f",
+  "normalPushExit": 0,
+  "freshRemoteMainAfterPush": "c8b96fd916ee66b3fca56d85076ef48e90accc21",
+  "localMain": "c8b96fd916ee66b3fca56d85076ef48e90accc21",
+  "localMainDirectory": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "pushOnly": "refs/heads/main",
+  "forceUsed": false,
+  "remoteT247Changed": false,
+  "collaboratorInvited": false,
+  "collaboratorStatus": "HOLD；Root已向用户询问旧T247凭据/会话访问风险，待真实回答",
+  "taskCompleted": false,
+  "preservedOriginalMain": "59940d23df047a6bd6e675b771838e0716752f45",
+  "preservedLocalRef": "codex/t1375-original-main-preserved",
+  "preexistingUncommittedFiles": 12,
+  "preexistingFilesByteExactAfterSwitchAndPush": true,
+  "applicationAndToolsDirectoriesByteDiffFromOriginalMergedCandidate": [],
+  "observedSourceHashesEqual": 83,
+  "auditAttachments": [
+    {
+      "path": "docs/verification/t1375/FINAL_REVIEW_SAFE.json",
+      "bytes": 206349,
+      "sha256": "d6b57b93945067830aaa88148489abefe180fc16426e1ff8dde11db97eee4ab8"
+    },
+    {
+      "path": "docs/verification/t1375/FINAL_TREE_SCAN_SAFE.json",
+      "bytes": 228927,
+      "sha256": "c223b62caff9833d212c523f72d3d705172fd866d1adf90a2601ce1f53bd68f7"
+    },
+    {
+      "path": "docs/verification/t1375/INPUT_MANIFEST_SAFE.json",
+      "bytes": 7998350,
+      "sha256": "59a26793d94968d7cc8aa981c4b1c0a395ee4c0305e2061357babc973235fe3d"
+    },
+    {
+      "path": "docs/verification/t1375/PROJECTION_PROOF_SAFE.json",
+      "bytes": 992,
+      "sha256": "b798e205b20a9b9b03db5c52e4e37ace0810fd2d79f1494a0426c33fe14f1de2"
+    }
+  ],
+  "otherProductTasksChanged": false
+}

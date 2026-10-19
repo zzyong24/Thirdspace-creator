@@ -1,0 +1,3766 @@
+{
+  "schema": "t1375-final-independent-review/v1",
+  "decision": "GO_SAFE_MAIN_ONLY",
+  "target": "c8b96fd916ee66b3fca56d85076ef48e90accc21",
+  "sole_parent": [
+    "1963e4ebe48f15ec084a1efe7dac2f195675b92f"
+  ],
+  "complete_all_rule_scan": true,
+  "paths": 26786,
+  "unique_blobs": 15516,
+  "input_bytes": 1804061006,
+  "known_sensitive_unique_values": 34,
+  "known_sensitive_matches": 0,
+  "protected_sources": 83,
+  "protected_source_mismatch": [],
+  "all_rule_findings": 465,
+  "classification_counts": {
+    "STATIC_CACHE_KEY": 1,
+    "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY": 143,
+    "SOURCE_TEST_FIXTURE": 30,
+    "CONTRACT_SYNTHETIC_TEST_VECTOR": 21,
+    "SYNTHETIC_PUBLIC_DEV_HMAC_URL": 1,
+    "ENGINEERING_VERIFICATION_REGISTRY_KEY": 2,
+    "HASH_OR_OBJECT_ID": 261,
+    "STANDARD_PROTOCOL_PUBLIC_CONSTANT": 2,
+    "DOCUMENTATION_PLACEHOLDER": 2,
+    "ENGINEERING_ID_REGISTRY": 1,
+    "BUNDLED_PUBLIC_PROJECT_TELEMETRY_KEY": 1
+  },
+  "unresolved_findings": 0,
+  "elapsed_seconds": 117.192,
+  "scanner_native_reported_bytes": [
+    "1399306529"
+  ],
+  "native_binary_archive_disclosure": "全部tracked文件在完整输入映射；不自行跳binary/大文件；符号链接4个blob文本单扫，不跟随树外目标。原生二进制/压缩默认处理，archive depth0，实际native scanned byte数见redacted log，不能声称每个二进制字节均按文本规则。",
+  "input_manifest_sha256": "59a26793d94968d7cc8aa981c4b1c0a395ee4c0305e2061357babc973235fe3d",
+  "scan_receipt_sha256": "c223b62caff9833d212c523f72d3d705172fd866d1adf90a2601ce1f53bd68f7",
+  "projection_proof_sha256": "b798e205b20a9b9b03db5c52e4e37ace0810fd2d79f1494a0426c33fe14f1de2",
+  "post_head_unchanged": true,
+  "post_tree_clean": true,
+  "remote_T247_contamination_unchanged": true,
+  "collaborator_invitation": "HOLD until separately resolving existing remote T247 sensitive history; no invite authorization in this review",
+  "code_tests_reexecuted": false,
+  "rows": [
+    {
+      "path": ".github/workflows/desktop-release.yml",
+      "blob": "c120595338a17266dbd96f99ea204fd8ad367dea",
+      "rule": "generic-api-key",
+      "line": 186,
+      "classification": "STATIC_CACHE_KEY",
+      "evidence": "Swatinem/rust-cache inputs.key静态缓存标签，非认证字段。"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "blob": "b308e816583e95f23659e8a8206004fd8b9492c6",
+      "rule": "generic-api-key",
+      "line": 501,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "backend/src/modules/ingestion/ingestion.douyin.test.ts",
+      "blob": "b4621918d5b8230292e577b17f9e378c458b63b6",
+      "rule": "generic-api-key",
+      "line": 957,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "backend/src/modules/ingestion/ingestion.douyin.test.ts",
+      "blob": "b4621918d5b8230292e577b17f9e378c458b63b6",
+      "rule": "generic-api-key",
+      "line": 1045,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "backend/src/modules/ingestion/ingestion.douyin.test.ts",
+      "blob": "b4621918d5b8230292e577b17f9e378c458b63b6",
+      "rule": "generic-api-key",
+      "line": 1119,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/contracts/fixtures/channel-bound-feedback-v1.vector.json",
+      "blob": "36f097316d8d4812ff9cb0f1975f3808853b67f9",
+      "rule": "jwt",
+      "line": 30,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/config-access-ticket-v2.vector.json",
+      "blob": "6db6f80464208645e01f5f17953d7bcf6b73fc25",
+      "rule": "jwt",
+      "line": 31,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "generic-api-key",
+      "line": 61,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "generic-api-key",
+      "line": 62,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "generic-api-key",
+      "line": 82,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "generic-api-key",
+      "line": 132,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "generic-api-key",
+      "line": 133,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "generic-api-key",
+      "line": 153,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "generic-api-key",
+      "line": 220,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json",
+      "blob": "2012f987a508c51b2ef48b8fe96ad7ae844f3270",
+      "rule": "private-key",
+      "line": 12,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "契约共享固定测试向量与真实consumer pin；growth向量明示TEST VECTORS ONLY且testKeys，feedback/config用同agent-42/ABCDEFGH占位身份与公钥互操作，非live身份/密钥。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 36,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 39,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 66,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 93,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 96,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 122,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 149,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 152,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+      "blob": "15fdb0189a87c5fe6c6a506742171c784433a9f6",
+      "rule": "jwt",
+      "line": 178,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/growth-consumer-cross-repo-samples.json",
+      "blob": "9f4b6d4649ea0c48385ae2d11d569940ae8dd57a",
+      "rule": "jwt",
+      "line": 15,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/build/growth-t243/growth-consumer-cross-repo-samples.json",
+      "blob": "9f4b6d4649ea0c48385ae2d11d569940ae8dd57a",
+      "rule": "jwt",
+      "line": 284,
+      "classification": "CONTRACT_SYNTHETIC_TEST_VECTOR",
+      "evidence": "T243跨仓合成Ed25519消费样例；boundary/synthetic输入、公钥、privateSigningKeyExported=false，已有独立T247完整扫描分类。"
+    },
+    {
+      "path": "docs/research/evidence/t915/browser-profile-dispatcher-baseline-red.log",
+      "blob": "cf6c5e05019ce3f921cc8478f6a50e1e4cbee731",
+      "rule": "generic-api-key",
+      "line": 5,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "真实源测试固定幂等ID/合成执行lease标识，未作为外部服务密钥。"
+    },
+    {
+      "path": "docs/research/evidence/t915/browser-profile-dispatcher-diagnostic.log",
+      "blob": "0df4053920ed1b159ce44e0188b77f8be9ee4612",
+      "rule": "generic-api-key",
+      "line": 5,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "真实源测试固定幂等ID/合成执行lease标识，未作为外部服务密钥。"
+    },
+    {
+      "path": "docs/research/evidence/t915/chat-asset-production-diagnostic.log",
+      "blob": "72214d0a07abd3ee21ace0a87951d5ae39a35561",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "真实源测试固定幂等ID/合成执行lease标识，未作为外部服务密钥。"
+    },
+    {
+      "path": "docs/research/evidence/t915/chat-asset-production-localfs-tests.log",
+      "blob": "61db07f8871ea683ec0019dc0663dcdad7ba664c",
+      "rule": "generic-api-key",
+      "line": 25,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "真实源测试固定幂等ID/合成执行lease标识，未作为外部服务密钥。"
+    },
+    {
+      "path": "docs/research/evidence/t915/chat-asset-production-localfs-tests.log",
+      "blob": "61db07f8871ea683ec0019dc0663dcdad7ba664c",
+      "rule": "generic-api-key",
+      "line": 36,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "真实源测试固定幂等ID/合成执行lease标识，未作为外部服务密钥。"
+    },
+    {
+      "path": "docs/research/evidence/t915/chat-web-read-ports-red.log",
+      "blob": "0930f457437d15c51ed1186ccc59b39dff961c6b",
+      "rule": "generic-api-key",
+      "line": 60,
+      "classification": "SYNTHETIC_PUBLIC_DEV_HMAC_URL",
+      "evidence": "历史同commit e8b69147的test自造example内容、mkdtemp t915-chat-read、/blob storage；原GET key/exp token与源码公开DEV_BLOB_SECRET HMAC精确相等；不依赖过期、未读env/试API。"
+    },
+    {
+      "path": "docs/research/t1062-local-word-timing/RESEARCH.md",
+      "blob": "087643e7c9d9c42821b29e2ad55c7f502a74dc7a",
+      "rule": "generic-api-key",
+      "line": 125,
+      "classification": "ENGINEERING_VERIFICATION_REGISTRY_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/research/t1103-pi-joint-arguments.md",
+      "blob": "21ef127f19d47b44e2d9fe9d8bffb146c99b08cf",
+      "rule": "generic-api-key",
+      "line": 108,
+      "classification": "ENGINEERING_VERIFICATION_REGISTRY_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1074/browser-regression.cjs",
+      "blob": "022632346064cb979db372cfa6a9fa83b52dede9",
+      "rule": "generic-api-key",
+      "line": 9,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/UI_COMPONENT_WALK/final-source-global-source-manifest.json",
+      "blob": "88d2501ae195a9fec684007d213a3088cfa7c1f4",
+      "rule": "generic-api-key",
+      "line": 132,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/UI_COMPONENT_WALK/final-source-global-source-manifest.json",
+      "blob": "88d2501ae195a9fec684007d213a3088cfa7c1f4",
+      "rule": "generic-api-key",
+      "line": 247,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/UI_COMPONENT_WALK/final-source-global-source-manifest.json",
+      "blob": "88d2501ae195a9fec684007d213a3088cfa7c1f4",
+      "rule": "generic-api-key",
+      "line": 251,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/html/data/e02ff19fb32bc7e62d1d9780800524e779113ad9.md",
+      "blob": "d3924387c6946b61439abd6157370fccbf81e3b7",
+      "rule": "generic-api-key",
+      "line": 196,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/UI_COMPONENT_WALK/final-source-source-manifest.json",
+      "blob": "8a1a840f114c9371d6ccb6277e3fe58f8b41339f",
+      "rule": "generic-api-key",
+      "line": 126,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/UI_COMPONENT_WALK/final-source-source-manifest.json",
+      "blob": "8a1a840f114c9371d6ccb6277e3fe58f8b41339f",
+      "rule": "generic-api-key",
+      "line": 244,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/UI_COMPONENT_WALK/final-source-source-manifest.json",
+      "blob": "8a1a840f114c9371d6ccb6277e3fe58f8b41339f",
+      "rule": "generic-api-key",
+      "line": 247,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/reviews/preparation-v4/generated100/e2e/settings.spec.ts",
+      "blob": "b51dc7dd0a55d50c3da3e0d855c59e187cec56a1",
+      "rule": "generic-api-key",
+      "line": 369,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/reviews/preparation-v5/generated100/e2e/settings.spec.ts",
+      "blob": "b51dc7dd0a55d50c3da3e0d855c59e187cec56a1",
+      "rule": "generic-api-key",
+      "line": 369,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/independent-final-runtime-review-history/5d36-metadata-schema-concerns/139-pi-support.ts",
+      "blob": "c4461404d8becc8a2adc51f7b58e23559fad3372",
+      "rule": "generic-api-key",
+      "line": 22,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/independent-final-runtime-review-history/a738-source-concerns/047-pi-support.ts",
+      "blob": "c4461404d8becc8a2adc51f7b58e23559fad3372",
+      "rule": "generic-api-key",
+      "line": 22,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/tests-t1246-v3/e2e/pi-support.ts",
+      "blob": "c4461404d8becc8a2adc51f7b58e23559fad3372",
+      "rule": "generic-api-key",
+      "line": 22,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v2/frontend/tests-t1246-v3/e2e/pi-support.ts",
+      "blob": "c4461404d8becc8a2adc51f7b58e23559fad3372",
+      "rule": "generic-api-key",
+      "line": 22,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v4/frontend/tests-t1246-v3/e2e/pi-support.ts",
+      "blob": "c4461404d8becc8a2adc51f7b58e23559fad3372",
+      "rule": "generic-api-key",
+      "line": 22,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v3/frontend/tests-t1246-v3/e2e/pi-support.ts",
+      "blob": "c4461404d8becc8a2adc51f7b58e23559fad3372",
+      "rule": "generic-api-key",
+      "line": 22,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "blob": "c4461404d8becc8a2adc51f7b58e23559fad3372",
+      "rule": "generic-api-key",
+      "line": 22,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/source/e2e/settings.spec.ts",
+      "blob": "041a69ee6520f1386637b0466fa38d29a07e7ef8",
+      "rule": "generic-api-key",
+      "line": 369,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/pi-support.ts",
+      "blob": "5618aedbec47e6833a2c8565472f8da794105ca3",
+      "rule": "generic-api-key",
+      "line": 26,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/browser-review-history/tool29b3-approved-source/source/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+      "blob": "bfb6eba9b098e8d5ac8214b9768b2c598dd5fc4c",
+      "rule": "generic-api-key",
+      "line": 7,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/browser-review-history/tool29b3-approved-source/source/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+      "blob": "bfb6eba9b098e8d5ac8214b9768b2c598dd5fc4c",
+      "rule": "generic-api-key",
+      "line": 37,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+      "blob": "bfb6eba9b098e8d5ac8214b9768b2c598dd5fc4c",
+      "rule": "generic-api-key",
+      "line": 7,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+      "blob": "bfb6eba9b098e8d5ac8214b9768b2c598dd5fc4c",
+      "rule": "generic-api-key",
+      "line": 37,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool-history/toold0eb-final-ps-admission/source/docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+      "blob": "80b3d13fb0deafdc8b66473294b526cd884862cc",
+      "rule": "generic-api-key",
+      "line": 7,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool-history/toold0eb-final-ps-admission/source/docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+      "blob": "80b3d13fb0deafdc8b66473294b526cd884862cc",
+      "rule": "generic-api-key",
+      "line": 37,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 72694,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 72762,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 72763,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73179,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73200,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73241,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73245,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73278,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73324,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73390,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73418,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73483,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/independent-final-runtime-review-history/5d36-metadata-schema-concerns/151-coreBundle.js",
+      "blob": "bc601fcf741792e3fc76884a28a3c43f80c6472f",
+      "rule": "generic-api-key",
+      "line": 37763,
+      "classification": "STANDARD_PROTOCOL_PUBLIC_CONSTANT",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/independent-final-runtime-review-history/a738-source-concerns/059-coreBundle.js",
+      "blob": "bc601fcf741792e3fc76884a28a3c43f80c6472f",
+      "rule": "generic-api-key",
+      "line": 37763,
+      "classification": "STANDARD_PROTOCOL_PUBLIC_CONSTANT",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73549,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73577,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73588,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73654,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73682,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73717,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73783,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73811,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73820,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73886,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73891,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73957,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73985,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 73994,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 74060,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 74088,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 74123,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 74240,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 74241,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 74244,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 470,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 640,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 1149,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 1331,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 1446,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 1742,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75190,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75251,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75252,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75477,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75481,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75482,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75491,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75492,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75598,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75613,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75614,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 75686,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 76666,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 11588,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 77498,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "88ea6c685c980be69f69c71408360d4260418334",
+      "rule": "generic-api-key",
+      "line": 11753,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 78295,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 78296,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 78297,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 79402,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 79454,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 79723,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 501,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 671,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 1180,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 1362,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 1477,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 80464,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 80523,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 1773,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 80706,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 82420,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 11619,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 83501,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "blob": "92d982fee2da7fa06387329208e2c312fb48be60",
+      "rule": "generic-api-key",
+      "line": 11784,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 83912,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84082,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/request-budget/native/original-build-inputs/apps/web/src/services/upload/providers.ts",
+      "blob": "b47dbf826753c07ddf1ccb817b255b51589bd12e",
+      "rule": "generic-api-key",
+      "line": 618,
+      "classification": "DOCUMENTATION_PLACEHOLDER",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1254/candidates/request-budget/static-fixed/original-build-inputs/apps/web/src/services/upload/providers.ts",
+      "blob": "b47dbf826753c07ddf1ccb817b255b51589bd12e",
+      "rule": "generic-api-key",
+      "line": 618,
+      "classification": "DOCUMENTATION_PLACEHOLDER",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84240,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84381,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84596,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84597,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84602,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84629,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84630,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84641,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84644,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84645,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84740,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84741,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84742,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84757,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84758,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84803,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84824,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 84898,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85050,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85096,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85100,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85174,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85410,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85411,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85630,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85631,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85635,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85917,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 85918,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 42,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 98,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 111,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 206,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 228,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 279,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 322,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 331,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 406,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 441,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 448,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 509,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 545,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 552,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 611,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 653,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 663,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 734,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 770,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 777,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 836,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 852,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 26,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 82,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 95,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 194,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 250,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 263,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 354,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 409,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 422,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 516,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 538,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 589,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 632,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 641,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 716,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 751,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 758,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 819,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 855,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 862,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 921,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 963,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 973,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86090,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86139,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86140,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86242,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86243,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86250,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86283,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86285,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86290,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 950,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 982,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 986,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1053,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1060,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1065,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1066,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1072,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1191/LOCAL_PACKAGE_4B10/package-source-freeze-t1191.json",
+      "blob": "fadd2d9c120c4715730b74c134e4aa2561232309",
+      "rule": "generic-api-key",
+      "line": 86464,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1044,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1080,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1087,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1154,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1176,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1685,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1734,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 1742,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1227,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1270,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1279,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1354,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1389,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1396,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1457,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1493,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1500,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1559,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1601,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1611,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1682,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1718,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/canonical111-fixtures/RUN_BINDING.json",
+      "blob": "d3a60b59e58eb8e1a6d81f6f009893a19e710639",
+      "rule": "generic-api-key",
+      "line": 1725,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 2351,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1290/owned-migration-test-run/SOURCE_BINDING.json",
+      "blob": "1a24b19c49f7b2a19590649aafc5845ded93d28a",
+      "rule": "generic-api-key",
+      "line": 2553,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1317/runtime/green-v1/snapshot/frontend/src/server/__module_integration__/group-workbench-inspection.persistence-client.test.ts",
+      "blob": "ad8dd9ea8473197fd148844ab376eac10d72340b",
+      "rule": "generic-api-key",
+      "line": 54,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1317/runtime/green-v2/snapshot/frontend/src/server/__module_integration__/group-workbench-inspection.persistence-client.test.ts",
+      "blob": "02ac4da880c89b8c9348a4ca567f820bfac6bbfc",
+      "rule": "generic-api-key",
+      "line": 54,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1317/runtime/red-v1/snapshot/frontend/src/server/__module_integration__/group-workbench-inspection.persistence-client.test.ts",
+      "blob": "ad8dd9ea8473197fd148844ab376eac10d72340b",
+      "rule": "generic-api-key",
+      "line": 54,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1318/runtime/green-member-v3/snapshot/frontend/src/server/__module_integration__/group-thesis-adoption.persistence-client.test.ts",
+      "blob": "01a1fb1e9da341bd3c96e458449bea78fde6aaad",
+      "rule": "generic-api-key",
+      "line": 51,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1318/runtime/green-v2/snapshot/frontend/src/server/__module_integration__/group-thesis-adoption.persistence-client.test.ts",
+      "blob": "79241fc7412a6595538c8594134bb2f5c7d019f3",
+      "rule": "generic-api-key",
+      "line": 50,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/backend-type-v1/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "0aef0c0138c6c08111917d1142579fdec4b67740",
+      "rule": "generic-api-key",
+      "line": 171,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/boundary-v1/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "ae2627dffd89a02dbaa2feb95718ff9404b5c1b3",
+      "rule": "generic-api-key",
+      "line": 185,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/final-narrow-v3/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "ae2627dffd89a02dbaa2feb95718ff9404b5c1b3",
+      "rule": "generic-api-key",
+      "line": 185,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "ae2627dffd89a02dbaa2feb95718ff9404b5c1b3",
+      "rule": "generic-api-key",
+      "line": 185,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/frontend-type-v2/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "b64225a5d4b6f7a46736350a866b1ac1fdee66c8",
+      "rule": "generic-api-key",
+      "line": 199,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/matrix-v2/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "0aef0c0138c6c08111917d1142579fdec4b67740",
+      "rule": "generic-api-key",
+      "line": 171,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/semantic-v1/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "ae2627dffd89a02dbaa2feb95718ff9404b5c1b3",
+      "rule": "generic-api-key",
+      "line": 185,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1319/runtime/source-guard-v4/snapshot/frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "b64225a5d4b6f7a46736350a866b1ac1fdee66c8",
+      "rule": "generic-api-key",
+      "line": 199,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "e165bddaaa1cde8820c7dffbca8e8035315b6a0b",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-guards-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-guards-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-guards-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "2709bf55fdd9110bff140d5c0473b17817444e6b",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-guards-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "2709bf55fdd9110bff140d5c0473b17817444e6b",
+      "rule": "generic-api-key",
+      "line": 111,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-guards-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "2709bf55fdd9110bff140d5c0473b17817444e6b",
+      "rule": "generic-api-key",
+      "line": 147,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/green-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "5f6409fe1fc375ca58c479bee30ab84dfdb1d805",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/ordinary-source-red-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/ordinary-source-red-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/ordinary-source-red-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 115,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/ordinary-source-red-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 151,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/ordinary-source-red-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "5f6409fe1fc375ca58c479bee30ab84dfdb1d805",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v2/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "5f6409fe1fc375ca58c479bee30ab84dfdb1d805",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v3/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v3/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/red-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "5f6409fe1fc375ca58c479bee30ab84dfdb1d805",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-checkpoint-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-checkpoint-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-checkpoint-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 88,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-checkpoint-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 109,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-checkpoint-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 141,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-checkpoint-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 177,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-type-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-type-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 88,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 109,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 141,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/backend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 177,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/boundary-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/boundary-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/boundary-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 87,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/boundary-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 108,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/boundary-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 140,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/boundary-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 176,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 88,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 109,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 141,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 177,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v2/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 87,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 108,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 140,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 176,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v3/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v3/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 98,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 119,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 154,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/frontend-type-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 190,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 88,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 109,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 141,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "aaf97b72d5ad03b83943902f5533c65c03962c04",
+      "rule": "generic-api-key",
+      "line": 177,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v2/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 87,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 108,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 140,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 176,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-full-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-tail-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-tail-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-tail-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 98,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-tail-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 119,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-tail-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 154,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-tail-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 190,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-target-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-target-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "363634d7db9c9a93423dcdeab61e87d719032a5f",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-target-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "363634d7db9c9a93423dcdeab61e87d719032a5f",
+      "rule": "generic-api-key",
+      "line": 121,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-target-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "363634d7db9c9a93423dcdeab61e87d719032a5f",
+      "rule": "generic-api-key",
+      "line": 157,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/green-target-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/red-target-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/red-target-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "363634d7db9c9a93423dcdeab61e87d719032a5f",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/red-target-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "363634d7db9c9a93423dcdeab61e87d719032a5f",
+      "rule": "generic-api-key",
+      "line": 121,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/red-target-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "363634d7db9c9a93423dcdeab61e87d719032a5f",
+      "rule": "generic-api-key",
+      "line": 157,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/red-target-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/semantic-v1/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/semantic-v1/snapshot/docs/verification/t1320/runtime/green-protection-v2/snapshot/frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/semantic-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 87,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/semantic-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 108,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/semantic-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 140,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1323/runtime/round3/semantic-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "751ad83d225cfa2c452513930544367ab0528980",
+      "rule": "generic-api-key",
+      "line": 176,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-final-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-final-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 115,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-final-v3/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 151,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 115,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 151,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 115,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/backend-type-v2/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 151,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/boundary-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/boundary-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 115,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/boundary-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 151,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 115,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/frontend-type-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 151,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/semantic-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/semantic-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 115,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1325/runtime/semantic-v1/snapshot/frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "6d7fcb5ab7264d726d184c06e2b800b48d3916dd",
+      "rule": "generic-api-key",
+      "line": 151,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "docs/verification/t1375/CREDENTIAL_PUBLISHED_SCOPE_SAFE.json",
+      "blob": "6485a9f1dfaa1a4709055aba8c24562996500b81",
+      "rule": "generic-api-key",
+      "line": 4,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "安全收据values_sha256字段，仅原值SHA256指纹，不是原凭据。"
+    },
+    {
+      "path": "docs/verification/t1375/CREDENTIAL_PUBLISHED_SCOPE_SAFE.json",
+      "blob": "6485a9f1dfaa1a4709055aba8c24562996500b81",
+      "rule": "generic-api-key",
+      "line": 5,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "安全收据values_sha256字段，仅原值SHA256指纹，不是原凭据。"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/SHA256.json",
+      "blob": "1b5cd79292fa5c63c8618f6ed35a4cf48d5f5d9c",
+      "rule": "generic-api-key",
+      "line": 152,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/SHA256.json",
+      "blob": "1b5cd79292fa5c63c8618f6ed35a4cf48d5f5d9c",
+      "rule": "generic-api-key",
+      "line": 322,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/transcribe-command-legacy-dispatch.test.ts",
+      "blob": "6a6b6f9526e1a6ad27618522a55a8509729dae0f",
+      "rule": "generic-api-key",
+      "line": 130,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/agentic-provider-names.persistence-client.test.ts",
+      "blob": "03bd6da1b00f4216cdc2c2c7708c3c1a02d555c8",
+      "rule": "generic-api-key",
+      "line": 199,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/agentic-public-admission.persistence-client.test.ts",
+      "blob": "b64225a5d4b6f7a46736350a866b1ac1fdee66c8",
+      "rule": "generic-api-key",
+      "line": 199,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/group-thesis-adoption.persistence-client.test.ts",
+      "blob": "01a1fb1e9da341bd3c96e458449bea78fde6aaad",
+      "rule": "generic-api-key",
+      "line": 51,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "blob": "246e256d3f44ea0f7404a2626b6b0a0e3cc679cc",
+      "rule": "generic-api-key",
+      "line": 73,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/group-workbench-inspection.persistence-client.test.ts",
+      "blob": "02ac4da880c89b8c9348a4ca567f820bfac6bbfc",
+      "rule": "generic-api-key",
+      "line": 54,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 98,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 119,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 154,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/codex-mixed-checkpoint.persistence-client.test.ts",
+      "blob": "b56e75dd181c5b0b418ddb84a425e56b6ef4ef80",
+      "rule": "generic-api-key",
+      "line": 190,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/wechat-navigation-diagnosis.persistence-client.test.ts",
+      "blob": "59bd01c0ea63ae0662a23dbc230b879204f35ab7",
+      "rule": "generic-api-key",
+      "line": 54,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/wechat-navigation-diagnosis.persistence-client.test.ts",
+      "blob": "59bd01c0ea63ae0662a23dbc230b879204f35ab7",
+      "rule": "generic-api-key",
+      "line": 75,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/wechat-navigation-diagnosis.persistence-client.test.ts",
+      "blob": "59bd01c0ea63ae0662a23dbc230b879204f35ab7",
+      "rule": "generic-api-key",
+      "line": 84,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src/server/activation/managed-credential-lease.server.test.ts",
+      "blob": "42b7ad06450203ffe708d7591abb91726b7498b3",
+      "rule": "generic-api-key",
+      "line": 40,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "真实源测试固定幂等ID/合成执行lease标识，未作为外部服务密钥。"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.model-benefit-recovery.test.ts",
+      "blob": "f95886bec1cb3daf34f3c4ebc96e0162fc0ca16e",
+      "rule": "generic-api-key",
+      "line": 81,
+      "classification": "PROTOCOL_IDENTIFIER_NOT_EXTERNAL_SERVICE_KEY",
+      "evidence": "真实源测试固定幂等ID/合成执行lease标识，未作为外部服务密钥。"
+    },
+    {
+      "path": "frontend/src-tauri/src/entitlement_claim.rs",
+      "blob": "f179fa85beb3e9b5836fa3afd8f1aa5e3f31fbfc",
+      "rule": "generic-api-key",
+      "line": 216,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/tests/integration_w4c.rs",
+      "blob": "bce802e32f326d51dfe8afc3d5aca17e88f85dfe",
+      "rule": "generic-api-key",
+      "line": 83,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src-tauri/src/logging.rs",
+      "blob": "aa9a391b8c95415b53e5fa75247dd87839e283e8",
+      "rule": "generic-api-key",
+      "line": 1013,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src-tauri/src/logging.rs",
+      "blob": "aa9a391b8c95415b53e5fa75247dd87839e283e8",
+      "rule": "generic-api-key",
+      "line": 1020,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/debug_capture.rs",
+      "blob": "0b263ac60d6e32dcb3f26eab23b5eea61007ebc5",
+      "rule": "jwt",
+      "line": 1845,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "vendored redaction/debug_capture测试输入，无production认证消费者。"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "blob": "11d02816c9d92d4e8180bab16f56ee4b87b4aa12",
+      "rule": "stripe-access-token",
+      "line": 102,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "vendored redaction/debug_capture测试输入，无production认证消费者。"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "blob": "11d02816c9d92d4e8180bab16f56ee4b87b4aa12",
+      "rule": "generic-api-key",
+      "line": 103,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "blob": "11d02816c9d92d4e8180bab16f56ee4b87b4aa12",
+      "rule": "generic-api-key",
+      "line": 104,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/tests/e2e/settings.spec.ts",
+      "blob": "0ebc0640318dbdc6bb9db79094baac72dec45c02",
+      "rule": "generic-api-key",
+      "line": 369,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+      "blob": "db54bb5812a590e382f31371c9534f8ac89e5fce",
+      "rule": "generic-api-key",
+      "line": 369,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "frontend/tests-t1246-round2-original/e2e/settings.spec.ts",
+      "blob": "041a69ee6520f1386637b0466fa38d29a07e7ef8",
+      "rule": "generic-api-key",
+      "line": 369,
+      "classification": "SOURCE_TEST_FIXTURE",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "orchestrator/ID_REGISTRY.md",
+      "blob": "bcabe82431f6bae69163e45d9dd20196c75a6be0",
+      "rule": "generic-api-key",
+      "line": 859,
+      "classification": "ENGINEERING_ID_REGISTRY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "orchestrator/events.ndjson",
+      "blob": "65a4a326586d331bf910856154c76e6672039901",
+      "rule": "generic-api-key",
+      "line": 625,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/doocs-md/native/SHA256.json",
+      "blob": "1b5cd79292fa5c63c8618f6ed35a4cf48d5f5d9c",
+      "rule": "generic-api-key",
+      "line": 152,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/doocs-md/native/SHA256.json",
+      "blob": "1b5cd79292fa5c63c8618f6ed35a4cf48d5f5d9c",
+      "rule": "generic-api-key",
+      "line": 322,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "patches/hyperframes@0.7.54.patch",
+      "blob": "82160ca493f4fb6b1e5b93e38c538aab3b0c2b0d",
+      "rule": "generic-api-key",
+      "line": 247,
+      "classification": "BUNDLED_PUBLIC_PROJECT_TELEMETRY_KEY",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/doocs-md/native/native-delivery.json",
+      "blob": "d56ab79c7e640d39313e9c93588042601390e8e3",
+      "rule": "generic-api-key",
+      "line": 162,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/doocs-md/native/native-delivery.json",
+      "blob": "d56ab79c7e640d39313e9c93588042601390e8e3",
+      "rule": "generic-api-key",
+      "line": 458,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274/source-reconstruction.json",
+      "blob": "a2dc16075272235d4fe9eac2601c06cfdd7ed65d",
+      "rule": "generic-api-key",
+      "line": 104,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274/source-reconstruction.json",
+      "blob": "a2dc16075272235d4fe9eac2601c06cfdd7ed65d",
+      "rule": "generic-api-key",
+      "line": 117,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274/source-reconstruction.json",
+      "blob": "a2dc16075272235d4fe9eac2601c06cfdd7ed65d",
+      "rule": "generic-api-key",
+      "line": 120,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274/source-reconstruction.json",
+      "blob": "a2dc16075272235d4fe9eac2601c06cfdd7ed65d",
+      "rule": "generic-api-key",
+      "line": 121,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview/source-reconstruction.json",
+      "blob": "f4c2eaa7d0a65de46a0f6d568b6fa545bf1686b4",
+      "rule": "generic-api-key",
+      "line": 28,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview/source-reconstruction.json",
+      "blob": "f4c2eaa7d0a65de46a0f6d568b6fa545bf1686b4",
+      "rule": "generic-api-key",
+      "line": 29,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview/source-reconstruction.json",
+      "blob": "f4c2eaa7d0a65de46a0f6d568b6fa545bf1686b4",
+      "rule": "generic-api-key",
+      "line": 43,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview/source-reconstruction.json",
+      "blob": "f4c2eaa7d0a65de46a0f6d568b6fa545bf1686b4",
+      "rule": "generic-api-key",
+      "line": 332,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preserved-missing-media/source-manifest.json",
+      "blob": "bae5448c0edbf0400ef828cd146174738ce85c51",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preserved-missing-media/source-manifest.json",
+      "blob": "bae5448c0edbf0400ef828cd146174738ce85c51",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preserved-missing-media/source-manifest.json",
+      "blob": "bae5448c0edbf0400ef828cd146174738ce85c51",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preserved-missing-media/source-manifest.json",
+      "blob": "bae5448c0edbf0400ef828cd146174738ce85c51",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-separated-audio/source-reconstruction.json",
+      "blob": "dfcda6e229ccb841cef4bec337ee4ead8ec4d901",
+      "rule": "generic-api-key",
+      "line": 28,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-separated-audio/source-reconstruction.json",
+      "blob": "dfcda6e229ccb841cef4bec337ee4ead8ec4d901",
+      "rule": "generic-api-key",
+      "line": 29,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-separated-audio/source-reconstruction.json",
+      "blob": "dfcda6e229ccb841cef4bec337ee4ead8ec4d901",
+      "rule": "generic-api-key",
+      "line": 43,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-separated-audio/source-reconstruction.json",
+      "blob": "dfcda6e229ccb841cef4bec337ee4ead8ec4d901",
+      "rule": "generic-api-key",
+      "line": 332,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-center/source-manifest.json",
+      "blob": "4e6e886fd638aa9f143d21597ba768058cb58b33",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-center/source-manifest.json",
+      "blob": "4e6e886fd638aa9f143d21597ba768058cb58b33",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-center/source-manifest.json",
+      "blob": "4e6e886fd638aa9f143d21597ba768058cb58b33",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-preview-center/source-manifest.json",
+      "blob": "4e6e886fd638aa9f143d21597ba768058cb58b33",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-resize-hit/source-manifest.json",
+      "blob": "15c97c96970bc0d8e5181988aac20c431a86307d",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-resize-hit/source-manifest.json",
+      "blob": "15c97c96970bc0d8e5181988aac20c431a86307d",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-resize-hit/source-manifest.json",
+      "blob": "15c97c96970bc0d8e5181988aac20c431a86307d",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-resize-hit/source-manifest.json",
+      "blob": "15c97c96970bc0d8e5181988aac20c431a86307d",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1282-scene-effect-protocol/source-manifest.json",
+      "blob": "674c30a3b26c9bd7b3c6c7a8d7539aaa3382ebc6",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1282-scene-effect-protocol/source-manifest.json",
+      "blob": "674c30a3b26c9bd7b3c6c7a8d7539aaa3382ebc6",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1282-scene-effect-protocol/source-manifest.json",
+      "blob": "674c30a3b26c9bd7b3c6c7a8d7539aaa3382ebc6",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1282-scene-effect-protocol/source-manifest.json",
+      "blob": "674c30a3b26c9bd7b3c6c7a8d7539aaa3382ebc6",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-fit/source-manifest.json",
+      "blob": "8004172e5a8c8538c440facf1ffe51281960b5ce",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-fit/source-manifest.json",
+      "blob": "8004172e5a8c8538c440facf1ffe51281960b5ce",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-fit/source-manifest.json",
+      "blob": "8004172e5a8c8538c440facf1ffe51281960b5ce",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-fit/source-manifest.json",
+      "blob": "8004172e5a8c8538c440facf1ffe51281960b5ce",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive/source-manifest.json",
+      "blob": "d8e191f9bc3bfab880aca81f471b3f08becb67c4",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive/source-manifest.json",
+      "blob": "d8e191f9bc3bfab880aca81f471b3f08becb67c4",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive/source-manifest.json",
+      "blob": "d8e191f9bc3bfab880aca81f471b3f08becb67c4",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive/source-manifest.json",
+      "blob": "d8e191f9bc3bfab880aca81f471b3f08becb67c4",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-geometry/source-manifest.json",
+      "blob": "770506924fac00cc041fba684e39e6d0553f456f",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-geometry/source-manifest.json",
+      "blob": "770506924fac00cc041fba684e39e6d0553f456f",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-geometry/source-manifest.json",
+      "blob": "770506924fac00cc041fba684e39e6d0553f456f",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-responsive-geometry/source-manifest.json",
+      "blob": "770506924fac00cc041fba684e39e6d0553f456f",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-toolbar-fit/source-manifest.json",
+      "blob": "c9a1d54aa3e42b29805644a3b1ce4eee4a13072f",
+      "rule": "generic-api-key",
+      "line": 19,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-toolbar-fit/source-manifest.json",
+      "blob": "c9a1d54aa3e42b29805644a3b1ce4eee4a13072f",
+      "rule": "generic-api-key",
+      "line": 20,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-toolbar-fit/source-manifest.json",
+      "blob": "c9a1d54aa3e42b29805644a3b1ce4eee4a13072f",
+      "rule": "generic-api-key",
+      "line": 34,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/verification/t1274-toolbar-fit/source-manifest.json",
+      "blob": "c9a1d54aa3e42b29805644a3b1ce4eee4a13072f",
+      "rule": "generic-api-key",
+      "line": 325,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "blob": "ecb0f1ee2735b07a1f02d881b821abc8acb6f734",
+      "rule": "generic-api-key",
+      "line": 278,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "blob": "ecb0f1ee2735b07a1f02d881b821abc8acb6f734",
+      "rule": "generic-api-key",
+      "line": 460,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "blob": "ecb0f1ee2735b07a1f02d881b821abc8acb6f734",
+      "rule": "generic-api-key",
+      "line": 10323,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "blob": "ecb0f1ee2735b07a1f02d881b821abc8acb6f734",
+      "rule": "generic-api-key",
+      "line": 10488,
+      "classification": "HASH_OR_OBJECT_ID",
+      "evidence": "与已完成1772逐项字段/生产者分类同值SHA；本行规则/字段意义一致，非仅按目录或hex白名单。"
+    }
+  ]
+}
