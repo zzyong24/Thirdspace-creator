@@ -1,0 +1,128 @@
+/* 仅作用于定位入口；复用 CreatorOS 的语义色和尺寸，不影响稿面助手。 */
+.dialog { container-type:inline-size; gap:16px; }
+.dialog > header { padding-bottom:16px; }
+.dialog :global([data-slot="ai-copilot-close"]) { width:40px; height:40px; border:1px solid var(--creatoros-border); }
+.body { display:grid; grid-template-columns:216px minmax(0,1fr); gap:24px; min-height:0; flex:1; }
+.guide { display:flex; flex-direction:column; gap:24px; padding:20px; background:var(--creatoros-surface-subtle); border:1px solid var(--creatoros-border); border-radius:var(--creatoros-radius-card); overflow-y:auto; }
+.eyebrow { display:flex; align-items:center; gap:8px; color:var(--creatoros-brand-hover); font-size:12px; font-weight:600; }
+.guideIntro h3 { margin:12px 0 8px; font-size:20px; line-height:1.4; font-weight:650; letter-spacing:-.02em; text-wrap:balance; }
+.guideIntro p, .guideSteps p { color:var(--creatoros-text-muted); font-size:13px; line-height:1.6; margin:0; }
+.guideIntro, .assurance { flex-shrink:0; }
+.guideSteps { list-style:none; padding:0; margin:0; display:grid; gap:16px; }
+.guideSteps li { display:flex; align-items:baseline; gap:12px; }
+.guideSteps li > span { color:var(--creatoros-brand-hover); font-size:12px; font-variant-numeric:tabular-nums; }
+.guideSteps strong { font-size:14px; font-weight:600; }
+.guideSteps p { margin-top:4px; font-size:12px; }
+.assurance { flex-shrink:0; }
+.guideDetails { min-height:0; overflow-y:auto; }
+.guideDetails summary { cursor:pointer; font-size:12px; color:var(--creatoros-text-muted); font-weight:600; padding-block:4px; }
+.guideDetails ol { list-style:none; padding:0; margin:16px 0 0; display:grid; gap:20px; }
+.guideDetails li { display:flex; align-items:baseline; gap:12px; }
+.guideDetails li > span { color:var(--creatoros-brand-hover); font-size:12px; font-variant-numeric:tabular-nums; }
+.guideDetails strong { font-size:13px; font-weight:600; }
+.guideDetails p { margin-top:4px; font-size:12px; }
+.assurance { display:flex; align-items:flex-start; gap:8px; margin-top:auto; padding-top:16px; border-top:1px solid var(--creatoros-border); color:var(--creatoros-text-muted); font-size:12px; line-height:1.7; }
+.assurance svg { flex-shrink:0; margin-top:2px; color:var(--creatoros-success); }
+.workspace { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto minmax(0,1fr); gap:12px; overflow:hidden; }
+.workspace :global([data-slot="copilot-header"]) { grid-column:2; grid-row:1; }
+.workspace :global([data-slot="copilot-header"]) > div:first-of-type { display:none; }
+.workspace :global([data-slot="copilot-context-chips"]) { grid-column:1; grid-row:1; align-self:center; }
+.workspace :global([data-slot="copilot-conversation"]) { grid-column:1 / -1; grid-row:2; }
+.workspace :global([data-slot="copilot-header"]) { min-height:36px; }
+.workspace :global([data-slot="copilot-header"]) > span { display:none; }
+.workspace :global([data-slot="copilot-header-title"]) { font-size:14px; }
+.workspace :global([data-slot="copilot-header"]) p { font-size:12px; }
+.workspace :global([data-slot="copilot-header"]) button { min-height:36px; font-size:12px; padding-inline:10px; }
+.workspace :global([data-slot="context-chip-empty"]) { border:none; border-radius:0; padding:0; color:var(--creatoros-text-muted); font-size:12px; }
+.workspace :global([data-slot="copilot-conversation"]) { gap:12px; overflow-y:auto; overscroll-behavior:contain; }
+.workspace :global([data-slot="copilot-message-scroll"]) { border:0; border-radius:var(--creatoros-radius-control); background:var(--creatoros-surface-subtle); padding:20px; min-height:120px; }
+.workspace :global([data-slot="prompt-composer"]) { padding:16px; border-color:var(--creatoros-border-strong); border-radius:var(--creatoros-radius-card); box-shadow:none; }
+.inputLabel { font-size:13px; font-weight:600; color:var(--creatoros-text); }
+.workspace :global([data-slot="prompt-input"]) { field-sizing:content; height:auto; min-height:72px; max-height:160px; border:0; padding:0 4px 0 0; font-size:14px; line-height:1.65; resize:vertical; }
+.workspace :global([data-slot="assistant-engine-status"]) { padding:8px 12px; border-radius:var(--creatoros-radius-control); background:var(--creatoros-warning-soft); color:var(--creatoros-warning); font-size:12px; line-height:1.6; }
+.workspace :global([data-slot="copilot-attachment-picker"]) { border:0; border-radius:0; padding:0; background:transparent; }
+.workspace :global([data-slot="copilot-attachment-picker"]) button { min-height:32px; }
+.workspace :global([data-slot="copilot-attachment-picker"]) > div > span { font-size:12px; }
+.workspace :global([data-slot="prompt-send-hint"]) { font-size:12px; white-space:normal; }
+.workspace :global([data-slot="suggested-action-chips"]) { justify-content:flex-end; padding-top:8px; border-top:1px solid var(--creatoros-border); }
+.workspace :global([data-slot="suggested-action-chips"]) > div:first-child:empty { display:none; }
+.workspace :global([data-slot="suggested-action-chips"]) > div:last-child { width:100%; gap:12px; }
+.workspace :global([data-slot="prompt-send-hint"]) { margin-right:auto; }
+.workspace :global([data-slot="prompt-clear"]) { border:0; border-radius:var(--creatoros-radius-control); min-height:40px; }
+.workspace :global([data-slot="submit-button"]) { width:auto; min-height:40px; height:40px; gap:6px; padding-inline:16px; border-radius:var(--creatoros-radius-control); font-size:14px; font-weight:600; }
+.start { display:flex; flex-direction:column; justify-content:center; align-items:stretch; min-height:100%; max-width:720px; margin-inline:auto; text-align:left; }
+.start h3 { font-size:22px; line-height:1.5; font-weight:650; margin:8px 0; text-wrap:balance; }
+.start > p { font-size:13px; line-height:1.7; color:var(--creatoros-text-muted); }
+.starters { display:grid; gap:8px; margin-top:20px; }
+.starters button { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; text-align:left; background:var(--creatoros-surface); color:var(--creatoros-text); border:1px solid var(--creatoros-border); border-radius:var(--creatoros-radius-control); cursor:pointer; transition:background-color var(--creatoros-motion-fast),border-color var(--creatoros-motion-fast); }
+.starters button:hover:not(:disabled) { background:var(--creatoros-brand-soft); border-color:var(--creatoros-brand); }
+.starters button:disabled { opacity:.55; cursor:not-allowed; }
+.starters strong { display:block; font-size:14px; font-weight:600; }
+.starters small { display:block; font-size:12px; color:var(--creatoros-text-muted); margin-top:4px; line-height:1.6; }
+.starters svg { flex-shrink:0; color:var(--creatoros-brand-hover); }
+.dialog :is(button,textarea,summary,a):focus-visible { outline:2px solid var(--creatoros-brand); outline-offset:3px; }
+@container (min-width:601px) {
+  .starters { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .starters button { align-items:flex-start; padding:12px; gap:4px; }
+  .starters button svg { width:14px; margin-top:3px; }
+}
+@container (max-width:800px) {
+  .body { display:flex; flex-direction:column; gap:12px; }
+  .guide { display:block; padding:12px 16px; flex-shrink:0; max-height:140px; }
+  .guideIntro { display:none; }
+  .guideSteps { display:none; }
+  .assurance { margin:0; border:0; padding:0; }
+  .workspace :global([data-slot="copilot-message-scroll"]) { min-height:160px; }
+}
+@container (max-width:460px) {
+  .dialog > header { padding-bottom:8px; }
+  .workspace { grid-template-columns:1fr; grid-template-rows:auto auto minmax(0,1fr); gap:8px; }
+  .workspace :global([data-slot="copilot-header"]) { grid-column:1; grid-row:1; }
+  .workspace :global([data-slot="copilot-context-chips"]) { grid-row:2; }
+  .workspace :global([data-slot="copilot-conversation"]) { grid-row:3; }
+  .workspace :global([data-slot="copilot-header"]) > div:first-of-type { display:none; }
+  .workspace :global([data-slot="copilot-header"]) > div:last-of-type { margin-left:0; }
+  .workspace :global([data-slot="copilot-header"]) button { min-height:44px; }
+  .workspace :global([data-slot="copilot-message-scroll"]) { padding:16px; }
+  .start h3 { font-size:20px; }
+  .starters button { padding:12px; }
+  .starters small { display:none; }
+  .workspace :global([data-slot="prompt-composer"]) { padding:12px; }
+  .workspace :global([data-slot="prompt-input"]) { font-size:16px; min-height:72px; }
+  .workspace :global([data-slot="prompt-form"]) { gap:8px; }
+  .workspace :global([data-slot="prompt-send-hint"]) { display:none; }
+  .workspace :global([data-slot="prompt-clear"]) { margin-left:auto; }
+  .dialog :global([data-slot="ai-copilot-close"]) { width:44px; height:44px; }
+  .start > .eyebrow { display:none; }
+  .start h3 { margin:0 0 4px; }
+  .starters { margin-top:12px; }
+  .starters button { min-height:44px; padding:10px 12px; }
+  .workspace :global([data-slot="prompt-send-hint"]) { max-width:12ch; font-size:12px; }
+  .workspace :global([data-slot="copilot-attachment-picker"]) > div > span { display:none; }
+  .workspace :global([data-slot="copilot-attachment-picker"]) button,
+  .workspace :global([data-slot="prompt-clear"]),
+  .workspace :global([data-slot="submit-button"]) { min-height:44px; }
+}
+@media (max-height:700px) and (min-width:768px) {
+  .guide { gap:16px; padding:16px; }
+  .guideIntro h3 { margin:12px 0 8px; }
+  .guideSteps { gap:12px; }
+  .workspace :global([data-slot="prompt-input"]) { min-height:72px; }
+  .starters { margin-top:12px; }
+  .workspace :global([data-slot="prompt-composer"]) { padding:12px; }
+  .workspace :global([data-slot="prompt-form"]) { gap:8px; }
+  .workspace :global([data-slot="copilot-message-scroll"]) { padding:16px; }
+  .start > .eyebrow, .starters small { display:none; }
+  .start h3 { font-size:20px; margin:0 0 4px; }
+  .starters button { min-height:56px; align-items:center; }
+}
+
+@media (max-width:640px) {
+  .panel { min-width:calc(100vw - 24px); max-width:calc(100vw - 24px); min-height:calc(100dvh - 24px); max-height:calc(100dvh - 24px); padding:16px; }
+  .dialog { gap:12px; }
+}
+@media (max-height:500px) {
+  .guide { display:none; }
+  .workspace :global([data-slot="copilot-conversation"]) { overflow-y:auto; }
+  .workspace :global([data-slot="copilot-message-scroll"]) { flex:none; min-height:200px; }
+}

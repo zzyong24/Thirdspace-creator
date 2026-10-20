@@ -1,3 +1,4 @@
+import { isIsolatedUiPreview } from "@/features/preview/preview-mode.server";
 import {ObservabilityClient} from "@/lib/observability-client";
 /**
  * (creator) segment layout — the single shell wrapping every authenticated
@@ -184,7 +185,7 @@ export default async function CreatorLayout({
         packageBrandName={PACKAGE_BRAND_NAME}
         packageBrandIconDataUrl={PACKAGE_BRAND_ICON_DATA_URL}
       >
-        <ShellRouter user={user} notifications={notifications}>
+        <ShellRouter user={user} notifications={notifications} previewMode={isIsolatedUiPreview()}>
           {/* [T-332 S4] 0 号 → per-account 页面整页绑定引导(不渲染 children,防各页
               读 per-account op 撞 AccountRequiredError 的裸错;白名单页照常)。 */}
           <ZeroAccountRouteGuard hasActiveAccount={hasActiveAccount || Boolean(session.ctx.groupId)}>{children}</ZeroAccountRouteGuard>

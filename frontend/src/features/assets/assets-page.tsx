@@ -52,6 +52,7 @@
  */
 
 import * as React from "react";
+import styles from "./assets-workspace.module.css";
 import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
@@ -322,9 +323,10 @@ export async function AssetsPage({
         data-page="assets"
         data-assets-id="assets-root"
         data-page-state="error"
-        className="flex flex-col gap-3"
+        className={styles.page}
       >
-        <AssetToolbar query={(q ?? "").trim()} activeType={normalizeType(type)} />
+        <header><h1 className="text-2xl font-semibold">素材中心</h1></header>
+      <AssetToolbar query={(q ?? "").trim()} activeType={normalizeType(type)} />
         <ErrorState error={resolvedError ?? null} />
       </main>
     );
@@ -343,11 +345,12 @@ export async function AssetsPage({
       data-page="assets"
       data-assets-id="assets-root"
       data-page-state={vm.assets.length === 0 ? "empty" : "default"}
-      className="flex flex-col gap-3"
+      className={styles.page}
     >
+      <header><h1 className="text-2xl font-semibold">素材中心</h1></header>
       <AssetToolbar query={gallery.query} activeType={gallery.activeType} />
       <div
-        data-slot="assets-page-body"
+        data-slot="assets-page-body" data-studio-layout="library"
         className="grid grid-cols-1 gap-card-gap lg:grid-cols-[216px_minmax(0,1fr)]"
       >
         <div
@@ -360,7 +363,10 @@ export async function AssetsPage({
             activeType={gallery.activeType}
             query={gallery.query}
           />
-          <StorageUsageCard storage={vm.storage} />
+          <details className={styles.storage}>
+            <summary>存储空间</summary>
+            <StorageUsageCard storage={vm.storage} />
+          </details>
         </div>
         <AssetsInteractiveRegion viewModel={vm} gallery={gallery} />
       </div>

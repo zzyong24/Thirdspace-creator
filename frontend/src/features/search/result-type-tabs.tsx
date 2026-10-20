@@ -71,7 +71,8 @@ export function ResultTypeTabs({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* §290 结果类型 tab —— URL 驱动的真分面(?type= 由 server 消费)。 */}
-        <nav
+        <div
+          role="group"
           data-slot="result-type-tabs"
           aria-label="搜索结果类型"
           className="flex flex-wrap items-center gap-1.5"
@@ -82,11 +83,10 @@ export function ResultTypeTabs({
               <button
                 key={tab.id}
                 type="button"
-                role="tab"
                 data-slot="result-type-tab"
                 data-tab-id={tab.id}
                 data-pressed={pressed ? "true" : "false"}
-                aria-selected={pressed}
+                aria-pressed={pressed}
                 onClick={() => handleClick(tab.id)}
                 className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 text-[12px] font-medium text-foreground transition-colors hover:bg-surface-subtle data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
               >
@@ -100,7 +100,7 @@ export function ResultTypeTabs({
               </button>
             );
           })}
-        </nav>
+        </div>
         <span
           data-slot="result-type-sort"
           className="text-[11px] text-muted-foreground"

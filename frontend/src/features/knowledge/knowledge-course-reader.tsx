@@ -197,85 +197,85 @@ function CourseHome({
 
   return (
     <div className="space-y-8" data-slot="built-in-course-home">
-      <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-[#171A17] text-white shadow-[0_18px_50px_rgba(27,31,25,0.12)]">
-        <div className="grid gap-10 px-6 py-9 md:px-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-14 lg:py-14">
+      <section className="overflow-hidden rounded-card border border-border bg-brand-soft text-foreground">
+        <div className="grid gap-8 p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:p-8">
           <div className="max-w-3xl">
-            <div className="mb-8 flex items-center gap-3 text-xs font-semibold tracking-[0.2em] text-[#B8D8B9]">
-              <span className="grid size-9 place-items-center rounded-full border border-[#B8D8B9]/35 bg-[#B8D8B9]/10">
+            <div className="mb-4 flex items-center gap-2 text-sm font-medium text-brand-hover">
+              <span className="inline-flex">
                 <Sparkles className="size-4" aria-hidden="true" />
               </span>
               内置课程
             </div>
-            <h1 className="max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-5xl">
+            <h1 className="max-w-3xl text-balance text-2xl font-semibold leading-snug sm:text-3xl">
               {BUILT_IN_IP_COURSE.title}
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-stone-300 sm:text-lg">
-              {BUILT_IN_IP_COURSE.description} 不从术语开始，而是沿着一次真实创作的顺序，把定位、选题、脚本、表现和变现串成一条路。
+            <p className="mt-4 max-w-2xl text-base leading-7 text-text-muted">
+              {BUILT_IN_IP_COURSE.description} 
             </p>
-            <p className="mt-3 text-sm text-stone-500">{BUILT_IN_IP_COURSE.subtitle}</p>
-            <div className="mt-9 flex flex-wrap gap-3">
+            <p className="mt-3 text-sm text-text-muted">{BUILT_IN_IP_COURSE.subtitle}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={lessonHref(nextLessonId)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D9F99D] px-5 text-sm font-semibold text-[#172014] transition hover:bg-[#E7FFB8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D9F99D]"
+                className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand px-5 text-sm font-semibold text-brand-foreground transition hover:bg-brand-hover"
               >
                 {completedCount > 0 ? "继续学习" : "从第一课开始"}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-              <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-5 text-sm text-stone-300">
+              <span className="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm text-text-muted">
                 <Clock3 className="size-4" aria-hidden="true" />
                 适合边做边学
               </span>
             </div>
           </div>
 
-          <aside className="self-end rounded-3xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur-sm">
+          <aside className="self-end rounded-card bg-surface p-5">
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-sm text-stone-400">你的进度</p>
+                <p className="text-sm text-text-muted">你的进度</p>
                 <p className="mt-2 text-4xl font-semibold tracking-tight">{percent}%</p>
               </div>
-              <p className="text-sm text-stone-400">
+              <p className="text-sm text-text-muted">
                 {completedCount}/{BUILT_IN_IP_COURSE.stats.lessonCount} 节
               </p>
             </div>
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-border">
               <div
-                className="h-full rounded-full bg-[#D9F99D] transition-[width] duration-500"
+                className="h-full rounded-full bg-brand transition-[width] duration-500"
                 style={{ width: `${percent}%` }}
               />
             </div>
-            <dl className="mt-7 grid grid-cols-3 gap-3 border-t border-white/10 pt-6 text-center">
+            <dl className="mt-7 grid grid-cols-3 gap-3 border-t border-border pt-6 text-center">
               <div>
                 <dt className="text-xl font-semibold">{BUILT_IN_IP_COURSE.stats.moduleCount}</dt>
-                <dd className="mt-1 text-xs text-stone-400">模块</dd>
+                <dd className="mt-1 text-xs text-text-muted">模块</dd>
               </div>
               <div>
                 <dt className="text-xl font-semibold">{BUILT_IN_IP_COURSE.stats.lessonCount}</dt>
-                <dd className="mt-1 text-xs text-stone-400">课程</dd>
+                <dd className="mt-1 text-xs text-text-muted">课程</dd>
               </div>
               <div>
                 <dt className="text-xl font-semibold">{BUILT_IN_IP_COURSE.stats.knowledgePointCount}</dt>
-                <dd className="mt-1 text-xs text-stone-400">知识点</dd>
+                <dd className="mt-1 text-xs text-text-muted">知识点</dd>
               </div>
             </dl>
           </aside>
         </div>
       </section>
 
-      <p className="px-1 text-xs leading-5 text-stone-400" data-slot="built-in-course-attribution">
+      <p className="px-1 text-xs leading-5 text-text-muted" data-slot="built-in-course-attribution">
         课程说明：{BUILT_IN_IP_COURSE.source.attribution}
       </p>
 
       <section aria-labelledby="course-roadmap-title">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold tracking-[0.18em] text-emerald-700">学习路径</p>
-            <h2 id="course-roadmap-title" className="mt-2 text-2xl font-semibold tracking-tight text-stone-900">
-              沿着一条作品的诞生顺序学习
+            
+            <h2 id="course-roadmap-title" className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+              学习路径
             </h2>
           </div>
-          <p className="max-w-xl text-sm leading-6 text-stone-500">
-            每节课拆成可阅读、可回答、可练习的知识点。课程完成状态只保存在本机，不会修改你的个人知识。
+          <p className="max-w-xl text-sm leading-6 text-text-muted">
+            学习进度仅存本机，不修改个人知识库。
           </p>
         </div>
 
@@ -284,36 +284,36 @@ function CourseHome({
             const lessons = moduleLessons(module.id);
             const done = lessons.filter((item) => completed.has(item.id)).length;
             return (
-              <article key={module.id} className="rounded-3xl border border-stone-200 bg-white p-5 shadow-[0_8px_30px_rgba(28,25,23,0.045)] sm:p-6">
+              <article key={module.id} className="rounded-card border border-border bg-surface p-5  sm:p-6">
                 <div className="flex gap-4">
-                  <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#EEF4E8] text-sm font-bold text-emerald-800">
+                  <div className="grid size-11 shrink-0 place-items-center rounded-card bg-brand-soft text-sm font-bold text-brand-hover">
                     {String(moduleIndex + 1).padStart(2, "0")}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <h3 className="text-lg font-semibold text-stone-900">{module.title}</h3>
-                      <span className="text-xs text-stone-500">{done}/{lessons.length} 节完成</span>
+                      <h3 className="text-lg font-semibold text-foreground">{module.title}</h3>
+                      <span className="text-xs text-text-muted">{done}/{lessons.length} 节完成</span>
                     </div>
-                    <p className="mt-1 text-sm text-stone-500">{module.knowledgePointCount} 个知识点</p>
+                    <p className="mt-1 text-sm text-text-muted">{module.knowledgePointCount} 个知识点</p>
                   </div>
                 </div>
-                <ol className="mt-5 space-y-1 border-t border-stone-100 pt-3">
+                <ol className="mt-5 space-y-1 border-t border-border pt-3">
                   {lessons.map((item) => (
                     <li key={item.id}>
                       <Link
                         href={lessonHref(item.id)}
-                        className="group flex items-center gap-3 rounded-2xl px-2 py-3 transition hover:bg-stone-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                        className="group flex items-center gap-3 rounded-card px-2 py-3 transition hover:bg-surface-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
                       >
                         {completed.has(item.id) ? (
-                          <CheckCircle2 className="size-5 shrink-0 text-emerald-600" aria-label="已完成" />
+                          <CheckCircle2 className="size-5 shrink-0 text-success" aria-label="已完成" />
                         ) : (
-                          <Circle className="size-5 shrink-0 text-stone-300" aria-label="未完成" />
+                          <Circle className="size-5 shrink-0 text-text-muted" aria-label="未完成" />
                         )}
-                        <span className="min-w-0 flex-1 text-sm leading-5 text-stone-700 group-hover:text-stone-950">
-                          <span className="mr-2 font-medium text-stone-400">{item.number}.</span>
+                        <span className="min-w-0 flex-1 text-sm leading-5 text-text-muted group-hover:text-foreground">
+                          <span className="mr-2 font-medium text-text-muted">{item.number}.</span>
                           {item.title}
                         </span>
-                        <ChevronRight className="size-4 shrink-0 text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-stone-600" aria-hidden="true" />
+                        <ChevronRight className="size-4 shrink-0 text-text-muted transition group-hover:translate-x-0.5 group-hover:text-text-muted" aria-hidden="true" />
                       </Link>
                     </li>
                   ))}
@@ -353,32 +353,32 @@ function CourseLesson({
 
   return (
     <div className="space-y-5" data-slot="built-in-course-lesson">
-      <header className="rounded-3xl border border-stone-200 bg-white px-5 py-6 shadow-[0_8px_30px_rgba(28,25,23,0.045)] sm:px-7">
-        <Link href="/knowledge?view=course" className="inline-flex items-center gap-2 text-sm font-medium text-stone-500 transition hover:text-stone-900">
+      <header className="rounded-card border border-border bg-surface px-5 py-6  sm:px-7">
+        <Link href="/knowledge?view=course" className="inline-flex items-center gap-2 text-sm font-medium text-text-muted transition hover:text-foreground">
           <ArrowLeft className="size-4" aria-hidden="true" />
           返回课程目录
         </Link>
         <div className="mt-5 flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-4xl">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-emerald-700">
+            <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-brand-hover">
               <span>{lesson.meta.module}</span>
-              <span className="text-stone-300">/</span>
+              <span className="text-text-muted">/</span>
               <span>第 {lesson.meta.number} 节</span>
             </div>
-            <h1 className="mt-3 text-balance text-2xl font-semibold leading-tight tracking-[-0.025em] text-stone-950 sm:text-3xl">
+            <h1 className="mt-3 text-balance text-2xl font-semibold leading-tight tracking-[-0.025em] text-foreground sm:text-3xl">
               {lesson.meta.title}
             </h1>
-            <p className="mt-3 text-sm leading-6 text-stone-500">
-              本节包含 {lesson.points.length} 个知识点。先读懂核心，再展开案例和易错点，最后用问题与练习检验自己。
+            <p className="mt-3 text-sm leading-6 text-text-muted">
+              本节 {lesson.points.length} 个知识点，含案例、自测与练习。
             </p>
             <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl bg-[#F3F7EF] px-4 py-3">
-                <dt className="text-xs font-semibold tracking-[0.08em] text-emerald-700">学完你会</dt>
-                <dd className="mt-1.5 text-sm leading-6 text-emerald-950">{lesson.meta.learningGoal}</dd>
+              <div className="rounded-card bg-surface-subtle px-4 py-3">
+                <dt className="text-xs font-semibold tracking-[0.08em] text-brand-hover">学完你会</dt>
+                <dd className="mt-1.5 text-sm leading-6 text-brand-hover">{lesson.meta.learningGoal}</dd>
               </div>
-              <div className="rounded-2xl bg-stone-50 px-4 py-3">
-                <dt className="text-xs font-semibold tracking-[0.08em] text-stone-500">这一节要交付</dt>
-                <dd className="mt-1.5 text-sm leading-6 text-stone-800">{lesson.meta.deliverable}</dd>
+              <div className="rounded-card bg-surface-subtle px-4 py-3">
+                <dt className="text-xs font-semibold tracking-[0.08em] text-text-muted">这一节要交付</dt>
+                <dd className="mt-1.5 text-sm leading-6 text-foreground">{lesson.meta.deliverable}</dd>
               </div>
             </dl>
           </div>
@@ -386,7 +386,7 @@ function CourseLesson({
             type="button"
             onClick={() => onComplete(lesson.meta.id)}
             disabled={isComplete}
-            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#172014] px-5 text-sm font-semibold text-white transition hover:bg-emerald-950 disabled:cursor-default disabled:bg-emerald-50 disabled:text-emerald-700"
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-foreground transition hover:bg-brand-hover disabled:cursor-default disabled:bg-brand-soft disabled:text-brand-hover"
           >
             {isComplete ? <Check className="size-4" aria-hidden="true" /> : <ListChecks className="size-4" aria-hidden="true" />}
             {isComplete ? "本节已完成" : "标记本节完成"}
@@ -395,8 +395,8 @@ function CourseLesson({
       </header>
 
       <div className="grid items-start gap-5 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_300px]">
-        <aside className="rounded-3xl border border-stone-200 bg-white p-3 xl:sticky xl:top-5" aria-label="本节知识点">
-          <div className="px-3 pb-2 pt-2 text-xs font-semibold tracking-[0.14em] text-stone-400">本节目录</div>
+        <aside className="rounded-card border border-border bg-surface p-3 xl:sticky xl:top-5" aria-label="本节知识点">
+          <div className="px-3 pb-2 pt-2 text-xs font-semibold tracking-[0.14em] text-text-muted">本节目录</div>
           <nav className="space-y-1">
             {lesson.points.map((point, index) => (
               <button
@@ -406,13 +406,13 @@ function CourseLesson({
                   onPointChange(index);
                 }}
                 aria-current={index === activePointIndex ? "step" : undefined}
-                className={`flex w-full items-start gap-3 rounded-2xl px-3 py-3 text-left text-sm leading-5 transition ${
+                className={`flex w-full items-start gap-3 rounded-card px-3 py-3 text-left text-sm leading-5 transition ${
                   index === activePointIndex
-                    ? "bg-[#EEF4E8] font-medium text-emerald-950"
-                    : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                    ? "bg-brand-soft font-medium text-brand-hover"
+                    : "text-text-muted hover:bg-surface-subtle hover:text-foreground"
                 }`}
               >
-                <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-[11px] font-bold ${index === activePointIndex ? "bg-emerald-700 text-white" : "bg-stone-100 text-stone-500"}`}>
+                <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-[11px] font-bold ${index === activePointIndex ? "bg-brand text-brand-foreground" : "bg-surface-subtle text-text-muted"}`}>
                   {index + 1}
                 </span>
                 <span>{point.title ?? `知识点 ${index + 1}`}</span>
@@ -421,16 +421,16 @@ function CourseLesson({
           </nav>
         </aside>
 
-        <article className="min-w-0 rounded-3xl border border-stone-200 bg-white p-5 shadow-[0_8px_30px_rgba(28,25,23,0.045)] sm:p-8">
+        <article className="min-w-0 rounded-card border border-border bg-surface p-5  sm:p-8">
           {activePoint ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">知识点 {activePointIndex + 1}/{lesson.points.length}</span>
+                <span className="rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-text-muted">知识点 {activePointIndex + 1}/{lesson.points.length}</span>
                 {activePoint.difficulty ? <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">{activePoint.difficulty}</span> : null}
               </div>
-              <h2 className="mt-5 text-2xl font-semibold leading-tight tracking-[-0.02em] text-stone-950">{activePoint.title}</h2>
+              <h2 className="mt-5 text-2xl font-semibold leading-tight tracking-[-0.02em] text-foreground">{activePoint.title}</h2>
               {activePoint.oneLine ? (
-                <div className="mt-6 rounded-2xl border-l-4 border-emerald-600 bg-[#F3F7EF] px-5 py-4 text-base font-medium leading-7 text-emerald-950">
+                <div className="mt-6 rounded-card border border-border bg-surface-subtle px-5 py-4 text-base font-medium leading-7 text-brand-hover">
                   {activePoint.oneLine}
                 </div>
               ) : null}
@@ -443,22 +443,22 @@ function CourseLesson({
 
         <aside className="space-y-4 lg:col-start-2 xl:col-start-auto xl:sticky xl:top-5">
           {activePoint?.socratic.length ? (
-            <section className="rounded-3xl border border-stone-200 bg-[#FCFBF7] p-5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-stone-900">
-                <MessageCircleQuestion className="size-5 text-emerald-700" aria-hidden="true" />
+            <section className="rounded-card border border-border bg-surface p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <MessageCircleQuestion className="size-5 text-brand-hover" aria-hidden="true" />
                 先自测，再看提示
               </div>
               <div className="mt-4 space-y-3">
                 {activePoint.socratic.map((question, index) => (
-                  <details key={`${question.q}-${index}`} className="group rounded-2xl border border-stone-200 bg-white p-4">
-                    <summary className="cursor-pointer list-none text-sm font-medium leading-6 text-stone-800 marker:hidden">
+                  <details key={`${question.q}-${index}`} className="group rounded-card border border-border bg-surface p-4">
+                    <summary className="cursor-pointer list-none text-sm font-medium leading-6 text-foreground marker:hidden">
                       Q{index + 1}. {question.q}
                     </summary>
-                    <div className="mt-3 border-t border-stone-100 pt-3 text-sm leading-6 text-stone-600">
+                    <div className="mt-3 border-t border-border pt-3 text-sm leading-6 text-text-muted">
                       {question.hint ? <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">提示：{question.hint}</p> : null}
                       {question.keyPoints.length ? (
                         <ul className="mt-3 space-y-1.5">
-                          {question.keyPoints.map((point) => <li key={point} className="flex gap-2"><Check className="mt-1 size-3.5 shrink-0 text-emerald-600" />{point}</li>)}
+                          {question.keyPoints.map((point) => <li key={point} className="flex gap-2"><Check className="mt-1 size-3.5 shrink-0 text-success" />{point}</li>)}
                         </ul>
                       ) : null}
                     </div>
@@ -469,19 +469,19 @@ function CourseLesson({
           ) : null}
 
           {activePoint?.practiceTask ? (
-            <section className="rounded-3xl border border-stone-200 bg-white p-5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-stone-900">
-                <NotebookPen className="size-5 text-emerald-700" aria-hidden="true" />
+            <section className="rounded-card border border-border bg-surface p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <NotebookPen className="size-5 text-brand-hover" aria-hidden="true" />
                 现在就做
               </div>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-stone-600">{activePoint.practiceTask}</p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-text-muted">{activePoint.practiceTask}</p>
             </section>
           ) : null}
 
           {activePoint && Object.values(activePoint.rubric).some(Boolean) ? (
-            <section className="rounded-3xl border border-stone-200 bg-white p-5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-stone-900">
-                <Route className="size-5 text-emerald-700" aria-hidden="true" />
+            <section className="rounded-card border border-border bg-surface p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Route className="size-5 text-brand-hover" aria-hidden="true" />
                 掌握标准
               </div>
               <div className="mt-4 space-y-3">
@@ -494,9 +494,9 @@ function CourseLesson({
         </aside>
       </div>
 
-      <footer className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-stone-200 bg-white p-4">
-        {previous ? <Link href={lessonHref(previous.id)} className="inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-medium text-stone-600 hover:bg-stone-100"><ArrowLeft className="size-4" />上一节</Link> : <span />}
-        {next ? <Link href={lessonHref(next.id)} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-stone-900 px-4 text-sm font-medium text-white hover:bg-stone-800">下一节<ArrowRight className="size-4" /></Link> : <Link href="/knowledge?view=course" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-medium text-white">完成课程<Check className="size-4" /></Link>}
+      <footer className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-4">
+        {previous ? <Link href={lessonHref(previous.id)} className="inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-medium text-text-muted hover:bg-surface-subtle"><ArrowLeft className="size-4" />上一节</Link> : <span />}
+        {next ? <Link href={lessonHref(next.id)} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand-hover">下一节<ArrowRight className="size-4" /></Link> : <Link href="/knowledge?view=course" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-brand px-4 text-sm font-medium text-brand-foreground">完成课程<Check className="size-4" /></Link>}
       </footer>
     </div>
   );
@@ -505,22 +505,22 @@ function CourseLesson({
 function ReadableText({ title, icon, content }: { readonly title: string; readonly icon: ReactNode; readonly content: string }) {
   return (
     <section className="mt-8">
-      <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900">{icon}{title}</h3>
-      <p className="mt-3 whitespace-pre-wrap text-[15px] leading-8 text-stone-700">{content}</p>
+      <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">{icon}{title}</h3>
+      <p className="mt-3 whitespace-pre-wrap text-[15px] leading-8 text-text-muted">{content}</p>
     </section>
   );
 }
 
 function Disclosure({ title, icon, content, tone = "neutral" }: { readonly title: string; readonly icon: ReactNode; readonly content: string; readonly tone?: "neutral" | "warning" }) {
   return (
-    <details className={`group mt-6 rounded-2xl border p-5 ${tone === "warning" ? "border-amber-200 bg-amber-50/60" : "border-stone-200 bg-stone-50/60"}`}>
-      <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-stone-900 marker:hidden">{icon}{title}<ChevronRight className="ml-auto size-4 transition group-open:rotate-90" /></summary>
-      <p className="mt-4 whitespace-pre-wrap border-t border-current/10 pt-4 text-sm leading-7 text-stone-700">{content}</p>
+    <details className={`group mt-6 rounded-card border p-5 ${tone === "warning" ? "border-warning/30 bg-warning-soft" : "border-border bg-surface-subtle/60"}`}>
+      <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-foreground marker:hidden">{icon}{title}<ChevronRight className="ml-auto size-4 transition group-open:rotate-90" /></summary>
+      <p className="mt-4 whitespace-pre-wrap border-t border-current/10 pt-4 text-sm leading-7 text-text-muted">{content}</p>
     </details>
   );
 }
 
 function RubricRow({ score, label, text }: { readonly score: string; readonly label: string; readonly text?: string }) {
   if (!text) return null;
-  return <div className="grid grid-cols-[44px_1fr] gap-3"><span className="grid size-11 place-items-center rounded-xl bg-[#EEF4E8] text-sm font-bold text-emerald-800">{score}</span><div><p className="text-xs font-semibold text-stone-400">{label}</p><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-stone-600">{text}</p></div></div>;
+  return <div className="grid grid-cols-[44px_1fr] gap-3"><span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-sm font-bold text-brand-hover">{score}</span><div><p className="text-xs font-semibold text-text-muted">{label}</p><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-text-muted">{text}</p></div></div>;
 }

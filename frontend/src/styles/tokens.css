@@ -1,30 +1,30 @@
 :root {
-  --creatoros-canvas: #f8f9fc;
+  --creatoros-canvas: #f5f6fa;
   --creatoros-surface: #ffffff;
-  --creatoros-surface-subtle: #f5f6fa;
-  --creatoros-brand: #6d4aff;
-  --creatoros-brand-hover: #5b38eb;
-  --creatoros-brand-soft: #f2efff;
+  --creatoros-surface-subtle: #eef0f6;
+  --creatoros-brand: #6441d9;
+  --creatoros-brand-hover: #5030b0;
+  --creatoros-brand-soft: #eee9ff;
   /* [UI 修真] brand 上的前景 —— 白色,压在饱和紫上高对比(此前缺失致按钮字回退成深色)。 */
   --creatoros-brand-foreground: #ffffff;
-  --creatoros-text: #171a25;
-  --creatoros-text-muted: #667085;
-  --creatoros-text-subtle: #98a2b3;
-  --creatoros-border: #e6e8f0;
-  --creatoros-border-strong: #d5d9e3;
-  --creatoros-success: #12b76a;
-  --creatoros-success-soft: #ecfdf3;
-  --creatoros-warning: #f79009;
-  --creatoros-warning-soft: #fffaeb;
-  --creatoros-danger: #f04438;
-  --creatoros-danger-soft: #fef3f2;
-  --creatoros-info: #2e90fa;
-  --creatoros-info-soft: #eff8ff;
+  --creatoros-text: #202337;
+  --creatoros-text-muted: #555e70;
+  --creatoros-text-subtle: #626b7c;
+  --creatoros-border: #dce0e9;
+  --creatoros-border-strong: #838da0;
+  --creatoros-success: #187044;
+  --creatoros-success-soft: #e9f5ed;
+  --creatoros-warning: #8a4b08;
+  --creatoros-warning-soft: #fff3dc;
+  --creatoros-danger: #c4313c;
+  --creatoros-danger-soft: #fff0f1;
+  --creatoros-info: #2361ba;
+  --creatoros-info-soft: #edf3ff;
 
   --creatoros-sidebar-width: 224px;
-  --creatoros-header-height: 72px;
+  --creatoros-header-height: 64px;
   --creatoros-page-gutter: 24px;
-  --creatoros-section-gap: 20px;
+  --creatoros-section-gap: 24px;
   --creatoros-card-gap: 16px;
   --creatoros-radius-control: 8px;
   --creatoros-radius-card: 12px;
@@ -40,8 +40,7 @@
   --creatoros-text-xl: 24px;
   --creatoros-text-2xl: 32px;
 
-  --creatoros-shadow-card:
-    0 1px 3px rgb(16 24 40 / 0.06), 0 1px 2px rgb(16 24 40 / 0.04);
+  --creatoros-shadow-card: none;
   --creatoros-shadow-popover:
     0 12px 24px rgb(16 24 40 / 0.12), 0 4px 8px rgb(16 24 40 / 0.06);
   --creatoros-z-header: 20;
@@ -49,9 +48,54 @@
   --creatoros-z-overlay: 50;
   --creatoros-z-dialog: 60;
 
-  --creatoros-chart-1: #6d4aff;
-  --creatoros-chart-2: #4f7cff;
-  --creatoros-chart-3: #12b76a;
-  --creatoros-chart-4: #f79009;
-  --creatoros-chart-5: #c840d8;
+  --creatoros-chart-1: #6441d9;
+  --creatoros-chart-2: #2361ba;
+  --creatoros-chart-3: #187044;
+  --creatoros-chart-4: #8a4b08;
+  --creatoros-chart-5: #b03a87;
+}
+
+/* UI/UX Pro Max · CreatorOS 统一设计系统；规范见 design-system/creatoros/MASTER.md。 */
+:root {
+  --creatoros-space-1: 4px;
+  --creatoros-space-2: 8px;
+  --creatoros-space-3: 12px;
+  --creatoros-space-4: 16px;
+  --creatoros-space-5: 24px;
+  --creatoros-space-6: 32px;
+  --creatoros-space-7: 48px;
+  --creatoros-content-max: 1440px;
+  --creatoros-control-height: 40px;
+  --creatoros-control-compact: 32px;
+  --creatoros-line-height: 1.6;
+  --creatoros-motion-fast: 150ms;
+  --creatoros-motion-normal: 200ms;
+}
+.dark {
+  --creatoros-canvas: #141723;
+  --creatoros-surface: #1e2232;
+  --creatoros-surface-subtle: #292e41;
+  --creatoros-brand: #b5a2ff;
+  --creatoros-brand-hover: #cebeff;
+  --creatoros-brand-soft: #30294d;
+  --creatoros-brand-foreground: #1c1534;
+  --creatoros-text: #f0f1fa;
+  --creatoros-text-muted: #b5bdcf;
+  --creatoros-text-subtle: #aab3c7;
+  --creatoros-border: #3b4258;
+  --creatoros-border-strong: #7d89a5;
+  --creatoros-success: #83dab0;
+  --creatoros-success-soft: #193b2d;
+  --creatoros-warning: #ffd08b;
+  --creatoros-warning-soft: #42321e;
+  --creatoros-danger: #ffacb4;
+  --creatoros-danger-soft: #492630;
+  --creatoros-info: #a2c6ff;
+  --creatoros-info-soft: #243754;
+  --creatoros-chart-1: #b5a2ff;
+  --creatoros-chart-2: #a2c6ff;
+  --creatoros-chart-3: #83dab0;
+  --creatoros-chart-4: #ffd08b;
+  --creatoros-chart-5: #f2a7d9;
+  --creatoros-shadow-popover: 0 12px 32px rgb(0 0 0 / .35);
 }

@@ -558,6 +558,17 @@ describe("T-482 内容雷达工作区", () => {
       .parentElement;
     expect(detailRegion).not.toHaveClass("xl:col-span-2");
     expect(detailRegion).toHaveClass("xl:min-h-0");
+    const sourceStep=screen.getByRole("heading",{name:"01 来源与采集"});
+    const pickStep=screen.getByRole("heading",{name:"02 挑选内容"});
+    const readStep=screen.getByRole("heading",{name:"03 阅读核对"});
+    const createStep=screen.getByRole("heading",{name:"04 改写创作"});
+    expect(sourceStep.compareDocumentPosition(pickStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(pickStep.compareDocumentPosition(readStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(readStep.compareDocumentPosition(createStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const transcript=screen.getByRole("heading",{name:"逐字稿"});
+    const evidence=screen.getByRole("heading",{name:"来源证据"});
+    expect(transcript.compareDocumentPosition(evidence)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(evidence.compareDocumentPosition(createStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("[T-572] 左栏可按来源名称、类型和同步状态快速筛选", async () => {
@@ -3253,3 +3264,38 @@ it('[T-1022] 空组已有公开素材可以提交改写候选，未保存定位�
     expect(await screen.findByText("已排队")).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
+
+
+it("来源管理只展示来源任务，入口仍打开原对话框", async () => {
+  render(<IntelligenceWorkbench presentation="sources" groupId="sources-only-empty" workspace={workspace} items={[]} initialDetail={null} api={api()}/>);
+  expect(screen.getByRole("heading",{name:"真实来源"})).toBeVisible();
+  expect(screen.getByRole("heading",{name:"从添加一个来源开始"})).toBeVisible();
+  expect(screen.queryByRole("heading",{name:"02 挑选内容"})).not.toBeInTheDocument();
+  expect(screen.queryByRole("textbox",{name:"搜索雷达内容"})).not.toBeInTheDocument();
+  expect(screen.queryByRole("separator",{name:"调整作品详情宽度"})).not.toBeInTheDocument();
+  for (const [name,title] of [["添加来源","添加真实来源"],["粘贴分享链接","从抖音分享链接建档"],["新建分类","新建监控分类"]]) {
+    await userEvent.click(screen.getByRole("button",{name}));
+    expect(screen.getByRole("dialog",{name:title})).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+  }
+});
+
+it("来源目录选择仅切换真实状态概览，筛选和原同步入口保留", async () => {
+  const sourceWorkspace:RadarWorkspace={...workspace,sources:[{id:"source-preview-web",collectionId:null,type:"web",displayName:"来源布局样例",canonicalUrl:"https://example.com",collector:null,monitorEnabled:false,syncPolicy:{mode:"manual"},status:"active",lastRunAt:null,nextRunAt:null,version:1}]};
+  const calls=api();
+  render(<IntelligenceWorkbench presentation="sources" groupId="sources-only-selected" workspace={sourceWorkspace} items={[]} initialDetail={null} api={calls}/>);
+  await userEvent.click(screen.getByRole("button",{name:/来源布局样例.*网页/}));
+  expect(screen.getByRole("button",{name:/来源布局样例.*网页/})).toHaveAttribute("aria-pressed","true");
+  const overview=screen.getByRole("region",{name:"来源采集概览"});
+  expect(within(overview).getByRole("heading",{name:"来源布局样例"})).toBeVisible();
+  expect(within(overview).getByText("已暂停")).toBeVisible();
+  expect(within(overview).getByText("未安排")).toBeVisible();
+  expect(within(overview).getByRole("link",{name:"查看来源原链接"})).toHaveAttribute("href","https://example.com");
+  expect(calls.listItems).not.toHaveBeenCalled();
+  expect(screen.getByRole("button",{name:"同步 来源布局样例"})).toBeEnabled();
+  expect(screen.getByRole("button",{name:"恢复 来源布局样例 的每日自动同步"})).toBeEnabled();
+  expect(screen.getByRole("button",{name:"移除 来源布局样例"})).toBeEnabled();
+  await userEvent.type(screen.getByRole("searchbox",{name:"筛选来源"}),"不存在的来源");
+  expect(screen.getByText("没有匹配的来源")).toBeVisible();
+  expect(screen.queryByRole("button",{name:"同步 来源布局样例"})).not.toBeInTheDocument();
+});

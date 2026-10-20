@@ -246,10 +246,11 @@ export function SearchPage({
   return (
     <main
       data-app="creatoros"
-      data-page="search"
+      data-page="search" data-studio-layout="search"
       data-search-id="search-root"
       className="flex flex-col gap-3"
     >
+      <header><h1 className="text-2xl font-semibold">搜索结果</h1></header>
       {/* [T-051 2d] 全局搜索输入框只有一个真身:TopHeader `search` 模式渲染的
           `HeaderGlobalSearch` client 岛(提交 → push /search?q= → server 重查)。
           原来藏在这里的 sr-only 复制品(可见框是死的、活框被藏起来的交互倒置)
@@ -356,7 +357,7 @@ function ProjectResultSection({
   return (
     <SectionCard
       title="项目"
-      description="按相关度排序的匹配项目"
+     
       action={
         <Link
           href="/projects"
@@ -442,7 +443,7 @@ function KnowledgeResultSection({
   return (
     <SectionCard
       title="知识"
-      description="匹配的知识条目"
+     
       action={
         <a
           href="/knowledge"
@@ -514,7 +515,7 @@ function AssetResultSection({
   return (
     <SectionCard
       title="素材"
-      description="缩略图横向排列"
+     
       action={
         <a
           href="/assets"
@@ -583,7 +584,7 @@ function VideoResultSection({
   return (
     <SectionCard
       title="视频"
-      description="匹配的视频内容"
+     
       action={
         <a
           href="/publishing"
@@ -692,7 +693,7 @@ function SearchSideRail({
 
 function QuickActions({ actions }: { actions: ReadonlyArray<QuickAction> }) {
   return (
-    <SectionCard title="快捷操作" description="一键跳转到常用入口">
+    <SectionCard title="快捷操作">
       <ul
         data-slot="search-quick-actions"
         className="flex flex-col gap-1.5"
@@ -724,7 +725,7 @@ function QuickActions({ actions }: { actions: ReadonlyArray<QuickAction> }) {
 
 function SearchHistory({ items }: { items: ReadonlyArray<HistoryItem> }) {
   return (
-    <SectionCard title="搜索历史" description="最近的搜索">
+    <SectionCard title="搜索历史">
       {items.length === 0 ? (
         <p className="text-xs text-muted-foreground">暂无搜索历史。</p>
       ) : (
@@ -763,7 +764,7 @@ function SearchHistory({ items }: { items: ReadonlyArray<HistoryItem> }) {
 
 function SearchTips({ tips }: { tips: ReadonlyArray<string> }) {
   return (
-    <SectionCard title="搜索技巧" description="更精确地搜索">
+    <SectionCard title="搜索技巧">
       {/* §297 Search-tips rows — decorative per roadmap §4 (static syntax tips). */}
       <ul
         data-slot="search-tips"

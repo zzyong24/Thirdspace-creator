@@ -64,7 +64,7 @@ export function MetricCard({
         {label}
       </span>
       <div className="flex items-baseline gap-2">
-        <span className="text-[22px] font-semibold leading-tight tabular-nums text-foreground">
+        <span data-value-state={value === "—" ? "missing" : "known"} className="text-2xl font-normal leading-tight tabular-nums text-foreground">
           {value}
         </span>
         {/* [T-054] 无真环比(空/「—」占位)时不渲染 delta 徽标 —— 灰色小横杠

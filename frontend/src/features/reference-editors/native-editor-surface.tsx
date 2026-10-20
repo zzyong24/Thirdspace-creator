@@ -77,13 +77,14 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
     const portals = document.createElement('div');
     // NoteRelay的原生正文/整卡滚动归挂载容器；其它工作台保留原裁切布局。
     container.style.cssText = `height:100%;min-height:0;min-width:0;position:relative;overflow:${editor === 'noterelay' ? 'auto' : 'hidden'};`;
-    container.tabIndex = -1;
+    container.tabIndex = editor === 'noterelay' ? 0 : -1;
+    if (editor === 'noterelay') {container.setAttribute('role', 'region'); container.setAttribute('aria-label', '成稿排版预览，可使用方向键滚动');}
     portals.dataset.nativePortalRoot = '';
     portals.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:60;';
     const css = document.createElement('link');
     css.rel = 'stylesheet'; css.href = `/reference-editors/${editor}/native/native.css`;
     const baseStyle = document.createElement('style');
-    baseStyle.textContent = ':host{display:block;height:100%;min-height:0;color:var(--creatoros-text);background:var(--creatoros-surface);font-family:var(--creatoros-font-sans)}*,*::before,*::after{box-sizing:border-box}[data-native-portal-root]>*{pointer-events:auto}';
+    baseStyle.textContent = ':host{display:block;height:100%;min-height:0;color:var(--creatoros-text);background:var(--creatoros-surface);font-family:var(--creatoros-font-sans)}*,*::before,*::after{box-sizing:border-box}[data-native-portal-root]>*{pointer-events:auto}:where(a,button,input,textarea,select,[tabindex]):focus-visible{outline:2px solid var(--creatoros-brand);outline-offset:2px}@media(prefers-reduced-motion:reduce){[data-native-dialog-content]{animation:none}:where(a,button,input,textarea,select,[role="tab"]){transition-property:color,background-color,border-color,opacity}}';
     let mounted: NativeEditorHandle | undefined;
     let cssResolve: () => void;
     let cssReject: (error: Error) => void;

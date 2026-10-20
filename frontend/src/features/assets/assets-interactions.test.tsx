@@ -416,6 +416,8 @@ describe("Assets needs-backend wiring", () => {
     );
     expect(trashViewBtn).not.toBeNull();
     fireEvent.click(trashViewBtn!);
+    expect(trashViewBtn).toHaveAttribute("aria-pressed", "true");
+    expect(container.querySelector('[data-slot="asset-detail-rail"]')).not.toBeVisible();
     // 列出已回收素材。
     const item = container.querySelector(
       '[data-slot="assets-trash-item"][data-asset-id="asset-trashed-1"]',
@@ -479,6 +481,38 @@ describe("Assets needs-backend wiring", () => {
     expect(
       container.querySelector('[data-slot="assets-trash-item"]'),
     ).toBeNull();
+  });
+
+  it("项目概览隐藏无关详情，进入通用素材后恢复详情且不修改记录", async () => {
+    const { container } = await renderIsland();
+    const detail = container.querySelector('[data-slot="asset-detail-rail"]')!;
+    fireEvent.click(container.querySelector('[data-slot="assets-view-byProject"]')!);
+    expect(detail).not.toBeVisible();
+    fireEvent.click(container.querySelector('[data-project-id="__general__"]')!);
+    expect(detail).toBeVisible();
+    fireEvent.click(container.querySelector('[data-slot="assets-folder-back"]')!);
+    expect(detail).not.toBeVisible();
+    fireEvent.click(container.querySelector('[data-slot="assets-view-all"]')!);
+    expect(detail).toBeVisible();
+    expect(mockClient.trashAsset).not.toHaveBeenCalled();
+    expect(mockClient.restoreAsset).not.toHaveBeenCalled();
+    expect(mockClient.toggleFavorite).not.toHaveBeenCalled();
+  });
+
+  it("换页保留类型和搜索，调整每页条数回到第一页", async () => {
+    const { AssetsInteractiveRegion } = await import("./assets-interactive-region");
+    const vm = buildAssetsViewModel();
+    const { container } = render(<AssetsInteractiveRegion viewModel={vm} gallery={{
+      assets: vm.assets, totalCount: 25, currentPage: 2, pageSize: 12,
+      totalPages: 3, activeType: "image", query: "封面", projects: [],
+    }} />);
+    mockRouter.push.mockClear();
+    fireEvent.click(container.querySelector('[data-slot="pagination-next"]')!);
+    let url = new URL(mockRouter.push.mock.calls.at(-1)![0], "http://localhost");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ type: "image", q: "封面", page: "3", pageSize: "12" });
+    fireEvent.change(container.querySelector('[data-slot="pagination-page-size"]')!, { target: { value: "48" } });
+    url = new URL(mockRouter.push.mock.calls.at(-1)![0], "http://localhost");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ type: "image", q: "封面", pageSize: "48" });
   });
 
   it("[T-060③a] 附到项目已退役:素材只两条来路(素材中心直传 / 项目内上传)", async () => {

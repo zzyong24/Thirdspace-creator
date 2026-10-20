@@ -9,7 +9,7 @@
  *
  * Layout (定位中心重建, two-column): 页头 + 新建定位母版 → 两栏 grid:
  *   - 左主栏: 英雄区 当前定位母版 (一句话放大 + 9-facet 图标 chip 网格) → 版本历史表.
- *   - 右规则栏: 「定位规则（供下游模块使用）」 5 条规则卡 (彩色图标 chip + 短文),
+ *   - 右规则栏: 「定位规则」 5 条规则卡 (彩色图标 chip + 短文),
  *       prominent / NOT collapsed (these are the constraints the downstream brief injects).
  * The mutating controls live in the client islands `positioning-interactive-region.tsx`
  * (drawer = upsertProfile + createStatement)。定位采集与生成统一进入 Copilot，候选仍须
@@ -150,6 +150,7 @@ export function PositioningCenterView({
   return (
     // 固定高度填满：页头 shrink-0 钉住,两栏 flex-1 占满剩余高度、每列各自框内滚。
     <div
+      data-page="positioning" data-studio-layout="brief"
       data-slot="positioning-center"
       data-testid="positioning-center"
       className="flex h-full min-h-0 flex-col gap-4"
@@ -164,10 +165,9 @@ export function PositioningCenterView({
           hasCurrentProfile={false}
         />
       ) : (
-        // T-666：正式母版永远在前采草稿之前展示。进行中的 scratch / pivot / optimize
-        // 只是可恢复草稿，不能再独占整页制造“旧定位已丢失”的错觉。
+        // 已有定位时保留母版、规则与历史；后续对话统一从页头“重新定位”进入。
         <div className="flex min-h-0 flex-1 flex-col gap-section-gap overflow-y-auto pr-1">
-          <div className="grid shrink-0 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div data-slot="studio-positioning-layout" className="grid shrink-0 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_380px]">
             {/* 左列子卡片必须 shrink-0:否则 flex 会把卡片压缩适应列高,卡片自身
                 overflow-hidden 无声裁掉内容 → 列 scrollHeight==clientHeight 永不滚 (T-090)。 */}
             <div className="flex min-h-0 min-w-0 flex-col gap-section-gap overflow-y-auto pr-1">
@@ -184,19 +184,14 @@ export function PositioningCenterView({
             <DownstreamRules profile={profile} />
           </div>
 
-          <div className="shrink-0 scroll-mt-4">
-            <PositioningDiscoveryWorkflow
-              initialSession={activeDiscovery}
-              hasCurrentProfile
-            />
-          </div>
+
         </div>
       )}
     </div>
   );
 }
 
-// 页头：标题 + 副标题 + 右侧主按钮「+ 新建定位母版」(确认后重置真母版并进入 AI 访谈).
+// 首次定位入口位于空态；已有定位时仅在页头保留非破坏式“重新定位”入口。
 function PageHeader({
   isEmpty,
 }: {
@@ -207,7 +202,7 @@ function PageHeader({
       <div className="flex min-w-0 flex-col gap-0.5">
         <h1 className="text-xl font-semibold text-foreground">定位中心</h1>
         <p className="text-sm text-muted-foreground">
-          账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。
+          明确受众、价值与表达方式。
         </p>
       </div>
       {isEmpty ? null : (
@@ -266,7 +261,7 @@ function HeroMaster({
       className="shrink-0"
       title="当前定位母版"
       action={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {currentStatement ? (
             <Badge
               data-testid="positioning-current-pill"
@@ -324,17 +319,15 @@ function HeroMaster({
               <div
                 key={facet.label}
                 data-testid="positioning-facet"
-                className="flex items-start gap-3 rounded-card border border-border bg-card px-3 py-3 transition-colors hover:border-brand/40"
+                className="flex min-w-0 flex-col gap-2 rounded-card border border-border bg-card px-3 py-3"
               >
-                <IconChip icon={facet.icon} tone={facet.tone} />
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <dt className="text-[11px] font-medium text-text-subtle">
-                    {facet.label}
-                  </dt>
-                  <dd className="text-[13px] leading-snug text-foreground">
-                    {facet.value}
-                  </dd>
-                </div>
+                <dt className="flex items-center gap-2 text-xs font-medium text-text-muted">
+                  <IconChip icon={facet.icon} tone={facet.tone} />
+                  {facet.label}
+                </dt>
+                <dd className="text-sm leading-relaxed text-foreground">
+                  {facet.value}
+                </dd>
               </div>
             ))}
           </dl>
@@ -369,7 +362,7 @@ function HeroMaster({
   );
 }
 
-// 右规则栏「定位规则（供下游模块使用）」— 5 条规则卡, prominent / not collapsed.
+// 右规则栏「定位规则」— 5 条规则卡, prominent / not collapsed.
 // Each = 彩色图标 chip + 标签 + 短文. Empty rule → that card is dropped (never invented).
 // These ARE the fields creative-context injects as HARD constraints into 选题/写稿/项目.
 type Rule = {
@@ -418,7 +411,7 @@ function DownstreamRules({
       <div className="flex shrink-0 flex-col gap-0.5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-[15px] font-semibold text-foreground">
-            定位规则（供下游模块使用）
+            定位规则
           </h2>
           <PositioningDraftDrawer
             profile={profile}
@@ -427,12 +420,12 @@ function DownstreamRules({
             triggerSize="sm"
             triggerIcon="pencil"
             title="编辑定位规则"
-            description="修改选题 / 写稿 / 项目 / 禁止 / 表达规则；保存后下游 AI 会使用最新规则。"
+            description="修改规则，保存后用于后续 AI 创作。"
             initialTab="rules"
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          每次 AI 生成（选题 / 写稿 / 项目 / 评分 / Copilot）都会把下面这些规则作为硬约束注入。改规则即改下游所有 AI 的行为。
+          规则用于后续 AI 创作，保存后生效。
         </p>
       </div>
 
@@ -498,7 +491,7 @@ function DownstreamRules({
             triggerSize="sm"
             triggerIcon="pencil"
             title="编辑当前定位"
-            description="填写选题 / 写稿 / 项目 / 禁止 / 表达规则,下游 AI 会以它们为硬约束。"
+            description="填写后续 AI 创作需要遵守的规则。"
             initialTab="rules"
           />
         </div>

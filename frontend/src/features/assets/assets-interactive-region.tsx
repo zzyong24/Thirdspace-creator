@@ -21,6 +21,7 @@
  */
 
 import * as React from "react";
+import { Folder, FolderOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -329,14 +330,18 @@ export function AssetsInteractiveRegion({
   return (
     <div
       data-slot="assets-interactive-region"
+      data-view={view}
+      data-folder-open={Boolean(openProjectId)}
       className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_312px]"
     >
       <div
+        id="asset-gallery"
         data-slot="asset-gallery"
         aria-label="素材画廊"
         className="flex flex-col gap-3"
       >
         <GalleryHeader
+          title={view === "trash" ? "回收站" : view === "byProject" && !openProjectId ? "项目素材" : "素材库"}
           totalCount={
             view === "trash"
               ? trashedAssets.length
@@ -344,7 +349,7 @@ export function AssetsInteractiveRegion({
           }
         />
         {/* [T-060③b] 视图切换:全部 | 按项目(文件夹)| [T-248 批B] 回收站。 */}
-        <div data-slot="assets-view-switch" className="flex items-center gap-1.5">
+        <div data-slot="assets-view-switch" role="group" aria-label="素材视图" className="flex items-center gap-1.5">
           {(
             [
               { key: "all", label: "全部" },
@@ -357,6 +362,7 @@ export function AssetsInteractiveRegion({
               type="button"
               data-slot={`assets-view-${v.key}`}
               data-active={view === v.key}
+              aria-pressed={view === v.key}
               onClick={() => {
                 setView(v.key);
                 setOpenProjectId(null);
@@ -382,6 +388,7 @@ export function AssetsInteractiveRegion({
             </button>
           ) : null}
         </div>
+        {selected && view !== "trash" && (view !== "byProject" || openProjectId) ? <a data-slot="asset-detail-jump" href="#asset-detail">查看所选素材 ↓</a> : null}
         {view === "trash" ? (
           // [T-248 批B] 回收站视图:已回收素材列表,每项带「还原」确认门。
           <TrashList
@@ -403,7 +410,7 @@ export function AssetsInteractiveRegion({
                 onClick={() => setOpenProjectId(g.projectId)}
                 className="flex flex-col items-start gap-1 rounded-card border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-brand/50"
               >
-                <span aria-hidden="true" className="text-lg">📁</span>
+                <Folder aria-hidden="true" className="size-5 text-brand" />
                 <span className="w-full truncate text-xs font-medium text-foreground">
                   {g.title}
                 </span>
@@ -417,7 +424,7 @@ export function AssetsInteractiveRegion({
               onClick={() => setOpenProjectId("__general__")}
               className="flex flex-col items-start gap-1 rounded-card border border-dashed border-border bg-surface-subtle/50 px-3 py-3 text-left transition-colors hover:border-brand/50"
             >
-              <span aria-hidden="true" className="text-lg">🗂</span>
+              <FolderOpen aria-hidden="true" className="size-5 text-brand" />
               <span className="text-xs font-medium text-foreground">通用素材</span>
               <span className="text-[11px] text-text-subtle">
                 {projectGroups.generalCount} 件 · 未挂项目
@@ -441,8 +448,10 @@ export function AssetsInteractiveRegion({
           />
         ) : null}
       </div>
-      <div className="flex flex-col gap-2">
+      <div id="asset-detail" data-slot="asset-detail-rail" hidden={view === "trash" || (view === "byProject" && !openProjectId)} className="flex flex-col gap-2">
+        <a data-slot="asset-gallery-jump" href="#asset-gallery">← 返回素材</a>
         <AssetDetailPanel
+          compact
           asset={selected}
           usageHistory={viewModel.usageHistory}
           onDownload={handleDownload}
@@ -622,13 +631,14 @@ function TrashList({
 // GalleryHeader — the REAL result count (no fabricated number)
 // ---------------------------------------------------------------------------
 
-function GalleryHeader({ totalCount }: { readonly totalCount: number }) {
+function GalleryHeader({ totalCount, title }: { readonly totalCount: number; readonly title: string }) {
   return (
     <div
       data-slot="gallery-controls"
       aria-label="画廊控制"
       className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"
     >
+      <h2 className="text-base font-semibold text-foreground">{title}</h2>
       <span className="text-sm text-foreground">
         共{" "}
         <span
@@ -682,6 +692,7 @@ function AssetCardGrid({ assets, selectedId, onSelect }: AssetCardGridProps) {
         <AssetCard
           key={asset.id}
           asset={asset}
+          libraryLayout
           selected={asset.id === selectedId}
           onSelect={onSelect}
         />

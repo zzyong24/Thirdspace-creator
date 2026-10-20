@@ -203,6 +203,8 @@ export const CopilotAttachmentPicker = React.forwardRef<
         ref={inputRef}
         type="file"
         className="sr-only"
+        aria-label="选择文件或图片"
+        tabIndex={-1}
         multiple
         accept={ACCEPT}
         onChange={(event) => {

@@ -376,6 +376,7 @@ export interface ShellUser {
 }
 
 export interface ShellRouterProps {
+  readonly previewMode?: boolean;
   readonly children: React.ReactNode;
   readonly user?: ShellUser;
   // G1: the server-read Shell notifications, forwarded untouched to the
@@ -387,6 +388,7 @@ export interface ShellRouterProps {
 
 function ShellRouterContents({
   children,
+  previewMode = false,
   user,
   notifications,
   hasInterceptingModal = false,
@@ -404,6 +406,7 @@ function ShellRouterContents({
 
   return (
     <AppShell
+      previewMode={previewMode}
       pathname={pathname}
       user={user}
       notifications={notifications}

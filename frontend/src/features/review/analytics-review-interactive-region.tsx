@@ -676,7 +676,7 @@ function CurrentPeriodLearnings({
       data-slot="current-period-learnings"
       data-empty={isEmpty ? "true" : "false"}
       aria-label="本期经验"
-      className="flex flex-col gap-2 rounded-xl border border-brand/25 border-t-4 border-t-brand/50 bg-brand-soft/20 p-3 shadow-card"
+      className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-card"
     >
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="flex flex-col gap-0.5">
@@ -1120,6 +1120,7 @@ function ReviewAuthoringPanel({
       </p>
 
       <div data-slot="add-insight-form" className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">洞察类型
         <select
           data-slot="insight-type-select"
           value={insightType}
@@ -1133,6 +1134,8 @@ function ReviewAuthoringPanel({
             </option>
           ))}
         </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">洞察标题
         <input
           data-slot="insight-title-input"
           value={title}
@@ -1141,6 +1144,8 @@ function ReviewAuthoringPanel({
           placeholder="洞察标题"
           className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground disabled:opacity-50"
         />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">补充说明（可选）
         <input
           data-slot="insight-description-input"
           value={description}
@@ -1149,6 +1154,7 @@ function ReviewAuthoringPanel({
           placeholder="补充说明（可选）"
           className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground disabled:opacity-50"
         />
+        </label>
         <button
           type="button"
           data-slot="add-insight-button"

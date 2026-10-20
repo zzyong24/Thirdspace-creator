@@ -144,9 +144,6 @@ export function TodoCard({
             data-slot="todo-empty"
             className="flex flex-col items-start gap-2 rounded-card border border-dashed border-border bg-surface-subtle px-3.5 py-4"
           >
-            <p className="text-sm text-muted-foreground">
-              没有待处理任务。从选题池挑一条,开启下一条内容。
-            </p>
             <Link
               href="/topics"
               className="text-sm font-medium text-brand hover:underline"

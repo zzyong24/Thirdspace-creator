@@ -1,0 +1,242 @@
+/* CreatorOS UI/UX Pro Max 系统：共享界面规则。
+ * 颜色只取 tokens.css；页面构图仍由原有功能组件与 CSS modules 负责。
+ * 编辑内容、画布节点、视频时间轴、文章排版和图文成品不在全局尺寸规则内。
+ */
+body { line-height:var(--creatoros-line-height); }
+html { color-scheme:light; }
+html.dark { color-scheme:dark; }
+
+/* Consistent keyboard focus also applies to native controls and portal overlays. */
+:where(a,button,input,textarea,select,summary,[tabindex]):focus-visible {
+  outline:2px solid var(--creatoros-brand);
+  outline-offset:3px;
+}
+:where(a,button,input,textarea,select,summary,[tabindex]) { scroll-margin-block:16px; }
+[data-slot="skip-link"] {
+  position:fixed; left:16px; top:12px; z-index:100;
+  transform:translateY(-200%); padding:12px 20px;
+  border-radius:var(--creatoros-radius-control);
+  background:var(--creatoros-brand); color:var(--creatoros-brand-foreground);
+  font-size:14px; font-weight:600;
+}
+[data-slot="skip-link"]:focus { transform:translateY(0); }
+[data-slot="app-page-content"]:focus { outline:none; }
+[data-slot="scroll-area-viewport"] { scroll-padding:16px; }
+
+/* Workspace shell: stable navigation, clear header, a quiet canvas. */
+[data-design="manuscript"] [data-slot="app-sidebar"] {
+  background:var(--creatoros-surface); border-right:1px solid var(--creatoros-border);
+  padding:24px 12px 16px;
+}
+[data-design="manuscript"] [data-slot="sidebar-nav-item"] {
+  min-height:40px; height:auto; padding-block:8px; font-size:14px;
+  border-radius:var(--creatoros-radius-control);
+  transition:background-color var(--creatoros-motion-fast),color var(--creatoros-motion-fast);
+}
+[data-design="manuscript"] [data-slot="sidebar-nav-item"]:hover { background:var(--creatoros-surface-subtle); color:var(--creatoros-text); }
+[data-design="manuscript"] [data-slot="sidebar-nav-item"][data-active="true"] {
+  color:var(--creatoros-brand-hover); background:var(--creatoros-brand-soft); font-weight:600;
+}
+[data-design="manuscript"] [data-slot="sidebar-nav-group"] { padding:20px 10px 8px; font-size:12px; letter-spacing:.04em; }
+[data-design="manuscript"] [data-slot="app-top-header"] {
+  min-height:var(--creatoros-header-height); height:var(--creatoros-header-height);
+  background:var(--creatoros-surface); border-bottom:1px solid var(--creatoros-border); padding-inline:32px;
+}
+[data-design="manuscript"] [data-slot="app-top-header"][data-mode="project-workspace"] { height:auto; min-height:var(--creatoros-header-height); }
+[data-design="manuscript"] [data-slot="header-actions"] :is(a,button) { min-height:40px; }
+[data-design="manuscript"] [data-slot="app-page-content"] {
+  padding:32px 32px 48px; max-width:var(--creatoros-content-max);
+}
+[data-design="manuscript"] [data-slot="app-page-content"][data-fill="true"] { padding:24px; max-width:none; }
+[data-design="manuscript"] [data-slot="app-page-content"] :is(main > header,[data-page] > header) h1 {
+  font-size:28px; line-height:1.35; font-weight:650; letter-spacing:-.02em; text-wrap:balance;
+}
+[data-design="manuscript"] [data-slot="app-page-content"] :is(main > header,[data-page] > header) > p {
+  font-size:14px; line-height:1.6; color:var(--creatoros-text-muted); max-width:68ch;
+}
+:is([data-slot="section-card"],[data-slot="card"],[data-slot="metric-card"]) {
+  border-radius:var(--creatoros-radius-card); box-shadow:none;
+}
+[data-slot="card-title"] { line-height:1.5; font-weight:600; }
+[data-slot="card-description"] { color:var(--creatoros-text-muted); line-height:1.6; }
+
+/* One control vocabulary across pages and overlays. Preserve every real handler. */
+:is([data-ui="button"],[data-slot="button"]) { border-radius:var(--creatoros-radius-control); transition-duration:var(--creatoros-motion-fast); cursor:pointer; }
+:is([data-ui="button"],[data-slot="button"]):is([data-size="default"],[data-size="lg"]) { min-height:var(--creatoros-control-height); padding-inline:16px; }
+:is([data-ui="button"],[data-slot="button"])[data-size="sm"] { min-height:var(--creatoros-control-compact); font-size:13px; padding-inline:12px; }
+:is([data-ui="button"],[data-slot="button"])[data-size="xs"] { min-height:28px; }
+:is([data-ui="button"],[data-slot="button"])[data-size="icon"] { min-width:40px; min-height:40px; }
+:is([data-ui="button"],[data-slot="button"])[data-size="icon-lg"] { min-width:44px; min-height:44px; }
+:is([data-ui="button"],[data-slot="button"])[data-size="icon-sm"] { min-width:32px; min-height:32px; }
+:is([data-ui="button"],[data-slot="button"])[data-size="icon-xs"] { min-width:28px; min-height:28px; }
+:is([data-ui="button"],[data-slot="button"])[data-variant="default"] { background:var(--creatoros-brand); color:var(--creatoros-brand-foreground); }
+:is([data-ui="button"],[data-slot="button"])[data-variant="default"]:hover:not(:disabled) { background:var(--creatoros-brand-hover); }
+:is([data-ui="button"],[data-slot="button"])[data-variant="outline"] { background:var(--creatoros-surface); border-color:var(--creatoros-border-strong); color:var(--creatoros-text); }
+:is([data-ui="button"],[data-slot="button"])[data-variant="outline"]:hover:not(:disabled) { background:var(--creatoros-surface-subtle); }
+:is([data-ui="button"],[data-slot="button"])[data-variant="secondary"] { background:var(--creatoros-brand-soft); color:var(--creatoros-brand-hover); }
+:is([data-ui="button"],[data-slot="button"])[data-variant="destructive"] { background:var(--creatoros-danger-soft); color:var(--creatoros-danger); }
+:is([data-ui="button"],[data-slot="button"]):is(:disabled,[aria-disabled="true"]) { cursor:not-allowed; opacity:.55; }
+:is([data-ui="button"],[data-slot="button"])[aria-busy="true"] { cursor:progress; }
+:is([data-ui="button"],[data-slot="button"]):active:not(:disabled) { filter:brightness(.96); }
+:is(:is([data-ui="input"],[data-slot="input"]),:is([data-ui="textarea"],[data-slot="textarea"]),:is([data-ui="select-trigger"],[data-slot="select-trigger"])) {
+  background:var(--creatoros-surface); color:var(--creatoros-text);
+  border-color:var(--creatoros-border-strong); border-radius:var(--creatoros-radius-control); font-size:14px;
+}
+:is(:is([data-ui="input"],[data-slot="input"]),:is([data-ui="select-trigger"],[data-slot="select-trigger"])) { min-height:40px; }
+:is(:is([data-ui="input"],[data-slot="input"]),:is([data-ui="textarea"],[data-slot="textarea"]))::placeholder { color:var(--creatoros-text-subtle); opacity:1; }
+:is(:is([data-ui="input"],[data-slot="input"]),:is([data-ui="textarea"],[data-slot="textarea"]),:is([data-ui="select-trigger"],[data-slot="select-trigger"]))[aria-invalid="true"] { border-color:var(--creatoros-danger); }
+:is(:is([data-ui="input"],[data-slot="input"]),:is([data-ui="textarea"],[data-slot="textarea"])):disabled { background:var(--creatoros-surface-subtle); opacity:.75; }
+:is([data-slot="tabs-trigger"],[data-slot="select-item"],[data-slot="dropdown-menu-item"]) { min-height:36px; }
+[data-slot="tabs-trigger"][data-state="active"] { color:var(--creatoros-brand-hover); background:var(--creatoros-brand-soft); }
+:is(:is([data-ui="dialog-content"],[data-slot="dialog-content"]),[data-slot="alert-dialog-content"]) {
+  border:1px solid var(--creatoros-border); border-radius:var(--creatoros-radius-panel);
+  background:var(--creatoros-surface); color:var(--creatoros-text);
+  max-height:calc(100dvh - 48px); overflow-y:auto; overscroll-behavior:contain;
+}
+[data-slot="dialog-title"] { font-size:18px; line-height:1.5; font-weight:600; padding-right:32px; }
+[data-slot="settings-tabs"] button { min-height:40px; border-radius:var(--creatoros-radius-control); }
+[data-slot="settings-tabs"] button[aria-selected="true"] { background:var(--creatoros-brand-soft); color:var(--creatoros-brand-hover); }
+[data-page="accounts"] label:has(input[type="checkbox"]) { min-height:44px; align-items:center; }
+
+/* Page families retain their task-specific structures within one system. */
+[data-design="manuscript"] [data-slot="continue-creating-card"] { border-left:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="studio-journey"] a { min-height:40px; }
+[data-design="manuscript"] [data-slot="project-row"] { border-radius:var(--creatoros-radius-card); }
+[data-design="manuscript"] [data-testid="topics-basis-panel"] { min-width:0; max-width:100%; flex-shrink:1; row-gap:8px; }
+[data-design="manuscript"] [data-slot="project-open-action"] { border-radius:var(--creatoros-radius-control); }
+[data-design="manuscript"] :is([data-slot="studio-overview-metrics"],[data-testid="topics-sources"],[data-testid="topics-detail"],[data-slot="knowledge-workspace"],[data-slot="draft-pane"],[data-slot="draft-chat-rail"]) { border-radius:var(--creatoros-radius-card); }
+[data-design="manuscript"] [data-studio-layout="document"] > header { gap:16px; align-items:flex-start; }
+[data-design="manuscript"] [data-studio-layout="document"] > [aria-label="NoteRelay 排版预览"] { border-radius:var(--creatoros-radius-card); }
+[data-design="manuscript"] [data-page="canvas-editor"] > header { gap:12px; flex-wrap:wrap; }
+
+@media (max-width:1199px) {
+  [data-design="manuscript"] [data-slot="app-page-content"] { padding-inline:24px; }
+  [data-design="manuscript"] [data-slot="studio-overview-charts"] { grid-template-columns:minmax(0,1fr); }
+  [data-design="manuscript"] [data-slot="publishing-center-primary-row"] { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:767px) {
+  [data-design="manuscript"] [data-slot="app-page-content"],
+  [data-design="manuscript"] [data-slot="app-page-content"][data-fill="true"] { padding:24px 16px 32px; }
+  [data-design="manuscript"] [data-slot="app-page-content"] :is(main > header,[data-page] > header) h1 { font-size:24px; }
+  [data-design="manuscript"] [data-slot="app-top-header"] { padding-inline:16px; }
+  :is(:is([data-ui="input"],[data-slot="input"]),:is([data-ui="textarea"],[data-slot="textarea"]),:is([data-ui="select-trigger"],[data-slot="select-trigger"])) { font-size:16px; }
+  :is(:is([data-ui="button"],[data-slot="button"]),:is([data-ui="select-trigger"],[data-slot="select-trigger"])) { min-height:44px; }
+  :is([data-ui="button"],[data-slot="button"])[data-size^="icon"] { min-width:44px; min-height:44px; }
+  :is([data-ui="button"],[data-slot="button"])[data-size="sm"],:is([data-ui="button"],[data-slot="button"])[data-size="xs"] { min-height:44px; }
+  :is([data-slot="tabs-trigger"],[data-slot="select-item"],[data-slot="dropdown-menu-item"]) { min-height:44px; }
+  :is(:is([data-ui="dialog-content"],[data-slot="dialog-content"]),[data-slot="alert-dialog-content"]) { max-height:calc(100dvh - 24px); max-width:calc(100vw - 24px); }
+  [data-design="manuscript"] [data-slot="draft-pane"] { padding:16px; }
+  [data-design="manuscript"] [data-slot="studio-journey"] a { min-height:44px; }
+  [data-slot="copilot-attachment-picker"] button { min-height:44px; min-width:44px; }
+  [data-slot="settings-tabs"] button { min-height:44px; }
+}
+@media (max-width:640px) {
+  [data-design="manuscript"] [data-slot="app-sidebar"] { padding:4px 16px; }
+  [data-design="manuscript"] [data-slot="app-sidebar"][data-collapsed="false"] { padding:12px 20px max(16px,env(safe-area-inset-bottom)); }
+  [data-design="manuscript"] [data-slot="app-sidebar"][data-collapsed="false"] [data-slot="sidebar-nav-item"] { min-height:44px; }
+  [data-design="manuscript"] [data-slot="app-top-header"] { height:auto; min-height:56px; padding-block:8px; }
+  [data-design="manuscript"] [data-slot="header-actions"] :is(a,button) { min-height:40px; }
+  [data-design="manuscript"] [data-slot="app-page-content"] { padding-bottom:max(32px,env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  html, [data-slot="scroll-area-viewport"], [data-slot="app-page-content"] { scroll-behavior:auto; }
+  /* Keep busy indicators and immediate state feedback; remove spatial page/control motion. */
+  [data-slot="app-shell"] :is(a,button,summary), [data-slot="dialog-content"], [data-slot="overlay-panel"] { transition-property:color,background-color,border-color,opacity; }
+  [data-state="open"][data-slot="dialog-content"], [data-state="closed"][data-slot="dialog-content"] { animation:none; }
+}
+@media (forced-colors:active) {
+  :where(a,button,input,textarea,select,summary,[tabindex]):focus-visible { outline-color:Highlight; }
+  [data-slot="sidebar-nav-item"][data-active="true"], [aria-current="page"] { outline:1px solid Highlight; outline-offset:-2px; }
+}
+
+/* 有内容的工作区：列表/详情按可读宽度分配，避免来源栏独占首屏。 */
+[data-slot="isolated-preview-notice"] { flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; padding:8px 32px; min-height:36px; background:var(--creatoros-brand-soft); color:var(--creatoros-brand-hover); border-bottom:1px solid var(--creatoros-border); font-size:12px; line-height:1.6; }
+[data-slot="isolated-preview-notice"] strong { font-weight:600; }
+[data-slot="isolated-preview-notice"] a { min-height:24px; display:inline-flex; align-items:center; text-decoration:underline; text-underline-offset:3px; }
+[data-slot="preview-real-data"] { padding:16px; border:1px solid var(--creatoros-border); border-radius:var(--creatoros-radius-card); background:var(--creatoros-surface); }
+[data-slot="preview-real-data"] > summary { cursor:pointer; color:var(--creatoros-text-muted); font-size:14px; line-height:1.6; padding:4px; }
+[data-slot="preview-real-data"][open] > summary { margin-bottom:20px; }
+[data-design="manuscript"] [data-testid="topics-sources"] { padding:16px; }
+[data-design="manuscript"] [data-testid="topics-source-row"] { min-height:40px; padding-inline:8px; }
+[data-design="manuscript"] [data-testid="topics-detail"] { min-width:0; }
+[data-design="manuscript"] [data-testid="candidate-card"] { border-radius:var(--creatoros-radius-card); }
+[data-design="manuscript"] [data-testid="candidate-card"] h3 { font-size:16px; line-height:1.6; }
+[data-design="manuscript"] [data-slot="assets-toolbar-actions"] { flex-wrap:wrap; }
+[data-design="manuscript"] [data-slot="knowledge-workspace"] :is(input,textarea) { min-width:0; }
+[data-design="manuscript"] [data-page] :is(h1,h2,h3) { overflow-wrap:break-word; }
+@media (min-width:1024px) {
+ [data-design="manuscript"] [data-testid="topics-three-column"] { display:grid; grid-template-columns:168px minmax(280px,1.05fr) minmax(280px,1fr); gap:12px; overflow:hidden; }
+ [data-design="manuscript"] [data-testid="topics-three-column"] > * { min-height:0; max-height:100%; overflow-y:auto; }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] { grid-template-columns:160px minmax(240px,.9fr) minmax(280px,1.1fr); overflow:hidden; }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料原文"] { grid-column:auto; min-height:0; border-left:1px solid var(--creatoros-border); border-top:0; }
+}
+@media (min-width:768px) and (max-width:1023px) {
+ [data-design="manuscript"] [data-testid="topics-three-column"] { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,1fr); grid-template-rows:auto minmax(320px,1fr); overflow-y:auto; }
+ [data-design="manuscript"] [data-testid="topics-three-column"] > * { min-height:0; }
+ [data-design="manuscript"] [data-testid="topics-sources"] { grid-column:1/-1; }
+ [data-design="manuscript"] [data-testid="topics-sources"] ul { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
+ [data-design="manuscript"] [data-testid="topics-source-row"] { flex-wrap:wrap; }
+}
+@media (max-width:767px) {
+ [data-slot="isolated-preview-notice"] { padding:8px 16px; }
+ [data-design="manuscript"] [data-testid="topics-three-column"] { gap:12px; }
+ [data-design="manuscript"] [data-testid="topics-three-column"] > * { min-height:0; }
+ [data-design="manuscript"] [data-testid="topics-sources"] ul { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
+ [data-design="manuscript"] [data-testid="topics-source-row"] { min-height:44px; }
+ [data-design="manuscript"] [data-testid="candidate-pool"] { min-height:320px; }
+ [data-design="manuscript"] [data-testid="topics-detail"] { min-height:320px; }
+ [data-design="manuscript"] [data-slot="assets-left-rail"] { max-height:none; }
+ [data-slot="preview-real-data"] { padding:12px; }
+}
+[data-design="manuscript"] [data-testid="topics-source-row"] { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px; }
+[data-design="manuscript"] [data-testid="topics-source-row"] > span:first-child { display:none; }
+[data-design="manuscript"] [data-testid="topics-source-row"] > span:nth-child(2) { min-width:0; white-space:normal; overflow:visible; text-overflow:clip; font-size:13px; line-height:1.5; }
+[data-design="manuscript"] [data-testid="topics-source-row"][data-filter-availability="summary-only"] > span:last-child { grid-column:1/-1; font-size:12px; }
+[data-design="manuscript"] [data-slot="asset-card-grid"] { grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr)); gap:16px; }
+[data-design="manuscript"] [data-slot="asset-card"] { min-width:0; }
+[data-design="manuscript"] [data-slot="asset-card-button"] > div:last-child > span:first-child .truncate { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; line-height:1.6; }
+[data-design="manuscript"] [data-slot="automation-open-detail"] { white-space:normal; overflow:visible; text-overflow:clip; line-height:1.6; }
+[data-design="manuscript"] [data-slot="project-result-section"] { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); }
+[data-design="manuscript"] [data-slot="project-result-card"] { padding:16px; gap:12px; background:var(--creatoros-surface); }
+[data-design="manuscript"] [data-slot="project-result-card"] h3 { font-size:15px; line-height:1.6; -webkit-line-clamp:2; }
+[data-design="manuscript"] [data-slot="project-result-card"] > p { font-size:12px; line-height:1.7; -webkit-line-clamp:2; }
+[data-design="manuscript"] [data-slot="project-result-stage"] { min-height:24px; padding-inline:8px; font-size:12px; }
+[data-design="manuscript"] [data-slot="project-result-card"] > div:last-child > span { font-size:12px; }
+
+/* On a phone, give the selected document its full height instead of a clipped grid row. */
+@media (max-width:767px) {
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] { grid-template-rows:max-content 220px max-content; align-content:start; }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料列表"] { min-height:0; max-height:220px; overflow:hidden; }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料原文"] { min-height:260px; height:max-content; overflow:visible; }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料原文"] > header { position:static; padding:16px; }
+}
+
+[data-design="manuscript"] [data-slot="recent-knowledge-table"] {font-size:14px;line-height:1.6;}
+[data-design="manuscript"] [data-slot="recent-knowledge-table"] :is(th,td) {padding-block:12px;overflow-wrap:anywhere;}
+[data-design="manuscript"] [data-slot="recent-knowledge-table"] :is(th,[data-slot="recent-type-chip"]) {font-size:12px;}
+[data-design="manuscript"] [data-slot="recent-knowledge-row"] button {min-height:40px;padding:4px 8px;border-radius:var(--creatoros-radius-control);}
+[data-design="manuscript"] [data-slot="recent-knowledge-row"] button:focus-visible {outline:2px solid var(--creatoros-brand);outline-offset:2px;}
+
+/* Impeccable refinement: preserve the workspace, improve reading and control rhythm. */
+::selection { color:var(--creatoros-text); background:var(--creatoros-brand-soft); }
+:where(input,textarea,[contenteditable="true"]) { caret-color:var(--creatoros-brand); }
+[data-slot="app-shell"] { height:100dvh; }
+[data-design="manuscript"] [data-slot="app-page-content"] { scrollbar-gutter:stable; }
+[data-design="manuscript"] [data-slot="app-page-content"] :is(h1,h2,h3) { text-wrap:pretty; }
+[data-slot="section-card-action"] > div { flex-wrap:wrap; }
+[data-slot="section-card"] [data-slot="card-title"] { line-height:1.5; }
+[data-slot="result-type-tabs"] button { min-height:36px; padding-inline:12px; font-size:13px; }
+[data-slot="result-type-tab-count"] { font-family:inherit; font-size:12px; font-variant-numeric:tabular-nums; }
+[data-slot="script-structure-section"] > div:first-child { flex-wrap:wrap; row-gap:8px; }
+[data-slot="script-structure-section"] [data-slot="script-section-heading"] { min-width:6rem; }
+[data-slot="script-section-ai-rewrite"] { min-height:28px; }
+[data-slot="knowledge-file-import"] { max-width:100%; white-space:normal; text-align:left; height:auto; min-height:40px; }
+@media (max-width:767px) {
+  [data-slot="section-card"] > [data-slot="card-header"] { row-gap:12px; }
+  [data-slot="section-card-action"] > div { justify-content:flex-start; }
+  [data-slot="script-structure-section"] > div:first-child > span:last-child { flex-basis:100%; justify-content:flex-end; }
+  [data-slot="script-structure-section"] button { min-height:36px; }
+  [data-slot="result-type-tabs"] button { min-height:44px; }
+  [role="group"][aria-label="平台筛选"] { flex-wrap:wrap; overflow:visible; }
+  [role="group"][aria-label="平台筛选"] button { flex-shrink:0; min-height:40px; }
+}

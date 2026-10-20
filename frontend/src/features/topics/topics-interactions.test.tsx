@@ -164,7 +164,7 @@ beforeEach(() => {
 afterEach(() => {localPush.mockRestore();cleanup();});
 
 describe("topics view (pure render, deterministic)", () => {
-  it("renders the three columns and the AI band (4 buttons + basis panel), with NO funnel ([T-242])", () => {
+  it("renders the workflow, shared selection and AI band, with NO funnel", () => {
     render(
       <TopicsView
         viewModel={{
@@ -182,6 +182,7 @@ describe("topics view (pure render, deterministic)", () => {
     expect(screen.getByTestId("topics-three-column")).toBeInTheDocument();
     expect(screen.getByTestId("topics-sources")).toBeInTheDocument();
     expect(screen.getByTestId("topics-detail")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("topics-prepare-toggle"));
     // AI band: 4 出题深链(T-060① 弹窗退役 → Copilot 预填)+ 当前依据 panel
     expect(
       within(screen.getByTestId("topics-generate-actions")).getAllByRole(
@@ -412,8 +413,8 @@ describe("topics islands (needs-backend wiring)", () => {
   });
 
   it("立项为 Project → client.promoteCandidate then push to the new /projects/:id", async () => {
-    render(<CandidateCard candidate={candidate()} />);
-    fireEvent.click(screen.getByText("立项为 Project"));
+    render(<TopicsWorkspace candidates={[candidate({card:filledCard()})]} sources={overview().sources} sort="predictedScore" />);
+    fireEvent.click(within(screen.getByRole("region", {name:"立项创作"})).getByRole("button", {name:"立项为 Project"}));
     await waitFor(() =>
       expect(mockClient.promoteCandidate).toHaveBeenCalledTimes(1),
     );
@@ -457,8 +458,9 @@ describe("topics islands (needs-backend wiring)", () => {
 
   it("[T-103c] 补全选题卡 → Copilot 深链预填(topic.enrich, selection=候选;不再 createAITask 轮询)", () => {
     render(
-      <CandidateCard
-        candidate={candidate()}
+      <TopicsWorkspace
+        candidates={[candidate({card:filledCard()})]}
+        sources={overview().sources}
         sort="guardrail"
         sourceFilter="idea"
       />,
@@ -510,11 +512,16 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
-  it("promote button is disabled for an already-promoted candidate", () => {
-    render(<CandidateCard candidate={candidate({ status: "promoted" })} />);
+  it("候选卡操作区仅保留丢弃，标题仍可查看选题", () => {
+    render(<CandidateCard candidate={candidate()} />);
     const card = screen.getByTestId("candidate-card");
-    const promote = within(card).getByText("立项为 Project");
-    expect(promote.closest("button")).toBeDisabled();
+    const actions = card.querySelector('[data-slot="candidate-actions"]')!;
+    expect(within(actions as HTMLElement).getAllByRole("button")).toHaveLength(1);
+    expect(within(actions as HTMLElement).getByRole("button", { name: "丢弃" })).toBeEnabled();
+    expect(within(card).getByRole("button", { name: /^查看选题：/ })).toBeEnabled();
+    expect(within(card).queryByText("查看选题卡")).toBeNull();
+    expect(within(card).queryByTestId("enrich-button")).toBeNull();
+    expect(within(card).queryByText("立项为 Project")).toBeNull();
   });
 });
 
@@ -560,6 +567,7 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
         sort="demandCount"
       />,
     );
+    fireEvent.click(screen.getByTestId("topics-source-toggle"));
     fireEvent.click(screen.getByRole("button", { name: "按手动灵感过滤候选池" }));
     expect(mockRouter.push).toHaveBeenCalledWith(
       "/topics?sort=demandCount&source=idea",
@@ -583,6 +591,7 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     fireEvent.click(screen.getByRole("button", { name: "清除来源筛选" }));
     expect(mockRouter.push).toHaveBeenCalledWith("/topics?sort=predictedScore");
     mockRouter.push.mockClear();
+    fireEvent.click(screen.getByTestId("topics-source-toggle"));
     const active = screen.getByRole("button", { name: "取消按手动灵感过滤" });
     expect(active).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(active);
@@ -601,6 +610,7 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
         sort="predictedScore"
       />,
     );
+    fireEvent.click(screen.getByTestId("topics-source-toggle"));
     expect(
       screen.getByRole("button", { name: "按手动灵感过滤候选池" }).textContent,
     ).toContain("1");
@@ -618,6 +628,7 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
         sort="predictedScore"
       />,
     );
+    fireEvent.click(screen.getByTestId("topics-source-toggle"));
     const trendRow = screen.getByRole("button", { name: "按行业热点过滤候选池" });
     expect(trendRow).toBeDisabled();
     fireEvent.click(trendRow);
@@ -702,5 +713,68 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     expect(only.query.status).toBe("pool");
     expect(screen.queryByTestId("pool-source-filter-hint")).toBeNull();
     expect(screen.getAllByTestId("candidate-card")).toHaveLength(2);
+  });
+});
+
+
+describe("选题操作步骤布局",()=>{
+  it("新增入口集中在第一步，挑选、核对和立项保留独立目标",()=>{
+    render(<TopicsView viewModel={{candidates:[candidate({card:filledCard()})],overview:overview(),sort:"predictedScore",pendingReview:null}}/>);
+    const nav=screen.getByRole("navigation",{name:"选题操作步骤"});
+    expect(within(nav).getAllByRole("link").map(link=>link.getAttribute("href"))).toEqual(["#topics-prepare","#topics-pick","#topics-review","#topics-create"]);
+    const prepare=screen.getByTestId("topics-prepare-toggle").parentElement!;
+    expect(prepare).not.toHaveAttribute("open");
+    fireEvent.click(screen.getByTestId("topics-prepare-toggle"));
+    expect(within(prepare).getByRole("textbox",{name:"一句话起选题"})).toBeVisible();
+    expect(within(prepare).getByRole("button",{name:"手动详填"})).toBeVisible();
+    expect(within(prepare).getAllByRole("link")).toHaveLength(4);
+    expect(screen.getByRole("heading",{name:"02 挑选候选"})).toBeVisible();
+    expect(screen.getByRole("heading",{name:"03 核对选题"})).toBeVisible();
+    expect(within(screen.getByRole("region",{name:"立项创作"})).getByRole("button",{name:"立项为 Project"})).toBeEnabled();
+    expect(mockClient.createCandidate).not.toHaveBeenCalled();
+    expect(mockClient.promoteCandidate).not.toHaveBeenCalled();
+  });
+  it("标题按钮可选择候选，详情和立项动作使用相同候选ID",async()=>{
+    render(<TopicsWorkspace candidates={[candidate({id:"first",title:"第一条",card:filledCard()}),candidate({id:"second",title:"第二条",card:{...filledCard(),oneLiner:"第二条正文"}})]} sources={overview().sources} sort="predictedScore"/>);
+    const second=screen.getByRole("button",{name:"查看选题：第二条"});
+    fireEvent.click(second);
+    expect(second).toHaveAttribute("aria-pressed","true");
+    expect(within(screen.getByTestId("topics-detail")).getByText("第二条正文")).toBeVisible();
+    fireEvent.click(within(screen.getByRole("region",{name:"立项创作"})).getByRole("button",{name:"立项为 Project"}));
+    await waitFor(()=>expect(mockClient.promoteCandidate).toHaveBeenCalledWith(expect.objectContaining({params:{candidateId:"second"}})));
+  });
+});
+
+describe("补充选题展开面板",()=>{
+  it("四种AI依据有独立说明，保留原深链与预填，打开不会创建任务",()=>{
+    render(<TopicGenerateBand basis={overview().basis}/>);
+    expect(screen.getByRole("heading",{name:"让 AI 帮我找选题"})).toBeVisible();
+    for(const [basis,label] of [["positioning","基于定位出题"],["comments","基于评论问题"],["knowledge","基于知识库出题"],["trend","基于热点出题"]]){
+      const link=screen.getByRole("link",{name:label});
+      expect(link).toHaveAttribute("data-basis",basis);
+      expect(link).toHaveAccessibleDescription();
+      const url=new URL(link.getAttribute("href")!,"http://localhost/topics");
+      expect(url.searchParams.get("fn")).toBe("topic.generate");
+      expect(url.searchParams.get("prefill")).toBeTruthy();
+    }
+    expect(screen.getByRole("group",{name:"当前依据"})).toHaveTextContent("AI 工程 / 应用落地");
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
+    expect(mockClient.createCandidate).not.toHaveBeenCalled();
+  });
+  it("自己补充区域有可见标签与保存提示，空输入禁用，收起不丢未提交内容",()=>{
+    render(<TopicsView viewModel={{candidates:[candidate({card:filledCard()})],overview:overview(),sort:"predictedScore",pendingReview:null}}/>);
+    fireEvent.click(screen.getByTestId("topics-prepare-toggle"));
+    const entry=screen.getByRole("region",{name:"我已有想法"});
+    const input=within(entry).getByLabelText("一句话起选题");
+    expect(within(entry).getByText("一句话起选题",{selector:"label"})).toBeVisible();
+    expect(input).toHaveAccessibleDescription("点击后先存为候选，再进入对话补全。");
+    expect(within(entry).getByRole("button",{name:"编导起草"})).toBeDisabled();
+    fireEvent.change(input,{target:{value:"一个未提交的想法"}});
+    fireEvent.click(screen.getByTestId("topics-prepare-toggle"));
+    fireEvent.click(screen.getByTestId("topics-prepare-toggle"));
+    expect(input).toHaveValue("一个未提交的想法");
+    expect(within(entry).getByRole("button",{name:"编导起草"})).toBeEnabled();
+    expect(within(entry).getByRole("button",{name:"手动详填"})).toBeVisible();
+    expect(mockClient.createCandidate).not.toHaveBeenCalled();
   });
 });

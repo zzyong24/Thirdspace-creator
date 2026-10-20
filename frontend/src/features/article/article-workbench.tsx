@@ -449,7 +449,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     </section>
   );
 
-  return <main data-page="article-workbench" className="mx-auto w-full max-w-[1200px] @container space-y-4 px-3 py-4 text-sm sm:px-5 md:px-8">
+  return <main data-page="article-workbench" data-studio-layout="document" className="mx-auto w-full max-w-[1200px] @container space-y-4 px-3 py-4 text-sm sm:px-5 md:px-8">
     {showArticleControls && articleControls}
     {pendingSwitch && <section role="alertdialog" aria-label="当前文章有未保存修改" className="space-y-3 rounded-xl border border-border bg-surface p-4">
       <p>当前文章有未保存的修改。保存后继续，或明确放弃这些修改。</p>
@@ -468,7 +468,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     {busy === "load" && <p className="text-sm text-muted-foreground">正在读取已保存的文章…</p>}
     {state && draft && <>
       <header className="flex flex-wrap items-start justify-between gap-4 py-2">
-        <div><h1 className="text-lg font-semibold">公众号成稿</h1><p className="mt-1 text-sm text-muted-foreground">原稿来自脚本，在对话中调整这篇文章。</p></div>
+        <div><h1 className="text-lg font-semibold">公众号成稿</h1></div>
         <Button className="min-h-11 px-5" disabled={Boolean(busy)||reorganizing||!state.scriptContext?.scriptText.trim()||state.scriptContext.state!=="ready"} onClick={()=>void reorganize()}>{reorganizing?"正在准备…":"重新组织内容"}</Button>
       </header>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">

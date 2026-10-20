@@ -60,13 +60,23 @@ async function renderPublishingCenter(
 describe("PublishingCenterPage", () => {
   afterEach(cleanup);
 
+  it("嵌入预览时继承外层标题，月历与发布记录保留", async () => {
+    const { PublishingCenterPage } = await import("./publishing-center-page");
+    render(<main><h1>发布中心</h1><PublishingCenterPage showPageHeading={false}
+      viewModel={buildPublishingCenterViewModel()}
+      calendar={<div data-testid="embedded-calendar">真实月历</div>}/></main>);
+    expect(screen.getAllByRole("heading",{level:1,name:"发布中心"})).toHaveLength(1);
+    expect(screen.getByTestId("embedded-calendar")).toBeVisible();
+  });
+
   it("沿用全局 Header 与单一 AppShell", async () => {
     const { container } = await renderPublishingCenter();
     const header = container.querySelector('[data-slot="app-top-header"]');
     expect(header).toHaveAttribute("data-mode", "global");
     expect(
       container.querySelector('[data-slot="header-page-heading"]')?.textContent,
-    ).toContain("发布中心");
+    ).toBe("");
+    expect(screen.getAllByRole("heading", {level:1,name:"发布中心"})).toHaveLength(1);
     expect(container.querySelectorAll('[data-slot="app-shell"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-slot="app-sidebar"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-slot="app-top-header"]')).toHaveLength(1);

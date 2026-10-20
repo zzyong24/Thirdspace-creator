@@ -1,4 +1,5 @@
 "use client";
+import { Search } from "lucide-react";
 
 /**
  * `AssetsToolbarSearch` — Plan D1 wired search box for the Assets Center
@@ -59,7 +60,7 @@ export function AssetsToolbarSearch({
         搜索素材
       </label>
       <span aria-hidden="true" className="text-muted-foreground text-xs">
-        🔎
+        <Search className="size-4" aria-hidden="true" />
       </span>
       <input
         id="assets-search"

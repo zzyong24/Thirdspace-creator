@@ -20,6 +20,7 @@
  */
 
 import * as React from "react";
+import styles from "./dashboard-page.module.css";
 import { STAGE_LABELS as CANONICAL_STAGE_LABELS } from "@/lib/stage-labels";
 import Link from "next/link";
 
@@ -66,6 +67,7 @@ export interface DashboardPageProps {
   readonly greetingName?: string;
   /** 当前组的数据筛选位于问候之后，与原顶栏动作留出同一行空间。 */
   readonly filters?: React.ReactNode;
+  readonly previewRecent?: React.ReactNode;
   readonly dateRange?: {startDate:string;endDate:string};
   readonly trendContext?: {emptyMessage:string;sourceNote?:string};
   readonly trendSource?: DashboardTrendSource;
@@ -79,6 +81,7 @@ export async function DashboardPage({
   viewModel,
   greetingName,
   filters,
+  previewRecent,
   dateRange,
   trendSource,
 }: DashboardPageProps = {}) {
@@ -100,29 +103,38 @@ export async function DashboardPage({
     <main
       data-app="creatoros"
       data-page="dashboard"
-      className="flex flex-col gap-section-gap"
+      className={cn("flex flex-col gap-section-gap", styles.page)}
     >
-      {/* [T-132] 常驻新手清单:Dashboard 主内容最顶部。client 组件,自己拉 state /
-          判显隐(未完成且未「不再显示」才渲),配全或点「不再显示」后自动消失。 */}
-      <OnboardingCard />
-
-      <header className="flex flex-col gap-0.5 max-sm:pt-14">
-        <h1
-          data-slot="dashboard-welcome"
-          className="font-heading text-xl font-semibold text-foreground"
+      <header className={styles.welcome}>
+        <div className={styles.welcomeText}>
+          <h1
+            data-slot="dashboard-welcome"
+            className="font-heading text-2xl font-semibold text-foreground"
+          >
+            {greeting}
+          </h1>
+          <p
+            data-slot="dashboard-subtext"
+            className="text-sm text-muted-foreground"
+          >
+            {buildDashboardSubtext(vm.todos.length, vm.suggestions.length)}
+          </p>
+        </div>
+        <Link
+          href="/projects"
+          data-slot="dashboard-projects-link"
+          className={styles.projectsLink}
         >
-          {greeting}
-        </h1>
-        <p
-          data-slot="dashboard-subtext"
-          className="text-sm text-muted-foreground"
-        >
-          {buildDashboardSubtext(vm.todos.length, vm.suggestions.length)}
-        </p>
+          查看项目 <span aria-hidden="true">→</span>
+        </Link>
       </header>
-      {filters}
-      <SummaryMetrics metrics={vm.metrics} />
-      <DashboardGrid vm={vm} dateRange={dateRange} trendSource={trendSource}/>
+      {!vm.continueCreating ? <OnboardingCard /> : null}
+      <DashboardGrid previewRecent={previewRecent} vm={vm} dateRange={dateRange} trendSource={trendSource}/>
+      <details data-slot="studio-home-data">
+        <summary>数据概况与筛选范围</summary>
+        <div data-slot="studio-home-data-body">{filters}<SummaryMetrics metrics={vm.metrics} /></div>
+      </details>
+      {vm.continueCreating ? <OnboardingCard /> : null}
     </main>
   );
 }
@@ -135,6 +147,7 @@ function SummaryMetrics({ metrics }: { metrics: DashboardViewModel["metrics"] })
   return (
     <section
       data-slot="dashboard-summary-metrics"
+      data-metric-count={metrics.length}
       aria-label="总览指标"
       className={cn("grid grid-cols-1 gap-card-gap sm:grid-cols-2",metrics.length===6?"lg:grid-cols-3 xl:grid-cols-6":"lg:grid-cols-5")}
     >
@@ -157,13 +170,14 @@ function SummaryMetrics({ metrics }: { metrics: DashboardViewModel["metrics"] })
 // Grid
 // ---------------------------------------------------------------------------
 
-function DashboardGrid({ vm,dateRange,trendSource }: { vm: DashboardViewModel;dateRange?:{startDate:string;endDate:string};trendSource?:DashboardTrendSource }) {
+function DashboardGrid({ vm,dateRange,trendSource,previewRecent }: { vm: DashboardViewModel;previewRecent?:React.ReactNode;dateRange?:{startDate:string;endDate:string};trendSource?:DashboardTrendSource }) {
   return (
     <section
       data-slot="dashboard-grid"
       aria-label="工作台"
       className="grid grid-cols-1 gap-card-gap md:grid-cols-2 lg:grid-cols-3"
     >
+      <div className={styles.focusLane}>
       <ContinueCreatingCard
         continueCreating={vm.continueCreating}
         projectPlatforms={
@@ -172,17 +186,31 @@ function DashboardGrid({ vm,dateRange,trendSource }: { vm: DashboardViewModel;da
             : []
         }
       />
+      <div className={styles.discoveryLane}>
+        <TrendingTopicsCard topics={vm.trendingTopics} />
+        {vm.recentPublications.length===0&&previewRecent?previewRecent:<RecentPublicationsCard publications={vm.recentPublications} />}
+      </div>
+      <details data-slot="studio-home-trend" className={styles.trendDisclosure}>
+        <summary>查看作品数据与趋势</summary>
+        <DashboardTrendCard key={trendSource?JSON.stringify(trendSource):"legacy"} source={trendSource} publications={vm.recentPublications} dateRange={dateRange}/>
+      </details>
+      </div>
+      <aside className={styles.agendaLane} aria-label="待办、建议与创作入口">
       <TodoCard
         todos={vm.todos}
         scheduleReminderReadState={vm.scheduleReminderReadState}
       />
-      <TrendingTopicsCard topics={vm.trendingTopics} />
-      <RecentPublicationsCard publications={vm.recentPublications} />
-      <DashboardTrendCard key={trendSource?JSON.stringify(trendSource):"legacy"} source={trendSource} publications={vm.recentPublications} dateRange={dateRange}/>
       <CreationSuggestionsCard
         suggestions={vm.suggestions}
         continueCreating={vm.continueCreating}
       />
+      <nav aria-label="创作流程" data-slot="studio-journey" className={styles.journey}>
+        <h2>创作入口</h2>
+        <Link href="/positioning">明确定位</Link><Link href="/intelligence">观察信源</Link>
+        <Link href="/topics">挑选选题</Link><Link href="/projects">全部项目</Link>
+        <Link href="/publishing">安排发布</Link><Link href="/daily-report">复盘表现</Link>
+      </nav>
+      </aside>
     </section>
   );
 }
@@ -202,7 +230,7 @@ function ContinueCreatingCard({
   if (!continueCreating) {
     return (
       <div data-slot="continue-creating-card">
-        <SectionCard title="继续创作" description="最近编辑的项目与下一步行动">
+        <SectionCard title="继续创作">
           <div
             data-slot="continue-creating-empty"
             className="flex flex-col items-start gap-3 rounded-card border border-dashed border-border bg-surface-subtle px-3.5 py-6"
@@ -258,7 +286,20 @@ function ContinueCreatingCard({
     <div data-slot="continue-creating-card">
     <SectionCard
       title="继续创作"
-      description="最近编辑的项目与下一步行动"
+     
+      action={
+        <Link
+          href="/projects/new"
+          data-slot="new-project-entry"
+          className={cn(
+            "inline-flex min-h-8 items-center gap-1 text-xs font-medium text-brand",
+            "transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          )}
+        >
+          <span aria-hidden="true">＋</span>
+          <span>新项目</span>
+        </Link>
+      }
     >
       <div className="flex flex-col gap-3">
         <Link
@@ -267,7 +308,7 @@ function ContinueCreatingCard({
           className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3 transition-colors hover:border-brand/40 hover:bg-brand-soft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-medium text-foreground">
+            <span data-slot="focus-project-title" className="text-foreground">
               {continueCreating.projectTitle}
             </span>
             <StatusBadge status="active" />
@@ -289,18 +330,9 @@ function ContinueCreatingCard({
             showValue
             label="项目进度"
           />
+          <span data-slot="focus-project-action">继续编辑<span aria-hidden="true">↗</span></span>
         </Link>
-        <Link
-          href="/projects/new"
-          data-slot="new-project-entry"
-          className={cn(
-            "flex h-12 items-center justify-center gap-2 rounded-card border border-dashed border-border bg-surface-subtle text-sm font-medium text-brand",
-            "transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          )}
-        >
-          <span aria-hidden="true">＋</span>
-          <span>新项目</span>
-        </Link>
+
       </div>
     </SectionCard>
     </div>
@@ -323,7 +355,7 @@ function TrendingTopicsCard({ topics }: { topics: ReadonlyArray<TopicRow> }) {
     <div data-slot="trending-topics-card">
     <SectionCard
       title="热门选题"
-      description="来自知识库的灵感与热点"
+     
       action={
         <Link
           href="/topics"
@@ -354,16 +386,16 @@ function TrendingTopicsCard({ topics }: { topics: ReadonlyArray<TopicRow> }) {
             key={topic.id}
             data-slot="trending-topic-row"
             data-trend={topic.trend}
-            className="flex items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
+            className="flex items-start justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
           >
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-start gap-2">
               <span
                 aria-hidden="true"
                 className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand"
               >
                 {index + 1}
               </span>
-              <span className="truncate text-sm text-foreground">
+              <span data-slot="trending-topic-title" className="min-w-0 break-words text-sm leading-6 text-foreground [overflow-wrap:anywhere]">
                 {topic.title}
               </span>
             </div>
@@ -392,8 +424,8 @@ function RecentPublicationsCard({
 }) {
   return (
     <div data-slot="recent-publications-card">
-    <SectionCard title="最近发布" description="各平台的最新表现">
-      {!publications.length?<p className="py-4 text-sm text-muted-foreground">当前筛选内暂无发布记录。<Link href="/publishing" className="ml-2 text-brand">去发布中心 →</Link></p>:null}
+    <SectionCard title="最近发布">
+      {!publications.length?<p className="py-4 text-sm text-muted-foreground">当前筛选内暂无发布记录。<Link href="/publishing" className="ml-2 text-brand underline underline-offset-4">去发布中心 →</Link></p>:null}
       <ul
         data-slot="recent-publications"
         className="flex flex-col gap-2"
@@ -448,7 +480,7 @@ function CreationSuggestionsCard({
     <div data-slot="creation-suggestions-card">
     <SectionCard
       title="创作建议"
-      description="基于当前进度的下一步行动"
+     
     >
       {suggestions.length === 0 ? (
         // [T-197] 诚实空态(原来空数组渲空 ul 一片空白)。
@@ -475,15 +507,10 @@ function CreationSuggestionsCard({
               <span className="text-sm font-medium text-foreground">
                 {suggestion.title}
               </span>
-              <TagChip
-                label={categoryLabel(suggestion.category)}
-                tone="info"
-                size="sm"
-              />
             </div>
-            <p className="text-xs text-muted-foreground">
+            {suggestion.description && <p className="text-xs text-muted-foreground">
               {suggestion.description}
-            </p>
+            </p>}
             {(() => {
               // D3: each suggestion routes to the most relevant real surface
               // for its category — there is no per-suggestion projectId, so the
@@ -564,19 +591,6 @@ function stageLabel(stage: string): string {
   return STAGE_LABELS[stage] ?? stage;
 }
 
-
-const CATEGORY_LABELS: Record<string, string> = {
-  script: "脚本",
-  production: "拍摄",
-  publishing: "发布",
-  research: "研究",
-  planning: "策划",
-  review: "复盘",
-};
-
-function categoryLabel(category: string): string {
-  return CATEGORY_LABELS[category] ?? category;
-}
 
 function getProjectPlatformLabels(projectId: string): ReadonlyArray<string> {
   // [FE-M04] 只返回真实目标平台;缺失就返回空(不再伪造「多平台」)。空数组时由

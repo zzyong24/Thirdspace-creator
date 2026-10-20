@@ -109,7 +109,7 @@ export function TodayTopicsStrip({
           </Badge>
         ) : null}
         <span className="text-[11px] text-text-subtle">
-          系统昨夜~今晨自动供给的候选
+          按新增时间汇总
         </span>
       </div>
       {today.length === 0 ? (
@@ -117,7 +117,7 @@ export function TodayTopicsStrip({
           data-testid="today-topics-empty"
           className="rounded-control border border-dashed border-border px-3 py-2 text-xs text-muted-foreground"
         >
-          今天早上暂时没找到新选题。系统每天会自动找,晚点再来看看,或点上方手动找一批。
+          今日暂无新增选题，可继续挑选已有候选，或从上方补充选题。
         </p>
       ) : (
         <ul

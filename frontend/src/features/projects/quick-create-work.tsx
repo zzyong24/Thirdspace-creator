@@ -43,10 +43,10 @@ export function QuickCreateWork({ accountPlatform, sourceItemId, sourceTitle, so
     finally {if(current()){const snapshot=captured.snapshot();if(snapshot.project)setCreatedProject(snapshot.project);}}
   }
 
-  return <main data-page="quick-create-work" className="mx-auto w-full max-w-3xl space-y-6 p-5 md:p-8">
+  return <main data-page="quick-create-work" data-studio-layout="creation" className="mx-auto w-full max-w-3xl space-y-6 p-5 md:p-8">
     <header><Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">← 返回项目</Link>
       <h1 className="mt-3 text-2xl font-semibold">这次想创作什么？</h1>
-      <p className="mt-2 text-sm text-muted-foreground">写一句主题，选需要的作品形式，先进入脚本编辑台。文章和图文可基于保存脚本继续扩写。</p></header>
+      <p className="mt-2 text-sm text-muted-foreground">填写主题，选择作品形式。</p></header>
     <section className="space-y-5 rounded-xl border border-border bg-surface p-5" aria-label="快速创作">
       {sourceTitle && <p className="rounded-md bg-primary/5 p-3 text-sm">来自内容雷达：{sourceTitle}。系统会核对原文或逐字稿；资料不足时仍可手写。</p>}
       {sourceNotice && <p className="rounded-md bg-warning/10 p-3 text-sm text-muted-foreground">{sourceNotice}</p>}

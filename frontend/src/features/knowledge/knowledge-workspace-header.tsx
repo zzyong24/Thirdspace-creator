@@ -16,7 +16,7 @@ export function KnowledgeWorkspaceHeader({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">知识库</h1>
-          <p className="mt-1 text-sm text-muted-foreground">把资料与创作经验，留给下一次创作。</p>
+          
         </div>
         {action ?? (
           <Button asChild>

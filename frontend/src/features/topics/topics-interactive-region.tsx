@@ -1,4 +1,7 @@
 "use client";
+import styles from "./topics-workflow.module.css";
+import prepareStyles from "./topics-prepare.module.css";
+import { TopicWorkflowStep } from "./topics-workflow-step";
 import { AudienceTaskDetail } from "./audience-task-detail";
 
 /**
@@ -11,9 +14,9 @@ import { AudienceTaskDetail } from "./audience-task-detail";
  * needs-backend controls, each → its mapped contract op then `router.refresh()`:
  *  - `CreateCandidateForm` (新建选题卡) → `client.createCandidate` (source fixed 'idea';
  *    AI-sourced candidates arrive via the AI 选题会 confirm flow, NOT this form — C-3).
- *  - rich `CandidateCard` 立项为 Project → `client.promoteCandidate` → navigate to the new
- *    `/projects/:id`; 丢弃 → `client.patchCandidate { status:'dropped' }`; 查看选题卡 →
- *    selects the card (drives the right detail column, no op); 补充信息 / 补全选题卡 →
+ *  - `CandidateCard` title selects the detail; its only action is 丢弃 →
+ *    `client.patchCandidate { status:'dropped' }`. Detail actions promote via
+ *    `client.promoteCandidate` then navigate to `/projects/:id`; 补充信息 / 补全选题卡 →
  *    `EnrichButton`(**T-103c 起改为对话内即时反馈**,SPEC 2026-07-04 ai-into-copilot-convergence
  *    §3):不再后台 createAITask(topic.enrich) + 轮询,而是打开 Copilot 深链带
  *    `fn=topic.enrich` + selection(candidate id + 标题)+ 预填话术(不自动发,T-055b),编导在对话里
@@ -32,7 +35,7 @@ import * as React from "react";
 import {openCopilotLocally} from "@/lib/copilot-navigation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, ExternalLink, type LucideIcon } from "lucide-react";
+import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, ExternalLink, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -268,15 +271,10 @@ function ScoreChip({
 export function CandidateCard({
   candidate,
   sourceLabel,
-  sort,
-  sourceFilter,
 }: {
   readonly candidate: CandidateResource;
   readonly sourceLabel?: string;
-  readonly sort?: CandidateSortKey;
-  readonly sourceFilter?: CandidateSourceFilter | null;
 }) {
-  const { pending, run, router } = useMutation();
   const { selectedId, select } = React.useContext(SelectionCtx);
   const selected = selectedId === candidate.id;
   const card = candidate.card;
@@ -286,28 +284,11 @@ export function CandidateCard({
   const isExperiment = Boolean(card.attributionId);
   const [attributionOpen, setAttributionOpen] = React.useState(false);
 
-  function promote() {
-    run(
-      () =>
-        client.promoteCandidate({
-          params: { candidateId: candidate.id },
-          query: undefined,
-          body: {},
-        }),
-      (result) => {
-        const projectId = (result as { projectId?: string } | null)?.projectId;
-        if (projectId) router.push(`/projects/${projectId}`);
-        else router.refresh();
-      },
-    );
-  }
-
   const meta = [
-    card.targetAudience ? `观众 ${card.targetAudience}` : null,
-    SOURCE_LABELS[candidate.source] ?? candidate.source,
-    card.format ? `形式 ${card.format}` : null,
-    STATUS_LABELS[candidate.status] ?? candidate.status,
-  ].filter((x): x is string => x !== null);
+    { label: "观众", value: card.targetAudience },
+    { label: "形式", value: card.format },
+    { label: "状态", value: STATUS_LABELS[candidate.status] ?? candidate.status },
+  ].filter((item) => Boolean(item.value));
 
   return (
     <li
@@ -324,20 +305,26 @@ export function CandidateCard({
           : "border-border hover:border-brand/40",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="flex min-w-0 flex-col gap-0.5">
-          <span className="flex items-center gap-2">
-            <span className="font-medium leading-snug text-foreground">
-              {candidate.title}
-            </span>
-            <Badge variant="secondary" className="shrink-0 text-[10px]">
-              {sourceLabel ?? SOURCE_LABELS[candidate.source] ?? candidate.source}
-            </Badge>
-            {ROLE_LABELS[candidate.contentRole ?? ""] ? (
-              <Badge variant="outline" className="shrink-0 text-[10px]">
-                {ROLE_LABELS[candidate.contentRole ?? ""]}
-              </Badge>
-            ) : null}
+      <h3 className={styles.candidateHeading}>
+        <button
+          type="button"
+          aria-pressed={selected}
+          aria-label={`查看选题：${candidate.title}`}
+          onClick={(event) => { event.stopPropagation(); select(candidate.id); }}
+          className={styles.titleButton}
+        >
+          {candidate.title}
+        </button>
+      </h3>
+      <div className={styles.candidateLabels}>
+        <Badge variant="secondary">
+          {sourceLabel ?? SOURCE_LABELS[candidate.source] ?? candidate.source}
+        </Badge>
+        {ROLE_LABELS[candidate.contentRole ?? ""] ? (
+          <Badge variant="outline">
+            {ROLE_LABELS[candidate.contentRole ?? ""]}
+          </Badge>
+        ) : null}
             {isExperiment ? (
               <button
                 type="button"
@@ -347,14 +334,12 @@ export function CandidateCard({
                   e.stopPropagation();
                   setAttributionOpen((v) => !v);
                 }}
-                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-brand/50 px-1.5 py-0.5 text-[10px] font-medium text-brand hover:bg-brand-soft"
+                className={styles.experimentLabel}
               >
                 <FlaskConical className="size-3" />
                 实验
               </button>
             ) : null}
-          </span>
-        </span>
       </div>
 
       {/* [T-235d/e] 归因依据展开(实验徽标点开):angle 里携带归因引用(runner 落库时写入),
@@ -362,25 +347,25 @@ export function CandidateCard({
       {isExperiment && attributionOpen ? (
         <p
           data-testid="experiment-attribution"
-          className="rounded-control border border-brand/30 bg-brand-soft/40 px-2.5 py-1.5 text-[11px] leading-relaxed text-foreground"
+          className={styles.attributionText}
         >
           {candidate.angle || "该实验候选未携带归因引用文本(可在归因资产里溯源)。"}
         </p>
       ) : null}
 
-      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted-foreground">
-        {meta.map((m, i) => (
-          <React.Fragment key={i}>
-            {i > 0 ? <span className="text-text-subtle">·</span> : null}
-            <span>{m}</span>
-          </React.Fragment>
+      <dl className={styles.candidateMeta}>
+        {meta.map(({ label, value }) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
         ))}
-      </p>
+      </dl>
 
       <SourceReferenceLinks candidate={candidate} compact />
 
       {/* 4 评分 chip — null 显示「—」(不编). */}
-      <div className="flex flex-wrap gap-1.5">
+      <div data-slot="candidate-scores" className="flex flex-wrap gap-1.5">
         <ScoreChip label="定位契合" value={candidate.positioningFit} />
         <ScoreChip label="受众痛感" value={card.audiencePainScore} />
         <ScoreChip label="素材充足" value={card.materialScore} />
@@ -390,36 +375,7 @@ export function CandidateCard({
         />
       </div>
 
-      {/* 4 按钮. */}
-      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1 px-2 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            select(candidate.id);
-          }}
-        >
-          <Eye className="size-3.5" />
-          查看选题卡
-        </Button>
-        <EnrichButton candidate={candidate} sort={sort} sourceFilter={sourceFilter} />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1 px-2 text-xs"
-          disabled={pending || candidate.status === "promoted"}
-          onClick={(e) => {
-            e.stopPropagation();
-            promote();
-          }}
-        >
-          <Rocket className="size-3.5" />
-          立项为 Project
-        </Button>
+      <div data-slot="candidate-actions" className="flex items-center pt-0.5">
         <DropButton candidate={candidate} />
       </div>
     </li>
@@ -1084,12 +1040,13 @@ function CandidateDetailPanel({
   return (
     <aside
       data-testid="topics-detail"
+      id="topics-review"
       className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
     >
-      <h3 className="shrink-0 text-sm font-semibold text-foreground">选题卡详情</h3>
+      <div className={styles.reviewHeading}><TopicWorkflowStep step={3} label="核对选题"/><a href="#topics-pick" className={styles.backToPool}>返回候选</a></div>
 
       {/* 详情体可能较长 → 框内独立滚动 (列内裁切而非整页滚)。 */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
+      <div tabIndex={0} role="region" aria-label="选题卡详情" className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
         {candidate === null ? (
           <div
             data-testid="detail-no-selection"
@@ -1099,7 +1056,7 @@ function CandidateDetailPanel({
               <FileText className="size-5" />
             </span>
             <p className="text-sm text-muted-foreground">
-              从中间候选池选一条，查看它的选题卡。
+              从候选池选一条，查看它的选题卡。
             </p>
           </div>
         ) : !candidate.card.oneLiner && !candidate.card.audienceTask ? (
@@ -1115,35 +1072,62 @@ function CandidateDetailPanel({
             <p className="text-sm text-muted-foreground">
               这条还没有选题卡。让 AI 按你的定位 + 素材补全一句话选题、观众痛点、推荐结构等。
             </p>
-            <EnrichButton
-              candidate={candidate}
-              className="h-8 px-3"
-              sort={sort}
-              sourceFilter={sourceFilter}
-            />
+
           </div>
         ) : (
-          <CandidateCardDetail
-            candidate={candidate}
-            sort={sort}
-            sourceFilter={sourceFilter}
-          />
+          <CandidateCardDetail candidate={candidate}/>
         )}
       </div>
+      <CandidateProjectActions candidate={candidate} sort={sort} sourceFilter={sourceFilter}/>
     </aside>
   );
 }
 
-function CandidateCardDetail({
-  candidate,
-  sort,
-  sourceFilter,
-}: {
-  readonly candidate: CandidateResource;
-  readonly sort: CandidateSortKey;
-  readonly sourceFilter: CandidateSourceFilter | null;
-}) {
+function CandidateProjectActions({candidate,sort,sourceFilter}:{readonly candidate:CandidateResource|null;readonly sort:CandidateSortKey;readonly sourceFilter:CandidateSourceFilter|null}) {
   const { pending, run, router } = useMutation();
+  function promote() {
+    if (!candidate) return;
+    run(
+      () =>
+        client.promoteCandidate({
+          params: { candidateId: candidate.id },
+          query: undefined,
+          body: {},
+        }),
+      (result) => {
+        const projectId = (result as { projectId?: string } | null)?.projectId;
+        if (projectId) router.push(`/projects/${projectId}`);
+        else router.refresh();
+      },
+    );
+  }
+
+  return (
+      <section id="topics-create" className={styles.createActions} aria-label="立项创作">
+        <TopicWorkflowStep step={4} label="立项创作"/>
+      {candidate ? <div className="flex flex-wrap items-center gap-2">
+        <EnrichButton
+          candidate={candidate}
+          className="h-8 px-3"
+          sort={sort}
+          sourceFilter={sourceFilter}
+        />
+        <Button
+          type="button"
+          size="sm"
+          className="h-8 gap-1 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
+          disabled={pending || candidate.status === "promoted"}
+          onClick={promote}
+        >
+          <Rocket className="size-3.5" />
+          立项为 Project
+        </Button>
+      </div> : <p>先选择一条候选，再进入创作。</p>}
+      </section>
+  );
+}
+
+function CandidateCardDetail({candidate}:{readonly candidate: CandidateResource;}) {
   const card = candidate.card;
   const [radarTranscript, setRadarTranscript] = React.useState("");
   const radarItemId = card.sourceReferences?.find(
@@ -1168,21 +1152,6 @@ function CandidateCardDetail({
     };
   }, [card.adaptedDraft, radarItemId]);
 
-  function promote() {
-    run(
-      () =>
-        client.promoteCandidate({
-          params: { candidateId: candidate.id },
-          query: undefined,
-          body: {},
-        }),
-      (result) => {
-        const projectId = (result as { projectId?: string } | null)?.projectId;
-        if (projectId) router.push(`/projects/${projectId}`);
-        else router.refresh();
-      },
-    );
-  }
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -1253,25 +1222,7 @@ function CandidateCardDetail({
 
       <DetailRow label="立项建议" value={card.proposal} />
 
-      {/* 底部动作 */}
-      <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
-        <EnrichButton
-          candidate={candidate}
-          className="h-8 px-3"
-          sort={sort}
-          sourceFilter={sourceFilter}
-        />
-        <Button
-          type="button"
-          size="sm"
-          className="h-8 gap-1 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
-          disabled={pending || candidate.status === "promoted"}
-          onClick={promote}
-        >
-          <Rocket className="size-3.5" />
-          立项为 Project
-        </Button>
-      </div>
+
     </div>
   );
 }
@@ -1288,6 +1239,7 @@ export function IdeaDraftForm({
   readonly sourceFilter?: CandidateSourceFilter | null;
 } = {}) {
   const router = useRouter();
+  const inputId = React.useId();
   const [idea, setIdea] = React.useState("");
   const [phase, setPhase] = React.useState<"idle" | "opening" | "error">("idle");
   const cancelledRef = React.useRef(false);
@@ -1333,6 +1285,7 @@ export function IdeaDraftForm({
       data-testid="idea-draft-form"
       className="shrink-0 rounded-card border border-brand/30 bg-brand-soft/40 p-2.5"
     >
+      <label htmlFor={inputId} className={prepareStyles.ideaLabel}>一句话起选题</label>
       <form
         className="flex items-center gap-2"
         onSubmit={(e) => {
@@ -1340,10 +1293,12 @@ export function IdeaDraftForm({
           draft();
         }}
       >
-        <Sparkles className="size-4 shrink-0 text-brand" />
+        <Sparkles className="size-4 shrink-0 text-brand" aria-hidden="true"/>
         <Input
+          id={inputId}
           aria-label="一句话起选题"
-          placeholder="说一句你想做的选题,编导补全成整张卡…"
+          aria-describedby={`${inputId}-hint`}
+          placeholder="说说你想做的内容"
           value={idea}
           onChange={(e) => setIdea(e.target.value)}
           disabled={phase === "opening"}
@@ -1358,6 +1313,7 @@ export function IdeaDraftForm({
           {phase === "opening" ? "打开对话中…" : "编导起草"}
         </Button>
       </form>
+      <p id={`${inputId}-hint`} className={prepareStyles.ideaHint}>点击后先存为候选，再进入对话补全。</p>
       {phase === "error" ? (
         <p className="mt-1.5 pl-6 text-[11px] text-muted-foreground">
           打开对话出错,请重试 —— 裸卡若已建也已进池,你可在卡上点「补全选题卡」再补。
@@ -1372,7 +1328,11 @@ function PoolColumn({
   pool,
   sort,
   sourceFilter,
+  sources,
+  candidateCountsBySource,
 }: {
+  readonly sources: TopicsOverviewResource["sources"];
+  readonly candidateCountsBySource: Partial<Record<CandidateSourceFilter, number>>;
   readonly pool: CandidateResource[];
   readonly sort: CandidateSortKey;
   /** [T-244] 当前来源过滤 —— 标题旁给「已按来源过滤」提示,换排序时保留。 */
@@ -1389,12 +1349,10 @@ function PoolColumn({
     : pool;
 
   return (
-    <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4">
+    <section id="topics-pick" className={styles.pool}>
       <div className="flex shrink-0 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <h3 className="shrink-0 text-sm font-semibold text-foreground">
-            选题候选池
-          </h3>
+          <TopicWorkflowStep step={2} label="挑选候选"/>
           {/* [T-244] 过滤态提示:让用户知道池子当前不是全量,以及在哪取消。 */}
           {sourceFilter ? (
             <button
@@ -1408,11 +1366,12 @@ function PoolColumn({
             </button>
           ) : null}
         </div>
-        <CreateCandidateForm />
+        <span className={styles.poolCount}>{filtered.length} 条</span>
       </div>
-
-      {/* A1 主路径:一句话让编导补全(12 字段表单降级成上面的「手动详填」)。 */}
-      <IdeaDraftForm sort={sort} sourceFilter={sourceFilter} />
+      <details key={sourceFilter ?? "all"} className={styles.sourceFilters}>
+        <summary data-testid="topics-source-toggle">按来源筛选{sourceFilter ? ` · ${SOURCE_FILTER_LABELS[sourceFilter]}` : ""}</summary>
+        <SourcesColumn sources={sources} sort={sort} sourceFilter={sourceFilter} candidateCountsBySource={candidateCountsBySource}/>
+      </details>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         <span className="relative flex-1">
@@ -1442,13 +1401,11 @@ function PoolColumn({
               // [T-244] 过滤态空列表 ≠ 真没候选:提示是过滤导致的,别误导用户去建卡。
               <>
                 「{SOURCE_FILTER_LABELS[sourceFilter]}」来源下暂无候选
-                —— 点左栏来源行可取消过滤,回到全部候选。
+                —— 可在“按来源筛选”中取消过滤，查看全部候选。
               </>
             ) : (
               <>
-                还没有候选。
-                <span className="text-brand">用上面一句话让编导起草</span>
-                ，或开一场 AI 选题会 —— 编导基于你的定位 + 评论 + 爆款经验主动出题。
+                还没有候选。<a href="#topics-prepare" className="text-brand underline">前往“补充选题”</a>，用一句话起草或选择 AI 出题依据。
                 {/* [T-332 S4·§6.2] 新号无信号的诚实引导:候选为空可能是「这个号的采集
                     作业还没跑 / 跑了但还没攒出信号」——给「跑一次采集」入口,别让用户
                     以为功能坏了。 */}
@@ -1471,8 +1428,6 @@ function PoolColumn({
             <CandidateCard
               key={c.id}
               candidate={c}
-              sort={sort}
-              sourceFilter={sourceFilter}
             />
           ))
         )}
@@ -1543,17 +1498,8 @@ export function TopicsWorkspace({
     <SelectionCtx.Provider value={ctx}>
       {/* flex-1 min-h-0 → 三栏占满中间剩余高度;每列各自框内滚动 (列内裁切而非整页滚)。
           窄屏 (无 lg) 退回单列纵向、由外层页面统一处理高度。 */}
-      <div
-        data-testid="topics-three-column"
-        className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_360px]"
-      >
-        <SourcesColumn
-          sources={sources}
-          sort={sort}
-          sourceFilter={sourceFilter}
-          candidateCountsBySource={candidateCountsBySource}
-        />
-        <PoolColumn pool={pool} sort={sort} sourceFilter={sourceFilter} />
+      <div data-testid="topics-three-column" className={styles.workspace}>
+        <PoolColumn pool={pool} sort={sort} sourceFilter={sourceFilter} sources={sources} candidateCountsBySource={candidateCountsBySource}/>
         <CandidateDetailPanel
           candidate={selected}
           sort={sort}

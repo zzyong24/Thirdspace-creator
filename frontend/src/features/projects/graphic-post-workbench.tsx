@@ -187,9 +187,9 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
     }catch(reason){if(mounted.current)setError(describeUserError(reason,"重新组织尚未开始，当前稿件已保留。"));}
     finally{reorganizationInFlight.current=false;if(mounted.current)setReorganizing(false);}
   }
-  return <main data-page="graphic-post-workbench" className="mx-auto w-full max-w-[1200px] @container space-y-4 px-5 py-4 text-sm md:px-8">
+  return <main data-page="graphic-post-workbench" data-studio-layout="document" className="mx-auto w-full max-w-[1200px] @container space-y-4 px-5 py-4 text-sm md:px-8">
     <header className="flex flex-wrap items-start justify-between gap-4 py-2">
-      <div><h1 className="text-lg font-semibold">图文成稿</h1><p className="mt-1 text-sm text-muted-foreground">原稿来自脚本，在对话中调整图文表达。</p></div>
+      <div><h1 className="text-lg font-semibold">图文成稿</h1></div>
       <Button className="min-h-11 px-5" disabled={busy||reorganizing||!state.scriptContext?.scriptText.trim()||state.scriptContext.state!=="ready"} onClick={()=>void reorganize()}>{reorganizing?"正在准备…":"重新组织内容"}</Button>
     </header>
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span>{dirty?"已承接脚本，开始对话或导出时保存":"当前成稿已保存"}</span><Link className="underline underline-offset-4" href={`/projects/${projectId}`}>{state.scriptContext?.state==="ready"?"查看脚本原稿":"前往脚本撰写原稿"}</Link></div>

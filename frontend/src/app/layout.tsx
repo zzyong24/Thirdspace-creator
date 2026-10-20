@@ -60,7 +60,7 @@ export default function RootLayout({
   const desktop = isDesktopRuntime(process.env);
   return (
     <html
-      lang="en"
+      lang="zh-CN"
       className="font-sans"
       data-desktop={desktop ? "1" : "0"}
       suppressHydrationWarning
