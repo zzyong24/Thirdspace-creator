@@ -16,6 +16,8 @@ Play,
 RefreshCw,
 Search,
 ShieldCheck,
+Heart,
+Flame,
 Sparkles,
 Trash2,
 Upload
@@ -1063,6 +1065,7 @@ function IntelligenceWorkbenchScope({
                 {sourcesOnly ? workspace.sources.length : allItemsTotal}
               </span>
             </button>
+            <div className="mt-3 space-y-3" data-slot="radar-collection-groups">
             {workspace.collections.map((collection) => {
               const collectionSources = workspace.sources
                 .filter(
@@ -1079,30 +1082,16 @@ function IntelligenceWorkbenchScope({
                 return null;
               }
               return (
-                <div key={collection.id} className="mt-2">
-                  <button
-                    type="button"
-                    onClick={() => void selectItemScope(collection.id, null)}
-                    aria-pressed={selectedCollectionId === collection.id && !selectedSourceId}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition",
-                      selectedCollectionId === collection.id
-                        ? "bg-primary/10 font-medium text-primary"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {collection.kind === "system" ? (
-                      <ShieldCheck className="size-3.5 text-primary" />
-                    ) : (
-                      <Archive className="size-3.5 text-muted-foreground" />
-                    )}
-                    <span className="min-w-0 flex-1 truncate">
-                      {collection.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {collectionSources.length}
-                    </span>
-                  </button>
+                <RadarCollectionGroup
+                  key={collection.id}
+                  name={collection.name}
+                  system={collection.kind === "system"}
+                  count={collectionSources.length}
+                  active={selectedCollectionId === collection.id && !selectedSourceId}
+                  highlighted={selectedCollectionId === collection.id}
+                  filtering={Boolean(sourceQuery.trim())}
+                  onSelect={() => void selectItemScope(collection.id, null)}
+                >
                   {collectionSources.map((source) => (
                     <SourceRow
                       key={source.id}
@@ -1129,9 +1118,10 @@ function IntelligenceWorkbenchScope({
                       onShowRuns={() => setHistorySource(source)}
                     />
                   ))}
-                </div>
+                </RadarCollectionGroup>
               );
             })}
+            </div>
             {workspace.sources
               .filter(
                 (source) =>
@@ -1424,6 +1414,70 @@ function IntelligenceWorkbenchScope({
         </div>
         </>}
       </div>
+    </section>
+  );
+}
+
+/** 系统分组（我的收藏 / 黑马发现）的说明与空态文案；只描述真实来源，不提供假入口。 */
+const SYSTEM_COLLECTION_META: Record<string, { icon: typeof Heart; hint: string; empty: string }> = {
+  我的收藏: { icon: Heart, hint: "抖音收藏夹同步的作品", empty: "还没有绑定收藏夹。用上方「添加来源」选择「我的收藏」，验证后会出现在这里。" },
+  黑马发现: { icon: Flame, hint: "热点宝关键词命中的黑马作品", empty: "还没有黑马关键词。用上方「添加来源」选择「黑马关键词」并验证热点宝授权。" },
+};
+
+function RadarCollectionGroup({
+  name,
+  system,
+  count,
+  active,
+  highlighted,
+  filtering,
+  onSelect,
+  children,
+}: {
+  name: string;
+  system: boolean;
+  count: number;
+  active: boolean;
+  highlighted: boolean;
+  filtering: boolean;
+  onSelect: () => void;
+  children: React.ReactNode;
+}) {
+  const meta = system ? SYSTEM_COLLECTION_META[name] : undefined;
+  const Icon = meta?.icon ?? (system ? ShieldCheck : Archive);
+  return (
+    <section
+      data-slot="radar-collection-group"
+      data-collection-kind={system ? "system" : "custom"}
+      aria-label={`${name}分组`}
+      className="rounded-xl border border-border/60 bg-surface/60"
+    >
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={active}
+        className={cn(
+          "flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-left text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-primary/40",
+          highlighted ? "bg-primary/10 font-medium text-primary" : "text-foreground hover:bg-muted",
+          count === 0 && "rounded-b-xl",
+        )}
+      >
+        <Icon aria-hidden="true" className={cn("size-3.5 shrink-0", system ? "text-primary" : "text-muted-foreground")} />
+        <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
+        <span className="rounded-full bg-muted px-1.5 text-[10px] font-medium tabular-nums leading-4 text-muted-foreground">
+          {count}
+        </span>
+      </button>
+      {meta ? (
+        <p className="px-3 pb-1 text-[10px] leading-4 text-muted-foreground">{meta.hint}</p>
+      ) : null}
+      {count > 0 ? (
+        <div className="border-t border-border/50 pb-1.5" data-slot="radar-collection-sources">{children}</div>
+      ) : meta && !filtering ? (
+        <p data-slot="radar-collection-empty" className="mx-2 mb-2 rounded-lg border border-dashed border-border/80 px-2.5 py-2 text-[11px] leading-5 text-muted-foreground">
+          {meta.empty}
+        </p>
+      ) : null}
     </section>
   );
 }

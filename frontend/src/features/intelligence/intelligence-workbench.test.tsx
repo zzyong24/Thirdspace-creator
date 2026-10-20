@@ -1114,6 +1114,30 @@ describe("T-482 内容雷达工作区", () => {
     );
   });
 
+  it("收藏与黑马发现按分组卡片呈现：说明、计数徽标与真实空态（无假按钮）", () => {
+    const { container } = render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={api()}
+      />,
+    );
+    const groups = container.querySelectorAll('[data-slot="radar-collection-group"]');
+    expect(groups).toHaveLength(2);
+    const fav = screen.getByRole("region", { name: "我的收藏分组" });
+    const dh = screen.getByRole("region", { name: "黑马发现分组" });
+    expect(within(fav).getByText("抖音收藏夹同步的作品")).toBeInTheDocument();
+    expect(within(dh).getByText("热点宝关键词命中的黑马作品")).toBeInTheDocument();
+    expect(within(fav).getByRole("button", { name: /^我的收藏/ })).toHaveAttribute("aria-pressed", "false");
+    expect(fav.querySelector('[data-slot="radar-collection-empty"]')?.textContent).toMatch(/还没有绑定收藏夹/);
+    expect(dh.querySelector('[data-slot="radar-collection-empty"]')?.textContent).toMatch(/还没有黑马关键词/);
+    // 空态只说明下一步，不另造按钮。
+    expect(within(fav).getAllByRole("button")).toHaveLength(1);
+    expect(within(dh).getAllByRole("button")).toHaveLength(1);
+  });
+
   it("按定位→雷达→选题边界显示系统分类，评论未知不伪装 0", () => {
     render(
       <IntelligenceWorkbench
