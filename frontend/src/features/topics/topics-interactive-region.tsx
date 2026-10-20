@@ -16,11 +16,9 @@ import { AudienceTaskDetail } from "./audience-task-detail";
  *    AI-sourced candidates arrive via the AI 选题会 confirm flow, NOT this form — C-3).
  *  - `CandidateCard` title selects the detail; its only action is 丢弃 →
  *    `client.patchCandidate { status:'dropped' }`. Detail actions promote via
- *    `client.promoteCandidate` then navigate to `/projects/:id`; 补充信息 / 补全选题卡 →
- *    `EnrichButton`(**T-103c 起改为对话内即时反馈**,SPEC 2026-07-04 ai-into-copilot-convergence
- *    §3):不再后台 createAITask(topic.enrich) + 轮询,而是打开 Copilot 深链带
- *    `fn=topic.enrich` + selection(candidate id + 标题)+ 预填话术(不自动发,T-055b),编导在对话里
- *    调 topic.enrich 产 enrich 卡(既有)→ 对话内采纳落库。退役后台 poll 死码。
+ *    `client.promoteCandidate` then navigate to `/projects/:id?from=topic`.
+ *    选题页只负责选方案：原「补充信息 / 补全选题卡」入口移到项目页的自动处理流水线
+ *    (ProjectPipelinePanel 在 from=topic 时自动在项目编导栏启动 brief.fill)。
  *  - `CandidateSortControl` (推荐排序 / …) → re-issues `candidates.list` with the new
  *    `sort` via a URL search-param navigation.
  *  - [T-244] 左栏来源行(行业热点/手动灵感,可映射到 candidates.source 枚举的两行)→
@@ -33,7 +31,6 @@ import { AudienceTaskDetail } from "./audience-task-detail";
 
 import * as React from "react";
 import {openCopilotLocally} from "@/lib/copilot-navigation";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, ExternalLink, type LucideIcon } from "lucide-react";
 
@@ -385,7 +382,7 @@ export function CandidateCard({
 // ── 丢弃(带淘汰原因)────────────────────────────────────────────────────────────
 // [T-216 seam③] 点「丢弃」先填一句为什么 → patchCandidate{status:'dropped', dropReason}。
 // 原因是防茧房校准的信号源(后端 T-212d 蒸馏它),故不能丢;但允许留空直接丢弃(留空不带
-// dropReason)。自带弹窗/mutation,与 EnrichButton 一样是自足小组件。
+// dropReason)。自带弹窗/mutation,自足小组件。
 function DropButton({
   candidate,
 }: {
@@ -486,55 +483,6 @@ function DropButton({
 // [T-103c] 选题补全的预填话术 —— 只填不发(T-055b),编导据此优先调 topic.enrich。
 const TOPIC_ENRICH_PREFILL =
   "基于这条选题,补全一份完整选题卡(观众/痛点/结构/形式),我要采纳进候选池。";
-
-// 补充信息 / 补全选题卡(**T-103c 起改为对话内即时反馈**)— 不再后台起 topic.enrich 任务 + 轮询,
-// 而是打开 Copilot 深链:fn=topic.enrich + selection(candidate id + 标题,免编导索要)+ 预填话术
-// (不自动发)。编导在对话里调 topic.enrich 产 enrich 卡(既有)→ 对话内采纳落库。label 在裸卡时
-// 「补全选题卡」、已有一句话选题时「补充信息」。
-export function EnrichButton({
-  candidate,
-  className,
-  sort,
-  sourceFilter,
-}: {
-  readonly candidate: CandidateResource;
-  readonly className?: string;
-  readonly sort?: CandidateSortKey;
-  readonly sourceFilter?: CandidateSourceFilter | null;
-}) {
-  const hasCard = Boolean(candidate.card.oneLiner);
-  const label = hasCard ? "补充信息" : "补全选题卡";
-  // query-only 深链 → 就地开 Copilot 浮层不跳页;selection.kind=candidate 让编导知道"这条"指哪条。
-  const href = preserveTopicsState(
-    copilotDeepLink(
-      "topics",
-      "topic.enrich",
-      { kind: "candidate", id: candidate.id, title: candidate.title },
-      TOPIC_ENRICH_PREFILL,
-    ),
-    sort,
-    sourceFilter,
-  );
-
-  return (
-    <Button
-      asChild
-      type="button"
-      variant="outline"
-      size="sm"
-      className={cn("h-7 gap-1 px-2 text-xs", className)}
-    >
-      <Link
-        href={href}
-        data-testid="enrich-button"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Sparkles className="size-3.5" />
-        {label}
-      </Link>
-    </Button>
-  );
-}
 
 // ── 新建选题卡 (manual·富字段录入弹窗 TOPIC-FORM) ──────────────────────────────────
 // 标题必填;其余整张候选卡字段(一句话/受众/痛点/冲突/Hook/结构/素材/风险/立项)可选。
@@ -1030,12 +978,8 @@ function DetailIcon({ icon: Icon, label }: { readonly icon: LucideIcon; readonly
 
 function CandidateDetailPanel({
   candidate,
-  sort,
-  sourceFilter,
 }: {
   readonly candidate: CandidateResource | null;
-  readonly sort: CandidateSortKey;
-  readonly sourceFilter: CandidateSourceFilter | null;
 }) {
   return (
     <aside
@@ -1070,7 +1014,7 @@ function CandidateDetailPanel({
             </p>
             <SourceReferenceLinks candidate={candidate} />
             <p className="text-sm text-muted-foreground">
-              这条还没有选题卡。让 AI 按你的定位 + 素材补全一句话选题、观众痛点、推荐结构等。
+              这条还没有选题卡。升级为项目后，会在项目里自动补全一句话选题、观众痛点、推荐结构等。
             </p>
 
           </div>
@@ -1078,12 +1022,12 @@ function CandidateDetailPanel({
           <CandidateCardDetail candidate={candidate}/>
         )}
       </div>
-      <CandidateProjectActions candidate={candidate} sort={sort} sourceFilter={sourceFilter}/>
+      <CandidateProjectActions candidate={candidate}/>
     </aside>
   );
 }
 
-function CandidateProjectActions({candidate,sort,sourceFilter}:{readonly candidate:CandidateResource|null;readonly sort:CandidateSortKey;readonly sourceFilter:CandidateSourceFilter|null}) {
+function CandidateProjectActions({candidate}:{readonly candidate:CandidateResource|null}) {
   const { pending, run, router } = useMutation();
   function promote() {
     if (!candidate) return;
@@ -1096,22 +1040,18 @@ function CandidateProjectActions({candidate,sort,sourceFilter}:{readonly candida
         }),
       (result) => {
         const projectId = (result as { projectId?: string } | null)?.projectId;
-        if (projectId) router.push(`/projects/${projectId}`);
+        // 补全资料等处理统一在项目里自动进行：带 from=topic 让项目页自动启动补全。
+        if (projectId) router.push(`/projects/${projectId}?from=topic`);
         else router.refresh();
       },
     );
   }
 
   return (
-      <section id="topics-create" className={styles.createActions} aria-label="立项创作">
-        <TopicWorkflowStep step={4} label="立项创作"/>
+      <section id="topics-create" className={styles.createActions} aria-label="升级为项目">
+        <TopicWorkflowStep step={4} label="升级为项目"/>
+        <p className="text-xs leading-5 text-muted-foreground">选题只负责选定方案；补全资料、转写和写稿会在新项目里自动进行。</p>
       {candidate ? <div className="flex flex-wrap items-center gap-2">
-        <EnrichButton
-          candidate={candidate}
-          className="h-8 px-3"
-          sort={sort}
-          sourceFilter={sourceFilter}
-        />
         <Button
           type="button"
           size="sm"
@@ -1120,7 +1060,7 @@ function CandidateProjectActions({candidate,sort,sourceFilter}:{readonly candida
           onClick={promote}
         >
           <Rocket className="size-3.5" />
-          立项为 Project
+          {candidate.status === "promoted" ? "已升级为项目" : pending ? "正在升级…" : "升级为项目"}
         </Button>
       </div> : <p>先选择一条候选，再进入创作。</p>}
       </section>
@@ -1502,8 +1442,6 @@ export function TopicsWorkspace({
         <PoolColumn pool={pool} sort={sort} sourceFilter={sourceFilter} sources={sources} candidateCountsBySource={candidateCountsBySource}/>
         <CandidateDetailPanel
           candidate={selected}
-          sort={sort}
-          sourceFilter={sourceFilter}
         />
       </div>
     </SelectionCtx.Provider>

@@ -412,13 +412,13 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
-  it("立项为 Project → client.promoteCandidate then push to the new /projects/:id", async () => {
+  it("升级为项目 → client.promoteCandidate then push to /projects/:id?from=topic（补全在项目中自动进行）", async () => {
     render(<TopicsWorkspace candidates={[candidate({card:filledCard()})]} sources={overview().sources} sort="predictedScore" />);
-    fireEvent.click(within(screen.getByRole("region", {name:"立项创作"})).getByRole("button", {name:"立项为 Project"}));
+    fireEvent.click(within(screen.getByRole("region", {name:"升级为项目"})).getByRole("button", {name:"升级为项目"}));
     await waitFor(() =>
       expect(mockClient.promoteCandidate).toHaveBeenCalledTimes(1),
     );
-    expect(mockRouter.push).toHaveBeenCalledWith("/projects/proj-99");
+    expect(mockRouter.push).toHaveBeenCalledWith("/projects/proj-99?from=topic");
   });
 
   it("[T-216] 丢弃 → 弹窗填原因 → client.patchCandidate{status:'dropped',dropReason} then router.refresh", async () => {
@@ -456,7 +456,7 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(arg.body).not.toHaveProperty("dropReason");
   });
 
-  it("[T-103c] 补全选题卡 → Copilot 深链预填(topic.enrich, selection=候选;不再 createAITask 轮询)", () => {
+  it("选题只选方案：详情不再提供补全选题卡，只保留唯一的升级为项目", () => {
     render(
       <TopicsWorkspace
         candidates={[candidate({card:filledCard()})]}
@@ -465,18 +465,10 @@ describe("topics islands (needs-backend wiring)", () => {
         sourceFilter="idea"
       />,
     );
-    const link = screen.getByTestId("enrich-button");
-    const href = link.getAttribute("href") ?? "";
-    expect(href).toContain("copilot=open");
-    expect(href).toContain("surface=topics");
-    expect(href).toContain("fn=topic.enrich");
-    expect(href).toContain("selKind=candidate");
-    expect(href).toContain("selId=cand-1");
-    expect(href).toContain("prefill=");
-    // [T-827] 打开浮层不能清掉用户正在看的来源/排序,关闭后仍回原候选池。
-    expect(href).toContain("sort=guardrail");
-    expect(href).toContain("source=idea");
-    // 补全不再后台起任务 —— 走对话确认门物化。
+    expect(screen.queryByTestId("enrich-button")).toBeNull();
+    const actions=screen.getByRole("region",{name:"升级为项目"});
+    expect(within(actions).getAllByRole("button")).toHaveLength(1);
+    expect(within(actions).getByText(/补全资料、转写和写稿会在新项目里自动进行/)).toBeVisible();
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
@@ -730,7 +722,7 @@ describe("选题操作步骤布局",()=>{
     expect(within(prepare).getAllByRole("link")).toHaveLength(4);
     expect(screen.getByRole("heading",{name:"02 挑选候选"})).toBeVisible();
     expect(screen.getByRole("heading",{name:"03 核对选题"})).toBeVisible();
-    expect(within(screen.getByRole("region",{name:"立项创作"})).getByRole("button",{name:"立项为 Project"})).toBeEnabled();
+    expect(within(screen.getByRole("region",{name:"升级为项目"})).getByRole("button",{name:"升级为项目"})).toBeEnabled();
     expect(mockClient.createCandidate).not.toHaveBeenCalled();
     expect(mockClient.promoteCandidate).not.toHaveBeenCalled();
   });
@@ -740,7 +732,7 @@ describe("选题操作步骤布局",()=>{
     fireEvent.click(second);
     expect(second).toHaveAttribute("aria-pressed","true");
     expect(within(screen.getByTestId("topics-detail")).getByText("第二条正文")).toBeVisible();
-    fireEvent.click(within(screen.getByRole("region",{name:"立项创作"})).getByRole("button",{name:"立项为 Project"}));
+    fireEvent.click(within(screen.getByRole("region",{name:"升级为项目"})).getByRole("button",{name:"升级为项目"}));
     await waitFor(()=>expect(mockClient.promoteCandidate).toHaveBeenCalledWith(expect.objectContaining({params:{candidateId:"second"}})));
   });
 });
