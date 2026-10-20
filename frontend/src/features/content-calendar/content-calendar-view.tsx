@@ -412,7 +412,7 @@ function CalendarDayCell({
         <span
           className={[
             "text-xs",
-            cell.inMonth ? "text-foreground" : "text-muted-foreground/50",
+            cell.inMonth ? "text-foreground" : "text-muted-foreground",
             isToday
               ? "flex h-5 w-5 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground"
               : "",

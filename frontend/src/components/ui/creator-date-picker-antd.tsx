@@ -28,6 +28,8 @@ export default function CreatorDatePickerAntd(props:CreatorDatePickerAntdProps){
   // 空字符串是表单“尚未选择”的内部表示，不能传给 Dayjs；否则 Ant 会把整张月历渲染成 Invalid Date。
   const selected=(typeof props.value==="string"?props.value:range?.startDate)||null;
   const common={
+    // The lazy picker mounts only after an explicit open; retain the trigger's keyboard focus.
+    autoFocus:props.open,
     open:props.open,onOpenChange:props.onOpenChange,disabled:props.disabled,allowClear:props.allowClear??false,
     minDate:props.minDate?dayjs(props.minDate):undefined,maxDate:props.maxDate?dayjs(props.maxDate):undefined,
     className:props.className,"aria-label":props.label??"选择日期",size:"large" as const,

@@ -33,3 +33,10 @@ it('旧长摘要只在一个折叠区域保留，不重复渲染两份',()=>{con
 it('旧长标题与摘要放在同一详情区，主标题使用简明引导且不丢失原文',()=>{const headline='这是此前生成的很长的标题。'.repeat(6),summary='原始摘要保留';mocks.state={...mocks.state,status:'succeeded',analysis:{...analysis,headline,summary}};render(<DailyReportPage report={report}/>);expect(screen.getByRole('heading',{name:'本期运营建议'})).toBeInTheDocument();expect(screen.queryByRole('heading',{name:headline})).toBeNull();const details=screen.getByText(headline).closest('details');expect(details).not.toHaveAttribute('open');expect(screen.getByText(summary).closest('details')).toBe(details);expect(screen.getAllByText(headline)).toHaveLength(1);expect(screen.getAllByText(summary)).toHaveLength(1);fireEvent.click(screen.getByText('查看此前分析，或重新生成简明建议'));expect(details).toHaveAttribute('open');});
 
 it('全组不选具体账号也展示原运营分析和原生指标，不要求伪accountId',()=>{render(<DailyReportPage report={{...report,accountId:null,groupId:'real-group',platform:null,selectedAccountId:null,accountName:'真实账号组'}}/>);expect(screen.getByRole('heading',{name:'作品表现比较'})).toBeInTheDocument();expect(screen.getByRole('heading',{name:'定位与内容布局'})).toBeInTheDocument();expect(screen.queryByRole('heading',{name:'先选择一个账号'})).toBeNull();expect(screen.getByRole('button',{name:'生成运营分析'})).toBeEnabled();});
+
+it("嵌入预览时保留外层主标题，报表筛选和导出仍可用",()=>{
+ render(<main><h1>运营分析</h1><DailyReportPage report={report} showPageHeading={false}/></main>);
+ expect(screen.getAllByRole("heading",{level:1,name:"运营分析"})).toHaveLength(1);
+ expect(screen.getByRole("button",{name:"导出数据"})).toBeEnabled();
+ expect(screen.getByRole("tab",{name:"运营复盘"})).toBeVisible();
+});

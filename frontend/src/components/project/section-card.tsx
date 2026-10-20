@@ -16,7 +16,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -45,17 +44,17 @@ export function SectionCard({
       data-slot="section-card"
       className={cn("gap-card-gap", className)}
     >
-      <CardHeader className="flex flex-row items-start justify-between gap-card-gap">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <CardTitle id={labelledBy} className="text-[15px] font-semibold">
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-[min(100%,10rem)] flex-1 flex-col gap-0.5">
+          <h2 data-slot="card-title" id={labelledBy} className="font-heading text-[15px] leading-snug font-semibold">
             {title}
-          </CardTitle>
+          </h2>
           {description ? (
             <CardDescription>{description}</CardDescription>
           ) : null}
         </div>
         {action ? (
-          <div data-slot="section-card-action" className="shrink-0">
+          <div data-slot="section-card-action" className="min-w-0 max-w-full">
             {action}
           </div>
         ) : null}

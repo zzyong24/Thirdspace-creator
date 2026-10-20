@@ -336,31 +336,39 @@ describe("AppShell", () => {
     expect(header?.getAttribute("data-mode")).toBe("project-workspace");
   });
 
-  it("keeps global actions in an overlay header without consuming page height", async () => {
+  it("keeps global actions in normal flow so page tools are never covered", async () => {
     const { container } = await renderShell({
       pathname: "/",
       headerMode: "global",
     });
     const header = container.querySelector('[data-slot="app-top-header"]');
 
-    expect(header).toHaveAttribute("data-layout", "overlay");
-    expect(header).toHaveClass("absolute");
+    expect(header).toHaveAttribute("data-layout", "flow");
+    expect(header).not.toHaveClass("absolute");
   });
 
-  it("does not create a duplicate h1 for global overlay page titles", async () => {
-    const { container } = await renderShell({
-      pathname: "/projects",
-      headerMode: "global",
-      pageTitle: "项目",
-      pageDescription: "所有项目及其当前阶段",
-    });
-    const headingSlot = container.querySelector(
-      '[data-slot="header-page-heading"]',
-    );
-
-    expect(headingSlot).not.toBeNull();
-    expect(headingSlot?.textContent).toContain("项目");
-    expect(headingSlot?.querySelector("h1")).toBeNull();
+  it.each([
+    ["/overview", "创作者总览"],
+    ["/positioning", "定位中心"],
+    ["/intelligence", "内容雷达"],
+    ["/projects", "项目"],
+    ["/topics", "选题中心"],
+    ["/knowledge", "知识库"],
+    ["/assets", "素材中心"],
+    ["/publishing", "发布中心"],
+    ["/daily-report", "运营分析"],
+  ])("%s 保留正文唯一主标题，工具栏不再重复页面名称", async (pathname, title) => {
+    const { AppShell } = await import("./app-shell");
+    const { container } = render(<AppShell pathname={pathname} headerMode="global" pageTitle={title}>
+      <main><h1>{title}</h1></main>
+    </AppShell>);
+    const headingSlot = container.querySelector('[data-slot="header-page-heading"]');
+    expect(headingSlot).toBeEmptyDOMElement();
+    expect(headingSlot).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getAllByRole("heading", {level:1})).toHaveLength(1);
+    expect(screen.getByRole("heading", {level:1,name:title})).toBeVisible();
+    expect(container.querySelector('[data-slot="app-top-header"]')).toBeInTheDocument();
+    expect(screen.getByRole("navigation", {name:"主要导航"})).toBeInTheDocument();
   });
 
   it("renders the page content inside the page scroll area", async () => {
@@ -610,6 +618,21 @@ describe("AppShell", () => {
 // ---------------------------------------------------------------------------
 
 describe("Sidebar 折叠 (T-129)", () => {
+  it("手机菜单展开隔离主内容，Esc 后焦点回到重新渲染的开关", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn((query: string) => ({matches:query === "(max-width: 1024px)" || query === "(max-width: 640px)",media:query,addEventListener:vi.fn(),removeEventListener:vi.fn(),addListener:vi.fn(),removeListener:vi.fn(),dispatchEvent:()=>true,onchange:null}) as MediaQueryList);
+    try {
+      const view=await renderShell();
+      fireEvent.click(screen.getByRole("button",{name:"展开侧栏"}));
+      const toggle=screen.getByRole("button",{name:"收起侧栏"});
+      expect(toggle).toHaveFocus();
+      expect(screen.getByRole("dialog",{name:"主侧栏"})).toHaveAttribute("aria-modal","true");
+      expect(view.container.querySelector('[data-slot="app-main-frame"]')).toHaveAttribute("inert");
+      fireEvent.keyDown(toggle,{key:"Escape"});
+      await waitFor(()=>expect(screen.getByRole("button",{name:"展开侧栏"})).toHaveFocus());
+      expect(view.container.querySelector('[data-slot="app-main-frame"]')).not.toHaveAttribute("inert");
+    } finally {cleanup();window.matchMedia=original;}
+  });
   it("窄窗口自动收起，恢复宽窗口时保留桌面展开偏好", async () => {
     let listener: ((event: MediaQueryListEvent) => void) | undefined;
     const original = window.matchMedia;

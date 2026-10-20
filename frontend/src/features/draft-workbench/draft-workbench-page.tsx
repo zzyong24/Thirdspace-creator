@@ -32,7 +32,7 @@ import { AmmoDumpZone } from "./ammo-dump-zone";
 import { AmmoCardList } from "./ammo-card-list";
 import { DraftPrimaryAction } from "./draft-primary-action";
 // [T-374] 顶条「立即抓取逐字稿」:自己作品(有抖音锚)单条立抓,不等每日自动任务。
-import { TranscribeNowButton } from "./transcribe-now-button";
+import { ProjectPipelinePanel, type PipelineOrigin } from "./project-pipeline-panel";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
 import { PublishPackageCta } from "./publish-package-cta";
@@ -43,11 +43,24 @@ import {
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
-export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
+export function DraftWorkbenchPage({ vm, autoFillBrief = false }: { vm: DraftWorkbenchVm; autoFillBrief?: boolean }) {
   const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
-  const hasTranscribeAction = Boolean(project.douyinExternalId && project.transcriptState !== "done");
   const isPublished = publishPack?.outputPublished ?? publishPack?.status === "published";
-  const hasTopbarContent = project.imported || hasTranscribeAction || isPublished;
+  // 转写入口已移入下方「项目准备」流水线；顶条只保留导入标记与发布后主行动。
+  const hasTopbarContent = project.imported || isPublished;
+  const radarEvidence = project.briefDetail?.contentRadarEvidence;
+  const pipelineOrigin: PipelineOrigin = radarEvidence
+    ? "radar"
+    : project.imported
+      ? "imported"
+      : project.source === "topic"
+        ? "topic"
+        : "manual";
+  const briefSettled = Boolean(
+    project.briefDetail?.targetAudience?.trim() &&
+      project.briefDetail?.contentGoal?.trim() &&
+      project.briefDetail?.coreMessage?.trim(),
+  );
   const radarDraftSeed = vm.radarDraftSeed ?? "";
   const seedHtml = radarDraftSeed
     .split(/\n+/)
@@ -92,14 +105,6 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               真实导入作品
             </span>
           ) : null}
-          {/* 有真稿后保原任务入口；只读结果不等于本次刚保存。 */}
-          {project.douyinExternalId ? (
-            <TranscribeNowButton
-              projectId={project.id}
-              awemeId={project.douyinExternalId}
-              initialState={project.transcriptState}
-            />
-          ) : null}
           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction
             projectId={project.id}
@@ -116,6 +121,19 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
       <DraftResizableLayout
         left={
           <>
+          {/* 项目准备:雷达/选题移交过来的转写、补全资料、初稿步骤,在原有稿面之前集中展示。 */}
+          <ProjectPipelinePanel
+            projectId={project.id}
+            title={project.title}
+            origin={pipelineOrigin}
+            sourceRefs={(radarEvidence?.sourceReferences ?? []).map((ref) => ({ label: ref.label, url: ref.url, platform: ref.platform }))}
+            douyinExternalId={project.douyinExternalId}
+            transcriptState={project.transcriptState}
+            briefSettled={briefSettled}
+            draftReady={script.versionCount > 0 || Boolean(radarDraftSeed.trim())}
+            autoFillBrief={autoFillBrief}
+          />
+
           {/* 成熟度轨(装饰,随区块态着色由各区块节点体现) */}
           <TopicCard
             projectId={project.id}

@@ -1,3 +1,5 @@
+import { PreviewSamples } from "@/features/preview/preview-samples";
+import { hasPreviewSamples } from "@/features/preview/preview-mode.server";
 import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
 import {
   IntelligenceWorkbench,
@@ -52,7 +54,7 @@ export default async function IntelligencePage() {
         })) as RadarItemDetail)
       : null;
 
-  return (
+  const workbench = (
     <IntelligenceWorkbench
       groupId={session.ctx.groupId??undefined}
       accountId={session.ctx.accountId??undefined}
@@ -63,4 +65,20 @@ export default async function IntelligencePage() {
       positioningVersionId={positioningStatements[0]?.id ?? null}
     />
   );
+  if (hasPreviewSamples(session.ctx.groupId) && items.length === 0) return (
+    <main data-page="preview-radar" className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto">
+      <header><h1 className="text-2xl font-semibold">内容雷达</h1></header>
+      <PreviewSamples kind="radar" radarSources={<IntelligenceWorkbench
+        presentation="sources"
+        groupId={session.ctx.groupId??undefined}
+        accountId={session.ctx.accountId??undefined}
+        workspace={workspace}
+        items={items}
+        initialTotal={itemPage.meta.total}
+        initialDetail={initialDetail}
+        positioningVersionId={positioningStatements[0]?.id ?? null}
+      />}/>
+    </main>
+  );
+  return workbench;
 }

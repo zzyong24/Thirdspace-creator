@@ -136,6 +136,7 @@ export interface SidebarUser {
 }
 
 export interface SidebarProps {
+  readonly onMobileOpenChange?: (open: boolean) => void;
   readonly pathname: string;
   readonly contextualCardVariant?: SidebarContextualCardVariant;
   readonly contextSection?: SidebarContextSection;
@@ -218,6 +219,7 @@ function initialsFromName(name: string): string {
 // ---------------------------------------------------------------------------
 
 export function Sidebar({
+  onMobileOpenChange,
   pathname,
   contextualCardVariant = "assistant",
   contextSection,
@@ -231,6 +233,25 @@ export function Sidebar({
   // 是收拢态则切过去(收拢用户会有一帧展开闪,可接受)。
   const [collapsed, setCollapsed] = React.useState(false);
   const desktopCollapsed = React.useRef(false);
+  const sidebarRef = React.useRef<HTMLElement>(null);
+  const restoreToggleFocus = React.useRef(false);
+  React.useLayoutEffect(() => {
+    if (!restoreToggleFocus.current) return;
+    sidebarRef.current?.querySelector<HTMLButtonElement>('[data-slot="sidebar-collapse-toggle"]')?.focus();
+    restoreToggleFocus.current = false;
+  }, [collapsed]);
+  const [mobile, setMobile] = React.useState(false);
+  React.useEffect(() => {
+    const query = window.matchMedia("(max-width: 640px)");
+    const sync = () => setMobile(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  React.useEffect(() => {
+    onMobileOpenChange?.(mobile && !collapsed);
+    return () => onMobileOpenChange?.(false);
+  }, [mobile, collapsed, onMobileOpenChange]);
   React.useEffect(() => {
     try {
       desktopCollapsed.current = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
@@ -246,6 +267,7 @@ export function Sidebar({
     return () => narrow.removeEventListener("change", change);
   }, []);
   const handleToggle = React.useCallback(() => {
+    restoreToggleFocus.current = true;
     setCollapsed((prev) => {
       const next = !prev;
       // 自动收起不覆盖桌面偏好；窄窗口仍可由用户临时展开。
@@ -261,9 +283,29 @@ export function Sidebar({
   return (
     <TooltipProvider delayDuration={0}>
       <aside
+        ref={sidebarRef}
         data-slot="app-sidebar"
         data-testid="app-sidebar"
         data-collapsed={collapsed ? "true" : "false"}
+        onClickCapture={event => {
+          if (window.matchMedia("(max-width: 640px)").matches && event.target instanceof Element && event.target.closest("a[href]")) setCollapsed(true);
+        }}
+        onKeyDown={event => {
+          if (event.key === "Tab" && mobile && !collapsed) {
+            const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled]), [tabindex="0"]',
+            )).filter(node => node.getClientRects().length > 0);
+            const first = controls[0], last = controls[controls.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+          }
+          if (event.key === "Escape" && window.matchMedia("(max-width: 640px)").matches) {
+            restoreToggleFocus.current = true;
+            setCollapsed(true);
+          }
+        }}
+        role={mobile && !collapsed ? "dialog" : undefined}
+        aria-modal={mobile && !collapsed ? true : undefined}
         aria-label="主侧栏"
         style={PACKAGE_BRAND_SIDEBAR_STYLE as React.CSSProperties}
         className={cn(
@@ -273,6 +315,7 @@ export function Sidebar({
         )}
       >
         <SidebarHeader collapsed={collapsed} onToggle={handleToggle} />
+        <div data-slot="sidebar-workspace"><AccountSwitcher collapsed={collapsed} /></div>
         <div
           data-slot="sidebar-scroll-region"
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
@@ -303,7 +346,6 @@ export function Sidebar({
           />
           {/* [T-136 切片 a] 当前抖音号切换器(多号 = 多独立人设);紧挨用户区上方,
               展开/收拢态都渲染(收拢态只显图标 + tooltip)。 */}
-          <AccountSwitcher collapsed={collapsed} />
           <UserProfileCard
             collapsed={collapsed}
             displayName={resolvedUser.displayName}
@@ -395,6 +437,7 @@ function SidebarCollapseToggle({
       data-testid="sidebar-collapse-toggle"
       aria-label={label}
       aria-pressed={collapsed}
+      aria-expanded={!collapsed}
       onClick={onToggle}
       className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
@@ -450,14 +493,18 @@ function PrimaryNav({
               collapsed ? "justify-center px-0" : "gap-2.5 px-2.5",
               "text-muted-foreground hover:bg-muted hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              isActive && "bg-brand-soft font-medium text-brand",
+              isActive && "bg-surface font-medium text-foreground",
             )}
           >
             <PrimaryNavContents icon={Icon} label={entry.label} collapsed={collapsed} pending={pendingHref===entry.href}/>
           </Link>
         );
         if (!collapsed) {
-          return <React.Fragment key={entry.id}>{link}</React.Fragment>;
+          return <React.Fragment key={entry.id}>
+            {({positioning: "创作", knowledge: "资料", publishing: "运营", settings: "工作区"} as Record<string,string>)[entry.id] ?
+              <span data-slot="sidebar-nav-group">{({positioning: "创作", knowledge: "资料", publishing: "运营", settings: "工作区"} as Record<string,string>)[entry.id]}</span> : null}
+            {link}
+          </React.Fragment>;
         }
         return (
           <Tooltip key={entry.id}>

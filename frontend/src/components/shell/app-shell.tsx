@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import {SettingsReturnProvider} from "./settings-return-context";
 
 import {
@@ -44,6 +45,7 @@ import type { NotificationsViewModel } from "@/fixtures/selectors";
 
 export interface AppShellProps {
   readonly pathname: string;
+  readonly previewMode?: boolean;
   readonly user?: SidebarUser;
   // G1: the server-read Shell notifications, forwarded to the TopHeader bell.
   readonly notifications?: NotificationsViewModel;
@@ -71,6 +73,7 @@ export interface AppShellProps {
 
 export function AppShell({
   pathname,
+  previewMode = false,
   user,
   notifications,
   headerMode = "global",
@@ -88,6 +91,8 @@ export function AppShell({
   children,
   className,
 }: AppShellProps) {
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
   const newProjectReturn = React.useRef<{node:HTMLAnchorElement;path:string;index:number}|null>(null);
   const previousPath = React.useRef(pathname);
   React.useEffect(()=>{
@@ -105,6 +110,8 @@ export function AppShell({
         if(target && event.button===0) newProjectReturn.current={node:target,path:pathname,index:Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href="/projects/new"]')).indexOf(target)};
       }}
       data-slot="app-shell"
+      data-design="manuscript"
+      data-route={pathname}
       data-testid="app-shell"
       data-masked={overlayMasked ? "true" : "false"}
       className={cn(
@@ -114,7 +121,12 @@ export function AppShell({
         className,
       )}
     >
+      <a data-slot="skip-link" href="#creatoros-main-content" onClick={event => {
+        event.preventDefault();
+        contentRef.current?.focus();
+      }}>跳到页面内容</a>
       <Sidebar
+        onMobileOpenChange={setMobileNavOpen}
         pathname={pathname}
         user={user}
         contextualCardVariant={contextualCardVariant}
@@ -122,6 +134,7 @@ export function AppShell({
       />
       <div
         data-slot="app-main-frame"
+        inert={mobileNavOpen || undefined}
         // h-full + min-h-0 → 主框占满固定高度并允许子级(PageScrollArea)以 flex-1
         // 撑出可滚区域;TopHeader 自然高度被钉在顶部。
         className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col"
@@ -139,6 +152,7 @@ export function AppShell({
           searchValue={searchValue}
           overlayMasked={overlayMasked}
         />
+        {previewMode && <div data-slot="isolated-preview-notice"><span><strong>独立预览</strong> · 模拟内容</span><Link href="/preview">页面导航 →</Link></div>}
         <PageScrollArea
           data-fill={contentFill ? "true" : "false"}
           className={cn(contentFill && [
@@ -150,6 +164,9 @@ export function AppShell({
           ])}
         >
           <div
+            ref={contentRef}
+            id="creatoros-main-content"
+            tabIndex={-1}
             data-slot="app-page-content"
             data-fill={contentFill ? "true" : "false"}
             className={cn(

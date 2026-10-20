@@ -1,15 +1,14 @@
 "use client";
 import { compactNumber,dateLabel,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
+import styles from "./source-management.module.css";
+import { SourceManagementOverview } from "./source-management-overview";
 import { SourceRunHistoryDialog } from "./source-run-history-dialog";
-import {TopicTaskControls} from "./topic-task-controls";
-import { TopicCandidateEditor } from "./topic-candidate-editor";
 
 import {
 Activity,
 Archive,
 ChevronRight,
 Clock3,
-FileAudio,
 Link2,
 LockKeyhole,
 Pause,
@@ -17,6 +16,8 @@ Play,
 RefreshCw,
 Search,
 ShieldCheck,
+Heart,
+Flame,
 Sparkles,
 Trash2,
 Upload
@@ -28,12 +29,11 @@ import {readRadarView,saveRadarView} from "./radar-view-preferences";
 import * as React from "react";
 import { AddCollectionDialog,ImportDouyinShareDialog } from "./collection-import-dialogs";
 import { transcriptSaveErrorMessage } from "./intelligence-errors";
-import { operationKey } from "./radar-operation-key";
 import { AddSourceDialog } from "./source-setup-dialog";
-import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskNeedsModelSetup,topicTaskStatus } from "./topic-task-state";
 import { useSourceRuns } from "./use-source-runs";
 import { useTopicPreview } from "./use-topic-preview";
 import { useTranscriptRefresh } from "./use-transcript-refresh";
+import { RadarUpgradeAction } from "./radar-upgrade-action";
 import { useProjectUpgradeQueue,upgradeLabel,upgradeProjectId,upgradeNotice,upgradeNeedsResultCheck } from "./use-project-upgrade-queue";
 import type {ExecutionTaskResourceV2} from "@creatoros/contract";
 export { favoriteFoldersErrorMessage,sourceVerificationErrorMessage } from "./intelligence-errors";
@@ -93,44 +93,6 @@ export function groupRadarSourceEvidence(
   return [...grouped.values()];
 }
 
-function topicConfirmationInput(
-  transformId: string,
-  candidate: NonNullable<RadarItemDetail["transforms"][number]["outputSnapshot"]>,
-  idempotencyKey: string,
-): Parameters<RadarApi["confirmTopic"]>[0] {
-  const rewriteOnly =
-    candidate.generationMode === "rewrite_only" ||
-    candidate.adaptedDraft?.generationMode === "rewrite_only";
-  if (rewriteOnly) {
-    return {
-      transformId,
-      editedDraftContentText: candidate.adaptedDraft?.contentText ?? "",
-      idempotencyKey,
-    };
-  }
-  return {
-    transformId,
-    editedCandidate: {
-      title: candidate.title ?? "",
-      angle: candidate.angle ?? "",
-      differentiation: candidate.differentiation ?? "",
-      sourceSummary: candidate.sourceSummary ?? "",
-      targetAudience: candidate.targetAudience ?? "",
-      audiencePain: candidate.audiencePain ?? "",
-      coreConflict: candidate.coreConflict ?? "",
-      format: candidate.format ?? "",
-      contentRole: candidate.contentRole ?? null,
-      adaptationStrategy: candidate.adaptationStrategy ?? {
-        keep: [],
-        replace: [],
-        add: [],
-        avoid: [],
-      },
-    },
-    idempotencyKey,
-  };
-}
-
 function IntelligenceWorkbenchScope({
   groupId,
   accountId,
@@ -140,7 +102,9 @@ function IntelligenceWorkbenchScope({
   initialDetail,
   positioningVersionId = null,
   api: injectedApi,
+  presentation = "workspace",
 }: {
+  presentation?: "workspace" | "sources";
   groupId?: string;
   accountId?: string;
   workspace: RadarWorkspace;
@@ -150,6 +114,7 @@ function IntelligenceWorkbenchScope({
   positioningVersionId?: string | null;
   api?: RadarApi;
 }) {
+  const sourcesOnly = presentation === "sources";
   const legacyAccountId=groupId?undefined:accountId;
   const scope=React.useMemo(()=>({groupId,accountId:legacyAccountId}),[groupId,legacyAccountId]);
   const scopeKey=radarScopeKey(scope);
@@ -205,7 +170,7 @@ function IntelligenceWorkbenchScope({
     activeDetailItemId.current = detail?.item.id ?? null;
   }, [detail?.item.id]);
 
-  const {topicGenerating,previewTopic,previewNeedsReconciliation,resetTopicPreview}=useTopicPreview({api,detail,positioningVersionId,setDetail,setNotice,setBusy,activeDetailItemId});
+  const {resetTopicPreview}=useTopicPreview({api,detail,positioningVersionId,setDetail,setNotice,setBusy,activeDetailItemId});
   const upgrades=useProjectUpgradeQueue({api,...scope,positioningVersionId,setNotice});
   useTranscriptRefresh({api,detail,rows:scopedItems,setDetail,setRows:setScopedItems,activeItemId:activeDetailItemId,
     pendingItemIds:upgrades.tasks.filter(task=>["queued","running"].includes(task.status)&&task.checkpoint&&typeof task.checkpoint==="object"&&"stage" in task.checkpoint&&task.checkpoint.stage==="transcribing").map(task=>task.ownerId),
@@ -335,6 +300,12 @@ function IntelligenceWorkbenchScope({
 
   const selectItemScope = React.useCallback(
     async (collectionId: string | null, sourceId: string | null) => {
+      if (sourcesOnly) {
+        setSelectedCollectionId(collectionId);
+        setSelectedSourceId(sourceId);
+        setNotice(null);
+        return;
+      }
       const requestId = itemScopeRequestId.current + 1;
       itemScopeRequestId.current = requestId;
       const previous = {
@@ -391,6 +362,7 @@ function IntelligenceWorkbenchScope({
       }
     },
     [
+      sourcesOnly,
       scope,
       api,
       detail,
@@ -789,25 +761,6 @@ function IntelligenceWorkbenchScope({
     }
   }, [api, removalBusy, removalSource, router, runningSourceIds]);
 
-  const enqueueTranscript = React.useCallback(async () => {
-    if (!detail) return;
-    setBusy(true);
-    setNotice(null);
-    try {
-      await api.enqueueTranscript({
-        itemId: detail.item.id,
-        idempotencyKey: operationKey("ai-transcribe"),
-      });
-      setDetail(current=>current?.item.id===detail.item.id?{...current,transcript:{...current.transcript,status:"queued"}}:current);
-      setScopedItems(rows=>rows.map(row=>row.item.id===detail.item.id?{...row,transcriptState:"processing",progressState:"transcript_processing"}:row));
-      setNotice("已加入 AI 转写队列，完成后会自动更新正文。");
-    } catch {
-      setNotice("逐字稿排队失败，请检查 ASR 模型配置后重试。");
-    } finally {
-      setBusy(false);
-    }
-  }, [api, detail, router]);
-
   const uploadTranscript = React.useCallback(
     async (
       input:
@@ -852,121 +805,17 @@ function IntelligenceWorkbenchScope({
   );
 
 
-  const confirmTopic = React.useCallback(
-    async (
-      transformId: string,
-      candidate: NonNullable<
-        RadarItemDetail["transforms"][number]["outputSnapshot"]
-      >,
-    ) => {
-      if (!detail) return;
-      const itemId = detail.item.id;
-      setBusy(true);
-      setNotice(null);
-      try {
-        await api.confirmTopic(
-          topicConfirmationInput(
-            transformId,
-            candidate,
-            operationKey("topic-confirm"),
-          ),
-        );
-        const refreshed = await api.getItem(itemId);
-        setDetail((current) =>
-          current?.item.id === itemId ? refreshed : current,
-        );
-        setNotice(
-          "已写入选题池。立项后，对标原稿、改写规则和我的初稿会一起带入项目。",
-        );
-        router.refresh();
-      } catch {
-        setNotice("写入选题池失败，候选仍保留，可以稍后重试。");
-      } finally {
-        setBusy(false);
-      }
-    },
-    [api, detail, router],
-  );
-
-  const upgradeTopicToProject = React.useCallback(
-    async (
-      transformId: string,
-      candidate: NonNullable<
-        RadarItemDetail["transforms"][number]["outputSnapshot"]
-      >,
-      existingTopicId: string | null,
-    ) => {
-      if (!detail) return;
-      const itemId = detail.item.id;
-      setBusy(true);
-      setNotice(null);
-      let topicId = existingTopicId;
-      try {
-        if (!topicId) {
-          const confirmed = await api.confirmTopic(
-            topicConfirmationInput(
-              transformId,
-              candidate,
-              operationKey("topic-confirm"),
-            ),
-          );
-          topicId = confirmed.topicId;
-        }
-        const promotion = await api.promoteCandidate({ candidateId: topicId });
-        setNotice("项目已创建，正在进入项目…");
-        router.push(`/projects/${promotion.projectId}`);
-      } catch {
-        if (topicId) {
-          try {
-            const refreshed = await api.getItem(itemId);
-            setDetail((current) =>
-              current?.item.id === itemId ? refreshed : current,
-            );
-          } catch {
-            // 保留当前候选；刷新失败不覆盖真正的立项错误。
-          }
-          setNotice(
-            "选题已保留，但项目创建未完成。请重试「一键升级项目」，不会重复创建。",
-          );
-        } else {
-          setNotice("升级项目失败，候选仍保留，可以稍后重试。");
-        }
-      } finally {
-        setBusy(false);
-      }
-    },
-    [api, detail, router],
-  );
-
-  return (
-    <section
-      data-testid="intelligence-workbench"
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-[22px] border border-border/80 bg-surface shadow-lg"
-    >
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-gradient-to-r from-brand-soft/60 via-surface to-surface px-4 py-3 sm:px-5">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Activity className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold text-foreground">
-              真实信源工作台
-            </h2>
-            <p className="truncate text-xs text-muted-foreground">
-              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full bg-warning-soft px-2.5 py-1 text-warning">
-            待处理 {workspace.pendingCount}
-          </span>
+  const sourceDialogs = {
+    collection: (
           <AddCollectionDialog
             groupId={groupId}
             accountId={accountId}
             api={api}
             onDone={() => router.refresh()}
           />
+
+    ),
+    import: (
           <ImportDouyinShareDialog
             groupId={groupId}
             accountId={accountId}
@@ -979,6 +828,9 @@ function IntelligenceWorkbenchScope({
               router.refresh();
             }}
           />
+
+    ),
+    add: (
           <AddSourceDialog
             groupId={groupId}
             accountId={accountId}
@@ -996,8 +848,47 @@ function IntelligenceWorkbenchScope({
               }
             }}
           />
+    ),
+  };
+
+  return (
+    <section
+      data-page="intelligence"
+      data-testid="intelligence-workbench"
+      data-presentation={presentation}
+      className={cn("flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-border bg-surface", sourcesOnly && styles.manager)}
+    >
+      {sourcesOnly ? <header className={styles.managerHeader}>
+        <div><h3>真实来源</h3><p>只收公开作品与计数，不采集评论正文。</p></div>
+        <span>待处理 {workspace.pendingCount}</span>
+      </header> : (
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-surface px-4 py-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex size-5 items-center justify-center text-muted-foreground">
+            <Activity className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold text-foreground">
+              内容雷达
+            </h1>
+            <p className="truncate text-xs text-muted-foreground">
+              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className={workspace.pendingCount > 0 ? "rounded-full bg-warning-soft px-2.5 py-1 text-warning" : "rounded-full bg-surface-subtle px-2.5 py-1 text-muted-foreground"}>
+            待处理 {workspace.pendingCount}
+          </span>
+
         </div>
       </div>
+      )}
+      {sourcesOnly ? <div className={styles.actions} aria-label="来源操作">
+        <div>{sourceDialogs.add}<p>持续跟踪主页、网页或订阅源</p></div>
+        <div>{sourceDialogs.import}<p>导入单条抖音作品</p></div>
+        <div>{sourceDialogs.collection}<p>按主题整理来源</p></div>
+      </div> : null}
 
       <SourceRunHistoryDialog
         key={historySource?.id ?? "no-source-history"}
@@ -1123,17 +1014,27 @@ function IntelligenceWorkbenchScope({
       ) : null}
 
       <div
-        data-testid="intelligence-responsive-layout"
-        className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)] xl:overflow-hidden 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto]"
+        data-testid="intelligence-responsive-layout" data-studio-layout="inbox"
+        className={cn("grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)] xl:overflow-hidden 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto]", sourcesOnly && styles.sourceLayout)}
       >
         <aside
           data-testid="intelligence-sidebar"
           aria-label="内容雷达分类和来源"
           className="flex min-h-0 flex-col border-b border-border/70 bg-surface-subtle xl:border-b-0 xl:border-r"
         >
+          {!sourcesOnly ? <>
+          <div className="shrink-0 border-b border-border/70 p-3">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">01</span> 来源与采集</h2>
+            <div className="flex flex-wrap gap-2">
+              {sourceDialogs.collection}
+              {sourceDialogs.import}
+              {sourceDialogs.add}
+            </div>
+          </div>
+          </> : null}
           <div className="shrink-0 space-y-2 px-3 pb-2 pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              分类与来源
+              来源目录
             </p>
             <label className="relative block">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -1151,6 +1052,7 @@ function IntelligenceWorkbenchScope({
             <button
               type="button"
               onClick={() => void selectItemScope(null, null)}
+              aria-pressed={!selectedCollectionId && !selectedSourceId}
               className={cn(
                 "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition",
                 !selectedCollectionId && !selectedSourceId
@@ -1158,11 +1060,12 @@ function IntelligenceWorkbenchScope({
                   : "text-foreground hover:bg-muted",
               )}
             >
-              <span>全部内容</span>
+              <span>{sourcesOnly ? "全部来源" : "全部内容"}</span>
               <span className="text-xs text-muted-foreground">
-                {allItemsTotal}
+                {sourcesOnly ? workspace.sources.length : allItemsTotal}
               </span>
             </button>
+            <div className="mt-3 space-y-3" data-slot="radar-collection-groups">
             {workspace.collections.map((collection) => {
               const collectionSources = workspace.sources
                 .filter(
@@ -1179,29 +1082,16 @@ function IntelligenceWorkbenchScope({
                 return null;
               }
               return (
-                <div key={collection.id} className="mt-2">
-                  <button
-                    type="button"
-                    onClick={() => void selectItemScope(collection.id, null)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition",
-                      selectedCollectionId === collection.id
-                        ? "bg-primary/10 font-medium text-primary"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {collection.kind === "system" ? (
-                      <ShieldCheck className="size-3.5 text-primary" />
-                    ) : (
-                      <Archive className="size-3.5 text-muted-foreground" />
-                    )}
-                    <span className="min-w-0 flex-1 truncate">
-                      {collection.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {collectionSources.length}
-                    </span>
-                  </button>
+                <RadarCollectionGroup
+                  key={collection.id}
+                  name={collection.name}
+                  system={collection.kind === "system"}
+                  count={collectionSources.length}
+                  active={selectedCollectionId === collection.id && !selectedSourceId}
+                  highlighted={selectedCollectionId === collection.id}
+                  filtering={Boolean(sourceQuery.trim())}
+                  onSelect={() => void selectItemScope(collection.id, null)}
+                >
                   {collectionSources.map((source) => (
                     <SourceRow
                       key={source.id}
@@ -1228,9 +1118,10 @@ function IntelligenceWorkbenchScope({
                       onShowRuns={() => setHistorySource(source)}
                     />
                   ))}
-                </div>
+                </RadarCollectionGroup>
               );
             })}
+            </div>
             {workspace.sources
               .filter(
                 (source) =>
@@ -1272,10 +1163,12 @@ function IntelligenceWorkbenchScope({
           </div>
         </aside>
 
+        {sourcesOnly ? <SourceManagementOverview workspace={workspace} selectedSourceId={selectedSourceId} selectedCollectionId={selectedCollectionId}/> : <>
         <main
           aria-busy={itemsLoading}
           className="flex min-h-0 min-w-0 flex-col bg-canvas/55"
         >
+          <h2 className="flex shrink-0 items-center gap-2 border-b border-border/70 px-4 py-3 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
           <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 px-4 py-2.5">
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>逐字稿</span>
@@ -1464,6 +1357,9 @@ function IntelligenceWorkbenchScope({
           <div
             role="separator"
             aria-label="调整作品详情宽度"
+            aria-valuenow={detailWidth}
+            aria-valuemin={MIN_DETAIL_WIDTH}
+            aria-valuemax={MAX_DETAIL_WIDTH}
             aria-orientation="vertical"
             tabIndex={0}
             onPointerDown={startResize}
@@ -1491,18 +1387,17 @@ function IntelligenceWorkbenchScope({
           >
             {detail ? (
               <ItemDetail
-                api={api}
-                onTaskDetail={(refreshed)=>setDetail(current=>current?.item.id===refreshed.item.id?refreshed:current)}
                 detail={detail}
                 busy={busy}
-                topicGenerating={topicGenerating}
-                hasPositioning={Boolean(positioningVersionId)}
-                previewNeedsReconciliation={previewNeedsReconciliation}
-                onTranscribe={enqueueTranscript}
                 onUploadTranscript={uploadTranscript}
-                onPreviewTopic={previewTopic}
-                onConfirmTopic={confirmTopic}
-                onUpgradeProject={upgradeTopicToProject}
+                upgradeTask={upgrades.byItem.get(detail.item.id)}
+                upgradeSubmitting={upgrades.submitting.has(detail.item.id)}
+                onUpgrade={api.enqueueProjectUpgrades?()=>{
+                  const projectId=upgradeProjectId(upgrades.byItem.get(detail.item.id));
+                  if(projectId)router.push(`/projects/${encodeURIComponent(projectId)}`);
+                  else void upgrades.enqueue(detail.item.id);
+                }:undefined}
+                onCancelUpgrade={()=>{const task=upgrades.byItem.get(detail.item.id);if(task)void upgrades.cancel(task);}}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
@@ -1517,7 +1412,72 @@ function IntelligenceWorkbenchScope({
             )}
           </aside>
         </div>
+        </>}
       </div>
+    </section>
+  );
+}
+
+/** 系统分组（我的收藏 / 黑马发现）的说明与空态文案；只描述真实来源，不提供假入口。 */
+const SYSTEM_COLLECTION_META: Record<string, { icon: typeof Heart; hint: string; empty: string }> = {
+  我的收藏: { icon: Heart, hint: "抖音收藏夹同步的作品", empty: "还没有绑定收藏夹。用上方「添加来源」选择「我的收藏」，验证后会出现在这里。" },
+  黑马发现: { icon: Flame, hint: "热点宝关键词命中的黑马作品", empty: "还没有黑马关键词。用上方「添加来源」选择「黑马关键词」并验证热点宝授权。" },
+};
+
+function RadarCollectionGroup({
+  name,
+  system,
+  count,
+  active,
+  highlighted,
+  filtering,
+  onSelect,
+  children,
+}: {
+  name: string;
+  system: boolean;
+  count: number;
+  active: boolean;
+  highlighted: boolean;
+  filtering: boolean;
+  onSelect: () => void;
+  children: React.ReactNode;
+}) {
+  const meta = system ? SYSTEM_COLLECTION_META[name] : undefined;
+  const Icon = meta?.icon ?? (system ? ShieldCheck : Archive);
+  return (
+    <section
+      data-slot="radar-collection-group"
+      data-collection-kind={system ? "system" : "custom"}
+      aria-label={`${name}分组`}
+      className="rounded-xl border border-border/60 bg-surface/60"
+    >
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={active}
+        className={cn(
+          "flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-left text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-primary/40",
+          highlighted ? "bg-primary/10 font-medium text-primary" : "text-foreground hover:bg-muted",
+          count === 0 && "rounded-b-xl",
+        )}
+      >
+        <Icon aria-hidden="true" className={cn("size-3.5 shrink-0", system ? "text-primary" : "text-muted-foreground")} />
+        <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
+        <span className="rounded-full bg-muted px-1.5 text-[10px] font-medium tabular-nums leading-4 text-muted-foreground">
+          {count}
+        </span>
+      </button>
+      {meta ? (
+        <p className="px-3 pb-1 text-[10px] leading-4 text-muted-foreground">{meta.hint}</p>
+      ) : null}
+      {count > 0 ? (
+        <div className="border-t border-border/50 pb-1.5" data-slot="radar-collection-sources">{children}</div>
+      ) : meta && !filtering ? (
+        <p data-slot="radar-collection-empty" className="mx-2 mb-2 rounded-lg border border-dashed border-border/80 px-2.5 py-2 text-[11px] leading-5 text-muted-foreground">
+          {meta.empty}
+        </p>
+      ) : null}
     </section>
   );
 }
@@ -1565,7 +1525,7 @@ function SourceRow({
       className={cn(
         "ml-3 mr-1 mt-1.5 min-w-0 overflow-hidden rounded-xl border transition",
         active
-          ? "border-primary/30 bg-surface shadow-sm ring-1 ring-primary/10"
+          ? "border-primary/30 bg-surface ring-1 ring-primary/10"
           : "border-transparent bg-transparent hover:border-border/70 hover:bg-muted/55",
       )}
     >
@@ -1573,6 +1533,7 @@ function SourceRow({
         <button
           type="button"
           onClick={onSelect}
+          aria-pressed={active}
           className="min-w-0 flex-1 rounded-lg px-2 py-1.5 text-left outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <span
@@ -1711,8 +1672,8 @@ function ItemCard({
       className={cn(
         "group flex min-h-28 w-full flex-col overflow-hidden rounded-2xl border bg-surface text-left transition",
         active
-          ? "border-primary/60 shadow-card ring-1 ring-primary/20"
-          : "border-border/80 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm",
+          ? "border-primary/60 ring-1 ring-primary/20"
+          : "border-border/80 hover:border-primary/30",
       )}
     >
       <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 flex-col p-3.5 text-left">
@@ -1756,26 +1717,16 @@ function ItemCard({
 }
 
 function ItemDetail({
-  api,onTaskDetail,
   detail,
   busy,
-  topicGenerating,
-  hasPositioning,
-  previewNeedsReconciliation,
-  onTranscribe,
   onUploadTranscript,
-  onPreviewTopic,
-  onConfirmTopic,
-  onUpgradeProject,
+  upgradeTask,
+  upgradeSubmitting,
+  onUpgrade,
+  onCancelUpgrade,
 }: {
-  api:RadarApi;
-  onTaskDetail:(detail:RadarItemDetail)=>void;
   detail: RadarItemDetail;
   busy: boolean;
-  topicGenerating: boolean;
-  hasPositioning: boolean;
-  previewNeedsReconciliation: boolean;
-  onTranscribe: () => void;
   onUploadTranscript: (
     input:
       | { inputMode: "paste"; text: string }
@@ -1786,75 +1737,26 @@ function ItemDetail({
           text: string;
         },
   ) => Promise<boolean>;
-  onPreviewTopic: () => void;
-  onConfirmTopic: (
-    transformId: string,
-    candidate: NonNullable<
-      RadarItemDetail["transforms"][number]["outputSnapshot"]
-    >,
-  ) => void;
-  onUpgradeProject: (
-    transformId: string,
-    candidate: NonNullable<
-      RadarItemDetail["transforms"][number]["outputSnapshot"]
-    >,
-    existingTopicId: string | null,
-  ) => void;
+  upgradeTask?: ExecutionTaskResourceV2;
+  upgradeSubmitting: boolean;
+  onUpgrade?: () => void;
+  onCancelUpgrade?: () => void;
 }) {
   const [transcriptEditorOpen, setTranscriptEditorOpen] =
     React.useState(false);
   const latest = detail.metrics[0] ?? null;
-  const latestTransform = detail.transforms[0] ?? null;
-  const latestSnapshot = latestTransform?.outputSnapshot ?? null;
-  const latestHasCandidate = Boolean(
-    latestSnapshot &&
-      (latestSnapshot.hook?.trim() ||
-        latestSnapshot.title?.trim() ||
-        latestSnapshot.adaptedDraft?.contentText?.trim()),
-  );
-  const previousSuccessfulDraft = detail.transforms.find((transform) => {
-    const snapshot = transform.outputSnapshot;
-    const draft = snapshot?.adaptedDraft?.contentText?.trim();
-    const completed =
-      transform.status === "confirmed" ||
-      transform.taskStatus === "succeeded" ||
-      snapshot?.generationProgress?.rewriteDraft?.status === "completed" ||
-      snapshot?.generationProgress?.draft?.status === "completed";
-    return Boolean(draft && completed);
-  });
-  const topicCandidateTransform = latestHasCandidate
-    ? latestTransform
-    : previousSuccessfulDraft ?? latestTransform;
-  const rawTopicSnapshot = topicCandidateTransform?.outputSnapshot ?? null;
-  const topicCandidate =
-    rawTopicSnapshot &&
-    (rawTopicSnapshot.hook?.trim() ||
-      rawTopicSnapshot.title?.trim() ||
-      rawTopicSnapshot.adaptedDraft?.contentText?.trim())
-      ? rawTopicSnapshot
-      : null;
-  const latestTaskStatus = topicTaskStatus(latestTransform);
-  const topicTaskTerminalFailure=Boolean(topicTaskAttention(latestTaskStatus));
-  const topicTaskModelSetup=topicTaskNeedsModelSetup(latestTransform);
-  const topicTaskUnavailable =
-    latestTransform !== null &&
-    latestTransform.outputSnapshot === null &&
-    topicTaskStatus(latestTransform) == null;
-  const transcriptLocked = detail.transforms.some(
-    (transform) =>
-      transform.status === "confirmed" ||
-      Boolean(
-        transform.outputSnapshot?.title?.trim() ||
-          transform.outputSnapshot?.adaptedDraft?.contentText?.trim(),
-      ),
-  );
-  const topicTaskBusy=topicGenerating||detail.transforms.some(transform=>isTopicTaskPending(topicTaskStatus(transform)));
+  // 雷达只负责选方案：转写、拆解、写稿全部在「升级为项目」后的项目流水线里自动完成。
+  // 仅当原升级任务卡在「转写结果待确认」时，保留手动补充逐字稿这一恢复路径。
   const transcriptCooling=detail.transcript.errorCode==="TRANSCRIBE_SOURCE_COOLDOWN" && detail.transcript.status==="queued";
   const transcriptBusy =
     detail.transcript.status === "queued" ||
     detail.transcript.status === "running";
+  const transcriptLocked = detail.transforms.some(
+    (transform) => transform.status === "confirmed",
+  );
+  const needsTranscriptRecovery = upgradeNeedsResultCheck(upgradeTask);
   const transcriptCanChange =
-    !transcriptLocked && !topicTaskBusy && !transcriptBusy;
+    needsTranscriptRecovery && !transcriptLocked && !transcriptBusy;
   const sourceEvidence = groupRadarSourceEvidence(detail.snapshots);
   return (
     <div className="flex min-h-full flex-col">
@@ -1869,6 +1771,7 @@ function ItemDetail({
         />
       ) : null}
       <div className="border-b border-border/70 p-5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">03</span> 阅读核对</h2>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-base font-semibold leading-6 text-foreground">
@@ -1880,12 +1783,7 @@ function ItemDetail({
                 ? dateLabel(detail.item.publishedAt)
                 : `发布时间未知 · 收录于 ${dateLabel(detail.item.capturedAt)}`}
             </p>
-            <Link
-              href={`/projects/create?sourceItemId=${encodeURIComponent(detail.item.id)}`}
-              className="mt-3 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
-            >
-              {detail.item.type === "video" ? "用这条创作视频 →" : "用这条创作图文 →"}
-            </Link>
+
           </div>
           <a
             href={detail.item.canonicalUrl}
@@ -1917,171 +1815,6 @@ function ItemDetail({
       </div>
 
       <div className="space-y-5 p-5">
-        <section>
-          <div className="flex items-center justify-between gap-3">
-            <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              生成我的改写稿
-            </h4>
-            {latestTransform?.status === "confirmed" ? (
-              <span className="rounded-full bg-success-soft px-2 py-1 text-[11px] text-success">
-                已采纳过
-              </span>
-            ) : null}
-          </div>
-          {latestTransform ? (
-            <TopicTaskControls
-              key={`task-controls:${latestTransform.id}`}
-              transform={latestTransform}
-              itemId={detail.item.id}
-              api={api}
-              onDetail={onTaskDetail}
-            />
-          ) : null}
-          {latestTransform && topicCandidate ? (
-            <>
-            {topicCandidateTransform?.id !== latestTransform.id && topicTaskTerminalFailure ? (
-              <p role="status" className="mt-3 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs leading-5 text-muted-foreground">
-                {[
-                  "failed",
-                  "blocked",
-                  "cancelled",
-                ].includes(latestTaskStatus ?? "")
-                  ? "最近一次重试未生成新稿。之前成功的改写稿仍保留在下方，可以继续编辑、复制或采纳。"
-                  : "最近一次请求仍未确认完成。下方展示的是之前成功的改写稿，可以继续编辑、复制或采纳。"}
-              </p>
-            ) : null}
-            <TopicCandidateEditor
-              key={`candidate-editor:${topicCandidateTransform?.id ?? latestTransform.id}`}
-              transform={{
-                ...(topicCandidateTransform ?? latestTransform),
-                outputSnapshot: topicCandidate,
-              }}
-              sourceTranscript={detail.transcript.text ?? ""}
-              busy={busy}
-              generationPending={topicTaskBusy}
-              retryDisabled={
-                busy ||
-                topicTaskBusy ||
-                detail.snapshots.length === 0 ||
-                detail.transcript.status !== "done"
-              }
-              onRetry={onPreviewTopic}
-              onConfirm={onConfirmTopic}
-              onUpgradeProject={onUpgradeProject}
-            />
-            </>
-          ) : topicTaskTerminalFailure || topicTaskUnavailable ? (
-            <div
-              role="alert"
-              className="mt-3 rounded-xl border border-destructive/25 bg-destructive/[0.045] p-4"
-            >
-              <p className="text-xs font-semibold text-foreground">
-                {topicTaskModelSetup
-                  ? "完成 AI 设置后继续"
-                  : topicTaskAttention(topicTaskStatus(latestTransform))
-                  ? topicTaskAttention(topicTaskStatus(latestTransform))
-                  : topicTaskUnavailable
-                    ? "生成状态不可用"
-                    : "生成任务失败"}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                {latestTransform?.taskErrorMessage?.trim() ||
-                  (topicTaskUnavailable
-                    ? "旧任务没有可读取的执行状态，可以直接重新生成。"
-                    : "这次没有生成改写稿。已有成功稿件会保留，你可以明确重试。")}
-              </p>
-              {latestTransform?.taskErrorCode && !topicTaskModelSetup ? (
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  错误代码：{latestTransform.taskErrorCode}
-                </p>
-              ) : null}
-              {topicTaskModelSetup ? (
-                <Link
-                  href="/settings?highlight=text-model"
-                  data-slot="radar-model-settings-link"
-                  className="mt-3 inline-flex h-8 items-center rounded-md bg-primary px-3 text-[11px] font-medium text-primary-foreground"
-                >
-                  去设置 AI 模型
-                </Link>
-              ) : topicTaskUnavailable||canRetryTopicTask(topicTaskStatus(latestTransform))?(
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={
-                  busy ||
-                  detail.snapshots.length === 0 ||
-                  detail.transcript.status !== "done"
-                }
-                onClick={onPreviewTopic}
-                className="mt-3 gap-1.5"
-              >
-                <RefreshCw className="size-3.5" />
-                {previewNeedsReconciliation ? "核对原请求" : "重新生成改写稿"}
-              </Button>
-              ):null}
-            </div>
-          ) : topicGenerating ||
-            (latestTransform &&
-              isTopicTaskPolling(topicTaskStatus(latestTransform))) ? (
-            <div
-              role="status"
-              className="mt-3 rounded-xl border border-primary/20 bg-primary/[0.045] p-4"
-            >
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <RefreshCw className="size-4 animate-spin" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-foreground">
-                    正在生成改写稿
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    任务已创建；完成后会自动显示可编辑、可复制的改写稿。请勿重复点击。
-                  </p>
-                </div>
-              </div>
-              <p className="mt-3 text-[11px] text-muted-foreground">
-                后台完成后会自动更新当前选题，无需切换选题或页面。
-              </p>
-            </div>
-          ) : (
-            <div className="mt-3 rounded-xl border border-dashed border-border p-4">
-              <p className="text-xs leading-5 text-muted-foreground">
-                已选作品具备逐字稿时，可直接生成可编辑、可复制的改写稿。生成不会写入选题池。
-              </p>
-              {!hasPositioning ? (
-                <p className="mt-2 text-[11px] leading-4 text-warning">
-                  当前没有可用账号定位；生成时会明确标注为通用改写稿。
-                </p>
-              ) : null}
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={
-                  busy ||
-                  detail.snapshots.length === 0 ||
-                  detail.transcript.status !== "done"
-                }
-                onClick={onPreviewTopic}
-                className="mt-3 gap-1.5"
-              >
-                <Sparkles className="size-3.5" />
-                {previewNeedsReconciliation ? "核对原请求" : "生成我的改写稿"}
-              </Button>
-              {detail.snapshots.length === 0 ? (
-                <p className="mt-2 text-[11px] text-warning">
-                  需要先完成一次真实同步，取得来源快照。
-                </p>
-              ) : detail.transcript.status !== "done" ? (
-                <p className="mt-2 text-[11px] text-warning">
-                  可先 AI 转写或上传逐字稿，也可点击作品上的“升级为项目”，自动排队完成转写、选题拆解和文案生成。
-                </p>
-              ) : null}
-            </div>
-          )}
-        </section>
 
         <section>
           <div className="flex items-center justify-between">
@@ -2113,7 +1846,7 @@ function ItemDetail({
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-xs leading-5 text-muted-foreground">
-                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "点击 AI 转写即可自动提取正文，也可以粘贴正文或从文件导入。"}
+                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : needsTranscriptRecovery ? "转写结果尚未确认，请补充逐字稿后继续升级。" : "升级为项目后，会在项目里自动转写正文。"}
               </p>
             </div>
           )}
@@ -2121,19 +1854,6 @@ function ItemDetail({
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <LockKeyhole className="size-3.5 text-primary" />
               已用于生成选题，逐字稿永久锁定。
-            </p>
-          ) : topicTaskBusy ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              选题正在生成，完成前暂时不能修改逐字稿。
-            </p>
-          ) : transcriptBusy && detail.transcript.text ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              正在重新转写；新结果成功前继续保留当前正文。
-            </p>
-          ) : detail.transcript.status === "done" &&
-            detail.transcript.errorCode ? (
-            <p className="mt-2 text-xs text-warning">
-              上次重新转写失败，已保留当前正文。
             </p>
           ) : null}
           {transcriptCanChange ? (
@@ -2145,20 +1865,10 @@ function ItemDetail({
                 disabled={busy}
                 onClick={() => setTranscriptEditorOpen(true)}
                 className="gap-1.5"
+                data-slot="radar-transcript-recovery"
               >
                 <Upload className="size-3.5" />
-                {detail.transcript.text ? "替换逐字稿" : "添加逐字稿"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={onTranscribe}
-                className="gap-1.5"
-              >
-                <FileAudio className="size-3.5" />
-                {detail.transcript.text ? "重新 AI 转写" : "AI 转写"}
+                补充逐字稿后继续升级
               </Button>
             </div>
           ) : null}
@@ -2198,6 +1908,19 @@ function ItemDetail({
               </p>
             )}
           </div>
+        </section>
+
+        <section data-radar-step="upgrade" className="border-t border-border pt-5">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">04</span> 选定方案</h3>
+          <p className="text-xs leading-5 text-muted-foreground">
+            选中这条作为方案后升级为项目。项目会自动依次完成转写、选题拆解与补全资料、生成文案，进度在项目页查看。
+          </p>
+          <RadarUpgradeAction
+            task={upgradeTask}
+            submitting={upgradeSubmitting}
+            onUpgrade={onUpgrade}
+            onCancel={onCancelUpgrade}
+          />
         </section>
       </div>
     </div>

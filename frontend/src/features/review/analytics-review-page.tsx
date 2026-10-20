@@ -113,11 +113,12 @@ export function AnalyticsReviewPage({
   return (
     <main
       data-app="creatoros"
-      data-page="analytics-review"
+      data-page="analytics-review" data-studio-layout="report"
       data-project-id={vm.projectId}
       data-page-state={state}
       className="flex flex-col gap-section-gap"
     >
+      <header><h1 className="text-2xl font-semibold">项目复盘</h1></header>
       {groupFilters}
       {state === "loading" ? (
         <LoadingState label="正在加载数据复盘…" rows={6} />

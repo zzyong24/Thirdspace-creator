@@ -31,6 +31,7 @@ import { PublishingContentList } from "./publishing-content-list";
 // ---------------------------------------------------------------------------
 
 export interface PublishingCenterPageProps {
+  readonly showPageHeading?: boolean;
   readonly navigationQuery?: string;
   /** 真实表现投影；缺省只用于接线期间的诚实空投影，不读取 fixture。 */
   readonly viewModel?: PublishingCenterViewModel;
@@ -140,6 +141,7 @@ export function PublishingCenterPage({
   navigationQuery,
   filters,
   groupMode = false,
+  showPageHeading = true,
 }: PublishingCenterPageProps = {}) {
   const vm = viewModel ?? EMPTY_VIEW_MODEL;
   const performanceState =
@@ -152,11 +154,12 @@ export function PublishingCenterPage({
   return (
     <main
       data-app="creatoros"
-      data-page="publishing-center"
+      data-page="publishing-center" data-studio-layout="calendar"
       data-publishing-center-id="publishing-center-root"
       data-page-state={performanceState}
       className="min-w-0"
     >
+      {showPageHeading && <header className="mb-4"><h1 className="text-2xl font-semibold">发布中心</h1></header>}
       <div
         data-slot="publishing-center-layout"
         data-layout="calendar-70-performance-30"

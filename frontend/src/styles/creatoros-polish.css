@@ -1,0 +1,161 @@
+/* Taste / Accent ladder, seed 325642811.
+   Preserve CreatorOS tokens, real content, document artwork and editor coordinates.
+   Shared chrome uses flat surfaces; overlays keep their elevation. */
+
+/* Global actions have an 80px overlay lane. Reserve it on every global route,
+   including fixed-height workbenches, so actions never cover the page's tools. */
+[data-slot="app-main-frame"]:has(> [data-layout="overlay"]) [data-slot="app-page-content"] {
+  padding-top: 88px;
+}
+[data-slot="app-page-content"] { min-width: 0; }
+[data-slot="app-page-content"] > :is(main, section, div) { min-width: 0; }
+[data-slot="app-page-content"] :is(main > header, [data-page] > header) h1 {
+  font-size: 24px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+[data-slot="app-page-content"] :is(main, [data-page]) > header { min-width: 0; }
+
+/* Labelled navigation remains quiet; all destinations and accessible names stay. */
+[data-slot="app-sidebar"] { padding-top: 20px; padding-bottom: 20px; }
+[data-slot="sidebar-primary-nav"] { gap: 2px; }
+[data-slot="sidebar-nav-item"] { height: 36px; font-size: 14px; border-radius: var(--creatoros-radius-control); }
+[data-slot="sidebar-nav-item"][data-active="true"] { background: var(--creatoros-brand-soft); color: var(--creatoros-brand-hover); }
+[data-slot="sidebar-contextual-card"] { background: var(--creatoros-surface-subtle); box-shadow: none; }
+[data-slot="app-top-header"] :is(a, button) { box-shadow: none; }
+[data-slot="header-actions"] { min-width: 0; }
+
+/* One spacing scale, no resting-card shadows. Numeric data stays tabular. */
+:is([data-slot="card"], [data-slot="section-card"], [data-slot="metric-card"], [data-slot="review-metric-card"]) {
+  box-shadow: none;
+  border-color: var(--creatoros-border);
+}
+[data-slot="card-title"] { font-weight: 600; }
+[data-slot="metric-card"] { font-variant-numeric: tabular-nums; }
+[data-slot="metric-card"] > div > span:first-child { font-size: 24px; font-weight: 400; }
+[data-slot="card-description"] { line-height: 1.6; }
+:is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
+  background-color: var(--creatoros-surface);
+  border-color: var(--creatoros-border-strong);
+  border-radius: var(--creatoros-radius-control);
+  font-size: 14px;
+}
+:is([data-slot="input"], [data-slot="select-trigger"]) { min-height: 36px; }
+[data-slot="button"][data-size="default"] { min-height: 36px; }
+[data-slot="button"][data-size="sm"] { min-height: 32px; font-size: 12px; }
+:is([data-slot="input"], [data-slot="textarea"]):disabled { opacity: 0.75; }
+
+/* Table headers recede; only actual numeric cells align on the right. */
+[data-slot="app-page-content"] thead { background: var(--creatoros-surface); }
+[data-slot="app-page-content"] thead th { font-size: 12px; font-weight: 500; color: var(--creatoros-text-muted); }
+[data-slot="app-page-content"] td.tabular-nums { text-align: right; font-variant-numeric: tabular-nums; }
+[data-slot="table-container"] { border-radius: var(--creatoros-radius-control); }
+[data-slot="table-head"] { color: var(--creatoros-text-muted); font-size: 12px; font-weight: 500; }
+
+/* Shared account/date filters: identity, platform, account and range stay explicit. */
+[aria-label="账号组数据筛选"] { gap: 10px; border-radius: var(--creatoros-radius-card); }
+[aria-label="账号组数据筛选"] > div:first-child > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+[aria-label="平台筛选"] > button { min-height: 36px; padding: 6px 10px; }
+[aria-label="报表日期范围"] { min-width: 0; max-width: 100%; }
+
+/* Overview: five equal cells close the same full-width grid, no orphan tile. */
+[data-page="group-overview"] [aria-label="账号组指标"] { gap: 0; }
+[data-page="group-overview"] [aria-label="账号组指标"] > div:not(:last-child) { border-radius: 0; border-right: 0; }
+[data-page="group-overview"] [aria-label="账号组指标"] > div:first-child { border-radius: 12px 0 0 12px; }
+[data-page="group-overview"] [aria-label="账号组指标"] > div:nth-child(5) { border-right: 1px solid var(--creatoros-border); border-radius: 0 12px 12px 0; }
+[data-page="group-overview"] [aria-label="账号组指标"] > div:last-child { padding-top: 12px; }
+[data-page="group-overview"] [aria-label="账号组指标"] p:last-child { font-size: 24px; font-weight: 400; }
+[data-page="group-overview"] table :is(td, th):nth-child(n + 2) { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Workbenches share the available canvas; document/picture contents are exempt. */
+:is([data-page="creative-workspace"], [data-page="project-output-home"], [data-page="quick-create-work"], [data-page="work-composition"], [data-page="video-output-workbench"], [data-page="article-workbench"], [data-page="graphic-post-workbench"], [data-page="moments-workbench"]) {
+  padding-inline: 0;
+  padding-top: 0;
+}
+[data-page="draft-workbench"] [data-slot="draft-topbar"] { border-radius: var(--creatoros-radius-card); background: var(--creatoros-surface); }
+[data-page="draft-workbench"] :is([data-slot="draft-ammo-drawer"], [data-slot="draft-script-section"], [data-slot="draft-publish-pack"]) { box-shadow: none; }
+[data-page="intelligence"] { border-radius: var(--creatoros-radius-card); box-shadow: none; }
+[data-testid="intelligence-sidebar"] { background: var(--creatoros-surface-subtle); }
+[data-page="positioning"] [data-slot="icon-chip"] { background: transparent; color: var(--creatoros-text-muted); border: 0; }
+[data-page="topics"] > header { flex-wrap: wrap; }
+[data-page="topics"] > header > div:last-child { flex-wrap: wrap; }
+
+/* Settings is a working dialog: readable panels, quiet navigation, bounded height. */
+[data-slot="settings-dialog"] { width: calc(100vw - 48px); max-width: 1040px; height: min(840px, calc(100svh - 64px)); border-radius: var(--creatoros-radius-panel); }
+[data-slot="settings-tabs"] { background: var(--creatoros-surface-subtle); padding: 12px; gap: 4px; }
+[data-slot="settings-tabs"] > button { min-height: 36px; font-weight: 400; }
+[data-slot="settings-tabs"] > button[aria-selected="true"] { font-weight: 500; }
+[data-slot="settings-panels"] { padding: 20px 24px; }
+[data-slot="settings-panels"] [data-slot="section-card"] { border-radius: var(--creatoros-radius-card); }
+
+@media (min-width: 641px) and (max-width: 1100px) {
+  [data-page="group-overview"] [aria-label="账号组指标"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-page="group-overview"] [aria-label="账号组指标"] > div:nth-child(5) { grid-column: span 2; }
+  [data-page="group-overview"] [aria-label="账号组指标"] > div:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 767px) {
+  [data-slot="settings-dialog"] { width: calc(100vw - 24px); height: calc(100svh - 24px); max-width: none; }
+  [data-slot="settings-tabs"] { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 8px; }
+  [data-slot="settings-tabs"] > button { font-size: 12px; gap: 6px; padding-inline: 8px; min-height: 44px; }
+  [data-slot="settings-panels"] { padding: 16px; }
+  [data-slot="app-page-content"] > :is(main, section, div) { max-width: 100%; }
+}
+@media (max-width: 640px) {
+  :root { --creatoros-page-gutter: 16px; }
+  [data-slot="app-sidebar"] { padding-block: 16px; }
+  [data-slot="sidebar-nav-item"] { height: 40px; }
+  [aria-label="账号组数据筛选"] > div:last-of-type > div { max-width: 100%; flex-wrap: wrap; }
+  [aria-label="平台筛选"] { flex-wrap: nowrap; overflow-x: auto; }
+  [aria-label="平台筛选"] > button { white-space: nowrap; flex: none; min-height: 44px; }
+  [data-page="group-overview"] [aria-label="账号组指标"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-page="group-overview"] [aria-label="账号组指标"] > div:nth-child(5) { grid-column: 1 / -1; }
+  [data-page="group-overview"] [aria-label="账号组指标"] > div:last-child { grid-column: 1 / -1; }
+  [data-page="group-overview"] [aria-label="账号组指标"] > div:not(:last-child) { border-radius: 0; border-right: 1px solid var(--creatoros-border); }
+  [data-slot="button"][data-size="default"],
+  [data-slot="button"][data-size="sm"],
+  [data-slot="select-trigger"] { min-height: 44px; }
+  [data-slot="input"] { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="app-sidebar"], [data-slot="button"], [data-slot="sidebar-nav-item"] { transition: none; }
+}
+
+/* Tablet knowledge view: directory + list, then the full-width readable source.
+   The original document stays intact; each pane keeps its own labelled region. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  [data-slot="knowledge-workspace"] { grid-template-columns: 160px minmax(0, 1fr); overflow-y: auto; }
+  [data-slot="knowledge-workspace"] > [aria-label="资料原文"] { grid-column: 1 / -1; min-height: 260px; }
+  [data-slot="knowledge-workspace"] > [aria-label="资料列表"] { min-height: 280px; }
+}
+@media (max-width: 767px) {
+  [data-slot="knowledge-workspace"] { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  [data-slot="knowledge-workspace"] > [aria-label="资料目录"] { max-height: 220px; flex: none; }
+  [data-slot="knowledge-workspace"] > :is([aria-label="资料列表"], [aria-label="资料原文"]) { min-height: 260px; }
+}
+
+[data-testid="topics-source-row"] > span:first-child {
+  width: 20px;
+  height: 28px;
+  background: transparent;
+  color: var(--creatoros-text-muted);
+}
+[data-testid="topics-source-row"] :is([data-slot="badge"], span:last-child) { font-size: 12px; }
+[data-slot="metric-card"] > div > [data-value-state="missing"]:first-child { font-size: 16px; color: var(--creatoros-text-muted); }
+
+[data-testid="intelligence-sidebar"] > div:first-child > p:first-child {
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+@media (max-width: 1279px) {
+  [data-testid="intelligence-responsive-layout"] { display: flex; flex-direction: column; overflow-y: auto; }
+  [data-testid="intelligence-sidebar"] { flex: none; min-height: 200px; max-height: 320px; }
+  [data-testid="intelligence-responsive-layout"] > main { flex: none; min-height: 400px; }
+  [data-testid="intelligence-detail"] { flex: none; min-height: 260px; overflow: visible; }
+  [data-testid="intelligence-detail"] > div { min-height: 260px; }
+}
+@media (max-width: 1023px) {
+  [data-testid="topics-three-column"] { display: flex; flex-direction: column; overflow-y: auto; }
+  [data-testid="topics-three-column"] > * { flex: none; min-height: 260px; }
+}

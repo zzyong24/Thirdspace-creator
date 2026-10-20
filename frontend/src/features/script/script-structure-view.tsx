@@ -718,7 +718,7 @@ function SectionCard({
           {section.body.length} 字
         </span>
         {/* 段操作:上移/下移/删除/在下方加段(hover 常显策略交给 opacity,键盘可达)。 */}
-        <span className="flex shrink-0 items-center gap-0.5 opacity-40 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <span className="flex shrink-0 items-center gap-0.5">
           <button
             type="button"
             data-slot="script-section-ai-rewrite"

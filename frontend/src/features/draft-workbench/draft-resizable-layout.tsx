@@ -238,7 +238,7 @@ export function DraftResizableLayout({
   }, [nonce, narrow]);
 
   return (
-    <div ref={containerRef} className="flex min-h-0 flex-1" onFocusCapture={event => {
+    <div ref={containerRef} data-slot="studio-editor-split" className="flex min-h-0 flex-1" onFocusCapture={event => {
       if (event.target instanceof HTMLElement && event.currentTarget.contains(event.target)) lastFocusedRef.current = event.target;
     }}>
       <div

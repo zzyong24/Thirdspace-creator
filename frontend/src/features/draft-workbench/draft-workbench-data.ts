@@ -219,6 +219,8 @@ export interface DraftWorkbenchVm {
     readonly brief: string;
     readonly currentStage: ProjectStageName;
     readonly imported: boolean;
+    /** 项目来源（manual / topic / imported），供项目准备流水线显示来源。 */
+    readonly source?: "manual" | "topic" | "imported";
     readonly briefDetail: ProjectBriefDetail | null;
     /**
      * [T-374] 项目关联的抖音作品 aweme_id(platformRef.platform=douyin 且 externalId 非空
@@ -672,6 +674,7 @@ export async function buildDraftWorkbenchVm(
       brief: project.brief,
       currentStage: project.currentStage,
       imported: project.source === "imported",
+      source: project.source === "topic" || project.source === "imported" ? project.source : "manual",
       briefDetail: project.briefDetail ?? null,
       // [T-374] 抖音锚:douyin + 非空 externalId 才算(手动项目为空形状 → null)。
       douyinExternalId,

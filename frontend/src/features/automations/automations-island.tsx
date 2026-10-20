@@ -755,6 +755,7 @@ function CadenceEditor({
           >
             <SelectTrigger
               data-slot="automation-cadence-period-unit"
+              aria-label="重复周期"
               size="sm"
               className="w-[110px]"
             >
@@ -775,6 +776,7 @@ function CadenceEditor({
             >
               <SelectTrigger
                 data-slot="automation-cadence-weekday"
+              aria-label="执行星期"
                 size="sm"
                 className="w-[90px]"
               >
@@ -804,6 +806,7 @@ function CadenceEditor({
           <span className="text-xs text-muted-foreground">每</span>
           <Input
             data-slot="automation-cadence-interval-every"
+              aria-label="间隔数值"
             type="number"
             min={1}
             max={cadence.unit === "hours" ? 23 : 59}
@@ -824,6 +827,7 @@ function CadenceEditor({
           >
             <SelectTrigger
               data-slot="automation-cadence-interval-unit"
+              aria-label="间隔单位"
               size="sm"
               className="w-[90px]"
             >
@@ -918,6 +922,7 @@ function TimePicker({
       <Select value={String(hour)} onValueChange={(v) => onChange(Number(v), minute)}>
         <SelectTrigger
           data-slot="automation-time-hour"
+              aria-label="执行小时"
           size="sm"
           className="w-[72px]"
         >
@@ -938,6 +943,7 @@ function TimePicker({
       >
         <SelectTrigger
           data-slot="automation-time-minute"
+              aria-label="执行分钟"
           size="sm"
           className="w-[72px]"
         >
@@ -1926,12 +1932,14 @@ export function AutomationsIsland({
             const reason=a.readinessError ?? (a.status==="archived"?"已归档，保留历史任务":count?`${count} 条采集计划`:a.readiness?.planEvidence==="missing"?"尚未建立采集计划；缺少默认计划的验证证明":a.readiness?.collectAvailable===false?"尚未建立采集计划；采集能力未装配":a.readiness?.planEvidence!=="verified"||a.readiness.collectAvailable!==true?"尚未建立采集计划；资格尚未确认":"尚未建立采集计划；选择此账号可创建");
             return <li key={a.id} className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] rounded-control border border-border px-3 py-2 text-sm"><span className="font-medium">{PLATFORM_LABELS[a.platform]??a.platform} · {a.handle}</span><p className={a.readinessError?"text-destructive":"text-muted-foreground"}>{reason}</p>{!count&&a.readiness?.planEvidence==="missing"?<a href="/accounts" className="text-brand hover:underline">去账号绑定</a>:null}</li>;
           })}
-          {!accounts.length?<li className="text-sm text-muted-foreground">当前账号组没有平台账号。<a href="/accounts" className="text-brand hover:underline">添加平台账号</a></li>:null}
+          {!accounts.length?<li className="text-sm text-muted-foreground">当前账号组没有平台账号。<a href="/accounts" className="text-brand underline underline-offset-4">添加平台账号</a></li>:null}
         </ul>
       </section> : null}
 
       {/* 从模板入手(WorkBuddy 式)。[T-367] 透传现存 jobs 查重:已存在 kind 的卡显
           「已存在」态,点它启用/定位既有 job,不再建第二条。 */}
+      <details data-slot="studio-automation-templates" open>
+      <summary>从模板创建任务</summary>
       <TemplateCards
         onPick={openFromTemplate}
         jobs={jobs}
@@ -1939,6 +1947,7 @@ export function AutomationsIsland({
         enforceTarget={!!scope}
         onEnableExisting={enableExisting}
       />
+      </details>
 
       {/* 任务概览与主操作合并,让数量、状态、账号和新建入口属于同一信息层。 */}
       <div
@@ -1953,7 +1962,7 @@ export function AutomationsIsland({
             <span className="rounded-full bg-surface-subtle px-2.5 py-1 text-xs text-muted-foreground">
               {scope && visibleJobs.length !== jobs.length ? `当前 ${visibleJobs.length} / 全组 ${jobs.length} 个任务` : `共 ${jobs.length} 个任务`}
             </span>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+            <span className={jobs.some((job) => job.enabled) ? "rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success" : "rounded-full bg-surface-subtle px-2.5 py-1 text-xs font-medium text-muted-foreground"}>
               {jobs.filter((job) => job.enabled).length} 个已启用
             </span>
             {jobs.some((job) => !job.enabled) ? (

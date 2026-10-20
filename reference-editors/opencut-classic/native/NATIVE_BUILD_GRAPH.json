@@ -333,7 +333,7 @@
     },
     {
       "module": "src/components/editor/panels/assets/draggable-item.tsx",
-      "renderedLength": 6736
+      "renderedLength": 6868
     },
     {
       "module": "src/components/editor/panels/assets/index.tsx",
@@ -345,7 +345,7 @@
     },
     {
       "module": "src/components/editor/panels/assets/views/assets.tsx",
-      "renderedLength": 16415
+      "renderedLength": 16525
     },
     {
       "module": "src/components/editor/panels/assets/views/base-panel.tsx",
@@ -369,7 +369,7 @@
     },
     {
       "module": "src/components/editor/panels/properties/components/property-param-field.tsx",
-      "renderedLength": 4358
+      "renderedLength": 4558
     },
     {
       "module": "src/components/editor/panels/properties/empty-view.tsx",
@@ -429,7 +429,7 @@
     },
     {
       "module": "src/components/ui/color-picker.tsx",
-      "renderedLength": 18143
+      "renderedLength": 18283
     },
     {
       "module": "src/components/ui/context-menu.tsx",
@@ -485,7 +485,7 @@
     },
     {
       "module": "src/components/ui/slider.tsx",
-      "renderedLength": 834
+      "renderedLength": 954
     },
     {
       "module": "src/components/ui/split-button.tsx",
@@ -1025,7 +1025,7 @@
     },
     {
       "module": "src/preview/components/toolbar.tsx",
-      "renderedLength": 3735
+      "renderedLength": 3757
     },
     {
       "module": "src/preview/components/transform-handles.tsx",
@@ -1437,11 +1437,11 @@
     },
     {
       "module": "src/timeline/components/timeline-playhead.tsx",
-      "renderedLength": 3201
+      "renderedLength": 3436
     },
     {
       "module": "src/timeline/components/timeline-ruler.tsx",
-      "renderedLength": 3136
+      "renderedLength": 3774
     },
     {
       "module": "src/timeline/components/timeline-tick.tsx",
@@ -1449,7 +1449,7 @@
     },
     {
       "module": "src/timeline/components/timeline-toolbar.tsx",
-      "renderedLength": 10253
+      "renderedLength": 10411
     },
     {
       "module": "src/timeline/components/timeline-track.tsx",

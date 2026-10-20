@@ -35,9 +35,9 @@ const requiredColorTokens = [
 
 const exactTokens = {
   "--creatoros-sidebar-width": "224px",
-  "--creatoros-header-height": "72px",
+  "--creatoros-header-height": "64px",
   "--creatoros-page-gutter": "24px",
-  "--creatoros-section-gap": "20px",
+  "--creatoros-section-gap": "24px",
   "--creatoros-card-gap": "16px",
   "--creatoros-radius-control": "8px",
   "--creatoros-radius-card": "12px",

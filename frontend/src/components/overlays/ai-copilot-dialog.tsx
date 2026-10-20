@@ -33,6 +33,10 @@
 import * as React from "react";
 import { Sparkles, X } from "lucide-react";
 
+import { useSearchParams } from "next/navigation";
+import { PositioningConversationGuide } from "@/features/copilot/positioning-conversation";
+import styles from "@/features/copilot/positioning-conversation.module.css";
+
 import { AICopilotContent } from "@/features/copilot/ai-copilot-content";
 
 export interface AICopilotDialogProps {
@@ -40,11 +44,13 @@ export interface AICopilotDialogProps {
 }
 
 export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
+  const params = useSearchParams();
+  const positioning = pathname === "/positioning" && params?.get("surface") === "positioning";
   return (
     // bug #5:对话框做满高 flex 列(min-h-0 允许内部收缩),AICopilotContent 以 flex-1 占满,
     // 让对话区成为可滚主区、次区折叠在下。
     <div
-      className="flex h-full min-h-0 flex-col gap-3"
+      className={`flex h-full min-h-0 flex-col gap-3 ${positioning ? styles.dialog : ""}`}
       data-slot="ai-copilot-dialog"
       data-current-path={pathname}
     >
@@ -55,7 +61,7 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
             id="ai-copilot-title"
             className="font-heading text-lg font-semibold leading-tight text-foreground"
           >
-            AI 助手
+            {positioning ? "定位对话" : "AI 助手"}
           </h2>
           {/* [T-096 #3] 「⌘K 全局唤醒」假徽标已摘:⌘K 实际绑定 /search(T-051 裁决),
               浮层从无该监听 —— 死入口不再假承诺(T-048 审计实锤)。 */}
@@ -65,7 +71,7 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
               setMessages,历史读回逻辑与之同处一地);这里只留关闭按钮。 */}
           <button
             type="button"
-            aria-label="关闭 AI 助手"
+            aria-label={positioning ? "关闭定位对话" : "关闭 AI 助手"}
             data-overlay-close
             data-slot="ai-copilot-close"
             data-testid="ai-copilot-close"
@@ -76,8 +82,11 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1">
-        <AICopilotContent />
+      <div className={positioning ? styles.body : "min-h-0 flex-1"}>
+        {positioning ? <PositioningConversationGuide /> : null}
+        <div className="min-h-0 min-w-0 flex-1">
+          <AICopilotContent />
+        </div>
       </div>
     </div>
   );

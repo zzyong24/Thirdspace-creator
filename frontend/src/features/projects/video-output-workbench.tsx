@@ -218,9 +218,9 @@ export function VideoOutputWorkbench({ projectId, projectTitle, outputId, output
     finally { setBusy(null); }
   }
 
-  return <main data-page="video-output-workbench" className="mx-auto w-full max-w-5xl space-y-5 p-5 md:p-8">
+  return <main data-page="video-output-workbench" data-studio-layout="document" className="mx-auto w-full max-w-5xl space-y-5 p-5 md:p-8">
     <header className="space-y-2"><Link href={`/projects/${encodeURIComponent(projectId)}`} className="text-sm text-muted-foreground hover:text-foreground">← {projectTitle}</Link>
-      <h1 className="text-2xl font-semibold">{outputTitle}</h1><p className="text-sm text-muted-foreground">这条视频作品有独立的正式脚本和版本。生成内容需要审阅并明确采纳。</p></header>
+      <h1 className="text-2xl font-semibold">{outputTitle}</h1><p className="text-sm text-muted-foreground">生成候选需审阅后采纳。</p></header>
     {error && <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
     {message && <p role="status" className="rounded-md bg-success-soft p-3 text-sm text-success">{message}</p>}
     {startStatus === "unavailable" && <p className="rounded-md bg-surface-subtle p-3 text-sm text-muted-foreground">作品已创建。当前无法自动生成首稿，可直接写脚本并保存。</p>}
@@ -247,6 +247,6 @@ export function VideoOutputWorkbench({ projectId, projectTitle, outputId, output
     </section>}
     <PublicationResultActions accountId={accountId} outputId={outputId} outputType="video"
       platform={targetPlatform === "xiaohongshu" || targetPlatform === "douyin" || targetPlatform === "kuaishou" ? targetPlatform : null} dirty={dirty} />
-    <nav className="border-t border-border pt-4 text-sm"><Link href={`/projects/${encodeURIComponent(projectId)}/production?outputId=${encodeURIComponent(outputId)}`} className="text-primary hover:underline">制作这条视频 →</Link><p className="mt-1 text-xs text-muted-foreground">素材、剪辑方案和成片归属当前视频作品。</p></nav>
+    <nav className="border-t border-border pt-4 text-sm"><Link href={`/projects/${encodeURIComponent(projectId)}/production?outputId=${encodeURIComponent(outputId)}`} className="text-primary hover:underline">制作视频 →</Link></nav>
   </main>;
 }

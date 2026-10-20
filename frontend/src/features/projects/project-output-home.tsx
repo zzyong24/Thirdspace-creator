@@ -130,15 +130,15 @@ function ProjectOutputHomeSession({ projectId, projectTitle, initialOutputs, acc
     }
   }
 
-  return <main data-page="project-output-home" className="mx-auto w-full max-w-5xl space-y-6 p-5 md:p-8">
+  return <main data-page="project-output-home" data-studio-layout="creation" className="mx-auto w-full max-w-5xl space-y-6 p-5 md:p-8">
     <header className="space-y-2">
       <Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">← 返回项目</Link>
       <Link href={`/projects/${encodeURIComponent(projectId)}`} className="inline-flex rounded-md border px-3 py-2 text-sm hover:bg-surface-subtle">返回脚本编辑台</Link>
       <h1 className="text-2xl font-semibold text-foreground">{projectTitle}</h1>
-      <p className="text-sm text-muted-foreground">选择这次要做的作品，打开后直接写稿或制作内容。一个项目可以有多种作品。</p>
+      <p className="text-sm text-muted-foreground">一个项目可包含多种作品。</p>
     </header>
     <section className="rounded-xl border border-border bg-surface p-5" aria-label="创作作品">
-      <div className="mb-4"><h2 className="text-lg font-semibold">创作作品</h2><p className="mt-1 text-sm text-muted-foreground">平台和形式只决定本次作品，不改变项目里的其他作品。</p></div>
+      <div className="mb-4"><h2 className="text-lg font-semibold">创作作品</h2><p className="mt-1 text-sm text-muted-foreground">仅设置本次作品的平台与形式。</p></div>
       <NewProjectForm includeWorkType multipleWorkTypes={false} submitLabel="开始创作"
         defaultValues={{name: projectTitle, contentType: initialType ?? recommendedWorkChoice(accountPlatform)}}
         onCreate={createWork} onCancel={() => router.push(`/projects/${encodeURIComponent(projectId)}`)} />

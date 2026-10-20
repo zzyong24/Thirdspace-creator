@@ -23,6 +23,7 @@
  */
 
 import * as React from "react";
+import styles from "./projects-page.module.css";
 import Link from "next/link";
 
 import { EmptyState } from "@/components/state/page-state";
@@ -226,7 +227,7 @@ export async function ProjectsPage({
     <main
       data-app="creatoros"
       data-page="projects"
-      className="flex flex-col gap-section-gap"
+      className={cn("flex flex-col gap-section-gap", styles.page)}
     >
       <header className="flex flex-col gap-1">
         <h1
@@ -235,22 +236,28 @@ export async function ProjectsPage({
         >
           项目
         </h1>
-        <p
-          data-slot="projects-subtitle"
-          className="text-sm text-muted-foreground"
-        >
-          所有创作项目的管理与进度跟踪
-        </p>
+        
         <Link href="/accounts/works" className="mt-1 self-start text-sm text-brand hover:underline">已采集作品</Link>
       </header>
 
+      <div data-slot="studio-projects-body">
+      <section data-slot="studio-projects-index" aria-label="项目状态概览" className={styles.stageIndex}>
+        <div className={styles.stageIndexHeading}><h2>按创作阶段查看</h2></div>
+        <nav aria-label="按阶段筛选项目" className={styles.stageNav}>
+        {tabs.map(tab => <Link key={tab.id} href={(() => { const query = new URLSearchParams(); if(tab.id !== "all") query.set("status",tab.id); if(sort !== "updated") query.set("sort",sort); return query.size ? `/projects?${query}` : "/projects"; })()} aria-current={status === tab.id ? "page" : undefined}>
+          <span>{tab.label}</span><span className={styles.stageCount}>{tab.count.toLocaleString("zh-CN")}</span>
+        </Link>)}
+        </nav>
+      </section>
+      <div data-slot="studio-projects-list">
+      <div className={styles.listHeading}><h2>项目稿件</h2><p>{totalLabel}</p></div>
       <ProjectsToolbar
         tabs={tabs}
         status={status}
         sort={sort}
       />
 
-      <ProjectList rows={rows} scheduleContext={scheduleContext} groupId={groupId}/>
+      <ProjectList rows={rows} scheduleContext={scheduleContext} groupId={groupId} filtered={status !== "all" && baseRows.length > 0}/>
 
       <Pagination
         currentPage={currentPage}
@@ -259,6 +266,7 @@ export async function ProjectsPage({
         perPageLabel={`每页显示 ${PROJECTS_PAGE_SIZE} 条`}
         hrefForPage={paginate ? hrefForPage : undefined}
       />
+      </div></div>
     </main>
   );
 }
@@ -271,7 +279,9 @@ function ProjectList({
   rows,
   scheduleContext,
   groupId,
+  filtered = false,
 }: {
+  filtered?: boolean;
   rows: ReadonlyArray<ProjectListRow>;
   groupId?:string|null;
   scheduleContext?: ProjectsPageProps["scheduleContext"];
@@ -281,10 +291,11 @@ function ProjectList({
   if (rows.length === 0) {
     return (
       <EmptyState
-        title={groupId?"这个账号组还没有项目":"这个账号还没有项目"}
-        description={groupId?"项目属于当前账号组。可以先创建项目，分发时再添加平台账号，也可以从选题池立项。":"项目按抖音号隔离。新建一个项目,或先去选题池挑一条候选立项。"}
+        title={filtered ? "当前状态下没有项目" : groupId?"这个账号组还没有项目":"这个账号还没有项目"}
+        description={filtered ? "试试其他状态，或返回全部项目继续创作。" : groupId?"项目属于当前账号组。可以先创建项目，分发时再添加平台账号，也可以从选题池立项。":"项目按抖音号隔离。新建一个项目,或先去选题池挑一条候选立项。"}
         action={
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            {filtered ? <Link href="/projects" className={styles.returnLink}>查看全部项目 →</Link> : null}
             <Link
               href="/projects/new"
               data-slot="projects-empty-new"
@@ -312,7 +323,7 @@ function ProjectList({
     >
       <div
         data-slot="project-list-header"
-        className="grid grid-cols-[minmax(0,1fr)_140px_130px_170px_110px_150px_108px] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground"
+        className="grid grid-cols-[minmax(0,1fr)_140px_130px_170px_110px_150px_108px] gap-4 border-b border-border bg-surface px-5 py-3 text-xs font-medium text-muted-foreground"
       >
         <span>项目</span>
         <span>当前阶段</span>
@@ -355,22 +366,19 @@ function ProjectListItem({
       data-project-stage={row.currentStage}
       className="grid grid-cols-[minmax(0,1fr)_140px_130px_170px_110px_150px_108px] items-center gap-4 px-5 py-6"
     >
-      <div className="flex min-w-0 items-center gap-4">
-        {/* [T-078] 有真封面(采集回填的 revision.coverAssetId)渲真图;无则渐变占位。 */}
+      <div data-slot="project-identity" className="flex min-w-0 items-center gap-4">
+        {/* [T-078] 有真封面则渲真图；无封面使用项目名首字，避免暗示存在封面素材。 */}
         <CoverThumb
           assetId={row.coverAssetId ?? null}
           alt={row.title}
-          className="h-[70px] w-[84px] shrink-0 rounded-control object-cover shadow-sm bg-surface-subtle"
+          className={styles.projectCover}
           fallback={
             <div
               data-slot="project-thumbnail"
               aria-hidden="true"
-              className={cn(
-                "flex h-[70px] w-[84px] shrink-0 items-center justify-center overflow-hidden whitespace-pre-line rounded-control px-2 text-center text-[10px] font-bold leading-tight tracking-wide text-white shadow-sm",
-                coverBgClass(row.id),
-              )}
+              className={styles.projectCoverFallback}
             >
-              {thumbnailLabel(row)}
+              {row.title.trim().slice(0, 1) || "项"}
             </div>
           }
         />
@@ -389,18 +397,8 @@ function ProjectListItem({
           >
             {row.brief}
           </p>
-          <div
-            data-slot="project-owner"
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
-          >
-            <span
-              aria-hidden="true"
-              className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-brand-soft text-[8px] font-semibold text-brand"
-            >
-              我
-            </span>
-            <span>更新时间：{formatCompactUpdatedAt(row.updatedAt)}</span>
-          </div>
+          <span data-slot="project-owner" className="text-xs text-muted-foreground">我</span>
+
         </div>
       </div>
 
@@ -408,18 +406,20 @@ function ProjectListItem({
         data-slot="project-stage"
         className="flex min-w-0 flex-col items-start gap-0.5"
       >
+        <span className={styles.compactLabel}>当前阶段</span>
         <span
           className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
           style={stageChipStyle(row)}
         >
           {stageLabel(row)}
         </span>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {stageDescriptor(row)}
         </span>
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div data-slot="project-progress" className="flex flex-col gap-1.5">
+        <span className={styles.compactLabel}>进度</span>
         <span className="text-sm font-medium text-foreground tabular-nums">
           {Math.round(row.progressPct)}%
         </span>
@@ -435,6 +435,10 @@ function ProjectListItem({
         className="flex flex-wrap items-center gap-1.5"
         aria-label="目标平台"
       >
+        <span className={styles.compactLabel}>目标平台</span>
+        {row.platforms.length === 0 ? (
+          <span className="text-xs text-muted-foreground">未设置</span>
+        ) : null}
         {row.platforms.slice(0, 2).map((platform) => (
           <PlatformIcon
             key={platform.id}
@@ -453,6 +457,7 @@ function ProjectListItem({
         data-slot="project-updated-at"
         className="text-xs text-muted-foreground tabular-nums"
       >
+        <span className={styles.compactLabel}>最近更新</span>
         {formatCompactUpdatedAt(row.updatedAt)}
       </span>
 
@@ -606,13 +611,13 @@ function mapProjectRowToTab(row: ProjectListRow): string {
 const STAGE_LABELS = STAGE_LABELS_ACTIVE;
 
 const STAGE_CHIP_TONE: Record<ProjectStageName, { bg: string; fg: string }> = {
-  brief: { bg: "rgba(148,163,184,0.16)", fg: "#475569" },
-  research: { bg: "rgba(124,58,237,0.12)", fg: "#7c3aed" },
-  planning: { bg: "rgba(245,158,11,0.12)", fg: "#d97706" },
-  script: { bg: "rgba(16,185,129,0.14)", fg: "#059669" },
-  production: { bg: "rgba(99,102,241,0.14)", fg: "#4f46e5" },
-  publishing: { bg: "rgba(244,114,182,0.14)", fg: "#db2777" },
-  review: { bg: "rgba(14,165,233,0.14)", fg: "#0284c7" },
+  brief: { bg: "var(--creatoros-surface-subtle)", fg: "var(--creatoros-text-muted)" },
+  research: { bg: "var(--creatoros-brand-soft)", fg: "var(--creatoros-brand)" },
+  planning: { bg: "var(--creatoros-brand-soft)", fg: "var(--creatoros-brand)" },
+  script: { bg: "var(--creatoros-brand-soft)", fg: "var(--creatoros-brand)" },
+  production: { bg: "var(--creatoros-brand-soft)", fg: "var(--creatoros-brand)" },
+  publishing: { bg: "var(--creatoros-brand-soft)", fg: "var(--creatoros-brand)" },
+  review: { bg: "var(--creatoros-surface-subtle)", fg: "var(--creatoros-text-muted)" },
 };
 
 // 真机反馈 #1(时间倒序)排序键:导入作品用真实发布时刻,缺失回退 createdAt。
@@ -898,36 +903,6 @@ async function resolveProjectMetrics(
 function numOfMetric(raw: Record<string, unknown>, key: string): number {
   const v = raw[key];
   return typeof v === "number" && Number.isFinite(v) ? v : 0;
-}
-
-const COVER_BG_CLASSES = [
-  "bg-gradient-to-br from-violet-500 to-fuchsia-500",
-  "bg-gradient-to-br from-emerald-500 to-teal-500",
-  "bg-gradient-to-br from-amber-500 to-rose-500",
-  "bg-gradient-to-br from-sky-500 to-indigo-500",
-  "bg-gradient-to-br from-pink-500 to-red-500",
-  "bg-gradient-to-br from-cyan-500 to-blue-500",
-];
-
-function coverBgClass(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i += 1) {
-    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  const idx = hash % COVER_BG_CLASSES.length;
-  return COVER_BG_CLASSES[idx]!;
-}
-
-function thumbnailLabel(row: ProjectListRow): string {
-  const labels: Record<string, string> = {
-    "project-ainativebrowser": "AI NATIVE\nBROWSER",
-    "project-claude-code-guide": "Claude\nCode",
-    "project-mcp-protocol": "MCP\n协议",
-    "project-notion-ai": "Notion\nAI",
-    "project-gpt4o-report": "GPT-4o",
-    "project-midjourney-v6": "Midjourney\nV6",
-  };
-  return labels[row.id] ?? row.contentCategory.slice(0, 4);
 }
 
 function workspaceHrefForRow(row: ProjectListRow): string {

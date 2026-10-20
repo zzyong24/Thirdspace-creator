@@ -20,6 +20,9 @@
  * 选题卡 字段 are dropped (never invented); null 指标 render 「—」.
  */
 
+import styles from "./topics-workflow.module.css";
+import prepareStyles from "./topics-prepare.module.css";
+import { TopicWorkflowStep } from "./topics-workflow-step";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import Link from "next/link";
 import { Radar } from "lucide-react";
@@ -31,6 +34,8 @@ import type {
 
 import {
   TopicsWorkspace,
+  IdeaDraftForm,
+  CreateCandidateForm,
   type CandidateSortKey,
   type CandidateSourceFilter,
 } from "./topics-interactive-region";
@@ -212,16 +217,15 @@ export function TopicsView({
     // [T-242] 固定高度填满：页头 + 健康条 + 今日条带 + AI 选题会带(一行紧凑) shrink-0
     // 钉住,候选池三栏 flex-1 占满全部剩余高度 (页面主体)、每列框内独立滚动。
     <div
+      data-page="topics" data-studio-layout="inbox"
       data-slot="topics"
       data-testid="topics"
-      className="flex h-full min-h-0 flex-col gap-4"
+      className={styles.page}
     >
       <header className="flex shrink-0 items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
-          <p className="text-sm text-muted-foreground">
-            从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
-          </p>
+          
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <AudienceSignalsButton />
@@ -234,21 +238,22 @@ export function TopicsView({
         </div>
       </header>
 
-      {/* [T-235e·①] 今日新选题:页顶横向滚动卡片带(来源徽标 + 一句依据;空态诚实)。 */}
-      <TodayTopicsStrip
-        candidates={todayCandidates ?? candidates}
-        dayStartIso={dayStartIso}
-      />
+      <nav className={styles.journey} aria-label="选题操作步骤"><ol>{["补充选题","挑选候选","核对选题","立项创作"].map((step,index)=><li key={step}><a href={`#${["topics-prepare","topics-pick","topics-review","topics-create"][index]}`}><span>{String(index+1).padStart(2,"0")}</span>{step}</a></li>)}</ol></nav>
 
-      {/* [T-242] AI 选题会 带 (一行紧凑排布 ——「手动加餐」定位,不与候选池抢视觉权重)。 */}
-      <div className="shrink-0">
-        <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview} />
-      </div>
+      <details id="topics-prepare" className={styles.prepare}>
+        <summary data-testid="topics-prepare-toggle"><TopicWorkflowStep step={1} label="补充选题" as="span"/><span>AI 选题 / 一句话起草 / 手动录入</span></summary>
+        <div className={prepareStyles.layout} data-slot="topics-prepare-body">
+          <h2 className="sr-only">补充选题方式</h2>
+          <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview}/>
+          <section className={prepareStyles.entry} data-slot="topics-idea-entry" aria-label="我已有想法">
+            <header><h3>我已有想法</h3><p>先记下想法，再交给编导补全。</p></header>
+            <IdeaDraftForm sort={sort} sourceFilter={sourceFilter}/>
+            <div className={prepareStyles.manual}><span>已有完整选题？</span><CreateCandidateForm/></div>
+          </section>
+          <div className={prepareStyles.recent}><TodayTopicsStrip candidates={todayCandidates ?? candidates} dayStartIso={dayStartIso}/></div>
+        </div>
+      </details>
 
-      {/* [T-242] 候选池三栏 C 位：来源 / 候选池 / 详情 —— flex-1 占满全部剩余高度,
-          页面主体 (原页尾 6 态漏斗已移除,高度全部让给候选池)。 */}
-      {/* [T-244] 候选池吃过滤后的 poolCandidates;禁用判定吃全量 candidates(来源行是否可点
-          取决于「有没有该来源的候选可看」,不随当前过滤态变化)。 */}
       <TopicsWorkspace
         candidates={poolCandidates ?? candidates}
         allCandidates={candidates}

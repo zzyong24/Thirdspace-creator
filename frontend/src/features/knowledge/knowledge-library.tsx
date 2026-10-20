@@ -446,7 +446,7 @@ function KnowledgeLibraryWorkspace({
           <Plus />添加资料
         </Button>
       } />
-      <div className="grid min-h-0 min-w-0 flex-1 overflow-y-auto rounded-panel border border-border bg-surface md:overflow-hidden md:grid-cols-[160px_280px_minmax(0,1fr)] xl:grid-cols-[184px_320px_minmax(0,1fr)]">
+      <div data-slot="knowledge-workspace" data-studio-layout="reader" className="grid min-h-0 min-w-0 flex-1 overflow-y-auto rounded-panel border border-border bg-surface md:overflow-hidden md:grid-cols-[160px_280px_minmax(0,1fr)] xl:grid-cols-[184px_320px_minmax(0,1fr)]">
         <aside
           aria-label="资料目录"
           className="flex flex-col gap-5 overflow-y-auto border-b border-border bg-surface-subtle/40 p-4 md:border-r md:border-b-0"

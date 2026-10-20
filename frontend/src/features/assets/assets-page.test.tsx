@@ -116,7 +116,7 @@ describe("AssetsPage", () => {
     cleanup();
   });
 
-  it("mounts the TopHeader in global mode with the assets page title", async () => {
+  it("mounts the TopHeader in global mode without duplicating the content title", async () => {
     const { container } = await renderAssets();
     const header = container.querySelector('[data-slot="app-top-header"]');
     expect(header).not.toBeNull();
@@ -125,7 +125,7 @@ describe("AssetsPage", () => {
       '[data-slot="header-page-heading"]',
     );
     expect(heading).not.toBeNull();
-    expect(heading!.textContent ?? "").toContain("素材中心");
+    expect(heading).toBeEmptyDOMElement();
   });
 
   it("marks the Assets nav item as the active page in the sidebar", async () => {
@@ -230,6 +230,8 @@ describe("AssetsPage", () => {
     const updatedAssetId = panel.getAttribute("data-asset-id");
     expect(updatedAssetId).not.toBeNull();
     expect(updatedAssetId).not.toBe(initialAssetId);
+    expect(button).toHaveAttribute("aria-pressed", "true");
+    expect(panel.querySelector("h2")?.textContent).toBe(button.getAttribute("aria-label"));
   });
 
   it("renders distinct deterministic MediaPreview thumbnails per asset type", async () => {
@@ -403,6 +405,23 @@ describe("AssetsPage", () => {
     const { container } = await renderAssets({ viewModel: vm, q: needle });
     const cards = container.querySelectorAll('[data-slot="asset-card"]');
     expect(cards.length).toBe(expected);
+  });
+
+  it("25条素材在12条分页下正确显示中间页和末页边界", async () => {
+    const { buildAssetsViewModel } = await import("@/fixtures/selectors");
+    const vm = buildAssetsViewModel();
+    const assets = Array.from({ length: 25 }, (_, index) => ({
+      ...vm.assets[0]!, id: `pagination-${String(index).padStart(2, "0")}`,
+      name: `分页素材 ${index}`, type: "image" as const,
+    }));
+    const middle = await renderAssets({ viewModel: { ...vm, assets }, type: "image", q: "分页素材", page: "2", pageSize: "12" });
+    expect(middle.container.querySelectorAll('[data-slot="asset-card"]')).toHaveLength(12);
+    expect(screen.getByRole("button", { name: "第 2 页" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "下一页" })).toBeEnabled();
+    middle.unmount();
+    const last = await renderAssets({ viewModel: { ...vm, assets }, type: "image", q: "分页素材", page: "3", pageSize: "12" });
+    expect(last.container.querySelectorAll('[data-slot="asset-card"]')).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "下一页" })).toBeDisabled();
   });
 
   it("removed the fabricated decorative controls (filter chips / batch menu / view toggle)", async () => {

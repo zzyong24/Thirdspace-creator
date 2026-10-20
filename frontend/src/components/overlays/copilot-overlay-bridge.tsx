@@ -16,8 +16,12 @@
  */
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 
 export function CopilotOverlayBridge(): React.ReactElement | null {
+  const params = useSearchParams();
+  // 定位对话的实际快捷键已在输入区说明，不显示通用指令菜单的提示。
+  if (params?.get("surface") === "positioning") return null;
   return (
     <p
       data-slot="ai-copilot-shortcut-hint"

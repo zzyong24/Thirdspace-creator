@@ -73,17 +73,17 @@
     "native": {
       "deliveryMode": "native",
       "sourceArchive": "sources/opencut-classic/native-source.tar.gz",
-      "sourceArchiveSha256": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
+      "sourceArchiveSha256": "c3edf2cc15b4ff9bcc506f313996c5298e5182665849162362f9437a1af73ca0",
       "patch": "sources/opencut-classic/native-patches.diff",
-      "patchSha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "patchSha256": "0d29dbc02503a7d905aec1bbdc63700213fb3ceb99e00f20b300d6c98a19a45c",
       "bundleFiles": {
         "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
-        "NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
-        "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
-        "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+        "NATIVE_BUILD_GRAPH.json": "bfe2d587fdca3dab4478630f59ddaa36ea8b55863a309732403a34144108486c",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
         "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
-        "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
-        "native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27"
+        "native.css": "d34420a00ddc1f5a0fbf1d7eb775622224d98a0a7aa2b4f0dd47ed9edacfa8dd",
+        "native.js": "c89f0f5cf4efd1a4ca4a9d3649ff26ddbf59d0121abd40de194e42e0ba9e3aef"
       },
       "t1062CandidateManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-manifest-final.json",
@@ -96,7 +96,7 @@
       },
       "t1069ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-native-source/delivery-candidate/full-reconstruction-result.json",
       "fullReconstructionPatch": "sources/opencut-classic/native-from-t1046.patch",
-      "fullReconstructionPatchSha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "fullReconstructionPatchSha256": "0d29dbc02503a7d905aec1bbdc63700213fb3ceb99e00f20b300d6c98a19a45c",
       "fixedBaseArchive": "sources/opencut-classic-source.tar.gz",
       "fixedBaseSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
       "contractCopySha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
@@ -108,7 +108,34 @@
       "t1070PixelVersionRepairEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/public-render-frame-validation.json",
       "t1070PixelVersionReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/full-reconstruction.json",
       "t1070PixelVersionBuildEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/production-build-consistency.json",
-      "t1070PixelVersionSourceDiffSha256": "9eff2d82290ca8dffe6e7e60c60da5416f0a762247d3f85d4c074467119840e3"
+      "t1070PixelVersionSourceDiffSha256": "9eff2d82290ca8dffe6e7e60c60da5416f0a762247d3f85d4c074467119840e3",
+      "localPreviewAccessibility": {
+        "scope": "仅独立预览，原生时间轴及素材和属性控件可访问名称",
+        "sourcePatch": "outputs/CreatorOS-populated-native-source.patch",
+        "sourceChanged": [
+          "apps/web/src/components/editor/panels/assets/draggable-item.tsx",
+          "apps/web/src/components/editor/panels/assets/views/assets.tsx",
+          "apps/web/src/components/editor/panels/properties/components/property-param-field.tsx",
+          "apps/web/src/components/ui/color-picker.tsx",
+          "apps/web/src/components/ui/slider.tsx",
+          "apps/web/src/timeline/components/timeline-toolbar.tsx"
+        ],
+        "buildRuntime": "Bun 1.4.3",
+        "installedApplicationChanged": false,
+        "report": "outputs/CreatorOS-populated-preview-report.json",
+        "historicalVerificationStatus": "原 verificationStatus 属历史验收，不代表本轮"
+      },
+      "localPreviewImpeccable": {
+        "scope": "独立预览内的缩放控件名称、时间轴键盘与目标尺寸",
+        "sourceChanged": [
+          "apps/web/src/preview/components/toolbar.tsx",
+          "apps/web/src/timeline/components/layout.ts",
+          "apps/web/src/timeline/components/timeline-playhead.tsx",
+          "apps/web/src/timeline/components/timeline-ruler.tsx"
+        ],
+        "installedApplicationChanged": false,
+        "report": "outputs/CreatorOS-impeccable-report.json"
+      }
     }
   },
   "noterelay": {

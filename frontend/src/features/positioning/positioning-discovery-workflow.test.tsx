@@ -44,7 +44,7 @@ describe("PositioningDiscoveryWorkflow — T-707", () => {
       />,
     );
 
-    expect(screen.getByText("用 Copilot 把定位聊清楚")).toBeTruthy();
+    expect(screen.getByText("定位对话")).toBeTruthy();
     expect(screen.getByRole("link", { name: /开始定位对话/ })).toBeTruthy();
     expect(screen.queryByText(/还差 .* 个问题/)).toBeNull();
     expect(screen.queryByRole("button", { name: /保存并继续/ })).toBeNull();
@@ -66,12 +66,27 @@ describe("PositioningDiscoveryWorkflow — T-707", () => {
     );
   });
 
-  it("预填话术明确纯人设/产品通版和随时生成", () => {
+  it("开场简短，不重复执行说明；旧资料仍完整带入", () => {
+    for (const hasCurrentProfile of [false, true]) {
+      const fresh = buildCopilotPrefill(null, hasCurrentProfile);
+      expect(fresh.length).toBeLessThan(60);
+      expect(fresh).toContain("帮我梳理账号定位");
+      expect(fresh).not.toContain("positioning.generate");
+    }
     const prompt = buildCopilotPrefill(SESSION, true);
-    expect(prompt).toContain("纯人设和有产品/服务");
-    expect(prompt).toContain("每轮最多问一个");
-    expect(prompt).toContain("立即调用 positioning.generate");
-    expect(prompt).toContain("不要用六问、逐字稿、联网或方向选择阻断");
+    expect(prompt).toContain("建立个人品牌；获得客户线索；先服务湖南餐饮老板");
+    expect(prompt).toContain("定位路径：optimize");
+    expect(prompt).not.toContain("positioning.generate");
+  });
+
+  it("长答案和跳过状态原样保留，不为缩短界面裁掉用户资料", () => {
+    const answer = "我希望保留的真实经历。".repeat(50);
+    const prompt = buildCopilotPrefill({...SESSION, answers:[
+      {...SESSION.answers[0], customText:answer},
+      {...SESSION.answers[0], themeId:"proof", skipped:true},
+    ]}, true);
+    expect(prompt).toContain(answer);
+    expect(prompt).toContain("可信证明：暂不确定");
   });
 
   it("旧 scratch 会话携带明确机器路由，普通入口不误写 scratch", () => {

@@ -278,6 +278,21 @@ describe("T-482 内容雷达工作区", () => {
     expect(stub.enqueueProjectUpgrades).toHaveBeenCalledTimes(2);
     expect(stub.enqueueProjectUpgrades).toHaveBeenNthCalledWith(2,expect.objectContaining({itemIds:["item-2"],positioningVersionId:"position-1"}));
   });
+  it("雷达只选方案：详情不提供 AI 转写或改写，只用唯一的升级为项目入口", async()=>{
+    const stub=api();
+    stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[],total:0});
+    stub.enqueueProjectUpgrades=vi.fn().mockResolvedValue({tasks:[]});
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[{item:detail.item,latestMetric:null,sourceCount:1}]} initialDetail={detail} api={stub}/>);
+    expect(screen.getByRole("heading",{name:"04 选定方案"})).toBeInTheDocument();
+    expect(screen.queryByRole("button",{name:/AI 转写/})).toBeNull();
+    expect(screen.queryByRole("button",{name:/生成我的改写稿/})).toBeNull();
+    expect(screen.queryByRole("button",{name:/添加逐字稿|替换逐字稿/})).toBeNull();
+    const upgrade=document.querySelector('[data-slot="radar-upgrade-button"]') as HTMLButtonElement;
+    expect(upgrade).toHaveTextContent("升级为项目");
+    fireEvent.click(upgrade);
+    await waitFor(()=>expect(stub.enqueueProjectUpgrades).toHaveBeenCalledWith(expect.objectContaining({itemIds:[detail.item.id],positioningVersionId:"position-1"})));
+    expect(stub.enqueueTranscript).not.toHaveBeenCalled();
+  });
   it("显示服务端真实总量，并允许继续读取 100 条之后的内容", async () => {
     const firstPage = Array.from({ length: 100 }, (_, index) => ({
       item: {
@@ -558,6 +573,17 @@ describe("T-482 内容雷达工作区", () => {
       .parentElement;
     expect(detailRegion).not.toHaveClass("xl:col-span-2");
     expect(detailRegion).toHaveClass("xl:min-h-0");
+    const sourceStep=screen.getByRole("heading",{name:"01 来源与采集"});
+    const pickStep=screen.getByRole("heading",{name:"02 挑选内容"});
+    const readStep=screen.getByRole("heading",{name:"03 阅读核对"});
+    const createStep=screen.getByRole("heading",{name:"04 选定方案"});
+    expect(sourceStep.compareDocumentPosition(pickStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(pickStep.compareDocumentPosition(readStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(readStep.compareDocumentPosition(createStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const transcript=screen.getByRole("heading",{name:"逐字稿"});
+    const evidence=screen.getByRole("heading",{name:"来源证据"});
+    expect(transcript.compareDocumentPosition(evidence)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(evidence.compareDocumentPosition(createStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("[T-572] 左栏可按来源名称、类型和同步状态快速筛选", async () => {
@@ -1088,6 +1114,30 @@ describe("T-482 内容雷达工作区", () => {
     );
   });
 
+  it("收藏与黑马发现按分组卡片呈现：说明、计数徽标与真实空态（无假按钮）", () => {
+    const { container } = render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={api()}
+      />,
+    );
+    const groups = container.querySelectorAll('[data-slot="radar-collection-group"]');
+    expect(groups).toHaveLength(2);
+    const fav = screen.getByRole("region", { name: "我的收藏分组" });
+    const dh = screen.getByRole("region", { name: "黑马发现分组" });
+    expect(within(fav).getByText("抖音收藏夹同步的作品")).toBeInTheDocument();
+    expect(within(dh).getByText("热点宝关键词命中的黑马作品")).toBeInTheDocument();
+    expect(within(fav).getByRole("button", { name: /^我的收藏/ })).toHaveAttribute("aria-pressed", "false");
+    expect(fav.querySelector('[data-slot="radar-collection-empty"]')?.textContent).toMatch(/还没有绑定收藏夹/);
+    expect(dh.querySelector('[data-slot="radar-collection-empty"]')?.textContent).toMatch(/还没有黑马关键词/);
+    // 空态只说明下一步，不另造按钮。
+    expect(within(fav).getAllByRole("button")).toHaveLength(1);
+    expect(within(dh).getAllByRole("button")).toHaveLength(1);
+  });
+
   it("按定位→雷达→选题边界显示系统分类，评论未知不伪装 0", () => {
     render(
       <IntelligenceWorkbench
@@ -1108,7 +1158,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByText("黑马发现")).toBeInTheDocument();
     expect(screen.getAllByText("未知").length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/点击 AI 转写即可自动提取正文/),
+      screen.getByText(/升级为项目后，会在项目里自动转写正文/),
     ).toBeInTheDocument();
   });
 
@@ -1785,27 +1835,6 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeInTheDocument();
   });
 
-  it("逐字稿只有点击“AI 转写”后才进入队列", async () => {
-    const stub = api();
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={detail}
-        api={stub}
-      />,
-    );
-    expect(stub.enqueueTranscript).not.toHaveBeenCalled();
-    await userEvent.click(
-      screen.getByRole("button", { name: "AI 转写" }),
-    );
-    expect(stub.enqueueTranscript).toHaveBeenCalledWith(
-      expect.objectContaining({ itemId: "item-1" }),
-    );
-    expect(await screen.findByText("排队中")).toBeInTheDocument();
-  });
-
   it("[T-610] 来源证据按 sourceId 去重，保留最近采集时间和累计次数", () => {
     render(
       <IntelligenceWorkbench
@@ -1852,110 +1881,6 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getAllByText("同一作品")).toHaveLength(1);
     expect(screen.getByText(/累计采集 3 次/)).toBeInTheDocument();
     expect(screen.getByText("另一个来源发现")).toBeInTheDocument();
-  });
-
-  it("[T-603] 文件先导入编辑器，确认保存后才写入逐字稿并解锁生成选题", async () => {
-    const uploadedTranscript = {
-      ...detail.transcript,
-      status: "done" as const,
-      text: "第一句\n第二句",
-    };
-    const uploadTranscript = vi.fn().mockResolvedValue(uploadedTranscript);
-    const stub = Object.assign(api(), { uploadTranscript });
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={{
-          ...detail,
-          snapshots: [
-            {
-              id: "snapshot-1",
-              title: "真实作品",
-              capturedAt: "2026-07-23T12:00:00.000Z",
-              finalUrl: detail.item.canonicalUrl,
-            },
-          ],
-        }}
-        api={stub}
-        positioningVersionId="positioning-1"
-      />,
-    );
-
-    const file = new File(
-      [
-        "1\n00:00:01,000 --> 00:00:03,000\n第一句\n\n2\n00:00:04,000 --> 00:00:06,000\n第二句",
-      ],
-      "访谈.srt",
-      { type: "application/x-subrip" },
-    );
-    await userEvent.click(
-      screen.getByRole("button", { name: "添加逐字稿" }),
-    );
-    await userEvent.upload(
-      screen.getByLabelText("从文件导入逐字稿"),
-      file,
-    );
-
-    expect(uploadTranscript).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("逐字稿正文")).toHaveValue(
-      "第一句\n第二句",
-    );
-    await userEvent.click(
-      screen.getByRole("button", { name: "保存逐字稿" }),
-    );
-
-    await waitFor(() =>
-      expect(uploadTranscript).toHaveBeenCalledWith({
-        itemId: "item-1",
-        inputMode: "file",
-        format: "srt",
-        fileName: "访谈.srt",
-        text: "第一句\n第二句",
-      }),
-    );
-    expect(
-      await screen.findByText(
-        (_, node) =>
-          node?.tagName === "P" &&
-          node.textContent === "第一句\n第二句",
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "生成我的改写稿" }),
-    ).toBeEnabled();
-  });
-
-  it("[T-1017] 当前账号没有定位仍可直接生成通用改写稿", () => {
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={{
-          ...detail,
-          snapshots: [
-            {
-              id: "snapshot-1",
-              title: "真实作品",
-              capturedAt: "2026-07-23T12:00:00.000Z",
-              finalUrl: detail.item.canonicalUrl,
-            },
-          ],
-          transcript: {
-            ...detail.transcript,
-            status: "done",
-            text: "一段真实逐字稿",
-          },
-        }}
-        positioningVersionId={null}
-        api={api()}
-      />,
-    );
-
-    expect(screen.getByText("当前没有可用账号定位；生成时会明确标注为通用改写稿。")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "生成我的改写稿" })).toBeEnabled();
   });
 
   it("[T-622] 逐字稿和选题状态筛选、收藏排序统一交给服务端查询", async () => {
@@ -2031,1048 +1956,6 @@ describe("T-482 内容雷达工作区", () => {
       }),
     );
   });
-
-  it("[T-622] 支持直接粘贴逐字稿；生成候选前仍可替换和重新转写", async () => {
-    const savedTranscript = {
-      ...detail.transcript,
-      status: "done" as const,
-      text: "粘贴进来的完整逐字稿",
-    };
-    const uploadTranscript = vi.fn().mockResolvedValue(savedTranscript);
-    const stub = Object.assign(api(), { uploadTranscript });
-    const { rerender } = render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={detail}
-        api={stub}
-        positioningVersionId="positioning-1"
-      />,
-    );
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "添加逐字稿" }),
-    );
-    await userEvent.type(
-      screen.getByRole("textbox", { name: "逐字稿正文" }),
-      "粘贴进来的完整逐字稿",
-    );
-    await userEvent.click(
-      screen.getByRole("button", { name: "保存逐字稿" }),
-    );
-    await waitFor(() =>
-      expect(uploadTranscript).toHaveBeenCalledWith({
-        itemId: "item-1",
-        inputMode: "paste",
-        text: "粘贴进来的完整逐字稿",
-      }),
-    );
-
-    rerender(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={{
-          ...detail,
-          transcript: savedTranscript,
-        }}
-        api={stub}
-        positioningVersionId="positioning-1"
-      />,
-    );
-    expect(
-      screen.getByRole("button", { name: "替换逐字稿" }),
-    ).toBeEnabled();
-    expect(
-      screen.getByRole("button", { name: "重新 AI 转写" }),
-    ).toBeEnabled();
-  });
-
-  it("[T-893] 超长逐字稿使用受限正文滚动区，常见小窗口仍保留保存操作区", async () => {
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={detail}
-        api={api()}
-        positioningVersionId="positioning-1"
-      />,
-    );
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "添加逐字稿" }),
-    );
-
-    const dialog = screen.getByRole("dialog");
-    const body = dialog.querySelector(
-      '[data-slot="transcript-editor-body"]',
-    );
-    expect(dialog).toHaveClass("max-h-[calc(100dvh-2rem)]", "overflow-hidden");
-    expect(body).toHaveClass("min-h-0", "overflow-y-auto");
-    expect(screen.getByLabelText("逐字稿正文")).toHaveClass(
-      "field-sizing-fixed",
-      "max-h-[min(50dvh,28rem)]",
-      "overflow-y-auto",
-    );
-    expect(
-      screen.getByRole("button", { name: "保存逐字稿" }).closest(
-        '[data-slot="dialog-footer"]',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("[T-622] 任一选题候选生成成功后永久锁定逐字稿", () => {
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={{
-          ...detail,
-          transcript: {
-            ...detail.transcript,
-            status: "done",
-            text: "已经参与生成的逐字稿",
-          },
-          transforms: [
-            {
-              id: "transform-locked",
-              status: "candidate",
-              targetTopicId: null,
-              outputSnapshot: {
-                title: "已生成候选",
-                angle: "真实角度",
-                differentiation: "差异化",
-                sourceSummary: "摘要",
-              },
-            },
-          ],
-        }}
-        api={api()}
-        positioningVersionId="positioning-1"
-      />,
-    );
-
-    expect(
-      screen.getByText("已用于生成选题，逐字稿永久锁定。"),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "替换逐字稿" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "重新 AI 转写" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("[T-546] 生成我的改写稿立即显示局部进度并阻止重复创建，完成后回显编辑卡", async () => {
-    const stub = api();
-    const readyDetail: RadarItemDetail = {
-      ...detail,
-      snapshots: [
-        {
-          id: "snapshot-1",
-          title: "真实作品",
-          capturedAt: "2026-07-23T12:00:00.000Z",
-          finalUrl: detail.item.canonicalUrl,
-        },
-      ],
-      transcript: {
-        itemId: detail.item.id,
-        status: "done",
-        text: "完整逐字稿",
-        errorCode: null,
-      },
-    };
-    const pendingTransform: RadarItemDetail["transforms"][number] = {
-      id: "transform-1",
-      status: "candidate",
-      outputSnapshot: null,
-      targetTopicId: null,
-    };
-    const completedDetail: RadarItemDetail = {
-      ...readyDetail,
-      transforms: [
-        {
-          ...pendingTransform,
-          outputSnapshot: {
-            title: "完整候选标题",
-            angle: "真实切入角度",
-            differentiation: "本账号差异化",
-            sourceSummary: "来自逐字稿的真实摘要",
-            hook: "反差开场",
-            structureSteps: ["提出误区", "拆解原因", "给出行动"],
-          },
-        },
-      ],
-    };
-    let finishPreview!: (
-      value: Awaited<ReturnType<RadarApi["previewTopic"]>>,
-    ) => void;
-    stub.previewTopic = vi.fn(
-      () =>
-        new Promise<Awaited<ReturnType<RadarApi["previewTopic"]>>>((resolve) => {
-          finishPreview = resolve;
-        }),
-    );
-    stub.getItem = vi.fn().mockResolvedValue(completedDetail);
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={readyDetail}
-        positioningVersionId="positioning-v1"
-        api={stub}
-      />,
-    );
-
-    const generate = screen.getByRole("button", {
-      name: "生成我的改写稿",
-    });
-    fireEvent.click(generate);
-
-    expect(stub.previewTopic).toHaveBeenCalledTimes(1);
-    expect(
-      await screen.findByRole("status"),
-    ).toHaveTextContent("正在生成改写稿");
-    expect(
-      screen.getByText(/任务已创建；完成后会自动显示可编辑、可复制的改写稿/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("后台完成后会自动更新当前选题，无需切换选题或页面。"),
-    ).toBeInTheDocument();
-
-    finishPreview({
-      transform: {
-        ...pendingTransform,
-        outputSnapshot: null,
-      },
-      task: { id: "task-1", status: "queued" },
-    });
-
-    expect(
-      await screen.findByDisplayValue("完整候选标题"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("反差开场")).toBeInTheDocument();
-  });
-
-  it("[T-589] 模型超过 8 秒仍自动跟踪到终态，不要求用户手动刷新", async () => {
-    vi.useFakeTimers();
-    const stub = api();
-    const readyDetail: RadarItemDetail = {
-      ...detail,
-      snapshots: [
-        {
-          id: "snapshot-1",
-          title: "真实作品",
-          capturedAt: "2026-07-23T12:00:00.000Z",
-          finalUrl: detail.item.canonicalUrl,
-        },
-      ],
-      transcript: {
-        itemId: detail.item.id,
-        status: "done",
-        text: "完整逐字稿",
-        errorCode: null,
-      },
-    };
-    const pending: RadarItemDetail = {
-      ...readyDetail,
-      transforms: [
-        {
-          id: "transform-slow",
-          status: "candidate",
-          taskStatus: "running",
-          taskErrorCode: null,
-          taskErrorMessage: null,
-          outputSnapshot: null,
-          targetTopicId: null,
-        },
-      ],
-    };
-    const completed: RadarItemDetail = {
-      ...readyDetail,
-      transforms: [
-        {
-          ...pending.transforms[0]!,
-          taskStatus: "succeeded",
-          outputSnapshot: {
-            title: "慢模型也会自动回显",
-            angle: "真实切入角度",
-            differentiation: "本账号差异化",
-            sourceSummary: "真实摘要",
-            hook: "反差开场",
-            structureSteps: ["提出问题", "拆解原因"],
-          },
-        },
-      ],
-    };
-    stub.previewTopic = vi.fn().mockResolvedValue({
-      transform: {
-        id: "transform-slow",
-        status: "candidate",
-        outputSnapshot: null,
-        targetTopicId: null,
-      },
-      task: { id: "task-slow", status: "queued" },
-    });
-    let reads = 0;
-    stub.getItem = vi.fn().mockImplementation(async () => {
-      reads += 1;
-      return reads > 20 ? completed : pending;
-    });
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={readyDetail}
-        positioningVersionId="positioning-v1"
-        api={stub}
-      />,
-    );
-    fireEvent.click(
-      screen.getByRole("button", { name: "生成我的改写稿" }),
-    );
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(90_000);
-    });
-
-    expect(reads).toBeGreaterThan(20);
-    expect(
-      screen.getByDisplayValue("慢模型也会自动回显"),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "刷新生成结果" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("[T-642] 重新进入后台生成中的当前选题时自动续接，读取抖动后仍回显选题卡", async () => {
-    vi.useFakeTimers();
-    const stub = api();
-    const pending: RadarItemDetail = {
-      ...detail,
-      snapshots: [
-        {
-          id: "snapshot-1",
-          title: "真实作品",
-          capturedAt: "2026-07-23T12:00:00.000Z",
-          finalUrl: detail.item.canonicalUrl,
-        },
-      ],
-      transcript: {
-        itemId: detail.item.id,
-        status: "done",
-        text: "完整逐字稿",
-        errorCode: null,
-      },
-      transforms: [
-        {
-          id: "transform-resume",
-          status: "candidate",
-          taskStatus: "running",
-          taskErrorCode: null,
-          taskErrorMessage: null,
-          outputSnapshot: null,
-          targetTopicId: null,
-        },
-      ],
-    };
-    const completed: RadarItemDetail = {
-      ...pending,
-      transforms: [
-        {
-          ...pending.transforms[0]!,
-          taskStatus: "succeeded",
-          outputSnapshot: {
-            title: "无需切换选题即可看到的新卡片",
-            angle: "当前选题角度",
-            differentiation: "本账号差异化",
-            sourceSummary: "真实摘要",
-            hook: "自动回显",
-            structureSteps: ["拆解", "生成", "回显"],
-          },
-        },
-      ],
-    };
-    stub.getItem = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("temporary network error"))
-      .mockResolvedValue(completed);
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={pending}
-        positioningVersionId="positioning-v1"
-        api={stub}
-      />,
-    );
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(5_000);
-    });
-
-    expect(stub.getItem).toHaveBeenCalledTimes(2);
-    expect(
-      screen.getByDisplayValue("无需切换选题即可看到的新卡片"),
-    ).toBeInTheDocument();
-  });
-
-  it("[T-870] 生成完成的雷达选题可一次确认并升级为项目", async () => {
-    const stub = api();
-    vi.mocked(stub.confirmTopic).mockResolvedValue({
-      topicId: "candidate-radar-1",
-    });
-    vi.mocked(stub.promoteCandidate).mockResolvedValue({
-      projectId: "project-radar-1",
-    });
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        positioningVersionId="positioning-v1"
-        initialDetail={{
-          ...detail,
-          transcript: {
-            ...detail.transcript,
-            status: "done",
-            text: "来源完整逐字稿",
-          },
-          snapshots: [
-            {
-              id: "snapshot-upgrade",
-              title: "真实作品",
-              capturedAt: "2026-07-23T12:00:00.000Z",
-              finalUrl: detail.item.canonicalUrl,
-            },
-          ],
-          transforms: [
-            {
-              id: "transform-upgrade",
-              status: "candidate",
-              taskStatus: "succeeded",
-              taskErrorCode: null,
-              taskErrorMessage: null,
-              targetTopicId: null,
-              outputSnapshot: {
-                hook: "反常识开场",
-                structureSteps: ["提出误区", "给出方法"],
-                coreClaims: ["流程决定交付"],
-                reusablePattern: "误区—方法",
-                factRisks: [],
-                title: "先稳定流程，再选择模型",
-                angle: "从真实交付切入",
-                differentiation: "使用本账号案例",
-                sourceSummary: "来源讨论模型和流程",
-                targetAudience: "AI 业务负责人",
-                audiencePain: "交付结果不稳定",
-                coreConflict: "模型参数与流程责任的冲突",
-                format: "案例复盘口播",
-                contentRole: "traffic",
-                contentRoleReason: "原作靠共同处境吸引观看，本账号可用同类问题吸引业务负责人。",
-                adaptationStrategy: {
-                  keep: ["反常识结构"],
-                  replace: ["来源案例"],
-                  add: ["本账号经验"],
-                  avoid: ["照搬原句"],
-                },
-                adaptedDraft: {
-                  contentText: "这是一版基于逐字稿生成的完整改写初稿。",
-                  generatedFromTranscriptHash: "sha256:transcript",
-                  strategyHash: "sha256:strategy",
-                  templateVersion: "intelligence-topic-draft-v1",
-                },
-                generationProgress: {
-                  decomposition: { status: "completed" },
-                  topic: { status: "completed" },
-                  draft: { status: "completed" },
-                },
-              },
-            },
-          ],
-        }}
-        api={stub}
-      />,
-    );
-
-    expect(screen.getByText("原推荐：流量型")).toBeInTheDocument();
-    await userEvent.selectOptions(screen.getByLabelText("选题候选内容目的"), "conversion");
-    expect(screen.getByText(/当前初稿仍是原推荐下的参考稿/)).toBeInTheDocument();
-    await userEvent.click(
-      screen.getByRole("button", { name: "一键升级项目" }),
-    );
-
-    await waitFor(() =>
-      expect(stub.confirmTopic).toHaveBeenCalledWith(
-        expect.objectContaining({
-          transformId: "transform-upgrade",
-          editedCandidate: expect.objectContaining({ contentRole: "conversion" }),
-          idempotencyKey: expect.stringMatching(/^topic-confirm:/),
-        }),
-      ),
-    );
-    expect(stub.promoteCandidate).toHaveBeenCalledWith({
-      candidateId: "candidate-radar-1",
-    });
-    expect(push).toHaveBeenCalledWith("/projects/project-radar-1");
-  });
-
-  it("[T-900] 只有改写初稿时也可写入选题池或一键升级项目", async () => {
-    const stub = api();
-    vi.mocked(stub.confirmTopic).mockResolvedValue({
-      topicId: "candidate-partial-radar",
-    });
-    vi.mocked(stub.promoteCandidate).mockResolvedValue({
-      projectId: "project-partial-radar",
-    });
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        positioningVersionId="positioning-v1"
-        initialDetail={{
-          ...detail,
-          transcript: {
-            ...detail.transcript,
-            status: "done",
-            text: "来源完整逐字稿",
-          },
-          transforms: [
-            {
-              id: "transform-partial-upgrade",
-              status: "candidate",
-              taskStatus: "succeeded",
-              taskErrorCode: null,
-              taskErrorMessage: null,
-              targetTopicId: null,
-              outputSnapshot: {
-                title: "",
-                angle: "",
-                differentiation: "",
-                sourceSummary: "",
-                targetAudience: "",
-                audiencePain: "",
-                coreConflict: "",
-                format: "",
-                adaptationStrategy: {
-                  keep: [],
-                  replace: [],
-                  add: [],
-                  avoid: [],
-                },
-                adaptedDraft: {
-                  contentText: "这是已经可用的本账号改写逐字稿。",
-                  generatedFromTranscriptHash: "sha256:transcript",
-                  strategyHash: "sha256:strategy",
-                  templateVersion: "intelligence-topic-draft-v1",
-                },
-                generationProgress: {
-                  decomposition: { status: "completed" },
-                  topic: { status: "completed" },
-                  draft: { status: "completed" },
-                },
-              },
-            },
-          ],
-        }}
-        api={stub}
-      />,
-    );
-
-    expect(
-      screen.getByRole("button", { name: "确认写入选题池" }),
-    ).toBeEnabled();
-    expect(
-      screen.getByRole("button", { name: "一键升级项目" }),
-    ).toBeEnabled();
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "一键升级项目" }),
-    );
-
-    await waitFor(() =>
-      expect(stub.confirmTopic).toHaveBeenCalledWith(
-        expect.objectContaining({
-          transformId: "transform-partial-upgrade",
-          editedCandidate: expect.objectContaining({
-            title: "",
-            audiencePain: "",
-            coreConflict: "",
-            format: "",
-          }),
-        }),
-      ),
-    );
-    expect(stub.promoteCandidate).toHaveBeenCalledWith({
-      candidateId: "candidate-partial-radar",
-    });
-    expect(push).toHaveBeenCalledWith("/projects/project-partial-radar");
-  });
-
-  it("[T-870] 已写入选题池的雷达候选直接升级，不重复确认", async () => {
-    const stub = api();
-    vi.mocked(stub.promoteCandidate).mockResolvedValue({
-      projectId: "project-existing-topic",
-    });
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        positioningVersionId="positioning-v1"
-        initialDetail={{
-          ...detail,
-          transcript: {
-            ...detail.transcript,
-            status: "done",
-            text: "来源完整逐字稿",
-          },
-          transforms: [
-            {
-              id: "transform-confirmed",
-              status: "confirmed",
-              taskStatus: "succeeded",
-              taskErrorCode: null,
-              taskErrorMessage: null,
-              targetTopicId: "candidate-existing",
-              outputSnapshot: {
-                title: "已经保存的选题",
-                angle: "真实角度",
-                differentiation: "真实差异化",
-                sourceSummary: "真实来源",
-                targetAudience: "目标观众",
-                audiencePain: "真实痛点",
-                coreConflict: "真实冲突",
-                format: "口播",
-                adaptationStrategy: {
-                  keep: ["结构"],
-                  replace: ["案例"],
-                  add: ["经验"],
-                  avoid: ["照搬"],
-                },
-                adaptedDraft: {
-                  contentText: "已经确认的改写稿。",
-                  generatedFromTranscriptHash: "sha256:transcript",
-                  strategyHash: "sha256:strategy",
-                  templateVersion: "intelligence-topic-draft-v1",
-                },
-              },
-            },
-          ],
-        }}
-        api={stub}
-      />,
-    );
-
-    expect(screen.getByLabelText("选题候选内容目的")).toBeDisabled();
-    expect(screen.getByText("原推荐：未推荐")).toBeInTheDocument();
-    await userEvent.click(
-      screen.getByRole("button", { name: "一键升级项目" }),
-    );
-
-    await waitFor(() =>
-      expect(stub.promoteCandidate).toHaveBeenCalledWith({
-        candidateId: "candidate-existing",
-      }),
-    );
-    expect(stub.confirmTopic).not.toHaveBeenCalled();
-    expect(push).toHaveBeenCalledWith("/projects/project-existing-topic");
-  });
-
-  it("[T-870] 项目创建失败时保留已确认选题并允许幂等重试", async () => {
-    const stub = api();
-    const confirmedDetail: RadarItemDetail = {
-      ...detail,
-      transcript: {
-        ...detail.transcript,
-        status: "done",
-        text: "来源完整逐字稿",
-      },
-      transforms: [
-        {
-          id: "transform-retry-project",
-          status: "confirmed",
-          taskStatus: "succeeded",
-          targetTopicId: "candidate-retry-project",
-          outputSnapshot: {
-            title: "保留的选题",
-            angle: "真实角度",
-            differentiation: "真实差异化",
-            sourceSummary: "真实来源",
-            targetAudience: "目标观众",
-            audiencePain: "真实痛点",
-            coreConflict: "真实冲突",
-            format: "口播",
-            adaptationStrategy: {
-              keep: ["结构"],
-              replace: ["案例"],
-              add: ["经验"],
-              avoid: ["照搬"],
-            },
-            adaptedDraft: {
-              contentText: "已经确认且不会因立项失败丢失的改写稿。",
-              generatedFromTranscriptHash: "sha256:transcript",
-              strategyHash: "sha256:strategy",
-              templateVersion: "intelligence-topic-draft-v1",
-            },
-          },
-        },
-      ],
-    };
-    vi.mocked(stub.getItem).mockResolvedValue(confirmedDetail);
-    vi.mocked(stub.promoteCandidate).mockRejectedValueOnce(
-      new Error("temporary project failure"),
-    );
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={confirmedDetail}
-        api={stub}
-      />,
-    );
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "一键升级项目" }),
-    );
-
-    expect(
-      await screen.findByText(
-        "选题已保留，但项目创建未完成。请重试「一键升级项目」，不会重复创建。",
-      ),
-    ).toBeInTheDocument();
-    expect(push).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("button", { name: "一键升级项目" }),
-    ).toBeEnabled();
-  });
-
-  it("[T-579] 生成任务失败后停止假进度，显示真实错误并允许重新生成", async () => {
-    const stub = api();
-    const readyDetail: RadarItemDetail = {
-      ...detail,
-      snapshots: [
-        {
-          id: "snapshot-1",
-          title: "真实作品",
-          capturedAt: "2026-07-23T12:00:00.000Z",
-          finalUrl: detail.item.canonicalUrl,
-        },
-      ],
-      transcript: {
-        itemId: detail.item.id,
-        status: "done",
-        text: "完整逐字稿",
-        errorCode: null,
-      },
-    };
-    const failedDetail: RadarItemDetail = {
-      ...readyDetail,
-      transforms: [
-        {
-          id: "transform-failed",
-          status: "candidate",
-          taskStatus: "failed",
-          taskErrorCode: "MODEL_PROTOCOL_ERROR",
-          taskErrorMessage: "模型没有返回可解析的选题结构",
-          outputSnapshot: null,
-          targetTopicId: null,
-        },
-      ],
-    };
-    stub.previewTopic = vi.fn().mockResolvedValue({
-      transform: {
-        id: "transform-failed",
-        status: "candidate",
-        outputSnapshot: null,
-        targetTopicId: null,
-      },
-      task: { id: "task-failed", status: "queued" },
-    });
-    stub.getItem = vi.fn().mockResolvedValue(failedDetail);
-
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={readyDetail}
-        positioningVersionId="positioning-v1"
-        api={stub}
-      />,
-    );
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "生成我的改写稿" }),
-    );
-
-    expect(
-      (await screen.findAllByText("模型没有返回可解析的选题结构"))[0],
-    ).toBeInTheDocument();
-    expect(screen.getByText("错误代码：MODEL_PROTOCOL_ERROR")).toBeInTheDocument();
-    expect(
-      screen.queryByText("候选仍在后台生成"),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "重新生成改写稿" }),
-    ).toBeEnabled();
-  });
-
-  it("[T-1022] 改写阶段暂时失败保留已有结果并由原任务自动恢复", async () => {
-    const stub = api();
-    vi.mocked(stub.previewTopic).mockResolvedValue({
-      transform: {
-        id: "transform-retry",
-        status: "candidate",
-        outputSnapshot: null,
-        targetTopicId: null,
-      },
-      task: { id: "task-retry", status: "queued" },
-    });
-    vi.mocked(stub.getItem).mockImplementation(() => new Promise(() => {}));
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={{
-          ...detail,
-          transcript: {
-            ...detail.transcript,
-            status: "done",
-            text: "来源完整逐字稿",
-          },
-          snapshots: [
-            {
-              id: "snapshot-partial",
-              title: "真实作品",
-              capturedAt: "2026-07-23T12:00:00.000Z",
-              finalUrl: detail.item.canonicalUrl,
-            },
-          ],
-          transforms: [
-            {
-              id: "transform-partial",
-              status: "candidate",
-              taskStatus: "queued",
-              taskRuntimeStatus: "retry_wait",
-              taskErrorCode: "TOPIC_PREVIEW_OUTPUT_INVALID",
-              taskErrorMessage: "模型输出不完整，系统正在继续生成选题卡",
-              targetTopicId: null,
-              outputSnapshot: {
-                hook: "反常识开场",
-                structureSteps: ["提出误区", "给出新方法"],
-                coreClaims: ["流程比参数优先"],
-                reusablePattern: "误区—方法",
-                factRisks: [],
-                title: "先稳定流程，再选择模型",
-                angle: "从交付现场切入",
-                differentiation: "不用来源案例",
-                sourceSummary: "来源讨论模型与工作流",
-                targetAudience: "业务负责人",
-                audiencePain: "交付不稳定",
-                coreConflict: "参数与流程优先级",
-                format: "复盘口播",
-                adaptationStrategy: {
-                  keep: ["反常识结构"],
-                  replace: ["来源案例"],
-                  add: ["本账号经验"],
-                  avoid: ["照搬原句"],
-                },
-                generationProgress: {
-                  decomposition: { status: "completed" },
-                  topic: { status: "completed" },
-                  draft: { status: "failed" },
-                },
-              },
-            },
-          ],
-        }}
-        api={stub}
-        positioningVersionId="positioning-1"
-      />,
-    );
-
-    expect(screen.getByText("反常识开场")).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue("先稳定流程，再选择模型"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("拆解和选题已保留，正在重试改写初稿"),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "重试生成选题卡" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "确认写入选题池" })).toBeDisabled();
-
-    expect(stub.previewTopic).not.toHaveBeenCalled();
-  });
-
-  it("[T-1022] 没有可用模型时保留原选题任务并直达模型设置", () => {
-    const stub = api();
-    render(
-      <IntelligenceWorkbench
-        accountId="account-1"
-        workspace={workspace}
-        items={[]}
-        initialDetail={{
-          ...detail,
-          transcript: { ...detail.transcript, status: "done", text: "来源完整逐字稿" },
-          snapshots: [{
-            id: "snapshot-model-setup",
-            title: "真实作品",
-            capturedAt: "2026-07-23T12:00:00.000Z",
-            finalUrl: detail.item.canonicalUrl,
-          }],
-          transforms: [{
-            id: "transform-model-setup",
-            status: "candidate",
-            taskStatus: "blocked",
-            taskRuntimeStatus: "waiting_user",
-            taskErrorCode: "MODEL_CONFIGURATION_REQUIRED",
-            taskErrorMessage: "还没有可用的 AI 模型，请完成模型设置后继续原任务",
-            outputSnapshot: null,
-            targetTopicId: null,
-          }],
-        }}
-        api={stub}
-        positioningVersionId="positioning-1"
-      />,
-    );
-
-    expect(screen.getByText("完成 AI 设置后继续")).toBeInTheDocument();
-    const settings = document.querySelector('[data-slot="radar-model-settings-link"]') as HTMLAnchorElement;
-    expect(settings?.getAttribute("href")).toBe("/settings?highlight=text-model");
-    expect(screen.queryByRole("button", { name: "重新生成" })).not.toBeInTheDocument();
-  });
-
-  it.each([
-    ["成功但未采纳", "candidate" as const, null],
-    ["已采纳且下游选题已淘汰", "confirmed" as const, "topic-dropped"],
-  ])(
-    "[T-744] %s 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳",
-    async (_label, status, targetTopicId) => {
-      const stub = api();
-      vi.mocked(stub.previewTopic).mockResolvedValue({
-        transform: {
-          id: "transform-rewrite-retry",
-          status: "candidate",
-          outputSnapshot: null,
-          targetTopicId: null,
-        },
-        task: { id: "task-rewrite-retry", status: "queued" },
-      });
-      vi.mocked(stub.getItem).mockImplementation(() => new Promise(() => {}));
-      render(
-        <IntelligenceWorkbench
-          accountId="account-1"
-          workspace={workspace}
-          items={[]}
-          positioningVersionId="positioning-v1"
-          initialDetail={{
-            ...detail,
-            transcript: {
-              ...detail.transcript,
-              status: "done",
-              text: "来源完整逐字稿",
-            },
-            snapshots: [
-              {
-                id: "snapshot-rewrite-retry",
-                title: "真实作品",
-                capturedAt: "2026-07-23T12:00:00.000Z",
-                finalUrl: detail.item.canonicalUrl,
-              },
-            ],
-            transforms: [
-              {
-                id: "transform-completed",
-                status,
-                taskStatus: "succeeded",
-                taskErrorCode: null,
-                taskErrorMessage: null,
-                targetTopicId,
-                outputSnapshot: {
-                  hook: "反常识开场",
-                  structureSteps: ["提出误区", "给出新方法"],
-                  coreClaims: ["流程比参数优先"],
-                  reusablePattern: "误区—方法",
-                  factRisks: [],
-                  title: "先稳定流程，再选择模型",
-                  angle: "从交付现场切入",
-                  differentiation: "不用来源案例",
-                  sourceSummary: "来源讨论模型与工作流",
-                  targetAudience: "业务负责人",
-                  audiencePain: "交付不稳定",
-                  coreConflict: "参数与流程优先级",
-                  format: "复盘口播",
-                  adaptationStrategy: {
-                    keep: ["反常识结构"],
-                    replace: ["来源案例"],
-                    add: ["本账号经验"],
-                    avoid: ["照搬原句"],
-                  },
-                  adaptedDraft: {
-                    contentText: "这是一版已经成功但用户想重试的改写稿。",
-                    generatedFromTranscriptHash: "sha256:transcript",
-                    strategyHash: "sha256:strategy",
-                    templateVersion: "intelligence-topic-draft-v1",
-                  },
-                  generationProgress: {
-                    decomposition: { status: "completed" },
-                    topic: { status: "completed" },
-                    draft: { status: "completed" },
-                  },
-                },
-              },
-            ],
-          }}
-          api={stub}
-        />,
-      );
-
-      if (status === "confirmed") {
-        expect(screen.getByText("已采纳过")).toBeInTheDocument();
-      }
-      await userEvent.click(
-        screen.getByRole("button", { name: "重新生成改写稿" }),
-      );
-      await waitFor(() =>
-        expect(stub.previewTopic).toHaveBeenCalledWith({
-          itemId: "item-1",
-          sourceSnapshotId: "snapshot-rewrite-retry",
-          positioningVersionId: "positioning-v1",
-          idempotencyKey: expect.stringMatching(/^topic-preview:/),
-        }),
-      );
-
-      expect(
-        screen.getByDisplayValue("这是一版已经成功但用户想重试的改写稿。"),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "确认写入选题池" }),
-      ).toBeDisabled();
-      expect(screen.getByLabelText("选题候选标题")).toBeDisabled();
-      expect(
-        screen.queryByRole("button", { name: "重新生成改写稿" }),
-      ).not.toBeInTheDocument();
-      expect(stub.confirmTopic).not.toHaveBeenCalled();
-    },
-  );
 
   it("博主主页必须真实预览成功后才能保存并首次同步", async () => {
     const stub = api();
@@ -3153,7 +2036,6 @@ describe("T-482 内容雷达工作区", () => {
   });
 });
 
-
 it("[T-1022] 空组真实工作台可新建分类并预检公开网页，无须绑定平台账号", async () => {
   const stub=api();vi.mocked(stub.listCollectors).mockResolvedValue([]);
   render(<IntelligenceWorkbench groupId="empty-group" workspace={workspace} items={[]} initialDetail={null} api={stub}/>);
@@ -3178,17 +2060,6 @@ it("[T-1022] 两个空组切换卸载旧组列表及详情，旧筛选与迟到�
   await act(async()=>{finish({items:[{item:detail.item,latestMetric:null,sourceCount:0}],page:1,pageSize:100,total:1,hasMore:false});});
   expect(screen.queryByText("真实作品")).toBeNull();
   expect(screen.getByText("先添加一个真实来源")).toBeInTheDocument();
-});
-
-it('[T-1022] 空组已有公开素材可以提交改写候选，未保存定位不要求平台账号',async()=>{
- const stub=api();const ready={...detail,snapshots:[{id:'group-snapshot',title:'真实作品',capturedAt:'2026-10-04T00:00:00Z',finalUrl:detail.item.canonicalUrl}],transcript:{...detail.transcript,status:'done' as const,text:'已有公开素材的完整逐字稿'}};
- vi.mocked(stub.getItem).mockResolvedValue(ready);
- vi.mocked(stub.previewTopic).mockResolvedValue({transform:{id:'group-transform',status:'candidate',outputSnapshot:null,targetTopicId:null},task:{id:'group-task',status:'queued'}});
- render(<IntelligenceWorkbench groupId='empty-group' workspace={workspace} items={[]} initialDetail={ready} api={stub}/>);
- await userEvent.click(screen.getByRole('button',{name:'生成我的改写稿'}));
- expect(stub.previewTopic).toHaveBeenCalledWith(expect.objectContaining({itemId:detail.item.id,sourceSnapshotId:'group-snapshot'}));
- expect(vi.mocked(stub.previewTopic).mock.calls[0]![0]).not.toHaveProperty('accountId');
- expect(vi.mocked(stub.previewTopic).mock.calls[0]![0]).not.toHaveProperty('positioningVersionId');
 });
 
   it("分享文本 queued 回执保持排队，未完成时不刷新或自动转写", async () => {
@@ -3253,3 +2124,37 @@ it('[T-1022] 空组已有公开素材可以提交改写候选，未保存定位�
     expect(await screen.findByText("已排队")).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
+
+it("来源管理只展示来源任务，入口仍打开原对话框", async () => {
+  render(<IntelligenceWorkbench presentation="sources" groupId="sources-only-empty" workspace={workspace} items={[]} initialDetail={null} api={api()}/>);
+  expect(screen.getByRole("heading",{name:"真实来源"})).toBeVisible();
+  expect(screen.getByRole("heading",{name:"从添加一个来源开始"})).toBeVisible();
+  expect(screen.queryByRole("heading",{name:"02 挑选内容"})).not.toBeInTheDocument();
+  expect(screen.queryByRole("textbox",{name:"搜索雷达内容"})).not.toBeInTheDocument();
+  expect(screen.queryByRole("separator",{name:"调整作品详情宽度"})).not.toBeInTheDocument();
+  for (const [name,title] of [["添加来源","添加真实来源"],["粘贴分享链接","从抖音分享链接建档"],["新建分类","新建监控分类"]]) {
+    await userEvent.click(screen.getByRole("button",{name}));
+    expect(screen.getByRole("dialog",{name:title})).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+  }
+});
+
+it("来源目录选择仅切换真实状态概览，筛选和原同步入口保留", async () => {
+  const sourceWorkspace:RadarWorkspace={...workspace,sources:[{id:"source-preview-web",collectionId:null,type:"web",displayName:"来源布局样例",canonicalUrl:"https://example.com",collector:null,monitorEnabled:false,syncPolicy:{mode:"manual"},status:"active",lastRunAt:null,nextRunAt:null,version:1}]};
+  const calls=api();
+  render(<IntelligenceWorkbench presentation="sources" groupId="sources-only-selected" workspace={sourceWorkspace} items={[]} initialDetail={null} api={calls}/>);
+  await userEvent.click(screen.getByRole("button",{name:/来源布局样例.*网页/}));
+  expect(screen.getByRole("button",{name:/来源布局样例.*网页/})).toHaveAttribute("aria-pressed","true");
+  const overview=screen.getByRole("region",{name:"来源采集概览"});
+  expect(within(overview).getByRole("heading",{name:"来源布局样例"})).toBeVisible();
+  expect(within(overview).getByText("已暂停")).toBeVisible();
+  expect(within(overview).getByText("未安排")).toBeVisible();
+  expect(within(overview).getByRole("link",{name:"查看来源原链接"})).toHaveAttribute("href","https://example.com");
+  expect(calls.listItems).not.toHaveBeenCalled();
+  expect(screen.getByRole("button",{name:"同步 来源布局样例"})).toBeEnabled();
+  expect(screen.getByRole("button",{name:"恢复 来源布局样例 的每日自动同步"})).toBeEnabled();
+  expect(screen.getByRole("button",{name:"移除 来源布局样例"})).toBeEnabled();
+  await userEvent.type(screen.getByRole("searchbox",{name:"筛选来源"}),"不存在的来源");
+  expect(screen.getByText("没有匹配的来源")).toBeVisible();
+  expect(screen.queryByRole("button",{name:"同步 来源布局样例"})).not.toBeInTheDocument();
+});
