@@ -3,11 +3,15 @@
 import { ArrowRight, Compass, ShieldCheck } from "lucide-react";
 import styles from "./positioning-conversation.module.css";
 
+export type PositioningStartMode = "optimize" | "pivot" | "scratch";
+
+// 「继续深入当前账号」= optimize：用户已明确选择沿当前账号深化，本轮生成的定位提案会自动采纳
+// （仍走原 confirmDiscovery / upsertProfile 采纳门，失败可重试，历史版本可复制为草稿回退）。
 const STARTERS = [
-  { title: "继续深入当前账号", description: "沿着已有内容，找到更鲜明的方向", prompt: "我想继续深入当前账号，先聊目前的内容和瓶颈。" },
-  { title: "调整到一个新方向", description: "保留自己的积累，探索新的可能", prompt: "我想调整到新方向，先聊想改变什么、保留哪些积累。" },
-  { title: "完全从零开始", description: "从你的经历、优势和创作目标聊起", prompt: "我想完全从零开始定位，先聊我的经历和优势。" },
-] as const;
+  { mode: "optimize", title: "继续深入当前账号", description: "沿着已有内容，生成后自动采纳为当前定位", prompt: "我想继续深入当前账号，先聊目前的内容和瓶颈。" },
+  { mode: "pivot", title: "调整到一个新方向", description: "保留自己的积累，探索新的可能", prompt: "我想调整到新方向，先聊想改变什么、保留哪些积累。" },
+  { mode: "scratch", title: "完全从零开始", description: "从你的经历、优势和创作目标聊起", prompt: "我想完全从零开始定位，先聊我的经历和优势。" },
+] as const satisfies ReadonlyArray<{ mode: PositioningStartMode; title: string; description: string; prompt: string }>;
 
 export function PositioningConversationGuide() {
   return (
@@ -22,13 +26,13 @@ export function PositioningConversationGuide() {
         <li><span aria-hidden="true">02</span><div><strong>补关键点</strong><p>每次只补一个关键信息。</p></div></li>
         <li><span aria-hidden="true">03</span><div><strong>看候选</strong><p>随时说“先给我一版”。</p></div></li>
       </ol>
-      <p className={styles.assurance}><ShieldCheck size={16} aria-hidden="true" /><span>未采纳前，不会修改当前定位母版。</span></p>
+      <p className={styles.assurance}><ShieldCheck size={16} aria-hidden="true" /><span>调整方向或从零开始时，未采纳前不会修改当前定位母版；继续深入当前账号会自动采纳，可在历史版本中恢复。</span></p>
     </aside>
   );
 }
 
 export function PositioningConversationStart({ onPick, disabled }: {
-  readonly onPick: (prompt: string) => void;
+  readonly onPick: (prompt: string, mode: PositioningStartMode) => void;
   readonly disabled: boolean;
 }) {
   return (
@@ -38,7 +42,7 @@ export function PositioningConversationStart({ onPick, disabled }: {
       <p>选起点或直接输入，确认后再发送。</p>
       <div className={styles.starters}>
         {STARTERS.map((item) => (
-          <button key={item.title} type="button" disabled={disabled} onClick={() => onPick(item.prompt)}>
+          <button key={item.title} type="button" data-mode={item.mode} disabled={disabled} onClick={() => onPick(item.prompt, item.mode)}>
             <span><strong>{item.title}</strong><small>{item.description}</small></span>
             <ArrowRight size={16} aria-hidden="true" />
           </button>

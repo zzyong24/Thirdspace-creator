@@ -17,6 +17,7 @@
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {taskRuntimeStatus,type RuntimeTask} from "@/components/ai/task-runtime-actions";
 import { client } from "@/lib/contract-client";
@@ -439,9 +440,12 @@ function clampKeywords(raw: readonly string[]): [string, string, string] {
 export function ChatPositioningCard({
   suggestion,
   discovery = null,
+  autoAdopt = false,
 }: {
   readonly suggestion: ChatPositioningSuggestion | null;
   readonly discovery?: ChatPositioningDiscoveryProvenance | null;
+  /** 用户已选「继续深入当前账号」：提案到达即走同一采纳门自动写入，不再等手动点击。 */
+  readonly autoAdopt?: boolean;
 }) {
   const router = useRouter();
   const [state, setState] = React.useState<AdoptState>("idle");
@@ -574,7 +578,26 @@ export function ChatPositioningCard({
     }
   }, [discovery, router, state, suggestion]);
 
-  if (!suggestion || (!suggestion.oneLiner && !suggestion.persona)) return null;
+  const adoptable = Boolean(suggestion && (suggestion.oneLiner || suggestion.persona));
+  // 自动采纳只尝试一次：失败后回到手动「重试」，过期卡不重试，避免对同一候选反复写入。
+  const autoTriedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!autoAdopt || !adoptable || autoTriedRef.current || state !== "idle") return;
+    autoTriedRef.current = true;
+    void adopt();
+  }, [adopt, adoptable, autoAdopt, state]);
+
+  if (!suggestion || !adoptable) {
+    return autoAdopt ? (
+      <p
+        data-slot="chat-positioning-auto-empty"
+        role="status"
+        className="mt-1.5 rounded-lg border border-border bg-surface/70 px-2.5 py-2 text-[11px] leading-relaxed text-muted-foreground"
+      >
+        本轮没有生成可采纳的定位提案，当前定位未改动。可以继续补充信息，或直接说“先给我一版”。
+      </p>
+    ) : null;
+  }
 
   // [T-234] 卡上先展示 AI 提炼的硬约束(非空键),用户看清是什么再决定采纳。
   const ruleRows: ReadonlyArray<readonly [string, string]> = RULE_KEYS.map(
@@ -599,7 +622,7 @@ export function ChatPositioningCard({
       className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        AI 定位提案 · 采纳写入定位母版
+        {autoAdopt ? "AI 定位提案 · 继续深入当前账号，自动采纳" : "AI 定位提案 · 采纳写入定位母版"}
       </span>
       <div className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-2">
         {suggestion.oneLiner ? (
@@ -648,12 +671,22 @@ export function ChatPositioningCard({
         ) : null}
         <div className="flex items-center gap-2">
           {state === "adopted" ? (
-            <span
-              data-slot="chat-positioning-adopted"
-              className="text-[10px] font-medium text-success"
-            >
-              ✓ 已写入当前定位
-            </span>
+            <>
+              <span
+                data-slot="chat-positioning-adopted"
+                className="text-[10px] font-medium text-success"
+              >
+                {autoAdopt ? "✓ 已自动写入当前定位" : "✓ 已写入当前定位"}
+              </span>
+              {/* 撤销/再编辑：定位中心「编辑当前定位」可改，历史版本可「复制为草稿」恢复旧版。 */}
+              <Link
+                href="/positioning"
+                data-slot="chat-positioning-revise"
+                className="text-[10px] text-brand underline-offset-2 hover:underline"
+              >
+                去定位中心修改或恢复历史版本
+              </Link>
+            </>
           ) : (
             <button
               type="button"
@@ -663,14 +696,14 @@ export function ChatPositioningCard({
               className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
             >
               {state === "adopting"
-                ? "采纳中…"
+                ? autoAdopt ? "自动采纳中…" : "采纳中…"
                 : state === "stale"
                   ? "定位卡已过期"
                   : "采纳为当前定位"}
             </button>
           )}
           {state === "error" ? (
-            <span className="text-[10px] text-destructive">采纳失败,重试</span>
+            <span data-slot="chat-positioning-adopt-error" className="text-[10px] text-destructive">{autoAdopt ? "自动采纳未完成，当前定位未改动，可点按钮重试" : "采纳失败,重试"}</span>
           ) : null}
           {state === "stale" ? (
             <span className="text-[10px] leading-relaxed text-warning">

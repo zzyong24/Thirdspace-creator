@@ -746,6 +746,9 @@ export function AICopilotContent({
     embed?.surface ?? (searchParams?.get("surface") || DEFAULT_SURFACE);
   const positioning = !embed && surface === "positioning";
   const positioningStarterBaseRef = React.useRef<string | null>(null);
+  // 用户在本次会话里点了「继续深入当前账号」时记下当时的消息数：只有之后新产生的定位提案
+  // 才自动采纳。只存内存，刷新/重放历史对话不会对旧卡片自动写入。
+  const [positioningAutoAdoptFrom, setPositioningAutoAdoptFrom] = React.useState<number | null>(null);
   // [T-108] embed.request(稿面 AI 按钮发起)优先于 URL:functionKey/selection 从 request 读,
   // 让常驻 rail 无需 `?copilot=open` 深链就置顶专用工具 + 注入选中态(根治 T-108)。request 为
   // null(首帧/未发起)时回落 URL(浮层深链)/ embed.selection(常驻项目上下文),行为不变。
@@ -3497,6 +3500,7 @@ export function AICopilotContent({
                           key={key}
                           suggestion={o.suggestion ?? null}
                           discovery={o.discovery ?? null}
+                          autoAdopt={positioningAutoAdoptFrom !== null && messageIndex >= positioningAutoAdoptFrom}
                         />
                       );
                     }
@@ -3611,7 +3615,8 @@ export function AICopilotContent({
           ) : positioning ? (
             <PositioningConversationStart
               disabled={streaming || hasPendingApproval}
-              onPick={(choice) => {
+              onPick={(choice, mode) => {
+                setPositioningAutoAdoptFrom(mode === "optimize" ? messages.length : null);
                 // 只预填，不发送；保留入口带来的已保存资料和用户手写内容。
                 if (prompt !== lastPrefillRef.current) positioningStarterBaseRef.current = prompt;
                 const base = positioningStarterBaseRef.current ?? searchParams?.get("prefill") ?? "";

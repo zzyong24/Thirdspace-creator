@@ -215,3 +215,45 @@ describe("ChatPositioningCard — downstreamRules 硬约束 (T-234)", () => {
     expect(confirmDiscovery).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("ChatPositioningCard — 继续深入当前账号自动采纳", () => {
+  it("autoAdopt → 提案到达即自动采纳一次，显示已写入与修改入口，无需点击", async () => {
+    const { rerender } = render(<ChatPositioningCard suggestion={BASE} autoAdopt />);
+    await waitFor(() => expect(upsertProfile).toHaveBeenCalledTimes(1));
+    expect(createStatement).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText("✓ 已自动写入当前定位")).toBeTruthy();
+    const revise = document.querySelector('[data-slot="chat-positioning-revise"]');
+    expect(revise?.getAttribute("href")).toBe("/positioning");
+    rerender(<ChatPositioningCard suggestion={BASE} autoAdopt />);
+    expect(upsertProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it("autoAdopt + 前采提案 → 走原子 confirmDiscovery，只提交一次", async () => {
+    render(<ChatPositioningCard suggestion={BASE} discovery={{ sessionId: "s1", candidateId: "poscand:s1:3:direct", candidateRevision: 3 }} autoAdopt />);
+    await waitFor(() => expect(confirmDiscovery).toHaveBeenCalledTimes(1));
+    expect(upsertProfile).not.toHaveBeenCalled();
+  });
+
+  it("自动采纳失败 → 不自动重试，提示当前定位未改动并保留手动重试", async () => {
+    upsertProfile.mockRejectedValueOnce(new Error("boom"));
+    const user = userEvent.setup();
+    render(<ChatPositioningCard suggestion={BASE} autoAdopt />);
+    expect(await screen.findByText("自动采纳未完成，当前定位未改动，可点按钮重试")).toBeTruthy();
+    expect(upsertProfile).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "采纳为当前定位" }));
+    await waitFor(() => expect(upsertProfile).toHaveBeenCalledTimes(2));
+  });
+
+  it("autoAdopt 但没有提案 → 诚实提示，不写库", () => {
+    render(<ChatPositioningCard suggestion={null} autoAdopt />);
+    expect(document.querySelector('[data-slot="chat-positioning-auto-empty"]')).not.toBeNull();
+    expect(upsertProfile).not.toHaveBeenCalled();
+  });
+
+  it("未选继续深入(默认) → 不自动采纳，仍需手动点击", async () => {
+    render(<ChatPositioningCard suggestion={BASE} />);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(upsertProfile).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "采纳为当前定位" })).toBeTruthy();
+  });
+});
