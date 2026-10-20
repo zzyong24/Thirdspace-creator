@@ -471,11 +471,12 @@ describe("DraftWorkbenchPage — T-1055 顶条仅保留真实动作", () => {
     expect(screen.getByText("真实导入作品")).toBeTruthy();
     expect(screen.queryByRole("link", {name: "项目作品与创作"})).toBeNull();
   });
-  it("真实逐字稿任务和已发布复盘顶条保留", () => {
+  it("真实逐字稿任务移入项目准备流水线，已发布复盘顶条保留", () => {
     const original = baseVm();
     const vm = baseVm({project: {...original.project, douyinExternalId: "douyin-1", transcriptState: "queued"}});
     const {container} = render(<DraftWorkbenchPage vm={vm} />);
-    expect(container.querySelector('[data-slot="draft-topbar"] [data-slot="mock-transcribe-now"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="project-pipeline"] [data-step="transcript"] [data-slot="mock-transcribe-now"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="draft-topbar"] [data-slot="mock-transcribe-now"]')).toBeNull();
   });
   it("明确未发布不会被旧 published 包状态误判", () => {
     const vm = baseVm({publishPack: {publicationId: "pub-1", platform: "douyin", status: "published", outputPublished: false,
