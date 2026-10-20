@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1384|整合工作树独有代码并清理多余工作树|✅|—|—|[范围](docs/features/t1384-worktree-consolidation-cleanup.md) · [清理记录](docs/verification/t1384/REPORT.md)|14附属树已移除仅主仓；内盘约243MiB→80.31GiB；17历史ref/bundle及差量原件私有保T7，唯一遗漏工具7db6036纳main；原在途保留，无push/安装/full，已补按需建树与收尾回收规则。|
 |T-1383|只读核对内盘告急与项目构建测试空间占用|✅|—|—|[空间核查](docs/engineering/storage-audit-2026-10-20.md)|内盘409→334MiB；主仓43.6、五工作树49.6、已确认临时副本58.1GiB；工作树18.025GiB缓存已核ignored/未见占用，未删除/停进程，实际回收待清理后验证。|
 |T-1381|拉取当前main最新远端代码并保留本地改动|✅|—|—|本行限定Git同步范围|用户要求拉最新代码；核对origin/main并优先快进，保全未提交与未跟踪文件，不扩产品、安装或脚手架升级范围；完成依据真实HEAD及本地改动核对。|
 |T-1377|精确收窄旧出包超时断言并保留负控制|✅|PASS[REV:e6a1ced3d84c]|—|[已授权单文件修正](docs/features/t1377-packaging-workflow-timeout-test-scope.md)|单测试文件修正39PASS/独审GO，已提交8062921并taskctl完成；唯一150分钟行例外+有限负控，workflow/产品/预算未改，原44+1FAIL保。|

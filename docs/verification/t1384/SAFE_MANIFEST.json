@@ -1,0 +1,131 @@
+{
+  "task": "T-1384",
+  "removed_worktrees": 14,
+  "remaining_worktrees": 1,
+  "before_available_KiB": {
+    "internal": 249084,
+    "external": 853601508
+  },
+  "after_available_KiB": {
+    "internal": 84214200,
+    "external": 887420176
+  },
+  "archive_root": "/Volumes/T7-MacData/CreatorOS-Archives/T1384-worktrees-20261020-bnm7_2jj",
+  "preserved_git_refs": 17,
+  "code_commit": "7db6036be",
+  "unique_tool_sha256": "193436801a9f39b08fc0c7364836ec2c4318024940a8b7ee98fb3fffe855374c",
+  "trees": [
+    {
+      "source": "/private/tmp/t1375-final-safe-main-p18f0s59/Thirdspace-creator",
+      "HEAD": "c8b96fd916ee66b3fca56d85076ef48e90accc21",
+      "ref": "refs/heads/codex/t1384-preserve-01",
+      "preserved_files": 0,
+      "archive_sha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+      "removed": true
+    },
+    {
+      "source": "/private/tmp/t1375-safe-main-gb5pdvbt/Thirdspace-creator",
+      "HEAD": "06b64933cfe8bbe1d9f51177ceb66f21ba96b6fa",
+      "ref": "refs/heads/codex/t1384-preserve-02",
+      "preserved_files": 0,
+      "archive_sha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+      "removed": true
+    },
+    {
+      "source": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t238-creator-00i2if0x/source",
+      "HEAD": "3aa1bf72dbc75dc156f865d5ffc0973590a0100d",
+      "ref": "refs/heads/codex/t1384-preserve-03",
+      "preserved_files": 4513,
+      "archive_sha256": "912381087bdd4dfca8cbbe093ae184e3db9037ba6caaa5fd56420a0e10a60c1d",
+      "removed": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/account-binding-daily-candidate/Thirdspace-creator",
+      "HEAD": "e6769b474fde3db583bf08b04104e4f3a57bd6c9",
+      "ref": "refs/heads/codex/t1384-preserve-04",
+      "preserved_files": 372,
+      "archive_sha256": "0e1df97088112c4941c8734db77bada5740c3405e0f7d9b985feb74797751e1c",
+      "removed": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/t1364-wechat-navigation/Thirdspace-creator",
+      "HEAD": "2d3826ef164241860437daa393d336d9b042f980",
+      "ref": "refs/heads/codex/t1384-preserve-05",
+      "preserved_files": 95,
+      "archive_sha256": "36a7dc8f8115739deb647a2850b192a980e01f6fe248dc22fe6fb485fe0deb4b",
+      "removed": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/t1367-collapsed-navigation/Thirdspace-creator",
+      "HEAD": "665508e66ee4bf46a6ebe3267ce4887c92964e18",
+      "ref": "refs/heads/codex/t1384-preserve-06",
+      "preserved_files": 98,
+      "archive_sha256": "0e2162e709efc52a9e4034488c2b9d13347372ecdede94abcf187b649078a2f5",
+      "removed": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/t1369-filter-navigation/Thirdspace-creator",
+      "HEAD": "10cab133f97821cface88f9d1c0f8426acad763a",
+      "ref": "refs/heads/codex/t1384-preserve-07",
+      "preserved_files": 163,
+      "archive_sha256": "1fae1bf688792455be9e7c631d5068b794e7bd955cc7e27c54e0dfb30912cf90",
+      "removed": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/t1370-t1371-ui-data/Thirdspace-creator",
+      "HEAD": "10238309c46f557b0c92d9d008cb466f7974c594",
+      "ref": "refs/heads/codex/t1384-preserve-08",
+      "preserved_files": 2689,
+      "archive_sha256": "a53eea426328973702ef483628c691aeee9708259c9606f3e2b2af35d7e54da2",
+      "removed": true
+    },
+    {
+      "source": "/Volumes/T7-MacData/CodexBuilds/CreatorT247Windows-20261017/source",
+      "HEAD": "8e39d20a77baa5317aa1082609f71beb37f48c14",
+      "ref": "refs/heads/codex/t1384-preserve-09",
+      "preserved_files": 0,
+      "archive_sha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+      "removed": true
+    },
+    {
+      "source": "/Volumes/T7-MacData/CodexBuilds/t1300-final-20261017-7f371055a6ac/source",
+      "HEAD": "806a42e67a8a75d74df14eaa917ec1cdbe30d657",
+      "ref": "refs/heads/codex/t1384-preserve-10",
+      "preserved_files": 18,
+      "archive_sha256": "8bc684c5485d619857fdb4fb61852d392b67544ec1507a0cc097c8d419d2a31f",
+      "removed": true
+    },
+    {
+      "source": "/Volumes/T7-MacData/CodexBuilds/T1376-20261019-923_wag6/source",
+      "HEAD": "dedc4b367016c719bbcd0b513a53a65be544ac0e",
+      "ref": "refs/heads/codex/t1384-preserve-11",
+      "preserved_files": 2622,
+      "archive_sha256": "05b46e974d00fafdc1539e9fe5060ba445345de17890751cc2ac6b9bbcdc76e7",
+      "removed": true
+    },
+    {
+      "source": "/Volumes/T7-MacData/CodexBuilds/T1380-local-collaborator/source",
+      "HEAD": "55841ceaf80d97f33847e8913b75c00bfa2e17d8",
+      "ref": "refs/heads/codex/t1384-preserve-12",
+      "preserved_files": 4,
+      "archive_sha256": "7a613f670d2bb206fbd1273eac9afe157fcd4c9f97609da7bf7b8b9ba8ce3304",
+      "removed": true
+    },
+    {
+      "source": "/Volumes/T7-MacData/CodexBuilds/T238-20261017/source",
+      "HEAD": "3cd2446ca8e71ce1cc35b6bc54db7ef9b3b0b21a",
+      "ref": "refs/heads/codex/t1384-preserve-13",
+      "preserved_files": 2611,
+      "archive_sha256": "df989c6544aee44ab407ab2b2f76eff72b21d34c895b6f60f94a227d5c4ae03a",
+      "removed": true
+    },
+    {
+      "source": "/Volumes/T7-MacData/CodexBuilds/T243-CreatorOS-20261017/source",
+      "HEAD": "d4432b6110a753c661581c1531bed9c469c41e1c",
+      "ref": "refs/heads/codex/t1384-preserve-14",
+      "preserved_files": 2709,
+      "archive_sha256": "73a0261a3c2dcad9a432d5279a229dee8c1b298639fda2192473fb50e0e06785",
+      "removed": true
+    }
+  ]
+}
