@@ -1,0 +1,133 @@
+{
+  "groupsReadExit": 0,
+  "groupsVisible": 5,
+  "perGroupReadAvailability": [
+    {
+      "scopeOrdinal": 1,
+      "groupStatus": "active",
+      "membershipCount": 4,
+      "accounts.list": {
+        "exit": 0,
+        "seconds": 0.3619809169904329,
+        "responseSHA256": "bcd1461a585e008653c3ec6385214306717ea687e08769d41b98f08060eb0efd",
+        "dataType": "list",
+        "returnedCount": 7,
+        "total": 7,
+        "page": 1,
+        "pageSize": 100
+      },
+      "projects.list": {
+        "exit": 0,
+        "seconds": 0.33887083298759535,
+        "responseSHA256": "4ea4c4121137acfa47a30a0404f6364a332277d693042e371ebb5b6873317fd9",
+        "dataType": "list",
+        "returnedCount": 65,
+        "total": 65,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "scopeOrdinal": 2,
+      "groupStatus": "active",
+      "membershipCount": 1,
+      "accounts.list": {
+        "exit": 0,
+        "seconds": 1.541855667019263,
+        "responseSHA256": "2bd429cb80e0431d787f9a6a217bde85e64af5ae323b882821599e3d94593aa4",
+        "dataType": "list",
+        "returnedCount": 7,
+        "total": 7,
+        "page": 1,
+        "pageSize": 100
+      },
+      "projects.list": {
+        "exit": 0,
+        "seconds": 0.33365775004494935,
+        "responseSHA256": "c5dc0c7af17473d6c7feea1b16539c3654481503fccc3f9299ff693f350814b2",
+        "dataType": "list",
+        "returnedCount": 4,
+        "total": 4,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "scopeOrdinal": 3,
+      "groupStatus": "active",
+      "membershipCount": 0,
+      "accounts.list": {
+        "exit": 0,
+        "seconds": 0.31776291702408344,
+        "responseSHA256": "ef0803d6aef9f14a5b7ae43fa344e87224dd92861b52731585d0c2968967a5fa",
+        "dataType": "list",
+        "returnedCount": 7,
+        "total": 7,
+        "page": 1,
+        "pageSize": 100
+      },
+      "projects.list": {
+        "exit": 0,
+        "seconds": 0.3397687919787131,
+        "responseSHA256": "5ea23ec0ba240d6dc50f1f2f3d93db5b486f07fef3c278ff33cc93730cfe4547",
+        "dataType": "list",
+        "returnedCount": 2,
+        "total": 2,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "scopeOrdinal": 4,
+      "groupStatus": "active",
+      "membershipCount": 0,
+      "accounts.list": {
+        "exit": 0,
+        "seconds": 1.5667521249852143,
+        "responseSHA256": "800ce452819520926827d803e0f9b2d1ee18a26b1bf3341a506f90ed3dbdaf80",
+        "dataType": "list",
+        "returnedCount": 7,
+        "total": 7,
+        "page": 1,
+        "pageSize": 100
+      },
+      "projects.list": {
+        "exit": 0,
+        "seconds": 0.3218824160285294,
+        "responseSHA256": "2862b8199d9cc8437a6de706edb4f0f5e12f76d4ea1ae3df366ac1c33e3d0e0e",
+        "dataType": "list",
+        "returnedCount": 1,
+        "total": 1,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "scopeOrdinal": 5,
+      "groupStatus": "active",
+      "membershipCount": 1,
+      "accounts.list": {
+        "exit": 0,
+        "seconds": 0.3206906249979511,
+        "responseSHA256": "a71c4909e3c3153f4add351da281bdf405538dbf83a882e3a4ecfc8a30259d99",
+        "dataType": "list",
+        "returnedCount": 7,
+        "total": 7,
+        "page": 1,
+        "pageSize": 100
+      },
+      "projects.list": {
+        "exit": 0,
+        "seconds": 0.349761999968905,
+        "responseSHA256": "17b16b8dead177df3496941738ce326913efcfbc48c7d4ec3add5377e0775c64",
+        "dataType": "list",
+        "returnedCount": 1,
+        "total": 1,
+        "page": 1,
+        "pageSize": 50
+      }
+    }
+  ],
+  "businessWrites": 0,
+  "verificationBoundary": "公开读取可用及当前返回事实；只读单页、不冒全量分页/全库字节比对/跨平台采集恢复或原任务自动恢复。账号列表为用户登记集，不能将5次相同7行相加为35账号。"
+}

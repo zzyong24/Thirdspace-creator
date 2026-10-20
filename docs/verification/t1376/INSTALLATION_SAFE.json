@@ -1,0 +1,131 @@
+{
+  "schema": "t1376-installation/v1",
+  "candidateSourceCommit": "dedc4b367016c719bbcd0b513a53a65be544ac0e",
+  "authorizationDecision": "DEC-137602",
+  "userAuthorizedInterrupt": true,
+  "normalQuit": {
+    "actualExit": 0,
+    "freshOldAppPIDs": [
+      55420
+    ],
+    "ownedProcessCount": 4,
+    "allEnded": true,
+    "forceKillExecuted": false,
+    "businessTaskCancelRetryResumeOrDeadlineWrites": false
+  },
+  "backup": {
+    "path": "/Applications/.CreatorOS.app.t1376-backup-548d38217296",
+    "oldAppTreeExact": true,
+    "treeManifestSHA256": "c46aaad00242a725aa836766dcf949b9ba068e74fbe5b6c367ac50ab68244745"
+  },
+  "installedApp": {
+    "path": "/Applications/CreatorOS.app",
+    "pid": 22213,
+    "ownedRuntimePID": 22560,
+    "version": "1.2.0",
+    "openExit": 0,
+    "executableSHA256": "faa1a7e42bbc25bf72fcc63d36f85bb073fae038a14723f9a646957224ffd361",
+    "sidecarTarSHA256": "57b6c345451742ca2a750333df35f1c3a13d30de688fef273dd4997d20366b98",
+    "runtimeStampMatch": true,
+    "sourceMatch": true
+  },
+  "runtimeCanonical": {
+    "expectedEntries": 37660,
+    "actualEntries": 37660,
+    "missingCount": 0,
+    "extraCount": 0,
+    "mismatchCount": 0
+  },
+  "readiness": {
+    "firstReadyUTC": "2026-10-20T03:02:15.075285+00:00",
+    "lastReadyUTC": "2026-10-20T03:04:17.601102+00:00",
+    "continuousSeconds": 122.52627137501258,
+    "points": [
+      {
+        "utc": "2026-10-20T03:02:15.075285+00:00",
+        "elapsedSinceFirstReadySeconds": 0.0,
+        "cliStatusExit": 0,
+        "connected": true,
+        "pid": 22213,
+        "statusSHA256": "d5fc9b18e20a4ece05865e92ee861afba5163dfba32de2229c026a50ba2f4e75"
+      },
+      {
+        "utc": "2026-10-20T03:02:35.476281+00:00",
+        "elapsedSinceFirstReadySeconds": 20.401004292012658,
+        "cliStatusExit": 0,
+        "connected": true,
+        "pid": 22213,
+        "statusSHA256": "d5fc9b18e20a4ece05865e92ee861afba5163dfba32de2229c026a50ba2f4e75"
+      },
+      {
+        "utc": "2026-10-20T03:02:55.859436+00:00",
+        "elapsedSinceFirstReadySeconds": 40.784164167009294,
+        "cliStatusExit": 0,
+        "connected": true,
+        "pid": 22213,
+        "statusSHA256": "d5fc9b18e20a4ece05865e92ee861afba5163dfba32de2229c026a50ba2f4e75"
+      },
+      {
+        "utc": "2026-10-20T03:03:16.278664+00:00",
+        "elapsedSinceFirstReadySeconds": 61.203395708987955,
+        "cliStatusExit": 0,
+        "connected": true,
+        "pid": 22213,
+        "statusSHA256": "d5fc9b18e20a4ece05865e92ee861afba5163dfba32de2229c026a50ba2f4e75"
+      },
+      {
+        "utc": "2026-10-20T03:03:36.752305+00:00",
+        "elapsedSinceFirstReadySeconds": 81.6770397920045,
+        "cliStatusExit": 0,
+        "connected": true,
+        "pid": 22213,
+        "statusSHA256": "d5fc9b18e20a4ece05865e92ee861afba5163dfba32de2229c026a50ba2f4e75"
+      },
+      {
+        "utc": "2026-10-20T03:03:57.169263+00:00",
+        "elapsedSinceFirstReadySeconds": 102.09400325000752,
+        "cliStatusExit": 0,
+        "connected": true,
+        "pid": 22213,
+        "statusSHA256": "d5fc9b18e20a4ece05865e92ee861afba5163dfba32de2229c026a50ba2f4e75"
+      },
+      {
+        "utc": "2026-10-20T03:04:17.601102+00:00",
+        "elapsedSinceFirstReadySeconds": 122.52584020904033,
+        "cliStatusExit": 0,
+        "connected": true,
+        "pid": 22213,
+        "statusSHA256": "d5fc9b18e20a4ece05865e92ee861afba5163dfba32de2229c026a50ba2f4e75"
+      }
+    ],
+    "accessStatusExit": 0
+  },
+  "initialCheckerFailure": {
+    "preserved": true,
+    "privateReceiptSHA256": "96ee3d493b90e1c5cbc2ad7cbf4a072963e3676f61129d4435acb90c6f739ade",
+    "cause": "自有取证脚本假设sidecar comm仍是wrapper绝对路径；实际正常改title为next-server，fresh父PID/cwd与canonical源均相同。修正取证归属为稳定PID/PPID/真实cwd，不改产品、不重启App。"
+  },
+  "dataProtection": {
+    "installerOnlyReplacedApp": true,
+    "applicationSupportAuthProfilesMediaKeychainDeleted": false,
+    "userDataByteComparison": "NOT_PERFORMED",
+    "publicGroupAccountProjectReadAvailable": true
+  },
+  "boundaries": {
+    "adHoc": true,
+    "notarized": false,
+    "nativePixels": "UNAVAILABLE_NOT_VERIFIED",
+    "automaticBusinessTaskRecovery": "NOT_VERIFIED",
+    "T1369NavigationFixed": "NOT_CLAIMED",
+    "T1374AllMediaRecovered": "NOT_CLAIMED",
+    "fullReconcile": "NOT_RUN_T1373_PREFLIGHT_BLOCKED",
+    "buildOnlyExtraSmokeTLSHardening": "NOT_RUN"
+  },
+  "privateEvidence": {
+    "installationReceipt": "/Volumes/T7-MacData/CodexBuilds/T1376-20261019-923_wag6/private/INSTALL_REPLACEMENT_20261020.json",
+    "installationReceiptSHA256": "632958af1acce963a58c607f8b6ff4e0a949ab0fcf2e74127ff5486796a5f7c8",
+    "readyReceipt": "/Volumes/T7-MacData/CodexBuilds/T1376-20261019-923_wag6/private/INSTALLED_READY_VERIFICATION.json",
+    "readyReceiptSHA256": "2bea861c01b3378227c64e6ae18fb6718ccda25e2209b9036e41c0be3f41a835"
+  },
+  "completedInstallation": true
+}

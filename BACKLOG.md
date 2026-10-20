@@ -10,7 +10,7 @@
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
 |T-1377|精确收窄旧出包超时断言并保留负控制|✅|PASS[REV:e6a1ced3d84c]|—|[已授权单文件修正](docs/features/t1377-packaging-workflow-timeout-test-scope.md)|单测试文件修正39PASS/独审GO，已提交8062921并taskctl完成；唯一150分钟行例外+有限负控，workflow/产品/预算未改，原44+1FAIL保。|
-|T-1376|当前main本机产包并保留数据重新安装|🔨|PASS[REV:7639dd591a9e]|—|[本机替换范围](docs/features/t1376-current-main-local-package-reinstall.md)|原0b四门44PASS1FAIL保；用户授权独立T1377已修正/39PASS/提交并完成，T1376已正式resume，以新干净候选重新四门后固定skip产包与保数据替换；旧App仍保留。|
+|T-1376|当前main本机产包并保留数据重新安装|✅|PASS[REV:7639dd591a9e]|—|[本机替换范围](docs/features/t1376-current-main-local-package-reinstall.md)|用户知情允许中断后正常quit/旧App精确保全，同卷替换dedc包并启动；58PASS/产包exit0、签名DMG及37660项runtime同源，PID22213公开Ready连续122.526秒；数据不清理、原任务自动恢复/导航/剩余媒体未代签，full受T1373限制未跑。|
 |T-1375|整合全部未合并现有代码到main并推送及添加协作者|✅|—|—|[既有代码整合范围](docs/features/t1375-integrate-all-code-main-collaborator.md)|安全main4458a52已普通推送，83源码/工具及12原件保持；用户知情后masx-commits标准write邀请338488946实际201并读回，pending_acceptance（有效none，未冒已接受）；旧T247不改，full未跑/T1373保，无产品/安装/采集动作。|
 |T-1374|查明并恢复所有已绑定媒体的既有数据展示|⏸️|PASS[REV:16648a3ea984]|待验|[逐平台完整恢复范围](docs/features/t1374-all-bound-platform-data-recovery.md)|本轮仅补三测试/seed，52+3+双窗2通过、prod0改；安装仍旧2d未交付，视频号原EXPORT_FAILED/0页且native0/site-safety受阻，已block不冒全部恢复；full未跑/T1373保。|
 |T-1372|删除项目OilUI技能与强制接入并回归既有风格|✅|—|—|[精确删除范围](docs/features/t1372-remove-project-oil-ui-workflow.md)|用户撤销OilUI，精确删项目17文件及当前强制引用；沿旧tokens/组件，不改全局技能或历史证据，三产品问题继续。|

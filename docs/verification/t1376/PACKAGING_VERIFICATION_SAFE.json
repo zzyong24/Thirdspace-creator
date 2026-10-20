@@ -1,0 +1,151 @@
+{
+  "schema": "t1376-packaging-result/v1",
+  "candidateCommit": "dedc4b367016c719bbcd0b513a53a65be544ac0e",
+  "originalFailurePreserved": true,
+  "basicChecks": {
+    "filesPassed": 4,
+    "testsPassed": 58,
+    "command": [
+      "pnpm",
+      "-C",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "scripts/desktop/package-local.test.mjs",
+      "scripts/desktop/desktop-release-workflow.test.mjs",
+      "scripts/desktop/notarize.test.mjs",
+      "scripts/desktop/tauri-signing-config.test.mjs",
+      "--maxWorkers=1",
+      "--retry=0",
+      "--testTimeout=120000",
+      "--hookTimeout=120000"
+    ],
+    "actualChildExit": 0,
+    "outerTimeout": false,
+    "elapsedSeconds": 4.419931749987882,
+    "logSHA256": "d75650ed2f9b1cd277c7432ff49eab49419071c51f5d185d17d8df6159fcd151",
+    "logBytes": 1604,
+    "head": "dedc4b367016c719bbcd0b513a53a65be544ac0e",
+    "childEnvironmentNamesOnly": [
+      "CREATOROS_LOCAL_SKIP_INSTALL",
+      "HOME",
+      "HTTPS_PROXY",
+      "HTTP_PROXY",
+      "LANG",
+      "LC_ALL",
+      "LC_CTYPE",
+      "LOGNAME",
+      "PATH",
+      "SHELL",
+      "TEMP",
+      "TERM",
+      "TMP",
+      "TMPDIR",
+      "USER",
+      "http_proxy",
+      "https_proxy"
+    ],
+    "sourceCleanAfter": true,
+    "watchdogSeconds": 86400,
+    "cleanupAllowanceSeconds": 900
+  },
+  "fixedPackage": {
+    "command": [
+      "pnpm",
+      "-C",
+      "frontend",
+      "desktop:package-local"
+    ],
+    "actualChildExit": 0,
+    "outerTimeout": false,
+    "elapsedSeconds": 454.1973301669932,
+    "logSHA256": "5712cba0c7b0ad9ad71b2aad90db0229cc276048af749dfa5eb9ec0ea2836df2",
+    "logBytes": 96401,
+    "head": "dedc4b367016c719bbcd0b513a53a65be544ac0e",
+    "childEnvironmentNamesOnly": [
+      "CREATOROS_LOCAL_SKIP_INSTALL",
+      "HOME",
+      "HTTPS_PROXY",
+      "HTTP_PROXY",
+      "LANG",
+      "LC_ALL",
+      "LC_CTYPE",
+      "LOGNAME",
+      "PATH",
+      "SHELL",
+      "TEMP",
+      "TERM",
+      "TMP",
+      "TMPDIR",
+      "USER",
+      "http_proxy",
+      "https_proxy"
+    ],
+    "sourceCleanAfter": true,
+    "watchdogSeconds": 86400,
+    "cleanupAllowanceSeconds": 900
+  },
+  "artifactVerification": {
+    "head": "dedc4b367016c719bbcd0b513a53a65be544ac0e",
+    "dmgPath": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "dmgSHA256": "7a0aa554bbfdfc43cf1afe2bee375ff4f22f755a9250c3bc44393e3c62a8e88b",
+    "dmgBytes": 845516204,
+    "appPath": "/Volumes/T7-MacData/CodexBuilds/T1376-20261019-923_wag6/source/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+    "appExecutableSHA256": "faa1a7e42bbc25bf72fcc63d36f85bb073fae038a14723f9a646957224ffd361",
+    "sidecarTarSHA256": "57b6c345451742ca2a750333df35f1c3a13d30de688fef273dd4997d20366b98",
+    "serverSHA256": "5e0e2dac653770ffd12b68760ca5f659c09e98a2504c19707b70080c2b6ad652",
+    "version": "1.2.0",
+    "adHoc": true,
+    "notarized": false,
+    "mountedAppTreeExact": true,
+    "appTreeEntries": 12,
+    "appTreeManifestSHA256": "ef3be36201e27e04636234cc6eff4d063d0536f9a9d3850ec8e22c80028f6baa",
+    "checks": [
+      {
+        "stage": "hdiutil-verify",
+        "actualExit": 0,
+        "seconds": 2.916437792009674,
+        "logSHA256": "97e9b15f14e11aac6e3e33abe12c06855b435dc5ed7e3a53a58a85bcb5169473"
+      },
+      {
+        "stage": "codesign-verify-app",
+        "actualExit": 0,
+        "seconds": 0.49468812497798353,
+        "logSHA256": "29cc1170f8d8e81b8e0c5b567d8045d073e4865546a11880a4d6e1718ab1f1fd"
+      },
+      {
+        "stage": "codesign-details",
+        "actualExit": 0,
+        "seconds": 0.005782250023912638,
+        "logSHA256": "65e424fdff438d859a747751975a0eff98d47a714666e3eaa887a9948e809df2"
+      },
+      {
+        "stage": "hdiutil-attach",
+        "actualExit": 0,
+        "seconds": 0.12697524996474385,
+        "logSHA256": "c56796eaac339796ae1d4c660cabaf635a403a7e405c88a22745861ba4ae303a"
+      },
+      {
+        "stage": "codesign-verify-mounted-app",
+        "actualExit": 0,
+        "seconds": 0.5187597500043921,
+        "logSHA256": "bf8325c33129688605d2de397b9ca883271c64833c0c7e6067ab5433d12b9e0a"
+      },
+      {
+        "stage": "hdiutil-detach",
+        "actualExit": 0,
+        "seconds": 0.1466432919842191,
+        "logSHA256": "e2e7e4de75aa32d2268acd6fb9074177fbb16c94025e0b863e444f72f183a2e4"
+      }
+    ]
+  },
+  "original12": {
+    "all12Unchanged": true,
+    "privateReceiptSHA256": "5f3ed557b04336b678d44a7681db7efef45b85cdfa2ec48f63ce7e75725db10e"
+  },
+  "installed": false,
+  "quitExecuted": false,
+  "replacementPendingActualTasks": true,
+  "verificationBoundary": "本地ad-hoc包，无Apple公证/正式双平台发布；BUILD_ONLY额外smoke/TLS/硬化未执行；真实安装尚未开始，T1369/T1374剩余问题未签恢复。"
+}

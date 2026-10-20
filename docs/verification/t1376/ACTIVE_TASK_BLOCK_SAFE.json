@@ -1,0 +1,28 @@
+{
+  "schema": "t1376-active-task-block/v1",
+  "readOnlyWindowSeconds": 122.269916,
+  "rounds": 6,
+  "driverExit": 0,
+  "originalAITasksStillRunning": 3,
+  "persistentExecutionsStillRunning": 2,
+  "leaseOwnerPresent": true,
+  "naturalHeartbeatsAdvanced": true,
+  "latestHeartbeatUTC": [
+    "2026-10-19T14:34:18.793Z",
+    "2026-10-19T14:34:26.613Z"
+  ],
+  "latestLeaseExpiryUTC": [
+    "2026-10-19T14:39:18.793Z",
+    "2026-10-19T14:39:26.613Z"
+  ],
+  "globalSupportedDrainContract": "NOT_FOUND_IN_CURRENT_PUBLIC_INVENTORY",
+  "safeRecoverableStop": "UNKNOWN",
+  "dirtyInterface": "UNKNOWN",
+  "quitExecuted": false,
+  "installed": false,
+  "taskCancelPauseOrLeaseWrite": false,
+  "observationStopped": true,
+  "privateSafeReceipt": "/private/tmp/creatoros-prequit-readonly-uox0e_bb/watch120/WINDOW_RESULT_SAFE.json",
+  "privateSafeReceiptSHA256": "365c0412b0c91d0397ae5c395a7d5d807838362bf4bb4f03dc66dee988468972",
+  "boundary": "只说明原ID观察时仍有真实活动；不改任务、不将正常quit当无影响。未开启下一轮或扩大扫描。"
+}
