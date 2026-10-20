@@ -1,9 +1,26 @@
 import {afterEach,beforeAll,describe,expect,it,vi} from "vitest";
 import {fireEvent,render,screen,waitFor} from "@testing-library/react";
 import CreatorDatePickerAntd from "./creator-date-picker-antd";
+import {CreatorDatePicker} from "./creator-date-picker";
 beforeAll(()=>{Object.defineProperty(window,"matchMedia",{writable:true,value:vi.fn(()=>({matches:false,addListener:vi.fn(),removeListener:vi.fn(),addEventListener:vi.fn(),removeEventListener:vi.fn()}))});});
 afterEach(()=>vi.useRealTimers());
 describe("真实中文Ant日历",()=>{
+ it.each(["date","range"] as const)("首次加载%s日历后保留焦点，Escape关闭且不改变已选日期",async(mode)=>{
+  const onChange=vi.fn();
+  render(mode==="range"
+   ? <CreatorDatePicker mode="range" label="报表起止日期" value={{startDate:"2026-09-07",endDate:"2026-09-13"}} onChange={onChange}/>
+   : <CreatorDatePicker label="报表日期" value="2026-09-13" onChange={onChange}/>);
+  const trigger=screen.getByRole("button",{name:mode==="range"?"报表起止日期":"报表日期"});
+  trigger.focus();fireEvent.click(trigger);
+  const input=(await screen.findAllByRole("textbox"))[0];
+  await waitFor(()=>expect(input).toHaveFocus());
+  fireEvent.keyDown(input,{key:"Escape",code:"Escape"});
+  // JSDOM does not finish CSS exit animations; verify the closing panel no longer accepts input.
+  await waitFor(()=>expect(document.querySelector(".ant-picker-dropdown")).toHaveStyle({pointerEvents:"none"}));
+  expect(input).toHaveFocus();
+  expect(input).toHaveValue(mode==="range"?"2026-09-07":"2026-09-13");
+  expect(onChange).not.toHaveBeenCalled();
+ });
  it("选择自然周得到周一到周日，选择自然月覆盖真实月末",async()=>{const onChange=vi.fn();const view=render(<CreatorDatePickerAntd mode="week" value={{startDate:"2026-09-07",endDate:"2026-09-13"}} onChange={onChange} open onOpenChange={()=>{}}/>);fireEvent.click(await screen.findByTitle("2026-09-16"));await waitFor(()=>expect(onChange).toHaveBeenCalledWith({startDate:"2026-09-14",endDate:"2026-09-20"}));view.unmount();onChange.mockClear();render(<CreatorDatePickerAntd mode="month" value={{startDate:"2024-01-01",endDate:"2024-01-31"}} onChange={onChange} open onOpenChange={()=>{}}/>);fireEvent.click(await screen.findByTitle("2024-02"));await waitFor(()=>expect(onChange).toHaveBeenCalledWith({startDate:"2024-02-01",endDate:"2024-02-29"}));});
  it("单天模式可真实选择日期，中文月份与周一起始可见",async()=>{const onChange=vi.fn();render(<CreatorDatePickerAntd value="2026-09-13" onChange={onChange} open onOpenChange={()=>{}}/>);expect(await screen.findByText("9月")).toBeInTheDocument();const head=document.querySelector(".ant-picker-content thead tr");expect(head?.firstElementChild?.textContent).toBe("一");fireEvent.click(screen.getByTitle("2026-09-18"));await waitFor(()=>expect(onChange).toHaveBeenCalledWith("2026-09-18"));});
  it("自定义日期范围选择完整首尾后才提交",async()=>{const onChange=vi.fn();render(<CreatorDatePickerAntd mode="range" value={{startDate:"2026-09-07",endDate:"2026-09-13"}} onChange={onChange} open onOpenChange={()=>{}}/>);fireEvent.focus(screen.getByPlaceholderText("开始日期"));fireEvent.click((await screen.findAllByTitle("2026-09-09"))[0]);expect(onChange).not.toHaveBeenCalled();fireEvent.click(screen.getAllByTitle("2026-09-20")[0]);await waitFor(()=>expect(onChange).toHaveBeenCalledWith({startDate:"2026-09-09",endDate:"2026-09-20"}));});

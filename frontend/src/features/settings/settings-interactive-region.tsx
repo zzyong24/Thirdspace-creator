@@ -286,7 +286,7 @@ export function SettingsDialog({
         {/* sticky header — 标题 + 描述 (关闭按钮由 DialogContent 自带的 X 提供). */}
         <div className="flex shrink-0 flex-col gap-1 border-b border-border/70 px-6 py-4">
           <DialogTitle className="text-lg">设置</DialogTitle>
-          <DialogDescription>账号、偏好与系统</DialogDescription>
+          <DialogDescription className="sr-only">账号、偏好与系统</DialogDescription>
         </div>
 
         {/* 主体:左竖 Tab 栏 + 右内容区 (各自框内滚动). */}
@@ -294,6 +294,7 @@ export function SettingsDialog({
           {/* 左侧竖向 Tab 栏. */}
           <nav
             data-slot="settings-tabs"
+            role="tablist"
             aria-label="设置分类导航"
             className="grid w-full shrink-0 grid-cols-2 gap-0.5 overflow-y-auto border-b border-border/70 bg-surface-subtle/40 p-2 sm:grid-cols-3 md:flex md:w-44 md:flex-col md:border-r md:border-b-0"
           >
@@ -306,6 +307,19 @@ export function SettingsDialog({
                   type="button"
                   role="tab"
                   aria-selected={active}
+                  id={`settings-tab-${t.id}`}
+                  aria-controls={`settings-panel-${t.id}`}
+                  tabIndex={active ? 0 : -1}
+                  onKeyDown={event => {
+                    const tabs = SETTINGS_DIALOG_TABS;
+                    const index = tabs.findIndex(item => item.id === t.id);
+                    const delta = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+                    if (!delta && event.key !== "Home" && event.key !== "End") return;
+                    event.preventDefault();
+                    const next = tabs[event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + delta + tabs.length) % tabs.length]!;
+                    setTab(next.id);
+                    event.currentTarget.closest('[role="tablist"]')?.querySelector<HTMLButtonElement>(`[data-tab-id="${next.id}"]`)?.focus();
+                  }}
                   data-tab-id={t.id}
                   data-active={active}
                   onClick={() => setTab(t.id)}
@@ -412,6 +426,9 @@ function SettingsPanel({
   return (
     <div
       role="tabpanel"
+      id={`settings-panel-${tabId}`}
+      aria-labelledby={`settings-tab-${tabId}`}
+      tabIndex={0}
       data-slot="settings-panel"
       data-tab-id={tabId}
       data-active={active === tabId}
@@ -458,7 +475,7 @@ function AccountInformationCard({
   return (
     <SectionCard
       title="账户信息"
-      description="账号基本信息与登录状态"
+     
       action={
         <span
           data-slot="account-status-badge"
@@ -1636,7 +1653,7 @@ function PreferenceSettingsCard({
   return (
     <SectionCard
       title="偏好设置"
-      description="新建项目与编辑流程的默认行为"
+     
     >
       <div data-slot="preference-settings-card" className="flex flex-col gap-3">
         <SettingsFormRow
@@ -1780,13 +1797,13 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
   return (
     <SectionCard
       title="外观"
-      description="主题与界面密度(本地持久,刷新后保持)"
+     
     >
       <div data-slot="system-settings-card" className="flex flex-col gap-3">
         <SettingsFormRow
           label="主题"
           controlId="sys-theme"
-          help="跟随系统或手动切换浅色/深色（已本地持久，刷新后保持）。"
+          help="跟随系统或手动选择浅色、深色。"
         >
           <Select
             value={theme}
@@ -1812,7 +1829,7 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
         <SettingsFormRow
           label="密度"
           controlId="sys-density"
-          help="列表与卡片的间距（已本地持久，刷新后保持）。"
+          help="调整列表与卡片间距。"
         >
           <Select
             value={density}
@@ -1897,7 +1914,7 @@ function StorageUsageCard({
   const backendLabel = storage.backend === "s3" ? "云存储 (S3)" : "本地磁盘";
 
   return (
-    <SectionCard title="存储空间" description="素材、知识库与导出文件">
+    <SectionCard title="存储空间">
       <div
         data-slot="storage-usage-card"
         data-highlight="storage-root"

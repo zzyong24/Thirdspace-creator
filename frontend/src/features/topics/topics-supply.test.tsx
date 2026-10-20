@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // [T-235e] 选题中心「被服务感知」测试(SPEC daily-topic-autopilot §2.5,三决策):
 //   ① 今日新选题条带:createdAt≥dayStartIso 过滤、来源徽标(🔥跟拍|/实验|前缀 + source 枚举)、
-//     一句依据、空态诚实「今天早上暂时没找到新选题」。
+//     一句依据、空态诚实「今日暂无新增选题」。
 //   ② 供给链健康条:lastRun 缺失 → 「—」诚实降级;有实绩 → ✓HH:mm;计数派生纯函数。
 //   ③ 候选卡「实验」徽标(card.attributionId)点开显示 angle 里的归因引用。
 // 全部固定 VM(deterministic:渲染无 Date.now —— dayStartIso 由测试显式传入)。
@@ -177,7 +177,7 @@ describe("[T-235e] 今日新选题条带", () => {
     window.removeEventListener("creatoros:topic-focus", listener);
   });
 
-  it("空态诚实:今日无新候选 → 「今天早上暂时没找到新选题」", () => {
+  it("空态诚实:今日无新候选 → 「今日暂无新增选题」", () => {
     render(
       <TodayTopicsStrip
         dayStartIso={DAY_START_ISO}
@@ -185,7 +185,7 @@ describe("[T-235e] 今日新选题条带", () => {
       />,
     );
     expect(screen.getByTestId("today-topics-empty")).toHaveTextContent(
-      "今天早上暂时没找到新选题",
+      "今日暂无新增选题",
     );
   });
 

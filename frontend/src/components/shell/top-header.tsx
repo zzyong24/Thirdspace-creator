@@ -122,12 +122,12 @@ export function TopHeader({
       data-slot="app-top-header"
       data-testid="app-top-header"
       data-mode={resolvedMode}
-      data-layout={usesOverlayLayout ? "overlay" : "flow"}
+      data-layout="flow"
       data-masked={overlayMasked ? "true" : "false"}
       className={cn(
         "z-header flex min-w-0 items-center gap-3 px-page-gutter",
         usesOverlayLayout
-          ? "pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"
+          ? "h-14 shrink-0 justify-between bg-transparent"
           : resolvedMode === "project-overview"
             ? "h-40 shrink-0 items-start border-b border-border bg-surface py-5"
             : "h-header shrink-0 border-b border-border bg-surface",
@@ -152,7 +152,7 @@ export function TopHeader({
         <PageHeading
           title={pageTitle}
           description={pageDescription}
-          visuallyHidden={usesOverlayLayout}
+          contentOwnsTitle={usesOverlayLayout}
         />
       )}
       <HeaderActions
@@ -174,32 +174,24 @@ export function TopHeader({
 function PageHeading({
   title,
   description,
-  visuallyHidden = false,
+  contentOwnsTitle = false,
 }: {
   title?: string;
   description?: string;
-  visuallyHidden?: boolean;
+  contentOwnsTitle?: boolean;
 }) {
-  if (!title) {
-    return <div data-slot="header-page-heading" className="min-w-0 flex-1" />;
+  // Ordinary pages own their heading in the content area; the toolbar only hosts actions.
+  if (!title || contentOwnsTitle) {
+    return <div data-slot="header-page-heading" aria-hidden="true" className="min-w-0 flex-1" />;
   }
   return (
     <div
       data-slot="header-page-heading"
-      className={cn(
-        "flex min-w-0 flex-1 flex-col",
-        visuallyHidden && "sr-only",
-      )}
+      className="flex min-w-0 flex-1 flex-col"
     >
-      {visuallyHidden ? (
-        <span className="truncate text-md font-semibold text-foreground">
-          {title}
-        </span>
-      ) : (
-        <h1 className="truncate text-md font-semibold text-foreground">
-          {title}
-        </h1>
-      )}
+      <h1 className="truncate text-md font-semibold text-foreground">
+        {title}
+      </h1>
       {description ? (
         <p className="truncate text-sm text-muted-foreground">{description}</p>
       ) : null}

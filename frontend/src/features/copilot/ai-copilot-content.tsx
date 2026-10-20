@@ -1,5 +1,7 @@
 "use client";
 
+import { PositioningConversationStart } from "./positioning-conversation";
+import positioningStyles from "./positioning-conversation.module.css";
 import {useAssistantEngine} from "./use-assistant-engine";
 import {getLiveChatSession,acquireLiveChatSession} from "./live-chat-session";
 import { ChatToolTrace } from "./chat-tool-trace";
@@ -742,6 +744,8 @@ export function AICopilotContent({
   // 从稿面内深链触发);浮层模式维持全 URL 驱动。
   const surface =
     embed?.surface ?? (searchParams?.get("surface") || DEFAULT_SURFACE);
+  const positioning = !embed && surface === "positioning";
+  const positioningStarterBaseRef = React.useRef<string | null>(null);
   // [T-108] embed.request(稿面 AI 按钮发起)优先于 URL:functionKey/selection 从 request 读,
   // 让常驻 rail 无需 `?copilot=open` 深链就置顶专用工具 + 注入选中态(根治 T-108)。request 为
   // null(首帧/未发起)时回落 URL(浮层深链)/ embed.selection(常驻项目上下文),行为不变。
@@ -1423,8 +1427,9 @@ export function AICopilotContent({
     if (!el) return;
     if (messages.length > prevMsgCountRef.current) autoFollowRef.current = true;
     prevMsgCountRef.current = messages.length;
-    if (autoFollowRef.current) el.scrollTop = el.scrollHeight;
-  }, [messages, streaming]);
+    if (positioning && messages.length === 0) el.scrollTop = 0;
+    else if (autoFollowRef.current) el.scrollTop = el.scrollHeight;
+  }, [messages, streaming, positioning]);
 
   // [T-094] 本轮流式错误 → 人话气泡:服务端 onError 已转人话;若客户端拿到的仍是原始机器码
   // (装配期 4xx 等路径),这里再过一次共享映射兜底。命中「换模型可解」类附「去设置」链接。
@@ -2570,7 +2575,7 @@ export function AICopilotContent({
     // bug #5:面板布局重排 —— 整体撑满浮层高度(min-h-0 让内部可正确收缩),对话区做主区(flex-1
     // 占满、消息流自身滚动),下面的「控制台/快捷入口/智能推荐」收进一个有界、可滚的次区,不再挤占对话。
     <div
-      className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto"
+      className={`flex h-full min-h-0 flex-col gap-3 overflow-y-auto ${positioning ? positioningStyles.workspace : ""}`}
       data-slot="ai-copilot-content"
     >
       {/* CopilotHeader ------------------------------------------------- */}
@@ -2591,11 +2596,11 @@ export function AICopilotContent({
             data-slot="copilot-header-title"
             className="truncate text-sm font-semibold text-foreground"
           >
-            {embed?.title ?? "AI 助手"}
+            {embed?.title ?? (positioning ? "账号定位" : "AI 助手")}
           </h2>
-          <p className="truncate text-[11px] text-muted-foreground">
-            {embed?.subtitle ?? "描述你的目标，我来帮你规划下一步"}
-          </p>
+          {embed?.subtitle && <p className="truncate text-[11px] text-muted-foreground">
+            {embed.subtitle}
+          </p>}
         </div>
         {/* 历史记录 + 新对话(SPEC 本切片:占位按钮做实)。历史记录 → 拉过往会话列表,点某条
             切过去 + 读回;新对话 → 清空当前会话(下次发言后端 lazy 建新会话)。 */}
@@ -2703,7 +2708,7 @@ export function AICopilotContent({
             className="inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"
           >
             <FolderOpen className="size-3" aria-hidden="true" />
-            <span className="shrink-0 font-medium text-brand/75">项目</span>
+            <span className="shrink-0 font-medium text-brand">项目</span>
             <span aria-hidden="true" className="shrink-0 text-brand/40">·</span>
             <span className="min-w-0 truncate font-medium">{activeProjectChip.title}</span>
             {/* [T-108] 稿面常驻项目上下文(embed.selection)不给摘除按钮 —— 它是本页固定归属;
@@ -2725,7 +2730,7 @@ export function AICopilotContent({
             data-slot="context-chip-empty"
             className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-subtle"
           >
-            未关联项目 · 输入 @ 引用一个项目
+            {positioning ? "账号组级定位 · 无需关联项目" : "未关联项目 · 输入 @ 引用一个项目"}
           </span>
         )}
         {objectChip ? (
@@ -3603,6 +3608,16 @@ export function AICopilotContent({
                 </li>
               ) : null}
             </ol>
+          ) : positioning ? (
+            <PositioningConversationStart
+              disabled={streaming || hasPendingApproval}
+              onPick={(choice) => {
+                // 只预填，不发送；保留入口带来的已保存资料和用户手写内容。
+                if (prompt !== lastPrefillRef.current) positioningStarterBaseRef.current = prompt;
+                const base = positioningStarterBaseRef.current ?? searchParams?.get("prefill") ?? "";
+                applyQuickPrompt({ prefill: [base.trim(), choice].filter(Boolean).join("\n\n"), functionKey: "positioning.generate" }, choice);
+              }}
+            />
           ) : (
             // 空对话态:大对话区不留白,给一句引导。
             <div
@@ -3613,10 +3628,10 @@ export function AICopilotContent({
                 <Sparkles className="size-4" aria-hidden="true" />
               </span>
               <p className="text-[13px] font-medium text-foreground">
-                {embeddedContentOwner ? "告诉我这份成稿需要怎么调整" : "描述你的目标，我来帮你规划下一步"}
+                {embeddedContentOwner ? "告诉我这份成稿需要怎么调整" : "描述本次目标"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {embeddedContentOwner ? "可以调整表达、结构或重点，审阅候选后再采纳。" : "试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。"}
+                {embeddedContentOwner ? "审阅候选后采纳。" : "也可选择下方指令。"}
               </p>
             </div>
           )}
@@ -3643,6 +3658,7 @@ export function AICopilotContent({
             )}
             {/* @项目引用(T-039b):relative 容器锚定下拉;输入 @ 弹真项目列表,选中插入 chip +
                 注入 chatContext(等价选中态项目)。下拉在 textarea 上方(bottom-full)。 */}
+            {positioning ? <label htmlFor="ai-copilot-prompt" className={positioningStyles.inputLabel}>告诉我你的想法</label> : null}
             <div className="relative" data-slot="prompt-input-wrap">
               {mentionOpen && (
                 <ProjectMentionMenu
@@ -3670,8 +3686,8 @@ export function AICopilotContent({
                   attachmentPickerRef.current?.addFiles(files);
                 }}
                 rows={2}
-                aria-label="我能帮你做什么"
-                placeholder={embeddedContentOwner === "wechat_article" ? "告诉我这篇文章需要怎么调整" : embeddedContentOwner === "graphic_post" ? "告诉我这份图文需要怎么调整" : "我能帮你做什么？（试试「基于最近评论出 5 个选题」，或输入 @ 引用一个项目）"}
+                aria-label={positioning ? "定位对话内容" : "我能帮你做什么"}
+                placeholder={positioning ? "说说你在做什么、想影响谁，或想解决的定位问题。不确定也可以。" : embeddedContentOwner === "wechat_article" ? "告诉我这篇文章需要怎么调整" : embeddedContentOwner === "graphic_post" ? "告诉我这份图文需要怎么调整" : "描述目标，或输入 @ 引用项目"}
                 className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                 data-slot="prompt-input"
               />
@@ -3689,7 +3705,7 @@ export function AICopilotContent({
               data-slot="suggested-action-chips"
             >
               <div className="flex flex-wrap items-center gap-1.5">
-                {!embeddedContentOwner && vm.chips.map((action) => (
+                {!embeddedContentOwner && !positioning && vm.chips.map((action) => (
                   <button
                     key={action.id}
                     type="button"
@@ -3762,7 +3778,7 @@ export function AICopilotContent({
                     className="flex size-9 items-center justify-center rounded-full bg-brand text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowUp className="size-4" aria-hidden="true" />
-                    <span className="sr-only">生成</span>
+                    <span className={positioning ? "" : "sr-only"}>{positioning ? "发送" : "生成"}</span>
                   </button>
                 )}
               </div>

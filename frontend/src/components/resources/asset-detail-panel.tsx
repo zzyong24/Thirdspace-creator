@@ -49,6 +49,7 @@ export interface AssetDetailPanelProps {
   readonly onReveal?: (assetId: string) => void;
   // [T-060③a] 「附到项目」已退役:素材只两条来路(素材中心=通用,项目内上传=项目素材)。
   readonly actionsPending?: boolean;
+  readonly compact?: boolean;
 }
 
 export function AssetDetailPanel({
@@ -60,6 +61,7 @@ export function AssetDetailPanel({
   onTrash,
   onReveal,
   actionsPending = false,
+  compact = false,
 }: AssetDetailPanelProps) {
   const usageForAsset = asset
     ? usageHistory.filter((row) => row.assetId === asset.id)
@@ -73,9 +75,10 @@ export function AssetDetailPanel({
     >
       {asset ? (
         <>
+          {compact ? <header data-slot="asset-detail-heading"><p>所选素材</p><h2>{asset.name}</h2></header> : null}
           <SectionCard
             title="预览"
-            description={TYPE_LABEL[asset.type]}
+            description={compact ? undefined : TYPE_LABEL[asset.type]}
             contentClassName="p-0"
             className="gap-1.5"
           >
@@ -86,7 +89,7 @@ export function AssetDetailPanel({
           ) : null}
           <SectionCard
             title="操作"
-            description="管理此素材的使用方式"
+            description={compact ? undefined : "管理此素材的使用方式"}
             className="gap-1.5"
           >
             <div data-slot="asset-actions" className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
@@ -165,7 +168,7 @@ export function AssetDetailPanel({
           </SectionCard>
           <SectionCard
             title="元数据"
-            description="文件基础信息"
+            description={compact ? undefined : "文件基础信息"}
             className="gap-1.5"
           >
             <dl
@@ -206,7 +209,7 @@ export function AssetDetailPanel({
           </SectionCard>
           <SectionCard
             title="标签"
-            description="已附加到此素材的标签"
+            description={compact ? undefined : "已附加到此素材的标签"}
             className="gap-1.5"
           >
             <div data-slot="asset-tags" className="flex flex-wrap gap-1">
@@ -226,7 +229,7 @@ export function AssetDetailPanel({
           </SectionCard>
           <SectionCard
             title="使用记录"
-            description="此素材被引用的项目"
+            description={compact ? undefined : "此素材被引用的项目"}
             className="gap-1.5"
           >
             <ul

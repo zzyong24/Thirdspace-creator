@@ -1,0 +1,183 @@
+/* Anthropic frontend-design — 稿件桌。
+   Shared application chrome only: native document artwork and canvas coordinates stay intact. */
+
+[data-design="manuscript"] { background:var(--creatoros-canvas); }
+[data-design="manuscript"] [data-slot="app-sidebar"] {
+  background:var(--creatoros-canvas); border-right:0; padding:20px 12px 16px; gap:16px;
+}
+[data-design="manuscript"] [data-slot="sidebar-header"] { margin-bottom:0; min-height:32px; }
+[data-design="manuscript"] [data-slot="sidebar-workspace"] { min-width:0; padding:0 2px 8px; border-bottom:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="sidebar-workspace"] button { background:transparent; box-shadow:none; }
+[data-design="manuscript"] [data-slot="sidebar-primary-nav"] { gap:2px; }
+[data-design="manuscript"] [data-slot="sidebar-nav-item"] { height:34px; font-size:13px; border-radius:6px; color:var(--creatoros-text-muted); }
+[data-design="manuscript"] [data-slot="sidebar-nav-item"][data-active="true"] { background:var(--creatoros-surface); color:var(--creatoros-text); font-weight:600; }
+[data-design="manuscript"] [data-slot="sidebar-nav-group"] { padding:16px 10px 6px; font-size:12px; color:var(--creatoros-text-muted); }
+[data-design="manuscript"] [data-slot="sidebar-contextual-card"] { padding:12px; gap:8px; border:0; border-radius:8px; background:transparent; }
+[data-design="manuscript"] [data-slot="sidebar-contextual-card"] p { font-size:12px; }
+[data-design="manuscript"] [data-slot="sidebar-identity-footer"] { gap:8px; }
+[data-design="manuscript"] [data-slot="app-main-frame"] { min-width:0; }
+[data-design="manuscript"] [data-slot="app-top-header"] {
+  height:56px; min-height:56px; padding:0 32px; gap:12px; background:var(--creatoros-canvas);
+}
+[data-design="manuscript"] [data-slot="app-top-header"][data-mode="project-workspace"] { height:auto; min-height:64px; padding-block:10px; }
+[data-design="manuscript"] [data-slot="header-actions"] a { min-height:32px; }
+[data-design="manuscript"] [data-slot="header-actions"] a[href="/search"] { background:transparent; border:0; width:36px; padding:0; }
+[data-design="manuscript"] [data-slot="header-actions"] a[href="/search"] :is(span,kbd) { display:none; }
+[data-design="manuscript"] [data-slot="app-page-content"] {
+  padding:28px 32px 40px; min-width:0; max-width:1440px; margin-inline:auto;
+}
+[data-design="manuscript"] [data-slot="app-page-content"] > :is(main,section,div) { width:100%; }
+[data-design="manuscript"] :is([data-page="automations"],[data-page="accounts"],[data-page="daily-report"],[data-page="positioning"],[data-page="search"],[data-studio-layout="creation"],[data-studio-layout="document"]) { width:100%; }
+[data-design="manuscript"] [data-slot="app-page-content"][data-fill="true"] { padding:16px 24px 24px; max-width:none; }
+[data-design="manuscript"] [data-slot="app-page-content"] > [data-page="dashboard"] { max-width:1160px; margin-inline:auto; }
+[data-design="manuscript"] [data-slot="app-page-content"] :is(main > header,[data-page] > header) h1 { font-size:24px; line-height:1.4; letter-spacing:-.025em; }
+[data-design="manuscript"] [data-slot="section-card"] { box-shadow:none; border-color:var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="metric-card"] > div > span:first-child { font-size:24px; font-weight:400; }
+[data-design="manuscript"] [data-slot="metric-card"] > div > [data-value-state="missing"]:first-child { font-size:18px; }
+
+/* The content lifecycle is navigation, not a decorative progress meter. */
+[data-slot="studio-journey"] { display:flex; align-items:center; flex-wrap:wrap; gap:8px 24px; padding:0 0 20px; border-bottom:1px solid var(--creatoros-border); }
+[data-slot="studio-journey"] a { font-size:13px; color:var(--creatoros-text-muted); min-height:32px; display:inline-flex; align-items:center; }
+[data-slot="studio-journey"] a:hover { color:var(--creatoros-brand); }
+[data-slot="studio-journey"] a[href="/projects"] { color:var(--creatoros-text); font-weight:600; }
+[data-slot="studio-home-data"] { border-block:1px solid var(--creatoros-border); padding:16px 0; }
+[data-slot="studio-home-data"] > summary { cursor:pointer; font-size:14px; font-weight:500; }
+[data-slot="studio-home-data-body"] { display:grid; gap:16px; padding-top:20px; }
+[data-slot="studio-home-trend"] [data-slot="section-card"] { background:var(--creatoros-surface); }
+[data-slot="studio-home-trend"] :is(svg,[data-slot="empty-state"]) { max-height:200px; }
+
+/* Projects: a stage index beside the working list, collapsed to tabs on narrow screens. */
+[data-slot="studio-projects-body"] { display:grid; grid-template-columns:176px minmax(0,1fr); gap:24px; align-items:start; }
+[data-slot="studio-projects-index"] { display:flex; flex-direction:column; gap:4px; }
+[data-slot="studio-projects-index"] h2 { font-size:14px; font-weight:600; }
+[data-slot="studio-projects-index"] p { font-size:12px; color:var(--creatoros-text-muted); margin:4px 0 14px; }
+[data-slot="studio-projects-index"] a { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; font-size:13px; color:var(--creatoros-text-muted); border-radius:6px; }
+[data-slot="studio-projects-index"] a[aria-current="page"] { background:var(--creatoros-surface); color:var(--creatoros-text); }
+[data-slot="studio-projects-index"] a > span:last-child { font-variant-numeric:tabular-nums; }
+[data-slot="studio-projects-index"] a[data-slot="studio-new-project"] { justify-content:center; border:1px solid var(--creatoros-border-strong); margin-top:12px; color:var(--creatoros-text); }
+[data-slot="studio-projects-list"] { min-width:0; display:flex; flex-direction:column; gap:16px; }
+@media (min-width:1200px) {
+ [data-slot="studio-projects-list"] [data-slot="status-tabs"] { display:none; }
+ [data-slot="studio-projects-list"] [data-slot="projects-controls-row"] { justify-content:flex-end; }
+}
+[data-design="manuscript"] [data-page="projects"] > header { padding-bottom:16px; }
+[data-design="manuscript"] [data-slot="project-row"] { background:var(--creatoros-surface); border-radius:10px; }
+[data-design="manuscript"] [data-slot="project-list-header"] { background:transparent; }
+
+/* Scope becomes a quiet control strip; overview has a leading content count. */
+[data-design="manuscript"] [aria-label="账号组数据筛选"] { background:transparent; border:0; padding:0 0 16px; border-radius:0; gap:12px; }
+[data-design="manuscript"] [aria-label="平台筛选"] > button { background:transparent; border-radius:0; color:var(--creatoros-text-muted); border-bottom:2px solid transparent; }
+[data-design="manuscript"] [aria-label="平台筛选"] > button[aria-pressed="true"] { color:var(--creatoros-text); border-bottom-color:var(--creatoros-brand); }
+[data-design="manuscript"] [data-slot="studio-overview-metrics"] { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:0; background:var(--creatoros-surface); border-radius:10px; padding:8px; }
+[data-design="manuscript"] [data-slot="studio-overview-metrics"] > div:not(:last-child) { border:0; border-radius:0; padding:16px; background:transparent; }
+[data-design="manuscript"] [data-slot="studio-overview-metrics"] > div:first-child { grid-column:auto; }
+[data-design="manuscript"] [data-slot="studio-overview-metrics"] > div:first-child p:last-child { font-size:32px; }
+[data-design="manuscript"] [data-slot="studio-overview-metrics"] > div:last-child { grid-column:1/-1; border-top:1px solid var(--creatoros-border); padding:12px 16px 4px; }
+[data-design="manuscript"] [data-slot="studio-overview-charts"] { grid-template-columns:minmax(0,3fr) minmax(0,2fr); }
+
+/* Library, inbox and media keep different proportions for their different jobs. */
+[data-design="manuscript"] [data-slot="assets-page-body"] { grid-template-columns:200px minmax(0,1fr); gap:24px; }
+[data-design="manuscript"] [data-slot="assets-left-rail"] [data-slot="section-card"] { background:transparent; border:0; padding-inline:0; }
+[data-design="manuscript"] [data-slot="asset-toolbar"] { padding:12px 0 16px; }
+[data-design="manuscript"] [data-slot="knowledge-workspace"] { grid-template-columns:176px minmax(220px,1fr) minmax(280px,36%); gap:0; background:var(--creatoros-surface); border-radius:10px; overflow:hidden; border:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="knowledge-workspace"] > * { border-radius:0; border:0; }
+[data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料目录"] { background:var(--creatoros-canvas); border-right:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料原文"] { border-left:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-testid="topics-three-column"] { grid-template-columns:220px minmax(0,1fr) 320px; gap:12px; }
+[data-design="manuscript"] :is([data-testid="topics-sources"],[data-testid="topics-detail"]) { background:var(--creatoros-surface); border-radius:10px; border-color:var(--creatoros-border); }
+[data-design="manuscript"] [data-testid="intelligence-responsive-layout"] { grid-template-columns:180px minmax(0,1fr) 320px; border-top:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-testid="intelligence-sidebar"] { background:var(--creatoros-canvas); }
+[data-design="manuscript"] [data-page="positioning"] { max-width:1180px; margin-inline:auto; }
+[data-design="manuscript"] [data-page="positioning"] > section { border-radius:10px; }
+[data-design="manuscript"] [data-slot="publishing-center-primary-row"] { grid-template-columns:minmax(0,1fr) 300px; gap:24px; }
+[data-design="manuscript"] [data-page="daily-report"] { max-width:1180px; margin-inline:auto; }
+[data-design="manuscript"] [data-page="automations"] { max-width:1180px; margin-inline:auto; }
+[data-design="manuscript"] [data-page="accounts"] { max-width:1180px; margin-inline:auto; }
+[data-design="manuscript"] [data-slot="studio-account-layout"] { grid-template-columns:220px minmax(0,1fr); gap:24px; }
+[data-design="manuscript"] [data-slot="studio-account-layout"] > aside [data-slot="section-card"] { background:transparent; border:0; }
+[data-design="manuscript"] [data-slot="studio-account-layout"] > aside [data-slot="card-header"],
+[data-design="manuscript"] [data-slot="studio-account-layout"] > aside [data-slot="card-content"] { padding-inline:0; }
+[data-design="manuscript"] [data-slot="studio-positioning-layout"] { grid-template-columns:minmax(0,1fr) 320px; gap:24px; }
+[data-design="manuscript"] [data-testid="automations-region"] { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:16px 24px; align-items:start; }
+[data-design="manuscript"] [data-testid="automations-region"] > * { grid-column:1/-1; }
+[data-design="manuscript"] [data-slot="studio-automation-templates"] { grid-column:2; grid-row:2/span 3; border-radius:10px; background:var(--creatoros-surface); padding:20px; }
+[data-design="manuscript"] [data-slot="studio-automation-templates"] > summary { cursor:pointer; font-size:14px; font-weight:600; margin-bottom:16px; }
+[data-design="manuscript"] [data-slot="studio-automation-templates"] [data-slot="automation-templates"] > div { grid-template-columns:minmax(0,1fr); }
+[data-design="manuscript"] :is([data-slot="automations-overview"],[data-slot="automations-list"],[data-slot="automations-empty"]) { grid-column:1; }
+[data-design="manuscript"] [data-slot="automations-overview"] { flex-wrap:wrap; border:0; }
+[data-design="manuscript"] [data-studio-layout="creation"] { max-width:1160px; padding:0; }
+[data-design="manuscript"] [data-page="work-composition"] > .grid { grid-template-columns:minmax(0,3fr) minmax(0,2fr); }
+[data-design="manuscript"] [data-page="project-output-home"] ul.grid { grid-template-columns:minmax(0,1fr); }
+[data-design="manuscript"] [data-page="project-output-home"] ul.grid > li { background:var(--creatoros-surface); border-radius:10px; padding:20px; }
+[data-design="manuscript"] [data-page="quick-create-work"] { max-width:800px; }
+[data-design="manuscript"] [data-page="creative-workspace"] { max-width:none; padding:0; }
+[data-design="manuscript"] [data-page="creative-workspace"] > nav { border-bottom:1px solid var(--creatoros-border); padding-block:4px 16px; }
+[data-design="manuscript"] [data-page="search"] { max-width:1000px; margin-inline:auto; }
+
+/* Manuscript editors: quiet surrounding desk, readable paper, separate assistant. */
+[data-design="manuscript"] [data-slot="studio-editor-split"] { gap:16px; }
+[data-design="manuscript"] [data-slot="draft-pane"] { background:var(--creatoros-surface); border:1px solid var(--creatoros-border); border-radius:10px; padding:24px; gap:20px; }
+[data-design="manuscript"] [data-slot="draft-script-section"] { order:-1; padding-bottom:24px; border-bottom:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="draft-chat-rail"] { border:1px solid var(--creatoros-border); border-radius:10px; overflow:hidden; background:var(--creatoros-surface); }
+[data-design="manuscript"] [data-studio-layout="document"] { max-width:1080px; padding:0; }
+[data-design="manuscript"] [data-studio-layout="document"] > header { padding:0 0 16px; border-bottom:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-studio-layout="document"] > [aria-label="NoteRelay 排版预览"] { background:var(--creatoros-surface); border:1px solid var(--creatoros-border); border-radius:10px; padding:20px; }
+[data-design="manuscript"] [data-page="canvas-editor"] > header { background:var(--creatoros-surface); border-bottom:1px solid var(--creatoros-border); }
+
+/* Settings uses an independent dialog portal, outside AppShell. */
+[data-slot="settings-dialog"] { max-width:1160px; width:calc(100vw - 64px); height:min(860px,calc(100svh - 64px)); border-radius:14px; }
+[data-slot="settings-tabs"] { background:var(--creatoros-canvas); padding:16px 10px; }
+[data-slot="settings-tabs"] > button[aria-selected="true"] { background:var(--creatoros-surface); color:var(--creatoros-text); }
+[data-slot="settings-panels"] { padding:24px; }
+@media (min-width:1100px) {
+ [data-slot="settings-panels"] [data-slot="section-card"] { display:grid; grid-template-columns:200px minmax(0,1fr); gap:24px; background:transparent; border:0; border-bottom:1px solid var(--creatoros-border); border-radius:0; padding:0 0 24px; }
+ [data-slot="settings-panels"] [data-slot="section-card"] > [data-slot="card-header"] { grid-column:1; padding:8px 0 0; }
+ [data-slot="settings-panels"] [data-slot="section-card"] > [data-slot="card-content"] { grid-column:2; grid-row:1; background:var(--creatoros-canvas); padding:20px; border-radius:10px; }
+}
+@media (max-width:1199px) {
+ [data-slot="studio-projects-body"] { grid-template-columns:minmax(0,1fr); }
+ [data-slot="studio-projects-index"] { display:none; }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] { grid-template-columns:160px minmax(0,1fr); overflow-y:auto; }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料原文"] { grid-column:1/-1; min-height:260px; border-left:0; border-top:1px solid var(--creatoros-border); }
+ [data-design="manuscript"] [data-testid="intelligence-responsive-layout"] { display:flex; flex-direction:column; overflow-y:auto; }
+ [data-design="manuscript"] [data-testid="topics-three-column"] { display:flex; flex-direction:column; overflow-y:auto; }
+ [data-design="manuscript"] [data-testid="topics-three-column"] > * { flex:none; min-height:260px; }
+ [data-design="manuscript"] [data-testid="automations-region"] { grid-template-columns:minmax(0,1fr); }
+ [data-design="manuscript"] [data-slot="studio-automation-templates"] { grid-column:1; grid-row:auto; order:5; }
+}
+@media (max-width:767px) {
+ [data-design="manuscript"] [data-slot="app-top-header"] { padding-inline:20px; }
+ [data-design="manuscript"] [data-slot="app-top-header"][data-mode="project-workspace"] { flex-wrap:wrap; }
+ [data-design="manuscript"] [data-slot="header-project-identity"] { width:100%; flex-wrap:wrap; gap:8px; }
+ [data-design="manuscript"] [data-slot="header-project-identity"] > div { width:100%; }
+ [data-design="manuscript"] [data-slot="app-page-content"],
+ [data-design="manuscript"] [data-slot="app-page-content"][data-fill="true"] { padding:20px 16px 32px; }
+ [data-design="manuscript"] [data-slot="studio-overview-metrics"] { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ [data-design="manuscript"] [data-slot="studio-overview-metrics"] > div:nth-child(5) { grid-column:1/-1; }
+ [data-design="manuscript"] [data-slot="studio-overview-charts"],
+ [data-design="manuscript"] [data-slot="publishing-center-primary-row"],
+ [data-design="manuscript"] [data-slot="assets-page-body"],
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] { grid-template-columns:minmax(0,1fr); }
+ [data-design="manuscript"] [data-slot="studio-account-layout"],
+ [data-design="manuscript"] [data-slot="studio-positioning-layout"],
+ [data-design="manuscript"] [data-page="work-composition"] > .grid { grid-template-columns:minmax(0,1fr); }
+ [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料目录"] { max-height:200px; }
+ [data-design="manuscript"] [data-slot="draft-pane"] { padding:16px; }
+ [data-slot="settings-dialog"] { width:calc(100vw - 24px); height:calc(100svh - 24px); }
+ [data-slot="settings-panels"] { padding:16px; }
+ [data-slot="settings-tabs"] { padding:8px; }
+}
+@media (max-width:640px) {
+ [data-design="manuscript"] { padding-top:52px; }
+ [data-design="manuscript"] [data-slot="app-sidebar"] { position:fixed; inset:0 0 auto; width:100%; height:52px; z-index:45; padding:8px 16px; border-bottom:1px solid var(--creatoros-border); }
+ [data-design="manuscript"] [data-slot="sidebar-header"] { width:100%; min-height:34px; flex-direction:row; justify-content:space-between; align-items:center; }
+ [data-design="manuscript"] [data-slot="app-sidebar"][data-collapsed="true"] :is([data-slot="sidebar-workspace"],[data-slot="sidebar-scroll-region"],[data-slot="sidebar-identity-footer"]) { display:none; }
+ [data-design="manuscript"] [data-slot="app-sidebar"][data-collapsed="false"] { inset:0; height:100dvh; padding:16px 24px; gap:16px; }
+ [data-design="manuscript"] [data-slot="app-sidebar"][data-collapsed="false"] [data-slot="sidebar-nav-item"] { height:40px; }
+ [data-design="manuscript"] [data-slot="app-top-header"] { height:48px; min-height:48px; padding-inline:16px; }
+ [data-design="manuscript"] [data-slot="app-main-frame"] { height:calc(100dvh - 52px); }
+ [data-slot="studio-journey"] { gap:4px 20px; padding-bottom:12px; }
+}
+@media (prefers-reduced-motion:reduce) {
+ [data-design="manuscript"] [data-slot="app-sidebar"] { transition-property:color,background-color; }
+}

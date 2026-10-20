@@ -82,18 +82,13 @@ export function PositioningDiscoveryWorkflow({
             </span>
             <div>
               <h2 className="text-base font-semibold text-foreground">
-                用 Copilot 把定位聊清楚
+                定位对话
               </h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                不再填写固定六问，也不会因为资料不全卡住生成。
-              </p>
             </div>
           </div>
 
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Copilot 会先判断你是想继续深入当前账号、调整方向，还是重新定位；再结合可用作品和你的回答，
-            每次只补一个真正影响结果的信息。纯人设不会被强塞产品；有产品或服务时，才继续梳理产品、
-            人群、场景、痛点和信任证明。
+            支持继续深入、调整方向或重新定位，每轮只问一个关键问题。
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -147,18 +142,15 @@ export function buildCopilotPrefill(
       return `- ${THEME_LABELS[answer.themeId] ?? answer.themeId}：${values || "待补充"}`;
     })
     .join("\n");
-  const route = session
-    ? SOURCE_MODE_LABELS[session.sourceMode]
-    : hasCurrentProfile
-      ? "先问我想继续深入当前账号、调整方向，还是重新定位"
-      : "先问我想基于当前账号作品继续深入、调整到新方向，还是完全从零开始";
-
+  // 对话节奏、通版账号和即时生成规则由 chatbox.positioning 的系统模板负责。
+  // 输入框只保留用户可读的开场和原有资料，不重复展示执行说明，也不截断旧答案。
   return [
-    "帮我梳理账号定位。",
-    ...(session ? [`定位路径：${session.sourceMode}`] : []),
-    `本次起点：${route}。`,
-    savedAnswers ? `之前已保存的信息：\n${savedAnswers}` : "目前还没有固定答案，请从最关键的一点开始。",
-    "请同时兼容纯人设和有产品/服务两种情况，每轮最多问一个真正影响定位的问题。",
-    "如果现有信息已经够用，或者我说“先给我一版”，请立即调用 positioning.generate 给出可采纳候选；缺失内容标为待验证，不要用六问、逐字稿、联网或方向选择阻断。",
+    session
+      ? "帮我继续梳理账号定位。"
+      : hasCurrentProfile
+        ? "帮我梳理账号定位，先确认是继续深入、调整方向，还是重新定位。"
+        : "帮我梳理账号定位，从最关键的问题开始。",
+    ...(session ? [`定位路径：${session.sourceMode}\n本次起点：${SOURCE_MODE_LABELS[session.sourceMode]}。`] : []),
+    ...(savedAnswers ? [`已保存的信息：\n${savedAnswers}`] : []),
   ].join("\n\n");
 }

@@ -58,7 +58,7 @@ it("明确版本冲突可读最新基线，仍保留用户编辑",async()=>{
  api.createMomentsVersion.mockRejectedValueOnce({code:"VERSION_CONFLICT"});render(<MomentsWorkbench initial={initial} accountId="account-a"/>);
  fireEvent.change(screen.getByRole("textbox",{name:"朋友圈正文"}),{target:{value:"保留编辑"}});fireEvent.click(screen.getByRole("button",{name:"保存稿件"}));await screen.findByRole("alert");
  api.getMoments.mockResolvedValue({...initial,currentVersionId:"new-version",current:{...initial.current,text:"另一窗口已保存"}});
- fireEvent.click(screen.getByRole("button",{name:"读取最新版本，保留编辑"}));await screen.findByText(/已读取最新版本/);
+ fireEvent.click(screen.getByRole("button",{name:"刷新版本（保留编辑）"}));await screen.findByText(/已读取最新版本/);
  expect(screen.getByRole("textbox",{name:"朋友圈正文"})).toHaveValue("保留编辑");
  fireEvent.click(screen.getByRole("button",{name:"保存稿件"}));await waitFor(()=>expect(api.createMomentsVersion).toHaveBeenCalledTimes(2));
  expect(api.createMomentsVersion.mock.calls[1][0].body.expectedCurrentVersionId).toBe("new-version");

@@ -1,3 +1,5 @@
+import { PreviewSamples } from "@/features/preview/preview-samples";
+import { hasPreviewSamples } from "@/features/preview/preview-mode.server";
 import Link from "next/link";
 import type {ReactNode} from "react";
 import {PlatformWorkAccountNavigation} from "@/features/platform-account/platform-work-account-navigation";
@@ -27,7 +29,7 @@ export default async function PlatformWorksPage({
   const member=selectedGroup?.members.find(member=>member.accountId===accountId&&member.status==='active'&&member.leftAt===null);
   const navigation=selectedGroup?<PlatformWorkAccountNavigation group={selectedGroup} selectedId={accountId} showManagement={!member}/>:null;
   const withNavigation=(content:ReactNode)=>navigation?<div className="flex min-w-0 flex-col gap-5">{navigation}{content}</div>:content;
-  if(!accountId)return selectedGroup?<main data-testid="platform-work-account-selection" className="flex min-w-0 flex-col gap-5"><h1 className="text-xl font-semibold">已采集的平台作品</h1>{navigation}{selectedGroup.members.some(member=>member.status==='active'&&member.leftAt===null)&&<p className="text-sm text-muted-foreground">选择一个平台账号，查看它的作品目录和数据。</p>}</main>:<ZeroAccountGuidance/>;
+  if(!accountId)return selectedGroup?<main data-testid="platform-work-account-selection" className="flex min-w-0 flex-col gap-5"><h1 className="text-xl font-semibold">已采集的平台作品</h1>{navigation}{hasPreviewSamples(selectedGroup.id)&&<PreviewSamples kind="platform"/>}{selectedGroup.members.some(member=>member.status==='active'&&member.leftAt===null)&&<p className="text-sm text-muted-foreground">选择一个平台账号，查看它的作品目录和数据。</p>}</main>:<ZeroAccountGuidance/>;
   if(params.accountId&&!selectedGroup)return <ZeroAccountGuidance/>;
   if(selectedGroup&&!member)return withNavigation(<p role="alert" className="text-sm text-destructive">这个账号不属于当前账号组，请选择当前组的平台账号。</p>);
   const client=createServerClient({...session.ctx,accountId,...(selectedGroup&&member?{groupVersion:selectedGroup.version,membershipVersion:member.version}:{})});

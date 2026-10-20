@@ -109,39 +109,16 @@ describe("DashboardPage", () => {
     expect(metrics).toHaveLength(5);
   });
 
-  it("renders the six grid cards in the locked order", async () => {
+  it("keeps all six work areas available with optional trends", async () => {
     const { container } = await renderDashboard();
     const grid = container.querySelector('[data-slot="dashboard-grid"]');
     expect(grid).not.toBeNull();
-    // Each top-level grid card is tagged with a `data-slot` matching
-    // its semantic role. The Data Overview card embeds a ChartFrame
-    // which is itself a SectionCard, so we assert by slot name to
-    // avoid counting the nested chart card.
-    const cardSlots = [
-      "continue-creating-card",
-      "todo-card",
-      "trending-topics-card",
-      "recent-publications-card",
-      "data-overview-card",
-      "creation-suggestions-card",
-    ];
-    const orderedNodes = cardSlots.map((slot) =>
-      grid!.querySelector(`[data-slot="${slot}"]`),
-    );
-    // All six must exist.
-    expect(orderedNodes.every((node) => node !== null)).toBe(true);
-    // The ordering must be: Continue, Todo, Trending, Publications,
-    // Data, Suggestions. We compare the DOM source order of each
-    // card against the order of the others using compareDocumentPosition.
-    for (let i = 1; i < orderedNodes.length; i += 1) {
-      const node = orderedNodes[i] as Element;
-      const previous = orderedNodes[i - 1] as Element;
-      // `previous` should come *before* `node` in document order.
-      const relation = previous.compareDocumentPosition(node);
-      expect(
-        relation & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+    for (const slot of ["continue-creating-card", "todo-card", "trending-topics-card", "recent-publications-card", "data-overview-card", "creation-suggestions-card"]) {
+      expect(grid!.querySelector(`[data-slot="${slot}"]`)).not.toBeNull();
     }
+    const disclosure = container.querySelector('details[data-slot="studio-home-trend"]');
+    expect(disclosure).not.toHaveAttribute("open");
+    expect(disclosure?.querySelector('[data-slot="data-overview-card"]')).not.toBeNull();
   });
 
   it("continues creating card shows the active project progress", async () => {

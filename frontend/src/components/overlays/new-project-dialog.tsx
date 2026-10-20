@@ -157,11 +157,9 @@ export function NewProjectDialog() {
         <header className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-0.5">
             <h2 className="font-heading text-xl font-semibold leading-tight">
-              {DIALOG_TITLE}　<span className="text-brand">✦</span>
+              {DIALOG_TITLE}
             </h2>
-            <p className="text-xs text-muted-foreground">
-              从一个想法开始，选择需要的作品形式，进入对应工作台
-            </p>
+            
           </div>
           <button
             ref={closeButtonRef}

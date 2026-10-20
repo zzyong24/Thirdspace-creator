@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "../styles/tokens.css";
+@import "../styles/creatoros-polish.css";
+@import "../styles/creatoros-studio.css";
+@import "../styles/creatoros-system.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -95,7 +98,7 @@
   --popover: var(--creatoros-surface);
   --popover-foreground: var(--creatoros-text);
   --primary: var(--creatoros-brand);
-  --primary-foreground: var(--creatoros-surface);
+  --primary-foreground: var(--creatoros-brand-foreground);
   --secondary: var(--creatoros-brand-soft);
   --secondary-foreground: var(--creatoros-text);
   --muted: var(--creatoros-surface-subtle);
@@ -115,45 +118,11 @@
   --sidebar: var(--creatoros-surface);
   --sidebar-foreground: var(--creatoros-text);
   --sidebar-primary: var(--creatoros-brand);
-  --sidebar-primary-foreground: var(--creatoros-surface);
+  --sidebar-primary-foreground: var(--creatoros-brand-foreground);
   --sidebar-accent: var(--creatoros-brand-soft);
   --sidebar-accent-foreground: var(--creatoros-brand-hover);
   --sidebar-border: var(--creatoros-border);
   --sidebar-ring: var(--creatoros-brand);
-}
-
-/* 暗色主题 —— 把 --creatoros-* 调色板换成暗色值。`.dark` 由 settings 的主题切换加在
-   <html> 上(applyTheme),并由 root layout 的初始化脚本在首帧前按 localStorage 应用。
-   语义映射(:root 的 --background/--card/...)引用这些 token,故下游自动跟随暗色。
-   例外:亮色里"品牌色按钮上的文字"= --creatoros-surface(白),暗色里 surface 变深 →
-   单独把 --primary-foreground / --sidebar-primary-foreground 钉成浅色,保证可读。 */
-.dark {
-  --creatoros-canvas: #0e1015;
-  --creatoros-surface: #181b23;
-  --creatoros-surface-subtle: #20242e;
-  --creatoros-brand: #7c5cff;
-  --creatoros-brand-hover: #9479ff;
-  --creatoros-brand-soft: #241f3d;
-  --creatoros-text: #e7e9f0;
-  --creatoros-text-muted: #9aa3b2;
-  --creatoros-text-subtle: #6b7280;
-  --creatoros-border: #272b36;
-  --creatoros-border-strong: #3a3f4d;
-  --creatoros-success: #2ee08a;
-  --creatoros-success-soft: #10261c;
-  --creatoros-warning: #f7a23b;
-  --creatoros-warning-soft: #2a2110;
-  --creatoros-danger: #ff5c50;
-  --creatoros-danger-soft: #2c1715;
-  --creatoros-info: #4aa3ff;
-  --creatoros-info-soft: #11233a;
-  --creatoros-shadow-card: 0 1px 3px rgb(0 0 0 / 0.45), 0 1px 2px rgb(0 0 0 / 0.35);
-  --creatoros-shadow-popover:
-    0 12px 24px rgb(0 0 0 / 0.6), 0 4px 10px rgb(0 0 0 / 0.45);
-
-  /* 语义例外:品牌色按钮上的文字在暗色仍需浅色 */
-  --primary-foreground: #ffffff;
-  --sidebar-primary-foreground: #ffffff;
 }
 
 @layer base {

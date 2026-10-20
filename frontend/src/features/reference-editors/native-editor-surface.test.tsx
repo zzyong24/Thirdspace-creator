@@ -18,6 +18,8 @@ it('NoteRelay恢复原生完整稿滚动，其它原生挂载仍保持原裁切�
  await act(async()=>fireEvent.load(host.shadowRoot!.querySelector('link')!));
  await waitFor(()=>expect(h.mount).toHaveBeenCalledOnce());
  expect((h.mount.mock.calls[0][0] as HTMLElement).style.overflow).toBe('auto');
+ expect((h.mount.mock.calls[0][0] as HTMLElement).tabIndex).toBe(0);
+ expect((h.mount.mock.calls[0][0] as HTMLElement)).toHaveAccessibleName('成稿排版预览，可使用方向键滚动');
  expect(options.owner).toEqual(owner);
  expect(options.signal.aborted).toBe(false);
  view.unmount();

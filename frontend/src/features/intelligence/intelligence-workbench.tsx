@@ -1,5 +1,7 @@
 "use client";
 import { compactNumber,dateLabel,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
+import styles from "./source-management.module.css";
+import { SourceManagementOverview } from "./source-management-overview";
 import { SourceRunHistoryDialog } from "./source-run-history-dialog";
 import {TopicTaskControls} from "./topic-task-controls";
 import { TopicCandidateEditor } from "./topic-candidate-editor";
@@ -140,7 +142,9 @@ function IntelligenceWorkbenchScope({
   initialDetail,
   positioningVersionId = null,
   api: injectedApi,
+  presentation = "workspace",
 }: {
+  presentation?: "workspace" | "sources";
   groupId?: string;
   accountId?: string;
   workspace: RadarWorkspace;
@@ -150,6 +154,7 @@ function IntelligenceWorkbenchScope({
   positioningVersionId?: string | null;
   api?: RadarApi;
 }) {
+  const sourcesOnly = presentation === "sources";
   const legacyAccountId=groupId?undefined:accountId;
   const scope=React.useMemo(()=>({groupId,accountId:legacyAccountId}),[groupId,legacyAccountId]);
   const scopeKey=radarScopeKey(scope);
@@ -335,6 +340,12 @@ function IntelligenceWorkbenchScope({
 
   const selectItemScope = React.useCallback(
     async (collectionId: string | null, sourceId: string | null) => {
+      if (sourcesOnly) {
+        setSelectedCollectionId(collectionId);
+        setSelectedSourceId(sourceId);
+        setNotice(null);
+        return;
+      }
       const requestId = itemScopeRequestId.current + 1;
       itemScopeRequestId.current = requestId;
       const previous = {
@@ -391,6 +402,7 @@ function IntelligenceWorkbenchScope({
       }
     },
     [
+      sourcesOnly,
       scope,
       api,
       detail,
@@ -938,35 +950,17 @@ function IntelligenceWorkbenchScope({
     [api, detail, router],
   );
 
-  return (
-    <section
-      data-testid="intelligence-workbench"
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-[22px] border border-border/80 bg-surface shadow-lg"
-    >
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-gradient-to-r from-brand-soft/60 via-surface to-surface px-4 py-3 sm:px-5">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Activity className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold text-foreground">
-              真实信源工作台
-            </h2>
-            <p className="truncate text-xs text-muted-foreground">
-              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full bg-warning-soft px-2.5 py-1 text-warning">
-            待处理 {workspace.pendingCount}
-          </span>
+  const sourceDialogs = {
+    collection: (
           <AddCollectionDialog
             groupId={groupId}
             accountId={accountId}
             api={api}
             onDone={() => router.refresh()}
           />
+
+    ),
+    import: (
           <ImportDouyinShareDialog
             groupId={groupId}
             accountId={accountId}
@@ -979,6 +973,9 @@ function IntelligenceWorkbenchScope({
               router.refresh();
             }}
           />
+
+    ),
+    add: (
           <AddSourceDialog
             groupId={groupId}
             accountId={accountId}
@@ -996,8 +993,47 @@ function IntelligenceWorkbenchScope({
               }
             }}
           />
+    ),
+  };
+
+  return (
+    <section
+      data-page="intelligence"
+      data-testid="intelligence-workbench"
+      data-presentation={presentation}
+      className={cn("flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-border bg-surface", sourcesOnly && styles.manager)}
+    >
+      {sourcesOnly ? <header className={styles.managerHeader}>
+        <div><h3>真实来源</h3><p>只收公开作品与计数，不采集评论正文。</p></div>
+        <span>待处理 {workspace.pendingCount}</span>
+      </header> : (
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-surface px-4 py-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex size-5 items-center justify-center text-muted-foreground">
+            <Activity className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold text-foreground">
+              内容雷达
+            </h1>
+            <p className="truncate text-xs text-muted-foreground">
+              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className={workspace.pendingCount > 0 ? "rounded-full bg-warning-soft px-2.5 py-1 text-warning" : "rounded-full bg-surface-subtle px-2.5 py-1 text-muted-foreground"}>
+            待处理 {workspace.pendingCount}
+          </span>
+
         </div>
       </div>
+      )}
+      {sourcesOnly ? <div className={styles.actions} aria-label="来源操作">
+        <div>{sourceDialogs.add}<p>持续跟踪主页、网页或订阅源</p></div>
+        <div>{sourceDialogs.import}<p>导入单条抖音作品</p></div>
+        <div>{sourceDialogs.collection}<p>按主题整理来源</p></div>
+      </div> : null}
 
       <SourceRunHistoryDialog
         key={historySource?.id ?? "no-source-history"}
@@ -1123,17 +1159,27 @@ function IntelligenceWorkbenchScope({
       ) : null}
 
       <div
-        data-testid="intelligence-responsive-layout"
-        className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)] xl:overflow-hidden 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto]"
+        data-testid="intelligence-responsive-layout" data-studio-layout="inbox"
+        className={cn("grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)] xl:overflow-hidden 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto]", sourcesOnly && styles.sourceLayout)}
       >
         <aside
           data-testid="intelligence-sidebar"
           aria-label="内容雷达分类和来源"
           className="flex min-h-0 flex-col border-b border-border/70 bg-surface-subtle xl:border-b-0 xl:border-r"
         >
+          {!sourcesOnly ? <>
+          <div className="shrink-0 border-b border-border/70 p-3">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">01</span> 来源与采集</h2>
+            <div className="flex flex-wrap gap-2">
+              {sourceDialogs.collection}
+              {sourceDialogs.import}
+              {sourceDialogs.add}
+            </div>
+          </div>
+          </> : null}
           <div className="shrink-0 space-y-2 px-3 pb-2 pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              分类与来源
+              来源目录
             </p>
             <label className="relative block">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -1151,6 +1197,7 @@ function IntelligenceWorkbenchScope({
             <button
               type="button"
               onClick={() => void selectItemScope(null, null)}
+              aria-pressed={!selectedCollectionId && !selectedSourceId}
               className={cn(
                 "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition",
                 !selectedCollectionId && !selectedSourceId
@@ -1158,9 +1205,9 @@ function IntelligenceWorkbenchScope({
                   : "text-foreground hover:bg-muted",
               )}
             >
-              <span>全部内容</span>
+              <span>{sourcesOnly ? "全部来源" : "全部内容"}</span>
               <span className="text-xs text-muted-foreground">
-                {allItemsTotal}
+                {sourcesOnly ? workspace.sources.length : allItemsTotal}
               </span>
             </button>
             {workspace.collections.map((collection) => {
@@ -1183,6 +1230,7 @@ function IntelligenceWorkbenchScope({
                   <button
                     type="button"
                     onClick={() => void selectItemScope(collection.id, null)}
+                    aria-pressed={selectedCollectionId === collection.id && !selectedSourceId}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition",
                       selectedCollectionId === collection.id
@@ -1272,10 +1320,12 @@ function IntelligenceWorkbenchScope({
           </div>
         </aside>
 
+        {sourcesOnly ? <SourceManagementOverview workspace={workspace} selectedSourceId={selectedSourceId} selectedCollectionId={selectedCollectionId}/> : <>
         <main
           aria-busy={itemsLoading}
           className="flex min-h-0 min-w-0 flex-col bg-canvas/55"
         >
+          <h2 className="flex shrink-0 items-center gap-2 border-b border-border/70 px-4 py-3 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
           <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 px-4 py-2.5">
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>逐字稿</span>
@@ -1464,6 +1514,9 @@ function IntelligenceWorkbenchScope({
           <div
             role="separator"
             aria-label="调整作品详情宽度"
+            aria-valuenow={detailWidth}
+            aria-valuemin={MIN_DETAIL_WIDTH}
+            aria-valuemax={MAX_DETAIL_WIDTH}
             aria-orientation="vertical"
             tabIndex={0}
             onPointerDown={startResize}
@@ -1517,6 +1570,7 @@ function IntelligenceWorkbenchScope({
             )}
           </aside>
         </div>
+        </>}
       </div>
     </section>
   );
@@ -1565,7 +1619,7 @@ function SourceRow({
       className={cn(
         "ml-3 mr-1 mt-1.5 min-w-0 overflow-hidden rounded-xl border transition",
         active
-          ? "border-primary/30 bg-surface shadow-sm ring-1 ring-primary/10"
+          ? "border-primary/30 bg-surface ring-1 ring-primary/10"
           : "border-transparent bg-transparent hover:border-border/70 hover:bg-muted/55",
       )}
     >
@@ -1573,6 +1627,7 @@ function SourceRow({
         <button
           type="button"
           onClick={onSelect}
+          aria-pressed={active}
           className="min-w-0 flex-1 rounded-lg px-2 py-1.5 text-left outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <span
@@ -1711,8 +1766,8 @@ function ItemCard({
       className={cn(
         "group flex min-h-28 w-full flex-col overflow-hidden rounded-2xl border bg-surface text-left transition",
         active
-          ? "border-primary/60 shadow-card ring-1 ring-primary/20"
-          : "border-border/80 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm",
+          ? "border-primary/60 ring-1 ring-primary/20"
+          : "border-border/80 hover:border-primary/30",
       )}
     >
       <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 flex-col p-3.5 text-left">
@@ -1869,6 +1924,7 @@ function ItemDetail({
         />
       ) : null}
       <div className="border-b border-border/70 p-5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">03</span> 阅读核对</h2>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-base font-semibold leading-6 text-foreground">
@@ -1880,12 +1936,7 @@ function ItemDetail({
                 ? dateLabel(detail.item.publishedAt)
                 : `发布时间未知 · 收录于 ${dateLabel(detail.item.capturedAt)}`}
             </p>
-            <Link
-              href={`/projects/create?sourceItemId=${encodeURIComponent(detail.item.id)}`}
-              className="mt-3 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
-            >
-              {detail.item.type === "video" ? "用这条创作视频 →" : "用这条创作图文 →"}
-            </Link>
+
           </div>
           <a
             href={detail.item.canonicalUrl}
@@ -1917,7 +1968,126 @@ function ItemDetail({
       </div>
 
       <div className="space-y-5 p-5">
+
         <section>
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              逐字稿
+            </h4>
+            {transcriptLocked ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] text-primary">
+                <LockKeyhole className="size-3" />
+                已锁定
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-1 text-[11px]",
+                  detail.transcript.status === "done"
+                    ? "bg-success-soft text-success"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {transcriptCooling?"等待自动继续":transcriptLabel(detail.transcript.status)}
+              </span>
+            )}
+          </div>
+          {detail.transcript.text ? (
+            <p className="mt-3 whitespace-pre-wrap rounded-xl bg-muted/60 p-3 text-sm leading-6 text-foreground">
+              {detail.transcript.text}
+            </p>
+          ) : (
+            <div className="mt-3 rounded-xl border border-dashed border-border p-4">
+              <p className="text-xs leading-5 text-muted-foreground">
+                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "点击 AI 转写即可自动提取正文，也可以粘贴正文或从文件导入。"}
+              </p>
+            </div>
+          )}
+          {transcriptLocked ? (
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <LockKeyhole className="size-3.5 text-primary" />
+              已用于生成选题，逐字稿永久锁定。
+            </p>
+          ) : topicTaskBusy ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              选题正在生成，完成前暂时不能修改逐字稿。
+            </p>
+          ) : transcriptBusy && detail.transcript.text ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              正在重新转写；新结果成功前继续保留当前正文。
+            </p>
+          ) : detail.transcript.status === "done" &&
+            detail.transcript.errorCode ? (
+            <p className="mt-2 text-xs text-warning">
+              上次重新转写失败，已保留当前正文。
+            </p>
+          ) : null}
+          {transcriptCanChange ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setTranscriptEditorOpen(true)}
+                className="gap-1.5"
+              >
+                <Upload className="size-3.5" />
+                {detail.transcript.text ? "替换逐字稿" : "添加逐字稿"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={onTranscribe}
+                className="gap-1.5"
+              >
+                <FileAudio className="size-3.5" />
+                {detail.transcript.text ? "重新 AI 转写" : "AI 转写"}
+              </Button>
+            </div>
+          ) : null}
+        </section>
+
+        <section>
+          <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            来源证据
+          </h4>
+          <div className="mt-3 space-y-2">
+            {sourceEvidence.length > 0 ? (
+              sourceEvidence.slice(0, 4).map(({ snapshot, captureCount }) => (
+                <a
+                  key={snapshot.sourceId ?? snapshot.finalUrl}
+                  href={snapshot.finalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border/80 px-3 py-2.5 transition hover:border-primary/30"
+                >
+                  <Clock3 className="size-4 shrink-0 text-primary" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-medium">
+                      {snapshot.title ?? "来源快照"}
+                    </span>
+                    <span className="block text-[10px] text-muted-foreground">
+                      最近采集 {dateLabel(snapshot.capturedAt)}
+                      {captureCount > 1
+                        ? ` · 累计采集 ${captureCount} 次`
+                        : ""}
+                    </span>
+                  </span>
+                </a>
+              ))
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                暂无来源快照，下一次成功同步后显示。
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section data-radar-step="create" className="border-t border-border pt-5">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">04</span> 改写创作</h3>
           <div className="flex items-center justify-between gap-3">
             <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               生成我的改写稿
@@ -2081,123 +2251,12 @@ function ItemDetail({
               ) : null}
             </div>
           )}
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              逐字稿
-            </h4>
-            {transcriptLocked ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] text-primary">
-                <LockKeyhole className="size-3" />
-                已锁定
-              </span>
-            ) : (
-              <span
-                className={cn(
-                  "rounded-full px-2 py-1 text-[11px]",
-                  detail.transcript.status === "done"
-                    ? "bg-success-soft text-success"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                {transcriptCooling?"等待自动继续":transcriptLabel(detail.transcript.status)}
-              </span>
-            )}
-          </div>
-          {detail.transcript.text ? (
-            <p className="mt-3 whitespace-pre-wrap rounded-xl bg-muted/60 p-3 text-sm leading-6 text-foreground">
-              {detail.transcript.text}
-            </p>
-          ) : (
-            <div className="mt-3 rounded-xl border border-dashed border-border p-4">
-              <p className="text-xs leading-5 text-muted-foreground">
-                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "点击 AI 转写即可自动提取正文，也可以粘贴正文或从文件导入。"}
-              </p>
-            </div>
-          )}
-          {transcriptLocked ? (
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <LockKeyhole className="size-3.5 text-primary" />
-              已用于生成选题，逐字稿永久锁定。
-            </p>
-          ) : topicTaskBusy ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              选题正在生成，完成前暂时不能修改逐字稿。
-            </p>
-          ) : transcriptBusy && detail.transcript.text ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              正在重新转写；新结果成功前继续保留当前正文。
-            </p>
-          ) : detail.transcript.status === "done" &&
-            detail.transcript.errorCode ? (
-            <p className="mt-2 text-xs text-warning">
-              上次重新转写失败，已保留当前正文。
-            </p>
-          ) : null}
-          {transcriptCanChange ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={() => setTranscriptEditorOpen(true)}
-                className="gap-1.5"
-              >
-                <Upload className="size-3.5" />
-                {detail.transcript.text ? "替换逐字稿" : "添加逐字稿"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={onTranscribe}
-                className="gap-1.5"
-              >
-                <FileAudio className="size-3.5" />
-                {detail.transcript.text ? "重新 AI 转写" : "AI 转写"}
-              </Button>
-            </div>
-          ) : null}
-        </section>
-
-        <section>
-          <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            来源证据
-          </h4>
-          <div className="mt-3 space-y-2">
-            {sourceEvidence.length > 0 ? (
-              sourceEvidence.slice(0, 4).map(({ snapshot, captureCount }) => (
-                <a
-                  key={snapshot.sourceId ?? snapshot.finalUrl}
-                  href={snapshot.finalUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 rounded-xl border border-border/80 px-3 py-2.5 transition hover:border-primary/30"
-                >
-                  <Clock3 className="size-4 shrink-0 text-primary" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-medium">
-                      {snapshot.title ?? "来源快照"}
-                    </span>
-                    <span className="block text-[10px] text-muted-foreground">
-                      最近采集 {dateLabel(snapshot.capturedAt)}
-                      {captureCount > 1
-                        ? ` · 累计采集 ${captureCount} 次`
-                        : ""}
-                    </span>
-                  </span>
-                </a>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                暂无来源快照，下一次成功同步后显示。
-              </p>
-            )}
-          </div>
+            <Link
+              href={`/projects/create?sourceItemId=${encodeURIComponent(detail.item.id)}`}
+              className="mt-4 inline-flex min-h-10 items-center rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 max-sm:min-h-11"
+            >
+              {detail.item.type === "video" ? "用这条创作视频 →" : "用这条创作图文 →"}
+            </Link>
         </section>
       </div>
     </div>

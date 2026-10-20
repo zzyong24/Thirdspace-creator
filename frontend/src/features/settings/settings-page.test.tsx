@@ -229,7 +229,7 @@ describe("SettingsPage", () => {
     expect(serialized).not.toContain("qwen-asr-main");
   });
 
-  it("mounts the TopHeader in global mode with the settings title", async () => {
+  it("mounts the TopHeader in global mode without duplicating the dialog title", async () => {
     const { container } = await renderSettings();
     const header = container.querySelector('[data-slot="app-top-header"]');
     expect(header).not.toBeNull();
@@ -238,8 +238,8 @@ describe("SettingsPage", () => {
       '[data-slot="header-page-heading"]',
     );
     expect(heading).not.toBeNull();
-    expect(heading!.textContent ?? "").toContain("设置");
-    expect(heading!.textContent ?? "").toContain("账号、偏好与系统");
+    expect(heading).toBeEmptyDOMElement();
+    expect(screen.getByRole("heading", {name:"设置"})).toBeInTheDocument();
   });
 
   it("marks the Settings nav item as the active page in the sidebar", async () => {

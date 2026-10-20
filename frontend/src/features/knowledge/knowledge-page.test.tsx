@@ -99,7 +99,7 @@ describe("KnowledgePage", () => {
     cleanup();
   });
 
-  it("mounts the TopHeader in global mode with the knowledge page title", async () => {
+  it("mounts the TopHeader in global mode without duplicating the content title", async () => {
     const { container } = await renderKnowledge();
     const header = container.querySelector('[data-slot="app-top-header"]');
     expect(header).not.toBeNull();
@@ -108,7 +108,7 @@ describe("KnowledgePage", () => {
       '[data-slot="header-page-heading"]',
     );
     expect(heading).not.toBeNull();
-    expect(heading!.textContent ?? "").toContain("知识库");
+    expect(heading).toBeEmptyDOMElement();
   });
 
   it("marks the Knowledge nav item as the active page in the sidebar", async () => {

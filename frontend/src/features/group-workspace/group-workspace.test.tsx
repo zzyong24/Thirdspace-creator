@@ -35,3 +35,10 @@ it('T1362有归属记录但未知不说未采集，旧sampleCount不冒目录数
  const data:GroupWorkspace={...workspace,platform:'xiaohongshu',accounts:[{id:'x',name:'真实账号',platform:'xiaohongshu',historical:false,archived:false}],platforms:[{platform:'xiaohongshu',publicationCount:0,sampleCount:0,views:null,browses:null,reads:null,likes:null,shares:null,capturedAt:null}],collected:{state:'ready',catalogWorkCount:1,unattributableWorkCount:0,deduplicatedWorkCount:0,metrics:[{platform:'xiaohongshu',metricKey:'view_count',scope:'work',unit:'count',window:'lifetime',value:null,knownCount:0,eligibleCount:1,capturedAt:null,observedAt:null,sources:[]}]}};
  render(<GroupOverview workspace={data}/>);expect(screen.getByText('部分指标暂缺')).toBeVisible();expect(screen.queryByText('尚未采集指标')).toBeNull();const row=screen.getByRole('rowheader',{name:/小红书/}).closest('tr')!;expect(row.children[2]).toHaveTextContent('0');expect(row.children[4]).toHaveTextContent('—');
 });
+
+it("总览嵌入已有标题的页面时不重复标题，指标与管理入口保留",()=>{
+ render(<main><h1>创作者总览</h1><GroupOverview workspace={workspace} showPageHeading={false}/></main>);
+ expect(screen.getAllByRole("heading",{level:1,name:"创作者总览"})).toHaveLength(1);
+ expect(screen.getByText("视频累计播放（次）")).toBeVisible();
+ expect(screen.getByRole("link",{name:"管理账号组"})).toHaveAttribute("href","/accounts");
+});

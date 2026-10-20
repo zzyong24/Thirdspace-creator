@@ -4,6 +4,7 @@ import {afterEach,beforeEach,expect,it,vi} from "vitest";
 const router=vi.hoisted(()=>({replace:vi.fn(),push:vi.fn(),back:vi.fn(),refresh:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>router,usePathname:()=>window.location.pathname,useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("@/lib/contract-client",()=>({client:{
+ getRedfox:vi.fn().mockResolvedValue({configured:false}),
  getPreferences:vi.fn().mockResolvedValue({assistantExecutionEngine:"codex"}),
  getReportingStatus:vi.fn().mockResolvedValue({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
 }}));
@@ -29,4 +30,17 @@ it("实际来源完整地址只消费一次，同宿主新一次进入重新打�
  window.history.replaceState(null,"","/settings");view.rerender(tree());
  expect(await screen.findByRole("dialog",{},{timeout:120000})).toBeVisible();
  fireEvent.keyDown(screen.getByRole("dialog"),{key:"Escape"});expect(router.replace).toHaveBeenCalledTimes(2);
+});
+
+it("设置标签页方向键切换焦点和内容，Home/End 可到达两端且不保存配置",async()=>{
+ render(tree());
+ const account=await screen.findByRole("tab",{name:"账户"});
+ account.focus();fireEvent.keyDown(account,{key:"ArrowRight"});
+ expect(screen.getByRole("tab",{name:"偏好"})).toHaveFocus();
+ expect(screen.getByRole("tabpanel",{name:"偏好"})).toBeVisible();
+ fireEvent.keyDown(document.activeElement!,{key:"End"});
+ expect(screen.getByRole("tab",{name:"存储"})).toHaveFocus();
+ fireEvent.keyDown(document.activeElement!,{key:"Home"});
+ expect(account).toHaveFocus();expect(account).toHaveAttribute("aria-selected","true");
+ expect(router.replace).not.toHaveBeenCalled();expect(router.push).not.toHaveBeenCalled();
 });

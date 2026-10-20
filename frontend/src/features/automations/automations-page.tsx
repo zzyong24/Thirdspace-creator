@@ -110,7 +110,7 @@ export async function AutomationsPage({
   return (
     <main
       data-app="creatoros"
-      data-page="automations"
+      data-page="automations" data-studio-layout="operations"
       className="flex flex-col gap-section-gap"
     >
       <header className="flex flex-col gap-1">
@@ -120,12 +120,7 @@ export async function AutomationsPage({
         >
           自动化
         </h1>
-        <p
-          data-slot="automations-subtitle"
-          className="text-sm text-muted-foreground"
-        >
-          让作品指标、评论、流量来源和视频内容按需更新，持续支持选题与复盘。
-        </p>
+        
       </header>
 
       <AutomationsIsland key={scope?.groupId ?? "legacy"} jobs={rows} currentAccount={currentAccount} accounts={accounts} groupName={group?.name} scope={scope} />

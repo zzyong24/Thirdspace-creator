@@ -1,3 +1,5 @@
+import { PreviewSamples } from "@/features/preview/preview-samples";
+import { hasPreviewSamples } from "@/features/preview/preview-mode.server";
 /**
  * Publishing Center route entrypoint.
  *
@@ -65,6 +67,7 @@ export default async function PublishingCenterRoutePage({
         }}
       />
     );
+  if(hasPreviewSamples(session.ctx.groupId)&&projection.performance.publications.length===0)return <main data-page="preview-publishing" className="flex min-w-0 flex-col gap-5"><header><h1 className="text-2xl font-semibold">发布中心</h1></header><PreviewSamples kind="publishing"/><details data-slot="preview-real-data"><summary>打开实际内容日历、筛选与发布记录</summary><PublishingCenterPage showPageHeading={false} viewModel={projection.performance} calendar={calendar} filters={groupData?<GroupWorkspaceFilters workspace={groupData.workspace}/>:undefined} groupMode={Boolean(groupData)}/></details></main>;
   return (
     <PublishingCenterPage
       viewModel={projection.performance}

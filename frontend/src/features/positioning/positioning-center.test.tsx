@@ -151,8 +151,8 @@ describe("PositioningCenterView", () => {
     );
     expect(screen.getByTestId("positioning-downstream")).toBeInTheDocument();
     expect(screen.getAllByTestId("positioning-history-row")).toHaveLength(2);
-    expect(screen.getByTestId("positioning-copilot-entry")).toBeInTheDocument();
-    expect(screen.getByText(/已恢复 0 条旧前采信息 · 重新定位/)).toBeInTheDocument();
+    expect(screen.queryByTestId("positioning-copilot-entry")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "重新定位" })).toHaveLength(1);
   });
 
   it("[T-707] brand-new user直接进入定位 Copilot，不再展示固定路径问卷", () => {
@@ -201,11 +201,16 @@ describe("PositioningCenterView", () => {
     expect(screen.getAllByTestId("positioning-facet").length).toBe(5);
   });
 
-  it("[T-707] 已有母版时仍只有一个定位 Copilot 入口", () => {
+  it("已有定位时仅保留页头重新定位，隐藏下方定位对话", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
-    expect(screen.getByTestId("positioning-copilot-entry")).toBeTruthy();
-    const link = screen.getByTestId("positioning-open-copilot");
-    expect(link.textContent).toContain("开始定位对话");
+    expect(screen.queryByTestId("positioning-copilot-entry")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "定位对话" })).toBeNull();
+    expect(screen.queryByRole("link", { name: /开始定位对话|继续定位对话/ })).toBeNull();
+    const link = screen.getByRole("link", { name: "重新定位" });
+    const target = new URL(link.getAttribute("href")!, "http://localhost");
+    expect(target.searchParams.get("copilot")).toBe("open");
+    expect(target.searchParams.get("scope")).toBe("surface:positioning");
+    expect(target.searchParams.get("fn")).toBe("positioning.generate");
     expect(screen.queryByText(/AI 生成定位建议/)).toBeNull();
     expect(screen.queryByLabelText("搜索地区")).toBeNull();
     expect(screen.queryByRole("button", { name: "联网补充" })).toBeNull();
@@ -214,7 +219,7 @@ describe("PositioningCenterView", () => {
   it("renders the right-rail 定位规则 with the 5 rule cards (downstream constraints)", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     const panel = screen.getByTestId("positioning-downstream");
-    expect(panel.textContent).toContain("定位规则（供下游模块使用）");
+    expect(panel.textContent).toContain("定位规则");
     const fields = screen.getByTestId("positioning-downstream-fields");
     // the 5 rules actually injected into downstream runners (creative-context).
     expect(fields.textContent).toContain("选题规则");

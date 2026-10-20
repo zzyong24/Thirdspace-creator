@@ -24,6 +24,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 import {handleCopilotLocalClick} from "@/lib/copilot-navigation";
 import { cn } from "@/lib/utils";
+import positioningStyles from "@/features/copilot/positioning-conversation.module.css";
 import {
   OVERLAY_QUERY_KEY,
   OVERLAY_OPEN_VALUE,
@@ -362,8 +363,10 @@ export function OverlayController({
       active !== document.body &&
       !dialogRef.current?.contains(active)
         ? active
-        : null;
-  }, [open]);
+        : pathname === "/positioning" && searchParams?.get("surface") === "positioning"
+          ? document.querySelector<HTMLElement>('[data-testid="positioning-open-copilot"]')
+          : null;
+  }, [open, pathname, searchParams]);
 
   React.useEffect(() => {
     restoreSizeTimeoutRef.current = window.setTimeout(() => {
@@ -448,16 +451,22 @@ export function OverlayController({
       document.body.style.overflow = previousOverflow;
       // Restore focus to the trigger that opened the overlay.
       const trigger = triggerRef.current;
-      if (trigger && typeof trigger.focus === "function") {
+      const positioningEntry = pathname === "/positioning" && searchParams?.get("surface") === "positioning";
+      if (trigger || positioningEntry) {
         // 路由切换可能在 effect cleanup 之后才真正移除仍持焦的 dialog；下一帧再
         // 恢复到入口，避免浏览器的卸载聚焦把它覆盖成 body。
         window.setTimeout(() => {
-          if (document.contains(trigger)) trigger.focus();
+          const target = trigger && document.contains(trigger)
+            ? trigger
+            : positioningEntry
+              ? document.querySelector<HTMLElement>('[data-testid="positioning-open-copilot"]')
+              : null;
+          target?.focus();
         }, 16);
       }
       triggerRef.current = null;
     };
-  }, [open, close]);
+  }, [open, close, pathname, searchParams]);
 
   if (!open) return null;
 
@@ -478,7 +487,7 @@ export function OverlayController({
           ref={dialogRef}
           role="dialog"
           aria-modal="true"
-          aria-label={COPILOT_DIALOG_TITLE}
+          aria-label={pathname === "/positioning" && searchParams?.get("surface") === "positioning" ? "定位对话" : COPILOT_DIALOG_TITLE}
           tabIndex={-1}
           data-slot="overlay-panel"
           data-overlay-panel="copilot"
@@ -487,6 +496,7 @@ export function OverlayController({
             // bug #5:面板不再整体 overflow-y-auto(否则对话区无法 flex-1 占满 + 自身滚动)。
             // 改为 overflow-hidden + flex 列,把滚动职责交给内部各区(对话流 / 次区)。
             "relative z-10 flex max-h-[calc(100vh-48px)] max-w-[calc(100vw-48px)] flex-none flex-col gap-3 overflow-hidden rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
+            pathname === "/positioning" && searchParams?.get("surface") === "positioning" && positioningStyles.panel,
             className,
           )}
         >
@@ -495,7 +505,9 @@ export function OverlayController({
             role="separator"
             tabIndex={0}
             aria-label="调整 AI 助手大小"
+            aria-valuenow={visibleSize.width}
             aria-valuetext={`${visibleSize.width} × ${visibleSize.height}`}
+            aria-orientation="vertical"
             data-slot="ai-copilot-resize-handle"
             title="拖拽调整窗口大小"
             onPointerDown={beginResize}

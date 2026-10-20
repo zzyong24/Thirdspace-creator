@@ -1147,7 +1147,7 @@ function RecentKnowledgeTable({
                       (selected ? "bg-brand-soft/40" : "hover:bg-surface-subtle")
                     }
                   >
-                    <td className="py-1.5 text-foreground">{row.title}</td>
+                    <td className="py-1.5 text-foreground"><button type="button" className="w-full cursor-pointer text-left" onClick={(event)=>{event.stopPropagation();onSelectRow(row.id);}}>{row.title}</button></td>
                     <td className="py-1.5">
                       {isExperience ? (
                         <span

@@ -404,6 +404,18 @@ describe("OverlayController", () => {
     expect(mockNext.state.replace).not.toHaveBeenCalled();
   });
 
+  it("定位入口未获得浏览器焦点时，关闭仍返回定位入口", async () => {
+    resetNext({ pathname: "/positioning", searchParams: new URLSearchParams("copilot=open&surface=positioning") });
+    const { OverlayController } = await importOverlayController();
+    render(<RoutedOverlayController>
+      <a href="?copilot=open&surface=positioning" data-testid="positioning-open-copilot">开始定位对话</a>
+      <OverlayController><button data-overlay-close>关闭定位对话</button></OverlayController>
+    </RoutedOverlayController>);
+    expect(screen.getByRole("dialog", {name:"定位对话"})).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.getByTestId("positioning-open-copilot")).toHaveFocus());
+  });
+
   it("traps focus inside the open overlay and restores focus to the trigger on close", async () => {
     // Place a trigger outside the overlay so the trigger can regain focus.
     const trigger = document.createElement("button");

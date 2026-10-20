@@ -549,7 +549,7 @@
  				mediaSortBy: state.mediaSortBy,
 --- a/apps/web/src/components/editor/panels/assets/draggable-item.tsx
 +++ b/apps/web/src/components/editor/panels/assets/draggable-item.tsx
-@@ -1,241 +1,242 @@
+@@ -1,241 +1,247 @@
 -"use client";
 -
 -import { Plus } from "lucide-react";
@@ -913,6 +913,7 @@
 +							{preview}
 +							{!isDragging && (
 +								<PlusButton
++									label={`添加 ${name} 到时间轴`}
 +									className="opacity-0 group-hover:opacity-100"
 +									onClick={handleAddToTimeline}
 +								/>
@@ -980,6 +981,7 @@
 +								</div>
 +								{shouldShowPlusOnDrag && (
 +									<PlusButton
++										label={`添加 ${name} 到时间轴`}
 +										onClick={handleAddToTimeline}
 +										tooltipText="Add to timeline or drag to position"
 +									/>
@@ -994,6 +996,7 @@
 +}
 +
 +function PlusButton({
++	label,
 +	className,
 +	onClick,
 +	tooltipText,
@@ -1001,9 +1004,11 @@
 +	className?: string;
 +	onClick?: () => void;
 +	tooltipText?: string;
++	label: string;
 +}) {
 +	const button = (
 +		<Button
++			aria-label={label}
 +			size="icon"
 +			className={cn(
 +				"bg-background hover:bg-background text-foreground absolute right-2 bottom-2 size-5",
@@ -1083,7 +1088,23 @@
  	}
  
  	if (item.type === "audio") {
-@@ -641,3 +628,9 @@
+@@ -527,6 +514,7 @@
+ 				<Tooltip>
+ 					<TooltipTrigger asChild>
+ 						<Button
++							aria-label={mediaViewMode === "grid" ? "切换列表视图" : "切换网格视图"}
+ 							size="icon"
+ 							variant="ghost"
+ 							onClick={() =>
+@@ -555,6 +543,7 @@
+ 						<TooltipTrigger asChild>
+ 							<DropdownMenuTrigger asChild>
+ 								<Button
++									aria-label="素材排序"
+ 									size="icon"
+ 									variant="ghost"
+ 									disabled={isProcessing}
+@@ -641,3 +630,9 @@
  		</DropdownMenuItem>
  	);
  }
@@ -1093,6 +1114,57 @@
 + useEffect(()=>{if(!element.current)return;const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){setNear(true);observer.disconnect();}},{rootMargin:'80px'});observer.observe(element.current);return()=>observer.disconnect();},[item.id]);
 + return <div ref={element} className="relative size-full">{near&&!failed&&item.url?<video src={item.url} preload="metadata" muted playsInline className="size-full rounded object-cover" aria-label={item.name} onError={()=>setFailed(true)}/>:<MediaTypePlaceholder icon={Video01Icon} label="Video" duration={item.duration} variant="muted"/>}{shouldShowDurationBadge?<MediaDurationBadge duration={item.duration}/>:null}</div>;
 +}
+--- a/apps/web/src/components/editor/panels/properties/components/property-param-field.tsx
++++ b/apps/web/src/components/editor/panels/properties/components/property-param-field.tsx
+@@ -91,6 +91,7 @@
+ 	if (param.type === "boolean") {
+ 		return (
+ 			<Switch
++				aria-label={param.label}
+ 				checked={Boolean(value)}
+ 				onCheckedChange={(checked) => {
+ 					onPreview(checked);
+@@ -109,7 +110,7 @@
+ 					onCommit();
+ 				}}
+ 			>
+-				<SelectTrigger className="w-full">
++				<SelectTrigger className="w-full" aria-label={param.label}>
+ 					<SelectValue />
+ 				</SelectTrigger>
+ 				<SelectContent>
+@@ -126,6 +127,7 @@
+ 	if (param.type === "color") {
+ 		return (
+ 			<ColorPicker
++				aria-label={param.label}
+ 				value={String(value).replace(/^#/, "").toUpperCase()}
+ 				onChange={(color) => onPreview(`#${color}`)}
+ 				onChangeEnd={(color) => {
+@@ -139,6 +141,7 @@
+ 	if (param.type === "text") {
+ 		return (
+ 			<Textarea
++				aria-label={param.label}
+ 				value={String(value)}
+ 				onChange={(event) => onPreview(event.currentTarget.value)}
+ 				onBlur={onCommit}
+@@ -149,6 +152,7 @@
+ 	if (param.type === "font") {
+ 		return (
+ 			<input
++				aria-label={param.label}
+ 				className="border-input bg-accent h-9 w-full rounded-md border px-3 text-sm outline-none"
+ 				value={String(value)}
+ 				onChange={(event) => onPreview(event.currentTarget.value)}
+@@ -209,6 +213,7 @@
+ 
+ 	return (
+ 		<NumberField
++			aria-label={param.label}
+ 			icon={param.shortLabel}
+ 			value={draft.displayValue}
+ 			dragSensitivity="slow"
 --- a/apps/web/src/components/ui/alert-dialog.tsx
 +++ b/apps/web/src/components/ui/alert-dialog.tsx
 @@ -1,12 +1,14 @@
@@ -1266,6 +1338,32 @@
 +Button.displayName = "Button";
 +
 +export { Button, buttonVariants };
+--- a/apps/web/src/components/ui/color-picker.tsx
++++ b/apps/web/src/components/ui/color-picker.tsx
+@@ -406,6 +406,7 @@
+ }
+ 
+ interface ColorPickerProps {
++	"aria-label"?: string;
+ 	value?: string;
+ 	onChange?: (value: string) => void;
+ 	onChangeEnd?: (value: string) => void;
+@@ -495,6 +496,7 @@
+ 				>
+ 					<PopoverTrigger asChild>
+ 						<button
++							aria-label={`${props["aria-label"] ?? "颜色"}：打开调色板`}
+ 							className="size-4.5 relative cursor-pointer overflow-hidden rounded-sm border hover:ring-1 hover:ring-foreground/20"
+ 							type="button"
+ 						>
+@@ -510,6 +512,7 @@
+ 					</PopoverTrigger>
+ 					<div className="flex flex-1 items-center">
+ 						<Input
++							aria-label={`${props["aria-label"] ?? "颜色"}：十六进制值`}
+ 							className="border-0! bg-transparent p-0 ring-0! ring-offset-0! uppercase"
+ 							size="sm"
+ 							containerClassName="w-full"
 --- a/apps/web/src/components/ui/context-menu.tsx
 +++ b/apps/web/src/components/ui/context-menu.tsx
 @@ -1,3 +1,4 @@
@@ -2086,6 +2184,26 @@
  			ref={ref}
  			className={cn(sheetVariants({ side }), className)}
  			onOpenAutoFocus={(e) => {
+--- a/apps/web/src/components/ui/slider.tsx
++++ b/apps/web/src/components/ui/slider.tsx
+@@ -10,7 +10,7 @@
+ 	React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
+ 		className?: string;
+ 	}
+->(({ className, ...props }, ref) => (
++>(({ className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => (
+ 	<SliderPrimitive.Root
+ 		ref={ref}
+ 		className={cn(
+@@ -22,7 +22,7 @@
+ 		<SliderPrimitive.Track className="bg-accent relative h-1.5 w-full grow overflow-hidden rounded-full">
+ 			<SliderPrimitive.Range className="bg-primary absolute h-full" />
+ 		</SliderPrimitive.Track>
+-		<SliderPrimitive.Thumb className="border-primary/50 bg-background focus-visible:ring-ring block size-4 rounded-full border shadow-sm focus-visible:ring-1 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50" />
++		<SliderPrimitive.Thumb aria-label={ariaLabel} aria-labelledby={ariaLabelledBy} className="border-primary/50 bg-background focus-visible:ring-ring block size-4 rounded-full border shadow-sm focus-visible:ring-1 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50" />
+ 	</SliderPrimitive.Root>
+ ));
+ Slider.displayName = SliderPrimitive.Root.displayName;
 --- a/apps/web/src/core/managers/audio-manager.ts
 +++ b/apps/web/src/core/managers/audio-manager.ts
 @@ -1,3 +1,4 @@
@@ -8415,6 +8533,15 @@
  					<HugeiconsIcon icon={FullScreenIcon} />
  				</Button>
  			</div>
+@@ -117,7 +117,7 @@
+ 			value={isAtFit ? "fit" : String(zoomPercent)}
+ 			onValueChange={onValueChange}
+ 		>
+-			<SelectTrigger className="tabular-nums">{displayLabel}</SelectTrigger>
++			<SelectTrigger className="tabular-nums" aria-label="预览缩放">{displayLabel}</SelectTrigger>
+ 			<SelectContent>
+ 				<SelectItem value="fit">Fit</SelectItem>
+ 				<SelectSeparator />
 @@ -137,6 +137,7 @@
  	return (
  		<Button
@@ -10816,6 +10943,255 @@
  
  let cachedPresets: EasingPreset[] | null = null;
  const listeners = new Set<() => void>();
+--- a/apps/web/src/timeline/components/layout.ts
++++ b/apps/web/src/timeline/components/layout.ts
+@@ -14,7 +14,7 @@
+ 
+ export const TIMELINE_TRACK_GAP_PX = 6;
+ export const TIMELINE_TRACK_LABELS_COLUMN_WIDTH_PX = 112;
+-export const TIMELINE_RULER_HEIGHT_PX = 22;
+-export const TIMELINE_BOOKMARK_ROW_HEIGHT_PX = 16;
++export const TIMELINE_RULER_HEIGHT_PX = 28;
++export const TIMELINE_BOOKMARK_ROW_HEIGHT_PX = 24;
+ export const TIMELINE_SCROLLBAR_SIZE_PX = 12;
+ export const TIMELINE_CONTENT_TOP_PADDING_PX = 2;
+--- a/apps/web/src/timeline/components/timeline-playhead.tsx
++++ b/apps/web/src/timeline/components/timeline-playhead.tsx
+@@ -77,7 +77,7 @@
+ 		getCenteredLineLeft({ centerPixel: centerPosition }) - scrollLeft;
+ 
+ 	const handlePlayheadKeyDown = (
+-		event: React.KeyboardEvent<HTMLDivElement>,
++		event: React.KeyboardEvent<HTMLElement>,
+ 	) => {
+ 		if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+ 
+@@ -106,12 +106,6 @@
+ 	return (
+ 		<div
+ 			ref={playheadRef}
+-			role="slider"
+-			aria-label="Timeline playhead"
+-			aria-valuemin={0}
+-			aria-valuemax={duration}
+-			aria-valuenow={currentTime}
+-			tabIndex={0}
+ 			className="pointer-events-none absolute"
+ 			style={{
+ 				left: `${leftPosition}px`,
+@@ -120,16 +114,24 @@
+ 				width: `${TIMELINE_INDICATOR_LINE_WIDTH_PX}px`,
+ 				zIndex: TIMELINE_LAYERS.playhead,
+ 			}}
+-			onKeyDown={handlePlayheadKeyDown}
+ 		>
+ 			<div className="bg-primary pointer-events-none absolute left-0 h-full w-0.5" />
+ 
+ 			<button
+ 				type="button"
+-				aria-label="Drag playhead"
+-				className={`pointer-events-auto absolute top-1 left-1/2 size-3 -translate-x-1/2 transform cursor-col-resize rounded-full border-2 shadow-xs ${isSnappingToPlayhead ? "bg-primary border-primary" : "bg-primary border-primary/50"}`}
++				role="slider"
++				aria-label="时间轴播放头"
++				aria-orientation="horizontal"
++				aria-valuemin={0}
++				aria-valuemax={duration}
++				aria-valuenow={currentTime}
++				aria-valuetext={`${(currentTime / TICKS_PER_SECOND).toFixed(2)} 秒`}
++				className="pointer-events-auto absolute top-0 left-1/2 grid size-6 -translate-x-1/2 cursor-col-resize place-items-center rounded-full"
++				onKeyDown={handlePlayheadKeyDown}
+ 				onMouseDown={handlePlayheadMouseDown}
+-			/>
++			>
++				<span aria-hidden="true" className={`size-3 rounded-full border-2 shadow-xs ${isSnappingToPlayhead ? "bg-primary border-primary" : "bg-primary border-primary/50"}`} />
++			</button>
+ 		</div>
+ 	);
+ }
+--- a/apps/web/src/timeline/components/timeline-ruler.tsx
++++ b/apps/web/src/timeline/components/timeline-ruler.tsx
+@@ -1,7 +1,7 @@
+ import { type JSX } from "react";
+ import { BASE_TIMELINE_PIXELS_PER_SECOND } from "@/timeline/scale";
+ import { mediaTimeToSeconds } from "opencut-wasm";
+-import { TICKS_PER_SECOND } from "@/wasm";
++import { TICKS_PER_SECOND, mediaTime, ZERO_MEDIA_TIME } from "@/wasm";
+ import { TIMELINE_RULER_HEIGHT_PX } from "./layout";
+ import { DEFAULT_FPS } from "@/fps/defaults";
+ import { useEditor } from "@/editor/use-editor";
+@@ -30,6 +30,8 @@
+ 	handleRulerTrackingMouseDown,
+ 	handleRulerMouseDown,
+ }: TimelineRulerProps) {
++	const editor = useEditor();
++	const currentTime = useEditor((e) => e.playback.getCurrentTime());
+ 	const durationTicks = useEditor((e) => e.timeline.getTotalDuration());
+ 	const durationSeconds = mediaTimeToSeconds({ time: durationTicks });
+ 	const pixelsPerSecond = BASE_TIMELINE_PIXELS_PER_SECOND * zoomLevel;
+@@ -101,10 +103,11 @@
+ 		<div
+ 			role="slider"
+ 			tabIndex={0}
+-			aria-label="Timeline ruler"
++			aria-label="时间轴标尺"
+ 			aria-valuemin={0}
+-			aria-valuemax={effectiveDurationSeconds}
+-			aria-valuenow={0}
++			aria-valuemax={durationSeconds}
++			aria-valuenow={mediaTimeToSeconds({time: currentTime})}
++			aria-orientation="horizontal"
+ 			className="relative flex-1 overflow-x-visible"
+ 			style={{ height: TIMELINE_RULER_HEIGHT_PX }}
+ 			onWheel={handleWheel}
+@@ -116,7 +119,13 @@
+ 				}
+ 			}}
+ 			onMouseDown={handleRulerTrackingMouseDown}
+-			onKeyDown={() => {}}
++			onKeyDown={(event) => {
++                if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
++                event.preventDefault();
++                const frame = Math.round(TICKS_PER_SECOND * fps.denominator / fps.numerator);
++                const next = event.key === "Home" ? ZERO_MEDIA_TIME : event.key === "End" ? durationTicks : mediaTime({ticks: Math.max(0, Math.min(durationTicks, currentTime + (event.key === "ArrowRight" ? frame : -frame)))});
++                editor.playback.seek({time: next});
++            }}
+ 		>
+ 			<div
+ 				role="none"
+--- a/apps/web/src/timeline/components/timeline-toolbar.tsx
++++ b/apps/web/src/timeline/components/timeline-toolbar.tsx
+@@ -144,19 +144,19 @@
+ 			<TooltipProvider delayDuration={500}>
+ 				<ToolbarButton
+ 					icon={<HugeiconsIcon icon={ScissorIcon} />}
+-					tooltip="Split element"
++					tooltip="分割片段"
+ 					onClick={({ event }) => handleAction({ action: "split", event })}
+ 				/>
+ 
+ 				<ToolbarButton
+ 					icon={<HugeiconsIcon icon={AlignLeftIcon} />}
+-					tooltip="Split left"
++					tooltip="分割并移除左侧"
+ 					onClick={({ event }) => handleAction({ action: "split-left", event })}
+ 				/>
+ 
+ 				<ToolbarButton
+ 					icon={<HugeiconsIcon icon={AlignRightIcon} />}
+-					tooltip="Split right"
++					tooltip="分割并移除右侧"
+ 					onClick={({ event }) =>
+ 						handleAction({ action: "split-right", event })
+ 					}
+@@ -177,7 +177,7 @@
+ 
+ 				<ToolbarButton
+ 					icon={<HugeiconsIcon icon={Copy01Icon} />}
+-					tooltip="Duplicate element"
++					tooltip="复制片段"
+ 					onClick={({ event }) =>
+ 						handleAction({ action: "duplicate-selected", event })
+ 					}
+@@ -185,14 +185,14 @@
+ 
+ 				<ToolbarButton
+ 					icon={<HugeiconsIcon icon={SnowIcon} />}
+-					tooltip="Freeze frame (coming soon)"
++					tooltip="定格画面（暂不可用）"
+ 					disabled={true}
+ 					onClick={({ event: _event }) => {}}
+ 				/>
+ 
+ 				<ToolbarButton
+ 					icon={<HugeiconsIcon icon={Delete02Icon} />}
+-					tooltip="Delete element"
++					tooltip="删除片段"
+ 					onClick={({ event }) =>
+ 						handleAction({ action: "delete-selected", event })
+ 					}
+@@ -204,7 +204,8 @@
+ 					<ToolbarButton
+ 						icon={<HugeiconsIcon icon={Bookmark02Icon} />}
+ 						isActive={isCurrentlyBookmarked}
+-						tooltip={isCurrentlyBookmarked ? "Remove bookmark" : "Add bookmark"}
++						tooltip={isCurrentlyBookmarked ? "移除书签" : "添加书签"}
++						accessibleLabel="书签"
+ 						onClick={({ event }) =>
+ 							handleAction({ action: "toggle-bookmark", event })
+ 						}
+@@ -255,7 +256,7 @@
+ 				<SplitButtonLeft>{currentScene?.name || "No Scene"}</SplitButtonLeft>
+ 				<SplitButtonSeparator />
+ 				<ScenesView>
+-					<SplitButtonRight onClick={() => {}}>
++					<SplitButtonRight aria-label="场景列表" onClick={() => {}}>
+ 						<HugeiconsIcon icon={Layers01Icon} className="size-4" />
+ 					</SplitButtonRight>
+ 				</ScenesView>
+@@ -286,14 +287,14 @@
+ 				<ToolbarButton
+ 					icon={<HugeiconsIcon icon={MagnetIcon} />}
+ 					isActive={snappingEnabled}
+-					tooltip="Auto snapping"
++					tooltip="自动吸附"
+ 					onClick={() => toggleSnapping()}
+ 				/>
+ 
+ 				<ToolbarButton
+ 					icon={<OcRippleIcon size={24} className="scale-110" />}
+ 					isActive={rippleEditingEnabled}
+-					tooltip="Ripple editing"
++					tooltip="波纹编辑"
+ 					onClick={() => toggleRippleEditing()}
+ 				/>
+ 			</TooltipProvider>
+@@ -304,11 +305,13 @@
+ 				<Button
+ 					variant="text"
+ 					size="icon"
++					aria-label="缩小时间轴"
+ 					onClick={() => onZoom({ direction: "out" })}
+ 				>
+ 					<HugeiconsIcon icon={SearchMinusIcon} />
+ 				</Button>
+ 				<Slider
++					aria-label="时间轴缩放"
+ 					className="w-28"
+ 					value={[zoomToSlider({ zoomLevel, minZoom })]}
+ 					onValueChange={(values) =>
+@@ -321,6 +324,7 @@
+ 				<Button
+ 					variant="text"
+ 					size="icon"
++					aria-label="放大时间轴"
+ 					onClick={() => onZoom({ direction: "in" })}
+ 				>
+ 					<HugeiconsIcon icon={SearchAddIcon} />
+@@ -333,6 +337,7 @@
+ function ToolbarButton({
+ 	icon,
+ 	tooltip,
++	accessibleLabel,
+ 	onClick,
+ 	disabled,
+ 	isActive,
+@@ -340,6 +345,7 @@
+ }: {
+ 	icon: React.ReactNode;
+ 	tooltip: string;
++	accessibleLabel?: string;
+ 	onClick?: ({ event }: { event: React.MouseEvent }) => void;
+ 	disabled?: boolean;
+ 	isActive?: boolean;
+@@ -349,6 +355,8 @@
+ 		<Button
+ 			variant={isActive ? "secondary" : "text"}
+ 			size="icon"
++			aria-label={accessibleLabel ?? tooltip}
++			aria-pressed={isActive}
+ 			disabled={disabled}
+ 			onClick={onClick ? (event) => onClick({ event }) : undefined}
+ 			className={cn(
 --- /dev/null
 +++ b/apps/web/src/timeline/controllers/zoom-controller.test.ts
 @@ -0,0 +1,8 @@
