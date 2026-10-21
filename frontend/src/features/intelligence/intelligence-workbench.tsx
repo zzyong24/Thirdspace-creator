@@ -1,6 +1,7 @@
 "use client";
 import { compactNumber,dateLabel,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
 import styles from "./source-management.module.css";
+import layoutStyles from "./intelligence-workbench.module.css";
 import { SourceManagementOverview } from "./source-management-overview";
 import { SourceRunHistoryDialog } from "./source-run-history-dialog";
 
@@ -856,7 +857,7 @@ function IntelligenceWorkbenchScope({
       data-page="intelligence"
       data-testid="intelligence-workbench"
       data-presentation={presentation}
-      className={cn("flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-border bg-surface", sourcesOnly && styles.manager)}
+      className={cn("flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-border bg-surface", sourcesOnly ? styles.manager : layoutStyles.workbench)}
     >
       {sourcesOnly ? <header className={styles.managerHeader}>
         <div><h3>真实来源</h3><p>只收公开作品与计数，不采集评论正文。</p></div>
@@ -871,7 +872,7 @@ function IntelligenceWorkbenchScope({
             <h1 className="truncate text-lg font-semibold text-foreground">
               内容雷达
             </h1>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]">
               只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
             </p>
           </div>
@@ -1015,12 +1016,12 @@ function IntelligenceWorkbenchScope({
 
       <div
         data-testid="intelligence-responsive-layout" data-studio-layout="inbox"
-        className={cn("grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)] xl:overflow-hidden 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto]", sourcesOnly && styles.sourceLayout)}
+        className={cn("grid min-h-0 min-w-0 flex-1", sourcesOnly ? styles.sourceLayout : layoutStyles.layout)}
       >
         <aside
           data-testid="intelligence-sidebar"
           aria-label="内容雷达分类和来源"
-          className="flex min-h-0 flex-col border-b border-border/70 bg-surface-subtle xl:border-b-0 xl:border-r"
+          className={cn("flex min-h-0 min-w-0 flex-col bg-surface-subtle", !sourcesOnly && layoutStyles.sidebar)}
         >
           {!sourcesOnly ? <>
           <div className="shrink-0 border-b border-border/70 p-3">
@@ -1048,7 +1049,7 @@ function IntelligenceWorkbenchScope({
               />
             </label>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+          <div className={cn("min-h-0 flex-1 overflow-y-auto px-2 pb-4", !sourcesOnly && layoutStyles.sourceList)}>
             <button
               type="button"
               onClick={() => void selectItemScope(null, null)}
@@ -1166,7 +1167,7 @@ function IntelligenceWorkbenchScope({
         {sourcesOnly ? <SourceManagementOverview workspace={workspace} selectedSourceId={selectedSourceId} selectedCollectionId={selectedCollectionId}/> : <>
         <main
           aria-busy={itemsLoading}
-          className="flex min-h-0 min-w-0 flex-col bg-canvas/55"
+          className={cn("flex min-h-0 min-w-0 flex-col bg-canvas/55", layoutStyles.itemsPane)}
         >
           <h2 className="flex shrink-0 items-center gap-2 border-b border-border/70 px-4 py-3 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
           <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 px-4 py-2.5">
@@ -1280,7 +1281,7 @@ function IntelligenceWorkbenchScope({
                 : `${scopedTotal} 条真实内容`}
             </span>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className={cn("min-h-0 flex-1 overflow-y-auto p-3", layoutStyles.itemList)}>
             {upgrades.tasks.some(task=>!["succeeded","cancelled"].includes(task.status)) ? (
               <div role="status" className="mb-3 rounded-xl bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
                 项目升级队列 · {upgrades.tasks.filter(task=>!["succeeded","failed","blocked","cancelled"].includes(task.status)).length} 项处理中或排队
@@ -1313,7 +1314,8 @@ function IntelligenceWorkbenchScope({
             ) : (
               <div
                 className={cn(
-                  "grid grid-cols-1 gap-2 transition-opacity xl:grid-cols-2",
+                  layoutStyles.itemGrid,
+                  "gap-2 transition-opacity",
                   itemsLoading && "opacity-60",
                 )}
               >
@@ -1347,7 +1349,8 @@ function IntelligenceWorkbenchScope({
           </div>
         </main>
 
-        <div className="relative flex min-h-[320px] xl:min-h-0">
+        <div data-slot="radar-detail-pane" className={layoutStyles.detailPane}
+          style={{ "--detail-width": `${detailWidth}px` } as React.CSSProperties}>
           <div
             role="separator"
             aria-label="调整作品详情宽度"
@@ -1364,20 +1367,15 @@ function IntelligenceWorkbenchScope({
                 persistWidth(detailWidth - 24);
               }
             }}
-            className="group z-10 hidden w-1 cursor-col-resize bg-border/60 outline-none transition hover:bg-primary/50 focus:bg-primary 2xl:block"
+            className={cn("group z-10 w-1 shrink-0 cursor-col-resize bg-border/60 outline-none transition hover:bg-primary/50 focus:bg-primary", layoutStyles.resizeHandle)}
           >
             <span className="absolute left-1/2 top-1/2 h-14 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent group-hover:bg-primary/20" />
           </div>
           <aside
             data-testid="intelligence-detail"
             aria-label="作品详情"
-            style={
-              {
-                width: detailWidth,
-                "--detail-width": `${detailWidth}px`,
-              } as React.CSSProperties
-            }
-            className="min-h-0 !w-full overflow-y-auto bg-surface 2xl:!w-[var(--detail-width)] 2xl:shrink-0"
+            tabIndex={0}
+            className={cn("min-h-0 min-w-0 bg-surface", layoutStyles.detail)}
           >
             {detail ? (
               <ItemDetail
@@ -1457,7 +1455,7 @@ function RadarCollectionGroup({
         )}
       >
         <Icon aria-hidden="true" className={cn("size-3.5 shrink-0", system ? "text-primary" : "text-muted-foreground")} />
-        <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
+        <span className="min-w-0 flex-1 whitespace-normal font-semibold [overflow-wrap:anywhere]">{name}</span>
         <span className="rounded-full bg-muted px-1.5 text-[10px] font-medium tabular-nums leading-4 text-muted-foreground">
           {count}
         </span>
@@ -1523,27 +1521,27 @@ function SourceRow({
           : "border-transparent bg-transparent hover:border-border/70 hover:bg-muted/55",
       )}
     >
-      <div className="flex min-w-0 items-center gap-1.5 p-1.5">
+      <div className="flex min-w-0 flex-col gap-1 p-1.5">
         <button
           type="button"
           onClick={onSelect}
           aria-pressed={active}
-          className="min-w-0 flex-1 rounded-lg px-2 py-1.5 text-left outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="w-full min-w-0 rounded-lg px-2 py-1.5 text-left outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <span
-            className="block truncate whitespace-nowrap text-xs font-semibold text-foreground"
+            className={cn("block text-sm font-semibold leading-6 text-foreground", layoutStyles.sourceName)}
             title={source.displayName}
           >
             {source.displayName}
           </span>
-          <span className="mt-0.5 flex min-w-0 items-center gap-1 whitespace-nowrap text-[10px] leading-4 text-muted-foreground">
+          <span className="mt-1 flex min-w-0 flex-wrap items-center gap-1 text-xs leading-5 text-muted-foreground">
             <span className="shrink-0">{sourceTypeLabel(source.type)}</span>
             <span aria-hidden="true" className="opacity-50">
               ·
             </span>
             <span
               className={cn(
-                "min-w-0 truncate",
+                "min-w-0 [overflow-wrap:anywhere]",
                 currentStatus === "failed" && "text-destructive",
                 currentStatus === "blocked" && "text-warning",
                 (currentStatus === "succeeded_with_items" ||
@@ -1555,6 +1553,16 @@ function SourceRow({
             </span>
           </span>
         </button>
+        <span
+          className="block min-w-0 px-2 pb-1 text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]"
+          title={collectorUnavailable?"采集账号已不可用，请添加使用当前组账号的来源。原内容仍保留。":`${collectorLabel} → 归当前工作区`}
+        >
+          {collectorLabel}
+        </span>
+      </div>
+
+      <div role="group" aria-label={`${source.displayName}的来源操作`}
+        className={cn("border-t border-border/55 bg-muted/25 px-2 py-2", layoutStyles.sourceActions)}>
         <Button
           type="button"
           aria-label={
@@ -1567,7 +1575,7 @@ function SourceRow({
           disabled={syncing || source.status !== "active" || !!collectorUnavailable}
           onClick={loginExpired ? onReconnect : onRun}
           className={cn(
-            "h-8 shrink-0 gap-1 whitespace-nowrap border-border bg-surface px-2 text-[11px] text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
+            "h-8 shrink-0 gap-1 whitespace-nowrap border-border bg-surface px-2 text-xs text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
             loginExpired && "border-warning/40 text-warning",
           )}
         >
@@ -1578,15 +1586,6 @@ function SourceRow({
           )}
           {loginExpired ? "登录" : queued ? "排队中" : syncing ? "同步中" : "同步"}
         </Button>
-      </div>
-
-      <div className="flex min-w-0 items-center gap-1 border-t border-border/55 bg-muted/25 px-2 py-1.5">
-        <span
-          className="min-w-0 flex-1 truncate whitespace-nowrap text-[10px] text-muted-foreground"
-          title={collectorUnavailable?"采集账号已不可用，请添加使用当前组账号的来源。原内容仍保留。":`${collectorLabel} → 归当前工作区`}
-        >
-          {collectorLabel}
-        </span>
         <Button
           type="button"
           aria-label={`${source.monitorEnabled ? "暂停" : "恢复"} ${source.displayName} 的每日自动同步`}
@@ -1599,7 +1598,7 @@ function SourceRow({
           size="sm"
           disabled={monitorUpdating || source.status !== "active"}
           onClick={onToggleMonitor}
-          className="h-6 shrink-0 gap-1 whitespace-nowrap px-1.5 text-[10px] text-muted-foreground hover:bg-surface hover:text-foreground"
+          className="h-8 shrink-0 gap-1 whitespace-nowrap px-2 text-xs text-muted-foreground hover:bg-surface hover:text-foreground"
         >
           {source.monitorEnabled ? (
             <Pause className="size-3" />
@@ -1626,7 +1625,7 @@ function SourceRow({
           size="sm"
           disabled={syncing}
           onClick={onRemove}
-          className="h-6 shrink-0 gap-1 whitespace-nowrap px-1.5 text-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          className="h-8 shrink-0 gap-1 whitespace-nowrap px-2 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         >
           <Trash2 className="size-3" />
           移除
@@ -1638,7 +1637,7 @@ function SourceRow({
           variant="ghost"
           size="icon"
           onClick={onShowRuns}
-          className="size-6 shrink-0 text-muted-foreground hover:bg-surface hover:text-foreground"
+          className="size-8 shrink-0 text-muted-foreground hover:bg-surface hover:text-foreground"
         >
           <Clock3 className="size-3" />
         </Button>

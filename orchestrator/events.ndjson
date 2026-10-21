@@ -1751,3 +1751,5 @@
 {"ts":"2026-10-21T07:49:18.991Z","actor":"taskctl","action":"block","task":"T-1380","reason":"本项修复与测试完成，但.git/index.lock只读拒绝，无法满足独立commit","sha_before":"d914bc60f871","sha_after":"23e1c9278941"}
 {"ts":"2026-10-21T07:49:19.020Z","actor":"taskctl","action":"block","task":"T-1381","reason":"本项修复与测试完成，但.git/index.lock只读拒绝，无法满足独立commit","sha_before":"23e1c9278941","sha_after":"eb928961cc43"}
 {"ts":"2026-10-21T07:49:19.047Z","actor":"taskctl","action":"block","task":"T-1382","reason":"本项修复与测试完成，但.git/index.lock只读拒绝，无法满足独立commit","sha_before":"eb928961cc43","sha_after":"be0842d059bb"}
+{"ts":"2026-10-21T08:20:41.725Z","actor":"taskctl","action":"start","task":"T-1383","sha_before":"cdddf9847cdf","sha_after":"105aa48bca2a"}
+{"ts":"2026-10-21T08:25:25.544Z","actor":"taskctl","action":"block","task":"T-1383","reason":"代码与雷达95例/typecheck通过；Chrome未获准无法实测视觉，.git/index.lock写入受沙箱阻止；按用户授权留下补丁与本地提交脚本。完整reconcile保留T-1373既有阻断，见T-1383-RESULT.md。","sha_before":"105aa48bca2a","sha_after":"d59aa6cf6d0c"}

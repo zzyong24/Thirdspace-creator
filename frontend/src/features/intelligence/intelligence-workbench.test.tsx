@@ -548,8 +548,8 @@ describe("T-482 内容雷达工作区", () => {
     );
 
     const layout = screen.getByTestId("intelligence-responsive-layout");
-    expect(layout.className).toContain("xl:grid-cols");
-    expect(layout.className).toContain("2xl:grid-cols");
+    expect(layout.className).toContain("layout");
+    expect(layout.className).not.toContain("xl:grid-cols");
     const sidebar = screen.getByTestId("intelligence-sidebar");
     expect(sidebar.className).toContain("bg-surface-subtle");
     expect(sidebar.className).not.toMatch(/bg-\[#|bg-white/);
@@ -572,14 +572,12 @@ describe("T-482 内容雷达工作区", () => {
     );
 
     const layout = screen.getByTestId("intelligence-responsive-layout");
-    expect(layout.className).toContain(
-      "xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)]",
-    );
+    expect(layout.className).toContain("layout");
     const detailRegion = screen
       .getByTestId("intelligence-detail")
       .parentElement;
     expect(detailRegion).not.toHaveClass("xl:col-span-2");
-    expect(detailRegion).toHaveClass("xl:min-h-0");
+    expect(detailRegion).toHaveAttribute("data-slot", "radar-detail-pane");
     const sourceStep=screen.getByRole("heading",{name:"01 来源与采集"});
     const pickStep=screen.getByRole("heading",{name:"02 挑选内容"});
     const readStep=screen.getByRole("heading",{name:"03 阅读核对"});
@@ -1181,16 +1179,19 @@ describe("T-482 内容雷达工作区", () => {
         api={api()}
       />,
     );
-    const separator = screen.getByRole("separator", {
-      name: "调整作品详情宽度",
-    });
+    // jsdom 不计算容器查询；验证大屏调宽的处理器与存储值，显隐由样式契约覆盖。
     const pane = screen.getByTestId("intelligence-detail");
-    expect(pane).toHaveStyle({ width: "392px" });
+    const separator = pane.parentElement!.querySelector<HTMLElement>('[role="separator"]')!;
+    expect(separator).toHaveAttribute("aria-label", "调整作品详情宽度");
+    expect(separator).toHaveAttribute("aria-valuenow", "392");
+    expect(pane.parentElement!.style.getPropertyValue("--detail-width")).toBe("392px");
     fireEvent.keyDown(separator, { key: "ArrowLeft" });
-    expect(pane).toHaveStyle({ width: "416px" });
+    expect(separator).toHaveAttribute("aria-valuenow", "416");
+    expect(pane.parentElement!.style.getPropertyValue("--detail-width")).toBe("416px");
+    expect(pane).toHaveAttribute("tabindex", "0");
   });
 
-  it("[T-514/T-546] 窄栏来源使用两层紧凑结构，名称不逐字换行且操作完整", async () => {
+  it("[T-1383/T-514/T-546] 长来源名完整换行，操作独立成组且运行记录仍可打开", async () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {
       ...workspace,
@@ -1199,7 +1200,7 @@ describe("T-482 内容雷达工作区", () => {
           id: "source-1",
           collectionId: "collection-darkhorse",
           type: "darkhorse_query",
-          displayName: "AI 工具",
+          displayName: "爆款选题观察与创作者工具收藏",
           canonicalUrl: null,
           collector: null,
           monitorEnabled: true,
@@ -1234,27 +1235,31 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    const sync = screen.getByRole("button", { name: "同步 AI 工具" });
+    const sync = screen.getByRole("button", { name: "同步 爆款选题观察与创作者工具收藏" });
     expect(sync).toHaveTextContent("同步");
     expect(sync).not.toHaveClass("opacity-0");
     const sourceRow = screen.getByTestId("radar-source-row-source-1");
     expect(sourceRow).toHaveClass("overflow-hidden");
-    expect(within(sourceRow).getByText("AI 工具")).toHaveClass(
-      "truncate",
-      "whitespace-nowrap",
-    );
-    expect(within(sourceRow).getByText("尚未同步")).toHaveClass("truncate");
+    const name = within(sourceRow).getByText("爆款选题观察与创作者工具收藏");
+    expect(name).not.toHaveClass("truncate");
+    expect(name).not.toHaveClass("whitespace-nowrap");
+    expect(within(sourceRow).getByText("尚未同步")).not.toHaveClass("truncate");
+    const actions = within(sourceRow).getByRole("group", { name: "爆款选题观察与创作者工具收藏的来源操作" });
+    expect(within(actions).getByRole("button", { name: "同步 爆款选题观察与创作者工具收藏" })).toBe(sync);
+    expect(within(actions).getAllByRole("button")).toHaveLength(4);
+    expect(actions).not.toContainElement(name);
+    expect(actions).not.toContainElement(within(sourceRow).getByText("无需登录账号"));
     expect(
       within(sourceRow).getByRole("button", {
-        name: "暂停 AI 工具 的每日自动同步",
+        name: "暂停 爆款选题观察与创作者工具收藏 的每日自动同步",
       }),
     ).toHaveTextContent("自动");
 
     await userEvent.click(
-      screen.getByRole("button", { name: "查看 AI 工具 的运行记录" }),
+      screen.getByRole("button", { name: "查看 爆款选题观察与创作者工具收藏 的运行记录" }),
     );
     expect(
-      await screen.findByRole("heading", { name: "AI 工具 · 运行记录" }),
+      await screen.findByRole("heading", { name: "爆款选题观察与创作者工具收藏 · 运行记录" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/APP 运行时执行/)).toBeInTheDocument();
     expect(stub.listRuns).toHaveBeenCalledWith("source-1");

@@ -1,0 +1,147 @@
+/* 雷达按实际可用宽度分栏，避免展开导航、缩放和嵌入容器挤压来源。 */
+.workbench {
+  container: radar-workbench / inline-size;
+  min-width: 0;
+}
+
+.layout {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  overflow-y: auto;
+}
+
+.sidebar {
+  border-bottom: 1px solid var(--creatoros-border);
+}
+
+.sourceList {
+  flex: none;
+  overflow: visible;
+}
+
+.itemsPane {
+  container: radar-items / inline-size;
+}
+
+.itemList {
+  max-height: 560px;
+}
+
+.itemGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.detailPane {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 320px;
+  border-top: 1px solid var(--creatoros-border);
+}
+
+.detail {
+  width: 100%; /* 窄窗口不应用已记忆的大屏宽度。 */
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.resizeHandle {
+  display: none;
+}
+
+.sourceName {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.sourceActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sourceActions button[data-slot="button"] {
+  min-width: 32px;
+  min-height: 32px;
+  padding-inline: 8px;
+  font-size: 12px;
+}
+
+@container radar-workbench (min-width: 680px) {
+  .layout {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    border-right: 1px solid var(--creatoros-border);
+    border-bottom: 0;
+  }
+
+  .detailPane {
+    grid-column: 1 / -1;
+  }
+}
+
+@container radar-workbench (min-width: 1040px) {
+  .layout {
+    grid-template-columns: 300px minmax(300px, 0.9fr) minmax(360px, 1.1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-content: stretch;
+    overflow: hidden;
+  }
+
+  .sourceList {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .itemList {
+    max-height: none;
+  }
+
+  .detailPane {
+    grid-column: auto;
+    min-height: 0;
+    border-top: 0;
+    border-left: 1px solid var(--creatoros-border);
+  }
+
+  .detail {
+    overflow-y: auto;
+  }
+}
+
+/* 最大已存详情宽640px仍为来源300px和作品至少360px留足空间。 */
+@container radar-workbench (min-width: 1320px) {
+  .layout {
+    grid-template-columns: 300px minmax(360px, 1fr) auto;
+  }
+
+  .detailPane {
+    width: calc(var(--detail-width) + 4px);
+    border-left: 0;
+  }
+
+  .resizeHandle {
+    display: block;
+  }
+
+  .detail {
+    flex: 1;
+  }
+}
+
+@container radar-items (min-width: 640px) {
+  .itemGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .sourceActions button[data-slot="button"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
