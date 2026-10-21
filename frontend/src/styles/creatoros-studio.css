@@ -117,7 +117,7 @@
 /* Manuscript editors: quiet surrounding desk, readable paper, separate assistant. */
 [data-design="manuscript"] [data-slot="studio-editor-split"] { gap:16px; }
 [data-design="manuscript"] [data-slot="draft-pane"] { background:var(--creatoros-surface); border:1px solid var(--creatoros-border); border-radius:10px; padding:24px; gap:20px; }
-[data-design="manuscript"] [data-slot="draft-script-section"] { order:-1; padding-bottom:24px; border-bottom:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="draft-script-section"] { padding-bottom:24px; border-bottom:1px solid var(--creatoros-border); }
 [data-design="manuscript"] [data-slot="draft-chat-rail"] { border:1px solid var(--creatoros-border); border-radius:10px; overflow:hidden; background:var(--creatoros-surface); }
 [data-design="manuscript"] [data-studio-layout="document"] { max-width:1080px; padding:0; }
 [data-design="manuscript"] [data-studio-layout="document"] > header { padding:0 0 16px; border-bottom:1px solid var(--creatoros-border); }

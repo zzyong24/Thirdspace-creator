@@ -56,3 +56,13 @@ describe("ProjectPipelinePanel", () => {
     expect(container.querySelector('[data-step="transcript"]')?.getAttribute("data-state")).toBe("done");
   });
 });
+
+it("去写稿保留用户主动的script锚点，挂载不主动滚动", () => {
+  const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+  const { container } = render(<ProjectPipelinePanel {...base} />);
+  expect(scroll).not.toHaveBeenCalled();
+  const link = container.querySelector('a[href="#script"]');
+  expect(link).toHaveTextContent("去写稿");
+  expect(link).not.toHaveAttribute("autofocus");
+  scroll.mockRestore();
+});
