@@ -782,3 +782,20 @@ describe("补充选题展开面板",()=>{
     expect(mockClient.createCandidate).not.toHaveBeenCalled();
   });
 });
+
+describe("选题来源中文标签", () => {
+  it.each([
+    ["trend", "推荐"], ["benchmark", "对标"], ["demand", "需求"],
+    ["idea", "灵感"], ["favorites", "收藏"], ["future_source", "未知来源"],
+    ["constructor", "未知来源"], ["", "未知来源"],
+  ])("%s 显示 %s", (source, label) => {
+    render(<CandidateCard candidate={candidate({ source: source as CandidateResource["source"] })} />);
+    const card = screen.getByTestId("candidate-card");
+    expect(within(card).getByText(label)).toBeInTheDocument();
+    if (source) expect(within(card).queryByText(source, { exact: true })).not.toBeInTheDocument();
+  });
+  it("保留已有的明确来源名称", () => {
+    render(<CandidateCard candidate={candidate({source: "favorites"})} sourceLabel="收藏夹：创作参考" />);
+    expect(screen.getByText("收藏夹：创作参考")).toBeInTheDocument();
+  });
+});
