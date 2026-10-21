@@ -107,14 +107,27 @@ function isolatedEnv(privateRoot, runDir, metadata) {
     T1382_JOURNEY_BASE_URL: BASE_URL, T1382_JOURNEY_MODE: metadata.mode,
   };
 }
+function foreignListeningPorts() {
+  // 运行前在沙箱外枚举本机已监听 TCP 端口（不含本旅程端口），供隔离规则逐个拒绝。
+  const out = spawnSync('/usr/sbin/lsof', ['-nP', '-iTCP', '-sTCP:LISTEN', '-Fn'], { encoding: 'utf8' });
+  assert.equal(out.status, 0, '无法枚举本机监听端口，拒绝运行');
+  const ports = new Set();
+  for (const line of out.stdout.split('\n')) { const m = line.match(/^n.*:(\d+)$/); if (m && Number(m[1]) !== PORT) ports.add(Number(m[1])); }
+  return [...ports].sort((a, b) => a - b);
+}
 function sandboxProfile(privateRoot, runDir, sourceRoot) {
   const quote = (text) => JSON.stringify(text);
   const writable = [privateRoot, runDir, join(ROOT, 'frontend/.next'), join(ROOT, 'ai-worker/dist')];
+  const writableFiles = [join(ROOT, 'frontend/next-env.d.ts')];
   return `(version 1)\n(allow default)\n` +
     // 仅3441可出站，禁止 localhost:* 绕到本地代理/真实模型网关。
-    `(deny network*)\n(allow network-bind (local ip "localhost:${PORT}"))\n(allow network-inbound (local ip "localhost:${PORT}"))\n(allow network-outbound (remote ip "localhost:${PORT}"))\n` +
+    // Next dev/Turbopack 内部需要 loopback 临时端口与 unix socket：放行回环，但逐个拒绝本机其它已监听端口（代理/数据库/其它服务），外网一律拒绝。
+    `(deny network*)\n(allow network-bind (local ip "localhost:*"))\n(allow network-inbound (local ip "localhost:*"))\n(allow network-outbound (remote ip "localhost:*"))\n` +
+    `(allow network-outbound (remote unix-socket))\n(allow network-bind (local unix-socket))\n(allow network-inbound (local unix-socket))\n` +
+    foreignListeningPorts().map((port) => `(deny network-outbound (remote ip "localhost:${port}"))`).join('\n') + '\n' +
     `(deny file-write*)\n${writable.map((p) => `(allow file-write* (subpath ${quote(p)}))`).join('\n')}\n` +
     `(allow file-write* (literal "/dev/null") (literal "/dev/tty"))\n` +
+    writableFiles.map((p) => `(allow file-write* (literal ${quote(p)}))`).join('\n') + '\n' +
     [sourceRoot, join(homedir(), '.codex'), join(homedir(), '.creatoros'), join(ROOT, '.auth'), join(ROOT, 'frontend/.auth')].map((p) => `(deny file-read* (subpath ${quote(p)}))`).join('\n') + '\n' +
     envFiles().map((p) => `(deny file-read-data (literal ${quote(p)}))`).join('\n') + '\n';
 }
@@ -217,7 +230,7 @@ async function probe(host, port) {
     socket.setTimeout(120000, () => { socket.destroy(); bad(Error('timeout is not isolation proof')); });
   });
 }
-Promise.all([probe('192.0.2.1', 9), probe('127.0.0.1', 1)]).then(
+Promise.all([probe('192.0.2.1', 9), ...${JSON.stringify(foreignListeningPorts().slice(0, 8))}.map((port) => probe('127.0.0.1', port))]).then(
   () => console.log('network denied at OS boundary'),
   error => { console.error(error.message); process.exit(1); }
 );`;
