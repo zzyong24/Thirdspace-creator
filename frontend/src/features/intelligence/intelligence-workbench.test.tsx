@@ -239,7 +239,7 @@ describe("T-482 内容雷达工作区", () => {
     stub.enqueueProjectUpgrades=vi.fn();
     stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[{id:"upgrade-1",accountId:"account-1",ownerId:detail.item.id,status:"succeeded",checkpoint:{stage:"completed",projectId:"project-actual"},createdAt:"2026-09-09T00:00:00Z"}],total:1});
     render(<IntelligenceWorkbench accountId="account-1" workspace={{...workspace,blockedCount:2}} items={[{item:detail.item,latestMetric:null,sourceCount:1}]} initialDetail={null} api={stub}/>);
-    expect(await screen.findByRole("link",{name:"查看项目"})).toHaveAttribute("href","/projects/project-actual");
+    expect(await screen.findByRole("link",{name:"查看项目：真实作品"})).toHaveAttribute("href","/projects/project-actual");
     expect(screen.getByText("已升级为项目")).toBeInTheDocument();
     expect(screen.queryByText("受阻 2")).not.toBeInTheDocument();
     expect(screen.queryByRole("button",{name:"升级为项目"})).not.toBeInTheDocument();
@@ -805,7 +805,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByText("2 条真实内容")).toBeInTheDocument();
   });
 
-  it("[T-572] 即使数据里残留封面地址，列表和详情也不再渲染大图占位", () => {
+  it("[T-1384] 列表展示已有封面缩略图，详情不渲染大图占位", () => {
     const itemWithLegacyCover = {
       ...detail.item,
       coverUrl: "https://example.com/legacy-cover.jpg",
@@ -826,7 +826,9 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelectorAll("img")).toHaveLength(1);
+    expect(container.querySelector("img")).toHaveAttribute("width", "48");
+    expect(within(screen.getByTestId("intelligence-detail")).queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getAllByText("真实作品")).toHaveLength(2);
     expect(screen.getAllByText(/赞/).length).toBeGreaterThan(0);
   });
@@ -1191,7 +1193,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(pane).toHaveAttribute("tabindex", "0");
   });
 
-  it("[T-1383/T-514/T-546] 长来源名完整换行，操作独立成组且运行记录仍可打开", async () => {
+  it("[T-1384/T-514/T-546] 长来源名有完整提示，管理菜单仍能打开运行记录", async () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {
       ...workspace,
@@ -1246,17 +1248,15 @@ describe("T-482 内容雷达工作区", () => {
     expect(within(sourceRow).getByText("尚未同步")).not.toHaveClass("truncate");
     const actions = within(sourceRow).getByRole("group", { name: "爆款选题观察与创作者工具收藏的来源操作" });
     expect(within(actions).getByRole("button", { name: "同步 爆款选题观察与创作者工具收藏" })).toBe(sync);
-    expect(within(actions).getAllByRole("button")).toHaveLength(4);
+    expect(within(actions).getAllByRole("button")).toHaveLength(2);
+    expect(name).toHaveAttribute("title", "爆款选题观察与创作者工具收藏");
     expect(actions).not.toContainElement(name);
-    expect(actions).not.toContainElement(within(sourceRow).getByText("无需登录账号"));
-    expect(
-      within(sourceRow).getByRole("button", {
-        name: "暂停 爆款选题观察与创作者工具收藏 的每日自动同步",
-      }),
-    ).toHaveTextContent("自动");
+    expect(actions).not.toContainElement(within(sourceRow).getByText("无需登录账号 · 自动"));
+    await userEvent.click(screen.getByRole("button", {name: "管理 爆款选题观察与创作者工具收藏"}));
+    expect(screen.getByRole("menuitem", {name: "暂停 爆款选题观察与创作者工具收藏 的每日自动同步"})).toBeInTheDocument();
 
     await userEvent.click(
-      screen.getByRole("button", { name: "查看 爆款选题观察与创作者工具收藏 的运行记录" }),
+      screen.getByRole("menuitem", { name: "查看 爆款选题观察与创作者工具收藏 的运行记录" }),
     );
     expect(
       await screen.findByRole("heading", { name: "爆款选题观察与创作者工具收藏 · 运行记录" }),
@@ -1297,9 +1297,8 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "移除 AI 工具" }),
-    );
+    await userEvent.click(screen.getByRole("button", {name: "管理 AI 工具"}));
+    await userEvent.click(screen.getByRole("menuitem", {name: "移除 AI 工具"}));
 
     expect(stub.deleteSource).not.toHaveBeenCalled();
     expect(
@@ -1359,9 +1358,8 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByTestId("radar-source-row-source-1")).toHaveClass(
       "ring-1",
     );
-    await userEvent.click(
-      screen.getByRole("button", { name: "移除 AI 工具" }),
-    );
+    await userEvent.click(screen.getByRole("button", {name: "管理 AI 工具"}));
+    await userEvent.click(screen.getByRole("menuitem", {name: "移除 AI 工具"}));
     await userEvent.click(
       screen.getByRole("button", { name: "删除信源与内容" }),
     );
@@ -1421,9 +1419,8 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "移除 行业观察" }),
-    );
+    await userEvent.click(screen.getByRole("button", {name: "管理 行业观察"}));
+    await userEvent.click(screen.getByRole("menuitem", {name: "移除 行业观察"}));
     await userEvent.click(
       screen.getByRole("button", { name: "删除信源与内容" }),
     );
@@ -1440,7 +1437,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
-  it("[T-665] 同步中的来源明确禁用移除，不能误调用删除接口", () => {
+  it("[T-665] 同步中的来源明确禁用移除，不能误调用删除接口", async () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {
       ...workspace,
@@ -1485,10 +1482,12 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    const remove = screen.getByRole("button", {
+    await userEvent.click(screen.getByRole("button", {name: "管理 行业观察"}));
+    const remove = screen.getByRole("menuitem", {
       name: "同步中，暂时不能移除 行业观察",
     });
-    expect(remove).toBeDisabled();
+    expect(remove).toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(remove);
     expect(remove).toHaveAttribute(
       "title",
       "同步进行中，完成后才能移除来源",
@@ -1773,8 +1772,9 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
+    await userEvent.click(screen.getByRole("button", {name: "管理 示例博主"}));
     await userEvent.click(
-      screen.getByRole("button", {
+      screen.getByRole("menuitem", {
         name: "暂停 示例博主 的每日自动同步",
       }),
     );
@@ -2164,8 +2164,10 @@ it("来源目录选择仅切换真实状态概览，筛选和原同步入口保�
   expect(within(overview).getByRole("link",{name:"查看来源原链接"})).toHaveAttribute("href","https://example.com");
   expect(calls.listItems).not.toHaveBeenCalled();
   expect(screen.getByRole("button",{name:"同步 来源布局样例"})).toBeEnabled();
-  expect(screen.getByRole("button",{name:"恢复 来源布局样例 的每日自动同步"})).toBeEnabled();
-  expect(screen.getByRole("button",{name:"移除 来源布局样例"})).toBeEnabled();
+  await userEvent.click(screen.getByRole("button",{name:"管理 来源布局样例"}));
+  expect(screen.getByRole("menuitem",{name:"恢复 来源布局样例 的每日自动同步"})).not.toHaveAttribute("aria-disabled", "true");
+  expect(screen.getByRole("menuitem",{name:"移除 来源布局样例"})).not.toHaveAttribute("aria-disabled", "true");
+  await userEvent.keyboard("{Escape}");
   await userEvent.type(screen.getByRole("searchbox",{name:"筛选来源"}),"不存在的来源");
   expect(screen.getByText("没有匹配的来源")).toBeVisible();
   expect(screen.queryByRole("button",{name:"同步 来源布局样例"})).not.toBeInTheDocument();
@@ -2181,4 +2183,70 @@ it.each(["unknown", "provider_new_state"])("未知转写状态 %s 显示通用�
  expect(screen.getByRole("button",{name:"升级为项目"})).toBeEnabled();
  expect(stub.enqueueProjectUpgrades).not.toHaveBeenCalled();
  expect(stub.enqueueTranscript).not.toHaveBeenCalled();
+});
+
+it("T-1384 作品行显示已有封面、完整标题提示，缺封面诚实留空且选择仍有效", async () => {
+  const stub = api();
+  const title = "长作品标题".repeat(45);
+  render(<IntelligenceWorkbench accountId="density-cover" workspace={workspace} items={[
+    { item: {...detail.item, title, coverUrl: "https://example.com/cover.jpg"}, latestMetric: {...detail.metrics[0], likeCount: 12800000}, sourceCount: 2 },
+    { item: {...detail.item, id: "no-cover", title: "山"}, latestMetric: {...detail.metrics[0], likeCount: 0}, sourceCount: 1 },
+  ]} initialDetail={null} api={stub}/>);
+  const cover = screen.getByRole("img", {name: `${title}的封面`});
+  expect(cover).toHaveAttribute("src", "https://example.com/cover.jpg");
+  expect(cover).toHaveAttribute("loading", "lazy");
+  expect(screen.getByText(title)).toHaveAttribute("title", title);
+  expect(screen.getAllByRole("img")).toHaveLength(1);
+  expect(screen.getByText("赞 0")).toBeInTheDocument();
+  fireEvent.error(cover);
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  await userEvent.click(screen.getByText(title));
+  expect(stub.getItem).toHaveBeenCalledWith("item-1");
+});
+
+it("T-1384 自定义子分类保留真实父级名称提示和目录层级", () => {
+  const name = "很长的子分类名称".repeat(12);
+  render(<IntelligenceWorkbench accountId="density-group" workspace={{...workspace, collections:[...workspace.collections, {
+    id:"child", parentId:"collection-favorites", name, kind:"custom", sortOrder:2, version:1,
+  }]}} items={[]} initialDetail={null} api={api()}/>);
+  const child = screen.getByRole("region", {name:`${name}分组`});
+  expect(child).toHaveAttribute("data-parent-collection", "我的收藏");
+  expect(within(child).getByText(name)).toHaveAttribute("title", `我的收藏 / ${name}`);
+});
+
+it.each([
+  ["failed", "升级失败"], ["blocked", "升级受阻"], ["paused", "升级已暂停"],
+  ["cancelled", "升级已取消"], ["queued", "升级排队中"],
+])("T-1384 作品卡的 %s 显示状态，继续或重试入口只在详情", async (status, label) => {
+  const stub = api();
+  stub.enqueueProjectUpgrades = vi.fn();
+  stub.listProjectUpgrades = vi.fn().mockResolvedValue({tasks:[{
+    id:"upgrade-state", accountId:"state-account", ownerId:detail.item.id, status,
+    checkpoint:null, errorMessage: status === "failed" ? "来源暂不可读，原任务已保留" : null,
+    createdAt:"2026-10-21T00:00:00Z",
+  }],total:1});
+  render(<IntelligenceWorkbench accountId="state-account" workspace={workspace} items={[{item:detail.item, latestMetric:null, sourceCount:1}]} initialDetail={null} api={stub}/>);
+  expect(await screen.findByText(label)).toBeInTheDocument();
+  expect(screen.queryByRole("button", {name:/升级为项目|重试升级|继续升级|重新加入队列/})).not.toBeInTheDocument();
+  if (status === "failed") expect(screen.getByText(label)).toHaveAttribute("title", "来源暂不可读，原任务已保留");
+});
+
+it("T-1384 需登录来源醒目标识、按可见状态筛选，管理菜单支持键盘开关", async () => {
+  const stub = api();
+  const source = {id:"login-source", collectionId:null, type:"favorites_folder" as const, displayName:"登录过期的来源", canonicalUrl:null, collector:null, monitorEnabled:true, syncPolicy:{mode:"manual" as const}, status:"active" as const, lastRunAt:null, nextRunAt:null, version:1};
+  render(<IntelligenceWorkbench accountId="status-search" workspace={{...workspace, sources:[source], health:[{
+    sourceId:source.id, lastRunId:null, lastRunStatus:"blocked", blockedCount:1,
+    lastErrorCode:"LOGIN_REQUIRED", scannedCount:0,newCount:0,updatedCount:0,failedCount:0,
+  }]}} items={[]} initialDetail={null} api={stub}/>);
+  expect(screen.getByText("需登录")).toHaveClass("text-warning");
+  await userEvent.type(screen.getByRole("searchbox", {name:"筛选来源"}), "需登录");
+  expect(screen.getByRole("button",{name:"重新登录 登录过期的来源 的采集账号"})).toBeEnabled();
+  const manage = screen.getByRole("button",{name:"管理 登录过期的来源"});
+  manage.focus();
+  await userEvent.keyboard("{Enter}");
+  expect(screen.getByRole("menuitem", {name:"查看 登录过期的来源 的运行记录"})).toBeVisible();
+  await userEvent.keyboard("{Escape}");
+  expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  expect(manage).toHaveFocus();
+  expect(stub.startRun).not.toHaveBeenCalled();
 });
