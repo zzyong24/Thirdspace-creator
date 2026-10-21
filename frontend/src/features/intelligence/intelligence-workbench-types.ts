@@ -161,7 +161,8 @@ export interface RadarItemDetail {
       | "done"
       | "skipped"
       | "failed"
-      | "blocked";
+      | "blocked"
+      | "unknown";
     text: string | null;
     errorCode: string | null;
   };

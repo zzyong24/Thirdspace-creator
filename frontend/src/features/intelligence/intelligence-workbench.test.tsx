@@ -2165,3 +2165,15 @@ it("来源目录选择仅切换真实状态概览，筛选和原同步入口保�
   expect(screen.getByText("没有匹配的来源")).toBeVisible();
   expect(screen.queryByRole("button",{name:"同步 来源布局样例"})).not.toBeInTheDocument();
 });
+
+it.each(["unknown", "provider_new_state"])("未知转写状态 %s 显示通用状态，正文和升级入口仍可用", async (status) => {
+ const stub=api();
+ stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[],total:0});
+ stub.enqueueProjectUpgrades=vi.fn().mockResolvedValue({tasks:[]});
+ render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[]} initialDetail={{...detail,transcript:{...detail.transcript,status:status as RadarItemDetail["transcript"]["status"],text:"保留的真实逐字稿"}}} api={stub}/>);
+ expect(screen.getByText("状态未知")).toBeInTheDocument();
+ expect(screen.getByText("保留的真实逐字稿")).toBeInTheDocument();
+ expect(screen.getByRole("button",{name:"升级为项目"})).toBeEnabled();
+ expect(stub.enqueueProjectUpgrades).not.toHaveBeenCalled();
+ expect(stub.enqueueTranscript).not.toHaveBeenCalled();
+});

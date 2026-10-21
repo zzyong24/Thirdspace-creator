@@ -87,7 +87,7 @@ export function isRunActive(status: RadarRunStatus | null | undefined): boolean 
 }
 
 export function transcriptLabel(status: RadarItemDetail["transcript"]["status"]) {
-  return {
+  const labels: Record<RadarItemDetail["transcript"]["status"], string> = {
     not_requested: "尚未转写",
     queued: "排队中",
     running: "转写中",
@@ -95,7 +95,9 @@ export function transcriptLabel(status: RadarItemDetail["transcript"]["status"])
     skipped: "已跳过",
     failed: "转写失败",
     blocked: "需要处理",
-  }[status];
+    unknown: "状态未知",
+  };
+  return Object.hasOwn(labels, status) ? labels[status] : "状态未知";
 }
 
 export function progressLabel(

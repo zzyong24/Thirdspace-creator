@@ -1,5 +1,5 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import {ENDPOINTS} from '@creatoros/contract';
+import {ENDPOINTS, intelligenceTranscriptStatus, itemTranscriptResource} from '@creatoros/contract';
 import {defaultApi} from './intelligence-workbench-api';
 import {CURRENT_ACCOUNT_KEY,CURRENT_GROUP_KEY} from '@/lib/http-transport';
 afterEach(()=>{vi.unstubAllGlobals();localStorage.clear();});
@@ -45,4 +45,28 @@ it('活跃原任务经公开ownerId+kind列表完整分页，冻结scope，不�
  for(const call of calls){expect(call.headers['x-group-id']).toBe('group-a');expect(call.headers).not.toHaveProperty('x-account-id');}
  rows.splice(0,rows.length,task('original-task','group-b'));
  await expect(api.getProjectUpgrade!({id:'original-task',ownerId:'shared-item'})).rejects.toThrow('原升级任务暂未读到');
+});
+
+const transcriptFixture = {
+ itemId: "item-unknown", status: "not_requested", text: "已有正文保留", source: null,
+ provider: null, model: null, language: null, executionTaskId: null,
+ queuedAt: null, completedAt: null, errorCode: null,
+};
+it.each(intelligenceTranscriptStatus.options)("转写读取保留合法状态 %s", status => {
+ expect(itemTranscriptResource.parse({...transcriptFixture,status}).status).toBe(status);
+});
+it.each(["future_status", "unknown", "", "constructor"])("转写读取将未知字符串 %s 规范为unknown，写入筛选枚举仍拒绝", status => {
+ expect(itemTranscriptResource.parse({...transcriptFixture,status})).toMatchObject({status:"unknown",text:"已有正文保留"});
+ expect(intelligenceTranscriptStatus.safeParse(status).success).toBe(false);
+ expect(ENDPOINTS.listIntelligenceItems.query.safeParse({sort:"newest",transcriptStatus:status}).success).toBe(false);
+});
+it.each([undefined,null,123,{},[]])("转写状态非字符串 %j 仍拒绝，不能吞掉结构损坏", status => {
+ expect(itemTranscriptResource.safeParse({...transcriptFixture,status}).success).toBe(false);
+});
+it("真实HTTP客户端解析未知转写状态，详情及正文仍可读", async () => {
+ const item={id:"item-unknown",userId:"user",accountId:null,groupId:"group-a",type:"video",platform:"douyin",externalId:null,canonicalUrl:"https://example.com/work",authorId:null,authorName:"作者",title:"正常作品",summary:null,coverUrl:null,coverAssetId:null,publishedAt:null,durationMs:null,capturedAt:"2026-10-21T00:00:00Z",availability:"available"};
+ vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify({data:{item,metrics:[],observations:[],snapshots:[],transcript:{...transcriptFixture,status:"provider_new_state"},transforms:[]},meta:{requestId:"unknown-status"}}),{status:200})));
+ const result=await defaultApi({groupId:"group-a"}).getItem(item.id);
+ expect(result.item.title).toBe("正常作品");
+ expect(result.transcript).toMatchObject({status:"unknown",text:"已有正文保留"});
 });

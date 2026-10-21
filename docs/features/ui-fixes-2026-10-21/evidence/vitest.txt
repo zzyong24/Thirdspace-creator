@@ -1,0 +1,55 @@
+
+ RUN  v4.1.8 /Users/masx/Projects/Thirdspace-creator/frontend
+
+(node:3313) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3307) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3312) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3309) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3306) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3310) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3308) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3311) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+ ❯ src/features/draft-workbench/draft-workbench-state.test.ts (8 tests | 1 failed) 15ms
+     × T-767 当前脚本版本晚于最新锁定预测时，VM 把预测标为过期 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/draft-workbench/draft-workbench-state.test.ts > draft workbench project state > T-767 当前脚本版本晚于最新锁定预测时，VM 把预测标为过期
+AssertionError: expected { predictionId: 'pred-v1', …(5) } to match object { predictionId: 'pred-v1', …(2) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "predictionId": "pred-v1",
+-   "stale": true,
++   "stale": false,
+    "status": "locked",
+  }
+
+ ❯ src/features/draft-workbench/draft-workbench-state.test.ts:272:32
+    270|     const vm = await buildDraftWorkbenchVm("p-1", client);
+    271|
+    272|     expect(vm.blindPrediction).toMatchObject({
+       |                                ^
+    273|       predictionId: "pred-v1",
+    274|       status: "locked",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 7 passed (8)
+      Tests  1 failed | 199 passed (200)
+   Start at  15:47:43
+   Duration  5.66s (transform 9.95s, setup 992ms, import 13.37s, tests 5.68s, environment 2.47s)
