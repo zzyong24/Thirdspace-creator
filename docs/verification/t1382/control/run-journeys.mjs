@@ -112,7 +112,7 @@ function sandboxProfile(privateRoot, runDir, sourceRoot) {
   const writable = [privateRoot, runDir, join(ROOT, 'frontend/.next'), join(ROOT, 'ai-worker/dist')];
   return `(version 1)\n(allow default)\n` +
     // 仅3441可出站，禁止 localhost:* 绕到本地代理/真实模型网关。
-    `(deny network*)\n(allow network-bind (local ip "127.0.0.1:${PORT}"))\n(allow network-inbound (local ip "127.0.0.1:${PORT}"))\n(allow network-outbound (remote ip "127.0.0.1:${PORT}"))\n` +
+    `(deny network*)\n(allow network-bind (local ip "localhost:${PORT}"))\n(allow network-inbound (local ip "localhost:${PORT}"))\n(allow network-outbound (remote ip "localhost:${PORT}"))\n` +
     `(deny file-write*)\n${writable.map((p) => `(allow file-write* (subpath ${quote(p)}))`).join('\n')}\n` +
     `(allow file-write* (literal "/dev/null") (literal "/dev/tty"))\n` +
     [sourceRoot, join(homedir(), '.codex'), join(homedir(), '.creatoros'), join(ROOT, '.auth'), join(ROOT, 'frontend/.auth')].map((p) => `(deny file-read* (subpath ${quote(p)}))`).join('\n') + '\n' +
