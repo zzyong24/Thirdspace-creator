@@ -53,3 +53,6 @@ backups/
 
 # T-1072：同依赖版本的冻结6b1322af故障对照，不进入候选源码。
 /.t1072-baseline-diagnostic/
+
+# 质量门证据（tools/quality 输出，本地留存，不入库）
+.quality/

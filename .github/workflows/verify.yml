@@ -28,6 +28,9 @@ jobs:
     name: lint + typecheck + 单测
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      # 提高堆上限；类型检查串行，避免多个大堆争抢 runner 内存。
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - uses: actions/checkout@v4
 
@@ -56,30 +59,56 @@ jobs:
 
       # 全包 tsc --noEmit(frontend 的 typecheck script 自带 next typegen 前置)。
       - name: typecheck(全 workspace)
-        run: pnpm -r typecheck
+        run: pnpm -r --workspace-concurrency=1 typecheck
 
       # 单测逐包分步跑 —— 失败时一眼看清挂在哪个包,而非交错日志里捞。
       # 全部走 vitest + 内存 PGlite(NODE_ENV=test 分支),不需要 Postgres 服务。
+      # [健康检查 2026-10-21] 经 tools/quality/run-tests.mjs 运行:只有不在
+      # tools/quality/known-failures.json 里的失败才让步骤变红;已知失败照常列出,转绿会提示删条目。
+      # 每个包都跑(前一包失败不跳过后续包),结构化证据作为 artifact 上传。
+      - name: 质量门工具自测(known-failures 判定逻辑)
+        run: node --test tools/quality/quality.test.mjs
+
       - name: 单测 contract
-        run: pnpm --filter @creatoros/contract test
+        if: ${{ !cancelled() }}
+        run: node tools/quality/run-tests.mjs contract --log-dir "$RUNNER_TEMP/quality" --out "$RUNNER_TEMP/quality/contract.json"
 
       - name: 单测 backend
-        run: pnpm --filter @creatoros/backend test
+        if: ${{ !cancelled() }}
+        run: node tools/quality/run-tests.mjs backend --log-dir "$RUNNER_TEMP/quality" --out "$RUNNER_TEMP/quality/backend.json"
+
+      # ai-worker 有用真实 Chromium 的平台导航测试,先装浏览器(版本跟随 ai-worker 的 @playwright/test)。
+      - name: 安装 Chromium(ai-worker 浏览器测试)
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @creatoros/ai-worker exec playwright install --with-deps chromium
 
       - name: 单测 ai-worker
-        run: pnpm --filter @creatoros/ai-worker test
+        if: ${{ !cancelled() }}
+        run: node tools/quality/run-tests.mjs ai-worker --log-dir "$RUNNER_TEMP/quality" --out "$RUNNER_TEMP/quality/ai-worker.json"
 
       - name: 单测 mcp-server
-        run: pnpm --filter @creatoros/mcp-server test
+        if: ${{ !cancelled() }}
+        run: node tools/quality/run-tests.mjs mcp-server --log-dir "$RUNNER_TEMP/quality" --out "$RUNNER_TEMP/quality/mcp-server.json"
 
       - name: 单测 frontend
-        run: pnpm --filter creatoros-frontend test
+        if: ${{ !cancelled() }}
+        run: node tools/quality/run-tests.mjs frontend --log-dir "$RUNNER_TEMP/quality" --out "$RUNNER_TEMP/quality/frontend.json"
+
+      - name: 上传单测证据
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-evidence
+          path: ${{ runner.temp }}/quality
+          retention-days: 14
 
   # frontend 生产构建 —— 长通道,与 checks 并行。
   build:
     name: frontend 生产构建
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - uses: actions/checkout@v4
 

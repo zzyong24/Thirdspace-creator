@@ -1,0 +1,5 @@
+{
+  "schema": "known-failures/v1",
+  "note": "新增条目必须带负责任务号、核实原因和稳定错误标记；fail 条目转绿后 run-tests 提示删除。kind: fail=确定断言漂移, flaky=已核实偶发, env=缺受控环境（如 T1246 自有 PG）而按设计拒跑。test=* 只匹配文件级错误，env 必须带 message_includes；运行异常永不豁免。",
+  "entries": []
+}

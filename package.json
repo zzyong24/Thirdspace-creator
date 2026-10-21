@@ -16,6 +16,9 @@
     "db:gen-baseline": "pnpm --filter @creatoros/backend exec tsx scripts/gen-baseline-migration.ts",
     "reconcile": "node orchestrator/process/reconcile.mjs",
     "boundary": "node orchestrator/process/boundary-scan.mjs",
-    "pmem:sync": "node orchestrator/process/pmem.mjs sync"
+    "pmem:sync": "node orchestrator/process/pmem.mjs sync",
+    "verify:task": "node tools/quality/verify-task.mjs",
+    "verify:release": "node tools/quality/verify-release.mjs",
+    "test:known": "node tools/quality/run-tests.mjs"
   }
 }
