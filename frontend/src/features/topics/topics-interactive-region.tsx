@@ -155,12 +155,19 @@ export function useMutation() {
 }
 
 // ── source / status / role label maps ───────────────────────────────────────────
-const SOURCE_LABELS: Record<string, string> = {
+const SOURCE_LABELS = {
   trend: "推荐",
   benchmark: "对标",
   demand: "需求",
   idea: "灵感",
-};
+  favorites: "收藏",
+} satisfies Record<CandidateSourceFilter, string>;
+
+function candidateSourceLabel(source: string): string {
+  return Object.hasOwn(SOURCE_LABELS, source)
+    ? SOURCE_LABELS[source as CandidateSourceFilter]
+    : "未知来源";
+}
 
 const STATUS_LABELS: Record<string, string> = {
   pool: "候选池",
@@ -315,7 +322,7 @@ export function CandidateCard({
       </h3>
       <div className={styles.candidateLabels}>
         <Badge variant="secondary">
-          {sourceLabel ?? SOURCE_LABELS[candidate.source] ?? candidate.source}
+          {sourceLabel ?? candidateSourceLabel(candidate.source)}
         </Badge>
         {ROLE_LABELS[candidate.contentRole ?? ""] ? (
           <Badge variant="outline">

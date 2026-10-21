@@ -25,6 +25,7 @@ import {
 import * as React from "react";
 
 import "@/styles/tokens.css";
+import "@/styles/creatoros-system.css";
 
 // [T-115] The sidebar `storage` card (SidebarStorageCard) now client-fetches the
 // REAL `settings.storage.get` on mount instead of showing hardcoded 12.4/50GB.
@@ -452,6 +453,18 @@ describe("AppShell", () => {
   //  - ui/Projects.png
   //  - ui/Research Workspace.png
   // ---------------------------------------------------------------------------
+
+  it.each(["/", "/intelligence", "/topics"])("主导航在 %s 不参与内容区伸缩，展开与折叠宽度独立", async (pathname) => {
+    await renderShell({ pathname, contentFill: true });
+    const sidebar = screen.getByTestId("app-sidebar");
+    const expanded = getComputedStyle(sidebar);
+    expect(expanded.width).toBe("var(--creatoros-sidebar-width)");
+    expect(expanded.flexGrow).toBe("0");
+    expect(expanded.flexShrink).toBe("0");
+    expect(expanded.minWidth).toBe("0px");
+    fireEvent.click(sidebar.querySelector('[data-slot="sidebar-collapse-toggle"]')!);
+    expect(getComputedStyle(sidebar).width).toBe("64px");
+  });
 
   it("exposes the sidebar width as a CSS variable in the 220-232px band", () => {
     const raw = readRootVar("--creatoros-sidebar-width");

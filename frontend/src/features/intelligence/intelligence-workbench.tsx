@@ -1,6 +1,7 @@
 "use client";
 import { compactNumber,dateLabel,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
 import styles from "./source-management.module.css";
+import layoutStyles from "./intelligence-workbench.module.css";
 import { SourceManagementOverview } from "./source-management-overview";
 import { SourceRunHistoryDialog } from "./source-run-history-dialog";
 
@@ -11,6 +12,8 @@ ChevronRight,
 Clock3,
 Link2,
 LockKeyhole,
+MoreHorizontal,
+ImageOff,
 Pause,
 Play,
 RefreshCw,
@@ -48,6 +51,7 @@ DialogFooter,
 DialogHeader,
 DialogTitle
 } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -582,6 +586,7 @@ function IntelligenceWorkbenchScope({
             source.collector?.accountHandle,
             source.monitorEnabled ? "自动同步" : "手动同步",
             health?.lastErrorCode,
+            health?.lastErrorCode === "LOGIN_REQUIRED" ? "需登录" : null,
           ]
             .filter(Boolean)
             .join(" ")
@@ -856,7 +861,7 @@ function IntelligenceWorkbenchScope({
       data-page="intelligence"
       data-testid="intelligence-workbench"
       data-presentation={presentation}
-      className={cn("flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-border bg-surface", sourcesOnly && styles.manager)}
+      className={cn("flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-border bg-surface", sourcesOnly ? styles.manager : layoutStyles.workbench)}
     >
       {sourcesOnly ? <header className={styles.managerHeader}>
         <div><h3>真实来源</h3><p>只收公开作品与计数，不采集评论正文。</p></div>
@@ -871,7 +876,7 @@ function IntelligenceWorkbenchScope({
             <h1 className="truncate text-lg font-semibold text-foreground">
               内容雷达
             </h1>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]">
               只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
             </p>
           </div>
@@ -1015,15 +1020,15 @@ function IntelligenceWorkbenchScope({
 
       <div
         data-testid="intelligence-responsive-layout" data-studio-layout="inbox"
-        className={cn("grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)] xl:overflow-hidden 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto]", sourcesOnly && styles.sourceLayout)}
+        className={cn("grid min-h-0 min-w-0 flex-1", sourcesOnly ? styles.sourceLayout : layoutStyles.layout)}
       >
         <aside
           data-testid="intelligence-sidebar"
           aria-label="内容雷达分类和来源"
-          className="flex min-h-0 flex-col border-b border-border/70 bg-surface-subtle xl:border-b-0 xl:border-r"
+          className={cn("flex min-h-0 min-w-0 flex-col bg-surface-subtle", !sourcesOnly && layoutStyles.sidebar)}
         >
           {!sourcesOnly ? <>
-          <div className="shrink-0 border-b border-border/70 p-3">
+          <div className={cn("shrink-0 border-b border-border/70 p-3", layoutStyles.sourceHeader)}>
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">01</span> 来源与采集</h2>
             <div className="flex flex-wrap gap-2">
               {sourceDialogs.collection}
@@ -1032,7 +1037,7 @@ function IntelligenceWorkbenchScope({
             </div>
           </div>
           </> : null}
-          <div className="shrink-0 space-y-2 px-3 pb-2 pt-4">
+          <div className="shrink-0 space-y-2 px-3 py-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               来源目录
             </p>
@@ -1048,7 +1053,7 @@ function IntelligenceWorkbenchScope({
               />
             </label>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+          <div className={cn("min-h-0 flex-1 overflow-y-auto px-2 pb-4", !sourcesOnly && layoutStyles.sourceList)}>
             <button
               type="button"
               onClick={() => void selectItemScope(null, null)}
@@ -1065,8 +1070,8 @@ function IntelligenceWorkbenchScope({
                 {sourcesOnly ? workspace.sources.length : allItemsTotal}
               </span>
             </button>
-            <div className="mt-3 space-y-3" data-slot="radar-collection-groups">
-            {workspace.collections.map((collection) => {
+            <div className="mt-2 space-y-2" data-slot="radar-collection-groups">
+            {orderRadarCollections(workspace.collections).map(({ collection, parentName }) => {
               const collectionSources = workspace.sources
                 .filter(
                   (source) =>
@@ -1085,6 +1090,7 @@ function IntelligenceWorkbenchScope({
                 <RadarCollectionGroup
                   key={collection.id}
                   name={collection.name}
+                  parentName={parentName}
                   system={collection.kind === "system"}
                   count={collectionSources.length}
                   active={selectedCollectionId === collection.id && !selectedSourceId}
@@ -1166,10 +1172,10 @@ function IntelligenceWorkbenchScope({
         {sourcesOnly ? <SourceManagementOverview workspace={workspace} selectedSourceId={selectedSourceId} selectedCollectionId={selectedCollectionId}/> : <>
         <main
           aria-busy={itemsLoading}
-          className="flex min-h-0 min-w-0 flex-col bg-canvas/55"
+          className={cn("flex min-h-0 min-w-0 flex-col bg-canvas/55", layoutStyles.itemsPane)}
         >
           <h2 className="flex shrink-0 items-center gap-2 border-b border-border/70 px-4 py-3 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
-          <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 px-4 py-2.5">
+          <div className={layoutStyles.filterBar}>
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>逐字稿</span>
               <select
@@ -1263,7 +1269,7 @@ function IntelligenceWorkbenchScope({
               </select>
             </label>
           </div>
-          <div className="flex shrink-0 items-center gap-3 border-b border-border/70 px-4 py-3">
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/70 px-3 py-2">
             <label className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -1271,7 +1277,7 @@ function IntelligenceWorkbenchScope({
                 value={query}
                 onChange={(event) => updateSearch(event.target.value)}
                 placeholder="搜索标题、作者或摘要"
-                className="h-9 rounded-xl border-border/80 bg-surface pl-9"
+                className="h-8 rounded-lg border-border/80 bg-surface pl-9 text-xs"
               />
             </label>
             <span className="shrink-0 text-xs text-muted-foreground">
@@ -1280,11 +1286,12 @@ function IntelligenceWorkbenchScope({
                 : `${scopedTotal} 条真实内容`}
             </span>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className={cn("min-h-0 flex-1 overflow-y-auto p-2", layoutStyles.itemList)}>
             {upgrades.tasks.some(task=>!["succeeded","cancelled"].includes(task.status)) ? (
-              <div role="status" className="mb-3 rounded-xl bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-                项目升级队列 · {upgrades.tasks.filter(task=>!["succeeded","failed","blocked","cancelled"].includes(task.status)).length} 项处理中或排队
-                {upgrades.tasks.some(task=>["failed","blocked"].includes(task.status))?" · 部分作品需要处理，可在对应卡片重试":" · 后台依次处理，可继续添加作品"}
+              <div role="status" className={layoutStyles.queueSummary}
+                title="项目在后台依次处理；选择对应作品可在详情查看进度、取消或重试。">
+                <span>项目升级队列 · {upgrades.tasks.filter(task=>!["succeeded","failed","blocked","cancelled"].includes(task.status)).length} 项处理中</span>
+                {upgrades.tasks.some(task=>["failed","blocked"].includes(task.status)) ? <span className="text-warning">有待处理</span> : null}
               </div>
             ):null}
             {itemsLoading && filteredItems.length === 0 ? (
@@ -1313,7 +1320,8 @@ function IntelligenceWorkbenchScope({
             ) : (
               <div
                 className={cn(
-                  "grid grid-cols-1 gap-2 transition-opacity xl:grid-cols-2",
+                  layoutStyles.itemGrid,
+                  "gap-2 transition-opacity",
                   itemsLoading && "opacity-60",
                 )}
               >
@@ -1324,12 +1332,6 @@ function IntelligenceWorkbenchScope({
                     active={detail?.item.id === row.item.id}
                     onSelect={() => selectItem(row.item.id)}
                     upgradeTask={upgrades.byItem.get(row.item.id)}
-                    upgradeSubmitting={upgrades.submitting.has(row.item.id)}
-                    onUpgrade={api.enqueueProjectUpgrades?()=>{
-                      const projectId=upgradeProjectId(upgrades.byItem.get(row.item.id));
-                      if(projectId)router.push(`/projects/${encodeURIComponent(projectId)}`);
-                      else void upgrades.enqueue(row.item.id);
-                    }:undefined}
                     onCancelUpgrade={()=>{const task=upgrades.byItem.get(row.item.id);if(task)void upgrades.cancel(task);}}
                   />
                 ))}
@@ -1353,7 +1355,8 @@ function IntelligenceWorkbenchScope({
           </div>
         </main>
 
-        <div className="relative flex min-h-[320px] xl:min-h-0">
+        <div data-slot="radar-detail-pane" className={layoutStyles.detailPane}
+          style={{ "--detail-width": `${detailWidth}px` } as React.CSSProperties}>
           <div
             role="separator"
             aria-label="调整作品详情宽度"
@@ -1370,20 +1373,15 @@ function IntelligenceWorkbenchScope({
                 persistWidth(detailWidth - 24);
               }
             }}
-            className="group z-10 hidden w-1 cursor-col-resize bg-border/60 outline-none transition hover:bg-primary/50 focus:bg-primary 2xl:block"
+            className={cn("group z-10 w-1 shrink-0 cursor-col-resize bg-border/60 outline-none transition hover:bg-primary/50 focus:bg-primary", layoutStyles.resizeHandle)}
           >
             <span className="absolute left-1/2 top-1/2 h-14 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent group-hover:bg-primary/20" />
           </div>
           <aside
             data-testid="intelligence-detail"
             aria-label="作品详情"
-            style={
-              {
-                width: detailWidth,
-                "--detail-width": `${detailWidth}px`,
-              } as React.CSSProperties
-            }
-            className="min-h-0 !w-full overflow-y-auto bg-surface 2xl:!w-[var(--detail-width)] 2xl:shrink-0"
+            tabIndex={0}
+            className={cn("min-h-0 min-w-0 bg-surface", layoutStyles.detail)}
           >
             {detail ? (
               <ItemDetail
@@ -1424,8 +1422,24 @@ const SYSTEM_COLLECTION_META: Record<string, { icon: typeof Heart; hint: string;
   黑马发现: { icon: Flame, hint: "热点宝关键词命中的黑马作品", empty: "还没有黑马关键词。用上方「添加来源」选择「黑马关键词」并验证热点宝授权。" },
 };
 
+/** 只按服务返回的 parentId 排目录，不推断内容归类；缺父级或循环仍保留可见条目。 */
+function orderRadarCollections(collections: RadarWorkspace["collections"]) {
+  const visited = new Set<string>();
+  const ordered: { collection: RadarWorkspace["collections"][number]; parentName?: string }[] = [];
+  const visit = (collection: RadarWorkspace["collections"][number]) => {
+    if (visited.has(collection.id)) return;
+    visited.add(collection.id);
+    ordered.push({ collection, parentName: collections.find(parent => parent.id === collection.parentId)?.name });
+    collections.filter(child => child.parentId === collection.id).forEach(visit);
+  };
+  collections.filter(row => !row.parentId || !collections.some(parent => parent.id === row.parentId)).forEach(visit);
+  collections.forEach(visit);
+  return ordered;
+}
+
 function RadarCollectionGroup({
   name,
+  parentName,
   system,
   count,
   active,
@@ -1435,6 +1449,7 @@ function RadarCollectionGroup({
   children,
 }: {
   name: string;
+  parentName?: string;
   system: boolean;
   count: number;
   active: boolean;
@@ -1449,8 +1464,9 @@ function RadarCollectionGroup({
     <section
       data-slot="radar-collection-group"
       data-collection-kind={system ? "system" : "custom"}
+      data-parent-collection={parentName}
       aria-label={`${name}分组`}
-      className="rounded-xl border border-border/60 bg-surface/60"
+      className={cn("rounded-xl border border-border/60 bg-surface/60", parentName && layoutStyles.childCollection)}
     >
       <button
         type="button"
@@ -1463,13 +1479,13 @@ function RadarCollectionGroup({
         )}
       >
         <Icon aria-hidden="true" className={cn("size-3.5 shrink-0", system ? "text-primary" : "text-muted-foreground")} />
-        <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
+        <span className={cn("min-w-0 flex-1 font-semibold", layoutStyles.sourceName)} title={parentName ? `${parentName} / ${name}` : name}>{name}</span>
         <span className="rounded-full bg-muted px-1.5 text-[10px] font-medium tabular-nums leading-4 text-muted-foreground">
           {count}
         </span>
       </button>
       {meta ? (
-        <p className="px-3 pb-1 text-[10px] leading-4 text-muted-foreground">{meta.hint}</p>
+        <p className="px-3 pb-2 text-xs leading-4 text-muted-foreground">{meta.hint}</p>
       ) : null}
       {count > 0 ? (
         <div className="border-t border-border/50 pb-1.5" data-slot="radar-collection-sources">{children}</div>
@@ -1514,7 +1530,7 @@ function SourceRow({
       ? "running"
       : (health?.lastRunStatus ?? null);
   const loginExpired = health?.lastErrorCode === "LOGIN_REQUIRED";
-  const statusLabel = runStatusLabel(currentStatus);
+  const statusLabel = loginExpired ? "需登录" : runStatusLabel(currentStatus);
   const collectorUnavailable=source.collector && source.collector.availability!=="active";
   const collectorLabel = collectorUnavailable ? "采集账号需重新选择" : source.collector
     ? `用 ${source.collector.accountHandle ?? source.collector.accountId} 采集`
@@ -1523,35 +1539,36 @@ function SourceRow({
     <div
       data-testid={`radar-source-row-${source.id}`}
       className={cn(
-        "ml-3 mr-1 mt-1.5 min-w-0 overflow-hidden rounded-xl border transition",
+        layoutStyles.sourceRow,
+        "min-w-0 overflow-hidden rounded-lg border transition",
         active
           ? "border-primary/30 bg-surface ring-1 ring-primary/10"
           : "border-transparent bg-transparent hover:border-border/70 hover:bg-muted/55",
       )}
     >
-      <div className="flex min-w-0 items-center gap-1.5 p-1.5">
+      <div className={layoutStyles.sourceInfo}>
         <button
           type="button"
           onClick={onSelect}
           aria-pressed={active}
-          className="min-w-0 flex-1 rounded-lg px-2 py-1.5 text-left outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="w-full min-w-0 rounded text-left outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <span
-            className="block truncate whitespace-nowrap text-xs font-semibold text-foreground"
+            className={cn("block text-sm font-semibold leading-5 text-foreground", layoutStyles.sourceName)}
             title={source.displayName}
           >
             {source.displayName}
           </span>
-          <span className="mt-0.5 flex min-w-0 items-center gap-1 whitespace-nowrap text-[10px] leading-4 text-muted-foreground">
+          <span className="mt-1 flex min-w-0 flex-wrap items-center gap-1 text-xs leading-4 text-muted-foreground">
             <span className="shrink-0">{sourceTypeLabel(source.type)}</span>
             <span aria-hidden="true" className="opacity-50">
               ·
             </span>
             <span
               className={cn(
-                "min-w-0 truncate",
-                currentStatus === "failed" && "text-destructive",
-                currentStatus === "blocked" && "text-warning",
+                "min-w-0 rounded px-1 [overflow-wrap:anywhere]",
+                currentStatus === "failed" && !loginExpired && "bg-destructive/10 font-medium text-destructive",
+                (currentStatus === "blocked" || loginExpired || currentStatus === "partial") && "bg-warning/10 font-medium text-warning",
                 (currentStatus === "succeeded_with_items" ||
                   currentStatus === "succeeded_no_change") &&
                   "text-success",
@@ -1561,6 +1578,16 @@ function SourceRow({
             </span>
           </span>
         </button>
+        <span
+          className={cn("block min-w-0 truncate text-xs leading-4 text-muted-foreground", collectorUnavailable && "text-warning")}
+          title={collectorUnavailable?"采集账号已不可用，请添加使用当前组账号的来源。原内容仍保留。":`${collectorLabel} → 归当前工作区`}
+        >
+          {collectorLabel} · {source.monitorEnabled ? "自动" : "手动"}
+        </span>
+      </div>
+
+      <div role="group" aria-label={`${source.displayName}的来源操作`}
+        className={layoutStyles.sourceActions}>
         <Button
           type="button"
           aria-label={
@@ -1573,7 +1600,7 @@ function SourceRow({
           disabled={syncing || source.status !== "active" || !!collectorUnavailable}
           onClick={loginExpired ? onReconnect : onRun}
           className={cn(
-            "h-8 shrink-0 gap-1 whitespace-nowrap border-border bg-surface px-2 text-[11px] text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
+            "h-8 shrink-0 gap-1 whitespace-nowrap border-border bg-surface px-2 text-xs text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
             loginExpired && "border-warning/40 text-warning",
           )}
         >
@@ -1584,70 +1611,28 @@ function SourceRow({
           )}
           {loginExpired ? "登录" : queued ? "排队中" : syncing ? "同步中" : "同步"}
         </Button>
-      </div>
-
-      <div className="flex min-w-0 items-center gap-1 border-t border-border/55 bg-muted/25 px-2 py-1.5">
-        <span
-          className="min-w-0 flex-1 truncate whitespace-nowrap text-[10px] text-muted-foreground"
-          title={collectorUnavailable?"采集账号已不可用，请添加使用当前组账号的来源。原内容仍保留。":`${collectorLabel} → 归当前工作区`}
-        >
-          {collectorLabel}
-        </span>
-        <Button
-          type="button"
-          aria-label={`${source.monitorEnabled ? "暂停" : "恢复"} ${source.displayName} 的每日自动同步`}
-          title={
-            source.monitorEnabled
-              ? "暂停每日自动同步（仍可手动同步）"
-              : "恢复每日自动同步"
-          }
-          variant="ghost"
-          size="sm"
-          disabled={monitorUpdating || source.status !== "active"}
-          onClick={onToggleMonitor}
-          className="h-6 shrink-0 gap-1 whitespace-nowrap px-1.5 text-[10px] text-muted-foreground hover:bg-surface hover:text-foreground"
-        >
-          {source.monitorEnabled ? (
-            <Pause className="size-3" />
-          ) : (
-            <Play className="size-3" />
-          )}
-          {monitorUpdating
-            ? "处理中"
-            : source.monitorEnabled
-              ? "自动"
-              : "手动"}
-        </Button>
-        <Button
-          type="button"
-          aria-label={
-            syncing
-              ? `同步中，暂时不能移除 ${source.displayName}`
-              : `移除 ${source.displayName}`
-          }
-          title={
-            syncing ? "同步进行中，完成后才能移除来源" : "移除来源"
-          }
-          variant="ghost"
-          size="sm"
-          disabled={syncing}
-          onClick={onRemove}
-          className="h-6 shrink-0 gap-1 whitespace-nowrap px-1.5 text-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="size-3" />
-          移除
-        </Button>
-        <Button
-          type="button"
-          aria-label={`查看 ${source.displayName} 的运行记录`}
-          title="查看运行记录"
-          variant="ghost"
-          size="icon"
-          onClick={onShowRuns}
-          className="size-6 shrink-0 text-muted-foreground hover:bg-surface hover:text-foreground"
-        >
-          <Clock3 className="size-3" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label={`管理 ${source.displayName}`} title="管理来源" className="size-8 text-muted-foreground">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled={monitorUpdating || source.status !== "active"} onSelect={onToggleMonitor}
+              aria-label={`${source.monitorEnabled ? "暂停" : "恢复"} ${source.displayName} 的每日自动同步`}>
+              {source.monitorEnabled ? <Pause /> : <Play />}
+              {monitorUpdating ? "处理中" : source.monitorEnabled ? "暂停每日自动同步" : "恢复每日自动同步"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onShowRuns} aria-label={`查看 ${source.displayName} 的运行记录`}>
+              <Clock3 /> 查看运行记录
+            </DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={syncing} onSelect={onRemove}
+              aria-label={syncing ? `同步中，暂时不能移除 ${source.displayName}` : `移除 ${source.displayName}`}
+              title={syncing ? "同步进行中，完成后才能移除来源" : "移除来源"}>
+              <Trash2 /> {syncing ? "同步中，暂不能移除" : "移除来源"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
@@ -1657,61 +1642,57 @@ function ItemCard({
   row,
   active,
   onSelect,
-  upgradeTask,upgradeSubmitting,onUpgrade,onCancelUpgrade,
+  upgradeTask,onCancelUpgrade,
 }: {
   row: RadarItemRow;
   active: boolean;
   onSelect: () => void;
   upgradeTask?:ExecutionTaskResourceV2;
-  upgradeSubmitting?:boolean;
-  onUpgrade?:()=>void;
   onCancelUpgrade?:()=>void;
 }) {
+  const [failedCover, setFailedCover] = React.useState<string | null>(null);
+  const title = row.item.title || "未命名内容";
+  const projectId = upgradeProjectId(upgradeTask);
+  const notice = upgradeNotice(upgradeTask);
+  // 列表只陈述真实任务状态；操作措辞留给详情的唯一升级入口。
+  const upgradeStates: Partial<Record<ExecutionTaskResourceV2["status"], string>> = {
+    failed: "升级失败", blocked: "升级受阻", paused: "升级已暂停", cancelled: "升级已取消",
+    pause_requested: "正在暂停", cancel_requested: "正在取消",
+  };
+  const state = projectId ? "已升级为项目" : upgradeTask
+    ? upgradeStates[upgradeTask.status] ?? upgradeLabel(upgradeTask)
+    : progressLabel(row.progressState);
+  const attention = upgradeTask && ["failed", "blocked", "paused", "cancelled"].includes(upgradeTask.status);
   return (
-    <div
-      className={cn(
-        "group flex min-h-28 w-full flex-col overflow-hidden rounded-2xl border bg-surface text-left transition",
-        active
-          ? "border-primary/60 ring-1 ring-primary/20"
-          : "border-border/80 hover:border-primary/30",
-      )}
-    >
-      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 flex-col p-3.5 text-left">
-        <span className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
-          {row.item.title || "未命名内容"}
-        </span>
-        <span className="mt-1 truncate text-xs text-muted-foreground">
-          {row.item.authorName ?? row.item.platform} ·{" "}
-          {row.item.publishedAt
-            ? dateLabel(row.item.publishedAt)
-            : `发布时间未知 · 收录于 ${dateLabel(row.item.capturedAt)}`}
-        </span>
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 text-[11px] text-muted-foreground">
-          <span>赞 {compactNumber(row.latestMetric?.likeCount ?? null)}</span>
-          <span>
-            评论 {compactNumber(row.latestMetric?.commentCount ?? null)}
+    <div data-slot="radar-item-row" className={cn(layoutStyles.itemCard, "border bg-surface transition",
+      active ? "border-primary/60 ring-1 ring-primary/20" : "border-border/80 hover:border-primary/30")}>
+      <button type="button" onClick={onSelect} aria-pressed={active} className={layoutStyles.itemSelect}>
+        {row.item.coverUrl && failedCover !== row.item.coverUrl ? (
+          // 已有外站封面直读，不新增图片代理或远程域名配置。
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={row.item.coverUrl} alt={`${title}的封面`} width={48} height={48} loading="lazy" className={layoutStyles.cover}
+            onError={() => setFailedCover(row.item.coverUrl)} />
+        ) : <span className={layoutStyles.coverPlaceholder} aria-hidden="true"><ImageOff className="size-4" /></span>}
+        <span className={layoutStyles.itemCopy}>
+          <span className={layoutStyles.itemTitle} title={title}>{title}</span>
+          <span className="block truncate text-xs text-muted-foreground" title={`${row.item.authorName ?? row.item.platform} · ${row.item.publishedAt ? dateLabel(row.item.publishedAt) : `发布时间未知 · 收录于 ${dateLabel(row.item.capturedAt)}`}`}>
+            {row.item.authorName ?? row.item.platform} · {row.item.publishedAt ? dateLabel(row.item.publishedAt) : `发布时间未知 · 收录于 ${dateLabel(row.item.capturedAt)}`}
           </span>
-          <span>{row.sourceCount} 个来源</span>
-          {progressLabel(row.progressState) ? (
-            <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-              {upgradeNeedsResultCheck(upgradeTask)?"转写待确认":progressLabel(row.progressState)}
-            </span>
-          ) : null}
-        </div>
+        </span>
       </button>
-      {onUpgrade ? <div className="border-t border-border/50 px-3.5 py-2">
-        <div className="flex items-center gap-2">
-          {upgradeProjectId(upgradeTask) ? <>
-            <span className="text-xs text-muted-foreground">已升级为项目</span>
-            <Link className="ml-auto inline-flex h-7 items-center gap-1 text-xs text-primary" href={`/projects/${encodeURIComponent(upgradeProjectId(upgradeTask)!)}`}>查看项目<ChevronRight className="size-3.5" /></Link>
-          </> : <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-primary" onClick={onUpgrade}
-            disabled={upgradeSubmitting || Boolean(upgradeTask && !["succeeded","failed","blocked","cancelled","paused"].includes(upgradeTask.status))}>
-            <Sparkles className="size-3.5" />{upgradeSubmitting?"正在加入…":upgradeLabel(upgradeTask)}
-          </Button>}
-          {upgradeTask && ["queued","running","paused","pause_requested"].includes(upgradeTask.status)?<Button size="sm" variant="ghost" className="ml-auto h-7 text-xs text-muted-foreground" onClick={onCancelUpgrade}>取消</Button>:null}
-        </div>
-        {upgradeNotice(upgradeTask)?<p className="mt-1 text-xs text-warning">{upgradeNotice(upgradeTask)}</p>:null}
-      </div>:null}
+      <div className={layoutStyles.itemMeta}>
+        <span>赞 {compactNumber(row.latestMetric?.likeCount ?? null)}</span>
+        <span>评论 {compactNumber(row.latestMetric?.commentCount ?? null)}</span>
+        <span>{row.sourceCount} 个来源</span>
+      </div>
+      {state ? <div className={layoutStyles.itemState}>
+        <span className={cn("min-w-0 truncate text-xs", attention ? "text-warning" : "text-primary")} title={notice || state}>
+          {upgradeNeedsResultCheck(upgradeTask) ? "转写待确认" : state}
+        </span>
+        {projectId ? <Link aria-label={`查看项目：${title}`} className="shrink-0 text-xs text-primary hover:underline" href={`/projects/${encodeURIComponent(projectId)}`}>查看项目</Link> : null}
+        {upgradeTask && ["queued", "running", "paused", "pause_requested"].includes(upgradeTask.status) ?
+          <Button size="sm" variant="ghost" className="h-7 px-1 text-xs text-muted-foreground" onClick={onCancelUpgrade}>取消</Button> : null}
+      </div> : null}
     </div>
   );
 }
@@ -1770,7 +1751,7 @@ function ItemDetail({
           onSave={onUploadTranscript}
         />
       ) : null}
-      <div className="border-b border-border/70 p-5">
+      <div className={cn("border-b border-border/70 p-3", layoutStyles.detailHeader)}>
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">03</span> 阅读核对</h2>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -1803,18 +1784,18 @@ function ItemDetail({
           ["收藏", latest?.collectCount ?? null],
           ["分享", latest?.shareCount ?? null],
         ].map(([label, value]) => (
-          <div key={String(label)} className="bg-surface px-2 py-3 text-center">
+          <div key={String(label)} className="bg-surface px-1 py-2 text-center">
             <strong className="block text-sm text-foreground">
               {compactNumber(value as number | null)}
             </strong>
-            <span className="mt-0.5 block text-[10px] text-muted-foreground">
+            <span className="mt-0.5 block text-xs text-muted-foreground">
               {label}
             </span>
           </div>
         ))}
       </div>
 
-      <div className="space-y-5 p-5">
+      <div className={cn("space-y-4 p-3", layoutStyles.detailBody)}>
 
         <section>
           <div className="flex items-center justify-between">
@@ -1844,7 +1825,7 @@ function ItemDetail({
               {detail.transcript.text}
             </p>
           ) : (
-            <div className="mt-3 rounded-xl border border-dashed border-border p-4">
+            <div className="mt-2 rounded-lg border border-dashed border-border p-3">
               <p className="text-xs leading-5 text-muted-foreground">
                 {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : needsTranscriptRecovery ? "转写结果尚未确认，请补充逐字稿后继续升级。" : "升级为项目后，会在项目里自动转写正文。"}
               </p>
@@ -1910,7 +1891,7 @@ function ItemDetail({
           </div>
         </section>
 
-        <section data-radar-step="upgrade" className="border-t border-border pt-5">
+        <section data-radar-step="upgrade" className="border-t border-border pt-3">
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">04</span> 选定方案</h3>
           <p className="text-xs leading-5 text-muted-foreground">
             选中这条作为方案后升级为项目。项目会自动依次完成转写、选题拆解与补全资料、生成文案，进度在项目页查看。

@@ -9,6 +9,13 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1384|按真实密度重排内容雷达三栏|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1384.md)|用户授权沿ui-ux-pro-max与MASTER重排11来源/5分类/40作品；1440与1280保留三栏、缩略图、紧凑状态与筛选，保功能及详情唯一升级入口。当前分支本地提交或补丁脚本，不push。|
+|T-1383|重新规划内容雷达三栏与来源操作布局|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1383.md)|用户授权使用ui-ux-pro-max，1440px来源完整、三栏重排与窄窗降级；保留全部功能、详情04唯一升级入口、分组卡片与未知状态。补vitest/typecheck，当前分支本地中文提交或补丁脚本，不push。|
+|T-1378|统一主导航宽度并恢复选题页1440px完整布局|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1378.md)|用户2026-10-21明确：intelligence/topics侧栏统一约224px，选题右侧03/04完整显示；遵守MASTER，补vitest，独立中文commit至当前ui-fixes分支、不push。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|
+|T-1379|修复项目页首开自动滚动到口播脚本|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1379.md)|用户2026-10-21明确：定位autofocus/scrollIntoView/hash根因，首开停顶部项目准备，保留主动去写稿#script；补vitest并独立中文commit。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|
+|T-1380|补全选题来源中文标签与未知值兜底|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1380.md)|用户2026-10-21明确：candidateSource的trend/benchmark/demand/idea/favorites全部中文，未知值兜底；补vitest并独立中文commit。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|
+|T-1381|移除雷达作品卡片重复的升级为项目按钮|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1381.md)|用户2026-10-21明确：只移除ItemCard入口，保留作品详情04选定方案入口；补vitest并独立中文commit。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|
+|T-1382|容错雷达作品未知转写状态避免整页崩溃|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1382.md)|用户2026-10-21明确：transcript.status未知枚举显示状态未知且不触发整页ZodError；补vitest并独立中文commit。五项最终frontend typecheck及相关vitest，保留已知T767失败及既有lint；不改授权/激活/verdict/签名。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|
 |T-1377|精确收窄旧出包超时断言并保留负控制|✅|PASS[REV:e6a1ced3d84c]|—|[已授权单文件修正](docs/features/t1377-packaging-workflow-timeout-test-scope.md)|单测试文件修正39PASS/独审GO，已提交8062921并taskctl完成；唯一150分钟行例外+有限负控，workflow/产品/预算未改，原44+1FAIL保。|
 |T-1376|当前main本机产包并保留数据重新安装|✅|PASS[REV:7639dd591a9e]|—|[本机替换范围](docs/features/t1376-current-main-local-package-reinstall.md)|用户知情允许中断后正常quit/旧App精确保全，同卷替换dedc包并启动；58PASS/产包exit0、签名DMG及37660项runtime同源，PID22213公开Ready连续122.526秒；数据不清理、原任务自动恢复/导航/剩余媒体未代签，full受T1373限制未跑。|
 |T-1375|整合全部未合并现有代码到main并推送及添加协作者|✅|—|—|[既有代码整合范围](docs/features/t1375-integrate-all-code-main-collaborator.md)|安全main4458a52已普通推送，83源码/工具及12原件保持；用户知情后masx-commits标准write邀请338488946实际201并读回，pending_acceptance（有效none，未冒已接受）；旧T247不改，full未跑/T1373保，无产品/安装/采集动作。|

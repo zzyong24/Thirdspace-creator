@@ -269,7 +269,9 @@ export const itemMetricSnapshotResource = z
 export const itemTranscriptResource = z
   .object({
     itemId: id,
-    status: intelligenceTranscriptStatus,
+    // 仅资源读取兼容未来状态；写入与筛选继续使用严格的 intelligenceTranscriptStatus。
+    // 先验证字符串，避免 catch 把缺失、null 或损坏结构当成正常状态。
+    status: z.string().pipe(z.enum([...intelligenceTranscriptStatus.options, "unknown"]).catch("unknown")),
     text: z.string().nullable(),
     source: z.enum(["asr", "caption", "manual"]).nullable(),
     provider: z.string().nullable(),

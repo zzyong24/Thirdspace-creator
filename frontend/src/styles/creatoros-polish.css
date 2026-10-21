@@ -148,13 +148,6 @@
   letter-spacing: 0;
   text-transform: none;
 }
-@media (max-width: 1279px) {
-  [data-testid="intelligence-responsive-layout"] { display: flex; flex-direction: column; overflow-y: auto; }
-  [data-testid="intelligence-sidebar"] { flex: none; min-height: 200px; max-height: 320px; }
-  [data-testid="intelligence-responsive-layout"] > main { flex: none; min-height: 400px; }
-  [data-testid="intelligence-detail"] { flex: none; min-height: 260px; overflow: visible; }
-  [data-testid="intelligence-detail"] > div { min-height: 260px; }
-}
 @media (max-width: 1023px) {
   [data-testid="topics-three-column"] { display: flex; flex-direction: column; overflow-y: auto; }
   [data-testid="topics-three-column"] > * { flex: none; min-height: 260px; }
