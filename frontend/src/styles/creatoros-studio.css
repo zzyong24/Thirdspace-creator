@@ -85,7 +85,6 @@
 [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料原文"] { border-left:1px solid var(--creatoros-border); }
 [data-design="manuscript"] [data-testid="topics-three-column"] { grid-template-columns:220px minmax(0,1fr) 320px; gap:12px; }
 [data-design="manuscript"] :is([data-testid="topics-sources"],[data-testid="topics-detail"]) { background:var(--creatoros-surface); border-radius:10px; border-color:var(--creatoros-border); }
-[data-design="manuscript"] [data-testid="intelligence-responsive-layout"] { grid-template-columns:180px minmax(0,1fr) 320px; border-top:1px solid var(--creatoros-border); }
 [data-design="manuscript"] [data-testid="intelligence-sidebar"] { background:var(--creatoros-canvas); }
 [data-design="manuscript"] [data-page="positioning"] { max-width:1180px; margin-inline:auto; }
 [data-design="manuscript"] [data-page="positioning"] > section { border-radius:10px; }
@@ -117,7 +116,7 @@
 /* Manuscript editors: quiet surrounding desk, readable paper, separate assistant. */
 [data-design="manuscript"] [data-slot="studio-editor-split"] { gap:16px; }
 [data-design="manuscript"] [data-slot="draft-pane"] { background:var(--creatoros-surface); border:1px solid var(--creatoros-border); border-radius:10px; padding:24px; gap:20px; }
-[data-design="manuscript"] [data-slot="draft-script-section"] { order:-1; padding-bottom:24px; border-bottom:1px solid var(--creatoros-border); }
+[data-design="manuscript"] [data-slot="draft-script-section"] { padding-bottom:24px; border-bottom:1px solid var(--creatoros-border); }
 [data-design="manuscript"] [data-slot="draft-chat-rail"] { border:1px solid var(--creatoros-border); border-radius:10px; overflow:hidden; background:var(--creatoros-surface); }
 [data-design="manuscript"] [data-studio-layout="document"] { max-width:1080px; padding:0; }
 [data-design="manuscript"] [data-studio-layout="document"] > header { padding:0 0 16px; border-bottom:1px solid var(--creatoros-border); }
@@ -139,7 +138,6 @@
  [data-slot="studio-projects-index"] { display:none; }
  [data-design="manuscript"] [data-slot="knowledge-workspace"] { grid-template-columns:160px minmax(0,1fr); overflow-y:auto; }
  [data-design="manuscript"] [data-slot="knowledge-workspace"] > [aria-label="资料原文"] { grid-column:1/-1; min-height:260px; border-left:0; border-top:1px solid var(--creatoros-border); }
- [data-design="manuscript"] [data-testid="intelligence-responsive-layout"] { display:flex; flex-direction:column; overflow-y:auto; }
  [data-design="manuscript"] [data-testid="topics-three-column"] { display:flex; flex-direction:column; overflow-y:auto; }
  [data-design="manuscript"] [data-testid="topics-three-column"] > * { flex:none; min-height:260px; }
  [data-design="manuscript"] [data-testid="automations-region"] { grid-template-columns:minmax(0,1fr); }

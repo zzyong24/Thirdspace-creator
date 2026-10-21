@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import "@/styles/creatoros-studio.css";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 // [Bug-8 T-021] 口播脚本 section 的副行文案对 imported 项目要给出针对性引导,
@@ -488,4 +489,14 @@ describe("DraftWorkbenchPage — T-1055 顶条仅保留真实动作", () => {
     const {container} = render(<DraftWorkbenchPage vm={vm} />);
     expect(container.querySelector('[data-slot="draft-topbar"]')).toBeNull();
   });
+});
+
+// T-1379：CSS视觉顺序与DOM一致，不把脚本重排到项目准备之前。
+it("普通项目首屏按项目准备、脚本顺序展示且没有负排序", () => {
+  const { container } = render(<div data-design="manuscript"><DraftWorkbenchPage vm={baseVm()} /></div>);
+  const pipeline = container.querySelector('[data-slot="project-pipeline"]')!;
+  const script = container.querySelector('[data-slot="draft-script-section"]')!;
+  expect(pipeline.compareDocumentPosition(script) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(Number(getComputedStyle(script).order || 0)).toBeGreaterThanOrEqual(Number(getComputedStyle(pipeline).order || 0));
+  expect(script.id).toBe("script");
 });

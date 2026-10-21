@@ -70,5 +70,6 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
         {preparation?<div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={state?.busy} onClick={()=>void run(()=>state!.start("brief"))}>让编导补全资料</Button></div>:null}
       </div>
     </div>
+    <a href="#script" className="mt-3 inline-flex min-h-8 items-center text-sm font-medium text-brand underline-offset-2 hover:underline">去写稿</a>
   </section>;
 }

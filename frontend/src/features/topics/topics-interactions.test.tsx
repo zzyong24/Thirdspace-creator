@@ -1,4 +1,5 @@
 import * as React from "react";
+import topicStyles from "./topics-workflow.module.css";
 import {
   cleanup,
   fireEvent,
@@ -305,6 +306,17 @@ describe("topics view (pure render, deterministic)", () => {
 });
 
 describe("topics three-column selection", () => {
+  it("候选与核对升级区域使用可收缩的两列，不以内容最小宽度挤出主区", () => {
+    render(<main data-page="topics" className={topicStyles.page}>
+      <TopicsWorkspace candidates={[candidate({ title: "超长选题".repeat(40), card: filledCard() })]} sources={overview().sources} sort="predictedScore" />
+    </main>);
+    const workspace = screen.getByTestId("topics-three-column");
+    expect(workspace.children).toHaveLength(2);
+    expect(getComputedStyle(workspace).gridTemplateColumns).toBe("minmax(0,.9fr) minmax(0,1.1fr)");
+    expect(screen.getByTestId("topics-detail")).toHaveTextContent("核对选题");
+    expect(screen.getByTestId("topics-detail")).toHaveTextContent("升级为项目");
+  });
+
   it("clicking a candidate selects it and drives the right detail column", () => {
     render(
       <TopicsWorkspace
@@ -768,5 +780,22 @@ describe("补充选题展开面板",()=>{
     expect(within(entry).getByRole("button",{name:"编导起草"})).toBeEnabled();
     expect(within(entry).getByRole("button",{name:"手动详填"})).toBeVisible();
     expect(mockClient.createCandidate).not.toHaveBeenCalled();
+  });
+});
+
+describe("选题来源中文标签", () => {
+  it.each([
+    ["trend", "推荐"], ["benchmark", "对标"], ["demand", "需求"],
+    ["idea", "灵感"], ["favorites", "收藏"], ["future_source", "未知来源"],
+    ["constructor", "未知来源"], ["", "未知来源"],
+  ])("%s 显示 %s", (source, label) => {
+    render(<CandidateCard candidate={candidate({ source: source as CandidateResource["source"] })} />);
+    const card = screen.getByTestId("candidate-card");
+    expect(within(card).getByText(label)).toBeInTheDocument();
+    if (source) expect(within(card).queryByText(source, { exact: true })).not.toBeInTheDocument();
+  });
+  it("保留已有的明确来源名称", () => {
+    render(<CandidateCard candidate={candidate({source: "favorites"})} sourceLabel="收藏夹：创作参考" />);
+    expect(screen.getByText("收藏夹：创作参考")).toBeInTheDocument();
   });
 });

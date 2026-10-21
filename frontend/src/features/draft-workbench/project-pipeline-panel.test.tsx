@@ -160,3 +160,18 @@ describe("ProjectPipelinePanel — 服务端准备状态",()=>{
  it("初稿采纳期间新增输入，保留已保存回执且不刷新覆盖",async()=>{const draft:ProjectPreparationCandidate={...brief,kind:"draft",content:{kind:"draft",text:"来源初稿候选"}};let clean=true;controls.capture.mockReturnValue(()=>clean);let finish!:(value:unknown)=>void;controls.accept.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));mount(preparation(),<ProjectPreparationCandidateCard projectId="p-1" candidate={draft}/>);await ready();fireEvent.click(screen.getByRole("button",{name:"采纳初稿"}));await waitFor(()=>expect(controls.accept).toHaveBeenCalledTimes(1));clean=false;await act(async()=>finish({id:"receipt-real",projectId:"p-1",candidateId:draft.id}));expect(screen.getByText(/期间的输入已保留/)).toBeVisible();expect(controls.refresh).not.toHaveBeenCalled();},120000);
  it("隐藏页不轮询，重新显示只观察原任务",async()=>{const hidden=vi.spyOn(document,"hidden","get").mockReturnValue(true);try{mount(preparation([step("transcript","running")]),undefined,2);await ready();await act(async()=>{await new Promise(resolve=>setTimeout(resolve,15));});expect(controls.get).toHaveBeenCalledTimes(1);controls.get.mockResolvedValue(preparation([step("transcript","done")]));hidden.mockReturnValue(false);fireEvent(document,new Event("visibilitychange"));await waitFor(()=>expect(controls.get).toHaveBeenCalledTimes(2));expect(controls.start).not.toHaveBeenCalled();}finally{hidden.mockRestore();}},120000);
 });
+
+it("去写稿保留用户主动的script锚点，挂载不主动滚动", async () => {
+  const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+  scroll.mockClear();
+  try {
+    const { container } = mount();
+    await ready();
+    expect(scroll).not.toHaveBeenCalled();
+    const link = container.querySelector('a[href="#script"]');
+    expect(link).toHaveTextContent("去写稿");
+    expect(link).not.toHaveAttribute("autofocus");
+  } finally {
+    scroll.mockRestore();
+  }
+}, 120000);
