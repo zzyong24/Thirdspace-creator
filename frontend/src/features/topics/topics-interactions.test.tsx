@@ -22,9 +22,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
   createCandidate: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
-  promoteCandidate: vi.fn((i: unknown): Promise<unknown> => {
+  ensureProject: vi.fn((i: unknown): Promise<unknown> => {
     void i;
-    return Promise.resolve({ projectId: "proj-99" });
+    return Promise.resolve({ project: {id: "proj-99"} });
   }),
   patchCandidate: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   createAITask: vi.fn(
@@ -49,7 +49,7 @@ const mockListTaskResults = vi.fn(
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createCandidate: (i: unknown) => mockClient.createCandidate(i),
-    promoteCandidate: (i: unknown) => mockClient.promoteCandidate(i),
+    ensureProject: (i: unknown) => mockClient.ensureProject(i),
     patchCandidate: (i: unknown) => mockClient.patchCandidate(i),
     createAITask: (i: unknown) => mockClient.createAITask(i),
     getTask: () => Promise.resolve({ status: "queued" }),
@@ -412,13 +412,13 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
-  it("升级为项目 → client.promoteCandidate then push to /projects/:id?from=topic（补全在项目中自动进行）", async () => {
+  it("升级为项目 → client.ensureProject then push to /projects/:id（准备在项目中继续）", async () => {
     render(<TopicsWorkspace candidates={[candidate({card:filledCard()})]} sources={overview().sources} sort="predictedScore" />);
     fireEvent.click(within(screen.getByRole("region", {name:"升级为项目"})).getByRole("button", {name:"升级为项目"}));
     await waitFor(() =>
-      expect(mockClient.promoteCandidate).toHaveBeenCalledTimes(1),
+      expect(mockClient.ensureProject).toHaveBeenCalledTimes(1),
     );
-    expect(mockRouter.push).toHaveBeenCalledWith("/projects/proj-99?from=topic");
+    expect(mockRouter.push).toHaveBeenCalledWith("/projects/proj-99");
   });
 
   it("[T-216] 丢弃 → 弹窗填原因 → client.patchCandidate{status:'dropped',dropReason} then router.refresh", async () => {
@@ -468,7 +468,7 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(screen.queryByTestId("enrich-button")).toBeNull();
     const actions=screen.getByRole("region",{name:"升级为项目"});
     expect(within(actions).getAllByRole("button")).toHaveLength(1);
-    expect(within(actions).getByText(/补全资料、转写和写稿会在新项目里自动进行/)).toBeVisible();
+    expect(within(actions).getByText(/准备进度、补充来源和候选采纳在项目页处理/)).toBeVisible();
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
@@ -724,7 +724,7 @@ describe("选题操作步骤布局",()=>{
     expect(screen.getByRole("heading",{name:"03 核对选题"})).toBeVisible();
     expect(within(screen.getByRole("region",{name:"升级为项目"})).getByRole("button",{name:"升级为项目"})).toBeEnabled();
     expect(mockClient.createCandidate).not.toHaveBeenCalled();
-    expect(mockClient.promoteCandidate).not.toHaveBeenCalled();
+    expect(mockClient.ensureProject).not.toHaveBeenCalled();
   });
   it("标题按钮可选择候选，详情和立项动作使用相同候选ID",async()=>{
     render(<TopicsWorkspace candidates={[candidate({id:"first",title:"第一条",card:filledCard()}),candidate({id:"second",title:"第二条",card:{...filledCard(),oneLiner:"第二条正文"}})]} sources={overview().sources} sort="predictedScore"/>);
@@ -733,7 +733,7 @@ describe("选题操作步骤布局",()=>{
     expect(second).toHaveAttribute("aria-pressed","true");
     expect(within(screen.getByTestId("topics-detail")).getByText("第二条正文")).toBeVisible();
     fireEvent.click(within(screen.getByRole("region",{name:"升级为项目"})).getByRole("button",{name:"升级为项目"}));
-    await waitFor(()=>expect(mockClient.promoteCandidate).toHaveBeenCalledWith(expect.objectContaining({params:{candidateId:"second"}})));
+    await waitFor(()=>expect(mockClient.ensureProject).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({source:"topic",candidateId:"second"})})));
   });
 });
 

@@ -1,5 +1,6 @@
 import { QuickCreateWork } from "@/features/projects/quick-create-work";
 import { createServerClient } from "@/lib/contract-client.server";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { resolveSession } from "@/lib/session.server";
 
 export default async function CreateWorkPage({ searchParams }: { searchParams?: Promise<{ sourceItemId?: string }> }) {
@@ -10,9 +11,9 @@ export default async function CreateWorkPage({ searchParams }: { searchParams?: 
   let sourceTitle: string | undefined;
   let sourceType: "video" | "article" | "trend_signal" | undefined;
   let sourceNotice: string | undefined;
-  if (session?.ctx.accountId) {
+  if (session?.ctx.groupId || session?.ctx.accountId) {
     const scoped = createServerClient(session.ctx);
-    try {
+    if(session.ctx.accountId)try {
       const account = await scoped.getAccount({ params: { accountId: session.ctx.accountId }, query: undefined, body: undefined });
       accountPlatform = account.platform;
     } catch { /* 账号平台缺失时仍允许用户自行选作品形式。 */ }
@@ -22,11 +23,12 @@ export default async function CreateWorkPage({ searchParams }: { searchParams?: 
         sourceItemId = source.item.id;
         sourceTitle = source.item.title || "这条内容";
         sourceType = source.item.type;
-      } catch {
-        sourceNotice = "所选雷达来源暂不可读取。仍可输入主题直接创作，作品不会附上未经核验的来源。";
+      } catch(error) {
+        sourceNotice = `${describeUserError(error,"所选雷达来源暂不可读取。")} 请返回核对，或明确选择不附来源继续创作。`;
       }
     }
   }
+  if(requestedSourceId&&!session?.ctx.groupId&&!session?.ctx.accountId)sourceNotice="请先选择账号组或账号，再核对所选来源。";
   return <QuickCreateWork accountId={session?.ctx.accountId} accountPlatform={accountPlatform}
     sourceItemId={sourceItemId} sourceTitle={sourceTitle} sourceType={sourceType} sourceNotice={sourceNotice} />;
 }

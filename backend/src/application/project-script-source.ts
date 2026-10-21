@@ -23,6 +23,7 @@ export function createProjectScriptSource(ports: {
       unavailable("脚本来源不属于当前项目，或不是可用的脚本与大纲。");
     const version = (await ports.artifacts.listVersions(ctx, artifact.id)).find(row => row.id === versionId);
     if (!version) return unavailable("脚本来源的保存版本不存在，请重新读取脚本。");
+    if((version.contentData as {purpose?:string}|null)?.purpose==='project_preparation_source')return unavailable('准备来源尚未采纳为正式稿，请从项目来源读取。');
     return {artifact, version};
   }
   const source = {

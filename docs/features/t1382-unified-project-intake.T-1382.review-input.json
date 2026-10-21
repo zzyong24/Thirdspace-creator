@@ -1,0 +1,175 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "本次由未参与文稿编辑的独立同模型审阅者（homogeneous，非跨模型）完整静态复核 SPEC v2.1、原 v2 人工评审及物理架构，并核对相关实际消费者。原 v2 人工评审未入 reviewctl，本次为首次机器登记，故 review_kind=initial，不改写原人工评审结论。REV-001..REV-006 的六条建议均已在 v2.1 的约束、清单和验收计划中解决，未发现新增自相矛盾或证据充分的阻塞；当前 open blocker/major/minor 均为 0。只读静态证据，不包含产品运行、测试、类型检查、数据库、迁移、网络、真实模型或跨模型评审；功能验收仍待实施。SPEC SHA-256=e44ddb8151a0d9b435e68842a72a995e708c56b8e9e18cd08dd0b3c3b734d6e6；架构 SHA-256=eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1382-04",
+        "quote": "AI 拆解、初稿和资料补全只产候选"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1382-05",
+        "quote": "未采纳前正式 brief/script 不因新 AI 结果改变"
+      },
+      "where": "SPEC §7.2、§9、§11；N-1",
+      "failure_mode": "若仅按现有文件清单改写入与面板，准备来源 output_script 仍可能被正式稿读取或复用为写入目标。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/application/context/confirmed-project-script.ts:22; backend/src/application/context/current-artifact.ts:49; backend/src/application/project-script-source.ts:20; backend/src/modules/artifacts/script-draft-target.service.ts:18",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "首轮全文及实际消费者静态核查",
+      "suggestion": "按 N-1 补齐已明确隔离约束对应的实际消费者、文件计数和公共读写用例。",
+      "resolution_evidence": "独立静态核实 SPEC v2.1 §7.2（256–258 行）明确 preparation 来源 purpose 的默认/精确版本读取及写稿目标隔离、正式空稿不回灌和来源显式读取；§9.2（395–398 行）补齐四个实际消费者；§11.1（465 行）、§11.2 第 14 项（485 行）、新增 current-artifact.test.ts 计划（492 行）及 AC-1382-05（524 行）覆盖仅来源为空、空稿、精确引用和采纳不改来源。已只读对照四个当前消费者，设计补漏已解决；产品实现与测试均未执行。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1382-03",
+        "quote": "支持原准备任务恢复"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1382-04",
+        "quote": "未知结果不盲重发"
+      },
+      "where": "SPEC §7.3、§9、§11；N-2",
+      "failure_mode": "若漏改 Codex 原调用恢复判别，新 project-owner preview 的真实原 thread/turn 不会被识别为可只读恢复。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/modules/execution/codex-read-recovery.ts:21; backend/src/modules/execution/model-call-recovery.ts:102; backend/src/modules/execution/persistent-task.service.ts:1121",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "首轮全文及实际消费者静态核查",
+      "suggestion": "按 N-2 补入 helper 和测试，验证真实冻结身份下原调用读回且不重新提交。",
+      "resolution_evidence": "独立静态核实 SPEC v2.1 §7.3（267 行）明确 project-owner topic_preview 的原 task/owner/scope/冻结模型/thread/turn 只读恢复、零新增模型提交及原期限；§9.2（384 行）补 codex-read-recovery.ts，§11.1（466 行）补两个现有恢复测试，§11.2 第 15 项（486 行）要求公共持久任务链，AC-1382-04（523 行）绑定验收。已只读对照 helper 当前 transform 限制及真实调用绑定，设计适配点已解决；未运行恢复或模型调用。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-1382-05",
+        "quote": "保留 T-1332 纯组端到端能力"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1382-06",
+        "quote": "accountId=null 纯组完整公共链通过"
+      },
+      "where": "SPEC §4.1、§9.1、§11；N-3",
+      "failure_mode": "保留快速创作页面的 accountId 前置条件会让纯组 sourceItemId 未被读取且无来源错误提示。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/src/app/(creator)/projects/create/page.tsx:13",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "首轮全文及实际消费者静态核查",
+      "suggestion": "按 N-3 明确 workspace 来源读取，并增加纯组带 sourceItemId 的直接入口用例。",
+      "resolution_evidence": "独立静态核实 SPEC v2.1 §4.1（108 行）将 workspace 来源预读与账号平台信息读取分开，明确纯组 accountId=null 的 sourceItemId 成功/拒绝及显式无来源选择；§9.1（339 行）落到实际 create/page.tsx，§11.2 第 16 项（487 行）直接覆盖页面、切组旧响应，492 行新增 page.test.tsx 计划，AC-1382-01/06（520、525 行）绑定验收。已只读核对页面现有 accountId 条件；该设计缺口已解决，未执行页面。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-1382-02",
+        "quote": "保存项目、入口来源和原始素材引用"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1382-02",
+        "quote": "六来源正确保存/透传"
+      },
+      "where": "SPEC §5.1、§5.2；N-4",
+      "failure_mode": "若仅扩资源枚举，公开 create 可自报的新来源与可信宿主入口事实容易混淆，原 imported 行为也可能继续直接决定 review 阶段。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "contract/src/operations/projects.ts:62; backend/src/modules/projects/projects.transport.ts:258; backend/src/modules/projects/projects.service.ts:1052",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "首轮全文及实际消费者静态核查",
+      "suggestion": "按 N-4 写清公开 create 来源白名单、可信赋值和发布事实边界，增加公共操作负项。",
+      "resolution_evidence": "独立静态核实 SPEC v2.1 §5.1（154、167–169 行）区分六值资源与 create 原三值请求 schema，公开 manual/topic 可用，新增三值合同拒绝，伪报 imported 服务端拒绝；ingestion 真实账号/publication/canonical owner 内部验证，radar/quick_create 受控 ensure 与 assistant 采纳宿主可信赋值，不接受 caller trusted 标记。§9.2/9.3、§11.1（467 行）、§11.2 第 17 项（488 行）及 AC-1382-02（521 行）覆盖直接公共操作负项。已只读对照原 create schema；来源声明与发布事实边界已澄清，未运行接口。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-005",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1382-02",
+        "quote": "保存项目、入口来源"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1382-02",
+        "quote": "六来源正确保存/透传"
+      },
+      "where": "SPEC §9；N-5",
+      "failure_mode": "新增来源可能不被新手引导视为已建项目，内容日历仍持有三值来源类型。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/src/features/onboarding/onboarding-data.ts:89; backend/src/modules/content-calendar/content-calendar.service.ts:132",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "首轮全文及实际消费者静态核查",
+      "suggestion": "按 N-5 补列两个实际消费者及对应来源信号测试，更新文件计数。",
+      "resolution_evidence": "独立静态核实 SPEC v2.1 §5.2（181 行）规定 onboarding 五种真实创作入口、保 imported 区别及空数据真实信号，日历复用同一六值合同；§9.1（349 行）与 §9.2（399 行）补两处实际消费者；§11.1（468 行）、§11.2 第 18 项（489 行）、AC-1382-02（521 行）覆盖账号/纯组信号及六值透传。已只读对照当前 onboarding 和 ScheduleProject 三值类型；影响清单逐行计数 23+47+7+3=80，两个遗漏已纳入；未执行产品测试。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-006",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-1382-05",
+        "quote": "保留 T-1332 纯组端到端能力和既有项目数据/ID"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1382-06",
+        "quote": "已有项目 ID/数据不变"
+      },
+      "where": "SPEC §6.2、§8.1、§11；N-6",
+      "failure_mode": "只通过旧父 checkpoint.projectId 查找既有项目，会漏认项目已提交但父回执尚未写入的崩溃窗口。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/modules/projects/radar-project.service.ts:49; backend/src/modules/intelligence/radar-project-queue.service.ts:146; backend/src/modules/intelligence/radar-project-queue.service.ts:167",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "首轮全文及实际消费者静态核查",
+      "suggestion": "按 N-6 将此窗口纳入既有项目保全用例，核实真实关联并返回原 ID，无需保留旧执行器。",
+      "resolution_evidence": "独立静态核实 SPEC v2.1 §6.2（207 行）、§8.1（304–306 行）明确项目已提交而父 checkpoint 未写 projectId 的只读查找：冻结旧任务身份仅定位既有行，再核归属/item 事实，失败/冲突不能当不存在，确认未提交才按新公式创建。§8.2（317 行）、§9.2（358 行）、§11.2 第 19 项（490 行）及 AC-1382-06/08（525、527 行）覆盖账号/纯组、迁移/重点击/并发、原 ID 与内容不变、零第二项目及未提交对照。已只读核对旧服务真实 ID 公式和创建后独立 checkpoint 窗口；未运行数据库、迁移或并发测试。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

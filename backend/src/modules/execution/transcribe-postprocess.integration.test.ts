@@ -30,7 +30,7 @@ beforeAll(async () => { const opened = await createDb(); db = opened.db; close =
 afterAll(async () => close?.());
 type Mode = 'sse' | 'json' | 'reject' | 'bad-output' | 'fidelity' | 'unconfigured' | 'budget' | 'disconnect' | 'cancel';
 
-async function fixture(mode: Mode, extraIds: string[] = []) {
+async function fixture(mode: Mode, extraIds: string[] = [], noListener=false) {
   const id = `postprocess-${++sequence}`, awemeId = `video-${sequence}`, now = () => new Date().toISOString();
   const ctx = { userId: 'synthetic-user', accountId: 'synthetic-account', requestId: id, source: 'user' as const };
   let requests = 0;
@@ -49,8 +49,8 @@ async function fixture(mode: Mode, extraIds: string[] = []) {
     res.writeHead(200, { 'content-type': 'text/event-stream' });
     res.end(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', choices: [{ index: 0, delta: choice.message, finish_reason: 'stop' }], usage })}\n\ndata: [DONE]\n\n`);
   });
-  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
-  const baseUrl = `http://127.0.0.1:${(server.address() as { port: number }).port}/v1`;
+  if(!noListener)await new Promise<void>((resolve,reject) => {server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const baseUrl = `http://127.0.0.1:${noListener?1:(server.address() as { port: number }).port}/v1`;
   const spec = { apiFormat: 'openai_chat' as const, model: 'fixture', baseUrl, token: 'synthetic-token' };
   const bytes = new Uint8Array([1, 2, 3]);
   const identity = { protocol: 'qwen-chat-audio.v1' as const, provider: 'qwen', model: 'fixture-asr', endpointDigest: digest('https://example.invalid/v1/chat/completions'), language: 'zh' };
@@ -198,8 +198,8 @@ it.each(['source', 'bundle'] as const)('实际转录Worker闭合工件写入/终
 }, 300_000); // 原deadline包含启动，另覆盖120秒关闭与60秒清理余量。
 
 // JSONB 只规范对象键顺序；完整字段、模型身份及原作品数组顺序仍严格核验。
-async function receiptGuardFixture(mode: 'unconfigured' | 'json' = 'unconfigured') {
-  const f = await fixture(mode);
+async function receiptGuardFixture(mode: 'unconfigured' | 'json' = 'unconfigured',noListener=false) {
+  const f = await fixture(mode,[],noListener);
   const stamp = f.now(), projectId = `guard-project-${f.id}`;
   await db.insert(projects).values({ id: projectId, userId: f.ctx.userId, accountId: f.ctx.accountId, title: '合成回执守卫作品', source: 'imported', platformRef: { platform: 'douyin', externalId: f.awemeId }, creationMode: 'talking_head', status: 'active', currentStage: 'script', startedAt: stamp, createdAt: stamp, updatedAt: stamp });
   const result = await runTranscribePostprocessInWorker(f.awemeId, new AbortController().signal, f.call);
@@ -453,4 +453,24 @@ it('T208 attempt2 summary真实CHECK失败保两表和旧历史，移除精确�
   const summary=after.steps.find(row=>row.id===summaryId)!;expect(summary.text).toBe('转写完成 1 条，已有逐字稿跳过 0 条，图集跳过 1 条，转写失败 0 条，未找到对应作品 0 条');expect(summary.stepNo).toBeGreaterThan(Math.max(...before.steps.map(row=>row.stepNo)));
   expect(await f.workflow.complete(ref,{})).toEqual({status:'succeeded'});expect(await t208Rows(f,ref)).toEqual(after);expect(f.requests).toBe(0);expect(await artifacts.listProjectArtifacts(f.ctx,projectId)).toEqual(facts);expect(await artifacts.listProjectArtifacts(f.ctx,siblingProjectId)).toEqual(imageFacts);
  }finally{await unblock?.();await f.cleanup();}
+});
+it('T1382 准备来源经真实转写完成口保存，零master初始化和reconstruct；重复回执幂等',async()=>{
+ const f=await receiptGuardFixture('unconfigured',true);try{
+  const {projectSourceReferences}=await import('../../schema/projects'),referenceId=`prep-source-${f.id}`;
+  await db.insert(projectSourceReferences).values({id:referenceId,projectId:f.projectId,sourceKey:referenceId,sourceKind:'platform_work',accountId:f.ctx.accountId,platform:'douyin',externalId:f.awemeId,createdAt:f.now(),updatedAt:f.now()});
+  const parent=await f.tasks.enqueue(f.ctx,{kind:'project_preparation',ownerType:'project',ownerId:f.projectId,idempotencyKey:`parent-${f.id}`,payload:{schemaVersion:1,projectId:f.projectId,sourceReferenceIds:[referenceId]},executionBudget:{maxCalls:20,maxTokens:1000000,deadlineMs:1800000}});
+  const proof={schemaVersion:1,parentTaskId:parent.id,projectId:f.projectId,sourceReferenceId:referenceId,sourceDigest:null,exclusive:true};
+  await db.update(aiTasks).set({projectId:f.projectId,runtimeData:{preparationParentProof:proof},inputData:{projectId:f.projectId,awemeIds:[f.awemeId]}}).where(eq(aiTasks.id,f.id));
+  await db.update(executionTasks).set({payload:{...f.payload,preparationParentProof:proof}}).where(eq(executionTasks.id,f.ref.executionTaskId));
+  const onTranscriptReady=vi.fn(async()=>{}),workflow=createExecutionTranscribeWorkflowService(db,{now:f.now,nextId:f.nextId,postprocess:f.post,hasTranscriptArtifact:async()=>false,onTranscriptReady});
+  const before=(await f.ledger.inspect(f.ref)).calls;
+  expect(await workflow.invoke(f.ref,'saveTranscribeArtifact',{awemeId:f.awemeId})).toMatchObject({status:'saved',projectId:f.projectId});
+  expect(await workflow.invoke(f.ref,'saveTranscribeArtifact',{awemeId:f.awemeId})).toMatchObject({status:'saved',projectId:f.projectId});
+  const artifacts=createArtifactsService({db,now:f.now,nextId:f.nextId}),rows=await artifacts.listProjectArtifacts(f.ctx,f.projectId);
+  expect(rows).toHaveLength(1);expect(rows[0]!.artifactType).toBe('output_script');
+  const version=(await artifacts.listVersions(f.ctx,rows[0]!.id)).find(v=>v.id===rows[0]!.currentVersionId)!;
+  expect((await artifacts.listVersions(f.ctx,rows[0]!.id)).every(v=>(v.contentData as any)?.purpose==='project_preparation_source')).toBe(true);
+  expect(version.contentData).toMatchObject({purpose:'project_preparation_source',skipMasterScript:true,projectId:f.projectId,referenceId,parentTaskId:parent.id,executionTaskId:f.ref.executionTaskId});
+  expect(onTranscriptReady).not.toHaveBeenCalled();expect((await f.ledger.inspect(f.ref)).calls).toEqual(before);expect(f.requests).toBe(0);
+ }finally{await f.cleanup();}
 });

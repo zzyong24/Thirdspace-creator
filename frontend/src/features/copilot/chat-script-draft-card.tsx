@@ -32,6 +32,7 @@ import type {
   AITaskResultDataResource,
   AITaskResultResource,
 } from "@creatoros/contract";
+import {ProjectPreparationCandidateCard,type PreparationCardProps} from "./project-preparation-candidate-card";
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 90; // ~6 分钟 —— 整稿生成可达分钟级(弱模型更慢)
@@ -106,7 +107,12 @@ function sectionsToEditorHtml(sections: ReadonlyArray<ChatScriptSection>): strin
   return sectionsToHtml(views);
 }
 
-export function ChatScriptDraftCard({
+export function ChatScriptDraftCard(props:{draftMode?:"generate"|"verbatim";taskId:string|null;projectId:string|null;error:string|null;pollIntervalMs?:number;preparation?:PreparationCardProps}){
+  if(props.preparation)return <ProjectPreparationCandidateCard {...props.preparation}/>;
+  return <OrdinaryChatScriptDraftCard {...props}/>;
+}
+
+function OrdinaryChatScriptDraftCard({
   draftMode: initialDraftMode = "generate",
   taskId,
   projectId,

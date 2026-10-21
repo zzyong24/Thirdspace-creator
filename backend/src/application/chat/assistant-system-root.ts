@@ -44,6 +44,7 @@ export interface AssistantSystemRootPorts {
  generation?:NonNullable<ReturnType<typeof createCreativeCanvasRoot>['generation']>;
 }
 type ActionServices={
+ projectIntake:Pick<ReturnType<typeof import("../projects/project-intake").createProjectIntakeApplication>,"ensureAssistantCreate">;
  projects:ProjectsService;candidates:CandidateService;artifacts:ArtifactsService;
  articles:ArticlesService;graphicPosts:GraphicPostsService;knowledge:KnowledgeService;
   intelligence:Pick<IntelligenceService,'createCollection'|'readCollection'>;
@@ -147,7 +148,7 @@ export function createAssistantActionOwners(db:Db,ports:AssistantActionOwnerPort
    const deferred:Array<()=>Promise<void>>=[],store=transaction as unknown as Db,services=ports.forStore(store,deferred),stable=key(source);
    let result:unknown,operationId:string,status:'adopted'|'accepted'='adopted';
    switch(action.kind){
-    case 'project.create':{const {kind:_,...body}=action;operationId='projects.create';result=await write(services.writes.projects,ENDPOINTS.createProject,ctx,{body});break;}
+    case 'project.create':{const {kind:_,...body}=action;operationId='projects.create';const ensured=await services.projectIntake.ensureAssistantCreate(ctx,body,stable);result=await write(services.writes.projects,ENDPOINTS.getProject,ctx,{params:{projectId:ensured.project.id}});break;}
     case 'topic.create':{const {kind:_,...body}=action;operationId='candidates.create';result=await services.candidates.createCandidate(ctx,body);break;}
     case 'topic.promote':{
      if(!isDeepStrictEqual(json(await services.candidates.getCandidateForUpdate(ctx,action.candidateId)),observations.candidate))throw new ConflictError('选题已改变，请重新核对立项内容');

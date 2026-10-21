@@ -15,9 +15,13 @@ export function createScriptDraftTargetService(deps:{now:()=>string;nextId:(pref
   const service=createArtifactsService({db:tx,now:deps.now,nextId:deps.nextId,
    assertProjectOwned:(context,id)=>lockOwnedProjectForUpdate(tx,context,id),
    resolveOutputProjectId:async(c,id)=>(await projects.getOutput(c,id)).projectId});
-  const existing=(await service.listProjectArtifacts(ctx,projectId)).find(row=>row.stage==="script" && row.artifactType==="output_script" &&
+  const candidates=(await service.listProjectArtifacts(ctx,projectId)).filter(row=>row.stage==="script" && row.artifactType==="output_script" &&
    (outputId ? row.contentOutputId===outputId : !row.contentOutputId));
-  if(existing)return existing.id;
+  for(const existing of candidates){
+   const current=(await service.listVersions(ctx,existing.id)).find(version=>version.id===existing.currentVersionId);
+   if((current?.contentData as {purpose?:string}|null)?.purpose==='project_preparation_source')continue;
+   return existing.id;
+  }
   return (await service.createReservedScriptDraftTarget(ctx,{projectId,contentOutputId:outputId??null})).id;
  }};
 }

@@ -176,6 +176,31 @@ it('同字符串用于另一个独立target不作全域冲突，原账号组版�
   expect(Object.hasOwn((otherRow!.payload as Record<string,unknown>)[FIELD] as object,hash('same-text'))).toBe(true);
  }finally{await f.client.close();}
 },180000);
+it('T1382 历史generic-only按真实target保只读和拒绝边界，另一直接转写可复用字符串',async()=>{
+ for(const mode of ['same-target','mixed-target','malformed'] as const){
+  const f=await fixture();try{
+   const key='historical-generic-only',accepted=await f.retry(key);await f.failAttempt();
+   const [row]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,f.executionId));
+   const payload={...(row!.payload as Record<string,unknown>)};delete payload[FIELD];
+   await f.db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.executionId));
+   await f.db.delete(executionControlReceipts).where(eq(executionControlReceipts.userId,f.ctx.userId));
+   const other=mode==='mixed-target'?await f.tasks.enqueue(f.ctx,{kind:'source_sync',ownerType:'source',ownerId:'historical-other',idempotencyKey:'historical-other',payload:{}}):null;
+   const ids=other?[f.executionId,other.id]:[f.executionId];
+   await f.db.insert(executionControlReceipts).values({id:'historical-generic-only',userId:f.ctx.userId,groupId:f.ctx.groupId,accountId:f.ctx.accountId,idempotencyKey:key,requestDigest:hash(JSON.stringify({command:'retry',taskIds:[...ids].sort()})),result:mode==='malformed'?[{}]:other?[...accepted,other]:accepted,createdAt:now()});
+   const before=await snapshot(f.db,f.executionId),receipts=await f.db.select().from(executionControlReceipts),reopens=daily.reopens;
+   if(mode==='same-target')expect(await f.retry(key)).toEqual(accepted);
+   else await expect(f.retry(key)).rejects.toMatchObject({name:'ConflictError'});
+   await expect(f.tasks.command(f.ctx,{taskIds:[f.executionId],command:'retry',idempotencyKey:key,receiptProtocol:'transcribe-command-v1'})).rejects.toMatchObject({name:'ConflictError'});
+   await expect(f.tasks.command(f.ctx,{taskIds:[f.executionId],command:'cancel',idempotencyKey:key})).rejects.toMatchObject({name:'ConflictError'});
+   expect(await snapshot(f.db,f.executionId)).toEqual(before);expect(await f.db.select().from(executionControlReceipts)).toEqual(receipts);expect(daily.reopens).toBe(reopens);
+   if(mode==='same-target'){
+    const second=await fixture(undefined,{db:f.db,client:f.client},'two');expect((await second.retry(key))[0]?.status).toBe('queued');
+    expect(await f.db.select().from(executionControlReceipts)).toEqual(receipts);
+    expect((await snapshot(f.db,f.executionId)).execution).toEqual(before.execution);
+   }
+  }finally{await f.client.close();}
+ }
+},180000);
 it('主路和replay均重核本人当前active组，跨owner/group与归档不写受理',async()=>{
  const f=await fixture();try{
   await f.retry('original-intent');await f.failAttempt();const before=await snapshot(f.db,f.executionId);

@@ -1,4 +1,4 @@
-import type { ExecutionTaskResourceV2 } from "@creatoros/contract";
+import type { ExecutionTaskResourceV2, ProjectPreparationResource, ProjectEnsureResult, ProjectEnsureInput } from "@creatoros/contract";
 export interface RadarScope { groupId?: string; accountId?: string; }
 export type RadarScopeInput = RadarScope | string;
 export function radarScope(input: RadarScopeInput): RadarScope { return typeof input === "string" ? {accountId: input} : input; }
@@ -92,6 +92,7 @@ export interface RadarMetric {
 
 export interface RadarItem {
   id: string;
+  projectId?: string;
   type: "video" | "article" | "trend_signal";
   platform: string;
   canonicalUrl: string;
@@ -278,9 +279,8 @@ export interface StartRunResult {
 }
 
 export interface RadarApi {
-  enqueueProjectUpgrades?(input:{itemIds:string[];positioningVersionId:string;idempotencyKey:string}):Promise<{tasks:ExecutionTaskResourceV2[]}>;
-  listProjectUpgrades?(input:RadarScope & {page:number}):Promise<{tasks:ExecutionTaskResourceV2[];total:number}>;
-  getProjectUpgrade?(task:Pick<ExecutionTaskResourceV2,"id"|"ownerId">):Promise<ExecutionTaskResourceV2>;
+  ensureProject?(input:Extract<ProjectEnsureInput,{source:"radar"}>):Promise<ProjectEnsureResult>;
+  getProjectPreparation?(projectId:string):Promise<ProjectPreparationResource>;
   listShareImportTasks?(input: RadarScope & {ownerId?: string; page?: number}): Promise<ExecutionTaskResourceV2[]>;
   commandTask?(input:{taskId:string;command:"resume"|"cancel"|"retry";idempotencyKey:string}):Promise<void>;
   listCollectors(input: RadarScope): Promise<

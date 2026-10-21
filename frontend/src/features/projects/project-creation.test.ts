@@ -18,7 +18,7 @@ describe("T-1050 多形式创建会话", () => {
     const {session, ports} = setup();
     const result = await session.create(input);
     expect(ports.createProject).toHaveBeenCalledOnce();
-    expect(ports.createProject).toHaveBeenCalledWith({title: "主题", brief: "描述"});
+    expect(ports.createProject).toHaveBeenCalledWith({title: "主题", brief: "描述", idempotencyKey:expect.any(String)});
     expect(result.outputs.map(item => item.contentType)).toEqual(["article", "image", "video"]);
     expect(ports.createOutput).toHaveBeenCalledTimes(3);
   });
@@ -77,12 +77,14 @@ describe("T-1050 多形式创建会话", () => {
     await expect(session.create(input)).rejects.toMatchObject({needsAccount: true});
     expect(ports.createProject).not.toHaveBeenCalled();
   });
-  it("项目响应未知时禁止盲目重发，提示先核对项目列表", async () => {
+  it("项目响应未知时只由用户以原输入原键恢复，不能换输入或自动重发", async () => {
     const {session, ports} = setup();
-    ports.createProject.mockRejectedValue(new TypeError("Failed to fetch"));
-    await expect(session.create(input)).rejects.toThrow(/项目列表/);
-    await expect(session.create(input)).rejects.toThrow(/项目列表/);
+    ports.createProject.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await expect(session.create(input)).rejects.toThrow(/结果.*确认/);
     expect(ports.createProject).toHaveBeenCalledOnce();
+    await expect(session.create({...input,name:"其它主题"})).rejects.toThrow(/原.*输入|原.*主题/);
+    const result=await session.create(input);expect(result.project.id).toBe("project-a");
+    expect(ports.createProject).toHaveBeenCalledTimes(2);expect(ports.createProject.mock.calls[1]).toEqual(ports.createProject.mock.calls[0]);
   });
   it("真实 428 转成账号恢复提示", async () => {
     const {session, ports} = setup();

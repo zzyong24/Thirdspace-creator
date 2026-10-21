@@ -18,6 +18,24 @@ const ctx: RequestContext = {
 };
 
 describe("[T-633] 选题卡失败诊断脱敏", () => {
+  it.each([
+    {code:'CODEX_LOGIN_REQUIRED'},
+    {errorCode:'CODEX_LOGIN_REQUIRED'},
+    {details:{domainCode:'CODEX_LOGIN_REQUIRED'}},
+    new Error('CODEX_LOGIN_REQUIRED: synthetic-private-value'),
+    new Error('wrapper',{cause:{details:{domainCode:'CODEX_LOGIN_REQUIRED'},message:'synthetic-private-value'}}),
+  ])('fa 登录错误从安全码和cause识别且不泄漏原异常 %#',error=>{
+    const result=classifyTopicPreviewFailure(error);
+    expect(result).toEqual({category:'engine_unavailable',errorCode:'CODEX_LOGIN_REQUIRED',message:'AI 引擎未登录，请先在设置中登录 Codex 后继续原任务'});
+    expect(JSON.stringify(result)).not.toContain('synthetic-private-value');
+  });
+  it('fa 不支持当前平台属于引擎不可用',()=>{
+    expect(classifyTopicPreviewFailure({code:'CODEX_PLATFORM_UNSUPPORTED'})).toMatchObject({category:'engine_unavailable',errorCode:'CODEX_PLATFORM_UNSUPPORTED'});
+  });
+  it.each(['CODEX_RPC_REJECTED','CODEX_PROTOCOL_INVALID','MODEL_RESULT_UNKNOWN','CODEX_FAKE','PREFIX_CODEX_LOGIN_REQUIRED','CODEX_LOGIN_REQUIRED_SUFFIX'])('fa 未知或相似协议码不冒充登录错误 %s',code=>{
+    expect(classifyTopicPreviewFailure({code,message:code}).category).not.toBe('engine_unavailable');
+  });
+  it('fa 循环cause安全结束',()=>{const error:{cause?:unknown}={};error.cause=error;expect(classifyTopicPreviewFailure(error).category).toBe('unknown');});
   it("结构化 JSON 截断归类为输出不完整，不再只落一个 Error", () => {
     expect(
       classifyTopicPreviewFailure(

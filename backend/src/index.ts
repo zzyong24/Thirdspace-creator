@@ -58,6 +58,8 @@ export {
 } from "./errors";
 export {
   projects,
+  projectSourceReferences,
+  projectIntakes,
   projectActivities,
   projectStages,
   projectTargetPlatforms,

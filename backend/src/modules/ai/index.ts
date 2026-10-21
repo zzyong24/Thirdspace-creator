@@ -101,3 +101,5 @@ export {createAssistantActionAdoptionService} from './assistant-action-adoption.
 export {createChatProposalSourceService,sealChatProposal} from './chat-proposal-source.service';
 
 export {createPredictionLockService,type PredictionLockBinding,type PredictionLockPorts} from "./prediction-lock.service";
+
+export {submitProjectPreparationTranscription} from "./project-transcription-submission";

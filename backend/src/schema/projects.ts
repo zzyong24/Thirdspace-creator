@@ -6,6 +6,7 @@ import {
   boolean,
   jsonb,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
 
 // Timestamps are stored as ISO-8601 text to match the contract resource schemas
@@ -45,6 +46,65 @@ export const projects = pgTable("projects", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 },t=>[index("projects_group_scope_ix").on(t.userId,t.groupId)]);
+
+// T1382：原始资料仅归属项目，不代表用户已确认来源或采纳候选。
+export const projectSourceReferences = pgTable("project_source_references", {
+  id: text("id").primaryKey(),
+  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  sourceKey: text("source_key").notNull(),
+  sourceKind: text("source_kind").notNull(),
+  itemId: text("item_id"),
+  snapshotId: text("snapshot_id"),
+  accountId: text("account_id"),
+  platform: text("platform"),
+  externalId: text("external_id"),
+  url: text("url"),
+  bodyAvailable: boolean("body_available").notNull().default(false),
+  sourceDigest: text("source_digest"),
+  transcriptHash: text("transcript_hash"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, table => [
+  uniqueIndex("project_source_references_project_key_ux").on(table.projectId, table.sourceKey),
+  index("project_source_references_item_ix").on(table.itemId),
+  index("project_source_references_snapshot_ix").on(table.snapshotId),
+  check("project_source_references_source_key_ck", sql`length(btrim(${table.sourceKey})) > 0`),
+  check("project_source_references_source_shape_ck", sql`
+    (${table.sourceKind} = 'intelligence_item'
+      AND ${table.itemId} IS NOT NULL AND length(btrim(${table.itemId})) > 0
+      AND ${table.snapshotId} IS NOT NULL AND length(btrim(${table.snapshotId})) > 0)
+    OR
+    (${table.sourceKind} = 'platform_work'
+      AND ${table.accountId} IS NOT NULL AND length(btrim(${table.accountId})) > 0
+      AND ${table.platform} IS NOT NULL AND length(btrim(${table.platform})) > 0
+      AND ${table.externalId} IS NOT NULL AND length(btrim(${table.externalId})) > 0)
+  `),
+]);
+
+// projectId 为持久回执的原身份：删除项目后仍保留，不因同键重试另建项目。
+export const projectIntakes = pgTable("project_intakes", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  scopeKind: text("scope_kind").notNull(),
+  scopeId: text("scope_id").notNull(),
+  source: text("source").notNull(),
+  intakeKey: text("intake_key").notNull(),
+  requestDigest: text("request_digest").notNull(),
+  projectId: text("project_id").notNull(),
+  preparationTaskId: text("preparation_task_id"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, table => [
+  uniqueIndex("project_intakes_scope_key_ux").on(table.userId, table.scopeKind, table.scopeId, table.source, table.intakeKey),
+  index("project_intakes_project_ix").on(table.projectId),
+  check("project_intakes_scope_kind_ck", sql`${table.scopeKind} IN ('group', 'legacy-account')`),
+  check("project_intakes_identity_ck", sql`
+    length(btrim(${table.userId})) > 0 AND length(btrim(${table.scopeId})) > 0
+    AND length(btrim(${table.intakeKey})) > 0 AND length(btrim(${table.requestDigest})) > 0
+    AND length(btrim(${table.projectId})) > 0
+  `),
+  check("project_intakes_source_ck", sql`${table.source} IN ('manual', 'topic', 'radar', 'imported', 'assistant', 'quick_create')`),
+]);
 
 export const projectActivities = pgTable("project_activities", {
   id: text("id").primaryKey(),

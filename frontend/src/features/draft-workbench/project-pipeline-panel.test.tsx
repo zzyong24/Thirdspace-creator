@@ -1,58 +1,44 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, fireEvent, cleanup } from "@testing-library/react";
+import * as React from "react";
+import {describe,it,expect,vi,beforeEach,afterEach} from "vitest";
+import {render,fireEvent,cleanup,screen,waitFor,act} from "@testing-library/react";
+import type {ProjectPreparationResource,ProjectPreparationStep,ProjectPreparationCandidate} from "@creatoros/contract";
+const controls=vi.hoisted(()=>({scope:{groupId:"group-a",accountId:null as string|null},get:vi.fn(),start:vi.fn(),provide:vi.fn(),accept:vi.fn(),openChat:vi.fn(),refresh:vi.fn(),capture:vi.fn()}));
+vi.mock("next/navigation",()=>({useRouter:()=>({refresh:controls.refresh})}));
+vi.mock("@/lib/creation-workspace-scope",async()=>{
+  const actual=await vi.importActual<typeof import("@/lib/creation-workspace-scope")>("@/lib/creation-workspace-scope");
+  const workspace={capture(){const key=actual.creationScopeKey(controls.scope);return {assertCurrent(){if(actual.creationScopeKey(controls.scope)!==key)throw Error("工作区已切换");},client:{getProjectPreparation:controls.get,startProjectPreparation:controls.start,provideProjectPreparationTranscript:controls.provide,acceptProjectPreparationCandidate:controls.accept}};}};
+  return {...actual,useCreationScope:()=>controls.scope,useCreationWorkspace:()=>workspace,readCreationScope:()=>controls.scope};
+});
+vi.mock("./draft-chat-request",()=>({useDraftChatRequest:()=>({openChat:controls.openChat,captureScriptAdoption:controls.capture})}));
+import {ProjectPipelinePanel} from "./project-pipeline-panel";
+import {ProjectPreparationProvider} from "./project-preparation-context";
+import {ProjectPreparationCandidateCard} from "@/features/copilot/project-preparation-candidate-card";
+function step(name:ProjectPreparationStep['name'],status:ProjectPreparationStep['status'],actions:ProjectPreparationStep['availableActions']=[]):ProjectPreparationStep{return {name,status,required:true,reasonCode:"REAL_CHECKPOINT",revision:3,childTaskId:status==="queued"||status==="running"?"child-real":null,businessTaskId:null,inputDigest:null,outputReferences:[],startedAt:null,completedAt:null,lastError:null,availableActions:actions};}
+function preparation(steps:ProjectPreparationStep[]=[step("transcript","failed",["retry","provide_transcript"])]):ProjectPreparationResource{return {projectId:"p-1",origin:"radar",registration:"registered",preparationTaskId:"parent-real",revision:4,steps,candidates:[],sourceReferences:[{id:"ref-real",projectId:"p-1",sourceKey:"item:real",sourceKind:"intelligence_item",itemId:"item-real",snapshotId:"snapshot-real",url:"https://example.com/source",bodyAvailable:false,sourceDigest:"source-real",transcriptHash:null,createdAt:"2026-10-21T00:00:00.000Z",updatedAt:"2026-10-21T00:00:00.000Z"}],lastError:null,availableActions:["retry"]};}
+const brief:ProjectPreparationCandidate={id:"candidate-real",kind:"brief",sourceTaskId:"child-real",transformId:null,checkpointPath:"calls.real",sourceDigest:"candidate-source",artifactDigest:"artifact-real",status:"pending",acceptanceReceipt:null,baseline:{kind:"digest",digest:"baseline-real"},content:{kind:"brief",brief:"",briefDetail:{targetAudience:"建议观众"}}};
+function mount(value=preparation(),children?:React.ReactNode,pollIntervalMs=100000){controls.get.mockResolvedValue(value);controls.start.mockResolvedValue(value);controls.provide.mockResolvedValue(value);return render(<ProjectPreparationProvider projectId="p-1" initialPreparation={value} pollIntervalMs={pollIntervalMs}><ProjectPipelinePanel projectId="p-1" origin="radar"/>{children}</ProjectPreparationProvider>);}
+beforeEach(()=>{for(const value of Object.values(controls))if(vi.isMockFunction(value))value.mockReset();controls.scope={groupId:"group-a",accountId:null};controls.capture.mockReturnValue(()=>true);});
+afterEach(cleanup);
+async function ready(){await waitFor(()=>expect(screen.getByRole("button",{name:"重新读取状态"})).not.toBeDisabled());}
+describe("ProjectPipelinePanel — 服务端准备状态",()=>{
+ it("fb 已有可信逐字稿显示完成和就绪，真正无需转写仍不需要",async()=>{const value=preparation([{...step("transcript","done"),reasonCode:"TRANSCRIPT_ALREADY_AVAILABLE"}]);const mounted=mount(value);await ready();expect(screen.getByText("已完成")).toBeVisible();expect(screen.getByText("逐字稿就绪，本次无需再转写。")).toBeVisible();expect(screen.queryByText("不需要")).toBeNull();mounted.unmount();mount(preparation([{...step("transcript","not_required"),reasonCode:"NO_SUPPORTED_TRANSCRIPTION_SOURCE"}]));await ready();expect(screen.getByText("不需要")).toBeVisible();expect(screen.getByText(/当前来源不适用自动转写/)).toBeVisible();},120000);
+ it("fb 全等资料完成后明确无需采纳，不显示待采纳候选",async()=>{mount(preparation([{...step("brief","done"),reasonCode:"BRIEF_UNCHANGED"}]));await ready();expect(screen.getByText("已完成")).toBeVisible();expect(screen.getByText("本次建议与已有资料一致，无需采纳。")).toBeVisible();expect(screen.queryByText("候选已生成，待采纳")).toBeNull();},120000);
 
-const openChat = vi.fn();
-vi.mock("./draft-chat-request", () => ({ useDraftChatRequest: () => ({ openChat }) }));
-vi.mock("./transcribe-now-button", () => ({ TranscribeNowButton: () => <span data-slot="mock-transcribe-now" /> }));
-vi.mock("next/link", () => ({ default: ({ href, children, ...p }: { href: string; children: React.ReactNode }) => <a href={href} {...p}>{children}</a> }));
-
-import { ProjectPipelinePanel, transcriptStepState } from "./project-pipeline-panel";
-
-const base = {
-  projectId: "p-1", title: "选题A", origin: "topic" as const, sourceRefs: [],
-  douyinExternalId: null, transcriptState: "none" as never, briefSettled: false, draftReady: false,
-};
-
-describe("ProjectPipelinePanel", () => {
-  beforeEach(() => { openChat.mockReset(); sessionStorage.clear(); });
-  afterEach(cleanup);
-
-  it("transcriptStepState 映射真实状态", () => {
-    expect(transcriptStepState("radar", false, "none" as never)).toBe("done");
-    expect(transcriptStepState("topic", false, "none" as never)).toBe("skipped");
-    expect(transcriptStepState("manual", true, "running" as never)).toBe("running");
-    expect(transcriptStepState("manual", true, "failed" as never)).toBe("failed");
-  });
-
-  it("渲染三步并标注状态", () => {
-    const { container } = render(<ProjectPipelinePanel {...base} briefSettled draftReady />);
-    expect(container.querySelector('[data-slot="project-pipeline"]')).not.toBeNull();
-    expect(container.querySelector('[data-step="brief"]')?.getAttribute("data-state")).toBe("done");
-    expect(container.querySelector('[data-step="draft"]')?.getAttribute("data-state")).toBe("done");
-    expect(container.querySelector('[data-step="transcript"]')?.getAttribute("data-state")).toBe("skipped");
-  });
-
-  it("from=topic 自动启动一次 brief.fill，刷新不重复", () => {
-    const { unmount } = render(<ProjectPipelinePanel {...base} autoFillBrief />);
-    expect(openChat).toHaveBeenCalledTimes(1);
-    expect(openChat.mock.calls[0][0]).toMatchObject({ functionKey: "brief.fill", autoSend: true, selection: { kind: "project", id: "p-1" } });
-    unmount();
-    render(<ProjectPipelinePanel {...base} autoFillBrief />);
-    expect(openChat).toHaveBeenCalledTimes(1);
-  });
-
-  it("选题卡已补全不自动启动；手动按钮可启动", () => {
-    render(<ProjectPipelinePanel {...base} autoFillBrief briefSettled />);
-    expect(openChat).not.toHaveBeenCalled();
-    cleanup();
-    const { container } = render(<ProjectPipelinePanel {...base} />);
-    fireEvent.click(container.querySelector('[data-slot="pipeline-brief-fill"]')!);
-    expect(openChat).toHaveBeenCalledTimes(1);
-  });
-
-  it("有抖音锚时转写步骤保留真实任务入口", () => {
-    const { container } = render(<ProjectPipelinePanel {...base} origin="manual" douyinExternalId="d-1" transcriptState={"done" as never} />);
-    expect(container.querySelector('[data-step="transcript"] [data-slot="mock-transcribe-now"]')).not.toBeNull();
-    expect(container.querySelector('[data-step="transcript"]')?.getAttribute("data-state")).toBe("done");
-  });
+ it.each(["queued","running","done","candidate_ready"] as const)("fa %s历史状态不显示上一次错误",async status=>{const value=preparation([{...step("source_draft",status),lastError:{code:"EXECUTION_FAILED",message:"上一次生成错误"}}]);value.lastError={code:"EXECUTION_FAILED",message:"上一次生成错误"};mount(value);await ready();expect(screen.queryByText("上一次生成错误")).toBeNull();},120000);
+ it.each(["failed","blocked","waiting_user","unknown_result"] as const)("fa %s保留当前真实错误",async status=>{mount(preparation([{...step("source_draft",status),lastError:{code:"EXECUTION_FAILED",message:"请先在设置中登录 Codex"}}]));await ready();expect(screen.getByText("请先在设置中登录 Codex")).toBeVisible();},120000);
+ it("状态全部取checkpoint；雷达来源不能推导转写已完成",async()=>{const value=preparation([step("transcript","failed"),step("source_draft","candidate_ready"),step("brief","paused")]);const {container}=mount(value);await ready();expect(container.querySelector('[data-step="transcript"]')).toHaveAttribute("data-state","failed");expect(container.querySelector('[data-step="source_draft"]')).toHaveAttribute("data-state","candidate_ready");expect(container.querySelector('[data-step="brief"]')).toHaveAttribute("data-state","paused");expect(container.textContent).not.toContain("升级时已完成转写");},120000);
+ it("渲染三个真实步骤，不按本地资料补造完成数",async()=>{const {container}=mount(preparation([step("transcript","not_required"),step("source_draft","done"),step("brief","waiting_user")]));await ready();expect(container.querySelectorAll("[data-step]")).toHaveLength(3);expect(screen.getByText(/已完成 2\/3 步/)).toBeVisible();},120000);
+ it("进入项目或刷新不自动发送补全，sessionStorage没有执行标记",async()=>{mount();await ready();expect(controls.start).not.toHaveBeenCalled();expect(controls.openChat).not.toHaveBeenCalled();expect(sessionStorage.getItem("creatoros:project-pipeline:brief-fill:p-1")).toBeNull();},120000);
+ it("点击补全才用POST登记真实brief步骤",async()=>{mount();await ready();fireEvent.click(screen.getByRole("button",{name:"让编导补全资料"}));await waitFor(()=>expect(controls.start).toHaveBeenCalledWith(expect.objectContaining({params:{projectId:"p-1"},body:{idempotencyKey:expect.any(String),requestedSteps:["brief"]}})));expect(controls.openChat).not.toHaveBeenCalled();},120000);
+ it("失败步骤重试保留原父与checkpoint，由POST恢复，已完成步骤无重试",async()=>{mount(preparation([step("transcript","failed",["retry"]),step("source_draft","done")]));await ready();expect(screen.getAllByRole("button",{name:"重试本步骤"})).toHaveLength(1);fireEvent.click(screen.getByRole("button",{name:"重试本步骤"}));await waitFor(()=>expect(controls.start).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({requestedSteps:["transcript"]})})));},120000);
+ it("手工稿只在转写步骤，提交原父/来源/修订并读回服务端",async()=>{mount();await ready();fireEvent.click(screen.getByRole("button",{name:"手工补逐字稿"}));fireEvent.change(screen.getByRole("textbox",{name:"逐字稿"}),{target:{value:"用户提供的真实正文"}});fireEvent.click(screen.getByRole("button",{name:"提交逐字稿"}));await waitFor(()=>expect(controls.provide).toHaveBeenCalledWith({params:{projectId:"p-1"},query:undefined,body:{parentTaskId:"parent-real",referenceId:"ref-real",expectedSourceDigest:"source-real",expectedStepRevision:3,submissionKey:expect.any(String),inputMode:"paste",text:"用户提供的真实正文"}}));},120000);
+ it("结果未知只核对原状态，不提供普通重试",async()=>{mount(preparation([step("transcript","unknown_result",["check_result"])]));await ready();expect(screen.queryByRole("button",{name:"重试本步骤"})).toBeNull();fireEvent.click(screen.getByRole("button",{name:"核对原任务状态"}));await waitFor(()=>expect(controls.start).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({requestedSteps:["transcript"]})})));expect(controls.get).toHaveBeenCalledTimes(1);},120000);
+ it("读取失败保留已知原任务状态，不冒充未登记",async()=>{mount();await ready();controls.get.mockRejectedValueOnce(Error("临时读取失败"));fireEvent.click(screen.getByRole("button",{name:"重新读取状态"}));await screen.findByRole("alert");expect(screen.getByRole("alert")).toHaveTextContent("状态暂时无法读取");expect(screen.queryByText("未登记准备流程")).toBeNull();expect(document.querySelector('[data-step="transcript"]')).toHaveAttribute("data-state","failed");},120000);
+ it("无记录显示真实空态，仅用户点启动才创建准备计划",async()=>{const value:ProjectPreparationResource={...preparation(),registration:"not_registered",preparationTaskId:null,revision:null,steps:[],candidates:[],availableActions:["start"]};mount(value);await ready();expect(screen.getByText("未登记准备流程")).toBeVisible();expect(controls.start).not.toHaveBeenCalled();fireEvent.click(screen.getByRole("button",{name:"启动项目准备"}));await waitFor(()=>expect(controls.start).toHaveBeenCalledTimes(1));},120000);
+ it("候选先展开现值与建议值，用户采纳后才提交真实digest和baseline",async()=>{const value=preparation();value.candidates=[brief];mount(value,<ProjectPreparationCandidateCard projectId="p-1" candidate={brief} current={{targetAudience:"当前观众"}}/>);await ready();expect(controls.accept).not.toHaveBeenCalled();expect(screen.queryByText("建议观众")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"展开候选"}));expect(screen.getByText("当前观众")).toBeVisible();expect(screen.getByText("建议观众")).toBeVisible();controls.accept.mockResolvedValue({id:"receipt-real",projectId:"p-1",candidateId:brief.id,sourceTaskId:brief.sourceTaskId,candidateSourceDigest:brief.sourceDigest,acceptedDigest:"accepted",projectVersion:1,artifactVersion:null,acceptedAt:"2026-10-21T00:00:00.000Z"});fireEvent.click(screen.getByRole("button",{name:"采纳资料补全"}));await waitFor(()=>expect(controls.accept).toHaveBeenCalledWith({params:{projectId:"p-1",candidateId:brief.id},query:undefined,body:{idempotencyKey:expect.any(String),candidateSourceDigest:brief.sourceDigest,baseline:brief.baseline}}));await screen.findByText(/已取得采纳回执/);},120000);
+ it("单个GET未结束时不并发轮询，卸载后不写回",async()=>{let finish!:(value:ProjectPreparationResource)=>void;controls.get.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));const mounted=render(<ProjectPreparationProvider projectId="p-1" initialPreparation={preparation([step("transcript","running")])} pollIntervalMs={1}><ProjectPipelinePanel projectId="p-1"/></ProjectPreparationProvider>);await act(async()=>{await new Promise(resolve=>setTimeout(resolve,20));});expect(controls.get).toHaveBeenCalledTimes(1);mounted.unmount();await act(async()=>finish(preparation()));expect(controls.start).not.toHaveBeenCalled();},120000);
+ it("切组后旧GET结果不能回写新scope",async()=>{const deferred:Array<(value:ProjectPreparationResource)=>void>=[];controls.get.mockImplementation(()=>new Promise(resolve=>deferred.push(resolve)));const element=<ProjectPreparationProvider projectId="p-1"><ProjectPipelinePanel projectId="p-1"/></ProjectPreparationProvider>;const mounted=render(element);controls.scope={groupId:"group-b",accountId:null};mounted.rerender(<ProjectPreparationProvider projectId="p-1"><ProjectPipelinePanel projectId="p-1"/></ProjectPreparationProvider>);await waitFor(()=>expect(deferred).toHaveLength(2));const old=preparation([step("transcript","done")]);await act(async()=>deferred[0]!(old));expect(document.querySelector('[data-step="transcript"]')).toBeNull();const fresh=preparation([step("transcript","waiting_user")]);await act(async()=>deferred[1]!(fresh));expect(document.querySelector('[data-step="transcript"]')).toHaveAttribute("data-state","waiting_user");},120000);
+ it("初稿采用前有脏稿则拒绝，不能发送采纳请求",async()=>{const draft:ProjectPreparationCandidate={...brief,kind:"draft",content:{kind:"draft",text:"来源初稿候选"}};controls.capture.mockImplementation(()=>{throw Error("当前脚本有未保存修改");});mount(preparation(),<ProjectPreparationCandidateCard projectId="p-1" candidate={draft}/>);await ready();fireEvent.click(screen.getByRole("button",{name:"采纳初稿"}));await screen.findByText("当前脚本有未保存修改");expect(controls.accept).not.toHaveBeenCalled();expect(controls.refresh).not.toHaveBeenCalled();},120000);
+ it("初稿采纳期间新增输入，保留已保存回执且不刷新覆盖",async()=>{const draft:ProjectPreparationCandidate={...brief,kind:"draft",content:{kind:"draft",text:"来源初稿候选"}};let clean=true;controls.capture.mockReturnValue(()=>clean);let finish!:(value:unknown)=>void;controls.accept.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));mount(preparation(),<ProjectPreparationCandidateCard projectId="p-1" candidate={draft}/>);await ready();fireEvent.click(screen.getByRole("button",{name:"采纳初稿"}));await waitFor(()=>expect(controls.accept).toHaveBeenCalledTimes(1));clean=false;await act(async()=>finish({id:"receipt-real",projectId:"p-1",candidateId:draft.id}));expect(screen.getByText(/期间的输入已保留/)).toBeVisible();expect(controls.refresh).not.toHaveBeenCalled();},120000);
+ it("隐藏页不轮询，重新显示只观察原任务",async()=>{const hidden=vi.spyOn(document,"hidden","get").mockReturnValue(true);try{mount(preparation([step("transcript","running")]),undefined,2);await ready();await act(async()=>{await new Promise(resolve=>setTimeout(resolve,15));});expect(controls.get).toHaveBeenCalledTimes(1);controls.get.mockResolvedValue(preparation([step("transcript","done")]));hidden.mockReturnValue(false);fireEvent(document,new Event("visibilitychange"));await waitFor(()=>expect(controls.get).toHaveBeenCalledTimes(2));expect(controls.start).not.toHaveBeenCalled();}finally{hidden.mockRestore();}},120000);
 });

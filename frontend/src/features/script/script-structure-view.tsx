@@ -236,6 +236,7 @@ function ScriptStructureEditor({
   React.useEffect(() => {
     if (appliedKeyRef.current === propsKey) return;
     if (status !== "saved") return;
+    if(creationScopeKey(readCreationScope())!==scopeKey)return;
     const sameContent = editorCanonical(payloadSections(localRef.current)) === editorCanonical(payloadSections(toEditable(sections)));
     const sameAnchor = persistedAnchorRef.current?.artifactId === artifactId && persistedAnchorRef.current?.versionId === currentVersionId;
     // 自己保存的回流不改变generation；真正外部换版/正文变化必须使旧确认失效。
@@ -247,7 +248,7 @@ function ScriptStructureEditor({
       persistedAnchorRef.current = { artifactId, versionId: currentVersionId };
     }
     appliedKeyRef.current = propsKey;
-  }, [artifactId, currentVersionId, propsKey, sections, status]);
+  }, [artifactId, currentVersionId, propsKey, sections, status,scopeKey]);
 
   const editRevisionRef = React.useRef(0);
   const markDirty = React.useCallback(() => {
@@ -515,7 +516,7 @@ function ScriptStructureEditor({
     if (intent && intentRef.current === intent) intentRef.current = null;
     return { kind: "project_script", id: anchor.artifactId, versionId: anchor.versionId };
   }; }, [projectId, scopeKey, persistCurrentSections]);
-  React.useEffect(() => registerScript({ readState: () => ({ generation: editRevisionRef.current }), prepareForCreation: () => prepareRef.current() }), [registerScript, projectId, scopeKey]);
+  React.useEffect(() => registerScript({ readState: () => ({ generation: editRevisionRef.current,projectId,scopeKey,dirty:statusRef.current!=="saved",saving:statusRef.current==="saving",artifactId:artifactIdRef.current }), prepareForCreation: () => prepareRef.current() }), [registerScript, projectId, scopeKey]);
 
   React.useEffect(() => {
     registerFlush(async () => {

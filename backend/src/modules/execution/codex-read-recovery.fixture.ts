@@ -9,7 +9,7 @@ export async function createControlledCodexSession(){
   if(method!=='thread/read')throw Error('RECOVERY_MUST_NOT_SUBMIT:'+method);
   const threadId=params.threadId;
   if(typeof threadId!=='string'||!threadId.startsWith('recovery-')||params.includeTurns!==true)throw Error('WRONG_ORIGINAL_THREAD');
-  return {thread:{id:threadId,turns:[{id:threadId.replace('thread','turn'),status:threadId.includes('pending')?'inProgress':'completed',items:threadId.includes('image')?[{id:'original-image-item',type:'imageGeneration',status:'completed',result:recoveryImage}]:[{type:'agentMessage',text:threadId.includes('structured')?'{"oneLiner":"原节点候选"}':threadId.includes('script-draft')?'{"authorized":true,"startAnchor":"第一句正文。","endAnchor":"最后一句。"}':threadId.includes('hooks')?'[]':'原线程文本',phase:'final_answer'}]}]}};
+  return {thread:{id:threadId,turns:[{id:threadId.replace('thread','turn'),status:threadId.includes('pending')?'inProgress':'completed',items:threadId.includes('image')?[{id:'original-image-item',type:'imageGeneration',status:'completed',result:recoveryImage}]:[{type:'agentMessage',text:threadId.includes('preparation-decomposition')?JSON.stringify({hook:'原来源开头',structureSteps:['事实','说明'],coreClaims:['原主张'],reusablePattern:'原结构',factRisks:[]}):threadId.includes('structured')?'{"oneLiner":"原节点候选"}':threadId.includes('script-draft')?'{"authorized":true,"startAnchor":"第一句正文。","endAnchor":"最后一句。"}':threadId.includes('hooks')?'[]':'原线程文本',phase:'final_answer'}]}]}};
  }};
  return {rpc,authenticated:true,mcpNames:[]};
 }

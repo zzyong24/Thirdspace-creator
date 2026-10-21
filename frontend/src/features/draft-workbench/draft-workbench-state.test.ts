@@ -67,15 +67,15 @@ it("T-1021 当前发布版本缺失时不拿第一页历史版本冒充当前内
 });
 
 describe("draft workbench project state", () => {
-  it("treats an upstream-confirmed radar draft as a usable saved script", async () => {
+  it("T-1382 历史来源候选不冒充正式稿或解锁发布", async () => {
     const vm = await buildDraftWorkbenchVm(
       "p-1",
       makeClient({ radarDraftSeed: "雷达已经确认的完整口播稿" }),
     );
 
     expect(vm.script.versionCount).toBe(0);
-    expect(vm.radarDraftSeed).toBe("雷达已经确认的完整口播稿");
-    expect(vm.publishUnlocked).toBe(true);
+    expect(vm.radarDraftSeed).toBeNull();
+    expect(vm.publishUnlocked).toBe(false);
   });
 
   it("recognizes a newly adopted cover material as the project cover", async () => {
@@ -236,7 +236,7 @@ describe("draft workbench project state", () => {
   it("T-767 当前脚本版本晚于最新锁定预测时，VM 把预测标为过期", async () => {
     const client = makeClient({ outputs: [{ id: "out-1" }] });
     client.listArtifacts = vi.fn(async () => [
-      { id: "script-1", artifactType: "output_script", stage: "script" },
+      { id: "script-1", artifactType: "output_script", stage: "script",currentVersionId:"v2" },
     ]);
     client.getArtifact = vi.fn(async () => ({ currentVersionId: "v2" }));
     client.listArtifactVersions = vi.fn(async () => [

@@ -1,4 +1,5 @@
-import type { Db } from '@creatoros/backend';
+import {createHash} from 'node:crypto';
+import {and,eq,projectSourceReferences,type Db} from '@creatoros/backend';
 import type { RequestContext } from '@creatoros/contract';
 import { createArtifactsService, type SearchUpsert } from '../artifacts';
 import { createProjectRepository } from './projects.repository';
@@ -67,6 +68,29 @@ export function createTranscriptArtifactService(deps: {
         }
     }
     const service = {
+        /** 可信准备完成端口：只写来源工件，不写创作稿或初始化口播。 */
+        async ensurePreparation(ctx:RequestContext,input:{projectId:string;referenceId:string;parentTaskId:string;executionTaskId:string;awemeId:string;transcript:string}){
+            return deps.db.transaction(async transaction=>{
+                const tx=transaction as unknown as Db;await lockOwnedProjectForUpdate(tx,ctx,input.projectId);
+                const project=await createProjectRepository(tx).get(ctx,input.projectId),ref=project.platformRef as {platform?:string;externalId?:string};
+                const [reference]=await tx.select().from(projectSourceReferences).where(and(eq(projectSourceReferences.id,input.referenceId),eq(projectSourceReferences.projectId,input.projectId)));
+                if(!reference||reference.sourceKind!=='platform_work'||reference.platform!=='douyin'||reference.externalId!==input.awemeId||ref.platform!=='douyin'||ref.externalId!==input.awemeId)throw new Error('准备逐字稿与真实项目来源不符');
+                const artifacts=artifactsFor({db:tx,now:deps.now,nextId:deps.nextId}),rows=await artifacts.listProjectArtifacts(ctx,input.projectId);
+                for(const artifact of rows){
+                    if(artifact.artifactType!=='output_script')continue;
+                    const version=(await artifacts.listVersions(ctx,artifact.id)).find(row=>row.id===artifact.currentVersionId),data=version?.contentData as Record<string,unknown>|undefined;
+                    if(data?.purpose==='project_preparation_source'&&data.referenceId===input.referenceId&&(data.executionTaskId===input.executionTaskId||version?.contentText===input.transcript)){
+                        if(version?.contentText!==input.transcript)throw new Error('原准备逐字稿回执正文不一致');
+                        return {status:'skipped' as const,reason:'already-exists' as const,projectId:project.id,artifactId:artifact.id,awemeId:input.awemeId};
+                    }
+                }
+                const hash=`sha256:${createHash('sha256').update(input.transcript).digest('hex')}`;
+                const contentData={purpose:'project_preparation_source',skipMasterScript:true,source:'transcribed',awemeId:input.awemeId,projectId:project.id,referenceId:input.referenceId,parentTaskId:input.parentTaskId,executionTaskId:input.executionTaskId,sourceDigest:reference.sourceDigest,transcriptHash:hash};
+                const artifact=await artifacts.createArtifact(ctx,{projectId:project.id,title:'准备来源逐字稿',artifactType:'output_script',stage:'script',initialContentText:input.transcript,initialContentData:contentData});
+                await tx.update(projectSourceReferences).set({bodyAvailable:true,transcriptHash:hash,updatedAt:deps.now()}).where(eq(projectSourceReferences.id,reference.id));
+                return {status:'bound' as const,projectId:project.id,artifactId:artifact.id,awemeId:input.awemeId};
+            });
+        },
         /** 只读省流探针归逐字稿领域所有，执行器不拼装项目与工件仓库。 */
         async hasExisting(ctx:RequestContext,awemeId:string):Promise<boolean>{
             const project=await createProjectRepository(deps.db).findImportedByRef(ctx,{platform:'douyin',externalId:awemeId});

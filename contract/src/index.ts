@@ -27,6 +27,40 @@ export * from "./resources/production-main-track";
 export * from "./resources/creative-results";
 export * from "./resources/output-conversions";
 export { contentOutputResource, type ContentOutputResource } from "./resources/projects";
+export {
+  projectSource,
+  projectSourceReference,
+  projectPreparationStepName,
+  projectPreparationStepStatus,
+  projectPreparationAction,
+  projectPreparationError,
+  projectPreparationStep,
+  projectPreparationAcceptanceReceipt,
+  projectPreparationCandidate,
+  projectPreparationResource,
+  type ProjectSource,
+  type ProjectSourceReference,
+  type ProjectPreparationStepName,
+  type ProjectPreparationStepStatus,
+  type ProjectPreparationError,
+  type ProjectPreparationStep,
+  type ProjectPreparationAcceptanceReceipt,
+  type ProjectPreparationCandidate,
+  type ProjectPreparationResource,
+} from "./resources/projects";
+export {
+  publicProjectCreateSource,
+  projectEnsureInput,
+  projectEnsureResult,
+  projectPreparationStartInput,
+  projectPreparationTranscriptInput,
+  projectPreparationCandidateAcceptInput,
+  type ProjectEnsureInput,
+  type ProjectEnsureResult,
+  type ProjectPreparationStartInput,
+  type ProjectPreparationTranscriptInput,
+  type ProjectPreparationCandidateAcceptInput,
+} from "./operations/projects";
 
 export {
   knowledgeFolderResource,

@@ -1,3 +1,7 @@
+import {createProjectPreparationApplication} from "@creatoros/backend/application/projects/project-preparation";
+import {createProjectPreparationChat} from "@creatoros/backend/application/projects/project-preparation-chat";
+import {submitProjectPreparationTranscription} from "@creatoros/backend/modules/ai";
+import {createProjectIntakeApplication} from "@creatoros/backend/application/projects/project-intake";
 import {createWechatNavigationDiagnosis} from '@creatoros/backend/application/collection/wechat-navigation-diagnosis';
 import {createSelectedModelSnapshotReader,freezeSelectedModelRoutes,type SelectedModelSnapshot,resolveFrozenModelCredential,type FrozenModelCredential,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner,type MultimodalSpec,CapabilityModelRoutingError} from '@creatoros/backend/modules/ai-runtime';
 import {modelRouteCatalog,projectFrozenModelSettings,frozenExecutionRoute,readFrozenModelRoute,type ExecutionRoute,type FrozenModelRoute,type ModelRouteMode} from '@creatoros/contract/execution-worker';
@@ -187,7 +191,7 @@ import { SECRET_DECRYPT_FAIL_SENTINEL, createOnboardingState, createIntegrationC
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
-import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
+import { createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
 import { createKnowledgeRepository, createKnowledgeService, createKnowledgeTransport } from "@creatoros/backend/modules/knowledge";
 import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createVisualTemplateService, createVisualTemplateTransport, VISUAL_TEMPLATE_OP_IDS, ConflictError as AssetConflictError, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, createWorkbenchBlobService, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
@@ -219,8 +223,8 @@ import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creato
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, registerPersistentTaskObserver, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
-import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
+import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, retireLegacyRadarUpgrades, registerPersistentTaskObserver, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createTranscriptSourceRecoveryService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
 import type { ContextDeps as ChatContextDeps } from "@creatoros/backend/modules/ai-runtime";
@@ -1453,7 +1457,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     deps,
     stageGateReadersRef,
   );
+  const projectPreparationRef:{current:ReturnType<typeof createProjectPreparationApplication>['preparation']|undefined}={current:undefined};
+  const requireProjectPreparation=()=>{if(!projectPreparationRef.current)throw new Error('项目准备服务未装配');return projectPreparationRef.current;};
+  const projectIntake = createProjectIntakeApplication(db, deps,{preparation:{reserve:(c,input,tx)=>requireProjectPreparation().reserve(c,input,tx)}});
   const projectsBaseTransport = createProjectsTransport(() => ({
+    intake: projectIntake,
+    preparation:{get:(c,id)=>requireProjectPreparation().get(c,id),start:(c,id,input)=>requireProjectPreparation().start(c,id,input),provideTranscript:(c,id,input)=>requireProjectPreparation().provideTranscript(c,id,input),acceptCandidate:(c,id,candidate,input)=>requireProjectPreparation().acceptCandidate(c,id,candidate,input)},
     service: projectsService,
     repo: projectsRepo,
     createArticleOutput: (ctx, projectId, input) => articlesService.createOutput(ctx, projectId, input),
@@ -2386,8 +2395,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 数据底座(SPEC §1.3):导入历史项目端口 → projectsService.ensureImportedProject
       //   (建 project source:imported + content_output,经公共 service,不跨模块直连 repo)。
       projects: {
+        ensureProjectIntake:(ctx,input)=>projectIntake.ensureImportedProject(ctx,input),
         ensureImportedProject: (ctx, input) =>
-          projectsService.ensureImportedProject(ctx, input),
+          projectIntake.ensureImportedProject(ctx, input),
         // [T-321] 日拉去重主键 = publications.externalId → 反查属主项目 → merge 更新(不新建
         //   重复项目)。让用户手建 manual 项目「登记已发布」绑定的作品被日拉命中合并,而不是
         //   另建一条 imported 重复。merge 保持原 source(不翻 imported → 不触发 reconstruct
@@ -3896,10 +3906,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       let family:RoutingFamily|null=input.kind==='transcribe'?'audio':input.kind==='topic_preview'||input.kind==='script_candidate'?'text':null;
       // 仅明确授权的转写父步骤需要audio；纯分享/采集/数据库任务不访问官方模型。
       if(input.kind==='share_import'&&input.payload.transcribeAfterImport===true)family='audio';
-      if(input.kind==='radar_project_upgrade'){
-        const detail=await intelligenceService.getItem(c,input.ownerId);
-        if(detail.transcript.status!=='done'||!detail.transcript.text?.trim())family='audio';
-      }
       return family?prepareModelAuthority(c,family):undefined;
     },
     resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx),
@@ -3910,6 +3916,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 预算回到队列或诚实失败；控制请求则收敛到 paused / cancelled。
   // 启动时一次性把旧版本遗留的无副作用模型 unknown_result 沿原调用键续跑；
   // 带外部副作用的未知调用仍保持待对账，不做盲重放。
+  await retireLegacyRadarUpgrades(db,deps.now());
   await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true});
   const executionBase = createExecutionTransport(
     () => executionService,
@@ -4047,23 +4054,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const {projectScriptGenerator,topicPreviewGenerator}=intelligenceGeneration;
   let recoveryWake:ReturnType<typeof createRecoveryWakeCoordinator>|undefined;
   const projectScriptRunnerDeps={tasks:persistentTaskService,references:projectIntelligenceReferences,generator:projectScriptGenerator};
+  const preparationChat=createProjectPreparationChat(db,{...deps,assemble:(c,snapshot,options)=>prepareChatReply(chatRuntime,c,snapshot,{executionEngine:options.executionEngine,executionRoute:options.executionRoute,chatContext:{surface:'project',projectId:snapshot.conversation.projectId,selection:{kind:'project',ids:[snapshot.conversation.projectId!]}}})});
+  const preparationApplication=createProjectPreparationApplication(db,{...deps,tasks:persistentTaskService,intelligence:intelligenceService,
+    submitBrief:async(c,input)=>{const result=await preparationChat.submit(c,input);chatWorker?.start();return result;},
+    readBrief:preparationChat.read,
+    async readTranscriptFile(c,input,store){
+      const assets=createAssetsService(createAssetRepository(store,deps),objectStorageForStore(store),deps);
+      await assets.assertAssetFileOwned(c,input.assetId,input.assetFileId,false);
+      const asset=await assets.getAsset(c,input.assetId),[file]=await assets.listFilesByIds(c,[input.assetFileId]);
+      if(!file||file.assetId!==asset.id||asset.currentFileId!==file.id||file.fileSize>2*1024*1024||!asset.name.toLowerCase().endsWith(`.${input.format}`))throw new Error('来源附件版本或格式不符');
+      const blob=await assets.getAssetBytes(c,asset.id);if(!blob||blob.bytes.byteLength>2*1024*1024)throw new Error('来源附件不可读取或过大');
+      return {text:new TextDecoder('utf-8',{fatal:true}).decode(blob.bytes),fileName:asset.name};
+    },
+    submitProjectTranscript:async(c,input,referenceId)=>{
+      const task=await submitProjectPreparationTranscription(aiOwnerDeps,c,{projectId:input.project.id,attemptId:`preparation:${input.claim.task.id}:${Number((input.claim.payload as {inputRevision?:number}).inputRevision??0)}`},{claim:input.claim,referenceId});
+      const mapped=await transcribeBusiness.prepare(c,task.id);if(mapped.legacy)throw new Error('原转写保留旧执行记录，请核对后继续');
+      const runtime=await aiService.getTaskRuntimeData(c,task.id),proof=runtime.preparationParentProof as {parentTaskId?:string}|undefined;
+      if(!stoppingPreparation)modelWorker?.start();return {childTaskId:mapped.executionTaskId,businessTaskId:task.id,shared:proof?.parentTaskId!==input.claim.task.id};
+    },
+  });
+  projectPreparationRef.current=preparationApplication.preparation;
   const topicPreviewRunnerDeps = {
     tasks: persistentTaskService,
     intelligence: intelligenceService,
     generator: topicPreviewGenerator,
+    projectGenerator:topicPreviewGenerator,projectPreparation:preparationApplication.generation,
   };
   const transcriptSourceRecovery=createTranscriptSourceRecoveryService(db,deps);
-  const radarProjectQueue = createRadarProjectQueueService({
-    tasks: persistentTaskService, intelligence: intelligenceService,
-    assertPositioning: (c, id) => positioningService.getStatement(c, id),
-    projects: createRadarProjectService(db, deps),
-    recoverSourceCooldown:(c,id)=>transcriptSourceRecovery.recoverReferenced(c,id),
-  });
   const intelligenceBase = createIntelligenceTransport(
     () => intelligenceService,
     () => projectIntelligenceReferences,
     () => projectScriptCandidates,
-    () => radarProjectQueue,
   );
   const fetchIntelligenceFeed = async (url: string, signal?: AbortSignal) => {
     signal?.throwIfAborted();
@@ -4381,6 +4402,7 @@ dispatchIntelligenceRun});
   // Clock/ids share the deterministic `deps` (createSeq keeps cand/sig/promo ids
   // collision-free across requests).
   const candidateService = createCandidateService({
+    ensureProjectIntake:(c,id)=>projectIntake.ensureProject(c,{source:"topic",candidateId:id}),
     resolveCollectedPublication:async(ctx,id)=>{const row=await publishingService.resolveCollectedPublicationById(ctx,id);return row?{groupId:row.groupId??null,accountId:row.accountId}:null;},
     topicWorkspace:{assertProject:(c,id)=>projectsService.getProject(c,id),currentPositioningVersion:async c=>(await positioningService.readPositioningCenter(c)).currentStatement?.id??null},
     db,
@@ -4477,31 +4499,7 @@ dispatchIntelligenceRun});
     return { id: candidate.id, adoptedTitle: candidate.title, adoptedDraftContentText: candidate.card.adaptedDraft?.contentText };
   };
   const candidateBase = createCandidateTransport(() => candidateService);
-  // 内容雷达候选沿用现有 Candidate→Project 主链；promote 成功后，同步把
-  // item/snapshot/transform/transcript hash 固定为 Project 来源。普通候选没有
-  // intelligence transform，attachFromPromotion 诚实返回 null，不制造伪来源。
-  const candidate: Transport = {
-    async request(endpoint, input, ctx) {
-      const result = await candidateBase.request(endpoint, input, ctx);
-      if (ctx && endpoint.id === "candidates.promote") {
-        const promotion = (
-          result as {
-            data?: { candidateId?: unknown; projectId?: unknown };
-          }
-        ).data;
-        if (
-          typeof promotion?.candidateId === "string" &&
-          typeof promotion.projectId === "string"
-        ) {
-          await projectIntelligenceReferences.attachFromPromotion(ctx, {
-            topicId: promotion.candidateId,
-            projectId: promotion.projectId,
-          });
-        }
-      }
-      return result;
-    },
-  };
+  const candidate: Transport = candidateBase;
 
   // Calibration (module 20, Wave 5–7): the service builds a per-ctx user-scoped repo
   // over the shared db (the repo bakes userId in; the service mints one per request).
@@ -6908,6 +6906,7 @@ FAVORITES_PROMOTE_PER_RUN
   });
   const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService,visualMaterialAdoption);
   const assistantCandidateFor=(store:typeof db)=>createCandidateService({db:store,...deps,
+    ensureProjectIntake:(c,id)=>createProjectIntakeApplication(store,deps,{preparation:{reserve:(context,input,tx)=>requireProjectPreparation().reserve(context,input,tx)}}).ensureProject(c,{source:"topic",candidateId:id}),
     projects:{createProject:(c,input)=>workProjectsFor(store).createProject(c,input)},
     topicWorkspace:{assertProject:(c,id)=>workProjectsFor(store).getProject(c,id),currentPositioningVersion:async c=>(await workPositioningFor(store).readPositioningCenter(c)).currentStatement?.id??null},
     resolveCollectedPublication:async(c,id)=>{const row=await workPublishingFor(store).resolveCollectedPublicationById(c,id);return row?{groupId:row.groupId??null,accountId:row.accountId}:null;},
@@ -6918,7 +6917,7 @@ FAVORITES_PROMOTE_PER_RUN
     binding:accountBindingService,assetTags:assetTagProposalAdoption,
     forStore:(store,deferred)=>{
       const projects=workProjectsFor(store),artifacts=workArtifactsFor(store,deferred),knowledge=workKnowledgeFor(store),publishing=workPublishingFor(store);
-      return {projects,artifacts,knowledge,candidates:assistantCandidateFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),
+      return {projects,projectIntake:createProjectIntakeApplication(store,deps),artifacts,knowledge,candidates:assistantCandidateFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),
         intelligence:store===db?intelligenceService:createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now,resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx)})}),
         positioning:workPositioningFor(store),groups:createAccountGroupService({db:store,...deps}),accounts:store===db?platformAccountService:createPlatformAccountService({db:store,...deps}),
         calendar:calendarFor(store),scheduling:createSchedulingService({db:store,...deps}),settings:settingsServiceFor(store),
@@ -7328,7 +7327,7 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
         await periodicPlatformCollection({userId:localUser.id,accountId:null,requestId:"platform-periodic",source:"ingestion"});
       },
       workbench_files:control=>fileRecovery.scan(control),
-      radar_project_upgrade: control => radarProjectQueue.tick(control),
+      project_preparation:control=>requireProjectPreparation().tick(control),
       script_candidate:control=>drainProjectScriptCandidateQueue(projectScriptRunnerDeps,5,control),
       topic_preview:control=>drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps,{...control,maxTasks:5}),
       transcribe:control=>intelligenceTranscriptRunnerDeps?drainIntelligenceTranscriptQueue(intelligenceTranscriptRunnerDeps,{...control,maxTasks:4,concurrency:2}):Promise.resolve(0),

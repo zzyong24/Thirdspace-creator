@@ -1,4 +1,5 @@
-import {frozenExecutionEngine,codexExecutionSpec,readFrozenModelRoute} from '@creatoros/contract/execution-worker';
+import {generationReadRecovery,recoverableCodexModelCalls} from '../execution/model-call-recovery';
+import {type ProjectPreparationGenerationTarget,frozenExecutionEngine,codexExecutionSpec,readFrozenModelRoute} from '@creatoros/contract/execution-worker';
 import {createExecutionCodexCallService} from '../execution/execution-codex-call.service';
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
@@ -11,7 +12,7 @@ import {createExecutionWorkerOutcomeService} from "../execution/execution-worker
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
 import {createExecutionCallLedgerService} from "../execution/execution-call-ledger.service";
 import {createExecutionWorkerCallPorts} from "../execution/execution-worker-call-ports.service";
-import {prepareExecutionModelIdentity} from "../execution/execution-model-identity.service";
+import {prepareExecutionModelIdentity,projectPreparationGenerationTargetForTask,frozenProjectPreparationGenerationBinding,stableIntelligenceTopicTargetSchema} from "../execution/execution-model-identity.service";
 import {createClaimedWorkerSupervision} from "../execution/claimed-worker-supervision";
 import type {PersistentTaskClaim,PersistentTaskService} from "../execution/persistent-task.service";
 import type {TopicPreviewGeneratorPort,TopicPreviewCheckpoint} from "./topic-preview-runner";
@@ -46,7 +47,9 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const task=await verify();
   // 只绑定实际提示使用的源内容；列表展示状态/updatedAt 变化不使已结算模型失去回放资格。
   const item=z.object({title:z.string().nullable().optional(),authorName:z.string().nullable().optional(),platform:z.string().optional(),canonicalUrl:z.string()});
-  const stable=mode==="topic_preview"?z.object({generationMode:z.enum(["rewrite_only","strategy_backed"]).optional(),transformId:z.string(),item,positioning:z.unknown().nullable().optional(),positioningVersionId:z.string().nullable().optional(),personalizationStatus:z.enum(["applied","not_applied"]).optional(),transcript:z.object({hash:z.string(),text:z.string()})}).parse(target):z.object({strategy:z.string(),sources:z.array(z.object({item,transform:z.object({outputSnapshot:z.json()}),transcript:z.object({text:z.string()})}))}).parse(target);
+  const projectTarget=task.kind==='topic_preview'&&task.ownerType==='project'?projectPreparationGenerationTargetForTask(task,target):null;
+  if(task.kind==='topic_preview'&&task.ownerType==='project'&&!projectTarget)throw new Error('PREPARATION_GENERATION_SOURCE_MISMATCH');
+  const stable=projectTarget??(mode==="topic_preview"?stableIntelligenceTopicTargetSchema.parse(target):z.object({strategy:z.string(),sources:z.array(z.object({item,transform:z.object({outputSnapshot:z.json()}),transcript:z.object({text:z.string()})}))}).parse(target));
   const sourceDigest=hash(stable),capability=mode==="topic_preview"?"topic.generate":"script.draft";
   const modelMode=mode==='topic_preview'&&isRewriteOnlyTarget(target)?'text' as const:'structured' as const;
   const spec=executionModelSpecSchema.parse(!readFrozenModelRoute(task.payload,modelMode,capability)&&frozenExecutionEngine(task.payload)==='codex'?codexExecutionSpec():await deps.resolveModelSpec(ctx,capability,{ref,mode:modelMode}));
@@ -56,7 +59,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
    const skillIds=mode==="topic_preview"?(isRewriteOnlyTarget(target)?["intelligence.topic-adapted-draft"]:["intelligence.topic-decompose","intelligence.topic-from-decomposition","intelligence.topic-adapted-draft"]):["script.draft"];
    const snapshot=workerSkillSnapshotSchema.parse(await deps.resolveSkillSnapshot(ctx,skillIds));
    if(snapshot.userId!==ctx.userId || snapshot.accountId!==(ctx.accountId??null) || (snapshot.groupId??null)!==(ctx.groupId??null))throw new Error("INTELLIGENCE_SKILL_OWNER_MISMATCH");
-   const rawInput={kind:"model.structured",operationKey:`intelligence:${task.id}`,capability,skillId:skillIds[0],skillSnapshot:snapshot,maxOutputTokens:8192,timeoutMs:600000,facets:{mode,target:JSON.stringify(target),...(task.executionBudget && isContinuousExecutionBudget(task.executionBudget)?{continuousRecovery:"true"}:{})}};
+   const rawInput={kind:"model.structured",operationKey:`intelligence:${task.id}`,capability,skillId:skillIds[0],skillSnapshot:snapshot,maxOutputTokens:8192,timeoutMs:600000,facets:{mode,target:JSON.stringify(projectTarget??target),...(task.executionBudget && isContinuousExecutionBudget(task.executionBudget)?{continuousRecovery:"true"}:{})}};
    // 仅尚未冻结的已选正文用专用标签；原合法 structured 冻结输入不改写。
    const input=mode==="topic_preview" && isRewriteOnlyTarget(target)?intelligenceRewriteInputSchema.parse({...rawInput,intelligenceText:"rewrite_only"}):structuredGenerationInputSchema.parse(rawInput);
    frozen=await leases.withLease(ref,"admission",async({tx,task})=>{
@@ -67,10 +70,21 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
    });
   }
   const saved=savedSchema.parse(frozen);
+  if(projectTarget&&!frozenProjectPreparationGenerationBinding({...task,payload:{...task.payload as object,intelligenceGeneration:saved}}))throw new Error('PREPARATION_GENERATION_BINDING_INVALID');
   if(saved.sourceDigest!==sourceDigest || !isDeepStrictEqual(saved.identity,json(identity)))throw new Error("INTELLIGENCE_GENERATION_AUTHORITY_CHANGED");
   await ledger.initializeBudget(ref);
   const state=await ledger.inspect(ref);
   // 已保存最终模型结果可按原调用回放，不能换模型重新烧费。
+  let recovery=generationReadRecovery(task);
+  if(!recovery&&projectTarget&&recoverableCodexModelCalls(task,state.calls).length){
+   recovery=await leases.withLease(ref,'admission',async({tx,task})=>{
+    const prior=generationReadRecovery(task);if(prior)return prior;
+    const value={schemaVersion:1 as const,callIds:state.calls.map(call=>call.id),operationKeys:state.calls.map(call=>call.operationKey)};
+    await tx.update(executionTasks).set({payload:{...task.payload as object,generationReadRecovery:value}}).where(eq(executionTasks.id,task.id));return value;
+   });
+  }
+  const readRecoveryOnly=recovery!==undefined||state.calls.some(call=>['started','unknown'].includes(call.status));
+  const originalOperations=new Set(recovery?.operationKeys??state.calls.map(call=>call.operationKey));
   const prior=state.calls.at(-1);
   if(prior?.status==="settled" && prior.resultText){const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(prior.resultText));return mode==="topic_preview"?parseTopicResult(value.value,saved.input):z.object({text:z.string().min(1)}).parse(value.value);}
   let completed:unknown, persistedStatus:string|undefined,requestSequence=0,closedPorts=false;
@@ -84,18 +98,20 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     if(port==="reserveGenerationCall"){
      await verify();const request=workerPortInputSchemas.reserveGenerationCall.parse(raw),prefix=`${saved.input.operationKey}/model/`;
      if(!request.operationKey.startsWith(prefix)|| request.operationKey.slice(prefix.length)!==String(requestSequence+1))throw new Error("INTELLIGENCE_OPERATION_MISMATCH");
+     if(readRecoveryOnly&&!originalOperations.has(request.operationKey))throw new Error('INTELLIGENCE_ORIGINAL_CALL_READ_ONLY');
      const requested=request.request.maxOutputTokens;
      if(typeof requested!=="number" || requested<1 || requested>saved.input.maxOutputTokens || "headers" in request.request || "abortSignal" in request.request)throw new Error("INTELLIGENCE_MODEL_BUDGET_INVALID");
      const encoded=JSON.stringify(request.request);if(encoded.length>4000000)throw new Error("INTELLIGENCE_MODEL_INPUT_TOO_LARGE");
      const currentTask=await verify(),recorded=(await ledger.inspect(ref)).calls;
      const retry=recorded.find(row=>row.id===currentTask.retryOfCallId && row.operationKey===request.operationKey);
      const row=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${hash(request.request)}`,reservedTokens:Buffer.byteLength(encoded)+1024+requested,...(retry?{retryOfCallId:retry.id}:{})},(_rows,task)=>{
+      const marker=generationReadRecovery(task);if(marker){const original=_rows.find(call=>marker.callIds.includes(call.id)&&call.operationKey===request.operationKey);if(!original||!marker.operationKeys.includes(request.operationKey)||!['started','unknown','settled'].includes(original.status)||retry)throw new Error('INTELLIGENCE_ORIGINAL_CALL_READ_ONLY');}
       if(retry && task.retryOfCallId!==retry.id)throw new Error("INTELLIGENCE_RETRY_AUTHORITY_CHANGED");
      });
      requestSequence++;
      return {callId:row.id,status:row.status,...(row.providerResult?{providerResult:row.providerResult}:{}),...(row.rejectionCode?{rejectionCode:row.rejectionCode}:{})};
     }
-    if(port==="startCall")return calls.startCall(ref,raw);
+    if(port==="startCall"){if(generationReadRecovery(await verify()))throw new Error('INTELLIGENCE_ORIGINAL_CALL_READ_ONLY');return calls.startCall(ref,raw);}
     if(port==="settleGenerationCall"){const {callId,...settlement}=workerPortInputSchemas.settleGenerationCall.parse(raw);const row=await ledger.settle(ref,callId,settlement,call=>{if(call.kind!=="model"||call.parentCallId)throw new Error("INTELLIGENCE_MODEL_CALL_INVALID");});return {callId:row.id,status:row.status};}
     if(port==="saveGenerationResult"){
      await verify();const request=workerPortInputSchemas.saveGenerationResult.parse(raw),value=z.object({kind:z.enum(["checkpoint","result"]),stage:z.enum(["decomposition","topic","draft"]).optional(),value:z.json()}).parse(JSON.parse(request.text));
@@ -115,7 +131,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     if(port==="commitResult"){
      const request=workerPortInputSchemas.commitResult.parse(raw);
      if(request.outcome!=="succeeded"){
-      const result=await outcomes.recordFailure(ref,request);
+      const result=await outcomes.recordFailure(ref,recovery?{...request,outcome:'unknown_result',errorCode:'INTELLIGENCE_ORIGINAL_CALL_READ_ONLY'}:request);
       persistedStatus=result.status;closedPorts=true;return result;
      }
      await verify();const last=(await ledger.inspect(ref)).calls.at(-1);if(last?.id!==request.callId||last.resultText!==request.text||last.status!=="settled")throw new Error("INTELLIGENCE_COMMIT_MISMATCH");
@@ -148,14 +164,14 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
    try{
     const task=await leases.withLease(ref,"settlement",async({task})=>task);
     status=task.status;
-    if(task.kind!==mode || task.userId!==ctx.userId || task.accountId!==ctx.accountId)throw new Error("INTELLIGENCE_GENERATION_OWNER_MISMATCH");
+    if(task.kind!==mode || task.userId!==ctx.userId || task.accountId!==(ctx.accountId??null))throw new Error("INTELLIGENCE_GENERATION_OWNER_MISMATCH");
     if(task.status==="running"&&!supervision.isStopping()){
      const state=await ledger.inspect(ref);
      // IPC/结算回执丢失不推测为未调用；只留给原账本恢复，不给runner覆盖失败的机会。
      if(!state.calls.length){unstartedFailure=true;}else{
      const unknown=state.calls.some(row=>row.status==="started"||row.status==="unknown");
      const rejected=state.calls.at(-1)?.status==="rejected";
-     const result=await outcomes.recordFailure(ref,{outcome:unknown?"unknown_result":rejected?"waiting_user":"failed",errorCode:unknown?"INTELLIGENCE_CALL_REQUIRES_RECONCILIATION":rejected?"INTELLIGENCE_REJECTED_OUTCOME_MISSING":"INTELLIGENCE_WORKER_INTERRUPTED"});
+     const result=await outcomes.recordFailure(ref,{outcome:generationReadRecovery(task)||unknown?"unknown_result":rejected?"waiting_user":"failed",errorCode:unknown?"INTELLIGENCE_CALL_REQUIRES_RECONCILIATION":rejected?"INTELLIGENCE_REJECTED_OUTCOME_MISSING":"INTELLIGENCE_WORKER_INTERRUPTED"});
      status=result.status;
      }
     }
@@ -164,7 +180,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
    throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,status);
   }
  }
- const topicPreviewGenerator:TopicPreviewGeneratorPort={async generate(ctx,target,onCheckpoint,claim){const result=await generate(ctx,"topic_preview",target,claim,onCheckpoint);return isRewriteOnlyTarget(target)?rewriteOnlyResult.parse(result):topicResult.parse(result);}};
+ const topicPreviewGenerator:TopicPreviewGeneratorPort<Parameters<TopicPreviewGeneratorPort["generate"]>[1]|ProjectPreparationGenerationTarget>={async generate(ctx,target,onCheckpoint,claim){const result=await generate(ctx,"topic_preview",target,claim,onCheckpoint);return isRewriteOnlyTarget(target)?rewriteOnlyResult.parse(result):topicResult.parse(result);}};
  const projectScriptGenerator:ProjectScriptCandidateGeneratorPort={async generate(ctx,target,claim){return z.object({text:z.string().min(1)}).parse(await generate(ctx,"script_candidate",target,claim));}};
  return {topicPreviewGenerator,projectScriptGenerator,stop:supervision.stop};
 }

@@ -185,3 +185,18 @@ it('两个真实组可用相同attempt；同组不同请求合并在途任务，
     const [receipt] = await db.select().from(projectTranscriptionRequests).where(eq(projectTranscriptionRequests.projectId,otherProjectId));
     expect(receipt).toMatchObject({groupId:f.other.id,accountId,aiTaskId:other.id});
 });
+it('T1382 内部准备提交复用projects.transcribe业务，冻结父证明和原绝对期限',async()=>{
+ const f=await fixture(),{projectSourceReferences}=await import('../../schema/projects'),{createPersistentTaskService}=await import('../execution/persistent-task.service');
+ const tasks=createPersistentTaskService(db,f.deps),referenceId=f.deps.nextId('raw-source');
+ await db.insert(projectSourceReferences).values({id:referenceId,projectId:f.input.projectId,sourceKey:referenceId,sourceKind:'platform_work',accountId:f.ctx.accountId,platform:'douyin',externalId:'video',createdAt:f.deps.now(),updatedAt:f.deps.now()});
+ const parent=await tasks.enqueue(f.ctx,{kind:'project_preparation',ownerType:'project',ownerId:f.input.projectId,idempotencyKey:'preparation-parent',payload:{schemaVersion:1,projectId:f.input.projectId,sourceReferenceIds:[referenceId]},executionBudget:{maxCalls:20,maxTokens:100000,deadlineMs:1800000}}),claim=(await tasks.claimTask({taskId:parent.id,workerId:'preparation'}))!;
+ const module=await import('./project-transcription-submission');
+ const task=await module.submitProjectPreparationTranscription(f.deps,f.ctx,f.input,{claim,referenceId});
+ const {createTranscribeBusinessExecutionService}=await import('../ai-runtime/transcribe-business-execution.service');
+ const adapter=createTranscribeBusinessExecutionService(db,{now:f.deps.now,budget:{maxCalls:20,maxTokens:100000,deadlineMs:1800000},resolveSpec:async()=>({kind:'audio',provider:'local',model:'base',baseUrl:null,apiKey:null,settings:{}} as never)});
+ const mapped=await adapter.prepare(f.ctx,task.id);expect(mapped.legacy).not.toBe(true);
+ const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId!)),[original]=await db.select().from(executionTasks).where(eq(executionTasks.id,parent.id));
+ expect(execution!.deadlineAt).toBe(original!.deadlineAt);expect(execution!.payload).toMatchObject({preparationParentProof:{parentTaskId:parent.id,projectId:f.input.projectId,sourceReferenceId:referenceId},preparationPolicy:{skipMasterScript:true,autoReconstruct:false}});
+ expect((await module.submitProjectPreparationTranscription(f.deps,f.ctx,f.input,{claim,referenceId})).id).toBe(task.id);
+ await expect(module.submitProjectPreparationTranscription(f.deps,f.ctx,{...f.input,attemptId:f.input.attemptId+'-wrong'},{claim:{...claim,lease:{...claim.lease,fenceToken:'wrong'}},referenceId})).rejects.toThrow();
+});

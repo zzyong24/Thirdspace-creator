@@ -7,6 +7,10 @@ vi.mock("@/lib/http-transport",()=>({readCurrentAccountId:current,readCurrentGro
 import {loadState,loadProjectSignals,saveOnboarding} from './onboarding-data';
 const record=()=>({accountId:"a",origin:null,hidden:false,collapsed:true,completedSteps:[] as string[],updatedAt:null});
 beforeEach(()=>{vi.clearAllMocks();window.localStorage.clear();current.mockReturnValue('a');client.getOnboarding.mockResolvedValue(record());client.patchOnboarding.mockImplementation(async({body})=>({...record(),...body}));client.getAccount.mockResolvedValue({id:'a'});client.listProjects.mockResolvedValue([]);client.getPositioningCenter.mockResolvedValue({profile:null});client.getIntelligenceWorkspace.mockResolvedValue({sources:[]});client.listIntelligenceItems.mockResolvedValue([]);});
+it.each(['manual','topic','radar','assistant','quick_create'])('T-1382 %s 是真实创建信号，与导入作品信号分开',async(source)=>{
+ client.listProjects.mockResolvedValue([{source}]);
+ await expect(loadProjectSignals()).resolves.toEqual({hasCreatedProject:true,hasImportedWorks:false});
+},120000);
 describe('T-964 引导真实数据与持久进度',()=>{
  it('绑定来自账号记录，登录探测不参与，端口存储清空不撤销后端里程碑',async()=>{
   client.getOnboarding.mockResolvedValue({...record(),completedSteps:['import-account','first-project'],updatedAt:'2026-09-13'});

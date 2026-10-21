@@ -20,10 +20,145 @@ import {
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 
-// 数据底座(宪法 §7 / SPEC §1.2):项目来源。`manual`=手动新建,`topic`=选题立项,
-// `imported`=真实采集导入(已发布作品 → 历史项目)。存量行均 manual,行为不变。
-export const projectSource = z.enum(["manual", "topic", "imported"]);
+// T-1382：资源来源是服务端确认的入口事实；公开 create 的白名单独立定义。
+export const projectSource = z.enum(["manual", "topic", "radar", "imported", "assistant", "quick_create"]);
 export type ProjectSource = z.infer<typeof projectSource>;
+
+const rawSourceReferenceFields = {
+  id,
+  projectId: id,
+  sourceKey: z.string().min(1),
+  url: z.string().url().nullable(),
+  bodyAvailable: z.boolean(),
+  sourceDigest: z.string().min(1).nullable(),
+  transcriptHash: z.string().min(1).nullable(),
+  ...timestamps,
+};
+
+// 原始来源独立于用户已确认的 project_intelligence_references，不索取虚构的候选或 hash。
+export const projectSourceReference = z.discriminatedUnion("sourceKind", [
+  z.object({
+    ...rawSourceReferenceFields,
+    sourceKind: z.literal("intelligence_item"),
+    itemId: id,
+    snapshotId: id,
+  }).strict(),
+  z.object({
+    ...rawSourceReferenceFields,
+    sourceKind: z.literal("platform_work"),
+    accountId: id,
+    platform: platformId,
+    externalId: z.string().min(1),
+  }).strict(),
+]);
+export type ProjectSourceReference = z.infer<typeof projectSourceReference>;
+
+export const projectPreparationStepName = z.enum(["transcript", "source_draft", "brief"]);
+export type ProjectPreparationStepName = z.infer<typeof projectPreparationStepName>;
+export const projectPreparationStepStatus = z.enum([
+  "not_required", "pending", "queued", "running", "waiting_user", "candidate_ready",
+  "done", "failed", "blocked", "unknown_result", "paused", "cancelled",
+]);
+export type ProjectPreparationStepStatus = z.infer<typeof projectPreparationStepStatus>;
+export const projectPreparationAction = z.enum([
+  "start", "pause", "resume", "cancel", "retry", "provide_transcript", "accept_candidate", "check_result",
+]);
+export const projectPreparationError = z.object({
+  code: z.enum([
+    "FORBIDDEN", "SOURCE_NOT_FOUND", "IDEMPOTENCY_CONFLICT", "SOURCE_VERSION_CHANGED",
+    "CONFIGURATION_REQUIRED", "EXECUTION_FAILED", "UNKNOWN_RESULT", "DEADLINE_EXHAUSTED",
+  ]),
+  message: z.string().min(1),
+}).strict();
+export type ProjectPreparationError = z.infer<typeof projectPreparationError>;
+
+export const projectPreparationStep = z.object({
+  name: projectPreparationStepName,
+  required: z.boolean(),
+  reasonCode: z.string().min(1),
+  status: projectPreparationStepStatus,
+  revision: z.number().int().nonnegative(),
+  childTaskId: id.nullable(),
+  businessTaskId: id.nullable(),
+  childOwner: z.object({ type: z.enum(["item", "project"]), id }).strict().nullable().optional(),
+  reuse: z.enum(["reused", "exclusive"]).nullable().optional(),
+  attempt: z.number().int().nonnegative().nullable().optional(),
+  inputDigest: z.string().min(1).nullable(),
+  outputReferences: z.array(z.object({ kind: z.string().min(1), id }).strict()),
+  startedAt: iso8601.nullable(),
+  completedAt: iso8601.nullable(),
+  lastError: projectPreparationError.nullable(),
+  availableActions: z.array(projectPreparationAction),
+}).strict().refine(
+  (step) => !["queued", "running"].includes(step.status) || step.childTaskId !== null,
+  { message: "运行中的步骤必须引用真实执行任务", path: ["childTaskId"] },
+);
+export type ProjectPreparationStep = z.infer<typeof projectPreparationStep>;
+
+export const projectPreparationAcceptanceReceipt = z.object({
+  id,
+  projectId: id,
+  candidateId: id,
+  sourceTaskId: id,
+  candidateSourceDigest: z.string().min(1),
+  acceptedDigest: z.string().min(1),
+  projectVersion: z.number().int().nonnegative(),
+  artifactVersion: z.number().int().nonnegative().nullable(),
+  acceptedAt: iso8601,
+}).strict();
+export type ProjectPreparationAcceptanceReceipt = z.infer<typeof projectPreparationAcceptanceReceipt>;
+export const projectPreparationCandidate = z.object({
+  id,
+  kind: z.enum(["brief", "draft", "decomposition"]),
+  sourceTaskId: id,
+  transformId: id.nullable(),
+  checkpointPath: z.string().min(1).nullable(),
+  sourceDigest: z.string().min(1),
+  artifactDigest: z.string().min(1),
+  status: z.enum(["pending", "accepted", "rejected"]),
+  acceptanceReceipt: projectPreparationAcceptanceReceipt.nullable(),
+  // GET 返回核实过的候选与冻结采纳基线；checkpoint 中的旧回执可省略。
+  content: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("brief"), brief: z.string(), briefDetail: z.record(z.string(), z.unknown()) }).strict(),
+    z.object({ kind: z.literal("draft"), text: z.string() }).strict(),
+  ]).optional(),
+  baseline: z.object({ kind: z.literal("digest"), digest: z.string().min(1) }).strict().optional(),
+  contentError: z.string().min(1).optional(),
+}).strict().refine(
+  (candidate) => candidate.transformId !== null || candidate.checkpointPath !== null,
+  { message: "候选必须引用真实产物", path: ["transformId"] },
+).refine(
+  (candidate) => (candidate.status === "accepted") === (candidate.acceptanceReceipt !== null),
+  { message: "已采纳状态必须对应真实采纳回执", path: ["acceptanceReceipt"] },
+);
+export type ProjectPreparationCandidate = z.infer<typeof projectPreparationCandidate>;
+
+const preparationFields = {
+  projectId: id,
+  origin: projectSource,
+  sourceReferences: z.array(projectSourceReference),
+  availableActions: z.array(projectPreparationAction),
+  lastError: projectPreparationError.nullable(),
+};
+export const projectPreparationResource = z.discriminatedUnion("registration", [
+  z.object({
+    ...preparationFields,
+    registration: z.literal("not_registered"),
+    preparationTaskId: z.null(),
+    revision: z.null(),
+    steps: z.array(projectPreparationStep).max(0),
+    candidates: z.array(projectPreparationCandidate).max(0),
+  }).strict(),
+  z.object({
+    ...preparationFields,
+    registration: z.literal("registered"),
+    preparationTaskId: id,
+    revision: z.number().int().nonnegative(),
+    steps: z.array(projectPreparationStep),
+    candidates: z.array(projectPreparationCandidate),
+  }).strict(),
+]);
+export type ProjectPreparationResource = z.infer<typeof projectPreparationResource>;
 
 // 导入项目的平台引用(SPEC §1.2)。装在 projects.platform_ref jsonb。非导入项目为
 // 默认空形状({platform:"",externalId:""})。`shareUrl` 是逐字稿冷启动口子(SPEC

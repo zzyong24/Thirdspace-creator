@@ -2,7 +2,6 @@ import {beforeEach,afterEach,it,expect} from 'vitest';
 import {createDb,eq,executionTasks,executionCalls,type Db} from '@creatoros/backend';
 import {createPersistentTaskService} from '../execution';
 import {createIntelligenceService} from './intelligence.service';
-import {createRadarProjectQueueService} from './radar-project-queue.service';
 import {runIntelligenceTranscriptTask} from './transcript-runner';
 import {createTranscriptSourceRecoveryService,transcriptSourceRetryDelay} from './transcript-source-recovery.service';
 import type {RequestContext} from '@creatoros/contract';
@@ -58,12 +57,4 @@ it('付费调用账本存在时，新旧冷却恢复都拒绝，不清空未知�
  await expect(recovery.recoverReferenced(ctx,taskId)).rejects.toThrow('调用账本');
  expect((await tasks.get(ctx,taskId)).status).toBe('failed');
  expect((await db.select().from(executionCalls).where(eq(executionCalls.id,'charged')))[0]?.status).toBe('unknown');
-});
-it('升级父项点名旧冷却子项后等待，复用原子任务且不进入选题阶段',async()=>{
- const {taskId,itemId}=await queued();await db.update(executionTasks).set({status:'failed',lastErrorCode:'TRANSCRIBE_FAILED',lastErrorMessage:'DouyinCooldownActiveError'}).where(eq(executionTasks.id,taskId));
- const queue=createRadarProjectQueueService({tasks,now:()=>new Date(clock).toISOString(),intelligence,assertPositioning:async()=>{},projects:{ensureRadarProject:async()=>{throw Error('冷却中不得创建项目');}},recoverSourceCooldown:recovery.recoverReferenced});
- const parent=(await queue.enqueue(ctx,{itemIds:[itemId],positioningVersionId:'fixture',idempotencyKey:'upgrade'})).tasks[0]!;
- await queue.tick({shouldStop:()=>false});
- expect((await tasks.get(ctx,parent.id)).runtimeStatus).toBe('retry_wait');expect((await tasks.get(ctx,parent.id)).checkpoint).toMatchObject({transcriptTaskId:taskId});
- expect((await tasks.get(ctx,taskId)).runtimeStatus).toBe('retry_wait');expect((await tasks.list(ctx,{kind:'transcribe'})).total).toBe(1);
 });

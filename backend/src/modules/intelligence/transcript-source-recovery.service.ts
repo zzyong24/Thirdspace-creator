@@ -1,3 +1,4 @@
+import {readPreparationParentProof} from '../execution/execution-preparation-parent';
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {and,eq,executionTasks,executionCalls,itemTranscripts,type Db} from '@creatoros/backend';
 import {createContinuousExecutionBudget,type ExecutionRef} from '@creatoros/contract/execution-worker';
@@ -28,9 +29,11 @@ export function createTranscriptSourceRecoveryService(db:Db,deps:{now?:()=>strin
   const previous=payload.transcriptSourceRecovery as {failures?:number}|undefined;
   const failures=Number.isInteger(previous?.failures)&&previous!.failures!>=0?previous!.failures!+1:1;
   const stamp=now(),retryAt=new Date(Date.parse(stamp)+transcriptSourceRetryDelay(failures,remainMs,deps.random)).toISOString();
-  await tx.update(executionTasks).set({status:'retry_wait',retryAt,deadlineAt:null,executionBudget:createContinuousExecutionBudget(),leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,
-   payload:{...payload,transcriptSourceRecovery:{failures,retryAt,remainMs,reason:'TRANSCRIBE_SOURCE_COOLDOWN',...(legacy?{legacyRecovery:{errorCode:task.lastErrorCode,errorMessage:task.lastErrorMessage,deadlineAt:task.deadlineAt}}:{})}},lastErrorCode:'TRANSCRIBE_SOURCE_COOLDOWN',lastErrorMessage:'来源通道冷却中，将在退避结束后自动继续',updatedAt:stamp}).where(eq(executionTasks.id,task.id));
-  await tx.update(itemTranscripts).set({status:bound.transcript.text?.trim()?'done':'queued',errorCode:'TRANSCRIBE_SOURCE_COOLDOWN',completedAt:null,updatedAt:stamp}).where(and(eq(itemTranscripts.itemId,bound.item.id),eq(itemTranscripts.executionTaskId,task.id)));
+  const preparation=readPreparationParentProof(task),exhausted=!!preparation&&task.deadlineAt!==null&&!(Date.parse(retryAt)<Date.parse(task.deadlineAt));
+  if(preparation&&task.executionBudget===null)throw new ConflictError('准备转写缺少原冻结预算');
+  await tx.update(executionTasks).set({status:exhausted?'failed':'retry_wait',retryAt:exhausted?null:retryAt,...(preparation?{}:{deadlineAt:null,executionBudget:createContinuousExecutionBudget()}),leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,
+   payload:{...payload,transcriptSourceRecovery:{failures,retryAt,remainMs,reason:'TRANSCRIBE_SOURCE_COOLDOWN',...(legacy?{legacyRecovery:{errorCode:task.lastErrorCode,errorMessage:task.lastErrorMessage,deadlineAt:task.deadlineAt}}:{})}},lastErrorCode:exhausted?'EXECUTION_DEADLINE':'TRANSCRIBE_SOURCE_COOLDOWN',lastErrorMessage:exhausted?'原转写期限不足以等待来源恢复':'来源通道冷却中，将在退避结束后自动继续',updatedAt:stamp}).where(eq(executionTasks.id,task.id));
+  await tx.update(itemTranscripts).set({status:bound.transcript.text?.trim()?'done':exhausted?'failed':'queued',errorCode:exhausted?'EXECUTION_DEADLINE':'TRANSCRIBE_SOURCE_COOLDOWN',completedAt:exhausted?stamp:null,updatedAt:stamp}).where(and(eq(itemTranscripts.itemId,bound.item.id),eq(itemTranscripts.executionTaskId,task.id)));
  }
  return {
   async defer(ctx:RequestContext,ref:ExecutionRef,error:unknown):Promise<boolean> {

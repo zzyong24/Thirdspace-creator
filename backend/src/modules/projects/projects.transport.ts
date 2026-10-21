@@ -1,6 +1,8 @@
+import {ENDPOINTS} from "@creatoros/contract";
 import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
+  OwnershipError,
   UnsupportedOperationError,
 } from "@creatoros/backend";
 import type { ProjectsService, BriefDetail } from "./projects.service";
@@ -54,6 +56,8 @@ export const PROJECT_OP_IDS = [
   //   (触发要 ai transport transcribe.douyin 排队,在 composition 层才可见)。列入 OP_IDS 让
   //   PERSISTED_OPS/dispatch 把它路由到 projects transport(同 benchmark.works.transcribe 先例)。
   "projects.transcribe",
+  "projects.ensure",
+  "projects.preparation.get", "projects.preparation.start", "projects.preparation.transcript.provide", "projects.preparation.candidate.accept",
 ] as const;
 
 // jsonb(unknown)→ 契约 projectBriefDetail 的规范形状(立项 Brief 地基)。丢未知键、
@@ -201,6 +205,11 @@ function publicBriefDetailWrite(
 }
 
 export interface ProjectsTransportDeps {
+  preparation?:Pick<ReturnType<typeof import("./project-preparation.service").createProjectPreparationService>,"get"|"start"|"provideTranscript"|"acceptCandidate">;
+  intake?: {
+    ensureProject(ctx: RequestContext, body: unknown): Promise<import("./project-intake.service").ProjectIntakeResult>;
+    ensurePublicCreate(ctx: RequestContext, body: unknown): Promise<import("./project-intake.service").ProjectIntakeResult>;
+  };
   service: ProjectsService;
   repo: ProjectRepository;
   createArticleOutput?: (ctx: RequestContext, projectId: string, input: {
@@ -222,12 +231,13 @@ export function createProjectsTransport(
   return {
     async request(endpoint: Endpoint, input, ctx) {
       if (!ctx) throw new AuthenticationError();
-      const { service, repo, createArticleOutput, createGraphicPostOutput } = factory(ctx);
+      const { service, repo, createArticleOutput, createGraphicPostOutput, intake, preparation } = factory(ctx);
 
       const { params, query, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as {
         projectId?: string;
         outputId?: string;
+        candidateId?:string;
         taskId?: string;
         stage?: string;
       };
@@ -246,7 +256,36 @@ export function createProjectsTransport(
           const rows = await repo.list(ctx);
           return { data: rows.map(toProject), meta: listMeta(rows.length) };
         }
+        case "projects.preparation.get": {
+          if(!preparation)throw new UnsupportedOperationError(endpoint.id);
+          return {data:await preparation.get(ctx,ENDPOINTS.getProjectPreparation.params.parse(p).projectId),meta:singleMeta};
+        }
+        case "projects.preparation.start": {
+          if(!preparation)throw new UnsupportedOperationError(endpoint.id);
+          return {data:await preparation.start(ctx,ENDPOINTS.startProjectPreparation.params.parse(p).projectId,ENDPOINTS.startProjectPreparation.body.parse(b)),meta:singleMeta};
+        }
+        case "projects.preparation.transcript.provide": {
+          if(!preparation)throw new UnsupportedOperationError(endpoint.id);
+          return {data:await preparation.provideTranscript(ctx,ENDPOINTS.provideProjectPreparationTranscript.params.parse(p).projectId,ENDPOINTS.provideProjectPreparationTranscript.body.parse(b)),meta:singleMeta};
+        }
+        case "projects.preparation.candidate.accept": {
+          if(!preparation)throw new UnsupportedOperationError(endpoint.id);
+          const params=ENDPOINTS.acceptProjectPreparationCandidate.params.parse(p);
+          return {data:await preparation.acceptCandidate(ctx,params.projectId,params.candidateId,ENDPOINTS.acceptProjectPreparationCandidate.body.parse(b)),meta:singleMeta};
+        }
+        case "projects.ensure": {
+          if (!intake) throw new UnsupportedOperationError(endpoint.id);
+          const result = await intake.ensureProject(ctx, b);
+          return { data: {...result, project: toProject(result.project)}, meta: singleMeta };
+        }
         case "projects.create": {
+          const checked = ENDPOINTS.createProject.body.parse(b);
+          if (checked.source === "imported") throw new OwnershipError("公开创建不能声明采集导入来源");
+          if (intake) {
+            const result = await intake.ensurePublicCreate(ctx, b);
+            return {data: toProject(result.project), meta: singleMeta};
+          }
+          if (checked.idempotencyKey || checked.platformRef?.platform || checked.platformRef?.externalId) throw new UnsupportedOperationError("projects.create intake 未装配");
           const row = await service.createProject(ctx, {
             title: String(b.title ?? ""),
             brief: b.brief as string | undefined,

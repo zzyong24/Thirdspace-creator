@@ -1,4 +1,3 @@
-export { createRadarProjectQueueService, type RadarProjectQueueService } from "./radar-project-queue.service";
 export {
   createIntelligenceService,
   type IntelligenceService,

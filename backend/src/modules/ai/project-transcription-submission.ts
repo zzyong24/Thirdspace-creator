@@ -1,3 +1,7 @@
+import {createExecutionLeaseService} from '../execution/execution-lease.service';
+import type {PersistentTaskClaim} from '../execution/persistent-task.service';
+import {executionTasks,projectSourceReferences,projects} from '@creatoros/backend';
+import {executionBudgetSchema,executionRouteSchema,createExecutionRoute} from '@creatoros/contract/execution-worker';
 import { and, eq, workspaceKey, workspaceFilter, workspaceStamp, projectTranscriptionRequests, type Db } from '@creatoros/backend';
 import type { RequestContext } from '@creatoros/contract';
 import { createAiService, type ServiceDeps } from './ai.service';
@@ -12,8 +16,9 @@ type Prepared = {
     inputData: Record<string, unknown>;
 };
 /** 请求回执、在途合并、任务创建由后端提交；配置读取不占数据库写事务。 */
-export async function submitProjectTranscription(deps: ServiceDeps, context: RequestContext, original: ProjectTranscriptionSubmission) {
+export async function submitProjectTranscription(deps: ServiceDeps, context: RequestContext, original: ProjectTranscriptionSubmission, preparation?:{claim:PersistentTaskClaim;referenceId:string}) {
     const ctx = structuredClone(context), input = structuredClone(original);
+    if(preparation)await createExecutionLeaseService(deps.db,deps).withLease({executionTaskId:preparation.claim.task.id,attempt:preparation.claim.lease.attempt,fenceToken:preparation.claim.lease.fenceToken},'admission',async({task})=>{if(task.kind!=='project_preparation'||task.ownerType!=='project'||task.ownerId!==input.projectId||task.userId!==ctx.userId||task.accountId!==(ctx.accountId??null)||task.groupId!==(ctx.groupId??null))throw new ConflictError('项目准备提交归属不符');});
     const workspace = workspaceKey(ctx);
     const stamp = workspaceStamp(ctx);
     if (typeof input.attemptId !== 'string' || input.attemptId.length < 16 || input.attemptId.length > 128)
@@ -67,7 +72,19 @@ export async function submitProjectTranscription(deps: ServiceDeps, context: Req
             const existing = await replay(tx);
             if (existing)
                 return { task: existing };
-            const service = createAiService({ ...deps, db: tx, resolveTaskRuntimeData: async () => structuredClone(runtime?.data ?? {}) });
+            let runtimeData=structuredClone(runtime?.data??{});
+            if(preparation&&runtime){
+                const proof=preparation;
+                runtimeData=await createExecutionLeaseService(tx,deps).withLease({executionTaskId:proof.claim.task.id,attempt:proof.claim.lease.attempt,fenceToken:proof.claim.lease.fenceToken},'admission',async({tx:store,task})=>{
+                    const payload=task.payload as Record<string,unknown>,[reference]=await store.select().from(projectSourceReferences).where(and(eq(projectSourceReferences.id,proof.referenceId),eq(projectSourceReferences.projectId,input.projectId)));
+                    const [project]=await store.select().from(projects).where(eq(projects.id,input.projectId)),ref=project?.platformRef as {platform?:string;externalId?:string}|undefined;
+                    if(!reference||!Array.isArray(payload.sourceReferenceIds)||!payload.sourceReferenceIds.includes(reference.id)||reference.sourceKind!=='platform_work'||reference.platform!=='douyin'||reference.externalId!==runtime.prepared.awemeId||ref?.platform!=='douyin'||ref.externalId!==reference.externalId)throw new ConflictError('准备转写来源与原项目不符');
+                    const executionRoute=executionRouteSchema.parse(payload.executionRoute??runtimeData.executionRoute??createExecutionRoute('pi'));
+                    if(payload.executionRoute===undefined)await store.update(executionTasks).set({payload:{...payload,executionRoute}}).where(eq(executionTasks.id,task.id));
+                    return {...runtimeData,executionRoute,preparationParentProof:{schemaVersion:1,parentTaskId:task.id,projectId:input.projectId,sourceReferenceId:reference.id,sourceDigest:reference.sourceDigest,exclusive:true},preparationPolicy:{skipMasterScript:true,autoReconstruct:false},preparationDeadlineAt:task.deadlineAt,preparationBudget:executionBudgetSchema.parse(task.executionBudget)};
+                });
+            }
+            const service = createAiService({ ...deps, db: tx, resolveTaskRuntimeData: async () => structuredClone(runtimeData) });
             // 兼容已有单请求任务；历史回读不因当前正文或来源变化而重建。
             const legacy = await service.findTaskByAttempt(ctx, 'transcribe.douyin', input.attemptId);
             if (legacy) {
@@ -109,3 +126,6 @@ export async function submitProjectTranscription(deps: ServiceDeps, context: Req
         throw new Error('转写提交未完成');
     return final.task;
 }
+
+/** 仅供项目准备组合根调用；浏览器输入不接受父证明。 */
+export const submitProjectPreparationTranscription=(deps:ServiceDeps,ctx:RequestContext,input:ProjectTranscriptionSubmission,preparation:{claim:PersistentTaskClaim;referenceId:string})=>submitProjectTranscription(deps,ctx,input,preparation);

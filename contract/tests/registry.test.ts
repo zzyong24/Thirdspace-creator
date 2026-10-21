@@ -45,7 +45,6 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/outputs/:outputId/production/editor/rough-cut/:requestId"],
   ["POST", "/outputs/:outputId/production/editor/rough-cut/adopt"],
   ["POST", "/publications/:publicationId/visual-note/export"],
-  ["POST", "/intelligence/projects/enqueue"],
   ["GET", "/settings/redfox"],
   ["PUT", "/settings/redfox"],
   ["DELETE", "/settings/redfox"],
@@ -89,6 +88,11 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   // 项目与流程
   ["GET", "/projects"],
   ["POST", "/projects"],
+  ["POST", "/projects/ensure"],
+  ["GET", "/projects/:projectId/preparation"],
+  ["POST", "/projects/:projectId/preparation"],
+  ["POST", "/projects/:projectId/preparation/transcript"],
+  ["POST", "/projects/:projectId/preparation/candidates/:candidateId/accept"],
   ["GET", "/projects/:projectId"],
   ["PATCH", "/projects/:projectId"],
   ["POST", "/projects/:projectId/archive"],
@@ -504,6 +508,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
 ];
 
 describe("endpoint registry", () => {
+  it("T-1382 退役旧雷达producer只保留统一ensure入口", () => {
+    expect(Object.values(ENDPOINTS).map(endpoint=>String(endpoint.id)).includes("intelligence.projects.enqueue")).toBe(false);
+    expect(ENDPOINTS.ensureProject.id).toBe("projects.ensure");
+  });
   const registered = Object.values(ENDPOINTS).map(
     (e) => `${e.method} ${e.path}`,
   );

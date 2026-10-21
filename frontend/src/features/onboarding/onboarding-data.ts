@@ -86,7 +86,7 @@ export async function loadProjectSignals(accountId = readCurrentAccountId(),scop
     if (!Array.isArray(rows)) return {};
     return {
       hasImportedWorks: rows.some(row => row.source === "imported"),
-      hasCreatedProject: rows.some(row => row.source === "manual" || row.source === "topic"),
+      hasCreatedProject: rows.some(row => ["manual","topic","radar","assistant","quick_create"].includes(row.source)),
     };
   } catch {
     return {};

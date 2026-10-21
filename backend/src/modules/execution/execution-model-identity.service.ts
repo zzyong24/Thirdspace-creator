@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { and, eq, aiTasks, executionTasks, type Db } from "@creatoros/backend";
 import {
-  workerModelSpecSchema,executionModelSpecSchema,codexModelSpecSchema,
+  workerModelSpecSchema,executionModelSpecSchema,codexModelSpecSchema,projectPreparationGenerationTargetSchema,
   assetProcessingInputSchema,workerTaskInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema,executionRouteSchema,frozenModelRouteSchema,assetGenerationInputSchema,structuredGenerationInputSchema,intelligenceRewriteInputSchema,coverImagePreparationSchema,transcribePostprocessPlanSchema,videoFrozenSchema,readFrozenModelRoute,type FrozenModelRoute,
   type ExecutionRef,
 } from "@creatoros/contract/execution-worker";
@@ -100,6 +100,34 @@ function frozenRootModelMode(payload:Record<string,unknown>,input:ReturnType<typ
  if(input.skillId!=='asset.classify'||input.capability!=='asset.classify'||frozen.taskType!=='asset.classify')throw new ConflictError('MODEL_ROUTE_NOT_FROZEN');
  return 'vision';
 }
+type PreparationGenerationOwner={groupVersion?:number|null;membershipVersion?:number|null;id:string;kind:string;ownerType:string;ownerId:string;userId:string;accountId:string|null;groupId:string|null;payload:unknown};
+// 与原bridge相同的稳定字段和顺序；列表状态变化不改变原模型输入的来源证明。
+export const stableIntelligenceTopicTargetSchema=z.object({generationMode:z.enum(['rewrite_only','strategy_backed']).optional(),transformId:z.string(),item:z.object({title:z.string().nullable().optional(),authorName:z.string().nullable().optional(),platform:z.string().optional(),canonicalUrl:z.string()}),positioning:z.unknown().nullable().optional(),positioningVersionId:z.string().nullable().optional(),personalizationStatus:z.enum(['applied','not_applied']).optional(),transcript:z.object({hash:z.string(),text:z.string()})});
+/** SEMANTIC_BOUNDARY_ALLOW: 仅校验原雷达任务冻结来源与归属；不选择内容，也不授予新模型提交。 */
+export function frozenIntelligenceTopicGenerationBinding(task:PreparationGenerationOwner){
+ try{
+  const payload=frozenObject(task.payload),saved=frozenObject(payload.intelligenceGeneration),input=z.union([structuredGenerationInputSchema,intelligenceRewriteInputSchema]).parse(saved.input);
+  if(task.kind!=='topic_preview'||task.ownerType!=='transform'||payload.itemId!==task.ownerId||input.operationKey!==`intelligence:${task.id}`||input.capability!=='topic.generate'||input.facets.mode!=='topic_preview'||input.skillSnapshot.userId!==task.userId||input.skillSnapshot.accountId!==task.accountId||(input.skillSnapshot.groupId??null)!==task.groupId||(input.skillSnapshot.groupVersion??null)!==(task.groupVersion??null)||(input.skillSnapshot.membershipVersion??null)!==(task.membershipVersion??null))return null;
+  const raw=JSON.parse(input.facets.target??'null'),target=stableIntelligenceTopicTargetSchema.parse(raw);
+  if(raw.item?.id!==task.ownerId||typeof payload.sourceSnapshotId!=='string'||raw.snapshot?.id!==payload.sourceSnapshotId||(payload.generationMode==='rewrite_only'&&target.transformId!==payload.transformId)||target.transcript.hash!==`sha256:${createHash('sha256').update(target.transcript.text).digest('hex')}`||saved.sourceDigest!==createHash('sha256').update(JSON.stringify(target)).digest('hex'))return null;
+  return {target,input};
+ }catch{return null;}
+}
+/** SEMANTIC_BOUNDARY_ALLOW: 校验持久输入与来源 hash，不理解或选择创作内容。 */
+export function projectPreparationGenerationTargetForTask(task:PreparationGenerationOwner,raw:unknown){
+ const parsed=projectPreparationGenerationTargetSchema.safeParse(raw),payload=frozenObject(task.payload);
+ if(!parsed.success||task.kind!=='topic_preview'||task.ownerType!=='project'||payload.projectId!==task.ownerId||parsed.data.projectId!==task.ownerId||!isDeepStrictEqual(payload.source,parsed.data.source)||parsed.data.transcript.hash!==`sha256:${createHash('sha256').update(parsed.data.transcript.text).digest('hex')}`)return null;
+ return parsed.data;
+}
+export function frozenProjectPreparationGenerationBinding(task:PreparationGenerationOwner){
+ try{
+  const saved=frozenObject(frozenObject(task.payload).intelligenceGeneration),input=z.union([structuredGenerationInputSchema,intelligenceRewriteInputSchema]).parse(saved.input);
+  if(input.operationKey!==`intelligence:${task.id}`||input.capability!=='topic.generate'||input.facets.mode!=='topic_preview'||input.skillSnapshot.userId!==task.userId||input.skillSnapshot.accountId!==task.accountId||(input.skillSnapshot.groupId??null)!==task.groupId||(input.skillSnapshot.groupVersion??null)!==(task.groupVersion??null)||(input.skillSnapshot.membershipVersion??null)!==(task.membershipVersion??null))return null;
+  const raw=JSON.parse(input.facets.target??'null'),target=projectPreparationGenerationTargetForTask(task,raw);
+  if(!target||saved.sourceDigest!==createHash('sha256').update(JSON.stringify(raw)).digest('hex'))return null;
+  return {target,input};
+ }catch{return null;}
+}
 /** SEMANTIC_BOUNDARY_ALLOW: 只核原调用键、存档输入与无秘密身份，不从Worker声明或业务内容选择来源。 */
 export function frozenNonChatModelBindingForCall(task:{id:string;kind:string;ownerType:string;ownerId:string;userId:string;accountId:string|null;groupId:string|null;payload:unknown},call:{executionTaskId:string;kind:string;parentCallId:string|null;operationKey:string;inputDigest:string;toolExecutionClaimId?:string|null}){
  try{
@@ -107,7 +135,8 @@ export function frozenNonChatModelBindingForCall(task:{id:string;kind:string;own
   if(routes.schemaVersion!==2||call.executionTaskId!==task.id||call.kind!=='model'||call.parentCallId!==null||call.toolExecutionClaimId)return null;
   const visual=payload.stageKind==='video.visual-review',rawInput=visual?payload.reviewInput:payload.modelInput;
   const top=workerTaskInputSchema.safeParse(rawInput);
-  const intelligence=(task.kind==='topic_preview'&&task.ownerType==='transform')||(task.kind==='script_candidate'&&task.ownerType==='project');
+  const projectPreview=task.kind==='topic_preview'&&task.ownerType==='project'&&!!frozenProjectPreparationGenerationBinding(task);
+  const intelligence=projectPreview||(task.kind==='topic_preview'&&task.ownerType==='transform')||(task.kind==='script_candidate'&&task.ownerType==='project');
   if(!intelligence&&(task.kind!=='ai_task'||task.ownerType!=='ai_task'||(!visual&&payload.aiTaskId!==task.ownerId)||!top.success))return null;
   if(visual&&(payload.parentAiTaskId!==task.ownerId||typeof payload.parentInputDigest!=='string'||typeof payload.requestDigest!=='string'))return null;
   const sameScope=(input:ReturnType<typeof structuredGenerationInputSchema.parse>)=>input.skillSnapshot.userId===task.userId&&input.skillSnapshot.accountId===task.accountId&&(input.skillSnapshot.groupId??null)===task.groupId;

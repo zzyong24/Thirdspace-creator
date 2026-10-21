@@ -59,7 +59,10 @@ describe("contract module initialization from every real entry", () => {
       const root = await import("../contract/src/index.ts");
       const legacy = await import("../contract/src/endpoints.ts");
       if (root.defineEndpoint !== legacy.defineEndpoint) throw new Error("legacy export changed");
-      if (Object.keys(root.ENDPOINTS).length !== 436) throw new Error("registry surface changed");
+      // T1382：新增五个项目准备入口、退役一个雷达 producer，保留精确清单规模检查。
+      if (Object.keys(root.ENDPOINTS).length !== 440) throw new Error("registry surface changed");
+      for (const id of ["projects.ensure","projects.preparation.get","projects.preparation.start","projects.preparation.transcript.provide","projects.preparation.candidate.accept"]) if (!Object.values(root.ENDPOINTS).some(op=>op.id===id)) throw new Error("project intake operation missing");
+      if (Object.values(root.ENDPOINTS).some(op=>op.id==="intelligence.projects.enqueue")) throw new Error("retired radar producer registered");
       for (const id of ["ai.predictionLocks.source","ai.predictionLocks.start"]) if (!Object.values(root.ENDPOINTS).some(op=>op.id===id)) throw new Error("prediction source operation missing");
       if (root.ENDPOINTS.readWorkCandidateSource.method !== "GET" || root.ENDPOINTS.readWorkCandidateSource.id !== "ai.workCandidates.source") throw new Error("work candidate source operation missing");
       if (Object.values(root.ENDPOINTS).filter(e => e.method === "GET" && e.path === "/accounts/:accountId/collection-plan-readiness").length !== 1) throw new Error("collection readiness sentinel changed");

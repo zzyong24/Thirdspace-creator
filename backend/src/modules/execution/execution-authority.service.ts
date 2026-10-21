@@ -1,3 +1,4 @@
+import {assertPreparationSource,preparationParentProofSchema} from './execution-preparation-parent';
 import {frozenExecutionRoute} from '@creatoros/contract/execution-worker';
 import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob} from '../scheduling';
 import {requireWorkspace} from "../../workspace-scope";
@@ -30,6 +31,14 @@ const preparedDeadlineSchema=z.object({deadlineAt:z.string().datetime().nullable
 async function verifiedInheritedDeadline(tx:Db,task:typeof aiTasks.$inferSelect,prepared:PreparedModelExecution):Promise<string|null>{
  const runtime=(task.runtimeData??{}) as Record<string,unknown>,input=(task.inputData??{}) as Record<string,unknown>;
  const deadlineAt=executionBudgetDeadline(prepared.budget,task.requestedAt);
+ if(runtime.preparationParentProof!==undefined){
+  const proof=preparationParentProofSchema.parse(runtime.preparationParentProof),[parent]=await tx.select().from(executionTasks).where(eq(executionTasks.id,proof.parentTaskId)).for('update');
+  if(!parent||!['running','queued','retry_wait'].includes(parent.status)||proof.projectId!==task.projectId)throw new ConflictError('准备父已停止或项目不符');
+  const reference=await assertPreparationSource(tx as never,parent,{kind:'ai_task',ownerType:'ai_task',ownerId:task.id,userId:task.userId,accountId:task.accountId,groupId:task.groupId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion,payload:{aiTaskId:task.id,modelInput:prepared.modelInput}},proof.sourceReferenceId);
+  const budget=executionBudgetSchema.parse(parent.executionBudget),expected=executionBudgetSchema.parse({...budget,deadlineMs:parent.deadlineAt===null?null:Date.parse(parent.deadlineAt)-Date.parse(task.requestedAt)});
+  if(reference?.sourceDigest!==proof.sourceDigest||runtime.preparationDeadlineAt!==parent.deadlineAt||deadlineAt!==parent.deadlineAt||!isDeepStrictEqual(prepared.budget,expected))throw new ConflictError('准备子预算或来源与原父不符');
+  return parent.deadlineAt;
+ }
  if(runtime.hostTaskSubmission!==undefined){
   const origin=submittedOriginSchema.parse(runtime.hostTaskSubmission);
   const [parent]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,origin.executionTaskId),eq(executionTasks.userId,task.userId),workspaceFilter(executionTasks,task)));
@@ -101,12 +110,13 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
         }
         const executionTaskId = `exec_${randomUUID()}`;
         const stamp = now();
+        if((task.runtimeData as Record<string,unknown>)?.preparationParentProof!==undefined&&!prepared?.inheritedDeadline)throw new ConflictError('项目准备子任务必须继承原父期限');
         const deadlineAt=prepared?(prepared.inheritedDeadline?await verifiedInheritedDeadline(tx as unknown as Db,task,prepared):newExecutionBudgetDeadline(prepared.budget,browserGrant?.grantedAt??task.requestedAt)):null;
         if(prepared?.inheritedDeadline&&deadlineAt!==null&&Date.parse(deadlineAt)<=Date.parse(stamp))throw new ConflictError("原任务期限已耗尽，不能创建新执行");
         await tx.insert(executionTasks).values({
           id: executionTaskId, userId: task.userId, accountId: task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,
           kind: "ai_task", ownerType: "ai_task", ownerId: task.id,
-          idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id,executionRoute:frozenExecutionRoute(task.runtimeData), ...(prepared ? {modelInput:prepared.modelInput} : {})},
+          idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id,executionRoute:frozenExecutionRoute(task.runtimeData), ...(prepared ? {modelInput:prepared.modelInput} : {}),...((task.runtimeData as Record<string,unknown>)?.preparationParentProof?{preparationParentProof:(task.runtimeData as Record<string,unknown>).preparationParentProof,preparationPolicy:{skipMasterScript:true,autoReconstruct:false}}:{})},
           ...(prepared ? {priority:prepared.priority??0,executionBudget:prepared.budget,deadlineAt} : {}),
           createdAt: stamp, updatedAt: stamp,
         });

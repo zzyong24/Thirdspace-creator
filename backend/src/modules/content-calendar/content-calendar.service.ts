@@ -129,7 +129,7 @@ export interface ScheduleProject {
   id: string;
   title: string;
   status: string;
-  source: "manual" | "topic" | "imported";
+  source: import("@creatoros/contract").ProjectSource;
   currentStage: string;
   updatedAt: string;
   outputs: Array<{ id: string; status: string }>;

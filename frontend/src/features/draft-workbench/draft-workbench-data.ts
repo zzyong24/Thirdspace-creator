@@ -1,6 +1,6 @@
 import { readPagedRows } from "@/features/knowledge/knowledge-library-data";
 import "server-only";
-import {publicationVisualNoteSchema,type PublicationVisualNote} from "@creatoros/contract";
+import {publicationVisualNoteSchema,type PublicationVisualNote,type ProjectSource,type ProjectPreparationResource} from "@creatoros/contract";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
@@ -139,6 +139,7 @@ export interface DraftWorkbenchClient extends ScriptDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  getProjectPreparation?(input: {params:{projectId:string};query:undefined;body:undefined}):Promise<ProjectPreparationResource>;
   getProjectIntelligence?(input: {
     params: { projectId: string };
     query: undefined;
@@ -219,8 +220,8 @@ export interface DraftWorkbenchVm {
     readonly brief: string;
     readonly currentStage: ProjectStageName;
     readonly imported: boolean;
-    /** 项目来源（manual / topic / imported），供项目准备流水线显示来源。 */
-    readonly source?: "manual" | "topic" | "imported";
+    /** 项目来源（受控入口六值），供项目准备流水线显示来源。 */
+    readonly source?: ProjectSource;
     readonly briefDetail: ProjectBriefDetail | null;
     /**
      * [T-374] 项目关联的抖音作品 aweme_id(platformRef.platform=douyin 且 externalId 非空
@@ -244,8 +245,10 @@ export interface DraftWorkbenchVm {
     readonly currentVersionId?: string | null;
     readonly versions?: ScriptViewModel["versions"];
   };
-  /** [T-642] 尚无正式 output_script 时，内容雷达已确认口播稿的直接初值。 */
+  /** 历史候选不再作为编辑器初值；只读投影保持真实空值。 */
   readonly radarDraftSeed: string | null;
+  readonly preparation?: ProjectPreparationResource | null;
+  readonly preparationReadError?:string|null;
   /**
    * [T-055h③] 项目的第一个 ContentOutput id(登记已发布的挂点);null = 还没有
    * (登记表单提交时先 createOutput 铸一个)。
@@ -590,27 +593,11 @@ export async function buildDraftWorkbenchVm(
     loadScriptEditorData(scriptArtifactId, client),
     loadThesisSkeleton(project.id, client),
   ]);
-  const radarEvidence = project.briefDetail?.contentRadarEvidence;
-  let radarDraftSeed =
-    radarEvidence?.adaptedDraftSeed.contentText.trim() || null;
-  // 存量兼容：若旧版 transport 曾丢 briefDetail 扩展字段，从不可变雷达引用只恢复
-  // 已确认改写稿。来源逐字稿继续保留为后台证据，不再进入 Project 稿面 UI。
-  if (!radarDraftSeed && client.getProjectIntelligence) {
-    try {
-      const contexts = (await client.getProjectIntelligence({
-        params: { projectId: project.id },
-        query: undefined,
-        body: undefined,
-      })) as Array<{
-        item: { title: string; canonicalUrl: string };
-        transcript: { text: string };
-        adaptedDraft?: string | null;
-      }>;
-      radarDraftSeed = contexts[0]?.adaptedDraft?.trim() || null;
-    } catch {
-      // 证据读失败时保留真实空态；不影响已有正式 output_script。
-    }
-  }
+  let preparation:ProjectPreparationResource|null=null,preparationReadError:string|null=null;
+  try {
+    if(!client.getProjectPreparation)throw Error("项目准备读取端口不可用。");
+    preparation=await client.getProjectPreparation({params:{projectId:project.id},query:undefined,body:undefined});
+  }catch(error){preparationReadError=error instanceof Error?error.message:"状态暂时无法读取。";}
 
   let ammoReadError: string | null = null;
   const [
@@ -674,7 +661,7 @@ export async function buildDraftWorkbenchVm(
       brief: project.brief,
       currentStage: project.currentStage,
       imported: project.source === "imported",
-      source: project.source === "topic" || project.source === "imported" ? project.source : "manual",
+      source: project.source as ProjectSource | undefined,
       briefDetail: project.briefDetail ?? null,
       // [T-374] 抖音锚:douyin + 非空 externalId 才算(手动项目为空形状 → null)。
       douyinExternalId,
@@ -690,13 +677,14 @@ export async function buildDraftWorkbenchVm(
       currentVersionId: scriptData?.currentVersionId ?? null,
       versions: scriptData?.versions ?? [],
     },
-    radarDraftSeed,
+    radarDraftSeed:null,
+    preparation,
+    preparationReadError,
     publishPack,
     projectCoverAssetId,
-    // 雷达改写稿已在上游由用户确认并持久化，进入项目后不应要求用户再敲一个
-    // 空格制造“第一个版本”才能继续。正式版本存在时仍由正式稿接管。
+    // 候选不冒充正式稿；仅由真实保存版本解锁。
     publishUnlocked:
-      (scriptData?.versions.length ?? 0) > 0 || Boolean(radarDraftSeed),
+      (scriptData?.versions.length ?? 0) > 0,
     blindPrediction: currentBlindPrediction,
     ammo,
     ammoReadError,

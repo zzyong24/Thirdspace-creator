@@ -72,6 +72,24 @@ async function findProseMirror(): Promise<HTMLElement> {
   });
 }
 
+it("T-1382 准备候选落库后的外部版本不覆盖尚未保存的本地稿", async () => {
+  let editor: Editor | null = null;
+  const mounted = render(<ScriptRichEditor projectId="project-real" artifactId="a1" initialHtml="<p>已保存稿</p>" onEditorReady={value => {editor=value;}} />);
+  await findProseMirror();
+  await act(async () => {editor!.commands.setContent("<p>用户未保存的输入</p>");});
+  mounted.rerender(<ScriptRichEditor projectId="project-real" artifactId="a1" initialHtml="<p>准备候选已采纳版本</p>" onEditorReady={value => {editor=value;}} />);
+  expect(editor!.getText()).toBe("用户未保存的输入");
+  expect(document.querySelector('[data-save-status="dirty"]')).not.toBeNull();
+}, 120000);
+
+it("T1382 dirty时到达的外部旧稿在本地保存后也不回灌",async()=>{
+ let editor:Editor|null=null;
+ const view=(html:string)=><DraftChatRequestProvider><FlushProbe/><ScriptRichEditor projectId="project-real" artifactId="a1" initialHtml={html} onEditorReady={value=>{editor=value;}}/></DraftChatRequestProvider>;
+ const mounted=render(view("<p>原正式稿</p>"));await findProseMirror();
+ await act(async()=>{editor!.commands.setContent("<p>用户本地稿</p>");});mounted.rerender(view("<p>稍早采纳的外部稿</p>"));
+ await act(async()=>{await strictFlush();});expect(editor!.getText()).toBe("用户本地稿");expect(document.querySelector('[data-save-status="saved"]')).not.toBeNull();
+},120000);
+
 describe("ScriptRichEditor (TipTap)", () => {
   it("dirty与保存在途登记离开保护，保存或卸载只释放自己的活动",async()=>{
     let editor:Editor|null=null,finish!:(value:unknown)=>void;

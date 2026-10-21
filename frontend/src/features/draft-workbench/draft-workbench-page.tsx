@@ -23,6 +23,7 @@ import { ContentDirectionActions } from "./content-direction-actions";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
 import { DraftChatRequestProvider } from "./draft-chat-request";
+import {ProjectPreparationProvider} from "./project-preparation-context";
 import { DraftResizableLayout } from "./draft-resizable-layout";
 import { CreationFlowCtas } from "./creation-flow-ctas";
 import { ThesisSkeletonPanel } from "./thesis-skeleton-panel";
@@ -32,7 +33,7 @@ import { AmmoDumpZone } from "./ammo-dump-zone";
 import { AmmoCardList } from "./ammo-card-list";
 import { DraftPrimaryAction } from "./draft-primary-action";
 // [T-374] 顶条「立即抓取逐字稿」:自己作品(有抖音锚)单条立抓,不等每日自动任务。
-import { ProjectPipelinePanel, type PipelineOrigin } from "./project-pipeline-panel";
+import { ProjectPipelinePanel } from "./project-pipeline-panel";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
 import { PublishPackageCta } from "./publish-package-cta";
@@ -43,45 +44,12 @@ import {
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
-export function DraftWorkbenchPage({ vm, autoFillBrief = false }: { vm: DraftWorkbenchVm; autoFillBrief?: boolean }) {
+export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
   const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
   const isPublished = publishPack?.outputPublished ?? publishPack?.status === "published";
   // 转写入口已移入下方「项目准备」流水线；顶条只保留导入标记与发布后主行动。
   const hasTopbarContent = project.imported || isPublished;
-  const radarEvidence = project.briefDetail?.contentRadarEvidence;
-  const pipelineOrigin: PipelineOrigin = radarEvidence
-    ? "radar"
-    : project.imported
-      ? "imported"
-      : project.source === "topic"
-        ? "topic"
-        : "manual";
-  const briefSettled = Boolean(
-    project.briefDetail?.targetAudience?.trim() &&
-      project.briefDetail?.contentGoal?.trim() &&
-      project.briefDetail?.coreMessage?.trim(),
-  );
-  const radarDraftSeed = vm.radarDraftSeed ?? "";
-  const seedHtml = radarDraftSeed
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) =>
-      `<p>${line
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")}</p>`,
-    )
-    .join("");
-  const persistedHtml =
-    script.editorHtml ??
-    (script.sections.length > 0 ? sectionsToHtml(script.sections) : "");
-  // 内容雷达的改写稿已经由用户在上游确认：项目尚无正式稿时直接填进现有编辑器。
-  // 有正式版本后始终以 output_script 为准，即使用户把正式稿清空也不回灌旧 seed。
-  const initialHtml =
-    script.versionCount > 0 || persistedHtml.trim()
-      ? persistedHtml
-      : seedHtml;
+  const initialHtml=script.editorHtml??(script.sections.length>0?sectionsToHtml(script.sections):"");
 
   return (
     <main
@@ -116,23 +84,14 @@ export function DraftWorkbenchPage({ vm, autoFillBrief = false }: { vm: DraftWor
       {/* ── 主体:左稿面 + 右对话位 ──
           [T-108] DraftChatRequestProvider 包住左稿面 + 右 rail:左稿面的 AI 按钮(盲预测/审核)
           通过 context 直接预填右栏常驻 rail(方案 A),不再走 `?copilot=open` 深链开全局弹层。 */}
+      <ProjectPreparationProvider projectId={project.id} initialPreparation={vm.preparation} initialError={vm.preparationReadError}>
       <DraftChatRequestProvider>
       {/* [T-130] 可拖拽分栏:左稿面(flex-1)| 右编导栏(可拖拽调宽 + localStorage 持久)。 */}
       <DraftResizableLayout
         left={
           <>
           {/* 项目准备:雷达/选题移交过来的转写、补全资料、初稿步骤,在原有稿面之前集中展示。 */}
-          <ProjectPipelinePanel
-            projectId={project.id}
-            title={project.title}
-            origin={pipelineOrigin}
-            sourceRefs={(radarEvidence?.sourceReferences ?? []).map((ref) => ({ label: ref.label, url: ref.url, platform: ref.platform }))}
-            douyinExternalId={project.douyinExternalId}
-            transcriptState={project.transcriptState}
-            briefSettled={briefSettled}
-            draftReady={script.versionCount > 0 || Boolean(radarDraftSeed.trim())}
-            autoFillBrief={autoFillBrief}
-          />
+          <ProjectPipelinePanel projectId={project.id} title={project.title} origin={project.source??"manual"} />
 
           {/* 成熟度轨(装饰,随区块态着色由各区块节点体现) */}
           <TopicCard
@@ -241,7 +200,7 @@ export function DraftWorkbenchPage({ vm, autoFillBrief = false }: { vm: DraftWor
         }
         right={
           /* 右栏:编导对话(T-055b)—— 全局 ChatBox 内嵌常驻,上下文 chip = 当前项目。 */
-          <DraftChatRail
+          <DraftChatRail currentBrief={project.briefDetail?{...project.briefDetail}:null}
             projectId={project.id}
             projectTitle={project.title}
             outputId={outputId}
@@ -249,6 +208,7 @@ export function DraftWorkbenchPage({ vm, autoFillBrief = false }: { vm: DraftWor
         }
       />
       </DraftChatRequestProvider>
+      </ProjectPreparationProvider>
     </main>
   );
 }

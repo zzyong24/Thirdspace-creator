@@ -12,8 +12,7 @@ interface CreationPorts {
   readGroupId?: () => string | null;
   verifyGroup?: (id:string) => Promise<void>;
   verifyAccount: (id: string) => Promise<void>;
-  prepareBrief?: (brief: string) => Promise<string>;
-  createProject: (body: {title: string; brief: string}) => Promise<Project>;
+  createProject: (body: {title: string; brief: string; idempotencyKey:string}) => Promise<Project>;
   createOutput: (projectId: string, body: OutputBody) => Promise<ProjectWorkOutput>;
 }
 export class ProjectCreationError extends Error {
@@ -33,7 +32,7 @@ export function createProjectCreationSession(ports: CreationPorts) {
   let accountId: string | null = null;
   let groupId:string|null=null,workspaceKey:string|null=null;
   let frozenDigest: string | null = null;
-  let projectUnknown = false;
+  const projectActionKey=crypto.randomUUID();
   let inFlight = false;
   const requests = new Map<WorkType, {body: OutputBody; output?: ProjectWorkOutput}>();
   function snapshot() {
@@ -53,7 +52,6 @@ export function createProjectCreationSession(ports: CreationPorts) {
     if (inFlight) throw new ProjectCreationError("正在创建，请等待当前操作完成。");
     const types = WORK_CHOICES.filter(choice => values.contentTypes.includes(choice.id)).map(choice => choice.id);
     if (!values.name.trim() || types.length === 0) throw new ProjectCreationError("请填写主题，并至少选择一种作品形式。");
-    if (projectUnknown) throw new ProjectCreationError("创建结果尚未确认，请先在项目列表核对是否已创建，再开始新的创建。");
     const digest = JSON.stringify({title: values.name.trim(), brief: values.brief, types, platform: values.targetPlatform ?? null});
     if (frozenDigest && digest !== frozenDigest) throw new ProjectCreationError("请先使用原主题和作品选择重试，已创建的项目和稿件会保留。");
     inFlight = true;
@@ -67,15 +65,14 @@ export function createProjectCreationSession(ports: CreationPorts) {
       if (checkAccount().key !== selected.key) throw new ProjectCreationError("账号已切换，请重新核对创作账号后再创建。");
       accountId = current;groupId=selected.group;workspaceKey=selected.key;
       if (!project) {
-        const brief = ports.prepareBrief ? await ports.prepareBrief(values.brief) : values.brief;
+        frozenDigest=digest;
         checkAccount();
-        try {project = await ports.createProject({title: values.name.trim(), brief});} catch (error) {
+        try {project = await ports.createProject({title: values.name.trim(), brief:values.brief,idempotencyKey:projectActionKey});} catch (error) {
           const status = (error as {status?: number} | null)?.status;
           if (!status || status >= 500) {
-            projectUnknown = true;
-            throw new ProjectCreationError("创建结果尚未确认，请先在项目列表核对是否已创建，再开始新的创建。");
+            throw new ProjectCreationError("创建结果尚未确认，请使用原主题和作品选择重试读取；原动作键已保留。");
           }
-          accountId = null;groupId=null;workspaceKey=null;
+          accountId = null;groupId=null;workspaceKey=null;frozenDigest=null;
           if (accountError(error)) throw new ProjectCreationError(ACCOUNT_HINT, true);
           throw error;
         }
@@ -110,7 +107,7 @@ export function createProjectCreationSession(ports: CreationPorts) {
   return {create, snapshot};
 }
 
-export function createBrowserProjectCreationSession(source?: {sourceItemId?: string; sourceType?: "video" | "article" | "trend_signal"}) {
+export function createBrowserProjectCreationSession(source?: {source?:"manual"|"quick_create";sourceItemId?: string; sourceType?: "video" | "article" | "trend_signal"}) {
   let workspace:CreationWorkspace|null=null,disposed=false;
   const operation=()=>{if(disposed)throw new ProjectCreationError("已离开本次创建，原输入和已创建回执保留。");if(!workspace){workspace=createCreationWorkspace(readCreationScope());workspace.activate();}return workspace.capture();};
   const session=createProjectCreationSession({
@@ -121,18 +118,10 @@ export function createBrowserProjectCreationSession(source?: {sourceItemId?: str
       const op=operation();const account = await op.client.getAccount({params: {accountId: id}, query: undefined, body: undefined}) as {status: string};
       op.assertCurrent();if (account.status !== "active") throw new ProjectCreationError(ACCOUNT_HINT, true);
     },
-    ...(source?.sourceItemId ? {prepareBrief: async (brief: string) => {
-      const op=operation();const detail = await op.client.getIntelligenceItem({params:{itemId:source.sourceItemId!},query:undefined,body:undefined});
-      op.assertCurrent();
-      // SEMANTIC_BOUNDARY_ALLOW: 按已有抓取回执协议读取用户明确选择的来源，不归类或改写内容。
-      const snapshot = [...detail.snapshots].sort((a,b)=>b.capturedAt.localeCompare(a.capturedAt)).find(item=>item.safeExtract?.trim());
-      const text = source.sourceType === "video" ? (detail.transcript.status === "done" ? detail.transcript.text : null)
-        : snapshot?.safeExtract || (detail.transcript.status === "done" ? detail.transcript.text : null);
-      const reference = text?.trim() ? text.slice(0,60000) + (text.length>60000 ? "\n（资料较长，仅提供前60000字，后续内容未提供，不得推断。）" : "")
-        : "所选来源正文暂不可读取；仅有标题不能当作已读原文，不得编造来源内容。";
-      return [brief, `参考资料：${detail.item.title || "内容雷达所选内容"}`, reference].filter(Boolean).join("\n\n");
-    }} : {}),
-    createProject: async body => await operation().client.createProject({params: undefined, query: undefined, body}) as Project,
+    createProject: async body => {
+      const result=await operation().client.ensureProject({params:undefined,query:undefined,body:{...body,source:source?.source??"manual",...(source?.sourceItemId?{sourceItemId:source.sourceItemId}:{})}});
+      return result.project;
+    },
     createOutput: async (projectId, body) => await operation().client.createOutput({params: {projectId}, query: undefined, body}) as ProjectWorkOutput,
   });
   return {...session,assertCurrent:()=>{if(disposed)throw new ProjectCreationError("本次创建已关闭，已创建回执保留。");workspace?.assertCurrent();},dispose:()=>{disposed=true;workspace?.dispose();}};

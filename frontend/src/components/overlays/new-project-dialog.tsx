@@ -176,7 +176,7 @@ export function NewProjectDialog() {
           includeWorkType
           advancedOpen
           onCreate={async (values) => {
-            const captured=creationRef.current??(creationRef.current=createBrowserProjectCreationSession()),epoch=generation.current;
+            const captured=creationRef.current??(creationRef.current=createBrowserProjectCreationSession({source:"manual"})),epoch=generation.current;
             const current=()=>{if(!alive.current||!activeRoute.current||epoch!==generation.current||creationRef.current!==captured)return false;try{captured.assertCurrent();return true;}catch{return false;}};
             try{const result=await captured.create(values);if(!current())return;
               router.refresh();

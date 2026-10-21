@@ -15,11 +15,15 @@ import * as React from "react";
 
 import { AICopilotContent } from "@/features/copilot/ai-copilot-content";
 import { useDraftChatRequest } from "./draft-chat-request";
+import {useProjectPreparation} from "./project-preparation-context";
+import {ChatBriefCard} from "@/features/copilot/chat-brief-card";
+import {ChatScriptDraftCard} from "@/features/copilot/chat-script-draft-card";
 
 export function DraftChatRail({
   projectId,
   projectTitle,
   outputId,
+  currentBrief,
 }: {
   readonly projectId: string;
   readonly projectTitle: string;
@@ -28,13 +32,16 @@ export function DraftChatRail({
    * 让对话内 calibration.diagnosis 卡在稿面场景长出「锁定为盲预测」确认门。
    */
   readonly outputId?: string | null;
+  readonly currentBrief?:Record<string,unknown>|null;
 }) {
   // [T-108] 稿面 AI 按钮(盲预测/审核)发起的对话请求 —— 透传进 embed.request,让常驻 rail
   // 据 request.nonce 变化预填输入框 + 置 functionKey + 注入 content_output(不开全局弹层)。
   const { request,readEditorState } = useDraftChatRequest();
   const editorState=readEditorState();
+  const preparation=useProjectPreparation();
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
+      <div aria-label="项目准备候选">{preparation?.projectId===projectId?preparation.preparation?.candidates.filter(candidate=>candidate.status!=="rejected").map(candidate=>candidate.kind==="brief"?<ChatBriefCard key={candidate.id} suggestion={null} current={null} projectId={projectId} preparation={{candidate,projectId,current:currentBrief}}/>:<ChatScriptDraftCard key={candidate.id} taskId={null} projectId={projectId} error={null} preparation={{candidate,projectId}}/>):null}</div>
       {editorState?.target?<p role="status" className="mb-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm">当前{editorState.target.contentType==="article"?"文章":editorState.target.contentType==="image"?"图文":"视频"} · {editorState.dirty?"发送前将保存当前修改":"已保存稿与选区"}</p>:null}
       <React.Suspense fallback={null}>
         <AICopilotContent

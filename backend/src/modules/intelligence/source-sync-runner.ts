@@ -22,7 +22,7 @@ export interface IntelligenceSourceAdapterPort {
 
 export interface RunIntelligenceSourceTaskDeps {
   tasks: PersistentTaskService;
-  intelligence: IntelligenceService;
+  intelligence: Pick<IntelligenceService, "getRunByTaskForExecution" | "getSourceExecutionInput" | "applyAdapterBatch">;
   adapter: IntelligenceSourceAdapterPort;
   now?: () => string;
   workerId?: () => string;

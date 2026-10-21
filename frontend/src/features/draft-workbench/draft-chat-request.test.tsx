@@ -11,6 +11,23 @@ function Consumer() {
   return null;
 }
 afterEach(cleanup);
+it("T-1382 主脚本采用证明拒绝脏稿，新增输入/重注册使原证明失效，允许保存的空稿",()=>{
+  render(<DraftChatRequestProvider><Consumer/></DraftChatRequestProvider>);
+  let generation=1,dirty=true;
+  const scopeKey="account:missing";
+  const port={readState:()=>({generation,dirty,projectId:"p",scopeKey,saving:false,artifactId:"a"}),prepareForCreation:async()=>{throw Error("不能为检查采用而自动保存");}};
+  api.registerScript(port);
+  expect(()=>api.captureScriptAdoption("p",scopeKey)).toThrow(/未保存/);
+  dirty=false;
+  const stillCurrent=api.captureScriptAdoption("p",scopeKey);
+  expect(stillCurrent()).toBe(true);
+  generation++;
+  expect(stillCurrent()).toBe(false);
+  const next=api.captureScriptAdoption("p",scopeKey);
+  api.registerScript({...port});
+  expect(next()).toBe(false);
+  expect(()=>api.captureScriptAdoption("other",scopeKey)).toThrow(/当前项目/);
+},120000);
 it("匹配编辑器有未保存文字时拒绝采用，不能返回null触发直接保存", async () => {
   render(<DraftChatRequestProvider><Consumer /></DraftChatRequestProvider>);
   let adoptions = 0;

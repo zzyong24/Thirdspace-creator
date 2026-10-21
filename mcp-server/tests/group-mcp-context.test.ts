@@ -11,6 +11,24 @@ describe('MCP固定组范围',()=>{it('serve固定组传真实header；显式切
  finally{await client.close();await server.close()}
 })});
 
+it('bug8 MCP radar ensure沿固定或显式授权组传groupId，切组不继承旧账号',async()=>{
+ const fetchImpl=vi.fn(async(_input:RequestInfo|URL,_init?:RequestInit)=>new Response(JSON.stringify({data:{project:{id:'existing-project'},preparationTaskId:'existing-preparation',reused:true},meta:{requestId:'radar-scope'}}),{status:200}));
+ const server=createCreatorOsMcpServer({dispatchClient:new DispatchClient({baseUrl:'http://localhost',fetchImpl:fetchImpl as typeof fetch}),defaultGroupId:'group-a',defaultAccountId:'acct-a'});
+ const client=new Client({name:'radar-scope-test',version:'1'}),[a,b]=InMemoryTransport.createLinkedPair();
+ try{
+  await server.connect(a);await client.connect(b);
+  const body={source:'radar',itemId:'same-item',idempotencyKey:'radar-click'},call={apply:true,idempotencyKey:'radar-click',confirmImpact:'同组雷达建项same-item'};
+  const first=await client.callTool({name:'projects_ensure',arguments:{body,_creatoros:call}});
+  expect(first.isError).not.toBe(true);
+  expect(fetchImpl.mock.calls[0]?.[1]?.headers).toMatchObject({'x-group-id':'group-a','x-account-id':'acct-a'});
+  await client.callTool({name:'projects_ensure',arguments:{body,_creatoros:{...call,groupId:'group-b'}}});
+  expect(fetchImpl).toHaveBeenCalledTimes(2);
+  expect(fetchImpl.mock.calls[1]?.[1]?.headers).toMatchObject({'x-group-id':'group-b'});
+  expect(fetchImpl.mock.calls[1]?.[1]?.headers).not.toHaveProperty('x-account-id');
+  expect(JSON.parse(String(fetchImpl.mock.calls[1]?.[1]?.body))).toMatchObject({id:'projects.ensure',input:{body}});
+ }finally{await client.close();await server.close();}
+});
+
 it('T1252 MCP SDK取消沿原scope私有signal，不重发或扩大组权限',async()=>{
  const {Agent}=await import('undici');
  let received!:AbortSignal;

@@ -4,9 +4,29 @@ import {partitionExecutionCalls} from "./execution-call-tree";
 import {reconstructCheckpointMessages} from "./execution-checkpoint.service";
 import {isChatModelOperation,chatFallbackParent} from "./execution-chat-fallback.service";
 import {originalCodexReadBinding} from './codex-read-recovery';
-import {frozenChatModelRouteForCall,frozenNonChatModelBindingForCall} from './execution-model-identity.service';
+import {frozenChatModelRouteForCall,frozenNonChatModelBindingForCall,frozenProjectPreparationGenerationBinding,frozenIntelligenceTopicGenerationBinding} from './execution-model-identity.service';
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
+
+/** 只缩小原项目生成的调用集合；不授予新的模型提交。 */
+export function generationReadRecovery(task:Pick<Task,'payload'>):{schemaVersion:1;callIds:string[];operationKeys:string[]}|undefined{
+ const value=(task.payload as Record<string,unknown>|null)?.generationReadRecovery as {schemaVersion?:unknown;callIds?:unknown;operationKeys?:unknown}|undefined;
+ if(value===undefined)return undefined;
+ // 损坏标记也禁止扩张提交权；空集合将保持待核对。
+ return {schemaVersion:1,callIds:Array.isArray(value?.callIds)?value.callIds.filter((v):v is string=>typeof v==='string'):[],operationKeys:Array.isArray(value?.operationKeys)?value.operationKeys.filter((v):v is string=>typeof v==='string'):[]};
+}
+export function generationReadRecoveryHasFinalResult(task:Task,calls:readonly Call[]):boolean{
+ const marker=generationReadRecovery(task),last=[...calls].sort((a,b)=>a.sequence-b.sequence).at(-1);
+ if(!last||last.status!=='settled'||!last.resultText||!last.providerResult||calls.some(call=>['started','unknown','reserved'].includes(call.status)))return false;
+ if(marker){if(!marker.callIds.includes(last.id))return false;}
+ else{
+  // 正常最终回执可能已提交而候选尚未保存；这时还没有读取恢复标记。
+  // 只认可原项目、冻结来源和原模型操作的完成事实，不能凭普通checkpoint放开次数上限。
+  const frozen=frozenProjectPreparationGenerationBinding(task)??frozenIntelligenceTopicGenerationBinding(task),prefix=frozen?`${frozen.input.operationKey}/model/`:null;
+  if(!prefix||last.executionTaskId!==task.id||last.kind!=='model'||last.parentCallId!==null||!last.operationKey.startsWith(prefix)||!/^[1-9][0-9]*$/.test(last.operationKey.slice(prefix.length)))return false;
+ }
+ try{const result=JSON.parse(last.resultText);return result.kind==='result'&&typeof result.value?.adaptedDraft==='string'&&result.value.adaptedDraft.trim().length>0;}catch{return false;}
+}
 
 export const isChatReplayRecoveryError=(code:string|null)=>code==="CHAT_MODEL_REQUEST_REPLAY_MISMATCH"||code==="MODEL_CALL_REQUIRES_RECONCILIATION";
 
@@ -72,6 +92,7 @@ export function recoverableChatModelRetryAnchor(task:Task,calls:readonly Call[])
  * No token usage or provider success is inferred from a missing response.
  */
 export function unconfirmedModelCalls(task:Task,calls:readonly Call[]):Call[]{
+ if(generationReadRecovery(task))return [];
  const input=(task.payload as {modelInput?:{kind?:string;executionEngine?:string}}|null)?.modelInput;
  // SEMANTIC_BOUNDARY_ALLOW: 只按冻结执行协议防止对同一未知回合再提交，不选择内容。
  const payload=task.payload as Record<string,unknown>|null,v2Chat=input?.kind==='chat.run'&&(payload?.executionRoute as {schemaVersion?:unknown}|undefined)?.schemaVersion===2;

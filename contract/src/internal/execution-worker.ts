@@ -66,6 +66,20 @@ export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToo
 import { z } from "zod";
 import { executionTimeoutMs } from "../timeout-policy";
 
+/** 项目来源只携带真实持久锚；宿主另核正文 hash、工件归属及导入回执。 */
+const preparationSourceFields={projectId:z.string().min(1),contentHash:z.string().regex(/^sha256:[a-f0-9]{64}$/),title:z.string().nullable(),authorName:z.string().nullable(),url:z.string().url().nullable()};
+export const projectPreparationGenerationSourceSchema=z.discriminatedUnion('kind',[
+ z.object({...preparationSourceFields,kind:z.literal('project_artifact'),artifactId:z.string().min(1),artifactVersion:z.number().int().positive()}).strict(),
+ z.object({...preparationSourceFields,kind:z.literal('imported_text'),intakeId:z.string().min(1),contentText:z.string().min(1).max(2_000_000)}).strict(),
+]);
+export const projectPreparationGenerationTargetSchema=z.object({
+ ownerType:z.literal('project'),projectId:z.string().min(1),source:projectPreparationGenerationSourceSchema,
+ generationMode:z.enum(['rewrite_only','strategy_backed']),positioning:z.unknown().nullable().optional(),positioningVersionId:z.string().nullable().optional(),personalizationStatus:z.enum(['applied','not_applied']).optional(),
+ transcript:z.object({text:z.string().min(1).max(2_000_000),hash:z.string().regex(/^sha256:[a-f0-9]{64}$/)}).strict(),
+}).strict().refine(value=>value.projectId===value.source.projectId&&value.transcript.hash===value.source.contentHash&&(value.source.kind!=='imported_text'||value.source.contentText===value.transcript.text),'项目来源与正文锚不一致');
+export type ProjectPreparationGenerationTarget=z.infer<typeof projectPreparationGenerationTargetSchema>;
+export type ProjectPreparationGenerationSource=z.infer<typeof projectPreparationGenerationSourceSchema>;
+
 /** 后端冻结的任务总预算；null 仅由 continuous 策略显式授权，单次请求仍独立限时。 */
 export const executionBudgetSchema = z.union([
   z.object({maxCalls:z.number().int().positive().max(10000),maxTokens:z.number().int().positive().max(2_000_000_000),deadlineMs:z.number().int().positive().max(2_000_000_000)}).strict(),

@@ -76,6 +76,8 @@ export interface IngestionPublishingPort {
 // (composition root 适配到 projectsService.ensureImportedProject)。可选 —— 未注入时
 // refreshDouyin 退回旧行为(未知作品 reject),不破坏既有最小组合。
 export interface IngestionProjectsPort {
+  /** 生产组合根绑定统一事务入口；返回真实canonical发布归属。 */
+  ensureProjectIntake?(ctx:RequestContext,input:Parameters<IngestionProjectsPort["ensureImportedProject"]>[1]):Promise<{projectId:string;outputId:string;publicationId:string}>;
   ensureImportedProject(
     ctx: RequestContext,
     input: {
@@ -799,6 +801,11 @@ export function createIngestionService(args: {
         const projectId=await ports.projects.getProjectIdByOutput?.(factCtx,boundPub.contentOutputId);
         if(!projectId)throw new OwnershipError("历史发布来源项目不存在");
         return {projectId,outputId:boundPub.contentOutputId,publicationId:boundPub.id};
+      }
+      if(ports.projects.ensureProjectIntake){
+        const result=await ports.projects.ensureProjectIntake(ctx,{title,brief:input.brief,platform:input.platform,externalId:input.externalId,shareUrl,publishedAt:input.publishedAt});
+        await reconcileImportedBestEffort(ctx,{platform:input.platform,externalId:input.externalId,canonicalProjectId:result.projectId});
+        return {projectId:result.projectId,outputId:result.outputId,publicationId:result.publicationId};
       }
       if (
         boundPub?.contentOutputId &&

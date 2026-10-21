@@ -3,7 +3,7 @@ import type { UIMessage } from "ai";
 import type { RequestContext } from "@creatoros/contract";
 import type { ChatTurnSnapshot } from "@creatoros/backend/modules/ai";
 import { prepareDurableChatTurn, requiredSkillIdsForTask, type ChatContext, type VerbatimSource } from "@creatoros/backend/modules/ai-runtime";
-import { workerSkillSnapshotSchema } from "@creatoros/contract/execution-worker";
+import { executionRouteSchema,frozenExecutionEngine,readFrozenModelRoute,type ExecutionRoute,workerSkillSnapshotSchema } from "@creatoros/contract/execution-worker";
 import type { WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 import { resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
@@ -25,7 +25,7 @@ function modelMessageMode(messages:readonly {role:string;content:unknown}[]):"te
 }
 /** 两个公开入口共用冻结方法、工具定义与模型消息装配。 */
 export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,snapshot:ChatTurnSnapshot,input?:{
- chatContext?:ChatContext;messages?:UIMessage[];trustedScriptSources?:VerbatimSource[];abortSignal?:AbortSignal;executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex";
+ executionRoute?:ExecutionRoute;chatContext?:ChatContext;messages?:UIMessage[];trustedScriptSources?:VerbatimSource[];abortSignal?:AbortSignal;executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex";
 }){
 
  const chatContext=input?.chatContext??{surface:snapshot.conversation.projectId?"project":"topics",projectId:snapshot.conversation.projectId};
@@ -42,7 +42,12 @@ export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,
  }
  // 元数据只捕获一次；只在最终实际capability已知后冻结主route。
  const routingInput={mode:uiMessageMode(messages),executionEngine:input?.executionEngine,legacyExecutionEngine:input?.legacyExecutionEngine};
- const routing=input?.abortSignal?await runtime.prepareChatRouting?.(owner,routingInput,input.abortSignal):await runtime.prepareChatRouting?.(owner,routingInput);
+ const trusted=input?.executionRoute?executionRouteSchema.parse(input.executionRoute):undefined;
+ const trustedEngine=trusted?frozenExecutionEngine({executionRoute:trusted}):undefined;
+ const routing=trusted?{executionEngine:trustedEngine!,engineForMode:()=>trustedEngine!,freeze:async(capability:string,mode:'text'|'vision')=>{
+  if(trusted.schemaVersion===2){const selected=readFrozenModelRoute({executionRoute:trusted},mode,capability);if(!selected||selected.readiness!=='configured'||(selected.source==='codex')!==(trustedEngine==='codex'))throw new Error('MODEL_ROUTE_NOT_FROZEN');}
+  return structuredClone(trusted);
+ }}:input?.abortSignal?await runtime.prepareChatRouting?.(owner,routingInput,input.abortSignal):await runtime.prepareChatRouting?.(owner,routingInput);
  const initialEngine=routing?.executionEngine??input?.executionEngine??"pi";
  const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),"topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill"]);
  const workbenchHost=(runtime.durable as (ChatRuntime["durable"] & {workbenchHost?:{catalog:readonly WorkbenchCapability[];platform:WorkbenchCapability["platforms"][number];capabilities:readonly string[];dispatch:Function}}) | undefined)?.workbenchHost;

@@ -183,7 +183,6 @@ export const REQUEST_OPERATION_IDS = [
   "intelligence.migrations.report",
   "intelligence.migrations.rollback",
   "intelligence.migrations.start",
-  "intelligence.projects.enqueue",
   "intelligence.runs.get",
   "intelligence.runs.list",
   "intelligence.runs.start",

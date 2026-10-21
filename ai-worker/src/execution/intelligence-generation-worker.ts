@@ -4,7 +4,7 @@ import { findStructuredOutputError } from "../nodes/structured-output-error";
 import {GenerationFailure,generationFailure} from "./generation-error";
 import {generateText} from "ai";
 import {z} from "zod";
-import {workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type executionModelSpecSchema} from "@creatoros/contract/execution-worker";
+import {projectPreparationGenerationTargetSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type executionModelSpecSchema} from "@creatoros/contract/execution-worker";
 import {createDurableGenerationModel} from "./durable-generation-model";
 import {modelFor} from "../runtime/provider-factory";
 import {runWithEffectiveSkillSnapshot,getEffectiveTemplate} from "../prompt/effective-skill-runtime";
@@ -67,7 +67,8 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
    return save({kind:"result",value:{text:result.shots.map(shot=>shot.口播.trim()).filter(Boolean).join("\n")}});
   }
   if(input.facets.mode!=="topic_preview")throw new Error("INTELLIGENCE_MODE_INVALID");
-  const source=topicTarget.parse(target);
+  const parsed=z.union([projectPreparationGenerationTargetSchema,topicTarget]).parse(target);
+  const source='ownerType' in parsed?{...parsed,item:{title:parsed.source.title,authorName:parsed.source.authorName,platform:'',canonicalUrl:parsed.source.url??''},reusableDecomposition:null,reusableCandidate:null}:parsed;
   if(source.generationMode==="rewrite_only"){
    const template=getEffectiveTemplate("intelligence.topic-adapted-draft");
    const {system,prompt}=bindPrompt(template,{

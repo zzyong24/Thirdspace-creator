@@ -28,6 +28,17 @@ async function setup() {
 }
 
 describe("T-1051 主稿来源与真实扩写服务", () => {
+  it('T1382 默认及精确版本读取排除准备来源，包括已恢复的历史版本',async()=>{
+    const f=await setup();try{
+      const service=f.artifacts(f.opened.db),source=await service.createArtifact(ctx(),{projectId:f.project.id,title:'来源',artifactType:'output_script',stage:'script',initialContentText:'不得作为正式稿',initialContentData:{purpose:'project_preparation_source'}});
+      const ref={kind:'project_script' as const,id:source.id,versionId:source.currentVersionId!};
+      expect(await f.source.read(ctx(),f.project.id)).toBeNull();
+      await expect(f.source.readVersion(ctx(),ref,f.project.id)).rejects.toThrow();
+      await expect(f.source.assert(ctx(),ref,f.project.id)).rejects.toThrow();
+      await service.createVersion(ctx(),source.id,{contentText:'当前正式内容',contentData:{}});
+      await expect(f.source.assert(ctx(),ref,f.project.id)).rejects.toThrow();
+    }finally{await f.opened.client.close();}
+  });
   it("明确预留输出脚本不遮主稿当前版本；旧引用不随修改重绑",async()=>{
     const f=await setup();try {
       await f.opened.db.transaction(tx=>createScriptDraftTargetService(f.deps).ensure(tx as unknown as Db,ctx(),f.project.id));const master=await f.create("master_script","主稿第一版");

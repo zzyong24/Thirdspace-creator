@@ -7,6 +7,8 @@ import { createExecutionLeaseService } from "./execution-lease.service";
 import { observeCommittedTaskSettlement } from "./persistent-task.service";
 import { ConflictError } from "./execution.errors";
 import {provenChatModelRetryTail} from "./model-call-recovery";
+import {preparationGenerationAttemptsExhausted} from './execution-preparation-parent';
+import {modelEngineUnavailableMessage} from './model-engine-error';
 
 /** 后端保存等待时间和重试来源；调度 attempt 仅用于 fencing，不作为供应商调用次数。 */
 export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>string; random?:()=>number;allowedKinds?:readonly ("ai_task"|"topic_preview"|"script_candidate"|"transcribe")[]} = {}) {
@@ -31,7 +33,7 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
           const budget=task.executionBudget === null ? null : executionBudgetSchema.parse(task.executionBudget);
           const delay=Math.max(input.retryAfterMs ?? 0,computeBackoffMs(last.sequence,deps.random));
           const next=Date.parse(now())+delay;
-          if(!budget || (task.deadlineAt===null&&!isContinuousExecutionBudget(budget)) || (isContinuousExecutionBudget(budget)&&!executionAttemptAvailable(budget,task.attempt,task.maxAttempts)) || (budget.maxCalls !== null && last.sequence >= budget.maxCalls) || (task.deadlineAt !== null && next >= Date.parse(task.deadlineAt))) {
+          if(!budget || preparationGenerationAttemptsExhausted(task) || (task.deadlineAt===null&&!isContinuousExecutionBudget(budget)) || (isContinuousExecutionBudget(budget)&&!executionAttemptAvailable(budget,task.attempt,task.maxAttempts)) || (budget.maxCalls !== null && last.sequence >= budget.maxCalls) || (task.deadlineAt !== null && next >= Date.parse(task.deadlineAt))) {
             status="failed";
           }else{
             retryAt=new Date(next).toISOString();retryOfCallId=last.id;
@@ -46,12 +48,14 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
           }
         }
         if(input.outcome === "waiting_user" && last?.status === "rejected") retryOfCallId=last.id;
+        if(input.outcome==='waiting_user'&&preparationGenerationAttemptsExhausted(task))status='failed';
+        const generationExhausted=status==='failed'&&preparationGenerationAttemptsExhausted(task);
         if(last && (last.status === "started" || last.status === "unknown") && input.outcome !== "unknown_result") {
           throw new ConflictError("已有未知调用不能改成可恢复失败");
         }
         const [updated]=await tx.update(executionTasks).set({status,retryAt,retryOfCallId,
-          leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,lastErrorCode: status === "failed" && input.outcome === "retry_wait" ? "RETRY_BUDGET_EXHAUSTED" : input.errorCode,
-          lastErrorMessage:input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":last?.status==="superseded"?"模型连接中断，原任务正在自动续跑":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "服务尚未返回完整结果，任务已暂停，已完成内容保留" : "执行停止，等待恢复或诊断",
+          leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,lastErrorCode: generationExhausted?'GENERATION_RECOVERY_EXHAUSTED':status === "failed" && input.outcome === "retry_wait" ? "RETRY_BUDGET_EXHAUSTED" : input.errorCode,
+          lastErrorMessage:generationExhausted?'原任务生成重试次数已用尽，已停止自动重试':input.outcome==='waiting_user'&&modelEngineUnavailableMessage(input.errorCode)?modelEngineUnavailableMessage(input.errorCode):input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":last?.status==="superseded"?"模型连接中断，原任务正在自动续跑":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "服务尚未返回完整结果，任务已暂停，已完成内容保留" : "执行停止，等待恢复或诊断",
           updatedAt:now(),
         }).where(and(eq(executionTasks.id,task.id),eq(executionTasks.fenceToken,ref.fenceToken))).returning();
         return {result:{status:updated!.status,retryAt:updated!.retryAt},event:{taskId:updated!.id,userId:updated!.userId,attempt:updated!.attempt,kind:updated!.kind,status:updated!.status,occurredAt:updated!.updatedAt}};

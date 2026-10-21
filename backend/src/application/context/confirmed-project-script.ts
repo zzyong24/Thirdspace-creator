@@ -19,19 +19,26 @@ function createConfirmedSnapshotReader(ports:ConfirmedProjectScriptPorts) {
     await ports.projectsService.getProject(ctx,projectId);
     const rows=await ports.artifactsService.listProjectArtifacts(ctx,projectId);
     // SEMANTIC_BOUNDARY_ALLOW: 只按原类型/列表身份与显式预留事实选择，不评价正文。
-    const select=(listed:typeof rows)=>["output_script","master_script"].flatMap(type=>listed.filter(row=>row.artifactType===type && row.currentVersionId && row.currentVersionIsReserved!==true))[0];
-    const target=select(rows);
-    if(!target){
-      if(select(await ports.artifactsService.listProjectArtifacts(ctx,projectId)))throw new ConflictError("当前确认稿已变化，请重新读取");
+    const select=async(listed:typeof rows)=>{
+      for(const target of ["output_script","master_script"].flatMap(type=>listed.filter(row=>row.artifactType===type && row.currentVersionId && row.currentVersionIsReserved!==true))){
+        if(target.projectId!==projectId)throw new ConflictError("当前确认稿版本不可读取");
+        const current=(await ports.artifactsService.listVersions(ctx,target.id)).find(row=>row.id===target.currentVersionId && row.artifactId===target.id);
+        if(!current)throw new ConflictError("当前确认稿版本不存在");
+        if((current.contentData as {purpose?:string}|null)?.purpose==='project_preparation_source')continue;
+        return {target,current};
+      }
+      return null;
+    };
+    const selected=await select(rows);
+    if(!selected){
+      if(await select(await ports.artifactsService.listProjectArtifacts(ctx,projectId)))throw new ConflictError("当前确认稿已变化，请重新读取");
       return null;
     }
-    if(target.projectId!==projectId || !target.currentVersionId)throw new ConflictError("当前确认稿版本不可读取");
-    const current=(await ports.artifactsService.listVersions(ctx,target.id)).find(row=>row.id===target.currentVersionId && row.artifactId===target.id);
-    if(!current)throw new ConflictError("当前确认稿版本不存在");
+    const {target,current}=selected;
     const result=await project(target,current);
     // 包括异步结构表读取在内的完整投影完成后，再核精确 current；不混用两次版本。
-    const latest=select(await ports.artifactsService.listProjectArtifacts(ctx,projectId));
-    if(latest?.id!==target.id || latest.currentVersionId!==current.id)throw new ConflictError("当前确认稿已变化，请重新读取");
+    const latest=await select(await ports.artifactsService.listProjectArtifacts(ctx,projectId));
+    if(latest?.target.id!==target.id || latest.current.id!==current.id)throw new ConflictError("当前确认稿已变化，请重新读取");
     return result;
   };
 }

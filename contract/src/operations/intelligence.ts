@@ -441,18 +441,6 @@ export const intelligenceOperations = {
     response: z.object({ task: executionTaskResourceV2 }).strict(),
     fr: ["FR-CR-021"],
   }),
-  enqueueIntelligenceProjectUpgrades: defineEndpoint({
-    id: "intelligence.projects.enqueue",
-    method: "POST",
-    path: "/intelligence/projects/enqueue",
-    body: z.object({
-      itemIds: z.array(id).min(1),
-      positioningVersionId: id,
-      idempotencyKey: z.string().min(1),
-    }).strict(),
-    response: z.object({ tasks: z.array(executionTaskResourceV2) }).strict(),
-    fr: ["FR-CR-021"],
-  }),
   enqueueIntelligenceTranscripts: defineEndpoint({
     id: "intelligence.transcripts.enqueue",
     method: "POST",

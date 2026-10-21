@@ -1,4 +1,5 @@
 import {z} from "zod";
+import {createProjectIntakeApplication} from "../projects/project-intake";
 import {afterAll,beforeAll,expect,it,vi} from "vitest";
 import {createDb,assets,entityTags,intelligenceCollections,aiTasks,aiTaskResults,canvasGenerationLinks,executionTasks,executionCalls,and,eq,sql,type Db} from "@creatoros/backend";
 import {creativeCanvases} from "../../schema/creative-canvas";
@@ -133,7 +134,7 @@ async function fixture(group=false,generate=false,options:{actionVersion?:1|2;di
   const accounts=createPlatformAccountService({db:store,...deps,bindingCapabilities:async()=>bindingCapabilities});
   const publishing=createPublishingService({db:store,...deps,membership:createMembershipLockService(store),assertTargetAccount:(c,target)=>accounts.assertOwnedAccount(c,target.accountId,target.platform),resolveOutputOwner:(c,id)=>projects.getOutputOwnerSummary(c,id),listOutputIdsByProject:(c,id)=>projects.listOutputIdsByProject(c,id)});
   const calendar=createContentCalendarService({db:store,...deps,clock:{now:clockNow},platformAccounts:accounts,publishing:{isOutputPublished:async(c,id)=>(await publishing.listPublications(c,id,{limit:100,offset:0})).some(row=>row.status==='published')},candidates:{exists:async(c,id)=>{try{await candidates.getCandidate(c,id);return true;}catch{return false;}}},notifications:{notify:async()=>{}},identity:{getEffectiveTimezone:async()=> 'UTC'},projects,schedulePublishing:publishing});
-  return {projects,knowledge,candidates,articles,graphicPosts,artifacts,accounts,publishing,calendar,intelligence:createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:clockNow})}),settings,scheduling:createSchedulingService({db:store,...deps}),positioning:createPositioningService({db:store,...deps,projects:{getProjectSubject:failPort}}),groups:createAccountGroupService({db:store,...deps}),writes:{candidates:createCandidateTransport(()=>candidates),projects:createProjectsTransport(()=>({service:projects,repo:createProjectRepository(store)})),artifacts:createArtifactsTransport(()=>artifacts),knowledge:createKnowledgeTransport(()=>knowledge),publishing:createPublishingTransport(()=>publishing)}};
+  return {projects,projectIntake:createProjectIntakeApplication(store,deps),knowledge,candidates,articles,graphicPosts,artifacts,accounts,publishing,calendar,intelligence:createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:clockNow})}),settings,scheduling:createSchedulingService({db:store,...deps}),positioning:createPositioningService({db:store,...deps,projects:{getProjectSubject:failPort}}),groups:createAccountGroupService({db:store,...deps}),writes:{candidates:createCandidateTransport(()=>candidates),projects:createProjectsTransport(()=>({service:projects,repo:createProjectRepository(store)})),artifacts:createArtifactsTransport(()=>artifacts),knowledge:createKnowledgeTransport(()=>knowledge),publishing:createPublishingTransport(()=>publishing)}};
  };
  if(options.ownerAction==='topic.promote'){
   const candidate=await actionServices(db).candidates.createCandidate(ctx,{title:'中性选题立项',angle:'验证候选到项目的原服务映射',source:'trend'});action={kind:'topic.promote',candidateId:candidate.id};
@@ -353,7 +354,7 @@ it.each(['project.create','knowledge.create','group.create'] as const)('真实�
  const adopted=await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never});
  expect(adopted).toMatchObject({status:'adopted',result:{id:expect.any(String)}});
  const result=adopted.result as {id:string};
- if(kind==='project.create')expect((await createProjectsService(createProjectRepository(db),{now,nextId:p=>`${p}-${++seq}`}).getProject(f.ctx,result.id)).title).toBe('AI中性项目');
+ if(kind==='project.create')expect((await createProjectsService(createProjectRepository(db),{now,nextId:p=>`${p}-${++seq}`}).getProject(f.ctx,result.id))).toMatchObject({title:'AI中性项目',source:'assistant'});
  if(kind==='knowledge.create'){const knowledge=createKnowledgeService(createKnowledgeRepository(db,{now,nextId:p=>`${p}-${++seq}`}));expect(await knowledge.getKnowledge(f.ctx,result.id)).toMatchObject({title:'AI中性知识',sourceType:'ai',knowledgeType:'note'});expect((await knowledge.listRevisions(f.ctx,result.id))[0]!.content).toBe('原候选完整内容');}
  if(kind==='group.create')expect(await createAccountGroupService({db,now,nextId:p=>`${p}-${++seq}`}).get(f.ctx,result.id)).toMatchObject({name:'AI中性账号组',members:[]});
  expect(await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never})).toEqual(adopted);expect((await f.state()).results).toHaveLength(1);expect((await f.state()).call).toEqual(original);

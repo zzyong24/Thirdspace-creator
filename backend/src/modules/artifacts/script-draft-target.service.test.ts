@@ -19,6 +19,12 @@ async function fixture(){
  const read=createConfirmedProjectScriptReader({projectsService:projects,artifactsService:service});
  return {ctx,projects,project,service,serviceFor,targets,ensure,raw,read};
 }
+it('T1382 写入目标排除来源，采纳正式稿不改变来源正文和版本',async()=>{
+ const f=await fixture(),source=await f.service.createArtifact(f.ctx,{projectId:f.project.id,title:'来源',artifactType:'output_script',stage:'script',initialContentText:'来源原文',initialContentData:{purpose:'project_preparation_source'}});
+ const before=await f.service.listVersions(f.ctx,source.id),id=await f.ensure();expect(id).not.toBe(source.id);expect(await f.ensure()).toBe(id);
+ await f.service.createVersion(f.ctx,id,{contentText:'用户采纳的候选'});expect(await f.read(f.ctx,f.project.id)).toMatchObject({artifactId:id,fullText:'用户采纳的候选'});
+ expect(await f.service.listVersions(f.ctx,source.id)).toEqual(before);
+});
 it('只有新ensure空v1预留，原事务失败回滚；普通公开空v1复用且正式权威',async()=>{
  const f=await fixture();await expect(db.transaction(async tx=>{await f.targets.ensure(tx as unknown as Db,f.ctx,f.project.id);throw Error('原父事务回滚');})).rejects.toThrow('回滚');
  expect(await f.service.listProjectArtifacts(f.ctx,f.project.id)).toEqual([]);

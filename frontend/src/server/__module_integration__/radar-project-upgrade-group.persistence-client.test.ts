@@ -4,7 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {createHash,randomBytes} from 'node:crypto';
 import {createServer,type Server} from 'node:http';
-import {ENDPOINTS,type Endpoint,type RequestContext} from '@creatoros/contract';
+import {ENDPOINTS,type Endpoint,type RequestContext,type ProjectPreparationStep,type ProjectPreparationCandidate,type ProjectSourceReference,type ExecutionTaskResourceV2} from '@creatoros/contract';
+type ProjectResource=(typeof ENDPOINTS.getProject.response)['_output'];
+type IntakeTraceRow={source?:string;itemId?:string;idempotencyKey?:string;userId:string;groupId:string|null;accountId:string|null;startedAt:string;resultProjectId?:string;preparationTaskId?:string|null;reused?:boolean;errorName?:string;finishedAt?:string};
 import {executionTasks,executionCalls,projects,projectActivities,eq,asc,type Db} from '@creatoros/backend';
 
 const owned=vi.hoisted(()=>({root:'',db:null as Db|null,ports:[] as any[],boundary:[] as any[],forks:[] as any[]}));
@@ -22,14 +24,15 @@ vi.mock('@creatoros/backend/modules/assets',async original=>{
 });
 // 新隔离实例没有渠道授权；不访问真实配置/密钥/认证。模型只从本次公开self设置读取。
 vi.mock('@/server/activation/client-config.server',async original=>({...await original<typeof import('@/server/activation/client-config.server')>(),readChannelModelAuthority:async()=>({authority:'local'})}));
-// 透明观察真正末端；原参数、返回值与异常均原样透传，不代写候选或项目。
-vi.mock('@creatoros/backend/modules/projects',async original=>{
- const actual=await original<typeof import('@creatoros/backend/modules/projects')>();
- return {...actual,createRadarProjectService:(...args:Parameters<typeof actual.createRadarProjectService>)=>{
-  const service=actual.createRadarProjectService(...args);
-  return {...service,async ensureRadarProject(...input:Parameters<typeof service.ensureRadarProject>){
-   const row:any={queueTaskId:input[1].queueTaskId,userId:input[0].userId,groupId:input[0].groupId??null,accountId:input[0].accountId??null,startedAt:new Date().toISOString()};owned.boundary.push(row);
-   try{const result=await service.ensureRadarProject(...input);row.resultProjectId=result.id;return result;}
+// 透明观察真实统一建项应用；原参数、返回值与异常均原样透传，不代写候选或项目。
+vi.mock('@creatoros/backend/application/projects/project-intake',async original=>{
+ const actual=await original<typeof import('@creatoros/backend/application/projects/project-intake')>();
+ return {...actual,createProjectIntakeApplication:(...args:Parameters<typeof actual.createProjectIntakeApplication>)=>{
+  const service=actual.createProjectIntakeApplication(...args);
+  return {...service,async ensureProject(...input:Parameters<typeof service.ensureProject>){
+   const request=input[1] as {source?:string;itemId?:string;idempotencyKey?:string};
+   const row:IntakeTraceRow={source:request.source,itemId:request.itemId,idempotencyKey:request.idempotencyKey,userId:input[0].userId,groupId:input[0].groupId??null,accountId:input[0].accountId??null,startedAt:new Date().toISOString()};owned.boundary.push(row);
+   try{const result=await service.ensureProject(...input);row.resultProjectId=result.project.id;row.preparationTaskId=result.preparationTaskId;row.reused=result.reused;return result;}
    catch(error){row.errorName=error instanceof Error?error.name:'UnknownError';throw error;}
    finally{row.finishedAt=new Date().toISOString();}
   }};
@@ -73,7 +76,7 @@ const decomposition={hook:'先给桌面留一点记录空间',structureSteps:['�
 const topic={title:'先留一个记录想法的位置',angle:'从一只杯子和一本笔记本说明整理顺序',differentiation:'用中性桌面动作说明记录前的准备',sourceSummary:'人工来源摘要描述杯子、笔记本与桌面空白',targetAudience:'希望记录想法的人',audiencePain:'不知道从哪一步开始整理',coreConflict:'物品占用与记录空间之间的取舍',format:'中性口播',contentRole:null,contentRoleReason:'测试没有业务目标，目的留空',adaptationStrategy:{keep:['按顺序操作的结构'],replace:['重新组织表达'],add:['先观察再移动'],avoid:['效果数字与来源外事实']}};
 const draft='先看看桌面上现有的东西：一只杯子，一本合上的笔记本。把杯子放稳，再把笔记本移到一旁。留出的这点空白，可以用来写下一句想法。这里只演示一个顺序，不用一次改变所有东西。';
 
-it('纯组公开雷达升级：真实父队列→原策略worker与账本→真实项目末端',async()=>{
+it('T1382 纯组统一建项准备：ensure→真实策略worker与三次账本→人工采纳正式稿',async()=>{
  expect(process.env.T1332_APPROVED).toBe('1');
  const phase=process.env.T1332_PHASE;expect(['red','green']).toContain(phase);
  const label=process.env.T1332_RUN_LABEL??phase!;expect(/^(red|green)(-[A-Za-z0-9]+)*$/.test(label)).toBe(true);
@@ -101,10 +104,22 @@ it('纯组公开雷达升级：真实父队列→原策略worker与账本→真�
   for(;;){remaining();if(protocolErrors.length)throw Error('T1332_SUPPLIER_PROTOCOL_FIXTURE_ERROR');const value=await read();if(done(value))return value;await new Promise(resolve=>setTimeout(resolve,Math.min(500,remaining())));}
  };
  const parent=async()=>{
-  const rows:any[]=await call(ENDPOINTS.listExecutionTasks,{query:{kind:'radar_project_upgrade',ownerId:itemId,page:1,pageSize:100}});
+  const rows:ExecutionTaskResourceV2[]=await call(ENDPOINTS.listExecutionTasks,{query:{kind:'project_preparation',ownerId:projectId,page:1,pageSize:100}});
   const row=rows.find(x=>x.id===parentId);if(!row)throw Error('T1332_ORIGINAL_PARENT_NOT_FOUND');
   if(owned.db){const [raw]=await owned.db.select({deadlineAt:executionTasks.deadlineAt}).from(executionTasks).where(eq(executionTasks.id,parentId));if(raw?.deadlineAt!==null&&raw?.deadlineAt!==undefined){const value=Date.parse(raw.deadlineAt);if(!Number.isFinite(value))throw Error('T1332_INVALID_PERSISTED_DEADLINE');deadline=Math.min(deadline,value);}}
   return row;
+ };
+ const formalScripts=async()=>{
+  const artifacts:Array<(typeof ENDPOINTS.listArtifacts.response)['_output']>=await call(ENDPOINTS.listArtifacts,{params:{projectId},query:{page:1,pageSize:100}}),formal:Array<{artifact:(typeof ENDPOINTS.listArtifacts.response)['_output'];current:(typeof ENDPOINTS.listArtifactVersions.response)['_output']}>=[];
+  for(const artifact of artifacts){
+   if(artifact.stage!=='script'||!['output_script','master_script'].includes(artifact.artifactType)||!artifact.currentVersionId||artifact.currentVersionIsReserved===true)continue;
+   const versions:Array<(typeof ENDPOINTS.listArtifactVersions.response)['_output']>=await call(ENDPOINTS.listArtifactVersions,{params:{artifactId:artifact.id},query:{page:1,pageSize:100}}),current=versions.find(row=>row.id===artifact.currentVersionId);
+   expect(current,'正式工件的当前版本必须真实可读').toBeTruthy();
+   if(!current)throw Error('正式稿当前版本缺失');
+   if(current.contentData?.purpose==='project_preparation_source'||current.contentData?.skipMasterScript===true)continue;
+   formal.push({artifact,current});
+  }
+  return formal;
  };
  const snapshot=async(name:string)=>{
   if(!owned.db)return;
@@ -158,35 +173,82 @@ it('纯组公开雷达升级：真实父队列→原策略worker与账本→真�
   const sourceTerminal=await poll(()=>call(ENDPOINTS.getIntelligenceRun,{params:{runId:source.run.id}}),(value:any)=>['succeeded_with_items','succeeded_no_change','partial','blocked','failed'].includes(value.run.status));
   save('source-terminal',sourceTerminal);expect(sourceTerminal.run.status).toBe('succeeded_with_items');
   const listing:any[]=await poll(()=>call(ENDPOINTS.listIntelligenceItems,{query:{sourceId,page:1,pageSize:100,sort:'newest'}}),(rows:any[])=>rows.length>0);expect(listing).toHaveLength(1);itemId=listing[0].item.id;
-  await call(ENDPOINTS.uploadManualIntelligenceTranscript,{body:{itemId,inputMode:'paste',text}});
   const beforeDetail=await call(ENDPOINTS.getIntelligenceItem,{params:{itemId}}),beforeProjects=await call(ENDPOINTS.listProjects,{query:{page:1,pageSize:100}});
-  expect(beforeDetail.transcript).toMatchObject({status:'done',source:'manual',text});expect(beforeDetail.transforms).toHaveLength(0);expect(beforeDetail.snapshots).toHaveLength(1);
+  expect(beforeDetail.transforms).toHaveLength(0);expect(beforeDetail.snapshots).toHaveLength(1);
   save('before',{ctx,group,profile,statement,source,beforeDetail,beforeProjects,routing:await call(ENDPOINTS.getModelRouting)});
-  const submitted=await call(ENDPOINTS.enqueueIntelligenceProjectUpgrades,{body:{itemIds:[itemId],positioningVersionId:statement.id,idempotencyKey:'t1332-owned-upgrade-once'}});expect(submitted.tasks).toHaveLength(1);parentId=submitted.tasks[0].id;save('public-submission',{submitted,parentId,at:new Date().toISOString()});
+  // ensure立即提交纯组项目，准备是否完成不影响真实projectId；人工稿也只在项目步骤提供。
+  const ensureInput={source:'radar',itemId,positioningVersionId:statement.id,idempotencyKey:'t1382-owned-ensure-once'};
+  const submitted=await call(ENDPOINTS.ensureProject,{body:ensureInput});
+  projectId=submitted.project.id;parentId=submitted.preparationTaskId;
+  expect(projectId).toBeTruthy();expect(parentId).toBeTruthy();expect(submitted.reused).toBe(false);
+  expect(submitted.project).toMatchObject({id:projectId,source:'radar',title:beforeDetail.item.title,brief:''});
+  expect(submitted.sourceReferences).toHaveLength(1);expect(submitted.sourceReferences[0]).toMatchObject({projectId,sourceKind:'intelligence_item',itemId,snapshotId:beforeDetail.snapshots[0].id});
+  save('public-submission',{submitted,parentId,projectId,at:new Date().toISOString()});
+  const initialProject=await call(ENDPOINTS.getProject,{params:{projectId}});
+  expect(await formalScripts()).toEqual([]);expect(modelRequests).toHaveLength(0);
+  // 暂停原父以补稿。若首次自动检查已受阻，仍沿原父操作，不另建父或改写数据库。
+  const pausing=await call(ENDPOINTS.commandExecutionTasks,{body:{taskIds:[parentId],command:'pause',idempotencyKey:'t1382-owned-pause-for-manual-source'}});
+  expect(pausing.tasks.some((row:ExecutionTaskResourceV2)=>row.id===parentId)).toBe(true);
+  await poll(parent,row=>['paused','blocked','failed','waiting_user'].includes(row.runtimeStatus??row.status));
+  let preparation=await call(ENDPOINTS.getProjectPreparation,{params:{projectId}});
+  expect(preparation).toMatchObject({registration:'registered',projectId,preparationTaskId:parentId,origin:'radar'});
+  for(const childId of [...new Set<string>(preparation.steps.flatMap((step:ProjectPreparationStep)=>step.childTaskId?[step.childTaskId]:[]))]){
+   const child=await call(ENDPOINTS.getExecutionTask,{params:{taskId:childId}});
+   expect(child.runtimeStatus??child.status,'未知供应商结果不能绕过后补稿').not.toBe('unknown_result');
+   if(['queued','running','retry_wait','pause_requested'].includes(child.runtimeStatus??child.status)){
+    await call(ENDPOINTS.commandExecutionTasks,{body:{taskIds:[childId],command:'pause',idempotencyKey:`t1382-owned-pause-child-${childId}`}});
+    await poll(()=>call(ENDPOINTS.getExecutionTask,{params:{taskId:childId}}),(row:ExecutionTaskResourceV2)=>['paused','succeeded','blocked','failed','cancelled','waiting_user'].includes(row.runtimeStatus??row.status));
+   }
+  }
+  preparation=await call(ENDPOINTS.getProjectPreparation,{params:{projectId}});
+  const reference=preparation.sourceReferences.find((row:ProjectSourceReference)=>row.sourceKind==='intelligence_item'&&row.itemId===itemId),transcriptStep=preparation.steps.find((step:ProjectPreparationStep)=>step.name==='transcript');
+  expect(reference?.sourceDigest).toBeTruthy();expect(transcriptStep).toBeTruthy();
+  const provided=await call(ENDPOINTS.provideProjectPreparationTranscript,{params:{projectId},body:{parentTaskId:parentId,referenceId:reference.id,expectedSourceDigest:reference.sourceDigest,expectedStepRevision:transcriptStep.revision,submissionKey:'t1382-owned-project-manual-source',inputMode:'paste',text}});
+  expect(provided.preparationTaskId).toBe(parentId);expect(provided.sourceReferences.find((row:ProjectSourceReference)=>row.id===reference.id)).toMatchObject({bodyAvailable:true});
+  const resumed=await call(ENDPOINTS.startProjectPreparation,{params:{projectId},body:{idempotencyKey:'t1382-owned-resume-original-preparation',requestedSteps:['transcript','source_draft']}});
+  expect(resumed.preparationTaskId).toBe(parentId);
+  const manualDetail=await call(ENDPOINTS.getIntelligenceItem,{params:{itemId}});expect(manualDetail.transcript).toMatchObject({status:'done',source:'manual',text});
   const settled=await poll(parent,row=>['succeeded','blocked','failed','cancelled','paused'].includes(row.status)&&!['retry_wait'].includes(row.runtimeStatus??''));
-  save('parent-terminal',settled);topicTaskId=settled.checkpoint?.topicTaskId??'';transformId=settled.checkpoint?.transformId??'';
-  const detail=await call(ENDPOINTS.getIntelligenceItem,{params:{itemId}});save('item-after',detail);
+  save('parent-terminal',settled);
+  preparation=await call(ENDPOINTS.getProjectPreparation,{params:{projectId}});
+  const sourceDraftStep=preparation.steps.find((step:ProjectPreparationStep)=>step.name==='source_draft');topicTaskId=sourceDraftStep?.childTaskId??'';
+  const candidate=preparation.candidates.find((row:ProjectPreparationCandidate)=>row.kind==='draft'&&row.sourceTaskId===topicTaskId);transformId=candidate?.transformId??'';
+  const detail=await call(ENDPOINTS.getIntelligenceItem,{params:{itemId}});save('item-after',detail);expect(detail.snapshots).toEqual(beforeDetail.snapshots);
   const evidence=await snapshot('formal-chain');expect(evidence).toBeTruthy();
   const child=evidence!.rows.find(row=>row.id===topicTaskId);expect(child).toMatchObject({kind:'topic_preview',ownerType:'transform',ownerId:itemId,status:'succeeded',groupId:ctx.groupId,accountId:null});
   const transform=detail.transforms.find((row:any)=>row.id===transformId);expect(transform).toBeTruthy();expect(transform.aiTaskId).toBe(topicTaskId);expect(transform.outputSnapshot).toMatchObject({...decomposition,...topic,adaptedDraft:{contentText:draft},generationProgress:{decomposition:{status:'completed'},topic:{status:'completed'},draft:{status:'completed'}}});
   const modelCalls=evidence!.calls.filter(row=>row.executionTaskId===topicTaskId&&row.kind==='model');expect(modelCalls).toHaveLength(3);expect(modelCalls.every(row=>row.status==='settled'&&row.rejectionCode===null)).toBe(true);expect(modelRequests).toHaveLength(3);
   const modelInput=(child!.payload as any).intelligenceGeneration.input;expect(modelInput).toMatchObject({kind:'model.structured',capability:'topic.generate',facets:{mode:'topic_preview'}});expect(JSON.parse(modelInput.facets.target)).toMatchObject({generationMode:'strategy_backed',transformId,positioningVersionId:statement.id});
-  expect(owned.boundary).toHaveLength(1);expect(owned.boundary[0]).toMatchObject({queueTaskId:parentId,groupId:ctx.groupId,accountId:null});
+  expect(owned.ports.some(row=>row.executionTaskId===topicTaskId&&row.port==='readTaskContext')).toBe(true);
+  expect(owned.ports.filter(row=>row.executionTaskId===topicTaskId&&row.port==='saveGenerationResult').map(row=>row.stage)).toEqual(expect.arrayContaining(['decomposition','topic','draft']));
+  expect(owned.boundary).toHaveLength(1);expect(owned.boundary[0]).toMatchObject({source:'radar',itemId,groupId:ctx.groupId,accountId:null,resultProjectId:projectId,preparationTaskId:parentId,reused:false});
   const projectsAfter=await call(ENDPOINTS.listProjects,{query:{page:1,pageSize:100}});save('projects-after',{before:beforeProjects,after:projectsAfter});
-  save('RESULT',{status:settled.status==='succeeded'?'CONTROLLED_CHAIN_REACHED_SUCCESS_ASSERTIONS':'CONTROLLED_CHAIN_REACHED_TERMINAL_FAILURE',parentId,topicTaskId,transformId,boundary:owned.boundary,actualRequests:modelRequests.length,modelCalls:modelCalls.length,externalPaidModels:0,expected:'真实原父成功且同组项目创建',meaning:'Vitest原始断言是最终受控结果；blocked不是PASS/新包模型验收'});
-  // 改前必须自然失败于真实账号门；不得把预期错误写成通过。
-  if(settled.status!=='succeeded'){expect(owned.boundary[0].errorName,'目标RED必须是真实末端账号门，不是其它准备失败').toBe('AccountRequiredError');expect(projectsAfter,'失败不能有项目/子资料孤儿').toEqual(beforeProjects);}
+  save('RESULT',{status:settled.status==='succeeded'?'CONTROLLED_CHAIN_REACHED_CANDIDATE_ASSERTIONS':'CONTROLLED_CHAIN_REACHED_TERMINAL_FAILURE',parentId,topicTaskId,transformId,projectId,boundary:owned.boundary,actualRequests:modelRequests.length,modelCalls:modelCalls.length,externalPaidModels:0,expected:'统一ensure已提交纯组项目；原父生成候选，用户采纳后才有正式稿',meaning:'Vitest原始断言是最终受控结果；blocked不是PASS/新包模型验收'});
+  // 准备受阻也必须保全ensure已提交项目，不能制造第二项目或将失败当成功。
+  expect(projectsAfter.filter((row:ProjectResource)=>!beforeProjects.some((old:ProjectResource)=>old.id===row.id))).toHaveLength(1);
   expect(settled.status,JSON.stringify({status:settled.status,errorCode:settled.errorCode,boundary:owned.boundary})).toBe('succeeded');
-  projectId=settled.checkpoint?.projectId??'';expect(projectId).toBeTruthy();
+  expect(sourceDraftStep).toMatchObject({status:'candidate_ready',childTaskId:topicTaskId});expect(candidate).toMatchObject({status:'pending',acceptanceReceipt:null,content:{kind:'draft',text:draft}});expect(candidate.baseline).toMatchObject({kind:'digest',digest:expect.any(String)});
   const project=await call(ENDPOINTS.getProject,{params:{projectId}}),stages=await call(ENDPOINTS.listStages,{params:{projectId}});
   const [projectRow]=await owned.db!.select().from(projects).where(eq(projects.id,projectId));
   expect(projectRow).toMatchObject({id:projectId,userId:ctx.userId,groupId:ctx.groupId,accountId:null});
-  expect(project).toMatchObject({title:topic.title,briefDetail:{targetAudience:topic.targetAudience,coreMessage:topic.angle,contentFormat:topic.format,contentRadarEvidence:{decomposition, strategy:topic.adaptationStrategy,adaptedDraftSeed:{contentText:draft}}}});expect(stages).toHaveLength(7);
+  expect(project.title).toBe(initialProject.title);expect(project.brief).toBe(initialProject.brief);expect(project.briefDetail).toEqual(initialProject.briefDetail);expect(await formalScripts()).toEqual([]);expect(stages).toHaveLength(7);
   const activities=await owned.db!.select().from(projectActivities).where(eq(projectActivities.projectId,projectId));expect(activities.filter(row=>row.eventType==='project_created')).toHaveLength(1);
-  expect(projectsAfter.filter((row:any)=>!beforeProjects.some((old:any)=>old.id===row.id))).toHaveLength(1);
-  const repeat=await call(ENDPOINTS.enqueueIntelligenceProjectUpgrades,{body:{itemIds:[itemId],positioningVersionId:statement.id,idempotencyKey:'t1332-owned-upgrade-public-idempotent-readback'}});expect(repeat.tasks[0].id).toBe(parentId);expect(repeat.tasks[0].checkpoint.projectId).toBe(projectId);expect(modelRequests).toHaveLength(3);
+  const repeat=await call(ENDPOINTS.ensureProject,{body:{...ensureInput,idempotencyKey:'t1382-owned-ensure-public-idempotent-readback'}});expect(repeat).toMatchObject({project:{id:projectId},preparationTaskId:parentId,reused:true});expect(modelRequests).toHaveLength(3);
+  expect(owned.boundary).toHaveLength(2);expect(owned.boundary[1]).toMatchObject({groupId:ctx.groupId,accountId:null,resultProjectId:projectId,preparationTaskId:parentId,reused:true});
   expect(await call(ENDPOINTS.getProject,{params:{projectId}})).toEqual(project);expect(await call(ENDPOINTS.getIntelligenceItem,{params:{itemId}})).toEqual(detail);
-  save('green-public-readback',{project,stages,activities,repeat,originalItemAndSourcesUntouched:true});
+  const acceptanceInput={idempotencyKey:'t1382-owned-accept-source-draft',candidateSourceDigest:candidate.sourceDigest,baseline:candidate.baseline};
+  const receipt=await call(ENDPOINTS.acceptProjectPreparationCandidate,{params:{projectId,candidateId:candidate.id},body:acceptanceInput});
+  expect(receipt).toMatchObject({projectId,candidateId:candidate.id,sourceTaskId:topicTaskId,candidateSourceDigest:candidate.sourceDigest,artifactVersion:expect.any(Number)});
+  const acceptedPreparation=await call(ENDPOINTS.getProjectPreparation,{params:{projectId}});expect(acceptedPreparation.candidates.find((row:ProjectPreparationCandidate)=>row.id===candidate.id)).toMatchObject({status:'accepted',acceptanceReceipt:receipt});
+  const acceptedScripts=await formalScripts();expect(acceptedScripts).toHaveLength(1);expect(acceptedScripts[0].current.contentText).toBe(draft);
+  const acceptedProject=await call(ENDPOINTS.getProject,{params:{projectId}});expect(acceptedProject.brief).toBe(initialProject.brief);expect(acceptedProject.briefDetail).toEqual(initialProject.briefDetail);
+  expect(await call(ENDPOINTS.acceptProjectPreparationCandidate,{params:{projectId,candidateId:candidate.id},body:acceptanceInput})).toEqual(receipt);
+  expect((await formalScripts())[0].current.id).toBe(acceptedScripts[0].current.id);
+  const acceptedRepeat=await call(ENDPOINTS.ensureProject,{body:ensureInput});expect(acceptedRepeat).toMatchObject({project:{id:projectId},preparationTaskId:parentId,reused:true});expect(modelRequests).toHaveLength(3);
+  expect((await call(ENDPOINTS.listProjects,{query:{page:1,pageSize:100}})).filter((row:ProjectResource)=>!beforeProjects.some((old:ProjectResource)=>old.id===row.id))).toHaveLength(1);
+  expect((await owned.db!.select().from(projectActivities).where(eq(projectActivities.projectId,projectId))).filter(row=>row.eventType==='project_created')).toHaveLength(1);
+  expect(network.every(row=>row.url===feedUrl),'全部非受控网络请求仍被拒绝').toBe(true);expect(protocolErrors).toEqual([]);
+  save('green-public-readback',{project,acceptedProject,stages,activities,repeat,acceptedRepeat,receipt,acceptedPreparation,acceptedScripts,originalSnapshotsUntouched:true,manualTranscriptProvidedThroughProject:true});
  }catch(error){primaryFailed=true;primaryFailure=error;}finally{
   let finalSnapshotErrorName:string|null=null;
   try{await snapshot('finally-before-dispose');}catch(error){finalSnapshotErrorName=error instanceof Error?error.name:'NonErrorThrown';if(!primaryFailed){primaryFailed=true;primaryFailure=error;}}

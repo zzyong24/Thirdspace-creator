@@ -98,8 +98,8 @@ describe('T1278 真实公共执行绑定的完整路由（不代签模型调用�
  },180_000);
 
  it.each(['wrong-item','share-not-authorized','deadline'] as const)('可信父证明仍需具体作品、转录授权与原期限 %s',async variant=>{
-  const tasks=createPersistentTaskService(store.db,{now:()=>stamp}),share=variant==='share-not-authorized';
-  const parent=await tasks.enqueue(ctx,{kind:share?'share_import':'radar_project_upgrade',ownerType:share?'item_import':'item',ownerId:share?'original-share':'original-item',idempotencyKey:`parent-proof-${variant}`,payload:share?{shareInput:'原授权分享',transcribeAfterImport:false,executionRoute:fixtureRoute()}:{itemId:'original-item',executionRoute:fixtureRoute()}});
+  const tasks=createPersistentTaskService(store.db,{now:()=>stamp});
+  const parent=await tasks.enqueue(ctx,{kind:'share_import',ownerType:'item_import',ownerId:'original-share',idempotencyKey:`parent-proof-${variant}`,payload:{shareInput:'原授权分享',transcribeAfterImport:variant!=='share-not-authorized',executionRoute:fixtureRoute()}});
   const claim=await tasks.claimTask({taskId:parent.id,workerId:'original-parent-worker'});expect(claim).toBeTruthy();
   if(variant==='deadline')await store.db.update(executionTasks).set({deadlineAt:'2026-10-13T23:59:59.000Z'}).where(eq(executionTasks.id,parent.id));
   const item=variant==='wrong-item'?'different-item':'original-item';

@@ -11,6 +11,7 @@
 |---|---|---|---|---|---|---|
 |T-1384|整合工作树独有代码并清理多余工作树|✅|—|—|[范围](docs/features/t1384-worktree-consolidation-cleanup.md) · [清理记录](docs/verification/t1384/REPORT.md)|14附属树已移除仅主仓；内盘约243MiB→80.31GiB；17历史ref/bundle及差量原件私有保T7，唯一遗漏工具7db6036纳main；原在途保留，无push/安装/full，已补按需建树与收尾回收规则。|
 |T-1383|只读核对内盘告急与项目构建测试空间占用|✅|—|—|[空间核查](docs/engineering/storage-audit-2026-10-20.md)|内盘409→334MiB；主仓43.6、五工作树49.6、已确认临时副本58.1GiB；工作树18.025GiB缓存已核ignored/未见占用，未删除/停进程，实际回收待清理后验证。|
+|T-1382|统一项目入口并把准备工程归回项目|🔨|PASS[REV:6ea0e716a260]|待验|[统一入口 SPEC v2.1](docs/features/t1382-unified-project-intake.md)|p3补齐N-5共13项及转写回执回归1项，修纯组幂等冲突并清零新增lint；四包类型通过；PG/沙箱与完整旅程待验，见docs/verification/t1382/final.md。 fa批次修复重试/取消/错误呈现，43项新增回归；证据见[fa记录](docs/verification/t1382/fix-fa.md)，状态保持待验。 fb修资料回执/无变化、转写就绪及0140时间，作用域仅分析；198通过/4 PG守卫，见[fb记录](docs/verification/t1382/fix-fb.md)。 Phase A修bug8组scope归一，174回归/四包类型通过；仅备清理脚本与提交清单，缺2项目ID/原值，见[记录](docs/verification/t1382/phaseA.md)，不提交/清真实库/complete。|
 |T-1381|拉取当前main最新远端代码并保留本地改动|✅|—|—|本行限定Git同步范围|用户要求拉最新代码；核对origin/main并优先快进，保全未提交与未跟踪文件，不扩产品、安装或脚手架升级范围；完成依据真实HEAD及本地改动核对。|
 |T-1377|精确收窄旧出包超时断言并保留负控制|✅|PASS[REV:e6a1ced3d84c]|—|[已授权单文件修正](docs/features/t1377-packaging-workflow-timeout-test-scope.md)|单测试文件修正39PASS/独审GO，已提交8062921并taskctl完成；唯一150分钟行例外+有限负控，workflow/产品/预算未改，原44+1FAIL保。|
 |T-1376|当前main本机产包并保留数据重新安装|✅|PASS[REV:7639dd591a9e]|—|[本机替换范围](docs/features/t1376-current-main-local-package-reinstall.md)|用户知情允许中断后正常quit/旧App精确保全，同卷替换dedc包并启动；58PASS/产包exit0、签名DMG及37660项runtime同源，PID22213公开Ready连续122.526秒；数据不清理、原任务自动恢复/导航/剩余媒体未代签，full受T1373限制未跑。|

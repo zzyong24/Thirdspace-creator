@@ -1,3 +1,4 @@
+import {executionBudgetSchema} from '@creatoros/contract/execution-worker';
 import {ErrorCode} from '@creatoros/contract';
 import {readFrozenModelRoute,type ExecutionRef,type ExecutionRoute} from '@creatoros/contract/execution-worker';
 import {localWhisperSpec} from '@creatoros/ai-worker';
@@ -60,12 +61,14 @@ export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:Boun
    const modelInput=transcribeTaskInputSchema.parse({kind:'transcribe.douyin',awemeIds:ids(task),language:'zh',configuration:transcribeConfiguration(spec)});
    // 批量转写按已授权作品数预留识别/后处理额度，不共用一次文本生成的6次调用上限。
    // 只在首次绑定时冻结，恢复不扩大原任务预算或期限。
-   const budget={...deps.budget,maxCalls:Math.min(10000,deps.budget.maxCalls*modelInput.awemeIds.length),maxTokens:Math.min(2_000_000_000,deps.budget.maxTokens*modelInput.awemeIds.length)};
+   let budget:ReturnType<typeof executionBudgetSchema.parse>={...deps.budget,maxCalls:Math.min(10000,deps.budget.maxCalls*modelInput.awemeIds.length),maxTokens:Math.min(2_000_000_000,deps.budget.maxTokens*modelInput.awemeIds.length)};
+   const runtime=task.runtimeData as Record<string,unknown>,inherited=runtime.preparationParentProof!==undefined;
+   if(inherited){const original=executionBudgetSchema.parse(runtime.preparationBudget),deadline=runtime.preparationDeadlineAt;if(deadline!==null&&typeof deadline!=='string')throw new Error('准备转写缺少原期限');budget=executionBudgetSchema.parse({...original,deadlineMs:deadline===null?null:Date.parse(deadline)-Date.parse(task.requestedAt)});}
    return db.transaction(async tx=>{
     abort.throwIfAborted();const [current]=await tx.select().from(aiTasks).where(owned(ctx,task.id)).for('update');
     if(!current||current.requestFingerprint!==task.requestFingerprint||!isDeepStrictEqual(current.inputData,task.inputData)||current.projectId!==task.projectId)throw new Error('转写准备期间原任务已改变');
     if(!current.executionTaskId&&await legacy(tx,current)){abort.throwIfAborted();return {legacy:true as const};}
-    const mapped=await createExecutionAuthorityService(tx as unknown as Db,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget});abort.throwIfAborted();return mapped;
+    const mapped=await createExecutionAuthorityService(tx as unknown as Db,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget,...(inherited?{inheritedDeadline:true as const}:{})});abort.throwIfAborted();return mapped;
    });
   },
   async recoverQueued(onLegacy:(ctx:RequestContext,id:string)=>Promise<void>,onFailure:(ctx:RequestContext,id:string)=>Promise<void>,shouldStop=()=>false){

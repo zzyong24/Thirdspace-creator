@@ -46,15 +46,18 @@ return async (
   ) => {
     await projectsService.getProject(c, projectId);
     const artifactRows = await artifactsService.listProjectArtifacts(c, projectId);
-    const target = artifactRows.find((row) => row.artifactType === artifactType);
-    if (!target?.currentVersionId) return null;
+    for(const target of artifactRows.filter(row=>row.artifactType===artifactType)){
+    if (!target.currentVersionId) continue;
     const versions = await artifactsService.listVersions(c, target.id);
     const current = versions.find(
       (version) => version.id === target.currentVersionId,
     );
-    if (!current) return null;
+    if (!current) continue;
+    if((current.contentData as {purpose?:string}|null)?.purpose==='project_preparation_source')continue;
 
     return readArtifactVersionTruth(c,target,current,artifactsService);
+    }
+    return null;
   };
 }
 

@@ -73,7 +73,7 @@ export const assistantProposalSourceSchema=z.object({taskId:id,callId:id,toolCal
 export type AssistantProposalSource=z.infer<typeof assistantProposalSourceSchema>;
 const kind=<T extends string>(value:T)=>({kind:z.literal(value)});
 const assistantActionBranches=[
- projectsOperations.createProject.body.omit({source:true,platformRef:true}).extend(kind("project.create")).strict(),
+ projectsOperations.createProject.body.omit({source:true,platformRef:true,idempotencyKey:true}).extend(kind("project.create")).strict(),
  candidateOperations.createCandidate.body.extend(kind("topic.create")).strict(),
  z.object({...kind("topic.promote"),candidateId:id}).strict(),
  artifactsOperations.applyScriptPatch.body.extend({...kind("script.patch"),artifactId:id}).strict(),

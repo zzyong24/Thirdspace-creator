@@ -1,5 +1,7 @@
 import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
 import { createTopicWorkspaceService, type TopicWorkspaceDeps } from "./topic-workspace.service";
+import { lockWorkspaceMembership } from "../platform-account/membership-lock.service";
+import { ConflictError } from "../../errors";
 import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import {and,eq,gte,lt,sql,type Db} from "@creatoros/backend";
@@ -84,6 +86,8 @@ function assertCandidateTitle(title: string): void {
 // with the same aiTaskId is idempotent (no duplicate Candidate).
 
 export interface CandidateProjectsPort {
+  /** intake 同事务的真实项目归属读取；缺失时新晋升提交口拒绝写入。 */
+  getProject?(ctx: RequestContext, projectId: string): Promise<{ id: string }>;
   // Ownership-stamped project create for promote → Project. 立项 Brief 地基:新建项目
   // 从 brief 阶段起(ProjectsService 内部设 current_stage=brief),promote 额外带一份用
   // 候选填好的结构化 Brief 草稿(briefDetail),落到立项工作台供创作者核对/补全。
@@ -174,6 +178,7 @@ export interface CandidateOverviewPort {
 }
 
 export interface ServiceDeps {
+  ensureProjectIntake?:(ctx:RequestContext,candidateId:string)=>Promise<unknown>;
   resolveCollectedPublication?: (ctx:RequestContext,id:string)=>Promise<{groupId:string|null;accountId:string}|null>;
   topicWorkspace?: Pick<TopicWorkspaceDeps,"assertProject"|"currentPositioningVersion">;
   db: Db;
@@ -318,6 +323,12 @@ export interface CandidateService {
   ): Promise<CandidateResource>;
   /** 应用组合的同事务锁读，不是模型写入或公共API。 */
   getCandidateForUpdate(ctx: RequestContext, candidateId: string): Promise<CandidateResource>;
+  /** 仅供绑定真实事务的统一 intake 读取与提交，不复制 AI 稿件。 */
+  getProjectIntakeCandidate(ctx: RequestContext, candidateId: string): Promise<{
+    candidate: CandidateResource;
+    promotion: TopicPromotionResource | null;
+  }>;
+  commitProjectIntakePromotion(ctx: RequestContext, candidateId: string, projectId: string): Promise<TopicPromotionResource>;
   patchCandidate(
     ctx: RequestContext,
     candidateId: string,
@@ -414,6 +425,18 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       accountId: ctx.accountId ?? null,
     };
     return createCandidateRepository(db, repoDeps);
+  }
+
+  async function lockProjectIntakeCandidate(ctx: RequestContext, candidateId: string) {
+    if (typeof (db as unknown as { rollback?: unknown }).rollback !== "function") {
+      throw new ConflictError("选题 intake 必须绑定实际事务");
+    }
+    await lockWorkspaceMembership(db as unknown as Parameters<typeof lockWorkspaceMembership>[0], ctx);
+    const [candidate] = await db.select().from(candidates).where(and(
+      eq(candidates.id, candidateId), eq(candidates.userId, ctx.userId), workspaceFilter(candidates, ctx),
+    )).limit(1).for("update");
+    if (!candidate) throw new OwnershipError("选题不存在或不属于当前工作区");
+    return candidate;
   }
 
   async function fitFor(
@@ -579,6 +602,33 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       return toCandidateDto(row);
     },
 
+    async getProjectIntakeCandidate(ctx, candidateId) {
+      const candidate = await lockProjectIntakeCandidate(ctx, candidateId);
+      const promotion = await repoFor(ctx, "candidate.projectIntake.get").findPromotionByCandidateId(candidateId);
+      if (candidate.status === "promoted" && !promotion) {
+        throw new ConflictError("选题已升级，但原项目关联缺失，请核对原记录");
+      }
+      const dto = toCandidateDto(candidate);
+      if (!promotion && dto.card.audienceTask) await workspace.assertCurrent(ctx, dto.card.audienceTask);
+      return { candidate: dto, promotion: promotion ? toTopicPromotionDto(promotion) : null };
+    },
+    async commitProjectIntakePromotion(ctx, candidateId, projectId) {
+      const candidate = await lockProjectIntakeCandidate(ctx, candidateId);
+      if (!projectId.trim() || !projects.getProject) throw new ConflictError("项目归属读取端口未接入或项目标识无效");
+      const project = await projects.getProject(ctx, projectId);
+      if (project.id !== projectId) throw new OwnershipError("升级项目不属于当前工作区");
+      const repo = repoFor(ctx, "candidate.projectIntake.commit");
+      const existing = await repo.findPromotionByCandidateId(candidateId);
+      if (existing) {
+        if (existing.projectId !== projectId) throw new ConflictError("该选题已经关联另一项目");
+        if (candidate.status !== "promoted") await repo.setPromoted(candidateId);
+        return toTopicPromotionDto(existing);
+      }
+      if (candidate.status === "promoted") throw new ConflictError("选题原项目关联缺失，不能另建升级回执");
+      const promotion = await repo.createPromotion({ candidateId, projectId });
+      await repo.setPromoted(candidateId);
+      return toTopicPromotionDto(promotion);
+    },
     async patchCandidate(ctx, candidateId, patch) {
       if (patch.title !== undefined) assertCandidateTitle(patch.title);
       // Sanitize a partial 选题卡 patch (drop unknown keys / clamp metrics) before it
@@ -610,6 +660,12 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async promote(ctx, candidateId) {
+      if(deps.ensureProjectIntake){
+        await deps.ensureProjectIntake(ctx,candidateId);
+        const promotion=await repoFor(ctx,"candidate.promote").findPromotionByCandidateId(candidateId);
+        if(!promotion)throw new ConflictError("统一项目入口缺少选题升级回执");
+        return toTopicPromotionDto(promotion);
+      }
       const repo = repoFor(ctx, "candidate.promote");
       const cand = await repo.getCandidate(candidateId); // ownership gate (404)
       if (cand.status === "promoted") {

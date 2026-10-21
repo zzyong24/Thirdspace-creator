@@ -16,10 +16,13 @@ it('两个空组的公开导入任务按冻结组隔离，提交保留独立 sco
  expect(api.importDouyinShare).toHaveBeenCalledWith(expect.objectContaining({groupId:'group-a'}));
  expect(vi.mocked(api.importDouyinShare).mock.calls[0]![0].accountId).toBeUndefined();
 });
-it('项目升级任务不能因两组账号都为空而混组',async()=>{
- const api={listProjectUpgrades:vi.fn().mockResolvedValue({tasks:[task('group-a','own','radar_project_upgrade'),task('group-b','other','radar_project_upgrade')],total:2})} as unknown as RadarApi;
- const {result}=renderHook(()=>useProjectUpgradeQueue({api,groupId:'group-a',positioningVersionId:null,setNotice:vi.fn()}));
- await waitFor(()=>expect(result.current.tasks.map(t=>t.id)).toEqual(['own']));
+it('项目映射不能因两组账号都为空而混组，迟到ensure回执留在原组',async()=>{
+ let resolve!:(value:unknown)=>void;
+ const api={ensureProject:vi.fn(()=>new Promise(r=>{resolve=r;}))} as unknown as RadarApi;
+ const {result,rerender}=renderHook(({groupId})=>useProjectUpgradeQueue({api,groupId,positioningVersionId:null,setNotice:vi.fn()}),{initialProps:{groupId:'group-a'}});
+ let pending!:Promise<void>;act(()=>{pending=result.current.enqueue('same-item');});rerender({groupId:'group-b'});
+ await act(async()=>{resolve({project:{id:'project-a'}});await pending;});expect(result.current.byItem.size).toBe(0);
+ expect(api.ensureProject).toHaveBeenCalledWith(expect.objectContaining({idempotencyKey:'radar-ensure:group:group-a:same-item'}));
 });
 it('空组偏好键按组区分且保留旧账号键',()=>{
  expect(radarViewKey({groupId:'group-a'})).not.toBe(radarViewKey({groupId:'group-b'}));

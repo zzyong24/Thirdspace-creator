@@ -68,3 +68,10 @@ it('实际prepareChatReply把原取消信号交到模型准备接缝，不新建
  await expect(prepareChatReply({...f.runtime,prepareChatRouting} as never,f.owner as never,f.snapshot as never,{abortSignal:controller.signal})).rejects.toMatchObject({name:'AbortError'});
  expect(prepareChatRouting).toHaveBeenCalledTimes(1);
 });
+
+it('T1382 准备chat使用父冻结路由，当前偏好不可重新捕获',async()=>{
+ const f=creationRuntime(),{createExecutionRoute,inheritExecutionRoute}=await import('@creatoros/contract/execution-worker'),route=inheritExecutionRoute({executionRoute:createExecutionRoute('codex')});
+ const prepareChatRouting=vi.fn(async()=>{throw Error('不能重读当前路由');});
+ const result=await prepareChatReply({...f.runtime,prepareChatRouting} as never,f.owner as never,f.snapshot as never,{executionRoute:route} as never);
+ expect(result.executionRoute).toEqual(route);expect(prepareChatRouting).not.toHaveBeenCalled();
+});

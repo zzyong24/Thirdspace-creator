@@ -91,6 +91,11 @@ import {
 } from "./draft-workbench-page";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 
+it("T-1382 未采纳的来源初稿不能成为编辑器初值", () => {
+  const { container } = render(<DraftWorkbenchPage vm={baseVm({radarDraftSeed:"尚未采纳的来源候选"})} />);
+  expect(container.querySelector('[data-slot="mock-rich-editor"]')).toHaveAttribute("data-initial-html", "");
+}, 120000);
+
 function baseVm(overrides: Partial<DraftWorkbenchVm> = {}): DraftWorkbenchVm {
   return {
     project: {
@@ -200,7 +205,7 @@ describe("DraftWorkbenchPage — T-642 按选题来源分流", () => {
     ).toBe("");
   });
 
-  it("携带内容雷达证据的项目仍使用单稿编辑器，并用改写初稿初始化口播稿", () => {
+  it("携带内容雷达证据的项目仍使用单稿编辑器，候选不自动初始化口播稿", () => {
     const { container } = render(
       <DraftWorkbenchPage
         vm={baseVm({
@@ -217,10 +222,10 @@ describe("DraftWorkbenchPage — T-642 按选题来源分流", () => {
       container
         .querySelector('[data-slot="mock-rich-editor"]')
         ?.getAttribute("data-initial-html"),
-    ).toBe("<p>我的改写初稿</p>");
+    ).toBe("");
   });
 
-  it("来源原稿暂时读不到时，雷达改写稿仍直接填进现有编辑器", () => {
+  it("来源原稿暂时读不到时，不用雷达候选冒充正式稿", () => {
     const { container } = render(
       <DraftWorkbenchPage
         vm={baseVm({
@@ -236,7 +241,7 @@ describe("DraftWorkbenchPage — T-642 按选题来源分流", () => {
       container
         .querySelector('[data-slot="mock-rich-editor"]')
         ?.getAttribute("data-initial-html"),
-    ).toBe("<p>已经在内容雷达确认的改写稿</p>");
+    ).toBe("");
   });
 
   it("雷达项目已有正式稿件版本时，以正式稿为准，不被初稿覆盖", () => {
@@ -350,7 +355,7 @@ describe("DraftWorkbenchPage — T-488 移除脚本阶段导出素材包", () =>
 
 // [T-374] 顶条「立即抓取逐字稿」按钮门:有抖音锚(douyinExternalId)才渲染。
 describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
-  it("有 douyinExternalId → 渲染按钮(带 projectId)", () => {
+  it("有 douyinExternalId 也不绕过preparation另起转写", () => {
     const { container } = render(
       <DraftWorkbenchPage
         vm={baseVm({
@@ -368,11 +373,11 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
       />,
     );
     const btn = container.querySelector('[data-slot="mock-transcribe-now"]');
-    expect(btn).not.toBeNull();
-    expect(btn?.getAttribute("data-project-id")).toBe("p-1");
+    expect(btn).toBeNull();
+    expect(container.querySelector('[data-slot="project-pipeline"]')).not.toBeNull();
   });
 
-  it("已有逐字稿 → 保准确原作品任务入口；内部仍禁止二次抓取", () => {
+  it("已有逐字稿不凭前端平台锚伪造准备步骤", () => {
     const { container } = render(
       <DraftWorkbenchPage
         vm={baseVm({
@@ -386,10 +391,8 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
       />,
     );
     const entry = container.querySelector('[data-slot="mock-transcribe-now"]');
-    expect(entry).not.toBeNull();
-    expect(entry).toHaveAttribute("data-project-id", "p-1");
-    expect(entry).toHaveAttribute("data-aweme-id", "aweme-1");
-    expect(entry).toHaveAttribute("data-initial-state", "done");
+    expect(entry).toBeNull();
+    expect(container.textContent).not.toContain("升级时已完成转写");
   });
 
   it("无 douyinExternalId(手动项目)→ 不渲染(诚实,无锚无法抓)", () => {
@@ -471,11 +474,12 @@ describe("DraftWorkbenchPage — T-1055 顶条仅保留真实动作", () => {
     expect(screen.getByText("真实导入作品")).toBeTruthy();
     expect(screen.queryByRole("link", {name: "项目作品与创作"})).toBeNull();
   });
-  it("真实逐字稿任务移入项目准备流水线，已发布复盘顶条保留", () => {
+  it("项目准备入口保留，顶条不另起逐字稿任务", () => {
     const original = baseVm();
     const vm = baseVm({project: {...original.project, douyinExternalId: "douyin-1", transcriptState: "queued"}});
     const {container} = render(<DraftWorkbenchPage vm={vm} />);
-    expect(container.querySelector('[data-slot="project-pipeline"] [data-step="transcript"] [data-slot="mock-transcribe-now"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="project-pipeline"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="project-pipeline"] [data-step="transcript"] [data-slot="mock-transcribe-now"]')).toBeNull();
     expect(container.querySelector('[data-slot="draft-topbar"] [data-slot="mock-transcribe-now"]')).toBeNull();
   });
   it("明确未发布不会被旧 published 包状态误判", () => {

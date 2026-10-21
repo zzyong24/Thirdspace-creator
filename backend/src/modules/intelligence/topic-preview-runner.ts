@@ -1,3 +1,5 @@
+import type {ProjectPreparationGenerationTarget} from '@creatoros/contract/execution-worker';
+import {findModelEngineUnavailable} from '../execution/model-engine-error';
 import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
 import type { RequestContext } from "@creatoros/contract";
 import type {
@@ -13,12 +15,10 @@ export class IntelligenceGenerationSuspended extends Error {
   }
 }
 
-export interface TopicPreviewGeneratorPort {
+export interface TopicPreviewGeneratorPort<Target=Awaited<ReturnType<IntelligenceService["getTopicPreviewForExecution"]>>> {
   generate(
     ctx: RequestContext,
-    input: Awaited<
-      ReturnType<IntelligenceService["getTopicPreviewForExecution"]>
-    >,
+    input: Target,
     onCheckpoint: (checkpoint: TopicPreviewCheckpoint) => Promise<void>,
     claim?:PersistentTaskClaim,
   ): Promise<{
@@ -87,6 +87,8 @@ export interface TopicPreviewRunnerDeps {
   tasks: PersistentTaskService;
   intelligence: IntelligenceService;
   generator: TopicPreviewGeneratorPort;
+  projectGenerator?:TopicPreviewGeneratorPort<ProjectPreparationGenerationTarget>;
+  projectPreparation?:import("../projects/project-preparation-generation.service").ProjectPreparationGenerationService;
   workerId?: () => string;
 }
 
@@ -98,6 +100,7 @@ export interface TopicPreviewDrainOptions extends TaskDrainControl {
 const TOPIC_PREVIEW_LEASE_SECONDS = 300;
 
 export type TopicPreviewFailureCategory =
+  | "engine_unavailable"
   | "credential"
   | "positioning"
   | "timeout"
@@ -112,7 +115,10 @@ export type TopicPreviewFailureCategory =
 export function classifyTopicPreviewFailure(error: unknown): {
   category: TopicPreviewFailureCategory;
   message: string;
+  errorCode?: string;
 } {
+  const engine=findModelEngineUnavailable(error);
+  if(engine)return {category:'engine_unavailable',message:engine.message,errorCode:engine.code};
   const parts: string[] = [];
   const seen = new Set<unknown>();
   let current: unknown = error;
@@ -203,6 +209,13 @@ export async function runIntelligenceTopicPreviewTask(
   let targetTransformId: string | null = null;
   const rewriteDraftCheckpoint: { value: { contentText: string } | null } = { value: null };
   try {
+    if(claim.task?.ownerType==='project'){
+      if(!deps.projectPreparation||!deps.projectGenerator)throw new Error('项目候选执行端口未装配');
+      const target=await deps.projectPreparation.getContext(ctx,claim);
+      const generated=await deps.projectGenerator.generate(ctx,target,checkpoint=>deps.projectPreparation!.saveCandidate(ctx,claim,checkpoint),claim);
+      await deps.projectPreparation.finish(ctx,claim,generated);
+      await deps.tasks.finish({...lease,status:'succeeded'});return;
+    }
     const target = await deps.intelligence.getTopicPreviewForExecution(
       ctx,
       input.taskId,
@@ -274,7 +287,7 @@ export async function runIntelligenceTopicPreviewTask(
     }
     const failure = classifyTopicPreviewFailure(error);
     const waitingForUser =
-      failure.category === "positioning" || failure.category === "credential";
+      failure.category === "positioning" || failure.category === "credential" || failure.category === "engine_unavailable";
     const recoverable = ["timeout", "output_invalid", "network"].includes(
       failure.category,
     );
@@ -304,7 +317,7 @@ export async function runIntelligenceTopicPreviewTask(
         : recoverable
           ? "retry_wait"
           : "failed",
-      errorCode:
+      errorCode: failure.errorCode ?? (
         failure.category === "positioning"
           ? "POSITIONING_MISSING"
           : failure.category === "credential"
@@ -315,7 +328,7 @@ export async function runIntelligenceTopicPreviewTask(
                 ? "TOPIC_PREVIEW_OUTPUT_INVALID"
                 : failure.category === "network"
                   ? "TOPIC_PREVIEW_NETWORK"
-                  : "TOPIC_PREVIEW_FAILED",
+                  : "TOPIC_PREVIEW_FAILED"),
       errorMessage: failure.message,
     });
   }

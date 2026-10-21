@@ -1,7 +1,18 @@
 import {expect,it} from 'vitest';
+import {createHash} from 'node:crypto';
 import {codexExecutionSpec,createExecutionRoute,intelligenceRewriteInputSchema,workerTaskInputSchema,structuredGenerationInputSchema} from '@creatoros/contract/execution-worker';
 import {originalCodexReadBinding} from './codex-read-recovery';
 type Task=Parameters<typeof originalCodexReadBinding>[0];type Call=Parameters<typeof originalCodexReadBinding>[1];
+it('T1382 project-owner原Codex回合只读恢复核冻结来源/项目/工作区',()=>{
+ const f=owner('topic_preview'),payload=f.task.payload as any,hash=`sha256:${createHash('sha256').update('真实来源正文').digest('hex')}`;
+ const source={kind:'project_artifact',projectId:'project',artifactId:'source-artifact',artifactVersion:2,contentHash:hash,title:'来源',authorName:null,url:null};
+ const target={ownerType:'project',projectId:'project',source,generationMode:'strategy_backed',transcript:{text:'真实来源正文',hash}};
+ const input={...payload.intelligenceGeneration.input,facets:{mode:'topic_preview',target:JSON.stringify(target)}};
+ const task={...f.task,ownerType:'project',ownerId:'project',payload:{...payload,projectId:'project',source,intelligenceGeneration:{...payload.intelligenceGeneration,input,sourceDigest:createHash('sha256').update(JSON.stringify(target)).digest('hex')}}} as Task;
+ expect(originalCodexReadBinding(task,f.call)).toMatchObject({threadId:'original-thread',turnId:'original-turn'});
+ for(const changed of [{...task,ownerId:'foreign'},{...task,groupId:'foreign'},{...task,groupVersion:9},{...task,membershipVersion:9},{...task,payload:{...task.payload as object,projectId:'foreign'}},{...task,payload:{...task.payload as object,source:{...source,artifactVersion:3}}}])expect(originalCodexReadBinding(changed,f.call)).toBeNull();
+ expect(originalCodexReadBinding(task,{...f.call,executionTaskId:'other-task'})).toBeNull();
+});
 function owner(kind:'topic_preview'|'script_candidate'|'scheduled.flywheel'){
  const identity={schemaVersion:1,capability:kind==='topic_preview'?'topic.generate':'script.draft',...codexExecutionSpec()},input={kind:'model.structured',operationKey:kind==='scheduled.flywheel'?'flywheel:original':'intelligence:task',capability:identity.capability,facets:{title:'原题'},skillId:'original-skill',maxOutputTokens:2048,skillSnapshot:{snapshotVersion:1,userId:'u',accountId:'a',resolvedAt:'fixed',platformPolicyVersion:'1',platformPolicy:'原策略',skills:[{skillId:'original-skill',baseVersion:'1',overlayRevision:null,overlayVersion:null,effective:{methodSystem:'原策略',template:'{{title}}',tools:[],requiredFacets:['title'],contextRequirements:[],outputSchema:{type:'object'},completionPolicy:null,completionPolicyAdapter:null}}]}};
  const call={id:'original-call',executionTaskId:'task',operationKey:`${input.operationKey}/model/1`,parentCallId:null,kind:'model',status:'unknown',startedAttempt:1,providerJob:null,toolExecutionClaimId:null} as Call;

@@ -1,8 +1,9 @@
+import {projectIntakeDigest} from '../projects/project-intake.service';
 import {intelligenceWorkspaceFilter,intelligenceTransformGuardFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {platformAccounts} from "../../schema/platform-account";
 import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
-import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
+import {requireWorkspace,workspaceKey,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {createContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import { createHash, randomUUID } from "node:crypto";
 
@@ -25,6 +26,9 @@ import {
   intelligenceItems,
   intelligenceMigrationLedgers,
   projectIntelligenceReferences,
+  projectSourceReferences,
+  projectIntakes,
+  projects,
   intelligenceSources,
   intelligenceSourceCollectionMemberships,
   intelligenceSyncRunEvents,
@@ -1070,11 +1074,11 @@ export function createIntelligenceService(
     });
   }
 
-  async function enqueueRewriteTransform(ctx: RequestContext, transform: TransformRow) {
+  async function enqueueRewriteTransform(ctx: RequestContext, transform: TransformRow, modelRouteParent?:{taskId:string;workerId:string;attempt:number;fenceToken?:string;preparationReferenceId?:string|null}) {
     if (transform.aiTaskId) return { transform: toTransform(transform), task: await deps.tasks.get(ctx, transform.aiTaskId) };
     const frozen = transform.outputSnapshot as Record<string, unknown>;
     const task = await deps.tasks.enqueue(ctx, {
-      kind: "topic_preview", executionBudget: createContinuousExecutionBudget(), ownerType: "transform", ownerId: transform.itemId,
+      kind: "topic_preview", modelRouteParent, executionBudget: createContinuousExecutionBudget(), ownerType: "transform", ownerId: transform.itemId,
       idempotencyKey: transform.idempotencyKey, priority: 20,
       payload: { generationMode: "rewrite_only", transformId: transform.id, itemId: transform.itemId, sourceSnapshotId: transform.sourceSnapshotId,
         positioningVersionId: transform.positioningVersionId, positioningSnapshot: frozen.positioningSnapshot,
@@ -1152,9 +1156,10 @@ export function createIntelligenceService(
   async function requireItem(
     ctx: RequestContext,
     id: string,
+    lock = false,
   ): Promise<ItemRow> {
     const accountId = await account(ctx, "intelligence.item");
-    const rows = await db
+    const query = db
       .select()
       .from(intelligenceItems)
       .where(
@@ -1165,6 +1170,7 @@ export function createIntelligenceService(
         ),
       )
       .limit(2);
+    const rows = lock ? await query.for("share") : await query;
     const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence item not found");
     return row;
@@ -1173,9 +1179,10 @@ export function createIntelligenceService(
   async function requireSnapshot(
     ctx: RequestContext,
     id: string,
+    lock = false,
   ): Promise<SnapshotRow> {
     const accountId = await account(ctx, "intelligence.snapshot");
-    const rows = await db
+    const query = db
       .select()
       .from(sourceSnapshots)
       .where(
@@ -1186,6 +1193,7 @@ export function createIntelligenceService(
         ),
       )
       .limit(2);
+    const rows = lock ? await query.for("share") : await query;
     const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence snapshot not found");
     return row;
@@ -2150,6 +2158,20 @@ export function createIntelligenceService(
     return { run: toRun(racedRun), task };
   }
 
+  async function radarProjectIds(ctx: RequestContext, itemIds: string[]) {
+    if (!itemIds.length) return new Map<string, string>();
+    const scope = workspaceKey(ctx);
+    // SEMANTIC_BOUNDARY_ALLOW: 只按真实intake、来源ID和工作区读取既有映射，不选择或创建项目。
+    const rows = await db.select({itemId: projectSourceReferences.itemId, projectId: projects.id, intakeKey: projectIntakes.intakeKey})
+      .from(projectSourceReferences).innerJoin(projects, eq(projects.id, projectSourceReferences.projectId))
+      .innerJoin(projectIntakes, eq(projectIntakes.projectId, projects.id))
+      .where(and(eq(projects.userId, ctx.userId), workspaceFilter(projects, ctx),
+        eq(projectIntakes.userId, ctx.userId), eq(projectIntakes.scopeKind, scope.kind), eq(projectIntakes.scopeId, scope.id),
+        eq(projectIntakes.source, 'radar'), eq(projectSourceReferences.sourceKind, 'intelligence_item'),
+        inArray(projectSourceReferences.itemId, itemIds)));
+    return new Map(rows.filter(row => row.intakeKey === projectIntakeDigest(['item', row.itemId])).map(row => [row.itemId!, row.projectId]));
+  }
+
   const service = {
     assertCollectorEligible,
     async assertWorkspaceReadable(ctx:RequestContext){await assertWritableWorkspace(db,ctx,{allowArchived:true});},
@@ -3087,11 +3109,16 @@ export function createIntelligenceService(
                   row.status === "confirmed" && Boolean(row.targetTopicId),
               )
             : [];
+        // raw 可固定没有 observation 的合法快照；只扩大保护查询，不扩大可删除作品集合。
+        const rawItemIds=[...new Set([...itemIds,...snapshots.flatMap(row=>row.itemId?[row.itemId]:[])])];
+        const rawReferences=rawItemIds.length?await tx.select({itemId:projectSourceReferences.itemId,snapshotId:projectSourceReferences.snapshotId}).from(projectSourceReferences).innerJoin(projects,eq(projects.id,projectSourceReferences.projectId)).where(and(eq(projects.userId,ctx.userId),eq(projectSourceReferences.sourceKind,'intelligence_item'),inArray(projectSourceReferences.itemId,rawItemIds))):[];
         const protectedItemIds = new Set([
+          ...rawReferences.flatMap(row=>row.itemId?[row.itemId]:[]),
           ...projectReferences.map((row) => row.itemId),
           ...confirmedTransforms.map((row) => row.itemId),
         ]);
         const protectedSnapshotIds = new Set([
+          ...rawReferences.flatMap(row=>row.snapshotId?[row.snapshotId]:[]),
           ...projectReferences.map((row) => row.sourceSnapshotId),
           ...confirmedTransforms.map((row) => row.sourceSnapshotId),
         ]);
@@ -3903,13 +3930,14 @@ export function createIntelligenceService(
       });
       const offset = Math.max(0, query.offset ?? 0);
       const limit = Math.max(1, query.limit ?? 20);
+      const projectIds = await radarProjectIds(ctx, rows.slice(offset, offset + limit).map(item => item.id));
       return {
         rows: rows.slice(offset, offset + limit).map((item) => {
           const projection =
             projectionByItem.get(item.id) ??
             itemWorkflowProjection(undefined, [], new Map());
           return {
-            item: toItem(item),
+            item: {...toItem(item), ...(projectIds.has(item.id) ? {projectId: projectIds.get(item.id)!} : {})},
             latestMetric: latestMetric.has(item.id)
               ? toMetric(latestMetric.get(item.id)!)
               : null,
@@ -3918,6 +3946,38 @@ export function createIntelligenceService(
           };
         }),
         total: rows.length,
+      };
+    },
+
+    /** 统一 intake 的只读来源口：不补 transcript、不预约执行、不产生候选。 */
+    async getProjectIntakeSource(ctx: RequestContext, itemId: string, snapshotId?: string) {
+      const item = await requireItem(ctx, itemId, true);
+      const selected = snapshotId ? await requireSnapshot(ctx, snapshotId, true) : (
+        await db.select().from(sourceSnapshots).where(and(
+          eq(sourceSnapshots.itemId, item.id),
+          eq(sourceSnapshots.userId, ctx.userId),
+          intelligenceWorkspaceFilter(sourceSnapshots, ctx),
+        )).orderBy(desc(sourceSnapshots.capturedAt), desc(sourceSnapshots.id)).limit(1).for("share")
+      )[0];
+      if (!selected) throw new OwnershipError("来源作品没有可用的真实快照");
+      if (selected.itemId !== item.id) throw new IntelligenceConflictError("来源快照不属于当前作品");
+      const [transcript] = await db.select().from(itemTranscripts).where(and(
+        eq(itemTranscripts.itemId, item.id),
+        eq(itemTranscripts.userId, ctx.userId),
+        intelligenceWorkspaceFilter(itemTranscripts, ctx),
+      )).limit(1).for("share");
+      const text = transcript?.status === "done" ? transcript.text?.trim() ?? "" : "";
+      const transcriptHash = text ? `sha256:${hash(text)}` : null;
+      // SEMANTIC_BOUNDARY_ALLOW: 仅摘要真实来源版本和正文身份，不判断内容或创作取舍。
+      const sourceDigest = `sha256:${hash(JSON.stringify([item.id, selected.id, selected.contentHash, transcriptHash]))}`;
+      return {
+        title: item.title,
+        itemId: item.id,
+        snapshotId: selected.id,
+        url: selected.finalUrl || item.canonicalUrl,
+        bodyAvailable: Boolean(text || selected.safeExtract?.trim()),
+        sourceDigest,
+        transcriptHash,
       };
     },
 
@@ -4029,8 +4089,9 @@ export function createIntelligenceService(
           }
         }),
       );
+      const projectIds = await radarProjectIds(ctx, [item.id]);
       return {
-        item: toItem(item),
+        item: {...toItem(item), ...(projectIds.has(item.id) ? {projectId: projectIds.get(item.id)!} : {})},
         metrics: metrics.map(toMetric),
         observations: observations.map(toObservation),
         snapshots: snapshots.map(toSnapshot),
@@ -4467,6 +4528,13 @@ export function createIntelligenceService(
       return result;
     },
 
+    /** 项目准备只读取原生成回执，不确认选题、不自动采纳。 */
+    async readProjectPreparationCandidate(ctx:RequestContext,taskId:string){
+      const target=await service.getTopicPreviewForExecution(ctx,taskId),task=await deps.tasks.get(ctx,taskId),transform=await requireTransform(ctx,target.transformId);
+      const output=transform.outputSnapshot as Record<string,unknown>|null,draft=output?.adaptedDraft as {contentText?:string;generatedFromTranscriptHash?:string}|undefined;
+      if(task.status!=='succeeded'||task.runtimeStatus==='partial'||transform.aiTaskId!==task.id||!draft?.contentText?.trim()||draft.generatedFromTranscriptHash!==target.transcript.hash)throw new IntelligenceConflictError('准备候选缺少完整原生成回执');
+      return {transformId:transform.id,itemId:transform.itemId,snapshotId:transform.sourceSnapshotId,text:draft.contentText,sourceDigest:`sha256:${hash(JSON.stringify([transform.itemId,transform.sourceSnapshotId,target.transcript.hash]))}`};
+    },
     async startTopicPreview(
       ctx: RequestContext,
       input: {
@@ -4477,6 +4545,7 @@ export function createIntelligenceService(
         strategyBacked?: boolean;
         idempotencyKey: string;
       },
+      modelRouteParent?:{taskId:string;workerId:string;attempt:number;fenceToken?:string;preparationReferenceId?:string|null},
     ) {
       await assertWritableWorkspace(db,ctx);
       const item = await requireItem(ctx, input.itemId);
@@ -4501,7 +4570,7 @@ export function createIntelligenceService(
           throw new IntelligenceConflictError("IDEMPOTENCY_KEY_ALREADY_BOUND_TO_DIFFERENT_SOURCE");
         }
         if (!existingTransform.aiTaskId) {
-          if ((existingTransform.outputSnapshot as Record<string, unknown> | null)?.generationMode === "rewrite_only") return enqueueRewriteTransform(ctx, existingTransform);
+          if ((existingTransform.outputSnapshot as Record<string, unknown> | null)?.generationMode === "rewrite_only") return enqueueRewriteTransform(ctx, existingTransform,modelRouteParent);
           throw new IntelligenceConflictError("REWRITE_TASK_LINK_MISSING");
         }
         const existingTask = await deps.tasks.get(ctx, existingTransform.aiTaskId);
@@ -4547,10 +4616,10 @@ export function createIntelligenceService(
       const positioningVersionId = strategyBacked
         ? input.positioningVersionId ?? null
         : positioningSnapshot?.id ?? null;
-      if (strategyBacked && (!positioningVersionId || !deps.positioning)) {
+      if (strategyBacked && (!positioningVersionId || !deps.positioning) && modelRouteParent?.preparationReferenceId===undefined) {
         throw new IntelligenceValidationError("批量升级缺少定位版本");
       }
-      if (strategyBacked) await deps.positioning!.getVersion(ctx, positioningVersionId!);
+      if (strategyBacked&&positioningVersionId) await deps.positioning!.getVersion(ctx, positioningVersionId);
       if (!strategyBacked) {
         // 先发布不可变来源记录，再让任务进入可领取队列。IPC/进程恢复可按 transformId 接上同一记录。
         const stamp = now();
@@ -4567,10 +4636,10 @@ export function createIntelligenceService(
         if (!row || row.itemId !== item.id || row.sourceSnapshotId !== snapshot.id) throw new IntelligenceConflictError("IDEMPOTENCY_KEY_ALREADY_BOUND_TO_DIFFERENT_SOURCE");
         return row;
         });
-        return enqueueRewriteTransform(ctx, row);
+        return enqueueRewriteTransform(ctx, row,modelRouteParent);
       }
       const task = await deps.tasks.enqueue(ctx, {
-        kind: "topic_preview",
+        kind: "topic_preview",modelRouteParent,
         executionBudget: createContinuousExecutionBudget(),
         ownerType: "transform",
         ownerId: item.id,
@@ -4741,10 +4810,10 @@ export function createIntelligenceService(
           reusableCandidate: null,
         };
       }
-      if (!transform.positioningVersionId || !deps.positioning) {
+      if ((!transform.positioningVersionId || !deps.positioning) && !taskPayload?.preparationParentProof) {
         throw new IntelligenceValidationError("旧版选题拆解任务缺少定位版本");
       }
-      const positioningVersion = await deps.positioning.getVersion(ctx, transform.positioningVersionId);
+      const positioningVersion = transform.positioningVersionId&&deps.positioning?await deps.positioning.getVersion(ctx, transform.positioningVersionId):null;
       const positioning = positioningVersion;
       const priorTransforms = await db
         .select({
@@ -4796,7 +4865,7 @@ export function createIntelligenceService(
         snapshot: toSnapshot(snapshot),
         positioning,
         positioningVersionId: transform.positioningVersionId,
-        personalizationStatus: "applied",
+        personalizationStatus: positioning?"applied":"not_applied",
         transcript: {
           text: transcriptText,
           hash: transcriptHash,
@@ -5879,7 +5948,7 @@ export function createIntelligenceService(
     async enqueueTranscripts(
       ctx: RequestContext,
       input: { itemIds: string[]; idempotencyKey: string },
-      modelRouteParent?:{taskId:string;workerId:string;attempt:number;fenceToken?:string},
+      modelRouteParent?:{taskId:string;workerId:string;attempt:number;fenceToken?:string;preparationReferenceId?:string|null},
     ) {
       await assertWritableWorkspace(db,ctx);
       const ids = [...new Set(input.itemIds)];

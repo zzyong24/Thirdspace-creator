@@ -21,6 +21,7 @@ import type {
   BriefFillSuggestion,
   BriefCurrentDetail,
 } from "@creatoros/backend/modules/ai-runtime";
+import {ProjectPreparationCandidateCard,type PreparationCardProps} from "./project-preparation-candidate-card";
 
 // 建议字段 → 中文名(与立项工作台 BriefWorkbench 的字段口径一致)。
 const BRIEF_FIELD_LABELS: ReadonlyArray<{
@@ -37,7 +38,12 @@ const BRIEF_FIELD_LABELS: ReadonlyArray<{
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-export function ChatBriefCard({
+export function ChatBriefCard(props:{suggestion:BriefFillSuggestion|null;current:BriefCurrentDetail|null;projectId:string|null;preparation?:PreparationCardProps}){
+  if(props.preparation)return <ProjectPreparationCandidateCard {...props.preparation}/>;
+  return <OrdinaryChatBriefCard {...props}/>;
+}
+
+function OrdinaryChatBriefCard({
   suggestion,
   current,
   projectId,

@@ -24,7 +24,7 @@ import { createServerClient } from "@/lib/contract-client.server";
 
 interface DraftWorkbenchRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
-  readonly searchParams?: Promise<{ readonly view?: string; readonly from?: string }>;
+  readonly searchParams?: Promise<{ readonly view?: string }>;
 }
 
 export default async function DraftWorkbenchRoute({
@@ -32,7 +32,7 @@ export default async function DraftWorkbenchRoute({
   searchParams,
 }: DraftWorkbenchRouteProps) {
   const { projectId } = await params;
-  const { view, from } = (await searchParams) ?? {};
+  const { view } = (await searchParams) ?? {};
 
   const session = await resolveSession();
   if (!session) {
@@ -100,7 +100,7 @@ export default async function DraftWorkbenchRoute({
 
   // `notFound()` never returns, so the renderer below always has a VM.
   if (vm === null) notFound();
-  return <DraftWorkbenchPage vm={vm} autoFillBrief={from === "topic"} />;
+  return <DraftWorkbenchPage vm={vm} />;
 }
 
 /**

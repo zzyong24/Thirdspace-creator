@@ -54,7 +54,7 @@ interface ProjectDto {
   readonly startedAt: string;
   readonly targetCompletedAt: string | null;
   // 来源(契约 projectResource.source)。imported = 真实导入的已发布作品 → 概览页突出复盘。
-  readonly source?: "manual" | "topic" | "imported";
+  readonly source?: import("@creatoros/contract").ProjectSource;
   // 结构化 Brief —— 立项工作台读它做初值(契约 projectResource.briefDetail)。
   readonly briefDetail?: {
     readonly targetAudience?: string;

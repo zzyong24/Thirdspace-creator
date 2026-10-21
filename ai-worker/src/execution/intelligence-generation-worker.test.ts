@@ -1,4 +1,5 @@
 import {it, expect, vi, afterEach} from "vitest";
+import {createHash} from 'node:crypto';
 import {createExecutionWorker} from "./worker-runtime";
 import * as providerFactory from "../runtime/provider-factory";
 import {generateIntelligenceInWorker} from "./intelligence-generation-worker";
@@ -13,6 +14,14 @@ async function run(context:unknown=input(),credential:unknown=spec,rejectPort?:s
  try{worker.receive({version:1,type:"run",requestId:"r",execution:{executionTaskId:"e",attempt:1,fenceToken:"f"},deadlineAt:null});await vi.waitFor(()=>expect(messages.some(m=>m.type==="stopped")).toBe(true),observationTimeout?{timeout:observationTimeout}:undefined);return messages;}finally{worker.close();}
 }
 afterEach(()=>{vi.unstubAllGlobals();vi.restoreAllMocks();});
+it.each(['project_artifact','imported_text'] as const)('T1382 %s无网址真实来源沿worker端口生成，未知回执不新增提交',async kind=>{
+ const fetch=vi.fn(()=>{throw Error('不得联网');});vi.stubGlobal('fetch',fetch);
+ const original=input(),text='真实项目来源正文',hash=`sha256:${createHash('sha256').update(text).digest('hex')}`;
+ original.facets.target=JSON.stringify({ownerType:'project',projectId:'project',generationMode:'strategy_backed',source:{kind,projectId:'project',contentHash:hash,title:'来源',authorName:null,url:null,...(kind==='project_artifact'?{artifactId:'source-artifact',artifactVersion:1}:{intakeId:'real-intake',contentText:text})},transcript:{text,hash}});
+ const messages=await run(original,spec,undefined,120000);
+ expect(messages.filter(m=>m.type==='call').map(m=>m.port)).toContain('reserveGenerationCall');
+ expect(messages.filter(m=>m.type==='call').map(m=>m.port)).not.toContain('startCall');expect(fetch).not.toHaveBeenCalled();
+});
 it("真实 Pi 构造与冻结 Skill 到达预留端口，未知回执不联网",async()=>{
  const fetch=vi.fn(()=>{throw Error("不得联网");});vi.stubGlobal("fetch",fetch);
  const messages=await run();

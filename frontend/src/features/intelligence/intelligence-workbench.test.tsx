@@ -236,11 +236,11 @@ describe("T-482 内容雷达工作区", () => {
 
   it("T-938 已升级作品显示真实项目链接，页头不显示受阻计数", async()=>{
     const stub=api();
-    stub.enqueueProjectUpgrades=vi.fn();
-    stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[{id:"upgrade-1",accountId:"account-1",ownerId:detail.item.id,status:"succeeded",checkpoint:{stage:"completed",projectId:"project-actual"},createdAt:"2026-09-09T00:00:00Z"}],total:1});
-    render(<IntelligenceWorkbench accountId="account-1" workspace={{...workspace,blockedCount:2}} items={[{item:detail.item,latestMetric:null,sourceCount:1}]} initialDetail={null} api={stub}/>);
+
+    render(<IntelligenceWorkbench accountId="account-1" workspace={{...workspace,blockedCount:2}} items={[{item:{...detail.item,projectId:"project-actual"},latestMetric:null,sourceCount:1,progressState:"pending_topic"}]} initialDetail={null} api={stub}/>);
     expect(await screen.findByRole("link",{name:"查看项目"})).toHaveAttribute("href","/projects/project-actual");
-    expect(screen.getByText("已升级为项目")).toBeInTheDocument();
+    expect(screen.getByText("项目已创建")).toBeInTheDocument();
+    expect(screen.queryByText("待生成选题")).toBeNull();
     expect(screen.queryByText("受阻 2")).not.toBeInTheDocument();
     expect(screen.queryByRole("button",{name:"升级为项目"})).not.toBeInTheDocument();
   });
@@ -269,19 +269,16 @@ describe("T-482 内容雷达工作区", () => {
 
   it("T-937 升级入队未返回时仍可添加第二个作品，重复点击不重复提交", async()=>{
     const stub=api();
-    stub.enqueueProjectUpgrades=vi.fn();
-    stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[],total:0});
-    stub.enqueueProjectUpgrades=vi.fn(()=>new Promise<{tasks:never[]}>(()=>{}));
+    stub.ensureProject=vi.fn(()=>new Promise<import("@creatoros/contract").ProjectEnsureResult>(()=>{}));
     render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[{item:detail.item,latestMetric:null,sourceCount:1},{item:{...detail.item,id:"item-2",title:"第二个作品"},latestMetric:null,sourceCount:1}]} initialDetail={null} api={stub}/>);
     const buttons=screen.getAllByRole("button",{name:"升级为项目"});
     fireEvent.click(buttons[0]!);fireEvent.click(buttons[0]!);fireEvent.click(buttons[1]!);
-    expect(stub.enqueueProjectUpgrades).toHaveBeenCalledTimes(2);
-    expect(stub.enqueueProjectUpgrades).toHaveBeenNthCalledWith(2,expect.objectContaining({itemIds:["item-2"],positioningVersionId:"position-1"}));
+    expect(stub.ensureProject).toHaveBeenCalledTimes(2);
+    expect(stub.ensureProject).toHaveBeenNthCalledWith(2,expect.objectContaining({source:"radar",itemId:"item-2",positioningVersionId:"position-1"}));
   });
   it("雷达只选方案：详情不提供 AI 转写或改写，只用唯一的升级为项目入口", async()=>{
     const stub=api();
-    stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[],total:0});
-    stub.enqueueProjectUpgrades=vi.fn().mockResolvedValue({tasks:[]});
+    stub.ensureProject=vi.fn().mockResolvedValue({project:{id:"real-project"},sourceReferences:[],preparationTaskId:null,reused:false});
     render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[{item:detail.item,latestMetric:null,sourceCount:1}]} initialDetail={detail} api={stub}/>);
     expect(screen.getByRole("heading",{name:"04 选定方案"})).toBeInTheDocument();
     expect(screen.queryByRole("button",{name:/AI 转写/})).toBeNull();
@@ -290,7 +287,7 @@ describe("T-482 内容雷达工作区", () => {
     const upgrade=document.querySelector('[data-slot="radar-upgrade-button"]') as HTMLButtonElement;
     expect(upgrade).toHaveTextContent("升级为项目");
     fireEvent.click(upgrade);
-    await waitFor(()=>expect(stub.enqueueProjectUpgrades).toHaveBeenCalledWith(expect.objectContaining({itemIds:[detail.item.id],positioningVersionId:"position-1"})));
+    await waitFor(()=>expect(stub.ensureProject).toHaveBeenCalledWith(expect.objectContaining({source:"radar",itemId:detail.item.id,positioningVersionId:"position-1"})));
     expect(stub.enqueueTranscript).not.toHaveBeenCalled();
   });
   it("显示服务端真实总量，并允许继续读取 100 条之后的内容", async () => {

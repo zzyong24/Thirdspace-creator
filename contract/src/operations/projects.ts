@@ -12,17 +12,98 @@ import {
 import {
   projectResource,
   projectBriefDetail,
-  projectSource,
   platformRef,
   projectStageResource,
   contentOutputResource,
   contentRole,
   taskResource,
   projectActivityResource,
+  projectSourceReference,
+  projectPreparationStepName,
+  projectPreparationResource,
+  projectPreparationAcceptanceReceipt,
 } from "../resources/projects";
 
 const projectParams = z.object({ projectId: id });
 const outputParams = z.object({ outputId: id });
+const idempotencyKey = z.string().trim().min(1).max(256);
+const projectCreationFields = {
+  title: z.string().min(1),
+  brief: z.string().default(""),
+  briefDetail: projectBriefDetail.optional(),
+  contentType: contentType.optional(),
+  creationMode: creationMode.optional(),
+  targetPlatforms: z.array(platformId).optional(),
+};
+
+// N-4：资源六值不扩大公开旧创建合同。imported 仍必须由后端可信 ingestion 守卫裁决。
+export const publicProjectCreateSource = z.enum(["manual", "topic", "imported"]);
+export const projectEnsureInput = z.discriminatedUnion("source", [
+  z.object({ source: z.literal("manual"), ...projectCreationFields, idempotencyKey }).strict(),
+  z.object({
+    source: z.literal("quick_create"), ...projectCreationFields, sourceItemId: id.optional(), idempotencyKey,
+  }).strict(),
+  z.object({
+    source: z.literal("topic"), candidateId: id, idempotencyKey: idempotencyKey.optional(),
+  }).strict(),
+  z.object({
+    source: z.literal("radar"), itemId: id, positioningVersionId: id.optional(), idempotencyKey,
+  }).strict(),
+]);
+export type ProjectEnsureInput = z.infer<typeof projectEnsureInput>;
+export const projectEnsureResult = z.object({
+  project: projectResource,
+  preparationTaskId: id.nullable(),
+  sourceReferences: z.array(projectSourceReference),
+  reused: z.boolean(),
+}).strict();
+export type ProjectEnsureResult = z.infer<typeof projectEnsureResult>;
+
+export const projectPreparationStartInput = z.object({
+  idempotencyKey,
+  requestedSteps: z.array(projectPreparationStepName).min(1).max(3).refine(
+    (steps) => new Set(steps).size === steps.length,
+    { message: "准备步骤不能重复" },
+  ),
+}).strict();
+export type ProjectPreparationStartInput = z.infer<typeof projectPreparationStartInput>;
+
+const transcriptSubmissionFields = {
+  parentTaskId: id,
+  referenceId: id,
+  expectedSourceDigest: z.string().min(1),
+  expectedStepRevision: z.number().int().nonnegative(),
+  submissionKey: idempotencyKey,
+};
+export const projectPreparationTranscriptInput = z.discriminatedUnion("inputMode", [
+  z.object({
+    ...transcriptSubmissionFields, inputMode: z.literal("paste"), text: z.string().trim().min(1).max(500_000),
+  }).strict(),
+  // 既有受控上传完成后的真实素材/文件引用；服务端再核归属及实际格式，不接本机路径。
+  z.object({
+    ...transcriptSubmissionFields, inputMode: z.literal("file"),
+    assetId: id, assetFileId: id, format: z.enum(["txt", "md", "srt", "vtt"]),
+  }).strict(),
+]);
+export type ProjectPreparationTranscriptInput = z.infer<typeof projectPreparationTranscriptInput>;
+
+export const projectPreparationCandidateAcceptInput = z.object({
+  idempotencyKey,
+  candidateSourceDigest: z.string().min(1),
+  baseline: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("digest"), digest: z.string().min(1) }).strict(),
+    z.object({
+      kind: z.literal("versions"),
+      projectVersion: z.number().int().nonnegative(),
+      artifactVersion: z.number().int().nonnegative().nullable(),
+    }).strict(),
+  ]),
+  editedContent: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("brief"), brief: z.string(), briefDetail: projectBriefDetail }).strict(),
+    z.object({ kind: z.literal("draft"), text: z.string() }).strict(),
+  ]).optional(),
+}).strict();
+export type ProjectPreparationCandidateAcceptInput = z.infer<typeof projectPreparationCandidateAcceptInput>;
 
 // SPEC §13 "项目与流程" group. `GET /projects/:projectId/overview` is a page
 // composition DTO and is registered under operations/pages.ts.
@@ -59,11 +140,55 @@ export const projectsOperations = {
       targetPlatforms: z.array(platformId).optional(),
       // 数据底座(SPEC §1.2):可选 source/platformRef。省略 → service 默认 manual +
       // 空 platformRef(手动新建行为不变)。ingestion 导入路径经 service 传 imported。
-      source: projectSource.optional(),
+      source: publicProjectCreateSource.optional(),
       platformRef: platformRef.optional(),
+      idempotencyKey: idempotencyKey.optional(),
     }),
     response: projectResource,
     fr: ["FR-PROJECTS-CREATE", "FR-002"],
+  }),
+  ensureProject: defineEndpoint({
+    id: "projects.ensure",
+    method: "POST",
+    path: "/projects/ensure",
+    body: projectEnsureInput,
+    response: projectEnsureResult,
+    fr: ["FR-PROJECTS-ENSURE"],
+  }),
+  getProjectPreparation: defineEndpoint({
+    id: "projects.preparation.get",
+    method: "GET",
+    path: "/projects/:projectId/preparation",
+    params: projectParams,
+    response: projectPreparationResource,
+    fr: ["FR-PROJECTS-PREPARATION"],
+  }),
+  startProjectPreparation: defineEndpoint({
+    id: "projects.preparation.start",
+    method: "POST",
+    path: "/projects/:projectId/preparation",
+    params: projectParams,
+    body: projectPreparationStartInput,
+    response: projectPreparationResource,
+    fr: ["FR-PROJECTS-PREPARATION"],
+  }),
+  provideProjectPreparationTranscript: defineEndpoint({
+    id: "projects.preparation.transcript.provide",
+    method: "POST",
+    path: "/projects/:projectId/preparation/transcript",
+    params: projectParams,
+    body: projectPreparationTranscriptInput,
+    response: projectPreparationResource,
+    fr: ["FR-PROJECTS-PREPARATION"],
+  }),
+  acceptProjectPreparationCandidate: defineEndpoint({
+    id: "projects.preparation.candidate.accept",
+    method: "POST",
+    path: "/projects/:projectId/preparation/candidates/:candidateId/accept",
+    params: z.object({ projectId: id, candidateId: id }),
+    body: projectPreparationCandidateAcceptInput,
+    response: projectPreparationAcceptanceReceipt,
+    fr: ["FR-PROJECTS-PREPARATION"],
   }),
   getProject: defineEndpoint({
     id: "projects.get",

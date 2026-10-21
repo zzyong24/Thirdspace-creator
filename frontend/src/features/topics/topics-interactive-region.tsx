@@ -16,9 +16,9 @@ import { AudienceTaskDetail } from "./audience-task-detail";
  *    AI-sourced candidates arrive via the AI 选题会 confirm flow, NOT this form — C-3).
  *  - `CandidateCard` title selects the detail; its only action is 丢弃 →
  *    `client.patchCandidate { status:'dropped' }`. Detail actions promote via
- *    `client.promoteCandidate` then navigate to `/projects/:id?from=topic`.
+ *    `client.ensureProject` then navigate to `/projects/:id`.
  *    选题页只负责选方案：原「补充信息 / 补全选题卡」入口移到项目页的自动处理流水线
- *    (ProjectPipelinePanel 在 from=topic 时自动在项目编导栏启动 brief.fill)。
+ *    项目准备与候选采纳在项目内继续。
  *  - `CandidateSortControl` (推荐排序 / …) → re-issues `candidates.list` with the new
  *    `sort` via a URL search-param navigation.
  *  - [T-244] 左栏来源行(行业热点/手动灵感,可映射到 candidates.source 枚举的两行)→
@@ -35,6 +35,7 @@ import { useRouter } from "next/navigation";
 import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, ExternalLink, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import {creationScopeKey,readCreationScope,useCreationScope} from "@/lib/creation-workspace-scope";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1022,49 +1023,38 @@ function CandidateDetailPanel({
           <CandidateCardDetail candidate={candidate}/>
         )}
       </div>
-      <CandidateProjectActions candidate={candidate}/>
+      <CandidateProjectActions key={candidate?.id??"none"} candidate={candidate}/>
     </aside>
   );
 }
 
 function CandidateProjectActions({candidate}:{readonly candidate:CandidateResource|null}) {
-  const { pending, run, router } = useMutation();
-  function promote() {
-    if (!candidate) return;
-    run(
-      () =>
-        client.promoteCandidate({
-          params: { candidateId: candidate.id },
-          query: undefined,
-          body: {},
-        }),
-      (result) => {
-        const projectId = (result as { projectId?: string } | null)?.projectId;
-        // 补全资料等处理统一在项目里自动进行：带 from=topic 让项目页自动启动补全。
-        if (projectId) router.push(`/projects/${projectId}?from=topic`);
-        else router.refresh();
-      },
-    );
+  const router=useRouter(),scopeKey=creationScopeKey(useCreationScope());
+  const epoch=React.useRef(0),alive=React.useRef(false),inFlight=React.useRef(false);
+  const [state,setState]=React.useState<{scopeKey:string;pending:boolean;error:string|null;projectId?:string}>({scopeKey,pending:false,error:null});
+  React.useEffect(()=>{const invalidate=()=>{epoch.current++;};alive.current=true;invalidate();inFlight.current=false;return()=>{alive.current=false;invalidate();};},[scopeKey]);
+  const visible=state.scopeKey===scopeKey?state:null;
+  async function promote(){
+    if(!candidate||inFlight.current)return;
+    const turn=epoch.current;inFlight.current=true;setState({scopeKey,pending:true,error:null});
+    const current=()=>alive.current&&epoch.current===turn&&creationScopeKey(readCreationScope())===scopeKey;
+    try{
+      const result=await client.ensureProject({params:undefined,query:undefined,body:{source:"topic",candidateId:candidate.id,idempotencyKey:`topic-ensure:${candidate.id}`}});
+      if(!current())return;
+      setState({scopeKey,pending:false,error:null,projectId:result.project.id});
+      router.push(`/projects/${encodeURIComponent(result.project.id)}`);
+    }catch(error){if(current())setState({scopeKey,pending:false,error:error instanceof Error?error.message:"项目创建结果暂未确认，请使用原方案重试。"});}
+    finally{if(current())inFlight.current=false;}
   }
-
-  return (
-      <section id="topics-create" className={styles.createActions} aria-label="升级为项目">
-        <TopicWorkflowStep step={4} label="升级为项目"/>
-        <p className="text-xs leading-5 text-muted-foreground">选题只负责选定方案；补全资料、转写和写稿会在新项目里自动进行。</p>
-      {candidate ? <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          size="sm"
-          className="h-8 gap-1 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
-          disabled={pending || candidate.status === "promoted"}
-          onClick={promote}
-        >
-          <Rocket className="size-3.5" />
-          {candidate.status === "promoted" ? "已升级为项目" : pending ? "正在升级…" : "升级为项目"}
-        </Button>
-      </div> : <p>先选择一条候选，再进入创作。</p>}
-      </section>
-  );
+  return <section id="topics-create" className={styles.createActions} aria-label="升级为项目">
+    <TopicWorkflowStep step={4} label="升级为项目"/>
+    <p className="text-xs leading-5 text-muted-foreground">选定方案后创建项目；准备进度、补充来源和候选采纳在项目页处理。</p>
+    {candidate?<div className="flex flex-wrap items-center gap-2">
+      {candidate.status==="promoted"||visible?.projectId?<span className="text-xs text-muted-foreground">项目已创建</span>:null}
+      <Button type="button" size="sm" className="h-8 gap-1 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90" disabled={visible?.pending} onClick={()=>void promote()}><Rocket className="size-3.5"/>{visible?.pending?"正在读取项目…":candidate.status==="promoted"||visible?.projectId?"查看项目":"升级为项目"}</Button>
+    </div>:<p>先选择一条候选，再进入创作。</p>}
+    {visible?.error?<p role="alert" className="mt-2 text-sm text-destructive">{visible.error}</p>:null}
+  </section>;
 }
 
 function CandidateCardDetail({candidate}:{readonly candidate: CandidateResource;}) {
@@ -1170,7 +1160,7 @@ function CandidateCardDetail({candidate}:{readonly candidate: CandidateResource;
 // ── 编导起草:一句话 → 补全整张选题卡(A1 把"填表"翻成"审稿")────────────────────────
 // 人只打一句意图;**T-103c 起改为对话内即时反馈**:编导先建裸卡(createCandidate),再打开 Copilot
 // 深链(fn=topic.enrich + selection=新建候选 + 预填话术,不自动发)——补全在对话里流式进行,产 enrich
-// 卡逐条采纳落库,不再后台轮询 confirm。裸卡已进池(title 在),补全没走完也可在卡上再点「补全选题卡」。
+// 卡逐条采纳落库,不再后台轮询 confirm。裸卡已进池(title 在)，用户可选择方案后进入项目继续准备。
 export function IdeaDraftForm({
   sort,
   sourceFilter,
@@ -1256,7 +1246,7 @@ export function IdeaDraftForm({
       <p id={`${inputId}-hint`} className={prepareStyles.ideaHint}>点击后先存为候选，再进入对话补全。</p>
       {phase === "error" ? (
         <p className="mt-1.5 pl-6 text-[11px] text-muted-foreground">
-          打开对话出错,请重试 —— 裸卡若已建也已进池,你可在卡上点「补全选题卡」再补。
+          打开对话出错，请重试。已保存的候选仍在选题池中，可以选定方案后进入项目。
         </p>
       ) : null}
     </div>

@@ -213,7 +213,7 @@ export interface PlatformRef {
   hidden?: boolean;
 }
 
-export type ProjectSource = "manual" | "topic" | "imported";
+export type ProjectSource = import("@creatoros/contract").ProjectSource;
 
 export interface CreateProjectCommand {
   title: string;
@@ -459,7 +459,7 @@ export interface ProjectsService {
     id: string;
     title: string;
     status: string;
-    source: "manual" | "topic" | "imported";
+    source: ProjectSource;
     currentStage: string;
     updatedAt: string;
     outputs: Array<{ id: string; status: string }>;
@@ -1225,7 +1225,7 @@ export function createProjectsService(
         externalId: input.externalId,
       });
       const targets = matches.filter(
-        (project) => project.id !== input.canonicalProjectId,
+        (project) => project.accountId === ctx.accountId && project.id !== input.canonicalProjectId,
       );
       const ts = deps.now();
       const candidates = targets.filter(
@@ -1744,7 +1744,7 @@ export function createProjectsService(
         id: project.id,
         title: project.title,
         status: project.status,
-        source: project.source as "manual" | "topic" | "imported",
+        source: project.source as ProjectSource,
         currentStage: project.currentStage,
         updatedAt: project.updatedAt,
         outputs: outputs.map((output) => ({

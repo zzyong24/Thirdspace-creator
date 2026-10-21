@@ -3,7 +3,7 @@ import {z} from 'zod';
 import type {executionCalls,executionTasks} from '@creatoros/backend';
 import {chatWorkerInputSchema,codexModelSpecSchema,structuredGenerationInputSchema,intelligenceRewriteInputSchema,externalChatStartSchema,frozenExecutionEngine,isContinuousExecutionBudget,workerTaskInputSchema,videoFrozenSchema} from '@creatoros/contract/execution-worker';
 import {canonicalJson} from '../ai/canonical-json';
-import {frozenChatModelRouteForCall,frozenNonChatModelBindingForCall} from './execution-model-identity.service';
+import {frozenChatModelRouteForCall,frozenNonChatModelBindingForCall,frozenProjectPreparationGenerationBinding} from './execution-model-identity.service';
 type Task=typeof executionTasks.$inferSelect;
 type Call=typeof executionCalls.$inferSelect;
 const object=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
@@ -18,7 +18,8 @@ export function originalCodexReadBinding(task:Task,call:Call){
  const payload=object(task.payload),visual=object(payload.executionRoute).schemaVersion===2&&payload.stageKind==='video.visual-review',input=workerTaskInputSchema.safeParse(visual?payload.reviewInput:payload.modelInput),chat=chatWorkerInputSchema.safeParse(payload.modelInput);
  const v2=object(payload.executionRoute).schemaVersion===2,own=v2&&!chat.success?frozenNonChatModelBindingForCall(task,call):null;
  const chatV2=chat.success&&object(payload.executionRoute).schemaVersion===2;
- const intelligence=(task.kind==='topic_preview'&&task.ownerType==='transform')||(task.kind==='script_candidate'&&task.ownerType==='project');
+ const projectPreview=task.kind==='topic_preview'&&task.ownerType==='project'&&!!frozenProjectPreparationGenerationBinding(task);
+ const intelligence=projectPreview||(task.kind==='topic_preview'&&task.ownerType==='transform')||(task.kind==='script_candidate'&&task.ownerType==='project');
  if((!intelligence&&(task.kind!=='ai_task'||task.ownerType!=='ai_task'||(!visual&&payload.aiTaskId!==task.ownerId)||!input.success))||
   (v2?(chatV2?frozenChatModelRouteForCall(payload,call)?.source:own?.route.source)!=='codex':(frozenExecutionEngine(payload)!=='codex'&&!(payload.executionRoute===undefined&&chat.success&&chat.data.executionEngine==='codex')))||
   call.executionTaskId!==task.id||!['model','external_agent'].includes(call.kind)||!['started','unknown'].includes(call.status)||

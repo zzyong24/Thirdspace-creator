@@ -1,3 +1,4 @@
+import {readPreparationParentProof} from './execution-preparation-parent';
 import {z} from 'zod';
 import {isDeepStrictEqual} from 'node:util';
 import {eq,desc,executionTasks,executionCalls,aiTasks,aiTaskSteps,type Db} from '@creatoros/backend';
@@ -35,9 +36,9 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
  }
  const service={
   async prepareItem(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
-   const {awemeId}=workerPortInputSchemas.prepareTranscribeItem.parse(raw),initial=await access(ref,awemeId,async(scope,state)=>({context:scope.context,receipt:entries(state.payload)[awemeId]??null,source:sources(state.payload)[awemeId]??null}));signal?.throwIfAborted();
+   const {awemeId}=workerPortInputSchemas.prepareTranscribeItem.parse(raw),initial=await access(ref,awemeId,async(scope,state)=>({context:scope.context,receipt:entries(state.payload)[awemeId]??null,source:sources(state.payload)[awemeId]??null,preparation:readPreparationParentProof(scope.task)}));signal?.throwIfAborted();
    if(initial.receipt&&initial.receipt.status!=='failed')return {receipt:initial.receipt,source:initial.source};
-   const exists=await deps.hasTranscriptArtifact(initial.context,awemeId);signal?.throwIfAborted();
+   const exists=initial.preparation?false:await deps.hasTranscriptArtifact(initial.context,awemeId);signal?.throwIfAborted();
    return access(ref,awemeId,async(scope,state)=>{
     signal?.throwIfAborted();const previous=entries(state.payload)[awemeId];
     if(previous&&previous.status!=='failed')return {receipt:previous,source:sources(state.payload)[awemeId]??null};
@@ -53,7 +54,7 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
   });},
   async saveArtifact(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
    const {awemeId}=workerPortInputSchemas.saveTranscribeArtifact.parse(raw);
-   const initial=await access(ref,awemeId,async(scope,state)=>({context:scope.context,source:sources(state.payload)[awemeId],receipt:entries(state.payload)[awemeId]}));
+   const initial=await access(ref,awemeId,async(scope,state)=>({context:scope.context,source:sources(state.payload)[awemeId],receipt:entries(state.payload)[awemeId],preparation:readPreparationParentProof(scope.task)}));
    if(initial.receipt&&initial.receipt.status!=='failed')return initial.receipt;
    const album=initial.source?.kind==='image-album';
    const post=album?null:await deps.postprocess.read(ref,{awemeId},signal);
@@ -68,10 +69,11 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
      const original=transcribePostprocessResultSchema.safeParse(frozen),observed=transcribePostprocessResultSchema.safeParse(post);
      if(!original.success||!observed.success||!isDeepStrictEqual(original.data,observed.data))throw new ConflictError('后处理最终正文与原回执不符');
     }
-    const bound=await createTranscriptArtifactService({db:scope.tx as unknown as Db,now:deps.now,nextId:deps.nextId}).ensure(scope.context,{awemeId,transcript:album?'(图集作品,无口播音频)':post!.transcript,source:album?'image-album':'transcribed',...(album?{skipMasterScript:true}:{})});
+    const artifactService=createTranscriptArtifactService({db:scope.tx as unknown as Db,now:deps.now,nextId:deps.nextId}),preparation=readPreparationParentProof(scope.task);
+    const bound=preparation?await artifactService.ensurePreparation(scope.context,{projectId:preparation.projectId,referenceId:preparation.sourceReferenceId!,parentTaskId:preparation.parentTaskId,executionTaskId:scope.task.id,awemeId,transcript:album?'(图集作品,无口播音频)':post!.transcript}):await artifactService.ensure(scope.context,{awemeId,transcript:album?'(图集作品,无口播音频)':post!.transcript,source:album?'image-album':'transcribed',...(album?{skipMasterScript:true}:{})});
     signal?.throwIfAborted();return store(scope,state,{awemeId,status:bound.status==='skipped'&&bound.reason==='no-imported-project'?'no-project':album?'image-album':'saved',projectId:'projectId'in bound?bound.projectId??null:null,error:null},post??undefined);
    });
-   if(result.projectId&&!album&&deps.onTranscriptReady){try{signal?.throwIfAborted();await deps.onTranscriptReady(initial.context,{awemeId,projectId:result.projectId});}catch{/* 派生任务失败不能反转已保存事实。 */}}
+   if(result.projectId&&!album&&!initial.preparation&&deps.onTranscriptReady){try{signal?.throwIfAborted();await deps.onTranscriptReady(initial.context,{awemeId,projectId:result.projectId});}catch{/* 派生任务失败不能反转已保存事实。 */}}
    return result;
   },
   async failItem(ref:ExecutionRef,raw:unknown){const {awemeId,error}=workerPortInputSchemas.failTranscribeItem.parse(raw);return access(ref,awemeId,async(scope,state)=>{

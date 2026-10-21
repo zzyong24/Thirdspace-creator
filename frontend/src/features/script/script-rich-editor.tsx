@@ -265,8 +265,12 @@ export function ScriptRichEditor({
       appliedHtmlRef.current = next;
       return;
     }
+    // 准备候选采纳后的读回也必须保留在途输入；不能用外部已保存版本覆盖脏稿。
+    if(creationScopeKey(readCreationScope())!==scriptScopeKey)return;
+    if(saveStatusRef.current!=="saved") { appliedHtmlRef.current=next; return; }
     appliedHtmlRef.current = next;
     if (editor.getHTML() !== next) {
+      generationRef.current++;
       editor.commands.setContent(next, { emitUpdate: false });
     }
     // 已应用一个新的外部值 → 清掉 echo 守卫,让「保存后又被外部合法带回同一内容」(如版本回滚
@@ -275,7 +279,7 @@ export function ScriptRichEditor({
     // setContent(emitUpdate:false) 不触发 onUpdate,故在此显式同步派生态(刚载入 = 已保存)。
     setSaveStatus("saved");
     setWordCount(editor.getText().length);
-  }, [initialHtml, editor]);
+  }, [initialHtml, editor,scriptScopeKey,saveStatus]);
 
   // 把 editor 句柄交给可选回调(测试用;生产不传)。仅在实例创建后触发一次。
   React.useEffect(() => {
@@ -399,7 +403,7 @@ export function ScriptRichEditor({
     check();if(editor.getHTML()!==html||saveStatusRef.current!=="saved")throw Error("脚本在保存期间已改变，本次未生成。");
     return {kind:"project_script",id,versionId};
   };},[artifactId,editor,projectId,performSave,scriptScopeKey]);
-  React.useEffect(()=>registerScript({readState:()=>({generation:generationRef.current}),prepareForCreation:()=>prepareScriptRef.current()}),[registerScript,editor,projectId,scriptScopeKey]);
+  React.useEffect(()=>registerScript({readState:()=>({generation:generationRef.current,projectId,scopeKey:scriptScopeKey,dirty:saveStatusRef.current!=="saved",saving:savePendingRef.current,artifactId:artifactIdRef.current}),prepareForCreation:()=>prepareScriptRef.current()}),[registerScript,editor,projectId,scriptScopeKey]);
   const handleSave = React.useCallback(() => {
     startTransition(() => {
       void performSave().catch(() => {});

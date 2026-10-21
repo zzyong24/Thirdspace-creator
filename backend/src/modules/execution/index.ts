@@ -1,5 +1,7 @@
+export {retireLegacyRadarUpgrades} from "./retired-radar-upgrade.service";
 // Execution 模块(T-255a 执行层框架,脑手分离)—— 唯一公共出口(foundation §1)。
 export {readFrozenChatExecutionEngine} from './execution-chat-route.service';
+export { createLegacyRadarProjectLookupService, type LegacyRadarProjectIdentity } from "./legacy-radar-project-lookup.service";
 //
 // 存储复用 ai_tasks(taskType 命名空间 `exec.*`,六态 + 步骤流 + 结果表现成,零新表/
 // 零迁移);本模块自己不碰 db,读写全经注入的 AI/Assets 端口(SPEC §22)。组成:

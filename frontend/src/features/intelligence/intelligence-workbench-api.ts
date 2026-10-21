@@ -9,23 +9,8 @@ export function defaultApi(scope?:RadarScope): RadarApi {
   const radarTransport=createHttpTransport("/api/v1",scope?.groupId?{groupId:scope.groupId}:scope);
   const client=createClient(ENDPOINTS,radarTransport);
   return {
-    async enqueueProjectUpgrades(input){
-      return client.enqueueIntelligenceProjectUpgrades({params:undefined,query:undefined,body:input});
-    },
-    async listProjectUpgrades(input){
-      const result=await requestListWithMeta(radarTransport,ENDPOINTS.listExecutionTasks,{params:undefined,query:{...radarAccountInput(input),kind:"radar_project_upgrade",page:input.page,pageSize:100},body:undefined});
-      return {tasks:result.data.map(row=>executionTaskResourceV2.parse(row)),total:result.meta.total};
-    },
-    async getProjectUpgrade(task){
-      // 持久队列的公共读取仍是带 V2 筛选的 list；旧 get 属于 ai_tasks。
-      // 只恢复活跃作品的原任务，保留公开分页契约与原 ID。
-      for(let page=1;;page++){
-        const result=await requestListWithMeta(radarTransport,ENDPOINTS.listExecutionTasks,{params:undefined,query:{...radarAccountInput(scope??{}),kind:"radar_project_upgrade",ownerId:task.ownerId,page,pageSize:100},body:undefined});
-        const original=result.data.map(row=>executionTaskResourceV2.parse(row)).find(row=>row.id===task.id&&(!scope||radarTaskInScope(row,scope)));
-        if(original)return original;
-        if(result.data.length===0 || page*100>=result.meta.total)throw new Error("原升级任务暂未读到，请稍后恢复。");
-      }
-    },
+    ensureProject: input=>client.ensureProject({params:undefined,query:undefined,body:input}),
+    getProjectPreparation: projectId=>client.getProjectPreparation({params:{projectId},query:undefined,body:undefined}),
     async listShareImportTasks(input) {
       const rows: unknown = await client.listExecutionTasks({params: undefined, query: {...scopedInput(input), kind: "share_import", page: input.page ?? 1, pageSize: 100}, body: undefined});
       if (!Array.isArray(rows)) throw new Error("导入任务列表回执格式不正确，请刷新核对。");

@@ -6,6 +6,8 @@
 // notifications.db-schema.ts ↔ backend/src/schema/projects.ts).
 export {
   projects,
+  projectSourceReferences,
+  projectIntakes,
   projectActivities,
   projectStages,
   projectTargetPlatforms,

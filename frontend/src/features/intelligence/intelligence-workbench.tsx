@@ -18,24 +18,19 @@ Search,
 ShieldCheck,
 Heart,
 Flame,
-Sparkles,
-Trash2,
-Upload
+Trash2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {radarScopeKey} from "./intelligence-workbench-types";
 import {readRadarView,saveRadarView} from "./radar-view-preferences";
 import * as React from "react";
 import { AddCollectionDialog,ImportDouyinShareDialog } from "./collection-import-dialogs";
-import { transcriptSaveErrorMessage } from "./intelligence-errors";
 import { AddSourceDialog } from "./source-setup-dialog";
 import { useSourceRuns } from "./use-source-runs";
 import { useTopicPreview } from "./use-topic-preview";
 import { useTranscriptRefresh } from "./use-transcript-refresh";
 import { RadarUpgradeAction } from "./radar-upgrade-action";
-import { useProjectUpgradeQueue,upgradeLabel,upgradeProjectId,upgradeNotice,upgradeNeedsResultCheck } from "./use-project-upgrade-queue";
-import type {ExecutionTaskResourceV2} from "@creatoros/contract";
+import { useProjectUpgradeQueue,type RadarProjectState } from "./use-project-upgrade-queue";
 export { favoriteFoldersErrorMessage,sourceVerificationErrorMessage } from "./intelligence-errors";
 export type * from "./intelligence-workbench-types";
 
@@ -49,9 +44,7 @@ DialogHeader,
 DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { prepareTranscriptUpload } from "./intelligence-transcript-upload";
 import { defaultApi } from "./intelligence-workbench-api";
 import type { RadarApi,RadarItemDetail,RadarItemPage,RadarItemRow,RadarSort,RadarSource,RadarTopicState,RadarTranscriptState,RadarWorkspace } from "./intelligence-workbench-types";
 
@@ -171,9 +164,9 @@ function IntelligenceWorkbenchScope({
   }, [detail?.item.id]);
 
   const {resetTopicPreview}=useTopicPreview({api,detail,positioningVersionId,setDetail,setNotice,setBusy,activeDetailItemId});
-  const upgrades=useProjectUpgradeQueue({api,...scope,positioningVersionId,setNotice});
+  const upgrades=useProjectUpgradeQueue({api,...scope,items:detail?[...scopedItems.map(row=>row.item),detail.item]:scopedItems.map(row=>row.item),positioningVersionId,setNotice});
   useTranscriptRefresh({api,detail,rows:scopedItems,setDetail,setRows:setScopedItems,activeItemId:activeDetailItemId,
-    pendingItemIds:upgrades.tasks.filter(task=>["queued","running"].includes(task.status)&&task.checkpoint&&typeof task.checkpoint==="object"&&"stage" in task.checkpoint&&task.checkpoint.stage==="transcribing").map(task=>task.ownerId),
+
   });
 
   React.useEffect(() => {
@@ -761,49 +754,6 @@ function IntelligenceWorkbenchScope({
     }
   }, [api, removalBusy, removalSource, router, runningSourceIds]);
 
-  const uploadTranscript = React.useCallback(
-    async (
-      input:
-        | { inputMode: "paste"; text: string }
-        | {
-            inputMode: "file";
-            format: "txt" | "md" | "srt" | "vtt";
-            fileName: string;
-            text: string;
-          },
-    ): Promise<boolean> => {
-      if (!detail) return false;
-      const itemId = detail.item.id;
-      const replacing = Boolean(detail.transcript.text);
-      setBusy(true);
-      setNotice(null);
-      try {
-        const transcript = await api.uploadTranscript({
-          itemId,
-          ...input,
-        });
-        setDetail((current) =>
-          current?.item.id === itemId
-            ? { ...current, transcript }
-            : current,
-        );
-        setNotice(
-          replacing
-            ? "逐字稿已替换，可以继续生成选题候选。"
-            : "逐字稿已保存，可以继续生成选题候选。",
-        );
-        router.refresh();
-        return true;
-      } catch (error) {
-        setNotice(transcriptSaveErrorMessage(error));
-        return false;
-      } finally {
-        setBusy(false);
-      }
-    },
-    [api, detail, router],
-  );
-
 
   const sourceDialogs = {
     collection: (
@@ -872,7 +822,7 @@ function IntelligenceWorkbenchScope({
               内容雷达
             </h1>
             <p className="truncate text-xs text-muted-foreground">
-              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
+              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿在项目内补充或转写
             </p>
           </div>
         </div>
@@ -1281,12 +1231,6 @@ function IntelligenceWorkbenchScope({
             </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {upgrades.tasks.some(task=>!["succeeded","cancelled"].includes(task.status)) ? (
-              <div role="status" className="mb-3 rounded-xl bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-                项目升级队列 · {upgrades.tasks.filter(task=>!["succeeded","failed","blocked","cancelled"].includes(task.status)).length} 项处理中或排队
-                {upgrades.tasks.some(task=>["failed","blocked"].includes(task.status))?" · 部分作品需要处理，可在对应卡片重试":" · 后台依次处理，可继续添加作品"}
-              </div>
-            ):null}
             {itemsLoading && filteredItems.length === 0 ? (
               <div
                 role="status"
@@ -1323,14 +1267,13 @@ function IntelligenceWorkbenchScope({
                     row={row}
                     active={detail?.item.id === row.item.id}
                     onSelect={() => selectItem(row.item.id)}
-                    upgradeTask={upgrades.byItem.get(row.item.id)}
+                    upgradeState={upgrades.byItem.get(row.item.id)}
                     upgradeSubmitting={upgrades.submitting.has(row.item.id)}
-                    onUpgrade={api.enqueueProjectUpgrades?()=>{
-                      const projectId=upgradeProjectId(upgrades.byItem.get(row.item.id));
+                    onUpgrade={api.ensureProject?()=>{
+                      const projectId=upgrades.byItem.get(row.item.id)?.projectId;
                       if(projectId)router.push(`/projects/${encodeURIComponent(projectId)}`);
                       else void upgrades.enqueue(row.item.id);
                     }:undefined}
-                    onCancelUpgrade={()=>{const task=upgrades.byItem.get(row.item.id);if(task)void upgrades.cancel(task);}}
                   />
                 ))}
               </div>
@@ -1389,15 +1332,13 @@ function IntelligenceWorkbenchScope({
               <ItemDetail
                 detail={detail}
                 busy={busy}
-                onUploadTranscript={uploadTranscript}
-                upgradeTask={upgrades.byItem.get(detail.item.id)}
+                upgradeState={upgrades.byItem.get(detail.item.id)}
                 upgradeSubmitting={upgrades.submitting.has(detail.item.id)}
-                onUpgrade={api.enqueueProjectUpgrades?()=>{
-                  const projectId=upgradeProjectId(upgrades.byItem.get(detail.item.id));
+                onUpgrade={api.ensureProject?()=>{
+                  const projectId=upgrades.byItem.get(detail.item.id)?.projectId;
                   if(projectId)router.push(`/projects/${encodeURIComponent(projectId)}`);
                   else void upgrades.enqueue(detail.item.id);
                 }:undefined}
-                onCancelUpgrade={()=>{const task=upgrades.byItem.get(detail.item.id);if(task)void upgrades.cancel(task);}}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
@@ -1657,15 +1598,14 @@ function ItemCard({
   row,
   active,
   onSelect,
-  upgradeTask,upgradeSubmitting,onUpgrade,onCancelUpgrade,
+  upgradeState,upgradeSubmitting,onUpgrade,
 }: {
   row: RadarItemRow;
   active: boolean;
   onSelect: () => void;
-  upgradeTask?:ExecutionTaskResourceV2;
+  upgradeState?:RadarProjectState;
   upgradeSubmitting?:boolean;
   onUpgrade?:()=>void;
-  onCancelUpgrade?:()=>void;
 }) {
   return (
     <div
@@ -1692,61 +1632,22 @@ function ItemCard({
             评论 {compactNumber(row.latestMetric?.commentCount ?? null)}
           </span>
           <span>{row.sourceCount} 个来源</span>
-          {progressLabel(row.progressState) ? (
+          {!(row.item.projectId || upgradeState?.projectId) && progressLabel(row.progressState) ? (
             <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-              {upgradeNeedsResultCheck(upgradeTask)?"转写待确认":progressLabel(row.progressState)}
+              {progressLabel(row.progressState)}
             </span>
           ) : null}
         </div>
       </button>
-      {onUpgrade ? <div className="border-t border-border/50 px-3.5 py-2">
-        <div className="flex items-center gap-2">
-          {upgradeProjectId(upgradeTask) ? <>
-            <span className="text-xs text-muted-foreground">已升级为项目</span>
-            <Link className="ml-auto inline-flex h-7 items-center gap-1 text-xs text-primary" href={`/projects/${encodeURIComponent(upgradeProjectId(upgradeTask)!)}`}>查看项目<ChevronRight className="size-3.5" /></Link>
-          </> : <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-primary" onClick={onUpgrade}
-            disabled={upgradeSubmitting || Boolean(upgradeTask && !["succeeded","failed","blocked","cancelled","paused"].includes(upgradeTask.status))}>
-            <Sparkles className="size-3.5" />{upgradeSubmitting?"正在加入…":upgradeLabel(upgradeTask)}
-          </Button>}
-          {upgradeTask && ["queued","running","paused","pause_requested"].includes(upgradeTask.status)?<Button size="sm" variant="ghost" className="ml-auto h-7 text-xs text-muted-foreground" onClick={onCancelUpgrade}>取消</Button>:null}
-        </div>
-        {upgradeNotice(upgradeTask)?<p className="mt-1 text-xs text-warning">{upgradeNotice(upgradeTask)}</p>:null}
-      </div>:null}
+      {(onUpgrade||upgradeState)?<RadarUpgradeAction compact state={upgradeState} submitting={upgradeSubmitting??false} onUpgrade={onUpgrade}/>:null}
+
     </div>
   );
 }
 
-function ItemDetail({
-  detail,
-  busy,
-  onUploadTranscript,
-  upgradeTask,
-  upgradeSubmitting,
-  onUpgrade,
-  onCancelUpgrade,
-}: {
-  detail: RadarItemDetail;
-  busy: boolean;
-  onUploadTranscript: (
-    input:
-      | { inputMode: "paste"; text: string }
-      | {
-          inputMode: "file";
-          format: "txt" | "md" | "srt" | "vtt";
-          fileName: string;
-          text: string;
-        },
-  ) => Promise<boolean>;
-  upgradeTask?: ExecutionTaskResourceV2;
-  upgradeSubmitting: boolean;
-  onUpgrade?: () => void;
-  onCancelUpgrade?: () => void;
-}) {
-  const [transcriptEditorOpen, setTranscriptEditorOpen] =
-    React.useState(false);
+function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:RadarItemDetail;busy?:boolean;upgradeState?:RadarProjectState;upgradeSubmitting:boolean;onUpgrade?:()=>void}) {
   const latest = detail.metrics[0] ?? null;
   // 雷达只负责选方案：转写、拆解、写稿全部在「升级为项目」后的项目流水线里自动完成。
-  // 仅当原升级任务卡在「转写结果待确认」时，保留手动补充逐字稿这一恢复路径。
   const transcriptCooling=detail.transcript.errorCode==="TRANSCRIBE_SOURCE_COOLDOWN" && detail.transcript.status==="queued";
   const transcriptBusy =
     detail.transcript.status === "queued" ||
@@ -1754,22 +1655,9 @@ function ItemDetail({
   const transcriptLocked = detail.transforms.some(
     (transform) => transform.status === "confirmed",
   );
-  const needsTranscriptRecovery = upgradeNeedsResultCheck(upgradeTask);
-  const transcriptCanChange =
-    needsTranscriptRecovery && !transcriptLocked && !transcriptBusy;
   const sourceEvidence = groupRadarSourceEvidence(detail.snapshots);
   return (
     <div className="flex min-h-full flex-col">
-      {transcriptEditorOpen ? (
-        <TranscriptEditorDialog
-          open
-          currentText={detail.transcript.text ?? ""}
-          replacing={Boolean(detail.transcript.text)}
-          busy={busy}
-          onClose={() => setTranscriptEditorOpen(false)}
-          onSave={onUploadTranscript}
-        />
-      ) : null}
       <div className="border-b border-border/70 p-5">
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">03</span> 阅读核对</h2>
         <div className="flex items-start justify-between gap-4">
@@ -1846,7 +1734,7 @@ function ItemDetail({
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-xs leading-5 text-muted-foreground">
-                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : needsTranscriptRecovery ? "转写结果尚未确认，请补充逐字稿后继续升级。" : "升级为项目后，会在项目里自动转写正文。"}
+                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "升级为项目后，会在项目里自动转写正文。"}
               </p>
             </div>
           )}
@@ -1856,22 +1744,7 @@ function ItemDetail({
               已用于生成选题，逐字稿永久锁定。
             </p>
           ) : null}
-          {transcriptCanChange ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={() => setTranscriptEditorOpen(true)}
-                className="gap-1.5"
-                data-slot="radar-transcript-recovery"
-              >
-                <Upload className="size-3.5" />
-                补充逐字稿后继续升级
-              </Button>
-            </div>
-          ) : null}
+
         </section>
 
         <section>
@@ -1913,188 +1786,16 @@ function ItemDetail({
         <section data-radar-step="upgrade" className="border-t border-border pt-5">
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">04</span> 选定方案</h3>
           <p className="text-xs leading-5 text-muted-foreground">
-            选中这条作为方案后升级为项目。项目会自动依次完成转写、选题拆解与补全资料、生成文案，进度在项目页查看。
+            选中这条作为方案后升级为项目。项目会保留来源；准备进度、补充逐字稿和候选采纳都在项目页处理。
           </p>
           <RadarUpgradeAction
-            task={upgradeTask}
-            submitting={upgradeSubmitting}
+            state={upgradeState}
+            submitting={upgradeSubmitting??false}
             onUpgrade={onUpgrade}
-            onCancel={onCancelUpgrade}
           />
         </section>
       </div>
     </div>
-  );
-}
-
-function TranscriptEditorDialog({
-  open,
-  currentText,
-  replacing,
-  busy,
-  onClose,
-  onSave,
-}: {
-  open: boolean;
-  currentText: string;
-  replacing: boolean;
-  busy: boolean;
-  onClose: () => void;
-  onSave: (
-    input:
-      | { inputMode: "paste"; text: string }
-      | {
-          inputMode: "file";
-          format: "txt" | "md" | "srt" | "vtt";
-          fileName: string;
-          text: string;
-        },
-  ) => Promise<boolean>;
-}) {
-  const [text, setText] = React.useState(currentText);
-  const [file, setFile] =
-    React.useState<Awaited<ReturnType<typeof prepareTranscriptUpload>> | null>(
-      null,
-    );
-  const [error, setError] = React.useState<string | null>(null);
-  const [preparing, setPreparing] = React.useState(false);
-  const [saving, setSaving] = React.useState(false);
-
-  const normalized = text.trim();
-  const byteLength = new TextEncoder().encode(normalized).byteLength;
-  const invalid =
-    !normalized ||
-    normalized.includes("\ufffd") ||
-    normalized.length > 500_000 ||
-    byteLength > 2 * 1024 * 1024;
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next && !saving) onClose();
-      }}
-    >
-      <DialogContent className="max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {replacing ? "替换逐字稿" : "添加逐字稿"}
-          </DialogTitle>
-          <DialogDescription>
-            直接粘贴正文，或从 TXT、Markdown、SRT、VTT 文件导入后检查再保存。
-          </DialogDescription>
-        </DialogHeader>
-        <div
-          data-slot="transcript-editor-body"
-          className="min-h-0 space-y-3 overflow-y-auto pr-1"
-        >
-          <label
-            className={cn(
-              "inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-              (busy || preparing || saving) &&
-                "pointer-events-none opacity-50",
-            )}
-          >
-            <Upload className="size-3.5" />
-            从文件导入
-            <input
-              type="file"
-              accept=".txt,.md,.srt,.vtt,text/plain,text/markdown,text/vtt,application/x-subrip"
-              aria-label="从文件导入逐字稿"
-              className="sr-only"
-              disabled={busy || preparing || saving}
-              onChange={(event) => {
-                const selected = event.currentTarget.files?.[0];
-                event.currentTarget.value = "";
-                if (!selected) return;
-                setPreparing(true);
-                setError(null);
-                void prepareTranscriptUpload(selected)
-                  .then((prepared) => {
-                    setFile(prepared);
-                    setText(prepared.text);
-                  })
-                  .catch((caught) =>
-                    setError(
-                      caught instanceof Error
-                        ? caught.message
-                        : "文件读取失败，请重新选择。",
-                    ),
-                  )
-                  .finally(() => setPreparing(false));
-              }}
-            />
-          </label>
-          {file ? (
-            <p className="text-xs text-muted-foreground">
-              已导入 {file.fileName}，保存前仍可继续修改正文。
-            </p>
-          ) : null}
-          <Textarea
-            aria-label="逐字稿正文"
-            value={text}
-            disabled={busy || saving}
-            onChange={(event) => {
-              setText(event.target.value);
-              setError(null);
-            }}
-            placeholder="在这里粘贴或编辑逐字稿正文…"
-            className="field-sizing-fixed min-h-64 max-h-[min(50dvh,28rem)] resize-y overflow-y-auto text-sm leading-6"
-          />
-          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>
-              {normalized.length.toLocaleString("zh-CN")} 字 ·{" "}
-              {byteLength.toLocaleString("zh-CN")} 字节
-            </span>
-            {error ? (
-              <span role="alert" className="text-destructive">
-                {error}
-              </span>
-            ) : invalid ? (
-              <span className="text-warning">
-                正文不能为空、包含乱码或超过 2 MiB / 500,000 字。
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={saving}
-            onClick={onClose}
-          >
-            取消
-          </Button>
-          <Button
-            type="button"
-            disabled={busy || preparing || saving || invalid}
-            onClick={() => {
-              setSaving(true);
-              setError(null);
-              const payload = file
-                ? {
-                    inputMode: "file" as const,
-                    format: file.format,
-                    fileName: file.fileName,
-                    text: normalized,
-                  }
-                : {
-                    inputMode: "paste" as const,
-                    text: normalized,
-                  };
-              void onSave(payload)
-                .then((saved) => {
-                  if (saved) onClose();
-                })
-                .finally(() => setSaving(false));
-            }}
-          >
-            {saving ? "保存中…" : "保存逐字稿"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
+import {creationScopeKey,readCreationScope} from "@/lib/creation-workspace-scope";
 
 /**
  * `draft-chat-request.tsx` — 稿面「外部对话请求」协调器(T-108,方案 A · lift state)。
@@ -108,7 +109,7 @@ export interface DraftEditorPort {
   ): Promise<EditorAdoption>;
 }
 export interface DraftScriptPort {
-  readState(): { generation: number };
+  readState(): { generation: number; projectId?:string|null; scopeKey?:string; dirty?:boolean; saving?:boolean; artifactId?:string|null };
   prepareForCreation(): Promise<ScriptSourceRef>;
 }
 /** SEMANTIC_BOUNDARY_ALLOW: JSON 字段顺序规范化只用于同一稿件/回执核验，不判断内容。 */
@@ -228,6 +229,7 @@ interface DraftChatRequestContextValue {
   ) => Promise<EditorAdoption | null>;
   readonly registerScript: (port: DraftScriptPort) => () => void;
   readonly prepareScriptForCreation: () => Promise<ScriptSourceRef>;
+  readonly captureScriptAdoption: (projectId:string,scopeKey:string) => () => boolean;
   readonly notifyEditorChanged: () => void;
   readonly notifyEditorReady: (port: DraftEditorPort) => void;
 
@@ -458,6 +460,13 @@ export function DraftChatRequestProvider({
       throw Error("脚本在保存期间已改变，本次未生成。");
     return source;
   }, []);
+  const captureScriptAdoption=React.useCallback((projectId:string,scopeKey:string)=>{
+    const entry=scriptRef.current,state=entry?.port.readState();
+    if(!entry||!state||state.projectId!==projectId||state.scopeKey!==scopeKey||creationScopeKey(readCreationScope())!==scopeKey)
+      throw Error("当前项目脚本尚未准备好，请回原项目核对。");
+    if(state.dirty||state.saving)throw Error("当前脚本有未保存修改，请先保存或核对，候选尚未采纳。");
+    return ()=>{const after=entry.port.readState();return providerAlive.current&&scriptRef.current===entry&&after.projectId===projectId&&after.scopeKey===scopeKey&&creationScopeKey(readCreationScope())===scopeKey&&after.generation===state.generation&&!after.dirty&&!after.saving;};
+  },[]);
   const previewEditorCandidate = React.useCallback(
     async (candidate: WorkEditorCandidate) => {
       const entry = editorRef.current;
@@ -526,6 +535,7 @@ export function DraftChatRequestProvider({
       adoptEditorCandidate,
       registerScript,
       prepareScriptForCreation,
+      captureScriptAdoption,
       notifyEditorChanged,
       notifyEditorReady,
     }),
@@ -545,6 +555,7 @@ export function DraftChatRequestProvider({
       adoptEditorCandidate,
       registerScript,
       prepareScriptForCreation,
+      captureScriptAdoption,
       notifyEditorChanged,
       notifyEditorReady,
       editorTick,
@@ -579,6 +590,7 @@ const NOOP_VALUE: DraftChatRequestContextValue = {
   prepareScriptForCreation: async () => {
     throw Error("请先打开当前脚本。");
   },
+  captureScriptAdoption:()=>{throw Error("请在当前项目脚本内采纳候选。");},
   notifyEditorChanged: () => {},
   notifyEditorReady: () => {},
   request: null,

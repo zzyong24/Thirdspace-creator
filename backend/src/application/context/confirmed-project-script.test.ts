@@ -19,6 +19,14 @@ async function fixture(){
  const create=(artifactType:string,text='',data:Record<string,unknown>={})=>service.createArtifact(ctx,{projectId:project.id,title:'保存稿',stage:'script',artifactType,initialContentText:text,initialContentData:data});
  return {ctx,projects,projectsFor,project,service,serviceFor,ports,read,create};
 }
+it('T1382 准备来源不成为确认稿，正式空稿保持权威且来源可显式读取',async()=>{
+ const f=await fixture(),source=await f.create('output_script','来源原文',{purpose:'project_preparation_source'});
+ expect(await f.read(f.ctx,f.project.id)).toBeNull();
+ expect(await createConfirmedProjectReviewScriptReader(f.ports)(f.ctx,f.project.id)).toBeNull();
+ const master=await f.create('master_script','人工母稿');expect((await f.read(f.ctx,f.project.id))?.artifactId).toBe(master.id);
+ const empty=await f.create('output_script','');expect(await f.read(f.ctx,f.project.id)).toMatchObject({artifactId:empty.id,fullText:''});
+ expect((await f.service.listVersions(f.ctx,source.id))[0]?.contentText).toBe('来源原文');
+});
 it('只有明确预留排除，旧NULL/普通公开空稿仍权威；同tx能读到未提交的新目标状态',async()=>{
  const f=await fixture(),master=await f.create('master_script','旧稿');
  await db.transaction(async tx=>{

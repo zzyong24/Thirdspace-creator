@@ -4,8 +4,10 @@ import {
   createDb,
   AccountRequiredError,
   projects,
+  eq,
   type Db,
 } from "@creatoros/backend";
+import {createProjectRepository,createProjectsService} from "../projects";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createContentCalendarService,
@@ -143,6 +145,22 @@ describe("content-calendar service", () => {
   });
 
   describe("T-599 project schedules", () => {
+    it.each(['manual','topic','radar','assistant','quick_create','imported'] as const)('T1382 %s 经真实项目端口读回后保留日历排期边界',async(source)=>{
+      await db.update(projects).set({source}).where(eq(projects.id,'project-1'));
+      const projectService=createProjectsService(createProjectRepository(db),{now:()=>CLOCK,nextId:(prefix)=>`${prefix}-source`});
+      const observed: string[]=[];
+      const {service}=makeService(db,{projects:{getScheduleProject:async(context,id)=>{
+        const project=await projectService.getScheduleProject(context,id);observed.push(project.source);return project;
+      }}});
+      await expect(projectService.getScheduleProject(ctx,'project-1')).resolves.toMatchObject({id:'project-1',source});
+      const creation=service.createEntry(ctx,ACC,{projectId:'project-1',plannedDate:'2026-07-21'});
+      if(source==='imported')await expect(creation).rejects.toBeInstanceOf(ConflictError);
+      else{
+        const entry=await creation;
+        expect(await service.listActiveProjectSchedules(ctx,ACC)).toEqual(expect.arrayContaining([expect.objectContaining({id:entry.id,projectId:'project-1'})]));
+      }
+      expect(observed).toContain(source);
+    });
     it("exposes one identity-owned calendar context and falls back invalid timezones to UTC", async () => {
       const getEffectiveTimezone = vi.fn(async () => "Mars/Olympus");
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

@@ -78,7 +78,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// contract-client mock — the dialog drives `client.createProject` (Task 8).
+// contract-client mock — the dialog drives `client.ensureProject` (Task 8).
 // The mock returns a project with a deterministic `*-mock-*` id so the test
 // can assert that navigation uses the *returned* id rather than a slug guess.
 // ---------------------------------------------------------------------------
@@ -87,10 +87,8 @@ const mockClient = {
   getAccount: vi.fn(async () => ({status: "active"})),
   getPreferences: vi.fn<() => Promise<{defaultCreationMode?: string}>>(async () => ({})),
   createOutput: vi.fn(async ({body}: {body: {title:string; contentType?:string}}) => ({id:"output-mock-1",projectId:"project-mock-1",title:body.title,contentType:body.contentType ?? "video"})),
-  createProject: vi.fn(async ({ body }: { body: { title: string } }) => ({
-    id: "project-mock-1",
-    title: body.title,
-    currentStage: "research",
+  ensureProject: vi.fn(async ({ body }: { body: { title: string } }) => ({
+    project:{id: "project-mock-1",title: body.title,currentStage: "research"},sourceReferences:[],preparationTaskId:null,reused:false,
   })),
 };
 
@@ -99,8 +97,8 @@ vi.mock("@/lib/contract-client", () => ({
     getAccount: () => mockClient.getAccount(),
     getPreferences: () => mockClient.getPreferences(),
     createOutput: (input: {body:{title:string;contentType?:string}}) => mockClient.createOutput(input),
-    createProject: (input: { body: { title: string } }) =>
-      mockClient.createProject(input),
+    ensureProject: (input: { body: { title: string } }) =>
+      mockClient.ensureProject(input),
   },
 }));
 
@@ -176,7 +174,7 @@ async function importNewProjectDialog() {
 beforeEach(() => {
   resetNext();
   mockClient.getPreferences.mockReset().mockResolvedValue({});
-  mockClient.createProject.mockClear();
+  mockClient.ensureProject.mockClear();
   mockClient.createOutput.mockClear();
 });
 
@@ -545,11 +543,11 @@ describe("NewProjectDialog (intercepting route shell)", () => {
     await userEvent.click(create);
 
     await waitFor(() => {
-      expect(mockClient.createProject).toHaveBeenCalledTimes(1);
+      expect(mockClient.ensureProject).toHaveBeenCalledTimes(1);
     });
     // The create payload carries the typed title.
-    expect(mockClient.createProject.mock.calls[0]![0]).toMatchObject({
-      body: { title: "新选题" },
+    expect(mockClient.ensureProject.mock.calls[0]![0]).toMatchObject({
+      body: { source:"manual",title: "新选题",idempotencyKey:expect.any(String) },
     });
     expect(mockClient.createOutput).toHaveBeenCalledWith(expect.objectContaining({
       params:{projectId:"project-mock-1"}, body:expect.objectContaining({title:"新选题",contentType:"video",clientRequestId:expect.any(String)}),

@@ -127,6 +127,7 @@ export function createGroupMigrationService({db,now,nextId,observePhase}:{db:Db;
    }
   }
   const liveFields:Record<string,Record<string,[string,string]>>={
+   project_source_references:{item_id:['intelligence_items','雷达作品'],snapshot_id:['intelligence_source_snapshots','雷达快照']},
    project_intelligence_references:{topic_id:['candidates','选题'],item_id:['intelligence_items','雷达作品'],source_snapshot_id:['intelligence_source_snapshots','雷达快照'],transform_id:['intelligence_transforms','雷达拆写']},
    predictions:{rubric_version_id:['rubric_versions','校准量表版本']},
    learning_applications:{learning_id:['learnings','经验']},learnings:{review_id:['reviews','经验来源复盘']},
@@ -140,6 +141,15 @@ export function createGroupMigrationService({db,now,nextId,observePhase}:{db:Db;
   const activityTypes:Record<string,[string,string]>={project:['projects','项目'],content_output:['content_outputs','稿件'],artifact:['artifacts','产物'],artifact_version:['artifact_versions','产物版本'],review:['reviews','复盘'],learning:['learnings','经验'],candidate:['candidates','选题'],topic:['candidates','选题'],intelligence_item:['intelligence_items','雷达作品'],rubric:['rubrics','校准量表'],rubric_version:['rubric_versions','校准量表版本'],positioning_statement:['positioning_statements','定位版本']};
   for(const image of images){
    for(const[field,[table,label]]of Object.entries(liveFields[image.table]??{}))await live(table,image.row[field],label);
+   if(image.table==='project_source_references'){
+    if(image.row.source_kind==='intelligence_item'){
+     const [snapshot]=await rows(store,'intelligence_source_snapshots','id',[String(image.row.snapshot_id)]);
+     if(!snapshot||snapshot.item_id!==image.row.item_id)throw new ConflictError('原始来源快照不属于对应雷达作品');
+    }else if(image.row.source_kind==='platform_work'){
+     const [account]=await rows(store,'platform_accounts','id',[String(image.row.account_id)]),members=await rows(store,'account_group_memberships','platform_account_id',[String(image.row.account_id)]);
+     if(!account||account.user_id!==ctx.userId||account.platform!==image.row.platform||!members.some(m=>m.user_id===ctx.userId&&m.group_id===body.toGroupId&&m.left_at===null))throw new ConflictError('原始平台来源账号不属于目标组，请先处理来源依赖');
+    }
+   }
    if(image.table==='projects'){
     const evidence=object(object(image.row.brief_detail).contentRadarEvidence);
     await live('intelligence_source_snapshots',evidence.sourceSnapshotId,'雷达快照');
@@ -188,7 +198,11 @@ export function createGroupMigrationService({db,now,nextId,observePhase}:{db:Db;
    plan=await build(tx,ctx,body);
   }
  }
- async function reassign(tx:Tx,images:RecordImage[],groupId:string){for(const x of images)if(Object.hasOwn(x.row,'group_id'))await tx.execute(sql`UPDATE ${sql.identifier(x.table)} SET group_id=${groupId} WHERE ${rowWhere(x.table,x.row)}`);}
+ async function reassign(tx:Tx,images:RecordImage[],groupId:string){for(const x of images){
+  if(Object.hasOwn(x.row,'group_id'))await tx.execute(sql`UPDATE ${sql.identifier(x.table)} SET group_id=${groupId} WHERE ${rowWhere(x.table,x.row)}`);
+  // 入口回执随同一项目迁移可见范围，保留真实ID、动作键和原始正文身份；undo同路恢复。
+  if(x.table==='project_intakes'&&x.row.scope_kind==='group')await tx.execute(sql`UPDATE project_intakes SET scope_id=${groupId} WHERE ${rowWhere(x.table,x.row)}`);
+ }}
  const result=(r:typeof accountGroupMigrations.$inferSelect)=>({id:r.id,fromGroupId:r.fromGroupId,toGroupId:r.toGroupId,status:r.status as 'applied'|'undone',createdAt:r.createdAt,undoneAt:r.undoneAt});
  return {
   async preview(ctx:RequestContext,body:GroupMigrationSelection){return view(await build(db,ctx,body));},
@@ -204,7 +218,7 @@ export function createGroupMigrationService({db,now,nextId,observePhase}:{db:Db;
     const id=nextId('group_migration');await reassign(tx,plan.images,body.toGroupId);
     for(const g of plan.grants)await tx.insert(resourceAccessGrants).values({id:nextId('grant'),userId:ctx.userId,targetGroupId:body.toGroupId,resourceType:g.resourceType,resourceId:g.resourceId,originGroupId:g.originGroupId,migrationId:id,createdAt:now(),revokedAt:null}).onConflictDoNothing();
     // digest覆盖子项，后续增量不能被undo覆盖。before-image不导出给其它用户。
-    const after=plan.images.map(x=>({table:x.table,row:Object.hasOwn(x.row,'group_id')?{...x.row,group_id:body.toGroupId}:x.row}));
+    const after=plan.images.map(x=>({table:x.table,row:{...x.row,...(Object.hasOwn(x.row,'group_id')?{group_id:body.toGroupId}:{}),...(x.table==='project_intakes'&&x.row.scope_kind==='group'?{scope_id:body.toGroupId}:{})}}));
     const [row]=await tx.insert(accountGroupMigrations).values({id,userId:ctx.userId,fromGroupId:body.fromGroupId,toGroupId:body.toGroupId,key,inputHash,status:'applied',beforeImage:plan,afterDigest:digest(after),createdAt:now(),undoneAt:null}).returning();return result(row!);
    });
   },
