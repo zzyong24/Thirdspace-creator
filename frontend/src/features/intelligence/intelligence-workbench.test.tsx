@@ -273,8 +273,14 @@ describe("T-482 内容雷达工作区", () => {
     stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[],total:0});
     stub.enqueueProjectUpgrades=vi.fn(()=>new Promise<{tasks:never[]}>(()=>{}));
     render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[{item:detail.item,latestMetric:null,sourceCount:1},{item:{...detail.item,id:"item-2",title:"第二个作品"},latestMetric:null,sourceCount:1}]} initialDetail={null} api={stub}/>);
-    const buttons=screen.getAllByRole("button",{name:"升级为项目"});
-    fireEvent.click(buttons[0]!);fireEvent.click(buttons[0]!);fireEvent.click(buttons[1]!);
+    vi.mocked(stub.getItem).mockImplementation(async (itemId) => ({...detail, item: {...detail.item, id: itemId, title: itemId === "item-2" ? "第二个作品" : "真实作品"}}));
+    expect(screen.queryByRole("button", {name: "升级为项目"})).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", {name: /真实作品/}));
+    const first = await screen.findByRole("button", {name: "升级为项目"});
+    fireEvent.click(first); fireEvent.click(first);
+    fireEvent.click(screen.getByRole("button", {name: /第二个作品/}));
+    const second = await screen.findByRole("button", {name: "升级为项目"});
+    fireEvent.click(second);
     expect(stub.enqueueProjectUpgrades).toHaveBeenCalledTimes(2);
     expect(stub.enqueueProjectUpgrades).toHaveBeenNthCalledWith(2,expect.objectContaining({itemIds:["item-2"],positioningVersionId:"position-1"}));
   });
@@ -289,6 +295,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.queryByRole("button",{name:/添加逐字稿|替换逐字稿/})).toBeNull();
     const upgrade=document.querySelector('[data-slot="radar-upgrade-button"]') as HTMLButtonElement;
     expect(upgrade).toHaveTextContent("升级为项目");
+    expect(screen.getAllByRole("button", {name: "升级为项目"})).toHaveLength(1);
     fireEvent.click(upgrade);
     await waitFor(()=>expect(stub.enqueueProjectUpgrades).toHaveBeenCalledWith(expect.objectContaining({itemIds:[detail.item.id],positioningVersionId:"position-1"})));
     expect(stub.enqueueTranscript).not.toHaveBeenCalled();

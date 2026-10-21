@@ -1324,12 +1324,6 @@ function IntelligenceWorkbenchScope({
                     active={detail?.item.id === row.item.id}
                     onSelect={() => selectItem(row.item.id)}
                     upgradeTask={upgrades.byItem.get(row.item.id)}
-                    upgradeSubmitting={upgrades.submitting.has(row.item.id)}
-                    onUpgrade={api.enqueueProjectUpgrades?()=>{
-                      const projectId=upgradeProjectId(upgrades.byItem.get(row.item.id));
-                      if(projectId)router.push(`/projects/${encodeURIComponent(projectId)}`);
-                      else void upgrades.enqueue(row.item.id);
-                    }:undefined}
                     onCancelUpgrade={()=>{const task=upgrades.byItem.get(row.item.id);if(task)void upgrades.cancel(task);}}
                   />
                 ))}
@@ -1657,14 +1651,12 @@ function ItemCard({
   row,
   active,
   onSelect,
-  upgradeTask,upgradeSubmitting,onUpgrade,onCancelUpgrade,
+  upgradeTask,onCancelUpgrade,
 }: {
   row: RadarItemRow;
   active: boolean;
   onSelect: () => void;
   upgradeTask?:ExecutionTaskResourceV2;
-  upgradeSubmitting?:boolean;
-  onUpgrade?:()=>void;
   onCancelUpgrade?:()=>void;
 }) {
   return (
@@ -1699,15 +1691,12 @@ function ItemCard({
           ) : null}
         </div>
       </button>
-      {onUpgrade ? <div className="border-t border-border/50 px-3.5 py-2">
+      {upgradeTask ? <div className="border-t border-border/50 px-3.5 py-2">
         <div className="flex items-center gap-2">
           {upgradeProjectId(upgradeTask) ? <>
             <span className="text-xs text-muted-foreground">已升级为项目</span>
             <Link className="ml-auto inline-flex h-7 items-center gap-1 text-xs text-primary" href={`/projects/${encodeURIComponent(upgradeProjectId(upgradeTask)!)}`}>查看项目<ChevronRight className="size-3.5" /></Link>
-          </> : <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-primary" onClick={onUpgrade}
-            disabled={upgradeSubmitting || Boolean(upgradeTask && !["succeeded","failed","blocked","cancelled","paused"].includes(upgradeTask.status))}>
-            <Sparkles className="size-3.5" />{upgradeSubmitting?"正在加入…":upgradeLabel(upgradeTask)}
-          </Button>}
+          </> : <span className="text-xs text-muted-foreground">{upgradeLabel(upgradeTask)}</span>}
           {upgradeTask && ["queued","running","paused","pause_requested"].includes(upgradeTask.status)?<Button size="sm" variant="ghost" className="ml-auto h-7 text-xs text-muted-foreground" onClick={onCancelUpgrade}>取消</Button>:null}
         </div>
         {upgradeNotice(upgradeTask)?<p className="mt-1 text-xs text-warning">{upgradeNotice(upgradeTask)}</p>:null}
