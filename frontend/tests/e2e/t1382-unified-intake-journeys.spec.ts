@@ -195,10 +195,15 @@ test('J08-preparation-controls 准备原任务暂停恢复取消及Codex未登�
  while(Date.now()-started<requestMs){await page.waitForTimeout(10_000);expect(await taskSnapshot()).toEqual(before);}
  j.conditions.push({condition:'error',result:'pass',evidence_refs:[j.ref('readback.json'),await j.capture('codex-login-required-no-retry')]});
  await j.refresh();await page.goto('/projects');await page.goBack();await j.project(p.id);expect((await j.prep(p.id)).preparationTaskId).toBe(original.preparationTaskId);j.conditions.push({condition:'back',result:'pass',evidence_refs:[await j.capture('preparation-return')]});
- // 当前源码未提供父准备任务的 UI 控制。保留真实断言，不能用 dispatch 命令冒充按钮。
+ // 由真实按钮控制原父任务；分别核对暂停、恢复、取消的服务端回执。
  const pause=panel.getByRole('button',{name:/^暂停(项目准备|任务)?$/});await expect(pause,'项目准备必须提供真实暂停控制；缺失时保留失败').toBeVisible();await pause.click();
  await expect.poll(async()=> (await j.prep(p.id)).steps.some(s=>s.status==='paused'),{timeout:requestMs}).toBe(true);await j.capture('preparation-paused');
- const resume=panel.getByRole('button',{name:/^(恢复|继续)(项目准备|任务)?$/});await expect(resume).toBeVisible();await resume.click();expect((await j.prep(p.id)).preparationTaskId).toBe(original.preparationTaskId);
+ const resume=panel.getByRole('button',{name:/^(恢复|继续)(项目准备|任务)?$/});await expect(resume).toBeVisible();
+ const resumed=page.waitForResponse(response=>operationId(response.request())==='execution.tasks.command'&&(response.request().postDataJSON() as {input?:{body?:{command?:string}}}).input?.body?.command==='resume',{timeout:requestMs});
+ await resume.click();const resumeResponse=await resumed;expect(resumeResponse.ok()).toBe(true);
+ const resumeReceipt=ENDPOINTS.commandExecutionTasks.response.parse((await resumeResponse.json()).data);
+ const resumedParent=resumeReceipt.tasks.find(task=>task.id===original.preparationTaskId);expect(resumedParent).toBeTruthy();expect(['queued','running','retry_wait']).toContain(resumedParent!.runtimeStatus??resumedParent!.status);
+ j.operations.push({kind:'ui-control',command:'resume',taskId:original.preparationTaskId,status:resumeResponse.status()});expect((await j.prep(p.id)).preparationTaskId).toBe(original.preparationTaskId);
  await panel.getByRole('button',{name:/^取消(项目准备|任务)$/}).click();await expect.poll(async()=> (await j.prep(p.id)).steps.some(s=>s.status==='cancelled'),{timeout:requestMs}).toBe(true);await j.refresh();j.completed=true;
 });
 test('J09-transcript-ready 项目补逐字稿持久就绪不冒充采纳',async({page,journey:j})=>{
@@ -215,7 +220,9 @@ test('J10-settings-assistant-reference 模型未登录提示与助手真实项�
  await expect(page.getByLabel('文本创作与结构化模型来源',{exact:true})).toHaveValue('codex');await page.getByRole('button',{name:'重新读取当前设置',exact:true}).click();
  await expect(slot(page,'model-source-status-text')).toContainText('Codex 尚未登录');await j.capture('codex-not-logged-in');
  j.conditions.push({condition:'error',result:'pass',evidence_refs:[j.ref('readback.json'),j.visible.at(-1)!.screenshot_ref]});
- await page.goto('/?copilot=open');const dialog=slot(page,'ai-copilot-dialog');await expect(dialog).toBeVisible();const input=dialog.getByRole('textbox',{name:'我能帮你做什么',exact:true});await input.fill(`帮我看看 @${p.title}`);
+ await page.goto('/?copilot=open');const dialog=slot(page,'ai-copilot-dialog');await expect(dialog).toBeVisible();const input=dialog.getByRole('textbox',{name:'我能帮你做什么',exact:true});
+ // @ 查询在空白处结束；先输入标题的连续前缀，再用真实项目 ID 选中包含空格的完整标题。
+ const mentionQuery=p.title.split(/\s/u)[0]!;expect(mentionQuery).toBeTruthy();await input.fill(`帮我看看 @${mentionQuery}`);
  const option=page.locator(`[data-slot="project-mention-option"][data-project-id="${p.id}"]`);await expect(option).toBeVisible();await option.click();
  const chip=dialog.locator(`[data-slot="context-chip"][data-kind="project"][data-project-id="${p.id}"]`);await expect(chip).toHaveCount(1);await expect(chip).toContainText(p.title);await expect(input).toHaveValue('帮我看看 ');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect((await j.call<Project>('projects.get',{params:{projectId:p.id}})).id).toBe(p.id);await j.capture('assistant-real-reference');j.completed=true;

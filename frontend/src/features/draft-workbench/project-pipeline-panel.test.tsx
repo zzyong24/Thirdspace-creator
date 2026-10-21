@@ -2,11 +2,11 @@ import * as React from "react";
 import {describe,it,expect,vi,beforeEach,afterEach} from "vitest";
 import {render,fireEvent,cleanup,screen,waitFor,act} from "@testing-library/react";
 import type {ProjectPreparationResource,ProjectPreparationStep,ProjectPreparationCandidate} from "@creatoros/contract";
-const controls=vi.hoisted(()=>({scope:{groupId:"group-a",accountId:null as string|null},get:vi.fn(),start:vi.fn(),provide:vi.fn(),accept:vi.fn(),openChat:vi.fn(),refresh:vi.fn(),capture:vi.fn()}));
+const controls=vi.hoisted(()=>({scope:{groupId:"group-a",accountId:null as string|null},get:vi.fn(),task:vi.fn(),command:vi.fn(),start:vi.fn(),provide:vi.fn(),accept:vi.fn(),openChat:vi.fn(),refresh:vi.fn(),capture:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>({refresh:controls.refresh})}));
 vi.mock("@/lib/creation-workspace-scope",async()=>{
   const actual=await vi.importActual<typeof import("@/lib/creation-workspace-scope")>("@/lib/creation-workspace-scope");
-  const workspace={capture(){const key=actual.creationScopeKey(controls.scope);return {assertCurrent(){if(actual.creationScopeKey(controls.scope)!==key)throw Error("工作区已切换");},client:{getProjectPreparation:controls.get,startProjectPreparation:controls.start,provideProjectPreparationTranscript:controls.provide,acceptProjectPreparationCandidate:controls.accept}};}};
+  const workspace={capture(){const key=actual.creationScopeKey(controls.scope);return {assertCurrent(){if(actual.creationScopeKey(controls.scope)!==key)throw Error("工作区已切换");},client:{getProjectPreparation:controls.get,getExecutionTask:controls.task,commandExecutionTasks:controls.command,startProjectPreparation:controls.start,provideProjectPreparationTranscript:controls.provide,acceptProjectPreparationCandidate:controls.accept}};}};
   return {...actual,useCreationScope:()=>controls.scope,useCreationWorkspace:()=>workspace,readCreationScope:()=>controls.scope};
 });
 vi.mock("./draft-chat-request",()=>({useDraftChatRequest:()=>({openChat:controls.openChat,captureScriptAdoption:controls.capture})}));
@@ -17,10 +17,128 @@ function step(name:ProjectPreparationStep['name'],status:ProjectPreparationStep[
 function preparation(steps:ProjectPreparationStep[]=[step("transcript","failed",["retry","provide_transcript"])]):ProjectPreparationResource{return {projectId:"p-1",origin:"radar",registration:"registered",preparationTaskId:"parent-real",revision:4,steps,candidates:[],sourceReferences:[{id:"ref-real",projectId:"p-1",sourceKey:"item:real",sourceKind:"intelligence_item",itemId:"item-real",snapshotId:"snapshot-real",url:"https://example.com/source",bodyAvailable:false,sourceDigest:"source-real",transcriptHash:null,createdAt:"2026-10-21T00:00:00.000Z",updatedAt:"2026-10-21T00:00:00.000Z"}],lastError:null,availableActions:["retry"]};}
 const brief:ProjectPreparationCandidate={id:"candidate-real",kind:"brief",sourceTaskId:"child-real",transformId:null,checkpointPath:"calls.real",sourceDigest:"candidate-source",artifactDigest:"artifact-real",status:"pending",acceptanceReceipt:null,baseline:{kind:"digest",digest:"baseline-real"},content:{kind:"brief",brief:"",briefDetail:{targetAudience:"建议观众"}}};
 function mount(value=preparation(),children?:React.ReactNode,pollIntervalMs=100000){controls.get.mockResolvedValue(value);controls.start.mockResolvedValue(value);controls.provide.mockResolvedValue(value);return render(<ProjectPreparationProvider projectId="p-1" initialPreparation={value} pollIntervalMs={pollIntervalMs}><ProjectPipelinePanel projectId="p-1" origin="radar"/>{children}</ProjectPreparationProvider>);}
-beforeEach(()=>{for(const value of Object.values(controls))if(vi.isMockFunction(value))value.mockReset();controls.scope={groupId:"group-a",accountId:null};controls.capture.mockReturnValue(()=>true);});
+beforeEach(()=>{for(const value of Object.values(controls))if(vi.isMockFunction(value))value.mockReset();controls.scope={groupId:"group-a",accountId:null};controls.capture.mockReturnValue(()=>true);controls.task.mockResolvedValue({id:"parent-real",status:"cancelled"});});
 afterEach(cleanup);
 async function ready(){await waitFor(()=>expect(screen.getByRole("button",{name:"重新读取状态"})).not.toBeDisabled());}
 describe("ProjectPipelinePanel — 服务端准备状态",()=>{
+ it("C2 恢复回执queued但步骤仍failed时观察父runtimeStatus直到真实waiting_user",async()=>{
+  const failed={...preparation([step("brief","failed")]),availableActions:["resume","cancel"] as ProjectPreparationResource["availableActions"]};
+  const stale={...preparation([step("brief","failed")]),availableActions:["pause","cancel"] as ProjectPreparationResource["availableActions"]};
+  const blocked={...preparation([{...step("brief","waiting_user"),lastError:{code:"EXECUTION_FAILED",message:"请在设置中登录 Codex 后恢复"}}]),availableActions:["resume","cancel"] as ProjectPreparationResource["availableActions"]};
+  mount(failed,undefined,2);await ready();
+  controls.command.mockResolvedValue({tasks:[{id:"parent-real",status:"queued"}]});
+  controls.get.mockResolvedValue(stale);
+  controls.task.mockResolvedValueOnce({id:"parent-real",status:"blocked",runtimeStatus:"retry_wait"}).mockImplementation(async()=>{controls.get.mockResolvedValue(blocked);return {id:"parent-real",status:"blocked",runtimeStatus:"waiting_user"};});
+  fireEvent.click(screen.getByRole("button",{name:"恢复项目准备"}));
+  expect(await screen.findByText("请在设置中登录 Codex 后恢复")).toBeVisible();
+  expect(screen.getByRole("button",{name:"恢复项目准备"})).toBeEnabled();
+  expect(controls.task).toHaveBeenCalledTimes(2);
+  const count=controls.get.mock.calls.length;
+  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,15));});
+  expect(controls.get).toHaveBeenCalledTimes(count);expect(controls.command).toHaveBeenCalledTimes(1);expect(controls.start).not.toHaveBeenCalled();
+ },120000);
+ it("C2 pending控制沿原父单飞观察，确认后才显示恢复按钮",async()=>{
+  const active={...preparation([step("brief","running")]),availableActions:["pause","cancel"] as ProjectPreparationResource["availableActions"]};
+  const pending={...preparation([step("brief","paused")]),availableActions:["start"] as ProjectPreparationResource["availableActions"]};
+  const paused={...preparation([step("brief","paused")]),availableActions:["resume","cancel"] as ProjectPreparationResource["availableActions"]};
+  mount(active,undefined,2);await ready();
+  controls.command.mockResolvedValue({tasks:[{id:"parent-real",status:"pause_requested"}]});
+  controls.get.mockResolvedValue(pending);
+  controls.task.mockResolvedValueOnce({id:"parent-real",status:"pause_requested"}).mockImplementation(async()=>{controls.get.mockResolvedValue(paused);return {id:"parent-real",status:"paused"};});
+  fireEvent.click(screen.getByRole("button",{name:"暂停项目准备"}));
+  expect(await screen.findByRole("button",{name:"恢复项目准备"})).toBeEnabled();
+  expect(controls.task).toHaveBeenCalledWith({params:{taskId:"parent-real"},query:undefined,body:undefined});
+  expect(controls.task).toHaveBeenCalledTimes(2);
+  const count=controls.get.mock.calls.length;
+  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,15));});
+  expect(controls.get).toHaveBeenCalledTimes(count);
+  expect(controls.command).toHaveBeenCalledTimes(1);expect(controls.start).not.toHaveBeenCalled();
+ },120000);
+ it("C2 刷新pending投影核对原父并有限观察，confirmed cancelled只核对一次",async()=>{
+  const pending={...preparation([step("brief","paused")]),availableActions:["start"] as ProjectPreparationResource["availableActions"]};
+  const paused={...preparation([step("brief","paused")]),availableActions:["resume","cancel"] as ProjectPreparationResource["availableActions"]};
+  controls.task.mockResolvedValueOnce({id:"parent-real",status:"pause_requested"}).mockImplementation(async()=>{controls.get.mockResolvedValue(paused);return {id:"parent-real",status:"paused"};});
+  const mounted=mount(pending,undefined,2);
+  expect(await screen.findByRole("button",{name:"恢复项目准备"})).toBeEnabled();
+  expect(controls.task).toHaveBeenCalledTimes(2);mounted.unmount();
+  controls.task.mockReset().mockResolvedValue({id:"parent-real",status:"cancelled"});controls.get.mockClear();
+  mount({...preparation([step("brief","cancelled")]),availableActions:["start"]},undefined,2);await ready();
+  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,15));});
+  expect(controls.task).toHaveBeenCalledTimes(1);expect(controls.get).toHaveBeenCalledTimes(1);
+  expect(controls.command).not.toHaveBeenCalled();expect(controls.start).not.toHaveBeenCalled();
+ },120000);
+ it("C2 pending观察满120秒保留原父状态，停止观察且不重发控制",async()=>{
+  const clock=vi.spyOn(Date,"now").mockReturnValue(1000);
+  try{
+   const pending={...preparation([step("brief","paused")]),availableActions:["start"] as ProjectPreparationResource["availableActions"]};
+   controls.task.mockResolvedValue({id:"parent-real",status:"pause_requested"});
+   mount(pending);await ready();
+   expect(controls.task).toHaveBeenCalledWith({params:{taskId:"parent-real"},query:undefined,body:undefined});
+   clock.mockReturnValue(121001);fireEvent(window,new Event("focus"));
+   expect(await screen.findByRole("alert")).toHaveTextContent("控制已提交，请重新读取原任务状态");
+   expect(document.querySelector('[data-step="brief"]')).toHaveAttribute("data-state","paused");
+   expect(controls.task).toHaveBeenCalledTimes(1);expect(controls.command).not.toHaveBeenCalled();expect(controls.start).not.toHaveBeenCalled();
+  }finally{clock.mockRestore();}
+ },120000);
+ it("C2 切组后原父控制观察晚到不能回写新组或继续旧scope读取",async()=>{
+  const pending={...preparation([step("brief","paused")]),availableActions:["start"] as ProjectPreparationResource["availableActions"]};
+  let finish!:(value:unknown)=>void;
+  controls.task.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+  const mounted=mount(pending);await waitFor(()=>expect(controls.task).toHaveBeenCalledTimes(1));
+  controls.scope={groupId:"group-b",accountId:null};
+  const fresh={...preparation([step("brief","waiting_user")]),availableActions:["resume","cancel"] as ProjectPreparationResource["availableActions"]};
+  controls.get.mockResolvedValue(fresh);
+  mounted.rerender(<ProjectPreparationProvider projectId="p-1"><ProjectPipelinePanel projectId="p-1"/></ProjectPreparationProvider>);
+  await ready();expect(document.querySelector('[data-step="brief"]')).toHaveAttribute("data-state","waiting_user");
+  await act(async()=>finish({id:"parent-real",status:"paused"}));
+  expect(document.querySelector('[data-step="brief"]')).toHaveAttribute("data-state","waiting_user");
+  expect(controls.get).toHaveBeenCalledTimes(2);expect(controls.command).not.toHaveBeenCalled();expect(controls.start).not.toHaveBeenCalled();
+ },120000);
+ it.each([
+  ["pause","暂停项目准备","running","paused",["pause","cancel"],["resume","cancel"]],
+  ["resume","恢复项目准备","paused","queued",["resume","cancel"],["pause","cancel"]],
+  ["cancel","取消项目准备","running","cancelled",["pause","cancel"],["start"]],
+ ] as const)("C2 父任务 %s 使用原taskId与真实控制命令，并读取服务端回执",async(command,label,before,after,actions,nextActions)=>{
+  const value={...preparation([step("brief",before)]),availableActions:[...actions]};
+  mount(value);await ready();
+  const next={...preparation([step("brief",after)]),availableActions:[...nextActions]};
+  controls.command.mockResolvedValue({tasks:[{id:"parent-real",status:after}]});
+  controls.get.mockResolvedValue(next);
+  fireEvent.click(screen.getByRole("button",{name:label}));
+  await waitFor(()=>expect(controls.command).toHaveBeenCalledWith({params:undefined,query:undefined,body:{taskIds:["parent-real"],command,idempotencyKey:expect.any(String)}}));
+  await waitFor(()=>expect(controls.get).toHaveBeenCalledTimes(2));
+  await waitFor(()=>expect(document.querySelector('[data-step="brief"]')).toHaveAttribute("data-state",after));
+  expect(controls.start).not.toHaveBeenCalled();
+ },120000);
+ it("C2 只按父任务可用动作显示控制，终态和无父任务隐藏三个控制",async()=>{
+  const value={...preparation([step("brief","paused")]),availableActions:["resume","cancel"] as ProjectPreparationResource["availableActions"]};
+  const mounted=mount(value);await ready();
+  expect(screen.queryByRole("button",{name:"暂停项目准备"})).toBeNull();
+  expect(screen.getByRole("button",{name:"恢复项目准备"})).toBeEnabled();
+  expect(screen.getByRole("button",{name:"取消项目准备"})).toBeEnabled();
+  mounted.unmount();
+  const terminal=mount({...preparation([step("brief","cancelled")]),availableActions:["start"]});await ready();
+  for(const name of ["暂停项目准备","恢复项目准备","取消项目准备"])expect(screen.queryByRole("button",{name})).toBeNull();
+  terminal.unmount();
+  mount({...preparation(),registration:"not_registered",preparationTaskId:null,revision:null,steps:[],availableActions:["start"]});await ready();
+  for(const name of ["暂停项目准备","恢复项目准备","取消项目准备"])expect(screen.queryByRole("button",{name})).toBeNull();
+ },120000);
+ it("C2 父控制请求在途禁用所有控制，重复点击不重发，失败显示真实错误保留原状态",async()=>{
+  mount({...preparation([step("brief","running")]),availableActions:["pause","cancel"]});await ready();
+  let reject!:(reason:Error)=>void;
+  controls.command.mockImplementation(()=>new Promise((_resolve,fail)=>{reject=fail;}));
+  fireEvent.click(screen.getByRole("button",{name:"暂停项目准备"}));
+  await waitFor(()=>expect(screen.getByRole("button",{name:"暂停项目准备"})).toBeDisabled());
+  expect(screen.getByRole("button",{name:"取消项目准备"})).toBeDisabled();
+  fireEvent.click(screen.getByRole("button",{name:"暂停项目准备"}));
+  expect(controls.command).toHaveBeenCalledTimes(1);
+  await act(async()=>reject(Error("父任务控制失败，请核对原任务")));
+  expect(await screen.findByRole("alert")).toHaveTextContent("父任务控制失败，请核对原任务");
+  expect(document.querySelector('[data-step="brief"]')).toHaveAttribute("data-state","running");
+  expect(screen.getByRole("button",{name:"暂停项目准备"})).toBeEnabled();
+  expect(controls.get).toHaveBeenCalledTimes(1);
+  expect(controls.start).not.toHaveBeenCalled();
+ },120000);
  it("fb 已有可信逐字稿显示完成和就绪，真正无需转写仍不需要",async()=>{const value=preparation([{...step("transcript","done"),reasonCode:"TRANSCRIPT_ALREADY_AVAILABLE"}]);const mounted=mount(value);await ready();expect(screen.getByText("已完成")).toBeVisible();expect(screen.getByText("逐字稿就绪，本次无需再转写。")).toBeVisible();expect(screen.queryByText("不需要")).toBeNull();mounted.unmount();mount(preparation([{...step("transcript","not_required"),reasonCode:"NO_SUPPORTED_TRANSCRIPTION_SOURCE"}]));await ready();expect(screen.getByText("不需要")).toBeVisible();expect(screen.getByText(/当前来源不适用自动转写/)).toBeVisible();},120000);
  it("fb 全等资料完成后明确无需采纳，不显示待采纳候选",async()=>{mount(preparation([{...step("brief","done"),reasonCode:"BRIEF_UNCHANGED"}]));await ready();expect(screen.getByText("已完成")).toBeVisible();expect(screen.getByText("本次建议与已有资料一致，无需采纳。")).toBeVisible();expect(screen.queryByText("候选已生成，待采纳")).toBeNull();},120000);
 

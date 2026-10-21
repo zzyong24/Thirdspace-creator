@@ -10,6 +10,7 @@ export type PipelineOrigin=ProjectSource;
 export const BRIEF_FILL_PREFILL="请根据项目已有资料提出补全候选，保留真实信息，等待我采纳。";
 const ORIGIN_LABEL:Record<ProjectSource,string>={manual:"手动新建",topic:"来自选题",radar:"来自内容雷达",imported:"真实导入作品",assistant:"来自助手",quick_create:"快速创作"};
 const STATE_LABEL:Record<ProjectPreparationStepStatus,string>={not_required:"不需要",pending:"待处理",queued:"排队中",running:"进行中",waiting_user:"等待补充",candidate_ready:"候选已生成，待采纳",done:"已完成",failed:"失败",blocked:"准备受阻",unknown_result:"结果待确认",paused:"已暂停",cancelled:"已取消"};
+const CONTROL_LABEL={pause:"暂停项目准备",resume:"恢复项目准备",cancel:"取消项目准备"};
 const STEP_LABEL={transcript:"转写正文",source_draft:"来源拆解与初稿",brief:"资料补全"};
 const showsCurrentError=(status:ProjectPreparationStepStatus)=>["failed","blocked","waiting_user","unknown_result","paused"].includes(status);
 
@@ -32,6 +33,7 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
     {message?<p role="alert" className="mt-3 text-sm text-destructive">{message}</p>:null}
     {preparation?.lastError&&preparation.steps.some(step=>showsCurrentError(step.status))?<p className="mt-3 text-sm text-warning">{preparation.lastError.message}</p>:null}
     {state?<Button type="button" size="sm" variant="ghost" disabled={state.busy} onClick={()=>void run(state.reload)}>重新读取状态</Button>:null}
+    {preparation?.registration==="registered"&&preparation.preparationTaskId?<div aria-label="项目准备控制" className="mt-2 flex flex-wrap gap-2">{(["pause","resume","cancel"] as const).filter(command=>preparation.availableActions.includes(command)).map(command=><Button key={command} type="button" size="sm" variant="outline" disabled={state?.busy||Boolean(state?.error)} onClick={()=>void run(()=>state!.control(command))}>{CONTROL_LABEL[command]}</Button>)}</div>:null}
     <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(200px,0.8fr)_minmax(0,2fr)]">
       <div data-slot="pipeline-source" className="min-w-0 rounded-xl bg-surface-subtle p-4">
         <h3 className="text-sm font-semibold">来源素材</h3>

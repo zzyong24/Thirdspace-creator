@@ -28,7 +28,7 @@ flowchart LR
     { "id": "AC-1382-QUICK-EMPTY", "test_id": "J05-quick-empty", "description": "快速创作无来源时真实保存，不虚构来源和准备任务" },
     { "id": "AC-1382-RADAR", "test_id": "J06-radar-idempotency", "description": "雷达选作品升级/查看真实项目，重复动作返回同一项目" },
     { "id": "AC-1382-TOPIC", "test_id": "J07-topic-upgrade", "description": "选题升级进入真实项目，来源保持选题，重复进入不多建" },
-    { "id": "AC-1382-CONTROLS", "test_id": "J08-preparation-controls", "description": "项目准备真实控制与取消后读回，失败不丢项目或伪造成功" },
+    { "id": "AC-1382-CONTROLS", "test_id": "J08-preparation-controls", "description": "项目准备真实暂停、恢复命令回执及取消后读回，Codex未登录提示与原任务有限观察，失败不丢项目或伪造成功" },
     { "id": "AC-1382-TRANSCRIPT", "test_id": "J09-transcript-ready", "description": "项目内补逐字稿经真实服务保存，显示逐字稿就绪并刷新读回" },
     { "id": "AC-1382-SETTINGS-REF", "test_id": "J10-settings-assistant-reference", "description": "设置、编导和来源引用入口真实打开，可用与不可用状态如实显示" }
   ],
@@ -39,6 +39,7 @@ flowchart LR
     "backend/src/application/projects/project-intake.ts",
     "backend/src/modules/projects/project-intake.service.ts",
     "backend/src/modules/projects/project-preparation.service.ts",
+    "backend/src/modules/projects/project-preparation.service.test.ts",
     "backend/src/modules/projects/project-preparation-generation.service.ts",
     "backend/src/modules/execution/persistent-task.service.ts",
     "backend/src/modules/projects/projects.transport.ts",
@@ -52,6 +53,10 @@ flowchart LR
     "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
     "frontend/src/features/topics/topics-interactive-region.tsx",
     "frontend/src/features/draft-workbench/project-pipeline-panel.tsx",
+    "frontend/src/features/draft-workbench/project-pipeline-panel.test.tsx",
+    "frontend/src/features/copilot/ai-copilot-content.tsx",
+    "frontend/src/features/copilot/project-mention.ts",
+    "frontend/src/features/copilot/project-mention-menu.tsx",
     "frontend/tests/e2e/t1382-unified-intake-journeys.spec.ts",
     "frontend/playwright.t1382.config.ts",
     "docs/verification/t1382/control/PAGE_SPEC.md",
@@ -78,4 +83,4 @@ RED 只能来自指定真实请求已被阻断、指定原本应成功的旅程�
 
 本合约不扩称：六来源全部模型生成/采纳、真实模型调用、外部平台采集、真实 PostgreSQL 迁移、完整纯组 worker 装配、已安装桌面 App 重启、发布和打包。上述未验证范围沿 final.md 原记录保留；本套 UI 旅程通过也不能自动把这些范围写成全绿。
 
-静态发现：当前项目准备面板缺少父任务暂停/恢复/取消控件，J08 将按已确认范围要求真实检查；如实失败后才据运行证据列为 open_defects，不能在本静态阶段填成功或伪造失败截图。
+Phase C2 已补父任务暂停/恢复/取消控件，按服务端可用动作接既有执行控制命令；控制回执尚待确认时观察原父任务，有限观察结束后保留原状态，不自动重发。J08 保留全部检查并新增恢复命令成功回执断言。J10 按既有提及规则输入标题的连续前缀，仍要求按真实项目 ID 选中、显示完整标题及移除输入中的提及文本。组件与服务测试不代替双视口真实验收，外部重跑结果仍待验证。

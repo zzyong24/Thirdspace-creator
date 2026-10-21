@@ -1,3 +1,4 @@
+import {findModelEngineUnavailable} from '../execution/model-engine-error';
 import {readLegacyRadarPendingCalls} from '../execution/retired-radar-upgrade.service';
 import {and,eq} from 'drizzle-orm';
 import {
@@ -237,7 +238,8 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
     const current=await deps.tasks.get(ctx,claim.task.id);
     if(['pause_requested','cancel_requested'].includes(current.status)){await deps.tasks.acknowledgeControl(lease);return;}
     if(current.status!=='running'||current.attempt!==claim.lease.attempt)return;
-    cp.lastError={code:'EXECUTION_FAILED',message:error instanceof Error?error.message:'准备失败，请核对原任务'};const failed=cp.steps.find(step=>step.name===cp.activeStep);if(failed){failed.status='failed';failed.lastError=cp.lastError;failed.availableActions=failed.name==='transcript'?['retry','provide_transcript']:['retry'];}await save();await finish('blocked','PREPARATION_FAILED');
+    const unavailable=findModelEngineUnavailable(error);
+    cp.lastError={code:'EXECUTION_FAILED',message:unavailable?.message??(error instanceof Error?error.message:'准备失败，请核对原任务')};const failed=cp.steps.find(step=>step.name===cp.activeStep);if(failed){failed.status='failed';failed.lastError=cp.lastError;failed.availableActions=failed.name==='transcript'?['retry','provide_transcript']:['retry'];}await save();await finish('blocked','PREPARATION_FAILED');
    }
   },
   async provideTranscript(ctx:RequestContext,projectId:string,raw:unknown){

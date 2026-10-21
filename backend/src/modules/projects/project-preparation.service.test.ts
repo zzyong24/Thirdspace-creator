@@ -292,3 +292,19 @@ it('fb 历史逐字稿已就绪checkpoint读为done，继续准备不重转写�
  await f.service.tick({shouldStop:()=>false});expect(f.dispatch.mock.calls).toHaveLength(1);
  expect((await f.service.get(f.ctx,f.project.id)).steps.find(s=>s.name==='transcript')).toMatchObject({status:'done',completedAt:null,childTaskId:null});
 });
+
+it('C2 brief准备在提交前发现Codex未登录，保留原任务并显示安全登录指引且不自动重试',async()=>{
+ const f=await fixture(),{CapabilityModelRoutingError}=await import('../ai-runtime/capability-model-routing');
+ f.dispatch.mockRejectedValue(new CapabilityModelRoutingError('CODEX_LOGIN_REQUIRED','text:copilot.assist'));
+ const started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'codex-not-logged-in-before-submission',requestedSteps:['brief']});
+ await f.service.tick({shouldStop:()=>false});
+ const expectedError={code:'EXECUTION_FAILED',message:'AI 引擎未登录，请先在设置中登录 Codex 后继续原任务'};
+ const resource=await f.service.get(f.ctx,f.project.id);
+ expect(resource).toMatchObject({preparationTaskId:started.preparationTaskId,lastError:expectedError,availableActions:expect.arrayContaining(['pause','cancel']),steps:expect.arrayContaining([expect.objectContaining({name:'brief',status:'failed',childTaskId:null,lastError:expectedError})])});
+ expect(await f.tasks.get(f.ctx,started.preparationTaskId!)).toMatchObject({status:'blocked'});
+ for(let i=0;i<3;i++){clock.value=new Date(Date.parse(clock.value)+3000).toISOString();await f.service.tick({shouldStop:()=>false});}
+ expect(f.dispatch).toHaveBeenCalledTimes(1);
+ expect((await f.service.get(f.ctx,f.project.id)).preparationTaskId).toBe(started.preparationTaskId);
+ await f.tasks.command(f.ctx,{taskIds:[started.preparationTaskId!],command:'pause',idempotencyKey:'pause-login-blocked'});
+ expect(await f.service.get(f.ctx,f.project.id)).toMatchObject({availableActions:expect.arrayContaining(['resume','cancel']),steps:expect.arrayContaining([expect.objectContaining({name:'brief',status:'paused'})])});
+});
