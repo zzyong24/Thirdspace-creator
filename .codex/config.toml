@@ -1,0 +1,49 @@
+# CreatorOS 项目级 Codex 配置（仅本仓生效，需项目为 trusted；不改 ~/.codex/config.toml）
+# 目的：关掉与本仓无关的插件 / MCP，缩短每次会话的技能清单与工具清单。
+# 需要临时启用时，在命令行加 -c 'plugins."<名称>".enabled=true'，或删掉对应条目。
+
+# —— 与本仓无关的插件 ——
+[plugins."hyperframes@openai-curated"]
+enabled = false
+
+[plugins."remotion@openai-curated"]
+enabled = false
+
+[plugins."figma@openai-curated"]
+enabled = false
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = false
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = false
+
+[plugins."documents@openai-primary-runtime"]
+enabled = false
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = false
+
+[plugins."cowart@personal"]
+enabled = false
+
+[plugins."iphone-use@iphone-use-local"]
+enabled = false
+
+[plugins."unified-computer-use@openai-bundled"]
+enabled = false
+
+[plugins."chrome@openai-bundled"]
+enabled = false
+
+# 保留：github、superpowers、pdf、visualize、codex-app-tools、browser、code-review
+
+# —— 与本仓无关的 MCP（保留 creatoros、node_repl、thirdspace-memory-writer）——
+[mcp_servers.chatcut_desktop]
+enabled = false
+
+[mcp_servers.iphone_use]
+enabled = false
+
+[mcp_servers.nomifun-knowledge]
+enabled = false
