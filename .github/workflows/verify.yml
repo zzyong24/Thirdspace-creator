@@ -28,6 +28,9 @@ jobs:
     name: lint + typecheck + 单测
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      # 提高堆上限；类型检查串行，避免多个大堆争抢 runner 内存。
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - uses: actions/checkout@v4
 
@@ -56,7 +59,7 @@ jobs:
 
       # 全包 tsc --noEmit(frontend 的 typecheck script 自带 next typegen 前置)。
       - name: typecheck(全 workspace)
-        run: pnpm -r typecheck
+        run: pnpm -r --workspace-concurrency=1 typecheck
 
       # 单测逐包分步跑 —— 失败时一眼看清挂在哪个包,而非交错日志里捞。
       # 全部走 vitest + 内存 PGlite(NODE_ENV=test 分支),不需要 Postgres 服务。
@@ -80,6 +83,8 @@ jobs:
     name: frontend 生产构建
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - uses: actions/checkout@v4
 
