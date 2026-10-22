@@ -3,8 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 7db6036be
-<!-- 合并保留远端同步来源：ci-fix-2026-10-21 @ 76a702e9 -->
+LAST_SYNCED: main @ be1078891
 
 ## 这是什么(定位)
 
@@ -24,8 +23,9 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1386 提交质量门并合并远端main后普通推送
+- [wip] T-1378 诊断每日观测HTTP422与接收端固定清单兼容
 - [wip] T-1385 修复 Verify 的 Node 堆内存耗尽
-- [wip] T-1382 统一项目入口并把准备工程归回项目
 - [wip] T-1369 修复首页平台筛选后的连续侧栏导航卡死
 - [open] T-1373 核对完整对账中真实CLI的用户目录与联网副作用
 - [open] T-1366 核对导航诊断新增的旧宽路径收据失配
