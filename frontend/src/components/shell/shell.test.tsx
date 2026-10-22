@@ -579,7 +579,13 @@ describe("AppShell", () => {
       for (const { name, href } of expectedLinks) {
         expect(within(nav).getByRole("link", { name: name! })).toHaveAttribute("href", href);
       }
-      if (collapsed) expect(action).toHaveAttribute("aria-label", "打开 AI 助手");
+      expect(action).toHaveAttribute("aria-label", "打开 AI 助手");
+      expect(footer.textContent).not.toContain("今天想先做点什么");
+      if (!collapsed) {
+        expect(action).toHaveTextContent("AI 助手");
+        expect(footer.querySelector('[data-slot="sidebar-contextual-card"]')).toBe(action);
+        expect(action).toHaveClass("px-2.5", "gap-2.5");
+      }
     }
   });
 

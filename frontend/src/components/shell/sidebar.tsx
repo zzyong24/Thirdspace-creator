@@ -570,7 +570,7 @@ interface SidebarContextualCardProps {
   readonly userDisplayName: string;
 }
 
-function SidebarContextualCard({ variant, collapsed, userDisplayName }: SidebarContextualCardProps) {
+function SidebarContextualCard({ variant, collapsed }: SidebarContextualCardProps) {
   if (variant === "storage") {
     // [T-115] storage 卡接真实源 —— 客户端拉 settings.storage.get,显真实
     // usedBytes / totalBytes(真实磁盘容量),读失败诚实降级。旧硬编码
@@ -599,25 +599,17 @@ function SidebarContextualCard({ variant, collapsed, userDisplayName }: SidebarC
           <TooltipContent side="right">打开 AI 助手</TooltipContent>
         </Tooltip>
       ) : (
-        <div
+        <Link
           data-slot="sidebar-contextual-card"
           data-variant="assistant"
-          className="flex w-full min-w-0 flex-col gap-3 rounded-xl bg-surface-subtle px-2.5 py-3"
+          href="?copilot=open&scope=global"
+          prefetch={false}
+          aria-label="打开 AI 助手"
+          className={cn(actionClass, "w-full min-w-0 justify-start gap-2.5 px-2.5")}
         >
-          <div className="flex min-w-0 items-start gap-2.5">
-            <Sparkles className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
-            <div className="min-w-0 flex-1">
-              <span className="text-sm font-medium leading-5 text-foreground">AI 助手</span>
-              <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-muted-foreground">
-                {`${userDisplayName}，今天想先做点什么？`}
-              </p>
-            </div>
-          </div>
-          {/* 保持当前页面路径与全局会话桶，就地打开 Copilot。 */}
-          <Link href="?copilot=open&scope=global" prefetch={false} className={actionClass}>
-            打开 AI 助手
-          </Link>
-        </div>
+          <Sparkles className="size-4 shrink-0" aria-hidden="true" />
+          <span>AI 助手</span>
+        </Link>
       )}
     </section>
   );

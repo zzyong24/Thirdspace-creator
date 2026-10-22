@@ -22,3 +22,7 @@ flowchart TB
 - pmem sync已执行；context-compile因缺task binding失败，按规则回退阅读BACKLOG任务行与本SPEC。前置独立评审、TDD红测及浏览器截图/几何/主题实测未发生，不追记PASS。
 - 完整reconcile未执行：process/reconcile.config.json中LED-053仍调用真实timeout verify，延续T-1373副作用阻断；taskctl已如实block。导航与超时执行路径未修改。
 - 无commit、push或full build，无付费模型调用；所有原有未跟踪文件保持原样。
+
+## 2026-10-22 紧凑化续任务
+
+用户要求删除问候副标题，将展开卡合并为图标 + AI 助手单行链接；aria-label 保留“打开 AI 助手”，收拢图标态及原 href 不变。更新 shell 断言，随 T-1396 指定测试及 /tmp/ui2-fix-* 交付。
