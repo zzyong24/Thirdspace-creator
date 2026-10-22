@@ -69,8 +69,9 @@ jobs:
   unit:
     name: 单测 ${{ matrix.package }} (${{ matrix.shard }})
     runs-on: ubuntu-latest
-    # 实测依赖准备可达 22 分钟；总预算包含安装、真实 worker 构建及完整分片。
-    timeout-minutes: 60
+    # 实测依赖准备已约 40 分钟、完整分片约 25 分钟；总预算另含诊断与证据上传。
+    # 只调整 job 外层预算，保留原用例超时、完整套件与运行异常门禁。
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
