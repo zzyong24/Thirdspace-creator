@@ -90,7 +90,9 @@ jobs:
           - { package: frontend, workers: 2, shard: "3/4" }
           - { package: frontend, workers: 2, shard: "4/4" }
     env:
-      NODE_OPTIONS: --max-old-space-size=6144
+      # private ubuntu-latest 为 2 CPU / 8 GB；两个测试进程各限 3 GiB old-space。
+      # 堆上限不是 RSS 上限，WASM/浏览器另占内存，实际峰值随证据上传。
+      NODE_OPTIONS: --max-old-space-size=3072
       # 每包最多两个 worker；普通测试保持原内存 PGlite 语义，显式磁盘用例自管目录。
       # run-tests 同时隔离 HOME/CODEX_HOME，运行异常仍由 reporter 阻断。
       QUALITY_VERBOSE: "1"
