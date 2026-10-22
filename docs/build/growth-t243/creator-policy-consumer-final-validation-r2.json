@@ -1,0 +1,21 @@
+{
+  "freezeSHA256": "cf941b19f862c4e6bde10e57c492cf8683964ea9934f7fa8190b31a789d1da0a",
+  "validation": {
+    "cacheRecovery": "consumer-cache-recovery-r6.log 13P；真实密文file/dir fsync及认证readback故障，阶段恢复不盲回滚",
+    "focused": "consumer-focused-r5.log 134P；此前save阶段文案增量单独由13P覆盖",
+    "types": "types-r6.log：标准/opt/homebrew/opt/node/bin/node ./node_modules/typescript/bin/tsc --noEmit --incremental false，实际exec session39903退出0；原types-r4 TS2345合成reasonCode遗漏保留",
+    "crossRepo": "growth-consumer-cross-repo-samples.json aa7fecf8 实际Growthservice签名/credential/link，model-benefit-cross-repo-fixture.json cd8ced45；当前为实际DTO消费者，非双方动态服务联验/真人UAT",
+    "baselineRed": "consumer-null-baseline-red.log；准确3cd旧client-config重放null拒，恢复after；如实为实现后baseline对照",
+    "focusedFiles": [
+      "src/server/activation/model-benefit.server.test.ts",
+      "src/server/activation/client-config.server.test.ts",
+      "src/server/activation/ai-credit-link.server.test.ts",
+      "src/server/settings-channel-model-credentials-wrap.test.ts",
+      "src/server/task-model-authority.test.ts",
+      "src/app/api/v1/local/client-config/route.test.ts",
+      "src/app/api/v1/local/ai-credits/connect/route.test.ts"
+    ]
+  },
+  "typesExitCode": 0,
+  "typesLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
