@@ -27,3 +27,5 @@
 ## 验收及规则
 
 用户本轮已明确批准契约漏登记修复及Verify执行方式调整；不修改产品方向、数据归属或许可安全边界。maintenance按实际变更进行独立复核，测试/日志不得补拍。涉及超时路径运行timeout-policy回归。完成按pmem sync→quick只读reconcile→taskctl complete；历史范围外22ERROR/17WARN如实记载，若新增本任务问题必须修复。最后保留真实CI结果和最多三轮推送计数。
+
+首次推送后的 Linux 差异继续在本任务内修复：各单测 job 显式构建实际 worker；浏览器使用短的私有 TMP 与 T1324 根；后端 16 片、前端 8 片各 1 worker、3072MiB 堆，60 分钟包含安装和测试。原生分片覆盖全部原文件，不增加筛选或跳过。新增运行中资源采样与真实 Chromium 诊断，诊断失败仍执行原完整测试。动态合成 AAC 显式指定原正例所需时间基，4MiB 比较仍核验全部字节，PGlite 夹具用后正式关闭；生产精度守卫、原业务断言及 104 项精确环境清单保持。依据与尚未证实的根因边界见 [Linux 调研](../research/2026-10-22-verify-linux-runtime-research.md)。

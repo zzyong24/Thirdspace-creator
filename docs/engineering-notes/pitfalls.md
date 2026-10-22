@@ -282,6 +282,14 @@ T-459 已加护栏 `requiresSerializableFunctionSource(code)`(regex 检测 `.eva
 
 给整包 Vitest 全局设置非空 `PGLITE_DATA_DIR` 会让原本逐例重置的内存库共享磁盘，产生锁竞争、脏数据和非业务失败。质量入口应清除继承的数据库地址，隔离 HOME/CODEX_HOME，文件库测试自己创建私有目录；原诊断输出也必须隔离，但仍保留固定 child 所要求的目录层级。Unix socket 测试还要使用足够短的 TMPDIR。缺历史固定材料或审批时保留原拒绝条件，仅用精确稳定标记登记 env；进程中断与未处理异常永不放行。守卫：`node --test tools/quality/quality.test.mjs`，完整包验证：`node tools/quality/run-tests.mjs frontend`。
 
+### 本机遗留产物和新版工具默认值会掩盖 CI 前置缺口
+
+T-1397 首轮 Linux 的聊天、转录和粗剪失败都涉及单测 job 未构建的 `ai-worker/dist`；另一 build job 的成功不能提供本 job 的文件。动态 AAC 正例还隐含 FFmpeg 新版 movie_timescale 默认值，与 CI 6.1 的1000不同。正解是各 job 显式运行正式 worker build，合成正例显式声明48000物理时间基，保留原业务/精度断言。详见 [Linux 调研](../research/2026-10-22-verify-linux-runtime-research.md)。
+
+### 浏览器实际 TMP 是子进程收到的最终路径
+
+不能只看 workflow 父 TMP 或 argv 的 user-data-dir。HTML 渲染器和 T1324 夹具会再次添加/覆盖目录，Chrome 还会创建自己的 SingletonSocket 临时目录；最终长度可能超过 Linux 上限。保留短私有根并用真实浏览器验证；SIGTRAP 与 Crashpad 频率警告不能直接写成 OOM。诊断保存完整 stderr 与 signal，原完整渲染测试仍必须执行。
+
 ## CI 步骤插在产物生成之前 → tauri_build 资源校验必然 panic(T-992,2026-09-15)
 
 **坑**:为守护 T-992 的启动容忍分支,往 `desktop-release.yml` 里加了一步 `cargo test --lib runtime_cleanup_tests::windows_ --no-default-features`,插在 `安装 Windows production closure 的 Chromium` 之后、`构建并接入 Windows production closure(T-675)` 之前。Windows job 直接挂:`build.rs:404` panic `tauri_build 失败: resource path binaries\creatoros-server-x86_64-pc-windows-msvc.exe doesn't exist`,exit 101(run 34942593764)。**不是测试失败,是这一步根本编译不起来**。原因:`binaries/` 被 gitignore,该 exe 在 Windows 上由 `prepare-packaged-runtime.mjs` 写出,而它只在 `build-production-closure.mjs --prepare-package` 里被调用 —— 也就是紧跟其后那一步;另一条会填充该目录的 `build-sidecar.mjs` 挂着 `runner.os != 'Windows'`,Windows 上不跑。
