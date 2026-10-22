@@ -69,31 +69,44 @@ jobs:
   unit:
     name: 单测 ${{ matrix.package }} (${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    # 实测依赖准备可达 22 分钟；总预算包含安装、真实 worker 构建及完整分片。
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         include:
           - { package: contract, shard: "1/1", workers: 2 }
-          - { package: backend, workers: 2, shard: "1/8" }
-          - { package: backend, workers: 2, shard: "2/8" }
-          - { package: backend, workers: 2, shard: "3/8" }
-          - { package: backend, workers: 2, shard: "4/8" }
-          - { package: backend, workers: 2, shard: "5/8" }
-          - { package: backend, workers: 2, shard: "6/8" }
-          - { package: backend, workers: 2, shard: "7/8" }
-          - { package: backend, workers: 2, shard: "8/8" }
+          - { package: backend, workers: 1, shard: "1/16" }
+          - { package: backend, workers: 1, shard: "2/16" }
+          - { package: backend, workers: 1, shard: "3/16" }
+          - { package: backend, workers: 1, shard: "4/16" }
+          - { package: backend, workers: 1, shard: "5/16" }
+          - { package: backend, workers: 1, shard: "6/16" }
+          - { package: backend, workers: 1, shard: "7/16" }
+          - { package: backend, workers: 1, shard: "8/16" }
+          - { package: backend, workers: 1, shard: "9/16" }
+          - { package: backend, workers: 1, shard: "10/16" }
+          - { package: backend, workers: 1, shard: "11/16" }
+          - { package: backend, workers: 1, shard: "12/16" }
+          - { package: backend, workers: 1, shard: "13/16" }
+          - { package: backend, workers: 1, shard: "14/16" }
+          - { package: backend, workers: 1, shard: "15/16" }
+          - { package: backend, workers: 1, shard: "16/16" }
           - { package: ai-worker, shard: "1/1", workers: 2 }
           - { package: mcp-server, shard: "1/1", workers: 2 }
-          - { package: frontend, workers: 2, shard: "1/4" }
-          - { package: frontend, workers: 2, shard: "2/4" }
-          - { package: frontend, workers: 2, shard: "3/4" }
-          - { package: frontend, workers: 2, shard: "4/4" }
+          - { package: frontend, workers: 1, shard: "1/8" }
+          - { package: frontend, workers: 1, shard: "2/8" }
+          - { package: frontend, workers: 1, shard: "3/8" }
+          - { package: frontend, workers: 1, shard: "4/8" }
+          - { package: frontend, workers: 1, shard: "5/8" }
+          - { package: frontend, workers: 1, shard: "6/8" }
+          - { package: frontend, workers: 1, shard: "7/8" }
+          - { package: frontend, workers: 1, shard: "8/8" }
     env:
-      # private ubuntu-latest 为 2 CPU / 8 GB；两个测试进程各限 3 GiB old-space。
+      # private ubuntu-latest 为 2 CPU / 8 GB；大包只开一个测试进程，限 3 GiB old-space。
       # 堆上限不是 RSS 上限，WASM/浏览器另占内存，实际峰值随证据上传。
       NODE_OPTIONS: --max-old-space-size=3072
-      # 每包最多两个 worker；普通测试保持原内存 PGlite 语义，显式磁盘用例自管目录。
+      # 增加分片覆盖原完整套件；普通测试保持原内存 PGlite 语义，显式磁盘用例自管目录。
       # run-tests 同时隔离 HOME/CODEX_HOME，运行异常仍由 reporter 阻断。
       QUALITY_VERBOSE: "1"
     steps:
@@ -115,6 +128,10 @@ jobs:
           cache: pnpm
       - name: 安装依赖(锁定 lockfile)
         run: pnpm install --frozen-lockfile
+      - name: 构建真实 worker(公共入口与转录集成测试前置)
+        if: matrix.package == 'backend' || matrix.package == 'frontend'
+        # dist 未跟踪且独立 build job 不共享产物，不能依赖本机旧 dist。
+        run: pnpm --filter @creatoros/ai-worker build
       - name: 安装 Chromium(ai-worker/backend 浏览器测试)
         if: matrix.package == 'ai-worker' || matrix.package == 'backend'
         run: pnpm --filter @creatoros/ai-worker exec playwright install --with-deps chromium
@@ -130,19 +147,28 @@ jobs:
         if: matrix.package == 'backend' || matrix.package == 'frontend'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install --no-install-recommends -y ffmpeg
           ffmpeg -version
           ffprobe -version
       - name: 单测完整分片
-        env:
-          CREATOROS_TEST_OUTPUT_ROOT: ${{ runner.temp }}/creatoros-test-output
-          T1324_RUNTIME_ROOT: ${{ runner.temp }}/creatoros-t1324-runtime
-          TMPDIR: ${{ runner.temp }}/creatoros-test-tmp
         run: |
-          mkdir -p "$TMPDIR" "$RUNNER_TEMP/quality"
+          # Chromium 还会在 TMPDIR 下建立隔离目录与 Unix socket，保留短的私有根路径。
+          export TMPDIR="$(mktemp -d /tmp/cr.XXXXXX)"
+          export CREATOROS_TEST_OUTPUT_ROOT="$TMPDIR/output"
+          export T1324_RUNTIME_ROOT="$TMPDIR/t1324"
+          mkdir -p "$RUNNER_TEMP/quality"
           free -m
           nproc
+          node tools/quality/ci-resources.mjs "$RUNNER_TEMP/quality/resource-samples.jsonl" &
+          resource_monitor_pid=$!
+          trap 'kill "$resource_monitor_pid" 2>/dev/null || true' EXIT
+          chromium_smoke_status=0
+          if [[ "${{ matrix.package }}" == "backend" || "${{ matrix.package }}" == "frontend" ]]; then
+            node tools/quality/chromium-smoke.mjs --output-dir "$RUNNER_TEMP/quality/chromium-smoke" || chromium_smoke_status=$?
+          fi
+          # 浏览器诊断失败也继续原完整套件；两者失败均保留为失败，证据随 always 上传。
           /usr/bin/time -v -o "$RUNNER_TEMP/quality/resources.txt" node tools/quality/run-tests.mjs "${{ matrix.package }}" --shard "${{ matrix.shard }}" --max-workers "${{ matrix.workers }}" --log-dir "$RUNNER_TEMP/quality" --out "$RUNNER_TEMP/quality/${{ matrix.package }}.json"
+          exit "$chromium_smoke_status"
       - name: 上传单测证据(含失败)
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
