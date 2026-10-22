@@ -9,7 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1395|用当前源码重打本地包并保留数据恢复启动|🔨|—|—|[授权与验收](docs/features/t1395-local-package-startup-recovery.md)|用户2026-10-22明确授权重新打包安装、保留现有数据、确认正常启动；冻结当前已提交源码，备份App与原库，先验证副本再安装及真实启动，不发布。|
+|T-1395|用当前源码重打本地包并保留数据恢复启动|✅|—|—|[授权与验收](docs/features/t1395-local-package-startup-recovery.md)|源码7252d30d5本地包已安装，58测试及DMG/签名通过；副本迁移与实际库核心内容保留通过，原生首页正常且保持运行；旧App/原库已备份，不发布；quick仍既有22/17。|
 |T-1394|排查本机CreatorOS启动失败并核定恢复路径|✅|—|—|[诊断范围与验收](docs/features/t1394-local-startup-diagnosis.md)|已定位T1382实测把原库升0139，旧App仅0137/0138；冷快照保全，当前源码副本只读兼容PASS；失败App已退出，未重打包安装/恢复启动，需匹配新包；quick仍既有22/17。|
 |T-1386|提交质量门并合并远端main后普通推送|✅|—|—|[授权与验收](docs/features/t1386-quality-main-integration.md)|2026-10-22续授权：保留双方任务与stash，审查剩余改动，排除私密/临时文件，分组提交并普通push；gitleaks零发现，quality/boundary及quick对账不劣于原基线。|
 |T-1380|解除协作者本地Mac完整构建对作者私钥的依赖|⏸️|PASS[REV:fade0e6a2c0c]|—|[独立本地构建范围](docs/features/t1380-independent-local-mac-build.md)|用户已明确取消Local方案并要求回退；本任务产品/脚本改动已私有保全后撤回，未产包/安装；原R1仅历史，不冒完成。|
