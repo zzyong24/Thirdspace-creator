@@ -18,7 +18,8 @@ function sample() {
   let processes;
   try {
     // 不采集 argv 或环境变量，避免把凭据写入日志。
-    processes = execFileSync("ps", ["-eo", "pid,ppid,rss,comm", "--sort=-rss"], { encoding: "utf8", timeout: 5000 }).trim().split("\n").slice(0, 16);
+    // 遵循执行预算下限；此独立采样进程不阻塞测试，失败只记录 unavailable。
+    processes = execFileSync("ps", ["-eo", "pid,ppid,rss,comm", "--sort=-rss"], { encoding: "utf8", timeout: 120000 }).trim().split("\n").slice(0, 16);
   } catch (error) { processes = { unavailable: error.code ?? String(error) }; }
   const record = {
     at: new Date().toISOString(),
