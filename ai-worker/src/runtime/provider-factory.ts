@@ -396,7 +396,7 @@ export function protectChannelEmbeddingModel(
 function safePiRejection(spec:ApiModelSpec,facts:{statusCode:number;responseHeaders:Record<string,string>;message:string}):Error{
   if(spec.displayModelKey==="channel-managed" && isManagedAiCreditExhaustedError(facts))return new ManagedAiCreditExhaustedError();
   const message=isStructuredResponseCompatibilityError(facts)?"response_format unsupported":`Pi provider HTTP ${facts.statusCode}`;
-  return Object.assign(new Error(message),{statusCode:facts.statusCode,responseHeaders:facts.responseHeaders});
+  return Object.assign(new Error(message),{statusCode:facts.statusCode,responseHeaders:facts.responseHeaders,providerErrorDetail:facts.message});
 }
 
 /** 把模型配置绑定到 Pi 网络适配及既有任务账本协议。 */

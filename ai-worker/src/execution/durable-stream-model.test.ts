@@ -370,3 +370,10 @@ it.each(['reserved','foreign-call','missing-receipt'])('旧候选只允许读取
  await expect(model.doStream({prompt})).rejects.toMatchObject({errorCode:'CHAT_MODEL_REPLAY_RECEIPT_MISMATCH'});
  expect(f.ports.reserve).toHaveBeenCalledTimes(1);expect(f.ports.start).not.toHaveBeenCalled();expect(f.provider.doStream).not.toHaveBeenCalled();
 });
+
+it('明确HTTP拒绝把安全原因结算到原调用，并随失败抛出',async()=>{
+ const f=fixture([]);
+ f.provider.doStream=vi.fn(async()=>{throw Object.assign(new Error('provider rejected'),{statusCode:400,providerErrorDetail:'http_400: invalid tool_choice'});});
+ await expect(f.model().doStream({prompt:[{role:'user',content:[{type:'text',text:'test'}]}]})).rejects.toMatchObject({errorCode:'http_400',errorMessage:'http_400: invalid tool_choice'});
+ expect(f.ports.settle).toHaveBeenCalledWith('call',{status:'rejected',errorDetail:'http_400: invalid tool_choice'});
+});

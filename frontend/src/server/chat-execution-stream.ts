@@ -25,7 +25,7 @@ export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:Request
      if(page.status==='waiting_user'&&!approvalPending){
       const task=await runtime.get(ctx,input.executionTaskId);
       if(subscription.signal.aborted)return;
-      yield {type:'error',errorText:humanizeAiError(new Error(task.errorMessage??task.errorCode??''))?.message??'本次执行需要你处理权限、登录或模型配置，处理后再继续。'};
+      yield {type:'error',errorText:humanizeAiError(new Error([task.errorCode,task.errorMessage].filter(Boolean).join(': ')))?.message??'本次执行需要你处理权限、登录或模型配置，处理后再继续。'};
      }
      if(page.status==='unknown_result'){
       const task=await runtime.get(ctx,input.executionTaskId);
@@ -37,7 +37,7 @@ export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:Request
     if(page.status==='failed'){
      const task=await runtime.get(ctx,input.executionTaskId);
      if(subscription.signal.aborted)return;
-     yield {type:'error',errorText:humanizeAiError(new Error(task.errorMessage??task.errorCode??''))?.message??'本次执行未完成，请检查模型配置后重试。'};
+     yield {type:'error',errorText:humanizeAiError(new Error([task.errorCode,task.errorMessage].filter(Boolean).join(': ')))?.message??'本次执行未完成，请检查模型配置后重试。'};
     }
     if(page.status==='cancelled')yield {type:'abort'};
    }

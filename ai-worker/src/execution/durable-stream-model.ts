@@ -172,7 +172,7 @@ export function createDurableStreamModel(input: {
                 ? { status: "unknown" }
                 : failure.outcome === "retry_wait" && !fallbackEligible
                   ? {status:"superseded"}
-                : { status: "rejected",...(fallbackEligible?{rejectionCode:"CHAT_MODEL_RETRYABLE_REJECTION" as const}:{}) },
+                : { status: "rejected",...(failure.errorMessage?{errorDetail:failure.errorMessage}:{}),...(fallbackEligible?{rejectionCode:"CHAT_MODEL_RETRYABLE_REJECTION" as const}:{}) },
             );
           } catch {
             throw new GenerationFailure(

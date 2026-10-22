@@ -242,20 +242,21 @@ describe("describeUserError — 通用面向用户错误收口", () => {
     );
   });
 
-  it("dev 环境把原始 err 打 console.error(便于排查),但不返给用户", () => {
+  it("dev 环境保留去重后的安全诊断,但不返给用户", () => {
     vi.stubEnv("NODE_ENV", "development");
-    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const err = new Error("raw-technical-detail-xyz");
     const out = describeUserError(err, "上传失败,请重试");
     expect(out).toBe("上传失败,请重试");
-    expect(spy).toHaveBeenCalled();
-    // console 收到的是原始 err;返回给用户的绝不含它。
+    describeUserError(new Error("raw-technical-detail-xyz"));
+    expect(spy).toHaveBeenCalledTimes(1);
+    // console 收到的是安全摘要;返回给用户的绝不含它。
     expect(out).not.toContain("raw-technical-detail-xyz");
   });
 
   it("prod 环境不把原始 err 打 console(避免噪音/泄露)", () => {
     vi.stubEnv("NODE_ENV", "production");
-    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
     describeUserError(new Error("boom"), "失败");
     expect(spy).not.toHaveBeenCalled();
   });
@@ -373,3 +374,11 @@ describe('T1294 确定零turn的Codex会话预检查安全提示',()=>{
   expect(JSON.stringify(human)).not.toMatch(/provider-raw-message|secret-fixture-token|fixture-private-account|fixture-private-key|responseBody|api_key/);
  });
 });
+
+ it.each([400,404,422])('供应商拒绝 http_%s 显示明确设置建议与安全原因',status=>{
+  const result=humanizeAiError(new Error(`http_${status}: invalid tool_choice Bearer fixture-credential`));
+  expect(result?.message).toContain('模型服务拒绝了请求');
+  expect(result?.message).toContain('invalid tool_choice');
+  expect(result?.message).not.toContain('fixture-credential');
+  expect(result?.suggestSwitchModel).toBe(true);
+ });

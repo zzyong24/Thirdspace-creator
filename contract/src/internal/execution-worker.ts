@@ -194,7 +194,7 @@ export const workerProviderReceiptSchema = z.object({
 export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 const generationSettlementSchema=z.discriminatedUnion("status", [
  z.object({callId:operationKeySchema,status:z.literal("settled"),providerResult:workerProviderReceiptSchema,usage:workerUsageSchema}).strict(),
- z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional()}).strict(),
+ z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional(),errorDetail:z.string().max(512).optional()}).strict(),
  z.object({callId:operationKeySchema,status:z.literal("superseded")}).strict(),
  z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
 ]);
@@ -331,7 +331,7 @@ export const workerPortInputSchemas = {
   saveCheckpoint: saveExecutionCheckpointSchema,
   commitResult: z.discriminatedUnion("outcome", [
     z.object({outcome: z.literal("succeeded"), callId: operationKeySchema, text: z.string().min(1).max(2_000_000)}).strict(),
-    z.object({outcome: z.enum(["failed", "unknown_result", "retry_wait", "waiting_user"]), errorCode: z.string().min(1).max(128), retryAfterMs: z.number().finite().nonnegative().optional()}).strict(),
+    z.object({outcome: z.enum(["failed", "unknown_result", "retry_wait", "waiting_user"]), errorCode: z.string().min(1).max(128), errorMessage:z.string().max(512).optional(), retryAfterMs: z.number().finite().nonnegative().optional()}).strict(),
   ]),
   heartbeat: emptyPortInput,
   acknowledgeControl: emptyPortInput,

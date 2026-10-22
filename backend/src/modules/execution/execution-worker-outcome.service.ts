@@ -1,3 +1,4 @@
+import {redactProviderErrorDetail} from "@creatoros/contract/provider-error-detail";
 import {executionBudgetSchema,executionAttemptAvailable,isContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import {recoverableAssetCalls} from "./asset-execution-recovery";
 import { and, desc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
@@ -55,7 +56,7 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
         }
         const [updated]=await tx.update(executionTasks).set({status,retryAt,retryOfCallId,
           leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,lastErrorCode: generationExhausted?'GENERATION_RECOVERY_EXHAUSTED':status === "failed" && input.outcome === "retry_wait" ? "RETRY_BUDGET_EXHAUSTED" : input.errorCode,
-          lastErrorMessage:generationExhausted?'原任务生成重试次数已用尽，已停止自动重试':input.outcome==='waiting_user'&&modelEngineUnavailableMessage(input.errorCode)?modelEngineUnavailableMessage(input.errorCode):input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":last?.status==="superseded"?"模型连接中断，原任务正在自动续跑":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "服务尚未返回完整结果，任务已暂停，已完成内容保留" : "执行停止，等待恢复或诊断",
+          lastErrorMessage:generationExhausted?'原任务生成重试次数已用尽，已停止自动重试':input.outcome==='waiting_user'&&modelEngineUnavailableMessage(input.errorCode)?modelEngineUnavailableMessage(input.errorCode):input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":last?.status==="superseded"?"模型连接中断，原任务正在自动续跑":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "服务尚未返回完整结果，任务已暂停，已完成内容保留" : /^http_(400|404|422)$/.test(input.errorCode) ? redactProviderErrorDetail(`${input.errorCode}: ${input.errorMessage ?? (last?.status==="rejected" ? last.resultText : null) ?? "模型服务拒绝了请求"}`) : "执行停止，等待恢复或诊断",
           updatedAt:now(),
         }).where(and(eq(executionTasks.id,task.id),eq(executionTasks.fenceToken,ref.fenceToken))).returning();
         return {result:{status:updated!.status,retryAt:updated!.retryAt},event:{taskId:updated!.id,userId:updated!.userId,attempt:updated!.attempt,kind:updated!.kind,status:updated!.status,occurredAt:updated!.updatedAt}};

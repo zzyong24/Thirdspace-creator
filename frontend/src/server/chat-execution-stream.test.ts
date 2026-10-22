@@ -241,3 +241,11 @@ it('实际服务接受原任务cancel_requested后本地停止可回收，SDK断
   expect((await tasks.get(context,task.id)).status).toBe('cancelled');
  }finally{release();await session.chat.stop();await sending;vi.unstubAllGlobals();await connection.client.close();}
 });
+
+it.each([400,404,422])('失败任务 http_%s 与供应商原因通过 SSE 到达用户',async status=>{
+ const runtime={subscribe:async function*(){yield {events:[],hasMore:false,status:'failed'};},get:async()=>({errorCode:`http_${status}`,errorMessage:'invalid tool_choice'})} as unknown as Parameters<typeof chatExecutionResponse>[0];
+ const body=await chatExecutionResponse(runtime,context,input,new AbortController().signal).text();
+ expect(body).toContain('模型服务拒绝了请求');expect(body).toContain('invalid tool_choice');expect(body).not.toContain('本次执行未完成');
+ const event=body.split('\n').filter(line=>line.startsWith('data: {')).map(line=>JSON.parse(line.slice(6))).find(row=>row.type==='error');
+ expect(humanizeAiErrorMessage(event.errorText)).toMatchObject({code:'provider_invalid',message:expect.stringContaining('invalid tool_choice')});
+});

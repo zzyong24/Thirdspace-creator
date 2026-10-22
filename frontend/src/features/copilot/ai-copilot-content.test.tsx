@@ -463,6 +463,15 @@ describe("T-1070 actual composer component / SDK boundary", () => {
   beforeEach(() => {
     prepare = vi.fn(async () => structuredClone(target));
   });
+  it.each(["http_400: invalid tool_choice","模型服务拒绝了请求：invalid tool_choice，请检查模型名称、接口格式和工具参数。"])("供应商原因保留在错误卡，重复渲染不触发Console Error或自动重发：%s",raw=>{
+    protocol.error=Error(raw);
+    const errors=vi.spyOn(console,"error").mockImplementation(()=>{});
+    const view=render(<NoEditorComposer/>);
+    expect(screen.getByText(/模型服务拒绝了请求：invalid tool_choice/)).toBeInTheDocument();
+    view.rerender(<NoEditorComposer/>);
+    expect(errors).not.toHaveBeenCalled();expect(protocol.send).not.toHaveBeenCalled();expect(protocol.regenerate).not.toHaveBeenCalled();
+    errors.mockRestore();
+  });
   let ticketCoordinator: ReturnType<typeof useDraftChatRequest>;
   let ticketSelection: any;
   function TicketPort() {

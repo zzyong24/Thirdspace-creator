@@ -13,6 +13,7 @@
 // 原则:只翻译**能识别的**错误(规则不命中返回 null,调用方回落原始 message —— 诚实,
 // 不把未知错误包装成似是而非的人话)。规则表可扩展,其他 AI 链路直接复用。
 
+import {redactProviderErrorDetail} from "@creatoros/contract/provider-error-detail";
 import type { ArtifactType } from "@/types/domain";
 
 /** 稳定错误分类：渲染层可依赖 code 决定动作，不必反向解析人话文案。 */
@@ -200,6 +201,13 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
  */
 export function humanizeAiErrorMessage(raw: string): HumanAiError | null {
   if (!raw) return null;
+  // SSE 已翻译成安全中文后，客户端仍须识别其分类并展示同一原因。
+  if(raw.startsWith("模型服务拒绝了请求"))return {code:"provider_invalid",message:redactProviderErrorDetail(raw),suggestSwitchModel:true};
+  const rejected=raw.match(/\bhttp_(400|404|422)\b\s*:?\s*([\s\S]*)/i);
+  if(rejected){
+    const detail=redactProviderErrorDetail(rejected[2].replace(/^(?:http_(?:400|404|422)\s*:?\s*)+/i, "")).slice(0,240);
+    return {code:"provider_invalid",message:`模型服务拒绝了请求${detail ? "："+detail : ""}，请检查模型名称、接口格式和工具参数。`,suggestSwitchModel:true};
+  }
   for (const rule of AI_ERROR_HUMAN_RULES) {
     if (rule.pattern.test(raw)) return rule.human;
   }
@@ -241,7 +249,7 @@ function collectErrorText(err: unknown): string {
 //   - 优先走 humanizeAiError(AI 类错已人话)命中即返;
 //   - 否则识别常见结构化码(鉴权/网络/404/限流)映射人话;
 //   - 再否则返 fallback(默认「操作失败,请重试。」)—— **绝不**把裸 err.message 渲给用户;
-//   - **仅 dev**(NODE_ENV!=='production')把原始 err 打 console.error 便于排查(prod 静默)。
+//   - **仅 dev**(NODE_ENV!=='production')把安全摘要去重后打 console.warn 便于排查(prod 静默)。
 // 与 ai-error-humanize 同库(纯常量/纯函数,前后端可 import),扩展而非另起炉灶。
 
 /** 结构化(非 AI 平台码)错误 → 人话规则:按序匹配,先命中先用。 */
@@ -284,21 +292,29 @@ export const DEFAULT_USER_ERROR = "操作失败，请重试。";
 
 /**
  * 面向用户的错误收口(唯一入口):AI 错→人话 / 结构化码→人话 / 其余→fallback。
- * **绝不**返回裸 err.message 或技术码。dev 才把原始 err 打 console.error(排查用)。
+ * **绝不**返回裸 err.message 或技术码。dev 才把安全摘要去重后打 console.warn(排查用)。
  *
  * @param err 任意 catch 到的错误。
  * @param fallback 识别不出时给用户看的人话(默认「操作失败,请重试。」)。
  */
+const loggedUserErrors = new Set<string>();
+
 export function describeUserError(
   err: unknown,
   fallback: string = DEFAULT_USER_ERROR,
 ): string {
-  // dev 留原文进 console(便于排查);prod 静默(避免噪音 + 泄露)。
+  // dev 仅记录去重后的安全摘要；prod 静默。
   if (
     typeof process !== "undefined" &&
     process.env?.NODE_ENV !== "production"
   ) {
-    console.error("[describeUserError]", err);
+    const diagnostic=redactProviderErrorDetail(collectErrorText(err));
+    if(!loggedUserErrors.has(diagnostic)){
+      if(loggedUserErrors.size>=100)loggedUserErrors.delete(loggedUserErrors.values().next().value!);
+      loggedUserErrors.add(diagnostic);
+      // warn 保留开发诊断，不触发 Next 的 Console Error 弹层；相同错误只记录一次。
+      console.warn("[describeUserError]", diagnostic);
+    }
   }
 
   const ai = humanizeAiError(err);

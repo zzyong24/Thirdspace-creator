@@ -1,3 +1,4 @@
+import { providerErrorDetail } from "@creatoros/contract/provider-error-detail";
 import { createModels,createProvider,lazyApi,envApiKeyAuth,type Model,type Api,type AssistantMessageEvent } from "@earendil-works/pi-ai";
 import type { LanguageModelV4,LanguageModelV4CallOptions,LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import type { ApiModelSpec } from "./provider-factory";
@@ -8,7 +9,8 @@ import { toPiContext,fromPiMessage,piPayload } from "./pi-provider-codec";
 export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(facts:{statusCode:number;responseHeaders:Record<string,string>;message:string})=>Error):LanguageModelV4{
   const api=spec.apiFormat==="anthropic"?"anthropic-messages":spec.apiFormat==="openai_chat"?"openai-completions":"openai-responses";
   const baseUrl=(spec.apiFormat==="anthropic" && spec.baseUrl ? spec.baseUrl.replace(/\/v1\/?$/,"") : spec.baseUrl)??(spec.apiFormat==="anthropic"?"https://api.anthropic.com":"https://api.openai.com/v1");
-  const model:Model<Api>={id:spec.model,name:spec.model,api,provider:"creatoros-pi",baseUrl,reasoning:false,input:["text","image"],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:200000,maxTokens:32768};
+  const deepseek=api==="openai-completions" && new URL(baseUrl).hostname==="api.deepseek.com";
+  const model:Model<Api>={id:spec.model,name:spec.model,api,provider:"creatoros-pi",baseUrl,reasoning:false,...(deepseek?{compat:{maxTokensField:"max_tokens" as const}}:{}),input:["text","image"],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:200000,maxTokens:32768};
   const models=createModels();
   const implementation=api==="anthropic-messages"?lazyApi(()=>import("@earendil-works/pi-ai/api/anthropic-messages")):api==="openai-completions"?lazyApi(()=>import("@earendil-works/pi-ai/api/openai-completions")):lazyApi(()=>import("@earendil-works/pi-ai/api/openai-responses"));
   models.setProvider(createProvider({id:model.provider,models:[model],auth:{apiKey:envApiKeyAuth("CreatorOS 内存凭据",[])},api:implementation}));
@@ -23,7 +25,14 @@ export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(fact
       headers:{...Object.fromEntries(Object.entries(request.headers??{}).filter((entry):entry is [string,string]=>typeof entry[1]==="string")),...(spec.apiFormat==="anthropic" && spec.authStyle==="bearer"?{authorization:`Bearer ${spec.token}`}:{})},
       ...(request.reasoning && !["none","provider-default"].includes(request.reasoning)?{reasoningEffort:request.reasoning}:{}),
       ...(toolChoice?{toolChoice}:{}),
-      onPayload:payload=>{try{return piPayload(request,api,payload,mediaParts);}catch(error){localFailure=error;throw error;}},
+      onPayload:payload=>{try{
+        const body=piPayload(request,api,payload,mediaParts);
+        // SEMANTIC_BOUNDARY_ALLOW: DeepSeek 协议规定强制工具与思考模式互斥；不改变工具选择。
+        if(deepseek && (choice?.type==="tool" || choice?.type==="required")){
+          body.thinking={type:"disabled"};delete body.reasoning_effort;
+        }
+        return body;
+      }catch(error){localFailure=error;throw error;}},
       onResponse:fact=>{response={statusCode:fact.status,responseHeaders:fact.headers};},
     } as Parameters<typeof models.stream>[2]);
     return (async function*(){
@@ -37,8 +46,9 @@ export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(fact
           console.warn(piProviderDiagnostic(spec,event.error.errorMessage??"供应商未返回完整模型结果",{statusCode:response?.statusCode,output}));
           if(!output && response && response.statusCode>=400){
             // 原错误文字只进入受控分类器，不能挂在 cause/响应字段泄露给调用方。
-            if(classifyRejection)throw classifyRejection({...response,message:event.error.errorMessage??""});
-            throw Object.assign(new Error(`Pi provider HTTP ${response.statusCode}`),response);
+            const detail=providerErrorDetail(response.statusCode,event.error.errorMessage??"",[spec.token]);
+            if(classifyRejection)throw classifyRejection({...response,message:detail});
+            throw Object.assign(new Error(detail),{...response,providerErrorDetail:detail});
           }
           throw new Error("PI_MODEL_STREAM_RESULT_UNKNOWN");
         }

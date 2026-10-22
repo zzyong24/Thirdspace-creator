@@ -18,6 +18,15 @@ describe("持久重试调度",()=>{
     const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
     return {clock,now,tasks,ref,ports:createExecutionWorkerCallPorts(db,deps),ledger:createExecutionCallLedgerService(db,deps),outcomes:createExecutionWorkerOutcomeService(db,{now,random:()=>0})};
   }
+  it("拒绝诊断保存在原调用并到达任务错误，持久前再次脱敏",async()=>{
+    const f=await fixture("provider-detail");const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
+    await f.ports.startCall(f.ref,{callId:call.callId});
+    await f.ledger.settle(f.ref,call.callId,{status:"rejected",errorDetail:"http_400: invalid tool_choice token=synthetic-sensitive"});
+    const saved=(await f.ledger.inspect(f.ref)).calls.find(row=>row.id===call.callId)!;
+    expect(saved.resultText).toContain("invalid tool_choice");expect(saved.resultText).not.toContain("synthetic-sensitive");
+    await f.outcomes.recordFailure(f.ref,{outcome:"failed",errorCode:"http_400"});
+    expect(await f.tasks.get(ctx,f.ref.executionTaskId)).toMatchObject({errorCode:"http_400",errorMessage:expect.stringContaining("invalid tool_choice")});
+  });
   it("保留完整Retry-After，暂停恢复不能提前领取；到期同键重试并受总调用预算限制",async()=>{
     const f=await fixture("retry");const a=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
     await f.ports.startCall(f.ref,{callId:a.callId});await f.ports.settleCall(f.ref,{callId:a.callId,status:"rejected"});

@@ -1550,7 +1550,7 @@ export function AICopilotContent({
         ? hasDurableTaskReceipt
           ? "后台任务和已完成内容都已保留。连接暂未恢复，你可以稍后回来，或继续恢复当前轮次。"
           : "输入和已完成内容已保留，但后台任务尚未建立。你可以继续恢复当前轮次。"
-        : resultUnconfirmed ? human!.message : suggestOpenCredits
+        : human?.code === "provider_invalid" ? publicMessage : resultUnconfirmed ? human!.message : suggestOpenCredits
         ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
         : suggestOpenPositioning
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
@@ -1801,7 +1801,9 @@ export function AICopilotContent({
 
   const continueRecovery = React.useCallback(() => {
     resetRecoveryBudget();
-    return retryLastTurn();
+    return retryLastTurn().catch(cause => {
+      setComposerLifecycleError(describeUserError(cause, "恢复本轮生成失败，请稍后重试。"));
+    });
   }, [resetRecoveryBudget, retryLastTurn]);
 
   // T-1022/T-1023：regenerate 会复用后端已保存的 sourceMessageId。前端只负责把请求可靠交给
