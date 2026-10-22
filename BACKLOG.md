@@ -9,7 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1386|提交质量门并合并远端main后普通推送|🔨|—|—|[授权与验收](docs/features/t1386-quality-main-integration.md)|2026-10-22续授权：保留双方任务与stash，审查剩余改动，排除私密/临时文件，分组提交并普通push；gitleaks零发现，quality/boundary及quick对账不劣于原基线。|
+|T-1386|提交质量门并合并远端main后普通推送|✅|—|—|[授权与验收](docs/features/t1386-quality-main-integration.md)|2026-10-22续授权：保留双方任务与stash，审查剩余改动，排除私密/临时文件，分组提交并普通push；gitleaks零发现，quality/boundary及quick对账不劣于原基线。|
 |T-1380|解除协作者本地Mac完整构建对作者私钥的依赖|⏸️|PASS[REV:fade0e6a2c0c]|—|[独立本地构建范围](docs/features/t1380-independent-local-mac-build.md)|用户已明确取消Local方案并要求回退；本任务产品/脚本改动已私有保全后撤回，未产包/安装；原R1仅历史，不冒完成。|
 |T-1379|核对协作者Mac本地完整包的条件与正确操作|✅|—|—|[只读操作说明](docs/features/t1379-collaborator-local-mac-package-guidance.md)|只读核本地ad-hoc/可选updater与必需root/verdict，保T1378在途；无本机再构建/安装或共享私钥。|
 |T-1378|诊断每日观测HTTP422与接收端固定清单兼容|🔨|PASS[REV:48c6e24fa806]|—|[原拒收与隔离范围](docs/features/t1378-observability-http-422-registry-diagnosis.md)|10/20原422/待发1563保；合成跨端RED确认两已登记ID不兼容，Growth T248三文件本地39PASS/非作者及补丁实用独审PASS；原stage/body、发布及owner待核，不催传/追签首因，见t1378/RESULT。|
