@@ -18,8 +18,8 @@ vi.mock('./ai.repository',async original=>{
 import {createAiService,type ServiceDeps} from './ai.service';
 import {createAiRepository} from './ai.repository';
 it('三个真实checkpoint caller并发不能覆盖同root已提交的来源绑定或彼此字段',async()=>{
- expect(process.env.T1328_CHECKPOINT_APPROVED).toBe('1');
- const root=process.env.T1328_CHECKPOINT_OUTPUT;expect(root).toBeTruthy();fs.mkdirSync(root!,{recursive:true});
+ expect(process.env.T1328_CHECKPOINT_APPROVED,'T1328_CHECKPOINT_APPROVAL_REQUIRED').toBe('1');
+ const root=process.env.T1328_CHECKPOINT_OUTPUT;expect(root,'T1328_CHECKPOINT_OUTPUT_REQUIRED').toBeTruthy();fs.mkdirSync(root!,{recursive:true});
  const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(root!,name+'.json'),JSON.stringify(value,null,2)+'\n');
  let unlock:(()=>void)|undefined;let pending:Promise<unknown>[]=[];
  const f=await createDb();let seq=0;const now=()=>new Date().toISOString(),nextId=(prefix:string)=>`t1328-checkpoint-${prefix}-${++seq}`;

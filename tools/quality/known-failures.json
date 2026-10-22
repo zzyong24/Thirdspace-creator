@@ -1,5 +1,215 @@
 {
   "schema": "known-failures/v1",
   "note": "新增条目必须带负责任务号、核实原因和稳定错误标记；fail 条目转绿后 run-tests 提示删除。kind: fail=确定断言漂移, flaky=已核实偶发, env=缺受控环境（如 T1246 自有 PG）而按设计拒跑。test=* 只匹配文件级错误，env 必须带 message_includes；运行异常永不豁免。",
-  "entries": []
+  "entries": [
+    {
+      "id": "KF-1397-001",
+      "package": "backend",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "test": "T1209真实PG转组先持锁，正常迁移退让后重读；未来私有作业v2、旧历史不改",
+      "kind": "env",
+      "reason": "T1209真实PG锁竞争用例未提供本轮自有独立PostgreSQL；原前置明确拒绝，未跳过或绕过T1246。",
+      "owner_task": "T-1209",
+      "since": "2026-10-22",
+      "message_includes": "真实并发验收必须显式指定隔离PG"
+    },
+    {
+      "id": "KF-1397-002",
+      "package": "backend",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "test": "T1209真实PG迁移先持锁，转组真实等待；提交后原服务转组v2且重开幂等",
+      "kind": "env",
+      "reason": "T1209真实PG锁竞争用例未提供本轮自有独立PostgreSQL；原前置明确拒绝，未跳过或绕过T1246。",
+      "owner_task": "T-1209",
+      "since": "2026-10-22",
+      "message_includes": "真实并发验收必须显式指定隔离PG"
+    },
+    {
+      "id": "KF-1397-003",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG原article owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-004",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG原graphic owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-005",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG旧来源ROW EXCLUSIVE阻新DDL时，异常回滚释放组锁，新提交来源被最终重采",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-006",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG显式归组持真实组/父/来源行锁时，0130退让后沿最新父归属保真",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-007",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-008",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-009",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-010",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG原membership freeze后转组完成，0130重采真实历史并保持旧NULL来源",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-011",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG0130成功轮持锁时，原项目INSERT被阻止；回滚诊断后正常迁移含真实新父",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-012",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG来源行锁冲突整轮释放；原事务提交后正常迁移重新盖章",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-013",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG整轮退让中取消，旧数据与104账本保持；再次正常升级可完成",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-014",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG两原归组服务反向参数a-first，与0130竞争仍正确串行",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-015",
+      "package": "backend",
+      "file": "src/legacy-source-migration.test.ts",
+      "test": "真实PG两原归组服务反向参数b-first，与0130竞争仍正确串行",
+      "kind": "env",
+      "reason": "未提供本轮自有且经T1246归属守卫验证的独立PostgreSQL；原T1089并发前置明确拒绝，不能用内存库或公共数据库冒充。",
+      "owner_task": "T-1089",
+      "since": "2026-10-22",
+      "message_includes": "T1089必须显式配置独立PG"
+    },
+    {
+      "id": "KF-1397-016",
+      "package": "backend",
+      "file": "src/modules/production/production-precise-asr-mapping.test.ts",
+      "test": "固定普通AAC完整音频v2/strict roundtrip/双域实际词边界；末端不钉、不双扣priming",
+      "kind": "env",
+      "reason": "缺少T1062保全的原固定AAC材料；不能生成替代素材冒充同一固定原件，普通合成PCM/回退链已实跑通过。",
+      "owner_task": "T-1062",
+      "since": "2026-10-22",
+      "message_includes": "T1062_CANONICAL_AAC_FILE必须指向保全的原固定AAC"
+    },
+    {
+      "id": "KF-1397-017",
+      "package": "backend",
+      "file": "src/modules/production/production-precise-asr-mapping.test.ts",
+      "test": "固定偏移AAC仍走原全文；canonical精度预算不足不反杀全文",
+      "kind": "env",
+      "reason": "缺少T1062保全的原固定AAC材料；不能生成替代素材冒充同一固定原件，普通合成PCM/回退链已实跑通过。",
+      "owner_task": "T-1062",
+      "since": "2026-10-22",
+      "message_includes": "T1062_CANONICAL_AAC_FILE必须指向保全的原固定AAC"
+    },
+    {
+      "id": "KF-1397-018",
+      "package": "backend",
+      "file": "src/modules/production/production-precise-asr-mapping.test.ts",
+      "test": "R6.1随包工具同固定AAC：实际full-output receipt/count严格缺失伪造和flush/WAV/PCM矛盾均拒绝",
+      "kind": "env",
+      "reason": "缺少T1062保全的原固定AAC材料；不能生成替代素材冒充同一固定原件，普通合成PCM/回退链已实跑通过。",
+      "owner_task": "T-1062",
+      "since": "2026-10-22",
+      "message_includes": "T1062_CANONICAL_AAC_FILE必须指向保全的原固定AAC"
+    },
+    {
+      "id": "KF-1397-019",
+      "package": "backend",
+      "file": "src/modules/ai/runtime-checkpoint-merge.integration.test.ts",
+      "test": "三个真实checkpoint caller并发不能覆盖同root已提交的来源绑定或彼此字段",
+      "kind": "env",
+      "reason": "本轮未取得T1328专用并发写入夹具批准；原toBe(1)前置保持，未添加批准变量，仅加明确诊断marker。",
+      "owner_task": "T-1328",
+      "since": "2026-10-22",
+      "message_includes": "T1328_CHECKPOINT_APPROVAL_REQUIRED"
+    }
+  ]
 }
