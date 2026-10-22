@@ -31,9 +31,20 @@ export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(fact
       ...(toolChoice?{toolChoice}:{}),
       onPayload:payload=>{try{
         const body=piPayload(request,api,payload,mediaParts);
-        // SEMANTIC_BOUNDARY_ALLOW: DeepSeek 协议规定强制工具与思考模式互斥；不改变工具选择。
-        if(deepseek && (choice?.type==="tool" || choice?.type==="required")){
-          body.thinking={type:"disabled"};delete body.reasoning_effort;
+        // SEMANTIC_BOUNDARY_ALLOW: DeepSeek 工具历史须无损回传推理；缺失时按协议关闭思考。
+        // 只按精确 host 开启此扩展，不能把 reasoning_content 发给其他供应商。
+        if(deepseek){
+          const history=context.messages.filter(message=>message.role==="assistant");
+          const wire=Array.isArray(body.messages)?body.messages.filter((message:any)=>message.role==="assistant"):[];
+          let incomplete=history.length!==wire.length;
+          history.forEach((message,index)=>{
+            const reasoning=message.content.filter(part=>part.type==="thinking").map(part=>part.thinking).join("");
+            if(!reasoning)incomplete=true;
+            if(wire[index] && reasoning)wire[index].reasoning_content=reasoning;
+          });
+          if(choice?.type==="tool" || choice?.type==="required" || incomplete || request.reasoning==="none"){
+            body.thinking={type:"disabled"};delete body.reasoning_effort;
+          }
         }
         return body;
       }catch(error){localFailure=buildFailure(error);throw localFailure;}},

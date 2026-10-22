@@ -23,3 +23,7 @@
 修复：仅在可证明尚未进入传输的上下文与 payload 构造边界标记 ModelRequestBuildError，账本结算 rejected；宿主已验证的生成父工具随任务 failed 结束并保留脱敏原因，跳过无法回放 rejected 模型的 complete 兜底。structured-node 同行输出脱敏异常类与消息。网络/响应/回执不确定仍保留 reconciliation。
 
 验收：相关 worker/backend Vitest、两包 typecheck、timeout-policy 回归、worker 重建；完整历史根因与真机复验仍未完成，不登记全绿或任务完成。
+
+## 第四轮思考历史协议（2026-10-22）
+
+基线 4634bd03b6428f2f3a81ce3cd65c9c8272b55a4d。DeepSeek 开启思考的工具多轮必须回传 reasoning_content。仅精确 api.deepseek.com/openai_chat 在请求边界从已有 reasoning parts 无损恢复字段；强制工具或任一历史 assistant 缺少推理时关闭思考，兼容已有持久历史与定位结构化子调用。不向其他供应商添加扩展。仅 mocked fetch 验证流式/JSON、多轮、强制工具后续轮和定位子调用；相关测试、worker typecheck 与重建。无真实模型验收，不登记任务全绿。
