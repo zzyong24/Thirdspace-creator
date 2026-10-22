@@ -1,3 +1,4 @@
+import {setImmediate as realSetImmediate} from "node:timers";
 /**
  * Settings island wiring tests (Settings module Step 5).
  *
@@ -2323,7 +2324,7 @@ describe("T1278 原资金等待只继承原900000截止，unknown保原idem（�
     try{
       await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'兑换并开通'}));await flush();});
       // webcrypto digest uses the real platform queue; own original timer stays fake.
-      for(let n=0;n<20&&fetchMock.mock.calls.length===0;n++)await act(async()=>{await new Promise<void>(r=>setImmediate(r));await flush();});
+      for(let n=0;n<20&&fetchMock.mock.calls.length===0;n++)await act(async()=>{await new Promise<void>(r=>realSetImmediate(r));await flush();});
       expect(fetchMock).toHaveBeenCalledOnce();const originalKey=new Headers(fetchMock.mock.calls[0]![1]!.headers).get('Idempotency-Key');expect(originalKey).toMatch(/^bootstrap-/);
       await act(async()=>{await vi.advanceTimersByTimeAsync(900_000);await flush();});
       expect(screen.getByRole('button',{name:'恢复原提交'})).toBeDisabled(); // 清空码；结束busy仍能重新输入原码。
@@ -2332,7 +2333,7 @@ describe("T1278 原资金等待只继承原900000截止，unknown保原idem（�
       await act(async()=>{release(stage==='fetch'?receipt():{contractVersion:'growth-ai-credit-bootstrap-v1',operationRef:'AICLE-T1278ORIGINALWAIT',status:'applied',creditUnits:123,expiresAt:'2026-10-14T12:30:00+00:00'});await flush();});
       expect(screen.queryByRole('status')).not.toBeInTheDocument();expect(screen.getByLabelText('原操作编号')).toHaveValue('');expect(mockOpenExternalUrl).not.toHaveBeenCalled();
       fetchMock.mockResolvedValue(receipt());await act(async()=>{fireEvent.change(screen.getByLabelText('官方额度充值码'),{target:{value:code}});fireEvent.click(screen.getByRole('button',{name:'恢复原提交'}));await flush();});
-      for(let n=0;n<20&&fetchMock.mock.calls.length<2;n++)await act(async()=>{await new Promise<void>(r=>setImmediate(r));await flush();});
+      for(let n=0;n<20&&fetchMock.mock.calls.length<2;n++)await act(async()=>{await new Promise<void>(r=>realSetImmediate(r));await flush();});
       expect(fetchMock).toHaveBeenCalledTimes(2);expect(new Headers(fetchMock.mock.calls[1]![1]!.headers).get('Idempotency-Key')).toBe(originalKey);expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账');
     }finally{view.unmount();release?.(stage==='fetch'?receipt():{});await flush();vi.useRealTimers();vi.unstubAllGlobals();}
   },180_000);

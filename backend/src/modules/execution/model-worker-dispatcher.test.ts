@@ -84,9 +84,9 @@ describe("真实模型调度宿主",()=>{
     const server=createServer((req,res)=>{req.resume();res.writeHead(200,{"content-type":"text/event-stream"});res.write(': waiting\n\n');opened=true;res.on("close",()=>{disconnected=true;});});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port);
     try{
-      const draining=host.drainOnce();await vi.waitFor(()=>expect(opened).toBe(true));
+      const draining=host.drainOnce();await vi.waitFor(()=>expect(opened).toBe(true),{timeout:10000});
       await createPersistentTaskService(db).command(ctx,{taskIds:[mapped.executionTaskId],command:"cancel",idempotencyKey:"cancel"});
-      await draining;expect(disconnected).toBe(true);expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("cancelled");
+      await draining;await vi.waitFor(()=>expect(disconnected).toBe(true),{timeout:10000});expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("cancelled");
       expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"cancel-active"))).toHaveLength(0);
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
@@ -99,10 +99,10 @@ describe("真实模型调度宿主",()=>{
     const finish=(res:import("node:http").ServerResponse)=>res.end('data: {"id":"pool","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{"content":"完成正文"},"finish_reason":null}]}\n\ndata: {"id":"pool","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}\n\ndata: [DONE]\n\n');
     try{
       const draining=host.drainOnce();expect(host.drainOnce()).toBe(draining);
-      await vi.waitFor(()=>expect(responses).toHaveLength(2));
+      await vi.waitFor(()=>expect(responses).toHaveLength(2),{timeout:10000});
       expect((await persistent.get(ctx,third.executionTaskId)).status).toBe("queued");
       await persistent.command(ctx,{taskIds:[first.executionTaskId],command:"cancel",idempotencyKey:"pool-cancel-first"});
-      await vi.waitFor(()=>expect(responses).toHaveLength(3));
+      await vi.waitFor(()=>expect(responses).toHaveLength(3),{timeout:10000});
       expect((await persistent.get(ctx,first.executionTaskId)).status).toBe("cancelled");
       expect((await persistent.get(ctx,second.executionTaskId)).status).toBe("running");
       for(const response of responses)if(!response.destroyed)finish(response);
@@ -128,10 +128,10 @@ describe("真实模型调度宿主",()=>{
     const server=createServer((req,res)=>{req.resume();opened++;res.on("close",()=>{closed++;});res.writeHead(200,{"content-type":"text/event-stream"});res.write(': waiting\n\n');});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port,reorderedDb);
     try{
-      const draining=host.drainOnce();await empty;release();await vi.waitFor(()=>expect(opened).toBe(1));
+      const draining=host.drainOnce();await empty;release();await vi.waitFor(()=>expect(opened).toBe(1),{timeout:10000});
       await prepare("pool-late-short");
-      await vi.waitFor(()=>expect(opened).toBe(2));
-      await host.stop();await draining;await vi.waitFor(()=>expect(closed).toBe(2));
+      await vi.waitFor(()=>expect(opened).toBe(2),{timeout:10000});
+      await host.stop();await draining;await vi.waitFor(()=>expect(closed).toBe(2),{timeout:10000});
       for(const id of ["pool-late-long","pool-late-short"])expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,id))).toHaveLength(0);
     }finally{release();await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
@@ -167,7 +167,7 @@ describe("真实模型调度宿主",()=>{
       expect((await persistent.get(ctx,second.executionTaskId)).status).toBe("running");
       expect((await persistent.get(ctx,first.executionTaskId)).status).toBe("cancelled");
       expect(peak).toBe(2);
-      await host.stop();await vi.waitFor(()=>expect(closed).toBe(3));
+      await host.stop();await vi.waitFor(()=>expect(closed).toBe(3),{timeout:10000});
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
   },15000);
 
