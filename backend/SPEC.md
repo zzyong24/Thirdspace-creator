@@ -484,6 +484,8 @@ GET    /search
 GET    /ai/conversations
 POST   /ai/conversations
 POST   /ai/conversations/:conversationId/messages
+GET    /ai/conversations/:conversationId/prediction-locks/source
+POST   /ai/conversations/:conversationId/prediction-locks/start
 POST   /ai/tasks
 POST   /ai/tasks/:taskId/confirm
 POST   /ai/tasks/:taskId/cancel
@@ -496,6 +498,8 @@ PATCH  /settings/preferences
 PUT    /settings/models/:capability
 POST   /settings/agents
 ```
+
+T-1328 原卡盲预测锁定接口沿正式 AI dispatch：`source` 只读原消息与工具卡绑定的来源、基线及真实任务/预测回执；`start` 由用户动作携带原来源、当前基线摘要与 `policyVersion: 1`，后台验证归属并按原来源幂等创建诊断任务。采纳继续沿 `POST /ai/tasks/:taskId/confirm`。完整来源、冻结与恢复约束见 [T-1328 服务合同](../docs/features/t1328-prediction-card-lock-restoration.md)。
 
 ### 外置 Skill 写入
 
