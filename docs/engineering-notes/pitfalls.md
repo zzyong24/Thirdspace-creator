@@ -274,6 +274,10 @@ T-459 已加护栏 `requiresSerializableFunctionSource(code)`(regex 检测 `.eva
 
 **正解**(T-466):改 `installMode: "both"`。Tauri v2 NSIS 双模式下**自动**:①弹"仅当前用户 / 所有用户"选择页(选后者需 UAC 提升,装 `C:\Program Files\`);②弹 InstallDirPage 让用户选路径。**教训**:Tauri v2 提供的选项级功能(installMode)不是"技术选择"是"用户体验选择",技术团队顺手写的 `currentUser` 隐含限制了终端用户的自主权——**默认选保守值(both)不选最简(currentUser)**,除非有明确理由。
 
+## 开发验证升级已装数据库后，旧桌面包可能再也打不开（T-1394，2026-10-22）
+
+10/21的T1382开发验证直接指向已装PGlite库，执行0139；本机旧App分别只认识0137和0138，10/22重启报`CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN`，五分钟后超时。两App版本号都为1.2.0，不能用显示版本号代替包内迁移清单。排查需对齐实际进程路径、包内journal和原库账本；开发验证优先用冷副本，若已在授权范围升级真实库，必须同时交付并验证匹配桌面包。不能删账本或改保护逻辑来强开旧包。证据与此次恢复边界见[诊断报告](../research/t1394-local-startup-diagnosis.md)。
+
 ## CI 步骤插在产物生成之前 → tauri_build 资源校验必然 panic(T-992,2026-09-15)
 
 **坑**:为守护 T-992 的启动容忍分支,往 `desktop-release.yml` 里加了一步 `cargo test --lib runtime_cleanup_tests::windows_ --no-default-features`,插在 `安装 Windows production closure 的 Chromium` 之后、`构建并接入 Windows production closure(T-675)` 之前。Windows job 直接挂:`build.rs:404` panic `tauri_build 失败: resource path binaries\creatoros-server-x86_64-pc-windows-msvc.exe doesn't exist`,exit 101(run 34942593764)。**不是测试失败,是这一步根本编译不起来**。原因:`binaries/` 被 gitignore,该 exe 在 Windows 上由 `prepare-packaged-runtime.mjs` 写出,而它只在 `build-production-closure.mjs --prepare-package` 里被调用 —— 也就是紧跟其后那一步;另一条会填充该目录的 `build-sidecar.mjs` 挂着 `runner.os != 'Windows'`,Windows 上不跑。
