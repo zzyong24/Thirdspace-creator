@@ -1,6 +1,8 @@
 // @vitest-environment node
 import {it,expect,vi} from 'vitest';
 import fs from 'node:fs/promises';
+import {mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {createHash,randomBytes} from 'node:crypto';
@@ -15,12 +17,15 @@ vi.mock('@creatoros/backend/modules/execution',async original=>{const actual=awa
 import {compositeTransport,__resetPersistenceForTests,getIdentityService} from '@/server/persistence-client';
 import {GET} from '@/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route';
 import {PUT} from '@/app/api/v1/blob/[...key]/route';
-const runtime=path.resolve('../docs/verification/t1324/runtime');
+// 每次完整套件及重试都使用新目录，避免复用历史验证库或让 ffmpeg 等待覆盖确认。
+const runtime=process.env.T1324_RUNTIME_ROOT?path.resolve(process.env.T1324_RUNTIME_ROOT):mkdtempSync(path.join(tmpdir(),'t1324-runtime-'));
+const ffmpeg=process.env.CREATOROS_FFMPEG_PATH?.trim()||'ffmpeg';
+const ffprobe=process.env.CREATOROS_FFPROBE_PATH?.trim()||'ffprobe';
 const hash=(value:unknown)=>createHash('sha256').update(typeof value==='string'||Buffer.isBuffer(value)?value:JSON.stringify(value)).digest('hex');
 const run=async(file:string,args:string[],timeout=120000)=>new Promise<{stdout:string;stderr:string}>((resolve,reject)=>execFile(file,args,{timeout,maxBuffer:16*1024*1024},(error,stdout,stderr)=>error?reject(Object.assign(error,{stderr})):resolve({stdout,stderr})));
 const scopes=(process.env.T1324_CASES??'pure,legacy').split(',');
 it.each(scopes)('真实公开渲染产物预览 %s',async name=>{
- owned.root=path.join(runtime,'cases',process.env.T1324_RUN_ID??'unbound',name);await fs.mkdir(owned.root,{recursive:true});await fs.mkdir(path.join(owned.root,'tmp'),{recursive:true});owned.db=null;owned.runs=[];
+ const cases=path.join(runtime,'cases',process.env.T1324_RUN_ID??'unbound');await fs.mkdir(cases,{recursive:true});owned.root=await fs.mkdtemp(path.join(cases,name+'-'));await fs.mkdir(path.join(owned.root,'tmp'),{recursive:true});owned.db=null;owned.runs=[];
  const save=async(label:string,value:unknown)=>fs.writeFile(path.join(owned.root,label+'.json'),JSON.stringify(value,null,2)+'\n');
  for(const [key,value]of Object.entries({DATABASE_URL:'',PGLITE_DATA_DIR:path.join(owned.root,'db'),CREATOROS_STORAGE:'local',CREATOROS_MEDIA_ROOT:path.join(owned.root,'media'),CREATOROS_WORKSPACES_ROOT:path.join(owned.root,'workspaces'),CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_CLIENT_CONFIG_PULL_ENABLED:'0',CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH:path.join(owned.root,'missing-seed'),CREATOROS_MASTER_KEY:randomBytes(32).toString('base64'),TMPDIR:path.join(owned.root,'tmp'),TEMP:path.join(owned.root,'tmp'),TMP:path.join(owned.root,'tmp')}))vi.stubEnv(key,value);
  __resetPersistenceForTests();let ctx:RequestContext,taskId='',artifactPath='',taskSnapshot:any;
@@ -32,7 +37,7 @@ it.each(scopes)('真实公开渲染产物预览 %s',async name=>{
   const identity=await getIdentityService();ctx=await identity.resolveLocalContext();expect(owned.driver).toEqual({kind:'file-pglite',target:path.join(owned.root,'db')});expect(process.env.PGLITE_DATA_DIR).toBe(path.join(owned.root,'db'));
   if(name==='legacy'){const account=await call(ENDPOINTS.createAccount,{platform:'douyin',accountHandle:'t1324-owned-legacy'});ctx={...ctx,accountId:account.id};}else{const group=await call(ENDPOINTS.createAccountGroup,{name:'预览受控组',idempotencyKey:'t1324-group'});ctx={...ctx,groupId:group.id,groupVersion:group.version,accountId:null};}
   const project=await call(ENDPOINTS.createProject,{title:'原生公共预览受控输入'});
-  const source=path.join(owned.root,'neutral-source.mp4');const sourceRun=await run('/opt/homebrew/bin/ffmpeg',['-hide_banner','-loglevel','error','-f','lavfi','-i','testsrc2=size=320x180:rate=24','-f','lavfi','-i','sine=frequency=440:sample_rate=48000','-t','2','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-movflags','+faststart',source]);await save('source-command',{binary:'/opt/homebrew/bin/ffmpeg',sourceType:'全新生成中性测试画面和音频',durationSec:2,exitCode:0,stdout:sourceRun.stdout,stderr:sourceRun.stderr});
+  const source=path.join(owned.root,'neutral-source.mp4');const sourceRun=await run(ffmpeg,['-nostdin','-hide_banner','-loglevel','error','-f','lavfi','-i','testsrc2=size=320x180:rate=24','-f','lavfi','-i','sine=frequency=440:sample_rate=48000','-t','2','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-movflags','+faststart',source]);await save('source-command',{binary:ffmpeg,sourceType:'全新生成中性测试画面和音频',durationSec:2,exitCode:0,stdout:sourceRun.stdout,stderr:sourceRun.stderr});
   const sourceBytes=await fs.readFile(source),upload=await call(ENDPOINTS.createUpload,{assetType:'video',mimeType:'video/mp4',fileSize:sourceBytes.length,projectId:project.id,fileName:'neutral-source.mp4'});
   const headers:Record<string,string>=ctx.groupId?{'x-group-id':ctx.groupId}:{};if(ctx.accountId)headers['x-account-id']=ctx.accountId;
   const url=new URL(upload.uploadUrl,'http://127.0.0.1');const storedKey=url.pathname.split('/api/v1/blob/')[1]!.split('/');const put=await PUT(new Request(url,{method:'PUT',headers,body:Uint8Array.from(sourceBytes).buffer}),{params:Promise.resolve({key:storedKey})});expect(put.status).toBe(200);
@@ -41,7 +46,7 @@ it.each(scopes)('真实公开渲染产物预览 %s',async name=>{
   const created=await call(ENDPOINTS.createExecutionTask,{projectId:project.id,attemptId:'t1324-public-render-'+name,spec});taskId=created.id;await save('public-created',created);
   await vi.waitFor(async()=>{const current=(await owned.db!.select().from(aiTasks).where(eq(aiTasks.id,taskId)))[0]!;await fs.appendFile(path.join(owned.root,'observations.ndjson'),JSON.stringify({observedAt:new Date().toISOString(),taskId,status:current.status,errorMessage:current.errorMessage})+'\n');expect(['awaiting_confirmation','failed','cancelled','succeeded'].includes(current.status)).toBe(true);},{timeout:900000,interval:250});await Promise.allSettled(owned.runs);
   const task=await call(ENDPOINTS.getExecutionTask,undefined,{taskId});await save('public-render-result',task);expect(task.status,task.errorMessage??'原公共渲染状态').toBe('awaiting_confirmation');const video=task.manifest.artifacts.find((item:any)=>item.mimeType?.startsWith('video/'));expect(video).toBeTruthy();artifactPath=video.path;
-  const output=path.join(owned.root,'workspaces',taskId,'out',artifactPath);const bytes=await fs.readFile(output);expect(bytes.length).toBeGreaterThan(0);await save('output-probe',{...(await run('/opt/homebrew/bin/ffprobe',['-v','error','-show_streams','-show_format','-of','json',output])),bytes:bytes.length,sha256:hash(bytes)});
+  const output=path.join(owned.root,'workspaces',taskId,'out',artifactPath);const bytes=await fs.readFile(output);expect(bytes.length).toBeGreaterThan(0);await save('output-probe',{...(await run(ffprobe,['-v','error','-show_streams','-show_format','-of','json',output])),bytes:bytes.length,sha256:hash(bytes)});
   taskSnapshot=await state();await save('before-preview',taskSnapshot);
   const full=await preview('initial-header',headers);expect(full.result.status).toBe(200);expect(full.bytes).toEqual(bytes);
   const cookieHeaders={cookie:ctx.groupId?'creatoros_current_group='+encodeURIComponent(ctx.groupId):'creatoros_current_account='+encodeURIComponent(ctx.accountId!)};

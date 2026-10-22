@@ -78,7 +78,7 @@ const digest = (value: unknown) => createHash('sha256').update(typeof value === 
 const save = (name: string, value: unknown) => fs.writeFileSync(path.join(owned.root, name + '.json'), JSON.stringify(value, null, 2) + '\n');
 const selected = (process.env.T1329_CASES ?? 'collect,material,research').split(',');
 it.each(selected)('公开 agentic 准入与完整原链 %s', async name => {
-  owned.root = path.join(runtime, 'cases', process.env.T1329_RUN_ID ?? 'unbound', name);
+  owned.root = path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT ? path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT, 't1329') : runtime,  'cases', process.env.T1329_RUN_ID ?? 'unbound', name);
   for (const dir of ['', 'tmp', 'media', 'workspaces', 'empty-codex-home']) fs.mkdirSync(path.join(owned.root, dir), {recursive: true});
   owned.db = null; owned.host = null; owned.errors = []; owned.domainErrors = []; owned.ports = []; owned.storage = null; owned.beforeInvoke = null;
   for (const [key, value] of Object.entries({DATABASE_URL: '', PGLITE_DATA_DIR: path.join(owned.root, 'db'), CREATOROS_MASTER_KEY: randomBytes(32).toString('base64'), CREATOROS_MASTER_KEY_FD: '', CREATOROS_MASTER_KEY_FILE: '', CREATOROS_STORAGE: 'local', CREATOROS_MEDIA_ROOT: path.join(owned.root, 'media'), CREATOROS_WORKSPACES_ROOT: path.join(owned.root, 'workspaces'), CREATOROS_DISABLE_BACKGROUND_DRIVERS: '1', CREATOROS_DISABLE_SCHEDULER: '1', CREATOROS_CLIENT_CONFIG_PULL_ENABLED: '0', CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH: path.join(owned.root, 'missing-seed')})) vi.stubEnv(key, value);

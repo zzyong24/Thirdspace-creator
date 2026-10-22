@@ -21,7 +21,7 @@ const user:RequestContext={userId:canonicalDataset.user.id,requestId:'t1312-owne
 let root='',server:Server|undefined,requests:any[]=[],caseName='',serial=0;
 const fixtureDims=[{key:'cta',label:'已编辑的CTA维度',description:'明确旧库存，仅用于隔离默认缺失前置',weight:1}];
 async function call(endpoint:Endpoint,ctx:RequestContext,body?:unknown,params?:unknown,query?:unknown):Promise<any>{return (await compositeTransport.request(endpoint,{params,body,query} as never,ctx) as {data:unknown}).data;}
-async function evidence(name:string,value:unknown){const dir=resolve('../docs/verification/t1312/runtime',process.env.T1312_RUN_ID??'unlabelled');await mkdir(dir,{recursive:true});await writeFile(join(dir,name+'.json'),JSON.stringify(value,null,2)+'\n');}
+async function evidence(name:string,value:unknown){const dir=resolve(process.env.CREATOROS_TEST_OUTPUT_ROOT?join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'t1312'):'../docs/verification/t1312/runtime',process.env.T1312_RUN_ID??'unlabelled');await mkdir(dir,{recursive:true});await writeFile(join(dir,name+'.json'),JSON.stringify(value,null,2)+'\n');}
 beforeEach(async()=>{
  root=await mkdtemp(join(tmpdir(),'t1312-owned-default-'));owned.media=join(root,'media');owned.prepares=[];owned.drafts=[];owned.errors=[];owned.sql=[];requests=[];
  for(const [key,value] of Object.entries({CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DISABLE_SCHEDULER:'1',DATABASE_URL:'',PGLITE_DATA_DIR:join(root,'db'),CREATOROS_STORAGE:'local',CREATOROS_CLIENT_CONFIG_PULL_ENABLED:'0',CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH:'/nonexistent/t1312-fixture'}))vi.stubEnv(key,value);__resetPersistenceForTests();

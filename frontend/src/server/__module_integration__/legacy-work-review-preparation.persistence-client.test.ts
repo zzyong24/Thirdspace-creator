@@ -194,7 +194,7 @@ async function call(
 }
 async function evidence(name: string, value: unknown) {
   const directory = resolve(
-    '../docs/verification/t1313/runtime',
+    process.env.CREATOROS_TEST_OUTPUT_ROOT?join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'t1313'):'../docs/verification/t1313/runtime',
     process.env.T1313_RUN_ID ?? 'unlabelled',
   );
   await mkdir(directory, { recursive: true });

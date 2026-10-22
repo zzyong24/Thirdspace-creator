@@ -26,7 +26,7 @@ const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(owned.root,na
 
 import {createWorkbenchPlanService} from '../../../../backend/src/modules/execution/workbench-plan.service';
 it('纯组完整v2候选后原公开inspect/events与同组筛选读取',async()=>{
- owned.root=path.join(runtime,'cases',process.env.T1317_RUN_ID??'unbound','public');fs.mkdirSync(owned.root,{recursive:true});for(const d of ['tmp','empty-codex-home'])fs.mkdirSync(path.join(owned.root,d),{recursive:true});
+ owned.root=path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT?path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'t1317'):runtime,'cases',process.env.T1317_RUN_ID??'unbound','public');fs.mkdirSync(owned.root,{recursive:true});for(const d of ['tmp','empty-codex-home'])fs.mkdirSync(path.join(owned.root,d),{recursive:true});
  owned.errors=[];owned.ports=[];owned.host=null;owned.db=null;owned.tools=null;owned.observe=null;owned.caseName='public';owned.crashed=false;
  save('scenario',{sequence:['system_features','topic_generate'],kind:'normal',realExternalModels:0});
  for(const [key,value]of Object.entries({DATABASE_URL:'',PGLITE_DATA_DIR:path.join(owned.root,'db'),CREATOROS_STORAGE:'local',CREATOROS_MEDIA_ROOT:path.join(owned.root,'media'),CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_CLIENT_CONFIG_PULL_ENABLED:'0',CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH:path.join(owned.root,'missing-seed')}))vi.stubEnv(key,value);

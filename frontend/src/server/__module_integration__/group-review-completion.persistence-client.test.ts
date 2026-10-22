@@ -22,7 +22,7 @@ import {compositeTransport,__resetPersistenceForTests} from '@/server/persistenc
 const user:RequestContext={userId:canonicalDataset.user.id,requestId:'t1311-owned-public-review',source:'user'};
 let root='',server:Server|undefined,requests:any[]=[],caseName='',seq=0;
 async function call(endpoint:Endpoint,ctx:RequestContext,body?:unknown,params?:unknown,query?:unknown):Promise<any>{return (await compositeTransport.request(endpoint,{params,body,query} as never,ctx) as {data:unknown}).data;}
-async function evidence(name:string,value:unknown){const directory=resolve('../docs/verification/t1311/runtime',process.env.T1311_RUN_ID??'unlabelled');await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.json'),JSON.stringify(value,null,2)+'\n');}
+async function evidence(name:string,value:unknown){const directory=resolve(process.env.CREATOROS_TEST_OUTPUT_ROOT?join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'t1311'):'../docs/verification/t1311/runtime',process.env.T1311_RUN_ID??'unlabelled');await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.json'),JSON.stringify(value,null,2)+'\n');}
 beforeEach(async()=>{
  root=await mkdtemp(join(tmpdir(),'t1311-owned-review-'));owned.media=join(root,'media');owned.errors=[];owned.invocations=[];requests=[];
  vi.stubEnv('CREATOROS_DISABLE_BACKGROUND_DRIVERS','1');vi.stubEnv('CREATOROS_DISABLE_SCHEDULER','1');vi.stubEnv('DATABASE_URL','');vi.stubEnv('PGLITE_DATA_DIR',join(root,'db'));vi.stubEnv('CREATOROS_STORAGE','local');vi.stubEnv('CREATOROS_CLIENT_CONFIG_PULL_ENABLED','0');vi.stubEnv('CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH','/nonexistent/t1311-fixture');__resetPersistenceForTests();

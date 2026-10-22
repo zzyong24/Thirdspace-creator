@@ -11,7 +11,7 @@ vi.mock('@creatoros/backend',async original=>{const actual=await original<typeof
 vi.mock('@creatoros/backend/modules/calibration',async original=>{const actual=await original<typeof import('@creatoros/backend/modules/calibration')>();return {...actual,createCalibrationService:(...args:Parameters<typeof actual.createCalibrationService>)=>{const deps=args[0],port=deps.learnings;if(!port)return actual.createCalibrationService(...args);return actual.createCalibrationService({...deps,learnings:{...port,async adjustConfidence(...input:Parameters<typeof port.adjustConfidence>){owned.feedback.push({ctx:input[0],input:input[1]});return port.adjustConfidence(...input);}}});}};});
 vi.mock('node:child_process',async original=>{const actual=await original<typeof import('node:child_process')>();return {...actual,fork:(...args:Parameters<typeof actual.fork>)=>{const child=actual.fork(...args);owned.children.push({pid:child.pid??null});if(child.pid){const fields=actual.execFileSync('/bin/ps',['-p',String(child.pid),'-o','pgid=,lstart=,comm='],{encoding:'utf8'}).trim().split(/\s+/);fs.appendFileSync(path.join(process.env.T1339_PHASE_ROOT!,'CHILDREN.ndjson'),JSON.stringify({pid:child.pid,pgid:Number(fields.shift()),identity:fields.join(' '),runId:process.env.T1339_RUN_ID})+'\n');}return child;}};});
 import {compositeTransport,getIdentityService,getStorageRootForRequest,__resetPersistenceForTests} from '@/server/persistence-client';
-const base='/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6';
+const base=process.env.CREATOROS_TEST_OUTPUT_ROOT?path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'t1339'):'/Volumes/T7-MacData/CodexBuilds/t1339-missing-actual-20261017-42fe69d6';
 const phase=process.env.T1339_PHASE??'red-v1';
 const phaseRoot=path.join(base,phase);
 if(process.env.T1339_PHASE_ROOT&&path.resolve(process.env.T1339_PHASE_ROOT)!==phaseRoot)throw Error('OWNED_PHASE_BINDING_MISMATCH');
@@ -20,7 +20,13 @@ const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(phaseRoot,nam
 type Family={name:string;ctx:RequestContext;project:any;output:any;rubric:any;prediction:any;result:any;expected:Record<string,number>;feedbackBefore:number;feedbackAfter:number};
 async function snapshot(){if(!owned.db)throw Error('DB_NOT_CREATED');return {rubrics:await owned.db.select().from(rubrics),versions:await owned.db.select().from(rubricVersions),predictions:await owned.db.select().from(predictions),results:await owned.db.select().from(calibrationResults),ingestion:await owned.db.select().from(ingestionRuns)};}
 async function lifecycle(dbPhase:string,body:(call:(e:Endpoint,input?:any,ctx?:RequestContext)=>Promise<any>,user:RequestContext)=>Promise<void>){
- expect(['red-v1','green-v1']).toContain(phase);expect(fs.realpathSync(base)).toBe(base);fs.mkdirSync(phaseRoot,{recursive:true,mode:0o700});
+ expect(['red-v1','green-v1']).toContain(phase);
+ let actualBase:string;
+ try{actualBase=fs.realpathSync(base);}catch(error){
+  if(error&&typeof error==='object'&&'code'in error&&error.code==='ENOENT')throw new Error('T1339_OWNED_BASE_REQUIRED',{cause:error});
+  throw error;
+ }
+ expect(actualBase).toBe(base);fs.mkdirSync(phaseRoot,{recursive:true,mode:0o700});
  const dbRoot=path.join(base,dbPhase);for(const dir of ['tmp','media','workspaces'])fs.mkdirSync(path.join(dbRoot,dir),{recursive:true,mode:0o700});
  const keyFile=path.join(base,'fixture-application-key');if(!fs.existsSync(keyFile)){if(phase!=='red-v1')throw Error('ORIGINAL_FIXTURE_KEY_REQUIRED');fs.writeFileSync(keyFile,randomBytes(32).toString('base64'),{mode:0o600,flag:'wx'});}expect(fs.statSync(keyFile).mode&0o777).toBe(0o600);
  if(dbPhase==='red-v1'&&phase==='green-v1'&&(!fs.existsSync(path.join(dbRoot,'FIXTURE.json'))||JSON.parse(fs.readFileSync(path.join(dbRoot,'CLEANUP.json'),'utf8')).persistence!=='DISPOSED'))throw Error('COMPLETED_ORIGINAL_RED_REQUIRED');
