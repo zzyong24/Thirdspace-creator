@@ -25,7 +25,8 @@ describe("工作台预览完整回读", () => {
     await expect(readRegisteredWorkbenchPreview(reader, ctx, "task", "artifact", 1))
       .rejects.toBeInstanceOf(WorkbenchPreviewTooLargeError);
     const raw = await readRegisteredWorkbenchPreview(reader, ctx, "task", "artifact", 1, MAX_WORKBENCH_RAW_BYTES);
-    expect(raw.bytes).toEqual(data);
+    expect(raw.bytes.byteLength).toBe(data.byteLength);
+    expect(Buffer.from(raw.bytes.buffer, raw.bytes.byteOffset, raw.bytes.byteLength).equals(data)).toBe(true);
   });
 
   it("拒绝篡改字节、假元数据和超限对象", async () => {
