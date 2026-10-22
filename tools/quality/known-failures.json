@@ -1134,6 +1134,17 @@
       "owner_task": "T-1062",
       "since": "2026-10-22",
       "message_includes": "缺少原固定AAC"
+    },
+    {
+      "id": "KF-1397-104",
+      "package": "frontend",
+      "file": "src/server/feedback/channel-bound-feedback-fixture.test.ts",
+      "test": "T-538 三仓共享 feedback-context fixture > 与 Growth owner 文件逐字一致且 SHA-256 锁定",
+      "kind": "env",
+      "reason": "原Growth owner跨仓fixture缺失。测试仅在readFile原Owner的ENOENT前置拒绝并保cause，未替换为Creator自比；Ubuntu仅checkout当前仓不含兄弟仓原材料。本机原Owner可用时原逐字与固定SHA断言真实PASS。",
+      "owner_task": "T-538",
+      "since": "2026-10-22",
+      "message_includes": "T538_GROWTH_OWNER_FIXTURE_MISSING"
     }
   ]
 }
