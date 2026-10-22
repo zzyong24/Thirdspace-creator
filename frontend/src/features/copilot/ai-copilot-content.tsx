@@ -2763,7 +2763,7 @@ export function AICopilotContent({
           [T-095] 板块重合修复的根因是「次区 shrink-0 拒绝收缩」(已改为可收缩 max-h 次区,见
           copilot-secondary),而非主区高度模式。
           [T-101] 主区必须 min-h-0:长对话时 flex 才能把主区收缩到父容器给的高度,让内部消息滚动区
-          (min-h-[220px] 固定保底 + overflow-y-auto)真正滚动。此前误用 min-h-min(下限=min-content=
+          (min-h-0 + overflow-y-auto)真正滚动。此前误用 min-h-min(下限=min-content=
           消息全内容高)使滚动容器被撑到全高、scrollHeight==clientHeight,长对话滚不动。 */}
       <div
         data-slot="copilot-conversation"
@@ -2831,12 +2831,12 @@ export function AICopilotContent({
             })}
           </ul>
         ) : null}
-        {/* 消息流(可滚)—— 给一个 min-h 下限,保证对话区是视觉主区,不被次区压扁(bug #5)。 */}
+        {/* 消息流独立滚动；允许收缩，长候选与展开评论不会挤出面板。 */}
         <div
           ref={messagesScrollRef}
           onScroll={handleMessagesScroll}
           data-slot="copilot-message-scroll"
-          className="min-h-[120px] min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
+          className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
           <WorkbenchArtifactHistory conversationId={conversationId} accountId={sessionAccountId??""} excludeRefs={visibleArtifactRefs}/>
           {messages.length > 0 || chatError ? (

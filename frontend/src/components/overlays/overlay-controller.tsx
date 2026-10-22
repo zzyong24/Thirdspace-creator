@@ -495,7 +495,7 @@ export function OverlayController({
           className={cn(
             // bug #5:面板不再整体 overflow-y-auto(否则对话区无法 flex-1 占满 + 自身滚动)。
             // 改为 overflow-hidden + flex 列,把滚动职责交给内部各区(对话流 / 次区)。
-            "relative z-10 flex max-h-[calc(100vh-48px)] max-w-[calc(100vw-48px)] flex-none flex-col gap-3 overflow-hidden rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
+            "relative z-10 flex max-h-[calc(100dvh-48px)] max-w-[calc(100vw-48px)] flex-none flex-col gap-3 overflow-hidden rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
             pathname === "/positioning" && searchParams?.get("surface") === "positioning" && positioningStyles.panel,
             className,
           )}
