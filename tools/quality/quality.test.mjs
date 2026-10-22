@@ -21,6 +21,29 @@ const report = {
 };
 const entry = (o) => ({ id: "KF-X", package: "backend", kind: "fail", reason: "r", owner_task: "T-1", since: "2026-10-21", ...o });
 
+test("分片参数保留完整套件，非法分片和并发在启动进程前拒绝", () => {
+  assert.deepEqual(quality.testExecutionArgs(), []);
+  assert.deepEqual(quality.testExecutionArgs({ shard: "2/4", maxWorkers: "2" }), ["--shard=2/4", "--maxWorkers=2"]);
+  for (const shard of ["0/4", "5/4", "1/0", "1/4 --exclude=src", "all", "9007199254740992/9007199254740992"])
+    assert.throws(() => quality.testExecutionArgs({ shard }), /--shard/);
+  for (const maxWorkers of ["0", "-1", "2.5", "50%", "2 --passWithNoTests", "9007199254740992"])
+    assert.throws(() => quality.testExecutionArgs({ maxWorkers }), /--max-workers/);
+});
+
+test("测试隔离清除继承的真数据库和PGlite路径，审批与自有PG守卫不生成也不绕过", () => {
+  const inherited = { HOME: "/real-user", CODEX_HOME: "/real-user/.codex", DATABASE_URL: "postgresql://real-user-db", PGLITE_DATA_DIR: "/real-user/db", CREATOROS_TEST_POSTGRES_URL: "owned-fixture-still-requires-validation", T1246_B029_NONCE: "original-guard", NODE_OPTIONS: "--max-old-space-size=6144" };
+  const result = quality.isolatedTestEnvironment("/isolated-home", "/evidence/runtime.json", inherited);
+  assert.equal(result.DATABASE_URL, "");
+  assert.equal(result.PGLITE_DATA_DIR, "");
+  assert.equal(result.HOME, "/isolated-home");
+  assert.equal(result.CODEX_HOME, path.join("/isolated-home", ".codex"));
+  assert.equal(result.CREATOROS_TEST_POSTGRES_URL, inherited.CREATOROS_TEST_POSTGRES_URL);
+  assert.equal(result.T1246_B029_NONCE, "original-guard");
+  assert.equal("T1332_APPROVED" in result, false);
+  assert.equal("T1328_CHECKPOINT_APPROVED" in result, false);
+  assert.equal(inherited.PGLITE_DATA_DIR, "/real-user/db");
+});
+
 test("解析：用例按 祖先 > 标题 命名；文件级失败记为 *", () => {
   const r = parseVitestJson(report, "backend");
   assert.deepEqual(r.map((x) => `${x.file}::${x.test}::${x.status}`), [

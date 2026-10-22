@@ -148,7 +148,33 @@ export async function gitIdentity() {
   return { commit: await git(["rev-parse", "HEAD"]), branch: await git(["rev-parse", "--abbrev-ref", "HEAD"]), tracked_changes: status ? status.split("\n").length : 0 };
 }
 
-export async function runPackageTests(pkg, { logDir, strictResolved = false } = {}) {
+// 只允许 Vitest 自带的完整套件分片和正整数并发，不提供过滤/跳过用例入口。
+export function testExecutionArgs({ shard, maxWorkers } = {}) {
+  const args = [];
+  if (shard !== undefined) {
+    const match = /^(\d+)\/(\d+)$/.exec(String(shard));
+    if (!match || !Number.isSafeInteger(Number(match[1])) || !Number.isSafeInteger(Number(match[2]))
+      || Number(match[1]) < 1 || Number(match[1]) > Number(match[2])) throw new Error("--shard 必须是 index/count，且 1 <= index <= count");
+    args.push(`--shard=${shard}`);
+  }
+  if (maxWorkers !== undefined) {
+    if (!/^[1-9]\d*$/.test(String(maxWorkers)) || !Number.isSafeInteger(Number(maxWorkers))) throw new Error("--max-workers 必须是正整数");
+    args.push(`--maxWorkers=${maxWorkers}`);
+  }
+  return args;
+}
+
+// 普通测试保原内存库语义；磁盘用例在自己的受控目录内显式配置。
+// 只隔离数据库入口与用户目录，不生成任何审批或真 PG 守卫凭据。
+export function isolatedTestEnvironment(home, runtimePath, inherited = process.env) {
+  return { ...inherited, HOME: home, CODEX_HOME: path.join(home, ".codex"),
+    DATABASE_URL: "", PGLITE_DATA_DIR: "", QUALITY_RUNTIME_REPORT: runtimePath,
+    ...(inherited.PLAYWRIGHT_BROWSERS_PATH || !inherited.HOME ? {} : { PLAYWRIGHT_BROWSERS_PATH: path.join(inherited.HOME, process.platform === "darwin" ? "Library/Caches/ms-playwright" : ".cache/ms-playwright") }),
+    NODE_OPTIONS: inherited.NODE_OPTIONS ?? "--max-old-space-size=6144" };
+}
+
+export async function runPackageTests(pkg, { logDir, strictResolved = false, shard, maxWorkers } = {}) {
+  const executionArgs = testExecutionArgs({ shard, maxWorkers });
   const entries = loadKnownFailures();
   const { dir } = PACKAGES[pkg];
   const jsonPath = path.join(logDir, `${pkg}-vitest.json`);
@@ -157,14 +183,13 @@ export async function runPackageTests(pkg, { logDir, strictResolved = false } = 
   fs.rmSync(jsonPath, { force: true });
   fs.rmSync(runtimePath, { force: true });
   // 隔离 HOME / CODEX_HOME：本机跑也像 CI 一样不读写真实用户数据。
-  // 注意不要设 PGLITE_DATA_DIR：测试默认用内存 PGlite，设了会让并行 worker 共用一个磁盘库而互相损坏。
+  // 清除继承的 DB 配置，普通用例仍使用各 fork 的内存库；磁盘用例自行 stub 受控路径。
+  // 真 PG 受控夹具仍走原 CREATOROS_TEST_POSTGRES_URL 与归属守卫。
   const home = fs.mkdtempSync(path.join(os.tmpdir(), `creatoros-test-home-${pkg}-`));
   const step = await runStep({
     name: `test-${pkg}`, cmd: "pnpm", cwd: path.join(ROOT, dir), logDir,
-    env: { HOME: home, CODEX_HOME: path.join(home, ".codex"), QUALITY_RUNTIME_REPORT: runtimePath,
-      // 浏览器二进制只读复用本机缓存（CI 里由 workflow 安装）
-      ...(process.env.PLAYWRIGHT_BROWSERS_PATH || !process.env.HOME ? {} : { PLAYWRIGHT_BROWSERS_PATH: path.join(process.env.HOME, process.platform === "darwin" ? "Library/Caches/ms-playwright" : ".cache/ms-playwright") }), NODE_OPTIONS: process.env.NODE_OPTIONS ?? "--max-old-space-size=6144" },
-    args: ["exec", "vitest", "run", "--reporter=default", "--reporter=json", `--reporter=${path.join(ROOT, "tools/quality/runtime-reporter.mjs")}`, `--outputFile.json=${jsonPath}`],
+    env: isolatedTestEnvironment(home, runtimePath),
+    args: ["exec", "vitest", "run", ...executionArgs, "--reporter=default", "--reporter=json", `--reporter=${path.join(ROOT, "tools/quality/runtime-reporter.mjs")}`, `--outputFile.json=${jsonPath}`],
   });
   let assessment;
   let reportError = null;
@@ -174,5 +199,5 @@ export async function runPackageTests(pkg, { logDir, strictResolved = false } = 
     reportError = `vitest 报告不可读: ${e.message}`;
     assessment = { counts: {}, new_failures: [], known_failures: [], resolved_known_failures: [], runtime_errors: [], ok: false };
   }
-  return { package: pkg, step, report_error: reportError, ...assessment };
+  return { package: pkg, execution: { shard: shard ?? null, max_workers: maxWorkers === undefined ? null : Number(maxWorkers) }, step, report_error: reportError, ...assessment };
 }

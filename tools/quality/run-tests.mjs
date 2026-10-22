@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // 单包单测 + known-failures 判定。
-// 用法：node tools/quality/run-tests.mjs <package> [--out <evidence.json>] [--log-dir <dir>] [--strict-resolved]
+// 用法：node tools/quality/run-tests.mjs <package> [--out <evidence.json>] [--log-dir <dir>] [--shard index/count] [--max-workers n] [--strict-resolved]
 // 退出码：0 = 无新失败（已知失败如实列出）；1 = 有新失败或测试进程异常；2 = 用法/清单错误。
 // --strict-resolved：清单里的 fail 项已通过也算失败（提醒及时删条目；CI 默认只告警）。
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { PACKAGES, gitIdentity, runPackageTests } from "./lib.mjs";
+import { PACKAGES, gitIdentity, runPackageTests, testExecutionArgs } from "./lib.mjs";
 
 const argv = process.argv.slice(2);
 const pkg = argv[0];
@@ -14,7 +14,13 @@ const opt = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1
 if (!PACKAGES[pkg]) { console.error(`用法: run-tests.mjs <${Object.keys(PACKAGES).join("|")}> [--out file] [--log-dir dir]`); process.exit(2); }
 
 const logDir = path.resolve(opt("--log-dir") ?? fs.mkdtempSync(path.join(os.tmpdir(), "creatoros-quality-")));
-const res = await runPackageTests(pkg, { logDir, strictResolved: argv.includes("--strict-resolved") });
+const execution = { shard: opt("--shard"), maxWorkers: opt("--max-workers") };
+try {
+  for (const name of ["--shard", "--max-workers"]) if (argv.includes(name) && !opt(name)) throw new Error(`${name} 缺少参数`);
+  testExecutionArgs(execution);
+} catch (error) { console.error(error.message); process.exit(2); }
+console.log(`[${pkg}] 开始完整${execution.shard ? `分片 ${execution.shard}` : "套件"}；maxWorkers=${execution.maxWorkers ?? "包配置"}；实时日志 ${process.env.QUALITY_VERBOSE === "1" ? "开启" : "关闭"}`);
+const res = await runPackageTests(pkg, { logDir, strictResolved: argv.includes("--strict-resolved"), ...execution });
 const evidence = { schema: "creatoros-test-run/v1", ...(await gitIdentity()), node: process.version, at: new Date().toISOString(), ...res };
 const out = opt("--out");
 if (out) fs.writeFileSync(out, JSON.stringify(evidence, null, 2) + "\n");
