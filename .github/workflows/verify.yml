@@ -133,6 +133,16 @@ jobs:
         if: matrix.package == 'backend' || matrix.package == 'frontend'
         # dist 未跟踪且独立 build job 不共享产物，不能依赖本机旧 dist。
         run: pnpm --filter @creatoros/ai-worker build
+      - name: 使用 Ubuntu 官方 HTTPS 包源
+        if: matrix.package == 'ai-worker' || matrix.package == 'backend' || matrix.package == 'frontend'
+        # 实测 Azure HTTP 下载反复重试；官方 HTTPS 已是 runner 原镜像表的备用源。
+        # 只替换精确地址，保留发行版、组件、Signed-By 和全部签名校验。
+        run: |
+          for apt_source in /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
+            if [[ -f "$apt_source" ]]; then
+              sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu/|https://archive.ubuntu.com/ubuntu/|g' "$apt_source"
+            fi
+          done
       - name: 安装 Chromium(ai-worker/backend 浏览器测试)
         if: matrix.package == 'ai-worker' || matrix.package == 'backend'
         run: pnpm --filter @creatoros/ai-worker exec playwright install --with-deps chromium
