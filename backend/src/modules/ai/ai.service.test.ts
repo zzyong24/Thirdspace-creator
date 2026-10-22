@@ -24,6 +24,12 @@ const NOW = "2026-06-21T00:00:00.000Z";
 // [T-332 S2] ctx 一律带号(strict 门下未选号 = 引导态禁读写;C-07 断言单列)。
 const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user", accountId: "acct-a" };
 
+// makeService 内的 mock 共享含 DB 的词法作用域，常量实现也可能保留整个作用域。
+// 所有实现都后置安装，让每例 mockReset 能真正释放它们，而非恢复持有 DB 的初始实现。
+function fixtureMock<Args extends unknown[], Result>(implementation: (...args: Args) => Result) {
+  return vi.fn<(...args: Args) => Result>().mockImplementation(implementation);
+}
+
 function makeService(
   db: Db,
   artifactsPort?: Partial<AiArtifactsPort>,
@@ -34,10 +40,10 @@ function makeService(
 ) {
   let seq = 0;
   const port: AiArtifactsPort = {
-    createVersion: artifactsPort?.createVersion ?? vi.fn(async () => ({})),
+    createVersion: artifactsPort?.createVersion ?? fixtureMock(async () => ({})),
     adoptThesisCandidate:
       artifactsPort?.adoptThesisCandidate ??
-      vi.fn(async (_ctx, input) => {
+      fixtureMock(async (_ctx: RequestContext, input: Parameters<NonNullable<AiArtifactsPort["adoptThesisCandidate"]>>[1]) => {
         const repo = createAiRepository(db, {
           now: () => NOW,
           nextId: (prefix) => `${prefix}-thesis-adopt`,
@@ -52,23 +58,23 @@ function makeService(
   };
   const knowledge: AiKnowledgePort = {
     createKnowledge:
-      knowledgePort?.createKnowledge ?? vi.fn(async () => ({ id: "k-new" })),
+      knowledgePort?.createKnowledge ?? fixtureMock(async () => ({ id: "k-new" })),
   };
   const candidate = {
-    createFromAIResult: vi.fn(async () => ({ id: "cand-new" })),
-    enrichCard: vi.fn(async () => ({ id: "cand-new" })),
+    createFromAIResult: fixtureMock(async () => ({ id: "cand-new" })),
+    enrichCard: fixtureMock(async () => ({ id: "cand-new" })),
   };
-  const learnings = { createLearning: vi.fn(async () => ({ id: "learn-new" })) };
+  const learnings = { createLearning: fixtureMock(async () => ({ id: "learn-new" })) };
   const publishing = {
-    createPublicationFromDraft: vi.fn(async () => ({ id: "pub-new" })),
+    createPublicationFromDraft: fixtureMock(async () => ({ id: "pub-new" })),
   };
-  const materialLinks = { link: vi.fn(async () => ({ id: "mlink-new" })) };
+  const materialLinks = { link: fixtureMock(async () => ({ id: "mlink-new" })) };
   const positioning: AiPositioningPort = positioningPort ?? {
-    upsertProfile: vi.fn(async () => ({ id: "profile-new" })),
-    createStatementVersion: vi.fn(async () => ({ id: "stmt-new" })),
+    upsertProfile: fixtureMock(async () => ({ id: "profile-new" })),
+    createStatementVersion: fixtureMock(async () => ({ id: "stmt-new" })),
   };
   const calibration = {
-    createDraftPrediction: vi.fn(async () => ({ id: "pred-new" })),
+    createDraftPrediction: fixtureMock(async () => ({ id: "pred-new" })),
   };
   const service = createAiService({
     db,
@@ -103,7 +109,12 @@ describe("ai service", () => {
   afterEach(async () => {
     const opened = client;
     client = undefined;
-    await opened?.close();
+    try {
+      await opened?.close();
+    } finally {
+      // close 失败仍向外抛出，同时释放 mock 对已关闭 DB 的引用。
+      vi.resetAllMocks();
+    }
   });
   beforeEach(async () => {
     ({ db, client } = await createDb());
@@ -1093,7 +1104,12 @@ describe("[DATA-H06] confirmTask 批量采纳:第 N 条失败 → 重试不重�
   afterEach(async () => {
     const opened = client;
     client = undefined;
-    await opened?.close();
+    try {
+      await opened?.close();
+    } finally {
+      // close 失败仍向外抛出，同时释放 mock 对已关闭 DB 的引用。
+      vi.resetAllMocks();
+    }
   });
   beforeEach(async () => {
     ({ db, client } = await createDb());
@@ -1262,7 +1278,12 @@ describe("[DATA-H07] generated_asset:pending 候选态 → 采纳 active / 拒�
   afterEach(async () => {
     const opened = client;
     client = undefined;
-    await opened?.close();
+    try {
+      await opened?.close();
+    } finally {
+      // close 失败仍向外抛出，同时释放 mock 对已关闭 DB 的引用。
+      vi.resetAllMocks();
+    }
   });
   beforeEach(async () => {
     ({ db, client } = await createDb());
@@ -1413,7 +1434,12 @@ describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", ()
   afterEach(async () => {
     const opened = client;
     client = undefined;
-    await opened?.close();
+    try {
+      await opened?.close();
+    } finally {
+      // close 失败仍向外抛出，同时释放 mock 对已关闭 DB 的引用。
+      vi.resetAllMocks();
+    }
   });
   beforeEach(async () => {
     ({ db, client } = await createDb());
