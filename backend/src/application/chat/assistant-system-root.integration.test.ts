@@ -707,7 +707,7 @@ import {readFileSync} from 'node:fs';
 import {projects,contentOutputs,productions,productionEditVersions,productionRenderRequests} from '@creatoros/backend';
 import {createProductionService,createProductionTransport} from '../../modules/production';
 const nativeV1Definition=JSON.parse(readFileSync(new URL('../../../../docs/verification/t1086/system-read-v1.definition.json',import.meta.url),'utf8'));
-async function nativeReadOwnerFixture(scope:'pure-group'|'group-account'|'legacy',catalog:1|2=2){
+async function nativeReadOwnerFixture(scope:'pure-group'|'group-account'|'legacy',catalog:1|2|'2-before-group-trend'=2){
  const f=await fixture(scope!=='legacy'),services=f.actionServices(db),ctx={...f.ctx};
  if(scope==='group-account'){
   const account=await services.accounts.createAccount(ctx,{platform:'xiaohongshu',accountHandle:`真实读取账号-${++seq}`});
@@ -731,6 +731,7 @@ async function nativeReadOwnerFixture(scope:'pure-group'|'group-account'|'legacy
  }},{now});
  const definitions=(await prepareChatToolDefinitions(buildChatTools(['system.features','system.read'],{assistantReadCatalogVersion:catalog} as never))).definitions;
  if(catalog===1)definitions[1]=structuredClone(nativeV1Definition);
+ if(catalog==='2-before-group-trend')definitions[1]=JSON.parse(readFileSync(new URL('../../modules/ai-runtime/test-fixtures/assistant-system-read-v2-before-group-trend.json',import.meta.url),'utf8'));
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,now,nextId:p=>`${p}-read-bound-${++seq}`});
  const conversation=await repo.createConversation({title:'只读原工程',projectId:project.id,scope:'project'}),message=await repo.createMessage(conversation.id,{role:'user',content:'只读当前工程，不创建候选',attachments:[],modelMetadata:{}});
  const host={...f.host,chatContext:{surface:'project' as const,projectId:project.id},skillSnapshot:{...f.host.skillSnapshot,accountId:ctx.accountId??null,skills:f.host.skillSnapshot.skills.map(skill=>({...skill,effective:{...skill.effective,tools:['system.features','system.read']}}))}};
@@ -825,3 +826,21 @@ it.each([1,2] as const)('T1248 旧/当前action%s真实host→seal→settled→�
  expect(await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never})).toEqual(receipt);
  expect((await f.state()).results).toHaveLength(1);expect((await f.state()).call).toEqual(original);expect(f.frozen.modelInput.tools).toEqual(definitions);
 },180000);
+
+
+it('T1397旧V2真实root保63目录和原editor续窗，趋势/缺revision拒绝且零写',async()=>{
+ const f=await nativeReadOwnerFixture('pure-group','2-before-group-trend'),before=await f.state();
+ const directory=await f.root.host.features(f.ctx,{feature:'video',offset:0,limit:20},f.frozen) as {rows:Array<{reads:string[]}>};
+ expect(directory.rows[0]!.reads).toEqual(['projects.outputs.list','outputs.production.editor.get']);
+ const request={kind:'outputs.production.editor.get',params:{outputId:f.outputs[2]!.id}};
+ const original=ENDPOINTS.getProductionEditor.response.parse((await f.request(ENDPOINTS.getProductionEditor,f.outputs[2]!.id)).data);
+ let part=nativeReadResult.parse(await f.read({request})),text=part.text;expect(part.complete).toBe(false);expect(part.observedRevision).toBe(1);
+ for(let page=0;!part.complete&&page<20;page++){
+  part=nativeReadResult.parse(await f.read({request,window:{offsetUtf16:part.nextWindowOffset!,lengthUtf16:12000,expectedRevision:1}}));text+=part.text;
+ }
+ expect(part.complete).toBe(true);expect(JSON.parse(text)).toEqual(original);
+ const readCount=f.reads.length;
+ await expect(f.read({request,window:{offsetUtf16:12000}})).rejects.toThrow();
+ await expect(f.read({request:{kind:'pages.groupTrend.get',params:{groupId:f.ctx.groupId}}})).rejects.toThrow();
+ expect(f.reads).toHaveLength(readCount);expect(await f.state()).toEqual(before);
+},1200000);

@@ -135,3 +135,30 @@ it('T1248 unknown-only整套显式拒绝，正常non-system空子集仍按原ear
  await expect(unknown(systemCtx,{} as never,systemRef,new AbortController().signal)).rejects.toThrow('定义');
  for(const owner of [read,propose,features,createCanvas])expect(owner).not.toHaveBeenCalled();
 },180000);
+
+
+// 原件来自6e4689b3180f91189110208267708ad72b03ae64的真实buildChatTools，未从当前schema伪造。
+const frozenV2BeforeTrendRead=JSON.parse(readFileSync(new URL('./test-fixtures/assistant-system-read-v2-before-group-trend.json',import.meta.url),'utf8'));
+it.each([1,2] as const)('T1397旧V2 read63/action%s完整原型恢复真实host，保续窗合同且拒趋势与篡改',async actionVersion=>{
+ const names=['system.features','system.read','system.action.propose','canvas.create.propose','canvas.generate.propose'];
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(names,{assistantActionCatalogVersion:actionVersion} as never))).definitions;
+ definitions[1]=structuredClone(frozenV2BeforeTrendRead);const before=structuredClone(definitions);
+ expect(frozenV2BeforeTrendRead.version).toBe('chat-tools-system-director-v1:c3212370b554d132cc84082c9cbd98eae94065b7a5d93ed7f24d6d98db80cf01');
+ expect(frozenV2BeforeTrendRead.parameters.properties.request.oneOf).toHaveLength(63);
+ expect(await matchFrozenAssistantSystemCatalog(definitions)).toEqual({assistantReadCatalogVersion:'2-before-group-trend',assistantActionCatalogVersion:actionVersion});
+ const read=vi.fn(async()=>({kind:'system.read',text:'original editor'}));
+ const reader={read:async()=>({context:systemCtx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:'project',projectId:'fixed-project'}}})};
+ const host=createChatSystemToolHost(reader as never,{features:vi.fn(),read,propose:vi.fn(),createCanvas:vi.fn(),generateCanvas:vi.fn()} as never);
+ const tools=await host(systemCtx,{} as never,systemRef,new AbortController().signal);
+ expect(tools['system.read']!.version).toBe(frozenV2BeforeTrendRead.version);
+ const scope={execution:systemRef,aiTaskId:'v2-original',callId:'v2-read',toolCallId:'v2-tool',signal:new AbortController().signal};
+ const continuation={request:{kind:'outputs.production.editor.get',params:{outputId:'original-video'}},window:{offsetUtf16:12000,expectedRevision:1}};
+ expect(await tools['system.read']!.execute!(systemCtx,continuation,scope)).toMatchObject({status:'ok',sideEffect:'none'});expect(read).toHaveBeenCalledTimes(1);
+ for(const invalid of [{...continuation,window:{offsetUtf16:12000}}, {...continuation,unexpected:true},{request:{kind:'pages.groupTrend.get',params:{groupId:systemCtx.groupId}}}]){
+  expect(await tools['system.read']!.execute!(systemCtx,invalid,scope)).toMatchObject({status:'error',sideEffect:'none'});expect(read).toHaveBeenCalledTimes(1);
+ }
+ for(const mutate of [(d:typeof definitions)=>{d[1]!.version+='tampered';},(d:typeof definitions)=>{d[1]!.parameters={...d[1]!.parameters,additionalProperties:true};}]){
+  const changed=structuredClone(definitions);mutate(changed);await expect(matchFrozenAssistantSystemCatalog(changed)).rejects.toThrow('定义');
+ }
+ expect(definitions).toEqual(before);
+},120000);

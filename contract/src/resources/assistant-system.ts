@@ -45,9 +45,11 @@ const readEndpointCandidates=[
 ].flatMap(operations=>Object.values(operations)).filter(endpoint=>endpoint.method==="GET");
 export const assistantReadEndpointsV1:Readonly<Record<string,Endpoint>>=Object.freeze(Object.fromEntries(readEndpointCandidates.filter(endpoint=>readIds.has(endpoint.id)).map(endpoint=>[endpoint.id,endpoint])));
 /** 代码内固定目录，恢复旧任务不能接受任务自报端点或 schema。 */
-export type AssistantReadCatalogVersion=1|2;
+export type AssistantReadCatalogVersion=1|2|'2-before-group-trend';
 // T1347趋势只属于当前V2；沿原operation顺序保留当前完整schema/版本，不能改写冻结V1。
 export const assistantReadEndpoints:Readonly<Record<string,Endpoint>>=Object.freeze({...Object.fromEntries(readEndpointCandidates.filter(endpoint=>readIds.has(endpoint.id)||endpoint.id===pagesOperations.getGroupTrend.id).map(endpoint=>[endpoint.id,endpoint])),[productionOperations.getProductionEditor.id]:productionOperations.getProductionEditor});
+// T1086 已冻结的V2有原生工程/版本续窗，但尚无T1347趋势；只恢复这个精确原型。
+export const assistantReadEndpointsV2BeforeGroupTrend:Readonly<Record<string,Endpoint>>=Object.freeze({...assistantReadEndpointsV1,[productionOperations.getProductionEditor.id]:productionOperations.getProductionEditor});
 function readBranches(endpoints:Readonly<Record<string,Endpoint>>){return Object.values(endpoints).map(endpoint=>{
  const shape:Record<string,z.ZodType>={kind:z.literal(endpoint.id)};
  if(endpoint.params)shape.params=endpoint.params instanceof z.ZodObject?endpoint.params.strict():endpoint.params;
@@ -60,12 +62,21 @@ function readBranches(endpoints:Readonly<Record<string,Endpoint>>){return Object
 });}
 export const assistantReadRequestSchemaV1=z.discriminatedUnion('kind',readBranches(assistantReadEndpointsV1) as [z.ZodObject,...z.ZodObject[]]);
 export const assistantReadRequestSchema=z.discriminatedUnion('kind',readBranches(assistantReadEndpoints) as [z.ZodObject,...z.ZodObject[]]);
+export const assistantReadRequestSchemaV2BeforeGroupTrend=z.discriminatedUnion('kind',readBranches(assistantReadEndpointsV2BeforeGroupTrend) as [z.ZodObject,...z.ZodObject[]]);
 // V1 的字段、顺序和默认值保持已冻结 JSON schema 原样。
 export const assistantReadInputSchemaV1=z.object({request:assistantReadRequestSchemaV1,window:z.object({offsetUtf16:z.number().int().nonnegative().default(0),lengthUtf16:z.number().int().min(1).max(20000).default(12000)}).strict().optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(50).default(20)}).strict();
-export const assistantReadInputSchema=z.object({request:assistantReadRequestSchema,window:z.object({offsetUtf16:z.number().int().nonnegative().default(0),lengthUtf16:z.number().int().min(1).max(20000).default(12000),expectedRevision:z.number().int().nonnegative().optional()}).strict().optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(50).default(20)}).strict().superRefine((input,ctx)=>{
+function readInputSchemaV2(request:typeof assistantReadRequestSchema){return z.object({request,window:z.object({offsetUtf16:z.number().int().nonnegative().default(0),lengthUtf16:z.number().int().min(1).max(20000).default(12000),expectedRevision:z.number().int().nonnegative().optional()}).strict().optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(50).default(20)}).strict().superRefine((input,ctx)=>{
  const continuation=input.request.kind==='outputs.production.editor.get'&&(input.window?.offsetUtf16??0)>0;
  if(continuation&&input.window?.expectedRevision===undefined)ctx.addIssue({code:'custom',path:['window','expectedRevision'],message:'原生工程续窗必须复制首读 observedRevision'});
  if(!continuation&&input.window?.expectedRevision!==undefined)ctx.addIssue({code:'custom',path:['window','expectedRevision'],message:'expectedRevision 仅用于同一原生工程的非零续窗'});
+});}
+export const assistantReadInputSchema=readInputSchemaV2(assistantReadRequestSchema);
+export const assistantReadInputSchemaV2BeforeGroupTrend=readInputSchemaV2(assistantReadRequestSchemaV2BeforeGroupTrend);
+/** SEMANTIC_BOUNDARY_ALLOW:仅按代码内固定原型选同一参数schema和端点表，不能从任务自报schema授予权限。 */
+export const assistantReadCatalogs=Object.freeze({
+ 1:{inputSchema:assistantReadInputSchemaV1,endpoints:assistantReadEndpointsV1},
+ 2:{inputSchema:assistantReadInputSchema,endpoints:assistantReadEndpoints},
+ '2-before-group-trend':{inputSchema:assistantReadInputSchemaV2BeforeGroupTrend,endpoints:assistantReadEndpointsV2BeforeGroupTrend},
 });
 export type AssistantReadInput=z.infer<typeof assistantReadInputSchema>;
 export const assistantFeaturesInputSchema=z.object({feature:z.string().min(1).optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(20).default(14)}).strict();

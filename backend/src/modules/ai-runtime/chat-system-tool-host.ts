@@ -24,7 +24,7 @@ export async function matchFrozenAssistantSystemCatalog(all:Host['modelInput']['
  // whitelist原本按调用方顺序装配合法子集；不能新设全局排序反杀旧任务。
  // 原型按冻结顺序逐字段比较，不排序；实际顺序篡改由原modelInputDigest映射拒绝。
  if(!definitions.length)return {assistantReadCatalogVersion:null,assistantActionCatalogVersion:2};
- for(const assistantReadCatalogVersion of [2,1] as const)for(const assistantActionCatalogVersion of [2,1] as const){
+ for(const assistantReadCatalogVersion of [2,'2-before-group-trend',1] as const)for(const assistantActionCatalogVersion of [2,1] as const){
   const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantReadCatalogVersion,assistantActionCatalogVersion} as unknown as ChatToolDeps);
   const current=(await prepareChatToolDefinitions(tools)).definitions;
   if(canonicalJson(current)===canonicalJson(definitions))return {assistantReadCatalogVersion:definitions.some(tool=>tool.name==='system.read')?assistantReadCatalogVersion:null,assistantActionCatalogVersion};

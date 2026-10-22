@@ -18,7 +18,7 @@ import {aiTasks,executionTasks,and,eq,type Db} from '@creatoros/backend';
 import {isDeepStrictEqual} from 'node:util';
 import {workspaceFilter} from '../../workspace-scope';
 import type {createCreativeCanvasRoot} from '../generation/creative-canvas-root';
-import {assistantReadEndpoints,assistantReadEndpointsV1,assistantReadInputSchema,assistantReadInputSchemaV1,assistantActionProposeInputSchema,assistantActionCandidateSchema,canvasCreateCandidateSchema,canvasCreateProposalInputSchema,assistantFeaturesInputSchema,canvasGenerateProposalInputSchema,canvasGenerateUnsignedCandidateSchema,canvasGenerateCandidateSchema,canvasProposalAdmissionSchema,type CanvasProposalAdmission,type RequestContext,type AssistantActionInput,type AssistantProposalSource} from '@creatoros/contract';
+import {assistantReadEndpoints,assistantReadCatalogs,assistantActionProposeInputSchema,assistantActionCandidateSchema,canvasCreateCandidateSchema,canvasCreateProposalInputSchema,assistantFeaturesInputSchema,canvasGenerateProposalInputSchema,canvasGenerateUnsignedCandidateSchema,canvasGenerateCandidateSchema,canvasProposalAdmissionSchema,type CanvasProposalAdmission,type RequestContext,type AssistantActionInput,type AssistantProposalSource} from '@creatoros/contract';
 import {createChatProposalSourceService,createAssistantActionAdoptionService,createAssistantActionTransport} from '../../modules/ai';
 import {createCreativeCanvasService} from '../../modules/creative-canvas';
 import {buildChatTools,type ChatToolDeps} from '../../modules/ai-runtime/chat-tools';
@@ -280,7 +280,7 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
   async features(_ctx,input,frozen){
    const parsed=assistantFeaturesInputSchema.parse(input),availableTools=frozen.modelInput.tools.map(tool=>({name:tool.name,effect:tool.effect,execution:tool.execution??'host'}));
    const catalog=await matchFrozenAssistantReadCatalog(frozen.modelInput.tools);
-   const readable=catalog===1?assistantReadEndpointsV1:catalog===2?assistantReadEndpoints:{};
+   const readable=catalog===null?{}:assistantReadCatalogs[catalog].endpoints;
    const visible=features.map(feature=>({
     feature:feature.feature,title:feature.title,page:feature.page,
     reads:Object.keys(readable).filter(id=>feature.reads.some(prefix=>id.startsWith(prefix))),
@@ -294,8 +294,8 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
   },
   async read(ctx,input,frozen){
    const catalog=frozen?.modelInput?await matchFrozenAssistantReadCatalog(frozen.modelInput.tools):null;
-   const parsed=(catalog===1?assistantReadInputSchemaV1:assistantReadInputSchema).parse(input),request=parsed.request as {kind:string;params?:unknown;query?:unknown};
-   const endpoint=(catalog===2?assistantReadEndpoints:assistantReadEndpointsV1)[request.kind];if(!endpoint)throw new ConflictError('读取操作不在已审固定目录');
+   const selected=assistantReadCatalogs[catalog??1],parsed=selected.inputSchema.parse(input),request=parsed.request as {kind:string;params?:unknown;query?:unknown};
+   const endpoint=selected.endpoints[request.kind];if(!endpoint)throw new ConflictError('读取操作不在已审固定目录');
    const response=await ports.read(ctx,endpoint,{...(request.params?{params:request.params}:{}),...(request.query?{query:request.query}:{})});
    let data=response.data,readMeta=response.meta??null,total:number|null=null,nextOffset:number|null=null,nextInput:typeof parsed|null=null;
    let observedRevision:number|undefined;
