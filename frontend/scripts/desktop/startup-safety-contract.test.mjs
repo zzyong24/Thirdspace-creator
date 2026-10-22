@@ -164,7 +164,7 @@ describe("T-535 desktop startup safety contract", () => {
   });
 
   it("emits a machine-readable marker only after the sidecar page finishes loading", () => {
-    expect(rustShell).toContain(".on_page_load(|_window, payload|");
+    expect(rustShell).toContain(".on_page_load(|window, payload|");
     expect(rustShell).toContain("PageLoadEvent::Finished");
     expect(rustShell).toContain("[CreatorOS] MAIN_PAGE_LOAD_FINISHED");
   });
