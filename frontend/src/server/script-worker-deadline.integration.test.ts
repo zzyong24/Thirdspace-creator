@@ -8,6 +8,9 @@ import {beforeAll,expect,it,vi} from "vitest";
 import type {Endpoint} from "@creatoros/contract";
 import {executionTasks,executionCalls,eq,type Db} from "@creatoros/backend";
 const fixture=vi.hoisted(()=>({url:"",db:null as Db|null,opens:0,candidatesBeforeRestart:-1,credentialReads:0,checkpointSaved:false,expireOnReopen:null as string|null,release:null as null|(()=>void)}));
+function resetFixture(){
+ fixture.db=null;fixture.opens=0;fixture.candidatesBeforeRestart=-1;fixture.credentialReads=0;fixture.checkpointSaved=false;fixture.expireOnReopen=null;fixture.release=null;
+}
 vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{
  const result=await actual.createConfiguredDb(...args);fixture.db=result.db;fixture.opens++;
  if(fixture.opens===2){
@@ -31,7 +34,7 @@ const ctx={userId:"script-budget-user",accountId:"script-budget-account",request
 const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,query:undefined,body} as never,ctx) as {data:any}).data;
 beforeAll(()=>{execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 it("口播检查点已持久化但回执丢失后重启，过期任务恢复基础分镜并可采纳",async()=>{
- fixture.db=null;fixture.opens=0;fixture.candidatesBeforeRestart=-1;fixture.credentialReads=0;fixture.checkpointSaved=false;fixture.expireOnReopen=null;fixture.release=null;
+ resetFixture();
  const directory=mkdtempSync(resolve(tmpdir(),"t915-script-deadline-"));vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR",resolve(directory,"db"));__resetPersistenceForTests();
  const voiceover="已生成的完整口播必须保留。即使分镜预算不足，也应该能够采纳。";
  const requests:string[]=[];let injectionError:unknown;
