@@ -1,3 +1,5 @@
+import {ModelRequestBuildError} from "../execution/generation-error";
+import {safeErrorMessage} from "./error-diagnostics";
 import { providerErrorDetail } from "@creatoros/contract/provider-error-detail";
 import { createModels,createProvider,lazyApi,envApiKeyAuth,type Model,type Api,type AssistantMessageEvent } from "@earendil-works/pi-ai";
 import type { LanguageModelV4,LanguageModelV4CallOptions,LanguageModelV4StreamPart } from "@ai-sdk/provider";
@@ -17,7 +19,9 @@ export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(fact
   const identity=providerIdentityFor({...spec,customEndpoint:Boolean(spec.baseUrl),displayModelKey:undefined});
   const events=(request:LanguageModelV4CallOptions)=>{
     const mediaParts=new Map<string,Record<string,unknown>>();
-    const context=toPiContext(request,model,mediaParts);
+    const buildFailure=(error:unknown)=>new ModelRequestBuildError(safeErrorMessage(new Error(`${error instanceof Error?error.name:"Error"}: ${error instanceof Error?error.message:"请求构造失败"}`.replaceAll(spec.token,"[REDACTED]"))));
+    let context:ReturnType<typeof toPiContext>;
+    try{context=toPiContext(request,model,mediaParts);}catch(error){throw buildFailure(error);}
     const choice=request.toolChoice;
     const toolChoice=choice?.type==="tool"?(api==="anthropic-messages"?{type:"tool",name:choice.toolName}:api==="openai-responses"?{type:"function",name:choice.toolName}:{type:"function",function:{name:choice.toolName}}):choice?.type==="required"?(api==="anthropic-messages"?"any":"required"):choice?.type;
     let response:{statusCode:number;responseHeaders:Record<string,string>}|undefined,output=false,localFailure:unknown;
@@ -32,7 +36,7 @@ export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(fact
           body.thinking={type:"disabled"};delete body.reasoning_effort;
         }
         return body;
-      }catch(error){localFailure=error;throw error;}},
+      }catch(error){localFailure=buildFailure(error);throw localFailure;}},
       onResponse:fact=>{response={statusCode:fact.status,responseHeaders:fact.headers};},
     } as Parameters<typeof models.stream>[2]);
     return (async function*(){

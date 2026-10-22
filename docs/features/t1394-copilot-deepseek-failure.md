@@ -13,3 +13,13 @@
 基线 5837a64c469555517b38425a201c7b86bbe4b9d6，用户明确授权 failed / cancelled 同源消息新建执行尝试，运行中与成功提交继续幂等；不重复消息。事务锁下复核最新绑定，并发重试合并，保留旧任务。内部兜底不冒充供应商详情，缺详情提示历史未记录原因，移除 Error 名称拼接。合成 DeepSeek 400 JSON 验证 worker 分类、调用及任务脱敏持久化与卡片传播；不调用真实模型。
 
 涉及路径：backend 聊天提交器及测试、worker outcome 测试，frontend 错误映射及流测试；仅相关 vitest 和所改包 typecheck，无全量构建。任务包编译因原 task binding 缺失失败，按 AGENTS 回退读本 SPEC 与 BACKLOG 行；缺失编排技能按用户要求跳过。交付 /tmp/copilot-fix2.patch、提交脚本与结果记录，不 push。
+
+## 第三轮发送前失败诊断（2026-10-22）
+
+基线 1428abf203a331c7fcc47b03f14fbcec621290d5。用户提供定位工具子模型 17ms、零用量、unknown 与 completeChatGeneration 冲突证据。禁止真实模型调用、读密钥、修改许可激活签名与 push；交付 /tmp/copilot-fix3.patch、提交脚本、结果记录。
+
+本轮实证：当前源码 DeepSeek/openai_chat/api.deepseek.com 的 positioning.generate 文本兼容路径，使用 mocked fetch 返回完整 Chat Completion 可成功。历史日志未含底层异常，不能声称已确定历史 exact exception。注入 ReferenceError 仅用于验证发送前构造失败边界，不冒称历史复现。
+
+修复：仅在可证明尚未进入传输的上下文与 payload 构造边界标记 ModelRequestBuildError，账本结算 rejected；宿主已验证的生成父工具随任务 failed 结束并保留脱敏原因，跳过无法回放 rejected 模型的 complete 兜底。structured-node 同行输出脱敏异常类与消息。网络/响应/回执不确定仍保留 reconciliation。
+
+验收：相关 worker/backend Vitest、两包 typecheck、timeout-policy 回归、worker 重建；完整历史根因与真机复验仍未完成，不登记全绿或任务完成。

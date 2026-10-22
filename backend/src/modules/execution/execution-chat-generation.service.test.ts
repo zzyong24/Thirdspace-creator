@@ -314,7 +314,7 @@ it("定位节点按专属能力重建原 normalizer 结果并保留前采候选�
  const f=await fixture(false,"positioning.generate"),request=await next(f),child=await f.service.reserve(f.ref,request);
  await f.service.start(f.ref,{callId:child.callId});await f.service.settle(f.ref,{callId:child.callId,...success});
  expect((await f.service.complete(f.ref,{callId:f.parent.callId})).data).toMatchObject({kind:"positioning.suggestion",suggestion:{oneLiner:"原模型候选",keywords:["","",""]},discovery:{sessionId:"session",candidateId:"poscand:session:7:direct",candidateRevision:7}});
- expect(f.resolveCredential).toHaveBeenCalledWith({...f.ctx,groupId:null,groupVersion:undefined,membershipVersion:undefined,source:"ai",requestId:`execution:${f.ref.executionTaskId}:${f.ref.attempt}`},"positioning.generate",f.ref,undefined);
+ expect(f.resolveCredential).toHaveBeenCalledWith({...f.ctx,groupId:null,groupVersion:undefined,membershipVersion:undefined,source:"ai",requestId:`execution:${f.ref.executionTaskId}:${f.ref.attempt}`},"positioning.generate",f.ref,undefined,undefined,undefined,false);
 });
 
 it.each([true,false])("聊天诊断从原模型回执恢复，有效评分=%s",async valid=>{
@@ -335,4 +335,18 @@ it("复盘空经验报告经持久模型账本到聊天结果并保留项目来�
  await f.service.start(f.ref,{callId:child.callId});await f.service.settle(f.ref,{callId:child.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:JSON.stringify(report)}]}});
  const result=await f.make().complete(f.ref,{callId:f.parent.callId});
  expect(result.data).toEqual({kind:"review.learnings",items:[],observations:report.observations,hypotheses:report.hypotheses,nextExperiment:report.nextExperiment,insufficientReason:report.insufficientReason,projectId:"source-project",error:null});
+});
+
+it('发送前失败：子模型 rejected、父工具 rejected、任务 failed 并保存脱敏真实原因',async()=>{
+ const f=await fixture(false,'positioning.generate'),request=await next(f),child=await f.service.reserve(f.ref,request);
+ await f.service.start(f.ref,{callId:child.callId});
+ await f.service.settle(f.ref,{callId:child.callId,status:'rejected',errorDetail:'ReferenceError: choice is not defined token=synthetic-secret'});
+ expect(await f.service.fail(f.ref,{callId:f.parent.callId,outcome:'failed',errorCode:'MODEL_REQUEST_BUILD_FAILED'})).toMatchObject({status:'failed'});
+ expect(await f.service.fail(f.ref,{callId:f.parent.callId,outcome:'failed',errorCode:'MODEL_REQUEST_BUILD_FAILED'})).toMatchObject({status:'failed'});
+ const task=await f.tasks.get(f.ctx,f.task.executionTaskId);
+ expect(task).toMatchObject({errorCode:'MODEL_REQUEST_BUILD_FAILED',errorMessage:expect.stringContaining('ReferenceError: choice is not defined')});
+ expect(JSON.stringify(task)).not.toContain('synthetic-secret');
+ const state=await f.ledger.inspect(f.ref);
+ expect(state.calls.find(c=>c.id===child.callId)).toMatchObject({status:'rejected'});
+ expect(state.calls.find(c=>c.id===f.parent.callId)).toMatchObject({status:'rejected',resultText:expect.stringContaining('ReferenceError: choice is not defined')});
 });

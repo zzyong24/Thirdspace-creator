@@ -53,3 +53,10 @@ it("宿主failure ACK丢失仅重读同报告，不新增节点或更换parent",
  await expect(runChatGenerationInWorker("parent-original",new AbortController().signal,f.call)).rejects.toMatchObject({outcome:"retry_wait",errorCode:"RATE_LIMIT",retryAfterMs:1750});
  expect(f.reports).toEqual(Array.from({length:2},()=>({callId:"parent-original",outcome:"retry_wait",errorCode:"RATE_LIMIT",retryAfterMs:1750})));expect(controlled.sequence).toHaveBeenCalledTimes(1);
 });
+
+it('已结算发送前失败直接报告原因，不调用 complete 掩盖为 HOST_PORT_REJECTED',async()=>{
+ const f=ports();controlled.sequence.mockRejectedValue(new GenerationFailure('failed','MODEL_REQUEST_BUILD_FAILED',undefined,'ReferenceError: fixture is not defined'));
+ await expect(runChatGenerationInWorker('parent-original',new AbortController().signal,f.call)).rejects.toMatchObject({outcome:'failed',errorCode:'MODEL_REQUEST_BUILD_FAILED',message:'ReferenceError: fixture is not defined'});
+ expect(f.call.mock.calls.some(([port])=>port==='completeChatGeneration')).toBe(false);
+ expect(f.reports).toEqual([{callId:'parent-original',outcome:'failed',errorCode:'MODEL_REQUEST_BUILD_FAILED',retryAfterMs:undefined}]);
+});

@@ -48,7 +48,7 @@ export function createDurableGenerationModel(input:{model:LanguageModel;operatio
         try{await input.ports.settle(reservation.callId,failure.outcome==="unknown_result" ? {status:"unknown"} : failure.outcome==="retry_wait" && !isStructuredResponseCompatibilityError(error) ? {status:"superseded"} : {status:"rejected",...(failure.errorMessage?{errorDetail:failure.errorMessage}:{}),...(isStructuredResponseCompatibilityError(error) ? {rejectionCode:"STRUCTURED_PROTOCOL_UNSUPPORTED" as const} : {})});}
         catch{throw new GenerationFailure("unknown_result","MODEL_SETTLEMENT_RECEIPT_UNKNOWN");}
         // 明确协议拒绝保留给原结构化兼容判断；未知提交不能触发协议回退。
-        throw failure.outcome==="unknown_result" || failure.outcome==="retry_wait" ? failure : error;
+        throw failure.outcome==="unknown_result" || failure.outcome==="retry_wait" || failure.errorCode==="MODEL_REQUEST_BUILD_FAILED" ? failure : error;
       }
       let receipt:WorkerProviderReceipt;
       try{receipt=workerProviderReceiptSchema.parse(JSON.parse(JSON.stringify({content:result.content,finishReason:result.finishReason,usage:result.usage,warnings:result.warnings,providerMetadata:result.providerMetadata})));}
