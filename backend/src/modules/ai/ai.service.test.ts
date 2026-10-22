@@ -1,5 +1,5 @@
 import {projects as parentProjects,contentOutputs as parentOutputs,publications as parentPublications,reviews as parentReviews} from "@creatoros/backend";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createDb, assets, aiTasks, executionTasks, eq, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -99,8 +99,14 @@ function makeService(
 
 describe("ai service", () => {
   let db: Db;
+  let client: Awaited<ReturnType<typeof createDb>>["client"] | undefined;
+  afterEach(async () => {
+    const opened = client;
+    client = undefined;
+    await opened?.close();
+  });
   beforeEach(async () => {
-    ({ db } = await createDb());
+    ({ db, client } = await createDb());
     // 真实父实体fixture；授权不能只靠通过的mock服务端口。
     await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
 
@@ -1083,8 +1089,14 @@ describe("ai service", () => {
 // awaiting_confirmation;重试跳过已采纳项,不重复落库(旧行为会把前 N-1 条再落一遍)。
 describe("[DATA-H06] confirmTask 批量采纳:第 N 条失败 → 重试不重复前 N-1 条", () => {
   let db: Db;
+  let client: Awaited<ReturnType<typeof createDb>>["client"] | undefined;
+  afterEach(async () => {
+    const opened = client;
+    client = undefined;
+    await opened?.close();
+  });
   beforeEach(async () => {
-    ({ db } = await createDb());
+    ({ db, client } = await createDb());
     // 真实父实体fixture；授权不能只靠通过的mock服务端口。
     await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
 
@@ -1246,8 +1258,14 @@ describe("[DATA-H06] confirmTask 批量采纳:第 N 条失败 → 重试不重�
 // 进回收站。资产行直接种进真 assets 表(runner 现在以 pending 建档),断言走真 DB 行状态。
 describe("[DATA-H07] generated_asset:pending 候选态 → 采纳 active / 拒绝清理", () => {
   let db: Db;
+  let client: Awaited<ReturnType<typeof createDb>>["client"] | undefined;
+  afterEach(async () => {
+    const opened = client;
+    client = undefined;
+    await opened?.close();
+  });
   beforeEach(async () => {
-    ({ db } = await createDb());
+    ({ db, client } = await createDb());
     // 真实父实体fixture；授权不能只靠通过的mock服务端口。
     await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
 
@@ -1391,8 +1409,14 @@ import { OwnershipError } from "./ai.errors";
 
 describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", () => {
   let db: Db;
+  let client: Awaited<ReturnType<typeof createDb>>["client"] | undefined;
+  afterEach(async () => {
+    const opened = client;
+    client = undefined;
+    await opened?.close();
+  });
   beforeEach(async () => {
-    ({ db } = await createDb());
+    ({ db, client } = await createDb());
     // 真实父实体fixture；授权不能只靠通过的mock服务端口。
     await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
 
