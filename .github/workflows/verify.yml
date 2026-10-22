@@ -121,6 +121,11 @@ jobs:
       - name: 安装 Chromium(frontend 真实渲染测试)
         if: matrix.package == 'frontend'
         run: pnpm --filter creatoros-frontend exec playwright install --with-deps chromium
+      - name: 绑定已安装的渲染浏览器
+        if: matrix.package == 'backend' || matrix.package == 'frontend'
+        # 使用安装器同版本的真实路径，避免依赖旧目录名或 runner 预装浏览器。
+        run: |
+          pnpm --filter "${{ matrix.package == 'frontend' && 'creatoros-frontend' || '@creatoros/ai-worker' }}" exec node --input-type=module -e 'import { chromium } from "@playwright/test"; import fs from "node:fs"; const browser = chromium.executablePath(); fs.accessSync(browser, fs.constants.X_OK); fs.appendFileSync(process.env.GITHUB_ENV, `CREATOROS_RENDER_CHROMIUM_PATH=${browser}\n`); console.log(browser);'
       - name: 安装并核验媒体工具
         if: matrix.package == 'backend' || matrix.package == 'frontend'
         run: |
