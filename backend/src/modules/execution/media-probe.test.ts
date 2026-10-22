@@ -14,7 +14,7 @@ it("真实 ffmpeg 原片经 ffprobe 读取时间基和音频流，缺输入不�
  const root=await mkdtemp(join(tmpdir(),"creatoros-real-probe-"));
  try{
   const sandbox=await createSandbox(root,"actual-probe"),file=join(sandbox.inputDir,"probe-source");
-  await promisify(execFile)("/opt/homebrew/bin/ffmpeg",["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","2","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac","-f","mp4",file]);
+  await promisify(execFile)((process.env.CREATOROS_FFMPEG_PATH || "ffmpeg"),["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","2","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac","-f","mp4",file]);
   const {runExecutionTask}=await import("./run-execution-task"),{createExecutorRegistry}=await import("./executor-registry");
   const registry=createExecutorRegistry(),results:Array<Record<string,unknown>>=[],failures:string[]=[];registry.register(createMediaProbeExecutor());
   const ctx={userId:"user",accountId:"account",requestId:"request",source:"user" as const};

@@ -31,7 +31,7 @@ it("T850 正式候选公共Source真实probe/adopt→精确Assets对象物化/�
  const {createAiService}=await import("../ai/ai.service"),{createExecutionService}=await import("../execution/execution.service"),{runExecutionTask,abortExecutionTask}=await import("../execution/run-execution-task"),{createExecutorRegistry}=await import("../execution/executor-registry"),{createMediaProbeExecutor}=await import("../execution/media-probe");
  const root=await mkdtemp(join(tmpdir(),"creatoros-public-probe-retry-")),file=join(root,"original.mp4");
  try{
-  await promisify(execFile)("/opt/homebrew/bin/ffmpeg",["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","1","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac",file]);
+  await promisify(execFile)((process.env.CREATOROS_FFMPEG_PATH || "ffmpeg"),["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","1","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac",file]);
   const fileDigest=createHash("sha256").update(await readFile(file)).digest("hex");
   // 未使用的领域采纳口明确抛错，不返回虚构领域实体；本测试真正调用原任务 owner。
   const unavailable=new Proxy({}, {get:()=>()=>{throw Error("该领域端口不属于探针旅程");}});

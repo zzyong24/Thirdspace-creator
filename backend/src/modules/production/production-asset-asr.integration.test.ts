@@ -36,7 +36,7 @@ it.each([{mode:'v2',identity:'current'},{mode:'native',identity:'current'},{mode
  const {createAiService}=await import("../ai/ai.service"),{createExecutionService}=await import("../execution/execution.service"),{runExecutionTask,abortExecutionTask}=await import("../execution/run-execution-task"),{createExecutorRegistry}=await import("../execution/executor-registry"),{createMediaProbeExecutor}=await import("../execution/media-probe");
  const root=await mkdtemp(join(tmpdir(),"creatoros-public-probe-retry-")),file=join(root,"original.mp4");
  try{
-  await promisify(execFile)("/opt/homebrew/bin/ffmpeg",["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","1","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac",file]);
+  await promisify(execFile)((process.env.CREATOROS_FFMPEG_PATH || "ffmpeg"),["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","1","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac",file]);
   const fileDigest=createHash("sha256").update(await readFile(file)).digest("hex");
   // 未使用的领域采纳口明确抛错，不返回虚构领域实体；本测试真正调用原任务 owner。
   const unavailable=new Proxy({}, {get:()=>()=>{throw Error("该领域端口不属于探针旅程");}});
@@ -150,7 +150,7 @@ it.skipIf(!sourcePgUrl)('T1062真实PG同组不同父Source并发预约/attach�
   await runtime.db.insert(accountGroups).values({id:c.groupId!,userId:c.userId,name:'真实并发组',createdAt:now,updatedAt:now});
   for(const n of [1,2]){await runtime.db.insert(projects).values({id:'pg-project-'+n,userId:c.userId,groupId:c.groupId,accountId:null,title:'并发父'+n,creationMode:'guided',status:'active',currentStage:'production',startedAt:now,createdAt:now,updatedAt:now});await runtime.db.insert(contentOutputs).values({id:'pg-video-'+n,projectId:'pg-project-'+n,groupId:c.groupId,contentType:'video',title:'并发原片',status:'drafting',createdAt:now,updatedAt:now});}
   const {execFile}=await import('node:child_process'),{promisify}=await import('node:util'),{readFile}=await import('node:fs/promises');const file=join(root,'fixture-original.mp4');
-  await promisify(execFile)('/opt/homebrew/bin/ffmpeg',['-v','error','-f','lavfi','-i','testsrc2=size=320x180:rate=30','-t','1','-c:v','libx264','-pix_fmt','yuv420p',file]);
+  await promisify(execFile)((process.env.CREATOROS_FFMPEG_PATH || 'ffmpeg'),['-v','error','-f','lavfi','-i','testsrc2=size=320x180:rate=30','-t','1','-c:v','libx264','-pix_fmt','yuv420p',file]);
   const bytes=await readFile(file),fileDigest=createHash('sha256').update(bytes).digest('hex');
   // 实际临时合成原文件及其资源行；仅媒体元数据读取端口为fixture，不运行probe或模型。
   await runtime.db.insert(assets).values({id:'fixture-asset',userId:c.userId,groupId:c.groupId,accountId:null,assetType:'video',name:'fixture-original.mp4',status:'active',currentFileId:'fixture-file',createdAt:now,updatedAt:now});

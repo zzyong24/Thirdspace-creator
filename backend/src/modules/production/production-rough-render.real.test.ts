@@ -11,7 +11,7 @@ import {createVideoRenderExecutor,createDefaultVideoRenderEngine} from "../execu
 import type {ExecutionManifest,ProductionPlanV2} from "@creatoros/contract";
 // 真实本机媒体工具/HyperFrames验收；合成测试片只检验音画时间，不冒充真人稿或模型判断。
 it("真实主轨重排和重复片段经公共执行输出有音频MP4，声音源顺序与工程一致",async()=>{
- const root=await mkdtemp(join(tmpdir(),"creatoros-rough-real-")),ffmpeg="/opt/homebrew/bin/ffmpeg",sourceFile=join(root,"source.mp4");
+ const root=await mkdtemp(join(tmpdir(),"creatoros-rough-real-")),ffmpeg=(process.env.CREATOROS_FFMPEG_PATH || "ffmpeg"),sourceFile=join(root,"source.mp4");
  try{
   await promisify(execFile)(ffmpeg,["-v","error","-f","lavfi","-i","color=c=red:s=320x180:r=24:d=1","-f","lavfi","-i","sine=frequency=440:sample_rate=48000:duration=1","-f","lavfi","-i","color=c=blue:s=320x180:r=24:d=1","-f","lavfi","-i","sine=frequency=880:sample_rate=48000:duration=1","-filter_complex","[0:v][1:a][2:v][3:a]concat=n=2:v=1:a=1[v][a]","-map","[v]","-map","[a]","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac",sourceFile]);
   const {createHash}=await import("node:crypto"),fileDigest=createHash("sha256").update(await readFile(sourceFile)).digest("hex");
@@ -26,7 +26,7 @@ it("真实主轨重排和重复片段经公共执行输出有音频MP4，声音�
   await runExecutionTask({userId:"actual-user",accountId:"actual-account",requestId:"actual-request",source:"user"},{id,inputData:{spec:{taskType:"video.render",goal:"实际粗剪渲染验收",inputs:compiled.mediaBindings.map(b=>({assetId:b.assetId,assetFileId:b.assetFileId,fileDigest:b.fileDigest,mountAs:b.mountAs})),params:{props:compiled.props},constraints:{timeoutSec:null,network:"deny",maxOutputMB:64}}}},{workspacesRoot:root,registry,ai:{markRunning:async()=>{},recordStep:async(_c,_id,input)=>{steps.push(input.text);},recordCandidate:async(_c,_id,input)=>{manifest=input.resultData.manifest as ExecutionManifest;return{};},markFailed:async(_c,_id,error)=>{failures.push(error??"");}},assets:{materializeAsset:async(_c,_id,destination,exact)=>{expect(exact?.assetFileId).toBe("actual-file");await copyFile(sourceFile,destination);return {size:(await stat(destination)).size,mimeType:"video/mp4"};}}});
   const diagnostics=resolve("../docs/research/evidence/t850");await mkdir(diagnostics,{recursive:true});await import("node:fs/promises").then(fs=>fs.writeFile(join(diagnostics,"rough-render-diagnostics.json"),JSON.stringify({failures,steps,manifest},null,2)));
   expect(failures).toEqual([]);const result=manifest as ExecutionManifest|null;expect(result?.taskType).toBe("video.render");const artifact=result?.artifacts.find(a=>a.fileName.endsWith(".mp4"));expect(artifact).toBeTruthy();
-  const output=join(root,id,"out",artifact!.path),{stdout}=await promisify(execFile)("/opt/homebrew/bin/ffprobe",["-v","error","-show_streams","-show_format","-of","json",output]),probe=JSON.parse(stdout) as {streams:Array<{codec_type:string}>;format:{duration:string}};
+  const output=join(root,id,"out",artifact!.path),{stdout}=await promisify(execFile)((process.env.CREATOROS_FFPROBE_PATH || "ffprobe"),["-v","error","-show_streams","-show_format","-of","json",output]),probe=JSON.parse(stdout) as {streams:Array<{codec_type:string}>;format:{duration:string}};
   expect(probe.streams.some(s=>s.codec_type==="audio")).toBe(true);expect(Math.abs(Number(probe.format.duration)-1.5)).toBeLessThan(.1);
   for(const [time,channel] of [[.25,2],[.75,0],[1.25,2]]){
    const pixel=join(root,`pixel-${time}.rgb`);await promisify(execFile)(ffmpeg,["-v","error","-ss",String(time),"-i",output,"-frames:v","1","-vf","crop=16:16:152:82,scale=1:1","-pix_fmt","rgb24","-f","rawvideo",pixel]);
