@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1396|清理启动恢复留下的旧版及数据副本|✅|—|—|[授权与范围](docs/features/t1396-local-recovery-backup-cleanup.md)|已按授权删10处旧App/旧DMG及数据副本，逻辑12.14GiB；当前App、正式数据、新DMG均保留，原进程与首页200通过；轻量证据保留。|
 |T-1395|用当前源码重打本地包并保留数据恢复启动|✅|—|—|[授权与验收](docs/features/t1395-local-package-startup-recovery.md)|源码7252d30d5本地包已安装，58测试及DMG/签名通过；副本迁移与实际库核心内容保留通过，原生首页正常且保持运行；旧App/原库已备份，不发布；quick仍既有22/17。|
 |T-1394|排查本机CreatorOS启动失败并核定恢复路径|✅|—|—|[诊断范围与验收](docs/features/t1394-local-startup-diagnosis.md)|已定位T1382实测把原库升0139，旧App仅0137/0138；冷快照保全，当前源码副本只读兼容PASS；失败App已退出，未重打包安装/恢复启动，需匹配新包；quick仍既有22/17。|
 |T-1386|提交质量门并合并远端main后普通推送|✅|—|—|[授权与验收](docs/features/t1386-quality-main-integration.md)|2026-10-22续授权：保留双方任务与stash，审查剩余改动，排除私密/临时文件，分组提交并普通push；gitleaks零发现，quality/boundary及quick对账不劣于原基线。|

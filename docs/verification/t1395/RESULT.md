@@ -1,5 +1,7 @@
 # T-1395 本地重打包、安装与启动验收
 
+> 后续状态：2026-10-22用户明确授权清理旧版及完整数据备份，T1396已删除旧App、旧DMG、`app-data`及全部本次数据库副本。当前App、正式数据、新DMG和轻量验收记录保留；下文备份描述为安装验收当时事实。见[清理结果](../../features/t1396-local-recovery-backup-cleanup.md)。
+
 2026-10-22已用当前源码完成本地macOS包并安装到`/Applications/CreatorOS.app`。原生窗口显示真实首页及既有内容，主页和数据库身份接口均200；原`CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN`未复现。现有数据已备份并核对保留，App保持运行。
 
 ```mermaid
