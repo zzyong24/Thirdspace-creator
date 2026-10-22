@@ -278,6 +278,10 @@ T-459 已加护栏 `requiresSerializableFunctionSource(code)`(regex 检测 `.eva
 
 10/21的T1382开发验证直接指向已装PGlite库，执行0139；本机旧App分别只认识0137和0138，10/22重启报`CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN`，五分钟后超时。两App版本号都为1.2.0，不能用显示版本号代替包内迁移清单。排查需对齐实际进程路径、包内journal和原库账本；开发验证优先用冷副本，若已在授权范围升级真实库，必须同时交付并验证匹配桌面包。不能删账本或改保护逻辑来强开旧包。证据与此次恢复边界见[诊断报告](../research/t1394-local-startup-diagnosis.md)。
 
+## 完整测试隔离不能把全部内存库换成同一个盘库（T-1397，2026-10-22）
+
+给整包 Vitest 全局设置非空 `PGLITE_DATA_DIR` 会让原本逐例重置的内存库共享磁盘，产生锁竞争、脏数据和非业务失败。质量入口应清除继承的数据库地址，隔离 HOME/CODEX_HOME，文件库测试自己创建私有目录；原诊断输出也必须隔离，但仍保留固定 child 所要求的目录层级。Unix socket 测试还要使用足够短的 TMPDIR。缺历史固定材料或审批时保留原拒绝条件，仅用精确稳定标记登记 env；进程中断与未处理异常永不放行。守卫：`node --test tools/quality/quality.test.mjs`，完整包验证：`node tools/quality/run-tests.mjs frontend`。
+
 ## CI 步骤插在产物生成之前 → tauri_build 资源校验必然 panic(T-992,2026-09-15)
 
 **坑**:为守护 T-992 的启动容忍分支,往 `desktop-release.yml` 里加了一步 `cargo test --lib runtime_cleanup_tests::windows_ --no-default-features`,插在 `安装 Windows production closure 的 Chromium` 之后、`构建并接入 Windows production closure(T-675)` 之前。Windows job 直接挂:`build.rs:404` panic `tauri_build 失败: resource path binaries\creatoros-server-x86_64-pc-windows-msvc.exe doesn't exist`,exit 101(run 34942593764)。**不是测试失败,是这一步根本编译不起来**。原因:`binaries/` 被 gitignore,该 exe 在 Windows 上由 `prepare-packaged-runtime.mjs` 写出,而它只在 `build-production-closure.mjs --prepare-package` 里被调用 —— 也就是紧跟其后那一步;另一条会填充该目录的 `build-sidecar.mjs` 挂着 `runner.os != 'Windows'`,Windows 上不跑。
