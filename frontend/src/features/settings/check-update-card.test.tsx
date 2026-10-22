@@ -18,6 +18,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    getRedfox: () => Promise.resolve({configured:false}),
     getPreferences: () => Promise.resolve({assistantExecutionEngine:"pi"}),
     getReportingStatus: () => Promise.resolve({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
     patchPreferences: (i: unknown) => Promise.resolve(i),

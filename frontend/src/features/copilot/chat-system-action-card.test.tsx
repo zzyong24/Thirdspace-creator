@@ -211,11 +211,11 @@ it('当前已保存稿采用正式来源候选后读回原版本，不再显示�
   }
   return new Response(JSON.stringify({data:value,meta:{requestId:'ui-fixture'}}));
  }});
- const adopt=vi.fn(async(candidate:any,requestId:string)=>{const value=await saveWorkEditorCandidate(operations.capture().client,candidate,requestId);return {status:'adopted' as const,versionId:value.receipt.versionId};});
+ const adopt=vi.fn(async(candidate:any,requestId:string,isCurrent?:()=>boolean)=>{expect(isCurrent?.()).toBe(true);const value=await saveWorkEditorCandidate(operations.capture().client,candidate,requestId);return {status:'adopted' as const,versionId:value.receipt.versionId};});
  function Editor(){const chat=useDraftChatRequest();useEffect(()=>chat.registerEditor({readState:()=>({target:null,outputId:'article-current',generation:0,dirty:false}),prepareForTurn:async()=>{throw Error('不发起');},previewCandidate:async()=>null,adoptCandidate:adopt}),[chat.registerEditor]);return null;}
  render(<DraftChatRequestProvider><Editor/><ChatSystemActionCard result={action} operations={operations}/></DraftChatRequestProvider>);
  fireEvent.click(await screen.findByRole('button',{name:'采用此改动'}));await screen.findByText('已采用并保存');
- expect(screen.queryByText('等待你采用')).not.toBeInTheDocument();expect(adopt).toHaveBeenCalledTimes(1);expect(adopt.mock.calls[0]).toHaveLength(2);
+ expect(screen.queryByText('等待你采用')).not.toBeInTheDocument();expect(adopt).toHaveBeenCalledTimes(1);expect(adopt.mock.calls[0]).toHaveLength(3);expect(adopt.mock.calls[0][2]).toBeTypeOf('function');
  expect(requests.filter(r=>r.id==='ai.assistantActions.adopt')).toEqual([{id:'ai.assistantActions.adopt',input:{body:source}}]);
  await waitFor(()=>expect(requests.some(r=>r.id==='articles.versions.get')).toBe(true));
 });
