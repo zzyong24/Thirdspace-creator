@@ -3,7 +3,7 @@ import { join,resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fork } from "node:child_process";
 import { describe,it,expect } from "vitest";
-import { stageMissingDependencies } from "../../../tools/windows-closure-rat/stage-layered-workers.mjs";
+import { stageMissingDependencies,stageScopedWorkerDependencies } from "../../../tools/windows-closure-rat/stage-layered-workers.mjs";
 import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerExternalPackages,workerExternalPackages } from "./execution-worker-runtime.mjs";
 describe("随包Worker入口资源",()=>{
   it("复制固定 Worker 与 ACP 入口并保留旧返回路径，普通Worker仍可独立启动",async()=>{
@@ -27,10 +27,24 @@ describe("随包Worker入口资源",()=>{
       mkdirSync(join(root,"frontend/runtime"),{recursive:true});
       if(process.platform==="win32"){mkdirSync(join(root,"cli"),{recursive:true});copyFileSync(process.execPath,join(root,"cli/node.exe"));}
       copyFileSync(resolve("../tools/windows-closure-rat/creatoros-module-resolver.cjs"),join(root,"frontend/creatoros-module-resolver.cjs"));
-      for(const request of workerExternalPackages){const name=request.replace(/\/package\.json$/,"");const dir=join(root,"frontend/.next/vendor",name);mkdirSync(dir,{recursive:true});writeFileSync(join(dir,"package.json"),JSON.stringify({name,main:"index.js"}));writeFileSync(join(dir,"index.js"),"module.exports={}");}
-      expect(()=>assertWorkerExternalPackages(root)).not.toThrow();
-      rmSync(join(root,"frontend/.next/vendor/mammoth"),{recursive:true});
-      expect(()=>assertWorkerExternalPackages(root)).toThrow("分层依赖验证失败");
+      const source=join(root,"fixture-source"),codexAlias=`@openai/codex-${process.platform}-${process.arch}`;
+      mkdirSync(source,{recursive:true});writeFileSync(join(source,"package.json"),"{}");
+      for(const request of workerExternalPackages){
+        const name=request.replace(/\/package\.json$/,""),dir=join(source,"node_modules",name);
+        mkdirSync(dir,{recursive:true});
+        const manifest={name,version:"1.0.0",main:"index.js",
+          ...(name==="@openai/codex"?{optionalDependencies:{[codexAlias]:`npm:@openai/codex@1.0.0-${process.platform}-${process.arch}`}}:{}),
+          ...(name===codexAlias?{name:"@openai/codex",version:`1.0.0-${process.platform}-${process.arch}`,os:[process.platform],cpu:[process.arch]}:{})};
+        writeFileSync(join(dir,"package.json"),JSON.stringify(manifest));writeFileSync(join(dir,"index.js"),"module.exports={}");
+      }
+      writeFileSync(join(root,"frontend/runtime/execution-worker.cjs"),"// fixture entry");
+      const graph=stageScopedWorkerDependencies({from:source,runtimeRoot:root,
+        packages:workerExternalPackages.map(request=>request.replace(/\/package\.json$/,"")).filter(name=>name!==codexAlias),entries:["execution-worker.cjs"]});
+      expect(()=>assertWorkerExternalPackages(root,{buildOnly:false})).not.toThrow();
+      const mammoth=graph.nodes[graph.entries["frontend/runtime/execution-worker.cjs"].dependencies.mammoth];
+      expect(mammoth.name).toBe("mammoth");
+      rmSync(join(root,mammoth.root),{recursive:true});
+      expect(()=>assertWorkerExternalPackages(root,{buildOnly:false})).toThrow("分层依赖验证失败");
     } finally {rmSync(root,{recursive:true,force:true});}
   });
   it.each(["execution-worker.cjs","agentic-worker.cjs","codex-acp.cjs","codex-status-worker.cjs","video-visual-review-worker.cjs"])("缺少 %s 时不能通过资源完整性检查",filename=>{

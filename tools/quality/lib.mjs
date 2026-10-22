@@ -169,6 +169,7 @@ export function testExecutionArgs({ shard, maxWorkers } = {}) {
 export function isolatedTestEnvironment(home, runtimePath, inherited = process.env) {
   return { ...inherited, HOME: home, CODEX_HOME: path.join(home, ".codex"),
     DATABASE_URL: "", PGLITE_DATA_DIR: "", QUALITY_RUNTIME_REPORT: runtimePath,
+    CREATOROS_TEST_OUTPUT_ROOT: inherited.CREATOROS_TEST_OUTPUT_ROOT || path.join(home, "test-output"),
     ...(inherited.PLAYWRIGHT_BROWSERS_PATH || !inherited.HOME ? {} : { PLAYWRIGHT_BROWSERS_PATH: path.join(inherited.HOME, process.platform === "darwin" ? "Library/Caches/ms-playwright" : ".cache/ms-playwright") }),
     NODE_OPTIONS: inherited.NODE_OPTIONS ?? "--max-old-space-size=6144" };
 }

@@ -35,6 +35,8 @@ test("测试隔离清除继承的真数据库和PGlite路径，审批与自有PG
   const result = quality.isolatedTestEnvironment("/isolated-home", "/evidence/runtime.json", inherited);
   assert.equal(result.DATABASE_URL, "");
   assert.equal(result.PGLITE_DATA_DIR, "");
+  assert.equal(result.CREATOROS_TEST_OUTPUT_ROOT, "/isolated-home/test-output");
+  assert.equal(quality.isolatedTestEnvironment("/isolated-home", "/evidence/runtime.json", { CREATOROS_TEST_OUTPUT_ROOT: "/owned-output" }).CREATOROS_TEST_OUTPUT_ROOT, "/owned-output");
   assert.equal(result.HOME, "/isolated-home");
   assert.equal(result.CODEX_HOME, path.join("/isolated-home", ".codex"));
   assert.equal(result.CREATOROS_TEST_POSTGRES_URL, inherited.CREATOROS_TEST_POSTGRES_URL);
