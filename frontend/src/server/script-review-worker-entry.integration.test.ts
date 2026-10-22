@@ -1,3 +1,4 @@
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import {createServer} from "node:http";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -6,7 +7,6 @@ import {execFileSync} from "node:child_process";
 import {describe,it,expect,vi} from "vitest";
 import type {Endpoint} from "@creatoros/contract";
 const fixture=vi.hoisted(()=>({url:""}));
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"review-fixture",token:"fixture",settings:{structuredOutputs:true}})}));
 import {compositeTransport,__resetPersistenceForTests} from "./persistence-client";
 const ctx={userId:"review-entry-test",accountId:"review-entry-test",requestId:"review-entry-test",source:"user" as const};
 const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,query:undefined,body} as never,ctx) as {data:any}).data;
@@ -22,6 +22,7 @@ describe("生产文稿审核 Worker 入口",()=>{
     res.writeHead(200,{"content-type":"text/event-stream"});res.end(`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"review-fixture",choices:[{index:0,delta:{role:"assistant",content:JSON.stringify(generated)},finish_reason:null}]})}\n\ndata: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"review-fixture",choices:[{index:0,delta:{},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}})}\n\ndata: [DONE]\n\n`);});});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
     try{
+  await configureModelFixture(call,fixture.url,"review-fixture");
       const project=await call("projects.create",undefined,{title:"隔离审核测试"});
       if(semantic!=="neutral")await call("reviewRules.create",undefined,{tier:"official_hard",category:"导流",matchType:"word",pattern:"QQ",note:"复核是否引导站外联系",source:"manual",status:"active"});
       const artifact=await call("artifacts.create",{projectId:project.id},{title:"待审原稿",artifactType:"master_script",stage:"script"});

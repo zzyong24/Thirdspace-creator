@@ -1,3 +1,4 @@
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import {createServer} from "node:http";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -8,7 +9,6 @@ import type {Endpoint} from "@creatoros/contract";
 import {executionTasks,eq,type Db} from "@creatoros/backend";
 const fixture=vi.hoisted(()=>({url:"",db:null as Db|null}));
 vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const result=await actual.createConfiguredDb(...args);fixture.db=result.db;return result;}};});
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"budget-fixture",token:"fixture",settings:{structuredOutputs:true}})}));
 import {compositeTransport,__resetPersistenceForTests} from "./persistence-client";
 const ctx={userId:"script-budget-user",accountId:"script-budget-account",requestId:"test",source:"user" as const};
 const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,query:undefined,body} as never,ctx) as {data:any}).data;
@@ -30,6 +30,7 @@ it("口播已成功但分镜预算耗尽时零额外HTTP，完整原文仍可采
   }catch(error){injectionError=error;res.writeHead(500);res.end("fixture injection failed");}
  });await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
  try{
+  await configureModelFixture(call,fixture.url,"budget-fixture");
   const project=await call("projects.create",undefined,{title:"隔离预算项目"});const artifact=await call("artifacts.create",{projectId:project.id},{title:"目标原稿",artifactType:"master_script",stage:"script"});
   const before=await call("artifacts.versions.list",{artifactId:artifact.id});
   const task=await call("ai.tasks.create",undefined,{taskType:"script.draft",attemptId:"script-budget-public-entry",inputData:{projectId:project.id,artifactId:artifact.id,topic:"保留已生成结果"}});

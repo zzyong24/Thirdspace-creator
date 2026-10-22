@@ -1,3 +1,4 @@
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import {createServer} from "node:http";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -8,7 +9,7 @@ import type {Endpoint} from "@creatoros/contract";
 import {executionTasks,executionCalls,eq,type Db} from "@creatoros/backend";
 const fixture=vi.hoisted(()=>({url:"",db:null as Db|null,opens:0,candidatesBeforeRestart:-1,credentialReads:0,checkpointSaved:false,release:null as null|(()=>void)}));
 vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const result=await actual.createConfiguredDb(...args);fixture.db=result.db;fixture.opens++;if(fixture.opens===2)fixture.candidatesBeforeRestart=(await result.db.select().from(actual.aiTaskResults)).length;return result;}};});
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>{fixture.credentialReads++;return ({apiFormat:"openai_chat",baseUrl:fixture.url,model:"budget-fixture",token:"fixture",settings:{structuredOutputs:true}});}}));
+vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveFrozenModelCredential:async(...args:Parameters<typeof import("@creatoros/backend/modules/ai-runtime").resolveFrozenModelCredential>)=>{fixture.credentialReads++;const actual=await original<typeof import("@creatoros/backend/modules/ai-runtime")>();return actual.resolveFrozenModelCredential(...args);}}));
 vi.mock("../../../backend/src/modules/execution/execution-script-checkpoint.service",async original=>{
  const actual=await original<typeof import("../../../backend/src/modules/execution/execution-script-checkpoint.service")>();
  return {...actual,createExecutionScriptCheckpointService:(...args:Parameters<typeof actual.createExecutionScriptCheckpointService>)=>{
@@ -31,6 +32,7 @@ it("口播检查点已持久化但回执丢失后重启，过期任务恢复基�
   }catch(error){injectionError=error;res.writeHead(500);res.end("fixture injection failed");}
  });await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
  try{
+  await configureModelFixture(call,fixture.url,"budget-fixture");
   const project=await call("projects.create",undefined,{title:"隔离预算项目"});const artifact=await call("artifacts.create",{projectId:project.id},{title:"目标原稿",artifactType:"master_script",stage:"script"});
   const before=await call("artifacts.versions.list",{artifactId:artifact.id});
   const task=await call("ai.tasks.create",undefined,{taskType:"script.draft",attemptId:"script-budget-public-entry",inputData:{projectId:project.id,artifactId:artifact.id,topic:"保留已生成结果"}});

@@ -1,3 +1,4 @@
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import { createServer } from "node:http";
 import { mkdtempSync,rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -6,7 +7,6 @@ import { execFileSync } from "node:child_process";
 import { describe,it,expect,vi } from "vitest";
 import type { Endpoint } from "@creatoros/contract";
 const fixture=vi.hoisted(()=>({url:"",loseArtifactReceipt:false}));
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture",settings:{structuredOutputs:true}})}));
 vi.mock("@creatoros/backend/modules/artifacts",async original=>{
   const actual=await original<typeof import("@creatoros/backend/modules/artifacts")>();
   return {...actual,createArtifactsService:(...args:Parameters<typeof actual.createArtifactsService>)=>{
@@ -28,6 +28,7 @@ describe("生产多平台创建入口",()=>{
     const server=createServer((req,res)=>{req.resume();requests++;res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(generated)},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
     try{
+  await configureModelFixture(call,fixture.url,"fixture");
       ctx.accountId=null;const account=await call("accounts.create",undefined,{platform:"douyin",accountHandle:"隔离真实绑定根"});ctx.accountId=account.id;
       const project=await call("projects.create",undefined,{title:"隔离测试项目"});
       const output=await call("projects.outputs.create",{projectId:project.id},{title:"隔离测试作品"});

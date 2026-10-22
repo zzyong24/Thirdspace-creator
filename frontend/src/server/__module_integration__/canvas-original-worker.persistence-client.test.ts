@@ -32,6 +32,8 @@ it.each(['legacy','group','group-account'] as const)('公共Settings→原Canvas
   }
   await call(ENDPOINTS.putModel,{capability:'image.generate'},{provider:'openai',modelName:'gpt-image-1',baseUrl,secret:'local-fixture-only',isDefault:false});
   await call(ENDPOINTS.putModel,{capability:'image.edit'},{provider:'openai',modelName:'gpt-image-1',baseUrl,secret:'local-fixture-only',isDefault:false});
+  const routing=await call(ENDPOINTS.getModelRouting,undefined);
+  await call(ENDPOINTS.putModelRouting,undefined,{schemaVersion:1,expectedRevision:routing.revision,choices:{...routing.effectiveChoices,image:'self'}});
   const project=await call(ENDPOINTS.createProject,undefined,{title:'原Canvas公共Worker验证',brief:'用户明确参考图'});
   const upload=await call(ENDPOINTS.createUpload,undefined,{assetType:'image',mimeType:'image/png',fileSize:png.length});await held.storage!.putObject({storageKey:upload.storageKey,bytes:png,mimeType:'image/png',assetType:'image'});
   const reference=await call(ENDPOINTS.completeUpload,{uploadId:upload.uploadId},{name:'实际首版参考图'});

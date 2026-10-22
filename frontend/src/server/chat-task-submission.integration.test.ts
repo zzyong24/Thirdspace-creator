@@ -1,4 +1,5 @@
 // @vitest-environment node
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import {it,expect,vi} from "vitest";
 import type {Endpoint,RequestContext} from "@creatoros/contract";
 import {createServer} from "node:http";
@@ -18,7 +19,6 @@ vi.mock("@creatoros/backend/modules/ai-runtime",async original=>{
  const actual=await original<typeof import("@creatoros/backend/modules/ai-runtime")>();
  return {...actual,resolveMultimodalSpec:async()=>({kind:"image",provider:"openai",model:"gpt-image-1",token:"fixture",baseUrl:fixture.url}),
   createAssetBusinessExecutionService:(...args:Parameters<typeof actual.createAssetBusinessExecutionService>)=>{const service=actual.createAssetBusinessExecutionService(...args);return {...service,prepare:async(...input:Parameters<typeof service.prepare>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture asset prepare unavailable"),{statusCode:503});}return service.prepare(...input);}};},
-  resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture",settings:{structuredOutputs:true}}),
   preparePlatformAdaptContext:async(...args:Parameters<typeof actual.preparePlatformAdaptContext>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture publish prepare unavailable"),{statusCode:503});}return actual.preparePlatformAdaptContext(...args);},
   createScriptBusinessAdapter:(...args:Parameters<typeof actual.createScriptBusinessAdapter>)=>{const adapter=actual.createScriptBusinessAdapter(...args);return {...adapter,prepare:async(...input:Parameters<typeof adapter.prepare>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture script prepare unavailable"),{statusCode:503});}return adapter.prepare(...input);}};},
   prepareScriptReviewContext:async(...args:Parameters<typeof actual.prepareScriptReviewContext>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture review prepare unavailable"),{statusCode:503});}return actual.prepareScriptReviewContext(...args);},
@@ -36,6 +36,7 @@ it("聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同�
  const ctx:RequestContext={userId:"chat-submit",accountId:"a",source:"user",requestId:"test"};
  const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,body} as never,ctx) as {data:any}).data;
  try{
+  await configureModelFixture(call,fixture.url,"fixture",{image:true});
   const runtime=await getChatRuntime(),project=await call("projects.create",undefined,{title:"提交恢复项目"});
   const input={projectId:project.id,topic:"原主题",attemptId:"chat-planning-original-attempt"};
   const [first,again]=await Promise.all([runtime.dispatchPlanningThesis(ctx,input),runtime.dispatchPlanningThesis(ctx,input)]);
@@ -98,6 +99,7 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
  const ctx:RequestContext={userId:"planning-factory",accountId:"a",source:"user",requestId:"test"};
  const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,body} as never,ctx) as {data:any}).data;
  try{
+  await configureModelFixture(call,fixture.url,"fixture",{image:true});
   const runtime=await getChatRuntime(),db=fixture.db!;
   // 测试只初始化隔离数据库的存储配置；禁止调用会迁移真实默认媒体目录的设置 API。
   if(material)await db.insert(storageConfigs).values({userId:ctx.userId,rootPath:resolve(directory,"media"),backend:"local",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
@@ -113,9 +115,10 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
   // 专项声明对应真实工具；全场景和正式聊天路由仍需独立验收。
   const prototypes=buildChatTools([toolName] as never,{} as never);
   const definitions=(await prepareChatToolDefinitions(prototypes,{atomicPlanningThesis:true,atomicMaterialGenerate:material,atomicScriptReview:review,atomicPublishPackage:publish,workerScriptDraft:script})).definitions;
-  const submission=await createChatTurnSubmissionService(db,{assertProject:async(c,id)=>{if(!await runtime.contextReaders.getProjectDetail!(c,{projectId:id}))throw new Error("项目不可访问");},assemble:async()=>({capability:"copilot.assist",system:"使用论点工具",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:4,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"project",projectId:project.id,selection:{kind:"candidate",ids:[],label:"原选区标题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:script?[{ref:"source",label:"原稿",text:originalScript,truncated:false,sourceType:"message",sourceId:source.id}]:[],...(script?{scriptDraftContext:{latestUserInstruction:source.content}}:{}),skillSnapshot:snapshot} as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+  const routing=await runtime.prepareChatRouting!(ctx,{mode:"text"});const executionRoute=await routing.freeze("copilot.assist","text");
+  const submission=await createChatTurnSubmissionService(db,{assertProject:async(c,id)=>{if(!await runtime.contextReaders.getProjectDetail!(c,{projectId:id}))throw new Error("项目不可访问");},assemble:async()=>({executionRoute,chatModelMode:"text",capability:"copilot.assist",system:"使用论点工具",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:4,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"project",projectId:project.id,selection:{kind:"candidate",ids:[],label:"原选区标题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:script?[{ref:"source",label:"原稿",text:originalScript,truncated:false,sourceType:"message",sourceId:source.id}]:[],...(script?{scriptDraftContext:{latestUserInstruction:source.content}}:{}),skillSnapshot:snapshot} as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
   const taskFactory=material?createChatMaterialTaskHost(createChatHostContextReader(db),runtime.contextReaders,{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatMaterialTask}):createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{publish:{preparePublish:runtime.prepareChatPublishTask,wakeTask:runtime.wakeChatPublishTask},scriptDraft:{prepareDraft:runtime.prepareChatScriptDraftTask,wakeTask:runtime.wakeChatScriptDraftTask},review:{prepareReview:runtime.prepareChatScriptReviewTask,wakeTask:runtime.wakeChatScriptReviewTask},planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}});
-  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"planning-parent",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{try{const tools=await taskFactory(...args);const mismatches=args[1].tools.filter(f=>{const t=tools[f.name];return !t||t.version!==f.version||t.effect!==f.effect||(t.execution??"host")!==(f.execution??"host");}).map(f=>f.name);if(mismatches.length)console.error("T1085_FACTORY_MISMATCH",JSON.stringify(mismatches));return tools;}catch(error){console.error("T1085_FACTORY_FAILURE",error instanceof Error?error.message:String(error));throw error;}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture"})});
+  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"planning-parent",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{try{const tools=await taskFactory(...args);const mismatches=args[1].tools.filter(f=>{const t=tools[f.name];return !t||t.version!==f.version||t.effect!==f.effect||(t.execution??"host")!==(f.execution??"host");}).map(f=>f.name);if(mismatches.length)console.error("T1085_FACTORY_MISMATCH",JSON.stringify(mismatches));return tools;}catch(error){console.error("T1085_FACTORY_FAILURE",error instanceof Error?error.message:String(error));throw error;}},resolveModelCredential:(c,capability,owner)=>runtime.resolveModelSpec(c,capability,owner)});
   host.start();
   await vi.waitFor(async()=>{const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));expect(row?.status,JSON.stringify(row)).toBe(empty?"partial":"succeeded");},{timeout:120000});
   expect(fixtureErrors).toEqual([]);expect(rootRequests).toHaveLength(2);
@@ -159,6 +162,7 @@ it("正式发布包派发沿原 attempt 复用首稿快照，稿面改变不重�
  const ctx:RequestContext={userId:"publish-replay",accountId:"a",source:"user",requestId:"test"};
  const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,body} as never,ctx) as {data:any}).data;
  try{
+  await configureModelFixture(call,fixture.url,"fixture",{image:true});
   const runtime=await getChatRuntime(),project=await call("projects.create",undefined,{title:"发布首稿"});
   const output=await call("projects.outputs.create",{projectId:project.id},{title:"发布挂点"});
   const artifact=await call("artifacts.create",{projectId:project.id},{title:"已保存正文",artifactType:"output_script",stage:"script"});

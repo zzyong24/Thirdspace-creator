@@ -1,3 +1,4 @@
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import {createServer} from "node:http";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -8,7 +9,6 @@ import type {Endpoint} from "@creatoros/contract";
 import {metricSnapshots,learnings,eq,type Db} from "@creatoros/backend";
 const fixture=vi.hoisted(()=>({url:"",db:null as Db|null,loseReceipt:false}));
 vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const result=await actual.createConfiguredDb(...args);fixture.db=result.db;return result;}};});
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"review-fixture",token:"fixture",settings:{structuredOutputs:true}})}));
 vi.mock("@creatoros/backend/modules/learnings",async original=>{const actual=await original<typeof import("@creatoros/backend/modules/learnings")>();return {...actual,createLearningsService:(...args:Parameters<typeof actual.createLearningsService>)=>{const service=actual.createLearningsService(...args),create=service.createLearning.bind(service);service.createLearning=async(...input)=>{const result=await create(...input);if(fixture.loseReceipt){fixture.loseReceipt=false;throw new Error("LEARNING_RECEIPT_LOST");}return result;};return service;}};});
 import {compositeTransport,__resetPersistenceForTests} from "./persistence-client";
 const ctx={userId:"insights-entry-test",accountId:null as string|null,requestId:"test",source:"user" as const};
@@ -20,6 +20,7 @@ describe("生产复盘 Worker 入口与采纳",()=>{
   const server=createServer((req,res)=>{req.on("data",chunk=>{requestBody+=chunk.toString();});req.on("end",()=>{requests++;res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"review-fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(generated)},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});});
   await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
   try{
+  await configureModelFixture(call,fixture.url,"review-fixture");
    ctx.accountId=null;const account=await call("accounts.create",undefined,{platform:"bilibili",accountHandle:"隔离复盘根"});ctx.accountId=account.id;
    const project=await call("projects.create",undefined,{title:"真实复盘项目"});const output=await call("projects.outputs.create",{projectId:project.id},{title:"真实作品"});
    const publication=await call("outputs.publications.register",{outputId:output.id},{platform:"bilibili",externalId:"BV-fixture-insights",externalUrl:"https://www.bilibili.com/video/BV-fixture-insights",title:"实际登记的作品",publishedAt:"2026-09-05T00:00:00.000Z"});

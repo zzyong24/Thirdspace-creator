@@ -1,3 +1,4 @@
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import {createServer} from "node:http";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -6,7 +7,6 @@ import {execFileSync} from "node:child_process";
 import {beforeAll,expect,it,vi} from "vitest";
 import type {Endpoint} from "@creatoros/contract";
 const fixture=vi.hoisted(()=>({url:""}));
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"thesis-fixture",token:"fixture",settings:{structuredOutputs:true}})}));
 import {compositeTransport,__resetPersistenceForTests} from "./persistence-client";
 const ctx={userId:"thesis-entry-user",accountId:"thesis-entry-account",requestId:"test",source:"user" as const};
 const call=async(id:string,params:unknown,body?:unknown,context=ctx)=>(await compositeTransport.request({id} as Endpoint,{params,query:undefined,body} as never,context) as {data:any}).data;
@@ -18,6 +18,7 @@ it.each([false,true])("论点树真实Worker公共生成与采纳，明确429重
  const server=createServer(async(req,res)=>{const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));requests.push(Buffer.concat(chunks).toString());if(retry && requests.length===1){res.writeHead(429,{"content-type":"application/json","retry-after":"0"});res.end(JSON.stringify({error:{message:"fixture rate limit",type:"rate_limit_error"}}));return;}res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"thesis-fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(generated)},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});
  await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
  try{
+  await configureModelFixture(call,fixture.url,"thesis-fixture");
   const coreMessage="本项目真实硬锚：先演示实际操作再解释方法";
   const project=await call("projects.create",undefined,{title:"隔离论点项目",briefDetail:{coreMessage}});
   expect((await call("artifacts.list",{projectId:project.id})).filter((a:any)=>a.artifactType==="thesis_tree")).toEqual([]);

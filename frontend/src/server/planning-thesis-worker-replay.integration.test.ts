@@ -1,3 +1,4 @@
+import {configureModelFixture} from "@/test/configure-model-fixture";
 import {createServer} from "node:http";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -12,7 +13,7 @@ vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof
  // 故障窗口的旧租约尚未过期；仅加速隔离DB的租约过期，保留deadline/账本真实状态。
  await result.db.update(actual.executionTasks).set({leaseExpiresAt:new Date(Date.now()-1000).toISOString()}).where(actual.eq(actual.executionTasks.id,rows[0]!.id));
 }return result;}};});
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>{fixture.credentialReads++;return ({apiFormat:"openai_chat",baseUrl:fixture.url,model:"budget-fixture",token:"fixture",settings:{structuredOutputs:true}});}}));
+vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveFrozenModelCredential:async(...args:Parameters<typeof import("@creatoros/backend/modules/ai-runtime").resolveFrozenModelCredential>)=>{fixture.credentialReads++;const actual=await original<typeof import("@creatoros/backend/modules/ai-runtime")>();return actual.resolveFrozenModelCredential(...args);}}));
 vi.mock("../../../backend/src/modules/execution/execution-generation-ports.service",async original=>{
  const actual=await original<typeof import("../../../backend/src/modules/execution/execution-generation-ports.service")>();
  return {...actual,createExecutionGenerationPorts:(...args:Parameters<typeof actual.createExecutionGenerationPorts>)=>{
@@ -35,6 +36,7 @@ it("论点模型已结算但回执丢失后真实重启，重放原调用且仅�
   }catch(error){injectionError=error;res.writeHead(500);res.end("fixture injection failed");}
  });await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
  try{
+  await configureModelFixture(call,fixture.url,"budget-fixture");
   const project=await call("projects.create",undefined,{title:"隔离预算项目"});const artifact=await call("artifacts.create",{projectId:project.id},{title:"目标原稿",artifactType:"master_script",stage:"script"});
   const before=await call("artifacts.versions.list",{artifactId:artifact.id});
   const task=await call("ai.tasks.create",undefined,{taskType:"planning.thesis",attemptId:"planning-thesis-replay-entry",inputData:{projectId:project.id,artifactId:artifact.id,topic:"保留已生成结果"}});

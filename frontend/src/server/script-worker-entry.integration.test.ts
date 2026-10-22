@@ -21,18 +21,13 @@ vi.mock("@creatoros/backend", async (original) => {
 });
 vi.mock("@creatoros/backend/modules/ai-runtime", async (original) => ({
   ...(await original<typeof import("@creatoros/backend/modules/ai-runtime")>()),
-  resolveLlmConfig: async () => {
+  resolveFrozenModelCredential: async (...args: Parameters<typeof import("@creatoros/backend/modules/ai-runtime").resolveFrozenModelCredential>) => {
     fixture.credentialReads++;
-    if (fixture.verbatim)
-      throw new Error("VERBATIM_MUST_NOT_RESOLVE_CREDENTIAL");
-    return {
-      apiFormat: "openai_chat",
-      baseUrl: fixture.url,
-      model: "script-fixture",
-      token: "fixture",
-      settings: { structuredOutputs: true },
-    };
+    if (fixture.verbatim) throw new Error("VERBATIM_MUST_NOT_RESOLVE_CREDENTIAL");
+    const actual = await original<typeof import("@creatoros/backend/modules/ai-runtime")>();
+    return actual.resolveFrozenModelCredential(...args);
   },
+
 }));
 import {
   getChatRuntime,
@@ -53,6 +48,18 @@ const call = async (id: string, params: unknown, body?: unknown) =>
       ctx,
     )) as { data: any }
   ).data;
+// 原公开配置让新冻结路由绑定本轮 HTTP 模型；不再只替换已不被正式链路调用的旧 resolver。
+async function configureFixtureModel() {
+  await call("settings.models.put", { capability: "script.draft" }, {
+    provider: "openai", modelName: "script-fixture", secret: "fixture", baseUrl: fixture.url,
+    apiFormat: "openai_chat", settings: { structuredOutputs: true },
+  });
+  const routing = await call("settings.modelRouting.get", undefined);
+  await call("settings.modelRouting.put", undefined, {
+    schemaVersion: 1, expectedRevision: routing.revision,
+    choices: { ...routing.effectiveChoices, text: "self" },
+  });
+}
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const lines = [
   "先看真实结果。",
@@ -141,6 +148,7 @@ it.each(["normal", "verbatim", "mismatch", "malformed", "retry"] as const)(
     await new Promise<void>((done) => server.listen(0, "127.0.0.1", done));
     fixture.url = `http://127.0.0.1:${(server.address() as { port: number }).port}/v1`;
     try {
+      await configureFixtureModel();
       const project = await call("projects.create", undefined, {
         title: "隔离写稿项目",
       });
@@ -327,6 +335,7 @@ it("script.draft已取消原任务拒绝retryOf克隆，不重置原截止或派
  await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
  try{
   const runtime=await getChatRuntime();
+  await configureFixtureModel();
   const project=await call("projects.create",undefined,{title:"已取消原任务负路"});
   const artifact=await call("artifacts.create",{projectId:project.id},{title:"取消候选目标",artifactType:"master_script",stage:"script"});
   const inputData={projectId:project.id,artifactId:artifact.id,topic:"原任务取消后不会复制恢复",instruction:"只使用本轮资料",sourceSnapshots:[{sourceType:"message",sourceId:"cancelled-fixture",label:"原始资料",order:0,charCount:sourceText.length,sha256:hash(sourceText),body:sourceText,complete:true}]};
