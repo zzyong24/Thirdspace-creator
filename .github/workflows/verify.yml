@@ -101,6 +101,12 @@ jobs:
         with:
           # 历史恢复回归会读取固定旧producer的真实Git对象，浅克隆不能完成原验收。
           fetch-depth: 0
+      - name: 核验历史恢复的固定producer对象
+        if: matrix.package == 'frontend'
+        run: |
+          historical_producer=6e4689b3180f91189110208267708ad72b03ae64
+          git cat-file -e "$historical_producer^{commit}" || git fetch --no-tags origin "$historical_producer"
+          git cat-file -e "$historical_producer^{commit}"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

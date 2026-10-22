@@ -21,7 +21,7 @@ it("公共根真实探针后同事务核原字节，坏字节拒绝零保存，�
  const root=await mkdtemp(join(tmpdir(),"creatoros-root-source-bytes-"));
  try{
   held.root=join(root,"storage");
-  const path=join(root,"original.mp4");await promisify(execFile)("/opt/homebrew/bin/ffmpeg",["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","1","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac",path]);const bytes=await readFile(path);
+  const path=join(root,"original.mp4");await promisify(execFile)((process.env.CREATOROS_FFMPEG_PATH || 'ffmpeg'),["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-f","lavfi","-i","sine=frequency=440:sample_rate=48000","-t","1","-c:v","libx264","-pix_fmt","yuv420p","-c:a","aac",path]);const bytes=await readFile(path);
   const project=(await call(ENDPOINTS.createProject,undefined,{title:"公共根真实媒体",brief:"测试字节与同事务归属"})).data;
   const output=(await call(ENDPOINTS.createOutput,{projectId:project.id},{title:"独立原片",contentType:"video"})).data;
   const upload=(await call(ENDPOINTS.createUpload,undefined,{assetType:"video",mimeType:"video/mp4",fileSize:bytes.length})).data;
