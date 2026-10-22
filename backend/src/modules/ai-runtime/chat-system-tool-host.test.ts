@@ -154,7 +154,7 @@ it.each([1,2] as const)('T1397旧V2 read63/action%s完整原型恢复真实host�
  const scope={execution:systemRef,aiTaskId:'v2-original',callId:'v2-read',toolCallId:'v2-tool',signal:new AbortController().signal};
  const continuation={request:{kind:'outputs.production.editor.get',params:{outputId:'original-video'}},window:{offsetUtf16:12000,expectedRevision:1}};
  expect(await tools['system.read']!.execute!(systemCtx,continuation,scope)).toMatchObject({status:'ok',sideEffect:'none'});expect(read).toHaveBeenCalledTimes(1);
- for(const invalid of [{...continuation,window:{offsetUtf16:12000}}, {...continuation,unexpected:true},{request:{kind:'pages.groupTrend.get',params:{groupId:systemCtx.groupId}}}]){
+ for(const invalid of [{...continuation,window:{offsetUtf16:12000}}, {...continuation,unexpected:true},{request:{kind:'pages.groupTrend.get',params:{groupId:systemCtx.groupId!}}}]){
   expect(await tools['system.read']!.execute!(systemCtx,invalid,scope)).toMatchObject({status:'error',sideEffect:'none'});expect(read).toHaveBeenCalledTimes(1);
  }
  for(const mutate of [(d:typeof definitions)=>{d[1]!.version+='tampered';},(d:typeof definitions)=>{d[1]!.parameters={...d[1]!.parameters,additionalProperties:true};}]){
