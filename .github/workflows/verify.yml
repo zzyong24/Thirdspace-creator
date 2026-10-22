@@ -98,6 +98,9 @@ jobs:
       QUALITY_VERBOSE: "1"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 历史恢复回归会读取固定旧producer的真实Git对象，浅克隆不能完成原验收。
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
