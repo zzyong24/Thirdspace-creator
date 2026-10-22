@@ -116,7 +116,7 @@ it("显式文稿保留原文；读取期间取消不能返回生成输入",async
 
 it("真实当前稿reader→冻结任务host→诊断facets保持规范正文和版本",async()=>{
  const getProject=vi.fn(async()=>({id:"project"}));
- const current=createCurrentArtifactReader({projectsService:{getProject},artifactsService:{listProjectArtifacts:async()=>[{id:"artifact",artifactType:"output_script",currentVersionId:"v1"}],listVersions:async()=>[{id:"v2",versionNumber:2,contentText:"非当前正文"},{id:"v1",versionNumber:1,contentText:"旧字段",contentData:{sections:[{id:"s1",body:"当前稿原文\n含换行"}]}}],getScriptSections:async()=>[]}} as never);
+ const current=createCurrentArtifactReader({projectsService:{getProject},artifactsService:{listProjectArtifacts:async()=>[{id:"artifact",projectId:"project",artifactType:"output_script",currentVersionId:"v1"}],listVersions:async()=>[{id:"v2",versionNumber:2,contentText:"非当前正文"},{id:"v1",versionNumber:1,contentText:"旧字段",contentData:{sections:[{id:"s1",body:"当前稿原文\n含换行"}]}}],getScriptSections:async()=>[]}} as never);
  const f=await fixture((c,p)=>current(c,p,"output_script"));Object.assign(f.restored.hostContext.chatContext,{projectId:"project"});
  const prepared=await f.tools["calibration.diagnose"]!.prepareGeneration!(f.ctx,{title:"标题"},f.scope);
  expect(prepared.node.facets.script).toBe("当前稿原文\n含换行");expect(getProject).toHaveBeenCalledWith(f.ctx,"project");

@@ -226,7 +226,7 @@ it("真实enqueue从出生冻结有限结构化生成期限，原Worker到期不
  const server=createServer(async(req,res)=>{for await(const _ of req){};httpCalls++;res.writeHead(200,{"content-type":"application/json"});res.write('{"id":');res.on("close",()=>{disconnected++;});});
  await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));
  const host=createModelWorkerDispatcher(db,{now,entryPath,workerId:`finite-worker-${business.id}`,budget,modelConcurrency:1,pollMs:100,projectCandidate,resolveModelCredential:async(context,capability,owner)=>{
-  expect(context).toMatchObject({userId:ctx.userId,accountId:ctx.accountId,groupId:ctx.groupId});expect(capability).toBe(skillId);expect(owner).toEqual({aiTaskId:business.id,executionTaskId:task.id});return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"finite-local-fixture"};
+  expect(context).toMatchObject({userId:ctx.userId,accountId:ctx.accountId,groupId:ctx.groupId});expect(capability).toBe(skillId);expect(owner).toEqual({aiTaskId:business.id,executionTaskId:task.id,mode:"structured",signal:expect.any(AbortSignal)});return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"finite-local-fixture"};
  }});
  let draining:Promise<number>|undefined;
  try{

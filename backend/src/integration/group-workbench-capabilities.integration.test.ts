@@ -29,6 +29,7 @@ describe('纯组工作台目录的正式 CLI gateway 与 transport 组合',()=>{
   await db.insert(projects).values({id:'catalog-project',userId:group.userId,groupId:group.groupId,accountId:null,title:'原项目',creationMode:'script',status:'active',currentStage:'planning',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
   await db.insert(contentOutputs).values({id:'catalog-output',groupId:group.groupId,projectId:'catalog-project',contentType:'article',status:'draft',title:'原稿',createdAt:stamp,updatedAt:stamp});
   await db.insert(aiTasks).values({id:'catalog-original-task',userId:group.userId,groupId:group.groupId,accountId:null,taskType:'script.draft',idempotencyKey:'catalog-original-key',requestedAt:stamp});
+  await db.insert(executionTasks).values({id:'catalog-original-execution',userId:group.userId,groupId:group.groupId,accountId:null,kind:'ai_task',ownerType:'ai_task',ownerId:'catalog-original-task',status:'queued',idempotencyKey:'catalog-execution-key',payload:{},createdAt:stamp,updatedAt:stamp});
   gateway=createCliInvocationService({db,masterKey:Buffer.alloc(32,9),now:()=>stamp,nextId:prefix=>`${prefix}-${++sequence}`});
   transport=createWorkbenchPublicTransport({tasks:createWorkbenchPublicService(db),stream:createExecutionStreamService(db),artifacts:{} as Parameters<typeof createWorkbenchPublicTransport>[0]['artifacts'],capabilities,render:noFileOperation,reconcile:noFileOperation});
  },120000);
@@ -70,8 +71,6 @@ describe('纯组工作台目录的正式 CLI gateway 与 transport 组合',()=>{
   return {endpoint,input,request:(ctx:RequestContext)=>transport.request(endpoint,input,ctx)};
  }
  it.each([
-  guardedEndpoint(ENDPOINTS.inspectWorkbenchTask,{params:{taskId:'catalog-original-task'},query:{afterSequence:0,limit:50},body:undefined}),
-  guardedEndpoint(ENDPOINTS.readWorkbenchEvents,{params:{taskId:'catalog-original-task'},query:{afterSequence:0,limit:64},body:undefined}),
   guardedEndpoint(ENDPOINTS.listWorkbenchArtifacts,{params:{conversationId:'catalog-conversation'},query:{limit:50},body:undefined}),
   guardedEndpoint(ENDPOINTS.readWorkbenchArtifact,{params:{taskId:'catalog-original-task',artifactId:'catalog-artifact',version:1},query:{offset:0,limit:128000},body:undefined}),
   guardedEndpoint(ENDPOINTS.renderWorkbenchArtifact,{params:{taskId:'catalog-original-task',artifactId:'catalog-artifact',version:1},query:{format:'preview'},body:undefined}),
@@ -82,5 +81,17 @@ describe('纯组工作台目录的正式 CLI gateway 与 transport 组合',()=>{
   endpoint.params?.parse(input.params);endpoint.query?.parse(input.query);endpoint.body?.parse(input.body);
   await expect(gateway.begin(group,{operation:endpoint.id,effect:getCliOperationPolicy(endpoint.id)!.effect,clientId:'isolated-cli',idempotencyKey:null,inputHash:'sha256:guard',targetRefs:[]})).rejects.toThrow('AccountRequiredError');
   await expect(request(group)).rejects.toThrow('当前账号不存在');expect(capabilities.mock.calls).toHaveLength(calls);expect(await db.select().from(cliInvocations)).toEqual(audit);expect(noFileOperation).not.toHaveBeenCalled();
+ });
+ it.each([
+  guardedEndpoint(ENDPOINTS.inspectWorkbenchTask,{params:{taskId:'catalog-original-execution'},query:{afterSequence:0,limit:50},body:undefined}),
+  guardedEndpoint(ENDPOINTS.readWorkbenchEvents,{params:{taskId:'catalog-original-execution'},query:{afterSequence:0,limit:64},body:undefined}),
+ ])('T1317 $endpoint.id 公开读取支持真实纯组任务，CLI门和跨组归属仍拒绝',async({endpoint,request})=>{
+  const before=await businessSnapshot(),audit=await db.select().from(cliInvocations),calls=capabilities.mock.calls.length;
+  await expect(gateway.begin(group,{operation:endpoint.id,effect:getCliOperationPolicy(endpoint.id)!.effect,clientId:'isolated-cli',idempotencyKey:null,inputHash:'sha256:group-task-read',targetRefs:[]})).rejects.toThrow('AccountRequiredError');
+  const result=await request(group) as {data:unknown};
+  if(endpoint.id==='workbench.tasks.inspect')expect(result.data).toMatchObject({task:{id:'catalog-original-execution',groupId:group.groupId,accountId:null},calls:[]});
+  else expect(result.data).toMatchObject({events:[],nextSequence:0});
+  for(const ctx of [{...group,userId:'another-user'},{...group,groupId:'catalog-foreign'}])await expect(request(ctx)).rejects.toThrow();
+  expect(await businessSnapshot()).toEqual(before);expect(await db.select().from(cliInvocations)).toEqual(audit);expect(capabilities.mock.calls).toHaveLength(calls);expect(noFileOperation).not.toHaveBeenCalled();
  });
 });

@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { createDb, aiConversations, aiMessages, aiTasks, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, eq, type Db } from "@creatoros/backend";
-import { chatToolProviderName, chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
+import { chatToolProviderName, chatWorkerInputSchema, externalToolInputProofSchema } from "@creatoros/contract/execution-worker";
 import { createAiRepository } from "./ai.repository";
-import { createChatTurnSubmissionService, type ChatTurnSnapshot } from "./chat-turn-submission.service";
+import { chatInputDigest, createChatTurnSubmissionService, type ChatTurnSnapshot } from "./chat-turn-submission.service";
 import { createChatTurnCompletionService } from "./chat-turn-completion.service";
 import { createChatHostContextReader } from "./chat-host-context.service";
 import { createChatProposalSourceService, sealChatProposal } from "./chat-proposal-source.service";
@@ -56,7 +56,7 @@ async function fixture(engine: "pi" | "codex" = "pi") {
     results: await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId, submitted.taskId)).orderBy(aiTaskResults.id),
     events: await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId, submitted.executionTaskId)).orderBy(executionStreamEvents.sequence),
   });
-  const initial = await rows(), frozen = structuredClone({ inputData: initial.business.inputData, payload: initial.task.payload });
+  const initial = await rows(), frozen = structuredClone({ inputData: initial.business.inputData, payload: z.record(z.string(), z.unknown()).parse(initial.task.payload) });
   expect((initial.business.inputData as { historyMessageIds: string[] }).historyMessageIds).toEqual([first.id, answer.id, source.id]);
   const modelInput = chatWorkerInputSchema.parse((initial.task.payload as { modelInput: unknown }).modelInput);
   let modelIndex = 0;
@@ -82,8 +82,10 @@ async function fixture(engine: "pi" | "codex" = "pi") {
     // 合成数据库的区分性实验：仅令后续行排到 source 前，原冻结ID/摘要/正文/回执保持。
     await db.update(aiMessages).set({ createdAt: "2026-10-08T23:59:59.000Z" }).where(eq(aiMessages.id, messageId));
   }
-  async function assertFrozen() {
-    const current = await rows(); expect({ inputData: current.business.inputData, payload: current.task.payload }).toEqual(frozen);
+  async function assertFrozen(externalToolInputs?: Record<string, z.infer<typeof externalToolInputProofSchema>>) {
+    // T1097允许追加真实外部调用的原参数证明；原输入、host及其余payload仍逐字段全等。
+    const expected = externalToolInputs ? { ...frozen, payload: { ...frozen.payload, externalToolInputs } } : frozen;
+    const current = await rows(); expect({ inputData: current.business.inputData, payload: current.task.payload }).toEqual(expected);
     expect(assemble).toHaveBeenCalledTimes(1);
   }
   return { ctx, repo, source, conversation, message, submission, submitted, request, ref, reader, completion, external, rows, frozen, first, answer, now, modelInput, settleModel, startExternal, externalReceipt, finishPi, perturb, assertFrozen };
@@ -124,18 +126,20 @@ it("T1090 外部引擎首次完成和原回放保持原任务/回执，后续排
 it.each(["pi", "codex"] as const)("T1090 %s真实宿主候选读取保留原来源，后续时间扰动不重发候选", async engine => {
   const f = await fixture(engine), input = { kind: "project.create" as const, title: "中性候选" }, toolCallId = `t1090-tool-${++sequence}`;
   const tool = { version: toolVersion, parameters, parameterSchema, effect: "proposal" as const, approve: async () => ({ status: "not-applicable" as const }), execute: async (_ctx: unknown, request: unknown, scope: { aiTaskId: string; callId: string; toolCallId: string }) => ({ status: "ok" as const, summary: "候选待采用", evidence: [], data: sealChatProposal({ taskId: scope.aiTaskId, callId: scope.callId, toolCallId: scope.toolCallId }, candidateSchema.parse({ schemaVersion: 1, kind: "system.action.proposal", request })), error: null, continuation: null, sideEffect: "proposal" as const }) };
-  const tools = { [toolName]: tool }; let data: unknown;
+  const tools = { [toolName]: tool }; let data: unknown, externalToolInputs: Record<string, z.infer<typeof externalToolInputProofSchema>> | undefined;
   if (engine === "pi") {
     const model = await f.settleModel([{ type: "tool-call", toolCallId, toolName: chatToolProviderName(toolName), input: JSON.stringify(input) }], "tool-calls");
     const ports = createExecutionChatToolPorts(db, { now: f.now, budget, tools }), call = await ports.reserve(f.ref, { modelCallId: model.callId, toolCallId });
     await ports.start(f.ref, { callId: call.callId }); data = (await ports.execute(f.ref, { callId: call.callId })).data;
   } else {
     const turn = await f.startExternal();
-    data = (await createExternalTaskToolService(db, { now: f.now }).execute(f.ref, { turnCallId: turn.callId, toolCallId, toolName, input }, tools, new AbortController().signal)).outcome!.data;
+    const result = await createExternalTaskToolService(db, { now: f.now }).execute(f.ref, { turnCallId: turn.callId, toolCallId, toolName, input }, tools, new AbortController().signal);
+    data = result.outcome!.data;
+    externalToolInputs = { [result.callId]: externalToolInputProofSchema.parse({ schemaVersion: 1, callId: result.callId, turnCallId: turn.callId, toolCallId, toolName, toolVersion, inputDigest: `sha256:${chatInputDigest({ turnCallId: turn.callId, toolCallId, toolName, version: toolVersion, input })}`, input }) };
   }
   const source = (data as { source: unknown }).source, reader = createChatProposalSourceService(db, { tools, parseCandidate: (_name, value) => candidateSchema.parse(value) });
   const expected = await reader.read(f.ctx, source), later = await f.message("assistant", "后来的独立讨论"); await f.perturb(later.id); const before = await f.rows();
-  expect(await reader.read(f.ctx, source)).toEqual(expected); expect(await f.rows()).toEqual(before); await f.assertFrozen();
+  expect(await reader.read(f.ctx, source)).toEqual(expected); expect(await f.rows()).toEqual(before); await f.assertFrozen(externalToolInputs);
 });
 
 it.each(["empty", "duplicate", "bad-type", "missing", "foreign", "source-not-last", "content", "parts", "attachments", "source-binding", "project", "account", "user", "frozen", "host", "fence"] as const)("T1090仍拒绝%s，不改原task/payload/消息/回执", async mode => {

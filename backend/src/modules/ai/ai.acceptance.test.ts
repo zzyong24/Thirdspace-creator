@@ -205,6 +205,8 @@ describe("ai acceptance (SPEC §22)", () => {
       "ai.conversations.list",
       "ai.conversations.messages.create",
       "ai.conversations.messages.list",
+      "ai.predictionLocks.source",
+      "ai.predictionLocks.start",
       "ai.tasks.cancel",
       "ai.tasks.confirm",
       "ai.tasks.create",
@@ -213,6 +215,7 @@ describe("ai acceptance (SPEC §22)", () => {
       "ai.tasks.results.list",
       "ai.tasks.results.patch",
       "ai.tasks.steps.list",
+      "ai.workCandidates.source",
     ]);
   });
 });

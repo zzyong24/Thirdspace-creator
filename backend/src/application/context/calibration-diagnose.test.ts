@@ -5,7 +5,7 @@ const ctx={userId:"user",accountId:"account",source:"ai" as const,requestId:"r"}
 function fixture(){
  const getProject=vi.fn(async()=>({id:"project"}));
  const listVersions=vi.fn(async()=>[{id:"current",versionNumber:2,contentText:"当前完整正文",contentData:{}},{id:"newer",versionNumber:3,contentText:"未选中更新稿"}]);
- const artifactsService={listProjectArtifacts:vi.fn(async()=>[{id:"artifact",artifactType:"output_script",currentVersionId:"current"}]),listVersions,getScriptSections:vi.fn(async()=>[])};
+ const artifactsService={listProjectArtifacts:vi.fn(async()=>[{id:"artifact",projectId:"project",artifactType:"output_script",currentVersionId:"current"}]),listVersions,getScriptSections:vi.fn(async()=>[])};
  const getOutput=vi.fn(async()=>({id:"output",projectId:"project",title:"标题"}));
  const readCurrent=createCurrentArtifactReader({projectsService:{getProject},artifactsService} as never);
  const reader=createCalibrationDiagnoseReaders({projectsService:{getOutput},publishingService:{},calibrationService:{},readCurrentScript:(c:typeof ctx,p:string)=>readCurrent(c,p,"output_script")} as never);

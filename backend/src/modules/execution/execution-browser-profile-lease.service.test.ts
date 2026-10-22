@@ -211,7 +211,13 @@ it.each(["fence","deadline","cancel"] as const)("等待期间%s失效不取得�
 it("等待超时不释放持有者，不影响另一个用户或网站",async()=>{
  const a=await owner("wait-timeout-a","wait-timeout"),b=await owner("wait-timeout-b","wait-timeout"),c=await owner("wait-other-user","different-user"),service=createExecutionBrowserProfileLeaseService(db,{now});
  const first=await service.acquire(a.ref,"example.com");
- await expect(waitForChatWebProfile(()=>service.acquire(b.ref,"example.com"),new AbortController().signal,{timeoutMs:25,pollMs:5})).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});
+ // LED-053 将执行等待抬到至少120秒；推进观察时钟验证边界，避免真实等待撞上测试自身期限。
+ const clock=vi.spyOn(performance,"now").mockReturnValue(0);
+ try{
+  const acquire=vi.fn(async()=>{try{return await service.acquire(b.ref,"example.com");}finally{clock.mockReturnValue(120001);}});
+  await expect(waitForChatWebProfile(acquire,new AbortController().signal,{timeoutMs:120000,pollMs:5})).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});
+  expect(acquire).toHaveBeenCalledTimes(1);
+ }finally{clock.mockRestore();}
  expect(await service.listOwned(b.ref)).toEqual([]);expect((await service.acquire(a.ref,"example.com")).leaseId).toBe(first.leaseId);
  expect((await service.acquire(c.ref,"example.com")).leaseId).not.toBe(first.leaseId);
  expect((await service.acquire(b.ref,"other.example.net")).leaseId).not.toBe(first.leaseId);

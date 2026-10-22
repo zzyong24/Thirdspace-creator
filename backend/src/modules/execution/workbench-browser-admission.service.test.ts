@@ -1,4 +1,4 @@
-import {afterAll,beforeAll,expect,it} from "vitest";
+import {afterAll,beforeAll,expect,it,vi} from "vitest";
 import {createDb,executionTasks,eq,type Db} from "@creatoros/backend";
 import {createPersistentTaskService} from "./persistent-task.service";
 import {createExecutionBrowserProfileLeaseService} from "./execution-browser-profile-lease.service";
@@ -66,7 +66,7 @@ it("解析器不能重绑账号；过期或停止的原执行租约不能新增�
 it("原采集器的宿主生命周期与新浏览器准入按同一物理档案交接",async()=>{
  const profileKey="d".repeat(64),authDir="/test/t1008-legacy-handoff";
  const legacy=createHostBrowserProfileLifecycle(db,{
-  hostInstanceId:"legacy-handoff",waitTimeoutMs:25,pollIntervalMs:5,
+  hostInstanceId:"legacy-handoff",waitTimeoutMs:120000,pollIntervalMs:5,
   resolveProfile:async()=>({userId:"handoff-user",authDir,profileKey}),
  });
  const first=await legacy.acquire(authDir);
@@ -77,7 +77,10 @@ it("原采集器的宿主生命周期与新浏览器准入按同一物理档案�
  await expect(admission.acquire(one.ref,{laneId:"lane",mode:"primary",domain:"douyin.com"})).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});
  await first.onStopped();
  const second=await admission.acquire(one.ref,{laneId:"lane",mode:"primary",domain:"douyin.com"});
- await expect(legacy.acquire(authDir)).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});
+ const realNow=Date.now.bind(Date);let offset=0;
+ const clock=vi.spyOn(Date,"now").mockImplementation(()=>realNow()+offset);
+ const waiting=legacy.acquire(authDir),move=setTimeout(()=>{offset=120001;},20);
+ try{await expect(waiting).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});}finally{clearTimeout(move);clock.mockRestore();}
  expect(await admission.releaseAfterProfileStopped(one.ref,second.leaseId)).toBe(true);
  const third=await legacy.acquire(authDir);
  await third.onStopped();

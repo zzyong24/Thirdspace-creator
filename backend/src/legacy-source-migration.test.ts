@@ -49,9 +49,18 @@ async function seed(c:Query){
   ['project-valid','u','a','p',null],['global-valid','u','a',null,null],['foreign-user','v','a','p',null],['wrong-account','u','b','p',null],['missing-project','u','a','missing',null],['no-member','u','missing',null,null],['already-stamped','u','a','p','other']
  ] as const)await c.query('INSERT INTO ai_conversations(id,user_id,account_id,project_id,group_id,title,scope,created_at,updated_at) VALUES($1,$2,$3,$4,$5,\'原会话\',\'global\',$6,$6)',[id,user,account,project,group,time]);
 }
-async function snapshot(c:Query){
+async function snapshot(c:Query,upgraded=false){
  const result:Record<string,unknown[]>={};
- for(const table of ['platform_accounts','account_groups','account_group_memberships','projects','content_outputs','artifacts','article_anchors','graphic_post_anchors','ai_conversations','ai_messages','ai_tasks','execution_tasks','execution_calls'])result[table]=(await c.query(`SELECT * FROM ${table} ORDER BY 1`)).rows;
+ for(const table of ['platform_accounts','account_groups','account_group_memberships','projects','content_outputs','artifacts','article_anchors','graphic_post_anchors','ai_conversations','ai_messages','ai_tasks','execution_tasks','execution_calls']){
+  result[table]=(await c.query(`SELECT * FROM ${table} ORDER BY 1`)).rows.map(value=>{
+   if(table!=='artifacts')return value;
+   const {script_draft_reservation_version_id,...legacy}=value as Record<string,unknown>;
+   // 0138只为旧稿新增空预约引用；旧104的每一个原有列仍逐值精确比较。
+   if(upgraded)expect(Object.hasOwn(value as object,'script_draft_reservation_version_id')).toBe(true);
+   if(script_draft_reservation_version_id!==undefined)expect(script_draft_reservation_version_id).toBeNull();
+   return legacy;
+  });
+ }
  return result;
 }
 const omitGroup=(rows:unknown[])=>rows.map(value=>{const {group_id,...rest}=value as Record<string,unknown>;return rest;});
@@ -64,12 +73,12 @@ it('正常104升级仅修复可证明三来源NULL，所有内容/父归属/历�
   expect((await opened.client.query("SELECT id,group_id FROM ai_conversations WHERE id IN ('project-valid','global-valid') ORDER BY id")).rows).toEqual([{id:'global-valid',group_id:'grp_legacy_a'},{id:'project-valid',group_id:'grp_legacy_a'}]);
   for(const table of ['article_anchors','graphic_post_anchors'])expect((await opened.client.query(`SELECT group_id FROM ${table}`)).rows).toEqual([{group_id:'grp_legacy_a'}]);
   expect((await opened.client.query("SELECT id,group_id FROM ai_conversations WHERE id NOT IN ('project-valid','global-valid') ORDER BY id")).rows).toEqual([{id:'already-stamped',group_id:'other'},{id:'foreign-user',group_id:null},{id:'missing-project',group_id:null},{id:'no-member',group_id:null},{id:'wrong-account',group_id:null}]);
-  after=await snapshot(opened.client);
+  after=await snapshot(opened.client,true);
   for(const [table,values] of Object.entries(before!))expect(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(after[table]!):after[table]).toEqual(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(values):values);
   const ledger=(await opened.client.query<{hash:string;created_at:number}>('SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id')).rows;
-  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+7);expect(ledger.slice(oldLedger!.length).map(row=>Number(row.created_at))).toEqual([1791043200003,1791043200004,1791043200005,1791043200006,1791043200008,1791043200009,1791043200010]);expect(ledger.at(110)?.created_at).toBe(1791043200010);
+  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+10);expect(ledger.slice(oldLedger!.length).map(row=>Number(row.created_at))).toEqual([1791043200003,1791043200004,1791043200005,1791043200006,1791043200008,1791043200009,1791043200010,1791043200011,1791043200012,1791043200013]);expect(ledger.at(110)?.created_at).toBe(1791043200010);
  }finally{await opened.client.close();}
- const second=await createDb({dataDir});try{expect(await snapshot(second.client)).toEqual(after!);expect((await second.client.query('SELECT * FROM drizzle.__drizzle_migrations WHERE created_at=1791043200003')).rows).toHaveLength(1);}finally{await second.client.close();}
+ const second=await createDb({dataDir});try{expect(await snapshot(second.client,true)).toEqual(after!);expect((await second.client.query('SELECT * FROM drizzle.__drizzle_migrations WHERE created_at=1791043200003')).rows).toHaveLength(1);}finally{await second.client.close();}
 });
 
 it.each(['transfer','return-with-history','wrong-artifact-type','wrong-artifact-project','wrong-artifact-output','foreign-artifact-user','foreign-artifact-account','conflicting-output-group','null-output-group','null-project-group','archived-account','archived-group'] as const)('旧来源%s不凭同名账号或不完整父链取得新归属',{timeout:180000,retry:0},async mode=>{
@@ -92,7 +101,7 @@ it.each(['transfer','return-with-history','wrong-artifact-type','wrong-artifact-
   before=await snapshot(client);
  }finally{await client.close();}
  const opened=await createDb({dataDir});try{
-  const after=await snapshot(opened.client);
+  const after=await snapshot(opened.client,true);
   for(const table of ['article_anchors','graphic_post_anchors'])expect(after[table]).toEqual(before![table]);
   for(const table of ['platform_accounts','account_groups','account_group_memberships','projects','content_outputs','artifacts','ai_messages','ai_tasks','execution_tasks','execution_calls'])expect(after[table]).toEqual(before![table]);
   if(['transfer','return-with-history','archived-account','archived-group'].includes(mode))expect(after.ai_conversations).toEqual(before!.ai_conversations);
@@ -100,9 +109,9 @@ it.each(['transfer','return-with-history','wrong-artifact-type','wrong-artifact-
  }finally{await opened.client.close();}
 });
 
-it('0130SQL身份及当前111尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
+it('0130SQL身份及当前114尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
  const journal=JSON.parse(await readFile(join(folder,'meta/_journal.json'),'utf8'));
- expect(journal.entries).toHaveLength(111);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
+ expect(journal.entries).toHaveLength(114);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
  expect(journal.entries[105]).toEqual({idx:105,version:'7',when:1791043200004,tag:'0131_platform_native_reports',breakpoints:true});
  expect(journal.entries[106]).toEqual({idx:106,version:'7',when:1791043200005,tag:'0132_legacy_scheduled_job_membership',breakpoints:true});
  expect(journal.entries[107]).toEqual({idx:107,version:'7',when:1791043200006,tag:'0133_assistant_execution_engine',breakpoints:true});
@@ -110,6 +119,11 @@ it('0130SQL身份及当前111尾精确追加，旧104 journal及历史迁移固�
  const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
  expect(journal.entries[109]).toEqual({idx:109,version:'7',when:1791043200009,tag:'0136_embedding_identity',breakpoints:true});
  expect(journal.entries[110]).toEqual({idx:110,version:'7',when:1791043200010,tag:'0137_observability_routing_convergence',breakpoints:true});
+ expect(journal.entries.slice(111)).toEqual([
+  {idx:111,version:'7',when:1791043200011,tag:'0138_script_target_reservation',breakpoints:true},
+  {idx:112,version:'7',when:1791043200012,tag:'0139_unified_project_intake',breakpoints:true},
+  {idx:113,version:'7',when:1791043200013,tag:'0140_unified_project_intake_retirement_timestamps',breakpoints:true},
+ ]);
  expect(digest(await readFile(join(folder,'0137_observability_routing_convergence.sql'),'utf8'))).toBe('d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494');
  expect(digest(await readFile(join(folder,'0136_embedding_identity.sql'),'utf8'))).toBe('2f279e1cb378dd60d4878d8883a8335955834cf1bacfc70a15b05e423fe13477');
  expect(digest(await readFile(join(folder,'0135_model_routing.sql'),'utf8'))).toBe('6fae4e865bf2fbabaf16127644e0abb6b1179bc3fc246b563a3a3c5c663233e8');

@@ -262,7 +262,7 @@ it("磁盘数据库关闭重开后保持原游标和内容，迁移重复启动�
     await store.client.close();
     await rm(dir, { recursive: true, force: true });
   }
-}, 15000);
+});
 
 it("内部模型不能写入对外展示流",async()=>{
  const f=await fixture("private-child");
