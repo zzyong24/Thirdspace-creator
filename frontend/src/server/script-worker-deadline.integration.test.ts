@@ -7,8 +7,17 @@ import {execFileSync} from "node:child_process";
 import {beforeAll,expect,it,vi} from "vitest";
 import type {Endpoint} from "@creatoros/contract";
 import {executionTasks,executionCalls,eq,type Db} from "@creatoros/backend";
-const fixture=vi.hoisted(()=>({url:"",db:null as Db|null,opens:0,candidatesBeforeRestart:-1,credentialReads:0,checkpointSaved:false,release:null as null|(()=>void)}));
-vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const result=await actual.createConfiguredDb(...args);fixture.db=result.db;fixture.opens++;if(fixture.opens===2)fixture.candidatesBeforeRestart=(await result.db.select().from(actual.aiTaskResults)).length;return result;}};});
+const fixture=vi.hoisted(()=>({url:"",db:null as Db|null,opens:0,candidatesBeforeRestart:-1,credentialReads:0,checkpointSaved:false,expireOnReopen:null as string|null,release:null as null|(()=>void)}));
+vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{
+ const result=await actual.createConfiguredDb(...args);fixture.db=result.db;fixture.opens++;
+ if(fixture.opens===2){
+  fixture.candidatesBeforeRestart=(await result.db.select().from(actual.aiTaskResults)).length;
+  // 旧宿主已正式停止，模拟离线期间到期；新宿主尚未装配，不能与旧watcher竞争。
+  expect(fixture.expireOnReopen).toBeTruthy();
+  await result.db.update(actual.executionTasks).set({deadlineAt:new Date(Date.now()-1000).toISOString()}).where(actual.eq(actual.executionTasks.id,fixture.expireOnReopen!));
+ }
+ return result;
+}};});
 vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveFrozenModelCredential:async(...args:Parameters<typeof import("@creatoros/backend/modules/ai-runtime").resolveFrozenModelCredential>)=>{fixture.credentialReads++;const actual=await original<typeof import("@creatoros/backend/modules/ai-runtime")>();return actual.resolveFrozenModelCredential(...args);}}));
 vi.mock("../../../backend/src/modules/execution/execution-script-checkpoint.service",async original=>{
  const actual=await original<typeof import("../../../backend/src/modules/execution/execution-script-checkpoint.service")>();
@@ -22,6 +31,7 @@ const ctx={userId:"script-budget-user",accountId:"script-budget-account",request
 const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,query:undefined,body} as never,ctx) as {data:any}).data;
 beforeAll(()=>{execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 it("口播检查点已持久化但回执丢失后重启，过期任务恢复基础分镜并可采纳",async()=>{
+ fixture.db=null;fixture.opens=0;fixture.candidatesBeforeRestart=-1;fixture.credentialReads=0;fixture.checkpointSaved=false;fixture.expireOnReopen=null;fixture.release=null;
  const directory=mkdtempSync(resolve(tmpdir(),"t915-script-deadline-"));vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR",resolve(directory,"db"));__resetPersistenceForTests();
  const voiceover="已生成的完整口播必须保留。即使分镜预算不足，也应该能够采纳。";
  const requests:string[]=[];let injectionError:unknown;
@@ -40,7 +50,7 @@ it("口播检查点已持久化但回执丢失后重启，过期任务恢复基�
   const rows=await fixture.db!.select().from(executionTasks).where(eq(executionTasks.userId,ctx.userId));expect(rows).toHaveLength(1);
   const execution=rows[0]!;
   const calls=await fixture.db!.select().from(executionCalls).where(eq(executionCalls.executionTaskId,execution.id));expect(calls).toHaveLength(1);expect(calls[0]!.status).toBe("settled");
-  await fixture.db!.update(executionTasks).set({deadlineAt:new Date(Date.now()-1000).toISOString()}).where(eq(executionTasks.id,execution.id));
+  expect(Date.parse(execution.deadlineAt!)).toBeGreaterThan(Date.now());fixture.expireOnReopen=execution.id;
   const credentialsBeforeRestart=fixture.credentialReads;
   const dispose=(globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence!;
   let timer:ReturnType<typeof setTimeout>|undefined;
