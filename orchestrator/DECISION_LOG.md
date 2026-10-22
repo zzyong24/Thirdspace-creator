@@ -2542,3 +2542,9 @@ raw 引用独立新表；旧 confirmed、已有项目 ID/数据及历史 source 
 以 HEAD 为基础保留远端新增 8 行及本地新增/修改行，UI 的 T-1378～T-1384 与原任务重号，改记为 T-1387～T-1393；[映射及原始任务行](../docs/features/ui-fixes-2026-10-21/TASK_ID_MAPPING.md)保留完整来源。旧 SPEC 路径及评审链不改，历史事件按原时间/来源识别，不批量重写 task ID，不伪造 start/complete。
 
 流程工具保持 3.30.0 引擎字节；移除版本标记中的本机 skill_dir，规则来源文档泛化一处本机私人目录，并据实更新项目派生规则包 hash。完整 reconcile 的 lesson_execution 预算尚未配置，既有调用默认 full 的宿主 hooks 会报 NOT RUN；本轮只按授权验 quick read-only，不冒充全量通过，不修改项目守卫配置。
+
+## DEC-139701（2026-10-22）：修复 Verify、逐项核定已知失败并正常推送
+
+**Owner**：user。用户明确授权T1397修复main Verify：核契约漏登记、调查backend exit143、完整运行backend/frontend并核定known-failures、串行6144MiB类型检查与全部包质量门、小粒度中文提交、HTTPS正常推送及最多两轮追加修复，并追踪CI最终结果。已知环境缺失须绑定稳定错误标记；真实断言漂移优先修复，无法修复或时序不稳分别如实记fail/flaky。不允许跳过原测试、修改Codex全局配置、设置T1332_APPROVED、绕过T1246、force push或跳过hooks。
+
+此次调整Verify执行资源与证据收集方式不改变产品数据归属或许可安全边界。两条预测锁路由已核实原T1328业务合同及正式消费者，文档登记按授权补齐；测试文件内硬编码登记数组与“不许为了通过去改测试”的授权边界已单独向用户确认，未获答复前不修改该数组或断言。完整证据及最终结论交付`~/terminals/ci-green/REPORT.md`。
