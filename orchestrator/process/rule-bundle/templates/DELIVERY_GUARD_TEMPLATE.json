@@ -1,0 +1,10 @@
+{
+  "schema": "delivery-guard/v1",
+  "max_review_cycles_per_task": 2,
+  "max_review_events_per_task": 6,
+  "max_stalled_iterations": 2,
+  "max_changed_files_per_iteration": 40,
+  "max_active_decisions_per_task": 3,
+  "max_invalidations_per_task": 3,
+  "review_cycle_baselines": {}
+}

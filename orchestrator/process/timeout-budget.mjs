@@ -40,6 +40,6 @@ function main(){
  console.log(JSON.stringify({ok:results.every(x=>x.ok),results},null,2));
  if(results.some(x=>!x.ok))process.exitCode=1;
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+if(process.argv[1]&&fs.existsSync(process.argv[1])&&fs.realpathSync(process.argv[1])===fs.realpathSync(fileURLToPath(import.meta.url))){
  try{main();}catch(error){console.error(error.message);process.exitCode=2;}
 }

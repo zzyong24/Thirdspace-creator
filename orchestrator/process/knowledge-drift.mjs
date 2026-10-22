@@ -16,6 +16,7 @@
 //   node process/knowledge-drift.mjs                # 校验(CI / reconcile / SHIP 阶段用)
 //   node process/knowledge-drift.mjs --config <p>   # 指定配置
 //   node process/knowledge-drift.mjs --quiet        # 只在失败时输出
+//   node process/knowledge-drift.mjs --strict       # 缺 generated 也用非零状态传递给调用者
 //
 // 零依赖。风格同 boundary-scan.mjs。
 
@@ -27,6 +28,7 @@ import { fileURLToPath } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const QUIET = argv.includes("--quiet");
+const STRICT = argv.includes("--strict");
 
 function findConfig() {
   const i = argv.indexOf("--config");
@@ -160,4 +162,4 @@ if (stale.length > 0) {
 
 if (!QUIET)
   console.log(`\n✓ knowledge-drift:${ok} 个 feature 无漂移${missing.length ? `,${missing.length} 个待首次生成(WARN)` : ""}。`);
-process.exit(0);
+process.exit(STRICT && missing.length ? 1 : 0);

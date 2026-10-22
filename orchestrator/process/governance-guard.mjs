@@ -276,4 +276,4 @@ function main() {
     console.log("✓ governance guard: review-added scope and complexity budget clean");
   } catch (error) { console.error(`✗ ${error.message}`); process.exit(2); }
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(SELF)) main();
+if (process.argv[1] && fs.existsSync(process.argv[1]) && fs.realpathSync(process.argv[1]) === fs.realpathSync(SELF)) main();

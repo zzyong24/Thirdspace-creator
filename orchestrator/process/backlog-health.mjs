@@ -16,6 +16,7 @@
 //   node orchestrator/process/backlog-health.mjs           # 默认读 <项目根>/BACKLOG.md
 //   node orchestrator/process/backlog-health.mjs <path>    # 显式指定文件(测试/其他布局)
 //   node orchestrator/process/backlog-health.mjs --quiet   # 干净时完全静默(reconcile 用)
+//   node orchestrator/process/backlog-health.mjs --json    # 只读结构化结果；状态数不是实际并发数
 //
 // exit 0 = 干净或仅 WARN;exit 1 = 有 ERROR;exit 2 = 体积失控(RUNAWAY)。找不到 BACKLOG.md → 友好提示 exit 0(不阻塞)。
 // 零依赖(纯 node:fs)。压缩规范见 rules/task-ledger-rules.md(长过程迁 docs/tasks/T-xxx.md 或 commit message)。
@@ -29,6 +30,7 @@ const REPO = path.resolve(HERE, "..", ".."); // orchestrator/process/ → 项目
 
 const argv = process.argv.slice(2);
 const QUIET = argv.includes("--quiet");
+const JSON_OUTPUT = argv.includes("--json");
 const explicit = argv.find((a) => !a.startsWith("-"));
 const BACKLOG = explicit ? path.resolve(process.cwd(), explicit) : path.resolve(REPO, "BACKLOG.md");
 
@@ -42,6 +44,7 @@ const DONE_WARN = 200;
 const STATUS_CELL_MAX = 60; // 状态 cell 超此长度 = 塞了过程叙事
 
 const findings = [];
+const summary = { bytes: 0, task_states: { todo: 0, in_progress: 0, done: 0, paused: 0, blocked: 0 }, inconsistent_status_rows: 0 };
 let runaway = false;
 const err = (m) => findings.push({ level: "ERROR", m });
 const warn = (m) => findings.push({ level: "WARN", m });
@@ -50,6 +53,15 @@ const ok = (m) => findings.push({ level: "OK", m });
 function die() {
   const errs = findings.filter((f) => f.level === "ERROR").length;
   const warns = findings.filter((f) => f.level === "WARN").length;
+  const exitCode = runaway ? 2 : errs ? 1 : 0;
+  if (JSON_OUTPUT) {
+    console.log(JSON.stringify({
+      schema: "backlog-health/v1", file: BACKLOG, summary,
+      thresholds_bytes: { warning: SIZE_WARN, error: SIZE_FAIL, runaway: SIZE_RUNAWAY },
+      errors: errs, warnings: warns, findings, exit_code: exitCode,
+    }, null, 2));
+    process.exit(exitCode);
+  }
   if (!QUIET || errs || warns) {
     const icon = { ERROR: "✗", WARN: "!", OK: "✓" };
     console.log("\n── backlog-health ─────────────────────────────────────");
@@ -58,11 +70,12 @@ function die() {
     console.log(`${errs} error(s), ${warns} warning(s).`);
     console.log(errs ? "✗ BACKLOG 台账超限——按 rules/task-ledger-rules.md 压缩(✅ 归档一条命令:backlog-compact.mjs;长过程迁 docs/tasks/ 或 commit message)。" : "✓ BACKLOG 台账在限内。");
   }
-  process.exit(runaway ? 2 : errs ? 1 : 0);
+  process.exit(exitCode);
 }
 
 if (!existsSync(BACKLOG)) {
-  if (!QUIET) console.log(`· backlog-health:未找到 ${path.relative(process.cwd(), BACKLOG)} — 跳过(项目尚无任务看板)。`);
+  if (JSON_OUTPUT) console.log(JSON.stringify({ schema: "backlog-health/v1", file: BACKLOG, skipped: "missing-backlog", exit_code: 0 }));
+  else if (!QUIET) console.log(`· backlog-health:未找到 ${path.relative(process.cwd(), BACKLOG)} — 跳过(项目尚无任务看板)。`);
   process.exit(0);
 }
 
@@ -95,6 +108,7 @@ if (!activeDuplicates.length && !reusedArchived.length) ok("执行任务 ID 唯�
 
 // ① 文件体积
 const bytes = Buffer.byteLength(src, "utf8");
+summary.bytes = bytes;
 const kb = (bytes / 1024).toFixed(1);
 if (bytes > SIZE_RUNAWAY) {
   runaway = true;
@@ -131,18 +145,30 @@ if (doneStart >= 0 && !doneWarns) ok(`已完成区(L${doneStart + 1} 起):无超
 
 // ④ 状态列一致性(铁律 2/4):状态 cell 只放状态 emoji(+日期),塞过程叙事 = WARN
 const STATUS_RE = /^(📋|🔨|✅|⏸️|⛔)/;
+const stateNames = { "📋": "todo", "🔨": "in_progress", "✅": "done", "⏸️": "paused", "⛔": "blocked" };
 let statusWarns = 0;
 for (let i = 0; i < lines.length; i++) {
   const L = lines[i];
   if (!L.startsWith("|")) continue;
   const cells = L.split("|").map((c) => c.trim());
   const sc = cells.find((c) => STATUS_RE.test(c));
+  const task = cells.find((c) => /^T-[A-Za-z0-9._-]+$/.test(c));
+  if (task && sc) {
+    const symbol = sc.match(STATUS_RE)[1];
+    summary.task_states[stateNames[symbol]]++;
+    if (/^🔨\s*待办|^📋\s*进行中|^✅\s*(?:待办|进行中)/.test(sc)) {
+      summary.inconsistent_status_rows++;
+      if (summary.inconsistent_status_rows <= 10) warn(`L${i + 1} ${task} 状态符号与文字冲突:「${sc.slice(0, 50)}」。按真实进度校正；不能将该行计作已确认的在制任务。`);
+    }
+  }
   if (sc && sc.length > STATUS_CELL_MAX) {
     statusWarns++;
     if (statusWarns <= 10) warn(`L${i + 1} 状态 cell 长 ${sc.length} 字(>${STATUS_CELL_MAX})— 状态列塞了过程叙事:「${sc.slice(0, 30)}…」。过程进 commit message,状态列只放 emoji+日期+一句话。`);
   }
 }
 if (statusWarns > 10) warn(`…还有 ${statusWarns - 10} 条状态列超长行(共 ${statusWarns})。`);
-if (!statusWarns) ok(`状态列干净(无塞叙事,上限 ${STATUS_CELL_MAX} 字)。`);
+if (summary.inconsistent_status_rows > 10) warn(`…还有 ${summary.inconsistent_status_rows - 10} 条状态符号与文字冲突(共 ${summary.inconsistent_status_rows})。`);
+if (!statusWarns && !summary.inconsistent_status_rows) ok(`状态列干净(无塞叙事,上限 ${STATUS_CELL_MAX} 字)。`);
+ok(`看板状态计数:${JSON.stringify(summary.task_states)}；仅按行内符号统计，不代表实际并发或当前领取数。`);
 
 die();

@@ -9,6 +9,9 @@
 //     "program_completion_required": false, "probes": [] }
 // Missing/legacy receipt policy or a missing topology classification fails closed. `init-project.sh`
 // creates the config; projects add probes whose stage IDs and paths come from their current manifest.
+// --profile quick --read-only: deterministic control audit, never a full verification claim.
+// --profile full (default): also runs project lesson commands and applicable live verification.
+// --read-only prohibits telemetry writes and all entry points that can run project commands.
 
 import { readFileSync, existsSync, writeFileSync, appendFileSync, statSync } from 'node:fs';
 import { tallyLessonStats } from './lessons-stats.mjs';
@@ -22,7 +25,8 @@ import { auditGovernance, governanceDebtReport } from './governance-guard.mjs';
 import { auditAutonomy, auditWatchdog } from './autonomy-guard.mjs';
 import { auditResearchGates } from './research-gate.mjs';
 import { auditDeliveryPhase } from './delivery-phase.mjs';
-import { execSync, spawnSync } from 'node:child_process';
+import { runLessonChecks } from './lesson-runner.mjs';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,6 +38,35 @@ const CONFIG = resolve(HERE, 'reconcile.config.json');
 const VALID_STATUS = ['not-started','draft','needs-user-confirmation','blocked','passed','compact','accepted-risk','invalidated'];
 const VALID_GATE_STATUS = ['not-run', 'pass', 'fail', 'accepted-risk'];
 const CONCISE = process.argv.includes('--concise');
+const READ_ONLY = process.argv.includes('--read-only');
+const CONSOLIDATE = process.argv.includes('--consolidate');
+const ANTI_CHECK = process.argv.includes('--anti-check');
+const args = process.argv.slice(2);
+let PROFILE = 'full';
+for (let index = 0; index < args.length; index++) {
+  const arg = args[index];
+  if (arg === '--profile') PROFILE = args[++index];
+  else if (arg.startsWith('--profile=')) PROFILE = arg.slice('--profile='.length);
+  else if (!['--concise', '--read-only', '--consolidate', '--anti-check'].includes(arg)) {
+    console.error(`Unknown reconcile option: ${arg}`);
+    process.exit(2);
+  }
+}
+if (!['quick', 'full'].includes(PROFILE)) {
+  console.error('reconcile --profile must be quick or full (default: full).');
+  process.exit(2);
+}
+if ((READ_ONLY || PROFILE === 'quick') && (CONSOLIDATE || ANTI_CHECK)) {
+  console.error('quick/read-only audit cannot run --consolidate or --anti-check: these operations write project state.');
+  process.exit(2);
+}
+const RUN_EXECUTABLE_CHECKS = PROFILE === 'full' && !READ_ONLY;
+const AUDIT_ONLY = !RUN_EXECUTABLE_CHECKS;
+// Even Git's optional index refresh must not write during a read-only control audit.
+if (AUDIT_ONLY) process.env.GIT_OPTIONAL_LOCKS = '0';
+const skippedChecks = AUDIT_ONLY
+  ? ['project lesson commands', 'asset example execution', 'program fresh verification and execution-record updates']
+  : [];
 const COMPACT_DESIGN_NOTES = 'skipped-by-DEC-000 (class S); compact DESIGN stays inside PRODUCT_SPEC.md';
 
 // control_root (optional, repo-relative): directory holding the control artifacts (manifest, logs,
@@ -47,6 +80,8 @@ if (existsSync(CONFIG)) {
       throw new Error(`receipt_policy=${JSON.stringify(cfg.receipt_policy)} is not legacy|required`);
     if (cfg.program_completion_required != null && typeof cfg.program_completion_required !== 'boolean')
       throw new Error('program_completion_required 必须是 boolean');
+    if (cfg.lessons != null && !Array.isArray(cfg.lessons))
+      throw new Error('lessons 必须是数组');
   } catch (e) {
     configReadError = e.message;
   }
@@ -88,12 +123,16 @@ const deliveryState = auditDeliveryPhase(REPO);
 function die(code) {
   const order = { ERROR: 0, WARN: 1, OK: 2 };
   findings.sort((a, b) => order[a.level] - order[b.level]);
+  if (AUDIT_ONLY) {
+    console.log(`Coverage: ${PROFILE}${READ_ONLY ? ' read-only' : ''} control audit only; full verification NOT RUN (incomplete coverage).`);
+    console.log(`Skipped: ${skippedChecks.join('; ')}. Run an authorized \`reconcile.mjs --profile full\` for executable checks.`);
+  }
   if (CONCISE) {
     const errs = findings.filter(f => f.level === 'ERROR').length;
     const warns = findings.filter(f => f.level === 'WARN').length;
     const oks = findings.filter(f => f.level === 'OK').length;
     if (!errs && !warns) {
-      console.log(`✓ reconcile clean — ${oks} check(s).`);
+      console.log(`✓ reconcile clean — ${oks} check(s)${AUDIT_ONLY ? '; control audit only' : ''}.`);
       process.exit(code ?? 0);
     }
     if (!errs) {
@@ -128,7 +167,7 @@ function die(code) {
   const warns = findings.filter(f => f.level === 'WARN').length;
   console.log('───────────────────────────────────────────────────────');
   console.log(`${errs} error(s), ${warns} warning(s).`);
-  console.log(errs ? '✗ DRIFT: manifest does not reconcile with reality.' : '✓ Manifest reconciles with reality.');
+  console.log(errs ? '✗ DRIFT: manifest does not reconcile with reality.' : AUDIT_ONLY ? '✓ Control audit passed; full verification remains unperformed.' : '✓ Manifest reconciles with reality.');
   process.exit(code ?? (errs ? 1 : 0));
 }
 
@@ -559,9 +598,9 @@ if (existsSync(ID_REGISTRY) !== existsSync(TRACEABILITY)) {
 // we WARN-surface asset-check's exit 1 rather than exit 1 from reconcile on its behalf.
 const ASSET_CHECK = resolve(HERE, 'asset-check.mjs');
 if (existsSync(ASSET_CHECK)) {
-  const r = spawnSync('node', [ASSET_CHECK], { cwd: REPO, stdio: 'ignore' });
+  const r = spawnSync(process.execPath, [ASSET_CHECK, ...(AUDIT_ONLY ? ['--static'] : [])], { cwd: REPO, stdio: 'ignore' });
   if (r.error) warn(`asset-check.mjs could not be spawned (${r.error.message}).`);
-  else if (r.status === 0) ok('asset-check.mjs: reuse-asset library integrity clean.');
+  else if (r.status === 0) ok(`asset-check.mjs: reuse-asset library ${AUDIT_ONLY ? 'static ' : ''}integrity clean.`);
   else warn(`asset-check.mjs reported asset-library drift (exit ${r.status}). Run \`node orchestrator/process/asset-check.mjs\` for details. (WARN-biased: does not block reconcile.)`);
 } else {
   warn('asset-check.mjs not found beside reconcile.mjs — asset-library integrity unchecked.');
@@ -586,11 +625,20 @@ if (existsSync(BOUNDARY_SCAN)) {
 // command (backlog-compact.mjs), so blocking is cheap to satisfy.
 const BACKLOG_HEALTH = resolve(HERE, 'backlog-health.mjs');
 if (existsSync(BACKLOG_HEALTH)) {
-  const r = spawnSync('node', [BACKLOG_HEALTH, '--quiet'], { cwd: REPO, stdio: 'ignore' });
+  const r = spawnSync(process.execPath, [BACKLOG_HEALTH, '--json'], { cwd: REPO, encoding: 'utf8', maxBuffer: 1024 * 1024 });
   if (r.error) warn(`backlog-health.mjs could not be spawned (${r.error.message}).`);
-  else if (r.status === 0) ok('backlog-health.mjs: BACKLOG within size/line limits.');
-  else if (r.status === 2) err('backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.');
-  else warn('backlog-health.mjs reported BACKLOG bloat (exit 1). Run `node orchestrator/process/backlog-health.mjs` for the oversized lines — compact per rules/task-ledger-rules.md (`backlog-compact.mjs` handles ✅ rows). (WARN-biased: does not block reconcile.)');
+  else {
+    if (r.status === 2) err('backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — compact the ledger before further work.');
+    try {
+      const report = JSON.parse(r.stdout);
+      const issues = (report.findings ?? []).filter(finding => finding.level !== 'OK');
+      for (const finding of issues) warn(`backlog-health.mjs: ${finding.m}`);
+      if (!issues.length && r.status === 0) ok('backlog-health.mjs: BACKLOG within size/line limits (or absent).');
+      else if (!issues.length && r.status !== 2) warn(`backlog-health.mjs reported an incomplete audit (exit ${r.status}).`);
+    } catch {
+      warn(`backlog-health.mjs: audit output unreadable (exit ${r.status}); run it standalone for details.`);
+    }
+  }
 }
 
 // Review/acceptance receipts are the CI backstop for edits that bypass taskctl or the optional
@@ -653,10 +701,15 @@ for (const [scriptName, label] of [
 ]) {
   const P = resolve(HERE, scriptName);
   if (!existsSync(P)) continue;
-  const r = spawnSync('node', [P], { cwd: REPO, stdio: 'ignore' });
+  // Ask children to expose issues through status, then preserve their WARN-biased policy here.
+  // Previously default exit 0 + ignored output made missing docs look clean.
+  const r = spawnSync(process.execPath, [P, '--strict'], { cwd: REPO, encoding: 'utf8', maxBuffer: 1024 * 1024 });
   if (r.error) warn(`${scriptName} could not be spawned (${r.error.message}).`);
   else if (r.status === 0) ok(`${scriptName}: clean (or knowledge layer not enabled).`);
-  else warn(`${scriptName}: ${label}. Run \`node orchestrator/process/${scriptName}\` for details. (WARN-biased calibration window.)`);
+  else {
+    const detail = `${r.stdout || ''}\n${r.stderr || ''}`.trim().slice(-1200);
+    warn(`${scriptName}: ${label}. ${detail} (WARN-biased calibration window.)`);
+  }
 }
 
 if (cgStatus === 'fail') {
@@ -669,15 +722,15 @@ if (cgStatus === 'fail') {
 }
 
 let gitOk = true;
-try { execSync('git rev-parse --git-dir', { cwd: REPO, stdio: 'ignore' }); } catch { gitOk = false; }
+try { execFileSync('git', ['rev-parse', '--git-dir'], { cwd: REPO, stdio: 'ignore' }); } catch { gitOk = false; }
 const branch = workBranch || 'HEAD';
 let branchOk = gitOk;
 if (gitOk && workBranch) {
-  try { execSync(`git rev-parse --verify ${branch}`, { cwd: REPO, stdio: 'ignore' }); }
+  try { execFileSync('git', ['rev-parse', '--verify', branch], { cwd: REPO, stdio: 'ignore' }); }
   catch { branchOk = false; warn(`work_branch "${branch}" not found locally — skipping reality probes.`); }
 }
 const existsOnBranch = (p) => {
-  try { execSync(`git cat-file -e ${branch}:${p}`, { cwd: REPO, stdio: 'ignore' }); return true; }
+  try { execFileSync('git', ['cat-file', '-e', `${branch}:${p}`], { cwd: REPO, stdio: 'ignore' }); return true; }
   catch { return false; }
 };
 if (gitOk && branchOk && cfg.probes.length) {
@@ -718,37 +771,48 @@ if (currentStage && !stages[currentStage])
   warn(`current_stage "${currentStage}" is not a stage id in the manifest.`);
 
 // Lessons guard checks (self-evolving loop). Each active lesson in reconcile.config.json
-// "lessons" carries an executable GuardCheck; re-running them every reconcile turns a past
+// "lessons" carries an executable GuardCheck; re-running them in full reconciliation turns a past
 // pitfall into a gate — a non-zero exit from `check` means the pitfall RECURRED => ERROR =>
 // exit 1, so the same mistake can only happen once. `check:"manual"`/empty = un-automatable
 // lesson (WARN). Human-readable backing records live in <control_root>/LESSON_LEDGER.md.
-const CONSOLIDATE = process.argv.includes('--consolidate');
 const calibrationOn = cfg.calibration_mode !== false;
 let results = [];
 let nextStats = {};
-if (Array.isArray(cfg.lessons) && cfg.lessons.length) {
-  results = [];
-  for (const L of cfg.lessons) {
-    const id = L.led || '(unnamed lesson)';
-    if (!L.check || L.check === 'manual') {
-      warn(`lesson ${id}: manual guard (no executable check) — verify by hand: ${L.what || ''}`);
-      results.push({ led: id, outcome: 'manual', deterrence: !!L.deterrence });
-      continue;
+if (RUN_EXECUTABLE_CHECKS && Array.isArray(cfg.lessons) && cfg.lessons.length) {
+  const run = await runLessonChecks(cfg.lessons, {
+    cwd: REPO,
+    policy: cfg.lesson_execution,
+    onEvent(event) {
+      if (event.type === 'start') console.log(`→ lesson ${event.led}: start (execution budget ${event.timeoutMs} ms)`);
+      else {
+        console.log(`${event.outcome === 'hold' ? '✓' : '✗'} lesson ${event.led}: ${event.outcome} (${event.durationMs} ms)`);
+        if (event.outcome !== 'hold') {
+          const detail = `${event.stdout || ''}\n${event.stderr || ''}`.trim().slice(-4000);
+          if (detail) console.log(detail);
+        }
+      }
+    },
+  });
+  if (!run.ok) {
+    for (const message of run.errors) err(message);
+    err('lesson checks NOT RUN: declare lesson_execution.minimum_timeout_ms and default_timeout_ms (or each lesson.timeout_ms) from the project command budgets. Cleanup/settlement default to 1000 ms each; overall_timeout_ms is computed unless an external deadline is configured.');
+    die(1);
+  } else {
+    results = run.results;
+    for (const [index, result] of results.entries()) {
+      const lesson = cfg.lessons[index];
+      if (result.outcome === 'manual') warn(`lesson ${result.led}: manual guard (no executable check) — verify by hand: ${lesson.what || ''}`);
+      else if (result.outcome === 'hold') ok(`lesson ${result.led}: guard holds (${result.durationMs} ms; ${lesson.what || ''})`);
+      else if (result.outcome === 'fire') err(`lesson ${result.led} RECURRED — ${lesson.onFail || lesson.what || 'guard check failed'} (${result.durationMs} ms, exit ${result.status})`);
+      else err(`lesson ${result.led}: ${result.outcome}; guard result is incomplete, NOT PASS (${result.durationMs} ms).`);
     }
-    try {
-      execSync(L.check, { cwd: REPO, stdio: 'ignore', shell: '/bin/bash' });
-      ok(`lesson ${id}: guard holds (${L.what || ''})`);
-      results.push({ led: id, outcome: 'hold', deterrence: !!L.deterrence });
-    } catch {
-      err(`lesson ${id} RECURRED — ${L.onFail || L.what || 'guard check failed'}`);
-      results.push({ led: id, outcome: 'fire', deterrence: !!L.deterrence });
-    }
+    // Incomplete/timed-out execution is not proof that a historical failure recurred.
+    const STATS = resolve(CONTROL_ROOT, '.lessons-stats.json');
+    const prevStats = existsSync(STATS) ? JSON.parse(readFileSync(STATS, 'utf8')) : {};
+    nextStats = tallyLessonStats(prevStats, results.filter(result => ['hold', 'fire', 'manual'].includes(result.outcome)), new Date().toISOString());
+    writeFileSync(STATS, JSON.stringify(nextStats, null, 2));
+    if (results.some(result => result.outcome === 'cancelled')) die(1);
   }
-  // 遥测旁路(不改上面三支 findings 语义):累加 fireCount/lastFiredAt → <control_root>/.lessons-stats.json
-  const STATS = resolve(CONTROL_ROOT, '.lessons-stats.json');
-  const prevStats = existsSync(STATS) ? JSON.parse(readFileSync(STATS, 'utf8')) : {};
-  nextStats = tallyLessonStats(prevStats, results, new Date().toISOString());
-  writeFileSync(STATS, JSON.stringify(nextStats, null, 2));
 }
 
 // 防腐三守卫 + 度量(仅 --consolidate / run 收口跑;全 WARN,绝不 ERROR;阈值动作 calibration-gated)。
@@ -769,7 +833,7 @@ if (CONSOLIDATE) {
 
 // antiCheck 全守卫元验证(揪假绿稻草人)。会写工作树(setup/teardown),只在 --anti-check / --consolidate
 // 显式跑,绝不进平时高频路径。WARN-only:假绿 → WARN,无 antiCheck → WARN(full 要求全覆盖)。
-if (process.argv.includes('--anti-check') || CONSOLIDATE) {
+if (ANTI_CHECK || CONSOLIDATE) {
   for (const r of runAllAntiChecks(cfg.lessons, REPO)) {
     if (r.status === 'false-green') findings.push(r.finding);
     else if (r.status === 'uncovered') warn(`lesson ${r.led}: 无 antiCheck — full 要求全守卫覆盖(补复现态断言)。`);
@@ -815,6 +879,8 @@ if (CONSOLIDATE) {
       const programGate = resolve(HERE, 'program-gate.mjs');
       if (!existsSync(programGate)) {
         err('5-ship claims readiness but program-gate.mjs is missing — update the vendored engine.');
+      } else if (AUDIT_ONLY) {
+        warn('5-ship claims readiness: control audit does not re-run deployed program verification. Full coverage is incomplete; no cross-project GO is issued by this audit.');
       } else {
         const result = spawnSync(process.execPath, [programGate, '--audit'], {
           cwd: REPO,

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 工程教训查询/审计入口。自动采集只写 LESSON_INBOX，生命周期晋升仍由人工 Gate 决定。
-import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -66,4 +66,4 @@ export function main() {
   throw new Error(`未知命令: ${command}; 支持 audit | context`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) main();

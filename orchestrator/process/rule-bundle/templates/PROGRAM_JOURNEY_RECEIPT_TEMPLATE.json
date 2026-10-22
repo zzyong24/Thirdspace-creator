@@ -1,0 +1,36 @@
+{
+  "schema": "program-journey-receipt/v1",
+  "journey_id": "J-001",
+  "environment": "<same-as-release-set>",
+  "release_set_sha256": "<sha256-of-release-set.json>",
+  "observed_at": "<ISO-8601>",
+  "non_fixture": true,
+  "test_entity_refs": [
+    "<opaque-real-test-entity-reference>"
+  ],
+  "steps": [
+    {
+      "id": "FLOW-001-S01",
+      "status": "pass",
+      "evidence_refs": [
+        "orchestrator/program/evidence/<artifact>"
+      ],
+      "observed_ref": "<opaque-observed-value-reference>"
+    },
+    {
+      "id": "FLOW-001-S02",
+      "status": "pass",
+      "evidence_refs": [
+        "orchestrator/program/evidence/<artifact>"
+      ],
+      "observed_ref": "<opaque-observed-value-reference>"
+    }
+  ],
+  "postconditions": {
+    "read_after_write": true,
+    "settled": true,
+    "refresh": true,
+    "repeat_safe": true
+  },
+  "open_defects": []
+}

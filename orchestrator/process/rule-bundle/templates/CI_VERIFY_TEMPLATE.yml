@@ -1,0 +1,44 @@
+# GitHub 验证示例；init-project.sh --ci github 显式安装。
+# 已有 verify.yml 保留，差异生成候选文件供合并。
+# 按项目真实默认分支、安装与验证命令修改，Node 版本与项目 engines 对齐。
+# 非 Node 项目保留 Node 供治理脚本使用，另设产品所需 runtime。
+# 本地文件不证明 workflow 已运行或 required checks 已启用；在远端核实。
+# quick 只检查控制面，不执行任意 lesson shell，也不替代下面的产品验证。
+# 如需完整 lessons，先隔离其网络/用户目录/安装等副作用并设置项目预算。
+
+name: verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 非 Node 项目改为治理脚本支持的 Node 版本，并另设产品 runtime。
+          node-version-file: package.json
+
+      - name: Orchestrator control-plane guards
+        run: node orchestrator/process/reconcile.mjs --profile quick --read-only
+
+      - name: Project migration diagnostics
+        run: node orchestrator/process/project-doctor.mjs
+
+      - name: Install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile   # ← 换成项目真实安装命令(npm ci / uv sync / …)
+
+      - name: Verify (typecheck + test + lint + build)
+        # ← 换成项目真实必需验证命令；测试/构建使用隔离的数据和服务。
+        run: pnpm verify

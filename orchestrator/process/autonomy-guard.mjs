@@ -12,8 +12,6 @@ const digestFile = (f) => fs.existsSync(f) ? createHash("sha256").update(fs.read
 const digestEvents = (events) => createHash("sha256")
   .update(events.map((event) => JSON.stringify(event)).join("\n") + (events.length ? "\n" : ""))
   .digest("hex");
-const git = (root, args, fallback = "missing") => { try { return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim(); } catch { return fallback; } };
-
 function completedTaskIds(root) {
   const file = path.join(root, "BACKLOG.md");
   if (!fs.existsSync(file)) return new Set();
@@ -73,16 +71,66 @@ function reviewErrors(cfg, task, events) {
   }
   return [];
 }
+const iterationBookkeeping = new Set([
+  "orchestrator/.autonomy-iteration.json",
+  "orchestrator/AUTONOMY_EVENTS.ndjson",
+]);
+function gitOutput(root, args) {
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+}
+function workingFiles(root) {
+  // -z preserves spaces, tabs, newlines and Git's rename records.
+  const records = gitOutput(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]).split("\0");
+  const files = {};
+  for (let i = 0; i < records.length; i++) {
+    if (!records[i]) continue;
+    const status = records[i].slice(0, 2);
+    const names = [records[i].slice(3)];
+    if (/[RC]/.test(status)) names.push(records[++i]);
+    for (const name of names) {
+      if (!name || iterationBookkeeping.has(name)) continue;
+      const file = path.join(root, name);
+      let content = "missing";
+      try {
+        const stat = fs.lstatSync(file);
+        const hash = createHash("sha256").update(`${stat.mode & 0o777}:`);
+        if (stat.isSymbolicLink()) hash.update(fs.readlinkSync(file));
+        else if (stat.isFile()) hash.update(fs.readFileSync(file));
+        else hash.update("directory");
+        content = hash.digest("hex");
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+      }
+      files[name] = `${status}:${content}`;
+    }
+  }
+  return files;
+}
+function iterationChanges(root, before, after) {
+  if (!before.working_files || !after.working_files) {
+    throw new Error("iteration baseline predates change measurement; preserve it and restart begin after reconciling the unfinished iteration");
+  }
+  const committed = gitOutput(root, [
+    "diff", "--name-only", "-z", "--no-renames", before.head, after.head, "--",
+  ]).split("\0").filter(Boolean);
+  const changed = new Set(committed);
+  for (const name of new Set([...Object.keys(before.working_files), ...Object.keys(after.working_files)])) {
+    if (before.working_files[name] !== after.working_files[name]) changed.add(name);
+  }
+  for (const name of iterationBookkeeping) changed.delete(name);
+  return [...changed].sort();
+}
 function snapshot(root, taskId) {
   const decision = path.join(root, "orchestrator", "DECISION_LOG.md");
   const manifest = path.join(root, "orchestrator", "ARTIFACT_MANIFEST.yaml");
-  const status = git(root, ["status", "--porcelain"], "");
+  const files = workingFiles(root);
   return {
     at: new Date().toISOString(), task_id: taskId,
-    head: git(root, ["rev-parse", "HEAD"]),
+    head: gitOutput(root, ["rev-parse", "--verify", "HEAD"]).trim(),
     progress: digestFile(path.join(root, "orchestrator", "progress.json")),
     board: digestFile(path.join(root, "BACKLOG.md")),
-    changed_files: status ? status.split(/\r?\n/).filter(Boolean).length : 0,
+    changed_files: Object.keys(files).length,
+    working_files: files,
     active_decisions: fs.existsSync(decision) ? (fs.readFileSync(decision, "utf8").match(/^Status:\s*active\s*$/gmi) ?? []).length : 0,
     invalidations: fs.existsSync(manifest) ? (fs.readFileSync(manifest, "utf8").match(/invalidated/gi) ?? []).length : 0,
   };
@@ -160,7 +208,14 @@ export function auditWatchdog(root, options = {}) {
     const task = String(event.task_id ?? "").split(":", 1)[0];
     if (!targets.has(event.task_id) && !targets.has(task)) continue;
     if (completed.has(task)) continue;
-    if ((event.after_changed_files ?? 0) > (cfg.max_changed_files_per_iteration ?? 40)) errors.push(`${event.task_id}: changed-file growth ${event.after_changed_files} exceeds budget — HALT_REPLAN`);
+    // v1 events only recorded dirty files. Retain that historical check without
+    // pretending it measured the committed diff; new receipts carry the actual delta.
+    const changedFiles = event.schema === "autonomy-iteration/v2" ? event.changed_files : event.after_changed_files;
+    if (event.schema === "autonomy-iteration/v2" && (!Number.isSafeInteger(changedFiles) || changedFiles < 0)) {
+      errors.push(`${event.task_id}: invalid iteration changed-file measurement — HALT_REPLAN`);
+    } else if ((changedFiles ?? 0) > (cfg.max_changed_files_per_iteration ?? 40)) {
+      errors.push(`${event.task_id}: iteration changed files ${changedFiles} exceeds budget — HALT_REPLAN`);
+    }
     if ((event.after_active_decisions ?? 0) > (cfg.max_active_decisions_per_task ?? 3)) errors.push(`${event.task_id}: active DEC churn ${event.after_active_decisions} exceeds budget — HALT_REPLAN`);
     if ((event.after_invalidations ?? 0) > (cfg.max_invalidations_per_task ?? 3)) errors.push(`${event.task_id}: invalidation count ${event.after_invalidations} exceeds budget — HALT_REPLAN`);
   }
@@ -197,11 +252,15 @@ function main() {
     if (!fs.existsSync(pending)) { console.error("missing iteration baseline; run begin first"); process.exit(2); }
     const before = json(pending); if (taskId && taskId !== before.task_id) { console.error("iteration task mismatch"); process.exit(2); }
     const after = snapshot(root, before.task_id);
+    const changedPaths = iterationChanges(root, before, after);
     const event = {
-      schema: "autonomy-iteration/v1", task_id: before.task_id, started_at: before.at, finished_at: after.at,
+      schema: "autonomy-iteration/v2", task_id: before.task_id, started_at: before.at, finished_at: after.at,
       before_head: before.head, after_head: after.head, before_progress: before.progress, after_progress: after.progress,
       before_board: before.board, after_board: after.board,
       before_changed_files: before.changed_files, after_changed_files: after.changed_files,
+      changed_files: changedPaths.length,
+      changed_paths_sha256: createHash("sha256").update(changedPaths.join("\0")).digest("hex"),
+      change_measurement: "commit-diff-and-working-tree-delta",
       before_active_decisions: before.active_decisions, after_active_decisions: after.active_decisions,
       before_invalidations: before.invalidations, after_invalidations: after.invalidations,
       commit_transition: before.head !== after.head,
@@ -221,4 +280,4 @@ function main() {
   if (errors.length) { console.error(`autonomy-guard HALT (${errors.length})\n${errors.map((e) => `  ✗ ${e}`).join("\n")}`); process.exit(1); }
   console.log("✓ autonomy preflight/watchdog clean");
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(SELF)) main();
+if (process.argv[1] && fs.existsSync(process.argv[1]) && fs.realpathSync(process.argv[1]) === fs.realpathSync(SELF)) main();

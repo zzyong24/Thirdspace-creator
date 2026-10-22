@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Convergent SPEC review round",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "review_kind", "summary", "findings"],
+  "properties": {
+    "schema": {
+      "const": "spec-review-round/v2"
+    },
+    "review_kind": {
+      "type": "string",
+      "enum": ["initial", "recheck"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "quote"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "quote": { "type": "string", "minLength": 1 }
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question",
+        "timebox_minutes",
+        "allowed_write_globs",
+        "forbidden_operations",
+        "teardown",
+        "evidence_expected"
+      ],
+      "properties": {
+        "question": { "type": "string", "minLength": 1 },
+        "timebox_minutes": { "type": "integer", "minimum": 1, "maximum": 240 },
+        "allowed_write_globs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "forbidden_operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "teardown": { "type": "string", "minLength": 1 },
+        "evidence_expected": { "type": "string", "minLength": 1 }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "status",
+        "severity",
+        "category",
+        "requirement_anchor",
+        "acceptance_anchor",
+        "where",
+        "failure_mode",
+        "evidence_kind",
+        "evidence_ref",
+        "risk_class",
+        "disposition",
+        "remedy_type",
+        "scope_effect",
+        "origin",
+        "origin_ref",
+        "suggestion",
+        "resolution_evidence",
+        "parent_id"
+        ,"threat_model_id"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^REV-[0-9]{3,}$" },
+        "status": { "type": "string", "enum": ["open", "resolved"] },
+        "severity": { "type": "string", "enum": ["blocker", "major", "minor"] },
+        "category": {
+          "type": "string",
+          "enum": [
+            "correctness",
+            "completeness",
+            "consistency",
+            "security",
+            "data-integrity",
+            "operability",
+            "testability",
+            "scope"
+          ]
+        },
+        "requirement_anchor": { "$ref": "#/$defs/anchor" },
+        "acceptance_anchor": { "$ref": "#/$defs/anchor" },
+        "where": { "type": "string", "minLength": 1 },
+        "failure_mode": { "type": "string", "minLength": 1 },
+        "evidence_kind": {
+          "type": "string",
+          "enum": [
+            "spec-contradiction",
+            "deterministic-check",
+            "runtime-observation",
+            "external-fact"
+          ]
+        },
+        "evidence_ref": { "type": "string", "minLength": 1 },
+        "risk_class": {
+          "type": "string",
+          "enum": [
+            "confirmed-requirement",
+            "security",
+            "data-loss",
+            "irreversibility",
+            "low-risk",
+            "preference"
+          ]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": ["mitigate", "accept", "avoid", "escalate", "probe", "future"]
+        },
+        "remedy_type": {
+          "type": "string",
+          "enum": ["constraint", "clarify", "remove", "probe", "risk-decision", "future"]
+        },
+        "scope_effect": {
+          "type": "string",
+          "enum": ["none", "narrowing", "expansion"]
+        },
+        "origin": {
+          "type": "string",
+          "enum": ["baseline", "changed-lines", "new-evidence", "late-critical"]
+        },
+        "origin_ref": { "type": "string", "minLength": 1 },
+        "suggestion": { "type": "string", "minLength": 1 },
+        "resolution_evidence": { "type": "string" },
+        "parent_id": { "type": "string" },
+        "threat_model_id": { "type": "string" },
+        "probe": { "$ref": "#/$defs/probe" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "origin": { "const": "changed-lines" } },
+            "required": ["origin"]
+          },
+          "then": {
+            "properties": {
+              "origin_ref": { "pattern": "^SPEC-LINE:[1-9][0-9]*:[a-f0-9]{16}$" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "origin": { "const": "new-evidence" } },
+            "required": ["origin"]
+          },
+          "then": {
+            "properties": {
+              "origin_ref": { "pattern": "^EVIDENCE-SHA256:[a-f0-9]{64}:.+$" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "origin": { "const": "late-critical" } },
+            "required": ["origin"]
+          },
+          "then": {
+            "properties": {
+              "origin_ref": {
+                "pattern": "^(?:(?:SPEC|CONSTITUTION)-LINE:[1-9][0-9]*:[a-f0-9]{16}|EVIDENCE-SHA256:[a-f0-9]{64}:.+)$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

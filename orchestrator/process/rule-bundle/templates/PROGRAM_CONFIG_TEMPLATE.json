@@ -1,0 +1,58 @@
+{
+  "schema": "product-program/v1",
+  "program_id": "<program-id>",
+  "name": "<program-name>",
+  "completion_authority": "program-gate",
+  "components": [
+    {
+      "id": "component-a",
+      "repo_path": "<absolute-or-coordinator-relative-repo-a>",
+      "release_identity": {
+        "required_commit": "<approved-full-commit-sha>",
+        "only_parent": "<optional-approved-single-parent-sha>"
+      }
+    },
+    {
+      "id": "component-b",
+      "repo_path": "<absolute-or-coordinator-relative-repo-b>"
+    }
+  ],
+  "journeys": [
+    {
+      "id": "J-001",
+      "title": "<one user-perceivable cross-project journey>",
+      "critical": true,
+      "depends_on": [],
+      "canonical_flow": {
+        "path": "docs/journeys/FLOW-001-<slug>.md",
+        "sha256": "<sha256-of-current-canonical-flow>"
+      },
+      "component_ids": [
+        "component-a",
+        "component-b"
+      ],
+      "steps": [
+        {
+          "id": "FLOW-001-S01",
+          "owner_component": "component-a",
+          "depends_on": []
+        },
+        {
+          "id": "FLOW-001-S02",
+          "owner_component": "component-b",
+          "depends_on": [
+            "FLOW-001-S01"
+          ]
+        }
+      ],
+      "verify_commands": [
+        {
+          "id": "E2E-J001",
+          "cwd": "<path-inside-component-a-repo>",
+          "command": "<real journey command runnable from component-a deployed commit>"
+        }
+      ],
+      "receipt": "orchestrator/program/receipts/J-001.json"
+    }
+  ]
+}

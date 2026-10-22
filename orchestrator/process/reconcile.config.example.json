@@ -22,6 +22,13 @@
   "_stale_note": "未校准·占位:active rule 超此天数从未 fire 且非 deterrence → never-fired WARN(候选剪枝提示)。",
   "quarantine_threshold": 3,
   "_quarantine_note": "占位·未校准:lesson 误报 ≥ 此值 → 提议 quarantine(calibration ON 时只 print would)。",
+  "lesson_execution": {
+    "minimum_timeout_ms": 60000,
+    "default_timeout_ms": 120000,
+    "cleanup_grace_ms": 1000,
+    "settlement_margin_ms": 1000
+  },
+  "_lesson_execution_note": "Example budgets only: use the project's execution lower bound and measured full command budgets. Each lesson may override timeout_ms. Cleanup and settlement default to 1000 ms each; overall_timeout_ms is optional and otherwise computed as the sum of all serial execution + cleanup + settlement budgets plus 1 ms. An explicit overall_timeout_ms must exceed that sum. No executable lessons means no budget configuration is required. quick/read-only skips lesson execution and never writes lesson telemetry.",
   "lessons": [
     {
       "led": "LED-001",

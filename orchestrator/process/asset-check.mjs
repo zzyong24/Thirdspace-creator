@@ -7,6 +7,7 @@
 // 末尾 WARN-only 折叠 assets-runner(example 红不阻断主流程,符合 WARN-not-ERROR)。
 //
 // Exit 0=clean, 1=violation. Per-skill config: process/asset-check.config.json(覆盖 DEFAULTS)。
+// --static checks cards/index/license/example paths without executing example commands.
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
@@ -193,10 +194,12 @@ if (existsSync(INDEX)) {
 
 // (5b) WARN-only 折叠 assets-runner(example 红不阻断主流程)
 const RUNNER = resolve(HERE, 'assets-runner.mjs');
-if (existsSync(RUNNER)) {
+if (existsSync(RUNNER) && !process.argv.includes('--static')) {
   const r = spawnSync('node', [RUNNER], { cwd: REPO, stdio: 'ignore' });
   if (r.status && r.status !== 0) warn('assets-runner 报告有 example 未跑绿 — 见 node process/assets-runner.mjs');
 }
 
-if (!findings.some((f) => f.level === 'ERROR')) ok('asset-check: 资产库一致(必填/INDEX/candidate/license/example 全过)');
+if (!findings.some((f) => f.level === 'ERROR')) ok(process.argv.includes('--static')
+  ? 'asset-check: 静态资产库一致(必填/INDEX/candidate/license；example 未执行)'
+  : 'asset-check: 资产库一致(必填/INDEX/candidate/license/example 全过)');
 die();

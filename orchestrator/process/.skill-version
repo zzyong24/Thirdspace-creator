@@ -1,2 +1,3 @@
-version=3.29.0
-skill_dir=/Users/zyongzhu/.codex/skills/product-to-code-orchestrator
+version=3.30.0
+rule_bundle_version=3.30.0
+rule_bundle_sha256=ba1870fd6b9ed68f8470806767c658d0647a7c6d324f525d7397fe0b253473eb

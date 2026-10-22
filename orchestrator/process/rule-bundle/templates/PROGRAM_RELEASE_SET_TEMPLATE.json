@@ -1,0 +1,17 @@
+{
+  "schema": "program-release-set/v1",
+  "environment": "<staging-or-production>",
+  "generated_at": "<ISO-8601>",
+  "components": {
+    "component-a": {
+      "commit_sha": "<deployed-commit-sha>",
+      "deploy_url": "https://<deployed-url>",
+      "deployed_at": "<ISO-8601>"
+    },
+    "component-b": {
+      "commit_sha": "<deployed-commit-sha>",
+      "deploy_url": "https://<deployed-url>",
+      "deployed_at": "<ISO-8601>"
+    }
+  }
+}

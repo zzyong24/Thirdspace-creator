@@ -9,7 +9,7 @@
 #
 # 可调:env BACKLOG_INJECT_ROWS(默认 1)。纯 bash 零依赖;缺 BACKLOG.md 的项目安全退出。
 
-ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
+ROOT="${CLAUDE_PROJECT_DIR:-${CODEX_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}}"
 BL="$ROOT/BACKLOG.md"
 [ -f "$BL" ] || exit 0
 
@@ -23,7 +23,8 @@ MAXLEN=100
 MAXCELLS=8
 
 echo "【必读·任务看板 BACKLOG.md】"
-echo "读取顺序:本看板 → 任务引用的 SPEC → 代码。铁律:需求即建任务进看板;开工从看板顶取并改 🔨;完成改 ✅+提交;禁止 P0/P1 分级与多阶段执行,任务清楚即起 Workflow/并行 subagent;改方向/架构/数据归属的 SPEC 过审才准开工。"
+echo "从看板顶部选择依赖就绪的任务，核对 context-plan.mjs 给出的当前阶段、规则与项目资料。开工标 🔨；中间步骤保持进行中，验收通过后标 ✅。"
+echo "沿用已有授权；buildout 推进实现与验收，maintenance 按触发条件正式审核。派发、并行或自治时生成任务包；完整流程以项目 AGENTS.md 和阶段规则为准。"
 echo "---"
 
 # ---------- 收集可执行行(只扫「## ✅」/归档区之前;🔨 优先、再 📋,各按文件内出现顺序) ----------
@@ -98,8 +99,9 @@ if [ -f "$VF" ]; then
   if [ -n "$pv" ] && [ -n "$sd" ] && [ -f "$sd/VERSION" ]; then
     sv="$(cat "$sd/VERSION")"
     if [ "$pv" != "$sv" ]; then
-      echo "⚠ 脚手架引擎过时:项目 vendored ${pv},skill 已是 ${sv}。建议先升级再开工:"
-      echo "  bash \"$sd/tools/init-project.sh\" \"$ROOT\" --update [--topology single|multi] [--program-id <multi-id>]  (缺显式 topology 的旧项目必须补分类；保留项目 config/baseline)"
+      echo "⚠ 脚手架有可用更新:项目固定 ${pv},本机 skill 为 ${sv}；规则以项目固定版本为准。按需更新:"
+      printf '  bash %q %q --update\n' "$sd/tools/init-project.sh" "$ROOT"
+      echo "  缺显式 topology 的旧项目另补 --topology single 或 multi；multi 同时提供 --program-id。"
     fi
   fi
 fi

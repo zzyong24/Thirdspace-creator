@@ -56,3 +56,12 @@ backups/
 
 # 质量门证据（tools/quality 输出，本地留存，不入库）
 .quality/
+
+# 流程升级备份与本机临时诊断，原件保留。
+*.pre-update
+*.pre-update.*
+/docs/research/evidence/t915/browser-pi-full-normal-trace-1792590530272.ndjson
+/docs/research/evidence/t915/browser-pi-full-normal-trace-1792597069370.ndjson
+/docs/research/evidence/t915/browser-pi-full-unknown-trace-1792590537589.ndjson
+/docs/research/evidence/t915/browser-pi-full-unknown-trace-1792597085836.ndjson
+/orchestrator/context/T-1331.md

@@ -1,0 +1,6 @@
+{
+  "schema": "complexity-ledger/v1",
+  "_entry_contract": "Each entry binds one task_id, exact files, file_sha256, categories, and disposition. Reuse/reference text creates no entry; another task or stale file hash never authorizes the selected task.",
+  "entries": [],
+  "historical_baselines": []
+}

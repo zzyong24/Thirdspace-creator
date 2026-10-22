@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // context-plan.mjs — 为当前阶段/任务生成确定性的“路径指针”读取计划。
 //
-// required_reads 是 skill_dir 下按需读取的通用规则路径；required_project_reads
-// 是 project root 下当前任务必须读取的权威事实路径。两者都只返回指针，不内联正文。因此
-// total_inline_bytes 只计实际嵌入的规则正文（当前为 0）；referenced_bytes
-// 则通过 .skill-version 的 skill_dir 计算，只作诊断，不占启动上下文预算。
+// required_reads 优先指向经 hash 校验的项目内 rule-bundle；只有尚未迁移的
+// legacy 项目使用 .skill-version 的本机 skill_dir，并明确报告不可移植。
+// required_project_reads 指向 project root。两者只返回指针，不内联正文；
+// referenced_bytes 只作诊断，不占启动上下文预算。
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { projectRuleBundle } from "./rule-bundle.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -223,6 +224,34 @@ function skillDirFromVersion(processDir) {
   const value = raw.match(/^skill_dir=(.+)$/m)?.[1]?.trim();
   if (!value) fail(`${versionFile} 缺少 skill_dir`);
   return path.resolve(value);
+}
+
+function ruleSource(processDir) {
+  try {
+    const bundle = projectRuleBundle(processDir);
+    if (bundle) return {
+      root: bundle.root,
+      kind: "project-bundle",
+      portable: true,
+      version: bundle.manifest.skill_version,
+      content_sha256: bundle.manifest.content_sha256,
+      diagnostic: null,
+    };
+  } catch (error) {
+    fail(error.message);
+  }
+  const root = skillDirFromVersion(processDir);
+  const sourceCheckout = path.resolve(processDir) === HERE && fs.existsSync(path.join(root, "SKILL.md"));
+  return {
+    root,
+    kind: sourceCheckout ? "source-checkout" : "legacy-local-skill",
+    portable: false,
+    version: null,
+    content_sha256: null,
+    diagnostic: sourceCheckout
+      ? "source checkout 直接读取未打包规则；本输出不代表项目已固定规则版本"
+      : "legacy 项目未安装 rule bundle，当前依赖本机 skill_dir，不可移植；运行 init-project.sh --update 迁移",
+  };
 }
 
 function isPlainObject(value) {
@@ -502,7 +531,7 @@ const reasons = new Map();
 
 const hasContextPolicy = Object.prototype.hasOwnProperty.call(reconcile, "context_policy");
 const compatibilityMode = !hasContextPolicy;
-const diagnostic = compatibilityMode
+const policyDiagnostic = compatibilityMode
   ? "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置"
   : null;
 let projectPacks = [];
@@ -535,7 +564,7 @@ function activate(id, reason) {
 activate("core", "每个任务都需要的最小交付内核");
 activate(stagePack, `当前阶段为 ${stage}`);
 if (compatibilityMode) {
-  for (const id of PACK_ORDER) activate(id, diagnostic);
+  for (const id of PACK_ORDER) activate(id, policyDiagnostic);
 }
 
 const triage = scalarFromManifest(manifestRaw, "scale_class");
@@ -645,12 +674,14 @@ if (reasons.has("security")) {
   addProjectRead(path.join(layout.controlDir, "THREAT_MODEL.json"));
 }
 
-const skillDir = skillDirFromVersion(layout.processDir);
+const source = ruleSource(layout.processDir);
+const diagnostic = [policyDiagnostic, source.diagnostic].filter(Boolean).join("; ") || null;
+const skillDir = source.root;
 let referencedBytes = 0;
 for (const ref of requiredReads) {
   const target = path.join(skillDir, ref);
   if (!fs.existsSync(target) || !fs.statSync(target).isFile()) {
-    fail(`context pack 引用路径不存在: ${ref} (skill_dir=${skillDir})`);
+    fail(`context pack 引用路径不存在: ${ref} (read_root=${skillDir}; ${source.kind})`);
   }
   referencedBytes += fs.statSync(target).size;
 }
@@ -661,6 +692,12 @@ const result = {
   task_id: args.task,
   step: currentTask.step,
   read_root: skillDir,
+  rule_source: {
+    kind: source.kind,
+    portable: source.portable,
+    version: source.version,
+    content_sha256: source.content_sha256,
+  },
   compatibility_mode: compatibilityMode,
   diagnostic,
   packs: activePacks,
@@ -668,7 +705,7 @@ const result = {
   required_project_reads: requiredProjectReads,
   // required_reads 是路径指针，planner 不嵌入任何规则/模板正文。
   total_inline_bytes: 0,
-  // 诊断值：指针对应文件在 skill_dir 中的字节总数，不计入上下文预算。
+  // 诊断值：指针对应文件在 read_root 中的字节总数，不计入上下文预算。
   referenced_bytes: referencedBytes,
 };
 
