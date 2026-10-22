@@ -77,7 +77,7 @@ const topic={title:'先留一个记录想法的位置',angle:'从一只杯子和
 const draft='先看看桌面上现有的东西：一只杯子，一本合上的笔记本。把杯子放稳，再把笔记本移到一旁。留出的这点空白，可以用来写下一句想法。这里只演示一个顺序，不用一次改变所有东西。';
 
 it('T1382 纯组统一建项准备：ensure→真实策略worker与三次账本→人工采纳正式稿',async()=>{
- expect(process.env.T1332_APPROVED).toBe('1');
+ expect(process.env.T1332_APPROVED,'T1332_APPROVAL_REQUIRED').toBe('1');
  const phase=process.env.T1332_PHASE;expect(['red','green']).toContain(phase);
  const label=process.env.T1332_RUN_LABEL??phase!;expect(/^(red|green)(-[A-Za-z0-9]+)*$/.test(label)).toBe(true);
  owned.root=path.join(runtime,'cases',label);fs.mkdirSync(owned.root,{recursive:true});

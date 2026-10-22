@@ -29,7 +29,13 @@ import {createThesisAdoption} from '../../../../backend/src/application/thesis-a
 import {projects,artifacts,artifactVersions} from '@creatoros/backend';
 vi.mock('@creatoros/backend/modules/execution',async original=>{const actual=await original<typeof import('@creatoros/backend/modules/execution')>();return {...actual,createModelWorkerDispatcher:(...args:Parameters<typeof actual.createModelWorkerDispatcher>)=>{owned.structuredHost=actual.createModelWorkerDispatcher(args[0],{...args[1],entryPath:path.resolve('../docs/verification/t1318/runtime/worker-entry.fixture.cjs')});return {...owned.structuredHost,start:()=>{}};}};});
 it.each((process.env.T1318_CASES??'pure,filter,legacy').split(','))('完整公开thesis生成采纳 %s',async name=>{
- owned.root=path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT?path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'t1318'):runtime,'cases',process.env.T1318_RUN_ID??'unbound',name);fs.mkdirSync(owned.root,{recursive:true});for(const d of ['tmp','empty-codex-home'])fs.mkdirSync(path.join(owned.root,d),{recursive:true});
+ // 与原child入口读取同一固定目标，只提前诊断缺原材料；保原哈希与绑定拒绝。
+ const binding=JSON.parse(fs.readFileSync(path.join(runtime,'WORKER_BINDING.json'),'utf8'));
+ try{fs.readFileSync(binding.executionWorkerPath);}catch(error){
+  if((error as NodeJS.ErrnoException).code==='ENOENT')throw new Error('T1318_ORIGINAL_WORKER_MISSING',{cause:error});
+  throw error;
+ }
+ owned.root=path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT?path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'docs/verification/t1318/runtime'):runtime,'cases',process.env.T1318_RUN_ID??'unbound',name);fs.mkdirSync(owned.root,{recursive:true});for(const d of ['tmp','empty-codex-home'])fs.mkdirSync(path.join(owned.root,d),{recursive:true});
  owned.errors=[];owned.ports=[];owned.host=null;owned.db=null;owned.structuredHost=null;owned.observe=null;owned.caseName=name;owned.crashed=false;save('scenario',{kind:'normal',sequence:[],realExternalModels:0});
  for(const [key,value]of Object.entries({DATABASE_URL:'',PGLITE_DATA_DIR:path.join(owned.root,'db'),CREATOROS_STORAGE:'local',CREATOROS_MEDIA_ROOT:path.join(owned.root,'media'),CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_CLIENT_CONFIG_PULL_ENABLED:'0',CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH:path.join(owned.root,'missing-seed')}))vi.stubEnv(key,value);
  __resetPersistenceForTests();let ctx:RequestContext={userId:canonicalDataset.user.id,accountId:null,requestId:'t1318-public',source:'user'};let taskId='',projectId='';let restoreLogger:(()=>void)|undefined;const sqlTrace:any[]=[];

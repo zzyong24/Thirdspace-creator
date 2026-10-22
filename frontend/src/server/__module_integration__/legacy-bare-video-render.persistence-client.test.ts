@@ -8,7 +8,7 @@ const owned=vi.hoisted(()=>({network:[] as string[]}));
 const base='/Volumes/T7-MacData/CodexBuilds/t1343-legacy-bare-render-20261018',phase=process.env.T1343_PHASE!;
 const sha=(b:Buffer)=>createHash('sha256').update(b).digest('hex');
 it('合法裸主原片：真实公共上传/自然渲染/原Next GET与Range/公开采纳/下载解码，0供应商',async()=>{
- expect(['red-v1','green-v1']).toContain(phase);expect(fs.realpathSync(base)).toBe(base);
+ expect(['red-v1','green-v1'],'T1343_PHASE_REQUIRED').toContain(phase);expect(fs.realpathSync(base)).toBe(base);
  const root=path.join(base,phase),evidence=path.join(root,'case');fs.mkdirSync(evidence,{mode:0o700});
  for(const name of ['media','workspaces','tmp','private'])fs.mkdirSync(path.join(root,name),{mode:0o700});
  const binding=JSON.parse(fs.readFileSync(process.env.T1343_RUNTIME_BINDING!,'utf8'));

@@ -84,6 +84,7 @@ const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(owned.root,na
 const selected=(process.env.T1334_CASES??'collect,material,research').split(',');
 it.each(selected)('自主任务动态工具可见性完整公共链 %s',async name=>{
  expect(['collect','material','research']).toContain(name);
+ if(runtime===undefined)throw new Error('T1334_PHASE_ROOT_REQUIRED');
  const ownedBase=process.env.T1341_MAINTENANCE==='1'?'/Volumes/T7-MacData/CodexBuilds/t1341-asset-real-tags-20261017-b1c02e13':'/Volumes/T7-MacData/CodexBuilds/t1334-tool-visibility-20261017-706cfbe7';expect(runtime.startsWith(ownedBase+path.sep)).toBe(true);expect(fs.lstatSync(ownedBase).isSymbolicLink()).toBe(false);
  owned.root=path.join(runtime,'cases',process.env.T1334_RUN_ID!,name);for(const dir of ['','tmp','media','workspaces','empty-codex-home'])fs.mkdirSync(path.join(owned.root,dir),{recursive:true,mode:0o700});
  owned.db=null;owned.host=null;owned.errors=[];owned.domainErrors=[];owned.ports=[];owned.storage=null;owned.beforeInvoke=null;

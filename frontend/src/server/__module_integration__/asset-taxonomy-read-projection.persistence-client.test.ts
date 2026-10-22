@@ -20,7 +20,7 @@ const sha=(bytes:Buffer)=>createHash('sha256').update(bytes).digest('hex');
 const failure=(e:unknown)=>({name:e instanceof Error?e.name:'Other',message:e instanceof Error?e.message:String(e)});
 type Call=(e:Endpoint,input?:any,ctx?:RequestContext)=>Promise<any>;
 async function lifecycle(name:string,body:(call:Call,user:RequestContext,root:string,nonce:string,save:(name:string,value:unknown)=>void)=>Promise<void>){
- expect(['red-v1','green-v1']).toContain(phase);expect(fs.realpathSync(base)).toBe(base);
+ expect(['red-v1','green-v1'],'T1341_PHASE_REQUIRED').toContain(phase);expect(fs.realpathSync(base)).toBe(base);
  const root=path.join(base,phase,'cases',name);fs.mkdirSync(root,{recursive:true,mode:0o700});for(const dir of ['tmp','media','workspaces'])fs.mkdirSync(path.join(root,dir),{mode:0o700});
  const save=(n:string,v:unknown)=>fs.writeFileSync(path.join(root,n+'.json'),JSON.stringify(v,null,2)+'\n');
  const key=path.join(root,'fixture-application-key');fs.writeFileSync(key,randomBytes(32).toString('base64'),{mode:0o600,flag:'wx'});

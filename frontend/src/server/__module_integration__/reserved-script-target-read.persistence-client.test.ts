@@ -27,7 +27,7 @@ const runtime=path.resolve('../docs/verification/t1331/runtime/regression/closin
 const sha=(value:unknown)=>createHash('sha256').update(typeof value==='string'||Buffer.isBuffer(value)?value:JSON.stringify(value)).digest('hex');
 const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(owned.root,name+'.json'),JSON.stringify(value,null,2)+'\n');
 it('预留稿目标的三个真实服务端读取与候选采纳完整公共链',async()=>{
- const phase=process.env.T1331_PHASE;expect(['red','green'].includes(phase??'')).toBe(true);expect(process.env.T1331_APPROVED).toBe('1');
+ const phase=process.env.T1331_PHASE;expect(['red','green'].includes(phase??''),'T1331_PHASE_REQUIRED').toBe(true);expect(process.env.T1331_APPROVED).toBe('1');
  const label=process.env.T1331_RUN_LABEL??phase!;expect(/^(red|green)(-[a-zA-Z0-9]+)*$/.test(label)).toBe(true);
  owned.root=path.join(runtime,'cases',label);expect(fs.existsSync(path.join(owned.root,'START.json'))).toBe(false);
  for(const dir of ['','tmp','media','empty-codex-home'])fs.mkdirSync(path.join(owned.root,dir),{recursive:true});

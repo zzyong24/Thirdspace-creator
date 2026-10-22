@@ -57,7 +57,7 @@ const sha = (value: unknown) => createHash('sha256').update(typeof value === 'st
 const save = (name: string, value: unknown) => fs.writeFileSync(path.join(owned.root, name + '.json'), JSON.stringify(value, null, 2) + '\n');
 const selected = (process.env.T1325_CASES ?? 'card,edit').split(',');
 it.each(selected)('完整公共已生成候选在当前模型未配置后的采纳 %s', async name => {
-  owned.root = path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT ? path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT, 't1325') : runtime,  'cases', process.env.T1325_RUN_ID ?? 'unbound', name);
+  owned.root = path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT ? path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT, 'docs/verification/t1325/runtime') : runtime,  'cases', process.env.T1325_RUN_ID ?? 'unbound', name);
   for (const dir of ['', 'tmp', 'media', 'empty-codex-home']) fs.mkdirSync(path.join(owned.root, dir), {recursive: true});
   owned.errors = []; owned.ports = []; owned.db = null; owned.host = null; owned.storage = null; owned.ref = null; owned.beforeInvoke = null;
   save('scenario', {kind: name === 'cover' ? 'cover' : 'card', externalModels: 0, protocolBoundary: 'controlled-native-cli'});

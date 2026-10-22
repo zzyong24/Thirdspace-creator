@@ -27,7 +27,7 @@ const scenarios:Record<string,string[]>={main:['system_features','topic_generate
 const selected=(process.env.T1320_CASES??'main').split(',');
 it.each(selected)('完整公开v2混流 %s',async name=>{
  const sequence=scenarios[name];expect(sequence).toBeDefined();
- owned.root=path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT?path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'t1320'):runtime,'cases',process.env.T1320_RUN_ID??'unbound',name);fs.mkdirSync(owned.root,{recursive:true});fs.mkdirSync(path.join(owned.root,'tmp'),{recursive:true});fs.mkdirSync(path.join(owned.root,'empty-codex-home'),{recursive:true});
+ owned.root=path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT?path.join(process.env.CREATOROS_TEST_OUTPUT_ROOT,'docs/verification/t1320/runtime'):runtime,'cases',process.env.T1320_RUN_ID??'unbound',name);fs.mkdirSync(owned.root,{recursive:true});fs.mkdirSync(path.join(owned.root,'tmp'),{recursive:true});fs.mkdirSync(path.join(owned.root,'empty-codex-home'),{recursive:true});
  owned.errors=[];owned.ports=[];owned.host=null;owned.db=null;owned.tools=null;owned.observe=null;owned.caseName=name;owned.crashed=false;
  const binding=JSON.parse(fs.readFileSync(path.join(runtime,'WORKER_BINDING.json'),'utf8')),bytes=fs.readFileSync(binding.executionWorkerPath);expect(bytes.length).toBe(binding.bytes);expect(createHash('sha256').update(bytes).digest('hex')).toBe(binding.sha256);
  const callIds=name==='duplicate'?['same-host','same-topic','same-host','same-topic']:sequence.map((_,i)=>'fixture-tool-'+i);save('scenario',{name,sequence,callIds,kind:'normal',realExternalModels:0});

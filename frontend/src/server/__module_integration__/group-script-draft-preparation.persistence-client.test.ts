@@ -22,7 +22,7 @@ const runtime=path.resolve('../docs/verification/t1327/runtime');
 const sha=(value:unknown)=>createHash('sha256').update(typeof value==='string'||Buffer.isBuffer(value)?value:JSON.stringify(value)).digest('hex');
 const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(owned.root,name+'.json'),JSON.stringify(value,null,2)+'\n');
 it('纯账号组整稿完整公开生产链：原母稿可读、候选、采纳与刷新',async()=>{
- const phase=process.env.T1327_PHASE;expect(['red','green'].includes(phase??'')).toBe(true);expect(process.env.T1327_APPROVED).toBe('1');
+ const phase=process.env.T1327_PHASE;expect(['red','green'].includes(phase??''),'T1327_PHASE_REQUIRED').toBe(true);expect(process.env.T1327_APPROVED).toBe('1');
  const label=process.env.T1327_RUN_LABEL??phase!;expect(/^(red|green)(-[a-zA-Z0-9]+)*$/.test(label)).toBe(true);
  owned.root=path.join(runtime,'cases',label);expect(fs.existsSync(path.join(owned.root,'START.json'))).toBe(false);
  for(const dir of ['','tmp','media','empty-codex-home'])fs.mkdirSync(path.join(owned.root,dir),{recursive:true});
