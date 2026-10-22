@@ -4,17 +4,21 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {ENDPOINTS,NATIVE_DOCUMENT_VERSION,NATIVE_SOURCE_REVISION,workEditorTarget,workCreationTarget,type RequestContext,type WorkEditorTarget} from '@creatoros/contract';
-import {chatWorkerInputSchema,codexAcpBinding} from '@creatoros/contract/execution-worker';
+import {chatWorkerInputSchema,executionRouteSchema} from '@creatoros/contract/execution-worker';
 import type {Db} from '@creatoros/backend';
+import {configureModelFixture} from '../test/configure-model-fixture';
 
-const fixture=vi.hoisted(()=>({db:undefined as Db|undefined,start:vi.fn(),modelResolution:0}));
+const fixture=vi.hoisted(()=>({db:undefined as Db|undefined,start:vi.fn()}));
 vi.mock('@creatoros/backend',async original=>{const actual=await original<typeof import('@creatoros/backend')>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const opened=await actual.createConfiguredDb(...args);fixture.db=opened.db;return opened;}};});
 vi.mock('@creatoros/backend/modules/assets',async original=>{const actual=await original<typeof import('@creatoros/backend/modules/assets')>();return {...actual,migrateStorageRoot:async()=>{throw Error('本隔离夹具禁止访问或迁移真实媒体根');}};});
 vi.mock('@creatoros/backend/modules/ai-runtime',async original=>{
  const actual=await original<typeof import('@creatoros/backend/modules/ai-runtime')>();
  return {...actual,
-  // 仅模型配置/网络替身；真实prepare/Skill/目标reader没有替换，不执行Pi或Codex。
-  resolveLlmConfig:async()=>{fixture.modelResolution++;return {apiFormat:'openai_chat',baseUrl:'http://127.0.0.1:1/v1',model:'isolated-no-network',token:'fixture',settings:{structuredOutputs:true}};},
+  // 仅本机安装状态元数据替身；真实设置、身份冻结、prepare和目标reader仍执行。
+  createLocalCodexStatusService:()=>{
+   const status={engine:'codex' as const,installed:true,available:true,version:'0.159.3',defaultModelId:'t1091-codex-fixture',availableModels:[{id:'t1091-codex-fixture',inputModalities:['text']}],loginStatus:'authenticated' as const,capabilities:{text:true,imageUnderstanding:false,imageGeneration:false,imageEditing:'unavailable' as const}};
+   return {read:async()=>structuredClone(status),peek:()=>structuredClone(status),stop:async()=>{}};
+  },
   composeChatProduction:(...args:Parameters<typeof actual.composeChatProduction>)=>{const durable=actual.composeChatProduction(...args);return {...durable,start:fixture.start};},
  };
 });
@@ -34,6 +38,7 @@ beforeAll(async()=>{
  runtime=await getChatRuntime();
  ctx={userId:'t1091-public-options-user',accountId:null,source:'user',requestId:'t1091-public-options'};
  const group=ENDPOINTS.createAccountGroup.response.parse(await owned('accountGroups.create',undefined,{name:'公开编导隔离组',idempotencyKey:key('group')}));ctx={...ctx,groupId:group.id};
+ await configureModelFixture(owned,'http://127.0.0.1:1/v1','isolated-no-network');
 },180000);
 afterAll(async()=>{
  await (globalThis as typeof globalThis&{__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();vi.unstubAllEnvs();if(directory)await rm(directory,{recursive:true,force:true});
@@ -91,7 +96,9 @@ async function freeze(message:{id:string;modelMetadata:Record<string,unknown>}){
  const {chatInputDigest}=await import('../../../backend/src/modules/ai/chat-turn-submission.service');
  expect(task!.inputData).toMatchObject({kind:'chat.run',sourceMessageId:message.id,modelInputDigest:chatInputDigest(input),hostContextDigest:chatHostContextDigest(host)});
  expect(task).toMatchObject({status:'queued',groupId:ctx.groupId});expect(execution).toMatchObject({status:'queued',ownerId:task!.id,groupId:ctx.groupId});
- return {task:task!,execution:execution!,input,host};
+ const route=executionRouteSchema.parse(payload.executionRoute);
+ expect((task!.runtimeData as Record<string,unknown>).executionRoute).toEqual(route);
+ return {task:task!,execution:execution!,input,host,route};
 }
 
 it.each((['article','graphic','native','creation'] as const).flatMap(family=>(['pi','codex'] as const).map(executionEngine=>({family,executionEngine}))))('公开 $executionEngine / $family 消息经原prepare和真实reader冻结当前目标，仅产候选权限',{timeout:180000,retry:0},async({family,executionEngine})=>{
@@ -105,7 +112,12 @@ it.each((['article','graphic','native','creation'] as const).flatMap(family=>(['
  try{
   const message=ENDPOINTS.createMessage.response.parse(await owned('ai.conversations.messages.create',{conversationId:conversation.id},input)),frozen=await freeze(message);
   expect(frozen.input.executionEngine).toBe(executionEngine);
-  if(executionEngine==='codex')expect(frozen.input.externalAgentBinding).toEqual(codexAcpBinding);else expect(frozen.input.externalAgentBinding).toBeUndefined();
+  expect(frozen.route.schemaVersion).toBe(2);
+  if(frozen.route.schemaVersion!==2)throw Error('公开准备必须冻结当前模型路由');
+  expect(frozen.route.orchestrator).toMatchObject({engine:executionEngine,protocolKind:executionEngine==='codex'?'codex-app-server':'pi',source:'chat-explicit'});
+  expect(frozen.input.modelRoutingVersion).toBe(2);expect(frozen.input.externalAgentBinding).toBeUndefined();
+  expect(frozen.route.routes[`text:${frozen.input.capability}`]).toMatchObject({source:executionEngine==='codex'?'codex':'self',readiness:'configured',identity:executionEngine==='codex'?{protocolKind:'codex-app-server',runtimeVersion:'0.159.3',requestedModel:'t1091-codex-fixture'}:{provider:'openai',model:'isolated-no-network',endpoint:'http://127.0.0.1:1/v1',configuration:{kind:'row',capability:'default'}}});
+  expect(frozen.input.requestedModel).toBe(executionEngine==='codex'?'t1091-codex-fixture':undefined);
   const expected=editorTarget??{...creation,scriptConfirmation:{confirmedBy:'user',source:'public-request'}};
   expect(reader).toHaveBeenCalledWith(ctx,expected);
   expect(frozen.host.chatContext).toEqual({surface:'project',projectId:project.id,...(editorTarget?{editorTarget}:{creationTarget:expected})});
