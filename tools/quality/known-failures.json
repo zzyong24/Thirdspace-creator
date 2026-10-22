@@ -210,6 +210,83 @@
       "owner_task": "T-1328",
       "since": "2026-10-22",
       "message_includes": "T1328_CHECKPOINT_APPROVAL_REQUIRED"
+    },
+    {
+      "id": "KF-1397-020",
+      "package": "frontend",
+      "file": "src/server/__module_integration__/legacy-work-parent-workspace.persistence-client.test.ts",
+      "test": "legacy公共完整报告确认后，正常页面切原组仍能读取原作品子树",
+      "kind": "env",
+      "reason": "仅缺原批准前置条件；保留全部断言，未设置批准变量；原条件只增加描述性marker，未改变批准条件或执行后续链路。",
+      "owner_task": "T-1338",
+      "since": "2026-10-22",
+      "message_includes": "T1338_APPROVAL_REQUIRED"
+    },
+    {
+      "id": "KF-1397-021",
+      "package": "frontend",
+      "file": "src/server/__module_integration__/legacy-work-parent-workspace.persistence-client.test.ts",
+      "test": "T1338新子树公开新写继承与原回执材料链",
+      "kind": "env",
+      "reason": "仅缺原批准前置条件；保留全部断言，未设置批准变量；原条件只增加描述性marker，未改变批准条件或执行后续链路。",
+      "owner_task": "T-1338",
+      "since": "2026-10-22",
+      "message_includes": "T1338_APPROVAL_REQUIRED"
+    },
+    {
+      "id": "KF-1397-022",
+      "package": "frontend",
+      "file": "src/server/__module_integration__/prediction-lock-source.persistence-client.test.ts",
+      "test": "原聊天诊断卡真实公共锁定与重新挂载：只能锁原source subject并恢复具体预测",
+      "kind": "env",
+      "reason": "仅缺原批准前置条件；保留全部断言，未设置批准变量；原条件只增加描述性marker，未改变批准条件或执行后续链路。",
+      "owner_task": "T-1328",
+      "since": "2026-10-22",
+      "message_includes": "T1328_APPROVAL_REQUIRED"
+    },
+    {
+      "id": "KF-1397-023",
+      "package": "frontend",
+      "file": "src/server/__module_integration__/script-review-confirmed-current.persistence-client.test.ts",
+      "test": "正式script.review确认当前版本/restore",
+      "kind": "env",
+      "reason": "仅缺原批准前置条件；保留全部断言，未设置批准变量；原条件只增加描述性marker，未改变批准条件或执行后续链路。",
+      "owner_task": "T-1331",
+      "since": "2026-10-22",
+      "message_includes": "T1331_REVIEW_APPROVAL_REQUIRED"
+    },
+    {
+      "id": "KF-1397-024",
+      "package": "frontend",
+      "file": "src/server/__module_integration__/script-review-confirmed-current.persistence-client.test.ts",
+      "test": "正式script.review确认当前版本/reserved",
+      "kind": "env",
+      "reason": "仅缺原批准前置条件；保留全部断言，未设置批准变量；原条件只增加描述性marker，未改变批准条件或执行后续链路。",
+      "owner_task": "T-1331",
+      "since": "2026-10-22",
+      "message_includes": "T1331_REVIEW_APPROVAL_REQUIRED"
+    },
+    {
+      "id": "KF-1397-025",
+      "package": "frontend",
+      "file": "src/server/__module_integration__/mixed-codex-tool-stream.persistence-client.test.ts",
+      "test": "完整公开v2混流 main",
+      "kind": "env",
+      "reason": "原固定binding已存在，但其绑定的原打包Worker入口已缺失；保留binding/哈希及原守卫，不生成替代Worker。",
+      "owner_task": "T-1320",
+      "since": "2026-10-22",
+      "message_includes": "ENOENT: no such file or directory, open '/private/tmp/t1300-artifact-940jy2at/sidecar/frontend/runtime/execution-worker.cjs'"
+    },
+    {
+      "id": "KF-1397-026",
+      "package": "frontend",
+      "file": "src/server/__module_integration__/calibration-missing-actual.persistence-client.test.ts",
+      "test": "真实公开人工partial/zero/empty→锁定→manual结果→概览/重放，无模型",
+      "kind": "env",
+      "reason": "新私有输出根没有原受控T1339 baseline，原realpath存在门在创建目录/打开数据库前拒绝；依据t1339-private-marker新证据，不能豁免原full历史库计数11!=1。",
+      "owner_task": "T-1339",
+      "since": "2026-10-22",
+      "message_includes": "T1339_OWNED_BASE_REQUIRED"
     }
   ]
 }

@@ -30,7 +30,7 @@ const errorJson=(error:unknown)=>error instanceof Error?{name:error.name,message
 
 it.each(['restore','reserved'] as const)('正式script.review确认当前版本/%s',async(kind)=>{
  const label=process.env.T1331_REVIEW_LABEL,selected=process.env.T1331_REVIEW_CASE;
- expect(process.env.T1331_REVIEW_APPROVED).toBe('1');expect(selected).toBe(kind);expect(/^(red|green)(-[A-Za-z0-9]+)+$/.test(label??'')).toBe(true);
+ expect(process.env.T1331_REVIEW_APPROVED,'T1331_REVIEW_APPROVAL_REQUIRED').toBe('1');expect(selected).toBe(kind);expect(/^(red|green)(-[A-Za-z0-9]+)+$/.test(label??'')).toBe(true);
  owned.root=path.join(runtime,'cases',label!,kind);expect(fs.existsSync(path.join(owned.root,'START.json'))).toBe(false);
  for(const dir of ['','tmp','media'])fs.mkdirSync(path.join(owned.root,dir),{recursive:true});
  save('START',{label,kind,runId:process.env.T1331_REVIEW_RUN_ID,startedAt:new Date().toISOString(),externalPaidModels:0,source:'正式公开端点；仅外部模型HTTP响应合成'});

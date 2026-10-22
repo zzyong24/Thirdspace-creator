@@ -37,7 +37,7 @@ const runtime=path.resolve('../docs/verification/t1328/runtime');
 const sha=(value:Buffer|string)=>createHash('sha256').update(value).digest('hex');
 const save=(name:string,value:unknown)=>fs.writeFileSync(path.join(owned.root,name+'.json'),JSON.stringify(value,null,2)+'\n');
 it('原聊天诊断卡真实公共锁定与重新挂载：只能锁原source subject并恢复具体预测',async()=>{
- expect(process.env.T1328_APPROVED).toBe('1');const label=process.env.T1328_RUN_LABEL!;expect(/^(red|green)(-[a-zA-Z0-9]+)*$/.test(label)).toBe(true);
+ expect(process.env.T1328_APPROVED,'T1328_APPROVAL_REQUIRED').toBe('1');const label=process.env.T1328_RUN_LABEL!;expect(/^(red|green)(-[a-zA-Z0-9]+)*$/.test(label)).toBe(true);
  owned.root=path.join(runtime,'cases',label);expect(fs.existsSync(path.join(owned.root,'START.json'))).toBe(false);
  for(const dir of ['','tmp','media','empty-codex-home'])fs.mkdirSync(path.join(owned.root,dir),{recursive:true});
  save('START',{label,at:new Date().toISOString(),externalModels:0,scope:'真实API/chat→生产worker/host→正式rubric候选→原组件click→确认/预测锁→原组件重挂载；仅外部Codex I/O替身与浏览器transport内存透传'});

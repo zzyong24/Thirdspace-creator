@@ -29,7 +29,7 @@ const save=(name:string,v:unknown)=>fs.writeFileSync(path.join(owned.root,name+'
 const originalText='这是一份隔离验收的朋友圈原稿。先把杯子放稳，再留下可写一句话的位置。只记录实际动作，不把人工测试输入当成发布效果。';
 
 it('legacy公共完整报告确认后，正常页面切原组仍能读取原作品子树',async()=>{
- expect(process.env.T1338_APPROVED).toBe('1');expect(process.env.T1338_CASE).toBe('legacy');
+ expect(process.env.T1338_APPROVED,'T1338_APPROVAL_REQUIRED').toBe('1');expect(process.env.T1338_CASE).toBe('legacy');
  const label=process.env.T1338_LABEL!;expect(/^(red|green)-v[1-9][0-9]*$/.test(label)).toBe(true);
  const auth=JSON.parse(fs.readFileSync(path.join(runtime,'OWNED_RUNTIME.json'),'utf8'));
  owned.root=path.join(auth.ownedRoot,'cases',label,'legacy');expect(fs.existsSync(path.join(owned.root,'START.json'))).toBe(false);
@@ -113,7 +113,7 @@ it('legacy公共完整报告确认后，正常页面切原组仍能读取原作�
 },28_800_000);
 
 it('T1338新子树公开新写继承与原回执材料链',async()=>{
- expect(process.env.T1338_APPROVED).toBe('1');expect(process.env.T1338_CASE).toBe('new-writes');expect(process.env.T1338_CONTINUATION_BINDING).toBeUndefined();
+ expect(process.env.T1338_APPROVED,'T1338_APPROVAL_REQUIRED').toBe('1');expect(process.env.T1338_CASE).toBe('new-writes');expect(process.env.T1338_CONTINUATION_BINDING).toBeUndefined();
  const auth=JSON.parse(fs.readFileSync(path.join(runtime,'OWNED_RUNTIME.json'),'utf8')),label=process.env.T1338_LABEL!;expect(/^green-v[1-9][0-9]*$/.test(label)).toBe(true);owned.root=path.join(auth.ownedRoot,'cases',label,'new-writes');expect(fs.existsSync(path.join(owned.root,'START.json'))).toBe(false);
  for(const n of ['','tmp','media','workspaces'])fs.mkdirSync(path.join(owned.root,n),{recursive:true,mode:0o700});const key=path.join(owned.root,'private-master-key');fs.writeFileSync(key,randomBytes(32).toString('base64'),{mode:0o600,flag:'wx'});
  save('START',{kind:'NEW_PUBLIC_WRITES_ZERO_MODEL',label,root:owned.root,generatedKeyMetadataOnly:{path:key,mode:'0600'}});
