@@ -1,4 +1,6 @@
-import test from 'node:test';
+// @vitest-environment node
+// 同一断言同时用于原 Node Gate 与完整 Vitest 套件。
+const {test}=process.env.VITEST?await import('vitest'):await import('node:test');
 import assert from 'node:assert/strict';
 import { createPublicKey, generateKeyPairSync, sign } from 'node:crypto';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';

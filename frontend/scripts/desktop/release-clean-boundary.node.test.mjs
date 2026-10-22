@@ -1,4 +1,5 @@
-import test from 'node:test';
+// 同一断言同时用于原 Node Gate 与完整 Vitest 套件。
+const {test}=process.env.VITEST?await import('vitest'):await import('node:test');
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
