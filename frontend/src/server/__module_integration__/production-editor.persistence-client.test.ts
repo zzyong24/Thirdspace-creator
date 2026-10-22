@@ -176,7 +176,22 @@ for(const [kind,mutate] of corruptSnapshotCases)it(`公开render拒绝真实owne
   expect((await scopedCall(f.ctx,ENDPOINTS.getProductionEditor.id,f.params)).revision).toBe(f.saved.revision);
 });
 it("公开render保留模型authority变化取消门，不进入claim或executor",async()=>{
-  const f=await renderOwnerFixture("null");captured.mutateRuntime=r=>{r.modelAuthorityDigest="changed-authority";};const result=await f.render();
+  const f=await renderOwnerFixture("null");
+  const {createExecutionRoute}=await import("@creatoros/contract/execution-worker");
+  const {pinModelAuthority,TaskModelAuthorityScope}=await import("@/server/task-model-authority");
+  const {readChannelModelAuthority}=await import("@/server/activation/client-config.server");
+  captured.beforeRuntimeRead=async id=>{
+    captured.beforeRuntimeRead=null;
+    const {aiTasks,eq}=await import("@creatoros/backend");
+    const [row]=await captured.db!.select().from(aiTasks).where(eq(aiTasks.id,id));
+    const pinned=pinModelAuthority(await readChannelModelAuthority());
+    // 此例保原V1取消门；V2确定性任务由原完整map合同覆盖，不混入旧全局摘要。
+    const runtime={...(row!.runtimeData as Record<string,unknown>),executionRoute:createExecutionRoute('pi'),modelAuthority:pinned.authority,modelAuthorityDigest:pinned.digest};
+    const valid=vi.fn(async()=>{});
+    expect(await new TaskModelAuthorityScope().runFrozen(runtime,readChannelModelAuthority,valid)).toBe(true);expect(valid).toHaveBeenCalledOnce();
+    await captured.db!.update(aiTasks).set({runtimeData:runtime}).where(eq(aiTasks.id,id));
+  };
+  captured.mutateRuntime=r=>{r.modelAuthorityDigest="changed-authority";};const result=await f.render();
   await vi.waitFor(async()=>expect((await f.task(result.taskId)).status).toBe("cancelled"),{timeout:120000});expect(captured.runs).toEqual([]);expect(captured.claims).toEqual([]);
 });
 it("legacy旧snapshot可读但真实initialgroup缺member版本仍由原admission拒绝",async()=>{

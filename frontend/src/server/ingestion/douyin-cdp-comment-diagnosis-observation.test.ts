@@ -36,7 +36,9 @@ it('真实handle投影失败与evaluate阶段区分，不泄露raw错误',async(
  const result=await observe(host,start);expect(result.ui).toMatchObject({observationFailure:'projection_failed',nodes:[]});expect(JSON.stringify(result)).not.toContain('SECRET');
 }));
 
-it.each(['evaluation','projection'] as const)('%s阶段自有1s deadline只记deadline，迟到handle不回写',async stage=>fixture(async(host,page,start,requests)=>{
+it.each(['evaluation','projection'] as const)('%s阶段原session剩余1s deadline只记deadline，迟到handle不回写',async stage=>{
+ let clockOffset=0;
+ return fixture(async(host,page,start,requests)=>{
  const original=page.evaluateHandle.bind(page);let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});let finished!:()=>void;const completion=new Promise<void>(resolve=>{finished=resolve;});
  vi.spyOn(page,'evaluateHandle').mockImplementationOnce(async(...args)=>{
   const handle=await original(...args);
@@ -46,10 +48,13 @@ it.each(['evaluation','projection'] as const)('%s阶段自有1s deadline只记de
   return handle;
  });
  try{
+  // 原观察预算继承session剩余期限；不再假设生产中存在固定1秒的新超时。
+  clockOffset=Date.parse(start.expiresAt)-Date.now()-1000;
   const result=await observe(host,start);expect(result.ui).toMatchObject({observationFailure:'observation_deadline',nodes:[]});expect(result.dispatched).toBe(true);
-  release();await completion;vi.restoreAllMocks();const recovered=await observe(host,start);expect(recovered.ui.status).toBe('observed');expect(recovered.ui).not.toHaveProperty('observationFailure');expect(recovered.generation).toBe(result.generation+1);expect(requests).toHaveLength(1);
- }finally{release();await completion;}
-}));
+  release();await completion;clockOffset=0;vi.restoreAllMocks();const recovered=await observe(host,start);expect(recovered.ui.status).toBe('observed');expect(recovered.ui).not.toHaveProperty('observationFailure');expect(recovered.generation).toBe(result.generation+1);expect(requests).toHaveLength(1);
+ }finally{clockOffset=0;release();await completion;}
+ },ports=>createCommentDiagnosisHost({...ports,now:()=>Date.now()+clockOffset}));
+});
 
 it('实际page关闭可辨认，原unknown/dispatched不被观察失败覆盖',async()=>fixture(async(host,page,start)=>{
  await page.evaluate(()=>document.querySelector('a')!.addEventListener('click',event=>{event.preventDefault();window.open('about:blank');}));

@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { Db } from "@creatoros/backend";
+const fixture=vi.hoisted(()=>({db:null as Db|null,sequence:0}));
+vi.mock("@creatoros/backend",async original=>{
+  const actual=await original<typeof import("@creatoros/backend")>();
+  return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{
+    const opened=await actual.createConfiguredDb(...args);fixture.db=opened.db;return opened;
+  }};
+});
 import type {
   Endpoint,
   RequestContext,
@@ -369,20 +377,11 @@ describe("query-services ops registered in the composite transport", () => {
       } as never,
       owner,
     );
-    await compositeTransport.request(
-      ep("artifacts.create"),
-      {
-        params: { projectId: PROJECT_ID },
-        query: undefined,
-        body: {
-          title: "尚未写入的成片脚本",
-          artifactType: "output_script",
-          stage: "script",
-          contentOutputId: output.data.id,
-        },
-      } as never,
-      owner,
-    );
+    // T1331：公开创建的空稿已经是用户正式真相；只有原ensure新建的预留目标可排除。
+    const {createScriptDraftTargetService}=await import("@creatoros/backend/modules/artifacts");
+    const pendingId=await fixture.db!.transaction(tx=>createScriptDraftTargetService({now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-query-reserved-${++fixture.sequence}`}).ensure(tx as unknown as Db,owner,PROJECT_ID,output.data.id));
+    const pending=await compositeTransport.request(ep("artifacts.get"),{params:{artifactId:pendingId}} as never,owner) as {data:{currentVersionIsReserved:boolean}};
+    expect(pending.data.currentVersionIsReserved).toBe(true);
     await compositeTransport.request(
       ep("artifacts.create"),
       {

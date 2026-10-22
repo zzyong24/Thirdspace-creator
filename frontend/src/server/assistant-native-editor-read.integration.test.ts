@@ -9,9 +9,17 @@ import {ENDPOINTS,NATIVE_DOCUMENT_VERSION,NATIVE_SOURCE_REVISION,workEditorTarge
 import type {Db} from '@creatoros/backend';
 import {workerToolResultReceiptSchema,agenticToolOutcomeSchema} from '@creatoros/contract/execution-worker';
 import type {ChatWorkbenchCapabilityHost} from '../../../backend/src/modules/ai-runtime/chat-workbench-capability-host';
+import {configureModelFixture} from '../test/configure-model-fixture';
 const fixture=vi.hoisted(()=>({db:undefined as Db|undefined}));
 vi.mock('@creatoros/backend',async original=>{const actual=await original<typeof import('@creatoros/backend')>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const result=await actual.createConfiguredDb(...args);fixture.db=result.db;return result;}};});
 vi.mock('@creatoros/backend/modules/assets',async original=>{const actual=await original<typeof import('@creatoros/backend/modules/assets')>();return {...actual,migrateStorageRoot:async()=>{throw Error('本隔离夹具禁止迁移媒体目录');}};});
+vi.mock('@creatoros/backend/modules/ai-runtime',async original=>{
+ const actual=await original<typeof import('@creatoros/backend/modules/ai-runtime')>();
+ return {...actual,createLocalCodexStatusService:()=>{
+  const status={engine:'codex' as const,installed:true,available:true,version:'0.159.3',defaultModelId:'native-read-codex-fixture',availableModels:[{id:'native-read-codex-fixture',inputModalities:['text']}],loginStatus:'authenticated' as const,capabilities:{text:true,imageUnderstanding:false,imageGeneration:false,imageEditing:'unavailable' as const}};
+  return {read:async()=>structuredClone(status),peek:()=>structuredClone(status),stop:async()=>{}};
+ }};
+});
 import {getChatRuntime,compositeTransport,__resetPersistenceForTests} from './persistence-client';
 import {prepareChatReply} from './prepare-chat-reply';
 
@@ -126,6 +134,7 @@ it.each(['pure-group','group-account','legacy-registered','legacy-premigration']
    const owned=groups.filter(group=>group.members.some(member=>member.accountId===ctx.accountId));
    expect(owned).toHaveLength(1);ctx={...ctx,groupId:owned[0]!.id};
   }
+  await configureModelFixture((id,params,body)=>publicData(id,ctx,params,body),`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,'fixture');
   const project=ENDPOINTS.createProject.response.parse(await publicData('projects.create',ctx,undefined,{title:'真实当前项目'}));projectId=project.id;
   const script=ENDPOINTS.createArtifact.response.parse(await publicData('artifacts.create',ctx,{projectId},{title:'真实主脚本',artifactType:'output_script',stage:'script'}));
   await publicData('artifacts.versions.create',ctx,{artifactId:script.id},{contentText:'真实主脚本正文，旧内容保持。',changeSummary:'建立只读验收原稿'});
@@ -187,7 +196,7 @@ it.each(['pure-group','group-account','legacy-registered','legacy-premigration']
   const factoryErrors:string[]=[],missingTools:string[]=[];
   worker=createChatWorkerDispatcher(db,{entryPath:resolve('../ai-worker/dist/execution-worker.cjs'),workerId:`native-public-${scope}`,webRead,budget:{maxCalls:32,maxTokens:300000,deadlineMs:1200000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{
    try{const tools=Object.assign({},await taskTools(...args),await ingestionTools(...args),await planTools(...args),await systemTools(...args),workbenchTools?await workbenchTools(...args):{});missingTools.push(...args[1].tools.filter(tool=>!Object.hasOwn(tools,tool.name)).map(tool=>tool.name));return tools;}catch(error){factoryErrors.push(error instanceof Error?error.message:String(error));throw error;}
-  },resolveModelCredential:async()=>({apiFormat:'openai_chat',baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:'fixture',token:'fixture'})});
+  },resolveModelCredential:(c,capability,owner)=>runtime.resolveModelSpec(c,capability,owner)});
   worker.start();console.info('[T1086-fixture] verification-worker-started',scope);
   await vi.waitFor(async()=>{const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));expect(task?.status,JSON.stringify({task:task&&{id:task.id,status:task.status,lastErrorCode:task.lastErrorCode},requests:requests.length,errors,factoryErrors,missingTools})).toBe('succeeded');},{timeout:120000});
   expect(errors).toEqual([]);expect(factoryErrors).toEqual([]);expect(missingTools).toEqual([]);expect(requests).toHaveLength(8);

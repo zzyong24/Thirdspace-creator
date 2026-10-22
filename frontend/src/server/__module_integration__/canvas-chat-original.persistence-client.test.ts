@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createServer} from 'node:http';
 import {ENDPOINTS,type Endpoint,type RequestContext} from '@creatoros/contract';
+import {configureModelFixture} from '@/test/configure-model-fixture';
 // 仅选择本候选源码正式编译的原worker文件；不替换模型resolver或业务owner。
 vi.mock('@/server/execution-worker-path',async original=>{const actual=await original<typeof import('@/server/execution-worker-path')>();const {fileURLToPath}=await import('node:url');return{...actual,resolveExecutionWorkerPath:()=>fileURLToPath(new URL('../../../../ai-worker/dist/execution-worker.cjs',import.meta.url))};});
 import {compositeTransport,getChatRuntime,__resetPersistenceForTests} from '@/server/persistence-client';
@@ -21,6 +22,7 @@ it('原Settings/聊天assembly/Pi Worker/read/propose受控账本只写候选，
  vi.stubEnv('DATABASE_URL','');vi.stubEnv('PGLITE_DATA_DIR',join(dir,'db'));__resetPersistenceForTests();
  try{
   await call(ENDPOINTS.putModel,{capability:'topic.generate'},{provider:'openai',modelName:'local-fixture',apiFormat:'openai_chat',baseUrl,secret:'local-fixture-only',isDefault:false});
+  await configureModelFixture((id,params,body)=>call(Object.values(ENDPOINTS).find(endpoint=>endpoint.id===id)!,params,body),baseUrl,'local-fixture');
   const canvas=await call(ENDPOINTS.createCanvas,undefined,{title:'原编导画布'});canvasId=canvas.id;baseRevision=canvas.revision;
   const runtime=await getChatRuntime(),conversation=await runtime.ai.createConversation(ctx,{title:'原画布对话',scope:`surface:canvas:${canvasId}`}),message=await runtime.ai.createMessage(ctx,conversation.id,{content:'请读取这张画布，然后保存一项文字候选供我检查'});
   const submitted=await runtime.durable.submit(ctx,{conversationId:conversation.id,sourceMessageId:message.id},(owner,snapshot)=>prepareChatReply(runtime,owner,snapshot,{chatContext:{surface:'canvas',selection:{kind:'canvas',ids:[canvasId],label:canvas.title}},messages:[{id:message.id,role:'user',parts:[{type:'text',text:message.content}]}]}));

@@ -5,6 +5,18 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
+import type { ProjectsService } from "@creatoros/backend/modules/projects";
+
+const fixture=vi.hoisted(()=>({projects:null as ProjectsService|null}));
+vi.mock("@creatoros/backend/modules/projects",async original=>{
+  const actual=await original<typeof import("@creatoros/backend/modules/projects")>();
+  return {...actual,createProjectsService:(...args:Parameters<typeof actual.createProjectsService>)=>{
+    const service=actual.createProjectsService(...args);
+    // 透明保留组合根服务；采集夹具经原具名内部入口，不能伪装公开import权限。
+    if(args[2])fixture.projects=service;
+    return service;
+  }};
+});
 
 // 数据底座(SPEC §1.4)优先读真接线 —— composition root 的三向读侧端到端断言,经
 // compositeTransport 打 pages.dashboard.get(同 server 页面 + /api/v1 route 共享的真 pglite)。
@@ -12,7 +24,7 @@ import { canonicalDataset } from "@/fixtures/canonical";
 //   ② 优先读真:种入 1 个 source='imported' 真项目 + 其已发布作品后 → 判据翻真,最近发布让 fixture
 //      让位、只出真实导入作品(治 dy-pub-00 假标题);imported 作品标题经 content_output 回退恢复。
 //
-// 种 imported 走真 op 链:projects.create(source:imported)→ projects.outputs.create →
+// 种 imported 走原采集内部入口ensureImportedProject→公开读取，再走
 // outputs.publications.create(transition published),与 T-001 落库形状一致(source/外发布)。
 
 // T1246 显式受控平台适配器，只验证原发布事务/幂等/索引；不启动浏览器或发布真人内容。
@@ -69,6 +81,7 @@ async function getCalibrationOverview(): Promise<CalibrationOverviewDto> {
 }
 
 beforeEach(async () => {
+  fixture.projects=null;
   __resetPersistenceForTests();
   const account = await compositeTransport.request(ep("accounts.create"), {
     params:undefined,query:undefined,body:{platform:"douyin",accountHandle:"@t1246-real-data",followerBaseline:0},
@@ -128,30 +141,12 @@ describe("数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜�
 
   it("优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品", async () => {
     // —— 种一个真实采集导入项目(source:imported)+ 作品 + 已发布 publication ——
-    const proj = (await compositeTransport.request(
-      ep("projects.create"),
-      {
-        params: undefined,
-        query: undefined,
-        body: {
-          title: "真实导入作品·四步法",
-          source: "imported",
-          platformRef: { platform: "douyin", externalId: "aweme-real-1" },
-        },
-      } as never,
-      owner,
-    )) as { data: { id: string; source: string } };
+    await expect(compositeTransport.request(ep("projects.create"),{body:{title:"公开不能伪装采集",source:"imported",platformRef:{platform:"douyin",externalId:"aweme-forged"}}} as never,owner)).rejects.toThrow("公开创建不能声明采集导入来源");
+    const imported=await fixture.projects!.ensureImportedProject(owner,{title:"真实导入作品·四步法",platform:"douyin",externalId:"aweme-real-1"});
+    const proj=(await compositeTransport.request(ep("projects.get"),{params:{projectId:imported.projectId}} as never,owner)) as {data:{id:string;source:string}};
     expect(proj.data.source).toBe("imported");
 
-    const output = (await compositeTransport.request(
-      ep("projects.outputs.create"),
-      {
-        params: { projectId: proj.data.id },
-        query: undefined,
-        body: { title: "真实导入作品·四步法" },
-      } as never,
-      owner,
-    )) as { data: { id: string } };
+    const output={data:{id:imported.outputId}};
 
     const pub = (await compositeTransport.request(
       ep("outputs.publications.create"),
