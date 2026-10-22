@@ -1,9 +1,11 @@
 import {createServer} from 'node:http';
 import {describe,it,expect,vi,beforeEach} from 'vitest';
+import {asSchema} from 'ai';
 import {workerSkillSnapshotSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {generateStructuredInWorker} from './structured-worker-generation';
 import {getOfficialSkillBase} from '../index';
 import {codexCallAuthority,codexWorkerPorts} from './codex-call-context';
+import {knowledgeDistillSchema} from '../prompt/templates/knowledge-distill';
 const native=vi.hoisted(()=>({turn:vi.fn(),recover:vi.fn(),close:vi.fn()}));
 vi.mock('./codex-app-server',async original=>({...await original<typeof import('./codex-app-server')>(),createControlledCodexSession:vi.fn(async()=>({authenticated:true,mcpNames:[],rpc:{close:native.close}}))}));
 vi.mock('./codex-native-turn',async original=>({...await original<typeof import('./codex-native-turn')>(),runCodexNativeTurn:native.turn,recoverCodexNativeTurn:native.recover}));
@@ -34,7 +36,11 @@ beforeEach(()=>{native.turn.mockReset();native.recover.mockReset();native.close.
 describe('T-1238 知识通过原Structured Worker模型预约',()=>{
  it.each(Object.keys(outputs) as Skill[])('Codex %s 不解析文本API；ALS中启动/绑定/结算真实预约，重放不再发模型',{timeout:120_000,retry:0},async skill=>{
   const l=ledger(),signal=new AbortController().signal;
-  native.turn.mockImplementation(async request=>{expect(codexWorkerPorts.getStore()).toBe(l.call);const authority=codexCallAuthority.getStore()!;expect(authority.recover).toBe(false);expect([...l.rows.values()].find(row=>row.callId===authority.callId)?.status).toBe('started');expect(request.outputSchema).toMatchObject({type:'object'});await request.onThread('native-thread');await request.onTurn(`native-turn-${native.turn.mock.calls.length}`);return {text:JSON.stringify(outputs[skill]),sessionId:'native-thread',providerTurnId:`native-turn-${native.turn.mock.calls.length}`,model:'real-native-model',modelProvider:'openai',usage:{inputTokens:5,outputTokens:7}};});
+  const originalSchema=skill==='knowledge.distill'?await asSchema(knowledgeDistillSchema).jsonSchema:getOfficialSkillBase(skill)!.outputSchema;
+  native.turn.mockImplementation(async request=>{expect(codexWorkerPorts.getStore()).toBe(l.call);const authority=codexCallAuthority.getStore()!;expect(authority.recover).toBe(false);expect([...l.rows.values()].find(row=>row.callId===authority.callId)?.status).toBe('started');
+   // T-1265：原完整schema随首次同一turn的文字协议传递，仍由原SDK/业务校验。
+   expect(originalSchema).toMatchObject({type:'object'});expect(request).not.toHaveProperty('outputSchema');expect(request.prompt).toContain(JSON.stringify(originalSchema));
+   await request.onThread('native-thread');await request.onTurn(`native-turn-${native.turn.mock.calls.length}`);return {text:JSON.stringify(outputs[skill]),sessionId:'native-thread',providerTurnId:`native-turn-${native.turn.mock.calls.length}`,model:'real-native-model',modelProvider:'openai',usage:{inputTokens:5,outputTokens:7}};});
   const run=()=>codexWorkerPorts.run(l.call,()=>generateStructuredInWorker(input(skill),{engine:'codex',protocolKind:'codex-app-server',runtimeVersion:'0.159.3'},signal,l.call));
   const first=await run(),count=skill==='knowledge.distill'?2:1;expect(native.turn).toHaveBeenCalledTimes(count);expect([...l.rows.values()]).toHaveLength(count);expect([...l.rows.values()].every(row=>row.status==='settled'&&row.threadId==='native-thread'&&row.turnId)).toBe(true);
   expect(JSON.parse(first.text).object).toEqual(skill==='knowledge.distill'?{parts:[outputs[skill],outputs[skill]]}:outputs[skill]);expect(l.saved).toEqual([first.text]);
