@@ -104,9 +104,10 @@ jobs:
       - name: 核验历史恢复的固定producer对象
         if: matrix.package == 'frontend'
         run: |
-          historical_producer=6e4689b3180f91189110208267708ad72b03ae64
-          git cat-file -e "$historical_producer^{commit}" || git fetch --no-tags origin "$historical_producer"
-          git cat-file -e "$historical_producer^{commit}"
+          for historical_producer in 6e4689b3180f91189110208267708ad72b03ae64 a9d06c01a8f3bff6f4323c438b6d569753675f2c; do
+            git cat-file -e "$historical_producer^{commit}" || git fetch --no-tags origin "$historical_producer"
+            git cat-file -e "$historical_producer^{commit}"
+          done
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
