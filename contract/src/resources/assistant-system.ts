@@ -34,18 +34,20 @@ const readIds=new Set([
  "positioning.profile.get","pages.positioning.get","positioning.statements.list","positioning.statements.get",
  "accountGroups.list","accountGroups.get","accounts.list","accounts.get","accounts.bindingCapabilities","accounts.bind.status",
  "outputs.publications.list","publications.get","publications.revisions.list",
- "analytics.projects.get","analytics.publications.get","analytics.traffic.get","pages.dashboard.get","pages.projectOverview.get","pages.groupTrend.get","pages.groupOverview.get","pages.dailyReport.get",
+ "analytics.projects.get","analytics.publications.get","analytics.traffic.get","pages.dashboard.get","pages.projectOverview.get","pages.groupOverview.get","pages.dailyReport.get",
  "group.calendar.list","group.cadence.get","scheduledJobs.list","scheduledJobs.get","jobRuns.listByJob","jobRuns.get","settings.preferences.get",
  "canvas.list","canvas.get","canvas.capabilities","canvas.node.tasks","canvas.generations.material.get",
 ]);
-export const assistantReadEndpointsV1:Readonly<Record<string,Endpoint>>=Object.freeze(Object.fromEntries([
+const readEndpointCandidates=[
  projectsOperations,candidateOperations,artifactsOperations,articlesOperations,graphicPostsOperations,knowledgeOperations,
  positioningOperations,publishingOperations,contentCalendarOperations,settingsOperations,schedulingOperations,assetsOperations,
  intelligenceOperations,platformAccountOperations,accountGroupOperations,analyticsOperations,pagesOperations,workCompositionsOperations,momentsOperations,creativeCanvasOperations,
-].flatMap(operations=>Object.values(operations)).filter(endpoint=>readIds.has(endpoint.id)&&endpoint.method==="GET").map(endpoint=>[endpoint.id,endpoint])));
+].flatMap(operations=>Object.values(operations)).filter(endpoint=>endpoint.method==="GET");
+export const assistantReadEndpointsV1:Readonly<Record<string,Endpoint>>=Object.freeze(Object.fromEntries(readEndpointCandidates.filter(endpoint=>readIds.has(endpoint.id)).map(endpoint=>[endpoint.id,endpoint])));
 /** 代码内固定目录，恢复旧任务不能接受任务自报端点或 schema。 */
 export type AssistantReadCatalogVersion=1|2;
-export const assistantReadEndpoints:Readonly<Record<string,Endpoint>>=Object.freeze({...assistantReadEndpointsV1,[productionOperations.getProductionEditor.id]:productionOperations.getProductionEditor});
+// T1347趋势只属于当前V2；沿原operation顺序保留当前完整schema/版本，不能改写冻结V1。
+export const assistantReadEndpoints:Readonly<Record<string,Endpoint>>=Object.freeze({...Object.fromEntries(readEndpointCandidates.filter(endpoint=>readIds.has(endpoint.id)||endpoint.id===pagesOperations.getGroupTrend.id).map(endpoint=>[endpoint.id,endpoint])),[productionOperations.getProductionEditor.id]:productionOperations.getProductionEditor});
 function readBranches(endpoints:Readonly<Record<string,Endpoint>>){return Object.values(endpoints).map(endpoint=>{
  const shape:Record<string,z.ZodType>={kind:z.literal(endpoint.id)};
  if(endpoint.params)shape.params=endpoint.params instanceof z.ZodObject?endpoint.params.strict():endpoint.params;

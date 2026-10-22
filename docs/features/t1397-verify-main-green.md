@@ -9,8 +9,12 @@
 1. 对照实现和业务契约修复SPEC §13漏登记路由；契约测试保持原断言，接口确有用途才登记。
 
    核实两条T1328预测锁路由后发现测试硬编码SPEC_13登记数组。用户已单独明确授权「允许仅补两条登记，断言不变」；数组数据与SPEC同步不扩展至改测试逻辑。
+
+   完整后端验证另发现真实兼容回归：`pages.groupTrend.get`被加入共享目录，改变T1086/T1248已冻结的V1 schema。修复仅将该能力限制在当前V2目录，保持V1原golden/hash及当前V2完整字节/顺序，恢复既有合同而非改测试预期；范围含`contract/src/resources/assistant-system.ts`与针对版本隔离的回归测试。不得以known清单掩盖该回归。
 2. 用失败run日志和本地完整后端测试查明exit143原因，按证据修workflow时限、分片、并发、内存。所有原测试仍执行，进程异常不得登记为已知失败放行。
-3. 本机完整跑backend及frontend，前端显式使用独立`PGLITE_DATA_DIR`，不接触正在运行App数据；运行`propose-known-failures.mjs`产生候选，再逐条核实环境/断言漂移/时序不稳，写清稳定错误标记与责任任务。可修复的问题优先修，清单不掩盖新回归。
+3. 本机完整跑backend及frontend，前端隔离PGlite与用户目录，普通用例使用内存库、磁盘用例使用私有临时目录，不接触正在运行App数据；运行`propose-known-failures.mjs`产生候选，再逐条核实环境/断言漂移/时序不稳，写清稳定错误标记与责任任务。可修复的问题优先修，清单不掩盖新回归。
+
+   隔离核实：全局非空PGLITE会强制所有普通单测共用磁盘库，与原`__resetPersistenceForTests`的新内存库语义冲突。最终runner清除继承`DATABASE_URL`/`PGLITE_DATA_DIR`，普通Vitest按正式driver走独立内存库，HOME/CODEX_HOME私有；本来要求file-PGlite的用例自行指定私有临时路径。先前全局盘库轮次的失败仅为负面证据，不作为已知失败放行理由，修后需完整重跑。
 4. 本地全workspace typecheck（6144MiB堆、并发1）、quality.test.mjs、boundary和run-tests全部包通过。单包PASS必须保留原始失败数和已知豁免数；不冒充原始测试全绿。
 5. 验证后分小提交推送，使用`gh run watch`等待最终结果；必要时按最多2轮追加推送继续修复。中文报告交付`/Users/zyongzhu/terminals/ci-green/REPORT.md`，包含最终CI结论/链接、每项已知失败理由与改动文件。
 
