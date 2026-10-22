@@ -60,6 +60,8 @@ async function exercise(kind:Kind){
    assert.equal(rows().filter(x=>x.type==='input'&&x.message?.type==='status').length,2,'observer cancellation cannot recycle real in-flight slot before cleanup');
    fs.writeFileSync(gate,'release');const values=await Promise.all(jobs.slice(1));
    for(const value of values){assert.equal(value.loginStatus,'unauthenticated');assert.equal(value.errorCode,'CODEX_LOGIN_REQUIRED');}
+   // 被取消的观察者已提前拒绝；另两个结果不能证明其 producer 清理已经完成。
+   await waitUntil(()=>rows().filter(x=>x.type==='cleanup-finished').length===3,'cancelled-producer-cleanup-finished');
    assert.equal(rows().filter(x=>x.type==='input'&&x.message?.type==='status').length,3);
    assert.equal(rows().filter(x=>x.type==='input'&&x.message?.type==='cancel').length,1);assert.equal(rows().filter(x=>x.type==='cleanup-finished').length,3);
   }else{
