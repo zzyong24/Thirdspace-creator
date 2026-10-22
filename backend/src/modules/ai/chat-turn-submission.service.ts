@@ -54,7 +54,7 @@ export function createChatTurnSubmissionService(db:Db,deps:{
   assertProject?(ctx:RequestContext,projectId:string):Promise<unknown>;
 }){
   const now=deps.now??(()=>new Date().toISOString()),nextId=deps.nextId??(prefix=>`${prefix}-${randomUUID()}`);
-  async function existing(store:Db,ctx:RequestContext,snapshot:ChatTurnSnapshot){
+  async function existing(store:Db,ctx:RequestContext,snapshot:ChatTurnSnapshot,retryOf?:string){
     const id=object(snapshot.sourceMessage.modelMetadata).chatTaskId;
     if(id===undefined){
       if(object(snapshot.sourceMessage.modelMetadata).replyTaskId!==undefined)throw new ConflictError("源消息已有旧回复任务，不能重复创建聊天执行");
@@ -73,6 +73,8 @@ export function createChatTurnSubmissionService(db:Db,deps:{
       if(canonicalJson(executionRoute)!==canonicalJson(businessRoute))throw new ConflictError("聊天根路由与原任务不符");
     }
     readChatHostContextPair(object(execution.payload).hostContext,input.hostContextDigest,{userId:task.userId,accountId:task.accountId,groupId:task.groupId,projectId:snapshot.conversation.projectId});
+    // 仅跳过本次提交最初看到的终态；并发提交已换绑的新尝试必须回放。
+    if(execution.id===retryOf && ["failed","cancelled"].includes(execution.status))return null;
     return {taskId:task.id,executionTaskId:execution.id,sourceMessageId:snapshot.sourceMessage.id,replayed:true};
   }
   return {
@@ -81,7 +83,12 @@ export function createChatTurnSubmissionService(db:Db,deps:{
       const snapshot=await readChatTurnSnapshot(db,ctx,request);
       const requestedEngine=request.executionEngine===undefined?undefined:z.enum(["pi","codex"]).parse(request.executionEngine);
       const replay=await existing(db,ctx,snapshot);
+      let retryOf:string|undefined;
       if(replay){
+        const [previous]=await db.select().from(executionTasks).where(eq(executionTasks.id,replay.executionTaskId));
+        if(previous && ["failed","cancelled"].includes(previous.status))retryOf=previous.id;
+      }
+      if(replay && !retryOf){
         if(requestedEngine!==undefined){
           const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,replay.executionTaskId));
           if(object(object(execution?.payload).modelInput).executionEngine!==requestedEngine)throw new ConflictError("源消息已绑定另一引擎，请另起新消息");
@@ -130,7 +137,7 @@ export function createChatTurnSubmissionService(db:Db,deps:{
         modelInput.groupId=frozenScope.groupId;modelInput.groupVersion=frozenScope.groupVersion;modelInput.membershipVersion=frozenScope.membershipVersion;
         const store=tx as unknown as Db;
         const current=await readChatTurnSnapshot(store,ctx,request,true);
-        const winner=await existing(store,ctx,current);
+        const winner=await existing(store,ctx,current,retryOf);
         if(winner){
           const [execution]=await tx.select().from(executionTasks).where(eq(executionTasks.id,winner.executionTaskId));
           if(object(object(execution?.payload).modelInput).executionEngine!==modelInput.executionEngine)throw new ConflictError("源消息已绑定另一引擎，请另起新消息");
@@ -138,8 +145,9 @@ export function createChatTurnSubmissionService(db:Db,deps:{
         }
         if(chatHistoryDigest(current)!==historyDigest)throw new ConflictError("聊天来源在装配期间改变，请重新提交");
         const taskId=nextId("ai-task"),stamp=now();
-        await tx.insert(aiTasks).values({id:taskId,userId:ctx.userId,accountId:frozenScope.accountId,groupId:frozenScope.groupId,groupVersion:frozenScope.groupVersion,membershipVersion:frozenScope.membershipVersion,projectId:current.conversation.projectId,taskType:"copilot.assist",runtimeData:{executionRoute,...(executionRoute.schemaVersion===2?{chatModelMode}:{})},status:"queued",requestedAt:stamp,idempotencyKey:`chat:${current.sourceMessage.id}`,inputData:{kind:"chat.run",conversationId:current.conversation.id,sourceMessageId:current.sourceMessage.id,historyMessageIds:current.messages.map(message=>message.id),historyDigest,modelInputDigest:chatInputDigest(modelInput),...(hostContext?{hostContextDigest:chatHostContextDigest(hostContext)}:{})}});
-        const execution=await createPersistentTaskService(store,{now,nextId}).enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:taskId,...(preparation?{modelRouteParent:{taskId:preparation.claim.task.id,...preparation.claim.lease,preparationReferenceId:preparation.referenceId}}:{}),idempotencyKey:`chat:${current.sourceMessage.id}`,executionBudget:createContinuousExecutionBudget(),payload:{aiTaskId:taskId,executionRoute,...(executionRoute.schemaVersion===2?{chatModelMode}:{}),artifactProtocolVersion:2,terminalPlanFailurePolicyVersion:1,toolValidationRecoveryVersion:1,toolFailureReceiptVersion:1,modelInput,...(hostContext?{hostContext}:{})}});
+        const idempotencyKey=retryOf?`chat:${current.sourceMessage.id}:retry:${retryOf}`:`chat:${current.sourceMessage.id}`;
+        await tx.insert(aiTasks).values({id:taskId,userId:ctx.userId,accountId:frozenScope.accountId,groupId:frozenScope.groupId,groupVersion:frozenScope.groupVersion,membershipVersion:frozenScope.membershipVersion,projectId:current.conversation.projectId,taskType:"copilot.assist",runtimeData:{executionRoute,...(executionRoute.schemaVersion===2?{chatModelMode}:{})},status:"queued",requestedAt:stamp,idempotencyKey,inputData:{kind:"chat.run",conversationId:current.conversation.id,sourceMessageId:current.sourceMessage.id,historyMessageIds:current.messages.map(message=>message.id),historyDigest,modelInputDigest:chatInputDigest(modelInput),...(hostContext?{hostContextDigest:chatHostContextDigest(hostContext)}:{})}});
+        const execution=await createPersistentTaskService(store,{now,nextId}).enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:taskId,...(preparation?{modelRouteParent:{taskId:preparation.claim.task.id,...preparation.claim.lease,preparationReferenceId:preparation.referenceId}}:{}),idempotencyKey,executionBudget:createContinuousExecutionBudget(),payload:{aiTaskId:taskId,executionRoute,...(executionRoute.schemaVersion===2?{chatModelMode}:{}),artifactProtocolVersion:2,terminalPlanFailurePolicyVersion:1,toolValidationRecoveryVersion:1,toolFailureReceiptVersion:1,modelInput,...(hostContext?{hostContext}:{})}});
 
         if(execution.ownerId!==taskId)throw new ConflictError("源消息已有不同的执行绑定");
         await tx.update(aiTasks).set({executionTaskId:execution.id}).where(eq(aiTasks.id,taskId));

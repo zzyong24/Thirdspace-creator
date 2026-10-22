@@ -382,3 +382,12 @@ describe('T1294 确定零turn的Codex会话预检查安全提示',()=>{
   expect(result?.message).not.toContain('fixture-credential');
   expect(result?.suggestSwitchModel).toBe(true);
  });
+
+it.each(["", "执行停止，等待恢复或诊断", "http_400", "模型服务拒绝了请求"])("历史拒绝无详情诚实提示：%s",detail=>{
+ const result=humanizeAiError(new Error(`http_400: ${detail}`));
+ expect(result?.message).toContain("当时未记录具体原因");expect(result?.message).toContain("HTTP 400");expect(result?.message).not.toContain(" | Error");
+ expect(humanizeAiError(new Error(result!.message))?.message).toBe(result?.message);
+});
+it("供应商详情不拼接 Error 名称",()=>{
+ expect(humanizeAiError(new Error("http_400: invalid tool_choice"))?.message).not.toContain(" | Error");
+});

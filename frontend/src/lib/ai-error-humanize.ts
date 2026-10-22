@@ -201,12 +201,17 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
  */
 export function humanizeAiErrorMessage(raw: string): HumanAiError | null {
   if (!raw) return null;
+  raw = raw.replace(/(?:\s*\|\s*(?:Error|AI_APICallError))+$/g, "").trim();
+  if(/^上次请求被模型服务拒绝（HTTP (400|404|422)）/.test(raw))return {code:"provider_invalid",message:raw,suggestSwitchModel:true};
   // SSE 已翻译成安全中文后，客户端仍须识别其分类并展示同一原因。
   if(raw.startsWith("模型服务拒绝了请求"))return {code:"provider_invalid",message:redactProviderErrorDetail(raw),suggestSwitchModel:true};
   const rejected=raw.match(/\bhttp_(400|404|422)\b\s*:?\s*([\s\S]*)/i);
   if(rejected){
     const detail=redactProviderErrorDetail(rejected[2].replace(/^(?:http_(?:400|404|422)\s*:?\s*)+/i, "")).slice(0,240);
-    return {code:"provider_invalid",message:`模型服务拒绝了请求${detail ? "："+detail : ""}，请检查模型名称、接口格式和工具参数。`,suggestSwitchModel:true};
+    const missing=!detail || /^(?:执行停止，等待恢复或诊断|模型服务拒绝了请求|Error)$/.test(detail);
+    return {code:"provider_invalid",message:missing
+      ? `上次请求被模型服务拒绝（HTTP ${rejected[1]}），但当时未记录具体原因；请点重试重新发送。`
+      : `模型服务拒绝了请求：${detail}，请检查模型名称、接口格式和工具参数。`,suggestSwitchModel:true};
   }
   for (const rule of AI_ERROR_HUMAN_RULES) {
     if (rule.pattern.test(raw)) return rule.human;
@@ -216,6 +221,11 @@ export function humanizeAiErrorMessage(raw: string): HumanAiError | null {
 
 /** Error/unknown → 人话(取 message 走规则表)。不命中返回 null。 */
 export function humanizeAiError(err: unknown): HumanAiError | null {
+  // Error 名称、响应正文与 cause 只辅助分类，不能拼成供应商原因展示。
+  if(err instanceof Error){
+    const direct=humanizeAiErrorMessage(err.message);
+    if(direct)return direct;
+  }
   const raw = collectErrorText(err);
   return humanizeAiErrorMessage(raw);
 }
