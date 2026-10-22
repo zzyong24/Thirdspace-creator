@@ -7,14 +7,14 @@ import {execFileSync} from "node:child_process";
 import {beforeAll,expect,it,vi} from "vitest";
 import type {Endpoint} from "@creatoros/contract";
 import {executionTasks,executionCalls,eq,type Db} from "@creatoros/backend";
-const fixture=vi.hoisted(()=>({url:"",db:null as Db|null,opens:0,candidatesBeforeRestart:-1,credentialReads:0,checkpointSaved:false,expireOnReopen:null as string|null,release:null as null|(()=>void)}));
+const fixture=vi.hoisted(()=>({url:"",db:null as Db|null,opens:0,candidatesBeforeRestart:-1,reopenedAt:null as number|null,credentialReads:0,checkpointSaved:false,expireOnReopen:null as string|null,release:null as null|(()=>void)}));
 function resetFixture(){
- fixture.db=null;fixture.opens=0;fixture.candidatesBeforeRestart=-1;fixture.credentialReads=0;fixture.checkpointSaved=false;fixture.expireOnReopen=null;fixture.release=null;
+ fixture.url="";fixture.db=null;fixture.opens=0;fixture.candidatesBeforeRestart=-1;fixture.reopenedAt=null;fixture.credentialReads=0;fixture.checkpointSaved=false;fixture.expireOnReopen=null;fixture.release=null;
 }
 vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{
  const result=await actual.createConfiguredDb(...args);fixture.db=result.db;fixture.opens++;
  if(fixture.opens===2){
-  fixture.candidatesBeforeRestart=(await result.db.select().from(actual.aiTaskResults)).length;
+  fixture.reopenedAt=Date.now();fixture.candidatesBeforeRestart=(await result.db.select().from(actual.aiTaskResults)).length;
   // 旧宿主已正式停止，模拟离线期间到期；新宿主尚未装配，不能与旧watcher竞争。
   expect(fixture.expireOnReopen).toBeTruthy();
   await result.db.update(actual.executionTasks).set({deadlineAt:new Date(Date.now()-1000).toISOString()}).where(actual.eq(actual.executionTasks.id,fixture.expireOnReopen!));
@@ -35,6 +35,8 @@ const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransp
 beforeAll(()=>{execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 it("口播检查点已持久化但回执丢失后重启，过期任务恢复基础分镜并可采纳",async()=>{
  resetFixture();
+ const beganAt=Date.now(),phases:Array<{phase:string;elapsedMs:number}>=[];
+ const record=(phase:string)=>phases.push({phase,elapsedMs:Date.now()-beganAt});
  const directory=mkdtempSync(resolve(tmpdir(),"t915-script-deadline-"));vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR",resolve(directory,"db"));__resetPersistenceForTests();
  const voiceover="已生成的完整口播必须保留。即使分镜预算不足，也应该能够采纳。";
  const requests:string[]=[];let injectionError:unknown;
@@ -45,11 +47,13 @@ it("口播检查点已持久化但回执丢失后重启，过期任务恢复基�
   }catch(error){injectionError=error;res.writeHead(500);res.end("fixture injection failed");}
  });await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
  try{
-  await configureModelFixture(call,fixture.url,"budget-fixture");
+  await configureModelFixture(call,fixture.url,"budget-fixture");record("public-model-configured");
   const project=await call("projects.create",undefined,{title:"隔离预算项目"});const artifact=await call("artifacts.create",{projectId:project.id},{title:"目标原稿",artifactType:"master_script",stage:"script"});
   const before=await call("artifacts.versions.list",{artifactId:artifact.id});
+  record("public-fixture-ready");
   const task=await call("ai.tasks.create",undefined,{taskType:"script.draft",attemptId:"script-budget-public-entry",inputData:{projectId:project.id,artifactId:artifact.id,topic:"保留已生成结果"}});
   await vi.waitFor(()=>expect(fixture.checkpointSaved).toBe(true),{timeout:15000,interval:50});
+  record("persisted-checkpoint-receipt-held");
   const rows=await fixture.db!.select().from(executionTasks).where(eq(executionTasks.userId,ctx.userId));expect(rows).toHaveLength(1);
   const execution=rows[0]!;
   const calls=await fixture.db!.select().from(executionCalls).where(eq(executionCalls.executionTaskId,execution.id));expect(calls).toHaveLength(1);expect(calls[0]!.status).toBe("settled");
@@ -58,12 +62,15 @@ it("口播检查点已持久化但回执丢失后重启，过期任务恢复基�
   const dispose=(globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence!;
   let timer:ReturnType<typeof setTimeout>|undefined;
   try{await Promise.race([dispose(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error("DISPOSE_WAITED_FOR_CHECKPOINT_GATE")),8000);})]);}finally{if(timer)clearTimeout(timer);fixture.release?.();}
+  record("original-runtime-disposed");
   __resetPersistenceForTests();
   await vi.waitFor(async()=>{expect(injectionError).toBeUndefined();const current=await call("ai.tasks.get",{taskId:task.id});expect(current.status,JSON.stringify(current)).toBe("awaiting_confirmation");},{timeout:15000,interval:100});
+  record("expired-offline-checkpoint-recovered");
   expect(fixture.opens).toBe(2);expect(fixture.candidatesBeforeRestart).toBe(0);expect(fixture.credentialReads).toBe(credentialsBeforeRestart);const current=await call("ai.tasks.get",{taskId:task.id});expect(current.executionTaskId).toBeTruthy();expect(current.runtimeStatus).toBe("partial");expect(requests).toHaveLength(1);expect(requests[0]).toContain("口播主笔");
   const candidates=await call("ai.tasks.results.list",{taskId:task.id});expect(candidates).toHaveLength(1);expect(candidates[0].resultData.sections.map((s:any)=>s.口播).join("")).toBe(voiceover);expect(candidates[0].resultData.qualityWarnings.length).toBeGreaterThan(0);
   expect(await call("artifacts.versions.list",{artifactId:artifact.id})).toEqual(before);
   expect((await call("ai.tasks.confirm",{taskId:task.id})).status).toBe("succeeded");
   const saved=await call("artifacts.get",{artifactId:artifact.id});const versions=await call("artifacts.versions.list",{artifactId:artifact.id});expect(versions).toHaveLength(before.length+1);expect(versions.find((v:any)=>v.id===saved.currentVersionId)?.contentData).toEqual(candidates[0].resultData.contentData);expect(requests).toHaveLength(1);expect(await fixture.db!.select().from(executionCalls).where(eq(executionCalls.executionTaskId,execution.id))).toHaveLength(1);
- }finally{fixture.release?.();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
-},45000);
+ }finally{record("cleanup");console.info("[script-deadline-fixture]",JSON.stringify({phases,reopenedAtElapsedMs:fixture.reopenedAt===null?null:fixture.reopenedAt-beganAt,opens:fixture.opens,requests:requests.length}));fixture.release?.();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
+ // 总预算覆盖两次真实root迁移、公开链和原15s/8s/15s阶段等待，阶段预算不延长。
+},120000);
