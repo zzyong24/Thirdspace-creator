@@ -290,6 +290,10 @@ T-1397 首轮 Linux 的聊天、转录和粗剪失败都涉及单测 job 未构�
 
 不能只看 workflow 父 TMP 或 argv 的 user-data-dir。HTML 渲染器和 T1324 夹具会再次添加/覆盖目录，Chrome 还会创建自己的 SingletonSocket 临时目录；最终长度可能超过 Linux 上限。保留短私有根并用真实浏览器验证；SIGTRAP 与 Crashpad 频率警告不能直接写成 OOM。诊断保存完整 stderr 与 signal，原完整渲染测试仍必须执行。
 
+新增诊断自身也需真实验证：T-1397 第二轮原渲染测试通过，但新CLI截图探针等不到自行退出，被自身120秒定时器结束而把job判红。改用产品已经使用的Playwright显式截图/关闭，校验真实PNG、完整stderr和正常退出，并跑缺binary/假exit0负例；共享探针期限并留清理余量。语法检查不能代签目标平台，脚本主动kill不能误标系统OOM，诊断失败不能阻止原完整测试收集。
+
+PGlite.close不等于解除所有引用：Vitest4的vi.fn初始实现被mock注册表保留，同一factory其他常量闭包也可能共享含db的上下文。仅改直接读db的mock仍会保留数据库。测试夹具应把实现安装在可reset的mock上，并在用例完成后清理实现与调用记录，保留正式数据库close；用真实完整套件及RSS验证，不能仅凭close调用或GC推测内存已释放。
+
 ## CI 步骤插在产物生成之前 → tauri_build 资源校验必然 panic(T-992,2026-09-15)
 
 **坑**:为守护 T-992 的启动容忍分支,往 `desktop-release.yml` 里加了一步 `cargo test --lib runtime_cleanup_tests::windows_ --no-default-features`,插在 `安装 Windows production closure 的 Chromium` 之后、`构建并接入 Windows production closure(T-675)` 之前。Windows job 直接挂:`build.rs:404` panic `tauri_build 失败: resource path binaries\creatoros-server-x86_64-pc-windows-msvc.exe doesn't exist`,exit 101(run 34942593764)。**不是测试失败,是这一步根本编译不起来**。原因:`binaries/` 被 gitignore,该 exe 在 Windows 上由 `prepare-packaged-runtime.mjs` 写出,而它只在 `build-production-closure.mjs --prepare-package` 里被调用 —— 也就是紧跟其后那一步;另一条会填充该目录的 `build-sidecar.mjs` 挂着 `runner.os != 'Windows'`,Windows 上不跑。

@@ -28,4 +28,40 @@
 
 PGlite 生命周期修复前后整文件均54/54通过，但本次采样的修后 RSS 更高，不能宣称降低了内存或已证明 runner143 的原因。实际 AAC 对照采用本机静态 FFmpeg6.0 与系统9.0.1；这不等于 Linux6.1 修后已验收，后者仍以新 CI 为准。
 
-Chromium 新诊断计划在下一 CI 用已安装真实 binary，在父 TMP、HTML 子 TMP 和 T1324 任务 TMP 三种环境产生真实800×600 PNG，并保留全部 stderr、exit/signal；提交前只有 `node --check` 通过，没有冒充 Linux 实跑。它不能代签原 Playwright PNG/PDF、HyperFrames 视频、安全与任务链断言。资源每30秒采样，缺 cgroup 明记 unavailable；采样最大值不是瞬时峰值上界，也不能用最后一次 oom_kill=0 排除随后发生的 OOM。
+第二轮提交时，Chromium 新诊断计划在下一 CI 用已安装真实 binary，在父 TMP、HTML 子 TMP 和 T1324 任务 TMP 三种环境产生真实800×600 PNG，并保留全部 stderr、exit/signal；当时只有 `node --check` 通过，没有冒充 Linux 实跑。它不能代签原 Playwright PNG/PDF、HyperFrames 视频、安全与任务链断言。资源采样目标间隔30秒，慢采样会推迟后续样本；缺 cgroup 明记 unavailable，采样最大值不是瞬时峰值上界，也不能用最后一次 oom_kill=0 排除随后发生的 OOM。
+
+## 第二轮新增 CLI 诊断缺陷及修复
+
+[第二轮39769166511](https://github.com/zzyong24/Thirdspace-creator/actions/runs/39769166511)的原前端第6、7片测试已通过，其中真实跨目录PNG像素与PDF正文原失败用例通过。但新增的CLI `--screenshot` 诊断三环境均未生成PNG、未自行退出，120秒后被诊断脚本主动SIGKILL，导致job失败。这不是系统OOM，也不是原SIGTRAP；DBus/gcm/GPU警告不能确定CLI内部挂住的唯一原因。原完整suite按设计仍执行，旧诊断负证据保留。
+
+修复只改诊断脚本，使用锁定Playwright的实际launch→离线route→导航→screenshot→await close控制链，仍要求真实800×600 PNG及正常浏览器退出。三个环境继续保留原父/子TMP关系；probe共享120秒绝对期限，清理最多另30秒，父watchdog150秒，不能让内层各自续满预算。保存完整pw:browser日志，driver退出与Chrome实际退出/信号分别记录；不存在browser、假可执行返回0仍硬失败，不扩known，不改生产与原测试断言。
+
+修后本机真实Chromium148三环境共3.00秒、3张PNG及正常close，缺browser和假exit0两个负例均失败，独立审查通过。最终字节还把context默认动作/导航预算设置为同一绝对期限的剩余时间，并重新实跑上述正反例。平台明确为macOS，不能代签Linux；最后一轮CI仍必须实际验证该脚本和原完整套件。证据：`chrome-independent-review/playwright-smoke-v2/budget-final-commands.json`，脚本SHA256 `52389c62d5b27613debab6e917eb5bebafa7ef9ed43c97ec46bb6e7b0e6b2676`。
+
+第三轮提交前的timeout-policy静态检查还发现：第二轮新增、现已受Git跟踪的资源采样脚本为ps设置5000ms，低于执行预算下限120000ms。现按既有规则改为120000ms，不新增豁免；此同步调用仅在独立后台采样进程内执行，失败记录unavailable，不阻塞原测试主进程。语法、一次本机采样及完整timeout-policy回归实际exit0（`timeout-policy-round-3-fixed.log`）；macOS缺少Linux资源文件的结果不冒充Linux采样通过。
+
+第二轮前端第5片实际浏览器安装12分17秒，媒体安装到11:54:35 UTC已25分46秒且仍在进行，job累计39分25秒尚未进入测试；已完成片原完整测试约25分钟。最后一轮unit外层预算由60改90分钟：准备约40＋测试约25＋三个诊断最坏7.5，约72.5分钟后仍留上传和波动余量。只改job总期限，不改case/hook、分片、并发、堆或失败门。该处理针对实际安装挤占预算，不宣称修复原143来源；YAML和全部Bash块已验证，独立评审记录`chrome-independent-review/round3-unit-90min-budget-review.json`。
+
+## 两次 exit143 的平台复核
+
+原run39711648579与首轮backend第4片实际runner均为2.338.0。精确版本[JobRunner.cs](https://github.com/actions/runner/blob/v2.338.0/src/Runner.Worker/JobRunner.cs#L126)表明原shutdown文案来自内部`UserCancelled`分支；[Runner.cs](https://github.com/actions/runner/blob/v2.338.0/src/Runner.Listener/Runner.cs#L350)也会把SIGTERM/unload映射到此名，所以不能等同“用户手动取消”。两job未到40分钟，check API无额外原因字段，也没有OOM/cgroup/内核记录；现存main Verify创建窗口未显示终止前有新run，不能归于新push并发取消。
+
+原run单测默认只把stdout写文件，未启用QUALITY_VERBOSE且中断后没有artifact，静默18分39秒不能证明卡死。首轮第4片到143前约50秒仍完成真实业务用例，也不支持整轮始终卡死。已确认终止机制为runner收到通用关闭信号并伴随143，上游触发仍未知；确定来源需要托管平台内部runner/worker诊断，公开job日志与REST无法提供。该边界与四个明确40分钟超时job分开。原件、精确源码和hash见`chrome-independent-review/exit143-platform-audit/`。
+
+安装慢点的完整片对照：前端第3片同样87个FFmpeg依赖包共62.8MB，下载耗13分53秒（75.4kB/s），解包/配置仅约4.23秒，apt update约1秒。136条Ign集中在Azure HTTP包源，切官方HTTPS后余包约16秒完成；第2/6/7片同包下载约4秒。第5片到11:57:21 UTC准备已42分11秒尚未进入测试，不能把安装等待误写为测试卡死。证据`frontend/ci-39769166511/apt-readonly-review.json`。
+
+第5片最终12:02:27 UTC才进入完整分片，准备累计47分17秒。本轮原日志明确实际入口是`file:/etc/apt/apt-mirrors.txt`。官方[configure-apt-sources.sh](https://github.com/actions/runner-images/blob/416ad027415129c880fc76669a2c063b0a39b4a0/images/ubuntu/scripts/build/configure-apt-sources.sh#L9)把Azure HTTP设首选、官方archive HTTPS设备用；精确镜像tag取回404，不冒称已读该tag。最后一轮在Playwright安装前，将该镜像表及已有兼容源文件里的精确Azure HTTP地址替换为原备用官方HTTPS，保留发行版/组件/Signed-By/签名校验和所有安装包；不加PPA或不安全apt选项。此举消除已观察到的Azure重试入口，不能保证未来公网速度，90分钟总预算仍保留。独立证据`chrome-independent-review/apt-source-audit/`。
+
+## 第二轮单文件内存压力与 mock 保留链
+
+后端第8片在12:02:42 UTC收到runner shutdown并exit143，未能上传完整测试JSON。恢复的最后资源样本12:02:25显示该片`ai.service.test.ts`独立Node进程RSS约6.61GiB、MemAvailable约394MiB、swap约2.83GiB；上一个articles文件用的是不同PID，因此是单文件内增长，不是跨文件fork复用。最后样本cgroup oom/oom_kill仍为0，只能证明明显内存压力，不能伪称已取得内核OOM或平台上游关闭原因。
+
+锁定Vitest4.1.8的spy用强Set保存mock，`vi.fn(initialImplementation)`会把初始闭包作为reset目标继续保留；PGlite0.2.17的close执行shutdown但不清除WASM模块字段。makeService的数据库闭包与其他常量mock共享词法上下文，所以仅close或仅改adoption mock均不足。真实锁定spy/V8的三组外部WeakRef诊断确认：原结构、只改adoption在reset和GC后仍可达；全部factory mock使用无初始基线的mock再安装实现、reset后才不可达。该机制实验不是实际数据库套件或Linux验收，原件见`chrome-independent-review/pglite-resource-audit/`。
+
+最终夹具修复只影响`ai.service.test.ts`的mock构造与四处关闭hook的finally reset，close错误继续传播，保留全部54例业务断言；不增加堆、不强制GC、不跳例、不加known。最终字节SHA256 `80b75d53ddfa230d6572bf3b76a9611fc4f5c39adc6e00709d8c2e3212e8e21c`实际54/54、runtime0、149.39秒，backend6144类型检查exit0，独立逆向字节审查确认业务输入/断言不变。相同3072堆/单worker，本机close-only进程树RSS峰3854.66MiB→最终1944.38MiB（下降49.56%），单进程3635.81→1673.63MiB（下降53.97%）。这是本机对照，Linux峰值与完整分片仍以最后一轮CI为准；旧close-only和只改adoption的不足证据保留。完整证据`backend/ci-run-39769166511/ai-service-retention/FINAL-HANDOFF.json`。
+
+## 第二轮终态与最后一次推送边界
+
+第二轮run39769166511实际FAIL，`gh run watch`收口exit1。后端除第8片runner143外，其余15片原run-tests全部PASS；第10片总59分49秒，距60分钟仅11秒，但原测试完整通过，不能误记超时。前端7个完整分片545文件、5374PASS/64精确env/6skip，new/runtime均0；第5片因精确60分钟job上限取消，缺78文件的完整报告，不能签全量。首轮后端14项新增失败均已逐一PASS；前端20项中15项PASS，其余5项属于未完成第5片。contract、ai-worker、mcp-server、checks与build均成功，原非阻塞lint债务仍如实保留。
+
+本轮失败同时包含新增CLI诊断、单文件mock保留内存与安装挤占job预算；最后一次推送同时修这些已证问题，不扩104项known清单、不改原断言或跳过未完成测试。最终结果仍须以最后一轮真实Linux全量Verify为准，不提前声明main变绿。
