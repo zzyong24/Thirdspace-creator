@@ -113,7 +113,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
     if(!["waiting_user","retry_wait","failed"].includes(task.status))return null;
     const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
     const found=find(task,calls,callId),last=calls.at(-1);
-    if(found.parent.status!=="started" || last?.parentCallId!==callId || !recoverableModelFailure(last) || last.startedAttempt!==ref.attempt)throw new ConflictError("挂起回执不匹配原生成");
+    if((found.parent.status!=="started" && !(found.parent.status==="rejected" && task.status==="failed" && failure.errorCode==="MODEL_REQUEST_BUILD_FAILED")) || last?.parentCallId!==callId || !recoverableModelFailure(last) || last.startedAttempt!==ref.attempt)throw new ConflictError("挂起回执不匹配原生成");
     const exhausted=task.status==="failed" && failure.outcome==="retry_wait" && task.lastErrorCode==="RETRY_BUDGET_EXHAUSTED";
     if(!exhausted && (task.status!==failure.outcome || task.lastErrorCode!==failure.errorCode || (task.status!=="failed" && task.retryOfCallId!==last.id)))throw new ConflictError("挂起事实不符");
     return {status:task.status,retryAt:task.retryAt};

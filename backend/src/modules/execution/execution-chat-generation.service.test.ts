@@ -336,3 +336,17 @@ it("复盘空经验报告经持久模型账本到聊天结果并保留项目来�
  const result=await f.make().complete(f.ref,{callId:f.parent.callId});
  expect(result.data).toEqual({kind:"review.learnings",items:[],observations:report.observations,hypotheses:report.hypotheses,nextExperiment:report.nextExperiment,insufficientReason:report.insufficientReason,projectId:"source-project",error:null});
 });
+
+it('发送前失败：子模型 rejected、父工具 rejected、任务 failed 并保存脱敏真实原因',async()=>{
+ const f=await fixture(false,'positioning.generate'),request=await next(f),child=await f.service.reserve(f.ref,request);
+ await f.service.start(f.ref,{callId:child.callId});
+ await f.service.settle(f.ref,{callId:child.callId,status:'rejected',errorDetail:'ReferenceError: choice is not defined token=synthetic-secret'});
+ expect(await f.service.fail(f.ref,{callId:f.parent.callId,outcome:'failed',errorCode:'MODEL_REQUEST_BUILD_FAILED'})).toMatchObject({status:'failed'});
+ expect(await f.service.fail(f.ref,{callId:f.parent.callId,outcome:'failed',errorCode:'MODEL_REQUEST_BUILD_FAILED'})).toMatchObject({status:'failed'});
+ const task=await f.tasks.get(f.ctx,f.task.executionTaskId);
+ expect(task).toMatchObject({errorCode:'MODEL_REQUEST_BUILD_FAILED',errorMessage:expect.stringContaining('ReferenceError: choice is not defined')});
+ expect(JSON.stringify(task)).not.toContain('synthetic-secret');
+ const state=await f.ledger.inspect(f.ref);
+ expect(state.calls.find(c=>c.id===child.callId)).toMatchObject({status:'rejected'});
+ expect(state.calls.find(c=>c.id===f.parent.callId)).toMatchObject({status:'rejected',resultText:expect.stringContaining('ReferenceError: choice is not defined')});
+});

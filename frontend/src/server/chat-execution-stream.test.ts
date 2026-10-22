@@ -241,3 +241,59 @@ it('实际服务接受原任务cancel_requested后本地停止可回收，SDK断
   expect((await tasks.get(context,task.id)).status).toBe('cancelled');
  }finally{release();await session.chat.stop();await sending;vi.unstubAllGlobals();await connection.client.close();}
 });
+
+it.each([400,404,422])('失败任务 http_%s 与供应商原因通过 SSE 到达用户',async status=>{
+ const runtime={subscribe:async function*(){yield {events:[],hasMore:false,status:'failed'};},get:async()=>({errorCode:`http_${status}`,errorMessage:'invalid tool_choice'})} as unknown as Parameters<typeof chatExecutionResponse>[0];
+ const body=await chatExecutionResponse(runtime,context,input,new AbortController().signal).text();
+ expect(body).toContain('模型服务拒绝了请求');expect(body).toContain('invalid tool_choice');expect(body).not.toContain('本次执行未完成');
+ const event=body.split('\n').filter(line=>line.startsWith('data: {')).map(line=>JSON.parse(line.slice(6))).find(row=>row.type==='error');
+ expect(humanizeAiErrorMessage(event.errorText)).toMatchObject({code:'provider_invalid',message:expect.stringContaining('invalid tool_choice')});
+});
+
+it.each([null,"执行停止，等待恢复或诊断"])("历史失败缺供应商详情经 SSE 提示重试：%s",async errorMessage=>{
+ const runtime={subscribe:async function*(){yield {events:[],hasMore:false,status:'failed'};},get:async()=>({errorCode:'http_400',errorMessage})} as unknown as Parameters<typeof chatExecutionResponse>[0];
+ const body=await chatExecutionResponse(runtime,context,input,new AbortController().signal).text();
+ expect(body).toContain('当时未记录具体原因');expect(body).toContain('请点重试重新发送');expect(body).not.toContain(' | Error');
+});
+
+it('合成 DeepSeek 400 经真实 worker 流包装、调用结算、任务落库与 SSE 到达卡片且脱敏',async()=>{
+ const {modelFor}=await import('../../../ai-worker/src/runtime/provider-factory');
+ const {createDurableStreamModel}=await import('../../../ai-worker/src/execution/durable-stream-model');
+ const {generationFailure}=await import('../../../ai-worker/src/execution/generation-error');
+ const {createExecutionWorkerOutcomeService}=await import('../../../backend/src/modules/execution/execution-worker-outcome.service');
+ const {createExecutionGenerationPorts}=await import('../../../backend/src/modules/execution/execution-generation-ports.service');
+ const {createChatTurnSubmissionService}=await import('../../../backend/src/modules/ai/chat-turn-submission.service');
+ const {createAiRepository}=await import('../../../backend/src/modules/ai/ai.repository');
+ const connection=await createDb(),db=connection.db;
+ const tasks=createPersistentTaskService(db),deps={budget:{maxCalls:2,maxTokens:10000,deadlineMs:300000}};
+ const ledger=createExecutionCallLedgerService(db,deps),ports=createExecutionGenerationPorts(db,deps);
+ const fetchMock=vi.fn(async()=>new Response(JSON.stringify({error:{message:'invalid tool_choice token=synthetic-private',type:'invalid_request_error'}}),{status:400,headers:{'content-type':'application/json'}}));
+ vi.stubGlobal('fetch',fetchMock);
+ try{
+  const repo=createAiRepository(db,{userId:context.userId,accountId:context.accountId,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-${crypto.randomUUID()}`});
+  const conversation=await repo.createConversation({title:'合成拒绝',projectId:null,scope:'global'});
+  const source=await repo.createMessage(conversation.id,{role:'user',content:'合成请求',attachments:[],modelMetadata:{}});
+  const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:'copilot.assist',system:'合成策略',messages:[{role:'user',content:'合成请求'}],maxSteps:2,maxOutputTokens:128,tools:[]})}).submit(context,{conversationId:conversation.id,sourceMessageId:source.id});
+  const task={id:submitted.executionTaskId};
+  const claim=await tasks.claimTask({taskId:task.id,workerId:'fixture'});expect(claim).toBeTruthy();
+  const ref={executionTaskId:task.id,attempt:claim!.lease.attempt,fenceToken:claim!.lease.fenceToken};
+  const model=createDurableStreamModel({model:modelFor({apiFormat:'openai_chat',baseUrl:'https://api.deepseek.com',model:'deepseek-flash',token:'synthetic-fixture-only'}),operationKey:`chat:${source.id}`,ports:{
+   reserve:request=>ports.reserveGenerationCall(ref,request),
+   start:async callId=>{await ledger.start(ref,callId);},
+   settle:async(callId,settlement)=>{await ports.settleGenerationCall(ref,{callId,...settlement});},
+  }});
+  let caught:unknown;
+  try{await model.doStream({prompt:[{role:'user',content:[{type:'text',text:'合成请求'}]}],maxOutputTokens:128});}catch(error){caught=error;}
+  expect(caught).toBeDefined();const failure=generationFailure(caught,false);
+  expect(failure).toMatchObject({outcome:'failed',errorCode:'http_400',errorMessage:expect.stringContaining('invalid tool_choice')});
+  const calls=(await ledger.inspect(ref)).calls;
+  expect(calls).toHaveLength(1);expect(calls[0]).toMatchObject({status:'rejected',resultText:expect.stringContaining('invalid tool_choice')});
+  expect(calls[0]!.resultText).not.toContain('synthetic-private');
+  await createExecutionWorkerOutcomeService(db).recordFailure(ref,{outcome:failure.outcome,errorCode:failure.errorCode,errorMessage:failure.errorMessage});
+  const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
+  expect(stored!.lastErrorMessage).toContain('invalid tool_choice');expect(stored!.lastErrorMessage).not.toContain('synthetic-private');
+  const runtime={subscribe:async function*(){yield {events:[],hasMore:false,status:'failed'};},get:()=>tasks.get(context,task.id)} as unknown as Parameters<typeof chatExecutionResponse>[0];
+  const body=await chatExecutionResponse(runtime,context,{...input,executionTaskId:task.id},new AbortController().signal).text();
+  expect(body).toContain('模型服务拒绝了请求：');expect(body).toContain('invalid tool_choice');expect(body).not.toContain('synthetic-private');expect(body).not.toContain(' | Error');expect(fetchMock).toHaveBeenCalledTimes(1);
+ }finally{vi.unstubAllGlobals();await connection.client.close();}
+});

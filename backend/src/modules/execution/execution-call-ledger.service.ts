@@ -1,3 +1,4 @@
+import {redactProviderErrorDetail} from "@creatoros/contract/provider-error-detail";
 import {executionBudgetSchema as budgetSchema, executionBudgetDeadline} from "@creatoros/contract/execution-worker";
 import { isDeepStrictEqual } from "node:util";
 import { randomUUID } from "node:crypto";
@@ -20,7 +21,7 @@ const settlementSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional(), providerResult: workerProviderReceiptSchema.optional()}).strict(),
   z.object({status: z.literal("unknown")}).strict(),
   z.object({status: z.literal("superseded")}).strict(),
-  z.object({status: z.literal("rejected"), rejectionCode: z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION","ASR_HTTP_400","ASR_HTTP_401","ASR_HTTP_402","ASR_HTTP_403","ASR_HTTP_404","ASR_HTTP_405","ASR_HTTP_413","ASR_HTTP_415","ASR_HTTP_422","ASR_HTTP_429"]).optional()}).strict(),
+  z.object({status: z.literal("rejected"), rejectionCode: z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION","ASR_HTTP_400","ASR_HTTP_401","ASR_HTTP_402","ASR_HTTP_403","ASR_HTTP_404","ASR_HTTP_405","ASR_HTTP_413","ASR_HTTP_415","ASR_HTTP_422","ASR_HTTP_429"]).optional(),errorDetail:z.string().max(512).optional()}).strict(),
 ]);
 type Call = typeof executionCalls.$inferSelect;
 type Budget = z.infer<typeof budgetSchema>;
@@ -234,7 +235,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         const totalTokens = usage ? usage.totalTokens ?? (usage.inputTokens != null && usage.outputTokens != null ? usage.inputTokens + usage.outputTokens : null) : null;
         if (totalTokens !== null) count.parse(totalTokens);
         const [settled] = await tx.update(executionCalls).set({
-          status: input.status, usage, totalTokens, rejectionCode: input.status === "rejected" ? input.rejectionCode ?? null : null, providerResult: input.status === "settled" ? input.providerResult ?? call.providerResult : null, resultText: input.status === "settled" ? input.resultText ?? call.resultText : null, resultRef: input.status === "settled" ? input.resultRef ?? call.resultRef : null, updatedAt: now(),
+          status: input.status, usage, totalTokens, rejectionCode: input.status === "rejected" ? input.rejectionCode ?? null : null, providerResult: input.status === "settled" ? input.providerResult ?? call.providerResult : null, resultText: input.status === "settled" ? input.resultText ?? call.resultText : input.status === "rejected" ? (input.errorDetail ? redactProviderErrorDetail(input.errorDetail) : call.resultText) : null, resultRef: input.status === "settled" ? input.resultRef ?? call.resultRef : null, updatedAt: now(),
         }).where(eq(executionCalls.id, callId)).returning();
         return settled!;
       });

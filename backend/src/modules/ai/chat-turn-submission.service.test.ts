@@ -28,8 +28,8 @@ const now=()=>new Date(1788600000000+(++seq)*1000).toISOString();
 const nextId=(prefix:string)=>`${prefix}-chat-submit-${++seq}`;
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});
 afterAll(async()=>{await close();});
-async function fixture(){
-  const ctx={userId:"chat-submit-u",accountId:`chat-submit-a-${++seq}`,requestId:"test",source:"user" as const};
+async function fixture(userId="chat-submit-u"){
+  const ctx={userId,accountId:`chat-submit-a-${++seq}`,requestId:"test",source:"user" as const};
   const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId});
   const conversation=await repo.createConversation({title:"真实会话",projectId:null,scope:"global"});
   const message=async(role:"user"|"assistant",content:string)=>repo.createMessage(conversation.id,{role,content,attachments:[],modelMetadata:{existing:"保留"}});
@@ -329,3 +329,23 @@ it('未显式engine的v2聊天不强填pi，AI与execution同事务保存主模�
  expect(await service.submit(f.ctx,f.request)).toEqual({...submitted,replayed:true});expect(assemble).toHaveBeenCalledTimes(1);
  await db.update(aiTasks).set({runtimeData:{}}).where(eq(aiTasks.id,submitted.taskId));await expect(service.submit(f.ctx,f.request)).rejects.toThrow();expect(assemble).toHaveBeenCalledTimes(1);
 },180_000);
+
+it.each(["failed","cancelled"])("同源 %s 后重发新建尝试，并发合并且保留原用户消息",async status=>{
+ const f=await fixture("chat-retry-u"),first=await f.service.submit(f.ctx,f.request);
+ await db.update(executionTasks).set({status}).where(eq(executionTasks.id,first.executionTaskId));
+ const [a,b]=await Promise.all([f.service.submit(f.ctx,f.request),f.service.submit(f.ctx,f.request)]);
+ expect(a.executionTaskId).not.toBe(first.executionTaskId);expect(a.executionTaskId).toBe(b.executionTaskId);
+ expect([a.replayed,b.replayed].sort()).toEqual([false,true]);
+ const rows=await f.rows();expect(rows.tasks).toHaveLength(2);expect(rows.executions).toHaveLength(2);
+ expect(rows.executions.find(row=>row.id===first.executionTaskId)?.status).toBe(status);
+ expect(new Set(rows.executions.map(row=>row.idempotencyKey)).size).toBe(2);
+ expect((await db.select().from(aiMessages).where(eq(aiMessages.conversationId,f.conversation.id))).filter(row=>row.id===f.source.id)).toHaveLength(1);
+ expect(await f.service.submit(f.ctx,f.request)).toEqual({...a,replayed:true});
+ await db.update(executionTasks).set({status:"failed"}).where(eq(executionTasks.id,a.executionTaskId));
+ const next=await f.service.submit(f.ctx,f.request);expect(next.executionTaskId).not.toBe(a.executionTaskId);
+});
+it.each(["running","succeeded","unknown_result","waiting_user","retry_wait"])("同源 %s 继续幂等，不自动创建尝试",async status=>{
+ const f=await fixture("chat-retry-u"),first=await f.service.submit(f.ctx,f.request);
+ await db.update(executionTasks).set({status}).where(eq(executionTasks.id,first.executionTaskId));
+ expect(await f.service.submit(f.ctx,f.request)).toEqual({...first,replayed:true});expect((await f.rows()).executions).toHaveLength(1);
+});

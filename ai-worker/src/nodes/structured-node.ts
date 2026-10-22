@@ -1,3 +1,4 @@
+import {safeErrorMessage} from "../runtime/error-diagnostics";
 import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { StructuredOutputError } from "./structured-output-error";
 export { StructuredOutputError } from "./structured-output-error";
@@ -353,9 +354,10 @@ export async function runStructuredNode<T>(
   const logPerformance = (
     status: "ok" | "error",
     path: "structured" | "text_compat" | "text_fallback" | "unknown",
+    error?:unknown,
   ) => {
     console.info(
-      `[structured-node] template=${template.id} status=${status} durationMs=${Date.now() - startedAt} path=${path} modelCalls=${modelCalls} inputTokens=${totalUsage.inputTokens ?? 0} outputTokens=${totalUsage.outputTokens ?? 0}`,
+      `[structured-node] template=${template.id} status=${status} durationMs=${Date.now() - startedAt} path=${path} modelCalls=${modelCalls} inputTokens=${totalUsage.inputTokens ?? 0} outputTokens=${totalUsage.outputTokens ?? 0}${error ? ` error=${safeErrorMessage(new Error(`${error instanceof Error?error.name:"Error"}: ${error instanceof Error?error.message:"节点失败"}`))}` : ""}`,
     );
   };
 
@@ -655,7 +657,7 @@ ${previousText.slice(0, 24000)}`;
 
     throw new Error("结构化节点:不可达的 repair 状态");
   } catch (error) {
-    logPerformance("error", lastPath);
+    logPerformance("error", lastPath,error);
     throw error;
   }
 }

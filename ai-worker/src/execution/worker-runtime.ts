@@ -352,7 +352,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       }
       // 不返回 provider 原始错误，避免密钥/请求正文进入 IPC 错误日志。
       // 提交可能已落库但回执丢失，禁止用第二次失败提交覆盖它；交给后端同键对账。
-      if (!signal.aborted && !committing) await call(execution, "commitResult", {outcome: reason, errorCode: failure?.errorCode ?? "WORKER_EXECUTION_INTERRUPTED", retryAfterMs: failure?.retryAfterMs}).catch(() => {});
+      if (!signal.aborted && !committing) await call(execution, "commitResult", {outcome: reason, errorCode: failure?.errorCode ?? "WORKER_EXECUTION_INTERRUPTED", ...(failure?.errorMessage?{errorMessage:failure.errorMessage}:{}), retryAfterMs: failure?.retryAfterMs}).catch(() => {});
     } finally {
       finished = true;
       if (heartbeatTimer) clearTimeout(heartbeatTimer);

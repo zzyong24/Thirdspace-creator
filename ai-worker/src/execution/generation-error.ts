@@ -1,5 +1,11 @@
+import {redactProviderErrorDetail} from "@creatoros/contract/provider-error-detail";
 import {CodexHostError} from './codex-app-server-protocol';
 import { classifyLlmError, getRetryAfterMs } from "../runtime/retry-policy";
+
+/** 仅在适配器可证明请求构造尚未交给传输层时创建。 */
+export class ModelRequestBuildError extends Error {
+  constructor(detail:string){super(detail);this.name="ModelRequestBuildError";}
+}
 
 /** 只传白名单诊断，不保留原始供应商请求、响应或凭据。 */
 export class GenerationFailure extends Error {
@@ -7,10 +13,13 @@ export class GenerationFailure extends Error {
     readonly outcome: "retry_wait" | "waiting_user" | "failed" | "unknown_result",
     readonly errorCode: string,
     readonly retryAfterMs?: number,
-  ) {super(errorCode);}
+    readonly errorMessage?: string,
+  ) {super(errorMessage ?? errorCode);}
 }
 
 export function generationFailure(error: unknown, hasOutput: boolean, options: {allowUnconfirmedModelRetry?: boolean} = {}): GenerationFailure {
+  if(error instanceof GenerationFailure)return error;
+  if(error instanceof ModelRequestBuildError)return new GenerationFailure("failed","MODEL_REQUEST_BUILD_FAILED",undefined,redactProviderErrorDetail(error.message));
   if(error instanceof CodexHostError){
     const unavailable=['CODEX_LOGIN_REQUIRED','CODEX_IMAGE_CAPABILITY_UNAVAILABLE','CODEX_IMAGE_MODEL_UNAVAILABLE','CODEX_RUNTIME_UNAVAILABLE','CODEX_VERSION_UNSUPPORTED','CODEX_CAPABILITY_UNVERIFIED','CODEX_CALL_AUTHORITY_REQUIRED','CODEX_PARENT_DEADLINE_REQUIRED'];
     return new GenerationFailure(!hasOutput&&unavailable.includes(error.code)?'waiting_user':'unknown_result',error.code);
@@ -26,7 +35,7 @@ export function generationFailure(error: unknown, hasOutput: boolean, options: {
       const delay = typeof e.retryAfterMs === "number" && Number.isFinite(e.retryAfterMs) && e.retryAfterMs >= 0
         ? e.retryAfterMs : getRetryAfterMs(error, Date.now, Infinity) ?? undefined;
       if (classified.retryable) return new GenerationFailure("retry_wait", classified.reason, delay);
-      return new GenerationFailure("failed", classified.reason);
+      return new GenerationFailure("failed", classified.reason, undefined, typeof (e as {providerErrorDetail?:unknown}).providerErrorDetail === "string" ? redactProviderErrorDetail((e as {providerErrorDetail:string}).providerErrorDetail) : undefined);
     }
   }
   // 模型文本是可丢弃的候选。即使流里已有未完成文本，连接故障仍可废弃本次候选并由原任务续跑；

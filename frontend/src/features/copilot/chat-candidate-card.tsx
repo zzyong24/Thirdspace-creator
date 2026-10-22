@@ -226,7 +226,7 @@ export function ChatCandidateCard({
   return (
     <div
       data-slot="chat-candidate-card"
-      className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
+      className="mt-1.5 min-w-0 [overflow-wrap:anywhere] flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
         {scopedCandidateId
@@ -243,7 +243,7 @@ export function ChatCandidateCard({
               data-slot="chat-candidate-item"
               className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
             >
-              <div className="flex items-start gap-2">
+              <div className="flex flex-wrap items-start gap-2">
                 {/* [T-264] 批量勾选(落库后隐藏)。 */}
                 {!done ? (
                   <input

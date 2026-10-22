@@ -22,12 +22,15 @@ export async function runChatGenerationInWorker(callId:string,signal:AbortSignal
  }catch(error){
   signal.throwIfAborted();
   // 已确认坏结构或结算 ACK 丢失可由宿主重建成功/失败；此处不会重发模型。
-  try{return await complete();}catch{/* 有未确认调用时交给原任务停止语义。 */}
   const failure=findGenerationFailure(error)??generationFailure(error,false);
+  // 已结算的发送前失败没有可回放的供应商回执，直接报告真实原因。
+  if(failure.errorCode!=="MODEL_REQUEST_BUILD_FAILED"){
+   try{return await complete();}catch{/* 有未确认调用时交给原任务停止语义。 */}
+  }
   if(failure.outcome==="unknown_result")throw failure;
   const report={callId,outcome:failure.outcome,errorCode:failure.errorCode,retryAfterMs:failure.retryAfterMs};
   const saved=z.object({status:z.enum(["retry_wait","waiting_user","failed"])}).parse(await call("failChatGeneration",report).catch(()=>call("failChatGeneration",report)));
-  throw new DurableToolSuspension(saved.status,failure.errorCode,failure.retryAfterMs);
+  throw new DurableToolSuspension(saved.status,failure.errorCode,failure.retryAfterMs,failure.errorMessage);
  }
  return complete();
 }

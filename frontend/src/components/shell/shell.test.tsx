@@ -551,6 +551,44 @@ describe("AppShell", () => {
     expect(pill).not.toBeNull();
   });
 
+  it("助手页脚在展开与收拢态均保留全局 Copilot 入口和全部导航", async () => {
+    const { container } = await renderShell();
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    const nav = within(sidebar).getByRole("navigation", { name: "主要导航" });
+    const expectedLinks = within(nav).getAllByRole("link").map(link => ({
+      name: link.textContent?.trim(), href: link.getAttribute("href"),
+    }));
+    for (const group of ["创作", "资料", "运营", "工作区"]) {
+      expect(within(nav).getByText(group)).toBeInTheDocument();
+    }
+    for (const name of ["发布中心", "运营分析", "自动化", "设置"]) {
+      expect(within(nav).getByRole("link", { name })).toBeInTheDocument();
+    }
+    for (const collapsed of [false, true]) {
+      if (collapsed) fireEvent.click(within(sidebar).getByTestId("sidebar-collapse-toggle"));
+      const footer = within(sidebar).getByRole("region", { name: "AI 助手" });
+      expect(nav).not.toContainElement(footer);
+      expect(container.querySelector('[data-slot="sidebar-identity-footer"]')).toContainElement(footer);
+      const action = within(footer).getByRole("link", { name: "打开 AI 助手" });
+      expect(action).toHaveAttribute("href", "?copilot=open&scope=global");
+      expect(action).toHaveClass("min-h-11", "focus-visible:ring-2");
+      action.focus();
+      expect(action).toHaveFocus();
+      // 原生链接打开行为由 href 驱动，测试不请求真实 Copilot 或模型。
+      expect(within(nav).getAllByRole("link")).toHaveLength(expectedLinks.length);
+      for (const { name, href } of expectedLinks) {
+        expect(within(nav).getByRole("link", { name: name! })).toHaveAttribute("href", href);
+      }
+      expect(action).toHaveAttribute("aria-label", "打开 AI 助手");
+      expect(footer.textContent).not.toContain("今天想先做点什么");
+      if (!collapsed) {
+        expect(action).toHaveTextContent("AI 助手");
+        expect(footer.querySelector('[data-slot="sidebar-contextual-card"]')).toBe(action);
+        expect(action).toHaveClass("px-2.5", "gap-2.5");
+      }
+    }
+  });
+
   it("sidebar user profile shows avatar + name + email + plan label", async () => {
     const { container } = await renderShell();
     const profile = container.querySelector('[data-slot="sidebar-user-profile"]');
@@ -574,7 +612,7 @@ describe("AppShell", () => {
     expect(sidebar).toHaveClass("h-dvh", "min-h-0", "overflow-hidden");
     expect(scrollRegion).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
     expect(identityFooter).toHaveClass("shrink-0");
-    expect(contextualCard).toHaveClass("[@media(max-height:760px)]:hidden");
+    expect(contextualCard).not.toHaveClass("[@media(max-height:760px)]:hidden");
   });
 
   it("页面只让 Radix viewport 负责纵向滚动，外层 Root 不再形成第二滚动容器", async () => {

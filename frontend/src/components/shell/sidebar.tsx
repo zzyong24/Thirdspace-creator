@@ -332,10 +332,11 @@ export function Sidebar({
             collapsed && "items-center",
           )}
         >
-          {/* 收拢态隐藏促销/存储卡(留出窄条空间);展开态照旧。 */}
-          {!collapsed ? (
+          {/* 助手在两种侧栏宽度下均保留入口；存储卡维持原有展示条件。 */}
+          {!collapsed || contextualCardVariant === "assistant" ? (
             <SidebarContextualCard
               variant={contextualCardVariant}
+              collapsed={collapsed}
               userDisplayName={resolvedUser.displayName}
             />
           ) : null}
@@ -565,45 +566,52 @@ function ContextSection({ section }: { section: SidebarContextSection }) {
 
 interface SidebarContextualCardProps {
   readonly variant: SidebarContextualCardVariant;
+  readonly collapsed: boolean;
   readonly userDisplayName: string;
 }
 
-function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCardProps) {
+function SidebarContextualCard({ variant, collapsed }: SidebarContextualCardProps) {
   if (variant === "storage") {
     // [T-115] storage 卡接真实源 —— 客户端拉 settings.storage.get,显真实
     // usedBytes / totalBytes(真实磁盘容量),读失败诚实降级。旧硬编码
     // (12.4/50GB · 固定 25% · 自动同步已开启)全删。
     return <SidebarStorageCard />;
   }
+  const actionClass = "flex min-h-11 items-center justify-center rounded-md bg-brand-soft text-sm font-medium text-brand transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
   return (
-    <div
-      data-slot="sidebar-contextual-card"
-      data-variant="assistant"
-      className="flex min-h-36 flex-col gap-3 rounded-xl border border-border bg-surface-subtle p-4 text-xs [@media(max-height:760px)]:hidden"
+    <section
+      data-slot="sidebar-assistant-footer"
+      aria-label="AI 助手"
+      className="w-full min-w-0 shrink-0 border-t border-border pt-3"
     >
-      <div className="flex items-center gap-2 text-foreground">
-        <span
-          aria-hidden="true"
-          className="flex size-6 items-center justify-center rounded-full bg-brand-soft text-brand"
+      {collapsed ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="?copilot=open&scope=global"
+              prefetch={false}
+              aria-label="打开 AI 助手"
+              className={cn(actionClass, "mx-auto w-11 max-w-full")}
+            >
+              <Sparkles className="size-4 shrink-0" aria-hidden="true" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">打开 AI 助手</TooltipContent>
+        </Tooltip>
+      ) : (
+        <Link
+          data-slot="sidebar-contextual-card"
+          data-variant="assistant"
+          href="?copilot=open&scope=global"
+          prefetch={false}
+          aria-label="打开 AI 助手"
+          className={cn(actionClass, "w-full min-w-0 justify-start gap-2.5 px-2.5")}
         >
-          <Sparkles className="size-3.5" />
-        </span>
-        <span className="font-medium">AI 助手</span>
-      </div>
-      <p className="text-muted-foreground">
-        {`${userDisplayName}，今天想先做点什么？`}
-      </p>
-      {/* bug #3:query-only href(以 `?` 开头)= 保持当前页路径,就地开 Copilot 浮层,不跳首页。
-          [T-096 #1] 显式 scope=global:全局入口有自己的会话桶(不再借 topics 桶),
-          延续全局会话 + 历史只列全局(修「左下角每次新建对话」根因)。 */}
-      <Link
-        href="?copilot=open&scope=global"
-        prefetch={false}
-        className="text-brand underline-offset-4 hover:underline"
-      >
-        打开 AI 助手
-      </Link>
-    </div>
+          <Sparkles className="size-4 shrink-0" aria-hidden="true" />
+          <span>AI 助手</span>
+        </Link>
+      )}
+    </section>
   );
 }
 

@@ -463,6 +463,15 @@ describe("T-1070 actual composer component / SDK boundary", () => {
   beforeEach(() => {
     prepare = vi.fn(async () => structuredClone(target));
   });
+  it.each(["http_400: invalid tool_choice","模型服务拒绝了请求：invalid tool_choice，请检查模型名称、接口格式和工具参数。"])("供应商原因保留在错误卡，重复渲染不触发Console Error或自动重发：%s",raw=>{
+    protocol.error=Error(raw);
+    const errors=vi.spyOn(console,"error").mockImplementation(()=>{});
+    const view=render(<NoEditorComposer/>);
+    expect(screen.getByText(/模型服务拒绝了请求：invalid tool_choice/)).toBeInTheDocument();
+    view.rerender(<NoEditorComposer/>);
+    expect(errors).not.toHaveBeenCalled();expect(protocol.send).not.toHaveBeenCalled();expect(protocol.regenerate).not.toHaveBeenCalled();
+    errors.mockRestore();
+  });
   let ticketCoordinator: ReturnType<typeof useDraftChatRequest>;
   let ticketSelection: any;
   function TicketPort() {
@@ -1224,4 +1233,64 @@ describe("T1340 文章异步就绪的真实助手消费",()=>{
   }
   for(const row of requests)expect(Object.values(ENDPOINTS).find(endpoint=>endpoint.id===row.id)?.method,`未知或非只读端点：${row.id}`).toBe("GET");expect(protocol.send).not.toHaveBeenCalled();expect(protocol.fetch).not.toHaveBeenCalled();
  },120000);
+});
+
+
+describe("选题采纳区的有界滚动布局", () => {
+  for (const basis of ["positioning", "comments", "knowledge", "trend"]) {
+    for (const [width, height] of [[1440, 900], [1280, 800]]) {
+      for (const theme of ["dark", "light"]) {
+        it(`${basis} · ${width}×${height} · ${theme}：长候选和批量操作留在消息滚动区`, async () => {
+          vi.stubGlobal("innerWidth", width);
+          vi.stubGlobal("innerHeight", height);
+          document.documentElement.classList.toggle("dark", theme === "dark");
+          try {
+            previewNavigation.pathname = "/topics";
+            previewNavigation.search = "copilot=open&surface=topics&fn=topic.generate";
+            const items = Array.from({ length: 16 }, (_, i) => ({
+              title: `${basis} ${i} ${"LongUnbrokenTitle".repeat(20)}`,
+              angle: "切入依据".repeat(60), contentRole: "traffic", predictedScore: 80,
+              reason: "模拟理由".repeat(60),
+              sourceComments: basis === "comments" ? ["长评论原文".repeat(120), "https://example.test/" + "quote".repeat(100)] : [],
+            }));
+            protocol.messages = [{ id: "topic-result", role: "assistant", parts: [{
+              type: "tool-topic_generate", toolCallId: "mock-topics", state: "output-available",
+              input: { basis }, output: { kind: "topic.candidates", items },
+            }] }];
+            renderDialog("/topics");
+            const dialog = screen.getByRole("dialog", { name: "AI 助手" });
+            const card = await waitFor(() => {
+              const el = slot(dialog, "chat-candidate-card");
+              expect(el).not.toBeNull(); return el as HTMLElement;
+            });
+            expect(dialog).toHaveClass("max-h-[calc(100dvh-48px)]");
+            expect(slot(dialog, "ai-copilot-dialog")).toHaveClass("flex", "min-h-0");
+            expect(slot(dialog, "ai-copilot-body")).toHaveClass("flex", "min-h-0", "flex-1", "flex-col");
+            expect(slot(dialog, "ai-copilot-content-wrap")).toHaveClass("flex", "min-h-0", "flex-1", "flex-col");
+            const scroll = slot(dialog, "copilot-message-scroll")!;
+            expect(scroll).toHaveClass("overflow-y-auto", "min-h-0", "flex-1");
+            expect(scroll).toContainElement(card);
+            expect(card.querySelectorAll('[data-slot="chat-candidate-item"]')).toHaveLength(16);
+            expect(card.querySelectorAll('button')).toHaveLength(17);
+            expect(screen.getAllByRole("button", { name: /^采纳$/ })).toHaveLength(16);
+            expect(scroll).toContainElement(screen.getByRole("button", { name: "采纳选中 16 条" }));
+            for (let el: Element | null = card; el && el !== scroll; el = el.parentElement) {
+              expect(el.className).not.toMatch(/overflow-(?:hidden|clip)|(?:^| )max-h-|(?:^| )h-\d/);
+            }
+            expect(card).toHaveClass("[overflow-wrap:anywhere]");
+            for (const details of card.querySelectorAll("details")) {
+              fireEvent.click(details.querySelector("summary")!);
+              expect(details.open).toBe(true);
+            }
+            const composer = slot(dialog, "prompt-composer") as HTMLElement;
+            expect(composer).toHaveClass("shrink-0");
+            expect(scroll).not.toContainElement(composer);
+            expect(scroll.parentElement).toBe(composer.parentElement);
+          } finally {
+            document.documentElement.classList.remove("dark");
+          }
+        });
+      }
+    }
+  }
 });

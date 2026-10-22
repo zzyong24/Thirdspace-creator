@@ -27,6 +27,10 @@
     "./timeout-policy": {
       "types": "./src/timeout-policy.ts",
       "default": "./src/timeout-policy.ts"
+    },
+    "./provider-error-detail": {
+      "types": "./src/provider-error-detail.ts",
+      "default": "./src/provider-error-detail.ts"
     }
   },
   "scripts": {

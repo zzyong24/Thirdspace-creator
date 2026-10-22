@@ -82,9 +82,10 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
         </div>
       </header>
 
-      <div className={positioning ? styles.body : "min-h-0 flex-1"}>
+      {/* 高度必须通过连续的 flex 容器传到消息区，普通 block 会让长结果撑出面板。 */}
+      <div data-slot="ai-copilot-body" className={positioning ? styles.body : "flex min-h-0 min-w-0 flex-1 flex-col"}>
         {positioning ? <PositioningConversationGuide /> : null}
-        <div className="min-h-0 min-w-0 flex-1">
+        <div data-slot="ai-copilot-content-wrap" className="flex min-h-0 min-w-0 flex-1 flex-col">
           <AICopilotContent />
         </div>
       </div>

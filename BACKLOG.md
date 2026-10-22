@@ -9,6 +9,9 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|四来源 mock 回归、补齐弹窗 flex 高度链；不真实调用、不push，补丁交付。|
+|T-1399|固定侧栏 AI 助手页脚与收拢入口|⏸️|—|待验|[SPEC](docs/features/t1399-sidebar-assistant-footer.md)|仅调整助手卡片与测试，保留全部导航、折叠及原 Copilot 参数；指定回归、补丁交付，不push。|
+|T-1398|修复 Copilot DeepSeek 强制工具请求、失败重试与错误诊断丢失|🔨 待办|—|待验|[SPEC](docs/features/t1398-copilot-deepseek-failure.md)|用户授权最小修复、相关测试与补丁交付；不真实调用、不读密钥、不修改许可激活签名、不push。 第四轮补 DeepSeek 推理历史回传与缺失历史关闭思考；第三轮补发送前明确失败结算与日志；当前源码 mocked DeepSeek 定位成功，历史 exact exception 未复现，任务保持未完成。|
 |T-1397|修复main Verify并核实已知失败|🔨|—|—|[授权与验收](docs/features/t1397-verify-main-green.md)|用户授权契约漏登记、后端CI终止根因、完整本地测试与逐项known清单；6144串行类型检查及各包质量门，HTTPS普通推送并最多2轮追加修复，报告至terminals/ci-green。|
 |T-1396|清理启动恢复留下的旧版及数据副本|✅|—|—|[授权与范围](docs/features/t1396-local-recovery-backup-cleanup.md)|已按授权删10处旧App/旧DMG及数据副本，逻辑12.14GiB；当前App、正式数据、新DMG均保留，原进程与首页200通过；轻量证据保留。|
 |T-1395|用当前源码重打本地包并保留数据恢复启动|✅|—|—|[授权与验收](docs/features/t1395-local-package-startup-recovery.md)|源码7252d30d5本地包已安装，58测试及DMG/签名通过；副本迁移与实际库核心内容保留通过，原生首页正常且保持运行；旧App/原库已备份，不发布；quick仍既有22/17。|
