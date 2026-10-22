@@ -1,4 +1,4 @@
-# T-1394：Copilot DeepSeek 请求与诊断修复
+# T-1398：Copilot DeepSeek 请求与诊断修复
 
 用户授权：分支 fix-ai-copilot-2026-10-22，基线 5763199619968a3c342205d97d23a9efe59dc138；跳过缺失 product-to-code-orchestrator。禁止读取凭据、真实模型调用、许可/激活/verdict/签名改动及 push。
 

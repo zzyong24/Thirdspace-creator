@@ -1,4 +1,4 @@
-# T-1395 侧栏 AI 助手页脚
+# T-1399 侧栏 AI 助手页脚
 
 用户授权：仅调整 AI 助手卡片与必要样式、测试；使用 ui-ux-pro-max 和 design-system/creatoros/MASTER.md；跳过缺失 product-to-code-orchestrator。不修改导航、门控、分组折叠、持久化键或 Copilot 查询参数；不修改许可、激活、verdict、签名，不调用付费模型，不 push。
 
@@ -25,4 +25,4 @@ flowchart TB
 
 ## 2026-10-22 紧凑化续任务
 
-用户要求删除问候副标题，将展开卡合并为图标 + AI 助手单行链接；aria-label 保留“打开 AI 助手”，收拢图标态及原 href 不变。更新 shell 断言，随 T-1396 指定测试及 /tmp/ui2-fix-* 交付。
+用户要求删除问候副标题，将展开卡合并为图标 + AI 助手单行链接；aria-label 保留“打开 AI 助手”，收拢图标态及原 href 不变。更新 shell 断言，随 T-1400 指定测试及 /tmp/ui2-fix-* 交付。

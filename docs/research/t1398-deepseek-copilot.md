@@ -1,4 +1,4 @@
-# T-1394：DeepSeek Copilot 400 协议核对（2026-10-22）
+# T-1398：DeepSeek Copilot 400 协议核对（2026-10-22）
 
 官方来源：
 - https://api-docs.deepseek.com/api/create-chat-completion/

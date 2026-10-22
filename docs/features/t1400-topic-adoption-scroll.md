@@ -1,4 +1,4 @@
-# T-1396 选题采纳滚动修复
+# T-1400 选题采纳滚动修复
 
 用户授权：四种出题来源共用 Copilot 的长候选卡必须可滚动到逐条及批量操作，覆盖 1440×900、1280×800 和亮暗主题；禁止生产路由视觉夹具、真实模型调用、许可/激活/verdict/签名改动、push。使用 ui-ux-pro-max 与 CreatorOS MASTER；按用户要求跳过缺失编排技能。
 
@@ -13,7 +13,7 @@ flowchart TB
  C --> F[正常流中的输入区]
 ```
 
-验收：在真实对话组件内 mock topic.generate tool result，四来源、多候选、长标题及展开评论；断言高度传递、动态视口上限、滚动容器、卡片无固定高度裁切、逐条和批量按钮结构。运行指定 shell/copilot/overlays/topics vitest 与 frontend typecheck，不 full build。jsdom 不证明几何可见性，浏览器未运行时如实记录。遵循既有 T-1395 安全边界，不运行可能触发真实 CLI/模型的全局 reconcile。
+验收：在真实对话组件内 mock topic.generate tool result，四来源、多候选、长标题及展开评论；断言高度传递、动态视口上限、滚动容器、卡片无固定高度裁切、逐条和批量按钮结构。运行指定 shell/copilot/overlays/topics vitest 与 frontend typecheck，不 full build。jsdom 不证明几何可见性，浏览器未运行时如实记录。遵循既有 T-1399 安全边界，不运行可能触发真实 CLI/模型的全局 reconcile。
 
 交付：/tmp/ui2-fix.patch、/tmp/ui2-fix-commit.sh、/tmp/ui2-fix-RESULT.md。脚本核对分支与完整基线 SHA，仅 add 明确文件，分两次中文提交，不push、不跳 hook。
 
