@@ -107,6 +107,10 @@ export function pruneStandaloneLeaks(runtimeRoot) {
  */
 export function assertNoPackagedBuildArtifacts(runtimeRoot) {
   const forbidden = [];
+  // Codex ships this executable as a runtime resource. Keep the exception
+  // narrow so nested CreatorOS installers remain fail-closed.
+  const isAllowedCodexSandboxSetup = (rel, name) => name === "codex-windows-sandbox-setup.exe"
+    && /^frontend\/\.next\/worker-packages\/.+\/vendor\/[^/]+\/codex-resources\/codex-windows-sandbox-setup\.exe$/.test(rel);
   const visit = (dir) => {
     for (const name of readdirSync(dir)) {
       const path = join(dir, name);
@@ -126,7 +130,7 @@ export function assertNoPackagedBuildArtifacts(runtimeRoot) {
         || name.endsWith(".app.tar.gz")
         || name.endsWith(".dmg")
         || name.endsWith(".msi")
-        || name.endsWith("-setup.exe")
+        || (name.endsWith("-setup.exe") && !isAllowedCodexSandboxSetup(rel, name))
       ) {
         forbidden.push(rel);
       }

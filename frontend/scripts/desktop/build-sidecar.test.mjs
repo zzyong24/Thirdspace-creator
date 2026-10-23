@@ -164,6 +164,34 @@ describe("sidecar 构建产物递归污染哨兵", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("允许 worker-packages 中 Codex sandbox runtime 资源", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-codex-resource-"));
+    try {
+      const resource = join(
+        root,
+        "frontend/.next/worker-packages/p0072/vendor/x86_64-pc-windows-msvc/codex-resources",
+      );
+      mkdirSync(resource, { recursive: true });
+      writeFileSync(join(resource, "codex-windows-sandbox-setup.exe"), "runtime-resource");
+
+      expect(() => assertNoPackagedBuildArtifacts(root)).not.toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("仍拒绝缓存中的嵌套 CreatorOS 安装包", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-installer-"));
+    try {
+      mkdirSync(join(root, "frontend/cache"), { recursive: true });
+      writeFileSync(join(root, "frontend/cache/CreatorOS_1.2.0_x64-setup.exe"), "nested-installer");
+
+      expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(/CreatorOS_1\.2\.0_x64-setup\.exe/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("macOS AppleDouble 打包防线", () => {
