@@ -107,6 +107,10 @@ export function pruneStandaloneLeaks(runtimeRoot) {
  */
 export function assertNoPackagedBuildArtifacts(runtimeRoot) {
   const forbidden = [];
+  // Codex ships this executable as a runtime resource. Keep the exception
+  // narrow so nested CreatorOS installers remain fail-closed.
+  const isAllowedCodexSandboxSetup = (rel, name) => name === "codex-windows-sandbox-setup.exe"
+    && /^frontend\/\.next\/worker-packages\/.+\/vendor\/[^/]+\/codex-resources\/codex-windows-sandbox-setup\.exe$/.test(rel);
   const visit = (dir) => {
     for (const name of readdirSync(dir)) {
       const path = join(dir, name);
@@ -126,7 +130,7 @@ export function assertNoPackagedBuildArtifacts(runtimeRoot) {
         || name.endsWith(".app.tar.gz")
         || name.endsWith(".dmg")
         || name.endsWith(".msi")
-        || name.endsWith("-setup.exe")
+        || (name.endsWith("-setup.exe") && !isAllowedCodexSandboxSetup(rel, name))
       ) {
         forbidden.push(rel);
       }
@@ -544,10 +548,7 @@ function packSidecarTarball() {
   // win 上必须显式用系统 bsdtar(System32\tar.exe):CI 的 bash 环境里 Git 的 GNU tar 排 PATH
   // 前面,它把 `D:\...` 的盘符当远程主机名(实测「Cannot connect to D: resolve failed」)。
   // 系统 bsdtar 处理 win 路径正确,且与用户机 lib.rs 解压器同源(W-spike 方案本意)。
-  const tarBin =
-    platform === "win32"
-      ? join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe")
-      : "tar";
+  const tarBin = windowsTarBinary(platform, process.env);
   const r = spawnSync(tarBin, ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], {
     stdio: "inherit",
     env: portableTarEnv(process.env),
@@ -1125,6 +1126,28 @@ export function findPnpmEntryForPackage(srcPnpm, packageName, expectedVersion) {
   return null;
 }
 
+export function windowsTarBinary(targetPlatform = platform, env = process.env) {
+  return targetPlatform === "win32"
+    ? join(env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe")
+    : "tar";
+}
+
+export function resolvePiPnpmEntry(srcPnpm, repoRoot, packageName) {
+  const direct = findPnpmEntryForPackage(srcPnpm, packageName);
+  if (direct) return direct;
+  for (const project of ["backend", "ai-worker"]) {
+    const anchor = join(repoRoot, project, "node_modules", ...packageName.split("/"));
+    try {
+      const body = realpathSync(anchor);
+      const entry = readdirSync(srcPnpm).find((candidate) => {
+        try { return realpathSync(resolveEntryPackage(srcPnpm, candidate).dir) === body; } catch { return false; }
+      });
+      if (entry) return entry;
+    } catch { /* 安装未建立该项目入口，继续检查另一项目。 */ }
+  }
+  return null;
+}
+
 export function materializeRuntimePackageClosure({
   srcPnpm,
   runtimeRoot,
@@ -1487,13 +1510,12 @@ function bundlePiEngine() {
     throw new Error(`[build-sidecar] .pnpm 目录缺(src=${existsSync(srcPnpm)} dest=${existsSync(destPnpm)})`);
   }
   const PI_PKG = "@earendil-works/pi-coding-agent";
-  const PI_PNPM = PI_PKG.replace("/", "+"); // scope "/"→"+"(pnpm 目录名编码)
   // lazy-only 且 CreatorOS 永不用的 provider 顶包 —— 剪掉不进闭包(连带其独占传递依赖)。
   const CUT_PKG = ["@aws-sdk/client-bedrock-runtime", "@google/genai", "@mistralai/mistralai"];
   const isCut = (entry) => CUT_PKG.includes(resolveEntryPackage(srcPnpm, entry).name);
 
   // Pi 是独立 Agent Worker 的必备运行时；缺包时不能产出残缺安装包。
-  const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PI_PNPM}@`));
+  const rootEntry = resolvePiPnpmEntry(srcPnpm, REPO, PI_PKG);
   if (!rootEntry) throw new Error(`[build-sidecar] 缺少必备 Pi 运行时 ${PI_PKG}`);
 
   // BFS 算闭包(剪掉 provider 顶包子树)。
@@ -1793,7 +1815,7 @@ export function stageWorkbenchBrowserArchive(triple,archive,destination) {
   if (!spec) throw new Error(`[build-sidecar] 无工作台浏览器资产映射:${triple}`);
   if (sha256File(archive)!==spec.sha256) throw new Error(`[build-sidecar] 工作台 CfT ${spec.platform} SHA-256 不符`);
   rmSync(destination,{recursive:true,force:true});mkdirSync(destination,{recursive:true});
-  const extracted=spawnSync("tar",["-xf",archive,"-C",destination],{stdio:"pipe",encoding:"utf8"});
+  const extracted=spawnSync(windowsTarBinary(platform, process.env),["-xf",archive,"-C",destination],{stdio:"pipe",encoding:"utf8"});
   if (extracted.status!==0) {
     rmSync(destination,{recursive:true,force:true});
     throw new Error(`[build-sidecar] 工作台 CfT 解压失败:${extracted.stderr||extracted.error||extracted.status}`);
@@ -2584,6 +2606,7 @@ function main() {
         throw new Error("[build-sidecar] 当前平台没有工作台浏览器资产");
     }
     catch (error) {
+      if (platform === "win32" && (process.env.CREATOROS_DESKTOP_RELEASE === "1" || process.env.CREATOROS_PRODUCTION_CLOSURE === "1")) throw error;
       if (process.env.CREATOROS_REQUIRE_WORKBENCH_BROWSER === "1") throw error;
       console.warn(`[build-sidecar] 工作台浏览器未能随包安装，仅此能力不可用:${error.message}`);
     }

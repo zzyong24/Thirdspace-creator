@@ -428,6 +428,25 @@ jobs:
         if: runner.os != 'Windows'
         run: pnpm -C frontend exec playwright install chromium
 
+      - name: 准备更新根私钥（仅供后续 sidecar 签名）
+        if: runner.os != 'Windows' && (steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true')
+        env:
+          CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM: ${{ secrets.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM:-}" ]; then
+            printf '%s\n' '::error::缺少仓库密钥 CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM，无法签名 sidecar'
+            exit 1
+          fi
+          umask 077
+          key_path="$RUNNER_TEMP/creatoros-update-root.pem"
+          printf '%s\n' "$CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM" > "$key_path"
+          chmod 600 "$key_path"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            key_path="$(cygpath -w "$key_path")"
+          fi
+          printf 'CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH=%s\n' "$key_path" >> "$GITHUB_ENV"
+
       - name: 构建 clean Runtime Image(T-487,仅 cache miss)
         if: runner.os != 'Windows' && (steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true')
         env:
@@ -822,6 +841,25 @@ jobs:
             }
           }
           NODE
+
+      - name: 准备更新根私钥（仅供后续 sidecar 签名）
+        if: inputs.windows_capsule_mode != 'prepare'
+        env:
+          CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM: ${{ secrets.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM:-}" ]; then
+            printf '%s\n' '::error::缺少仓库密钥 CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM，无法签名 sidecar'
+            exit 1
+          fi
+          umask 077
+          key_path="$RUNNER_TEMP/creatoros-update-root.pem"
+          printf '%s\n' "$CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM" > "$key_path"
+          chmod 600 "$key_path"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            key_path="$(cygpath -w "$key_path")"
+          fi
+          printf 'CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH=%s\n' "$key_path" >> "$GITHUB_ENV"
 
       - name: 打包(release.mjs 全链)
         if: inputs.windows_capsule_mode != 'prepare'
@@ -1397,6 +1435,10 @@ jobs:
           rm -f "$RUNNER_TEMP/creatoros-developer-id.p12"
           echo "[T-709] ✓ 一次性签名钥匙串与证书文件已清理"
 
+      - name: 清理更新根私钥
+        if: always()
+        run: rm -f "$RUNNER_TEMP/creatoros-update-root.pem"
+
   windows-runtime-rat:
     if: ${{ inputs.t247_private_asset_relay != true && (github.event_name == 'workflow_dispatch' && inputs.windows_runtime_rat == true) }}
     runs-on: windows-latest
@@ -1487,6 +1529,25 @@ jobs:
         run: |
           node tools/windows-closure-rat/prepare-packaged-runtime.mjs \
             tools/windows-closure-rat/out/closure
+
+      - name: 准备更新根私钥（仅供后续 sidecar 签名）
+        if: ${{ inputs.windows_package_rat == true }}
+        env:
+          CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM: ${{ secrets.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM:-}" ]; then
+            printf '%s\n' '::error::缺少仓库密钥 CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM，无法签名 sidecar'
+            exit 1
+          fi
+          umask 077
+          key_path="$RUNNER_TEMP/creatoros-update-root.pem"
+          printf '%s\n' "$CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM" > "$key_path"
+          chmod 600 "$key_path"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            key_path="$(cygpath -w "$key_path")"
+          fi
+          printf 'CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH=%s\n' "$key_path" >> "$GITHUB_ENV"
 
       - name: 构建真实 NSIS 候选包（不发布）
         if: ${{ inputs.windows_package_rat == true }}
@@ -1794,6 +1855,10 @@ jobs:
             frontend/src-tauri/target/release-fast/bundle/creatoros-release-attestation.json
           if-no-files-found: warn
           retention-days: 30
+
+      - name: 清理更新根私钥
+        if: always()
+        run: rm -f "$RUNNER_TEMP/creatoros-update-root.pem"
 
   draft-release:
     needs: build
