@@ -147,13 +147,9 @@ export async function createAiCreditPortalLink(
       },
       });
     }
-  } catch {
+  } catch (error) {
     if (dependencies.signal?.aborted) throw new DOMException("本次额度页面打开已取消", "AbortError");
-    return fail(
-      "AI_CREDIT_LINK_UNAVAILABLE",
-      "AI 额度服务暂时不可用，请稍后重试",
-      true,
-    );
+    throw asAiCreditLinkError(error);
   }
   if (dependencies.signal?.aborted) throw new DOMException("本次额度页面打开已取消", "AbortError");
   validateNoStore(response);

@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ fcbbdfff
+LAST_SYNCED: fix-ai-credit-link-2026-10-23 @ 99a98f9d
 
 ## 这是什么(定位)
 
