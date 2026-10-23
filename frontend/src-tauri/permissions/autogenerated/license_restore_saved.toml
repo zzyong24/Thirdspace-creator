@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-license-restore-saved"
+description = "Enables the license_restore_saved command without any pre-configured scope."
+commands.allow = ["license_restore_saved"]
+
+[[permission]]
+identifier = "deny-license-restore-saved"
+description = "Denies the license_restore_saved command without any pre-configured scope."
+commands.deny = ["license_restore_saved"]

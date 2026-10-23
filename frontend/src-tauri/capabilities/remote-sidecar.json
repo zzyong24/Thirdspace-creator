@@ -13,6 +13,7 @@
     "opener:default",
     "allow-export-daily-report-csv",
     "allow-license-activate",
+    "allow-license-restore-saved",
     "allow-license-check",
     "allow-license-reset-local",
     "allow-entitlement-claim-start",

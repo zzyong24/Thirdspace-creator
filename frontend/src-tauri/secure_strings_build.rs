@@ -23,18 +23,19 @@ pub fn write_secure_strings(out_dir: &Path, debug_build: bool,
         "CREATOROS_ENTITLEMENT_CLAIM_ENABLED", // 17 运行时env名称
         "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED", // 18 同上
         "NOMIFUN_CHROME_BINARY", // 19 真实env名称
+        "/api/license/restore-current", // 20 T-1402 专用安全恢复；不复用 activate
     ];
     let max_len = values.iter().map(|s| s.len()).max().unwrap();
     let lengths: Vec<usize> = values.iter().map(|s| s.len()).collect();
     let mut source = String::new();
     if debug_build {
-        source.push_str("const PLAINTEXT: [&str; 20] = [\n");
+        source.push_str("const PLAINTEXT: [&str; 21] = [\n");
         for value in values { source.push_str(&format!("    {value:?},\n")); }
         source.push_str("];\n");
     } else {
-        source.push_str(&format!("const MAX_LEN: usize = {max_len};\nconst LENGTHS: [usize; 20] = {lengths:?};\n"));
+        source.push_str(&format!("const MAX_LEN: usize = {max_len};\nconst LENGTHS: [usize; 21] = {lengths:?};\n"));
         source.push_str(&format!("static KEY: [u8; 32] = {key:?};\n"));
-        source.push_str("static ENCODED: [&[u8]; 20] = [\n");
+        source.push_str("static ENCODED: [&[u8]; 21] = [\n");
         for value in values {
             let bytes: Vec<u8> = value.bytes().enumerate()
                 .map(|(index, byte)| byte ^ key[index % key.len()]).collect();

@@ -24,9 +24,10 @@ pub mod ids {
     pub const CREATOROS_ENTITLEMENT_CLAIM_ENABLED: usize = 17;
     pub const CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: usize = 18;
     pub const NOMIFUN_CHROME_BINARY_ENV: usize = 19;
+    pub const LICENSE_RESTORE_PATH: usize = 20;
 }
 #[cfg(not(debug_assertions))]
-static CACHE: [OnceLock<[u8; MAX_LEN]>; 20] = [const { OnceLock::new() }; 20];
+static CACHE: [OnceLock<[u8; MAX_LEN]>; 21] = [const { OnceLock::new() }; 21];
 
 #[cfg(debug_assertions)]
 pub fn s(id: usize) -> &'static str { PLAINTEXT[id] }
@@ -65,6 +66,8 @@ static ACTIVATE_TARGET: OnceLock<[u8; MAX_LEN + 12]> = OnceLock::new();
 #[cfg(not(debug_assertions))]
 static STATUS_TARGET: OnceLock<[u8; MAX_LEN + 12]> = OnceLock::new();
 #[cfg(not(debug_assertions))]
+static RESTORE_TARGET: OnceLock<[u8; MAX_LEN + 12]> = OnceLock::new();
+#[cfg(not(debug_assertions))]
 static FEEDBACK_PUBLIC_ENV: OnceLock<[u8; MAX_LEN + 12]> = OnceLock::new();
 
 #[cfg(not(debug_assertions))]
@@ -89,6 +92,10 @@ pub fn license_activate_target() -> &'static str {
 pub fn license_status_target() -> &'static str {
     #[cfg(debug_assertions)] { "post /api/license/status" }
     #[cfg(not(debug_assertions))] { prefixed(&STATUS_TARGET, "post ", ids::LICENSE_STATUS_PATH) }
+}
+pub fn license_restore_target() -> &'static str {
+    #[cfg(debug_assertions)] { "post /api/license/restore-current" }
+    #[cfg(not(debug_assertions))] { prefixed(&RESTORE_TARGET, "post ", ids::LICENSE_RESTORE_PATH) }
 }
 pub fn product_feedback_public_env() -> &'static str {
     #[cfg(debug_assertions)] { "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED" }
