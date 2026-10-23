@@ -268,3 +268,20 @@ it.each(['startup','scheduled','bootstrap','manual_revalidate'])('T238 普通%s�
  expect(fulfillActivationIncludedCredit).not.toHaveBeenCalled();expect(refreshClientConfig).toHaveBeenCalledOnce();
 },180_000);
 });
+
+
+describe('T1402 automatic mode route闭合',()=>{
+ beforeEach(()=>{upgradeModelBenefits.mockReset();refreshClientConfig.mockReset();fulfillActivationIncludedCredit.mockReset();readSessionCookie.mockReturnValue('session');readRequestAccountId.mockReturnValue('acct-1');resolveRequestContext.mockResolvedValue({userId:'u-1',accountId:'acct-1',requestId:'req-1'});});
+ it.each(['','manual','automatic, automatic'])('未知mode %s拒绝422且不调用任一产品端口',async(mode)=>{
+  const response=await POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':'legacy_upgrade','x-creatoros-upgrade-action':'probe','x-creatoros-upgrade-mode':mode}}));
+  expect(response.status).toBe(422);expect(upgradeModelBenefits).not.toHaveBeenCalled();expect(refreshClientConfig).not.toHaveBeenCalled();expect(fulfillActivationIncludedCredit).not.toHaveBeenCalled();
+ });
+ it.each(['startup','scheduled','bootstrap','activation'])('非legacy %s不能附automatic获得写链',async(trigger)=>{
+  const response=await POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':trigger,'x-creatoros-upgrade-mode':'automatic'}}));expect(response.status).toBe(422);
+ });
+ it('automatic精确传内部观察标志、真实actor与原signal，不改公开DTO',async()=>{
+  upgradeModelBenefits.mockImplementation(async(action,deps)=>{deps.observation.onToken('enc:v1:automaticSynthetic');return {contractVersion:'creatoros-legacy-model-upgrade-v1',action,phase:'proof',outcome:'unknown',reasonCode:'UPGRADE_SERVICE_UNAVAILABLE',bindingStatus:'unverified',entitlementStatus:'not_started',configurationStatus:'not_started',retryable:true}});
+  const request=new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':'legacy_upgrade','x-creatoros-upgrade-action':'probe','x-creatoros-upgrade-mode':'automatic'}}),response=await POST(request);
+  expect(response.status).toBe(200);expect(upgradeModelBenefits).toHaveBeenLastCalledWith('probe',expect.objectContaining({signal:request.signal,observation:expect.objectContaining({automatic:true,actor:expect.objectContaining({userId:'u-1',accountId:'acct-1'})})}));
+ });
+});

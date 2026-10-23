@@ -34,7 +34,7 @@ export type ModelBenefitDependencies={
   env?:Record<string,string|undefined>;now?:()=>Date;nonce?:()=>string;fetchImpl?:typeof fetch;
   readVerdict?:typeof readLicenseVerdictDetailed;signal?:AbortSignal;expectedScopeId?:string;
   modelBenefitStore?:ModelBenefitStore;putManagedCredential?:(scopeId:string,serviceId:string,token:string)=>Promise<void>;
-  observation?:{token:string|null;actor:{userId:string;accountId:string|null;groupId:string|null};onToken:(token:string)=>void};
+  observation?:{token:string|null;actor:{userId:string;accountId:string|null;groupId:string|null};automatic?:boolean;onToken:(token:string)=>void};
   /** 仅本地隔离测试的密钥端口；HTTP不接受该值，运行时仍走既有master解析。 */
   observationMasterKey?:Buffer;
 };
@@ -123,7 +123,10 @@ async function currentLicense(deps:ModelBenefitDependencies){
 export function deriveModelBenefitScopeId(row:Pick<Authority,"projectKey"|"entitlementBindingHash"|"modelScope"|"authorizationVersion">){
   return createHash("sha256").update(canonical(["creatoros-model-benefit-scope-v1",row.projectKey,row.entitlementBindingHash,row.modelScope,row.authorizationVersion,"creatoros.desktop"])).digest("hex");
 }
-async function access(deps:ModelBenefitDependencies){
+async function access(deps:ModelBenefitDependencies,automaticOwner=false){
+  // 普通后台读取不能用新的generation打断已获准的自动阶段。
+  if(!automaticOwner&&Array.from(upgradeObservations.values()).some(row=>row.automatic&&row.inFlight))
+    fail('MODEL_BENEFIT_REFRESH_PENDING','原模型权益正在核对，请稍后同步配置',true);
   const generation=++observationGeneration;
   const env=deps.env??process.env,{verdict,licenseDigest}=await currentLicense(deps),nonce=(deps.nonce??(()=>randomBytes(18).toString("base64url")))();
   if(generation!==observationGeneration)fail("MODEL_ROUTE_IDENTITY_CHANGED","已有新的模型核验操作，请查看当前结果",true);
@@ -149,8 +152,10 @@ async function post(deps:ModelBenefitDependencies,identity:Awaited<ReturnType<ty
 }
 
 const UPGRADE_FENCE_PURPOSE='creatoros-legacy-upgrade-fence-v1',UPGRADE_FENCE_TTL_MS=730_000;
-type UpgradeObservation={actor:string;identityHash:string;proofScopeHash?:string;bootNonceHash:string;expiresAt:number;inFlight:boolean;fulfillSent:boolean};
+type UpgradeObservation={actor:string;identityHash:string;proofScopeHash?:string;bootNonceHash:string;expiresAt:number;inFlight:boolean;fulfillSent:boolean;automatic:boolean};
 const upgradeObservations=new Map<string,UpgradeObservation>();
+// 仅首个请求持有token；失效和过期也保留本启动墓碑，其他窗口不能接管未知结果。
+const automaticUpgradeObservations=new Map<string,{token:string|null}>();
 export function deriveLegacyUpgradeIdentityHash(v:import('./license-file.server').LicenseVerdict):string{
   if(!v.code||!v.machineId||!v.projectKey||typeof v.licenseMode!=='string'||!v.licenseMode||!Object.hasOwn(v,'expiresAt'))fail('MODEL_ROUTE_IDENTITY_CHANGED','原授权身份需要重新核对');
   const expiry=v.expiresAt===null?null:typeof v.expiresAt==='string'?Date.parse(v.expiresAt):NaN;
@@ -166,39 +171,65 @@ async function openUpgradeObservation(action:UpgradeAction,deps:ModelBenefitDepe
   const bootNonceHash=digest(boot);
   for(const [key,row] of upgradeObservations)if(row.expiresAt<=now&&!row.inFlight)upgradeObservations.delete(key);
   let token=input.token,entry:UpgradeObservation|undefined;
+  const automatic=input.automatic===true;
+  let automaticRecord:{token:string|null}|undefined;
+  let automaticIdentity:Awaited<ReturnType<typeof currentLicense>>|undefined;
+  if(automatic){
+    if(token===null&&action!=='probe')return changed();
+    automaticIdentity=await currentLicense(deps);
+    const identityHash=deriveLegacyUpgradeIdentityHash(automaticIdentity.verdict);
+    const index=digest(canonical([actor,bootNonceHash,identityHash]));
+    automaticRecord=automaticUpgradeObservations.get(index);
+    if(token===null){
+      // currentLicense包含异步读盘，必须在await之后重新查索引并同步占用。
+      if(automaticRecord||automaticUpgradeObservations.size>=256)
+        fail('CLIENT_CONFIG_PENDING','本次启动的原权益核对仍待确认',true);
+      automaticRecord={token:null};automaticUpgradeObservations.set(index,automaticRecord);
+    }else if(!automaticRecord||automaticRecord.token!==token){
+      const previous=upgradeObservations.get(token);
+      if(previous?.automatic&&previous.actor===actor&&previous.bootNonceHash===bootNonceHash&&previous.identityHash!==identityHash)
+        upgradeObservations.delete(token);
+      return changed();
+    }
+  }
   if(token===null){
     if(action!=='probe')return changed();
     if(upgradeObservations.size>=256)fail('CLIENT_CONFIG_PENDING','原权益核对正在进行，请稍后继续',true);
-    const identity=await currentLicense(deps),identityHash=deriveLegacyUpgradeIdentityHash(identity.verdict),resolved=deps.observationMasterKey?{key:deps.observationMasterKey,degraded:false}:resolveMasterKey(env);
+    const identity=automaticIdentity??await currentLicense(deps),identityHash=deriveLegacyUpgradeIdentityHash(identity.verdict),resolved=deps.observationMasterKey?{key:deps.observationMasterKey,degraded:false}:resolveMasterKey(env);
     if(resolved.degraded||resolved.key.length!==32)fail('CLIENT_CONFIG_STORAGE_UNAVAILABLE','本机原授权核对尚未就绪',true);
     const issuedAt=Date.now(),expiresAt=issuedAt+UPGRADE_FENCE_TTL_MS;
     const payload={contractVersion:'creatoros-legacy-upgrade-observation-v1',observationId:randomUUID(),licenseIdentityHash:identityHash,issuedAt:new Date(issuedAt).toISOString(),expiresAt:new Date(expiresAt).toISOString(),bootNonceHash};
     token=encryptSecret(JSON.stringify(payload),createHash('sha256').update(resolved.key).update(UPGRADE_FENCE_PURPOSE).digest());
     if(upgradeObservations.size>=256)fail('CLIENT_CONFIG_PENDING','原权益核对正在进行，请稍后继续',true);
-    entry={actor,identityHash,bootNonceHash,expiresAt,inFlight:false,fulfillSent:false};upgradeObservations.set(token,entry);
+    entry={actor,identityHash,bootNonceHash,expiresAt,inFlight:false,fulfillSent:false,automatic};upgradeObservations.set(token,entry);
+    if(automaticRecord)automaticRecord.token=token;
   }else{
     if(token.length>4096||!token.startsWith('enc:v1:'))return changed();
     entry=upgradeObservations.get(token);
-    if(!entry||entry.expiresAt<=Date.now()||entry.actor!==actor||entry.bootNonceHash!==bootNonceHash)return changed();
+    if(!entry||entry.expiresAt<=Date.now()||entry.actor!==actor||entry.bootNonceHash!==bootNonceHash||entry.automatic!==automatic)return changed();
   }
   const current=entry,key=token;
   if(current.inFlight)fail('CLIENT_CONFIG_PENDING','本次原权益核对仍在执行，请稍后继续',true);
   if(action==='fulfill'&&current.fulfillSent)return changed();
+  const remaining=current.expiresAt-Date.now();if(remaining<=0)return changed();
+  const deadline=new AbortController();
+  const timer=setTimeout(()=>deadline.abort(),remaining);timer.unref?.();
+  const signal=deps.signal?AbortSignal.any([deps.signal,deadline.signal]):deadline.signal;
   current.inFlight=true;
-  try{input.onToken(key);}catch(error){current.inFlight=false;throw error;}
+  try{input.onToken(key);}catch(error){clearTimeout(timer);current.inFlight=false;throw error;}
   const check=async()=>{
-    live(deps.signal);
+    live(signal);
     if(upgradeObservations.get(key)!==current||current.expiresAt<=Date.now()||current.actor!==actor)return changed();
     const identity=await currentLicense(deps);
     if(deriveLegacyUpgradeIdentityHash(identity.verdict)!==current.identityHash){upgradeObservations.delete(key);return changed();}
-    live(deps.signal);
+    live(signal);
     if(current.expiresAt<=Date.now())return changed();
   };
-  return {check,pinProof:(claims:ProofClaims)=>{
+  return {check,signal,automatic,pinProof:(claims:ProofClaims)=>{
     const scopeHash=digest(canonical([claims.policyId,claims.projectKey,claims.sourceChannelRef,claims.modelScope,claims.entitlementBindingHash]));
     if(current.proofScopeHash&&current.proofScopeHash!==scopeHash){upgradeObservations.delete(key);return changed();}
     current.proofScopeHash=scopeHash;
-  },consumeFulfill:()=>{if(current.fulfillSent)return changed();current.fulfillSent=true;},release:()=>{current.inFlight=false;if(current.expiresAt<=Date.now())upgradeObservations.delete(key);}};
+  },consumeFulfill:()=>{if(current.fulfillSent)return changed();current.fulfillSent=true;},release:()=>{clearTimeout(timer);current.inFlight=false;if(current.expiresAt<=Date.now())upgradeObservations.delete(key);}};
 }
 function verifyIdentity(row:Record<string,unknown>,identity:Awaited<ReturnType<typeof access>>,now:Date){
   assertAuthority(row);
@@ -346,8 +377,10 @@ export async function upgradeModelBenefits(action:UpgradeAction,deps:ModelBenefi
   try{
     live(deps.signal);
     if((deps.env??process.env).CREATOROS_MODEL_BENEFITS_ENABLED!=='1')fail('CLIENT_CONFIG_PENDING','当前模型升级服务尚未启用',true);
-    observation=await openUpgradeObservation(action,deps);await observation?.check();
-    const identity=await access(deps);
+    observation=await openUpgradeObservation(action,deps);
+    if(observation)deps={...deps,signal:observation.signal};
+    await observation?.check();
+    const identity=await access(deps,observation?.automatic);
     await observation?.check();observation?.pinProof(identity.claims);
     const send=(operation:string)=>post(deps,identity,operation,undefined,async()=>{await observation?.check();if(operation==='fulfill')observation?.consumeFulfill();});
     phase=action==='probe'?'credentials':action==='fulfill'?'fulfillment':'configuration';

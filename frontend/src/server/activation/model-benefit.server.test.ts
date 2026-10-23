@@ -325,3 +325,67 @@ it("T1375 fresh security_error对象不折为临时不可用，后续合法验�
  corrupt=false;f.deps.modelBenefitStore=backing;
  await expect(ensureModelBenefitAuthority(f.deps,async()=>true)).resolves.toMatchObject({authority:'channel',outcome:'configured'});
 });
+
+
+describe('T1402 automatic 单owner与原截止',()=>{
+ async function autoFixture(){
+  const f=await fixture(),key=randomBytes(32),boot=randomBytes(32).toString('hex'),actor={userId:'automatic-principal',accountId:'automatic-account',groupId:'automatic-group'},tokens:string[]=[];
+  const step=(action:'probe'|'fulfill'|'sync',options:{token?:string|null;automatic?:boolean;actor?:typeof actor}={})=>upgradeModelBenefits(action,{...f.deps,env:{...f.env,CREATOROS_SIDECAR_HANDSHAKE_TOKEN:boot},observationMasterKey:key,observation:{token:options.token??null,actor:options.actor??actor,automatic:options.automatic??true,onToken:value=>tokens.push(value)}});
+  return {...f,key,boot,actor,tokens,step};
+ }
+ it('同boot重复无token probe只有首响应持token，后来请求无下游',async()=>{
+  const f=await autoFixture();expect(await f.step('probe')).toMatchObject({outcome:'ready'});const count=f.calls.length;
+  expect(await f.step('probe')).toMatchObject({phase:'proof',outcome:'unknown',reasonCode:'UPGRADE_SERVICE_UNAVAILABLE',bindingStatus:'unverified',entitlementStatus:'not_started'});
+  expect(f.tokens).toHaveLength(1);expect(f.calls).toHaveLength(count);
+ });
+ it('两个首次probe穿过异步读盘后仍仅一个owner发下游',async()=>{
+  const f=await autoFixture(),results=await Promise.all([f.step('probe'),f.step('probe')]);
+  expect(results.filter(r=>r.outcome==='ready')).toHaveLength(1);expect(results.filter(r=>r.reasonCode==='UPGRADE_SERVICE_UNAVAILABLE')).toHaveLength(1);
+  expect(f.tokens).toHaveLength(1);expect(f.calls.filter(p=>p.endsWith('model-benefit-proofs'))).toHaveLength(1);
+ });
+ it('过期保automatic墓碑，无token probe不续TTL或新造观察',async()=>{
+  const f=await autoFixture();await f.step('probe');const count=f.calls.length,clock=vi.spyOn(Date,'now').mockReturnValue(Date.now()+730001);
+  try{expect(await f.step('probe')).toMatchObject({outcome:'unknown',reasonCode:'UPGRADE_SERVICE_UNAVAILABLE'});expect(await f.step('sync',{token:f.tokens[0]})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});}finally{clock.mockRestore()}
+  expect(f.tokens).toHaveLength(1);expect(f.calls).toHaveLength(count);
+ });
+ it('manual token不能混入automatic；automatic无token fulfill不能申请观察',async()=>{
+  const f=await autoFixture();await f.step('probe',{automatic:false});const token=f.tokens[0],count=f.calls.length;
+  expect(await f.step('fulfill',{token})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});expect(await f.step('fulfill')).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});
+  expect(f.calls).toHaveLength(count);expect(f.tokens).toHaveLength(1);
+ });
+ it('原许可变化使automatic token失效，换回A也不复活原token或新观察',async()=>{
+  const f=await autoFixture();await f.step('probe');const token=f.tokens[0],count=f.calls.length;f.setVerdict({code:'DIFFERENT-AUTOMATIC-CODE'});
+  expect(await f.step('sync',{token})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});f.setVerdict({code:'LOCAL-SYNTHETIC-CODE'});
+  expect(await f.step('probe')).toMatchObject({reasonCode:'UPGRADE_SERVICE_UNAVAILABLE'});expect(await f.step('sync',{token})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});
+  expect(f.calls).toHaveLength(count);expect(f.tokens).toHaveLength(1);
+ });
+ it('automatic原owner可续同token，但同token履约最多发送一次',async()=>{
+  const f=await autoFixture();await f.step('probe');const token=f.tokens[0];expect(await f.step('fulfill',{token})).toMatchObject({entitlementStatus:'ready'});
+  expect(await f.step('fulfill',{token})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});expect(f.calls.filter(p=>p.endsWith('/fulfill'))).toHaveLength(1);
+  expect(await f.step('sync',{token})).toMatchObject({configurationStatus:'ready'});
+ });
+ it('automatic在途时普通read/fulfill/link在generation递增前延期，owner仍可完成',async()=>{
+  const f=await autoFixture(),original=f.fetchImpl.getMockImplementation()!;let entered!:()=>void,release!:()=>void;
+  const started=new Promise<void>(resolve=>{entered=resolve}),gate=new Promise<void>(resolve=>{release=resolve});let held=false;
+  f.fetchImpl.mockImplementation(async(input,init)=>{if(String(input).endsWith('model-benefit-proofs')&&!held){held=true;entered();await gate;}return original(input,init)});
+  const owner=f.step('probe');await started;
+  try{
+   await expect(refreshClientConfig(f.deps)).rejects.toMatchObject({code:'MODEL_BENEFIT_REFRESH_PENDING',retryable:true});
+   expect(await fulfillActivationIncludedCredit(f.deps)).toMatchObject({status:'pending'});
+   await expect(requestModelBenefitLink(f.deps)).rejects.toMatchObject({code:'MODEL_BENEFIT_REFRESH_PENDING'});
+  }finally{release()}
+  expect(await owner).toMatchObject({outcome:'ready'});expect(f.calls.filter(p=>p.endsWith('model-benefit-proofs'))).toHaveLength(1);expect(f.calls.filter(p=>p.endsWith('/fulfill'))).toHaveLength(0);
+ });
+ it('附token后下游真实signal按原entry剩余时间截止，不新开120秒',async()=>{
+  const f=await autoFixture();await f.step('probe');const token=f.tokens[0],clock=vi.spyOn(Date,'now').mockReturnValue(Date.now()+729950);let aborted=false;
+  f.fetchImpl.mockImplementation(async(_input,init)=>new Promise<Response>((_resolve,reject)=>{const signal=init?.signal;const stop=()=>{aborted=true;reject(new DOMException('原观察已到期','AbortError'))};if(signal?.aborted)stop();else signal?.addEventListener('abort',stop,{once:true})}));
+  try{const result=await Promise.race([f.step('sync',{token}).then(()=>null,error=>error),new Promise(resolve=>setTimeout(()=>resolve('not-clamped'),250))]);expect(result).toMatchObject({name:'AbortError'});expect(aborted).toBe(true);}finally{clock.mockRestore()}
+ });
+ it('automatic索引满256不驱逐墓碑或因token过期开放替代写',async()=>{
+  vi.resetModules();const isolated=await import('./model-benefit.server'),f=await fixture(),key=randomBytes(32),boot=randomBytes(32).toString('hex');let created=0;
+  const make=(i:number)=>{const controller=new AbortController();return isolated.upgradeModelBenefits('probe',{...f.deps,signal:controller.signal,observationMasterKey:key,env:{...f.env,CREATOROS_SIDECAR_HANDSHAKE_TOKEN:boot},observation:{automatic:true,token:null,actor:{userId:'cap-'+i,accountId:null,groupId:null},onToken:()=>{created++;controller.abort()}}});};
+  await Promise.allSettled(Array.from({length:257},(_,i)=>make(i)));expect(created).toBe(256);expect(f.fetchImpl).not.toHaveBeenCalled();
+  const clock=vi.spyOn(Date,'now').mockReturnValue(Date.now()+1460000);try{expect(await make(257)).toMatchObject({reasonCode:'UPGRADE_SERVICE_UNAVAILABLE'});expect(await make(0)).toMatchObject({reasonCode:'UPGRADE_SERVICE_UNAVAILABLE'});}finally{clock.mockRestore()}
+  expect(created).toBe(256);
+ });
+});

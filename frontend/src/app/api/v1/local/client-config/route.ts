@@ -100,7 +100,9 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   const upgradeAction=request.headers.get('x-creatoros-upgrade-action');
-  if(trigger==='legacy_upgrade'?!isUpgradeAction(upgradeAction):upgradeAction!==null)
+  const upgradeMode=request.headers.get('x-creatoros-upgrade-mode');
+  if((upgradeMode!==null&&(upgradeMode!=='automatic'||trigger!=='legacy_upgrade'))||
+    (trigger==='legacy_upgrade'?!isUpgradeAction(upgradeAction):upgradeAction!==null))
     return response({error:'升级请求格式不正确，请重新打开设置后重试'},422);
   let ctx;
   try {
@@ -127,7 +129,7 @@ export async function POST(request: Request): Promise<Response> {
       if(request.signal.aborted)throw new DOMException('已停止等待','AbortError');
       const result=await (await import('@/server/activation/model-benefit.server')).upgradeModelBenefits(upgradeAction,{
         signal:request.signal,
-        observation:{token:request.headers.get(UPGRADE_OBSERVATION_HEADER),actor:{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null},onToken:value=>{observationToken=value;}},
+        observation:{token:request.headers.get(UPGRADE_OBSERVATION_HEADER),actor:{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null},...(upgradeMode==='automatic'?{automatic:true}:{}),onToken:value=>{observationToken=value;}},
         putManagedCredential:async(scopeId,serviceId,token)=>{
           if(request.signal.aborted)throw new DOMException('已停止等待','AbortError');
           await settings.setChannelModelCredential(ctx,scopeId,serviceId,token);
