@@ -1,83 +1,105 @@
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {afterEach,beforeEach,describe,it,expect,vi} from 'vitest';
 import '@testing-library/jest-dom/vitest';
-const f=vi.hoisted(()=>({fetch:vi.fn(),invoke:vi.fn(),fresh:vi.fn(),refresh:vi.fn(),group:'group-a',account:'acct-a'}));
+import type {AutomaticLicenseUpgradeState} from '@/lib/automatic-license-upgrade';
+const f=vi.hoisted(()=>({
+  fetch:vi.fn(),open:vi.fn(),fresh:vi.fn(),refresh:vi.fn(),group:'group-a',account:'acct-a',
+  listeners:new Set<()=>void>(),state:null as AutomaticLicenseUpgradeState|null,
+  idle:{scopeKey:'',status:'idle' as const,phase:null,reasonCode:null,entitlementReady:false,configurationReady:false,successRevision:0},
+}));
 vi.mock('next/navigation',()=>({useRouter:()=>({refresh:f.refresh})}));
 vi.mock('@/lib/http-transport',async original=>({...await original<typeof import('@/lib/http-transport')>(),fetchCreatorApi:f.fetch,readCurrentGroupId:()=>f.group,readCurrentAccountId:()=>f.account}));
-vi.mock('@tauri-apps/api/core',()=>({invoke:f.invoke}));
+vi.mock('@/lib/open-ai-credit-center',async original=>({...await original<typeof import('@/lib/open-ai-credit-center')>(),openAiCreditCenter:f.open}));
 vi.mock('@/features/copilot/assistant-engine',()=>({refreshModelRoutingAfterUpgrade:f.fresh,loadModelRouting:vi.fn()}));
+vi.mock('@/lib/automatic-license-upgrade',()=>({
+ AUTOMATIC_UPGRADE_SERVER_STATE:f.idle,
+ automaticUpgradeScopeKey:(scope:{groupId:string|null;accountId:string|null})=>scope.groupId?`group:${scope.groupId}`:`account:${scope.accountId??'missing'}`,
+ readAutomaticLicenseUpgrade:()=>f.state??f.idle,
+ subscribeAutomaticLicenseUpgrade:(listener:()=>void)=>{f.listeners.add(listener);return()=>f.listeners.delete(listener);},
+}));
 import {AiCreditCenterCard} from './channel-model-configuration';
-const syntheticObservation='enc:v1:'+btoa('public-controlled-observation-token-not-a-key');
-const reply=(action:string,patch:Record<string,unknown>={})=>Response.json({contractVersion:'creatoros-legacy-model-upgrade-v1',action,phase:action==='probe'?'credentials':action==='fulfill'?'fulfillment':'configuration',outcome:'ready',reasonCode:'UPGRADE_READY',bindingStatus:'verified',entitlementStatus:'ready',configurationStatus:action==='sync'?'ready':'not_started',retryable:false,...patch},{headers:{'x-creatoros-upgrade-observation':syntheticObservation}});
-const absent=()=>reply('probe',{outcome:'pending',reasonCode:'UPGRADE_ENTITLEMENT_NOT_READY',entitlementStatus:'unknown',retryable:true});
-const unknown=(action='probe')=>reply(action,{outcome:'unknown',reasonCode:'UPGRADE_ENTITLEMENT_UNKNOWN',entitlementStatus:'unknown',retryable:true});
-const binding=()=>reply('probe',{phase:'proof',outcome:'restore_required',reasonCode:'UPGRADE_BINDING_RECHECK_REQUIRED',bindingStatus:'unverified',entitlementStatus:'not_started'});
-const actions=()=>f.fetch.mock.calls.map(call=>new Headers(call[1]?.headers).get('x-creatoros-upgrade-action'));
-const start=()=>fireEvent.click(screen.getByRole('button',{name:'升级原激活码，启用模型权益'}));
-beforeEach(()=>{f.fetch.mockReset();f.invoke.mockReset();f.fresh.mockReset().mockResolvedValue(undefined);f.refresh.mockReset();f.group='group-a';f.account='acct-a';});
-afterEach(()=>{cleanup();vi.useRealTimers();});
-describe('T1402真实设置卡的一键受控旅程（非桌面/生产验收）',()=>{
- it('已有钱包仍有入口，ready只读同步及新store，不重复fulfill',async()=>{
-  f.fetch.mockResolvedValueOnce(reply('probe')).mockResolvedValueOnce(reply('sync'));render(<AiCreditCenterCard accountStatus="ready"/>);start();
-  await screen.findByText('原激活码已升级，模型权益与配置已核对，个人模型来源保持不变');expect(actions()).toEqual(['probe','sync']);expect(f.invoke).not.toHaveBeenCalled();expect(f.fresh).toHaveBeenCalledTimes(1);
+const publish=(patch:Partial<AutomaticLicenseUpgradeState>)=>act(()=>{
+ f.state={...f.idle,scopeKey:'group:group-a',...patch};for(const listener of f.listeners)listener();
+});
+const ready=(revision=1)=>publish({status:'ready',phase:'routing',reasonCode:'UPGRADE_READY',entitlementReady:true,configurationReady:true,successRevision:revision});
+const open=()=>fireEvent.click(screen.getByRole('button',{name:'查看 AI 额度与消耗'}));
+beforeEach(()=>{f.fetch.mockReset();f.open.mockReset();f.fresh.mockReset();f.refresh.mockReset();f.group='group-a';f.account='acct-a';f.state=null;f.listeners.clear();});
+afterEach(()=>cleanup());
+describe('T1402无感升级状态与额度卡（协调链守卫迁入automatic-license-upgrade.test.ts）',()=>{
+ it('T1402无感入口：额度卡不再要求点击升级或继续核对',()=>{
+  render(<AiCreditCenterCard/>);
+  expect(screen.queryByRole('button',{name:/升级原激活码|继续核对|取消等待/})).toBeNull();
+  expect(screen.getByText(/模型权益会随原授权自动核对/)).toBeInTheDocument();
+  expect(f.fetch).not.toHaveBeenCalled();expect(f.open).not.toHaveBeenCalled();
  });
- it('初次明确升级遇404不假定未开户，但沿同权益fulfill后sync',async()=>{
-  f.fetch.mockResolvedValueOnce(absent()).mockResolvedValueOnce(reply('fulfill')).mockResolvedValueOnce(reply('sync'));render(<AiCreditCenterCard/>);start();
-  await screen.findByText('原激活码已升级，模型权益与配置已核对，个人模型来源保持不变');expect(actions()).toEqual(['probe','fulfill','sync']);expect(f.invoke).not.toHaveBeenCalled();
+ it('设置只是订阅，后台核对不阻止查看额度，卸载不触发或取消升级',()=>{
+  const view=render(<AiCreditCenterCard/>);publish({status:'checking',phase:'proof'});
+  expect(screen.getByRole('status')).toHaveTextContent('正在后台核对');expect(screen.getByRole('button',{name:'查看 AI 额度与消耗'})).toBeEnabled();
+  view.unmount();expect(f.listeners.size).toBe(0);expect(f.fetch).not.toHaveBeenCalled();
  });
- it('绑定缺失只提交一次仅opaque参数native，确认后freshprobe与原钱包复用',async()=>{
-  f.fetch.mockResolvedValueOnce(binding()).mockResolvedValueOnce(reply('probe')).mockResolvedValueOnce(reply('sync'));
-  f.invoke.mockResolvedValue({contractVersion:'creatoros-license-restore-result-v1',status:'ready',reasonCode:'RESTORE_READY',bindingStatus:'verified',persistence:'confirmed',retryable:false});render(<AiCreditCenterCard/>);start();
-  await screen.findByText('原激活码已升级，模型权益与配置已核对，个人模型来源保持不变');expect(f.invoke.mock.calls).toEqual([['license_restore_saved',{observationToken:syntheticObservation}]]);expect(actions()).toEqual(['probe','probe','sync']);
+ it('完整成功局部展示，不打开额度、不写个人路由、不整页刷新',()=>{
+  render(<AiCreditCenterCard/>);ready();expect(screen.getByRole('status')).toHaveTextContent('模型权益已就绪');
+  expect(f.open).not.toHaveBeenCalled();expect(f.fetch).not.toHaveBeenCalled();expect(f.fresh).not.toHaveBeenCalled();expect(f.refresh).not.toHaveBeenCalled();
  });
- it('nativeunknown仍缺失停止，不盲restore；用户继续才新inspect',async()=>{
-  f.fetch.mockImplementation(async()=>binding());f.invoke.mockResolvedValue({contractVersion:'creatoros-license-restore-result-v1',status:'unknown',reasonCode:'RESTORE_CONTINUE_REQUIRED',bindingStatus:'unverified',persistence:'unchanged',retryable:true});render(<AiCreditCenterCard/>);start();
-  await screen.findByRole('button',{name:'继续核对'});expect(f.invoke).toHaveBeenCalledTimes(1);expect(actions().every(a=>a==='probe')).toBe(true);
-  fireEvent.click(screen.getByRole('button',{name:'继续核对'}));await waitFor(()=>expect(f.invoke).toHaveBeenCalledTimes(2));
+ it('未知/部分成功保留准确状态，不提供重复领取按钮',()=>{
+  render(<AiCreditCenterCard/>);publish({status:'pending',entitlementReady:true,phase:'configuration'});
+  expect(screen.getByRole('status')).toHaveTextContent('原模型权益已就绪，配置仍待核对');
+  expect(screen.queryByRole('button',{name:/升级|继续核对/})).toBeNull();
  });
- it('恢复续查缺token不会占用尚未发出的native guard，下一次明确观察仍可恢复',async()=>{
-  f.fetch.mockResolvedValueOnce(binding()).mockResolvedValueOnce(binding());
-  f.invoke.mockResolvedValue({contractVersion:'creatoros-license-restore-result-v1',status:'unknown',reasonCode:'RESTORE_CONTINUE_REQUIRED',bindingStatus:'unverified',persistence:'unchanged',retryable:true});
-  render(<AiCreditCenterCard/>);start();await screen.findByRole('button',{name:'继续核对'});
-  f.fetch.mockResolvedValueOnce(Response.json({contractVersion:'creatoros-legacy-model-upgrade-v1',action:'probe',phase:'proof',outcome:'unknown',reasonCode:'UPGRADE_SERVICE_UNAVAILABLE',bindingStatus:'unverified',entitlementStatus:'not_started',configurationStatus:'not_started',retryable:true}));
-  fireEvent.click(screen.getByRole('button',{name:'继续核对'}));await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('升级结果尚未确认'));expect(f.invoke).toHaveBeenCalledTimes(1);
-  f.fetch.mockResolvedValueOnce(binding()).mockResolvedValueOnce(binding());fireEvent.click(screen.getByRole('button',{name:'继续核对'}));await waitFor(()=>expect(f.invoke).toHaveBeenCalledTimes(2));
+ it('有效设备冲突有准确说明，不能标就绪',()=>{
+  render(<AiCreditCenterCard/>);publish({status:'blocked',reasonCode:'RESTORE_ACTIVE_BINDING_CONFLICT'});
+  expect(screen.getByRole('status')).toHaveTextContent('原授权存在有效设备绑定');expect(screen.getByRole('status')).not.toHaveTextContent('已就绪');
  });
- it('409明确经济unknown先停止；明确继续后404才恢复原预约',async()=>{
-  f.fetch.mockResolvedValueOnce(unknown());render(<AiCreditCenterCard/>);start();await screen.findByRole('button',{name:'继续核对'});expect(actions()).toEqual(['probe']);
-  f.fetch.mockResolvedValueOnce(absent()).mockResolvedValueOnce(reply('fulfill')).mockResolvedValueOnce(reply('sync'));fireEvent.click(screen.getByRole('button',{name:'继续核对'}));await screen.findByText('原激活码已升级，模型权益与配置已核对，个人模型来源保持不变');expect(actions()).toEqual(['probe','probe','fulfill','sync']);
+ it('同scope的新成功清除已经失效的旧额度错误',async()=>{
+  f.open.mockRejectedValueOnce(Error('AI 额度服务暂时不可用，请稍后重试'));render(<AiCreditCenterCard/>);open();
+  await screen.findByText('AI 额度服务暂时不可用，请稍后重试');ready();
+  expect(screen.queryByText('AI 额度服务暂时不可用，请稍后重试')).toBeNull();expect(f.open).toHaveBeenCalledTimes(1);
  });
- it('fulfill丢响应先只读，仍未知停止，不能同观察再发款',async()=>{
-  f.fetch.mockResolvedValueOnce(absent()).mockResolvedValueOnce(unknown('fulfill')).mockResolvedValueOnce(absent());render(<AiCreditCenterCard/>);start();await screen.findByRole('button',{name:'继续核对'});
-  expect(actions()).toEqual(['probe','fulfill','probe']);expect(f.invoke).not.toHaveBeenCalled();
+ it('已成功之后产生的新额度错误不能被旧revision清掉',async()=>{
+  ready();f.open.mockRejectedValueOnce(Error('新的额度中心连接错误'));render(<AiCreditCenterCard/>);open();
+  await screen.findByText('新的额度中心连接错误');ready();expect(screen.getByText('新的额度中心连接错误')).toBeInTheDocument();
  });
- it('已知权益ready而sync失败，继续只sync；store失败也不报完整成功',async()=>{
-  f.fetch.mockResolvedValueOnce(reply('probe')).mockResolvedValueOnce(reply('sync',{outcome:'pending',reasonCode:'UPGRADE_CONFIGURATION_PENDING',configurationStatus:'pending',retryable:true}));render(<AiCreditCenterCard/>);start();
-  await screen.findByText('原模型权益已就绪，配置仍待核对；不会重复领取原权益');f.fetch.mockResolvedValueOnce(reply('sync'));f.fresh.mockRejectedValueOnce(Error('controlled GET failure'));fireEvent.click(screen.getByRole('button',{name:'继续核对'}));await screen.findByText('原模型权益已就绪，界面配置尚未读回，请继续核对');expect(actions()).toEqual(['probe','sync','sync']);expect(f.refresh).not.toHaveBeenCalled();
+ it('额度中心在途期间后台成功，后来产生的新错误保持可见',async()=>{
+  let reject!:(error:Error)=>void;f.open.mockImplementation(()=>new Promise((_resolve,r)=>{reject=r;}));render(<AiCreditCenterCard/>);open();ready();
+  await act(async()=>reject(Error('本次打开额度失败')));expect(screen.getByText('本次打开额度失败')).toBeInTheDocument();
+  ready();expect(screen.getByText('本次打开额度失败')).toBeInTheDocument();
  });
- it('双击共享本次观察，取消后迟到native不发后续请求或假称撤销',async()=>{
-  let finish!:(v:unknown)=>void;f.fetch.mockResolvedValue(binding());f.invoke.mockImplementation(()=>new Promise(r=>{finish=r}));render(<AiCreditCenterCard/>);start();await waitFor(()=>expect(f.invoke).toHaveBeenCalledTimes(1));
-  fireEvent.click(screen.getByRole('button',{name:'正在核对原权益…'}));fireEvent.click(screen.getByRole('button',{name:'取消等待'}));await screen.findByRole('button',{name:'继续核对'});
-  await act(async()=>finish({contractVersion:'creatoros-license-restore-result-v1',status:'ready',reasonCode:'RESTORE_READY',bindingStatus:'verified',persistence:'confirmed',retryable:false}));expect(f.fetch).toHaveBeenCalledTimes(1);expect(f.invoke).toHaveBeenCalledTimes(1);expect(screen.getByRole('status')).toHaveTextContent('停止等待');
+ it('另一scope迟到成功不显示、不清当前额度错误',async()=>{
+  f.open.mockRejectedValueOnce(Error('当前组额度错误'));render(<AiCreditCenterCard/>);open();await screen.findByText('当前组额度错误');
+  publish({scopeKey:'group:group-b',status:'ready',successRevision:10,entitlementReady:true,configurationReady:true});
+  expect(screen.getByText('当前组额度错误')).toBeInTheDocument();expect(screen.queryByRole('status')).toBeNull();
  });
- it('切组后原生迟到结果不污染新scope，也不发新组fulfill',async()=>{
-  let finish!:(v:unknown)=>void;f.fetch.mockResolvedValue(binding());f.invoke.mockImplementation(()=>new Promise(r=>{finish=r}));render(<AiCreditCenterCard/>);start();await waitFor(()=>expect(f.invoke).toHaveBeenCalledTimes(1));
-  act(()=>{f.group='group-b';window.dispatchEvent(new Event('creatoros:accounts-changed'));});await act(async()=>finish({contractVersion:'creatoros-license-restore-result-v1',status:'ready',reasonCode:'RESTORE_READY',bindingStatus:'verified',persistence:'confirmed',retryable:false}));expect(f.fetch).toHaveBeenCalledTimes(1);expect(screen.queryByRole('status')).toBeNull();
+ it('切组撤掉旧成功和旧错误，组内平台筛选不丢升级状态',async()=>{
+  ready();render(<AiCreditCenterCard/>);act(()=>{f.account='acct-b';window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+  expect(screen.getByRole('status')).toHaveTextContent('模型权益已就绪');
+  act(()=>{f.group='group-b';window.dispatchEvent(new Event('creatoros:accounts-changed'));});expect(screen.queryByRole('status')).toBeNull();
  });
- it('父730000从最初点击起覆盖原生等待，不因进入恢复而续期',async()=>{
-  vi.useFakeTimers();let finish!:(v:Response)=>void;f.fetch.mockImplementationOnce(()=>new Promise(r=>{finish=r}));f.invoke.mockImplementation(()=>new Promise(()=>{}));render(<AiCreditCenterCard/>);start();
-  await act(async()=>{await vi.advanceTimersByTimeAsync(600000);finish(binding());});await act(async()=>{await vi.advanceTimersByTimeAsync(130000);});
-  expect(screen.getByRole('status')).toHaveTextContent('停止等待');expect(f.invoke).toHaveBeenCalledTimes(1);expect(f.fetch).toHaveBeenCalledTimes(1);
+ it('同组筛选变化保留新额度错误，真实切组才清理',async()=>{
+  ready();f.open.mockRejectedValueOnce(Error('当前组新额度错误'));render(<AiCreditCenterCard/>);open();
+  await screen.findByText('当前组新额度错误');
+  act(()=>{f.account='acct-b';window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+  expect(screen.getByText('当前组新额度错误')).toBeInTheDocument();
+  act(()=>{f.group='group-b';window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+  expect(screen.queryByText('当前组新额度错误')).toBeNull();
  });
- it('config继续保最初父截止，729秒后续读挂起只剩1秒；过期不偷偷新观察',async()=>{
-  vi.useFakeTimers();f.fetch.mockResolvedValueOnce(reply('probe')).mockResolvedValueOnce(reply('sync',{outcome:'pending',reasonCode:'UPGRADE_CONFIGURATION_PENDING',configurationStatus:'pending',retryable:true}));render(<AiCreditCenterCard/>);start();
-  await act(async()=>{await vi.advanceTimersByTimeAsync(0);});expect(screen.getByRole('button',{name:'继续核对'})).toBeEnabled();
-  await act(async()=>{await vi.advanceTimersByTimeAsync(729000);});f.fetch.mockImplementationOnce(()=>new Promise(()=>{}));fireEvent.click(screen.getByRole('button',{name:'继续核对'}));
-  await act(async()=>{await vi.advanceTimersByTimeAsync(1000);});expect(screen.getByRole('status')).toHaveTextContent('停止等待');expect(actions()).toEqual(['probe','sync','sync']);
-  fireEvent.click(screen.getByRole('button',{name:'继续核对'}));expect(screen.getByRole('status')).toHaveTextContent('重新点击升级入口');expect(actions()).toEqual(['probe','sync','sync']);
+ it('同组筛选变化不取消在途额度打开，真实切组才取消',async()=>{
+  let resolve!:()=>void;
+  f.open.mockImplementation(()=>new Promise<void>(r=>{resolve=r;}));render(<AiCreditCenterCard/>);open();
+  const signal=f.open.mock.calls[0][0].signal as AbortSignal;
+  act(()=>{f.account='acct-b';window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+  expect(signal.aborted).toBe(false);
+  act(()=>{f.group='group-b';window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+  expect(signal.aborted).toBe(true);await act(async()=>resolve());
  });
- it('矛盾native已存但runtime拒绝不继续经济链',async()=>{
-  f.fetch.mockResolvedValue(binding());f.invoke.mockResolvedValue({contractVersion:'creatoros-license-restore-result-v1',status:'blocked',reasonCode:'RESTORE_RESPONSE_UNVERIFIED',bindingStatus:'verified',persistence:'confirmed',retryable:false});render(<AiCreditCenterCard/>);start();
-  await screen.findByText('当前授权无法安全核对，原有工作已保留，请稍后再试');expect(actions()).toEqual(['probe']);expect(f.fresh).not.toHaveBeenCalled();
+ it('只有用户查看额度才打开链接；升级就绪本身不会自动充值',async()=>{
+  f.open.mockResolvedValue(undefined);render(<AiCreditCenterCard/>);ready();expect(f.open).not.toHaveBeenCalled();open();
+  await waitFor(()=>expect(f.open).toHaveBeenCalledTimes(1));expect(f.fetch).not.toHaveBeenCalled();
  });
+});
+
+it('自动启用成功使旧not_configured页面立即可查看额度，无需整页刷新',()=>{
+ render(<AiCreditCenterCard accountStatus="not_configured"/>);
+ expect(screen.queryByRole('button',{name:'查看 AI 额度与消耗'})).toBeNull();ready();
+ expect(screen.getByRole('button',{name:'查看 AI 额度与消耗'})).toBeEnabled();
+ expect(f.open).not.toHaveBeenCalled();expect(f.refresh).not.toHaveBeenCalled();
 });

@@ -3,18 +3,19 @@ import * as React from 'react';
 import {SectionCard} from '@/components/project/section-card';
 import {ChannelConfigRetryButton} from '@/components/shell/channel-config-bootstrap';
 import type {ModelAuthorityState,SettingsViewModel,ModelAuthorityCapability} from './settings-page';
-import {AiCreditCenterCard,ChannelManagedModelCard,ChannelServiceCredentialCard} from './channel-model-configuration';
+import {AiCreditCenterCard,ChannelManagedModelCard,ChannelServiceCredentialCard,useAutomaticUpgradeState} from './channel-model-configuration';
 import {ModelCapabilitySource} from './model-capability-source';
 import {ModelConfigTransferCard} from './model-config-transfer-card';
 import {MultimodalModelCard} from './multimodal-model-configuration';
 import {ModelConfigurationCard} from './text-model-configuration';
 import {RedfoxConfiguration} from './redfox-configuration';
 import {ModelConfigurationManual} from './model-configuration-manual';
-import {modelConfigurationIdentity,useModelConnectionTest} from './model-connection-test';
+import {modelConfigurationIdentity,useModelConnectionTest,TestConnectionButton} from './model-connection-test';
 import {useAssistantEngine} from '@/features/copilot/use-assistant-engine';
 import type {ModelRoutingChoices} from '@creatoros/contract';
 export function SettingsModelRegion({viewModel,modelAuthority,highlight}:{viewModel:SettingsViewModel;modelAuthority?:ModelAuthorityState;highlight:string|null}){
  const {routing}=useAssistantEngine();
+ const automatic=useAutomaticUpgradeState();
  const probe=useModelConnectionTest('default',modelConfigurationIdentity(viewModel.model),routing.ready);
  const labels={text:'文本创作与结构化',vision:'图片理解',image:'图片生成与编辑',video:'视频生成',audio:'语音转文字',embed:'检索向量'};
  const capabilities:Record<keyof ModelRoutingChoices,ModelAuthorityCapability[]>={text:['default'],vision:['asset.classify'],image:['image.generate','image.edit'],video:['video.generate'],audio:['transcribe.audio'],embed:['knowledge.search.embed']};
@@ -27,6 +28,8 @@ export function SettingsModelRegion({viewModel,modelAuthority,highlight}:{viewMo
   }
   if(source==='official')return <div className="flex flex-col gap-card-gap">{capabilities[family].map(capability=>{
    const state=modelAuthority?.capabilities?.[capability];
+   if(!(state?.authority==='channel'&&state.hasSecret)&&automatic.status==='ready'&&routing.ready&&routing.resource?.capabilities.some(row=>row.capability===capability&&row.source==='official'&&row.status==='ready'))
+    return <SectionCard key={capability} title={capability==='image.edit'?'参考图编辑':labels[family]}><div data-slot="channel-model-automatic-ready" data-capability={capability} className="flex flex-col gap-3"><p className="text-sm text-muted-foreground">官方模型已自动同步，可直接使用，无需填写密钥</p>{capability==='transcribe.audio'?null:<TestConnectionButton capability={capability} slotPrefix={`channel-${capability.replaceAll('.','-')}`}/>}</div></SectionCard>;
    return state?.authority==='channel'?<ChannelManagedModelCard key={capability} state={state} title={capability==='image.edit'?'参考图编辑':labels[family]} highlight={capability}/>:<SectionCard key={capability} title={capability==='image.edit'?'参考图编辑':labels[family]}><p className="text-sm text-muted-foreground">当前官方配置尚未取得，请重新同步后核对本项状态。其它用途与原配置继续保留。</p><ChannelConfigRetryButton/></SectionCard>;
   })}</div>;
   if(source==='local')return <SectionCard title="本地转录"><p className="text-sm text-muted-foreground">使用本地 Whisper 转录。实际档位与可用性由任务准备时核验。</p></SectionCard>;
