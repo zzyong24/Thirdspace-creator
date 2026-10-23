@@ -13,6 +13,8 @@ import { fetchCreatorApi, readCurrentAccountId, readCurrentGroupId } from "@/lib
 import { executionTimeoutMs, completionWaitMs } from "@creatoros/contract/timeout-policy";
 import { openAiCreditCenter, waitForAiCreditCenter, withAiCreditCenterBudget, AI_CREDIT_CENTER_OPEN_WAIT_MS } from "@/lib/open-ai-credit-center";
 import { cn } from "@/lib/utils";
+import {parseLegacyUpgradeResult,parseNativeRestoreResult,parseUpgradeObservationToken,UPGRADE_OBSERVATION_HEADER,type UpgradeAction,type LegacyUpgradeResult} from "@/lib/legacy-license-upgrade";
+import {refreshModelRoutingAfterUpgrade} from "@/features/copilot/assistant-engine";
 import {
   Loader2
 } from "lucide-react";
@@ -27,55 +29,117 @@ import { useSettingsMutation } from "./use-settings-mutation";
 const INCLUDED_CREDIT_WAIT_MS = 730_000;
 function IncludedCreditActivation() {
   const router = useRouter();
-  const [busy, setBusy] = React.useState(false);
-  const [message, setMessage] = React.useState<string | null>(null);
-  const generation = React.useRef(0), active = React.useRef<AbortController | null>(null);
-  React.useEffect(() => {
-    let scope = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
-    const changed = () => {
-      const next = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
-      if (next === scope) return;
-      scope = next; generation.current++; active.current?.abort(); active.current = null; setBusy(false); setMessage(null);
+  const [busy,setBusy] = React.useState(false),[message,setMessage] = React.useState<string|null>(null),[canContinue,setCanContinue] = React.useState(false);
+  const generation=React.useRef(0),active=React.useRef<AbortController|null>(null),nativePending=React.useRef(false);
+  const observationToken=React.useRef<string|null>(null);
+  const observationDeadline=React.useRef<number|null>(null);
+  const resume=React.useRef<'economic'|'binding'|'config'|null>(null),knownReady=React.useRef(false),needsNative=React.useRef(false);
+  React.useEffect(()=>{
+    let scope=JSON.stringify([readCurrentGroupId(),readCurrentAccountId()]);
+    const changed=()=>{
+      const next=JSON.stringify([readCurrentGroupId(),readCurrentAccountId()]);if(next===scope)return;
+      scope=next;generation.current++;active.current?.abort();active.current=null;resume.current=null;knownReady.current=false;needsNative.current=false;
+      observationToken.current=null;
+      observationDeadline.current=null;
+      setBusy(false);setCanContinue(false);setMessage(null);
     };
-    window.addEventListener("creatoros:accounts-changed", changed); window.addEventListener("storage", changed);
-    return () => { generation.current++; active.current?.abort(); window.removeEventListener("creatoros:accounts-changed", changed); window.removeEventListener("storage", changed); };
-  }, []);
-  const activate = async () => {
-    if (active.current) return;
-    const current = ++generation.current, controller = new AbortController(); active.current = controller;
-    const scope = { groupId: readCurrentGroupId(), accountId: readCurrentAccountId() };
-    const live = () => current === generation.current && !controller.signal.aborted && scope.groupId === readCurrentGroupId() && scope.accountId === readCurrentAccountId();
-    const timer = setTimeout(() => controller.abort(), INCLUDED_CREDIT_WAIT_MS);
-    setBusy(true); setMessage("正在核对产品已含额度，你可以继续使用其它功能");
-    try {
-      const response = await waitForAiCreditCenter(() => fetchCreatorApi("/api/v1/local/client-config", {
-        method: "POST", cache: "no-store", signal: controller.signal, headers: { "x-creatoros-config-trigger": "activation" },
-      }, scope), controller.signal);
-      const body = await waitForAiCreditCenter(() => response.json(), controller.signal) as {
-        authority?: string; outcome?: string; activationFulfillment?: { status?: string; action?: string };
-      };
-      if (!live()) return;
-      const result = body.activationFulfillment;
-      if (!response.ok || !result || !["ready", "pending", "not_eligible", "unavailable"].includes(result.status ?? "") || typeof result.action !== "string" || result.action.length > 400)
-        throw new Error("启用结果尚未确认，请重新核对原权益，也可先切换为自配模型");
-      setMessage(result.status === "ready" && (body.authority !== "channel" || body.outcome !== "configured")
-        ? "产品已含额度已开通，模型配置仍在同步，可稍后再核对或先用自配模型" : result.action);
-      if (result.status === "ready") router.refresh();
-    } catch (error) {
-      if (live()) setMessage(error instanceof Error ? error.message : "启用结果尚未确认，请稍后核对原权益");
-      else if (current === generation.current) setMessage("已停止等待，服务端结果仍需核对；可再次启用核对原权益，也可先用自配模型");
-    } finally {
-      clearTimeout(timer);
-      if (current === generation.current) { active.current = null; setBusy(false); }
+    window.addEventListener('creatoros:accounts-changed',changed);window.addEventListener('storage',changed);
+    return()=>{generation.current++;active.current?.abort();window.removeEventListener('creatoros:accounts-changed',changed);window.removeEventListener('storage',changed);};
+  },[]);
+  const activate=async()=>{
+    if(active.current)return;
+    const continuing=canContinue,previousResume=resume.current,reuseObservation=continuing&&previousResume==='config'&&knownReady.current;
+    if(reuseObservation&&(observationDeadline.current===null||Date.now()>=observationDeadline.current)){
+      knownReady.current=false;needsNative.current=false;observationToken.current=null;observationDeadline.current=null;resume.current=null;setCanContinue(false);setMessage('原授权或核对期限已变化，请重新点击升级入口核对当前原码');return;
     }
+    const current=++generation.current,controller=new AbortController();active.current=controller;
+    if(!reuseObservation){observationToken.current=null;observationDeadline.current=Date.now()+INCLUDED_CREDIT_WAIT_MS;}
+    const scope={groupId:readCurrentGroupId(),accountId:readCurrentAccountId()};
+    const same=()=>current===generation.current&&scope.groupId===readCurrentGroupId()&&scope.accountId===readCurrentAccountId();
+    const live=()=>{if(!same()||controller.signal.aborted)throw new DOMException('已停止等待','AbortError');};
+    const timer=setTimeout(()=>controller.abort(),Math.max(0,observationDeadline.current!-Date.now()));
+    let submitted=false;
+    const wait=<T,>(operation:()=>Promise<T>|T)=>waitForAiCreditCenter(operation,controller.signal);
+    const pending=(kind:'economic'|'binding'|'config',text:string)=>{live();resume.current=kind;setCanContinue(true);setMessage(text);};
+    const read=async(action:UpgradeAction)=>{
+      live();if(action==='fulfill')submitted=true;
+      const existing=observationToken.current;
+      const response=await wait(()=>fetchCreatorApi('/api/v1/local/client-config',{method:'POST',cache:'no-store',signal:controller.signal,headers:{'x-creatoros-config-trigger':'legacy_upgrade','x-creatoros-upgrade-action':action,...(existing?{[UPGRADE_OBSERVATION_HEADER]:existing}:{})}},scope));
+      const value=await wait(()=>response.json());live();
+      const result=parseLegacyUpgradeResult(value,action),received=response.headers.get(UPGRADE_OBSERVATION_HEADER);
+      if(received!==null){const token=parseUpgradeObservationToken(received);if(existing!==null&&token!==existing)throw Error('本次原权益观察已变化');observationToken.current=token;}
+      if(!observationToken.current&&['ready','restore_required','pending'].includes(result.outcome))throw Error('本次原权益观察尚未确认');
+      return result;
+    };
+    const identityChanged=()=>{knownReady.current=false;needsNative.current=false;observationToken.current=null;observationDeadline.current=null;resume.current=null;setCanContinue(false);setMessage('原授权或核对期限已变化，请重新点击升级入口核对当前原码');};
+    const sync=async()=>{
+      const result=await read('sync');
+      if(result.reasonCode==='UPGRADE_IDENTITY_CHANGED'){identityChanged();return;}
+      if(result.configurationStatus!=='ready'||result.entitlementStatus!=='ready'){
+        pending('config',knownReady.current?'原模型权益已就绪，配置仍待核对；不会重复领取原权益':'配置尚未核对完成，请继续核对原权益');return;
+      }
+      knownReady.current=true;
+      try{await wait(()=>refreshModelRoutingAfterUpgrade(controller.signal));live();}
+      catch{live();pending('config','原模型权益已就绪，界面配置尚未读回，请继续核对');return;}
+      resume.current=null;setCanContinue(false);setMessage('原激活码已升级，模型权益与配置已核对，个人模型来源保持不变');router.refresh();
+    };
+    const stop=(result:LegacyUpgradeResult)=>{
+      if(result.reasonCode==='UPGRADE_IDENTITY_CHANGED'){identityChanged();return;}
+      if(result.outcome==='blocked'){
+        if(result.reasonCode==='UPGRADE_EXISTING_OPERATION_PENDING')pending('economic','原权益仍有待确认的操作，请先核对原操作；不会另开模型账户');
+        else {setCanContinue(false);setMessage(result.reasonCode==='UPGRADE_LICENSE_REVOKED'||result.reasonCode==='UPGRADE_LICENSE_INELIGIBLE'?'当前原授权不符合模型权益条件，请核对原许可状态':'当前授权无法安全核对，原有工作已保留，请稍后再试');}
+      }else pending('economic','原模型权益结果尚未确认，请继续核对；不会更换原账户或重复领取');
+    };
+    setBusy(true);setCanContinue(false);setMessage('正在核对原激活码与模型权益，你可以继续使用其它功能');
+    try{
+      if(continuing&&previousResume==='config'&&knownReady.current){await sync();return;}
+      let result=await read('probe');
+      if(result.outcome==='restore_required'||needsNative.current){
+        if(nativePending.current){pending('binding','原授权恢复仍在进行，请稍后继续核对；已发出的请求不会重复提交');return;}
+        needsNative.current=true;
+        // UI取消不撤销IPC；直到真实promise收尾才允许本组件再提交原生请求。
+        let raw:unknown;
+        const token=parseUpgradeObservationToken(observationToken.current);
+        const {invoke}=await wait(()=>import('@tauri-apps/api/core'));live();nativePending.current=true;
+        const work=Promise.resolve().then(()=>{live();submitted=true;return invoke<unknown>('license_restore_saved',{observationToken:token});});
+        void work.then(()=>{nativePending.current=false;},()=>{nativePending.current=false;});
+        raw=await wait(()=>work);
+        live();const saved=parseNativeRestoreResult(raw);
+        if(saved.status!=='ready'){
+          if(saved.status==='blocked'&&!saved.retryable){setCanContinue(false);setMessage('当前授权无法安全核对，原有工作已保留，请稍后再试');return;}
+          // 未知之后只读一次；不能据fresh proof绕过本机保存未确认。
+          if(saved.status==='unknown')await read('probe');
+          pending('binding','原绑定结果尚未确认，请继续核对；本次不会再次提交恢复');return;
+        }
+        needsNative.current=false;result=await read('probe');
+        if(result.outcome==='restore_required'){pending('binding','原绑定仍需核对，请继续核对；本次不会再次提交恢复');return;}
+      }
+      if(result.entitlementStatus==='ready'){knownReady.current=true;await sync();return;}
+      const explicitRecovery=continuing&&previousResume==='economic';
+      const canFulfill=result.bindingStatus==='verified'&&(result.reasonCode==='UPGRADE_ENTITLEMENT_NOT_READY'||result.reasonCode==='UPGRADE_WALLET_NOT_LINKED'||explicitRecovery&&result.reasonCode==='UPGRADE_ENTITLEMENT_UNKNOWN');
+      if(!canFulfill){stop(result);return;}
+      result=await read('fulfill');
+      if(result.entitlementStatus==='ready'){knownReady.current=true;await sync();return;}
+      if(result.outcome==='unknown'||result.outcome==='pending'){
+        const observed=await read('probe');
+        if(observed.entitlementStatus==='ready'){knownReady.current=true;await sync();return;}
+        pending('economic','原模型权益结果尚未确认，请继续核对；不会更换原账户或重复领取');return;
+      }
+      stop(result);
+    }catch{
+      if(same()){
+        resume.current=knownReady.current?'config':needsNative.current?'binding':'economic';setCanContinue(true);
+        setMessage(controller.signal.aborted?(submitted?'已停止等待，已提交的结果仍需核对；请稍后继续核对':'已停止等待，本次核对尚未完成；请稍后继续核对'):knownReady.current?'原模型权益已就绪，配置仍待核对；不会重复领取原权益':'升级结果尚未确认，请继续核对原权益，也可先使用自配模型');
+      }
+    }finally{clearTimeout(timer);if(current===generation.current){active.current=null;setBusy(false);}}
   };
   return <div data-slot="included-credit-activation" className="flex w-full flex-col gap-3 border-b border-border/70 pb-4">
-    <p className="text-base leading-6 text-muted-foreground">产品已包含的官方额度可在这里启用，无需另购充值码。没有包含额度时，也可在模型来源中选择自配模型或本地 Codex 继续使用。</p>
+    <p className="text-base leading-6 text-muted-foreground">原激活码可在这里升级模型权益，无需换码或重新购买。原许可期限、已有钱包与个人模型来源保持不变；模型费用和额度按原权益规则使用。</p>
     <div className="flex flex-wrap gap-3">
-      <Button type="button" className="min-h-11 text-base" disabled={busy} onClick={() => void activate()}>{busy ? "正在核对已含额度…" : "启用产品已含额度"}</Button>
-      {busy && <Button type="button" className="min-h-11 text-base" variant="outline" onClick={() => active.current?.abort()}>取消等待</Button>}
+      <Button type="button" className="min-h-11 text-base" disabled={busy} onClick={()=>void activate()}>{busy?'正在核对原权益…':canContinue?'继续核对':'升级原激活码，启用模型权益'}</Button>
+      {busy&&<Button type="button" className="min-h-11 text-base" variant="outline" onClick={()=>active.current?.abort()}>取消等待</Button>}
     </div>
-    {message && <p role="status" className="text-base leading-6">{message}</p>}
+    {message&&<p role="status" className="text-base leading-6">{message}</p>}
   </div>;
 }
 
@@ -119,7 +183,7 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
       title="AI 额度与消耗"
       description="前往额度中心查看总额度、已消耗和剩余额度，并进行购买或充值。"
     >
-      {accountStatus !== "ready" && <IncludedCreditActivation />}
+      <IncludedCreditActivation />
       <div
         data-slot="ai-credit-center-card"
         className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"

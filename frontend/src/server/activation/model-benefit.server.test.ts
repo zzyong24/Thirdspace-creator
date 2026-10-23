@@ -7,6 +7,8 @@ import {refreshClientConfig,readChannelModelAuthority,fulfillActivationIncludedC
 import {EncryptedModelBenefitStore,deriveModelBenefitScopeId,requestModelBenefitLink,ensureModelBenefitAuthority,type ModelBenefitDependencies} from "./model-benefit.server";
 import {pinModelAuthority} from "../task-model-authority";
 import {createAiCreditPortalLink} from "./ai-credit-link.server";
+import {upgradeModelBenefits,deriveLegacyUpgradeIdentityHash} from './model-benefit.server';
+import {decryptSecret} from '@creatoros/backend';
 
 const ROOT=resolve(process.cwd(),"..");
 const growth=JSON.parse(readFileSync(join(ROOT,"docs/build/growth-t243/growth-consumer-cross-repo-samples.json"),"utf8"));
@@ -16,7 +18,7 @@ async function fixture(name="unassigned") {
   await mkdir(join(ROOT,"tmp/growth-t243"),{recursive:true});const dir=await mkdtemp(join(ROOT,"tmp/growth-t243/consumer-"));dirs.push(dir);
   const row=growth.cases.find((c:{name:string})=>c.name===name),am=activity.cases.find((c:{name:string})=>c.name===name);
   const env={CREATOROS_MODEL_BENEFITS_ENABLED:"1",CREATOROS_CLIENT_CONFIG_PULL_ENABLED:"1",CREATOROS_LICENSE_BASE_URL:"https://activity.invalid",CREATOROS_LICENSE_PROJECT_KEY:"creatoros",CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN:"https://growth.invalid",CREATOROS_LICENSE_PUBLIC_KEY_B64:activity.publicKeyBase64,CREATOROS_MODEL_BENEFIT_KEY_ID:activity.kid,CREATOROS_GROWTH_CONFIG_KEY_ID:growth.growthSigner.keyId,CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64:growth.growthSigner.publicKeyBase64};
-  let verdict={v:1,allowed:true,status:"active",code:"LOCAL-SYNTHETIC-CODE",machineId:"synthetic-original-PC",projectKey:"creatoros",channelRef:row.directory.body.sourceChannelRef};
+  let verdict:import('./license-file.server').LicenseVerdict={v:1,allowed:true,status:"active",code:"LOCAL-SYNTHETIC-CODE",machineId:"synthetic-original-PC",projectKey:"creatoros",licenseMode:'TIME',expiresAt:null,channelRef:row.directory.body.sourceChannelRef};
   let now=new Date(growth.now);const puts=new Map<string,string>(),store=new EncryptedModelBenefitStore(join(dir,"cache"),randomBytes(32)),calls:string[]=[];
   const fetchImpl=vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
     const url=new URL(String(input));calls.push(url.pathname);expect(init?.method).toBe("POST");expect(init?.redirect).toBe("manual");expect(init?.cache).toBe("no-store");expect(url.search).toBe("");
@@ -35,7 +37,125 @@ async function fixture(name="unassigned") {
   return {dir,row,am,env,deps,store,puts,calls,fetchImpl,putManagedCredential,setVerdict:(value:Partial<typeof verdict>)=>{verdict={...verdict,...value}},setNow:(value:Date)=>{now=value}};
 }
 function canonical(value:unknown):string{if(value===null||typeof value!=="object")return JSON.stringify(value);if(Array.isArray(value))return `[${value.map(canonical).join(",")}]`;return `{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonical((value as Record<string,unknown>)[key])}`).join(",")}}`}
-async function retimedFixture(){
+describe('T1402真实正式v1升级消费端口',()=>{
+ it('并发首次probe穿过异步读盘后仍不超过256个live观察，不踢已有观察',async()=>{
+  const f=await fixture(),read=f.deps.readVerdict!,key=Buffer.alloc(32,7);let release!:()=>void,created=0,entered=0;
+  const gate=new Promise<void>(resolve=>{release=resolve}),clock=vi.spyOn(Date,'now').mockReturnValue(Date.now()-1460000);
+  try{
+   const calls=Array.from({length:257},()=>{const controller=new AbortController();return upgradeModelBenefits('probe',{...f.deps,signal:controller.signal,readVerdict:async()=>{entered++;await gate;return read();},observationMasterKey:key,env:{...f.env,CREATOROS_SIDECAR_HANDSHAKE_TOKEN:'22'.repeat(32)},observation:{token:null,actor:{userId:'principal',accountId:'account',groupId:'group'},onToken:()=>{created++;controller.abort();}}});});
+   for(let i=0;i<20&&entered<257;i++)await Promise.resolve();expect(entered).toBe(257);release();await Promise.allSettled(calls);
+   expect(created).toBe(256);expect(f.fetchImpl).not.toHaveBeenCalled();
+  }finally{release?.();clock.mockRestore()}
+ });
+ async function observed(){
+  const f=await fixture(),key=Buffer.from(Array.from({length:32},(_,i)=>i));let token:string|null=null;
+  const actor={userId:'synthetic-principal',accountId:'synthetic-account',groupId:'synthetic-group'};
+  const step=(action:'probe'|'fulfill'|'sync',options:{token?:string|null;actor?:typeof actor}={})=>upgradeModelBenefits(action,{...f.deps,env:{...f.env,CREATOROS_SIDECAR_HANDSHAKE_TOKEN:'11'.repeat(32)},observationMasterKey:key,observation:{token:options.token===undefined?token:options.token,actor:options.actor??actor,onToken:value=>{token=value}}});
+  return {...f,key,actor,step,token:()=>token};
+ }
+ it('跨请求probe A后换B不能fulfill B，token中不暴露稳定identity明文',async()=>{
+  const f=await observed();expect(await f.step('probe')).toMatchObject({outcome:'ready'});expect(f.token()).toMatch(/^enc:v1:/);
+  const k=createHash('sha256').update(f.key).update('creatoros-legacy-upgrade-fence-v1').digest();const payload=JSON.parse(decryptSecret(f.token()!,k));expect(payload.contractVersion).toBe('creatoros-legacy-upgrade-observation-v1');expect(Date.parse(payload.expiresAt)-Date.parse(payload.issuedAt)).toBe(730000);
+  f.setVerdict({code:'DIFFERENT-SYNTHETIC-CODE'});const before=f.fetchImpl.mock.calls.length;
+  expect(await f.step('fulfill')).toMatchObject({outcome:'blocked',reasonCode:'UPGRADE_IDENTITY_CHANGED'});expect(f.fetchImpl).toHaveBeenCalledTimes(before);
+ });
+ it('过期/丢失token probe绝不重新pin续TTL，错actor同样零请求',async()=>{
+  const f=await observed();await f.step('probe');const token=f.token(),before=f.fetchImpl.mock.calls.length;
+  expect(await f.step('probe',{actor:{...f.actor,accountId:'other-account'}})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});
+  const clock=vi.spyOn(Date,'now').mockReturnValue(Date.now()+730001);
+  try{expect(await f.step('probe',{token})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});}finally{clock.mockRestore()}
+  expect(await f.step('probe',{token:'enc:v1:UNKNOWN'})).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});expect(f.fetchImpl).toHaveBeenCalledTimes(before);
+ });
+ it('稳定hash规范expiry且不钉activatedAt/epoch/lastseen，原mode和期限变化拒绝',async()=>{
+  const base={v:1,allowed:true,status:'active',projectKey:'creatoros',code:'SYNTHETIC',machineId:'fixture-host',licenseMode:'TIME',channelRef:null,expiresAt:'2027-01-01T00:00:00Z'};
+  expect(deriveLegacyUpgradeIdentityHash(base)).toBe(deriveLegacyUpgradeIdentityHash({...base,expiresAt:'2027-01-01T00:00:00.000Z',activatedAt:'2020-01-01T00:00:00.000Z',verdictAtMs:123}));
+  expect(deriveLegacyUpgradeIdentityHash(base)).not.toBe(deriveLegacyUpgradeIdentityHash({...base,licenseMode:'COUNT'}));expect(()=>deriveLegacyUpgradeIdentityHash({...base,expiresAt:undefined})).toThrow();
+  const f=await observed();await f.step('probe');f.setVerdict({expiresAt:'2027-01-01T00:00:00.000Z'});expect(await f.step('sync')).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});expect(f.putManagedCredential).not.toHaveBeenCalled();
+ });
+ it('fulfill实际发送前重核期限fence，同token第二fulfill不再提交',async()=>{
+  const f=await observed();await f.step('probe');await f.step('fulfill');const count=f.fetchImpl.mock.calls.length;expect(await f.step('fulfill')).toMatchObject({outcome:'blocked'});expect(f.fetchImpl).toHaveBeenCalledTimes(count);
+  const g=await observed();await g.step('probe');const original=g.fetchImpl.getMockImplementation()!;g.fetchImpl.mockImplementation(async(input,init)=>{const response=await original(input,init);if(String(input).endsWith('model-benefit-proofs'))g.setVerdict({expiresAt:'2027-01-01T00:00:00.000Z'});return response});
+  expect(await g.step('fulfill')).toMatchObject({reasonCode:'UPGRADE_IDENTITY_CHANGED'});expect(g.calls.filter(p=>p.endsWith('/fulfill'))).toHaveLength(0);
+ });
+ it('vault异步写后原期限已变不能继续cache提交，不只route开头查一次',async()=>{
+  const f=await observed();await f.step('probe');f.deps.putManagedCredential=async()=>{f.setVerdict({expiresAt:'2027-01-01T00:00:00.000Z'})};
+  expect(await f.step('sync')).toMatchObject({outcome:'blocked',reasonCode:'UPGRADE_IDENTITY_CHANGED'});expect(await f.store.load()).toBeNull();
+ });
+ it.each(['credentials','vault','cache'])('短于proof的签名目录在%s等待跨截止不报配置ready',async(phase)=>{
+  const f=await retimedFixture(1000),original=f.fetchImpl.getMockImplementation()!;
+  if(phase==='credentials')f.fetchImpl.mockImplementation(async(input,init)=>{const response=await original(input,init);if(String(input).endsWith('/credentials'))f.advance(2000);return response;});
+  if(phase==='vault')f.deps.putManagedCredential=async()=>{f.advance(2000)};
+  if(phase==='cache')f.deps.modelBenefitStore={load:()=>f.store.load(),save:async value=>{await f.store.save(value);f.advance(2000)}};
+  expect(await upgradeModelBenefits('sync',f.deps)).toMatchObject({outcome:'pending',reasonCode:'UPGRADE_CONFIGURATION_PENDING',configurationStatus:'pending'});
+  if(phase!=='cache')expect(await f.store.load()).toBeNull();
+  else expect(await readChannelModelAuthority(f.deps)).toMatchObject({authority:'local'});
+ });
+ it('probe只读fresh proof/原凭据，不发fulfill、不写Key或配置',async()=>{
+  const f=await fixture();expect(await upgradeModelBenefits('probe',f.deps)).toMatchObject({outcome:'ready',bindingStatus:'verified',entitlementStatus:'ready',configurationStatus:'not_started'});
+  expect(f.calls).toEqual(['/api/license/model-benefit-proofs','/api/client/model-benefits/credentials']);expect(f.putManagedCredential).not.toHaveBeenCalled();expect(await f.store.load()).toBeNull();
+ });
+ it('proof绑定拒绝精确投影，尚未发Growth，凭据未知不触发恢复绑定',async()=>{
+  const f=await fixture();f.fetchImpl.mockResolvedValue(Response.json({error:{code:'MODEL_BENEFIT_BINDING_STALE',message:'do not expose'}},{status:409,headers:{'cache-control':'no-store'}}));
+  expect(await upgradeModelBenefits('probe',f.deps)).toMatchObject({outcome:'restore_required',reasonCode:'UPGRADE_BINDING_RECHECK_REQUIRED',entitlementStatus:'not_started'});expect(f.fetchImpl).toHaveBeenCalledTimes(1);
+ });
+ it.each([['MODEL_CREDENTIAL_NOT_CONFIGURED',404,'pending','UPGRADE_ENTITLEMENT_NOT_READY'],['MODEL_PROVIDER_CREATION_UNKNOWN',409,'unknown','UPGRADE_ENTITLEMENT_UNKNOWN'],['AI_CREDIT_BOOTSTRAP_PENDING',409,'blocked','UPGRADE_EXISTING_OPERATION_PENDING']])('probe %s不伪造未开户或自动发款',async(code,status,outcome,reasonCode)=>{
+  const f=await fixture(),original=f.fetchImpl.getMockImplementation()!;f.fetchImpl.mockImplementation(async(input,init)=>String(input).endsWith('/credentials')?Response.json({error:{code,message:'internal'}},{status:Number(status),headers:{'cache-control':'no-store'}}):original(input,init));
+  expect(await upgradeModelBenefits('probe',f.deps)).toMatchObject({outcome,reasonCode});expect(f.calls.some(p=>p.endsWith('fulfill'))).toBe(false);expect(f.putManagedCredential).not.toHaveBeenCalled();
+ });
+ it('fulfill只保原权益结果，后续sync独立读写，绝不并发两次履约',async()=>{
+  const f=await fixture();expect(await upgradeModelBenefits('fulfill',f.deps)).toMatchObject({entitlementStatus:'ready',configurationStatus:'not_started'});
+  expect(f.calls).toEqual(['/api/license/model-benefit-proofs','/api/client/model-benefits/fulfill']);expect(f.putManagedCredential).not.toHaveBeenCalled();
+  expect(await upgradeModelBenefits('sync',f.deps)).toMatchObject({entitlementStatus:'ready',configurationStatus:'ready'});expect(f.putManagedCredential).toHaveBeenCalledTimes(1);expect(f.calls.filter(p=>p.endsWith('fulfill'))).toHaveLength(1);
+ });
+ it('fulfill后丢响应是unknown，不能变成尚未发起或绑定恢复',async()=>{
+  const f=await fixture(),original=f.fetchImpl.getMockImplementation()!;f.fetchImpl.mockImplementation(async(input,init)=>{if(String(input).endsWith('/fulfill'))throw Error('controlled lost response');return original(input,init)});
+  expect(await upgradeModelBenefits('fulfill',f.deps)).toMatchObject({outcome:'unknown',entitlementStatus:'unknown',phase:'fulfillment'});expect(f.putManagedCredential).not.toHaveBeenCalled();
+ });
+ it('sync缺原凭据不报configured完成，不调用fulfill',async()=>{
+  const f=await fixture(),original=f.fetchImpl.getMockImplementation()!;f.fetchImpl.mockImplementation(async(input,init)=>String(input).endsWith('/credentials')?Response.json({error:{code:'MODEL_CREDENTIAL_NOT_CONFIGURED',message:'internal'}},{status:404,headers:{'cache-control':'no-store'}}):original(input,init));
+  expect(await upgradeModelBenefits('sync',f.deps)).toMatchObject({outcome:'pending',configurationStatus:'pending',entitlementStatus:'unknown'});expect(f.calls.some(p=>p.endsWith('fulfill'))).toBe(false);
+ });
+ it.each([false,123,{},[]])('历史prefix只准string|null，非法类型%j仍拒绝',async(prefix)=>{
+  const f=await fixture(),original=f.fetchImpl.getMockImplementation()!;f.fetchImpl.mockImplementation(async(input,init)=>{
+   if(String(input).endsWith('/credentials')){const body=structuredClone(f.row.credentials);body.credential.tokenPrefix=prefix;return Response.json(body,{headers:{'cache-control':'private, no-store'}});}return original(input,init);
+  });expect(await upgradeModelBenefits('probe',f.deps)).toMatchObject({outcome:'blocked',reasonCode:'UPGRADE_AUTHORITY_UNVERIFIED'});expect(f.putManagedCredential).not.toHaveBeenCalled();
+ });
+});
+describe('T1402实际Growth正式v1输出消费（合成authority/fake provider，非生产或恢复接口验收）',()=>{
+ const vectors=JSON.parse(readFileSync(join(ROOT,'docs/verification/t1402/fixtures/growth-formal-v1-economy-r1.json'),'utf8'));
+ const names:[string][]=vectors.cases.map((row:{name:string})=>[row.name]);
+ it.each(names)('实际服务向量 %s 保原经济结果/unknown/Key与closed协议',async(name)=>{
+  expect(vectors.provenance.handWrittenDirectoryOrCredential).toBe(false);
+  const row=vectors.cases.find((value:{name:string})=>value.name===name),f=await fixture();
+  const authorityKid=Object.keys(row.syntheticAuthorityPublicKeys)[0]!,growthKid=Object.keys(row.growthBundlePublicKeys)[0]!;
+  f.env.CREATOROS_LICENSE_PUBLIC_KEY_B64=row.syntheticAuthorityPublicKeys[authorityKid];f.env.CREATOROS_MODEL_BENEFIT_KEY_ID=authorityKid;f.env.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64=row.growthBundlePublicKeys[growthKid];f.env.CREATOROS_GROWTH_CONFIG_KEY_ID=growthKid;
+  f.setVerdict({channelRef:row.proofClaims.sourceChannelRef});f.deps.now=()=>new Date(row.now);f.deps.nonce=()=>row.proofClaims.nonce;
+  let credentials={status:404,body:{error:{code:'MODEL_CREDENTIAL_NOT_CONFIGURED',message:'not configured'}},cacheControl:'private, no-store'},fulfillment=credentials;
+  f.fetchImpl.mockImplementation(async(input,init)=>{
+   const path=new URL(String(input)).pathname;f.calls.push(path);expect(init?.method).toBe('POST');expect(new URL(String(input)).search).toBe('');
+   if(path.endsWith('/model-benefit-proofs')){expect(JSON.parse(String(init?.body)).nonce).toBe(row.proofClaims.nonce);return Response.json({contractVersion:'model-benefit-proof-v1',modelBenefitProof:row.modelBenefitProof},{headers:{'cache-control':'no-store'}});}
+   expect(JSON.parse(String(init?.body))).toEqual({contractVersion:'growth-model-benefit-request-v1',modelBenefitProof:row.modelBenefitProof});
+   if(path.endsWith('/directory'))return Response.json(row.directory,{headers:{'cache-control':'private, no-store'}});
+   const response=path.endsWith('/credentials')?credentials:fulfillment;
+   return Response.json(response.body,{status:response.status,headers:{'cache-control':response.cacheControl}});
+  });
+  // trace每项为原fixture已明确执行的独立操作；这里不伪装一次UI观察自动重放fulfill。
+  for(const step of row.trace){
+   const action=step.request.path.endsWith('/credentials')?'probe':step.request.path.endsWith('/fulfill')?'fulfill':'sync';
+   if(action==='probe')credentials=step.response;if(action==='fulfill')fulfillment=step.response;
+   const result=await upgradeModelBenefits(action,f.deps);
+   if(action!=='sync'){
+    if(step.response.status===200)expect(result.entitlementStatus).toBe(step.response.body.wallet.linked?'ready':'pending');
+    else expect(result.outcome).toBe(step.response.status===404?'pending':'unknown');
+   }
+   expect(JSON.stringify(result)).not.toContain(row.modelBenefitProof);
+   if(action==='fulfill'&&step.response.status===200)credentials=step.response;
+  }
+  expect(await upgradeModelBenefits('sync',f.deps)).toMatchObject({configurationStatus:'ready',entitlementStatus:'ready'});
+  expect(new Set(f.puts.values()).size).toBe(1);expect(await f.store.load()).not.toBeNull();expect(f.calls.every(path=>path.startsWith('/api/license/')||path.startsWith('/api/client/model-benefits/'))).toBe(true);
+ });
+});
+async function retimedFixture(directoryLifetimeMs=300000){
  const f=await fixture(),amKeys=generateKeyPairSync("ed25519"),growthKeys=generateKeyPairSync("ed25519");let clock=new Date(growth.now),offline=false;
  f.env.CREATOROS_LICENSE_PUBLIC_KEY_B64=amKeys.publicKey.export({format:"der",type:"spki"}).subarray(-32).toString("base64");f.env.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64=growthKeys.publicKey.export({format:"der",type:"spki"}).subarray(-32).toString("base64");
  const hash=(text:string)=>`sha256:${createHash("sha256").update(text).digest("hex")}`;
@@ -46,7 +166,7 @@ async function retimedFixture(){
   const unsigned=Buffer.from(canonical(header)).toString("base64url")+"."+Buffer.from(canonical(claims)).toString("base64url"),proof=unsigned+"."+sign(null,Buffer.from(unsigned),amKeys.privateKey).toString("base64url");
   if(path.endsWith("model-benefit-proofs"))return Response.json({contractVersion:"model-benefit-proof-v1",modelBenefitProof:proof},{headers:{"cache-control":"no-store"}});
   expect(JSON.parse(String(init?.body)).modelBenefitProof).toBe(proof);
-  const row=structuredClone(path.endsWith("directory")?f.row.directory.body:f.row.credentials);row.proofDigest=hash(proof);row.expiresAt=claims.expiresAt;
+  const row=structuredClone(path.endsWith("directory")?f.row.directory.body:f.row.credentials);row.proofDigest=hash(proof);row.expiresAt=path.endsWith('directory')?new Date(clock.getTime()+directoryLifetimeMs).toISOString():claims.expiresAt;
   if(path.endsWith("directory")){const semantic={...row};delete semantic.bundleDigest;delete semantic.keyId;delete semantic.signature;row.bundleDigest=hash(canonical(semantic));row.signature=sign(null,Buffer.from(canonical({...semantic,bundleDigest:row.bundleDigest,keyId:row.keyId})),growthKeys.privateKey).toString("base64url")}
   return Response.json(row,{headers:{"cache-control":"private, no-store"}});
  });

@@ -147,8 +147,10 @@ export async function createAiCreditPortalLink(
       },
       });
     }
-  } catch {
+  } catch (cause) {
     if (dependencies.signal?.aborted) throw new DOMException("本次额度页面打开已取消", "AbortError");
+    if (cause instanceof ClientConfigPullError && cause.code === 'MODEL_BENEFIT_BINDING_STALE')
+      return fail(cause.code,'当前电脑的原授权绑定需要核对，请使用升级原激活码入口恢复后再试',false);
     return fail(
       "AI_CREDIT_LINK_UNAVAILABLE",
       "AI 额度服务暂时不可用，请稍后重试",
