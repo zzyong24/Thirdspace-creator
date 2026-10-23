@@ -13,6 +13,8 @@ const STARTERS = [
   { mode: "scratch", title: "完全从零开始", description: "从你的经历、优势和创作目标聊起", prompt: "我想完全从零开始定位，先聊我的经历和优势。" },
 ] as const satisfies ReadonlyArray<{ mode: PositioningStartMode; title: string; description: string; prompt: string }>;
 
+export const SCRATCH_POSITIONING_PROMPT = STARTERS.find((item) => item.mode === "scratch")!.prompt;
+
 export function PositioningConversationGuide() {
   return (
     <aside className={styles.guide} aria-label="定位对话说明">
@@ -31,9 +33,11 @@ export function PositioningConversationGuide() {
   );
 }
 
-export function PositioningConversationStart({ onPick, disabled }: {
+export function PositioningConversationStart({ onPick, disabled, hasMaster = false, onSoftClear }: {
   readonly onPick: (prompt: string, mode: PositioningStartMode) => void;
   readonly disabled: boolean;
+  readonly hasMaster?: boolean;
+  readonly onSoftClear?: () => void;
 }) {
   return (
     <section className={styles.start} aria-labelledby="positioning-start-title" data-slot="positioning-conversation-start">
@@ -48,6 +52,21 @@ export function PositioningConversationStart({ onPick, disabled }: {
           </button>
         ))}
       </div>
+      {hasMaster && onSoftClear ? (
+        <button
+          type="button"
+          data-slot="positioning-soft-clear"
+          disabled={disabled}
+          onClick={() => {
+            if (window.confirm("清除本次对话中的现有定位信息？当前定位母版不会被删除，会从零开启新的定位对话。")) {
+              onSoftClear();
+            }
+          }}
+          className="mt-3 inline-flex min-h-10 items-center rounded-md border border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          清除现有定位信息
+        </button>
+      ) : null}
     </section>
   );
 }

@@ -26,6 +26,7 @@ const listProjects = vi.fn();
 const getPreferences = vi.fn();
 const getModelRouting = vi.fn();
 const patchPreferences = vi.fn();
+const getPositioningCenter = vi.fn();
 
 // 「继续」 routing uses next/navigation's useRouter; mock it so the island mounts
 // under the test renderer (no real app-router provider).
@@ -65,6 +66,7 @@ vi.mock("@/lib/contract-client", () => ({
     getPreferences: (...args: unknown[]) => getPreferences(...args),
     getModelRouting: (...args: unknown[]) => getModelRouting(...args),
     patchPreferences: (...args: unknown[]) => patchPreferences(...args),
+    getPositioningCenter: (...args: unknown[]) => getPositioningCenter(...args),
   },
 }));
 
@@ -164,6 +166,8 @@ beforeEach(async () => {
     getPreferences.mockResolvedValue(result);
     return result;
   });
+  getPositioningCenter.mockReset();
+  getPositioningCenter.mockResolvedValue({ profile: null, currentStatement: null });
   mockedLiveSession = null;
   listTasks.mockReset();
   listTasks.mockResolvedValue([]);
@@ -1400,6 +1404,21 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
     expect(screen.queryByText("刚才输入的内容还在，可以直接再试一次。")).not.toBeInTheDocument();
     expect(regenerate).not.toHaveBeenCalled();
+  });
+
+  it("[T-957] 定位结果未知时提供开新定位对话，但不重发原任务", async () => {
+    mockSearch = "copilot=open&surface=positioning";
+    mockError = new Error("CHAT_RESULT_UNCONFIRMED");
+    mockMessages = [{ id: "u-positioning", role: "user", parts: [{ type: "text", text: "重新定位" }] }];
+    render(<AICopilotContent viewModel={VM} />);
+    const button = await screen.findByRole("button", { name: "开新定位对话" });
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+    fireEvent.click(button);
+    expect(regenerate).not.toHaveBeenCalled();
+    expect(setMessages).toHaveBeenCalledWith([]);
+    const body = await (initialChatTransport?.body as (() => Record<string, unknown>))();
+    expect(body).toMatchObject({ chatContext: { functionKey: "positioning.generate" } });
+    expect((screen.getByLabelText("定位对话内容") as HTMLTextAreaElement).value).toContain("定位路径：scratch");
   });
 
   it("[T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试", () => {
