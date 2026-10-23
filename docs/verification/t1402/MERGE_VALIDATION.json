@@ -1,0 +1,56 @@
+{
+  "task": "T-1402",
+  "upstream": "f478560db6984ecaa4338f273f04fd70813388d2",
+  "integrationScope": "普通合并最新main，保留双方功能和断言；单fixture使用已有dispatch类型，未更改业务语义",
+  "checks": [
+    {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1402/frontend-merged-r2.log",
+      "exitCode": 0,
+      "sha256": "9e4cd3b09a13119b435b8a2372ffddc49ac300bae3efd65cdf609ed421a6819b"
+    },
+    {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1402/backend-merged-r3.log",
+      "exitCode": 0,
+      "sha256": "31d07b20f9c91c6b7d4df7aa8e47dceba61ca2bd2cb45b2ec9e63621741fd452"
+    },
+    {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1402/typecheck-merged-r3.log",
+      "exitCode": 0,
+      "sha256": "909f820f9e596e60095413c06910db2597c44966e3b2f6c4b4c27dc42ef3f98f"
+    },
+    {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1402/timeout-merged.log",
+      "exitCode": 0,
+      "sha256": "92feb9938fea422e85125394115088b063655b2d624824b1ecb97f954761f686"
+    },
+    {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1402/boundary-merged.log",
+      "exitCode": 0,
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    }
+  ],
+  "files": [
+    {
+      "path": "frontend/src/server/activation/ai-credit-link.server.ts",
+      "sha256": "39a6012b8e6ab862bc6fbac700b404df33855fd4570acf5e3f258194b37058f2"
+    },
+    {
+      "path": "frontend/src/server/activation/ai-credit-link.server.test.ts",
+      "sha256": "a59f5f79758deccb7457278887ca008b9f15e5634076b96b99369fc8e55aff0c"
+    },
+    {
+      "path": "backend/src/modules/projects/project-preparation.service.test.ts",
+      "sha256": "f7c997766c3fe3369bf737ee095c5da75ad172c06f1b6a6a55ca7e38f9b81f25"
+    },
+    {
+      "path": "backend/src/modules/projects/project-preparation.service.ts",
+      "sha256": "2bdb82ba63665c642e89dfad08eb3002d5e85eaedc769783e2dc4732fbeafbec"
+    },
+    {
+      "path": "backend/src/application/projects/project-preparation.ts",
+      "sha256": "eb7a347e6bd75b638f3c8233d9a2dcaf4b51f9809e8b64506697fb764965af79"
+    }
+  ],
+  "realDesktopUat": false,
+  "productionDeployed": false
+}

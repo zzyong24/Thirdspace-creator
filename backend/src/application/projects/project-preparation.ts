@@ -86,9 +86,15 @@ export function createProjectPreparationApplication(db:Db,deps:ServiceDeps&{
     const selected=sources[0]!,contentHash=hash(selected.version.contentText),source={kind:'project_artifact' as const,projectId:project.id,artifactId:selected.artifact.id,artifactVersion:selected.version.versionNumber,contentHash,title:selected.artifact.title,authorName:null,url:reference?.url??null};
     const child=await generation.reserve(ctx,{parentClaim:claim,projectId:project.id,referenceId:reference?.id??null,inputRevision:revision,target:{ownerType:'project',projectId:project.id,source,generationMode:'strategy_backed',transcript:{text:selected.version.contentText,hash:contentHash}}});
     return {status:'child',...child,businessTaskId:null,shared:false};
-   }catch(error){// SEMANTIC_BOUNDARY_ALLOW: 仅匹配宿主确定的配置错误协议码，不解释模型文本。
-    const code=(error as {details?:{domainCode?:string};code?:string}).details?.domainCode??(error as {code?:string}).code??(error instanceof Error?error.message:undefined);
-    if(['MODEL_NOT_CONFIGURED','MODEL_CREDENTIAL_UNAVAILABLE','MODEL_CONFIGURATION_UNAVAILABLE','MODEL_ROUTE_NOT_FROZEN'].includes(code??''))return waiting('CONFIGURATION_REQUIRED','请完成模型配置后继续原准备任务');throw error;
+   }catch(error){// SEMANTIC_BOUNDARY_ALLOW: 仅匹配宿主确定的配置/登录协议码，不解释模型文本。
+    const code=(error as {details?:{domainCode?:string};code?:string;errorCode?:string;name?:string}).details?.domainCode??(error as {code?:string}).code??(error as {errorCode?:string}).errorCode??(error instanceof Error?error.message:undefined);
+    if(['MODEL_NOT_CONFIGURED','MODEL_CREDENTIAL_UNAVAILABLE','MODEL_CONFIGURATION_UNAVAILABLE','MODEL_ROUTE_NOT_FROZEN'].includes(code??''))return waiting('CONFIGURATION_REQUIRED','请完成模型配置后继续原准备任务');
+    const name=(error as {name?:string}).name??'';
+    const blob=`${name}\n${code??''}\n${error instanceof Error?error.message:''}`;
+    if(/DouyinNotLoggedInError|TRANSCRIBE_LOGIN_REQUIRED|DOUYIN_FAVORITES_SESSION_EXPIRED|未检测到抖音创作者中心登录态|(?:^|[^A-Z_])LOGIN_REQUIRED(?:[^A-Z_]|$)/.test(blob)&&!/\bCODEX_[A-Z_]+\b/.test(blob)){
+     return waiting('LOGIN_REQUIRED','请在当前账号完成抖音登录后继续原任务；去「设置 → 账户」扫码登录，或手工补逐字稿后继续');
+    }
+    throw error;
    }
   },
   async collect(ctx,{project,step,childTaskId}){

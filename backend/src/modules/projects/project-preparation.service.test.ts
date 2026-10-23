@@ -20,7 +20,7 @@ async function fixture(){
  const projects=createProjectsService(createProjectRepository(db),{now,nextId}),project=await projects.createProject(ctx,{title:'准备项目',brief:'用户原始资料'});
  const tasks=createPersistentTaskService(db,{now,nextId});
  const module=await import('./project-preparation.service');
- const dispatch=vi.fn(async()=>({status:'waiting_user' as const,reasonCode:'CONFIGURATION_REQUIRED',message:'请配置模型后继续'}));
+ const dispatch=vi.fn<import('./project-preparation.service').ProjectPreparationDeps['dispatch']>(async()=>({status:'waiting_user' as const,reasonCode:'CONFIGURATION_REQUIRED',message:'请配置模型后继续'}));
  const service=module.createProjectPreparationService(db,{now,nextId,tasks,dispatch});
  return {ctx,project,projects,tasks,service,dispatch};
 }
@@ -307,4 +307,57 @@ it('C2 brief准备在提交前发现Codex未登录，保留原任务并显示安
  expect((await f.service.get(f.ctx,f.project.id)).preparationTaskId).toBe(started.preparationTaskId);
  await f.tasks.command(f.ctx,{taskIds:[started.preparationTaskId!],command:'pause',idempotencyKey:'pause-login-blocked'});
  expect(await f.service.get(f.ctx,f.project.id)).toMatchObject({availableActions:expect.arrayContaining(['resume','cancel']),steps:expect.arrayContaining([expect.objectContaining({name:'brief',status:'paused'})])});
+});
+
+it('C2b brief准备抛出DouyinNotLoggedInError时显示重连指引，不露出类名且不自动重试',async()=>{
+ const f=await fixture();
+ f.dispatch.mockRejectedValue(Object.assign(new Error('DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录'),{name:'DouyinNotLoggedInError'}));
+ const started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'douyin-not-logged-in-brief',requestedSteps:['brief']});
+ await f.service.tick({shouldStop:()=>false});
+ const expectedError={code:'CONFIGURATION_REQUIRED',message:'请在当前账号完成抖音登录后继续原任务；去「设置 → 账户」扫码登录，或手工补逐字稿后继续'};
+ const resource=await f.service.get(f.ctx,f.project.id);
+ expect(resource).toMatchObject({preparationTaskId:started.preparationTaskId,lastError:expectedError,steps:expect.arrayContaining([expect.objectContaining({name:'brief',status:'failed',lastError:expectedError})])});
+ expect(JSON.stringify(resource)).not.toContain('DouyinNotLoggedInError');
+ for(let i=0;i<3;i++){clock.value=new Date(Date.parse(clock.value)+3000).toISOString();await f.service.tick({shouldStop:()=>false});}
+ expect(f.dispatch).toHaveBeenCalledTimes(1);
+});
+
+it('C2c 仅请求brief时跳过未请求的历史转写失败，仍可提交brief',async()=>{
+ const f=await fixture();
+ const started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'prior-transcript-fail',requestedSteps:['transcript','brief']});
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,started.preparationTaskId!));
+ const cp=parent!.checkpoint as import('./project-preparation.service').PreparationCheckpoint;
+ const transcript=cp.steps.find(s=>s.name==='transcript')!;
+ transcript.status='failed';transcript.required=false;transcript.reasonCode='NOT_REQUESTED';transcript.lastError={code:'EXECUTION_FAILED',message:'DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录'};
+ const brief=cp.steps.find(s=>s.name==='brief')!;brief.status='pending';brief.required=true;brief.reasonCode='USER_REQUESTED';
+ cp.lastError=transcript.lastError;
+ await db.update(executionTasks).set({status:'queued',checkpoint:cp}).where(eq(executionTasks.id,parent!.id));
+ f.dispatch.mockImplementation(async(_ctx,input)=>{
+  if(input.step==='transcript')throw Object.assign(new Error('DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录'),{name:'DouyinNotLoggedInError'});
+  return {status:'waiting_user' as const,reasonCode:'CONFIGURATION_REQUIRED',message:'请配置模型后继续'};
+ });
+ await f.service.tick({shouldStop:()=>false});
+ expect(f.dispatch.mock.calls.map(call=>call[1].step)).toEqual(['brief']);
+ const resource=await f.service.get(f.ctx,f.project.id);
+ expect(resource.steps.find(s=>s.name==='brief')).toMatchObject({status:'waiting_user'});
+ expect(JSON.stringify(resource.lastError??{})).not.toMatch(/DouyinNotLoggedInError/);
+});
+
+it('C2d 转写子任务抖音未登录时等待用户并可继续跑brief',async()=>{
+ const f=await fixture();
+ const started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'transcript-login-continue-brief',requestedSteps:['transcript','brief']});
+ const child=await f.tasks.enqueue(f.ctx,{kind:'ai_task',ownerType:'project',ownerId:f.project.id,idempotencyKey:'transcript-child-login',payload:{}});
+ await db.update(executionTasks).set({status:'waiting_user',lastErrorCode:'TRANSCRIBE_LOGIN_REQUIRED',lastErrorMessage:'DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录'}).where(eq(executionTasks.id,child.id));
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,started.preparationTaskId!));
+ const cp=parent!.checkpoint as import('./project-preparation.service').PreparationCheckpoint;
+ const transcript=cp.steps.find(s=>s.name==='transcript')!;
+ transcript.status='failed';transcript.childTaskId=child.id;transcript.required=true;
+ await db.update(executionTasks).set({status:'queued',checkpoint:cp}).where(eq(executionTasks.id,parent!.id));
+ f.dispatch.mockResolvedValue({status:'waiting_user' as const,reasonCode:'CONFIGURATION_REQUIRED',message:'请配置模型后继续'});
+ await f.service.tick({shouldStop:()=>false});
+ const resource=await f.service.get(f.ctx,f.project.id);
+ expect(resource.steps.find(s=>s.name==='transcript')).toMatchObject({status:'waiting_user',lastError:{code:'CONFIGURATION_REQUIRED',message:expect.stringContaining('设置 → 账户')},availableActions:expect.arrayContaining(['provide_transcript','resume'])});
+ expect(resource.steps.find(s=>s.name==='brief')).toMatchObject({status:'waiting_user'});
+ expect(f.dispatch.mock.calls.map(call=>call[1].step)).toEqual(['brief']);
+ expect(JSON.stringify(resource)).not.toContain('DouyinNotLoggedInError');
 });

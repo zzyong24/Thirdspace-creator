@@ -63,7 +63,7 @@ SHA256：`8fdbab49a052ae3f5b63e447ceb20a6dba1af5146e13c318aefc6f7bf2759716`。�
 
 自建PG role/db activity_t1402_fixture、端口49402、data_directory指向本外部pg/data；initdb/migrate/实际数据库元数据保留。`pg/STOP_RECEIPT.json`核owned PID12244和准确命令/实例身份后执行stop，**stop exit0 / status exit3（已停止）**；仅停本轮自己的进程，数据/server日志保留。私有SQLite也已disconnect，临时DB/复制的schema留在私有临时目录，不改repo schema。真实业务写入0，所有数据库记录为合成fixture。
 
-准备的生产最后一步只在外部 `PRODUCTION_CANDIDATE.md`，源码包 `ACTIVITY_T1402_3SOURCE_CANDIDATE.tar.gz`，SHA1f9808e3c461eb4356d5c3da94895541bb6a9096c7a49d69d735e7313b1467ad。仅3新增source；不包含测试/fixture、PG数据、环境、密钥或迁移。文档给准确来源、上线前版本核对、备份/新旧制品、只读/无效合成请求检测、无迁移及切回旧制品方案。**未获生产授权、未执行任何生产步骤**；实际线上当前目录/版本须获准后核对，不虚构它们。
+准备的生产最后一步只在外部 `PRODUCTION_CANDIDATE.md`，源码包 `ACTIVITY_T1402_3SOURCE_CANDIDATE.tar.gz`，SHA2b2aa02646dede83fa7f14f0c3cf3086a6d40f8e7e8517db5ada69fe4947cada。仅3新增source；不包含测试/fixture、PG数据、环境、密钥或迁移。文档给准确来源、上线前版本核对、备份/新旧制品、只读/无效合成请求检测、无迁移及切回旧制品方案。**未获生产授权、未执行任何生产步骤**；实际线上当前目录/版本须获准后核对，不虚构它们。
 
 ## 当前待收口
 
@@ -74,3 +74,8 @@ SHA256：`8fdbab49a052ae3f5b63e447ceb20a6dba1af5146e13c318aefc6f7bf2759716`。�
 ## 最终独审签收补记
 
 `final-independent-source-review.json`，SHA256 `38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a`：最终source-bound本地PASS，13manifest逐项当前SHA、7项quality-start冻结SHA、36/36聚焦、585PASS+7skip、typecheck0及ownedPGstop均独立读取核对；最终4向量body digest/Ed25519/固定host/3source SHA独立验证全true，并核root真实native consumer 1测试消费4向量PASS。旧墓碑finding已销账；只签本地准确范围，不签生产。没有为了签收再改源或重跑无必要测试。
+
+
+## 封包元数据修正（仅本地重封包）
+
+原包含macOS AppleDouble元数据，共6个成员，已由本次纯三文件封包替代。原包保留为 `ACTIVITY_T1402_3SOURCE_CANDIDATE.appledouble-original.tar.gz`，原SHA `1f9808e3c461eb4356d5c3da94895541bb6a9096c7a49d69d735e7313b1467ad` **已替代，不得再用于发布**。新包 `ACTIVITY_T1402_3SOURCE_CANDIDATE.tar.gz`，SHA `2b2aa02646dede83fa7f14f0c3cf3086a6d40f8e7e8517db5ada69fe4947cada`，以Python tarfile USTAR显式加入三份普通文件；严格核对恰好3个regular member、精确路径及内容SHA与原FINAL_SOURCE_MANIFEST逐项相等。源码/测试和原Gate证据未改、未重跑。未执行生产动作；10/17旧备份不能视作本轮fresh备份，须另获准后取得当前备份。详细记录 `PACKAGE_REPACK_RECEIPT.json`。

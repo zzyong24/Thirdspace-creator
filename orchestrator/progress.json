@@ -56,7 +56,8 @@
         "frontend/src/features/copilot/assistant-engine-model-routing-refresh.test.ts",
         "frontend/src/server/activation/ai-credit-link.server.ts",
         "frontend/src/server/activation/ai-credit-link.server.test.ts",
-        "frontend/src/features/settings/settings-interactive-region.test.tsx"
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "backend/src/modules/projects/project-preparation.service.test.ts"
       ],
       "read_set": [
         "orchestrator/SYSTEM_ARCHITECTURE.md",

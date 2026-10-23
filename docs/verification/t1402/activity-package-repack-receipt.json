@@ -1,0 +1,79 @@
+{
+  "createdAt": "2026-10-23T04:37:02.572293+00:00",
+  "operation": "local-package-only",
+  "oldPackage": {
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/ACTIVITY_T1402_3SOURCE_CANDIDATE.appledouble-original.tar.gz",
+    "sha256": "1f9808e3c461eb4356d5c3da94895541bb6a9096c7a49d69d735e7313b1467ad",
+    "superseded": true,
+    "members": [
+      {
+        "name": "src/app/api/license/restore-current/._route.ts",
+        "regular": true,
+        "bytes": 163,
+        "sha256": "34b8c3d886cc937188e13bc07bc38646f1ae4acb4802f5ccbb29c98a96bf2398"
+      },
+      {
+        "name": "src/app/api/license/restore-current/route.ts",
+        "regular": true,
+        "bytes": 469,
+        "sha256": "7a1fd3801bfa2b09b9e0296a2c21f93c543ebc31891f675b04ad91cf6f73e8db"
+      },
+      {
+        "name": "src/lib/._license-restore-current-contract.ts",
+        "regular": true,
+        "bytes": 163,
+        "sha256": "34b8c3d886cc937188e13bc07bc38646f1ae4acb4802f5ccbb29c98a96bf2398"
+      },
+      {
+        "name": "src/lib/license-restore-current-contract.ts",
+        "regular": true,
+        "bytes": 4309,
+        "sha256": "2e111589e626f688d17df54a1a4161bf294dd5af0e96bf0ce19eaa48e7b77466"
+      },
+      {
+        "name": "src/lib/._license-restore-current-service.ts",
+        "regular": true,
+        "bytes": 163,
+        "sha256": "34b8c3d886cc937188e13bc07bc38646f1ae4acb4802f5ccbb29c98a96bf2398"
+      },
+      {
+        "name": "src/lib/license-restore-current-service.ts",
+        "regular": true,
+        "bytes": 22464,
+        "sha256": "7d5de9ad614cd4f5e49bb108646596fc7b106582862ad2792a132e8ed3ff7134"
+      }
+    ]
+  },
+  "newPackage": {
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/ACTIVITY_T1402_3SOURCE_CANDIDATE.tar.gz",
+    "sha256": "2b2aa02646dede83fa7f14f0c3cf3086a6d40f8e7e8517db5ada69fe4947cada",
+    "members": [
+      {
+        "name": "src/app/api/license/restore-current/route.ts",
+        "regular": true,
+        "bytes": 469,
+        "sha256": "7a1fd3801bfa2b09b9e0296a2c21f93c543ebc31891f675b04ad91cf6f73e8db"
+      },
+      {
+        "name": "src/lib/license-restore-current-contract.ts",
+        "regular": true,
+        "bytes": 4309,
+        "sha256": "2e111589e626f688d17df54a1a4161bf294dd5af0e96bf0ce19eaa48e7b77466"
+      },
+      {
+        "name": "src/lib/license-restore-current-service.ts",
+        "regular": true,
+        "bytes": 22464,
+        "sha256": "7d5de9ad614cd4f5e49bb108646596fc7b106582862ad2792a132e8ed3ff7134"
+      }
+    ],
+    "regularMemberCount": 3,
+    "format": "USTAR"
+  },
+  "sourceManifestPath": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/FINAL_SOURCE_MANIFEST.json",
+  "sourceManifestSha256": "1354b889202cc0e46b63ec459b3fd6f685197752e42b0c97de0d099ae25858ba",
+  "sourcesUnchanged": true,
+  "testsUnchanged": true,
+  "gateRerun": false,
+  "productionActions": 0
+}

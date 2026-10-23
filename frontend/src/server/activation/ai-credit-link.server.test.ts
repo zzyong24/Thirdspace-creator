@@ -5,6 +5,8 @@ import {
   createAiCreditPortalLink,
 } from "./ai-credit-link.server";
 
+import { ClientConfigPullError } from "./client-config.server";
+
 const NOW = new Date("2026-08-06T12:00:00.000Z");
 
 function access() {
@@ -42,6 +44,42 @@ describe("createAiCreditPortalLink", () => {
   it('T1402绑定proof错误不吞为AI_CREDIT_LINK_UNAVAILABLE，任意上游文案不暴露',async()=>{
     await expect(createAiCreditPortalLink({env:{CREATOROS_MODEL_BENEFITS_ENABLED:'1',CREATOROS_CLIENT_CONFIG_PULL_ENABLED:'1',CREATOROS_LICENSE_BASE_URL:'https://activity.invalid',CREATOROS_LICENSE_PROJECT_KEY:'creatoros'},readVerdict:async()=>({state:'ready',verdict:{v:1,allowed:true,status:'active',code:'SYNTHETIC',machineId:'test-machine',projectKey:'creatoros'}}),fetchImpl:vi.fn(async()=>Response.json({error:{code:'MODEL_BENEFIT_BINDING_STALE',message:'secret internal'}},{status:409,headers:{'cache-control':'no-store'}}))})).rejects.toMatchObject({code:'MODEL_BENEFIT_BINDING_STALE',message:'当前电脑的原授权绑定需要核对，请使用升级原激活码入口恢复后再试'});
   });
+  it.each([
+    ["CLIENT_CONFIG_PENDING", "权益配置同步尚未启用", false],
+    ["CLIENT_CONFIG_ACCESS_DENIED", "当前权益无法同步配置", false],
+    ["CLIENT_CONFIG_NETWORK_UNAVAILABLE", "权益服务暂时无法连接", true],
+  ])("保留 requestAccess 的 %s 分类", async (code, message, retryable) => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    await expect(createAiCreditPortalLink({
+      env: {},
+      requestAccess: async () => { throw new ClientConfigPullError(code, message, retryable); },
+      fetchImpl,
+    })).rejects.toMatchObject({ code, message, retryable });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it.each(["access", "fetch"])("%s 未分类异常仍返回安全的不可用提示", async (stage) => {
+    await expect(createAiCreditPortalLink({
+      env: {},
+      requestAccess: stage === "access" ? async () => { throw new Error("private diagnostic"); } : access,
+      fetchImpl: vi.fn(async () => { throw new TypeError("fetch failed"); }) as typeof fetch,
+    })).rejects.toMatchObject({
+      code: "AI_CREDIT_LINK_UNAVAILABLE",
+      message: "AI 额度服务暂时不可用，请稍后重试",
+      retryable: true,
+    });
+  });
+
+  it.each([
+    [503, "AI_CREDIT_LINK_UNAVAILABLE", true],
+    [403, "AI_CREDIT_ACCESS_DENIED", false],
+  ])("保留 Growth HTTP %s 分类", async (status, code, retryable) => {
+    await expect(createAiCreditPortalLink({
+      env: {}, requestAccess: access,
+      fetchImpl: vi.fn(async () => success({}, status)) as typeof fetch,
+    })).rejects.toMatchObject({ code, retryable });
+  });
+
   it("用短时 ticket 创建一次性会话，code 只进入同源 fragment", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async () => success());
     const result = await createAiCreditPortalLink({
