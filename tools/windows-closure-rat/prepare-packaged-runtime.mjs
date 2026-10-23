@@ -12,6 +12,10 @@ import {
 import { dirname, relative, resolve, sep } from "node:path";
 import { bakeVerdictPublicKey } from "./bake-verdict-public-key.mjs";
 import { stageCreatorOsCliRuntime } from "../../frontend/scripts/desktop/creatoros-cli-runtime.mjs";
+import {
+  cleanSidecarReusable,
+  writeCleanSidecarPolicy,
+} from "../../frontend/scripts/desktop/build-sidecar.mjs";
 
 import { reportCapacity } from "./runtime-diagnostics.mjs";
 
@@ -104,6 +108,18 @@ for (const report of [
   "runtime-smoke-results.json",
 ]) {
   rmSync(resolve(sidecarRoot, report), { force: true });
+}
+
+// [T-675] 生产精简闭包已经是可复用的 clean runtime。显式写入发布 CSP
+// 标记，供 package.mjs 后续 CREATOROS_SKIP_SIDECAR_REBUILD=1 稳定短路；
+// 当前 prepare 步骤的 workflow env 可能没有 signing-required，不能直接透传。
+const cleanPolicyEnv = {
+  ...process.env,
+  CREATOROS_SIDECAR_SIGNING_REQUIRED: "1",
+};
+writeCleanSidecarPolicy(sidecarRoot, cleanPolicyEnv);
+if (!cleanSidecarReusable(sidecarRoot)) {
+  throw new Error("[T-675] packaged runtime clean policy 写入后校验失败");
 }
 
 let files = 0;

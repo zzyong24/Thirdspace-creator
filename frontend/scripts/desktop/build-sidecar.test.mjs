@@ -32,7 +32,29 @@ import {
   canvasNativePackageFor,
   findPnpmEntryForPackage,
   materializeRuntimePackageClosure,
+  windowsTarBinary,
+  resolvePiPnpmEntry,
 } from "./build-sidecar.mjs";
+
+describe("Windows release 归档与 Pi 入口解析", () => {
+  it("Windows 固定使用 System32 tar，避免 Git tar 把盘符当远端", () => {
+    expect(windowsTarBinary("win32", { SystemRoot: "C:\\Windows" })).toBe("C:\\Windows/System32/tar.exe");
+    expect(windowsTarBinary("darwin", {})).toBe("tar");
+  });
+  it("Pi 可通过项目 node_modules 的真实入口回溯 .pnpm 条目", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-pi-resolve-"));
+    try {
+      const pnpm = join(root, "node_modules", ".pnpm");
+      const body = join(pnpm, "pi-entry", "node_modules", "@earendil-works", "pi-coding-agent");
+      mkdirSync(body, { recursive: true });
+      writeFileSync(join(body, "package.json"), JSON.stringify({ name: "@earendil-works/pi-coding-agent", version: "0.80.7" }));
+      const anchor = join(root, "backend", "node_modules", "@earendil-works", "pi-coding-agent");
+      mkdirSync(dirname(anchor), { recursive: true });
+      symlinkSync(body, anchor, "dir");
+      expect(resolvePiPnpmEntry(pnpm, root, "@earendil-works/pi-coding-agent")).toBe("pi-entry");
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
 
 describe("T-843 CreatorOS CLI 随包运行时", () => {
   it("双平台都要求 CLI bundle 与随包 Node 同时存在", () => {

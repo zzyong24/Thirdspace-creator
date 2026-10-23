@@ -49,6 +49,20 @@ test("packaged runtime stages CreatorOS CLI before copying the closure into Taur
   assert.match(source, /targetPlatform:\s*["']win32["']/);
 });
 
+test("packaged runtime writes a signing-required clean policy after assembly", () => {
+  const source = readFileSync(
+    resolve(HERE, "prepare-packaged-runtime.mjs"),
+    "utf8",
+  );
+  const policyIndex = source.indexOf("writeCleanSidecarPolicy(sidecarRoot, cleanPolicyEnv)");
+  const copyIndex = source.indexOf("cpSync(closureRoot, sidecarRoot");
+  const cliStageIndex = source.indexOf("stageCreatorOsCliRuntime({");
+  assert.ok(policyIndex > copyIndex, "policy 必须在 runtime 复制完成后写入");
+  assert.ok(policyIndex > cliStageIndex, "policy 必须在 CLI 装配后写入");
+  assert.match(source, /CREATOROS_SIDECAR_SIGNING_REQUIRED:\s*["']1["']/);
+  assert.match(source, /cleanSidecarReusable\(sidecarRoot\)/);
+});
+
 test("production closure pins target and adapter evidence", () => {
   const plan = productionClosurePlan({ preparePackage: true });
   const next = plan.find(
