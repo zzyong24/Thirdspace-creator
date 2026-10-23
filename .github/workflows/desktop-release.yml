@@ -823,6 +823,24 @@ jobs:
           }
           NODE
 
+      - name: 注入 update-root 私钥(临时文件，不落仓库)
+        env:
+          CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM: ${{ secrets.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM:-}" ]; then
+            printf '%s\n' '::error::缺少仓库密钥 CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM，无法签名 sidecar'
+            exit 1
+          fi
+          umask 077
+          key_path="$RUNNER_TEMP/creatoros-update-root.pem"
+          printf '%s\n' "$CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM" > "$key_path"
+          chmod 600 "$key_path"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            key_path="$(cygpath -w "$key_path")"
+          fi
+          printf 'CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH=%s\n' "$key_path" >> "$GITHUB_ENV"
+
       - name: 打包(release.mjs 全链)
         if: inputs.windows_capsule_mode != 'prepare'
         working-directory: frontend
@@ -1794,6 +1812,10 @@ jobs:
             frontend/src-tauri/target/release-fast/bundle/creatoros-release-attestation.json
           if-no-files-found: warn
           retention-days: 30
+
+      - name: 清理 update-root 临时私钥
+        if: always()
+        run: rm -f "$RUNNER_TEMP/creatoros-update-root.pem"
 
   draft-release:
     needs: build
