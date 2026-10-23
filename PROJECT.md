@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ fcbbdfff
+LAST_SYNCED: codex/legacy-license-upgrade @ d7f63c15e
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1402 历史激活码一键升级模型权益与原授权恢复
 - [wip] T-1398 修复 Copilot DeepSeek 强制工具请求、失败重试与错误诊断丢失
 - [wip] T-1397 修复main Verify并核实已知失败
 - [wip] T-1378 诊断每日观测HTTP422与接收端固定清单兼容

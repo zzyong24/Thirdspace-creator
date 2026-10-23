@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1402|历史激活码一键升级模型权益与原授权恢复|🔨|PASS[REV:9f72852e3003]|待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)|用户要求面向所有用户自助升级历史永久码；保原许可与钱包，幂等启用，不依赖人工查库；含本机已明确授权恢复及一份失效旧绑定释放，本地实现测试打包安装，发布另列。|
 |T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|四来源 mock 回归、补齐弹窗 flex 高度链；不真实调用、不push，补丁交付。|
 |T-1399|固定侧栏 AI 助手页脚与收拢入口|⏸️|—|待验|[SPEC](docs/features/t1399-sidebar-assistant-footer.md)|仅调整助手卡片与测试，保留全部导航、折叠及原 Copilot 参数；指定回归、补丁交付，不push。|
 |T-1398|修复 Copilot DeepSeek 强制工具请求、失败重试与错误诊断丢失|🔨 待办|—|待验|[SPEC](docs/features/t1398-copilot-deepseek-failure.md)|用户授权最小修复、相关测试与补丁交付；不真实调用、不读密钥、不修改许可激活签名、不push。 第四轮补 DeepSeek 推理历史回传与缺失历史关闭思考；第三轮补发送前明确失败结算与日志；当前源码 mocked DeepSeek 定位成功，历史 exact exception 未复现，任务保持未完成。|

@@ -1,0 +1,460 @@
+{
+  "reviewedAt": "2026-10-23T04:30:21.581239+00:00",
+  "task": "T-1402",
+  "reviewer": "ci_contract",
+  "verdict": "PASS_CURRENT_TS_SOURCE_AND_CONTROLLED_LOCAL_TESTS",
+  "scope": "只读TS源码与既有受控本地证据；未运行测试、API或数据库",
+  "sources": [
+    {
+      "path": "frontend/src/lib/legacy-license-upgrade.ts",
+      "sha256": "91d1c522e8cd0084bf69a528fa04dcd6d2e4825cd135b53fed401df646363d7f",
+      "bytes": 8018,
+      "actualSha256": "91d1c522e8cd0084bf69a528fa04dcd6d2e4825cd135b53fed401df646363d7f",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/lib/legacy-license-upgrade.test.ts",
+      "sha256": "07010251ad3d43010f3bf5e2a6316d7f15d79448b9c3563b31e5de17a4269467",
+      "bytes": 2140,
+      "actualSha256": "07010251ad3d43010f3bf5e2a6316d7f15d79448b9c3563b31e5de17a4269467",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/activation/model-benefit.server.ts",
+      "sha256": "f3e30e9216ac4d1d2e98002b3356153ff25ee0a4057dc4fb0fba2b7848ec3654",
+      "bytes": 42865,
+      "actualSha256": "f3e30e9216ac4d1d2e98002b3356153ff25ee0a4057dc4fb0fba2b7848ec3654",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/activation/model-benefit.server.test.ts",
+      "sha256": "2026acd0d2c845fcf2b58cdab4ffea8f9ad23856490f51e42d9ea026a71cbf79",
+      "bytes": 39411,
+      "actualSha256": "2026acd0d2c845fcf2b58cdab4ffea8f9ad23856490f51e42d9ea026a71cbf79",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/client-config/route.ts",
+      "sha256": "95df4917a19d71841d96adac3c2b0e6b35d7944604c8b38efe35f968e36265e2",
+      "bytes": 7767,
+      "actualSha256": "95df4917a19d71841d96adac3c2b0e6b35d7944604c8b38efe35f968e36265e2",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/client-config/route.test.ts",
+      "sha256": "0e4d9baec7e4609ccaedb5e4f487bc52b281824d876e2cc872ef932498c3db1f",
+      "bytes": 12487,
+      "actualSha256": "0e4d9baec7e4609ccaedb5e4f487bc52b281824d876e2cc872ef932498c3db1f",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/features/settings/channel-model-configuration.tsx",
+      "sha256": "d48537ae7e2b14f408affd142664a9b88de837180e44e783e252332d3721ac44",
+      "bytes": 33435,
+      "actualSha256": "d48537ae7e2b14f408affd142664a9b88de837180e44e783e252332d3721ac44",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/features/settings/channel-model-configuration.test.tsx",
+      "sha256": "86f29ccd863b28482c56f087000f97d12a2ea8f9efa7bf14646e1f78d16c6675",
+      "bytes": 11614,
+      "actualSha256": "86f29ccd863b28482c56f087000f97d12a2ea8f9efa7bf14646e1f78d16c6675",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/features/copilot/assistant-engine.ts",
+      "sha256": "be9244417001c34575760f6a8c99a79897c55d318350bf9410af61e7aa28195d",
+      "bytes": 12121,
+      "actualSha256": "be9244417001c34575760f6a8c99a79897c55d318350bf9410af61e7aa28195d",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/features/copilot/assistant-engine-model-routing-refresh.test.ts",
+      "sha256": "01d51f91732bb59353441c3c6f69f49bf058eb4c93b08b24c3c9e4e8fcd8245f",
+      "bytes": 1998,
+      "actualSha256": "01d51f91732bb59353441c3c6f69f49bf058eb4c93b08b24c3c9e4e8fcd8245f",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/activation/ai-credit-link.server.ts",
+      "sha256": "501dd5ecd45a1f1af0c8d536f6da3a66620db3c25002ac57567728ea0c198f87",
+      "bytes": 18841,
+      "actualSha256": "501dd5ecd45a1f1af0c8d536f6da3a66620db3c25002ac57567728ea0c198f87",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/activation/ai-credit-link.server.test.ts",
+      "sha256": "954ae0c588def3ceee59726715b7e7bc65b034edf9dfa324bf422474800b6f92",
+      "bytes": 5568,
+      "actualSha256": "954ae0c588def3ceee59726715b7e7bc65b034edf9dfa324bf422474800b6f92",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "sha256": "7ee70cdc7007459f01f78e114e35814c59b1280221c14cc0e6f63d0fa8c81674",
+      "bytes": 131870,
+      "actualSha256": "7ee70cdc7007459f01f78e114e35814c59b1280221c14cc0e6f63d0fa8c81674",
+      "matches": true
+    }
+  ],
+  "testEvidence": {
+    "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/verification/t1402/ts-final-focused-r3.log",
+    "sha256": "dd73ab4fcc373b72335a939bc210bdced412dc04ae495d7e5329f8c8f0749718",
+    "files": 7,
+    "passed": 232,
+    "failed": 0,
+    "pending": 0,
+    "durationSeconds": 27.0,
+    "sourceMtimeBeforeRun": true,
+    "boundary": "原7文件受控本地Vitest摘要；未独立重跑；不是browser、desktop或生产"
+  },
+  "findings": [
+    {
+      "id": "TS-001",
+      "status": "resolved",
+      "file": "frontend/src/server/activation/model-benefit.server.ts",
+      "lines": [
+        360,
+        361,
+        364,
+        367,
+        376
+      ],
+      "issue": "sync仅取得目录时验证expiresAt；随后credentials/Key/cache等待跨越目录截止但proof仍有效，提交guard只核proof/原许可/观察TTL，最终可错误返回configuration ready。",
+      "sequence": [
+        "合法签名directory.expiresAt早于同次proof.expiresAt",
+        "credentials或putManagedCredential/cache.save等待跨directory截止",
+        "assertCurrent与observation.check仍成功",
+        "过期目录保存并返回UPGRADE_READY"
+      ],
+      "minimalFix": "原三个commit边界复核该directory截止；保原权益ready的partial语义；新增真实签名短目录RED并验0后续写/不ready。",
+      "resolution": {
+        "sourceSha256": "f3e30e9216ac4d1d2e98002b3356153ff25ee0a4057dc4fb0fba2b7848ec3654",
+        "description": "新增sync局部assertConfigurationCurrent，在credentials返回以及commit入场/Key写后/cache写后复核目录原截止；过期仍保原经济ready而配置pending，缓存落完才跨期也不ready且正式readChannelModelAuthority不启用过期目录。旧全量接口未改。",
+        "red": {
+          "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/verification/t1402/ts-directory-deadline-red.log",
+          "sha256": "5a19ddaa35c332efefbdfdc9c9aaa688e2d215cbee408f7594dc1a7adfaa8b29",
+          "failed": 3,
+          "skippedByFilter": 44,
+          "invalidBehaviorObserved": "三个真实签名短目录反例原输出configuration ready"
+        },
+        "green": {
+          "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/verification/t1402/ts-final-focused-r3.log",
+          "sha256": "dd73ab4fcc373b72335a939bc210bdced412dc04ae495d7e5329f8c8f0749718",
+          "passed": 232
+        }
+      }
+    }
+  ],
+  "acceptedChecks": [
+    "初次probe无header才创建，未知token不复活",
+    "Map256上限异步后再次复核、不踢live、actor与stable tuple及TTL固定",
+    "fulfill发送前消费标记，同token不二次履约",
+    "原生只收同值opaque token，不接受JS提供许可对象",
+    "config继续保原UI观察截止，原生pending只在token解析成功后设置",
+    "nullable tokenPrefix仅string|null，非法类型继续拒，非空Key/scope/签名仍严格",
+    "新路由读回真实发新GET，不修改个人模型偏好",
+    "sync目录截止三个异步边界RED→GREEN，原权益ready不被回退，配置不假ready",
+    "真实Growth四场景原fixture逐SHA未改，string|null兼容不等于无Key，不触发第二账号/再赠",
+    "可信route闭合投影，不暴露原code/machine/Key/proof；cap/fence测试直接调用实际服务分支"
+  ],
+  "claimsNotMade": [
+    "安装/真实UI UAT",
+    "最终Activity签发向量消费",
+    "生产或真实用户经济履约"
+  ],
+  "priorReview": {
+    "verdict": "MUST_FIX_DIRECTORY_DEADLINE",
+    "testEvidence": {
+      "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/verification/t1402/ts-final-focused-r2.log",
+      "sha256": "3b1e4b21c2ea3f82e01dba88e401b904075ba14c6bf809f1219ad9978db50374",
+      "files": 7,
+      "passed": 229,
+      "failed": 0,
+      "boundary": "原运行日志摘要；不是浏览器、桌面安装或生产验收，尚不覆盖本次目录截止反例"
+    },
+    "sources": [
+      {
+        "path": "frontend/src/lib/legacy-license-upgrade.ts",
+        "sha256": "91d1c522e8cd0084bf69a528fa04dcd6d2e4825cd135b53fed401df646363d7f"
+      },
+      {
+        "path": "frontend/src/lib/legacy-license-upgrade.test.ts",
+        "sha256": "07010251ad3d43010f3bf5e2a6316d7f15d79448b9c3563b31e5de17a4269467"
+      },
+      {
+        "path": "frontend/src/server/activation/model-benefit.server.ts",
+        "sha256": "f3e30e9216ac4d1d2e98002b3356153ff25ee0a4057dc4fb0fba2b7848ec3654"
+      },
+      {
+        "path": "frontend/src/server/activation/model-benefit.server.test.ts",
+        "sha256": "2026acd0d2c845fcf2b58cdab4ffea8f9ad23856490f51e42d9ea026a71cbf79"
+      },
+      {
+        "path": "frontend/src/app/api/v1/local/client-config/route.ts",
+        "sha256": "95df4917a19d71841d96adac3c2b0e6b35d7944604c8b38efe35f968e36265e2"
+      },
+      {
+        "path": "frontend/src/app/api/v1/local/client-config/route.test.ts",
+        "sha256": "0e4d9baec7e4609ccaedb5e4f487bc52b281824d876e2cc872ef932498c3db1f"
+      },
+      {
+        "path": "frontend/src/features/settings/channel-model-configuration.tsx",
+        "sha256": "d48537ae7e2b14f408affd142664a9b88de837180e44e783e252332d3721ac44"
+      },
+      {
+        "path": "frontend/src/features/settings/channel-model-configuration.test.tsx",
+        "sha256": "86f29ccd863b28482c56f087000f97d12a2ea8f9efa7bf14646e1f78d16c6675"
+      },
+      {
+        "path": "frontend/src/features/copilot/assistant-engine.ts",
+        "sha256": "be9244417001c34575760f6a8c99a79897c55d318350bf9410af61e7aa28195d"
+      },
+      {
+        "path": "frontend/src/features/copilot/assistant-engine-model-routing-refresh.test.ts",
+        "sha256": "01d51f91732bb59353441c3c6f69f49bf058eb4c93b08b24c3c9e4e8fcd8245f"
+      },
+      {
+        "path": "frontend/src/server/activation/ai-credit-link.server.ts",
+        "sha256": "501dd5ecd45a1f1af0c8d536f6da3a66620db3c25002ac57567728ea0c198f87"
+      },
+      {
+        "path": "frontend/src/server/activation/ai-credit-link.server.test.ts",
+        "sha256": "954ae0c588def3ceee59726715b7e7bc65b034edf9dfa324bf422474800b6f92"
+      },
+      {
+        "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "sha256": "7ee70cdc7007459f01f78e114e35814c59b1280221c14cc0e6f63d0fa8c81674"
+      }
+    ]
+  },
+  "authorManifest": {
+    "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/verification/t1402/ts-implementation-evidence.json",
+    "sha256": "e0e17c6c96e59de9d96b968e702cfc194c5ed00edb167f6ac27bdfa185111b09",
+    "allSourcesFixturesAndReceiptsMatch": true,
+    "checks": {
+      "files": [
+        {
+          "path": "frontend/src/lib/legacy-license-upgrade.ts",
+          "sha256": "91d1c522e8cd0084bf69a528fa04dcd6d2e4825cd135b53fed401df646363d7f",
+          "bytes": 8018,
+          "actualSha256": "91d1c522e8cd0084bf69a528fa04dcd6d2e4825cd135b53fed401df646363d7f",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/lib/legacy-license-upgrade.test.ts",
+          "sha256": "07010251ad3d43010f3bf5e2a6316d7f15d79448b9c3563b31e5de17a4269467",
+          "bytes": 2140,
+          "actualSha256": "07010251ad3d43010f3bf5e2a6316d7f15d79448b9c3563b31e5de17a4269467",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/server/activation/model-benefit.server.ts",
+          "sha256": "f3e30e9216ac4d1d2e98002b3356153ff25ee0a4057dc4fb0fba2b7848ec3654",
+          "bytes": 42865,
+          "actualSha256": "f3e30e9216ac4d1d2e98002b3356153ff25ee0a4057dc4fb0fba2b7848ec3654",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/server/activation/model-benefit.server.test.ts",
+          "sha256": "2026acd0d2c845fcf2b58cdab4ffea8f9ad23856490f51e42d9ea026a71cbf79",
+          "bytes": 39411,
+          "actualSha256": "2026acd0d2c845fcf2b58cdab4ffea8f9ad23856490f51e42d9ea026a71cbf79",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/app/api/v1/local/client-config/route.ts",
+          "sha256": "95df4917a19d71841d96adac3c2b0e6b35d7944604c8b38efe35f968e36265e2",
+          "bytes": 7767,
+          "actualSha256": "95df4917a19d71841d96adac3c2b0e6b35d7944604c8b38efe35f968e36265e2",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/app/api/v1/local/client-config/route.test.ts",
+          "sha256": "0e4d9baec7e4609ccaedb5e4f487bc52b281824d876e2cc872ef932498c3db1f",
+          "bytes": 12487,
+          "actualSha256": "0e4d9baec7e4609ccaedb5e4f487bc52b281824d876e2cc872ef932498c3db1f",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/features/settings/channel-model-configuration.tsx",
+          "sha256": "d48537ae7e2b14f408affd142664a9b88de837180e44e783e252332d3721ac44",
+          "bytes": 33435,
+          "actualSha256": "d48537ae7e2b14f408affd142664a9b88de837180e44e783e252332d3721ac44",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/features/settings/channel-model-configuration.test.tsx",
+          "sha256": "86f29ccd863b28482c56f087000f97d12a2ea8f9efa7bf14646e1f78d16c6675",
+          "bytes": 11614,
+          "actualSha256": "86f29ccd863b28482c56f087000f97d12a2ea8f9efa7bf14646e1f78d16c6675",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/features/copilot/assistant-engine.ts",
+          "sha256": "be9244417001c34575760f6a8c99a79897c55d318350bf9410af61e7aa28195d",
+          "bytes": 12121,
+          "actualSha256": "be9244417001c34575760f6a8c99a79897c55d318350bf9410af61e7aa28195d",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/features/copilot/assistant-engine-model-routing-refresh.test.ts",
+          "sha256": "01d51f91732bb59353441c3c6f69f49bf058eb4c93b08b24c3c9e4e8fcd8245f",
+          "bytes": 1998,
+          "actualSha256": "01d51f91732bb59353441c3c6f69f49bf058eb4c93b08b24c3c9e4e8fcd8245f",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/server/activation/ai-credit-link.server.ts",
+          "sha256": "501dd5ecd45a1f1af0c8d536f6da3a66620db3c25002ac57567728ea0c198f87",
+          "bytes": 18841,
+          "actualSha256": "501dd5ecd45a1f1af0c8d536f6da3a66620db3c25002ac57567728ea0c198f87",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/server/activation/ai-credit-link.server.test.ts",
+          "sha256": "954ae0c588def3ceee59726715b7e7bc65b034edf9dfa324bf422474800b6f92",
+          "bytes": 5568,
+          "actualSha256": "954ae0c588def3ceee59726715b7e7bc65b034edf9dfa324bf422474800b6f92",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+          "sha256": "7ee70cdc7007459f01f78e114e35814c59b1280221c14cc0e6f63d0fa8c81674",
+          "bytes": 131870,
+          "actualSha256": "7ee70cdc7007459f01f78e114e35814c59b1280221c14cc0e6f63d0fa8c81674",
+          "matches": true
+        }
+      ],
+      "requiredFixtures": [
+        {
+          "path": "docs/build/growth-t243/growth-consumer-cross-repo-samples.json",
+          "sha256": "aa7fecf83ed93302db0c4be8918497d31aeef70b11c1951e426f482e50500aca",
+          "bytes": 22916,
+          "actualSha256": "aa7fecf83ed93302db0c4be8918497d31aeef70b11c1951e426f482e50500aca",
+          "matches": true
+        },
+        {
+          "path": "docs/build/growth-t243/model-benefit-cross-repo-fixture.json",
+          "sha256": "cd8ced4573cc57d855ddbda94d121f5dadc768890ecc0b1ece04c2b5a11beed2",
+          "bytes": 18392,
+          "actualSha256": "cd8ced4573cc57d855ddbda94d121f5dadc768890ecc0b1ece04c2b5a11beed2",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/fixtures/growth-formal-v1-economy-r1.json",
+          "sha256": "a7c9ae53ce13c955e8bfcc219085edc04e483ef6da9cc10e5863f3bccf3d069d",
+          "bytes": 133830,
+          "actualSha256": "a7c9ae53ce13c955e8bfcc219085edc04e483ef6da9cc10e5863f3bccf3d069d",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/fixtures/node-observation-v1.json",
+          "sha256": "ee5c63606cc8ed2d0a13692cdb20a771e80c9c7e6c5d490d2089bbd18706b659",
+          "bytes": 2418,
+          "actualSha256": "ee5c63606cc8ed2d0a13692cdb20a771e80c9c7e6c5d490d2089bbd18706b659",
+          "matches": true
+        }
+      ],
+      "receipts": [
+        {
+          "path": "docs/verification/t1402/ts-baseline.log",
+          "sha256": "d8421fece418877555f32965b1249f1d6f50ba718d5cee48b49459b0e1c9c7da",
+          "bytes": 869,
+          "actualSha256": "d8421fece418877555f32965b1249f1d6f50ba718d5cee48b49459b0e1c9c7da",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-red.log",
+          "sha256": "b8dcc1b0685d612bd8c4c32dec4c23d6dfa5c5f12db85b27e8d11304275e4df1",
+          "bytes": 10476,
+          "actualSha256": "b8dcc1b0685d612bd8c4c32dec4c23d6dfa5c5f12db85b27e8d11304275e4df1",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-ui-route-red.log",
+          "sha256": "3e4041ad58ef467b68621c4cdca14e4220a204b5fa6fc14d4f3b6367740462ec",
+          "bytes": 186601,
+          "actualSha256": "3e4041ad58ef467b68621c4cdca14e4220a204b5fa6fc14d4f3b6367740462ec",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-fence-red.log",
+          "sha256": "b2e5927621bf39cdcf03bbd2fa1799b8e94cf1d5e046658facf5eca4a56c601d",
+          "bytes": 4487,
+          "actualSha256": "b2e5927621bf39cdcf03bbd2fa1799b8e94cf1d5e046658facf5eca4a56c601d",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-fence-green.log",
+          "sha256": "64593075efd07308b510e8db4a04bc16e49b4a42a4c82a4bc222d57442f37d6b",
+          "bytes": 1023,
+          "actualSha256": "64593075efd07308b510e8db4a04bc16e49b4a42a4c82a4bc222d57442f37d6b",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-capacity-red-final.log",
+          "sha256": "2af1daa8a1e03a90a806facce87efc6724a4d3d5f75c13d146509a134eefebbd",
+          "bytes": 1124,
+          "actualSha256": "2af1daa8a1e03a90a806facce87efc6724a4d3d5f75c13d146509a134eefebbd",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-deadline-guard-red.log",
+          "sha256": "b2b3b38a6055547ac95a68dc5c3f955caa94713cfd1041f5e55bba9593381a57",
+          "bytes": 10254,
+          "actualSha256": "b2b3b38a6055547ac95a68dc5c3f955caa94713cfd1041f5e55bba9593381a57",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/growth-runtime-consumer.log",
+          "sha256": "9ead4fddcc1772c41aa125d538140e267e66484ea29653f3878a00270764150d",
+          "bytes": 1598,
+          "actualSha256": "9ead4fddcc1772c41aa125d538140e267e66484ea29653f3878a00270764150d",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/growth-runtime-consumer-green.log",
+          "sha256": "cc96cfba51c866fbf748277d8f96975bb026a8dac1804097c40c4016ca42df09",
+          "bytes": 434,
+          "actualSha256": "cc96cfba51c866fbf748277d8f96975bb026a8dac1804097c40c4016ca42df09",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-final-focused.log",
+          "sha256": "acd02e11d0890615e09c4e01a3b57abc3c0badc5d753acd859739a075afd4aac",
+          "bytes": 1327,
+          "actualSha256": "acd02e11d0890615e09c4e01a3b57abc3c0badc5d753acd859739a075afd4aac",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-final-focused-r2.log",
+          "sha256": "3b1e4b21c2ea3f82e01dba88e401b904075ba14c6bf809f1219ad9978db50374",
+          "bytes": 1329,
+          "actualSha256": "3b1e4b21c2ea3f82e01dba88e401b904075ba14c6bf809f1219ad9978db50374",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-directory-deadline-red.log",
+          "sha256": "5a19ddaa35c332efefbdfdc9c9aaa688e2d215cbee408f7594dc1a7adfaa8b29",
+          "bytes": 2256,
+          "actualSha256": "5a19ddaa35c332efefbdfdc9c9aaa688e2d215cbee408f7594dc1a7adfaa8b29",
+          "matches": true
+        },
+        {
+          "path": "docs/verification/t1402/ts-final-focused-r3.log",
+          "sha256": "dd73ab4fcc373b72335a939bc210bdced412dc04ae495d7e5329f8c8f0749718",
+          "bytes": 1330,
+          "actualSha256": "dd73ab4fcc373b72335a939bc210bdced412dc04ae495d7e5329f8c8f0749718",
+          "matches": true
+        }
+      ]
+    }
+  },
+  "unresolvedFindings": [],
+  "notClaimed": [
+    "全workspace/typecheck等主会话Gate已由本工件代验；以主会话最新出口为准",
+    "真实browser/desktop/安装或本机激活恢复",
+    "真实生产Provider调用/真实钱包经济履约"
+  ]
+}
