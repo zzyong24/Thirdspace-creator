@@ -13,6 +13,17 @@ const STATE_LABEL:Record<ProjectPreparationStepStatus,string>={not_required:"不
 const CONTROL_LABEL={pause:"暂停项目准备",resume:"恢复项目准备",cancel:"取消项目准备"};
 const STEP_LABEL={transcript:"转写正文",source_draft:"来源拆解与初稿",brief:"资料补全"};
 const showsCurrentError=(status:ProjectPreparationStepStatus)=>["failed","blocked","waiting_user","unknown_result","paused"].includes(status);
+/** 准备错误面向用户：去掉 Error 类名前缀，抖音登录墙给重连指引。 */
+function humanizePreparationError(message:string|null|undefined):string{
+  const raw=(message??"").trim();
+  if(!raw)return "准备失败，请核对原任务。";
+  if(/DouyinNotLoggedInError|TRANSCRIBE_LOGIN_REQUIRED|DOUYIN_FAVORITES_SESSION_EXPIRED|未检测到抖音创作者中心登录态|(?:^|[^A-Z_])LOGIN_REQUIRED(?:[^A-Z_]|$)/.test(raw)&&!/\bCODEX_[A-Z_]+\b/.test(raw)){
+    return "请在当前账号完成抖音登录后继续原任务；去「设置 → 账户」扫码登录，或手工补逐字稿后继续";
+  }
+  const stripped=raw.replace(/^[A-Za-z][A-Za-z0-9_]*Error:\s*/,"");
+  return stripped||raw;
+}
+
 
 export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:string;title?:string;origin?:ProjectSource}) {
   const state=useProjectPreparation();
@@ -31,7 +42,7 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
     {state?.error?<p role="alert" className="mt-3 text-sm text-destructive">状态暂时无法读取：{state.error}</p>:null}
     {!preparation&&!state?.error?<p role="status" className="mt-3 text-sm text-muted-foreground">正在读取项目准备状态…</p>:null}
     {message?<p role="alert" className="mt-3 text-sm text-destructive">{message}</p>:null}
-    {preparation?.lastError&&preparation.steps.some(step=>showsCurrentError(step.status))?<p className="mt-3 text-sm text-warning">{preparation.lastError.message}</p>:null}
+    {preparation?.lastError&&preparation.steps.some(step=>showsCurrentError(step.status))?<p className="mt-3 text-sm text-warning">{humanizePreparationError(preparation.lastError.message)}</p>:null}
     {state?<Button type="button" size="sm" variant="ghost" disabled={state.busy} onClick={()=>void run(state.reload)}>重新读取状态</Button>:null}
     {preparation?.registration==="registered"&&preparation.preparationTaskId?<div aria-label="项目准备控制" className="mt-2 flex flex-wrap gap-2">{(["pause","resume","cancel"] as const).filter(command=>preparation.availableActions.includes(command)).map(command=><Button key={command} type="button" size="sm" variant="outline" disabled={state?.busy||Boolean(state?.error)} onClick={()=>void run(()=>state!.control(command))}>{CONTROL_LABEL[command]}</Button>)}</div>:null}
     <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(200px,0.8fr)_minmax(0,2fr)]">
@@ -51,7 +62,7 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
           return <li key={step.name} data-step={step.name} data-state={step.status} className="flex min-w-0 flex-col gap-2 rounded-xl border border-border p-4">
             <h3 className="text-sm font-semibold">{STEP_LABEL[step.name]}</h3>
             <p className="flex items-center gap-1.5 text-xs"><Icon className={`size-3.5 ${step.status==="running"?"animate-spin motion-reduce:animate-none":""}`} aria-hidden="true"/>{accepted?"候选已采纳":STATE_LABEL[step.status]}</p>
-            {step.lastError&&showsCurrentError(step.status)?<p className="text-sm text-warning">{step.lastError.message}</p>:null}
+            {step.lastError&&showsCurrentError(step.status)?<p className="text-sm text-warning">{humanizePreparationError(step.lastError.message)}</p>:null}
             {step.status==="unknown_result"?<p className="text-sm text-muted-foreground">请核对原任务回执；不会重新发送供应商请求。</p>:null}
             {step.status==="candidate_ready"?<p className="text-sm text-muted-foreground">{accepted?"已取得真实采纳回执，正式版本已保存。":"请在项目编导栏核对候选并点采纳。"}</p>:null}
             {step.status==="done"&&step.reasonCode==="TRANSCRIPT_ALREADY_AVAILABLE"?<p className="text-sm text-muted-foreground">逐字稿就绪，本次无需再转写。</p>:null}
