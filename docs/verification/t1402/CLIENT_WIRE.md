@@ -1,6 +1,6 @@
 # T-1402 Creator 完整消费合同
 
-2026-10-23；状态：待独立契约复审。本文不是实现/测试通过收据。
+2026-10-23；历史一键合同已实施。新增§11为当前无感入口合同，待独立复审；其触发和继续语义优先于§1、§6–10内手动交互描述，既有闭合wire和安全校验保持。本文不是新增实现/测试通过收据。
 
 工作树：`/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator`，起点 `9c585dd4db5f263d228bb71bb832700dfd81f64e`。已读主仓最新 SPEC（含本地范围授权及 unknown 六行表）、本树 Packet §1–5/7–9，写前核 §6。本轮只允许写本文档，未修改产品源、主控制面或 T-1401 候选。
 
@@ -389,3 +389,20 @@ native仅接 `{observationToken}`：字符串≤4096 ASCII，严格`enc:v1:`加c
 本启动内维护最多256条的有界used observationId集合，按原token截止清理、不踢活跃；真正调度inspect之前消费ID。重复/过期/无法确认token按blocked RESTORE_CONTINUE_REQUIRED/unverified/unchanged/retryable=true返回，不冒称网络unknown。旧启动token因boot绑定拒绝。先前已发native仍由guard收尾，不能用新token并行写。
 
 Node应输出公开合成32B key/boot nonce/原tuple、实际encryptSecret token、明文与SHA供Rust真实解封/一致hash测试；不得读真实主密钥或手写密文冒互通。新增RED覆盖跨请求换码/改expiry、错actor、过期/失联不复活、写前变更、同token双fulfill、恢复epoch与ISO等价格式仍同原身份；原生由Root补token错误/换码/过期/重放零HTTP向量。
+
+
+## 11. 无感入口修订（2026-10-23，待独立复审）
+
+本节准确行为以上游 SPEC“无感升级修订”为准。唯一新增输入为现空POST header `x-creatoros-upgrade-mode: automatic`；未知值、非legacy_upgrade携带此头拒绝422。DTO、opaque token、Activity签名wire及Rust IPC参数不变，不暴露去重身份给WebView。
+
+Node automatic 索引键由真实 actor/当前启动hash/当前稳定许可hash组成；只有probe无token可申请，创建前后异步边界复核索引，首次占用仅首响应返回token。后来的无token probe只返回现有闭合projection（phase=proof,outcome=unknown,reasonCode=UPGRADE_SERVICE_UNAVAILABLE,bindingStatus=unverified,entitlementStatus=not_started,configurationStatus=not_started,retryable=true），无token响应头、无下游；不允许其他realm接管原观察。token TTL不延长；原观察过期、被身份变化失效、原生token已消费等不会创建替代automatic观察。索引保留本启动墓碑，容量256 fail-closed。附token自动请求必须命中同automatic记录与原actor/boot/许可；不能借旧手动token混入自动链。原inFlight、fulfillSent和Rust同token消费保护均保持。
+
+coordinator 由已登录workspace ready的desktop启动组件激活，等待最近licensed且未撤销的原生判定及后续事件；同步订阅状态供设置显示。一次工作共享promise与原截止，解绑显示观察者不解除原生互斥。切scope停旧观察，任何async回调先核scope/generation；不能用router.refresh引发全页闪白。未知后在同token内经济unknown只读probe、已证原凭据ready后可sync；原生unknown仅probe并停止sync/整体ready，不以fresh proof替代本机保存回执。网络退避有界且不延长原预算；下一正常冷启动按当前事实新观察，不要求用户确认。
+
+准确新增产品写集：`frontend/src/components/shell/channel-config-bootstrap.tsx`及其test、`frontend/src/app/(creator)/layout.tsx`、`frontend/src/lib/automatic-license-upgrade.ts`及其test。原T1402范围内settings两测试、client-config route及test、model-benefit server及test、共享DTO及test允许为本修订调整。预期不改Rust、Activity或Growth产品源码。既有完整原生与跨scope测试不可为了UI调整删除安全断言，应在公共coordinator/service中保留相应验证。
+
+
+§11独评收紧：正常重挂复用同realm模块flight；reload/第二窗口拿不到原token故不会丢native-unknown后进入sync。首response丢失也保守pending，本宿主不新占用；下次正常冷启动fresh当前事实开始。原owner的客户端预算从ensure最初入场固定730000ms（早于Node issuedAt），Node每个stage和下游fetch同时clamp原entry剩余时间，无新增到期header。automatic inFlight期间，普通model-benefit access在++observationGeneration前返回既有MODEL_BENEFIT_REFRESH_PENDING；自动先开始时ordinary不得使其失效，ordinary先开始时原generation/commit防旧回写继续生效。自动stage之间允许普通读取，自动自身下一阶段fresh access；不改许可/金额/个人路由权限。
+
+
+实施落点补充（同合同，2026-10-23独审准入）：设置官方配置展开卡仍消费旧SSR modelAuthority，fresh routing不替换该prop。准确增加 `frontend/src/features/settings/settings-model-region.tsx` 及 `settings-model-region-automatic.test.tsx`，只在当前scope自动流程完整ready且routing.ready、exact capability/source=official/status=ready时，以真实只读自动同步摘要与原测试连接按钮替代未就绪旧SSR分支；已有完整ready卡保持。self/Codex/其他capability/其他scope不放行，不推造modelOptions/Key，不改模型来源或整页刷新。此项属于当前SPEC的局部能力状态联动，原输入输出wire、token/预算和服务端安全合同不变；具体代码另行独审，先RED再实现。

@@ -19897,7 +19897,14 @@
         "frontend/src/server/activation/ai-credit-link.server.ts",
         "frontend/src/server/activation/ai-credit-link.server.test.ts",
         "frontend/src/features/settings/settings-interactive-region.test.tsx",
-        "backend/src/modules/projects/project-preparation.service.test.ts"
+        "backend/src/modules/projects/project-preparation.service.test.ts",
+        "frontend/src/components/shell/channel-config-bootstrap.tsx",
+        "frontend/src/components/shell/channel-config-bootstrap.test.tsx",
+        "frontend/src/app/(creator)/layout.tsx",
+        "frontend/src/lib/automatic-license-upgrade.ts",
+        "frontend/src/lib/automatic-license-upgrade.test.ts",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/settings-model-region-automatic.test.tsx"
       ],
       "read_set": [
         "orchestrator/SYSTEM_ARCHITECTURE.md",

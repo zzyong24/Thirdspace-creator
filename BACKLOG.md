@@ -9,7 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1402|历史激活码一键升级模型权益与原授权恢复|🔨|PASS[REV:9f72852e3003]|待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)|用户要求面向所有用户自助升级历史永久码；保原许可与钱包，幂等启用，不依赖人工查库；含本机已明确授权恢复及一份失效旧绑定释放，本地实现测试打包安装，发布另列。|
+|T-1402| 历史激活码无感升级模型权益与原授权恢复 |🔨| PASS[REV:d3792db71858] |待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)| 用户最新要求无需点击，桌面启动自动核对升级；原按钮实际已恢复并复用原钱包，修状态联动与自动生命周期。原期限/次数/钱包/有效绑定保护不变，新增合同待独评，本地打包安装沿用授权。 |
 |T-1401|修复 AI 额度连接错误被通用不可用提示掩盖|✅|—|—|[SPEC](docs/features/t1401-ai-credit-link-errors.md)|保留配置错误分类与重试语义，验证开发接口，删除临时诊断；仅本地提交，不push。|
 |T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|四来源 mock 回归、补齐弹窗 flex 高度链；不真实调用、不push，补丁交付。|
 |T-1399|固定侧栏 AI 助手页脚与收拢入口|⏸️|—|待验|[SPEC](docs/features/t1399-sidebar-assistant-footer.md)|仅调整助手卡片与测试，保留全部导航、折叠及原 Copilot 参数；指定回归、补丁交付，不push。|
