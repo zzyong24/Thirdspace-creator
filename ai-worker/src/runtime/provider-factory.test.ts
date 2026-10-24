@@ -20,6 +20,14 @@ function providerOf(model: ReturnType<typeof modelFor>): string {
 }
 
 describe("modelFor", () => {
+  it('T1405 普通402没有余额证据时不能变成额度不足，明确余额错误仍安全归类',()=>{
+    const error=toChannelManagedError({status:402,message:'payment verification required',responseBody:'synthetic-private-body'});
+    expect(error).not.toBeInstanceOf(ManagedAiCreditExhaustedError);
+    expect(error).toBeInstanceOf(ChannelManagedProviderError);
+    expect(error.message).not.toContain('synthetic-private-body');
+    expect(toChannelManagedError({status:402,code:'AI_CREDIT_EXHAUSTED'})).toBeInstanceOf(ManagedAiCreditExhaustedError);
+    expect(toChannelManagedError({status:400,responseBody:'insufficient balance'})).toBeInstanceOf(ManagedAiCreditExhaustedError);
+  });
   it("[T-735] 渠道错误保留可行动分类、阶段、HTTP 与脱敏参考号", () => {
     const error = toChannelManagedError(
       Object.assign(new Error("private upstream body SECRET"), {

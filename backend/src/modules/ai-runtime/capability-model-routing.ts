@@ -10,7 +10,12 @@ import {canonicalJson} from '../ai/canonical-json';
 export class CapabilityModelRoutingError extends Error {
   readonly code=ErrorCode.ConflictError;
   readonly details:{domainCode:string;routeKey:string};
-  constructor(domainCode:string,routeKey:string){super(`${domainCode}：所选模型暂不可执行，请检查该用途的模型设置。`);this.details={domainCode,routeKey};}
+  constructor(domainCode:string,routeKey:string){
+    super(domainCode==='MODEL_ROUTING_CONFLICT'
+      ? '当前用途的模型来源为 Codex，Pi 引擎无法执行。请选择 Codex 引擎；若要使用 Pi，请先将该用途的模型来源改为官方或自配。'
+      : `${domainCode}：所选模型暂不可执行，请检查该用途的模型设置。`);
+    this.details={domainCode,routeKey};
+  }
 }
 export type SelectedModelMetadata={
   status:'ready'|'not_configured'|'unverified'|'unavailable';

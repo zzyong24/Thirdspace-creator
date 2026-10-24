@@ -231,7 +231,6 @@ function collectProviderErrorSignals(error: unknown, depth = 0): string[] {
 export function isManagedAiCreditExhaustedError(error: unknown): boolean {
   if (error instanceof ManagedAiCreditExhaustedError) return true;
   const signals = collectProviderErrorSignals(error);
-  if (signals.some((value) => value.trim() === "402")) return true;
   return /\bAI_CREDIT_(?:EXHAUSTED|INSUFFICIENT)\b|insufficient[\s_-]*(?:balance|quota|credit)|(?:balance|quota|credit)[\s_-]*(?:exhausted|insufficient|depleted)|\b(?:1008)\b|余额不足|额度不足|积分不足/i.test(
     signals.join(" | "),
   );

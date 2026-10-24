@@ -32,6 +32,8 @@ export interface AssembleChatDeps extends ContextDeps {
  * 单测注入 fake。全部按当前用户过滤(由绑定处的 service/repo 用 ctx.userId 收窄)。
  */
 export interface ContextReaders {
+    /** 仅按本次可信对话 ctx.groupId 读取所属组，不采用界面默认值或列组推断。 */
+    getCurrentGroup?: (ctx: RequestContext) => Promise<{id: string; name: string} | null>;
     /** 列该用户最近的项目/作品(用于 context.projects)。 */
     listProjects: (ctx: RequestContext, opts: {
         limit: number;

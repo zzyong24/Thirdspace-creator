@@ -7107,6 +7107,11 @@ FAVORITES_PROMOTE_PER_RUN
     // 现成读端口,不新造 repo 方法)。诚实说明:knowledge 的 query 仍是内存 contains 过滤；materials 已走领域分页检索
     // (list 本身不带全文检索);projects 无真实 publishedAt(那在 publication 上)→ 不塞、留空。
     contextReaders: {
+getCurrentGroup: async ctx => {
+  if(!ctx.groupId)return null;
+  const group=await accountGroupService.get(ctx,ctx.groupId);
+  return {id:group.id,name:group.name};
+},
 getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputId),
 ...createChatProjectsReaders({projectsService,publishingService,artifactsService,listRecentProjects,searchProjects: (c,opts)=>searchProjectsWithPublicationFacts(c,opts,{listProjects: ctx=>projectsService.listProjectsForComposition(ctx),listOutputRefsByProjects: (ctx,ids)=>projectsService.listOutputRefsByProjects(ctx,ids),listPublicationsByOutputIds: (ctx,ids)=>publishingService.listPublicationsByOutputIds(ctx,ids)}),contentRadarDraftSeedOf,extractArtifactText,makeReviewSubjectReader,readProjectRadarDraftSeed,readCurrentArtifactTruth}),
 ...createChatLifecycleReaders({projectsService,publishingService,analyticsService,assetsService,artifactsService,materialLinksService,reviewGateService,extractArtifactText,isLegacyIncompleteReview}),

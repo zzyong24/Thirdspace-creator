@@ -60,6 +60,7 @@ describe('T1278 完整冻结只访问用户选择的来源',()=>{
  it('显式pi不猜API来源，显式codex只覆盖当轮主调用',async()=>{
   const read=vi.fn(async()=>({status:'ready' as const,identity:codex}));
   await expect(freezeSelectedModelRoutes({choices,revision:2,main:{mode:'text',capability:'topic.generate'},explicitEngine:'pi',read})).rejects.toMatchObject({details:{domainCode:'MODEL_ROUTING_CONFLICT'}});
+  await expect(freezeSelectedModelRoutes({choices,revision:2,main:{mode:'text',capability:'topic.generate'},explicitEngine:'pi',read})).rejects.toThrow('选择 Codex 引擎');
   expect(read).not.toHaveBeenCalled();
  });
  it('官方其它目录变化不等于选中身份改变，选中模型变化仍拒绝',()=>{

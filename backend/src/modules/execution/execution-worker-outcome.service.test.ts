@@ -94,6 +94,16 @@ describe("持久重试调度",()=>{
     f.ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
     expect((await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128})).callId).not.toBe(call.callId);
   });
+  it('T1405 额度不足保留原任务与准确恢复提示，不自动换源或重提',async()=>{
+    const f=await fixture('credit-message');
+    const call=await f.ports.reserveCall(f.ref,{operationKey:'generate',maxOutputTokens:128});
+    await f.ports.startCall(f.ref,{callId:call.callId});
+    await f.ports.settleCall(f.ref,{callId:call.callId,status:'rejected'});
+    await f.outcomes.recordFailure(f.ref,{outcome:'waiting_user',errorCode:'AI_CREDIT_EXHAUSTED'});
+    expect(await f.tasks.get(ctx,f.ref.executionTaskId)).toMatchObject({id:f.ref.executionTaskId,runtimeStatus:'waiting_user',errorCode:'AI_CREDIT_EXHAUSTED',errorMessage:expect.stringContaining('额度不足')});
+    expect((await f.tasks.get(ctx,f.ref.executionTaskId)).errorMessage).toContain('继续原任务');
+    expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'no-auto-resume'})).toBeNull();
+  });
   it("等待超出原截止时间时停止，不能缩短服务端要求的等待",async()=>{
     const f=await fixture("deadline");const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
     await f.ports.startCall(f.ref,{callId:call.callId});await f.ports.settleCall(f.ref,{callId:call.callId,status:"rejected"});
