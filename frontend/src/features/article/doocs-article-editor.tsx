@@ -54,6 +54,10 @@ function documentFromSnapshot(document:ArticleDocument,snapshot:EditorValue,regi
 export function DoocsArticleEditor(props:Props){const scope=useNativeWorkspace();return <DoocsEditorSession key={`${creationScopeKey(scope)}:${props.outputId}`} {...props}/>;}
 function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDelivery,accountId,projectId,outputId, sourceVersionId, value, savedDocument, onChange, onSave }: Props) {
   const scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope),assetClient=workspace.client;
+  const lazyDelivery=deliveryOnly&&!showPreview;
+  const [nativeRequested,setNativeRequested]=React.useState(!lazyDelivery);
+  const nativeWaiter=React.useRef<{resolve:(handle:NativeEditorHandle)=>void;reject:(reason:Error)=>void}|null>(null);
+  const deliveryPending=React.useRef(false);
   const [mountVersion]=React.useState(sourceVersionId);
   const storageOwner=scope.groupId?creationScopeKey(scope):scope.accountId??accountId??"missing";
   const editorRef = React.useRef<NativeEditorHandle>(null);
@@ -144,12 +148,26 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
     return () => clearTimeout(timer);
   }, [accountId, outputId, sourceVersionId, value, draftMarkdown, draftLayout, editorReady,checkpoint]);
 
-  React.useEffect(()=>{const imports=imported.current;const sequence=loadSequence;alive.current=true;return()=>{alive.current=false;session.current=sessionId();sequence.current++;controller.current?.abort();imports.clear();};},[]);
+  React.useEffect(()=>{const imports=imported.current;const sequence=loadSequence;alive.current=true;return()=>{alive.current=false;session.current=sessionId();sequence.current++;controller.current?.abort();nativeWaiter.current?.reject(new Error('已离开当前稿件'));nativeWaiter.current=null;imports.clear();};},[]);
 
   React.useEffect(()=>{
-    if(!editorReady||contentFingerprint===acknowledged||contentFingerprint===nativeEcho||loadingFingerprint.current===contentFingerprint)return;
+    if(lazyDelivery||!editorReady||contentFingerprint===acknowledged||contentFingerprint===nativeEcho||loadingFingerprint.current===contentFingerprint)return;
     void initializeEditor().catch(reason=>{if(alive.current&&reason?.name!=='AbortError')setError(reason.message);});
-  },[contentFingerprint,acknowledged,nativeEcho,editorReady,initializeEditor]);
+  },[contentFingerprint,acknowledged,nativeEcho,editorReady,initializeEditor,lazyDelivery]);
+
+  function nativeReady(){
+    setEditorReady(true);
+    if(lazyDelivery){const active=editorRef.current;if(active)nativeWaiter.current?.resolve(active);nativeWaiter.current=null;return;}
+    readCheckpoint();void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);});
+  }
+  function nativeError(message:string){
+    setError(message);
+    if(lazyDelivery){nativeWaiter.current?.reject(new Error(message));nativeWaiter.current=null;setEditorReady(false);setNativeRequested(false);}
+  }
+  function requireNativeEditor():Promise<NativeEditorHandle>{
+    if(editorReady&&editorRef.current)return Promise.resolve(editorRef.current);
+    return new Promise((resolve,reject)=>{nativeWaiter.current={resolve,reject};setNativeRequested(true);});
+  }
 
   function restoreCheckpoint(){
     if(!checkpoint||checkpointConflict||busy)return;
@@ -172,17 +190,23 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
   }
 
   async function exportFormalVersion(action:'zip'|'copy-html'='zip') {
-    if (busy || !editorReady || syncing || (!deliveryOnly&&JSON.stringify(value) !== JSON.stringify(savedDocument))) {
+    if(deliveryPending.current)return;
+    if (busy || (!lazyDelivery&&(!editorReady||syncing)) || (!deliveryOnly&&JSON.stringify(value) !== JSON.stringify(savedDocument))) {
       setError("请先保存并读回当前稿件，再导出公众号物料。"); return;
     }
-    setBusy(true); setError(null);
+    deliveryPending.current=true;setBusy(true); setError(null);
+    const requestedDocument=JSON.stringify(currentDocuments.current.value);
     try {
       const prepared=deliveryOnly&&prepareDelivery?await prepareDelivery():null;
+      if(!alive.current||requestedDocument!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
       if(deliveryOnly&&!prepared)throw new Error("保存尚未确认，请恢复原请求后再导出。");
       const savedDocument=prepared?.document??currentDocuments.current.savedDocument;
       const deliveryVersionId=prepared?.versionId??sourceVersionId;
-      const active=editorRef.current;if(!active)throw new Error('编辑器尚未准备好');
       const frozen=JSON.stringify(savedDocument);
+      const active=lazyDelivery?await requireNativeEditor():editorRef.current;if(!active)throw new Error('编辑器尚未准备好');
+      if(!alive.current||editorRef.current!==active||requestedDocument!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
+      if(lazyDelivery)await initializeEditor(savedDocument);
+      if(!alive.current||editorRef.current!==active||requestedDocument!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
       const snapshot=await active.request<EditorValue>('snapshot');
       if(!alive.current||editorRef.current!==active||frozen!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
       const actual=documentFromSnapshot(savedDocument,snapshot,imported.current);
@@ -228,15 +252,16 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = `${safeTitle}-公众号物料.zip`; anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       setStatus("已导出当前正式版本的 HTML 与图片 ZIP；请解压后用相对路径检查图片。");
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "公众号导出未完成。"); }
-    finally { if(alive.current)setBusy(false); }
+    } catch (reason) { if(alive.current)setError(reason instanceof Error ? reason.message : "公众号导出未完成。"); }
+    finally { deliveryPending.current=false;if(alive.current)setBusy(false); }
   }
 
   return <section className={deliveryOnly&&!showPreview?"contents":"min-w-0 space-y-3 rounded-xl border p-2 sm:p-4"}>
     <div className="flex flex-wrap items-center justify-between gap-3">{(!deliveryOnly||showPreview)&&<div className="min-w-0"><h3 className="text-[13.5px] font-semibold">{showPreview?"成稿预览":"公众号排版编辑器"}</h3><p className="text-xs text-muted-foreground">{syncing?"正在同步当前正文与排版…":status}</p></div>}
-      <div className="flex min-w-0 w-full flex-wrap gap-2 sm:w-auto">{showPreview&&<Button variant="outline" disabled={busy||!editorReady||syncing} onClick={()=>void exportFormalVersion('copy-html')}>复制公众号文章</Button>}<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" variant="outline" onClick={() => void exportFormalVersion()} disabled={busy || !editorReady || syncing || (!deliveryOnly&&JSON.stringify(value) !== JSON.stringify(savedDocument))}>导出 HTML + 图片 ZIP</Button>
+      <div className="flex min-w-0 w-full flex-wrap gap-2 sm:w-auto">{showPreview&&<Button variant="outline" disabled={busy||!editorReady||syncing} onClick={()=>void exportFormalVersion('copy-html')}>复制公众号文章</Button>}<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" variant="outline" onClick={() => void exportFormalVersion()} disabled={busy || (!lazyDelivery&&(!editorReady||syncing)) || (!deliveryOnly&&JSON.stringify(value) !== JSON.stringify(savedDocument))}>导出 HTML + 图片 ZIP</Button>
         {!deliveryOnly&&<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" onClick={() => void saveEditorDraft()} disabled={busy || !editorReady || syncing || checkpointConflict}>{busy ? "处理中…" : "保存正文与排版"}</Button>}</div></div>
-    {error && <p role="alert" className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{error}{syncing&&<Button className="ml-2" size="sm" variant="outline" disabled={busy} onClick={()=>void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);})}>重新读取当前稿</Button>}</p>}
+    {lazyDelivery&&busy&&<p role="status" className="text-xs text-muted-foreground">正在准备导出，完成后将自动下载。</p>}
+    {error && <p role="alert" className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{error}{!lazyDelivery&&syncing&&<Button className="ml-2" size="sm" variant="outline" disabled={busy} onClick={()=>void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);})}>重新读取当前稿</Button>}</p>}
     {checkpoint && <div role="status" className="rounded-md border border-warning/30 bg-warning/10 p-3 text-sm">
       {checkpointConflict ? <><span>标签页保存了旧版本草稿。当前正式稿已变化，请比较内容；旧草稿只读，不可直接覆盖当前版本。</span>
         <details className="mt-2"><summary className="cursor-pointer">查看旧草稿</summary><p className="mt-2 font-medium">{checkpoint.document.title}</p><pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded bg-surface p-2">{checkpoint.markdown}</pre></details></> : "发现此标签页上次未保存的草稿。"}
@@ -244,12 +269,12 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
       <Button className="ml-2" size="sm" variant="ghost" onClick={() => { sessionStorage.removeItem(checkpointKey(storageOwner,outputId)); setCheckpoint(null); setCheckpointConflict(false); }}>放弃旧草稿并继续当前稿</Button>
     </div>}
     {showPreview&&<div aria-label="原版式成稿预览" className="mx-auto max-w-[680px] overflow-auto rounded-md bg-white p-6 text-neutral-900" dangerouslySetInnerHTML={{__html:previewHtml}}/>}
-    <div aria-hidden={deliveryOnly||undefined} inert={deliveryOnly||undefined} style={deliveryOnly?{position:"fixed",left:-10000,top:0,width:800,height:700,visibility:"hidden"}:undefined} className="h-[700px] min-h-0 overflow-hidden rounded-md border bg-surface"><NativeEditorSurface ref={editorRef} editor="doocs-md" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId,outputId,sourceVersionId:mountVersion}} disabled={busy||syncing} onReady={()=>{readCheckpoint();setEditorReady(true);void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);});}} onChanged={receiveChanged} onError={setError} onImport={async file=>{
+    {nativeRequested&&<div aria-hidden={deliveryOnly||undefined} inert={deliveryOnly||undefined} style={deliveryOnly?{position:"fixed",left:-10000,top:0,width:800,height:700,visibility:"hidden"}:undefined} className="h-[700px] min-h-0 overflow-hidden rounded-md border bg-surface"><NativeEditorSurface ref={editorRef} editor="doocs-md" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId,outputId,sourceVersionId:mountVersion}} disabled={busy||syncing} onReady={nativeReady} onChanged={receiveChanged} onError={nativeError} onImport={async file=>{
       const output=await workspace.client.getOutput({params:{outputId},query:undefined,body:undefined});if(!alive.current)throw new Error('已离开当前稿件');
       const ref=await uploadEditorMedia(output.projectId,outputId,file,workspace.capture());if(!alive.current)throw new Error('已离开当前稿件');
       imported.current.set(`${ref.assetId}:${ref.assetFileId}`,{assetId:ref.assetId,assetFileId:ref.assetFileId});
       return {mediaId:`creatoros-asset:${ref.assetId}:${ref.assetFileId}`};
-    }}/></div>
+    }}/></div>}
     {!deliveryOnly&&<details className="text-xs text-muted-foreground"><summary className="cursor-pointer">开源来源与许可</summary><a className="underline" href="/reference-editors/sources/doocs-md/native-source.tar.gz" download>Doocs 对应源码与许可</a></details>}
   </section>;
 }

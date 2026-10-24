@@ -49,6 +49,9 @@ type ArticleState = {
   current: ArticleDocument;
   versions: { id: string; versionNumber: number; createdAt: string; changeSummary: string }[];
 };
+type BrandProfile = { id: string; versionNumber: number; oneLiner: string };
+export type ArticleInitialRead = {scopeKey:string;projectId:string;outputId:string;result:Promise<{article:ArticleState;error?:never}|{article?:never;error:string}>};
+export type ArticleBrandProfileRead = {scopeKey:string;result:Promise<BrandProfile|null>};
 type ArticleSaveRequest = { clientRequestId: string; payloadDigest: string; body: { expectedCurrentVersionId: string; document: ArticleDocument } };
 type CandidateSection = Section & { op: "insert" | "replace"; afterSectionId?: string | null };
 type Candidate = {
@@ -154,7 +157,7 @@ function ArticleCoverDisplay({ image }: { image: CoverImageUse }) {
       : <p className="text-xs text-muted-foreground">{unavailable ? "此封面图片暂无法读取" : "正在读取封面图片…"}</p>}</figure>;
 }
 
-function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOutputs, initialOutputId, activeBrandProfile = null }: {
+function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOutputs, initialOutputId, activeBrandProfile = null, initialArticleRead, brandProfileRead }: {
   projectId: string;
   projectTitle: string;
   accountId?: string | null;
@@ -163,13 +166,26 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
   articleTargetSelected?: boolean;
   initialOutputs: { id: string; title: string }[];
   initialOutputId?: string;
-  activeBrandProfile?: { id: string; versionNumber: number; oneLiner: string } | null;
+  activeBrandProfile?: BrandProfile | null;
+  initialArticleRead?: ArticleInitialRead;
+  brandProfileRead?: ArticleBrandProfileRead;
 }) {
   const scope=useCreationScope(),articleClient=useCreationClient() as unknown as ArticleClient,workspaceOwner=creationScopeKey(scope);
   const chat=useDraftChatRequest();
-  const initialWritingChoice=React.useRef(chat.readWritingContext(workspaceOwner,projectId));
-  const [brandVersion]=React.useState(initialWritingChoice.current?.brandProfileVersionId??activeBrandProfile?.id??null);
-  const sourceVersionChoices=React.useRef(initialWritingChoice.current?.sourceAssets??[]);
+  const [initialWritingChoice]=React.useState(()=>chat.readWritingContext(workspaceOwner,projectId));
+  const [firstArticleRead]=React.useState(initialArticleRead);
+  const [deferredBrand]=React.useState(()=>brandProfileRead?.scopeKey===workspaceOwner?brandProfileRead:undefined);
+  const [brandProfile,setBrandProfile]=React.useState(activeBrandProfile);
+  const [brandReady,setBrandReady]=React.useState(!deferredBrand);
+  const writingReady=Boolean(initialWritingChoice)||brandReady;
+  const brandVersion=initialWritingChoice?initialWritingChoice.brandProfileVersionId:brandProfile?.id??null;
+  React.useEffect(()=>{
+    if(!deferredBrand)return;
+    let active=true;
+    void deferredBrand.result.then(profile=>{if(active){setBrandProfile(profile);setBrandReady(true);}},()=>{if(active){setBrandProfile(null);setBrandReady(true);}});
+    return()=>{active=false;};
+  },[deferredBrand]);
+  const sourceVersionChoices=React.useRef(initialWritingChoice?.sourceAssets??[]);
   const [outputs, setOutputs] = React.useState(initialOutputs);
   const [outputId, setOutputId] = React.useState(initialOutputId
     ? initialOutputs.some(output => output.id === initialOutputId) ? initialOutputId : ""
@@ -180,9 +196,9 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
   const [candidate, setCandidate] = React.useState<Candidate | null>(null);
   const [pendingTaskId, setPendingTaskId] = React.useState<string | null>(null);
   const [partialTask, setPartialTask] = React.useState(false);
-  const [useBrandProfile] = React.useState(initialWritingChoice.current?initialWritingChoice.current.brandProfileVersionId!==null:Boolean(activeBrandProfile));
+  const useBrandProfile=brandVersion!==null;
   const [sourceAssets] = React.useState<SourceAsset[]>([]);
-  const [selectedSourceIds] = React.useState<string[]>(initialWritingChoice.current?.sourceAssets.map(s=>s.assetId)??[]);
+  const [selectedSourceIds] = React.useState<string[]>(initialWritingChoice?.sourceAssets.map(s=>s.assetId)??[]);
   const [preview, setPreview] = React.useState<{ versionId: string; document: ArticleDocument } | null>(null);
   const [selectedSections, setSelectedSections] = React.useState<string[]>([]);
   const [selectedMetadata, setSelectedMetadata] = React.useState<("title" | "summary" | "factItems")[]>([]);
@@ -219,12 +235,15 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     }
   }
 
-  const load = React.useCallback(async (id: string) => {
+  const load = React.useCallback(async (id: string, firstRead?:ArticleInitialRead) => {
     const serial = ++loadSerial.current;
     setBusy("load"); setError(null); setPartialTask(false);
     try {
-      const loaded = await articleClient.getArticle({ params: { outputId: id }, query: undefined, body: undefined });
+      let loaded:ArticleState;
+      if(firstRead){const result=await firstRead.result;if(result.error!==undefined)throw Error(result.error);loaded=result.article;}
+      else loaded = await articleClient.getArticle({ params: { outputId: id }, query: undefined, body: undefined });
       if (serial !== loadSerial.current) return;
+      if(loaded.projectId!==projectId||loaded.outputId!==id)throw Error('文章不属于当前项目或作品，请返回项目重新打开。');
       const key = `${workspaceOwner}:${id}`;
       const current = structuredClone(loaded.current);
       const first=!firstLoads.current.has(key);
@@ -240,7 +259,11 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     } catch (err) { if (serial === loadSerial.current) { setError(errorText(err)); setState(null); setDraft(null); } }
     finally { if (serial === loadSerial.current) setBusy(null); }
   }, [accountId,chat.notifyEditorReady]);
-  React.useEffect(() => { if (outputId) void load(outputId); }, [outputId, load]);
+  React.useEffect(() => {
+    if(!outputId)return;
+    const firstRead=!firstLoads.current.has(`${workspaceOwner}:${outputId}`)&&firstArticleRead?.scopeKey===workspaceOwner&&firstArticleRead.projectId===projectId&&firstArticleRead.outputId===outputId?firstArticleRead:undefined;
+    void load(outputId,firstRead);
+  }, [outputId, load, firstArticleRead, workspaceOwner, projectId]);
   React.useEffect(() => {
     if (!outputId) return;
     setPendingTaskId(sessionStorage.getItem(`creatoros:article-task:${outputId}`));
@@ -290,8 +313,8 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     return () => { active = false; if (timer) clearTimeout(timer); };
   }, [outputId, pendingTaskId]);
 
-  const writingChoice=()=>({schemaVersion:1 as const,brandProfileVersionId:useBrandProfile?brandVersion:null,sourceAssets:selectedSourceIds.map(id=>sourceVersionChoices.current.find(s=>s.assetId===id)??(()=>{const asset=sourceAssets.find(s=>s.id===id);if(!asset?.currentFileId)throw Error('所选资料的原文件版本不可用，请明确重新选择');return {assetId:id,assetFileId:asset.currentFileId};})())});
-  React.useEffect(()=>{chat.setWritingContext(workspaceOwner,projectId,writingChoice());},[workspaceOwner,projectId,useBrandProfile,brandVersion,selectedSourceIds,sourceAssets,chat.setWritingContext]);
+  const writingChoice=()=>{if(!writingReady)throw Error('正在读取当前定位，请稍后再组织内容。');return {schemaVersion:1 as const,brandProfileVersionId:useBrandProfile?brandVersion:null,sourceAssets:selectedSourceIds.map(id=>sourceVersionChoices.current.find(s=>s.assetId===id)??(()=>{const asset=sourceAssets.find(s=>s.id===id);if(!asset?.currentFileId)throw Error('所选资料的原文件版本不可用，请明确重新选择');return {assetId:id,assetFileId:asset.currentFileId};})())};};
+  React.useEffect(()=>{if(writingReady)chat.setWritingContext(workspaceOwner,projectId,writingChoice());},[workspaceOwner,projectId,useBrandProfile,brandVersion,writingReady,selectedSourceIds,sourceAssets,chat.setWritingContext]);
   const derivedCurrent=(proof:NonNullable<ReturnType<typeof derivedEditorDraft>>)=>Boolean(mountedRef.current&&derivedRef.current===proof&&
     stateRef.current?.outputId===proof.outputId&&stateRef.current.artifactId===proof.artifactId&&stateRef.current.currentVersionId===proof.currentVersionId&&
     workspaceOwner===proof.scopeKey&&projectId===proof.projectId&&generationRef.current===proof.generation&&
@@ -303,7 +326,8 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
    const exact=await articleClient.getArticleVersion({params:{outputId:proof.outputId,versionId:proof.currentVersionId},query:undefined,body:undefined});
    if(!derivedCurrent(proof)||latest.projectId!==proof.projectId||latest.artifactId!==proof.artifactId||latest.currentVersionId!==proof.currentVersionId||exact.versionId!==proof.currentVersionId||editorCanonical(exact.document)!==proof.baseFingerprint||editorCanonical(latest.current)!==proof.baseFingerprint)return null;
    admittedRef.current={candidate:editorCanonical(candidate),proof};return {isCurrent:()=>derivedCurrent(proof)};
-  },readState:()=>({target:targetRef.current,outputId:stateRef.current?.outputId,generation:generationRef.current,dirty:Boolean(stateRef.current&&draftRef.current&&editorCanonical(draftRef.current)!==editorCanonical(stateRef.current.current)),preparation:stateRef.current&&draftRef.current?{scopeKey:workspaceOwner,projectId,outputId:stateRef.current.outputId,owner:"wechat_article",versionId:stateRef.current.currentVersionId,documentFingerprint:editorCanonical(draftRef.current),selection:selectionRef.current,writingContext:writingChoice()}:undefined}),prepareForTurn:async(options)=>{
+  },readState:()=>({target:targetRef.current,outputId:stateRef.current?.outputId,generation:generationRef.current,dirty:Boolean(stateRef.current&&draftRef.current&&editorCanonical(draftRef.current)!==editorCanonical(stateRef.current.current)),preparation:stateRef.current&&draftRef.current&&writingReady?{scopeKey:workspaceOwner,projectId,outputId:stateRef.current.outputId,owner:"wechat_article",versionId:stateRef.current.currentVersionId,documentFingerprint:editorCanonical(draftRef.current),selection:selectionRef.current,writingContext:writingChoice()}:undefined}),prepareForTurn:async(options)=>{
+   writingChoice();
    if(savePromiseRef.current)await savePromiseRef.current;
    const initial=stateRef.current;if(!initial||!draftRef.current)throw Error("当前稿件尚未准备好。");
    if(editorCanonical(draftRef.current)!==editorCanonical(initial.current)&&!(await save()))throw Error("请先确认保存当前修改，原请求已保留。");
@@ -462,19 +486,20 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
         <Button variant="ghost" disabled={Boolean(busy)} onClick={() => setPendingSwitch(null)}>继续编辑当前稿</Button>
       </div>
     </section>}
-    {error && <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}{state&&<Button variant="outline" className="ml-3" disabled={Boolean(busy)} onClick={()=>void save()}>恢复保存并核对</Button>}</div>}
+    {error && <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}{state?<Button variant="outline" className="ml-3" disabled={Boolean(busy)} onClick={()=>void save()}>恢复保存并核对</Button>:outputId&&<Button variant="outline" className="ml-3" disabled={Boolean(busy)} onClick={()=>void load(outputId)}>重新读取文章</Button>}</div>}
     {partialTask && <p data-slot="article-task-partial" role="status" className="rounded-md bg-warning/10 p-3 text-sm text-foreground">本次文章生成部分完成，候选尚未就绪；请查看原任务结果。</p>}
     {message && <p role="status" className="rounded-md bg-success-soft p-3 text-sm text-success">{message}</p>}
     {busy === "load" && <p className="text-sm text-muted-foreground">正在读取已保存的文章…</p>}
     {state && draft && <>
       <header className="flex flex-wrap items-start justify-between gap-4 py-2">
         <div><h1 className="text-lg font-semibold">公众号成稿</h1></div>
-        <Button className="min-h-11 px-5" disabled={Boolean(busy)||reorganizing||!state.scriptContext?.scriptText.trim()||state.scriptContext.state!=="ready"} onClick={()=>void reorganize()}>{reorganizing?"正在准备…":"重新组织内容"}</Button>
+        <Button className="min-h-11 px-5" disabled={Boolean(busy)||reorganizing||!writingReady||!state.scriptContext?.scriptText.trim()||state.scriptContext.state!=="ready"} onClick={()=>void reorganize()}>{reorganizing?"正在准备…":"重新组织内容"}</Button>
       </header>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>{dirty?"已承接脚本，开始对话或导出时保存":"当前成稿已保存"}</span>
         <Link href={`/projects/${projectId}`} className="underline underline-offset-4">{state.scriptContext?.state==="ready"?"查看脚本原稿":"前往脚本撰写原稿"}</Link>
       </div>
+      {!writingReady&&<p role="status" className="text-xs text-muted-foreground">正在读取当前定位，正文可先查看和导出。</p>}
       {state.scriptContext?.message&&<p role="status" className="text-sm text-muted-foreground">{state.scriptContext.message}</p>}
       {draft.imageMatchWarnings?.map((warning,index)=><p key={index} role="status" className="text-sm text-muted-foreground">{warning}</p>)}
       {(scope.groupId||accountId)&&(draft.nativeLayout?.editor==='doocs-md'?<DoocsArticleEditor deliveryOnly showPreview prepareDelivery={async()=>{if(!(await save())||!stateRef.current)return null;return {versionId:stateRef.current.currentVersionId,document:stateRef.current.current};}} projectId={projectId} accountId={accountId??null} outputId={state.outputId} sourceVersionId={state.currentVersionId} value={draft} savedDocument={state.current} onChange={setDraft} onSave={save}/>:<NoteRelayEditor simplified prepareDelivery={save} projectId={projectId} accountId={accountId??null} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="wechat" value={draft} disabled={Boolean(busy)} onLayoutChange={layout=>setDraft(current=>current?{...current,nativeLayout:layout}:current)}

@@ -14,13 +14,14 @@ import { notFound } from "next/navigation";
 import { DraftWorkbenchPage } from "@/features/draft-workbench/draft-workbench-page";
 import { ProjectOutputHome, type ProjectWorkOutput } from "@/features/projects/project-output-home";
 import {
-  buildDraftWorkbenchVm,
+  buildDraftWorkbenchStream,
   type DraftWorkbenchClient,
 } from "@/features/draft-workbench/draft-workbench-data";
 import { isOwnershipError } from "@/features/project-overview/project-overview-workspace-data";
 import { CrossAccountEmptyState } from "@/components/state/page-state";
 import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
+import {resolveProjectRoute} from "@/features/projects/project-route-data";
 
 interface DraftWorkbenchRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -41,14 +42,19 @@ export default async function DraftWorkbenchRoute({
   }
 
   const sessionClient = createServerClient({...session.ctx,accountId:session.ctx.groupId?null:session.ctx.accountId});
-  const resolvedId = await resolveProjectIdParam(projectId, sessionClient);
+  let project: Awaited<ReturnType<typeof sessionClient.getProject>>;
+  try {project=await resolveProjectRoute(projectId,sessionClient);}
+  catch(error){
+    if(isOwnershipError(error))return <main data-page="project-cross-account-404" className="flex flex-col gap-card-gap"><CrossAccountEmptyState groupId={session.ctx.groupId} entityLabel="项目" backHref="/projects" backLabel="回项目列表"/></main>;
+    notFound();
+  }
+  const resolvedId = project.id;
   const scoped = sessionClient as unknown as DraftWorkbenchClient;
   if (view === "works") {
     let overview: { projectId: string; projectTitle: string; outputs: ProjectWorkOutput[] } | null = null;
     let crossAccountOverview = false;
     let accountPlatform: string | null = null;
     try {
-      const project = await scoped.getProject({ params: { projectId: resolvedId }, query: undefined, body: undefined }) as { id: string; title: string };
       const outputs = await scoped.listOutputs({ params: { projectId: project.id }, query: undefined, body: undefined }) as unknown as ProjectWorkOutput[];
       overview = { projectId: project.id, projectTitle: project.title, outputs };
     } catch (err) {
@@ -65,10 +71,10 @@ export default async function DraftWorkbenchRoute({
     }
     return <ProjectOutputHome projectId={overview.projectId} projectTitle={overview.projectTitle} initialOutputs={overview.outputs} accountId={session.ctx.groupId?null:session.ctx.accountId} accountPlatform={accountPlatform} />;
   }
-  let vm: Awaited<ReturnType<typeof buildDraftWorkbenchVm>> | null = null;
+  let data: Awaited<ReturnType<typeof buildDraftWorkbenchStream>> | null = null;
   let crossAccount = false;
   try {
-    vm = await buildDraftWorkbenchVm(resolvedId, scoped);
+    data = await buildDraftWorkbenchStream(resolvedId, scoped, project);
   } catch (err) {
     // [T-332 S4] 跨号/未知 by-id → OwnershipError 404(后端语义,不泄露存在性)。
     // 对用户最常见的成因是「切号后打开旧账号的项目深链」——裸 404 页不可理解,
@@ -99,40 +105,6 @@ export default async function DraftWorkbenchRoute({
   }
 
   // `notFound()` never returns, so the renderer below always has a VM.
-  if (vm === null) notFound();
-  return <DraftWorkbenchPage vm={vm} />;
-}
-
-/**
- * URL `[projectId]` 段 → canonical 项目 id(沿用旧总览页的解析:完整 id 直通,
- * kebab 化标题兜底;都不中回原参 → 上层 404)。
- */
-async function resolveProjectIdParam(param: string, scoped: Pick<ReturnType<typeof createServerClient>, "listProjects">): Promise<string> {
-  if (!param) return param;
-  try {
-    const projects = (await scoped.listProjects({
-      params: undefined,
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<{ id: string; title: string }>;
-    if (projects.some((project) => project.id === param)) {
-      return param;
-    }
-    const slug = param.toLowerCase();
-    const match = projects.find(
-      (project) => slugifyTitle(project.title) === slug,
-    );
-    return match?.id ?? param;
-  } catch {
-    return param;
-  }
-}
-
-function slugifyTitle(title: string): string {
-  const asciiOnly = title.replace(/[^\x20-\x7E]/g, " ");
-  return asciiOnly
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  if (data === null) notFound();
+  return <DraftWorkbenchPage vm={data.vm} deferred={data.deferred} />;
 }

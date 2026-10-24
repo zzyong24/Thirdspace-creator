@@ -5,17 +5,17 @@ import type {ArticleDocument} from '@creatoros/contract';
 import {DoocsArticleEditor} from './doocs-article-editor';
 import {unzipSync,strFromU8} from 'fflate';
 import {serializeArticleMarkdown} from './doocs-markdown';
-const h=vi.hoisted(()=>({live:null as any,request:vi.fn(),save:vi.fn(),change:vi.fn(),getOutput:vi.fn(),upload:vi.fn(),changed:null as null|((value:unknown)=>void),importMedia:null as null|((file:File)=>Promise<{mediaId:string}>)}));
+const h=vi.hoisted(()=>({live:null as any,readyError:null as string|null,request:vi.fn(),save:vi.fn(),change:vi.fn(),getOutput:vi.fn(),upload:vi.fn(),changed:null as null|((value:unknown)=>void),importMedia:null as null|((file:File)=>Promise<{mediaId:string}>)}));
 vi.mock('@/lib/contract-client',()=>({client:{getOutput:h.getOutput}}));
 vi.mock('@/features/reference-editors/reference-editor-media',()=>({uploadEditorMedia:h.upload}));
 // 原引擎构建独立验证；这里只验证原宿主的缓存/素材/CAS回调与隔离边界。
-vi.mock('@/features/reference-editors/native-editor-surface',()=>({NativeEditorSurface:React.forwardRef(function Surface(props:any,ref:any){React.useImperativeHandle(ref,()=>({request:h.request}),[]);h.changed=(value:any)=>{h.live=value;props.onChanged(value);};h.importMedia=props.onImport;React.useEffect(()=>{props.onReady();},[]);return <div data-testid="doocs-native"/>;})}));
+vi.mock('@/features/reference-editors/native-editor-surface',()=>({NativeEditorSurface:React.forwardRef(function Surface(props:any,ref:any){React.useImperativeHandle(ref,()=>({request:h.request}),[]);h.changed=(value:any)=>{h.live=value;props.onChanged(value);};h.importMedia=props.onImport;React.useEffect(()=>{if(h.readyError){const message=h.readyError;h.readyError=null;props.onError(message);}else props.onReady();},[]);return <div data-testid="doocs-native"/>;})}));
 vi.mock('@/lib/creation-workspace-scope',async importOriginal=>{const actual=await importOriginal<any>(),{client:scopeClient}=await import('@/lib/contract-client');return {...actual,useCreationWorkspace:(scope:any)=>{const workspace=actual.useCreationWorkspace(scope);return {...workspace,client:scopeClient,capture:()=>Object.freeze({...workspace.capture(),client:scopeClient})};}};});
 
 const document:ArticleDocument={schemaVersion:1,title:'文章',summary:'摘要',sections:[{sectionId:'section',order:0,heading:'要点',headingLevel:2,body:'原正文',sourceRefs:[]}],factItems:[],visualBriefs:[],imageUses:[]};
 const props={projectId:'project',accountId:'account',outputId:'output',sourceVersionId:'version',value:document,savedDocument:document,onChange:h.change,onSave:h.save};
 const layout={schemaVersion:1,editor:'doocs-md',editorCommit:'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31',themeId:'default',themeSettings:{},customCss:'',exportOptions:{useIndent:false,useJustify:false}};
-beforeEach(()=>{localStorage.removeItem("creatoros:current-group");localStorage.setItem("creatoros:current-account","account");vi.clearAllMocks();sessionStorage.clear();h.live={markdown:serializeArticleMarkdown(document.sections),layout:undefined};h.request.mockImplementation(async(op:string,payload:any)=>{if(op==='load'){h.live={markdown:payload.document.markdown,layout:payload.document.layout??undefined};return h.live;}if(op==='snapshot')return h.live;return {};});h.save.mockResolvedValue(true);h.getOutput.mockResolvedValue({projectId:'project'});h.upload.mockResolvedValue({mediaId:'registered',assetId:'asset',assetFileId:'file'});});
+beforeEach(()=>{localStorage.removeItem("creatoros:current-group");localStorage.setItem("creatoros:current-account","account");vi.clearAllMocks();h.readyError=null;sessionStorage.clear();h.live={markdown:serializeArticleMarkdown(document.sections),layout:undefined};h.request.mockImplementation(async(op:string,payload:any)=>{if(op==='load'){h.live={markdown:payload.document.markdown,layout:payload.document.layout??undefined};return h.live;}if(op==='snapshot')return h.live;return {};});h.save.mockResolvedValue(true);h.getOutput.mockResolvedValue({projectId:'project'});h.upload.mockResolvedValue({mediaId:'registered',assetId:'asset',assetFileId:'file'});});
 afterEach(cleanup);
 it('同页原生修改段落保留稳定ID和正式保存回调，没有iframe',async()=>{
  const view=render(<DoocsArticleEditor {...props}/>);await waitFor(()=>expect(h.request).toHaveBeenCalledWith('load',expect.objectContaining({document:expect.objectContaining({title:'文章'})}),expect.objectContaining({signal:expect.any(AbortSignal)})));expect(view.container.querySelector('iframe')).toBeNull();
@@ -50,9 +50,40 @@ it('精简交付读取保存回执的新版本，ZIP清单不会标成旧版本�
  vi.spyOn(URL,'createObjectURL').mockImplementation(blob=>{archive=blob as Blob;return 'blob:zip';});vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
  const original=h.request.getMockImplementation()!;h.request.mockImplementation((op:string,payload:any)=>op==='export-html'?Promise.resolve({html:'<p>原正文</p>',bindings:[]}):original(op,payload));
  render(<DoocsArticleEditor {...props} deliveryOnly prepareDelivery={prepared}/>);expect(screen.queryByRole('button',{name:'保存正文与排版'})).toBeNull();
+ expect(screen.queryByTestId('doocs-native')).toBeNull();expect(h.request).not.toHaveBeenCalled();
  const button=screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'});await waitFor(()=>expect(button).toBeEnabled());fireEvent.click(button);await waitFor(()=>expect(archive).not.toBeNull());
  const bytes=await new Promise<ArrayBuffer>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as ArrayBuffer);reader.onerror=reject;reader.readAsArrayBuffer(archive!);});
  const files=unzipSync(new Uint8Array(bytes));expect(JSON.parse(strFromU8(files['manifest.json']!))).toMatchObject({versionId:'saved-v2',outputId:'output'});expect(strFromU8(files['index.html']!)).toContain('原正文');expect(prepared).toHaveBeenCalledOnce();expect(h.change).not.toHaveBeenCalled();
+});
+
+it('隐藏导出准备失败可重试，一次点击等待保存及原生加载后交付',async()=>{
+ const prepare=vi.fn().mockRejectedValueOnce(new Error('保存失败，请重试')).mockResolvedValue({versionId:'v2',document});
+ const click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:zip');
+ const original=h.request.getMockImplementation()!;h.request.mockImplementation((op:string,payload:any)=>op==='export-html'?Promise.resolve({html:'<p>原正文</p>',bindings:[]}):original(op,payload));
+ render(<DoocsArticleEditor {...props} deliveryOnly prepareDelivery={prepare}/>);
+ fireEvent.click(screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'}));expect(await screen.findByRole('alert')).toHaveTextContent('保存失败');expect(screen.queryByTestId('doocs-native')).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'}));await waitFor(()=>expect(click).toHaveBeenCalledOnce());expect(prepare).toHaveBeenCalledTimes(2);
+});
+
+it('隐藏导出等待保存期间改稿或切scope，旧回执不启动编辑器或交付',async()=>{
+ let finish!:(value:any)=>void;const prepare=vi.fn(()=>new Promise<any>(resolve=>{finish=resolve;}));const click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ const view=render(<DoocsArticleEditor {...props} deliveryOnly prepareDelivery={prepare}/>);fireEvent.click(screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'}));
+ view.rerender(<DoocsArticleEditor {...props} value={{...document,title:'已改稿'}} deliveryOnly prepareDelivery={prepare}/>);await act(async()=>finish({versionId:'v2',document}));expect(await screen.findByRole('alert')).toHaveTextContent('稿件已改变');expect(screen.queryByTestId('doocs-native')).toBeNull();expect(click).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'}));view.rerender(<DoocsArticleEditor {...props} outputId="next" deliveryOnly prepareDelivery={prepare}/>);await act(async()=>finish({versionId:'v2',document}));expect(screen.queryByTestId('doocs-native')).toBeNull();expect(click).not.toHaveBeenCalled();
+});
+
+it('隐藏原生编辑器加载失败后点击可重开，加载中的重复点击不会重复保存',async()=>{
+ const prepare=vi.fn(async()=>({versionId:'v2',document}));h.readyError='编辑器样式读取失败';const click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:zip');
+ let finish!:(value:any)=>void;const original=h.request.getMockImplementation()!;h.request.mockImplementation((op:string,payload:any)=>op==='load'?new Promise(resolve=>{finish=resolve;}):op==='export-html'?Promise.resolve({html:'<p>原正文</p>',bindings:[]}):original(op,payload));
+ render(<DoocsArticleEditor {...props} deliveryOnly prepareDelivery={prepare}/>);fireEvent.click(screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'}));expect(await screen.findByRole('alert')).toHaveTextContent('编辑器样式读取失败');expect(screen.queryByTestId('doocs-native')).toBeNull();
+ const button=screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'});fireEvent.click(button);await waitFor(()=>expect(h.request).toHaveBeenCalledWith('load',expect.anything(),expect.anything()));expect(screen.getByRole('status')).toHaveTextContent('正在准备导出');fireEvent.click(button);expect(prepare).toHaveBeenCalledTimes(2);
+ await act(async()=>finish(h.live));await waitFor(()=>expect(click).toHaveBeenCalledOnce());
+});
+
+it('隐藏导出原生load期间改稿，晚回执不触发snapshot或交付',async()=>{
+ let finish!:(value:any)=>void;h.request.mockImplementation((op:string)=>op==='load'?new Promise(resolve=>{finish=resolve;}):Promise.resolve({}));
+ const prepare=vi.fn(async()=>({versionId:'v2',document}));const view=render(<DoocsArticleEditor {...props} deliveryOnly prepareDelivery={prepare}/>);fireEvent.click(screen.getByRole('button',{name:'导出 HTML + 图片 ZIP'}));await waitFor(()=>expect(h.request).toHaveBeenCalled());
+ view.rerender(<DoocsArticleEditor {...props} value={{...document,title:'新稿'}} deliveryOnly prepareDelivery={prepare}/>);await act(async()=>finish(h.live));expect(await screen.findByRole('alert')).toHaveTextContent('稿件已改变');expect(h.request.mock.calls.map(([op])=>op)).toEqual(['load']);
 });
 
 it('旧版式稿只读呈现原引擎输出，保留暂存草稿恢复且不暴露编辑表单',async()=>{

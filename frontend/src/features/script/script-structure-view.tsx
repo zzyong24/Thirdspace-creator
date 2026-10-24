@@ -121,6 +121,7 @@ export function ScriptStructureToggle({
   projectId = null,
   currentVersionId = null,
   assetLabels = {},
+  assetLabelsRead,
   children,
 }: {
   readonly sections: ReadonlyArray<ScriptSectionView>;
@@ -133,8 +134,19 @@ export function ScriptStructureToggle({
   readonly projectId?: string | null;
   readonly currentVersionId?: string | null;
   readonly assetLabels?: Readonly<Record<string, string>>;
+  readonly assetLabelsRead?: Promise<{labels:Readonly<Record<string,string>>;error?:string|null}>;
   readonly children: React.ReactNode;
 }) {
+  const [loadedLabels,setLoadedLabels]=React.useState<{read:typeof assetLabelsRead;labels:Readonly<Record<string,string>>;error?:string|null}|null>(null);
+  React.useEffect(()=>{
+    if(!assetLabelsRead)return;
+    let active=true;
+    void assetLabelsRead.then(result=>{if(active)setLoadedLabels({read:assetLabelsRead,...result});},()=>{if(active)setLoadedLabels({read:assetLabelsRead,labels:{},error:'素材暂时无法读取'});});
+    return()=>{active=false;};
+  },[assetLabelsRead]);
+  const labelsPending=Boolean(assetLabelsRead&&loadedLabels?.read!==assetLabelsRead);
+  const labelsUnavailable=Boolean(assetLabelsRead&&loadedLabels?.read===assetLabelsRead&&loadedLabels.error);
+  const visibleLabels=assetLabelsRead&&loadedLabels?.read===assetLabelsRead?loadedLabels.labels:assetLabels;
   // T-072:有结构化分段 → 默认进结构编辑(用户目标形态);没有 → 默认自由文本编辑。
   const [view, setView] = React.useState<"edit" | "structure">(
     sections.length > 0 ? "structure" : "edit",
@@ -176,7 +188,9 @@ export function ScriptStructureToggle({
           artifactId={artifactId}
           projectId={projectId}
           currentVersionId={currentVersionId}
-          assetLabels={assetLabels}
+          assetLabels={visibleLabels}
+          assetLabelsPending={labelsPending}
+          assetLabelsUnavailable={labelsUnavailable}
         />
       )}
     </div>
@@ -193,12 +207,16 @@ function ScriptStructureEditor({
   projectId,
   currentVersionId,
   assetLabels,
+  assetLabelsPending=false,
+  assetLabelsUnavailable=false,
 }: {
   readonly sections: ReadonlyArray<ScriptSectionView>;
   readonly artifactId: string | null;
   readonly projectId: string | null;
   readonly currentVersionId: string | null;
   readonly assetLabels: Readonly<Record<string, string>>;
+  readonly assetLabelsPending?: boolean;
+  readonly assetLabelsUnavailable?: boolean;
 }) {
   const router = useRouter();
   const { openChat, registerFlush, registerScript } = useDraftChatRequest();
@@ -602,6 +620,8 @@ function ScriptStructureEditor({
             onRemove={removeSection}
             onInsertBelow={insertBelow}
             assetLabels={assetLabels}
+            assetLabelsPending={assetLabelsPending}
+            assetLabelsUnavailable={assetLabelsUnavailable}
             onRewrite={(section) => handleRewrite(section, i)}
           />
         ))}
@@ -659,6 +679,8 @@ function SectionCard({
   onInsertBelow,
   onRewrite,
   assetLabels,
+  assetLabelsPending=false,
+  assetLabelsUnavailable=false,
 }: {
   readonly section: EditableSection;
   readonly index: number;
@@ -669,6 +691,8 @@ function SectionCard({
   readonly onInsertBelow: (index: number) => void;
   readonly onRewrite: (section: EditableSection) => void | Promise<void>;
   readonly assetLabels: Readonly<Record<string, string>>;
+  readonly assetLabelsPending?: boolean;
+  readonly assetLabelsUnavailable?: boolean;
 }) {
   const t = TYPE_LABEL[section.type] ?? TYPE_LABEL.body;
   const time =
@@ -787,10 +811,10 @@ function SectionCard({
               {section.visual.assetRefs.map((ref) => (
                 <span
                   key={ref}
-                  data-asset-state={assetLabels[ref] ? "resolved" : "missing"}
+                  data-asset-state={assetLabels[ref] ? "resolved" : assetLabelsPending ? "loading" : assetLabelsUnavailable ? "unavailable" : "missing"}
                   className="inline-flex max-w-full items-center truncate rounded-full border border-border bg-surface px-1.5 py-px"
                 >
-                  {assetLabels[ref] || "素材已失效"}
+                  {assetLabels[ref] || (assetLabelsPending ? "正在读取素材…" : assetLabelsUnavailable ? "素材暂时无法读取" : "素材已失效")}
                 </span>
               ))}
             </p>

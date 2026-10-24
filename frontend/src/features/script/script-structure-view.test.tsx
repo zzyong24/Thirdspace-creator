@@ -97,6 +97,7 @@ function renderToggle(
     projectId?: string | null;
     currentVersionId?: string | null;
     assetLabels?: Readonly<Record<string, string>>;
+    assetLabelsRead?: Promise<{labels:Readonly<Record<string,string>>;error?:string|null}>;
   } = {},
 ) {
   return render(
@@ -105,6 +106,30 @@ function renderToggle(
     </ScriptStructureToggle>,
   );
 }
+
+it('素材名称迟到只补标签，不重建结构编辑器或覆盖当前输入',async()=>{
+  let finish!:(value:{labels:Readonly<Record<string,string>>})=>void;
+  const labels=new Promise<{labels:Readonly<Record<string,string>>}>(resolve=>{finish=resolve;});
+  renderToggle([{...SECTIONS[0]!,visual:{description:'画面',assetRefs:['asset-late'],missing:[]}}],{assetLabelsRead:labels});
+  expect(screen.getByText('正在读取素材…')).toBeVisible();
+  const body=screen.getByDisplayValue(SECTIONS[0]!.body);
+  fireEvent.change(body,{target:{value:'加载期间的未保存输入'}});
+  await act(async()=>finish({labels:{'asset-late':'后到的真实素材'}}));
+  expect(screen.getByText('后到的真实素材')).toBeVisible();
+  expect(screen.getByDisplayValue('加载期间的未保存输入')).toBe(body);
+});
+
+it('标签请求失败不把仍引用的素材误报失效，用户输入保留',async()=>{
+  let fail!:(error:Error)=>void;
+  const labels=new Promise<{labels:Readonly<Record<string,string>>}>((_,reject)=>{fail=reject;});
+  renderToggle([{...SECTIONS[0]!,visual:{description:'画面',assetRefs:['asset-late'],missing:[]}}],{assetLabelsRead:labels});
+  const body=screen.getByDisplayValue(SECTIONS[0]!.body);
+  fireEvent.change(body,{target:{value:'请求失败期间仍保留的正文'}});
+  await act(async()=>fail(Error('offline')));
+  expect(screen.getByText('素材暂时无法读取')).toBeVisible();
+  expect(screen.queryByText('素材已失效')).toBeNull();
+  expect(screen.getByDisplayValue('请求失败期间仍保留的正文')).toBe(body);
+});
 
 function ChatRequestProbe() {
   const { request } = useDraftChatRequest();

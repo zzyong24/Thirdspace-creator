@@ -1,6 +1,6 @@
 import { readPagedRows } from "@/features/knowledge/knowledge-library-data";
 import "server-only";
-import {publicationVisualNoteSchema,type PublicationVisualNote,type ProjectSource,type ProjectPreparationResource} from "@creatoros/contract";
+import {ErrorCode,publicationVisualNoteSchema,type PublicationVisualNote,type ProjectSource,type ProjectPreparationResource} from "@creatoros/contract";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
@@ -275,6 +275,9 @@ export interface DraftWorkbenchVm {
   } | null;
   /** 当前项目有效封面:发布 revision 优先，否则取项目已采纳的封面素材。 */
   readonly projectCoverAssetId: string | null;
+  readonly publicationReadError?: string | null;
+  readonly predictionReadError?: string | null;
+  readonly scriptReviewReadError?: string | null;
   /** 发布包解锁:正式脚本版本或已确认雷达稿任一存在。 */
   readonly publishUnlocked: boolean;
   /**
@@ -330,16 +333,18 @@ export interface DraftWorkbenchVm {
 async function readPublishPack(
   client: DraftWorkbenchClient,
   projectId: string,
+  outputsRead?: Promise<unknown>,
 ): Promise<{
   outputId: string | null;
   publishPack: DraftWorkbenchVm["publishPack"];
+  publicationReadError?: string | null;
 }> {
   try {
-    const outputsRaw = await client.listOutputs({
+    const outputsRaw = await (outputsRead ?? client.listOutputs({
       params: { projectId },
       query: undefined,
       body: undefined,
-    });
+    }));
     const outputs = (
       Array.isArray(outputsRaw) ? outputsRaw : []
     ) as OutputDto[];
@@ -358,19 +363,13 @@ async function readPublishPack(
     if (pubs.length === 0) return { outputId, publishPack: null };
     const packages = await Promise.all(
       pubs.map(async (pub) => {
-        let revision: RevisionDto | null = null;
-        try {
-          const revsRaw = await client.listPublicationRevisions({
-            params: { publicationId: pub.id },
-            query: { page: 1, pageSize: 20 },
-            body: undefined,
-          });
-          const revs = (Array.isArray(revsRaw) ? revsRaw : []) as RevisionDto[];
-          revision =
-            revs.find((r) => r.id === pub.currentRevisionId) ?? null;
-        } catch {
-          revision = null;
-        }
+        const revsRaw = await client.listPublicationRevisions({
+          params: { publicationId: pub.id },
+          query: { page: 1, pageSize: 20 },
+          body: undefined,
+        });
+        const revs = (Array.isArray(revsRaw) ? revsRaw : []) as RevisionDto[];
+        const revision = revs.find((r) => r.id === pub.currentRevisionId) ?? null;
         return { pub, revision };
       }),
     );
@@ -405,15 +404,16 @@ async function readPublishPack(
       },
     };
   } catch {
-    return { outputId: null, publishPack: null };
+    return { outputId: null, publishPack: null, publicationReadError: "发布信息暂时无法读取，请重新读取；已有稿件与发布记录仍保留。" };
   }
 }
 
 // [T-063e] 读本项目产出上最新的盲预测(subjectType=content_output, subjectId=outputId)。
-// 列表 createdAt desc → 第一条命中即最新。读失败 / 无 outputId / 桩不带 op → null(诚实)。
+// 列表 createdAt desc → 第一条命中即最新。读失败单独报告，不能冒充尚未预测。
 async function readBlindPrediction(
   client: DraftWorkbenchClient,
   outputId: string | null,
+  onReadError?:()=>void,
 ): Promise<DraftWorkbenchVm["blindPrediction"]> {
   if (!outputId || !client.listPredictions) return null;
   try {
@@ -445,6 +445,7 @@ async function readBlindPrediction(
       stale: false,
     };
   } catch {
+    onReadError?.();
     return null;
   }
 }
@@ -570,126 +571,82 @@ async function readLinkedProjectCoverAssetId(
  * 稿面工作台 VM 装配。项目读失败向上抛(路由 notFound 处理,与旧总览页一致);
  * 其余区各自降级为空。
  */
-export async function buildDraftWorkbenchVm(
+export interface DraftWorkbenchDeferred {
+  materials: Promise<Pick<DraftWorkbenchVm, "ammo" | "ammoReadError">>;
+  publication: Promise<Pick<DraftWorkbenchVm, "publishPack" | "projectCoverAssetId" | "blindPrediction" | "publicationReadError" | "predictionReadError">>;
+  review: Promise<Pick<DraftWorkbenchVm,"scriptReview"|"scriptReviewReadError">>;
+  transcript: Promise<ProjectTranscriptState>;
+}
+
+/** 核心与附属读共用本次请求的归属和作品列表；慢素材不能挡住正文。 */
+export async function buildDraftWorkbenchStream(
   projectId: string,
   client: DraftWorkbenchClient = defaultClient as unknown as DraftWorkbenchClient,
-): Promise<DraftWorkbenchVm> {
-  const project = (await client.getProject({
-    params: { projectId },
-    query: undefined,
-    body: undefined,
-  })) as ProjectDto;
-  const douyinExternalId =
-    project.platformRef?.platform === "douyin" &&
-    (project.platformRef.externalId ?? "").trim()
-      ? project.platformRef.externalId!.trim()
-      : null;
-
-  const scriptArtifactId = await resolveScriptArtifactIdFromDb(
-    project.id,
-    client,
-  );
-  const [scriptData, thesis] = await Promise.all([
-    loadScriptEditorData(scriptArtifactId, client),
-    loadThesisSkeleton(project.id, client),
-  ]);
-  let preparation:ProjectPreparationResource|null=null,preparationReadError:string|null=null;
-  try {
-    if(!client.getProjectPreparation)throw Error("项目准备读取端口不可用。");
-    preparation=await client.getProjectPreparation({params:{projectId:project.id},query:undefined,body:undefined});
-  }catch(error){preparationReadError=error instanceof Error?error.message:"状态暂时无法读取。";}
-
-  let ammoReadError: string | null = null;
-  const [
-    { outputId, publishPack },
-    ammo,
-    linkedProjectCoverAssetId,
-    transcriptState,
-  ] = await Promise.all([
-    readPublishPack(client, project.id),
-    readAmmo(client, project.id, (message) => {
-      ammoReadError = message;
-    }).catch(() => {
-      ammoReadError = "项目资料读取失败，请重新读取。";
-      return [];
-    }),
-    readLinkedProjectCoverAssetId(client, project.id),
-    readProjectTranscriptState(client, project.id, douyinExternalId),
-  ]);
-
-  // [T-063e] 盲预测读依赖 outputId,故在发布包读之后串行。
-  const blindPrediction = await readBlindPrediction(client, outputId);
-  const currentScriptVersionCreatedAt =
-    scriptData?.versions.find(
-      (version) => version.id === scriptData.currentVersionId,
-    )?.createdAt ?? null;
-  const currentBlindPrediction = blindPrediction
-    ? {
-        ...blindPrediction,
-        stale: isBlindPredictionStale(
-          blindPrediction.createdAt,
-          currentScriptVersionCreatedAt,
-        ),
-      }
-    : null;
-
-  // [T-086] 稿面审核门首屏报告(404=未审吞成 null,桩不带 op → null,诚实)。
-  const scriptReview = await readScriptReview(client, project.id);
-
-  // 发布 revision 是最终发布真值；尚未创建发布行时，直接识别项目用料链中采纳的
-  // cover。兼容旧版把 cover.generate 错绑成 clip 的存量数据：生成器命名固定为
-  // “…… · 封面”/“AI 封面”，且只在图片素材 + clip 角色下兜底，避免误判普通素材。
-  const adoptedCover =
-    ammo.find((item) => item.kind === "asset" && item.role === "cover") ??
-    ammo.find(
-      (item) =>
-        item.kind === "asset" &&
-        item.role === "clip" &&
-        item.assetType === "image" &&
-        (item.title === "AI 封面" || item.title.endsWith(" · 封面")),
-    );
-  const projectCoverAssetId =
-    publishPack?.coverAssetId ??
-    linkedProjectCoverAssetId ??
-    adoptedCover?.id ??
-    null;
-
+  verifiedProject?: ProjectDto,
+): Promise<{vm: DraftWorkbenchVm; deferred: DraftWorkbenchDeferred}> {
+  const project = verifiedProject ?? await client.getProject({params:{projectId},query:undefined,body:undefined}) as ProjectDto;
+  const douyinExternalId=project.platformRef?.platform === "douyin" && (project.platformRef.externalId??"").trim() ? project.platformRef.externalId!.trim() : null;
+  const outputsRead=client.listOutputs({params:{projectId:project.id},query:undefined,body:undefined});
+  void outputsRead.catch(()=>undefined);
+  const scriptRead=(async()=>{
+    const scriptArtifactId=await resolveScriptArtifactIdFromDb(project.id,client);
+    const [scriptData,thesis]=await Promise.all([loadScriptEditorData(scriptArtifactId,client),loadThesisSkeleton(project.id,client)]);
+    return {scriptArtifactId,scriptData,thesis};
+  })();
+  const preparationRead=(async()=>{
+    try {
+      if(!client.getProjectPreparation)throw Error("项目准备读取端口不可用。");
+      return {preparation:await client.getProjectPreparation({params:{projectId:project.id},query:undefined,body:undefined}),preparationReadError:null};
+    }catch(error){return {preparation:null,preparationReadError:error instanceof Error?error.message:"状态暂时无法读取。"};}
+  })();
+  const materials=(async()=>{
+    let ammoReadError:string|null=null;
+    const ammo=await readAmmo(client,project.id,message=>{ammoReadError=message;}).catch(()=>{ammoReadError="项目资料读取失败，请重新读取。";return [];});
+    return {ammo,ammoReadError};
+  })();
+  const packRead=readPublishPack(client,project.id,outputsRead);
+  const linkedCoverRead=readLinkedProjectCoverAssetId(client,project.id);
+  const review=(async()=>{
+    let scriptReviewReadError:string|null=null;
+    const scriptReview=await readScriptReview(client,project.id,()=>{scriptReviewReadError="脚本审阅暂时无法读取，请重新读取；已有审核记录仍保留。";});
+    return {scriptReview,scriptReviewReadError};
+  })();
+  const transcript=readProjectTranscriptState(client,project.id,douyinExternalId);
+  const publication=(async()=>{
+    const [{outputId,publishPack,publicationReadError},{ammo},linkedProjectCoverAssetId,{scriptData}]=await Promise.all([packRead,materials,linkedCoverRead,scriptRead]);
+    let predictionReadError:string|null=null;
+    const blindPrediction=await readBlindPrediction(client,outputId,()=>{predictionReadError="盲预测暂时无法读取，请重新读取；已有预测记录仍保留。";});
+    const currentScriptVersionCreatedAt=scriptData?.versions.find(version=>version.id===scriptData.currentVersionId)?.createdAt??null;
+    const adoptedCover=ammo.find(item=>item.kind==="asset"&&item.role==="cover")??ammo.find(item=>item.kind==="asset"&&item.role==="clip"&&item.assetType==="image"&&(item.title==="AI 封面"||item.title.endsWith(" · 封面")));
+    return {
+      publishPack,
+      publicationReadError,
+      predictionReadError,
+      projectCoverAssetId:publishPack?.coverAssetId??linkedProjectCoverAssetId??adoptedCover?.id??null,
+      blindPrediction:blindPrediction?{...blindPrediction,stale:isBlindPredictionStale(blindPrediction.createdAt,currentScriptVersionCreatedAt)}:null,
+    };
+  })();
+  // 立即挂错误处理，RSC核心失败时未消费的附属Promise也不能变成未处理拒绝。
+  void publication.catch(()=>undefined);
+  const [{scriptArtifactId,scriptData,thesis},preparation,outputsRaw]=await Promise.all([scriptRead,preparationRead,outputsRead.catch(()=>[])]);
+  const outputs=Array.isArray(outputsRaw)?outputsRaw as OutputDto[]:[];
+  const outputId=(outputs.find(item=>item.contentType==="video")??outputs.find(item=>!item.contentType))?.id??null;
   return {
-    project: {
-      id: project.id,
-      title: project.title,
-      brief: project.brief,
-      currentStage: project.currentStage,
-      imported: project.source === "imported",
-      source: project.source as ProjectSource | undefined,
-      briefDetail: project.briefDetail ?? null,
-      // [T-374] 抖音锚:douyin + 非空 externalId 才算(手动项目为空形状 → null)。
-      douyinExternalId,
-      transcriptState,
+    vm:{
+      project:{id:project.id,title:project.title,brief:project.brief,currentStage:project.currentStage,imported:project.source==="imported",source:project.source as ProjectSource|undefined,briefDetail:project.briefDetail??null,douyinExternalId,transcriptState:"unknown"},
+      scriptArtifactId,thesis,outputId,
+      script:{editorHtml:scriptData?.editorHtml??null,sections:scriptData?.sections??[],versionCount:scriptData?.versions.length??0,currentVersionId:scriptData?.currentVersionId??null,versions:scriptData?.versions??[]},
+      radarDraftSeed:null,...preparation,publishPack:null,projectCoverAssetId:null,publishUnlocked:(scriptData?.versions.length??0)>0,blindPrediction:null,ammo:[],ammoReadError:null,scriptReview:null,
     },
-    scriptArtifactId,
-    thesis,
-    outputId,
-    script: {
-      editorHtml: scriptData?.editorHtml ?? null,
-      sections: scriptData?.sections ?? [],
-      versionCount: scriptData?.versions.length ?? 0,
-      currentVersionId: scriptData?.currentVersionId ?? null,
-      versions: scriptData?.versions ?? [],
-    },
-    radarDraftSeed:null,
-    preparation,
-    preparationReadError,
-    publishPack,
-    projectCoverAssetId,
-    // 候选不冒充正式稿；仅由真实保存版本解锁。
-    publishUnlocked:
-      (scriptData?.versions.length ?? 0) > 0,
-    blindPrediction: currentBlindPrediction,
-    ammo,
-    ammoReadError,
-    scriptReview,
+    deferred:{materials,publication,review,transcript},
   };
+}
+
+/** 非流式消费者保留原完整投影，不把加载中的占位当作真实空态。 */
+export async function buildDraftWorkbenchVm(projectId:string,client:DraftWorkbenchClient=defaultClient as unknown as DraftWorkbenchClient):Promise<DraftWorkbenchVm> {
+  const {vm,deferred}=await buildDraftWorkbenchStream(projectId,client);
+  const [materials,publication,review,transcriptState]=await Promise.all([deferred.materials,deferred.publication,deferred.review,deferred.transcript]);
+  return {...vm,...materials,...publication,...review,project:{...vm.project,transcriptState}};
 }
 
 interface TranscriptTaskDto {
@@ -763,10 +720,11 @@ export async function readProjectTranscriptState(
   } catch { return "unknown"; }
 }
 
-// [T-086] 读本项目最新审核报告。404(未审)/ 桩不带 op / 读失败 → null(诚实显未审)。
+// 404/未提供端口保留原未审态，其余读取失败必须单独显示。
 async function readScriptReview(
   client: DraftWorkbenchClient,
   projectId: string,
+  onReadError?:()=>void,
 ): Promise<ScriptReviewReportResource | null> {
   if (!client.getLatestScriptReview) return null;
   try {
@@ -776,7 +734,9 @@ async function readScriptReview(
       body: undefined,
     });
     return (raw ?? null) as ScriptReviewReportResource | null;
-  } catch {
+  } catch(error) {
+    const known=error as {status?:number;code?:string;name?:string}|null;
+    if(known?.status!==404&&known?.code!==ErrorCode.OwnershipError&&known?.name!=="ReportNotFoundError")onReadError?.();
     return null;
   }
 }

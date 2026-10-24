@@ -41,10 +41,11 @@ import {
   ScriptReviewGate,
   ReviewSoftGateHint,
 } from "./script-review-gate";
-import type { DraftWorkbenchVm } from "./draft-workbench-data";
+import type { DraftWorkbenchVm, DraftWorkbenchDeferred } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
+import {DeferredReadError} from './draft-workbench-deferred';
 
-export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
+export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; deferred?: DraftWorkbenchDeferred }) {
   const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
   const isPublished = publishPack?.outputPublished ?? publishPack?.status === "published";
   // 转写入口已移入下方「项目准备」流水线；顶条只保留导入标记与发布后主行动。
@@ -60,26 +61,9 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
     >
       {/* ── 顶条(T-075 收窄:标题与阶段条由 shell project-workspace header 统一提供;
           [T-076] 阶段条两段化「脚本|复盘」,主行动按发布态收敛)。 ── */}
-      {hasTopbarContent && <header
-        data-slot="draft-topbar"
-        className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
-      >
-        <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center gap-2.5">
-          {project.imported ? (
-            <span
-              data-slot="draft-imported-badge"
-              className="rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-[11px] text-muted-foreground"
-            >
-              真实导入作品
-            </span>
-          ) : null}
-          {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
-          <DraftPrimaryAction
-            projectId={project.id}
-            published={isPublished}
-          />
-        </div>
-      </header>}
+      {deferred ? <React.Suspense fallback={project.imported ? <DraftTopbar project={project} published={false}/> : null}>
+        <DeferredTopbar project={project} publication={deferred.publication}/>
+      </React.Suspense> : hasTopbarContent ? <DraftTopbar project={project} published={isPublished}/> : null}
 
       {/* ── 主体:左稿面 + 右对话位 ──
           [T-108] DraftChatRequestProvider 包住左稿面 + 右 rail:左稿面的 AI 按钮(盲预测/审核)
@@ -106,16 +90,12 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           <CreationFlowCtas projectId={project.id} />
 
           {/* [T-146/T-726] 弹药上移:用户先看到手里有哪些素材/资料，再直接写稿。 */}
-          <AmmoDrawer ammo={ammo} projectId={project.id} readError={vm.ammoReadError} />
-
-          <ThesisSkeletonPanel
-            thesis={thesis}
-            ammo={ammo.map((item) => ({
-              id: item.id,
-              title: item.title,
-              kind: item.kind,
-            }))}
-          />
+          {deferred ? <React.Suspense fallback={<DeferredSectionLoading label="创作素材与资料"/>}>
+            <DeferredMaterials projectId={project.id} thesis={thesis} data={deferred.materials}/>
+          </React.Suspense> : <>
+            <AmmoDrawer ammo={ammo} projectId={project.id} readError={vm.ammoReadError}/>
+            <ThesisSkeletonPanel thesis={thesis} ammo={ammo.map(item=>({id:item.id,title:item.title,kind:item.kind}))}/>
+          </>}
 
           {/* [T-387b] 缺素材清单:采纳整稿的「分镜凝固 pass」把各段 visual.missing 汇总到这
               (弹药区下,离补料入口最近)。无缺项 → 不渲(零回归)。 */}
@@ -158,6 +138,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               artifactId={scriptArtifactId}
               projectId={project.id}
               currentVersionId={script.currentVersionId ?? null}
+              assetLabelsRead={deferred?.materials.then(data=>({labels:Object.fromEntries(data.ammo.filter(item=>item.kind==='asset').map(item=>[item.id,item.title])),error:data.ammoReadError}))}
               assetLabels={Object.fromEntries(
                 ammo
                   .filter((item) => item.kind === "asset")
@@ -174,17 +155,21 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             {/* [T-086 SPEC §3] 编导文案审核门(软门):审核按钮 + 结构化报告 + 命中列表。
                 硬门切换点见 blind-predict-row / PublishPackSection 的软门提示注释。 */}
             <ContentDirectionActions projectId={project.id} projectTitle={project.title} />
-            <ScriptReviewGate
+            {deferred ? <React.Suspense fallback={<DeferredSectionLoading label="脚本审阅"/>}>
+              <DeferredReview vm={vm} report={deferred.review}/>
+            </React.Suspense> : vm.scriptReviewReadError ? <DeferredReadError message={vm.scriptReviewReadError} label="脚本审阅"/> : <ScriptReviewGate
               projectId={project.id}
               projectTitle={project.title}
               outputId={outputId}
               currentVersion={script.versionCount}
               initialReport={scriptReview}
-            />
+            />}
           </section>
 
           {/* ── 发布包区 ── */}
-          <PublishPackSection
+          {deferred ? <React.Suspense fallback={<DeferredSectionLoading label="发布信息"/>}>
+            <DeferredPublication vm={vm} data={deferred.publication} report={deferred.review}/>
+          </React.Suspense> : <PublishPackSection
             publishPack={publishPack}
             projectCoverAssetId={projectCoverAssetId}
             unlocked={publishUnlocked}
@@ -194,7 +179,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             blindPrediction={blindPrediction}
             scriptReview={scriptReview}
             scriptVersion={script.versionCount}
-          />
+            publicationReadError={vm.publicationReadError}
+            predictionReadError={vm.predictionReadError}
+            scriptReviewReadError={vm.scriptReviewReadError}
+          />}
           {/* [T-146] 弹药抽屉已上移至 CreationFlowCtas 之后(论点/脚本之上)。 */}
           </>
         }
@@ -213,6 +201,50 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
   );
 }
 
+function DraftTopbar({project,published}:{project:DraftWorkbenchVm['project'];published:boolean}) {
+  return <header
+        data-slot="draft-topbar"
+        className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
+      >
+        <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center gap-2.5">
+          {project.imported ? (
+            <span
+              data-slot="draft-imported-badge"
+              className="rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-[11px] text-muted-foreground"
+            >
+              真实导入作品
+            </span>
+          ) : null}
+          {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
+          <DraftPrimaryAction
+            projectId={project.id}
+            published={published}
+          />
+        </div>
+      </header>;
+}
+
+function DeferredSectionLoading({label}:{label:string}) {
+  return <section role="status" aria-label={`正在读取${label}`} className="rounded-xl border border-border/70 bg-surface p-3 text-sm text-muted-foreground">正在读取{label}…</section>;
+}
+async function DeferredTopbar({project,publication}:{project:DraftWorkbenchVm['project'];publication:DraftWorkbenchDeferred['publication']}) {
+  const {publishPack}=await publication;
+  const published=publishPack?.outputPublished??publishPack?.status==='published';
+  return project.imported||published ? <DraftTopbar project={project} published={published}/> : null;
+}
+async function DeferredMaterials({projectId,thesis,data}:{projectId:string;thesis:DraftWorkbenchVm['thesis'];data:DraftWorkbenchDeferred['materials']}) {
+  const {ammo,ammoReadError}=await data;
+  return <><AmmoDrawer projectId={projectId} ammo={ammo} readError={ammoReadError}/><ThesisSkeletonPanel thesis={thesis} ammo={ammo.map(item=>({id:item.id,title:item.title,kind:item.kind}))}/></>;
+}
+async function DeferredReview({vm,report}:{vm:DraftWorkbenchVm;report:DraftWorkbenchDeferred['review']}) {
+  const {scriptReview,scriptReviewReadError}=await report;
+  return scriptReviewReadError ? <DeferredReadError message={scriptReviewReadError} label="脚本审阅"/> : <ScriptReviewGate projectId={vm.project.id} projectTitle={vm.project.title} outputId={vm.outputId} currentVersion={vm.script.versionCount} initialReport={scriptReview}/>;
+}
+async function DeferredPublication({vm,data,report}:{vm:DraftWorkbenchVm;data:DraftWorkbenchDeferred['publication'];report:DraftWorkbenchDeferred['review']}) {
+  const [publication,review]=await Promise.all([data,report]);
+  return <PublishPackSection {...publication} {...review} unlocked={vm.publishUnlocked} projectId={vm.project.id} projectTitle={vm.project.title} outputId={vm.outputId} scriptVersion={vm.script.versionCount}/>;
+}
+
 // ---------------------------------------------------------------------------
 // 发布包区(SPEC §4.3:脚本有版本即解锁;无发布行 = 引导文案)
 // ---------------------------------------------------------------------------
@@ -227,6 +259,9 @@ function PublishPackSection({
   blindPrediction,
   scriptReview,
   scriptVersion,
+  publicationReadError,
+  predictionReadError,
+  scriptReviewReadError,
 }: {
   publishPack: DraftWorkbenchVm["publishPack"];
   projectCoverAssetId: string | null;
@@ -237,7 +272,11 @@ function PublishPackSection({
   blindPrediction: DraftWorkbenchVm["blindPrediction"];
   scriptReview: DraftWorkbenchVm["scriptReview"];
   scriptVersion: number;
+  publicationReadError?: string | null;
+  predictionReadError?: string | null;
+  scriptReviewReadError?: string | null;
 }) {
+  if(publicationReadError)return <section id="publish" data-slot="draft-publish-pack" className="rounded-xl border border-border/70 bg-surface p-3"><h2 className="mb-2 font-semibold">发布信息</h2><DeferredReadError message={publicationReadError}/></section>;
   const outputPublished =
     publishPack?.outputPublished ?? publishPack?.status === "published";
   const publishedAt =
@@ -326,7 +365,7 @@ function PublishPackSection({
         />
       ) : null}
       {/* [T-086 软门] 发布前动作旁的合规软门提示(不阻断,一键跳审核门)。 */}
-      {unlocked ? (
+      {scriptReviewReadError ? <DeferredReadError message={scriptReviewReadError} label="脚本审阅"/> : unlocked ? (
         <ReviewSoftGateHint
           report={scriptReview}
           currentVersion={scriptVersion}
@@ -334,7 +373,7 @@ function PublishPackSection({
         />
       ) : null}
       {/* [T-063e] 飞轮第一步:发布前先盲预测(解锁后常驻;已预测显预测分/锁定态)。 */}
-      {unlocked ? (
+      {predictionReadError ? <DeferredReadError message={predictionReadError} label="盲预测"/> : unlocked ? (
         <BlindPredictRow
           projectId={projectId}
           projectTitle={projectTitle}

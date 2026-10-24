@@ -62,3 +62,29 @@ it('精简公众号默认使用无需填写占位符的版式，已有主题保�
  const view=render(<NoteRelayEditor {...props} simplified value={doc}/>);await connected();expect(h.request.mock.calls.find(([op])=>op==='load')?.[1].layout.themeId).toBe('graphite-minimal');
  view.rerender(<NoteRelayEditor {...props} simplified value={{...doc,nativeLayout:{...defaultLayout('wechat'),themeId:'moyu-green'}}}/>);await waitFor(()=>expect(h.request.mock.calls.filter(([op])=>op==='load').at(-1)?.[1].layout.themeId).toBe('moyu-green'));
 });
+
+function withImages(count:number):ArticleDocument{return {...doc,imageUses:Array.from({length:count},(_,index)=>({sectionId:'s',assetId:`asset-${index}`,assetFileId:`file-${index}`,sourceKind:'existing' as const,reviewState:'selected' as const}))};}
+it('慢图片以4路上限并发，乱序完成仍保原投影顺序并局部降级',async()=>{
+ const pending=new Map<string,(value:any)=>void>();let inFlight=0,peak=0;
+ h.getAssetFileDownloadUrl.mockImplementation(async({params}:any)=>({url:params.assetId}));
+ vi.stubGlobal('fetch',vi.fn((url:string)=>{inFlight++;peak=Math.max(peak,inFlight);return new Promise(resolve=>pending.set(url,value=>{inFlight--;resolve(value);}));}));
+ render(<NoteRelayEditor projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={withImages(6)} onLayoutChange={()=>{}}/>);
+ await waitFor(()=>expect(pending.size).toBe(4));expect(h.request).not.toHaveBeenCalled();
+ const response=(body:string)=>({ok:true,blob:async()=>new Blob([body],{type:'image/png'})});
+ await act(async()=>{pending.get('asset-2')!(response('2'));pending.get('asset-0')!({ok:false});});await waitFor(()=>expect(pending.size).toBe(6));
+ await act(async()=>{for(const index of [5,3,4,1])pending.get(`asset-${index}`)!(response(String(index)));});await connected();
+ expect(peak).toBe(4);expect(h.request.mock.calls.find(([op])=>op==='load')?.[1].images.map((image:any)=>image.source)).toEqual([1,2,3,4,5].map(i=>`creatoros-asset:asset-${i}:file-${i}`));expect(screen.getByRole('alert')).toHaveTextContent('1 张图片');
+});
+
+it('改稿取消旧图片批次，忽略不响应signal的迟到下载且卸载继续取消',async()=>{
+ const pending:Array<{signal:AbortSignal;finish:(value:any)=>void}>=[];h.getAssetFileDownloadUrl.mockImplementation(async()=>({url:'image'}));vi.stubGlobal('fetch',vi.fn((_url,options)=>new Promise(resolve=>pending.push({signal:options.signal,finish:resolve}))));
+ const view=render(<NoteRelayEditor projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={withImages(1)} onLayoutChange={()=>{}}/>);await waitFor(()=>expect(pending).toHaveLength(1));
+ view.rerender(<NoteRelayEditor projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={{...doc,title:'新正文'}} onLayoutChange={()=>{}}/>);await connected();expect(pending[0]!.signal.aborted).toBe(true);
+ await act(async()=>pending[0]!.finish({ok:true,blob:async()=>new Blob(['old'],{type:'image/png'})}));expect(h.request.mock.calls.filter(([op])=>op==='load')).toHaveLength(1);expect(h.request.mock.calls.find(([op])=>op==='load')?.[1].title).toBe('新正文');
+ view.rerender(<NoteRelayEditor projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={withImages(1)} onLayoutChange={()=>{}}/>);await waitFor(()=>expect(pending).toHaveLength(2));view.unmount();expect(pending[1]!.signal.aborted).toBe(true);await act(async()=>pending[1]!.finish({ok:true,blob:async()=>new Blob(['late'],{type:'image/png'})}));expect(h.request.mock.calls.filter(([op])=>op==='load')).toHaveLength(1);
+});
+
+it('图片类型及25MiB大小检查失败只降级对应图片，正文仍加载',async()=>{
+ h.getAssetFileDownloadUrl.mockImplementation(async({params}:any)=>({url:params.assetId}));vi.stubGlobal('fetch',vi.fn(async(url:string)=>({ok:true,blob:async()=>url==='asset-0'?new Blob(['html'],{type:'text/html'}):Object.defineProperty(new Blob(['pixels'],{type:'image/png'}),'size',{value:26*1024*1024})})));
+ render(<NoteRelayEditor projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={withImages(2)} onLayoutChange={()=>{}}/>);await connected();expect(screen.getByRole('alert')).toHaveTextContent('2 张图片');expect(h.request.mock.calls.find(([op])=>op==='load')?.[1]).toMatchObject({title:'真实稿',images:[]});
+});

@@ -222,7 +222,9 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
     async getArticle(ctx, outputId) {
       const {row, artifact} = await anchor(ctx, outputId);
       const versions = await deps.artifacts(db).listVersions(ctx, artifact.id);
-      const current = await documentFor(ctx, outputId);
+      const version = versions.find((v) => v.id === artifact.currentVersionId);
+      if (!version) throw new ArticleOwnership("文章版本不存在");
+      const current = {versionId: version.id, document: articleDocument.parse(version.contentData)};
       const scriptContext=await optionalScriptContext(ctx,row.projectId,deps);
       return {projectId: row.projectId, outputId, artifactId: artifact.id, currentVersionId: current.versionId, current: current.document,
         ...(scriptContext?{scriptContext}:{}),versions: versions.map((v) => ({id: v.id, versionNumber: v.versionNumber, createdAt: v.createdAt, changeSummary: v.changeSummary}))};

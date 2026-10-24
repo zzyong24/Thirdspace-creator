@@ -13,6 +13,7 @@ type Metadata={themes:Array<{id:string;name:string}>;images:Array<{key:string;la
 type ExportAction='copy-html'|'html'|'copy-text'|'copy-png'|'png'|'zip';
 type Delivery={blob:Blob;plainText?:string;filename?:string};
 const empty:Metadata={themes:[],images:[],pageIndex:0,pageCount:0,selectedImage:''};
+const imageDownloadConcurrency=4;
 function Choice({label,value,items,onChange,disabled}:{label:string;value:string;items:Array<{id:string;name:string}>;onChange:(value:string)=>void;disabled?:boolean}){
  return <label className="space-y-1 text-xs text-muted-foreground"><span>{label}</span><Select value={value} onValueChange={onChange} disabled={disabled}><SelectTrigger aria-label={label} className="min-w-32"><SelectValue/></SelectTrigger><SelectContent>{items.map(item=><SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></label>;
 }
@@ -31,17 +32,33 @@ function NoteRelayEditorSession(props:Props){
  const initialize=React.useCallback(async()=>{
   const active=editor.current;if(!active||!ready.current||!alive.current)return;
   loading.current?.abort();const abort=new AbortController();loading.current=abort;const generation=++sequence.current,snapshot=latest.current;
-  setRendered('');const images:Array<{source:string;blob:Blob}>=[],failures:string[]=[];
+  setRendered('');const images:Array<{source:string;blob:Blob}|undefined>=new Array(snapshot.projection.images.length),failures:string[]=[];
   try{
-   for(const image of snapshot.projection.images){
-    abort.signal.throwIfAborted();const source=assetSource(image);
-    try{let blob=assets.current.get(source);if(!blob){const file=await client.getAssetFileDownloadUrl({params:image,query:undefined,body:undefined});abort.signal.throwIfAborted();const response=await fetch(file.url,{credentials:'omit',signal:abort.signal});if(!response.ok)throw new Error('素材下载失败');blob=await response.blob();abort.signal.throwIfAborted();if(!blob.type.startsWith('image/')||blob.size>25*1024*1024)throw new Error('素材不是受支持的图片或超过 25 MiB');assets.current.set(source,blob);}images.push({source,blob});}
-    catch(reason){abort.signal.throwIfAborted();failures.push(reason instanceof Error?reason.message:'图片读取失败');}
+   let nextIndex=0;
+   async function downloadImages(){
+    while(nextIndex<snapshot.projection.images.length){
+     abort.signal.throwIfAborted();const index=nextIndex++,image=snapshot.projection.images[index]!,source=assetSource(image);
+     try{
+      let blob=assets.current.get(source);
+      if(!blob){
+       const file=await client.getAssetFileDownloadUrl({params:image,query:undefined,body:undefined});abort.signal.throwIfAborted();
+       const response=await fetch(file.url,{credentials:'omit',signal:abort.signal});if(!response.ok)throw new Error('素材下载失败');
+       blob=await response.blob();abort.signal.throwIfAborted();
+       if(!blob.type.startsWith('image/')||blob.size>25*1024*1024)throw new Error('素材不是受支持的图片或超过 25 MiB');
+       if(generation!==sequence.current||snapshot.digest!==latest.current.digest||!alive.current)return;
+       assets.current.set(source,blob);
+      }
+      images[index]={source,blob};
+     }
+     catch(reason){abort.signal.throwIfAborted();failures.push(reason instanceof Error?reason.message:'图片读取失败');}
+    }
    }
+   await Promise.all(Array.from({length:Math.min(imageDownloadConcurrency,snapshot.projection.images.length)},()=>downloadImages()));
    if(generation!==sequence.current||snapshot.digest!==latest.current.digest||editor.current!==active||!alive.current)return;
    setAssetError(failures.length?`有 ${failures.length} 张图片无法读取；正文和版式仍可保存，请重新选图后导出。`:null);
-   const result=await active.request<Metadata>('load',{platform:snapshot.platform,title:snapshot.projection.title,markdown:snapshot.projection.markdown,layout:snapshot.layout,images},{signal:abort.signal});
-   if(generation===sequence.current&&snapshot.digest===latest.current.digest&&alive.current){setMeta(result);setRendered(snapshot.digest);onPreviewReady.current?.({pageCount:result.pageCount,pageIndex:result.pageIndex});}
+   // 原生协议以整批load重建预览及Blob映射，不支持单图增量回填。
+   const result=await active.request<Metadata>('load',{platform:snapshot.platform,title:snapshot.projection.title,markdown:snapshot.projection.markdown,layout:snapshot.layout,images:images.filter(image=>image!==undefined)},{signal:abort.signal});
+   if(generation===sequence.current&&snapshot.digest===latest.current.digest&&editor.current===active&&alive.current){setMeta(result);setRendered(snapshot.digest);onPreviewReady.current?.({pageCount:result.pageCount,pageIndex:result.pageIndex});}
   }catch(reason){if(!abort.signal.aborted&&alive.current)setError(reason instanceof Error?reason.message:'预览未完成');}
  },[]);
  React.useEffect(()=>{const assetCache=assets.current;const renderSequence=sequence;alive.current=true;return()=>{alive.current=false;ready.current=false;renderSequence.current++;loading.current?.abort();assetCache.clear();};},[]);
