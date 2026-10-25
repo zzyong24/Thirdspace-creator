@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "runId": "77b38a47-b23d-4d6f-9656-4428e1037142",
+  "status": "pass",
+  "startedAt": "2026-10-24T13:47:50.681Z",
+  "gitHead": "cfd165baad057b73898a97263f43754d40896082",
+  "sourceSha": "7e885cd24e1173162633d95ed2c9d4b4c475b17f1eff23a100edbb9ad05d4592",
+  "sources": {
+    "backend/src/modules/articles/articles.service.ts": "5d204e51e9da83b168a0b3a0e84847ad8b31c2fe09c2088e4bfa52bf35501812",
+    "frontend/src/app/(creator)/projects/[projectId]/article/page.tsx": "0abc0c56d386382c1df8ac9f0784ec9267561b4ee4871b52aed9d4a09e8f873b",
+    "frontend/src/app/(creator)/projects/[projectId]/page.tsx": "b6a419b3180f7a4534ae7bfb70f0ce1197bbf03e12f07870476a8461365227b0",
+    "frontend/src/app/(creator)/projects/[projectId]/production/page.tsx": "b6bac460e59d2751b3968bf8ac8a46b0e07237f120240c30452c60fb0ebbb675",
+    "frontend/src/features/article/article-workbench.tsx": "f3108546acff1f353f02bf7f0d90535fa051e0c8d4ef00b1dcc43f46d42656b3",
+    "frontend/src/features/article/doocs-article-editor.tsx": "7a53612f33b1d5ea474b2ffb028881964c4943fa9d08e72fc0e1abba469b91dc",
+    "frontend/src/features/draft-workbench/draft-workbench-data.ts": "6ea49343fd52e2a57dc8c291edbaea68313d6dfd0c656fd166ce2beb58875085",
+    "frontend/src/features/draft-workbench/draft-workbench-deferred.tsx": "644e9c0fb2eccb85365bde6f5e0821b561c6c97a38560138145c79186dbafc4d",
+    "frontend/src/features/draft-workbench/draft-workbench-page.tsx": "0de344071a1ae6d1f2aa7d9324f9bbf8519517ea7616cb89e27b6f918ada0e38",
+    "frontend/src/features/projects/project-route-data.ts": "35ffa3086964f97fa4c170436c2d9f5d6c5ce3561c30874cb2e8ce7f1f77a787",
+    "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx": "8a13d879eb9e5937b94bb0ec12aed5422496d2b9b6a67a6ef981760d028e9146",
+    "frontend/src/features/script/script-structure-view.tsx": "2fa910e1d2476dc44982b559b0dd54ebaab3fa7e3b4274d0e42b3ef09b2dee0d"
+  },
+  "sourceGitStatus": "",
+  "spaceId": 54,
+  "origin": "http://127.0.0.1:60919",
+  "groupId": "grp-d544fcdd-29",
+  "projectId": "project-intake-502186e3bf0ee5d16d07935c82083c64",
+  "articleId": "output-d544fcdd-50",
+  "graphicId": "output-d544fcdd-62",
+  "videoId": "output-d544fcdd-74",
+  "method": "同一Ego TaskSpace真实点击；MutationObserver从DOM click计时；正式隔离backend/PGlite；未mock请求或正文；每次重新导航及下载，不读取旧PASS",
+  "limitations": [
+    "Next dev暖态，不是当前安装版",
+    "没有修改前同条件浏览器基线",
+    "视频只有本次隔离空工程，不测试真实媒体或模型",
+    "范围外缺失scriptReviews报告可返回404；切离的附属请求可Abort"
+  ],
+  "samples": [
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64/article?outputId=output-d544fcdd-50",
+      "rootAtMs": 333.1999999284744,
+      "readyAtMs": 438.2999999523163,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1366-article.txt",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "target": "article"
+    },
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64/outputs/output-d544fcdd-62/image",
+      "rootAtMs": 183.80000007152557,
+      "readyAtMs": 211.30000007152557,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1366-graphic.txt",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "target": "graphic"
+    },
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64/production?outputId=output-d544fcdd-74",
+      "rootAtMs": 214.29999995231628,
+      "readyAtMs": 448.39999997615814,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1366-video.txt",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "target": "video"
+    },
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64",
+      "rootAtMs": 220,
+      "readyAtMs": 220,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1366-script.txt",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "target": "script"
+    },
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64/article?outputId=output-d544fcdd-50",
+      "rootAtMs": 895.8999999761581,
+      "readyAtMs": 2818.2000000476837,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1024-article.txt",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "target": "article"
+    },
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64/outputs/output-d544fcdd-62/image",
+      "rootAtMs": 202.20000004768372,
+      "readyAtMs": 216.60000002384186,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1024-graphic.txt",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "target": "graphic"
+    },
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64/production?outputId=output-d544fcdd-74",
+      "rootAtMs": 149.39999997615814,
+      "readyAtMs": 149.39999997615814,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1024-video.txt",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "target": "video"
+    },
+    {
+      "url": "http://127.0.0.1:60919/projects/project-intake-502186e3bf0ee5d16d07935c82083c64",
+      "rootAtMs": 215.79999995231628,
+      "readyAtMs": 215.79999995231628,
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "alerts": [],
+      "textPath": "browser-gate-1024-script.txt",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "target": "script"
+    }
+  ],
+  "exports": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "clicksOnExportButton": 1,
+      "hiddenNativeBefore": 0,
+      "downloadFilename": "Tab切换文章真实验收-公众号物料.zip",
+      "elapsedMs": 2763,
+      "failure": null,
+      "manifest": {
+        "outputId": "output-d544fcdd-50",
+        "versionId": "artifactversion-d544fcdd-60",
+        "title": "Tab切换文章真实验收",
+        "imageOrder": [],
+        "layout": "base-theme",
+        "generatedAt": "2026-10-24T13:47:56.020Z"
+      },
+      "archivePath": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1404/browser-gate-1366-article.zip",
+      "archiveSha": "393b42095778083e2bd19776b04f713a7d9f0f31cc51720c86bc9ccebd62bc6e"
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "clicksOnExportButton": 1,
+      "hiddenNativeBefore": 0,
+      "downloadFilename": "Tab切换文章真实验收-公众号物料.zip",
+      "elapsedMs": 815,
+      "failure": null,
+      "manifest": {
+        "outputId": "output-d544fcdd-50",
+        "versionId": "artifactversion-d544fcdd-60",
+        "title": "Tab切换文章真实验收",
+        "imageOrder": [],
+        "layout": "base-theme",
+        "generatedAt": "2026-10-24T13:48:09.783Z"
+      },
+      "archivePath": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1404/browser-gate-1024-article.zip",
+      "archiveSha": "15450f676c6a0b7ceb43b1a587e7c5ad00bac7b1f848f64400c6d4886370c7d1"
+    }
+  ],
+  "finishedAt": "2026-10-24T13:48:15.579Z"
+}

@@ -1,0 +1,30 @@
+{
+  "note": "原始命令日志保留原字节压缩归档；解压到original路径即可复原。没有修改原日志或旧验收收据。",
+  "files": {
+    "docs/verification/t1404/backend-red.log": {
+      "archive": "docs/verification/t1404/backend-red.log.gz",
+      "originalSha256": "d468ae097c9295d4b9f16c1baaa0d66cabb746eb427e9ce5dd3e458c9b749bb6",
+      "archiveSha256": "1890cef42c9a34e99b46022e6bdb99fc3be97d58016a526e8208da309490e9a4"
+    },
+    "docs/verification/t1404/browser-final-verify.log": {
+      "archive": "docs/verification/t1404/browser-final-verify.log.gz",
+      "originalSha256": "5818eb279aa54455f05f62aba20d01712fd9ee971ef50a2ffa3b69f91c9e1ae6",
+      "archiveSha256": "73f3799fcab100f858a4cc4d4350a6d135665a3aef4da12fe6a47ebc9aefa9a3"
+    },
+    "docs/verification/t1404/editor-red.log": {
+      "archive": "docs/verification/t1404/editor-red.log.gz",
+      "originalSha256": "be8108165963d9d916e7aa020d0409f09b3ac66f238d33b179f770a44aaeb431",
+      "archiveSha256": "eefdf9db4d0de3c3bce8750d10c75a850272076b9d3a65ea2966ffe3d2e00348"
+    },
+    "docs/verification/t1404/integration-focused.log": {
+      "archive": "docs/verification/t1404/integration-focused.log.gz",
+      "originalSha256": "6c4a4e1e9c61678425d43ae05ad2c1724a441705e6302418b26f9bd89fb8e963",
+      "archiveSha256": "9ead499a4a352291a7660bb36597caed53880ed573ab4686e016cfc28449d388"
+    },
+    "docs/verification/t1404/root-red.log": {
+      "archive": "docs/verification/t1404/root-red.log.gz",
+      "originalSha256": "1316febcd1d9630902cecae2cc8e90a905b25788c5e635ce40ae7519dec4bc4a",
+      "archiveSha256": "e6edbdcb5b705731d17941a383f6b75434590f19e3a932e7a38c97c6fb7e528d"
+    }
+  }
+}
