@@ -14,6 +14,7 @@ import type {ProjectPreparationDeps,PreparationContent} from '../../modules/proj
 import {projectIntakeDigest} from '../../modules/projects/project-intake.service';
 import {ConflictError} from '../../errors';
 import {ProjectPreparationInputRequired} from '../../modules/projects/project-preparation-input-required';
+import {buildProjectPreparationBriefSeed} from './project-preparation-brief-seed';
 const object=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
 const briefFieldsSchema=ENDPOINTS.getProject.response.shape.briefDetail.unwrap().pick({targetAudience:true,contentGoal:true,contentFormat:true,coreMessage:true,durationEstimate:true,successCriteria:true}).strict();
 const briefSuggestionSchema=briefFieldsSchema.refine(value=>Object.keys(value).length>0&&Object.values(value).every(text=>typeof text==='string'&&text.trim().length>0));
@@ -26,9 +27,10 @@ export function createProjectPreparationChat(db:Db,deps:ServiceDeps&{assemble(ct
     if(task.kind!=='project_preparation'||task.ownerId!==project.id||task.userId!==ctx.userId||task.accountId!==(ctx.accountId??null)||task.groupId!==(ctx.groupId??null))throw new ConflictError('准备编导归属不符');
     const cp=object(task.checkpoint),submissions=object(cp.chatSubmissions),prior=object(submissions[key]);
     if(typeof prior.conversationId==='string'&&typeof prior.sourceMessageId==='string')return {conversationId:prior.conversationId,sourceMessageId:prior.sourceMessageId};
+    const content=buildProjectPreparationBriefSeed(project);
     const repo=createAiRepository(tx as unknown as Db,{...deps,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,membershipVersion:ctx.membershipVersion});
     const conversation=await repo.createConversation({title:'项目准备资料候选',projectId:project.id,scope:`project:${project.id}`});
-    const message=await repo.createMessage(conversation.id,{role:'user',content:'请根据本项目已有资料，用 brief.fill 提出资料补全候选。保留已有事实，缺少的内容明确留空，等待我采纳。',attachments:[],modelMetadata:{}});
+    const message=await repo.createMessage(conversation.id,{role:'user',content,attachments:[],modelMetadata:{}});
     const anchor={conversationId:conversation.id,sourceMessageId:message.id};
     await createPersistentTaskService(tx as unknown as Db,deps).saveCheckpoint({taskId:task.id,...claim.lease,checkpoint:{...cp,chatSubmissions:{...submissions,[key]:anchor}}});return anchor;
    });

@@ -57,3 +57,19 @@
 - 此后根代理的独评、类型、worker build、boundary与重新签名打包/安装/实机模型验证待另记；本段不把尚未发生的步骤标PASS。
 
 根代理补修门禁实测：独立源码复核通过；新JSON夹具类型修正后宿主测试10/10（与先前63项有重叠，不相加）；backend完整类型检查45.398秒、exit0；Worker构建2.322秒、exit0（保留原vendor import.meta警告）；boundary仍5=原基线5、无新增违规。安装过的6c候选和真实7项限定通过/I-04失败报告单独保留为历史。本次宿主补修源码仍须另行同源prepare、既有根签名、package、安装及新任务真实模型复验；没有热改安装目录或篡改旧任务回执。
+
+## 2026-10-26：99233实机partial后自由简报到新准备请求的补修
+
+已装99233真实空资料保护与一次明确恢复准入成立，但第二次模型仍给出空资料，非空候选/采纳未完成，实机结果保留partial。公开PATCH/GET已证明237字节自由简报保存，后续只读源码定位到固定准备seed未显式带入自由brief；没有第三次模型请求或改写旧310父/回执。
+
+新增仅preparation的用户资料seed，保留自由原文和已有规划字段，正式字段优先、资料非系统指令、候选需采纳。单次64KiB是UTF-8序列化消息专用保守上限，不冒称既有4M字节、不改全局预算；超限不创建源消息或模型child，原文保留，缩短后沿既有公开重试路径继续。
+
+公开transport链红测 `i04-free-brief-public-red.log` 2失败5跳过；首服务红测2失败5通过另保留。最小补修后 `i04-free-brief-source-green.log` 2文件13/13、19.51秒，覆盖实际PATCH/GET/start→新源消息→正式模型消息转换与入队冻结、已有规划/其它项目隔离、旧历史/期限/预算及重复操作；中文/JSON转义超限零新增与缩短后恢复。详细边界见 `C_I04_FREE_BRIEF_SEED_FIX.md`；不能把本次源码绿测覆盖已装99233的partial，也未以合成非空provider输出代替真实模型结果。
+
+同一终态扩大受影响回归 `i04-free-brief-regression.log` 4文件71/71、34.80秒，包含新seed/真实terminal完整链、原preparation service及正式candidate host。与先前13项重叠，不累加；完整类型/worker/boundary及再次打包安装实机由根代理另记。
+
+后续根backend类型检查 `backend-typecheck-20261025T182813Z.log` 实际失败于新增公开transport测试9处缺query/GET缺body。第一次补query:{}与GET undefined body后，运行测试13/13（`i04-free-brief-typefix-test.log`，19.61秒）通过，但第二次 `backend-typecheck-20261025T183031Z.log` 仍9处失败，不能把这次中间测试绿写成类型通过。
+
+核明EndpointInput条件类型与这些endpoint无query schema后，仅把9处改为query:undefined，GET保持body:undefined，无any/新强转或生产改动。C按授权实际执行完整backend类型检查：`backend-typecheck-20261025T183215Z.json/.log`，47.228秒、exit0；最终受影响 `i04-free-brief-typefix-query-final-test.log` 2文件13/13、20.61秒。两轮真实类型失败日志均保留，不倒填、不相加测试数量。
+
+根代理补充门禁实测：本次生产实现 Worker 构建退出0（2.009秒，保留既有 vendor import.meta 警告）；boundary 退出0，仍5条原基线、无新增；独立源链审查通过。此结论仅为源码/隔离检查，后续新源码提交、构建、安装及真实模型复验另行记录，不覆盖99233实机partial。
