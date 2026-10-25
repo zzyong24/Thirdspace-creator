@@ -14,7 +14,7 @@ import * as React from "react";
 
 import {
   invalidateAssetPreviewUrl,
-  resolveAssetPreviewUrl,
+  acquireAssetPreviewUrl,
 } from "@/components/resources/asset-preview-url";
 import { MediaPreview } from "@/components/resources/media-preview";
 import type { ResourceAsset } from "@/components/resources/types";
@@ -31,13 +31,15 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
     setUrl(null);
     setFailed(false);
     // [T-061] 共享缓存:与网格缩略图同一素材只换一次签名 URL。
-    void resolveAssetPreviewUrl(asset.id).then((u) => {
+    const preview = acquireAssetPreviewUrl(asset.id, {priority: "active"});
+    void preview.promise.then((u) => {
       if (cancelled) return;
       if (u) setUrl(u);
       else setFailed(true);
     });
     return () => {
       cancelled = true;
+      preview.release();
     };
   }, [asset.id, retryNonce]);
 

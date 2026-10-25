@@ -25,6 +25,7 @@ import {
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createPersistentTaskService } from "../execution";
+import { createAccountGroupService } from "../platform-account/account-group.service";
 import { createIntelligenceService } from "./intelligence.service";
 
 const ctx: RequestContext = {
@@ -1238,6 +1239,131 @@ describe("T-482 内容雷达领域主链", () => {
         { itemId, reason: "TRANSCRIPT_LOCKED" },
       ]);
     } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-1403] 来源计数按作品去重，来源/分类筛选和分页保留全来源计数且不串组", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    const groups = createAccountGroupService({ db, now: d.now, nextId: d.nextId });
+    try {
+      const groupA = await groups.create(ctx, { name: "来源甲组", idempotencyKey: "count-group-a" });
+      const groupB = await groups.create(ctx, { name: "来源乙组", idempotencyKey: "count-group-b" });
+      const a = { ...ctx, accountId: null, groupId: groupA.id };
+      const b = { ...ctx, accountId: null, groupId: groupB.id };
+      const collection = await service.createCollection(a, { name: "来源分类", parentId: null, idempotencyKey: "count-collection" });
+      const createSource = (scope: RequestContext, key: string, collectionId: string | null = null) => service.createSource(scope, {
+        collectionId, type: "rss", config: { type: "rss", url: `https://example.test/${key}.xml` },
+        monitorEnabled: false, runInitial: true, idempotencyKey: key,
+      });
+      const first = await createSource(a, "count-source-a", collection.id);
+      const second = await createSource(a, "count-source-b");
+      const foreign = await createSource(b, "count-source-foreign");
+      const seed = (scope: RequestContext, key: string) => service.seedItemForTest(scope, {
+        canonicalUrl: `https://example.test/video/${key}`, externalId: key, title: key,
+      });
+      const older = await seed(a, "单来源作品");
+      d.clock.value = "2026-07-24T12:00:00.000Z";
+      const shared = await seed(a, "跨来源作品");
+      const withoutObservation = await seed(a, "未关联来源作品");
+      const otherGroupItem = await seed(b, "其他组作品");
+      const observation = (id: string, scope: RequestContext, itemId: string, source: typeof first) => ({
+        id, userId: scope.userId, accountId: scope.accountId ?? null, groupId: scope.groupId,
+        itemId, sourceId: source.source.id, runId: source.run!.id, externalRef: itemId,
+        firstSeenAt: d.now(), lastSeenAt: d.now(), discoveryContext: {},
+      });
+      await db.insert(itemSourceObservations).values([
+        observation("count-z", a, shared, first),
+        observation("count-a", a, shared, first),
+        observation("count-b", a, shared, second),
+        observation("count-older", a, older, first),
+        observation("count-foreign", b, otherGroupItem, foreign),
+        // 错组关联仍有真实 source/run 父实体，必须由现有工作区守卫排除。
+        observation("count-cross-group", b, shared, foreign),
+        { ...observation("count-cross-user", a, shared, first), userId: "foreign-user" },
+      ]);
+
+      const page = await service.listItems(a, { sourceId: first.source.id, sort: "newest", limit: 1, offset: 0 });
+      expect(page.total).toBe(2);
+      expect(page.rows).toHaveLength(1);
+      expect(page.rows[0]).toMatchObject({ item: { id: shared }, sourceCount: 2 });
+      const nextPage = await service.listItems(a, { sourceId: first.source.id, sort: "newest", limit: 1, offset: 1 });
+      expect(nextPage.total).toBe(2);
+      expect(nextPage.rows[0]).toMatchObject({ item: { id: older }, sourceCount: 1 });
+      const byCollection = await service.listItems(a, { collectionId: collection.id, query: "跨来源" });
+      expect(byCollection.total).toBe(1);
+      expect(byCollection.rows[0]).toMatchObject({ item: { id: shared }, sourceCount: 2 });
+      const all = await service.listItems(a);
+      expect(all.total).toBe(3);
+      expect(all.rows.find(row => row.item.id === withoutObservation)?.sourceCount).toBe(1);
+      expect((await service.listItems(b)).rows).toMatchObject([{ item: { id: otherGroupItem }, sourceCount: 1 }]);
+      await expect(service.listItems(b, { sourceId: first.source.id })).rejects.toThrow();
+      expect((await service.listItems(ctxAccount2)).total).toBe(0);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-1403] 来源计数读取 observation 字段保持线性预算", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    let selectSpy: ReturnType<typeof vi.spyOn> | undefined;
+    try {
+      const source = await service.createSource(ctx, {
+        collectionId: null, type: "rss", config: { type: "rss", url: "https://example.test/linear-count.xml" },
+        monitorEnabled: false, runInitial: true, idempotencyKey: "linear-count-source",
+      });
+      const count = 64;
+      const itemIds: string[] = [];
+      for (let index = 0; index < count; index++) {
+        itemIds.push(await service.seedItemForTest(ctx, {
+          canonicalUrl: `https://example.test/linear-count/${index}`, externalId: `linear-${index}`, title: `线性计数 ${index}`,
+        }));
+      }
+      await db.insert(itemSourceObservations).values(itemIds.map((itemId, index) => ({
+        id: `linear-observation-${index}`, userId: ctx.userId, accountId: ctx.accountId!,
+        itemId, sourceId: source.source.id, runId: source.run!.id, externalRef: itemId,
+        firstSeenAt: d.now(), lastSeenAt: d.now(), discoveryContext: {},
+      })));
+      let sourceReads = 0;
+      let observedRows = 0;
+      const select = db.select.bind(db);
+      selectSpy = vi.spyOn(db, "select").mockImplementation((...args: Parameters<typeof db.select>) => {
+        const builder = select(...args);
+        const from = builder.from.bind(builder);
+        vi.spyOn(builder, "from").mockImplementation((table: any) => {
+          const query = from(table);
+          if (table === itemSourceObservations) {
+            const then = query.then.bind(query);
+            // 保留真实 SQL 及其工作区过滤，只在返回的 observation 上观测访问量。
+            vi.spyOn(query, "then").mockImplementation(((resolve: any, reject: any) => then((rows: any[]) => {
+              observedRows += rows.length;
+              for (const row of rows) {
+                const sourceId = row.sourceId;
+                Object.defineProperty(row, "sourceId", { enumerable: true, get: () => { sourceReads++; return sourceId; } });
+              }
+              return resolve?.(rows);
+            }, reject)) as typeof query.then);
+          }
+          return query;
+        });
+        return builder;
+      });
+      const result = await service.listItems(ctx);
+      expect(result.total).toBe(count);
+      expect(result.rows).toHaveLength(20);
+      expect(result.rows.every(row => row.sourceCount === 1)).toBe(true);
+      expect(observedRows).toBe(count);
+      // 宽松的每行预算允许常数倍遍历，但会抓住逐行重扫全部 observation 的回归。
+      expect(sourceReads).toBeGreaterThanOrEqual(count);
+      expect(sourceReads).toBeLessThanOrEqual(count * 8);
+    } finally {
+      selectSpy?.mockRestore();
       await client.close();
     }
   });

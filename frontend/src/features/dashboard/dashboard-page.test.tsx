@@ -99,6 +99,19 @@ describe("DashboardPage", () => {
     expect(heading.textContent ?? "").not.toMatch(/Zyong/i);
   });
 
+  it("组首页展示采集作品与适用指标，系统发布和全组项目分别标明", async () => {
+    const { buildDashboardViewModel } = await import("@/fixtures/selectors");
+    const workspace:import('../group-workspace/workspace-query').GroupWorkspace={groupId:'g',groupName:'本人账号组',status:'active',platform:'xiaohongshu',accountId:null,startDate:'2026-09-25',endDate:'2026-10-24',generatedAt:'2026-10-24T12:00:00Z',contentCount:2,publicationCount:3,pendingCount:1,collectedAccounts:1,totalAccounts:1,videoViews:null,articleReads:null,browseViews:3692,followers:null,latestCapturedAt:null,coverage:'',metricMode:'published_and_collected_in_period_cumulative',accounts:[{id:'x',name:'本人',platform:'xiaohongshu',historical:false,archived:false}],platforms:[],collected:{state:'ready',catalogWorkCount:13,unattributableWorkCount:0,deduplicatedWorkCount:0,metrics:[]}};
+    const viewModel={...buildDashboardViewModel(),workspace,metrics:[{id:'g-content',label:'独立内容数',value:'65',delta:'',trend:'flat' as const,tone:'neutral' as const},{id:'g-likes',label:'点赞（次）',value:'57',delta:'',trend:'flat' as const,tone:'neutral' as const}]};
+    const {container}=await renderDashboard({viewModel});
+    const summary=container.querySelector('[data-slot="dashboard-summary-metrics"]')!;
+    expect(within(summary as HTMLElement).getByText('已采集作品（条）').closest('[data-slot="metric-card"]')).toHaveTextContent('13');
+    expect(within(summary as HTMLElement).getByText('累计浏览（次）').closest('[data-slot="metric-card"]')).toHaveTextContent('3,692');
+    expect(summary).not.toHaveTextContent('文章阅读');expect(summary).toHaveTextContent('57');
+    expect(screen.getByText(/CreatorOS 已发布内容：2 期/)).toBeInTheDocument();
+    expect(screen.getByText(/CreatorOS 全组项目数：65/)).toBeInTheDocument();
+  });
+
   it("renders exactly five metric cards in a single summary row", async () => {
     const { container } = await renderDashboard();
     const summary = container.querySelector(

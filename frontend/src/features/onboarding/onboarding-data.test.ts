@@ -4,7 +4,8 @@ const publicReads=vi.hoisted(()=>vi.fn());
 const client=vi.hoisted(()=>({getOnboarding:vi.fn(),patchOnboarding:vi.fn(),getAccount:vi.fn(),listProjects:vi.fn(),getPositioningCenter:vi.fn(),getIntelligenceWorkspace:vi.fn(),listIntelligenceItems:vi.fn(),statusDouyin:vi.fn()}));
 vi.mock("@/lib/contract-client",()=>({client}));
 vi.mock("@/lib/http-transport",()=>({readCurrentAccountId:current,readCurrentGroupId:()=>null,createHttpTransport:()=>({request:publicReads})}));
-import {loadState,loadProjectSignals,saveOnboarding} from './onboarding-data';
+import {loadState,loadProjectSignals,loadRadarSignals,saveOnboarding} from './onboarding-data';
+import {deriveGuidedSteps} from './onboarding-steps';
 const record=()=>({accountId:"a",origin:null,hidden:false,collapsed:true,completedSteps:[] as string[],updatedAt:null});
 beforeEach(()=>{vi.clearAllMocks();window.localStorage.clear();current.mockReturnValue('a');client.getOnboarding.mockResolvedValue(record());client.patchOnboarding.mockImplementation(async({body})=>({...record(),...body}));client.getAccount.mockResolvedValue({id:'a'});client.listProjects.mockResolvedValue([]);client.getPositioningCenter.mockResolvedValue({profile:null});client.getIntelligenceWorkspace.mockResolvedValue({sources:[]});client.listIntelligenceItems.mockResolvedValue([]);});
 it.each(['manual','topic','radar','assistant','quick_create'])('T-1382 %s 是真实创建信号，与导入作品信号分开',async(source)=>{
@@ -49,4 +50,18 @@ it('T1345零身份必须实际确认完整零组零旧账号后才投影首组�
 it('T1345已有组或旧账号的无身份恢复不误当新用户，读取错误不假装零',async()=>{
  current.mockReturnValue(null);publicReads.mockImplementation(async(endpoint)=>{const rows=endpoint.id==='accountGroups.list'?[{id:'existing',userId:'u',name:'已有组',status:'archived',version:1,members:[],createdAt:'2026-10-01T00:00:00Z',updatedAt:'2026-10-01T00:00:00Z'}]:[];return {data:rows,meta:{requestId:'existing-user',page:1,pageSize:1,total:rows.length}};});
  expect(await loadState()).toMatchObject({needsFirstGroup:false});publicReads.mockRejectedValueOnce(Error('groups offline'));await expect(loadState()).rejects.toThrow('groups offline');
+});
+
+it('T1403 旧账号读取仍带真实accountId，失败不伪称无对标选题',async()=>{
+ client.getIntelligenceWorkspace.mockResolvedValue({sources:[{id:'benchmark',type:'creator_profile',monitorEnabled:true,status:'active'}]});
+ client.listIntelligenceItems.mockRejectedValue(Error('offline'));
+ expect(await loadRadarSignals()).toEqual({hasBenchmarkMonitor:true,hasBenchmarkTopic:undefined});
+ expect(client.listIntelligenceItems).toHaveBeenCalledWith({params:undefined,query:{accountId:'a',sourceId:'benchmark',page:1,pageSize:1,sort:'newest',topicState:'converted'},body:undefined});
+});
+
+it('T1403 旧账号的已完成对标选题不重扫，当前信号保持未知且里程碑保留',async()=>{
+ client.getOnboarding.mockResolvedValue({...record(),completedSteps:['import-account','benchmark-topic']});
+ client.getIntelligenceWorkspace.mockResolvedValue({sources:[{id:'benchmark',type:'creator_profile',monitorEnabled:false,status:'active'}]});
+ const state=await loadState();expect(client.listIntelligenceItems).not.toHaveBeenCalled();expect(state.hasBenchmarkTopic).toBeUndefined();
+ expect(deriveGuidedSteps(state).find(step=>step.key==='benchmark-topic')?.done).toBe(true);expect(client.patchOnboarding).not.toHaveBeenCalled();
 });

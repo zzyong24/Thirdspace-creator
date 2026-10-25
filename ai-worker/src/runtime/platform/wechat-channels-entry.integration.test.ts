@@ -32,9 +32,10 @@ const files={
 };
 type MenuMode='collapsed'|'direct'|'lateDirect'|'centre'|'lateCentre'|'both'|'directDuplicateCentre'|'lateDirectDuplicateCentre'|'beforeCentreClick'|'missing'|'hidden'|'duplicateEntry'|'duplicateCentre'|'missingAfterCentre';
 type RecoveryCase='button'|'menuitem'|'link'|'labelledby'|'descendant'|'responsive'|'unknown'|'wide'|'conflict'|'disabled'|'occluded'|'duplicateOwner'|'tooltip'|'unrelated'|'duplicateRelated'|'relatedWithUnrelated'|'controlsChange'|'ownerReplace'|'ownerDetach'|'duplicatePanelId'|'reportOwner'|'reportOwnerChild'|'panelReplace'|'ownerNameChange'|'coverOwner';
-type FixtureOptions={mode:MenuMode;recoveryCase?:RecoveryCase;cancelRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';expireRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';cancelAt?:'wait'|'centreClick'|'entryClick'|'route'|'hover';expireAt?:'wait'|'centreClick'|'route'|'hover'|'entryClick';unconfirmedClose?:boolean;throwDiagnostic?:boolean;identity?:'wrong'|'login'|'foreign';fastMissingClock?:boolean;worksAlreadyTarget?:boolean};
+type RouteFault='qrLogin'|'qrHidden'|'qrNear'|'login'|'foreign'|'home'|'forbidden'|'missingFrame'|'duplicateFrame'|'hiddenFrame'|'fakeShadow'|'duplicateTab'|'staleDates'|'wrongTotal'|'wrongResponse'|'badFile'|'changedBeforeDownload';
+type FixtureOptions={fault?:RouteFault;faultKind?:keyof typeof files;cancelRouteAt?:'before'|'after'|'tab'|'window'|'download';expireRouteAt?:'before'|'after'|'tab'|'window'|'download';mode:MenuMode;recoveryCase?:RecoveryCase;cancelRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';expireRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';cancelAt?:'wait'|'centreClick'|'entryClick'|'route'|'hover';expireAt?:'wait'|'centreClick'|'route'|'hover'|'entryClick';unconfirmedClose?:boolean;throwDiagnostic?:boolean;identity?:'wrong'|'login'|'foreign';fastMissingClock?:boolean;worksAlreadyTarget?:boolean};
 
-function topHtml(options:FixtureOptions){
+function topHtml(options:FixtureOptions,parentPath=''){
  const entry='<button data-menu="entry">视频数据</button><button data-menu="followers">关注者数据</button>';
  const centre='<button data-menu="centre">数据中心</button>';
  const variant=options.recoveryCase??'button';
@@ -51,7 +52,7 @@ function topHtml(options:FixtureOptions){
  let collapsed=owner+(variant==='descendant'?'':panel);
  if(variant==='duplicateOwner')collapsed+=owner.replace('id="synthetic-owner-label"','id="synthetic-duplicate-label"');
  if(variant==='responsive')collapsed+='<div hidden>'+owner.replace('id="synthetic-owner-label"','id="synthetic-responsive-label"')+'</div>';
- if(variant==='occluded')collapsed+='<div style="position:fixed;inset:0;z-index:999"></div>';
+ if(variant==='occluded'&&!parentPath.startsWith('/platform/statistic/'))collapsed+='<div style="position:fixed;inset:0;z-index:999"></div>';
  if(variant==='tooltip')collapsed=collapsed.replace('id="synthetic-associated-panel"','id="synthetic-associated-panel" role="tooltip"');
  if(variant==='unrelated'||variant==='relatedWithUnrelated')collapsed+='<div id="synthetic-unrelated" hidden>'+entry+'</div>';
  if(variant==='duplicatePanelId')collapsed+='<div id="synthetic-associated-panel" hidden>'+entry+'</div>';
@@ -67,7 +68,7 @@ function topHtml(options:FixtureOptions){
  if(options.mode==='hidden')menus+='<div hidden>'+entry+centre+'</div>';
  return '<!doctype html><meta charset="utf-8"><body>'+
   (options.identity==='login'?'<h1>微信扫码登录</h1>':`<h2 class="finder-nickname">明确合成视频号</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="${options.identity==='wrong'?'synthetic-wrong':stableId}">${options.identity==='wrong'?'synthetic-wrong':stableId}</span>`)+
-  '<nav id="menus">'+menus+'</nav><main id="panel"></main><script>'+`
+  '<div id="menus">'+menus+'</div><main id="panel">'+(['/platform/statistic/post','/platform/statistic/follower'].includes(parentPath)?'<iframe style="width:100%;height:600px" src="'+parentPath.replace('/platform/','/micro/')+'"></iframe>':'')+'</main><script>'+`
    document.querySelectorAll('[data-collapsed-owner]').forEach(owner=>owner.addEventListener('pointerenter',()=>{window.fixtureEvent('hover');
     const variant=${JSON.stringify(variant)};
     if(variant!=='unrelated'&&document.querySelector('#synthetic-associated-panel'))document.querySelector('#synthetic-associated-panel').hidden=false;
@@ -94,9 +95,9 @@ function frameHtml(followers:boolean){
  return '<!doctype html><meta charset="utf-8"><body><button data-tab="daily">全部视频</button><button data-tab="works">单篇视频</button><button data-tab="followers">关注者增长</button><div class="card-title"><span class="info">共 1 条视频</span></div><div class="filter-row"><label><input type="radio" name="range" value="1">近7天</label><label><input type="radio" name="range" value="2" checked>近30天</label><div class="filter-extra"><a id="download" href="/fixture-download">下载表格</a></div></div><div class="ant-table-body"><table id="rows"></table></div><script>'+`
   let kind=${JSON.stringify(followers?'channelsFollowers':'channelsDaily')};const days=${JSON.stringify(days)};
   const render=range=>{document.querySelector('#rows').innerHTML=(kind==='channelsWorks'?['2026-10-09']:range===1?days.slice(-7):days).map(day=>'<tr><td>'+day+'</td></tr>').join('');document.querySelector('#download').href='/fixture-download?kind='+kind;};
-  document.querySelectorAll('[data-tab]').forEach(button=>button.onclick=()=>{kind=button.dataset.tab==='works'?'channelsWorks':button.dataset.tab==='followers'?'channelsFollowers':'channelsDaily';render(2);});
+  document.querySelectorAll('[data-tab]').forEach(button=>button.onclick=async()=>{await window.fixtureEvent('report-tab');kind=button.dataset.tab==='works'?'channelsWorks':button.dataset.tab==='followers'?'channelsFollowers':'channelsDaily';render(2);});
   document.querySelectorAll('input').forEach(input=>input.onchange=async()=>{
-   const range=Number(input.value);if(kind==='channelsWorks'&&range===2)await fetch('/micro/statistic/cgi-bin/mmfinderassistant-bin/statistic/post_list',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({startTime:1788969600,endTime:1791475200,pageSize:10,currentPage:1})});render(range);
+   const range=Number(input.value);await window.fixtureEvent('range'+range);if(kind==='channelsWorks'&&range===2)await fetch('/micro/statistic/cgi-bin/mmfinderassistant-bin/statistic/post_list',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({startTime:1788969600,endTime:1791475200,pageSize:10,currentPage:1})});render(range);
   });render(2);
  `+'</script></body>';
 }
@@ -121,25 +122,53 @@ async function fixture(browser:Browser,options:FixtureOptions){
  const store=await storedService(),context=await browser.newContext({serviceWorkers:'block',acceptDownloads:true,locale:'zh-CN',timezoneId:'Asia/Shanghai'}),page=await context.newPage();
  const controller=new AbortController(),diagnostics:WechatBrowserDiagnostic[]=[],events:string[]=[],budgets:number[]=[];
  let opened=0,closed=0,released=0,downloads=0,physicalConfirmed=0,physicalStoppedAt:number|null=null,leaseReleasedAt:number|null=null,barrier=false,held=false,clockOffset=0,pendingStop:(()=>Promise<void>)|undefined;
- let lastStatus:string|undefined;
+ let lastStatus:string|undefined;const navigationPaths:string[]=[];let failureRootReads=0;let activeKind:keyof typeof files|undefined;
  const realNow=Date.now,wallStarted=performance.now(),hoverWallMs:number[]=[],coverProof:Array<{ownerConnected:boolean;controlsUnchanged:boolean;nameUnchanged:boolean;ownerCenterCovered:boolean;entryActionable:boolean}>=[];let resolveReleased!:()=>void;
  const releasedGate=new Promise<void>(resolve=>{resolveReleased=resolve;});
  const awaitHostRelease=async()=>{let timer:ReturnType<typeof setTimeout>|undefined;try{await Promise.race([releasedGate,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('synthetic host release not confirmed')),120000);})]);}finally{if(timer)clearTimeout(timer);}};
  const lifecycle=createHostBrowserProfileLifecycle(store.db,{hostInstanceId:'synthetic-t1367-host',resolveProfile:async authDir=>({userId:store.ctx.userId,authDir,profileKey:'a'.repeat(64),domain:'channels.weixin.qq.com'})});
- const wallClock=options.expireAt||options.fastMissingClock?vi.spyOn(Date,'now').mockImplementation(()=>realNow()+clockOffset):undefined;
- const expire=()=>{clockOffset+=30*60000+1;};
+ const wallClock=options.expireAt||options.expireRouteAt||options.fastMissingClock||options.fault?vi.spyOn(Date,'now').mockImplementation(()=>realNow()+clockOffset):undefined;
+ const expire=()=>{events.push('deadline-injected');clockOffset+=30*60000+1;};
  const exhaustObservation=()=>{clockOffset+=120001;};
- const cancel=()=>controller.abort(new Error('明确合成用户取消'));
- await page.exposeFunction('fixtureEvent',(event:string)=>{events.push(event);if(event==='hover'&&options.cancelAt==='hover')cancel();if(event==='hover'&&options.expireAt==='hover')expire();if((event==='entry'||event==='followers')&&options.expireAt==='entryClick')expire();if(event==='centre'&&options.cancelAt==='centreClick')cancel();if((event==='entry'||event==='followers')&&options.cancelAt==='entryClick')cancel();if(event==='centre'&&options.expireAt==='centreClick')expire();});
+ const cancel=()=>{events.push('cancel-injected');controller.abort(new Error('明确合成用户取消'));};
+ await page.exposeFunction('fixtureEvent',(event:string)=>{events.push(event);if(event==='report-tab'&&options.cancelRouteAt==='tab'||event==='range1'&&options.cancelRouteAt==='window')cancel();if(event==='report-tab'&&options.expireRouteAt==='tab'||event==='range1'&&options.expireRouteAt==='window')expire();if(event==='hover'&&options.cancelAt==='hover')cancel();if(event==='hover'&&options.expireAt==='hover')expire();if((event==='entry'||event==='followers')&&options.expireAt==='entryClick')expire();if(event==='centre'&&options.cancelAt==='centreClick')cancel();if((event==='entry'||event==='followers')&&options.cancelAt==='entryClick')cancel();if(event==='centre'&&options.expireAt==='centreClick')expire();});
+ // 仅辅助隐藏frame负例推进原观察时钟；真实locator仍执行且原timeout预算不改。
+ if(options.fault==='hiddenFrame')page.on('frameattached',frame=>{
+  const read=frame.getByText.bind(frame);
+  const wrap=(locator:Locator):Locator=>new Proxy(locator,{get(node,key){
+   if(key==='filter')return(...args:Parameters<Locator['filter']>)=>wrap(node.filter(...args));
+   if(key==='count')return async()=>{const count=await node.count();if(count===0)exhaustObservation();return count;};
+   const value=Reflect.get(node,key,node);return typeof value==='function'?value.bind(node):value;
+  }});
+  frame.getByText=(...args)=>wrap(read(...args));
+ });
  await context.route('**/*',async route=>{
   const url=new URL(route.request().url());
-  if(url.origin!==origin){if(options.identity==='foreign'&&url.origin==='https://synthetic-foreign.invalid')await route.fulfill({contentType:'text/html',body:topHtml(options)});else await route.abort();return;}
+  if(url.origin!==origin){if((options.identity==='foreign'||options.fault==='foreign')&&url.origin==='https://synthetic-foreign.invalid'){events.push('foreign-document-served');await route.fulfill({contentType:'text/html',body:topHtml(options)});}else await route.abort();return;}
+  if(url.pathname==='/fixture-login'){events.push('login-document-served');await route.fulfill({contentType:'text/html',body:'<h1>微信扫码登录</h1>'});return;}
   if(url.pathname==='/fixture-download'){
+   if(options.cancelRouteAt==='download'){cancel();await route.abort().catch(()=>{});return;}if(options.expireRouteAt==='download')expire();
    downloads++;const kind=url.searchParams.get('kind') as keyof typeof files;
-   await route.fulfill({headers:{'content-type':'text/csv; charset=utf-8','content-disposition':`attachment; filename="synthetic-${kind}.csv"`},body:files[kind]});return;
+   await route.fulfill({headers:{'content-type':'text/csv; charset=utf-8','content-disposition':`attachment; filename="synthetic-${kind}.csv"`},body:options.fault==='badFile'&&kind===(options.faultKind??'channelsDaily')?'invalid synthetic report':files[kind]});return;
   }
-  if(url.pathname.endsWith('/statistic/post_list')){await route.fulfill({json:{errCode:0,data:{totalCount:1,list:[{}]}}});return;}
-  await route.fulfill({contentType:'text/html; charset=utf-8',body:url.pathname.startsWith('/micro/')?frameHtml(url.pathname.endsWith('/follower')):topHtml(options)});
+  if(url.pathname.endsWith('/statistic/post_list')){await route.fulfill({json:{errCode:options.fault==='wrongResponse'?1:0,data:{totalCount:1,list:[{}]}}});return;}
+  const reportRoute=['/platform/statistic/post','/platform/statistic/follower'].includes(url.pathname);
+  if(reportRoute){
+   navigationPaths.push(url.pathname);
+   // Playwright不拦截HTTP redirect后续URL且本夹具禁DNS；用真实SPA路由变化验证实际登录DOM/父路径，不能用DNS失败冒登录判定。
+   if(['qrLogin','qrHidden','qrNear'].includes(options.fault??'')){events.push('qr-document-served');const src=options.fault==='qrNear'?'https://open.weixin.qq.com.evil.invalid/connect/qrconnect':'https://open.weixin.qq.com/connect/qrconnect?appid=synthetic&state=synthetic';await route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><script>history.replaceState({},"","/fixture-login")</script><div'+(options.fault==='qrHidden'?' style="display:none"':'')+'><iframe src="'+src+'"></iframe></div>'});return;}
+   if(options.fault==='login'){events.push('login-document-served');await route.fulfill({contentType:'text/html',body:'<!doctype html><meta charset="utf-8"><script>history.replaceState({},"","/fixture-login")</script><h1>微信扫码登录</h1>'});return;}
+   if(options.fault==='home'){await route.fulfill({contentType:'text/html',body:'<!doctype html><script>history.replaceState({},"","/platform")</script><p>明确合成首页</p>'});return;}
+  }
+  let html=url.pathname.startsWith('/micro/')?frameHtml(url.pathname.endsWith('/follower')):topHtml(options,url.pathname);
+  if(reportRoute&&options.fault==='missingFrame')html=html.replace(/<iframe[^>]*><\/iframe>/g,'');
+  if(reportRoute&&options.fault==='duplicateFrame')html=html.replace('</main>','<iframe style="width:100%;height:300px" src="'+url.pathname.replace('/platform/','/micro/')+'"></iframe></main>');
+  if(reportRoute&&['hiddenFrame','fakeShadow'].includes(options.fault??''))html=html.replace('width:100%;height:600px','display:none;width:100%;height:600px');
+  if(reportRoute&&options.fault==='fakeShadow')html+='<script>const host=document.createElement("wujie-app");host.style.display="block";host.attachShadow({mode:"open"}).innerHTML="<button>全部视频</button>";document.body.append(host);</script>';
+  if(url.pathname.startsWith('/micro/')&&options.fault==='duplicateTab')html=html.replace('<button data-tab="daily">全部视频</button>','<button>全部视频</button><button data-tab="daily">全部视频</button>');
+  if(url.pathname.startsWith('/micro/')&&options.fault==='staleDates')html=html.replace('2026-10-08','2026-10-07');
+  if(url.pathname.startsWith('/micro/')&&options.fault==='wrongTotal')html=html.replace('共 1 条视频','共 2 条视频');
+  await route.fulfill({status:reportRoute&&options.fault==='forbidden'?403:200,contentType:'text/html; charset=utf-8',body:html});
  });
  const rawGetText=page.getByText.bind(page);
  const roleLocator=(locator:Locator):Locator=>new Proxy(locator,{get(node,key){
@@ -185,18 +214,19 @@ async function fixture(browser:Browser,options:FixtureOptions){
     const value=Reflect.get(node,property,node);return typeof value==='function'?value.bind(node):value;
    }});return wrap(rawGetText(text,params));
   };
+  if(key==='frames')return()=>{if(['missingFrame','hiddenFrame','fakeShadow','staleDates','wrongTotal'].includes(options.fault??'')&&(options.fault!=='wrongTotal'||activeKind==='channelsWorks')&&++failureRootReads%4===0)exhaustObservation();return page.frames();};
   if(key==='waitForURL')return async(...args:Parameters<Page['waitForURL']>)=>{if(options.cancelAt==='route')cancel();if(options.expireAt==='route')expire();await page.waitForURL(...args);};
-  if(key==='goto')return async(...args:Parameters<Page['goto']>)=>{budgets.push(args[1]?.timeout??0);return page.goto(options.identity==='foreign'?'https://synthetic-foreign.invalid/':args[0],args[1]);};
+  if(key==='goto')return async(...args:Parameters<Page['goto']>)=>{budgets.push(args[1]?.timeout??0);const report=['/platform/statistic/post','/platform/statistic/follower'].includes(new URL(args[0]).pathname);if(report&&options.cancelRouteAt==='before')cancel();if(report&&options.expireRouteAt==='before')expire();let result;try{result=await page.goto(options.identity==='foreign'?'https://synthetic-foreign.invalid/':args[0],args[1]);}catch(error){const message=error instanceof Error?error.message:'';events.push(message.includes('ERR_NAME_NOT_RESOLVED')?'goto-dns-blocked':message.includes('ERR_INVALID_REDIRECT')?'goto-invalid-redirect':'goto-other-error');throw error;}if(report&&options.fault==='login'){const shape=await page.evaluate(()=>({utf8:document.characterSet.toUpperCase()==='UTF-8',latin:document.characterSet.toLowerCase()==='windows-1252',exact:[...document.querySelectorAll('h1')].some(node=>node.textContent==='微信扫码登录')}));events.push('login-shape:'+JSON.stringify(shape));}if(report&&options.fault==='foreign')await page.goto('https://synthetic-foreign.invalid/',args[1]);if(report&&options.cancelRouteAt==='after')cancel();if(report&&options.expireRouteAt==='after')expire();return result;};
   const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;
  }});
  const witnesses=createVerifiedWechatDomWitnesses({now:()=>witnessNow});
  const recoveryPhases=new Map<string,number>();let progressKind='';
- const source=createWechatBrowserSource({...witnesses,reportWitness:{...witnesses.reportWitness,prepare:(p,platform,kind,op)=>witnesses.reportWitness.prepare(p,platform,kind,{...op,onEntryObservation:observation=>{
+ const source=createWechatBrowserSource({...witnesses,reportWitness:{...witnesses.reportWitness,prepare:async(p,platform,kind,op)=>{activeKind=kind as keyof typeof files;const prepared=await witnesses.reportWitness.prepare(p,platform,kind,{...op,onEntryObservation:observation=>{
   op.onEntryObservation?.(observation);if(progressKind!==kind){recoveryPhases.clear();progressKind=kind;}const phase=observation?.entryPhase;if(!phase||!['recover_owner','hover_owner','wait_associated_entry'].includes(phase))return;
   const count=(recoveryPhases.get(phase)??0)+1;recoveryPhases.set(phase,count);events.push('phase:'+phase);
   if(options.cancelRecoveryAt===phase)cancel();if(options.expireRecoveryAt===phase)expire();
   if(options.fastMissingClock&&phase!=='hover_owner'&&count>1)exhaustObservation();
- }})},now:()=>Date.now(),openProfile:async(_dir,_headless,controls)=>{
+ }});if(options.fault==='changedBeforeDownload'&&kind===(options.faultKind??'channelsDaily'))await page.frames().find(frame=>frame.url().includes('/micro/statistic/'))!.evaluate(()=>{document.querySelector('#rows td')!.textContent='2026-01-01';});return prepared;}},now:()=>Date.now(),openProfile:async(_dir,_headless,controls)=>{
   opened++;expect(held).toBe(true);
   return new Proxy(context,{get(target,key){
    if(key==='pages')return()=>[observedPage];
@@ -216,135 +246,59 @@ async function fixture(browser:Browser,options:FixtureOptions){
   });},
   onStopUnconfirmed:(_attempt,retry)=>{pendingStop=retry;},
  });
- return {...store,diagnostics,events,budgets,execute:async()=>{const result=await execute(store.ctx,store.run,controller.signal);lastStatus=result.status;return result;},hoverWallMs,coverProof,awaitHostRelease,readHostLease:()=>store.db.select().from(executionBrowserProfileLeases),physical:()=>({opened,closed,released,downloads,held,physicalConfirmed,physicalStoppedAt,leaseReleasedAt,pendingStop:Boolean(pendingStop)}),cleanup:async()=>{if(held&&!options.unconfirmedClose)await awaitHostRelease();if(options.mode!=='collapsed'){expect(hoverWallMs).toHaveLength(0);console.info('[t1367-legacy-safe]',JSON.stringify({mode:options.mode,identity:options.identity??'valid',cancelAt:options.cancelAt??null,expireAt:options.expireAt??null,worksAlreadyTarget:options.worksAlreadyTarget??false,status:lastStatus,hoverActionCount:hoverWallMs.length,physicalConfirmed,released,held,downloads}));}wallClock?.mockRestore();await context.close();await store.client.close();}};
+ return {...store,diagnostics,get failureDiagnostics(){return diagnostics.filter(event=>event.code!=='IDENTITY_OBSERVATION');},events,budgets,navigationPaths,execute:async()=>{const result=await execute(store.ctx,store.run,controller.signal);lastStatus=result.status;console.info('[t1403-case-safe]',JSON.stringify({mode:options.mode,recoveryCase:options.recoveryCase,fault:options.fault,identity:options.identity,cancelRouteAt:options.cancelRouteAt,expireRouteAt:options.expireRouteAt,result,events:events.filter(event=>!event.startsWith('phase:')),physical:{opened,closed,released,downloads,held,physicalConfirmed,pendingStop:Boolean(pendingStop)},diagnostics:diagnostics.filter(event=>event.code!=='IDENTITY_OBSERVATION')}));return result;},hoverWallMs,coverProof,awaitHostRelease,readHostLease:()=>store.db.select().from(executionBrowserProfileLeases),physical:()=>({opened,closed,released,downloads,held,physicalConfirmed,physicalStoppedAt,leaseReleasedAt,pendingStop:Boolean(pendingStop)}),cleanup:async()=>{if(held&&!options.unconfirmedClose)await awaitHostRelease();if(options.mode!=='collapsed'){expect(hoverWallMs).toHaveLength(0);console.info('[t1367-legacy-safe]',JSON.stringify({mode:options.mode,identity:options.identity??'valid',cancelAt:options.cancelAt??null,expireAt:options.expireAt??null,worksAlreadyTarget:options.worksAlreadyTarget??false,status:lastStatus,hoverActionCount:hoverWallMs.length,physicalConfirmed,released,held,downloads}));}wallClock?.mockRestore();await context.close();await store.client.close();}};
 }
 
 describe('T1363 已有视频号菜单时序的真实DOM公共持久链',()=>{
  let browser:Browser;
  beforeAll(async()=>{browser=await chromium.launch({headless:true,timeout:120000,args:['--disable-background-networking','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost']});},120000);
  afterAll(async()=>{await browser?.close();},120000);
- it('T1367公共主族：完整原120秒missing后仅一次hover关联面板，三报告下载解析事务与公开同run读回',{timeout:testBudgetMs,retry:0},async()=>{
-  const f=await fixture(browser,{mode:'collapsed'}),started=performance.now();
+ it('T1403固定路线主族：无role图标侧栏经三报表真实下载解析事务与公开读回',{timeout:testBudgetMs,retry:0},async()=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown'}),started=performance.now();
   try{
    const result=await f.execute();
-   console.info('[t1367-public-safe]',JSON.stringify({status:result.status,reasonCode:result.reasonCode,elapsedMs:Math.round(performance.now()-started),hoverWallMs:f.hoverWallMs.map(Math.round),events:f.events,physical:f.physical(),diagnostics:f.diagnostics}));
+   console.info('[t1403-route-public-safe]',JSON.stringify({status:result.status,reasonCode:result.reasonCode,elapsedMs:Math.round(performance.now()-started),hoverWallMs:f.hoverWallMs,events:f.events,physical:f.physical(),diagnostics:f.diagnostics}));
    expect(result).toMatchObject({attemptId:f.run.attemptId,status:'complete',committedReports:3});
-   expect(f.hoverWallMs).toHaveLength(1);expect(f.hoverWallMs[0]).toBeGreaterThanOrEqual(120000);
-   expect(await f.service.status(f.ctx,f.ctx.accountId!,f.run.attemptId)).toMatchObject({status:'complete',committedPages:4});
+   expect(f.hoverWallMs).toHaveLength(0);expect(f.events.filter(event=>['hover','entry','followers','centre'].includes(event))).toEqual([]);
    const response=await f.transport.request(ENDPOINTS.listNativeReports,{params:{accountId:f.ctx.accountId!},query:{cursor:null,pageSize:20},body:undefined},f.ctx) as {data:unknown};
    const read=platformNativeReportsListResponse.parse(response.data);expect(read.items.map(r=>r.kind).sort()).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);
    expect(read.items.every(r=>r.groupId===f.ctx.groupId)).toBe(true);expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);
+   expect(await f.service.status(f.ctx,f.ctx.accountId!,f.run.attemptId)).toMatchObject({status:'complete',committedPages:4});
    expect(f.physical()).toMatchObject({opened:1,closed:1,released:1,downloads:3,held:false,physicalConfirmed:1});
    expect(f.physical().physicalStoppedAt).not.toBeNull();expect(f.physical().leaseReleasedAt!).toBeGreaterThanOrEqual(f.physical().physicalStoppedAt!);
    const leases=await f.readHostLease();expect(leases).toHaveLength(1);expect(leases[0]!.releasedAt).not.toBeNull();
   }finally{await f.cleanup();}
  });
- it('T1367 IMPL-001：关联panel覆盖owner中心仍只点击唯一命中entry，三报表公共链',{timeout:testBudgetMs,retry:0},async()=>{
-  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'coverOwner',fastMissingClock:true});
-  try{const result=await f.execute();console.info('[t1367-impl001-safe]',JSON.stringify({status:result.status,reasonCode:result.reasonCode,hoverActionCount:f.hoverWallMs.length,downloads:f.physical().downloads,coverProof:f.coverProof,diagnostics:f.diagnostics}));expect(f.coverProof).toEqual([{ownerConnected:true,controlsUnchanged:true,nameUnchanged:true,ownerCenterCovered:true,entryActionable:true}]);expect(result).toMatchObject({status:'complete',committedReports:3});expect(f.hoverWallMs).toHaveLength(1);expect(f.physical()).toMatchObject({physicalConfirmed:1,released:1,held:false,downloads:3});expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);}finally{await f.cleanup();}
+ // T1367菜单专属动作/等待合同已由T1403明确替代；以下保原布局输入族，固定路线不hover/不点菜单。
+ it.each(['button','menuitem','link','labelledby','descendant','responsive','unknown','wide','conflict','disabled','occluded','duplicateOwner','tooltip','unrelated','duplicateRelated','relatedWithUnrelated','controlsChange','ownerReplace','ownerDetach','duplicatePanelId','reportOwner','reportOwnerChild','panelReplace','ownerNameChange','coverOwner'] as const)('%s折叠布局不猜owner、不强点，固定报表路线可用',{timeout:testBudgetMs,retry:0},async recoveryCase=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase});
+  try{expect(await f.execute()).toMatchObject({status:'complete',committedReports:3});expect(f.hoverWallMs).toEqual([]);expect(f.events.filter(event=>['hover','entry','followers','centre'].includes(event))).toEqual([]);expect(f.navigationPaths).toEqual(['/platform/statistic/post','/platform/statistic/follower','/platform/statistic/post']);expect(f.physical()).toMatchObject({downloads:3,physicalConfirmed:1,released:1,held:false});expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);}finally{await f.cleanup();}
  });
- it.each(['button','menuitem','link','labelledby','descendant','responsive','relatedWithUnrelated','reportOwner'] as const)('T1367辅助加速 %s：严格关联三报告成功且原观察完成前hover为0',{timeout:testBudgetMs,retry:0},async recoveryCase=>{
-  const f=await fixture(browser,{mode:'collapsed',recoveryCase,fastMissingClock:true});
-  try{expect(await f.execute()).toMatchObject({status:'complete',committedReports:3});expect(f.hoverWallMs).toHaveLength(recoveryCase==='reportOwner'?3:1);expect(f.events.indexOf('phase:recover_owner')).toBeLessThan(f.events.indexOf('hover'));expect(f.physical()).toMatchObject({downloads:3,physicalConfirmed:1,released:1,held:false});expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);}finally{await f.cleanup();}
+ it.each(['direct','lateDirect','centre','lateCentre','both','directDuplicateCentre','lateDirectDuplicateCentre','beforeCentreClick','missing','hidden','duplicateEntry','duplicateCentre','missingAfterCentre'] as const)('%s菜单布局不再授予或阻断已知父路由',{timeout:testBudgetMs,retry:0},async mode=>{
+  const f=await fixture(browser,{mode});try{expect(await f.execute()).toMatchObject({status:'complete',committedReports:3});expect(f.hoverWallMs).toEqual([]);expect(f.events.filter(event=>['entry','followers','centre'].includes(event))).toEqual([]);expect(f.physical()).toMatchObject({downloads:3,released:1,held:false});}finally{await f.cleanup();}
  });
- it.each(['unknown','wide','conflict','disabled','occluded','duplicateOwner','tooltip','unrelated','duplicateRelated','controlsChange','ownerReplace','ownerDetach','duplicatePanelId','reportOwnerChild','panelReplace','ownerNameChange'] as const)('T1367辅助加速 %s：未知/歧义/关联变更不晚点或提交',{timeout:testBudgetMs,retry:0},async recoveryCase=>{
-  const f=await fixture(browser,{mode:'collapsed',recoveryCase,fastMissingClock:true});
-  try{expect(await f.execute()).toMatchObject({status:'failed',reasonCode:'EXPORT_FAILED',committedReports:0});expect(f.hoverWallMs.length).toBeLessThanOrEqual(1);if(['unknown','wide','conflict','disabled','occluded','duplicateOwner'].includes(recoveryCase))expect(f.events).not.toContain('hover');expect(f.events).not.toContain('entry');if(recoveryCase==='reportOwnerChild')expect(f.diagnostics[0]).toMatchObject({code:'REPORT_LINK_MISSING',entryObservation:{entryPhase:'wait_associated_entry'}});expect(f.physical()).toMatchObject({downloads:0,physicalConfirmed:1,released:1,held:false});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);}finally{await f.cleanup();}
+ it('works已在目标父路由不重复导航，三份真实文件完整保存',{timeout:testBudgetMs,retry:0},async()=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',worksAlreadyTarget:true});try{expect(await f.execute()).toMatchObject({status:'complete',committedReports:3});expect(f.navigationPaths).toEqual(['/platform/statistic/post','/platform/statistic/follower']);expect(f.events).toContain('works-already-at-target');expect(f.physical()).toMatchObject({downloads:3,released:1,held:false});}finally{await f.cleanup();}
  });
- it.each(['recover_owner','hover_owner','wait_associated_entry'] as const)('T1367辅助加速 %s取消：原signal停止恢复且不晚下载提交',{timeout:testBudgetMs,retry:0},async cancelRecoveryAt=>{
-  const f=await fixture(browser,{mode:'collapsed',fastMissingClock:true,cancelRecoveryAt});
-  try{expect(await f.execute()).toMatchObject({status:'cancelled',committedReports:0});await f.awaitHostRelease();expect(f.physical()).toMatchObject({downloads:0,physicalConfirmed:1,released:1,held:false});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);}finally{await f.cleanup();}
+ it.each(['wrong','login','foreign'] as const)('%s原身份边界拒绝，零报表导航下载和提交',{timeout:testBudgetMs,retry:0},async identity=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',identity});try{expect(await f.execute()).toMatchObject(identity==='login'?{status:'needsAuth',reasonCode:'LOGIN_REQUIRED'}:identity==='wrong'?{status:'failed',reasonCode:'WRONG_PLATFORM_IDENTITY'}:{status:'failed',reasonCode:'EXPORT_FAILED'});expect(f.navigationPaths).toEqual([]);expect(f.physical()).toMatchObject({downloads:0,released:1,held:false});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);}finally{await f.cleanup();}
  });
- it.each(['recover_owner','hover_owner','wait_associated_entry'] as const)('T1367辅助加速 %s原deadline：不续期或晚动作',{timeout:testBudgetMs,retry:0},async expireRecoveryAt=>{
-  const f=await fixture(browser,{mode:'collapsed',fastMissingClock:true,expireRecoveryAt});
-  try{expect(await f.execute()).toMatchObject({status:'failed',committedReports:0});expect(f.diagnostics[0]?.code).toBe('EXECUTION_DEADLINE_EXCEEDED');expect(f.physical()).toMatchObject({downloads:0,physicalConfirmed:1,released:1,held:false});}finally{await f.cleanup();}
+ it.each(['qrLogin','qrHidden','qrNear','login','foreign','home','forbidden','missingFrame','duplicateFrame','hiddenFrame','fakeShadow','duplicateTab','staleDates','badFile','changedBeforeDownload'] as const)('%s真实页面/文件不满足原见证仍失败（循环负例仅受控时钟）',{timeout:testBudgetMs,retry:0},async fault=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',fault});try{expect(await f.execute()).toMatchObject((fault==='login'||fault==='qrLogin')?{status:'needsAuth',reasonCode:'LOGIN_REQUIRED',committedReports:0}:{status:'failed',reasonCode:'EXPORT_FAILED',committedReports:0});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);expect(f.physical()).toMatchObject({physicalConfirmed:1,released:1,held:false});expect(f.navigationPaths).toHaveLength(1);expect(f.failureDiagnostics).toHaveLength(1);if(fault==='login'){expect(f.events).toContain('login-document-served');expect(f.events).toContain('login-shape:'+JSON.stringify({utf8:true,latin:false,exact:true}));}if(fault==='qrLogin'||fault==='qrHidden'||fault==='qrNear')expect(f.events).toContain('qr-document-served');if(fault==='foreign'){expect(f.events).toContain('foreign-document-served');expect(f.failureDiagnostics[0]?.code).toBe('SOURCE_URL_INVALID');}}finally{await f.cleanup();}
  });
- it.each(['hover','entryClick'] as const)('T1367辅助加速 实际%s动作中取消：关闭与DB释放分别确认，无晚提交',{timeout:testBudgetMs,retry:0},async cancelAt=>{
-  const f=await fixture(browser,{mode:'collapsed',fastMissingClock:true,cancelAt});
-  try{expect(await f.execute()).toMatchObject({status:'cancelled',committedReports:0});await f.awaitHostRelease();expect(f.physical()).toMatchObject({downloads:0,physicalConfirmed:1,released:1,held:false});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);}finally{await f.cleanup();}
+ it.each(['wrongResponse','wrongTotal'] as const)('%s不能保存单篇：前两报表保留，非假全成功（受控时钟）',{timeout:testBudgetMs,retry:0},async fault=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',fault});try{expect(await f.execute()).toMatchObject({status:'partial',committedReports:2});expect((await f.db.select().from(platformNativeReports)).map(row=>row.kind).sort()).toEqual(['channelsDaily','channelsFollowers']);expect(f.physical()).toMatchObject({physicalConfirmed:1,released:1,held:false});}finally{await f.cleanup();}
  });
- it.each(['hover','entryClick'] as const)('T1367辅助加速 实际%s动作中原deadline耗尽，不续期或提交',{timeout:testBudgetMs,retry:0},async expireAt=>{
-  const f=await fixture(browser,{mode:'collapsed',fastMissingClock:true,expireAt});
-  try{expect(await f.execute()).toMatchObject({status:'failed',committedReports:0});expect(f.physical().downloads).toBe(0);expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);}finally{await f.cleanup();}
+ it('第三报表坏文件保两份真实提交与原失败，不洗成complete',{timeout:testBudgetMs,retry:0},async()=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',fault:'badFile',faultKind:'channelsWorks'});try{expect(await f.execute()).toMatchObject({status:'partial',committedReports:2});expect(await f.db.select().from(platformNativeReports)).toHaveLength(2);expect(f.physical()).toMatchObject({downloads:3,physicalConfirmed:1,released:1,held:false});}finally{await f.cleanup();}
  });
- it('初始两个入口0后仅原直接入口晚到：同Page三报告真实下载parse/事务保存并公开读回',{timeout:testBudgetMs,retry:0},async()=>{
-  const f=await fixture(browser,{mode:'lateDirect'}),started=performance.now();
-  try{
-   const result=await f.execute();
-   console.info('[t1363-safe]',JSON.stringify({case:'late-direct',status:result.status,reasonCode:result.reasonCode,elapsedMs:Math.round(performance.now()-started),events:f.events,physical:f.physical(),diagnostics:f.diagnostics}));
-   expect(f.events).toContain('entry-initial-zero');expect(f.events).toContain('entry-rendered-visible-one');
-   expect(result).toMatchObject({attemptId:f.run.attemptId,status:'complete',committedReports:3});
-   expect(await f.service.status(f.ctx,f.ctx.accountId!,f.run.attemptId)).toMatchObject({status:'complete',committedPages:4});
-   const envelope=await f.transport.request(ENDPOINTS.listNativeReports,{params:{accountId:f.ctx.accountId!},query:{cursor:null,pageSize:20},body:undefined},f.ctx) as {data:unknown};
-   const read=platformNativeReportsListResponse.parse(envelope.data);
-   expect(read.items.map(report=>report.kind).sort()).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);
-   expect(read.items.every(report=>report.groupId===f.ctx.groupId)).toBe(true);
-   expect(read.items.flatMap(report=>report.tables.flatMap(table=>table.rows.flat())).some(cell=>cell.raw==='0'&&cell.value===0)).toBe(true);
-   expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);expect(await f.db.select().from(platformCatalogs)).toHaveLength(0);
-   expect(f.physical()).toMatchObject({opened:1,closed:1,released:1,downloads:3,held:false});expect(f.events).not.toContain('centre');
-   expect(f.budgets.every(ms=>ms>=120000)).toBe(true);
-  }finally{await f.cleanup();}
+ it.each(['before','after','tab','window','download'] as const)('%s实际入口/动作取消后零晚提交，实停与DB释放分证',{timeout:testBudgetMs,retry:0},async cancelRouteAt=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',cancelRouteAt});try{expect(await f.execute()).toMatchObject({status:'cancelled',committedReports:0});await f.awaitHostRelease();expect(f.events).toContain('cancel-injected');expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);expect(f.physical()).toMatchObject({physicalConfirmed:1,released:1,held:false});}finally{await f.cleanup();}
  });
- it.each(['direct','centre','lateCentre','both','directDuplicateCentre','lateDirectDuplicateCentre','beforeCentreClick'] as const)('%s旧合法族保持三报告成功，唯一直接入口优先',{timeout:testBudgetMs,retry:0},async mode=>{
-  const f=await fixture(browser,{mode});
-  try{
-   expect(await f.execute()).toMatchObject({status:'complete',committedReports:3});
-   expect(await f.service.status(f.ctx,f.ctx.accountId!,f.run.attemptId)).toMatchObject({status:'complete',committedPages:4});
-   expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);expect(f.physical()).toMatchObject({opened:1,released:1,downloads:3,held:false});
-   expect(f.events).not.toContain('hover');
-   if(['direct','both','directDuplicateCentre','lateDirectDuplicateCentre','beforeCentreClick'].includes(mode))expect(f.events).not.toContain('centre');
-   else expect(f.events.filter(event=>event==='centre')).toHaveLength(1);
-  }finally{await f.cleanup();}
+ it.each(['before','after','tab','window','download'] as const)('%s原deadline到期后零提交，不续期（受控时钟）',{timeout:testBudgetMs,retry:0},async expireRouteAt=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',expireRouteAt});try{const result=await f.execute();expect(result).toMatchObject(expireRouteAt==='download'?{status:'partial',reasonCode:'TASK_TIMEOUT',committedReports:0}:{status:'failed',committedReports:0});await f.awaitHostRelease();expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);expect(f.events).toContain('deadline-injected');if(expireRouteAt==='download')expect(f.failureDiagnostics[0]?.stage).toBe('submit');else expect(f.failureDiagnostics[0]?.code).toBe('EXECUTION_DEADLINE_EXCEEDED');expect(f.physical()).toMatchObject({physicalConfirmed:1,released:1,held:false});}finally{await f.cleanup();}
  });
- it('works已在目标父路由时保原免菜单路径，三份报表仍完整事务保存',{timeout:testBudgetMs,retry:0},async()=>{
-  const f=await fixture(browser,{mode:'direct',worksAlreadyTarget:true});
-  try{
-   expect(await f.execute()).toMatchObject({status:'complete',committedReports:3});
-   expect(f.events).toContain('works-already-at-target');expect(f.events.filter(event=>event==='entry')).toHaveLength(1);
-   expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);expect(f.physical()).toMatchObject({downloads:3,released:1,held:false});
-  }finally{await f.cleanup();}
- });
- it.each([
-  ['missing','REPORT_LINK_MISSING'],['hidden','REPORT_LINK_MISSING'],['duplicateEntry','REPORT_LINK_AMBIGUOUS'],['duplicateCentre','REPORT_LINK_AMBIGUOUS'],['missingAfterCentre','REPORT_LINK_MISSING'],
- ] as const)('%s真实菜单负族保持原安全failRun',{timeout:testBudgetMs,retry:0},async(mode,code)=>{
-  const f=await fixture(browser,{mode,fastMissingClock:true});
-  try{
-   expect(await f.execute()).toMatchObject({status:'failed',reasonCode:'EXPORT_FAILED',committedReports:0});
-   expect(await f.service.status(f.ctx,f.ctx.accountId!,f.run.attemptId)).toMatchObject({status:'failed',reasonCode:'EXPORT_FAILED'});
-   expect(f.diagnostics).toHaveLength(1);expect(f.diagnostics[0]).toMatchObject({platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code});
-   expect(f.diagnostics[0]?.entryObservation).toMatchObject({entryPhase:mode==='duplicateEntry'?'initial':mode==='missingAfterCentre'?'wait_entry_after_centre':mode==='missing'||mode==='hidden'?'recover_owner':'wait_entry_or_centre',entryVisibleCount:mode==='duplicateEntry'?2:0,centreClicked:mode==='missingAfterCentre'});
-   expect(Object.keys(f.diagnostics[0]?.entryObservation??{}).every(key=>['entryPhase','entryVisibleCount','centreVisibleCount','centreClicked'].includes(key))).toBe(true);
-   expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);expect(f.physical()).toMatchObject({opened:1,released:1,downloads:0,held:false});
-  }finally{await f.cleanup();}
- });
- it.each(['wrong','login','foreign'] as const)('%s身份边界仍拒绝且不下载',{timeout:testBudgetMs,retry:0},async identity=>{
-  const f=await fixture(browser,{mode:'direct',identity});
-  try{
-   expect(await f.execute()).toMatchObject(identity==='login'?{status:'needsAuth',reasonCode:'LOGIN_REQUIRED'}:identity==='wrong'?{status:'failed',reasonCode:'WRONG_PLATFORM_IDENTITY'}:{status:'failed',reasonCode:'EXPORT_FAILED'});
-   expect(f.physical()).toMatchObject({downloads:0,released:1,held:false});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);
-  }finally{await f.cleanup();}
- });
- it.each(['wait','centreClick','entryClick','route'] as const)('%s阶段明确取消不晚下载或提交',{timeout:testBudgetMs,retry:0},async cancelAt=>{
-  const f=await fixture(browser,{mode:cancelAt==='wait'?'lateDirect':cancelAt==='centreClick'?'centre':'direct',cancelAt});
-  try{
-   expect(await f.execute()).toMatchObject({status:'cancelled',reasonCode:'CANCELLED',committedReports:0});
-   expect(f.physical().downloads).toBe(0);expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);
-  }finally{await f.cleanup();}
- });
- it.each(['wait','centreClick','route'] as const)('%s阶段原deadline耗尽不续观察或晚提交（受控时钟）',{timeout:testBudgetMs,retry:0},async expireAt=>{
-  const f=await fixture(browser,{mode:expireAt==='wait'?'lateDirect':expireAt==='centreClick'?'centre':'direct',expireAt});
-  try{
-   expect(await f.execute()).toMatchObject({status:'failed',reasonCode:'EXPORT_FAILED',committedReports:0});
-   expect(f.physical().downloads).toBe(0);expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);
-   expect(f.diagnostics[0]?.code).toBe('EXECUTION_DEADLINE_EXCEEDED');
-  }finally{await f.cleanup();}
- });
- it('停止未确认保原资源，不冒释放；诊断失败不替换采集错误',{timeout:testBudgetMs,retry:0},async()=>{
-  const f=await fixture(browser,{mode:'duplicateEntry',unconfirmedClose:true,throwDiagnostic:true});
-  try{
-   expect(await f.execute()).toMatchObject({status:'partial',reasonCode:'BROWSER_STOP_UNCONFIRMED',stopUnconfirmed:true});
-   expect(f.physical()).toMatchObject({released:0,held:true,pendingStop:true,downloads:0});
-   expect(f.diagnostics[0]).toMatchObject({code:'REPORT_LINK_AMBIGUOUS'});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);
-  }finally{await f.cleanup();}
+ it('停止未确认仍保租约，诊断回调异常不能替换原错误',{timeout:testBudgetMs,retry:0},async()=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',fault:'forbidden',unconfirmedClose:true,throwDiagnostic:true});try{expect(await f.execute()).toMatchObject({status:'partial',reasonCode:'BROWSER_STOP_UNCONFIRMED',stopUnconfirmed:true});expect(f.physical()).toMatchObject({released:0,held:true,pendingStop:true,downloads:0});expect(f.failureDiagnostics[0]).toMatchObject({code:'REPORT_PAGE_MISSING'});expect(await f.db.select().from(platformNativeReports)).toHaveLength(0);}finally{await f.cleanup();}
  });
 });

@@ -122,7 +122,30 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import { SettingsDialog } from "./settings-interactive-region";
+import { TestConnectionButton } from "./model-connection-test";
 import type { SettingsViewModel } from "./settings-page";
+
+describe("T1403 连接测试能力边界", () => {
+  it("图片编辑显示未测试说明，没有不执行探测的假按钮", () => {
+    rtlRender(<TestConnectionButton capability="image.edit" slotPrefix="t1403-image-edit" />);
+    expect(screen.getByText(/暂无内置连接测试/)).toHaveTextContent("不代表密钥失效");
+    expect(screen.getByText(/暂无内置连接测试/)).toHaveTextContent("未执行图片编辑");
+    expect(screen.queryByRole("button", { name: "测试连接" })).toBeNull();
+    expect(mockClient.testModelConnection).not.toHaveBeenCalled();
+  });
+
+  it("视频探针警告结果不显示连通成功或密钥失败", async () => {
+    mockClient.testModelConnection.mockResolvedValueOnce({ ok: true, status: "warn", detail: "尚未确认视频鉴权与端点，未实际生成视频。" });
+    const tree = rtlRender(<TestConnectionButton capability="video.generate" slotPrefix="t1403-video" />);
+    fireEvent.click(screen.getByRole("button", { name: "测试连接" }));
+    await waitFor(() => expect(tree.container.querySelector('[data-slot="t1403-video-test-result"]')).toHaveAttribute("data-status", "warn"), { timeout: 120000 });
+    const result = tree.container.querySelector('[data-slot="t1403-video-test-result"]')!;
+    expect(result).toHaveTextContent("⚠ 尚未确认");
+    expect(result).not.toHaveTextContent("✓ 连通");
+    expect(result).not.toHaveTextContent("✗ 失败");
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  });
+});
 
 const VM: SettingsViewModel = {
   account: {

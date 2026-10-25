@@ -7,7 +7,7 @@ import {Readable} from 'node:stream';
 import type {BrowserContext,Download,Frame,Locator,Page} from '@playwright/test';
 import {describe,expect,it,vi} from 'vitest';
 vi.mock('node:fs/promises',async importOriginal=>({...await importOriginal<typeof import('node:fs/promises')>()}));
-import {createWechatBrowserSource,createWechatNativeDomReportWitness,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatReportWitness,type WechatReportPageState,WechatBrowserSourceError} from './wechat-browser-source';
+import {createWechatBrowserSource,createWechatNativeDomReportWitness,type WechatCreatorPlatform,type WechatIdentityObservation,type WechatIdentityWitness,type WechatReportWitness,type WechatReportPageState,WechatBrowserSourceError} from './wechat-browser-source';
 // 仅Chromium/页面/下载为明确fixture，实际source负责账号核对、原生事件、字节边界和停止协议。
 // 不连接真实账号，不把以下displayName或stable ID宣称为两平台已测身份字段。
 const origins={wechatOfficial:'https://mp.weixin.qq.com',wechatVideo:'https://channels.weixin.qq.com'};
@@ -46,7 +46,7 @@ function fixture(platform:WechatCreatorPlatform='wechatVideo'){
  ]);
  const locator={getAttribute:vi.fn(async()=>href),click:vi.fn(async()=>{order.push('click:'+currentKind);})} as unknown as Locator;
  const createDownload=():Download=>({failure:async()=>null,suggestedFilename:()=>currentKind+(platform==='wechatOfficial'?'.xls':'.csv'),createReadStream:async()=>{const stream=Readable.from([bytes.get(currentKind)!],{autoDestroy:false}),destroy=stream.destroy.bind(stream);stream.destroy=(error?:Error)=>{streamClosed?.();return destroy(error);};return stream;}}) as unknown as Download;
- const page={goto:vi.fn(async()=>{}),url:()=>origins[platform]+'/',waitForEvent:vi.fn(async(_event:string,options:{timeout:number})=>{order.push('listen:'+currentKind);expect(options.timeout).toBeGreaterThanOrEqual(120000);if(downloadFailure)throw downloadFailure;return createDownload();})} as unknown as Page;
+ const page={goto:vi.fn(async()=>{}),isClosed:()=>false,url:()=>origins[platform]+'/',waitForEvent:vi.fn(async(_event:string,options:{timeout:number})=>{order.push('listen:'+currentKind);expect(options.timeout).toBeGreaterThanOrEqual(120000);if(downloadFailure)throw downloadFailure;return createDownload();})} as unknown as Page;
  const request={get:vi.fn(async()=>({status:()=>200,headers:()=>({'content-disposition':'attachment; filename="native.xls"'}),body:async()=>bytes.get(currentKind)!,dispose:vi.fn(async()=>{})}))};
  const close=vi.fn(async()=>{await onStopped();});
  const context={pages:()=>[page],newPage:async()=>page,close,request} as unknown as BrowserContext;
@@ -148,6 +148,34 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   expect(onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'navigate',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error',failureKind});
   expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private-test-token');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('Cookie');
   expect(f.identityWitness.read).not.toHaveBeenCalled();expect(f.reportWitness.prepare).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it.each([
+  ['page.evaluate: Execution context was destroyed, most likely because of a navigation.\nCookie=fixture-private','EXECUTION_CONTEXT_DESTROYED'],
+  ['page.goto: Navigation to "https://channels.weixin.qq.com/platform?token=fixture-private" is interrupted by another navigation to "https://channels.weixin.qq.com/?token=fixture-private"\nCall log: fixture-private','NAVIGATION_INTERRUPTED'],
+ ] as const)('T1403身份协议分类 %# 仅发固定类别，诊断失败也不改变错误或关闭',async(message,failureKind)=>{
+  for(const phase of ['isLoggedOut','read'] as const)for(const throwing of [false,true]){
+   const f=fixture(),onDiagnostic=vi.fn(()=>{if(throwing)throw Error('fixture-private diagnostic failure');});f.page.isClosed=()=>true; // 本族仅核不满足恢复条件时的诊断，不把可恢复瞬态固定成失败。
+   vi.mocked(f.identityWitness[phase]).mockRejectedValueOnce(Error(message));
+   await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED',message:'微信账号身份暂未核对完成，请查看原任务'});
+   expect(onDiagnostic).toHaveBeenCalledExactlyOnceWith({platform:'wechatVideo',stage:'readIdentity',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error',failureKind});
+   expect(JSON.stringify(onDiagnostic.mock.calls)).not.toMatch(/fixture-private|Cookie|https:\/\//);
+   expect(f.reportWitness.prepare).not.toHaveBeenCalled();expect(f.page.waitForEvent).not.toHaveBeenCalled();
+   expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+  }
+ });
+ it.each([
+  Error('业务提示：Execution context was destroyed, most likely because of a navigation.'),
+  Error('page.evaluate: Execution context was destroyed, most likely because of a navigation problem'),
+  Error('业务提示：Navigation to "x" is interrupted by another navigation to "y"'),
+  Error('page.goto: Navigation to "x" is interrupted by another navigation tomorrow'),
+  Object.assign(Error('fixture-private unknown failure'),{code:'NAVIGATION_INTERRUPTED'}),
+  Object.assign(Error('page.goto: Timeout 120000ms exceeded. fixture-private'),{name:'TimeoutError'}),
+ ])('T1403身份协议近似或未知错误 %# 不推断类别、不透传code/私密信息',async error=>{
+  const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED',message:'微信账号身份暂未核对完成，请查看原任务'});
+  expect(onDiagnostic).toHaveBeenCalledExactlyOnceWith({platform:'wechatVideo',stage:'readIdentity',code:'BROWSER_OPERATION_FAILED',exceptionName:error.name});
+  expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('fixture-private');expect(f.reportWitness.prepare).not.toHaveBeenCalled();
+  expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
  });
  it('登录复核自身失败不覆盖原窗口错误，不能据失败探针判掉登录',async()=>{
   const f=fixture();vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(new WechatBrowserSourceError('REPORT_WINDOW_MISSING','fixture window missing'));
@@ -448,5 +476,173 @@ describe('T1110 受信私有失败图候选（实际/tmp文件+合成Page）',()
   const directory=await privateImageDirectory(),f=privateImageFixture(directory);f.screenshot.mockRejectedValueOnce(Error('fixture screenshot failed'));f.close.mockRejectedValue(Error('fixture actual stop failed'));
   try{await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',f.controls)).rejects.toMatchObject({code:'BROWSER_STOP_UNCONFIRMED',resourceStopUnconfirmed:true});expect(f.onStopUnconfirmed).toHaveBeenCalledOnce();expect(f.onStopped).not.toHaveBeenCalled();expect(await fsPromises.readdir(directory)).toEqual([]);}
   finally{f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+});
+
+
+describe('T1403 视频号原600000身份包络与登录预检',()=>{
+ const contextError=()=>Error('page.evaluate: Execution context was destroyed, most likely because of a navigation.\nCall log: fixture-private');
+ it.each([false,true])('预检瞬态后真实loggedOut=%s，不把未知当false',async loggedOut=>{
+  const f=fixture();f.page.isClosed=()=>false;vi.mocked(f.identityWitness.isLoggedOut).mockRejectedValueOnce(contextError()).mockResolvedValueOnce(loggedOut);
+  const run=f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls);
+  if(loggedOut){await expect(run).rejects.toMatchObject({code:'LOGIN_REQUIRED'});expect(f.identityWitness.read).not.toHaveBeenCalled();}
+  else{await expect(run).resolves.toMatchObject({platformIdentity:'fixture-platform-id'});expect(f.identityWitness.read).toHaveBeenCalledOnce();}
+  expect(f.identityWitness.isLoggedOut).toHaveBeenCalledTimes(2);expect(f.openProfile).toHaveBeenCalledOnce();expect(f.close).toHaveBeenCalledOnce();
+ });
+ it.each(['loginCheck','identityRead'] as const)('%s pending受原600000约束，迟到成功不能进入报表',async phase=>{
+  vi.useFakeTimers();try{
+   const f=fixture();let finish!:(value:any)=>void;const pending=new Promise<any>(resolve=>{finish=resolve;});
+   vi.mocked(phase==='loginCheck'?f.identityWitness.isLoggedOut:f.identityWitness.read).mockImplementationOnce(()=>pending);
+   let settled=false;const run=f.source.collectNativeReports('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls).then(()=>{settled=true;return null;},error=>{settled=true;return error;});
+   await vi.advanceTimersByTimeAsync(600000);try{expect(settled).toBe(true);expect(await run).toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});expect(f.reportWitness.prepare).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();}finally{if(!settled)await vi.advanceTimersByTimeAsync(9000000);await run;}
+   finish(phase==='loginCheck'?false:{platform:'wechatVideo',platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'});await vi.advanceTimersByTimeAsync(0);expect(f.reportWitness.prepare).not.toHaveBeenCalled();if(phase==='loginCheck')expect(f.identityWitness.read).not.toHaveBeenCalled();
+  }finally{vi.useRealTimers();}
+ });
+ it('预检耗时从字段剩余额度扣除，600000不含completion grace',async()=>{
+  vi.useFakeTimers();try{
+   const f=fixture();vi.mocked(f.identityWitness.isLoggedOut).mockImplementationOnce(async()=>{vi.setSystemTime(Date.now()+200000);return false;});
+   let remaining=0;vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_p,_platform,op)=>{remaining=op.timeoutMs(480000);return {platform:'wechatVideo',platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};});
+   await f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls);expect(remaining).toBe(400000);
+  }finally{vi.useRealTimers();}
+ });
+});
+
+// 合成异常只验证资格/期限分支；真实上下文销毁机制在dom-witness的Chromium三例单独核验。
+describe('T1403 身份恢复资格及原取消/清理边界',()=>{
+ const exact='page.evaluate: Execution context was destroyed, most likely because of a navigation.';
+ it.each([
+  Error('业务提示：'+exact),Error(exact+'oops'),Error('page.evaluateHandle: Execution context was destroyed, most likely because of a navigation.'),
+  Object.assign(Error(exact),{name:'TimeoutError'}),Object.assign(Error(exact),{name:'TypeError'}),Object.assign(Error(exact),{name:'SyntaxError'}),
+  Object.assign(Error('unknown'),{code:'EXECUTION_CONTEXT_DESTROYED'}),Error('Target page, context or browser has been closed'),Error('net::ERR_ABORTED'),
+ ])('预检近似/未知异常%#不吞，不进入字段或报表',async error=>{
+  const f=fixture();vi.mocked(f.identityWitness.isLoggedOut).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls)).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});
+  expect(f.identityWitness.isLoggedOut).toHaveBeenCalledOnce();expect(f.identityWitness.read).not.toHaveBeenCalled();expect(f.reportWitness.prepare).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();
+ });
+ it.each(['closed','foreign','credentials'] as const)('%s预检context异常不能继续同页观察',async mode=>{
+  const f=fixture();f.page.isClosed=()=>mode==='closed';if(mode!=='closed')f.page.url=()=>mode==='foreign'?'https://foreign.invalid/':'https://name:secret@channels.weixin.qq.com/';
+  vi.mocked(f.identityWitness.isLoggedOut).mockRejectedValueOnce(Error(exact));await expect(f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls)).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});
+  expect(f.identityWitness.isLoggedOut).toHaveBeenCalledOnce();expect(f.identityWitness.read).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();
+ });
+ it.each(['loginCheck','identityRead'] as const)('%s pending父取消和更早deadline优先，迟到reject不能再行动',async phase=>{
+  for(const mode of ['cancel','deadline'] as const){
+   vi.useFakeTimers();try{
+    const f=fixture(),controller=new AbortController(),reason=Error('fixture original cancellation');let rejectLate!:(error:Error)=>void;
+    const pending=new Promise<never>((_resolve,reject)=>{rejectLate=reject;});vi.mocked(phase==='loginCheck'?f.identityWitness.isLoggedOut:f.identityWitness.read).mockImplementationOnce(()=>pending);
+    const run=f.source.collectNativeReports('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,signal:controller.signal,deadlineAt:new Date(Date.now()+120000).toISOString()}).catch(error=>error);
+    await vi.advanceTimersByTimeAsync(0);if(mode==='cancel')controller.abort(reason);await vi.advanceTimersByTimeAsync(mode==='deadline'?120000:0);
+    const error=await run;if(mode==='cancel')expect(error).toBe(reason);else expect(error).toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});
+    expect(f.close).toHaveBeenCalled();expect(f.openProfile).toHaveBeenCalledOnce();rejectLate(Error(exact));await vi.advanceTimersByTimeAsync(0);expect(f.reportWitness.prepare).not.toHaveBeenCalled();
+    if(phase==='loginCheck')expect(f.identityWitness.read).not.toHaveBeenCalled();
+   }finally{vi.useRealTimers();}
+  }
+ });
+ it('反复预检context错误不能更新600000期限，超时不执行字段',async()=>{
+  vi.useFakeTimers();try{
+   const f=fixture();vi.mocked(f.identityWitness.isLoggedOut).mockRejectedValue(Error(exact));
+   const run=f.source.collectNativeReports('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls).catch(error=>error);
+   await vi.advanceTimersByTimeAsync(600000);expect(await run).toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});expect(f.identityWitness.read).not.toHaveBeenCalled();expect(f.reportWitness.prepare).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();
+  }finally{vi.useRealTimers();}
+ });
+ it('恢复后wrong identity仍立即拒绝，close失败保原stopUnconfirmed',async()=>{
+  const f=fixture();vi.mocked(f.identityWitness.isLoggedOut).mockRejectedValueOnce(Error(exact));f.setIdentity('wrong-id');
+  await expect(f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls)).rejects.toMatchObject({code:'WRONG_PLATFORM_IDENTITY'});expect(f.identityWitness.read).toHaveBeenCalledOnce();expect(f.close).toHaveBeenCalledOnce();
+  const g=fixture();vi.mocked(g.identityWitness.isLoggedOut).mockRejectedValueOnce(Error(exact));g.close.mockRejectedValue(Error('fixture physical close failed'));
+  await expect(g.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',g.controls)).rejects.toMatchObject({code:'BROWSER_STOP_UNCONFIRMED',resourceStopUnconfirmed:true});expect(g.onStopped).not.toHaveBeenCalled();expect(g.onStopUnconfirmed).toHaveBeenCalledOnce();
+ });
+ it('login仍跳过预检，不重启profile也不改变公众号入口',async()=>{
+  const f=fixture();await f.source.login('wechatVideo','/synthetic-profile',f.controls);expect(f.identityWitness.isLoggedOut).not.toHaveBeenCalled();expect(f.identityWitness.read).toHaveBeenCalledOnce();expect(f.openProfile).toHaveBeenCalledOnce();
+ });
+});
+
+function identityObservationFixture():WechatIdentityObservation{return {routeClass:'identity',loginPromptVisible:null,qrLoginFrameRaw:null,qrLoginFrameVisible:null,routeUnchanged:true,readyState:'complete',rootScan:'complete',frameCount:0,foreignFrameCount:0,unknownShadowCount:0,truncated:false,roots:[{kind:'top',parent:null,visible:true,uidRaw:0,uidVisible:0,nameRaw:0,nameVisible:0,uidIdRaw:0,uidIdVisible:0,nameClassRaw:0,nameClassVisible:0,idTextPresent:null,copyPresent:null,copyMatches:null,namePresent:null,uidInRoot:null,nameInRoot:null}]};}
+describe('T1403 正常身份流程附有限shape诊断',()=>{
+ it('每次identity首次加变化最多4条，同形不重复，prepare不继承',async()=>{
+  const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{
+   for(const count of [0,0,1,0,2,3,4,5])op.onIdentityObservation?.({...identityObservationFixture(),frameCount:count});
+   return {platform,platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};
+  });
+  await f.source.collectNativeReports('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic});
+  const shapes=onDiagnostic.mock.calls.map(([event])=>event).filter(event=>event.code==='IDENTITY_OBSERVATION');expect(shapes).toHaveLength(4);expect(shapes.map(event=>event.identityObservation.frameCount)).toEqual([0,1,2,3]);expect(shapes.every(event=>event.stage==='readIdentity'&&event.platform==='wechatVideo')).toBe(true);
+ });
+ it('非法shape和回调异常不改变原身份、wrongID或关闭',async()=>{
+  for(const bad of [{...identityObservationFixture(),secret:'fixture-private'},{...identityObservationFixture(),routeClass:'https://private.invalid/?token=fixture-private'},{...identityObservationFixture(),frameCount:-1}]){
+   const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{op.onIdentityObservation?.(bad as never);return {platform,platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};});
+   await f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic});expect(onDiagnostic).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();
+  }
+  const f=fixture(),onDiagnostic=vi.fn(()=>{throw Error('fixture-private logger failure');});vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{op.onIdentityObservation?.(identityObservationFixture() as never);return {platform,platformIdentity:'wrong-id',displayName:'fixture',sourcePath:'/platform'};});
+  await expect(f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'WRONG_PLATFORM_IDENTITY'});expect(f.close).toHaveBeenCalledOnce();
+ });
+ it('本地600000到期后的late shape不发出，也不进入报表',async()=>{
+  vi.useFakeTimers();try{
+   const f=fixture(),onDiagnostic=vi.fn();let finish!:()=>void;vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{await new Promise<void>(resolve=>{finish=resolve;});op.onIdentityObservation?.(identityObservationFixture() as never);return {platform,platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};});
+   const run=f.source.collectNativeReports('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic}).catch(error=>error);await vi.advanceTimersByTimeAsync(600000);expect(await run).toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});
+   finish();await vi.advanceTimersByTimeAsync(0);expect(onDiagnostic.mock.calls.filter(([event])=>event.code==='IDENTITY_OBSERVATION')).toHaveLength(0);expect(f.reportWitness.prepare).not.toHaveBeenCalled();
+  }finally{vi.useRealTimers();}
+ });
+});
+
+describe('T1403 shape附加隔离边界',()=>{
+ it('新调用独立限量，身份结束及prepare不接纳旧sink',async()=>{
+  const f=fixture(),onDiagnostic=vi.fn();let prior:((value:WechatIdentityObservation)=>void)|undefined;
+  vi.mocked(f.identityWitness.read).mockImplementation(async(_page,platform,op)=>{prior=op.onIdentityObservation;for(let n=0;n<6;n++)prior?.({...identityObservationFixture(),frameCount:n});return {platform,platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};});
+  const prepare=f.reportWitness.prepare;vi.mocked(prepare).mockImplementationOnce(async()=>{prior?.({...identityObservationFixture(),frameCount:99});return {scope:f.page,download:f.locator,state:{selection,dates:['2026-10-07','2026-10-08']}};});
+  await f.source.collectNativeReports('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic});prior?.({...identityObservationFixture(),frameCount:98});
+  await f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic});
+  const events=onDiagnostic.mock.calls.map(([e])=>e).filter(e=>e.code==='IDENTITY_OBSERVATION');expect(events).toHaveLength(8);expect(events.map(e=>e.identityObservation.frameCount)).toEqual([0,1,2,3,0,1,2,3]);expect(f.close).toHaveBeenCalledTimes(2);
+ });
+ it('非法嵌套、超界、未知空值及抛错getter不消耗四条名额',async()=>{
+  const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{
+   const valid=identityObservationFixture(),root=valid.roots[0]!;
+   for(const bad of [{...valid,roots:[{...root,privateText:'private-unique-root'}]},{...valid,roots:[{...root,parent:0}]},{...valid,roots:[{...root,uidRaw:1001}]},{...valid,frameCount:null},{...valid,roots:[{...root,copyMatches:'private-unique-copy'}]},Object.defineProperty({...valid},'roots',{get(){throw Error('private-unique-getter');}})])op.onIdentityObservation?.(bad as never);
+   op.onIdentityObservation?.(valid);return {platform,platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};
+  });
+  await f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic});expect(onDiagnostic).toHaveBeenCalledOnce();expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private-unique');
+ });
+ it('取消后无shape；读取异常、LOGIN_REQUIRED和关闭失败保原协议',async()=>{
+  const f=fixture(),controller=new AbortController(),reason=Error('private cancel'),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,_platform,op)=>{controller.abort(reason);op.onIdentityObservation?.(identityObservationFixture());throw reason;});
+  await expect(f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,signal:controller.signal,onDiagnostic})).rejects.toBe(reason);expect(onDiagnostic.mock.calls.filter(([e])=>e.code==='IDENTITY_OBSERVATION')).toHaveLength(0);
+  const g=fixture();g.setLoggedOut(true);await expect(g.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',g.controls)).rejects.toMatchObject({code:'LOGIN_REQUIRED'});expect(g.identityWitness.read).not.toHaveBeenCalled();expect(g.close).toHaveBeenCalledOnce();
+  const h=fixture();vi.mocked(h.identityWitness.read).mockImplementationOnce(async(_page,_platform,op)=>{op.onIdentityObservation?.(identityObservationFixture());throw Error('private actual evaluate');});h.close.mockRejectedValue(Error('private actual close'));
+  await expect(h.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...h.controls,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_STOP_UNCONFIRMED',resourceStopUnconfirmed:true});expect(h.onStopUnconfirmed).toHaveBeenCalledOnce();expect(JSON.stringify(onDiagnostic.mock.calls)).not.toMatch(/private actual/);
+ });
+ it('pending或异步失败诊断接收者不阻塞原身份/关闭',async()=>{
+  for(const callback of [()=>new Promise<void>(()=>{}),async()=>{throw Error('private asynchronous logger');}]){
+   const f=fixture();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{op.onIdentityObservation?.(identityObservationFixture());return {platform,platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};});
+   await expect(f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic:callback})).resolves.toMatchObject({platformIdentity:'fixture-platform-id'});expect(f.close).toHaveBeenCalledOnce();
+  }
+ });
+});
+
+describe('T1403 EXP2 shape新白名单',()=>{
+ it('固定route/login布尔可观察，true不放松原expected身份',async()=>{
+  const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{op.onIdentityObservation?.({...identityObservationFixture(),routeClass:'official_root',rootScan:'not_run',frameCount:null,foreignFrameCount:null,unknownShadowCount:null,roots:[],loginPromptVisible:true} as never);return {platform,platformIdentity:'wrong-fixture-id',displayName:'fixture',sourcePath:'/platform'};});
+  await expect(f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'WRONG_PLATFORM_IDENTITY'});expect(onDiagnostic.mock.calls.filter(([event])=>event.code==='IDENTITY_OBSERVATION')).toHaveLength(1);expect(f.close).toHaveBeenCalledOnce();expect(f.reportWitness.prepare).not.toHaveBeenCalled();
+ });
+});
+
+describe('T1403 修复受信身份核验模式',()=>{
+ it.each(['readIdentity','collectNativeReports','login'] as const)('%s只正常视频号核验启用，interactive login保留',async method=>{
+  const f=fixture();await (method==='login'?f.source.login('wechatVideo','/synthetic-profile',f.controls):f.source[method]('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls));
+  expect(vi.mocked(f.identityWitness.read).mock.calls[0]![2]).toMatchObject({identityVerification:method==='login'?'interactiveLogin':'boundIdentity'});
+ });
+});
+
+
+describe('T1406 入口locator.evaluateAll固定首行安全分类',()=>{
+ it.each(['','.','\nCall log: Cookie=fixture-private'])('已实证固定协议%s只输出类别且保原错误清理',async suffix=>{
+  const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockRejectedValueOnce(Error('locator.evaluateAll: Execution context was destroyed, most likely because of a navigation'+suffix));
+  await expect(f.source.login('wechatOfficial','/synthetic-only-profile',{onStopped:f.onStopped,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});
+  expect(onDiagnostic).toHaveBeenCalledExactlyOnceWith({platform:'wechatOfficial',stage:'readIdentity',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error',failureKind:'EXECUTION_CONTEXT_DESTROYED'});
+  expect(JSON.stringify(onDiagnostic.mock.calls)).not.toMatch(/Cookie|fixture-private|https:/);expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it.each([
+  '业务提示：locator.evaluateAll: Execution context was destroyed, most likely because of a navigation.',
+  'locator.evaluateAll: Execution context was destroyed, most likely because of a navigation problem',
+  'locator.evaluate: Execution context was destroyed, most likely because of a navigation.',
+ ])('近似协议 %# 不加类别',async message=>{
+  const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockRejectedValueOnce(Error(message));
+  await expect(f.source.login('wechatOfficial','/synthetic-only-profile',{onStopped:f.onStopped,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});
+  expect(onDiagnostic).toHaveBeenCalledExactlyOnceWith({platform:'wechatOfficial',stage:'readIdentity',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error'});expect(f.close).toHaveBeenCalledOnce();
  });
 });

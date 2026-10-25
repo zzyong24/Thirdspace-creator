@@ -1,7 +1,7 @@
 import type {Frame,Page,Response,Request,Locator,ElementHandle} from '@playwright/test';
 import type {NativeReportKind,NativeReportPayload} from '@creatoros/contract';
 import {setTimeout as delay} from 'node:timers/promises';
-import {WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation,type WechatEntryObservation} from './wechat-browser-source';
+import {canRetryWechatVideoIdentityContext,WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation,type WechatIdentityObservation,type WechatIdentityRootObservation} from './wechat-browser-source';
 
 // T1110 2026-10-09普通账号页/原生详情实测。只核身份、日期、响应和完整性，不做语义选择。
 // SEMANTIC_BOUNDARY_ALLOW: DOM标签、日期格式和原生响应为固定协议，不解释内容或推断指标累计口径。
@@ -27,111 +27,6 @@ async function observe<T>(controls:WechatOperationControls,read:(end:number)=>Pr
  const end=Date.now()+controls.timeoutMs(requested);
  for(;;){controls.signal.throwIfAborted();const value=await read(end);controls.signal.throwIfAborted();if(value!==null)return value;if(Date.now()>=end)return fail(code,'微信后台数据尚未就绪，请查看原任务');await delay(250,undefined,{signal:controls.signal});}
 }
-// SEMANTIC_BOUNDARY_ALLOW: 只落实固定精确可访问名、DOM identity、行动资格及aria关联，不推断图标/内容含义。
-function namedAction(page:Page,name:string,includeHidden=false):Locator{
- return page.getByRole('button',{name,exact:true,includeHidden}).or(page.getByRole('menuitem',{name,exact:true,includeHidden})).or(page.getByRole('link',{name,exact:true,includeHidden}));
-}
-function recoveryControls(page:Page,original:WechatOperationControls,end:number):WechatOperationControls{
- return {signal:original.signal,timeoutMs(requested){
-  original.signal.throwIfAborted();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
-  const remaining=end-Date.now();if(remaining<=0)return fail('REPORT_LINK_MISSING','微信后台数据尚未就绪，请查看原任务');
-  return Math.min(original.timeoutMs(requested),remaining);
- }};
-}
-async function actionableNodes(locator:Locator,op:WechatOperationControls):Promise<ElementHandle<Element>[]>{
- op.timeoutMs();const handles=await locator.elementHandles() as ElementHandle<Element>[],valid:ElementHandle<Element>[]=[];let returned=false;
- try{
-  for(const handle of handles){
-   op.timeoutMs();
-   const actionable=await handle.isVisible()&&await handle.isEnabled()&&await handle.evaluate(node=>{
-    if(!node.isConnected)return false;
-    for(let current:Element|null=node;current;current=current.parentElement??((current.getRootNode() as ShadowRoot).host??null)){
-     const style=getComputedStyle(current);if(current.getAttribute('role')?.trim().split(/\s+/).includes('tooltip')||current.hasAttribute('hidden')||current.getAttribute('aria-hidden')==='true'||style.display==='none'||style.visibility==='hidden'||style.visibility==='collapse'||style.opacity==='0')return false;
-    }
-    const box=node.getBoundingClientRect();if(box.width<=0||box.height<=0)return false;
-    const root=node.getRootNode() as Document|ShadowRoot,hit=root.elementFromPoint(box.x+box.width/2,box.y+box.height/2);
-    return hit===node||!!hit&&node.contains(hit);
-   });
-   op.timeoutMs();if(!actionable)continue;
-   // Locator.or是节点集合并集；再次用真实节点identity核对，不能按相同文字/坐标合并。
-   if(!await handle.evaluate((node,previous)=>previous.includes(node),valid))valid.push(handle);
-  }
-  op.timeoutMs();returned=true;return valid;
- }finally{for(const handle of handles)if(!returned||!valid.includes(handle))await handle.dispose();}
-}
-/** 原initial missing结束后的独立恢复；最多hover一次，不重开旧全Page观察。 */
-async function recoverCollapsedEntry(page:Page,label:string,controls:WechatOperationControls,original:WechatBrowserSourceError,progress:(phase:WechatEntryObservation['entryPhase'])=>void):Promise<void>{
- let owner:ElementHandle<Element>|undefined,selected:ElementHandle<Element>|undefined;
- const panels=new Map<string,ElementHandle<Element>|null>();let controlsValue='';let ownerName=label;
- const check=()=>{controls.signal.throwIfAborted();controls.timeoutMs();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');};
- const sameOwner=async(op:WechatOperationControls,requireUnique=false)=>{
-  op.timeoutMs();
-  // hover前才需再次行动资格；展开后只核原DOM/精确语义，不能要求被关联面板覆盖的旧owner仍可再hover。
-  const matches=requireUnique?await actionableNodes(namedAction(page,ownerName),op):await namedAction(page,ownerName,true).elementHandles() as ElementHandle<Element>[];
-  try{if(requireUnique&&matches.length!==1||!await owner!.evaluate((node,fresh)=>node.isConnected&&fresh.includes(node),matches))return fail('REPORT_NOT_READY','折叠菜单行动节点已变化');op.timeoutMs();}
-  finally{for(const handle of matches)await handle.dispose();}
- };
- const binding=async(op:WechatOperationControls,initial=false)=>{
-  op.timeoutMs();const value=await owner!.getAttribute('aria-controls')??'';
-  if(!initial&&value!==controlsValue)return fail('REPORT_NOT_READY','折叠菜单关联已变化');
-  if(initial)controlsValue=value;
-  const ids=[...new Set(value.trim().split(/\s+/).filter(Boolean))];
-  if(ids.length>16||value.length>1024)return fail('REPORT_NOT_READY','折叠菜单关联无法核实');
-  for(const id of ids){
-   const count=await owner!.evaluate((node,id)=>[...node.ownerDocument.querySelectorAll('[id]')].filter(element=>element.id===id).length,id);
-   if(count>1)return fail('REPORT_NOT_READY','折叠菜单关联面板不唯一');
-   const raw=await owner!.evaluateHandle((node,id)=>{const matches=[...node.ownerDocument.querySelectorAll('[id]')].filter(element=>element.id===id);return matches.length===1?matches[0]!:null;},id),current=raw.asElement() as ElementHandle<Element>|null;
-   const previous=panels.get(id);
-   if(previous){
-    const unchanged=current&&await previous.evaluate((node,fresh)=>node===fresh,current);await raw.dispose();
-    if(!unchanged)return fail('REPORT_NOT_READY','折叠菜单关联面板已变化');
-   }else if(current){panels.set(id,current);}else{await raw.dispose();panels.set(id,null);}
-  }
-  op.timeoutMs();
- };
- const entries=async(op:WechatOperationControls)=>{
-  await sameOwner(op);await binding(op);const all=await actionableNodes(namedAction(page,label),op),related:ElementHandle<Element>[]=[];let returned=false;
-  try{
-   for(const candidate of all){
-    const included=await candidate.evaluate((node,{owner,panels})=>{
-     const contains=(ancestor:Element,child:Element)=>{for(let current:Element|null=child;current;current=current.parentElement??((current.getRootNode() as ShadowRoot).host??null))if(current===ancestor)return true;return false;};
-     return contains(owner,node)||panels.some(panel=>contains(panel,node));
-    },{owner:owner!,panels:[...panels.values()].filter((node):node is ElementHandle<Element>=>node!==null)});
-    if(included)related.push(candidate);
-   }
-   op.timeoutMs();returned=true;return related;
-  }finally{for(const candidate of all)if(!returned||!related.includes(candidate))await candidate.dispose();}
- };
- try{
-  check();
-  owner=await observe(controls,async end=>{
-   progress('recover_owner');const op=recoveryControls(page,controls,end);op.timeoutMs();
-   const candidates=await actionableNodes(namedAction(page,label).or(namedAction(page,'数据中心')),op);
-   if(candidates.length!==1){for(const handle of candidates)await handle.dispose();op.timeoutMs();return null;}
-   const chosen=candidates[0]!;
-   try{ownerName=await namedAction(page,label).evaluateAll((nodes,node)=>nodes.some(candidate=>candidate===node),chosen)?label:'数据中心';op.timeoutMs();return chosen;}
-   catch(error){await chosen.dispose();throw error;}
-  },'REPORT_LINK_MISSING',120000);
-  const hoverEnd=Date.now()+controls.timeoutMs(120000),hoverOp=recoveryControls(page,controls,hoverEnd);
-  progress('hover_owner');await sameOwner(hoverOp,true);await binding(hoverOp,true);hoverOp.timeoutMs();
-  await owner.hover({timeout:hoverOp.timeoutMs(120000)});
-  hoverOp.timeoutMs();await sameOwner(hoverOp);await binding(hoverOp);hoverOp.timeoutMs();
-  selected=await observe(controls,async end=>{
-   progress('wait_associated_entry');const op=recoveryControls(page,controls,end),matches=await entries(op);
-   if(matches.length!==1){for(const handle of matches)await handle.dispose();op.timeoutMs();return null;}
-   op.timeoutMs();return matches[0]!;
-  },'REPORT_LINK_MISSING',120000);
-  // 点击和父路由等待复用原各一项预算；关联观察end不充当新的点击期限。
-  const clickOp=recoveryControls(page,controls,Date.now()+controls.timeoutMs(120000));
-  const fresh=await entries(clickOp);
-  try{if(fresh.length!==1||!await selected.evaluate((node,current)=>node===current,fresh[0]!))return fail('REPORT_NOT_READY','折叠菜单报表入口已变化');clickOp.timeoutMs();}
-  finally{for(const node of fresh)await node.dispose();}
-  progress('click_entry');await selected.click({timeout:clickOp.timeoutMs(120000)});clickOp.timeoutMs();check();
- }catch(error){
-  check();if(error instanceof WechatBrowserSourceError&&error.code==='REPORT_LINK_MISSING'){throw original;}
-  throw error;
- }finally{await selected?.dispose();await owner?.dispose();for(const node of panels.values())await node?.dispose();}
-}
 /** 一次失败后的固定数字快照；不读取/返回正文、链接或身份，不改原报表选择。 */
 async function readMissingSectionObservation(frame:Frame,exact:Locator,visible:Locator,controls:WechatOperationControls):Promise<WechatSectionObservation|undefined>{
  controls.signal.throwIfAborted();const timeoutMs=controls.timeoutMs(120000);
@@ -152,24 +47,111 @@ async function readMissingSectionObservation(frame:Frame,exact:Locator,visible:L
   controls.signal.throwIfAborted();controls.timeoutMs(120000);return observation;
  }finally{if(timer)clearTimeout(timer);if(onAbort)controls.signal.removeEventListener('abort',onAbort);}
 }
-export async function readWechatIdentityDom(page:Page,platform:WechatCreatorPlatform){
+export async function readWechatIdentityDom(page:Page,platform:WechatCreatorPlatform,onObservation?:(value:WechatIdentityObservation)=>void,observeWrongPath=false,verifyWrongPath=false){
  const url=nativeUrl(page.url(),origins[platform],platform);
- if(url.pathname!==(platform==='wechatOfficial'?'/cgi-bin/settingpage':'/platform'))return null;
- const information=await page.evaluate(platform=>{
+ const notify=(value:WechatIdentityObservation|undefined)=>{if(value)try{void Promise.resolve(onObservation?.(value)).catch(()=>{});}catch{/* 形状观察不能替换原identity。 */}};
+ if(verifyWrongPath&&url.pathname==='/platform')return null;
+ const identityPage=!observeWrongPath&&url.pathname===(platform==='wechatOfficial'?'/cgi-bin/settingpage':'/platform');
+ if(!identityPage&&!(platform==='wechatVideo'&&(observeWrongPath||verifyWrongPath))){
+  if(platform==='wechatVideo'&&onObservation)notify({routeClass:({'/':'official_root','/platform/':'identity_slash','/platform/statistic/post':'platform_post','/platform/statistic/follower':'platform_follower','/micro/statistic/post':'micro_post','/micro/statistic/follower':'micro_follower'} as Record<string,WechatIdentityObservation['routeClass']>)[url.pathname]??'official_other',loginPromptVisible:null,qrLoginFrameRaw:null,qrLoginFrameVisible:null,routeUnchanged:true,readyState:'unknown',rootScan:'not_run',frameCount:null,foreignFrameCount:null,unknownShadowCount:null,truncated:false,roots:[]});
+  return null;
+ }
+ const result=await page.evaluate(({platform,diagnose,identityPage,sourcePath,verifyWrongPath})=>{
   const visible=(node:Element)=>!node.closest('[hidden]')&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden'&&node.getClientRects().length>0;
   if(platform==='wechatVideo'){
+   const promptVisible=(node:Element)=>{
+    if(!node.getClientRects().length||node.closest('[hidden],script,style,template,noscript')||getComputedStyle(node).visibility==='hidden')return false;
+    for(let parent:Element|null=node;parent;parent=parent.parentElement)if(getComputedStyle(parent).display==='none')return false;
+    return true;
+   };
+   const readQrFrames=()=>{
+    const frames=[...document.querySelectorAll('iframe')].filter(frame=>{
+     const rawSrc=frame.getAttribute('src')??'';
+     try{const src=new URL(rawSrc,location.href);return src.origin==='https://open.weixin.qq.com'&&src.pathname==='/connect/qrconnect'&&!src.username&&!src.password;}catch{return false;}
+    });
+    return {raw:Math.min(1000,frames.length),visible:Math.min(1000,frames.filter(promptVisible).length),truncated:frames.length>1000};
+   };
+   const metadata=(readLoginPrompt:boolean,knownQr?:{raw:number;visible:number;truncated:boolean}):WechatIdentityObservation|undefined=>{
+    // 只读官方当前快照；导航到foreign时不触碰其DOM或用未知path猜登录状态。
+    if(location.origin!=='https://channels.weixin.qq.com')return undefined;
+    const routes:Record<string,WechatIdentityObservation['routeClass']>={'/':'official_root','/platform':'identity','/platform/':'identity_slash','/platform/statistic/post':'platform_post','/platform/statistic/follower':'platform_follower','/micro/statistic/post':'micro_post','/micro/statistic/follower':'micro_follower'};
+    let loginPromptVisible:boolean|null=null,qrLoginFrameRaw:number|null=null,qrLoginFrameVisible:number|null=null,truncated=false;
+    if(readLoginPrompt){
+     // 与原isLoggedOut逐字同算法；此布尔只观察，false不能解释为已经登录。
+     try{
+      const visibleText=(node:Element)=>{
+       const walker=document.createTreeWalker(node,NodeFilter.SHOW_TEXT);let text='',current:Node|null;
+       while((current=walker.nextNode()))if(current.parentElement&&promptVisible(current.parentElement))text+=current.textContent??'';
+       return text.trim();
+      };
+      loginPromptVisible=[...document.querySelectorAll('h1,h2,h3,p,span,div')].some(node=>promptVisible(node)&&['扫码登录','微信扫码登录','请使用微信扫描二维码登录'].includes(visibleText(node)));
+     }catch{/* 未知提示观察保持null。 */}
+     try{
+      // 官方公开wxLogin.js固定入口的机械候选计数；不读query值、frameDOM或据此判断登录。
+      const counts=knownQr??readQrFrames();
+      qrLoginFrameRaw=counts.raw;qrLoginFrameVisible=counts.visible;truncated=counts.truncated;
+     }catch{qrLoginFrameRaw=null;qrLoginFrameVisible=null;/* 读取属性/可见性未知时不能伪造0或半份计数。 */}
+    }
+    return {routeClass:routes[location.pathname]??'official_other',routeUnchanged:location.pathname===sourcePath,loginPromptVisible,qrLoginFrameRaw,qrLoginFrameVisible,readyState:document.readyState,rootScan:'not_run',frameCount:null,foreignFrameCount:null,unknownShadowCount:null,truncated,roots:[]};
+   };
+   if(!identityPage){
+    if(verifyWrongPath){
+     if(location.origin!=='https://channels.weixin.qq.com'||location.pathname!==sourcePath)return {identity:null};
+     // 业务见证来自受信核验模式的当前DOM，独立于诊断callback/采样/cap；读取异常保原失败。
+     const counts=readQrFrames();let shape:WechatIdentityObservation|undefined;
+     if(diagnose)try{shape=metadata(true,counts);}catch{/* 可选观察失败不替换业务见证。 */}
+     return {identity:null,loginRequired:counts.visible>0,shape};
+    }
+    try{return {identity:null,shape:diagnose?metadata(true):undefined};}catch{return {identity:null};}
+   }
    const ids=[...document.querySelectorAll('#finder-uid-copy.finder-uniq-id')].filter(visible),names=[...document.querySelectorAll('h2.finder-nickname')].filter(visible);
-   if(ids.length!==1||names.length!==1)return null;
-   const id=ids[0]!.textContent?.trim()??'',copied=ids[0]!.getAttribute('data-clipboard-text')?.trim();
-   if(!id||!copied||id!==copied)return null;
-   return {platformIdentity:id,displayName:names[0]!.textContent?.trim()??''};
+   // 原顶层身份判定先完成；frame/shadow观察绝不参与准入。
+   let identity:{platformIdentity:string;displayName:string}|null=null;
+   if(ids.length===1&&names.length===1){
+    const id=ids[0]!.textContent?.trim()??'',copied=ids[0]!.getAttribute('data-clipboard-text')?.trim();
+    if(id&&copied&&id===copied)identity={platformIdentity:id,displayName:names[0]!.textContent?.trim()??''};
+   }
+   let shape:WechatIdentityObservation|undefined;
+   if(diagnose)try{
+    const base=metadata(false);if(!base)return {identity};
+    const roots:WechatIdentityRootObservation[]=[],pending:Array<{root:Document|ShadowRoot;kind:WechatIdentityRootObservation['kind'];parent:number|null;visible:boolean}>=[{root:document,kind:'top',parent:null,visible:true}];
+    let frameCount=0,foreignFrameCount=0,unknownShadowCount=0,truncated=false,visited=0;
+    for(let cursor=0;cursor<pending.length;cursor++){
+     const item=pending[cursor]!,root=item.root,index=roots.length;
+     const exactIds=[...root.querySelectorAll('#finder-uid-copy.finder-uniq-id')],exactNames=[...root.querySelectorAll('h2.finder-nickname')],broadIds=[...root.querySelectorAll('#finder-uid-copy')],broadNames=[...root.querySelectorAll('.finder-nickname')];
+     const validIds=exactIds.filter(visible),validNames=exactNames.filter(visible),id=validIds.length===1?validIds[0]:undefined,name=validNames.length===1?validNames[0]:undefined;
+     const idText=id?.textContent?.trim(),copy=id?.getAttribute('data-clipboard-text')?.trim();
+     if([exactIds.length,exactNames.length,broadIds.length,broadNames.length].some(count=>count>1000))truncated=true;
+     roots.push({kind:item.kind,parent:item.parent,visible:item.visible,uidRaw:Math.min(1000,exactIds.length),uidVisible:Math.min(1000,validIds.length),nameRaw:Math.min(1000,exactNames.length),nameVisible:Math.min(1000,validNames.length),uidIdRaw:Math.min(1000,broadIds.length),uidIdVisible:Math.min(1000,broadIds.filter(visible).length),nameClassRaw:Math.min(1000,broadNames.length),nameClassVisible:Math.min(1000,broadNames.filter(visible).length),idTextPresent:id?!!idText:null,copyPresent:id?!!copy:null,copyMatches:id?!!idText&&!!copy&&idText===copy:null,namePresent:name?!!name.textContent?.trim():null,uidInRoot:id?Node.prototype.getRootNode.call(id)===root:null,nameInRoot:name?Node.prototype.getRootNode.call(name)===root:null});
+     const walker=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT);
+     for(let node=walker.nextNode() as Element|null;node;node=walker.nextNode() as Element|null){
+      if(++visited>2000){truncated=true;break;}
+      let child:Document|ShadowRoot|null=null,kind:WechatIdentityRootObservation['kind']='openShadow';
+      if(node.localName==='iframe'){
+       frameCount++;if(frameCount>1000){frameCount=1000;truncated=true;}kind='frame';
+       try{const frame=node as HTMLIFrameElement;if(frame.contentWindow?.location.origin===location.origin)child=frame.contentDocument;else {foreignFrameCount++;if(foreignFrameCount>1000){foreignFrameCount=1000;truncated=true;}}}catch{foreignFrameCount++;if(foreignFrameCount>1000){foreignFrameCount=1000;truncated=true;}}
+      }else if(node.shadowRoot)child=node.shadowRoot;
+      else if(node.localName.includes('-')){unknownShadowCount++;if(unknownShadowCount>1000){unknownShadowCount=1000;truncated=true;}}
+      if(child){if(pending.length<8)pending.push({root:child,kind,parent:index,visible:item.visible&&visible(node)});else truncated=true;}
+     }
+     if(visited>2000)break;
+    }
+    shape={...base,rootScan:truncated?'limited':'complete',frameCount,foreignFrameCount,unknownShadowCount,truncated,roots};
+   }catch{/* 可选元数据失败只省略观察；保留上方原identity。 */}
+   return {identity,shape};
   }
   const items=[...document.querySelectorAll('li.weui-desktop-setting__item')].filter(visible);
   const values=(label:string)=>items.filter(item=>item.querySelector('.weui-desktop-setting__item__label')?.textContent?.trim()===label).map(item=>item.querySelector('.weui-desktop-setting__item__info')?.textContent?.trim()??'');
   const ids=values('AppID'),names=values('名称');
-  if(ids.length!==1||names.length!==1||!/^wx[0-9a-zA-Z]+$/.test(ids[0]!))return null;
-  return {platformIdentity:ids[0]!,displayName:names[0]!};
- },platform);
+  if(ids.length!==1||names.length!==1||!/^wx[0-9a-zA-Z]+$/.test(ids[0]!))return {identity:null};
+  return {identity:{platformIdentity:ids[0]!,displayName:names[0]!}};
+ },{platform,diagnose:platform==='wechatVideo'&&!!onObservation,identityPage,sourcePath:url.pathname,verifyWrongPath});
+ if(platform==='wechatVideo'){
+  const current=observeWrongPath||verifyWrongPath?nativeUrl(page.url(),origins.wechatVideo,'wechatVideo'):url;
+  if(result.shape&&current.pathname!==url.pathname)result.shape.routeUnchanged=false;notify(result.shape);
+  if(verifyWrongPath&&'loginRequired' in result&&result.loginRequired&&current.pathname===url.pathname)return fail('LOGIN_REQUIRED','微信后台需要本人重新登录');
+ }
+ const information=result.identity;
  return information?.displayName?{...information,platform,sourcePath:url.pathname}:null;
 }
 /** SEMANTIC_BOUNDARY_ALLOW: 仅识别已实证的Playwright导航协议异常，不判断登录、身份或内容。 */
@@ -177,12 +159,38 @@ async function readOfficialIdentityFields(page:Page,controls:WechatOperationCont
  try{return await readWechatIdentityDom(page,'wechatOfficial');}
  catch(error){
   controls.signal.throwIfAborted();
-  // 只在公众号字段观察的同一Page上等待新上下文；入口、报表和其它错误原样失败。
+  // 只在公众号字段观察的同一Page上等待新上下文；入口另有独立窄协议，报表和其它错误原样失败。
   if(!(error instanceof Error)||error.name!=='Error'||
    !/Execution context was destroyed, most likely because of a navigation\.?$/.test(error.message)||page.isClosed())throw error;
   try{nativeUrl(page.url(),origins.wechatOfficial,'wechatOfficial');}catch{throw error;}
   return null; // 外层observe保留原end，不能因导航重建480000观察窗口。
  }
+}
+/** SEMANTIC_BOUNDARY_ALLOW: 仅恢复已实证locator.evaluateAll同页导航协议，入口end只建一次。 */
+async function navigateOfficialIdentityEntry(page:Page,controls:WechatOperationControls){
+ const check=(end:number)=>{controls.signal.throwIfAborted();controls.timeoutMs();if(Date.now()>=end)return fail('ENTRY_NOT_READY','微信后台数据尚未就绪，请查看原任务');};
+ const current=()=>{if(page.isClosed())return fail('BROWSER_OPERATION_FAILED','微信账号身份暂未核对完成，请查看原任务');return nativeUrl(page.url(),origins.wechatOfficial,'wechatOfficial');};
+ const entry=await observe(controls,async end=>{
+  check(end);const before=current();if(before.pathname==='/cgi-bin/settingpage')return {end,href:null};
+  let hrefs:string[];
+  try{hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')).filter((v):v is string=>!!v));}
+  catch(error){
+   check(end);
+   if(!(error instanceof Error)||error.name!=='Error'||!/^locator\.evaluateAll: Execution context was destroyed, most likely because of a navigation\.?(?:\r?\n|$)/.test(error.message)||page.isClosed())throw error;
+   try{nativeUrl(page.url(),origins.wechatOfficial,'wechatOfficial');}catch{throw error;}
+   return null;
+  }
+  check(end);const after=current();if(after.pathname==='/cgi-bin/settingpage')return {end,href:null};
+  if(after.href!==before.href)return null; // 自动跳转后不采用旧DOM href。
+  const valid=hrefs.flatMap(href=>{try{const url=nativeUrl(href,after.href,'wechatOfficial');return url.pathname==='/cgi-bin/settingpage'?[url.href]:[];}catch{return [];}});
+  const unique=[...new Set(valid)];return unique.length===1?{end,href:unique[0]!}:null;
+ },'ENTRY_NOT_READY',480000);
+ check(entry.end);if(current().pathname==='/cgi-bin/settingpage')return;
+ if(!entry.href)return fail('ENTRY_NOT_READY','微信后台数据尚未就绪，请查看原任务');
+ // goto在恢复catch之外；未证导航中断/网络错误仍结束原任务，不新增导航重试。
+ const inherited=controls.timeoutMs(),remaining=entry.end-Date.now();if(remaining<=0)return fail('ENTRY_NOT_READY','微信后台数据尚未就绪，请查看原任务');
+ await page.goto(entry.href,{waitUntil:'domcontentloaded',timeout:Math.min(inherited,remaining)});
+ check(entry.end);current();
 }
 type RenderedShadow={pagePath:string;section:string};
 type WorksObservation={selection:NativeReportPayload['selection'];reportedRows:number};
@@ -278,20 +286,46 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
   },
   async read(page,platform,controls){
    if(platform==='wechatVideo')await page.goto(origins[platform]+'/platform',{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
-   else if(nativeUrl(page.url(),origins[platform],platform).pathname!=='/cgi-bin/settingpage'){
-    const href=await observe(controls,async()=>{
-     nativeUrl(page.url(),origins[platform],platform);
-     const hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')).filter((v):v is string=>!!v));
-     const valid=hrefs.flatMap(href=>{try{const url=nativeUrl(href,page.url(),platform);return url.pathname==='/cgi-bin/settingpage'?[url.href]:[];}catch{return [];}});
-     return [...new Set(valid)].length===1?valid[0]!:null;
-    },'ENTRY_NOT_READY',480000);
-    await page.goto(href,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
-   }
-   return observe(controls,()=>platform==='wechatOfficial'?readOfficialIdentityFields(page,controls):readWechatIdentityDom(page,platform),platform==='wechatOfficial'?'FIELDS_NOT_READY':'IDENTITY_MISSING',480000);
+   else if(nativeUrl(page.url(),origins[platform],platform).pathname!=='/cgi-bin/settingpage')await navigateOfficialIdentityEntry(page,controls);
+   if(platform==='wechatOfficial')return observe(controls,()=>readOfficialIdentityFields(page,controls),'FIELDS_NOT_READY',480000);
+   let wrongPathStarted:number|undefined,nextOpportunity=0;
+   const opportunities=[0,1000,3000,7000];
+   return observe(controls,async end=>{
+    const check=()=>{controls.signal.throwIfAborted();controls.timeoutMs();if(Date.now()>=end)return fail('IDENTITY_MISSING','微信后台数据尚未就绪，请查看原任务');};
+    check();const wrongPath=nativeUrl(page.url(),origins.wechatVideo,'wechatVideo').pathname!=='/platform';
+    let sampleWrongPath=false;
+    if(wrongPath&&controls.onIdentityObservation){
+     wrongPathStarted??=Date.now();const elapsed=Date.now()-wrongPathStarted;
+     if(nextOpportunity<opportunities.length&&elapsed>=opportunities[nextOpportunity]!){
+      // 机会先消耗，跨过的时点不catchup；每个原poll最多一次，绝不补偿失败。
+      while(nextOpportunity+1<opportunities.length&&elapsed>=opportunities[nextOpportunity+1]!)nextOpportunity++;
+      nextOpportunity++;sampleWrongPath=true;
+     }
+    }
+    const verifyWrongPath=wrongPath&&controls.identityVerification==='boundIdentity';
+    if(sampleWrongPath||verifyWrongPath){
+     let accepting=true,timer:ReturnType<typeof setTimeout>|undefined,onAbort:(()=>void)|undefined;
+     try{
+      const pending=Promise.resolve().then(()=>{
+       check();if(nativeUrl(page.url(),origins.wechatVideo,'wechatVideo').pathname==='/platform')return null;
+       return readWechatIdentityDom(page,platform,sampleWrongPath?value=>{if(!accepting)return;check();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');controls.onIdentityObservation?.(value);}:undefined,true,verifyWrongPath);
+      });
+      await Promise.race([pending,new Promise<null>((resolve,reject)=>{
+       const remaining=end-Date.now();timer=setTimeout(()=>resolve(null),Math.max(0,Math.min(remaining,controls.timeoutMs(remaining))));
+       onAbort=()=>reject(controls.signal.reason);controls.signal.addEventListener('abort',onAbort,{once:true});if(controls.signal.aborted)onAbort();
+      })]);
+      check();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');return null;
+     }catch(error){check();if(verifyWrongPath&&!canRetryWechatVideoIdentityContext(page,error,controls))throw error;return null;}
+     finally{accepting=false;if(timer)clearTimeout(timer);if(onAbort)controls.signal.removeEventListener('abort',onAbort);}
+    }
+    try{const value=await readWechatIdentityDom(page,platform,wrongPath?undefined:value=>{check();controls.onIdentityObservation?.(value);});check();return value;}
+    catch(error){check();if(!canRetryWechatVideoIdentityContext(page,error,controls))throw error;return null;}
+   },'IDENTITY_MISSING',480000);
   },
  };
  const reportWitness:WechatReportWitness={async prepare(page,platform,kind,controls){
-  if(platform!==(kind.startsWith('official')?'wechatOfficial':'wechatVideo'))return fail('REPORT_PLATFORM_MISMATCH','报表不属于当前平台');
+  if(!Object.prototype.hasOwnProperty.call(paths,kind)||platform!==(kind.startsWith('official')?'wechatOfficial':'wechatVideo'))return fail('REPORT_PLATFORM_MISMATCH','报表不属于当前平台');
+  controls.signal.throwIfAborted();controls.timeoutMs();
   const current=nativeUrl(page.url(),origins[platform],platform),sourcePath=paths[kind];
   const target=windowFor((options.now??Date.now)(),kind==='channelsWorks');
   if(platform==='wechatOfficial'){
@@ -301,46 +335,18 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    if(!unique.length)return fail('REPORT_LINK_MISSING','当前页面没有原生报表入口');
    await page.goto(unique[0]!,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
   }else if(current.pathname!==sourcePath){
-   // 后台菜单实际href为javascript；仅操作唯一可见真实入口，不猜深链。
-   const entry=page.getByText(kind==='channelsFollowers'?'关注者数据':'视频数据',{exact:true}).filter({visible:true});
-   let entryVisibleCount=await entry.count(),centreVisibleCount:number|undefined,centreClicked=false,recovered=false;
-   const progress=(entryPhase:WechatEntryObservation['entryPhase'])=>{try{controls.onEntryObservation?.({entryPhase,entryVisibleCount,...(centreVisibleCount===undefined?{}:{centreVisibleCount}),centreClicked});}catch{/* 诊断不能改变原菜单操作。 */}};
-   progress('initial');
-   if(entryVisibleCount>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');
-   {
-    const centre=page.getByText('数据中心',{exact:true}).filter({visible:true});
-    let ready:'entry'|'centre'|undefined;
-    try{ready=await observe(controls,async()=>{
-     nativeUrl(page.url(),origins[platform],platform);
-     entryVisibleCount=await entry.count();controls.signal.throwIfAborted();progress('wait_entry_or_centre');
-     if(entryVisibleCount>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');
-     // 同一结束时刻中也允许原合法直接入口晚到；无关centre重复不能反杀该路径。
-     if(entryVisibleCount===1)return 'entry' as const;
-     centreVisibleCount=await centre.count();controls.signal.throwIfAborted();progress('wait_entry_or_centre');
-     if(centreVisibleCount>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');
-     if(centreVisibleCount!==1)return null;
-     // 真正点击前重核：菜单异步展开后再点中心可能把刚出现的入口折回去。
-     entryVisibleCount=await entry.count();controls.signal.throwIfAborted();progress('wait_entry_or_centre');
-     if(entryVisibleCount>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');
-     if(entryVisibleCount===1)return 'entry' as const;
-     centreVisibleCount=await centre.count();controls.signal.throwIfAborted();progress('wait_entry_or_centre');
-     if(centreVisibleCount>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');
-     if(centreVisibleCount!==1)return null;
-     nativeUrl(page.url(),origins[platform],platform);progress('click_centre');
-     await centre.click({timeout:controls.timeoutMs()});controls.signal.throwIfAborted();centreClicked=true;
-     return 'centre' as const;
-    },'REPORT_LINK_MISSING');}catch(error){
-     if(!(error instanceof WechatBrowserSourceError)||error.code!=='REPORT_LINK_MISSING'||centreClicked)throw error;
-     controls.signal.throwIfAborted();controls.timeoutMs();nativeUrl(page.url(),origins[platform],platform);
-     await recoverCollapsedEntry(page,kind==='channelsFollowers'?'关注者数据':'视频数据',controls,error,progress);recovered=true;
-    }
-    if(ready==='centre')await observe(controls,async()=>{nativeUrl(page.url(),origins[platform],platform);entryVisibleCount=await entry.count();controls.signal.throwIfAborted();progress('wait_entry_after_centre');if(entryVisibleCount>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');return entryVisibleCount===1?true:null;},'REPORT_LINK_MISSING');
-   }
-   nativeUrl(page.url(),origins[platform],platform);
-   if(!recovered){progress('click_entry');await entry.click({timeout:controls.timeoutMs()});}
-   controls.signal.throwIfAborted();progress('wait_target_route');
-   await page.waitForURL(url=>url.origin===origins[platform]&&!url.username&&!url.password&&url.pathname===sourcePath,{timeout:controls.timeoutMs()});
-   controls.signal.throwIfAborted();try{controls.onEntryObservation?.(undefined);}catch{/* 诊断不能阻断后续报表。 */}
+   // SEMANTIC_BOUNDARY_ALLOW: 只用既有kind→固定官方父路由协议，不按图标/文本猜导航或平台权限。
+   const response=await page.goto(new URL(sourcePath,origins.wechatVideo).href,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs(120000)});
+   controls.signal.throwIfAborted();controls.timeoutMs();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
+   const loggedOut=await identityWitness.isLoggedOut(page,'wechatVideo',controls);
+   controls.signal.throwIfAborted();controls.timeoutMs();
+   if(loggedOut)return fail('LOGIN_REQUIRED','微信后台需要本人重新登录');
+   // 仅复用原boundIdentity错路径QR业务见证；不读报表页身份、不再goto身份首页。
+   try{await readWechatIdentityDom(page,'wechatVideo',undefined,true,true);}
+   catch(error){controls.signal.throwIfAborted();controls.timeoutMs();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');throw error;}
+   controls.signal.throwIfAborted();controls.timeoutMs();
+   const landed=nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
+   if(landed.pathname!==sourcePath||response&&response.status()>=400)return fail('REPORT_PAGE_MISSING','原生报表页面尚未就绪，请查看原任务');
   }
   let scope:Page|Frame=page,uiRoot:Page|Frame|Locator=page,works:WorksObservation|undefined,shadow:RenderedShadow|undefined;
   let host:ElementHandle<Element>|null=null,frameElement:ElementHandle<Node>|undefined;

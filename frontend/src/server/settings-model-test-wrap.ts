@@ -18,8 +18,9 @@ import { resolveMinimaxH3Endpoints } from "@creatoros/ai-worker";
  *   - knowledge.search.embed:已停用；在配置解析与网络前明确返回，不再测试向量模型。
  *   - image.generate:resolveMultimodal → **真实最小生图调用**(供应商无免费探测端点;
  *     消耗少量额度 —— UI 文案已提示)。definitive:出字节 = 真连通。
- *   - video.generate:生视频分钟级且计费,不真生成 —— 对生成端点发**缺 prompt 的鉴权探测**
- *     (401/403 或 MiniMax base_resp 1004 → 鉴权失败;参数级报错 → 鉴权/端点可达)。
+ *   - video.generate:生视频分钟级且计费,不真生成 —— 仅发缺 prompt 的请求；401/403 或
+ *     MiniMax base_resp 1004 明确鉴权失败，其余响应不能证明已鉴权或可生成，返回 warn。
+ *   - image.edit:暂无内置连接测试，返回未测试说明，不发付费编辑请求。
  *   - transcribe.audio:云端配置 → GET /v1/models 鉴权探测；未配置 → 中性说明本地 Whisper 回退。
  *   - web.search:resolveSearch → browser 免 key 直接 ✓;rss → GET 首个 feed URL;
  *     bocha/tavily/serpapi → 真实最小检索(1 条,消耗少量额度)。
@@ -236,11 +237,11 @@ async function textModelProbe(
   }
 }
 
-// ── 生成端点鉴权探测(video.generate:不真生成,发缺 prompt 请求判鉴权)────────────
+// ── 视频端点有限探测：缺内容请求只能发现明确失败，不能由参数错误反推鉴权成功。────
 async function generationAuthProbe(
   spec: MmSpecLite,
   fetchImpl: typeof fetch,
-): Promise<{ ok: boolean; detail: string }> {
+): Promise<{ ok: boolean; detail: string; status?: "warn" }> {
   try {
     const provider = spec.provider.toLowerCase();
     const omnihi =
@@ -262,7 +263,7 @@ async function generationAuthProbe(
         "Content-Type": "application/json",
         Authorization: `Bearer ${spec.token}`,
       },
-      // 故意不带 prompt:鉴权通过 → 参数级报错(不触发计费生成);鉴权失败 → 401/1004。
+      // 保留原缺内容请求；参数校验顺序由供应商决定，不能用参数错误证明鉴权已通过。
       body: JSON.stringify({ model: spec.model }),
     });
     if (res.status === 401 || res.status === 403) {
@@ -282,7 +283,7 @@ async function generationAuthProbe(
     } catch {
       /* 非 JSON → 按 HTTP 状态判 */
     }
-    const code = parsed.base_resp?.status_code;
+    const code = parsed?.base_resp?.status_code;
     if (code === 1004) {
       logProbeFailure("generationAuthProbe/1004", {
         category: "authentication_error",
@@ -302,8 +303,9 @@ async function generationAuthProbe(
     }
     return {
       ok: true,
+      status: "warn",
       detail:
-        "鉴权与端点可达(未实际生成视频 —— 生视频分钟级且计费,只校验了密钥与端点)。",
+        "尚未确认视频鉴权与端点，未实际生成视频。请核对已保存的配置；实际生成可能消耗额度。",
     };
   } catch {
     logProbeFailure("generationAuthProbe", { category: "network_error" });
@@ -435,6 +437,15 @@ export async function runModelConnectionTest(
           provider: "",
           model: "",
           detail: "向量检索已停用，知识搜索使用关键词，无需配置或测试向量模型。",
+        };
+      }
+      case "image.edit": {
+        return {
+          ok: true,
+          status: "warn",
+          provider: "",
+          model: "",
+          detail: "图片编辑暂无内置连接测试，不代表密钥失效；未执行图片编辑。",
         };
       }
       case "image.generate": {

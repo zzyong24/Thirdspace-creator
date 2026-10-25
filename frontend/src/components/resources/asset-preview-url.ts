@@ -18,20 +18,30 @@
 import { client } from "@/lib/contract-client";
 import { readCurrentAccountId, readCurrentGroupId } from "@/lib/http-transport";
 
-// [Bug-6 T-019] 10 分钟 < token TTL(15min 默认),留 5min 安全垫;
-// 太短 → 多余 dispatch;太长 → 又踩「缓存超过 token 寿命」的原坑。
-const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_TTL_MS = 10 * 60 * 1000; // 小于签名URL的15分钟有效期。
 const MAX_CACHE_ENTRIES = 256;
+const MAX_REQUESTS = 4;
+const MAX_THUMBNAIL_REQUESTS = 3;
 
-interface CacheEntry {
-  url: string | null;
-  expiresAt: number;
+type PreviewPriority = "thumbnail" | "active";
+type PreviewJob = {
+  key: string;
+  assetId: string;
+  phase: "queued" | "running" | "settled";
+  consumers: Map<symbol, PreviewPriority>;
+  legacyConsumer: boolean;
+  promise: Promise<string | null>;
+  resolve: (url: string | null) => void;
+};
+export interface AssetPreviewLease {
+  readonly promise: Promise<string | null>;
+  release(): void;
 }
-
+interface CacheEntry { url: string | null; expiresAt: number; }
 const cache = new Map<string, CacheEntry>();
-// in-flight Promise 按 assetId 串行(防双击/并发 mount 同一素材重复换),
-// 但 cache 命中读 `Promise.resolve(entry.url)`(不进微任务排队,已 fetch 完的同步返回)。
-const inflight = new Map<string, Promise<string | null>>();
+// Map插入顺序保同级FIFO；不同素材共享有限名额，同素材仍共用原Promise。
+const inflight = new Map<string, PreviewJob>();
+let running = 0, runningThumbnails = 0, pumpScheduled = false;
 let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 function previewKey(assetId: string) {
   return JSON.stringify([readCurrentGroupId(), readCurrentAccountId(), assetId]);
@@ -44,57 +54,101 @@ function sweepCache() {
   const nextExpiry = Math.min(...[...cache.values()].map(entry => entry.expiresAt));
   expiryTimer = Number.isFinite(nextExpiry) ? setTimeout(sweepCache, Math.max(0, nextExpiry - now)) : undefined;
 }
-
-export function resolveAssetPreviewUrl(assetId: string): Promise<string | null> {
+function hasConsumers(job: PreviewJob) { return job.legacyConsumer || job.consumers.size > 0; }
+function isActive(job: PreviewJob) { return job.legacyConsumer || [...job.consumers.values()].includes("active"); }
+function current(job: PreviewJob) { return inflight.get(job.key) === job && previewKey(job.assetId) === job.key; }
+function cancelQueued(job: PreviewJob) {
+  if (job.phase !== "queued") return;
+  if (inflight.get(job.key) === job) inflight.delete(job.key);
+  job.phase = "settled";
+  job.resolve(null); // 取消不是失败，不写短TTL缓存或触发自动重试。
+}
+function schedulePump() {
+  if (pumpScheduled) return;
+  pumpScheduled = true;
+  void Promise.resolve().then(() => { pumpScheduled = false; pump(); });
+}
+async function read(job: PreviewJob): Promise<string | null> {
+  let url: string | null = null, failed = false;
+  try {
+    // 在真正调用SDK的同一同步段核范围，不把旧队列用新账号请求头发出去。
+    if (!current(job) || !hasConsumers(job)) return null;
+    const dto = await client.getDownloadUrl({params: {assetId: job.assetId},query: undefined,body: undefined});
+    url = dto.url ?? null;
+  } catch { failed = true; }
+  if (!current(job) || !hasConsumers(job)) return null;
+  cache.set(job.key, {url,expiresAt: Date.now() + (failed ? 30_000 : CACHE_TTL_MS)});
   sweepCache();
-  const key = previewKey(assetId);
-  const hit = cache.get(key);
-  // [Bug-6 T-019] 命中但过期 → 当作未命中,失效 + 重换。
+  return url;
+}
+function pump() {
+  for (const job of inflight.values()) {
+    if (job.phase === "queued" && (!current(job) || !hasConsumers(job))) cancelQueued(job);
+  }
+  while (running < MAX_REQUESTS) {
+    const queued = [...inflight.values()].filter(job => job.phase === "queued");
+    const job = queued.find(isActive) ?? (runningThumbnails < MAX_THUMBNAIL_REQUESTS ? queued[0] : undefined);
+    if (!job) return;
+    const thumbnail = !isActive(job);
+    job.phase = "running"; running++;
+    if (thumbnail) runningThumbnails++;
+    const finish = (url: string | null) => {
+      // release/invalidate不能提前释放物理在途名额，只在SDK实际settle时扣减。
+      running--;
+      if (thumbnail) runningThumbnails--;
+      if (inflight.get(job.key) === job) inflight.delete(job.key);
+      job.phase = "settled"; job.resolve(url); schedulePump();
+    };
+    void read(job).then(finish, () => finish(null));
+  }
+}
+function lookup(assetId: string): {promise: Promise<string | null>;job?: PreviewJob} {
+  sweepCache();
+  const key = previewKey(assetId), hit = cache.get(key);
   if (hit && Date.now() < hit.expiresAt) {
     cache.delete(key); cache.set(key, hit);
-    return Promise.resolve(hit.url);
+    return {promise: Promise.resolve(hit.url)};
   }
-
-  // 已过期 → 失效原条目(下个 await 不会用旧 url)。
   if (hit) cache.delete(key);
-
-  // 防并发:同一 assetId 多处同时 mount(网格卡 + 详情栏)共用一次 in-flight。
-  const inflightHit = inflight.get(key);
-  if (inflightHit) return inflightHit;
-
-  const p = Promise.resolve().then(async () => {
-    try {
-      const dto = (await client.getDownloadUrl({
-        params: { assetId },
-        query: undefined,
-        body: undefined,
-      })) as unknown as { url?: string };
-      if (previewKey(assetId) !== key || inflight.get(key) !== p) return null;
-      const url = dto.url ?? null;
-      if (inflight.get(key) === p) {
-        cache.set(key, { url, expiresAt: Date.now() + CACHE_TTL_MS }); sweepCache();
-      }
-      return url;
-    } catch {
-      // [Bug-6 T-019] 失败也缓存短 TTL(30s),避免某素材瞬时 5xx 被打爆 dispatch。
-      // 但显式 invalidate 仍能立刻清掉(组件 onError 触发时)。
-      if (inflight.get(key) === p) {
-        cache.set(key, { url: null, expiresAt: Date.now() + 30_000 }); sweepCache();
-      }
-      return null;
-    } finally {
-      if (inflight.get(key) === p) inflight.delete(key);
-    }
-  });
-  inflight.set(key, p);
-  return p;
+  const existing = inflight.get(key);
+  if (existing) return {promise: existing.promise,job: existing};
+  let resolve!: PreviewJob["resolve"];
+  const promise = new Promise<string | null>(done => { resolve = done; });
+  const job: PreviewJob = {key,assetId,phase:"queued",consumers:new Map(),legacyConsumer:false,promise,resolve};
+  inflight.set(key,job);
+  return {promise,job};
 }
 
-/** 文件内容变更(重传/新版本)后失效,下次重新换 URL。 */
+/** 旧单次调用保原签名和Promise共享；默认主动预览，不被缩略图占满名额。 */
+export function resolveAssetPreviewUrl(assetId: string): Promise<string | null> {
+  const {promise,job} = lookup(assetId);
+  if (job) { job.legacyConsumer = true; schedulePump(); }
+  return promise;
+}
+
+/** effect持有独立订阅；最后释放只撤未发请求，不伪造网络abort。 */
+export function acquireAssetPreviewUrl(assetId: string, {priority}: {priority: PreviewPriority}): AssetPreviewLease {
+  const {promise,job} = lookup(assetId), token = Symbol();
+  if (job) { job.consumers.set(token,priority); schedulePump(); }
+  let released = false;
+  return {promise,release() {
+    if (released) return;
+    released = true;
+    if (!job) return;
+    job.consumers.delete(token);
+    if (!hasConsumers(job)) cancelQueued(job);
+    schedulePump();
+  }};
+}
+
+/** 文件内容变更后失效；旧请求继续占真实名额，但结果不能回填。 */
 export function invalidateAssetPreviewUrl(assetId: string): void {
   const key = previewKey(assetId);
   cache.delete(key);
-  // [Bug-6 T-019] 同时清 in-flight(避免下一次 mount 拿到旧 in-flight 旧 promise)。
-  inflight.delete(key);
-  sweepCache();
+  const job = inflight.get(key);
+  if (job) {
+    cancelQueued(job);
+    if (inflight.get(key) === job) inflight.delete(key);
+  }
+  sweepCache(); schedulePump();
 }

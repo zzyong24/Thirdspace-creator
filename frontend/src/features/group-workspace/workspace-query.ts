@@ -2,7 +2,7 @@ import {groupWorkspaceQuery,type ENDPOINTS,type GroupWorkspaceQuery} from "@crea
 export type GroupWorkspace=typeof ENDPOINTS.getGroupOverview.response["_output"]["workspace"];
 type PlatformId=NonNullable<GroupWorkspace["platform"]>;
 export const WORKSPACE_PLATFORMS:readonly {id:PlatformId;label:string}[]=[{id:"douyin",label:"抖音"},{id:"kuaishou",label:"快手"},{id:"wechatVideo",label:"视频号"},{id:"wechatOfficial",label:"公众号"},{id:"xiaohongshu",label:"小红书"}];
-export function platformName(platform:string){return WORKSPACE_PLATFORMS.find(p=>p.id===platform)?.label??platform;}
+export function platformName(platform:string){return WORKSPACE_PLATFORMS.find(p=>p.id===(platform==='wechatOfficialAccount'?'wechatOfficial':platform))?.label??platform;}
 /** SEMANTIC_BOUNDARY_ALLOW: 校验公开查询字段与日历日期，不选择账号或内容。归属由服务端再校验。 */
 export function workspaceQueryFromSearch(search:Record<string,string|string[]|undefined>):GroupWorkspaceQuery {
  const query:GroupWorkspaceQuery={};

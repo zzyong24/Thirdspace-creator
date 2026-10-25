@@ -16,7 +16,7 @@ const reportNames:Record<NativeReportKind,string>={officialContent:"内容分析
 const unitNames:Record<string,string>={people:"人",count:"次",signedCount:"人",ratio:"%",seconds:"秒",date:"日期",opaqueId:"平台ID",text:""};
 const active=(run:CollectionRunResource|null)=>run?.status==='queued'||run?.status==='running';
 const timedOut=(run:CollectionRunResource|null)=>run?.status==='partial'&&run.reasonCode==='TASK_TIMEOUT';
-const statuses:Record<CollectionRunResource['status'],string>={queued:"等待同步",running:"正在同步数据",complete:"数据同步完成",partial:"数据同步未完成，可继续原任务",needsAuth:"登录已过期，请重新扫码",failed:"数据同步未完成，请重试",cancelled:"本次同步已取消"};
+const statuses:Record<CollectionRunResource['status'],string>={queued:"等待同步",running:"正在同步数据",complete:"数据同步完成",partial:"数据同步未完成，可继续原任务",needsAuth:"微信需要重新登录，请重新扫码",failed:"数据同步未完成，请重试",cancelled:"本次同步已取消"};
 function time(value:string){return new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'});}
 function formatCell(cell:NativeReportResource['tables'][number]['rows'][number][number],unit:string){
  if(cell.value===null)return '—';
