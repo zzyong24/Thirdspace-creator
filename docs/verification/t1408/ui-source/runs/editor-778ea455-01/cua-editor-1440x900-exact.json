@@ -1,0 +1,107 @@
+{
+  "width": 1440,
+  "height": 900,
+  "startedAt": "2026-10-25T06:55:44.237Z",
+  "steps": [
+    {
+      "step": "打开素材与转写",
+      "elapsedMs": 377
+    },
+    {
+      "step": "进入转写",
+      "elapsedMs": 749
+    },
+    {
+      "step": "展开原片详情",
+      "elapsedMs": 1153
+    },
+    {
+      "step": "原生滚动及可见性核对",
+      "elapsedMs": 1476
+    },
+    {
+      "step": "打开核对原片",
+      "elapsedMs": 1795
+    },
+    {
+      "step": "取消原片选择",
+      "elapsedMs": 2169
+    },
+    {
+      "step": "返回画面",
+      "elapsedMs": 2520
+    },
+    {
+      "step": "画面播放控制可见（计时终点）",
+      "elapsedMs": 2527
+    }
+  ],
+  "assertions": {
+    "emptyHint": true,
+    "prepareDisabled": true,
+    "guide": true,
+    "buttonFullyVisible": true,
+    "emptyDialog": true,
+    "importHint": true,
+    "chooseDisabled": true
+  },
+  "initial": {
+    "dirty": false,
+    "height": 900,
+    "width": 1440
+  },
+  "settle": {
+    "result": {
+      "type": "object",
+      "value": {
+        "elapsedMs": 98.89999997615814,
+        "frames": 13,
+        "stable": 12
+      }
+    }
+  },
+  "beforeScroll": {
+    "button": {
+      "bottom": 581.1953125,
+      "left": 294,
+      "right": 841.0625,
+      "top": 499.1953125
+    },
+    "fullyVisible": false,
+    "scroll": {
+      "bottom": 571.5234375,
+      "left": 269,
+      "right": 866.0625,
+      "scrollTop": 0,
+      "top": 361.1953125
+    }
+  },
+  "scrollAction": {
+    "direction": "down",
+    "pages": 0.015190972222222222,
+    "pixels": 13.671875
+  },
+  "afterScroll": {
+    "button": {
+      "bottom": 567.6953125,
+      "left": 294,
+      "right": 841.0625,
+      "top": 485.6953125
+    },
+    "fullyVisible": true,
+    "scroll": {
+      "bottom": 571.5234375,
+      "left": 269,
+      "right": 866.0625,
+      "scrollTop": 13.5,
+      "top": 361.1953125
+    }
+  },
+  "elapsedMs": 2527,
+  "final": {
+    "dirty": false,
+    "height": 900,
+    "width": 1440
+  },
+  "pass": true
+}

@@ -1,0 +1,187 @@
+{
+  "schema": "t1410-backlog-compaction-preview/v1",
+  "generatedAt": "2026-10-25T06:56:37.265Z",
+  "root": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "out": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1410/backlog-preview-20261025-apply",
+  "sourceCommit": "778ea4559850b0d8dfbf279c312dc4c21d72866e",
+  "mode": "preview-only",
+  "realControlFilesWritten": false,
+  "sourceSnapshots": [
+    {
+      "path": "BACKLOG.md",
+      "bytes": 98343,
+      "sha256": "eb98b0fcf3fdf9f1a5b600ee46f084c6c539d01af21df2b54193208ab9d47159"
+    },
+    {
+      "path": "BACKLOG-details.md",
+      "bytes": 243143,
+      "sha256": "b204c37c14112750b1d83ff71c5327cc84e6525ae94aabbeb4013f99b5b88b42"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "bytes": 813266,
+      "sha256": "d0188162cc9d2616850587c9da416f5b45b5a08df334e93796846fd81d910d31"
+    }
+  ],
+  "originalRows": 406,
+  "originalSevenColumnRows": 328,
+  "pausedRowsPreservedVerbatim": 78,
+  "previewRows": 400,
+  "archivedCount": 6,
+  "archiveProof": [
+    {
+      "id": "T-1404",
+      "spec": "docs/features/t1404-tab-navigation-performance-fixes.md",
+      "evidence": "docs/verification/t1404/FRONTEND_VALIDATION.md",
+      "evidenceSha256": "51cb1ab67f765566fca99c9fc746c586d05971ddd04c939b64a77598bfc1c54d",
+      "originalRowSha256": "04f45d8ee33e4ee3a7f18148bd1cf235a78b144cab287cd8a3d59976a8b90d53",
+      "completeEvent": {
+        "ts": "2026-10-24T13:48:15.752Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1404",
+        "evidence": "docs/verification/t1404/FRONTEND_VALIDATION.md",
+        "report": "docs/verification/t1404/FRONTEND_VALIDATION.md",
+        "report_sha": "51cb1ab67f76",
+        "acceptance_checks": [
+          "TAB-CYCLE",
+          "SCRIPT-ROUNDTRIP",
+          "ARTICLE-ZIP"
+        ],
+        "visible_copy_sha": "bdcee870e776f13e0c759fb977669b4a373ab9ce61437a0004af4a5408d22d3b",
+        "visible_copy_captures": 8,
+        "commit_sha": "cfd165baad057b73898a97263f43754d40896082",
+        "verification_executed": true,
+        "verification_command_sha": "64419b3565aa",
+        "verification_output_sha": "e3b0c44298fc",
+        "verification_output_bytes": 0,
+        "sha_before": "cf3aa93f30a5",
+        "sha_after": "d1d413ffba02"
+      },
+      "identityBoundary": "仅搬运原完成行；不是重新验收产品。"
+    },
+    {
+      "id": "T-1396",
+      "spec": "docs/features/t1396-local-recovery-backup-cleanup.md",
+      "evidence": "docs/features/t1396-local-recovery-backup-cleanup.md",
+      "evidenceSha256": "2e2874691972615b1694cda01db07df3130b4b5d7615edab7ba2cfd7b949d90d",
+      "originalRowSha256": "e24309ef204bd90799fb746b0126007d404bf47e654057eb85ec56c9165a1c67",
+      "completeEvent": {
+        "ts": "2026-10-22T04:55:08.851Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1396",
+        "evidence": "docs/features/t1396-local-recovery-backup-cleanup.md；用户明确授权，双代理只读核对10目标边界通过；固定清单删除10处旧版App/DMG与数据副本，逻辑12.14GiB，删除后全部不存在；正式App/数据/新DMG设备inode未变，原进程仍运行且主页HTTP200；pmem sync成功，quick既有22ERROR/17WARN历史审核/看板体量属范围外，full未运行",
+        "sha_before": "a2434c225d11",
+        "sha_after": "29dff2c4508d"
+      },
+      "identityBoundary": "仅搬运原完成行；不是重新验收产品。"
+    },
+    {
+      "id": "T-1395",
+      "spec": "docs/features/t1395-local-package-startup-recovery.md",
+      "evidence": "docs/verification/t1395/RESULT.md",
+      "evidenceSha256": "c97a94ad54e54a0dd241778ceeeab6ff0e3d0553599cc6ee7b0f514812d40e48",
+      "originalRowSha256": "c6e6b9d68f6e6738851aaa019495d9026908c60190a35001fce834f7b6aebc89",
+      "completeEvent": {
+        "ts": "2026-10-22T04:51:53.375Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1395",
+        "evidence": "docs/verification/t1395/RESULT.md；冻结7252d30d5，打包58/58及固定入口退出0，DMG和签名验证通过；副本迁移与实际库核心13表完整内容保留通过；原生安装版首页及身份接口200，日志启动验证通过，无原迁移错误，App保持运行；pmem sync成功，quick仍既有22ERROR/17WARN（历史审核和看板体量，范围外基线未恶化），full未运行；未push/发布",
+        "sha_before": "bb97aec389b0",
+        "sha_after": "45b3e753845c"
+      },
+      "identityBoundary": "仅搬运原完成行；不是重新验收产品。"
+    },
+    {
+      "id": "T-1394",
+      "spec": "docs/features/t1394-local-startup-diagnosis.md",
+      "evidence": "docs/research/t1394-local-startup-diagnosis.md",
+      "evidenceSha256": "51f5ebd208a0acd56522e3ff8388e3443f2da95dd90b4007bb51d45a86771099",
+      "originalRowSha256": "6929d472866dc9ea8ee95341e7321500a713f36f80313088098fc726751d0c88",
+      "completeEvent": {
+        "ts": "2026-10-22T04:25:01.736Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1394",
+        "evidence": "诊断闭合：日志首错+旧包0137/0138+副本账本0139+T1382历史来源；当前源码只读兼容检查PASS，原库快照已保全；docs/research/t1394-local-startup-diagnosis.md。启动未恢复，未重打包安装。pmem sync通过；quick对账22ERROR/17WARN与T1386既有基线一致，均属范围外旧债；full未跑。",
+        "sha_before": "045975e0ce57",
+        "sha_after": "201f3223e086"
+      },
+      "identityBoundary": "仅搬运原完成行；不是重新验收产品。"
+    },
+    {
+      "id": "T-1386",
+      "spec": "docs/features/t1386-quality-main-integration.md",
+      "evidence": "docs/features/t1386-quality-main-integration.md",
+      "evidenceSha256": "15ae288147199d66cfb09f97a15d8487d1327c61f1a31e3030ba36dc4b5bbad9",
+      "originalRowSha256": "af4f5f6d7fa110f6192527a6e4f12ec83aa3cfc859682111b2ecbfa1bedd2311",
+      "completeEvent": {
+        "ts": "2026-10-22T02:28:52.754Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1386",
+        "evidence": "已普通推送main至9be6271e0ce1058d750febdd05306f2168b748f2；三组177文件逐项审查，gitleaks全量暂存及三组均0发现；quality15/15、boundary无新增、timeout-policy通过；pmem sync及quick只读对账22ERROR/17WARN与原基线逐条一致，既有看板体积和历史收据债非本任务范围，full未跑且不冒全绿；stash及备份保留。详情见用户指定terminals/commit-rest报告。",
+        "sha_before": "36c878b2cc86",
+        "sha_after": "fb310c157f98"
+      },
+      "identityBoundary": "仅搬运原完成行；不是重新验收产品。"
+    },
+    {
+      "id": "T-1379",
+      "spec": "docs/features/t1379-collaborator-local-mac-package-guidance.md",
+      "evidence": "docs/features/t1379-collaborator-local-mac-package-guidance.md",
+      "evidenceSha256": "b11db94c138f2f2bbd3a00ec47797daa428c69eaf5ac89a954b9a5a7ee8b52b2",
+      "originalRowSha256": "893540b22387d6d7fe378c3cb7362d93f14232358aca22b4c624c6e882da5e10",
+      "completeEvent": {
+        "ts": "2026-10-20T03:26:15.276Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1379",
+        "evidence": "docs/features/t1379-collaborator-local-mac-package-guidance.md；只读核55841cea本地入口/可选Apple和updater/必需固定sidecar root及verdict、T1377祖先；给条件式操作和已验DMG方案。不构建/安装/传送/读取私钥，不改签名制度，无产品Gate或full执行。",
+        "sha_before": "257c30163589",
+        "sha_after": "afdd863501d5"
+      },
+      "identityBoundary": "只归档当前协作者Mac说明；同号UI任务后续block原事件不改、不作已完成证明。"
+    }
+  ],
+  "externalizedRows": 322,
+  "bytesBefore": 98343,
+  "bytesAfter": 58866,
+  "assertions": {
+    "nonArchivedIdsAndOrder": true,
+    "taskNamesUnchanged": true,
+    "stateReviewAcceptanceUnchanged": true,
+    "pausedRawLinesUnchanged": true,
+    "docHrefSequenceUnchangedPerTask": true,
+    "originalLinksPreservedAcrossFiles": true,
+    "originalRowsAndDescriptionsPreservedVerbatim": true,
+    "archiveAndDetailsOldPrefixUnchanged": true,
+    "contradictoryDoneRowsPreserved": true,
+    "liveSourceUnchangedDuringRun": true
+  },
+  "health": {
+    "exitCode": 1,
+    "errors": 1,
+    "warnings": 12,
+    "summary": {
+      "bytes": 58866,
+      "task_states": {
+        "todo": 76,
+        "in_progress": 199,
+        "done": 3,
+        "paused": 115,
+        "blocked": 0
+      },
+      "inconsistent_status_rows": 162
+    },
+    "runawayRemoved": true,
+    "below30KiB": false
+  },
+  "limits": [
+    "此预览不是主控制面修改，也不是产品重新验收。",
+    "每次运行实时读取所有行；新行不会因硬编码总hash被拒绝。应用前须停止并发写并重新生成，不复制旧预览覆盖新任务。",
+    "不更正旧状态矛盾和历史撞号；health仍有历史警告/体积硬限时如实保留。"
+  ]
+}

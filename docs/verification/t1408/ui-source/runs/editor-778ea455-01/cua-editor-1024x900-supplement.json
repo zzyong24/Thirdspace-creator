@@ -1,0 +1,52 @@
+{
+  "width": 1024,
+  "initial": {
+    "dirty": false,
+    "height": 900,
+    "width": 1024
+  },
+  "settle": {
+    "result": {
+      "type": "object",
+      "value": {
+        "elapsedMs": 105.89999997615814,
+        "frames": 13,
+        "stable": 12
+      }
+    }
+  },
+  "startedAt": "2026-10-25T06:53:22.973Z",
+  "steps": [
+    {
+      "step": "进入转写",
+      "elapsedMs": 825
+    },
+    {
+      "step": "打开核对原片",
+      "elapsedMs": 1543
+    }
+  ],
+  "assertions": {
+    "emptyHint": true,
+    "prepareDisabled": true,
+    "guide": true,
+    "emptyDialog": true,
+    "importHint": true,
+    "chooseDisabled": true
+  },
+  "buttonRect": {
+    "bottom": 581.1953125,
+    "height": 82,
+    "right": 518.3828125,
+    "width": 392.3828125,
+    "x": 126,
+    "y": 499.1953125
+  },
+  "elapsedMs": 2285,
+  "final": {
+    "dirty": false,
+    "height": 900,
+    "width": 1024
+  },
+  "pass": true
+}

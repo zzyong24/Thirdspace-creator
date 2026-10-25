@@ -1,0 +1,30 @@
+{
+  "task": "T-1411",
+  "baseCommit": "778ea4559850b0d8dfbf279c312dc4c21d72866e",
+  "files": [
+    {
+      "path": "contract/src/internal/model-probe-io.ts",
+      "sha256": "70fa5fc9cded08e650e5924cfdf4d78b23aeb8b004b9ed63a2de2d0011064a8a"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+      "sha256": "84539272de5b3430ac64847e7fb5cb3f64ef768812f6e0b16bdd662094f93abd"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.ts",
+      "sha256": "b8b750e3150509a2dfd5778ede26c06724d5c0be6a8141e7b5d2e660a85a9959"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+      "sha256": "c4a22cb356fed0d869a933239960a3d5768930253006cdb41fe4f6c01434de5c"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.test.ts",
+      "sha256": "bb2a872c1321fe559198e84edfe4fe82ddc010958115da8dead46793e67cfc18"
+    },
+    {
+      "path": "docs/features/t1411-model-probe-auth-parity.md",
+      "sha256": "9f96d971292778c094418199950aaa289ba9e403c381768458618f188b04dc44"
+    }
+  ]
+}

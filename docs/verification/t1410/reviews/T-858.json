@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "完整初审当前SPEC SHA256=65055af6914c4f7475ab2846913d815c2cb03843a2e2a612b63f6f898745098b，宪法orchestrator/SYSTEM_ARCHITECTURE.md。原三项finding的强调空集、非重叠主视觉和辅助overlay合同仍有明确约束；但当前文档仍将竖屏人物可见/PiP判失败，与用户后来确认且T-859已明确引用的T-902规则冲突。此新周期baseline只指出有效合同标识缺口，不重开原已销账项、不要求新产品能力或重复验收。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-858-3 / T-902 §2 / DEC-VIDEO-056",
+        "quote": "人物完全退出；PiP 不进入本次新候选的导演合同；用户后续确认竖屏 card 或非 overlay B-roll beat 人物始终位于内容层之上"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-2",
+        "quote": "主视觉接管期间人物完全不可见，模板没有人物缩放/位移 tween"
+      },
+      "where": "当前T-858 FR-858-3、§3.1/§3.3、§5及AC-858-2的竖屏人物断言与后继已确认T-902",
+      "failure_mode": "本次若直接把当前T-858全文重新签为有效规格，实施者按其FR-858-3和AC-858-2隐藏竖屏真人、禁止PiP即可通过旧断言，却违反用户后继确认的真人常驻；遵循T-902保留左下人物的实现又会被当前AC明确判失败。当前T-858没有像T-859那样标识这些断言已被取代，两个相反的用户可见结果都继续作为当前合同存在。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md:54-62,159-162,196-200；docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md:3-5,47-50；docs/superpowers/specs/2026-08-19-portrait-presenter-first-face-persistent.md:14-25；orchestrator/archive/DECISION_LOG-archive.md:53-75（原用户覆盖决定，非新cycle权限）",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle initial full review",
+      "suggestion": "保留原文历史及原用户决定来源，明确人物隐藏/禁PiP/硬切和对应旧验收断言已被T-902取代、不得再作当前竖屏通过或失败标准；其余方向/字幕/引用与恢复约束继续适用。可以先在原任务允许的规格纠偏流程中处理后再复审，不借T-1410修改产品或要求重复已确认的产品决定。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

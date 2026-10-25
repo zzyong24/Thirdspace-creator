@@ -1,0 +1,7 @@
+
+── backlog-compact ────────────────────────────────────
+台账:docs/verification/t1410/backlog-preview-20261025-apply/BACKLOG.md(2.1KB)
+完成区:未找到 `## ✅`/归档区段;保留最近 5 条,归档 6 条。
+✓ 归档 6 行 → docs/verification/t1410/backlog-preview-20261025-apply/BACKLOG-archive.md
+✓ 主文件 2.1KB → 0.1KB。git diff 复核后连同归档文件一起提交。
+  剩余超长 📋/🔨 行属语义压缩(agent 的活):node orchestrator/process/backlog-health.mjs 查看清单。

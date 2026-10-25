@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-816；SPEC SHA-256=76f70923f3e92a895a3f43beb741c767139bc5afcd4010b00339dd3aa10b47b3；本轮宪法=orchestrator/SYSTEM_ARCHITECTURE.md，SHA-256=eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df。对当前完整当前稿真相规格及当前 SYSTEM_ARCHITECTURE 做独立初审。原 REV-001 的 frontend→contract/RPC 和 Backend 单写边界在 §7/AC-8 明确，REV-002 的同版本稳定 sectionRef 规则在 §4/AC-8 保留。新增 snapshotRef 与配图/封面候选来源封套、采纳时当前稿/权限/幂等复核补齐当下真值和候选确认门；无第二任务权、数据库或自动采用。未发现当前规格 blocker/major/minor；本轮未执行真实生成或采纳。",
+  "findings": []
+}

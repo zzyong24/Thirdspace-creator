@@ -1,0 +1,1589 @@
+{
+  "schema": "t1410-serial-review-record-plan/v1",
+  "plan_id": "6ff4bdfc-b158-4725-b813-ca33f2e182b7",
+  "prepared_at": "2026-10-25",
+  "purpose": "根会话审核后串行消费 20 次精确 capability，执行 21 个真实 initial record；本计划生成不改控制面。",
+  "reviewer_identity": {
+    "review_mode": "homogeneous",
+    "model": "inherited-host-model-unverified",
+    "explanation": "独立同构子会话继承宿主模型，未核实精确型号。"
+  },
+  "t1410_gate": {
+    "receipt": "1f4e2a1dd6f2",
+    "event_hash": "99a11765779e15d1f9cb725b9b9b08208fac50b2939ee5d0679e30d2ffacec74",
+    "spec_sha256": "1c4648100566b258456675893a2854be513e1676d82e6430ff68de0bfc44327d"
+  },
+  "original_event_prefix": {
+    "byte_length": 2068780,
+    "sha256": "69ec4dd0c31f09329d8cfb0abdbc01e69a49315926173d53bb75eccf06838eb9",
+    "last_event_hash": "99a11765779e15d1f9cb725b9b9b08208fac50b2939ee5d0679e30d2ffacec74"
+  },
+  "frozen_artifacts": [
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "d04f9a3a80439059fafa327c7f9a0ae1468ca926197e3f57a694a2bc31e9a4b9"
+    },
+    {
+      "path": "orchestrator/process/state-lock.mjs",
+      "sha256": "2ad93fca030eccf4097d8fd5ae4770f63de0e483a2decd50292e3fd8e0e6e2e3"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "docs/features/t1410-review-evidence-reconciliation.md",
+      "sha256": "1c4648100566b258456675893a2854be513e1676d82e6430ff68de0bfc44327d"
+    },
+    {
+      "path": "docs/verification/t1410/canonical-repair-plan.json",
+      "sha256": "9755aee5ecca1e4baf3214a7ada8ed243a7978bebbbb3401685396ded7a5522f"
+    },
+    {
+      "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+      "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+    },
+    {
+      "path": "docs/verification/t1410/reviews/batch-b-review.md",
+      "sha256": "913575efb18ead2589f34ff84442304aaf53e3dd4d72d49d409e13559ccece1c"
+    },
+    {
+      "path": "docs/verification/t1410/reviews/batch-c-review.md",
+      "sha256": "8cd67c86ba109314d665a030c023fa508b07ac1fe41df487ad73ed9ff4981829"
+    },
+    {
+      "path": "docs/verification/t1410/reviews/T-707.initial-review.md",
+      "sha256": "0b36154e3275f09e3e7de33b66711237112a5aa162c38e0e2b4b6001c9122d96"
+    }
+  ],
+  "safety_limits": [
+    "不改任务状态、验收列或产品 SPEC。",
+    "不调用业务、打包、安装、push、taskctl 或 reconcile。",
+    "T858 的预期 CONCERNS 如实落盘，不属于工具执行失败；非零退出/哈希/lineage/receipt 异常立即停止。",
+    "仅根会话审阅脚本/计划后 --apply；默认 --check 只读。",
+    "执行中断从已提交的实际 event/snapshot 恢复 receipt，不重复消费 nonce。"
+  ],
+  "steps": [
+    {
+      "task_id": "T-1369",
+      "spec_path": "docs/features/t1369-dashboard-filter-sidebar-navigation.md",
+      "spec_sha256": "4f608dbb11ca3e269bef9a5d78351b5bec0fb09c636a513f2e69ccae718ad18a",
+      "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "packet_path": "docs/verification/t1410/reviews/T-1369.json",
+      "packet_sha256": "c31b28def59d3727861e8b07aeadbcf0250a13f9377b096756c2114f0ba1a014",
+      "binding_evidence": {
+        "kind": "structured-batch-a",
+        "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+        "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+      },
+      "review_path": "docs/features/t1369-dashboard-filter-sidebar-navigation.review.md",
+      "previous": {
+        "event_hash": "756c3dda4c0952bbce08fa9fe03f533b5dfa87cd377fcd2d53796cb4a474c9d0",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "6f8114cc1f5fbc686abed00a695c4f2ffb8b33d389e47f964cf45d38d36078cb",
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+        "review_path": "docs/features/t1369-dashboard-filter-sidebar-navigation.review.md",
+        "snapshot_sha256": "44d5d6421b8db02fc81cab668066101eece7c2699bdd184e7bc80435eecec355",
+        "review_cell": "PASS[REV:e8916b9b3f96]"
+      },
+      "capability": {
+        "decision_id": "DEC-136909",
+        "nonce": "t1410-792a8d1b-d6a5-4621-82f8-f058d7a512d7",
+        "change_ids": [
+          "T1369-PRODUCTION-FIXTURE-BOUNDARY"
+        ],
+        "change_details": [
+          {
+            "id": "T1369-PRODUCTION-FIXTURE-BOUNDARY",
+            "description": "仅已确认 production 夹具移至外层、应用隔离及原预算守卫保持；不声称 production04 发生。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-136909\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-1369\nPrevious-Spec-SHA256: 6f8114cc1f5fbc686abed00a695c4f2ffb8b33d389e47f964cf45d38d36078cb\nPrevious-Constitution-SHA256: eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df\nAllowed-Change-IDs: T1369-PRODUCTION-FIXTURE-BOUNDARY\nMax-Cycles: 1\nNonce: t1410-792a8d1b-d6a5-4621-82f8-f058d7a512d7\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T1369-PRODUCTION-FIXTURE-BOUNDARY=仅已确认 production 夹具移至外层、应用隔离及原预算守卫保持；不声称 production04 发生。\nSource: DEC-136909 原用户答复“允许这次调整，继续验证”；T1410 FR-141002 仅补 typed 绑定，不冒 production04。\nReview-Evidence: docs/verification/t1410/reviews/T-1369.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "augment-existing-section",
+        "original_section": "## DEC-136909 — 用户明确准许一次T1369夹具调整审核周期（2026-10-19）\nRoot转交用户真实答复：对“只为这次测试环境调整新增一轮，让Sol继续一次生产模式验证（合成DB准备放外层、应用隔离保持）”，用户答“允许这次调整，继续验证”；并补充首页“任意平台都会卡”。这是此前缺失的精确Owner=user单次review-cycle授权，不冒旧批准；任意平台属于原FR输入族，不修改候选测试语义。候选SPEC4f608dbb…/proposal f846415e…原字节保持，旧R3仍仅6f8114。本条保真实授权，最高优先级T1375整合期间暂不启动新重门或与MAIN争写；后续正式独审/typed capability消费按实际工具契约继续，不将用户继续理解成安装/collect/full或许可绕行。\n\n\n",
+        "original_section_sha256": "e25c4db472aa91f8cc25e40277ceff5614475b2d40006a00e884ba3122b0947e"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[连续导航范围](docs/features/t1369-dashboard-filter-sidebar-navigation.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1369",
+        "--spec",
+        "docs/features/t1369-dashboard-filter-sidebar-navigation.md",
+        "--constitution",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-1369.json",
+        "--review",
+        "docs/features/t1369-dashboard-filter-sidebar-navigation.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-136909",
+        "--change-ids",
+        "T1369-PRODUCTION-FIXTURE-BOUNDARY"
+      ]
+    },
+    {
+      "task_id": "T-1255",
+      "spec_path": "docs/features/t1255-reporting-full-delivery.md",
+      "spec_sha256": "2323b2dd3404fb8de09d54592bcb75449899b828d06512cc7f2f9b286c6d3f6c",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-1255.json",
+      "packet_sha256": "1e4c97653cd56f56b7a1a90f942e94fd043350b3794beb1c884ae90de7080ca3",
+      "binding_evidence": {
+        "kind": "structured-batch-a",
+        "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+        "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+      },
+      "review_path": "docs/features/t1255-reporting-full-delivery.review.md",
+      "previous": {
+        "event_hash": "7c0346dd5ad90710d66bd46e5c348c4cade4affacb3f7d57575dbdcfddafcf9a",
+        "cycle": 3,
+        "round": 2,
+        "spec_sha256": "2323b2dd3404fb8de09d54592bcb75449899b828d06512cc7f2f9b286c6d3f6c",
+        "constitution_path": "PROJECT.md",
+        "constitution_sha256": "09ddad223f77418a2efc2d037f386542a2c121fe782427b00d0ece6ea3ac68f6",
+        "review_path": "docs/features/t1255-reporting-full-delivery.review.md",
+        "snapshot_sha256": "b3c5a5ebf4e6f005b0f571d81aefd5b910cd19281baea9bc693081be385e5454",
+        "review_cell": "PASS[REV:7e54d5d28829]"
+      },
+      "capability": {
+        "decision_id": "DEC-141001",
+        "nonce": "t1410-82dd5a3a-9b45-4b54-a00d-815741f544ab",
+        "change_ids": [
+          "T1255-CONSTITUTION-STABLE-PRODUCT"
+        ],
+        "change_details": [
+          {
+            "id": "T1255-CONSTITUTION-STABLE-PRODUCT",
+            "description": "全文审核现有日志诊断合同及当前 PROJECT 适用约束后，宪法稳定绑定产品定位，保原用户同意/隐私边界。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141001\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-1255\nPrevious-Spec-SHA256: 2323b2dd3404fb8de09d54592bcb75449899b828d06512cc7f2f9b286c6d3f6c\nPrevious-Constitution-SHA256: 09ddad223f77418a2efc2d037f386542a2c121fe782427b00d0ece6ea3ac68f6\nAllowed-Change-IDs: T1255-CONSTITUTION-STABLE-PRODUCT\nMax-Cycles: 1\nNonce: t1410-82dd5a3a-9b45-4b54-a00d-815741f544ab\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T1255-CONSTITUTION-STABLE-PRODUCT=全文审核现有日志诊断合同及当前 PROJECT 适用约束后，宪法稳定绑定产品定位，保原用户同意/隐私边界。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-1255.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 4,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[原直传合同](docs/features/t1255-reporting-full-delivery.md) · [观测方案候选](docs/features/t1255-observability-research.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1255",
+        "--spec",
+        "docs/features/t1255-reporting-full-delivery.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-1255.json",
+        "--review",
+        "docs/features/t1255-reporting-full-delivery.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141001",
+        "--change-ids",
+        "T1255-CONSTITUTION-STABLE-PRODUCT"
+      ]
+    },
+    {
+      "task_id": "T-1072-owned-devices",
+      "spec_path": "docs/features/t1072-owned-devices.md",
+      "spec_sha256": "971a503642f67e92b5343772d96abc6800ba74814c014b30fdfb6b486e866f7b",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-1072-owned-devices.json",
+      "packet_sha256": "2b59186223ed8112802583348948d33f812654fc920138721d42d18e6f7e5a27",
+      "binding_evidence": {
+        "kind": "structured-batch-a",
+        "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+        "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+      },
+      "review_path": "docs/features/t1072-owned-devices.T-1072-owned-devices.review.md",
+      "previous": null,
+      "capability": null,
+      "expected_cycle": 1,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[SPEC](docs/features/t1072-owned-devices.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1072-owned-devices",
+        "--spec",
+        "docs/features/t1072-owned-devices.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-1072-owned-devices.json",
+        "--review",
+        "docs/features/t1072-owned-devices.T-1072-owned-devices.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified"
+      ]
+    },
+    {
+      "task_id": "T-1021",
+      "spec_path": "docs/features/t1021-cover-template-library.md",
+      "spec_sha256": "1ca8392b4d5ea2ecb6288aef8284578164938ba2a5d648c3fa05a5e9606b83ad",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-1021.json",
+      "packet_sha256": "6f23430eb70d62c42ec2789eeab7d371dc4a08c23ff6bc8f3ca71c0dc5074916",
+      "binding_evidence": {
+        "kind": "structured-batch-a",
+        "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+        "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+      },
+      "review_path": "docs/features/t1021-cover-template-library.review.md",
+      "previous": {
+        "event_hash": "494552bf33ddd0e33bf270593b04388011dafa538f516a799a282db5926c4ac4",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "242b25c4f83f4030a8d9746e16754bc985a22eab91078f4e1ed6a9eb65b6a8c3",
+        "constitution_path": "docs/产品定位.md",
+        "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+        "review_path": "docs/features/t1021-cover-template-library.review.md",
+        "snapshot_sha256": "7b816e5713729ae38b6c07e61bd63ae5c6fe2bc59db9e7455a0e6340f9a10681",
+        "review_cell": "PASS[REV:f0f3fa0ff91b]"
+      },
+      "capability": {
+        "decision_id": "DEC-141002",
+        "nonce": "t1410-6a0f79aa-5bea-4452-addb-db78f81f1ce5",
+        "change_ids": [
+          "T1021-CANVAS-PUBLISHING-REFERENCE"
+        ],
+        "change_details": [
+          {
+            "id": "T1021-CANVAS-PUBLISHING-REFERENCE",
+            "description": "复核新增无限画布对既有 Publishing 物料/版本真相的引用边界及原两项已解决约束。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141002\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-1021\nPrevious-Spec-SHA256: 242b25c4f83f4030a8d9746e16754bc985a22eab91078f4e1ed6a9eb65b6a8c3\nPrevious-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800\nAllowed-Change-IDs: T1021-CANVAS-PUBLISHING-REFERENCE\nMax-Cycles: 1\nNonce: t1410-6a0f79aa-5bea-4452-addb-db78f81f1ce5\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T1021-CANVAS-PUBLISHING-REFERENCE=复核新增无限画布对既有 Publishing 物料/版本真相的引用边界及原两项已解决约束。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-1021.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[SPEC](docs/features/t1021-cover-template-library.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1021",
+        "--spec",
+        "docs/features/t1021-cover-template-library.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-1021.json",
+        "--review",
+        "docs/features/t1021-cover-template-library.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141002",
+        "--change-ids",
+        "T1021-CANVAS-PUBLISHING-REFERENCE"
+      ]
+    },
+    {
+      "task_id": "T-915",
+      "spec_path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "spec_sha256": "b8282e2c286a9e0ffa757264667e724bcc20457e355b08487d8c08e1011811d9",
+      "constitution_path": "AGENTS.md",
+      "constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
+      "packet_path": "docs/verification/t1410/reviews/T-915.json",
+      "packet_sha256": "974002e6201287aa497dbbf638d5387f1ec5e79673829e66c812742e2f75a08d",
+      "binding_evidence": {
+        "kind": "structured-batch-a",
+        "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+        "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+      },
+      "review_path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+      "previous": {
+        "event_hash": "1d0f281764a2d94f245bbaedad518a9d89ad8fc824c531ba04bf5609a747b93b",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce",
+        "constitution_path": "AGENTS.md",
+        "constitution_sha256": "ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126",
+        "review_path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+        "snapshot_sha256": "a307cd7b22267b5ed05434913252f9a2c17db00d46d1f44e99ac506227ff5aae",
+        "review_cell": "PASS[REV:692283b8bace]"
+      },
+      "capability": {
+        "decision_id": "DEC-141003",
+        "nonce": "t1410-ed04a320-26f1-404b-afc1-964d4cbe8345",
+        "change_ids": [
+          "T915-CURRENT-EXECUTION-AUTHORITY"
+        ],
+        "change_details": [
+          {
+            "id": "T915-CURRENT-EXECUTION-AUTHORITY",
+            "description": "重审 task authority、当下 owner、外部登录身份、暂停预算及当前 AGENTS 约束。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141003\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-915\nPrevious-Spec-SHA256: b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce\nPrevious-Constitution-SHA256: ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126\nAllowed-Change-IDs: T915-CURRENT-EXECUTION-AUTHORITY\nMax-Cycles: 1\nNonce: t1410-ed04a320-26f1-404b-afc1-964d4cbe8345\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T915-CURRENT-EXECUTION-AUTHORITY=重审 task authority、当下 owner、外部登录身份、暂停预算及当前 AGENTS 约束。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-915.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "—",
+      "backlog_document": "[SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-915",
+        "--spec",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "--constitution",
+        "AGENTS.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-915.json",
+        "--review",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141003",
+        "--change-ids",
+        "T915-CURRENT-EXECUTION-AUTHORITY"
+      ]
+    },
+    {
+      "task_id": "T-859",
+      "spec_path": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+      "spec_sha256": "e5be057cd6751965e3f6827fa5529c9fc93c599624eab18443188c55597210f5",
+      "constitution_path": "AGENTS.md",
+      "constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
+      "packet_path": "docs/verification/t1410/reviews/T-859.json",
+      "packet_sha256": "30dd33b841c76a4803c1a2f5746bb52d2aaadb7ac8f5a7bb3f2a846aa4461a58",
+      "binding_evidence": {
+        "kind": "structured-batch-a",
+        "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+        "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
+      "previous": {
+        "event_hash": "db0d70797f340d98150f2e44928f4c5ea3e4b2a74bd750d340c4a161d4e032ee",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "e6fe3ad73fa90859a3850b09e4ffd11fd82efdc1da7e1ee27899839d045981c5",
+        "constitution_path": "AGENTS.md",
+        "constitution_sha256": "e84f83b7e65a415ba7a2a4639188bc2fd2d682f42d3220107a119abdc39d2a77",
+        "review_path": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
+        "snapshot_sha256": "b3953126162829b9373c3dc90ed6a5968728ffce7a0e267a8893344d258a787f",
+        "review_cell": "PASS[REV:9895a91a63a8]"
+      },
+      "capability": {
+        "decision_id": "DEC-141004",
+        "nonce": "t1410-c42362aa-711c-4c29-82f8-e3d101b6505f",
+        "change_ids": [
+          "T859-T902-PRESENTER-VISIBILITY"
+        ],
+        "change_details": [
+          {
+            "id": "T859-T902-PRESENTER-VISIBILITY",
+            "description": "重审 T902 覆盖后的持续人物可见、旧 hidden 无执行权及当前 AGENTS 约束。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141004\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-859\nPrevious-Spec-SHA256: e6fe3ad73fa90859a3850b09e4ffd11fd82efdc1da7e1ee27899839d045981c5\nPrevious-Constitution-SHA256: e84f83b7e65a415ba7a2a4639188bc2fd2d682f42d3220107a119abdc39d2a77\nAllowed-Change-IDs: T859-T902-PRESENTER-VISIBILITY\nMax-Cycles: 1\nNonce: t1410-c42362aa-711c-4c29-82f8-e3d101b6505f\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T859-T902-PRESENTER-VISIBILITY=重审 T902 覆盖后的持续人物可见、旧 hidden 无执行权及当前 AGENTS 约束。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-859.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-859",
+        "--spec",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+        "--constitution",
+        "AGENTS.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-859.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141004",
+        "--change-ids",
+        "T859-T902-PRESENTER-VISIBILITY"
+      ]
+    },
+    {
+      "task_id": "T-858",
+      "spec_path": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md",
+      "spec_sha256": "65055af6914c4f7475ab2846913d815c2cb03843a2e2a612b63f6f898745098b",
+      "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "packet_path": "docs/verification/t1410/reviews/T-858.json",
+      "packet_sha256": "e41430ec70c5a26911a0abb77ffc85ba65d77e47c301098cc7fd2ffec72d9697",
+      "binding_evidence": {
+        "kind": "structured-batch-a",
+        "path": "docs/verification/t1410/reviews/batch-a-audit.json",
+        "sha256": "6503115db52e51548393d0ce9c887dedc8e93fd7b20af152f29cf232b90666d7"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.review.md",
+      "previous": {
+        "event_hash": "3d2ef5ac0db0ab1c0a7d0e31d15ff3eb4f8a59038d2abd6d42298c0f620c0483",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "ab768b979e62ab63199ee8d1014c993dcac7f51dfa92f15e627dacb33b2ceed1",
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+        "review_path": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.review.md",
+        "snapshot_sha256": "cd9e4dcaba9e0558550416214256cad97ed45c32f45826a6bdd7bc0a76cadb7e",
+        "review_cell": "PASS[REV:2521be715a0a]"
+      },
+      "capability": {
+        "decision_id": "DEC-141005",
+        "nonce": "t1410-5f897d17-1abf-403b-94fb-7828627028f7",
+        "change_ids": [
+          "T858-CURRENT-AUTHORITY-RECOVERY",
+          "T858-T902-ASSERTION-APPLICABILITY"
+        ],
+        "change_details": [
+          {
+            "id": "T858-CURRENT-AUTHORITY-RECOVERY",
+            "description": "重审当前 backend 真值、fence、单次强调重试、安全降级和架构约束。"
+          },
+          {
+            "id": "T858-T902-ASSERTION-APPLICABILITY",
+            "description": "真实初审保留旧竖屏断言未标识后继覆盖的 open finding，不以维护授权接受产品争议。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141005\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-858\nPrevious-Spec-SHA256: ab768b979e62ab63199ee8d1014c993dcac7f51dfa92f15e627dacb33b2ceed1\nPrevious-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66\nAllowed-Change-IDs: T858-CURRENT-AUTHORITY-RECOVERY,T858-T902-ASSERTION-APPLICABILITY\nMax-Cycles: 1\nNonce: t1410-5f897d17-1abf-403b-94fb-7828627028f7\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T858-CURRENT-AUTHORITY-RECOVERY=重审当前 backend 真值、fence、单次强调重试、安全降级和架构约束。；T858-T902-ASSERTION-APPLICABILITY=真实初审保留旧竖屏断言未标识后继覆盖的 open finding，不以维护授权接受产品争议。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-858.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "CONCERNS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-858)  [SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-858",
+        "--spec",
+        "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md",
+        "--constitution",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-858.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141005",
+        "--change-ids",
+        "T858-CURRENT-AUTHORITY-RECOVERY,T858-T902-ASSERTION-APPLICABILITY"
+      ]
+    },
+    {
+      "task_id": "T-824",
+      "spec_path": "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md",
+      "spec_sha256": "192b82d1165b95deb86983129be8d5683db1c60f6032ec1990798768e4e753d9",
+      "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "packet_path": "docs/verification/t1410/reviews/T-824.json",
+      "packet_sha256": "6ea7ecfbe3d3b8c506f58bfbea965a3da847c92c8bf82706331cd48dec34b18e",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-824.json",
+        "sha256": "6ea7ecfbe3d3b8c506f58bfbea965a3da847c92c8bf82706331cd48dec34b18e"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.review.md",
+      "previous": {
+        "event_hash": "b5c6f08f45f868c62dc5f790155cbcf1a73a8d683e2b543765cac09b2b8a7fbb",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "58355a1e3ae9f12a57279dfb67ba05d7e950b2aec1f3284aecaf8764339950c6",
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+        "review_path": "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.review.md",
+        "snapshot_sha256": "5abd502198d7139e994123cb47b0218878c76567eb3ed20336943b4fec96237e",
+        "review_cell": "PASS[REV:18361dc8c3c3]"
+      },
+      "capability": {
+        "decision_id": "DEC-141006",
+        "nonce": "t1410-fc2d75e6-cfc3-4803-9d36-c0cacd8b8be0",
+        "change_ids": [
+          "T824-CHECKPOINT-FENCE-CURRENT-ASSETS"
+        ],
+        "change_details": [
+          {
+            "id": "T824-CHECKPOINT-FENCE-CURRENT-ASSETS",
+            "description": "重审两阶段持久 checkpoint、operationId/fence、当前素材与架构单写边界。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141006\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-824\nPrevious-Spec-SHA256: 58355a1e3ae9f12a57279dfb67ba05d7e950b2aec1f3284aecaf8764339950c6\nPrevious-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66\nAllowed-Change-IDs: T824-CHECKPOINT-FENCE-CURRENT-ASSETS\nMax-Cycles: 1\nNonce: t1410-fc2d75e6-cfc3-4803-9d36-c0cacd8b8be0\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T824-CHECKPOINT-FENCE-CURRENT-ASSETS=重审两阶段持久 checkpoint、operationId/fence、当前素材与架构单写边界。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-824.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-824)  [SPEC](docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-824",
+        "--spec",
+        "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md",
+        "--constitution",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-824.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141006",
+        "--change-ids",
+        "T824-CHECKPOINT-FENCE-CURRENT-ASSETS"
+      ]
+    },
+    {
+      "task_id": "T-819",
+      "spec_path": "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md",
+      "spec_sha256": "b3f5b662689736181ccda4753f68d020c13954008318dc189c9ef309aebf09f8",
+      "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "packet_path": "docs/verification/t1410/reviews/T-819.json",
+      "packet_sha256": "06130ac1c48ea2824d878ed20774eab17c5d020a96088892d90dace98e2b8128",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-819.json",
+        "sha256": "06130ac1c48ea2824d878ed20774eab17c5d020a96088892d90dace98e2b8128"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.review.md",
+      "previous": {
+        "event_hash": "8cb26b1e42d23810b7e58fd06fb5f9aff100fa7d04944f4a3ca569306f125ae7",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "d89d457083d1d2d0dd132429b3f65b8a8470f3feca2f44284080833b4754eecb",
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+        "review_path": "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.review.md",
+        "snapshot_sha256": "ecf9c06b41fd924d0728ee0d475ee0334011c37db5790e6e86519a7db624ea0d",
+        "review_cell": "PASS[REV:0425ab7b87b8]"
+      },
+      "capability": {
+        "decision_id": "DEC-141007",
+        "nonce": "t1410-bdd78642-002f-40c4-aa50-06723665dbc3",
+        "change_ids": [
+          "T819-SNAPSHOT-BOUND-CANDIDATE"
+        ],
+        "change_details": [
+          {
+            "id": "T819-SNAPSHOT-BOUND-CANDIDATE",
+            "description": "重审 snapshotRef 在读取、候选创建和采纳三窗口的当前版本约束及当前架构。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141007\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-819\nPrevious-Spec-SHA256: d89d457083d1d2d0dd132429b3f65b8a8470f3feca2f44284080833b4754eecb\nPrevious-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66\nAllowed-Change-IDs: T819-SNAPSHOT-BOUND-CANDIDATE\nMax-Cycles: 1\nNonce: t1410-bdd78642-002f-40c4-aa50-06723665dbc3\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T819-SNAPSHOT-BOUND-CANDIDATE=重审 snapshotRef 在读取、候选创建和采纳三窗口的当前版本约束及当前架构。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-819.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-819)  [SPEC](docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-819",
+        "--spec",
+        "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md",
+        "--constitution",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-819.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141007",
+        "--change-ids",
+        "T819-SNAPSHOT-BOUND-CANDIDATE"
+      ]
+    },
+    {
+      "task_id": "T-816",
+      "spec_path": "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md",
+      "spec_sha256": "76f70923f3e92a895a3f43beb741c767139bc5afcd4010b00339dd3aa10b47b3",
+      "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "packet_path": "docs/verification/t1410/reviews/T-816.json",
+      "packet_sha256": "97b513fd253d09f67137094c1b0ea8a2f1033968e7220f6e946599fc855ea2e8",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-816.json",
+        "sha256": "97b513fd253d09f67137094c1b0ea8a2f1033968e7220f6e946599fc855ea2e8"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.review.md",
+      "previous": {
+        "event_hash": "04c7690bb634dad41e3a4a910e2bec60e686ccea618c7ebb9f23ed3e648d3f31",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "b9490f4fac3f5f00ff1c32d26609e48d82b94b615ab3580f0b0d2a5df955548d",
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+        "review_path": "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.review.md",
+        "snapshot_sha256": "736f2b7f6bcb37106f0779598c7ffeca2b4dd219eb7fe0c75c4156c6feb804c2",
+        "review_cell": "PASS[REV:fb03de3a57d7]"
+      },
+      "capability": {
+        "decision_id": "DEC-141008",
+        "nonce": "t1410-509d137e-cb27-4721-ac40-484ee7a07b51",
+        "change_ids": [
+          "T816-CURRENT-SCRIPT-IMAGE-CANDIDATE"
+        ],
+        "change_details": [
+          {
+            "id": "T816-CURRENT-SCRIPT-IMAGE-CANDIDATE",
+            "description": "重审当前稿、稳定段落、图像候选封套、采纳时复核与当前架构。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141008\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-816\nPrevious-Spec-SHA256: b9490f4fac3f5f00ff1c32d26609e48d82b94b615ab3580f0b0d2a5df955548d\nPrevious-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66\nAllowed-Change-IDs: T816-CURRENT-SCRIPT-IMAGE-CANDIDATE\nMax-Cycles: 1\nNonce: t1410-509d137e-cb27-4721-ac40-484ee7a07b51\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T816-CURRENT-SCRIPT-IMAGE-CANDIDATE=重审当前稿、稳定段落、图像候选封套、采纳时复核与当前架构。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-816.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-816)  [SPEC](docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-816",
+        "--spec",
+        "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md",
+        "--constitution",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-816.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141008",
+        "--change-ids",
+        "T816-CURRENT-SCRIPT-IMAGE-CANDIDATE"
+      ]
+    },
+    {
+      "task_id": "T-768",
+      "spec_path": "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md",
+      "spec_sha256": "7b662918812be8cad4a05bee49ce23682164b26283f3e2721da6d337fcb2339b",
+      "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "packet_path": "docs/verification/t1410/reviews/T-768.json",
+      "packet_sha256": "1ae88cf80e44ad6f07a55c43334182b01d0e3e449bdd62390dceeeee8febd762",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-768.json",
+        "sha256": "1ae88cf80e44ad6f07a55c43334182b01d0e3e449bdd62390dceeeee8febd762"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.review.md",
+      "previous": {
+        "event_hash": "6f21488e33ccbc81b3509df64e19defa20bde96b1d80d677474b1cb12a7534e8",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "f0771cc886f5f56646b8431bf2e939952ecaa7297a05c0b888e23f7ffdb4fec2",
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+        "review_path": "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.review.md",
+        "snapshot_sha256": "e6c699d4d7edb84d4ce1442c5c88276ae7cfe6ada80b67bc3e64e6b3c4b6c025",
+        "review_cell": "PASS[REV:3eb18966ea59]"
+      },
+      "capability": {
+        "decision_id": "DEC-141009",
+        "nonce": "t1410-3bd6535d-8fe7-4fff-b2f2-a1cbd917b80e",
+        "change_ids": [
+          "T768-UNKNOWN-CLOUD-LOCAL-FALLBACK"
+        ],
+        "change_details": [
+          {
+            "id": "T768-UNKNOWN-CLOUD-LOCAL-FALLBACK",
+            "description": "重审未知云端计费保留、独立本地 operationKey、取消/fence 和当前架构。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141009\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-768\nPrevious-Spec-SHA256: f0771cc886f5f56646b8431bf2e939952ecaa7297a05c0b888e23f7ffdb4fec2\nPrevious-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66\nAllowed-Change-IDs: T768-UNKNOWN-CLOUD-LOCAL-FALLBACK\nMax-Cycles: 1\nNonce: t1410-3bd6535d-8fe7-4fff-b2f2-a1cbd917b80e\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T768-UNKNOWN-CLOUD-LOCAL-FALLBACK=重审未知云端计费保留、独立本地 operationKey、取消/fence 和当前架构。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-768.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-768)  [SPEC](docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-768",
+        "--spec",
+        "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md",
+        "--constitution",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-768.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141009",
+        "--change-ids",
+        "T768-UNKNOWN-CLOUD-LOCAL-FALLBACK"
+      ]
+    },
+    {
+      "task_id": "T-726",
+      "spec_path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md",
+      "spec_sha256": "4e03ba1b4410acafaf062a92574100f3b8f8ee92675d263998fc231d2d299aa7",
+      "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "packet_path": "docs/verification/t1410/reviews/T-726.json",
+      "packet_sha256": "3c3706b9bd5a7b9087a54a50f61e47f3e7825b30ddb607677412f015a388b740",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-726.json",
+        "sha256": "3c3706b9bd5a7b9087a54a50f61e47f3e7825b30ddb607677412f015a388b740"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.review.md",
+      "previous": {
+        "event_hash": "219feb0c4ff34b741ada21bc2d96a773bb9bfb824d2414bc41808cc516d49c34",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1",
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+        "review_path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.review.md",
+        "snapshot_sha256": "7a778217f1342dfcd9fde9d49d179a9e1b20e1989c7cb78e1464359c216bf528",
+        "review_cell": "PASS[REV:2809820bf64a]"
+      },
+      "capability": {
+        "decision_id": "DEC-141010",
+        "nonce": "t1410-af54c509-e20f-49a1-9b98-996a4e468b91",
+        "change_ids": [
+          "T726-LEGACY-TASK-FENCE-RETIREMENT"
+        ],
+        "change_details": [
+          {
+            "id": "T726-LEGACY-TASK-FENCE-RETIREMENT",
+            "description": "重审退役旧任务/迟到 Worker、统一装配、当前素材及当前架构。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141010\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-726\nPrevious-Spec-SHA256: 7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1\nPrevious-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66\nAllowed-Change-IDs: T726-LEGACY-TASK-FENCE-RETIREMENT\nMax-Cycles: 1\nNonce: t1410-af54c509-e20f-49a1-9b98-996a4e468b91\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T726-LEGACY-TASK-FENCE-RETIREMENT=重审退役旧任务/迟到 Worker、统一装配、当前素材及当前架构。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-726.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-726)  [SPEC](docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-726",
+        "--spec",
+        "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md",
+        "--constitution",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-726.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141010",
+        "--change-ids",
+        "T726-LEGACY-TASK-FENCE-RETIREMENT"
+      ]
+    },
+    {
+      "task_id": "T-707",
+      "spec_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+      "spec_sha256": "95911e86fb467094feff7b2bd997d1b9ce2bd2e1cbe9dedc4862517ae5f7bdea",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-707.initial.json",
+      "packet_sha256": "d9ca18870401280d4052a9d5efd8659195e732548ce2a679bbbe48be63eda93b",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-707.initial.json",
+        "sha256": "d9ca18870401280d4052a9d5efd8659195e732548ce2a679bbbe48be63eda93b"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.review.md",
+      "previous": {
+        "event_hash": "69e8c24ad9a20bc47acd3b492a528477621d9c301080008ed93dd2bc6c909f11",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "381393efb2d2f63029b4d6df27522836b5bcbb7205429b9df13ccbd6d96f513e",
+        "constitution_path": "docs/产品定位.md",
+        "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+        "review_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.review.md",
+        "snapshot_sha256": "d7bffd9bc1ef312d8dcb4b89992ac09654b9866eb586a1be7d639042859ff28a",
+        "review_cell": "PASS[REV:06867c4bf60c]"
+      },
+      "capability": {
+        "decision_id": "DEC-141011",
+        "nonce": "t1410-e629a7a4-b73f-4cef-99db-e8671cebbf68",
+        "change_ids": [
+          "T707-NO-SESSION-IDEMPOTENCY",
+          "T707-LEGACY-REVIEW-SCHEMA"
+        ],
+        "change_details": [
+          {
+            "id": "T707-NO-SESSION-IDEMPOTENCY",
+            "description": "重审无 session 生成幂等及产品人群不可变 snapshot。"
+          },
+          {
+            "id": "T707-LEGACY-REVIEW-SCHEMA",
+            "description": "保留旧缺省 threat_model_id finding 原件，当前全文新 initial 代替不满足正式 schema 的 recheck；不宣称 CLI 必拒。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141011\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-707\nPrevious-Spec-SHA256: 381393efb2d2f63029b4d6df27522836b5bcbb7205429b9df13ccbd6d96f513e\nPrevious-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800\nAllowed-Change-IDs: T707-NO-SESSION-IDEMPOTENCY,T707-LEGACY-REVIEW-SCHEMA\nMax-Cycles: 1\nNonce: t1410-e629a7a4-b73f-4cef-99db-e8671cebbf68\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T707-NO-SESSION-IDEMPOTENCY=重审无 session 生成幂等及产品人群不可变 snapshot。；T707-LEGACY-REVIEW-SCHEMA=保留旧缺省 threat_model_id finding 原件，当前全文新 initial 代替不满足正式 schema 的 recheck；不宣称 CLI 必拒。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-707.initial.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-707)  [SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-707",
+        "--spec",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-707.initial.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141011",
+        "--change-ids",
+        "T707-NO-SESSION-IDEMPOTENCY,T707-LEGACY-REVIEW-SCHEMA"
+      ]
+    },
+    {
+      "task_id": "T-703",
+      "spec_path": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md",
+      "spec_sha256": "1624f50bb9f70d475bec8c633a7cc6f46d0d94f8fe4e01ecf6abfced36420460",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-703.json",
+      "packet_sha256": "54d32f7c459eb634548687b78785aa510d4450997e5a186cc3b5d96d28d1c5e5",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-703.json",
+        "sha256": "54d32f7c459eb634548687b78785aa510d4450997e5a186cc3b5d96d28d1c5e5"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.review.md",
+      "previous": {
+        "event_hash": "dc0a4a6a07946faf04ccca3c50bbbe2d3db6e0a2a699eb17def80f0feaadbb3f",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "70e49d3ae5a3e418fad77e80fa0a61054c42de5c0634cc20881cfd7a4f005320",
+        "constitution_path": "PROJECT.md",
+        "constitution_sha256": "2afb9684d1ef531f56c5def2185c6cc7086c00aa3105bff0ce87fc5c81fc5fad",
+        "review_path": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.review.md",
+        "snapshot_sha256": "92e737014a163cb8ae80acdc9ab339e9104824085912355b2c97e6d0d5ef263a",
+        "review_cell": "PASS[REV:c1a3920aea71]"
+      },
+      "capability": {
+        "decision_id": "DEC-141012",
+        "nonce": "t1410-e3ec53e2-589e-4ce4-b5ae-fcfb6b2dd538",
+        "change_ids": [
+          "T703-CURRENT-SOURCE-IDEMPOTENCY",
+          "T703-CONSTITUTION-STABLE-PRODUCT"
+        ],
+        "change_details": [
+          {
+            "id": "T703-CURRENT-SOURCE-IDEMPOTENCY",
+            "description": "重审稿件/文件来源指纹、确认/采纳幂等和公开旅程，保留当前窄写口引用 minor。"
+          },
+          {
+            "id": "T703-CONSTITUTION-STABLE-PRODUCT",
+            "description": "真实全文重审当前 PROJECT 与产品定位后稳定绑定，不减少制作/确认/隐私约束。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141012\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-703\nPrevious-Spec-SHA256: 70e49d3ae5a3e418fad77e80fa0a61054c42de5c0634cc20881cfd7a4f005320\nPrevious-Constitution-SHA256: 2afb9684d1ef531f56c5def2185c6cc7086c00aa3105bff0ce87fc5c81fc5fad\nAllowed-Change-IDs: T703-CURRENT-SOURCE-IDEMPOTENCY,T703-CONSTITUTION-STABLE-PRODUCT\nMax-Cycles: 1\nNonce: t1410-e3ec53e2-589e-4ce4-b5ae-fcfb6b2dd538\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T703-CURRENT-SOURCE-IDEMPOTENCY=重审稿件/文件来源指纹、确认/采纳幂等和公开旅程，保留当前窄写口引用 minor。；T703-CONSTITUTION-STABLE-PRODUCT=真实全文重审当前 PROJECT 与产品定位后稳定绑定，不减少制作/确认/隐私约束。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-703.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-703)  [SPEC](docs/superpowers/specs/2026-08-05-video-production-editing-loop.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-703",
+        "--spec",
+        "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-703.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-05-video-production-editing-loop.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141012",
+        "--change-ids",
+        "T703-CURRENT-SOURCE-IDEMPOTENCY,T703-CONSTITUTION-STABLE-PRODUCT"
+      ]
+    },
+    {
+      "task_id": "T-691",
+      "spec_path": "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md",
+      "spec_sha256": "a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-691.json",
+      "packet_sha256": "48b3aac3a841f27e771c1470a300edae549b61bdcef5f5eda44be318bf96bd28",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-691.json",
+        "sha256": "48b3aac3a841f27e771c1470a300edae549b61bdcef5f5eda44be318bf96bd28"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.review.md",
+      "previous": {
+        "event_hash": "e62296d83312eee0744b534c47ac4d9b4a68c0e530bda40972a27985a932036b",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232",
+        "constitution_path": "PROJECT.md",
+        "constitution_sha256": "6a04d0b0fa6c123f7990f02685afeed38858494cc2501ec4bfbc742050ab97fd",
+        "review_path": "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.review.md",
+        "snapshot_sha256": "79c9c163e7c4832bb2b949011b3459ebd9565303c6a109695f8c6c0a17bcfa6d",
+        "review_cell": "PASS[REV:9444ca5b32a9]"
+      },
+      "capability": {
+        "decision_id": "DEC-141013",
+        "nonce": "t1410-a80449c2-ec89-49c2-a219-4789b33fa09a",
+        "change_ids": [
+          "T691-CURRENT-COPILOT-CONTRACT",
+          "T691-CONSTITUTION-STABLE-PRODUCT"
+        ],
+        "change_details": [
+          {
+            "id": "T691-CURRENT-COPILOT-CONTRACT",
+            "description": "完整重审 lifecycle 读取/确认令牌/精确补丁/原子采纳合同及旧 findings。"
+          },
+          {
+            "id": "T691-CONSTITUTION-STABLE-PRODUCT",
+            "description": "按已实际重审的当前 PROJECT/AGENTS/SYSARCH 与稳定产品定位绑定；旧 hash 保留。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141013\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-691\nPrevious-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232\nPrevious-Constitution-SHA256: 6a04d0b0fa6c123f7990f02685afeed38858494cc2501ec4bfbc742050ab97fd\nAllowed-Change-IDs: T691-CURRENT-COPILOT-CONTRACT,T691-CONSTITUTION-STABLE-PRODUCT\nMax-Cycles: 1\nNonce: t1410-a80449c2-ec89-49c2-a219-4789b33fa09a\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T691-CURRENT-COPILOT-CONTRACT=完整重审 lifecycle 读取/确认令牌/精确补丁/原子采纳合同及旧 findings。；T691-CONSTITUTION-STABLE-PRODUCT=按已实际重审的当前 PROJECT/AGENTS/SYSARCH 与稳定产品定位绑定；旧 hash 保留。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-691.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-691)  [SPEC](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-691",
+        "--spec",
+        "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-691.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141013",
+        "--change-ids",
+        "T691-CURRENT-COPILOT-CONTRACT,T691-CONSTITUTION-STABLE-PRODUCT"
+      ]
+    },
+    {
+      "task_id": "T-694",
+      "spec_path": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md",
+      "spec_sha256": "bc30c20b81ec2878318b516384c23d76bc3bec396d0beb23ce0dc1d5e374cddb",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-694.initial.json",
+      "packet_sha256": "c46db36a785c7e71b96cfaaaa1d9eb6840b56cc5afc4c658a4ae1a9a953875bd",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-694.initial.json",
+        "sha256": "c46db36a785c7e71b96cfaaaa1d9eb6840b56cc5afc4c658a4ae1a9a953875bd"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.review.md",
+      "previous": {
+        "event_hash": "3be70a1c76dd2fe118734970f8d2b32da04195588a131263e1435adf0b6ee10b",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "6ea31e784c68e7498c99f4bfd89f8231d3d4e545c345127acd6eeee961a3192b",
+        "constitution_path": "docs/产品定位.md",
+        "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+        "review_path": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.review.md",
+        "snapshot_sha256": "b74c60cfe87eb872ed866811b70276ff50d428e7fbcd266cee62e02d9bb4bcf4",
+        "review_cell": "PASS[REV:2c7be136aea0]"
+      },
+      "capability": {
+        "decision_id": "DEC-141014",
+        "nonce": "t1410-6adf3c9d-fd6c-48b3-84db-38024fff6359",
+        "change_ids": [
+          "T694-CONFIRMED-RELEASE-BOUNDARIES",
+          "T694-LEGACY-REVIEW-SCHEMA"
+        ],
+        "change_details": [
+          {
+            "id": "T694-CONFIRMED-RELEASE-BOUNDARIES",
+            "description": "完整重审已确认包身份、离线 root、三更新路径、真实平台门及旧 findings。"
+          },
+          {
+            "id": "T694-LEGACY-REVIEW-SCHEMA",
+            "description": "旧 security/blocker 缺 threat_model_id，既不能补写冻结字段也不能满足当前校验；以真实完整 initial 开一次新周期。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141014\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-694\nPrevious-Spec-SHA256: 6ea31e784c68e7498c99f4bfd89f8231d3d4e545c345127acd6eeee961a3192b\nPrevious-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800\nAllowed-Change-IDs: T694-CONFIRMED-RELEASE-BOUNDARIES,T694-LEGACY-REVIEW-SCHEMA\nMax-Cycles: 1\nNonce: t1410-6adf3c9d-fd6c-48b3-84db-38024fff6359\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T694-CONFIRMED-RELEASE-BOUNDARIES=完整重审已确认包身份、离线 root、三更新路径、真实平台门及旧 findings。；T694-LEGACY-REVIEW-SCHEMA=旧 security/blocker 缺 threat_model_id，既不能补写冻结字段也不能满足当前校验；以真实完整 initial 开一次新周期。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-694.initial.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-694)  [SPEC](docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-694",
+        "--spec",
+        "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-694.initial.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141014",
+        "--change-ids",
+        "T694-CONFIRMED-RELEASE-BOUNDARIES,T694-LEGACY-REVIEW-SCHEMA"
+      ]
+    },
+    {
+      "task_id": "T-656",
+      "spec_path": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md",
+      "spec_sha256": "a6a56eb9bdb5c7b19e59fee6bef2c8f8fdbca2d4276f1b49d7a9c7ea049bc1ac",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-656.json",
+      "packet_sha256": "7e8753b28393eb2c61bfbd151dd4cfb88539168cfcbc97222e79124f3c400a38",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-656.json",
+        "sha256": "7e8753b28393eb2c61bfbd151dd4cfb88539168cfcbc97222e79124f3c400a38"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.review.md",
+      "previous": {
+        "event_hash": "417ae43280b9c642bc3d6af8387550e6ffb11a80346b57244fe4c06135cb4885",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "ca037dafc7b21ab04ce3ffe20502e7cc8862f14dc342a1e3db2437a67887f40e",
+        "constitution_path": "PROJECT.md",
+        "constitution_sha256": "d01469220b22455024bd58473a6ca9f307162b1317ba0fa5fe036b148f90362a",
+        "review_path": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.review.md",
+        "snapshot_sha256": "ebc3ef5996425224177752ace42d4ecbec6240dfd7a8fc299c7418633f8d7c57",
+        "review_cell": "PASS[REV:5f6970ac76f2]"
+      },
+      "capability": {
+        "decision_id": "DEC-141015",
+        "nonce": "t1410-90edc58a-8aa2-400c-92b3-4439c67db0a1",
+        "change_ids": [
+          "T656-CURRENT-DESKTOP-HARDENING",
+          "T656-CONSTITUTION-STABLE-PRODUCT"
+        ],
+        "change_details": [
+          {
+            "id": "T656-CURRENT-DESKTOP-HARDENING",
+            "description": "完整重审 seed 严格输入、子进程剥离、最终平台扫描及原四项 finding。"
+          },
+          {
+            "id": "T656-CONSTITUTION-STABLE-PRODUCT",
+            "description": "按当前完整适用约束重审后稳定绑定产品定位，保旧 PROJECT hash。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141015\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-656\nPrevious-Spec-SHA256: ca037dafc7b21ab04ce3ffe20502e7cc8862f14dc342a1e3db2437a67887f40e\nPrevious-Constitution-SHA256: d01469220b22455024bd58473a6ca9f307162b1317ba0fa5fe036b148f90362a\nAllowed-Change-IDs: T656-CURRENT-DESKTOP-HARDENING,T656-CONSTITUTION-STABLE-PRODUCT\nMax-Cycles: 1\nNonce: t1410-90edc58a-8aa2-400c-92b3-4439c67db0a1\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T656-CURRENT-DESKTOP-HARDENING=完整重审 seed 严格输入、子进程剥离、最终平台扫描及原四项 finding。；T656-CONSTITUTION-STABLE-PRODUCT=按当前完整适用约束重审后稳定绑定产品定位，保旧 PROJECT hash。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-656.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-656)  [SPEC](docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-656",
+        "--spec",
+        "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-656.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141015",
+        "--change-ids",
+        "T656-CURRENT-DESKTOP-HARDENING,T656-CONSTITUTION-STABLE-PRODUCT"
+      ]
+    },
+    {
+      "task_id": "T-652",
+      "spec_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+      "spec_sha256": "95911e86fb467094feff7b2bd997d1b9ce2bd2e1cbe9dedc4862517ae5f7bdea",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-652.initial.json",
+      "packet_sha256": "f39745f12d48c46c24feec340b354bd379797b14f8407db1616a241ff8773538",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-652.initial.json",
+        "sha256": "f39745f12d48c46c24feec340b354bd379797b14f8407db1616a241ff8773538"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.T-652.review.md",
+      "previous": {
+        "event_hash": "e7fb9f7b45d1b33e5a010e2649f6e149c492971f48cd5ce5d692b75a6cbbefc5",
+        "cycle": 1,
+        "round": 2,
+        "spec_sha256": "ef59b23c662a04c263266c4d0e9f0b98abc4d2ae3420f749211d226113ab35d6",
+        "constitution_path": "docs/产品定位.md",
+        "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+        "review_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.T-652.review.md",
+        "snapshot_sha256": "1106d454db0cd0059f7927d15c3d886af22aa2477d2ca8afe3a8603cdab12003",
+        "review_cell": "PASS[REV:2089334662f3]"
+      },
+      "capability": {
+        "decision_id": "DEC-141016",
+        "nonce": "t1410-f2f01212-d997-40b4-b211-feadac118f25",
+        "change_ids": [
+          "T652-CURRENT-DISCOVERY-CONTRACT",
+          "T652-LEGACY-REVIEW-SCHEMA"
+        ],
+        "change_details": [
+          {
+            "id": "T652-CURRENT-DISCOVERY-CONTRACT",
+            "description": "完整重审当前动态前采、物理证据隔离、无 session 幂等及原子确认合同。"
+          },
+          {
+            "id": "T652-LEGACY-REVIEW-SCHEMA",
+            "description": "保留 task-scoped migration 后旧 finding 缺省字段，以全文 initial 满足正式 schema；不声称非 security 的 CLI 必拒。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141016\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-652\nPrevious-Spec-SHA256: ef59b23c662a04c263266c4d0e9f0b98abc4d2ae3420f749211d226113ab35d6\nPrevious-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800\nAllowed-Change-IDs: T652-CURRENT-DISCOVERY-CONTRACT,T652-LEGACY-REVIEW-SCHEMA\nMax-Cycles: 1\nNonce: t1410-f2f01212-d997-40b4-b211-feadac118f25\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T652-CURRENT-DISCOVERY-CONTRACT=完整重审当前动态前采、物理证据隔离、无 session 幂等及原子确认合同。；T652-LEGACY-REVIEW-SCHEMA=保留 task-scoped migration 后旧 finding 缺省字段，以全文 initial 满足正式 schema；不声称非 security 的 CLI 必拒。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-652.initial.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md) · [详情](BACKLOG-details.md#t-652)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-652",
+        "--spec",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-652.initial.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.T-652.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141016",
+        "--change-ids",
+        "T652-CURRENT-DISCOVERY-CONTRACT,T652-LEGACY-REVIEW-SCHEMA"
+      ]
+    },
+    {
+      "task_id": "T-645",
+      "spec_path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md",
+      "spec_sha256": "d2e9fbef2dcb8228b3652d5f269024eada6cafbf62c03ec61ba26ad6e4418fd1",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-645.json",
+      "packet_sha256": "6a63ee66c3b9249d9c55f46bedf174e493269071f92d4bb41634e8e2398e9fe3",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-645.json",
+        "sha256": "6a63ee66c3b9249d9c55f46bedf174e493269071f92d4bb41634e8e2398e9fe3"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.review.md",
+      "previous": {
+        "event_hash": "ab61c3442f05c73c4febe511fa559717089235b244baad5920bd2186229eb6ac",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b",
+        "constitution_path": "PROJECT.md",
+        "constitution_sha256": "76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca",
+        "review_path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.review.md",
+        "snapshot_sha256": "920a481db238fd346afccd5aa11e116b245cc70b6f81a18487ff7284fe9be2b6",
+        "review_cell": "PASS[REV:5dfe24b42eb7]"
+      },
+      "capability": {
+        "decision_id": "DEC-141017",
+        "nonce": "t1410-e21b4871-ffad-4b9c-bc4f-b238f629c62e",
+        "change_ids": [
+          "T645-CURRENT-MANAGED-CREDENTIAL-LEASE",
+          "T645-CONSTITUTION-STABLE-PRODUCT"
+        ],
+        "change_details": [
+          {
+            "id": "T645-CURRENT-MANAGED-CREDENTIAL-LEASE",
+            "description": "完整重审 capability authority、OmniHi 与按请求 ASR lease、unknown 幂等和受控回退。"
+          },
+          {
+            "id": "T645-CONSTITUTION-STABLE-PRODUCT",
+            "description": "重审当前全部适用约束后稳定绑定产品定位，保原 PROJECT hash 与旧 finding。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141017\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-645\nPrevious-Spec-SHA256: c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b\nPrevious-Constitution-SHA256: 76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca\nAllowed-Change-IDs: T645-CURRENT-MANAGED-CREDENTIAL-LEASE,T645-CONSTITUTION-STABLE-PRODUCT\nMax-Cycles: 1\nNonce: t1410-e21b4871-ffad-4b9c-bc4f-b238f629c62e\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T645-CURRENT-MANAGED-CREDENTIAL-LEASE=完整重审 capability authority、OmniHi 与按请求 ASR lease、unknown 幂等和受控回退。；T645-CONSTITUTION-STABLE-PRODUCT=重审当前全部适用约束后稳定绑定产品定位，保原 PROJECT hash 与旧 finding。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-645.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-645)  [SPEC](docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-645",
+        "--spec",
+        "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-645.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141017",
+        "--change-ids",
+        "T645-CURRENT-MANAGED-CREDENTIAL-LEASE,T645-CONSTITUTION-STABLE-PRODUCT"
+      ]
+    },
+    {
+      "task_id": "T-642",
+      "spec_path": "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md",
+      "spec_sha256": "53794304623a79d9f7b7890edfd90b3e4bdc7c492d751b6ee50f4fb7b0455348",
+      "constitution_path": "docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md",
+      "constitution_sha256": "07c9b61b58ca970feff57f1647c30a32c4af4fc92063c9a87952771403376950",
+      "packet_path": "docs/verification/t1410/reviews/T-642.json",
+      "packet_sha256": "1987d7cdb3d61e5d32e95ead0d7f2775df0618e1e5ed2c33a7170dc449018b8f",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-642.json",
+        "sha256": "1987d7cdb3d61e5d32e95ead0d7f2775df0618e1e5ed2c33a7170dc449018b8f"
+      },
+      "review_path": "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.review.md",
+      "previous": {
+        "event_hash": "b37a9f58b1d3de2270bb1262ace95eca8e3dab1b0c5dd5fd14619ac48666fc2a",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "e8c4568adfcd8dcf82c91468cd1dfde4c46899e128d1388c00001eddcb9b1442",
+        "constitution_path": "docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md",
+        "constitution_sha256": "07c9b61b58ca970feff57f1647c30a32c4af4fc92063c9a87952771403376950",
+        "review_path": "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.review.md",
+        "snapshot_sha256": "05332437a3f29f7becc568d973414876bbdedbff656788a0c33dcc24451dfa7d",
+        "review_cell": "CONCERNS[REV:7728c9ed44bd]"
+      },
+      "capability": {
+        "decision_id": "DEC-141018",
+        "nonce": "t1410-9fdd44f0-3caa-41c5-aa20-c44b55e83c29",
+        "change_ids": [
+          "REV-002",
+          "T642-CURRENT-SEED-REWRITE-CONTRACT"
+        ],
+        "change_details": [
+          {
+            "id": "REV-002",
+            "description": "按原 DEC-RADAR-642 实质核对 seed 原子保存、首次保存物化和失败幂等；不将维护授权当作风险接受。"
+          },
+          {
+            "id": "T642-CURRENT-SEED-REWRITE-CONTRACT",
+            "description": "重审当前单编辑器/rewrite_only 局部覆盖，保来源证据、采纳和相似性规则。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141018\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-642\nPrevious-Spec-SHA256: e8c4568adfcd8dcf82c91468cd1dfde4c46899e128d1388c00001eddcb9b1442\nPrevious-Constitution-SHA256: 07c9b61b58ca970feff57f1647c30a32c4af4fc92063c9a87952771403376950\nAllowed-Change-IDs: REV-002,T642-CURRENT-SEED-REWRITE-CONTRACT\nMax-Cycles: 1\nNonce: t1410-9fdd44f0-3caa-41c5-aa20-c44b55e83c29\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: REV-002=按原 DEC-RADAR-642 实质核对 seed 原子保存、首次保存物化和失败幂等；不将维护授权当作风险接受。；T642-CURRENT-SEED-REWRITE-CONTRACT=重审当前单编辑器/rewrite_only 局部覆盖，保来源证据、采纳和相似性规则。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-642.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 待办",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[SPEC](docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md) · [详情](BACKLOG-details.md#t-642)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-642",
+        "--spec",
+        "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md",
+        "--constitution",
+        "docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-642.json",
+        "--review",
+        "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141018",
+        "--change-ids",
+        "REV-002,T642-CURRENT-SEED-REWRITE-CONTRACT"
+      ]
+    },
+    {
+      "task_id": "T-635",
+      "spec_path": "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md",
+      "spec_sha256": "5849ba840ce1352b97eb47a8d72b77397737242621d7e32170e2cd9e2a8d9402",
+      "constitution_path": "docs/产品定位.md",
+      "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "packet_path": "docs/verification/t1410/reviews/T-635.json",
+      "packet_sha256": "104cdcfabef05b29457bb8470bf94e030f97baf02892446a486389acd5a72b94",
+      "binding_evidence": {
+        "kind": "packet-summary",
+        "path": "docs/verification/t1410/reviews/T-635.json",
+        "sha256": "104cdcfabef05b29457bb8470bf94e030f97baf02892446a486389acd5a72b94"
+      },
+      "review_path": "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.review.md",
+      "previous": {
+        "event_hash": "0c9c53ee3d4485a9223555c98cf5253a5dab545732375d3e0599decd558f73e2",
+        "cycle": 1,
+        "round": 3,
+        "spec_sha256": "f00d4d7c0ecf1f7821fd336ce9278a12a168e1593417b1630527d458bcc929a3",
+        "constitution_path": "PROJECT.md",
+        "constitution_sha256": "89a36038833bdaed0d6de3ca353725643aff8aa53e6e0c53933b7ebdf4b1ad9b",
+        "review_path": "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.review.md",
+        "snapshot_sha256": "2b6d0421086151c1b6ac1e5d6da56bb21a623b63af8df60db6fde3287e14a2bd",
+        "review_cell": "PASS[REV:b8add273a494]"
+      },
+      "capability": {
+        "decision_id": "DEC-141019",
+        "nonce": "t1410-06405abc-5339-47eb-8c6b-8594b2f99429",
+        "change_ids": [
+          "T635-CURRENT-PRODUCT-IDENTITY",
+          "T635-CONSTITUTION-STABLE-PRODUCT"
+        ],
+        "change_details": [
+          {
+            "id": "T635-CURRENT-PRODUCT-IDENTITY",
+            "description": "完整重审所有非 debug 打包身份、claim=0、盘点/迁移、attestation 与 Growth T123。"
+          },
+          {
+            "id": "T635-CONSTITUTION-STABLE-PRODUCT",
+            "description": "当前 PROJECT/AGENTS/SYSARCH 约束重新审核后稳定绑定产品定位，保旧 hash。"
+          }
+        ],
+        "typed_block": "```text\nID: DEC-141019\nDate: 2026-10-25\nStage: T-1410 真实独立审核证据对账\nType: task-hash-change-bound-review-cycle\nAuthorization-Kind: process-review-cycle\nTask-ID: T-635\nPrevious-Spec-SHA256: f00d4d7c0ecf1f7821fd336ce9278a12a168e1593417b1630527d458bcc929a3\nPrevious-Constitution-SHA256: 89a36038833bdaed0d6de3ca353725643aff8aa53e6e0c53933b7ebdf4b1ad9b\nAllowed-Change-IDs: T635-CURRENT-PRODUCT-IDENTITY,T635-CONSTITUTION-STABLE-PRODUCT\nMax-Cycles: 1\nNonce: t1410-06405abc-5339-47eb-8c6b-8594b2f99429\nDecision: 仅允许基于真实完整初审开启一次新审核周期；保留历史事件和旧问题，不授予产品范围扩展、风险接受、任务完成或发布许可。\nChange-Detail: T635-CURRENT-PRODUCT-IDENTITY=完整重审所有非 debug 打包身份、claim=0、盘点/迁移、attestation 与 Growth T123。；T635-CONSTITUTION-STABLE-PRODUCT=当前 PROJECT/AGENTS/SYSARCH 约束重新审核后稳定绑定产品定位，保旧 hash。\nSource: 用户本轮要求“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”；T1410 FR-141002 已独立复审 PASS[REV:1f4e2a1dd6f2]，仅授权本次精确过程对账。\nReview-Evidence: docs/verification/t1410/reviews/T-635.json\nOwner: user\nStatus: active\n```\n",
+        "mode": "append-new-section"
+      },
+      "expected_cycle": 2,
+      "expected_round": 1,
+      "expected_verdict": "PASS",
+      "backlog_status": "🔨 本地实现待验",
+      "backlog_acceptance": "待验",
+      "backlog_document": "[详情](BACKLOG-details.md#t-635)  [SPEC](docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md)",
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-635",
+        "--spec",
+        "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/verification/t1410/reviews/T-635.json",
+        "--review",
+        "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "homogeneous",
+        "--model",
+        "inherited-host-model-unverified",
+        "--new-cycle",
+        "DEC-141019",
+        "--change-ids",
+        "T635-CURRENT-PRODUCT-IDENTITY,T635-CONSTITUTION-STABLE-PRODUCT"
+      ]
+    }
+  ],
+  "mechanical_preconditions_completed": [
+    {
+      "task_id": "T-642",
+      "action": "根会话仅追加原 canonical SPEC 链接；本计划只冻结已修复文档列，未执行此控制面写入。"
+    }
+  ]
+}

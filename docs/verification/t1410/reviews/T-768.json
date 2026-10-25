@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-768；SPEC SHA-256=7b662918812be8cad4a05bee49ce23682164b26283f3e2721da6d337fcb2339b；本轮宪法=orchestrator/SYSTEM_ARCHITECTURE.md，SHA-256=eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df。对当前完整 ASR 兜底规格及当前 SYSTEM_ARCHITECTURE 做独立初审。原 REV-001/002/003 分别由 §3.3 在线调用与非空合同同边界、§3.4 actual effectiveSpec/mode、§3.6 用户面固定失败类别及 AC-01/03/04 保持解决。新增 unknown 云端事实不可在线重放、独立本地 operationKey、唯一 Worker 进程所有权、fence/取消与音频归属复核，符合无重复付费与单写边界。未发现当前规格 blocker/major/minor；双平台安装真转写和崩溃演练仍是未由本轮执行的验收要求。",
+  "findings": []
+}

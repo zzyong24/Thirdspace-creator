@@ -2,53 +2,49 @@
 
 - Task: T-691
 - Verdict: PASS
-- Round: 3/3 (recheck)
+- Round: 1/3 (initial)
 - Spec receipt: a4a57d75e372
-- Review receipt: 9444ca5b32a9
+- Review receipt: 702e78ce0ae0
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (当前 SPEC §4.5 第 106、108-115 行规定 token 只能由用户点击确认卡后由 backend 签发，绑定 userId/accountId/projectId/reportId/findingIds/expectedArtifactVersionId/conversationId 与本次确认动作，10 分钟有效并一次性消费；自然语言只能预选，模型或客户端普通字符串不能授权；重放返回原 receipt，token 不匹配、过期或不存在均零写入。AC-6 第 181-183 行同步锁定该流程。)；REV-002 (当前 SPEC §4.4 第 93-107 行要求报告返回精确 artifactVersionId、稳定 findingId、唯一字符区间及固化 target；分别规定 contentData.html 与 contentData.sections 的正文真值、可回映 source map/sourceHash，并禁止以 contentText 模糊匹配写入。SPEC-LINE:106:e36d63054d020c80 与 SPEC-LINE:107:f2f437bd80f1542a 进一步要求投影、source map、替换和重算复用同一个无 DOM 共享模块，并以跨 backend/frontend fixture 锁定实体解码、空白、中文、内联标签和未知 contentData 字段保留。§4.5 第 137-149 行规定不可应用项、正文校验、重叠冲突、倒序替换、target/sourceHash 校验、HTML/sections 元数据保留、从单一已修改真值重算全部投影、零成功不建版本及重放/并发语义，已形成唯一可验证的批量应用契约。)；REV-003 (当前 SPEC §4.1 第 61 行已将 brief 明确加入 lifecycle 最小输出，要求返回短摘要、字段完整度、后续读取指针，并在不存在时标记 empty；§8 AC-3 第 178-179 行继续要求跨层读回 brief 且缺项明确为 empty。)；REV-004 (当前 SPEC §6 第 158-162 行规定同一 /api/chat 请求同时携带不同的非空 x-account-id 与 creatoros_current_account Cookie 时必须在进入 Context 前返回 ACCOUNT_CONTEXT_MISMATCH，不得自动选择；只有单一来源时才使用并校验属主。客户端切号时预先同步 localStorage/Cookie 被明确区分为正常同步。§8 AC-2 第 175-177 行采用完全相同的预置条件和预期结果。)
+已销账：—
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-691",
-  "round": 3,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "REV-001、REV-003、REV-004 维持已销账；REV-002 已补齐富文本/sections 单一真值、稳定 source map、确定性批量应用顺序、未知字段保留及跨层共享模块验证约束，现已销账。",
+  "summary": "T-691；SPEC=docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md；SHA-256=a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232；本轮宪法=docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；canonical lineage=9444ca5b32a9 / e62296d83312eee0744b534c47ac4d9b4a68c0e530bda40972a27985a932036b。完整初审生命周期读取、历史检索、finding 定位、用户确认令牌和 backend 原子采纳合同。原 REV-001 的授权伪造由后端一次性、限时、全上下文绑定令牌拒绝；REV-002 的定位与批量更新由 source hash、稳定 target、重叠拒绝、反向偏移及唯一版本提交收敛；REV-003 的 brief 读取与 REV-004 的账号上下文不一致拒绝均有明确合同和验收。当前读取 completeness、不可跨账号检索、CAS/重放/回滚及真实 UI 验收与产品宪法一致，未发现新的规格阻断项。当前 PROJECT 的产品定位、治理和架构指向以及 AGENTS、SYSTEM_ARCHITECTURE 的适用边界已复核；旧 PROJECT 精确生成态全文未找回，不声称复现旧 hash。新周期可绑定稳定产品定位，原人工确认、所有权和唯一写者约束继续有效。本次为独立会话实际只读规格审查，未核实精确模型型号；未运行产品测试、真实业务、真机安装或发布，不把规格结论当作实现验收。旧 canonical 与 foreign snapshot 仅作为历史证据，不继承旧 PASS。",
   "spec_path": "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md",
   "spec_sha256": "a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232",
-  "constitution_path": "PROJECT.md",
-  "constitution_sha256": "6a04d0b0fa6c123f7990f02685afeed38858494cc2501ec4bfbc742050ab97fd",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.review.md",
-  "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-sol",
+  "review_mode": "homogeneous",
+  "model": "inherited-host-model-unverified",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "e62296d83312eee0744b534c47ac4d9b4a68c0e530bda40972a27985a932036b",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-141013",
+    "nonce": "t1410-a80449c2-ec89-49c2-a219-4789b33fa09a",
+    "task_id": "T-691",
+    "previous_event_hash": "e62296d83312eee0744b534c47ac4d9b4a68c0e530bda40972a27985a932036b",
+    "allowed_change_ids": [
+      "T691-CONSTITUTION-STABLE-PRODUCT",
+      "T691-CURRENT-COPILOT-CONTRACT"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "6703206285f6dea3160a00e89fa15f7f602d98876e0fa5508d5ec1952e7a424b",
   "open_findings": [],
-  "resolved_findings": [
-    {
-      "id": "REV-001",
-      "resolution_evidence": "当前 SPEC §4.5 第 106、108-115 行规定 token 只能由用户点击确认卡后由 backend 签发，绑定 userId/accountId/projectId/reportId/findingIds/expectedArtifactVersionId/conversationId 与本次确认动作，10 分钟有效并一次性消费；自然语言只能预选，模型或客户端普通字符串不能授权；重放返回原 receipt，token 不匹配、过期或不存在均零写入。AC-6 第 181-183 行同步锁定该流程。"
-    },
-    {
-      "id": "REV-002",
-      "resolution_evidence": "当前 SPEC §4.4 第 93-107 行要求报告返回精确 artifactVersionId、稳定 findingId、唯一字符区间及固化 target；分别规定 contentData.html 与 contentData.sections 的正文真值、可回映 source map/sourceHash，并禁止以 contentText 模糊匹配写入。SPEC-LINE:106:e36d63054d020c80 与 SPEC-LINE:107:f2f437bd80f1542a 进一步要求投影、source map、替换和重算复用同一个无 DOM 共享模块，并以跨 backend/frontend fixture 锁定实体解码、空白、中文、内联标签和未知 contentData 字段保留。§4.5 第 137-149 行规定不可应用项、正文校验、重叠冲突、倒序替换、target/sourceHash 校验、HTML/sections 元数据保留、从单一已修改真值重算全部投影、零成功不建版本及重放/并发语义，已形成唯一可验证的批量应用契约。"
-    },
-    {
-      "id": "REV-003",
-      "resolution_evidence": "当前 SPEC §4.1 第 61 行已将 brief 明确加入 lifecycle 最小输出，要求返回短摘要、字段完整度、后续读取指针，并在不存在时标记 empty；§8 AC-3 第 178-179 行继续要求跨层读回 brief 且缺项明确为 empty。"
-    },
-    {
-      "id": "REV-004",
-      "resolution_evidence": "当前 SPEC §6 第 158-162 行规定同一 /api/chat 请求同时携带不同的非空 x-account-id 与 creatoros_current_account Cookie 时必须在进入 Context 前返回 ACCOUNT_CONTEXT_MISMATCH，不得自动选择；只有单一来源时才使用并校验属主。客户端切号时预先同步 localStorage/Cookie 被明确区分为正常同步。§8 AC-2 第 175-177 行采用完全相同的预置条件和预期结果。"
-    }
-  ],
-  "receipt": "9444ca5b32a9"
+  "resolved_findings": [],
+  "receipt": "702e78ce0ae0"
 }
 ```

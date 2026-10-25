@@ -2,47 +2,48 @@
 
 - Task: T-915
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: b990a38a0156
-- Review receipt: 692283b8bace
+- Round: 1/3 (initial)
+- Spec receipt: b8282e2c286a
+- Review receipt: 78ed5d428e7a
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (已只读核对当前 SPEC R-05 首段：不可恢复错误映射 failed，配置/登录阻断映射 waiting_user，未知提交映射 unknown_result；明确 blocked 只保留为工具结果与旧公共状态，不是新执行终态。历史 blocked 保持回读，仅依据持久化错误码与实际恢复动作映射，缺原因保留原记录并要求诊断，禁止猜成可重试。与 R-01 枚举及 AC-03、AC-07、AC-08 一致。)；REV-002 (已只读核对当前 SPEC R-01 状态机段：pause_requested 禁止新 admission，在途调用允许幂等结算或记未知，确认停止后进入 paused，暂停期间重启仍保持暂停；resume 取得新租约并保留累计预算、已确认回执、operationKey、原 deadline，浏览器重新观察。调度 attempt 明确为 fencing 版本，模型/工具重试额度单独累计，暂停恢复既不重置额度也不计作供应商失败重试。AC-05 已补充暂停无新 admission、在途结算、暂停重启不自启及恢复保持预算/重试额度/deadline/operationKey 的验收要求。)
+已销账：—
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-915",
-  "cycle": 1,
-  "round": 2,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "定向复核通过：REV-001 与 REV-002 已由当前 SPEC 的明确约束解决，无新增发现。本结论仅覆盖设计规格，不代表实现、测试或真机验收通过。",
+  "summary": "完整审核当前统一执行权、Worker受控端口、预算/暂停恢复、浏览器当下身份与授权、迁移及性能验收；当前SPEC SHA256=b8282e2c286a9e0ffa757264667e724bcc20457e355b08487d8c08e1011811d9，宪法AGENTS.md。原blocked映射及暂停预算两项已销账合同仍完整，当前增量明确持久task authority和同域多账号身份核对，未发现实质规格缺陷。历史构建/静态接线不替代尚缺的运行、性能及双端验收，旧进展记录不重置现行预算。",
   "spec_path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-  "spec_sha256": "b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce",
+  "spec_sha256": "b8282e2c286a9e0ffa757264667e724bcc20457e355b08487d8c08e1011811d9",
   "constitution_path": "AGENTS.md",
-  "constitution_sha256": "ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126",
+  "constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
   "review_path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
-  "review_mode": "independent-subagent",
-  "model": "inherited-root-model",
+  "review_mode": "homogeneous",
+  "model": "inherited-host-model-unverified",
   "policy": "convergent-review/v2",
-  "cycle_authorization": null,
-  "latest_event_hash": "1d0f281764a2d94f245bbaedad518a9d89ad8fc824c531ba04bf5609a747b93b",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-141003",
+    "nonce": "t1410-ed04a320-26f1-404b-afc1-964d4cbe8345",
+    "task_id": "T-915",
+    "previous_event_hash": "1d0f281764a2d94f245bbaedad518a9d89ad8fc824c531ba04bf5609a747b93b",
+    "allowed_change_ids": [
+      "T915-CURRENT-EXECUTION-AUTHORITY"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "f135d84bd08da9f5a64768dd4fe97d621f30a219de4631fc41134736d4ff0fe6",
   "open_findings": [],
-  "resolved_findings": [
-    {
-      "id": "REV-001",
-      "resolution_evidence": "已只读核对当前 SPEC R-05 首段：不可恢复错误映射 failed，配置/登录阻断映射 waiting_user，未知提交映射 unknown_result；明确 blocked 只保留为工具结果与旧公共状态，不是新执行终态。历史 blocked 保持回读，仅依据持久化错误码与实际恢复动作映射，缺原因保留原记录并要求诊断，禁止猜成可重试。与 R-01 枚举及 AC-03、AC-07、AC-08 一致。"
-    },
-    {
-      "id": "REV-002",
-      "resolution_evidence": "已只读核对当前 SPEC R-01 状态机段：pause_requested 禁止新 admission，在途调用允许幂等结算或记未知，确认停止后进入 paused，暂停期间重启仍保持暂停；resume 取得新租约并保留累计预算、已确认回执、operationKey、原 deadline，浏览器重新观察。调度 attempt 明确为 fencing 版本，模型/工具重试额度单独累计，暂停恢复既不重置额度也不计作供应商失败重试。AC-05 已补充暂停无新 admission、在途结算、暂停重启不自启及恢复保持预算/重试额度/deadline/operationKey 的验收要求。"
-    }
-  ],
-  "receipt": "692283b8bace"
+  "resolved_findings": [],
+  "receipt": "78ed5d428e7a"
 }
 ```

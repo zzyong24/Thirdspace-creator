@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-858 cycle 2 round 1 CONCERNS[REV:bb4811a06822] 的正式定向复审；canonical event=cd492cc1788571ff732bbadc1ef8c7a1e07126e0f3e5c56c2e2ba0d8c275d114。当前 SPEC SHA-256=a60c5d93b36d99da560a96870f558ede22e7d92bf1d63f0dfd00beef9d7c6a7a；宪法=orchestrator/SYSTEM_ARCHITECTURE.md，SHA-256=eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df。已读取 reviewctl context 的完整 REV-001 与 changed_line_refs，并核实 778ea4559850b0d8dfbf279c312dc4c21d72866e 中原 SPEC 全文字节 SHA 与该首轮绑定完全一致；实际差异仅顶部 8–17 行适用性段及空行。独立核对原 T-902 §2/§4、DEC-VIDEO-056 后，新增段准确列出流程图、FR-858-3、§3.1/§3.3、§5、AC-858-2 的旧人物隐藏/禁 PiP/硬切断言失效，明确竖屏有真人时持续可见、横屏及 visualOnly/损坏输入边界，保留其余方向/字幕/引用/非重叠/恢复合同。REV-001 在规格层已解决，增量未引入新 finding；仅修改旧 finding 的 status/resolution_evidence，保留严重度及全部冻结字段。没有重写旧轮次、调用业务或验证成片，不把本次规格销账当实现/安装/UI验收通过。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-858-3 / T-902 §2 / DEC-VIDEO-056",
+        "quote": "人物完全退出；PiP 不进入本次新候选的导演合同；用户后续确认竖屏 card 或非 overlay B-roll beat 人物始终位于内容层之上"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-2",
+        "quote": "主视觉接管期间人物完全不可见，模板没有人物缩放/位移 tween"
+      },
+      "where": "当前T-858 FR-858-3、§3.1/§3.3、§5及AC-858-2的竖屏人物断言与后继已确认T-902",
+      "failure_mode": "本次若直接把当前T-858全文重新签为有效规格，实施者按其FR-858-3和AC-858-2隐藏竖屏真人、禁止PiP即可通过旧断言，却违反用户后继确认的真人常驻；遵循T-902保留左下人物的实现又会被当前AC明确判失败。当前T-858没有像T-859那样标识这些断言已被取代，两个相反的用户可见结果都继续作为当前合同存在。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md:54-62,159-162,196-200；docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md:3-5,47-50；docs/superpowers/specs/2026-08-19-portrait-presenter-first-face-persistent.md:14-25；orchestrator/archive/DECISION_LOG-archive.md:53-75（原用户覆盖决定，非新cycle权限）",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle initial full review",
+      "suggestion": "保留原文历史及原用户决定来源，明确人物隐藏/禁PiP/硬切和对应旧验收断言已被T-902取代、不得再作当前竖屏通过或失败标准；其余方向/字幕/引用与恢复约束继续适用。可以先在原任务允许的规格纠偏流程中处理后再复审，不借T-1410修改产品或要求重复已确认的产品决定。",
+      "resolution_evidence": "当前 SPEC SHA-256=a60c5d93b36d99da560a96870f558ede22e7d92bf1d63f0dfd00beef9d7c6a7a 的顶部第 8–17 行“当前适用性”段（reviewctl changed_line_refs 从 SPEC-LINE:8:4f74d2d1d9e79611 至 SPEC-LINE:17:f12cc9724368f346）明确旧流程图、FR-858-3、§3.1/§3.3、§5、AC-858-2 内人物隐藏/禁止 PiP/硬切及通过失败断言由 T-902 §2/§4 和 DEC-VIDEO-056 取代，不再用作当前竖屏验收。段落逐项保持真实口播全幅基底、card/非 overlay B-roll 固定左下持续可见与平滑回位、安全区不得通过隐藏人物达成，并限定横屏原策略、visualOnly 不伪造真人、损坏输入原结构失败。核对 T-902:16–25、:38–44 与 DEC-VIDEO-056 原用户决定相符，原文保留且其余合同继续适用；因此不再有遵循后继人物可见规则却被旧 T858 断言判失败的当前规格冲突。未执行成片验收。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

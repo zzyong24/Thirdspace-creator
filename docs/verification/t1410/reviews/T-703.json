@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-703；SPEC SHA-256=1624f50bb9f70d475bec8c633a7cc6f46d0d94f8fe4e01ecf6abfced36420460；本轮宪法=docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。独立初审当前全部视频闭环规格，并读取原 PROJECT 的产品定位/架构指向及当前产品宪法 P-01..06、R-ACCOUNT/R-PRODUCTION/R-COPILOT、BR-01..03、隐私/可靠性/发布门与当前 SYSTEM_ARCHITECTURE。原 REV-001..004 的原子窄写、差异候选、授权预览和唯一结构对齐约束仍在；当前增量增加来源指纹、稳定 operationKey、采纳幂等与本地包双画幅旅程。保留一个 minor：§3 表格旧写入口与同节唯一窄写口不一致，正文/AC 已有明确正确行为，故不升级为 blocker/major。可将生成态 PROJECT 绑定转到 docs/产品定位.md，但原人工确认、单写者、受控成片与真实证据约束继续有效。未执行视频回归或安装验收。",
+  "findings": [
+    {
+      "id": "REV-005",
+      "status": "open",
+      "severity": "minor",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-703-5 / §3",
+        "quote": "用户首次确认和对话调整都走此窄写口。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-703-3",
+        "quote": "并发 sibling 配置更新仍保留 plan，陈旧 expectedRevision 返回 conflict；plan 写入或读回失败时不得创建 render 任务。"
+      },
+      "where": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:54 与 :60、:65、:73",
+      "failure_mode": "§3 数据表仍声称当前已确认剪辑方案由 outputs.production.put 写入，但同节正文明确首次确认和对话调整只能走 productions.editing-plan.confirm 的 revision 条件窄写；按表格追踪操作时会得到两个不同写入口。正文顺序及 AC-703-3 已明确排除整块 PUT 模拟，因此这是需要对齐的规格引用矛盾，不把已解决的原 REV-001 数据完整性风险重新升级或声称实现已失效。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:54 明列 outputs.production.put；:60 明列唯一 productions.editing-plan.confirm、保留 sibling keys 和 expectedRevision；:98–100 要求并发与重放验收。",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "T-1410 批次 B 对 T-703 当前完整 SPEC 的新周期独立初审",
+      "suggestion": "在原 T-703 的受控规格修订中，将 §3 当前已确认剪辑方案表格的写入操作统一为 productions.editing-plan.confirm；保留 outputs.production.get 读回和正文已有顺序/幂等约束，不新增产品范围。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

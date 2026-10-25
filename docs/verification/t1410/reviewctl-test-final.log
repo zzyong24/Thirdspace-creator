@@ -1,0 +1,29 @@
+✔ 复审既有 finding 只允许销账字段变化，证据、处置和建议等全部冻结 (3376.14ms)
+✔ R3 继续冻结 R2 条件，并允许严重度单向下降 (348.226583ms)
+✔ 共享同一 SPEC 的任务可迁移到任务级 review snapshot 且不覆盖另一任务 (442.10625ms)
+✔ changed-lines 必须引用相对上一轮实际新增或修改的 SPEC 行指纹 (544.569917ms)
+✔ 纯空白改动不能伪装成 changed-lines 新门柱 (325.816542ms)
+✔ new-evidence 和 late-critical 必须绑定可复核文件或行锚点 (1119.991125ms)
+✔ 复审拒绝把首轮漏掉、与 diff 无关的普通问题变成新门柱；已知项销账后 PASS (372.392042ms)
+✔ 复审只允许 changed-lines/new-evidence/late-critical 三类新 finding (222.954084ms)
+✔ 必须靠原型回答的问题只能走有时限、受限写集的 bounded probe (220.657958ms)
+✔ taskctl start 拒绝 legacy，严格项目校验 review receipt 与 spec hash (438.524334ms)
+✔ CONCERNS/FAIL receipt 是可审计结论，但都不是开工授权 (656.354917ms)
+✔ legacy review 不会被自动覆盖；复审最多三轮且不能换文件重置 lineage (554.455625ms)
+✔ legacy 无论旧状态如何都禁止开工；strict 缺列或损坏 config fail-closed (441.974167ms)
+✔ review cycle capability 绑定 task/hash/change IDs、旧 constitution、一次消费；通用 DEC-022 不可回放 (554.450083ms)
+✔ 旧项目未绑定的 review-cycle DEC 历史保留但 fail-closed，不可迁移成新授权 (107.269708ms)
+✔ security blocker 必须绑定用户批准的 threat model；same-UID 不能由标签自动升级 (222.112958ms)
+✔ existing-project audit 重新验证历史 security blocker 的 threat approval (220.892666ms)
+✔ 规则升级前没有 threat_model_id 的只读历史不会被追溯改写 (217.133459ms)
+✔ taskctl 的列映射绑定目标所属表，不会被后一个不同表头污染 (110.681417ms)
+✔ backlog hook 对 strict Edit 使用 review allowlist（未知值不能漏过） (35.242125ms)
+✔ backlog hook 对 legacy 的直接开工或完成编辑也 fail-closed (68.759792ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10746.397875

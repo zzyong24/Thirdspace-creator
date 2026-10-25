@@ -2,53 +2,49 @@
 
 - Task: T-656
 - Verdict: PASS
-- Round: 3/3 (recheck)
-- Spec receipt: ca037dafc7b2
-- Review receipt: 5f6970ac76f2
+- Round: 1/3 (initial)
+- Spec receipt: a6a56eb9bdb5
+- Review receipt: 0ee97952c9a3
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (SPEC-LINE:61:885827e6578204c9 明确 smoke 驱动完成签名后从实际 Sidecar child env 删除 signing/allow 变量，禁止 `...process.env` 继承，并要求纯函数测试同时证明 token 存在、私钥变量不存在；SEC-656-03 与 AC-656-06 同步收紧。)；REV-002 (SPEC-LINE:87:6e23a30a5b8a9f8f 新增独立 post-Tauri Gate；SPEC-LINE:89:b3d24d0107e116a6、SPEC-LINE:90:e1e68147dc6aa83b 定义双平台目标；SPEC-LINE:91:7f99c100d8c3d213、SPEC-LINE:100:7eaea1ce7d1fd621 规定流式解压、读取失败 fail-closed 及测试覆盖。)；REV-003 (SPEC-LINE:65:cf710ffcc545222f、SPEC-LINE:67:ad8cdf63bcac3a87、SPEC-LINE:73:b1539b8f2db07b32 统一 package/smoke/Cargo 的 canonical base64url 输入、显式 CI secret 表示迁移，并要求 legacy 输入三处一致硬失败；AC-656-08 已绑定验收。)；REV-004 (SPEC-LINE:90:3fcb79d9b0c09a9f 改为读取现有 `runtime-current.txt`，要求单行非空且受限 runtimeId、禁止 `..` 与分隔符，先做目录边界校验，再扫描 `$INSTDIR/runtime-images/$runtimeId/sidecar`；缺失、逃逸、非法或读取失败均 fail-closed。该路径与 `.github/workflows/desktop-release.yml:373-383` 的已验证安装布局一致。)
+已销账：—
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-656",
-  "round": 3,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "REV-001～REV-004 均已销账；本轮唯一改动与现有 Windows NSIS runtime 物理布局一致，未引入新的 blocker 或 major。",
+  "summary": "T-656；SPEC=docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md；SHA-256=a6a56eb9bdb5c7b19e59fee6bef2c8f8fdbca2d4276f1b49d7a9c7ea049bc1ac；本轮宪法=docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；canonical lineage=5f6970ac76f2 / 417ae43280b9c642bc3d6af8387550e6ffb11a80346b57244fe4c06135cb4885。完整初审正式 Sidecar 无环境变量绕过、开发入口编译隔离、32 字节 seed 严格规范、smoke 私钥传递、Rust 掩码及最终安装产物 Gate。原 REV-001 由向真正 Sidecar/子工具剥离 seed 收敛；REV-002 由 macOS/Windows 独立最终产物扫描和解压成员扫描收敛；REV-003 由共享严格输入规范收敛；REV-004 由 Windows runtime-current.txt 的真实路径合同收敛。规格区分混淆与强安全、保留真实签名/安装验收，不把扫描成功当作签名或服务端鉴权替代；未发现新的规格阻断项。当前 PROJECT、AGENTS、SYSTEM_ARCHITECTURE 与稳定产品定位的适用约束已重新检查；旧 PROJECT 精确生成态全文不可复现，不继承旧 PASS，允许新周期稳定绑定产品定位。本次为独立会话实际只读规格审查，未核实精确模型型号；未运行产品测试、真实业务、真机安装或发布，不把规格结论当作实现验收。旧 canonical 与 foreign snapshot 仅作为历史证据，不继承旧 PASS。",
   "spec_path": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md",
-  "spec_sha256": "ca037dafc7b21ab04ce3ffe20502e7cc8862f14dc342a1e3db2437a67887f40e",
-  "constitution_path": "PROJECT.md",
-  "constitution_sha256": "d01469220b22455024bd58473a6ca9f307162b1317ba0fa5fe036b148f90362a",
+  "spec_sha256": "a6a56eb9bdb5c7b19e59fee6bef2c8f8fdbca2d4276f1b49d7a9c7ea049bc1ac",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.review.md",
-  "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-terra",
+  "review_mode": "homogeneous",
+  "model": "inherited-host-model-unverified",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "417ae43280b9c642bc3d6af8387550e6ffb11a80346b57244fe4c06135cb4885",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-141015",
+    "nonce": "t1410-90edc58a-8aa2-400c-92b3-4439c67db0a1",
+    "task_id": "T-656",
+    "previous_event_hash": "417ae43280b9c642bc3d6af8387550e6ffb11a80346b57244fe4c06135cb4885",
+    "allowed_change_ids": [
+      "T656-CONSTITUTION-STABLE-PRODUCT",
+      "T656-CURRENT-DESKTOP-HARDENING"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "1bd7fd1d5120216dc4de96ac73e3be8b0c7f09b11981b5697d96238acffa541f",
   "open_findings": [],
-  "resolved_findings": [
-    {
-      "id": "REV-001",
-      "resolution_evidence": "SPEC-LINE:61:885827e6578204c9 明确 smoke 驱动完成签名后从实际 Sidecar child env 删除 signing/allow 变量，禁止 `...process.env` 继承，并要求纯函数测试同时证明 token 存在、私钥变量不存在；SEC-656-03 与 AC-656-06 同步收紧。"
-    },
-    {
-      "id": "REV-002",
-      "resolution_evidence": "SPEC-LINE:87:6e23a30a5b8a9f8f 新增独立 post-Tauri Gate；SPEC-LINE:89:b3d24d0107e116a6、SPEC-LINE:90:e1e68147dc6aa83b 定义双平台目标；SPEC-LINE:91:7f99c100d8c3d213、SPEC-LINE:100:7eaea1ce7d1fd621 规定流式解压、读取失败 fail-closed 及测试覆盖。"
-    },
-    {
-      "id": "REV-003",
-      "resolution_evidence": "SPEC-LINE:65:cf710ffcc545222f、SPEC-LINE:67:ad8cdf63bcac3a87、SPEC-LINE:73:b1539b8f2db07b32 统一 package/smoke/Cargo 的 canonical base64url 输入、显式 CI secret 表示迁移，并要求 legacy 输入三处一致硬失败；AC-656-08 已绑定验收。"
-    },
-    {
-      "id": "REV-004",
-      "resolution_evidence": "SPEC-LINE:90:3fcb79d9b0c09a9f 改为读取现有 `runtime-current.txt`，要求单行非空且受限 runtimeId、禁止 `..` 与分隔符，先做目录边界校验，再扫描 `$INSTDIR/runtime-images/$runtimeId/sidecar`；缺失、逃逸、非法或读取失败均 fail-closed。该路径与 `.github/workflows/desktop-release.yml:373-383` 的已验证安装布局一致。"
-    }
-  ],
-  "receipt": "5f6970ac76f2"
+  "resolved_findings": [],
+  "receipt": "0ee97952c9a3"
 }
 ```

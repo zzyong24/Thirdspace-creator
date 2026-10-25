@@ -1,0 +1,15 @@
+{
+  "task": "T-1411",
+  "source": "实施代理按本轮真实 exec_command/write_stdin 完成结果登记；并非根据日志末行推断退出状态。",
+  "results": [
+    {"command":"pnpm -C frontend exec vitest run src/server/settings-model-test-wrap.test.ts --retry=0","phase":"baseline","log":"baseline-frontend.log","exitCode":0,"passed":66,"failed":0,"toolChunkId":"c54cb7"},
+    {"command":"pnpm -C backend exec vitest run src/modules/ai-runtime/model-probe-io.service.test.ts --retry=0","phase":"red","log":"red-backend.log","exitCode":1,"passed":2,"failed":7,"toolChunkId":"4db5c2"},
+    {"command":"pnpm -C frontend exec vitest run src/server/settings-model-test-wrap.test.ts --retry=0","phase":"red-final","log":"red-frontend-final.log","exitCode":1,"passed":65,"failed":6,"toolChunkId":"858ee9"},
+    {"command":"pnpm -C frontend exec vitest run src/server/settings-model-test-wrap.test.ts --retry=0","phase":"green","log":"green-frontend.log","exitCode":0,"passed":71,"failed":0,"toolChunkId":"f6a592"},
+    {"command":"pnpm -C backend exec vitest run src/modules/ai-runtime/model-probe-io.service.test.ts src/modules/ai-runtime/request-io.service.test.ts --retry=0","phase":"green","log":"green-backend.log","exitCode":0,"passed":12,"failed":0,"toolChunkId":"4d1e03"},
+    {"command":"NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck","log":"typecheck.log","exitCode":0,"toolSessionId":54293,"completionToolChunkId":"78627b","observation":"write_stdin 返回 exit_code=0，整个串行 pnpm 命令已结束。"},
+    {"command":"node tools/timeout-policy/verify.mjs","log":"timeout-policy.log","exitCode":0,"toolSessionId":96811,"completionToolChunkId":"acbb72"},
+    {"command":"node orchestrator/process/boundary-scan.mjs","log":"boundary.log","exitCode":0,"toolChunkId":"d46592","remainingBaselineViolations":5,"newViolations":0},
+    {"command":"git diff --check","log":"diff-check.log","exitCode":0,"toolChunkId":"060153","recheckedToolChunkId":"c8bffc"}
+  ]
+}

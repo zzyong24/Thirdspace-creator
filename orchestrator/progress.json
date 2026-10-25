@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 296,
+    "verticals": 298,
     "tasks_done": 89,
-    "tasks_total": 423,
-    "tasks_pending": 334,
+    "tasks_total": 425,
+    "tasks_pending": 336,
     "verticals_complete": 28
   },
   "verticals": [
@@ -21569,7 +21569,10 @@
         "orchestrator/events.ndjson",
         "orchestrator/progress.json",
         "orchestrator/process/modules.config.json",
-        "orchestrator/context/T-1410.md"
+        "orchestrator/context/T-1410.md",
+        "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md",
+        "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md",
+        "orchestrator/ARTIFACT_MANIFEST.yaml"
       ],
       "read_set": [
         "docs/features/t1410-review-evidence-reconciliation.md",
@@ -21595,6 +21598,102 @@
         "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md",
         "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md",
         "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1411",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1411",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "contract/src/internal/model-probe-io.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts",
+        "docs/features/t1411-model-probe-auth-parity.md",
+        "docs/features/t1411-model-probe-auth-parity.T-1411.review.md",
+        "docs/verification/t1411/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1411.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "read_set": [
+        "docs/features/t1411-model-probe-auth-parity.md",
+        "docs/verification/t1408/official-pi-request-diagnosis.md",
+        "contract/src/internal/model-probe-io.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1412",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1412",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "orchestrator/process/reconcile.config.json",
+        "docs/verification/t1022/run-archive-guard.mjs",
+        "docs/verification/t1022/run-archive-guard.test.mjs",
+        "tools/timeout-policy/hyperframes.test.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.test.mjs",
+        "docs/features/t1412-full-reconcile-isolation.md",
+        "docs/features/t1412-full-reconcile-isolation.T-1412.review.md",
+        "docs/verification/t1412/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1412.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "read_set": [
+        "docs/features/t1412-full-reconcile-isolation.md",
+        "docs/verification/t1410/full-reconcile-safety-review.md",
+        "orchestrator/process/lesson-runner.mjs",
+        "backend/src/test-fixtures/owned-postgres.ts",
+        "orchestrator/process/reconcile.config.json",
+        "docs/verification/t1022/run-archive-guard.mjs",
+        "docs/verification/t1022/run-archive-guard.test.mjs",
+        "tools/timeout-policy/hyperframes.test.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.test.mjs"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

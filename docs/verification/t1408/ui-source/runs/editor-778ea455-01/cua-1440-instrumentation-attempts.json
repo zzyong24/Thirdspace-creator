@@ -1,0 +1,33 @@
+{
+  "invalidSelectorAttempt": {
+    "invalidBeforeInteraction": true,
+    "reason": "macOS AX 将 pressed button 显示为 checkbox；DOM role 已核实为 button",
+    "startedAt": "2026-10-25T06:51:43.654Z",
+    "startMs": 1792911103659,
+    "steps": []
+  },
+  "interactiveAttempt": {
+    "startedAt": "2026-10-25T06:52:09.899Z",
+    "startMs": 1792911129899,
+    "initial": {
+      "dirty": false,
+      "height": 900,
+      "name": "空编辑器复验",
+      "width": 1440
+    },
+    "steps": [
+      {
+        "step": "进入转写",
+        "elapsedMs": 762
+      }
+    ],
+    "emptyDialog": {
+      "empty": true,
+      "hint": true,
+      "chooseDisabled": true
+    },
+    "elapsedMs": 17889,
+    "pass": false
+  },
+  "note": "交互式分步工具执行：17.889 秒含模型决策间隔，未通过原 10 秒门槛。后续使用同样路径的完整确定性操作计时，保留本记录。"
+}

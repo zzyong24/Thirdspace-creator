@@ -3,52 +3,42 @@
 - Task: T-703
 - Verdict: PASS
 - Round: 2/3 (recheck)
-- Spec receipt: 70e49d3ae5a3
-- Review receipt: c1a3920aea71
+- Spec receipt: f24adeea67b0
+- Review receipt: 7146b662ddb2
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (当前 SPEC 第 41 行新增 productions.editing-plan.confirm：服务端以 expectedRevision 条件只替换 recordingConfig.videoEditingPlan、保留 sibling keys，冲突时零写入并禁止客户端整块 PUT 模拟；第 43 行固定“写入成功→读回核对→创建 video.render”的唯一顺序，失败保留确认卡；AC-703-3 覆盖并发 sibling 更新、陈旧 revision、写入或读回失败不得渲染。)；REV-002 (当前 SPEC 第 45 行固定 video.edit.render 的输入、expectedPlanRevision、sourceRenderTaskId 和有界 patch，要求校验项目/账号及 revision、确定性应用 patch 并通过 videoRenderProps.parse；AI 只记录候选，用户确认后才经 editing-plan.confirm 持久化并创建带 lineage 的 video.render，响应返回可读回的新 plan revision 与 render taskId。AC-703-6 明确验证目标场景 assetId 实际变化，排除了仅携带 retryFeedback 的原样重渲染。)；REV-003 (当前 SPEC 第 59 行固定 route 仅接收 taskId 与 manifest artifact path，并依次校验 RequestContext 用户/账号、项目归属、awaiting_confirmation、最新 manifest 精确成员、video MIME、sandbox/out 常规文件及 realpath/symlink 边界；失败统一 404，Cache-Control 为 no-store，discard/confirm 后旧 URL 必须 404，并规定 Range 的 200/206/416。AC-703-5 已逐项覆盖全部成功与拒绝条件。)；REV-004 (当前 SPEC 第 57 行固定 storyboard narration 与场景时间窗内原始 srtLines.text 为权威文本，规定 Unicode NFKC、大小写、空白标点处理、中文 2-gram 与 ASCII token、Jaccard 阈值 0.35、唯一最高分及并列/低分/零 token 的失败语义，并明确一段至多命中一场。AC-703-1 已增加段数不一致的唯一命中、并列冲突、低分/零命中及被剔除 fixture。)
+已销账：REV-005 (当前 SPEC SHA-256=f24adeea67b00661f67de2dffa7edc7491199cc8d3bd4b11bd5ccb6bfc5c107e，§3 第 54 行（SPEC-LINE:54:5093e32d4ddfa34b）当前已确认剪辑方案的写入口已改为 productions.editing-plan.confirm，唯一 diff 是该操作名；与同节第 60 行保 sibling keys/expectedRevision 条件更新、首次确认和对话调整共用窄写口一致，也与第 65/73 行确认后读回再创建 render 及第 98–100 行 AC-703-3 一致。原 outputs.production.get 读回、并发冲突、幂等回执和失败不创建 render 的要求均未修改；旧表格双入口引用矛盾已消除。仅核规格，未运行实现或安装验收。)
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-703",
+  "cycle": 2,
   "round": 2,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "REV-001..004 均已被当前 SPEC 的原子窄写与确认顺序、剪辑调整候选契约、临时预览授权及负向验收、确定性文本对齐规则消解；本轮改动行未引入新的 blocker、major 或需登记的 minor。",
+  "summary": "T-703 cycle 2 round 1 PASS[REV:2e9eb0bb4449] 所带 open minor REV-005 的正式定向复审；canonical event=f586f2438812fee183af7649efd842087648a2124b7f2a5e7fb2f9d392f3b3bd。当前 SPEC SHA-256=f24adeea67b00661f67de2dffa7edc7491199cc8d3bd4b11bd5ccb6bfc5c107e；宪法=docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读取 reviewctl context 的完整 finding/changed_line_refs，并验证 778ea4559850b0d8dfbf279c312dc4c21d72866e 中原 SPEC 全文字节与该首轮绑定 hash 相同。实际 diff 仅 §3 第 54 行数据表把 outputs.production.put 改为 productions.editing-plan.confirm，现与第 60 行唯一窄写口、确认/读回/创建 render 顺序和 AC-703-3 的并发、revision、幂等要求一致；outputs.production.get 读回及所有验收要求保持。REV-005 在规格层解决，增量无新 finding；只改 status/resolution_evidence，不重写冻结字段，不声称产品、渲染或本地安装验收已通过。",
   "spec_path": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md",
-  "spec_sha256": "70e49d3ae5a3e418fad77e80fa0a61054c42de5c0634cc20881cfd7a4f005320",
-  "constitution_path": "PROJECT.md",
-  "constitution_sha256": "2afb9684d1ef531f56c5def2185c6cc7086c00aa3105bff0ce87fc5c81fc5fad",
+  "spec_sha256": "f24adeea67b00661f67de2dffa7edc7491199cc8d3bd4b11bd5ccb6bfc5c107e",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.review.md",
-  "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-sol",
+  "review_mode": "homogeneous",
+  "model": "inherited-session-model",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "dc0a4a6a07946faf04ccca3c50bbbe2d3db6e0a2a699eb17def80f0feaadbb3f",
+  "cycle_authorization": null,
+  "latest_event_hash": "d33e1828a4af43ea7cc527eb6d49ebe66225df6a2588b7775e0323a4bbe4d898",
   "open_findings": [],
   "resolved_findings": [
     {
-      "id": "REV-001",
-      "resolution_evidence": "当前 SPEC 第 41 行新增 productions.editing-plan.confirm：服务端以 expectedRevision 条件只替换 recordingConfig.videoEditingPlan、保留 sibling keys，冲突时零写入并禁止客户端整块 PUT 模拟；第 43 行固定“写入成功→读回核对→创建 video.render”的唯一顺序，失败保留确认卡；AC-703-3 覆盖并发 sibling 更新、陈旧 revision、写入或读回失败不得渲染。"
-    },
-    {
-      "id": "REV-002",
-      "resolution_evidence": "当前 SPEC 第 45 行固定 video.edit.render 的输入、expectedPlanRevision、sourceRenderTaskId 和有界 patch，要求校验项目/账号及 revision、确定性应用 patch 并通过 videoRenderProps.parse；AI 只记录候选，用户确认后才经 editing-plan.confirm 持久化并创建带 lineage 的 video.render，响应返回可读回的新 plan revision 与 render taskId。AC-703-6 明确验证目标场景 assetId 实际变化，排除了仅携带 retryFeedback 的原样重渲染。"
-    },
-    {
-      "id": "REV-003",
-      "resolution_evidence": "当前 SPEC 第 59 行固定 route 仅接收 taskId 与 manifest artifact path，并依次校验 RequestContext 用户/账号、项目归属、awaiting_confirmation、最新 manifest 精确成员、video MIME、sandbox/out 常规文件及 realpath/symlink 边界；失败统一 404，Cache-Control 为 no-store，discard/confirm 后旧 URL 必须 404，并规定 Range 的 200/206/416。AC-703-5 已逐项覆盖全部成功与拒绝条件。"
-    },
-    {
-      "id": "REV-004",
-      "resolution_evidence": "当前 SPEC 第 57 行固定 storyboard narration 与场景时间窗内原始 srtLines.text 为权威文本，规定 Unicode NFKC、大小写、空白标点处理、中文 2-gram 与 ASCII token、Jaccard 阈值 0.35、唯一最高分及并列/低分/零 token 的失败语义，并明确一段至多命中一场。AC-703-1 已增加段数不一致的唯一命中、并列冲突、低分/零命中及被剔除 fixture。"
+      "id": "REV-005",
+      "resolution_evidence": "当前 SPEC SHA-256=f24adeea67b00661f67de2dffa7edc7491199cc8d3bd4b11bd5ccb6bfc5c107e，§3 第 54 行（SPEC-LINE:54:5093e32d4ddfa34b）当前已确认剪辑方案的写入口已改为 productions.editing-plan.confirm，唯一 diff 是该操作名；与同节第 60 行保 sibling keys/expectedRevision 条件更新、首次确认和对话调整共用窄写口一致，也与第 65/73 行确认后读回再创建 render 及第 98–100 行 AC-703-3 一致。原 outputs.production.get 读回、并发冲突、幂等回执和失败不创建 render 的要求均未修改；旧表格双入口引用矛盾已消除。仅核规格，未运行实现或安装验收。"
     }
   ],
-  "receipt": "c1a3920aea71"
+  "receipt": "7146b662ddb2"
 }
 ```

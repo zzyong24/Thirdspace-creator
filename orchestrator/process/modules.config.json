@@ -20543,7 +20543,10 @@
         "orchestrator/events.ndjson",
         "orchestrator/progress.json",
         "orchestrator/process/modules.config.json",
-        "orchestrator/context/T-1410.md"
+        "orchestrator/context/T-1410.md",
+        "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md",
+        "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md",
+        "orchestrator/ARTIFACT_MANIFEST.yaml"
       ],
       "verify_commands": {
         "implementation": [
@@ -20554,7 +20557,97 @@
           "node orchestrator/process/reconcile.mjs --profile quick --read-only"
         ]
       },
-      "scope_note": "用户授权修复未通过验收的控制证据；仅真实原件和独评，保产品争议与真实运行缺口。"
+      "scope_note": "2026-10-25维护授权：精确保全与20项真实新cycle、T1072新身份初审；旧schema冻结冲突不改引擎；仅纠正T858后继决定标识和T703窄写引用，独评后实施。"
+    },
+    "T-1411": {
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck"
+        ]
+      },
+      "task_id": "T-1411",
+      "read_set": [
+        "docs/features/t1411-model-probe-auth-parity.md",
+        "docs/verification/t1408/official-pi-request-diagnosis.md",
+        "contract/src/internal/model-probe-io.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts"
+      ],
+      "write_set": [
+        "contract/src/internal/model-probe-io.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts",
+        "docs/features/t1411-model-probe-auth-parity.md",
+        "docs/features/t1411-model-probe-auth-parity.T-1411.review.md",
+        "docs/verification/t1411/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1411.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "scope_note": "T1408诊断发现probe丢失鉴权方式；仅修既有请求投影，不宣称402恢复。"
+    },
+    "T-1412": {
+      "task_id": "T-1412",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1412-full-reconcile-isolation.md",
+        "docs/verification/t1410/full-reconcile-safety-review.md",
+        "orchestrator/process/lesson-runner.mjs",
+        "backend/src/test-fixtures/owned-postgres.ts",
+        "orchestrator/process/reconcile.config.json",
+        "docs/verification/t1022/run-archive-guard.mjs",
+        "docs/verification/t1022/run-archive-guard.test.mjs",
+        "tools/timeout-policy/hyperframes.test.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.test.mjs"
+      ],
+      "write_set": [
+        "orchestrator/process/reconcile.config.json",
+        "docs/verification/t1022/run-archive-guard.mjs",
+        "docs/verification/t1022/run-archive-guard.test.mjs",
+        "tools/timeout-policy/hyperframes.test.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.mjs",
+        "tools/timeout-policy/hyperframes-cli-isolation.test.mjs",
+        "docs/features/t1412-full-reconcile-isolation.md",
+        "docs/features/t1412-full-reconcile-isolation.T-1412.review.md",
+        "docs/verification/t1412/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1412.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "scope_note": "精确修三个完整验收入口缺陷；所有原检查/断言保留，真实运行以SPEC的隔离先证和owned环境为前置。打包冻结后实施。"
     }
   }
 }

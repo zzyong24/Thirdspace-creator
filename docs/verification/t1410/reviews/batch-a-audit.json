@@ -1,0 +1,935 @@
+{
+  "schema": "t1410-independent-review-batch/v1",
+  "batch": "A",
+  "base_commit": "8f0245a5a7bd4c9829c2be43c90880444477c2c2",
+  "independence": "继承宿主模型的独立同构会话；未核实具体型号",
+  "review_scope": "当前SPEC完整独立initial；原canonical findings及实际增量分证；无产品验收声明",
+  "authority": "T1410 FR-141002和主线程批次A授权；只写reviews证据路径",
+  "mutations_excluded": [
+    "SPEC",
+    "BACKLOG",
+    "review snapshots",
+    "events",
+    "product"
+  ],
+  "items": [
+    {
+      "task_id": "T-1369",
+      "spec_path": "docs/features/t1369-dashboard-filter-sidebar-navigation.md",
+      "spec_sha256": "4f608dbb11ca3e269bef9a5d78351b5bec0fb09c636a513f2e69ccae718ad18a",
+      "original_constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "current_original_constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "review_constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "review_constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "canonical_event_hash": "756c3dda4c0952bbce08fa9fe03f533b5dfa87cd377fcd2d53796cb4a474c9d0",
+      "canonical_cycle": 1,
+      "canonical_round": 3,
+      "needs_new_cycle": true,
+      "old_findings": [],
+      "source_identity_mapping": null,
+      "changed_line_refs": [
+        {
+          "origin_ref": "SPEC-LINE:98:7f7f16451a0ef717",
+          "text": "## production夹具边界修订（DEC-136907，2026-10-19）"
+        },
+        {
+          "origin_ref": "SPEC-LINE:100:72a9017b2d99627b",
+          "text": "前三次均为环境/夹具前置失败，未开始build/seed/sign/start/UI，不充产品RED：01长Unix socket119B而EINVAL、exit1/5.155582667秒；02同原SBPL短路径tsx CLI IPC探针EPERM、exit1/422.091ms；03标准Node loader探针实际0/1322.885ms，随后原宿主/bin/ps spawn EPERM，wrapper1/5.152955750秒最初留owned PG24400。03残留不隐去：外层另核root/UID/owner/私有pgdata/PID后原pg_ctl正常0/142.422ms清理，三端口再无listener。原件/源码快照/后置清理分证保。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:102:f175adc6b25e2bae",
+          "text": "Root明确授权精确[PRODUCTION_FIXTURE_BOUNDARY_DELTA](../verification/t1369/PRODUCTION_FIXTURE_BOUNDARY_DELTA.md)，最终SHA256 `f846415eb6ebdc4d96e42c15e5310adc4e3d56c13247fb82c239df875393f1de`。本段只修订上一production段的夹具隔离拓扑与外层清理预算；原冻结批准/实验历史不覆盖，未改产品/导航时序/准入门。大白话：原进程归属检查必须实际运行ps，因此合成夹具放外层，真正构建和页面运行仍留原沙箱；不能说成全栈禁网。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:104:7bb110be90a2ebfc",
+          "text": "外层仅本次最小env、新0700 owned root的原T1355 host/PG及原T1356 seed，保标准node --import tsx入口和原ps/nonce/UID/root/PID/监听归属门；fixture本身不再有OS禁网。已源审原host未装真实collect/onBound/external adapters，seed仅对严格校验的127.0.0.1私有role/db写确定合成service事实，无外部模型/实际采集/发布；原host空binding drain仍存在，不虚称无循环。seed后host/state安全计数基线与结束前比较，runIds/stageDetails应空、AI/schedule零、允许原合成collection runs且不得新增任务。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:106:789599585769f81d",
+          "text": "build/Next/browser逐字使用原SBPL，不加UnixIPC或外网规则；原verdict/build_smoke/helper与用户凭据禁读不变。配置webServer=[]，禁止自动reuse；只许本轮实际spawn后代，端口前置全空，ready/owner新文件0600/非symlink/UID、nonce/root、postmaster tuple、真实ps和实际监听PID逐一核，auth/me user须同seed.userId，失败即停不能借任意既存host。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:108:c9ed9cf17b4782d6",
+          "text": "原本地探针360秒→外层host完整readiness300秒→沙箱标准完整build7200秒→外层原seed/沙箱Next start/authready共600秒绝对期限（seed完且剩余有效才唯一签token并立即start）→沙箱一次normal原自然后受控链test9360秒/core120秒。清理PW120+Next120+host480=720秒，保host原ps180+pgCommand240串行420秒的真实预算；不沿旧300秒误杀。唯一新production04独立外层18840秒覆盖360+300+7200+600+9360+720+120=18660秒，另余180秒；不续01–03或任何在途期限。入口8GiB/运行3GiB及原精确cache/trace保护不变。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:110:681d79b636eb22f7",
+          "text": "本delta只在原production驱动/env/config与docs/verification/t1369/**内落实，不改原harness/seed、两产品源、依赖或许可guard；独审核本实际边界/预算字节后按Root既有明确授权唯一执行，不新增常规许可层。无真实导航RED仍不修产品，T1369保持进行中，不能代签完整FR/AC、Tauri恢复、full或完成。"
+        }
+      ],
+      "canonical_spec_commit": "5b8d4cdc1323fab4ff0dc7c411ac212c2189a8cd",
+      "old_findings_assessment": "原canonical末轮findings=[]，未推定其PASS有效。",
+      "actual_change_assessment": "精确历史全文diff仅新增production夹具边界段：host/PG/seed移到外层而应用保原SBPL，明确不宣称全栈禁网；原预算和身份守卫保留。",
+      "contract_review": "自然/受控RED、overview/settings对照、RSC完整结束与UI提交分证、G1/G2和ABA、两视口、dirty与任务保护均有要求。补充实验仅normal窗口不代签整体验收。",
+      "limitations": [
+        "没有执行production04、公共E2E或导航修复验证。"
+      ],
+      "evidence_paths": [
+        "docs/verification/t1369/PRODUCTION_FIXTURE_BOUNDARY_DELTA.md",
+        "docs/verification/t1355/harness/binding-fixture-server.mts",
+        "docs/verification/t1356/harness/seed-collected-dashboard.mts",
+        "frontend/playwright.t1356.config.ts"
+      ],
+      "output_path": "docs/verification/t1410/reviews/T-1369.json",
+      "finding_count": 0
+    },
+    {
+      "task_id": "T-1255",
+      "spec_path": "docs/features/t1255-reporting-full-delivery.md",
+      "spec_sha256": "2323b2dd3404fb8de09d54592bcb75449899b828d06512cc7f2f9b286c6d3f6c",
+      "original_constitution_path": "PROJECT.md",
+      "current_original_constitution_sha256": "e9085d32d6f91bbe1a251b502aeede8c338e95c87c9f809155c159b8b1b0ab13",
+      "review_constitution_path": "docs/产品定位.md",
+      "review_constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "canonical_event_hash": "7c0346dd5ad90710d66bd46e5c348c4cade4affacb3f7d57575dbdcfddafcf9a",
+      "canonical_cycle": 3,
+      "canonical_round": 2,
+      "needs_new_cycle": true,
+      "old_findings": [],
+      "source_identity_mapping": null,
+      "changed_line_refs": [],
+      "canonical_spec_commit": "c8b96fd916ee66b3fca56d85076ef48e90accc21",
+      "old_findings_assessment": "原末轮findings=[]；SPEC字节未变。",
+      "actual_change_assessment": "漂移来自生成PROJECT：当前定位、单体/Worker与唯一数据属主约束已审核；开放任务清单和模块库存不是新的产品合同。",
+      "constitution_rebinding_reason": "用稳定docs/产品定位.md承载后续审核，保原PROJECT路径和完整hash；仍保当前Architecture/AGENTS适用约束，不用换文档逃避规则。日志自动发送是SPEC记载的用户明确用途同意V2，不覆盖默认关闭、无业务数据库、每日一次、唯一owner及只读Agent范围。",
+      "contract_review": "封存前缀/幂等回执、并发配额与TTL、无钥匙诚实状态、明确owner/明文no-store、切换清除过期正文、exact eventId定位与完整JSON导出可验收。",
+      "limitations": [
+        "未运行Growth跨仓服务、读取真实日志/私钥或核线上客户异常。",
+        "安装日轮次、真实客户异常、双端和生产交付必须保持原待验。"
+      ],
+      "evidence_paths": [
+        "PROJECT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md",
+        "AGENTS.md"
+      ],
+      "output_path": "docs/verification/t1410/reviews/T-1255.json",
+      "finding_count": 0
+    },
+    {
+      "task_id": "T-1072-owned-devices",
+      "spec_path": "docs/features/t1072-owned-devices.md",
+      "spec_sha256": "971a503642f67e92b5343772d96abc6800ba74814c014b30fdfb6b486e866f7b",
+      "original_constitution_path": "docs/产品定位.md",
+      "current_original_constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "review_constitution_path": "docs/产品定位.md",
+      "review_constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "canonical_event_hash": null,
+      "canonical_cycle": null,
+      "canonical_round": null,
+      "needs_new_cycle": false,
+      "old_findings": [],
+      "source_identity_mapping": {
+        "source_task_id": "T-1072",
+        "source_event_hash": "0b5902901a901ff1e780f6e30ebd46d4ea7e0227b11a1e774bb11b08cf5c1a77",
+        "source_commit": "e8ec732c143615fa6d6dbaecc67e9aa57833a197",
+        "source_review_path": "docs/features/t1072-owned-devices.review.md",
+        "proposed_review_path": "docs/features/t1072-owned-devices.T-1072-owned-devices.review.md"
+      },
+      "changed_line_refs": [],
+      "canonical_spec_commit": null,
+      "source_spec_commit": "e8ec732c143615fa6d6dbaecc67e9aa57833a197",
+      "source_spec_sha256": "cec17b34e426622aa6a32aef24d219a109f364ff9ed7cddc84f3795e3bca0aff",
+      "old_findings_assessment": "原T-1072外部初审findings=[]，不是当前别名的规范审核。",
+      "actual_change_assessment": "对原来源全文作diff：LDR精确opaque引用、商品/profile解析条件，以及后附发布索引、组生成、JSONB等价、时间轴时长与测试驱动维修记录。后附记录均保原授权/预算/跨组守卫和未验边界，不新增自动发布或双机已完成事实。",
+      "contract_review": "原生设备身份/PKCE秘密不跨IPC，外层响应签名及v3绑定先于保存，TIME永久null与原expiresAt不重置，替换前后失败/journal/同意向恢复均有明确合同。",
+      "limitations": [
+        "当前新身份完整initial，不导入或冒认原T-1072批准。",
+        "原生/跨仓HTTP/真实双机与后附维修的运行数字本轮未重跑，不作已核产品完成证明。"
+      ],
+      "evidence_paths": [
+        "frontend/src-tauri/src/owned_devices.rs",
+        "docs/features/t1072-owned-devices.md"
+      ],
+      "output_path": "docs/verification/t1410/reviews/T-1072-owned-devices.json",
+      "finding_count": 0
+    },
+    {
+      "task_id": "T-1021",
+      "spec_path": "docs/features/t1021-cover-template-library.md",
+      "spec_sha256": "1ca8392b4d5ea2ecb6288aef8284578164938ba2a5d648c3fa05a5e9606b83ad",
+      "original_constitution_path": "docs/产品定位.md",
+      "current_original_constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "review_constitution_path": "docs/产品定位.md",
+      "review_constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "canonical_event_hash": "494552bf33ddd0e33bf270593b04388011dafa538f516a799a282db5926c4ac4",
+      "canonical_cycle": 1,
+      "canonical_round": 3,
+      "needs_new_cycle": true,
+      "old_findings": [
+        {
+          "id": "REV-001",
+          "status": "resolved",
+          "severity": "major",
+          "category": "completeness",
+          "requirement_anchor": {
+            "id": "双库与行业分类",
+            "quote": "小红书图文库服务完整笔记，包括首图、正文页、配文和图片顺序"
+          },
+          "acceptance_anchor": {
+            "id": "验收与性能",
+            "quote": "成功页保留与失败页恢复、页序及实际导出文件、配文编辑回读"
+          },
+          "where": "图文生成与采纳闭环；页面与真实操作表；assets.visualTemplates.generate 契约",
+          "failure_mode": "SPEC 承诺 visual.carousel 的单页重试、配文编辑回读和最终采纳，但操作表只绑定现有封面生成与单图采纳。缺少稳定页 ID、逐页状态、配文修改保存操作、原任务重试操作、整套笔记采纳业务归属；现有 generated_asset 采纳只物化单图，不能证明配文与页序刷新后保留。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "docs/features/t1021-cover-template-library.md:60-80,114; contract/src/operations/ai.ts:ai.tasks.results.patch,ai.tasks.confirm; backend/src/modules/ai/ai.service.ts:1214-1238,1360-1420",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "constraint",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "suggestion": "补齐稳定页 ID、候选/配文版本、编辑与重试操作、项目内完整笔记采纳归属；封面与整套笔记采纳分开；一次一张只限制封面；验收失败一页后编辑配文、刷新、单页重试、导出及采纳。",
+          "resolution_evidence": "SPEC-LINE:137:387d588eadad95e9 定义visual_note、稳定pageId、逐页状态、候选及配文版本，并绑定项目、ContentOutput与发布草稿基版。SPEC-LINE:139:acc6cc9828624066 与 SPEC-LINE:140:fc71dac5d60942ac 绑定配文/页序持久修改及原任务失败页重试，禁止成功页重生成。SPEC-LINE:141:76d94aa9dc2c080d 与 SPEC-LINE:142:ced9b8b845af463a 明确成功子集采纳，经Publishing保存同一不可变PublicationRevision；正式配文归description，页序归platformSettings.visualNote，不另建Assets图文交付物。SPEC-LINE:143:11c6230dd979183d 冻结完整内容digest、领域事务、当前版本CAS与持久采纳唯一键，回执丢失返回原Publication/Revision，同键变内容409。SPEC-LINE:144:fbd51feadaf9c3a8 按currentRevisionId回读并导出真实独立图片与配文。SPEC-LINE:147:7c4275c26ba0b151 将整套笔记采纳与另设项目封面分开。SPEC-LINE:183:b3d2eb986ceb113f 要求失败一页后编辑、刷新、单页重试、采纳、当前版本回读及导出的完整旅程，成功页调用数不增加，并覆盖同基版竞争、回执丢失、同键改封面/页序及旧Revision请求兼容；这是待实施验收合同，未声称运行通过。",
+          "parent_id": "",
+          "threat_model_id": ""
+        },
+        {
+          "id": "REV-002",
+          "status": "resolved",
+          "severity": "major",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "首批通用封面样图",
+            "quote": "真人模式为必要能力：必须使用用户明确选择的身份照片，绝不能生成陌生人替代"
+          },
+          "acceptance_anchor": {
+            "id": "验收与性能",
+            "quote": "真人身份与风格参考分离、多参考不支持时保留身份图的诚实降级"
+          },
+          "where": "真人模式判别与缺图降级；references；正式图片准备",
+          "failure_mode": "真人必须使用身份图与通用缺图仅提示词降级相冲突，未规定不选号模板时如何明确模式，未冻结身份图必填边界。正式 execution-cover.service 已有参考读取失败 catch 为 null 并转 image.generate 路径，可能生成陌生人。",
+          "evidence_kind": "spec-contradiction",
+          "evidence_ref": "docs/features/t1021-cover-template-library.md:99,114,120; backend/src/modules/execution/execution-cover.service.ts:95-106",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "constraint",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "suggestion": "按明确模式或可信模板 requiredInputs 冻结身份图必要性，身份缺失、读取失败或供应商不支持编辑不得提交文生图，允许补图或明确切换普通模式；只有风格缺失可保留身份图降级。验收必要身份图与普通提示词路径。",
+          "resolution_evidence": "SPEC-LINE:151:2333398019deb302 定义明确visualMode并以可信requiredInputs约束真人模板；真人请求必须且只能有一张用户选择的identity，无模板请求同样受约束，不按关键词判别。SPEC-LINE:153:11f662f22edb4152 明确身份缺失、不可读、摘要变化及供应商不支持编辑均禁止文生图，限制旧catch→null回退，仅风格缺失或多图不支持时保留identity。SPEC-LINE:171:3dde1aff4bd7301c 将仅提示词降级限定于普通请求，必要身份及权限错误不得降级忽略。SPEC-LINE:183:b3d2eb986ceb113f 要求身份缺失、身份读取失败、单参考供应商及普通纯提示词四类合同验收；前两类没有文生图调用，单参考保留身份，普通请求正常生成。这些为SPEC约束与待实施验收，不代表生产调用已验证。",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ],
+      "source_identity_mapping": null,
+      "changed_line_refs": [
+        {
+          "origin_ref": "SPEC-LINE:3:28f5f8ddadf0e246",
+          "text": "状态：此前发布合同已独立复核；用户认可并补充宿主为无限画布。画布入口尚未定位，追加接入规则待宿主核对与复核；旧PASS不覆盖本补充。私人收藏保存范围待确认，生产实现尚未开始。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:197:b9044fe3a68d4a0d",
+          "text": "## 用户追加：沿现有无限画布承载创作"
+        },
+        {
+          "origin_ref": "SPEC-LINE:199:a874ff9c0f7befb8",
+          "text": "用户明确认可复用现有发布链，并补充系统是无限画布。创作须在既有画布上承载：封面为画板、图文为带明确pageOrder的页组，模板/收藏/素材为缩放层外按需打开的面板；比例属于生成与导出的明确输入，不属于画布缩放。正式物料仍归已有Publishing版本，画布只引用真实任务、素材与发布版本。平移、移动、缩放不自动修改图文页序、采纳或发布状态；生成完成不抢视口；保留宿主原保存与撤销机制，不新增画布引擎。完整操作与验收补充见[integration.md的无限画布补充](t1021-cover-template-library/integration.md#无限画布补充2026-10-04)。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:201:26f97f920a036b93",
+          "text": "当前源码分支未定位该无限画布宿主，已询问用户入口/代码位置；此前核对的PublishPackSection是发布入口，不作为画布宿主的替代证据。实施前先绑定实际节点类型、坐标变换、布局保存与发布关联端口；不猜API或将独立HTML当成既有画布。此前`PASS[REV:f0f3fa0ff91b]`仅覆盖追加前的发布合同，本补充尚未复核，不声明生产Gate通过。"
+        }
+      ],
+      "canonical_spec_commit": null,
+      "old_full_spec_recovery": "未在本地该路径最近100个可达历史commit中找到canonical所审完整SPEC字节；使用真实规范事件完整旧packet及reviewctl行指纹增量，并完整审核当前全文，不伪称取得原全文diff。",
+      "old_findings_assessment": "原REV-001已resolved：当前图文候选合同仍完整定义pageId、配文/页序revision、failed页原任务retry、Publishing不可变Revision/CAS/adoptionKey/digest和并发回执旅程。原REV-002已resolved：explicit visualMode+requiredInputs，identity缺失/读取失败/能力不支持禁止文生图，普通提示词路径保留。",
+      "actual_change_assessment": "行指纹增量为状态说明及无限画布补充；已读被引integration补充。画布只引用Publishing，不因移动改变页序、不因生成抢视口；真实宿主节点/坐标/撤销与关联端口在实施前绑定，不假造已存在API。",
+      "contract_review": "两库/行业是内容目录，代码不做语义选择；收藏隔离建议尚待决定且未推定跨账号；比例能力与凭据同源冻结、未知能力保旧默认，生成/采纳/下载/发布边界明确。",
+      "limitations": [
+        "画布宿主未定位和私人收藏范围待定仍是明确实施前提，本审查不能作为猜测接口或数据归属的授权。",
+        "原OilUI流程按当前AGENTS及用户撤销决定不再适用，保tokens/原组件/操作验收；不改历史措辞。"
+      ],
+      "evidence_paths": [
+        "docs/features/t1021-cover-template-library/integration.md",
+        "AGENTS.md",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "output_path": "docs/verification/t1410/reviews/T-1021.json",
+      "finding_count": 0
+    },
+    {
+      "task_id": "T-915",
+      "spec_path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "spec_sha256": "b8282e2c286a9e0ffa757264667e724bcc20457e355b08487d8c08e1011811d9",
+      "original_constitution_path": "AGENTS.md",
+      "current_original_constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
+      "review_constitution_path": "AGENTS.md",
+      "review_constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
+      "canonical_event_hash": "1d0f281764a2d94f245bbaedad518a9d89ad8fc824c531ba04bf5609a747b93b",
+      "canonical_cycle": 1,
+      "canonical_round": 2,
+      "needs_new_cycle": true,
+      "old_findings": [
+        {
+          "status": "resolved",
+          "severity": "minor",
+          "evidence_kind": "spec-contradiction",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "resolution_evidence": "已只读核对当前 SPEC R-05 首段：不可恢复错误映射 failed，配置/登录阻断映射 waiting_user，未知提交映射 unknown_result；明确 blocked 只保留为工具结果与旧公共状态，不是新执行终态。历史 blocked 保持回读，仅依据持久化错误码与实际恢复动作映射，缺原因保留原记录并要求诊断，禁止猜成可重试。与 R-01 枚举及 AC-03、AC-07、AC-08 一致。",
+          "parent_id": "",
+          "id": "REV-001",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "R-01",
+            "quote": "任务状态为 queued、running、retry_wait、waiting_user、unknown_result、succeeded、partial、failed、cancelled。"
+          },
+          "acceptance_anchor": {
+            "id": "AC-07",
+            "quote": "actualEngine 真实；可用部分保留；诊断不冒充成功；有效旧路径安全降级"
+          },
+          "where": "R-01 状态枚举与 R-05 诊断结果映射",
+          "failure_mode": "R-05 要求只有诊断且无业务结果时为 failed/blocked，但 blocked 不在 R-01 新状态枚举中。当前持久任务服务已有 blocked 状态；迁移实现可能继续写入未定义的新状态，或将登录等待等可恢复阻断误投影为不可恢复失败。",
+          "evidence_ref": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md#r-01-执行权与数据归属；#r-05-结果与兼容路径；backend/src/modules/execution/persistent-task.service.ts 的 finish 与 commandTarget",
+          "suggestion": "明确 blocked 是旧公共状态或工具结果，而非新增执行终态；列明配置/登录阻断映射 waiting_user、未知提交映射 unknown_result、不可恢复且无业务结果映射 failed，并补充旧 blocked 数据的回读与恢复映射。也可选择保留内部 blocked，但需同步补齐状态机及可执行恢复命令。"
+        },
+        {
+          "status": "resolved",
+          "severity": "minor",
+          "evidence_kind": "spec-contradiction",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "resolution_evidence": "已只读核对当前 SPEC R-01 状态机段：pause_requested 禁止新 admission，在途调用允许幂等结算或记未知，确认停止后进入 paused，暂停期间重启仍保持暂停；resume 取得新租约并保留累计预算、已确认回执、operationKey、原 deadline，浏览器重新观察。调度 attempt 明确为 fencing 版本，模型/工具重试额度单独累计，暂停恢复既不重置额度也不计作供应商失败重试。AC-05 已补充暂停无新 admission、在途结算、暂停重启不自启及恢复保持预算/重试额度/deadline/operationKey 的验收要求。",
+          "parent_id": "",
+          "id": "REV-002",
+          "category": "completeness",
+          "requirement_anchor": {
+            "id": "R-01",
+            "quote": "暂停用控制状态 pause_requested/paused，保留恢复位置。"
+          },
+          "acceptance_anchor": {
+            "id": "AC-05",
+            "quote": "恢复消息/预算/工具事实；无重复候选；ai/execution 投影一致；浏览器重新观察；旧 sweep 不判死新任务"
+          },
+          "where": "R-01 暂停恢复与 AC-04/AC-05 故障验收",
+          "failure_mode": "SPEC 明确保留暂停能力，但验收仅覆盖取消、崩溃和检查点恢复，未检查 pause_requested 期间是否禁止新调用、如何收敛在途调用，以及 resume 是否保留累计预算与已完成事实。实现可通过现有 AC 而丢失用户已确认的暂停行为。",
+          "evidence_ref": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md#r-01-执行权与数据归属；#验收-ac完整范围统一交付；backend/src/modules/execution/persistent-task.service.ts 的 commandTarget、acknowledgeControl、recoverExpiredLeases",
+          "suggestion": "补充暂停语义及 AC：pause_requested 禁止新 admission，在途调用允许幂等结算或记未知；确认停止后进入 paused；resume 使用新执行租约并保留累计预算、已确认回执和稳定 operationKey，浏览器重新观察；暂停期间重启仍保持暂停。明确调度 attempt 与模型/工具重试额度的关系，不能通过暂停恢复重置额度。"
+        }
+      ],
+      "source_identity_mapping": null,
+      "changed_line_refs": [
+        {
+          "origin_ref": "SPEC-LINE:176:5c141774d75a7fa4",
+          "text": "浏览器接口：observe(sessionId) 返回 observationId、URL、标题、文本窗口与可操作元素引用；act(sessionId,observationId,action,targetRef,value) 仅支持导航/点击/填写/等待明确状态/提取，返回新 observation 与事实结果。过期观察返回 stale_observation 和新观察，不继续旧目标。每次动作后重新观察；模型判断是否达成业务目标。DOM 等外部内容作为不可信证据，不能改变工具权限。浏览器 session 必须绑定服务端持久化的 task authority 与工具 effect；每次副作用动作前由 backend 核对当前 user/account、任务控制状态、授权范围和稳定 operationKey。只读授权拒绝提交/发布类动作，超出范围进入 `waiting_user`；恢复后只能沿用原授权快照，未知提交按原 operationKey 对账，不能自动重复提交表单。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:178:2db3b3922e5d283e",
+          "text": "现有登录保管库真实归属是 user+domain，本次保持该数据归属，不宣称按 account 加密隔离。浏览器执行 session 绑定 task/user/account，上下文切换不得挪用任务页面；同一底层登录 profile 的动作串行。领取 profile 或执行首个读取/写入动作前，必须从页面可验证的外部账号身份回读并与目标 account 的显式绑定核对；无法证明或不匹配时进入 `waiting_user`，不得继续读取或操作。该绑定随 session/evidence/checkpoint 保存，恢复后重新验证，不能仅相信旧页面或模型描述。登录/captcha 等待用户并提供现有登录入口，恢复后新建观察，不能循环尝试绕过。重启后关闭遗留页并重新取得受控租约。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:197:4e2cc827b34b28ed",
+          "text": "| AC-06 | 浏览器过期定位、排队取消、登录阻断、授权与同域多账号 | 新观察后改目标；取消排队不启动；搜索取消不启动后续 fallback；动作后回读证据；登录不反复撞墙；只读授权拒绝提交，越权等待用户，恢复沿用原授权，未知提交同键核实；两个同 user/domain、不同 account 的 session、evidence、恢复和副作用动作不会串用外部登录身份 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:200:512432e2a7da784e",
+          "text": "| AC-09 | 性能基线与故障样本 | R-03 同条件 P50/P95 和模型调用数；全部故障分类符合预期；重复副作用为 0，取消生效后的新 admission 为 0；运行 LED-047 定向回归：同页弹层走本地打开路径，真实页面导航保留路由，折叠大对象按需渲染，每个轮询源限制在途请求，切换 user/account/project/task 或卸载后迟到响应不得回写，且不删除合法历史或阻断正常任务来换取性能结果 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:206:db81515e1cf82395",
+          "text": "### 2026-09-07 正式入口交付记录（用户暂缓测试）"
+        },
+        {
+          "origin_ref": "SPEC-LINE:208:518fd3f0c60cc15d",
+          "text": "- 用户要求优先业务落地、自主规划及失败恢复，暂不执行自动测试，由用户实测；本记录不构成验收 PASS。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:209:40eeb0aa9c8e2ca2",
+          "text": "- 正式 `/api/chat` 已改为持久 Worker 提交与事件订阅；接入 `research.autonomous` Pi 子任务、选题/复盘/知识蒸馏 Worker 节点、截图/采集/转写工具入口。截图与采集资源的物理迁移不因此视为完成。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:210:0344077f6fcd666b",
+          "text": "- 封面正式任务接入当前稿上下文、文案方案、图片生成/参考图编辑、候选投影与原调用明确拒绝重试；旧生产封面 runner 分支已移除。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:211:7b3763a06ff0c483",
+          "text": "- 保留原 30MiB 图片附件输入范围；图片传输编码与视觉预算预留分开，视觉预留为策略估值，实际用量以供应商回执结算。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:212:7a436ff59a812213",
+          "text": "- 代码主线截至 `2568ec31`；运行 `node ai-worker/scripts/build.mjs` 成功生成本地 Worker 文件。未运行测试、类型检查、全局 reconcile，未打包、发布或验证真实供应商。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:213:20428eb886463378",
+          "text": "- 仍待推进：聊天备用模型切换、完整转写生产流程迁移、剩余旧执行路径退役与架构收敛。性能、真实浏览器循环及桌面生命周期效果待实测；T915 继续执行中。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:215:7b7596ad8cd892c2",
+          "text": "### 2026-09-07 破坏式重构与消融进展"
+        },
+        {
+          "origin_ref": "SPEC-LINE:217:f9d6c9444070a8e3",
+          "text": "用户明确授权删除旧代码、按高内聚低耦合拆分并执行局部消融。正式聊天旧流执行器、宿主三种Agent装配与旧整批转写循环已退役；Worker来源故障有界恢复、采集状态与取消生命周期已接线。对照实验及剩余边界见 [消融记录](../../research/2026-09-07-runtime-ablation.md)。本轮只执行运行文件/依赖构建与静态消融，不记业务验收 PASS；备用模型切换、登录资源物理迁移及其它R-05入口继续推进。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:219:121e124a6827bbda",
+          "text": "2026-09-07 持续落地：聊天主调用在明确可重试 HTTP 拒绝且未出流时，可沿原任务切到专配 `chat.fallback`。备用调用独立记账、冻结无秘密身份、使用原检查点恢复；未知提交不切换，备用失败沿原预算恢复。Worker 运行文件构建完成，未执行供应商/业务测试，真实切换效果待用户验证。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:221:230e4baa4500b2f6",
+          "text": "2026-09-07 继续推进（截至 `88476871` 的正式接线）："
+        },
+        {
+          "origin_ref": "SPEC-LINE:223:86766090bba54ea5",
+          "text": "- `video.decisions` 完整多阶段决策已迁入 Worker，保留分块、检查点、材料模式及已有降级；原宿主执行分支删除。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:224:1d45ade6aecbacfd",
+          "text": "- `asset.classify`、`material.extract`、`reconstruct.project` 已接原 AI 任务与 execution_tasks 映射，产物经各领域完成事务落地；图片/文档旧模型循环删除。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:225:a871e7788b59865e",
+          "text": "- 情报选题预览、项目稿件生成用各自原 claim 监督 Worker；明确拒绝进入原任务重试，未知结果保留，旧 runner 不再覆盖恢复状态。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:226:f58cfcce1fb6ec07",
+          "text": "- 转写登录来源在 Worker 使用真实抖音账号目录；宿主抖音/热点宝及 staging 搬移共用物理目录租约。仅代码接线，未启动浏览器验证。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:227:8ebcb43c1711db96",
+          "text": "- 用户淘汰选题后的 `topic.preference` 改为真实持久任务，已删除无任务的宿主提炼；过时原因快照不覆盖新偏好。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:228:5337791ae0108804",
+          "text": "- 修复封面/转写已有私有端口未登记的问题；协议清单核对不存在未登记输入 schema。正式存储不再回退模拟成功，隔离测试仍保留内存适配器。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:229:617778b0c7c98e1e",
+          "text": "- 聊天备用模型局部消融见 [模拟记录](../../research/evidence/t915/chat-fallback-ablation.json)：明确拒绝后启用备用可输出；回放不增加模拟供应商调用；未知提交不切换。该记录不代表真实数据库、供应商或业务验收。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:231:155343de4e29355a",
+          "text": "仍在本任务完整范围内继续：情报转写、采集后的归因/对标/收藏提炼、编辑稿采纳相似度、embedding 等剩余入口及装配收敛。未运行全量测试/全局 reconcile，未做真实供应商、浏览器、双平台包验收；不据构建标记 T915 完成。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:233:01797500c138eb38",
+          "text": "2026-09-07 后续实现记录（尚未整体验收）："
+        },
+        {
+          "origin_ref": "SPEC-LINE:235:b18e3edfaa770aff",
+          "text": "- 编辑稿采纳相似度使用真实 `script.source_similarity` 子任务；已采纳的版本先回读原结果，不重复调用模型。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:236:42b2d13b64cac96b",
+          "text": "- 情报逐字稿接原 `transcribe` claim 的 ASR Worker；读取来源与音频提取仍是受取消约束的宿主资源端口，未宣称整条浏览器链物理迁移完成。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:237:7c71a6615daae586",
+          "text": "- 对标拆解、自有作品归因、收藏判库与知识分块的模型阶段已实现同原定时任务账本的 Worker 端口；单条对标转写已实现专用 `benchmark.transcribe`，只投影对标作品。生产装配正在整合，不能只凭工厂存在记为全入口完成。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:238:04a2e85aee293b00",
+          "text": "- 交互 embedding 已实现复用 IO Worker，最多两条实际在途请求，共用截止时间，未知请求不重发；知识搜索装配抽到 backend service，原关键词降级保留。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:239:ed8e83e7c35759f9",
+          "text": "- 静态消费者盘点证明旧 `trend.extract` 装配闭包已无实际调用方，按消费者证据删除；真实 Worker 出题和聊天读取链保留。不是根据功能名称裁剪业务。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:241:025dc1120107ac5b",
+          "text": "剩余工作包括上述最后入口的生产接线、设置连接探针隔离、旧路径清理、应用装配进一步收敛及用户实测。任务继续保持执行中，构建与局部模拟均不替代运行验收。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:243:488816385805dbee",
+          "text": "2026-09-07 生产接线与页面收敛（截至 `7d5380ba`）：四类定时采集后的模型阶段、收藏 ASR、单条对标转写、embedding 与模型连接探针均已接入实际装配；旧宿主转写函数及无消费者热点提取链删除。Metrics/WorkListExport/SearchVideos 已增加取消信号和浏览器关闭等待，并接到定时任务信号。知识搜索装配及 30 类公开服务分发已移至 backend 应用/service 层；未知操作仍在初始化数据库之前拒绝。情报工作台按来源表单、运行观察、选题任务、候选编辑等职责拆分，透传原任务 runtimeStatus，隔离账号与旧请求回显。只完成静态依赖构建和代码提交，没有实际启动应用或运行真实模型验收。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:245:6304fd0a9b0db135",
+          "text": "继续处理的明确兼容缺口：旧素材任务的供应商 checkpoint 仍需安全迁移，页面恢复/取消操作仍在核对具体可达入口；整个数据库/宿主装配尚未完全从 persistence-client 提取。不能写成“全项目重构完成”或“AI SDK 已卸载”。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:247:303a20d6168f9466",
+          "text": "### 2026-09-07 原任务恢复与旧出口退役（截至 `9dfdb507`）"
+        },
+        {
+          "origin_ref": "SPEC-LINE:249:e38a4dcefcd36a81",
+          "text": "以下为实际代码接线，均未作真实供应商或桌面运行验收："
+        },
+        {
+          "origin_ref": "SPEC-LINE:251:efed6b1b63163762",
+          "text": "| 功能 | 当前实现与旧路径处理 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:252:4199ba454d6d3ae8",
+          "text": "|---|---|"
+        },
+        {
+          "origin_ref": "SPEC-LINE:253:b950b5a80b8ba81e",
+          "text": "| 素材生成历史任务 | 原供应商 job、输入指纹与归属可证明时，由 Worker 只查询原 job；证据不足保持 unknown_result，禁止通用恢复重新提交。旧宿主素材生成 runner 删除。 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:254:9ffd7e46bc435b4a",
+          "text": "| 恢复与取消页面 | Copilot、情报选题、制作页读取真实 executionTaskId/runtimeStatus，操作原任务；等待用户、暂停、未知结果均有真实状态，未知结果不盲目重建任务。 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:255:8516aeb8ee0d4c16",
+          "text": "| 到期重试 | backend application recovery-wake 持续唤醒 script_candidate、topic_preview、transcribe、source_sync、share_import、benchmark、flywheel 七类原队列，每类单飞且有限批量；新请求/用户恢复即时唤醒。原启动一次的 drain 与两套独立 timer 删除。 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:256:fba7bf1a0ad1d2f1",
+          "text": "| 应用停止 | 先中断唤醒器，拒绝后续领取，再等待队列与模型监督器停止；来源同步区分宿主退出与用户取消，分享导入的 fetch/浏览器收到真实停止信号。 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:257:e29c4a814e0640da",
+          "text": "| 短结构化生成旧出口 | 删除无生产消费者的 planning contract/thesis、platform adapt、review analyze、script review 五个旧 runner，保留 Worker 上下文、候选契约和仍使用的纯函数。 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:258:40cd8e13e42b0be0",
+          "text": "| 应用与页面拆分 | 论点采纳事务、知识与搜索装配、搜索索引重建、公开 transport 路由迁入 backend application；情报、设置、制作页面按状态和职责拆分。 |"
+        },
+        {
+          "origin_ref": "SPEC-LINE:260:a85cf8d756ee75a4",
+          "text": "静态接线核对修复了定时模型解析初始化次序、对标转写读取 claim DTO 不含 payload、种子维护仍访问旧仓储变量、残留旧素材入口等问题。本次 Worker 构建成功，production 装配、唤醒器及对标转写三个文件的定向语义检查为 0 条诊断；这不是全库类型或业务验收 PASS。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:262:2001540ca501ae55",
+          "text": "仍需推进：知识查询不应等待整库存量 embedding；分享导入的运行中控制与失败恢复需进一步收口；完整数据库/宿主装配和部分浏览器资源物理边界仍未拆完。性能对照、真实搜索/浏览器循环、所有公共旅程与双平台包仍待用户实测。AI SDK 保留在短模型/流协议适配用途，不能宣称依赖已卸载；T915 继续执行中。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:264:af89c62223d8f1d0",
+          "text": "2026-09-07 查询延迟与重复分发收口（截至 `1915fd64`）："
+        },
+        {
+          "origin_ref": "SPEC-LINE:266:133dd4629368eb3f",
+          "text": "- 移除知识搜索等待全部缺失向量的旧路径；每次只计算当前查询向量，8 秒信号截止后降级关键词。知识保存先同步完成关键词索引，向量由后台每批最多 8 条、全局单飞、账号隔离补算；没有无限补算循环，失败留待后续触发。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:267:b87c77dcecf2d7d6",
+          "text": "- 后台向量仅在原 id、归属、内容与索引版本仍一致且向量为空时填入；采用条件更新，不以旧快照 upsert 复活已删文档。停止时拒绝新工作，取消模型并等待在途操作。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:268:af503c331248034e",
+          "text": "- `ai.tasks.create` 幂等命中非 queued 状态时仅回读，避免重新执行或取消原结果；定时任务由对应 owner 领取一次，移除外层旧快照包装造成的嵌套领取。未注册执行类型明确失败，替代领取后空转。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:269:ef82707a1b3ec08d",
+          "text": "- 新生产装配及搜索相关五个文件定向语义检查为 0 条诊断。没有实测延迟，8 秒是查询向量策略期限，不是整条请求的性能测量值。未运行自动测试或真实模型。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:271:c7fa3f9f72b6b104",
+          "text": "2026-09-07 分享导入恢复与旧模型工厂退役（截至 `2335d164`）："
+        },
+        {
+          "origin_ref": "SPEC-LINE:273:0f65ff241b86bea4",
+          "text": "- 分享导入 runner 从 frontend 迁入 backend intelligence；HTTP 408/429/5xx、明确网络故障、冷却和档案占用沿原任务有界重试，登录/验证码转 waiting_user。恢复门要求当前 worker、attempt、fence、活租约且无模型调用账本，沿用原预算和截止时间。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:274:d113f3621195820e",
+          "text": "- 分享导入增加运行中控制检查及心跳；暂停/取消传到真实 fetch 与浏览器，关闭完成后才确认控制。关闭未确认时向上保留停止失败；应用退出不伪装成用户取消。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:275:0cf64cec0881649d",
+          "text": "- 消费者检索确认旧 `createLlmCompleter` 仅剩无消费者装配，已删除该闭包、旧 Anthropic 工厂、两种占位协议出口及专属测试；保留仍使用的配置/类型/解析。backend/frontend 的直接 `@anthropic-ai/sdk` 依赖及对应 lock importer 删除，Worker 的供应商依赖和 AI SDK 短路径继续保留。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:276:3f2969f0b70369f4",
+          "text": "- 正式聊天入口静态打包完成；装配、浏览器来源、分享 runner、任务服务等六个本轮文件定向语义检查为 0 条诊断。未运行测试、真实浏览器/模型或桌面包；分享导入页面的原任务恢复入口继续接线。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:278:78e1df4e0782a5f5",
+          "text": "2026-09-07 分享导入可达恢复入口（截至 `66923056`）：页面提交后保留原执行任务，独立观察 hook 与状态卡展示自动重试、等待用户、未知结果；继续/取消使用原任务与稳定命令幂等标识。重开或重启后通过现有 execution.list 的 kind+account 分页恢复记录，读取更早记录有真实入口；不使用仅支持旧资源的 execution.get。未知提交冻结原请求并复用 key，关闭弹窗不取消，账号切换重新挂载隔离。任务列表的 legacy status 查询已对齐 runtime 状态投影，旧状态响应不覆盖更新后的原任务。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:280:69b72b2483dad407",
+          "text": "此轮定向检查覆盖生产装配、任务服务和五个分享页面文件，修复发现的两项列表类型诊断后，改动文件检查无剩余诊断；未执行自动测试、打开页面或调用供应商。代码交付已增加实际恢复入口，但完整应用装配、部分浏览器物理边界与全功能运行验收仍未结束，T915 不标完成。"
+        }
+      ],
+      "canonical_spec_commit": "51ed266eae26d50f46239dfb863b2e887309075e",
+      "old_findings_assessment": "原REV-001/002（minor）resolved合同仍在：blocked仅工具/旧公共回读；新等待/未知/失败映射明确；pause_requested禁止新admission，在途可结算，paused重启不自启，resume保预算/deadline/operationKey与新fence。",
+      "actual_change_assessment": "精确全文diff：R04及AC06加强task authority/effect/当前owner和外部登录账号核验，AC09补LED047，另附明确未验的代码进展记录。",
+      "contract_review": "单execution权、私有typed IPC、backend唯一写者、SDK只Worker、原key未知提交对账和不重放、候选人工采纳、取消/租约/迁移与双端故障验收均有闭环。",
+      "limitations": [
+        "后附历史静态接线及8秒查询向量策略记录不替代当前LED053完整请求预算，也不作性能/全入口迁移已完成证明。",
+        "本轮未进行全产品运行或性能评估。"
+      ],
+      "evidence_paths": [
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "AGENTS.md"
+      ],
+      "output_path": "docs/verification/t1410/reviews/T-915.json",
+      "finding_count": 0
+    },
+    {
+      "task_id": "T-859",
+      "spec_path": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+      "spec_sha256": "e5be057cd6751965e3f6827fa5529c9fc93c599624eab18443188c55597210f5",
+      "original_constitution_path": "AGENTS.md",
+      "current_original_constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
+      "review_constitution_path": "AGENTS.md",
+      "review_constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
+      "canonical_event_hash": "db0d70797f340d98150f2e44928f4c5ea3e4b2a74bd750d340c4a161d4e032ee",
+      "canonical_cycle": 1,
+      "canonical_round": 2,
+      "needs_new_cycle": true,
+      "old_findings": [],
+      "source_identity_mapping": null,
+      "changed_line_refs": [
+        {
+          "origin_ref": "SPEC-LINE:3:d56522912971f243",
+          "text": "> **2026-08-19 纠偏**：本规格中“动态内容卡独占并隐藏人物”及素材可选择 `hidden` 的竖屏默认已被"
+        },
+        {
+          "origin_ref": "SPEC-LINE:4:b23c065b880494b5",
+          "text": "> 用户真实成片验收否定，由 [T-902 SPEC](2026-08-19-portrait-presenter-first-face-persistent.md) 与"
+        },
+        {
+          "origin_ref": "SPEC-LINE:5:880b5c99d4de622f",
+          "text": "> DEC-VIDEO-056 取代。保留同一人物节点、固定左下几何、连续素材不弹跳、预加载和无白闪规则。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:19:88ff0f5bb4770579",
+          "text": "不暴露空白占位帧。竖屏且存在真实人物输入时，动态内容卡与非 `overlay` B-roll 都保持同一左下角人物；"
+        },
+        {
+          "origin_ref": "SPEC-LINE:20:5cccce168075a5d7",
+          "text": "只有 `visualOnly` 或确实没有人物输入的合法模式可无人物。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:26:f26253dbecfac6fe",
+          "text": "C -->|\"内容层短淡化\\n人物保持原位\"| D[\"动态内容 + 左下角人物\"]"
+        },
+        {
+          "origin_ref": "SPEC-LINE:27:f75b861d756ef85f",
+          "text": "D -->|\"人物平滑回全屏\"| E[\"同一人物全屏\"]"
+        },
+        {
+          "origin_ref": "SPEC-LINE:42:36390755004b50e3",
+          "text": "- 动态内容卡与非 `overlay` B-roll 使用同一左下人物几何；内容层切换时人物不淡出、不重启、不改变"
+        },
+        {
+          "origin_ref": "SPEC-LINE:43:38ab4e994f3f10e9",
+          "text": "时间轴。只有 `visualOnly` 或无人物输入时才允许没有人物。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:47:b3e05344f69d7e90",
+          "text": "素材匹配 AI 的结构化候选保留可选 `speakerMode: \"hidden\" | \"pip_bottom_left\"` 兼容字段。竖屏且存在"
+        },
+        {
+          "origin_ref": "SPEC-LINE:48:0307eead56b901ab",
+          "text": "真实人物输入时，backend 组装器必须把 card 与非 `overlay` B-roll 的执行值收敛为"
+        },
+        {
+          "origin_ref": "SPEC-LINE:49:92b19a4078536c4c",
+          "text": "`pip_bottom_left`；旧候选或模型给出的 `hidden` 不拥有最终执行权。横屏、`visualOnly` 或无人物输入"
+        },
+        {
+          "origin_ref": "SPEC-LINE:50:992af554ae9b003c",
+          "text": "仍可合法使用 `hidden`。这条确定性规则只落实用户明确画幅偏好，不根据文件名、关键词或内容类别猜语义。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:85:ceab509ab77411c2",
+          "text": "- portrait 且有真实人物输入时，card 与非 `overlay` B-roll 均输出 `pip_bottom_left`，即使旧候选或"
+        },
+        {
+          "origin_ref": "SPEC-LINE:86:e8c39618f93eaea0",
+          "text": "模型返回 `hidden`；landscape、`visualOnly` 或无人物输入时才原样透传合法值或使用 `hidden`。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:87:4c01678228bd45ef",
+          "text": "- `overlay` 不借此升级为主视觉。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:96:78265c8cd3f1a583",
+          "text": "- `portrait + broll/card + person → pip`"
+        },
+        {
+          "origin_ref": "SPEC-LINE:97:a8252e81bdc4a5ac",
+          "text": "- `landscape | visualOnly | no person → hidden`"
+        },
+        {
+          "origin_ref": "SPEC-LINE:115:9e73b9f2133b2ccb",
+          "text": "- direction 引用不到 B-roll：不凭时间近似绑定素材；跳过该问题素材并保留上一有效视觉或人物基底，"
+        },
+        {
+          "origin_ref": "SPEC-LINE:116:661cc462bffd6486",
+          "text": "记录可定位降级。只有输入损坏、归属错误或不存在任何安全视觉时才允许整单失败。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:118:17bafec728d28954",
+          "text": "- PiP、素材与字幕安全区冲突时，按固定顺序调整素材舞台缩放/裁切与安全边距，再回退上一有效视觉或"
+        },
+        {
+          "origin_ref": "SPEC-LINE:119:2452fa4c79b19c34",
+          "text": "安全基础布局；人物固定左下和字幕安全区不可被挤占。只有所有安全布局均不可用时才失败。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:128:e6ff232f57b01027",
+          "text": "进入动态内容时仍保持同一左下位置，结束后回到同一全屏基底。关键帧证明 PiP 不居中、不挡字幕、无弹跳；"
+        },
+        {
+          "origin_ref": "SPEC-LINE:129:448fd0bf576323da",
+          "text": "横版、方形、竖版素材都覆盖统一安全舞台及碰撞降级分支。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:133:06b84061adcba2e6",
+          "text": "围绕每个进入、切换与退出边界的限定窗口逐帧解码检查。人物→浅色素材、浅色素材互切、浅色素材→"
+        },
+        {
+          "origin_ref": "SPEC-LINE:134:95c51893a0de1445",
+          "text": "深色动态内容、动态内容→人物的每一帧都由旧层、新层或静态桥接层覆盖，且无默认背景、未加载视频帧"
+        },
+        {
+          "origin_ref": "SPEC-LINE:135:a30a27d92305a201",
+          "text": "或异常亮度突跳；记录真实源资源 ID/hash，区分素材自身白帧与空白占位。真实 MP4 与逐帧联系表同时留证。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:139:88861ac43eb575fa",
+          "text": "红测覆盖 `speakerMode` 的 schema/runner 保留、portrait/landscape/visualOnly 组装默认、direction 状态机、"
+        },
+        {
+          "origin_ref": "SPEC-LINE:140:0428cfb08ad6b4bd",
+          "text": "连续 PiP 不重复 tween、竖屏 card/B-roll 无 hidden tween、素材预加载、碰撞安全降级和平滑舞台 helper；"
+        },
+        {
+          "origin_ref": "SPEC-LINE:141:45afff59217820db",
+          "text": "旧候选与横屏回归通过。"
+        }
+      ],
+      "canonical_spec_commit": null,
+      "old_full_spec_recovery": "未在本地该路径最近100个可达历史commit中取得canonical所审完整SPEC字节；真实原packet为空finding，按reviewctl行指纹增量+完整当前全文初审。",
+      "old_findings_assessment": "原canonical末轮findings=[]，没有复制外链结论。",
+      "actual_change_assessment": "当前头部明确T902覆盖；新增card与非overlay有真人时固定PiP、旧hidden无执行权、冲突安全降级、无hidden tween与真实帧验收。",
+      "contract_review": "同一人物节点/时钟、连续同状态不重复tween，静态承接及媒体预加载、contain与字幕安全区、无白闪及用户预览后整片限制明确；AI仅产候选，backend收口不改语义。",
+      "limitations": [
+        "T902与原DEC作为已确认覆盖来源，不声称本轮验证其历史样片/测试数字。"
+      ],
+      "evidence_paths": [
+        "docs/superpowers/specs/2026-08-19-portrait-presenter-first-face-persistent.md",
+        "orchestrator/archive/DECISION_LOG-archive.md"
+      ],
+      "output_path": "docs/verification/t1410/reviews/T-859.json",
+      "finding_count": 0
+    },
+    {
+      "task_id": "T-858",
+      "spec_path": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md",
+      "spec_sha256": "65055af6914c4f7475ab2846913d815c2cb03843a2e2a612b63f6f898745098b",
+      "original_constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "current_original_constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "review_constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "review_constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "canonical_event_hash": "3d2ef5ac0db0ab1c0a7d0e31d15ff3eb4f8a59038d2abd6d42298c0f620c0483",
+      "canonical_cycle": 1,
+      "canonical_round": 3,
+      "needs_new_cycle": true,
+      "old_findings": [
+        {
+          "id": "REV-001",
+          "status": "resolved",
+          "severity": "major",
+          "category": "completeness",
+          "requirement_anchor": {
+            "id": "FR-858-2",
+            "quote": "可为每行中文字幕选择 0–2 个重点片段"
+          },
+          "acceptance_anchor": {
+            "id": "AC-858-3",
+            "quote": "真实字幕至少一行含合法 AI emphasis"
+          },
+          "where": "§3.1 的 `emphasis` 默认空数组/最多两项，与 §3.2 对单项 emphasis 的校验。",
+          "failure_mode": "模型为每一行返回空 `emphasis` 数组时，输出满足 schema，runner 也没有任何项可判无效而会原样通过；renderer 因而产出没有重点词的短样片，直接不满足 AC-858-3。由于 runner 被禁止重写或猜测重点词，当前失败与恢复规则也没有让该次正式决策链获得可验收强调的路径。",
+          "evidence_kind": "spec-contradiction",
+          "evidence_ref": "T-858 SPEC §3.1、§3.2、§5、AC-858-3",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "constraint",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "suggestion": "限定验收用真实候选：在所有字幕均非空时，至少保留一个经现有逐字与时间校验的 emphasis；若模型给出的有效集合为空，明确该样例不得进入验收并按既有模型重试/降级记录处理，不能由代码补猜重点词。",
+          "resolution_evidence": "SPEC-LINE:49:0c9e17ada910478c",
+          "parent_id": ""
+        },
+        {
+          "id": "REV-002",
+          "status": "resolved",
+          "severity": "major",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "FR-858-1",
+            "quote": "按时间排序的 beatGraph，每拍只有一个主视觉主体"
+          },
+          "acceptance_anchor": {
+            "id": "AC-858-4",
+            "quote": "主视觉交接时同一时刻只有一个主语"
+          },
+          "where": "§3.1 的 `VideoDirection.beatGraph` 与 §3.2“同一时刻最多一个非辅助主视觉”的 runner 校验。",
+          "failure_mode": "两个 beat 可以分别携带完整 `subject`，其时间窗重叠，但 schema 没有辅助/主视觉角色字段，§3.2 也未定义如何由已有字段判定“辅助”。一个合理实现会把两个对象同时渲染，另一个会按数组顺序覆盖其中一个；两者都可能将重叠项解释为辅助，却产生不同用户可见交接，且前者违反 AC-858-4。",
+          "evidence_kind": "spec-contradiction",
+          "evidence_ref": "T-858 SPEC §3.1 `VideoDirection`、§3.2 runner 校验、AC-858-4",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "constraint",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "suggestion": "明确现有 beat schema 中每项均为主视觉，并要求主视觉时间窗采用唯一的非重叠边界规则；若确有辅助叠层，必须以已定义、可被 runner 判定的契约语义表达其角色与允许组合。为该规则补一条重叠拒绝/交接测试。",
+          "resolution_evidence": "SPEC-LINE:107:85b747d30b4d27c9",
+          "parent_id": ""
+        },
+        {
+          "id": "REV-003",
+          "status": "resolved",
+          "severity": "major",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "FR-858-3",
+            "quote": "overlay 只用于 AI 明确选择的辅助叠层"
+          },
+          "acceptance_anchor": {
+            "id": "AC-858-4",
+            "quote": "主视觉交接时同一时刻只有一个主语"
+          },
+          "where": "direction 存在时，contract/runner 要求每段 B-roll 恰好一个 beat 且非人物 beat 必须是 `takeover`；但模板仍保留 `presentation=overlay` 的小尺寸、无全画布承接层渲染。",
+          "failure_mode": "AI 明确选择辅助 overlay 时，正式候选被迫把它声明为 takeover；模板却不会以不透明全画布层盖住人物，overlay 可与人物或既有视觉同时出现。若把该 beat 当主视觉，违反“takeover 期间人物不可见”；若按现有模板当辅助显示，则 direction 的唯一主视觉合同没有被执行。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "contract/src/resources/video-render.ts 的 direction 精确引用校验；backend/src/modules/ai-runtime/video-decisions-runner.ts 的非人物 beat 计数；backend/src/modules/execution/video-render/template.ts:1810-1942 对 overlay 跳过全画布承接；template.test.ts:1329-1350 保留 overlay 辅助素材路径。",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "constraint",
+          "scope_effect": "none",
+          "origin": "changed-lines",
+          "origin_ref": "SPEC-LINE:135:5bcca8de74942e4e",
+          "suggestion": "明确辅助 overlay 不进入主视觉 beatGraph 的精确引用计数，或规定任何进入 `takeover` 的 overlay 必须按主视觉覆盖人物；并补一条“人物基底 + 合法辅助 overlay”与一条“takeover 期间人物不可见”的回归测试。",
+          "resolution_evidence": "SPEC-LINE:135:5bcca8de74942e4e",
+          "parent_id": ""
+        }
+      ],
+      "source_identity_mapping": null,
+      "changed_line_refs": [
+        {
+          "origin_ref": "SPEC-LINE:49:7d5d5f33493f68cb",
+          "text": "T-858 的代表性验收候选全片至少要保留 1 个合法重点片段；首轮全部为空或全部被校验丢弃时，使用同一"
+        },
+        {
+          "origin_ref": "SPEC-LINE:51:45a5abe98d9bef27",
+          "text": "空时记录“重点词未产出”，保留真实字幕并使用无强调的安全基础样式，仍允许候选和短预览继续；该样例不能"
+        },
+        {
+          "origin_ref": "SPEC-LINE:52:f0dd34bc3f00d759",
+          "text": "作为 AC-858-3 的通过证据，也不能由代码补猜重点。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:127:3b8f82c1cc8e1ddf",
+          "text": "每行 `emphasis` 默认空数组、最多 2 项。ai-worker 只产生结构化方向/字幕候选并通过受控执行端口返回；"
+        },
+        {
+          "origin_ref": "SPEC-LINE:128:360b1e9b446a5c54",
+          "text": "backend service 是 checkpoint、候选、采纳投影与 render 请求的唯一持久化所有者，Worker 不打开数据库、"
+        },
+        {
+          "origin_ref": "SPEC-LINE:129:6593843440977f64",
+          "text": "不保存第二份业务状态。原有模型配置和业务落盘通道不变。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:134:6bb3ed707a81a894",
+          "text": "- ref 绑定不可变候选版本与真实资源 ID。方向落盘、短预览组装及 `video.render` 真正执行前，backend"
+        },
+        {
+          "origin_ref": "SPEC-LINE:135:d10ee3ae86aec06c",
+          "text": "service port 都必须按当前 RequestContext 重读根实体，核对 user/account/project、候选版本、资源"
+        },
+        {
+          "origin_ref": "SPEC-LINE:136:d5c785ab16729ab5",
+          "text": "存在性、有效时间窗与归属；可唯一重绑时使用当前真实值，否则返回明确冲突，禁止消费已删除、旧版本"
+        },
+        {
+          "origin_ref": "SPEC-LINE:137:2dd7922acf1cc536",
+          "text": "或跨项目资源。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:147:17b8c27dc3992ac6",
+          "text": "时执行 FR-858-2 的单次定向重试；仍为 0 时保留真实字幕和安全基础样式，记录增强未完成，不阻断候选或预览。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:150:1d6d1b354d051550",
+          "text": "- director、subtitles、候选提交与 render 请求共享 backend 注入的 `taskId + operationId + attempt + fence`。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:151:01a1d9f3829ae469",
+          "text": "相同 operationId 重放返回既有结算结果；定向重试只增加 attempt，旧 fence 的迟到结果不得写 checkpoint、"
+        },
+        {
+          "origin_ref": "SPEC-LINE:152:c2bcd2d06d80cbc2",
+          "text": "候选或 render 请求，也不得重复计费。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:177:f0fcca50f702adac",
+          "text": "- beat 排序或时间窗重叠会拒绝整份 direction，并进入既有有限重试；仍失败时明确记录无 direction，使用"
+        },
+        {
+          "origin_ref": "SPEC-LINE:178:22aabc75a8e3614f",
+          "text": "不含编导增强的安全基础时间线继续。只有单个 ref 不存在或范围越界、且移除它不需要代码选择主视觉也"
+        },
+        {
+          "origin_ref": "SPEC-LINE:179:a627b5f903e46e2f",
+          "text": "不破坏其余时间线语义时，才可丢弃该 beat 并记录原因；代码不得在重叠项之间替 AI 选择保留对象。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:181:9727df8554bdc13c",
+          "text": "一次同 Skill 定向重试，仍为空则使用无强调基础样式继续，并把该增强标为未完成。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:182:8f74d90a4137abe9",
+          "text": "- 布局冲突先按确定顺序降级并记录：移除辅助 overlay → 切换安全基础布局 → 跳过单个问题素材或降级"
+        },
+        {
+          "origin_ref": "SPEC-LINE:183:62ea11d164500f09",
+          "text": "单卡 → 回到人物基底。只有输入损坏、权限/归属错误或所有安全输出路径都不存在时才允许整单失败；"
+        },
+        {
+          "origin_ref": "SPEC-LINE:184:d861bbed7c266289",
+          "text": "任何路径都不得输出有裁切、遮挡或人物回位漂移的成片。发生降级的样例不能作为 T-858 验收通过证据。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:193:3f7dee7c81ad5e37",
+          "text": "ref、场景、时间、stage 和回位均能指向当前 backend service port 重读的真实候选对象，代码中没有"
+        },
+        {
+          "origin_ref": "SPEC-LINE:194:8ec49fa452c177fd",
+          "text": "关键词/文件名创作分支。补充候选换版本、资源删除、卡片重排和跨项目 ref 的拒绝或唯一重绑定用例。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:216:70aa47598a2d181d",
+          "text": "短预览”的真实生产旅程。故障注入覆盖相同 operationId 重放、崩溃续跑、旧 fence 迟到完成、无 emphasis"
+        },
+        {
+          "origin_ref": "SPEC-LINE:217:4118a7024d0808be",
+          "text": "安全预览、布局逐级降级和 Worker 无数据库依赖。输出实际关键帧、接触表和短 MP4，等待用户确认后才允许重渲整片。"
+        },
+        {
+          "origin_ref": "SPEC-LINE:228:80adf4b4b36aebdf",
+          "text": "不新增跨层直连；AI 仍只产候选，backend service 仍是唯一持久化与安全收口，renderer 仍只消费契约。"
+        }
+      ],
+      "canonical_spec_commit": null,
+      "old_full_spec_recovery": "未在本地该路径最近100个可达历史commit中取得canonical所审完整SPEC字节；已读原完整packet/全部3项resolved及当前行指纹差异，完整当前全文重新初审。",
+      "old_findings_assessment": "原REV001强调空集有单次同Skill重试与安全无强调但不能当验收；原REV002明确非重叠主视觉拍；原REV003明确辅助overlay不进入主视觉计数。这三项原已销账约束未重开。",
+      "actual_change_assessment": "当前增量加强强调失败不反杀、backend当下真值/版本归属、fence与operationId、局部降级及故障验收；这些可接受。另识别当前全文仍保留已被后来用户否定的竖屏人物完全退出/禁PiP断言，列本新周期baseline REV001。",
+      "contract_review": "direction/subtitle只是候选；后台唯一持久化、真实引用/版本/时间逐次校验、创作决策归AI、降级不冒验收等可实施。",
+      "limitations": [
+        "不能将当前T858的全文无条件签为新的有效竖屏隐藏人物合同。",
+        "最小修复是明确有效范围/后继覆盖，不是重做视频、降低门或让用户再次决定已确认偏好。",
+        "本轮不修改原SPEC；T1410若不能改该处则应如实保该finding并走原任务规格纠偏。"
+      ],
+      "evidence_paths": [
+        "docs/superpowers/specs/2026-08-19-portrait-presenter-first-face-persistent.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+        "orchestrator/archive/DECISION_LOG-archive.md"
+      ],
+      "output_path": "docs/verification/t1410/reviews/T-858.json",
+      "finding_count": 1
+    }
+  ]
+}

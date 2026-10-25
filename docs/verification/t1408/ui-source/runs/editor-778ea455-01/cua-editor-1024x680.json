@@ -1,0 +1,66 @@
+{
+  "width": 1024,
+  "height": 680,
+  "startedAt": "2026-10-25T06:54:35.905Z",
+  "assertions": {
+    "emptyHint": true,
+    "prepareDisabled": true,
+    "guide": true,
+    "buttonFullyVisible": false,
+    "emptyDialog": true,
+    "importHint": true,
+    "chooseDisabled": true
+  },
+  "steps": [],
+  "initial": {
+    "dirty": false,
+    "height": 680,
+    "width": 1024
+  },
+  "settle": {
+    "result": {
+      "type": "object",
+      "value": {
+        "elapsedMs": 105.19999992847444,
+        "frames": 13,
+        "stable": 12
+      }
+    }
+  },
+  "beforeScroll": {
+    "button": {
+      "bottom": 506.6953125,
+      "height": 82,
+      "top": 424.6953125,
+      "width": 392.3828125,
+      "x": 126,
+      "y": 424.6953125
+    },
+    "scroll": {
+      "bottom": 425.0234375,
+      "height": 100.328125,
+      "top": 324.6953125,
+      "width": 442.3828125,
+      "x": 101,
+      "y": 324.6953125
+    }
+  },
+  "afterScroll": {
+    "button": {
+      "bottom": 98.6953125,
+      "top": 16.6953125
+    },
+    "fullyVisible": false,
+    "scroll": {
+      "bottom": 425.0234375,
+      "top": 324.6953125
+    }
+  },
+  "elapsedMs": 2556,
+  "final": {
+    "dirty": false,
+    "height": 680,
+    "width": 1024
+  },
+  "pass": false
+}

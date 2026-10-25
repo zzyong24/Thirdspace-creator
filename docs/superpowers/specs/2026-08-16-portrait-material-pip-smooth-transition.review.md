@@ -2,9 +2,9 @@
 
 - Task: T-859
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: e6fe3ad73fa9
-- Review receipt: 9895a91a63a8
+- Round: 1/3 (initial)
+- Spec receipt: e5be057cd675
+- Review receipt: 2f586e24d5d0
 
 ## 当前有效问题
 
@@ -16,22 +16,34 @@
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-859",
-  "round": 2,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "本轮合同变更只将 `speakerMode` 放宽到已确认的非 overlay 主素材，并继续拒绝 overlay 驱动人物状态；与 T-859 的竖屏主素材 PiP 范围、T-858 的主视觉/辅助叠层边界和现有架构一致。相关 contract 聚焦测试 17/17 通过，未发现新增 blocker 或 major。",
+  "summary": "完整审核当前竖屏左下人物与平滑舞台合同；当前SPEC SHA256=e5be057cd6751965e3f6827fa5529c9fc93c599624eab18443188c55597210f5，宪法AGENTS.md。当前头部和FR/AC已按T-902声明有真人时持续可见、旧hidden不掌握执行权，保同节点、连续PiP、预加载和无白闪；未发现实质规格缺陷。无真实样片/用户确认的事实不作为本次规格缺陷，也不据规格审查补签样片或整片验收。",
   "spec_path": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
-  "spec_sha256": "e6fe3ad73fa90859a3850b09e4ffd11fd82efdc1da7e1ee27899839d045981c5",
+  "spec_sha256": "e5be057cd6751965e3f6827fa5529c9fc93c599624eab18443188c55597210f5",
   "constitution_path": "AGENTS.md",
-  "constitution_sha256": "e84f83b7e65a415ba7a2a4639188bc2fd2d682f42d3220107a119abdc39d2a77",
+  "constitution_sha256": "966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27",
   "review_path": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
-  "review_mode": "independent-agent",
-  "model": "gpt-5.6",
+  "review_mode": "homogeneous",
+  "model": "inherited-host-model-unverified",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "db0d70797f340d98150f2e44928f4c5ea3e4b2a74bd750d340c4a161d4e032ee",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-141004",
+    "nonce": "t1410-c42362aa-711c-4c29-82f8-e3d101b6505f",
+    "task_id": "T-859",
+    "previous_event_hash": "db0d70797f340d98150f2e44928f4c5ea3e4b2a74bd750d340c4a161d4e032ee",
+    "allowed_change_ids": [
+      "T859-T902-PRESENTER-VISIBILITY"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "7cdc1d24e012d6bfe3493e9a31d4a09a0184d5aadf468cdb4ec8bd380853dc10",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "9895a91a63a8"
+  "receipt": "2f586e24d5d0"
 }
 ```

@@ -2,49 +2,48 @@
 
 - Task: T-726
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: 7e2e8d6b672e
-- Review receipt: 2809820bf64a
+- Round: 1/3 (initial)
+- Spec receipt: 4e03ba1b4410
+- Review receipt: a9cb8ebdc520
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (AC-726-02 现要求无历史树 imported 项目的 reconstruct 前后 `thesis_tree` artifact/version 均为 0，并要求有历史树项目的 artifact/version/hash 不变；复审上下文 SPEC-LINE:164:9b5c99a231e3883f。)；REV-002 (AC-726-03 现逐一要求 `script.draft`、`planning.contract`、`planning.outline` 的 thesisBrief 为空、输入无论点树块且非 thesis 上下文不变；复审上下文 SPEC-LINE:165:767d4f34235931a0。)；REV-003 (AC-726-04 现分别覆盖前端制作候选和 backend `video.decisions`，并断言 shared、script-only、thesis-only 三类素材及零 thesis 读取；复审上下文 SPEC-LINE:166:01e9fcd58900d3b2。)
+已销账：—
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-726",
-  "round": 2,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "当前规格已为首轮三项问题补齐可执行验收：重建零写入、三个 runner 的 thesis 隔离，以及前端与 backend 制作候选的素材来源断言。",
+  "summary": "T-726；SPEC SHA-256=4e03ba1b4410acafaf062a92574100f3b8f8ee92675d263998fc231d2d299aa7；本轮宪法=orchestrator/SYSTEM_ARCHITECTURE.md，SHA-256=eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df。对当前完整论点骨架退役规格及当前 SYSTEM_ARCHITECTURE 做独立初审。原 REV-001/002/003 分别由 reconstruct 零新增、三条 runner 零 thesis 输入、两个消费者 shared/script-only/thesis-only 素材断言维持解决。新增非终态旧任务/迟到结果守卫、Backend 统一素材装配、当前资源与采纳复核，保留历史枚举、artifact/version/hash 与用户已确认结果；AI 仍只做语义选材候选。未发现当前规格 blocker/major/minor；AC-07 公共链路真机证据不能由规格审核替代。",
   "spec_path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md",
-  "spec_sha256": "7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1",
+  "spec_sha256": "4e03ba1b4410acafaf062a92574100f3b8f8ee92675d263998fc231d2d299aa7",
   "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
-  "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+  "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
   "review_path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.review.md",
-  "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-terra",
+  "review_mode": "homogeneous",
+  "model": "inherited-host-model-unverified",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "219feb0c4ff34b741ada21bc2d96a773bb9bfb824d2414bc41808cc516d49c34",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-141010",
+    "nonce": "t1410-af54c509-e20f-49a1-9b98-996a4e468b91",
+    "task_id": "T-726",
+    "previous_event_hash": "219feb0c4ff34b741ada21bc2d96a773bb9bfb824d2414bc41808cc516d49c34",
+    "allowed_change_ids": [
+      "T726-LEGACY-TASK-FENCE-RETIREMENT"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "5e2110b37fdb7bd26774a75093c1d483f51e68994723768f4e5856c04dc0335e",
   "open_findings": [],
-  "resolved_findings": [
-    {
-      "id": "REV-001",
-      "resolution_evidence": "AC-726-02 现要求无历史树 imported 项目的 reconstruct 前后 `thesis_tree` artifact/version 均为 0，并要求有历史树项目的 artifact/version/hash 不变；复审上下文 SPEC-LINE:164:9b5c99a231e3883f。"
-    },
-    {
-      "id": "REV-002",
-      "resolution_evidence": "AC-726-03 现逐一要求 `script.draft`、`planning.contract`、`planning.outline` 的 thesisBrief 为空、输入无论点树块且非 thesis 上下文不变；复审上下文 SPEC-LINE:165:767d4f34235931a0。"
-    },
-    {
-      "id": "REV-003",
-      "resolution_evidence": "AC-726-04 现分别覆盖前端制作候选和 backend `video.decisions`，并断言 shared、script-only、thesis-only 三类素材及零 thesis 读取；复审上下文 SPEC-LINE:166:01e9fcd58900d3b2。"
-    }
-  ],
-  "receipt": "2809820bf64a"
+  "resolved_findings": [],
+  "receipt": "a9cb8ebdc520"
 }
 ```

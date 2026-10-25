@@ -1,0 +1,21 @@
+{
+  "appliedAt": "2026-10-25T06:56:42.773230+00:00",
+  "sourcePreview": "docs/verification/t1410/backlog-preview-20261025-apply",
+  "files": [
+    {
+      "path": "BACKLOG.md",
+      "sha256": "6b9e5d74c0d7398ae0f391304f3868219b85737eccd58afc013bf2ecdc23e194",
+      "bytes": 58866
+    },
+    {
+      "path": "BACKLOG-details.md",
+      "sha256": "db601fa646b9603d19a5739fa56ab7bfbf2b03653c115d5b60f4e0faa79b0fc6",
+      "bytes": 391098
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "sha256": "ad3766599da87726427834fc983d3654307eff5e4d61b3cc9f5c9e14fecd4515",
+      "bytes": 815427
+    }
+  ]
+}

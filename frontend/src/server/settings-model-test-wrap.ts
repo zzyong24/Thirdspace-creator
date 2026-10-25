@@ -210,16 +210,10 @@ async function textModelProbe(
 ): Promise<{ ok: boolean; detail: string }> {
   try {
     const { text, reasoningText = "" } = await probe(spec,ctx);
-    if (text.trim().length > 0) {
+    if (text.trim().length > 0 || reasoningText.trim().length > 0) {
       return {
         ok: true,
-        detail: "已按正式聊天通路完成流式回复,连通。",
-      };
-    }
-    if (reasoningText.trim().length > 0) {
-      return {
-        ok: true,
-        detail: "已收到模型思考流，鉴权、端点和模型均已连通。",
+        detail: "已收到最小测试请求的流式回复，连通。",
       };
     }
     logProbeFailure("textModelProbe/empty-stream", {

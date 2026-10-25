@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-726；SPEC SHA-256=4e03ba1b4410acafaf062a92574100f3b8f8ee92675d263998fc231d2d299aa7；本轮宪法=orchestrator/SYSTEM_ARCHITECTURE.md，SHA-256=eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df。对当前完整论点骨架退役规格及当前 SYSTEM_ARCHITECTURE 做独立初审。原 REV-001/002/003 分别由 reconstruct 零新增、三条 runner 零 thesis 输入、两个消费者 shared/script-only/thesis-only 素材断言维持解决。新增非终态旧任务/迟到结果守卫、Backend 统一素材装配、当前资源与采纳复核，保留历史枚举、artifact/version/hash 与用户已确认结果；AI 仍只做语义选材候选。未发现当前规格 blocker/major/minor；AC-07 公共链路真机证据不能由规格审核替代。",
+  "findings": []
+}

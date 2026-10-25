@@ -110,7 +110,7 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(true);
     expect(r.model).toBe("test-model");
-    expect(r.detail).toContain("流式");
+    expect(r.detail).toBe("已收到最小测试请求的流式回复，连通。");
     expect(deps.probeTextModel).toHaveBeenCalledWith(llmSpec, ctx);
     expect(deps.fetchImpl).not.toHaveBeenCalled();
   });
@@ -185,7 +185,7 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     });
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(true);
-    expect(r.detail).toContain("思考流");
+    expect(r.detail).toBe("已收到最小测试请求的流式回复，连通。");
   });
 
   it("正式流式调用在流内返回 401 → ✗ 密钥错误，不得误报为空响应", async () => {
@@ -264,7 +264,7 @@ describe("受管文本探针的固定支付诊断", () => {
   });
 });
 
-describe("正式模型探针 Worker → IPC → settings.models.test 的支付诊断", () => {
+describe("正式模型探针 Worker → IPC → settings.models.test 的鉴权与支付诊断", () => {
   let directory: string;
   let entry: string;
   beforeAll(async () => {
@@ -278,6 +278,95 @@ describe("正式模型探针 Worker → IPC → settings.models.test 的支付�
     });
   });
   afterAll(async () => { if (directory) await rm(directory, { recursive: true, force: true }); });
+
+  it.each(["bearer", "x-api-key", undefined] as const)("T1411 Anthropic authStyle=%s 经真实 IPC 保持鉴权、128 上限与单次请求", async authStyle => {
+    const captured: Array<{ url: string | undefined; authorization: string | undefined; apiKey: string | string[] | undefined; body: Record<string, unknown> }> = [];
+    const server = createServer((request, response) => {
+      const chunks: Buffer[] = [];
+      request.on("data", chunk => chunks.push(Buffer.from(chunk)));
+      request.on("end", () => {
+        captured.push({ url: request.url, authorization: request.headers.authorization, apiKey: request.headers["x-api-key"], body: JSON.parse(Buffer.concat(chunks).toString()) });
+        const events = [
+          { type: "message_start", message: { id: "probe-message", type: "message", role: "assistant", model: "probe-model", content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 1, output_tokens: 0 } } },
+          { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
+          { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "OK" } },
+          { type: "content_block_stop", index: 0 },
+          { type: "message_delta", delta: { stop_reason: "end_turn", stop_sequence: null }, usage: { output_tokens: 1 } },
+          { type: "message_stop" },
+        ];
+        response.writeHead(200, { "content-type": "text/event-stream" });
+        response.end(events.map(event => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join(""));
+      });
+    });
+    const io = createModelProbeIoService({ entryPath: () => entry });
+    try {
+      await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("测试 HTTP 地址不可用");
+      const spec = { apiFormat: "anthropic" as const, baseUrl: `http://127.0.0.1:${address.port}/v1`, model: "probe-model", token: "synthetic-probe-token" };
+      // 旧调用允许缺省方式；正常设置解析器始终返回显式方式。
+      const result = authStyle === undefined ? await io.probeText(ctx, spec) : await runModelConnectionTest(ctx, "default", makeDeps({
+        resolveLlm: vi.fn(async () => ({ ...spec, authStyle })),
+        probeTextModel: (value, context) => io.probeText(context, value),
+      }));
+      expect(captured).toHaveLength(1);
+      expect(captured[0]).toMatchObject({ url: "/v1/messages", body: { model: spec.model, max_tokens: 128, stream: true } });
+      expect(captured[0]!.body).not.toHaveProperty("tools");
+      expect(captured[0]!.authorization).toBe(authStyle === "bearer" ? `Bearer ${spec.token}` : undefined);
+      expect(captured[0]!.apiKey).toBe(authStyle === "bearer" ? undefined : spec.token);
+      if (authStyle === undefined) expect(result).toEqual({ text: "OK", reasoningText: "" });
+      else expect(result).toEqual({ ok: true, provider: "anthropic", model: spec.model, detail: "已收到最小测试请求的流式回复，连通。" });
+    } finally {
+      await io.stop();
+      server.closeAllConnections();
+      await new Promise<void>((done, reject) => server.close(error => error ? reject(error) : done()));
+    }
+  });
+
+  it.each([401, 500])("T1411 Bearer 上游 HTTP %s 只发一次，错误 IPC 不带 token", async status => {
+    let requests = 0;
+    let authorization: string | undefined;
+    let apiKey: string | string[] | undefined;
+    let body: Record<string, unknown> | undefined;
+    const token = "synthetic-error-probe-token";
+    const server = createServer((request, response) => {
+      requests++; authorization = request.headers.authorization; apiKey = request.headers["x-api-key"];
+      const chunks: Buffer[] = [];
+      request.on("data", chunk => chunks.push(Buffer.from(chunk)));
+      request.on("end", () => {
+        body = JSON.parse(Buffer.concat(chunks).toString());
+        response.writeHead(status, { "content-type": "application/json" });
+        response.end(JSON.stringify({ type: "error", error: { type: status === 401 ? "authentication_error" : "api_error", message: `upstream rejected Bearer ${token}` } }));
+      });
+    });
+    const io = createModelProbeIoService({ entryPath: () => entry });
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    let receivedError: unknown;
+    try {
+      await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("测试 HTTP 地址不可用");
+      const result = await runModelConnectionTest(ctx, "default", makeDeps({
+        resolveLlm: vi.fn(async () => ({ apiFormat: "anthropic" as const, baseUrl: `http://127.0.0.1:${address.port}/v1`, model: "probe-model", authStyle: "bearer" as const, token })),
+        probeTextModel: async (value, context) => {
+          try { return await io.probeText(context, value); }
+          catch (error) { receivedError = error; throw error; }
+        },
+      }));
+      expect(receivedError).toBeInstanceOf(Error);
+      expect(result.ok).toBe(false);
+      expect(JSON.stringify([result, (receivedError as Error).message, log.mock.calls])).not.toContain(token);
+      expect(requests).toBe(1);
+      expect(body).toMatchObject({ max_tokens: 128, stream: true });
+      expect(authorization).toBe(`Bearer ${token}`);
+      expect(apiKey).toBeUndefined();
+    } finally {
+      await io.stop();
+      server.closeAllConnections();
+      await new Promise<void>((done, reject) => server.close(error => error ? reject(error) : done()));
+      log.mockRestore();
+    }
+  });
 
   it.each([
     { name: "未知 402", body: { error: { code: "billing_check", message: "payment verification required" } }, expected: paymentRequiredMessage },

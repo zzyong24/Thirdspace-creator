@@ -51,7 +51,7 @@ flowchart LR
 | 数据 | 来源 | 存储/状态 | 读回 |
 | --- | --- | --- | --- |
 | authored 分镜素材 | 当前 `output_script` 版本的 `visual.assetRefs` | 仍归 artifact；决策 runner 只读 | `readStoryboard` + 当前项目素材 inventory |
-| 当前已确认剪辑方案 | 用户确认后的编辑版 `VideoDecisions` + `VideoRenderProps`，并冻结 source artifactId/currentVersionId/contentHash 与素材身份/文件版本摘要 | 复用 Production 的 `recordingConfig.videoEditingPlan`；由 `outputs.production.put` 写入，禁止 AI 直写 | `outputs.production.get`，制作页与 Copilot lifecycle 同源读取 |
+| 当前已确认剪辑方案 | 用户确认后的编辑版 `VideoDecisions` + `VideoRenderProps`，并冻结 source artifactId/currentVersionId/contentHash 与素材身份/文件版本摘要 | 复用 Production 的 `recordingConfig.videoEditingPlan`；由 `productions.editing-plan.confirm` 写入，禁止 AI 直写 | `outputs.production.get`，制作页与 Copilot lifecycle 同源读取 |
 | 临时成片 | execution workspace `out/` + manifest | 状态 `awaiting_confirmation`，不属于素材库 | 新增只读临时预览 route；先经 execution service 校验 task 归属，再校验 path 属于 manifest 且位于 sandbox/out |
 | 正式成片 | 用户点击采纳 | 既有 `execution.tasks.confirm` → Assets active → material link role=final → export/output | 既有资产签名 URL 与 Production ready 状态 |
 | 对话调整 | 用户自然语言 + 当前 editing plan | AI 只产候选/重跑意图；用户确认后调用既有服务 | 制作页刷新 current plan 和新 execution task |

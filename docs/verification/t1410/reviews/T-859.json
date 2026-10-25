@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "完整审核当前竖屏左下人物与平滑舞台合同；当前SPEC SHA256=e5be057cd6751965e3f6827fa5529c9fc93c599624eab18443188c55597210f5，宪法AGENTS.md。当前头部和FR/AC已按T-902声明有真人时持续可见、旧hidden不掌握执行权，保同节点、连续PiP、预加载和无白闪；未发现实质规格缺陷。无真实样片/用户确认的事实不作为本次规格缺陷，也不据规格审查补签样片或整片验收。",
+  "findings": []
+}

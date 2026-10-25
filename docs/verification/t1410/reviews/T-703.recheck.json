@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-703 cycle 2 round 1 PASS[REV:2e9eb0bb4449] 所带 open minor REV-005 的正式定向复审；canonical event=f586f2438812fee183af7649efd842087648a2124b7f2a5e7fb2f9d392f3b3bd。当前 SPEC SHA-256=f24adeea67b00661f67de2dffa7edc7491199cc8d3bd4b11bd5ccb6bfc5c107e；宪法=docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读取 reviewctl context 的完整 finding/changed_line_refs，并验证 778ea4559850b0d8dfbf279c312dc4c21d72866e 中原 SPEC 全文字节与该首轮绑定 hash 相同。实际 diff 仅 §3 第 54 行数据表把 outputs.production.put 改为 productions.editing-plan.confirm，现与第 60 行唯一窄写口、确认/读回/创建 render 顺序和 AC-703-3 的并发、revision、幂等要求一致；outputs.production.get 读回及所有验收要求保持。REV-005 在规格层解决，增量无新 finding；只改 status/resolution_evidence，不重写冻结字段，不声称产品、渲染或本地安装验收已通过。",
+  "findings": [
+    {
+      "id": "REV-005",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-703-5 / §3",
+        "quote": "用户首次确认和对话调整都走此窄写口。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-703-3",
+        "quote": "并发 sibling 配置更新仍保留 plan，陈旧 expectedRevision 返回 conflict；plan 写入或读回失败时不得创建 render 任务。"
+      },
+      "where": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:54 与 :60、:65、:73",
+      "failure_mode": "§3 数据表仍声称当前已确认剪辑方案由 outputs.production.put 写入，但同节正文明确首次确认和对话调整只能走 productions.editing-plan.confirm 的 revision 条件窄写；按表格追踪操作时会得到两个不同写入口。正文顺序及 AC-703-3 已明确排除整块 PUT 模拟，因此这是需要对齐的规格引用矛盾，不把已解决的原 REV-001 数据完整性风险重新升级或声称实现已失效。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:54 明列 outputs.production.put；:60 明列唯一 productions.editing-plan.confirm、保留 sibling keys 和 expectedRevision；:98–100 要求并发与重放验收。",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "T-1410 批次 B 对 T-703 当前完整 SPEC 的新周期独立初审",
+      "suggestion": "在原 T-703 的受控规格修订中，将 §3 当前已确认剪辑方案表格的写入操作统一为 productions.editing-plan.confirm；保留 outputs.production.get 读回和正文已有顺序/幂等约束，不新增产品范围。",
+      "resolution_evidence": "当前 SPEC SHA-256=f24adeea67b00661f67de2dffa7edc7491199cc8d3bd4b11bd5ccb6bfc5c107e，§3 第 54 行（SPEC-LINE:54:5093e32d4ddfa34b）当前已确认剪辑方案的写入口已改为 productions.editing-plan.confirm，唯一 diff 是该操作名；与同节第 60 行保 sibling keys/expectedRevision 条件更新、首次确认和对话调整共用窄写口一致，也与第 65/73 行确认后读回再创建 render 及第 98–100 行 AC-703-3 一致。原 outputs.production.get 读回、并发冲突、幂等回执和失败不创建 render 的要求均未修改；旧表格双入口引用矛盾已消除。仅核规格，未运行实现或安装验收。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

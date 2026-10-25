@@ -1252,3 +1252,14 @@
 |T-1281|恢复旧V1合法纯原片的安全渲染|✅|PASS[REV:bc29ca11bb87]|—|[真实质量门失败与窄范围](docs/features/t1281-legacy-v1-plain-source-render.md)|db965c6a6纯原片编译已修，真实V1/V2画面音轨等价及横竖源/有声无声/非整数公共族通过；T1284旧字幕原声恢复，原FAIL/历史原文件不可复跑限制保留。|
 |T-1280|修复冻结Codex旧工程渲染被渠道模型护栏误取消|✅|PASS[REV:5404d174a545]|—|[公共取消与窄范围](docs/features/t1280-legacy-render-frozen-engine-authority.md)|b8d9a26b9精确集成冻结authority及最小contract依赖；6回归/类型、真实V1/V2公共MP4与RGB/PCM对照通过，原取消保留；最新build通过；全局仍T1204原29ERROR且无新增。|
 |T-1262|盘点磁盘并清理可再生成的历史安装包与冗余产物|✅|—|—|[清理范围](docs/features/t1262-disk-cleanup.md)|用户磁盘再次不足；先核体积/时间/在用情况，保当前安装与最新交付、源码/用户数据/在途验收，仅清明确旧且可替代的产物并记录释放空间。|
+
+## 归档于 2026-10-25
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1404|修复Tab切换读取和编辑器初始化开销|✅|PASS[REV:d891fda60145]|PASS:51cb1ab67f76|[SPEC](docs/features/t1404-tab-navigation-performance-fixes.md)|用户要求全部修复已确认问题；消除文章重复读、隐藏导出实例、串行图片与明确ID列表扫描，分区加载正文/素材/发布信息；保归属、草稿和保存导出，不安装发布。|
+|T-1396|清理启动恢复留下的旧版及数据副本|✅|—|—|[授权与范围](docs/features/t1396-local-recovery-backup-cleanup.md)|已按授权删10处旧App/旧DMG及数据副本，逻辑12.14GiB；当前App、正式数据、新DMG均保留，原进程与首页200通过；轻量证据保留。|
+|T-1395|用当前源码重打本地包并保留数据恢复启动|✅|—|—|[授权与验收](docs/features/t1395-local-package-startup-recovery.md)|源码7252d30d5本地包已安装，58测试及DMG/签名通过；副本迁移与实际库核心内容保留通过，原生首页正常且保持运行；旧App/原库已备份，不发布；quick仍既有22/17。|
+|T-1394|排查本机CreatorOS启动失败并核定恢复路径|✅|—|—|[诊断范围与验收](docs/features/t1394-local-startup-diagnosis.md)|已定位T1382实测把原库升0139，旧App仅0137/0138；冷快照保全，当前源码副本只读兼容PASS；失败App已退出，未重打包安装/恢复启动，需匹配新包；quick仍既有22/17。|
+|T-1386|提交质量门并合并远端main后普通推送|✅|—|—|[授权与验收](docs/features/t1386-quality-main-integration.md)|2026-10-22续授权：保留双方任务与stash，审查剩余改动，排除私密/临时文件，分组提交并普通push；gitleaks零发现，quality/boundary及quick对账不劣于原基线。|
+|T-1379|核对协作者Mac本地完整包的条件与正确操作|✅|—|—|[只读操作说明](docs/features/t1379-collaborator-local-mac-package-guidance.md)|只读核本地ad-hoc/可选updater与必需root/verdict，保T1378在途；无本机再构建/安装或共享私钥。|

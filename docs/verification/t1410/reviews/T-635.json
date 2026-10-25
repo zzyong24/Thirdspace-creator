@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-635；SPEC=docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md；SHA-256=5849ba840ce1352b97eb47a8d72b77397737242621d7e32170e2cd9e2a8d9402；本轮宪法=docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；canonical lineage=b8add273a494 / 0c9c53ee3d4485a9223555c98cf5253a5dab545732375d3e0599decd558f73e2。完整初审精确 CreatorOS product identity、所有 non-debug 打包入口、Rust/runtime 一致性、claim=0、历史迁移前置盘点、最终签名后 attestation 和跨平台负向验收，并逐段核对 Growth T-123 原始权威合同。Growth/Activity/CreatorOS 归属、固定 creatoros 身份、不得客户端关闭校验、四类生产/default 数据盘点不为零即不迁移、旧 alias 独立保留、T575 真实 GO 后才可 claim=1 均一致，未发现新的规格阻断项。当前 PROJECT、AGENTS、SYSTEM_ARCHITECTURE 和稳定产品定位的发布/秘密/权威约束已重新审核；新周期可以稳定绑定产品定位，原 PROJECT hash 与旧无 findings 历史保留，不以旧 PASS 代替本轮完整审核。本次为独立会话实际只读规格审查，未核实精确模型型号；未运行产品测试、真实业务、真机安装或发布，不把规格结论当作实现验收。旧 canonical 与 foreign snapshot 仅作为历史证据，不继承旧 PASS。",
+  "findings": []
+}

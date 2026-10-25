@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-694 当前完整 SPEC SHA-256=bc30c20b81ec2878318b516384c23d76bc3bec396d0beb23ce0dc1d5e374cddb；宪法=docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。独立复核原 canonical event 3be70a1c76dd2fe118734970f8d2b32da04195588a131263e1435adf0b6ee10b 的全部 finding；只改 status/resolution_evidence，保留包括 threat_model_id 缺省在内的所有冻结字段。原问题在当前规格有逐项实质解决依据。此包保存真实 recheck 反馈与旧字段原件，不可直接 record：当前 v2 JSON schema 必填 threat_model_id，而补此字段违反 frozen recheck；T694 另触发 security major/blocker 非空绑定规则。不得以降低严重度或补造历史字段规避；另附完整新周期 initial 包，须待 T1410 修订/授权。本次为独立会话实际只读规格审查，未核实精确模型型号；未运行产品测试、真实业务、真机安装或发布，不把规格结论当作实现验收。旧 canonical 与 foreign snapshot 仅作为历史证据，不继承旧 PASS。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "blocker",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "FR-694-08",
+        "quote": "在线 release key、Tauri updater key 或 CDN 任一单点失陷不能绕过离线 root envelope"
+      },
+      "acceptance_anchor": {
+        "id": "AC-694-08",
+        "quote": "只持有 Tauri updater 私钥但没有 root envelope 时拒绝安装"
+      },
+      "where": "§6.2 信任链；§10 PackageIdentity 定义",
+      "failure_mode": "SPEC 未定义客户端初始信任的 root 公钥/指纹、其与 PackageIdentity 的不可变绑定，或 root 与 Tauri updater key 的独立性。合理实现可以从 package latest/keyset 获取 root 或复用 updater key；此时 CDN 或 updater 私钥失陷即可同时替换验证根与 envelope，无法证明 AC 要求的拒绝行为。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md#L176-L194,L365-L369",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定每个包在安装物中已固定、且不经在线元数据引入的初始 root 验证材料与 package 绑定；明确其不得与 updater 验证键共用，以及轮换和 root recovery 只能如何改变该信任材料。",
+      "resolution_evidence": "当前 SPEC SHA-256=bc30c20b81ec2878318b516384c23d76bc3bec396d0beb23ce0dc1d5e374cddb：§6.2 在 Tauri/Rust 只读编译期固定 releaseTrustRootPublicKey、keyId、公钥摘要并与 PackageIdentity、identity.lock.json、release attestation 三方一致；禁止在线元数据首次引入 root。root 与 updater minisign 独立生成保管，计划轮换旧/新 root 双签过渡壳，root 疑似失陷仅完整安装包迁移；§10 将根材料纳入包身份。AC-694-08 保留单点失陷不能绕过根验签的负向验收。本次只证明规格约束齐备，未执行真实签名或更新测试。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-694-04",
+        "quote": "壳和 runtime 分离；只下载缺失 chunk；失败不破坏 current"
+      },
+      "acceptance_anchor": {
+        "id": "AC-694-04",
+        "quote": "断网、坏块、磁盘不足、manifest 篡改、健康检查失败均保持旧版可启动"
+      },
+      "where": "§6.2 安装验签条件；§6.3 客户端状态机",
+      "failure_mode": "runtime-only 路径直接进入 ReadyToRestart，未下载 Tauri artifact，但 §6.2 又要求 envelope root signature 与 Tauri artifact signature 均有效才允许安装。组合更新中 runtime 已进入 Pending 后再下载 shell，状态机没有 shell 下载或安装失败的转移，也未把 pending runtime 与所需 shell/protocol 绑定；重启时实现可能激活与旧 shell 不兼容的 pending runtime。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md#L176-L186,L201-L216,L234-L237",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "为 runtime-only、shell-only 与组合更新分别规定唯一的验签条件、pending 激活谓词和失败后状态；组合更新的 pending 必须绑定目标 shell 兼容条件，shell 下载或安装失败时不得激活它且 current 保持可启动。",
+      "resolution_evidence": "当前 SPEC SHA-256=bc30c20b81ec2878318b516384c23d76bc3bec396d0beb23ce0dc1d5e374cddb：§6.3 三路径表分别定义 runtime-only、shell-only、组合更新所需验签材料、PendingCurrentShell/PendingTargetShell 及目标 shell/version/protocol/artifact 绑定；组合 pending 不早于目标壳下载验签和兼容握手激活，壳失败恢复 previous shell 并保持 current runtime。§7/AC-694-04 仍要求断网、坏块、磁盘、篡改、健康及壳失败后旧版可启动。未以本次规格检查替代上述真实平台验收。",
+      "parent_id": ""
+    }
+  ]
+}

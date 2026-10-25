@@ -2,45 +2,48 @@
 
 - Task: T-816
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: b9490f4fac3f
-- Review receipt: fb03de3a57d7
+- Round: 1/3 (initial)
+- Spec receipt: 76f70923f3e9
+- Review receipt: de532b22b58b
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (SPEC-LINE:89:8816432398b4fd34 明确浏览器与 frontend 组件仅经 contract client/RPC，规范化与归属读取位于 backend artifact service 及其 RPC/运行时适配层；SPEC-LINE:103:791e30a0cfe93b23 要求边界检查证明 frontend 未新增 backend service/repository 直接依赖。)；REV-002 (SPEC-LINE:51:8bd7c8accf7cbbf8 定义 sectionRef 的权威来源、缺失/重复 ID 时按可见段落顺序确定性派生 script-saved-N、禁止随机 UUID，并要求同一 currentVersionId 的快照/执行重读/稿面投影共用规范化函数；SPEC-LINE:103:791e30a0cfe93b23 要求连续两次读取得到完全一致的 sectionRef[]。)
+已销账：—
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-816",
-  "round": 2,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "REV-001 与 REV-002 已由本轮受控修订销账；已检查全部 changed_line_refs，未引入新的 blocker、major 或 minor finding。",
+  "summary": "T-816；SPEC SHA-256=76f70923f3e92a895a3f43beb741c767139bc5afcd4010b00339dd3aa10b47b3；本轮宪法=orchestrator/SYSTEM_ARCHITECTURE.md，SHA-256=eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df。对当前完整当前稿真相规格及当前 SYSTEM_ARCHITECTURE 做独立初审。原 REV-001 的 frontend→contract/RPC 和 Backend 单写边界在 §7/AC-8 明确，REV-002 的同版本稳定 sectionRef 规则在 §4/AC-8 保留。新增 snapshotRef 与配图/封面候选来源封套、采纳时当前稿/权限/幂等复核补齐当下真值和候选确认门；无第二任务权、数据库或自动采用。未发现当前规格 blocker/major/minor；本轮未执行真实生成或采纳。",
   "spec_path": "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md",
-  "spec_sha256": "b9490f4fac3f5f00ff1c32d26609e48d82b94b615ab3580f0b0d2a5df955548d",
+  "spec_sha256": "76f70923f3e92a895a3f43beb741c767139bc5afcd4010b00339dd3aa10b47b3",
   "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
-  "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+  "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
   "review_path": "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.review.md",
-  "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-terra",
+  "review_mode": "homogeneous",
+  "model": "inherited-host-model-unverified",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "04c7690bb634dad41e3a4a910e2bec60e686ccea618c7ebb9f23ed3e648d3f31",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-141008",
+    "nonce": "t1410-509d137e-cb27-4721-ac40-484ee7a07b51",
+    "task_id": "T-816",
+    "previous_event_hash": "04c7690bb634dad41e3a4a910e2bec60e686ccea618c7ebb9f23ed3e648d3f31",
+    "allowed_change_ids": [
+      "T816-CURRENT-SCRIPT-IMAGE-CANDIDATE"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "fbb9102ccc43715ab4e49dd4736f35fcd899b799e4260f0b9d86fcf1d6bf15a9",
   "open_findings": [],
-  "resolved_findings": [
-    {
-      "id": "REV-001",
-      "resolution_evidence": "SPEC-LINE:89:8816432398b4fd34 明确浏览器与 frontend 组件仅经 contract client/RPC，规范化与归属读取位于 backend artifact service 及其 RPC/运行时适配层；SPEC-LINE:103:791e30a0cfe93b23 要求边界检查证明 frontend 未新增 backend service/repository 直接依赖。"
-    },
-    {
-      "id": "REV-002",
-      "resolution_evidence": "SPEC-LINE:51:8bd7c8accf7cbbf8 定义 sectionRef 的权威来源、缺失/重复 ID 时按可见段落顺序确定性派生 script-saved-N、禁止随机 UUID，并要求同一 currentVersionId 的快照/执行重读/稿面投影共用规范化函数；SPEC-LINE:103:791e30a0cfe93b23 要求连续两次读取得到完全一致的 sectionRef[]。"
-    }
-  ],
-  "receipt": "fb03de3a57d7"
+  "resolved_findings": [],
+  "receipt": "de532b22b58b"
 }
 ```
