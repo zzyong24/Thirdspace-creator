@@ -20713,6 +20713,42 @@
         ]
       },
       "scope_note": "T1412实现、聚焦回归和独立审核冻结后，root串行交接；前者保持进行中。配置与资源性检查不并行。官方同步图片恢复先证明当前幂等资格，否则保未通过。最终按T1412合并配置delta执行一次真实full，两任务分别引用范围。"
+    },
+    "T-1414": {
+      "task_id": "T-1414",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1414-critical-path-rule-summary.md",
+        "AGENTS.md",
+        "docs/engineering/agent-rules.md",
+        "orchestrator/process/critical-path-availability-rule.test.mjs"
+      ],
+      "write_set": [
+        "AGENTS.md",
+        "docs/features/t1414-critical-path-rule-summary.md",
+        "docs/features/t1414-critical-path-rule-summary.T-1414.review.md",
+        "docs/verification/t1414/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1414.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node --test orchestrator/process/critical-path-availability-rule.test.mjs"
+        ]
+      },
+      "scope_note": "只恢复完整规则中已存在的两条原文，不改守卫；不修改正在运行full的冻结worktree，待其结束后串行复验。"
     }
   }
 }

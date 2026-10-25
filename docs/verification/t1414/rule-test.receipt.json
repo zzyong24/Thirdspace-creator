@@ -1,0 +1,10 @@
+{
+  "startedAt": "2026-10-25T09:26:38.963340+00:00",
+  "command": [
+    "node",
+    "--test",
+    "orchestrator/process/critical-path-availability-rule.test.mjs"
+  ],
+  "exitCode": 0,
+  "outputSha256": "dde1bcec15a7fe50252c58c7de11a587232ec1b230eb1935655cc1d2fbf0812a"
+}

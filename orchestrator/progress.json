@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 299,
+    "verticals": 300,
     "tasks_done": 89,
-    "tasks_total": 426,
-    "tasks_pending": 337,
+    "tasks_total": 427,
+    "tasks_pending": 338,
     "verticals_complete": 28
   },
   "verticals": [
@@ -21760,6 +21760,46 @@
         "backend/src/modules/execution/asset-worker-runtime.integration.test.ts",
         "ai-worker/src/execution/cover-worker-run.test.ts",
         "backend/src/modules/execution/execution-worker-outcome.service.test.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1414",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1414",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "AGENTS.md",
+        "docs/features/t1414-critical-path-rule-summary.md",
+        "docs/features/t1414-critical-path-rule-summary.T-1414.review.md",
+        "docs/verification/t1414/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1414.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "PROJECT.md"
+      ],
+      "read_set": [
+        "docs/features/t1414-critical-path-rule-summary.md",
+        "AGENTS.md",
+        "docs/engineering/agent-rules.md",
+        "orchestrator/process/critical-path-availability-rule.test.mjs"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

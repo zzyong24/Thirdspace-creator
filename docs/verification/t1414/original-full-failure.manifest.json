@@ -1,0 +1,7 @@
+{
+  "raw": "docs/verification/t1414/original-full-failure.txt",
+  "rawSha256": "ce8005567ef96e9bfcebbedc2def2af37e86d98d824dbf2f8e8010dab8dd4515",
+  "gzip": "docs/verification/t1414/original-full-failure.txt.gz",
+  "gzipSha256": "ee49b7bd1dad9cd4c152cb7791d11ad991cc67333e8d348bbb816e7c2f1c0474",
+  "reason": "原始输出包含空白，原字节保留；压缩不改历史证据"
+}
