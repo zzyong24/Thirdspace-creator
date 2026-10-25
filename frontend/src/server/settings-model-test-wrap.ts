@@ -66,6 +66,10 @@ export interface ModelTestResult {
   status?: "ok" | "warn" | "fail";
 }
 
+export interface TextProbeOptions {
+  textOutputLimit?: 128 | 8192;
+}
+
 export interface SettingsModelTestDeps {
   settings: Transport;
   /** 文本 LLM 解析(default / script.review;三层回退)。未配 → 抛 LlmCredentialError。 */
@@ -102,6 +106,7 @@ export interface SettingsModelTestDeps {
   probeTextModel: (
     spec: LlmSpecLite,
     ctx:RequestContext,
+    options?: TextProbeOptions,
   ) => Promise<{ text: string; reasoningText?: string }>;
   fetchImpl: typeof fetch;
 }
@@ -207,13 +212,17 @@ async function textModelProbe(
   spec: LlmSpecLite,
   probe: SettingsModelTestDeps["probeTextModel"],
   ctx:RequestContext,
+  options?: TextProbeOptions,
 ): Promise<{ ok: boolean; detail: string }> {
   try {
-    const { text, reasoningText = "" } = await probe(spec,ctx);
+    const { text, reasoningText = "" } = options?.textOutputLimit === undefined
+      ? await probe(spec,ctx) : await probe(spec,ctx,options);
     if (text.trim().length > 0 || reasoningText.trim().length > 0) {
       return {
         ok: true,
-        detail: "已收到最小测试请求的流式回复，连通。",
+        detail: options?.textOutputLimit === 8192
+          ? "已收到最小文本请求的流式回复，输出上限为 8192；不代表正式聊天上下文或工具已通过。"
+          : "已收到最小测试请求的流式回复，连通。",
       };
     }
     logProbeFailure("textModelProbe/empty-stream", {
@@ -386,7 +395,13 @@ export async function runModelConnectionTest(
   ctx: RequestContext,
   capability: string,
   deps: Omit<SettingsModelTestDeps, "settings">,
+  rawOptions?: TextProbeOptions,
 ): Promise<ModelTestResult> {
+  const options = ENDPOINTS.testModelConnection.body.parse(rawOptions);
+  // SEMANTIC_BOUNDARY_ALLOW: 有限诊断参数只能进入文本协议；拒绝必须先于任何解析/外部调用。
+  if (options?.textOutputLimit !== undefined && !["default", "script.review", "copilot.assist", "chat.fallback"].includes(capability)) {
+    return { ok: false, status: "fail", provider: "", model: "", detail: "输出预算测试仅适用于文本模型；未执行此次测试。" };
+  }
   const { fetchImpl } = deps;
   const unconfigured = (msg: string): ModelTestResult => ({
     ok: false,
@@ -398,9 +413,10 @@ export async function runModelConnectionTest(
   try {
     switch (capability) {
       case "default":
+      case "copilot.assist":
       case "script.review": {
         const spec = await deps.resolveLlm(ctx, capability);
-        const r = await textModelProbe(spec, deps.probeTextModel,ctx);
+        const r = await textModelProbe(spec, deps.probeTextModel,ctx,options);
         return {
           ...r,
           ...resultIdentity(spec, spec.apiFormat, spec.model),
@@ -413,7 +429,7 @@ export async function runModelConnectionTest(
             "备用对话模型只认专配行(不回退主模型),请先保存配置。",
           );
         }
-        const r = await textModelProbe(spec, deps.probeTextModel,ctx);
+        const r = await textModelProbe(spec, deps.probeTextModel,ctx,options);
         return {
           ...r,
           ...resultIdentity(spec, spec.apiFormat, spec.model),
@@ -611,11 +627,12 @@ export function createSettingsWithModelTest(
         if (!ctx) {
           throw new Error("AuthenticationError: model test requires ctx");
         }
-        const { params } = (input ?? {}) as {
+        const { params, body } = (input ?? {}) as {
           params?: { capability?: string };
+          body?: TextProbeOptions;
         };
         const capability = params?.capability ?? "";
-        const result = await runModelConnectionTest(ctx, capability, rest);
+        const result = await runModelConnectionTest(ctx, capability, rest, body);
         return { data: result, meta: { requestId: ctx.requestId } };
       }
       return settings.request(endpoint, input, ctx);

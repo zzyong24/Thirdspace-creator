@@ -20830,6 +20830,51 @@
         ]
       },
       "scope_note": "只对齐外站真实可见正文，不改产品、安全策略、原命令、预算或隔离断言；失败原件保留。"
+    },
+    "T-1417": {
+      "task_id": "T-1417",
+      "archetype": [
+        "backend"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1417-text-probe-output-budget.md",
+        "AGENTS.md",
+        "frontend/src/server/prepare-chat-reply.ts"
+      ],
+      "write_set": [
+        "contract/src/operations/settings.ts",
+        "contract/src/internal/model-probe-io.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+        "ai-worker/src/io/model-probe-worker-entry.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+        "backend/src/modules/ai-runtime/request-io.service.test.ts",
+        "docs/features/t1417-text-probe-output-budget.md",
+        "docs/features/t1417-text-probe-output-budget.T-1417.review.md",
+        "docs/verification/t1417/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1417.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck"
+        ]
+      },
+      "scope_note": "仅受限文本探针诊断；保持默认128、正式8192、授权与worker隔离，不冒充官方聊天恢复。"
     }
   }
 }

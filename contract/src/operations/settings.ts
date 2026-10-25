@@ -150,6 +150,7 @@ export const settingsOperations = {
     method: "POST",
     path: "/settings/models/:capability/test",
     params: z.object({ capability: z.string().min(1) }),
+    body: z.object({ textOutputLimit: z.union([z.literal(128), z.literal(8192)]).optional() }).strict().optional(),
     response: z.object({
       ok: z.boolean(),
       provider: z.string(),

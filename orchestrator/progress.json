@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 302,
+    "verticals": 303,
     "tasks_done": 89,
-    "tasks_total": 429,
-    "tasks_pending": 340,
+    "tasks_total": 430,
+    "tasks_pending": 341,
     "verticals_complete": 28
   },
   "verticals": [
@@ -21886,6 +21886,53 @@
         "frontend/src/server/workbench-browser-host.test.ts",
         "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/actions.rs",
         "docs/verification/t1412/resumed-validation/reconcile-full.log"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1417",
+      "archetype": [
+        "backend"
+      ],
+      "task_id": "T-1417",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "contract/src/operations/settings.ts",
+        "contract/src/internal/model-probe-io.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+        "ai-worker/src/io/model-probe-worker-entry.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts",
+        "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+        "backend/src/modules/ai-runtime/request-io.service.test.ts",
+        "docs/features/t1417-text-probe-output-budget.md",
+        "docs/features/t1417-text-probe-output-budget.T-1417.review.md",
+        "docs/verification/t1417/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1417.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "PROJECT.md"
+      ],
+      "read_set": [
+        "docs/features/t1417-text-probe-output-budget.md",
+        "AGENTS.md",
+        "frontend/src/server/prepare-chat-reply.ts"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

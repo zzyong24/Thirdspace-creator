@@ -17,7 +17,7 @@ process.on("message",async raw=>{
   if(Date.now()>=input.deadlineAt)throw new Error("连接测试已超时");signal.throwIfAborted();
   let value:{text:string;reasoningText:string}|{byteLength:number};
   if(input.type==="text"){
-   const result=streamText({model:modelFor(input.spec),prompt:"连接测试。请只回复 OK。",maxOutputTokens:128,maxRetries:0,abortSignal:signal});
+   const result=streamText({model:modelFor(input.spec),prompt:"连接测试。请只回复 OK。",maxOutputTokens:input.textOutputLimit??128,maxRetries:0,abortSignal:signal});
    let text="",reasoningText="";
    for await(const part of result.fullStream){
     if(part.type==="error")throw part.error;

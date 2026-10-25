@@ -104,6 +104,44 @@ describe("consumeTextProbeStream", () => {
   });
 });
 
+describe("T1417 同能力受限输出预算诊断", () => {
+  it("公开合同兼容旧调用，只接受128或8192且不开放请求内容", () => {
+    const schema = ENDPOINTS.testModelConnection.body;
+    expect(schema?.safeParse(undefined).success).toBe(true);
+    for (const textOutputLimit of [128, 8192]) expect(schema?.safeParse({ textOutputLimit }).success).toBe(true);
+    for (const textOutputLimit of [-1, 0, 129, 32768, "8192", null]) expect(schema?.safeParse({ textOutputLimit }).success).toBe(false);
+    expect(schema?.safeParse({ textOutputLimit: 8192, prompt: "custom" }).success).toBe(false);
+  });
+
+  it.each([128, 8192] as const)("copilot.assist 按原能力解析并明确传递预算 %s", async textOutputLimit => {
+    const deps = makeDeps();
+    const result = await runModelConnectionTest(ctx, "copilot.assist", deps, { textOutputLimit });
+    expect(deps.resolveLlm).toHaveBeenCalledWith(ctx, "copilot.assist");
+    expect(deps.probeTextModel).toHaveBeenCalledWith(llmSpec, ctx, { textOutputLimit });
+    expect(result.ok).toBe(true);
+    if (textOutputLimit === 8192) {
+      expect(result.detail).toContain("8192");
+      expect(result.detail).toContain("不代表正式聊天上下文或工具已通过");
+    }
+  });
+
+  it.each(["image.generate", "video.generate", "asset.classify", "web.search", "unknown"])("%s 携带文本预算时在任何副作用前拒绝", async capability => {
+    const deps = makeDeps();
+    const result = await runModelConnectionTest(ctx, capability, deps, { textOutputLimit: 8192 });
+    expect(result).toMatchObject({ ok: false, status: "fail" });
+    for (const dependency of Object.values(deps)) expect(dependency).not.toHaveBeenCalled();
+  });
+
+  it("带预算的备用模型仍不回退主模型", async () => {
+    const deps = makeDeps({ resolveDedicatedLlm: vi.fn(async () => null) });
+    const result = await runModelConnectionTest(ctx, "chat.fallback", deps, { textOutputLimit: 8192 });
+    expect(result.ok).toBe(false);
+    expect(deps.resolveDedicatedLlm).toHaveBeenCalledWith(ctx, "chat.fallback");
+    expect(deps.resolveLlm).not.toHaveBeenCalled();
+    expect(deps.probeTextModel).not.toHaveBeenCalled();
+  });
+});
+
 describe("runModelConnectionTest — 文本模型(default)", () => {
   it("复用正式模型工厂的流式探针并收到非空文本 → ✓ 连通", async () => {
     const deps = makeDeps();
@@ -279,7 +317,13 @@ describe("正式模型探针 Worker → IPC → settings.models.test 的鉴权�
   });
   afterAll(async () => { if (directory) await rm(directory, { recursive: true, force: true }); });
 
-  it.each(["bearer", "x-api-key", undefined] as const)("T1411 Anthropic authStyle=%s 经真实 IPC 保持鉴权、128 上限与单次请求", async authStyle => {
+  it.each([
+    { authStyle: "bearer", textOutputLimit: undefined },
+    { authStyle: "x-api-key", textOutputLimit: undefined },
+    { authStyle: undefined, textOutputLimit: undefined },
+    { authStyle: "bearer", textOutputLimit: 128 },
+    { authStyle: "bearer", textOutputLimit: 8192 },
+  ] as const)("T1411/T1417 Anthropic $authStyle / $textOutputLimit 经真实 IPC 保持鉴权、输出上限与单次请求", async ({ authStyle, textOutputLimit }) => {
     const captured: Array<{ url: string | undefined; authorization: string | undefined; apiKey: string | string[] | undefined; body: Record<string, unknown> }> = [];
     const server = createServer((request, response) => {
       const chunks: Buffer[] = [];
@@ -305,16 +349,22 @@ describe("正式模型探针 Worker → IPC → settings.models.test 的鉴权�
       if (!address || typeof address === "string") throw new Error("测试 HTTP 地址不可用");
       const spec = { apiFormat: "anthropic" as const, baseUrl: `http://127.0.0.1:${address.port}/v1`, model: "probe-model", token: "synthetic-probe-token" };
       // 旧调用允许缺省方式；正常设置解析器始终返回显式方式。
-      const result = authStyle === undefined ? await io.probeText(ctx, spec) : await runModelConnectionTest(ctx, "default", makeDeps({
-        resolveLlm: vi.fn(async () => ({ ...spec, authStyle })),
-        probeTextModel: (value, context) => io.probeText(context, value),
-      }));
+      const dependencies = makeDeps({
+        resolveLlm: vi.fn(async () => ({ ...spec, authStyle: authStyle ?? "x-api-key" })),
+        probeTextModel: (value, context, options) => io.probeText(context, value, undefined, options),
+      });
+      const result = authStyle === undefined ? await io.probeText(ctx, spec)
+        : textOutputLimit === undefined ? await runModelConnectionTest(ctx, "default", dependencies)
+        : (await createSettingsWithModelTest({ ...dependencies, settings: { request: vi.fn() } }).request(
+          ENDPOINTS.testModelConnection, { params: { capability: "copilot.assist" }, query: undefined, body: { textOutputLimit } }, ctx,
+        ) as { data: unknown }).data;
       expect(captured).toHaveLength(1);
-      expect(captured[0]).toMatchObject({ url: "/v1/messages", body: { model: spec.model, max_tokens: 128, stream: true } });
+      expect(captured[0]).toMatchObject({ url: "/v1/messages", body: { model: spec.model, max_tokens: textOutputLimit ?? 128, stream: true } });
       expect(captured[0]!.body).not.toHaveProperty("tools");
       expect(captured[0]!.authorization).toBe(authStyle === "bearer" ? `Bearer ${spec.token}` : undefined);
       expect(captured[0]!.apiKey).toBe(authStyle === "bearer" ? undefined : spec.token);
       if (authStyle === undefined) expect(result).toEqual({ text: "OK", reasoningText: "" });
+      else if (textOutputLimit === 8192) expect(result).toMatchObject({ ok: true, detail: expect.stringContaining("8192") });
       else expect(result).toEqual({ ok: true, provider: "anthropic", model: spec.model, detail: "已收到最小测试请求的流式回复，连通。" });
     } finally {
       await io.stop();

@@ -6780,7 +6780,7 @@ FAVORITES_PROMOTE_PER_RUN
       );
       return results.length;
     },
-    probeTextModel: (spec,c) => modelProbeIo.probeText(c,spec),
+    probeTextModel: (spec,c,options) => modelProbeIo.probeText(c,spec,undefined,options),
     fetchImpl: fetch,
   });
   const settingsWithChannelModelCredentials =

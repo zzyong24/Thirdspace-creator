@@ -1,0 +1,46 @@
+{
+  "recordedAt": "2026-10-25T12:16:30.754126+00:00",
+  "results": {
+    "red-frontend": {
+      "exitCode": 1,
+      "failed": 10,
+      "passed": 72,
+      "logSha256": "2be992244b7beccbb9efce04bbe878aa170142ad3edd1806af4af0d4b343b8c5"
+    },
+    "red-backend": {
+      "exitCode": 1,
+      "failed": 8,
+      "passed": 9,
+      "logSha256": "37d2e5ec8a4babc34fff291a027b95fa1d36174ea9723b50b5eb36b21c89c0c4"
+    },
+    "green-backend": {
+      "exitCode": 0,
+      "passed": 20,
+      "logSha256": "b2072dd0c72b368a2947334749d29425cea58e0a90be78ebfdea3d1b863909e3"
+    },
+    "green-frontend-final": {
+      "exitCode": 0,
+      "passed": 82,
+      "logSha256": "4e9d1fe3339e6aa47e13d92559dc6210d5a7991d5c16dbdc52cdfbe119d27e77"
+    },
+    "typecheck": {
+      "exitCode": 2,
+      "error": "TS2571，测试中 transport 返回 unknown",
+      "logSha256": "17b0c85e97e56a55b34885964b36b473f919fd4f961560c545ae1003d583a3a8"
+    },
+    "typecheck-final": {
+      "exitCode": 0,
+      "logSha256": "8cd696b96d70601e352ea0d4228562a5a89a84a1ba98aff3ebe320d91c676d92"
+    },
+    "timeout-final": {
+      "exitCode": 0,
+      "logSha256": "d54ec4c5035deb2585746cf2bd64944147c8a43ae8b2696c367387b6578a3fe4"
+    },
+    "boundary-final": {
+      "exitCode": 0,
+      "logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    }
+  },
+  "independentReviewSha256": "8023dfa82740c780d0339abafd5f24865feed85ce2c77bbb522df80051c6bb7a",
+  "installedAcceptance": "pending"
+}
