@@ -1,0 +1,55 @@
+{
+  "review": "最终产物与运行事实独立复核",
+  "reviewer": "/root/t1405_spec_review",
+  "model": "继承宿主模型；未核实具体型号",
+  "commit": "6daaf71d4d3afe8d5bfa5801cffff7c9b9b345bb",
+  "findings": [],
+  "artifact": {
+    "sourceFiles": 130,
+    "sourceHashMismatches": [],
+    "manifestReviewBindingsCorrected": true,
+    "dmgSha256": "4b6716e925a18e8695559e3545359ac9797b1be6ecaf2b370e558e0d882fd2d0",
+    "binarySha256": "8c6d9f4b2d0de09c63ec96864379b9ff3bd5521b032ad5c563c036c8b642aa73",
+    "sidecarSha256": "67e32ad6ca8d4044fd71a306f58508b43352aaaf88a4270ba8206cb145085980",
+    "currentInstalledHashesMatch": true,
+    "codesignVerifyExit": 0,
+    "notarized": false
+  },
+  "finalInstalledCli": {
+    "summaryMatchesRawReceipts": true,
+    "piSuccessfulTurns": 3,
+    "codexSuccessfulTurns": 3,
+    "memoryAndCalculationBoth": "月光731｜323",
+    "thirdTurnBoth": "一次accountGroups.get，真实groupId一致，返回月明水清深，outcome=ok、sideEffect=none",
+    "routingChoicesRestored": true,
+    "routingRevision": "54→56"
+  },
+  "preservation": {
+    "projects": 65,
+    "allPublicProjectRowsEqual": true,
+    "publicGroupRowEqual": true,
+    "members": 5,
+    "officialAccountMemberRetained": true,
+    "installedHashesUnchangedAfterTests": true
+  },
+  "retainedFailures": {
+    "initialCodexCAS": "原始HTTP409回执保留；matrix为空，零模型任务；之后新前缀串行补测",
+    "summaryScript": "原默认分页断言失败保留；按合同允许limit20/offset0，未改产品/门或重跑模型",
+    "officialOriginalTask": {
+      "id": "ai-task-5e73167d-401",
+      "status": "running",
+      "runtimeStatus": "waiting_user",
+      "errorCode": "http_402",
+      "errorMessage": "执行停止，等待恢复或诊断"
+    }
+  },
+  "boundaries": [
+    "完整六组合矩阵绑定8f757，最终6daaf两引擎各三轮",
+    "证明macOS本地包，不代替Windows正式安装包验收",
+    "官方402不等同已证实余额不足",
+    "单次耗时观察不保证稳定性能或所有具体模型质量",
+    "全局quick22ERROR17WARN、旧失败和UI旅程门保留",
+    "本地包未公证，无完整发布GO"
+  ],
+  "fullReleaseGo": false
+}

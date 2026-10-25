@@ -9,8 +9,8 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1407|整理现有修复、安装复验并准备合并推送|🔨|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|用户明确恢复安装并要求处理代码、准备合并推送；保现安装修复与数据，整理本地提交、整合主干、CLI实测并给出真实准备状态，尚不执行push或公开发布。|
-|T-1405|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:da492135f519]|待验|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|用户要求修复T1403暴露的问题；核真实额度、对话组绑定、路由错误及工具开销，保合法来源与权限，独评后实现并CLI复验。|
+|T-1407|整理现有修复、安装复验并准备合并推送|⏸️|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|用户明确恢复安装并要求处理代码、准备合并推送；保现安装修复与数据，整理本地提交、整合主干、CLI实测并给出真实准备状态，尚不执行push或公开发布。|
+|T-1405|修复CLI真实对话的组上下文、模型错误与开销|⏸️|PASS[REV:da492135f519]|待验|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|用户要求修复T1403暴露的问题；核真实额度、对话组绑定、路由错误及工具开销，保合法来源与权限，独评后实现并CLI复验。|
 |T-1404|修复Tab切换读取和编辑器初始化开销|✅|PASS[REV:d891fda60145]|PASS:51cb1ab67f76|[SPEC](docs/features/t1404-tab-navigation-performance-fixes.md)|用户要求全部修复已确认问题；消除文章重复读、隐藏导出实例、串行图片与明确ID列表扫描，分区加载正文/素材/发布信息；保归属、草稿和保存导出，不安装发布。|
 |T-1403|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1403-cli-chat-combination-acceptance.md)|用户纠正非阻塞问题不要重复询问；固定月明水清深，修订Agent规则并真实CLI验证模型来源与引擎组合、回复和工具，不以连接探针代签。|
 |T-1402|历史激活码无感升级模型权益与原授权恢复|🔨|PASS[REV:523d1050324a]|待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)|用户要求面向所有用户自助升级历史永久码；保原许可与钱包，幂等启用，不依赖人工查库；含本机已明确授权恢复及一份失效旧绑定释放，本地实现测试打包安装，发布另列。|

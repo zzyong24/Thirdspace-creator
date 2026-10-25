@@ -1,0 +1,104 @@
+{
+  "candidateCommit": "6daaf71d4d3afe8d5bfa5801cffff7c9b9b345bb",
+  "matrix": [
+    {
+      "source": "self",
+      "engine": "pi",
+      "conversationId": "ai-conv-52de3486-195",
+      "turns": [
+        {
+          "taskId": "ai-task-52de3486-202",
+          "status": "succeeded",
+          "actualEngine": "pi",
+          "reply": "AI 能帮创作者把模糊的想法变成可执行的步骤：选题、写稿、封面、发布物料都能加速，但最终改不改、怎么改仍由你决定。（月光731）",
+          "toolCalls": 0,
+          "observationSeconds": 32.469,
+          "inputTokens": 50484,
+          "outputTokens": 39,
+          "cachedTokens": 159
+        },
+        {
+          "taskId": "ai-task-52de3486-244",
+          "status": "succeeded",
+          "actualEngine": "pi",
+          "reply": "月光731｜323",
+          "toolCalls": 0,
+          "observationSeconds": 16.455,
+          "inputTokens": 50987,
+          "outputTokens": 4,
+          "cachedTokens": 157
+        },
+        {
+          "taskId": "ai-task-52de3486-274",
+          "status": "succeeded",
+          "actualEngine": "pi",
+          "reply": "当前账号组名称：**月明水清深**\n\n依据：按本对话绑定的真实 groupId（grp_legacy_acct-ae1a8346-9）读取账号组信息，返回的 `name` 字段为「月明水清深」，状态 active。下挂 5 个成员号：抖音「月明水清深」、视频号「月明Verse」、快手「第三空间」、小红书「月明水清深」、公众号「月明水清深」——注意组名与其中的抖音号、小红书号、公众号号同名，界面筛选不影响组归属。\n\n本次只做了读取，未创建、修改或发布任何内容，也未调用外部采集工具。",
+          "toolCalls": 1,
+          "observationSeconds": 34.823,
+          "inputTokens": 103090,
+          "outputTokens": 212,
+          "cachedTokens": 51355
+        }
+      ],
+      "sourceChoicesRestored": true
+    },
+    {
+      "source": "codex",
+      "engine": "codex",
+      "conversationId": "ai-conv-52de3486-382",
+      "turns": [
+        {
+          "taskId": "ai-task-52de3486-387",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "AI能帮助创作者整理灵感、研究素材、打磨文案和优化创作流程，让想法更快成为作品，月光731",
+          "toolCalls": 0,
+          "observationSeconds": 39.119,
+          "inputTokens": 44751,
+          "outputTokens": 36,
+          "cachedTokens": 0
+        },
+        {
+          "taskId": "ai-task-52de3486-440",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "月光731｜323",
+          "toolCalls": 0,
+          "observationSeconds": 35.555,
+          "inputTokens": 44906,
+          "outputTokens": 9,
+          "cachedTokens": 0
+        },
+        {
+          "taskId": "ai-task-52de3486-487",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "当前账号组名称是「月明水清深」。依据：只读工具返回的账号组名称为该名称，状态为启用；本次未修改任何业务内容。",
+          "toolCalls": 1,
+          "observationSeconds": 37.604,
+          "inputTokens": 90897,
+          "outputTokens": 107,
+          "cachedTokens": 77312
+        }
+      ],
+      "sourceChoicesRestored": true
+    }
+  ],
+  "preservation": {
+    "projects": 65,
+    "publicProjectRowsEqual": true,
+    "publicGroupRowEqual": true,
+    "modelChoicesRestored": true,
+    "beforeRoutingRevision": 54,
+    "afterRoutingRevision": 56,
+    "installedHashesUnchanged": true
+  },
+  "officialOriginalTask": {
+    "id": "ai-task-5e73167d-401",
+    "status": "running",
+    "runtimeStatus": "waiting_user",
+    "errorCode": "http_402",
+    "errorMessage": "执行停止，等待恢复或诊断"
+  },
+  "boundary": "六组合完整矩阵仍归属初次8f757安装；最终6daaf包针对两条实际引擎各补测三轮。官方失败任务只回读，不重发或换源；不据此声称官方API恢复。"
+}

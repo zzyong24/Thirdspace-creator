@@ -1,0 +1,57 @@
+{
+  "previousCandidate": "8f757a153060067747bfaf664c46155d8b318ff2",
+  "newCandidate": "6daaf71d4d3afe8d5bfa5801cffff7c9b9b345bb",
+  "previousProductHashesPreserved": 126,
+  "previousProductHashesChanged": [],
+  "addedProductPaths": [
+    "ai-worker/package.json",
+    "ai-worker/src/runtime/chat/chat-pi-core.test.ts",
+    "ai-worker/src/runtime/chat/chat-pi-core.ts",
+    "pnpm-lock.yaml"
+  ],
+  "frozenOfflineInstall": {
+    "exitCode": 0,
+    "pnpm": "10.32.1",
+    "lockfileChanged": false,
+    "note": "按完整workspace frozen/offline安装成功；保留unrs-resolver构建脚本默认忽略警告，未批准额外脚本。"
+  },
+  "checks": {
+    "chatCoreAndProtocol": {
+      "files": 2,
+      "tests": 31,
+      "exitCode": 0,
+      "retry": 0
+    },
+    "coreProviderDiagnostics": {
+      "files": 3,
+      "tests": 20,
+      "exitCode": 0
+    },
+    "workerTypecheck": {
+      "exitCode": 0
+    },
+    "timeoutPolicy": {
+      "exitCode": 0
+    },
+    "boundary": {
+      "exitCode": 0,
+      "existingBaselineViolations": 5
+    },
+    "packagePreflight": {
+      "files": 4,
+      "tests": 58,
+      "exitCode": 0
+    },
+    "incrementalGitleaks": {
+      "commits": 2,
+      "exitCode": 0,
+      "findings": 0
+    },
+    "priorCandidateFullGitleaks": {
+      "exitCode": 1,
+      "findings": 32,
+      "classification": "合成夹具，详见secret-scan-classification.json；原结果不改写"
+    }
+  },
+  "priorBroaderGates": "backend258、worker429、frontend693、LED047190、五workspace类型检查和quality17均保留原候选证据；新增Pi影响部分已补跑，未声称重新跑全套。"
+}

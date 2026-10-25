@@ -1,0 +1,24 @@
+{
+  "review": "初次整合安装版及六组合证据的独立复核摘要",
+  "reviewer": "/root/t1405_spec_review",
+  "model": "继承宿主模型；未核实具体型号",
+  "candidateCommit": "8f757a153060067747bfaf664c46155d8b318ff2",
+  "findings": [],
+  "verified": [
+    "126产品文件hash和各来源祖先关系",
+    "安装App、sidecar与DMG独立重算并通过codesign",
+    "四组合各三轮成功、实际引擎、记忆323、一次真实组GET",
+    "Codex来源Pi按合同拒绝、官方Pi402原任务仅提交一次",
+    "65项目全行和5组成员保留，模型选择恢复",
+    "T1404原始日志解压hash及安全扫描",
+    "原gitleaks32合成材料命中和quick22ERROR17WARN未改写"
+  ],
+  "fullReleaseGo": false,
+  "limits": [
+    "六种基础组合不代表所有具体模型或复杂创作质量",
+    "Codex引擎不证明官方或自配API",
+    "官方402原因不明",
+    "旧视频号与性能未闭环",
+    "本地ad-hoc未公证"
+  ]
+}

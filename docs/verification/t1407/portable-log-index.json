@@ -1,0 +1,236 @@
+{
+  "rawScannerExitCode": 0,
+  "files": [
+    {
+      "raw": "backend.txt",
+      "archive": "logs/backend.txt.gz",
+      "rawSha256": "2e1fdf03885ed0b5d1c605db62dbb43720539f2bfc78dda254ae90e258275e9f",
+      "archiveSha256": "d8aadfde8134a883218f99f005214f4cf153cee376fa526b462992d56ce43982",
+      "bytes": 275
+    },
+    {
+      "raw": "worker.txt",
+      "archive": "logs/worker.txt.gz",
+      "rawSha256": "a716a2bf582abc0fdda96c618034f77d75ba51c7a6099491974e8c92bf355c0b",
+      "archiveSha256": "89dc455a09e5f9a02f7d9dc8e4858d69e260e2ad3de5dea509d23fa21e1907a7",
+      "bytes": 276
+    },
+    {
+      "raw": "frontend.txt",
+      "archive": "logs/frontend.txt.gz",
+      "rawSha256": "0288f8c180cfe0cf53165c0431f263fc2454ab6be191aebdd24aa8b1ee161095",
+      "archiveSha256": "2ddda323b8d78c35d0badcabf705c2a358c247aa9be895166fef398013ab086a",
+      "bytes": 5233
+    },
+    {
+      "raw": "led047.txt",
+      "archive": "logs/led047.txt.gz",
+      "rawSha256": "26c12505f1cc1a28ae413caa3d1dcd166ec3cda89eaa7ee57f24d84f01b5a500",
+      "archiveSha256": "bb021b35709f00e31520bddf5865ad2d9947093e922141cc806de081486b6b87",
+      "bytes": 1668
+    },
+    {
+      "raw": "package-preflight.txt",
+      "archive": "logs/package-preflight.txt.gz",
+      "rawSha256": "3caf5eb238682ae57ba2290a831c4703050d4e94843bca1bbb6747a4fb61f0e9",
+      "archiveSha256": "bd8ef3a68488c8102cf52d418d0e80897a574a76deabf6b857d32f4bcbebd6d0",
+      "bytes": 870
+    },
+    {
+      "raw": "typecheck.txt",
+      "archive": "logs/typecheck.txt.gz",
+      "rawSha256": "449558d476559597822b53594d022035f37b65aaf15287acd35cd00b23be7f15",
+      "archiveSha256": "8d5f530a619efc1ea4e78e075e308071d115e6aa8bc262386e9a670bb6a4bf18",
+      "bytes": 806
+    },
+    {
+      "raw": "timeout-policy.txt",
+      "archive": "logs/timeout-policy.txt.gz",
+      "rawSha256": "77691957e4b9a46a22c89e50fe45dee3b6626fc53c2d2cbcf9aa4da287eef802",
+      "archiveSha256": "a8a0dd20bbb959d01bc92f53b0daa9d1e5c5b1840058eb451d71ecfcd66b8f7e",
+      "bytes": 5857
+    },
+    {
+      "raw": "boundary.txt",
+      "archive": "logs/boundary.txt.gz",
+      "rawSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "archiveSha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2",
+      "bytes": 779
+    },
+    {
+      "raw": "quality.txt",
+      "archive": "logs/quality.txt.gz",
+      "rawSha256": "b2db20c87102575a867126b41d246b856f1c56454b9bb6cac3b1e9b390a419a5",
+      "archiveSha256": "248792daa9e41a0a8fa13eba9e0ced038b0192fbe4d3d394441f1fcd38247bfe",
+      "bytes": 1695
+    },
+    {
+      "raw": "reconcile-after-windows.txt",
+      "archive": "logs/reconcile-after-windows.txt.gz",
+      "rawSha256": "d48eab9e7c7fee1d261a4929fdfd55a02d930a4225a32b1395a1f3cd67a3d4c0",
+      "archiveSha256": "a388832e9a80c974cb4042f6439bdbe850956ef9d854182e1d89f5243d7dddc9",
+      "bytes": 7182
+    },
+    {
+      "raw": "windows-pi-regression.txt",
+      "archive": "logs/windows-pi-regression.txt.gz",
+      "rawSha256": "7c1eb4394c1ddd3694bcf4f569054cf6082c3744cf41cc4b351a8ffd28b17739",
+      "archiveSha256": "2e5252910235c03c1a624d7014a21ebe3fc70b46cb9f1a90f39ec0f4a95d4f71",
+      "bytes": 270
+    },
+    {
+      "raw": "windows-pi-chat-regression.txt",
+      "archive": "logs/windows-pi-chat-regression.txt.gz",
+      "rawSha256": "b05499004f22756a7bacc7fa48944afd1810d82c2e359b2c5022b62581c9eb9a",
+      "archiveSha256": "5cd2dd3649af3fdb7459083874fdb6a360051ccb8257575b9b38b1734989348d",
+      "bytes": 270
+    },
+    {
+      "raw": "windows-pi-typecheck.txt",
+      "archive": "logs/windows-pi-typecheck.txt.gz",
+      "rawSha256": "4a80a5efc59c5eb3e605cb3d29f409a5b1e02c33c10ca51a5a011fbc9194394f",
+      "archiveSha256": "869a125baeac65f5558e93d69c0b14d8ae26704829e930301efcd51eec491dad",
+      "bytes": 141
+    },
+    {
+      "raw": "windows-pi-timeout.txt",
+      "archive": "logs/windows-pi-timeout.txt.gz",
+      "rawSha256": "09d867b634228552b5217a7de0456306c4aa0b4f87c91bfb7996a5e0c9316f98",
+      "archiveSha256": "e7b71a904eb23b24971fee5f3e38ad24e2d837faf3b40c56b7f216cd6adc9616",
+      "bytes": 5857
+    },
+    {
+      "raw": "windows-pi-boundary.txt",
+      "archive": "logs/windows-pi-boundary.txt.gz",
+      "rawSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "archiveSha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2",
+      "bytes": 779
+    },
+    {
+      "raw": "windows-pi-package-preflight.txt",
+      "archive": "logs/windows-pi-package-preflight.txt.gz",
+      "rawSha256": "aefa8be357004605ee1d2e4461089b64b7a047c2346e2bf61cac15df3e0c1ba0",
+      "archiveSha256": "610bdb3c187ef6e3fb17072708599aaa2fbf1a41399b70679e4592524b220650",
+      "bytes": 872
+    },
+    {
+      "raw": "windows-pi-gitleaks.txt",
+      "archive": "logs/windows-pi-gitleaks.txt.gz",
+      "rawSha256": "bf722568463bff9b2a962b1bbe12963f22f4dde0a4e98116c73012db348a886d",
+      "archiveSha256": "b33a5cc76507383cf482cfcc307e80c429900f0c97d29cbdf278a3c36e59ee32",
+      "bytes": 108
+    },
+    {
+      "raw": "candidate-gitleaks.txt",
+      "archive": "logs/candidate-gitleaks.txt.gz",
+      "rawSha256": "a7b5dc6376100416c18873dfad37ecf5c9b1c6e9286cb7fcdb5d1f59378bbc5b",
+      "archiveSha256": "74289327f3662e71c10be51e7b4006eb90d24c43b7db775a9b06752a565c99c8",
+      "bytes": 181
+    },
+    {
+      "raw": "candidate-gitleaks.json",
+      "archive": "logs/candidate-gitleaks.json.gz",
+      "rawSha256": "f7af4ba6421e89b5f5d7587a793ecfa529fb9d355cb262434b1a5c2b74b194f6",
+      "archiveSha256": "68df3103480b38047754596a183d6a620161a325e632576363a9b418dc298aa9",
+      "bytes": 30735
+    },
+    {
+      "raw": "reconcile-quick-final-state.txt",
+      "archive": "logs/reconcile-quick-final-state.txt.gz",
+      "rawSha256": "d48eab9e7c7fee1d261a4929fdfd55a02d930a4225a32b1395a1f3cd67a3d4c0",
+      "archiveSha256": "a388832e9a80c974cb4042f6439bdbe850956ef9d854182e1d89f5243d7dddc9",
+      "bytes": 7182
+    },
+    {
+      "raw": "taskctl-complete-attempt.txt",
+      "archive": "logs/taskctl-complete-attempt.txt.gz",
+      "rawSha256": "43ce31862e2dd31a0c2bc0eae04eb2591c7b49fca026c6a69f09171c9e15c068",
+      "archiveSha256": "50468a1258e035aa6de88f261821a9f66a45ff72f9cf7afa418e71293ef4df29",
+      "bytes": 89
+    },
+    {
+      "raw": "windows-pi-final/package-local.txt",
+      "archive": "logs/windows-pi-final--package-local.txt.gz",
+      "rawSha256": "9b86da4b45b77accbd2fbaa7b7c55774bbafbb4b79a3cce97cb226c18fca51fd",
+      "archiveSha256": "dd182625e79be9826a6c57b9e3a6595cd21f272187eb88bc5d0edb648aa262bb",
+      "bytes": 107543
+    },
+    {
+      "raw": "windows-pi-final/dmg-verify.txt",
+      "archive": "logs/windows-pi-final--dmg-verify.txt.gz",
+      "rawSha256": "479dac2e04446f04599e67a62468e33a75bf665b6bbc81d9ecf8302f6562da65",
+      "archiveSha256": "d801d7fff7751a4dce8e1889991fdad1587675d563a584883178caf0cbb020b8",
+      "bytes": 1212
+    },
+    {
+      "raw": "windows-pi-final/built-app-signature.txt",
+      "archive": "logs/windows-pi-final--built-app-signature.txt.gz",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archiveSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 0
+    },
+    {
+      "raw": "windows-pi-final/installed-app-signature.txt",
+      "archive": "logs/windows-pi-final--installed-app-signature.txt.gz",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archiveSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 0
+    },
+    {
+      "raw": "windows-pi-final/install-and-launch.txt",
+      "archive": "logs/windows-pi-final--install-and-launch.txt.gz",
+      "rawSha256": "8e37fb85b3e8a4651fcbad4f163281ded01dc8a72660028979d0ed6fac8566eb",
+      "archiveSha256": "94a1e5f86a474f0724392a0b799b74de25fc801ca05d3d03420afbcfa527860c",
+      "bytes": 78
+    },
+    {
+      "raw": "windows-pi-final/install-verification.txt",
+      "archive": "logs/windows-pi-final--install-verification.txt.gz",
+      "rawSha256": "b752a291ee6b5b7c1a10ad70920ad4e91721ecefc6a46ad5cd24aca7d6916792",
+      "archiveSha256": "70e1610387fadb4f912e083efe13b63a82655fb54b53f0cdacc09d3f7e25ff72",
+      "bytes": 292
+    },
+    {
+      "raw": "windows-pi-final/cli-retest.txt",
+      "archive": "logs/windows-pi-final--cli-retest.txt.gz",
+      "rawSha256": "1b74865e317270c77aa872f91bcf9e3a1c69fbcc1956f472811a16f53571412f",
+      "archiveSha256": "01ece06c59f342a8a4428a80f76e93d07b64c8d4c81a86f668ea1e1ac65686ab",
+      "bytes": 399
+    },
+    {
+      "raw": "windows-pi-final/codex-confirmation/cli-retest.txt",
+      "archive": "logs/windows-pi-final--codex-confirmation--cli-retest.txt.gz",
+      "rawSha256": "36f507e1cb43e2775326de6dece98215a25724b42b10a3fe421439fb82034556",
+      "archiveSha256": "af87f2a3f4564d45a3c9002ce612fbd4e8a6c1f086f9d52a6a10516ed8193e70",
+      "bytes": 411
+    },
+    {
+      "raw": "windows-pi-final/codex-initial-CAS-rejected/cli-retest.txt",
+      "archive": "logs/windows-pi-final--codex-initial-CAS-rejected--cli-retest.txt.gz",
+      "rawSha256": "c90bb9d60d8a7d5d3621cd5cf7daf82a7c13c2a1fa2a93447cd5b23fe1075e3b",
+      "archiveSha256": "43f3355e993346b6864711dc6a1434c64ece4653476bb6ec216b23bfbd83fbd3",
+      "bytes": 473
+    },
+    {
+      "raw": "windows-pi-final/summary-initial-default-assertion-failure.txt",
+      "archive": "logs/windows-pi-final--summary-initial-default-assertion-failure.txt.gz",
+      "rawSha256": "0a72ec8e01086ea4fa741f3b39d70bf6b8312538717d4f71c3a6765e79256c2e",
+      "archiveSha256": "17e290d84044234595190691eec7fa59ad2bf043a56b34067967a243552d9a41",
+      "bytes": 405
+    },
+    {
+      "raw": "windows-pi-final/summary-verification.txt",
+      "archive": "logs/windows-pi-final--summary-verification.txt.gz",
+      "rawSha256": "9a184ab5730ed293231849474d5abfeef8bce057e68bb57d98f722c531ef68c6",
+      "archiveSha256": "4322f091381d98b0b7a707464db7fedc2f1ffa262b8707defb1f512560b30efa",
+      "bytes": 275
+    },
+    {
+      "raw": "final-fetch.txt",
+      "archive": "logs/final-fetch.txt.gz",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archiveSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 0
+    }
+  ]
+}

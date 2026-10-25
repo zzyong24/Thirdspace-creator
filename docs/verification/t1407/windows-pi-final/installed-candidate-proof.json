@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-25T05:18:04.904130+00:00",
+  "sourceDrift": [],
+  "sourceFreeze": "combined-candidate-manifest.json",
+  "standardCleanCommittedFreeze": true,
+  "localHashFreezeException": false,
+  "dmgPath": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "dmgSha256": "4b6716e925a18e8695559e3545359ac9797b1be6ecaf2b370e558e0d882fd2d0",
+  "expectedBuiltHashes": {
+    "binary": "8c6d9f4b2d0de09c63ec96864379b9ff3bd5521b032ad5c563c036c8b642aa73",
+    "sidecar": "67e32ad6ca8d4044fd71a306f58508b43352aaaf88a4270ba8206cb145085980"
+  },
+  "priorSidecarSha256": "cef4742476245a0608e51a9b6823da79ea0f9847447c657f6365f0f97f40ab36",
+  "rollbackAppPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1407-rollback-ocxsn_v7/CreatorOS.app",
+  "installed": true,
+  "notarized": false,
+  "installedHashes": {
+    "binary": "8c6d9f4b2d0de09c63ec96864379b9ff3bd5521b032ad5c563c036c8b642aa73",
+    "sidecar": "67e32ad6ca8d4044fd71a306f58508b43352aaaf88a4270ba8206cb145085980"
+  },
+  "cliStatus": {
+    "ok": true,
+    "mode": "installed",
+    "connected": true,
+    "access": "full",
+    "productId": "creatoros",
+    "packageId": "cloud.aitongban.creatoros",
+    "pid": 28563,
+    "expiresAt": 1792991912397
+  },
+  "completedAt": "2026-10-25T05:18:45.585712+00:00",
+  "rollbackBackupRemovedAfterSuccessfulValidation": true
+}

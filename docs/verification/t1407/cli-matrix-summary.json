@@ -1,0 +1,214 @@
+{
+  "groupId": "grp_legacy_acct-ae1a8346-9",
+  "groupName": "月明水清深",
+  "matrix": [
+    {
+      "source": "codex",
+      "engine": "codex",
+      "conversationId": "ai-conv-5e73167d-194",
+      "turns": [
+        {
+          "taskId": "ai-task-5e73167d-199",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "AI能帮助创作者整理素材、构思选题和打磨文稿，提高创作效率，月光731",
+          "observationSeconds": 48.66,
+          "toolCalls": 0,
+          "inputTokens": 44752,
+          "cachedTokens": 0,
+          "outputTokens": 113,
+          "messageSavedSeconds": 40.355
+        },
+        {
+          "taskId": "ai-task-5e73167d-265",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "月光731｜323",
+          "observationSeconds": 46.281,
+          "toolCalls": 0,
+          "inputTokens": 44901,
+          "cachedTokens": 0,
+          "outputTokens": 30,
+          "messageSavedSeconds": 37.827
+        },
+        {
+          "taskId": "ai-task-5e73167d-332",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "当前账号组名称是「月明水清深」。依据：只读查询返回的账号组名称为「月明水清深」，状态为正常启用；此次查询未修改任何业务内容。",
+          "observationSeconds": 33.871,
+          "toolCalls": 1,
+          "inputTokens": 90891,
+          "cachedTokens": 44928,
+          "outputTokens": 113,
+          "messageSavedSeconds": 22.145
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "source": "codex",
+      "engine": "pi",
+      "conversationId": "ai-conv-5e73167d-382",
+      "turns": [],
+      "result": "REJECTED_BY_CONTRACT",
+      "error": {
+        "code": "HTTP_409",
+        "message": "dispatch ai.conversations.messages.create failed (409): 当前用途的模型来源为 Codex，Pi 引擎无法执行。请选择 Codex 引擎；若要使用 Pi，请先将该用途的模型来源改为官方或自配。"
+      }
+    },
+    {
+      "source": "official",
+      "engine": "pi",
+      "conversationId": "ai-conv-5e73167d-397",
+      "turns": [],
+      "result": "BLOCKED_HTTP_402",
+      "taskId": "ai-task-5e73167d-401",
+      "errorCode": "http_402",
+      "errorMessage": "执行停止，等待恢复或诊断"
+    },
+    {
+      "source": "official",
+      "engine": "codex",
+      "conversationId": "ai-conv-5e73167d-559",
+      "turns": [
+        {
+          "taskId": "ai-task-5e73167d-564",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "AI能帮助创作者整理素材、构思选题和打磨文稿，让创作更高效，月光731",
+          "observationSeconds": 31.678,
+          "toolCalls": 0,
+          "inputTokens": 44752,
+          "cachedTokens": 0,
+          "outputTokens": 31,
+          "messageSavedSeconds": 22.002
+        },
+        {
+          "taskId": "ai-task-5e73167d-610",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "月光731｜323",
+          "observationSeconds": 41.191,
+          "toolCalls": 0,
+          "inputTokens": 44903,
+          "cachedTokens": 0,
+          "outputTokens": 9,
+          "messageSavedSeconds": 33.628
+        },
+        {
+          "taskId": "ai-task-5e73167d-671",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "当前账号组名称是「月明水清深」。依据：只读查询返回的账号组名称为「月明水清深」，状态为启用；本次查询未修改任何业务内容。",
+          "observationSeconds": 32.847,
+          "toolCalls": 1,
+          "inputTokens": 90894,
+          "cachedTokens": 44928,
+          "outputTokens": 112,
+          "messageSavedSeconds": 24.611
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "source": "self",
+      "engine": "pi",
+      "conversationId": "ai-conv-5e73167d-729",
+      "turns": [
+        {
+          "taskId": "ai-task-5e73167d-736",
+          "status": "succeeded",
+          "actualEngine": "pi",
+          "reply": "AI 能帮创作者把踩过的坑整理成可直接抄走的步骤、批量生成并打磨选题与稿件、准备发布物料，从而少走重复劳动、把时间留给真正需要判断的部分。（测试代号：月光731）",
+          "observationSeconds": 20.451,
+          "toolCalls": 0,
+          "inputTokens": 50485,
+          "cachedTokens": 159,
+          "outputTokens": 47,
+          "messageSavedSeconds": 12.144
+        },
+        {
+          "taskId": "ai-task-5e73167d-768",
+          "status": "succeeded",
+          "actualEngine": "pi",
+          "reply": "月光731｜323",
+          "observationSeconds": 17.357,
+          "toolCalls": 0,
+          "inputTokens": 50997,
+          "cachedTokens": 157,
+          "outputTokens": 4,
+          "messageSavedSeconds": 9.913
+        },
+        {
+          "taskId": "ai-task-5e73167d-799",
+          "status": "succeeded",
+          "actualEngine": "pi",
+          "reply": "当前账号组名称：**月明水清深**\n\n依据：用只读接口按本次对话绑定的真实 groupId（`grp_legacy_acct-ae1a8346-9`）读取 `accountGroups.get`，返回的 `name` 字段即为「月明水清深」，状态 active；组内含 5 个成员平台账号（抖音「月明水清深」、微信视频号「月明Verse」、快手「第三空间」、小红书「月明水清深」、公众号「月明水清深」）。未做任何创建、修改、采纳或发布操作。",
+          "observationSeconds": 34.953,
+          "toolCalls": 1,
+          "inputTokens": 103111,
+          "cachedTokens": 60765,
+          "outputTokens": 193,
+          "messageSavedSeconds": 29.059
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "source": "self",
+      "engine": "codex",
+      "conversationId": "ai-conv-5e73167d-850",
+      "turns": [
+        {
+          "taskId": "ai-task-5e73167d-855",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "AI能帮助创作者整理素材、梳理思路和打磨文案，让创作更高效，月光731",
+          "observationSeconds": 28.669,
+          "toolCalls": 0,
+          "inputTokens": 44752,
+          "cachedTokens": 0,
+          "outputTokens": 32,
+          "messageSavedSeconds": 19.188
+        },
+        {
+          "taskId": "ai-task-5e73167d-898",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "月光731｜323",
+          "observationSeconds": 34.823,
+          "toolCalls": 0,
+          "inputTokens": 44904,
+          "cachedTokens": 0,
+          "outputTokens": 9,
+          "messageSavedSeconds": 22.787
+        },
+        {
+          "taskId": "ai-task-5e73167d-943",
+          "status": "succeeded",
+          "actualEngine": "codex",
+          "reply": "当前账号组名称是「月明水清深」。依据：只读查询返回的当前绑定账号组名称为「月明水清深」，状态为启用；未修改任何业务内容。",
+          "observationSeconds": 36.715,
+          "toolCalls": 1,
+          "inputTokens": 90897,
+          "cachedTokens": 44928,
+          "outputTokens": 112,
+          "messageSavedSeconds": 26.674
+        }
+      ],
+      "result": "PASS"
+    }
+  ],
+  "sourceChoicesRestored": true,
+  "originalChoices": {
+    "text": "codex",
+    "vision": "codex",
+    "image": "codex",
+    "video": "official",
+    "audio": "official",
+    "embed": "official"
+  },
+  "finalRoutingRevision": 54,
+  "note": "Codex引擎三个来源选项均实际使用本地Codex；不据此声称官方API已可用。官方402不等同钱包余额不足。观察耗时含CLI与回读开销。"
+}

@@ -1,0 +1,9 @@
+{
+  "cause": "第二个补测在前一脚本最终路由恢复尚未退出时启动；CAS拒绝旧revision55修改。",
+  "modelTasksSubmitted": 0,
+  "matrixEmpty": true,
+  "priorPiScriptCompletedExitCode": 0,
+  "firstCodexScriptExitCode": 1,
+  "originalChoicesRestoredByPi": true,
+  "correction": "保留原始失败回执；确认前一脚本已退出及text=codex后，用独立新前缀串行运行Codex补测。"
+}
