@@ -1,0 +1,43 @@
+Coverage: quick read-only control audit only; full verification NOT RUN (incomplete coverage).
+Skipped: project lesson commands; asset example execution; program fresh verification and execution-record updates. Run an authorized `reconcile.mjs --profile full` for executable checks.
+
+── orchestrator reconcile ─────────────────────────────
+! [WARN] backlog-health.mjs: 归档内部保留 5 个历史撞号:T-357,T-356,T-488,T-489,T-627
+! [WARN] backlog-health.mjs: BACKLOG.md 58.7KB 超硬上限 30.0KB — 必须压缩/归档(backlog-compact.mjs 可机械迁走 ✅ 行)。
+! [WARN] backlog-health.mjs: L28 T-1398 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L69 T-1271 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L70 T-1265 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L71 T-1264 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L72 T-1263 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L77 T-1266 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L79 T-1261 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L81 T-1259 状态符号与文字冲突:「✅ 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L82 T-1258 状态符号与文字冲突:「✅ 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L83 T-1257 状态符号与文字冲突:「✅ 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: …还有 152 条状态符号与文字冲突(共 162)。
+✓ [OK] delivery phase: maintenance (legacy-compat)
+✓ [OK] required artifact present: ARTIFACT_MANIFEST.yaml
+✓ [OK] required artifact present: DECISION_LOG.md
+✓ [OK] governance-guard: scope authorization + complexity budget clean.
+✓ [OK] autonomy-guard: execution claim + delivery progress clean.
+✓ [OK] parsed 43 stages
+✓ [OK] CHANGE_IMPACT.md present
+✓ [OK] orphan-scan.mjs: bidirectional trace clean (computed, not attested).
+✓ [OK] asset-check.mjs: reuse-asset library static integrity clean.
+✓ [OK] boundary-scan.mjs: no NEW physical-architecture violation (or guard not configured).
+✓ [OK] reviewctl: review receipts + current snapshots + event chain reconcile.
+✓ [OK] frontend-validation: journey receipts reconcile (or no UI receipts yet).
+✓ [OK] research-gate: implementation paused for T-1135, T-1155, T-1181; bounded research may continue.
+✓ [OK] knowledge-drift.mjs: clean (or knowledge layer not enabled).
+✓ [OK] knowledge-coverage.mjs: clean (or knowledge layer not enabled).
+✓ [OK] docs-health.mjs: clean (or knowledge layer not enabled).
+✓ [OK] consistency_gate blocks 5-ship (status draft) — OK
+✓ [OK] consistency_gate blocks 17-integration-release (status draft) — OK
+✓ [OK] probe 2-contract ↔ contract/package.json: consistent (status passed, present true)
+✓ [OK] probe 4-build ↔ backend/src: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ ai-worker: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ frontend/src/app/api/v1/dispatch: consistent (status draft, present true)
+✓ [OK] updated_at (2026-10-25) is >= newest decision (2026-10-25).
+───────────────────────────────────────────────────────
+0 error(s), 13 warning(s).
+✓ Control audit passed; full verification remains unperformed.

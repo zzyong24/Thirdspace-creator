@@ -1,0 +1,6 @@
+
+> creatoros-frontend@1.2.0 typecheck /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully

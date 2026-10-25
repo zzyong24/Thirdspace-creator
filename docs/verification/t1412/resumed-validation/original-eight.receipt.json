@@ -1,0 +1,34 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "tools/timeout-policy/verify.mjs"
+  ],
+  "cwd": "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator",
+  "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1412/resumed-validation/original-eight.log",
+  "pid": 87094,
+  "identity": {
+    "pid": 87094,
+    "pgid": 87094,
+    "uid": 501,
+    "birth": "Sun Oct 25 18:02:01 2026",
+    "startedAt": 1792922521870
+  },
+  "startedAt": "2026-10-25T10:02:01.870Z",
+  "endedAt": "2026-10-25T10:02:53.275Z",
+  "elapsedMs": 51405,
+  "budgetMs": 1800000,
+  "deadlineAt": "2026-10-25T10:32:01.870Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

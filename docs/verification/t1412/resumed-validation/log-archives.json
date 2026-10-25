@@ -1,0 +1,23 @@
+[
+  {
+    "original": "docs/verification/t1412/resumed-validation/cft-five.log",
+    "originalSha256": "0ff3252bf5531e48feb1014309148a2236fd3f7118962cbd259eaaae86623edc",
+    "gzip": "docs/verification/t1412/resumed-validation/cft-five.log.gz",
+    "gzipSha256": "0679ab2050da68e184f5783a473718e59c6db5a4e78c5735093e2d367e796701",
+    "lossless": true
+  },
+  {
+    "original": "docs/verification/t1412/resumed-validation/original-archive.log",
+    "originalSha256": "0c6b6c5c6499ea1451b07acdeb285e1a663d37845fab80451ec63f94520de1f1",
+    "gzip": "docs/verification/t1412/resumed-validation/original-archive.log.gz",
+    "gzipSha256": "1f304a9e3b3934836f40cba0e1b8a2912cc0bb715eff4be1785bce1229110257",
+    "lossless": true
+  },
+  {
+    "original": "docs/verification/t1416/led054-green.log",
+    "originalSha256": "6d27ba3981246d1f3cfd1db4253d744aec63fa0b7557fad660cf856800cd9680",
+    "gzip": "docs/verification/t1416/led054-green.log.gz",
+    "gzipSha256": "af2f9acdd084020b6c1612b7470d8b3146a70798162b3da235c11ac688844587",
+    "lossless": true
+  }
+]

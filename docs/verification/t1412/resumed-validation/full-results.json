@@ -1,0 +1,233 @@
+{
+  "candidate": "75b74649e43e001bf6682867c331e14308074a61",
+  "configurationSha256": "c8c13b6788b08f48aa4f154bcbdd0d1f74cf72a0e3e4863788e9b4aaa9cb8ffc",
+  "holds": [
+    {
+      "id": "LED-052",
+      "elapsedMs": 79204
+    },
+    {
+      "id": "LED-045",
+      "elapsedMs": 65686
+    },
+    {
+      "id": "LED-044",
+      "elapsedMs": 11265
+    },
+    {
+      "id": "LED-043",
+      "elapsedMs": 7967
+    },
+    {
+      "id": "LED-001",
+      "elapsedMs": 30
+    },
+    {
+      "id": "LED-003",
+      "elapsedMs": 806
+    },
+    {
+      "id": "LED-005",
+      "elapsedMs": 2316
+    },
+    {
+      "id": "LED-006",
+      "elapsedMs": 11394
+    },
+    {
+      "id": "LED-007",
+      "elapsedMs": 8715
+    },
+    {
+      "id": "LED-008",
+      "elapsedMs": 11898
+    },
+    {
+      "id": "LED-010",
+      "elapsedMs": 2127
+    },
+    {
+      "id": "LED-011",
+      "elapsedMs": 8733
+    },
+    {
+      "id": "LED-012",
+      "elapsedMs": 4869
+    },
+    {
+      "id": "LED-013",
+      "elapsedMs": 11504
+    },
+    {
+      "id": "LED-014",
+      "elapsedMs": 116152
+    },
+    {
+      "id": "LED-015",
+      "elapsedMs": 2447
+    },
+    {
+      "id": "LED-016",
+      "elapsedMs": 4575
+    },
+    {
+      "id": "LED-017",
+      "elapsedMs": 55563
+    },
+    {
+      "id": "LED-018",
+      "elapsedMs": 66606
+    },
+    {
+      "id": "LED-020",
+      "elapsedMs": 27985
+    },
+    {
+      "id": "LED-022",
+      "elapsedMs": 3708
+    },
+    {
+      "id": "LED-023",
+      "elapsedMs": 22434
+    },
+    {
+      "id": "LED-024",
+      "elapsedMs": 16441
+    },
+    {
+      "id": "LED-025",
+      "elapsedMs": 9430
+    },
+    {
+      "id": "LED-027",
+      "elapsedMs": 86133
+    },
+    {
+      "id": "LED-028",
+      "elapsedMs": 9763
+    },
+    {
+      "id": "LED-029",
+      "elapsedMs": 2544
+    },
+    {
+      "id": "LED-031",
+      "elapsedMs": 14666
+    },
+    {
+      "id": "LED-032",
+      "elapsedMs": 19478
+    },
+    {
+      "id": "LED-034",
+      "elapsedMs": 1249
+    },
+    {
+      "id": "LED-035",
+      "elapsedMs": 4928
+    },
+    {
+      "id": "LED-036",
+      "elapsedMs": 53190
+    },
+    {
+      "id": "LED-038",
+      "elapsedMs": 37721
+    },
+    {
+      "id": "LED-039",
+      "elapsedMs": 3258
+    },
+    {
+      "id": "LED-040",
+      "elapsedMs": 93977
+    },
+    {
+      "id": "LED-041",
+      "elapsedMs": 18796
+    },
+    {
+      "id": "LED-042",
+      "elapsedMs": 26555
+    },
+    {
+      "id": "LED-046",
+      "elapsedMs": 54360
+    },
+    {
+      "id": "LED-047",
+      "elapsedMs": 13489
+    },
+    {
+      "id": "LED-048",
+      "elapsedMs": 223135
+    },
+    {
+      "id": "LED-049",
+      "elapsedMs": 175689
+    },
+    {
+      "id": "LED-050",
+      "elapsedMs": 138778
+    },
+    {
+      "id": "LED-051",
+      "elapsedMs": 9539
+    },
+    {
+      "id": "LED-056",
+      "elapsedMs": 31130
+    },
+    {
+      "id": "LED-055",
+      "elapsedMs": 32819
+    },
+    {
+      "id": "LED-059",
+      "elapsedMs": 11141
+    },
+    {
+      "id": "LED-058",
+      "elapsedMs": 76938
+    },
+    {
+      "id": "LED-009",
+      "elapsedMs": 5334
+    },
+    {
+      "id": "LED-057",
+      "elapsedMs": 68083
+    },
+    {
+      "id": "LED-061",
+      "elapsedMs": 130916
+    },
+    {
+      "id": "LED-053",
+      "elapsedMs": 51000
+    },
+    {
+      "id": "LED-060",
+      "elapsedMs": 27648
+    },
+    {
+      "id": "LED-062",
+      "elapsedMs": 843
+    },
+    {
+      "id": "LED-063",
+      "elapsedMs": 3685
+    }
+  ],
+  "fires": [
+    {
+      "id": "LED-054",
+      "elapsedMs": 203998
+    }
+  ],
+  "count": 55,
+  "fullExitCode": 1,
+  "fullLogSha256": "dc387caed1671762688b80bd518c8325df336bac3b2d1547d7f3edbec0480a0d",
+  "statsSha256": "3fce2c10d67ab371987f1a220e0703511f3dbb6da7f4c760250a3b97318d2d7a",
+  "scope": "原full真实失败；LED054修复另见T1416，不改写本收据。"
+}

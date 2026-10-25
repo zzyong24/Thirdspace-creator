@@ -1,0 +1,38 @@
+{
+  "commit": "75b74649e43e001bf6682867c331e14308074a61",
+  "main": "75b74649e43e001bf6682867c331e14308074a61",
+  "configurationSha256": "c8c13b6788b08f48aa4f154bcbdd0d1f74cf72a0e3e4863788e9b4aaa9cb8ffc",
+  "protectedHashes": {
+    "pnpm-lock.yaml": "c8cda15d07ebe8355d85916cb2e93f7d81ce5a38057ad2af2c3161338b3f888e",
+    "frontend/src-tauri/Cargo.lock": "c13d3e59a27b4ebff91696c1dbdd37b165dc77bd8ac7f1dd0dd8be9bdc41910d",
+    "frontend/src-tauri/vendor/nomifun/Cargo.lock": "171c17f0dba9e8fbd41ca918bc8d95c3d2b9c216a8795dc9d62782d82b2075d0",
+    "orchestrator/process/reconcile.config.json": "c8c13b6788b08f48aa4f154bcbdd0d1f74cf72a0e3e4863788e9b4aaa9cb8ffc",
+    "docs/verification/t1073/worker/ipc-memory-serial-observation.json": "dfc479002442577b7076eb81f33b2480ea1bac89ae6780382a8c499ba6b1d305",
+    "docs/verification/t1073/worker/ipc-memory-parallel-observation.json": "a08b03fdb7c9c412a322da547e21dcfa6df07a4a2c88fa8949c433462197e1ef"
+  },
+  "environmentKeys": [
+    "CARGO_HOME",
+    "CARGO_NET_OFFLINE",
+    "CARGO_TARGET_DIR",
+    "CREATOROS_TEST_CFT_ROOT",
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "NPM_CONFIG_GLOBALCONFIG",
+    "NPM_CONFIG_USERCONFIG",
+    "PATH",
+    "PLAYWRIGHT_BROWSERS_PATH",
+    "RUSTC",
+    "RUSTDOC",
+    "TMPDIR",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_RUNTIME_DIR"
+  ],
+  "cftPrecompiled": true,
+  "tauriConfigForFull": false,
+  "currentCandidateResources": true
+}

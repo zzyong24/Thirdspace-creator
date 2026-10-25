@@ -1,0 +1,20 @@
+# 新安装版 CLI 六组合复验
+
+2026-10-25，实际安装版本构建自 `f9e5e5ece`。本次仅通过公开已安装 creatoros CLI，在已指定“月明水清深”测试；未采纳、修改或发布业务内容。原始回执保留于相邻 cli-retest/；不把源码单测或旧版本结果当本次结果。
+
+| 模型来源 | 引擎 | 真实结果 | 各轮观察墙钟秒 |
+| --- | --- | --- | --- |
+| codex | codex | 3轮通过 | 39.604 / 40.76 / 35.163 |
+| codex | pi | 合同不支持，409明确拒绝 | 无任务 |
+| official | pi | 首轮402，后两轮未执行 | 130.886 |
+| official | codex | 3轮通过 | 45.464 / 29.879 / 39.942 |
+| self | pi | 3轮通过 | 24.36 / 33.296 / 39.072 |
+| self | codex | 3轮通过 | 44.154 / 37.859 / 39.979 |
+
+四组成功组合均有完整assistant回复：首轮记住月光731，第二轮精确月光731｜323，第三轮一次system.read/system_read、精确accountGroups.get读取本对话所属组；无全量猜组、跨组读取或重问用户。第三轮回复的可用性有差异：self+Pi附带内部组ID和成员细节，信息正确但偏冗长，不将功能通过等同所有表达体验最优。Codex引擎各来源行只表示该设置/引擎组合可执行，不证明调用了官方或自配底层供应商；没有公开回执的供应商身份不作推断。
+
+官方Pi新任务 ai-task-c34e9921-536 / execution-task-c34e9921-537：首轮无正常回复，attempt1，blocked/waiting_user，CHANNEL_MODEL_PAYMENT_REQUIRED。原模型调用call_26b266f8-ef98-4b79-9ff3-4cddfdb8f076的createdAt为10:02:36.491Z、updatedAt为10:02:41.222Z；约4.731秒仅是公开回执创建到更新的窗口，未公开startedAt，不能当精确网络或生成耗时。表内130.886秒是含CLI120秒观察等待的总墙钟，不是模型生成耗时。公开rejectionCode仍null，无权威上游业务原因；不能归因为余额不足或认为402修好。
+
+原任务execution-task-5e73167d-402仍attempt2/max3，保留两次历史拒绝，最后一次恢复未使用。本轮routing采用revision比较与回读，最后choices与最初完全一致；成功恢复。脚本exit0仅表示观察脚本完成，不表示六组合全绿。
+
+安装独审另见 independent-install-review.md。当前CUA仅列浏览器、apps为空；已有源码UI标签页417868478的Page.getFrameTree读取超时，未进行新安装版UI操作，不生成frontend-validation PASS。旧源码空工程UI结果仍只是其原提交、原环境证据。用户明确跳过额度页验收，未扩为官方聊天或UI豁免；完整full另由T1412运行。尚未推送。

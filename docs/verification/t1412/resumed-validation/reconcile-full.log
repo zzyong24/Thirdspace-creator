@@ -1,0 +1,259 @@
+→ lesson LED-052: start (execution budget 1800000 ms)
+✓ lesson LED-052: hold (79204 ms)
+→ lesson LED-045: start (execution budget 900000 ms)
+✓ lesson LED-045: hold (65686 ms)
+→ lesson LED-044: start (execution budget 2700000 ms)
+✓ lesson LED-044: hold (11265 ms)
+→ lesson LED-043: start (execution budget 2700000 ms)
+✓ lesson LED-043: hold (7967 ms)
+→ lesson LED-001: start (execution budget 120000 ms)
+✓ lesson LED-001: hold (30 ms)
+→ lesson LED-003: start (execution budget 120000 ms)
+✓ lesson LED-003: hold (806 ms)
+→ lesson LED-005: start (execution budget 900000 ms)
+✓ lesson LED-005: hold (2316 ms)
+→ lesson LED-006: start (execution budget 900000 ms)
+✓ lesson LED-006: hold (11394 ms)
+→ lesson LED-007: start (execution budget 900000 ms)
+✓ lesson LED-007: hold (8715 ms)
+→ lesson LED-008: start (execution budget 900000 ms)
+✓ lesson LED-008: hold (11898 ms)
+→ lesson LED-010: start (execution budget 900000 ms)
+✓ lesson LED-010: hold (2127 ms)
+→ lesson LED-011: start (execution budget 2700000 ms)
+✓ lesson LED-011: hold (8733 ms)
+→ lesson LED-012: start (execution budget 1800000 ms)
+✓ lesson LED-012: hold (4869 ms)
+→ lesson LED-013: start (execution budget 1800000 ms)
+✓ lesson LED-013: hold (11504 ms)
+→ lesson LED-014: start (execution budget 2280000 ms)
+✓ lesson LED-014: hold (116152 ms)
+→ lesson LED-015: start (execution budget 900000 ms)
+✓ lesson LED-015: hold (2447 ms)
+→ lesson LED-016: start (execution budget 1800000 ms)
+✓ lesson LED-016: hold (4575 ms)
+→ lesson LED-017: start (execution budget 1800000 ms)
+✓ lesson LED-017: hold (55563 ms)
+→ lesson LED-018: start (execution budget 8100000 ms)
+✓ lesson LED-018: hold (66606 ms)
+→ lesson LED-020: start (execution budget 1800000 ms)
+✓ lesson LED-020: hold (27985 ms)
+→ lesson LED-022: start (execution budget 900000 ms)
+✓ lesson LED-022: hold (3708 ms)
+→ lesson LED-023: start (execution budget 2700000 ms)
+✓ lesson LED-023: hold (22434 ms)
+→ lesson LED-024: start (execution budget 3600000 ms)
+✓ lesson LED-024: hold (16441 ms)
+→ lesson LED-025: start (execution budget 1800000 ms)
+✓ lesson LED-025: hold (9430 ms)
+→ lesson LED-027: start (execution budget 1800000 ms)
+✓ lesson LED-027: hold (86133 ms)
+→ lesson LED-028: start (execution budget 1800000 ms)
+✓ lesson LED-028: hold (9763 ms)
+→ lesson LED-029: start (execution budget 900000 ms)
+✓ lesson LED-029: hold (2544 ms)
+→ lesson LED-031: start (execution budget 4500000 ms)
+✓ lesson LED-031: hold (14666 ms)
+→ lesson LED-032: start (execution budget 3600000 ms)
+✓ lesson LED-032: hold (19478 ms)
+→ lesson LED-034: start (execution budget 900000 ms)
+✓ lesson LED-034: hold (1249 ms)
+→ lesson LED-035: start (execution budget 1800000 ms)
+✓ lesson LED-035: hold (4928 ms)
+→ lesson LED-036: start (execution budget 2700000 ms)
+✓ lesson LED-036: hold (53190 ms)
+→ lesson LED-038: start (execution budget 900000 ms)
+✓ lesson LED-038: hold (37721 ms)
+→ lesson LED-039: start (execution budget 900000 ms)
+✓ lesson LED-039: hold (3258 ms)
+→ lesson LED-040: start (execution budget 2700000 ms)
+✓ lesson LED-040: hold (93977 ms)
+→ lesson LED-041: start (execution budget 2700000 ms)
+✓ lesson LED-041: hold (18796 ms)
+→ lesson LED-042: start (execution budget 2700000 ms)
+✓ lesson LED-042: hold (26555 ms)
+→ lesson LED-046: start (execution budget 5400000 ms)
+✓ lesson LED-046: hold (54360 ms)
+→ lesson LED-047: start (execution budget 1560000 ms)
+✓ lesson LED-047: hold (13489 ms)
+→ lesson LED-048: start (execution budget 2820000 ms)
+✓ lesson LED-048: hold (223135 ms)
+→ lesson LED-049: start (execution budget 2280000 ms)
+✓ lesson LED-049: hold (175689 ms)
+→ lesson LED-050: start (execution budget 1800000 ms)
+✓ lesson LED-050: hold (138778 ms)
+→ lesson LED-051: start (execution budget 900000 ms)
+✓ lesson LED-051: hold (9539 ms)
+→ lesson LED-056: start (execution budget 900000 ms)
+✓ lesson LED-056: hold (31130 ms)
+→ lesson LED-055: start (execution budget 1800000 ms)
+✓ lesson LED-055: hold (32819 ms)
+→ lesson LED-054: start (execution budget 2700000 ms)
+✗ lesson LED-054: fire (203998 ms)
+⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/server/workbench-browser-host.test.ts[2m > [22mtwo accounts keep separate primary profiles and one cancellation leaves the other running
+[31m[1mAssertionError[22m: expected 'structured page representation for ex…' to contain 'Example Domain'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Example Domain[39m
+[31m+ structured page representation for extraction (untrusted, redacted). Requested schema: {}[39m
+[31m+[39m
+[31m+ [accessibility snapshot][39m
+[31m+ <data origin="https://example.com/">[39m
+[31m+ - generic [active] [ref=f0e1]:[39m
+[31m+   - img [ref=f0e2][39m
+[31m+   - paragraph [ref=f0e7]: [REDACTED_SECRET][39m
+[31m+   - paragraph [ref=f0e8]: This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.[39m
+[31m+   - paragraph [ref=f0e9]: هذا النطاق مُخصص للاستخدام في أمثلة التوثيق دون الحاجة إلى إذن. هذه ليست خدمة، يُرجى تجنب الاعتماد عليها لأغراض الاختبار والمراقبة.[39m
+[31m+   - paragraph [ref=f0e10]: L’usage de ce domaine est réservé à des exemples de documentation, sans autorisation préalable. Il ne s’agit pas d’un service ; son utilisation à des fins de test ou de surveillance est à éviter.[39m
+[31m+   - paragraph [ref=f0e11]: Данный домен предназначен для использования в примерах документации без необходимости получения предварительного разрешения. Это не сервис; не рекомендуется его использование для тестирования и мониторинга.[39m
+[31m+   - paragraph [ref=f0e12]: Este dominio está destinado al uso en ejemplos de documentación sin necesidad de permiso. Esto no es un servicio; evitar utilizarlo para realizar pruebas o monitoreos.[39m
+[31m+   - link "Learn more" [ref=f0e13] [cursor=pointer]:[39m
+[31m+     - /url: [REDACTED_SECRET][39m
+[31m+ </data>[39m
+[31m+[39m
+[31m+ [visible text][39m
+[31m+ <data origin="https://example.com/">[39m
+[31m+ [REDACTED_SECRET][39m
+[31m+[39m
+[31m+ This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.[39m
+[31m+[39m
+[31m+ هذا النطاق مُخصص للاستخدام في أمثلة التوثيق دون الحاجة إلى إذن. هذه ليست خدمة، يُرجى تجنب الاعتماد عليها لأغراض الاختبار والمراقبة.[39m
+[31m+[39m
+[31m+ L’usage de ce domaine est réservé à des exemples de documentation, sans autorisation préalable. Il ne s’agit pas d’un service ; son utilisation à des fins de test ou de surveillance est à éviter.[39m
+[31m+[39m
+[31m+ Данный домен предназначен для использования в примерах документации без необходимости получения предварительного разрешения. Это не сервис; не рекомендуется его использование для тестирования и мониторинга.[39m
+[31m+[39m
+[31m+ Este dominio está destinado al uso en ejemplos de documentación sin necesidad de permiso. Esto no es un servicio; evitar utilizarlo para realizar pruebas o monitoreos.[39m
+[31m+[39m
+[31m+ Learn more[39m
+[31m+ </data>[39m
+[31m+[39m
+[31m+ NOTE: P2 returns a deterministic page representation; perform the field extraction against the `schema` above. (TODO(P3): LLM-driven extraction wired in the nomi-integration layer — the engine holds no LLM.)[39m
+
+[36m [2m❯[22m src/server/workbench-browser-host.test.ts:[2m639:43[22m[39m
+    [90m637|[39m    url[33m:[39m[32m"https://example.com"[39m})[33m;[39m
+    [90m638|[39m   const extracted=await dispatch(second,"browser.extract",{laneId:seco…
+    [90m639|[39m   [34mexpect[39m(extracted[33m.[39mresult[33m.[39moutput[33m.[39mmessage)[33m.[39m[34mtoContain[39m([32m"Example Domain"[39m)[33m;[39m
+    [90m   |[39m                                           [31m^[39m
+    [90m640|[39m   expect(await readFile(firstMarker,"utf8")).toBe("private account sta…
+    [90m641|[39m   await dispatch(second,"browser.close",{laneId:secondLane,browserEpoc…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+→ lesson LED-059: start (execution budget 1800000 ms)
+✓ lesson LED-059: hold (11141 ms)
+→ lesson LED-058: start (execution budget 3120000 ms)
+✓ lesson LED-058: hold (76938 ms)
+→ lesson LED-009: start (execution budget 1920000 ms)
+✓ lesson LED-009: hold (5334 ms)
+→ lesson LED-057: start (execution budget 7200000 ms)
+✓ lesson LED-057: hold (68083 ms)
+→ lesson LED-061: start (execution budget 5400000 ms)
+✓ lesson LED-061: hold (130916 ms)
+→ lesson LED-053: start (execution budget 7200000 ms)
+✓ lesson LED-053: hold (51000 ms)
+→ lesson LED-060: start (execution budget 4500000 ms)
+✓ lesson LED-060: hold (27648 ms)
+→ lesson LED-062: start (execution budget 900000 ms)
+✓ lesson LED-062: hold (843 ms)
+→ lesson LED-063: start (execution budget 900000 ms)
+✓ lesson LED-063: hold (3685 ms)
+
+── orchestrator reconcile ─────────────────────────────
+✗ [ERROR] lesson LED-054 RECURRED — 恢复短事务读取可信身份→事务外 I/O→短事务复核租约；对象存储回读必须在租约事务外完成；外部副作用按原键对账后自动续跑同一任务。 (203998 ms, exit 1)
+! [WARN] backlog-health.mjs: 归档内部保留 5 个历史撞号:T-357,T-356,T-488,T-489,T-627
+! [WARN] backlog-health.mjs: BACKLOG.md 58.5KB 超硬上限 30.0KB — 必须压缩/归档(backlog-compact.mjs 可机械迁走 ✅ 行)。
+! [WARN] backlog-health.mjs: L27 T-1398 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L68 T-1271 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L69 T-1265 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L70 T-1264 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L71 T-1263 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L76 T-1266 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L78 T-1261 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L80 T-1259 状态符号与文字冲突:「✅ 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L81 T-1258 状态符号与文字冲突:「✅ 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: L82 T-1257 状态符号与文字冲突:「✅ 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+! [WARN] backlog-health.mjs: …还有 152 条状态符号与文字冲突(共 162)。
+✓ [OK] delivery phase: maintenance (legacy-compat)
+✓ [OK] required artifact present: ARTIFACT_MANIFEST.yaml
+✓ [OK] required artifact present: DECISION_LOG.md
+✓ [OK] governance-guard: scope authorization + complexity budget clean.
+✓ [OK] autonomy-guard: execution claim + delivery progress clean.
+✓ [OK] parsed 43 stages
+✓ [OK] CHANGE_IMPACT.md present
+✓ [OK] orphan-scan.mjs: bidirectional trace clean (computed, not attested).
+✓ [OK] asset-check.mjs: reuse-asset library integrity clean.
+✓ [OK] boundary-scan.mjs: no NEW physical-architecture violation (or guard not configured).
+✓ [OK] reviewctl: review receipts + current snapshots + event chain reconcile.
+✓ [OK] frontend-validation: journey receipts reconcile (or no UI receipts yet).
+✓ [OK] research-gate: implementation paused for T-1135, T-1155, T-1181; bounded research may continue.
+✓ [OK] knowledge-drift.mjs: clean (or knowledge layer not enabled).
+✓ [OK] knowledge-coverage.mjs: clean (or knowledge layer not enabled).
+✓ [OK] docs-health.mjs: clean (or knowledge layer not enabled).
+✓ [OK] consistency_gate blocks 5-ship (status draft) — OK
+✓ [OK] consistency_gate blocks 17-integration-release (status draft) — OK
+✓ [OK] probe 2-contract ↔ contract/package.json: consistent (status passed, present true)
+✓ [OK] probe 4-build ↔ backend/src: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ ai-worker: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ frontend/src/app/api/v1/dispatch: consistent (status draft, present true)
+✓ [OK] updated_at (2026-10-25) is >= newest decision (2026-10-25).
+✓ [OK] lesson LED-052: guard holds (79204 ms; 归档组的执行豁免被账号ID存在条件扩大到普通生成和同步任务)
+✓ [OK] lesson LED-045: guard holds (65686 ms; 官方受管生图提交瞬时断连再次被立即取消，或未知中转站/视频被盲目重放)
+✓ [OK] lesson LED-044: guard holds (11265 ms; 竖屏有真实口播源时再次被卡片、素材或历史 hidden 连续覆盖，导致整片无人)
+✓ [OK] lesson LED-043: guard holds (7967 ms; 新增审美、布局或质量门把上一版可完成的合法关键链路改成整单失败)
+✓ [OK] lesson LED-001: guard holds (30 ms; .env.local(含真实密钥)被提交进 git)
+✓ [OK] lesson LED-003: guard holds (806 ms; 物理架构边界回归(后端嵌前端 / AI SDK 泄漏 / 跨模块 repo))
+✓ [OK] lesson LED-005: guard holds (2316 ms; 长输入 AI 节点退回单次调用或丢失分块失败/覆盖真相)
+✓ [OK] lesson LED-006: guard holds (11394 ms; 桌面流水线退回只验安装文件、不真启动 GUI 与 WebView 主页面)
+✓ [OK] lesson LED-007: guard holds (8715 ms; 文本模型连通探针退回只读正文流，思考流与流内错误被误报为空响应)
+✓ [OK] lesson LED-008: guard holds (11898 ms; 授权放行被误当成渠道作用域完整，缺 identity 时静默回退或继续出网)
+✓ [OK] lesson LED-010: guard holds (2127 ms; CreatorOS 本机验收包退回手工拼接环境变量)
+✓ [OK] lesson LED-011: guard holds (8733 ms; AI 已选素材但成片仍把录屏/截图缩成不可读小卡，竖屏人物被正方形 contain 再次缩小)
+✓ [OK] lesson LED-012: guard holds (4869 ms; 主画面素材使用居中大卡压住人物，只露半张脸，且没有成片级视觉审核发现问题)
+✓ [OK] lesson LED-013: guard holds (11504 ms; 人工选材仍沿用旧时间线，竖图被拉伸，编辑器场景标签被烧进成片)
+✓ [OK] lesson LED-014: guard holds (116152 ms; 局部改稿退回让模型或用户补内部锚点、AI 整稿无 ID 导致服务端看不到段落，或锚点失效后继续阻断普通对话)
+✓ [OK] lesson LED-015: guard holds (2447 ms; 本地验收包再次暴露架构/任务/时间戳后缀，或把安装备份留给用户辨认)
+✓ [OK] lesson LED-016: guard holds (4575 ms; 信息卡存在但仍缩成角落小标签，长场景留下大段连续视觉空档)
+✓ [OK] lesson LED-017: guard holds (55563 ms; 用户明确要求原文不改时，系统仍把完整原稿压成摘要后交给写稿模型重写)
+✓ [OK] lesson LED-018: guard holds (66606 ms; 桌面浏览器消费入口再次被 Playwright CLI 或默认缓存前置阻断，或安装 runtime 只有空 browsers 目录)
+✓ [OK] lesson LED-020: guard holds (27985 ms; 参考历史作品生成封面再次误用 local.tools 探测模型、入口绑错通用生图或只读清单后不继续生成)
+✓ [OK] lesson LED-022: guard holds (3708 ms; 跨平台桌面能力再次在调用点内联单平台命令，或素材中心文案写死 Finder/访达)
+✓ [OK] lesson LED-023: guard holds (22434 ms; 结构化 AI 任务再次被统一超时误杀、纯文本 AI 节点再次无界挂起，协议不兼容被当成致命错误，或搜索页等 networkidle/重复撞登录墙)
+✓ [OK] lesson LED-024: guard holds (16441 ms; 信息卡再次只产单字符串与通用进场，不同内容关系退化为同一张圆角卡和文字冒出)
+✓ [OK] lesson LED-025: guard holds (9430 ms; 高信息架构图/流程图再次被缩成 overlay 并藏在大卡后，或信息卡不绑定真实 SRT 行而跨段滞留)
+✓ [OK] lesson LED-027: guard holds (86133 ms; 局部改稿采纳或撤销退回先检查版本、后无条件移动当前指针，或响应上一版由 transport 提前读取)
+✓ [OK] lesson LED-028: guard holds (9763 ms; MiniMax H3 对完整提交接口或版本根再次追加 v2 路径，或在 404 后盲试多个可能计费的 POST)
+✓ [OK] lesson LED-029: guard holds (2544 ms; 基础兜底卡再次冒充内容动效成功，或横屏主素材前后与 large_stage 尾部重新露出纯黑舞台)
+✓ [OK] lesson LED-031: guard holds (14666 ms; Windows 分层 runtime 的打包 RAT 加载了解析器，但生产 HyperFrames 子进程再次遗漏同一 module hook)
+✓ [OK] lesson LED-032: guard holds (19478 ms; 竖屏统一舞台再次把人物整场缩角落，或素材物化改名后悄悄丢失 AI 方向与字幕重点词)
+✓ [OK] lesson LED-034: guard holds (1249 ms; 图片编辑 multipart 再次发送字符串 n，导致严格上游按整数 schema 返回 400)
+✓ [OK] lesson LED-035: guard holds (4928 ms; video.cards 再次因单张 kind、sceneIdx/at 或可选 visualPlan 的静态/根级动态协议错误拖垮整批分镜)
+✓ [OK] lesson LED-036: guard holds (53190 ms; 本稿专属 AI 素材再次被标成人工素材，或 material.match 空数组冒充自动分镜成功并生成逐条手选控件)
+✓ [OK] lesson LED-038: guard holds (37721 ms; 逐字稿或选题改写持久队列再次只改回 queued、只领取固定小批，或没有对应消费者接走历史任务)
+✓ [OK] lesson LED-039: guard holds (3258 ms; 总导演自动补位再次按计划游标前进，插点被吸附或去重后仍留下真实时间洞并取消整套分镜)
+✓ [OK] lesson LED-040: guard holds (93977 ms; 用户剔除 B-roll 再次只改页面候选，旧 editing plan、失败回退或旧渲染任务继续复活素材)
+✓ [OK] lesson LED-041: guard holds (18796 ms; Windows 分层包再次只验证主线程可加载 Xenova，而真实 Whisper worker 没有消费 resolver/runtime root)
+✓ [OK] lesson LED-042: guard holds (26555 ms; 内容雷达再次把首屏 pageSize/items.length 当成全部内容总量，100 条后的真实作品不可见)
+✓ [OK] lesson LED-046: guard holds (54360 ms; Windows精简包漏Worker、只保留一种依赖入口或仍使用旧运行目录，网页能启动但后台不可用)
+✓ [OK] lesson LED-047: guard holds (13489 ms; 同页助手入口触发服务端导航、折叠详情提前序列化或慢请求轮询叠加，导致打开卡顿与状态无法更新)
+✓ [OK] lesson LED-048: guard holds (223135 ms; 合并采集互相阻断、长任务被误清理、跨计划误绑定及浏览器占用反复失败)
+✓ [OK] lesson LED-049: guard holds (175689 ms; 展示缓存漏接、全历史快照与计数读取放大、闲置列表持续轮询)
+✓ [OK] lesson LED-050: guard holds (138778 ms; 首页连点重复导航与先展开全部作品再截断导致排队卡顿)
+✓ [OK] lesson LED-051: guard holds (9539 ms; Windows 类型检查子进程默认堆不足造成重复构建失败)
+✓ [OK] lesson LED-056: guard holds (31130 ms; 宿主支持新工具版本，但真实内置目录筛选或新任务冻结丢掉该能力)
+✓ [OK] lesson LED-055: guard holds (32819 ms; 历史stop续行读取当前计划，导致模型请求重放指纹变化或原任务再次阻断)
+✓ [OK] lesson LED-059: guard holds (11141 ms; 内置工具约束再次阻断整轮聊天装配，或前端在没有任务回执和进展时无限自动恢复)
+✓ [OK] lesson LED-058: guard holds (76938 ms; 模型断流、超时或候选不完整再次变成用户手动重试终态，或外部副作用被盲目重放)
+✓ [OK] lesson LED-009: guard holds (5334 ms; 用写死词表、关键词分数或字符串相似度替代 Skill 做创作语义判断)
+✓ [OK] lesson LED-057: guard holds (68083 ms; Windows 干净安装验证遗漏保留 AppData 时运行环境目录切换拒绝访问)
+✓ [OK] lesson LED-061: guard holds (130916 ms; 线程/回执/响应流/闲置会话泄漏，慢轮询与后台调度叠加，等待或显式停止会话归属错误)
+✓ [OK] lesson LED-053: guard holds (51000 ms; 固定30秒宿主端口先于合法转录准备中止，观察到期误报失败，SDK隐式等待与首次预算未归一)
+✓ [OK] lesson LED-060: guard holds (27648 ms; 完整JSON被流式误判未知或转录共享schema缺validator阻断真实保存链)
+✓ [OK] lesson LED-062: guard holds (843 ms; 主动关闭浏览器时close事件早于完整close等待而提前释放登录档案)
+✓ [OK] lesson LED-063: guard holds (3685 ms; Windows配置持久化无条件同步只读目录导致已保存配置仍报失败并遮盖安全结果)
+───────────────────────────────────────────────────────
+1 error(s), 13 warning(s).
+✗ DRIFT: manifest does not reconcile with reality.

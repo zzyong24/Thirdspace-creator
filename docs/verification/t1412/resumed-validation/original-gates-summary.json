@@ -1,0 +1,40 @@
+{
+  "receipts": {
+    "original-eight": {
+      "code": 0,
+      "elapsedMs": 51405,
+      "closed": true,
+      "remaining": []
+    },
+    "original-archive": {
+      "code": 0,
+      "elapsedMs": 81592,
+      "closed": true,
+      "remaining": []
+    },
+    "reconcile-full": {
+      "code": 1,
+      "elapsedMs": 2187525,
+      "closed": true,
+      "remaining": []
+    }
+  },
+  "protectedBefore": {
+    "pnpm-lock.yaml": "c8cda15d07ebe8355d85916cb2e93f7d81ce5a38057ad2af2c3161338b3f888e",
+    "frontend/src-tauri/Cargo.lock": "c13d3e59a27b4ebff91696c1dbdd37b165dc77bd8ac7f1dd0dd8be9bdc41910d",
+    "frontend/src-tauri/vendor/nomifun/Cargo.lock": "171c17f0dba9e8fbd41ca918bc8d95c3d2b9c216a8795dc9d62782d82b2075d0",
+    "orchestrator/process/reconcile.config.json": "c8c13b6788b08f48aa4f154bcbdd0d1f74cf72a0e3e4863788e9b4aaa9cb8ffc",
+    "docs/verification/t1073/worker/ipc-memory-serial-observation.json": "dfc479002442577b7076eb81f33b2480ea1bac89ae6780382a8c499ba6b1d305",
+    "docs/verification/t1073/worker/ipc-memory-parallel-observation.json": "a08b03fdb7c9c412a322da547e21dcfa6df07a4a2c88fa8949c433462197e1ef"
+  },
+  "protectedAfter": {
+    "pnpm-lock.yaml": "c8cda15d07ebe8355d85916cb2e93f7d81ce5a38057ad2af2c3161338b3f888e",
+    "frontend/src-tauri/Cargo.lock": "c13d3e59a27b4ebff91696c1dbdd37b165dc77bd8ac7f1dd0dd8be9bdc41910d",
+    "frontend/src-tauri/vendor/nomifun/Cargo.lock": "171c17f0dba9e8fbd41ca918bc8d95c3d2b9c216a8795dc9d62782d82b2075d0",
+    "orchestrator/process/reconcile.config.json": "c8c13b6788b08f48aa4f154bcbdd0d1f74cf72a0e3e4863788e9b4aaa9cb8ffc",
+    "docs/verification/t1073/worker/ipc-memory-serial-observation.json": "dfc479002442577b7076eb81f33b2480ea1bac89ae6780382a8c499ba6b1d305",
+    "docs/verification/t1073/worker/ipc-memory-parallel-observation.json": "a08b03fdb7c9c412a322da547e21dcfa6df07a4a2c88fa8949c433462197e1ef"
+  },
+  "protectedUnchanged": true,
+  "endedAt": "2026-10-25T10:40:43.897Z"
+}

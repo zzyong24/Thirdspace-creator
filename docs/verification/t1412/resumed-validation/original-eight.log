@@ -1,0 +1,207 @@
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node tools/timeout-policy/check.mjs
+{
+  "ok": true,
+  "minimumExecutionMs": 120000,
+  "scannedFiles": 2913,
+  "failures": [],
+  "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+}
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/timeout-policy/check.test.mjs tools/timeout-policy/hyperframes.test.mjs
+✔ detects short request, browser default and abort timer consumers (5.570625ms)
+✔ does not turn polling, sleeps, TTL or shared remaining deadline into execution budgets (1.3245ms)
+✔ accepts normalized defaults and longer outer budget instead of bare numeric replacement (0.937208ms)
+✔ T1250 精确调度和词法绑定，不给未知正执行泛豁免 (1.221542ms)
+✔ T1250 shadow的同名调度函数及未知destroy仍执行门拒绝 (0.862209ms)
+✔ T1250 六个关闭动画只接受原冻结文件及原AST节点，修改字节不得豁免 (3067.254958ms)
+✔ T1250 named表达式/方法/for词法声明不能掩盖外层真实小预算 (0.630333ms)
+✔ T1252 headers/body/connect短门不被父case或未知dispatcher掩盖 (0.195791ms)
+✔ 锁定实际安装的同版本补丁，依赖升级必须重新核对内部等待 (1402.188417ms)
+✔ 实际安装的归一入口保留零值、拒绝非法值并明确覆盖页面默认 (3.894417ms)
+✔ 真实公共CLI拒绝一秒浏览器超时，错误单位为秒 (3301.296583ms)
+ℹ {"schema":"hyperframes-real-cli-proof/v1","isolation":{"schema":"hyperframes-cli-isolation/v1","root":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN","cwd":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/work","home":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/home","node":"/opt/homebrew/Cellar/node/25.9.0_2/bin/node","cli":"/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/hyperframes@0.7.54_patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472_70958a7107250b568c92e6d443cdd8c9/node_modules/hyperframes/dist/cli.js","cliSha256":"1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b","profile":"(version 1)\n(deny default)\n(deny network*)\n(allow process-exec (literal \"/opt/homebrew/Cellar/node/25.9.0_2/bin/node\"))\n(deny process-fork)\n(allow sysctl-read)\n(allow file-read-metadata)\n(allow file-read* (subpath \"/System/Library\") (subpath \"/usr/lib\") (subpath \"/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm\") (subpath \"/opt/homebrew/Cellar/node/25.9.0_2/bin\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/bin/node\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libssl.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib\") (literal \"/opt/homebrew/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib\") (literal \"/opt/homebrew/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib\") (literal \"/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib\") (literal \"/opt/homebrew/Cellar/sqlite/3.53.2/lib/libsqlite3.3.53.2.dylib\") (literal \"/opt/homebrew/Cellar/libngtcp2/1.23.0/lib/libngtcp2.16.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp3/1.16.0/lib/libnghttp3.9.7.0.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib\") (literal \"/opt/homebrew/Cellar/nbytes/0.1.4/lib/libnbytes.dylib\") (literal \"/opt/homebrew/Cellar/merve/1.2.2_1/lib/libmerve.1.2.2.dylib\") (literal \"/opt/homebrew/Cellar/simdutf/9.0.0/lib/libsimdutf.34.0.0.dylib\") (literal \"/opt/homebrew/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib\") (literal \"/opt/homebrew/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/simdjson/4.6.4/lib/libsimdjson.33.0.0.dylib\") (literal \"/opt/homebrew/Cellar/ada-url/3.4.4/lib/libada.3.4.4.dylib\") (literal \"/opt/homebrew/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib\"))\n(allow file-map-executable (subpath \"/System/Library\") (subpath \"/usr/lib\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/bin/node\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libssl.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib\") (literal \"/opt/homebrew/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib\") (literal \"/opt/homebrew/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib\") (literal \"/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib\") (literal \"/opt/homebrew/Cellar/sqlite/3.53.2/lib/libsqlite3.3.53.2.dylib\") (literal \"/opt/homebrew/Cellar/libngtcp2/1.23.0/lib/libngtcp2.16.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp3/1.16.0/lib/libnghttp3.9.7.0.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib\") (literal \"/opt/homebrew/Cellar/nbytes/0.1.4/lib/libnbytes.dylib\") (literal \"/opt/homebrew/Cellar/merve/1.2.2_1/lib/libmerve.1.2.2.dylib\") (literal \"/opt/homebrew/Cellar/simdutf/9.0.0/lib/libsimdutf.34.0.0.dylib\") (literal \"/opt/homebrew/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib\") (literal \"/opt/homebrew/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/simdjson/4.6.4/lib/libsimdjson.33.0.0.dylib\") (literal \"/opt/homebrew/Cellar/ada-url/3.4.4/lib/libada.3.4.4.dylib\") (literal \"/opt/homebrew/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib\"))\n(allow file-read* file-map-executable (subpath \"/System/Cryptexes/OS\") (subpath \"/System/Volumes/Preboot/Cryptexes/OS\"))\n(allow file-read* (literal \"/\") (literal \"/System\") (literal \"/System/Cryptexes\") (literal \"/System/Volumes\") (literal \"/System/Volumes/Preboot\") (literal \"/System/Volumes/Preboot/Cryptexes\"))\n(allow file-read* (literal \"/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/package.json\") (literal \"/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/frontend/package.json\") (literal \"/private/etc/localtime\") (literal \"/dev/random\") (literal \"/dev/urandom\") (literal \"/dev/null\"))\n(allow file-read* file-write* (subpath \"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN\"))\n(allow file-write* (literal \"/dev/null\"))\n","environment":{"PATH":"/usr/bin:/bin","LANG":"C","LC_ALL":"C","HOME":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/home","TMPDIR":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/tmp","XDG_CONFIG_HOME":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/config","XDG_CACHE_HOME":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/cache","XDG_DATA_HOME":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/data","OPENSSL_CONF":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/config/openssl.cnf","OPENSSL_CONF_INCLUDE":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/config","HYPERFRAMES_NO_TELEMETRY":"1","HYPERFRAMES_NO_AUTO_INSTALL":"1","HYPERFRAMES_NO_UPDATE_CHECK":"1"},"libraries":["/opt/homebrew/Cellar/node/25.9.0_2/bin/node","/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib","/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib","/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib","/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libssl.3.dylib","/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib","/opt/homebrew/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib","/opt/homebrew/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib","/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib","/opt/homebrew/Cellar/sqlite/3.53.2/lib/libsqlite3.3.53.2.dylib","/opt/homebrew/Cellar/libngtcp2/1.23.0/lib/libngtcp2.16.dylib","/opt/homebrew/Cellar/libnghttp3/1.16.0/lib/libnghttp3.9.7.0.dylib","/opt/homebrew/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib","/opt/homebrew/Cellar/nbytes/0.1.4/lib/libnbytes.dylib","/opt/homebrew/Cellar/merve/1.2.2_1/lib/libmerve.1.2.2.dylib","/opt/homebrew/Cellar/simdutf/9.0.0/lib/libsimdutf.34.0.0.dylib","/opt/homebrew/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib","/opt/homebrew/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib","/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib","/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib","/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib","/opt/homebrew/Cellar/simdjson/4.6.4/lib/libsimdjson.33.0.0.dylib","/opt/homebrew/Cellar/ada-url/3.4.4/lib/libada.3.4.4.dylib","/opt/homebrew/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib","/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib"],"verified":true,"probe":{"readDenied":true,"writeDenied":true,"networkDenied":true,"forkDenied":true,"detachedSetsidDenied":true,"home":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/home","cwd":"/private/tmp/cos1412-dudvlycw/creatoros-hyperframes-isolated-PdPoZN/work","parentSecretsAbsent":true,"connections":0,"durationMs":133}},"child":{"status":1,"signal":null,"stdout":"","stderr":"\n✗  Invalid browser-timeout\n\n   Got \"1\" seconds, which is below the 120-second execution floor. Puppeteer treats 0 as 'no timeout' — pass a value of at least 120 seconds.\n\n","durationMs":2324,"pid":87349,"remainingOwnedProcesses":0}}
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5020.323209
+验证：pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/contract[39m
+
+ [32m✓[39m tests/timeout-policy.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 18:02:26
+[2m   Duration [22m 551ms[2m (transform 215ms, setup 0ms, import 380ms, tests 5ms, environment 0ms)[22m
+
+验证：pnpm --dir ai-worker exec vitest run src/execution/worker-timeout-policy.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/ai-worker[39m
+
+[90mstderr[2m | src/runtime/browser/chromium-guard-lifecycle.test.ts[2m > [22m[2m锁失败的一次恢复仍持有队列，不能与后继启动并发
+[22m[39m[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次
+
+[90mstderr[2m | src/runtime/browser/chromium-guard-lifecycle.test.ts[2m > [22m[2m普通启动失败与锁重试仅在最终停止时通知宿主一次
+[22m[39m[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次
+
+ [32m✓[39m src/runtime/browser/chromium-guard-lifecycle.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/execution/worker-timeout-policy.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m20 passed[39m[22m[90m (20)[39m
+[2m   Start at [22m 18:02:28
+[2m   Duration [22m 1.76s[2m (transform 821ms, setup 0ms, import 1.66s, tests 30ms, environment 0ms)[22m
+
+验证：pnpm --dir backend exec vitest run src/modules/execution/new-execution-budget.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/execution-call-ledger.service.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend[39m
+
+ [32m✓[39m src/modules/execution/new-execution-budget.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 8835[2mms[22m[39m
+   [33m[2m✓[22m[39m 新任务通过正式持久入队口冻结至少两分钟期限 [33m 5643[2mms[22m[39m
+   [33m[2m✓[22m[39m 读取与认领历史原期限不会获得新的两分钟 [33m 3190[2mms[22m[39m
+ [32m✓[39m src/modules/execution/execution-call-ledger.service.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 9723[2mms[22m[39m
+     [33m[2m✓[22m[39m 存量账本升级保留原调用，重复执行迁移安全 [33m 3202[2mms[22m[39m
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mfails honestly on an unregistered executor / invalid spec / missing asset
+[22m[39m[run-execution-task] task t-a 失败: Error: 未注册的 executor: echo.manifest
+    at runExecutionTask (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:164:13)
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.test.ts:130:11
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mfails honestly on an unregistered executor / invalid spec / missing asset
+[22m[39m[run-execution-task] task t-b 失败: Error: 任务契约不合法: Invalid option: expected one of "echo.manifest"|"video.render"|"media.probe"|"agentic.research"|"agentic.collect"|"agentic.material"
+    at runExecutionTask (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:157:13)
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.test.ts:135:11
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mfails honestly on an unregistered executor / invalid spec / missing asset
+[22m[39m[run-execution-task] task t-c 失败: Error: 输入资产读取失败(assetId=missing)
+    at materializeInputs (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:137:13)
+    at runExecutionTask (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.test.ts:143:5
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mtimes out a hung executor via Promise.race + abort signal
+[22m[39m[run-execution-task] task t-timeout 失败: ExecutionTimeoutError: 执行超时(>120s),已中止
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:95:25
+    at callTimer (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/test.DNmyFkvJ.js:1773:25)
+    at doTickInner (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/test.DNmyFkvJ.js:2444:30)
+    at doTick (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/test.DNmyFkvJ.js:2525:21)
+    at Immediate.<anonymous> (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/test.DNmyFkvJ.js:2546:34)
+    at processImmediate (node:internal/timers:504:21)
+
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mnetwork constraint gate (RT-H06)[2m > [22m[2mrejects network: allowlist honestly (no enforcement mechanism exists)
+[22m[39m[run-execution-task] task t-allowlist 失败: Error: network: allowlist 尚无真实强制手段(平台无 OS 级网络沙箱/域名代理),诚实拒绝执行 —— 请改用 network: deny
+    at runExecutionTask (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:188:13)
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.test.ts:264:13
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mnetwork constraint gate (RT-H06)[2m > [22m[2mrejects network: deny for an executor that declares direct network access
+[22m[39m[run-execution-task] task t-direct 失败: Error: 任务声明 network: deny,但 executor echo.manifest 需要直接联网 —— 矛盾,诚实拒绝执行
+    at runExecutionTask (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:193:13)
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.test.ts:289:13
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mabortExecutionTask (discard) interrupts a no-deadline video render
+[22m[39m[run-execution-task] task t-abort 失败: Error: 用户丢弃任务,执行已中止
+    at abortExecutionTask (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:68:181)
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.test.ts:348:12
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+[90mstderr[2m | src/modules/execution/run-execution-task.test.ts[2m > [22m[2mrunExecutionTask (echo.manifest end-to-end)[2m > [22m[2mT1238 原视频冻结期限贯通 executor，已耗尽期限不能重新启动
+[22m[39m[run-execution-task] task t-expired-video 失败: ExecutionTimeoutError: 执行超时(>600s),已中止
+    at runExecutionTask (/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:202:19)
+    at /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/backend/src/modules/execution/run-execution-task.test.ts:359:5
+    at file:///Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ [32m✓[39m src/modules/execution/run-execution-task.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m37 passed[39m[22m[90m (37)[39m
+[2m   Start at [22m 18:02:30
+[2m   Duration [22m 14.32s[2m (transform 5.53s, setup 0ms, import 9.38s, tests 18.62s, environment 0ms)[22m
+
+验证：pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-dump-zone.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/draft-workbench/content-direction-actions.test.tsx src/features/draft-workbench/script-review-gate.test.tsx src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/frontend[39m
+
+(node:87557) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87553) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87551) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87555) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87554) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87556) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m src/server/ai/search/browser-search-fallback.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/features/copilot/chat-thesis-card.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[32m 139[2mms[22m[39m
+[90mstderr[2m | src/features/knowledge/knowledge-dump-zone.test.tsx[2m > [22m[2mKnowledgeDumpZone — 手动补录降级路径[2m > [22m[2m手动补录失败 → 内联错误,输入保留 [gate-F2]
+[22m[39m[describeUserError] 后端连接失败 | Error
+
+ [32m✓[39m src/features/knowledge/knowledge-dump-zone.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[32m 269[2mms[22m[39m
+ [32m✓[39m src/features/draft-workbench/content-direction-actions.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[32m 178[2mms[22m[39m
+ [32m✓[39m src/features/draft-workbench/script-review-gate.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[32m 165[2mms[22m[39m
+ [32m✓[39m src/server/ai/search/search-browser.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m68 passed[39m[22m[90m (68)[39m
+[2m   Start at [22m 18:02:45
+[2m   Duration [22m 4.82s[2m (transform 4.00s, setup 3.52s, import 6.64s, tests 781ms, environment 10.63s)[22m
+
+验证：pnpm --dir mcp-server test tests/cli.test.ts --testTimeout=120000 --hookTimeout=120000
+
+> @creatoros/mcp-server@0.1.0 test /Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/mcp-server
+> vitest run tests/cli.test.ts --testTimeout=120000 --hookTimeout=120000
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator/mcp-server[39m
+
+ [32m✓[39m tests/cli.test.ts [2m([22m[2m28 tests[22m[2m)[22m[33m 493[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m28 passed[39m[22m[90m (28)[39m
+[2m   Start at [22m 18:02:51
+[2m   Duration [22m 1.50s[2m (transform 484ms, setup 0ms, import 882ms, tests 493ms, environment 0ms)[22m
+
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/windows-closure-rat/render-probe-policy.test.mjs frontend/scripts/desktop/timeout-policy.node.mjs
+✔ 短预算归一，更长不缩短，非法值明确拒绝 (0.844042ms)
+✔ 绝对deadline向内传播，最后剩余不能被floor重新延长 (0.17975ms)
+✔ 页面配置端口收到动作与导航两分钟策略 (0.784ms)
+✔ 两个build-only消费者统一跳过外部依赖探针，正常验证传入两分钟 (0.950291ms)
+✔ 完整渲染探针无外层短帽子，已更长内层保留且拒绝非法配置 (181.457209ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 288.588208

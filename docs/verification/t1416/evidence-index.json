@@ -1,0 +1,50 @@
+{
+  "candidate": "4128c68c82a71e485110a026c1fbd288c549f363",
+  "files": [
+    {
+      "path": "candidate.json",
+      "bytes": 1896,
+      "sha256": "7becc891451428919a3f3cb1b5ccc12002ec2c00d23a4c9f1422608b53173aab"
+    },
+    {
+      "path": "candidate-after.json",
+      "bytes": 169,
+      "sha256": "d1124c9ec0dfae3a715b23d5e5faa7f87ec31ff120d4aab04cef815319d308df"
+    },
+    {
+      "path": "led054-green.receipt.json",
+      "bytes": 1378,
+      "sha256": "8efd3fbbbc21b9923a6b445b550d264d10f62757fb09186d9d8056bd17ba3b32"
+    },
+    {
+      "path": "led054-green.log",
+      "bytes": 14276,
+      "sha256": "6d27ba3981246d1f3cfd1db4253d744aec63fa0b7557fad660cf856800cd9680"
+    },
+    {
+      "path": "frontend-typecheck.receipt.json",
+      "bytes": 1003,
+      "sha256": "4be7d78ec3d4f201970c1bde0612e66cf69ccd6cdc32112b3c10501698e6e308"
+    },
+    {
+      "path": "frontend-typecheck.log",
+      "bytes": 216,
+      "sha256": "d826348d168cab8d14df784a67a699e28372dec0ba81f2e06c79920afed8bdff"
+    },
+    {
+      "path": "owned-pg-stop.json",
+      "bytes": 86,
+      "sha256": "929cd556d2fb14e0f03f86730c63e38c369109ca4f31d92fc616a09577761fc4"
+    },
+    {
+      "path": "implementation-review.md",
+      "bytes": 6089,
+      "sha256": "f1a23f8045d8a8600dc7b78a8ad69a0eb0018e950409822f00462c980cb9cf27"
+    },
+    {
+      "path": "RESULT.md",
+      "bytes": 1999,
+      "sha256": "06b4af1660d31273cbfbef94dfe256f2de9cb6651a0b75734bfc258b8e5aeee5"
+    }
+  ]
+}

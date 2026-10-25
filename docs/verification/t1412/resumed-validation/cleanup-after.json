@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-25T11:00:09.459075+00:00",
+  "removed": [
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/cache",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/cargo-offline-assets",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/config",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/data",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/home",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/package-assets",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/runtime",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/git-global.conf",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/npm-global.conf",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/npm-user.conf",
+    "/private/tmp/cos1412-dudvlycw"
+  ],
+  "retained": [
+    "/Applications/CreatorOS.app",
+    "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/rollback"
+  ],
+  "workspaceRemoved": true,
+  "temporaryRootRemoved": true,
+  "remainingPrivateRootKiB": 1664108,
+  "freeBytesInternal": 39572832256,
+  "freeBytesExternal": 889321095168,
+  "otherWorktrees": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator",
+      "head": "f7147fd71d5af9849f704814cb8bf7885343442a",
+      "headUnchanged": true,
+      "statusUnchanged": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/trial-device-model-benefits/Thirdspace-creator",
+      "head": "9c585dd4db5f263d228bb71bb832700dfd81f64e",
+      "headUnchanged": true,
+      "statusUnchanged": true
+    }
+  ],
+  "removedAllocatedKiB": 22429736
+}

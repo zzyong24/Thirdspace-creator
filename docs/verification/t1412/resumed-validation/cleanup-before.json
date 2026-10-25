@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-25T10:55:40.767204+00:00",
+  "tree": "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator",
+  "root": "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd",
+  "temporaryRoot": "/private/tmp/cos1412-dudvlycw",
+  "gitStatus": "M orchestrator/.lessons-stats.json",
+  "savedStatsSha256": "3fce2c10d67ab371987f1a220e0703511f3dbb6da7f4c760250a3b97318d2d7a",
+  "trackedHead": "4128c68c82a71e485110a026c1fbd288c549f363",
+  "workspaceKiB": 20620036,
+  "privateRootKiB": 24084604,
+  "tempKiB": 9240,
+  "freeBytesInternal": 39565783040,
+  "freeBytesExternal": 868378169344,
+  "matchingExecutables": [],
+  "retain": [
+    "/Applications/CreatorOS.app",
+    "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/rollback"
+  ],
+  "otherWorktrees": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator",
+      "head": "f7147fd71d5af9849f704814cb8bf7885343442a",
+      "statusSha256": "75cabf6dc97aa8aab7b3ecc904cb07b3c37dbac0f0d6a757bf225a8d0265467f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/trial-device-model-benefits/Thirdspace-creator",
+      "head": "9c585dd4db5f263d228bb71bb832700dfd81f64e",
+      "statusSha256": "32b1639c4906886525e2184ca8e7a3949d38ece7f446c874dd11ff6eb3bdb618"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "startedAt": "2026-10-25T09:51:59.131790+00:00",
+  "candidateCommit": "f9e5e5ece06d7d86dbb5bd38db76d18cc2437d84",
+  "dmg": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "dmgSha256": "79d023a39152ac8e31b862bdcbce70e30c9d13589bedea63060c47699af21193",
+  "oldDmgSha256": "bd2c31d89f7b82625486132192cd8e10c29849a83e643b8d7215cc9b7879500a",
+  "backupApp": "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/rollback/CreatorOS.app",
+  "previous": {
+    "binary": "c135dcda9f169ae68c611a39bc77b6eda6ecce76721ed8300d4597a46db8fbaf",
+    "sidecar": "a9be9fbbd90253bc3ab37423e54c6a6d3f1503d25c7fa9dbd0107e4c0d6b7750"
+  },
+  "expected": {
+    "binary": "856ac0b35d4dabb2fc159fe9338a9402b26a84225209c57c2164f63684b3ecdb",
+    "sidecar": "7c7c92df1b487392c9b4649a6d30d7c4f5dd6994b2f5ebb06ab579c7081b440b"
+  },
+  "installed": true,
+  "notarized": false,
+  "sourceClean": true,
+  "actual": {
+    "binary": "856ac0b35d4dabb2fc159fe9338a9402b26a84225209c57c2164f63684b3ecdb",
+    "sidecar": "7c7c92df1b487392c9b4649a6d30d7c4f5dd6994b2f5ebb06ab579c7081b440b"
+  },
+  "cliStatus": {
+    "ok": true,
+    "mode": "installed",
+    "connected": true,
+    "access": "full",
+    "productId": "creatoros",
+    "packageId": "cloud.aitongban.creatoros",
+    "pid": 83094,
+    "expiresAt": 1793008347515
+  },
+  "completedAt": "2026-10-25T09:52:38.096379+00:00"
+}

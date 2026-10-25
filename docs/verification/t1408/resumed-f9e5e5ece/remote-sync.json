@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-25T10:54:24.324573+00:00",
+  "defaultFetch": "SSH port22 connection closed; exit128",
+  "alternateFirst": "StrictHostKeyChecking拒绝未知[ssh.github.com]:443，未放松校验",
+  "successfulCommand": [
+    "git",
+    "-c",
+    "core.sshCommand=ssh -p 443 -o HostName=ssh.github.com -o HostKeyAlias=github.com -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20",
+    "fetch",
+    "origin"
+  ],
+  "exitCode": 0,
+  "trust": "使用已有github.com主机公钥进行严格验证；未更改全局SSH或Git配置。",
+  "originMain": "3a110457ac4c9cb0c2d1289bb427a95f652c38eb",
+  "localCandidate": "4128c68c82a71e485110a026c1fbd288c549f363",
+  "leftRightCounts": "0\t33",
+  "pushed": false
+}

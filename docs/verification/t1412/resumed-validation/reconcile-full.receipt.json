@@ -1,0 +1,36 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "orchestrator/process/reconcile.mjs",
+    "--profile",
+    "full"
+  ],
+  "cwd": "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator",
+  "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1412/resumed-validation/reconcile-full.log",
+  "pid": 90209,
+  "identity": {
+    "pid": 90209,
+    "pgid": 90209,
+    "uid": 501,
+    "birth": "Sun Oct 25 18:04:15 2026",
+    "startedAt": 1792922655994
+  },
+  "startedAt": "2026-10-25T10:04:15.994Z",
+  "endedAt": "2026-10-25T10:40:43.519Z",
+  "elapsedMs": 2187525,
+  "budgetMs": 127000000,
+  "deadlineAt": "2026-10-26T21:20:55.994Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 1,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

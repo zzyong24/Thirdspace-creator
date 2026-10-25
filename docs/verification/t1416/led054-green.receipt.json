@@ -1,0 +1,35 @@
+{
+  "file": "/bin/sh",
+  "args": [
+    "-c",
+    "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0"
+  ],
+  "cwd": "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator",
+  "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1416/led054-green.log",
+  "pid": 26484,
+  "identity": {
+    "pid": 26484,
+    "pgid": 26484,
+    "uid": 501,
+    "birth": "Sun Oct 25 18:47:30 2026",
+    "startedAt": 1792925250085
+  },
+  "startedAt": "2026-10-25T10:47:30.085Z",
+  "endedAt": "2026-10-25T10:51:18.535Z",
+  "elapsedMs": 228450,
+  "budgetMs": 2700000,
+  "deadlineAt": "2026-10-25T11:32:30.085Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

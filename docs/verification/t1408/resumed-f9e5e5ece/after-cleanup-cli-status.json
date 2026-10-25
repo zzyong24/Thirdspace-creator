@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-25T11:01:29.878298+00:00",
+  "exitCode": 0,
+  "status": {
+    "ok": true,
+    "mode": "installed",
+    "connected": true,
+    "access": "full",
+    "productId": "creatoros",
+    "packageId": "cloud.aitongban.creatoros",
+    "pid": 83094,
+    "expiresAt": 1793008347515
+  }
+}

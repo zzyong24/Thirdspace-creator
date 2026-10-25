@@ -1,0 +1,38 @@
+{
+  "candidate": "4128c68c82a71e485110a026c1fbd288c549f363",
+  "previousFullCandidate": "75b74649e43e001bf6682867c331e14308074a61",
+  "installedPackageCommit": "f9e5e5ece06d7d86dbb5bd38db76d18cc2437d84",
+  "source": "frontend/src/server/workbench-browser-host.test.ts",
+  "sourceSha256": "57e7b204be81a28646bd384f59e65b383afb541a84deb60fe76c9061c2c663c5",
+  "configurationSha256": "c8c13b6788b08f48aa4f154bcbdd0d1f74cf72a0e3e4863788e9b4aaa9cb8ffc",
+  "lesson": {
+    "led": "LED-054",
+    "what": "外部 I/O 或产物存储设置读取再次占住 PGlite 事务，或完成对账后原任务仍永久阻断",
+    "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
+    "onFail": "恢复短事务读取可信身份→事务外 I/O→短事务复核租约；对象存储回读必须在租约事务外完成；外部副作用按原键对账后自动续跑同一任务。",
+    "timeout_ms": 2700000
+  },
+  "environmentKeys": [
+    "CARGO_HOME",
+    "CARGO_NET_OFFLINE",
+    "CARGO_TARGET_DIR",
+    "CREATOROS_TEST_CFT_ROOT",
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "NPM_CONFIG_GLOBALCONFIG",
+    "NPM_CONFIG_USERCONFIG",
+    "PATH",
+    "PLAYWRIGHT_BROWSERS_PATH",
+    "RUSTC",
+    "RUSTDOC",
+    "TMPDIR",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_RUNTIME_DIR"
+  ],
+  "scope": "原full失败后的原单项整链复验；不改写原full结果。"
+}
