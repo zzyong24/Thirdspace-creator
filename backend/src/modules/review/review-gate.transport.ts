@@ -39,7 +39,8 @@ export function createReviewGateTransport(
       switch (endpoint.id) {
         case "reviewRules.list": {
           const rules = await service.listRules(ctx);
-          return { data: rules, meta };
+          // 此入口没有分页query，返回的是完整规则集；空列表仍需合法的列表信封。
+          return { data: rules, meta: { ...meta, page: 1, pageSize: Math.max(1, rules.length), total: rules.length } };
         }
         case "reviewRules.create": {
           const b = (body ?? {}) as Parameters<

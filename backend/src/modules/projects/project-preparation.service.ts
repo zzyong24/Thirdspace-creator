@@ -45,7 +45,21 @@ function checkpoint(value:unknown,projectId:string):PreparationCheckpoint {
  const normalized=structuredClone(cp);
  // 已持久化的就绪事实只纠正状态名，不补造历史完成时刻或模型调用。
  for(const step of normalized.steps)if(step.name==='transcript'&&step.status==='not_required'&&step.reasonCode==='TRANSCRIPT_ALREADY_AVAILABLE')step.status='done';
+ settleAcceptedPreparationSteps(normalized);
  return normalized;
+}
+function settleAcceptedPreparationSteps(cp:PreparationCheckpoint){
+ // SEMANTIC_BOUNDARY_ALLOW: 只投影既有真实采纳回执，不推断候选内容或补造完成时刻。
+ for(const step of cp.steps){
+  if(step.status!=='candidate_ready'||!step.childTaskId)continue;
+  const kind=step.name==='brief'?'brief':step.name==='source_draft'?'draft':null;
+  if(!kind)continue;
+  const candidates=cp.candidates.filter(candidate=>candidate.sourceTaskId===step.childTaskId&&candidate.kind===kind);
+  if(!candidates.length||!candidates.every(candidate=>candidate.status==='accepted'&&candidate.acceptanceReceipt?.candidateId===candidate.id&&candidate.acceptanceReceipt.sourceTaskId===candidate.sourceTaskId&&candidate.acceptanceReceipt.projectId===cp.projectId))continue;
+  step.status='done';step.availableActions=[];step.lastError=null;
+  const acceptedAt=candidates.map(candidate=>candidate.acceptanceReceipt!.acceptedAt).sort().at(-1);
+  if(acceptedAt)step.completedAt=acceptedAt;
+ }
 }
 const liveStatuses=['queued','running','retry_wait','paused','pause_requested','cancel_requested','waiting_user','unknown_result','blocked'];
 const currentErrorStatuses=['failed','blocked','waiting_user','unknown_result','paused'];
@@ -338,6 +352,7 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
     else {const artifacts=artifactsFor(tx),id=await createScriptDraftTargetService(deps).ensure(tx,ctx,projectId),artifact=await artifacts.getArtifact(ctx,id);const saved=await artifacts.createVersion(ctx,id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:content.text,createdByType:'ai',aiTaskId:child.id,adoptionKey:`preparation:${projectIntakeDigest([row.id,input.idempotencyKey])}`,adoptionSourceDigest:`sha256:${projectIntakeDigest([candidate.id,child.id,candidate.sourceDigest,candidate.artifactDigest])}`});artifactVersion=saved.versionNumber;}
     const project=await createProjectRepository(tx).get(ctx,projectId),receipt:ProjectPreparationAcceptanceReceipt={id:deps.nextId('preparation-acceptance'),projectId,candidateId,sourceTaskId:child.id,candidateSourceDigest:candidate.sourceDigest,acceptedDigest,projectVersion:Date.parse(project.updatedAt),artifactVersion,acceptedAt:deps.now()};
     candidate.status='accepted';candidate.acceptanceReceipt=receipt;cp.receipts={...cp.receipts,[input.idempotencyKey]:{requestDigest,receipt}};cp.revision++;
+    settleAcceptedPreparationSteps(cp);
     return {checkpoint:cp,result:receipt};
    });
   },

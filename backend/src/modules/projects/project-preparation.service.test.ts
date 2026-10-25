@@ -270,6 +270,13 @@ it.each(['tool','external_tool'] as const)('fb %s 部分不同brief保留真实�
  expect((await f.projects.getProject(f.ctx,f.project.id)).briefDetail).toMatchObject({targetAudience:'当前观众',coreMessage:'新的信息',targetPlatforms:['douyin']});
  expect(await f.preparation.acceptCandidate(f.ctx,f.project.id,candidate.id,input)).toEqual(receipt);
  expect((await f.preparation.get(f.ctx,f.project.id)).candidates[0]).toMatchObject({status:'accepted',acceptanceReceipt:receipt});
+ expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'done',availableActions:[],completedAt:receipt.acceptedAt});
+ // 兼容真实旧checkpoint：已有采纳回执，但旧版本遗漏step状态；只读投影不能再写项目或制造模型调用。
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId)),legacy=structuredClone(parent!.checkpoint) as any;
+ legacy.steps.find((s:any)=>s.name==='brief').status='candidate_ready';legacy.steps.find((s:any)=>s.name==='brief').availableActions=['accept_candidate'];
+ await db.update(executionTasks).set({checkpoint:legacy}).where(eq(executionTasks.id,f.parentId));
+ expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'done',availableActions:[],completedAt:receipt.acceptedAt});
+ const [unmodified]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));expect((unmodified!.checkpoint as any).steps.find((s:any)=>s.name==='brief').status).toBe('candidate_ready');
 });
 it.each((['tool','external_tool'] as const).flatMap(kind=>[undefined,null,{},[],{targetAudience:7},{madeUp:'不存在字段'}].map(suggestion=>({kind,suggestion}))))('fb $kind 无提案或非法brief不能冒成功 $suggestion',async ({kind,suggestion})=>{
  const f=await briefReceiptFixture(kind,suggestion);await f.preparation.tick({shouldStop:()=>false});

@@ -101,7 +101,9 @@ export function createChatStructuredTaskToolHost(
       const projectId=(selection?.kind==="project"?selection.ids[0]:undefined)||chat.projectId;
       let script=args.script;
       let source:Awaited<ReturnType<NonNullable<ChatStructuredToolPorts["readCurrentScript"]>>>=null;
-      if(!script?.trim() && projectId){
+      // SEMANTIC_BOUNDARY_ALLOW: 项目绑定决定正文版本来源；不从模型复述判断哪份稿件更新。
+      // 已保存稿由后端读取，显式 script 仅用于没有项目绑定的独立文稿诊断。
+      if(projectId){
        if(!ports.readCurrentScript)throw new Error("诊断当前稿读取端口未装配");
        source=await ports.readCurrentScript(structuredClone(resolved.restored.context),projectId,scope.signal);
        scope.signal?.throwIfAborted();

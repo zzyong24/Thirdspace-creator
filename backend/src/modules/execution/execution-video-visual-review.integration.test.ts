@@ -1,5 +1,5 @@
 import {beforeAll,afterAll,it,expect,vi} from 'vitest';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdir,mkdtemp,rm} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {resolve} from 'node:path';
 import {createServer} from 'node:http';
@@ -15,6 +15,7 @@ beforeAll(async()=>{
  const opened=await createDb();db=opened.db;close=()=>opened.client.close();
  const require=createRequire(resolve('../ai-worker/package.json')),build=require('esbuild').build;
  const {piRuntimeInitializationPlugin}=await import(resolve('../ai-worker/scripts/pi-runtime-bundle.mjs'));
+ await mkdir(resolve('../ai-worker/dist'),{recursive:true});
  temporary=await mkdtemp(resolve('../ai-worker/dist/t1238-video-'));piEntry=resolve(temporary,'pi.cjs');codexEntry=resolve(temporary,'codex.cjs');
  const options={entryPoints:[resolve('../ai-worker/src/execution/video-visual-review-worker-entry.ts')],bundle:true,platform:'node',target:'node24',format:'cjs',logLevel:'warning',external:['@openclaw/fs-safe']};
  await build({...options,outfile:piEntry,plugins:[piRuntimeInitializationPlugin()]});
@@ -67,6 +68,18 @@ it('父创建期限只冻结一次，预算不足保留成片且不读取模型�
 it('未配置Pi视觉模型沿用可选审核，不创建子任务；错误账号不能借父ID生成',async()=>{
  const id='visual-unconfigured';await original(id,'pi');const resolver=vi.fn(async()=>null),service=createExecutionVideoVisualReviewService(db,{entryPath:piEntry,resolvePiModelSpec:resolver});
  try{const a=await service.freezeParentDeadline(ctx,{taskId:id,deadlineAt:null});expect(await service.review(ctx,picture,{parentTaskId:id,...a,signal:new AbortController().signal})).toBeNull();expect(await ownedChild(id)).toBeUndefined();await expect(service.review({...ctx,accountId:'another'},picture,{parentTaskId:id,...a,signal:new AbortController().signal})).rejects.toThrow();expect(resolver).toHaveBeenCalledTimes(1);}finally{await service.stop();}
+});
+it('供应商明确拒绝图片后保留脱敏错误码，成片原任务仍running且不重发',async()=>{
+ const id='visual-provider-rejected';await original(id,'pi');
+ const api=await remote((_body,res)=>{res.writeHead(400,{'content-type':'application/json'});res.end(JSON.stringify({error:{code:'vision_unsupported',message:'Image input not supported; api_key=sk-private-fixture'}}));});
+ const service=createExecutionVideoVisualReviewService(db,{entryPath:piEntry,resolvePiModelSpec:async()=>api.spec});
+ try{
+  const a=await service.freezeParentDeadline(ctx,{taskId:id,deadlineAt:Date.now()+600_000});
+  const error=await service.review(ctx,picture,{parentTaskId:id,...a,signal:new AbortController().signal}).catch(error=>error);
+  expect(error).toBeInstanceOf(Error);expect(error.message).toContain('http_400');expect(error.message).not.toContain('sk-private-fixture');expect(error.message).not.toContain('fixture-private');
+  const child=await ownedChild(id);expect(child.lastErrorCode).toBe('http_400');expect(api.requests()).toBe(1);
+  expect((await db.select().from(aiTasks).where(eq(aiTasks.id,id)))[0]!.status).toBe('running');
+ }finally{await service.stop();await api.close();}
 });
 it('在途审核取消保留未知原调用，不重发，不把原成片任务改成失败',async()=>{
  const id='visual-cancel';await original(id,'pi');const api=await remote(()=>{}),service=createExecutionVideoVisualReviewService(db,{entryPath:piEntry,resolvePiModelSpec:async()=>api.spec});

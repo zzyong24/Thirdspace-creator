@@ -363,12 +363,30 @@ export function createCreativeCanvasService(db:Db,deps:{
     if(candidate.status!=="pending"||Date.parse(candidate.expiresAt)<=Date.parse(now()))throw new CanvasConflictError("画布建议已失效，请重新生成");
     if(canvas.revision!==expectedRevision||candidate.baseRevision!==canvas.revision)throw new CanvasConflictError("画布已更新，请重新查看建议");
     const doc=canvasDocumentSchema.parse(canvas.documentJson),nodes=[...doc.nodes],edges=[...doc.edges],idMap=new Map<string,string>();
+    const operations=z.array(canvasProposalOperationSchema).parse(candidate.operationsJson) as ProposalOperation[];
+    const existingIds=new Set(nodes.map(node=>node.id)),ambiguousAliases=new Set<string>();
+    const referencedIds=new Set(operations.flatMap(operation=>operation.type==="connect"?[operation.source,operation.target]:"nodeId"in operation?[operation.nodeId]:[]));
+    // SEMANTIC_BOUNDARY_ALLOW: tempId 与候选 node.id 是同一新节点的协议别名，
+    // 只做唯一身份规范化，不决定节点内容；禁止别名遮蔽现有或其他候选节点。
+    for(const operation of operations){
+     if(operation.type!=="addNode")continue;
+     if(existingIds.has(operation.tempId)||idMap.has(operation.tempId))throw new CanvasConflictError("候选节点引用重复或与现有节点冲突");
+     idMap.set(operation.tempId,randomUUID());
+    }
+    for(const operation of operations){
+     if(operation.type!=="addNode")continue;
+     const alias=operation.node.id,generatedId=idMap.get(operation.tempId)!;
+     if(existingIds.has(alias)||(idMap.has(alias)&&idMap.get(alias)!==generatedId))ambiguousAliases.add(alias);
+     else idMap.set(alias,generatedId);
+    }
+    // 旧模型可能给多个未引用节点同一占位 node.id；tempId 唯一时仍可安全落随机 ID。
+    // 只有后续操作实际使用了无法唯一解析的别名才拒绝，不阻断旧版可成功的整单。
+    for(const alias of ambiguousAliases)if(referencedIds.has(alias))throw new CanvasConflictError("候选节点引用重复或与现有节点冲突");
     const resolve=(value:string)=>idMap.get(value)??value;
-    for(const operation of z.array(canvasProposalOperationSchema).parse(candidate.operationsJson) as ProposalOperation[]){
+    for(const operation of operations){
      switch(operation.type){
       case "addNode":{
-       if(idMap.has(operation.tempId))throw new CanvasConflictError("候选节点引用重复");
-       const node={...operation.node,id:randomUUID()} as CanvasNode;idMap.set(operation.tempId,node.id);nodes.push(node);break;
+       const node={...operation.node,id:resolve(operation.tempId)} as CanvasNode;nodes.push(node);break;
       }
       case "updateNode":{
        const index=nodes.findIndex(node=>node.id===resolve(operation.nodeId));if(index<0)throw new CanvasConflictError("建议引用的节点已不存在");
@@ -382,7 +400,7 @@ export function createCreativeCanvasService(db:Db,deps:{
       case "moveNode":{const index=nodes.findIndex(node=>node.id===resolve(operation.nodeId));if(index<0)throw new CanvasConflictError("建议引用的节点已不存在");nodes[index]={...nodes[index]!,position:operation.position};break;}
       case "deleteNode":{const target=resolve(operation.nodeId),index=nodes.findIndex(node=>node.id===target);if(index<0)throw new CanvasConflictError("建议引用的节点已不存在");nodes.splice(index,1);for(let i=edges.length-1;i>=0;i--)if(edges[i]!.source===target||edges[i]!.target===target)edges.splice(i,1);break;}
       case "connect":{edges.push({id:randomUUID(),source:resolve(operation.source),target:resolve(operation.target),...(operation.label?{label:operation.label}:{})});break;}
-      case "disconnect":{const index=edges.findIndex(edge=>edge.id===resolve(operation.edgeId));if(index<0)throw new CanvasConflictError("建议引用的连接已不存在");edges.splice(index,1);break;}
+      case "disconnect":{const index=edges.findIndex(edge=>edge.id===operation.edgeId);if(index<0)throw new CanvasConflictError("建议引用的连接已不存在");edges.splice(index,1);break;}
      }
     }
     const valid=await validateDocument(ctx,pruneGroups({...doc,nodes,edges}),tx);

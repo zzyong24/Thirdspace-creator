@@ -101,6 +101,7 @@ import { createDashboardApplication } from "@creatoros/backend/application/queri
 import { createPageReadRevisionReader } from "@creatoros/backend/application/page-read-revision";
 import { createRecoveryWakeCoordinator } from "@creatoros/backend/application/recovery-wake";
 import { rebuildOwnedSearchIndex } from "@creatoros/backend/application/search-bootstrap";
+import { createEntitySearchProjection } from "@creatoros/backend/application/entity-search-projection";
 import { createThesisAdoption } from "@creatoros/backend/application/thesis-adoption";
 import { withPageReadInvalidation } from "@/lib/page-read-cache.server";
 import { createApplicationTransport } from "@creatoros/backend/application/transport";
@@ -1459,7 +1460,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
   const projectPreparationRef:{current:ReturnType<typeof createProjectPreparationApplication>['preparation']|undefined}={current:undefined};
   const requireProjectPreparation=()=>{if(!projectPreparationRef.current)throw new Error('项目准备服务未装配');return projectPreparationRef.current;};
-  const projectIntake = createProjectIntakeApplication(db, deps,{preparation:{reserve:(c,input,tx)=>requireProjectPreparation().reserve(c,input,tx)}});
+  const entitySearchProjection=createEntitySearchProjection({upsertDocument:(...args)=>searchService.upsertDocument(...args),removeDocument:(...args)=>searchService.removeDocument(...args)});
+  const projectIntake = createProjectIntakeApplication(db, deps,{preparation:{reserve:(c,input,tx)=>requireProjectPreparation().reserve(c,input,tx)},indexProject:entitySearchProjection.project});
   const projectsBaseTransport = createProjectsTransport(() => ({
     intake: projectIntake,
     preparation:{get:(c,id)=>requireProjectPreparation().get(c,id),start:(c,id,input)=>requireProjectPreparation().start(c,id,input),provideTranscript:(c,id,input)=>requireProjectPreparation().provideTranscript(c,id,input),acceptCandidate:(c,id,candidate,input)=>requireProjectPreparation().acceptCandidate(c,id,candidate,input)},
@@ -1468,13 +1470,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createArticleOutput: (ctx, projectId, input) => articlesService.createOutput(ctx, projectId, input),
     createGraphicPostOutput: (ctx, projectId, input) => graphicPostsService.createOutput(ctx, projectId, input),
   }));
-  // [全局搜索修复①] 项目写路径的搜索索引 fan-out(composition root 组合,projects 模块
-  // 不反向依赖 search)。projects 是四大实体里唯一漏接搜索索引的 —— createProject/
-  // patchProject 全程不碰 search_documents,导致「搜项目标题恒 0」。这里在 create/patch
-  // 成功后**同步 await** 投影一条 entity_type='project' 的 search_document(载荷 stage/
-  // progressPct/snippet 与读侧 toProjectCard 对齐);delete 走 removeDocument。同步(非
-  // fire-and-forget)消除「建完即搜」竞态。索引 best-effort:失败只丢检索增益,业务真值
-  // 已提交不回滚(SPEC §16 派生索引纪律),故 try/catch 吞掉。
+  // 所有 intake 来源的创建在 application 提交后投影；直接编辑仍在响应前同步索引。
+  // 这里只装配拥有者读取与后端投影端口，不在页面宿主复制业务投影规则。
   const indexProjectBestEffort = async (
     ctx: RequestContext,
     data: {
@@ -1487,19 +1484,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   ): Promise<void> => {
     if (!data.id) return;
     try {
-      const title = data.title ?? "";
-      const snippet = data.brief ?? "";
-      await searchService.upsertDocument(ctx, {
-        entityType: "project",
-        entityId: data.id,
-        title,
-        body: JSON.stringify({
-          stage: data.currentStage ?? "",
-          progressPct: data.progressPct ?? 0,
-          snippet,
-        }),
-        searchText: `${title}\n${snippet}`.toLowerCase().trim(),
-      });
+      await entitySearchProjection.project(ctx,await projectsService.getProject(ctx,data.id));
     } catch (err) {
       console.warn("[project-index] 索引失败(业务真值不受影响):", err);
     }
@@ -1509,8 +1494,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const result = await projectsBaseTransport.request(endpoint, input, ctx);
       if (ctx) {
         if (
-          endpoint.id === "projects.create" ||
-          endpoint.id === "projects.patch"
+          endpoint.id === "projects.patch" ||
+          endpoint.id === "projects.archive" ||
+          endpoint.id === "projects.stage.transition"
         ) {
           const data = (result as { data?: unknown }).data as
             | {
@@ -1657,6 +1643,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const assetsService = createAssetsService(assetsRepo, objectStorageForCtx, {
     ...deps,
     resolveProjectFolder,
+    onAssetChanged:entitySearchProjection.asset,
   });
   // [T-055d SPEC §7.2] Finder/下载 route 的最小运行时面:assetId → 归属校验 + 当前
   // file 的 storageKey(相对 media root);projectId → 项目目录相对路径。
@@ -6926,6 +6913,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
     async afterCommit(c,action,result){
       if(action.kind==="project.create")await indexProjectBestEffort(c,result as Parameters<typeof indexProjectBestEffort>[1]);
+      if(action.kind==="topic.promote")await indexProjectBestEffort(c,{id:(result as {projectId?:string}).projectId});
       if(action.kind==="knowledge.create")await knowledgeSearchRuntime.indexKnowledgeDocumentBestEffort(c,(result as {id:string}).id);
     },
   });

@@ -54,9 +54,12 @@ function DeviationCell({ value }: { readonly value: number | null }) {
 
 export function PredictionComparisonSection({
   vm,
+  publicationScoped = false,
 }: {
   /** null / rows 空 = 本项目未做盲预测(诚实空态)。 */
   readonly vm: PredictionComparisonVm | null;
+  /** 有平台/日期发布范围时，空值不代表稿面从未锁分。 */
+  readonly publicationScoped?: boolean;
 }) {
   const rows = vm?.rows ?? [];
   return (
@@ -71,7 +74,9 @@ export function PredictionComparisonSection({
             className="flex items-center justify-center gap-1.5 rounded-card border border-dashed border-border px-3 py-6 text-sm text-muted-foreground"
           >
             <Crosshair className="size-4" />
-            本项目未做盲预测。去稿面的发布包区「先盲预测」,发布后即可在这里对照。
+            {publicationScoped
+              ? "所选发布范围内暂无可对照的预测。已在稿面锁分但尚未发布的内容，可先返回稿面查看；发布并关联实际版本后再在这里对照。"
+              : "本项目未做盲预测。去稿面的发布包区「先盲预测」,发布后即可在这里对照。"}
           </p>
         ) : (
           <div className="flex flex-col gap-3">

@@ -214,6 +214,8 @@ export function createAssetsService(
   repo: AssetRepository,
   objectStorageForCtx: ObjectStorageForCtx,
   deps: RepoDeps & {
+    /** 提交真实素材后通知派生索引；可选且失败不得反杀上传/确认/回收。 */
+    onAssetChanged?: (ctx:RequestContext,asset:AssetRow)=>Promise<unknown>;
     // [T-055d SPEC §7.1] 项目目录名解析端口(composition root 绑 projects public service,
     // 含归属校验):projectId → "projects/<safe-title>-<id6>";未知/越权项目 → null(落 inbox)。
     // 可选:旧装配缺省 → 全部走旧 key 规则(assetType/nextKey),行为不变。
@@ -224,6 +226,11 @@ export function createAssetsService(
   },
 ): AssetsService {
   const legacyMediaBackfillInFlight = new Set<string>();
+  async function indexed(ctx:RequestContext,asset:AssetRow):Promise<AssetRow>{
+    try{await deps.onAssetChanged?.(ctx,asset);}
+    catch(error){console.warn("[asset-index] source saved; projection failed",{assetId:asset.id,error:error instanceof Error?error.message:String(error)});}
+    return asset;
+  }
 
   // Load an owned asset or raise OwnershipError (404, no existence leak).
   // [T-332 S2] by-id 读叠「号一致性门」(SPEC §4.5):未选号 → AccountRequiredError
@@ -390,7 +397,7 @@ export function createAssetsService(
         accountId,
       );
       if (!row) throw new OwnershipError("Asset not found"); // 非 pending / 越权 / 跨号 / 不存在
-      return row;
+      return indexed(ctx,row);
     },
 
     searchAssets:(ctx,input)=>searchAssetLibrary(repo,ctx,input),
@@ -678,7 +685,7 @@ export function createAssetsService(
           accountId,
         );
         if (!existing) throw new OwnershipError("Completed asset not found");
-        return existing;
+        return indexed(ctx,existing);
       }
       // SPEC §20: validate the stored object's MIME/size/checksum via headObject.
       const storage = await objectStorageForCtx(ctx);
@@ -704,7 +711,7 @@ export function createAssetsService(
         // garbage. Cleanup failure must not corrupt the already-committed asset.
         await storage.deleteObject?.(session.storageKey).catch(() => undefined);
       }
-      return asset;
+      return indexed(ctx,asset);
     },
 
     async createTemporaryDownload(ctx, input) {
@@ -823,7 +830,7 @@ export function createAssetsService(
         },
         accountId,
       );
-      return updated ?? asset;
+      return indexed(ctx,updated ?? asset);
     },
 
     async addAssetFile(ctx, assetId, input) {
@@ -876,7 +883,7 @@ export function createAssetsService(
         },
         accountId,
       );
-      return updated!;
+      return indexed(ctx,updated!);
     },
 
     async restoreAsset(ctx, assetId) {
@@ -896,7 +903,7 @@ export function createAssetsService(
         },
         accountId,
       );
-      return updated!;
+      return indexed(ctx,updated!);
     },
 
     async toggleFavorite(ctx, assetId) {
@@ -942,7 +949,7 @@ export function createAssetsService(
         },
         accountId,
       );
-      return updated!;
+      return indexed(ctx,updated!);
     },
 
     async unarchiveAsset(ctx, assetId) {
@@ -961,7 +968,7 @@ export function createAssetsService(
         },
         accountId,
       );
-      return updated!;
+      return indexed(ctx,updated!);
     },
   };
 }

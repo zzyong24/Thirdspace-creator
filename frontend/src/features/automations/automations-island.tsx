@@ -1005,6 +1005,8 @@ export function CreateJobDialog({
     prompt: string;
     /** 装配好的 target;undefined = 本次不改 target(edit 模式源类型不在已知集合时)。 */
     target?: Record<string, unknown>;
+    /** 仅新建使用；默认先保存为停用态，用户明确开启后才运行计划。 */
+    enabled?: boolean;
   }) => Promise<void>;
   /** 模板卡预填(打开弹窗时应用一次;仅 create 模式)。 */
   readonly prefill?: CreateJobPrefill | null;
@@ -1021,6 +1023,7 @@ export function CreateJobDialog({
   // T-248 编辑降级锁:job.schedule 反解失败时为 true —— 提示重选,重选前禁保存。
   const [cadenceUnresolved, setCadenceUnresolved] = React.useState(false);
   const [targetValue, setTargetValue] = React.useState("");
+  const [enabled, setEnabled] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [formError,setFormError]=React.useState<string|null>(null);
 
@@ -1067,6 +1070,7 @@ export function CreateJobDialog({
         setCadence(prefill?.cadence ?? {mode:"interval",unit:"hours",every:2});
         setCadenceUnresolved(false);
         setTargetValue("");
+        setEnabled(false);
       }
     }
     prevOpenRef.current = open;
@@ -1097,6 +1101,7 @@ export function CreateJobDialog({
         schedule,
         prompt: prompt.trim(),
         target,
+        ...(!isEdit ? { enabled } : {}),
       });
       if(formAlive.current&&formEpoch.current===originalEpoch)onOpenChange(false);
     } catch (error) {
@@ -1106,6 +1111,8 @@ export function CreateJobDialog({
     }
   }, [
     canSubmit,
+    enabled,
+    isEdit,
     job,
     cadence,
     targetValue,
@@ -1140,7 +1147,7 @@ export function CreateJobDialog({
             {isEdit ? "编辑采集任务" : "新建采集任务"}
           </DialogTitle>
           <DialogDescription>
-            设置任务内容和执行时间，保存后按计划运行。
+            {isEdit ? "设置任务内容和执行时间，启用状态保持不变。" : enabled ? "保存后按计划运行。" : "保存后保持停用，启用后才按计划运行。"}
           </DialogDescription>
         </DialogHeader>
 
@@ -1212,6 +1219,13 @@ export function CreateJobDialog({
 
           </label>
           )}
+
+          {!isEdit ? (
+            <div className="flex items-center justify-between gap-3 rounded-control border border-border px-3 py-2">
+              <span className="text-xs font-medium text-foreground">创建后启用</span>
+              <Switch aria-label="创建后启用" checked={enabled} onCheckedChange={setEnabled} disabled={submitting} />
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">频率</span>
@@ -1787,6 +1801,7 @@ export function AutomationsIsland({
       schedule: string;
       prompt: string;
       target?: Record<string, unknown>;
+      enabled?: boolean;
     }) => {
       const originalScope=accountRef.current;
       if(scope && !canCreateKind(input.sourceKind,createTarget))throw new Error("请选择已验证且可采集的目标账号，或创建组内每日选题");
@@ -1802,6 +1817,7 @@ export function AutomationsIsland({
           target: input.target ?? {},
           schedule: input.schedule, // 已由 CadenceEditor 编译成 cron(不露用户)
           toolGrants: [], // 偏只读 + 落库,首版空;工具授权由执行层(D3)约束
+          enabled: input.enabled ?? true,
         },
       });
       if(alive.current&&accountRef.current===originalScope)router.refresh();

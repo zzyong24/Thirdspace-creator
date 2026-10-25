@@ -143,6 +143,13 @@ describe("buildPredictionComparison(复盘对照读侧,T-063e)", () => {
 });
 
 describe("PredictionComparisonSection(复盘对照展示,T-063e)", () => {
+  it("T-1403 发布范围为空不把稿面已有锁分误说成整个项目未预测", () => {
+    render(<PredictionComparisonSection vm={null} publicationScoped />);
+    const message=screen.getByTestId("prediction-comparison-empty").textContent;
+    expect(message).toContain("所选发布范围");
+    expect(message).toContain("稿面");
+    expect(message).not.toContain("本项目未做盲预测");
+  });
   it("已回流:渲染预测分 + 逐维度 预测/真实/偏差 表", () => {
     render(
       <PredictionComparisonSection
