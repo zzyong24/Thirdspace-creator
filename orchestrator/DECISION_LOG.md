@@ -3071,3 +3071,49 @@ Boundary: 不证明余额充足或402恢复；不授权付款、钱包调整、�
 Owner: user
 Status: active
 ```
+
+
+## DEC-141501 — T1415 T-915 恢复既有规则后的精确审核周期
+
+```text
+ID: DEC-141501
+Date: 2026-10-25
+Stage: T-1415 控制面真实审核对账
+Type: task-hash-change-bound-review-cycle
+Authorization-Kind: process-review-cycle
+Task-ID: T-915
+Previous-Spec-SHA256: b8282e2c286a9e0ffa757264667e724bcc20457e355b08487d8c08e1011811d9
+Previous-Constitution-SHA256: 966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27
+Allowed-Change-IDs: T915-EXISTING-CRITICAL-PATH-RULE-RESTORED
+Max-Cycles: 1
+Nonce: t1415-85c04bd2-1a7f-4a54-b599-ffc7ee633a58
+Decision: 仅允许将当前完整独立初审登记为一次新审核周期；保持原SPEC、当前AGENTS和全部历史事件，不授权产品范围变化、风险接受、任务完成或发布。
+Change-Detail: T915-EXISTING-CRITICAL-PATH-RULE-RESTORED=T1414按完整原规则恢复AGENTS摘要后，重新完整审核当前SPEC、当前AGENTS及原findings；不换宪法或手改审核哈希，真实运行验收义务全部保留。
+Source: 用户“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”及“好的，继续吧”的既有授权；T1415独立初审已由reviewctl登记，event=13c2ee62a043cee5150be051848a96862d69d4bddf8e3967799be4b33f69a174。
+Review-Evidence: docs/verification/t1415/T-915-initial.json
+Owner: user
+Status: active
+```
+
+
+## DEC-141502 — T1415 T-859 恢复既有规则后的精确审核周期
+
+```text
+ID: DEC-141502
+Date: 2026-10-25
+Stage: T-1415 控制面真实审核对账
+Type: task-hash-change-bound-review-cycle
+Authorization-Kind: process-review-cycle
+Task-ID: T-859
+Previous-Spec-SHA256: e5be057cd6751965e3f6827fa5529c9fc93c599624eab18443188c55597210f5
+Previous-Constitution-SHA256: 966350c9181a8b4cd32d03cab4d4516b3c79f9af39f950576ac3e058e0a29f27
+Allowed-Change-IDs: T859-EXISTING-CRITICAL-PATH-RULE-RESTORED
+Max-Cycles: 1
+Nonce: t1415-a53747dc-9b00-4cd5-b22e-6d30eeb8dbcd
+Decision: 仅允许将当前完整独立初审登记为一次新审核周期；保持原SPEC、当前AGENTS和全部历史事件，不授权产品范围变化、风险接受、任务完成或发布。
+Change-Detail: T859-EXISTING-CRITICAL-PATH-RULE-RESTORED=T1414按完整原规则恢复AGENTS摘要后，重新完整审核当前SPEC、当前AGENTS及原findings；不换宪法或手改审核哈希，真实运行验收义务全部保留。
+Source: 用户“把官方 Pi 的 402 和没通过的验收都处理好，复验通过后再推送”及“好的，继续吧”的既有授权；T1415独立初审已由reviewctl登记，event=13c2ee62a043cee5150be051848a96862d69d4bddf8e3967799be4b33f69a174。
+Review-Evidence: docs/verification/t1415/T-859-initial.json
+Owner: user
+Status: active
+```

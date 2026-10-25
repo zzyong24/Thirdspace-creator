@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "orchestrator/process/reconcile.mjs",
+    "--profile",
+    "quick",
+    "--read-only"
+  ],
+  "exitCode": 0,
+  "elapsedSeconds": 4.97
+}

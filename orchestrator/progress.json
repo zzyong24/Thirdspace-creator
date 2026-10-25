@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 300,
+    "verticals": 301,
     "tasks_done": 89,
-    "tasks_total": 427,
-    "tasks_pending": 338,
+    "tasks_total": 428,
+    "tasks_pending": 339,
     "verticals_complete": 28
   },
   "verticals": [
@@ -21800,6 +21800,52 @@
         "AGENTS.md",
         "docs/engineering/agent-rules.md",
         "orchestrator/process/critical-path-availability-rule.test.mjs"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1415",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1415",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        ".codex/hooks/stop-reconcile.sh",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
+        "docs/features/t1415-resumed-verification-control.md",
+        "docs/features/t1415-resumed-verification-control.T-1415.review.md",
+        "docs/verification/t1415/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1415.md",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/events.ndjson",
+        "PROJECT.md",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "read_set": [
+        "docs/features/t1415-resumed-verification-control.md",
+        "AGENTS.md",
+        ".codex/hooks/stop-reconcile.sh",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+        "orchestrator/process/reviewctl.mjs"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

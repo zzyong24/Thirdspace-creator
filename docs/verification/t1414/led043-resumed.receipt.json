@@ -1,0 +1,35 @@
+{
+  "file": "/bin/sh",
+  "args": [
+    "-c",
+    "node --test orchestrator/process/critical-path-availability-rule.test.mjs && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts"
+  ],
+  "cwd": "/Volumes/T7-MacData/creatoros-validation-20261025-58l1q3bd/Thirdspace-creator",
+  "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1412/resumed-validation/led043.log",
+  "pid": 69486,
+  "identity": {
+    "pid": 69486,
+    "pgid": 69486,
+    "uid": 501,
+    "birth": "Sun Oct 25 17:30:23 2026",
+    "startedAt": 1792920623061
+  },
+  "startedAt": "2026-10-25T09:30:23.061Z",
+  "endedAt": "2026-10-25T09:30:37.251Z",
+  "elapsedMs": 14190,
+  "budgetMs": 2700000,
+  "deadlineAt": "2026-10-25T10:15:23.061Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

@@ -10,4 +10,5 @@ command -v node >/dev/null 2>&1 || {
 }
 
 cd "$ROOT" || exit 2
-node orchestrator/process/reconcile.mjs --concise
+# 日常 Stop 只做只读对账；完整验收必须显式执行原 --profile full。
+node orchestrator/process/reconcile.mjs --profile quick --read-only --concise

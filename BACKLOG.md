@@ -9,7 +9,8 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1414|恢复关键链路可用性规则摘要|🔨|PASS[REV:19fcdb3c4a1f]|—|[SPEC](docs/features/t1414-critical-path-rule-summary.md)|恢复规则摘要漏掉的既有安全降级与完整回归要求，保留原LED043测试。|
+|T-1415|收口恢复验收后的只读Stop与两份宪法审核|✅|PASS[REV:abe1e1aaf662]|—|[SPEC](docs/features/t1415-resumed-verification-control.md)|保留日常只读Stop，真实重审规则恢复导致过期的T915/T859，完整验收不降级。|
+|T-1414|恢复关键链路可用性规则摘要|✅|PASS[REV:19fcdb3c4a1f]|—|[SPEC](docs/features/t1414-critical-path-rule-summary.md)|恢复规则摘要漏掉的既有安全降级与完整回归要求，保留原LED043测试。|
 |T-1413|恢复重构后六项lesson正式链语义覆盖|🔨|PASS[REV:2a5f6be66c40]|—|[SPEC](docs/features/t1413-lesson-semantic-coverage.md)|修复3个已删除测试文件的6处守卫引用；补齐当前链语义与严格封面参考约束，官方图片恢复须先证明幂等资格。|
 |T-1412|修复完整对账的执行预算与测试隔离|🔨|PASS[REV:61ef55ddadbf]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
 |T-1411|修复文本连接测试鉴权丢失与结果说明|✅|PASS[REV:40d357fc2e44]|—|[SPEC](docs/features/t1411-model-probe-auth-parity.md)|[D]|
@@ -221,7 +222,7 @@
 |T-934|统一 CLI 与页面的持久聊天工具入口|🔨 待办|—|—|[SPEC](docs/verification/t934-cli-chat-unification.md)|[D]|
 |T-933|安装并验收本轮Agent Runtime桌面版|🔨 待办|—|—|[SPEC](docs/verification/t932-runtime-alignment.md)|[D]|
 |T-919|定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞|🔨 待办|—|—|复用 T-912/T-909 导航契约与 [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|[D]|
-|T-915|根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力|🔨 待办|PASS[REV:78ed5d428e7a]|—|[SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|[D]|
+|T-915|根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力|🔨 待办|PASS[REV:8d309f0236d1]|—|[SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|[D]|
 |T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[SPEC](docs/research/2026-09-04-architecture-agent-audit.md) [SPEC](BACKLOG-details.md#t-916) [SPEC](BACKLOG-details.md#t1173-t-916-same-identity-history)|[D]|
 |T-917|记录 T-915 媒体测试事故并防止测试再次访问真实媒体根|📋 待办|—|—|[SPEC](docs/research/evidence/t915/2026-09-06-media-test-incident.md)|[D]|
 |T-908|真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复|📋 待办|—|—|—|[D]|
@@ -232,7 +233,7 @@
 |T-878|让生图模型连接测试正确识别并提示 401/403 鉴权失败|📋 待办|—|—|[SPEC](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md)|[D]|
 |T-867|恢复 AI 对项目素材与分镜场景的自动语义匹配|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-867)|[D]|
 |T-860|修复竖屏素材底边与左下人物框边界重合|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-860)|[D]|
-|T-859|竖屏素材段人物收进左下角，并消除切换白闪|🔨 待办|PASS[REV:2f586e24d5d0]|待验|[SPEC](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md)|[D]|
+|T-859|竖屏素材段人物收进左下角，并消除切换白闪|🔨 待办|PASS[REV:44a0172c0850]|待验|[SPEC](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md)|[D]|
 |T-858|把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT|🔨 待办|PASS[REV:2798870c87f4]|待验|[SPEC](BACKLOG-details.md#t-858)  [SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md)|[D]|
 |T-857|构建当前已提交候选的 CreatorOS 1.1.0 Windows 安装包|⏸️ 待办|—|待验|[SPEC](BACKLOG-details.md#t-857)|[D]|
 |T-856|重做竖屏成片的统一舞台、字幕可读性与重点词强调|⏸️ 待办|—|待验|[SPEC](BACKLOG-details.md#t-856)|[D]|

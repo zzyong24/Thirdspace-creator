@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 922b2afbc
+LAST_SYNCED: main @ f9e5e5ece
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1415 收口恢复验收后的只读Stop与两份宪法审核
 - [wip] T-1414 恢复关键链路可用性规则摘要
 - [wip] T-1413 恢复重构后六项lesson正式链语义覆盖
 - [wip] T-1412 修复完整对账的执行预算与测试隔离

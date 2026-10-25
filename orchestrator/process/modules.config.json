@@ -20749,6 +20749,51 @@
         ]
       },
       "scope_note": "只恢复完整规则中已存在的两条原文，不改守卫；不修改正在运行full的冻结worktree，待其结束后串行复验。"
+    },
+    "T-1415": {
+      "task_id": "T-1415",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1415-resumed-verification-control.md",
+        "AGENTS.md",
+        ".codex/hooks/stop-reconcile.sh",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+        "orchestrator/process/reviewctl.mjs"
+      ],
+      "write_set": [
+        ".codex/hooks/stop-reconcile.sh",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
+        "docs/features/t1415-resumed-verification-control.md",
+        "docs/features/t1415-resumed-verification-control.T-1415.review.md",
+        "docs/verification/t1415/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1415.md",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/events.ndjson",
+        "PROJECT.md",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "bash -n .codex/hooks/stop-reconcile.sh",
+          "node orchestrator/process/reviewctl.mjs audit",
+          "node orchestrator/process/backlog-health.mjs",
+          "node orchestrator/process/reconcile.mjs --profile quick --read-only"
+        ]
+      },
+      "scope_note": "仅日常只读入口与AGENTS恢复后的两份真实独审；不改产品、原门、审核引擎或历史事件。外盘构建已完成，二进制仍绑定f9e5e5ece。"
     }
   }
 }

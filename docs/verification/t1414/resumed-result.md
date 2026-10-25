@@ -1,0 +1,5 @@
+# T-1414 恢复后实跑
+
+候选f9e5e5ece在干净外盘工作树运行原完整LED043命令，14190ms、exit0、closed=true、剩余子进程0。规则1项、frontend12项、backend133项全部通过，未改原门。原日志SHA256=4b4ba95429c47b22ce12ef37dc0d477aa0fbbe14dae86442cc14c42822f1bd70，完整压缩日志与收据相邻保存。
+
+原失败与逐字恢复证明保持。AGENTS恢复导致T915/T859宪法审核失效，已由T1415真实独立重审正式登记修复。主checkout pmem sync后quick0ERROR/13WARN，full仍未执行；看板超限/历史状态矛盾属既有范围外债，独立health真实exit1保留。本文不签其余完整验收。

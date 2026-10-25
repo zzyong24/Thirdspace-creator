@@ -1,0 +1,8 @@
+{
+  "command": [
+    "bash",
+    ".codex/hooks/stop-reconcile.sh"
+  ],
+  "exitCode": 0,
+  "elapsedSeconds": 6.781
+}
