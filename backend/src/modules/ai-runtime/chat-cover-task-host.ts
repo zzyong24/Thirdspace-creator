@@ -30,7 +30,7 @@ export function createChatCoverTaskHost(
   const prototypes=buildChatTools(["cover.generate"],{} as ChatToolDeps);
   const prepared=await prepareChatToolDefinitions(prototypes,{atomicCoverGenerate:true});
   if(canonicalJson(prepared.definitions[0])!==canonicalJson(frozen))throw new Error("封面工具定义与原任务不符");
-  return {context:restored.context,chatContext:restored.hostContext.chatContext,tool:prototypes["cover.generate"]!,definition:prepared.definitions[0]!,parameters:prepared.parameters["cover.generate"]!.parameters};
+  return {context:restored.context,chatContext:restored.hostContext.chatContext,referenceRequired:["cover.publication_reference","cover.reference"].includes(restored.hostContext.mediaRoute?.kind??""),tool:prototypes["cover.generate"]!,definition:prepared.definitions[0]!,parameters:prepared.parameters["cover.generate"]!.parameters};
  }
  return async(ctx,_input,execution,signal):Promise<Record<string,ChatBackendTool>>=>{
   const initial=await current(ctx,execution,signal);if(!initial)return {};
@@ -52,12 +52,14 @@ export function createChatCoverTaskHost(
     const parsed=resolved.parameters.parse(input) as {projectId?:string;topic?:string;referenceAssetId?:string;visualRequirements?:string};
     const projectId=resolved.chatContext.projectId?.trim();
     if(!projectId || (parsed.projectId?.trim() && parsed.projectId.trim()!==projectId))throw new Error("封面只能为当前项目生成，请进入项目稿面");
+    if(resolved.referenceRequired && !parsed.referenceAssetId?.trim())throw new Error("当前路线必须选择真实参考封面，未提交生成任务");
     if(!readers.getArtifactText)throw new Error("封面缺少当前稿读取能力");
     const scriptSnapshot=await readers.getArtifactText(resolved.context,{projectId,artifactType:"output_script"});
     scope.signal?.throwIfAborted();
     const task=await ports.prepareTaskCommit(resolved.context,{taskType:"cover.generate",attemptId,inputData:{projectId,
      ...(parsed.topic?.trim()?{topic:parsed.topic.trim()}:resolved.chatContext.selection?.label?{topic:resolved.chatContext.selection.label}:{}),
      ...(parsed.referenceAssetId?.trim()?{referenceAssetId:parsed.referenceAssetId.trim()}:{}),
+     ...(resolved.referenceRequired?{__coverReferenceRequired:true}:{}),
      ...(parsed.visualRequirements?.trim()?{visualRequirements:parsed.visualRequirements.trim().slice(0,1200)}:{}),
      ...(scriptSnapshot?{scriptSnapshot:structuredClone(scriptSnapshot)}:{}),
     }});

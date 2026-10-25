@@ -1,0 +1,27 @@
+{
+  "scanExitCode": 0,
+  "scanInputSha256": "e1d65d8d0bee8169a83c2ab2f2d2428bc35e02204a1dd39c9cb699ad39d04f47",
+  "files": [
+    {
+      "originalPath": "docs/verification/t1412/full-preparation/playwright-local-assets.json",
+      "originalSha256": "e90ca8b61154ef503e9802b2246d1ef66796c45bba3af5995e1a077a5b926c76",
+      "transportPath": "docs/verification/t1412/full-preparation/logs/playwright-local-assets.json.gz",
+      "transportSha256": "aa17013ec80c4e8f732b9de423858da4487dc65f7a2aa2113b6eec8280114425"
+    },
+    {
+      "originalPath": "docs/verification/t1412/full-preparation/rust-offline-assets.json",
+      "originalSha256": "3339418a6ce887e94daaaaaf049259445bc898f42d70b8a3ec96f4e811c897d8",
+      "transportPath": "docs/verification/t1412/full-preparation/logs/rust-offline-assets.json.gz",
+      "transportSha256": "0107b0b352405365d7973405ed7787116ff4acd624d11efafb33d04da054cb1e"
+    }
+  ],
+  "selectedPaths": [
+    "docs/verification/t1412/full-preparation/handoff.md",
+    "docs/verification/t1412/full-preparation/led061-historical-baselines.json",
+    "docs/verification/t1412/full-preparation/logs/playwright-local-assets.json.gz",
+    "docs/verification/t1412/full-preparation/prepare-offline-assets.py",
+    "docs/verification/t1412/full-preparation/logs/rust-offline-assets.json.gz",
+    "docs/verification/t1412/full-preparation/suggested-env-delta.json",
+    "docs/verification/t1412/full-preparation/evidence-manifest.json"
+  ]
+}

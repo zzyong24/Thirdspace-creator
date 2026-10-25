@@ -1,0 +1,372 @@
+{
+  "sourceFreezeSha256": "15218cd529aa6ba657b5c38ef2fe1fda34c8de160d8377c351155fb8bcedef03",
+  "rawEvidenceScanExitCode": 0,
+  "scanInputSha256": "98a435d9e28b96ac07ab38e14d079335b628b5a11417c46488abc60538a81000",
+  "scanNormalization": "only ANSI terminal controls removed for secret scan; raw files unchanged",
+  "files": [
+    {
+      "originalPath": "docs/verification/t1413/backend-existing-lessons.log",
+      "originalSha256": "333b140bcc7df0ad0c65200c5976903fb84b0d8e53b67673a0ecb2a82b551215",
+      "bytes": 256617,
+      "transportPath": "docs/verification/t1413/logs/backend-existing-lessons.log.gz",
+      "transportSha256": "4ed894d10b20f22ada5675e046ae017f5c7e73c16383b8fdfb48c7d461b54d33"
+    },
+    {
+      "originalPath": "docs/verification/t1413/backend-existing-lessons.vitest.json",
+      "originalSha256": "f9461da2c0794f414ab4df0e0fa840d390312881a6e7b3ffaf2ee329cdcd6443",
+      "bytes": 224386,
+      "transportPath": "docs/verification/t1413/logs/backend-existing-lessons.vitest.json.gz",
+      "transportSha256": "85849bca1962002dcc5bd49d354e3e1e0bf841140004d0fea10f0e3803704ef2"
+    },
+    {
+      "originalPath": "docs/verification/t1413/backend-safety-final.log",
+      "originalSha256": "cdc466dddda7cf3260d0b560657f408fc57353e7403c93f17df411073643011d",
+      "bytes": 17505,
+      "transportPath": "docs/verification/t1413/logs/backend-safety-final.log.gz",
+      "transportSha256": "edbdee8ed22fa2ab2952d6bbe72812e990233ea210f907c40e4c82defd7be816"
+    },
+    {
+      "originalPath": "docs/verification/t1413/backend-safety-final.vitest.json",
+      "originalSha256": "17786a06742c8d9facb04666bcd4754999433a7f3302a8951cf110c476c0ca5a",
+      "bytes": 24058,
+      "transportPath": "docs/verification/t1413/logs/backend-safety-final.vitest.json.gz",
+      "transportSha256": "d238cc0e116d44a4e3faa486f56ca711ad360fa25b88eb4d541d7b72d7f4f5ed"
+    },
+    {
+      "originalPath": "docs/verification/t1413/baseline.log",
+      "originalSha256": "4a0517bcd5a3053ad533cf3d7fa8cf568a7af414684bb3a5b0d3634b4d62027d",
+      "bytes": 1678,
+      "transportPath": "docs/verification/t1413/logs/baseline.log.gz",
+      "transportSha256": "b323ef32af0b489a577acefb6211309019bcb7765568e53233d0b595c7a1d77b"
+    },
+    {
+      "originalPath": "docs/verification/t1413/baseline.vitest.json",
+      "originalSha256": "46cfafb3113396d66be83b2e1516b96e0c3524e6f560755bb625267d195aba89",
+      "bytes": 2538,
+      "transportPath": "docs/verification/t1413/logs/baseline.vitest.json.gz",
+      "transportSha256": "b0b9b7401f46d7ab9d4c46353796225bb8895232e190f60b7f8451ef4b357fe3"
+    },
+    {
+      "originalPath": "docs/verification/t1413/boundary-final.log",
+      "originalSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "bytes": 779,
+      "transportPath": "docs/verification/t1413/logs/boundary-final.log.gz",
+      "transportSha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2"
+    },
+    {
+      "originalPath": "docs/verification/t1413/boundary.log",
+      "originalSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "bytes": 779,
+      "transportPath": "docs/verification/t1413/logs/boundary.log.gz",
+      "transportSha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-compatibility-final.log",
+      "originalSha256": "567cd1cd9e9cd25267473194d398c4ed6460ed48082cf12b3e09844796b23e3c",
+      "bytes": 5061,
+      "transportPath": "docs/verification/t1413/logs/cover-compatibility-final.log.gz",
+      "transportSha256": "ff1d7a028f1ac2c629c02ee422d3946ac08929ce65f6bb51c02019c366cc9507"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-compatibility-final.vitest.json",
+      "originalSha256": "7fa2412a57969e4b3af8f26660df42002f80b32457fc26fd49e44e07a5d064c9",
+      "bytes": 8379,
+      "transportPath": "docs/verification/t1413/logs/cover-compatibility-final.vitest.json.gz",
+      "transportSha256": "f535648e501b644f68de8e7ffbae55571963fcedceff10d6569a2b8f81c1e98a"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-freeze-final.log",
+      "originalSha256": "82d782c782c8c11d23e84904ad29c70c487139b9fd0c19035398a87ff55c957f",
+      "bytes": 5056,
+      "transportPath": "docs/verification/t1413/logs/cover-freeze-final.log.gz",
+      "transportSha256": "2b0b478dc7857a646d6df0fe33581a9b60ef6cbbd1de185bf2b2f1f3931247bf"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-freeze-final.vitest.json",
+      "originalSha256": "c5ca4e54531bf1c036a5172ee27bc8108ad723eb98de933ba2df17aa1d0fdd5d",
+      "bytes": 8374,
+      "transportPath": "docs/verification/t1413/logs/cover-freeze-final.vitest.json.gz",
+      "transportSha256": "2888d71c46d13b5803a1d3cfe5a74bc9cafefc9865985e31bee6a124d2f0b334"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-green.log",
+      "originalSha256": "b254e967da121a79082f913dd0200d0f888a467ff4515b9980cff0db9bf7c865",
+      "bytes": 4545,
+      "transportPath": "docs/verification/t1413/logs/cover-green.log.gz",
+      "transportSha256": "3ef3d905d67bf5ea7afdf852d82172f6a06d68c3a1a0b94ec151b28aa77f9915"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-green.vitest.json",
+      "originalSha256": "734857c33e37cafb598fbd93029e8a98221a9165e2e8147d55c791dc27ecf4b2",
+      "bytes": 7588,
+      "transportPath": "docs/verification/t1413/logs/cover-green.vitest.json.gz",
+      "transportSha256": "bb711967ecf5e45e5032e6f88d70f908df08f83e68259b32b44b660d1221b8f7"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-red.log",
+      "originalSha256": "3cb71ef650a6dcc626264d9d32b0d62e6f2d435119ab036d232b962f928d6255",
+      "bytes": 28227,
+      "transportPath": "docs/verification/t1413/logs/cover-red.log.gz",
+      "transportSha256": "0be59f51eb2518ec3f222423c5853a8659826bf4474aa522e23a835c0857929e"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-red.vitest.json",
+      "originalSha256": "7545547a76202e0cbefb8482d212ec1bb4cca1f0f8945a227e73695b275ba611",
+      "bytes": 20078,
+      "transportPath": "docs/verification/t1413/logs/cover-red.vitest.json.gz",
+      "transportSha256": "3a2c585016d7cc528eed39a448ff003ccbe577c520c46e7e24c2fc52bcba1bce"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-worker-valid-fixture.log",
+      "originalSha256": "e886cf0f9badeb83af027d03a9f55bf280b6619f71a6298e1ff97a85292f9efd",
+      "bytes": 922,
+      "transportPath": "docs/verification/t1413/logs/cover-worker-valid-fixture.log.gz",
+      "transportSha256": "b8a198c835180061e1399cc48cecc7a84c8c56905ec369d95e405de47838cde9"
+    },
+    {
+      "originalPath": "docs/verification/t1413/cover-worker-valid-fixture.vitest.json",
+      "originalSha256": "0641031346193dfdb79e70a6d8aa8ab0c6cae9e2df338ffc0abf5400151f0d7e",
+      "bytes": 1322,
+      "transportPath": "docs/verification/t1413/logs/cover-worker-valid-fixture.vitest.json.gz",
+      "transportSha256": "725a7d3c09708afe7ca2cdb4ea97928f257f6dc8f72a267bd4675fbed04bd520"
+    },
+    {
+      "originalPath": "docs/verification/t1413/diff-check-final.log",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "transportPath": "docs/verification/t1413/logs/diff-check-final.log.gz",
+      "transportSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "originalPath": "docs/verification/t1413/diff-check.log",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "transportPath": "docs/verification/t1413/logs/diff-check.log.gz",
+      "transportSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "originalPath": "docs/verification/t1413/frontend-lessons.log",
+      "originalSha256": "1c28ed1b82be6b1230b45d45b29e8c685a5250c00b5f5fc19375f0fd367bcb23",
+      "bytes": 113452,
+      "transportPath": "docs/verification/t1413/logs/frontend-lessons.log.gz",
+      "transportSha256": "03e2e9d286ae26893c214e089c4c1e8cea9a6449ea6aecbf92233be2f9909d85"
+    },
+    {
+      "originalPath": "docs/verification/t1413/frontend-lessons.vitest.json",
+      "originalSha256": "e567453602c821e3171034d8e25c9b3db1505336441da65e29a0fb81f94e6e51",
+      "bytes": 140508,
+      "transportPath": "docs/verification/t1413/logs/frontend-lessons.vitest.json.gz",
+      "transportSha256": "2db817b2669c20d63dd0c955525ed3a5a6f4d12520e057a7e021dff6ecaf5013"
+    },
+    {
+      "originalPath": "docs/verification/t1413/metadata-continuous-first.log",
+      "originalSha256": "46ad53557899229afa1df78f32d8edc1b4c05d459a640df02edbb12656c68c24",
+      "bytes": 15531,
+      "transportPath": "docs/verification/t1413/logs/metadata-continuous-first.log.gz",
+      "transportSha256": "150060e5bdbdac888d465c7b452a380b1e9242552ef4da9bd8185dd15b520ece"
+    },
+    {
+      "originalPath": "docs/verification/t1413/metadata-continuous-first.vitest.json",
+      "originalSha256": "551ccbbd0694a45a2583e103569274c139984907942aedf9afc5311ec1f91531",
+      "bytes": 21402,
+      "transportPath": "docs/verification/t1413/logs/metadata-continuous-first.vitest.json.gz",
+      "transportSha256": "c3a19674a6c16d48c72555ad93f83ef782d0a12dc63339ae1a2bf353c4e7ac4d"
+    },
+    {
+      "originalPath": "docs/verification/t1413/pi-protocol-final.log",
+      "originalSha256": "950ba3c06bd2ace82c01209f7024cbf403f87a6b5db86d84b75fc977413e311e",
+      "bytes": 7958,
+      "transportPath": "docs/verification/t1413/logs/pi-protocol-final.log.gz",
+      "transportSha256": "96fa61411d6c48d8f60e442acdc9cd7f1e366a68807f75215f519d68f05d915c"
+    },
+    {
+      "originalPath": "docs/verification/t1413/pi-protocol-final.vitest.json",
+      "originalSha256": "ec340a2118c3efa4dc93f2b03f1f5e1d1b8fabfb6772de77f63f82dfe4d99888",
+      "bytes": 9039,
+      "transportPath": "docs/verification/t1413/logs/pi-protocol-final.vitest.json.gz",
+      "transportSha256": "cbe0f5629dd5319e84fcfed5f4281b5d4b5b597a94652a8ec787e14e1278af1b"
+    },
+    {
+      "originalPath": "docs/verification/t1413/semantic-boundary-final.log",
+      "originalSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "bytes": 86,
+      "transportPath": "docs/verification/t1413/logs/semantic-boundary-final.log.gz",
+      "transportSha256": "e072a2bbe761c672af0fefcbe0551666845af536ea3fd654ad866bc6507c1ebb"
+    },
+    {
+      "originalPath": "docs/verification/t1413/semantic-boundary.log",
+      "originalSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "bytes": 86,
+      "transportPath": "docs/verification/t1413/logs/semantic-boundary.log.gz",
+      "transportSha256": "e072a2bbe761c672af0fefcbe0551666845af536ea3fd654ad866bc6507c1ebb"
+    },
+    {
+      "originalPath": "docs/verification/t1413/typecheck-backend-final.log",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "transportPath": "docs/verification/t1413/logs/typecheck-backend-final.log.gz",
+      "transportSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "originalPath": "docs/verification/t1413/typecheck-backend.log",
+      "originalSha256": "39a1e7718504df084c9da06f8cf362421989eae263f343ac49a385626a68337e",
+      "bytes": 2233,
+      "transportPath": "docs/verification/t1413/logs/typecheck-backend.log.gz",
+      "transportSha256": "5de4d8fa87e95213d773df6300e56cd333401aa640eb57dad0974bde5c5c9a35"
+    },
+    {
+      "originalPath": "docs/verification/t1413/typecheck-worker-final.log",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "transportPath": "docs/verification/t1413/logs/typecheck-worker-final.log.gz",
+      "transportSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "originalPath": "docs/verification/t1413/typecheck-worker-freeze.log",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "transportPath": "docs/verification/t1413/logs/typecheck-worker-freeze.log.gz",
+      "transportSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "originalPath": "docs/verification/t1413/typecheck-worker.log",
+      "originalSha256": "b192128211881bf511cf3289697133ac964c49ba1c286528b73e5482de0f5859",
+      "bytes": 1014,
+      "transportPath": "docs/verification/t1413/logs/typecheck-worker.log.gz",
+      "transportSha256": "902e75170c4fd999a6d4616d2690d53a068f927c4612601c8ed736739faa7198"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-final.log",
+      "originalSha256": "06a99263d0553fbe1d191515206275bda122c0d8e46d9c24b55b351adc80ebbf",
+      "bytes": 43488,
+      "transportPath": "docs/verification/t1413/logs/worker-final.log.gz",
+      "transportSha256": "678b7c14395b058c638a6557e3ca5cc90e80f7cb0c74006fc8f7c56fb1c0b976"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-final.vitest.json",
+      "originalSha256": "1d3fd0699be82f8a1333cbe5fe62c917350c5984ee18fda94b5c3262d1d14d57",
+      "bytes": 44598,
+      "transportPath": "docs/verification/t1413/logs/worker-final.vitest.json.gz",
+      "transportSha256": "a71edf30e28e0ee5e83e0f5e86f059f791f9267f494d564aa68bd2238b945497"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-material-match.log",
+      "originalSha256": "f1f17c3aef5e67c4afd70c4ad075e34979cda3c35ce12548692e45b9fecafbed",
+      "bytes": 1454,
+      "transportPath": "docs/verification/t1413/logs/worker-material-match.log.gz",
+      "transportSha256": "da1244576f1ac4e9b061d98132ee23a0e725201643e87d433df2708f663bcd95"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-material-match.vitest.json",
+      "originalSha256": "e883f14507b3f908c246acedeb35d314a9c85a8654d38d7b44306a01c64ae842",
+      "bytes": 2201,
+      "transportPath": "docs/verification/t1413/logs/worker-material-match.vitest.json.gz",
+      "transportSha256": "aa009496650c4044dc55c08bb3593a7b1a06d1b8715d118e71c00e7fb8fa68b1"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-new-first.log",
+      "originalSha256": "950cd61ab55cb0cf91d70d1ff646cc8f97004c98e1f44ccd50a833ee998d2e5a",
+      "bytes": 16189,
+      "transportPath": "docs/verification/t1413/logs/worker-new-first.log.gz",
+      "transportSha256": "ba9bd3529f4b39704945a5072acd4db16ed39a9f4720922f9cf7c2af71e027fb"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-new-first.vitest.json",
+      "originalSha256": "3cce137671f8b7f0d05339078aa3e4dd250615cd73a038214535fcb4310b2da8",
+      "bytes": 15751,
+      "transportPath": "docs/verification/t1413/logs/worker-new-first.vitest.json.gz",
+      "transportSha256": "93d9de86fbec1ebb69bd32bbad362abbe355dbc9a9022c6d300fd15ddf5acf5d"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-safety-green.log",
+      "originalSha256": "763bdbeee1f4cdac89c12d7956953a0b3fa1e7ac51965f1f35bd66fb76265b72",
+      "bytes": 18014,
+      "transportPath": "docs/verification/t1413/logs/worker-safety-green.log.gz",
+      "transportSha256": "8d684bdf7c9c1113d9aee0f1cc718c5e838eba99fd6086fd0f9c9a664e1d26b5"
+    },
+    {
+      "originalPath": "docs/verification/t1413/worker-safety-green.vitest.json",
+      "originalSha256": "a6619ce8e5bbd57a9f6cbe78e9e59c8ee8562101e534fd97f724d082b2e55871",
+      "bytes": 20438,
+      "transportPath": "docs/verification/t1413/logs/worker-safety-green.vitest.json.gz",
+      "transportSha256": "4c0c62b5c786464e1559d71bb8a032ac53fc9689cd443268b3dc9a787fee5251"
+    }
+  ],
+  "selectedPaths": [
+    "docs/verification/t1413/logs/backend-existing-lessons.log.gz",
+    "docs/verification/t1413/backend-existing-lessons.receipt.json",
+    "docs/verification/t1413/logs/backend-existing-lessons.vitest.json.gz",
+    "docs/verification/t1413/logs/backend-safety-final.log.gz",
+    "docs/verification/t1413/backend-safety-final.receipt.json",
+    "docs/verification/t1413/logs/backend-safety-final.vitest.json.gz",
+    "docs/verification/t1413/logs/baseline.log.gz",
+    "docs/verification/t1413/baseline.receipt.json",
+    "docs/verification/t1413/logs/baseline.vitest.json.gz",
+    "docs/verification/t1413/logs/boundary-final.log.gz",
+    "docs/verification/t1413/boundary-final.receipt.json",
+    "docs/verification/t1413/logs/boundary.log.gz",
+    "docs/verification/t1413/boundary.receipt.json",
+    "docs/verification/t1413/logs/cover-compatibility-final.log.gz",
+    "docs/verification/t1413/cover-compatibility-final.receipt.json",
+    "docs/verification/t1413/logs/cover-compatibility-final.vitest.json.gz",
+    "docs/verification/t1413/logs/cover-freeze-final.log.gz",
+    "docs/verification/t1413/cover-freeze-final.receipt.json",
+    "docs/verification/t1413/logs/cover-freeze-final.vitest.json.gz",
+    "docs/verification/t1413/logs/cover-green.log.gz",
+    "docs/verification/t1413/cover-green.receipt.json",
+    "docs/verification/t1413/logs/cover-green.vitest.json.gz",
+    "docs/verification/t1413/logs/cover-red.log.gz",
+    "docs/verification/t1413/cover-red.receipt.json",
+    "docs/verification/t1413/logs/cover-red.vitest.json.gz",
+    "docs/verification/t1413/logs/cover-worker-valid-fixture.log.gz",
+    "docs/verification/t1413/cover-worker-valid-fixture.receipt.json",
+    "docs/verification/t1413/logs/cover-worker-valid-fixture.vitest.json.gz",
+    "docs/verification/t1413/coverage-index.json",
+    "docs/verification/t1413/logs/diff-check-final.log.gz",
+    "docs/verification/t1413/diff-check-final.receipt.json",
+    "docs/verification/t1413/logs/diff-check.log.gz",
+    "docs/verification/t1413/diff-check.receipt.json",
+    "docs/verification/t1413/logs/frontend-lessons.log.gz",
+    "docs/verification/t1413/frontend-lessons.receipt.json",
+    "docs/verification/t1413/logs/frontend-lessons.vitest.json.gz",
+    "docs/verification/t1413/lesson-check-candidate.json",
+    "docs/verification/t1413/managed-image-idempotency-qualification.md",
+    "docs/verification/t1413/logs/metadata-continuous-first.log.gz",
+    "docs/verification/t1413/metadata-continuous-first.receipt.json",
+    "docs/verification/t1413/logs/metadata-continuous-first.vitest.json.gz",
+    "docs/verification/t1413/logs/pi-protocol-final.log.gz",
+    "docs/verification/t1413/pi-protocol-final.receipt.json",
+    "docs/verification/t1413/logs/pi-protocol-final.vitest.json.gz",
+    "docs/verification/t1413/run-focused.mjs",
+    "docs/verification/t1413/logs/semantic-boundary-final.log.gz",
+    "docs/verification/t1413/semantic-boundary-final.receipt.json",
+    "docs/verification/t1413/logs/semantic-boundary.log.gz",
+    "docs/verification/t1413/semantic-boundary.receipt.json",
+    "docs/verification/t1413/spec-review-eof-recheck.json",
+    "docs/verification/t1413/spec-review-initial.json",
+    "docs/verification/t1413/spec-review-recheck.json",
+    "docs/verification/t1413/logs/typecheck-backend-final.log.gz",
+    "docs/verification/t1413/typecheck-backend-final.receipt.json",
+    "docs/verification/t1413/logs/typecheck-backend.log.gz",
+    "docs/verification/t1413/typecheck-backend.receipt.json",
+    "docs/verification/t1413/logs/typecheck-worker-final.log.gz",
+    "docs/verification/t1413/typecheck-worker-final.receipt.json",
+    "docs/verification/t1413/logs/typecheck-worker-freeze.log.gz",
+    "docs/verification/t1413/typecheck-worker-freeze.receipt.json",
+    "docs/verification/t1413/logs/typecheck-worker.log.gz",
+    "docs/verification/t1413/typecheck-worker.receipt.json",
+    "docs/verification/t1413/logs/worker-final.log.gz",
+    "docs/verification/t1413/worker-final.receipt.json",
+    "docs/verification/t1413/logs/worker-final.vitest.json.gz",
+    "docs/verification/t1413/logs/worker-material-match.log.gz",
+    "docs/verification/t1413/worker-material-match.receipt.json",
+    "docs/verification/t1413/logs/worker-material-match.vitest.json.gz",
+    "docs/verification/t1413/logs/worker-new-first.log.gz",
+    "docs/verification/t1413/worker-new-first.receipt.json",
+    "docs/verification/t1413/logs/worker-new-first.vitest.json.gz",
+    "docs/verification/t1413/logs/worker-safety-green.log.gz",
+    "docs/verification/t1413/worker-safety-green.receipt.json",
+    "docs/verification/t1413/logs/worker-safety-green.vitest.json.gz",
+    "docs/verification/t1413/implementation-freeze.json"
+  ]
+}

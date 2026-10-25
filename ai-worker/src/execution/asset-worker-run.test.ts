@@ -89,3 +89,20 @@ it("参考图不可读时不启动供应商，也不降级为文生图",async()=
  },generate)).rejects.toThrow("参考版本丢失");
  expect(seen).not.toContain("startAssetCall");expect(generate).not.toHaveBeenCalled();
 });
+
+it.each([true,false])('T1413未证明幂等资格的同步图片网络未知不重提，受管标签=%s',async managed=>{
+ const generate=vi.fn(async(_input:unknown,_spec:unknown,_signal:AbortSignal,options:{idempotencyKey:string})=>{expect(options.idempotencyKey).toBe('execution-asset:original-call');throw Object.assign(Error('synthetic connection lost'),{stage:'submit',reason:'network'});});
+ let status='reserved';const settlements:unknown[]=[];
+ const call=async(port:string,data:unknown)=>{
+  if(port==='reserveAssetCall')return {callId:'original-call',status};
+  if(port==='resolveAssetCredential')return {provider:'openai',model:'image',baseUrl:null,kind:'image',token:'synthetic',...(managed?{displayModelKey:'channel-managed'}:{})};
+  if(port==='startAssetCall'){status='started';return {callId:'original-call',status};}
+  if(port==='settleAssetCall'){settlements.push(data);status='unknown';return {};}
+  if(port==='recoverAssetResult')return {status:'missing'};
+  if(port==='readAssetProviderJob')return null;
+  throw Error(`禁止 ${port}`);
+ };
+ await expect(runAssetInWorker(input,new AbortController().signal,call,generate)).rejects.toMatchObject({outcome:'unknown_result'});
+ await expect(runAssetInWorker(input,new AbortController().signal,call,generate)).rejects.toMatchObject({outcome:'unknown_result'});
+ expect(generate).toHaveBeenCalledOnce();expect(settlements).toEqual([{callId:'original-call',status:'unknown'},{callId:'original-call',status:'unknown'}]);
+});

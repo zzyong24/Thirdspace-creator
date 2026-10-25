@@ -1,0 +1,44 @@
+{
+  "recordedAt": "2026-10-25T08:39:57.886607+00:00",
+  "preparationCommand": [
+    "python3",
+    "docs/verification/t1412/full-preparation/prepare-offline-assets.py"
+  ],
+  "actualExitCode": 0,
+  "terminalSessionId": 43019,
+  "completionChunk": "1c4526",
+  "files": [
+    {
+      "path": "docs/verification/t1412/full-preparation/handoff.md",
+      "bytes": 4610,
+      "sha256": "cd9fb8fa71671cda55b3964a7fae277a9af0f623db180eae2aff657bd93fb2e9"
+    },
+    {
+      "path": "docs/verification/t1412/full-preparation/led061-historical-baselines.json",
+      "bytes": 1427,
+      "sha256": "1fe22b915a0ef8c60e32c0c51dee5aa98891ac3ff1439d4c1b0641aa224e738d"
+    },
+    {
+      "path": "docs/verification/t1412/full-preparation/playwright-local-assets.json",
+      "bytes": 127400,
+      "sha256": "e90ca8b61154ef503e9802b2246d1ef66796c45bba3af5995e1a077a5b926c76"
+    },
+    {
+      "path": "docs/verification/t1412/full-preparation/prepare-offline-assets.py",
+      "bytes": 12105,
+      "sha256": "1df27a4a8f345c284cd6e59ec36244b078976abe9202eb819f1449e7f8997ff0"
+    },
+    {
+      "path": "docs/verification/t1412/full-preparation/rust-offline-assets.json",
+      "bytes": 1444705,
+      "sha256": "3339418a6ce887e94daaaaaf049259445bc898f42d70b8a3ec96f4e811c897d8"
+    },
+    {
+      "path": "docs/verification/t1412/full-preparation/suggested-env-delta.json",
+      "bytes": 2299,
+      "sha256": "57337b6894159ab119d7d99e4d84971ad51997c5e6be354581d8c926946ba8f9"
+    }
+  ],
+  "mutatedStateJson": false,
+  "ranFullTestsBuildOrBrowser": false
+}

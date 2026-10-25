@@ -1,0 +1,140 @@
+{
+  "label": "cover-red",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/ai-runtime/chat-cover-task-host.test.ts",
+    "src/modules/ai-runtime/cover-business-adapter.test.ts",
+    "src/modules/execution/execution-cover-series.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/cover-red.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:33:42.767Z",
+  "endedAt": "2026-10-25T08:33:49.441Z",
+  "exitCode": 1,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/cover-red.log",
+  "logSha256": "3cb71ef650a6dcc626264d9d32b0d62e6f2d435119ab036d232b962f928d6255",
+  "report": "docs/verification/t1413/cover-red.vitest.json",
+  "counts": {
+    "passed": 13,
+    "failed": 9,
+    "pending": 0,
+    "total": 22
+  },
+  "files": [
+    {
+      "path": "backend/src/modules/execution/execution-cover-series.test.ts",
+      "tests": [
+        {
+          "name": "组图沿原封面持久调用传精确参考和画幅 按原file读字节、原画幅入图片调用、重复prepare复用已存回执",
+          "status": "passed"
+        },
+        {
+          "name": "组图沿原封面持久调用传精确参考和画幅 精确参考读取失败或checksum变化不能偷偷变文生图",
+          "status": "passed"
+        },
+        {
+          "name": "组图沿原封面持久调用传精确参考和画幅 旧cover只指定Asset的读取失败继续合法降级",
+          "status": "passed"
+        },
+        {
+          "name": "组图沿原封面持久调用传精确参考和画幅 用户明确的unsupported画幅给出真实模型原因",
+          "status": "passed"
+        },
+        {
+          "name": "封面实际prepareImage把取消传给官方fresh，迟到结果不保存coverImage",
+          "status": "passed"
+        },
+        {
+          "name": "T1413必需发布参考missing拒绝，不保存或转纯文",
+          "status": "failed"
+        },
+        {
+          "name": "T1413必需发布参考read-error拒绝，不保存或转纯文",
+          "status": "failed"
+        },
+        {
+          "name": "T1413必需发布参考empty拒绝，不保存或转纯文",
+          "status": "failed"
+        },
+        {
+          "name": "T1413必需发布参考unsupported拒绝，不保存或转纯文",
+          "status": "failed"
+        },
+        {
+          "name": "T1413必需发布参考invalid-mime拒绝，不保存或转纯文",
+          "status": "failed"
+        },
+        {
+          "name": "T1413必需发布参考保留原字节及image.edit，重复准备复用候选输入",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-cover-task-host.test.ts",
+      "tests": [
+        {
+          "name": "T1413 cover.publication_reference缺参考ID零提交，原路线要求不能丢失",
+          "status": "failed"
+        },
+        {
+          "name": "T1413 cover.reference缺参考ID零提交，原路线要求不能丢失",
+          "status": "failed"
+        },
+        {
+          "name": "T1413可信路线由宿主冻结必需标记并保留原稿与attempt",
+          "status": "failed"
+        },
+        {
+          "name": "T1413普通旧请求不要求参考，模型自报标记不能取得可信路线",
+          "status": "passed"
+        },
+        {
+          "name": "T1413封面准备拒绝account变化且零提交",
+          "status": "passed"
+        },
+        {
+          "name": "T1413封面准备拒绝group变化且零提交",
+          "status": "passed"
+        },
+        {
+          "name": "T1413封面准备拒绝project变化且零提交",
+          "status": "passed"
+        },
+        {
+          "name": "T1413封面准备拒绝definition变化且零提交",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/cover-business-adapter.test.ts",
+      "tests": [
+        {
+          "name": "T1413真实封面prepare冻结内部参考约束、原输入摘要与原稿，strict=true",
+          "status": "failed"
+        },
+        {
+          "name": "T1413真实封面prepare冻结内部参考约束、原输入摘要与原稿，strict=false",
+          "status": "passed"
+        },
+        {
+          "name": "T1413字符串真值不冒充宿主必需标记",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

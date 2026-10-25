@@ -1,0 +1,648 @@
+{
+  "label": "worker-final",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "ai-worker",
+    "exec",
+    "vitest",
+    "run",
+    "src/nodes/structured-node.test.ts",
+    "src/execution/worker-runtime.test.ts",
+    "src/execution/durable-generation-model.test.ts",
+    "src/execution/intelligence-generation-worker.test.ts",
+    "src/runtime/chat/chat-pi-loop.protocol.test.ts",
+    "src/execution/asset-worker-run.test.ts",
+    "src/execution/cover-worker-run.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/worker-final.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:38:55.316Z",
+  "endedAt": "2026-10-25T08:39:11.350Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/worker-final.log",
+  "logSha256": "06a99263d0553fbe1d191515206275bda122c0d8e46d9c24b55b351adc80ebbf",
+  "report": "docs/verification/t1413/worker-final.vitest.json",
+  "counts": {
+    "passed": 143,
+    "failed": 0,
+    "pending": 0,
+    "total": 143
+  },
+  "files": [
+    {
+      "path": "ai-worker/src/execution/asset-worker-run.test.ts",
+      "tests": [
+        {
+          "name": "原结果恢复优先于凭据和供应商调用",
+          "status": "passed"
+        },
+        {
+          "name": "原调用启动后才生成字节，保存回执作为唯一结果",
+          "status": "passed"
+        },
+        {
+          "name": "参考图按冻结版本在启动前读取，字节交给图片适配器",
+          "status": "passed"
+        },
+        {
+          "name": "参考图不可读时不启动供应商，也不降级为文生图",
+          "status": "passed"
+        },
+        {
+          "name": "凭据不可用保留原reserved，不启动或结算模型",
+          "status": "passed"
+        },
+        {
+          "name": "无任务号且无原字节的旧调用不能重新提交",
+          "status": "passed"
+        },
+        {
+          "name": "视频提交回执丢失不继续poll",
+          "status": "passed"
+        },
+        {
+          "name": "恢复原job时只传原任务号，不重新启动调用",
+          "status": "passed"
+        },
+        {
+          "name": "原视频查询 HTTP 401 只对瞬态故障请求续查",
+          "status": "passed"
+        },
+        {
+          "name": "原视频查询 HTTP 402 只对瞬态故障请求续查",
+          "status": "passed"
+        },
+        {
+          "name": "原视频查询 HTTP 403 只对瞬态故障请求续查",
+          "status": "passed"
+        },
+        {
+          "name": "原视频查询 HTTP 404 只对瞬态故障请求续查",
+          "status": "passed"
+        },
+        {
+          "name": "原视频查询 HTTP 429 只对瞬态故障请求续查",
+          "status": "passed"
+        },
+        {
+          "name": "原视频查询 HTTP 503 只对瞬态故障请求续查",
+          "status": "passed"
+        },
+        {
+          "name": "参考图按冻结版本在启动前读取，字节交给图片适配器",
+          "status": "passed"
+        },
+        {
+          "name": "参考图不可读时不启动供应商，也不降级为文生图",
+          "status": "passed"
+        },
+        {
+          "name": "T1413未证明幂等资格的同步图片网络未知不重提，受管标签=true",
+          "status": "passed"
+        },
+        {
+          "name": "T1413未证明幂等资格的同步图片网络未知不重提，受管标签=false",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "ai-worker/src/execution/cover-worker-run.test.ts",
+      "tests": [
+        {
+          "name": "T1413正式封面复用已结算文案、原参考与同key，未知=false不重提",
+          "status": "passed"
+        },
+        {
+          "name": "T1413正式封面复用已结算文案、原参考与同key，未知=true不重提",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "ai-worker/src/execution/durable-generation-model.test.ts",
+      "tests": [
+        {
+          "name": "持续 Agent 节点可废弃网络断开的模型候选并续跑",
+          "status": "passed"
+        },
+        {
+          "name": "Codex即使文本节点准许Pi候选重试，普通网络断开仍保留原call未知",
+          "status": "passed"
+        },
+        {
+          "name": "Codex原结果绑定确认丢失只读原call；已结算providerResult直接回放",
+          "status": "passed"
+        },
+        {
+          "name": "未声明持续恢复的调用仍保持未知结果边界",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "ai-worker/src/execution/intelligence-generation-worker.test.ts",
+      "tests": [
+        {
+          "name": "T1382 project_artifact无网址真实来源沿worker端口生成，未知回执不新增提交",
+          "status": "passed"
+        },
+        {
+          "name": "T1382 imported_text无网址真实来源沿worker端口生成，未知回执不新增提交",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Pi 构造与冻结 Skill 到达预留端口，未知回执不联网",
+          "status": "passed"
+        },
+        {
+          "name": "真实正文专用依赖保契约 null，未知调用不联网或重烧费",
+          "status": "passed"
+        },
+        {
+          "name": "真实正文专用依赖保契约 { type: 'object' }，未知调用不联网或重烧费",
+          "status": "passed"
+        },
+        {
+          "name": "宿主 readTaskContext 拒绝保留安全阶段",
+          "status": "passed"
+        },
+        {
+          "name": "宿主 resolveModelCredential 拒绝保留安全阶段",
+          "status": "passed"
+        },
+        {
+          "name": "损坏上下文不暴露输入且未调用模型",
+          "status": "passed"
+        },
+        {
+          "name": "损坏凭据回执独立诊断",
+          "status": "passed"
+        },
+        {
+          "name": "模型本地初始化失败不能谎报为已调用后结果未知",
+          "status": "passed"
+        },
+        {
+          "name": "[T-1017] 显式 strategy_backed 旧链协议仍能到达模型预留",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实普通正文入口timeout中止provider且迟到正文不保存或结算",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实普通正文入口cancel中止provider且迟到正文不保存或结算",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实普通正文入口late中止provider且迟到正文不保存或结算",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.test.ts",
+      "tests": [
+        {
+          "name": "专用正文标签先映射能力与依赖，不被视频/素材/每日选题抢走",
+          "status": "passed"
+        },
+        {
+          "name": "generic 不获得正文执行权，拒绝发生在凭据/预留前",
+          "status": "passed"
+        },
+        {
+          "name": "capability-only 不获得正文执行权，拒绝发生在凭据/预留前",
+          "status": "passed"
+        },
+        {
+          "name": "dependency-excluded 不获得正文执行权，拒绝发生在凭据/预留前",
+          "status": "passed"
+        },
+        {
+          "name": "正文专用调用继承原取消 signal，错 fence 取消不生效，晚返回不提交正文",
+          "status": "passed"
+        },
+        {
+          "name": "图卡 Skill 进入持久图片 Worker 分支，不落普通结构化文本提交",
+          "status": "passed"
+        },
+        {
+          "name": "私有消费确认与断连 先完成的音频确认独立于较早在途心跳，重复回复重发紧凑确认，错误 fence 不解开在途请求",
+          "status": "passed"
+        },
+        {
+          "name": "私有消费确认与断连 断连撤回所有在途端口，迟到回复不产生确认或新的工作",
+          "status": "passed"
+        },
+        {
+          "name": "网页能力声明依赖已装配对话运行器：false",
+          "status": "passed"
+        },
+        {
+          "name": "网页能力声明依赖已装配对话运行器：true",
+          "status": "passed"
+        },
+        {
+          "name": "未声明网页能力时在读取模型凭据前拒绝网页任务",
+          "status": "passed"
+        },
+        {
+          "name": "对话计划读取使用当前执行租约的命名端口",
+          "status": "passed"
+        },
+        {
+          "name": "终态失败步骤ID只沿受限聊天提交字段交给后端",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 先取得上下文与预算许可，再生成、结算并提交",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 重复投递同一租约不产生第二次模型调用",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 过期任务不申请凭据或预算",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 预算拒绝不执行模型",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 成功提交回执异常不再提交失败覆盖结果",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 长调用续租失败会中断执行，结束后不再心跳",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 启动许可拒绝时供应商调用保持为零",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 恢复遇到started调用不重放供应商",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 恢复遇到settled调用不重放供应商",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 恢复遇到unknown调用不重放供应商",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 恢复遇到rejected调用不重放供应商",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 检查点保存失败禁止提交候选或覆盖已结算结果",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 检查点要求对账时不开始新的供应商调用",
+          "status": "passed"
+        },
+        {
+          "name": "独立 Worker 端口生命周期 有效正文缺少usage仍保存回执并提交，未知预算不触发新调用",
+          "status": "passed"
+        },
+        {
+          "name": "可注入 Agent Worker 生命周期 仅装配真实运行器时声明能力，结果走专用候选端口",
+          "status": "passed"
+        },
+        {
+          "name": "可注入 Agent Worker 生命周期 未装配时不声明能力且等待配置，不请求模型",
+          "status": "passed"
+        },
+        {
+          "name": "可注入 Agent Worker 生命周期 运行器确定拒绝保留退避分类",
+          "status": "passed"
+        },
+        {
+          "name": "可注入 Agent Worker 生命周期 候选提交回执丢失不二次覆盖，报告unknown",
+          "status": "passed"
+        },
+        {
+          "name": "可注入 Agent Worker 生命周期 取消传入运行器，晚返回也不提交候选",
+          "status": "passed"
+        },
+        {
+          "name": "可注入 Agent Worker 生命周期 明确无候选失败回执收敛failed，不当未知也不二次提交",
+          "status": "passed"
+        },
+        {
+          "name": "旧版本分镜回执兼容 旧回执metadata变化可重放，原文篡改=false则拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "旧版本分镜回执兼容 旧回执metadata变化可重放，原文篡改=true则拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "每日选题Worker专用完成端口 跳过quota在获取凭据前完成，零模型",
+          "status": "passed"
+        },
+        {
+          "name": "每日选题Worker专用完成端口 跳过model_unconfigured在获取凭据前完成，零模型",
+          "status": "passed"
+        },
+        {
+          "name": "每日选题Worker专用完成端口 正常daily只向专用结果端口提交",
+          "status": "passed"
+        },
+        {
+          "name": "每日选题Worker专用完成端口 每日完成回执丢失不二次覆盖终态 skip=quota",
+          "status": "passed"
+        },
+        {
+          "name": "每日选题Worker专用完成端口 每日完成回执丢失不二次覆盖终态 skip=undefined",
+          "status": "passed"
+        },
+        {
+          "name": "宿主端口executeAgenticTool超过30秒但仍在任务预算内可以完成",
+          "status": "passed"
+        },
+        {
+          "name": "宿主端口readChatWebReadSession超过30秒但仍在任务预算内可以完成",
+          "status": "passed"
+        },
+        {
+          "name": "Codex 'local'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic",
+          "status": "passed"
+        },
+        {
+          "name": "Codex 'typed-authority'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic",
+          "status": "passed"
+        },
+        {
+          "name": "Codex 'typed-credential'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic",
+          "status": "passed"
+        },
+        {
+          "name": "Codex host-unknown：真实Worker投unknown，不能committed waiting_user或成功",
+          "status": "passed"
+        },
+        {
+          "name": "Codex wrong-ack：真实Worker投unknown，不能committed waiting_user或成功",
+          "status": "passed"
+        },
+        {
+          "name": "Codex真实消息取消：会话准备中同租约cancel仅停止，不结算拒绝/失败、不重发",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "ai-worker/src/nodes/structured-node.test.ts",
+      "tests": [
+        {
+          "name": "runStructuredNode 跨模型健壮性 模型已声明不支持结构化输出时直接走文本兼容协议，不先发送结构化请求",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 兼容端点明确拒绝 response_format 时改走文本 JSON，仍用同一 schema 验收",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 generateObject 落空(端点吐纯文本不调工具)→ 文本兜底抽 JSON + 同一 schema 校验",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 [T-865] 首次结构化响应仅一张卡枚举越界时局部恢复，不再追加第二次计费请求",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 [T-868] generateObject 的根级 custom 动态错误逐卡恢复，不追加文本模型请求",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 generateObject 落空 + 文本也无合 schema 的 JSON → 抛错(不假成功)",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 maxRetries=0 关闭 SDK 重试，节点格式恢复仍受两次共享预算限制",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 默认只做一次结构化尝试和至多两次格式恢复",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 显式格式恢复预算 0 严格限制总调用数",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 显式格式恢复预算 1 严格限制总调用数",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 显式格式恢复预算 2 严格限制总调用数",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 跨模型健壮性 文本兼容首响应失败后携带真实校验问题修复，合法结果不继续重试",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode reasoning 恢复边界 正文为空且调用方显式开启时，只恢复原始字段完整的审核 JSON",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode reasoning 恢复边界 原始 reasoning 不完整时失败：{}",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode reasoning 恢复边界 原始 reasoning 不完整时失败：先想想 {} 后面没有报告",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode reasoning 恢复边界 原始 reasoning 不完整时失败：完全没有 JSON",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode reasoning 恢复边界 正文非空但无合法 JSON 时不回读 reasoning",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode reasoning 恢复边界 未显式开启的结构化任务不读取 reasoning",
+          "status": "passed"
+        },
+        {
+          "name": "extractJsonObject 容忍 ``` 包裹 + 前后散文",
+          "status": "passed"
+        },
+        {
+          "name": "extractJsonObject 无 JSON → null",
+          "status": "passed"
+        },
+        {
+          "name": "extractJsonObject reasoning 前后各有花括号时提取第一个真实 JSON，而不是首尾粘连",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 创作型本地归一化 提供商把对象包进 result 时复用首次返回，仍由原 schema 严格验收",
+          "status": "passed"
+        },
+        {
+          "name": "runStructuredNode 创作型本地归一化 generateObject 已返回可恢复 JSON 时本地归一化成功，不再发起第二次模型调用",
+          "status": "passed"
+        },
+        {
+          "name": "isStructuredResponseParseError 识别 provider JSON 解析类错误及 cause 链，不把鉴权/网络错误误降级",
+          "status": "passed"
+        },
+        {
+          "name": "isStructuredResponseCompatibilityError 只识别明确的结构化响应协议不兼容，不把鉴权和网络失败降级",
+          "status": "passed"
+        },
+        {
+          "name": "resolveStructuredNodeTimeoutMs 默认 90 秒，允许节点级放宽，但始终有上下界",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-pi-loop.protocol.test.ts",
+      "tests": [
+        {
+          "name": "完整 legacy 窗口只替换本轮宿主回执，冻结历史和用户/助手同文保持原样",
+          "status": "passed"
+        },
+        {
+          "name": "截图回执经可信解析后以 image 内容进入 Pi 下一次模型请求",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：success",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：empty",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：tool",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：legacy",
+          "status": "passed"
+        },
+        {
+          "name": "接受的计划仍有未完成步骤时在原Pi循环继续，工具回执后才交付",
+          "status": "passed"
+        },
+        {
+          "name": "没有工具行动的连续空答复只做一次无工具恢复并快速失败",
+          "status": "passed"
+        },
+        {
+          "name": "计划未推进且模型重复宣称完成时给具体步骤错误，停止无限循环",
+          "status": "passed"
+        },
+        {
+          "name": "相同不可重试工具错误最多重复一次，随后无工具生成部分答复",
+          "status": "passed"
+        },
+        {
+          "name": "长度截断在原任务自动续写，持续截断时有限收口并保留 partial 内容",
+          "status": "passed"
+        },
+        {
+          "name": "长度截断后模型完成时沿原任务正常收口",
+          "status": "passed"
+        },
+        {
+          "name": "计划未完成时空响应继续原任务并允许下一步工具，不能进入只读最终答复恢复",
+          "status": "passed"
+        },
+        {
+          "name": "重复工具调用不重置计划无进展计数",
+          "status": "passed"
+        },
+        {
+          "name": "只有终态失败计划时不再请求模型或工具，只向后端提交可信失败步骤ID",
+          "status": "passed"
+        },
+        {
+          "name": "取消或跳过的终态计划不能让聊天任务冒充完成",
+          "status": "passed"
+        },
+        {
+          "name": "终态失败遇到length仍先按既有规则续写，只有stop才提交部分结果",
+          "status": "passed"
+        },
+        {
+          "name": "历史stop有后继时保留既有续行提示，再只对最新失败收口",
+          "status": "passed"
+        },
+        {
+          "name": "停止后沿原操作键回放已结算模型与工具回执，再继续同一计划",
+          "status": "passed"
+        },
+        {
+          "name": "重启前未知在途调用由 Worker 原检查点阻断（'requires_reconciliation'/'unknown'），不进入供应商或工具",
+          "status": "passed"
+        },
+        {
+          "name": "重启前未知在途调用由 Worker 原检查点阻断（'ready'/'unknown'），不进入供应商或工具",
+          "status": "passed"
+        },
+        {
+          "name": "重启前未知在途调用由 Worker 原检查点阻断（'ready'/'started'），不进入供应商或工具",
+          "status": "passed"
+        },
+        {
+          "name": "已结算长结果只把分页投影送回模型，UI仍持有完整结果",
+          "status": "passed"
+        },
+        {
+          "name": "'不同参数可继续纠错'",
+          "status": "passed"
+        },
+        {
+          "name": "'相同参数两次有限收口'",
+          "status": "passed"
+        },
+        {
+          "name": "'对象键顺序不制造新调用'",
+          "status": "passed"
+        },
+        {
+          "name": "'数组顺序保留'",
+          "status": "passed"
+        },
+        {
+          "name": "'不同错误不合并'",
+          "status": "passed"
+        },
+        {
+          "name": "'不同工具不合并'",
+          "status": "passed"
+        },
+        {
+          "name": "缺宿主绑定参数不把 SDK 空占位当真实重复调用",
+          "status": "passed"
+        },
+        {
+          "name": "T1413发布参考经真实Pi前两步强制工具与规范名称，第三步恢复自由",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

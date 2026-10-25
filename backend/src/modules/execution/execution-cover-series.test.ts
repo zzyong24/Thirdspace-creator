@@ -61,3 +61,42 @@ it('封面实际prepareImage把取消传给官方fresh，迟到结果不保存co
  try{expect(seen).toBe(controller.signal);}finally{controller.abort();release();await settled;}
  expect(h.state.payload.coverImage).toBeUndefined();
 });
+
+it.each(['missing','read-error','empty','unsupported','invalid-mime'])('T1413必需发布参考%s拒绝，不保存或转纯文',async failure=>{
+ const f=fixture({context,visualRequirements:'',referenceAssetId:failure==='missing'?null:'ref',referenceRequired:true},'cover.brief');
+ h.object={headline:'封面',subheadline:'',keyPoints:[],visualConcept:'真实画面',composition:'留白',palette:'蓝'} as never;
+ if(failure==='read-error')f.getReferenceBytes.mockRejectedValue(Error('reference unavailable'));
+ if(failure==='empty')f.getReferenceBytes.mockResolvedValue({bytes:new Uint8Array(),mimeType:'image/png'});
+ if(failure==='unsupported')f.resolveImageSpec.mockResolvedValue({provider:'unknown',model:'image',baseUrl:null,token:'fixture',kind:'image'});
+ if(failure==='invalid-mime')f.getReferenceBytes.mockResolvedValue({bytes,mimeType:'text/plain'});
+ await expect(f.service.prepareImage(ref,{})).rejects.toThrow('参考');
+ expect(h.state.payload.coverImage).toBeUndefined();
+ if(['missing','read-error','empty'].includes(failure))expect(f.resolveImageSpec).not.toHaveBeenCalled();
+});
+it('T1413必需发布参考保留原字节及image.edit，重复准备复用候选输入',async()=>{
+ const f=fixture({context,visualRequirements:'',referenceAssetId:'ref',referenceRequired:true},'cover.brief');
+ h.object={headline:'封面',subheadline:'',keyPoints:[],visualConcept:'真实画面',composition:'留白',palette:'蓝'} as never;
+ const first=await f.service.prepareImage(ref,{});
+ expect(first).toMatchObject({status:'prepared',value:{input:{capability:'image.edit'},reference:{assetId:'ref',checksum},resultData:{referenceImage:{used:true}}}});
+ expect(f.resolveImageSpec).toHaveBeenCalledWith(h.scope.context,'image.edit','task-1',undefined);
+ expect(await f.service.prepareImage(ref,{})).toEqual(first);expect(f.getReferenceBytes).toHaveBeenCalledOnce();
+});
+
+
+it.each([25,31])('T1413旧Codex精确参考保留原30MiB边界，%sMiB',async size=>{
+ const data=new Uint8Array(size*1024*1024),sum=createHash('sha256').update(data).digest('hex');
+ const f=fixture({context,visualRequirements:'',referenceAssetId:'ref',referenceFileId:'original-file',referenceChecksum:sum},'cover.brief');
+ h.object={headline:'封面',subheadline:'',keyPoints:[],visualConcept:'真实画面',composition:'留白',palette:'蓝'} as never;
+ f.getReferenceBytes.mockResolvedValue({bytes:data,mimeType:'image/png'});
+ f.resolveImageSpec.mockResolvedValue({engine:'codex',protocolKind:'codex-app-server',runtimeVersion:'0.159.3',kind:'image'} as never);
+ if(size<30)expect(await f.service.prepareImage(ref,{})).toMatchObject({status:'prepared',value:{input:{engine:'codex',capability:'image.edit'},reference:{checksum:sum}}});
+ else{await expect(f.service.prepareImage(ref,{})).rejects.toThrow('原大小限制');expect(h.state.payload.coverImage).toBeUndefined();}
+});
+it('T1413严格参考读取拒绝同时父取消时保留取消原因，不转业务冲突',async()=>{
+ const f=fixture({context,visualRequirements:'',referenceAssetId:'ref',referenceRequired:true},'cover.brief');
+ h.object={headline:'封面',subheadline:'',keyPoints:[],visualConcept:'真实画面',composition:'留白',palette:'蓝'} as never;
+ const controller=new AbortController(),reason=Error('TEST_PARENT_CANCEL_DURING_REFERENCE');
+ f.getReferenceBytes.mockImplementation(async()=>{controller.abort(reason);throw Error('读取被取消');});
+ await expect(f.service.prepareImage(ref,{},controller.signal)).rejects.toBe(reason);
+ expect(f.resolveImageSpec).not.toHaveBeenCalled();expect(h.state.payload.coverImage).toBeUndefined();
+});

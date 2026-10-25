@@ -1,0 +1,25 @@
+{
+  "preparedAt": "2026-10-25T08:38:12.375969+00:00",
+  "stateSha256": "967fa953dd50f5d7bc84c1a138f4786a6cadb8f9fc8405a0723f0b71c39d5a81",
+  "tree": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "privateRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1412-validation-pexkjjr3",
+  "head": "c00cef1c3f5a60f57f96aa6f85f09906d1274f81",
+  "files": [
+    {
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1073/worker/ipc-memory-serial-observation.json",
+      "destination": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1073/worker/ipc-memory-serial-observation.json",
+      "sha256": "dfc479002442577b7076eb81f33b2480ea1bac89ae6780382a8c499ba6b1d305",
+      "bytes": 575,
+      "action": "exclusive-create",
+      "identity": "历史基线；不是本轮新测观测"
+    },
+    {
+      "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1073/worker/ipc-memory-parallel-observation.json",
+      "destination": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1073/worker/ipc-memory-parallel-observation.json",
+      "sha256": "a08b03fdb7c9c412a322da547e21dcfa6df07a4a2c88fa8949c433462197e1ef",
+      "bytes": 386,
+      "action": "exclusive-create",
+      "identity": "历史基线；不是本轮新测观测"
+    }
+  ]
+}

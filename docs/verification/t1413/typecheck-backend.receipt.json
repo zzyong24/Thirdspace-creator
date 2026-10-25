@@ -1,0 +1,23 @@
+{
+  "label": "typecheck-backend",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "backend",
+    "exec",
+    "tsc",
+    "--noEmit"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:38:03.570Z",
+  "endedAt": "2026-10-25T08:39:12.028Z",
+  "exitCode": 2,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/typecheck-backend.log",
+  "logSha256": "39a1e7718504df084c9da06f8cf362421989eae263f343ac49a385626a68337e",
+  "report": "docs/verification/t1413/typecheck-backend.vitest.json",
+  "counts": null,
+  "files": []
+}

@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "originalPath": "docs/verification/t1413/root-validation/timeout-policy-final.log",
+      "originalSha256": "91c192c81e2903b8a9cbabad6d81ca265d7905381b3333eb203eafc54ce6e4a3",
+      "transportPath": "docs/verification/t1413/root-validation/logs/timeout-policy-final.log.gz",
+      "transportSha256": "1ee5b1fccca91503d1970b2e634630d50114d59fcb1a163c9f246a8b8bd6b438",
+      "scanExitCode": 0
+    },
+    {
+      "originalPath": "docs/verification/t1413/root-validation/workspace-typecheck-final.log",
+      "originalSha256": "487551e3459b792ef591138ea650ae25b3c380ac0283fbccdfd23e0c43403bad",
+      "transportPath": "docs/verification/t1413/root-validation/logs/workspace-typecheck-final.log.gz",
+      "transportSha256": "0128fae158148a0771325dcae0c0e46028219bed01a8b2b4d2c5102d991b979e",
+      "scanExitCode": 0
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "label": "cover-worker-valid-fixture",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "ai-worker",
+    "exec",
+    "vitest",
+    "run",
+    "src/execution/cover-worker-run.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/cover-worker-valid-fixture.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:38:01.148Z",
+  "endedAt": "2026-10-25T08:38:03.459Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/cover-worker-valid-fixture.log",
+  "logSha256": "e886cf0f9badeb83af027d03a9f55bf280b6619f71a6298e1ff97a85292f9efd",
+  "report": "docs/verification/t1413/cover-worker-valid-fixture.vitest.json",
+  "counts": {
+    "passed": 2,
+    "failed": 0,
+    "pending": 0,
+    "total": 2
+  },
+  "files": [
+    {
+      "path": "ai-worker/src/execution/cover-worker-run.test.ts",
+      "tests": [
+        {
+          "name": "T1413正式封面复用已结算文案、原参考与同key，未知=false不重提",
+          "status": "passed"
+        },
+        {
+          "name": "T1413正式封面复用已结算文案、原参考与同key，未知=true不重提",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

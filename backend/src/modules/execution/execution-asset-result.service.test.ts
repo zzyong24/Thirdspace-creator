@@ -25,10 +25,10 @@ beforeAll(async()=>{connection=await createDb();db=connection.db;root=await mkdt
 afterAll(async()=>{await connection.client.close();await rm(root,{recursive:true,force:true});});
 const budget={maxCalls:3,maxTokens:10000,deadlineMs:60000};
 const bytes=new Uint8Array([1,2,3]);
-async function fixture(mediaKind:"image"|"video"="video",codex=false){
+async function fixture(mediaKind:"image"|"video"="video",codex=false,prompt="画面"){
  const id=`asset-result-${++sequence}`,ctx={userId:id,accountId:id,requestId:id,source:"user" as const};
  const now=()=>"2026-09-06T00:00:00.000Z";
- const input={kind:"asset.generate",mediaKind,capability:`${mediaKind}.generate`,operationKey:"asset/original",prompt:"画面",provider:"minimax",model:"MiniMax-H3",baseUrl:null};
+ const input={kind:"asset.generate",mediaKind,capability:`${mediaKind}.generate`,operationKey:"asset/original",prompt,provider:"minimax",model:"MiniMax-H3",baseUrl:null};
  await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:"asset.generate",idempotencyKey:id,inputData:{kind:mediaKind,prompt:input.prompt},requestedAt:now()});
  const mapped=await createExecutionAuthorityService(db,{now}).bindAiTask(ctx,id);
  await db.update(executionTasks).set({payload:{aiTaskId:id,...(codex?{executionRoute:createExecutionRoute('codex')}:{}),modelInput:codex?{kind:'asset.generate',engine:'codex',protocolKind:'codex-app-server',runtimeVersion:'0.159.3',mediaKind:'image',capability:'image.generate',operationKey:input.operationKey,prompt:input.prompt,mode:'text_to_image'}:input}}).where(eq(executionTasks.id,mapped.executionTaskId));
@@ -342,4 +342,28 @@ it('Codex无原native字节绑定不能保存伪图或借Pi供应商回执',asyn
  const f=await fixture('image',true);await f.service.start(f.ref,f.call.id);
  await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow('原回合事实');
  expect(await db.select().from(assets).where(eq(assets.userId,f.id))).toHaveLength(0);
+});
+
+
+it('T1413真实保存回读保留服务原文、画面职责、AI来源，恢复不复制或覆盖',async()=>{
+ const prompt='【当前确认稿绑定】\n段落原文:不是多买工具，而是把流程接通。\n画面职责:解释工具之间的接力关系\n【视觉方案】\n两只手传递同一张卡片';
+ const f=await fixture('image',false,prompt);await f.service.start(f.ref,f.call.id);
+ const receipt=await f.service.save(f.ref,f.call.id,bytes);
+ const read=async()=>(await db.select().from(assets).where(eq(assets.id,receipt.assetId)))[0]!;
+ const original=await read();
+ expect(original).toMatchObject({name:'两只手传递同一张卡片 · 生成图',description:'服务原文:不是多买工具，而是把流程接通。\n画面职责:解释工具之间的接力关系\n视觉方案:两只手传递同一张卡片',status:'pending'});
+ expect(await f.service.save(f.ref,f.call.id,bytes)).toEqual(receipt);
+ expect(await createExecutionAssetResultService(f.deps).recover(f.ref,f.call.id)).toEqual({status:'committed',receipt});
+ expect(await read()).toEqual(original);expect(await db.select().from(assets).where(eq(assets.accountId,f.id))).toHaveLength(1);
+ await db.insert(projects).values({id:f.id,userId:f.id,accountId:f.id,title:'元数据项目',creationMode:'manual',status:'active',currentStage:'brief',startedAt:f.now(),createdAt:f.now(),updatedAt:f.now()});
+ await db.update(aiTasks).set({projectId:f.id}).where(eq(aiTasks.id,f.id));
+ const candidates=createExecutionCandidateService(db,{now:f.now,projectCandidate:()=>{throw Error('不得旁路');}});
+ const input={outcome:'succeeded',callId:f.call.id,text:JSON.stringify(receipt)};
+ const result=await candidates.commitResult(f.ref,input);expect(await candidates.commitResult(f.ref,input)).toEqual(result);
+ expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.id))).toHaveLength(1);
+ expect(await read()).toEqual(original);
+ const ai=adoptionAi(f);await ai.confirmTask(f.ctx,f.id);await ai.confirmTask(f.ctx,f.id);
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toMatchObject([{entityId:receipt.assetId,addedByType:'ai'}]);
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(1);
+ expect(await read()).toMatchObject({name:original.name,description:original.description,status:'active'});
 });

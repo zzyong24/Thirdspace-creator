@@ -1,0 +1,41 @@
+{
+  "preparedAt": "2026-10-25T08:38:12.375969+00:00",
+  "stateSha256": "967fa953dd50f5d7bc84c1a138f4786a6cadb8f9fc8405a0723f0b71c39d5a81",
+  "tree": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "privateRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1412-validation-pexkjjr3",
+  "head": "c00cef1c3f5a60f57f96aa6f85f09906d1274f81",
+  "status": "建议增量，尚未由 root 应用",
+  "envAdditions": {
+    "PATH": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin:/opt/homebrew/Cellar/node/25.9.0_2/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "RUSTC": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc",
+    "RUSTDOC": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustdoc",
+    "CARGO_HOME": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1412-validation-pexkjjr3/cargo-offline-assets",
+    "CARGO_TARGET_DIR": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1412-validation-pexkjjr3/cargo-target-full",
+    "CARGO_NET_OFFLINE": "true",
+    "PLAYWRIGHT_BROWSERS_PATH": "/Users/zyongzhu/Library/Caches/ms-playwright"
+  },
+  "optionalOnlyAfterRootDecision": {
+    "CREATOROS_TEST_CFT_ROOT": "/Users/zyongzhu/Library/Caches/ms-playwright/chromium-1223"
+  },
+  "doNotSet": [
+    "DATABASE_URL",
+    "TEST_DATABASE_URL",
+    "NODE_PATH",
+    "NODE_OPTIONS",
+    "RUSTUP_HOME 指向用户目录",
+    "CREATOROS_TEST_BROWSER_FIXTURE_BINARY 指向旧产物"
+  ],
+  "preservePrivateTmpdir": "/private/tmp/t1412-5r5zsohd",
+  "ownedPostgresKeysProvidedOnlyByRoot": [
+    "CREATOROS_OWNED_PG_MARKER",
+    "CREATOROS_OWNED_PG_NONCE",
+    "CREATOROS_TEST_POSTGRES_URL",
+    "CREATOROS_ISOLATED_PG_URL"
+  ],
+  "remaining": [
+    "151 个锁版本没有本地归档或源码；包含非本机目标，不能等同于 151 个 full 阻断，本机实际依赖闭包尚未解析",
+    "未运行原 full、测试、构建、浏览器，不能宣称这些已通过",
+    "若开启 CREATOROS_TEST_CFT_ROOT，须接受并真实执行原有 5 个条件测试；本次没有构建 fixture 或提供未知旧 binary",
+    "编译输出实际磁盘峰值未知；未复制旧 target，磁盘不足应保持真实失败，不改门"
+  ]
+}

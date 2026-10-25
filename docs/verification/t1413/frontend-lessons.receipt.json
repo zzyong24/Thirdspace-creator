@@ -1,0 +1,1564 @@
+{
+  "label": "frontend-lessons",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/app/api/chat/route.test.ts",
+    "src/server/__module_integration__/artifacts.persistence-client.test.ts",
+    "src/features/script/script-editor-data.test.ts",
+    "src/features/script/script-structure-view.test.tsx",
+    "src/features/copilot/chat-script-patch-card.test.tsx",
+    "src/features/copilot/ai-copilot-interactions.test.tsx",
+    "src/features/copilot/chat-api-error.test.ts",
+    "src/features/copilot/chat-script-draft-card.test.tsx",
+    "src/features/copilot/ai-copilot-content.test.tsx",
+    "src/features/copilot/chat-generate-card.test.tsx",
+    "src/server/ai/search/search-browser.test.ts",
+    "src/server/ai/search/browser-search-fallback.test.ts",
+    "src/features/production/video-decision-preview.test.tsx",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/frontend-lessons.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:39:18.633Z",
+  "endedAt": "2026-10-25T08:41:00.782Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/frontend-lessons.log",
+  "logSha256": "1c28ed1b82be6b1230b45d45b29e8c685a5250c00b5f5fc19375f0fd367bcb23",
+  "report": "docs/verification/t1413/frontend-lessons.vitest.json",
+  "counts": {
+    "passed": 363,
+    "failed": 0,
+    "pending": 0,
+    "total": 363
+  },
+  "files": [
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "tests": [
+        {
+          "name": "独立预览的定位专用对话 显示定位语境与真实入口，不夹带通用脚本指令",
+          "status": "passed"
+        },
+        {
+          "name": "独立预览的定位专用对话 更换起点保留入口资料，不累积矛盾选择或自动发送",
+          "status": "passed"
+        },
+        {
+          "name": "独立预览的定位专用对话 保留手写草稿，更换起点只替换预填选择",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) 宿主读取失败保留原因与恢复，不渲染项目空库或绿色成功",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) renders the dialog inside the single shared AppShell with one sidebar and one top-header",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) renders the dialog with role=dialog and aria-modal=true and is centered (not a right-side drawer)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) renders the page-specs §16 component tree in order",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) exposes the prompt region only ([T-354] secondary regions removed)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) renders the reference fixture counts",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) 生成封面入口绑定专用封面工具，并要求自动选择最新且最关联的已发布作品",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) 图片按稿件需要生成多段候选，视频默认只生成一个候选",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) renders the close button with data-overlay-close so the controller's delegated click handler closes the dialog",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) does NOT render a message thread UI",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot dialog (Task 24) does NOT post a real network request: the submit button is type=submit and is inside a form with no action",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 供应商原因保留在错误卡，重复渲染不触发Console Error或自动重发：http_400: invalid tool_choice",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 供应商原因保留在错误卡，重复渲染不触发Console Error或自动重发：模型服务拒绝了请求：invalid tool_choice，请检查模型名称、接口格式和工具参数。",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1300 真实Provider prepared ticket首次挂载StrictMode自动发送只准备一次且不进wire",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1300 prepared消费者失效重读期间unmount不发送旧指令",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1300 prepared消费者失效重读期间replace不发送旧指令",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1300 prepared消费者失效重读期间scope不发送旧指令",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1300 ticket消费后同归属明确prepare失败可恢复，仍复验原身份不借用已消费缓存",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 原发送入口button等待strict prepare，再发送当次 frozen target",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 原发送入口modified-enter等待strict prepare，再发送当次 frozen target",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1298 初挂StrictMode自动发送：真实卸载=false",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1298 初挂StrictMode自动发送：真实卸载=true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary autoSend也等strict prepare；保存UNKNOWN不调用SDK，保留原请求",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary UNKNOWN无服务器sourceID只读原会话，不regenerate、不重新prepare",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 响应header存服务器sourceID，重试原messageID与完整frozenbody，不读取变更后的稿",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 新回合严格准备明确失败时重试当前原话，不重接上一回合server source",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 真实SDK从listMessages恢复server user ID后重接原任务，保原附件、会话、引擎与冻结稿",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 真实SDK联合创作在引擎不可用时明确零提交，可显式恢复同target；fetch开始后失败保持UNKNOWN",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 真实SDK联合创作等待原Codex状态检查；同target就绪后只提交一次",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 真实SDK准备拒绝后继续保原附件，不采用后来picker的新附件",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 准备失败后切换scope，旧原请求没有继续入口或提交",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 准备失败后切换group，旧原请求没有继续入口或提交",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 准备失败后切换new-conversation，旧原请求没有继续入口或提交",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 延迟prepare完成前切换scope，不提交旧原话或覆盖新输入",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 延迟prepare完成前切换group，不提交旧原话或覆盖新输入",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 延迟prepare完成前切换new-conversation，不提交旧原话或覆盖新输入",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 旧prepare迟到拒绝不覆盖新会话输入或错误，清理后新输入可以发送",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 无prepare失败标记的普通SDK断流仍恢复，不把捕获发送误判为新准备失败",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 真实SDK无编辑器的引擎明确失败也可继续同原话，一次提交",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary 已排队自动恢复遇到合法prepare，不调用恢复或消耗三次无进展预算",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission no-scope禁发且原草稿/附件留在公共composer",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission empty-group真实workspace准入不要求平台/模型配置",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission legacy-account真实workspace准入不要求平台/模型配置",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission prepare期间同batch A-B-A不能提交旧owner",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission accounts卸载回来原草稿不丢",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission accounts回来真实picker已上传附件标签/原ID保留且零重复上传",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission own exact500真实SDK任务未建立不auto-regenerate，输入保留",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission generic500保持未知，不伪尚未启动",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 coreAdmission transport-loss保持未知，不伪尚未启动",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 draftBoundary 顶部workspace错误入口保留autoSend未发草稿",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 draftBoundary restored同File重选不碰撞localId或删除原ready附件",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 draftBoundary 原A附件切B不自动迁移或发送ID，不再上传",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 actual composer component / SDK boundary T1246 draftBoundary 网络已提交后切owner不得把原输入移作未提交draft",
+          "status": "passed"
+        },
+        {
+          "name": "T1188 实际 Copilot 原 project.transcribe 工具回执入口 真实 tool output taskId 接准确原 task 与 steps，零重发",
+          "status": "passed"
+        },
+        {
+          "name": "T1188 实际 Copilot 原 project.transcribe 工具回执入口 缺taskId保持未确认且无任务hook/POST",
+          "status": "passed"
+        },
+        {
+          "name": "T1188 实际 Copilot 原 project.transcribe 工具回执入口 工具error即使带taskId不装成功进度或重发",
+          "status": "passed"
+        },
+        {
+          "name": "BC003 实际封面chip预填按当前pi引擎免错误独立API门，引用资格不放松",
+          "status": "passed"
+        },
+        {
+          "name": "BC003 实际封面chip预填按当前codex引擎免错误独立API门，引用资格不放松",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 匹配当前wechat_article只隐藏内层chips，保输入附件发送清空和项目身份",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 匹配当前graphic_post只隐藏内层chips，保输入附件发送清空和项目身份",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 global保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 no-preparation保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 no-editor保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 script保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 video保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 project保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 output保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 empty-output保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 scope保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 selection-kind保持通用chips与placeholder，不借历史request猜宿主",
+          "status": "passed"
+        },
+        {
+          "name": "T1302 当前真实宿主的精简输入区 T1302 registry注册/注销及当前scope切换立即重新判定，保停止控件",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 核心RED 默认A先回后B：真实messages引用、DOM、菜单与指针最终必须B",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 核心RED stored失败的旧恢复整链不得清B指针或用迟到fallback覆盖B",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 核心RED 更晚C优先：B先回后C仍必须C",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 辅助原基线 B-first选择B",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 辅助原基线 A-complete选择B",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 未被替代的正常stored恢复仍可用",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 未被替代的正常fallback恢复仍可用",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 迟到fallback列表不能在明确B后新启动旧A读取",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 旧stored读取在new后不能回写",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 旧stored读取在unmount后不能回写",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 旧stored读取在same-scope-remount后不能回写",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 旧stored读取在scope-ABA后不能回写",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 旧stored读取在owner-ABA后不能回写",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 StrictMode仍可正常恢复，不因cleanup取消后跳过第二setup",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 旧history不覆盖真实SDK消息推进，即使最终status已ready",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 历史列表迟到不回写原scope之外的缓存",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 历史列表迟到不回写原owner之外的缓存",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 真实SDK受控status submitted-now使旧历史不能回写",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 真实SDK受控status submitted-then-ready使旧历史不能回写",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 空fallback收尾不覆盖未发送输入",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 明确历史读取失败保原A和未发送输入，不触发模型",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 实际公共submit manual在prepare await之前使旧历史失效",
+          "status": "passed"
+        },
+        {
+          "name": "T1308 真实SDK历史意图归属 实际公共submit auto在prepare await之前使旧历史失效",
+          "status": "passed"
+        },
+        {
+          "name": "T1340 文章异步就绪的真实助手消费 T1340 delayed article get→真实Provider→专属助手，首次承接仍dirty且无写入",
+          "status": "passed"
+        },
+        {
+          "name": "T1340 文章异步就绪的真实助手消费 T1340 已有合法wechat_article只显示平台空态且通用对话保持",
+          "status": "passed"
+        },
+        {
+          "name": "T1340 文章异步就绪的真实助手消费 T1340 已有合法graphic_post只显示平台空态且通用对话保持",
+          "status": "passed"
+        },
+        {
+          "name": "T1340 文章异步就绪的真实助手消费 T1340 late-load output：真实旧文章晚回不污染当前正文或助手",
+          "status": "passed"
+        },
+        {
+          "name": "T1340 文章异步就绪的真实助手消费 T1340 late-load scope：真实旧文章晚回不污染当前正文或助手",
+          "status": "passed"
+        },
+        {
+          "name": "T1340 文章异步就绪的真实助手消费 T1340 late-load unmount：真实旧文章晚回不污染当前正文或助手",
+          "status": "passed"
+        },
+        {
+          "name": "T1340 文章异步就绪的真实助手消费 T1340 late-load reject：真实旧文章晚回不污染当前正文或助手",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 positioning · 1440×900 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 positioning · 1440×900 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 positioning · 1280×800 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 positioning · 1280×800 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 comments · 1440×900 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 comments · 1440×900 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 comments · 1280×800 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 comments · 1280×800 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 knowledge · 1440×900 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 knowledge · 1440×900 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 knowledge · 1280×800 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 knowledge · 1280×800 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 trend · 1440×900 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 trend · 1440×900 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 trend · 1280×800 · dark：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        },
+        {
+          "name": "选题采纳区的有界滚动布局 trend · 1280×800 · light：长候选和批量操作留在消息滚动区",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+      "tests": [
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1055] 编导输入区不显示引擎选择和重查控件",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1055] CreatorOS 默认引擎不触发本地 Codex 检测",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1055] Codex 不可用时保留输入并指向真实设置卡",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) 文章配图深链在已有会话仍预填，并提交可信文章与段落锚点",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-473] 深链/嵌入 functionKey 只消费一次，新命令到来才重新武装",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) renders a CopilotHeader (page-specs §16 component tree)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) submit is disabled when empty, enabled after typing",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) submitting calls sendMessage({text}) and clears the composer",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-233] Shift+Enter 也发送(宽容两种修饰键)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) shows a stop button (not submit) while streaming",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) renders assistant text parts + a topic.generate candidate card, and 采纳 calls candidates.create",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) 同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-623] embed.request without autoSend prefills the existing rail and waits for the user",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-716] 新稿面命令原子替换话术与段落锚点，不保留旧话术却暗换上下文",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-716] 已挂载的对话 transport 每轮都读最新段落锚点，不发送首帧旧上下文",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-732] provider 失败后普通新消息不复用局部命令",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) clicking a suggested-action chip fills the composer with its label",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1022] 模型断流沿原任务自动恢复",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-1023] 组件卸载后清理恢复计时器，不在后台继续发请求",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-957] 原任务结果未知时不显示重新提交按钮：CHAT_RESULT_UNCONFIRMED",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-957] 原任务结果未知时不显示重新提交按钮：本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-957] 定位结果未知时提供开新定位对话，但不重发原任务",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-913] 定位未完成 → 直达定位中心，不误导去模型设置",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消息",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) 新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) T-039b @项目引用 输入 @ → 懒加载真项目列表(client.listProjects)并弹出补全下拉",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) T-039b @项目引用 @ 后接查询串 → 按标题过滤候选",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) T-039b @项目引用 选中某项目 → @query 不进消息正文 + 显式项目引用标签保留完整 ID/标题",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) T-039b @项目引用 [T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) T-039b @项目引用 [T-055b gate-F2] 无任何上下文 → 显式「未关联项目」空 chip,不静默",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) T-039b @项目引用 移除项目引用 chip → chip 消失(撤销注入)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) T-039b @项目引用 库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-239g] 长任务完成对话内通知卡 [T-976] 聊天未知结果不变成后台核对通知，其他创作任务仍可通知",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-239g] 长任务完成对话内通知卡 首帧已是终态的历史任务不推通知(只播种)",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-239g] 长任务完成对话内通知卡 在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭",
+          "status": "passed"
+        },
+        {
+          "name": "AI Copilot composer behavior (useChat-driven, T-004) [T-239g] 长任务完成对话内通知卡 失败任务 → 通知诚实带原因",
+          "status": "passed"
+        },
+        {
+          "name": "失败或拒绝工具 output-error 显示终态，历史回放不永久转圈",
+          "status": "passed"
+        },
+        {
+          "name": "失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈",
+          "status": "passed"
+        },
+        {
+          "name": "失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈",
+          "status": "passed"
+        },
+        {
+          "name": "慢任务读取超过轮询间隔时不叠加请求，返回结果仍能停止轮询",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-api-error.test.ts",
+      "tests": [
+        {
+          "name": "[T-716] Copilot 附件错误提示 从 AI SDK 包装的 JSON 错误中取出服务端策展过的附件提示",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] Copilot 附件错误提示 保留 PDF、DOCX、Markdown 等格式的明确可操作提示",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] Copilot 附件错误提示 局部改稿流中断时保留安全参考号，便于和完整日志对应",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] Copilot 附件错误提示 识别不能靠重试恢复的段落锚点错误，普通模型故障不误判",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] Copilot 附件错误提示 未知服务端错误和技术细节不透传给用户",
+          "status": "passed"
+        },
+        {
+          "name": "官方短等待仅精确code暂停自动重发，不以未知文字判任务状态",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-generate-card.test.tsx",
+      "tests": [
+        {
+          "name": "ChatGenerateCard — T-376 失败态诚实呈现 重新进入项目时任务已经采纳成功，立即恢复完成态，不继续显示正在生成",
+          "status": "passed"
+        },
+        {
+          "name": "ChatGenerateCard — T-376 失败态诚实呈现 任务 cancelled + 步骤流有 error 条 → 展示真实原因(已配置,但调用失败),链接改「检查配置」",
+          "status": "passed"
+        },
+        {
+          "name": "ChatGenerateCard — T-376 失败态诚实呈现 步骤流无 error 条(老任务)→ 兜底老猜测文案 + 「去设置配生图模型」链接",
+          "status": "passed"
+        },
+        {
+          "name": "ChatGenerateCard — T-376 失败态诚实呈现 未配置类原因(含「未配置」关键词)→ 原样展示 + 保留「去设置配生图模型」链接",
+          "status": "passed"
+        },
+        {
+          "name": "ChatGenerateCard — T-376 失败态诚实呈现 [T-735] 受管生成响应异常展示脱敏参考号，不误导用户去改本地模型配置",
+          "status": "passed"
+        },
+        {
+          "name": "ChatGenerateCard — T-523 参考图使用真相 封面候选只声明参考图已送适配器，不冒充模型采纳",
+          "status": "passed"
+        },
+        {
+          "name": "ChatGenerateCard — T-523 参考图使用真相 参考图读取失败时明确展示未送给适配器",
+          "status": "passed"
+        },
+        {
+          "name": "ChatGenerateCard — T-687 可引用别名与项目刷新 为生成图展示稳定别名，采纳后通知当前项目刷新素材并废弃旧决策",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-script-draft-card.test.tsx",
+      "tests": [
+        {
+          "name": "T-1073 历史成功整稿只恢复读取一次，立即显示已完成",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) dispatch 失败(error 非 null)→ 诚实错误态,不轮询",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) 轮询 awaiting_confirmation → 渲整稿分段候选 + 采纳按钮",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) 服务端判定单段候选可采纳时仍开放采纳，前端不硬编码段数或 CTA",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) [T-727] 原文保真候选显示字符校验与有界预览，但采纳事件携带完整长稿",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) 质量提醒不阻断已有整稿采纳",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) invalid 候选显示服务端人话原因并隐藏采纳按钮",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) 旧候选缺少完整性三字段时 fail-closed，提示重新生成且不可采纳",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) 点「采纳写入稿面」→ confirmTask + 发 SCRIPT_WRITE 局部刷新信号(不整页 refresh)",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) 任务失败时展示服务端真实原因；只有模型配置问题才显示设置入口",
+          "status": "passed"
+        },
+        {
+          "name": "ChatScriptDraftCard(对话内整稿卡,T-268 异步) 模型配置失败才给出设置入口",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-script-patch-card.test.tsx",
+      "tests": [
+        {
+          "name": "[T-716] ChatScriptPatchCard 采纳时只向后端发送锚定补丁命令，不在前端拼整稿",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] ChatScriptPatchCard 后端并发校验失败时展示可行动错误，不伪造成功",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] ChatScriptPatchCard [T-833] 同一回复的两张局部改稿卡可以依次采纳",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] ChatScriptPatchCard [T-833] 重绑定后的候选撤销到自己写入前的权威版本",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] ChatScriptPatchCard [T-812/T-819] 建议稿与原文相同则禁用采纳并明确提示",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/script/script-editor-data.test.ts",
+      "tests": [
+        {
+          "name": "loadPlanningOutline (SEAM-02) reads outline rows from the content_outline artifact's current version sections",
+          "status": "passed"
+        },
+        {
+          "name": "loadPlanningOutline (SEAM-02) falls back to label-less intent as heading, skips empty 段落",
+          "status": "passed"
+        },
+        {
+          "name": "loadPlanningOutline (SEAM-02) returns null when there is no project id",
+          "status": "passed"
+        },
+        {
+          "name": "loadPlanningOutline (SEAM-02) returns null when the project has no content_outline artifact",
+          "status": "passed"
+        },
+        {
+          "name": "loadPlanningOutline (SEAM-02) returns null when the outline artifact has no sections",
+          "status": "passed"
+        },
+        {
+          "name": "loadPlanningOutline (SEAM-02) returns null on a read failure (degrades, never throws)",
+          "status": "passed"
+        },
+        {
+          "name": "loadScriptEditorSections — T-387b visual 读回 段带 visual → 规整读回;无 visual 的段不带字段(旧稿零回归)",
+          "status": "passed"
+        },
+        {
+          "name": "loadScriptEditorSections — T-387b visual 读回 visual 三段全空(空壳)→ 不带字段",
+          "status": "passed"
+        },
+        {
+          "name": "resolveScriptArtifactIdFromDb — 空壳脚本兼容 明确预留 output_script 不遮住有正文的 master_script",
+          "status": "passed"
+        },
+        {
+          "name": "resolveScriptArtifactIdFromDb — 空壳脚本兼容 所有候选都为空时仍返回 output_script，保留正式写入目标",
+          "status": "passed"
+        },
+        {
+          "name": "公开读失败与损坏current不可冒无稿；正式空稿仍返回真实版本",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/script/script-structure-view.test.tsx",
+      "tests": [
+        {
+          "name": "素材名称迟到只补标签，不重建结构编辑器或覆盖当前输入",
+          "status": "passed"
+        },
+        {
+          "name": "标签请求失败不把仍引用的素材误报失效，用户输入保留",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureToggle(默认视图) 结构稿dirty与saving登记离开保护，保存和卸载不误清其它活动",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureToggle(默认视图) 真实结构编辑器切组先确认，取消逐字保留原段且没有保存请求",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureToggle(默认视图) 有 sections → 默认结构编辑视图(徽章/标题/正文/时间字数可见);切编辑回 TipTap children",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureToggle(默认视图) 无 sections → 默认编辑视图;切结构给引导空态 + 可加第一段起结构稿",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(交互) 换段型徽章 / 改标题正文 → 状态翻「有未保存的修改」",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(交互) 上移/下移/删除/在下方加段:段序与段数如实变化",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(保存) 保存 → createArtifactVersion 带 contentText 拼接 + contentData.sections 全量(金句强制 emphasis)→ refresh",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(保存) artifactId 缺省 + projectId → ensureScriptArtifact getOrCreate 再落库(首存不假成功)",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(保存) [T-732] 保存携带当前版本并发锚点，禁止旧稿覆盖刚写入的新整稿",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(保存) 全部段清空 → 保存禁用并提示,不产空版本",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] AI 改写本段 点击按钮自动携带稿件/版本/段落/原文锚点，不让模型或用户补技术 ID",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] AI 改写本段 [T-732] 整稿换版后段落与版本作为同一快照重绑，再点击只发送新版本正文",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] AI 改写本段 本地段落有未保存修改时先自动保存，再用新版本和新原文打开局部改写",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(凝固分镜 visual) 有 visual 的段渲画面描述/点名素材/缺素材;无 visual 的段不渲(旧稿零回归)",
+          "status": "passed"
+        },
+        {
+          "name": "ScriptStructureEditor(凝固分镜 visual) 结构编辑保存 → visual 原样带回(不洗掉分镜真源);无 visual 的段不带字段",
+          "status": "passed"
+        },
+        {
+          "name": "结构视图严格 flush 未知不吞掉，保留编辑与原回执而不盲append",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 默认分镜真实注册，已保存全文和版本读回后才给source",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 当前未保存稿保真实ID、类型、时间与完整visual，旧html不覆盖新sections",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 首次ensure真实ID保留，两次明确编辑不再次ensure或猜其它脚本",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 保存期间继续输入拒绝本次确认且保留新稿",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 切纯文本视图注销token，迟到原保存不发旧source",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 无响应ID的UNKNOWN不把同正文旧current当回执，也不盲append",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 原公共transport明确409 ConflictError后保dirty和原错误，用户再次确认可沿同base/body保存",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 手工保存收到明确CAS拒绝后下一次严格确认核并发current，不把它换成原base覆盖",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 首次ensure后明确CAS拒绝保真实ID和原prior，后续current变更不自动rebasing",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 非原明确CAS拒绝 503/'ConflictError' 继续保UNKNOWN意图，不再次append",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 非原明确CAS拒绝 409/'CONFLICT' 继续保UNKNOWN意图，不再次append",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 非原明确CAS拒绝 409/null 继续保UNKNOWN意图，不再次append",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 非原明确CAS拒绝 400/'ValidationError' 继续保UNKNOWN意图，不再次append",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 已known版本的读回失败恢复原ID，不再追加；并发current换版明确拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 无响应ID时新current恰好同文也不能冒充这次保存回执",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 等待原手工保存超过旧10s仍不提前确认、不启动第二次save",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 工作区切换或卸载后迟到保存只保原回执，不更新新scope或返回source",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 真实外部props换版时generation使原读回失效，新稿完整保留",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） artifact/project与exact version artifactId任一错配都拒绝确认",
+          "status": "passed"
+        },
+        {
+          "name": "T-1070 默认分镜严格确认（真实Provider与原client边界） 原rich的段间空行格式不同仍沿原CAS确认当前结构一次，不阻断默认视图",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/features/production/video-decision-preview.test.tsx",
+      "tests": [
+        {
+          "name": "VideoDecisionPreview 渲染场景列表 + 卡片 + B-roll 下拉 + 字幕样例",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview 删卡:✕ 后确认产物不含该卡(决策与 props 双侧)",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview B-roll 换选后保留原分镜与既有绑定，只在当前方案内自动优化",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview T-759 已绑定素材不再属于当前项目时显示真实旧名称和不可用状态，不渲染空白下拉",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview T-759 移除不可用素材后可直接确认，换选时只允许当前项目清单里的真实素材",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview T-712 AI 未采用的用户项目素材不会静默丢失，可明确分配到任意场景",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview [T-867 RED] 未匹配的当前项目 AI 生成素材不伪装成人工逐场分配项",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview 确认产物 = 组装好的渲染 props(contract 真值形状:meta/talkingHead/captions/delivery)",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview 提交渲染期间立即锁住确认按钮并展示明确进度，避免重复创建任务",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview 兼容旧候选时审片记录不再阻断，可直接确认进入渲染",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview 同一素材被绑定到多个场景时，应用补充选材不会丢掉任一既有绑定",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview 总导演审片通过后仍由用户最终确认进入渲染",
+          "status": "passed"
+        },
+        {
+          "name": "VideoDecisionPreview 丢弃回调可选:传了才显示按钮并触发",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/artifacts.persistence-client.test.ts",
+      "tests": [
+        {
+          "name": "artifacts ops registered in the composite transport the 8 artifacts op ids are persistence-backed (not the mock)",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts ops registered in the composite transport artifacts.list returns the seeded artifacts for the owner (user-scoped)",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts ops registered in the composite transport artifacts.versions.create round-trips: the new version is the current one + listable",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts ops registered in the composite transport artifacts.restore round-trips: restoring re-points to the selected immutable version",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts ops registered in the composite transport [T-816] context readers 跟随 currentVersionId，而不是把最大版本当当前稿",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts ops registered in the composite transport artifacts.scriptPatches.apply round-trips through the deterministic write command",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts ops registered in the composite transport [T-732] 当前 AI 整稿没有历史 section id 时仍能按第 2 段重绑",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/app/api/chat/route.test.ts",
+      "tests": [
+        {
+          "name": "[T-267②] deriveConversationTitle — 标题净化 普通消息 → 取前 24 字(原行为)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-267②] deriveConversationTitle — 标题净化 空 / 纯空白 → 「新对话」占位",
+          "status": "passed"
+        },
+        {
+          "name": "[T-267②] deriveConversationTitle — 标题净化 斜杠命令 + 路径参数(用户实测坑)→ 取文件名(basename),不用命令 / 路径原文",
+          "status": "passed"
+        },
+        {
+          "name": "[T-267②] deriveConversationTitle — 标题净化 裸绝对 / 相对路径开头 → 取文件名",
+          "status": "passed"
+        },
+        {
+          "name": "[T-267②] deriveConversationTitle — 标题净化 斜杠命令但无可辨识文件名 → 「新对话」占位(绝不用命令原文)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-267②] deriveConversationTitle — 标题净化 普通句子里顺带提到路径(非开头)→ 仍取前 24 字,不误当路径",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 鉴权门 无 session cookie → 200 直通本机主用户(T-046,装配照常)",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 鉴权门 显式 Codex 原样传到持久提交和本轮装配，不回落 Pi",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 鉴权门 非法引擎返回明确400且不保存消息或启动任务",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 鉴权门 非法 JSON body → 400",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 鉴权门 [T-691] header/Cookie 当前账号不一致 → 409 且不进入 Context",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 授权答复仅续跑同一等待中的原任务，不重复用户消息",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 授权答复遇到非 waiting_user 任务不盲目 resume",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-813] 全文阅读动作规范化并绑定用户点击的 URL",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-813] 非 http(s) 阅读地址在进入模型与浏览器前拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-716] 当前稿面已经没有目标段落时明确要求重新点选，不拿旧快照继续改",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-732] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-716] 显式局部改稿命令没有段落锚点时失败关闭，不降级成普通对话猜工具",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 有 cookie → 持久化用户消息，按原消息提交任务并订阅持久事件",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [LED-017] 长原文逐字进入受信 sourceRef；伪造的历史 UI 消息不进入任务快照",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [LED-020] 持久快照实际装配参考历史作品封面链：先读发布候选，再调用 cover.generate",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 原路由提交 → 真实执行账本完成：assistant 正文、用量、任务终态和事件原子落库",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-267②] 首条消息是斜杠命令+路径 → lazy 建会话用净化后的标题(文件名),不用路径原文",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 缺 chatContext.surface → 默认 topics(选题编导)",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 复用传入的 conversationId(不新建会话)",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-128] 原任务订阅完整重放文本、工具卡和完成事件",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-128/T-464] 纯空模型结果不可伪装成功，原任务返回失败事件",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-464] 空取消轮只回传 abort，不造 assistant 正文",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-096] lazy 建会话落声明的 scope(chatContext.scope)",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-096] 旧客户端未带 scope → 按 projectId 推导(有→project:<id>,无→global)",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-096 矩阵#2] 伪造请求:A 的 conversationId + B 的 scope 声明 → 4xx 拒绝,不续写不读回",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线)",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 [T-096] 非法 scope 声明回落推导后仍核对已有会话归属",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 装配抛错(如没配 key)→ 400(诚实,不假成功)",
+          "status": "passed"
+        },
+        {
+          "name": "POST /api/chat — 装配 + 持久化 用户消息保存失败禁止提交持久任务，并返回可重试错误",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239c] POST /api/chat — 中断与恢复 请求信号进入装配，但断开事件连接不向原任务发送 cancel",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239c] POST /api/chat — 中断与恢复 取消轮保留原任务已确认的文本与工具事件，不补造结束消息",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239c] POST /api/chat — 中断与恢复 空取消轮只有 abort，用户消息仍已绑定原任务",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239c] POST /api/chat — 中断与恢复 供应商失败只发可行动的安全文案，不把原始配置或密钥推给客户端",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239c] POST /api/chat — 中断与恢复 回执未知显式标记，不能把待确认任务当成成功",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 regenerate 找不到原用户消息时拒绝新建任务，不把重复发送变成新回合",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 regenerate 原内容或附件变化时保留409且零新消息/新任务：{\"content\":\"已保存的另一段原文\",\"attachments\":[]}",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 regenerate 原内容或附件变化时保留409且零新消息/新任务：{\"content\":\"hi\",\"attachments\":[\"original-attachment\"]}",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 兜底(无 trigger 的老客户端):续接会话且库中最后一条=同内容 user 行 → 不重插",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 兜底不误伤:最后一条是 assistant(正常新一轮,即使内容与更早 user 相同)→ 照常 insert",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 兜底读历史失败(best-effort)→ 照常 insert(宁多勿丢,不阻断)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] POST /api/chat — user 消息去重 首轮新会话(无 conversationId)不读历史,直接落 user 消息",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 Codex原附件归属拒绝：图片不存在，不创建执行任务",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 Codex原附件归属拒绝：图片跨账号组，不创建执行任务",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 图片经素材归属门读取，只把 assetId 落消息，模型临时收到 file part",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 文档抽取内容作为 user_data 注入，不把正文写进 attachments",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 Markdown 无预抽取结果时仍直接读取原始字节",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 PDF 无预抽取结果时可直接抽取文本",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 DOCX 无预抽取结果时可直接抽取文本",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 损坏 PDF 不泄漏解析器内部错误，返回明确的文件提示",
+          "status": "passed"
+        },
+        {
+          "name": "[T-716] POST /api/chat — 附件上下文 拒绝超过五个附件，且不会启动模型",
+          "status": "passed"
+        },
+        {
+          "name": "普通官方模型短等待返回精确503且不透内部错误，保原会话可回查",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/server/ai/search/browser-search-fallback.test.ts",
+      "tests": [
+        {
+          "name": "内置浏览器检索双引擎降级 百度有结果时直接返回，不启动备用引擎",
+          "status": "passed"
+        },
+        {
+          "name": "内置浏览器检索双引擎降级 百度报错或零结果时切换 DuckDuckGo，仍只返回真实 URL",
+          "status": "passed"
+        },
+        {
+          "name": "内置浏览器检索双引擎降级 两个引擎都正常但无结果时诚实返回空，不造模型记忆素材",
+          "status": "passed"
+        },
+        {
+          "name": "内置浏览器检索双引擎降级 两个引擎都失败时返回可诊断聚合错误",
+          "status": "passed"
+        },
+        {
+          "name": "内置浏览器检索双引擎降级 同一运行轮次已确认百度登录墙后有界跳过，冷却到期再真实重试",
+          "status": "passed"
+        },
+        {
+          "name": "内置浏览器检索双引擎降级 普通网络失败不会误封百度",
+          "status": "passed"
+        },
+        {
+          "name": "T-915 取消后不再启动 DuckDuckGo，也不把取消改写成搜索失败",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/server/ai/search/search-browser.test.ts",
+      "tests": [
+        {
+          "name": "buildSearchUrl(T-126b) 无 baseUrl → 默认 DuckDuckGo HTML,query 编码进 {q}",
+          "status": "passed"
+        },
+        {
+          "name": "buildSearchUrl(T-126b) baseUrl 含 {q} 模板 → 替换",
+          "status": "passed"
+        },
+        {
+          "name": "parseBingResults(T-126b) —— 纯函数 SERP 解析 解 b_algo 块 → title/url/snippet/siteName,丢弃非 http 链接",
+          "status": "passed"
+        },
+        {
+          "name": "parseBingResults(T-126b) —— 纯函数 SERP 解析 Bing 改版/无匹配 → 返 [](上层切换真实来源)",
+          "status": "passed"
+        },
+        {
+          "name": "createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图→降级 正常:导航成功 → 解析结果 + 触发自截图存证",
+          "status": "passed"
+        },
+        {
+          "name": "createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图→降级 命中登录墙/验证码 → SearchExecutionError(上层降级)",
+          "status": "passed"
+        },
+        {
+          "name": "createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图→降级 HTTP 4xx → SearchExecutionError",
+          "status": "passed"
+        },
+        {
+          "name": "createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图→降级 导航失败(超时/DNS)→ SearchExecutionError",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] parseBaiduResults — 纯函数百度 SERP 解析 从 result 块的 mu 属性取真实 URL(href 是 baidu.com/link 跳转链,不用),标题/摘要 best-effort",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] parseBaiduResults — 纯函数百度 SERP 解析 结构变了/无 mu → 诚实返 [](上层降级,不硬凑)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] parseSerpResults — 按最终 host 选解析器 baidu host → 百度解析;其余 → Bing 解析",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] parseSerpResults — 按最终 host 选解析器 主解析空结果时兜底试另一家(host 判断失误不归零)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] createBrowserScrapeAdapter — baseUrl 指到百度也能解析 百度 SERP(finalUrl baidu.com)→ 引擎感知解析出结果",
+          "status": "passed"
+        },
+        {
+          "name": "[T-919] Bing 跳转链接投影真实来源，拒绝非 HTTP 目标",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

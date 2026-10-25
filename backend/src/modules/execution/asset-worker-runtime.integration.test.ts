@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto';
+import {canonicalJson} from '../ai/canonical-json';
 import {createAssetBusinessExecutionService} from "../ai-runtime/asset-business-execution.service";
 import {createAiService,createGeneratedAssetAdoptionService} from "../ai";
 import {createModelWorkerDispatcher} from "./model-worker-dispatcher";
@@ -106,3 +108,28 @@ it.each([false,true])("视频查询503自动续查原job，之前429=%s",async f
   expect(posts).toBe(firstRejected?2:1);expect(queries).toBe(2);expect(queryTimes[1]!-queryTimes[0]!).toBeGreaterThanOrEqual(1000);expect(await db.select().from(executionCalls)).toHaveLength(firstRejected?2:1);expect(await db.select().from(assets)).toHaveLength(1);expect(await db.select().from(aiTaskResults)).toHaveLength(1);
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));await opened.client.close();await rm(dir,{recursive:true,force:true});}
 },12000);
+
+it.each([true,false])('T1413真实HTTP与Worker IPC：受管标签=%s未获幂等资格时网络未知及重启零重提',async managed=>{
+ const opened=await createDb(),db=opened.db,dir=await mkdtemp(join(tmpdir(),'t1413-unknown-'));
+ const received:Array<{key:string|string[]|undefined;body:string}>=[];
+ const server=createServer((req,_res)=>{const chunks:Buffer[]=[];req.on('data',chunk=>chunks.push(chunk));req.on('end',()=>{received.push({key:req.headers['idempotency-key'],body:Buffer.concat(chunks).toString('utf8')});req.socket.destroy();});});
+ await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));const baseUrl=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+ const ctx={userId:'unknown-owner',accountId:'unknown-account',requestId:'test',source:'user' as const},id='t1413-unknown',now=()=>new Date().toISOString(),budget={maxCalls:3,maxTokens:100000,deadlineMs:120000};
+ const options=managed?{displayModelKey:'channel-managed' as const}:{};
+ const input={kind:'asset.generate',mediaKind:'image',capability:'image.generate',operationKey:'unknown-original',prompt:'仅本机合成图片',provider:'openai',model:'image',baseUrl,runtimeOptionsDigest:`sha256:${createHash('sha256').update(canonicalJson(options)).digest('hex')}`} as const;
+ await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:'asset.generate',idempotencyKey:id,inputData:{kind:'image',prompt:input.prompt},requestedAt:now()});
+ const mapped=await createExecutionAuthorityService(db).bindAiTask(ctx,id,{requestFingerprint:`sha256:${'0'.repeat(64)}`,modelInput:input,budget});
+ const claim=(await createPersistentTaskService(db).claimTask({taskId:mapped.executionTaskId,workerId:'unknown-worker'}))!,ref={executionTaskId:mapped.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const leases=createExecutionLeaseService(db),ledger=createExecutionCallLedgerService(db,{budget}),calls=createExecutionWorkerCallPorts(db,{budget});
+ const storage=createLocalFsObjectStorage({rootPath:dir,publicBaseUrl:'/blob'},{nextKey:()=> 'unused'});
+ const ports=createExecutionAssetPorts({db,now,budget,objectStorageForCtx:async()=>storage,resolveCredential:async()=>({provider:'openai',model:'image',kind:'image',baseUrl,token:'synthetic',...options})});
+ const make=()=>createWorkerSupervisor({entryPath:resolve('../ai-worker/dist/execution-worker.cjs'),ports:{validate:async(current,mode)=>{await leases.withLease(current,mode,async()=>{});},invoke:async(current,port,data)=>{if(port==='heartbeat')return {};if(port==='readTaskContext')return calls.readTaskContext(current);if(port==='commitResult'){expect(data).toMatchObject({outcome:'unknown_result'});return {};}return ports.invoke(current,port,data);}}});
+ let supervisor=make();
+ try{
+  await supervisor.start();expect(await supervisor.run(ref,Date.now()+120000)).toBe('unknown_result');
+  await supervisor.stop();supervisor=make();await supervisor.start();expect(await supervisor.run(ref,Date.now()+120000)).toBe('unknown_result');
+  const state=await ledger.inspect(ref);expect(state.calls).toHaveLength(1);expect(state.calls[0]).toMatchObject({status:'unknown',operationKey:'unknown-original'});
+  expect(received).toHaveLength(1);expect(received[0]!.key).toBe(`execution-asset:${state.calls[0]!.id}`);expect(JSON.parse(received[0]!.body)).toMatchObject({prompt:input.prompt,model:'image'});
+  expect(await db.select().from(assets)).toHaveLength(0);expect(await db.select().from(aiTaskResults)).toHaveLength(0);
+ }finally{await supervisor.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));await opened.client.close();await rm(dir,{recursive:true,force:true});}
+},120000);

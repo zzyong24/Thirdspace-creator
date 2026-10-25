@@ -5,7 +5,7 @@ import * as providerFactory from "../runtime/provider-factory";
 import {generateIntelligenceInWorker} from "./intelligence-generation-worker";
 import {structuredGenerationInputSchema,intelligenceRewriteInputSchema,type WorkerMessage} from "@creatoros/contract/execution-worker";
 
-const spec={apiFormat:"openai_chat",baseUrl:"https://never-network.invalid/v1",model:"fixture",token:"secret-do-not-log",displayModelKey:"channel-managed"};
+const spec={apiFormat:"openai_chat",baseUrl:"https://never-network.invalid/v1",model:"fixture",token:"secret-do-not-log",displayModelKey:"channel-managed"} as const;
 const snapshot={snapshotVersion:1,userId:"u",accountId:"a",resolvedAt:"now",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"intelligence.topic-decompose",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"拆解正文",template:"{{transcript}}",tools:[],requiredFacets:["transcript"],contextRequirements:[],outputSchema:{type:"object",properties:{hook:{type:"string"}},required:["hook"],additionalProperties:false},completionPolicy:null,completionPolicyAdapter:null}}]};
 function input(){return structuredGenerationInputSchema.parse({kind:"model.structured",operationKey:"intelligence:fixture",capability:"topic.generate",skillId:"intelligence.topic-decompose",skillSnapshot:snapshot,maxOutputTokens:8192,facets:{mode:"topic_preview",target:JSON.stringify({positioning:{oneLiner:"定位",keywords:[]},item:{title:"作品",platform:"douyin",canonicalUrl:"https://example.com"},transcript:{text:"完整的原文"}})}});}
 async function run(context:unknown=input(),credential:unknown=spec,rejectPort?:string,observationTimeout?:number){
@@ -70,3 +70,35 @@ it("[T-1017] 显式 strategy_backed 旧链协议仍能到达模型预留", async
  expect(messages.filter(m => m.type === "call").map(m => m.port)).toContain("reserveGenerationCall");
  expect(messages.find(m => m.type === "call" && m.port === "commitResult")).toMatchObject({ data: { errorCode: "MODEL_CALL_REQUIRES_RECONCILIATION" } });
 });
+
+it.each(['timeout','cancel','late'] as const)('T1413真实普通正文入口%s中止provider且迟到正文不保存或结算',async mode=>{
+ const timeout=new AbortController(),parent=new AbortController(),timeoutBudgets:number[]=[],calls:Array<{port:string;data:unknown}>=[];
+ const originalTimeout=AbortSignal.timeout.bind(AbortSignal);
+ vi.spyOn(AbortSignal,'timeout').mockImplementation(ms=>{if(ms===180000){timeoutBudgets.push(ms);return timeout.signal;}return originalTimeout(ms);});
+ let entered!:()=>void,release!:()=>void,providerAborted=false;
+ const atProvider=new Promise<void>(resolve=>{entered=resolve;}),late=new Promise<void>(resolve=>{release=resolve;});
+ const usage={inputTokens:{total:1,noCache:1,cacheRead:0,cacheWrite:0},outputTokens:{total:1,text:1,reasoning:0}};
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doStream:async()=>{throw Error('不使用流');},doGenerate:async(request:any)=>{
+  const abort=request.abortSignal as AbortSignal;entered();
+  const stopped=new Promise<never>((_resolve,reject)=>abort.addEventListener('abort',()=>{providerAborted=true;reject(Object.assign(Error('request timeout'),{name:'TimeoutError',code:'ETIMEDOUT'}));},{once:true}));
+  if(mode==='late'){await Promise.race([late,stopped.catch(()=>late)]);return {content:[{type:'text',text:'迟到正文不得采纳'}],finishReason:{unified:'stop',raw:null},usage,warnings:[]};}
+  return stopped;
+ }};
+ vi.spyOn(providerFactory,'modelFor').mockReturnValue(model as never);
+ const original=input(),skillId='intelligence.topic-adapted-draft';
+ const context=intelligenceRewriteInputSchema.parse({...original,intelligenceText:'rewrite_only',skillId,facets:{...original.facets,continuousRecovery:'true',target:JSON.stringify({generationMode:'rewrite_only',item:{title:'来源',platform:'douyin',canonicalUrl:'https://example.test/source'},transcript:{text:'完整原文'}})},skillSnapshot:{...snapshot,skills:[{...snapshot.skills[0]!,skillId,effective:{...snapshot.skills[0]!.effective,outputSchema:null}}]}});
+ const work=generateIntelligenceInWorker(context,spec,parent.signal,async(port,data)=>{
+  calls.push({port,data});if(port==='reserveGenerationCall')return {callId:'timed-text',status:'reserved'};
+  if(port==='startCall')return {callId:'timed-text',status:'started'};
+  if(port==='settleGenerationCall')return {};if(port==='saveGenerationResult')return {};
+  throw Error(`禁止端口 ${port}`);
+ });
+ const settled=work.then(value=>({ok:true,value}),error=>({ok:false,error}));
+ await atProvider;
+ if(mode==='cancel')parent.abort(Error('TEST_PARENT_CANCEL'));else timeout.abort(new DOMException('单次超时','TimeoutError'));
+ release();const result=await settled;
+ expect(timeoutBudgets).toEqual([180000]);expect(providerAborted).toBe(true);expect(result.ok).toBe(false);
+ expect(calls.filter(call=>call.port==='saveGenerationResult')).toHaveLength(0);
+ expect(calls.filter(call=>call.port==='settleGenerationCall').some(call=>(call.data as {status:string}).status==='settled')).toBe(false);
+ if(mode==='timeout')expect(result).toMatchObject({error:{outcome:'retry_wait'}});
+},120000);

@@ -1,3 +1,4 @@
+import {createContinuousExecutionBudget} from '@creatoros/contract/execution-worker';
 import { afterAll,beforeAll,describe,expect,it } from "vitest";
 import { createDb,type Db } from "@creatoros/backend";
 import { createPersistentTaskService } from "./persistent-task.service";
@@ -138,3 +139,27 @@ describe("持久重试调度",()=>{
   });
 
 });
+
+
+// 此用例复用真实PGlite表/账本/任务与outcome；原有限预算fixture及截止测试不变。
+it('T1413真实持久continuous单次超时废弃候选，原task retry_wait且deadline保持null',async()=>{
+ const opened=await createDb();const database=opened.db;
+ try{
+  const clock={stamp:'2026-10-25T00:00:00.000Z'},now=()=>clock.stamp;
+  const tasks=createPersistentTaskService(database,{now}),budget=createContinuousExecutionBudget();
+  const task=await tasks.enqueue(ctx,{kind:'ai_task',ownerType:'ai_task',ownerId:'continuous-timeout',idempotencyKey:'continuous-timeout',payload:{modelInput},executionBudget:budget});
+  const claim=(await tasks.claimTask({taskId:task.id,workerId:'worker'}))!;
+  const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  const ports=createExecutionWorkerCallPorts(database,{now,budget}),ledger=createExecutionCallLedgerService(database,{now,budget}),outcomes=createExecutionWorkerOutcomeService(database,{now,random:()=>0});
+  const call=await ports.reserveCall(ref,{operationKey:'generate',maxOutputTokens:128});await ports.startCall(ref,{callId:call.callId});
+  await ports.settleCall(ref,{callId:call.callId,status:'superseded'});
+  expect(await outcomes.recordFailure(ref,{outcome:'retry_wait',errorCode:'MODEL_TIMEOUT'})).toMatchObject({status:'retry_wait'});
+  expect(await tasks.get(ctx,task.id)).toMatchObject({id:task.id,runtimeStatus:'retry_wait'});
+  expect(await ledger.inspect(ref)).toMatchObject({budget:{policy:'continuous',maxCalls:null,deadlineMs:null},deadlineAt:null,calls:[{id:call.callId,status:'superseded'}]});
+  clock.stamp='2026-10-25T00:01:00.000Z';
+  const next=(await tasks.claimTask({taskId:task.id,workerId:'retry-worker'}))!;expect(next.task.id).toBe(task.id);
+  const nextRef={executionTaskId:task.id,attempt:next.lease.attempt,fenceToken:next.lease.fenceToken};
+  const retry=await ports.reserveCall(nextRef,{operationKey:'generate',maxOutputTokens:128});expect(retry.callId).not.toBe(call.callId);
+  expect(await ledger.inspect(nextRef)).toMatchObject({deadlineAt:null,calls:[{id:call.callId,status:'superseded'},{id:retry.callId,retryOfCallId:call.callId}]});
+ }finally{await opened.client.close();}
+},120000);

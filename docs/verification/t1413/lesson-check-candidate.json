@@ -1,0 +1,38 @@
+{
+  "baseConfigSha256": "293009903af92bd378fc82defeb42d0e222c145c0ecc65e5918a794932e0a1cf",
+  "changes": [
+    {
+      "led": "LED-045",
+      "before": "pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts",
+      "after": "pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts src/modules/execution/asset-worker-runtime.integration.test.ts && pnpm --dir ai-worker exec vitest run src/execution/asset-worker-run.test.ts src/execution/cover-worker-run.test.ts"
+    },
+    {
+      "led": "LED-014",
+      "before": "pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts && pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts",
+      "after": "pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts && pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-assembly.test.ts src/modules/ai-runtime/chat-script-patch-tool-host.test.ts src/integration/chat-script-patch-worker.test.ts"
+    },
+    {
+      "led": "LED-017",
+      "before": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/script-runner.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/app/api/chat/route.test.ts",
+      "after": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-assembly.test.ts src/modules/ai-runtime/chat-script-draft-preparation.test.ts src/modules/ai-runtime/chat-script-import-authorization.test.ts src/integration/chat-script-draft-worker.test.ts src/modules/ai-runtime/script-runner.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/app/api/chat/route.test.ts"
+    },
+    {
+      "led": "LED-020",
+      "before": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts",
+      "after": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-assembly.test.ts src/modules/ai-runtime/chat-cover-task-host.test.ts src/modules/ai-runtime/cover-business-adapter.test.ts src/modules/execution/execution-cover-series.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts"
+    },
+    {
+      "led": "LED-023",
+      "before": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/runtime/agent-runtime.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts",
+      "after": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/execution/intelligence-generation-worker.test.ts src/execution/worker-runtime.test.ts src/execution/durable-generation-model.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/execution-worker-outcome.service.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts"
+    },
+    {
+      "led": "LED-036",
+      "before": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx",
+      "after": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/execution-asset-result.service.test.ts && pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx"
+    }
+  ],
+  "unproven": [
+    "FR-141306 当前线上幂等资格及正向恢复仍未验证；安全unknown覆盖不能代签正向恢复"
+  ]
+}

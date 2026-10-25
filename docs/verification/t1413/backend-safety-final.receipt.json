@@ -1,0 +1,384 @@
+{
+  "label": "backend-safety-final",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/execution/execution-asset-result.service.test.ts",
+    "src/modules/execution/execution-worker-outcome.service.test.ts",
+    "src/modules/execution/asset-worker-runtime.integration.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/backend-safety-final.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:37:37.616Z",
+  "endedAt": "2026-10-25T08:39:14.948Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/backend-safety-final.log",
+  "logSha256": "cdc466dddda7cf3260d0b560657f408fc57353e7403c93f17df411073643011d",
+  "report": "docs/verification/t1413/backend-safety-final.vitest.json",
+  "counts": {
+    "passed": 83,
+    "failed": 0,
+    "pending": 0,
+    "total": 83
+  },
+  "files": [
+    {
+      "path": "backend/src/modules/execution/asset-worker-runtime.integration.test.ts",
+      "tests": [
+        {
+          "name": "真实生图适配器与恢复 {\"loseAck\":false,\"status\":200,\"drift\":false}",
+          "status": "passed"
+        },
+        {
+          "name": "真实生图适配器与恢复 {\"loseAck\":true,\"status\":200,\"drift\":false}",
+          "status": "passed"
+        },
+        {
+          "name": "真实生图适配器与恢复 {\"loseAck\":false,\"status\":502,\"drift\":false}",
+          "status": "passed"
+        },
+        {
+          "name": "真实生图适配器与恢复 {\"loseAck\":false,\"status\":200,\"drift\":true}",
+          "status": "passed"
+        },
+        {
+          "name": "真实生图适配器与恢复 {\"loseAck\":false,\"status\":200,\"drift\":false,\"video\":true}",
+          "status": "passed"
+        },
+        {
+          "name": "真实生图适配器与恢复 {\"loseAck\":false,\"status\":200,\"drift\":false,\"video\":true,\"resume\":true}",
+          "status": "passed"
+        },
+        {
+          "name": "真实调度器对429有限重试，两次原调用只产一个素材候选",
+          "status": "passed"
+        },
+        {
+          "name": "公开创建素材经业务准备、真实Worker重试后公开采纳",
+          "status": "passed"
+        },
+        {
+          "name": "视频查询503自动续查原job，之前429=false",
+          "status": "passed"
+        },
+        {
+          "name": "视频查询503自动续查原job，之前429=true",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实HTTP与Worker IPC：受管标签=true未获幂等资格时网络未知及重启零重提",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实HTTP与Worker IPC：受管标签=false未获幂等资格时网络未知及重启零重提",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/execution/execution-asset-result.service.test.ts",
+      "tests": [
+        {
+          "name": "image 原调用只创建一个 pending 素材，费用未知不记零",
+          "status": "passed"
+        },
+        {
+          "name": "video 原调用只创建一个 pending 素材，费用未知不记零",
+          "status": "passed"
+        },
+        {
+          "name": "素材已提交但账本结算失败，取消=false 后只补原账本",
+          "status": "passed"
+        },
+        {
+          "name": "素材已提交但账本结算失败，取消=true 后只补原账本",
+          "status": "passed"
+        },
+        {
+          "name": "取消后只回读已提交结果，不改终态",
+          "status": "passed"
+        },
+        {
+          "name": "准备后字节写入中断，取消不允许恢复创建素材",
+          "status": "passed"
+        },
+        {
+          "name": "新 attempt 有原 job 才能保存续查字节，旧 fence 拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "无 job 的旧启动不能借新 attempt 提交新字节",
+          "status": "passed"
+        },
+        {
+          "name": "未启动不能提交，损坏业务映射不能开始或保存",
+          "status": "passed"
+        },
+        {
+          "name": "不同字节不可覆盖原结果",
+          "status": "passed"
+        },
+        {
+          "name": "无供应商任务号也能在新执行恢复已保存原字节，不能重写对象",
+          "status": "passed"
+        },
+        {
+          "name": "有准备记录但没有字节时明确返回不足，不能结算伪结果",
+          "status": "passed"
+        },
+        {
+          "name": "未知调用已有真实字节时可恢复结算，预算仍未知",
+          "status": "passed"
+        },
+        {
+          "name": "原素材通过同一候选事务完成，重投不恢复已删除素材",
+          "status": "passed"
+        },
+        {
+          "name": "首次候选拒绝已变化素材 deleted，不部分改变任务",
+          "status": "passed"
+        },
+        {
+          "name": "首次候选拒绝已变化素材 foreign，不部分改变任务",
+          "status": "passed"
+        },
+        {
+          "name": "首次候选拒绝已变化素材 file，不部分改变任务",
+          "status": "passed"
+        },
+        {
+          "name": "首次候选拒绝已变化素材 checksum，不部分改变任务",
+          "status": "passed"
+        },
+        {
+          "name": "素材验证后候选写入失败，任务状态全回滚且可原键补交",
+          "status": "passed"
+        },
+        {
+          "name": "取消后保存回执仍可补账，但不能再创建候选",
+          "status": "passed"
+        },
+        {
+          "name": "同内容其他调用的素材回执不能代替原产物",
+          "status": "passed"
+        },
+        {
+          "name": "等待素材验证后截止时间已到，不得用旧时间提交成功",
+          "status": "passed"
+        },
+        {
+          "name": "租约过期后自动接管原视频任务号，不重置调用预算",
+          "status": "passed"
+        },
+        {
+          "name": "租约过期后自动恢复本地原字节，供应商无需任务号",
+          "status": "passed"
+        },
+        {
+          "name": "过期素材恢复尊重 missing 边界",
+          "status": "passed"
+        },
+        {
+          "name": "过期素材恢复尊重 foreign-job 边界",
+          "status": "passed"
+        },
+        {
+          "name": "过期素材恢复尊重 attempts 边界",
+          "status": "passed"
+        },
+        {
+          "name": "过期素材恢复尊重 deadline 边界",
+          "status": "passed"
+        },
+        {
+          "name": "过期素材恢复尊重 cancel 边界",
+          "status": "passed"
+        },
+        {
+          "name": "过期素材恢复尊重 pause 边界",
+          "status": "passed"
+        },
+        {
+          "name": "原 job 的 unknown 调用可接管，但再次中断仍耗原尝试次数",
+          "status": "passed"
+        },
+        {
+          "name": "只有准备记录而没有字节时接管只回读，不产生素材或第二次自动接管",
+          "status": "passed"
+        },
+        {
+          "name": "素材已结算但未提交候选也不能绕过最大接管次数",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳在项目链接写后失败时完整回滚",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳并发及回执丢失后重试只建一个链接",
+          "status": "passed"
+        },
+        {
+          "name": "无项目的公共采纳只激活原素材",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳拒绝 account 变化且不激活、不建链",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳拒绝 project 变化且不激活、不建链",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳拒绝 file 变化且不激活、不建链",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳拒绝 checksum 变化且不激活、不建链",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳拒绝 receipt 变化且不激活、不建链",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳拒绝 candidate 变化且不激活、不建链",
+          "status": "passed"
+        },
+        {
+          "name": "公共素材采纳拒绝 cancelled 变化且不激活、不建链",
+          "status": "passed"
+        },
+        {
+          "name": "公共取消素材候选删除 pending，重复取消不恢复素材",
+          "status": "passed"
+        },
+        {
+          "name": "公共采纳与取消同时请求，只能有一个结果生效",
+          "status": "passed"
+        },
+        {
+          "name": "公共取消在状态写入失败时回滚素材删除",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 ready 边界",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 missing-job 边界",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 wrong-job 边界",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 attempts 边界",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 deadline 边界",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 cancel 边界",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 pause 边界",
+          "status": "passed"
+        },
+        {
+          "name": "自动原视频对账尊重 unclassified 边界",
+          "status": "passed"
+        },
+        {
+          "name": "Codex原图片image/png按真实字节格式保存；新租约只读原回合而不重发",
+          "status": "passed"
+        },
+        {
+          "name": "Codex原图片image/jpeg按真实字节格式保存；新租约只读原回合而不重发",
+          "status": "passed"
+        },
+        {
+          "name": "Codex原图片image/webp按真实字节格式保存；新租约只读原回合而不重发",
+          "status": "passed"
+        },
+        {
+          "name": "Codex无原native字节绑定不能保存伪图或借Pi供应商回执",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实保存回读保留服务原文、画面职责、AI来源，恢复不复制或覆盖",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
+      "tests": [
+        {
+          "name": "持久重试调度 拒绝诊断保存在原调用并到达任务错误，持久前再次脱敏",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 保留完整Retry-After，暂停恢复不能提前领取；到期同键重试并受总调用预算限制",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 进程退出留下的纯模型调用按原键有界续跑，不进入永久 unknown_result",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 旧版已落 unknown_result 的纯模型调用仅在启动扫描时沿原任务恢复",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 外部工具结果未知仍保持待对账，启动扫描不会盲重放",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 模型连接中断废弃本次候选后，原任务自动进入重试等待",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 等待登录或配置不会被自动领取，显式恢复后才允许领取",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 T1405 额度不足保留原任务与准确恢复提示，不自动换源或重提",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 T1409 受管支付拒绝保留原任务与固定诊断，未获继续授权不自动领取",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 等待超出原截止时间时停止，不能缩短服务端要求的等待",
+          "status": "passed"
+        },
+        {
+          "name": "持久重试调度 停机越过等待截止时间后终结任务，不永久显示排队",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实持久continuous单次超时废弃候选，原task retry_wait且deadline保持null",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

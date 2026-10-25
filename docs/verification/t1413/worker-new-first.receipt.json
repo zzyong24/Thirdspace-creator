@@ -1,0 +1,226 @@
+{
+  "label": "worker-new-first",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "ai-worker",
+    "exec",
+    "vitest",
+    "run",
+    "src/execution/intelligence-generation-worker.test.ts",
+    "src/runtime/chat/chat-pi-loop.protocol.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/worker-new-first.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:35:39.965Z",
+  "endedAt": "2026-10-25T08:35:48.096Z",
+  "exitCode": 1,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/worker-new-first.log",
+  "logSha256": "950cd61ab55cb0cf91d70d1ff646cc8f97004c98e1f44ccd50a833ee998d2e5a",
+  "report": "docs/verification/t1413/worker-new-first.vitest.json",
+  "counts": {
+    "passed": 44,
+    "failed": 1,
+    "pending": 0,
+    "total": 45
+  },
+  "files": [
+    {
+      "path": "ai-worker/src/execution/intelligence-generation-worker.test.ts",
+      "tests": [
+        {
+          "name": "T1382 project_artifact无网址真实来源沿worker端口生成，未知回执不新增提交",
+          "status": "passed"
+        },
+        {
+          "name": "T1382 imported_text无网址真实来源沿worker端口生成，未知回执不新增提交",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Pi 构造与冻结 Skill 到达预留端口，未知回执不联网",
+          "status": "passed"
+        },
+        {
+          "name": "真实正文专用依赖保契约 null，未知调用不联网或重烧费",
+          "status": "passed"
+        },
+        {
+          "name": "真实正文专用依赖保契约 { type: 'object' }，未知调用不联网或重烧费",
+          "status": "passed"
+        },
+        {
+          "name": "宿主 readTaskContext 拒绝保留安全阶段",
+          "status": "passed"
+        },
+        {
+          "name": "宿主 resolveModelCredential 拒绝保留安全阶段",
+          "status": "passed"
+        },
+        {
+          "name": "损坏上下文不暴露输入且未调用模型",
+          "status": "passed"
+        },
+        {
+          "name": "损坏凭据回执独立诊断",
+          "status": "passed"
+        },
+        {
+          "name": "模型本地初始化失败不能谎报为已调用后结果未知",
+          "status": "passed"
+        },
+        {
+          "name": "[T-1017] 显式 strategy_backed 旧链协议仍能到达模型预留",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实普通正文入口timeout中止provider且迟到正文不保存或结算",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实普通正文入口cancel中止provider且迟到正文不保存或结算",
+          "status": "passed"
+        },
+        {
+          "name": "T1413真实普通正文入口late中止provider且迟到正文不保存或结算",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-pi-loop.protocol.test.ts",
+      "tests": [
+        {
+          "name": "完整 legacy 窗口只替换本轮宿主回执，冻结历史和用户/助手同文保持原样",
+          "status": "passed"
+        },
+        {
+          "name": "截图回执经可信解析后以 image 内容进入 Pi 下一次模型请求",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：success",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：empty",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：tool",
+          "status": "passed"
+        },
+        {
+          "name": "缺final恢复协议：legacy",
+          "status": "passed"
+        },
+        {
+          "name": "接受的计划仍有未完成步骤时在原Pi循环继续，工具回执后才交付",
+          "status": "passed"
+        },
+        {
+          "name": "没有工具行动的连续空答复只做一次无工具恢复并快速失败",
+          "status": "passed"
+        },
+        {
+          "name": "计划未推进且模型重复宣称完成时给具体步骤错误，停止无限循环",
+          "status": "passed"
+        },
+        {
+          "name": "相同不可重试工具错误最多重复一次，随后无工具生成部分答复",
+          "status": "passed"
+        },
+        {
+          "name": "长度截断在原任务自动续写，持续截断时有限收口并保留 partial 内容",
+          "status": "passed"
+        },
+        {
+          "name": "长度截断后模型完成时沿原任务正常收口",
+          "status": "passed"
+        },
+        {
+          "name": "计划未完成时空响应继续原任务并允许下一步工具，不能进入只读最终答复恢复",
+          "status": "passed"
+        },
+        {
+          "name": "重复工具调用不重置计划无进展计数",
+          "status": "passed"
+        },
+        {
+          "name": "只有终态失败计划时不再请求模型或工具，只向后端提交可信失败步骤ID",
+          "status": "passed"
+        },
+        {
+          "name": "取消或跳过的终态计划不能让聊天任务冒充完成",
+          "status": "passed"
+        },
+        {
+          "name": "终态失败遇到length仍先按既有规则续写，只有stop才提交部分结果",
+          "status": "passed"
+        },
+        {
+          "name": "历史stop有后继时保留既有续行提示，再只对最新失败收口",
+          "status": "passed"
+        },
+        {
+          "name": "停止后沿原操作键回放已结算模型与工具回执，再继续同一计划",
+          "status": "passed"
+        },
+        {
+          "name": "重启前未知在途调用由 Worker 原检查点阻断（'requires_reconciliation'/'unknown'），不进入供应商或工具",
+          "status": "passed"
+        },
+        {
+          "name": "重启前未知在途调用由 Worker 原检查点阻断（'ready'/'unknown'），不进入供应商或工具",
+          "status": "passed"
+        },
+        {
+          "name": "重启前未知在途调用由 Worker 原检查点阻断（'ready'/'started'），不进入供应商或工具",
+          "status": "passed"
+        },
+        {
+          "name": "已结算长结果只把分页投影送回模型，UI仍持有完整结果",
+          "status": "passed"
+        },
+        {
+          "name": "'不同参数可继续纠错'",
+          "status": "passed"
+        },
+        {
+          "name": "'相同参数两次有限收口'",
+          "status": "passed"
+        },
+        {
+          "name": "'对象键顺序不制造新调用'",
+          "status": "passed"
+        },
+        {
+          "name": "'数组顺序保留'",
+          "status": "passed"
+        },
+        {
+          "name": "'不同错误不合并'",
+          "status": "passed"
+        },
+        {
+          "name": "'不同工具不合并'",
+          "status": "passed"
+        },
+        {
+          "name": "缺宿主绑定参数不把 SDK 空占位当真实重复调用",
+          "status": "passed"
+        },
+        {
+          "name": "T1413发布参考经真实Pi前两步强制工具与规范名称，第三步恢复自由",
+          "status": "failed"
+        }
+      ]
+    }
+  ]
+}

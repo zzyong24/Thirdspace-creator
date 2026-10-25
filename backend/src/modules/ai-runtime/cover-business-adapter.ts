@@ -14,7 +14,7 @@ export function createCoverBusinessAdapter(deps:ContextDeps):StructuredBusinessA
    const snapshot=task.inputData.scriptSnapshot as {fullText?:unknown}|undefined;
    const frozen:CoverContext={positioningBrief:context.positioningBrief,projectBriefHard:context.projectBriefHard,reviewScript:typeof snapshot?.fullText==="string"&&snapshot.fullText.trim()?snapshot.fullText:context.reviewScript,userMaterialHardBrief:context.userMaterialHardBrief,userMaterialRefBrief:context.userMaterialRefBrief,knowledgeBrief:context.knowledgeBrief,topic:context.topic,orientationHint:context.orientationHint};
    const visualRequirements=typeof task.inputData.visualRequirements==="string"?task.inputData.visualRequirements.trim().slice(0,COVER_VISUAL_REQUIREMENTS_MAX):"";
-   return {...coverFacets(frozen,{userVisualRequirements:visualRequirements}),__coverTaskInputDigest:generationRequestDigest({inputData:task.inputData,projectId:task.projectId}),__coverContext:JSON.stringify({context:frozen,visualRequirements,referenceAssetId:typeof task.inputData.referenceAssetId==="string"?task.inputData.referenceAssetId.trim()||null:null})};
+   return {...coverFacets(frozen,{userVisualRequirements:visualRequirements}),__coverTaskInputDigest:generationRequestDigest({inputData:task.inputData,projectId:task.projectId}),__coverContext:JSON.stringify({context:frozen,visualRequirements,...(task.inputData.__coverReferenceRequired===true?{referenceRequired:true}:{}),referenceAssetId:typeof task.inputData.referenceAssetId==="string"?task.inputData.referenceAssetId.trim()||null:null})};
   },
   project(){throw new Error("封面候选必须携带已保存图片回执，不能把文案方案当成封面完成");},
  };

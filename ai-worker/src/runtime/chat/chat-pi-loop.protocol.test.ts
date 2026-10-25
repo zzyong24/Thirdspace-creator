@@ -252,3 +252,24 @@ it('缺宿主绑定参数不把 SDK 空占位当真实重复调用',async()=>{
  const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>({stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'tool-call',toolCallId:'missing',toolName:'read',input:'{}'});c.enqueue({type:'finish',finishReason:{unified:'tool-calls',raw:null},usage});c.close();}})})};
  await assert.rejects(runChatPiLoop({model:model as never,system:'读取',messages:[{role:'user',content:'读取'}],definitions:[{name:'read',description:'读取',parameters:{type:'object',properties:{}}}],execute:async()=>({status:'error',sideEffect:'none',error:{code:'invalid_input',retryable:false}}),approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(120000),maxOutputTokens:256,messageId:'missing-bound-input',terminalToolFailurePolicyVersion:1,terminalToolFailureInput:()=>undefined} as Parameters<typeof runChatPiLoop>[0]),/CHAT_TERMINAL_TOOL_FAILURE_RECEIPT_MISSING/);
 },120000);
+
+it('T1413发布参考经真实Pi前两步强制工具与规范名称，第三步恢复自由',async()=>{
+ const requests:any[]=[],executed:string[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden');},doStream:async(request:any)=>{
+  requests.push(request);const step=requests.length;
+  return {stream:new ReadableStream({start(controller){controller.enqueue({type:'stream-start',warnings:[]});
+   if(step<3){const id=`cover-step-${step}`,toolName=step===1?'context_publications':'cover_generate',input=step===1?'{}':'{"referenceAssetId":"real-cover"}';controller.enqueue({type:'tool-input-start',id,toolName});controller.enqueue({type:'tool-input-delta',id,delta:input});controller.enqueue({type:'tool-input-end',id});controller.enqueue({type:'tool-call',toolCallId:id,toolName,input});}
+   else{controller.enqueue({type:'text-start',id:'final'});controller.enqueue({type:'text-delta',id:'final',delta:'已提交封面候选任务。'});controller.enqueue({type:'text-end',id:'final'});}
+   controller.enqueue({type:'finish',usage,finishReason:{unified:step<3?'tool-calls':'stop',raw:null}});controller.close();}})};
+ }};
+ const result=await runChatPiLoop({model:model as never,system:'按真实已发布封面选择参考',messages:[{role:'user',content:'参考发布作品做封面'}],forcedToolSequence:['context.publications','cover.generate'],definitions:['context.publications','cover.generate'].map(name=>({name,description:'真实封面链',parameters:{type:'object',properties:{referenceAssetId:{type:'string'}}}})),execute:async(name)=>{executed.push(name);return {status:'ok'};},approve:async()=> 'approved',approvalId:()=> 'approved',signal:AbortSignal.timeout(120000),maxOutputTokens:256,messageId:'publication-cover'});
+ assert.equal(requests.length,3);assert.deepEqual(executed,['context.publications','cover.generate']);
+ assert.deepEqual(requests[0].toolChoice,{type:'tool',toolName:'context_publications'});assert.deepEqual(requests[1].toolChoice,{type:'tool',toolName:'cover_generate'});
+ assert.notEqual(requests[2].toolChoice?.type,'tool');assert.ok(requests.every(request=>request.tools.every((tool:any)=>!tool.name.includes('.'))));
+ // Pi execute的args按宿主协议是空占位；真实参数须在已结算模型回执/消息投影里验证。
+ const selected=result.message.parts.find(part=>part.type==='tool-cover_generate') as {input?:unknown}|undefined;
+ assert.deepEqual(selected?.input,{referenceAssetId:'real-cover'});
+ const emitted=requests[2].prompt.flatMap((message:any)=>Array.isArray(message.content)?message.content:[]).find((part:any)=>part.type==='tool-call'&&part.toolCallId==='cover-step-2');
+ assert.deepEqual(emitted?.input,{referenceAssetId:'real-cover'});
+ assert.match(result.text,/已提交/);
+},120000);

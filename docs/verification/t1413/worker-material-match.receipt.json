@@ -1,0 +1,56 @@
+{
+  "label": "worker-material-match",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "ai-worker",
+    "exec",
+    "vitest",
+    "run",
+    "src/prompt/templates/material-match.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/worker-material-match.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:42:13.234Z",
+  "endedAt": "2026-10-25T08:42:15.357Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/worker-material-match.log",
+  "logSha256": "f1f17c3aef5e67c4afd70c4ad075e34979cda3c35ce12548692e45b9fecafbed",
+  "report": "docs/verification/t1413/worker-material-match.vitest.json",
+  "counts": {
+    "passed": 4,
+    "failed": 0,
+    "pending": 0,
+    "total": 4
+  },
+  "files": [
+    {
+      "path": "ai-worker/src/prompt/templates/material-match.test.ts",
+      "tests": [
+        {
+          "name": "material.match 视频呈现契约 接受 AI 返回的主画面层级，且拒绝协议外枚举",
+          "status": "passed"
+        },
+        {
+          "name": "material.match 视频呈现契约 把项目画幅、界面可读性和展示时长交给 Skill 判断",
+          "status": "passed"
+        },
+        {
+          "name": "material.match 视频呈现契约 把原文件名和人工选材当高价值上下文，但禁止机械字符串匹配",
+          "status": "passed"
+        },
+        {
+          "name": "material.match 视频呈现契约 [T-867 RED] 当前项目生成素材必须由 AI 自动逐项评估，空结果不能把选场景作业退给用户",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

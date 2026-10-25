@@ -96,35 +96,36 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
    const result=await replay(initial.payload.modelIdentity,initial.input,models,signal);
    if(result.status==="next-request")return {status:"pending" as const};
    if(result.status!=="complete")throw new ConflictError("封面文案尚未完成，不能准备图片");
-   const source=JSON.parse(initial.input.facets.__coverContext??"null") as {context:CoverContext;visualRequirements:string;referenceAssetId:string|null;referenceFileId?:string;referenceChecksum?:string;aspectRatio?:string};
+   const source=JSON.parse(initial.input.facets.__coverContext??"null") as {context:CoverContext;visualRequirements:string;referenceAssetId:string|null;referenceRequired?:boolean;referenceFileId?:string;referenceChecksum?:string;aspectRatio?:string};
    if(!source?.context?.topic)throw new ConflictError("封面原上下文缺失");
    const resultData=initial.input.skillId==="graphic.card-brief"
     ? projectGraphicCardPlan(result.value.object,source.context,source.visualRequirements,{aspectRatio:source.aspectRatio})
     : projectCoverPlan(result.value.object,source.context,source.visualRequirements);
    let reference:{assetId:string;assetFileId?:string;checksum:string;mimeType:string}|null=null;
    let referenceBytes:Uint8Array|undefined;
+   const strictReference=source.referenceRequired===true||Boolean(source.referenceFileId);
+   if(strictReference&&!source.referenceAssetId)throw new ConflictError("必需参考图片缺失，不能改为文生图");
    if(source.referenceAssetId){
     const read=()=>deps.getReferenceBytes(initial.context,source.referenceAssetId!,source.referenceFileId);
-    // Explicit immutable references may not silently fall back. Legacy cover references retain their established safe output path.
-    const value=source.referenceFileId?await read():await read().catch(()=>null);signal?.throwIfAborted();
+    // 必需路线和精确文件均不得静默丢参考；无此约束的旧封面保留原降级。
+    const value=strictReference?await read().catch(()=>{signal?.throwIfAborted();throw new ConflictError("必需参考图片无法读取");}):await read().catch(()=>null);signal?.throwIfAborted();
     if(value?.bytes.byteLength){
       const checksum=createHash("sha256").update(value.bytes).digest("hex");
       if(source.referenceChecksum&&checksum!==source.referenceChecksum)throw new ConflictError("统一参考的精确文件校验已变化，请重新选择参考");
       referenceBytes=value.bytes;
       reference={assetId:source.referenceAssetId,...(source.referenceFileId?{assetFileId:source.referenceFileId}:{}),checksum,mimeType:value.mimeType};
-    }else if(source.referenceFileId)throw new ConflictError("统一参考的精确文件无法读取，可明确取消参考后重试文生图");
+    }else if(strictReference)throw new ConflictError("统一参考的精确文件无法读取，可明确取消参考后重试文生图");
    }
    const capability=reference?"image.edit":"image.generate",credential=executionAssetCredentialSchema.parse(await deps.resolveImageSpec(initial.context,capability,initial.business.id,signal));signal?.throwIfAborted();
+   if(strictReference&&!("engine" in credential)&&(!supportsAssetGenerationMode(credential,"image_to_image")||!reference||!referenceBytes||!referenceImageAllowed(credential,"image_to_image",reference.mimeType,referenceBytes)))throw new ConflictError("当前图片模型不支持这份参考图片，可明确取消参考后文生图");
    let value:ReturnType<typeof coverImagePreparationSchema.parse>;
    if("engine" in credential){
+    if(source.referenceRequired===true&&reference&&!["image/jpeg","image/png","image/webp"].includes(reference.mimeType))throw new ConflictError("当前图片模型不支持这份参考图片");
     if(referenceBytes&&referenceBytes.byteLength>30*1024*1024)throw new ConflictError('参考图超过原大小限制');
     value=coverImagePreparationSchema.parse({input:{kind:'asset.generate',operationKey:`${initial.input.operationKey}/image`,mediaKind:'image',capability,prompt:resultData.prompt,...(source.aspectRatio?{aspectRatio:source.aspectRatio}:{}),engine:'codex',protocolKind:credential.protocolKind,runtimeVersion:credential.runtimeVersion},reference,resultData:{...resultData,referenceImage:{requestedAssetId:source.referenceAssetId,status:source.referenceAssetId?(reference?'used':'not_used'):'not_requested',used:Boolean(reference)}}});
    }else{
    const {token:_token,provider,model,baseUrl,serviceId,kind,...options}=credential;
    if(kind!=="image")throw new ConflictError("封面图片能力配置错误");
-   if(source.referenceFileId){
-     if(!supportsAssetGenerationMode(credential,"image_to_image")||!reference||!referenceBytes||!referenceImageAllowed(credential,"image_to_image",reference.mimeType,referenceBytes))throw new ConflictError("当前图片模型不支持这份参考图片，可明确取消参考后文生图");
-   }
    if(source.aspectRatio){const issue=assetGenerationParameterError(credential,reference?"image_to_image":"text_to_image",{prompt:resultData.prompt,aspectRatio:source.aspectRatio});if(issue)throw new ConflictError(issue);}
    value=coverImagePreparationSchema.parse({input:{kind:"asset.generate",operationKey:`${initial.input.operationKey}/image`,mediaKind:"image",capability,prompt:resultData.prompt,...("aspectRatio" in resultData && resultData.aspectRatio?{aspectRatio:resultData.aspectRatio}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest:`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`},reference,resultData:{...resultData,referenceImage:{requestedAssetId:source.referenceAssetId,...(source.referenceFileId?{requestedAssetFileId:source.referenceFileId}:{}),status:source.referenceAssetId?(reference?"used":"not_used"):"not_requested",used:Boolean(reference)}}});
    }

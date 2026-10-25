@@ -1,0 +1,19 @@
+{
+  "label": "semantic-boundary-final",
+  "command": "node",
+  "argv": [
+    "orchestrator/process/semantic-boundary-scan.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:45:19.477Z",
+  "endedAt": "2026-10-25T08:45:19.770Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/semantic-boundary-final.log",
+  "logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+  "report": "docs/verification/t1413/semantic-boundary-final.vitest.json",
+  "counts": null,
+  "files": []
+}

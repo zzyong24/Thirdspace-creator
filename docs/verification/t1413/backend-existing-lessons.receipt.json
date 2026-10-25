@@ -1,0 +1,2310 @@
+{
+  "label": "backend-existing-lessons",
+  "command": "pnpm",
+  "argv": [
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/artifacts/artifacts.service.test.ts",
+    "src/modules/ai-runtime/script-runner.test.ts",
+    "src/modules/ai-runtime/chat-tools.test.ts",
+    "src/modules/ai-runtime/chat-assembly.test.ts",
+    "src/modules/ai-runtime/chat-script-patch-tool-host.test.ts",
+    "src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+    "src/modules/ai-runtime/chat-script-import-authorization.test.ts",
+    "src/modules/ai-runtime/cover-runner.test.ts",
+    "src/modules/ai-runtime/multimodal/resolve.test.ts",
+    "src/modules/ai-runtime/video-decisions-runner.test.ts",
+    "src/integration/chat-script-patch-worker.test.ts",
+    "src/integration/chat-script-draft-worker.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator/docs/verification/t1413/backend-existing-lessons.vitest.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:41:09.330Z",
+  "endedAt": "2026-10-25T08:43:44.082Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment": "仅指定state.json.env，无父环境继承；未记录原env",
+  "log": "docs/verification/t1413/backend-existing-lessons.log",
+  "logSha256": "333b140bcc7df0ad0c65200c5976903fb84b0d8e53b67673a0ecb2a82b551215",
+  "report": "docs/verification/t1413/backend-existing-lessons.vitest.json",
+  "counts": {
+    "passed": 551,
+    "failed": 0,
+    "pending": 0,
+    "total": 551
+  },
+  "files": [
+    {
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "tests": [
+        {
+          "name": "真实 Worker 整稿授权与原子提交：generate",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 整稿授权与原子提交：verbatim",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 整稿授权与原子提交：unauthorized",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 整稿授权与原子提交：reject429",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 整稿授权与原子提交：crashAfterChild",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 整稿授权与原子提交：crashUnknownChild",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 整稿授权与原子提交：settlementDrop",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 整稿授权与原子提交：completeDrop",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/integration/chat-script-patch-worker.test.ts",
+      "tests": [
+        {
+          "name": "真实 Worker 局部改稿只产原版本候选：success",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 局部改稿只产原版本候选：unchanged",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 局部改稿只产原版本候选：lostAck",
+          "status": "passed"
+        },
+        {
+          "name": "真实 Worker 局部改稿只产原版本候选：crashAfterPatch",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/artifacts/artifacts.service.test.ts",
+      "tests": [
+        {
+          "name": "artifacts.service — append-only versioning createVersion appends + re-points; the prior version row is unchanged",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning restoreVersion points currentVersionId at the selected immutable version without appending",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning restoreVersion does not append another version when the target snapshot is already current",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning [T-833] 局部改稿撤销发现后续版本时拒绝覆盖",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning createVersion with createdByType 'ai' + aiTaskId records candidate provenance",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning applyScriptPatch changes only the anchored section and appends one immutable version",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning [T-833] 同一旧稿生成的多张候选可按未变化段落顺序全部采纳",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning [T-833] 旧候选重放时保留最新稿的其他改动",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning [T-732] createVersion 为脚本的无 ID 段落持久化稳定锚点",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning [T-732] 存量无 ID 脚本可按兼容锚点只改目标段，并在新版本中自愈 ID",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning applyScriptPatch refuses a stale version anchor",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning applyScriptPatch refuses an original-text mismatch",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — append-only versioning [T-812/T-819] applyScriptPatch 拒绝 no-op，不新增版本",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — ownership getArtifact for another user's artifact throws OwnershipError",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — ownership createRelation rejects a target the ctx.userId does not own",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — structured-content guard replaceStructuredContent runs against the current version",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — structured-content guard replaceStructuredContent refuses a stale (non-current) version id (ConflictError)",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam) AI 版 → 用户改版 (脚本) → 触发一条 delta,before/after 正确",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam) 纯用户版 → 用户版 → 不触发(前版非 AI)",
+          "status": "passed"
+        },
+        {
+          "name": "artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam) 非脚本 artifact 即使 AI→用户 也不触发(埋点限脚本改稿)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-332 S2] artifacts 按号隔离:未选号禁读写 + 双号零交叉 未选号 ctx:创建/读取入口全部 AccountRequiredError(SPEC §4.2 引导态)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-332 S2] artifacts 按号隔离:未选号禁读写 + 双号零交叉 双号隔离:同项目下各建稿,list 零交叉,by-id 跨号 404,版本链承父锚",
+          "status": "passed"
+        },
+        {
+          "name": "T-1034：分镜保存→局部修改→实际制作正文与导出→回滚保持同一真值",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "tests": [
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 只用最新一轮原文授权转写；历史轮次的转写要求不能污染普通分享",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 否定转写意图优先，不因出现关键词而升级授权：不要转写，只帮我建档 https://v.douyin.com/no-transcribe/",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 否定转写意图优先，不因出现关键词而升级授权：不用转录，收藏即可 https://v.douyin.com/no-transcript/",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 否定转写意图优先，不因出现关键词而升级授权：别生成字幕，只建档 https://v.douyin.com/no-subtitles/",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 最新轮明确要求转写时仍授权派生任务",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 封面参考图否定意图优先，不进入自动引用：不要参考图，直接生成封面",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 封面参考图否定意图优先，不进入自动引用：不用沿用这张图的风格，直接生成封面",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 参考最新发布作品生成封面进入发布作品语义选择链，而不是全素材库唯一图链",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] Copilot 媒体意图确定性路由 发布作品参考链先强制读取合格候选、再强制生成，并物理排除 local.tools",
+          "status": "passed"
+        },
+        {
+          "name": "[T-727] 原文来源清单与当前指令优先级 专用语义门只接受结构化授权与锚点，不接受模型散文或错误类型",
+          "status": "passed"
+        },
+        {
+          "name": "[T-727] 原文来源清单与当前指令优先级 system 明确本轮创作指令覆盖 Brief/定位/归因建议，并向模型提供受信 sourceRef 而非摘要正文",
+          "status": "passed"
+        },
+        {
+          "name": "[T-707] 定位 Copilot 的 scratch 隔离识别 识别 Copilot 明确选择的重新定位，不再依赖旧六问完成暗号",
+          "status": "passed"
+        },
+        {
+          "name": "[T-707] 定位 Copilot 的 scratch 隔离识别 入口只是询问三种路径时不误判 scratch",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 surface=topics → 选 chatbox.topic skill(页面层)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-995] 画布对话选择专用 Skill 并先读取真实画布",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-513] active 账号快照覆盖 chat method 与工具，不读取全局 registry 定制",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-770] 冻结快照缺可选 guide 仅说明工具不可用，主聊天仍可用",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 未知 surface → 回落 chatbox.topic(路由不崩)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 数据层:把非空 CreativeContext facets 注进 system(定位/飞轮/受众信号/知识库)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 当前对话的图N/imageN别名按真实 assetId 注入，模型无需猜素材标题",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 本机读取能力明确支持 Windows 盘符和 UNC 路径，不再误报只能识别 Unix 路径",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-096 矩阵#10] 系统注入不受 scope 隔离影响:任意 scope 声明下 system 仍含账号级 facets(不过度隔离)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 surface=review + projectId → 把「本次复盘对象」(真标题/文案/数据/评论)注进对话 system(修「瞎问复盘对象」)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 surface=review 但无 projectId(无真材料)→ 不注入复盘对象块(§8 不摆假)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-106] 项目态注入当前项目 id 为工具可用值 + 指路 context.artifact.text + 禁 context.projects 找",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-106] 无 projectId(账号级对话)→ 不注入当前项目块",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-117] functionKey 命中真工具 → forcedTool 置该工具(streamText 会 toolChoice 强制)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-732/T-819] 失效快捷命令不强制；普通项目对话改为开放语义定位候选工具",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-732] 连续对话的段落锚点同时开放局部与整稿工具，由模型按本轮语义选择",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-117] 无 functionKey / functionKey 非真工具 → forcedTool undefined(自由对话不强制)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240③] 场景白名单真收窄:topics(选题页)= 创作产出 + 素材 + 全量只读,不含 review.analyze/review.script",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,完整行数=实际工具数)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240③] skillsBrief 与场景白名单同步:review 面 preferred 在前,被场景砍掉的工具不进自感知清单",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 surface=positioning → chatbox.positioning skill + positioning.generate([T-240③] 场景收窄:不给出题/写稿/复盘)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 T-039b:surface=topics(非定位)→ 不注入账号画像(避免给其它 surface 塞账号噪声)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240③] surface=review → chatbox.review skill,场景白名单 = 复盘提炼 + 记经验 + 素材 + 全量只读(不给创作产出)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 T-039a:surface=review 但缺 projectId → 不调 reviewSubject reader(诚实兜底,不崩)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 functionKey 叠加:把命中的专用工具置顶(按钮层,一键岛预调)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 functionKey 越权(不在 skill preferred 白名单)→ 不置顶该工具(在场景白名单内仍可调,只是不预调置顶)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ① 创作前项目(未发布)→ system 注入「创作前(未发布)」阶段块 + 「没有逐字稿是正常状态」",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ① 已发布项目 → system 注入「已发布(可复盘)」阶段块(拆解必须读真逐字稿/指标)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ① 无 projectId / 读不到项目详情 → 不注阶段块(不喂猜测,装配不崩)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ② 规则带作用域:全局条款(编造禁令/直接写稿)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 [T-730] 编导仍可直接使用 Brief、定位和真实素材写稿，不强制论点前置",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 [T-265] 全局反工具冒充条款在场(治「深链死链 → 编导抓 topic.enrich 冒充论点树」)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ③ 创作前 project surface → review.analyze 被阶段感知砍掉(review.script/calibration.diagnose 保留)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量工具(向后兼容)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 [T-770] 元 Skill 工具仅在 topics/project 暴露，聚焦 surface 均不暴露",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 [T-240] 场景一等机制 ③ functionKey 命中真工具但被场景砍掉 → 补回白名单且 forcedTool 生效(T-231⑨ 强制置顶不受收窄影响)",
+          "status": "passed"
+        },
+        {
+          "name": "prepareChatAssembly — 三层注入装配 facets 装配失败(reader 抛)不阻断装配 —— 降级为无该 facet 的 system",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081⑤] honestyBlock — 工具边界诚实 system 注入「绝不提供工具不具备的操作选项」规则",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081⑤] honestyBlock — 工具边界诚实 [T-806/T-957] 对用户说明状态，不泄漏内部提示词或原始错误",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081⑤] honestyBlock — 工具边界诚实 [T-957] 强制局部改稿失败说明同样遵守用户表达边界",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081⑤] honestyBlock — 工具边界诚实 [T-098] system 注入「指针权/禁逐字复述清单」规则",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081⑤] honestyBlock — 工具边界诚实 [T-708] 创作完整度统一为软提示，用户要先生成时不再被形式门禁拦住",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081⑤] honestyBlock — 工具边界诚实 [T-708] 长文允许阶段结果，本机授权在同一回合续跑而不是重复调用",
+          "status": "passed"
+        },
+        {
+          "name": "[T-684] 随包浏览器检索 + 禁止模型记忆兜底 宿主未装 searchWeb 端口 → 明确能力未接入，不引导配置搜索模型",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081②] formatWorksBrief — 全部作品标题压缩列表 每条截 40 字加 …,带发布状态标记",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081②] formatWorksBrief — 全部作品标题压缩列表 上限 100 条;total 更大时如实标注剩余",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081②] formatWorksBrief — 全部作品标题压缩列表 空列表 → 空串(调用方整段省略,不注空噪声)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] buildHooksPrompt — extraBrief 注入 extraBrief 非空 → 注入「本次生成指令」段(优先遵循)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] buildHooksPrompt — extraBrief 注入 extraBrief 空 → 不注入该段(行为与旧 prompt 一致)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] buildHooksPrompt — extraBrief 注入 projectBriefHard + userMaterial + antiFabrication 全注入",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] buildHooksPrompt — extraBrief 注入 三样都不传 → 不注入(账号态/无素材向后兼容)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-269] buildEnrichPrompt — anti-fabrication 注入 传入 antiFabrication → prompt 含可溯硬约束段 + materialBasis 禁凭空声称",
+          "status": "passed"
+        },
+        {
+          "name": "[T-269] buildEnrichPrompt — anti-fabrication 注入 不传 antiFabrication → 向后兼容(旧调用/单测不注该段)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-269] buildEnrichPrompt — anti-fabrication 注入 [T-371] 传 verifiedBrief → prompt 含联网核实素材段 + 据实引用指令,禁占位承诺",
+          "status": "passed"
+        },
+        {
+          "name": "[T-269] buildEnrichPrompt — anti-fabrication 注入 [T-371] 不传 verifiedBrief → 素材依据段走「未联网核实」诚实门,禁伪承诺占位",
+          "status": "passed"
+        },
+        {
+          "name": "parseHookItems 剥围栏 + 提取数组 + 收窄字段",
+          "status": "passed"
+        },
+        {
+          "name": "parseHookItems 不合形输出 → 诚实空数组",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] resolveChatMaxSteps — 步数上限可配 未配 → 默认 6;非法值 → 默认 6",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239f] resolveChatMaxSteps — 步数上限可配 可配且夹在 [2,12](至少留 1 步给禁工具收尾)",
+          "status": "passed"
+        },
+        {
+          "name": "Pi 显式工具指令 [T-443] 强制意图改由 system 指令承担,且必须用**合规工具名**(与发给模型的 tools key 一致)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239c] 当前长工具取消信号链 material.screenshot: 原冻结宿主 execute 将同一 scope.signal 交给截图端口",
+          "status": "passed"
+        },
+        {
+          "name": "[T-239c] 当前长工具取消信号链 web.read: 实际 Worker 透传 signal；取消不结算失败，普通读取错误保存人话",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] 环境感知能力认知 — honesty 第 13 条 system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令",
+          "status": "passed"
+        },
+        {
+          "name": "[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 system 注入第 11 条:有真实热点能力(内容雷达/web 搜索)+ 引导登记来源,绝不自称没能力",
+          "status": "passed"
+        },
+        {
+          "name": "chat-runner T-382 — 当前选中号注入 ctx.accountId 命中 → 任意 surface 的 system 含「当前选中的抖音号」块 + 禁反问指令",
+          "status": "passed"
+        },
+        {
+          "name": "chat-runner T-382 — 当前选中号注入 定位对话:画像段标 ⭐当前选中号(其余号仅并列),且 system 含当前号块",
+          "status": "passed"
+        },
+        {
+          "name": "chat-runner T-382 — 当前选中号注入 未选号(ctx 无 accountId)→ 不注当前号块(诚实,不猜)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-386] prepareChatAssembly — 后台任务状态真值块 listRecentTasksPort 有近期任务 → system 注真值块(id+状态人话+硬指令)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-386] prepareChatAssembly — 后台任务状态真值块 端口抛错 / 未装配 → 不注块、装配不崩(best-effort);诚实第 16 条恒在",
+          "status": "passed"
+        },
+        {
+          "name": "[T-386] prepareChatAssembly — 后台任务状态真值块 非 chat 派发类任务(定时采集等)被滤掉,不喂噪声",
+          "status": "passed"
+        },
+        {
+          "name": "持久聊天准备并发账号使用各自快照，跨账号快照在读取上下文前拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "真实聊天冻结可选计划工具，旧快照不被静默改写",
+          "status": "passed"
+        },
+        {
+          "name": "T1084 pi 持久聊天先装配计划及 Workbench，再冻结完整工具目录",
+          "status": "passed"
+        },
+        {
+          "name": "T1084 codex 持久聊天先装配计划及 Workbench，再冻结完整工具目录",
+          "status": "passed"
+        },
+        {
+          "name": "T1084 完整装配后仍拒绝计划 '描述' 漂移",
+          "status": "passed"
+        },
+        {
+          "name": "T1084 完整装配后仍拒绝计划 'schema' 漂移",
+          "status": "passed"
+        },
+        {
+          "name": "T1084 完整装配后仍拒绝计划 '版本' 漂移",
+          "status": "passed"
+        },
+        {
+          "name": "持久聊天准备不借外层快照补齐缺失的产品说明",
+          "status": "passed"
+        },
+        {
+          "name": "素材快捷入口允许先读上下文，目录保留冻结覆写并按需读取正文",
+          "status": "passed"
+        },
+        {
+          "name": "旧冻结快照缺检索规划时不补入当前方法，也不阻断素材回合",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 账号覆写在原规则后追加偏好时，最终规则仍只保留一次并位于末尾",
+          "status": "passed"
+        },
+        {
+          "name": "Canvas 受信单画布范围 系统目录可跨页面使用，生成候选只在真实单画布上下文开放",
+          "status": "passed"
+        },
+        {
+          "name": "Canvas 受信单画布范围 原global/project工具不注册Canvas，普通material.generate仍在",
+          "status": "passed"
+        },
+        {
+          "name": "Canvas 受信单画布范围 真实单画布入口选原Canvas Skill且强制先读，再可propose",
+          "status": "passed"
+        },
+        {
+          "name": "Canvas 受信单画布范围 多画布与错kind没有可编辑Canvas工具",
+          "status": "passed"
+        },
+        {
+          "name": "编导工具只在真实准备端口确认同保存target后开放，旧聊天与失效functionKey不偷补",
+          "status": "passed"
+        },
+        {
+          "name": "编导上下文在准备首个await前冻结，外部改selection/消息不污染原target及模型输入",
+          "status": "passed"
+        },
+        {
+          "name": "联合创作准备先确认真实source/member并冻结两个短工具顺序",
+          "status": "passed"
+        },
+        {
+          "name": "T1074 topics 的Codex真实准备仅冻结已审宿主读取/候选，工具目录对应实际定义",
+          "status": "passed"
+        },
+        {
+          "name": "T1074 canvas 的Codex真实准备仅冻结已审宿主读取/候选，工具目录对应实际定义",
+          "status": "passed"
+        },
+        {
+          "name": "T1097/T1300 解析选择首await前冻结且中性只读资料不漏全局品牌/文档，新owner仍宿主候选",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+      "tests": [
+        {
+          "name": "宿主整稿输入准备 T959 无资料引用仍传用户要求与编导建议",
+          "status": "passed"
+        },
+        {
+          "name": "宿主整稿输入准备 generate 保留原清洗与真实多源顺序，不需要授权请求",
+          "status": "passed"
+        },
+        {
+          "name": "宿主整稿输入准备 资料缺指令和失效引用保留原错误",
+          "status": "passed"
+        },
+        {
+          "name": "宿主整稿输入准备 冻结来源，模型只提供授权锚点而不能替换正文",
+          "status": "passed"
+        },
+        {
+          "name": "宿主整稿输入准备 拒绝未授权、坏决策、伪锚点与截断来源",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-script-import-authorization.test.ts",
+      "tests": [
+        {
+          "name": "授权节点使用完整最新指令和完整来源，不消费模型建议作为最终边界",
+          "status": "passed"
+        },
+        {
+          "name": "授权解析保留精确锚点，拒绝错误类型，不从模型说明猜授权",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-script-patch-tool-host.test.ts",
+      "tests": [
+        {
+          "name": "局部改稿经组合宿主保留原卡片和参数，选中模式=false",
+          "status": "passed"
+        },
+        {
+          "name": "局部改稿经组合宿主保留原卡片和参数，选中模式=true",
+          "status": "passed"
+        },
+        {
+          "name": "冻结选中段的版本改变后拒绝产补丁",
+          "status": "passed"
+        },
+        {
+          "name": "冻结选中段的原文改变后拒绝产补丁",
+          "status": "passed"
+        },
+        {
+          "name": "冻结选中段的段落改变后拒绝产补丁",
+          "status": "passed"
+        },
+        {
+          "name": "冻结选中段的账号改变后拒绝产补丁",
+          "status": "passed"
+        },
+        {
+          "name": "冻结选中段的定义改变后拒绝产补丁",
+          "status": "passed"
+        },
+        {
+          "name": "自然语言模式执行时重读当前稿，失效引用与重复引用不能产候选",
+          "status": "passed"
+        },
+        {
+          "name": "不变正文、伪造锚点和取消均不产生可采纳成功",
+          "status": "passed"
+        },
+        {
+          "name": "无项目的显式选中段使用真实选择解析端口，仍核对原版本",
+          "status": "passed"
+        },
+        {
+          "name": "重建工具只消费冻结定义，用户改稿不阻断历史结果回放",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+      "tests": [
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) [T-104] ALL_CHAT_TOOL_NAMES 与 allChatTools 全实现同步(drift guard:加工具忘更新单一真值即挂)",
+          "status": "passed"
+        },
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) 挂上白名单里、本切片已实现的工具(topic.generate + topic.enrich)",
+          "status": "passed"
+        },
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) 白名单外的工具不挂(防越权)",
+          "status": "passed"
+        },
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) 首波 5 工具全部可挂(slice 2 补齐 calibration.diagnose / review.analyze / positioning.generate)",
+          "status": "passed"
+        },
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) 白名单里但仍未实现的工具(如 material.match)被跳过,不报错、不挂空壳",
+          "status": "passed"
+        },
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) 空白名单 → 不挂任何工具",
+          "status": "passed"
+        },
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) [T-770] creatoros.guide 只读返回当前 snapshot 中的版本化产品说明",
+          "status": "passed"
+        },
+        {
+          "name": "buildChatTools — 白名单过滤(tools 挂载) [T-770] creatoros.guide 缺失或错版本时显式失败，不用模型记忆兜底",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) topic.generate.execute 调注入的 generateTopics,返回候选列表(kind=topic.candidates)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) topic.generate.execute basis 缺省 positioning",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) topic.enrich.execute 调注入的 enrichTopic,返回选题卡候选(kind=topic.card)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-473] 同一回合内相同选题补全调用幂等，只执行一次 runner",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-266] topic.enrich 锚定某候选(selection)→ result.candidateId 透传回(前端刷新后仍能 patch)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) topic.enrich 返回 null(模型没产可解析卡)→ result.card 为 null(诚实,不假候选)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-055c] script.hooks execute → deps.generateHooks,返回 kind=script.hooks 候选组",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-716] 没有稿面可信锚点时物理不挂 script.patch，模型不能反问技术 ID",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-716] 稿面已绑定锚点时模型只需给 replacementText，技术 ID 强制取可信上下文",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-819] 普通项目对话先读当前稿，再用稳定 sectionRef 产同一种局部候选",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-812/T-819] 相同建议稿返回明确 no-op，不能冒充已改",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) calibration.diagnose.execute 调注入的 diagnoseContent,返回诊断候选(kind=calibration.diagnosis)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) calibration.diagnose 返回 null(没产可解析诊断)→ diagnosis 为 null(诚实)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) review.analyze.execute 调注入的 analyzeReview,返回经验候选(kind=review.learnings)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-224 诚实门] review.analyze:analyzeReview 无真逐字稿 → 空 items + 非空 error(不产经验卡)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-062a] learning.capture 可挂 + execute 纯回显候选(kind=learning.capture,模型填参、不跑二次 LLM)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-077b] brief.fill 可挂 + execute 回显建议(清洗空字段)+ 读现状 current(不写库)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-077b] brief.fill:现状读端口回 null(无项目上下文)→ current=null(诚实,不编现状)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) positioning.generate.execute 调注入的 generatePositioning,返回定位候选(kind=positioning.suggestion)",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-652] positioning.generate 回传前采候选来源，供原子确认门校验",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-652] 前采生成以服务端最新会话为准，不把对话里的旧版本做成必然冲突的候选",
+          "status": "passed"
+        },
+        {
+          "name": "工具 execute — 复用 runner 产候选(非实体) [T-707] 未答完六问且未选择方向时也能直接生成可采纳候选",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084b] material.screenshot 工具 — 自动化截图 execute 调注入的 captureScreenshot,返回落库 asset + sourceUrl(kind=material.screenshot)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084b] material.screenshot 工具 — 自动化截图 截图抛错(登录墙/打不开)→ 不抛,asset=null + error 人话(诚实,不假截到图)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084b] material.screenshot 工具 — 自动化截图 空 URL → 诚实报错,不调截图端口",
+          "status": "passed"
+        },
+        {
+          "name": "[T-217c] web.read 工具 — 带登录态读网页正文 execute 调注入的 readWeb,读到正文 → asset + excerpt(kind=web.read,needLogin/error 为 null)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-217c] web.read 工具 — 带登录态读网页正文 无会话/过期(needLogin)→ 不落库,返回 needLogin.domain(编导引导去保管库登录)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-217c] web.read 工具 — 带登录态读网页正文 读取抛错(打不开/HTTP/抽不出正文)→ 不抛,asset=null + error 人话",
+          "status": "passed"
+        },
+        {
+          "name": "[T-217c] web.read 工具 — 带登录态读网页正文 空 URL → 诚实报错,不调读取端口",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 [T-792] 工具说明要求配图先服务内容认知，再写成可见画面而非泛化海报",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 execute 调注入的 dispatchGenerateAsset,返回 taskId + queued(kind=material.generate)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 [T-816] 项目配图重读当前段并把版本、hash、原文冻结进 prompt",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 [T-816] 精确文字数字信息卡拒绝自由文生图",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 kind=video 透传(视频异步不阻塞);无 style 时不传该键",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 可信快捷按钮固定素材类型，模型入参不能把图片改成视频",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 空 prompt → 诚实报错,不 dispatch",
+          "status": "passed"
+        },
+        {
+          "name": "[T-084c] material.generate 工具 — AI 生成素材对话化 dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch) 可挂 + 在 ALL_CHAT_TOOL_NAMES 单一真值里(否则 functionKey=publish.package 深链死链)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch) execute 调注入的 dispatchPublishPackage,topic trim 透传,返回 taskId + projectId(kind=publish.package)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch) 空 topic → 缺省不传(由端口从定位/项目兜底)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch) 端口抛错 → execute 接住转 error 非 null(卡渲诚实错误态,不裸抛)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-703] video.edit.render 工具 — 只产可确认剪辑候选 把有界修改参数透传给预演端口，不在工具执行阶段写库或启动渲染",
+          "status": "passed"
+        },
+        {
+          "name": "[T-703] video.edit.render 工具 — 只产可确认剪辑候选 端口未接入时返回可见错误候选，不伪装修改成功",
+          "status": "passed"
+        },
+        {
+          "name": "[T-385] project.transcribe 工具 — 对话内一键抓逐字稿 可挂 + 在 ALL_CHAT_TOOL_NAMES 单一真值里 + 在 project/review 场景白名单里",
+          "status": "passed"
+        },
+        {
+          "name": "[T-385] project.transcribe 工具 — 对话内一键抓逐字稿 execute 调注入的 dispatchProjectTranscribe,projectId trim 透传,返回 taskId(kind=project.transcribe)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-385] project.transcribe 工具 — 对话内一键抓逐字稿 空 projectId → 缺省不传(由 chat-runner 端口从 chatContext 兜底)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-385] project.transcribe 工具 — 对话内一键抓逐字稿 端口抛错(如无抖音锚 ValidationError)→ execute 接住转 error 非 null(诚实错误态,不裸抛)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-730] planning.thesis 可选论点骨架 在公开工具清单中，白名单可挂载",
+          "status": "passed"
+        },
+        {
+          "name": "[T-730] planning.thesis 可选论点骨架 execute 只分派候选任务，并规范化 projectId/topic",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] cover.generate 工具 — 制作封面链对话内真生成 cover.generate 可挂 + 在 ALL_CHAT_TOOL_NAMES 单一真值(否则 fn=cover.generate 深链死链)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] cover.generate 工具 — 制作封面链对话内真生成 execute 调注入的 dispatchGenerateCover,返回 taskId + projectId(kind=cover.generate,异步 dispatch)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] cover.generate 工具 — 制作封面链对话内真生成 无参(稿面右栏对话)→ projectId/topic 缺省不传,由 chat-runner 端口从 chatContext 兜底",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] cover.generate 工具 — 制作封面链对话内真生成 referenceAssetId trim 后透传给 dispatchGenerateCover(以图生图风格参考)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] cover.generate 工具 — 制作封面链对话内真生成 端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装已生成封面)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] cover.generate 工具 — 制作封面链对话内真生成 dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级,不裸机器码)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] intelligence.douyin.share 工具 — 持久建档与显式转写 archive_and_transcribe 只转成显式 transcribe=true，并返回父任务定位字段",
+          "status": "passed"
+        },
+        {
+          "name": "[T-523] intelligence.douyin.share 工具 — 持久建档与显式转写 普通 archive 恒传 transcribe=false；空分享不创建任务",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) execute 调注入的 dispatchScriptDraft,返回 taskId + projectId(kind=script.draft,异步 dispatch 非 sections)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) [T-791] generate 把本轮指令和多份受信资料按选择顺序完整冻结后 dispatch",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) [T-791] 多来源任一引用失效或截断时整次拒绝，不用剩余资料继续生成",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) 端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装写好)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) dispatch 抛错 → 不抛,taskId=null + error(诚实降级,不裸机器码)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) [T-727] verbatim 只传 sourceRef，由服务端恢复完整原文/hash 后 dispatch，绝不塞 extraBrief 摘要",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) [T-727] 精确锚点按包含边界切片；未知引用、重复锚点和截断附件都 fail-closed",
+          "status": "passed"
+        },
+        {
+          "name": "[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) [T-727] 专用 AI 语义门决定是否授权及正文边界，工具只按返回锚点恢复原字符",
+          "status": "passed"
+        },
+        {
+          "name": "[T-727] resolveVerbatimSource 协议边界 保留首尾空格、空行、标点与错别字，空白和 200,000 字符以上拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "[T-263] local.read needsApproval 授权判定(HITL 门,判定与执行拆开) 装配 decideLocalRead → 工具挂上 needsApproval 判定器;buildChatToolApproval 收录 local.read",
+          "status": "passed"
+        },
+        {
+          "name": "[T-263] local.read needsApproval 授权判定(HITL 门,判定与执行拆开) 已授权 → 'not-applicable'(免卡直接执行);敏感 → { type:'denied', reason }",
+          "status": "passed"
+        },
+        {
+          "name": "[T-263] local.read needsApproval 授权判定(HITL 门,判定与执行拆开) 未装配 decideLocalRead(端口缺席)→ 无授权门(buildChatToolApproval 不收录 local.read → undefined)",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) 三个 context 工具全部可挂",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) context.projects.execute 调 listProjects,返回真数据(kind=context.projects)",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) [T-058②] context.projects limit 缺省 20、封顶 50,offset 兜 0",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) [T-058③] context.comments.execute 调 listComments,带 total/hasMore",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) context.knowledge.execute 调 searchKnowledge(query 缺省空串)",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) context.materials.execute 调 searchMaterials(query 缺省空串)",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) context.materials 带 query 空命中 → note 注记「仅按标题匹配,没搜到≠库空」",
+          "status": "passed"
+        },
+        {
+          "name": "只读 context 工具 execute — 拉真数据(纯读、非候选) context 工具返回空(端口无数据)→ items 为空数组(诚实,不塞假数据)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-691] 项目生命周期 / 历史项目 / 审核报告只读工具 绑定当前项目后 lifecycle 忽略模型伪造的 projectId，并返回分区错误真相",
+          "status": "passed"
+        },
+        {
+          "name": "[T-691] 项目生命周期 / 历史项目 / 审核报告只读工具 历史项目检索透传真实排序条件，并默认排除绑定项目",
+          "status": "passed"
+        },
+        {
+          "name": "[T-691] 项目生命周期 / 历史项目 / 审核报告只读工具 审核报告按可信绑定项目读取，指定 reportId 不被吞掉",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 三个详情工具全部可挂",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 context.project.detail.execute 调 getProjectDetail 拼全档(found + project 直渲字段)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 context.project.detail.execute 空 projectId → found:false(不调端口,诚实空态)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 [T-642] context.project.detail 有可信绑定 → 可省略 id，模型伪造 id 也不能改绑",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 context.positioning.detail.execute 调 getPositioningDetail(无入参,全 facets/rules/账号画像)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 context.knowledge.detail.execute 调 getKnowledgeDetail,长正文走详情档预算(≤200+totalChars+指针)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 context.knowledge.detail.execute 读不到 → found:false + item:null(诚实空态)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 详情端口未装配(deps 缺省)→ 工具诚实空态(不抛、不塞假)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 三个全文工具全部可挂",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.artifacts.execute 调 listProjectArtifacts,返回产物清单(kind + found + items)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 [T-642] 全文类工具复用可信绑定 projectId，无需先查项目库",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.artifacts.execute 空 projectId → found:false(不调端口,诚实空态)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.artifact.text.execute 调 getArtifactText,返回窗口(text/offset/totalChars/hasMore)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 [T-816] context.artifact.text 透出 currentVersion 身份、hash 与稳定段落引用",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 [T-405] context.artifact.text:读不到该 type → found:false 且带 availableTypes 自纠清单",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.artifact.text.execute:超长正文 maxChars 强制封顶 8000(execute 侧,非君子协定)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.artifact.text.execute:offset 翻窗读到末尾 → hasMore:false",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.artifact.text.execute:缺 artifactType / 读不到 → found:false + 空窗口(诚实空态)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.knowledge.text.execute 调 getKnowledgeText,返回窗口 + 元数据(title/knowledgeType)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 context.knowledge.text.execute:读不到 → found:false + 空窗口(诚实空态)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 全文端口未装配(deps 缺省)→ 三工具诚实空态(不抛、不塞假)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 五个清单工具全部可挂",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [切片四] context.publications.execute 调 listPublications,带 total/offset/hasMore",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [T-400] 最新发布作品的 coverAssetId 可原样作为 cover.generate.referenceAssetId",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [T-779] 封面参考候选只保留真实已发布、有发布时间且有封面的作品，并按发布时间倒序",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [切片四] context.publications limit 封顶 50、offset 兜 0",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [切片四] context.metrics.execute 给 projectId → 单作品快照(subject + rows + 留存点)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [切片四] context.metrics.execute 不给 projectId → 账号级(projectId=undefined)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [T-642] context.metrics 已绑定项目 → 省略或伪造 id 都只读绑定作品",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [切片五] context.learnings.execute 调 listLearnings(透传 query/type/status)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [切片五] context.candidates.execute 调 listCandidates,带 total/offset/hasMore",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 [切片五] context.predictions.execute 调 getPredictions,拼 rubric 摘要 + 对照行",
+          "status": "passed"
+        },
+        {
+          "name": "[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 清单端口未装配(deps 缺省)→ 五工具诚实空态(不抛、不塞假)",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) 默认 maxChars=4000,offset=0 → 窗口 4000 字 + hasMore",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) maxChars 超 8000 → 封顶 8000(硬约束)",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) offset 翻窗:读到末尾 → hasMore:false,窗口只剩尾段",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) offset 越界(> totalChars)→ clamp 到末尾,空窗口 + hasMore:false",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) offset 负数/非数 → 兜 0",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) 空文本/非串 → 空窗口 + 0 字 + hasMore:false(诚实,不编)",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) 恰好读完(offset+maxChars == totalChars)边界 → hasMore:false",
+          "status": "passed"
+        },
+        {
+          "name": "readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3) clampWindowMaxChars:缺省/≤0/非数 → 4000;>8000 → 8000;区间内取整",
+          "status": "passed"
+        },
+        {
+          "name": "truncateDetailText — 详情档长文本预算(§3) 超 200 字 → preview 截 200 + totalChars 原长 + fullTextTool 指针",
+          "status": "passed"
+        },
+        {
+          "name": "truncateDetailText — 详情档长文本预算(§3) 恰 200 字(边界)→ 不截断,fullTextTool=null(全文即 preview)",
+          "status": "passed"
+        },
+        {
+          "name": "truncateDetailText — 详情档长文本预算(§3) 空/非串 → 空 preview + 0 字 + null 指针(不编)",
+          "status": "passed"
+        },
+        {
+          "name": "knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽) 整串不子串包含,但分词后有词命中 → 判为相关(放宽的关键)",
+          "status": "passed"
+        },
+        {
+          "name": "knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽) 命中词越多相关度越高(用于排序)",
+          "status": "passed"
+        },
+        {
+          "name": "knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽) 摘要参与匹配:词只在摘要里也算命中",
+          "status": "passed"
+        },
+        {
+          "name": "knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽) 完全不相关 → 0(诚实空,不塞无关资料)",
+          "status": "passed"
+        },
+        {
+          "name": "knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽) query 为空 / 全是噪声分隔符 → 0(交调用方走「不过滤」分支)",
+          "status": "passed"
+        },
+        {
+          "name": "knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽) 大小写不敏感",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 positioning.generate:extraBrief 透传到 deps.generatePositioning(原零入参 → 洞察永远进不去)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 topic.generate:extraBrief 透传到 deps.generateTopics(原 schema 未暴露该参)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 script.hooks / script.draft:extraBrief 透传到 generateHooks / dispatchScriptDraft",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 calibration.diagnose / review.analyze:extraBrief 透传到 diagnoseContent / analyzeReview",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 extraBrief 缺省 → 透传 undefined(行为与旧零入参一致,不注空噪声)",
+          "status": "passed"
+        },
+        {
+          "name": "clampExtraBrief trim + 原样保留",
+          "status": "passed"
+        },
+        {
+          "name": "clampExtraBrief 超 2000 字截断(schema maxLength 的运行时兜底)",
+          "status": "passed"
+        },
+        {
+          "name": "clampExtraBrief 空串/空白/非串 → undefined(prompt 整段省略)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081③] context.projects compact 模式 compact=true:limit 缺省与封顶放宽到 200",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081③] context.projects compact 模式 compact=true:超 40 字标题截断加 …(title 可能是整篇文案)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081③] context.projects compact 模式 默认(不带 compact)行为不变:limit 20/封顶 50、标题不截",
+          "status": "passed"
+        },
+        {
+          "name": "[T-081③] context.projects compact 模式 clampContextLimit / compactTitle 纯函数口径",
+          "status": "passed"
+        },
+        {
+          "name": "[T-094] knowledge.distill 工具 — 对话蒸馏 execute 调注入的 distillKnowledge,返回原子候选 + 原文(kind=knowledge.distill)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-094] knowledge.distill 工具 — 对话蒸馏 蒸馏失败(MiniMax new_sensitive/1026)→ 不抛,error 转人话 + suggestSwitchModel",
+          "status": "passed"
+        },
+        {
+          "name": "[T-094] knowledge.distill 工具 — 对话蒸馏 未知错误 → 使用中性错误文案,不泄漏底层地址且不建议换模型",
+          "status": "passed"
+        },
+        {
+          "name": "[T-094] knowledge.distill 工具 — 对话蒸馏 空原文 → 诚实报错引导粘贴,不调蒸馏引擎",
+          "status": "passed"
+        },
+        {
+          "name": "[T-094] knowledge.distill 工具 — 对话蒸馏 clampDistillContent:trim + 截 12000 字;非串 → 空串",
+          "status": "passed"
+        },
+        {
+          "name": "[T-094] knowledge.distill 工具 — 对话蒸馏 超硬上限时工具结果如实报告截断字符数，不让 Copilot 假装处理全文",
+          "status": "passed"
+        },
+        {
+          "name": "[T-240③] getSurfaceToolScope — 场景工具白名单 映射表每个场景:全部工具名合法(∈ ALL_CHAT_TOOL_NAMES)、无重复、context.* 全量保留(drift guard)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-240③] getSurfaceToolScope — 场景工具白名单 场景收窄语义:topics 无复盘/审核;review/calibration/positioning 无创作产出;distill 聚焦蒸馏",
+          "status": "passed"
+        },
+        {
+          "name": "[T-240③] getSurfaceToolScope — 场景工具白名单 阶段感知:project + 明确未发布 → 砍 review.analyze;已发布/未知 → 保留;未知 surface → null(回落全量)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-245] 热点能力认知 — 描述话术 + trendNote 透传 topic.generate 描述明说 basis=trend 自动拉内容雷达来源 + web 搜索",
+          "status": "passed"
+        },
+        {
+          "name": "[T-245] 热点能力认知 — 描述话术 + trendNote 透传 material.gather 已配联网检索分支:指路 topic.generate(basis=trend)拉热榜信号",
+          "status": "passed"
+        },
+        {
+          "name": "[T-245] 热点能力认知 — 描述话术 + trendNote 透传 generateTopics 返回新形状 { items, trendNote } → 工具结果带 trendNote(编导可如实转述)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-245] 热点能力认知 — 描述话术 + trendNote 透传 旧裸数组形状仍兼容:结果无 trendNote 字段(不渲空噪声)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-522] 同回合昂贵只读工具同参去重 material.gather 同一工具实例、规范化后同参复用一次 Promise；异参仍执行",
+          "status": "passed"
+        },
+        {
+          "name": "[T-522] 同回合昂贵只读工具同参去重 新的 allChatTools 实例不复用上一回合缓存",
+          "status": "passed"
+        },
+        {
+          "name": "[T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) 端口回 fullText → 首窗 12000 字 + window 真相字段 + hasMore=true(16k 预算内安全值)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) offset 翻窗:offset=12000 读第二窗;末窗 hasMore=false(窗口边界)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) maxChars 超封顶被夹到 12000(execute 侧强制,非君子协定)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) fromCache 透传:命中已存 asset(不重抓)时结果带 fromCache=true",
+          "status": "passed"
+        },
+        {
+          "name": "[T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) 旧端口无 fullText → text 退回 excerpt、window=null(诚实无窗口真相,不假装看全)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-326·RT-H05] web.read — 不可信网页内容定界包裹 tool result 的 text 带开始/结束哨栏,nonce 前后一致",
+          "status": "passed"
+        },
+        {
+          "name": "[T-326·RT-H05] web.read — 不可信网页内容定界包裹 正文里的伪指令**原样保留在定界区内**(不被剥掉——诚实保数据,靠定界防执行)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) 未授权 → needApproval 透传(path/size/type),file/listing/error 为空",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) denied(敏感 denylist 硬拒)→ error 带人话原因,不产 file",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) 已授权文本文件 → 窗口截断在 execute 侧(默认 4000/封顶 8000,同 §3 协议)+ 翻窗",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) 目录 → listing 透传(entries + total)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) 空路径 → 诚实报错,不调端口",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) 端口抛错(不存在/无权限)→ 不抛,error 人话",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) nameMatch(按名唯一命中)→ needApproval 指向真实路径 + foundByName 带原始名",
+          "status": "passed"
+        },
+        {
+          "name": "[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) nameCandidates(按名多命中)→ candidates 态列全路径,不误落 error",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] local.tools 工具 — 环境工具探测 透传探测结果:已装报 version、缺失带 installHint,rejected 原样回",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] local.tools 工具 — 环境工具探测 请求 tools 数组透传到端口(白名单/防注入在端口纯函数,execute 只转发)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] local.tools 工具 — 环境工具探测 端口抛错(未装配)→ 不抛,error 人话 + tools 空(诚实降级)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) 透传已授权目录清单(dirs 根路径),error 空",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) 不重造目录列举:结果只含 dirs 目录根,不含文件 entries(内容列举归 local.read)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) 空授权(还没「总是允许」过目录)→ dirs 空,不臆造",
+          "status": "passed"
+        },
+        {
+          "name": "[T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) 端口抛错(未装配)→ 不抛,error 人话 + dirs 空",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371/T-708] topic.enrich 事实增强 — verifiedBrief 透传但不阻断候选 verifiedBrief 透传到 deps.enrichTopic(照 extraBrief 清洗范式:trim)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371/T-708] topic.enrich 事实增强 — verifiedBrief 透传但不阻断候选 verifiedBrief 缺省 → 透传 undefined(不注空噪声,行为与旧入参一致)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371/T-708] topic.enrich 事实增强 — verifiedBrief 透传但不阻断候选 搜索失败仍允许先产候选，但禁止把模型记忆冒充检索结果",
+          "status": "passed"
+        },
+        {
+          "name": "[T-708] 创作工具完整度条件一律软化，安全与真相门保留 script.draft 缺少真实故事时先出可编辑稿，不编个人经历",
+          "status": "passed"
+        },
+        {
+          "name": "[T-708] 创作工具完整度条件一律软化，安全与真相门保留 长网页和本地文件允许阶段结果，但必须标明只读范围",
+          "status": "passed"
+        },
+        {
+          "name": "[T-708] 创作工具完整度条件一律软化，安全与真相门保留 本地读取的授权、敏感文件和路径选择仍是硬门",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371] isSerpUrl — 搜索结果页识别纯函数 命中主流搜索引擎结果页",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371] isSerpUrl — 搜索结果页识别纯函数 不误伤普通 URL(路径相似/域名相似/文章页)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记 SERP URL → 窗口压到 1500 字 + serpNote 诚实注记 + hasMore 真相",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记 SERP 上模型请求 maxChars=12000 也被封顶 1500(cap 同压,绕不过)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记 普通文章 URL → 默认 12000 窗口不变、无 serpNote(T-251 协议零变)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] isSearchResultsPageUrl — 结果列表页判定(引擎 SERP + 站内搜索页) 引擎 SERP 全部命中(isSerpUrl 超集)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] isSearchResultsPageUrl — 结果列表页判定(引擎 SERP + 站内搜索页) 站内搜索列表页命中:36氪/知乎/B站/微博",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] isSearchResultsPageUrl — 结果列表页判定(引擎 SERP + 站内搜索页) 不误伤:文章 slug 含 search-、普通文章页、非法输入",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] material.screenshot — 结果列表页硬拒 + 首屏默认 搜索结果列表页 URL → 不调截图端口,error 引导点进单篇(确定性门)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] material.screenshot — 结果列表页硬拒 + 首屏默认 引擎 SERP 同样硬拒(bing 结果页)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] material.screenshot — 结果列表页硬拒 + 首屏默认 fullPage 入参描述锚定「仅用户明确要求才传 true」(首屏默认,prompt 层纪律)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] web.read 被拒多路回退 — blocked → error + alternates 端口回 blocked+alternates → error=message+行动指引,alternates 透传给模型",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] web.read 被拒多路回退 — blocked → error + alternates blocked 但替代来源为空 → error 带诚实到底指引,不带 alternates 字段",
+          "status": "passed"
+        },
+        {
+          "name": "[T-390] web.read 被拒多路回退 — blocked → error + alternates 站内搜索列表页正文同样窗口压缩 + serpNote(T-371 扩展到站内搜索)",
+          "status": "passed"
+        },
+        {
+          "name": "T-915 同查询失败后可重新执行，不缓存拒绝结果",
+          "status": "passed"
+        },
+        {
+          "name": "全部现有工具参数及selected改稿变体可建立真实宿主校验",
+          "status": "passed"
+        },
+        {
+          "name": "全部现有工具参数及project改稿变体可建立真实宿主校验",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 重新读取标志只透传首窗，翻窗仍复用原正文",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 最终地址仅供展示，旧端口不能泄露凭据或可执行协议 非法或未知最终地址缺省：undefined",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 最终地址仅供展示，旧端口不能泄露凭据或可执行协议 非法或未知最终地址缺省：javascript:alert(1)",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 最终地址仅供展示，旧端口不能泄露凭据或可执行协议 非法或未知最终地址缺省：data:text/html,test",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 最终地址仅供展示，旧端口不能泄露凭据或可执行协议 非法或未知最终地址缺省：https://name:secret@example.org/",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 最终地址仅供展示，旧端口不能泄露凭据或可执行协议 保留真实最终地址且回执阅读器明确字符口径",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 网页失败的用户提示 HTTP 401 按实际状态给登录建议，不把内部操作写进错误文案",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 网页失败的用户提示 HTTP 403 按实际状态给登录建议，不把内部操作写进错误文案",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 网页失败的用户提示 HTTP 404 按实际状态给登录建议，不把内部操作写进错误文案",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 网页失败的用户提示 HTTP 429 按实际状态给登录建议，不把内部操作写进错误文案",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 网页失败的用户提示 HTTP 500 按实际状态给登录建议，不把内部操作写进错误文案",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 网页失败的用户提示 HTTP 503 按实际状态给登录建议，不把内部操作写进错误文案",
+          "status": "passed"
+        },
+        {
+          "name": "T-957 网页失败的用户提示 有替代来源和列表页的用户提示不包含内部工具名称",
+          "status": "passed"
+        },
+        {
+          "name": "画布候选工具先读真实版本，只写候选而不直接改画布",
+          "status": "passed"
+        },
+        {
+          "name": "T1070四工具只经冻结target的真实短端口读/提案，缺target错误无可用候选",
+          "status": "passed"
+        },
+        {
+          "name": "编导冻结工具说明提供真正的typed操作名，原错误op不能通过参数门",
+          "status": "passed"
+        },
+        {
+          "name": "T1248 当前与旧action独立固定原型，默认新合同不随恢复改动",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/cover-runner.test.ts",
+      "tests": [
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 T-1029 图文封面只使用入队快照，不重读后来的定位和项目资料",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 产结构化封面方案 → 结构化组装生图 prompt → 记 generated_asset 候选(带 coverPlan)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 硬注入立项 brief(核心信息/内容形式)+ 口播稿主张进封面方案生成上下文",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 用户画面要求同时进入封面策划 Skill 与最终生图 prompt，并写入候选诊断",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 未传用户画面要求时不注入空白硬约束块，保持旧 prompt",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 封面文案诚实门:headline 含语料里没有的编造数字 → coverPlan 追加未溯源标注(原文保留)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 封面文案诚实门:数字能在口播稿溯源 → 不误标(可溯的不加⚠️)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 未配生图模型(resolveMultimodalSpec 抛错)→ cancelTask,不落候选(诚实终态)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 生图返回空 bytes → cancelTask,不落候选",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 自配生图失败 → 步骤与终态保留脱敏原始错误，密钥和私有 URL 不外泄",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 provider 明确返回可重试 503 时使用同一幂等键短重试，不重复生成封面方案",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 Windows 日志同形的连续 502 会退避恢复，第三次成功仍只产一份封面候选",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 官方受管封面提交瞬时断连时沿用同一幂等号恢复，不重新生成封面方案",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 用户自配封面提交结果未知时不盲目重放",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 inputData.referenceAssetId → host 端口读素材字节 → referenceImage 喂进 generateImage",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 referenceAssetId 读不到(null)→ 诚实降级纯文生图 + 步骤注记「未使用参考图」,不失败",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图 无 referenceAssetId → 不读端口、generateImage 不带 referenceImage(零回归)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] composeCoverImagePrompt —— 生图 prompt 由结构化 facet 确定性组装 从结构化方案字段拼画面(主视觉/构图/封面文案/色调),非裸自由文本",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] composeCoverImagePrompt —— 生图 prompt 由结构化 facet 确定性组装 横屏 → 16:9;无方向 → 通用封面(画幅自适应)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] clampCoverPlan —— 封面文案裁到封面可用长度 超长 headline 截断、keyPoints 去空 + 封顶条数",
+          "status": "passed"
+        },
+        {
+          "name": "[T-271] clampCoverPlan —— 封面文案裁到封面可用长度 官方渠道收到的封面画面提示词有硬上限，超长方案不会再原样打到生图接口",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/script-runner.test.ts",
+      "tests": [
+        {
+          "name": "T-824 两阶段写稿 口播成功后完成断点保存失败（实际写入=false）不得标成模型失败或重复生成",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 口播成功后完成断点保存失败（实际写入=true）不得标成模型失败或重复生成",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 升级前已排队且只冻结旧 script.draft 的任务继续走兼容单阶段",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 无旧覆盖时先冻结连续口播，再逐字切分并只在校验通过后产候选",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 显式重试复用合法口播断点，不重复调用第一阶段",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 分镜首次改动口播时只重做分镜一次，不重跑连续口播",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 [T-835] 分镜连续改字也自动产出保留完整原文的基础分镜，不再取消任务",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 [T-835] 分镜模型临时失败时直接降级为基础分镜候选，不要求用户重跑整稿",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 [T-835] 基础分镜在目标时长短于镜头数时仍保持正时长且不重叠",
+          "status": "passed"
+        },
+        {
+          "name": "T-824 两阶段写稿 [T-835] 仅空白分隔漂移时按冻结原文重新锚定并保留模型分镜字段",
+          "status": "passed"
+        },
+        {
+          "name": "runScriptDraft 完整性闭环 (T-512) [T-791] 校验冻结来源后把指令与有边界原文交给 script.draft，遥测只记录元数据",
+          "status": "passed"
+        },
+        {
+          "name": "runScriptDraft 完整性闭环 (T-512) 透传 extraBrief，候选携带采纳门、冻结 skill/policy、原始/最终段数与真实终态",
+          "status": "passed"
+        },
+        {
+          "name": "runScriptDraft 完整性闭环 (T-512) 结构已合法但质量检查不足时保留为可采纳候选，并把问题降级为优化提醒",
+          "status": "passed"
+        },
+        {
+          "name": "runScriptDraft 失败可观测性 (T-486) 模型重试后仍无分镜时，cancelled 任务保存脱敏错误正文",
+          "status": "passed"
+        },
+        {
+          "name": "[T-730] runScriptDraft 可选论点消费边界 普通生成只透传 reader 放行的当前 adopted 论点",
+          "status": "passed"
+        },
+        {
+          "name": "[T-727] runScriptDraft 原文保真模式 逐字符产候选且完全不装配创作上下文、不解析模型、不调用 runScriptNode",
+          "status": "passed"
+        },
+        {
+          "name": "[T-727] runScriptDraft 原文保真模式 80,000 字以上长稿不截断；hash 或长度不一致时取消且零候选",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "tests": [
+        {
+          "name": "动态 refine schema(zod,绑定本次输入) ① 分场:边界不落 SRT start(超容差)→ 校验失败;落上 → 通过",
+          "status": "passed"
+        },
+        {
+          "name": "动态 refine schema(zod,绑定本次输入) ② 信息卡:sceneIdx 越界 / at 不落 SRT start → 校验失败",
+          "status": "passed"
+        },
+        {
+          "name": "动态 refine schema(zod,绑定本次输入) ② Scene Graph 坏动作在模型输出 schema 阶段失败，不能等后处理静默降级",
+          "status": "passed"
+        },
+        {
+          "name": "动态 refine schema(zod,绑定本次输入) ③ B-roll:assetId 清单外 → 校验失败(禁编造)",
+          "status": "passed"
+        },
+        {
+          "name": "动态 refine schema(zod,绑定本次输入) ④ 字幕:行数/序号集不一致 → 校验失败(禁增删并行)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-792] 内容辅助型画面需求向下游传递 真实素材匹配能看到认知增量和选图理由，但不接收仅供文生图的 prompt",
+          "status": "passed"
+        },
+        {
+          "name": "isCardContentTraceable(T-224 同源可溯校验) 数字不在原文 → 不可溯(一个编造数值即废)",
+          "status": "passed"
+        },
+        {
+          "name": "isCardContentTraceable(T-224 同源可溯校验) 关键词(CJK 4-gram / 拉丁 token)须在原文出现",
+          "status": "passed"
+        },
+        {
+          "name": "isCardContentTraceable(T-224 同源可溯校验) 无任何可核锚点(无数字无关键词)→ 剔除(诚实门)",
+          "status": "passed"
+        },
+        {
+          "name": "auditVideoDecisions(总导演确定性安全检查) 超过 8 秒且既无卡片也无素材时阻断，避免黑底加角落小人物",
+          "status": "passed"
+        },
+        {
+          "name": "auditVideoDecisions(总导演确定性安全检查) 第一场不足 8 秒但前三秒没有实质视觉时仍阻断，不能让短开场绕过长场景门",
+          "status": "passed"
+        },
+        {
+          "name": "auditVideoDecisions(总导演确定性安全检查) [T-876 RED] 非开场的短场景也不能整段没有素材或内容动效",
+          "status": "passed"
+        },
+        {
+          "name": "auditVideoDecisions(总导演确定性安全检查) 角标 overlay 不得冒充非开场主舞台覆盖",
+          "status": "passed"
+        },
+        {
+          "name": "auditVideoDecisions(总导演确定性安全检查) 真实主素材从第一句开始连续承接前三秒时通过开场检查",
+          "status": "passed"
+        },
+        {
+          "name": "auditVideoDecisions(总导演确定性安全检查) 18 秒场景只有开头一张小卡仍然阻断，卡片数量不等于时间线覆盖",
+          "status": "passed"
+        },
+        {
+          "name": "auditVideoDecisions(总导演确定性安全检查) 同一素材跨场景复用或同秒叠放多个主视觉都会阻断",
+          "status": "passed"
+        },
+        {
+          "name": "normalizeBrollTimeline(素材唯一 + 主视觉不重叠) 保留首次素材使用、移除同秒候选，并在下一主视觉进场时截断上一项",
+          "status": "passed"
+        },
+        {
+          "name": "normalizeBrollTimeline(素材唯一 + 主视觉不重叠) overlay 穿插在两个主视觉之间时仍能修复主视觉重叠",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 首条真实素材排到 3 秒后时，用第一句原文信息卡补齐前三秒且不改素材语义插点",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 保留已绑定素材，并用口播原文信息卡自动补齐长场景空档",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 总导演判定承接不足时也不把已确认的全屏录屏统一截成 4 秒",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 20 秒空镜会自动生成多个不同时间点的信息节拍，修后不再留下长空档",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) [T-879 RED] 稀疏长句 SRT 的补位按实际覆盖闭合，不因吸附去重留下五秒空洞",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 素材提前退出且后续仍是长句时，从真实退出点连续补到场景结尾",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 10 秒无真实素材场景至少形成 2 个连续信息节拍",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 18 秒无真实素材场景至少形成 3 个连续信息节拍",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 28 秒无真实素材场景至少形成 4 个连续信息节拍",
+          "status": "passed"
+        },
+        {
+          "name": "autoRepairVideoDecisions(总导演内部修片) 同一真实素材误绑多个场景时只保留首次使用，后续场景由信息卡补位",
+          "status": "passed"
+        },
+        {
+          "name": "closeDirectorReview(修完再通过) 两轮复审仍重复提出主观修正时结束循环，保留当前分镜并交付已闭合方案",
+          "status": "passed"
+        },
+        {
+          "name": "buildVideoDirectionSchema(整片唯一主视觉) 真实 ref、对象时间窗和覆盖整场的 beat 可通过",
+          "status": "passed"
+        },
+        {
+          "name": "buildVideoDirectionSchema(整片唯一主视觉) [T-876 RED] 拒绝把无 beat 的时间洞交给静止人物和空舞台",
+          "status": "passed"
+        },
+        {
+          "name": "buildVideoDirectionSchema(整片唯一主视觉) 拒绝两个主视觉时间窗重叠，也拒绝不存在的 ref",
+          "status": "passed"
+        },
+        {
+          "name": "buildVideoDirectionSchema(整片唯一主视觉) [T-858 RED] 拒绝漏编排或重复编排任何卡片/B-roll",
+          "status": "passed"
+        },
+        {
+          "name": "buildVideoDirectionSchema(整片唯一主视觉) [T-858 RED] 明确辅助 overlay 不进入主视觉 beatGraph",
+          "status": "passed"
+        },
+        {
+          "name": "decideScenes(吸附与推导) 边界吸附最近 SRT 行 start;endSec 一律推导;首场对齐首行",
+          "status": "passed"
+        },
+        {
+          "name": "decideScenes(吸附与推导) 吸附后撞到同一 start 的场景去重",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) [T-865 RED] 单张枚举越界只丢坏卡，可选视觉计划越界只降级计划",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) [T-868 RED] 根级 custom 动态协议错误逐卡恢复：坏 visualPlan 降级，坏 sceneIdx 只丢该卡",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) 分场与信息卡属于长结构任务，不复用普通文本节点的短时限",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) 编造数值的卡被剔除;合法卡 at 吸附到场景内 SRT 行 start",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) [T-839 RED] 口播实录与冻结稿措辞不同时，权威 SRT 原句及其 Scene Graph 仍可溯",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) at 吸附不越场:卡属场景 2(12-15s),模型给 11.9 → 吸到场内 12 而非邻场 8",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) [T-823] 卡片绑定当前 SRT 行，忽略稿件计划秒数，跨段时立即切换",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) visualPlan 的 role 结构和每个部件都合法可溯才透传；坏计划只降级计划，不误删合法旧卡",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) [T-802 RED] part 必须是完整原文子串，真实短片段后追加新主张仍丢计划",
+          "status": "passed"
+        },
+        {
+          "name": "decideCards(吸附 + 可溯剔除) Scene Graph 引用、唯一角色和动作属性不合时整段计划降级，合法计划完整透传",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) 标准版项目没有素材时仍把诚实空清单喂给 B-roll Skill，并生成画面需求",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) video.broll 即使违约返回真实素材，也只保留画面需求，素材选择统一交给 material.match",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) T-712 由 material.match AI Skill 给出素材与场景映射，代码只校验和吸附时间",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) [T-867 RED] 本稿素材首轮协议失败后携带真实 ID 定向修复一次",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) material.match 编造 id、封面或越界场景会被动态 schema 拒绝",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) [T-867 RED] 当前项目 AI 生成素材存在时，整批空匹配不能冒充自动匹配成功",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) [T-859 RED] material.match 的人物模式随真实素材候选穿过动态安全门",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) material.match 一条违约映射不会拖垮同批合法素材",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) authored 分镜点名的录屏即使模型漏选，也会按同序场景确定性进入时间线",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) 分镜点名多个候选时不能把它们全塞进同一秒，已有 AI 主视觉时也不追加",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) 同一 authored 素材被多段重复引用时只进入首次场景",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) video.broll 不再直接采用清单内/外 assetId，真实选料只走 material.match",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) 素材清单为空 → 仍生成可执行的联想画面需求，但不编造已存在素材",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) purpose 的中英文别名在严格 schema 前逐槽归一化，不能整批失败",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) 手动上传来源与语义描述必须进入可观测 prompt，模型能识别用户明确意图",
+          "status": "passed"
+        },
+        {
+          "name": "decideBroll(清单硬门) 原始文件名、尺寸与时长进入 AI 选料语义，人工选料成为重分镜硬约束",
+          "status": "passed"
+        },
+        {
+          "name": "enforceManualMaterialAssignments(人工选料不丢失) 模型遗漏时保留用户选的真实素材，使用素材真实时长而非固定 4 秒",
+          "status": "passed"
+        },
+        {
+          "name": "enforceManualMaterialAssignments(人工选料不丢失) 人工指定的场景覆盖 AI 的旧场景，不能因为资产已出现就沿用错误位置",
+          "status": "passed"
+        },
+        {
+          "name": "collectProjectBrollInventory(项目/账号边界 + 上传链投影) [T-867 RED] AI 为当前项目选入或生成并采纳的素材保留 ai 来源，不伪装成手动上传",
+          "status": "passed"
+        },
+        {
+          "name": "collectProjectBrollInventory(项目/账号边界 + 上传链投影) 先校验当前账号的项目所有权，只读取该项目 links，并过滤越权/非视觉素材",
+          "status": "passed"
+        },
+        {
+          "name": "collectProjectBrollInventory(项目/账号边界 + 上传链投影) [T-739] 脚本点名只能提升当前项目已挂载素材的优先级，绝不跨项目取素材",
+          "status": "passed"
+        },
+        {
+          "name": "collectProjectBrollInventory(项目/账号边界 + 上传链投影) [T-739] 当前项目没有挂载素材时，旧脚本即使残留 assetRefs 也必须诚实为空",
+          "status": "passed"
+        },
+        {
+          "name": "collectProjectBrollInventory(项目/账号边界 + 上传链投影) 缺 projectId 直接失败，不得回退当前账号整库冒充项目素材",
+          "status": "passed"
+        },
+        {
+          "name": "collectProjectBrollInventory(项目/账号边界 + 上传链投影) 封面即使被旧脚本 assetRefs 点名也不能进入 B-roll 候选",
+          "status": "passed"
+        },
+        {
+          "name": "decideSubtitles(时间轴不变 + 重写守门) 保留逐字匹配且时间落在真实 SRT 行内的 AI 重点词，非法范围只丢强调",
+          "status": "passed"
+        },
+        {
+          "name": "decideSubtitles(时间轴不变 + 重写守门) 新候选全片无合法重点时只定向重试一次，不用代码猜词",
+          "status": "passed"
+        },
+        {
+          "name": "decideSubtitles(时间轴不变 + 重写守门) 时间轴一律回填原值;小改字保留;重写(相似度<阈值)退回原文;en 透传",
+          "status": "passed"
+        },
+        {
+          "name": "decideSubtitles(时间轴不变 + 重写守门) 只保留能在口播稿找到依据的 ASR 错字校正",
+          "status": "passed"
+        },
+        {
+          "name": "decideSubtitles(时间轴不变 + 重写守门) [T-320] 校正基准=口播稿:script 作为 facet 真喂进 video.subtitles skill",
+          "status": "passed"
+        },
+        {
+          "name": "decideSubtitles(时间轴不变 + 重写守门) 长视频按固定行数分批，每批 schema 只绑定本批，最终按原 index 顺序归并",
+          "status": "passed"
+        },
+        {
+          "name": "decideSubtitles(时间轴不变 + 重写守门) 单批失败仅该批退回原 zh/空 en，其余批继续，进度明确标记 fallback",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 补充选材只局部调用 material.match，冻结既有分场/信息卡/字幕",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) [T-881] 补充选材失败时也不会把用户已排除的旧 B-roll 从 baseDecisions 捞回",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 五步顺序跑完 → recordCandidate(video_decisions,含总导演结论 + 清单快照)",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 总导演首审提出问题时保留既有素材、自动补信息卡并复审后只交付可渲染候选",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 总导演模型暂不可用时执行确定性安全审核，不无限重试或取消整条任务",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 第②步失败 → 诚实报「②信息卡」+ cancelTask,不落候选",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 显式重试复用同输入已完成的分场，不从第①步重新扣一遍执行",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 第③步失败后的显式重试同时复用分场和信息卡",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) material.match 暂时失败时不阻断成片，并在当前方案内自动补位",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) [T-867 RED] 本稿专属 AI 素材两次匹配失败时按生成来源恢复，不取消整条分场",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) 缺项目范围 → 备料失败，不读取账号整库 B-roll",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) [T-387c] 有凝固分镜 → storyboard facet 真喂进 scenes/cards/broll;subtitles 不吃",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) [T-703] 本次竖屏选择 → scenes/cards/broll 都收到 9:16 构图约束;字幕不受画幅干预",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) [T-387c] 无 visual(旧项目)→ facet 空串 = 现状(零回归);reader 未绑同样零回归",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) [T-387c] inputData.excludedAssetIds → 决策可选集里滤掉被剔项(人可剔)",
+          "status": "passed"
+        },
+        {
+          "name": "runVideoDecisions(编排) SRT 解析不出 → 备料失败诚实终态(不调模型)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-387c] storyboardFacet(凝固分镜 → 对齐器 facet) 无任何 authored 意图(空数组 / 全空段)→ 空串(零回归测锚)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-387c] storyboardFacet(凝固分镜 → 对齐器 facet) 有意图段 → 渲分镜表 + 对齐硬约束;未写画面的段标注可自主",
+          "status": "passed"
+        },
+        {
+          "name": "[T-387c] storyboardFromContentData(凝固分镜投影) sections[].visual → 投影行;narration 取「口播：」行",
+          "status": "passed"
+        },
+        {
+          "name": "[T-387c] storyboardFromContentData(凝固分镜投影) 旧稿无任何 visual / contentData 为空 → 空数组(→ facet 空,零回归)",
+          "status": "passed"
+        },
+        {
+          "name": "[T-387c] dedupeBrollRefs(聚合去重,先到先得) 同 assetId 保留先出现的(来源优先级由调用方排序保证)",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/multimodal/resolve.test.ts",
+      "tests": [
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) [T-831] 本地参考图兼容复用既有 image.generate 配置",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) [T-831] 官方渠道已托管生图但未声明 image.edit 时不误用本地兼容配置",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) T-645 渠道仅配置文本时，ASR 仍读取用户本地配置",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) T-768 完整渠道 ASR 缺 service Key 时丢弃在线配置并回退本地 Whisper",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) 按能力从 Growth 多模型数组选择默认生图模型",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) 参考图编辑按独立 image.edit capability 解析渠道编辑模型",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) configured 渠道 JSON 覆盖多模态本地行且不读取本地",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) 按 image.generate 命中行 → 投影成 MultimodalSpec(kind=image),secretValue 优先",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) video.generate 用 env-ref secretReference 解 token,kind=video",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) per-capability 未命中 → 回退该 kind 的默认行(image.default)",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 1 DB row(库存密钥优先) 空 token 的行被跳过(first_non_empty)→ 落到未配抛错",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 2 env 默认 无 DB 行时用 CREATOROS_IMAGE_*(需 provider+model+key 齐全)",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 2 env 默认 env 有 key 但缺 provider/model → 不成档 → 抛错(不瞎猜 provider)",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 3 未配抛错(诚实禁用) 啥都没配 → MultimodalConfigError(错误信息含能力名,供 UI 引导去设置)",
+          "status": "passed"
+        },
+        {
+          "name": "resolveMultimodalSpec — tier 3 未配抛错(诚实禁用) 多模态无 anthropic 官方免配兜底:仅 ANTHROPIC_API_KEY 不足以成档",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) T-763 per_request 渠道 ASR 不读取本机长期凭据",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) tier 1:Qwen ASR 用户配置可原样解析到运行时 spec",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) tier 1:transcribe.audio 命中 DB 行 → 出 spec(kind=audio),secretValue 优先",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) tier 1 回退:per-capability 未命中 → asr.default 行",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) tier 2:无 DB 行时用 CREATOROS_ASR_*(需 provider+model+key 齐全)",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) 两层都无 → 自动回退本地 Whisper，并沿用合法级别",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) 本地 Whisper 级别非法时回退 small",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) 渠道配置解析抛出任意异常时也丢弃在线配置并回退本地",
+          "status": "passed"
+        },
+        {
+          "name": "resolveTranscribeSpec — 云端优先、本地兜底(kind=audio) 配了云端 ASR 走用户 spec",
+          "status": "passed"
+        },
+        {
+          "name": "describeMultimodalFailure — 失败分类(T-376) MultimodalConfigError(resolve 层,message 含「未配置」)→ 原样透传指路文案",
+          "status": "passed"
+        },
+        {
+          "name": "describeMultimodalFailure — 失败分类(T-376) 同名 MultimodalConfigError 但 message 无「未配置」(factory 层:未知 provider/不支持)→ 「配置有问题」",
+          "status": "passed"
+        },
+        {
+          "name": "describeMultimodalFailure — 失败分类(T-376) 普通调用错误(key 无效/网络/审核)→ 「已配置,但调用失败:<真实原因>」,不冤枉未配置",
+          "status": "passed"
+        },
+        {
+          "name": "describeMultimodalFailure — 失败分类(T-376) LlmCredentialError(封面链的文案 LLM 凭据)→ 指明是文本模型问题,不指向生图配置",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}
