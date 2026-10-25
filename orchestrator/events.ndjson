@@ -1795,3 +1795,4 @@
 {"ts":"2026-10-25T06:46:22.552Z","actor":"taskctl","action":"start","task":"T-1403","sha_before":"5f969a691003","sha_after":"824027110093"}
 {"ts":"2026-10-25T07:31:21.032Z","actor":"taskctl","action":"block","task":"T-1403","reason":"源码修复、限定回归及构建通过；本机缺既有verdict/sidecar签名材料，官方Web预览亦拒绝无Rust verdict-token，原Windows修复包安装与真机复验待持钥环境；quick只读对账仍未闭合。","sha_before":"b24135c14bba","sha_after":"dd9b4c5c97b0"}
 {"ts":"2026-10-25T08:13:23.761Z","actor":"taskctl","action":"start","task":"T-1404","sha_before":"bf4342ebe935","sha_after":"d59c5e24b3c6"}
+{"ts":"2026-10-25T11:30:00.489Z","actor":"taskctl","action":"start","task":"T-1405","sha_before":"0fd333173dd1","sha_after":"25a31d05c3e9"}
