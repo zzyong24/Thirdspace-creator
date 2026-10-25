@@ -1,0 +1,18 @@
+{
+  "contractVersion": "creatoros-windows-sidecar-signature-v1",
+  "sourceCommit": "3ff74c163d8e713767bad7110ca8d73a2611d5a6",
+  "runId": "40222238320",
+  "artifactId": "12609634173",
+  "artifactDigest": "e8a448865d602185a829c5b72ba72e3bb346f5476fa7cdb05f16a1628752667c",
+  "manifestSHA256": "3489abb698e2287439e2e872ac783fa41d240df8d536a338bbcac67023535b7d",
+  "tarSHA256": "2e0f150798f7541e91df459f4c413e8d24efa6458a74ae89ffcb29a7fecda9c1",
+  "tarBLAKE3": "ce05442edab7d99836eb82fe021ab65823350d933bd51a64147778422812ea18",
+  "tarBytes": 874732184,
+  "node": {
+    "sha256": "98843732431bad6c2c165908bb7dde6fe2a221ddbc491a955d548a2e6ab9ebff",
+    "bytes": 95618048,
+    "target": "win32-x64"
+  },
+  "rootId": "creatoros-update-root-20260805-01",
+  "signatureSHA256": "1c3cf7563deb8f3169c2a69d5006e2b1d0bb17bdeceae04a3c571bdeaafba43c"
+}
