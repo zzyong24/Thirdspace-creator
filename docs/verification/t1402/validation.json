@@ -1,0 +1,34 @@
+{
+  "task": "T-1402",
+  "scope": [
+    "ai-worker/src/runtime/chat/chat-pi-core.ts",
+    "ai-worker/src/runtime/chat/chat-pi-core.test.ts",
+    "ai-worker/package.json",
+    "pnpm-lock.yaml importer ai-worker"
+  ],
+  "solution": "静态导入真实Pi Agent核心0.80.7，随Worker打包，移除运行时文件搜索",
+  "red": {
+    "test": "chat-pi-core.test.ts",
+    "result": "CHAT_PI_CORE_UNAVAILABLE",
+    "fixture": "esbuild CJS + 中文空目录 + 无node_modules + NODE_PATH空 + 合成模型/工具"
+  },
+  "green": {
+    "chatTests": 31,
+    "chatFiles": 2,
+    "contractTimeoutTests": 5,
+    "workerTimeoutTests": 20,
+    "timeoutNodeTests": 11,
+    "timeoutStaticScanFiles": 2777,
+    "typecheck": "passed",
+    "workerBuild": "passed",
+    "bundledExecutionWorkerSha256": "6E425B343C5E1993B76E74B06A3900AC543E64A4AAB15C1FCBB75831357AEDFC",
+    "patchSha256": "624F6932FA4FAA84F3B5C12306FDEF27B797D75A801A034D8029307BA95F9F54"
+  },
+  "limits": [
+    "Node v24.21.0；项目engines声明>=25 <26，运行出现引擎警告",
+    "timeout-policy/verify.mjs在Windows spawn pnpm ENOENT；静态扫描/Node测试通过，契约与Worker相应命令已手工通过，剩余全包验证未运行",
+    "pnpm offline frozen安装请求清空旧modules树，已中止；仅为新直接依赖建立指向既存锁定0.80.7包的workspace junction；未宣称完整干净安装通过",
+    "只生成源码Worker产物，未重打正式签名安装包、未部署源码bundle",
+    "未改安装、用户数据、签名、信任根或凭据"
+  ]
+}
