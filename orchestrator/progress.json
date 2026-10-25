@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 301,
+    "verticals": 302,
     "tasks_done": 89,
-    "tasks_total": 428,
-    "tasks_pending": 339,
+    "tasks_total": 429,
+    "tasks_pending": 340,
     "verticals_complete": 28
   },
   "verticals": [
@@ -21846,6 +21846,46 @@
         "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
         "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
         "orchestrator/process/reviewctl.mjs"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1416",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1416",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "docs/features/t1416-browser-visible-document-assertions.md",
+        "docs/features/t1416-browser-visible-document-assertions.T-1416.review.md",
+        "docs/verification/t1416/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1416.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "PROJECT.md"
+      ],
+      "read_set": [
+        "docs/features/t1416-browser-visible-document-assertions.md",
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/actions.rs",
+        "docs/verification/t1412/resumed-validation/reconcile-full.log"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

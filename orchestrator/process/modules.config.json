@@ -20794,6 +20794,42 @@
         ]
       },
       "scope_note": "仅日常只读入口与AGENTS恢复后的两份真实独审；不改产品、原门、审核引擎或历史事件。外盘构建已完成，二进制仍绑定f9e5e5ece。"
+    },
+    "T-1416": {
+      "task_id": "T-1416",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1416-browser-visible-document-assertions.md",
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/actions.rs",
+        "docs/verification/t1412/resumed-validation/reconcile-full.log"
+      ],
+      "write_set": [
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "docs/features/t1416-browser-visible-document-assertions.md",
+        "docs/features/t1416-browser-visible-document-assertions.T-1416.review.md",
+        "docs/verification/t1416/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1416.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --dir frontend typecheck"
+        ]
+      },
+      "scope_note": "只对齐外站真实可见正文，不改产品、安全策略、原命令、预算或隔离断言；失败原件保留。"
     }
   }
 }

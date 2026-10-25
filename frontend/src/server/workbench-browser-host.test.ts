@@ -450,6 +450,13 @@ realTest("interrupted real Chromium host recovers the same task profile on attem
   await rm(root,{recursive:true,force:true});
  }
 },180_000);
+// example.com 的标签页 title 不属于可见正文；只核对真实 extract 的正文区块。
+function expectExampleVisibleDocument(message:string){
+ const visibleText=message.split("[visible text]\n")[1]?.split("\n</data>")[0];
+ expect(visibleText).toMatch(/^<data origin="https:\/\/example\.com\/">\n/);
+ expect(visibleText).toContain("This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.");
+}
+
 realTest("Node/DB leases use the PID-bound Rust socket and real Chromium",async()=>{
  const directory=await mkdtemp(join(tmpdir(),"wb-browser-real-"));
  const ready=join(directory,"ready"),done=join(directory,"done"),profileRoot=join(directory,"profiles");
@@ -506,7 +513,7 @@ realTest("Node/DB leases use the PID-bound Rust socket and real Chromium",async(
   console.info("[browser-real] page navigated");
   const extracted=await call("browser.extract",{laneId,browserEpoch});
   console.info("[browser-real] page extracted");
-  expect(extracted.result.output.message).toContain("Example Domain");
+  expectExampleVisibleDocument(extracted.result.output.message);
   const closed=await call("browser.close",{laneId,browserEpoch});
   console.info("[browser-real] lane closed");
   expect(closed.profileStopped).toBe(true);
@@ -636,7 +643,7 @@ realTest("two accounts keep separate primary profiles and one cancellation leave
   await dispatch(second,"browser.navigate",{laneId:secondLane,browserEpoch:secondEpoch,
    url:"https://example.com"});
   const extracted=await dispatch(second,"browser.extract",{laneId:secondLane,browserEpoch:secondEpoch});
-  expect(extracted.result.output.message).toContain("Example Domain");
+  expectExampleVisibleDocument(extracted.result.output.message);
   expect(await readFile(firstMarker,"utf8")).toBe("private account state");
   await dispatch(second,"browser.close",{laneId:secondLane,browserEpoch:secondEpoch});
   expect(await profiles.listOwned(second.ref)).toEqual([]);

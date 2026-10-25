@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1416|修复真实浏览器验收的过时页面断言|🔨|PASS[REV:47d4fbfd6861]|—|[SPEC](docs/features/t1416-browser-visible-document-assertions.md)|核对可见正文及来源，保留真实浏览器、账号隔离与全部原断言。|
 |T-1415|收口恢复验收后的只读Stop与两份宪法审核|✅|PASS[REV:abe1e1aaf662]|—|[SPEC](docs/features/t1415-resumed-verification-control.md)|保留日常只读Stop，真实重审规则恢复导致过期的T915/T859，完整验收不降级。|
 |T-1414|恢复关键链路可用性规则摘要|✅|PASS[REV:19fcdb3c4a1f]|—|[SPEC](docs/features/t1414-critical-path-rule-summary.md)|恢复规则摘要漏掉的既有安全降级与完整回归要求，保留原LED043测试。|
 |T-1413|恢复重构后六项lesson正式链语义覆盖|🔨|PASS[REV:2a5f6be66c40]|—|[SPEC](docs/features/t1413-lesson-semantic-coverage.md)|修复3个已删除测试文件的6处守卫引用；补齐当前链语义与严格封面参考约束，官方图片恢复须先证明幂等资格。|

@@ -1,0 +1,11 @@
+{
+  "url": "https://example.com/",
+  "capturedDate": "2026-10-25",
+  "method": "curl -fsSL --max-time 20 https://example.com/",
+  "htmlSha256": "25ddf2c883e0d1958ea971d279a7e4f0fd446724ee3db7db19dadabd4a62e484",
+  "visibleBody": "This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.",
+  "observation": "Example Domain只出现在title；raw body无原可见h1。真实浏览器原RED日志另外包含同段正文。",
+  "redReceipt": "docs/verification/t1412/resumed-validation/cft-five.receipt.json",
+  "redLogSha256": "0ff3252bf5531e48feb1014309148a2236fd3f7118962cbd259eaaae86623edc",
+  "red": "原两文件31PASS/2FAIL/0skip；两处旧标题断言失败；5个realTest均执行。"
+}
