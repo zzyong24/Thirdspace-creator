@@ -5039,7 +5039,8 @@
         "frontend/src/components/shell/account-switcher.tsx",
         "frontend/src/components/shell/account-switcher.test.tsx",
         "frontend/src/features/platform-account/account-manager-page.tsx",
-        "frontend/src/features/platform-account/account-manager-page.test.tsx"
+        "frontend/src/features/platform-account/account-manager-page.test.tsx",
+        "docs/research/2026-10-24-tab-switch-performance.md"
       ],
       "verify_commands": {
         "implementation": [
@@ -5048,7 +5049,7 @@
           "pnpm -C frontend typecheck"
         ]
       },
-      "scope_note": "完整SPEC b6dc7eb70c7768e989b452865b0abad8d9ec42ebc33882b0f41294ede300ce36 独立PASS[REV:a53e25bf48df]；四前端窄修及四测试，保留错误/刷新/归属/普通稿面；不改后台调度或数据库。"
+      "scope_note": "完整SPEC b6dc7eb70c7768e989b452865b0abad8d9ec42ebc33882b0f41294ede300ce36 独立PASS[REV:a53e25bf48df]；四前端窄修及四测试，保留错误/刷新/归属/普通稿面；不改后台调度或数据库。；2026-10-24仅增当前源码性能研究文档准入，不扩大产品写集或签收历史证据。"
     },
     "T-1075": {
       "task_id": "T-1075",
@@ -19854,6 +19855,441 @@
           "pnpm --dir frontend exec playwright test --config=playwright.t1371.config.ts --workers=1 --retries=0"
         ]
       }
+    },
+    "T-1401": {
+      "task_id": "T-1401",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "write_set": [
+        "docs/features/t1401-trial-device-model-benefits.md",
+        "docs/features/t1401-trial-device-model-benefits.T-1401.review.md",
+        "docs/verification/t1401/**",
+        "BACKLOG.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1401.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "frontend/src/server/activation/model-benefit.server.ts",
+        "frontend/src/server/activation/model-benefit.server.test.ts",
+        "frontend/src/app/api/v1/local/client-config/route.ts",
+        "frontend/src/app/api/v1/local/client-config/route.test.ts",
+        "frontend/src/features/settings/channel-model-configuration.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx"
+      ],
+      "read_set": [
+        "docs/features/t1278-unified-license-capability-routing.md",
+        "frontend/src/components/shell/channel-config-bootstrap.tsx",
+        "frontend/src-tauri/src/license.rs",
+        "frontend/src/server/activation/client-config.server.ts",
+        "frontend/src/server/activation/license-client.ts",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/engineering/timeout-policy.md",
+        "frontend/src/app/activate/activate-form.tsx",
+        "frontend/src/app/activate/activate-form.test.tsx",
+        "frontend/src/app/activate/page.tsx"
+      ],
+      "exclusive_resources": [
+        "t1401-isolated-creator-worktree",
+        "t1401-private-pglite-test-data",
+        "growth-t250-owned-separately",
+        "activity-local-only-specific-user-approval-no-cross-writes"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/server/activation/model-benefit.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/features/settings/settings-interactive-region.test.tsx src/app/activate/activate-form.test.tsx --maxWorkers=1 --retry=0",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck",
+          "node --test tools/quality/quality.test.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
+    },
+    "T-1402": {
+      "task_id": "T-1402",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "write_set": [
+        "docs/features/t1402-legacy-license-one-click-upgrade.md",
+        "docs/features/t1402-legacy-license-one-click-upgrade.T-1402.review.md",
+        "docs/verification/t1402/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1402.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "read_set": [
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1401-trial-device-model-benefits.md",
+        "frontend/src-tauri/src/license.rs",
+        "frontend/src/features/settings/channel-model-configuration.tsx",
+        "frontend/src/server/activation/model-benefit.server.ts",
+        "frontend/src/server/activation/ai-credit-link.server.ts",
+        "frontend/src/app/api/v1/local/client-config/route.ts"
+      ],
+      "exclusive_resources": [
+        "t1402-isolated-worktree",
+        "t1402-private-pglite",
+        "native-license-activation-root-only",
+        "activity-growth-source-read-only-until-reviewed-contract"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck",
+          "node --test tools/quality/quality.test.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
+    },
+    "T-1404": {
+      "task_id": "T-1404",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1404-tab-navigation-performance-fixes.md",
+        "docs/research/2026-10-24-tab-switch-performance.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/**",
+        "backend/src/modules/articles/**",
+        "backend/src/modules/artifacts/**"
+      ],
+      "write_set": [
+        "docs/features/t1404-tab-navigation-performance-fixes.md",
+        "docs/features/t1404-tab-navigation-performance-fixes.T-1404.review.md",
+        "docs/verification/t1404/**",
+        "backend/src/modules/articles/articles.service.ts",
+        "frontend/src/features/article/article-workbench.tsx",
+        "frontend/src/features/article/doocs-article-editor.tsx",
+        "frontend/src/features/article/doocs-article-editor.test.tsx",
+        "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+        "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/page.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/production/page.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/article/page.tsx",
+        "frontend/src/features/projects/project-route-data.ts",
+        "frontend/src/features/projects/project-route-data.test.ts",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-deferred.tsx",
+        "frontend/src/features/script/script-structure-view.tsx",
+        "backend/src/modules/articles/articles.read-performance.test.ts",
+        "backend/src/modules/articles/articles.integration.test.ts",
+        "frontend/src/features/article/article-workbench.test.tsx",
+        "frontend/src/features/article/article-workbench.performance.test.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/production/page.performance.test.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/article/page.performance.test.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/page.performance.test.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-data.test.ts",
+        "frontend/src/features/draft-workbench/draft-workbench-page.performance.test.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-deferred.test.tsx",
+        "frontend/src/features/script/script-structure-view.test.tsx"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "pnpm -C frontend exec tsc --noEmit --incremental false",
+          "pnpm -C backend typecheck"
+        ]
+      },
+      "scope_note": "2026-10-24用户明确要求全面修复源码调查确认的问题；独立SPEC复核后执行，保组归属/未保存状态/原保存导出，不安装发布。"
+    },
+    "T-1405": {
+      "task_id": "T-1405",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1405-chat-model-combination-fixes.md",
+        "docs/verification/t1403/RESULT.md",
+        "docs/features/t1278-unified-license-capability-routing.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai-runtime/chat-assembly-types.ts",
+        "backend/src/modules/ai-runtime/chat-assembly.ts",
+        "backend/src/modules/ai-runtime/chat-workspace-context.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/__module_integration__/chat-workspace-context.persistence-client.test.ts",
+        "backend/src/modules/ai-runtime/capability-model-routing.ts",
+        "backend/src/modules/ai-runtime/capability-model-routing.test.ts",
+        "backend/src/modules/execution/model-engine-error.ts",
+        "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "ai-worker/src/runtime/provider-factory.test.ts",
+        "ai-worker/src/runtime/error-diagnostics.ts",
+        "ai-worker/src/runtime/error-diagnostics.test.ts"
+      ],
+      "write_set": [
+        "backend/src/modules/ai-runtime/chat-assembly-types.ts",
+        "backend/src/modules/ai-runtime/chat-assembly.ts",
+        "backend/src/modules/ai-runtime/chat-workspace-context.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/__module_integration__/chat-workspace-context.persistence-client.test.ts",
+        "backend/src/modules/ai-runtime/capability-model-routing.ts",
+        "backend/src/modules/ai-runtime/capability-model-routing.test.ts",
+        "backend/src/modules/execution/model-engine-error.ts",
+        "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "ai-worker/src/runtime/provider-factory.test.ts",
+        "ai-worker/src/runtime/error-diagnostics.ts",
+        "ai-worker/src/runtime/error-diagnostics.test.ts",
+        "docs/features/t1405-chat-model-combination-fixes.md",
+        "docs/features/t1405-chat-model-combination-fixes.T-1405.review.md",
+        "docs/verification/t1405/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1405.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck",
+          "node --test tools/quality/quality.test.mjs"
+        ]
+      },
+      "scope_note": "2026-10-24用户要求修复T1403真实CLI问题；独立规格评审后实施，不越源、不更改钱包或原未知任务。"
+    },
+    "T-1407": {
+      "task_id": "T-1407",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1407-local-integration-install-merge-preparation.md",
+        "docs/verification/t1405/RESULT.md",
+        "docs/verification/t1405/combined-candidate-manifest.json",
+        "docs/engineering/agent-rules.md"
+      ],
+      "write_set": [
+        "AGENTS.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "ai-worker/src/runtime/error-diagnostics.test.ts",
+        "ai-worker/src/runtime/error-diagnostics.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+        "ai-worker/src/runtime/platform/wechat-channels-entry.integration.test.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+        "ai-worker/src/runtime/platform/wechat-official-binding-navigation.integration.test.ts",
+        "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts",
+        "ai-worker/src/runtime/provider-factory.test.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "backend/src/application/projects/project-preparation.ts",
+        "backend/src/modules/ai-runtime/capability-model-routing.test.ts",
+        "backend/src/modules/ai-runtime/capability-model-routing.ts",
+        "backend/src/modules/ai-runtime/chat-assembly-types.ts",
+        "backend/src/modules/ai-runtime/chat-assembly.ts",
+        "backend/src/modules/ai-runtime/chat-workspace-context.test.ts",
+        "backend/src/modules/execution/execution-scheduled-child-resource.test.ts",
+        "backend/src/modules/execution/execution-scheduled-child.service.test.ts",
+        "backend/src/modules/execution/execution-scheduled-child.service.ts",
+        "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
+        "backend/src/modules/execution/model-engine-error.ts",
+        "backend/src/modules/intelligence/intelligence.service.test.ts",
+        "backend/src/modules/intelligence/intelligence.service.ts",
+        "backend/src/modules/projects/project-preparation.service.test.ts",
+        "backend/src/modules/projects/project-preparation.service.ts",
+        "docs/assets/commit-activity-dark.svg",
+        "docs/assets/commit-activity.svg",
+        "docs/engineering-notes/pitfalls.md",
+        "docs/engineering/agent-rules.md",
+        "docs/features/t1401-ai-credit-link-errors.md",
+        "docs/features/t1401-trial-device-model-benefits.md",
+        "docs/features/t1402-legacy-license-one-click-upgrade.T-1402.review.md",
+        "docs/features/t1402-legacy-license-one-click-upgrade.md",
+        "docs/features/t1403-cli-chat-combination-acceptance.md",
+        "docs/features/t1403-cos-ux-closure.T-1403.review.md",
+        "docs/features/t1403-cos-ux-closure.md",
+        "docs/features/t1405-chat-model-combination-fixes.T-1405.review.md",
+        "docs/features/t1405-chat-model-combination-fixes.md",
+        "docs/features/t1406-official-account-binding-failure.T-1406.review.md",
+        "docs/features/t1406-official-account-binding-failure.md",
+        "docs/features/t1407-local-integration-install-merge-preparation.T-1407.review.md",
+        "docs/features/t1407-local-integration-install-merge-preparation.md",
+        "docs/research/2026-10-24-tab-switch-performance.md",
+        "docs/verification/t1402/ACTIVITY_FINAL_HANDOFF.md",
+        "docs/verification/t1402/ACTIVITY_WIRE.md",
+        "docs/verification/t1402/AUTOMATIC_CONTRACT_REVIEW.md",
+        "docs/verification/t1402/AUTOMATIC_IMPLEMENTATION_REVIEW.md",
+        "docs/verification/t1402/AUTOMATIC_LOCAL_VALIDATION.md",
+        "docs/verification/t1402/CLIENT_WIRE.md",
+        "docs/verification/t1402/LOCAL_VALIDATION.md",
+        "docs/verification/t1402/MERGE_VALIDATION.json",
+        "docs/verification/t1402/MERGE_VALIDATION.md",
+        "docs/verification/t1402/activity-contract-audit.md",
+        "docs/verification/t1402/activity-final-independent-review.json",
+        "docs/verification/t1402/activity-package-repack-receipt.json",
+        "docs/verification/t1402/activity-restore-issued-fixtures.json",
+        "docs/verification/t1402/automatic-review-packet.json",
+        "docs/verification/t1402/client-contract-audit.md",
+        "docs/verification/t1402/contract-independent-review.md",
+        "docs/verification/t1402/fixtures/growth-formal-v1-economy-r1.json",
+        "docs/verification/t1402/fixtures/node-observation-v1.json",
+        "docs/verification/t1402/generate-node-observation-fixture.mts",
+        "docs/verification/t1402/growth-fixture-manifest.json",
+        "docs/verification/t1402/merge-incremental-independent-review.json",
+        "docs/verification/t1402/native-final-independent-review.json",
+        "docs/verification/t1402/package-validation-audit.md",
+        "docs/verification/t1402/review-input-r2.json",
+        "docs/verification/t1402/review-input.json",
+        "docs/verification/t1402/ts-final-independent-review.json",
+        "docs/verification/t1402/ts-implementation-evidence.json",
+        "docs/verification/t1402/ts-implementation-evidence.md",
+        "docs/verification/t1402/ts-source-before-directory-fix.json",
+        "docs/verification/t1402/wire-independent-review.md",
+        "docs/verification/t1405/**",
+        "docs/verification/t1407/**",
+        "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+        "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.json",
+        "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.txt",
+        "frontend/public/reference-editors/opencut-classic/native/native.js",
+        "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+        "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+        "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "frontend/src-tauri/build.rs",
+        "frontend/src-tauri/capabilities/remote-sidecar.json",
+        "frontend/src-tauri/permissions/autogenerated/license_restore_saved.toml",
+        "frontend/src-tauri/secure_strings_build.rs",
+        "frontend/src-tauri/src/lib.rs",
+        "frontend/src-tauri/src/license.rs",
+        "frontend/src-tauri/src/license_restore.rs",
+        "frontend/src-tauri/src/secure_strings.rs",
+        "frontend/src/app/(creator)/layout.tsx",
+        "frontend/src/app/api/v1/local/ai-credits/connect/route.test.ts",
+        "frontend/src/app/api/v1/local/client-config/route.test.ts",
+        "frontend/src/app/api/v1/local/client-config/route.ts",
+        "frontend/src/components/resources/asset-live-preview.tsx",
+        "frontend/src/components/resources/asset-preview-url.test.ts",
+        "frontend/src/components/resources/asset-preview-url.ts",
+        "frontend/src/components/resources/asset-thumbnail.tsx",
+        "frontend/src/components/shell/channel-config-bootstrap.test.tsx",
+        "frontend/src/components/shell/channel-config-bootstrap.tsx",
+        "frontend/src/components/shell/sidebar.tsx",
+        "frontend/src/components/shell/use-primary-navigation.test.tsx",
+        "frontend/src/components/shell/use-primary-navigation.ts",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/copilot/assistant-engine-model-routing-refresh.test.ts",
+        "frontend/src/features/copilot/assistant-engine.ts",
+        "frontend/src/features/copilot/positioning-conversation.test.tsx",
+        "frontend/src/features/copilot/positioning-conversation.tsx",
+        "frontend/src/features/dashboard/dashboard-page.test.tsx",
+        "frontend/src/features/dashboard/dashboard-page.tsx",
+        "frontend/src/features/dashboard/dashboard-trend-card.test.tsx",
+        "frontend/src/features/dashboard/dashboard-trend-card.tsx",
+        "frontend/src/features/draft-workbench/ammo-card-list.test.tsx",
+        "frontend/src/features/draft-workbench/project-pipeline-panel.test.tsx",
+        "frontend/src/features/draft-workbench/project-pipeline-panel.tsx",
+        "frontend/src/features/draft-workbench/project-preparation-context.tsx",
+        "frontend/src/features/group-workspace/group-overview.tsx",
+        "frontend/src/features/group-workspace/group-platform-data.test.tsx",
+        "frontend/src/features/group-workspace/group-platform-data.tsx",
+        "frontend/src/features/group-workspace/group-workspace-filters.test.tsx",
+        "frontend/src/features/group-workspace/group-workspace-filters.tsx",
+        "frontend/src/features/group-workspace/group-workspace.test.tsx",
+        "frontend/src/features/group-workspace/platform-metrics.test.tsx",
+        "frontend/src/features/group-workspace/platform-metrics.ts",
+        "frontend/src/features/group-workspace/use-workspace-filter-navigation.ts",
+        "frontend/src/features/group-workspace/workspace-query.ts",
+        "frontend/src/features/onboarding/group-onboarding-data.test.ts",
+        "frontend/src/features/onboarding/onboarding-data.test.ts",
+        "frontend/src/features/onboarding/onboarding-data.ts",
+        "frontend/src/features/platform-account/native-report-panel.test.tsx",
+        "frontend/src/features/platform-account/native-report-panel.tsx",
+        "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+        "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+        "frontend/src/features/settings/channel-model-configuration.test.tsx",
+        "frontend/src/features/settings/channel-model-configuration.tsx",
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/src/features/settings/settings-model-region-automatic.test.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/lib/automatic-license-upgrade.test.ts",
+        "frontend/src/lib/automatic-license-upgrade.ts",
+        "frontend/src/lib/legacy-license-upgrade.test.ts",
+        "frontend/src/lib/legacy-license-upgrade.ts",
+        "frontend/src/server/__module_integration__/chat-workspace-context.persistence-client.test.ts",
+        "frontend/src/server/activation/ai-credit-link.server.test.ts",
+        "frontend/src/server/activation/ai-credit-link.server.ts",
+        "frontend/src/server/activation/model-benefit.server.test.ts",
+        "frontend/src/server/activation/model-benefit.server.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "orchestrator/COMPLEXITY_LEDGER.json",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/context/T-1071.md",
+        "orchestrator/context/T-1278.md",
+        "orchestrator/context/T-1402.md",
+        "orchestrator/context/T-1405.md",
+        "orchestrator/context/T-1407.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/review-events.ndjson",
+        "reference-editors/manifest.json",
+        "reference-editors/opencut-classic/native/DELIVERY.json",
+        "reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+        "reference-editors/opencut-classic/native/README.md",
+        "reference-editors/opencut-classic/native/SHA256SUMS",
+        "reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.json",
+        "reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.txt",
+        "reference-editors/opencut-classic/native/native-from-t1046.patch",
+        "reference-editors/opencut-classic/native/native-source.tar.gz",
+        "reference-editors/opencut-classic/native/native.js"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck",
+          "node --test tools/quality/quality.test.mjs"
+        ]
+      },
+      "scope_note": "用户2026-10-25恢复安装并要求整理相关代码和准备合并推送；现安装源码、本任务补丁与主干的可追溯整合，不push或公开发布，不代签来源任务旧FAIL。"
     }
   }
 }

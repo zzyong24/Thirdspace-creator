@@ -421,7 +421,8 @@
     "t1362-collected-work-entry:e2e": "node docs/verification/t1355/control/run-frozen-ui.mjs T-1362",
     "t1370-inline-binding:e2e": "node docs/verification/t1370/control/run-frozen-ui.mjs T-1370",
     "t1371-unknown-summary:e2e": "node docs/verification/t1370/control/run-frozen-ui.mjs T-1371",
-    "t1382-unified-intake:e2e": "node docs/verification/t1382/control/run-journeys.mjs"
+    "t1382-unified-intake:e2e": "node docs/verification/t1382/control/run-journeys.mjs",
+    "tab-navigation-performance:e2e": "ego-browser nodejs < docs/verification/t1404/browser-verify.mjs > docs/verification/t1404/browser-final-verify.log 2>&1"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",
