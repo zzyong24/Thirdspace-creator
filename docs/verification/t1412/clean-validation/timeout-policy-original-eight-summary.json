@@ -1,0 +1,66 @@
+{
+  "commit": "4fb509fff576184c0b3bf3b73ca14178ace690a6",
+  "groupCount": 8,
+  "exitCode": 0,
+  "groups": [
+    {
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node tools/timeout-policy/check.mjs",
+      "summaries": []
+    },
+    {
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/timeout-policy/check.test.mjs tools/timeout-policy/hyperframes.test.mjs",
+      "summaries": [
+        "ℹ tests 11",
+        "ℹ pass 11",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0"
+      ]
+    },
+    {
+      "command": "pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000",
+      "summaries": [
+        " Test Files  1 passed (1)",
+        "      Tests  5 passed (5)"
+      ]
+    },
+    {
+      "command": "pnpm --dir ai-worker exec vitest run src/execution/worker-timeout-policy.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000",
+      "summaries": [
+        " Test Files  2 passed (2)",
+        "      Tests  20 passed (20)"
+      ]
+    },
+    {
+      "command": "pnpm --dir backend exec vitest run src/modules/execution/new-execution-budget.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/execution-call-ledger.service.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000",
+      "summaries": [
+        " Test Files  3 passed (3)",
+        "      Tests  37 passed (37)"
+      ]
+    },
+    {
+      "command": "pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-dump-zone.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/draft-workbench/content-direction-actions.test.tsx src/features/draft-workbench/script-review-gate.test.tsx src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000",
+      "summaries": [
+        " Test Files  6 passed (6)",
+        "      Tests  68 passed (68)"
+      ]
+    },
+    {
+      "command": "pnpm --dir mcp-server test tests/cli.test.ts --testTimeout=120000 --hookTimeout=120000",
+      "summaries": [
+        " Test Files  1 passed (1)",
+        "      Tests  28 passed (28)"
+      ]
+    },
+    {
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/windows-closure-rat/render-probe-policy.test.mjs frontend/scripts/desktop/timeout-policy.node.mjs",
+      "summaries": [
+        "ℹ tests 5",
+        "ℹ pass 5",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0"
+      ]
+    }
+  ]
+}

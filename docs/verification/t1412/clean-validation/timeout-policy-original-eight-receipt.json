@@ -1,0 +1,50 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "tools/timeout-policy/verify.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1412/clean-validation/timeout-policy-original-eight.log",
+  "pid": 19233,
+  "identity": {
+    "pid": 19233,
+    "pgid": 19233,
+    "uid": 501,
+    "birth": "Sun Oct 25 16:25:24 2026",
+    "startedAt": 1792916724610
+  },
+  "startedAt": "2026-10-25T08:25:24.610Z",
+  "endedAt": "2026-10-25T08:26:11.219Z",
+  "elapsedMs": 46609,
+  "budgetMs": 7200000,
+  "deadlineAt": "2026-10-25T10:25:24.610Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": "",
+  "commit": "4fb509fff576184c0b3bf3b73ca14178ace690a6",
+  "environmentKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "NPM_CONFIG_GLOBALCONFIG",
+    "NPM_CONFIG_USERCONFIG",
+    "PATH",
+    "TMPDIR",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_RUNTIME_DIR"
+  ]
+}

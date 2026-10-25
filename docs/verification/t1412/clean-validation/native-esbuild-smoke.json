@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/opt/homebrew/lib/node_modules/pnpm/bin/pnpm.cjs",
+    "-C",
+    "ai-worker",
+    "exec",
+    "esbuild",
+    "--version"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "exitCode": 0,
+  "stdout": "0.28.1\n",
+  "stderr": ""
+}

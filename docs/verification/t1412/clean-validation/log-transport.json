@@ -1,0 +1,18 @@
+[
+  {
+    "originalPath": "docs/verification/t1412/clean-validation/timeout-policy-original-eight.log",
+    "originalSha256": "fcccff2c0063ee9ec4d973d69603202bda0e6d6c525e70249fdff9e1a692833c",
+    "transportPath": "docs/verification/t1412/clean-validation/logs/timeout-policy-original-eight.log.gz",
+    "transportSha256": "275c764eba0a3eb216bdd0142d0925e184fbf6d5ff81dcf0dad4627dfa32e55e",
+    "scanExitCode": 0,
+    "scanInput": "仅去ANSI控制序列的原输出，未改变正文；原始字节按gzip保全"
+  },
+  {
+    "originalPath": "docs/verification/t1412/clean-validation/archive-original-clean.log",
+    "originalSha256": "5547715fd3b37a18e7400a0caba57f1c625fe369d1a2998911f88a5dc1860ce5",
+    "transportPath": "docs/verification/t1412/clean-validation/logs/archive-original-clean.log.gz",
+    "transportSha256": "70eb792f58cc6778e73b7d8863d7b31205e3161028e8d54a93b14c5a1c7e6755",
+    "scanExitCode": 0,
+    "scanInput": "仅去ANSI控制序列的原输出，未改变正文；原始字节按gzip保全"
+  }
+]

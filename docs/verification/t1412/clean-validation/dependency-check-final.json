@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-25T08:24:20.710247+00:00",
+  "symlinkCount": 4998,
+  "invalidSymlinks": [],
+  "staleMainShims": [],
+  "scannedBinFiles": 265,
+  "relocatedBinFiles": 172,
+  "nativeFileCount": 66,
+  "nativeChanged": [],
+  "hyperframesCliSha256": "1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b",
+  "esbuildVersion": "0.28.1"
+}

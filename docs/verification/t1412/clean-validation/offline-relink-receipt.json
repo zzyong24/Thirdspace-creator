@@ -1,0 +1,34 @@
+{
+  "argv": [
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/opt/homebrew/lib/node_modules/pnpm/bin/pnpm.cjs",
+    "install",
+    "--offline",
+    "--frozen-lockfile",
+    "--ignore-scripts",
+    "--store-dir",
+    "/Users/zyongzhu/Library/pnpm/store/v10"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1412-full-validation/Thirdspace-creator",
+  "startedAt": "2026-10-25T08:22:08.231478+00:00",
+  "endedAt": "2026-10-25T08:22:09.353173+00:00",
+  "elapsedSeconds": 1.121,
+  "exitCode": 0,
+  "environmentKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "NPM_CONFIG_GLOBALCONFIG",
+    "NPM_CONFIG_USERCONFIG",
+    "PATH",
+    "TMPDIR",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_RUNTIME_DIR"
+  ],
+  "nativeFilesBefore": 66,
+  "sameDevice": true
+}
