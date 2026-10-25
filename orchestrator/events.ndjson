@@ -1794,3 +1794,4 @@
 {"ts":"2026-10-25T04:07:32.647Z","actor":"taskctl","action":"complete","task":"T-1402","evidence":"67项针对回归、类型检查和Worker构建通过；Windows1.2.0原会话真实模型恢复及重启回读成功；源码4文件补丁可应用于fd9108b2，独立复核通过。保留完整质量门及正式发布待验。","sha_before":"a7b8199c193f","sha_after":"f893e72cc12c"}
 {"ts":"2026-10-25T06:46:22.552Z","actor":"taskctl","action":"start","task":"T-1403","sha_before":"5f969a691003","sha_after":"824027110093"}
 {"ts":"2026-10-25T07:31:21.032Z","actor":"taskctl","action":"block","task":"T-1403","reason":"源码修复、限定回归及构建通过；本机缺既有verdict/sidecar签名材料，官方Web预览亦拒绝无Rust verdict-token，原Windows修复包安装与真机复验待持钥环境；quick只读对账仍未闭合。","sha_before":"b24135c14bba","sha_after":"dd9b4c5c97b0"}
+{"ts":"2026-10-25T08:13:23.761Z","actor":"taskctl","action":"start","task":"T-1404","sha_before":"bf4342ebe935","sha_after":"d59c5e24b3c6"}

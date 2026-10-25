@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1404|使用既有更新根与 Actions 构建新版 Windows 包|🔨|—|待验|[SPEC](docs/features/t1404-windows-local-root-ci-package.md)|用户已提供既有更新根并确认 CI verdict 密钥；本机根签名、CI 原密钥编壳，仅构建分支 artifact，不合并/发版，原安装数据保全。|
 |T-1403|修复 Windows 全流程实测失败与可本机解除的阻塞|⏸️|—|待验|[SPEC](docs/features/t1403-windows-flow-repair.md)|四条失败流程与本机缺口源码修复、限定回归和构建已过；Windows合法包/真机复验待既有持钥环境；quick对账未全绿，不伪造发布和外部验收。|
 |T-1402|修复 Windows 定位对话缺少 Pi 核心依赖|✅|—|—|[SPEC](docs/features/t1402-windows-positioning-pi-core.md)|Windows1.2.0真实故障复现及本机依赖补全后定位成功；源码静态打包Agent，已验收补丁经用户明确授权推送并合入main，正式安装包另验。|
 |T-1401|修复 AI 额度连接错误被通用不可用提示掩盖|✅|—|—|[SPEC](docs/features/t1401-ai-credit-link-errors.md)|保留配置错误分类与重试语义，验证开发接口，删除临时诊断；仅本地提交，不push。|

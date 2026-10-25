@@ -3,7 +3,7 @@ import test from 'node:test';
 import {mkdtempSync,writeFileSync,readFileSync,rmSync,mkdirSync,symlinkSync,lstatSync} from 'node:fs';
 import {join} from 'node:path';
 import {createRequire} from 'node:module';
-import {pathToFileURL} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {tmpdir} from 'node:os';
 import {spawnSync} from 'node:child_process';
 import {createHash,generateKeyPairSync,sign} from 'node:crypto';
@@ -101,6 +101,7 @@ test('T1375 固定GitHub真实acquire入口保两分钟请求预算（mock传输
  const originalFetch=globalThis.fetch,originalTimeout=AbortSignal.timeout,budgets=[];
  AbortSignal.timeout=ms=>{budgets.push(ms);return originalTimeout(ms)};
  globalThis.fetch=async()=>new Response('{}',{status:401});
- try{await assert.rejects(acquireSignature(new URL('../../frontend/src-tauri/target/t1375-synthetic-capsule',import.meta.url).pathname,{...envFor(transfer()),GH_TOKEN:'synthetic-only'}),/HTTP401/);assert.equal(budgets.length,1);assert.ok(budgets[0]>=120000);}
+ const capsule=fileURLToPath(new URL(`../../frontend/src-tauri/target/t1375-synthetic-capsule-${process.pid}-${Date.now()}`,import.meta.url));
+ try{await assert.rejects(acquireSignature(capsule,{...envFor(transfer()),GH_TOKEN:'synthetic-only'}),/HTTP401/);assert.equal(budgets.length,1);assert.ok(budgets[0]>=120000);}
  finally{globalThis.fetch=originalFetch;AbortSignal.timeout=originalTimeout;}
 });
