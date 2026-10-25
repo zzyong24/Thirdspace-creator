@@ -1,0 +1,21 @@
+# 清单截至 c5e400de996291596e3c5aca2640df482de5dbfb；随后清单归档提交只追加证据，不改变产品或安装候选。
+9c585dd4d test(T-1397): 等待取消状态请求的真实清理完成
+fa0cd6044 新增原授权安全恢复入口与跨端校验
+d7f63c15e 增加历史激活码一键启用模型权益流程
+60d089049 登记历史授权升级契约与本地验证证据
+7f67264f4 合并最新主干并保留双方额度修复与测试
+ce15e7cbb 补齐无感授权升级的单次观察与并发保护
+5ecb37785 改为启动时无感升级模型权益并同步设置状态
+f7147fd71 记录无感升级契约复审与本地回归证据
+cfd165baa 修复Tab切换重复读取与编辑器初始化等待
+93a972b9c fix: 修复AI对话账号组归属和模型错误提示
+1158e5c85 Merge branch 'codex/cos-ux-closure' into codex/t1407-integration-ready
+f4780795f Merge remote-tracking branch 'origin/main' into codex/t1407-integration-ready
+f3e8e24ec 整合已安装的导航、平台展示、素材与公众号绑定修复
+fab59d28e Merge branch 'codex/t1407-installed-source' into codex/t1407-integration-ready
+bb52d5846 整理账号选择规则、模型实测与本地集成任务记录
+4eaf7946a 合并本地修复任务工件并保全分叉审核记录
+8f757a153 保全Tab性能修复的原界面验收和原始日志
+11471f127 记录远端 Windows Pi 修复的整合边界
+6daaf71d4 合入远端 Windows Pi 核心依赖修复并保留控制面来源
+c5e400de9 归档本地整合安装与真实CLI复验结果，保留未通过验收

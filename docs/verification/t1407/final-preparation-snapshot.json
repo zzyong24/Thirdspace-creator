@@ -1,0 +1,24 @@
+{
+  "atMainCommit": "c5e400de996291596e3c5aca2640df482de5dbfb",
+  "remoteMain": "a33cbbc1fd5b71c38ac1f1445a7230a4be4014c2",
+  "installedProductCandidate": "6daaf71d4d3afe8d5bfa5801cffff7c9b9b345bb",
+  "remoteIsAncestor": true,
+  "behind": 0,
+  "aheadBeforeThisSnapshotCommit": 20,
+  "workingTreeCleanBeforeSnapshot": true,
+  "productFileHashesMatchInstalledCandidate": 130,
+  "pushExecuted": false,
+  "task1405": "blocked: official Pi http_402",
+  "task1407": "blocked: missing standard UI journey report; CLI result not substituted",
+  "fullReleaseGo": false,
+  "stagedEvidenceScannerExitCode": 0,
+  "originalCandidateScannerExitCode": 1,
+  "originalCandidateSyntheticFixtureFindings": 32,
+  "quickReconcile": {
+    "errors": 22,
+    "warnings": 17
+  },
+  "ownWorktreeArchived": true,
+  "taskBackupAppsRemoved": 2,
+  "note": "本快照归档提交会增加一个仅证据提交；不重写安装候选或先前测试绑定。"
+}
