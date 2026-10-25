@@ -1,0 +1,27 @@
+✖ 真实CLI测试不能继承父环境；隔离由专用会话承担 (1.674375ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 122.694334
+
+✖ failing tests:
+
+test at tools/timeout-policy/hyperframes-cli-isolation.test.mjs:4:1
+✖ 真实CLI测试不能继承父环境；隔离由专用会话承担 (1.674375ms)
+  AssertionError [ERR_ASSERTION]: 原公共入口把任意父凭据/HOME传给真实CLI
+      at TestContext.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/tools/timeout-policy/hyperframes-cli-isolation.test.mjs:6:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'import {test} from \'node:test\';\nimport assert from \'node:assert/strict\';\nimport fs from \'node:fs\';\nimport os from \'node:os\';\nimport path from \'node:path\';\nimport vm from \'node:vm\';\nimport {createHash} from \'node:crypto\';\nimport {spawnSync} from \'node:child_process\';\nimport {fileURLToPath} from \'node:url\';\nimport {inspectSource} from \'./check.mjs\';\nconst root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),\'../..\');\nconst pkg=path.join(root,\'frontend/node_modules/hyperframes\');\nconst cli=path.join(pkg,\'dist/cli.js\');\nconst source=fs.readFileSync(cli,\'utf8\');\nconst sha=data=>createHash(\'sha256\').update(data).digest(\'hex\');\ntest(\'锁定实际安装的同版本补丁，依赖升级必须重新核对内部等待\',()=>{\n assert.equal(JSON.parse(fs.readFileSync(path.join(pkg,\'package.json\'))).version,\'0.7.54\');\n const patch=fs.readFileSync(path.join(root,\'patches/hyperframes@0.7.54.patch\'));\n assert.equal(sha(patch),\'15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0\');\n assert.ok(fs.readFileSync(path.join(root,\'pnpm-lock.yaml\'),\'utf8\').includes(`hash: ${sha(patch)}`));\n assert.equal(sha(source),\'1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b\');\n const short=inspectSource(source,\'hyperframes/dist/cli.js\');\n assert.equal(short.length,2);\n for(const item of short){assert.equal(item.valueMs,500);assert.match(item.source,/SIGKILL/);}\n // 这两处是已有停止指令后的进程树强杀宽限，不是工作执行上限；取消仍即时生效。\n assert.equal((source.match(/creatorosConfigurePageTimeouts\\((?:page\\d*|previewPage)\\);/g)||[]).length,12);\n});\ntest(\'实际安装的归一入口保留零值、拒绝非法值并明确覆盖页面默认\',()=>{\n const prefix=source.slice(source.indexOf(\'function creatorosConfigurePageTimeouts\'),source.indexOf(\'import { createRequire\'));\n const context=vm.createContext({});vm.runInContext(prefix,context);\n assert.equal(context.creatorosExecutionTimeout(1),120000);\n assert.equal(context.creatorosExecutionTimeout(300000),300000);\n assert.equal(context.creatorosExecutionTimeout(0),0);\n assert.throws(()=>context.creatorosExecutionTimeout(-1),/nonnegative/);\n const calls=[];context.creatorosConfigurePageTimeouts({setDefaultTimeout:ms=>calls.push(ms),setDefaultNavigationTimeout:ms=>calls.push(ms)});\n assert.deepEqual(calls,[120000,120000]);\n assert.ok(source.includes("MAX_PAGE_NAVIGATION_TIMEOUT_SECONDS = 86400"));\n assert.ok(source.includes("request_timeout_seconds=${Math.max(120, timeout)}"));\n});\ntest(\'真实公共CLI拒绝一秒浏览器超时，错误单位为秒\',()=>{\n const fixture=fs.mkdtempSync(path.join(os.tmpdir(),\'creatoros-timeout-cli-\'));\n fs.writeFileSync(path.join(fixture,\'index.html\'),\'<html><body><main data-composition-id="main" data-width="320" data-height="180" data-duration="0.2"></main></body></html>\');\n const result=spawnSync(process.execPath,[cli,\'render\',fixture,\'--browser-timeout\',\'1\'],{encoding:\'utf8\',env:{...process.env,HYPERFRAMES_TELEMETRY:\'0\'}});\n fs.rmSync(fixture,{recursive:true,force:true});\n assert.notEqual(result.status,0);assert.match(result.stdout+result.stderr,/120/);\n assert.doesNotMatch(result.stdout+result.stderr,/ENOENT|Cannot find module/);\n});\n',
+    expected: /env:\s*\{\s*\.\.\.process\.env/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }

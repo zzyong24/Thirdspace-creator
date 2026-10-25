@@ -1,0 +1,34 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1022/run-archive-guard.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1412/archive-red.log",
+  "pid": 1327,
+  "identity": {
+    "pid": 1327,
+    "pgid": 1327,
+    "uid": 501,
+    "birth": "Sun Oct 25 15:42:25 2026",
+    "startedAt": 1792914145336
+  },
+  "startedAt": "2026-10-25T07:42:25.336Z",
+  "endedAt": "2026-10-25T07:42:25.499Z",
+  "elapsedMs": 163,
+  "budgetMs": 1800000,
+  "deadlineAt": "2026-10-25T08:12:25.336Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 1,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

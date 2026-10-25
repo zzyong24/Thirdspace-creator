@@ -1,0 +1,1664 @@
+{
+  "schema": "t1412-lesson-budgets/v1",
+  "createdAt": "2026-10-25T07:32:09.896Z",
+  "policyMeaning": "有限命令执行策略上限；不是实测耗时，不声称覆盖全部case同时耗尽其声明timeout的理论最坏情况。超时保持incomplete，不改断言或记成功。",
+  "minimumTimeoutMs": 120000,
+  "workspaceDefaults": {
+    "backend": {
+      "testTimeoutMs": 120000,
+      "hookTimeoutMs": 120000,
+      "maxWorkers": 2
+    },
+    "frontend": {
+      "testTimeoutMs": 20000,
+      "hookTimeoutMs": 20000,
+      "retry": 2
+    },
+    "worker": {
+      "retry": 2
+    }
+  },
+  "explicitExceptions": [
+    "LED048原test/hook30000、单worker、retry0不改",
+    "LED053/061各Vitest组原test/hook120000、retry0不改",
+    "LED060 Pi JSON原case180000/HTTP120000不改",
+    "LED062/063原test/hook120000、retry0不改"
+  ],
+  "entries": [
+    {
+      "led": "LED-052",
+      "check": "node docs/verification/t1022/run-archive-guard.mjs",
+      "checkSha256": "8854803264c989d881cfd0427a26fab9b6451d3560d6d7b699b2e3d64ab12a08",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "node docs/verification/t1022/run-archive-guard.mjs",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 120000,
+          "basis": "静态检查"
+        }
+      ],
+      "wrapperBasis": "原3文件、180秒PG fixture；本轮实例启动独立，wrapper30分钟"
+    },
+    {
+      "led": "LED-045",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts",
+      "checkSha256": "c5ac0b4ec7aaddf797ee2a4aaec1fe642f7bab165dd714adccb186e73d176b86",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/cover-runner.test.ts",
+            "src/modules/ai-runtime/asset-generate-runner.test.ts"
+          ],
+          "missingFilters": [
+            "src/modules/ai-runtime/asset-generate-runner.test.ts"
+          ],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-044",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/video-regression-audit.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+      "checkSha256": "9d072ccc65654a84b273d6a2739d1e4a25df56ba5ad580875eab20657f1c2aa4",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts src/prompt/templates/video-decisions.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/prompt/templates/material-match.test.ts",
+            "src/prompt/templates/video-decisions.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/video-regression-audit.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/assemble-video-render-props.test.ts",
+            "src/features/production/video-regression-audit.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/video-render/template.test.ts",
+            "src/modules/execution/video-render/executor.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-043",
+      "check": "node --test orchestrator/process/critical-path-availability-rule.test.mjs && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+      "checkSha256": "52dd8ac1793434eb8f1c54b6e46ecfe0b353cafa52ad1ae7663b54829cdcafed",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "node --test orchestrator/process/critical-path-availability-rule.test.mjs",
+          "workspace": null,
+          "filters": [
+            "orchestrator/process/critical-path-availability-rule.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "Node合成测试及子进程；glob保留60分钟，否则15分钟"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/assemble-video-render-props.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/video-render/template.test.ts",
+            "src/modules/execution/video-render/executor.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-001",
+      "check": "! git ls-files | grep -qF .env.local",
+      "checkSha256": "2ddc18ba4b0bb2d07a06bf508245d10a3624f104a961af3e917414b048a92322",
+      "timeoutMs": 120000,
+      "stages": [
+        {
+          "command": "! git ls-files | grep -qF .env.local",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 120000,
+          "basis": "静态检查"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-003",
+      "check": "node orchestrator/process/boundary-scan.mjs --quiet",
+      "checkSha256": "2c2f95fdf3676e1bd1149cdc4c0315406c866bea313adddbf96afeee7ffae590",
+      "timeoutMs": 120000,
+      "stages": [
+        {
+          "command": "node orchestrator/process/boundary-scan.mjs --quiet",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 120000,
+          "basis": "静态检查"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-005",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chunk-and-merge.test.ts src/modules/ai-runtime/knowledge-distill-runner.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "checkSha256": "008853e477ab6a814b4c1319a9a9d010ff09f03fee1866f9ea85c4e1625be839",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chunk-and-merge.test.ts src/modules/ai-runtime/knowledge-distill-runner.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/chunk-and-merge.test.ts",
+            "src/modules/ai-runtime/knowledge-distill-runner.test.ts",
+            "src/modules/ai-runtime/video-decisions-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-006",
+      "check": "pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs",
+      "checkSha256": "8fba483eabd963fc9252beadc5863fe51e88539bd4137b49592dada24d5d4a87",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs",
+          "workspace": "frontend",
+          "filters": [
+            "scripts/desktop/startup-safety-contract.test.mjs",
+            "scripts/desktop/windows-runtime-config.test.mjs",
+            "scripts/desktop/desktop-release-workflow.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-007",
+      "check": "pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
+      "checkSha256": "cc5be35967055320368c43750fe6c0b4712bd16df3a99ffd916ea8127d55281f",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/settings-model-test-wrap.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-008",
+      "check": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/components/shell/channel-config-bootstrap.test.tsx src/features/settings/settings-page.test.tsx",
+      "checkSha256": "f723f33f7f7c00d2f1b703a95ff7ac602302b6e944a7ffff09cef477fba96258",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/components/shell/channel-config-bootstrap.test.tsx src/features/settings/settings-page.test.tsx",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/activation/client-config.server.test.ts",
+            "src/app/api/v1/local/client-config/route.test.ts",
+            "src/components/shell/channel-config-bootstrap.test.tsx",
+            "src/features/settings/settings-page.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-010",
+      "check": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs",
+      "checkSha256": "a5cde07b8dd47f30f036c3eebfb2dd87ac842018e1ac19a2fced0f1a1a91fd41",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs",
+          "workspace": "frontend",
+          "filters": [
+            "scripts/desktop/package-local.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-011",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts",
+      "checkSha256": "e9d42a802f69410a188759fc0947423047d6224632ad902836d9f9431a410fe0",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/prompt/templates/material-match.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/assemble-video-render-props.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/video-render/template.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-012",
+      "check": "pnpm --dir frontend exec vitest run src/features/copilot/execution-task-card.test.tsx && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+      "checkSha256": "f909f220a990fc6ecf6b5234cbe64d6005cef8a9b505327e9e9f614f27b77b84",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/copilot/execution-task-card.test.tsx",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/copilot/execution-task-card.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/video-render/template.test.ts",
+            "src/modules/execution/video-render/executor.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-013",
+      "check": "pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "checkSha256": "dfb010df7a0be5f649f386d3aa2c17a2c0a373714380936ae6b714585b796a6d",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx src/features/production/assemble-video-render-props.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/video-decision-preview.test.tsx",
+            "src/features/production/assemble-video-render-props.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts",
+            "src/modules/execution/video-render/template.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-014",
+      "check": "pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts && pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts",
+      "checkSha256": "0b1acc57d31e69b74b1daa77d42e5ed20c958b714861a1f43d2f50962a84522e",
+      "timeoutMs": 2280000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/app/api/chat/route.test.ts",
+            "src/server/__module_integration__/artifacts.persistence-client.test.ts",
+            "src/features/script/script-editor-data.test.ts",
+            "src/features/script/script-structure-view.test.tsx",
+            "src/features/copilot/chat-script-patch-card.test.tsx",
+            "src/features/copilot/ai-copilot-interactions.test.tsx",
+            "src/features/copilot/chat-api-error.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 1380000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/artifacts/artifacts.service.test.ts",
+            "src/modules/ai-runtime/script-runner.test.ts",
+            "src/modules/ai-runtime/chat-tools.test.ts",
+            "src/modules/ai-runtime/chat-runner.test.ts"
+          ],
+          "missingFilters": [
+            "src/modules/ai-runtime/chat-runner.test.ts"
+          ],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-015",
+      "check": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs",
+      "checkSha256": "a5cde07b8dd47f30f036c3eebfb2dd87ac842018e1ac19a2fced0f1a1a91fd41",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs",
+          "workspace": "frontend",
+          "filters": [
+            "scripts/desktop/package-local.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-016",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "checkSha256": "fdccab6487421752d7d147543ff1ad9fddca4cff9ce8ba5c525440e641283b62",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/prompt/templates/video-decisions.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts",
+            "src/modules/execution/video-render/template.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-017",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/script-runner.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/app/api/chat/route.test.ts",
+      "checkSha256": "ec25d362586db22dda62f57dcdf06031bee9f6e2285bbaa4689ae31ad6686af2",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/script-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/chat-tools.test.ts",
+            "src/modules/ai-runtime/chat-runner.test.ts",
+            "src/modules/ai-runtime/script-runner.test.ts"
+          ],
+          "missingFilters": [
+            "src/modules/ai-runtime/chat-runner.test.ts"
+          ],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/app/api/chat/route.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/copilot/chat-script-draft-card.test.tsx",
+            "src/app/api/chat/route.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-018",
+      "check": "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_",
+      "checkSha256": "ecc9826a6d3fa9921418d91a6ad87edaab6044094f494614fd53e4ef2ebf60f6",
+      "timeoutMs": 8100000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/ingestion/douyin-cdp.test.ts",
+            "scripts/desktop/startup-safety-contract.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 7200000,
+          "basis": "原生构建与lib测试；有限执行策略，不是实测上界"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-020",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts",
+      "checkSha256": "ef4405e4365fc0f06c3faa9d3629b3cc5ae35be80b0d3b6cdc98da801fa08a78",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/chat-runner.test.ts",
+            "src/modules/ai-runtime/chat-tools.test.ts",
+            "src/modules/ai-runtime/cover-runner.test.ts",
+            "src/modules/ai-runtime/multimodal/resolve.test.ts"
+          ],
+          "missingFilters": [
+            "src/modules/ai-runtime/chat-runner.test.ts"
+          ],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/copilot/ai-copilot-content.test.tsx",
+            "src/features/copilot/chat-generate-card.test.tsx",
+            "src/app/api/chat/route.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-022",
+      "check": "pnpm --dir frontend exec vitest run src/app/api/v1/local/reveal/plan.test.ts src/app/api/v1/local/reveal/route.contract.test.ts src/app/api/v1/local/reveal-logs/launcher.test.ts src/features/assets/assets-interactions.test.tsx",
+      "checkSha256": "814843f39f6380a3ace05b1c40cfe7274bb5df9f0bfd7250ae79cc7d1325030a",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/app/api/v1/local/reveal/plan.test.ts src/app/api/v1/local/reveal/route.contract.test.ts src/app/api/v1/local/reveal-logs/launcher.test.ts src/features/assets/assets-interactions.test.tsx",
+          "workspace": "frontend",
+          "filters": [
+            "src/app/api/v1/local/reveal/plan.test.ts",
+            "src/app/api/v1/local/reveal/route.contract.test.ts",
+            "src/app/api/v1/local/reveal-logs/launcher.test.ts",
+            "src/features/assets/assets-interactions.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-023",
+      "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/runtime/agent-runtime.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts",
+      "checkSha256": "229cedbabc8d08df483bbc0a4fcac069abc4e70463b7e78311722644040a47cf",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/runtime/agent-runtime.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/nodes/structured-node.test.ts",
+            "src/runtime/agent-runtime.test.ts"
+          ],
+          "missingFilters": [
+            "src/runtime/agent-runtime.test.ts"
+          ],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/ai/search/search-browser.test.ts",
+            "src/server/ai/search/browser-search-fallback.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-024",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && node orchestrator/process/verify-t794-motion-card-preview.mjs",
+      "checkSha256": "df21e8033d5fc8a637e32ae7df5c6b145c3057dd1a6db9011c06d8fd9b68a237",
+      "timeoutMs": 3600000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/prompt/templates/video-decisions.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts",
+            "src/modules/execution/video-render/template.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/assemble-video-render-props.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "node orchestrator/process/verify-t794-motion-card-preview.mjs",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "原双窗本地HTML浏览器与生成子进程"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-025",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "checkSha256": "e4ff05b506ee983700fa5461f7c8003526b3f51c444d0790a0b6f248b0eedbe7",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts src/prompt/templates/video-decisions.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/prompt/templates/material-match.test.ts",
+            "src/prompt/templates/video-decisions.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts",
+            "src/modules/execution/video-render/template.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-027",
+      "check": "pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.repository.integration.test.ts src/modules/artifacts/artifacts.service.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-patch-card.test.tsx",
+      "checkSha256": "19e0e2696e4b528838e3202ab6f513375335568153e8b4e5c11c46d31a8978c3",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.repository.integration.test.ts src/modules/artifacts/artifacts.service.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/artifacts/artifacts.repository.integration.test.ts",
+            "src/modules/artifacts/artifacts.service.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-patch-card.test.tsx",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/copilot/chat-script-patch-card.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-028",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-minimax.test.ts && pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
+      "checkSha256": "4c5258cd83d2ce30167acac2a4acf5b66b16da0ce455171f51fe20118fe95a9e",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-minimax.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/runtime/multimodal-minimax.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/settings-model-test-wrap.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-029",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "checkSha256": "0d027740a908c44fbbadf3d6e9577fa8966e31995e0a52d6a967408ff5965ede",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts",
+            "src/modules/execution/video-render/template.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-031",
+      "check": "pnpm --dir backend exec vitest run src/modules/execution/video-render/executor.test.ts src/modules/execution/child-env.test.ts && node --test tools/windows-closure-rat/*.test.mjs",
+      "checkSha256": "404a366e5147ef27b74fc6529bf0ec07ade838cf339d56e3ba09b8dc3237dc66",
+      "timeoutMs": 4500000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/video-render/executor.test.ts src/modules/execution/child-env.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/video-render/executor.test.ts",
+            "src/modules/execution/child-env.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "node --test tools/windows-closure-rat/*.test.mjs",
+          "workspace": null,
+          "filters": [
+            "tools/windows-closure-rat/*.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 3600000,
+          "basis": "Node合成测试及子进程；glob保留60分钟，否则15分钟"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-032",
+      "check": "pnpm --dir contract exec vitest run tests/video-render.test.ts && pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/production-workbench.test.tsx",
+      "checkSha256": "ec886f83233f99b82144c0929fc46ce2e08b4d87845d2bc34a95c30621532397",
+      "timeoutMs": 3600000,
+      "stages": [
+        {
+          "command": "pnpm --dir contract exec vitest run tests/video-render.test.ts",
+          "workspace": "contract",
+          "filters": [
+            "tests/video-render.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "contract测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/prompt/templates/video-decisions.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts",
+            "src/modules/execution/video-render/template.test.ts",
+            "src/modules/execution/video-render/executor.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/production-workbench.test.tsx",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/assemble-video-render-props.test.ts",
+            "src/features/production/production-workbench.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-034",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-openai-images.test.ts",
+      "checkSha256": "874fa2ed2128b4bf71385673d3cf0a9acaa389780cd75e3e52f9a09cdfd08b3d",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-openai-images.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/runtime/multimodal-openai-images.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-035",
+      "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/prompt/creative-output-recovery.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "checkSha256": "31cd5095b504116f4f4697559b8fc6283386fd4afd375e24c91285c739c18d52",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/prompt/creative-output-recovery.test.ts src/prompt/templates/video-decisions.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/nodes/structured-node.test.ts",
+            "src/prompt/creative-output-recovery.test.ts",
+            "src/prompt/templates/video-decisions.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-036",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx",
+      "checkSha256": "f2b7e1f4b67e62c73afa4c633b501d74fee920596983d4e62315363581ddb70b",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/prompt/templates/material-match.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts",
+            "src/modules/ai-runtime/asset-generate-runner.test.ts"
+          ],
+          "missingFilters": [
+            "src/modules/ai-runtime/asset-generate-runner.test.ts"
+          ],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/video-decision-preview.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-038",
+      "check": "pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts src/modules/intelligence/topic-preview-runner.test.ts",
+      "checkSha256": "009ec8277255505e40f3b42d9b94fdc5db4c1fe990e2d2884682af71f06f8332",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts src/modules/intelligence/topic-preview-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/intelligence/transcript-runner.test.ts",
+            "src/modules/intelligence/topic-preview-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-039",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "checkSha256": "22b2b4a8b37582c2ef8a98a48cb6e9c4351a197065467cecac52bab7a33333c2",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-040",
+      "check": "pnpm --dir contract exec vitest run tests/modules/production.test.ts && pnpm --dir backend exec vitest run src/modules/production/production.service.test.ts src/modules/production/production.contract.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/production-workbench.test.tsx src/server/__module_integration__/production.persistence-client.test.ts",
+      "checkSha256": "d0cda79d2e64471803c8d1de75cc3f0e3d1654be291672390aba89c02f93f817",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir contract exec vitest run tests/modules/production.test.ts",
+          "workspace": "contract",
+          "filters": [
+            "tests/modules/production.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "contract测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/production/production.service.test.ts src/modules/production/production.contract.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/production/production.service.test.ts",
+            "src/modules/production/production.contract.test.ts",
+            "src/modules/ai-runtime/video-decisions-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/production/production-workbench.test.tsx src/server/__module_integration__/production.persistence-client.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/production/production-workbench.test.tsx",
+            "src/server/__module_integration__/production.persistence-client.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-041",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts && pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts && node --test tools/windows-closure-rat/build-production-closure.test.mjs",
+      "checkSha256": "1b8c8d71146b3234f7795719a9cec82079b24febeba5710491e644cb2351f632",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/runtime/multimodal-whisper-local.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/activation/managed-asr.server.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "node --test tools/windows-closure-rat/build-production-closure.test.mjs",
+          "workspace": null,
+          "filters": [
+            "tools/windows-closure-rat/build-production-closure.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "Node合成测试及子进程；glob保留60分钟，否则15分钟"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-042",
+      "check": "pnpm --dir contract exec vitest run tests/client.test.ts && pnpm --dir backend exec vitest run src/modules/intelligence/intelligence.contract.test.ts && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx",
+      "checkSha256": "965a8350bb02e2ac4fe42572bcf3e2431b3067fb86c9e61d979d97f67a75960d",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir contract exec vitest run tests/client.test.ts",
+          "workspace": "contract",
+          "filters": [
+            "tests/client.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "contract测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/intelligence/intelligence.contract.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/intelligence/intelligence.contract.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/intelligence/intelligence-workbench.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-046",
+      "check": "node --test tools/windows-closure-rat/*.test.mjs && pnpm --dir ai-worker exec vitest run src/runtime/agentic/pi-packaged-runtime.test.ts && pnpm --dir frontend exec vitest run scripts/desktop/execution-worker-runtime.test.mjs",
+      "checkSha256": "26d8cbf584dd8a2c15db75c7d9293b529d0e3e051179cabdadf974f14c1b2051",
+      "timeoutMs": 5400000,
+      "stages": [
+        {
+          "command": "node --test tools/windows-closure-rat/*.test.mjs",
+          "workspace": null,
+          "filters": [
+            "tools/windows-closure-rat/*.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 3600000,
+          "basis": "Node合成测试及子进程；glob保留60分钟，否则15分钟"
+        },
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/runtime/agentic/pi-packaged-runtime.test.ts",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/runtime/agentic/pi-packaged-runtime.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run scripts/desktop/execution-worker-runtime.test.mjs",
+          "workspace": "frontend",
+          "filters": [
+            "scripts/desktop/execution-worker-runtime.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-047",
+      "check": "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0",
+      "checkSha256": "01811b3509bfa4dde0cf66ce57076c09af8bd1353449288ff0be0fb280a67785",
+      "timeoutMs": 1560000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/copilot/ai-copilot-interactions.test.tsx",
+            "src/features/knowledge/knowledge-dump-zone.test.tsx",
+            "src/features/topics/topics-interactions.test.tsx",
+            "src/components/overlays/overlay-routing.test.tsx",
+            "src/lib/copilot-navigation.test.ts",
+            "src/features/copilot/chat-tool-trace.test.tsx",
+            "src/features/automations/run-controls.test.tsx",
+            "src/features/automations/cadence.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 1560000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-048",
+      "check": "pnpm --dir backend exec vitest run src/application/scheduling/automation.test.ts src/application/scheduling/traffic-wake.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts src/modules/ai-runtime/scheduled-flywheel-execution.service.test.ts src/application/collection/cover-file-repair.test.ts src/application/collection/self-backfill.test.ts src/modules/execution/host-browser-profile-lifecycle.test.ts src/modules/execution/host-browser-process-recovery.test.ts src/application/scheduling/controls.test.ts src/modules/ai-runtime/scheduled-run-now.test.ts src/modules/ai-runtime/collection-stagger.test.ts src/modules/scheduling/stagger-collection-migration.test.ts src/modules/analytics/traffic-queue.integration.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000 --retry=0",
+      "checkSha256": "5a914787e030556d448df62def2550730c2bb649226c63f468a681a372bc0e7d",
+      "timeoutMs": 2820000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/application/scheduling/automation.test.ts src/application/scheduling/traffic-wake.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts src/modules/ai-runtime/scheduled-flywheel-execution.service.test.ts src/application/collection/cover-file-repair.test.ts src/application/collection/self-backfill.test.ts src/modules/execution/host-browser-profile-lifecycle.test.ts src/modules/execution/host-browser-process-recovery.test.ts src/application/scheduling/controls.test.ts src/modules/ai-runtime/scheduled-run-now.test.ts src/modules/ai-runtime/collection-stagger.test.ts src/modules/scheduling/stagger-collection-migration.test.ts src/modules/analytics/traffic-queue.integration.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000 --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/application/scheduling/automation.test.ts",
+            "src/application/scheduling/traffic-wake.test.ts",
+            "src/modules/ai-runtime/scheduled-collection-scheduler.test.ts",
+            "src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts",
+            "src/modules/ai-runtime/scheduled-flywheel-binding.test.ts",
+            "src/modules/ai-runtime/scheduled-flywheel-execution.service.test.ts",
+            "src/application/collection/cover-file-repair.test.ts",
+            "src/application/collection/self-backfill.test.ts",
+            "src/modules/execution/host-browser-profile-lifecycle.test.ts",
+            "src/modules/execution/host-browser-process-recovery.test.ts",
+            "src/application/scheduling/controls.test.ts",
+            "src/modules/ai-runtime/scheduled-run-now.test.ts",
+            "src/modules/ai-runtime/collection-stagger.test.ts",
+            "src/modules/scheduling/stagger-collection-migration.test.ts",
+            "src/modules/analytics/traffic-queue.integration.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 2820000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-049",
+      "check": "pnpm --dir frontend exec vitest run src/lib/page-read-cache.test.ts src/server/publishing-schedule-projection.test.ts src/features/automations/automations-page.test.tsx src/features/automations/run-controls.test.tsx src/features/publishing-center/publishing-center-page.test.tsx src/features/assets/assets-data.test.ts src/components/shell/shell.test.tsx --retry=0 && pnpm --dir backend exec vitest run src/modules/analytics/analytics.repository.integration.test.ts src/modules/scheduling/scheduling.repository.integration.test.ts src/modules/material-links/material-links.service.test.ts --maxWorkers=1 --retry=0",
+      "checkSha256": "4d5c2e544cf2b99d26f4f121284cb60fbfa2364055f021ca9f8e97197fdcb28d",
+      "timeoutMs": 2280000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/lib/page-read-cache.test.ts src/server/publishing-schedule-projection.test.ts src/features/automations/automations-page.test.tsx src/features/automations/run-controls.test.tsx src/features/publishing-center/publishing-center-page.test.tsx src/features/assets/assets-data.test.ts src/components/shell/shell.test.tsx --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/lib/page-read-cache.test.ts",
+            "src/server/publishing-schedule-projection.test.ts",
+            "src/features/automations/automations-page.test.tsx",
+            "src/features/automations/run-controls.test.tsx",
+            "src/features/publishing-center/publishing-center-page.test.tsx",
+            "src/features/assets/assets-data.test.ts",
+            "src/components/shell/shell.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 1380000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/analytics/analytics.repository.integration.test.ts src/modules/scheduling/scheduling.repository.integration.test.ts src/modules/material-links/material-links.service.test.ts --maxWorkers=1 --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/analytics/analytics.repository.integration.test.ts",
+            "src/modules/scheduling/scheduling.repository.integration.test.ts",
+            "src/modules/material-links/material-links.service.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-050",
+      "check": "pnpm --dir frontend exec vitest run src/components/shell/use-primary-navigation.test.tsx src/server/dashboard-query-projection.test.ts --retry=0 && pnpm --dir backend exec vitest run src/application/queries/dashboard-read-performance.test.ts src/modules/publishing/publishing.service.test.ts --maxWorkers=1 --retry=0",
+      "checkSha256": "e5e1bad03c265eacc48ba1b6c953ffece1dbd8ab557d8fb05518ea396a06da0b",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/components/shell/use-primary-navigation.test.tsx src/server/dashboard-query-projection.test.ts --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/components/shell/use-primary-navigation.test.tsx",
+            "src/server/dashboard-query-projection.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/application/queries/dashboard-read-performance.test.ts src/modules/publishing/publishing.service.test.ts --maxWorkers=1 --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/application/queries/dashboard-read-performance.test.ts",
+            "src/modules/publishing/publishing.service.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-051",
+      "check": "node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs",
+      "checkSha256": "e2cd3066f4e270a9605fa315113637f8797731e58c098b3618e7ec07fe483af1",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs",
+          "workspace": null,
+          "filters": [
+            "tools/windows-closure-rat/build-memory.test.mjs",
+            "tools/windows-closure-rat/build-production-closure.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "Node合成测试及子进程；glob保留60分钟，否则15分钟"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-056",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-builtin-manifest.test.ts src/server/prepare-chat-reply.test.ts src/server/workbench-artifact-register.integration.test.ts --retry=0",
+      "checkSha256": "60f1137decc91fdbb71e499b7206075ac29f59351adea82f93e0c0889d49ead6",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/workbench-builtin-manifest.test.ts src/server/prepare-chat-reply.test.ts src/server/workbench-artifact-register.integration.test.ts --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/workbench-builtin-manifest.test.ts",
+            "src/server/prepare-chat-reply.test.ts",
+            "src/server/workbench-artifact-register.integration.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-055",
+      "check": "pnpm --dir backend exec vitest run src/modules/execution/workbench-plan-history.test.ts src/modules/execution/chat-model-retry-anchor.test.ts src/modules/execution/chat-model-pause-recovery.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/execution/durable-stream-model.test.ts src/execution/worker-runtime.test.ts src/execution/chat-plan-history-replay.test.ts --retry=0",
+      "checkSha256": "e38adc85bbcd89dc0eff011ce5feaf440712b1185293e9819e250d7776b7401f",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/workbench-plan-history.test.ts src/modules/execution/chat-model-retry-anchor.test.ts src/modules/execution/chat-model-pause-recovery.test.ts --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/workbench-plan-history.test.ts",
+            "src/modules/execution/chat-model-retry-anchor.test.ts",
+            "src/modules/execution/chat-model-pause-recovery.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/execution/durable-stream-model.test.ts src/execution/worker-runtime.test.ts src/execution/chat-plan-history-replay.test.ts --retry=0",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/execution/durable-stream-model.test.ts",
+            "src/execution/worker-runtime.test.ts",
+            "src/execution/chat-plan-history-replay.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-054",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
+      "checkSha256": "84a551041e91b03d2443200d2c09ad0ead236f5abbe717adba15a1204f9ebbe8",
+      "timeoutMs": 2700000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/workbench-native-client.test.ts",
+            "src/server/workbench-browser-host.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/runtime/chat/chat-pi-loop.protocol.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/execution-worker-outcome.service.test.ts",
+            "src/modules/execution/persistent-task.service.test.ts",
+            "src/modules/execution/workbench-artifact-lineage.service.test.ts",
+            "src/integration/chat-worker-entry.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-059",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tool-parameters.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/features/copilot/chat-task-control.test.ts src/features/copilot/ai-copilot-interactions.test.tsx --retry=0",
+      "checkSha256": "5644c4362b046451fd75832f86ea17de1664b96b7b412b8ca202f98dde8e4690",
+      "timeoutMs": 1800000,
+      "stages": [
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tool-parameters.test.ts --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/chat-tool-parameters.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/features/copilot/chat-task-control.test.ts src/features/copilot/ai-copilot-interactions.test.tsx --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/prepare-chat-reply.test.ts",
+            "src/features/copilot/chat-task-control.test.ts",
+            "src/features/copilot/ai-copilot-interactions.test.tsx"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-058",
+      "check": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
+      "checkSha256": "e1a233d373dc79eabb84c4700ff2db5e6ea96619b7c20b6760b7cf1a07d0fbbb",
+      "timeoutMs": 3120000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/execution/durable-generation-model.test.ts",
+            "src/execution/durable-stream-model.test.ts",
+            "src/execution/durable-pi-stream.test.ts",
+            "src/execution/chat-tool-input-liveness.test.ts",
+            "src/runtime/pi-provider-http.test.ts",
+            "src/execution/intelligence-generation-worker.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 1200000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/execution-call-ledger.service.test.ts",
+            "src/modules/execution/execution-worker-outcome.service.test.ts",
+            "src/modules/execution/execution-chat-generation.service.test.ts",
+            "src/modules/ai/chat-turn-completion.service.test.ts",
+            "src/modules/intelligence/topic-preview-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 1020000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/features/intelligence/intelligence-workbench.test.tsx",
+            "src/features/copilot/ai-copilot-interactions.test.tsx",
+            "src/server/chat-execution-stream.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-009",
+      "check": "node --test orchestrator/process/semantic-boundary-scan.test.mjs && node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "checkSha256": "5095d47d111e40cc04b84bfecfab315a593eead6bc80e8b28ab59f3f519240ab",
+      "timeoutMs": 1920000,
+      "stages": [
+        {
+          "command": "node --test orchestrator/process/semantic-boundary-scan.test.mjs",
+          "workspace": null,
+          "filters": [
+            "orchestrator/process/semantic-boundary-scan.test.mjs"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "Node合成测试及子进程；glob保留60分钟，否则15分钟"
+        },
+        {
+          "command": "node orchestrator/process/semantic-boundary-scan.mjs",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 120000,
+          "basis": "静态检查"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/ai-runtime/video-decisions-runner.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-057",
+      "check": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features",
+      "checkSha256": "7d629b5804fb1b0dc958cfb809405310072713cad61f9c43e0edb9ebca1482fb",
+      "timeoutMs": 7200000,
+      "stages": [
+        {
+          "command": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 7200000,
+          "basis": "原生构建与lib测试；有限执行策略，不是实测上界"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-061",
+      "check": "node docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "checkSha256": "a005635e4a54e0a6c6b68d78d820a86b93a1b373749395d5ccabb06c544331a5",
+      "timeoutMs": 5400000,
+      "stages": [
+        {
+          "command": "node docs/verification/t1073/verify-resource-lifecycle.mjs",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 120000,
+          "basis": "静态检查"
+        }
+      ],
+      "wrapperBasis": "原5个串行组每组至少15分钟，另15分钟供bundle/内存探针及清理"
+    },
+    {
+      "led": "LED-053",
+      "check": "node tools/timeout-policy/verify.mjs",
+      "checkSha256": "753546cc37b53aa74b48c899e81eb2f727ec6a217834aefc5e0ec7ba12b7f2a3",
+      "timeoutMs": 7200000,
+      "stages": [
+        {
+          "command": "node tools/timeout-policy/verify.mjs",
+          "workspace": null,
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 120000,
+          "basis": "静态检查"
+        }
+      ],
+      "wrapperBasis": "原8串行组；5个Vitest组各15分钟、两组Node各15分钟、静态2分钟，120分钟保留13分钟启动余量"
+    },
+    {
+      "led": "LED-060",
+      "check": "pnpm --dir ai-worker run build && pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0",
+      "checkSha256": "4a422f95d824ff39cb919e135c39093ba120230f65c9ed118eee561bfdbcd8a2",
+      "timeoutMs": 4500000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker run build",
+          "workspace": "ai-worker",
+          "filters": [],
+          "missingFilters": [],
+          "allowanceMs": 1800000,
+          "basis": "原worker构建；沿已有30分钟构建准入"
+        },
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/runtime/pi-provider-json-compat.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        },
+        {
+          "command": "pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0",
+          "workspace": "backend",
+          "filters": [
+            "src/modules/execution/radar-model-result-unknown.repro.test.ts",
+            "src/modules/execution/transcribe-postprocess.integration.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "backend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": "原30分钟worker构建、两个原测试组，75分钟覆盖串行及启动余量"
+    },
+    {
+      "led": "LED-062",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/browser/chromium-guard-close-order.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+      "checkSha256": "fbeeb710ae059c2d31fc81cfcfe51c95cf60ea16733651332be8310f704454a6",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir ai-worker exec vitest run src/runtime/browser/chromium-guard-close-order.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "workspace": "ai-worker",
+          "filters": [
+            "src/runtime/browser/chromium-guard-close-order.test.ts",
+            "src/runtime/browser/chromium-guard-lifecycle.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "ai-worker测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    },
+    {
+      "led": "LED-063",
+      "check": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+      "checkSha256": "5bfe792b5a33342e7dbd44bbf5d06e6ced2a67bd2098e9621b212f6b6498137b",
+      "timeoutMs": 900000,
+      "stages": [
+        {
+          "command": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "workspace": "frontend",
+          "filters": [
+            "src/server/activation/client-config.server.test.ts",
+            "src/app/api/v1/local/client-config/route.test.ts"
+          ],
+          "missingFilters": [],
+          "allowanceMs": 900000,
+          "basis": "frontend测试组：至少15分钟并按filter数保留每文件3分钟及2分钟启动；原case/hook/retry完全保留"
+        }
+      ],
+      "wrapperBasis": null
+    }
+  ],
+  "limits": [
+    "6处失效filter不修改、不声称已覆盖",
+    "执行策略不能取代完整full收据，本轮不运行full",
+    "新发现合法执行超过策略或其它错误必须保留并据因果修订，不能改断言洗绿"
+  ]
+}

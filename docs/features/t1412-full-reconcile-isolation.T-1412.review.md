@@ -2,9 +2,9 @@
 
 - Task: T-1412
 - Verdict: PASS
-- Round: 1/3 (initial)
-- Spec receipt: fb70108d4729
-- Review receipt: 6b55ef00bbcd
+- Round: 2/3 (recheck)
+- Spec receipt: c7640f725a1d
+- Review receipt: 61ef55ddadbf
 
 ## 当前有效问题
 
@@ -17,13 +17,13 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1412",
   "cycle": 1,
-  "round": 1,
+  "round": 2,
   "max_rounds": 3,
-  "review_kind": "initial",
+  "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "独立正式初审 T-1412；审核者 /root/t1408_contract_review 未参与本 SPEC 编写。绑定 docs/features/t1412-full-reconcile-isolation.md，SHA-256 fb70108d47293cd2d3af94b29356fd20c90aa12bf6033c27f0c98644520f1f09；产品宪法 docs/产品定位.md，SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；已读任务包 §1–5、§7–9，写本证据前核对 §6。当前精确模型 ID 未核实，不作异构模型声明。已实读安全报告、55 项现有 lesson 命令、lesson-runner/timeout-budget/reconcile 执行分支、旧归档 wrapper、owned-postgres 守卫与回归、现有 T1246 owned-pg-runtime 启停机制、HyperFrames 测试/八组 verify、T1368 原生隔离驱动，以及实际安装 CLI 的 update/skills/telemetry/auto-install 相关源码。\n\n未发现需要修改规格的实质缺口。FR-141201 仅补现有 runner 支持的预算配置，冻结原 55 项 ID/顺序/check/onFail/数量及验收阈值；要求逐项预算依据先记录再落配置，计入初始化、内部等待、串行重型命令及清理，不统一强塞最低两分钟、不缩短内部预算或新增重试。现 runner 对每项及总体均要求有限安全整数，外层严格大于全部串行执行加 cleanup/settlement。评审者仅调用真实 planLessonExecution 进行纯读取，得到 lessons=55、ok=false、errors=56、首错误为缺 minimum_timeout_ms；没有调用任何 lesson。该观察只是确认当前缺陷，不冒充新增 TDD 红测或 full 运行。当前配置 SHA 00f439feb731856257da65f0ee25d4929f58e59ddeef8aa8e3ef2fdb619a8a76，与安全报告一致。\n\nFR-141202 的矛盾真实存在：旧 wrapper 强制 55422，而现 owned PG 明确拒绝 5432/55422。现有公共夹具验证 marker/nonce、0700 临时根、路径真实归属、uid、postmaster.pid、PID 出生时间、真实二进制、dataDir、随机端口和管理角色；OwnedPostgresPool 与已有启动机制另核实际服务器身份并管理随机 CREATE/DROP 登记。合同要求两 URL 同一本轮实例、先身份验证再启动原三个 vitest 目标，负例在 vitest 前拒绝；没有允许用单独 URL/端口或伪 marker 代签。现 T1246 启动器为导入不启动、真实 start/stop 有归属校验和回执，具备可复用路径；Node 加载或现机制不足时明确阻断并补审，不能绕过守卫。原测试目标、参数和数据库登记/清理均保留。\n\nFR-141203 保留实际安装 HyperFrames 0.7.54，CLI SHA 1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b、patch SHA 15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0 与原测试一致。原真实 argv 为 node、绝对 cli.js、render、本轮 HTML fixture 目录、--browser-timeout、1；原非零退出/包含120/无ENOENT或缺模块断言没有被删改。已安装源码证实 NO_TELEMETRY/NO_AUTO_INSTALL 有效，而 NO_UPDATE_CHECK 不阻止顶层 update/skills 的 fetch。规格因此要求该单一 CLI 子进程及后代 OS 断网、私有 HOME/cwd/缓存、必要环境白名单、必要 Node/依赖只读、仅本轮根可写，且不把 allow-default 或单目录 deny 当全用户目录保护。真实 CLI 必须在同一有效边界的合成读写/loopback/后代探针先证明后运行；能力缺失、权限不明、超时/信号、残留或清理不明均失败关闭。负向探针仅用本轮合成文件/自有 listener，红测不得裸跑风险 CLI，符合产品宪法真实证据、本地隐私和测试不触碰用户持久层要求。\n\nAC 将纯计划、真实 owned PG、实际 OS 能力、原 CLI 参数拒绝、两单门与最后 full 分开记录。没有用局部门通过代签 full，也没有扩大网络沙箱去误杀 LED060 自有 HTTP 或放开全部 localhost；其它 full 命令仍须在执行前核清输入/副作用，未知保留 blocked/unknown。精确候选写集足以容纳预算、wrapper、测试专用隔离和证据；runner/owned 守卫/依赖补丁/产品只读，若不足先补审而不临时扩写。既有 T1368/T1373 与旧 full/childUNKNOWN 保真，安装/发布/官方402仍在原任务单独验收。本轮只确认合同充分，不确认新沙箱已可用或实现已通过；未启动 PG、HyperFrames、full、浏览器或网络，未读取用户凭据/数据库，未改 SPEC、产品或控制面。仅写本 review evidence，完成后停止主树写入，实际实施等待主线程冻结结束通知。",
+  "summary": "T-1412 正常增量独立复审。承接 reviewctl context 的 previous_round=1、previous_verdict=PASS，previous_packet 与归档 initial 完全一致且原 findings 为空；本轮不改历史结论或补造 finding。绑定当前 docs/features/t1412-full-reconcile-isolation.md SHA-256 c7640f725a1d9db2780bb3cae662e2a91d9dc3cae207dca307f30ff7406bd1bf，上一轮 SHA-256 fb70108d47293cd2d3af94b29356fd20c90aa12bf6033c27f0c98644520f1f09。宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800 未变化。已读当前任务包 §1–5、§7–9，写证据前核 §6，并核 T-1413 module 的依赖与 scope_note。当前精确模型 ID 未核实，不作异构模型声明。\n\n本次仅评审末尾新增交接/full 段。四个 changed_line_refs 为 SPEC-LINE:57:1a381622142da995、SPEC-LINE:59:26c237a30b2155b6、SPEC-LINE:61:75995a09e3f13121、SPEC-LINE:63:c162a9a49ef95290；程序化确认新增段之前的原正文归一末尾换行后仍与上一轮 SPEC SHA 完全相同。未发现本次增量的实质缺口。\n\n新增段准确区分两个候选：T-1412 冻结时仍逐项证明只增加预算，原 55 项 ID/顺序/check/what/onFail 与其它原配置守恒；T-1413 仅按其独立已审规格迁移六项 check，不能倒称 T-1412 原命令未变。T-1412 实现、聚焦回归和独审冻结之后才允许 root 串行交接，T-1412 不为解除队列提前完成，配置/产品写入不并行。当前模块清空 depends_on 并保留显式交接约束，纠正的是此前把实现交接误绑定为整任务完成的顺序；未移除真实业务前置条件。\n\n最终 full 明确覆盖两者合并且独审后的配置 SHA，入口仍为 node orchestrator/process/reconcile.mjs --profile full；保 55 项 ID/顺序/what/onFail、无关 check token、真实结果计数与引擎。追加目标必须重核预算适用性，预算需要增量时先独评，不缩减原内部等待/重试。原两个单门、合成隔离证明、owned PG 归属/清理、独立代码审核和其它 full 命令安全输入/副作用核实均保留。允许同一份真实 full 收据按范围引用，避免重复执行，但未执行、失败或缺失覆盖仍如实记录，不能以共享收据代签任一未完成验收。这消除了原 AC4 的命令不变表述与 T-1413 授权迁移之间的歧义，没有降低门槛或扩大产品范围。\n\n本复审仅确认执行顺序和证据绑定合同充分；不确认 T-1412 实现已通过、隔离能力已证明或 full 已可安全执行，不启用 T-1413 官方图片重提、不代签官方402恢复。未运行测试、模型、网络、PG、CLI 或 full；未改 SPEC、产品、控制面、状态或旧证据，仅写本 review evidence。",
   "spec_path": "docs/features/t1412-full-reconcile-isolation.md",
-  "spec_sha256": "fb70108d47293cd2d3af94b29356fd20c90aa12bf6033c27f0c98644520f1f09",
+  "spec_sha256": "c7640f725a1d9db2780bb3cae662e2a91d9dc3cae207dca307f30ff7406bd1bf",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1412-full-reconcile-isolation.T-1412.review.md",
@@ -31,9 +31,9 @@
   "model": "inherited-session-model",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "ebf46b6c2d8e93eddf697c9c95da6826e3c421e1033c61ae753089a60f8633c6",
+  "latest_event_hash": "2b8968af9a8a61db3d59e0d8beca78adce441749e681839028dbba8c1e7b64a4",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "6b55ef00bbcd"
+  "receipt": "61ef55ddadbf"
 }
 ```

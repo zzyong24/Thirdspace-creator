@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 298,
+    "verticals": 299,
     "tasks_done": 89,
-    "tasks_total": 425,
-    "tasks_pending": 336,
+    "tasks_total": 426,
+    "tasks_pending": 337,
     "verticals_complete": 28
   },
   "verticals": [
@@ -21694,6 +21694,72 @@
         "tools/timeout-policy/hyperframes.test.mjs",
         "tools/timeout-policy/hyperframes-cli-isolation.mjs",
         "tools/timeout-policy/hyperframes-cli-isolation.test.mjs"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1413",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1413",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/modules/ai-runtime/chat-cover-task-host.ts",
+        "backend/src/modules/ai-runtime/cover-business-adapter.ts",
+        "backend/src/modules/execution/execution-cover.service.ts",
+        "ai-worker/src/execution/asset-worker-run.ts",
+        "backend/src/modules/ai-runtime/chat-cover-task-host.test.ts",
+        "backend/src/modules/ai-runtime/cover-business-adapter.test.ts",
+        "backend/src/modules/execution/execution-cover-series.test.ts",
+        "ai-worker/src/runtime/chat/chat-pi-loop.protocol.test.ts",
+        "backend/src/modules/execution/execution-asset-result.service.test.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.test.ts",
+        "ai-worker/src/execution/asset-worker-run.test.ts",
+        "backend/src/modules/execution/asset-worker-runtime.integration.test.ts",
+        "ai-worker/src/execution/cover-worker-run.test.ts",
+        "orchestrator/process/reconcile.config.json",
+        "docs/features/t1413-lesson-semantic-coverage.md",
+        "docs/features/t1413-lesson-semantic-coverage.T-1413.review.md",
+        "docs/verification/t1413/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1413.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "backend/src/modules/execution/execution-worker-outcome.service.test.ts"
+      ],
+      "read_set": [
+        "docs/features/t1413-lesson-semantic-coverage.md",
+        "docs/verification/t1412/stale-lesson-coverage-audit.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai-runtime/chat-cover-task-host.ts",
+        "backend/src/modules/ai-runtime/cover-business-adapter.ts",
+        "backend/src/modules/execution/execution-cover.service.ts",
+        "ai-worker/src/execution/asset-worker-run.ts",
+        "backend/src/modules/ai-runtime/chat-cover-task-host.test.ts",
+        "backend/src/modules/ai-runtime/cover-business-adapter.test.ts",
+        "backend/src/modules/execution/execution-cover-series.test.ts",
+        "ai-worker/src/runtime/chat/chat-pi-loop.protocol.test.ts",
+        "backend/src/modules/execution/execution-asset-result.service.test.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.test.ts",
+        "ai-worker/src/execution/asset-worker-run.test.ts",
+        "backend/src/modules/execution/asset-worker-runtime.integration.test.ts",
+        "ai-worker/src/execution/cover-worker-run.test.ts",
+        "backend/src/modules/execution/execution-worker-outcome.service.test.ts"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

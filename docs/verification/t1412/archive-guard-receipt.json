@@ -1,0 +1,40 @@
+{
+  "file": "pnpm",
+  "args": [
+    "-C",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/test-fixtures/owned-postgres.test.ts",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1412/archive-guard.log",
+  "pid": 4606,
+  "identity": {
+    "pid": 4606,
+    "pgid": 4606,
+    "uid": 501,
+    "birth": "Sun Oct 25 15:45:43 2026",
+    "startedAt": 1792914343191
+  },
+  "startedAt": "2026-10-25T07:45:43.191Z",
+  "endedAt": "2026-10-25T07:45:44.345Z",
+  "elapsedMs": 1154,
+  "budgetMs": 1800000,
+  "deadlineAt": "2026-10-25T08:15:43.191Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

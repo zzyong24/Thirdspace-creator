@@ -1,0 +1,18 @@
+{
+  "createdAt": "2026-10-25T07:30:38.707Z",
+  "sourceCommit": "398b63905",
+  "inputs": [
+    {
+      "path": "orchestrator/process/reconcile.config.json",
+      "sha256": "00f439feb731856257da65f0ee25d4929f58e59ddeef8aa8e3ef2fdb619a8a76"
+    },
+    {
+      "path": "docs/verification/t1022/run-archive-guard.mjs",
+      "sha256": "ebd96c358100d3275f32228c9330da5ba0e4fc6e23bc5ef31a5f506dae61aedd"
+    },
+    {
+      "path": "tools/timeout-policy/hyperframes.test.mjs",
+      "sha256": "988e1cdb67cf68a9cc7225c8007e6b2078f1402f7dc632e1fed3de67d383db38"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+[
+  {
+    "name": "review-audit",
+    "argv": [
+      "node",
+      "orchestrator/process/reviewctl.mjs",
+      "audit"
+    ],
+    "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+    "startedAt": "2026-10-25T08:10:28.636609+00:00",
+    "endedAt": "2026-10-25T08:10:31.248563+00:00",
+    "elapsedSeconds": 2.612,
+    "exitCode": 0,
+    "log": "review-audit-final.log"
+  },
+  {
+    "name": "backlog-health",
+    "argv": [
+      "node",
+      "orchestrator/process/backlog-health.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+    "startedAt": "2026-10-25T08:10:31.248679+00:00",
+    "endedAt": "2026-10-25T08:10:31.370256+00:00",
+    "elapsedSeconds": 0.122,
+    "exitCode": 1,
+    "log": "backlog-health-final.log"
+  },
+  {
+    "name": "quick-readonly",
+    "argv": [
+      "node",
+      "orchestrator/process/reconcile.mjs",
+      "--profile",
+      "quick",
+      "--read-only"
+    ],
+    "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+    "startedAt": "2026-10-25T08:10:31.370329+00:00",
+    "endedAt": "2026-10-25T08:10:39.274539+00:00",
+    "elapsedSeconds": 7.904,
+    "exitCode": 0,
+    "log": "quick-readonly-final.log"
+  }
+]

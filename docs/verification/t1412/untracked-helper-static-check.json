@@ -1,0 +1,6 @@
+{
+  "file": "tools/timeout-policy/hyperframes-cli-isolation.mjs",
+  "sha256": "9db2efd423c05b43f690180fbb4ddd46d5f0ce8d063e56f489c5e60dd8bb160a",
+  "findings": [],
+  "trackedRequired": false
+}

@@ -9,7 +9,8 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1412|修复完整对账的执行预算与测试隔离|🔨|PASS[REV:6b55ef00bbcd]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
+|T-1413|恢复重构后六项lesson正式链语义覆盖|📋|PASS[REV:2a5f6be66c40]|—|[SPEC](docs/features/t1413-lesson-semantic-coverage.md)|修复3个已删除测试文件的6处守卫引用；补齐当前链语义与严格封面参考约束，官方图片恢复须先证明幂等资格。|
+|T-1412|修复完整对账的执行预算与测试隔离|🔨|PASS[REV:61ef55ddadbf]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
 |T-1411|修复文本连接测试鉴权丢失与结果说明|✅|PASS[REV:40d357fc2e44]|—|[SPEC](docs/features/t1411-model-probe-auth-parity.md)|[D]|
 |T-1410|修复历史审核证据与看板对账|✅|PASS[REV:568fd798a094]|—|[SPEC](docs/features/t1410-review-evidence-reconciliation.md)|[D]|
 |T-1409|修复官方Pi支付拒绝的安全诊断|✅|PASS[REV:04839f8bcbce]|—|[SPEC](docs/features/t1409-managed-pi-payment-diagnostics.md)|[D]|

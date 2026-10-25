@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-1413 独立正式 EOF 规范化复审，承接 reviewctl context 的 previous_round=2、previous_verdict=PASS；其 previous_packet 与归档 spec-review-recheck.json 完全相同，changed_line_refs=[]。当前 SPEC docs/features/t1413-lesson-semantic-coverage.md SHA-256 fb7fdc227283fea745a099030c175efc29563a89bb81aa92f5053d1077cd6cb7；上轮 SHA-256 69569a4741ae1ab675f0feed8ce6c4646b91395829417cb87b82fee67b7ce302。已程序化核当前字节满足 rstrip()+单个 LF，并确认当前全部字节末尾仅补回一个 LF 即精确得到上轮 SHA，证明差异仅删除 EOF 的一条空行，正文、顺序、要求和验收逐字未变。产品宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800 未变化。\n\n沿用上轮唯一 REV-001 的 resolved 状态及完整原字段，连同 resolution_evidence 均不改写；没有新增 finding、范围或实现结论。FR-141306 未证资格保持 unknown，不启用重提，持续任务/旧兼容与全部验收不变。本轮仅检查 EOF 字节与正式评审上下文，未运行测试、模型、网络或 full，未修改 SPEC、产品、控制面、状态或旧证据。当前精确模型 ID 未核实，不作异构模型声明。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-141304",
+        "quote": "当前单次文本调用触发安全上界并中止 provider，取消及迟到结果安全；持续原任务按 T-1022 恢复。"
+      },
+      "acceptance_anchor": {
+        "id": "红绿、收集与退出证据-5",
+        "quote": "普通文本超时验证 provider 收到 abort，既有 continuous 账本/outcome 测试证明原任务 retry_wait；不向真实账号发请求，不降低生产 timeout。"
+      },
+      "where": "docs/features/t1413-lesson-semantic-coverage.md:40–50、69、79：九个测试写集与 LED-023 守卫依赖的持久 continuous 恢复证据。",
+      "failure_mode": "指定 backend outcome fixture 使用 maxCalls=2、maxTokens=10000、deadlineMs=300000，enqueue 未冻结 continuous；首次 reserve 会采用该有限预算并持久化 deadline。现有原任务 retry_wait 断言因此只覆盖有限预算任务。worker-runtime 用有限 deadlineAt，durable-generation-model 只用内存端口分类；新增 intelligence-generation-worker 的 null deadline 输入本身也不证明 backend 持久账本保留 continuous。现有清单可能全绿，但持续任务在单次文本超时后被错误加上总截止/终结的回归仍不能由所指证据发现，且实现者无权修改最直接的 backend outcome 测试来补足此已要求验收。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "SPEC SHA-256 0fbc06c4766ddb7c83c4ceb510b40306a29e7a461fd5b0a4ffed05dd8cad6566。backend/src/modules/execution/execution-worker-outcome.service.test.ts:12–19 的 fixture 与 :80–84 原任务 retry_wait 用例，文件 SHA-256 b5ae75bb7da4555783fa800228b6c0e33fbee23ebf3f7e237556002102a58496；:126–137 另显式验证有限 deadline 的终结。backend/src/modules/execution/execution-call-ledger.service.ts:81–104 证明 task.executionBudget=null 会取 configuredBudget 并持久化 deadline；contract/src/internal/execution-worker.ts:84–105 区分有限预算与显式 continuous/null deadline。ai-worker/src/execution/worker-runtime.test.ts 所有 run deadlineAt 均为有限时间（SHA-256 153084fa67449bf81708cd5473ac0417708638f308ad24c994dc0c111933d941）；ai-worker/src/execution/durable-generation-model.test.ts:7–25 使用内存端口（SHA-256 b4a30eb8cc006472a1811ac7def385ad51f8988917aea703c3c6d2be6d0ef63f）。本结论来自只读源码核查，未运行用例。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "docs/features/t1413-lesson-semantic-coverage.md：FR-141304、精确候选写集、LED-023、红绿/收集与退出证据第 5 条。",
+      "suggestion": "将现已列入 LED-023 的 backend/src/modules/execution/execution-worker-outcome.service.test.ts 纳入精确测试写集，要求补真实持久 continuous 个案：显式 continuous 预算、单次模型超时后的 superseded/retry_wait、同一 execution task、deadlineAt 保持 null，并保持原有限预算兼容测试；与 worker 入口 provider abort/父取消/迟到正文断言共同构成 FR-141304 证据。也可明确引用并纳入守卫一个现有等价真实测试的准确路径与断言，而不是继续声称当前 outcome fixture 已覆盖 continuous。若新增测试证实生产缺陷，再按既有规则独评生产写集增量；本 finding 不授权扩大产品范围。",
+      "resolution_evidence": "已独立核对当前 SPEC SHA-256 69569a4741ae1ab675f0feed8ce6c4646b91395829417cb87b82fee67b7ce302。SPEC-LINE:40:f7434eb791cdf288 将测试写集由九项改为十项；SPEC-LINE:51:b2d83000b0618bad 新增 backend/src/modules/execution/execution-worker-outcome.service.test.ts，明确真实持久 continuous fixture、显式冻结预算、单次模型超时后的 superseded/retry_wait、同一 executionTaskId 与 deadlineAt=null，并保留原有限预算/截止兼容用例，不再将原 fixture 计为 continuous；SPEC-LINE:80:d8c1a85acce88af1 将第 5 条错误的既有覆盖声明替换为必须新增的持久个案，与 provider abort 的真实生成入口断言共同验收，明确内存端口和有限预算不能代签。既有 LED-023 仍引用该实际测试文件，modules.config.json 的 T-1413 write_set 与任务包 §6 已包含同一路径。因此首轮的规格可证明性与准确写集缺口已解决。本状态仅指合同修订解决，并不声称新用例已编写/执行或生产行为已通过；如红测发现生产缺陷仍须独评准确写集增量。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

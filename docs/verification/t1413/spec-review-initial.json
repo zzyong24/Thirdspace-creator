@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-1413 独立正式初审。审核者 /root/t1408_contract_review 未编写本 SPEC，已读任务包 §1–5、§7–9，写证据前核对 §6；当前无 v2 review history，使用 initial，不伪造 recheck lineage。绑定 docs/features/t1413-lesson-semantic-coverage.md SHA-256 0fbc06c4766ddb7c83c4ceb510b40306a29e7a461fd5b0a4ffed05dd8cad6566；产品宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；前置审计 docs/verification/t1412/stale-lesson-coverage-audit.md SHA-256 da9eeddabe91fd80875872c985e72708fdee443bfbc47a1089924b5cab961a1b。精确模型 ID 未核实，不作异构模型声明。本轮实读四个生产候选、正式 cover/asset/文本 worker 入口、相关宿主与内部协议、现有账本/outcome 和 Worker 测试，以及 T-904 / T-1022 的相关有效约束。\n\n发现一项 major 验收可证明性缺口：FR-141304 与验收第 5 条依赖的“既有 continuous 账本/outcome 测试”在指定路径中不存在；现 backend 用例真实持久化的是有限预算。新增 worker 单次调用超时测试和现有内存端口分类测试不能替代持久 continuous 原任务/null deadline 的断言。REV-001 要求补准确测试写集及守卫目标，或者指向已存在的等价实际用例。这不是判定当前生产 continuous 行为已出错，也不要求改变 T-1022 产品语义。\n\n其余所查边界未发现需要新增规格阻断的实质缺口。严格发布参考可由 backend 对用户/账号/组、执行租约、宿主定义和被冻结 hostContext 的核验取得 mediaRoute；标记由宿主决定，经现有内部 coverContext 冻结，不能由模型自报。三个指定生产路径足以表达缺 ID 先拒绝、参考读失败/空字节/能力不支持拒绝及精确文件校验，旧输入无标记保留 legacy 行为；不需要新增公开参数。正式 Pi 协议测试要求捕获实际请求/调用顺序，正式 cover-worker 路径与素材保存/读回测试均有明确落点。局部改稿和原文导入继续使用现行 assembly/host/真实 Worker 的可信锚点、授权、原正文及幂等断言，不能将退役 runner 当正式链证据。\n\n官方同步图片幂等资格当前仍是 unknown。SPEC 明确要求当前真实适配器及受管网关合同证据；历史合同、来源名称或 loopback HTTP mock 不能证明线上去重，缺证据时不能激活生产恢复，也不能将该项写成通过。条件恢复仅允许既定网络提交未知的同 key/同输入两次 1s/3s，受现有 resolveAssetCredential 的租约/冻结身份校验约束；自配、异步视频、无资格输入不重提，started/unknown 重启不重开预算，未知不改写为 rejected/superseded。既有 HTTP 明确拒绝与下载阶段错误分类须按原约束保留；取消、失租、已结算文案、参考字节及单候选由实际入口测试验证。若现端口无法表达持久预算/安全边界，现规格已要求先增量独评，不能凭四路径写集自由扩张。\n\nT-1412 交接前不并发改 reconcile 配置；55 项 ID/顺序/what/onFail、无关 check 和已经验证的预算保留。本任务要求逐文件真实收集数/测试名、完整 argv/退出码及零 skip/零 retry，缺路径不能靠多 filter 整体 exit 0 掩盖。除 REV-001 外，四生产候选与其余测试目标在这些限定条件下可承载所述修复；本轮没有运行模型、网络、测试、full、数据库或用户业务，没有确认任何实现、官方幂等资格或六条 lesson 已通过。仅写本评审证据，不改 SPEC、产品、控制面或任务状态。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-141304",
+        "quote": "当前单次文本调用触发安全上界并中止 provider，取消及迟到结果安全；持续原任务按 T-1022 恢复。"
+      },
+      "acceptance_anchor": {
+        "id": "红绿、收集与退出证据-5",
+        "quote": "普通文本超时验证 provider 收到 abort，既有 continuous 账本/outcome 测试证明原任务 retry_wait；不向真实账号发请求，不降低生产 timeout。"
+      },
+      "where": "docs/features/t1413-lesson-semantic-coverage.md:40–50、69、79：九个测试写集与 LED-023 守卫依赖的持久 continuous 恢复证据。",
+      "failure_mode": "指定 backend outcome fixture 使用 maxCalls=2、maxTokens=10000、deadlineMs=300000，enqueue 未冻结 continuous；首次 reserve 会采用该有限预算并持久化 deadline。现有原任务 retry_wait 断言因此只覆盖有限预算任务。worker-runtime 用有限 deadlineAt，durable-generation-model 只用内存端口分类；新增 intelligence-generation-worker 的 null deadline 输入本身也不证明 backend 持久账本保留 continuous。现有清单可能全绿，但持续任务在单次文本超时后被错误加上总截止/终结的回归仍不能由所指证据发现，且实现者无权修改最直接的 backend outcome 测试来补足此已要求验收。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "SPEC SHA-256 0fbc06c4766ddb7c83c4ceb510b40306a29e7a461fd5b0a4ffed05dd8cad6566。backend/src/modules/execution/execution-worker-outcome.service.test.ts:12–19 的 fixture 与 :80–84 原任务 retry_wait 用例，文件 SHA-256 b5ae75bb7da4555783fa800228b6c0e33fbee23ebf3f7e237556002102a58496；:126–137 另显式验证有限 deadline 的终结。backend/src/modules/execution/execution-call-ledger.service.ts:81–104 证明 task.executionBudget=null 会取 configuredBudget 并持久化 deadline；contract/src/internal/execution-worker.ts:84–105 区分有限预算与显式 continuous/null deadline。ai-worker/src/execution/worker-runtime.test.ts 所有 run deadlineAt 均为有限时间（SHA-256 153084fa67449bf81708cd5473ac0417708638f308ad24c994dc0c111933d941）；ai-worker/src/execution/durable-generation-model.test.ts:7–25 使用内存端口（SHA-256 b4a30eb8cc006472a1811ac7def385ad51f8988917aea703c3c6d2be6d0ef63f）。本结论来自只读源码核查，未运行用例。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "docs/features/t1413-lesson-semantic-coverage.md：FR-141304、精确候选写集、LED-023、红绿/收集与退出证据第 5 条。",
+      "suggestion": "将现已列入 LED-023 的 backend/src/modules/execution/execution-worker-outcome.service.test.ts 纳入精确测试写集，要求补真实持久 continuous 个案：显式 continuous 预算、单次模型超时后的 superseded/retry_wait、同一 execution task、deadlineAt 保持 null，并保持原有限预算兼容测试；与 worker 入口 provider abort/父取消/迟到正文断言共同构成 FR-141304 证据。也可明确引用并纳入守卫一个现有等价真实测试的准确路径与断言，而不是继续声称当前 outcome fixture 已覆盖 continuous。若新增测试证实生产缺陷，再按既有规则独评生产写集增量；本 finding 不授权扩大产品范围。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

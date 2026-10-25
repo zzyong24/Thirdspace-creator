@@ -1,13 +1,12 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import {createHash} from 'node:crypto';
-import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {inspectSource} from './check.mjs';
+import {createHyperframesIsolation} from './hyperframes-cli-isolation.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const pkg=path.join(root,'frontend/node_modules/hyperframes');
 const cli=path.join(pkg,'dist/cli.js');
@@ -37,11 +36,13 @@ test('实际安装的归一入口保留零值、拒绝非法值并明确覆盖�
  assert.ok(source.includes("MAX_PAGE_NAVIGATION_TIMEOUT_SECONDS = 86400"));
  assert.ok(source.includes("request_timeout_seconds=${Math.max(120, timeout)}"));
 });
-test('真实公共CLI拒绝一秒浏览器超时，错误单位为秒',()=>{
- const fixture=fs.mkdtempSync(path.join(os.tmpdir(),'creatoros-timeout-cli-'));
- fs.writeFileSync(path.join(fixture,'index.html'),'<html><body><main data-composition-id="main" data-width="320" data-height="180" data-duration="0.2"></main></body></html>');
- const result=spawnSync(process.execPath,[cli,'render',fixture,'--browser-timeout','1'],{encoding:'utf8',env:{...process.env,HYPERFRAMES_TELEMETRY:'0'}});
- fs.rmSync(fixture,{recursive:true,force:true});
- assert.notEqual(result.status,0);assert.match(result.stdout+result.stderr,/120/);
- assert.doesNotMatch(result.stdout+result.stderr,/ENOENT|Cannot find module/);
+test('真实公共CLI拒绝一秒浏览器超时，错误单位为秒',async t=>{
+ const isolated=await createHyperframesIsolation(cli);
+ try{
+  fs.writeFileSync(path.join(isolated.work,'index.html'),'<html><body><main data-composition-id="main" data-width="320" data-height="180" data-duration="0.2"></main></body></html>',{mode:0o600});
+  const result=await isolated.run([cli,'render',isolated.work,'--browser-timeout','1']);
+  assert.equal(result.signal,null);assert.notEqual(result.status,0);assert.match(result.stdout+result.stderr,/120/);
+  assert.doesNotMatch(result.stdout+result.stderr,/ENOENT|Cannot find module/);
+  t.diagnostic(JSON.stringify({schema:'hyperframes-real-cli-proof/v1',isolation:isolated.proof,child:result}));
+ }finally{isolated.dispose();}
 });

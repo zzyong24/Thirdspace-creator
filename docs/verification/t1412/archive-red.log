@@ -1,0 +1,11 @@
+file:///Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1022/run-archive-guard.mjs:7
+ const url=new URL(value);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('归档执行门只允许本任务55422隔离服务器');
+                                                                                  ^
+
+Error: 归档执行门只允许本任务55422隔离服务器
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1022/run-archive-guard.mjs:7:83
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0

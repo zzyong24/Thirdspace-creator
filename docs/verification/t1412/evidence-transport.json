@@ -1,0 +1,39 @@
+{
+  "reason": "原始工具输出含尾随空白；保持原始字节，以gzip传输。原件仍在本地，扫描在压缩前完成。",
+  "rawScan": {
+    "command": "git diff --cached | gitleaks stdin --redact --report-format json --report-path docs/verification/t1412/staged-freeze-scan.json",
+    "exitCode": 0,
+    "result": "no leaks found",
+    "scope": "压缩前精确暂存的文本，非整个工作区或未暂存回执"
+  },
+  "files": [
+    {
+      "originalPath": "docs/verification/t1412/archive-green.log",
+      "originalSha256": "3063e27a41f55a99196e59ca8179534152801982b65fe228c5d266199e059962",
+      "transportPath": "docs/verification/t1412/logs/archive-green.log.gz",
+      "transportSha256": "838463433acb494020a89bdd0d11e06725890d1d90484d3d1c915ad64c5217e5",
+      "bytes": 5690
+    },
+    {
+      "originalPath": "docs/verification/t1412/archive-guard.log",
+      "originalSha256": "0a1b0ddc5270c25a5f45404cdac15cc079bf0c64ff05ddebb5bbb2104fb310e5",
+      "transportPath": "docs/verification/t1412/logs/archive-guard.log.gz",
+      "transportSha256": "a33025374ea57fe23f54b8c8fe490306d6c3f448496ffec4cc7c086bd6fd5d55",
+      "bytes": 504
+    },
+    {
+      "originalPath": "docs/verification/t1412/budget-red.log",
+      "originalSha256": "4b665c23e72e980fbfc7fa45202da8371ab0c561cc3f584f4087514f9c14321e",
+      "transportPath": "docs/verification/t1412/logs/budget-red.log.gz",
+      "transportSha256": "a87001fc5001d276027a23c4d1945208037c647b5ee2545cc4da4b2eeba1c7ba",
+      "bytes": 5780
+    },
+    {
+      "originalPath": "docs/verification/t1412/cli-static-budget-red.log",
+      "originalSha256": "d89c1e95c4f2798d130d65276314953e6464045a2a12087f0b5bf4fa504072dd",
+      "transportPath": "docs/verification/t1412/logs/cli-static-budget-red.log.gz",
+      "transportSha256": "b36cc9df35f1f6dd71e606392943b577f544ddfc25f112052af20e081b1d5324",
+      "bytes": 3078
+    }
+  ]
+}

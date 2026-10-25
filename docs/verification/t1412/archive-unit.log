@@ -1,0 +1,13 @@
+✔ 本轮真实owned随机端口可准入，不等于PG业务回归已执行 (22.6945ms)
+✔ 缺marker和错误nonce继续在启动vitest前拒绝 (0.517959ms)
+✔ 旧固定端口和不同实例URL在启动vitest前拒绝 (40.858625ms)
+✔ 不允许丢第二URL或绕向未登记库 (25.79675ms)
+✔ 原三个目标及参数完全保持，不偷换成准入单测 (0.846917ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 272.886042

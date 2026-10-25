@@ -1,0 +1,237 @@
+{
+  "schema": "t1412-implementation-freeze/v1",
+  "frozenAt": "2026-10-25T08:09:53.488Z",
+  "head": "4db7b52b5e24ad5b5e2c3744546b17416e913e9a",
+  "implementation": [
+    {
+      "path": "orchestrator/process/reconcile.config.json",
+      "sha256": "293009903af92bd378fc82defeb42d0e222c145c0ecc65e5918a794932e0a1cf"
+    },
+    {
+      "path": "docs/verification/t1022/run-archive-guard.mjs",
+      "sha256": "13e4294592182071d6c8e8c6f0e0a64e68305abcd0d6fd90fae0ef2a96c4272a"
+    },
+    {
+      "path": "docs/verification/t1022/run-archive-guard.test.mjs",
+      "sha256": "3deda4693815ae1c4710223ae9c6d68ed03d36d0ea008aba0e25fa60bd53c630"
+    },
+    {
+      "path": "tools/timeout-policy/hyperframes.test.mjs",
+      "sha256": "38d94f0154386f29c254fd367df009eef388ab22e7d10e7f645d0154d4b4fd7b"
+    },
+    {
+      "path": "tools/timeout-policy/hyperframes-cli-isolation.mjs",
+      "sha256": "9db2efd423c05b43f690180fbb4ddd46d5f0ce8d063e56f489c5e60dd8bb160a"
+    },
+    {
+      "path": "tools/timeout-policy/hyperframes-cli-isolation.test.mjs",
+      "sha256": "bef5768f7d303abdd255d3d9e4919214fc6759c22ebf4094c5a74ed720fd6a17"
+    }
+  ],
+  "auxiliarySources": [
+    {
+      "path": "docs/verification/t1412/lesson-budget.test.mjs",
+      "sha256": "183af5c2102ab83cfaa7b468ae4bc5b4eee4f8967a4c1cda925b2e6fe312342e"
+    },
+    {
+      "path": "docs/verification/t1412/owned-pg-run.mjs",
+      "sha256": "82fc15b61e421f7ad8148d102fc206486661f157b3fc836b7245ff2e6eb51e90"
+    },
+    {
+      "path": "docs/verification/t1412/legacy-cli-planning-red.mjs",
+      "sha256": "5f8cdb35a67e6911c2820265fb49169a6e79b4e85ce3f5acbfaf5436d8f57cb4"
+    }
+  ],
+  "originalLessonsPreserved": {
+    "count": 55,
+    "idOrderWhatCheckOnFailAndOtherFields": true
+  },
+  "tests": {
+    "focusedFinal": {
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "components": {
+        "budget": 3,
+        "cliIsolation": 7,
+        "realCliAndLocks": 3
+      }
+    },
+    "previousNine": "中间阶段缺最后静态checker用例及预算3项，最终为13项，不把9项冒最终数。",
+    "archiveNewAdmission": {
+      "passed": 5
+    },
+    "archiveOriginalTargets": {
+      "files": 3,
+      "passed": 59,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "existingOwnedGuard": {
+      "passed": 19,
+      "skipped": 0
+    },
+    "fullReconcile": "NOT_RUN",
+    "originalLED053EightGroups": "NOT_RUN; 等独审，禁止提前运行"
+  },
+  "cli": {
+    "forkDenied": true,
+    "detachedSetsidDenied": true,
+    "networkDenied": true,
+    "loopbackConnections": 0,
+    "actualCliStatus": 1,
+    "actualCliSignal": null,
+    "proof": "cli-real-final-proof.json",
+    "rootRemoved": true
+  },
+  "ownedPg": {
+    "stoppedAt": "2026-10-25T07:47:44.553Z",
+    "rootGone": true,
+    "homeGone": true
+  },
+  "untrackedStaticFindings": [],
+  "boundary": "exit0，无新增违规，5条旧基线保留",
+  "evidence": [
+    {
+      "path": "docs/verification/t1412/budget-red.log",
+      "bytes": 5780,
+      "sha256": "4b665c23e72e980fbfc7fa45202da8371ab0c561cc3f584f4087514f9c14321e"
+    },
+    {
+      "path": "docs/verification/t1412/budget-green.log",
+      "bytes": 401,
+      "sha256": "565b1250ce1506565e326b83d54c5ccd2c88a86c7fbde59606da95d823c31a24"
+    },
+    {
+      "path": "docs/verification/t1412/budget-inventory.json",
+      "bytes": 88262,
+      "sha256": "bb6d8a0d3825fc765f50a9ae809916eb6ae8f8d2f5da5dcf314a5e55888a2c95"
+    },
+    {
+      "path": "docs/verification/t1412/archive-red.log",
+      "bytes": 755,
+      "sha256": "839dd451e1bfd9d382d3b9dccea6b61617fb3a1542804c54638ea6fc56d059f3"
+    },
+    {
+      "path": "docs/verification/t1412/archive-red-receipt.json",
+      "bytes": 953,
+      "sha256": "5aa84fbac5178f3a948c90fedea9c6baad16dc1448b99935a113880a8107df16"
+    },
+    {
+      "path": "docs/verification/t1412/archive-unit.log",
+      "bytes": 493,
+      "sha256": "a879b51a72f9ed3d3ce627b36b829cdbe506cb44bd42d210711aef98e9c3d4de"
+    },
+    {
+      "path": "docs/verification/t1412/archive-green.log",
+      "bytes": 5690,
+      "sha256": "3063e27a41f55a99196e59ca8179534152801982b65fe228c5d266199e059962"
+    },
+    {
+      "path": "docs/verification/t1412/archive-green-receipt.json",
+      "bytes": 957,
+      "sha256": "954b7c7f17d48acc580a6f5636a84a95991ce4febd02b282fe43ca66599bd12e"
+    },
+    {
+      "path": "docs/verification/t1412/archive-guard.log",
+      "bytes": 504,
+      "sha256": "0a1b0ddc5270c25a5f45404cdac15cc079bf0c64ff05ddebb5bbb2104fb310e5"
+    },
+    {
+      "path": "docs/verification/t1412/owned-pg-stop.json",
+      "bytes": 86,
+      "sha256": "3d083eec3baf77e7a71a7587ede9cd0eeb2f5e8e9cdcafc3665b0d4aff5dc672"
+    },
+    {
+      "path": "docs/verification/t1412/cli-isolation-red.log",
+      "bytes": 4373,
+      "sha256": "a53ac583fa7350d8d06a749c48f8f1c2bd01984662b94ab7b24d8f4a289600b5"
+    },
+    {
+      "path": "docs/verification/t1412/cli-dynamic-planning-red.log",
+      "bytes": 925,
+      "sha256": "01406ec3e382e16d2037ca21cef21d0e57c413682869f56ff95859ac9cc51c4b"
+    },
+    {
+      "path": "docs/verification/t1412/cli-dynamic-planning-red-v2.log",
+      "bytes": 984,
+      "sha256": "d7ea74ed7ca2030573f82d2c1da0eca7ba8cfc96efcf92bb75ec5deefd59318f"
+    },
+    {
+      "path": "docs/verification/t1412/cli-isolation-first.log",
+      "bytes": 1648,
+      "sha256": "9abf55ab2a238c041d721c03cf4f2aea2d1cd18686850c50770c52b37f4f5b73"
+    },
+    {
+      "path": "docs/verification/t1412/cli-isolation-second.log",
+      "bytes": 1714,
+      "sha256": "b83ae39d302fe25c4e5be9dd1e26d2d472299c9543c5849aaf85620ff9de70f1"
+    },
+    {
+      "path": "docs/verification/t1412/cli-isolation-rpath-fixed.log",
+      "bytes": 1270,
+      "sha256": "c9ab8becd9af5fc4a7f5e5995b9ede62644b2e5c0c67e8490e48f599db27f9c2"
+    },
+    {
+      "path": "docs/verification/t1412/cli-isolation-probe-diagnostic.log",
+      "bytes": 1246,
+      "sha256": "a839101210df0a27f74a48cc5c90ddbed799bbe6bcd60c9ec9371a0ef99aa0ab"
+    },
+    {
+      "path": "docs/verification/t1412/cli-executable-map-probe.log",
+      "bytes": 1246,
+      "sha256": "f4401b252fd8642ae9a31d018a75420b487872335afade55d6a04ee5473d424c"
+    },
+    {
+      "path": "docs/verification/t1412/cli-cryptex-probe.log",
+      "bytes": 1570,
+      "sha256": "103fd3eb0abf3fad41db3c6dab9c0692961d50214dd9cdd2ce43011a19549d74"
+    },
+    {
+      "path": "docs/verification/t1412/cli-openssl-isolated-probe.log",
+      "bytes": 404,
+      "sha256": "16d0468e81b048e4e03b5035e00f02004c145dd487e1f66780eab7cfe6e30c86"
+    },
+    {
+      "path": "docs/verification/t1412/cli-no-fork-green.log",
+      "bytes": 404,
+      "sha256": "ad7992b6e381e7649e62574cbf89756cd0ed0ca3581f1b4bac53e3b3a33666a3"
+    },
+    {
+      "path": "docs/verification/t1412/cli-static-budget-red.log",
+      "bytes": 3078,
+      "sha256": "d89c1e95c4f2798d130d65276314953e6464045a2a12087f0b5bf4fa504072dd"
+    },
+    {
+      "path": "docs/verification/t1412/focused-final.log",
+      "bytes": 10381,
+      "sha256": "a66846a5f6068b860349d497beaef8c03625a1344504c07a0f43e3635375e233"
+    },
+    {
+      "path": "docs/verification/t1412/cli-real-final-proof.json",
+      "bytes": 9768,
+      "sha256": "c0d8e04359ed930c1498164a5e149eb10cb21ba5fa6a323e876a54f9dc84db76"
+    },
+    {
+      "path": "docs/verification/t1412/untracked-helper-static-check.json",
+      "bytes": 193,
+      "sha256": "05f9ee210ac8b85210f7a9205ad205d08ac1df0b3d36088d72cdcf0e011a8f79"
+    },
+    {
+      "path": "docs/verification/t1412/boundary-final.log",
+      "bytes": 779,
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    },
+    {
+      "path": "docs/verification/t1412/diff-check-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "limits": [
+    "执行策略预算不是实测最坏上界；超时保持失败/不完整",
+    "仅macOS原生隔离已实际证明，其它平台失败关闭不skip",
+    "原6处失效filter未改，T1413交接及full未执行",
+    "未修改产品/用户数据/根控制面；未提交或安装"
+  ]
+}
