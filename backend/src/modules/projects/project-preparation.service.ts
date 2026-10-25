@@ -217,6 +217,21 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
        step.status='blocked';step.reasonCode=child.status==='cancelled'?'CHILD_CANCELLED':'CHILD_PARTIAL';step.availableActions=step.name==='transcript'?['provide_transcript']:[];step.lastError={code:'EXECUTION_FAILED',message:child.status==='cancelled'?'原子任务已取消，请保留原记录核对；本步骤不能直接重试':'原子任务仅有部分结果，请保留原结果核对；本步骤不能直接重试'};cp.lastError=step.lastError;cp.blockedChildId=child.id;cp.blockedAtAttempt=claim.task.attempt;await save();await finish('blocked');return;
       }
       if(child.runtimeStatus==='unknown_result'){
+       const control=(claim.payload as {preparationControl?:{id:string}}).preparationControl;
+       if(control&&cp.resumedChildren?.[child.id]!==control.id){
+        cp.resumedChildren={...cp.resumedChildren,[child.id]:control.id};
+        try{
+         await deps.tasks.command(ctx,{taskIds:[child.id],command:'resume',idempotencyKey:`${claim.task.id}:${child.id}:${control.id}`});
+        }catch(error){
+         if(!(error instanceof ConflictError))throw error;
+        }
+        child=await deps.tasks.get(ctx,child.id);
+        if(['queued','running'].includes(child.runtimeStatus??child.status)){
+         step.status='queued';clearStepError(cp,step);await save();await finish('retry_wait');return;
+        }
+       }
+      }
+      if(child.runtimeStatus==='unknown_result'){
        step.status='unknown_result';step.availableActions=['check_result'];cp.blockedChildId=child.id;cp.blockedAtAttempt=claim.task.attempt;await save();await finish('blocked');return;
       }
       if(child.status==='succeeded'){

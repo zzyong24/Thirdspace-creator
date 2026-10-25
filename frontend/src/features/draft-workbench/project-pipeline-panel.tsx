@@ -78,7 +78,7 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
           <label className="mt-3 block text-sm">逐字稿<textarea aria-label="逐字稿" rows={6} className="mt-2 w-full rounded-control border border-border bg-surface p-2" value={text} onChange={event=>setText(event.target.value)}/></label>
           <Button className="mt-2" size="sm" disabled={state?.busy||!text.trim()||!selected?.sourceDigest} onClick={()=>void run(async()=>{await state!.provide({inputMode:"paste",parentTaskId:preparation.preparationTaskId,referenceId:selected!.id,expectedSourceDigest:selected!.sourceDigest!,expectedStepRevision:transcript.revision,text});setManual(false);setText("");})}>提交逐字稿</Button>
         </div>:null}
-        {preparation?<div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={state?.busy} onClick={()=>void run(()=>state!.start("brief"))}>让编导补全资料</Button></div>:null}
+        {preparation&&!preparation.steps.some(step=>step.name==="brief"&&step.availableActions.includes("check_result"))?<div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={state?.busy} onClick={()=>void run(()=>state!.start("brief"))}>让编导补全资料</Button></div>:null}
       </div>
     </div>
     <a href="#script" className="mt-3 inline-flex min-h-8 items-center text-sm font-medium text-brand underline-offset-2 hover:underline">去写稿</a>

@@ -1,6 +1,6 @@
 "use client";
 
-import { PositioningConversationStart } from "./positioning-conversation";
+import { PositioningConversationStart, SCRATCH_POSITIONING_PROMPT } from "./positioning-conversation";
 import positioningStyles from "./positioning-conversation.module.css";
 import {useAssistantEngine} from "./use-assistant-engine";
 import {getLiveChatSession,acquireLiveChatSession} from "./live-chat-session";
@@ -745,6 +745,20 @@ export function AICopilotContent({
   const surface =
     embed?.surface ?? (searchParams?.get("surface") || DEFAULT_SURFACE);
   const positioning = !embed && surface === "positioning";
+  const [positioningHasMaster, setPositioningHasMaster] = React.useState(false);
+  React.useEffect(() => {
+    let active = true;
+    if (!positioning || typeof client.getPositioningCenter !== "function") {
+      setPositioningHasMaster(false);
+      return () => { active = false; };
+    }
+    void client.getPositioningCenter({ params: undefined, query: undefined, body: undefined })
+      .then((center) => {
+        if (active) setPositioningHasMaster(Boolean((center as { profile?: unknown } | null)?.profile));
+      })
+      .catch(() => { if (active) setPositioningHasMaster(false); });
+    return () => { active = false; };
+  }, [positioning]);
   const positioningStarterBaseRef = React.useRef<string | null>(null);
   // 用户在本次会话里点了「继续深入当前账号」时记下当时的消息数：只有之后新产生的定位提案
   // 才自动采纳。只存内存，刷新/重放历史对话不会对旧卡片自动写入。
@@ -1440,7 +1454,7 @@ export function AICopilotContent({
   const receiptForRecovery=preparedReceipt.current;
   const chatError = React.useMemo<{
     title:string;message:string;suggestSwitchModel:boolean;suggestOpenCredits:boolean;suggestOpenPositioning:boolean;
-    suggestOpenEngine?:boolean;suggestOpenWorkspace?:boolean;suggestInspectTasks?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
+    suggestOpenEngine?:boolean;suggestOpenWorkspace?:boolean;suggestInspectTasks?:boolean;suggestNewPositioningConversation?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
   }|null>(() => {
     const waitingStopped=stoppedObservation?.session===liveSession&&stoppedObservation.epoch===liveSession.epoch&&liveSession.control.stopOutcome==="waiting_stopped";
     if(waitingStopped||isModelBenefitRefreshPending(error))return {
@@ -1564,6 +1578,7 @@ export function AICopilotContent({
       suggestSwitchModel,
       suggestOpenCredits,
       suggestOpenPositioning,
+      suggestNewPositioningConversation: resultUnconfirmed && positioning,
       canRetry: recoveryStalled,
       autoRecover,
     };
@@ -1587,6 +1602,7 @@ export function AICopilotContent({
     recoveryStalled,
     retryableScriptPatchRequest?.functionKey,
     terminalScriptSelectionError,
+    positioning,
   ]);
   const [openingCredits, setOpeningCredits] = React.useState(false);
   const [creditOpenError, setCreditOpenError] = React.useState<string | null>(null);
@@ -2264,6 +2280,19 @@ export function AICopilotContent({
     setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 新对话底数归零
     prefilledRef.current = false;
   }, [providerRequest?.nonce, setMessages, stop, liveSession, invalidateHistoryReads]);
+
+  const startScratchPositioningConversation = React.useCallback(() => {
+    startNewConversation();
+    setPositioningAutoAdoptFrom(null);
+    positioningStarterBaseRef.current = "定位路径：scratch\n本次起点：重新定位。";
+    applyQuickPrompt(
+      {
+        prefill: [positioningStarterBaseRef.current, SCRATCH_POSITIONING_PROMPT].join("\n\n"),
+        functionKey: "positioning.generate",
+      },
+      SCRATCH_POSITIONING_PROMPT,
+    );
+  }, [applyQuickPrompt, startNewConversation]);
 
   // GAP-COP-feed: 最近任务 is now backed by the REAL global task feed (ai.tasks.list) —
   // the user's cross-project AI tasks, newest first. `recentTasks` is null while loading,
@@ -3568,6 +3597,16 @@ export function AICopilotContent({
                         {openingCredits ? "正在打开…" : "查看额度并充值"}
                       </button>
                     ) : null}
+                    {chatError.suggestNewPositioningConversation ? (
+                      <button
+                        type="button"
+                        data-slot="copilot-error-new-positioning-conversation"
+                        onClick={startScratchPositioningConversation}
+                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        开新定位对话
+                      </button>
+                    ) : null}
                     {creditOpenError && chatError.suggestOpenCredits ? (
                       <span
                         data-slot="copilot-error-credits-open-error"
@@ -3617,6 +3656,8 @@ export function AICopilotContent({
           ) : positioning ? (
             <PositioningConversationStart
               disabled={streaming || hasPendingApproval}
+              hasMaster={positioningHasMaster}
+              onSoftClear={startScratchPositioningConversation}
               onPick={(choice, mode) => {
                 setPositioningAutoAdoptFrom(mode === "optimize" ? messages.length : null);
                 // 只预填，不发送；保留入口带来的已保存资料和用户手写内容。

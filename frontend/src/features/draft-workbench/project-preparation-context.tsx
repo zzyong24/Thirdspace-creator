@@ -26,7 +26,7 @@ type ControlObservation={projectId:string;scopeKey:string;taskId:string;deadline
 const CONTROL_OBSERVATION_MS=120000;
 const shouldObserveControlTask=(task:{status:string;runtimeStatus?:string})=>["pause_requested","cancel_requested","queued","running","retry_wait"].includes(task.runtimeStatus??task.status);
 const mayHavePendingControl=(value:ProjectPreparationResource)=>value.registration==="registered"&&value.availableActions.length===1&&value.availableActions[0]==="start"&&value.steps.some(step=>step.status==="paused"||step.status==="cancelled")||value.registration==="registered"&&value.availableActions.includes("pause")&&value.steps.some(step=>["failed","paused","waiting_user"].includes(step.status));
-const needsObservation=(value:ProjectPreparationResource)=>value.registration==="registered"&&value.steps.some(step=>["pending","queued","running"].includes(step.status));
+const needsObservation=(value:ProjectPreparationResource)=>value.registration==="registered"&&(value.availableActions.includes("check_result")||value.steps.some(step=>["pending","queued","running","unknown_result"].includes(step.status)||step.availableActions.includes("check_result")));
 
 /** 同一项目的面板和编导栏共用一个读取循环；切组仅结束前端观察。 */
 export function ProjectPreparationProvider({projectId,initialPreparation=null,initialError=null,children,pollIntervalMs=4000}:{
