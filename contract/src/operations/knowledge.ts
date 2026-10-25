@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoint-definition";
 import { id, paginationQuery } from "../primitives";
+import {knowledgeDistillSource,knowledgeDistillAdoptInput,knowledgeDistillReceipt,knowledgeDistillReceiptResult} from '../resources/knowledge-distill';
 import {
   knowledgeItemResource,
   knowledgeRevisionResource,
@@ -12,6 +13,8 @@ const knowledgeParams = z.object({ knowledgeId: id });
 
 // SPEC §13 "知识库" group.
 export const knowledgeOperations = {
+  getKnowledgeDistillReceipt:defineEndpoint({id:'knowledge.distill.receipt',method:'POST',path:'/knowledge-distill/receipt',body:z.object({source:knowledgeDistillSource}).strict(),response:knowledgeDistillReceiptResult,fr:['FR-KNOWLEDGE-CREATE']}),
+  adoptKnowledgeDistill:defineEndpoint({id:'knowledge.distill.adopt',method:'POST',path:'/knowledge-distill/adopt',body:knowledgeDistillAdoptInput,response:knowledgeDistillReceipt,fr:['FR-KNOWLEDGE-CREATE']}),
   listKnowledge: defineEndpoint({
     id: "knowledge.list",
     method: "GET",

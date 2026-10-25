@@ -83,6 +83,7 @@ export function PredictionComparisonSection({
             {rows.map((row) => (
               <div
                 key={row.predictionId}
+                id={`prediction-${row.predictionId}`}
                 data-testid="prediction-comparison-row"
                 data-prediction-id={row.predictionId}
                 className="flex flex-col gap-2 rounded-control border border-border/70 p-3"

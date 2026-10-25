@@ -438,6 +438,7 @@ export function buildReviewRuleSeedRows(
   return SEED_RULES.map((s) => ({
     id: `rrule-seed-${userId}-${s.slug}`,
     userId,
+    groupId: null,
     tier: s.tier,
     category: s.category,
     matchType: s.matchType,

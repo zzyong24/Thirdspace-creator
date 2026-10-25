@@ -57,7 +57,7 @@ export function createReviewGateTransport(
           return { data: rule, meta };
         }
         case "reviewRules.delete": {
-          const res = await service.deleteRule(ctx, p.ruleId ?? "");
+          const res = await service.deleteRule(ctx, p.ruleId ?? "", (body??{}) as {confirmSharedImpact?:boolean});
           return { data: res, meta };
         }
         case "scriptReviews.getLatest": {

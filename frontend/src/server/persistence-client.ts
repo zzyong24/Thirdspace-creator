@@ -1,3 +1,4 @@
+import {modelTestRoute,ModelProbeNotApplicable} from './settings-model-routing';
 import {createProjectPreparationApplication} from "@creatoros/backend/application/projects/project-preparation";
 import {createProjectPreparationChat} from "@creatoros/backend/application/projects/project-preparation-chat";
 import {submitProjectPreparationTranscription} from "@creatoros/backend/modules/ai";
@@ -108,6 +109,7 @@ import { createApplicationTransport } from "@creatoros/backend/application/trans
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
 import { createKnowledgeApplication } from "@creatoros/backend/application/knowledge";
+import {createKnowledgeDistillSourceService} from '@creatoros/backend/modules/ai';
 import { configureHostBrowserProfileLifecycle } from "./ingestion/host-browser-profile-lifecycle";
 import { createHostBrowserProfileLifecycle, createDesktopHostProcessRecovery } from "@creatoros/backend/modules/execution";
 import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
@@ -1553,6 +1555,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
 
   const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles}=createKnowledgeApplication(db,deps,{
+    readDistillSource:(ctx,source,store)=>createKnowledgeDistillSourceService(db).read(ctx,source,store),
+    assignDistillTags:async(ctx,knowledgeIds,tagNames)=>{
+      if(!tagNames.length)return;
+      const service=createTaxonomyService(taxonomyRepo,taxonomyAccess);
+      const tags=await service.listTags(ctx,{limit:1000,offset:0}),byName=new Map(tags.map(tag=>[tag.name,tag.id]));
+      const ids:string[]=[];
+      for(const raw of tagNames){const name=raw.trim();if(!name)continue;let id=byName.get(name);if(!id){try{id=(await service.createTag(ctx,{name,kind:'knowledge-topic'})).id;}catch{const existing=await service.listTags(ctx,{limit:1000,offset:0});id=existing.find(tag=>tag.name===name)?.id;if(!id)throw new Error('知识主题标签暂未同步');}byName.set(name,id);}ids.push(id);}
+      for(const knowledgeId of knowledgeIds)await service.assignTags(ctx,{entityType:'knowledge',entityId:knowledgeId,tagIds:[...new Set(ids)]});
+    },
     assertAssetReadable:async(c,id)=>{const asset=await assetsService.getAsset(c,id);if(asset.status!=="active")throw new OwnershipError("原文件不可用");return asset;},
     resolveEmbedSpec:async()=>null,
     embedTexts:async()=>{throw new Error('KNOWLEDGE_EMBEDDING_DISABLED');},
@@ -6710,50 +6721,39 @@ FAVORITES_PROMOTE_PER_RUN
   // ── [T-377] settings.models.test「测试连接」拦截:各能力现有解析链 + 最小真实调用/
   //    最便宜鉴权探测(策略见 settings-model-test-wrap.ts 头注)。解析器与 registry 都住
   //    组合根 → composition-only op(同 projects.transcribe 约定)。
+  const resolveModelTestRoute=async(ctx:RequestContext,testCapability:string)=>{
+    const selected=modelTestRoute(testCapability);
+    const executionRoute=testCapability==='default'
+      ?await (await prepareChatRouting(ctx,{mode:'text'})).freeze(selected.capability,'text')
+      :await resolveRootExecutionRoute(ctx,db,undefined,familyForCapability(selected.capability));
+    const route=readFrozenModelRoute({executionRoute},selected.mode,selected.capability);
+    if(!route)throw new CapabilityModelRoutingError('MODEL_ROUTE_NOT_FROZEN',`${selected.mode}:${selected.capability}`);
+    if(route.source==='codex')throw new ModelProbeNotApplicable('codex');
+    return route;
+  };
   const settingsWithModelTest = createSettingsWithModelTest({
     settings,
-    resolveLlm: (ctx, capability) =>
-      resolveLlmConfig(ctx, capability, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-        env: process.env,
-        getChannelModelConfig,
-        getChannelModelCredential: (serviceId) =>
-          getChannelModelCredential(ctx, serviceId),
-        getChannelModelSelection: (selectedCapability) =>
-          getChannelModelSelection(ctx, selectedCapability),
-      }),
-    resolveDedicatedLlm: (ctx, capability) =>
-      resolveDedicatedLlmConfig(ctx, capability, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-        env: process.env,
-        getChannelModelConfig,
-        getChannelModelCredential: (serviceId) =>
-          getChannelModelCredential(ctx, serviceId),
-      }),
-    resolveMultimodal: (ctx, capability) =>
-      resolveMultimodalSpecFn(
-        ctx,
-        capability as "image.generate" | "video.generate" | "asset.classify",
-        {
-          getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-          env: process.env,
-          getChannelModelConfig,
-          getChannelModelCredential: (serviceId) =>
-            getChannelModelCredential(ctx, serviceId),
-          getChannelModelSelection: (selectedCapability) =>
-            getChannelModelSelection(ctx, selectedCapability),
-        },
-      ),
-    resolveTranscribe: (ctx) =>
-      resolveTranscribeSpecFn(ctx, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-        env: process.env,
-        getChannelModelConfig,
-        getChannelModelCredential: (serviceId) =>
-          getChannelModelCredential(ctx, serviceId),
-        getChannelModelSelection: (selectedCapability) =>
-          getChannelModelSelection(ctx, selectedCapability),
-      }),
+    resolveLlm:async(ctx,capability)=>{
+      const spec=await resolveFrozenExecutionSpec(ctx,await resolveModelTestRoute(ctx,capability));
+      if('engine' in spec)throw new ModelProbeNotApplicable('codex');
+      return spec;
+    },
+    resolveDedicatedLlm:async(ctx,capability)=>{
+      const spec=await resolveFrozenExecutionSpec(ctx,await resolveModelTestRoute(ctx,capability));
+      if('engine' in spec)throw new ModelProbeNotApplicable('codex');
+      return spec;
+    },
+    resolveMultimodal:async(ctx,capability)=>{
+      const spec=await resolveFrozenAssetSpec(ctx,await resolveModelTestRoute(ctx,capability));
+      if('engine' in spec)throw new ModelProbeNotApplicable('codex');
+      return spec;
+    },
+    resolveTranscribe:async(ctx)=>{
+      const value=await resolveFrozenCredential(ctx,await resolveModelTestRoute(ctx,'transcribe.audio'),true);
+      if(value.kind==='codex')throw new ModelProbeNotApplicable('codex');
+      if(value.kind==='asr-pending-lease')throw new ModelProbeNotApplicable('audio-task');
+      return value.spec;
+    },
     resolveEmbed: async () => null,
     resolveSearch: (ctx) => resolveSearchSpec(ctx),
     generateImageMinimal: (spec,c) => modelProbeIo.probeImage(c,spec),

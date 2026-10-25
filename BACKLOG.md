@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1406|修复新版安装验收发现的八项缺陷|🔨|PASS[REV:b3a0d1e8ff5d]|待验|[SPEC](docs/features/t1406-installed-eight-defects.md)|筛选有效选择、规则组隔离、连接测试、空候选与原会话、蒸馏幂等、正式锁分卡及复盘直达；保全旧数据，源码回归与Windows更新分开验收。|
 |T-1405|新版安装后全功能实测|🔨|—|待验|[SPEC](docs/features/t1405-installed-functional-validation.md)|当前Windows修复包逐模块真实验证；独立验收组、原资料保全，源码/UI/API/真实模型证据分开，不把外部受阻或已知欠债标通过。|
 |T-1404|使用既有更新根与 Actions 构建新版 Windows 包|🔨|—|待验|[SPEC](docs/features/t1404-windows-local-root-ci-package.md)|用户已提供既有更新根并确认 CI verdict 密钥；本机根签名、CI 原密钥编壳，仅构建分支 artifact，不合并/发版，原安装数据保全。|
 |T-1403|修复 Windows 全流程实测失败与可本机解除的阻塞|⏸️|—|待验|[SPEC](docs/features/t1403-windows-flow-repair.md)|四条失败流程与本机缺口源码修复、限定回归和构建已过；Windows合法包/真机复验待既有持钥环境；quick对账未全绿，不伪造发布和外部验收。|

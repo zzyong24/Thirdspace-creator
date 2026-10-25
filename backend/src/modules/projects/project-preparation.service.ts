@@ -1,3 +1,4 @@
+import {ProjectPreparationInputRequired} from './project-preparation-input-required';
 import {findModelEngineUnavailable} from '../execution/model-engine-error';
 import {readLegacyRadarPendingCalls} from '../execution/retired-radar-upgrade.service';
 import {and,eq} from 'drizzle-orm';
@@ -26,7 +27,7 @@ export type PreparationContent={kind:'brief';brief:string;briefDetail:Record<str
 export type PreparationDispatchResult=
  |{status:'done'|'not_required'|'waiting_user';reasonCode:string;message?:string}
  |{status:'child';childTaskId:string;businessTaskId:string|null;shared:boolean;sourceDigest:string;transformId?:string};
-export type PreparationBaseline={digest:string;projectVersion:number;artifactVersion:number|null};
+export type PreparationBaseline={digest:string;projectVersion:number;artifactVersion:number|null;inputDigest?:string};
 export type PreparationCheckpoint={schemaVersion:1;projectId:string;stage:string;revision:number;steps:ProjectPreparationStep[];activeStep:PreparationStepName|null;blockedChildId:string|null;blockedAtAttempt:number|null;lastError:ProjectPreparationResource['lastError'];candidates:ProjectPreparationCandidate[];candidateBaselines:Record<string,PreparationBaseline>;candidateContents:Record<string,PreparationContent>;resumedChildren?:Record<string,string>;stepBaselines?:Partial<Record<PreparationStepName,PreparationBaseline>>;receipts?:Record<string,{requestDigest:string;receipt:ProjectPreparationAcceptanceReceipt}>;sourceRevisions?:Array<{revision:number;steps:ProjectPreparationStep[]}>;startRequests?:Record<string,string>;submissions?:Record<string,string>};
 export interface ProjectPreparationDeps extends ServiceDeps {
  tasks:PersistentTaskService;
@@ -97,7 +98,7 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
   const projects=createProjectsService(createProjectRepository(store),deps),project=await projects.getProject(ctx,projectId),artifacts=artifactsFor(store);
   const script=await createConfirmedProjectScriptReader({projectsService:projects,artifactsService:artifacts})(ctx,projectId);
   const version=script?(await artifacts.listVersions(ctx,script.artifactId)).find(v=>v.id===script.versionId):null;
-  return {digest:projectIntakeDigest({title:project.title,brief:project.brief,briefDetail:project.briefDetail,updatedAt:project.updatedAt,script}),projectVersion:Date.parse(project.updatedAt),artifactVersion:version?.versionNumber??null};
+  return {inputDigest:projectIntakeDigest({title:project.title,brief:project.brief,briefDetail:project.briefDetail,script}),digest:projectIntakeDigest({title:project.title,brief:project.brief,briefDetail:project.briefDetail,updatedAt:project.updatedAt,script}),projectVersion:Date.parse(project.updatedAt),artifactVersion:version?.versionNumber??null};
  }
  async function reserve(ctx:RequestContext,input:Parameters<ProjectPreparationReservationPort['reserve']>[1],tx:IntakeTransaction,requested?:PreparationStepName[]){
   const selected=requested??(input.source==='imported'?[]:input.source==='topic'?['transcript','source_draft','brief'] as PreparationStepName[]:input.sourceReferences.length?['transcript','source_draft'] as PreparationStepName[]:[]);
@@ -189,7 +190,8 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
     const candidates=new Map(cp.candidates.map(value=>[value.id,value]));
     for(const candidate of remote.candidates)if(candidate.status!=='pending'||!candidates.has(candidate.id))candidates.set(candidate.id,candidate);
     cp.candidates=[...candidates.values()];cp.receipts={...cp.receipts,...remote.receipts};cp.submissions={...cp.submissions,...remote.submissions};cp.startRequests={...cp.startRequests,...remote.startRequests};
-    cp.candidateBaselines={...cp.candidateBaselines,...remote.candidateBaselines};cp.sourceRevisions=remote.sourceRevisions??cp.sourceRevisions;
+    cp.candidateBaselines={...cp.candidateBaselines,...remote.candidateBaselines};
+    cp.sourceRevisions=[...new Map([...(remote.sourceRevisions??[]),...(cp.sourceRevisions??[])].map(value=>[value.revision,value])).values()].sort((a,b)=>a.revision-b.revision);
     cp.revision=Math.max(cp.revision,remote.revision)+1;
    };
    const save=async()=>leases.withLease(ref,'admission',async({tx,task})=>{
@@ -222,10 +224,35 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
      // 仅补全资料时，历史转写失败不应阻塞 brief。
      if(!step.required && ['failed','blocked','waiting_user','paused','unknown_result'].includes(step.status))continue;
      cp.activeStep=step.name;cp.stage=step.name==='transcript'?'transcribing':'generating';
+     if(step.name==='brief'&&step.status==='waiting_user'&&step.reasonCode==='BRIEF_INPUT_REQUIRED'&&step.childTaskId){
+      const control=(claim.payload as {preparationControl?:{id:string}}).preparationControl;
+      const baseline=await readBaseline(ctx,project.id);
+      const explicit=control&&cp.resumedChildren?.[step.childTaskId]!==control.id;
+      if(control)cp.resumedChildren={...cp.resumedChildren,[step.childTaskId]:control.id};
+      if(!explicit||!cp.stepBaselines?.brief?.inputDigest||baseline.inputDigest===cp.stepBaselines.brief.inputDigest){
+       cp.stage='awaiting_user';await save();await finish('waiting_user');return;
+      }
+      // 补充资料并明确继续才开启新输入版本；旧子回执、父期限/预算和其它已完成步骤不变。
+      cp.sourceRevisions=[...(cp.sourceRevisions??[]),{revision:cp.revision,steps:structuredClone(cp.steps)}];
+      cp.blockedChildId=null;cp.blockedAtAttempt=null;
+      step.revision++;step.status='pending';step.reasonCode='BRIEF_INPUT_UPDATED';step.childTaskId=null;step.businessTaskId=null;step.childOwner=null;step.reuse=null;step.attempt=null;step.inputDigest=null;step.outputReferences=[];step.startedAt=null;step.completedAt=null;clearStepError(cp,step);
+      cp.stepBaselines={...cp.stepBaselines,brief:baseline};cp.revision++;
+      const payload={...claim.payload,inputRevision:Number(claim.payload.inputRevision??0)+1};
+      await states.update(ctx,claim.task.id,project.id,async(_tx,row)=>{
+       if(row.status!=='running'||row.attempt!==claim.lease.attempt||row.fenceToken!==claim.lease.fenceToken||row.leaseOwner!==claim.lease.workerId||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(deps.now()))throw new ConflictError('准备输入版本已变化');
+       mergeUserChanges(checkpoint(row.checkpoint,project.id));
+       return {checkpoint:{...row.checkpoint as object,...cp},payload,result:undefined};
+      });
+      claim.payload=payload;
+     }
      if(step.childTaskId){
       let child=await deps.tasks.get(ctx,step.childTaskId);step.attempt=child.attempt;step.childOwner=['item','transform'].includes(child.ownerType)?{type:'item',id:child.ownerId}:{type:'project',id:project.id};
       if(child.runtimeStatus==='unknown_result'){
        await deps.tasks.recoverExpiredLeases({kinds:[child.kind],includeSafeUnknownResults:true,taskId:child.id});child=await deps.tasks.get(ctx,child.id);
+      }
+      if(step.name==='brief'&&child.runtimeStatus==='partial'){
+       try{await deps.collect?.(ctx,{project,step,childTaskId:child.id});}
+       catch(error){if(error instanceof ProjectPreparationInputRequired)throw error;}
       }
       if(child.status==='cancelled'||child.runtimeStatus==='partial'){
        step.status='blocked';step.reasonCode=child.status==='cancelled'?'CHILD_CANCELLED':'CHILD_PARTIAL';step.availableActions=step.name==='transcript'?['provide_transcript']:[];step.lastError={code:'EXECUTION_FAILED',message:child.status==='cancelled'?'原子任务已取消，请保留原记录核对；本步骤不能直接重试':'原子任务仅有部分结果，请保留原结果核对；本步骤不能直接重试'};cp.lastError=step.lastError;cp.blockedChildId=child.id;cp.blockedAtAttempt=claim.task.attempt;await save();await finish('blocked');return;
@@ -296,6 +323,12 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
     const current=await deps.tasks.get(ctx,claim.task.id);
     if(['pause_requested','cancel_requested'].includes(current.status)){await deps.tasks.acknowledgeControl(lease);return;}
     if(current.status!=='running'||current.attempt!==claim.lease.attempt)return;
+    if(error instanceof ProjectPreparationInputRequired&&cp.activeStep==='brief'){
+     const step=cp.steps.find(value=>value.name==='brief')!;
+     if(!cp.stepBaselines?.brief?.inputDigest){const current=await readBaseline(ctx,cp.projectId);cp.stepBaselines={...cp.stepBaselines,brief:{...(cp.stepBaselines?.brief??current),inputDigest:current.inputDigest}};}
+     step.status='waiting_user';step.reasonCode=error.code;step.lastError={code:'EXECUTION_FAILED',message:error.message};step.availableActions=['resume'];cp.lastError=step.lastError;cp.stage='awaiting_user';cp.blockedChildId=step.childTaskId;cp.blockedAtAttempt=claim.task.attempt;
+     await save();await finish('waiting_user');return;
+    }
     const unavailable=findModelEngineUnavailable(error);
     const login=!unavailable&&douyinLoginError(error);
     const message=unavailable?.message??(login?douyinLoginMessage:(error instanceof Error?error.message:'准备失败，请核对原任务'));

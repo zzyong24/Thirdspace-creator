@@ -1,3 +1,4 @@
+import {ModelProbeNotApplicable,modelTestRoute} from './settings-model-routing';
 /**
  * [T-377] settings.models.test「测试连接」通道单测(fake 解析器 / fetch / adapter,零网络):
  *   - 文本(default):最小流式探测,正文或思考流 → ✓;401 → ✗ 密钥提示(不泄 HTTP 码/响应体);
@@ -558,4 +559,33 @@ describe('T1294 已停用向量连接测试',()=>{
     await expect(wrapped.request(ENDPOINTS.testModelConnection,{params:{capability:'knowledge.search.embed'},query:undefined,body:undefined})).rejects.toThrow('AuthenticationError');
     expect(passthrough).not.toHaveBeenCalled();noProbe(deps);
   });
+});
+
+
+describe('T1406 已选业务路由探针分类',()=>{
+ it('固定映射主对话与真实审稿 adapter 协议，不引入不存在的script.review能力',()=>{
+  expect(modelTestRoute('default')).toEqual({mode:'text',capability:'copilot.assist'});
+  expect(modelTestRoute('script.review')).toEqual({mode:'structured',capability:'default'});
+ });
+ it('Codex仅中性未验证，不调用API或冒连通',async()=>{
+  const deps=makeDeps({resolveLlm:vi.fn(async()=>{throw new ModelProbeNotApplicable('codex');})});
+  const result=await runModelConnectionTest(ctx,'default',deps);
+  expect(result).toMatchObject({ok:false,status:'warn'});expect(result.detail).toMatch(/Codex.*不适用/);expect(result.detail).toContain('未验证');
+  expect(deps.probeTextModel).not.toHaveBeenCalled();expect(deps.fetchImpl).not.toHaveBeenCalled();
+ });
+ it('未知配置解析失败明确未外呼；日志与回包不泄漏原始配置',async()=>{
+  const log=vi.spyOn(console,'error').mockImplementation(()=>{});
+  try{
+   const deps=makeDeps({resolveLlm:vi.fn(async()=>{throw Error('fixture-secret private-model https://private.invalid/v1');})});
+   const result=await runModelConnectionTest(ctx,'default',deps);
+   expect(result).toMatchObject({ok:false,provider:'',model:''});expect(result.detail).toContain('配置解析未完成');expect(result.detail).toContain('尚未发起');
+   expect(deps.probeTextModel).not.toHaveBeenCalled();expect(deps.fetchImpl).not.toHaveBeenCalled();
+   expect(JSON.stringify([result,log.mock.calls])).not.toMatch(/fixture-secret|private-model|private.invalid/);expect(log).toHaveBeenCalledWith('[settings.models.test] runModelConnectionTest',{category:'configuration_error',correlationId:'r1'});
+  }finally{log.mockRestore();}
+ });
+});
+
+it.each([new Error('REQUEST_IO_DEADLINE'),Object.assign(new Error('fixture-private-timeout'),{name:'TimeoutError'})])('T1406 已知探针超时准确分类，不改原调用预算 %s',async error=>{
+ const log=vi.spyOn(console,'error').mockImplementation(()=>{});
+ try{const deps=makeDeps({probeTextModel:vi.fn(async()=>{throw error;})}),result=await runModelConnectionTest(ctx,'default',deps);expect(result).toMatchObject({ok:false});expect(result.detail).toContain('已超时');expect(JSON.stringify([result,log.mock.calls])).not.toContain('fixture-private-timeout');expect(log).toHaveBeenCalledWith('[settings.models.test] textModelProbe',{category:'timeout',correlationId:'r1'});}finally{log.mockRestore();}
 });

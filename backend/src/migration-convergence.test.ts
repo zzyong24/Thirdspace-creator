@@ -241,11 +241,12 @@ it('T1278 已记账0136却缺embedding_identity列拒绝，不伪造重建',asyn
 },180000);
 
 
-it('T1382 canonical114完整固定journal，原113身份保留并追加0140',async()=>{
+it('T1406 canonical115完整固定journal，原114身份保留并追加0141',async()=>{
  const raw=await readFile(join(folder,'meta/_journal.json'),'utf8');
- expect(createHash('sha256').update(raw).digest('hex')).toBe('340e182882cbf4bc4c27dde8e96d0e8a58bb35ed5be62da2869d1d9b02206cd2');
+ expect(createHash('sha256').update(raw).digest('hex')).toBe('125740a03cb23f7d76f25a5de77fd7b0dc11cfb3f1b7a4a3a644a1f5ed523fc0');
  const current=JSON.parse(raw) as {entries:Array<{idx:number;version:string;when:number;tag:string;breakpoints:boolean}>};
- expect(current.entries).toHaveLength(114);
+ expect(current.entries).toHaveLength(115);
+ expect(current.entries[114]).toEqual({idx:114,version:'7',when:1791043200014,tag:'0141_review_rule_group_scope',breakpoints:true});
  expect(current.entries[113]).toEqual({idx:113,version:'7',when:1791043200013,tag:'0140_unified_project_intake_retirement_timestamps',breakpoints:true});
  expect(current.entries[112]).toEqual({idx:112,version:'7',when:1791043200012,tag:'0139_unified_project_intake',breakpoints:true});
  expect(current.entries[111]).toEqual({idx:111,version:'7',when:1791043200011,tag:'0138_script_target_reservation',breakpoints:true});
@@ -255,6 +256,7 @@ it('T1382 canonical114完整固定journal，原113身份保留并追加0140',asy
  expect(createHash('sha256').update(JSON.stringify(receipts.slice(0,111))).digest('hex')).toBe('78c9c4af5305a709cd9fdab6367cd9e3a0b0dd6dacd51b97470e20b6b2d585af');
  expect(receipts[111]).toEqual({hash:'f6ad9f365d35f144a46b2fb370bf502a24a4e265de07dceb2fb88fd49b185a6f',created_at:1791043200011});
  expect(receipts[113]).toEqual({hash:'7e1856d6c6ea24f0ad559aab94f1354b7fb5607733082ec3cb1c88e0ff54a2bf',created_at:1791043200013});
+ expect(receipts[114]).toEqual({hash:'369bab227e661865bd2b855ce3d67c788c1a80531eea144e1df93b5458807416',created_at:1791043200014});
  expect(receipts[112]).toEqual({hash:'74c2288c5ae979c5f84820181602708c182da3a0408faac181ce7a25009e22a8',created_at:1791043200012});
  expect(receipts[110]).toEqual({hash:'d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494',created_at:1791043200010});
 });

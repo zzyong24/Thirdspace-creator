@@ -4,6 +4,7 @@ import {
   UnsupportedOperationError,
 } from "@creatoros/backend";
 import type { KnowledgeService } from "./knowledge.service";
+import type {createKnowledgeDistillAdoptionService} from './knowledge-distill-adoption.service';
 import type {
   KnowledgeItemWithStats,
   KnowledgeRevisionRow,
@@ -29,6 +30,8 @@ import type {
 // PERSISTED_OPS from KNOWLEDGE_OP_IDS (adding the module = registering it).
 
 export const KNOWLEDGE_OP_IDS = [
+  'knowledge.distill.receipt',
+  'knowledge.distill.adopt',
   "knowledge.list",
   "knowledge.create",
   "knowledge.get",
@@ -112,6 +115,7 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 export function createKnowledgeTransport(
   serviceFactory: (ctx: RequestContext) => KnowledgeService,
+  distill?:ReturnType<typeof createKnowledgeDistillAdoptionService>,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -125,6 +129,14 @@ export function createKnowledgeTransport(
       const q = (query ?? {}) as { page?: number; pageSize?: number };
 
       switch (endpoint.id) {
+        case 'knowledge.distill.receipt':{
+          if(!distill)throw new UnsupportedOperationError(endpoint.id);
+          return {data:await distill.receipt(ctx,(body as {source?:unknown}|undefined)?.source),meta:{requestId:ctx.requestId}};
+        }
+        case 'knowledge.distill.adopt':{
+          if(!distill)throw new UnsupportedOperationError(endpoint.id);
+          return {data:await distill.adopt(ctx,body),meta:{requestId:ctx.requestId}};
+        }
         case "knowledge.list": {
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 20;

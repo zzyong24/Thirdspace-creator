@@ -1263,6 +1263,8 @@ export function IdeaDraftForm({
 // ── 中栏：选题候选池 ──────────────────────────────────────────────────────────────
 function PoolColumn({
   pool,
+  query,
+  onQueryChange,
   sort,
   sourceFilter,
   sources,
@@ -1271,19 +1273,14 @@ function PoolColumn({
   readonly sources: TopicsOverviewResource["sources"];
   readonly candidateCountsBySource: Partial<Record<CandidateSourceFilter, number>>;
   readonly pool: CandidateResource[];
+  readonly query: string;
+  readonly onQueryChange: (query: string) => void;
   readonly sort: CandidateSortKey;
   /** [T-244] 当前来源过滤 —— 标题旁给「已按来源过滤」提示,换排序时保留。 */
   readonly sourceFilter: CandidateSourceFilter | null;
 }) {
   const router = useRouter();
-  const [q, setQ] = React.useState("");
-  const filtered = q.trim()
-    ? pool.filter(
-        (c) =>
-          c.title.includes(q.trim()) ||
-          (c.card.oneLiner ?? "").includes(q.trim()),
-      )
-    : pool;
+  const filtered = pool;
 
   return (
     <section id="topics-pick" className={styles.pool}>
@@ -1316,8 +1313,8 @@ function PoolColumn({
           <Input
             aria-label="搜索候选"
             placeholder="搜索选题"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
             className="h-8 pl-8 text-xs"
           />
         </span>
@@ -1334,7 +1331,9 @@ function PoolColumn({
             data-testid="candidate-empty-state"
             className="rounded-card border border-dashed border-border px-3 py-8 text-center text-sm text-muted-foreground"
           >
-            {sourceFilter ? (
+            {query.trim() ? (
+              <>没有匹配搜索条件的选题。清空搜索后查看候选。</>
+            ) : sourceFilter ? (
               // [T-244] 过滤态空列表 ≠ 真没候选:提示是过滤导致的,别误导用户去建卡。
               <>
                 「{SOURCE_FILTER_LABELS[sourceFilter]}」来源下暂无候选
@@ -1394,6 +1393,10 @@ export function TopicsWorkspace({
   readonly sourceFilter?: CandidateSourceFilter | null;
 }) {
   const pool = candidates.filter((c) => c.status === "pool");
+  const [query, setQuery] = React.useState("");
+  const visiblePool = query.trim()
+    ? pool.filter((c) => c.title.includes(query.trim()) || (c.card.oneLiner ?? "").includes(query.trim()))
+    : pool;
   // [T-244] 可点来源行的禁用判据:全量在池候选按 source 计数(为什么不用 overview
   // count 见 SourcesColumn prop 注释)。
   const candidateCountsBySource: Partial<Record<CandidateSourceFilter, number>> = {};
@@ -1407,10 +1410,10 @@ export function TopicsWorkspace({
   // and self-heals when the picked row leaves the pool (drop/promote/refresh), so we
   // never setState in an effect.
   const fallbackId =
-    pool.find((c) => c.card.oneLiner)?.id ?? pool[0]?.id ?? null;
+    visiblePool.find((c) => c.card.oneLiner)?.id ?? visiblePool[0]?.id ?? null;
   const [pickedId, setPickedId] = React.useState<string | null>(null);
   const selectedId =
-    pickedId && pool.some((c) => c.id === pickedId) ? pickedId : fallbackId;
+    pickedId && visiblePool.some((c) => c.id === pickedId) ? pickedId : fallbackId;
 
   // [T-279] 订阅「今日新选题」条带卡点击 → 选中该候选 + 把它在候选池里滚进视野
   //   (条带在本 island 外,靠 CustomEvent 跨过来;见 topic-focus-signal)。
@@ -1426,7 +1429,7 @@ export function TopicsWorkspace({
     });
   }, []);
 
-  const selected = pool.find((c) => c.id === selectedId) ?? null;
+  const selected = visiblePool.find((c) => c.id === selectedId) ?? null;
   // The React Compiler memoizes this object; a manual useMemo would mis-track the stable
   // setter, so we build it inline.
   const ctx: SelectionContext = { selectedId, select: setPickedId };
@@ -1436,7 +1439,7 @@ export function TopicsWorkspace({
       {/* flex-1 min-h-0 → 三栏占满中间剩余高度;每列各自框内滚动 (列内裁切而非整页滚)。
           窄屏 (无 lg) 退回单列纵向、由外层页面统一处理高度。 */}
       <div data-testid="topics-three-column" className={styles.workspace}>
-        <PoolColumn pool={pool} sort={sort} sourceFilter={sourceFilter} sources={sources} candidateCountsBySource={candidateCountsBySource}/>
+        <PoolColumn pool={visiblePool} query={query} onQueryChange={setQuery} sort={sort} sourceFilter={sourceFilter} sources={sources} candidateCountsBySource={candidateCountsBySource}/>
         <CandidateDetailPanel
           candidate={selected}
         />

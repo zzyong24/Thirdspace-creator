@@ -3402,6 +3402,7 @@ export function AICopilotContent({
                       return (
                         <ChatDistillCard
                           key={key}
+                          source={workSourceLocation(message,part.toolCallId)}
                           result={{
                             atoms: o.atoms ?? [],
                             suggestedTags: o.suggestedTags ?? [],

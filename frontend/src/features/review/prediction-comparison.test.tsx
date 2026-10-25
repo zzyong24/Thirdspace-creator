@@ -183,6 +183,7 @@ describe("PredictionComparisonSection(复盘对照展示,T-063e)", () => {
       "3.8",
     );
     const row = screen.getByTestId("prediction-comparison-row");
+    expect(row).toHaveAttribute("id",`prediction-${row.getAttribute("data-prediction-id")}`);
     expect(row.textContent).toContain("钩子强度");
     expect(row.textContent).toContain("钩子高估");
     expect(row.textContent).toContain("中偏差");
