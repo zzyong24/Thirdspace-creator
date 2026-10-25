@@ -28,13 +28,13 @@
 - 契约bootstrap测试出现43项统一 `uv_os_get_passwd ENOMEM`。根代理将同一个只读 `os.userInfo().username` 命令分别在沙箱和获准非沙箱运行：沙箱0.08秒失败、非沙箱0.08秒成功，支持Windows沙箱用户信息权限差异，不能直接写成产品内存不足。未mock系统API或降低测试；需用获准执行环境复跑，记录见 `sandbox-userinfo-probe.json`。
 - I-06旧标签增强在预审中发现可能随前端循环一起丢失，已要求恢复基于真实候选建议与冻结组的服务端best-effort标签；不允许借重复采纳或自动重模型修补标签。新事务仍以知识/修订/回执为同一业务提交边界。
 
-## 安装与外部边界
+## 首次源码实施时期的安装与外部边界（历史记录）
 
 当前仍为源码实施和隔离回归。本地构建、Windows合法签名构建、安装版原生复验、真实供应商请求和外部平台分别记录；未发生的项目不写PASS。未推送、合并、发版或热改现有安装程序。普通构建如需既有Actions签名资源，应先备好可评审提交与测试，再按实际授权处理。
 
-## 最后有效源码结果
+## 首次候选构建前的源码结果（后续I-04实机发现见末节）
 
-- 八项源码修复均完成；A、B、C实现有独立复核，范围见各独立审查。C先前partial完整链及timestamp-only红测已修复，保留原child的partial事实，只对明确可信空brief及成功只读context允许父等待补充；其它partial/未知/错误仍阻断。
+- 首次候选当时按受控回归记录八项源码完成；后续I-04真实候选宿主暴露遗漏，不能用本节旧绿测宣称其已安装闭环，以末节实机失败及补修记录为准。A、B、C实现复核范围见各独立审查。
 - A：前端66/66、契约5/5、后端21/21。
 - B：后端41/41、前端28/28、全契约567/567；旧root到0141真实public createDb双启数据保全、原词表组隔离及共享确认已覆盖；迁移五个限定case通过，23个筛选外未运行。
 - C：扩大后端367/367，最终受影响74/74；前端最终77/77。真实完成链与旧checkpoint兼容已覆盖。不同批次存在重叠，不能相加。两条未保存的C类型工具输出已从摘要改为如实的tool-only，不造日志；最终类型以根代理实际归档为准。
@@ -45,3 +45,15 @@
 现已准备本地可评审修复内容。远端修复分支、候选构建和原安装升级如继续发生，必须追加实际结果；当前本节不替后续流程预填PASS。
 
 最后代码检查发现并修正了蒸馏卡effect同步reset和新增测试any：以稳定source+组epoch key重挂载会话状态，effect仅同步外部回执，保留即时取消及迟到响应防护。最终28组件复跑通过；19个改动前端文件以Git基线逐条对照，新增lint错误0、警告0，原有18条错误未冒称清零。该产品修订后完整Next生产构建重新通过（92.87秒，含TypeScript），最终backend类型检查54.964秒退出0，前一轮构建不代替此终态。
+
+
+## 2026-10-26：已装6c实机暴露I-04正式宿主遗漏后的源码补修
+
+- 已装 `6c7f7dc0...` 在专用合成项目真实触发两次 `{}` brief.fill，但都是 generic no_evidence/none，子partial、父CHILD_PARTIAL/blocked。只一次模型准入，没有补充或新父；该实机 I-04 结论保留FAIL，不能以早期源码367/74或本次绿测覆盖。
+- 来源是正式候选工具宿主漏传原冻结 `toolFailureReceiptVersion`。此前 terminal 集成直造adapter1漏测该注册边界；现已改用真实 `createChatTaskToolHost(createChatHostContextReader(db))`，不再手工给适配器注入版本。
+- 修前实际红：`i04-host-registration-red.log`，5失败9通过。最小实现只透传同次恢复的tools与原版本；不默认1、不泛化no_evidence、不改旧回执/预算/期限。
+- 首green `i04-host-registration-green.log` 62通过1失败为legacy夹具误期望partial；旧missing flag completion语义本来可succeeded。仅修测试兼容期望，旧工具no_evidence且父拒无候选blocked均保留。
+- 最后必要回归 `i04-host-registration-green-final.log`，3文件63/63、29.41秒：正式宿主单测、真实注册/租约/completion/准备父完整链及原准备service。确切命令与边界见 `C_I04_HOST_REGISTRATION_FIX.md`。未再调用真实模型或动安装库。
+- 此后根代理的独评、类型、worker build、boundary与重新签名打包/安装/实机模型验证待另记；本段不把尚未发生的步骤标PASS。
+
+根代理补修门禁实测：独立源码复核通过；新JSON夹具类型修正后宿主测试10/10（与先前63项有重叠，不相加）；backend完整类型检查45.398秒、exit0；Worker构建2.322秒、exit0（保留原vendor import.meta警告）；boundary仍5=原基线5、无新增违规。安装过的6c候选和真实7项限定通过/I-04失败报告单独保留为历史。本次宿主补修源码仍须另行同源prepare、既有根签名、package、安装及新任务真实模型复验；没有热改安装目录或篡改旧任务回执。

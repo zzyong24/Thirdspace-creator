@@ -10,7 +10,9 @@ import {createProjectPreparationChat} from '../application/projects/project-prep
 import {createProjectPreparationApplication} from '../application/projects/project-preparation';
 import {buildChatTools,type ChatToolDeps} from '../modules/ai-runtime/chat-tools';
 import {prepareChatToolDefinitions} from '../modules/ai-runtime/chat-tool-definitions';
-import {createChatHostToolAdapter} from '../modules/ai-runtime/chat-host-tool-adapter';
+import {createChatTaskToolHost} from '../modules/ai-runtime/chat-task-tool-host';
+import {createChatHostContextReader} from '../modules/ai/chat-host-context.service';
+import type {ContextReaders} from '../modules/ai-runtime/chat-assembly-types';
 import {createExecutionChatToolPorts} from '../modules/execution/execution-chat-tool-ports.service';
 import {createExecutionCallLedgerService} from '../modules/execution/execution-call-ledger.service';
 import {createExecutionGenerationPorts} from '../modules/execution/execution-generation-ports.service';
@@ -21,13 +23,13 @@ let db:Db,close:()=>Promise<void>,seq=0;
 let clock='2026-10-25T01:00:00.000Z';const now=()=>clock,nextId=(prefix:string)=>`${prefix}-brief-terminal-${++seq}`;
 const budget={maxCalls:64,maxTokens:1000000,deadlineMs:1800000};
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();},120000);afterAll(async()=>close?.(),120000);
-async function actualTerminal(kind:'empty'|'read_failure'|'mixed'|'readonly_then_empty'){
+async function actualTerminal(kind:'empty'|'read_failure'|'mixed'|'readonly_then_empty'|'legacy_empty'){
  await db.update(executionTasks).set({status:'cancelled',leaseOwner:null,leaseExpiresAt:null}).where(eq(executionTasks.userId,'brief-terminal-user'));
  clock='2026-10-25T01:00:00.000Z';
  const ctx={userId:'brief-terminal-user',accountId:nextId('account'),requestId:'brief-terminal-fixture',source:'user' as const};
  const projects=createProjectsService(createProjectRepository(db),{now,nextId}),project=await projects.createProject(ctx,{title:'隔离完成链路项目',brief:'保留原资料'}),tasks=createPersistentTaskService(db,{now,nextId});
  const native=buildChatTools(['brief.fill','context.project.detail'],{humanizeError:()=>null,getProjectBrief:async()=>{if(kind!=='empty')throw Error('401 unauthorized');return null;}} as unknown as ChatToolDeps);
- const definitions=(await prepareChatToolDefinitions(native)).definitions,host=await createChatHostToolAdapter(native,async()=>native,{'brief.fill':'proposal','context.project.detail':'none'},{toolFailureReceiptVersion:1});
+ const definitions=(await prepareChatToolDefinitions(native)).definitions;
  const chat=createProjectPreparationChat(db,{now,nextId,assemble:async(_ctx,_snapshot,options)=>({capability:'copilot.assist',system:'隔离测试',messages:[{role:'user',content:'仅验证结构边界'}],maxSteps:6,maxOutputTokens:128,tools:definitions,executionRoute:options.executionRoute??createExecutionRoute('pi'),hostContext:{schemaVersion:1,chatContext:{surface:'project',projectId:project.id},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:now(),platformPolicyVersion:'1',platformPolicy:'隔离策略',skills:[{skillId:'chatbox.topic',baseVersion:'1',overlayRevision:null,overlayVersion:null,effective:{methodSystem:'隔离策略',template:'',tools:['brief.fill'],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}}})});
  const submitBrief=vi.fn(chat.submit),{preparation}=createProjectPreparationApplication(db,{now,nextId,tasks,intelligence:{} as never,submitBrief,readBrief:chat.read,submitProjectTranscript:async()=>{throw Error('禁止转写');}});
  const start=await preparation.start(ctx,project.id,{idempotencyKey:nextId('start'),requestedSteps:['brief']});await preparation.tick({shouldStop:()=>false});
@@ -35,22 +37,27 @@ async function actualTerminal(kind:'empty'|'read_failure'|'mixed'|'readonly_then
  const state=await preparation.get(ctx,project.id),childId=state.steps.find(s=>s.name==='brief')!.childTaskId!,claim=await tasks.claimTask({taskId:childId,workerId:'brief-terminal-fixture'});expect(claim).toBeTruthy();
  const ref={executionTaskId:childId,attempt:claim!.lease.attempt,fenceToken:claim!.lease.fenceToken};
  const [child]=await db.select().from(executionTasks).where(eq(executionTasks.id,childId));const frozen=chatWorkerInputSchema.parse((child!.payload as Record<string,unknown>).modelInput);
+ // 明确模拟旧任务缺失回执版本；只改隔离测试DB的兼容元数据，不改模型输入或原始账本。
+ if(kind==='legacy_empty'){const payload={...child!.payload as Record<string,unknown>};delete payload.toolFailureReceiptVersion;await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,childId));}
+ const readers={getProjectBrief:async()=>{if(kind==='read_failure'||kind==='mixed')throw Error('401 unauthorized');return null;},getProjectDetail:async()=>null} as unknown as ContextReaders;
+ // 与安装版同一组合工厂和真实冻结租约reader；不得在测试里直接给adapter硬塞版本1。
+ const host=await createChatTaskToolHost(createChatHostContextReader(db,{now}),readers)(ctx,frozen,ref,new AbortController().signal);
  const ledger=createExecutionCallLedgerService(db,{now,budget}),generation=createExecutionGenerationPorts(db,{now,budget}),ports=createExecutionChatToolPorts(db,{now,budget,tools:host});
  const first=await generation.reserveGenerationCall(ref,{operationKey:`${frozen.operationKey}/model/1`,request:{maxOutputTokens:128}});await ledger.start(ref,first.callId);
- const inputs=kind==='mixed'?[{},{coreMessage:'合法但读取被拒'}]:[kind==='empty'||kind==='readonly_then_empty'?{}:{coreMessage:'合法但读取被拒'}];
+ const inputs=kind==='mixed'?[{},{coreMessage:'合法但读取被拒'}]:[kind==='empty'||kind==='readonly_then_empty'||kind==='legacy_empty'?{}:{coreMessage:'合法但读取被拒'}];
  const commands=inputs.map(input=>({toolName:'brief_fill',input}));if(kind==='readonly_then_empty')commands.unshift({toolName:'context_project_detail',input:{}});
  await generation.settleGenerationCall(ref,{callId:first.callId,status:'settled',usage:{inputTokens:1,outputTokens:1},providerResult:{content:commands.map((command,index)=>({type:'tool-call',toolCallId:`actual-brief-${index}`,toolName:command.toolName,input:JSON.stringify(command.input)})),finishReason:{unified:'tool-calls'},usage:{inputTokens:{total:1},outputTokens:{total:1}},warnings:[]}});
  const toolIds:string[]=[];
  for(let index=0;index<commands.length;index++){
   const tool=await ports.reserve(ref,{modelCallId:first.callId,toolCallId:`actual-brief-${index}`});await ports.start(ref,{callId:tool.callId});const actual=await ports.execute(ref,{callId:tool.callId});toolIds.push(tool.callId);
-  if(commands[index]!.toolName==='context_project_detail')expect(actual).toMatchObject({status:'ok',sideEffect:'none'});else expect(actual).toMatchObject({status:'error',sideEffect:'none',error:{code:Object.keys(commands[index]!.input).length?'no_evidence':'invalid_input'}});
+  if(commands[index]!.toolName==='context_project_detail')expect(actual).toMatchObject({status:'ok',sideEffect:'none'});else expect(actual).toMatchObject({status:'error',sideEffect:'none',error:{code:Object.keys(commands[index]!.input).length||kind==='legacy_empty'?'no_evidence':'invalid_input'}});
  }
  const last=await generation.reserveGenerationCall(ref,{operationKey:`${frozen.operationKey}/model/2`,request:{maxOutputTokens:128}});await ledger.start(ref,last.callId);
  await generation.settleGenerationCall(ref,{callId:last.callId,status:'settled',usage:{inputTokens:1,outputTokens:1},providerResult:{content:[{type:'text',text:'尚未形成可采纳资料，请保留原记录。'}],finishReason:{unified:'stop'},usage:{inputTokens:{total:1},outputTokens:{total:1}},warnings:[]}});
  await createExecutionCheckpointService(db,{now}).save(ref,{expectedRevision:0,expectedLedgerSequence:2+toolIds.length,messages:[{role:'assistant',callId:first.callId},...toolIds.map(callId=>({role:'tool' as const,callId})),{role:'assistant',callId:last.callId}]});
  const binding=createAgenticToolBinding(host),completion=await createChatTurnCompletionService(db,{now,validateTerminalPlanFailures,validateTerminalToolFailures}).commitResult(ref,{lastModelCallId:last.callId,toolCallIds:toolIds},(task,calls,call)=>binding.forCall(task,calls,call));
- expect(completion!.outcome).toBe('partial');
- const [partial]=await db.select().from(executionTasks).where(eq(executionTasks.id,childId));const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,partial!.ownerId));expect(partial!.status).toBe('partial');expect(business!.status).toBe('partial');
+ expect(completion!.outcome).toBe(kind==='legacy_empty'?'succeeded':'partial');
+ const [partial]=await db.select().from(executionTasks).where(eq(executionTasks.id,childId));const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,partial!.ownerId));expect(partial!.status).toBe(kind==='legacy_empty'?'succeeded':'partial');expect(business!.status).toBe(kind==='legacy_empty'?'succeeded':'partial');
  clock='2026-10-25T01:00:05.000Z';
  return {ctx,project,projects,tasks,preparation,parentId:start.preparationTaskId!,childId,submitBrief};
 }
@@ -79,4 +86,11 @@ it('T1406 已冻结成功只读context回执不阻断真实空资料等待，仍
  const f=await actualTerminal('readonly_then_empty');await f.preparation.tick({shouldStop:()=>false});
  expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'waiting_user',reasonCode:'BRIEF_INPUT_REQUIRED',childTaskId:f.childId});
  const [child]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.childId));expect(child!.status).toBe('partial');expect(f.submitBrief).toHaveBeenCalledTimes(1);
+});
+
+it('T1406 正式组合宿主旧无版本任务保no_evidence及旧completion语义，父仍拒无候选',async()=>{
+ const f=await actualTerminal('legacy_empty');await f.preparation.tick({shouldStop:()=>false});
+ const preparation=await f.preparation.get(f.ctx,f.project.id);expect(preparation.steps.find(s=>s.name==='brief')).toMatchObject({status:'failed',lastError:{code:'EXECUTION_FAILED'}});expect(preparation.candidates).toEqual([]);
+ // 旧无flag completion本来允许文字结束为succeeded；不得补flag重写旧语义。工具仍no_evidence，父不冒资料完成。
+ const [child]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.childId)),[parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));expect(child!.status).toBe('succeeded');expect(parent!.status).toBe('blocked');expect((child!.payload as Record<string,unknown>).toolFailureReceiptVersion).toBeUndefined();expect(f.submitBrief).toHaveBeenCalledTimes(1);
 });
