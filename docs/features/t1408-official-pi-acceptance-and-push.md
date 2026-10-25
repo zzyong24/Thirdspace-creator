@@ -26,6 +26,10 @@
 
 具体诊断和实施合同在本SPEC补充，SPEC+BACKLOG为唯一计划。
 
+## 用户最新范围确认（2026-10-25）
+
+用户针对额度页登录要求明确回复“跳过这个额度验收 代码都提交合并了吗”。本轮跳过额度页登录、当前余额/冻结/消耗同步的验收，不再以完成登录为推进条件；该项记录为用户明确跳过，不能记录为PASS或据此推断余额充足、402根因已定位。上文要求查明真实余额/权益原因的部分按此确认缩减。官方来源Pi的实际对话CLI结果、其余已约定验收及“复验通过后再推送”的要求仍保留；不授权付款、调钱包、换源或消耗原任务最后一次恢复。
+
 ## FR-140801 组任务诊断的 CLI 入口一致性
 
 已核实：`workbench-public.transport.ts` 已允许 inspect/events 在真实 groupId、accountId=null 下读取；`workbench-public.service.ts` 通过持久任务所有权与 workspaceFilter 限制用户/组。CLI invocation gateway 先依据 WORKSPACE_OPERATION_SCOPES 强制平台账号，因此合法纯组请求先被 428 拦截。最小修复仅将 `workbench.tasks.inspect`、`workbench.tasks.events` 声明改为 group；legacy account-only 仍按原账号解析，artifact/file 操作保持其原平台权限。不得扩大敏感字段或绕过 task owner 校验。

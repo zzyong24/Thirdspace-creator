@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "operation": "settings.models.test",
+  "requestId": "req-4ba04d39-189",
+  "groupId": "grp_legacy_acct-ae1a8346-9",
+  "accountId": null,
+  "data": {
+    "ok": true,
+    "provider": "channel-managed",
+    "model": "channel-managed",
+    "detail": "已收到最小测试请求的流式回复，连通。"
+  },
+  "meta": {
+    "requestId": "req-4ba04d39-189"
+  },
+  "error": null
+}

@@ -1,0 +1,90 @@
+{
+  "worktree": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "candidateCommit": "398b63905d6208aca89b6359af15720fa96de8f6",
+  "candidateTree": "238ea2a23c6e8e80068624164f166c8b110c3a4d",
+  "originMain": "a33cbbc1fd5b71c38ac1f1445a7230a4be4014c2",
+  "cleanCommittedFreeze": true,
+  "installedSidecarBefore": "f814863c1d9ab8a5c64e2e64446901b704f8a130eb7e3b33624d520d5f9ea423",
+  "installedBinaryBefore": "27656faf20a27a72c80070e3bde90d37fcd7e04972391c444b8c9bed703aeb71",
+  "at": "2026-10-25T07:14:47.268394+00:00",
+  "sourceFiles": [
+    {
+      "path": "ai-worker/src/execution/durable-stream-model.test.ts",
+      "sha256": "8c79487793484bb1b4776464ac1bd073f721793fc9432162b149c95a404d9136"
+    },
+    {
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "sha256": "113c497021b72580750fe918fee6a88c80324ee81bcd064c355f0e31624778af"
+    },
+    {
+      "path": "ai-worker/src/runtime/error-diagnostics.test.ts",
+      "sha256": "0ba887eb1272422d92586d8f50f00b84098bc271fda01fef480b0967b03d9c50"
+    },
+    {
+      "path": "ai-worker/src/runtime/error-diagnostics.ts",
+      "sha256": "b3c2a9577b6ae5b76305de359c3853cf4ea45603ac49b66167288a618b059b4d"
+    },
+    {
+      "path": "ai-worker/src/runtime/provider-factory.test.ts",
+      "sha256": "8f7bf260cd35be5a4409ab7b6ecee1f676fcac75d2a6f6b408d16ce981de3256"
+    },
+    {
+      "path": "ai-worker/src/runtime/provider-factory.ts",
+      "sha256": "8813e3b05109408ca6e463f0a17546badd9c5b569eb66d471d30f86f48dd09f9"
+    },
+    {
+      "path": "backend/src/integration/group-workbench-capabilities.integration.test.ts",
+      "sha256": "05987c4776b88df2d5a9db6d6b7c160c66eac052c9ece778b3fc6f6c8be70da2"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/model-probe-io.service.test.ts",
+      "sha256": "c4a22cb356fed0d869a933239960a3d5768930253006cdb41fe4f6c01434de5c"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+      "sha256": "84539272de5b3430ac64847e7fb5cb3f64ef768812f6e0b16bdd662094f93abd"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-workbench-inspection.test.ts",
+      "sha256": "ae51873c8819c24a7b1e949f485999e0030fe96965c6c58f50683741980696b3"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
+      "sha256": "b5ae75bb7da4555783fa800228b6c0e33fbee23ebf3f7e237556002102a58496"
+    },
+    {
+      "path": "backend/src/modules/execution/model-engine-error.ts",
+      "sha256": "f0043946f89e61a01dfcddcbb3ce2d5cf96c5d917b835ff1c851b4e4df634521"
+    },
+    {
+      "path": "contract/src/internal/model-probe-io.ts",
+      "sha256": "70fa5fc9cded08e650e5924cfdf4d78b23aeb8b004b9ed63a2de2d0011064a8a"
+    },
+    {
+      "path": "contract/src/provider-error-detail.ts",
+      "sha256": "41f50a2e2521c194f8a3bacf9fd38cdb5391f6eda9a07685063450948cf7284a"
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "sha256": "20b4d865976438c08d18d42de37fe4d01f33b766f3ee9e89c05b8a716d2d5e1c"
+    },
+    {
+      "path": "contract/tests/provider-error-detail.test.ts",
+      "sha256": "446eeca81cfacd687307ae77332251a4157bebcc6b469468fd46d21d3aff2502"
+    },
+    {
+      "path": "docs/features/t1411-model-probe-auth-parity.md",
+      "sha256": "9f96d971292778c094418199950aaa289ba9e403c381768458618f188b04dc44"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.test.ts",
+      "sha256": "bb2a872c1321fe559198e84edfe4fe82ddc010958115da8dead46793e67cfc18"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.ts",
+      "sha256": "b8b750e3150509a2dfd5778ede26c06724d5c0be6a8141e7b5d2e660a85a9959"
+    }
+  ],
+  "originalManifestSha256": "c85e435671babfe75f89c4dfe071ccb16b9e87ad5520afda3bac4a95c14258eb",
+  "representationNote": "源文件哈希改用path/sha256列表表达；原始安装清单保留本地。19项逐一重新计算候选Git对象确认一致，不改变任何值或扫描规则。"
+}

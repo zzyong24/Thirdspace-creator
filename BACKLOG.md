@@ -9,11 +9,11 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1412|修复完整对账的执行预算与测试隔离|📋|PASS[REV:6b55ef00bbcd]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
+|T-1412|修复完整对账的执行预算与测试隔离|🔨|PASS[REV:6b55ef00bbcd]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
 |T-1411|修复文本连接测试鉴权丢失与结果说明|✅|PASS[REV:40d357fc2e44]|—|[SPEC](docs/features/t1411-model-probe-auth-parity.md)|[D]|
 |T-1410|修复历史审核证据与看板对账|✅|PASS[REV:568fd798a094]|—|[SPEC](docs/features/t1410-review-evidence-reconciliation.md)|[D]|
 |T-1409|修复官方Pi支付拒绝的安全诊断|✅|PASS[REV:04839f8bcbce]|—|[SPEC](docs/features/t1409-managed-pi-payment-diagnostics.md)|[D]|
-|T-1408|修复官方Pi与未通过验收并在通过后推送|🔨|PASS[REV:e780bb81f759]|待验|[SPEC](docs/features/t1408-official-pi-acceptance-and-push.md)|[D]|
+|T-1408|修复官方Pi与未通过验收并在通过后推送|🔨|PASS[REV:2a4274de9f10]|待验|[SPEC](docs/features/t1408-official-pi-acceptance-and-push.md)|[D]|
 |T-1407|整理现有修复、安装复验并准备合并推送|⏸️|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|[D]|
 |T-1405|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:2537258f8796]|—|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|[D]|
 |T-1403|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1403-cli-chat-combination-acceptance.md)|[D]|

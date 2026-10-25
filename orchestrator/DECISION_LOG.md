@@ -3055,3 +3055,19 @@ Review-Evidence: docs/verification/t1410/reviews/T-635.json
 Owner: user
 Status: active
 ```
+
+
+## DEC-141020 — 用户跳过本轮额度验收
+
+```text
+ID: DEC-141020
+Date: 2026-10-25
+Stage: T-1408 真实安装与CLI验收
+Type: user-confirmed-acceptance-scope
+Task-ID: T-1408
+Decision: 本轮跳过额度页面登录及当前余额、冻结、消耗同步验收，不再等待登录；记录为用户明确跳过而非PASS。官方来源Pi实际对话CLI结果与其余验收、复验通过后普通推送的条件继续保留。
+Source: 用户对额度页登录问题回复“跳过这个额度验收 代码都提交合并了吗”。
+Boundary: 不证明余额充足或402恢复；不授权付款、钱包调整、换源、代充或消耗原任务最后一次恢复。
+Owner: user
+Status: active
+```
