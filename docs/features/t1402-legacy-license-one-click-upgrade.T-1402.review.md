@@ -2,9 +2,9 @@
 
 - Task: T-1402
 - Verdict: PASS
-- Round: 3/3 (recheck)
+- Round: 1/3 (initial)
 - Spec receipt: ec21ef98e66b
-- Review receipt: d3792db71858
+- Review receipt: 523d1050324a
 
 ## 当前有效问题
 
@@ -17,23 +17,23 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1402",
   "cycle": 1,
-  "round": 3,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "T-1402 无感修订独立差异复审通过，仅冻结规格：SPEC ec21ef98e66b266f88dacc217480b12eb3c351d49ef035de754d28e8e7747808，CLIENT_WIRE d730be398988dda422a8652bbfea27eaefe1baed821f9ff84deb28e3fb63184d。首次无token唯一owner不交接，后续跨窗口/reload/丢响应无token且零下游并保墓碑；native unknown仅probe禁止sync/整体ready；普通access在自动inFlight时于generation递增前retryable延期；原客户端截止与entry剩余下游signal均不续期。原强验签/checked/稳定对象/钱包幂等不变。无未闭阻断，允许准确授权写集内RED和本地实现；不签尚未发生的源码、浏览器、桌面或生产验收。",
+  "summary": "同构独立会话对当前T-1402规格首轮完整审核；SPEC SHA256=ec21ef98e66b266f88dacc217480b12eb3c351d49ef035de754d28e8e7747808，与已安装f714规格字节一致。无感升级明确替代手动入口，可信原许可、强验签、绑定保护、原经济身份、钱包幂等、唯一owner、墓碑、unknown只读、scope切换、绝对预算、冷启动继续与配置联动均有可追溯要求。无实质规格缺陷。本轮不是复用原PASS，不代表完整跨端、安装版或生产验收。",
   "spec_path": "docs/features/t1402-legacy-license-one-click-upgrade.md",
   "spec_sha256": "ec21ef98e66b266f88dacc217480b12eb3c351d49ef035de754d28e8e7747808",
-  "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
-  "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1402-legacy-license-one-click-upgrade.T-1402.review.md",
   "review_mode": "homogeneous",
-  "model": "gpt-6.1-sol",
+  "model": "inherited-host-model",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "05ea4e14eeba97be7accf038d94daf78959505026741ccde73c7a6baf1b74e82",
+  "latest_event_hash": "7c62c1222e4ec5b9f3deb2154d446b17b062c7f4d6d0c6b820e7c77de78800a0",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "d3792db71858"
+  "receipt": "523d1050324a"
 }
 ```

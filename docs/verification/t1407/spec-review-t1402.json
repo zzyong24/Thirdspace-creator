@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "同构独立会话对当前T-1402规格首轮完整审核；SPEC SHA256=ec21ef98e66b266f88dacc217480b12eb3c351d49ef035de754d28e8e7747808，与已安装f714规格字节一致。无感升级明确替代手动入口，可信原许可、强验签、绑定保护、原经济身份、钱包幂等、唯一owner、墓碑、unknown只读、scope切换、绝对预算、冷启动继续与配置联动均有可追溯要求。无实质规格缺陷。本轮不是复用原PASS，不代表完整跨端、安装版或生产验收。",
+  "findings": []
+}

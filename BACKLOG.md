@@ -9,12 +9,16 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1402| 历史激活码无感升级模型权益与原授权恢复 |🔨| PASS[REV:d3792db71858] |待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)| 用户最新要求无需点击，桌面启动自动核对升级；原按钮实际已恢复并复用原钱包，修状态联动与自动生命周期。原期限/次数/钱包/有效绑定保护不变，新增合同待独评，本地打包安装沿用授权。 |
-|T-1401|修复 AI 额度连接错误被通用不可用提示掩盖|✅|—|—|[SPEC](docs/features/t1401-ai-credit-link-errors.md)|保留配置错误分类与重试语义，验证开发接口，删除临时诊断；仅本地提交，不push。|
+|T-1407|整理现有修复、安装复验并准备合并推送|🔨|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|用户明确恢复安装并要求处理代码、准备合并推送；保现安装修复与数据，整理本地提交、整合主干、CLI实测并给出真实准备状态，尚不执行push或公开发布。|
+|T-1405|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:da492135f519]|待验|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|用户要求修复T1403暴露的问题；核真实额度、对话组绑定、路由错误及工具开销，保合法来源与权限，独评后实现并CLI复验。|
+|T-1404|修复Tab切换读取和编辑器初始化开销|✅|PASS[REV:d891fda60145]|PASS:51cb1ab67f76|[SPEC](docs/features/t1404-tab-navigation-performance-fixes.md)|用户要求全部修复已确认问题；消除文章重复读、隐藏导出实例、串行图片与明确ID列表扫描，分区加载正文/素材/发布信息；保归属、草稿和保存导出，不安装发布。|
+|T-1403|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1403-cli-chat-combination-acceptance.md)|用户纠正非阻塞问题不要重复询问；固定月明水清深，修订Agent规则并真实CLI验证模型来源与引擎组合、回复和工具，不以连接探针代签。|
+|T-1402|历史激活码无感升级模型权益与原授权恢复|🔨|PASS[REV:523d1050324a]|待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)|用户要求面向所有用户自助升级历史永久码；保原许可与钱包，幂等启用，不依赖人工查库；含本机已明确授权恢复及一份失效旧绑定释放，本地实现测试打包安装，发布另列。|
+|T-1401|接入试用设备一次模型权益与明确恢复|🔨|—|待验|[SPEC](docs/features/t1401-trial-device-model-benefits.md)|用户确认每台试用设备一次5元；消费Activity/Growth试用v2、正式v1保持，复用正常许可核验与明确启用；独立worktree本地验证，不push/部署/实赠。|
 |T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|四来源 mock 回归、补齐弹窗 flex 高度链；不真实调用、不push，补丁交付。|
 |T-1399|固定侧栏 AI 助手页脚与收拢入口|⏸️|—|待验|[SPEC](docs/features/t1399-sidebar-assistant-footer.md)|仅调整助手卡片与测试，保留全部导航、折叠及原 Copilot 参数；指定回归、补丁交付，不push。|
 |T-1398|修复 Copilot DeepSeek 强制工具请求、失败重试与错误诊断丢失|🔨 待办|—|待验|[SPEC](docs/features/t1398-copilot-deepseek-failure.md)|用户授权最小修复、相关测试与补丁交付；不真实调用、不读密钥、不修改许可激活签名、不push。 第四轮补 DeepSeek 推理历史回传与缺失历史关闭思考；第三轮补发送前明确失败结算与日志；当前源码 mocked DeepSeek 定位成功，历史 exact exception 未复现，任务保持未完成。|
-|T-1397|修复main Verify并核实已知失败|🔨|—|—|[授权与验收](docs/features/t1397-verify-main-green.md)|用户授权契约漏登记、后端CI终止根因、完整本地测试与逐项known清单；6144串行类型检查及各包质量门，HTTPS普通推送并最多2轮追加修复，报告至terminals/ci-green。|
+|T-1397|修复main Verify并核实已知失败|⏸️|—|—|[授权与验收](docs/features/t1397-verify-main-green.md)|用户授权契约漏登记、后端CI终止根因、完整本地测试与逐项known清单；6144串行类型检查及各包质量门，HTTPS普通推送并最多2轮追加修复，报告至terminals/ci-green。|
 |T-1396|清理启动恢复留下的旧版及数据副本|✅|—|—|[授权与范围](docs/features/t1396-local-recovery-backup-cleanup.md)|已按授权删10处旧App/旧DMG及数据副本，逻辑12.14GiB；当前App、正式数据、新DMG均保留，原进程与首页200通过；轻量证据保留。|
 |T-1395|用当前源码重打本地包并保留数据恢复启动|✅|—|—|[授权与验收](docs/features/t1395-local-package-startup-recovery.md)|源码7252d30d5本地包已安装，58测试及DMG/签名通过；副本迁移与实际库核心内容保留通过，原生首页正常且保持运行；旧App/原库已备份，不发布；quick仍既有22/17。|
 |T-1394|排查本机CreatorOS启动失败并核定恢复路径|✅|—|—|[诊断范围与验收](docs/features/t1394-local-startup-diagnosis.md)|已定位T1382实测把原库升0139，旧App仅0137/0138；冷快照保全，当前源码副本只读兼容PASS；失败App已退出，未重打包安装/恢复启动，需匹配新包；quick仍既有22/17。|
@@ -74,7 +78,7 @@
 |T-1259|排查用户1.12版扫码绑定与配置同步异常并修复确认缺陷|✅ 待办|—|—|[排查与修复范围](docs/features/t1259-user-binding-config-repair.md)|用户确认1.12为当前、1.11为旧版；核版本与实际失败链，缺陷先RED再修，保原账号登录态与校验，不重发真实任务或发布。|
 |T-1258|分析用户2026-10-12四份加密运行日志异常|✅ 待办|—|—|[诊断范围](docs/features/t1258-user-log-diagnosis.md)|仅本地只读解密四份附件，按时间与影响分析失败、恢复及证据缺口，不改产品、不重发用户任务。|
 |T-1257|将当前已安装版本制作本地签名安装包|✅ 待办|—|—|[范围与验收](docs/features/t1257-installed-local-signed-installer.md)|用户明确只做本地签名、不提交Apple；冻结当前安装1.2.0 arm64副本，保运行时字节，签名封DMG与挂载核验，不重建未提交源码。|
-|T-1255|加密日志直传Growth、异常采集与运行指标观测|🔨 待办|PASS[REV:7e54d5d28829]|待验|[原直传合同](docs/features/t1255-reporting-full-delivery.md) · [观测方案候选](docs/features/t1255-observability-research.md)|10/21公开get原观察超600秒未取回执、仅停自有CLI，今日上传状态未知；保10/18真回执、10/20所见422及T1378/Growth T248本地39PASS候选，owner/完整解密/指标待核，不催传或签完成，见desktop-agent-live/RESULT.md。 |
+|T-1255|加密日志直传Growth、异常采集与运行指标观测|🔨 待办|PASS[REV:7e54d5d28829]|待验|[原直传合同](docs/features/t1255-reporting-full-delivery.md) · [观测方案候选](docs/features/t1255-observability-research.md)|10/24公开get成功，仍HTTP422/待发4399、每日排期保持，最近成功仍10/18；原Growth空间缺失，owner/完整解密/指标待核。保10/21观察失败及T1378/Growth T248本地39PASS候选，不追签线上首因、不催传或签完成，见desktop-agent-live/RESULT.md。 |
 |T-1256|修复Doocs静态原适配三处无用绑定编译失败|🔨 待办|PASS[REV:b3d116e19a48]|待验|[真实类型红与精确范围](docs/features/t1256-doocs-static-unused-bindings-build-closure.md)|T1254 V13两根24/slow/types及nativebuild已过，static完整原build三TS6133真失败；仅核并删三无用声明，保模板/原命令/旧FAIL，独评后续原余步骤。|
 |T-1254|闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性|🔨 待办|PASS[REV:1ebe2f90de0b]|待验|[当场两红与待评边界](docs/features/t1254-doocs-request-budget-and-source-closure.md)|完整Gate剩两真实网络abort；先核共享fetch原源/两包/使用路径与重建来源，独评后修，不扩动画豁免或只改产物洗绿。|
 |T-1253|闭合原Worker夹具可信回执与未知恢复验收|🔨 待办|PASS[REV:e890e7d4ffac]|待验|[真实8红与精确范围](docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md)|原9文件46例38PASS8FAIL；仅ports/hooks/draft三原测试，核429 superseded、partial与缺usage unknown，先独评不改生产/洗期望。|
@@ -168,7 +172,7 @@
 |T-1077|修复采纳与作品素材读取的项目返回值|🔨 待办|PASS[REV:a36209c19783]|待验|[SPEC](docs/features/t1077-material-parent-port.md) [详情](BACKLOG-details.md#t-1077)|见详情。|
 |T-1075|修复安装验收发现的素材标签观察与纯组生图证明|🔨 待办|PASS[REV:73a6052db08f]|—|[SPEC](docs/features/t1075-installed-ai-observation-gaps.md) [详情](BACKLOG-details.md#t-1075)|见详情。|
 |T-1074|全面验收与补齐AI助手系统操作、工具开放性和功能提示词|🔨 待办|PASS[REV:b19144c34cab]|待验|[SPEC](docs/features/t1074-ai-system-operations.md) [详情](BACKLOG-details.md#t-1074)|见详情。|
-|T-1071|修复账号绑定和页面Tab切换卡顿|🔨 待办|PASS[REV:a53e25bf48df]|待验|[SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071)|见详情。|
+|T-1071|修复账号绑定和页面Tab切换卡顿|🔨 待办|PASS[REV:a53e25bf48df]|待验|[SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071)|2026-10-24用户再次反馈Tab卡顿，本轮按当前源码分析导航、首屏读取、编辑器重建及后台争用；分析不代签安装版根因与修复验收，见[源码研究](docs/research/2026-10-24-tab-switch-performance.md)。|
 |T-1070|打通Codex执行与编导精调，脚本一键生成文章和图文|🔨 待办|PASS[REV:b195ac203ec0]|待验|[SPEC](docs/features/t1070-director-script-workflow.md) [详情](BACKLOG-details.md#t-1070)|见详情。|
 |T-1069|修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口|🔨 待办|PASS[REV:19bad8ef6f93]|待验|[SPEC](docs/features/t1069-installed-media-and-binding.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e350e6053e05749b)。|
 |T-1066|落实本地客户端优先出包并移除人为构建超时|⏸️ 待办|PASS[REV:0d40d8466937]|—|[SPEC](docs/features/t1066-local-package-build-only.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d6ce9166621c4243)。|
