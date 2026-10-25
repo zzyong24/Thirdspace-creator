@@ -9,8 +9,11 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+| T-1410 | 修复历史审核证据与看板对账 | 🔨 | PASS[REV:0555d8e67611] | — | [SPEC](docs/features/t1410-review-evidence-reconciliation.md) | 沿原规范链保全恢复原件并真实独审，不刷新hash冒PASS；通过后再整理看板。 |
+| T-1409 | 修复官方Pi支付拒绝的安全诊断 | 🔨 | PASS[REV:04839f8bcbce] | — | [SPEC](docs/features/t1409-managed-pi-payment-diagnostics.md) | T1408拆分的确定性错误提取与持久分类修复；真实原任务恢复与安装总验收仍由T1408闭环。 |
+|T-1408|修复官方Pi与未通过验收并在通过后推送|🔨|PASS[REV:e780bb81f759]|待验|[SPEC](docs/features/t1408-official-pi-acceptance-and-push.md)|用户明确继续修复官方402、验收失败及真实安装复验，通过后普通推送；先核根因和精确写集，独立审核，不伪造UI或历史审核。|
 |T-1407|整理现有修复、安装复验并准备合并推送|⏸️|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|用户明确恢复安装并要求处理代码、准备合并推送；保现安装修复与数据，整理本地提交、整合主干、CLI实测并给出真实准备状态，尚不执行push或公开发布。|
-|T-1405|修复CLI真实对话的组上下文、模型错误与开销|⏸️|PASS[REV:da492135f519]|待验|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|用户要求修复T1403暴露的问题；核真实额度、对话组绑定、路由错误及工具开销，保合法来源与权限，独评后实现并CLI复验。|
+|T-1405|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:2537258f8796]|—|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|用户要求修复T1403暴露的问题；核真实额度、对话组绑定、路由错误及工具开销，保合法来源与权限，独评后实现并CLI复验。|
 |T-1404|修复Tab切换读取和编辑器初始化开销|✅|PASS[REV:d891fda60145]|PASS:51cb1ab67f76|[SPEC](docs/features/t1404-tab-navigation-performance-fixes.md)|用户要求全部修复已确认问题；消除文章重复读、隐藏导出实例、串行图片与明确ID列表扫描，分区加载正文/素材/发布信息；保归属、草稿和保存导出，不安装发布。|
 |T-1403|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1403-cli-chat-combination-acceptance.md)|用户纠正非阻塞问题不要重复询问；固定月明水清深，修订Agent规则并真实CLI验证模型来源与引擎组合、回复和工具，不以连接探针代签。|
 |T-1402|历史激活码无感升级模型权益与原授权恢复|🔨|PASS[REV:523d1050324a]|待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)|用户要求面向所有用户自助升级历史永久码；保原许可与钱包，幂等启用，不依赖人工查库；含本机已明确授权恢复及一份失效旧绑定释放，本地实现测试打包安装，发布另列。|
@@ -312,7 +315,7 @@
 |T-655|接通 Seedance 文生视频适配器并修复 `seeddance` 配置报未知 provider|🔨 待办|—|—|[详情](BACKLOG-details.md#t-655)|详情见外置记录。|
 |T-654|新增 Qwen 方言 ASR 适配器并接入设置预设|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-654)|详情见外置记录。|
 |T-653|支持本地自配与渠道子 Key 托管双模式模型供给|📋 待办|待审|待验|[详情](BACKLOG-details.md#t-653)|详情见外置记录。|
-|T-652|重构定位前采为必经的编导式访谈与证据辅助工作流|🔨 待办|待审|待验|[详情](BACKLOG-details.md#t-652)|详情见外置记录。|
+|T-652|重构定位前采为必经的编导式访谈与证据辅助工作流|🔨 待办|PASS[REV:2089334662f3]|待验|[SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md) · [详情](BACKLOG-details.md#t-652)|详情见外置记录。|
 |T-650|知识倾倒输入框支持拖拽文件直接导入|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-650)|详情见外置记录。|
 |T-651|内容雷达默认按作品真实发布时间倒序|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-651)|详情见外置记录。|
 |T-649|调研并设计激活后渠道白标：品牌名、应用内 Logo 与系统级图标边界|📋 待办|—|待验|[详情](BACKLOG-details.md#t-649)|详情见外置记录。|

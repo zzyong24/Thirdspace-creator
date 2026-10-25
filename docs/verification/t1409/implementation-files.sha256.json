@@ -1,0 +1,14 @@
+{
+  "contract/src/provider-error-detail.ts": "41f50a2e2521c194f8a3bacf9fd38cdb5391f6eda9a07685063450948cf7284a",
+  "contract/tests/provider-error-detail.test.ts": "446eeca81cfacd687307ae77332251a4157bebcc6b469468fd46d21d3aff2502",
+  "ai-worker/src/runtime/provider-factory.ts": "8813e3b05109408ca6e463f0a17546badd9c5b569eb66d471d30f86f48dd09f9",
+  "ai-worker/src/runtime/provider-factory.test.ts": "8f7bf260cd35be5a4409ab7b6ecee1f676fcac75d2a6f6b408d16ce981de3256",
+  "ai-worker/src/execution/generation-error.ts": "113c497021b72580750fe918fee6a88c80324ee81bcd064c355f0e31624778af",
+  "ai-worker/src/execution/durable-stream-model.test.ts": "e3ea190a2fcd2e05cafb363ecebaabc4d62d50bef48641a8248ed49cc331bcff",
+  "ai-worker/src/runtime/error-diagnostics.ts": "b3c2a9577b6ae5b76305de359c3853cf4ea45603ac49b66167288a618b059b4d",
+  "ai-worker/src/runtime/error-diagnostics.test.ts": "0ba887eb1272422d92586d8f50f00b84098bc271fda01fef480b0967b03d9c50",
+  "backend/src/modules/execution/model-engine-error.ts": "f0043946f89e61a01dfcddcbb3ce2d5cf96c5d917b835ff1c851b4e4df634521",
+  "backend/src/modules/execution/execution-worker-outcome.service.test.ts": "b5ae75bb7da4555783fa800228b6c0e33fbee23ebf3f7e237556002102a58496",
+  "frontend/src/server/settings-model-test-wrap.ts": "a613dc41a2da18c6be1e72fc95534ac8cba3e18dfa838e9e3f984a960335cfa2",
+  "frontend/src/server/settings-model-test-wrap.test.ts": "f42c5c8de46a4ade402384ce77476a021d12ea40b114a69504cf96cea1ac2c87"
+}

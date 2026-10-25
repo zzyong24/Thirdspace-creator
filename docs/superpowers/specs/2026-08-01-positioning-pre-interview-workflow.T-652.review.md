@@ -3,37 +3,50 @@
 - Task: T-652
 - Verdict: PASS
 - Round: 2/3 (recheck)
-- Spec receipt: 95911e86fb46
-- Review receipt: eb61c0840578
+- Spec receipt: ef59b23c662a
+- Review receipt: 2089334662f3
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：—
+已销账：REV-001 (当前 SPEC 第 10 节第 325—333 行规定 confirm 的唯一事务后置条件、幂等结果、候选 revision 与当前 statement 前置版本校验、过期候选冲突、事务回滚及交错确认结果；第 12 节第 366—367 行以 AC-15 验收重复确认、交错确认和半采纳记录。)；REV-002 (当前 SPEC 第 4.1 节第 87—96 行将“从零开始”定义为物理输入边界，明确只读查看不加入证据板或改变生成输入、切换起点后才可纳入旧作品，并要求保存可检查的 input manifest；第 12 节第 364—365 行以 AC-14 验收旧 profile/work 引用为空及只读查看不改变 manifest。)；REV-003 (当前 SPEC 第 12 节第 361—363 行新增 AC-13，要求适合选项回答的问题默认展示至少两个普通语言选项及适用的补充入口，并验收单选、多选、自定义补充的保存、刷新恢复、修改、证据板同步和 normal/minimum viewport。)
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-652",
-  "cycle": 2,
+  "cycle": 1,
   "round": 2,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "PASS。Cycle 2 round 2 定向复审仅核查 T-707 带入的 changed lines：positioning.generate 的 userId + accountId + idempotencyKey 与规范化 input manifest 指纹契约只收敛最小 session/候选的重复生成，不改变 T-652 的同账号 confirm、statement 版本、PositioningProductAudienceSnapshot 同事务采纳及下游读取边界；纯人设、个人表达、作品集或纯影响力定位不创建产品人群 snapshot，并继续读取同一 statement/master snapshot，符合 T-652 既有适用条件且防止虚构产品、人群和场景。未发现新增 blocker、major 或 minor。",
+  "summary": "上一轮 REV-001/002/003 均已由当前 SPEC 的新增约束与结果级验收销账；changed_line_refs 未引入新的可阻断问题。",
   "spec_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
-  "spec_sha256": "95911e86fb467094feff7b2bd997d1b9ce2bd2e1cbe9dedc4862517ae5f7bdea",
+  "spec_sha256": "ef59b23c662a04c263266c4d0e9f0b98abc4d2ae3420f749211d226113ab35d6",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.T-652.review.md",
-  "review_mode": "independent-readonly",
+  "review_mode": "cross-model-same-family",
   "model": "gpt-5.6-sol",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "25e70baf82b4d3e9839a001e612cd369506d2366fb4316327b19455bcd1f7dc7",
+  "latest_event_hash": "e7fb9f7b45d1b33e5a010e2649f6e149c492971f48cd5ce5d692b75a6cbbefc5",
   "open_findings": [],
-  "resolved_findings": [],
-  "receipt": "eb61c0840578"
+  "resolved_findings": [
+    {
+      "id": "REV-001",
+      "resolution_evidence": "当前 SPEC 第 10 节第 325—333 行规定 confirm 的唯一事务后置条件、幂等结果、候选 revision 与当前 statement 前置版本校验、过期候选冲突、事务回滚及交错确认结果；第 12 节第 366—367 行以 AC-15 验收重复确认、交错确认和半采纳记录。"
+    },
+    {
+      "id": "REV-002",
+      "resolution_evidence": "当前 SPEC 第 4.1 节第 87—96 行将“从零开始”定义为物理输入边界，明确只读查看不加入证据板或改变生成输入、切换起点后才可纳入旧作品，并要求保存可检查的 input manifest；第 12 节第 364—365 行以 AC-14 验收旧 profile/work 引用为空及只读查看不改变 manifest。"
+    },
+    {
+      "id": "REV-003",
+      "resolution_evidence": "当前 SPEC 第 12 节第 361—363 行新增 AC-13，要求适合选项回答的问题默认展示至少两个普通语言选项及适用的补充入口，并验收单选、多选、自定义补充的保存、刷新恢复、修改、证据板同步和 normal/minimum viewport。"
+    }
+  ],
+  "receipt": "2089334662f3"
 }
 ```

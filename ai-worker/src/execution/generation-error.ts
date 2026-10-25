@@ -1,4 +1,4 @@
-import {redactProviderErrorDetail} from "@creatoros/contract/provider-error-detail";
+import {CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE,redactProviderErrorDetail} from "@creatoros/contract/provider-error-detail";
 import {CodexHostError} from './codex-app-server-protocol';
 import { classifyLlmError, getRetryAfterMs } from "../runtime/retry-policy";
 
@@ -29,6 +29,7 @@ export function generationFailure(error: unknown, hasOutput: boolean, options: {
   if (!hasOutput && error && typeof error === "object") {
     const e = error as {statusCode?: unknown; status?: unknown; code?: unknown; retryAfterMs?: unknown};
     if (e.code === "AI_CREDIT_EXHAUSTED") return new GenerationFailure("waiting_user", "AI_CREDIT_EXHAUSTED");
+    if (e.code === "CHANNEL_MODEL_PAYMENT_REQUIRED") return new GenerationFailure("waiting_user", "CHANNEL_MODEL_PAYMENT_REQUIRED", undefined, CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE);
     const status = e.statusCode ?? e.status;
     if (typeof status === "number" && status >= 400 && status <= 599) {
       if (status === 401 || status === 402 || status === 403) return new GenerationFailure("waiting_user", classified.reason);

@@ -6,6 +6,9 @@ import type {
 } from "@ai-sdk/provider";
 import { createDurableStreamModel, selectChatReplayRequest } from "./durable-stream-model";
 import {createHash} from 'node:crypto';
+import {createServer} from 'node:http';
+import {modelFor,toChannelManagedError} from '../runtime/provider-factory';
+import {generationFailure} from './generation-error';
 const usage = {
     inputTokens: { total: 2, noCache: 2, cacheRead: 0, cacheWrite: 0 },
     outputTokens: { total: 3, text: 3, reasoning: 0 },
@@ -376,4 +379,66 @@ it('明确HTTP拒绝把安全原因结算到原调用，并随失败抛出',asyn
  f.provider.doStream=vi.fn(async()=>{throw Object.assign(new Error('provider rejected'),{statusCode:400,providerErrorDetail:'http_400: invalid tool_choice'});});
  await expect(f.model().doStream({prompt:[{role:'user',content:[{type:'text',text:'test'}]}]})).rejects.toMatchObject({errorCode:'http_400',errorMessage:'http_400: invalid tool_choice'});
  expect(f.ports.settle).toHaveBeenCalledWith('call',{status:'rejected',errorDetail:'http_400: invalid tool_choice'});
+});
+
+const paymentMessage='官方模型服务返回支付或权益核验拒绝（HTTP 402）。请在设置查看 AI 额度与消耗，核对后继续原任务。';
+it.each([
+ {label:'字符串error',body:{error:'insufficient balance'},code:'AI_CREDIT_EXHAUSTED'},
+ {label:'对象error.type',body:{error:{type:'insufficient_quota',message:'rejected'}},code:'AI_CREDIT_EXHAUSTED'},
+ {label:'对象error.code',body:{error:{code:'AI_CREDIT_EXHAUSTED',message:'rejected'}},code:'AI_CREDIT_EXHAUSTED'},
+ {label:'未知受管402',body:{error:{code:'private-upstream-code',type:'private-upstream-type',message:'private-model private-provider private-token https://private.example/api'},request:{secret:'private-request'},headers:{authorization:'private-header'}},code:'CHANNEL_MODEL_PAYMENT_REQUIRED'},
+ {label:'SDK短消息',body:'payment verification required private-token',code:'CHANNEL_MODEL_PAYMENT_REQUIRED'},
+ {label:'自配402',body:{error:{message:'payment required'}},code:'http_402',self:true},
+])('T1409 实际HTTP→Pi→聊天durable：$label',async vector=>{
+ const {body,code}=vector;
+ let requests=0;
+ const log=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ const server=createServer((req,res)=>{requests++;req.resume();res.writeHead(402,{'content-type':typeof body==='string'?'text/plain':'application/json','x-private-header':'private-header'});res.end(typeof body==='string'?body:JSON.stringify(body));});
+ await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const f=fixture([]),fallbackModel=vi.fn(async()=>null);
+ try{
+  const model=createDurableStreamModel({model:modelFor({apiFormat:'openai_chat',baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:'private-model',token:'private-token',...('self' in vector?{}:{displayModelKey:'channel-managed' as const})}),operationKey:'payment-chat',ports:f.ports,fallbackModel});
+  let caught:unknown;
+  try{await model.doStream({prompt:[{role:'user',content:[{type:'text',text:'测试'}]}],maxOutputTokens:64,abortSignal:AbortSignal.timeout(5000)});}catch(error){caught=error;}
+  expect(caught).toMatchObject({outcome:'waiting_user',errorCode:code});
+  if(code==='CHANNEL_MODEL_PAYMENT_REQUIRED'){
+   expect(caught).toMatchObject({errorMessage:paymentMessage});
+   expect(f.ports.settle).toHaveBeenCalledWith('call',{status:'rejected',errorDetail:paymentMessage});
+  }else expect(f.ports.settle).toHaveBeenCalledWith('call',{status:'rejected'});
+  if('self' in vector)expect(String(caught)).not.toContain('官方');
+  expect(f.states).toEqual(['start','rejected']);expect(requests).toBe(1);expect(fallbackModel).not.toHaveBeenCalled();
+  expect(JSON.stringify({caught,settlements:f.ports.settle.mock.calls,logs:log.mock.calls})).not.toMatch(/private-model|private-provider|private-token|private\.example|private-upstream|private-request|private-header/);
+ }finally{log.mockRestore();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+});
+
+it('T1409 自配402保持原分类，受管支付错误已有输出时仍未知',async()=>{
+ const own=generationFailure({statusCode:402,providerErrorDetail:'http_402: payment required'},false);
+ expect(own).toMatchObject({outcome:'waiting_user',errorCode:'http_402'});expect(own.message).not.toContain('官方');
+ const managed=toChannelManagedError({status:402,message:'payment required'});
+ expect(generationFailure(managed,true,{allowUnconfirmedModelRetry:true})).toMatchObject({outcome:'unknown_result',errorCode:'MODEL_RESULT_UNKNOWN'});
+});
+
+it('T1409 实际HTTP已出文本后中断仍未知，不伪装支付拒绝或自动换源',async()=>{
+ let requests=0;
+ const log=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ const server=createServer((req,res)=>{
+  requests++;req.resume();res.writeHead(200,{'content-type':'text/event-stream'});
+  res.write(`data: ${JSON.stringify({id:'partial',object:'chat.completion.chunk',model:'private-model',choices:[{index:0,delta:{role:'assistant',content:'部分正文'},finish_reason:null}]})}\n\n`);
+  setTimeout(()=>res.end(`data: ${JSON.stringify({error:{code:'payment_required',message:'private-token private-provider'}})}\n\n`),10);
+ });
+ await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const f=fixture([]),fallbackModel=vi.fn(async()=>null);
+ try{
+  const model=createDurableStreamModel({model:modelFor({apiFormat:'openai_chat',baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:'private-model',token:'private-token',displayModelKey:'channel-managed'}),operationKey:'partial-payment',ports:f.ports,fallbackModel});
+  const response=await model.doStream({prompt:[{role:'user',content:[{type:'text',text:'测试'}]}],maxOutputTokens:64,abortSignal:AbortSignal.timeout(5000)});
+  const parts:LanguageModelV4StreamPart[]=[];
+  const reader=response.stream.getReader();
+  try{
+   for(;;){const part=await reader.read();if(part.done)break;parts.push(part.value);}
+  }finally{reader.releaseLock();}
+  expect(parts.some(part=>part.type==='text-delta'&&part.delta==='部分正文')).toBe(true);
+  expect(parts.find(part=>part.type==='error')).toMatchObject({error:{outcome:'unknown_result',errorCode:'MODEL_RESULT_UNKNOWN'}});
+  expect(f.states).toEqual(['start','unknown']);expect(requests).toBe(1);expect(fallbackModel).not.toHaveBeenCalled();
+  expect(JSON.stringify({settlements:f.ports.settle.mock.calls,logs:log.mock.calls})).not.toMatch(/private-model|private-token|private-provider/);
+ }finally{log.mockRestore();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 });

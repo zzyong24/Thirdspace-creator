@@ -1,7 +1,7 @@
 import { classifyLlmError } from "./retry-policy";
+import {CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE, MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE} from '@creatoros/contract/provider-error-detail';
 
 const MAX_DIAGNOSTIC_MESSAGE_CHARS = 500;
-const MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE = "AI 额度不足，请充值后再试。";
 
 function isManagedAiCreditExhausted(err: unknown): boolean {
   const e =
@@ -95,6 +95,7 @@ export function safeModelFailureMessage(
       ? (err as { stage: string }).stage
       : "";
   const safeMessages: Record<string, string> = {
+    CHANNEL_MODEL_PAYMENT_REQUIRED: CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE,
     CHANNEL_MODEL_AUTHENTICATION:
       "模型服务授权已失效，请重新校验激活权益后重试。",
     CHANNEL_MODEL_RATE_LIMITED: "当前生成请求较多，请稍后再试。",

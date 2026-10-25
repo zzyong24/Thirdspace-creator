@@ -20,6 +20,13 @@ function providerOf(model: ReturnType<typeof modelFor>): string {
 }
 
 describe("modelFor", () => {
+  it('T1409 受管支付拒绝只输出固定领域码，不继承上游正文或重试标记',()=>{
+    const error=toChannelManagedError({status:402,code:'private-provider-code',reason:'upstream',retryable:true,message:'private-model private-provider',body:{token:'private-token'}});
+    expect(error).toMatchObject({code:'CHANNEL_MODEL_PAYMENT_REQUIRED',reason:'payment_required',status:402,retryable:false,
+      message:'官方模型服务返回支付或权益核验拒绝（HTTP 402）。请在设置查看 AI 额度与消耗，核对后继续原任务。'});
+    expect(JSON.stringify(error)).not.toMatch(/private-model|private-provider|private-token/);
+    expect(error.cause).toBeUndefined();
+  });
   it('T1405 普通402没有余额证据时不能变成额度不足，明确余额错误仍安全归类',()=>{
     const error=toChannelManagedError({status:402,message:'payment verification required',responseBody:'synthetic-private-body'});
     expect(error).not.toBeInstanceOf(ManagedAiCreditExhaustedError);

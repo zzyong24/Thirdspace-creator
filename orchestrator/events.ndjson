@@ -1798,3 +1798,7 @@
 {"ts":"2026-10-25T04:08:40.632Z","actor":"taskctl","action":"resume","task":"T-1405","reason":"用户2026-10-25明确现在可以安装并整理代码准备合并推送；按T-1407先整理干净提交候选再安装复验。","sha_before":"38487f465776","sha_after":"a4fd821b8af1"}
 {"ts":"2026-10-25T05:13:35.055Z","actor":"taskctl","action":"block","task":"T-1405","reason":"已安装8f757候选并完成六组合真实CLI复验：四组合三轮通过，Codex来源配Pi按合同409；官方Pi原任务ai-task-5e73167d-401返回http_402并停waiting_user，公开步骤为空，组级执行诊断受AccountRequiredError限制，真实原因尚未核实。保留原任务不重发，不误判余额耗尽。见docs/verification/t1407/RESULT.md。","sha_before":"6c7294023b9d","sha_after":"aed1033264d1"}
 {"ts":"2026-10-25T05:27:40.910Z","actor":"taskctl","action":"block","task":"T-1407","reason":"本地整合、最终6daaf包安装与Pi/Codex各三轮CLI补测已完成，六组合原矩阵和数据保全证据齐备；标准taskctl complete因验收列待验要求UI旅程JSON，现有真实CLI RESULT不满足而拒绝。未伪造UI报告或降低门。官方Pi原任务仍http_402，full发布未放行；quick22ERROR17WARN保留。见docs/verification/t1407/RESULT.md和taskctl-complete-attempt.txt。","sha_before":"aed1033264d1","sha_after":"eb02dee03cf9"}
+{"ts":"2026-10-25T05:37:23.215Z","actor":"taskctl","action":"resume","task":"T-1405","reason":"用户明确要求继续修复官方Pi402、完成未通过验收并在复验通过后推送；沿原真实任务核因，保留既有授权。","sha_before":"eb02dee03cf9","sha_after":"afee192be07a"}
+{"ts":"2026-10-25T05:47:14.338Z","actor":"taskctl","action":"start","task":"T-1408","sha_before":"b8e3578a0202","sha_after":"300a2480edfd"}
+{"ts":"2026-10-25T05:52:43.426Z","actor":"taskctl","action":"start","task":"T-1409","sha_before":"439c98285d09","sha_after":"2adaf3788455"}
+{"ts":"2026-10-25T06:03:33.151Z","actor":"taskctl","action":"start","task":"T-1410","sha_before":"673286512d64","sha_after":"be815f3d86d8"}

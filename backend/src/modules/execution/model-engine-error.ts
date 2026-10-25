@@ -1,5 +1,8 @@
+import {CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE} from '@creatoros/contract/provider-error-detail';
+
 /** SEMANTIC_BOUNDARY_ALLOW: 仅识别引擎协议错误码并输出安全提示，不判断创作语义或保留原始异常。 */
 export function modelEngineUnavailableMessage(code: string): string | undefined {
+  if (code === 'CHANNEL_MODEL_PAYMENT_REQUIRED') return CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE;
   if (code === 'AI_CREDIT_EXHAUSTED') return 'AI 额度不足，请在设置中核对额度或充值；处理后继续原任务，不必重新发送消息';
   if (code === 'CODEX_LOGIN_REQUIRED') return 'AI 引擎未登录，请先在设置中登录 Codex 后继续原任务';
   if (['CODEX_RUNTIME_UNAVAILABLE','CODEX_STATUS_UNAVAILABLE','CODEX_VERSION_UNSUPPORTED','CODEX_PLATFORM_UNSUPPORTED'].includes(code))

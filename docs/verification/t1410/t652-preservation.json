@@ -1,0 +1,7 @@
+{
+  "path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.T-652.review.md",
+  "archive": "docs/verification/t1410/foreign-snapshots/T-652.task-scoped.review.md",
+  "sha256": "0e0f30a6c89eec7024a9c14a707746f5613e88f4237c856a7476b3d98bf77c2a",
+  "backlogBefore": "|T-652|重构定位前采为必经的编导式访谈与证据辅助工作流|🔨 待办|待审|待验|[详情](BACKLOG-details.md#t-652)|详情见外置记录。|",
+  "backlogAfter": "|T-652|重构定位前采为必经的编导式访谈与证据辅助工作流|🔨 待办|待审|待验|[SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md) · [详情](BACKLOG-details.md#t-652)|详情见外置记录。|"
+}

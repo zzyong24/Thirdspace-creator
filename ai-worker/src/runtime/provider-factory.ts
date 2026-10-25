@@ -1,4 +1,5 @@
 import type {CodexModelSpec} from '@creatoros/contract/execution-worker';
+import {CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE, MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE} from '@creatoros/contract/provider-error-detail';
 import {createCodexProviderModel} from './codex-provider';
 import { isStructuredResponseCompatibilityError } from "../nodes/structured-response-errors";
 import {structuredModeForIdentity} from "./provider-identity";
@@ -104,6 +105,7 @@ export class ChannelManagedProviderError extends Error {
 
 export type ChannelManagedFailureReason =
   | "authentication"
+  | "payment_required"
   | "rate_limited"
   | "upstream"
   | "response_contract"
@@ -130,6 +132,7 @@ interface ChannelManagedFailureDetails {
 
 const CHANNEL_FAILURE_CODES: Record<ChannelManagedFailureReason, string> = {
   authentication: "CHANNEL_MODEL_AUTHENTICATION",
+  payment_required: "CHANNEL_MODEL_PAYMENT_REQUIRED",
   rate_limited: "CHANNEL_MODEL_RATE_LIMITED",
   upstream: "CHANNEL_MODEL_UPSTREAM",
   response_contract: "CHANNEL_MODEL_RESPONSE_CONTRACT",
@@ -146,6 +149,8 @@ function channelFailureMessage(
   switch (reason) {
     case "authentication":
       return "模型服务授权已失效，请重新校验激活权益后重试。";
+    case "payment_required":
+      return CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE;
     case "rate_limited":
       return "当前生成请求较多，请稍后再试。";
     case "response_contract":
@@ -165,8 +170,7 @@ function channelFailureMessage(
   }
 }
 
-export const MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE =
-  "AI 额度不足，请充值后再试。";
+export { MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE } from "@creatoros/contract/provider-error-detail";
 
 /**
  * 受管权益的额度耗尽是一个产品状态，不是“模型配置错误”。这个错误只携带稳定、安全的
@@ -272,7 +276,9 @@ export function toChannelManagedError(error: unknown): Error {
       : null;
   const signals = collectProviderErrorSignals(error).join(" | ");
   const reason: ChannelManagedFailureReason =
-    explicitReason ??
+    // SEMANTIC_BOUNDARY_ALLOW: 仅映射明确 HTTP 402；余额事实已在上方单独核实。
+    // 供应商的任意业务码或 retryable 标记不能扩大支付拒绝的恢复权。
+    status === 402 ? "payment_required" : explicitReason ??
     (status === 401 || status === 403
       ? "authentication"
       : status === 429
@@ -305,7 +311,7 @@ export function toChannelManagedError(error: unknown): Error {
     ...(reference ? { reference } : {}),
     retryAfterMs: getRetryAfterMs(error, Date.now, Infinity) ?? undefined,
     retryable:
-      row.retryable === true || reason === "upstream" || reason === "rate_limited",
+      reason !== "payment_required" && (row.retryable === true || reason === "upstream" || reason === "rate_limited"),
   });
 }
 

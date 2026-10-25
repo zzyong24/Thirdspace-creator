@@ -104,6 +104,25 @@ describe("持久重试调度",()=>{
     expect((await f.tasks.get(ctx,f.ref.executionTaskId)).errorMessage).toContain('继续原任务');
     expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'no-auto-resume'})).toBeNull();
   });
+  it('T1409 受管支付拒绝保留原任务与固定诊断，未获继续授权不自动领取',async()=>{
+    const f=await fixture('managed-payment-message');
+    const message='官方模型服务返回支付或权益核验拒绝（HTTP 402）。请在设置查看 AI 额度与消耗，核对后继续原任务。';
+    const call=await f.ports.reserveCall(f.ref,{operationKey:'generate',maxOutputTokens:128});
+    await f.ports.startCall(f.ref,{callId:call.callId});
+    await f.ledger.settle(f.ref,call.callId,{status:'rejected',errorDetail:message});
+    expect((await f.ledger.inspect(f.ref)).calls.find(row=>row.id===call.callId)).toMatchObject({status:'rejected',resultText:message});
+    await f.outcomes.recordFailure(f.ref,{outcome:'waiting_user',errorCode:'CHANNEL_MODEL_PAYMENT_REQUIRED',errorMessage:'private-provider private-model token=private-token'});
+    const task=await f.tasks.get(ctx,f.ref.executionTaskId);
+    expect(task).toMatchObject({id:f.ref.executionTaskId,runtimeStatus:'waiting_user',errorCode:'CHANNEL_MODEL_PAYMENT_REQUIRED',errorMessage:message});
+    expect(JSON.stringify(task)).not.toMatch(/private-provider|private-model|private-token|额度不足/);
+    expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'no-auto-payment-retry'})).toBeNull();
+    await f.tasks.command(ctx,{taskIds:[f.ref.executionTaskId],command:'resume',idempotencyKey:'payment-explicit-resume'});
+    const claim=await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'payment-retry'});expect(claim?.task.id).toBe(f.ref.executionTaskId);
+    if(!claim)throw Error('缺少原任务恢复回执');
+    const nextRef={executionTaskId:f.ref.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+    const retry=await f.ports.reserveCall(nextRef,{operationKey:'generate',maxOutputTokens:128});expect(retry.callId).not.toBe(call.callId);
+    expect((await f.ledger.inspect(nextRef)).calls.find(row=>row.id===retry.callId)).toMatchObject({retryOfCallId:call.callId});
+  });
   it("等待超出原截止时间时停止，不能缩短服务端要求的等待",async()=>{
     const f=await fixture("deadline");const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
     await f.ports.startCall(f.ref,{callId:call.callId});await f.ports.settleCall(f.ref,{callId:call.callId,status:"rejected"});

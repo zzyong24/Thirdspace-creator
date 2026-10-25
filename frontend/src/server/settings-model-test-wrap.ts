@@ -1,6 +1,7 @@
 import { ENDPOINTS, type Transport } from "@creatoros/contract";
 import type { RequestContext } from "@creatoros/contract";
 import { resolveMinimaxH3Endpoints } from "@creatoros/ai-worker";
+import { CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE, MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE } from "@creatoros/contract/provider-error-detail";
 
 /**
  * [T-377] 「测试连接」composition-only op(settings.models.test):wrap settings transport,
@@ -189,6 +190,18 @@ export async function consumeTextProbeStream(
   return { text, reasoningText };
 }
 
+/** SEMANTIC_BOUNDARY_ALLOW: 仅匹配 worker 已生成的完整固定提示，不解释上游语义或透传正文。
+ * 现有 IPC 只传 message，并添加 `${status ?? ""} `；只剥这一层前缀。 */
+function managedPaymentProbeMessage(error: unknown, spec: LlmSpecLite): string | null {
+  if (spec.displayModelKey !== "channel-managed" || !(error instanceof Error)) return null;
+  const raw = error.message;
+  const status = /^([1-5]\d{2}) /.exec(raw)?.[1];
+  const message = status ? raw.slice(4) : raw.startsWith(" ") ? raw.slice(1) : raw;
+  if (message === MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE) return MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE;
+  if ((!status || status === "402") && message === CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE) return CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE;
+  return null;
+}
+
 // ── 文本类正式流式探针(Anthropic / Chat Completions / Responses)───────────────
 async function textModelProbe(
   spec: LlmSpecLite,
@@ -218,11 +231,15 @@ async function textModelProbe(
         "连接建立了，但模型没有返回有效文本。请核对 Base URL、协议和模型 ID。",
     };
   } catch (err) {
+    const paymentMessage = managedPaymentProbeMessage(err, spec);
     logProbeFailure("textModelProbe", {
-      category: isAuthenticationFailure(err)
+      category: paymentMessage === CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE ? "payment_required"
+        : paymentMessage === MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE ? "credit_exhausted"
+        : isAuthenticationFailure(err)
         ? "authentication_error"
         : "provider_error",
     });
+    if (paymentMessage) return { ok: false, detail: paymentMessage };
     if (isAuthenticationFailure(err)) {
       return {
         ok: false,

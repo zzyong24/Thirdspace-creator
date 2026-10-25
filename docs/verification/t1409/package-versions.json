@@ -1,0 +1,6 @@
+{
+  "frontend/package.json": "1.2.0",
+  "frontend/src-tauri/tauri.conf.json": "1.2.0",
+  "frontend/src-tauri/Cargo.toml": "1.2.0",
+  "frontend/src-tauri/Cargo.lock": "1.2.0"
+}

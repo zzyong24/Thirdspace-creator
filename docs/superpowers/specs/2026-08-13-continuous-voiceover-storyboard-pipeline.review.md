@@ -2,59 +2,41 @@
 
 - Task: T-824
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: 192b82d1165b
-- Review receipt: f0e215103ddf
+- Round: 3/3 (recheck)
+- Spec receipt: 58355a1e3ae9
+- Review receipt: 18361dc8c3c3
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-002 (SPEC-LINE:49:69d5f4eec327c2d2)；REV-003 (SPEC-LINE:68:38b61476266f9ec1)；REV-004 (SPEC-LINE:79:914973455fe6c14d)；REV-005 (SPEC-LINE:73:a84bba1f39d67ec9)；REV-006 (SPEC-LINE:130:35e82c6dcfc80c2a)
+已销账：REV-001 (SPEC §3.2 规定第一阶段成功后、第二阶段调用前，原子写入 server-only runtimeData 的 voiceover、hash、输入指纹、Skill 版本、stage 与 storyboardAttemptCount；§3.3 规定同任务重领和 retryOfTaskId 仅在该断点完整且全部校验一致时复用，否则 fail-closed，只有明确停在第一阶段失败且无断点的新显式重试可重跑第一阶段；§3.4、§5 与 AC-5 进一步要求持久计数和所有恢复不得重复计费已完成口播。)
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-824",
-  "cycle": 2,
-  "round": 2,
+  "round": 3,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "REV-002 至 REV-006 均已销账：Worker/Backend 所有权、幂等栅栏、素材当前真值、局部视觉降级与真实公共链路验收均已明确，未发现新增问题。",
+  "summary": "本轮仅移除标题元数据的 Markdown 行尾空格；语义未变，REV-001 继续保持已销账，未引入新 finding。",
   "spec_path": "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md",
-  "spec_sha256": "192b82d1165b95deb86983129be8d5683db1c60f6032ec1990798768e4e753d9",
+  "spec_sha256": "58355a1e3ae9f12a57279dfb67ba05d7e950b2aec1f3284aecaf8764339950c6",
   "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
-  "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+  "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
   "review_path": "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.review.md",
-  "review_mode": "independent-readonly",
-  "model": "gpt-5.6-sol",
+  "review_mode": "cross-model-same-family",
+  "model": "gpt-5.6-terra",
   "policy": "convergent-review/v2",
-  "cycle_authorization": null,
-  "latest_event_hash": "c360bb6fed3d3f50d338a55e12c43db6f5000d5338e802821c69ddf165a51df6",
+  "latest_event_hash": "b5c6f08f45f868c62dc5f790155cbcf1a73a8d683e2b543765cac09b2b8a7fbb",
   "open_findings": [],
   "resolved_findings": [
     {
-      "id": "REV-002",
-      "resolution_evidence": "SPEC-LINE:49:69d5f4eec327c2d2"
-    },
-    {
-      "id": "REV-003",
-      "resolution_evidence": "SPEC-LINE:68:38b61476266f9ec1"
-    },
-    {
-      "id": "REV-004",
-      "resolution_evidence": "SPEC-LINE:79:914973455fe6c14d"
-    },
-    {
-      "id": "REV-005",
-      "resolution_evidence": "SPEC-LINE:73:a84bba1f39d67ec9"
-    },
-    {
-      "id": "REV-006",
-      "resolution_evidence": "SPEC-LINE:130:35e82c6dcfc80c2a"
+      "id": "REV-001",
+      "resolution_evidence": "SPEC §3.2 规定第一阶段成功后、第二阶段调用前，原子写入 server-only runtimeData 的 voiceover、hash、输入指纹、Skill 版本、stage 与 storyboardAttemptCount；§3.3 规定同任务重领和 retryOfTaskId 仅在该断点完整且全部校验一致时复用，否则 fail-closed，只有明确停在第一阶段失败且无断点的新显式重试可重跑第一阶段；§3.4、§5 与 AC-5 进一步要求持久计数和所有恢复不得重复计费已完成口播。"
     }
   ],
-  "receipt": "f0e215103ddf"
+  "receipt": "18361dc8c3c3"
 }
 ```

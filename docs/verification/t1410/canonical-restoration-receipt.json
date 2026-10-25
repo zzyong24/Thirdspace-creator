@@ -1,0 +1,167 @@
+{
+  "schema": "canonical-snapshot-restoration/v1",
+  "at": "2026-10-25T06:08:31.332Z",
+  "eventChainUnchanged": true,
+  "items": [
+    {
+      "taskId": "T-915",
+      "path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+      "sourceCommit": "51ed266eae26d50f46239dfb863b2e887309075e",
+      "originalSha256": "7ea20561733af498aa007a9e543d53b6c4a5d6107bbc8ca7ba203b9e2c6d93a6",
+      "restoredSha256": "a307cd7b22267b5ed05434913252f9a2c17db00d46d1f44e99ac506227ff5aae",
+      "canonicalReceipt": "692283b8bace",
+      "canonicalEventHash": "1d0f281764a2d94f245bbaedad518a9d89ad8fc824c531ba04bf5609a747b93b",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-915.review.md"
+    },
+    {
+      "taskId": "T-859",
+      "path": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
+      "sourceCommit": "fdd6d7ab123413a1954085e5a51e25e89671277b",
+      "originalSha256": "bf0e1a41359e809fd887413944adeb4ebd8f22178e3aa7c397508606977cf559",
+      "restoredSha256": "b3953126162829b9373c3dc90ed6a5968728ffce7a0e267a8893344d258a787f",
+      "canonicalReceipt": "9895a91a63a8",
+      "canonicalEventHash": "db0d70797f340d98150f2e44928f4c5ea3e4b2a74bd750d340c4a161d4e032ee",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-859.review.md"
+    },
+    {
+      "taskId": "T-858",
+      "path": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.review.md",
+      "sourceCommit": "fdd6d7ab123413a1954085e5a51e25e89671277b",
+      "originalSha256": "c7711b98712a156bb260df844188db8baf8aeaf159314a59caea7b24f9aadc1d",
+      "restoredSha256": "cd9e4dcaba9e0558550416214256cad97ed45c32f45826a6bdd7bc0a76cadb7e",
+      "canonicalReceipt": "2521be715a0a",
+      "canonicalEventHash": "3d2ef5ac0db0ab1c0a7d0e31d15ff3eb4f8a59038d2abd6d42298c0f620c0483",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-858.review.md"
+    },
+    {
+      "taskId": "T-824",
+      "path": "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.review.md",
+      "sourceCommit": "5c3be5d18b1af36916466aaa0c13fbe79cd14c50",
+      "originalSha256": "044aca9d13b470275f3b6f665b9f8fce8eacf869310f9f4181491256a8dacbb6",
+      "restoredSha256": "5abd502198d7139e994123cb47b0218878c76567eb3ed20336943b4fec96237e",
+      "canonicalReceipt": "18361dc8c3c3",
+      "canonicalEventHash": "b5c6f08f45f868c62dc5f790155cbcf1a73a8d683e2b543765cac09b2b8a7fbb",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-824.review.md"
+    },
+    {
+      "taskId": "T-819",
+      "path": "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.review.md",
+      "sourceCommit": "b79e65908db0c2a531e6ec12f686e741fa606537",
+      "originalSha256": "3d7fc5be73fe1c53d3fbd5ba4e8496fd34b56ca97f61a3b3c6c29ac4fc81e650",
+      "restoredSha256": "ecf9c06b41fd924d0728ee0d475ee0334011c37db5790e6e86519a7db624ea0d",
+      "canonicalReceipt": "0425ab7b87b8",
+      "canonicalEventHash": "8cb26b1e42d23810b7e58fd06fb5f9aff100fa7d04944f4a3ca569306f125ae7",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-819.review.md"
+    },
+    {
+      "taskId": "T-816",
+      "path": "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.review.md",
+      "sourceCommit": "b79e65908db0c2a531e6ec12f686e741fa606537",
+      "originalSha256": "230e352f25822d73687cb49bc3daaa865fbeae24884f09fee35459238cdab913",
+      "restoredSha256": "736f2b7f6bcb37106f0779598c7ffeca2b4dd219eb7fe0c75c4156c6feb804c2",
+      "canonicalReceipt": "fb03de3a57d7",
+      "canonicalEventHash": "04c7690bb634dad41e3a4a910e2bec60e686ccea618c7ebb9f23ed3e648d3f31",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-816.review.md"
+    },
+    {
+      "taskId": "T-768",
+      "path": "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.review.md",
+      "sourceCommit": "63d5d04560d70ec404efc3168dd278c3715ca1c1",
+      "originalSha256": "baa250b231d737d93a8aa392f37fd6a93a12a9982459c418fda51c9360b26c42",
+      "restoredSha256": "e6c699d4d7edb84d4ce1442c5c88276ae7cfe6ada80b67bc3e64e6b3c4b6c025",
+      "canonicalReceipt": "3eb18966ea59",
+      "canonicalEventHash": "6f21488e33ccbc81b3509df64e19defa20bde96b1d80d677474b1cb12a7534e8",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-768.review.md"
+    },
+    {
+      "taskId": "T-726",
+      "path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.review.md",
+      "sourceCommit": "cea33354718dc86c021b19eca8b5131149c87df8",
+      "originalSha256": "e6deccb75cebfbfd72a420680463a894031d88c43e7b887b6df2d7e77e9f6c5d",
+      "restoredSha256": "7a778217f1342dfcd9fde9d49d179a9e1b20e1989c7cb78e1464359c216bf528",
+      "canonicalReceipt": "2809820bf64a",
+      "canonicalEventHash": "219feb0c4ff34b741ada21bc2d96a773bb9bfb824d2414bc41808cc516d49c34",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-726.review.md"
+    },
+    {
+      "taskId": "T-707",
+      "path": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.review.md",
+      "sourceCommit": "cea33354718dc86c021b19eca8b5131149c87df8",
+      "originalSha256": "a71e80338a90ed83c732943a97fa2615f451374ad34eed99a0b3cbfe3662cc86",
+      "restoredSha256": "d7bffd9bc1ef312d8dcb4b89992ac09654b9866eb586a1be7d639042859ff28a",
+      "canonicalReceipt": "06867c4bf60c",
+      "canonicalEventHash": "69e8c24ad9a20bc47acd3b492a528477621d9c301080008ed93dd2bc6c909f11",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-707.review.md"
+    },
+    {
+      "taskId": "T-703",
+      "path": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.review.md",
+      "sourceCommit": "cea33354718dc86c021b19eca8b5131149c87df8",
+      "originalSha256": "f52ecf8fd21b34b15aaa9c4ed9172db274232567b4a02d08e1b63d4d90d21723",
+      "restoredSha256": "92e737014a163cb8ae80acdc9ab339e9104824085912355b2c97e6d0d5ef263a",
+      "canonicalReceipt": "c1a3920aea71",
+      "canonicalEventHash": "dc0a4a6a07946faf04ccca3c50bbbe2d3db6e0a2a699eb17def80f0feaadbb3f",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-703.review.md"
+    },
+    {
+      "taskId": "T-691",
+      "path": "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.review.md",
+      "sourceCommit": "cea33354718dc86c021b19eca8b5131149c87df8",
+      "originalSha256": "90724a9b671ca5d5af9ae315fda314aaef882f008fa6b46b50bf63a6e50ebfc8",
+      "restoredSha256": "79c9c163e7c4832bb2b949011b3459ebd9565303c6a109695f8c6c0a17bcfa6d",
+      "canonicalReceipt": "9444ca5b32a9",
+      "canonicalEventHash": "e62296d83312eee0744b534c47ac4d9b4a68c0e530bda40972a27985a932036b",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-691.review.md"
+    },
+    {
+      "taskId": "T-694",
+      "path": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.review.md",
+      "sourceCommit": "cea33354718dc86c021b19eca8b5131149c87df8",
+      "originalSha256": "76ee0309931d9ceb448e3c223ad6e150a9dab34803930e7abfee5bb6e4491838",
+      "restoredSha256": "b74c60cfe87eb872ed866811b70276ff50d428e7fbcd266cee62e02d9bb4bcf4",
+      "canonicalReceipt": "2c7be136aea0",
+      "canonicalEventHash": "3be70a1c76dd2fe118734970f8d2b32da04195588a131263e1435adf0b6ee10b",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-694.review.md"
+    },
+    {
+      "taskId": "T-656",
+      "path": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.review.md",
+      "sourceCommit": "73cd2e1ae734659dec694d17a11c36e048c36717",
+      "originalSha256": "f917b459fa7cf35c90293d60829141fa6ab9e205f103ffba303ef64ddcac1fb1",
+      "restoredSha256": "ebc3ef5996425224177752ace42d4ecbec6240dfd7a8fc299c7418633f8d7c57",
+      "canonicalReceipt": "5f6970ac76f2",
+      "canonicalEventHash": "417ae43280b9c642bc3d6af8387550e6ffb11a80346b57244fe4c06135cb4885",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-656.review.md"
+    },
+    {
+      "taskId": "T-645",
+      "path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.review.md",
+      "sourceCommit": "73cd2e1ae734659dec694d17a11c36e048c36717",
+      "originalSha256": "6c74818663124eea4431f82998e124ed2ab33faf5aa3bcf29f3f421a580c29ea",
+      "restoredSha256": "920a481db238fd346afccd5aa11e116b245cc70b6f81a18487ff7284fe9be2b6",
+      "canonicalReceipt": "5dfe24b42eb7",
+      "canonicalEventHash": "ab61c3442f05c73c4febe511fa559717089235b244baad5920bd2186229eb6ac",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-645.review.md"
+    },
+    {
+      "taskId": "T-642",
+      "path": "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.review.md",
+      "sourceCommit": "73cd2e1ae734659dec694d17a11c36e048c36717",
+      "originalSha256": "bf1f1398f0922773770fc080e7ee920f3c1ba8d1417fc898e4991320eb44b574",
+      "restoredSha256": "05332437a3f29f7becc568d973414876bbdedbff656788a0c33dcc24451dfa7d",
+      "canonicalReceipt": "7728c9ed44bd",
+      "canonicalEventHash": "b37a9f58b1d3de2270bb1262ace95eca8e3dab1b0c5dd5fd14619ac48666fc2a",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-642.review.md"
+    },
+    {
+      "taskId": "T-635",
+      "path": "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.review.md",
+      "sourceCommit": "cfe0e4cc6725f6d7b318049df1a241dc51539d3f",
+      "originalSha256": "e419764f3841623929079de1963348c7069e31ef3c27cedea432272bfd0e93f6",
+      "restoredSha256": "2b6d0421086151c1b6ac1e5d6da56bb21a623b63af8df60db6fde3287e14a2bd",
+      "canonicalReceipt": "b8add273a494",
+      "canonicalEventHash": "0c9c53ee3d4485a9223555c98cf5253a5dab545732375d3e0599decd558f73e2",
+      "archive": "docs/verification/t1410/foreign-snapshots/T-635.review.md"
+    }
+  ]
+}

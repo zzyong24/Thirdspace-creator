@@ -1,0 +1,33 @@
+{
+  "task": "T-1408",
+  "scope": "FR-140801",
+  "reviewer": "/root/t1408_pi_diagnosis",
+  "decision": "PASS",
+  "boundary": "仅真实gateway与business service组合回归；未覆盖安装版CLI/HTTP认证/UI/官方402恢复",
+  "red": {
+    "files": 1,
+    "failed": 3,
+    "reason": "AccountRequiredError",
+    "log": "group-diagnostics-red.log"
+  },
+  "green": {
+    "files": 4,
+    "passed": 30,
+    "log": "group-diagnostics-green.log"
+  },
+  "nonblocking": [
+    "scope注释已同步任务诊断按组，不改变行为",
+    "测试负向助手未调用gateway.fail；不声称验证失败审计终态，真实dispatch已有fail未修改"
+  ],
+  "sha256": {
+    "contract/src/workspace-operation-scope.ts": "20b4d865976438c08d18d42de37fe4d01f33b766f3ee9e89c05b8a716d2d5e1c",
+    "backend/src/integration/group-workbench-capabilities.integration.test.ts": "05987c4776b88df2d5a9db6d6b7c160c66eac052c9ece778b3fc6f6c8be70da2",
+    "backend/src/modules/cli-invocations/cli-workbench-inspection.test.ts": "add262a68d98268e5f5c19b1a86619b1b81a1e305ea6e837f79473cbc37b8606"
+  },
+  "type_followup": {
+    "result": "PASS",
+    "reviewer": "/root/t1408_pi_diagnosis",
+    "sha256": "ae51873c8819c24a7b1e949f485999e0030fe96965c6c58f50683741980696b3",
+    "note": "仅明确schema解析后的泛型响应类型，权限/gateway/断言不变，3项retry0绿测"
+  }
+}

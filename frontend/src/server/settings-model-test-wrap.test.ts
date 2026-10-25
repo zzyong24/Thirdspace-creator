@@ -1,5 +1,6 @@
+// @vitest-environment node
 /**
- * [T-377] settings.models.test「测试连接」通道单测(fake 解析器 / fetch / adapter,零网络):
+ * [T-377] settings.models.test「测试连接」通道回归，T-1409 增加仅本地 HTTP 的正式 Worker/IPC：
  *   - 文本(default):最小流式探测,正文或思考流 → ✓;401 → ✗ 密钥提示(不泄 HTTP 码/响应体);
  *     正文与思考均为空 → ✗;未配 → 「未配置」。
  *   - chat.fallback:专配行 null → 「未配置」(不回退主模型)。
@@ -10,8 +11,14 @@
  *   - wrap 透传:非 test op 原样进 settings transport。
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { afterAll, beforeAll, describe, it, expect, vi } from "vitest";
+import { createServer } from "node:http";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { build } from "esbuild";
 import { ENDPOINTS, type RequestContext } from "@creatoros/contract";
+import { createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
 
 import {
   consumeTextProbeStream,
@@ -21,6 +28,8 @@ import {
 } from "./settings-model-test-wrap";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
+const paymentRequiredMessage = "官方模型服务返回支付或权益核验拒绝（HTTP 402）。请在设置查看 AI 额度与消耗，核对后继续原任务。";
+const creditExhaustedMessage = "AI 额度不足，请充值后再试。";
 
 async function* probeParts(
   parts: Array<{ type: string; text?: string; error?: unknown }>,
@@ -203,6 +212,121 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(false);
     expect(r.detail).toContain("未配置");
+  });
+});
+
+describe("受管文本探针的固定支付诊断", () => {
+  it.each([
+    [paymentRequiredMessage, paymentRequiredMessage],
+    [`402 ${paymentRequiredMessage}`, paymentRequiredMessage],
+    [` ${paymentRequiredMessage}`, paymentRequiredMessage],
+    [creditExhaustedMessage, creditExhaustedMessage],
+    [` ${creditExhaustedMessage}`, creditExhaustedMessage],
+    [`402 ${creditExhaustedMessage}`, creditExhaustedMessage],
+    [`429 ${creditExhaustedMessage}`, creditExhaustedMessage],
+  ])("普通 Error 的完整白名单消息 %s 保留固定诊断", async (message, expected) => {
+    const deps = makeDeps({
+      resolveLlm: vi.fn(async () => ({ ...llmSpec, displayModelKey: "channel-managed" as const })),
+      probeTextModel: vi.fn(async () => { throw new Error(message); }),
+    });
+    const result = await runModelConnectionTest(ctx, "default", deps);
+    expect(result).toEqual({ ok: false, provider: "channel-managed", model: "channel-managed", detail: expected });
+    expect(deps.probeTextModel).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    `402 ${paymentRequiredMessage} private-provider private-model token=private-secret`,
+    `private-provider ${creditExhaustedMessage}`,
+    `402 402 ${paymentRequiredMessage}`,
+    `500 ${paymentRequiredMessage}`,
+    `999 ${creditExhaustedMessage}`,
+    "AI_CREDIT_EXHAUSTED private-provider private-model token=private-secret",
+  ])("未知或夹带正文不匹配固定诊断：%s", async message => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const deps = makeDeps({
+        resolveLlm: vi.fn(async () => ({ ...llmSpec, displayModelKey: "channel-managed" as const })),
+        probeTextModel: vi.fn(async () => { throw new Error(message); }),
+      });
+      const result = await runModelConnectionTest(ctx, "default", deps);
+      expect(result.detail).toContain("连接失败");
+      expect(JSON.stringify([result, log.mock.calls])).not.toMatch(/private-|AI_CREDIT_EXHAUSTED|官方模型服务|AI 额度不足/);
+      expect(deps.probeTextModel).toHaveBeenCalledTimes(1);
+    } finally { log.mockRestore(); }
+  });
+
+  it("自配模型即使返回相同固定文本也不宣称官方支付诊断", async () => {
+    const deps = makeDeps({ probeTextModel: vi.fn(async () => { throw new Error(`402 ${paymentRequiredMessage}`); }) });
+    const result = await runModelConnectionTest(ctx, "default", deps);
+    expect(result.detail).toContain("连接失败");
+    expect(result.detail).not.toContain("官方");
+    expect(deps.probeTextModel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("正式模型探针 Worker → IPC → settings.models.test 的支付诊断", () => {
+  let directory: string;
+  let entry: string;
+  beforeAll(async () => {
+    directory = await mkdtemp(join(tmpdir(), "creatoros-payment-probe-"));
+    entry = join(directory, "probe.cjs");
+    const { piRuntimeInitializationPlugin } = await import(resolve("../ai-worker/scripts/pi-runtime-bundle.mjs"));
+    await build({
+      entryPoints: [resolve("../ai-worker/src/io/model-probe-worker-entry.ts")],
+      outfile: entry, bundle: true, platform: "node", target: "node24", format: "cjs", logLevel: "silent",
+      plugins: [piRuntimeInitializationPlugin()],
+    });
+  });
+  afterAll(async () => { if (directory) await rm(directory, { recursive: true, force: true }); });
+
+  it.each([
+    { name: "未知 402", body: { error: { code: "billing_check", message: "payment verification required" } }, expected: paymentRequiredMessage },
+    { name: "字符串余额信号", body: { error: "insufficient balance" }, expected: creditExhaustedMessage },
+    { name: "error.type 额度信号", body: { error: { type: "insufficient_quota", message: "余额不足" } }, expected: creditExhaustedMessage },
+    { name: "402 私密正文", body: { error: { code: "private-provider-code", message: "private-provider private-model https://private.example token=private-secret" }, headers: { authorization: "Bearer private-secret" } }, expected: paymentRequiredMessage },
+    { name: "自配 402", body: { error: { message: "payment required private-provider private-model token=private-secret" } }, expected: "连接失败：请核对密钥、Base URL、接口格式和模型 ID 后重试。", self: true },
+  ])("$name 经真实普通 Error 重建仍安全且只调用一次", async ({ body, expected, self }) => {
+    let requests = 0;
+    const server = createServer((request, response) => {
+      requests++;
+      request.resume();
+      response.writeHead(402, { "content-type": "application/json" });
+      response.end(JSON.stringify(body));
+    });
+    const io = createModelProbeIoService({ entryPath: () => entry });
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    let receivedError: unknown;
+    try {
+      await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("测试 HTTP 地址不可用");
+      const spec = { ...llmSpec, baseUrl: `http://127.0.0.1:${address.port}/v1`, model: "private-model", token: "private-secret",
+        ...(!self ? { displayModelKey: "channel-managed" as const } : {}) };
+      const deps = makeDeps({
+        resolveLlm: vi.fn(async () => spec),
+        probeTextModel: vi.fn(async (value, context) => {
+          try { return await io.probeText(context, value); }
+          catch (error) { receivedError = error; throw error; }
+        }),
+      });
+      const result = await runModelConnectionTest(ctx, "default", deps);
+      expect(receivedError).toBeInstanceOf(Error);
+      expect((receivedError as Error).constructor).toBe(Error);
+      expect(receivedError).not.toHaveProperty("code");
+      if (!self) expect((receivedError as Error).message.trim().replace(/^402 /, "")).toBe(expected);
+      expect(result).toEqual({ ok: false, provider: self ? "openai_chat" : "channel-managed", model: self ? "private-model" : "channel-managed", detail: expected });
+      const publicDiagnostics = JSON.stringify([result.detail, log.mock.calls]);
+      expect(publicDiagnostics).not.toMatch(/private-|private\.example|Bearer|billing_check|insufficient_quota/);
+      if (!self) expect(JSON.stringify([result, (receivedError as Error).message])).not.toMatch(/private-|private\.example|Bearer/);
+      expect(requests).toBe(1);
+      expect(deps.probeTextModel).toHaveBeenCalledTimes(1);
+      expect(deps.fetchImpl).not.toHaveBeenCalled();
+    } finally {
+      await io.stop();
+      server.closeAllConnections();
+      await new Promise<void>((done, reject) => server.close(error => error ? reject(error) : done()));
+      log.mockRestore();
+    }
   });
 });
 

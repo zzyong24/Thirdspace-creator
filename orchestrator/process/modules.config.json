@@ -20075,7 +20075,8 @@
         "ai-worker/src/runtime/provider-factory.ts",
         "ai-worker/src/runtime/provider-factory.test.ts",
         "ai-worker/src/runtime/error-diagnostics.ts",
-        "ai-worker/src/runtime/error-diagnostics.test.ts"
+        "ai-worker/src/runtime/error-diagnostics.test.ts",
+        "docs/research/2026-10-25-t1405-t1407-frontend-gate-applicability.md"
       ],
       "write_set": [
         "backend/src/modules/ai-runtime/chat-assembly-types.ts",
@@ -20101,7 +20102,8 @@
         "orchestrator/progress.json",
         "orchestrator/context/T-1405.md",
         "orchestrator/events.ndjson",
-        "orchestrator/review-events.ndjson"
+        "orchestrator/review-events.ndjson",
+        "docs/research/2026-10-25-t1405-t1407-frontend-gate-applicability.md"
       ],
       "verify_commands": {
         "implementation": [
@@ -20112,7 +20114,7 @@
           "node --test tools/quality/quality.test.mjs"
         ]
       },
-      "scope_note": "2026-10-24用户要求修复T1403真实CLI问题；独立规格评审后实施，不越源、不更改钱包或原未知任务。"
+      "scope_note": "2026-10-24用户要求修复T1403真实CLI问题；独立规格评审后实施，不越源、不更改钱包或原未知任务。 2026-10-25独立适用性复核：仅server/worker/backend改动，UI journey不适用；保原CLI/组合根/安装验收，见DEC-140502。"
     },
     "T-1407": {
       "task_id": "T-1407",
@@ -20343,6 +20345,216 @@
         ]
       },
       "scope_note": "用户2026-10-25恢复安装并要求整理相关代码和准备合并推送；现安装源码、本任务补丁与主干的可追溯整合，不push或公开发布，不代签来源任务旧FAIL。"
+    },
+    "T-1408": {
+      "task_id": "T-1408",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1408-official-pi-acceptance-and-push.md",
+        "AGENTS.md",
+        "docs/engineering/agent-rules.md",
+        "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+        "backend/src/modules/execution/workbench-public.service.ts",
+        "backend/src/modules/execution/workbench-public.transport.ts",
+        "backend/src/modules/execution/execution-stream.service.ts",
+        "backend/src/modules/execution/persistent-task.service.ts"
+      ],
+      "write_set": [
+        "contract/src/workspace-operation-scope.ts",
+        "backend/src/modules/cli-invocations/cli-workbench-inspection.test.ts",
+        "docs/features/t1408-official-pi-acceptance-and-push.md",
+        "docs/features/t1408-official-pi-acceptance-and-push.T-1408.review.md",
+        "docs/verification/t1408/**",
+        "docs/research/2026-10-25-official-pi-and-acceptance-repair.md",
+        "BACKLOG.md",
+        "BACKLOG-archive.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1408.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "backend/src/integration/group-workbench-capabilities.integration.test.ts"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck",
+          "node --test tools/quality/quality.test.mjs"
+        ]
+      },
+      "scope_note": "2026-10-25用户要求修复官方Pi与未通过验收后正常推送。分根因精确补充规格并独审；禁止凭修改文案或换源宣称恢复。"
+    },
+    "T-1409": {
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck",
+          "node --test tools/quality/quality.test.mjs"
+        ]
+      },
+      "task_id": "T-1409",
+      "read_set": [
+        "docs/features/t1409-managed-pi-payment-diagnostics.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/provider-error-detail.ts",
+        "contract/tests/provider-error-detail.test.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "ai-worker/src/runtime/provider-factory.test.ts",
+        "ai-worker/src/execution/generation-error.ts",
+        "ai-worker/src/execution/durable-stream-model.test.ts",
+        "ai-worker/src/execution/durable-pi-stream.test.ts",
+        "ai-worker/src/runtime/error-diagnostics.ts",
+        "ai-worker/src/runtime/error-diagnostics.test.ts",
+        "backend/src/modules/execution/model-engine-error.ts",
+        "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts"
+      ],
+      "write_set": [
+        "contract/src/provider-error-detail.ts",
+        "contract/tests/provider-error-detail.test.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "ai-worker/src/runtime/provider-factory.test.ts",
+        "ai-worker/src/execution/generation-error.ts",
+        "ai-worker/src/execution/durable-stream-model.test.ts",
+        "ai-worker/src/execution/durable-pi-stream.test.ts",
+        "ai-worker/src/runtime/error-diagnostics.ts",
+        "ai-worker/src/runtime/error-diagnostics.test.ts",
+        "backend/src/modules/execution/model-engine-error.ts",
+        "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
+        "docs/features/t1409-managed-pi-payment-diagnostics.md",
+        "docs/features/t1409-managed-pi-payment-diagnostics.T-1409.review.md",
+        "docs/verification/t1409/**",
+        "BACKLOG.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1409.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        "frontend/src/server/settings-model-test-wrap.test.ts"
+      ],
+      "scope_note": "用户继续修复402授权；只修安全诊断，不更改钱包/原模型身份/恢复预算。"
+    },
+    "T-1410": {
+      "task_id": "T-1410",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1410-review-evidence-reconciliation.md",
+        "docs/research/2026-10-25-official-pi-and-acceptance-repair.md",
+        "docs/features/t1369-dashboard-filter-sidebar-navigation.md",
+        "docs/features/t1255-reporting-full-delivery.md",
+        "docs/features/t1072-owned-devices.md",
+        "docs/features/t1021-cover-template-library.md",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+        "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md",
+        "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md",
+        "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md",
+        "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md",
+        "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md",
+        "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+        "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md",
+        "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md",
+        "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md",
+        "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+        "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md",
+        "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md",
+        "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md"
+      ],
+      "write_set": [
+        "docs/features/t1021-cover-template-library.T-1021.review.md",
+        "docs/features/t1021-cover-template-library.review.md",
+        "docs/features/t1072-owned-devices.T-1072-owned-devices.review.md",
+        "docs/features/t1072-owned-devices.review.md",
+        "docs/features/t1255-reporting-full-delivery.T-1255.review.md",
+        "docs/features/t1255-reporting-full-delivery.review.md",
+        "docs/features/t1369-dashboard-filter-sidebar-navigation.T-1369.review.md",
+        "docs/features/t1369-dashboard-filter-sidebar-navigation.review.md",
+        "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.T-635.review.md",
+        "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.review.md",
+        "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.T-642.review.md",
+        "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.review.md",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.T-652.review.md",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.T-707.review.md",
+        "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.review.md",
+        "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.T-645.review.md",
+        "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.review.md",
+        "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.T-656.review.md",
+        "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.review.md",
+        "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.T-694.review.md",
+        "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.review.md",
+        "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.T-691.review.md",
+        "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.review.md",
+        "docs/superpowers/specs/2026-08-05-video-production-editing-loop.T-703.review.md",
+        "docs/superpowers/specs/2026-08-05-video-production-editing-loop.review.md",
+        "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.T-726.review.md",
+        "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.review.md",
+        "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.T-768.review.md",
+        "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.review.md",
+        "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.T-824.review.md",
+        "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.review.md",
+        "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.T-816.review.md",
+        "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.review.md",
+        "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.T-819.review.md",
+        "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.review.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.T-859.review.md",
+        "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.review.md",
+        "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.T-858.review.md",
+        "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.review.md",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.T-915.review.md",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+        "docs/features/t1410-review-evidence-reconciliation.md",
+        "docs/features/t1410-review-evidence-reconciliation.T-1410.review.md",
+        "docs/verification/t1410/**",
+        "BACKLOG.md",
+        "BACKLOG-archive.md",
+        "BACKLOG-details.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1410.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node --test orchestrator/process/reviewctl.test.mjs",
+          "node orchestrator/process/reviewctl.mjs audit",
+          "node orchestrator/process/backlog-health.mjs",
+          "node orchestrator/process/reconcile.mjs --profile quick --read-only"
+        ]
+      },
+      "scope_note": "用户授权修复未通过验收的控制证据；仅真实原件和独评，保产品争议与真实运行缺口。"
     }
   }
 }

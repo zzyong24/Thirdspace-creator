@@ -85,13 +85,15 @@ describe('纯组工作台目录的正式 CLI gateway 与 transport 组合',()=>{
  it.each([
   guardedEndpoint(ENDPOINTS.inspectWorkbenchTask,{params:{taskId:'catalog-original-execution'},query:{afterSequence:0,limit:50},body:undefined}),
   guardedEndpoint(ENDPOINTS.readWorkbenchEvents,{params:{taskId:'catalog-original-execution'},query:{afterSequence:0,limit:64},body:undefined}),
- ])('T1317 $endpoint.id 公开读取支持真实纯组任务，CLI门和跨组归属仍拒绝',async({endpoint,request})=>{
+ ])('T1408 $endpoint.id CLI与公开读取支持真实纯组任务，跨组归属仍拒绝',async({endpoint,request})=>{
   const before=await businessSnapshot(),audit=await db.select().from(cliInvocations),calls=capabilities.mock.calls.length;
-  await expect(gateway.begin(group,{operation:endpoint.id,effect:getCliOperationPolicy(endpoint.id)!.effect,clientId:'isolated-cli',idempotencyKey:null,inputHash:'sha256:group-task-read',targetRefs:[]})).rejects.toThrow('AccountRequiredError');
+  const begun=await gateway.begin(group,{operation:endpoint.id,effect:getCliOperationPolicy(endpoint.id)!.effect,clientId:'isolated-cli',idempotencyKey:null,inputHash:'sha256:group-task-read',targetRefs:[]});
+  expect(begun.kind).toBe('execute');if(begun.kind!=='execute')throw Error('诊断读取应创建真实审计');
   const result=await request(group) as {data:unknown};
+  await gateway.succeed(begun.invocationId,result);
   if(endpoint.id==='workbench.tasks.inspect')expect(result.data).toMatchObject({task:{id:'catalog-original-execution',groupId:group.groupId,accountId:null},calls:[]});
   else expect(result.data).toMatchObject({events:[],nextSequence:0});
   for(const ctx of [{...group,userId:'another-user'},{...group,groupId:'catalog-foreign'}])await expect(request(ctx)).rejects.toThrow();
-  expect(await businessSnapshot()).toEqual(before);expect(await db.select().from(cliInvocations)).toEqual(audit);expect(capabilities.mock.calls).toHaveLength(calls);expect(noFileOperation).not.toHaveBeenCalled();
+  expect(await businessSnapshot()).toEqual(before);const after=await db.select().from(cliInvocations);expect(after).toHaveLength(audit.length+1);expect(after.find(row=>row.id===begun.invocationId)).toMatchObject({accountScope:`group:${group.groupId}`,accountId:null,effect:'read',status:'succeeded'});expect(capabilities.mock.calls).toHaveLength(calls);expect(noFileOperation).not.toHaveBeenCalled();
  });
 });
