@@ -1,0 +1,15 @@
+{
+  "remoteCommit": "a33cbbc1fd5b71c38ac1f1445a7230a4be4014c2",
+  "remoteParent": "fd9108b2b79c72e153259085ca0098cd36705795",
+  "productFiles": [
+    "ai-worker/package.json",
+    "pnpm-lock.yaml",
+    "ai-worker/src/runtime/chat/chat-pi-core.ts",
+    "ai-worker/src/runtime/chat/chat-pi-core.test.ts"
+  ],
+  "controlResolution": "保留本地主控制面；远端Windows T-1402与本地许可T-1402重号，不把其完成状态覆盖本地许可任务，不把外部sha链拼入本地事件链。远端原看板及事件逐字归档；代码、SPEC与原验证工件原样合入，其本机验证仍只归属远端提交。",
+  "rawFiles": {
+    "windows-orchestrator-events.ndjson": "f673812e9a0de536acec753626718ec1e54e04bf92859ae4767a5abf83fa5b90",
+    "windows-BACKLOG.md": "91b92c8bbcc9a9d416701ba10f32848fe4b1c532fa2c41fa45f7cc354b33b93d"
+  }
+}

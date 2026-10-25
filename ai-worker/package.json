@@ -140,6 +140,7 @@
   },
   "dependencies": {
     "@creatoros/contract": "workspace:*",
+    "@earendil-works/pi-agent-core": "0.80.7",
     "@earendil-works/pi-ai": "0.80.7",
     "@earendil-works/pi-coding-agent": "0.80.7",
     "@mozilla/readability": "0.6.0",
