@@ -1,0 +1,37 @@
+{
+  "commit": "b4e174a8433e21f75bbc6b2f69b2e065855b7698",
+  "clean": true,
+  "versions": [
+    "1.2.0",
+    "1.2.0",
+    "1.2.0",
+    "1.2.0"
+  ],
+  "environmentKeys": [
+    "CARGO_BUILD_JOBS",
+    "CARGO_HOME",
+    "CARGO_NET_OFFLINE",
+    "CARGO_TARGET_DIR",
+    "CREATOROS_FFMPEG_BUNDLE_SRC",
+    "CREATOROS_FFPROBE_BUNDLE_SRC",
+    "CREATOROS_LOCAL_SKIP_INSTALL",
+    "CREATOROS_WORKBENCH_CHROME_ARCHIVE",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LOGNAME",
+    "NPM_CONFIG_GLOBALCONFIG",
+    "NPM_CONFIG_USERCONFIG",
+    "PATH",
+    "PLAYWRIGHT_BROWSERS_PATH",
+    "RUSTC",
+    "RUSTDOC",
+    "TMPDIR",
+    "USER",
+    "XDG_CACHE_HOME",
+    "npm_config_cache"
+  ],
+  "historicalFindings": 32,
+  "secretValuesRecorded": false,
+  "externalBuild": true
+}

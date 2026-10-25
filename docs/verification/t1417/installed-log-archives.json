@@ -1,0 +1,26 @@
+[
+  {
+    "source": "docs/verification/t1417/preflight.log",
+    "archive": "docs/verification/t1417/preflight.log.gz",
+    "uncompressedSha256": "98679190f3567f771dabc795c25e56690d1840f2b0a4fbec9da1c49e1ebff63f",
+    "bytes": 2013
+  },
+  {
+    "source": "docs/verification/t1417/package.log",
+    "archive": "docs/verification/t1417/package.log.gz",
+    "uncompressedSha256": "18319e5f84722cf2f7be33829a484dec1bb57709f7675b520b0f888b3e174435",
+    "bytes": 95297
+  },
+  {
+    "source": "docs/verification/t1417/pmem-sync-final.log",
+    "archive": "docs/verification/t1417/pmem-sync-final.log.gz",
+    "uncompressedSha256": "9ba7456c8857bee286e3e849a101a41b1098a7e564a23dc6928f747a6719e63c",
+    "bytes": 116
+  },
+  {
+    "source": "docs/verification/t1417/reconcile-quick-final.log",
+    "archive": "docs/verification/t1417/reconcile-quick-final.log.gz",
+    "uncompressedSha256": "1cf79cfef015d4414d1367e44a2a94cabdcbf6833569b3c86e1497319b16340e",
+    "bytes": 4235
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "source": "pmem-sync.log",
+    "archive": "pmem-sync.log.gz",
+    "sha256": "2c9149cdd3145a4ea1800324a135178db75e65efb402b05f5926bc610d4b4cdb"
+  },
+  {
+    "source": "reconcile-quick.log",
+    "archive": "reconcile-quick.log.gz",
+    "sha256": "1cf79cfef015d4414d1367e44a2a94cabdcbf6833569b3c86e1497319b16340e"
+  }
+]

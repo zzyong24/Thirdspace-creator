@@ -1,0 +1,806 @@
+[
+  {
+    "path": "cli-retest/receipts/0001-initial-route-describe.json",
+    "sha256": "f673790fc8d7cae09f0cfaf1b6ba58d7d4dc056d0120d3ee7f5b2928718bea6e"
+  },
+  {
+    "path": "cli-retest/receipts/0002-initial-route.json",
+    "sha256": "cff0eef084b161b73125669f2eff33226638fe0ed7c4d44daf003f5572500535"
+  },
+  {
+    "path": "cli-retest/receipts/0003-bound-group-describe.json",
+    "sha256": "cb758c0e904e022e387c6d6ce81331ad4b6f7682ef84194a4f0ea2ce428739e7"
+  },
+  {
+    "path": "cli-retest/receipts/0004-bound-group.json",
+    "sha256": "09a4aefbc0eac83d64ec2f38e0afbd53a6c61ebfad71eaa21cb3ecf86fc88522"
+  },
+  {
+    "path": "cli-retest/receipts/0005-check-route-codex-describe.json",
+    "sha256": "cc58b87eb80c0842866b0abc400ce0cc91a2558ebe41ff5d3c788d14aa19dc60"
+  },
+  {
+    "path": "cli-retest/receipts/0006-check-route-codex.json",
+    "sha256": "14aef8c951a7972ffcdff2c1edfb67a8d8e237f81ec1fe1f5ff2f896d25a7cfa"
+  },
+  {
+    "path": "cli-retest/receipts/0007-codex-codex-conversation-describe.json",
+    "sha256": "c0a42b2cc18223242d283b2ee75c69503975b1241b6f8219819674b9ba933350"
+  },
+  {
+    "path": "cli-retest/receipts/0008-codex-codex-conversation.json",
+    "sha256": "462a64dccc841797f1574d98fd0acc973212f3967aa78050a46b5bfb4ae8cc99"
+  },
+  {
+    "path": "cli-retest/receipts/0009-codex-codex-turn1-submit-describe.json",
+    "sha256": "ad396fb72833f5b9eaaff0e42288dc4f7c3463395aef175fe3c2d14616f7b157"
+  },
+  {
+    "path": "cli-retest/receipts/0010-codex-codex-turn1-submit.json",
+    "sha256": "1a584603888635a393d5f54555ecce725e628578049b30b1dd269cd6e299b6c9"
+  },
+  {
+    "path": "cli-retest/receipts/0011-codex-codex-turn1-get-0-describe.json",
+    "sha256": "b8680a8339be60356dda0bc69d90b0bb67820d1d95945868ce07bed0215e09aa"
+  },
+  {
+    "path": "cli-retest/receipts/0012-codex-codex-turn1-get-0.json",
+    "sha256": "ff4883cbdb553173f4815eba9ce7d3c14898b0690024ecd85d2bee3f36f4dbc4"
+  },
+  {
+    "path": "cli-retest/receipts/0013-codex-codex-turn1-wait-0.json",
+    "sha256": "726109b5995472f7463ad543793bbe254629cee27af2a186d33b5289cb425765"
+  },
+  {
+    "path": "cli-retest/receipts/0014-codex-codex-turn1-get-1-describe.json",
+    "sha256": "b0ed97c018699a5841f6745727068020551b29776f86446750c8ef5b5166c8e3"
+  },
+  {
+    "path": "cli-retest/receipts/0015-codex-codex-turn1-get-1.json",
+    "sha256": "1a4d7ebb03d040b0e338737c860896e14b9baafb155262f4bb0d05e9b8f64471"
+  },
+  {
+    "path": "cli-retest/receipts/0016-codex-codex-turn1-messages-describe.json",
+    "sha256": "95110edd6cead04dceb72da45b7d219ac2312c9f5f10bfae9f7b9b503fd2fda0"
+  },
+  {
+    "path": "cli-retest/receipts/0017-codex-codex-turn1-messages.json",
+    "sha256": "1c69c0b0e8a218ae30b112b1daf618edf81a1988b23af8c660a79a7638268129"
+  },
+  {
+    "path": "cli-retest/receipts/0018-codex-codex-turn1-models-describe.json",
+    "sha256": "32e1888659e593c43df21041610cf958828702a00f6911156fb0d8f53c59fca9"
+  },
+  {
+    "path": "cli-retest/receipts/0019-codex-codex-turn1-models.json",
+    "sha256": "9318e7f6f985cb0076685846fad4dfc01e6001ae65ab969f7b249296d0937b77"
+  },
+  {
+    "path": "cli-retest/receipts/0020-codex-codex-turn1-events-0-describe.json",
+    "sha256": "96f0bc133aab41e3fd06878b4b63ca292394dcb4633e88f605a7fce0ef828326"
+  },
+  {
+    "path": "cli-retest/receipts/0021-codex-codex-turn1-events-0.json",
+    "sha256": "f8ce035dbabdfe597d3bd357147f569f3b69a1492420419143346eb30307a819"
+  },
+  {
+    "path": "cli-retest/receipts/0022-codex-codex-turn2-submit-describe.json",
+    "sha256": "a204b2d535e17fb40f2848edef7a6401c0acf102347062122003629262db9d8e"
+  },
+  {
+    "path": "cli-retest/receipts/0023-codex-codex-turn2-submit.json",
+    "sha256": "debdd70814cade1be3303978a83f0867195ed851f9c6154ce85e7febff752175"
+  },
+  {
+    "path": "cli-retest/receipts/0024-codex-codex-turn2-get-0-describe.json",
+    "sha256": "2b85cc3544a95e559cc1b507357cfc07afe90575148267c3757d89f65abc2644"
+  },
+  {
+    "path": "cli-retest/receipts/0025-codex-codex-turn2-get-0.json",
+    "sha256": "0f0340ac8bcb3e9013d7817a4e7988573ec372fef9711fac7854eb40717e51e1"
+  },
+  {
+    "path": "cli-retest/receipts/0026-codex-codex-turn2-wait-0.json",
+    "sha256": "c875dd5f096ac4e1864ed1edc13e25e1740d8157a804f522e8706532cbd62606"
+  },
+  {
+    "path": "cli-retest/receipts/0027-codex-codex-turn2-get-1-describe.json",
+    "sha256": "0ac5e8da79c01fb4b1ac25684d10146df4b0498252087d22052e31b0698cdb55"
+  },
+  {
+    "path": "cli-retest/receipts/0028-codex-codex-turn2-get-1.json",
+    "sha256": "c13218c66062f1a0ded0ceb827ce5527350befbeebc2de8020f3caa475aabe28"
+  },
+  {
+    "path": "cli-retest/receipts/0029-codex-codex-turn2-messages-describe.json",
+    "sha256": "681118ea2cfc10c3c82d1fda7e74c3b7fc62d5af052da0b8746d62e6f885f12d"
+  },
+  {
+    "path": "cli-retest/receipts/0030-codex-codex-turn2-messages.json",
+    "sha256": "e8fe94242e853a0ec71b35ce8351bd54a943565f7d8b0ad8242a6a46acc9171e"
+  },
+  {
+    "path": "cli-retest/receipts/0031-codex-codex-turn2-models-describe.json",
+    "sha256": "48a3f5d0fe1d55b7f1b9f4aa775328fe8a73071af1e30ae105b799fa0b366671"
+  },
+  {
+    "path": "cli-retest/receipts/0032-codex-codex-turn2-models.json",
+    "sha256": "91ed3b157261aa8bc69f8b14492217ef6d4e002e7d30f039fe20923ad2fa0b1a"
+  },
+  {
+    "path": "cli-retest/receipts/0033-codex-codex-turn2-events-0-describe.json",
+    "sha256": "5d866f2edf52aef87ddd16fda7ad03131dea0c39b24cceaba33025cd877ede59"
+  },
+  {
+    "path": "cli-retest/receipts/0034-codex-codex-turn2-events-0.json",
+    "sha256": "ee80bceb50fe63387b394b1b9b862e7f334ce90d95778ac45273d8092068a27f"
+  },
+  {
+    "path": "cli-retest/receipts/0035-codex-codex-turn3-submit-describe.json",
+    "sha256": "8ef048d813d2e7fbba6abb17cc84ae229f360d2d823b9bab22e5601154289689"
+  },
+  {
+    "path": "cli-retest/receipts/0036-codex-codex-turn3-submit.json",
+    "sha256": "e43022046f2b4f31e060307c6884282bd09efd434e60c5e4f4f2586673a66218"
+  },
+  {
+    "path": "cli-retest/receipts/0037-codex-codex-turn3-get-0-describe.json",
+    "sha256": "77802ad8c27bb665bebbc21383478e99027de8501aea7a85ca64ad13ae5b2b4e"
+  },
+  {
+    "path": "cli-retest/receipts/0038-codex-codex-turn3-get-0.json",
+    "sha256": "39b13f9557eaf61e3e8b18fc362257ceb8217d2805512d6b2c93d58ba13763f6"
+  },
+  {
+    "path": "cli-retest/receipts/0039-codex-codex-turn3-wait-0.json",
+    "sha256": "d354c8471dbf151c8d84066e97f43f87d1376e34acc76af3bf7f51dc366a2db7"
+  },
+  {
+    "path": "cli-retest/receipts/0040-codex-codex-turn3-get-1-describe.json",
+    "sha256": "3ab2d67b161f8aa381eea552fee8065484d01a46a37fbafd26106ac96811321d"
+  },
+  {
+    "path": "cli-retest/receipts/0041-codex-codex-turn3-get-1.json",
+    "sha256": "260c03596c8511780926211ad8a69218077b3f4ad8df7fa84ee2390378b926b2"
+  },
+  {
+    "path": "cli-retest/receipts/0042-codex-codex-turn3-messages-describe.json",
+    "sha256": "51d0f8a9d46a5fce3b6c826b2809282fab97ca111a2e4fed35e69e47227f0e8b"
+  },
+  {
+    "path": "cli-retest/receipts/0043-codex-codex-turn3-messages.json",
+    "sha256": "7588032caeb85318ce58ef6066aaaf4d9694d4eee667bda30ea3ea4bb165e23f"
+  },
+  {
+    "path": "cli-retest/receipts/0044-codex-codex-turn3-models-describe.json",
+    "sha256": "d6103b2daf3f6a4d5b5ed45d6d8c34c112ee3de460be353e7d8f346ecc94750d"
+  },
+  {
+    "path": "cli-retest/receipts/0045-codex-codex-turn3-models.json",
+    "sha256": "54e1d89ebc7a759517132ff10c6daa242c5c1c99429cdd3e3fdcbaa728eb012c"
+  },
+  {
+    "path": "cli-retest/receipts/0046-codex-codex-turn3-events-0-describe.json",
+    "sha256": "1deb8781552e2b22ff15afdcc3037d0e043872fa1ec4aa265ffcd8cf2204e332"
+  },
+  {
+    "path": "cli-retest/receipts/0047-codex-codex-turn3-events-0.json",
+    "sha256": "a1464094076d7fb60cefe4a4acdcfb8b2b7677a62c420454fd934b6cb7ba1cd5"
+  },
+  {
+    "path": "cli-retest/receipts/0048-check-route-codex-describe.json",
+    "sha256": "0eb97a6d0250a2a349a777bd5028ef209a3a9005218cc7b4ac45341a10ba8971"
+  },
+  {
+    "path": "cli-retest/receipts/0049-check-route-codex.json",
+    "sha256": "b647924c0bc19e02c79b37cd8408b0c55d3debb63fb337e8f7a631f4704ab6bc"
+  },
+  {
+    "path": "cli-retest/receipts/0050-codex-pi-conversation-describe.json",
+    "sha256": "e6ee785583ab10310eeac3a81055c6a87a719da64c9391f7fdbdd26e9fa2ebc4"
+  },
+  {
+    "path": "cli-retest/receipts/0051-codex-pi-conversation.json",
+    "sha256": "ac4aef2e295282a176d30eef61e17507ad2bd4035a8766520587f67fdc4e405e"
+  },
+  {
+    "path": "cli-retest/receipts/0052-codex-pi-turn1-submit-describe.json",
+    "sha256": "be72b5a076751d4b70272156370f085d1212010125df878f0351aae1b559a71f"
+  },
+  {
+    "path": "cli-retest/receipts/0053-codex-pi-turn1-submit.json",
+    "sha256": "971f21518e3382127ae3482f55367cb7bf12ed6b8a8d7c372597f66782c26a63"
+  },
+  {
+    "path": "cli-retest/receipts/0054-check-route-official-describe.json",
+    "sha256": "1d276002b98fc18a7197a1c23f21ed470e6904d08eaaf6455b778d3ff100772e"
+  },
+  {
+    "path": "cli-retest/receipts/0055-check-route-official.json",
+    "sha256": "95c1dab5f5baeb37f662afa1257acc1fbde544180b186bef125896ec5fbcddc7"
+  },
+  {
+    "path": "cli-retest/receipts/0056-set-route-official-describe.json",
+    "sha256": "bec699d94cb5bd13f6cad409c5b938ff5f0a370e27ff6421d941a2df31cba5c1"
+  },
+  {
+    "path": "cli-retest/receipts/0057-set-route-official.json",
+    "sha256": "0b76b79a4beb2d7cd1e59e99f9f3703df210e7b05b181233c2c6ef771670e118"
+  },
+  {
+    "path": "cli-retest/receipts/0058-readback-route-official-describe.json",
+    "sha256": "1d276002b98fc18a7197a1c23f21ed470e6904d08eaaf6455b778d3ff100772e"
+  },
+  {
+    "path": "cli-retest/receipts/0059-readback-route-official.json",
+    "sha256": "3293acb2a3535d4d1677f21aee5e576a66bc51aac354db4893cad0d2b14c5f8c"
+  },
+  {
+    "path": "cli-retest/receipts/0060-official-codex-conversation-describe.json",
+    "sha256": "ac4b2b4667463400f1f162a6e7848500005e7d96c0c2cc6d0058d7aec2a03694"
+  },
+  {
+    "path": "cli-retest/receipts/0061-official-codex-conversation.json",
+    "sha256": "bbda67a85597cb2b2ee52b8f91639d72f4aabe47234d82195138b1d3e3c83c78"
+  },
+  {
+    "path": "cli-retest/receipts/0062-official-codex-turn1-submit-describe.json",
+    "sha256": "651a1bd2f6ec0f3ceaa9d618b1bd24c9612d6c8d1cae17de012864becf41fe27"
+  },
+  {
+    "path": "cli-retest/receipts/0063-official-codex-turn1-submit.json",
+    "sha256": "00924522b01a92ae6744e306e3b112b9e185255b77d1e08f670a350a4d342102"
+  },
+  {
+    "path": "cli-retest/receipts/0064-official-codex-turn1-get-0-describe.json",
+    "sha256": "a9094ad866791d4574eb136acda156c2172019d657176a06471885b55c70141d"
+  },
+  {
+    "path": "cli-retest/receipts/0065-official-codex-turn1-get-0.json",
+    "sha256": "3979ea15aa00249a0dbfc02d3a3483c4d37076ceb5c605ce06bf0ae26fdd6423"
+  },
+  {
+    "path": "cli-retest/receipts/0066-official-codex-turn1-wait-0.json",
+    "sha256": "9a9079c38db8caed677187e7a0454db3fa1b7ab2c95e46bef1da6a43ff626603"
+  },
+  {
+    "path": "cli-retest/receipts/0067-official-codex-turn1-get-1-describe.json",
+    "sha256": "1d5bb31c3a93bd9d6c986eb58066c511a70199f0764a7c10b26ea3ba5f26e059"
+  },
+  {
+    "path": "cli-retest/receipts/0068-official-codex-turn1-get-1.json",
+    "sha256": "5c631c231fcde248716d72710ebc3bc89e6d965e45b45f6e010c39971f5e74f2"
+  },
+  {
+    "path": "cli-retest/receipts/0069-official-codex-turn1-messages-describe.json",
+    "sha256": "2dff4da5fdf3eda2fdd19bc1a123ab8800a77c544777f9e4b503f5ec7a102f17"
+  },
+  {
+    "path": "cli-retest/receipts/0070-official-codex-turn1-messages.json",
+    "sha256": "601456a218ba230e69b8d9e3dbfb0da0c902748df426d3c8819b17a582117f71"
+  },
+  {
+    "path": "cli-retest/receipts/0071-official-codex-turn1-models-describe.json",
+    "sha256": "9d286f109b2a74f1b2d8eb28108b943026081ffa675a54e0d4bae3adc22cd5db"
+  },
+  {
+    "path": "cli-retest/receipts/0072-official-codex-turn1-models.json",
+    "sha256": "5a0e5e88a3048b6e715c76538c83c5ead844d35342fee611d722754999f6dfc1"
+  },
+  {
+    "path": "cli-retest/receipts/0073-official-codex-turn1-events-0-describe.json",
+    "sha256": "bb9d477b0a8b9fe488a5dc76dcc82a9e65877a1fc881f23c1a12a2af9001a184"
+  },
+  {
+    "path": "cli-retest/receipts/0074-official-codex-turn1-events-0.json",
+    "sha256": "5aaa8064f077306dbbd950f845f6769aec9429c8da8292bd5d8cc18957fade30"
+  },
+  {
+    "path": "cli-retest/receipts/0075-official-codex-turn2-submit-describe.json",
+    "sha256": "e101c32858be084b4953d4c57672a098a9f6e9353ad8e72bad96035801017a0e"
+  },
+  {
+    "path": "cli-retest/receipts/0076-official-codex-turn2-submit.json",
+    "sha256": "e91836ec281bd75765755df05980a2944793ca706e85e3d7cfaa906be61d976d"
+  },
+  {
+    "path": "cli-retest/receipts/0077-official-codex-turn2-get-0-describe.json",
+    "sha256": "a1a7a035621e53a74a7b63df91e628b32de684bb36eb02107202da3fc6e06c8a"
+  },
+  {
+    "path": "cli-retest/receipts/0078-official-codex-turn2-get-0.json",
+    "sha256": "4ee2b4206aff9c8f469e5b89c3f7ee02f912cf9860df092971dd0d14748e9a98"
+  },
+  {
+    "path": "cli-retest/receipts/0079-official-codex-turn2-wait-0.json",
+    "sha256": "753a9b7dc589f196cdb1088eb8bc52751514668f1f4217b74f6e38ee9c7427a4"
+  },
+  {
+    "path": "cli-retest/receipts/0080-official-codex-turn2-get-1-describe.json",
+    "sha256": "c2596fb1367cc1f6aa631daef5b92b9e102b07884c5c1a30fdae00cc19ec53b3"
+  },
+  {
+    "path": "cli-retest/receipts/0081-official-codex-turn2-get-1.json",
+    "sha256": "8d3943b200a0aeff9f858e7cef0e0dad316cd357a8206e5c59f11d341a2c8416"
+  },
+  {
+    "path": "cli-retest/receipts/0082-official-codex-turn2-messages-describe.json",
+    "sha256": "807c55bf647e396f38c3afd125c30830a30a964caa28544e17de46ae0d78f847"
+  },
+  {
+    "path": "cli-retest/receipts/0083-official-codex-turn2-messages.json",
+    "sha256": "899cc6e5819f7cdaa701f9e11c410f14e0976b213d2a65603d04ceabe90081d0"
+  },
+  {
+    "path": "cli-retest/receipts/0084-official-codex-turn2-models-describe.json",
+    "sha256": "7727fb638ca33164560cb310532b0663187c4936d258c118caba8509a55a25bf"
+  },
+  {
+    "path": "cli-retest/receipts/0085-official-codex-turn2-models.json",
+    "sha256": "af5867ad7953c32429cfe4f590d8a0828d176c45dfccb86299fd7d672ca0dc2d"
+  },
+  {
+    "path": "cli-retest/receipts/0086-official-codex-turn2-events-0-describe.json",
+    "sha256": "9d8fa867b1f4cf9096a8e6b2e892da1d0f8ed161eb1186b2354f915d086663a0"
+  },
+  {
+    "path": "cli-retest/receipts/0087-official-codex-turn2-events-0.json",
+    "sha256": "aaee34c1ea274453c50cc92a43c08ac55469600e062342f39623349107dfcbec"
+  },
+  {
+    "path": "cli-retest/receipts/0088-official-codex-turn3-submit-describe.json",
+    "sha256": "6c4bc85e62d97bbb3f62303a9f436b48ee44c8e8f307c40fbc60fd3d54bc42b7"
+  },
+  {
+    "path": "cli-retest/receipts/0089-official-codex-turn3-submit.json",
+    "sha256": "3ae99e30080d3291e821144633e31200379f5b9b07b8a5300655170d672afbaa"
+  },
+  {
+    "path": "cli-retest/receipts/0090-official-codex-turn3-get-0-describe.json",
+    "sha256": "22218db2b815d32973ccf46593d5880e07b17ca5711d03af174791b4dcf20595"
+  },
+  {
+    "path": "cli-retest/receipts/0091-official-codex-turn3-get-0.json",
+    "sha256": "7f6044f7b6bf61814c520e6682b2325c09682f77eecf10656e9a1f2444dad113"
+  },
+  {
+    "path": "cli-retest/receipts/0092-official-codex-turn3-wait-0.json",
+    "sha256": "d4c43273b83700df991f50a787b26eb5dab579917bb80b20572ca313222c3fb1"
+  },
+  {
+    "path": "cli-retest/receipts/0093-official-codex-turn3-get-1-describe.json",
+    "sha256": "856c30f9f1d05286419b4944d311bca3bca94f3798896995d96043a104adbe82"
+  },
+  {
+    "path": "cli-retest/receipts/0094-official-codex-turn3-get-1.json",
+    "sha256": "02d2f43aed7b4c90160d66ccf8065cd4316e77c6bdd573d7bc74f6849b3bdc28"
+  },
+  {
+    "path": "cli-retest/receipts/0095-official-codex-turn3-messages-describe.json",
+    "sha256": "904d5cb29a1944865197f4f44d3580dab81682c637290f85e31a15828d78855e"
+  },
+  {
+    "path": "cli-retest/receipts/0096-official-codex-turn3-messages.json",
+    "sha256": "dcf60d79c13329353515c670b13fa7e43927d12d6a4627198c75959dad288909"
+  },
+  {
+    "path": "cli-retest/receipts/0097-official-codex-turn3-models-describe.json",
+    "sha256": "8b41728080bfd84cc334016f8bf779f219e15c5951b76d3ad7aef4269e7a8f62"
+  },
+  {
+    "path": "cli-retest/receipts/0098-official-codex-turn3-models.json",
+    "sha256": "4bf06999e0fb9cf0b6e8d9bd7944d7276dde1fe532fe18a3362288a8275d3e5f"
+  },
+  {
+    "path": "cli-retest/receipts/0099-official-codex-turn3-events-0-describe.json",
+    "sha256": "0c6a3445b49e9289086efac91d075cd3a42bd1f23fb36c9e9505be700e7a0c34"
+  },
+  {
+    "path": "cli-retest/receipts/0100-official-codex-turn3-events-0.json",
+    "sha256": "b19b2571a64c575576653a095da5edce9a88af10fb09542cc86054c44b5e8a76"
+  },
+  {
+    "path": "cli-retest/receipts/0101-check-route-self-describe.json",
+    "sha256": "68cb2de2f33e10688648350c3e2b7e05c2ed77791c93a981014f5720aa765c94"
+  },
+  {
+    "path": "cli-retest/receipts/0102-check-route-self.json",
+    "sha256": "40c303c318ba674e8dd73178984a521c4434fce4a9aa514fb7de839d9e8ae847"
+  },
+  {
+    "path": "cli-retest/receipts/0103-set-route-self-describe.json",
+    "sha256": "dac8d4006742ed1a5c7deb63940ed8487085b9edb2789c4698de9b81ce320124"
+  },
+  {
+    "path": "cli-retest/receipts/0104-set-route-self.json",
+    "sha256": "f2bd7ad5f82901ce88e6a818052ae788430b8c5e7591916125f4611c26b7493f"
+  },
+  {
+    "path": "cli-retest/receipts/0105-readback-route-self-describe.json",
+    "sha256": "e8fde9622669394f43413b22c88078f6f525d742f20c5b37eb51bfe627f90210"
+  },
+  {
+    "path": "cli-retest/receipts/0106-readback-route-self.json",
+    "sha256": "1060525fc0d1579e394ca336bf74489be51109d514b0c61f53421b38fe0f6a59"
+  },
+  {
+    "path": "cli-retest/receipts/0107-self-pi-conversation-describe.json",
+    "sha256": "0082859a049ab7806aafb5ae809fa758a37aced954834878429964ef5eaeb7af"
+  },
+  {
+    "path": "cli-retest/receipts/0108-self-pi-conversation.json",
+    "sha256": "63a033f6bed445a9a9f0dbd66ff9b1ad6f340629afd395f94ca73393f5613007"
+  },
+  {
+    "path": "cli-retest/receipts/0109-self-pi-turn1-submit-describe.json",
+    "sha256": "c836f63b5962ece34ff103111331105796655c34dd174a09b3ff5d377448eede"
+  },
+  {
+    "path": "cli-retest/receipts/0110-self-pi-turn1-submit.json",
+    "sha256": "a7cae346773eac7913f94d7d5ea0a6f0a2c0ec96b9a5797ff2a69e377b325a42"
+  },
+  {
+    "path": "cli-retest/receipts/0111-self-pi-turn1-get-0-describe.json",
+    "sha256": "4e94dfff3ad31613bd7318757bcb843271d0bc0a86807490d573a2aed875a620"
+  },
+  {
+    "path": "cli-retest/receipts/0112-self-pi-turn1-get-0.json",
+    "sha256": "fe337ed7743a2b518e5635b18ba64be2db0ec849f71cb3eb806a20d57ba1735b"
+  },
+  {
+    "path": "cli-retest/receipts/0113-self-pi-turn1-wait-0.json",
+    "sha256": "058b6dac39388276387ad9b2b25711e0e120e40c99a6a6cbef101915fc66b3ae"
+  },
+  {
+    "path": "cli-retest/receipts/0114-self-pi-turn1-get-1-describe.json",
+    "sha256": "4134a8ef8d3d7bc6a4dac504ae4c14a77f205f5ef70ef58f32480365c3d74aa0"
+  },
+  {
+    "path": "cli-retest/receipts/0115-self-pi-turn1-get-1.json",
+    "sha256": "ccdf4edb330a67279a22a7ce6f816d870acfe4bc81af6bc7ca8d0204873c48c1"
+  },
+  {
+    "path": "cli-retest/receipts/0116-self-pi-turn1-messages-describe.json",
+    "sha256": "189299f6eac8aa03739b36914f5a06b79080ec2cc517f1f33acd806c884ef147"
+  },
+  {
+    "path": "cli-retest/receipts/0117-self-pi-turn1-messages.json",
+    "sha256": "e2f92dd521086c752377d218d6d2af56e6fd2f54bc3b6bcb2b0f4ee273cbc9f8"
+  },
+  {
+    "path": "cli-retest/receipts/0118-self-pi-turn1-models-describe.json",
+    "sha256": "3447d3b250a78ceb9827657a99ee078df91beca457bbbe617179752401419be4"
+  },
+  {
+    "path": "cli-retest/receipts/0119-self-pi-turn1-models.json",
+    "sha256": "57e31224cb59dd1205e1292e6529e0db69af490f7854fde36cd9e85756805d32"
+  },
+  {
+    "path": "cli-retest/receipts/0120-self-pi-turn1-events-0-describe.json",
+    "sha256": "1fade4de020a152c41b013d1bbe530ca4028b981eaab6687255b70001fed7a67"
+  },
+  {
+    "path": "cli-retest/receipts/0121-self-pi-turn1-events-0.json",
+    "sha256": "2a2d414c3e25dced676b10c0ae2bc9133c111d2d07594e8bc3c1834981d569b1"
+  },
+  {
+    "path": "cli-retest/receipts/0122-self-pi-turn2-submit-describe.json",
+    "sha256": "12893a441bc1cad1263aff11f25c86b03e20244f9338009845b544d75cc7ccb0"
+  },
+  {
+    "path": "cli-retest/receipts/0123-self-pi-turn2-submit.json",
+    "sha256": "5c0d729749ccfd72a12958a255d1865265ad334c651e84206a7878aba6629ad3"
+  },
+  {
+    "path": "cli-retest/receipts/0124-self-pi-turn2-get-0-describe.json",
+    "sha256": "6abbb0f23ba69b5f4ba8f8aa81a2a25d8ddf82321bf603050b6826c78b177291"
+  },
+  {
+    "path": "cli-retest/receipts/0125-self-pi-turn2-get-0.json",
+    "sha256": "d360b39b13795ce44700bea8b5758b5662aee9e53eff6440f6547810307f543f"
+  },
+  {
+    "path": "cli-retest/receipts/0126-self-pi-turn2-wait-0.json",
+    "sha256": "f96be516804089c59b24d8952372b854d7ad1f35a885a71462093b463f41f557"
+  },
+  {
+    "path": "cli-retest/receipts/0127-self-pi-turn2-get-1-describe.json",
+    "sha256": "ee3523af108a804a38575444155105bac0d693b46a00f1baf8b71a67ad64e8ee"
+  },
+  {
+    "path": "cli-retest/receipts/0128-self-pi-turn2-get-1.json",
+    "sha256": "b89feee1bea06a5780d29e808242232353e17612fff55070ebce1011c6173b14"
+  },
+  {
+    "path": "cli-retest/receipts/0129-self-pi-turn2-messages-describe.json",
+    "sha256": "eef7ba28db85c5be752db6adde2b766e8234cc91e297def936aa49b95ac991a5"
+  },
+  {
+    "path": "cli-retest/receipts/0130-self-pi-turn2-messages.json",
+    "sha256": "400db2ca5e4dbecd7f51946b25e0cf7d934d761bbb60b06d4aae1522fccee71a"
+  },
+  {
+    "path": "cli-retest/receipts/0131-self-pi-turn2-models-describe.json",
+    "sha256": "d6622d14a4cf57541564c55128247d699bdf88ab37ca36cfd6147742d4961252"
+  },
+  {
+    "path": "cli-retest/receipts/0132-self-pi-turn2-models.json",
+    "sha256": "bee02db05f8088c66078b42dbdb0b7a849a64ca9532fe744710d674ef4feeeea"
+  },
+  {
+    "path": "cli-retest/receipts/0133-self-pi-turn2-events-0-describe.json",
+    "sha256": "0207963185b22e0ce55c5987a765f440b4414dc516db63c969f9ed891a3d8e6e"
+  },
+  {
+    "path": "cli-retest/receipts/0134-self-pi-turn2-events-0.json",
+    "sha256": "4cca97e7b83ace698b7457289953bf3df02c9b3591550f6809683f45c91e6944"
+  },
+  {
+    "path": "cli-retest/receipts/0135-self-pi-turn3-submit-describe.json",
+    "sha256": "63b2bfae76be791e1516d38d7e4da9c73b180dfebc866d9ce560f944767e3da0"
+  },
+  {
+    "path": "cli-retest/receipts/0136-self-pi-turn3-submit.json",
+    "sha256": "0fe53abb9043a7c7e938b7fea57b746954402b21b3ce3ed4b9c752d9aad45211"
+  },
+  {
+    "path": "cli-retest/receipts/0137-self-pi-turn3-get-0-describe.json",
+    "sha256": "94c3b07eaef8095d1522e5fc01c35dabc967bb4dc4191fa1ff6a853d1c83f264"
+  },
+  {
+    "path": "cli-retest/receipts/0138-self-pi-turn3-get-0.json",
+    "sha256": "9afc3c5650561eb0f8001752eb6b4c6c9ce105b86294fb3b01367770d5c56092"
+  },
+  {
+    "path": "cli-retest/receipts/0139-self-pi-turn3-wait-0.json",
+    "sha256": "1ff29b75be9d24085082dafffab7669f38fd24339b718290bf54f9ffe73fafaa"
+  },
+  {
+    "path": "cli-retest/receipts/0140-self-pi-turn3-get-1-describe.json",
+    "sha256": "cfcf12c14f22e171b3cc4de22e4cfdb7c46529c4d994b9e316aa91dfa4279f65"
+  },
+  {
+    "path": "cli-retest/receipts/0141-self-pi-turn3-get-1.json",
+    "sha256": "5784206283910bceb4a5447a06586e26fdaccc49d4f05d544f3c92dc0382cf91"
+  },
+  {
+    "path": "cli-retest/receipts/0142-self-pi-turn3-messages-describe.json",
+    "sha256": "79ddcef03de03779ce1d706dae11de9439a7eb01ada36e69f9db7acb730ab420"
+  },
+  {
+    "path": "cli-retest/receipts/0143-self-pi-turn3-messages.json",
+    "sha256": "9fbac64b2ab46ef669f3e533a60d63e85323c8305d745ee52ba588ed70eedbbc"
+  },
+  {
+    "path": "cli-retest/receipts/0144-self-pi-turn3-models-describe.json",
+    "sha256": "7727fb638ca33164560cb310532b0663187c4936d258c118caba8509a55a25bf"
+  },
+  {
+    "path": "cli-retest/receipts/0145-self-pi-turn3-models.json",
+    "sha256": "59d57c0532ebec6cd5a2b944e40711dfcd196864174b3eaff43cf5db1d085b20"
+  },
+  {
+    "path": "cli-retest/receipts/0146-self-pi-turn3-events-0-describe.json",
+    "sha256": "8896012c8f022f7973d91cff6a2deb257da213ad671ed6e2b0f3c82bba93f23d"
+  },
+  {
+    "path": "cli-retest/receipts/0147-self-pi-turn3-events-0.json",
+    "sha256": "5ba7b4d9a61ddfdf14daa1abf2828a5d9bb728225fa5181b0813f38c0b131d7d"
+  },
+  {
+    "path": "cli-retest/receipts/0148-check-route-self-describe.json",
+    "sha256": "e4b22aaa9b9b54894e91186ddc76ed429d1ff69139baf496e004dd5a645e6189"
+  },
+  {
+    "path": "cli-retest/receipts/0149-check-route-self.json",
+    "sha256": "a0f4c7bda92c2df97d17c2105c526e41b1841af264d5bc8ff34009a14cf8bd65"
+  },
+  {
+    "path": "cli-retest/receipts/0150-self-codex-conversation-describe.json",
+    "sha256": "801f9d42adebf8257b5c6f5c73fc755ab8ead641c58453d491182b4f51cdad32"
+  },
+  {
+    "path": "cli-retest/receipts/0151-self-codex-conversation.json",
+    "sha256": "ef5a6c663a9d414563feb0f15c1d1dfc05b08f84d747498f20396bd559979b56"
+  },
+  {
+    "path": "cli-retest/receipts/0152-self-codex-turn1-submit-describe.json",
+    "sha256": "be72b5a076751d4b70272156370f085d1212010125df878f0351aae1b559a71f"
+  },
+  {
+    "path": "cli-retest/receipts/0153-self-codex-turn1-submit.json",
+    "sha256": "9bdec6fdf2066722893ddab962793bab5529ed0e4fe7e2ccb49f0589840b76ae"
+  },
+  {
+    "path": "cli-retest/receipts/0154-self-codex-turn1-get-0-describe.json",
+    "sha256": "229736c16926176c36bb9bc4c09e04e11a2f3a51916be7ad060ab7bb6477ec10"
+  },
+  {
+    "path": "cli-retest/receipts/0155-self-codex-turn1-get-0.json",
+    "sha256": "6f15557e93efedae3b097064efacbb6a70ed0d1004eabbbce45d91693bd23b42"
+  },
+  {
+    "path": "cli-retest/receipts/0156-self-codex-turn1-wait-0.json",
+    "sha256": "bc99ab5434270c3f945f2da74de8dd046419d5d102345a075c71044b124c39b8"
+  },
+  {
+    "path": "cli-retest/receipts/0157-self-codex-turn1-get-1-describe.json",
+    "sha256": "22218db2b815d32973ccf46593d5880e07b17ca5711d03af174791b4dcf20595"
+  },
+  {
+    "path": "cli-retest/receipts/0158-self-codex-turn1-get-1.json",
+    "sha256": "4d94de5efdae12db74addba675e6bc070a48c2a33d7abb7387021c5218b18b54"
+  },
+  {
+    "path": "cli-retest/receipts/0159-self-codex-turn1-messages-describe.json",
+    "sha256": "760eedcf1a139fb2d26f896f7cbfa59fec3c920c441e7c32eddde364d57f02de"
+  },
+  {
+    "path": "cli-retest/receipts/0160-self-codex-turn1-messages.json",
+    "sha256": "ab73a5d645fe6ac61ba22b657d5d79e8e183ff6bef2b514aa0e569eff677edc0"
+  },
+  {
+    "path": "cli-retest/receipts/0161-self-codex-turn1-models-describe.json",
+    "sha256": "0d7c56fcc5b7e8348817513c32cf0328b26f6690f721a389061c5e51de13a5b1"
+  },
+  {
+    "path": "cli-retest/receipts/0162-self-codex-turn1-models.json",
+    "sha256": "f9e1ad0383b9c18e3c269a28483f495466cd8936b5bed12c370c8086718e5bdd"
+  },
+  {
+    "path": "cli-retest/receipts/0163-self-codex-turn1-events-0-describe.json",
+    "sha256": "d87a8226677faf798e181641f599339ca82431e66a2182fbc413048e01095ebf"
+  },
+  {
+    "path": "cli-retest/receipts/0164-self-codex-turn1-events-0.json",
+    "sha256": "2a6bf54f32b17711eba05650a9913c807f4a760e05bfb95a4205d5c11374858b"
+  },
+  {
+    "path": "cli-retest/receipts/0165-self-codex-turn2-submit-describe.json",
+    "sha256": "575776ea4e3244a25748d8c646dcf531713b047684a02c893f29f62da954c993"
+  },
+  {
+    "path": "cli-retest/receipts/0166-self-codex-turn2-submit.json",
+    "sha256": "a1e5b07d892e32587888ee9667c7de9943986a67d723f8961bca5d3adaa83382"
+  },
+  {
+    "path": "cli-retest/receipts/0167-self-codex-turn2-get-0-describe.json",
+    "sha256": "b8680a8339be60356dda0bc69d90b0bb67820d1d95945868ce07bed0215e09aa"
+  },
+  {
+    "path": "cli-retest/receipts/0168-self-codex-turn2-get-0.json",
+    "sha256": "92132963abfdb9b94e43e80a11bee52ae3699b2971fcbadd8e720a586f9e0880"
+  },
+  {
+    "path": "cli-retest/receipts/0169-self-codex-turn2-wait-0.json",
+    "sha256": "cb2bba20b5cd9597211ec352630d8583109ba387b3f909c7f91179ce32c31229"
+  },
+  {
+    "path": "cli-retest/receipts/0170-self-codex-turn2-get-1-describe.json",
+    "sha256": "6d63ea575d80d79d0a7d117374125456fb0f7d0719bddceb1cda9ff3a7b47032"
+  },
+  {
+    "path": "cli-retest/receipts/0171-self-codex-turn2-get-1.json",
+    "sha256": "ef453f21e62d69e1d49c6b13d41524786660a300dca81334c6e9491c745f1d72"
+  },
+  {
+    "path": "cli-retest/receipts/0172-self-codex-turn2-messages-describe.json",
+    "sha256": "63a5d93f6d86f85be5448d2f19afa9e2b1a724924cd1a37d86309bc9c7e69764"
+  },
+  {
+    "path": "cli-retest/receipts/0173-self-codex-turn2-messages.json",
+    "sha256": "1271b4ce4a80fff4fe4849cd9f003164b9ffa4fc568f01407e6f5be5a0ee0ef2"
+  },
+  {
+    "path": "cli-retest/receipts/0174-self-codex-turn2-models-describe.json",
+    "sha256": "dc9090fca423b75bc196135a8e1f93a63e8b8d198d5cdafb7e49c6530d71bfea"
+  },
+  {
+    "path": "cli-retest/receipts/0175-self-codex-turn2-models.json",
+    "sha256": "021eeade6ad398dc26ea659d498d2768983e661cff2e96aebde574325064ee5a"
+  },
+  {
+    "path": "cli-retest/receipts/0176-self-codex-turn2-events-0-describe.json",
+    "sha256": "54c20d5577a16b698343c8037eca6a83fd867dc594ae5c97b78efcfeb5c9ade9"
+  },
+  {
+    "path": "cli-retest/receipts/0177-self-codex-turn2-events-0.json",
+    "sha256": "ac1484ff3531bd366b93fdd7ce9759641e82a910639f72b06036553d1c367e83"
+  },
+  {
+    "path": "cli-retest/receipts/0178-self-codex-turn3-submit-describe.json",
+    "sha256": "6c4bc85e62d97bbb3f62303a9f436b48ee44c8e8f307c40fbc60fd3d54bc42b7"
+  },
+  {
+    "path": "cli-retest/receipts/0179-self-codex-turn3-submit.json",
+    "sha256": "3715f3781a6de3931fea250ba2504e19469bb4641afab90e3763afb5df01e848"
+  },
+  {
+    "path": "cli-retest/receipts/0180-self-codex-turn3-get-0-describe.json",
+    "sha256": "cce729fdbd56687d632cee2e56ed3c0ca6c48158bbada60896004ab3db600e7f"
+  },
+  {
+    "path": "cli-retest/receipts/0181-self-codex-turn3-get-0.json",
+    "sha256": "ba4454222b0611260db54499c442ca5fb31966786653f79d5c135006c28f19a3"
+  },
+  {
+    "path": "cli-retest/receipts/0182-self-codex-turn3-wait-0.json",
+    "sha256": "18c0224cb2317154687321286dbfb65ffeeaaa02edbe1f1403b6cb88b00838c9"
+  },
+  {
+    "path": "cli-retest/receipts/0183-self-codex-turn3-get-1-describe.json",
+    "sha256": "86cdc5ab43d54e837cd396a0e9ad26ba488fb42531c9e2b95120102359fc14a2"
+  },
+  {
+    "path": "cli-retest/receipts/0184-self-codex-turn3-get-1.json",
+    "sha256": "76c7d03df5ae4dc314a765536e4b12f52143c1a06baa602bf4f191789e42e9aa"
+  },
+  {
+    "path": "cli-retest/receipts/0185-self-codex-turn3-messages-describe.json",
+    "sha256": "096a7423e17626e6b4f9d44801c447e712b8b486610b5c6f1133e6a3cc3ed781"
+  },
+  {
+    "path": "cli-retest/receipts/0186-self-codex-turn3-messages.json",
+    "sha256": "ccea383f8a2702d938923eb6b3c68b1b243937d194f8435b74ad837d8aa1b17d"
+  },
+  {
+    "path": "cli-retest/receipts/0187-self-codex-turn3-models-describe.json",
+    "sha256": "34fc2433c72cdb18e2799f793260def9e986eabea0592db72cc271ba9f3fe46c"
+  },
+  {
+    "path": "cli-retest/receipts/0188-self-codex-turn3-models.json",
+    "sha256": "6938f9c9615f328513a00996c664cd11c0929dcbf856ae4bd0641f049267c772"
+  },
+  {
+    "path": "cli-retest/receipts/0189-self-codex-turn3-events-0-describe.json",
+    "sha256": "beaf6db6156a515cda498fc25eee1e3b8e4120a3ae114e2607ff145466b0be2b"
+  },
+  {
+    "path": "cli-retest/receipts/0190-self-codex-turn3-events-0.json",
+    "sha256": "88c769a110c9fdddfebf7760f3216b08430296ce9641ba2e50473d54e2f63204"
+  },
+  {
+    "path": "cli-retest/receipts/0191-check-route-codex-describe.json",
+    "sha256": "c79d6e6d18e8b80ec18507faf32fdf9aa73bd980c07317956f62b1a55f25a6f5"
+  },
+  {
+    "path": "cli-retest/receipts/0192-check-route-codex.json",
+    "sha256": "12ec48aea6dbc4ac73eb262c433a2da551464af2a49a8de1c99fdbe4e3e9acf9"
+  },
+  {
+    "path": "cli-retest/receipts/0193-set-route-codex-describe.json",
+    "sha256": "f4c43e661ace03fb1d26580cfccdc4f45159ceb32330de2918e6163910067e4f"
+  },
+  {
+    "path": "cli-retest/receipts/0194-set-route-codex.json",
+    "sha256": "327a734845bfef89dcdb47595407ce45d56e5c9a976a0d4750d1f1d22aa3abc7"
+  },
+  {
+    "path": "cli-retest/receipts/0195-readback-route-codex-describe.json",
+    "sha256": "cd5f1ce79eb3de727584ec2b7deb498bc10e2ce72cbab9fef1179ea54140c9de"
+  },
+  {
+    "path": "cli-retest/receipts/0196-readback-route-codex.json",
+    "sha256": "6a4317c9a46eb534e9e712789c2465239fe1d71e55fcfd5903ca8693991cc5eb"
+  },
+  {
+    "path": "cli-retest/receipts/0197-restored-route-describe.json",
+    "sha256": "c152b92f7a763cbffd80c5ddcdd630ff08244b88f9527ebfb51469caecceb301"
+  },
+  {
+    "path": "cli-retest/receipts/0198-restored-route.json",
+    "sha256": "b1fb38d2ffd8fb9b3147856fac9b9e2dd753d7c0b76b4ce3e1c7ee3d7e46ec2e"
+  },
+  {
+    "path": "cli-retest/matrix.json",
+    "sha256": "8cda43adce7ef49e1fb541b7e3408d65e9bb84162a6eeece8dfdea9043dfb0d0"
+  },
+  {
+    "path": "cli-retest/route-restoration.json",
+    "sha256": "37996e0e07abb66bc6460b4ec017ddd652dac306561f12b7e4d32a1cdf22b05a"
+  },
+  {
+    "path": "cli-retest/routing-state.json",
+    "sha256": "dc26f4285ff66172606ca235e6166c1c209440825af3c2183588e3f477137c70"
+  }
+]

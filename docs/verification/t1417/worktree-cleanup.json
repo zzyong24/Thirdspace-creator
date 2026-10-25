@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-25T12:59:28.286617+00:00",
+  "tree": "/Volumes/T7-MacData/creatoros-t1417-_7rs96zn/Thirdspace-creator",
+  "commit": "b4e174a8433e21f75bbc6b2f69b2e065855b7698",
+  "trackedChanges": false,
+  "nonIgnoredUntracked": false,
+  "removedKiB": 13009864,
+  "removed": true,
+  "retained": [
+    "installed app",
+    "Downloads DMG",
+    "immediate prior app rollback",
+    "external cargo registry cache"
+  ],
+  "method": "git worktree remove --force; only clean owned detached build tree with disposable ignored dependencies/build output"
+}

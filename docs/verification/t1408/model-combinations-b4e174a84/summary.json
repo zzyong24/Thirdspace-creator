@@ -1,0 +1,188 @@
+{
+  "installedCommit": "b4e174a8433e21f75bbc6b2f69b2e065855b7698",
+  "rows": [
+    {
+      "source": "codex",
+      "engine": "codex",
+      "conversationId": "ai-conv-a057fe81-646",
+      "result": "PASS",
+      "turns": [
+        {
+          "turn": 1,
+          "taskId": "ai-task-a057fe81-651",
+          "executionTaskId": "execution-task-a057fe81-652",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 43.16
+        },
+        {
+          "turn": 2,
+          "taskId": "ai-task-a057fe81-715",
+          "executionTaskId": "execution-task-a057fe81-716",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 50.394
+        },
+        {
+          "turn": 3,
+          "taskId": "ai-task-a057fe81-783",
+          "executionTaskId": "execution-task-a057fe81-784",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 1,
+          "onlyBoundGroupRead": true,
+          "wallSecondsIncludingCli": 80.227
+        }
+      ]
+    },
+    {
+      "source": "codex",
+      "engine": "pi",
+      "conversationId": "ai-conv-a057fe81-877",
+      "result": "EXPECTED_UNSUPPORTED",
+      "taskCreated": false
+    },
+    {
+      "source": "official",
+      "engine": "codex",
+      "conversationId": "ai-conv-a057fe81-891",
+      "result": "PASS",
+      "turns": [
+        {
+          "turn": 1,
+          "taskId": "ai-task-a057fe81-896",
+          "executionTaskId": "execution-task-a057fe81-897",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 38.209
+        },
+        {
+          "turn": 2,
+          "taskId": "ai-task-a057fe81-951",
+          "executionTaskId": "execution-task-a057fe81-952",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 41.645
+        },
+        {
+          "turn": 3,
+          "taskId": "ai-task-a057fe81-1005",
+          "executionTaskId": "execution-task-a057fe81-1006",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 1,
+          "onlyBoundGroupRead": true,
+          "wallSecondsIncludingCli": 48.485
+        }
+      ]
+    },
+    {
+      "source": "self",
+      "engine": "pi",
+      "conversationId": "ai-conv-a057fe81-1080",
+      "result": "PASS",
+      "turns": [
+        {
+          "turn": 1,
+          "taskId": "ai-task-a057fe81-1085",
+          "executionTaskId": "execution-task-a057fe81-1086",
+          "actualEngine": "pi",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 30.414
+        },
+        {
+          "turn": 2,
+          "taskId": "ai-task-a057fe81-1126",
+          "executionTaskId": "execution-task-a057fe81-1127",
+          "actualEngine": "pi",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 26.784
+        },
+        {
+          "turn": 3,
+          "taskId": "ai-task-a057fe81-1160",
+          "executionTaskId": "execution-task-a057fe81-1161",
+          "actualEngine": "pi",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 1,
+          "onlyBoundGroupRead": true,
+          "wallSecondsIncludingCli": 42.392
+        }
+      ]
+    },
+    {
+      "source": "self",
+      "engine": "codex",
+      "conversationId": "ai-conv-a057fe81-1215",
+      "result": "PASS",
+      "turns": [
+        {
+          "turn": 1,
+          "taskId": "ai-task-a057fe81-1219",
+          "executionTaskId": "execution-task-a057fe81-1220",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 42.723
+        },
+        {
+          "turn": 2,
+          "taskId": "ai-task-a057fe81-1282",
+          "executionTaskId": "execution-task-a057fe81-1283",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 0,
+          "onlyBoundGroupRead": false,
+          "wallSecondsIncludingCli": 41.933
+        },
+        {
+          "turn": 3,
+          "taskId": "ai-task-a057fe81-1332",
+          "executionTaskId": "execution-task-a057fe81-1333",
+          "actualEngine": "codex",
+          "completed": true,
+          "contentChecked": true,
+          "toolCount": 1,
+          "onlyBoundGroupRead": true,
+          "wallSecondsIncludingCli": 61.489
+        }
+      ]
+    }
+  ],
+  "routingRestored": true,
+  "finalRoutingRevision": 80,
+  "officialPi": {
+    "result": "NOT_PASSED",
+    "sameInstalledCandidateProbe128": "reply received",
+    "sameInstalledCandidateProbe8192": "HTTP_402",
+    "formalThreeTurnTest": "not passed",
+    "evidence": "../../t1417/installed-summary.json"
+  },
+  "paidOfficialProbeRepeated": false,
+  "protectedOriginalRecoveryUsed": false,
+  "allCombinationsPassed": false
+}

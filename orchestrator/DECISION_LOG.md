@@ -3117,3 +3117,25 @@ Review-Evidence: docs/verification/t1415/T-859-initial.json
 Owner: user
 Status: active
 ```
+
+
+## DEC-140802 — 本轮集中模型组合并停止剪辑测试
+
+```text
+ID: DEC-140802
+Date: 2026-10-25
+Stage: T-1408 安装版模型组合复验
+Type: task-hash-change-bound-review-cycle
+Authorization-Kind: process-review-cycle
+Task-ID: T-1408
+Previous-Spec-SHA256: 377b4c0db4f2dc3c00843ea03e2e8850c679191eba8b68b093580b035f08b40e
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: T1408-USER-MODEL-COMBINATION-FOCUS
+Max-Cycles: 1
+Nonce: t1408-model-focus-1d739221-934c-471b-881b-78d82c0426d7
+Decision: 停止本轮剪辑及其它无关业务旅程，集中公开 CLI 的模型来源与引擎组合、真实回复、跨轮记忆和同组只读工具；剪辑不再阻断本轮模型结果交付。
+Source: 用户“你不要去测试剪辑了，你主要就是测试我们不同的模型的组合能不能用。”
+Boundary: 保留旧失败与旧 UI 任务，未验不记 PASS；不豁免官方 Pi 实际失败，不扩大资金/换源/原任务恢复权限，不提前推送。
+Owner: user
+Status: active
+```

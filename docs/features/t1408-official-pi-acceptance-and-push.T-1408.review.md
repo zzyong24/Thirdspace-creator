@@ -2,43 +2,48 @@
 
 - Task: T-1408
 - Verdict: PASS
-- Round: 3/3 (recheck)
-- Spec receipt: 377b4c0db4f2
-- Review receipt: 2a4274de9f10
+- Round: 1/3 (initial)
+- Spec receipt: 746061940528
+- Review receipt: 865044ef60d5
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (SPEC第37–39行独审修订明确加入backend/src/integration/group-workbench-capabilities.integration.test.ts测试写集，更新合法组读取与审计，保留所有权/文件权限负向并纳入回归；modules.config.json和context/T-1408.md已同步。只确认规格缺口修复。)
+已销账：—
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-1408",
-  "cycle": 1,
-  "round": 3,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "独立代理 /root/t1408_contract_review 对 T-1408 cycle 1 round 2 后新增额度验收范围段作正式定向 recheck，供同 cycle round 3 记录；未参与本次 SPEC 改写。绑定当前 docs/features/t1408-official-pi-acceptance-and-push.md SHA-256 377b4c0db4f2dc3c00843ea03e2e8850c679191eba8b68b093580b035f08b40e；产品宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读当前任务包 §1–5、§7–9，写证据前核 §6，并实际调用 reviewctl context T-1408 取得完整冻结 finding 和 changed_line_refs。前轮为 PASS[REV:e780bb81f759]，SPEC SHA c485fc7a82b4a2301dcbb371ad2a31765317c4f6c1a752ce3292b8ac2234c2c5，latest event 692a92aa565dfd00a5fad5b068964329d9b8e904c61ebea859824a22c1f1f624；git HEAD 的 SPEC 字节精确匹配该前轮 SHA。\n\n实际 diff 仅新增第29行标题及第31行范围段，对应 SPEC-LINE:29:faf28d19eb654e04、SPEC-LINE:31:4f2c33b5c0d05c7f。主线程转交的用户新指令“跳过这个额度验收 代码都提交合并了吗”与 DEC-141020 的 Source/Decision/Boundary 一致。新增段将本轮额度页面登录及当前余额/冻结/消耗同步的验收明确记为用户跳过，解除登录作为推进前提；不将未执行记成 PASS，不推断余额充足、402 根因定位或服务恢复，且明确缩减前文真实余额/权益核因的对应义务。该范围收窄与产品宪法真实结果、secret/本地数据和商业资金边界相容，不要求用户再次登录或重复批准。\n\n官方来源 Pi 完成真实回复、跨轮记忆/计算和同组只读工具的原验收条目仍逐字保留；新增段明确官方对话 CLI、其余约定验收及通过后正常推送继续有效。因此额度豁免不能被解释为官方对话豁免、已可推送或全任务已完成。付款、钱包调整、代充/换源及消耗原任务最后一次恢复均没有新增授权。该增量不改产品、权限、预算、错误脱敏、旧失败记录、FR-140801 或其已补齐的测试写集。\n\n本轮无新增 finding；沿用 REV-001 的完整字段、resolved 状态及原 resolution_evidence，逐字段保持前轮包相同，不改写历史问题或冒充重新完成实现验收。仅评审范围修订，不核验本次构建安装、正在运行的官方探针/CAS 恢复、完整聊天或远端合并推送结果；未运行业务、未修改控制面。实际模型精确 ID 未核实，不作异构模型声明。",
+  "summary": "独立代理 /root/t1408_contract_review 对 T-1408 当前完整合同进行新的 initial 审核，重点核对用户最新范围纠正；未参与本次 SPEC 改写。本包供正常 typed 新周期消费，不是 cycle 1 的第 4 轮，不继承旧 PASS 作为本轮结论。绑定 docs/features/t1408-official-pi-acceptance-and-push.md SHA-256 746061940528344e34db04fd193329953bfcbc0d6b18646ff957555cce091731；产品宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读任务包 §1–5、§7–9，并在唯一证据写入前核 §6；实际调用 reviewctl context T-1408，读取当前完整 SPEC、产品宪法、原 finding、DEC-140802 和 reviewctl 的正常周期规则。\n\n当前 lineage 终点为 cycle 1 round 3、PASS[REV:2a4274de9f10]，event ab50417aa6642257d0ac19f6ee8dfad94f2f9acefac6d3cb2419fcb64ea56c02，前轮 SPEC SHA-256 377b4c0db4f2dc3c00843ea03e2e8850c679191eba8b68b093580b035f08b40e；宪法未变。当前 SPEC 去掉本次新增标题及两段后，其 SHA 精确等于前轮。实际 changed_line_refs 为 SPEC-LINE:41:88470d25d6f40ca9、SPEC-LINE:43:b55d1795ec24167b、SPEC-LINE:45:2b5b8c82e2e8eb78。旧 REV-001 的全部字段和原销账证据已读；当前末尾 FR-140801 独审修订仍明确纳入 group-workbench-capabilities.integration.test.ts，保留真实 gateway、合法组成功审计、异用户/异组/缺任务/归档/legacy 及 artifact/file 负向，原规格缺口没有被重新引入。本 initial 无新 finding；旧 resolved finding 和事件保存在原 lineage，不重写或删除，也不将规格销账表述为本轮重跑实现回归。\n\n用户“你不要去测试剪辑了，你主要就是测试我们不同的模型的组合能不能用”的纠正，与 DEC-140802 Source/Decision/Boundary 及新增段一致。本轮只交付安装版公开 CLI 的来源 × 引擎组合结果，停止剪辑、视频号采集和其它无关业务旅程；不能将原 UI/剪辑验收条目解释为仍需继续这些操作。旧剪辑失败保留为失败，本轮不继续执行、不冒充 PASS，也不阻断模型组合结果的如实交付；旧 UI 产品任务不在本轮代签。这是用户明确缩减本轮操作范围，不是修改产品宪法的全产品发布门或宣布原缺陷已修复。\n\n完整合同仍约束月明水清深已确认目标、公开入口、权限和敏感信息边界、来源与引擎分别记录、正常配置 CAS 恢复、针对性测试及适用工程检查、固定入口干净候选打包安装、独立复核、普通 merge 和非强推。原额度页面登录/余额冻结消耗同步只记用户跳过，不能推断余额或根因。FR-140801 仅修组任务诊断入口，不扩大任务所有权、文件权限或数据输出。新增组合说明明确 Codex 引擎成功不能证明 official/self API 已可用；各三轮和 codex/pi 409 仍是需实际核验的合同，未在本审核中冒充已完成结果。符合产品宪法 P-03、P-05、R-COPILOT、R-SETTINGS、NFR-PRIVACY/RELIABILITY 和真实发布证据要求；不新增产品代码、资金、换源或恢复权限。\n\n官方 Pi 的真实回复、跨轮记忆/计算及同组只读工具仍是通过后推送的必要条件。128 最小探针成功不能替代正式聊天，大预算 HTTP 402 仍是失败；不以 CLI 传输成功替代业务成功，不重发相同失败请求，不消耗原任务最后一次恢复。新增段没有豁免官方 Pi，不能据本合同审核结论推进推送。当前记录只支持修复有证据的客户端问题和继续模型组合范围内的已授权工作；没有授权用降预算、静默换源、代充或调钱包制造恢复结论。\n\n正式记录方式：reviewctl.mjs:585–588 禁止原 cycle 达到三轮后继续普通 recheck；:573–579 要求新周期为 initial 完整审核；:675–695 要求一次性 process-review-cycle typed capability。DEC-140802 当前只有范围决定字段，不能直接消费为新周期 capability。主会话应在既有用户明确范围决定下补齐或新增该 typed capability：Task-ID=T-1408、Previous-Spec-SHA256=377b4c0db4f2dc3c00843ea03e2e8850c679191eba8b68b093580b035f08b40e、Previous-Constitution-SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800、Owner=user、Status=active、Max-Cycles=1、唯一未消费 Nonce；Allowed-Change-IDs 与实际 --change-ids 精确相同，可直接绑定上述三条 changed_line_refs。原轮无 open finding，无须虚构争议 ID；保留原 review_path docs/features/t1408-official-pi-acceptance-and-push.T-1408.review.md，以本包作 initial 并显式 --new-cycle 正常生成 cycle 2 round 1。无需让用户重复确认已明确的范围纠正。本审核未运行 record、未生成 nonce、未消费授权或修改控制面，也不声称工具已经拒绝过实际 record。\n\n仅作合同审核：没有发出业务请求、读取凭据/用户数据库、启动浏览器、运行模型或修改源码/配置/任务状态；没有核验正在进行的组合复验、pmem/reconcile 或远端结果。本包无新增合同阻断，不是安装/产品/full/聊天验收 PASS，也不是推送许可。未核实运行模型精确 ID，不作异构评审声明。",
   "spec_path": "docs/features/t1408-official-pi-acceptance-and-push.md",
-  "spec_sha256": "377b4c0db4f2dc3c00843ea03e2e8850c679191eba8b68b093580b035f08b40e",
+  "spec_sha256": "746061940528344e34db04fd193329953bfcbc0d6b18646ff957555cce091731",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1408-official-pi-acceptance-and-push.T-1408.review.md",
   "review_mode": "homogeneous",
-  "model": "inherited-session-model",
+  "model": "独立同构会话，精确模型型号未核实",
   "policy": "convergent-review/v2",
-  "cycle_authorization": null,
-  "latest_event_hash": "ab50417aa6642257d0ac19f6ee8dfad94f2f9acefac6d3cb2419fcb64ea56c02",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-140802",
+    "nonce": "t1408-model-focus-1d739221-934c-471b-881b-78d82c0426d7",
+    "task_id": "T-1408",
+    "previous_event_hash": "ab50417aa6642257d0ac19f6ee8dfad94f2f9acefac6d3cb2419fcb64ea56c02",
+    "allowed_change_ids": [
+      "T1408-USER-MODEL-COMBINATION-FOCUS"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "ebb8edafe4a27f082cb6ddc093ef145142ea2f7924f9b45633a4ee8edb7af0f5",
   "open_findings": [],
-  "resolved_findings": [
-    {
-      "id": "REV-001",
-      "resolution_evidence": "SPEC第37–39行独审修订明确加入backend/src/integration/group-workbench-capabilities.integration.test.ts测试写集，更新合法组读取与审计，保留所有权/文件权限负向并纳入回归；modules.config.json和context/T-1408.md已同步。只确认规格缺口修复。"
-    }
-  ],
-  "receipt": "2a4274de9f10"
+  "resolved_findings": [],
+  "receipt": "865044ef60d5"
 }
 ```

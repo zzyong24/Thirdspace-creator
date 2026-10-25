@@ -1,0 +1,85 @@
+{
+  "candidate": "b4e174a8433e21f75bbc6b2f69b2e065855b7698",
+  "installation": {
+    "commit": "b4e174a8433e21f75bbc6b2f69b2e065855b7698",
+    "startedAt": "2026-10-25T12:36:14.512496+00:00",
+    "dmgPath": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "dmgSha256": "ca1e93cfad09577c193ea6599703bc7c234899416ff2217bcdeb6d7806e89ebf",
+    "dmgBytes": 847655233,
+    "expected": {
+      "binary": "96b98302102b82e5d5e353d6d8712b99bbdd2630d037f852702fd3b9c3f77c42",
+      "sidecar": "4bf8f2ba28f7e13bbc49a070af8bbb13f491e53bc379a49de751b31058af9645"
+    },
+    "prior": {
+      "binary": "856ac0b35d4dabb2fc159fe9338a9402b26a84225209c57c2164f63684b3ecdb",
+      "sidecar": "7c7c92df1b487392c9b4649a6d30d7c4f5dd6994b2f5ebb06ab579c7081b440b"
+    },
+    "rollback": "/Volumes/T7-MacData/creatoros-t1417-_7rs96zn/rollback/CreatorOS.app",
+    "notarized": false,
+    "installed": true,
+    "cliConnected": true,
+    "endedAt": "2026-10-25T12:36:54.020483+00:00"
+  },
+  "dataPreservation": {
+    "projectsBefore": 66,
+    "projectsAfter": 66,
+    "projectIdsUnchanged": true,
+    "membersBefore": 5,
+    "membersAfter": 5,
+    "groupMembersUnchanged": true,
+    "routingChoicesUnchanged": true,
+    "routeRevisionAfter": 77
+  },
+  "comparison": {
+    "results": [
+      {
+        "limit": 128,
+        "ok": true,
+        "data": {
+          "ok": true,
+          "provider": "channel-managed",
+          "model": "channel-managed",
+          "detail": "已收到最小测试请求的流式回复，连通。"
+        },
+        "error": null
+      },
+      {
+        "limit": 8192,
+        "ok": true,
+        "data": {
+          "ok": false,
+          "provider": "channel-managed",
+          "model": "channel-managed",
+          "detail": "官方模型服务返回支付或权益核验拒绝（HTTP 402）。请在设置查看 AI 额度与消耗，核对后继续原任务。"
+        },
+        "error": null
+      }
+    ],
+    "restored": true,
+    "officialChatPassed": false
+  },
+  "probeReceipts": [
+    {
+      "file": "docs/verification/t1417/installed-cli/008-probe-schema.json",
+      "sha256": "198b063af006e4e8b530d5cda45240fc81dce2386c06197fd2029f8e3a11a128",
+      "startedAt": "2026-10-25T12:37:26.182247+00:00",
+      "elapsedSeconds": 0.33283229102380574,
+      "exitCode": 0
+    },
+    {
+      "file": "docs/verification/t1417/installed-cli/020-probe-128.json",
+      "sha256": "e1baeda7a31ea156cb2e2e0a8e074955001da95d9369d6c5b1d6718df1ba5925",
+      "startedAt": "2026-10-25T12:38:15.834648+00:00",
+      "elapsedSeconds": 15.588989665964618,
+      "exitCode": 0
+    },
+    {
+      "file": "docs/verification/t1417/installed-cli/022-probe-8192.json",
+      "sha256": "746a263887c531490e44a8f94ab78fd2997900660913fd2b019978e5d93f6357",
+      "startedAt": "2026-10-25T12:38:31.793056+00:00",
+      "elapsedSeconds": 2.3922495419392362,
+      "exitCode": 0
+    }
+  ],
+  "protectedOriginalRecoveryUsed": false
+}
