@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-25T15:32:32.863475+00:00",
+  "release": "/opt/thirdspace/releases/growth-95cd62e-t24377-r2-20261017",
+  "apiPid": 3930976,
+  "businessWrites": false,
+  "sources": {
+    "server/integrations/managed_model/omnihi.py": {
+      "sha256": "afbe713f159734a31125c3113b38885736b347dd7ca27bdc95c65305a02bd5c4",
+      "snippets": [
+        {
+          "name": "build_omnihi_managed_model_provider",
+          "line": 456,
+          "source": "def build_omnihi_managed_model_provider(\n    environ: Mapping[str, str],\n    *,\n    http_client: httpx.Client | None = None,\n) -> OmniHiManagedModelKeyProvider | None:\n    names = (\n        \"THIRDSPACE_OMNIHI_AUTH_TYPE\",\n        \"THIRDSPACE_OMNIHI_IDENTIFIER\",\n        \"THIRDSPACE_OMNIHI_PASSWORD\",\n    )\n    present = [bool(environ.get(name)) for name in names]\n    if not any(present):\n        return None\n    if not all(present):\n        raise RuntimeError(\"OMNIHI_INTEGRATION_NOT_CONFIGURED\")\n    try:\n        timeout_seconds = float(\n            environ.get(\"THIRDSPACE_OMNIHI_TIMEOUT_SECONDS\", \"10\")\n        )\n        return OmniHiManagedModelKeyProvider(\n            base_url=environ.get(\n                \"THIRDSPACE_OMNIHI_BASE_URL\", \"https://omnihi.ai\"\n            ),\n            auth_type=environ[\"THIRDSPACE_OMNIHI_AUTH_TYPE\"],\n            identifier=environ[\"THIRDSPACE_OMNIHI_IDENTIFIER\"],\n            password=environ[\"THIRDSPACE_OMNIHI_PASSWORD\"],\n            country_code=environ.get(\"THIRDSPACE_OMNIHI_COUNTRY_CODE\", \"86\"),\n            client=http_client,\n            timeout_seconds=timeout_seconds,\n        )\n    except ValueError as exc:\n        raise RuntimeError(\"OMNIHI_INTEGRATION_NOT_CONFIGURED\") from exc"
+        },
+        {
+          "name": "get_budget",
+          "line": 58,
+          "source": "def get_budget(self, *, provider_key_id: str, deadline_at: datetime | None = None) -> ManagedApiKeyBudget:\n        ..."
+        },
+        {
+          "name": "get_budget",
+          "line": 421,
+          "source": "def get_budget(self, *, provider_key_id: str, deadline_at: datetime | None = None) -> ManagedApiKeyBudget:\n        if not provider_key_id or len(provider_key_id) > 128:\n            raise ValueError(\"MODEL_CREDENTIAL_INVALID\")\n        return self._budget_from_list(\n            bearer=self._login(deadline_at), provider_key_id=provider_key_id, deadline_at=deadline_at\n        )"
+        }
+      ]
+    },
+    "server/modules/client_config/service.py": {
+      "sha256": "eb18bca91f1b57db19d7ccab8d2b1f3ef5bfd64361831fe80aaabc99878b0425",
+      "snippets": [
+        {
+          "name": "_managed_credential_response",
+          "line": 2788,
+          "source": "def _managed_credential_response(\n        self,\n        session: Session,\n        row: ManagedModelCredential,\n        token: str,\n        *,\n        account: AiCreditAccount | None = None,\n    ) -> dict[str, Any]:\n        if account is None:\n            account = session.scalar(\n                select(AiCreditAccount).where(\n                    AiCreditAccount.managed_credential_id == row.id\n                )\n            )\n        partner_visible = False\n        if account is not None and account.user_id is not None:\n            partner_visible = session.scalar(\n                select(PartnerProfile.id).where(\n                    PartnerProfile.user_id == account.user_id,\n                    PartnerProfile.status == \"active\",\n                    PartnerProfile.contract_status == \"active\",\n                )\n            ) is not None\n        wallet = {\n            \"linked\": False,\n            \"availableUnits\": None,\n            \"referenceId\": None,\n        }\n        if account is not None:\n            omnihi_used_units = int(\n                Decimal(account.confirmed_budget_used)\n                * _AI_CREDIT_UNITS_PER_CNY\n            )\n            wallet = {\n                \"linked\": True,\n                \"availableUnits\": max(\n                    0,\n                    int(account.wallet_total_units)\n                    - omnihi_used_units\n                    - int(account.asr_committed_units)\n                    - int(account.asr_reserved_units),\n                ),\n                \"referenceId\": account.public_ref,\n            }\n        return {\n            \"contractVersion\": \"growth-managed-model-credential-v1\",\n            \"serviceId\": row.service_id,\n            \"credential\": {\n                \"type\": \"api_key\",\n                \"token\": token,\n                \"tokenPrefix\": row.token_prefix,\n            },\n            \"includedCredit\": {\n                \"amount\": f\"{Decimal(row.included_amount):.8f}\",\n                \"currency\": row.currency,\n            },\n            \"wallet\": wallet,\n            \"partnerAccess\": {\n                \"channelCenterVisible\": partner_visible,\n            },\n        }"
+        }
+      ]
+    },
+    "server/application/ai_credit_service.py": {
+      "sha256": "1a83ef0747583b9b50c663293941489ec25633d50495377f439dc07065672d93",
+      "snippets": [
+        {
+          "name": "_account_payload",
+          "line": 1159,
+          "source": "def _account_payload(self, db: Session, row: AiCreditAccount) -> dict:\n        credential = db.get(ManagedModelCredential, row.managed_credential_id)\n        wallet_total = int(row.wallet_total_units)\n        asr_reserved = int(row.asr_reserved_units)\n        asr_committed = int(row.asr_committed_units)\n        omnihi_used = self._units(row.confirmed_budget_used)\n        return {\n            \"accountRef\": row.public_ref,\n            \"productName\": self._product_name(db, credential),\n            \"totalUnits\": wallet_total,\n            \"usedUnits\": omnihi_used + asr_committed,\n            \"frozenUnits\": self._units(row.confirmed_budget_frozen),\n            \"remainingUnits\": max(\n                0,\n                wallet_total - omnihi_used - asr_committed - asr_reserved,\n            ),\n            \"pendingUnits\": self._units(\n                row.target_budget_amount - row.confirmed_budget_amount\n            ),\n            \"syncStatus\": row.sync_status,\n            \"updatedAt\": row.updated_at,\n            \"lastUsageRefreshedAt\": row.last_usage_refreshed_at,\n        }"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+Coverage: quick read-only control audit only; full verification NOT RUN (incomplete coverage).
+Skipped: project lesson commands; asset example execution; program fresh verification and execution-record updates. Run an authorized `reconcile.mjs --profile full` for executable checks.
+! reconcile completed with warnings — 13 warning(s), 23 check(s).
+  ! backlog-health.mjs: 归档内部保留 5 个历史撞号:T-357,T-356,T-488,T-489,T-627
+  ! backlog-health.mjs: BACKLOG.md 59.0KB 超硬上限 30.0KB — 必须压缩/归档(backlog-compact.mjs 可机械迁走 ✅ 行)。
+  ! backlog-health.mjs: L29 T-1398 状态符号与文字冲突:「🔨 待办」。按真实进度校正；不能将该行计作已确认的在制任务。
+  … 10 more warning(s) omitted.
+Run `node orchestrator/process/reconcile.mjs` for the full report.

@@ -2,9 +2,9 @@
 
 - Task: T-1408
 - Verdict: PASS
-- Round: 1/3 (initial)
-- Spec receipt: 746061940528
-- Review receipt: 865044ef60d5
+- Round: 2/3 (recheck)
+- Spec receipt: bab850a5474a
+- Review receipt: e9724b83fcdb
 
 ## 当前有效问题
 
@@ -17,33 +17,23 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1408",
   "cycle": 2,
-  "round": 1,
+  "round": 2,
   "max_rounds": 3,
-  "review_kind": "initial",
+  "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "独立代理 /root/t1408_contract_review 对 T-1408 当前完整合同进行新的 initial 审核，重点核对用户最新范围纠正；未参与本次 SPEC 改写。本包供正常 typed 新周期消费，不是 cycle 1 的第 4 轮，不继承旧 PASS 作为本轮结论。绑定 docs/features/t1408-official-pi-acceptance-and-push.md SHA-256 746061940528344e34db04fd193329953bfcbc0d6b18646ff957555cce091731；产品宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读任务包 §1–5、§7–9，并在唯一证据写入前核 §6；实际调用 reviewctl context T-1408，读取当前完整 SPEC、产品宪法、原 finding、DEC-140802 和 reviewctl 的正常周期规则。\n\n当前 lineage 终点为 cycle 1 round 3、PASS[REV:2a4274de9f10]，event ab50417aa6642257d0ac19f6ee8dfad94f2f9acefac6d3cb2419fcb64ea56c02，前轮 SPEC SHA-256 377b4c0db4f2dc3c00843ea03e2e8850c679191eba8b68b093580b035f08b40e；宪法未变。当前 SPEC 去掉本次新增标题及两段后，其 SHA 精确等于前轮。实际 changed_line_refs 为 SPEC-LINE:41:88470d25d6f40ca9、SPEC-LINE:43:b55d1795ec24167b、SPEC-LINE:45:2b5b8c82e2e8eb78。旧 REV-001 的全部字段和原销账证据已读；当前末尾 FR-140801 独审修订仍明确纳入 group-workbench-capabilities.integration.test.ts，保留真实 gateway、合法组成功审计、异用户/异组/缺任务/归档/legacy 及 artifact/file 负向，原规格缺口没有被重新引入。本 initial 无新 finding；旧 resolved finding 和事件保存在原 lineage，不重写或删除，也不将规格销账表述为本轮重跑实现回归。\n\n用户“你不要去测试剪辑了，你主要就是测试我们不同的模型的组合能不能用”的纠正，与 DEC-140802 Source/Decision/Boundary 及新增段一致。本轮只交付安装版公开 CLI 的来源 × 引擎组合结果，停止剪辑、视频号采集和其它无关业务旅程；不能将原 UI/剪辑验收条目解释为仍需继续这些操作。旧剪辑失败保留为失败，本轮不继续执行、不冒充 PASS，也不阻断模型组合结果的如实交付；旧 UI 产品任务不在本轮代签。这是用户明确缩减本轮操作范围，不是修改产品宪法的全产品发布门或宣布原缺陷已修复。\n\n完整合同仍约束月明水清深已确认目标、公开入口、权限和敏感信息边界、来源与引擎分别记录、正常配置 CAS 恢复、针对性测试及适用工程检查、固定入口干净候选打包安装、独立复核、普通 merge 和非强推。原额度页面登录/余额冻结消耗同步只记用户跳过，不能推断余额或根因。FR-140801 仅修组任务诊断入口，不扩大任务所有权、文件权限或数据输出。新增组合说明明确 Codex 引擎成功不能证明 official/self API 已可用；各三轮和 codex/pi 409 仍是需实际核验的合同，未在本审核中冒充已完成结果。符合产品宪法 P-03、P-05、R-COPILOT、R-SETTINGS、NFR-PRIVACY/RELIABILITY 和真实发布证据要求；不新增产品代码、资金、换源或恢复权限。\n\n官方 Pi 的真实回复、跨轮记忆/计算及同组只读工具仍是通过后推送的必要条件。128 最小探针成功不能替代正式聊天，大预算 HTTP 402 仍是失败；不以 CLI 传输成功替代业务成功，不重发相同失败请求，不消耗原任务最后一次恢复。新增段没有豁免官方 Pi，不能据本合同审核结论推进推送。当前记录只支持修复有证据的客户端问题和继续模型组合范围内的已授权工作；没有授权用降预算、静默换源、代充或调钱包制造恢复结论。\n\n正式记录方式：reviewctl.mjs:585–588 禁止原 cycle 达到三轮后继续普通 recheck；:573–579 要求新周期为 initial 完整审核；:675–695 要求一次性 process-review-cycle typed capability。DEC-140802 当前只有范围决定字段，不能直接消费为新周期 capability。主会话应在既有用户明确范围决定下补齐或新增该 typed capability：Task-ID=T-1408、Previous-Spec-SHA256=377b4c0db4f2dc3c00843ea03e2e8850c679191eba8b68b093580b035f08b40e、Previous-Constitution-SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800、Owner=user、Status=active、Max-Cycles=1、唯一未消费 Nonce；Allowed-Change-IDs 与实际 --change-ids 精确相同，可直接绑定上述三条 changed_line_refs。原轮无 open finding，无须虚构争议 ID；保留原 review_path docs/features/t1408-official-pi-acceptance-and-push.T-1408.review.md，以本包作 initial 并显式 --new-cycle 正常生成 cycle 2 round 1。无需让用户重复确认已明确的范围纠正。本审核未运行 record、未生成 nonce、未消费授权或修改控制面，也不声称工具已经拒绝过实际 record。\n\n仅作合同审核：没有发出业务请求、读取凭据/用户数据库、启动浏览器、运行模型或修改源码/配置/任务状态；没有核验正在进行的组合复验、pmem/reconcile 或远端结果。本包无新增合同阻断，不是安装/产品/full/聊天验收 PASS，也不是推送许可。未核实运行模型精确 ID，不作异构评审声明。",
+  "summary": "独立代理 /root/t1408_contract_review 对 T-1408 新增 Growth 定向只读诊断合同作普通 recheck。已读任务包 §1–5、§7–9，写前核 §6，实际读取 reviewctl context、当前完整 SPEC、适用产品宪法、DEC-140803 及相关 Growth 源码。绑定 SPEC SHA-256 bab850a5474a2d1dff198190d2a230c0d07ad787a88c0bf5ec20583abf8255b0；宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。前轮为 cycle 2 round 1 PASS[REV:865044ef60d5]，event ebb8edafe4a27f082cb6ddc093ef145142ea2f7924f9b45633a4ee8edb7af0f5、SPEC 746061940528344e34db04fd193329953bfcbc0d6b18646ff957555cce091731、findings=[]；本轮为独立判断，不继承旧 PASS。\n\n新增第51–61行以用户“结合growth服务一起分析”的明确指令为依据：只查原权益和当前服务版本，按 credential/provider/encrypted-token/wallet 四重历史一致性标签唯一定位；DB 显式只读事务、验证 read-only、finally rollback。历史同机标签不证明当前客户端仍使用该权益，合同及 collector 均明确该关联尚未独立核实；预算只可区分候选原因，不能将旧身份、402或不同余额口径直接当根因/实现bug。\n\n已核 provider.get_budget 实际为正常登录 POST 后分页 GET /api/v1/user/apikeys，再在可信服务端进程中按原 key 唯一筛选。本轮首次反馈指出它不是单 key 请求；新增第59行现已明确允许仅为精确筛选瞬时读取服务账号名单，每页100/最多100页，其他 key 不输出、不落盘、不调查，不猜接口。禁止 reveal/create/rotate/update、模型生成、资金变化、部署/重启；认证只在服务器内存按既有配置使用，输出仅白名单事实及固定错误，不保存身份、密钥、会话、连接串或完整响应。\n\n附带复核最终脚本：collect-account-readonly.py SHA-256 f59e24df08fb98f9cf9fcc93c0af853fb30d7a590aa72567781713fd83d1e57d；remote-host-readonly.py SHA-256 576b1fc233c66197265965702d0ec524a0c4a395c232e9c83a7d92905065985d。唯一目标守卫、provider 源码哈希核对、HTTPS 指定主机/方法/path hook、禁止跳转和101请求上限均存在。执行前反馈的总时限问题已以 SIGALRM/setitimer 30秒总限及 finally 恢复修正，超时为固定 PROVIDER_TOTAL_TIMEOUT；环境投影已由前缀改成六个 OMNIHI 变量加 DB 的七项精确名单。宿主校验运行 PID cwd 与 current release，使用原 release 子进程、55秒外层兜底，不输出环境或 stderr。没有发现这些收窄后的新阻断；执行结果仍须检查 error/身份关联/readOnlyTransaction/预算字段，不能用宿主退出0代成功。\n\n仅静态审核合同、脚本和已有版本证据，未访问生产、读取真实认证材料、运行脚本或供应商请求，未改控制面。当前 findings=[]；允许范围不恢复额度页面或剪辑验收、不动原任务最后恢复、不发重复生成、不修改产品预算。正常官方对话三轮及通过后推送条件仍有效；本包不证明查询已发生、402已定位或修复，也不是推送许可。审查模型精确 ID 未核实，不作异构声明。",
   "spec_path": "docs/features/t1408-official-pi-acceptance-and-push.md",
-  "spec_sha256": "746061940528344e34db04fd193329953bfcbc0d6b18646ff957555cce091731",
+  "spec_sha256": "bab850a5474a2d1dff198190d2a230c0d07ad787a88c0bf5ec20583abf8255b0",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1408-official-pi-acceptance-and-push.T-1408.review.md",
   "review_mode": "homogeneous",
   "model": "独立同构会话，精确模型型号未核实",
   "policy": "convergent-review/v2",
-  "cycle_authorization": {
-    "schema": "review-cycle-capability-consumption/v1",
-    "decision_id": "DEC-140802",
-    "nonce": "t1408-model-focus-1d739221-934c-471b-881b-78d82c0426d7",
-    "task_id": "T-1408",
-    "previous_event_hash": "ab50417aa6642257d0ac19f6ee8dfad94f2f9acefac6d3cb2419fcb64ea56c02",
-    "allowed_change_ids": [
-      "T1408-USER-MODEL-COMBINATION-FOCUS"
-    ],
-    "max_uses": 1
-  },
-  "latest_event_hash": "ebb8edafe4a27f082cb6ddc093ef145142ea2f7924f9b45633a4ee8edb7af0f5",
+  "cycle_authorization": null,
+  "latest_event_hash": "23854d0935a9a9d6d67209cb7c8b984e915aafc94d5a7fdf1d9c3c4cf320eca1",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "865044ef60d5"
+  "receipt": "e9724b83fcdb"
 }
 ```
