@@ -3,7 +3,8 @@ import {afterEach, beforeEach, expect, it, vi} from 'vitest';
 import {mkdtemp, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {ENDPOINTS, type Endpoint, type RequestContext} from '@creatoros/contract';
+import {ENDPOINTS, createClient, type Endpoint, type RequestContext} from '@creatoros/contract';
+import {resolveDailyTopicJob} from '@/features/automations/resolve-daily-topic-job';
 import {aiTasks, aiTaskResults, candidates, executionTasks, executionCalls, eq, jobRuns, scheduledJobs, sql, type Db} from '@creatoros/backend';
 import {accountGroups, accountGroupMemberships} from '../../../../backend/src/schema/account-groups';
 import {createDailyTopicCompletionService} from '../../../../backend/src/modules/ai/daily-topic-completion.service';
@@ -43,7 +44,7 @@ async function call(endpoint:Endpoint,ctx:RequestContext,body?:unknown,params?:u
 beforeEach(async()=>{
  root=await mkdtemp(join(tmpdir(),'t1309-owned-composition-'));owned.media=join(root,'media');
  vi.stubEnv('CREATOROS_DISABLE_BACKGROUND_DRIVERS','1');vi.stubEnv('CREATOROS_DISABLE_SCHEDULER','1');
- vi.stubEnv('DATABASE_URL','');vi.stubEnv('PGLITE_DATA_DIR',join(root,'db'));vi.stubEnv('CREATOROS_STORAGE','local');
+ vi.stubEnv('DATABASE_URL','');vi.stubEnv('PGLITE_DATA_DIR',join(root,'db'));vi.stubEnv('CREATOROS_DB_DIR',join(root,'db'));vi.stubEnv('CREATOROS_STORAGE','local');
  vi.stubEnv('CREATOROS_CLIENT_CONFIG_PULL_ENABLED','0');vi.stubEnv('CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH','/nonexistent/t1309-fixture');
  vi.stubEnv('CREATOROS_TOPIC_DAILY_LIMIT','1');__resetPersistenceForTests();
 },180000);
@@ -62,7 +63,7 @@ async function prepare(mode:'model'|'quota'|'model_unconfigured',scope?:RequestC
   await call(ENDPOINTS.createStatement,ctx,{oneLiner:'教创作者用真实证据完成工具实操',keywords:['创作','工具','实操']});
  }
  if(mode==='quota'&&seedQuota)await call(ENDPOINTS.createCandidate,ctx,{title:'本UTC日已确认候选',angle:'真实公开新增',source:'idea'});
- const job=await call(ENDPOINTS.createScheduledJob,ctx,{name:`T1309 ${mode}`,sourceKind:'topic.daily',schedule:'0 0 * * *',enabled:false});
+ const {job}=await resolveDailyTopicJob(createClient(ENDPOINTS,compositeTransport,ctx),{params:undefined,query:undefined,body:{name:`T1309 ${mode}`,prompt:'',target:{},toolGrants:[],sourceKind:'topic.daily',schedule:'0 0 * * *',enabled:false}});
  // 作业临时启用后原公开runNow；完成后finally由本owned DB整体销毁。
  await call(ENDPOINTS.setScheduledJobEnabled,ctx,{enabled:true},{jobId:job.id});
  const run=await call(ENDPOINTS.runScheduledJobNow,ctx,undefined,{jobId:job.id});
@@ -116,8 +117,14 @@ it('生产组合：同组两平台筛选共用公开作业及组额度，另一�
  const a=await call(ENDPOINTS.createAccount,scope,{platform:'bilibili',accountHandle:'@t1309-a',followerBaseline:0});
  const b=await call(ENDPOINTS.createAccount,scope,{platform:'bilibili',accountHandle:'@t1309-b',followerBaseline:0});
  const first=await prepare('model',{...scope,accountId:a.id});
- const sameJob=await call(ENDPOINTS.createScheduledJob,{...scope,accountId:b.id},{name:'另一平台筛选',sourceKind:'topic.daily',schedule:'0 0 * * *',enabled:false});
+ const duplicateBody={name:'另一平台筛选',prompt:'',target:{},toolGrants:[],sourceKind:'topic.daily' as const,schedule:'0 0 * * *',enabled:false};
+ await expect(call(ENDPOINTS.createScheduledJob,{...scope,accountId:b.id},duplicateBody)).rejects.toThrow('已有同类任务已启用');
+ expect((await first.db.select().from(scheduledJobs).where(eq(scheduledJobs.id,first.job.id)))[0]!.enabled).toBe(true);
+ const resolved=await resolveDailyTopicJob(createClient(ENDPOINTS,compositeTransport,{...scope,accountId:b.id}),{params:undefined,query:undefined,body:duplicateBody});
+ expect(resolved.reused).toBe(true);
+ const sameJob=resolved.job;
  expect(sameJob.id).toBe(first.job.id);
+ expect(sameJob.enabled).toBe(true);
  const deduped=await call(ENDPOINTS.runScheduledJobNow,{...scope,accountId:b.id},undefined,{jobId:sameJob.id});
  expect(deduped).toMatchObject({aiTaskId:first.business.id,jobRunId:first.run.jobRunId,deduped:true});
  await call(ENDPOINTS.updateAccountGroup,user,{name:'已重命名但仍可写',expectedVersion:group.version},{groupId:group.id});

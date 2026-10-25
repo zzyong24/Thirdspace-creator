@@ -60,6 +60,7 @@ import {
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import { resolveDailyTopicJob } from "./resolve-daily-topic-job";
 import { cn } from "@/lib/utils";
 import {describeUserError} from "@/lib/ai-error-humanize";
 function describeAutomationError(error:unknown,fallback:string){
@@ -1298,10 +1299,11 @@ export function CreateJobDialog({
 
 // ── 运行详情抽屉(读 jobRuns.listByJob + 选中 run 的 ai_task_steps)───────────────
 
-export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pending=false,requestError=null,contractClient=client}: {
+export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pending=false,requestError=null,reuseNotice=null,contractClient=client}: {
  readonly job: ScheduledJobResource|null;
  readonly open: boolean;
  readonly onOpenChange:(v:boolean)=>void;
+ readonly reuseNotice?:string|null;
  readonly preferredRunId?:string|null;
  readonly pending?:boolean;
  readonly requestError?:string|null;
@@ -1365,6 +1367,7 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
         </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {reuseNotice&&<p role="status" className="mb-3 text-sm text-muted-foreground">{reuseNotice}</p>}
           {(requestError||readError)&&<p role="alert" className="mb-3 text-sm text-destructive">{requestError||readError}</p>}
           {pending&&<p role="status" className="mb-3 text-sm text-muted-foreground">正在确认运行，请稍候…</p>}
           {loading ? (
@@ -1657,6 +1660,7 @@ export function AutomationsIsland({
     null,
   );
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const [reuseNotice,setReuseNotice]=React.useState<string|null>(null);
   const detailClient=React.useMemo(()=>getHistoryClient(detailJob?.accountId??null),[getHistoryClient,detailJob?.accountId]);
   const [detailRunId,setDetailRunId]=React.useState<string|null>(null);
   const [runError,setRunError]=React.useState<string|null>(null);
@@ -1691,7 +1695,7 @@ export function AutomationsIsland({
   const accountKey=scope?.groupId??currentAccount?.id??jobs.map(j=>j.id).join('|');
   const accountRef=React.useRef(accountKey);accountRef.current=accountKey;
   React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;detailEpoch.current++;};},[]);
-  React.useEffect(()=>{detailEpoch.current++;setDetailOpen(false);setDetailJob(null);setDetailRunId(null);setPendingRunNowId(null);setRunError(null);setCreateOpen(false);setEditOpen(false);setToggleErrors({});},[accountKey]);
+  React.useEffect(()=>{detailEpoch.current++;setDetailOpen(false);setDetailJob(null);setDetailRunId(null);setPendingRunNowId(null);setRunError(null);setReuseNotice(null);setCreateOpen(false);setEditOpen(false);setToggleErrors({});},[accountKey]);
   const changeDetailOpen=React.useCallback((value:boolean)=>{if(!value)detailEpoch.current++;setDetailOpen(value);},[]);
   // 批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)。
   const fetchLatestRuns = React.useCallback(async () => {
@@ -1805,7 +1809,8 @@ export function AutomationsIsland({
     }) => {
       const originalScope=accountRef.current;
       if(scope && !canCreateKind(input.sourceKind,createTarget))throw new Error("请选择已验证且可采集的目标账号，或创建组内每日选题");
-      await getClient(isSharedKind(input.sourceKind)?null:createTarget?.id??currentAccount?.id??null).createScheduledJob({
+      const jobClient=getClient(isSharedKind(input.sourceKind)?null:createTarget?.id??currentAccount?.id??null);
+      const request={
         params: undefined,
         query: undefined,
         body: {
@@ -1819,7 +1824,15 @@ export function AutomationsIsland({
           toolGrants: [], // 偏只读 + 落库,首版空;工具授权由执行层(D3)约束
           enabled: input.enabled ?? true,
         },
-      });
+      };
+      if(input.sourceKind==="topic.daily"){
+        const resolved=await resolveDailyTopicJob(jobClient,request);
+        if(resolved.reused&&alive.current&&accountRef.current===originalScope){
+          detailEpoch.current++;setDetailRunId(null);setRunError(null);
+          setReuseNotice(`已打开已有每日选题任务；原任务保持${resolved.job.enabled?"启用":"停用"}，名称、频率和启用状态均未更改。`);
+          setDetailJob(resolved.job);setDetailOpen(true);
+        }
+      }else await jobClient.createScheduledJob(request);
       if(alive.current&&accountRef.current===originalScope)router.refresh();
     },
     [router,getClient,createTarget,scope,currentAccount?.id],
@@ -1891,7 +1904,7 @@ export function AutomationsIsland({
   }, [selectedTarget,scope,setCreateOpen]);
 
   const openDetail = React.useCallback((job: ScheduledJobResource) => {
-    detailEpoch.current++;setDetailRunId(null);setRunError(null);
+    detailEpoch.current++;setDetailRunId(null);setRunError(null);setReuseNotice(null);
     setDetailJob(job);
     setDetailOpen(true);
   }, []);
@@ -1902,7 +1915,7 @@ export function AutomationsIsland({
    pendingRequests.current.add(job.id);
    const epoch=++detailEpoch.current,account=accountRef.current;
    const current=()=>alive.current&&accountRef.current===account&&detailEpoch.current===epoch;
-   setPendingRunNowId(job.id);setRunError(null);setDetailRunId(null);setDetailJob(job);setDetailOpen(true);
+   setPendingRunNowId(job.id);setRunError(null);setReuseNotice(null);setDetailRunId(null);setDetailJob(job);setDetailOpen(true);
    try {
     const response=await getClient(job.accountId??null).runScheduledJobNow({params:{jobId:job.id},query:undefined,body:{}});
     if(!current())return;
@@ -2098,6 +2111,7 @@ export function AutomationsIsland({
         preferredRunId={detailRunId}
         pending={pendingRunNowId===detailJob?.id}
         requestError={runError}
+        reuseNotice={reuseNotice}
         contractClient={detailClient}
       />
     </section>

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import {afterAll,beforeAll,expect,it,vi} from "vitest";
-import {ENDPOINTS,type Endpoint,type RequestContext} from "@creatoros/contract";
+import {ENDPOINTS,type AccountGroupResource,type CandidateResource,type Client,type Endpoint,type GlobalSearchPage,type RequestContext} from "@creatoros/contract";
 import {compositeTransport,__resetPersistenceForTests} from "@/server/persistence-client";
 import {canonicalDataset} from "@/fixtures/canonical";
 
@@ -10,13 +10,29 @@ const environment=vi.hoisted(()=>{
  return {previous};
 });
 
-vi.setConfig({testTimeout:180000,hookTimeout:180000,retry:0});
+vi.setConfig({testTimeout:180000,hookTimeout:180000});
 let owner:RequestContext,other:RequestContext;
 const initial:RequestContext={userId:canonicalDataset.user.id,accountId:null,requestId:"t1403-index",source:"user"};
-async function call(id:string,input:Record<string,unknown>={},ctx=owner):Promise<any>{
+type ContractClient=Client<typeof ENDPOINTS>;
+type ProjectResult=Awaited<ReturnType<ContractClient['getProject']>>;
+type AssetResult=Awaited<ReturnType<ContractClient['getAsset']>>;
+type OperationResults={
+ "accountGroups.create":AccountGroupResource;
+ "candidates.create":CandidateResource;
+ "candidates.promote":{projectId:string};
+ "projects.get":ProjectResult;
+ "projects.patch":ProjectResult;
+ "pages.search.get":GlobalSearchPage;
+ "assets.uploads.create":{uploadId:string};
+ "assets.uploads.complete":AssetResult;
+ "assets.get":AssetResult;
+ "assets.trash":AssetResult;
+ "assets.restore":AssetResult;
+};
+async function call<K extends keyof OperationResults>(id:K,input:Record<string,unknown>={},ctx=owner):Promise<OperationResults[K]>{
  const endpoint=Object.values(ENDPOINTS).find(value=>value.id===id) as Endpoint;
  if(!endpoint)throw new Error(`unknown operation: ${id}`);
- return (await compositeTransport.request(endpoint,input as never,ctx) as {data:unknown}).data;
+ return (await compositeTransport.request(endpoint,input as never,ctx) as {data:OperationResults[K]}).data;
 }
 const search=(q:string,type:string,ctx=owner)=>call("pages.search.get",{query:{q,type}},ctx);
 beforeAll(async()=>{
