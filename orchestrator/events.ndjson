@@ -1790,3 +1790,5 @@
 {"ts":"2026-10-23T01:22:34.953Z","actor":"taskctl","action":"block","task":"T-1401","reason":"代码修复、相关49测试、超时守卫与开发HTTP403实测通过；本地提交因环境.git只读，无法创建index.lock而受阻，未push。","sha_before":"11eba5e46a6a","sha_after":"1c96ee51c471"}
 {"ts":"2026-10-23T01:23:21.531Z","actor":"taskctl","action":"resume","task":"T-1401","reason":"仓库写权限恢复，本地提交已完成","sha_before":"1c96ee51c471","sha_after":"d71f0a81d303"}
 {"ts":"2026-10-23T01:23:21.559Z","actor":"taskctl","action":"complete","task":"T-1401","evidence":"commit 99a98f9d; vitest 27 pass; POST connect 403 权益配置同步尚未启用 retryable=false; diag deleted; no push","sha_before":"d71f0a81d303","sha_after":"11eba5e46a6a"}
+{"ts":"2026-10-25T04:07:32.581Z","actor":"taskctl","action":"start","task":"T-1402","sha_before":"472b47c72753","sha_after":"a7b8199c193f"}
+{"ts":"2026-10-25T04:07:32.647Z","actor":"taskctl","action":"complete","task":"T-1402","evidence":"67项针对回归、类型检查和Worker构建通过；Windows1.2.0原会话真实模型恢复及重启回读成功；源码4文件补丁可应用于fd9108b2，独立复核通过。保留完整质量门及正式发布待验。","sha_before":"a7b8199c193f","sha_after":"f893e72cc12c"}

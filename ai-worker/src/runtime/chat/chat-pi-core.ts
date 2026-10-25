@@ -1,6 +1,4 @@
-import { readdir, stat } from "node:fs/promises";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { Agent } from "@earendil-works/pi-agent-core";
 import type { AssistantMessage, AssistantMessageEventStream } from "@earendil-works/pi-ai";
 import type { PiResultContent } from "../../capabilities/result-pages";
 
@@ -19,21 +17,11 @@ export type ChatPiAgentConstructor = new (options:{
   toolExecution:"sequential";
   streamFn:(...args:unknown[])=>AssistantMessageEventStream;
 })=>ChatPiAgent;
-let loaded:ChatPiAgentConstructor|undefined;
-/** 加载 Pi 的无宿主工具核心：不扫描用户 Skill、扩展或本机文件。打包沿用 Pi 的真实依赖。 */
+/**
+ * 直接声明并打包 Pi 的无宿主工具核心，不在用户机器扫描 node_modules。
+ * Windows 分层安装包没有开发机的 pnpm 布局；静态导入让同一 Agent 随 Worker 交付，
+ * 不加载 coding-agent 的宿主工具、Skill 或扩展。
+ */
 export async function loadChatPiAgent():Promise<ChatPiAgentConstructor>{
-  if(loaded)return loaded;
-  const name="@earendil-works/pi-agent-core",anchor="dist/agent.js";
-  const isFile=async(file:string)=>stat(file).then(value=>value.isFile()).catch(()=>false);
-  for(const root of [path.join(process.cwd(),"node_modules"),path.resolve(process.cwd(),"..","node_modules")]){
-    const candidates=[path.join(root,name,anchor)];
-    const store=path.join(root,".pnpm");
-    for(const entry of await readdir(store).catch(()=>[] as string[]))if(entry.startsWith("@earendil-works+pi-agent-core@"))candidates.push(path.join(store,entry,"node_modules",name,anchor));
-    for(const file of candidates)if(await isFile(file)){
-      const module=await import(/* webpackIgnore: true */ pathToFileURL(file).href);
-      if(typeof module.Agent!=="function")throw Error("CHAT_PI_CORE_INVALID");
-      loaded=module.Agent as ChatPiAgentConstructor;return loaded;
-    }
-  }
-  throw Error("CHAT_PI_CORE_UNAVAILABLE");
+  return Agent as unknown as ChatPiAgentConstructor;
 }
