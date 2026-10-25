@@ -66,6 +66,24 @@ it('短tick保留同一个子ID；unknown_result不新建；显式恢复先查�
  expect((await f.service.get(f.ctx,f.project.id)).steps).toEqual(expect.arrayContaining([expect.objectContaining({status:'unknown_result',childTaskId:childId})]));
  expect(f.dispatch).toHaveBeenCalledTimes(1);expect((await f.tasks.get(f.ctx,parent.preparationTaskId!)).status).toBe('blocked');
 });
+it('unknown_result子任务在用户核对控制下只尝试恢复一次；拒绝时仍保留核对态且不重新dispatch',async()=>{
+ const f=await fixture();let childId='';
+ f.dispatch.mockImplementation(async()=>{const child=await f.tasks.enqueue(f.ctx,{kind:'topic_preview',ownerType:'project',ownerId:f.project.id,idempotencyKey:'brief-child-resume-once',payload:{executionRoute:createExecutionRoute('codex')}});childId=child.id;return {status:'child',childTaskId:child.id,businessTaskId:null,shared:false,sourceDigest:'brief-source'} as never;});
+ const parent=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'brief-resume-start',requestedSteps:['brief']});
+ await f.service.tick({shouldStop:()=>false});
+ await db.insert(executionCalls).values({id:nextId('brief-unknown-call'),executionTaskId:childId,sequence:1,operationKey:'original-model',kind:'model',inputDigest:'sha256:'+'b'.repeat(64),status:'unknown',reservedTokens:100,createdAt:now(),updatedAt:now()});
+ await db.update(executionTasks).set({status:'unknown_result'}).where(eq(executionTasks.id,childId));
+ clock.value='2026-10-21T01:00:05.000Z';
+ await f.service.tick({shouldStop:()=>false});
+ const command=vi.spyOn(f.tasks,'command');
+ await f.service.start(f.ctx,f.project.id,{idempotencyKey:'brief-resume-control',requestedSteps:['brief']});
+ await f.service.tick({shouldStop:()=>false});
+ expect(command.mock.calls.filter(([,input])=>input.taskIds.includes(childId))).toHaveLength(1);
+ expect(await f.tasks.get(f.ctx,childId)).toMatchObject({runtimeStatus:'unknown_result'});
+ expect(await f.tasks.get(f.ctx,parent.preparationTaskId!)).toMatchObject({status:'blocked'});
+ expect(f.dispatch).toHaveBeenCalledTimes(1);
+ command.mockRestore();
+});
 it('候选未采纳正式资料不变；采纳幂等且过期基线拒绝',async()=>{
  const f=await fixture(),started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'candidate-start-once',requestedSteps:['brief']});
  const baseline=await f.service.readBaseline(f.ctx,f.project.id);
@@ -332,12 +350,13 @@ it('C2c 仅请求brief时跳过未请求的历史转写失败，仍可提交brie
  const brief=cp.steps.find(s=>s.name==='brief')!;brief.status='pending';brief.required=true;brief.reasonCode='USER_REQUESTED';
  cp.lastError=transcript.lastError;
  await db.update(executionTasks).set({status:'queued',checkpoint:cp}).where(eq(executionTasks.id,parent!.id));
- f.dispatch.mockImplementation(async(_ctx,input)=>{
+ f.dispatch.mockImplementation(async(...args:any[])=>{
+  const input=args[1] as {step:string};
   if(input.step==='transcript')throw Object.assign(new Error('DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录'),{name:'DouyinNotLoggedInError'});
   return {status:'waiting_user' as const,reasonCode:'CONFIGURATION_REQUIRED',message:'请配置模型后继续'};
  });
  await f.service.tick({shouldStop:()=>false});
- expect(f.dispatch.mock.calls.map(call=>call[1].step)).toEqual(['brief']);
+ expect(f.dispatch.mock.calls.map(call=>(call as any)[1]?.step)).toEqual(['brief']);
  const resource=await f.service.get(f.ctx,f.project.id);
  expect(resource.steps.find(s=>s.name==='brief')).toMatchObject({status:'waiting_user'});
  expect(JSON.stringify(resource.lastError??{})).not.toMatch(/DouyinNotLoggedInError/);
@@ -358,6 +377,6 @@ it('C2d 转写子任务抖音未登录时等待用户并可继续跑brief',async
  const resource=await f.service.get(f.ctx,f.project.id);
  expect(resource.steps.find(s=>s.name==='transcript')).toMatchObject({status:'waiting_user',lastError:{code:'CONFIGURATION_REQUIRED',message:expect.stringContaining('设置 → 账户')},availableActions:expect.arrayContaining(['provide_transcript','resume'])});
  expect(resource.steps.find(s=>s.name==='brief')).toMatchObject({status:'waiting_user'});
- expect(f.dispatch.mock.calls.map(call=>call[1].step)).toEqual(['brief']);
+ expect(f.dispatch.mock.calls.map(call=>(call as any)[1]?.step)).toEqual(['brief']);
  expect(JSON.stringify(resource)).not.toContain('DouyinNotLoggedInError');
 });

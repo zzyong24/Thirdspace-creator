@@ -20,6 +20,8 @@
  */
 
 import * as React from "react";
+import {workspacePrimaryMetrics} from '@/features/group-workspace/platform-metrics';
+import type {GroupWorkspace} from '@/features/group-workspace/workspace-query';
 import styles from "./dashboard-page.module.css";
 import { STAGE_LABELS as CANONICAL_STAGE_LABELS } from "@/lib/stage-labels";
 import Link from "next/link";
@@ -56,7 +58,7 @@ import type { ProjectStageName } from "@/types/domain";
 
 export interface DashboardPageProps {
   /** Override hook for tests; defaults to the production selector. */
-  readonly viewModel?: DashboardViewModel;
+  readonly viewModel?: DashboardViewModel & {readonly workspace?:GroupWorkspace};
   /**
    * The displayed greeting name. In production `(creator)/page.tsx` passes the
    * REAL account holder (`resolveSession().user.displayName` — identity
@@ -85,7 +87,7 @@ export async function DashboardPage({
   dateRange,
   trendSource,
 }: DashboardPageProps = {}) {
-  const vm =
+  const vm:DashboardViewModel & {readonly workspace?:GroupWorkspace} =
     viewModel ??
     (await client.getDashboard({
       params: undefined,
@@ -99,6 +101,12 @@ export async function DashboardPage({
     vm,
     (greetingName ?? canonicalDataset.user.displayName).trim() || "创作者",
   );
+  const overviewQuery=new URLSearchParams(Object.entries(trendSource?.query??{}).filter((entry):entry is [string,string]=>typeof entry[1]==='string')).toString();
+  const workspace=vm.workspace;
+  const summaryMetrics:DashboardViewModel['metrics']=workspace?[
+    ...workspacePrimaryMetrics(workspace).map(metric=>({...metric,value:metric.value==null?'—':metric.value.toLocaleString('zh-CN'),delta:'',trend:'flat' as const,tone:'neutral' as const})),
+    ...vm.metrics.filter(metric=>['g-likes','g-followers','g-finish','g-watching','g-shares'].includes(metric.id)),
+  ]:vm.metrics;
   return (
     <main
       data-app="creatoros"
@@ -132,7 +140,11 @@ export async function DashboardPage({
       <DashboardGrid previewRecent={previewRecent} vm={vm} dateRange={dateRange} trendSource={trendSource}/>
       <details data-slot="studio-home-data">
         <summary>数据概况与筛选范围</summary>
-        <div data-slot="studio-home-data-body">{filters}<SummaryMetrics metrics={vm.metrics} /></div>
+        <div data-slot="studio-home-data-body">{filters}<SummaryMetrics metrics={summaryMetrics} />
+          {workspace&&<p className="text-xs text-muted-foreground">{workspace.collected?.state==='ready'?'已采集作品为所选日期内已纳入汇总的作品，不代表平台完整目录。':'平台作品数量暂不可读。'} CreatorOS 已发布内容：{workspace.contentCount.toLocaleString('zh-CN')} 期 · CreatorOS 发布记录：{workspace.publicationCount.toLocaleString('zh-CN')} 条 · 待处理任务：{workspace.pendingCount.toLocaleString('zh-CN')} 项；与平台采集作品分别统计。</p>}
+          {workspace&&vm.metrics.find(metric=>metric.id==='g-content')&&<p className="text-xs text-muted-foreground">CreatorOS 全组项目数：{vm.metrics.find(metric=>metric.id==='g-content')!.value}，不代表当前平台的作品数量。</p>}
+          {summaryMetrics.some(metric=>metric.value==='—'&&metric.id==='g-read')&&<p className="text-xs text-muted-foreground">文章阅读暂缺：当前筛选内暂无可用阅读指标。可到<Link href={`/overview${overviewQuery?'?'+overviewQuery:''}`} className="text-brand underline underline-offset-4">创作者总览</Link>查看账号绑定与采集情况。</p>}
+        </div>
       </details>
       {vm.continueCreating ? <OnboardingCard /> : null}
     </main>
@@ -149,6 +161,7 @@ function SummaryMetrics({ metrics }: { metrics: DashboardViewModel["metrics"] })
       data-slot="dashboard-summary-metrics"
       data-metric-count={metrics.length}
       aria-label="总览指标"
+      style={{gridTemplateColumns:"repeat(auto-fit,minmax(min(100%,180px),1fr))"}}
       className={cn("grid grid-cols-1 gap-card-gap sm:grid-cols-2",metrics.length===6?"lg:grid-cols-3 xl:grid-cols-6":"lg:grid-cols-5")}
     >
       {metrics.map((metric) => (

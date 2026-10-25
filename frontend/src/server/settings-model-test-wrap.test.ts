@@ -4,7 +4,7 @@
  *     正文与思考均为空 → ✗;未配 → 「未配置」。
  *   - chat.fallback:专配行 null → 「未配置」(不回退主模型)。
  *   - image.generate:真实最小生图 fake 成功 → ✓(额度提示语);调用抛错 → ✗ 人话提示(不泄原始报错)。
- *   - video.generate:鉴权探测 —— 401 → ✗ 密钥无效或无权限;参数级 400 → ✓(不真生成);MiniMax base_resp 1004 → ✗。
+ *   - video.generate:鉴权探测 —— 401/403/1004明确失败；参数级400和未知响应只警告，不推断已连通。
  *   - transcribe.audio:未配置 → 明确失败；云端 ASR → 三态鉴权探测。
  *   - web.search:browser 免 key → ✓;付费 provider 最小检索成功 → ✓。
  *   - wrap 透传:非 test op 原样进 settings transport。
@@ -284,7 +284,7 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     expect(r.detail).not.toContain("401");
   });
 
-  it("参数级 400(缺 prompt)→ ✓ 鉴权/端点可达,且明示未真生成", async () => {
+  it("T1403 参数级 400(缺 prompt)只说明尚未确认，不推断鉴权已通过", async () => {
     const deps = makeDeps({
       fetchImpl: vi.fn(async () =>
         jsonResponse(400, { error: "prompt required" }),
@@ -292,7 +292,43 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     });
     const r = await runModelConnectionTest(ctx, "video.generate", deps);
     expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
+    expect(r.detail).toContain("尚未确认");
     expect(r.detail).toContain("未实际生成");
+    expect(r.detail).not.toContain("鉴权与端点可达");
+  });
+
+  it.each([
+    { label: "404", response: () => jsonResponse(404) },
+    { label: "405", response: () => jsonResponse(405) },
+    { label: "429", response: () => jsonResponse(429) },
+    { label: "HTML 200", response: () => new Response("<html>login</html>", { status: 200, headers: { "content-type": "text/html" } }) },
+    { label: "空 204", response: () => new Response(null, { status: 204 }) },
+    { label: "未知 JSON 200", response: () => jsonResponse(200, { unknown: true }) },
+    { label: "参数错误 422", response: () => jsonResponse(422, { error: "content required" }) },
+    { label: "未知业务状态", response: () => jsonResponse(200, { base_resp: { status_code: 2013 } }) },
+    { label: "JSON null", response: () => jsonResponse(200, null) },
+    { label: "成功外形", response: () => jsonResponse(200, { task_id: "unverified-fixture-task" }) },
+  ])("T1403 $label 不伪报视频已连通，也不生成或再次请求", async ({ response }) => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => response());
+    const deps = makeDeps({ fetchImpl: fetchImpl as unknown as typeof fetch });
+    const result = await runModelConnectionTest(ctx, "video.generate", deps);
+    expect(result).toMatchObject({ ok: true, status: "warn" });
+    expect(result.detail).toContain("尚未确认");
+    expect(result.detail).toContain("未实际生成视频");
+    expect(result.detail).not.toContain("鉴权与端点可达");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(fetchImpl.mock.calls[0]![1]!.body as string)).toEqual({ model: mmSpec.model });
+    expect(deps.generateImageMinimal).not.toHaveBeenCalled();
+    expect(deps.probeTextModel).not.toHaveBeenCalled();
+  });
+
+  it.each([403, 500, 503])("T1403 HTTP %s 仍明确失败，不能被未知响应警告吞掉", async status => {
+    const deps = makeDeps({ fetchImpl: vi.fn(async () => jsonResponse(status)) as unknown as typeof fetch });
+    const result = await runModelConnectionTest(ctx, "video.generate", deps);
+    expect(result.ok).toBe(false);
+    expect(result.status).not.toBe("warn");
+    expect(result.detail).toContain(status === 403 ? "密钥无效或无权限" : "对方服务开小差");
   });
 
   it("MiniMax 惯例 HTTP 200 + base_resp 1004 → ✗ 密钥无效或无权限(不泄原始 status_msg)", async () => {
@@ -309,7 +345,7 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     expect(r.detail).not.toContain("invalid api key");
   });
 
-  it("OmniHi / Seedance 使用 media/v1/videos/generations 做零计费鉴权探测", async () => {
+  it("OmniHi / Seedance 保原 media/v1/videos/generations 缺内容请求，但不冒称鉴权成功", async () => {
     const fetchImpl = vi.fn(async () =>
       jsonResponse(400, { error: "prompt required" }),
     ) as unknown as typeof fetch;
@@ -326,13 +362,14 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     const r = await runModelConnectionTest(ctx, "video.generate", deps);
 
     expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
     expect(fetchImpl).toHaveBeenCalledWith(
       "https://api.omnihi.ai/media/v1/videos/generations",
       expect.objectContaining({ method: "POST" }),
     );
   });
 
-  it("MiniMax-H3 使用 v2 端点做缺内容的零计费鉴权探测", async () => {
+  it("MiniMax-H3 保原 v2 端点缺内容请求，但不冒称鉴权成功", async () => {
     const fetchImpl = vi.fn(async () =>
       jsonResponse(400, { error: "content required" }),
     ) as unknown as typeof fetch;
@@ -349,6 +386,7 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     const r = await runModelConnectionTest(ctx, "video.generate", deps);
 
     expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
     expect(fetchImpl).toHaveBeenCalledWith(
       "https://api.minimax.io/v2/video_generation",
       expect.objectContaining({
@@ -375,11 +413,24 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     const r = await runModelConnectionTest(ctx, "video.generate", deps);
 
     expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(fetchImpl).toHaveBeenCalledWith(
       "https://api.minimaxi.com/v2/video_generation",
       expect.objectContaining({ method: "POST" }),
     );
+  });
+});
+
+describe("T1403 图片编辑暂无内置探针", () => {
+  it("只说明未测试，不把不支持探针误报成密钥错误，也不调用任何模型或网络", async () => {
+    const deps = makeDeps();
+    const result = await runModelConnectionTest(ctx, "image.edit", deps);
+    expect(result).toMatchObject({ ok: true, status: "warn" });
+    expect(result.detail).toContain("暂无内置连接测试");
+    expect(result.detail).toContain("不代表密钥失效");
+    expect(result.detail).toContain("未执行图片编辑");
+    for (const dependency of Object.values(deps)) expect(dependency).not.toHaveBeenCalled();
   });
 });
 

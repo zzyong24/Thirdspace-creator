@@ -123,7 +123,7 @@ function wujieSourceFixture(options:{visibleIframe?:boolean;duplicateHost?:boole
  const page={
   url:()=>current,
   goto:vi.fn(async(url:string,options:{timeout:number})=>{timeouts.push(options.timeout);expect(options.timeout).toBeGreaterThanOrEqual(120000);spend('sdk:goto',options.timeout);current=new URL(url).pathname==='/'?channels+'/platform':url;dom.reconfigure({url:current});}),
-  evaluate:async(fn:Function,arg:unknown)=>{if(arg==='wechatVideo')spend('observe:identity',480000);return evaluate(dom,fn,arg);},
+  evaluate:async(fn:Function,arg:unknown)=>{if(arg&&typeof arg==='object'&&'platform' in arg&&arg.platform==='wechatVideo'&&'identityPage' in arg&&arg.identityPage===true)spend('observe:identity',480000);return evaluate(dom,fn,arg);},
   frames:()=>{spend('observe:frame');return [runtimeFrame];},
   locator:(selector:string)=>locator(uiContext,()=>[...document.querySelectorAll(selector),...(!options.visibleIframe?[...shadow.querySelectorAll(selector)]:[])],selector==='wujie-app'?'host':undefined),
   getByText:(text:string)=>locator(uiContext,()=>[...textNodes(document,text),...(!options.visibleIframe?textNodes(shadow,text):[])]),
@@ -154,7 +154,7 @@ function currentSettingsSourceFixture(options:{missingFields?:boolean;duplicateA
  const page={
   url:()=>current,
   goto:vi.fn(async(url:string,options:{timeout:number})=>{expect(options.timeout).toBeGreaterThanOrEqual(120000);current=new URL(url).pathname==='/'?landed:url;dom.reconfigure({url:current});}),
-  evaluate:async(fn:Function,arg:unknown)=>{const result=evaluate(dom,fn,arg);if(result===null&&(options.missingFields||options.duplicateAppId)&&!fieldsExpired){fieldsExpired=true;vi.setSystemTime(Date.now()+480000);}return result;},
+  evaluate:async(fn:Function,arg:unknown)=>{const result=evaluate(dom,fn,arg);if(result&&typeof result==='object'&&'identity' in result&&result.identity===null&&(options.missingFields||options.duplicateAppId)&&!fieldsExpired){fieldsExpired=true;vi.setSystemTime(Date.now()+480000);}return result;},
   locator:()=>({evaluateAll:async(fn:Function)=>{entryRead();const hrefs=evaluateMany(dom,fn,[...dom.window.document.querySelectorAll('a[href]')]);if(!entryExpired){entryExpired=true;vi.setSystemTime(Date.now()+480000);}return hrefs;}}),
  } as unknown as Page;
  const context=sourceContext(page,onStopped),source=createWechatBrowserSource({...createVerifiedWechatDomWitnesses(),openProfile:async()=>context});
@@ -201,8 +201,8 @@ describe('T1110 Wujie分离DOM与当前公众号设置页：正式source回归�
    expect(result.map(report=>report.kind)).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);
    expect(f.onReport.mock.calls.map(([report])=>report.kind)).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);
    expect(result[2]).toMatchObject({expectedRows:13,selection:{startDate:'2026-09-10',endDate:'2026-10-09',timeZone:'Asia/Shanghai',meaning:'publishedDates'}});
-   expect(vi.mocked(f.page.goto).mock.calls.map(([url])=>new URL(url).pathname)).toEqual(['/','/platform']);
-   expect(f.clicks.filter(action=>['menu','follower-menu'].includes(action))).toEqual(['menu','follower-menu','menu']);
+   expect(vi.mocked(f.page.goto).mock.calls.map(([url])=>new URL(url).pathname)).toEqual(['/','/platform','/platform/statistic/post','/platform/statistic/follower','/platform/statistic/post']);
+   expect(f.clicks.filter(action=>['menu','follower-menu'].includes(action))).toEqual([]);
    const workClicks=f.clicks.slice(f.clicks.indexOf('works'));
    expect(workClicks).toEqual(['works','seven','listen-response','thirty','fresh-request','fresh-response','listen-download','download']);
    expect(f.page.on).toHaveBeenCalledOnce();expect(f.page.off).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
@@ -269,11 +269,16 @@ describe('T1110 Wujie分离DOM与当前公众号设置页：正式source回归�
    expect(f.onReport.mock.calls.map(([report])=>report.kind)).toEqual(['channelsDaily','channelsFollowers']);expect(f.page.waitForEvent).toHaveBeenCalledTimes(2);
   }finally{f.dispose();}
  });
- it('正式source真实消费者逐段在原预算内慢成功：总计超过旧5570000ms仍交第三份',async()=>{
+ it('正式source固定路线消费者逐段在原预算与总截止内慢成功，按准确阶段交第三份',async()=>{
   vi.useFakeTimers();vi.setSystemTime(instant);const f=wujieSourceFixture({timedConsumers:true});
   try{
    const result=await f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-finder-id',{onStopped:f.onStopped},f.onReport);
-   expect(Date.now()-instant).toBeGreaterThan(5570000);expect(Date.now()-instant).toBeLessThan(7370000);
+   const stages=['openProfile','sdk:goto','sdk:goto','observe:identity',...['daily','followers','works'].flatMap(kind=>[
+    'sdk:goto','observe:frame','observe:host','sdk:click-'+kind,'observe:window','sdk:click-seven','sdk:click-thirty','sdk:report-state-read','sdk:report-state-read','sdk:href','sdk:click-download',
+   ])];
+   expect(f.timeSteps.map(step=>step.stage)).toEqual(stages);
+   expect(f.timeSteps.filter(step=>!['openProfile','observe:identity'].includes(step.stage))).toHaveLength(35);
+   expect(Date.now()-instant).toBe(1090000+470000+35*110000);expect(Date.now()-instant).toBeLessThan(7370000);
    expect(f.timeSteps.reduce((sum,step)=>sum+step.durationMs,0)).toBe(Date.now()-instant);
    expect(f.timeSteps).toContainEqual({stage:'openProfile',durationMs:1090000,requestedMs:1120000});
    expect(f.timeSteps).toContainEqual({stage:'observe:identity',durationMs:470000,requestedMs:480000});

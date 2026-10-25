@@ -1,73 +1,109 @@
 {
-  "task": "T-1296",
-  "deliveryStatus": "PASS_SCOPED_LAYOUT_AND_PUBLIC_MEDIA",
+  "task": "T-1403",
+  "deliveryStatus": "PASS_SCOPED_NATIVE_RECONSTRUCTION_EQUIVALENT_FORMAT_HOST_UNIT_UI_PENDING",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
     "command": "bun apps/web/scripts/build-native.mjs",
     "entry": "apps/web/src/embedded/native-entry.tsx",
     "bun": "1.4.0",
+    "declaredPackageManager": "bun@1.2.18",
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6645195,
+    "esmBytes": 6769569,
     "cssBytes": 131987,
-    "licensedDependencies": 59,
-    "renderedModules": 430,
+    "licensedDependencies": 60,
+    "renderedModules": 431,
     "nativeHashes": {
-      "native.js": "5b02fcbbe05a26fdc888b93aaf6e5e1a6a1ffefdfc3efd9ec75cff2655879057",
       "native.css": "d34420a00ddc1f5a0fbf1d7eb775622224d98a0a7aa2b4f0dd47ed9edacfa8dd",
-      "NATIVE_BUILD_GRAPH.json": "7250e9c96fce73f55936f35c6cada92686d96db1f3fd9979ad77e3462507af29",
-      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
-      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "native.js": "d53ca25f62bfffe205edcda8bbdfe48daf8889a3b0131103fe985ae1f3162dcc",
+      "NATIVE_BUILD_GRAPH.json": "fe4ad7307d3a16b832b42e99f0af85de8561cce939204988faead00c286e9e77",
+      "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+      "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
       "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
     },
-    "freshDependencyInstall": "bun install --frozen-lockfile --ignore-scripts，本轮真实安装989包",
+    "freshDependencyInstall": "两次独立scratch按原bun.lock冻结安装，关闭安装脚本，各989包，未改env/依赖版本；复用Bun缓存，不复用旧node_modules",
     "fixturePublished": false,
     "archiveRebuildBytesMatch": true,
-    "crossOsBitReproducibility": "not-claimed"
+    "crossOsBitReproducibility": "not-claimed",
+    "esbuildSupported": {
+      "template-literal": false
+    },
+    "templateCookedEquivalence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/actual-zod-cooked-values-final.json"
   },
   "source": {
-    "files": 716,
-    "changedFiles": 85,
-    "archiveBytes": 778196,
-    "patchBytes": 470746,
+    "files": 717,
+    "currentChangedPaths": 12,
+    "cumulativeChangedPaths": 94,
+    "archiveBytes": 786701,
+    "patchBytes": 469146,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+    "archiveSha256": "1968fe57ca4f5af10874be72ff3729729003d754031652454564208b2e6d09ab",
+    "patchSha256": "76fb6524da844f73998756bb27124011e80e8413b810ea9095f5c7dbfd067bf4",
+    "contractCopySha256": "12d6897943495486181b1ee7801ce9d0a28540f245bb194dd13299319f43801f",
     "hashes": {
-      "native-source.tar.gz": "cf77603d043837eb3e85032b99aa1200da54ccdb51dd9a2ae2fdb04734d9f72e",
-      "native-from-t1046.patch": "554069973d4382758e71c7e9e014f17ca8ad06f8271d97597337cfe005ab8f49",
-      "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      "native-source.tar.gz": "1968fe57ca4f5af10874be72ff3729729003d754031652454564208b2e6d09ab",
+      "native-from-t1046.patch": "76fb6524da844f73998756bb27124011e80e8413b810ea9095f5c7dbfd067bf4"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "docs/verification/t1296/native-package",
-    "productionReconstructionEvidence": "docs/verification/t1296/native-package/production-reconstruction.json",
-    "archiveSha256": "cf77603d043837eb3e85032b99aa1200da54ccdb51dd9a2ae2fdb04734d9f72e",
-    "patchSha256": "554069973d4382758e71c7e9e014f17ca8ad06f8271d97597337cfe005ab8f49"
+    "reconstructionEvidence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-patch-compare-v2.json",
+    "productionReconstructionEvidence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-production-build-consistency.json",
+    "patchContextLines": 0,
+    "patchGenerator": "Python difflib unified_diff n=0 with standard empty-range anchors and No newline markers"
   },
   "verification": {
-    "layoutTests": "native-verify-final.log：原生聚焦回归、类型与process AST通过，含自动与手动缩放边界",
-    "realBrowser": "native-geometry-pointer.log：布局/拖动/窄窗/200%/同DOM/锁与用户缩放通过；非零水平滚动另有真实Chromium JSON。ArrowRight旧热键缺陷独立T-1297。",
-    "sourceReconstruction": {
-      "status": "PASS",
-      "files": 716,
-      "standardPatchFuzz": 0,
-      "patchedArchiveAndExpandedAllBytesMatch": true,
-      "sourceArchiveSha256": "cf77603d043837eb3e85032b99aa1200da54ccdb51dd9a2ae2fdb04734d9f72e",
-      "patchSha256": "554069973d4382758e71c7e9e014f17ca8ad06f8271d97597337cfe005ab8f49"
+    "nativeTests": {
+      "tests": 94,
+      "assertions": 416,
+      "failures": 0,
+      "receipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/native-test-summary.json"
     },
-    "publicHost": "browser-accessibility-chrome.log：两个公共测试通过；候选预览/采纳/刷新/实际MP4交付与历史恢复；小窗口发送区滚动可达、输入可聚焦",
-    "evidenceDirectory": "docs/verification/t1296",
-    "independentVisualReview": "PASS，实际页面及发送区补证已由无历史上下文评审者查看"
+    "embeddedTypecheck": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/native-typecheck.json",
+    "hostTests": {
+      "files": 2,
+      "tests": 38,
+      "receipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/green-host-editor-final.json",
+      "scope": "mocked mount/controller host, not real UI"
+    },
+    "expectedRed": [
+      "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/red-native-command.json",
+      "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/red-native-preview.json"
+    ],
+    "sourceReconstruction": {
+      "exit": 0,
+      "files": 717,
+      "systemFuzz": 0,
+      "patchContextLines": 0,
+      "archivePatchAndCandidateBytesEqual": true,
+      "missing": [],
+      "extra": [],
+      "mismatch": []
+    },
+    "productionBuildConsistency": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-production-build-consistency.json",
+    "nativeIntegrityGateReceipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-final-native-integrity.json",
+    "evidenceDirectory": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation",
+    "realUi": "NOT_RUN_BY_WORKER_ROOT_OWNED",
+    "actualTemplateCookedEquivalence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/actual-zod-cooked-values-final.json",
+    "gitDiffCheckReceipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-final-diff-check.json",
+    "preservedIntermediateFailures": [
+      "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/final-diff-check.json",
+      "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-patch-compare.json"
+    ],
+    "formatOnlySourceChanges": [
+      "apps/web/scripts/build-native.mjs",
+      "apps/web/src/components/editor/editor-header.tsx"
+    ]
   },
   "limitations": [
-    "本轮未调用真实模型/ASR；确定性文字剪辑候选不冒充模型生成。",
-    "本轮只验证Web开发宿主和生产build，未打包替换现用桌面App。",
-    "逐帧/PTS及完整PCM比较基于同机同Chrome的改动前HEAD内核；不声明跨浏览器/跨OS字节复现。",
-    "全局既有reconcile失败保留，任务T-1292跟踪；不声明全产品无缺陷。"
+    "本worker未操作真实UI/原生GPU/实际MP4，没有把模拟编码/宿主单测作为真实剪辑验收。",
+    "未调用模型/ASR/付费能力，未改env/凭据/数据库/公共合同/validator/Gate/固定基线/核心renderer算法。",
+    "仅声明同机同锁两次实际生产构建字节一致，不声明跨OS位复现。",
+    "历史外部绝对路径可能失效；本轮证据单独绑定，历史收据不代签本轮。"
   ],
-  "scope": "唯一native writer；隔离源码与本worktree原生归档/patch/双目录精确资产；未修改root业务TSX。",
+  "scope": "T-1403真实合同消费者恢复、原预览迁名与必要IA；正式合同/schema/validator和原Gate未改；完整reference/public镜像；不提交、不push。",
   "t1062": {
     "task": "T-1062",
     "candidateManifest": {
@@ -2373,5 +2409,179 @@
       "unreplacedNodeEnv": 0,
       "unguardedGlobalProcessReferences": 0
     }
+  },
+  "t1296HistoricalCurrentMetadata": {
+    "task": "T-1296",
+    "deliveryStatus": "PASS_SCOPED_LAYOUT_AND_PUBLIC_MEDIA",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6645195,
+      "cssBytes": 131987,
+      "licensedDependencies": 59,
+      "renderedModules": 430,
+      "nativeHashes": {
+        "native.js": "5b02fcbbe05a26fdc888b93aaf6e5e1a6a1ffefdfc3efd9ec75cff2655879057",
+        "native.css": "d34420a00ddc1f5a0fbf1d7eb775622224d98a0a7aa2b4f0dd47ed9edacfa8dd",
+        "NATIVE_BUILD_GRAPH.json": "7250e9c96fce73f55936f35c6cada92686d96db1f3fd9979ad77e3462507af29",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "bun install --frozen-lockfile --ignore-scripts，本轮真实安装989包",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 716,
+      "changedFiles": 85,
+      "archiveBytes": 778196,
+      "patchBytes": 470746,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "cf77603d043837eb3e85032b99aa1200da54ccdb51dd9a2ae2fdb04734d9f72e",
+        "native-from-t1046.patch": "554069973d4382758e71c7e9e014f17ca8ad06f8271d97597337cfe005ab8f49",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "docs/verification/t1296/native-package",
+      "productionReconstructionEvidence": "docs/verification/t1296/native-package/production-reconstruction.json",
+      "archiveSha256": "cf77603d043837eb3e85032b99aa1200da54ccdb51dd9a2ae2fdb04734d9f72e",
+      "patchSha256": "554069973d4382758e71c7e9e014f17ca8ad06f8271d97597337cfe005ab8f49"
+    },
+    "verification": {
+      "layoutTests": "native-verify-final.log：原生聚焦回归、类型与process AST通过，含自动与手动缩放边界",
+      "realBrowser": "native-geometry-pointer.log：布局/拖动/窄窗/200%/同DOM/锁与用户缩放通过；非零水平滚动另有真实Chromium JSON。ArrowRight旧热键缺陷独立T-1297。",
+      "sourceReconstruction": {
+        "status": "PASS",
+        "files": 716,
+        "standardPatchFuzz": 0,
+        "patchedArchiveAndExpandedAllBytesMatch": true,
+        "sourceArchiveSha256": "cf77603d043837eb3e85032b99aa1200da54ccdb51dd9a2ae2fdb04734d9f72e",
+        "patchSha256": "554069973d4382758e71c7e9e014f17ca8ad06f8271d97597337cfe005ab8f49"
+      },
+      "publicHost": "browser-accessibility-chrome.log：两个公共测试通过；候选预览/采纳/刷新/实际MP4交付与历史恢复；小窗口发送区滚动可达、输入可聚焦",
+      "evidenceDirectory": "docs/verification/t1296",
+      "independentVisualReview": "PASS，实际页面及发送区补证已由无历史上下文评审者查看"
+    },
+    "limitations": [
+      "本轮未调用真实模型/ASR；确定性文字剪辑候选不冒充模型生成。",
+      "本轮只验证Web开发宿主和生产build，未打包替换现用桌面App。",
+      "逐帧/PTS及完整PCM比较基于同机同Chrome的改动前HEAD内核；不声明跨浏览器/跨OS字节复现。",
+      "全局既有reconcile失败保留，任务T-1292跟踪；不声明全产品无缺陷。"
+    ],
+    "scope": "唯一native writer；隔离源码与本worktree原生归档/patch/双目录精确资产；未修改root业务TSX。"
+  },
+  "t1403PreFormatDelivery": {
+    "task": "T-1403",
+    "deliveryStatus": "PASS_SCOPED_NATIVE_RECONSTRUCTION_HOST_UNIT_UI_PENDING",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "declaredPackageManager": "bun@1.2.18",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6769569,
+      "cssBytes": 131987,
+      "licensedDependencies": 60,
+      "renderedModules": 431,
+      "nativeHashes": {
+        "native.css": "d34420a00ddc1f5a0fbf1d7eb775622224d98a0a7aa2b4f0dd47ed9edacfa8dd",
+        "native.js": "d53ca25f62bfffe205edcda8bbdfe48daf8889a3b0131103fe985ae1f3162dcc",
+        "NATIVE_BUILD_GRAPH.json": "fe4ad7307d3a16b832b42e99f0af85de8561cce939204988faead00c286e9e77",
+        "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+        "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "两次独立scratch按原bun.lock冻结安装，关闭安装脚本，各989包，未改env/依赖版本；复用Bun缓存，不复用旧node_modules",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed",
+      "esbuildSupported": {
+        "template-literal": false
+      },
+      "templateCookedEquivalence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/actual-zod-cooked-values-final.json"
+    },
+    "source": {
+      "files": 717,
+      "currentChangedPaths": 12,
+      "cumulativeChangedPaths": 94,
+      "archiveBytes": 786701,
+      "patchBytes": 469146,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "archiveSha256": "1968fe57ca4f5af10874be72ff3729729003d754031652454564208b2e6d09ab",
+      "patchSha256": "76fb6524da844f73998756bb27124011e80e8413b810ea9095f5c7dbfd067bf4",
+      "contractCopySha256": "12d6897943495486181b1ee7801ce9d0a28540f245bb194dd13299319f43801f",
+      "hashes": {
+        "native-source.tar.gz": "1968fe57ca4f5af10874be72ff3729729003d754031652454564208b2e6d09ab",
+        "native-from-t1046.patch": "76fb6524da844f73998756bb27124011e80e8413b810ea9095f5c7dbfd067bf4"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-patch-compare-v2.json",
+      "productionReconstructionEvidence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-production-build-consistency.json",
+      "patchContextLines": 0,
+      "patchGenerator": "Python difflib unified_diff n=0 with standard empty-range anchors and No newline markers"
+    },
+    "verification": {
+      "nativeTests": {
+        "tests": 94,
+        "assertions": 416,
+        "failures": 0,
+        "receipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/native-test-summary.json"
+      },
+      "embeddedTypecheck": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/native-typecheck.json",
+      "hostTests": {
+        "files": 2,
+        "tests": 38,
+        "receipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/green-host-editor-final.json",
+        "scope": "mocked mount/controller host, not real UI"
+      },
+      "expectedRed": [
+        "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/red-native-command.json",
+        "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/red-native-preview.json"
+      ],
+      "sourceReconstruction": {
+        "exit": 0,
+        "files": 717,
+        "systemFuzz": 0,
+        "patchContextLines": 0,
+        "archivePatchAndCandidateBytesEqual": true,
+        "missing": [],
+        "extra": [],
+        "mismatch": []
+      },
+      "productionBuildConsistency": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-production-build-consistency.json",
+      "nativeIntegrityGateReceipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-final-native-integrity.json",
+      "evidenceDirectory": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation",
+      "realUi": "NOT_RUN_BY_WORKER_ROOT_OWNED",
+      "actualTemplateCookedEquivalence": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/actual-zod-cooked-values-final.json",
+      "gitDiffCheckReceipt": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-final-diff-check.json",
+      "preservedIntermediateFailures": [
+        "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/final-diff-check.json",
+        "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-patch-compare.json"
+      ],
+      "formatOnlySourceChanges": [
+        "apps/web/scripts/build-native.mjs",
+        "apps/web/src/components/editor/editor-header.tsx"
+      ]
+    },
+    "limitations": [
+      "本worker未操作真实UI/原生GPU/实际MP4，没有把模拟编码/宿主单测作为真实剪辑验收。",
+      "未调用模型/ASR/付费能力，未改env/凭据/数据库/公共合同/validator/Gate/固定基线/核心renderer算法。",
+      "仅声明同机同锁两次实际生产构建字节一致，不声明跨OS位复现。",
+      "历史外部绝对路径可能失效；本轮证据单独绑定，历史收据不代签本轮。"
+    ],
+    "scope": "T-1403真实合同消费者恢复、原预览迁名与必要IA；正式合同/schema/validator和原Gate未改；完整reference/public镜像；不提交、不push。"
   }
 }

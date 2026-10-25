@@ -466,14 +466,19 @@ function PrimaryNav({
   activeId: string | null;
   collapsed: boolean;
 }) {
-  const {navigate,pendingHref,error}=usePrimaryNavigation();
+  const {navigate,pendingHref,slowHref,error,retry}=usePrimaryNavigation();
   return (
     <nav
       data-slot="sidebar-primary-nav"
       aria-label="主要导航"
       className="flex flex-col gap-1"
     >
-      {error ? <p role="alert" className="text-xs text-destructive">{error}</p> : null}
+      {error||slowHref ? <div className="flex flex-col gap-2 rounded-md bg-muted p-2 text-xs">
+        <p role={error?"alert":"status"} aria-label={error?undefined:"页面打开较慢"} className={error?"text-destructive":"text-muted-foreground"}>
+          {error??"页面打开较慢，仍在读取。可以继续等待或重试。"}
+        </p>
+        <button type="button" onClick={retry} className="self-start rounded text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">重试打开页面</button>
+      </div> : null}
       {PRIMARY_NAV.map((entry) => {
         const Icon = entry.icon;
         const isActive = entry.id === activeId;

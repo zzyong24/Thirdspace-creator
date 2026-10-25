@@ -73,33 +73,33 @@
     "native": {
       "deliveryMode": "native",
       "sourceArchive": "sources/opencut-classic/native-source.tar.gz",
-      "sourceArchiveSha256": "c3edf2cc15b4ff9bcc506f313996c5298e5182665849162362f9437a1af73ca0",
+      "sourceArchiveSha256": "1968fe57ca4f5af10874be72ff3729729003d754031652454564208b2e6d09ab",
       "patch": "sources/opencut-classic/native-patches.diff",
-      "patchSha256": "0d29dbc02503a7d905aec1bbdc63700213fb3ceb99e00f20b300d6c98a19a45c",
+      "patchSha256": "76fb6524da844f73998756bb27124011e80e8413b810ea9095f5c7dbfd067bf4",
       "bundleFiles": {
-        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
-        "NATIVE_BUILD_GRAPH.json": "bfe2d587fdca3dab4478630f59ddaa36ea8b55863a309732403a34144108486c",
-        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
-        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
-        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
         "native.css": "d34420a00ddc1f5a0fbf1d7eb775622224d98a0a7aa2b4f0dd47ed9edacfa8dd",
-        "native.js": "c89f0f5cf4efd1a4ca4a9d3649ff26ddbf59d0121abd40de194e42e0ba9e3aef"
+        "native.js": "d53ca25f62bfffe205edcda8bbdfe48daf8889a3b0131103fe985ae1f3162dcc",
+        "NATIVE_BUILD_GRAPH.json": "fe4ad7307d3a16b832b42e99f0af85de8561cce939204988faead00c286e9e77",
+        "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+        "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
       },
       "t1062CandidateManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-manifest-final.json",
         "sha256": "246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153"
       },
-      "verificationStatus": "T1070_PIXEL_VERSION_RED_GREEN_53_TESTS_326_ASSERTIONS_RECONSTRUCTION_TWO_IDENTICAL_PRODUCTION_BUILDS_WARM_AND_SIX_PUBLIC_RENDER_FAMILIES_SOURCE_REVIEW_PASS_HOST_CANDIDATE_REVALIDATION_PENDING_NOT_OWNER_CAS_OR_INSTALL",
+      "verificationStatus": "T1403_NATIVE_CONTRACT_CONSUMERS_RED_GREEN_94_TESTS_416_ASSERTIONS_717_SOURCE_STANDARD_U0_F0_TWO_IDENTICAL_PRODUCTION_BUILDS_ZOD_COOKED_EQUIVALENT_HOST_38_TESTS_UI_PENDING",
       "t1062TitleRepairCurrentManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native31-current-binding.json",
         "sha256": "944f259e707c9579a321ede8b2655e51f3e3b36c9841fd0f16b640edc73d28b6"
       },
       "t1069ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-native-source/delivery-candidate/full-reconstruction-result.json",
       "fullReconstructionPatch": "sources/opencut-classic/native-from-t1046.patch",
-      "fullReconstructionPatchSha256": "0d29dbc02503a7d905aec1bbdc63700213fb3ceb99e00f20b300d6c98a19a45c",
+      "fullReconstructionPatchSha256": "76fb6524da844f73998756bb27124011e80e8413b810ea9095f5c7dbfd067bf4",
       "fixedBaseArchive": "sources/opencut-classic-source.tar.gz",
       "fixedBaseSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
-      "contractCopySha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+      "contractCopySha256": "12d6897943495486181b1ee7801ce9d0a28540f245bb194dd13299319f43801f",
       "documentVersion": 31,
       "sourceRevision": "cf5e79e919144200294fb9fed22a222592a0aeea",
       "t1070ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-build-consistency.json",
@@ -135,6 +135,40 @@
         ],
         "installedApplicationChanged": false,
         "report": "outputs/CreatorOS-impeccable-report.json"
+      },
+      "t1403Recovery": {
+        "task": "T-1403",
+        "evidenceDirectory": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation",
+        "sourceManifest": {
+          "path": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-final-source-manifest-v2.json",
+          "sha256": "d04c7d3533aee31379b52c0d88110c2973a7b703f1b5db2200d9570749e81c6b"
+        },
+        "productionBuildConsistency": {
+          "path": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-production-build-consistency.json",
+          "sha256": "c09cbacf52b7004fbe4ec18cff55fa0a3d25443f1e415bc01da2fc2ec31387c0"
+        },
+        "actualZodCookedValues": {
+          "path": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/actual-zod-cooked-values-final.json",
+          "sha256": "24ca842bd0a586bbd7e763290e9fbe52456ca3cc42bb1e53a02421d62d4eb553"
+        },
+        "patchContextLines": 0,
+        "fixture": false,
+        "realUi": "ROOT_OWNED_NOT_CLAIMED"
+      },
+      "t1403PreFormatRecovery": {
+        "task": "T-1403",
+        "evidenceDirectory": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation",
+        "sourceManifest": {
+          "path": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/final-source-manifest.json",
+          "sha256": "a8795b0df6de4485c6b83edec0498e6e3416328f4411b09379450bebea0999de"
+        },
+        "productionBuildConsistency": {
+          "path": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/production-build-consistency.json",
+          "sha256": "d8a9777824032c07c885354121e004f468add0c5d0a6f0f846d48b603f3e914a"
+        },
+        "fixture": false,
+        "realUi": "ROOT_PENDING_NOT_CLAIMED",
+        "historicalVerificationStatus": "T1070_PIXEL_VERSION_RED_GREEN_53_TESTS_326_ASSERTIONS_RECONSTRUCTION_TWO_IDENTICAL_PRODUCTION_BUILDS_WARM_AND_SIX_PUBLIC_RENDER_FAMILIES_SOURCE_REVIEW_PASS_HOST_CANDIDATE_REVALIDATION_PENDING_NOT_OWNER_CAS_OR_INSTALL"
       }
     }
   },

@@ -93,7 +93,7 @@ export async function loadProjectSignals(accountId = readCurrentAccountId(),scop
   }
 }
 
-export async function loadRadarSignals(accountId = readCurrentAccountId(),scope=currentOnboardingWorkspace()): Promise<{
+export async function loadRadarSignals(accountId = readCurrentAccountId(),scope=currentOnboardingWorkspace(),completedSteps:ReadonlyArray<OnboardingStateResource["completedSteps"][number]>=[]): Promise<{
   readonly hasBenchmarkMonitor?: boolean;
   readonly hasBenchmarkTopic?: boolean;
 }> {
@@ -120,9 +120,16 @@ export async function loadRadarSignals(accountId = readCurrentAccountId(),scope=
       (source) => source.monitorEnabled === true && source.status === "active",
     );
     assertCurrentWorkspace(scope);
-    const convertedBySource = await Promise.allSettled(
-      benchmarkSources.map((source) =>
-        client.listIntelligenceItems({
+    const hasBenchmarkMonitor = activeSources.length > 0;
+    // 已完成里程碑由 deriveGuidedSteps 复用，不重扫，也不冒充当前实时选题信号。
+    if (completedSteps.includes("benchmark-topic")) return {hasBenchmarkMonitor};
+    // 每轮引导扫描只保留一条在途读取，找到存在证据后不再扫描其余对标源。
+    let unreadSource = false;
+    for (const source of benchmarkSources) {
+      assertCurrentWorkspace(scope);
+      let rows: unknown;
+      try {
+        rows = await client.listIntelligenceItems({
           params: undefined,
           query: {
             ...(scope.groupId?{}:{accountId:accountId!}),
@@ -133,19 +140,15 @@ export async function loadRadarSignals(accountId = readCurrentAccountId(),scope=
             topicState: "converted",
           },
           body: undefined,
-        }),
-      ),
-    );
-    assertCurrentWorkspace(scope);
-    return {
-      hasBenchmarkMonitor: activeSources.length > 0,
-      hasBenchmarkTopic: convertedBySource.some(
-        (result) =>
-          result.status === "fulfilled" &&
-          Array.isArray(result.value) &&
-          result.value.length > 0,
-      ),
-    };
+        });
+      } catch {
+        unreadSource = true;
+      }
+      assertCurrentWorkspace(scope);
+      if (!Array.isArray(rows)) unreadSource = true;
+      else if (rows.length > 0) return {hasBenchmarkMonitor,hasBenchmarkTopic:true};
+    }
+    return {hasBenchmarkMonitor,hasBenchmarkTopic:unreadSource?undefined:false};
   } catch {
     return {};
   }
@@ -183,7 +186,7 @@ export async function loadState():Promise<OnboardingState>{
  assertCurrentWorkspace(scope);
  if(record.hidden)return {groupId,accountId,origin:record.origin,completedSteps:record.completedSteps,preferences:record};
  const [projectSignals,radarSignals,bound,hasPositioningProfile]=await Promise.all([
-  loadProjectSignals(accountId,scope),loadRadarSignals(accountId,scope),groupId?loadGroupMembers(groupId,scope):loadAccountBound(accountId!),loadHasProfile(scope),
+  loadProjectSignals(accountId,scope),loadRadarSignals(accountId,scope,record.completedSteps),groupId?loadGroupMembers(groupId,scope):loadAccountBound(accountId!),loadHasProfile(scope),
  ]);
  assertCurrentWorkspace(scope);
  const state:OnboardingState={groupId,accountId,...(groupId?{memberCount:typeof bound==="number"?bound:undefined}:{douyinLoggedIn:bound===true}),origin:resolveOrigin(record.origin,projectSignals),...projectSignals,...radarSignals,hasPositioningProfile,hasReviewedImportedProjects:record.completedSteps.includes("review-imported-projects")||(!groupId&&readReviewedImportedProjects(accountId)),completedSteps:record.completedSteps,preferences:record};

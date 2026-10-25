@@ -3867,22 +3867,15 @@ export function createIntelligenceService(
           latestMetric.set(metric.itemId, metric);
         }
       }
-      const sourceCount = new Map<string, number>();
+      // SEMANTIC_BOUNDARY_ALLOW: 仅按已授权作品/来源 ID 去重计数，不判断内容语义。
+      const sourcesByItem = new Map<string, Set<string>>();
       for (const observation of observations) {
-        const key = `${observation.itemId}:${observation.sourceId}`;
-        if (
-          !observations.some(
-            (other) =>
-              other !== observation &&
-              `${other.itemId}:${other.sourceId}` === key &&
-              other.id < observation.id,
-          )
-        ) {
-          sourceCount.set(
-            observation.itemId,
-            (sourceCount.get(observation.itemId) ?? 0) + 1,
-          );
+        let sources = sourcesByItem.get(observation.itemId);
+        if (!sources) {
+          sources = new Set<string>();
+          sourcesByItem.set(observation.itemId, sources);
         }
+        sources.add(observation.sourceId);
       }
       const timestamp = (value: string | null | undefined): number | null => {
         if (!value) return null;
@@ -3941,7 +3934,7 @@ export function createIntelligenceService(
             latestMetric: latestMetric.has(item.id)
               ? toMetric(latestMetric.get(item.id)!)
               : null,
-            sourceCount: Math.max(1, sourceCount.get(item.id) ?? 1),
+            sourceCount: Math.max(1, sourcesByItem.get(item.id)?.size ?? 1),
             ...projection,
           };
         }),

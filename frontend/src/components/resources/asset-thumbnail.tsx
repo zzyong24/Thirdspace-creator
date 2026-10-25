@@ -16,7 +16,7 @@ import * as React from "react";
 import { MediaPreview } from "@/components/resources/media-preview";
 import {
   invalidateAssetPreviewUrl,
-  resolveAssetPreviewUrl,
+  acquireAssetPreviewUrl,
 } from "@/components/resources/asset-preview-url";
 import type { ResourceAsset } from "@/components/resources/types";
 
@@ -34,11 +34,13 @@ export function AssetThumbnail({ asset }: { readonly asset: ResourceAsset }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 换 URL 时重置为占位态,避免旧图闪
     setUrl(null);
     setLoadFailed(false);
-    void resolveAssetPreviewUrl(asset.id).then((u) => {
+    const preview = acquireAssetPreviewUrl(asset.id, {priority: "thumbnail"});
+    void preview.promise.then((u) => {
       if (!cancelled) setUrl(u);
     });
     return () => {
       cancelled = true;
+      preview.release();
     };
   }, [asset.id, visual, retryNonce]);
 

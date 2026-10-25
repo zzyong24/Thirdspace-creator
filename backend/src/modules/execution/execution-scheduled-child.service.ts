@@ -1,24 +1,98 @@
 import {frozenExecutionRoute,inheritExecutionRoute} from '@creatoros/contract/execution-worker';
 import {isDeepStrictEqual} from 'node:util';
+import {setImmediate as yieldTurn} from 'node:timers/promises';
 import {workspaceFilter} from "../../workspace-scope";
-import {and,asc,eq,inArray,sql,executionTasks,executionCalls,jobRuns,scheduledJobs,aiTasks,type Db} from '@creatoros/backend';
+import {and,asc,desc,eq,inArray,sql,executionTasks,executionCalls,jobRuns,scheduledJobs,aiTasks,type Db} from '@creatoros/backend';
 import type {ExecutionRef} from '@creatoros/contract/execution-worker';
 import {ConflictError} from './execution.errors';
 type Row=typeof executionTasks.$inferSelect;
-const payload=(row:Row)=>row.payload as Record<string,unknown>;
-export function scheduledChildId(row:Row):string|undefined{const value=payload(row).__scheduledChild as {executionTaskId?:unknown}|undefined;return typeof value?.executionTaskId==='string'?value.executionTaskId:undefined;}
-function scheduledInput(child:Row):{jobId?:string;jobRunId?:string}{
+type RelationshipRow=Pick<Row,'id'|'userId'|'accountId'|'groupId'|'kind'|'ownerType'|'ownerId'|'payload'>;
+type ChildState=Pick<Row,'status'|'lastErrorCode'|'lastErrorMessage'>;
+type GuardReason='invalid_source'|'ownership_mismatch'|'missing_child'|'link_changed';
+class ScheduledChildConflict extends ConflictError {
+ constructor(readonly reason:GuardReason,message:string){super(message);}
+}
+const payload=(row:Pick<Row,'payload'>)=>row.payload as Record<string,unknown>;
+export function scheduledChildId(row:Pick<Row,'payload'>):string|undefined{const value=payload(row).__scheduledChild as {executionTaskId?:unknown}|undefined;return typeof value?.executionTaskId==='string'?value.executionTaskId:undefined;}
+function scheduledInput(child:Pick<Row,'payload'>):{jobId?:string;jobRunId?:string}{
  const input=payload(child).modelInput as {kind?:string;sourceKind?:string;jobId?:string;jobRunId?:string;facets?:Record<string,string>};
  if(input?.kind==='scheduled.flywheel'&&['benchmark','self.detail','self.metrics','self.traffic','comments','favorites'].includes(input.sourceKind??''))return {jobId:input.jobId,jobRunId:input.jobRunId};
- try{return JSON.parse(input?.facets?.__dailyTopic??'null')??{};}catch{throw new ConflictError('调度子任务冻结来源无效');}
+ try{return JSON.parse(input?.facets?.__dailyTopic??'null')??{};}catch{throw new ScheduledChildConflict('invalid_source','调度子任务冻结来源无效');}
 }
-export function assertScheduledChild(parent:Row,child:Row){
+export function assertScheduledChild(parent:RelationshipRow,child:RelationshipRow){
  const daily=scheduledInput(child);
- if(parent.kind!=='automation_sync'||parent.ownerType!=='scheduled_job'||child.kind!=='ai_task'||parent.userId!==child.userId||parent.accountId!==child.accountId||parent.groupId!==child.groupId||daily?.jobId!==parent.ownerId)throw new ConflictError('调度父子任务归属不一致');
+ if(parent.kind!=='automation_sync'||parent.ownerType!=='scheduled_job'||child.kind!=='ai_task'||parent.userId!==child.userId||parent.accountId!==child.accountId||parent.groupId!==child.groupId||daily?.jobId!==parent.ownerId)throw new ScheduledChildConflict('ownership_mismatch','调度父子任务归属不一致');
 }
-export function scheduledParentProjection(child:Row){return {status:['queued','running','retry_wait'].includes(child.status)?'blocked':child.status,lastErrorCode:child.lastErrorCode,lastErrorMessage:child.lastErrorMessage,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null};}
+export function scheduledParentProjection(child:ChildState){return {status:['queued','running','retry_wait'].includes(child.status)?'blocked':child.status,lastErrorCode:child.lastErrorCode,lastErrorMessage:child.lastErrorMessage,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null};}
+
+// 保留原 JSON 值（包括非法的每日来源字符串），仍由原守卫校验；
+// 不读取完整模型输入和 checkpoint，避免解码与关系核对无关的任务数据。
+const relationshipFields={
+ id:executionTasks.id,userId:executionTasks.userId,accountId:executionTasks.accountId,groupId:executionTasks.groupId,
+ kind:executionTasks.kind,ownerType:executionTasks.ownerType,ownerId:executionTasks.ownerId,
+ status:executionTasks.status,lastErrorCode:executionTasks.lastErrorCode,lastErrorMessage:executionTasks.lastErrorMessage,
+ payload:sql<Row['payload']>`CASE WHEN ${executionTasks.payload} = 'null'::jsonb THEN 'null'::jsonb ELSE jsonb_build_object(
+  '__scheduledChild',jsonb_build_object('executionTaskId',${executionTasks.payload} #> '{__scheduledChild,executionTaskId}'),
+  'parentExecutionTaskId',${executionTasks.payload}->'parentExecutionTaskId',
+  'modelInput',jsonb_build_object('kind',${executionTasks.payload} #> '{modelInput,kind}',
+   'sourceKind',${executionTasks.payload} #> '{modelInput,sourceKind}',
+   'jobId',${executionTasks.payload} #> '{modelInput,jobId}',
+   'facets',jsonb_build_object('__dailyTopic',${executionTasks.payload} #> '{modelInput,facets,__dailyTopic}'))
+ ) END`,
+};
+function reconciliationError(error:unknown):{kind:'guard';reason:GuardReason}|{kind:'sql';code:string}|{kind:'unknown'}{
+ if(error instanceof ScheduledChildConflict)return {kind:'guard',reason:error.reason};
+ // 驱动可能包装 SQL 错误；只读固定错误码，不读取或记录正文、ID 和行值。
+ try{
+  const seen=new Set<unknown>();let current:unknown=error;
+  while(current&&typeof current==='object'&&seen.size<4&&!seen.has(current)){
+   seen.add(current);const value=current as {code?:unknown;cause?:unknown};
+   if(typeof value.code==='string'&&/^[0-9A-Z]{5}$/.test(value.code))return {kind:'sql',code:value.code};
+   current=value.cause;
+  }
+ }catch{/* 诊断属性不可读时按未知处理，不改变核对结果。 */}
+ return {kind:'unknown'};
+}
 export function createExecutionScheduledChildService(db:Db,deps:{now?:()=>string}={}){
  const now=deps.now??(()=>new Date().toISOString());
+ type Report={succeeded:number;failed:number;pending:number;inconsistent:number};
+ let reconciliation:Promise<Report>|undefined;
+ async function reconcile():Promise<Report>{
+  const report:Report={succeeded:0,failed:0,pending:0,inconsistent:0};
+  const eligible=and(eq(executionTasks.kind,'automation_sync'),sql`${executionTasks.payload} ? '__scheduledChild'`);
+  const [last]=await db.select({id:executionTasks.id}).from(executionTasks).where(eligible).orderBy(desc(executionTasks.id)).limit(1);
+  if(!last)return report;
+  // 固定本轮 ID 上界；范围内新随机 ID 仍可能进入后页，不是初始成员快照。
+  const upperId=last.id;let cursor:string|undefined;
+  while(true){
+   const parents=await db.select({id:executionTasks.id,childId:sql<unknown>`${executionTasks.payload} #> '{__scheduledChild,executionTaskId}'`})
+    .from(executionTasks).where(and(eligible,sql`${executionTasks.id} <= ${upperId}`,cursor===undefined?undefined:sql`${executionTasks.id} > ${cursor}`))
+    .orderBy(asc(executionTasks.id)).limit(32);
+   if(!parents.length)break;
+   const count=parents.length,nextCursor=parents[parents.length-1]!.id;
+   for(const row of parents){
+    const childId=row.childId;if(typeof childId!=='string'||!childId)continue;
+    try{await db.transaction(async tx=>{
+     const rows=await tx.select(relationshipFields).from(executionTasks).where(inArray(executionTasks.id,[row.id,childId])).orderBy(asc(executionTasks.id)).for('update');
+     const parent=rows.find(r=>r.id===row.id),child=rows.find(r=>r.id===childId);
+     if(!parent||!child)throw new ScheduledChildConflict('missing_child','调度子任务不存在');
+     assertScheduledChild(parent,child);
+     if(payload(child).parentExecutionTaskId!==parent.id||scheduledChildId(parent)!==child.id)throw new ScheduledChildConflict('link_changed','调度链接已变更');
+     const projection=scheduledParentProjection(child);
+     if(parent.status!==projection.status||parent.lastErrorCode!==projection.lastErrorCode||parent.lastErrorMessage!==projection.lastErrorMessage){
+      await tx.update(executionTasks).set({...projection,updatedAt:now()}).where(eq(executionTasks.id,parent.id));
+      if(child.status==='succeeded')report.succeeded++;else if(['failed','cancelled'].includes(child.status))report.failed++;
+     }
+     if(!['succeeded','failed','cancelled','partial'].includes(child.status))report.pending++;
+    });}catch(error){report.inconsistent++;console.error('[scheduled-child]',reconciliationError(error));}
+   }
+   // 释放前页后再让出微任务链，允许其它工作运行及临时对象回收；不保证即时 GC。
+   parents.length=0;cursor=nextCursor;
+   if(count<32||cursor===upperId)break;
+   await yieldTurn();
+  }
+  return report;
+ }
  return {
  async attach(ref:ExecutionRef,childId:string){
  if(ref.executionTaskId===childId)throw new ConflictError('调度任务不能引用自身');
@@ -58,13 +132,11 @@ export function createExecutionScheduledChildService(db:Db,deps:{now?:()=>string
  await tx.update(executionTasks).set({...scheduledParentProjection(childState),payload:{...payload(parent),__scheduledChild:{executionTaskId:child.id}},updatedAt:now()}).where(eq(executionTasks.id,parent.id));
  });
  },
- async reconcile(){
- const parents=await db.select().from(executionTasks).where(and(eq(executionTasks.kind,'automation_sync'),sql`${executionTasks.payload} ? '__scheduledChild'`));
- const report={succeeded:0,failed:0,pending:0,inconsistent:0};
- for(const row of parents){try{await db.transaction(async tx=>{const childId=scheduledChildId(row);if(!childId)return;const rows=await tx.select().from(executionTasks).where(inArray(executionTasks.id,[row.id,childId])).orderBy(asc(executionTasks.id)).for('update');const parent=rows.find(r=>r.id===row.id),child=rows.find(r=>r.id===childId);if(!parent||!child)throw new ConflictError('调度子任务不存在');assertScheduledChild(parent,child);if(payload(child).parentExecutionTaskId!==parent.id||scheduledChildId(parent)!==child.id)throw new ConflictError('调度链接已变更');
- const projection=scheduledParentProjection(child);if(parent.status!==projection.status||parent.lastErrorCode!==projection.lastErrorCode||parent.lastErrorMessage!==projection.lastErrorMessage){await tx.update(executionTasks).set({...projection,updatedAt:now()}).where(eq(executionTasks.id,parent.id));if(child.status==='succeeded')report.succeeded++;else if(['failed','cancelled'].includes(child.status))report.failed++;}if(!['succeeded','failed','cancelled','partial'].includes(child.status))report.pending++;
- });}catch{report.inconsistent++;console.error('[scheduled-child] 父子任务关系异常，保留待检查',row.id);}}return report;
- }
+ reconcile(){
+  if(reconciliation)return reconciliation;
+  const active=reconcile().finally(()=>{if(reconciliation===active)reconciliation=undefined;});
+  reconciliation=active;return active;
+ },
  };
 }
 

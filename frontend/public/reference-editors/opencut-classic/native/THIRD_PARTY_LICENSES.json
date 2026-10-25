@@ -666,6 +666,18 @@
     ]
   },
   {
+    "name": "zod",
+    "version": "4.3.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/colinhacks/zod.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
     "name": "zustand",
     "version": "5.0.12",
     "license": "MIT",

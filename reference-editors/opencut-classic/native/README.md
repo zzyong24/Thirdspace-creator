@@ -1,3 +1,23 @@
+# T-1403 最终生成格式补充（2026-10-23）
+
+现成esbuild `supported: { 'template-literal': false }`由原production构建器转义模板，未手改bundle或第三方/合同算法。实际新旧包两段Zod生成字符串静态cooked全字符与插值顺序严格相同，四组相同插值执行值逐字相等；原/新包均没有tagged模板。431模块身份保持，fixture=false。固定基线717源标准U0补丁实际F0复原逐字节一致，同锁两次正式构建七输出一致。当前归档/patch/产物摘要以本目录SHA256SUMS、DELIVERY和manifest的t1403Recovery为准。
+
+原全树空白失败与第一次本机diff-U0空range导致24文件错位的来源失败均完整保留；改为Python标准unified_diff空range锚后，系统patch F0及717全字节检查通过。只去header第40行累计新增空tab，保基线另两空tab行；未改whitespace/Gate配置。最终原verify与git diff收据位于外部evidence/editor-implementation/format-final-*.json，未以失败当PASS。以下为前阶段/历史记录，不代签真实UI或整单验收。
+
+---
+
+# T-1403 当前原生交付（2026-10-23）
+
+恢复现行正式合同的真实采纳/预览消费者；保当前渲染与缺素材降级。真实preview-scene实现迁名native-preview，公共操作名仍preview-scene。显示词统一“转写”，原片选择在高级时间轴操作前，保属性/slot/返回画面。下文为历史交付记录，历史PASS不代表本轮。
+
+本轮源码717文件；正式合同逐字复制；累计patch从固定T1046基线系统`patch --fuzz=0`实际复原并逐文件一致。两次独立解包、冻结锁依赖安装、实际生产构建七份输出逐字节一致；fixture=false，真实合同/native-preview模块均进入Rollup图。Bun1.4.0（包声明1.2.18）、Vite6.4.3、TypeScript6.0.3；未改锁或env。
+
+94项原生回归/416断言、嵌入式类型与宿主38项单测通过；预期行为RED原日志保留。原完整性Gate收据及当前hash见DELIVERY.json/SHA256SUMS。**本worker未验真实UI/GPU/MP4，Root继续整单真实矩阵，不能将单测/重建等同真机PASS。**
+
+当前证据：`/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/`（final-source-manifest.json、final-patch-compare.json、production-build-consistency.json、native-test-summary.json及各命令exit/log）。未修改正式合同/schema/validator、原Gate或核心渲染算法，未运行模型/ASR或操作凭据/数据库。
+
+---
+
 # T-1296 脚本入口与全高剪辑助手
 
 右侧AI助手独占全高，左侧保留素材/转录/属性、预览和时间轴。按真实容器分配至少380px并可拖动；窄窗四工作面切换保留同一slot、输入和画布。原生聚焦回归、真实Chromium几何/拖动/200%与锁边界通过，716文件标准patch以F0还原，归档重建七产物与两目录逐字节一致。公共宿主实际候选预览、采纳、保存刷新、MP4交付和历史恢复通过；小窗发送区滚动可达。未调用真实模型/ASR，未打包替换现用桌面App。证据：`docs/verification/t1296`。以下历史原样保留。

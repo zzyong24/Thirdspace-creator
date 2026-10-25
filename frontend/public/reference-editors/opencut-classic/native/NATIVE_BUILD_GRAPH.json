@@ -1,7 +1,7 @@
 {
   "fixture": false,
   "entry": "src/embedded/native-entry.tsx",
-  "moduleCount": 430,
+  "moduleCount": 431,
   "modules": [
     {
       "module": "\u0000/__vite-plugin-wasm-helper",
@@ -21,7 +21,7 @@
     },
     {
       "module": "src/actions/keybindings-store.ts",
-      "renderedLength": 5424
+      "renderedLength": 5446
     },
     {
       "module": "src/actions/keybindings/migrations/index.ts",
@@ -81,7 +81,7 @@
     },
     {
       "module": "src/animation/effect-param-channel.ts",
-      "renderedLength": 1712
+      "renderedLength": 1736
     },
     {
       "module": "src/animation/graph-channels.ts",
@@ -89,7 +89,7 @@
     },
     {
       "module": "src/animation/graphic-param-channel.ts",
-      "renderedLength": 1015
+      "renderedLength": 1027
     },
     {
       "module": "src/animation/interpolation.ts",
@@ -209,7 +209,7 @@
     },
     {
       "module": "src/commands/timeline/element/duplicate-elements.ts",
-      "renderedLength": 2624
+      "renderedLength": 2634
     },
     {
       "module": "src/commands/timeline/element/effects/add-effect.ts",
@@ -233,7 +233,7 @@
     },
     {
       "module": "src/commands/timeline/element/insert-element.ts",
-      "renderedLength": 6232
+      "renderedLength": 6252
     },
     {
       "module": "src/commands/timeline/element/keyframes/remove-effect-param-keyframe.ts",
@@ -281,7 +281,7 @@
     },
     {
       "module": "src/commands/timeline/element/split-elements.ts",
-      "renderedLength": 5062
+      "renderedLength": 5102
     },
     {
       "module": "src/commands/timeline/element/toggle-source-audio-separation.ts",
@@ -317,7 +317,7 @@
     },
     {
       "module": "src/components/editable-timecode.tsx",
-      "renderedLength": 3338
+      "renderedLength": 3348
     },
     {
       "module": "src/components/editor/editor-header.tsx",
@@ -329,11 +329,11 @@
     },
     {
       "module": "src/components/editor/panels/assets/drag-overlay.tsx",
-      "renderedLength": 1546
+      "renderedLength": 1577
     },
     {
       "module": "src/components/editor/panels/assets/draggable-item.tsx",
-      "renderedLength": 6868
+      "renderedLength": 6904
     },
     {
       "module": "src/components/editor/panels/assets/index.tsx",
@@ -345,7 +345,7 @@
     },
     {
       "module": "src/components/editor/panels/assets/views/assets.tsx",
-      "renderedLength": 16525
+      "renderedLength": 16551
     },
     {
       "module": "src/components/editor/panels/assets/views/base-panel.tsx",
@@ -353,7 +353,7 @@
     },
     {
       "module": "src/components/editor/panels/assets/views/settings/background.tsx",
-      "renderedLength": 8918
+      "renderedLength": 8952
     },
     {
       "module": "src/components/editor/panels/assets/views/settings/index.tsx",
@@ -361,7 +361,7 @@
     },
     {
       "module": "src/components/editor/panels/properties/components/element-params-tab.tsx",
-      "renderedLength": 2594
+      "renderedLength": 2610
     },
     {
       "module": "src/components/editor/panels/properties/components/keyframe-toggle.tsx",
@@ -369,7 +369,7 @@
     },
     {
       "module": "src/components/editor/panels/properties/components/property-param-field.tsx",
-      "renderedLength": 4558
+      "renderedLength": 4580
     },
     {
       "module": "src/components/editor/panels/properties/empty-view.tsx",
@@ -401,7 +401,7 @@
     },
     {
       "module": "src/components/editor/scenes-view.tsx",
-      "renderedLength": 6401
+      "renderedLength": 6411
     },
     {
       "module": "src/components/icons/ui.tsx",
@@ -429,7 +429,7 @@
     },
     {
       "module": "src/components/ui/color-picker.tsx",
-      "renderedLength": 18283
+      "renderedLength": 18380
     },
     {
       "module": "src/components/ui/context-menu.tsx",
@@ -445,7 +445,7 @@
     },
     {
       "module": "src/components/ui/font-picker.tsx",
-      "renderedLength": 7615
+      "renderedLength": 7715
     },
     {
       "module": "src/components/ui/input.tsx",
@@ -541,11 +541,11 @@
     },
     {
       "module": "src/core/managers/project-manager.ts",
-      "renderedLength": 16045
+      "renderedLength": 16077
     },
     {
       "module": "src/core/managers/renderer-manager.ts",
-      "renderedLength": 6615
+      "renderedLength": 6635
     },
     {
       "module": "src/core/managers/save-manager.ts",
@@ -561,7 +561,7 @@
     },
     {
       "module": "src/core/managers/timeline-manager.ts",
-      "renderedLength": 15627
+      "renderedLength": 15659
     },
     {
       "module": "src/data/colors/pattern-craft.ts",
@@ -577,7 +577,7 @@
     },
     {
       "module": "src/diagnostics/render-perf.ts",
-      "renderedLength": 3073
+      "renderedLength": 3083
     },
     {
       "module": "src/editor/cancel-interaction.ts",
@@ -605,7 +605,7 @@
     },
     {
       "module": "src/effects/components/effects-tab.tsx",
-      "renderedLength": 8404
+      "renderedLength": 8422
     },
     {
       "module": "src/effects/definitions/blur.ts",
@@ -633,7 +633,7 @@
     },
     {
       "module": "src/embedded/frozen-export.ts",
-      "renderedLength": 1623
+      "renderedLength": 1639
     },
     {
       "module": "src/embedded/media-registration.ts",
@@ -641,7 +641,11 @@
     },
     {
       "module": "src/embedded/native-controller.ts",
-      "renderedLength": 9460
+      "renderedLength": 9486
+    },
+    {
+      "module": "src/embedded/native-document-contract.ts",
+      "renderedLength": 17612
     },
     {
       "module": "src/embedded/native-entry.tsx",
@@ -649,7 +653,7 @@
     },
     {
       "module": "src/embedded/native-host.ts",
-      "renderedLength": 7470
+      "renderedLength": 7490
     },
     {
       "module": "src/embedded/native-lifecycle.ts",
@@ -657,7 +661,11 @@
     },
     {
       "module": "src/embedded/native-operations.ts",
-      "renderedLength": 4505
+      "renderedLength": 5131
+    },
+    {
+      "module": "src/embedded/native-preview.ts",
+      "renderedLength": 9115
     },
     {
       "module": "src/embedded/native-version.ts",
@@ -670,10 +678,6 @@
     {
       "module": "src/embedded/next-image.tsx",
       "renderedLength": 274
-    },
-    {
-      "module": "src/embedded/preview-scene.ts",
-      "renderedLength": 8566
     },
     {
       "module": "src/embedded/preview-workspace.tsx",
@@ -701,7 +705,7 @@
     },
     {
       "module": "src/embedded/workspace-panel.tsx",
-      "renderedLength": 3309
+      "renderedLength": 3512
     },
     {
       "module": "src/fonts/google-fonts.ts",
@@ -729,15 +733,15 @@
     },
     {
       "module": "src/gradients/canvas.ts",
-      "renderedLength": 17938
+      "renderedLength": 18024
     },
     {
       "module": "src/gradients/parser.ts",
-      "renderedLength": 11939
+      "renderedLength": 11955
     },
     {
       "module": "src/graphics/components/graphic-tab.tsx",
-      "renderedLength": 5788
+      "renderedLength": 5808
     },
     {
       "module": "src/graphics/definitions/ellipse.ts",
@@ -765,7 +769,7 @@
     },
     {
       "module": "src/graphics/index.ts",
-      "renderedLength": 2670
+      "renderedLength": 2781
     },
     {
       "module": "src/graphics/registry.ts",
@@ -781,11 +785,11 @@
     },
     {
       "module": "src/guides/definitions/grid.tsx",
-      "renderedLength": 3456
+      "renderedLength": 3488
     },
     {
       "module": "src/guides/definitions/platforms.tsx",
-      "renderedLength": 1246
+      "renderedLength": 1256
     },
     {
       "module": "src/guides/definitions/tiktok-layout.tsx",
@@ -801,7 +805,7 @@
     },
     {
       "module": "src/guides/preview-overlay.tsx",
-      "renderedLength": 514
+      "renderedLength": 520
     },
     {
       "module": "src/guides/registry.tsx",
@@ -817,7 +821,7 @@
     },
     {
       "module": "src/hooks/use-focus-lock.ts",
-      "renderedLength": 1755
+      "renderedLength": 1795
     },
     {
       "module": "src/hooks/use-fullscreen.ts",
@@ -841,19 +845,19 @@
     },
     {
       "module": "src/masks/builtin/definitions/cinematic-bars.ts",
-      "renderedLength": 3221
+      "renderedLength": 3241
     },
     {
       "module": "src/masks/builtin/definitions/diamond.ts",
-      "renderedLength": 2291
+      "renderedLength": 2351
     },
     {
       "module": "src/masks/builtin/definitions/ellipse.ts",
-      "renderedLength": 1970
+      "renderedLength": 2070
     },
     {
       "module": "src/masks/builtin/definitions/heart.ts",
-      "renderedLength": 3221
+      "renderedLength": 3349
     },
     {
       "module": "src/masks/builtin/definitions/index.ts",
@@ -869,7 +873,7 @@
     },
     {
       "module": "src/masks/builtin/definitions/star.ts",
-      "renderedLength": 3218
+      "renderedLength": 3254
     },
     {
       "module": "src/masks/builtin/definitions/text.ts",
@@ -877,7 +881,7 @@
     },
     {
       "module": "src/masks/components/masks-tab.tsx",
-      "renderedLength": 22480
+      "renderedLength": 22538
     },
     {
       "module": "src/masks/dimensions.ts",
@@ -889,11 +893,11 @@
     },
     {
       "module": "src/masks/freeform/definition.ts",
-      "renderedLength": 12775
+      "renderedLength": 12781
     },
     {
       "module": "src/masks/freeform/path.ts",
-      "renderedLength": 13313
+      "renderedLength": 13517
     },
     {
       "module": "src/masks/geometry.ts",
@@ -921,7 +925,7 @@
     },
     {
       "module": "src/masks/types.ts",
-      "renderedLength": 385
+      "renderedLength": 417
     },
     {
       "module": "src/masks/use-mask-handles.ts",
@@ -937,7 +941,7 @@
     },
     {
       "module": "src/media/audio.ts",
-      "renderedLength": 13444
+      "renderedLength": 13466
     },
     {
       "module": "src/media/media-utils.ts",
@@ -949,7 +953,7 @@
     },
     {
       "module": "src/media/processing.ts",
-      "renderedLength": 7798
+      "renderedLength": 7878
     },
     {
       "module": "src/media/thumbnail.ts",
@@ -957,7 +961,7 @@
     },
     {
       "module": "src/media/upload-toast.ts",
-      "renderedLength": 1329
+      "renderedLength": 1359
     },
     {
       "module": "src/media/use-file-upload.ts",
@@ -965,11 +969,11 @@
     },
     {
       "module": "src/media/use-paste-media.ts",
-      "renderedLength": 3014
+      "renderedLength": 3024
     },
     {
       "module": "src/media/waveform-summary.ts",
-      "renderedLength": 3207
+      "renderedLength": 3223
     },
     {
       "module": "src/panels/layout.ts",
@@ -977,11 +981,11 @@
     },
     {
       "module": "src/params/index.ts",
-      "renderedLength": 3939
+      "renderedLength": 3941
     },
     {
       "module": "src/params/registry.ts",
-      "renderedLength": 7986
+      "renderedLength": 8002
     },
     {
       "module": "src/preview/components/context-menu.tsx",
@@ -989,11 +993,11 @@
     },
     {
       "module": "src/preview/components/cursors.ts",
-      "renderedLength": 498
+      "renderedLength": 531
     },
     {
       "module": "src/preview/components/handle-primitives.tsx",
-      "renderedLength": 8527
+      "renderedLength": 8607
     },
     {
       "module": "src/preview/components/index.tsx",
@@ -1017,15 +1021,15 @@
     },
     {
       "module": "src/preview/components/snap-guides.tsx",
-      "renderedLength": 1050
+      "renderedLength": 1062
     },
     {
       "module": "src/preview/components/text-edit-overlay.tsx",
-      "renderedLength": 4273
+      "renderedLength": 4333
     },
     {
       "module": "src/preview/components/toolbar.tsx",
-      "renderedLength": 3757
+      "renderedLength": 3767
     },
     {
       "module": "src/preview/components/transform-handles.tsx",
@@ -1065,7 +1069,7 @@
     },
     {
       "module": "src/preview/preview-snap.ts",
-      "renderedLength": 13623
+      "renderedLength": 13639
     },
     {
       "module": "src/preview/preview-store.ts",
@@ -1145,11 +1149,11 @@
     },
     {
       "module": "src/selection/selectable-surface.tsx",
-      "renderedLength": 6000
+      "renderedLength": 6020
     },
     {
       "module": "src/selection/selection-box.tsx",
-      "renderedLength": 401
+      "renderedLength": 441
     },
     {
       "module": "src/selection/state.ts",
@@ -1165,11 +1169,11 @@
     },
     {
       "module": "src/services/renderer/compositor/frame-descriptor.ts",
-      "renderedLength": 12276
+      "renderedLength": 12644
     },
     {
       "module": "src/services/renderer/compositor/wasm-compositor.ts",
-      "renderedLength": 4923
+      "renderedLength": 4947
     },
     {
       "module": "src/services/renderer/effect-preview.ts",
@@ -1177,7 +1181,7 @@
     },
     {
       "module": "src/services/renderer/gpu-renderer.ts",
-      "renderedLength": 1343
+      "renderedLength": 1349
     },
     {
       "module": "src/services/renderer/nodes/base-node.ts",
@@ -1201,7 +1205,7 @@
     },
     {
       "module": "src/services/renderer/nodes/image-node.ts",
-      "renderedLength": 3236
+      "renderedLength": 3262
     },
     {
       "module": "src/services/renderer/nodes/root-node.ts",
@@ -1209,7 +1213,7 @@
     },
     {
       "module": "src/services/renderer/nodes/sticker-node.ts",
-      "renderedLength": 1417
+      "renderedLength": 1423
     },
     {
       "module": "src/services/renderer/nodes/text-node.ts",
@@ -1237,7 +1241,7 @@
     },
     {
       "module": "src/services/storage/quota.ts",
-      "renderedLength": 470
+      "renderedLength": 486
     },
     {
       "module": "src/services/storage/service.ts",
@@ -1245,15 +1249,15 @@
     },
     {
       "module": "src/services/video-cache/service.ts",
-      "renderedLength": 9519
+      "renderedLength": 9529
     },
     {
       "module": "src/services/waveform-cache/service.ts",
-      "renderedLength": 1954
+      "renderedLength": 1966
     },
     {
       "module": "src/speed/components/speed-tab.tsx",
-      "renderedLength": 3719
+      "renderedLength": 3729
     },
     {
       "module": "src/stickers/intrinsic-size.ts",
@@ -1265,7 +1269,7 @@
     },
     {
       "module": "src/stickers/providers/flags.ts",
-      "renderedLength": 3862
+      "renderedLength": 3882
     },
     {
       "module": "src/stickers/providers/index.ts",
@@ -1289,7 +1293,7 @@
     },
     {
       "module": "src/stickers/sticker-id.ts",
-      "renderedLength": 735
+      "renderedLength": 761
     },
     {
       "module": "src/text/background.ts",
@@ -1301,7 +1305,7 @@
     },
     {
       "module": "src/text/layout.ts",
-      "renderedLength": 3746
+      "renderedLength": 3756
     },
     {
       "module": "src/text/measure-element.ts",
@@ -1309,7 +1313,7 @@
     },
     {
       "module": "src/text/primitives.ts",
-      "renderedLength": 4022
+      "renderedLength": 4072
     },
     {
       "module": "src/text/typography.ts",
@@ -1341,7 +1345,7 @@
     },
     {
       "module": "src/timeline/bookmarks/components/bookmarks.tsx",
-      "renderedLength": 13282
+      "renderedLength": 13340
     },
     {
       "module": "src/timeline/bookmarks/hooks/use-bookmark-drag.ts",
@@ -1349,7 +1353,7 @@
     },
     {
       "module": "src/timeline/bookmarks/preview-overlay-source.tsx",
-      "renderedLength": 1702
+      "renderedLength": 1708
     },
     {
       "module": "src/timeline/bookmarks/snap-source.ts",
@@ -1361,15 +1365,15 @@
     },
     {
       "module": "src/timeline/components/audio-volume-line.tsx",
-      "renderedLength": 6842
+      "renderedLength": 6892
     },
     {
       "module": "src/timeline/components/audio-waveform.tsx",
-      "renderedLength": 8472
+      "renderedLength": 8502
     },
     {
       "module": "src/timeline/components/drag-line.tsx",
-      "renderedLength": 442
+      "renderedLength": 452
     },
     {
       "module": "src/timeline/components/drop-target.ts",
@@ -1381,11 +1385,11 @@
     },
     {
       "module": "src/timeline/components/graph-editor/bezier-graph.tsx",
-      "renderedLength": 6438
+      "renderedLength": 6476
     },
     {
       "module": "src/timeline/components/graph-editor/custom-presets-store.ts",
-      "renderedLength": 2015
+      "renderedLength": 2021
     },
     {
       "module": "src/timeline/components/graph-editor/easing-presets.ts",
@@ -1393,19 +1397,19 @@
     },
     {
       "module": "src/timeline/components/graph-editor/popover.tsx",
-      "renderedLength": 10391
+      "renderedLength": 10429
     },
     {
       "module": "src/timeline/components/graph-editor/session.ts",
-      "renderedLength": 13391
+      "renderedLength": 13427
     },
     {
       "module": "src/timeline/components/graph-editor/use-controller.ts",
-      "renderedLength": 4347
+      "renderedLength": 4435
     },
     {
       "module": "src/timeline/components/index.tsx",
-      "renderedLength": 29109
+      "renderedLength": 29209
     },
     {
       "module": "src/timeline/components/interaction.ts",
@@ -1425,7 +1429,7 @@
     },
     {
       "module": "src/timeline/components/snap-indicator.tsx",
-      "renderedLength": 804
+      "renderedLength": 834
     },
     {
       "module": "src/timeline/components/theme.ts",
@@ -1433,19 +1437,19 @@
     },
     {
       "module": "src/timeline/components/timeline-element.tsx",
-      "renderedLength": 31894
+      "renderedLength": 32052
     },
     {
       "module": "src/timeline/components/timeline-playhead.tsx",
-      "renderedLength": 3436
+      "renderedLength": 3482
     },
     {
       "module": "src/timeline/components/timeline-ruler.tsx",
-      "renderedLength": 3774
+      "renderedLength": 3784
     },
     {
       "module": "src/timeline/components/timeline-tick.tsx",
-      "renderedLength": 697
+      "renderedLength": 717
     },
     {
       "module": "src/timeline/components/timeline-toolbar.tsx",
@@ -1453,7 +1457,7 @@
     },
     {
       "module": "src/timeline/components/timeline-track.tsx",
-      "renderedLength": 2540
+      "renderedLength": 2550
     },
     {
       "module": "src/timeline/components/track-layout.ts",
@@ -1473,7 +1477,7 @@
     },
     {
       "module": "src/timeline/controllers/playhead-controller.ts",
-      "renderedLength": 6362
+      "renderedLength": 6372
     },
     {
       "module": "src/timeline/controllers/resize-controller.ts",
@@ -1549,7 +1553,7 @@
     },
     {
       "module": "src/timeline/hooks/element/use-keyframe-selection.ts",
-      "renderedLength": 5705
+      "renderedLength": 5741
     },
     {
       "module": "src/timeline/hooks/use-edge-auto-scroll.ts",
@@ -1605,7 +1609,7 @@
     },
     {
       "module": "src/timeline/placement/compatibility.ts",
-      "renderedLength": 750
+      "renderedLength": 770
     },
     {
       "module": "src/timeline/placement/insert-index.ts",
@@ -1625,7 +1629,7 @@
     },
     {
       "module": "src/timeline/placement/track-factory.ts",
-      "renderedLength": 957
+      "renderedLength": 963
     },
     {
       "module": "src/timeline/playhead-snap-source.ts",
@@ -1633,7 +1637,7 @@
     },
     {
       "module": "src/timeline/ruler-utils.ts",
-      "renderedLength": 3919
+      "renderedLength": 3971
     },
     {
       "module": "src/timeline/scale.ts",
@@ -1693,11 +1697,11 @@
     },
     {
       "module": "src/utils/color.ts",
-      "renderedLength": 3999
+      "renderedLength": 4129
     },
     {
       "module": "src/utils/geometry.ts",
-      "renderedLength": 306
+      "renderedLength": 322
     },
     {
       "module": "src/utils/id.ts",
@@ -1705,7 +1709,7 @@
     },
     {
       "module": "src/utils/math.ts",
-      "renderedLength": 5004
+      "renderedLength": 5038
     },
     {
       "module": "src/utils/platform.ts",
@@ -1713,7 +1717,7 @@
     },
     {
       "module": "src/utils/string.ts",
-      "renderedLength": 171
+      "renderedLength": 173
     },
     {
       "module": "src/utils/ui.ts",
@@ -1721,7 +1725,7 @@
     },
     {
       "module": "src/wasm/media-time.ts",
-      "renderedLength": 2642
+      "renderedLength": 2664
     }
   ]
 }

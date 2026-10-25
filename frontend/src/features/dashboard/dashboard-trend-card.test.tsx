@@ -9,7 +9,7 @@ const pubs=[{id:'p',title:'一个很长但需要完整阅读的真实作品名�
 function data(values:Array<number|null>=[0,20,30],target=source){return {groupId:target.groupId,platform:target.query.platform??null,accountId:target.query.accountId??null,startDate:target.query.startDate,endDate:target.query.endDate,trend:values.map((value,i)=>({label:`2026-10-0${i+1}`,value})),performanceTrend:{mode:'daily',unit:'次',valueLabel:'播放量',reason:null,accountId:target.query.accountId,observedAt:'2026-10-04T01:00:00Z',reportIds:['report']}};}
 const response=(value:unknown)=>new Response(JSON.stringify({data:value}),{status:200,headers:{'content-type':'application/json'}});
 beforeEach(()=>localStorage.setItem(CURRENT_GROUP_KEY,'g'));
-afterEach(()=>{cleanup();vi.unstubAllGlobals();localStorage.clear();});
+afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();localStorage.clear();});
 it('独立读取真实日曲线、真0、日期时间轴与冻结组账号，不影响其它内容',async()=>{
  const fetch=vi.fn(async()=>response(data()));vi.stubGlobal('fetch',fetch);
  const view=render(<><p>继续创作仍可操作</p><DashboardTrendCard source={source} publications={pubs}/></>);
@@ -75,4 +75,21 @@ it('T1356小红书真实零浏览的累计回退不标作播放，辅助说明�
  expect(view.container.querySelector('[data-slot="chart-summary"]')).toHaveTextContent('累计浏览比较');expect(view.container.textContent).not.toContain('累计播放');
  expect(screen.getByRole('figure',{name:'近期作品累计浏览'})).toHaveAttribute('data-slot','dashboard-recent-plays');
  expect(view.container.querySelector('[data-slot="dashboard-recent-plays-svg"]')).not.toBeNull();expect(view.container.querySelector('[data-slot="dashboard-recent-plays-axis"]')).not.toBeNull();
+});
+
+it('每日读取悬挂后提供真实重试，取消旧请求并拒绝迟到结果',async()=>{
+ vi.useFakeTimers();
+ const calls:Array<{resolve:(v:Response)=>void;init:RequestInit}>=[];
+ vi.stubGlobal('fetch',vi.fn((_url,init)=>new Promise<Response>(resolve=>calls.push({resolve,init}))));
+ render(<DashboardTrendCard source={source} publications={pubs}/>);
+ await act(async()=>vi.advanceTimersByTime(2000));
+ expect(screen.getByText('每日数据读取较慢，可重试；其他内容仍可使用。')).toBeVisible();
+ const retry=screen.getByRole('button',{name:'重试读取每日数据'});
+ fireEvent.click(retry);fireEvent.click(retry);
+ expect(calls).toHaveLength(2);expect(calls[0]!.init.signal?.aborted).toBe(true);
+ await act(async()=>calls[1]!.resolve(response(data([0,2,3]))));
+ expect(screen.getByText('已显示 3 天数据 · 最高 3 次')).toBeVisible();
+ await act(async()=>calls[0]!.resolve(response(data([0,200,300]))));
+ expect(screen.queryByText(/最高 300 次/)).toBeNull();
+ expect(screen.queryByRole('button',{name:'重试读取每日数据'})).toBeNull();
 });

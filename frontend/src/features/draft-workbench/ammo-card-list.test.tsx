@@ -14,6 +14,7 @@ const previewMocks = vi.hoisted(() => ({
     return null;
   }),
   invalidateAssetPreviewUrl: vi.fn(),
+  releasePreview: vi.fn(),
 }));
 
 // [T-146] 稿面内容弹药双击预览测试:弹药区显已上传素材,双击某卡 → 开预览 Modal
@@ -23,7 +24,13 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
 }));
 vi.mock("@/lib/contract-client", () => ({ client: {} }));
-vi.mock("@/components/resources/asset-preview-url", () => previewMocks);
+vi.mock("@/components/resources/asset-preview-url", () => ({
+  ...previewMocks,
+  acquireAssetPreviewUrl: (assetId: string) => ({
+    promise: previewMocks.resolveAssetPreviewUrl(assetId),
+    release: previewMocks.releasePreview,
+  }),
+}));
 
 import { AmmoCardList } from "./ammo-card-list";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
@@ -71,6 +78,7 @@ afterEach(() => {
   cleanup();
   previewMocks.resolveAssetPreviewUrl.mockClear();
   previewMocks.invalidateAssetPreviewUrl.mockClear();
+  previewMocks.releasePreview.mockClear();
 });
 
 describe("AmmoCardList — 弹药双击预览", () => {

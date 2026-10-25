@@ -153,6 +153,12 @@ export function TestConnectionButton({
   const local = useModelConnectionTest(capability, undefined, !session);
   const {testing, result, runTest} = session ?? local;
 
+  if (capability === "image.edit") {
+    return <p className="text-xs text-muted-foreground" data-slot={`${slotPrefix}-test-unavailable`}>
+      图片编辑暂无内置连接测试，不代表密钥失效；未执行图片编辑。
+    </p>;
+  }
+
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
