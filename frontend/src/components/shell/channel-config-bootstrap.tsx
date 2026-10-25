@@ -2,12 +2,18 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import {useWorkspaceInitialization} from './workspace-initialization';
+import {useCreationScope,type CreationScope} from '@/lib/creation-workspace-scope';
+import {isDesktopRuntimeClient} from '@/lib/desktop-updater';
+import {fetchLastShellDecision,subscribeShellDecision,type ShellGateDecision} from '@/lib/shell-license';
+import {ensureAutomaticLicenseUpgrade,invalidateAutomaticLicenseUpgradeScope,automaticUpgradeScopeKey,readAutomaticLicenseUpgrade} from '@/lib/automatic-license-upgrade';
+import {fetchCreatorApi} from '@/lib/http-transport';
 
 const ENDPOINT = "/api/v1/local/client-config";
-const RETRY_DELAYS_MS = [0, 1_000, 3_000, 10_000] as const;
 const SCOPE_MISSING_ACTION = "授权缺少渠道信息，无法同步受管模型";
 const BOOTSTRAP_COMPLETED_KEY = "creatoros:client-config-bootstrap-completed";
-const BOOTSTRAP_FRESHNESS_MS = 5 * 60 * 1_000;
+const BOOTSTRAP_FRESHNESS_MS=5*60*1000;
+const RETRY_DELAYS_MS=[0,1000,3000,10000] as const;
 
 export const CLIENT_CONFIG_SYNCED_EVENT = "creatoros:client-config-synced";
 
@@ -26,23 +32,6 @@ function broadcastSuccess(): void {
   );
 }
 
-function hasBootstrappedInThisWindow(): boolean {
-  try {
-    const raw = window.sessionStorage.getItem(BOOTSTRAP_COMPLETED_KEY);
-    if (!raw) return false;
-    // 旧版本写入的布尔标记没有时效，会让同一个 WebView 永久停留在旧渠道 bundle。
-    // 将它视为已过期，下一次挂载立即重新拉取；新版本只接受短时新鲜时间戳。
-    const completedAt = Number(raw);
-    return (
-      Number.isFinite(completedAt) &&
-      completedAt > 0 &&
-      Date.now() - completedAt < BOOTSTRAP_FRESHNESS_MS
-    );
-  } catch {
-    return false;
-  }
-}
-
 function markBootstrappedInThisWindow(): void {
   try {
     window.sessionStorage.setItem(
@@ -52,6 +41,10 @@ function markBootstrappedInThisWindow(): void {
   } catch {
     // WebView 禁用存储时仍允许同步；只是不依赖存储作为业务真相。
   }
+}
+
+function hasBootstrappedInThisWindow():boolean{
+  try{const completedAt=Number(window.sessionStorage.getItem(BOOTSTRAP_COMPLETED_KEY));return Number.isFinite(completedAt)&&completedAt>0&&Date.now()-completedAt<BOOTSTRAP_FRESHNESS_MS;}catch{return false;}
 }
 
 async function pullClientConfig(
@@ -149,50 +142,54 @@ export function ChannelConfigRetryButton({
   );
 }
 
-/**
- * 激活后的渠道配置引导器。
- *
- * 首次进入登录后布局时只做后台同步。失败状态由设置页渠道配置区读取并提供恢复动作，禁止在
- * 所有业务页面右下角常驻报错；成功后只广播安全事件。后台同步不得刷新整份文档，否则桌面端
- * 会在首屏已经可用后再次白屏，严重时形成 WebView 刷新风暴。
- */
+/** 无感核对只唤醒共享owner，不等待在导航、不整页刷新、不把组件卸载当业务取消。 */
 export function ChannelConfigBootstrap(): React.JSX.Element | null {
-  React.useEffect(() => {
-    // 窗口级去重只负责限制后台拉取频率。同步后的消费者通过事件局部更新；这里绝不能调用
-    // router.refresh()，否则白标首启/Windows WebView 重新挂载时会打穿去重并整页闪白。
-    if (hasBootstrappedInThisWindow()) return;
-
-    const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const run = async (attempt: number): Promise<void> => {
-      if (controller.signal.aborted) return;
-      try {
-        const result = await pullClientConfig(controller.signal, "bootstrap");
-        if (result.ok) {
-          markBootstrappedInThisWindow();
-          broadcastSuccess();
-          return;
-        }
-        if (!result.retryable) {
-          return;
-        }
-      } catch {
-        if (controller.signal.aborted) return;
-      }
-      const next = attempt + 1;
-      if (next >= RETRY_DELAYS_MS.length) {
-        return;
-      }
-      timer = setTimeout(() => void run(next), RETRY_DELAYS_MS[next]);
+  const initialization=useWorkspaceInitialization(),scope=useCreationScope(),desktop=isDesktopRuntimeClient();
+  const previousScope=React.useRef<CreationScope|null>(null);
+  const [decision,setDecision]=React.useState<ShellGateDecision|null>(null);
+  React.useEffect(()=>{
+    if(!desktop)return;
+    let disposed=false,unlisten:(()=>void)|null=null,received=0;
+    void (async()=>{
+      // 先订阅再补读，避免挂载期间漏掉原生已经完成的新判定。
+      unlisten=await subscribeShellDecision(value=>{received++;if(!disposed)setDecision(value);});
+      if(disposed){unlisten?.();return;}
+      const revision=received,initial=await fetchLastShellDecision();
+      if(!disposed&&received===revision)setDecision(initial);
+    })();
+    return()=>{disposed=true;unlisten?.();};
+  },[desktop]);
+  React.useEffect(()=>{
+    if(!desktop)return;
+    const frozen:CreationScope={groupId:scope.groupId,accountId:scope.groupId?null:scope.accountId};
+    if(previousScope.current&&automaticUpgradeScopeKey(previousScope.current)!==automaticUpgradeScopeKey(frozen))invalidateAutomaticLicenseUpgradeScope(previousScope.current);
+    previousScope.current=frozen;
+    if(decision&&(!decision.licensed||decision.revoked)){invalidateAutomaticLicenseUpgradeScope(frozen);return;}
+    if(!initialization?.ready||!decision?.licensed||decision.revoked)return;
+    let disposed=false,timer:ReturnType<typeof setTimeout>|null=null;
+    const ordinary=new AbortController();
+    const pullOrdinary=async(attempt:number):Promise<void>=>{
+      if(disposed||ordinary.signal.aborted||hasBootstrappedInThisWindow())return;
+      try{
+        // 兼容旧渠道/白标路径；普通bootstrap保持只读经济行为，不携带automatic/action。
+        const response=await fetchCreatorApi(ENDPOINT,{method:'POST',cache:'no-store',headers:{'x-creatoros-config-trigger':'bootstrap'},signal:ordinary.signal},frozen);
+        const body=await response.json().catch(()=>null) as {retryable?:boolean}|null;
+        if(disposed||ordinary.signal.aborted)return;
+        if(response.ok){markBootstrappedInThisWindow();broadcastSuccess();return;}
+        if(body?.retryable!==true)return;
+      }catch{if(disposed||ordinary.signal.aborted)return;}
+      const next=attempt+1;if(next>=RETRY_DELAYS_MS.length)return;
+      timer=setTimeout(()=>void pullOrdinary(next),RETRY_DELAYS_MS[next]);
     };
-
-    void run(0);
-    return () => {
-      controller.abort();
-      if (timer) clearTimeout(timer);
-    };
-  }, []);
-
+    // 同realm重挂/许可事件只join模块owner；自动的未知不能被普通同步冒充成功。
+    void ensureAutomaticLicenseUpgrade(frozen).catch(()=>{}).then(()=>{
+      if(disposed)return;
+      const automatic=readAutomaticLicenseUpgrade();
+      if(automatic.status==='ready'||automatic.phase==='binding'||automatic.reasonCode?.startsWith('RESTORE_'))return;
+      void pullOrdinary(0);
+    });
+    // 这里只结束独立普通read；coordinator及已经发出的native继续由模块owner持有。
+    return()=>{disposed=true;ordinary.abort();if(timer)clearTimeout(timer);};
+  },[desktop,scope.groupId,scope.accountId,initialization?.ready,decision]);
   return null;
 }

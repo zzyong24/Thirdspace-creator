@@ -49,6 +49,23 @@ function checkpoint(value:unknown,projectId:string):PreparationCheckpoint {
 }
 const liveStatuses=['queued','running','retry_wait','paused','pause_requested','cancel_requested','waiting_user','unknown_result','blocked'];
 const currentErrorStatuses=['failed','blocked','waiting_user','unknown_result','paused'];
+/** 仅识别抖音登录墙；不得误伤 CODEX_LOGIN_REQUIRED（含子串 LOGIN_REQUIRED）。 */
+function douyinLoginError(error:unknown){
+ if(findModelEngineUnavailable(error))return false;
+ const value=error as {name?:string;errorCode?:string;code?:string;message?:string;cause?:unknown};
+ const parts:string[]=[];
+ let current:unknown=error;const seen=new Set<unknown>();
+ for(let depth=0;current&&typeof current==='object'&&!seen.has(current)&&depth<6;depth++){
+  seen.add(current);
+  const record=current as {name?:unknown;errorCode?:unknown;code?:unknown;message?:unknown;cause?:unknown};
+  for(const key of ['name','errorCode','code','message'] as const){if(typeof record[key]==='string')parts.push(record[key]);}
+  current=record.cause;
+ }
+ const text=parts.join('\n');
+ if(/\bCODEX_[A-Z_]+\b/.test(text))return false;
+ return /DouyinNotLoggedInError|TRANSCRIBE_LOGIN_REQUIRED|DOUYIN_FAVORITES_SESSION_EXPIRED|未检测到抖音创作者中心登录态|(?:^|[^A-Z_])LOGIN_REQUIRED(?:[^A-Z_]|$)/.test(text);
+}
+const douyinLoginMessage='请在当前账号完成抖音登录后继续原任务；去「设置 → 账户」扫码登录，或手工补逐字稿后继续';
 function clearStepError(cp:PreparationCheckpoint,step:ProjectPreparationStep){
  step.lastError=null;step.availableActions=step.availableActions.filter(action=>!['retry','resume','check_result','provide_transcript'].includes(action));
  cp.lastError=cp.steps.find(value=>currentErrorStatuses.includes(value.status)&&value.lastError)?.lastError??null;
@@ -88,7 +105,11 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
    const common={projectId,origin:project.source as ProjectSource,sourceReferences:refs};
    if(!task)return projectPreparationResource.parse({...common,registration:'not_registered',preparationTaskId:null,revision:null,steps:[],candidates:[],availableActions:['start'],lastError:null});
    const cp=checkpoint(task.checkpoint,projectId);
-   for(const step of cp.steps)if(!currentErrorStatuses.includes(step.status)&&step.lastError)clearStepError(cp,step);
+   for(const step of cp.steps){
+    if(!currentErrorStatuses.includes(step.status)&&step.lastError)clearStepError(cp,step);
+    else if(step.lastError&&douyinLoginError({code:step.lastError.code,message:step.lastError.message}))step.lastError={code:'CONFIGURATION_REQUIRED',message:douyinLoginMessage};
+   }
+   if(cp.lastError&&douyinLoginError({code:cp.lastError.code,message:cp.lastError.message}))cp.lastError={code:'CONFIGURATION_REQUIRED',message:douyinLoginMessage};
    if(['paused','pause_requested','cancelled','cancel_requested'].includes(task.status))for(const step of cp.steps){if(!['done','not_required','candidate_ready'].includes(step.status)){step.status=task.status.startsWith('cancel')?'cancelled':'paused';step.availableActions=task.status==='paused'?['resume']:[];}}
    const exhausted=task.status==='failed'&&['GENERATION_RECOVERY_EXHAUSTED','RETRY_BUDGET_EXHAUSTED','EXECUTION_DEADLINE'].includes(task.lastErrorCode??'');
    const canRetry=cp.steps.some(step=>step.required&&(step.availableActions.some(action=>['retry','resume'].includes(action))||['pending','queued','running','failed'].includes(step.status)));
@@ -184,6 +205,8 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
     for(const step of cp.steps){
      if(control.shouldStop()||control.signal?.aborted)return;
      if(['done','not_required','candidate_ready','cancelled'].includes(step.status))continue;
+     // 仅补全资料时，历史转写失败不应阻塞 brief。
+     if(!step.required && ['failed','blocked','waiting_user','paused','unknown_result'].includes(step.status))continue;
      cp.activeStep=step.name;cp.stage=step.name==='transcript'?'transcribing':'generating';
      if(step.childTaskId){
       let child=await deps.tasks.get(ctx,step.childTaskId);step.attempt=child.attempt;step.childOwner=['item','transform'].includes(child.ownerType)?{type:'item',id:child.ownerId}:{type:'project',id:project.id};
@@ -209,6 +232,10 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
         cp.resumedChildren={...cp.resumedChildren,[child.id]:control.id};
         await deps.tasks.command(ctx,{taskIds:[child.id],command:child.runtimeStatus==='waiting_user'||child.status==='paused'?'resume':'retry',idempotencyKey:`${claim.task.id}:${child.id}:${control.id}`});step.status='queued';clearStepError(cp,step);await save();await finish('retry_wait');return;
        }
+       const childLogin=douyinLoginError({name:child.errorCode,errorCode:child.errorCode,message:child.errorMessage});
+       if(childLogin&&!exhausted){
+        step.status='waiting_user';step.lastError={code:'CONFIGURATION_REQUIRED',message:douyinLoginMessage};step.availableActions=step.name==='transcript'?['resume','provide_transcript']:['resume'];cp.lastError=step.lastError;cp.blockedChildId=child.id;cp.blockedAtAttempt=claim.task.attempt;await save();continue;
+       }
        step.status=child.runtimeStatus==='waiting_user'?'waiting_user':child.status==='paused'?'paused':'failed';step.lastError={code:'EXECUTION_FAILED',message:child.errorMessage??'此步骤执行失败，请核对原任务后重试'};step.availableActions=exhausted?[]:step.status==='paused'||step.status==='waiting_user'?['resume']:['retry'];if(step.name==='transcript')step.availableActions.push('provide_transcript');cp.lastError=step.lastError;cp.blockedChildId=child.id;cp.blockedAtAttempt=claim.task.attempt;await save();await finish(exhausted?'failed':step.status==='waiting_user'?'waiting_user':'blocked',exhausted?child.errorCode??undefined:undefined);return;
       }
       // 明确控制只适用于本次恢复；观察到子已运行后，不能留作其未来失败的自动重试授权。
@@ -218,6 +245,8 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
      }
      cp.stepBaselines={...cp.stepBaselines,[step.name]:cp.stepBaselines?.[step.name]??await readBaseline(ctx,project.id)};await save();
      if(['done','not_required','candidate_ready','cancelled'].includes(step.status))continue;
+     // 仅补全资料时，历史转写失败不应阻塞 brief。
+     if(!step.required && ['failed','blocked','waiting_user','paused','unknown_result'].includes(step.status))continue;
      const dispatched=await deps.dispatch(ctx,{project,references:refs,step:step.name,claim});
      if(dispatched.status==='child'){
       const actualChild=await deps.tasks.get(ctx,dispatched.childTaskId);step.attempt=actualChild.attempt;step.childOwner=['item','transform'].includes(actualChild.ownerType)?{type:'item',id:actualChild.ownerId}:{type:'project',id:project.id};
@@ -239,7 +268,18 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
     if(['pause_requested','cancel_requested'].includes(current.status)){await deps.tasks.acknowledgeControl(lease);return;}
     if(current.status!=='running'||current.attempt!==claim.lease.attempt)return;
     const unavailable=findModelEngineUnavailable(error);
-    cp.lastError={code:'EXECUTION_FAILED',message:unavailable?.message??(error instanceof Error?error.message:'准备失败，请核对原任务')};const failed=cp.steps.find(step=>step.name===cp.activeStep);if(failed){failed.status='failed';failed.lastError=cp.lastError;failed.availableActions=failed.name==='transcript'?['retry','provide_transcript']:['retry'];}await save();await finish('blocked','PREPARATION_FAILED');
+    const login=!unavailable&&douyinLoginError(error);
+    const message=unavailable?.message??(login?douyinLoginMessage:(error instanceof Error?error.message:'准备失败，请核对原任务'));
+    cp.lastError={code:login?'CONFIGURATION_REQUIRED':'EXECUTION_FAILED',message};
+    const failed=cp.steps.find(step=>step.name===cp.activeStep);
+    const transcriptLogin=Boolean(login&&failed?.name==='transcript');
+    if(failed){
+     failed.status=transcriptLogin?'waiting_user':'failed';
+     failed.lastError=cp.lastError;
+     failed.availableActions=transcriptLogin?['resume','provide_transcript']:failed.name==='transcript'?['retry','provide_transcript']:['retry'];
+    }
+    await save();
+    await finish(transcriptLogin?'waiting_user':'blocked',transcriptLogin?undefined:'PREPARATION_FAILED');
    }
   },
   async provideTranscript(ctx:RequestContext,projectId:string,raw:unknown){

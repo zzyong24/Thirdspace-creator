@@ -435,6 +435,7 @@ fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "license_activate",
+            "license_restore_saved",
             "license_check",
             // [T-748] 设置页在 remote sidecar origin 调用的本地激活重置。
             "license_reset_local",

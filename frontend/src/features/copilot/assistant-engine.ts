@@ -1,6 +1,7 @@
 import {client} from '@/lib/contract-client';
 import {modelRoutingResourceSchema,modelRoutingPutSchema} from '@creatoros/contract';
 import {readCurrentGroupId,readCurrentAccountId,CURRENT_GROUP_KEY,CURRENT_ACCOUNT_KEY} from '@/lib/http-transport';
+import {waitForAiCreditCenter} from '@/lib/open-ai-credit-center';
 export type AssistantEngine = 'pi'|'codex';
 const key='creatoros:assistant-engine:v1';
 export const assistantEngineEvent='creatoros:assistant-engine-change';
@@ -89,6 +90,29 @@ export async function loadModelRouting(force=false):Promise<void>{
   if(current())routingEmit({resource,ready:true,reading:false,error:null});
  }catch{if(current())routingEmit({reading:false,error:'模型来源暂未取得，请重新读取'});}})();
  routingRead={scope,promise};try{await promise;}finally{if(routingRead?.promise===promise)routingRead=null;}
+}
+/** 升级完成屏障后的新读；不能把旧in-flight或吞掉的GET错误冒充读回成功。 */
+export async function refreshModelRoutingAfterUpgrade(signal:AbortSignal):Promise<void>{
+ const scope=routingScope(),observe=<T>(operation:()=>Promise<T>):Promise<T>=>waitForAiCreditCenter(operation,signal);
+ const live=()=>{if(signal.aborted)throw new DOMException('已停止等待','AbortError');if(scope!==routingScope())throw Error('账号组已变化，请在当前范围重新核对');};
+ live();
+ const previous=routingRead;
+ if(previous?.scope===scope)await observe(()=>previous.promise);
+ live();
+ if(routingState.saving)throw Error('模型来源正在保存，请完成后继续核对');
+ if(routingState.scope!==scope)routingEmit({resource:null,scope,ready:false});
+ const fence=++routingGeneration,current=()=>fence===routingGeneration&&scope===routingScope();
+ routingEmit({reading:true,error:null});
+ // 写操作与其他合法读者不被取消；本观察停止后，迟到结果也不得再写当前store。
+ const promise=(async()=>{
+  try{
+   const resource=modelRoutingResourceSchema.parse(await client.getModelRouting({params:undefined,query:undefined,body:undefined}));
+   live();if(!current())throw Error('模型来源已变化，请重新核对');
+   routingEmit({resource,scope,ready:true,reading:false,error:null});
+  }catch(error){if(current()&&!signal.aborted)routingEmit({reading:false,error:'模型来源暂未取得，请重新读取'});throw error;}
+ })();
+ routingRead={scope,promise};
+ try{await observe(()=>promise);}finally{if(signal.aborted&&current())routingEmit({reading:false});if(routingRead?.promise===promise)routingRead=null;}
 }
 export async function writeModelRouting(choices:import('@creatoros/contract').ModelRoutingChoices,expectedRevision:number){
  const scope=routingScope();

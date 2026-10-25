@@ -2349,30 +2349,28 @@ it('T1294 redfox旧deep link切到模型并只有一份真实密钥入口，额�
  }finally{Element.prototype.scrollIntoView=original;}
 });
 
-it('T238 未开通用户有明确已含权益恢复按钮，保AICR和来源选择不被自动改写',async()=>{
+// T1402：升级执行与迟到原生/截止守卫迁到 automatic-license-upgrade.test.ts；设置不再拥有该操作。
+it('T1402 未开通用户无需点升级，保AICR与个人来源选择',async()=>{
  const {AiCreditCenterCard}=await import('./channel-model-configuration');
- const calls:string[]=[];vi.spyOn(globalThis,'fetch').mockImplementation(async(url)=>{calls.push(String(url));return Response.json({authority:'channel',outcome:'configured',activationFulfillment:{status:'ready',action:'产品已含额度已启用',retryable:false}});});
+ const fetchMock=vi.spyOn(globalThis,'fetch');
  rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);
- await userEvent.click(screen.getByRole('button',{name:'启用产品已含额度'}));
- await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('产品已含额度已启用'),{timeout:120_000});
- expect(calls).toEqual(['/api/v1/local/client-config']);expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+ expect(screen.queryByRole('button',{name:/升级原激活码|继续核对/})).toBeNull();
+ expect(screen.getByText(/模型权益会随原授权自动核对/)).toBeInTheDocument();
+ expect(fetchMock).not.toHaveBeenCalled();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
  expect(screen.getByText('使用充值码开通官方额度')).toBeInTheDocument();
 },180_000);
 
-it('T238 取消只停止观察，迟到成功不刷新界面也不假称撤销权益',async()=>{
- const {AiCreditCenterCard}=await import('./channel-model-configuration');let finish!:(value:Response)=>void;
- const fetchMock=vi.spyOn(globalThis,'fetch').mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
- rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);await userEvent.click(screen.getByRole('button',{name:'启用产品已含额度'}));
- expect(screen.getByRole('button',{name:'取消等待'})).toBeEnabled();await userEvent.click(screen.getByRole('button',{name:'取消等待'}));
- await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('已停止等待'),{timeout:120_000});
- await act(async()=>{finish(Response.json({authority:'channel',outcome:'configured',activationFulfillment:{status:'ready',action:'产品已含额度已启用',retryable:false}}));});
- expect(fetchMock).toHaveBeenCalledTimes(1);expect(mockRouter.refresh).not.toHaveBeenCalled();expect(screen.getByRole('status')).toHaveTextContent('服务端结果仍需核对');
+it('T1402 设置卸载不会发起或取消正常启动流程，也不刷新整页',async()=>{
+ const {AiCreditCenterCard}=await import('./channel-model-configuration');
+ const fetchMock=vi.spyOn(globalThis,'fetch');
+ const view=rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);view.unmount();
+ expect(fetchMock).not.toHaveBeenCalled();expect(mockRouter.refresh).not.toHaveBeenCalled();
 },180_000);
-it('T238 换组取消观察，旧scope迟到结果不覆盖新窗口',async()=>{
- const {AiCreditCenterCard}=await import('./channel-model-configuration');let finish!:(value:Response)=>void;
- vi.spyOn(globalThis,'fetch').mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
- rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);await userEvent.click(screen.getByRole('button',{name:'启用产品已含额度'}));
- await act(async()=>{window.localStorage.setItem(CURRENT_GROUP_KEY,'new-t238-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));});
- await act(async()=>{finish(Response.json({authority:'channel',outcome:'configured',activationFulfillment:{status:'ready',action:'旧组已含额度已启用',retryable:false}}));});
- expect(screen.queryByText('旧组已含额度已启用')).not.toBeInTheDocument();expect(mockRouter.refresh).not.toHaveBeenCalled();
+it('T1402 换组不会由额度卡另起升级或改写来源',async()=>{
+ const {AiCreditCenterCard}=await import('./channel-model-configuration');
+ const fetchMock=vi.spyOn(globalThis,'fetch');
+ rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);
+ await act(async()=>{window.localStorage.setItem(CURRENT_GROUP_KEY,'new-t1402-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+ expect(fetchMock).not.toHaveBeenCalled();expect(mockRouter.refresh).not.toHaveBeenCalled();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+ expect(screen.queryByRole('button',{name:/升级原激活码|继续核对/})).toBeNull();
 },180_000);

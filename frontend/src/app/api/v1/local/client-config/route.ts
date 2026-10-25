@@ -16,6 +16,7 @@ import {
   readRequestGroupId,
 } from "@/lib/request-context.server";
 import { getSettingsService } from "@/server/persistence-client";
+import {isUpgradeAction,parseLegacyUpgradeResult,UPGRADE_OBSERVATION_HEADER} from '@/lib/legacy-license-upgrade';
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ const TRIGGERS = new Set([
   "scheduled",
   "bootstrap",
   "manual_revalidate",
+  "legacy_upgrade",
 ]);
 
 function safeTrigger(request: Request): string {
@@ -43,8 +45,8 @@ function logSync(fields: {
   console.info(`[client-config] ${JSON.stringify(fields)}`);
 }
 
-function response(body: unknown, status: number): Response {
-  return NextResponse.json(body, { status, headers: NO_STORE });
+function response(body: unknown, status: number,observationToken?:string): Response {
+  return NextResponse.json(body, { status, headers: {...NO_STORE,...(observationToken?{[UPGRADE_OBSERVATION_HEADER]:observationToken}:{})} });
 }
 
 /**
@@ -97,12 +99,17 @@ export async function POST(request: Request): Promise<Response> {
       422,
     );
   }
+  const upgradeAction=request.headers.get('x-creatoros-upgrade-action');
+  const upgradeMode=request.headers.get('x-creatoros-upgrade-mode');
+  if((upgradeMode!==null&&(upgradeMode!=='automatic'||trigger!=='legacy_upgrade'))||
+    (trigger==='legacy_upgrade'?!isUpgradeAction(upgradeAction):upgradeAction!==null))
+    return response({error:'升级请求格式不正确，请重新打开设置后重试'},422);
   let ctx;
   try {
     ctx = await resolveRequestContext(
       readSessionCookie(request),
       readRequestAccountId(request),
-      { rejectInvalidToken: true },
+      { rejectInvalidToken: true,...(trigger==='legacy_upgrade'?{groupId:readRequestGroupId(request)}:{}) },
     );
   } catch {
     return response(
@@ -116,6 +123,26 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   const settings = await getSettingsService();
+  if(trigger==='legacy_upgrade'&&isUpgradeAction(upgradeAction)){
+    try{
+      let observationToken:string|undefined;
+      if(request.signal.aborted)throw new DOMException('已停止等待','AbortError');
+      const result=await (await import('@/server/activation/model-benefit.server')).upgradeModelBenefits(upgradeAction,{
+        signal:request.signal,
+        observation:{token:request.headers.get(UPGRADE_OBSERVATION_HEADER),actor:{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null},...(upgradeMode==='automatic'?{automatic:true}:{}),onToken:value=>{observationToken=value;}},
+        putManagedCredential:async(scopeId,serviceId,token)=>{
+          if(request.signal.aborted)throw new DOMException('已停止等待','AbortError');
+          await settings.setChannelModelCredential(ctx,scopeId,serviceId,token);
+        },
+      });
+      const projection=parseLegacyUpgradeResult(result,upgradeAction);
+      logSync({phase:projection.phase,reason:projection.reasonCode,trigger,status:projection.outcome});
+      return response(projection,200,observationToken);
+    }catch{
+      logSync({phase:'legacy_upgrade',reason:'projection_unavailable',trigger,status:'blocked'});
+      return response({error:'升级结果暂时无法安全核对，请继续核对原权益'},503);
+    }
+  }
   return (async () => {
     if (request.signal.aborted) throw new DOMException("已停止等待", "AbortError");
     const activationFulfillment = trigger === "activation"

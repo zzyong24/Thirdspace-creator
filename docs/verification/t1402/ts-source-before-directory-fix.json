@@ -1,0 +1,79 @@
+{
+  "frozenAt": "2026-10-23T04:24:28Z",
+  "files": [
+    {
+      "path": "frontend/src/lib/legacy-license-upgrade.ts",
+      "sha256": "91d1c522e8cd0084bf69a528fa04dcd6d2e4825cd135b53fed401df646363d7f",
+      "bytes": 8018
+    },
+    {
+      "path": "frontend/src/lib/legacy-license-upgrade.test.ts",
+      "sha256": "07010251ad3d43010f3bf5e2a6316d7f15d79448b9c3563b31e5de17a4269467",
+      "bytes": 2140
+    },
+    {
+      "path": "frontend/src/server/activation/model-benefit.server.ts",
+      "sha256": "16a76e0bdaa51c6e14ce99e28e07b4d2be9598cef8268b4d357a503e6c9c908b",
+      "bytes": 42792
+    },
+    {
+      "path": "frontend/src/server/activation/model-benefit.server.test.ts",
+      "sha256": "79c736a4eaeec70f92e802e77f3649fb647996055f6615a2dc9788be8507956a",
+      "bytes": 38361
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/client-config/route.ts",
+      "sha256": "95df4917a19d71841d96adac3c2b0e6b35d7944604c8b38efe35f968e36265e2",
+      "bytes": 7767
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/client-config/route.test.ts",
+      "sha256": "0e4d9baec7e4609ccaedb5e4f487bc52b281824d876e2cc872ef932498c3db1f",
+      "bytes": 12487
+    },
+    {
+      "path": "frontend/src/features/settings/channel-model-configuration.tsx",
+      "sha256": "d48537ae7e2b14f408affd142664a9b88de837180e44e783e252332d3721ac44",
+      "bytes": 33435
+    },
+    {
+      "path": "frontend/src/features/settings/channel-model-configuration.test.tsx",
+      "sha256": "86f29ccd863b28482c56f087000f97d12a2ea8f9efa7bf14646e1f78d16c6675",
+      "bytes": 11614
+    },
+    {
+      "path": "frontend/src/features/copilot/assistant-engine.ts",
+      "sha256": "be9244417001c34575760f6a8c99a79897c55d318350bf9410af61e7aa28195d",
+      "bytes": 12121
+    },
+    {
+      "path": "frontend/src/features/copilot/assistant-engine-model-routing-refresh.test.ts",
+      "sha256": "01d51f91732bb59353441c3c6f69f49bf058eb4c93b08b24c3c9e4e8fcd8245f",
+      "bytes": 1998
+    },
+    {
+      "path": "frontend/src/server/activation/ai-credit-link.server.ts",
+      "sha256": "501dd5ecd45a1f1af0c8d536f6da3a66620db3c25002ac57567728ea0c198f87",
+      "bytes": 18841
+    },
+    {
+      "path": "frontend/src/server/activation/ai-credit-link.server.test.ts",
+      "sha256": "954ae0c588def3ceee59726715b7e7bc65b034edf9dfa324bf422474800b6f92",
+      "bytes": 5568
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "sha256": "7ee70cdc7007459f01f78e114e35814c59b1280221c14cc0e6f63d0fa8c81674",
+      "bytes": 131870
+    }
+  ],
+  "finalFocused": {
+    "exitCode": 0,
+    "files": 7,
+    "passed": 229,
+    "failed": 0,
+    "durationSeconds": 25.72,
+    "log": "docs/verification/t1402/ts-final-focused-r2.log",
+    "command": "env PGLITE_DATA_DIR=/tmp/t1402-ts-final2-20261023 DATABASE_URL= CREATOROS_DATABASE_URL= POSTGRES_URL= pnpm exec vitest run src/lib/legacy-license-upgrade.test.ts src/server/activation/model-benefit.server.test.ts src/server/activation/ai-credit-link.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/features/settings/channel-model-configuration.test.tsx src/features/copilot/assistant-engine-model-routing-refresh.test.ts src/features/settings/settings-interactive-region.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000"
+  }
+}

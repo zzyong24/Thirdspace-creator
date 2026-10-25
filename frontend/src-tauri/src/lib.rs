@@ -15,6 +15,7 @@ use std::time::Duration;
 
 // [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
 mod license;
+mod license_restore;
 mod secure_strings;
 #[cfg(not(debug_assertions))]
 mod release_integrity;
@@ -2294,6 +2295,7 @@ pub fn run() {
         //   验签/防重放/防回拨逻辑全在 Rust(SPEC §9「前端只拿结果」)。
         .invoke_handler(tauri::generate_handler![
             license::license_activate,
+            license_restore::license_restore_saved,
             license::license_check,
             license_reset_local,
             entitlement_claim::entitlement_claim_start,

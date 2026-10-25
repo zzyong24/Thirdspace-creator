@@ -1,0 +1,2683 @@
+{
+  "schemaVersion": "t249-formal-v1-economic-consumer-vectors-v1",
+  "growthCodeCommit": "ead6b312ed917a3a15aa87279269861628097d82",
+  "authorityFixtureSha256": "cd8ced4573cc57d855ddbda94d121f5dadc768890ecc0b1ece04c2b5a11beed2",
+  "provenance": {
+    "authority": "已有Activity跨仓合成正式v1签名fixture，非本轮生产签发",
+    "transport": "FastAPI TestClient/ASGI本地调用真实Growth router/service，SQLite内存库与fake provider",
+    "clock": "已有fixture资格时钟注入",
+    "keysAreSynthetic": true,
+    "handWrittenDirectoryOrCredential": false,
+    "ActivityRestoreCurrentRun": false,
+    "CreatorConsumerRun": false,
+    "onlineNetworkE2E": false
+  },
+  "cases": [
+    {
+      "name": "ready-existing-only",
+      "now": "2026-10-17T08:00:05.000Z",
+      "syntheticAuthorityPublicKeys": {
+        "activity-policy-synthetic-20261017": "yPuzBWfVl2A9vWF/GgAMYbcuoy0/uv+6XtjWOewNkPQ="
+      },
+      "growthBundlePublicKeys": {
+        "growth-config-test-01": "gyClGXfYw4yopJJ8Zw31gh5El2GUXhXp77JqFQnSMOo="
+      },
+      "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw",
+      "proofClaims": {
+        "type": "model-benefit-proof",
+        "contractVersion": "model-benefit-proof-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "nonce": "synthetic-proof-nonce-unassigned",
+        "jti": "01M54DZY00CCK1NQBRMHZ99ZW3",
+        "issuedAt": "2026-10-17T08:00:00.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "eligibilityResponse": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "active": true,
+        "modelBenefitEligibility": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULUVMSUdJQklMSVRZIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHktdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDUuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RTAyVzhaNUpUTTFBOUtZOVhDWVlLIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInByb29mRGlnZXN0Ijoic2hhMjU2OjhlNDU5NTlhNjcwYzg5YmY1ODBkOWFhN2JjZmNkZjM4MDA3MTEwODQxYzA4NDBhMTdlZTk3ZGJjOTMxZGViMzYiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSIsInJlcXVlc3ROb25jZSI6InN5bnRoZXRpYy1obWFjLW5vbmNlLXVuYXNzaWduZWQiLCJzb3VyY2VDaGFubmVsUmVmIjpudWxsLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSJ9.TD2m8eoAkn3a6vQHpQXL-bzIH6dTBX_TRNwv_iAPsF2xbg6KEpvfHusrYkAJ1bqFhR8VhOrxtf6ahxV9pX0lBA"
+      },
+      "requestNonce": "synthetic-hmac-nonce-unassigned",
+      "directory": {
+        "contractVersion": "growth-model-benefit-directory-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "configurationSourceChannelRef": "official",
+        "configurationSource": {
+          "packageRef": "PCP-3A2EC4D9AC134D96",
+          "revision": 1,
+          "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+        },
+        "payload": {
+          "services": [
+            {
+              "id": "omnihi-main",
+              "name": "OmniHi 模型服务",
+              "provider": "omnihi",
+              "credential": {
+                "type": "api_key",
+                "source": "activation_managed",
+                "lifecycle": "persistent",
+                "allowMultiple": false,
+                "links": {
+                  "portalUrl": "https://omnihi.ai",
+                  "purchaseUrl": null,
+                  "rechargeUrl": null,
+                  "helpUrl": "https://omnihi.ai/market-list"
+                }
+              }
+            }
+          ],
+          "connections": [
+            {
+              "id": "relay-text",
+              "name": "文本模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_chat"
+            },
+            {
+              "id": "relay-image",
+              "name": "图片模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_images"
+            },
+            {
+              "id": "relay-video",
+              "name": "视频模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "omnihi",
+              "baseURL": "https://api.omnihi.ai/media/v1",
+              "apiFormat": "omnihi_media"
+            }
+          ],
+          "models": {
+            "default": [
+              {
+                "id": "claude-haiku-4-5",
+                "name": "Claude Haiku 4.5",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-haiku-4.5",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "kimi-k2-6",
+                "name": "Kimi K2.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "kimi-k2.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gemini-3-5-flash",
+                "name": "Gemini 3.5 Flash",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gemini-3.5-flash",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "claude-sonnet-4-6",
+                "name": "Claude Sonnet 4.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-sonnet-4.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gpt-5-6-sol",
+                "name": "GPT 5.6 Sol",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gpt-5.6-sol",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "minimax-m3",
+                "name": "MiniMax M3",
+                "isDefault": true,
+                "connectionId": "relay-text",
+                "model": "minimax-m3",
+                "settings": {
+                  "timeoutMs": 3000000,
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "deepseek-v4-pro",
+                "name": "DeepSeek V4 Pro",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "deepseek-v4-pro",
+                "settings": {
+                  "temperature": 0.6
+                }
+              }
+            ],
+            "image.generate": [
+              {
+                "id": "gpt-image-2-text-to-image",
+                "name": "GPT Image 2 Text-to-Image",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-text-to-image",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "image.edit": [
+              {
+                "id": "gpt-image-2-edit",
+                "name": "GPT Image 2 图片编辑",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-edit",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "video.generate": [
+              {
+                "id": "seedance-2-fast-economy",
+                "name": "Seedance 2.0 Fast",
+                "isDefault": true,
+                "connectionId": "relay-video",
+                "model": "seedance/seedance-2.0-fast",
+                "settings": {
+                  "mode": "t2v",
+                  "duration": 4,
+                  "resolution": "480p",
+                  "aspect_ratio": "9:16",
+                  "generate_audio": false,
+                  "prompt_max_length": 500
+                }
+              }
+            ]
+          }
+        },
+        "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+        "bundleDigest": "sha256:1758a97dccbe2ff3efcb938b3206ffc7b1bc2fef47acc62b04f2e5019e34b69a",
+        "keyId": "growth-config-test-01",
+        "signature": "m4APQc8AcJfCAIIpgcs8uV2HNAxAMvammyIsOrea9myMR-6AtnkVUq8aP6TvGPtcqx7PaqNBi7XJOfgr1QjcDg"
+      },
+      "directoryEtag": "\"sha256:44628508b5a5c6727db0d09aae775872269540ef17642eba68a8b3cb4eb3da68\"",
+      "trace": [
+        {
+          "step": "authorized-initial-setup",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-authorized-initial-setup",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "5.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 250000,
+                "referenceId": "AICA-6024772C8754428E9021"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 0,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": false,
+          "fakeProviderCreateDelta": 1,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 1
+        },
+        {
+          "step": "ready-reread-random-a",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-ready-reread-random-a",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "5.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 250000,
+                "referenceId": "AICA-6024772C8754428E9021"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "ready-directory-read",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/directory",
+            "headers": {
+              "Idempotency-Key": "synthetic-ready-directory-read",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-directory-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "configurationSourceChannelRef": "official",
+              "configurationSource": {
+                "packageRef": "PCP-3A2EC4D9AC134D96",
+                "revision": 1,
+                "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+              },
+              "payload": {
+                "services": [
+                  {
+                    "id": "omnihi-main",
+                    "name": "OmniHi 模型服务",
+                    "provider": "omnihi",
+                    "credential": {
+                      "type": "api_key",
+                      "source": "activation_managed",
+                      "lifecycle": "persistent",
+                      "allowMultiple": false,
+                      "links": {
+                        "portalUrl": "https://omnihi.ai",
+                        "purchaseUrl": null,
+                        "rechargeUrl": null,
+                        "helpUrl": "https://omnihi.ai/market-list"
+                      }
+                    }
+                  }
+                ],
+                "connections": [
+                  {
+                    "id": "relay-text",
+                    "name": "文本模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "openai-compatible",
+                    "baseURL": "https://api.omnihi.ai/openai",
+                    "apiFormat": "openai_chat"
+                  },
+                  {
+                    "id": "relay-image",
+                    "name": "图片模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "openai-compatible",
+                    "baseURL": "https://api.omnihi.ai/openai",
+                    "apiFormat": "openai_images"
+                  },
+                  {
+                    "id": "relay-video",
+                    "name": "视频模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "omnihi",
+                    "baseURL": "https://api.omnihi.ai/media/v1",
+                    "apiFormat": "omnihi_media"
+                  }
+                ],
+                "models": {
+                  "default": [
+                    {
+                      "id": "claude-haiku-4-5",
+                      "name": "Claude Haiku 4.5",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "claude-haiku-4.5",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "kimi-k2-6",
+                      "name": "Kimi K2.6",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "kimi-k2.6",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "gemini-3-5-flash",
+                      "name": "Gemini 3.5 Flash",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "gemini-3.5-flash",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "claude-sonnet-4-6",
+                      "name": "Claude Sonnet 4.6",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "claude-sonnet-4.6",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "gpt-5-6-sol",
+                      "name": "GPT 5.6 Sol",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "gpt-5.6-sol",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "minimax-m3",
+                      "name": "MiniMax M3",
+                      "isDefault": true,
+                      "connectionId": "relay-text",
+                      "model": "minimax-m3",
+                      "settings": {
+                        "timeoutMs": 3000000,
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "deepseek-v4-pro",
+                      "name": "DeepSeek V4 Pro",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "deepseek-v4-pro",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    }
+                  ],
+                  "image.generate": [
+                    {
+                      "id": "gpt-image-2-text-to-image",
+                      "name": "GPT Image 2 Text-to-Image",
+                      "isDefault": true,
+                      "connectionId": "relay-image",
+                      "model": "openai/gpt-image-2-text-to-image",
+                      "settings": {
+                        "n": 1,
+                        "size": "1024x1024"
+                      }
+                    }
+                  ],
+                  "image.edit": [
+                    {
+                      "id": "gpt-image-2-edit",
+                      "name": "GPT Image 2 图片编辑",
+                      "isDefault": true,
+                      "connectionId": "relay-image",
+                      "model": "openai/gpt-image-2-edit",
+                      "settings": {
+                        "n": 1,
+                        "size": "1024x1024"
+                      }
+                    }
+                  ],
+                  "video.generate": [
+                    {
+                      "id": "seedance-2-fast-economy",
+                      "name": "Seedance 2.0 Fast",
+                      "isDefault": true,
+                      "connectionId": "relay-video",
+                      "model": "seedance/seedance-2.0-fast",
+                      "settings": {
+                        "mode": "t2v",
+                        "duration": 4,
+                        "resolution": "480p",
+                        "aspect_ratio": "9:16",
+                        "generate_audio": false,
+                        "prompt_max_length": 500
+                      }
+                    }
+                  ]
+                }
+              },
+              "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+              "bundleDigest": "sha256:1758a97dccbe2ff3efcb938b3206ffc7b1bc2fef47acc62b04f2e5019e34b69a",
+              "keyId": "growth-config-test-01",
+              "signature": "m4APQc8AcJfCAIIpgcs8uV2HNAxAMvammyIsOrea9myMR-6AtnkVUq8aP6TvGPtcqx7PaqNBi7XJOfgr1QjcDg"
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "ready-stale-usage-random-b",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-ready-stale-usage-random-b",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "5.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 250000,
+                "referenceId": "AICA-6024772C8754428E9021"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 1
+        },
+        {
+          "step": "already-ready-fulfill-random-c",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-already-ready-fulfill-random-c",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "5.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 250000,
+                "referenceId": "AICA-6024772C8754428E9021"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        }
+      ],
+      "fakeProviderCreatesTotal": 1,
+      "fakeProviderRecoversTotal": 0,
+      "recoverCalls": [],
+      "finalCounts": {
+        "managed_model_credential": 1,
+        "ai_credit_account": 1,
+        "ai_credit_ledger_entry": 1
+      },
+      "result": "PASS",
+      "realProviderCalls": 0,
+      "externalNetworkCalls": 0
+    },
+    {
+      "name": "unknown-reservation-5",
+      "now": "2026-10-17T08:00:05.000Z",
+      "syntheticAuthorityPublicKeys": {
+        "activity-policy-synthetic-20261017": "yPuzBWfVl2A9vWF/GgAMYbcuoy0/uv+6XtjWOewNkPQ="
+      },
+      "growthBundlePublicKeys": {
+        "growth-config-test-01": "gyClGXfYw4yopJJ8Zw31gh5El2GUXhXp77JqFQnSMOo="
+      },
+      "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw",
+      "proofClaims": {
+        "type": "model-benefit-proof",
+        "contractVersion": "model-benefit-proof-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "nonce": "synthetic-proof-nonce-unassigned",
+        "jti": "01M54DZY00CCK1NQBRMHZ99ZW3",
+        "issuedAt": "2026-10-17T08:00:00.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "eligibilityResponse": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "active": true,
+        "modelBenefitEligibility": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULUVMSUdJQklMSVRZIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHktdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDUuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RTAyVzhaNUpUTTFBOUtZOVhDWVlLIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInByb29mRGlnZXN0Ijoic2hhMjU2OjhlNDU5NTlhNjcwYzg5YmY1ODBkOWFhN2JjZmNkZjM4MDA3MTEwODQxYzA4NDBhMTdlZTk3ZGJjOTMxZGViMzYiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSIsInJlcXVlc3ROb25jZSI6InN5bnRoZXRpYy1obWFjLW5vbmNlLXVuYXNzaWduZWQiLCJzb3VyY2VDaGFubmVsUmVmIjpudWxsLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSJ9.TD2m8eoAkn3a6vQHpQXL-bzIH6dTBX_TRNwv_iAPsF2xbg6KEpvfHusrYkAJ1bqFhR8VhOrxtf6ahxV9pX0lBA"
+      },
+      "requestNonce": "synthetic-hmac-nonce-unassigned",
+      "directory": {
+        "contractVersion": "growth-model-benefit-directory-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "configurationSourceChannelRef": "official",
+        "configurationSource": {
+          "packageRef": "PCP-09FE53C68B424588",
+          "revision": 1,
+          "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+        },
+        "payload": {
+          "services": [
+            {
+              "id": "omnihi-main",
+              "name": "OmniHi 模型服务",
+              "provider": "omnihi",
+              "credential": {
+                "type": "api_key",
+                "source": "activation_managed",
+                "lifecycle": "persistent",
+                "allowMultiple": false,
+                "links": {
+                  "portalUrl": "https://omnihi.ai",
+                  "purchaseUrl": null,
+                  "rechargeUrl": null,
+                  "helpUrl": "https://omnihi.ai/market-list"
+                }
+              }
+            }
+          ],
+          "connections": [
+            {
+              "id": "relay-text",
+              "name": "文本模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_chat"
+            },
+            {
+              "id": "relay-image",
+              "name": "图片模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_images"
+            },
+            {
+              "id": "relay-video",
+              "name": "视频模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "omnihi",
+              "baseURL": "https://api.omnihi.ai/media/v1",
+              "apiFormat": "omnihi_media"
+            }
+          ],
+          "models": {
+            "default": [
+              {
+                "id": "claude-haiku-4-5",
+                "name": "Claude Haiku 4.5",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-haiku-4.5",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "kimi-k2-6",
+                "name": "Kimi K2.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "kimi-k2.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gemini-3-5-flash",
+                "name": "Gemini 3.5 Flash",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gemini-3.5-flash",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "claude-sonnet-4-6",
+                "name": "Claude Sonnet 4.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-sonnet-4.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gpt-5-6-sol",
+                "name": "GPT 5.6 Sol",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gpt-5.6-sol",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "minimax-m3",
+                "name": "MiniMax M3",
+                "isDefault": true,
+                "connectionId": "relay-text",
+                "model": "minimax-m3",
+                "settings": {
+                  "timeoutMs": 3000000,
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "deepseek-v4-pro",
+                "name": "DeepSeek V4 Pro",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "deepseek-v4-pro",
+                "settings": {
+                  "temperature": 0.6
+                }
+              }
+            ],
+            "image.generate": [
+              {
+                "id": "gpt-image-2-text-to-image",
+                "name": "GPT Image 2 Text-to-Image",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-text-to-image",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "image.edit": [
+              {
+                "id": "gpt-image-2-edit",
+                "name": "GPT Image 2 图片编辑",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-edit",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "video.generate": [
+              {
+                "id": "seedance-2-fast-economy",
+                "name": "Seedance 2.0 Fast",
+                "isDefault": true,
+                "connectionId": "relay-video",
+                "model": "seedance/seedance-2.0-fast",
+                "settings": {
+                  "mode": "t2v",
+                  "duration": 4,
+                  "resolution": "480p",
+                  "aspect_ratio": "9:16",
+                  "generate_audio": false,
+                  "prompt_max_length": 500
+                }
+              }
+            ]
+          }
+        },
+        "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+        "bundleDigest": "sha256:577fa06d34376f615d8aa5a58087dd47184bc9fa929860bd7c2ca05340cded00",
+        "keyId": "growth-config-test-01",
+        "signature": "bvl5kXVCQePSpOwAS6fDJTIvX41Gw_JqAm8sWwwzZtQ94N_i92hhmQ6Qp7nQOMrIbsJX2hn3udsxIsBUpfPSDQ"
+      },
+      "directoryEtag": "\"sha256:81246c4ad6d64076796698479ec5ea92e51a1c48be1c312d9a72f8639dab2f87\"",
+      "trace": [
+        {
+          "step": "unknown-readonly-before-recovery",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-unknown-readonly-before-recovery",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "MODEL_CREDENTIAL_NOT_CONFIGURED",
+                "message": "模型额度操作未完成，请稍后重试；可以继续使用自己的模型配置。"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "unknown-directory-zero-creation",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/directory",
+            "headers": {
+              "Idempotency-Key": "synthetic-unknown-directory-zero-creation",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-directory-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "configurationSourceChannelRef": "official",
+              "configurationSource": {
+                "packageRef": "PCP-09FE53C68B424588",
+                "revision": 1,
+                "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+              },
+              "payload": {
+                "services": [
+                  {
+                    "id": "omnihi-main",
+                    "name": "OmniHi 模型服务",
+                    "provider": "omnihi",
+                    "credential": {
+                      "type": "api_key",
+                      "source": "activation_managed",
+                      "lifecycle": "persistent",
+                      "allowMultiple": false,
+                      "links": {
+                        "portalUrl": "https://omnihi.ai",
+                        "purchaseUrl": null,
+                        "rechargeUrl": null,
+                        "helpUrl": "https://omnihi.ai/market-list"
+                      }
+                    }
+                  }
+                ],
+                "connections": [
+                  {
+                    "id": "relay-text",
+                    "name": "文本模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "openai-compatible",
+                    "baseURL": "https://api.omnihi.ai/openai",
+                    "apiFormat": "openai_chat"
+                  },
+                  {
+                    "id": "relay-image",
+                    "name": "图片模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "openai-compatible",
+                    "baseURL": "https://api.omnihi.ai/openai",
+                    "apiFormat": "openai_images"
+                  },
+                  {
+                    "id": "relay-video",
+                    "name": "视频模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "omnihi",
+                    "baseURL": "https://api.omnihi.ai/media/v1",
+                    "apiFormat": "omnihi_media"
+                  }
+                ],
+                "models": {
+                  "default": [
+                    {
+                      "id": "claude-haiku-4-5",
+                      "name": "Claude Haiku 4.5",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "claude-haiku-4.5",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "kimi-k2-6",
+                      "name": "Kimi K2.6",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "kimi-k2.6",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "gemini-3-5-flash",
+                      "name": "Gemini 3.5 Flash",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "gemini-3.5-flash",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "claude-sonnet-4-6",
+                      "name": "Claude Sonnet 4.6",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "claude-sonnet-4.6",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "gpt-5-6-sol",
+                      "name": "GPT 5.6 Sol",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "gpt-5.6-sol",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "minimax-m3",
+                      "name": "MiniMax M3",
+                      "isDefault": true,
+                      "connectionId": "relay-text",
+                      "model": "minimax-m3",
+                      "settings": {
+                        "timeoutMs": 3000000,
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "deepseek-v4-pro",
+                      "name": "DeepSeek V4 Pro",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "deepseek-v4-pro",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    }
+                  ],
+                  "image.generate": [
+                    {
+                      "id": "gpt-image-2-text-to-image",
+                      "name": "GPT Image 2 Text-to-Image",
+                      "isDefault": true,
+                      "connectionId": "relay-image",
+                      "model": "openai/gpt-image-2-text-to-image",
+                      "settings": {
+                        "n": 1,
+                        "size": "1024x1024"
+                      }
+                    }
+                  ],
+                  "image.edit": [
+                    {
+                      "id": "gpt-image-2-edit",
+                      "name": "GPT Image 2 图片编辑",
+                      "isDefault": true,
+                      "connectionId": "relay-image",
+                      "model": "openai/gpt-image-2-edit",
+                      "settings": {
+                        "n": 1,
+                        "size": "1024x1024"
+                      }
+                    }
+                  ],
+                  "video.generate": [
+                    {
+                      "id": "seedance-2-fast-economy",
+                      "name": "Seedance 2.0 Fast",
+                      "isDefault": true,
+                      "connectionId": "relay-video",
+                      "model": "seedance/seedance-2.0-fast",
+                      "settings": {
+                        "mode": "t2v",
+                        "duration": 4,
+                        "resolution": "480p",
+                        "aspect_ratio": "9:16",
+                        "generate_audio": false,
+                        "prompt_max_length": 500
+                      }
+                    }
+                  ]
+                }
+              },
+              "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+              "bundleDigest": "sha256:577fa06d34376f615d8aa5a58087dd47184bc9fa929860bd7c2ca05340cded00",
+              "keyId": "growth-config-test-01",
+              "signature": "bvl5kXVCQePSpOwAS6fDJTIvX41Gw_JqAm8sWwwzZtQ94N_i92hhmQ6Qp7nQOMrIbsJX2hn3udsxIsBUpfPSDQ"
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "explicit-recover-still-unknown",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-explicit-recover-still-unknown",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "MODEL_PROVIDER_CREATION_UNKNOWN",
+                "message": "模型额度操作未完成，请稍后重试；可以继续使用自己的模型配置。"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": false,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 1,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "unknown-readonly-after-409",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-unknown-readonly-after-409",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "MODEL_CREDENTIAL_NOT_CONFIGURED",
+                "message": "模型额度操作未完成，请稍后重试；可以继续使用自己的模型配置。"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "explicit-continue-original-reservation",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-explicit-continue-original-reservation",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "5.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 250000,
+                "referenceId": "AICA-6BB7BF8391AF493AB19E"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": false,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 1,
+          "fakeProviderBudgetReadDelta": 1
+        },
+        {
+          "step": "recovered-existing-only-random-d",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-recovered-existing-only-random-d",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "5.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 250000,
+                "referenceId": "AICA-6BB7BF8391AF493AB19E"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "recovered-repeat-random-e",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-recovered-repeat-random-e",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "5.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 250000,
+                "referenceId": "AICA-6BB7BF8391AF493AB19E"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        }
+      ],
+      "fakeProviderCreatesTotal": 0,
+      "fakeProviderRecoversTotal": 2,
+      "recoverCalls": [
+        {
+          "sameReservedName": true,
+          "budgetAmount": "5.00000000",
+          "notVisibleYet": true
+        },
+        {
+          "sameReservedName": true,
+          "budgetAmount": "5.00000000"
+        }
+      ],
+      "finalCounts": {
+        "managed_model_credential": 1,
+        "ai_credit_account": 1,
+        "ai_credit_ledger_entry": 1
+      },
+      "result": "PASS",
+      "realProviderCalls": 0,
+      "externalNetworkCalls": 0
+    },
+    {
+      "name": "unknown-reservation-30",
+      "now": "2026-10-17T08:00:05.000Z",
+      "syntheticAuthorityPublicKeys": {
+        "activity-policy-synthetic-20261017": "yPuzBWfVl2A9vWF/GgAMYbcuoy0/uv+6XtjWOewNkPQ="
+      },
+      "growthBundlePublicKeys": {
+        "growth-config-test-01": "gyClGXfYw4yopJJ8Zw31gh5El2GUXhXp77JqFQnSMOo="
+      },
+      "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw",
+      "proofClaims": {
+        "type": "model-benefit-proof",
+        "contractVersion": "model-benefit-proof-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "nonce": "synthetic-proof-nonce-unassigned",
+        "jti": "01M54DZY00CCK1NQBRMHZ99ZW3",
+        "issuedAt": "2026-10-17T08:00:00.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "eligibilityResponse": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "active": true,
+        "modelBenefitEligibility": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULUVMSUdJQklMSVRZIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHktdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDUuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RTAyVzhaNUpUTTFBOUtZOVhDWVlLIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInByb29mRGlnZXN0Ijoic2hhMjU2OjhlNDU5NTlhNjcwYzg5YmY1ODBkOWFhN2JjZmNkZjM4MDA3MTEwODQxYzA4NDBhMTdlZTk3ZGJjOTMxZGViMzYiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSIsInJlcXVlc3ROb25jZSI6InN5bnRoZXRpYy1obWFjLW5vbmNlLXVuYXNzaWduZWQiLCJzb3VyY2VDaGFubmVsUmVmIjpudWxsLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSJ9.TD2m8eoAkn3a6vQHpQXL-bzIH6dTBX_TRNwv_iAPsF2xbg6KEpvfHusrYkAJ1bqFhR8VhOrxtf6ahxV9pX0lBA"
+      },
+      "requestNonce": "synthetic-hmac-nonce-unassigned",
+      "directory": {
+        "contractVersion": "growth-model-benefit-directory-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "configurationSourceChannelRef": "official",
+        "configurationSource": {
+          "packageRef": "PCP-EF9C18E0D5A345E1",
+          "revision": 1,
+          "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+        },
+        "payload": {
+          "services": [
+            {
+              "id": "omnihi-main",
+              "name": "OmniHi 模型服务",
+              "provider": "omnihi",
+              "credential": {
+                "type": "api_key",
+                "source": "activation_managed",
+                "lifecycle": "persistent",
+                "allowMultiple": false,
+                "links": {
+                  "portalUrl": "https://omnihi.ai",
+                  "purchaseUrl": null,
+                  "rechargeUrl": null,
+                  "helpUrl": "https://omnihi.ai/market-list"
+                }
+              }
+            }
+          ],
+          "connections": [
+            {
+              "id": "relay-text",
+              "name": "文本模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_chat"
+            },
+            {
+              "id": "relay-image",
+              "name": "图片模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_images"
+            },
+            {
+              "id": "relay-video",
+              "name": "视频模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "omnihi",
+              "baseURL": "https://api.omnihi.ai/media/v1",
+              "apiFormat": "omnihi_media"
+            }
+          ],
+          "models": {
+            "default": [
+              {
+                "id": "claude-haiku-4-5",
+                "name": "Claude Haiku 4.5",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-haiku-4.5",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "kimi-k2-6",
+                "name": "Kimi K2.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "kimi-k2.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gemini-3-5-flash",
+                "name": "Gemini 3.5 Flash",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gemini-3.5-flash",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "claude-sonnet-4-6",
+                "name": "Claude Sonnet 4.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-sonnet-4.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gpt-5-6-sol",
+                "name": "GPT 5.6 Sol",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gpt-5.6-sol",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "minimax-m3",
+                "name": "MiniMax M3",
+                "isDefault": true,
+                "connectionId": "relay-text",
+                "model": "minimax-m3",
+                "settings": {
+                  "timeoutMs": 3000000,
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "deepseek-v4-pro",
+                "name": "DeepSeek V4 Pro",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "deepseek-v4-pro",
+                "settings": {
+                  "temperature": 0.6
+                }
+              }
+            ],
+            "image.generate": [
+              {
+                "id": "gpt-image-2-text-to-image",
+                "name": "GPT Image 2 Text-to-Image",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-text-to-image",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "image.edit": [
+              {
+                "id": "gpt-image-2-edit",
+                "name": "GPT Image 2 图片编辑",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-edit",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "video.generate": [
+              {
+                "id": "seedance-2-fast-economy",
+                "name": "Seedance 2.0 Fast",
+                "isDefault": true,
+                "connectionId": "relay-video",
+                "model": "seedance/seedance-2.0-fast",
+                "settings": {
+                  "mode": "t2v",
+                  "duration": 4,
+                  "resolution": "480p",
+                  "aspect_ratio": "9:16",
+                  "generate_audio": false,
+                  "prompt_max_length": 500
+                }
+              }
+            ]
+          }
+        },
+        "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+        "bundleDigest": "sha256:653676686a32ff687188410a225d596a1b27b8e004e2315f641dc51cf8af0744",
+        "keyId": "growth-config-test-01",
+        "signature": "B3uqddyBOwn_wa9pXraqJepQ0uu3A4DnTIJs2qqC2MbtgXw2Kra7yBpnK7QkCE_j6pa1bYlp7nOIfwU03T5ZCg"
+      },
+      "directoryEtag": "\"sha256:92532c8074126acecf902aea45094e532a9cc33c2921c3be6650b6a49a6f43b8\"",
+      "trace": [
+        {
+          "step": "unknown-readonly-before-recovery",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-unknown-readonly-before-recovery",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "MODEL_CREDENTIAL_NOT_CONFIGURED",
+                "message": "模型额度操作未完成，请稍后重试；可以继续使用自己的模型配置。"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "unknown-directory-zero-creation",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/directory",
+            "headers": {
+              "Idempotency-Key": "synthetic-unknown-directory-zero-creation",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-directory-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "configurationSourceChannelRef": "official",
+              "configurationSource": {
+                "packageRef": "PCP-EF9C18E0D5A345E1",
+                "revision": 1,
+                "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+              },
+              "payload": {
+                "services": [
+                  {
+                    "id": "omnihi-main",
+                    "name": "OmniHi 模型服务",
+                    "provider": "omnihi",
+                    "credential": {
+                      "type": "api_key",
+                      "source": "activation_managed",
+                      "lifecycle": "persistent",
+                      "allowMultiple": false,
+                      "links": {
+                        "portalUrl": "https://omnihi.ai",
+                        "purchaseUrl": null,
+                        "rechargeUrl": null,
+                        "helpUrl": "https://omnihi.ai/market-list"
+                      }
+                    }
+                  }
+                ],
+                "connections": [
+                  {
+                    "id": "relay-text",
+                    "name": "文本模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "openai-compatible",
+                    "baseURL": "https://api.omnihi.ai/openai",
+                    "apiFormat": "openai_chat"
+                  },
+                  {
+                    "id": "relay-image",
+                    "name": "图片模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "openai-compatible",
+                    "baseURL": "https://api.omnihi.ai/openai",
+                    "apiFormat": "openai_images"
+                  },
+                  {
+                    "id": "relay-video",
+                    "name": "视频模型连接",
+                    "serviceId": "omnihi-main",
+                    "provider": "omnihi",
+                    "baseURL": "https://api.omnihi.ai/media/v1",
+                    "apiFormat": "omnihi_media"
+                  }
+                ],
+                "models": {
+                  "default": [
+                    {
+                      "id": "claude-haiku-4-5",
+                      "name": "Claude Haiku 4.5",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "claude-haiku-4.5",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "kimi-k2-6",
+                      "name": "Kimi K2.6",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "kimi-k2.6",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "gemini-3-5-flash",
+                      "name": "Gemini 3.5 Flash",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "gemini-3.5-flash",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "claude-sonnet-4-6",
+                      "name": "Claude Sonnet 4.6",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "claude-sonnet-4.6",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "gpt-5-6-sol",
+                      "name": "GPT 5.6 Sol",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "gpt-5.6-sol",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "minimax-m3",
+                      "name": "MiniMax M3",
+                      "isDefault": true,
+                      "connectionId": "relay-text",
+                      "model": "minimax-m3",
+                      "settings": {
+                        "timeoutMs": 3000000,
+                        "temperature": 0.6
+                      }
+                    },
+                    {
+                      "id": "deepseek-v4-pro",
+                      "name": "DeepSeek V4 Pro",
+                      "isDefault": false,
+                      "connectionId": "relay-text",
+                      "model": "deepseek-v4-pro",
+                      "settings": {
+                        "temperature": 0.6
+                      }
+                    }
+                  ],
+                  "image.generate": [
+                    {
+                      "id": "gpt-image-2-text-to-image",
+                      "name": "GPT Image 2 Text-to-Image",
+                      "isDefault": true,
+                      "connectionId": "relay-image",
+                      "model": "openai/gpt-image-2-text-to-image",
+                      "settings": {
+                        "n": 1,
+                        "size": "1024x1024"
+                      }
+                    }
+                  ],
+                  "image.edit": [
+                    {
+                      "id": "gpt-image-2-edit",
+                      "name": "GPT Image 2 图片编辑",
+                      "isDefault": true,
+                      "connectionId": "relay-image",
+                      "model": "openai/gpt-image-2-edit",
+                      "settings": {
+                        "n": 1,
+                        "size": "1024x1024"
+                      }
+                    }
+                  ],
+                  "video.generate": [
+                    {
+                      "id": "seedance-2-fast-economy",
+                      "name": "Seedance 2.0 Fast",
+                      "isDefault": true,
+                      "connectionId": "relay-video",
+                      "model": "seedance/seedance-2.0-fast",
+                      "settings": {
+                        "mode": "t2v",
+                        "duration": 4,
+                        "resolution": "480p",
+                        "aspect_ratio": "9:16",
+                        "generate_audio": false,
+                        "prompt_max_length": 500
+                      }
+                    }
+                  ]
+                }
+              },
+              "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+              "bundleDigest": "sha256:653676686a32ff687188410a225d596a1b27b8e004e2315f641dc51cf8af0744",
+              "keyId": "growth-config-test-01",
+              "signature": "B3uqddyBOwn_wa9pXraqJepQ0uu3A4DnTIJs2qqC2MbtgXw2Kra7yBpnK7QkCE_j6pa1bYlp7nOIfwU03T5ZCg"
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "explicit-recover-still-unknown",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-explicit-recover-still-unknown",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "MODEL_PROVIDER_CREATION_UNKNOWN",
+                "message": "模型额度操作未完成，请稍后重试；可以继续使用自己的模型配置。"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": false,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 1,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "unknown-readonly-after-409",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-unknown-readonly-after-409",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "MODEL_CREDENTIAL_NOT_CONFIGURED",
+                "message": "模型额度操作未完成，请稍后重试；可以继续使用自己的模型配置。"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "explicit-continue-original-reservation",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-explicit-continue-original-reservation",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "30.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 1500000,
+                "referenceId": "AICA-67E3C153DD024DB295DB"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": false,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 1,
+          "fakeProviderBudgetReadDelta": 1
+        },
+        {
+          "step": "recovered-existing-only-random-d",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-recovered-existing-only-random-d",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "30.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 1500000,
+                "referenceId": "AICA-67E3C153DD024DB295DB"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "recovered-repeat-random-e",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-recovered-repeat-random-e",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": "SYNTHETIC-T249"
+              },
+              "includedCredit": {
+                "amount": "30.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 1500000,
+                "referenceId": "AICA-67E3C153DD024DB295DB"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 1
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        }
+      ],
+      "fakeProviderCreatesTotal": 0,
+      "fakeProviderRecoversTotal": 2,
+      "recoverCalls": [
+        {
+          "sameReservedName": true,
+          "budgetAmount": "30.00000000",
+          "notVisibleYet": true
+        },
+        {
+          "sameReservedName": true,
+          "budgetAmount": "30.00000000"
+        }
+      ],
+      "finalCounts": {
+        "managed_model_credential": 1,
+        "ai_credit_account": 1,
+        "ai_credit_ledger_entry": 1
+      },
+      "result": "PASS",
+      "realProviderCalls": 0,
+      "externalNetworkCalls": 0
+    },
+    {
+      "name": "active-key-without-wallet-30",
+      "now": "2026-10-17T08:00:05.000Z",
+      "syntheticAuthorityPublicKeys": {
+        "activity-policy-synthetic-20261017": "yPuzBWfVl2A9vWF/GgAMYbcuoy0/uv+6XtjWOewNkPQ="
+      },
+      "growthBundlePublicKeys": {
+        "growth-config-test-01": "gyClGXfYw4yopJJ8Zw31gh5El2GUXhXp77JqFQnSMOo="
+      },
+      "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw",
+      "proofClaims": {
+        "type": "model-benefit-proof",
+        "contractVersion": "model-benefit-proof-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "nonce": "synthetic-proof-nonce-unassigned",
+        "jti": "01M54DZY00CCK1NQBRMHZ99ZW3",
+        "issuedAt": "2026-10-17T08:00:00.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "eligibilityResponse": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "active": true,
+        "modelBenefitEligibility": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULUVMSUdJQklMSVRZIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHktdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDUuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RTAyVzhaNUpUTTFBOUtZOVhDWVlLIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInByb29mRGlnZXN0Ijoic2hhMjU2OjhlNDU5NTlhNjcwYzg5YmY1ODBkOWFhN2JjZmNkZjM4MDA3MTEwODQxYzA4NDBhMTdlZTk3ZGJjOTMxZGViMzYiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSIsInJlcXVlc3ROb25jZSI6InN5bnRoZXRpYy1obWFjLW5vbmNlLXVuYXNzaWduZWQiLCJzb3VyY2VDaGFubmVsUmVmIjpudWxsLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSJ9.TD2m8eoAkn3a6vQHpQXL-bzIH6dTBX_TRNwv_iAPsF2xbg6KEpvfHusrYkAJ1bqFhR8VhOrxtf6ahxV9pX0lBA"
+      },
+      "requestNonce": "synthetic-hmac-nonce-unassigned",
+      "directory": {
+        "contractVersion": "growth-model-benefit-directory-v1",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+        "expiresAt": "2026-10-17T08:05:00.000Z",
+        "configurationSourceChannelRef": "official",
+        "configurationSource": {
+          "packageRef": "PCP-040AEB23C7FE4B94",
+          "revision": 1,
+          "configDigest": "sha256:fb6f17663fb379008153510778164346bc6f9593d200816f3f60a23b591cf26f"
+        },
+        "payload": {
+          "services": [
+            {
+              "id": "omnihi-main",
+              "name": "OmniHi 模型服务",
+              "provider": "omnihi",
+              "credential": {
+                "type": "api_key",
+                "source": "activation_managed",
+                "lifecycle": "persistent",
+                "allowMultiple": false,
+                "links": {
+                  "portalUrl": "https://omnihi.ai",
+                  "purchaseUrl": null,
+                  "rechargeUrl": null,
+                  "helpUrl": "https://omnihi.ai/market-list"
+                }
+              }
+            }
+          ],
+          "connections": [
+            {
+              "id": "relay-text",
+              "name": "文本模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_chat"
+            },
+            {
+              "id": "relay-image",
+              "name": "图片模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "openai-compatible",
+              "baseURL": "https://api.omnihi.ai/openai",
+              "apiFormat": "openai_images"
+            },
+            {
+              "id": "relay-video",
+              "name": "视频模型连接",
+              "serviceId": "omnihi-main",
+              "provider": "omnihi",
+              "baseURL": "https://api.omnihi.ai/media/v1",
+              "apiFormat": "omnihi_media"
+            }
+          ],
+          "models": {
+            "default": [
+              {
+                "id": "claude-haiku-4-5",
+                "name": "Claude Haiku 4.5",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-haiku-4.5",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "kimi-k2-6",
+                "name": "Kimi K2.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "kimi-k2.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gemini-3-5-flash",
+                "name": "Gemini 3.5 Flash",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gemini-3.5-flash",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "claude-sonnet-4-6",
+                "name": "Claude Sonnet 4.6",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "claude-sonnet-4.6",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "gpt-5-6-sol",
+                "name": "GPT 5.6 Sol",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "gpt-5.6-sol",
+                "settings": {
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "minimax-m3",
+                "name": "MiniMax M3",
+                "isDefault": true,
+                "connectionId": "relay-text",
+                "model": "minimax-m3",
+                "settings": {
+                  "timeoutMs": 3000000,
+                  "temperature": 0.6
+                }
+              },
+              {
+                "id": "deepseek-v4-pro",
+                "name": "DeepSeek V4 Pro",
+                "isDefault": false,
+                "connectionId": "relay-text",
+                "model": "deepseek-v4-pro",
+                "settings": {
+                  "temperature": 0.6
+                }
+              }
+            ],
+            "image.generate": [
+              {
+                "id": "gpt-image-2-text-to-image",
+                "name": "GPT Image 2 Text-to-Image",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-text-to-image",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "image.edit": [
+              {
+                "id": "gpt-image-2-edit",
+                "name": "GPT Image 2 图片编辑",
+                "isDefault": true,
+                "connectionId": "relay-image",
+                "model": "openai/gpt-image-2-edit",
+                "settings": {
+                  "n": 1,
+                  "size": "1024x1024"
+                }
+              }
+            ],
+            "video.generate": [
+              {
+                "id": "seedance-2-fast-economy",
+                "name": "Seedance 2.0 Fast",
+                "isDefault": true,
+                "connectionId": "relay-video",
+                "model": "seedance/seedance-2.0-fast",
+                "settings": {
+                  "mode": "t2v",
+                  "duration": 4,
+                  "resolution": "480p",
+                  "aspect_ratio": "9:16",
+                  "generate_audio": false,
+                  "prompt_max_length": 500
+                }
+              }
+            ]
+          }
+        },
+        "payloadDigest": "sha256:1448176977eb56656819d7cb8ea1d03a626a3e9db1d4f83012f8155bd773a8fa",
+        "bundleDigest": "sha256:ab8c468faf438ab2f477e09c070773c8a6859bbbb03981d119b6f671eddfe935",
+        "keyId": "growth-config-test-01",
+        "signature": "k-MjKO5f7NOqyRnR2Rmz6ouDcDVebIEqm26pA8FvFFGdp280_p2VdpuWWBELCM4IeKF1a0_OdYsGoyldy-DCDQ"
+      },
+      "directoryEtag": "\"sha256:f842d7e4a17bc328b17b84096f809c3ed606490153c7a2c37eec783f5a8dd20d\"",
+      "trace": [
+        {
+          "step": "active-key-readonly-wallet-missing",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-active-key-readonly-wallet-missing",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": null
+              },
+              "includedCredit": {
+                "amount": "30.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": false,
+                "availableUnits": null,
+                "referenceId": null
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        },
+        {
+          "step": "explicit-restore-existing-budget-baseline",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/fulfill",
+            "headers": {
+              "Idempotency-Key": "synthetic-explicit-restore-existing-budget-baseline",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": null
+              },
+              "includedCredit": {
+                "amount": "30.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 1125000,
+                "referenceId": "AICA-43454E6B28254F589C59"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 0,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": false,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 1
+        },
+        {
+          "step": "restored-wallet-existing-only",
+          "request": {
+            "method": "POST",
+            "path": "/api/client/model-benefits/credentials",
+            "headers": {
+              "Idempotency-Key": "synthetic-restored-wallet-existing-only",
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "contractVersion": "growth-model-benefit-request-v1",
+              "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": {
+              "contractVersion": "growth-model-benefit-credential-v1",
+              "policyId": "creatoros-formal-model-20261017-v1",
+              "projectKey": "creatoros",
+              "sourceChannelRef": null,
+              "modelScope": {
+                "kind": "unassigned"
+              },
+              "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+              "authorizationVersion": 4,
+              "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+              "expiresAt": "2026-10-17T08:05:00.000Z",
+              "serviceId": "omnihi-main",
+              "credential": {
+                "type": "api_key",
+                "token": "SYNTHETIC-T249-FORMAL-V1-NOT-A-REAL-KEY",
+                "tokenPrefix": null
+              },
+              "includedCredit": {
+                "amount": "30.00000000",
+                "currency": "CNY"
+              },
+              "wallet": {
+                "linked": true,
+                "availableUnits": 1125000,
+                "referenceId": "AICA-43454E6B28254F589C59"
+              }
+            },
+            "cacheControl": "private, no-store"
+          },
+          "economicCountsBefore": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicCountsAfter": {
+            "managed_model_credential": 1,
+            "ai_credit_account": 1,
+            "ai_credit_ledger_entry": 0
+          },
+          "economicStateUnchanged": true,
+          "fakeProviderCreateDelta": 0,
+          "fakeProviderRecoverDelta": 0,
+          "fakeProviderBudgetReadDelta": 0
+        }
+      ],
+      "fakeProviderCreatesTotal": 0,
+      "fakeProviderRecoversTotal": 0,
+      "recoverCalls": [],
+      "finalCounts": {
+        "managed_model_credential": 1,
+        "ai_credit_account": 1,
+        "ai_credit_ledger_entry": 0
+      },
+      "result": "PASS",
+      "realProviderCalls": 0,
+      "externalNetworkCalls": 0
+    }
+  ]
+}

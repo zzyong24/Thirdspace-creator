@@ -2478,7 +2478,7 @@ pub struct ShellLicenseCtx {
 /// Tauri managed state 包装。
 pub struct LicenseState(pub std::sync::Arc<ShellLicenseCtx>);
 
-fn prod_points(ctx: &ShellLicenseCtx) -> Vec<Box<dyn LastSeenStore>> {
+pub(crate) fn prod_points(ctx: &ShellLicenseCtx) -> Vec<Box<dyn LastSeenStore>> {
     let mut points: Vec<Box<dyn LastSeenStore>> = vec![Box::new(FileLastSeen {
         path: ctx.app_data_dir.join(".license-seen"),
     })];

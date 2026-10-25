@@ -13,6 +13,14 @@ import { fetchCreatorApi, readCurrentAccountId, readCurrentGroupId } from "@/lib
 import { executionTimeoutMs, completionWaitMs } from "@creatoros/contract/timeout-policy";
 import { openAiCreditCenter, waitForAiCreditCenter, withAiCreditCenterBudget, AI_CREDIT_CENTER_OPEN_WAIT_MS } from "@/lib/open-ai-credit-center";
 import { cn } from "@/lib/utils";
+import { readCreationScope, useCreationScope } from "@/lib/creation-workspace-scope";
+import {
+  AUTOMATIC_UPGRADE_SERVER_STATE,
+  automaticUpgradeScopeKey,
+  readAutomaticLicenseUpgrade,
+  subscribeAutomaticLicenseUpgrade,
+  type AutomaticLicenseUpgradeState,
+} from "@/lib/automatic-license-upgrade";
 import {
   Loader2
 } from "lucide-react";
@@ -24,57 +32,35 @@ import type {
 
 import { TestConnectionButton } from "./model-connection-test";
 import { useSettingsMutation } from "./use-settings-mutation";
-const INCLUDED_CREDIT_WAIT_MS = 730_000;
-function IncludedCreditActivation() {
-  const router = useRouter();
-  const [busy, setBusy] = React.useState(false);
-  const [message, setMessage] = React.useState<string | null>(null);
-  const generation = React.useRef(0), active = React.useRef<AbortController | null>(null);
-  React.useEffect(() => {
-    let scope = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
-    const changed = () => {
-      const next = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
-      if (next === scope) return;
-      scope = next; generation.current++; active.current?.abort(); active.current = null; setBusy(false); setMessage(null);
-    };
-    window.addEventListener("creatoros:accounts-changed", changed); window.addEventListener("storage", changed);
-    return () => { generation.current++; active.current?.abort(); window.removeEventListener("creatoros:accounts-changed", changed); window.removeEventListener("storage", changed); };
-  }, []);
-  const activate = async () => {
-    if (active.current) return;
-    const current = ++generation.current, controller = new AbortController(); active.current = controller;
-    const scope = { groupId: readCurrentGroupId(), accountId: readCurrentAccountId() };
-    const live = () => current === generation.current && !controller.signal.aborted && scope.groupId === readCurrentGroupId() && scope.accountId === readCurrentAccountId();
-    const timer = setTimeout(() => controller.abort(), INCLUDED_CREDIT_WAIT_MS);
-    setBusy(true); setMessage("正在核对产品已含额度，你可以继续使用其它功能");
-    try {
-      const response = await waitForAiCreditCenter(() => fetchCreatorApi("/api/v1/local/client-config", {
-        method: "POST", cache: "no-store", signal: controller.signal, headers: { "x-creatoros-config-trigger": "activation" },
-      }, scope), controller.signal);
-      const body = await waitForAiCreditCenter(() => response.json(), controller.signal) as {
-        authority?: string; outcome?: string; activationFulfillment?: { status?: string; action?: string };
-      };
-      if (!live()) return;
-      const result = body.activationFulfillment;
-      if (!response.ok || !result || !["ready", "pending", "not_eligible", "unavailable"].includes(result.status ?? "") || typeof result.action !== "string" || result.action.length > 400)
-        throw new Error("启用结果尚未确认，请重新核对原权益，也可先切换为自配模型");
-      setMessage(result.status === "ready" && (body.authority !== "channel" || body.outcome !== "configured")
-        ? "产品已含额度已开通，模型配置仍在同步，可稍后再核对或先用自配模型" : result.action);
-      if (result.status === "ready") router.refresh();
-    } catch (error) {
-      if (live()) setMessage(error instanceof Error ? error.message : "启用结果尚未确认，请稍后核对原权益");
-      else if (current === generation.current) setMessage("已停止等待，服务端结果仍需核对；可再次启用核对原权益，也可先用自配模型");
-    } finally {
-      clearTimeout(timer);
-      if (current === generation.current) { active.current = null; setBusy(false); }
-    }
-  };
+export function useAutomaticUpgradeState(): AutomaticLicenseUpgradeState {
+  const scope = useCreationScope();
+  const state = React.useSyncExternalStore(
+    subscribeAutomaticLicenseUpgrade,
+    readAutomaticLicenseUpgrade,
+    () => AUTOMATIC_UPGRADE_SERVER_STATE,
+  );
+  return state.scopeKey === automaticUpgradeScopeKey(scope)
+    ? state
+    : AUTOMATIC_UPGRADE_SERVER_STATE;
+}
+
+/** 设置只观察正常启动流程，不在挂载、点击或刷新时另起授权/赠额操作。 */
+function IncludedCreditActivation({ state }: { readonly state: AutomaticLicenseUpgradeState }) {
+  let message: string | null = null;
+  if (state.status === "checking") message = "正在后台核对原授权与模型权益，你可以继续使用其它功能。";
+  if (state.status === "ready") message = "模型权益已就绪，原许可、已有钱包和个人模型来源保持不变。";
+  if (state.status === "pending") message = state.entitlementReady
+    ? "原模型权益已就绪，配置仍待核对；已有钱包和额度保持不变。"
+    : "模型权益暂未核对完成，原授权和已有数据已保留。";
+  if (state.status === "blocked") {
+    message = ["RESTORE_ACTIVE_BINDING_CONFLICT", "RESTORE_TARGET_BOUND_ELSEWHERE"].includes(state.reasonCode ?? "")
+      ? "原授权存在有效设备绑定，暂时无法自动恢复，请核对原授权的设备。"
+      : ["UPGRADE_LICENSE_REVOKED", "UPGRADE_LICENSE_INELIGIBLE", "RESTORE_LICENSE_REVOKED", "RESTORE_LICENSE_EXPIRED", "RESTORE_COUNT_DEPLETED"].includes(state.reasonCode ?? "")
+        ? "当前原授权不符合模型权益条件，请核对原许可状态。"
+        : "当前授权暂时无法安全核对，原有工作已保留。";
+  }
   return <div data-slot="included-credit-activation" className="flex w-full flex-col gap-3 border-b border-border/70 pb-4">
-    <p className="text-base leading-6 text-muted-foreground">产品已包含的官方额度可在这里启用，无需另购充值码。没有包含额度时，也可在模型来源中选择自配模型或本地 Codex 继续使用。</p>
-    <div className="flex flex-wrap gap-3">
-      <Button type="button" className="min-h-11 text-base" disabled={busy} onClick={() => void activate()}>{busy ? "正在核对已含额度…" : "启用产品已含额度"}</Button>
-      {busy && <Button type="button" className="min-h-11 text-base" variant="outline" onClick={() => active.current?.abort()}>取消等待</Button>}
-    </div>
+    <p className="text-base leading-6 text-muted-foreground">模型权益会随原授权自动核对，无需手动升级。原许可期限、已有钱包与个人模型来源保持不变；模型费用和额度按原权益规则使用。</p>
     {message && <p role="status" className="text-base leading-6">{message}</p>}
   </div>;
 }
@@ -82,15 +68,24 @@ function IncludedCreditActivation() {
 export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?: "ready" | "not_configured" | "unverified" } = {}) {
   const [opening, setOpening] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const upgrade = useAutomaticUpgradeState();
+  const errorSuccessRevision = React.useRef(0);
 
   const openingGeneration = React.useRef(0);
   const openingController = React.useRef<AbortController | null>(null);
   React.useEffect(() => {
-    let scope = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+    // 只由该工作区的新成功清理旧错误；额度中心正在执行或成功之后产生的新错误均保留。
+    if (upgrade.status === "ready" && !openingController.current && upgrade.successRevision > errorSuccessRevision.current) {
+      errorSuccessRevision.current = upgrade.successRevision;
+      setError(null);
+    }
+  }, [upgrade.status, upgrade.successRevision, upgrade.scopeKey]);
+  React.useEffect(() => {
+    let scope = automaticUpgradeScopeKey(readCreationScope());
     const change = () => {
-      const next = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+      const next = automaticUpgradeScopeKey(readCreationScope());
       if (next === scope) return;
-      scope = next; openingGeneration.current++; openingController.current?.abort(); openingController.current = null;
+      scope = next; openingGeneration.current++; openingController.current?.abort(); openingController.current = null; errorSuccessRevision.current = 0;
       setOpening(false); setError(null);
     };
     window.addEventListener("creatoros:accounts-changed", change); window.addEventListener("storage", change);
@@ -108,7 +103,11 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
     try {
       await openAiCreditCenter({ signal: controller.signal, isCurrent: live });
     } catch (cause) {
-      if (live()) setError(cause instanceof Error ? cause.message : "暂时无法打开 AI 额度，请稍后重试");
+      if (live()) {
+        const latest = readAutomaticLicenseUpgrade();
+        errorSuccessRevision.current = latest.scopeKey === automaticUpgradeScopeKey(readCreationScope()) ? latest.successRevision : 0;
+        setError(cause instanceof Error ? cause.message : "暂时无法打开 AI 额度，请稍后重试");
+      }
     } finally {
       if (current === openingGeneration.current) { openingController.current = null; setOpening(false); }
     }
@@ -119,7 +118,7 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
       title="AI 额度与消耗"
       description="前往额度中心查看总额度、已消耗和剩余额度，并进行购买或充值。"
     >
-      {accountStatus !== "ready" && <IncludedCreditActivation />}
+      <IncludedCreditActivation state={upgrade} />
       <div
         data-slot="ai-credit-center-card"
         className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"
@@ -127,7 +126,7 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
         <p className="text-base leading-6 text-muted-foreground">
           首次使用时按页面提示完成账号连接；之后可从这里直接进入额度中心。
         </p>
-        {accountStatus !== "not_configured" ? <Button
+        {accountStatus !== "not_configured" || upgrade.status === "ready" ? <Button
           type="button"
           data-slot="open-ai-credit-center"
           disabled={opening}
