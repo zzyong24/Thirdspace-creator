@@ -21,7 +21,7 @@ if(git('status','--porcelain=v1')!=='M orchestrator/.lessons-stats.json')throw E
 const source='frontend/src/server/workbench-browser-host.test.ts';
 const before=hash(path.join(state.tree,source));
 const config=JSON.parse(fs.readFileSync(path.join(state.tree,'orchestrator/process/reconcile.config.json'),'utf8'));
-const lesson=config.lessons.find(item=>item.id==='LED-054');
+const lesson=config.lessons.find(item=>item.led==='LED-054');
 if(!lesson||!lesson.check||lesson.timeout_ms!==2700000)throw Error('原LED054命令或预算缺失');
 save('candidate.json',{candidate,previousFullCandidate:state.commit,installedPackageCommit:state.installedPackageCommit,source,sourceSha256:before,configurationSha256:hash(path.join(state.tree,'orchestrator/process/reconcile.config.json')),lesson,environmentKeys:Object.keys(state.env).sort(),scope:'原full失败后的原单项整链复验；不改写原full结果。'});
 for(const key of Object.keys(process.env))delete process.env[key];
