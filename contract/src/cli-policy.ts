@@ -163,6 +163,7 @@ const READ_OPERATIONS = [
   "platforms.works.list",
   "pages.dashboard.get",
   "pages.groupTrend.get",
+  "pages.groupWorkspace.get",
   "pages.groupOverview.get",
   "pages.dailyReport.get",
   "pages.positioning.get",

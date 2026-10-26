@@ -2,7 +2,7 @@ import type {ArticleDocument,GraphicPostDocument,NoteRelayLayout} from '@creator
 export type ImageRef={assetId:string;assetFileId:string};
 export type Projection={title:string;markdown:string;images:ImageRef[]};
 export function assetSource(image:ImageRef){return `creatoros-asset:${image.assetId}:${image.assetFileId}`;}
-export function defaultLayout(platform:'wechat'|'rednote'):NoteRelayLayout{return {schemaVersion:1,editor:'noterelay',editorVersion:'0.1.8',themeId:platform==='wechat'?'moyu-green':'default',authorName:'',authorBio:'',variables:{},fontSize:16,splitHeading:2,templateId:'default',imageWidths:{},imageRadii:{}};}
+export function defaultLayout(platform:'wechat'|'rednote'):NoteRelayLayout{return {schemaVersion:1,editor:'noterelay',editorVersion:'0.1.8',themeId:platform==='wechat'?'moyu-green':'minimal',authorName:'',authorBio:'',variables:{},fontSize:16,splitHeading:2,templateId:'default',imageWidths:{},imageRadii:{}};}
 const imageNode=(image:ImageRef)=>`![图片](${assetSource(image)})`;
 // SEMANTIC_BOUNDARY_ALLOW: 仅投影用户已选的精确素材引用与显式段落顺序，不判断内容、匹配素材或选择风格。
 // 代码示例是原文，不能把其中的图片语法当成正式素材。
@@ -69,11 +69,13 @@ export function projectArticle(doc:ArticleDocument):Projection{
  return {title:doc.title,markdown:parts.filter(Boolean).join('\n\n'),images};
 }
 export function projectGraphic(doc:GraphicPostDocument):Projection{
- const images=unique(doc.imageUses);const {body,sources:consumed}=cleanMarkdown(doc.body,images);
+ const hasCards=Boolean(doc.cardBriefs?.length);
+ const images=unique(doc.imageUses);const {body,sources:consumed}=cleanMarkdown(hasCards?'':doc.body,images);
  const ordered=doc.imageUses.map((image,index)=>({image,index})).sort((a,b)=>a.image.order-b.image.order||a.index-b.index).map(({image})=>image);
  const used=new Set<ImageRef>();const take=(image:ImageRef)=>{if(consumed.has(assetSource(image))||used.has(image))return '';used.add(image);return imageNode(image);};
  const parts:string[]=[];const covers=ordered.filter(image=>image.role==='cover').map(take).filter(Boolean);if(covers.length)parts.push(covers.join('\n\n'));
- const main=[doc.title?`# ${doc.title}`:'',body].filter(Boolean).join('\n\n');if(main)parts.push(main);
+ // 发布配文与图片页是不同内容；未拆页旧稿保留原导出能力。
+ const main=hasCards?'':[doc.title?`# ${doc.title}`:'',body].filter(Boolean).join('\n\n');if(main)parts.push(main);
  for(const card of doc.cardBriefs??[]){const {body:text,sources}=cleanMarkdown(card.body,images);for(const source of sources)consumed.add(source);parts.push([card.title?`## ${card.title}`:'',text,...ordered.filter(image=>image.role!=='cover'&&image.cardId===card.cardId).map(take)].filter(Boolean).join('\n\n'));}
  for(const image of ordered.filter(image=>image.role!=='cover')){const node=take(image);if(node)parts.push(node);}
  return {title:doc.title,markdown:parts.filter(Boolean).join('\n\n---\n\n'),images};

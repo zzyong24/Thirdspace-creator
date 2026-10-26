@@ -1,0 +1,39 @@
+# SPEC Review — current
+
+- Task: T-1418
+- Verdict: PASS
+- Round: 1/3 (initial)
+- Spec receipt: 82fcdae03486
+- Review receipt: baa9f1987d8f
+
+## 当前有效问题
+
+当前无未销账问题。
+
+已销账：—
+
+```spec-review-state
+{
+  "schema": "spec-review-state/v2",
+  "task_id": "T-1418",
+  "cycle": 1,
+  "round": 1,
+  "max_rounds": 3,
+  "review_kind": "initial",
+  "verdict": "PASS",
+  "summary": "T-1418 独立前置规格审核通过，当前无未解决 finding。绑定 SPEC SHA256=82fcdae0348667f13fb360f38e8ef1a7ed750e7037133d1e99022dfbdf1769de；宪法 docs/产品定位.md SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；任务包 SHA256=1f4bd2957b8a67e7980d676efb520848b8d582c920f47de29f80ffda0133c284。已读任务包 §1–5、7–9，写前核 §6；reviewctl context 确认尚无 v2 history，故为 initial。同构独立审核，不声明异构模型。源码依据：group-workspace.ts 的旧 get 等待 dashboard/项目全表并串行读取采集摘要、指标、输出引用和首页标题；overview/page.tsx 只消费 workspace，因此新增同应用层只读投影并复用聚合是有依据的性能修复，不改变数据所有者。account-group.service.ts 的 root 按 userId+groupId 验权；新路径必须继续先验证组上下文，并以本组当前成员及冻结历史事实判断账号，不可把历史账号收窄为当前成员。现有 dashboard-collected-metrics.test.ts 的真实隔离 DB fixture 可承载异用户/异组/账号平台不符、转组历史、真实0/未知、采集失败及读取不写库的回归；两端点同 fixture 等价、无首页依赖、并发与计数、前端新旧页面路由及既有竞态回归构成可执行验收。初步反馈中的穷尽 scope/CLI 表遗漏、观测 JSON 登记、合同测试错误放入 src/、LED-047 无数值预算，均已在本轮最终 SPEC 和任务包修正：四个合同测试绑定 contract/tests/，与 vitest.config.ts 收集规则一致；未扩展助手语义工具范围。已只读核 red.log（SHA256=f8cecc920515c6f63215f84f486f301b2277dc68227c9ee2c0f0ccf9a68787e1）确为新端点 UnsupportedOperationError、1失败/6通过；它不代表其它拟新增断言已验证。installed-cli-before.json 仅证明三个含启动开销的成功读取样本，不能证明服务端或 UI 达标。后续必须按合同实际完成 RED/GREEN、静态/边界/超时门及同候选安装态验收：组合页 P95≤1s、普通读既有500ms标准保持，至少每平台5次并分别保留 CLI、服务端 durationMs、点击到匹配筛选提交的测量，保留冷次和慢次；正常/最小视口及完整 scope 提交前不签性能通过。本次只评审合同，未运行测试、真实业务、安装或网络操作，未修改产品/控制面；不代签实现或安装性能，不继续暂停的推送。",
+  "spec_path": "docs/features/t1418-creator-overview-read-performance.md",
+  "spec_sha256": "82fcdae0348667f13fb360f38e8ef1a7ed750e7037133d1e99022dfbdf1769de",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "review_path": "docs/features/t1418-creator-overview-read-performance.T-1418.review.md",
+  "review_mode": "homogeneous",
+  "model": "inherited-model-unverified",
+  "policy": "convergent-review/v2",
+  "cycle_authorization": null,
+  "latest_event_hash": "0377b84f82d3bf34a235f4cbf04f2e2901d925e2ee512a64f592fc3b89b66ffd",
+  "open_findings": [],
+  "resolved_findings": [],
+  "receipt": "baa9f1987d8f"
+}
+```

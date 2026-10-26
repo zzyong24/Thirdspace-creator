@@ -84,6 +84,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["PUT", "/account-groups/:groupId/cadence"],
   ["GET", "/account-groups/:groupId/cadence/attainment"],
   ["GET", "/groups/:groupId/overview"],
+  ["GET", "/groups/:groupId/workspace"],
   ["GET", "/analytics/daily-report"],
   // 项目与流程
   ["GET", "/projects"],

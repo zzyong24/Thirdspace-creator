@@ -274,6 +274,7 @@ export const REQUEST_OPERATION_IDS = [
   "pages.dailyReport.get",
   "pages.dashboard.get",
   "pages.groupTrend.get",
+  "pages.groupWorkspace.get",
   "pages.groupOverview.get",
   "pages.positioning.get",
   "pages.projectOverview.get",

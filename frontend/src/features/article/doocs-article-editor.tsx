@@ -55,6 +55,8 @@ export function DoocsArticleEditor(props:Props){const scope=useNativeWorkspace()
 function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDelivery,accountId,projectId,outputId, sourceVersionId, value, savedDocument, onChange, onSave }: Props) {
   const scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope),assetClient=workspace.client;
   const lazyDelivery=deliveryOnly&&!showPreview;
+  const [formattingOpen,setFormattingOpen]=React.useState(false);
+  const editable=!deliveryOnly||formattingOpen;
   const [nativeRequested,setNativeRequested]=React.useState(!lazyDelivery);
   const nativeWaiter=React.useRef<{resolve:(handle:NativeEditorHandle)=>void;reject:(reason:Error)=>void}|null>(null);
   const deliveryPending=React.useRef(false);
@@ -130,7 +132,7 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
   },[]);
 
   function receiveChanged(eventValue:unknown){
-    if(deliveryOnly||!alive.current||loadingFingerprint.current!==null||!eventValue||typeof eventValue!=='object')return;
+    if(!editable||!alive.current||loadingFingerprint.current!==null||!eventValue||typeof eventValue!=='object')return;
     const message=eventValue as EditorValue;
     if(typeof message.markdown==='string'){
       setDraftMarkdown(message.markdown);setDraftLayout(message.layout as typeof draftLayout);
@@ -140,13 +142,13 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
   }
 
   React.useEffect(() => {
-    if (deliveryOnly||!editorReady||checkpoint) return;
+    if (!editable||!editorReady||checkpoint) return;
     const timer = window.setTimeout(() => {
       try { sessionStorage.setItem(checkpointKey(storageOwner,outputId), JSON.stringify({groupId:scope.groupId,accountId:scope.accountId,outputId,sourceVersionId, updatedAt: Date.now(), document: value, markdown: draftMarkdown, layout: draftLayout } satisfies StoredCheckpoint)); }
       catch { setStatus("未保存草稿仍在编辑器内存中；浏览器刷新后无法恢复。"); }
     }, 500);
     return () => clearTimeout(timer);
-  }, [accountId, outputId, sourceVersionId, value, draftMarkdown, draftLayout, editorReady,checkpoint]);
+  }, [accountId, outputId, sourceVersionId, value, draftMarkdown, draftLayout, editorReady,checkpoint,editable]);
 
   React.useEffect(()=>{const imports=imported.current;const sequence=loadSequence;alive.current=true;return()=>{alive.current=false;session.current=sessionId();sequence.current++;controller.current?.abort();nativeWaiter.current?.reject(new Error('已离开当前稿件'));nativeWaiter.current=null;imports.clear();};},[]);
 
@@ -256,10 +258,31 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
     finally { deliveryPending.current=false;if(alive.current)setBusy(false); }
   }
 
+  async function toggleFormatting(){
+    if(!formattingOpen){setFormattingOpen(true);return;}
+    const active=editorRef.current;if(!active)return;const frozen=editorFingerprint(currentDocuments.current.value);
+    setBusy(true);setError(null);
+    try{
+      // 收起前读取实时正文；原生 changed 和草稿暂存都有延迟，不能用旧的 React 值覆盖最后输入。
+      const snapshot=await active.request<EditorValue>('snapshot');
+      if(!alive.current||editorRef.current!==active||editorFingerprint(currentDocuments.current.value)!==frozen)return;
+      const next=documentFromSnapshot(currentDocuments.current.value,snapshot,imported.current),nextFingerprint=editorFingerprint(next);
+      const rendered=await active.request<EditorValue>('export-html');
+      if(!alive.current||editorRef.current!==active||![frozen,nextFingerprint].includes(editorFingerprint(currentDocuments.current.value)))return;
+      if(typeof rendered.html!=='string')throw Error('排版预览尚未完成，请重试。');
+      setDraftMarkdown(snapshot.markdown!);setDraftLayout(next.nativeLayout);setNativeEcho(nextFingerprint);onChange(next);
+      if(!checkpoint){
+        try{sessionStorage.setItem(checkpointKey(storageOwner,outputId),JSON.stringify({groupId:scope.groupId,accountId:scope.accountId,outputId,sourceVersionId,updatedAt:Date.now(),document:next,markdown:snapshot.markdown!,layout:next.nativeLayout} satisfies StoredCheckpoint));setStatus('修改已在本标签页暂存，尚未保存为正式版本。');}
+        catch{setStatus('未保存草稿仍在编辑器内存中；浏览器刷新后无法恢复。');}
+      }
+      setPreviewHtml(DOMPurify.sanitize(rendered.html,{FORBID_TAGS:['style','iframe','object','embed','form','input','button','textarea']}));setFormattingOpen(false);
+    }catch(reason){if(alive.current)setError(reason instanceof Error?reason.message:'排版预览尚未完成。');}finally{if(alive.current)setBusy(false);}
+  }
+
   return <section className={deliveryOnly&&!showPreview?"contents":"min-w-0 space-y-3 rounded-xl border p-2 sm:p-4"}>
     <div className="flex flex-wrap items-center justify-between gap-3">{(!deliveryOnly||showPreview)&&<div className="min-w-0"><h3 className="text-[13.5px] font-semibold">{showPreview?"成稿预览":"公众号排版编辑器"}</h3><p className="text-xs text-muted-foreground">{syncing?"正在同步当前正文与排版…":status}</p></div>}
       <div className="flex min-w-0 w-full flex-wrap gap-2 sm:w-auto">{showPreview&&<Button variant="outline" disabled={busy||!editorReady||syncing} onClick={()=>void exportFormalVersion('copy-html')}>复制公众号文章</Button>}<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" variant="outline" onClick={() => void exportFormalVersion()} disabled={busy || (!lazyDelivery&&(!editorReady||syncing)) || (!deliveryOnly&&JSON.stringify(value) !== JSON.stringify(savedDocument))}>导出 HTML + 图片 ZIP</Button>
-        {!deliveryOnly&&<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" onClick={() => void saveEditorDraft()} disabled={busy || !editorReady || syncing || checkpointConflict}>{busy ? "处理中…" : "保存正文与排版"}</Button>}</div></div>
+        {deliveryOnly&&showPreview&&<Button variant="outline" disabled={busy||!editorReady||syncing} onClick={()=>void toggleFormatting()}>{formattingOpen?"收起排版":"调整排版"}</Button>}{editable&&<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" onClick={() => void saveEditorDraft()} disabled={busy || !editorReady || syncing || checkpointConflict}>{busy ? "处理中…" : "保存正文与排版"}</Button>}</div></div>
     {lazyDelivery&&busy&&<p role="status" className="text-xs text-muted-foreground">正在准备导出，完成后将自动下载。</p>}
     {error && <p role="alert" className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{error}{!lazyDelivery&&syncing&&<Button className="ml-2" size="sm" variant="outline" disabled={busy} onClick={()=>void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);})}>重新读取当前稿</Button>}</p>}
     {checkpoint && <div role="status" className="rounded-md border border-warning/30 bg-warning/10 p-3 text-sm">
@@ -268,13 +291,13 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
       {!checkpointConflict && <Button className="ml-3" size="sm" variant="outline" onClick={restoreCheckpoint}>恢复未保存草稿</Button>}
       <Button className="ml-2" size="sm" variant="ghost" onClick={() => { sessionStorage.removeItem(checkpointKey(storageOwner,outputId)); setCheckpoint(null); setCheckpointConflict(false); }}>放弃旧草稿并继续当前稿</Button>
     </div>}
-    {showPreview&&<div aria-label="原版式成稿预览" className="mx-auto max-w-[680px] overflow-auto rounded-md bg-white p-6 text-neutral-900" dangerouslySetInnerHTML={{__html:previewHtml}}/>}
-    {nativeRequested&&<div aria-hidden={deliveryOnly||undefined} inert={deliveryOnly||undefined} style={deliveryOnly?{position:"fixed",left:-10000,top:0,width:800,height:700,visibility:"hidden"}:undefined} className="h-[700px] min-h-0 overflow-hidden rounded-md border bg-surface"><NativeEditorSurface ref={editorRef} editor="doocs-md" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId,outputId,sourceVersionId:mountVersion}} disabled={busy||syncing} onReady={nativeReady} onChanged={receiveChanged} onError={nativeError} onImport={async file=>{
+    {showPreview&&!formattingOpen&&<div aria-label="原版式成稿预览" className="mx-auto max-w-[680px] overflow-auto rounded-md bg-white p-6 text-neutral-900" dangerouslySetInnerHTML={{__html:previewHtml}}/>}
+    {nativeRequested&&<div aria-hidden={!editable||undefined} inert={!editable||undefined} style={!editable?{position:"fixed",left:-10000,top:0,width:800,height:700,visibility:"hidden"}:undefined} className="h-[700px] min-h-0 overflow-hidden rounded-md border bg-surface"><NativeEditorSurface ref={editorRef} editor="doocs-md" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId,outputId,sourceVersionId:mountVersion}} disabled={busy||syncing} onReady={nativeReady} onChanged={receiveChanged} onError={nativeError} onImport={async file=>{
       const output=await workspace.client.getOutput({params:{outputId},query:undefined,body:undefined});if(!alive.current)throw new Error('已离开当前稿件');
       const ref=await uploadEditorMedia(output.projectId,outputId,file,workspace.capture());if(!alive.current)throw new Error('已离开当前稿件');
       imported.current.set(`${ref.assetId}:${ref.assetFileId}`,{assetId:ref.assetId,assetFileId:ref.assetFileId});
       return {mediaId:`creatoros-asset:${ref.assetId}:${ref.assetFileId}`};
     }}/></div>}
-    {!deliveryOnly&&<details className="text-xs text-muted-foreground"><summary className="cursor-pointer">开源来源与许可</summary><a className="underline" href="/reference-editors/sources/doocs-md/native-source.tar.gz" download>Doocs 对应源码与许可</a></details>}
+
   </section>;
 }

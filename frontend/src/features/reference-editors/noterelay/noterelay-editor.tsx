@@ -81,12 +81,13 @@ function NoteRelayEditorSession(props:Props){
   }catch(reason){if(alive.current&&editor.current===active)setError(reason instanceof Error?reason.message:'交付失败，请重试。');}finally{if(alive.current&&editor.current===active)setBusy(false);}
  }
  return <section className="space-y-4 rounded-xl border border-border bg-surface p-4" aria-label="NoteRelay 排版预览">
-  <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-[13.5px] font-semibold">成稿预览</h2></div>
+  <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-[13.5px] font-semibold">{platform==='wechat'?'成稿预览':'图片页预览'}</h2></div>
    <div className="flex flex-wrap items-start gap-2"><Button variant={props.simplified?"outline":"default"} className="min-h-11 px-4" disabled={!loaded||locked} onClick={()=>void deliver(platform==='wechat'?'copy-html':'zip')}>{busy?'正在交付…':platform==='wechat'?'复制公众号文章':'导出分页 ZIP'}</Button>
     <details className="relative"><summary className="cursor-pointer rounded-md border border-border px-3 py-3 text-sm">更多导出</summary><div className="absolute right-0 z-20 mt-2 flex min-w-40 flex-col gap-1 rounded-lg border border-border bg-surface p-2 shadow-lg">
     {(platform==='wechat'?[['html','导出 HTML'],['copy-text','复制纯文本']]:[['copy-png','复制当前页'],['png','下载当前页']]).map(([action,label])=><Button key={action} variant="ghost" disabled={!loaded||locked} onClick={()=>void deliver(action as ExportAction)}>{label}</Button>)}
     {props.extraDelivery}<Button variant="ghost" disabled={busy} onClick={()=>{ready.current=false;setRendered('');setEpoch(n=>n+1);}}>重新加载预览</Button></div></details>
    </div></div>
+  {props.simplified&&<Choice label={platform==='wechat'?'文章风格':'图片风格'} value={layout.themeId} items={meta.themes} disabled={!loaded||layoutLocked} onChange={themeId=>change({themeId})}/>}
   <div className="h-[min(850px,75dvh)] min-h-[420px] overflow-hidden rounded-lg border border-border"><NativeEditorSurface key={epoch} ref={editor} editor="noterelay" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId:props.projectId,outputId:props.outputId,sourceVersionId:mountVersion}} disabled={locked} onReady={()=>{ready.current=true;void initialize();}} onChanged={v=>{if(v&&typeof v==='object')setMeta(v as Metadata);}} onImport={async()=>{throw new Error('请从当前稿件选择图片');}} onError={setError}/></div>
   {platform==='rednote'&&<div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={!loaded||locked||meta.pageIndex<=0} onClick={()=>request('page',{index:meta.pageIndex-1})}>上一页</Button><span className="text-sm text-muted-foreground">{meta.pageCount?meta.pageIndex+1:0} / {meta.pageCount}</span><Button variant="outline" disabled={!loaded||locked||meta.pageIndex>=meta.pageCount-1} onClick={()=>request('page',{index:meta.pageIndex+1})}>下一页</Button>
 </div>}
@@ -109,6 +110,6 @@ function NoteRelayEditorSession(props:Props){
   </div></details>}
   {(error||assetError)&&<p role="alert" className="text-sm text-destructive">{error||assetError}</p>}{message&&<p role="status" className="text-sm text-success">{message}</p>}
 
-  <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">开源来源与许可</summary><a className="mt-2 block underline" href="/reference-editors/sources/noterelay/source.zip" download>NoteRelay 0.1.8 源码与许可</a></details>
+
  </section>;
 }

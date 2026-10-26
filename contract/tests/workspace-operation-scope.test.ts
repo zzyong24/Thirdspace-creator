@@ -5,14 +5,15 @@ describe("账号组操作归属契约",()=>{
   expect(scopes['settings.modelRouting.get']).toBe('user');
   expect(scopes['settings.modelRouting.put']).toBe('user');
  });
- it("原模型摘要是独立纯组读取，不扩大旧实体和文件门",()=>{
+ it("模型摘要与任务观察可按组读取，文件门保持平台账号",()=>{
   expect(scopes["workbench.modelCalls.summary" as keyof typeof scopes]).toBe("group");
-  for(const id of ["workbench.tasks.inspect","workbench.tasks.events","workbench.artifacts.read","workbench.files.reconcile"] as const)
+  for(const id of ["workbench.artifacts.read","workbench.files.reconcile"] as const)
    expect(scopes[id]).toBe("platform-account");
  });
- it("工具目录允许纯组，其余工作台实体操作仍要求原平台账号",()=>{
+ it("工具目录与任务观察允许纯组，物料与文件仍要求原平台账号",()=>{
   expect(scopes["workbench.capabilities.list"]).toBe("group");
-  for(const id of ["workbench.tasks.inspect","workbench.tasks.events","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile","workbench.files.reconcile"] as const)
+  expect(scopes["workbench.tasks.inspect"]).toBe("group");expect(scopes["workbench.tasks.events"]).toBe("group");
+  for(const id of ["workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile","workbench.files.reconcile"] as const)
    expect(scopes[id]).toBe("platform-account");
  });
  it("逐条声明所有正式操作，没有按名字在运行时猜作用域",()=>{

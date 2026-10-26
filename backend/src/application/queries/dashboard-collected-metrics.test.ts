@@ -53,7 +53,15 @@ async function fixture(){
  const services={groups,projects,publishing,analytics,nativeReports:collections,dashboard:{getDashboard:async()=>baseline},now:deps.now};
  const app=createGroupWorkspaceApplication({...services,collectedMetrics:collections} as any);
  const transport=createQueryServicesTransport({groupOverview:app} as any);
- async function read(query:Record<string,string>,c:RequestContext=ctx,groupId=c.groupId!){const response=await transport.request(ENDPOINTS.getGroupOverview,{params:{groupId},query,body:undefined},c);return (response as {data:unknown}).data as any;}
+ async function read(query:Record<string,string>,c:RequestContext=ctx,groupId=c.groupId!){
+  const input={params:{groupId},query,body:undefined};
+  const results=await Promise.allSettled([transport.request(ENDPOINTS.getGroupOverview,input,c),transport.request(ENDPOINTS.getGroupWorkspace,input,c)]);
+  const original=results[0]!,summary=results[1]!;
+  if(original.status==='rejected'){expect(summary.status).toBe('rejected');if(summary.status==='rejected')expect(summary.reason.code).toBe(original.reason.code);throw original.reason;}
+  if(summary.status==='rejected')throw summary.reason;
+  expect((summary.value as any).data).toEqual({workspace:(original.value as any).data.workspace});
+  return (original.value as any).data;
+ }
  return {...store,clock,groups,accounts,collections,ctx,a,b,xhs,ks,commit,work,metric,app,read,publishing,analytics,projects,services,initialXhsMetricPage};
 }
 let f:Awaited<ReturnType<typeof fixture>>;
@@ -154,6 +162,7 @@ describe('T1356 实际归属/去重/错误隔离公共保护',()=>{
  it('新摘要失败只降级来源覆盖，旧合法指标与其它工作台卡保留',()=>isolated(async f=>{
   await seedPublication(f);const app=createGroupWorkspaceApplication({...f.services,collectedMetrics:{async readDashboardSummary(){throw new Error('synthetic-summary-read-failure');}}} as any);
   const t=createQueryServicesTransport({groupOverview:app} as any),r:any=await t.request(ENDPOINTS.getGroupOverview,{params:{groupId:f.a.id},query:{platform:'xiaohongshu'},body:undefined},f.ctx);
+  const summary:any=await t.request(ENDPOINTS.getGroupWorkspace,{params:{groupId:f.a.id},query:{platform:'xiaohongshu'},body:undefined},f.ctx);expect(summary.data).toEqual({workspace:r.data.workspace});
   expect(value(r.data)).toBe('5');expect(r.data.workspace.collected.state).toBe('unavailable');expect(r.data.workspace.coverage).toContain('摘要暂不可读');expect(r.data.scheduleReminderReadState).toEqual(baseline.scheduleReminderReadState);expect(r.data.dataOverview.trend).toEqual([]);
  }),180000);
 });

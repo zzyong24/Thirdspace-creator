@@ -9,6 +9,10 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1418|修复创作者总览筛选读取慢与等待路径|🔨|PASS[REV:baa9f1987d8f]|待验|[SPEC](docs/features/t1418-creator-overview-read-performance.md)|按真实月明水清深数据定位重复/串行读取，保留账号隔离与正确筛选结果。|
+|T-1419|简化文章工作台并恢复公众号排版风格切换|🔨|PASS[REV:ab5903121ea5]|待验|[SPEC](docs/features/t1419-article-workbench-style-restoration.md)|移除创作流程里的来源许可说明，从历史恢复可保存、预览、导出的多风格切换。|
+|T-1420|按小红书图文重组正文与多页图片|🔨|PASS[REV:3b080bb41774]|待验|[SPEC](docs/features/t1420-graphic-post-content-structure.md)|正文符合平台表达、图片按内容语义拆页，清除多余来源许可和发布交付入口。|
+|T-1421|理清剪辑转写与按文字剪辑入口|🔨|PASS[REV:1afd62137d5a]|待验|[SPEC](docs/features/t1421-transcript-editing-clarity.md)|明确导入视频、转成文字、按文字剪辑的用途和先后关系，保留真实能力。|
 |T-1417|补齐官方Pi同能力输出预算诊断|✅|PASS[REV:c3f3e604a908]|—|[SPEC](docs/features/t1417-text-probe-output-budget.md)|受限128/8192文本探针，先区分402原因，不改正式聊天预算。|
 |T-1416|修复真实浏览器验收的过时页面断言|✅|PASS[REV:47d4fbfd6861]|—|[SPEC](docs/features/t1416-browser-visible-document-assertions.md)|核对可见正文及来源，保留真实浏览器、账号隔离与全部原断言。|
 |T-1415|收口恢复验收后的只读Stop与两份宪法审核|✅|PASS[REV:abe1e1aaf662]|—|[SPEC](docs/features/t1415-resumed-verification-control.md)|保留日常只读Stop，真实重审规则恢复导致过期的T915/T859，完整验收不降级。|
@@ -18,7 +22,7 @@
 |T-1411|修复文本连接测试鉴权丢失与结果说明|✅|PASS[REV:40d357fc2e44]|—|[SPEC](docs/features/t1411-model-probe-auth-parity.md)|[D]|
 |T-1410|修复历史审核证据与看板对账|✅|PASS[REV:568fd798a094]|—|[SPEC](docs/features/t1410-review-evidence-reconciliation.md)|[D]|
 |T-1409|修复官方Pi支付拒绝的安全诊断|✅|PASS[REV:04839f8bcbce]|—|[SPEC](docs/features/t1409-managed-pi-payment-diagnostics.md)|[D]|
-|T-1408|修复官方Pi与未通过验收并在通过后推送|🔨|PASS[REV:e9724b83fcdb]|待验|[SPEC](docs/features/t1408-official-pi-acceptance-and-push.md)|[D]|
+|T-1408|修复官方Pi与未通过验收并在通过后推送|⏸️|PASS[REV:e9724b83fcdb]|待验|[SPEC](docs/features/t1408-official-pi-acceptance-and-push.md)|[D]|
 |T-1407|整理现有修复、安装复验并准备合并推送|⏸️|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|[D]|
 |T-1405|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:2537258f8796]|—|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|[D]|
 |T-1403|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1403-cli-chat-combination-acceptance.md)|[D]|

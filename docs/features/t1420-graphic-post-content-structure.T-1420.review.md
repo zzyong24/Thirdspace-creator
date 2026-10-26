@@ -1,0 +1,39 @@
+# SPEC Review — current
+
+- Task: T-1420
+- Verdict: PASS
+- Round: 2/3 (recheck)
+- Spec receipt: 8a0073ade736
+- Review receipt: 3b080bb41774
+
+## 当前有效问题
+
+当前无未销账问题。
+
+已销账：—
+
+```spec-review-state
+{
+  "schema": "spec-review-state/v2",
+  "task_id": "T-1420",
+  "cycle": 1,
+  "round": 2,
+  "max_rounds": 3,
+  "review_kind": "recheck",
+  "verdict": "PASS",
+  "summary": "T-1420 第二轮增量复核；继承宿主模型的同构会话（homogeneous），未核实具体型号，未参与本任务规格编写或产品实施。已实际运行 reviewctl context T-1420 --spec docs/features/t1420-graphic-post-content-structure.md --constitution docs/产品定位.md --json，取得首轮 PASS、previous_round=1、原 findings=[]；上一 SPEC SHA256 6f9efb03640bfac509838d08d5b6d8d403375590c0ba11fbf8e54a784009cca6。当前 HEAD 98008e5170424ab9ca95186717fcbb636c7e137c；本轮 SPEC SHA256 8a0073ade7365dccd4c8e0e5823d59baec166740b23bb00642e370ff744c1567；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。本轮仅审 context 唯一增量 SPEC-LINE:19:321f541af13faba6 及新增写集：无主脚本但已有已保存正文或卡片的旧图文，允许以当前稿和绑定来源提出完整候选；两者皆空才引导脚本，不补造 scriptRef，保留原来源；公众号维持原脚本要求。只读核实 chatbox-turn.ts:56 确有公众号和图文统一脚本原稿约束；graphic-post-workbench.tsx:139/184/193 与 script-first-content.ts:21 也存在 requireScript 和提示约束，均已在本任务原/新增写集中，系统提示与按钮共同修订是兑现本次兼容结果的必要配套。现有未要求 requireScript 的 prepareForTurn 路线仍先冻结当前完整已保存文档、版本和 digest，并通过原候选/显式采纳端口处理；新合同未授权客户端造来源、绕过保存回读、跨平台反写、自动采纳或自动发布。新增 chatbox-turn.ts/test 与 native-bundle.test 写集覆盖系统提示兼容与真实分页一致性，未扩成新端口或新权限。未发现增量引入的规格矛盾或阻断，原空 findings 保持；这是规格复核，未执行测试、模型、用户 CLI、UI 或打包，不代签实现和真实验收。正式裁决由主线程 reviewctl 完成。",
+  "spec_path": "docs/features/t1420-graphic-post-content-structure.md",
+  "spec_sha256": "8a0073ade7365dccd4c8e0e5823d59baec166740b23bb00642e370ff744c1567",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "review_path": "docs/features/t1420-graphic-post-content-structure.T-1420.review.md",
+  "review_mode": "homogeneous",
+  "model": "inherited-model-unverified",
+  "policy": "convergent-review/v2",
+  "cycle_authorization": null,
+  "latest_event_hash": "5274769f9f891d3615a93953d4675247acdcd73379b3e1a65b8fa9bd277e0ea9",
+  "open_findings": [],
+  "resolved_findings": [],
+  "receipt": "3b080bb41774"
+}
+```

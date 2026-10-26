@@ -88,3 +88,13 @@ it('图片类型及25MiB大小检查失败只降级对应图片，正文仍加�
  h.getAssetFileDownloadUrl.mockImplementation(async({params}:any)=>({url:params.assetId}));vi.stubGlobal('fetch',vi.fn(async(url:string)=>({ok:true,blob:async()=>url==='asset-0'?new Blob(['html'],{type:'text/html'}):Object.defineProperty(new Blob(['pixels'],{type:'image/png'}),'size',{value:26*1024*1024})})));
  render(<NoteRelayEditor projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={withImages(2)} onLayoutChange={()=>{}}/>);await connected();expect(screen.getByRole('alert')).toHaveTextContent('2 张图片');expect(h.request.mock.calls.find(([op])=>op==='load')?.[1]).toMatchObject({title:'真实稿',images:[]});
 });
+
+it('简化文章可切换真实主题，正文不变且预览保存导出共用布局',async()=>{
+ const original=h.request.getMockImplementation()!;h.request.mockImplementation(async(op:string,payload:unknown)=>op==='load'?{themes:[{id:'graphite-minimal',name:'石墨极简风'},{id:'moyu-green',name:'摸鱼绿'}],images:[],selectedImage:'',pageIndex:0,pageCount:0}:original(op,payload));
+ const save=vi.fn(async()=>true);let current=doc;
+ function Host(){const [value,setValue]=React.useState(doc);current=value;return <NoteRelayEditor simplified prepareDelivery={save} projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={value} onLayoutChange={nativeLayout=>setValue(v=>({...v,nativeLayout}))}/>;}
+ render(<Host/>);await connected();const choice=screen.getByRole('combobox',{name:'文章风格'});fireEvent.keyDown(choice,{key:'ArrowDown'});fireEvent.click(await screen.findByRole('option',{name:'摸鱼绿'}));
+ await waitFor(()=>expect(h.request.mock.calls.filter(([op])=>op==='load').at(-1)?.[1].layout.themeId).toBe('moyu-green'));
+ expect(current.sections).toEqual(doc.sections);expect(current.nativeLayout?.themeId).toBe('moyu-green');expect(screen.queryByText('开源来源与许可')).toBeNull();
+ Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:vi.fn()}});exports();fireEvent.click(screen.getByRole('button',{name:'复制纯文本'}));await waitFor(()=>expect(save).toHaveBeenCalledOnce());expect(h.request.mock.calls.some(([op])=>op==='export')).toBe(true);
+});

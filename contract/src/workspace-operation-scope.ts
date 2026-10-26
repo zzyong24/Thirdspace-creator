@@ -215,6 +215,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "notifications.read": "group",
   // pages
   "pages.groupTrend.get": "group",
+  "pages.groupWorkspace.get": "group",
   "pages.groupOverview.get": "group",
   "pages.dailyReport.get": "group",
   "pages.projectOverview.get": "project-derived",

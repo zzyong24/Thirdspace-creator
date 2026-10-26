@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-1420 首轮独立全文规格审查；继承宿主模型的同构会话（homogeneous），未核实具体型号，未参与本任务规格编写或产品实施。当前 HEAD 98008e5170424ab9ca95186717fcbb636c7e137c；SPEC SHA256 6f9efb03640bfac509838d08d5b6d8d403375590c0ba11fbf8e54a784009cca6；宪法 docs/产品定位.md SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读任务包 §1–5、§7–9，写入前核 §6，仅写本轮审核证据。完整核对当前已确认稿→AI 语义组织标题/独立发布配文/逐页 cardBriefs→预览与显式采纳→编辑保存导出，以及非空卡片投影、无卡旧稿安全降级、既有选图/顺序/同图复用、用户保存主题不被替换。只读核实 projectGraphic 当前确会投影完整 doc.body 再追加卡片，rednote default 黑底/minimal 白底是真实已有主题，现有 work-editor typed_snapshot 及 createGraphicPostVersion 已支持完整 GraphicPostDocument，graphic.post-text 仍为单字段候选。合同将内容语义交给 AI，代码只落实显式结构与边界，未引入客户端自动采纳或新的发布副作用。合同要求无卡旧稿能提出重新组织候选；实施须兑现该按钮对当前稿的真实可用性，不能原样遗留 requireScript 禁用而仅换提示。现有缺陷正是本合同要修的实现差异，未将其冒作新规格阻断。未发现规格阻断。 这是规格及仓内事实审核，未执行模型、用户 CLI、UI、测试或打包，不证明实现完成或真实验收已通过；正式结论由主线程 reviewctl 依据 findings 裁决。",
+  "findings": []
+}

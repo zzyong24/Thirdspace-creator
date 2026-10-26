@@ -15,11 +15,9 @@ import { describeUserError } from "@/lib/ai-error-humanize";
 import {inheritGraphicScript,reorganizePrompt} from "./script-first-content";
 import { GraphicPostResults } from "./graphic-post-results";
 import {NoteRelayEditor} from "@/features/reference-editors/noterelay/noterelay-editor";
-import {LazyDisclosure} from "@/features/reference-editors/noterelay/lazy-disclosure";
 import {graphicDeliveryImages} from "./graphic-series-document";
 import {zipSync,strToU8} from "fflate";
 
-import { PublicationResultActions } from "./publication-result-actions";
 
 type WorkbenchProps = {
   projectId: string;
@@ -174,6 +172,13 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
     }catch(reason){if(mounted.current)setError(describeUserError(reason,'导出未完成，作品已保留，请重试。'));}
     finally{if(mounted.current)setExportBusy(false);}
   }
+  async function copyCaption(){
+    if(busy||exportBusy)return;setExportBusy(true);setError(null);
+    try{if(!(await save())||!mounted.current)return;const value=draftRef.current;
+      await navigator.clipboard.writeText([value.title,value.body,value.tags.map(tag=>`#${tag}`).join(' ')].filter(Boolean).join('\n\n'));
+      if(mounted.current)setMessage("发布配文已复制，可粘贴到小红书。");
+    }catch(reason){if(mounted.current)setError(describeUserError(reason,"配文复制未完成，请重试。"));}finally{if(mounted.current)setExportBusy(false);}
+  }
   const [reorganizing,setReorganizing]=React.useState(false);
   const reorganizationInFlight=React.useRef(false);
   async function reorganize(){
@@ -181,7 +186,7 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
     reorganizationInFlight.current=true;setReorganizing(true);setError(null);
     try{
       const preparedEditorTurn=await chat.prepareEditorRequest(creationScopeKey(scope));
-      if(!preparedEditorTurn)await portRef.current!.prepareForTurn({requireScript:true});
+      if(!preparedEditorTurn)await portRef.current!.prepareForTurn();
       if(mounted.current)chat.openChat({prefill:reorganizePrompt("rednote"),autoSend:true,preparedEditorTurn});
       else chat.discardPreparedEditorTurn(preparedEditorTurn);
     }catch(reason){if(mounted.current)setError(describeUserError(reason,"重新组织尚未开始，当前稿件已保留。"));}
@@ -190,7 +195,7 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
   return <main data-page="graphic-post-workbench" data-studio-layout="document" className="mx-auto w-full max-w-[1200px] @container space-y-4 px-5 py-4 text-sm md:px-8">
     <header className="flex flex-wrap items-start justify-between gap-4 py-2">
       <div><h1 className="text-lg font-semibold">图文成稿</h1></div>
-      <Button className="min-h-11 px-5" disabled={busy||reorganizing||!state.scriptContext?.scriptText.trim()||state.scriptContext.state!=="ready"} onClick={()=>void reorganize()}>{reorganizing?"正在准备…":"重新组织内容"}</Button>
+      <Button className="min-h-11 px-5" disabled={busy||reorganizing||!(draft.body.trim()||draft.cardBriefs?.some(card=>card.title.trim()||card.body.trim())||state.scriptContext?.state==="ready"&&state.scriptContext.scriptRef&&state.scriptContext.scriptText.trim())} onClick={()=>void reorganize()}>{reorganizing?"正在准备…":"重新组织内容"}</Button>
     </header>
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span>{dirty?"已承接脚本，开始对话或导出时保存":"当前成稿已保存"}</span><Link className="underline underline-offset-4" href={`/projects/${projectId}`}>{state.scriptContext?.state==="ready"?"查看脚本原稿":"前往脚本撰写原稿"}</Link></div>
     {error&&<div role="alert" className="rounded-md bg-destructive/10 p-3 text-destructive">{error}<Button variant="outline" className="ml-3" disabled={busy} onClick={()=>void save()}>恢复保存并核对</Button></div>}
@@ -198,10 +203,16 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
     {state.scriptContext?.message&&<p role="status" className="text-sm text-muted-foreground">{state.scriptContext.message}</p>}
     {startStatus==="unknown"&&<p role="status" className="text-muted-foreground">正在核对原首稿任务，原请求保留。</p>}
     {startResolutionMessage&&<p role="status" className="text-muted-foreground">{startResolutionMessage}</p>}
+    <section aria-label="发布配文" className="space-y-3 rounded-xl border border-border bg-surface p-4">
+      <div className="flex items-center justify-between gap-3"><h2 className="font-semibold">发布配文</h2><Button variant="outline" disabled={busy||exportBusy} onClick={()=>void copyCaption()}>复制配文</Button></div>
+      <p className="text-xs text-muted-foreground">随图片一起发布到小红书的标题和正文。</p>
+      {draft.title&&<h3 className="font-medium">{draft.title}</h3>}<p className="whitespace-pre-wrap break-words">{draft.body||"尚未填写发布正文，可让编导根据当前内容整理。"}</p>
+      {draft.tags.length>0&&<p className="text-sm text-muted-foreground">{draft.tags.map(tag=>`#${tag}`).join(' ')}</p>}
+    </section>
+    {!draft.cardBriefs?.length&&<p role="status" className="text-sm text-muted-foreground">这份稿件还未按内容拆成图片页。点击“重新组织内容”，预览编导整理的小红书配文和逐页内容后采纳；当前稿件仍可导出。</p>}
     <NoteRelayEditor simplified prepareDelivery={save} projectId={projectId} accountId={accountId} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="rednote" value={draft} disabled={busy} onLayoutChange={layout=>setDraft(current=>({...current,nativeLayout:layout}))}
       extraDelivery={<Button variant="ghost" disabled={busy||exportBusy} onClick={()=>void exportGroup()}>{exportBusy?"导出中…":"导出原图与配文"}</Button>}/>
     <GraphicPostResults resultsOnly key={`${accountId}:${state.outputId}`} accountId={accountId} outputId={state.outputId} targetPlatform={state.targetPlatform} currentVersionId={state.currentVersionId} manualDraftDirty={dirty} prepareGeneration={save} onAdopt={()=>refreshPost()} onResultListResolved={onResultListResolved} scriptDerived imageRequest={directorImageRequest} series={{cards:draft.cardBriefs??[],selectedCardId:activeCardId,selectedCardIds:activeCardIds}}/>
-    <LazyDisclosure label="发布与交付">{()=> <PublicationResultActions accountId={accountId} outputId={state.outputId} outputType="image" platform={state.targetPlatform==='xiaohongshu'?'xiaohongshu':null} dirty={dirty}/>}</LazyDisclosure>
     <details id="graphic-history" className="rounded-xl border border-border bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">历史版本</summary><ol className="mt-3 space-y-2 text-sm">{state.versions.map(version=><li key={version.id}><button type="button" onClick={()=>void openVersion(version.id)} className="text-left text-primary hover:underline">v{version.versionNumber} · {version.createdAt.slice(0,16).replace("T"," ")}</button></li>)}</ol></details>
     <Dialog open={Boolean(preview)} onOpenChange={(open) => { if (!open) setPreview(null); }}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">

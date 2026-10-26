@@ -7,7 +7,7 @@ const api=vi.hoisted(()=>({getGraphicPost:vi.fn(),getGraphicPostVersion:vi.fn(),
 vi.mock('@/lib/contract-client',()=>({client:api}));
 vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()})}));
 vi.mock('@/features/draft-workbench/draft-chat-request',async original=>{const real:any=await original();return {...real,useDraftChatRequest:()=>{const context=real.useDraftChatRequest();const registerEditor=React.useCallback((port:any)=>{api.port=port;return context.registerEditor(port);},[context.registerEditor]);return {...context,openChat:api.openChat,registerEditor};}};});
-vi.mock('@/features/reference-editors/noterelay/noterelay-editor',()=>({NoteRelayEditor:(props:any)=>{api.note=props;return <section aria-label="成稿预览"><h2>{props.value.title}</h2><p>{props.value.body}</p>{props.extraDelivery}</section>;}}));
+vi.mock('@/features/reference-editors/noterelay/noterelay-editor',()=>({NoteRelayEditor:(props:any)=>{api.note=props;return <section aria-label="成稿预览"><h2>图片页预览</h2>{props.extraDelivery}</section>;}}));
 vi.mock('./graphic-post-results',()=>({GraphicPostResults:(props:any)=>{api.result=props;return null;}}));
 vi.mock('./publication-result-actions',()=>({PublicationResultActions:()=>null}));
 import {GraphicPostWorkbench} from './graphic-post-workbench';
@@ -147,4 +147,18 @@ it('T1303 真实图文owner首次谱系在外部版式回调编辑又改回后�
 });
 it('T1303 图文派生准入只读等待时真实owner新回调输入保留，零保存',async()=>{
  render(<DraftChatRequestProvider><ChatPortWitness/><GraphicPostWorkbench {...props} initial={latest}/></DraftChatRequestProvider>);let finish!:(v:any)=>void;api.getGraphicPost.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));const candidate:any={kind:'work.creation.member',member:'image',proposal:{target:{projectId:'p',scriptSourceRef:script.scriptRef,graphicMember:{outputId:'o',artifactId:'a',baseVersionId:'v1'}},scriptSourceRef:script.scriptRef}};let pending!:Promise<any>;act(()=>{pending=actualChat.adoptEditorCandidate(candidate,'same-request').catch(error=>error);});await waitFor(()=>expect(finish).toBeTypeOf('function'));const layout:any={schemaVersion:1,editor:'noterelay',editorVersion:'0.1.8',themeId:'default',authorName:'等待期间的受控回调',authorBio:'',variables:{},fontSize:16,splitHeading:2,templateId:'default',imageWidths:{},imageRadii:{}};act(()=>api.note.onLayoutChange(layout));await act(async()=>finish(structuredClone(latest)));expect(await pending).toBeInstanceOf(Error);expect(api.note.value.nativeLayout).toEqual(layout);expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
+});
+
+it('发布配文独立显示且可复制，不再展示发布与交付；无脚本旧稿仍可重组',async()=>{
+ latest={...latest,scriptContext:{...script,state:'empty',scriptText:''} as any,current:{...latest.current,title:'发布标题',body:'小红书配文',tags:['创作'],cardBriefs:[{cardId:'a',title:'图片要点',body:'图内文字',sourceRefs:[]}]}};
+ const writeText=vi.fn(async()=>{});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText}});
+ render(<GraphicPostWorkbench {...props} initial={latest}/>);expect(screen.getByRole('region',{name:'发布配文'})).toHaveTextContent('小红书配文');expect(screen.queryByText('发布与交付')).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'复制配文'}));await waitFor(()=>expect(writeText).toHaveBeenCalledWith('发布标题\n\n小红书配文\n\n#创作'));
+ expect(screen.getByRole('button',{name:'重新组织内容'})).toBeEnabled();fireEvent.click(screen.getByRole('button',{name:'重新组织内容'}));await waitFor(()=>expect(api.openChat).toHaveBeenCalledOnce());
+ expect(api.openChat.mock.calls[0]![0].prefill).toContain('cardBriefs');expect(api.openChat.mock.calls[0]![0].prefill).toContain('小红书发布正文');
+});
+
+it('旧稿有空卡但主脚本可读时，仍可重新组织',async()=>{
+ latest={...latest,current:{...latest.current,cardBriefs:[{cardId:'empty',title:'',body:'',sourceRefs:[]}]}};render(<GraphicPostWorkbench {...props} initial={latest}/>);
+ expect(screen.getByRole('button',{name:'重新组织内容'})).toBeEnabled();fireEvent.click(screen.getByRole('button',{name:'重新组织内容'}));await waitFor(()=>expect(api.openChat).toHaveBeenCalledOnce());
 });

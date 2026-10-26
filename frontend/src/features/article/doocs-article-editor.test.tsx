@@ -92,3 +92,29 @@ it('旧版式稿只读呈现原引擎输出，保留暂存草稿恢复且不暴�
  render(<DoocsArticleEditor {...props} value={{...document,nativeLayout:layout} as ArticleDocument} deliveryOnly showPreview prepareDelivery={async()=>({versionId:'version',document})}/>);
  expect(await screen.findByText('原主题正文')).toHaveStyle({color:'rgb(100, 0, 0)'});expect(screen.getByLabelText('原版式成稿预览').querySelector('script')).toBeNull();expect(screen.queryAllByRole('textbox')).toHaveLength(0);fireEvent.click(screen.getByRole('button',{name:'恢复未保存草稿'}));expect(h.change).toHaveBeenCalledWith(old);
 });
+
+it('旧版式成稿可展开原排版并保存主题，隐藏交付仍不接受修改',async()=>{
+ const original=h.request.getMockImplementation()!;h.request.mockImplementation((op:string,payload:any)=>op==='export-html'?Promise.resolve({html:'<p>原正文</p>',bindings:[]}):original(op,payload));
+ render(<DoocsArticleEditor {...props} deliveryOnly showPreview prepareDelivery={async()=>({versionId:'v2',document})}/>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'复制公众号文章'})).not.toBeDisabled());
+ fireEvent.click(screen.getByRole('button',{name:'调整排版'}));expect(screen.getByTestId('doocs-native').parentElement).not.toHaveAttribute('inert');
+ await act(async()=>h.changed!({markdown:serializeArticleMarkdown(document.sections),layout:{...layout,themeId:'new-theme'}}));expect(h.change.mock.calls.at(-1)?.[0].nativeLayout.themeId).toBe('new-theme');
+ fireEvent.click(screen.getByRole('button',{name:'保存正文与排版'}));await waitFor(()=>expect(h.save).toHaveBeenCalledOnce());expect(h.save.mock.calls[0][0].sections).toEqual(document.sections);expect(screen.queryByText('开源来源与许可')).toBeNull();
+});
+
+it('排版输入尚未通知时立即收起，刷新仍可恢复最后正文和风格',async()=>{
+ const original=h.request.getMockImplementation()!;h.request.mockImplementation((op:string,payload:any)=>op==='export-html'?Promise.resolve({html:'<p>最新正文</p>',bindings:[]}):original(op,payload));
+ const view=render(<DoocsArticleEditor {...props} deliveryOnly showPreview/>);
+ fireEvent.click(await screen.findByRole('button',{name:'调整排版'}));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'收起排版'})).toBeEnabled());
+ const markdown=serializeArticleMarkdown([{...document.sections[0]!,body:'未满300ms的最后输入'}]);
+ h.live={markdown,layout:{...layout,themeId:'last-theme'}};
+ fireEvent.click(screen.getByRole('button',{name:'收起排版'}));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'调整排版'})).toBeEnabled());
+ const checkpoint=JSON.parse(sessionStorage.getItem('creatoros:article:draft:account:output')!);
+ expect(checkpoint.document.sections[0].body).toBe('未满300ms的最后输入');expect(checkpoint.document.nativeLayout.themeId).toBe('last-theme');
+ expect(h.save).not.toHaveBeenCalled();view.unmount();h.change.mockClear();
+ render(<DoocsArticleEditor {...props} deliveryOnly showPreview/>);
+ fireEvent.click(await screen.findByRole('button',{name:'恢复未保存草稿'}));
+ expect(h.change).toHaveBeenCalledWith(expect.objectContaining({sections:expect.arrayContaining([expect.objectContaining({body:'未满300ms的最后输入'})]),nativeLayout:expect.objectContaining({themeId:'last-theme'})}));
+});

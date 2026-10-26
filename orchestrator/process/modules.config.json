@@ -20875,6 +20875,186 @@
         ]
       },
       "scope_note": "仅受限文本探针诊断；保持默认128、正式8192、授权与worker隔离，不冒充官方聊天恢复。"
+    },
+    "T-1418": {
+      "task_id": "T-1418",
+      "archetype": [
+        "backend",
+        "frontend"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1418-creator-overview-read-performance.md",
+        "AGENTS.md"
+      ],
+      "write_set": [
+        "contract/src/operations/pages.ts",
+        "backend/src/application/queries/group-workspace.ts",
+        "backend/src/application/queries/group-workspace.test.ts",
+        "backend/src/application/queries/dashboard-collected-metrics.test.ts",
+        "backend/src/modules/query-services/query-services.transport.ts",
+        "frontend/src/app/(creator)/overview/page.tsx",
+        "frontend/src/features/group-workspace/group-page-routing.test.tsx",
+        "docs/features/t1418-creator-overview-read-performance.md",
+        "docs/features/t1418-creator-overview-read-performance.T-1418.review.md",
+        "docs/verification/t1418/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1418.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "PROJECT.md",
+        "contract/src/workspace-operation-scope.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/observability.ts",
+        "contract/tests/workspace-operation-scope.test.ts",
+        "contract/tests/cli-policy.test.ts",
+        "contract/tests/registry.test.ts",
+        "contract/src/observability-registry.json",
+        "contract/tests/group-workspace-read.test.ts"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck"
+        ]
+      }
+    },
+    "T-1419": {
+      "task_id": "T-1419",
+      "archetype": [
+        "frontend"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1419-article-workbench-style-restoration.md",
+        "AGENTS.md"
+      ],
+      "write_set": [
+        "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+        "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+        "frontend/src/features/article/doocs-article-editor.tsx",
+        "frontend/src/features/article/doocs-article-editor.test.tsx",
+        "frontend/src/features/article/article-workbench.tsx",
+        "frontend/src/features/article/article-workbench.test.tsx",
+        "docs/features/t1419-article-workbench-style-restoration.md",
+        "docs/features/t1419-article-workbench-style-restoration.T-1419.review.md",
+        "docs/verification/t1419/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1419.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck"
+        ]
+      }
+    },
+    "T-1420": {
+      "task_id": "T-1420",
+      "archetype": [
+        "frontend"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1420-graphic-post-content-structure.md",
+        "AGENTS.md"
+      ],
+      "write_set": [
+        "frontend/src/features/reference-editors/noterelay/projection.ts",
+        "frontend/src/features/reference-editors/noterelay/projection.test.ts",
+        "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+        "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+        "frontend/src/features/projects/graphic-post-workbench.tsx",
+        "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+        "frontend/src/features/projects/script-first-content.ts",
+        "frontend/src/features/projects/script-first-content.test.ts",
+        "ai-worker/src/prompt/templates/graphic-post-text.ts",
+        "docs/features/t1420-graphic-post-content-structure.md",
+        "docs/features/t1420-graphic-post-content-structure.T-1420.review.md",
+        "docs/verification/t1420/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1420.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "PROJECT.md",
+        "ai-worker/src/prompt/templates/chatbox-turn.ts",
+        "ai-worker/src/prompt/templates/chatbox-turn.test.ts",
+        "frontend/src/features/reference-editors/noterelay/native-bundle.test.ts"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck"
+        ]
+      }
+    },
+    "T-1421": {
+      "task_id": "T-1421",
+      "archetype": [
+        "frontend"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1421-transcript-editing-clarity.md",
+        "AGENTS.md"
+      ],
+      "write_set": [
+        "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+        "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+        "frontend/src/features/reference-editors/native-source-panel.tsx",
+        "frontend/src/features/reference-editors/native-source-panel.test.tsx",
+        "frontend/src/features/production/production-transcript-panel.tsx",
+        "frontend/src/features/production/production-transcript-panel.test.tsx",
+        "docs/features/t1421-transcript-editing-clarity.md",
+        "docs/features/t1421-transcript-editing-clarity.T-1421.review.md",
+        "docs/verification/t1421/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1421.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "NODE_OPTIONS=--max-old-space-size=6144 pnpm --workspace-concurrency=1 -r typecheck"
+        ]
+      }
     }
   }
 }

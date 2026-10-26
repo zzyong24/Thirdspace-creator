@@ -1,0 +1,44 @@
+[
+  {
+    "file": "docs/verification/t1418/backend-rerun.log",
+    "rawSha256": "bb4c8f255de35344c3e9b2e2232d1d51fc9e98d785bd5ec15f71bc5857326510",
+    "archive": "docs/verification/t1418/backend-rerun.log.gz",
+    "archiveSha256": "d82c5ad1db1fc3dba348a8958f95bb048c170165cef75fcacc574b2d2ef4ee63"
+  },
+  {
+    "file": "docs/verification/t1418/concurrency-green.log",
+    "rawSha256": "da8252733551ef47ca681c57c29b4a13e373f40193462f3287d3faeef6dd09e0",
+    "archive": "docs/verification/t1418/concurrency-green.log.gz",
+    "archiveSha256": "c1432e7083ae17b4b3552701c483f2fa72fec180cd08505b62a7ca7a1169cb97"
+  },
+  {
+    "file": "docs/verification/t1418/contract-rerun.log",
+    "rawSha256": "dc6e2679890643b77276ef3b6d95065340af04d2009085df4291b6a37951f358",
+    "archive": "docs/verification/t1418/contract-rerun.log.gz",
+    "archiveSha256": "7d936711f9ec0e7935ca6d8be407c42a84139b51d5bdde5180d0edbb0fb50342"
+  },
+  {
+    "file": "docs/verification/t1418/review-typecheck.log",
+    "rawSha256": "6ebc9d041395a682208d176a4ccf28bbb3f93a7b789c7c77500b99e8a56210b1",
+    "archive": "docs/verification/t1418/review-typecheck.log.gz",
+    "archiveSha256": "bec293431cf6803c18d342216631a44e210229cead7d76cb9f8783465492dcc6"
+  },
+  {
+    "file": "docs/verification/t1419/rapid-collapse-red.log",
+    "rawSha256": "1a30490650555cb83ea172677a47037a9ed8144e05f02b3fa4e3e26f11aa72e0",
+    "archive": "docs/verification/t1419/rapid-collapse-red.log.gz",
+    "archiveSha256": "6769da8988c9fd89d461ca9640d4df49428a6a510b6ea6cb4f8d6aa865a60a86"
+  },
+  {
+    "file": "docs/verification/t1420/combined-final.log",
+    "rawSha256": "920fee972fa1adbd3c456f91e92fe7efb2629da6b60ff2bd8174e58187e61628",
+    "archive": "docs/verification/t1420/combined-final.log.gz",
+    "archiveSha256": "e6ec4369675f5e3f28db79eb8de6f98781f9c1970acb22b2248ba9de0787852b"
+  },
+  {
+    "file": "docs/verification/t1420/review-fixes-green.log",
+    "rawSha256": "d0660d51f5f2fa0421ab2941dd6bb8f84148c8fe4c5ab4c701d426c49880ca58",
+    "archive": "docs/verification/t1420/review-fixes-green.log.gz",
+    "archiveSha256": "d31daaae3c3f149c070783fc3349223205b6b47e504818856281cc5fa5cbe53e"
+  }
+]

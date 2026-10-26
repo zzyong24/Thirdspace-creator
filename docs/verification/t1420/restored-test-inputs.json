@@ -1,0 +1,12 @@
+[
+  {
+    "path": "docs/verification/t1302/acceptance/runs/final-t1304-t1305/a/creation-article-actual-source.json",
+    "sourceCommit": "06b64933c",
+    "sha256": "53fb7b916ee59511390f5bb50385a6e7496d5ce4c86023fd633dbab6d4b2677f"
+  },
+  {
+    "path": "docs/verification/t1302/acceptance/runs/final-t1304-t1305/a/editor-article-actual-source.json",
+    "sourceCommit": "06b64933c",
+    "sha256": "799ce815b7f57f8269381ab4c0a61a22ac6b3188e271cc4ca58a68af20f109ed"
+  }
+]
