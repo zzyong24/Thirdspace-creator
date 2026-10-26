@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-26T05:10:15.757043+00:00",
+  "frontendTypecheck": {
+    "command": "pnpm -C frontend typecheck",
+    "exitCode": 0,
+    "log": "clipboard-typecheck-rerun.log",
+    "execSession": 42476
+  },
+  "componentTests": {
+    "command": "pnpm -C frontend exec vitest run src/features/reference-editors/noterelay/noterelay-editor.test.tsx src/features/article/doocs-article-editor.test.tsx src/features/projects/graphic-post-workbench.test.tsx",
+    "exitCode": 0,
+    "files": 3,
+    "passed": 55,
+    "log": "clipboard-green-negative.log",
+    "execSession": 50500
+  },
+  "installedCopyAcceptance": "pending"
+}

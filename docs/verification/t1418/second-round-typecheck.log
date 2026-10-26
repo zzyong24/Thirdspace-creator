@@ -1,0 +1,23 @@
+Scope: 5 of 6 workspace projects
+
+> @creatoros/contract@0.4.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> tsc --noEmit
+
+
+> @creatoros/ai-worker@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> tsc --noEmit
+
+
+> @creatoros/mcp-server@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server
+> tsc --noEmit
+
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+
+> creatoros-frontend@1.2.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully

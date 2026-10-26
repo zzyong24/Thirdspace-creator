@@ -12,6 +12,7 @@ import type { CreativeResult, GraphicPostDocument, GraphicPostResource } from "@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { describeUserError } from "@/lib/ai-error-humanize";
+import {writePreparedClipboard} from "@/features/reference-editors/write-prepared-clipboard";
 import {inheritGraphicScript,reorganizePrompt} from "./script-first-content";
 import { GraphicPostResults } from "./graphic-post-results";
 import {NoteRelayEditor} from "@/features/reference-editors/noterelay/noterelay-editor";
@@ -134,7 +135,9 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
    if((graphicSaveIntent.current||sessionStorage.getItem(saveStorageKey)||editorCanonical(draftRef.current)!==editorCanonical(initial.current))&&!(await save()))throw Error("请先确认保存当前修改，原请求已保留。");
    const current=stateRef.current!;const latest=await client.getGraphicPost({params:{outputId:current.outputId},query:undefined,body:undefined});
 
-   if(options?.requireScript&&(latest.scriptContext?.state!=="ready"||!latest.scriptContext.scriptRef||!latest.scriptContext.scriptText.trim()))throw Error("请先在脚本中保存原稿，再重新组织内容。");
+   const hasCurrentContent=Boolean(latest.current.body.trim()||latest.current.cardBriefs?.some(card=>card.title.trim()||card.body.trim()));
+   const hasScript=latest.scriptContext?.state==="ready"&&latest.scriptContext.scriptRef&&latest.scriptContext.scriptText.trim();
+   if(options?.requireScript&&!hasCurrentContent&&!hasScript)throw Error("当前图文没有可重组的内容，请先在脚本中保存原稿。");
    const exact=await client.getGraphicPostVersion({params:{outputId:current.outputId,versionId:latest.currentVersionId},query:undefined,body:undefined});
    if(latest.currentVersionId!==current.currentVersionId||editorCanonical(exact.document)!==editorCanonical(latest.current)||editorCanonical(draftRef.current)!==editorCanonical(exact.document))throw Error("当前作品已改变，请核对保存版本后重试。");
    const target:WorkEditorTarget={schemaVersion:1,projectId,outputId:latest.outputId,owner:"graphic_post",contentType:"image",savedBase:{kind:"artifact",artifactId:latest.artifactId,versionId:latest.currentVersionId},documentDigest:await editorDigest(exact.document),selection:selectionRef.current};targetRef.current=target;return target;
@@ -174,8 +177,13 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
   }
   async function copyCaption(){
     if(busy||exportBusy)return;setExportBusy(true);setError(null);
-    try{if(!(await save())||!mounted.current)return;const value=draftRef.current;
-      await navigator.clipboard.writeText([value.title,value.body,value.tags.map(tag=>`#${tag}`).join(' ')].filter(Boolean).join('\n\n'));
+    try{
+      const prepare=async()=>{
+        if(!(await save())||!mounted.current)throw new Error('保存尚未确认，配文未复制。');
+        const value=draftRef.current;return [value.title,value.body,value.tags.map(tag=>`#${tag}`).join(' ')].filter(Boolean).join('\n\n');
+      };
+      if(typeof ClipboardItem!=='undefined'&&typeof navigator.clipboard?.write==='function')await writePreparedClipboard(['text/plain'],async()=>({'text/plain':new Blob([await prepare()],{type:'text/plain'})}));
+      else await navigator.clipboard.writeText(await prepare());
       if(mounted.current)setMessage("发布配文已复制，可粘贴到小红书。");
     }catch(reason){if(mounted.current)setError(describeUserError(reason,"配文复制未完成，请重试。"));}finally{if(mounted.current)setExportBusy(false);}
   }

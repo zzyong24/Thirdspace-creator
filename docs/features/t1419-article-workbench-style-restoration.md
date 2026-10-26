@@ -11,3 +11,5 @@
 历史 8bb8facc7 的脚本驱动工作台重构传入 simplified，把 NoteRelay 全部排版设置隐藏；8bb8facc7^ 的文章工作台直接挂载完整设置。主题仍在 reference-editors/noterelay/src/themes/builtins.ts（摸鱼绿、红白、石墨极简、留白、票据、手记等）。恢复简化工作台顶部直接可见的“文章风格”选择，选项取真实编辑器 metadata，不硬编码第二套主题；高级署名/变量仍折叠，候选只读模式禁改。保留现有稿件 themeId，未设置者仍使用现有石墨默认；预览、保存和导出共用同一 nativeLayout。Doocs 历史稿保留该编辑器，通过“调整排版”展开现有原生能力，不强制迁移旧稿。移除两编辑器的创作区许可控件，许可证/源码归档仍在包内。
 
 修改 NoteRelayEditor、DoocsArticleEditor 和对应测试；必要 ArticleWorkbench 接线。验证真实主题切换回调、重绘、保存前核对、刷新回读，以及导出使用当前布局；无覆盖正文或强制迁移。
+
+安装态风格→保存→复制复验复现 WKWebView NotAllowedError：保存异步等待后才调用 clipboard.write，离开点击手势范围。WebKit 官方说明支持 ClipboardItem 的 Promise 数据（https://webkit.org/blog/10855/async-clipboard-api/）。修复为点击时同步提交剪贴板写入请求，Blob Promise 只在原保存/版本/归属/正文校验与原生导出全部成功后兑现；任一失败或换稿时拒绝 Promise，不复制旧稿、不虚报成功。复用小工具 write-prepared-clipboard.ts 到 NoteRelay 富文本/图片/纯文本、Doocs 富文本、图文配文（同一保存等待问题）；无 ClipboardItem 的原纯文本兼容路径保留，真正拒绝权限仍报错。增加实际组件延迟保存的红→绿测试、保存失败/换稿不得写入及安装版一次点击复制回读。只写既有相关组件测试及新工具，不改系统权限或 clipboard-read。

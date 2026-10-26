@@ -255,5 +255,5 @@ it('没有视频时给真实添加素材操作，不显示空转写表单',async
  const empty=structuredClone(initial);empty.plan.referenceEditor.mediaRefs=[];empty.plan.referenceEditor.nativeDocument.mediaMetadata=[];empty.plan.referenceEditor.nativeDocument.scenes[0].tracks.main.elements=[];empty.plan.nativeSources=[];local=empty.plan.referenceEditor.nativeDocument;
  render(<VideoReferenceWorkbench initial={empty} title="空工程" onOriginal={()=>{}} onSaved={h.saved}/>);await waitFor(()=>expect(screen.getByRole('button',{name:'保存工程'})).toBeEnabled());
  expect(screen.queryByTestId('native-source-entry')).toBeNull();expect(screen.queryByTestId('transcript-entry')).toBeNull();
- fireEvent.click(screen.getByRole('button',{name:'添加要剪辑的视频'}));expect(h.request).toHaveBeenCalledWith('open-addon',{panel:'materials'});
+ fireEvent.click(screen.getByRole('button',{name:'添加要剪辑的视频'}));expect(h.request).toHaveBeenCalledWith('open-addon',{panel:'assets'});
 });

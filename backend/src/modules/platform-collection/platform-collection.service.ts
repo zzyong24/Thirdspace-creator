@@ -923,20 +923,26 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
             WHERE t.user_id=w.user_id AND t.account_id=w.account_id AND t.platform=w.platform AND t.external_id=w.external_id))
       )
       AND w.published_at IS NOT NULL AND w.published_at::timestamptz>=${start}::timestamptz AND w.published_at::timestamptz<${end}::timestamptz`;
+    // 聚合/窗口放在逐作品子查询内，让现有 user/account/work 索引限制扫描。
+    // 否则冷统计计划可能反复联接整账号历史，形成作品数×指标数的扫描。
     const works=(await db.execute<DashboardWork>(sql`WITH scoped_works AS (${scopedWorks})
       SELECT w.id,w.account_id AS "accountId",w.platform,w.publication_id AS "publicationId",w.legacy_publication_id AS "legacyPublicationId",
-      coalesce(bool_or(${assigned}) FILTER (WHERE m.id IS NOT NULL),false) AS "hasOwned",
-      (count(m.id)=0 OR coalesce(bool_or(${unassigned}) FILTER (WHERE m.id IS NOT NULL),false)) AS "hasUnattributed"
-      FROM scoped_works w LEFT JOIN platform_work_metric_snapshots m ON m.platform_work_id=w.id AND m.account_id=w.account_id AND m.platform=w.platform AND m.user_id=${ctx.userId}
-      GROUP BY w.id,w.account_id,w.platform,w.publication_id,w.legacy_publication_id`)).rows;
+        ownership."hasOwned",ownership."hasUnattributed"
+      FROM scoped_works w CROSS JOIN LATERAL (
+        SELECT coalesce(bool_or(${assigned}) FILTER (WHERE m.id IS NOT NULL),false) AS "hasOwned",
+          (count(m.id)=0 OR coalesce(bool_or(${unassigned}) FILTER (WHERE m.id IS NOT NULL),false)) AS "hasUnattributed"
+        FROM platform_work_metric_snapshots m
+        WHERE m.user_id=${ctx.userId} AND m.account_id=w.account_id AND m.platform_work_id=w.id AND m.platform=w.platform
+      ) ownership`)).rows;
     const metricColumns=sql`m.id,m.account_id AS "accountId",m.platform,m.metric_key AS "metricKey",m.value,m.availability,m.unit,m.source,m.metric_window AS "window",m.captured_at AS "capturedAt",m.observed_at AS "observedAt",m.ingested_at AS "ingestedAt"`;
     // jsonb按结构规范分族；DENSE_RANK保留同刻冲突，禁止用ID任意胜出。
-    const workMetrics=(await db.execute<DashboardMetric>(sql`WITH scoped_works AS (${scopedWorks}), candidates AS (
-      SELECT ${metricColumns},m.platform_work_id AS "platformWorkId",dense_rank() OVER(PARTITION BY m.account_id,m.platform_work_id,m.metric_key,m.metric_window ORDER BY m.observed_at::timestamptz DESC,m.captured_at::timestamptz DESC) AS rank
-      FROM platform_work_metric_snapshots m INNER JOIN scoped_works w ON w.id=m.platform_work_id AND w.account_id=m.account_id AND w.platform=m.platform
-      WHERE m.user_id=${ctx.userId} AND ${assigned}
-      AND m.metric_key IN ('play_count','view_count','read_count','like_count','comment_count','share_count','favorite_count'))
-      SELECT * FROM candidates WHERE rank=1`)).rows;
+    const workMetrics=(await db.execute<DashboardMetric>(sql`WITH scoped_works AS (${scopedWorks})
+      SELECT candidates.* FROM scoped_works w CROSS JOIN LATERAL (
+        SELECT ${metricColumns},m.platform_work_id AS "platformWorkId",dense_rank() OVER(PARTITION BY m.account_id,m.platform_work_id,m.metric_key,m.metric_window ORDER BY m.observed_at::timestamptz DESC,m.captured_at::timestamptz DESC) AS rank
+        FROM platform_work_metric_snapshots m
+        WHERE m.user_id=${ctx.userId} AND m.account_id=w.account_id AND m.platform_work_id=w.id AND m.platform=w.platform AND ${assigned}
+          AND m.metric_key IN ('play_count','view_count','read_count','like_count','comment_count','share_count','favorite_count')
+      ) candidates WHERE candidates.rank=1`)).rows;
     const accountMetrics=(await db.execute<DashboardMetric>(sql`WITH candidates AS (
       SELECT ${metricColumns},NULL::text AS "platformWorkId",dense_rank() OVER(PARTITION BY m.account_id,m.metric_key,m.metric_window ORDER BY m.observed_at::timestamptz DESC,m.captured_at::timestamptz DESC) AS rank
       FROM platform_account_metric_snapshots m WHERE m.user_id=${ctx.userId} AND m.account_id IN (${sql.join(accountIds.map(id=>sql`${id}`),sql`,`)}) AND m.metric_key='follower_count' AND ${assigned})

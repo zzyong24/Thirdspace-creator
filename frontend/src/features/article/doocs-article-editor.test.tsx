@@ -118,3 +118,13 @@ it('排版输入尚未通知时立即收起，刷新仍可恢复最后正文和�
  fireEvent.click(await screen.findByRole('button',{name:'恢复未保存草稿'}));
  expect(h.change).toHaveBeenCalledWith(expect.objectContaining({sections:expect.arrayContaining([expect.objectContaining({body:'未满300ms的最后输入'})]),nativeLayout:expect.objectContaining({themeId:'last-theme'})}));
 });
+
+it('T1419 旧版式延迟保存时在点击当下登记富文本复制',async()=>{
+ let finish!:(value:any)=>void;const prepare=vi.fn(()=>new Promise<any>(resolve=>{finish=resolve;}));const captured:Blob[]=[];
+ const write=vi.fn(async(items:any[])=>{captured.push(...await Promise.all(Object.values(items[0].data) as Promise<Blob>[]));});
+ class Item{constructor(public data:Record<string,Promise<Blob>>){}}vi.stubGlobal('ClipboardItem',Item);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write}});
+ const original=h.request.getMockImplementation()!;h.request.mockImplementation((op:string,payload:any)=>op==='export-html'?Promise.resolve({html:'<p>原正文</p>',bindings:[]}):original(op,payload));
+ render(<DoocsArticleEditor {...props} deliveryOnly showPreview prepareDelivery={prepare}/>);await waitFor(()=>expect(screen.getByRole('button',{name:'复制公众号文章'})).not.toBeDisabled());
+ fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));expect(write).toHaveBeenCalledOnce();await waitFor(()=>expect(prepare).toHaveBeenCalledOnce());expect(captured).toEqual([]);
+ await act(async()=>finish({versionId:'v2',document}));await screen.findByText('公众号文章已按原版式复制。');expect(captured.map(b=>b.type)).toEqual(['text/html','text/plain']);vi.unstubAllGlobals();
+});

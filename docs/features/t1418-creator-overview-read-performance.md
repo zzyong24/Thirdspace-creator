@@ -19,3 +19,13 @@ RED/GREEN：公开 transport 新端点不依赖永不返回的 dashboard；同�
 公开端点登记同步维护 contract/src/workspace-operation-scope.ts（显式 group）、cli-policy.ts（只读、不确认）、observability.ts（页读操作），并运行 scope、cli-policy、registry 相关回归。不增加 AI 助手的可调度语义工具范围。
 
 观测登记同步 contract/src/observability-registry.json。补 contract/tests/group-workspace-read.test.ts 精确验证 params/query/响应、scope、只读策略与观测表，现有摘要组隔离测试复用到新端点。性能口径按产品定位 §16 的普通本地读 P95≤500ms、组合页 P95≤1s，本端点为组合页读；LED-047 不另造数值。分别记录 CLI 从启动到JSON完成（含启动开销）、服务端该操作 durationMs（现有页读日志）和页面从点击到新筛选范围提交；正常与最小视口，每个平台至少5次，真实冷次单列，不抹去慢次。总览请求若仍超过预算应继续定位；不能以单次CLI变快声明完整性能通过。
+
+## 装版复验后的第二处根因与修复
+
+839d7f280 已安装，公开 CLI 36 次复验仍见小红书约 3.5–3.9 秒，未达到预算，不验收通过。只读 CPU 采样定位主要开销在 PGlite。隔离内存数据库使用 301 条作品、6002 条指标复现：摘要第 1/2 条 SQL 分别约 429/1673ms；EXPLAIN ANALYZE 显示作品与指标反复嵌套扫描，各排除 1,800,600 个不匹配组合。第 2 条在每条指标下重新扫描整份作品目录 6002 次。现有复合索引包含 user/account/work，但优化器的计划未把 work ID 纳入索引条件；不能靠增加等待时间或删历史修复。原始诊断保存在 docs/verification/t1418/query-probe-before.json。
+
+拟把两条作品指标联接改为按已筛选作品的 LATERAL 子查询：第 1 条在每个作品的归属受限指标上聚合；第 2 条在每个作品的归属受限指标上按原 family/timestamp 做 dense_rank。子查询用现有 user/account/work 索引做有界查找，避免作品×全账号指标的交叉扫描；仍三条查询，不写用户数据库、不加缓存、不改 DENSE_RANK 同刻冲突、日期时区、可见性、历史成员与不可归属口径。账号粉丝查询保持。
+
+增加隔离数据库回归：合成 300 个新增作品×20 份历史指标，执行真实 SQL，检查摘要结果和计划的 work ID 索引约束、不再存在数千次重复目录扫描；保留红测与前后计划，不仅比较易受机器负载影响的时间。运行既有完整组隔离、历史归属、同刻冲突、不可用/未知/零、隐私可见性测试。再次打包装版后沿同组/日期测量，未过预算继续修复。写集追加 backend/src/modules/platform-collection/platform-collection.service.ts；无新公开契约、数据归属或产品方向变化。
+
+等价性约束：第 1 条 LATERAL 的 WHERE 只按 user/account/platform/work 收窄，不能预过滤 assigned；count/hasOwned/hasUnattributed 仍在全部相关指标上聚合，以区分无指标、只有合法其它组指标、重叠/非法成员区间。第 2 条才在 assigned 过滤后执行 dense_rank。

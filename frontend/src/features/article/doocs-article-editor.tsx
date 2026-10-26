@@ -1,4 +1,5 @@
 "use client";
+import {writePreparedClipboard} from "@/features/reference-editors/write-prepared-clipboard";
 
 import * as React from "react";
 import DOMPurify from "dompurify";
@@ -199,6 +200,7 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
     deliveryPending.current=true;setBusy(true); setError(null);
     const requestedDocument=JSON.stringify(currentDocuments.current.value);
     try {
+      const prepare=async()=>{
       const prepared=deliveryOnly&&prepareDelivery?await prepareDelivery():null;
       if(!alive.current||requestedDocument!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
       if(deliveryOnly&&!prepared)throw new Error("保存尚未确认，请恢复原请求后再导出。");
@@ -218,11 +220,16 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
       if(!alive.current||editorRef.current!==active||frozen!==JSON.stringify(currentDocuments.current.savedDocument)||frozen!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
       if (rendered.error) throw new Error(rendered.error);
       if (typeof rendered.html !== "string" || !Array.isArray(rendered.bindings)) throw new Error("编辑器没有返回可导出的 HTML。");
+       return {savedDocument,deliveryVersionId,frozen,active,rendered:{...rendered,html:rendered.html,bindings:rendered.bindings}};
+      };
       if(action==='copy-html'){
-        if(typeof ClipboardItem==='undefined'||!navigator.clipboard?.write)throw new Error('当前环境不支持富文本复制，请导出 HTML + 图片 ZIP。');
-        await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([rendered.html],{type:'text/html'}),'text/plain':new Blob([savedDocument.sections.map(section=>section.body).join('\n\n')],{type:'text/plain'})})]);
+        await writePreparedClipboard(['text/html','text/plain'],async()=>{
+          const {savedDocument,rendered}=await prepare();
+          return {'text/html':new Blob([rendered.html],{type:'text/html'}),'text/plain':new Blob([savedDocument.sections.map(section=>section.body).join('\n\n')],{type:'text/plain'})};
+        });
         if(alive.current)setStatus('公众号文章已按原版式复制。');return;
       }
+      const {savedDocument,deliveryVersionId,frozen,active,rendered}=await prepare();
       const files: Record<string, Uint8Array> = {};
       const bindingPaths = new Map<string, string>();
       for (const [index, image] of savedDocument.imageUses.entries()) {

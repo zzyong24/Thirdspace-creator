@@ -1,0 +1,1 @@
+实机空视频工程点击“添加要剪辑的视频”未切换素材面板。原生 native.js 的 open-addon 只接受 assets/transcript/director/properties，宿主错误传入 materials（这是 slot 名而非面板名）。已修正为 assets，未改原生剪辑器。红测 add-video-red.log 1 fail/28 skipped；修复后 add-video-green.log 3 文件44通过。仍需新安装版核实素材面板可见和添加操作。

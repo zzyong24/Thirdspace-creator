@@ -302,7 +302,7 @@ function VideoReferenceWorkbenchSession({initial,title,onOriginal,onSaved,scope,
  const transcriptPanel=<section aria-label="按文字剪视频" className="h-full min-w-0 space-y-4 overflow-y-auto p-3">
   <p className="text-xs text-muted-foreground">把视频声音转成文字，再按句定位、删减。先预览修改，采纳后才更新剪辑，原视频保留。</p>
   <section className="space-y-3"><h2 className="font-medium">1. 视频转文字</h2>
-   {!videoRefs.length?<div className="space-y-2"><p className="text-sm text-muted-foreground">先添加要剪辑的视频。</p><Button variant="outline" disabled={!ready||busy} onClick={()=>void frame.current?.request('open-addon',{panel:'materials'}).catch(cause=>setError(cause.message))}>添加要剪辑的视频</Button></div>:<>
+   {!videoRefs.length?<div className="space-y-2"><p className="text-sm text-muted-foreground">先添加要剪辑的视频。</p><Button variant="outline" disabled={!ready||busy} onClick={()=>void frame.current?.request('open-addon',{panel:'assets'}).catch(cause=>setError(cause.message))}>添加要剪辑的视频</Button></div>:<>
     <NativeSourcePanel key={owner.outputId} document={owner} media={videoRefs} metadata={metadata} disabled={busy||aiBusy||!!applyPending} prepareDocument={prepareDocument} onSaved={acceptVersion} onRecoverConflict={recoverConflict}/>
     {view&&canTranscribe?<ProductionTranscriptPanel defaultOpen document={owner} planView={view} disabled={busy||aiBusy||!!applyPending} prepareDocument={prepareDocument} onSaved={acceptVersion} onRecoverConflict={recoverConflict} run={async action=>{setAiBusy(true);try{await action();}finally{if(alive.current)setAiBusy(false);}}}/>:<p className="text-sm text-muted-foreground">选择视频并检查声音后，即可生成文字。请将要剪辑的视频加入下方时间轴；没有声音的视频仍可手工剪辑。</p>}
    </>}

@@ -2,9 +2,9 @@
 
 - Task: T-1418
 - Verdict: PASS
-- Round: 1/3 (initial)
-- Spec receipt: 82fcdae03486
-- Review receipt: baa9f1987d8f
+- Round: 2/3 (recheck)
+- Spec receipt: f52b3bb93451
+- Review receipt: 0a13080906b9
 
 ## 当前有效问题
 
@@ -17,23 +17,23 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1418",
   "cycle": 1,
-  "round": 1,
+  "round": 2,
   "max_rounds": 3,
-  "review_kind": "initial",
+  "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "T-1418 独立前置规格审核通过，当前无未解决 finding。绑定 SPEC SHA256=82fcdae0348667f13fb360f38e8ef1a7ed750e7037133d1e99022dfbdf1769de；宪法 docs/产品定位.md SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；任务包 SHA256=1f4bd2957b8a67e7980d676efb520848b8d582c920f47de29f80ffda0133c284。已读任务包 §1–5、7–9，写前核 §6；reviewctl context 确认尚无 v2 history，故为 initial。同构独立审核，不声明异构模型。源码依据：group-workspace.ts 的旧 get 等待 dashboard/项目全表并串行读取采集摘要、指标、输出引用和首页标题；overview/page.tsx 只消费 workspace，因此新增同应用层只读投影并复用聚合是有依据的性能修复，不改变数据所有者。account-group.service.ts 的 root 按 userId+groupId 验权；新路径必须继续先验证组上下文，并以本组当前成员及冻结历史事实判断账号，不可把历史账号收窄为当前成员。现有 dashboard-collected-metrics.test.ts 的真实隔离 DB fixture 可承载异用户/异组/账号平台不符、转组历史、真实0/未知、采集失败及读取不写库的回归；两端点同 fixture 等价、无首页依赖、并发与计数、前端新旧页面路由及既有竞态回归构成可执行验收。初步反馈中的穷尽 scope/CLI 表遗漏、观测 JSON 登记、合同测试错误放入 src/、LED-047 无数值预算，均已在本轮最终 SPEC 和任务包修正：四个合同测试绑定 contract/tests/，与 vitest.config.ts 收集规则一致；未扩展助手语义工具范围。已只读核 red.log（SHA256=f8cecc920515c6f63215f84f486f301b2277dc68227c9ee2c0f0ccf9a68787e1）确为新端点 UnsupportedOperationError、1失败/6通过；它不代表其它拟新增断言已验证。installed-cli-before.json 仅证明三个含启动开销的成功读取样本，不能证明服务端或 UI 达标。后续必须按合同实际完成 RED/GREEN、静态/边界/超时门及同候选安装态验收：组合页 P95≤1s、普通读既有500ms标准保持，至少每平台5次并分别保留 CLI、服务端 durationMs、点击到匹配筛选提交的测量，保留冷次和慢次；正常/最小视口及完整 scope 提交前不签性能通过。本次只评审合同，未运行测试、真实业务、安装或网络操作，未修改产品/控制面；不代签实现或安装性能，不继续暂停的推送。",
+  "summary": "PASS，仅限 T-1418 第二处根因及内部 SQL 修复方案的独立增量规格审核；不签实现、完整回归或安装性能通过。绑定当前 SPEC SHA256=f52b3bb934515c343fac500e773bcd4a26a62591d68ebe2de2c11b7ed811f4bc，宪法 docs/产品定位.md SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800，任务包 SHA256=2d3b35cd9462723ff231d63f5989e6c20977276afb20328867370eafbb349fb6。已核任务包 §1–5/7–9，写前核 §6；reviewctl context 为 round1 PASS，原 findings 为空，本次正常 recheck，仅审新增第23–31行及其源码/证据。已实际解析 query-probe-before.json（SHA256=987c27f062b63b2258869632210419aba7f7908814629cb85c942ce9eb76c3cd）：第1条指标索引只按 user/account 查找，6002行×301 loops；第2条作品目录301行×6002 loops；两条各有1,800,600 Rows Removed by Join Filter。单次查询计时分别429.448ms、1672.792ms；总 elapsed 还包含 EXPLAIN ANALYZE 重执行，不冒充单次端点延迟。platform-collection.ts:172 的既有复合索引前三列为 user/account/work，按作品相关的 LATERAL 聚合/window 有实证基础，不需新索引、缓存或用户数据变更；最终是否得到目标计划必须由真实 EXPLAIN 验证，LATERAL 关键字本身不是性能证明。审核中指出第1条若预过滤 assigned 会丢失其它组/重叠归属事实，已在 SPEC:31 精确解决：只先按 user/account/platform/work 收窄，完整保留 count、hasOwned、hasUnattributed；第2条才在 assigned 后 rank。实施必须保留零指标仍产生覆盖判断、仅有合法其它组样本不冒充不可归属、重叠/非法区间继续未知；同刻全部候选保留，不用 LIMIT 1/ROW_NUMBER/ID 排序替换 DENSE_RANK，不提前剔除 unavailable 样本以回退旧成功。既有 scopedWorks 的目录代、可见性/tombstone、日期时区条件及账号粉丝查询均保持。精确新增生产写集为原 platform-collection.service.ts，现有 dashboard-collected-metrics.test.ts 与证据目录已在写集；无公开契约或所有权变更。新增真实内存 PGlite fixture 的300作品×20历史样本检查301作品/302候选与最新时间，并验证 work 索引条件和目录单次扫描，能复现已证实计划缺陷；query-plan-red.log（SHA256=101df883c584f18ab0aff3b487e8b3b4d8fe68291421cf54f834a1cd34e40dbc）确为索引约束断言1失败/29跳过，跳过不计通过；其 plan JSON SHA256=b2c7041690cccb4c3c17454f999afbdedcfb76c26a0d59ac45b0d6af831dafa7。仍须按合同完成该用例 GREEN、原全部归属/历史/同刻/未知/零/隐私回归及静态门，保留前后计划并在新安装候选同组同日期复测；本次不替839d7f280未达预算的安装结果销账。本轮只读评审，未执行测试、SQL、业务、安装或网络操作，未改产品/控制面。",
   "spec_path": "docs/features/t1418-creator-overview-read-performance.md",
-  "spec_sha256": "82fcdae0348667f13fb360f38e8ef1a7ed750e7037133d1e99022dfbdf1769de",
+  "spec_sha256": "f52b3bb934515c343fac500e773bcd4a26a62591d68ebe2de2c11b7ed811f4bc",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1418-creator-overview-read-performance.T-1418.review.md",
-  "review_mode": "homogeneous",
-  "model": "inherited-model-unverified",
+  "review_mode": "independent-agent",
+  "model": "inherited",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "0377b84f82d3bf34a235f4cbf04f2e2901d925e2ee512a64f592fc3b89b66ffd",
+  "latest_event_hash": "86eae7b463f0e3edff8081e49809434403207926fe4ea7ed263859d5db41e63b",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "baa9f1987d8f"
+  "receipt": "0a13080906b9"
 }
 ```

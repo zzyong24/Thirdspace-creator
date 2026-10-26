@@ -314,3 +314,40 @@ describe('T1374 快手unknown已归属指标的跨平台公共保护',()=>{
   const before=await sourceState(f),page=await f.read({platform:'kuaishou',accountId:f.ks.id,startDate:'2026-09-01',endDate:'2026-09-01'});expect(page.workspace.videoViews).toBeNull();expect(value(page,'g-followers')).toBe('—');expect(page.workspace.collected.catalogWorkCount).toBe(1);expect(await sourceState(f)).toEqual(before);
  }),180000);
 });
+
+it('T1418 历史指标按作品索引查找，不反复扫描全账号目录',()=>isolated(async f=>{
+ const {sql}=await import('drizzle-orm');
+ const {PgDialect}=await import('drizzle-orm/pg-core');
+ const {writeFileSync}=await import('node:fs');
+ const [template]=await f.db.select().from(platformWorks).where(eq(platformWorks.accountId,f.xhs.id));
+ const [metricTemplate]=await f.db.select().from(platformWorkMetricSnapshots).where(eq(platformWorkMetricSnapshots.accountId,f.xhs.id));
+ for(let start=0;start<300;start+=50){
+  await f.db.insert(platformWorks).values(Array.from({length:50},(_,i)=>({...template!,id:`t1418-work-${start+i}`,externalId:`t1418-external-${start+i}`})));
+  await f.db.insert(platformWorkMetricSnapshots).values(Array.from({length:1000},(_,i)=>({...metricTemplate!,id:`t1418-metric-${start}-${i}`,platformWorkId:`t1418-work-${start+Math.floor(i/20)}`,observedAt:new Date(Date.parse(metricTemplate!.observedAt)+(i%20)*1000).toISOString(),sourceSnapshotKeyIndex:`probe-${i%20}`})));
+ }
+ const queries:Array<{elapsedMs:number;query:string;plan:any[] }>=[];const execute=f.db.execute.bind(f.db);const dialect=new PgDialect();
+ const spy=vi.spyOn(f.db,'execute').mockImplementation(query=>{
+  const statement=typeof query==='string'?sql.raw(query):query.getSQL();
+  const request=execute(query),run=request.execute.bind(request);
+  request.execute=async()=>{
+   const t=performance.now(),result=await run();const elapsedMs=performance.now()-t;
+   const plan=await execute(sql`EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) ${statement}`);
+   queries.push({elapsedMs,query:dialect.sqlToQuery(statement).sql,plan:plan.rows});return result;
+  };
+  return request;
+ });
+ const start=performance.now();
+ const result=await f.collections.readDashboardSummary(f.ctx,{groupId:f.a.id,platform:'xiaohongshu',startDate:'2026-09-27',endDate:'2026-10-26'});
+ spy.mockRestore();writeFileSync(process.env.T1418_QUERY_PLAN_OUTPUT??'../docs/verification/t1418/query-plan-current.json',JSON.stringify({elapsedMs:performance.now()-start,works:result.works.length,queries},null,2)+'\n');
+ expect(result.works).toHaveLength(301);
+ expect(result.workMetrics).toHaveLength(302);
+ expect(result.workMetrics.filter(m=>m.platformWorkId?.startsWith('t1418-work-')).every(m=>m.observedAt==='2026-10-19T00:00:19.000Z')).toBe(true);
+ const nodes=(p:any):any[]=>[p,...(p.Plans??[]).flatMap(nodes)];
+ for(const query of queries.slice(0,2)){
+  const planNodes=nodes(query.plan[0]['QUERY PLAN'][0].Plan);
+  const metrics=planNodes.filter(p=>p['Relation Name']==='platform_work_metric_snapshots');
+  expect(metrics.length).toBeGreaterThan(0);
+  expect(metrics.every(p=>p['Node Type']==='Index Scan'&&String(p['Index Cond']).includes('platform_work_id')),'每条指标读取必须以作品 ID 限制索引').toBe(true);
+  expect(planNodes.filter(p=>p['Relation Name']==='platform_works').every(p=>p['Actual Loops']===1),'筛选作品目录不应为每条指标重复扫描').toBe(true);
+ }
+}),180000);

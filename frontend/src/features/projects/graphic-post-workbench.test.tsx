@@ -136,8 +136,8 @@ it("T1300 重组只读取一次有效latest/exact，不额外前读当前稿",as
  latest.current={...latest.current,title:"已存",body:"已存正文"};render(<GraphicPostWorkbench {...props} initial={latest}/>);api.getGraphicPost.mockClear();api.getGraphicPostVersion.mockClear();fireEvent.click(screen.getByRole("button",{name:"重新组织内容"}));await waitFor(()=>expect(api.openChat).toHaveBeenCalledOnce());expect(api.getGraphicPost).toHaveBeenCalledTimes(1);expect(api.getGraphicPostVersion).toHaveBeenCalledTimes(1);
 });
 
-it("T1300 requireScript只约束重组当次latest，普通对话无脚本门槛",async()=>{
- latest.current={...latest.current,title:"已存",body:"已存正文"};render(<GraphicPostWorkbench {...props} initial={latest}/>);latest={...latest,scriptContext:{...script,state:"empty",scriptText:""} as any};await act(async()=>{expect(await api.port.prepareForTurn()).toMatchObject({outputId:"o"});});await expect(api.port.prepareForTurn({requireScript:true})).rejects.toThrow(/脚本/);expect(api.openChat).not.toHaveBeenCalled();expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
+it("T1420 重组核对当次最新稿，已清空的正文与脚本不能借旧状态通过",async()=>{
+ latest.current={...latest.current,title:"已存",body:"已存正文"};render(<GraphicPostWorkbench {...props} initial={latest}/>);latest={...latest,scriptContext:{...script,state:"empty",scriptText:""} as any};await act(async()=>{expect(await api.port.prepareForTurn()).toMatchObject({outputId:"o"});});await act(async()=>{expect(await api.port.prepareForTurn({requireScript:true})).toMatchObject({outputId:"o"});});latest={...latest,current:{...latest.current,body:"",cardBriefs:[]}};await expect(api.port.prepareForTurn({requireScript:true})).rejects.toThrow(/脚本/);expect(api.openChat).not.toHaveBeenCalled();expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
 });
 
 it('T1303 真实图文owner首次谱系在外部版式回调编辑又改回后不可复活',async()=>{
@@ -161,4 +161,25 @@ it('发布配文独立显示且可复制，不再展示发布与交付；无脚�
 it('旧稿有空卡但主脚本可读时，仍可重新组织',async()=>{
  latest={...latest,current:{...latest.current,cardBriefs:[{cardId:'empty',title:'',body:'',sourceRefs:[]}]}};render(<GraphicPostWorkbench {...props} initial={latest}/>);
  expect(screen.getByRole('button',{name:'重新组织内容'})).toBeEnabled();fireEvent.click(screen.getByRole('button',{name:'重新组织内容'}));await waitFor(()=>expect(api.openChat).toHaveBeenCalledOnce());
+});
+
+it.each(['body','cards'] as const)('T1420 真实对话Provider允许无脚本的已存%s重组',async kind=>{
+ latest={...latest,scriptContext:{...script,state:'empty',scriptRef:null,scriptText:''} as any,current:{...latest.current,title:'已有图文',body:kind==='body'?'已有图文正文':'',cardBriefs:kind==='cards'?[{cardId:'existing-card',title:'已有图片页',body:'已确认要点',sourceRefs:[]}]:[]}};
+ render(<DraftChatRequestProvider><ChatPortWitness/><GraphicPostWorkbench {...props} initial={latest}/></DraftChatRequestProvider>);
+ fireEvent.click(screen.getByRole('button',{name:'重新组织内容'}));
+ await waitFor(()=>expect(api.openChat).toHaveBeenCalledOnce());
+ expect(api.openChat.mock.calls[0]![0]).toMatchObject({autoSend:true,preparedEditorTurn:expect.any(Object)});
+ expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
+ expect(api.port.readState().target.savedBase.versionId).toBe('v1');
+ expect(api.port.readState().target.documentDigest).toBe(await (await import('@/features/draft-workbench/draft-chat-request')).editorDigest(latest.current));
+});
+
+it('T1419 图文配文延迟保存时先登记复制，核对保存回执后才兑现正文',async()=>{
+ latest.current={...latest.current,title:'配文标题',body:'配文正文'};
+ let finish!:(v:any)=>void;api.createGraphicPostVersion.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ const captured:Blob[]=[];const write=vi.fn(async(items:any[])=>{captured.push(...await Promise.all(Object.values(items[0].data) as Promise<Blob>[]));});
+ class Item{constructor(public data:Record<string,Promise<Blob>>){}}vi.stubGlobal('ClipboardItem',Item);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write}});
+ render(<GraphicPostWorkbench {...props} initial={latest}/>);act(()=>api.note.onLayoutChange({schemaVersion:1,editor:'noterelay',editorVersion:'0.1.8',themeId:'minimal',authorName:'',authorBio:'',variables:{},fontSize:16,splitHeading:2,templateId:'default',imageWidths:{},imageRadii:{}}));
+ fireEvent.click(screen.getByRole('button',{name:'复制配文'}));expect(write).toHaveBeenCalledOnce();await waitFor(()=>expect(api.createGraphicPostVersion).toHaveBeenCalledOnce());expect(captured).toEqual([]);
+ latest={...latest,currentVersionId:'v2',current:api.createGraphicPostVersion.mock.calls[0]![0].body.document};await act(async()=>finish({versionId:'v2',document:latest.current}));await screen.findByText('发布配文已复制，可粘贴到小红书。');expect(captured[0]!.type).toBe('text/plain');
 });

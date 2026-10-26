@@ -6,6 +6,7 @@ import {useNativeWorkspace} from '../use-native-account';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
+import {writePreparedClipboard} from '../write-prepared-clipboard';
 import {NativeEditorSurface,type NativeEditorHandle} from '../native-editor-surface';
 import {projectArticle,projectGraphic,defaultLayout,assetSource} from './projection';
 type Props={simplified?:boolean;prepareDelivery?:()=>Promise<boolean>;extraDelivery?:React.ReactNode;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string;platform:'wechat'|'rednote';value:ArticleDocument|GraphicPostDocument;onLayoutChange:(layout:NoteRelayLayout)=>void;disabled?:boolean;readOnlyCandidate?:boolean;onPreviewReady?:(metadata:{pageCount:number;pageIndex:number})=>void};
@@ -69,15 +70,24 @@ function NoteRelayEditorSession(props:Props){
  async function deliver(action:ExportAction){
   const active=editor.current;if(busy||!loaded||!active)return;setBusy(true);setError(null);setMessage(null);const frozen=latest.current.digest;
   try{
+   const prepare=async()=>{
    if(props.prepareDelivery&&!(await props.prepareDelivery()))throw new Error('保存尚未确认，请在稿面恢复原请求后再交付。');
    if(!alive.current||editor.current!==active||latest.current.digest!==frozen)throw new Error('稿件已改变，请重新导出');
    const result=await active.request<Delivery>('export',{action});
    if(!alive.current||editor.current!==active||latest.current.digest!==frozen)throw new Error('稿件已改变，请重新导出');
    const mime=action==='zip'?'application/zip':platform==='wechat'?'text/html':'image/png';if(!(result.blob instanceof Blob)||result.blob.type!==mime)throw new Error('交付文件类型不符');
-   if(action==='copy-html'){if(typeof ClipboardItem==='undefined'||!navigator.clipboard?.write)throw new Error('当前环境不支持富文本复制，请使用“复制纯文本”或“导出 HTML”。');await navigator.clipboard.write([new ClipboardItem({'text/html':result.blob,'text/plain':new Blob([result.plainText??''],{type:'text/plain'})})]);if(alive.current)setMessage('公众号文章已复制。');}
-   else if(action==='copy-text'){await navigator.clipboard.writeText(result.plainText??'');if(alive.current)setMessage('正文已复制为纯文本。');}
-   else if(action==='copy-png'){await navigator.clipboard.write([new ClipboardItem({'image/png':result.blob})]);if(alive.current)setMessage('当前页 PNG 已复制。');}
-   else{const url=URL.createObjectURL(result.blob),anchor=document.createElement('a');anchor.href=url;anchor.download=result.filename??`${projection.title.replace(/[\\/:*?"<>|]/g,'-')||'公众号文章'}.html`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);if(alive.current)setMessage('交付文件已生成。');}
+    return result;
+   };
+   if(action==='copy-html'||action==='copy-png'||action==='copy-text'&&typeof ClipboardItem!=='undefined'&&typeof navigator.clipboard?.write==='function'){
+    const types=action==='copy-html'?['text/html','text/plain']:action==='copy-png'?['image/png']:['text/plain'];
+    await writePreparedClipboard(types,async()=>{const result=await prepare();return {'text/html':result.blob,'image/png':result.blob,'text/plain':new Blob([result.plainText??''],{type:'text/plain'})};});
+    if(alive.current)setMessage(action==='copy-html'?'公众号文章已复制。':action==='copy-png'?'当前页 PNG 已复制。':'正文已复制为纯文本。');
+   }else{
+    const result=await prepare();
+    if(action==='copy-text'){await navigator.clipboard.writeText(result.plainText??'');if(alive.current)setMessage('正文已复制为纯文本。');}
+    else{const url=URL.createObjectURL(result.blob),anchor=document.createElement('a');anchor.href=url;anchor.download=result.filename??`${projection.title.replace(/[\\/:*?"<>|]/g,'-')||'公众号文章'}.html`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);if(alive.current)setMessage('交付文件已生成。');}
+   }
+
   }catch(reason){if(alive.current&&editor.current===active)setError(reason instanceof Error?reason.message:'交付失败，请重试。');}finally{if(alive.current&&editor.current===active)setBusy(false);}
  }
  return <section className="space-y-4 rounded-xl border border-border bg-surface p-4" aria-label="NoteRelay 排版预览">

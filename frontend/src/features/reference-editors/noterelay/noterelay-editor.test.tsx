@@ -28,7 +28,7 @@ it('原生工作面与CreatorOS控件直接改当前版式，无iframe或window�
 });
 it('富文本复制使用ClipboardItem；不支持时可真实复制纯文本',async()=>{
  const write=vi.fn(async()=>{}),writeText=vi.fn(async()=>{});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write,writeText}});class Item{constructor(public data:Record<string,Blob>){}}vi.stubGlobal('ClipboardItem',Item);
- render(<NoteRelayEditor projectId="project-fixture" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={doc} onLayoutChange={()=>{}}/>);await connected();fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));await waitFor(()=>expect(write).toHaveBeenCalledOnce());expect((write.mock.calls[0] as any)[0][0].data['text/html'].type).toBe('text/html');
+ render(<NoteRelayEditor projectId="project-fixture" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={doc} onLayoutChange={()=>{}}/>);await connected();fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));await waitFor(()=>expect(write).toHaveBeenCalledOnce());expect((await (write.mock.calls[0] as any)[0][0].data['text/html']).type).toBe('text/html');await screen.findByText('公众号文章已复制。');
  vi.stubGlobal('ClipboardItem',undefined);fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));expect(await screen.findByRole('alert')).toHaveTextContent('不支持富文本复制');exports();fireEvent.click(screen.getByRole('button',{name:'复制纯文本'}));await waitFor(()=>expect(writeText).toHaveBeenCalledWith('当前正文'));
 });
 it('导出期间改稿或换账号，迟到结果不下载',async()=>{
@@ -52,6 +52,7 @@ it('候选模式禁止版式回写，同时真实page/export端口保持可用',
 });
 
 it('精简模式移除精调表单，所有交付先确认保存，保存失败不导出',async()=>{
+ class Item{constructor(public data:Record<string,Promise<Blob>>){}}vi.stubGlobal('ClipboardItem',Item);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write:vi.fn(async(items:any[])=>{await Promise.all(Object.values(items[0].data));})}});
  const prepare=vi.fn(async()=>false);render(<NoteRelayEditor simplified prepareDelivery={prepare} projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={doc} onLayoutChange={()=>{}}/>);await connected();expect(screen.queryByText('排版设置')).toBeNull();expect(screen.queryAllByRole('textbox')).toHaveLength(0);
  fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));await screen.findByRole('alert');expect(prepare).toHaveBeenCalledOnce();expect(h.request.mock.calls.filter(([op])=>op==='export')).toHaveLength(0);
  prepare.mockResolvedValue(true);const writeText=vi.fn();Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText}});exports();fireEvent.click(screen.getByRole('button',{name:'复制纯文本'}));await waitFor(()=>expect(writeText).toHaveBeenCalledWith('当前正文'));expect(prepare).toHaveBeenCalledTimes(2);
@@ -97,4 +98,37 @@ it('简化文章可切换真实主题，正文不变且预览保存导出共用�
  await waitFor(()=>expect(h.request.mock.calls.filter(([op])=>op==='load').at(-1)?.[1].layout.themeId).toBe('moyu-green'));
  expect(current.sections).toEqual(doc.sections);expect(current.nativeLayout?.themeId).toBe('moyu-green');expect(screen.queryByText('开源来源与许可')).toBeNull();
  Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:vi.fn()}});exports();fireEvent.click(screen.getByRole('button',{name:'复制纯文本'}));await waitFor(()=>expect(save).toHaveBeenCalledOnce());expect(h.request.mock.calls.some(([op])=>op==='export')).toBe(true);
+});
+
+it.each([true,false])('T1419 点击时登记剪贴板，延迟保存成功=%s后才交付',async saved=>{
+ let finish!:(value:boolean)=>void;const prepare=vi.fn(()=>new Promise<boolean>(resolve=>{finish=resolve;}));
+ const materialized:Blob[]=[];const write=vi.fn(async(items:any[])=>{const blobs=await Promise.all(Object.values(items[0].data) as Promise<Blob>[]);materialized.push(...blobs);});
+ class Item{constructor(public data:Record<string,Promise<Blob>>){}}vi.stubGlobal('ClipboardItem',Item);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write}});
+ render(<NoteRelayEditor simplified prepareDelivery={prepare} projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={doc} onLayoutChange={()=>{}}/>);await connected();
+ fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));
+ expect(write,'必须在点击调用栈内请求复制，不能等异步保存后再请求权限').toHaveBeenCalledOnce();
+ await waitFor(()=>expect(prepare).toHaveBeenCalledOnce());expect(materialized).toEqual([]);expect(h.request.mock.calls.some(([op])=>op==='export')).toBe(false);
+ await act(async()=>finish(saved));
+ if(saved){await screen.findByText('公众号文章已复制。');expect(materialized.map(b=>b.type)).toEqual(['text/html','text/plain']);}
+ else {expect(await screen.findByRole('alert')).toHaveTextContent('保存尚未确认');expect(materialized).toEqual([]);expect(h.request.mock.calls.some(([op])=>op==='export')).toBe(false);}
+});
+
+it.each(['改稿','换账号','卸载'])('复制等待保存时%s，ClipboardItem 的内容拒绝交付',async kind=>{
+ class Item{constructor(public data:Record<string,Promise<Blob>>){}}vi.stubGlobal('ClipboardItem',Item);
+ const write=vi.fn(async(items:Item[])=>{await Promise.all(Object.values(items[0].data));});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write}});
+ let finish!:(value:boolean)=>void;const prepare=vi.fn(()=>new Promise<boolean>(resolve=>{finish=resolve;}));
+ const props={simplified:true,prepareDelivery:prepare,projectId:'p',accountId:'a',outputId:'o',sourceVersionId:'v',platform:'wechat' as const,value:doc,onLayoutChange:()=>{}};
+ const view=render(<NoteRelayEditor {...props}/>);await connected();fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));expect(write).toHaveBeenCalledOnce();await waitFor(()=>expect(prepare).toHaveBeenCalledOnce());
+ const content=write.mock.calls[0][0][0].data['text/html'];const rejected=expect(content).rejects.toThrow('稿件已改变');
+ if(kind==='改稿')view.rerender(<NoteRelayEditor {...props} value={{...doc,title:'后续修改'}}/>);
+ else if(kind==='换账号'){localStorage.setItem('creatoros:current-account','b');window.dispatchEvent(new Event('creatoros:accounts-changed'));view.rerender(<NoteRelayEditor {...props} accountId="b" outputId="o2"/>);}
+ else view.unmount();
+ await act(async()=>{finish(true);await rejected;});expect(h.request.mock.calls.filter(([op])=>op==='export')).toHaveLength(0);expect(screen.queryByText('公众号文章已复制。')).toBeNull();
+});
+
+it.each(['异步拒绝','write同步拒绝','构造同步拒绝'])('剪贴板%s且未订阅数据时，保存失败仍收敛为原错误',async mode=>{
+ class Item{constructor(public data:Record<string,Promise<Blob>>){if(mode==='构造同步拒绝')throw Error('clipboard denied');}}vi.stubGlobal('ClipboardItem',Item);
+ const write=vi.fn(()=>{if(mode==='write同步拒绝')throw Error('clipboard denied');return Promise.reject(Error('clipboard denied'));});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write}});
+ render(<NoteRelayEditor simplified prepareDelivery={async()=>false} projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={doc} onLayoutChange={()=>{}}/>);await connected();fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));
+ expect(await screen.findByRole('alert')).toHaveTextContent('保存尚未确认');expect(h.request.mock.calls.filter(([op])=>op==='export')).toHaveLength(0);expect(screen.queryByText('公众号文章已复制。')).toBeNull();
 });

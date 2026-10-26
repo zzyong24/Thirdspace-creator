@@ -9,9 +9,9 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1418|修复创作者总览筛选读取慢与等待路径|🔨|PASS[REV:baa9f1987d8f]|待验|[SPEC](docs/features/t1418-creator-overview-read-performance.md)|按真实月明水清深数据定位重复/串行读取，保留账号隔离与正确筛选结果。|
-|T-1419|简化文章工作台并恢复公众号排版风格切换|🔨|PASS[REV:ab5903121ea5]|待验|[SPEC](docs/features/t1419-article-workbench-style-restoration.md)|移除创作流程里的来源许可说明，从历史恢复可保存、预览、导出的多风格切换。|
-|T-1420|按小红书图文重组正文与多页图片|🔨|PASS[REV:3b080bb41774]|待验|[SPEC](docs/features/t1420-graphic-post-content-structure.md)|正文符合平台表达、图片按内容语义拆页，清除多余来源许可和发布交付入口。|
+|T-1418|修复创作者总览筛选读取慢与等待路径|🔨|PASS[REV:0a13080906b9]|待验|[SPEC](docs/features/t1418-creator-overview-read-performance.md)|按真实月明水清深数据定位重复/串行读取，保留账号隔离与正确筛选结果。|
+|T-1419|简化文章工作台并恢复公众号排版风格切换|🔨|PASS[REV:3e253feb0b88]|待验|[SPEC](docs/features/t1419-article-workbench-style-restoration.md)|移除创作流程里的来源许可说明，从历史恢复可保存、预览、导出的多风格切换。|
+|T-1420|按小红书图文重组正文与多页图片|🔨|PASS[REV:d078ce896db1]|待验|[SPEC](docs/features/t1420-graphic-post-content-structure.md)|正文符合平台表达、图片按内容语义拆页，清除多余来源许可和发布交付入口。|
 |T-1421|理清剪辑转写与按文字剪辑入口|🔨|PASS[REV:1afd62137d5a]|待验|[SPEC](docs/features/t1421-transcript-editing-clarity.md)|明确导入视频、转成文字、按文字剪辑的用途和先后关系，保留真实能力。|
 |T-1417|补齐官方Pi同能力输出预算诊断|✅|PASS[REV:c3f3e604a908]|—|[SPEC](docs/features/t1417-text-probe-output-budget.md)|受限128/8192文本探针，先区分402原因，不改正式聊天预算。|
 |T-1416|修复真实浏览器验收的过时页面断言|✅|PASS[REV:47d4fbfd6861]|—|[SPEC](docs/features/t1416-browser-visible-document-assertions.md)|核对可见正文及来源，保留真实浏览器、账号隔离与全部原断言。|
