@@ -2108,18 +2108,25 @@ export function createIntelligenceService(
         trigger: input.trigger,
       },
       priority: input.trigger === "manual" ? 20 : 10,
-    });
+    }, async (store, task) => {
+    // 运行绑定与任务同事务提交；后台drain不能先领取可见任务再发现run尚不存在。
+    // SEMANTIC_BOUNDARY_ALLOW: 仅按真实任务/来源ID原子绑定，不改变采集内容或归属策略。
     if (input.reuseActiveRun === false && task.idempotencyKey !== input.idempotencyKey) {
       throw new IntelligenceConflictError("该来源已有其他任务的同步，请稍后重试");
     }
-    const [existing] = await db
+    const [existing] = await store
       .select()
       .from(intelligenceSyncRuns)
       .where(eq(intelligenceSyncRuns.executionTaskId, task.id))
       .limit(1);
-    if (existing) return { run: toRun(existing), task };
+    if (existing) return;
+    const [boundSource] = await store.select().from(intelligenceSources).where(and(
+      eq(intelligenceSources.id, sourceId), eq(intelligenceSources.userId, ctx.userId), intelligenceWorkspaceFilter(intelligenceSources,ctx),
+    )).for("update").limit(1);
+    if (!boundSource) throw new OwnershipError("来源工作区已变化，不能创建同步运行");
+    if (boundSource.status !== "active") throw new IntelligenceConflictError(`来源当前为 ${boundSource.status}，不能开始同步`);
     const stamp = now();
-    const [run] = await db
+    await store
       .insert(intelligenceSyncRuns)
       .values({
         id: nextId("intelligence-run"),
@@ -2148,14 +2155,14 @@ export function createIntelligenceService(
       // executionTaskId 唯一索引决定唯一赢家，失败方随后回读同一 run。
       .onConflictDoNothing()
       .returning();
-    if (run) return { run: toRun(run), task };
-    const [racedRun] = await db
+    });
+    const [run] = await db
       .select()
       .from(intelligenceSyncRuns)
       .where(eq(intelligenceSyncRuns.executionTaskId, task.id))
       .limit(1);
-    if (!racedRun) throw new Error("failed to create intelligence run");
-    return { run: toRun(racedRun), task };
+    if (!run) throw new Error("failed to create intelligence run");
+    return { run: toRun(run), task };
   }
 
   async function radarProjectIds(ctx: RequestContext, itemIds: string[]) {

@@ -20,6 +20,9 @@ export type ScriptReviewReportResource =
 export function toReviewRuleDto(row: ReviewRuleRow): ReviewRuleResource {
   return {
     id: row.id,
+    groupId: row.groupId ?? null,
+    scope: row.groupId ? "group" : row.source === "seed" ? "system" : "shared_legacy",
+    scopeDescription: row.groupId ? "仅当前账号组" : row.source === "seed" ? "系统共享规则；修改会影响所有账号组，需明确确认" : "历史共享规则；原归属未知，修改会影响所有账号组，需明确确认",
     tier: row.tier as ReviewRuleResource["tier"],
     category: row.category,
     matchType: row.matchType as ReviewRuleResource["matchType"],

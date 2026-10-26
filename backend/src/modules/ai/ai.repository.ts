@@ -3,7 +3,7 @@ import {withWorkspaceParentWrite,withWorkspaceWrite} from "../../workspace-write
 import {projects,contentOutputs,assertWritableWorkspace} from "@creatoros/backend";
 import {workspaceFilter,workspaceStamp} from "../../workspace-scope";
 import {lockWorkspaceMembership} from "../platform-account/membership-lock.service";
-import { and, asc, desc, eq, isNull, like, sql, type Db } from "@creatoros/backend";
+import { and, asc, desc, eq, isNull, like, or, sql, type Db } from "@creatoros/backend";
 // [DATA-H07] 跨模块表(assets)—— canonical 定义在共享基座 @creatoros/backend(与 T-102
 // projects.repository 级联删除同一先例):AI 生成资产的「采纳翻 active / 拒绝清理」是 AI 采纳门
 // 的生命周期职责,但组合根(persistence-client)本波冻结、无法新增 assets 端口 —— 故按 T-102
@@ -329,10 +329,17 @@ export function createAiRepository(db: Db, deps: RepoDeps, parentLocked=false): 
       // (隔离语义:不可见,不是置灰)。不传 scope 维持全量(旧调用不破)。
       // [T-332 S2 · ISO-02] 号维度 strict 恒叠(user 门内层,无「无号全量」退化);
       // scope 过滤再叠一层。
+      const projectId=scope?.startsWith('project:')?scope.slice('project:'.length):null;
+      // 精确项目范围兼容旧准备会话；沿用原ID，只读关联仍属于当前工作区的父项目。
+      const scopeFilter=projectId?and(
+        eq(aiConversations.projectId,projectId),
+        or(eq(aiConversations.scope,scope!),eq(aiConversations.scope,'project')),
+        sql`exists (${db.select({id:projects.id}).from(projects).where(and(eq(projects.id,projectId),eq(projects.userId,deps.userId),workspaceFilter(projects,deps)))})`,
+      ):scope?eq(aiConversations.scope,scope):undefined;
       const where = and(
         eq(aiConversations.userId, deps.userId),
         workspaceFilter(aiConversations, deps),
-        scope ? eq(aiConversations.scope, scope) : undefined,
+        scopeFilter,
       );
       const rows = await db
         .select()

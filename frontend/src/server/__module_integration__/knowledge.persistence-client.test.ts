@@ -48,7 +48,7 @@ beforeEach(async () => {
 });
 
 describe("knowledge ops registered in the composite transport", () => {
-  it("the 13 knowledge op ids are persistence-backed (not the mock)", async () => {
+  it("the 15 knowledge op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of KNOWLEDGE_OP_IDS) {
@@ -56,8 +56,15 @@ describe("knowledge ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    // [T-519] 文件夹 list/create + move 进入同一真实 transport 后共 13 个。
-    expect(KNOWLEDGE_OP_IDS).toHaveLength(13);
+    // [T-1406] 原13项保留，蒸馏采纳及回执也必须进入真实持久化 transport。
+    expect([...KNOWLEDGE_OP_IDS].sort()).toEqual([
+      "knowledge.list", "knowledge.create", "knowledge.get",
+      "knowledge.revisions.create", "knowledge.revisions.list",
+      "knowledge.relations.create", "knowledge.relations.list",
+      "knowledge.archive", "knowledge.relations.delete", "knowledge.relations.listAll",
+      "knowledge.folders.list", "knowledge.folders.create", "knowledge.move",
+      "knowledge.distill.adopt", "knowledge.distill.receipt",
+    ].sort());
     // The two GAP-RES-1 soft-delete ops are in the owned set.
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.archive");
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.relations.delete");

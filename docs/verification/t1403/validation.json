@@ -1,0 +1,86 @@
+{
+  "task": "T-1403",
+  "sourceBase": "a33cbbc1fd5b71c38ac1f1445a7230a4be4014c2",
+  "sourceImplemented": true,
+  "nativeWindowsInstallationUpdated": false,
+  "allFlowsNormal": false,
+  "commercialModelRevalidatedThisRepair": false,
+  "checks": {
+    "worker-build": {
+      "exitCode": 0,
+      "seconds": 2.295,
+      "startedAt": "20261025T070421Z",
+      "logFile": "worker-build-20261025T070421Z.log"
+    },
+    "backend-typecheck": {
+      "exitCode": 0,
+      "seconds": 45.34,
+      "startedAt": "20261025T073020Z",
+      "logFile": "backend-typecheck-20261025T073020Z.log"
+    },
+    "frontend-build": {
+      "exitCode": 0,
+      "seconds": 87.133,
+      "startedAt": "20261025T071436Z",
+      "logFile": "frontend-build-20261025T071436Z.log"
+    },
+    "timeout-policy": {
+      "exitCode": 0,
+      "seconds": 44.929,
+      "startedAt": "20261025T073248Z",
+      "logFile": "timeout-policy-20261025T073248Z.log"
+    },
+    "boundary": {
+      "exitCode": 0,
+      "seconds": 0.274,
+      "startedAt": "20261025T070725Z",
+      "logFile": "boundary-20261025T070725Z.log"
+    },
+    "calibration-public": {
+      "exitCode": 0,
+      "seconds": 126.754,
+      "startedAt": "20261025T072034Z",
+      "logFile": "calibration-public-20261025T072034Z.log"
+    },
+    "reconcile": {
+      "exitCode": 1,
+      "seconds": 2.828,
+      "startedAt": "20261025T074307Z",
+      "logFile": "reconcile-20261025T074307Z.log"
+    }
+  },
+  "currentScriptHttp": {
+    "passed": 1,
+    "filteredSkipped": 22,
+    "actualWorker": true,
+    "provider": "loopback fixture",
+    "rootOldV2": true,
+    "childCurrentV3": true,
+    "userMessages": 1
+  },
+  "preservation": {
+    "coldBackupFiles": 8333,
+    "coldBackupBytes": 548991032,
+    "hashesMatched": true,
+    "originalEightApiClassesSameAsPriorFinal": true,
+    "originalExeUnchanged": true,
+    "initialTwoProjectUpdatedAtDifferencesRetained": true
+  },
+  "remaining": [
+    "既有持钥环境构建合法Windows包后安装/原生UI/真实模型复验",
+    "视觉审核真实供应商完成未证实",
+    "平台自动发布/平台草稿适配器未完成",
+    "真实扫码/作品数据/指标效果回流未完成",
+    "图像/视频生成服务资源缺失",
+    "quick对账未闭合，不能签全仓全绿"
+  ],
+  "evidencePolicy": "所有测试/构建发生在Windows及自有PGlite/loopback；原始红/绿/夹具错误分别保留，不包装商业模型或原生安装版通过。私有数据与密钥不进补丁。",
+  "controlAudit": {
+    "initialErrors": 84,
+    "environmentFixedFinalErrors": 27,
+    "warnings": 18,
+    "passed": false,
+    "attribution": "修复确认的Windows换行漂移与稀疏缺件后仍有原控制资料/收据不一致；不能把原84项全说成main既有或判为全绿。",
+    "newTaskBinding": "本轮context-compile因缺task binding失败，按AGENTS指定fallback读取BACKLOG与SPEC；未补造历史packet或前置审查。T1403保持发布/真机待验，不记完成。"
+  }
+}

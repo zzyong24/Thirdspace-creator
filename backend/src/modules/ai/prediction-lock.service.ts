@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {and,asc,eq,sql,aiTasks,aiTaskResults,executionTasks,executionCalls,projects,artifacts,type Db} from "@creatoros/backend";
-import {predictionLockSource,type PredictionLockSource,type PredictionLockState,type RequestContext} from "@creatoros/contract";
+import {predictionLockSource,type PredictionLockSource,type PredictionLockState,type PredictionResource,type RequestContext} from "@creatoros/contract";
 import {chatWorkerInputSchema,externalTaskToolCallSchema,externalChatStartSchema,externalChatReceiptSchema,externalToolInputProofSchema,agenticToolOutcomeSchema,workerToolResultReceiptSchema} from "@creatoros/contract/execution-worker";
 import {workspaceFilter,requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import {lockWorkspaceMembership,assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
@@ -29,7 +29,7 @@ export interface PredictionLockPorts {
  readConfirmedScript(ctx:RequestContext,projectId:string,store:Db):Promise<Script|null>;
  ensureRubric(ctx:RequestContext,store:Db):Promise<Rubric>;
  getRubric(ctx:RequestContext,id:string,store:Db):Promise<Rubric>;
- getPrediction(ctx:RequestContext,id:string,store:Db):Promise<{status:string;subjectId:string;rubricVersionId:string}>;
+ getPrediction(ctx:RequestContext,id:string,store:Db):Promise<PredictionResource>;
  prepareRuntime(ctx:RequestContext):Promise<Record<string,unknown>>;
  createChild(ctx:RequestContext,input:Record<string,unknown>,attemptId:string,runtime:Record<string,unknown>,store:Db):Promise<{id:string}>;
 }
@@ -115,6 +115,7 @@ export function createPredictionLockService(db:Db,ports:PredictionLockPorts,now=
   if(b.sourceDigest!==s.sourceDigest||!isDeepStrictEqual(b.source,s.requested)||b.subjectId!==s.subjectId||b.projectId!==s.root.projectId)throw new ConflictError("原卡绑定与来源不符");
   const [child]=await store.select().from(aiTasks).where(and(eq(aiTasks.id,b.childTaskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));
   let task:PredictionLockState['task']=null,status:PredictionLockState['status']='missing',resultId=b.resultId??null;
+  let formalPrediction:PredictionLockState['formalPrediction']=null;
   if(child){
    const marker=record(record(child.inputData).predictionLockSource);
    if(child.taskType!=="calibration.diagnose"||marker.policyVersion!==1||marker.rootTaskId!==s.root.id||marker.toolCallId!==b.source.toolCallId||marker.intentDigest!==b.intentDigest||child.projectId!==b.projectId||record(child.inputData).subjectId!==b.subjectId)throw new ConflictError("原卡子任务绑定不符");
@@ -128,10 +129,11 @@ export function createPredictionLockService(db:Db,ports:PredictionLockPorts,now=
       return {policyVersion:1,source:b.source,status:'missing',subjectId:b.subjectId,projectId:b.projectId,baselineDigest:b.baselineDigest,baseline:b.baseline,diagnoseTaskId:b.childTaskId,resultId:b.resultId??null,predictionId:b.predictionId,task};
     }
     const prediction=await ports.getPrediction(ctx,b.predictionId,store);
-    if(prediction.status!=='locked'||prediction.subjectId!==b.subjectId||prediction.rubricVersionId!==b.rubric.id||child.status!=='succeeded')throw new ConflictError('原卡具体预测回执与实际状态不符');
+    if(prediction.id!==b.predictionId||prediction.status!=='locked'||prediction.subjectType!=='content_output'||prediction.subjectId!==b.subjectId||prediction.rubricVersionId!==b.rubric.id||child.status!=='succeeded')throw new ConflictError('原卡具体预测回执与实际状态不符');
     const receipt=record(record(result.resultData).predictionLockReceipt);
     const expected={policyVersion:1,source:b.source,sourceDigest:b.sourceDigest,baselineDigest:b.baselineDigest,diagnoseTaskId:child.id,resultId:b.resultId,predictionId:b.predictionId};
     if(!isDeepStrictEqual(receipt,expected))throw new ConflictError('原卡候选锁定回执缺失或与来源不符');
+    formalPrediction={prediction,rubric:structuredClone(b.rubric)};
    }
    status=b.predictionId?'locked':['unknown_result','partial'].includes(task.runtimeStatus??'')||task.status==='partial'?'unknown':task.status==='awaiting_confirmation'?'awaiting_confirmation':['failed','cancelled','succeeded'].includes(task.status)?'failed':'running';
    if(status==='awaiting_confirmation'){
@@ -140,7 +142,7 @@ export function createPredictionLockService(db:Db,ports:PredictionLockPorts,now=
     if(candidates.length===0)status='missing';else resultId=candidates[0]!.id;
    }
   }
-  return {policyVersion:1,source:b.source,status,subjectId:b.subjectId,projectId:b.projectId,baselineDigest:b.baselineDigest,baseline:b.baseline,diagnoseTaskId:b.childTaskId,resultId,predictionId:b.predictionId??null,task};
+  return {policyVersion:1,source:b.source,status,subjectId:b.subjectId,projectId:b.projectId,baselineDigest:b.baselineDigest,baseline:b.baseline,diagnoseTaskId:b.childTaskId,resultId,predictionId:b.predictionId??null,task,formalPrediction};
  }
 
  async function lockSource(ctx:RequestContext,requested:PredictionLockSource,pre:Awaited<ReturnType<typeof source>>,tx:Tx){

@@ -1,0 +1,27 @@
+{
+  "observedDate": "2026-10-25",
+  "initialRepairCommit": "3d741fc95a37929a1a5f9d89f5f5f326d75f6ff0",
+  "scope": "CI发现的当前改动相关问题补充修正；不修改保护门、预期SHA或旧证据",
+  "actualFailures": [
+    "新增搜索集成测试的vi.setConfig retry字段不属于Vitest RuntimeConfig；同文件存在一个新增explicit-any lint错误",
+    "原每日选题重复create用例与新增停用创建保护冲突；新建界面需读取并明确复用同组已有作业，不能把已有启用作业冒充新建停用任务"
+  ],
+  "implementation": [
+    "移除不受支持的测试配置，搜索测试返回值改为明确契约类型",
+    "生产resolveDailyTopicJob先读取同组每日选题任务，已有任务只读复用；名称、频率和开关均不更改",
+    "界面打开已有任务详情并明确显示原启用状态未更改",
+    "直接重复disabled create仍拒绝，权限失败和查询后的并发保护错误仍原样抛出",
+    "每日选题集成夹具将CREATOROS_DB_DIR与PGLITE_DATA_DIR绑定同一临时测试目录，避免触及用户目录"
+  ],
+  "actualChecks": {
+    "dailyReproduction": {"failed": 1, "filteredSkipped": 11, "seconds": 21.71, "evidence": "t1404-daily-job-reuse-red.log"},
+    "finalTargetedRegression": {"files": 6, "passed": 66, "failed": 0, "skipped": 0, "seconds": 140.18, "evidence": "t1404-ci-followup-regression-v2.log"},
+    "frontendFullTypecheck": {"command": "pnpm -C frontend typecheck", "exitCode": 0, "scope": "next typegen && tsc --noEmit，包含测试类型", "evidence": "t1404-ci-followup-frontend-typecheck-v2.log"},
+    "scopedLint": {"newHelperTestsAndSearchErrors": 0, "newHelperTestsAndSearchWarnings": 0, "existingIslandErrors": 3, "existingIslandWarnings": 7, "existingDailyTestErrors": 7, "existingDailyTestWarnings": 0, "baselineDiagnosticSignaturesUnchanged": true, "evidence": "t1404-ci-followup-eslint-comparison.json"}
+  },
+  "limits": [
+    "上述限定回归不等于全仓CI、原生Windows或真实商业模型验收",
+    "旧修复head的GitHub两个job失败包含其他批准门、受控目录、外仓fixture和广泛lint问题，未宣称全部既有或清零",
+    "首轮prepare b57aac403347e5a25e42dd6c0111d5db317d8e0e虽构建成功，但已废弃，不签署或交付；新包另用补充修正后的准确源码重新prepare"
+  ]
+}

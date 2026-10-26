@@ -17,6 +17,10 @@ export const reviewRuleMatchType = z.enum(["word", "regex"]);
 
 export const reviewRuleResource = z.object({
   id,
+  /** additive：旧客户端资源无字段时兼容，正式服务始终明确适用层。 */
+  groupId: id.nullable().optional(),
+  scope: z.enum(["system", "shared_legacy", "group"]).optional(),
+  scopeDescription: z.string().optional(),
   tier: reviewRuleTier,
   /** 类目(导流/绝对化/降权词/营销词/情绪类/隐私/复用/其他)。自由字符串,种子给规范值。 */
   category: z.string(),

@@ -1,13 +1,15 @@
-import type {RequestContext} from "@creatoros/contract";
+import type {RequestContext,KnowledgeDistillReceipt} from "@creatoros/contract";
 import type {Db} from "../db";
 import {workspaceStamp} from "../workspace-scope";
 import type {Transport} from "@creatoros/contract";
-import {createKnowledgeRepository,createKnowledgeService,createKnowledgeTransport} from "../modules/knowledge";
+import {createKnowledgeRepository,createKnowledgeService,createKnowledgeTransport,createKnowledgeDistillAdoptionService,type DistillSourceReader} from "../modules/knowledge";
 import {createSearchRepository,createSearchService,createSearchTransport,createKnowledgeSearchRuntime} from "../modules/search";
 
 /** 知识写入与派生搜索索引的应用边界；宿主仅提供向量 IO 和配置解析。 */
 export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof createKnowledgeRepository>[1]&Parameters<typeof createSearchService>[1],ports:{
  assertAssetReadable?: (ctx:RequestContext,assetId:string)=>Promise<unknown>;
+ readDistillSource?:DistillSourceReader;
+ assignDistillTags?:(ctx:RequestContext,knowledgeIds:string[],tagNames:readonly string[])=>Promise<void>;
  resolveEmbedSpec:(ctx:RequestContext)=>Promise<Spec|null>;
  embeddingConfigDigest?:(spec:Spec)=>string|undefined;
  embedTexts:(ctx:RequestContext,spec:Spec,texts:string[],signal?:AbortSignal)=>Promise<number[][]>;
@@ -38,7 +40,8 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
   // collision-free across requests).
   const knowledgeRepo = createKnowledgeRepository(db, deps);
   const knowledgeService = createKnowledgeService(knowledgeRepo, {assertAssetReadable:ports.assertAssetReadable});
-  const knowledgeBaseTransport = createKnowledgeTransport(() => knowledgeService);
+  const distill=ports.readDistillSource?createKnowledgeDistillAdoptionService(db,deps,ports.readDistillSource):undefined;
+  const knowledgeBaseTransport = createKnowledgeTransport(() => knowledgeService,distill);
   const knowledgeSearchRuntime=createKnowledgeSearchRuntime({
     knowledge:knowledgeService,search:searchService,
     resolveEmbedSpec:ports.resolveEmbedSpec,embeddingConfigDigest:ports.embeddingConfigDigest,embedTexts:ports.embedTexts,
@@ -50,6 +53,15 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
   const knowledge: Transport = {
     async request(endpoint, input, ctx) {
       const result = await knowledgeBaseTransport.request(endpoint, input, ctx);
+      if(ctx&&endpoint.id==='knowledge.distill.adopt'){
+        const receipt=(result as {data:KnowledgeDistillReceipt}).data;
+        // Derived index repair is safe on replay; the committed receipt always remains the business truth.
+        for(const id of [...receipt.knowledgeIds,...(receipt.archiveKnowledgeId?[receipt.archiveKnowledgeId]:[])])await indexKnowledgeDocumentBestEffort(ctx,id);
+        if(ports.assignDistillTags&&ports.readDistillSource){
+          // Tags are an existing best-effort enhancement. Use frozen request ownership and verified server suggestions.
+          try{const source=await ports.readDistillSource(ctx,receipt.source,db);await ports.assignDistillTags(ctx,receipt.knowledgeIds,source.candidate.suggestedTags);}catch{/* A tag outage must not erase the committed receipt or create a second batch. */}
+        }
+      }
       if (
         ctx &&
         (endpoint.id === "knowledge.create" ||

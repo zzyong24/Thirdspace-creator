@@ -176,7 +176,7 @@ export function TestConnectionButton({
       {result ? (
         <p
           data-slot={`${slotPrefix}-test-result`}
-          data-ok={result.status === "fail" ? "false" : "true"}
+          data-ok={result.status === "ok" ? "true" : "false"}
           data-status={result.status}
           className={
             result.status === "ok"

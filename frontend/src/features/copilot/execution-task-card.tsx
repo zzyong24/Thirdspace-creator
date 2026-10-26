@@ -287,7 +287,7 @@ function ExecutionTaskCardBody({
     const raw = task?.manifest?.meta?.visualReview;
     if (!raw || typeof raw !== "object") return null;
     const value = raw as Record<string, unknown>;
-    if (value.status !== "reviewed") return null;
+    if (value.status !== "reviewed" && value.status !== "unavailable" && value.status !== "skipped") return null;
     const issues = Array.isArray(value.issues)
       ? value.issues.filter(
           (item): item is Record<string, unknown> =>
@@ -295,8 +295,9 @@ function ExecutionTaskCardBody({
         )
       : [];
     return {
-      verdict: value.verdict === "warn" ? "warn" : "pass",
-      summary: typeof value.summary === "string" ? value.summary : "视觉审核已完成。",
+      status: value.status,
+      verdict: value.status === "reviewed" ? value.verdict === "warn" ? "warn" : "pass" : null,
+      summary: typeof value.summary === "string" ? value.summary : value.status === "reviewed" ? "视觉审核已完成。" : "尚未取得完整视觉审核结果；成片已保留。",
       issues,
     };
   }, [task?.manifest?.meta]);
@@ -373,13 +374,13 @@ function ExecutionTaskCardBody({
             <div
               data-slot="execution-task-visual-review"
               className={`rounded-md border p-2 text-[11px] ${
-                visualReview.verdict === "warn"
+                visualReview.status !== "reviewed" || visualReview.verdict === "warn"
                   ? "border-warning/40 bg-warning/10 text-foreground"
                   : "border-success/40 bg-success/10 text-foreground"
               }`}
             >
               <p className="font-medium">
-                {visualReview.verdict === "warn" ? "视觉审核发现可优化项" : "视觉审核通过"}
+                {visualReview.status !== "reviewed" ? "视觉审核未完成" : visualReview.verdict === "warn" ? "视觉审核发现可优化项" : "视觉审核通过"}
               </p>
               <p className="mt-0.5 text-muted-foreground">{visualReview.summary}</p>
               {visualReview.issues.length > 0 ? (

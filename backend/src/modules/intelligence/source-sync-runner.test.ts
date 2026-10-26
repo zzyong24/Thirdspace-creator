@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createDb } from "@creatoros/backend";
+import {accountGroups} from '../../schema/account-groups';
 import type { RequestContext } from "@creatoros/contract";
 import { createPersistentTaskService } from "../execution";
 import { createIntelligenceService } from "./intelligence.service";
@@ -55,6 +56,38 @@ function succeededEnvelope(
 }
 
 describe("T-482 来源同步 worker", () => {
+  it.each(["account", "empty_group"])("T1403 来源任务可消费前已绑定运行，立即drain不被准入门误伤 %s", async mode => {
+    const { db, client } = await createDb(), d = deps();
+    const scope:RequestContext=mode==='empty_group'?{...ctx,accountId:null,groupId:'immediate-empty-group'}:ctx;
+    if(scope.groupId)await db.insert(accountGroups).values({id:scope.groupId,userId:scope.userId,name:'无账号验收组',status:'active',version:1,createdAt:d.now(),updatedAt:d.now()});
+    const tasks = createPersistentTaskService(db, d);
+    const intelligence = createIntelligenceService(db, { ...d, tasks });
+    const adapter = { run: vi.fn(async () => succeededEnvelope(d.now(), "即时调度的来源正文")) };
+    const enqueue = tasks.enqueue.bind(tasks);
+    const drainErrors: unknown[] = [];
+    // 精确复现：enqueue提交后，后台drain先于startRun调用者继续执行。
+    vi.spyOn(tasks, "enqueue").mockImplementation(async (...args) => {
+      const task = await enqueue(...args);
+      if (args[1].kind === "source_sync") {
+        try { await drainIntelligenceSourceQueue({ tasks, intelligence, adapter, now: d.now, workerId: () => "immediate-source-worker" }, 1); }
+        catch (error) { drainErrors.push(error); }
+      }
+      return task;
+    });
+    try {
+      const result = await intelligence.createSource(scope, {
+        collectionId: null, type: "rss", config: { type: "rss", url: "https://example.com/immediate.xml" },
+        monitorEnabled: false, runInitial: true, idempotencyKey: "immediate-source-admission",
+      });
+      expect(drainErrors).toEqual([]);
+      expect(adapter.run).toHaveBeenCalledTimes(1);
+      expect((await intelligence.getRun(scope, result.run!.id)).run.status).toBe("succeeded_with_items");
+      expect((await tasks.get(scope, result.task!.id)).status).toBe("succeeded");
+      expect((await intelligence.listItems(scope, {})).rows).toHaveLength(1);
+      if(mode==='empty_group')expect(result.task).toMatchObject({groupId:scope.groupId,accountId:null});
+    } finally { await client.close(); }
+  });
+
   it("claim 后调用适配器并把作品、指标和运行终态原子落入领域服务", async () => {
     const { db, client } = await createDb();
     const d = deps();

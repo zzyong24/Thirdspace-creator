@@ -1,238 +1,37 @@
-/**
- * KnowledgeAtomGate 单测(T-094,自 knowledge-dump-zone 旧内联确认门抽出)。
- * mock contract client,覆盖:
- *  - 默认全选,采纳按钮显条数;改 type/title/sourceNote 后逐条 knowledge.create
- *    (content=note,带 sourceNote)+ suggestedTags 挂 tag + 原文 reference 存档 + refresh;
- *  - 取消勾选做减法(未选中的不落库);
- *  - 关掉「原文同时存档」→ 不存 reference;originalText 为空 → 不渲存档项;
- *  - 采纳失败 → 内联错误,候选保留(不静默吞)[gate-F2];
- *  - 采纳成功 → 收尾态(已采纳 N 条)。
- */
-
-import type * as React from "react";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const mockRouter = { refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() };
-vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
-
-let knowledgeSeq = 0;
-const createKnowledge = vi.fn((_input: unknown): Promise<unknown> => {
-  knowledgeSeq += 1;
-  return Promise.resolve({ id: `k-${knowledgeSeq}` });
+import type * as React from 'react';
+import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+const state=vi.hoisted(()=>({refresh:vi.fn(),read:vi.fn(),adopt:vi.fn(),ordinary:vi.fn()}));
+vi.mock('next/navigation',()=>({useRouter:()=>({refresh:state.refresh})}));
+vi.mock('@/lib/contract-client',()=>({client:{getKnowledgeDistillReceipt:(...args:unknown[])=>state.read(...args),adoptKnowledgeDistill:(...args:unknown[])=>state.adopt(...args),createKnowledge:state.ordinary}}));
+import {KnowledgeAtomGate,archiveTitleOf} from './knowledge-atom-gate';
+const source={conversationId:'persisted-conv',sourceMessageId:'persisted-message',toolCallId:'persisted-call'};
+const atoms=[{type:'claim' as const,title:'观点一',note:'上下文',sourceNote:''},{type:'quote' as const,title:'金句二',note:'',sourceNote:'原作者'}];
+const receipt={source,taskId:'actual-task',callId:'actual-call',knowledgeIds:['k1','k2'],atomCount:2,archiveKnowledgeId:'archive1',createdAt:'2026-10-25T00:00:00Z'};
+const renderGate=(props:Partial<React.ComponentProps<typeof KnowledgeAtomGate>>={})=>render(<KnowledgeAtomGate atoms={atoms} source={source} originalText={'第一行\n完整原文'} suggestedTags={['主题']} {...props}/>);
+const ready=async()=>{let button!:HTMLElement;await waitFor(()=>{button=screen.getByRole('button',{name:/采纳选中/});expect((button as HTMLButtonElement).disabled).toBe(false);});return button;};
+beforeEach(()=>{vi.clearAllMocks();state.read.mockResolvedValue({receipt:null});state.adopt.mockResolvedValue(receipt);});afterEach(()=>cleanup());
+it('存档标题仍取首个非空行并截60字',()=>{expect(archiveTitleOf('\n  第一行\n第二行')).toBe('第一行');expect(archiveTitleOf('长'.repeat(80))).toHaveLength(60);});
+it('有来源先读持久回执，默认全选及原文存档，来源未就绪禁采纳',async()=>{
+ const first=renderGate();expect(screen.getAllByRole('checkbox').every(box=>(box as HTMLInputElement).checked)).toBe(true);await ready();expect(state.read).toHaveBeenCalledWith({params:undefined,query:undefined,body:{source}});first.unmount();
+ renderGate({source:null});expect((screen.getByRole('button',{name:/采纳选中/}) as HTMLButtonElement).disabled).toBe(true);expect(screen.getByRole('alert').textContent).toContain('来源尚未就绪');
 });
-const listTags = vi.fn((_input: unknown): Promise<unknown> =>
-  Promise.resolve([{ id: "tag-1", name: "已有标签" }]),
-);
-const createTag = vi.fn((_input: unknown): Promise<unknown> =>
-  Promise.resolve({ id: "tag-new" }),
-);
-const assignTags = vi.fn((_input: unknown): Promise<unknown> => Promise.resolve([]));
-vi.mock("@/lib/contract-client", () => ({
-  client: {
-    createKnowledge: (input: unknown) => createKnowledge(input as never),
-    listTags: (input: unknown) => listTags(input as never),
-    createTag: (input: unknown) => createTag(input as never),
-    assignTags: (input: unknown) => assignTags(input as never),
-  },
-}));
-
-import {
-  KnowledgeAtomGate,
-  archiveTitleOf,
-  type DistilledAtom,
-} from "./knowledge-atom-gate";
-
-const SAMPLE_ATOMS: DistilledAtom[] = [
-  {
-    type: "claim",
-    title: "上下文工程比提示词工程重要",
-    note: "谈 Agent 设计时的主张",
-    sourceNote: "",
-  },
-  {
-    type: "quote",
-    title: "把模型当同事,不当算命先生",
-    note: "",
-    sourceNote: "原文作者原话",
-  },
-  { type: "evidence", title: "截断 8000 字符后准确率不降", note: "", sourceNote: "" },
-];
-
-beforeEach(() => {
-  knowledgeSeq = 0;
-  mockRouter.refresh.mockClear();
-  createKnowledge.mockClear();
-  listTags.mockClear();
-  createTag.mockClear();
-  assignTags.mockClear();
+it('编辑/勾选只发送真实索引与编辑字段的一次采纳，客户端不发送原文或循环create',async()=>{
+ const rendered=renderGate();const button=await ready();fireEvent.change(rendered.container.querySelector('[data-slot="knowledge-atom-title"]')!,{target:{value:'人改标题'}});fireEvent.change(rendered.container.querySelector('[data-slot="knowledge-atom-type"]')!,{target:{value:'evidence'}});fireEvent.click(screen.getByRole('checkbox',{name:'采纳第 2 条'}));fireEvent.click(button);
+ await waitFor(()=>expect(state.adopt).toHaveBeenCalledOnce());expect(state.adopt.mock.calls[0]![0].body).toEqual({source,atoms:[{index:0,type:'evidence',title:'人改标题',note:'上下文',sourceNote:''}],archiveOriginal:true});expect(state.ordinary).not.toHaveBeenCalled();await screen.findByText(/已采纳 2 条/);expect(state.refresh).toHaveBeenCalledOnce();
 });
-
-afterEach(() => cleanup());
-
-function q<T extends Element>(container: HTMLElement, slot: string): T | null {
-  return container.querySelector<T>(`[data-slot="${slot}"]`);
-}
-function qa<T extends Element>(container: HTMLElement, slot: string): T[] {
-  return Array.from(container.querySelectorAll<T>(`[data-slot="${slot}"]`));
-}
-
-function renderGate(
-  over: Partial<React.ComponentProps<typeof KnowledgeAtomGate>> = {},
-) {
-  return render(
-    <KnowledgeAtomGate
-      atoms={SAMPLE_ATOMS}
-      suggestedTags={["上下文工程", "Agent"]}
-      originalText={"第一行是标题\n后面是全文正文"}
-      {...over}
-    />,
-  );
-}
-
-describe("archiveTitleOf(原文存档标题)", () => {
-  it("取首个非空行,截 60 字", () => {
-    expect(archiveTitleOf("\n\n  第一行标题  \n第二行")).toBe("第一行标题");
-    expect(archiveTitleOf("长".repeat(80))).toHaveLength(60);
-  });
+it('取消原文存档只发送false；原文显示空时也不请求存档',async()=>{
+ const first=renderGate();let button=await ready();fireEvent.click(first.container.querySelector('[data-slot="knowledge-distill-archive"]')!);fireEvent.click(button);await waitFor(()=>expect(state.adopt).toHaveBeenCalledOnce());expect(state.adopt.mock.calls[0]![0].body.archiveOriginal).toBe(false);first.unmount();state.adopt.mockClear();renderGate({originalText:''});button=await ready();fireEvent.click(button);await waitFor(()=>expect(state.adopt).toHaveBeenCalledOnce());expect(state.adopt.mock.calls[0]![0].body.archiveOriginal).toBe(false);
 });
-
-describe("KnowledgeAtomGate — 蒸馏批量确认门(共享组件)", () => {
-  it("默认全选,原文存档默认勾选,采纳按钮显示条数", () => {
-    const { container } = renderGate();
-    const checks = qa<HTMLInputElement>(container, "knowledge-atom-select");
-    expect(checks).toHaveLength(3);
-    expect(checks.every((c) => c.checked)).toBe(true);
-    expect(
-      q<HTMLInputElement>(container, "knowledge-distill-archive")!.checked,
-    ).toBe(true);
-    expect(
-      q<HTMLButtonElement>(container, "knowledge-distill-adopt")!.textContent,
-    ).toContain("采纳选中 3 条");
-  });
-
-  it("改 type/title/sourceNote → 采纳 → 逐条 knowledge.create + 原文存档 + tag 挂载 + refresh + 收尾态", async () => {
-    const { container } = renderGate();
-
-    const types = qa<HTMLSelectElement>(container, "knowledge-atom-type");
-    fireEvent.change(types[0]!, { target: { value: "quote" } });
-    const titles = qa<HTMLInputElement>(container, "knowledge-atom-title");
-    fireEvent.change(titles[0]!, { target: { value: "改过的原子标题" } });
-    const sources = qa<HTMLInputElement>(container, "knowledge-atom-source");
-    fireEvent.change(sources[0]!, { target: { value: "手补的出处" } });
-
-    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-distill-adopt")!);
-    // 3 原子 + 1 原文存档 = 4 次 create
-    await waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(4));
-    expect(createKnowledge).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        body: {
-          title: "改过的原子标题",
-          knowledgeType: "quote",
-          content: "谈 Agent 设计时的主张",
-          sourceNote: "手补的出处",
-        },
-      }),
-    );
-    expect(createKnowledge).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        body: expect.objectContaining({
-          knowledgeType: "quote",
-          sourceNote: "原文作者原话",
-        }),
-      }),
-    );
-    // 第 3 条:无 sourceNote → body 不带该键(缺省落 NULL)
-    const third = (
-      createKnowledge.mock.calls[2]![0] as { body: Record<string, unknown> }
-    ).body;
-    expect(third).not.toHaveProperty("sourceNote");
-    // 原文存档:reference,title=首行,content=全文
-    expect(createKnowledge).toHaveBeenNthCalledWith(
-      4,
-      expect.objectContaining({
-        body: {
-          title: "第一行是标题",
-          knowledgeType: "reference",
-          content: "第一行是标题\n后面是全文正文",
-        },
-      }),
-    );
-    // suggestedTags 挂载:缺的标签 createTag,再 assignTags 到每条原子
-    await waitFor(() => expect(assignTags).toHaveBeenCalledTimes(3));
-    expect(createTag).toHaveBeenCalledWith(
-      expect.objectContaining({
-        body: expect.objectContaining({ name: "上下文工程" }),
-      }),
-    );
-    expect(assignTags).toHaveBeenCalledWith(
-      expect.objectContaining({
-        body: expect.objectContaining({
-          entityType: "knowledge",
-          entityId: "k-1",
-        }),
-      }),
-    );
-    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
-    // 采纳后收尾态(候选行收起,显已采纳条数)
-    await waitFor(() =>
-      expect(q(container, "knowledge-atom-gate-done")).not.toBeNull(),
-    );
-    expect(q(container, "knowledge-atom-gate-done")!.textContent).toContain(
-      "已采纳 3 条",
-    );
-    expect(q(container, "knowledge-distill-batch")).toBeNull();
-  });
-
-  it("取消勾选做减法:未选中的不落库,按钮条数跟着变", async () => {
-    const { container } = renderGate();
-    const checks = qa<HTMLInputElement>(container, "knowledge-atom-select");
-    fireEvent.click(checks[1]!);
-    expect(
-      q<HTMLButtonElement>(container, "knowledge-distill-adopt")!.textContent,
-    ).toContain("采纳选中 2 条");
-
-    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-distill-adopt")!);
-    // 2 原子 + 1 存档 = 3 次;被取消的 quote 标题不出现
-    await waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(3));
-    const savedTitles = createKnowledge.mock.calls.map(
-      (c) => (c[0] as { body: { title: string } }).body.title,
-    );
-    expect(savedTitles).not.toContain("把模型当同事,不当算命先生");
-  });
-
-  it("关掉「原文同时存档」→ 只存原子,不存 reference", async () => {
-    const { container } = renderGate();
-    fireEvent.click(q<HTMLInputElement>(container, "knowledge-distill-archive")!);
-    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-distill-adopt")!);
-    await waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(3));
-    const savedTypes = createKnowledge.mock.calls.map(
-      (c) => (c[0] as { body: { knowledgeType: string } }).body.knowledgeType,
-    );
-    expect(savedTypes).not.toContain("reference");
-  });
-
-  it("originalText 为空 → 不渲「原文存档」项,也不多存 reference", async () => {
-    const { container } = renderGate({ originalText: "" });
-    expect(q(container, "knowledge-distill-archive")).toBeNull();
-    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-distill-adopt")!);
-    await waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(3));
-  });
-
-  it("采纳失败 → 内联错误,候选保留(不静默吞)[gate-F2]", async () => {
-    createKnowledge.mockRejectedValueOnce(new Error("后端连接失败"));
-    const { container } = renderGate();
-    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-distill-adopt")!);
-    await waitFor(() =>
-      expect(q(container, "knowledge-atom-gate-error")).not.toBeNull(),
-    );
-    expect(q(container, "knowledge-atom-gate-error")!.textContent).toContain(
-      "后端连接失败",
-    );
-    // 确认门保留,可重试;refresh 未发生
-    expect(q(container, "knowledge-distill-batch")).not.toBeNull();
-    expect(mockRouter.refresh).not.toHaveBeenCalled();
-  });
+it('刷新重挂载已有receipt直接呈收尾态，依receipt显示真正存档结果',async()=>{
+ state.read.mockResolvedValue({receipt:{...receipt,archiveKnowledgeId:null}});renderGate();await screen.findByText(/已采纳 2 条/);expect(screen.queryByRole('button',{name:/采纳选中/})).toBeNull();expect(screen.getByText(/已采纳 2 条/).textContent).not.toContain('原文已同时存档');expect(state.adopt).not.toHaveBeenCalled();
+});
+it('响应丢失后一次回读已提交receipt，不再次adopt',async()=>{
+ state.read.mockResolvedValueOnce({receipt:null}).mockResolvedValue({receipt});state.adopt.mockRejectedValueOnce(Error('响应断开'));renderGate();fireEvent.click(await ready());await screen.findByText(/已采纳 2 条/);expect(state.adopt).toHaveBeenCalledOnce();expect(state.read).toHaveBeenCalledTimes(2);
+});
+it('事务失败且无receipt保留候选和明确错误，允许重新点采纳',async()=>{
+ state.adopt.mockRejectedValueOnce(Error('后端连接失败'));renderGate();fireEvent.click(await ready());await screen.findByRole('alert');expect(screen.getByRole('alert').textContent).toContain('后端连接失败');expect(state.refresh).not.toHaveBeenCalled();expect((await ready()).textContent).toContain('采纳选中');
+});
+it('换组使未完成请求过期，旧返回不能把新范围卡标为已采纳',async()=>{
+ let finish!:(value:typeof receipt)=>void;state.adopt.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));renderGate();fireEvent.click(await ready());await waitFor(()=>expect(state.adopt).toHaveBeenCalledOnce());window.dispatchEvent(new CustomEvent('creatoros:accounts-changed',{detail:{source:'switch',routeRefreshScheduled:false}}));await ready();finish(receipt);await waitFor(()=>expect(state.read).toHaveBeenCalledTimes(2));expect(screen.queryByText(/已采纳 2 条/)).toBeNull();expect(state.refresh).not.toHaveBeenCalled();
 });

@@ -16,6 +16,7 @@ export type EndpointId = (typeof ENDPOINTS)[keyof typeof ENDPOINTS]["id"];
 // T-843: 这是 CLI effect 的契约真值，不在调用期按 HTTP method 或 operation 名猜。
 // 新 operation 没有进入 READ/MUTATION 两张穷尽表时，下方类型门与测试都会失败。
 const READ_OPERATIONS = [
+  'knowledge.distill.receipt',
   "ai.predictionLocks.source",
   'ai.workCandidates.source',
   'outputs.production.editor.script.read','outputs.production.editor.script.propose',
@@ -354,6 +355,7 @@ const MUTATION_OPERATIONS = [
   "intelligence.transforms.previewTopic",
   "knowledge.archive",
   "knowledge.create",
+  'knowledge.distill.adopt',
   "knowledge.folders.create",
   "knowledge.move",
   "knowledge.relations.create",
@@ -600,7 +602,7 @@ function policyFor(operation: EndpointId): CliOperationPolicy {
         ? "apply"
         : "confirm_impact",
     asyncTask: ASYNC_TASK_OPERATIONS.has(operation),
-    idempotency: effect === "read" ? "not_applicable" : (["ai.assistantActions.adopt","canvas.create.adopt","canvas.generation.confirm","topics.workspace.save","topics.proposals.feedback","accounts.bind.start","accounts.bind.cancel","projects.ensure","projects.preparation.start","projects.preparation.transcript.provide","projects.preparation.candidate.accept"] as readonly string[]).includes(operation) ? "native" : "gateway",
+    idempotency: effect === "read" ? "not_applicable" : (["knowledge.distill.adopt","ai.assistantActions.adopt","canvas.create.adopt","canvas.generation.confirm","topics.workspace.save","topics.proposals.feedback","accounts.bind.start","accounts.bind.cancel","projects.ensure","projects.preparation.start","projects.preparation.transcript.provide","projects.preparation.candidate.accept"] as readonly string[]).includes(operation) ? "native" : "gateway",
   };
 }
 

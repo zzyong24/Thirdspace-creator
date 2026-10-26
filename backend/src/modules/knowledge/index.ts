@@ -47,3 +47,4 @@ export {
 } from "./knowledge.schema";
 
 export { prepareKnowledgeProposal, createKnowledgeProposalAdoptionService } from "./knowledge-proposal-adoption.service";
+export {createKnowledgeDistillAdoptionService,type DistillSourceReader} from './knowledge-distill-adoption.service';

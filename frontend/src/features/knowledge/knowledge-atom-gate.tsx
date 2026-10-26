@@ -3,20 +3,21 @@
 /**
  * [T-094] 蒸馏批量确认门(共享组件)—— 从 knowledge-dump-zone 的内联确认门抽出:
  * 一批知识原子候选行卡(每条 checkbox 默认全选 + type 四原子下拉 + title 可编辑 +
- * sourceNote 可改)→ 人点「采纳选中 N 条」→ 逐条 contract knowledge.create(title/
- * knowledgeType/content=note/sourceNote)+ suggestedTags 挂 tag(best-effort)+
- * 可选「原文同时存档」(多存一条 type=reference,title=原文首行≤60 字,content=全文)。
+ * sourceNote 可改)→ 人点采纳 → 服务端核对真实任务/工具，原子+可选原文+回执单事务。
+ * 原文和建议标签只取服务端账本；索引/标签是事务后的可重试增强。
  *
  * 消费方:
  *   - Copilot 蒸馏工具卡(features/copilot/chat-distill-card,T-094 主入口);
  *   - (倾倒场旧表单蒸馏流已退役 —— 入口深链改开 Copilot,见 knowledge-dump-zone。)
  *
- * 铁律②:AI 只产候选,人点「采纳」才物化;采纳失败内联错误保留候选(已成条目不回滚,
- * 诚实呈现)[gate-F2]。tag 挂载是增强,失败不阻断原子入库。
+ * 铁律②:AI 只产候选，人点采纳才物化；事务失败整体回滚，丢失响应先读回执。
+ * 第一次选中的子集与存档结果固定；刷新/重试不能再创建一批。
  */
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import type {KnowledgeDistillSource,KnowledgeDistillReceipt} from '@creatoros/contract';
+import {useAccountsChanged} from '@/lib/account-events';
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
@@ -106,6 +107,7 @@ const selectCls =
   "h-8 rounded-md border border-border bg-surface px-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 export interface KnowledgeAtomGateProps {
+  source?:KnowledgeDistillSource|null;
   /** 蒸馏产的原子候选(初值;门内可勾选/改 type/title/sourceNote)。 */
   atoms: ReadonlyArray<DistilledAtom>;
   /** AI 建议的主题词(采纳时随原子挂 tag,best-effort)。 */
@@ -116,7 +118,17 @@ export interface KnowledgeAtomGateProps {
   onAdopted?: (count: number) => void;
 }
 
-export function KnowledgeAtomGate({
+export function KnowledgeAtomGate(props:KnowledgeAtomGateProps) {
+  const [scopeEpoch,setScopeEpoch]=React.useState(0);
+  useAccountsChanged(()=>setScopeEpoch(value=>value+1));
+  const conversationId=props.source?.conversationId,sourceMessageId=props.source?.sourceMessageId,toolCallId=props.source?.toolCallId;
+  const source=React.useMemo(()=>conversationId&&sourceMessageId&&toolCallId?{conversationId,sourceMessageId,toolCallId}:null,[conversationId,sourceMessageId,toolCallId]);
+  // A different persisted source or account group is a new editing session.
+  return <KnowledgeAtomGateSession key={`${JSON.stringify(source)}:${scopeEpoch}`} {...props} source={source}/>;
+}
+
+function KnowledgeAtomGateSession({
+  source,
   atoms,
   suggestedTags,
   originalText,
@@ -130,8 +142,21 @@ export function KnowledgeAtomGate({
   const [archiveOriginal, setArchiveOriginal] = React.useState(true);
   const [busy, setBusy] = React.useState(false);
   // 内联错误(非 toast 即逝)[gate-F2];成功后 adoptedCount 渲收尾态(候选不再可改)。
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(()=>source?null:'来源尚未就绪，无法安全采纳。请等待本轮结果保存；旧卡没有任务来源时请重新蒸馏。');
   const [adoptedCount, setAdoptedCount] = React.useState<number | null>(null);
+  const [receipt,setReceipt]=React.useState<KnowledgeDistillReceipt|null>(null);
+  const [loadingReceipt,setLoadingReceipt]=React.useState(!!source);
+  const epoch=React.useRef(0);
+  const invalidatePending=React.useCallback(()=>{epoch.current++;},[]);
+  useAccountsChanged(invalidatePending);
+  React.useEffect(()=>{
+    const current=++epoch.current;let alive=true;
+    if(!source)return;
+    void client.getKnowledgeDistillReceipt({params:undefined,query:undefined,body:{source}}).then(result=>{
+      if(alive&&current===epoch.current){setReceipt(result.receipt);setAdoptedCount(result.receipt?.atomCount??null);}
+    }).catch(err=>{if(alive&&current===epoch.current)setError(describeUserError(err,'无法读取采纳回执，请稍后重试。'));}).finally(()=>{if(alive&&current===epoch.current)setLoadingReceipt(false);});
+    return()=>{alive=false;invalidatePending();};
+  },[source,invalidatePending]);
 
   /** 就地改一行原子(勾选/type/title/sourceNote)。 */
   const patchRow = React.useCallback((index: number, patch: Partial<AtomRow>) => {
@@ -142,62 +167,38 @@ export function KnowledgeAtomGate({
     (a) => a.selected && a.title.trim().length > 0,
   ).length;
 
-  // 「采纳选中 N 条」→ 逐条 knowledge.create + tags 挂载(+ 可选原文 reference 存档)。
+  // Stable source identity, never a browser-only create loop or client archive bytes.
   const handleAdopt = React.useCallback(async () => {
-    if (busy || adoptedCount !== null) return;
-    const picked = rows.filter((a) => a.selected && a.title.trim().length > 0);
+    if (busy || loadingReceipt || adoptedCount !== null || !source) return;
+    const picked = rows.map((a,index)=>({...a,index})).filter((a) => a.selected && a.title.trim().length > 0);
     if (picked.length === 0) return;
     setBusy(true);
     setError(null);
+    const current=epoch.current;
     try {
-      const fullText = originalText.trim();
-      for (const atom of picked) {
-        const created = (await client.createKnowledge({
-          params: undefined,
-          query: undefined,
-          body: {
-            title: atom.title.trim(),
-            knowledgeType: atom.type,
-            // 原子本体在 title;note 是评注/上下文,落 content(可空)。
-            content: atom.note.trim(),
-            ...(atom.sourceNote.trim()
-              ? { sourceNote: atom.sourceNote.trim() }
-              : {}),
-          },
-        })) as unknown as { id: string };
-        // AI 馆长(轻):suggestedTags 即主题挂载(best-effort,失败不阻断)。
-        await assignKnowledgeTagsBestEffort(created.id, [...suggestedTags]);
-      }
-      // 「原文同时存档」:多存一条 reference(title=首行≤60 字,content=全文),出处不丢。
-      if (archiveOriginal && fullText) {
-        await client.createKnowledge({
-          params: undefined,
-          query: undefined,
-          body: {
-            title: archiveTitleOf(fullText) || "原文存档",
-            knowledgeType: "reference",
-            content: fullText,
-          },
-        });
-      }
-      setAdoptedCount(picked.length);
-      onAdopted?.(picked.length);
+      const result=await client.adoptKnowledgeDistill({params:undefined,query:undefined,body:{source,atoms:picked.map(({index,type,title,note,sourceNote})=>({index,type,title:title.trim(),note:note.trim(),sourceNote:sourceNote.trim()})),archiveOriginal:archiveOriginal&&!!originalText.trim()}});
+      if(current!==epoch.current)return;
+      setReceipt(result);setAdoptedCount(result.atomCount);
+      onAdopted?.(result.atomCount);
       router.refresh();
     } catch (err) {
-      // 失败内联保留候选(已成条目不回滚 —— 诚实呈现,refresh 后可见已入库的部分)。
-      setError(describeUserError(err, "采纳入库失败，请重试。"));
+      // A lost response can follow a committed transaction. Read the receipt once before offering retry.
+      if(current!==epoch.current)return;
+      try{const recovered=await client.getKnowledgeDistillReceipt({params:undefined,query:undefined,body:{source}});if(current!==epoch.current)return;if(recovered.receipt){setReceipt(recovered.receipt);setAdoptedCount(recovered.receipt.atomCount);router.refresh();return;}}catch{/* Preserve the original actionable failure; server receipt still protects a later retry. */}
+      if(current===epoch.current)setError(describeUserError(err, "采纳入库失败；本批次会整体回滚，或可由已保存回执恢复，请重试。"));
     } finally {
-      setBusy(false);
+      if(current===epoch.current)setBusy(false);
     }
   }, [
     rows,
     busy,
     adoptedCount,
     originalText,
-    suggestedTags,
     archiveOriginal,
     onAdopted,
     router,
+    source,
+    loadingReceipt,
   ]);
 
   if (adoptedCount !== null) {
@@ -207,7 +208,7 @@ export function KnowledgeAtomGate({
         className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-[12px] text-success"
       >
         已采纳 {adoptedCount} 条进知识库
-        {archiveOriginal && originalText.trim() ? "(原文已同时存档)" : ""}。
+        {receipt?.archiveKnowledgeId ? "(原文已同时存档)" : ""}。
       </p>
     );
   }
@@ -330,7 +331,7 @@ export function KnowledgeAtomGate({
         <button
           type="button"
           data-slot="knowledge-distill-adopt"
-          disabled={busy || selectedCount === 0}
+          disabled={busy || loadingReceipt || !source || selectedCount === 0}
           onClick={() => void handleAdopt()}
           className={cn(buttonCls, "bg-brand text-brand-foreground hover:bg-brand/90")}
         >

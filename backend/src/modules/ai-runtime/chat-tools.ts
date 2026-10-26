@@ -4396,6 +4396,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           const v = input[key];
           if (typeof v === "string" && v.trim()) suggestion[key] = v.trim();
         }
+        if (Object.keys(suggestion).length === 0) {
+          throw new ChatToolUserError("当前资料还没有可填写的字段，请在项目里补充观众、目标或核心信息后继续。");
+        }
         // 现状:读当前项目 briefDetail(项目对话才有;读不到 → null,卡上现值显「未填」)。
         const current = await deps.getProjectBrief();
         return { kind: "brief.fill", suggestion, current };

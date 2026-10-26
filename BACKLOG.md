@@ -10,6 +10,10 @@
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
 |T-1408|默认无需抖音登录即可定位|⏸️|—|待验|[SPEC](docs/features/t1408-positioning-without-douyin-login.md)|本地账号组生成候选、手动采纳及创建项目；用户已授权独立差量推送合main，整体验收未通过，不混入PR11。|
+|T-1406|修复新版安装验收发现的八项缺陷|🔨|PASS[REV:b3a0d1e8ff5d]|待验|[SPEC](docs/features/t1406-installed-eight-defects.md)|八项限定实机复验通过；整体PARTIAL及数据快照差异保留。2026-10-26用户授权合main，保全main正式发布workflow，合并与全量验收分开留证。|
+|T-1405|新版安装后全功能实测|🔨|—|待验|[SPEC](docs/features/t1405-installed-functional-validation.md)|当前Windows修复包逐模块真实验证；独立验收组、原资料保全，源码/UI/API/真实模型证据分开，不把外部受阻或已知欠债标通过。|
+|T-1404|使用既有更新根与 Actions 构建新版 Windows 包|🔨|—|待验|[SPEC](docs/features/t1404-windows-local-root-ci-package.md)|用户已提供既有更新根并确认 CI verdict 密钥；本机根签名、CI 原密钥编壳，仅构建分支 artifact，不合并/发版，原安装数据保全。|
+|T-1403|修复 Windows 全流程实测失败与可本机解除的阻塞|⏸️|—|待验|[SPEC](docs/features/t1403-windows-flow-repair.md)|四条失败流程与本机缺口源码修复、限定回归和构建已过；Windows合法包/真机复验待既有持钥环境；quick对账未全绿，不伪造发布和外部验收。|
 |T-1402|修复 Windows 定位对话缺少 Pi 核心依赖|✅|—|—|[SPEC](docs/features/t1402-windows-positioning-pi-core.md)|Windows1.2.0真实故障复现及本机依赖补全后定位成功；源码静态打包Agent，已验收补丁经用户明确授权推送并合入main，正式安装包另验。|
 |T-1401|修复 AI 额度连接错误被通用不可用提示掩盖|✅|—|—|[SPEC](docs/features/t1401-ai-credit-link-errors.md)|保留配置错误分类与重试语义，验证开发接口，删除临时诊断；仅本地提交，不push。|
 |T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|四来源 mock 回归、补齐弹窗 flex 高度链；不真实调用、不push，补丁交付。|

@@ -8,6 +8,7 @@ import {
 } from "./review-gate.service";
 import { ReportNotFoundError, ValidationError } from "./review-gate.errors";
 import { OwnershipError } from "@creatoros/backend";
+import {accountGroups} from '../../schema/account-groups';
 
 // 审核门 service 测(T-145 F47)—— 真实 pglite db(createDb 跑迁移建 review_rules /
 // script_review_reports)+ 确定性 now/nextId + stub ai port。覆盖审核门真实行为:
@@ -18,8 +19,8 @@ import { OwnershipError } from "@creatoros/backend";
 // user-scoped 隔离用双 ctx 交叉验证(A 建的规则/报告 B 读不到)。
 
 const NOW = "2026-07-05T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user" };
+const ctxA: RequestContext = { userId: "user-a",groupId:'review-old-a', requestId: "r1", source: "user" };
+const ctxB: RequestContext = { userId: "user-b",groupId:'review-old-b', requestId: "r2", source: "user" };
 
 function fakeAi(): ReviewGateAiPort & { createTask: ReturnType<typeof vi.fn> } {
   return {
@@ -52,6 +53,7 @@ describe("review-gate service", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await db.insert(accountGroups).values([ctxA,ctxB].map(ctx=>({id:ctx.groupId!,userId:ctx.userId,name:ctx.groupId!,status:'active',version:1,createdAt:NOW,updatedAt:NOW})));
   });
 
   // ── §1 规则库:采纳门铁律(AI 绝不自动写 active)──────────────────────────

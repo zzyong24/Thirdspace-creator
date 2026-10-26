@@ -177,6 +177,10 @@ it('正式默认rubric指针真实升版后，原source仍准备/采纳冻结旧
  expect(next.id).not.toBe(old.id);expect((await f.calibrationFor(f.db).ensureDefaultRubric(f.ctx)).currentVersion!.id).toBe(next.id);
  expect(await f.locks.readFrozen(f.ctx,child)).toEqual(frozen);await f.candidate(s.id);await f.adoption().confirmTask(f.ctx,s.id);
  const locked=await f.locks.read(f.ctx,s.source.requested);expect(locked.status).toBe('locked');expect((await f.calibrationFor(f.db).getPrediction(f.ctx,locked.predictionId!)).rubricVersionId).toBe(old.id);
+ const formal=locked.formalPrediction;
+ expect(formal).toBeTruthy();expect(formal?.prediction).toEqual(await f.calibrationFor(f.db).getPrediction(f.ctx,locked.predictionId!));
+ expect(formal?.rubric).toEqual({id:old.id,dimensions:old.dimensions});
+ expect(formal?.prediction.subjectId).toBe(f.output.id);expect(formal?.rubric.dimensions.some(d=>d.label.includes('后续新版'))).toBe(false);
 });
 
 it.each(['deleted','corrupt'] as const)('冻结rubric版本%s受控损坏后，confirm拒绝且不半写/不替换版本',async damage=>{

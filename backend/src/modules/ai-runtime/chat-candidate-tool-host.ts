@@ -12,7 +12,7 @@ export function createChatCandidateTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
  readers:Pick<ContextReaders,"getProjectBrief">,
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
- const resolve:ResolveChatHostTools=async(context,execution,signal)=>{
+ async function restore(...[context,execution,signal]:Parameters<ResolveChatHostTools>){
   const owner={userId:context.userId,accountId:context.accountId??null,groupId:context.groupId??null};
   signal?.throwIfAborted();
   const restored=structuredClone(await reader.read({...execution}));
@@ -30,11 +30,12 @@ export function createChatCandidateTaskToolHost(
   } as ChatToolDeps);
   if(canonicalJson((await prepareChatToolDefinitions(tools)).definitions)!==canonicalJson(definitions))throw new Error("候选工具定义与原任务不符");
   signal?.throwIfAborted();
-  return tools;
- };
+  return {tools,toolFailureReceiptVersion:restored.toolFailureReceiptVersion};
+ }
+ const resolve:ResolveChatHostTools=async(...args)=>(await restore(...args)).tools;
  return async(context,_input,execution,signal)=>{
-  const prototypes=await resolve(context,execution,signal);
-  const tools=await createChatHostToolAdapter(prototypes,resolve,effects);
+  const frozen=await restore(context,execution,signal);
+  const tools=await createChatHostToolAdapter(frozen.tools,resolve,effects,{toolFailureReceiptVersion:frozen.toolFailureReceiptVersion});
   signal.throwIfAborted();
   return tools;
  };

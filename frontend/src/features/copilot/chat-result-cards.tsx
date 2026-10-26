@@ -25,6 +25,7 @@ import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
 import {type PredictionLockSource,type PredictionLockState} from "@creatoros/contract";
 import {createCreationWorkspace,creationScopeKey,readCreationScope,useCreationScope} from "@/lib/creation-workspace-scope";
+import {projectWorkspaceHref} from "@/features/projects/project-href";
 
 type AdoptState = "idle" | "adopting" | "adopted" | "error" | "stale";
 
@@ -62,6 +63,7 @@ export interface BlindPredictLockContext {
   readonly source?: PredictionLockSource | null;
 }
 const DEFAULT_POLL_INTERVAL_MS = 4000;
+const diagnosisRecord=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
 type LockController = { refresh(): Promise<void>; act(): Promise<void>; command(action:"resume"|"retry"|"cancel"):Promise<void> };
 export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT_POLL_INTERVAL_MS}: {
   readonly diagnosis: ChatDiagnosis | null;
@@ -142,10 +144,22 @@ export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT
   },[identity,scopeKey,conversationId,sourceMessageId,toolCallId,pollIntervalMs,pauseObservation,!!blindPredict]);
   const runtimeTask=state?.task as RuntimeTask|null|undefined;
   const locked=state?.status==='locked';
+  const projection=locked?state.formalPrediction:null;
+  const formal=projection&&projection.prediction.id===state?.predictionId&&projection.prediction.subjectId===state?.subjectId&&projection.prediction.rubricVersionId===projection.rubric.id&&projection.prediction.status==='locked'?projection:null;
+  const rawDimensions=formal?.prediction.predictedConversion.dimensions;
+  const savedDimensions=Array.isArray(rawDimensions)?rawDimensions.map(diagnosisRecord):[];
+  const dimensions=locked?(formal?.rubric.dimensions.map(d=>{
+    const saved=savedDimensions.find(row=>row.key===d.key);
+    return {key:d.key,label:d.label,score:typeof saved?.score==='number'&&Number.isFinite(saved.score)&&saved.score>=1&&saved.score<=5?saved.score:null,reason:typeof saved?.reason==='string'?saved.reason:'',suggestion:typeof saved?.suggestion==='string'?saved.suggestion:''};
+  })??[]):(diagnosis?.dimensions.map(d=>({...d,label:d.key}))??[]);
+  const savedDiagnosis=diagnosisRecord(formal?.prediction.predictedMetrics.diagnosis);
+  const verdict=locked?(typeof savedDiagnosis.verdict==='string'?savedDiagnosis.verdict:''):(diagnosis?.verdict??'');
+  const priorityFixes=locked?(Array.isArray(savedDiagnosis.priorityFixes)?savedDiagnosis.priorityFixes.filter((v):v is string=>typeof v==='string'):[]):(diagnosis?.priorityFixes??[]);
+  const reviewHref=locked&&state.projectId&&state.predictionId?`${projectWorkspaceHref(state.projectId,'review')}?${new URLSearchParams({predictionId:state.predictionId})}#prediction-${encodeURIComponent(state.predictionId)}`:null;
   const partial=runtimeTask?.status==='partial',runtimeStatus=runtimeTask?taskRuntimeStatus(runtimeTask):null;
   const canAct=!!source&&!busy&&!error&&!partial&&!!state&&['available','awaiting_confirmation'].includes(state.status);
   const unavailable=!source?'原卡片来源未记录，无法确认锁定状态。':!state&&!error?'正在读取原卡片状态…':state?.status==='legacy_unknown'?'这张旧卡片没有可恢复的锁定回执。':state?.status==='missing'?'原锁定记录不可用，请保留当前卡片。':state?.status==='unknown'?'原任务结果尚未确认，请保留原任务核对。':state?.status==='failed'?'原任务未完成，请查看原任务状态。':null;
-  if (!diagnosis || diagnosis.dimensions.length === 0) return null;
+  if (!blindPredict && !diagnosis?.dimensions.length) return null;
   return (
     <div
       data-slot="chat-diagnosis-card"
@@ -153,10 +167,12 @@ export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT
       className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        {blindPredict ? "AI 编导盲预测 · 逐维度诊断" : "AI 编导诊断 · 逐维度盲评"}
+        {locked ? "已保存的正式盲预测" : blindPredict ? "AI 编导盲预测 · 逐维度诊断" : "AI 编导诊断 · 逐维度盲评"}
       </span>
+      {locked&&!formal?<p role="status" className="text-xs text-muted-foreground">已锁定评分暂未读取，请保留原回执并刷新核对。<button type="button" disabled={busy} className="ml-2 text-brand hover:underline" onClick={()=>void controller.current?.refresh()}>读取正式评分</button></p>:null}
+      {formal?<p data-slot="chat-diagnosis-formal" data-prediction-id={formal.prediction.id} className="break-all text-xs text-muted-foreground">加权分：{formal.prediction.predictedScore.toFixed(2)} / 5 · 预测：{formal.prediction.id} · 评分标准版本：{formal.rubric.id}</p>:null}
       <ul className="flex flex-col gap-1" aria-label="维度评分">
-        {diagnosis.dimensions.map((d, i) => (
+        {dimensions.map((d, i) => (
           <li
             key={`${d.key}-${i}`}
             data-slot="chat-diagnosis-dim"
@@ -164,10 +180,10 @@ export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT
           >
             <div className="flex items-center gap-2">
               <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
-                {d.key}
+                {d.label || d.key}
               </span>
               <span className="shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand">
-                {d.score} / 5
+                {d.score ?? "—"} / 5
               </span>
             </div>
             {d.reason ? (
@@ -181,14 +197,14 @@ export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT
           </li>
         ))}
       </ul>
-      {diagnosis.verdict ? (
+      {verdict ? (
         <p className="text-[13px] font-medium text-foreground">
-          综合判断：{diagnosis.verdict}
+          综合判断：{verdict}
         </p>
       ) : null}
-      {diagnosis.priorityFixes.length > 0 ? (
+      {priorityFixes.length > 0 ? (
         <p className="text-[11px] text-muted-foreground">
-          优先修改：{diagnosis.priorityFixes.join("；")}
+          优先修改：{priorityFixes.join("；")}
         </p>
       ) : null}
       <TaskObservationNotice {...observation} />
@@ -206,13 +222,13 @@ export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT
             <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               已锁定 · 不可改
             </span>
-            <a
-              href="/settings?tab=calibration"
+            {reviewHref?<a
+              href={reviewHref}
               data-slot="chat-diagnosis-retro-link"
               className="text-[11px] font-medium text-brand hover:underline"
             >
               看复盘 →
-            </a>
+            </a>:<span className="text-xs text-muted-foreground">原项目复盘入口暂未确认。</span>}
           </div>
         ) : (
           <div className="flex flex-col gap-1 border-t border-border/60 pt-1.5">
