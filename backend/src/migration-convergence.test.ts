@@ -243,8 +243,10 @@ it('T1278 已记账0136却缺embedding_identity列拒绝，不伪造重建',asyn
 
 it('T1406 canonical115完整固定journal，原114身份保留并追加0141',async()=>{
  const raw=await readFile(join(folder,'meta/_journal.json'),'utf8');
- expect(createHash('sha256').update(raw).digest('hex')).toBe('125740a03cb23f7d76f25a5de77fd7b0dc11cfb3f1b7a4a3a644a1f5ed523fc0');
+ expect(createHash('sha256').update(raw).digest('hex')).toBe('0d99e426b306c8108ce275cfb4df005877059a4e51b21494d4acd38dae313eb6');
  const current=JSON.parse(raw) as {entries:Array<{idx:number;version:string;when:number;tag:string;breakpoints:boolean}>};
+ expect(createHash('sha256').update(JSON.stringify({...current,entries:current.entries.slice(0,111)},null,2)+'\n').digest('hex')).toBe('d72d1f1b459d5d35695ac6671d49bf8959551d09ebe647972163f82a4dea69eb');
+ expect(createHash('sha256').update(JSON.stringify({...current,entries:current.entries.slice(0,114)},null,2)+'\n').digest('hex')).toBe('340e182882cbf4bc4c27dde8e96d0e8a58bb35ed5be62da2869d1d9b02206cd2');
  expect(current.entries).toHaveLength(115);
  expect(current.entries[114]).toEqual({idx:114,version:'7',when:1791043200014,tag:'0141_review_rule_group_scope',breakpoints:true});
  expect(current.entries[113]).toEqual({idx:113,version:'7',when:1791043200013,tag:'0140_unified_project_intake_retirement_timestamps',breakpoints:true});
@@ -254,6 +256,8 @@ it('T1406 canonical115完整固定journal，原114身份保留并追加0141',asy
  expect(current.entries[110]).toEqual({idx:110,version:'7',when:1791043200010,tag:'0137_observability_routing_convergence',breakpoints:true});
  const receipts=await Promise.all(current.entries.map(async entry=>({hash:createHash('sha256').update(await readFile(join(folder,entry.tag+'.sql'),'utf8')).digest('hex'),created_at:entry.when})));
  expect(createHash('sha256').update(JSON.stringify(receipts.slice(0,111))).digest('hex')).toBe('78c9c4af5305a709cd9fdab6367cd9e3a0b0dd6dacd51b97470e20b6b2d585af');
+ expect(createHash('sha256').update(JSON.stringify(receipts.slice(0,114))).digest('hex')).toBe('c6af0e97e55089f0e196065b53f52af88bf402e0464c276c6fee031af22a80fd');
+ expect(createHash('sha256').update(JSON.stringify(receipts)).digest('hex')).toBe('ffa3cee2abc8ee8d80ac8aefd293cb452c50d2700926b4d8b4d2f13df4a73328');
  expect(receipts[111]).toEqual({hash:'f6ad9f365d35f144a46b2fb370bf502a24a4e265de07dceb2fb88fd49b185a6f',created_at:1791043200011});
  expect(receipts[113]).toEqual({hash:'7e1856d6c6ea24f0ad559aab94f1354b7fb5607733082ec3cb1c88e0ff54a2bf',created_at:1791043200013});
  expect(receipts[114]).toEqual({hash:'369bab227e661865bd2b855ce3d67c788c1a80531eea144e1df93b5458807416',created_at:1791043200014});

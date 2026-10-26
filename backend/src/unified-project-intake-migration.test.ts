@@ -12,6 +12,7 @@ vi.setConfig({ testTimeout: 180000, hookTimeout: 180000 });
 const folder = fileURLToPath(new URL("../drizzle", import.meta.url));
 const migrationTag = "0139_unified_project_intake";
 const migrationWhen = 1791043200012;
+const reviewRuleMigration = { hash: "369bab227e661865bd2b855ce3d67c788c1a80531eea144e1df93b5458807416", created_at: 1791043200014 } as const;
 const time = "2026-10-20T15:00:00.000Z";
 const roots: string[] = [];
 afterEach(async () => { for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true }); });
@@ -113,9 +114,9 @@ it("旧112项库真实启动升级与重复启动保留账号和纯组项目、�
     before=upgraded;
     afterLedger = await ledger(first.client);
     expect(afterLedger.slice(0, beforeLedger!.length)).toEqual(beforeLedger!);
-    expect(afterLedger).toHaveLength(beforeLedger!.length + 2);
-    expect(Number(afterLedger.at(-2)!.created_at)).toBe(migrationWhen);
-    expect(Number(afterLedger.at(-1)!.created_at)).toBe(1791043200013);
+    expect(afterLedger).toHaveLength(beforeLedger!.length + 3);
+    expect(afterLedger.slice(beforeLedger!.length).map(row => Number(row.created_at))).toEqual([migrationWhen, 1791043200013, reviewRuleMigration.created_at]);
+    expect({ hash: afterLedger.at(-1)!.hash, created_at: Number(afterLedger.at(-1)!.created_at) }).toEqual(reviewRuleMigration);
     expect((await first.client.query("SELECT * FROM project_source_references")).rows).toEqual([]);
     expect((await first.client.query("SELECT * FROM project_intakes")).rows).toEqual([]);
   } finally { await first.client.close(); }
@@ -282,7 +283,9 @@ it('fb 已执行0139的库补ISO退役时间与已有尝试结束时间，保全
   const targets=new Set(['parent-account','parent-pure','exclusive-cancelled','unknown-parent','already-finished','exclusive-unknown']);
   expect(after.execution_tasks).toEqual(before.execution_tasks!.map(value=>{const row=value as Record<string,unknown>;return targets.has(row.id as string)&&row.id!=='parent-pure'?{...row,updated_at:expected}:row;}));
   expect(afterClocks).toEqual(beforeClocks.map(value=>{const row=value as Record<string,unknown>;return row.attempt===2&&['parent-account','parent-pure','exclusive-cancelled'].includes(row.task_id as string)?{...row,finished_at:row.task_id==='parent-pure'?time:expected,result:'cancelled',kind:row.task_id==='exclusive-cancelled'?'topic_preview':'radar_project_upgrade',reported:false}:row;}));
-  expect(afterLedger.slice(0,beforeLedger.length)).toEqual(beforeLedger);expect(afterLedger).toHaveLength(beforeLedger.length+1);expect(Number(afterLedger.at(-1)!.created_at)).toBe(1791043200013);
+  expect(afterLedger.slice(0,beforeLedger.length)).toEqual(beforeLedger);expect(afterLedger).toHaveLength(beforeLedger.length+2);
+  expect(afterLedger.slice(beforeLedger.length).map(row=>Number(row.created_at))).toEqual([1791043200013,reviewRuleMigration.created_at]);
+  expect({hash:afterLedger.at(-1)!.hash,created_at:Number(afterLedger.at(-1)!.created_at)}).toEqual(reviewRuleMigration);
   await current.client.exec(await readFile(join(folder,'0140_unified_project_intake_retirement_timestamps.sql'),'utf8'));
   expect(await legacySnapshot(current.client)).toEqual(after);expect(await clocks(current.client)).toEqual(afterClocks);expect(await ledger(current.client)).toEqual(afterLedger);
  }finally{await current.client.close();}

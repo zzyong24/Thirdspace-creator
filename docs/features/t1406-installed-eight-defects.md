@@ -62,3 +62,15 @@ flowchart LR
 T-1404 的候选构建分支曾临时替换 `.github/workflows/desktop-release.yml`，仅允许该构建分支运行，不能直接覆盖 main 原有 macOS / Windows 正式发布流程。本次额外写入边界仅为将该文件恢复到本次新获取 `origin/main` 的原始 blob，以及本 SPEC、BACKLOG 说明和 `docs/verification/t1406/MAIN_MERGE.md`。保全原 Verify 质量门、既有根和保护设置，不放宽候选构建守卫；历史 run、公开回执和制品仍只对应它们的精确源码，不宣称适用于新合并 SHA。
 
 合并前独立核对该保全差异、产品源字节未变及新增 PR 当场 CI / 评审状态；真实受阻或范围外既有欠账如实记录，不自动将 T-1406 改为全量验收完成。此前整体 Windows 验收 PARTIAL、严格数据快照 FAIL、凭据内容未验和两项目 updatedAt 原因未明的结论保留。
+
+PR #11 首轮实际 CI 又暴露本任务新增 0141 迁移后的一处测试库存遗漏：`frontend/src/server/legacy-frozen-source-read.integration.test.ts` 仍锁定止于 0140 的 114 条库存，三个历史升级 family 在 journal SHA 处失败。允许只补正此回归的明确 115 条库存及 0141 journal/SQL 身份，同时增加/保留旧 114 条与旧 111 条精确前缀锚，保留全部旧数据深等、冻结输入、真实 Worker、结算和同 source 重放断言。禁止动态接受最新库存、修改生产迁移 SQL、删除守卫或扩大 known-failures。复验采用合成旧 producer、独立 HOME/DB 与本地受控 HTTP，不使用用户原库或真实模型。
+
+同一库存审查另发现 `backend/src/legacy-source-migration.test.ts` 仍按 114 条/old104+10 验证，以及 `backend/src/migration-convergence.test.ts` 的 115 条 raw hash 误取 Windows CRLF 工作文件而非 Git/CI LF 字节。允许限定补正这两个测试：显式固定 0141 / 新总数 / Git LF hash，保留所有旧 SQL 身份、旧库存前缀及领域保全断言；本机先将原 Git LF blob 原字节物化后复验，不扩大为兼容任意 hash，不修改生产 journal/SQL 或分类基线。
+
+首轮 backend14/16 实际日志另显示 `backend/src/legacy-scheduled-job-migration.test.ts` 的当前库时间清单止于 0013，新增 0141 后实际多出 0014；允许只在这个测试的“当前库存”明确追加 0141/1791043200014 并保留旧前缀、冻结历史和锁并发测试。外部 PostgreSQL 前置未满足的用例继续如实列出，不以放宽前置制造通过。
+
+同类当前全库升级回归 `backend/src/unified-project-intake-migration.test.ts` 的 old112→当前和 old113→当前尾项也需明确包含 0141；只补正追加计数与精确迁移时间清单，保留原项目/准备时钟深等、重启幂等及旧 SQL 守卫。首轮 frontend5/8 又实际发现 `frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts` 的知识操作登记仍期待 13 个，本任务 I06 明确新增 `knowledge.distill.adopt` 与 `knowledge.distill.receipt` 后应为 15 个；只扩完整显式操作表并继续验证每个均为持久化实现，不使用动态长度或删掉真实实现断言。
+
+Windows 本机历史测试另遇真实夹具前置差异：系统 tar 默认磁带设备、Git tar 不接受 Windows `-C` 路径、pnpm 缩短虚拟目录名，以及 Git 归档换行转换。实际仅在隔离运行环境设置 `TAPE=-`、建立已核同版本实物的忽略目录 alias、使用进程级 Git `core.autocrlf=false`；旧 104 个 SQL 与原 Git blob 逐一精确相等后，原测试命令和全部守卫不变，最终真实 4/4 通过。此前四轮失败/未执行日志原样保留，不以更换历史源或模型 mock 绕过前置。
+
+首轮 frontend2/8 实际在 `frontend/src/server/script-review-worker-entry.integration.test.ts` 的 `reviewRules.create` 前置失败：旧测试仅有虚拟 accountId、没有 groupId。允许只补正此测试，以真实公共账号创建及其合法账号组构建隔离 RequestContext，再沿同组创建规则、触发实际 Worker、保存版本报告；保留全部原语义模型 HTTP 夹具、重试次数、冻结原文、lint/LLM 报告及无采纳候选断言。生产 group 守卫、模型调用及规则边界一律不改，不以假组 ID 或直接写数据库代替合法归属。
