@@ -12,6 +12,7 @@
     "process:default",
     "opener:default",
     "allow-export-daily-report-csv",
+    "allow-export-workbench-artifact",
     "allow-license-activate",
     "allow-license-restore-saved",
     "allow-license-check",

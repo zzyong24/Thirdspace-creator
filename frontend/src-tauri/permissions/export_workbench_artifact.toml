@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-export-workbench-artifact"
+description = "允许主窗口将已生成的文件交给原生保存面板；用户选址后保存，取消不写盘。"
+commands.allow = ["export_workbench_artifact"]
+
+[[permission]]
+identifier = "deny-export-workbench-artifact"
+description = "拒绝工作台文件导出。"
+commands.deny = ["export_workbench_artifact"]

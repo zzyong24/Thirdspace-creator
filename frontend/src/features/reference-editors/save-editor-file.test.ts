@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {saveEditorFile} from './save-editor-file';
 const h=vi.hoisted(()=>({desktop:true,invoke:vi.fn()}));
@@ -34,4 +36,13 @@ it('原生格式和大小边界在读取字节前拒绝',async()=>{
 it('网页保留下载，不冒充本机已保存',async()=>{
  h.desktop=false;const create=vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:export'),click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
  const blob=new Blob(['zip'],{type:'application/zip'});expect(await saveEditorFile(blob,'图文.zip',()=>{})).toBe('download-started');expect(create).toHaveBeenCalledWith(blob);expect(click).toHaveBeenCalledOnce();expect(h.invoke).not.toHaveBeenCalled();
+});
+
+it('桌面sidecar可调用受限保存命令，权限只绑定主窗口及已有本地地址',()=>{
+ const capability=JSON.parse(readFileSync(resolve(process.cwd(),'src-tauri/capabilities/remote-sidecar.json'),'utf8'));
+ expect(capability.windows).toEqual(['main']);expect(capability.remote.urls).toEqual(['http://127.0.0.1:*','http://localhost:*']);
+ expect(capability.permissions).toContain('allow-export-workbench-artifact');
+ expect(capability.permissions.some((v:string)=>v.startsWith('shell:')||v.startsWith('fs:'))).toBe(false);
+ const permission=readFileSync(resolve(process.cwd(),'src-tauri/permissions/export_workbench_artifact.toml'),'utf8');
+ expect(permission).toContain('commands.allow = ["export_workbench_artifact"]');expect(permission.match(/commands.allow/g)).toHaveLength(1);
 });

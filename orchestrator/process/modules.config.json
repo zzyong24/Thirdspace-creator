@@ -20966,7 +20966,9 @@
         "frontend/src/features/projects/graphic-post-workbench.test.tsx",
         "frontend/src/features/reference-editors/save-editor-file.ts",
         "frontend/src/features/reference-editors/save-editor-file.test.ts",
-        "frontend/src-tauri/src/lib.rs"
+        "frontend/src-tauri/src/lib.rs",
+        "frontend/src-tauri/capabilities/remote-sidecar.json",
+        "frontend/src-tauri/permissions/export_workbench_artifact.toml"
       ],
       "verify_commands": {
         "implementation": [
