@@ -18,6 +18,7 @@ import { GraphicPostResults } from "./graphic-post-results";
 import {NoteRelayEditor} from "@/features/reference-editors/noterelay/noterelay-editor";
 import {graphicDeliveryImages} from "./graphic-series-document";
 import {zipSync,strToU8} from "fflate";
+import {saveEditorFile,editorFileMessage} from "../reference-editors/save-editor-file";
 
 
 type WorkbenchProps = {
@@ -158,6 +159,8 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
       if(!(await save())||!mounted.current)return;
       const latest=await client.getGraphicPost({params:{outputId:state.outputId},query:undefined,body:undefined});
       if(!mounted.current)return;
+      const frozen=editorCanonical(draftRef.current),generation=generationRef.current;
+      if(editorCanonical(latest.current)!==frozen)throw new Error('稿件已改变，请重新导出');
       const images=graphicDeliveryImages(latest.current),files:Record<string,Uint8Array>={};
       const manifest:{order:number;assetId:string;assetFileId:string;file:string}[]=[];
       for(const [index,image] of images.entries()){
@@ -169,9 +172,9 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
       files['配文.txt']=new Uint8Array(strToU8([latest.current.title,latest.current.body,latest.current.summary,latest.current.tags.map(tag=>`#${tag}`).join(' ')].filter(Boolean).join('\n\n')));
       files['图片顺序.json']=new Uint8Array(strToU8(JSON.stringify(manifest,null,2)));
       if(!mounted.current)return;
-      const blob=new Blob([zipSync(files) as BlobPart],{type:'application/zip'}),url=URL.createObjectURL(blob),anchor=document.createElement('a');
-      anchor.href=url;anchor.download='图文作品.zip';anchor.click();window.setTimeout(()=>URL.revokeObjectURL(url),30000);
-      setMessage(`已导出 ${images.length} 张精确图片和配文，封面相同文件只导出一次。`);
+      const blob=new Blob([zipSync(files) as BlobPart],{type:'application/zip'});
+      const outcome=await saveEditorFile(blob,'图文作品.zip',()=>{if(!mounted.current||generation!==generationRef.current||editorCanonical(draftRef.current)!==frozen)throw new Error('稿件已改变，请重新导出');});
+      if(mounted.current)setMessage(editorFileMessage(outcome));
     }catch(reason){if(mounted.current)setError(describeUserError(reason,'导出未完成，作品已保留，请重试。'));}
     finally{if(mounted.current)setExportBusy(false);}
   }

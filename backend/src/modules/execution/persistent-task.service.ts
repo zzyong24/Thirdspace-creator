@@ -293,13 +293,26 @@ function leaseExpiry(now: string, seconds: number): string {
 }
 
 // 重试等待不能被直接领取或 pause/resume 绕过；旧任务未设置这两个字段时保持原行为。
-function claimableAt(stamp: string) {
+function claimableWithoutPayloadAt(stamp: string) {
   return sql`(${executionTasks.status} = 'queued' OR ${executionTasks.status} = 'retry_wait')
     AND ${executionTasks.kind} <> 'radar_project_upgrade'
     AND (${executionTasks.lastErrorCode} IS DISTINCT FROM 'SYSTEM_UPGRADED')
-    AND NOT (${executionTasks.payload} ? '__scheduledChild')
     AND (${executionTasks.retryAt} IS NULL OR ${executionTasks.retryAt} <= ${stamp})
     AND (${executionTasks.deadlineAt} IS NULL OR ${executionTasks.deadlineAt} > ${stamp})`;
+}
+
+function claimableAt(stamp: string) {
+  // AND 不保证求值顺序；CASE 避免空闲轮询解压终态历史任务的大 payload。
+  return sql`CASE WHEN ${claimableWithoutPayloadAt(stamp)}
+    THEN NOT (${executionTasks.payload} ? '__scheduledChild') ELSE false END`;
+}
+
+function claimableModeAt(stamp: string, mode: NonNullable<Parameters<PersistentTaskService["claimNext"]>[0]["executionMode"]>) {
+  const matchesMode = mode === "model"
+    ? sql`${executionTasks.payload}->'modelInput'->>'kind' IN ('model.generate','model.structured','asset.generate','transcribe.douyin','asset.asr')`
+    : sql`${executionTasks.payload}->'modelInput'->>'kind' = ${mode}`;
+  return sql`${executionTasks.kind} = 'ai_task' AND CASE WHEN ${claimableWithoutPayloadAt(stamp)}
+    THEN ${matchesMode} ELSE false END`;
 }
 
 function recoveryDueAt(stamp: string, includeSafeUnknownResults=false) {
@@ -833,12 +846,7 @@ export function createPersistentTaskService(
           if(!owner.userId||(!owner.accountId&&!owner.groupId))throw new ExecutionValidationError("排除账号必须有完整属主");
           filters.push(sql`NOT (${executionTasks.userId} = ${owner.userId} AND ${workspaceFilter(executionTasks,{accountId:owner.accountId,groupId:owner.groupId})})`);
         }
-        if (input.executionMode === "benchmark.transcribe") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'benchmark.transcribe'`);
-        if (input.executionMode === "scheduled.flywheel") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'scheduled.flywheel'`);
-        if (input.executionMode === "chat.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'chat.run'`);
-        if (input.executionMode === "agentic.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'agentic.run'`);
-        if (input.executionMode === "model") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' IN ('model.generate','model.structured','asset.generate','transcribe.douyin','asset.asr')`);
-        if (input.executionMode === "model.generate") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'model.generate'`);
+        if (input.executionMode) filters.push(claimableModeAt(stamp, input.executionMode));
         if (input.kinds) {
           filters.push(inArray(executionTasks.kind, input.kinds));
         }

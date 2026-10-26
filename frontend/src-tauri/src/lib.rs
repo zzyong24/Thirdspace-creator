@@ -189,6 +189,7 @@ enum NativeArtifactFormat {
     Csv,
     Png,
     Pdf,
+    Zip,
 }
 
 impl NativeArtifactFormat {
@@ -205,6 +206,8 @@ impl NativeArtifactFormat {
             Self::Png
         } else if media.eq_ignore_ascii_case("application/pdf") {
             Self::Pdf
+        } else if media.eq_ignore_ascii_case("application/zip") {
+            Self::Zip
         } else {
             return Err("不支持的产物类型。".to_string());
         };
@@ -226,6 +229,7 @@ impl NativeArtifactFormat {
             Self::Csv => &["csv"],
             Self::Png => &["png"],
             Self::Pdf => &["pdf"],
+            Self::Zip => &["zip"],
         }
     }
 
@@ -236,6 +240,7 @@ impl NativeArtifactFormat {
             Self::Csv => "CSV 数据文件",
             Self::Png => "PNG 图片",
             Self::Pdf => "PDF 文档",
+            Self::Zip => "ZIP 压缩文件",
         }
     }
 
@@ -4417,6 +4422,7 @@ mod tests {
             ("text/csv", "数据.csv", b"count,0\n".as_slice()),
             ("image/png", "图.png", b"\x89PNG\r\n\x1a\n".as_slice()),
             ("application/pdf", "图.pdf", b"%PDF-1.7\n".as_slice()),
+            ("application/zip", "图文.zip", b"PK\x03\x04\x00\xff".as_slice()),
         ] {
             let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
             let payload = prepare_artifact_export(&encoded, mime, name).unwrap();
@@ -4430,6 +4436,8 @@ mod tests {
             ("text/html", "CON.html"),
             ("text/html", "COM¹.html"),
             ("image/png; charset=utf-8", "image.png"),
+            ("application/zip; charset=utf-8", "图文.zip"),
+            ("application/zip", "图文.html"),
         ] {
             assert!(prepare_artifact_export(&encoded, mime, name).is_err());
         }

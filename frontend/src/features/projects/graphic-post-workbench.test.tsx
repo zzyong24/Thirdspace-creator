@@ -51,7 +51,7 @@ it('导出读取精确文件，封面重复文件只导出一次，真实页序�
  try{
   render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
 
-  fireEvent.click(screen.getByRole('button',{name:'导出原图与配文'}));await screen.findByText(/已导出 2 张精确图片和配文/);
+  fireEvent.click(screen.getByRole('button',{name:'导出原图与配文'}));await screen.findByText('已开始下载。');
   expect(read.mock.calls.map(call=>call[0])).toEqual(['http://example.test/file-a.png','http://example.test/file-b.png']);
   const buffer=await new Promise<ArrayBuffer>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as ArrayBuffer);reader.onerror=reject;reader.readAsArrayBuffer(archive!);});
   const files=unzipSync(new Uint8Array(buffer));expect(Object.keys(files)).toEqual(['01.png','02.png','配文.txt','图片顺序.json']);
@@ -155,7 +155,7 @@ it('发布配文独立显示且可复制，不再展示发布与交付；无脚�
  render(<GraphicPostWorkbench {...props} initial={latest}/>);expect(screen.getByRole('region',{name:'发布配文'})).toHaveTextContent('小红书配文');expect(screen.queryByText('发布与交付')).toBeNull();
  fireEvent.click(screen.getByRole('button',{name:'复制配文'}));await waitFor(()=>expect(writeText).toHaveBeenCalledWith('发布标题\n\n小红书配文\n\n#创作'));
  expect(screen.getByRole('button',{name:'重新组织内容'})).toBeEnabled();fireEvent.click(screen.getByRole('button',{name:'重新组织内容'}));await waitFor(()=>expect(api.openChat).toHaveBeenCalledOnce());
- expect(api.openChat.mock.calls[0]![0].prefill).toContain('cardBriefs');expect(api.openChat.mock.calls[0]![0].prefill).toContain('小红书发布正文');
+ expect(api.openChat.mock.calls[0]![0].prefill).toContain('图片页');expect(api.openChat.mock.calls[0]![0].prefill).toContain('小红书发布正文');expect(api.openChat.mock.calls[0]![0].prefill).not.toMatch(/work\.editor\.read|scriptContext|cardBriefs|cardId|schema/);
 });
 
 it('旧稿有空卡但主脚本可读时，仍可重新组织',async()=>{

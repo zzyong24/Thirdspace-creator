@@ -20917,7 +20917,9 @@
         "contract/tests/registry.test.ts",
         "contract/src/observability-registry.json",
         "contract/tests/group-workspace-read.test.ts",
-        "backend/src/modules/platform-collection/platform-collection.service.ts"
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/execution/persistent-task.service.test.ts"
       ],
       "verify_commands": {
         "implementation": [
@@ -20961,7 +20963,10 @@
         "PROJECT.md",
         "frontend/src/features/reference-editors/write-prepared-clipboard.ts",
         "frontend/src/features/projects/graphic-post-workbench.tsx",
-        "frontend/src/features/projects/graphic-post-workbench.test.tsx"
+        "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+        "frontend/src/features/reference-editors/save-editor-file.ts",
+        "frontend/src/features/reference-editors/save-editor-file.test.ts",
+        "frontend/src-tauri/src/lib.rs"
       ],
       "verify_commands": {
         "implementation": [

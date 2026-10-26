@@ -7,6 +7,7 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
 import {writePreparedClipboard} from '../write-prepared-clipboard';
+import {saveEditorFile,editorFileMessage} from '../save-editor-file';
 import {NativeEditorSurface,type NativeEditorHandle} from '../native-editor-surface';
 import {projectArticle,projectGraphic,defaultLayout,assetSource} from './projection';
 type Props={simplified?:boolean;prepareDelivery?:()=>Promise<boolean>;extraDelivery?:React.ReactNode;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string;platform:'wechat'|'rednote';value:ArticleDocument|GraphicPostDocument;onLayoutChange:(layout:NoteRelayLayout)=>void;disabled?:boolean;readOnlyCandidate?:boolean;onPreviewReady?:(metadata:{pageCount:number;pageIndex:number})=>void};
@@ -85,7 +86,11 @@ function NoteRelayEditorSession(props:Props){
    }else{
     const result=await prepare();
     if(action==='copy-text'){await navigator.clipboard.writeText(result.plainText??'');if(alive.current)setMessage('正文已复制为纯文本。');}
-    else{const url=URL.createObjectURL(result.blob),anchor=document.createElement('a');anchor.href=url;anchor.download=result.filename??`${projection.title.replace(/[\\/:*?"<>|]/g,'-')||'公众号文章'}.html`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);if(alive.current)setMessage('交付文件已生成。');}
+    else{
+      const filename=result.filename??`${projection.title.replace(/[\\/:*?"<>|]/g,'-')||'作品'}.${action==='zip'?'zip':action==='png'?'png':'html'}`;
+      const outcome=await saveEditorFile(result.blob,filename,()=>{if(!alive.current||editor.current!==active||latest.current.digest!==frozen)throw new Error('稿件已改变，请重新导出');});
+      if(alive.current)setMessage(editorFileMessage(outcome));
+    }
    }
 
   }catch(reason){if(alive.current&&editor.current===active)setError(reason instanceof Error?reason.message:'交付失败，请重试。');}finally{if(alive.current&&editor.current===active)setBusy(false);}

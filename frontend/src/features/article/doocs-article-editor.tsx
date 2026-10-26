@@ -4,6 +4,7 @@ import {writePreparedClipboard} from "@/features/reference-editors/write-prepare
 import * as React from "react";
 import DOMPurify from "dompurify";
 import { zipSync, strToU8 } from "fflate";
+import {saveEditorFile,editorFileMessage} from "../reference-editors/save-editor-file";
 import { articleDocument } from "@creatoros/contract";
 import { Button } from "@/components/ui/button";
 import {useCreationWorkspace,creationScopeKey} from "@/lib/creation-workspace-scope";
@@ -257,10 +258,10 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
       files["manifest.json"] = strToU8(JSON.stringify({ outputId, versionId: deliveryVersionId, title: safeTitle, imageOrder: [...bindingPaths.values()], layout: savedDocument.nativeLayout ? "saved" : "base-theme", generatedAt: new Date().toISOString() }, null, 2));
       if(!alive.current||frozen!==JSON.stringify(currentDocuments.current.savedDocument)||frozen!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
       const archive = zipSync(files, { level: 6 });
-      const url = URL.createObjectURL(new Blob([new Uint8Array(archive).buffer as ArrayBuffer], { type: "application/zip" }));
-      const anchor = document.createElement("a"); anchor.href = url; anchor.download = `${safeTitle}-公众号物料.zip`; anchor.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setStatus("已导出当前正式版本的 HTML 与图片 ZIP；请解压后用相对路径检查图片。");
+      const outcome = await saveEditorFile(new Blob([new Uint8Array(archive).buffer as ArrayBuffer], { type: "application/zip" }), `${safeTitle}-公众号物料.zip`, () => {
+        if(!alive.current||frozen!==JSON.stringify(currentDocuments.current.savedDocument)||frozen!==JSON.stringify(currentDocuments.current.value))throw new Error('稿件已改变，请重新导出');
+      });
+      if(alive.current)setStatus(editorFileMessage(outcome));
     } catch (reason) { if(alive.current)setError(reason instanceof Error ? reason.message : "公众号导出未完成。"); }
     finally { deliveryPending.current=false;if(alive.current)setBusy(false); }
   }
@@ -290,7 +291,7 @@ function DoocsEditorSession({deliveryOnly=false,showPreview=false,prepareDeliver
     <div className="flex flex-wrap items-center justify-between gap-3">{(!deliveryOnly||showPreview)&&<div className="min-w-0"><h3 className="text-[13.5px] font-semibold">{showPreview?"成稿预览":"公众号排版编辑器"}</h3><p className="text-xs text-muted-foreground">{syncing?"正在同步当前正文与排版…":status}</p></div>}
       <div className="flex min-w-0 w-full flex-wrap gap-2 sm:w-auto">{showPreview&&<Button variant="outline" disabled={busy||!editorReady||syncing} onClick={()=>void exportFormalVersion('copy-html')}>复制公众号文章</Button>}<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" variant="outline" onClick={() => void exportFormalVersion()} disabled={busy || (!lazyDelivery&&(!editorReady||syncing)) || (!deliveryOnly&&JSON.stringify(value) !== JSON.stringify(savedDocument))}>导出 HTML + 图片 ZIP</Button>
         {deliveryOnly&&showPreview&&<Button variant="outline" disabled={busy||!editorReady||syncing} onClick={()=>void toggleFormatting()}>{formattingOpen?"收起排版":"调整排版"}</Button>}{editable&&<Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" onClick={() => void saveEditorDraft()} disabled={busy || !editorReady || syncing || checkpointConflict}>{busy ? "处理中…" : "保存正文与排版"}</Button>}</div></div>
-    {lazyDelivery&&busy&&<p role="status" className="text-xs text-muted-foreground">正在准备导出，完成后将自动下载。</p>}
+    {lazyDelivery&&busy&&<p role="status" className="text-xs text-muted-foreground">正在准备导出文件…</p>}
     {error && <p role="alert" className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{error}{!lazyDelivery&&syncing&&<Button className="ml-2" size="sm" variant="outline" disabled={busy} onClick={()=>void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);})}>重新读取当前稿</Button>}</p>}
     {checkpoint && <div role="status" className="rounded-md border border-warning/30 bg-warning/10 p-3 text-sm">
       {checkpointConflict ? <><span>标签页保存了旧版本草稿。当前正式稿已变化，请比较内容；旧草稿只读，不可直接覆盖当前版本。</span>

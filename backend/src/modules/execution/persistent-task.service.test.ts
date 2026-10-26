@@ -1,3 +1,6 @@
+import {writeFileSync} from 'node:fs';
+import {drizzle} from 'drizzle-orm/pglite';
+import type {Db} from '../../db';
 import { describe, expect, it } from "vitest";
 
 import { createDb, executionTasks, userPreferences, eq } from "@creatoros/backend";
@@ -445,3 +448,44 @@ it('持久模型新根在事务前prepare，事务内只核；重放和显式冻
   await service.enqueue(ctxA,{...input,idempotencyKey:'known-route',payload:{executionRoute:createExecutionRoute('pi')}});expect(events).toEqual(['fresh','check','fresh','check','check']);
  }finally{await client.close();}
 },180000);
+
+
+it("空闲领取先排除大payload历史任务，所有执行模式不读取历史TOAST",async()=>{
+ const {db,client}=await createDb();const queries:Array<{sql:string,params:unknown[]}>=[];const plans:unknown[]=[];
+ try{
+  const service=createPersistentTaskService(db);await enqueue(service);const [seed]=await db.select().from(executionTasks);
+  const payload={modelInput:{kind:'chat.run',body:'历史正文需要完整保留，但空闲轮询不应反复解析。'.repeat(4000)}};
+  for(let batch=0;batch<60;batch++)await db.insert(executionTasks).values(Array.from({length:5},(_,i)=>({...seed!,id:`idle-history-${batch}-${i}`,ownerId:`idle-history-${batch}-${i}`,idempotencyKey:`idle-history-${batch}-${i}`,kind:'ai_task',ownerType:'ai_task',status:'succeeded',payload})));
+  const logged=drizzle(client,{logger:{logQuery(sql,params){if(sql.includes('from "execution_tasks"')&&sql.includes('order by')&&sql.includes('limit'))queries.push({sql,params});}}});
+  const tasks=createPersistentTaskService(logged as unknown as Db);
+  for(const executionMode of ['model','model.generate','chat.run','agentic.run','scheduled.flywheel','benchmark.transcribe'] as const){
+   expect(await tasks.claimNext({workerId:'idle-worker',kinds:['ai_task'],executionMode})).toBeNull();const query=queries.at(-1)!;
+   const result=await client.query('EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) '+query.sql,query.params);
+   const plan=(result.rows[0] as {'QUERY PLAN':Array<{Plan:{'Actual Rows':number;'Shared Hit Blocks':number;'Shared Read Blocks':number}}>})['QUERY PLAN'][0];
+   if(!plan)throw new Error('EXPLAIN 未返回实际计划');plans.push({executionMode,...plan});
+   writeFileSync(process.env.T1418_IDLE_PLAN_OUTPUT??'../docs/verification/t1418/idle-queue-plan-current.json',JSON.stringify({count:301,payloadBytes:Buffer.byteLength(JSON.stringify(payload)),plans},null,2)+'\n');
+   expect(plan.Plan['Actual Rows']).toBe(0);expect(plan.Plan['Shared Hit Blocks']+plan.Plan['Shared Read Blocks']).toBeLessThan(100);
+  }
+  expect((await client.query('select count(*)::int as count from execution_tasks')).rows).toEqual([{count:301}]);
+ }finally{await client.close().catch(()=>{});}
+},30000);
+
+it("执行模式领取保持资格、优先级和原任务attempt，跳过未来重试/过期/升级/受保护子任务",async()=>{
+ const {db,client}=await createDb();const now='2026-10-26T00:00:00.000Z';
+ try{
+  const service=createPersistentTaskService(db,{now:()=>now});await enqueue(service);const [seed]=await db.select().from(executionTasks);
+  const modes=['model.generate','chat.run','agentic.run','scheduled.flywheel','benchmark.transcribe'] as const;
+  for(const mode of modes){
+   const row={...seed!,kind:'ai_task',ownerType:'ai_task',status:'queued',payload:{modelInput:{kind:mode}},priority:50};
+   const variants=[{id:'ready',priority:5},{id:'later-priority',priority:1},{id:'future',status:'retry_wait',retryAt:'2026-10-27T00:00:00.000Z'},{id:'expired',deadlineAt:'2026-10-25T00:00:00.000Z'},{id:'upgraded',lastErrorCode:'SYSTEM_UPGRADED'},{id:'child',payload:{...row.payload,__scheduledChild:true}},{id:'finished',status:'succeeded'}];
+   await db.insert(executionTasks).values(variants.map(v=>({...row,...v,id:`${mode}-${v.id}`,ownerId:`${mode}-${v.id}`,idempotencyKey:`${mode}-${v.id}`})));
+   const claimed=await service.claimNext({workerId:'mode-worker',kinds:['ai_task'],executionMode:mode});expect(claimed?.task.id).toBe(`${mode}-ready`);expect(claimed?.lease.attempt).toBe(1);expect(claimed?.payload).toEqual(row.payload);
+   expect((await service.claimNext({workerId:'mode-worker',kinds:['ai_task'],executionMode:mode}))?.task.id).toBe(`${mode}-later-priority`);
+   expect(await service.claimNext({workerId:'mode-worker',kinds:['ai_task'],executionMode:mode})).toBeNull();
+  }
+  for(const kind of ['model.structured','asset.generate','transcribe.douyin','asset.asr']){
+   const id=`generic-${kind}`;await db.insert(executionTasks).values({...seed!,id,ownerId:id,idempotencyKey:id,kind:'ai_task',ownerType:'ai_task',status:'queued',payload:{modelInput:{kind}}});
+   expect((await service.claimNext({workerId:'model-worker',kinds:['ai_task'],executionMode:'model'}))?.task.id).toBe(id);
+  }
+ }finally{await client.close().catch(()=>{});}
+});

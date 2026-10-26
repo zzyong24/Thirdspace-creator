@@ -4,14 +4,16 @@ import {it,expect,vi,afterEach,beforeEach} from 'vitest';
 import type {ArticleDocument} from '@creatoros/contract';
 import {NoteRelayEditor} from './noterelay-editor';
 import {defaultLayout} from './projection';
-const h=vi.hoisted(()=>({request:vi.fn(),getAssetFileDownloadUrl:vi.fn()}));
+const h=vi.hoisted(()=>({request:vi.fn(),getAssetFileDownloadUrl:vi.fn(),desktop:false,invoke:vi.fn()}));
+vi.mock('@/lib/desktop-updater',()=>({isDesktopRuntimeClient:()=>h.desktop}));
+vi.mock('@tauri-apps/api/core',()=>({invoke:h.invoke}));
 vi.mock('@/lib/contract-client',()=>({client:h}));
 // 此夹具只验证React宿主的真实归属、控件与交付边界；原引擎见native-bundle.test.ts。
 vi.mock('../native-editor-surface',()=>({NativeEditorSurface:React.forwardRef(function Surface(props:any,ref:any){React.useImperativeHandle(ref,()=>({request:h.request}),[]);React.useEffect(()=>{props.onReady();},[]);return <div data-testid="native-editor" data-owner={props.owner.accountId}/>;})}));
 vi.mock('@/lib/creation-workspace-scope',async importOriginal=>{const actual=await importOriginal<any>(),{client:scopeClient}=await import('@/lib/contract-client');return {...actual,useCreationWorkspace:(scope:any)=>{const workspace=actual.useCreationWorkspace(scope);return {...workspace,client:scopeClient,capture:()=>({...workspace.capture(),client:scopeClient})};}};});
 
 const doc:ArticleDocument={schemaVersion:1,title:'真实稿',summary:'',sections:[{sectionId:'s',order:0,heading:'要点',headingLevel:2,body:'当前正文',sourceRefs:[]}],factItems:[],visualBriefs:[],imageUses:[]};
-beforeEach(()=>{localStorage.removeItem("creatoros:current-group");localStorage.setItem("creatoros:current-account","a");h.request.mockImplementation(async(operation:string)=>operation==='load'?{themes:[{id:'moyu-green',name:'摸鱼绿'}],images:[],selectedImage:'',pageIndex:0,pageCount:0}:{blob:new Blob(['<p>当前正文</p>'],{type:'text/html'}),plainText:'当前正文'});});
+beforeEach(()=>{h.desktop=false;localStorage.removeItem("creatoros:current-group");localStorage.setItem("creatoros:current-account","a");h.request.mockImplementation(async(operation:string)=>operation==='load'?{themes:[{id:'moyu-green',name:'摸鱼绿'}],images:[],selectedImage:'',pageIndex:0,pageCount:0}:{blob:new Blob(['<p>当前正文</p>'],{type:'text/html'}),plainText:'当前正文'});});
 afterEach(()=>{cleanup();vi.clearAllMocks();vi.unstubAllGlobals();});
 async function connected(){await waitFor(()=>expect(screen.getByRole('button',{name:'复制公众号文章'})).not.toBeDisabled());}
 it('预览宿主无重复说明，区标题字体与脚本一致',async()=>{
@@ -131,4 +133,20 @@ it.each(['异步拒绝','write同步拒绝','构造同步拒绝'])('剪贴板%s�
  const write=vi.fn(()=>{if(mode==='write同步拒绝')throw Error('clipboard denied');return Promise.reject(Error('clipboard denied'));});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write}});
  render(<NoteRelayEditor simplified prepareDelivery={async()=>false} projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="wechat" value={doc} onLayoutChange={()=>{}}/>);await connected();fireEvent.click(screen.getByRole('button',{name:'复制公众号文章'}));
  expect(await screen.findByRole('alert')).toHaveTextContent('保存尚未确认');expect(h.request.mock.calls.filter(([op])=>op==='export')).toHaveLength(0);expect(screen.queryByText('公众号文章已复制。')).toBeNull();
+});
+
+
+it('桌面分页ZIP等待原生保存回执，取消不报成功且不启动WebKit下载',async()=>{
+ h.desktop=true;let finish!:(value:string)=>void;h.invoke.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+ const blob=new Blob(['PK\x03\x04真实图卡字节'],{type:'application/zip'});
+ h.request.mockImplementation(async(op:string)=>op==='load'?{themes:[],images:[],selectedImage:'',pageIndex:0,pageCount:6}:{blob,filename:'分工图文.zip'});
+ const create=vi.fn(()=> 'blob:test');vi.stubGlobal('URL',Object.assign(URL,{createObjectURL:create,revokeObjectURL:vi.fn()}));
+ const click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ const save=vi.fn(async()=>true);
+ render(<NoteRelayEditor simplified prepareDelivery={save} projectId="p" accountId="a" outputId="o" sourceVersionId="v" platform="rednote" value={{schemaVersion:1,title:'图文',body:'配文',summary:'',tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null}} onLayoutChange={()=>{}}/>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'导出分页 ZIP'})).not.toBeDisabled());fireEvent.click(screen.getByRole('button',{name:'导出分页 ZIP'}));
+ await waitFor(()=>expect(h.invoke).toHaveBeenCalledOnce());expect(save).toHaveBeenCalledOnce();expect(h.invoke).toHaveBeenCalledWith('export_workbench_artifact',{bytesBase64:expect.any(String),mime:'application/zip',suggestedName:'分工图文.zip'});
+ expect(click).not.toHaveBeenCalled();expect(create).not.toHaveBeenCalled();expect(screen.queryByText('文件已保存。')).toBeNull();
+ await act(async()=>finish('cancelled'));expect(await screen.findByRole('status')).toHaveTextContent('已取消保存');expect(screen.queryByText('文件已保存。')).toBeNull();
+ click.mockRestore();
 });

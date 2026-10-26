@@ -29,3 +29,13 @@ RED/GREEN：公开 transport 新端点不依赖永不返回的 dashboard；同�
 增加隔离数据库回归：合成 300 个新增作品×20 份历史指标，执行真实 SQL，检查摘要结果和计划的 work ID 索引约束、不再存在数千次重复目录扫描；保留红测与前后计划，不仅比较易受机器负载影响的时间。运行既有完整组隔离、历史归属、同刻冲突、不可用/未知/零、隐私可见性测试。再次打包装版后沿同组/日期测量，未过预算继续修复。写集追加 backend/src/modules/platform-collection/platform-collection.service.ts；无新公开契约、数据归属或产品方向变化。
 
 等价性约束：第 1 条 LATERAL 的 WHERE 只按 user/account/platform/work 收窄，不能预过滤 assigned；count/hasOwned/hasUnattributed 仍在全部相关指标上聚合，以区分无指标、只有合法其它组指标、重叠/非法成员区间。第 2 条才在 assigned 过滤后执行 dense_rank。
+
+## 后台空闲轮询对前台读取的影响
+
+0c2877020 安装版完整36次公开CLI复测：最快普通读约0.35秒，但多个平台仍有约2秒慢次；进程无运行任务时 Next/PGlite 持续约100%单核CPU。临时只读调试采样仅记录脱敏SQL及时间、不执行额外数据库查询、不读取参数/结果：15秒中两类 claimNext 查询累计约11.38秒。调试断点及端口已关闭，采样开销不作为正式性能值。
+
+隔离内存数据库复现301任务，其中300条终态历史任务各带276044字节payload。空队列领取未命中，查询计划却对300条历史任务先执行 payload JSON 检查，再检查status；923个shared-hit blocks、执行约16ms。真实历史更多/更大时放大并挤占单连接读队列。见 idle-queue-probe-before.json；诊断曾因过大单批参数导致隔离WASM内存错误，改有界批次后复现；未读取或改写用户数据库。
+
+修复仅改变持久任务领取的SQL计算顺序：抽出不访问payload的领取条件（status、kind、升级错误、retryAt、deadlineAt）；使用CASE在这些条件满足后才检查__scheduledChild与modelInput.kind。所有executionMode仍使用原白名单，kind、excludeAccounts、优先级/创建时间/ID排序、领取后归属校验、CAS更新、租约、fenceToken和attempt语义保持。查询不新增缓存、迁移或索引，不停用后台任务、不延长轮询周期、不读取terminal历史payload。写集追加 backend/src/modules/execution/persistent-task.service.ts 及同名.test.ts。
+
+增加真实隔离SQL红→绿：含300条大payload终态历史、未来重试/到期/升级/受保护子任务；捕获实际SQL执行计划，验证空轮询不读取历史TOAST块（同样301条数据下shared-hit blocks<100）且返回空。另验证各执行模式、可领任务优先级/账号排除、等待与截止、并发领取、归属/fence/attempt既有测试。新安装版需再测实际CPU与总览CLI/页面P95，未达标不关闭本任务。
