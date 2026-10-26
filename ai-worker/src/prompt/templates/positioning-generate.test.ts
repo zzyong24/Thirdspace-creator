@@ -9,6 +9,12 @@ import { POSITIONING_GENERATE_TEMPLATE } from "./positioning-generate";
 const CURRENT = "定位一句话：把论文落成代码";
 
 describe("positioning.generate 模板 — {{works}} 真实作品画像占位 (T-081②/T-707)", () => {
+  it("T1408 本人资料可直接形成候选，无登录和同步作品前置条件",()=>{
+    expect(POSITIONING_GENERATE_TEMPLATE.system).toContain("无需登录抖音");
+    expect(POSITIONING_GENERATE_TEMPLATE.template).toContain("本人自述");
+    expect(POSITIONING_GENERATE_TEMPLATE.template).toContain("未绑定不等于从零开始");
+    expect(POSITIONING_GENERATE_TEMPLATE.template).toContain("不得编造粉丝量、播放量");
+  });
   it("works facet 传入 → 明确只是历史作品证据，不替用户决定未来", () => {
     const { prompt } = bindPrompt(POSITIONING_GENERATE_TEMPLATE, {
       current: CURRENT,

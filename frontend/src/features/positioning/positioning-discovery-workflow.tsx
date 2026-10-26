@@ -88,10 +88,11 @@ export function PositioningDiscoveryWorkflow({
           </div>
 
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            支持继续深入、调整方向或重新定位，每轮只问一个关键问题。
+            无需登录抖音，先聊你的经历、优势和创作目标。每轮只问一个关键问题，文案和资料可以稍后补充。
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline" data-slot="positioning-login-optional">默认无需抖音登录</Badge>
             <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
               <Sparkles className="size-3.5" /> 随时可说“先给我一版”
             </span>

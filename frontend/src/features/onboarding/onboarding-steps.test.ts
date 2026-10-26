@@ -123,10 +123,21 @@ describe("resolveOrigin", () => {
   });
 });
 
-it('T1345首用户优先创建组，已有组优先扫码，旧账号主线保持',()=>{
+it('T1408 首用户先创建组，有效组或旧账号默认直接定位',()=>{
  expect(deriveGuidedSteps({needsFirstGroup:true} as any)[0]).toMatchObject({title:'创建第一个账号组',ctaLabel:'去创建',href:'/accounts'});
- expect(deriveGuidedSteps({groupId:'g',memberCount:0})[0].why).toContain('扫码');
- expect(deriveGuidedSteps({accountId:'legacy'})[0].title).toBe('绑定你的抖音号');
+ expect(deriveGuidedSteps({groupId:'g',memberCount:0})[0]).toMatchObject({key:'positioning-profile',done:false,href:'/positioning'});
+ expect(deriveGuidedSteps({accountId:'legacy'})[0]).toMatchObject({key:'positioning-profile',done:false,href:'/positioning'});
+});
+
+it.each([{groupId:'g',memberCount:0},{accountId:'legacy'}])('T1408 %j 平台绑定不计必做，定位提前且其余顺序/历史完成记录保留',workspace=>{
+ const state={...workspace,origin:'existing' as const,completedSteps:['import-account'] as const};
+ const steps=deriveGuidedSteps(state);
+ expect(steps.map(item=>item.key)).toEqual(['positioning-profile','confirm-origin','review-imported-projects','benchmark-monitor','benchmark-topic','first-project']);
+ expect(steps.map(item=>item.order)).toEqual([1,2,3,4,5,6]);
+ // origin 已明确选择，因此仅确认起点算完成；历史绑定里程碑不再计数。
+ expect(steps.filter(item=>item.done).map(item=>item.key)).toEqual(['confirm-origin']);
+ expect(progressOf(steps)).toEqual({done:1,total:6});
+ expect(state.completedSteps).toEqual(['import-account']);
 });
 
 it('T1362组内已采集作品进入真实目录，旧账号历史项目路径保持',()=>{

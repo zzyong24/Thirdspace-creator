@@ -6,12 +6,67 @@ afterEach(() => {
 });
 
 describe("chat task receipt", () => {
+  it.each(["none","partial"])("T-1408 缺完整原轮回执%s时拒绝自动重发，不能退回submit",async receipt=>{
+    const fetchMock=vi.fn(async()=>new Response("unknown",{status:503,headers:receipt==="partial"?{"x-execution-task-id":"original"}:{}}));
+    vi.stubGlobal("fetch",fetchMock);const control=createChatTaskControl();
+    const messages=[{id:"source",role:"user"}];
+    await control.fetch("/api/chat",{body:JSON.stringify({trigger:"submit-message",messages})});
+    await expect(control.fetch("/api/chat",{body:JSON.stringify({trigger:"regenerate-message",conversationId:"conversation",messages})})).rejects.toThrow("CHAT_RESULT_UNCONFIRMED");
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+  it.each(["conversation","source"])("T-1407 拒绝不同%s的原轮恢复，不发送请求",async variant=>{
+    const fetchMock=vi.fn(async()=>new Response("ok",{headers:{"x-execution-task-id":"execution-original","x-conversation-id":"conversation-original","x-source-message-id":"server-user"}}));
+    vi.stubGlobal("fetch",fetchMock);const control=createChatTaskControl();
+    const messages=[{id:"client-user",role:"user"}];
+    await control.fetch("/api/chat",{body:JSON.stringify({trigger:"submit-message",messages})});
+    await expect(control.fetch("/api/chat",{body:JSON.stringify({trigger:"regenerate-message",conversationId:variant==="conversation"?"other":"conversation-original",messages:variant==="source"?[{id:"other-user",role:"user"}]:messages,recoveryIntent:"resume"})})).rejects.toThrow("CHAT_RESULT_UNCONFIRMED");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+  it("T-1407 取消进行中及确认后旧恢复均不重新提交，新消息可单独开始",async()=>{
+    let confirm!:(value:Response)=>void;
+    const fetchMock=vi.fn().mockResolvedValueOnce(new Response("ok",{headers:{"x-execution-task-id":"original","x-conversation-id":"conversation","x-source-message-id":"source"}})).mockImplementationOnce(()=>new Promise<Response>(resolve=>{confirm=resolve;})).mockResolvedValueOnce(new Response("next"));
+    vi.stubGlobal("fetch",fetchMock);const control=createChatTaskControl();
+    const messages=[{id:"source",role:"user"}];
+    await control.fetch("/api/chat",{body:JSON.stringify({trigger:"submit-message",messages})});
+    const cancelling=control.cancel();await Promise.resolve();
+    const old={body:JSON.stringify({trigger:"regenerate-message",conversationId:"conversation",messages})};
+    await expect(control.fetch("/api/chat",old)).rejects.toMatchObject({name:"AbortError"});
+    confirm(new Response("{}"));expect(await cancelling).toBe(true);
+    await expect(control.fetch("/api/chat",old)).rejects.toMatchObject({name:"AbortError"});
+    control.release();await expect(control.fetch("/api/chat",old)).rejects.toMatchObject({name:"AbortError"});
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(String(fetchMock.mock.calls[1][1].body)).input.body.command).toBe("cancel");
+    await control.fetch("/api/chat",{body:JSON.stringify({trigger:"submit-message",messages:[{id:"new",role:"user"}]})});
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+  it("T-1407 原轮重连只观察真实三元回执，不再重新提交已取消的消息", async () => {
+    const headers={"x-execution-task-id":"execution-original","x-conversation-id":"conversation-original","x-source-message-id":"server-user"};
+    const fetchMock=vi.fn().mockImplementation(async(_input:RequestInfo,_init?:RequestInit)=>new Response("ok",{headers}));
+    vi.stubGlobal("fetch",fetchMock);
+    const control=createChatTaskControl();
+    const messages=[{id:"client-user",role:"user",parts:[{type:"text",text:"原请求"}]}];
+    await control.fetch("/api/chat",{body:JSON.stringify({trigger:"submit-message",messages})});
+    await control.fetch("/api/chat",{body:JSON.stringify({trigger:"regenerate-message",conversationId:"conversation-original",messages})});
+    expect(JSON.parse(String(fetchMock.mock.calls[1][1]!.body)).originalTask).toEqual({executionTaskId:"execution-original",conversationId:"conversation-original",sourceMessageId:"server-user",intent:"observe"});
+    await control.fetch("/api/chat",{body:JSON.stringify({trigger:"regenerate-message",conversationId:"conversation-original",messages,recoveryIntent:"resume"})});
+    expect(JSON.parse(String(fetchMock.mock.calls[2][1]!.body)).originalTask.intent).toBe("resume");
+  });
+  it("T-1407 切会话释放旧观察并拒绝晚到回执",async()=>{
+    let release!:(value:Response)=>void;let signal:AbortSignal|undefined;
+    vi.stubGlobal("fetch",vi.fn((_input,init)=>{signal=init.signal;return new Promise<Response>(resolve=>{release=resolve;});}));
+    const control=createChatTaskControl();
+    const pending=control.fetch("/api/chat",{body:JSON.stringify({trigger:"submit-message"})}).catch(error=>error);
+    await Promise.resolve();control.release();
+    expect(signal?.aborted).toBe(true);
+    release(new Response("late",{headers:{"x-execution-task-id":"old"}}));
+    expect(await pending).toMatchObject({name:"AbortError"});expect(control.currentTaskId()).toBeNull();
+  });
   it("records the durable task receipt and keeps it while reconnecting the same turn", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
         new Response("ok", {
-          headers: { "x-execution-task-id": "execution-original" },
+          headers: { "x-execution-task-id": "execution-original","x-conversation-id":"conversation-original","x-source-message-id":"source-original" },
         }),
       )
       .mockResolvedValueOnce(new Response("temporary", { status: 503 }));
@@ -20,13 +75,13 @@ describe("chat task receipt", () => {
 
     await control.fetch("/api/chat", {
       method: "POST",
-      body: JSON.stringify({ trigger: "submit-message" }),
+      body: JSON.stringify({ trigger: "submit-message",messages:[{id:"source-original",role:"user"}] }),
     });
     expect(control.currentTaskId()).toBe("execution-original");
 
     await control.fetch("/api/chat", {
       method: "POST",
-      body: JSON.stringify({ trigger: "regenerate-message" }),
+      body: JSON.stringify({ trigger: "regenerate-message",conversationId:"conversation-original",messages:[{id:"source-original",role:"user"}] }),
     });
     expect(control.currentTaskId()).toBe("execution-original");
   });

@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1408|默认无需抖音登录即可定位|⏸️|—|待验|[SPEC](docs/features/t1408-positioning-without-douyin-login.md)|本地账号组生成候选、手动采纳及创建项目；用户已授权独立差量推送合main，整体验收未通过，不混入PR11。|
 |T-1402|修复 Windows 定位对话缺少 Pi 核心依赖|✅|—|—|[SPEC](docs/features/t1402-windows-positioning-pi-core.md)|Windows1.2.0真实故障复现及本机依赖补全后定位成功；源码静态打包Agent，已验收补丁经用户明确授权推送并合入main，正式安装包另验。|
 |T-1401|修复 AI 额度连接错误被通用不可用提示掩盖|✅|—|—|[SPEC](docs/features/t1401-ai-credit-link-errors.md)|保留配置错误分类与重试语义，验证开发接口，删除临时诊断；仅本地提交，不push。|
 |T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|四来源 mock 回归、补齐弹窗 flex 高度链；不真实调用、不push，补丁交付。|

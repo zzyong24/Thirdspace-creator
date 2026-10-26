@@ -196,6 +196,88 @@ function slot(dialog: HTMLElement, name: string) {
   return dialog.querySelector(`[data-slot="${name}"]`);
 }
 
+describe("T1408 定位首次配置模型的真实组件返回",()=>{
+  const entry="/positioning?"+new URLSearchParams({copilot:"open",surface:"positioning",fn:"positioning.generate",scope:"surface:positioning",prefill:"帮我梳理账号定位，从最关键的问题开始。"});
+  function setRoute(href:string){const url=new URL(href,window.location.origin);previewNavigation.pathname=url.pathname;previewNavigation.search=url.search.slice(1);window.history.replaceState(null,"",href);}
+  function Scene(){return <OverlayController><AICopilotDialog pathname={previewNavigation.pathname}/></OverlayController>;}
+  beforeEach(()=>{protocol.engineAvailable=false;protocol.actualSdk=true;protocol.sessionRegistry=new Map();setRoute(entry);});
+  it.each(["我做了十年家装，想服务第一次装修的家庭。",""])("未发送自述%j去模型设置并返回后原样保留，空串不被旧prefill覆盖",async value=>{
+    const view=render(<Scene/>);expect(screen.getByLabelText("定位对话内容")).toHaveValue("帮我梳理账号定位，从最关键的问题开始。");
+    fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value}});
+    fireEvent.click(screen.getByRole("link",{name:"模型设置"}));
+    setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);expect(screen.queryByLabelText("定位对话内容")).toBeNull();
+    protocol.engineAvailable=true;setRoute(entry);view.rerender(<Scene/>);
+    expect(screen.getByLabelText("定位对话内容")).toHaveValue(value);expect(protocol.fetch).not.toHaveBeenCalled();expect(protocol.send).not.toHaveBeenCalled();
+  });
+  it.each(["group","group-ABA","entry","scope","new-conversation"])("设置往返%s变化时不恢复旧账号组的未发送草稿",async mode=>{
+    const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"只能留在原入口的自述"}});fireEvent.click(screen.getByRole("link",{name:"模型设置"}));
+    if(mode==="new-conversation")fireEvent.click(screen.getByRole("button",{name:"新对话"}));
+    setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);
+    if(mode.startsWith("group")){const {writeCurrentGroupId}=await import("@/lib/http-transport");await act(async()=>{writeCurrentGroupId("fixture-other-group");if(mode==="group-ABA")writeCurrentGroupId("fixture-valid-empty-group");});}
+    const returned=new URL(entry,window.location.origin);if(mode==="entry")returned.searchParams.set("prefill","另一个明确入口");if(mode==="scope")returned.searchParams.set("scope","global");
+    protocol.engineAvailable=true;setRoute(returned.pathname+returned.search);view.rerender(<Scene/>);
+    expect(screen.getByLabelText("定位对话内容")).not.toHaveValue("只能留在原入口的自述");expect(protocol.fetch).not.toHaveBeenCalled();
+  });
+  it("已恢复的草稿原位换组后不留在新组，也不在切回后复活",async()=>{
+    const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"原组私有自述"}});fireEvent.click(screen.getByRole("link",{name:"模型设置"}));setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);setRoute(entry);view.rerender(<Scene/>);
+    expect(screen.getByLabelText("定位对话内容")).toHaveValue("原组私有自述");
+    const {writeCurrentGroupId}=await import("@/lib/http-transport");await act(async()=>writeCurrentGroupId("fixture-other-group"));expect(screen.getByLabelText("定位对话内容")).not.toHaveValue("原组私有自述");
+    await act(async()=>writeCurrentGroupId("fixture-valid-empty-group"));expect(screen.getByLabelText("定位对话内容")).not.toHaveValue("原组私有自述");expect(protocol.fetch).not.toHaveBeenCalled();
+  });
+  it("实际附件picker随设置往返恢复同组已就绪附件，不重复上传",async()=>{
+    protocol.actualSdk=false;const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"包含原资料的自述"}});
+    fireEvent.drop(view.container.querySelector('[data-slot="copilot-attachment-picker"]')!,{dataTransfer:{files:[new File(["本人合成经历"],"定位自述.md",{type:"text/markdown",lastModified:1})]}});
+    await screen.findByText("已就绪");expect(protocol.upload).toHaveBeenCalledOnce();fireEvent.click(screen.getByRole("link",{name:"模型设置"}));setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);protocol.engineAvailable=true;setRoute(entry);view.rerender(<Scene/>);
+    expect(screen.getByLabelText("定位对话内容")).toHaveValue("包含原资料的自述");expect(screen.getByText("定位自述.md")).toBeVisible();expect(screen.getByText("已就绪")).toBeVisible();expect(protocol.upload).toHaveBeenCalledOnce();expect(protocol.send).not.toHaveBeenCalled();
+  });
+  it("已消费设置返回草稿后，新对话清除该恢复态的输入和真实附件",async()=>{
+    protocol.actualSdk=false;const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"仅属于旧对话的恢复自述"}});
+    fireEvent.drop(view.container.querySelector('[data-slot="copilot-attachment-picker"]')!,{dataTransfer:{files:[new File(["本人合成经历"],"旧对话资料.md",{type:"text/markdown",lastModified:1})]}});await screen.findByText("已就绪");
+    fireEvent.click(screen.getByRole("link",{name:"模型设置"}));setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);setRoute(entry);view.rerender(<Scene/>);expect(screen.getByText("旧对话资料.md")).toBeVisible();
+    fireEvent.click(screen.getByRole("button",{name:"新对话"}));expect(screen.getByLabelText("定位对话内容")).not.toHaveValue("仅属于旧对话的恢复自述");expect(screen.queryByText("旧对话资料.md")).toBeNull();expect(protocol.send).not.toHaveBeenCalled();
+  });
+  it.each(["entry","scope"])("已消费设置返回草稿后原位%s改变，不把恢复输入带到另一个入口",async mode=>{
+    const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"仅属于原入口的恢复自述"}});fireEvent.click(screen.getByRole("link",{name:"模型设置"}));setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);setRoute(entry);view.rerender(<Scene/>);expect(screen.getByLabelText("定位对话内容")).toHaveValue("仅属于原入口的恢复自述");
+    const next=new URL(entry,window.location.origin);if(mode==="entry")next.searchParams.set("prefill","新的明确定位请求");else next.searchParams.set("scope","global");setRoute(next.pathname+next.search);view.rerender(<Scene/>);
+    expect(screen.getByLabelText("定位对话内容")).not.toHaveValue("仅属于原入口的恢复自述");expect(protocol.fetch).not.toHaveBeenCalled();
+  });
+  it.each(["before-settings-click","after-settings-click"])("已有完成会话的历史在%s读回时，模型设置返回仍保留新自述",async timing=>{
+    const rows=[{id:"completed-user",role:"user",content:"此前已经提交的定位"},{id:"completed-assistant",role:"assistant",content:"此前已经完成的定位回复"}];
+    localStorage.setItem("copilot:conv:group:fixture-valid-empty-group:surface:positioning","completed-conversation");
+    let resolveHistory!:(value:typeof rows)=>void;protocol.listMessages.mockReturnValueOnce(new Promise(resolve=>{resolveHistory=resolve;})).mockResolvedValue(rows);
+    const view=render(<Scene/>);await waitFor(()=>expect(protocol.listMessages).toHaveBeenCalledOnce());fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"设置往返检查，保留这次新的自述"}});
+    if(timing==="before-settings-click")await act(async()=>resolveHistory(rows));
+    fireEvent.click(screen.getByRole("link",{name:"模型设置"}));
+    if(timing==="after-settings-click")await act(async()=>resolveHistory(rows));
+    setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);protocol.engineAvailable=true;setRoute(entry);view.rerender(<Scene/>);
+    expect(screen.getByLabelText("定位对话内容")).toHaveValue("设置往返检查，保留这次新的自述");await screen.findByText("此前已经完成的定位回复");expect(protocol.fetch).not.toHaveBeenCalled();
+  });
+  it("真实SDK前轮已完成后，新编辑的未发送输入仍能随模型设置往返保留",async()=>{
+    protocol.engineAvailable=true;
+    protocol.fetch.mockResolvedValueOnce(new Response('data: {"type":"start","messageId":"completed-assistant"}\n\ndata: {"type":"text-start","id":"completed-text"}\n\ndata: {"type":"text-delta","id":"completed-text","delta":"前轮完成"}\n\ndata: {"type":"text-end","id":"completed-text"}\n\ndata: {"type":"finish","finishReason":"stop"}\n\ndata: [DONE]\n\n',{headers:{"content-type":"text/event-stream","x-vercel-ai-ui-message-stream":"v1","x-conversation-id":"completed-conversation","x-source-message-id":"completed-source","x-execution-task-id":"completed-execution"}}));
+    const view=render(<Scene/>);fireEvent.click(screen.getByLabelText("提交提示给 Copilot"));await waitFor(()=>expect(protocol.live.chat.status).toBe("ready"));await screen.findByText("前轮完成");expect(protocol.fetch).toHaveBeenCalledOnce();
+    fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"前轮完成以后我重新写的自述"}});protocol.engineAvailable=false;view.rerender(<Scene/>);fireEvent.click(screen.getByRole("link",{name:"模型设置"}));
+    setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);protocol.engineAvailable=true;setRoute(entry);view.rerender(<Scene/>);
+    expect(screen.getByLabelText("定位对话内容")).toHaveValue("前轮完成以后我重新写的自述");expect(protocol.fetch).toHaveBeenCalledOnce();
+  });
+  it.each(["window-still-settings","equivalent-query-encoding"])("真实路由返回%s时按当前React路由验证原入口，不丢弃已捕获草稿",async mode=>{
+    const query=new URLSearchParams({copilot:"open",surface:"positioning",fn:"positioning.generate",scope:"surface:positioning",prefill:"保留空格 source prompt"});const original="/positioning?"+query.toString();setRoute(original);
+    const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"真实路由提交时序不能丢掉本段草稿"}});fireEvent.click(screen.getByRole("link",{name:"模型设置"}));setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);
+    previewNavigation.pathname="/positioning";previewNavigation.search=query.toString();
+    if(mode==="equivalent-query-encoding")window.history.replaceState(null,"",original.replaceAll("+","%20"));
+    view.rerender(<Scene/>);expect(screen.getByLabelText("定位对话内容")).toHaveValue("真实路由提交时序不能丢掉本段草稿");
+    window.history.replaceState(null,"",original);view.rerender(<Scene/>);expect(screen.getByLabelText("定位对话内容")).toHaveValue("真实路由提交时序不能丢掉本段草稿");expect(protocol.fetch).not.toHaveBeenCalled();
+  });
+  it("完整查询保留重复键顺序，不能把另一个入口当作原设置返回",async()=>{
+    setRoute(entry+"&selId=first&selId=second");const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"重复键入口的原草稿"}});fireEvent.click(screen.getByRole("link",{name:"模型设置"}));setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);
+    setRoute(entry+"&selId=second&selId=first");view.rerender(<Scene/>);expect(screen.getByLabelText("定位对话内容")).not.toHaveValue("重复键入口的原草稿");expect(protocol.fetch).not.toHaveBeenCalled();
+  });
+  it("hash仅定位页面片段，同一路径和完整查询的设置返回仍保留聊天草稿",async()=>{
+    setRoute(entry+"#positioning-discovery");const view=render(<Scene/>);fireEvent.change(screen.getByLabelText("定位对话内容"),{target:{value:"页面滚动片段不改变聊天归属"}});fireEvent.click(screen.getByRole("link",{name:"模型设置"}));setRoute("/settings?highlight=assistant-engine");view.rerender(<Scene/>);
+    setRoute(entry+"#positioning-profile");view.rerender(<Scene/>);expect(screen.getByLabelText("定位对话内容")).toHaveValue("页面滚动片段不改变聊天归属");expect(protocol.fetch).not.toHaveBeenCalled();
+  });
+});
+
 describe("独立预览的定位专用对话", () => {
   function openPositioning() {
     previewNavigation.pathname = "/positioning";
@@ -460,6 +542,33 @@ describe("T-1070 actual composer component / SDK boundary", () => {
   function NoEditorComposer({ request }: { request?: any }) {
     return <DraftChatRequestProvider><AICopilotContent viewModel={viewModel} embed={{ ...embed, request }} /></DraftChatRequestProvider>;
   }
+  it("T-1407 真实SDK失败后新对话清除旧错误，空会话不会永久显示恢复",async()=>{
+    protocol.actualSdk=true;protocol.sessionRegistry=new Map();
+    protocol.fetch.mockResolvedValue(new Response("CHAT_MODEL_RESPONSE_INTERRUPTED",{status:503,headers:{"x-conversation-id":"original-conversation","x-source-message-id":"original-user","x-execution-task-id":"original-execution"}}));
+    render(<NoEditorComposer/>);const user=userEvent.setup();
+    await user.type(screen.getByLabelText("我能帮你做什么"),"梳理账号定位");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await waitFor(()=>expect(protocol.live.chat.status).toBe("error"));
+    await user.click(screen.getByRole("button",{name:/新对话/}));
+    await waitFor(()=>expect(protocol.live.chat.error).toBeUndefined());
+    expect(protocol.live.chat.messages).toHaveLength(0);expect(screen.queryByText("自动恢复中")).toBeNull();expect(protocol.fetch).toHaveBeenCalledOnce();
+  });
+  it("T-1408 真实SDK和真实task-control仅在点击继续后携原三元回执恢复",async()=>{
+    const {createChatTaskControl}=await import("./chat-task-control");
+    protocol.actualSdk=true;protocol.sessionRegistry=new Map();
+    const headers={"content-type":"text/event-stream","x-vercel-ai-ui-message-stream":"v1","x-conversation-id":"original-conversation","x-source-message-id":"original-user","x-execution-task-id":"original-execution"};
+    protocol.fetch.mockResolvedValueOnce(new Response('data: {"type":"start","messageId":"chat:original-user"}\n\ndata: {"type":"error","errorText":"CHAT_MODEL_RESPONSE_INTERRUPTED"}\n\ndata: [DONE]\n\n',{headers}));
+    protocol.fetch.mockResolvedValueOnce(new Response('data: {"type":"start","messageId":"chat:original-user"}\n\ndata: {"type":"text-start","id":"recovered"}\n\ndata: {"type":"text-delta","id":"recovered","delta":"你最希望帮助哪类人？"}\n\ndata: {"type":"text-end","id":"recovered"}\n\ndata: {"type":"finish","finishReason":"stop"}\n\ndata: [DONE]\n\n',{headers}));
+    vi.stubGlobal("fetch",protocol.fetch);
+    render(<NoEditorComposer/>);protocol.live.control=createChatTaskControl();const user=userEvent.setup();
+    await user.type(screen.getByLabelText("我能帮你做什么"),"从我的经验梳理定位");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await screen.findByText("本轮生成已暂停");
+    await act(async()=>{await new Promise(resolve=>setTimeout(resolve,1100));});expect(protocol.fetch).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("button",{name:"继续原任务"}));
+    await screen.findByText("你最希望帮助哪类人？");
+    expect(protocol.fetch).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(protocol.fetch.mock.calls[1][1].body).originalTask).toEqual({conversationId:"original-conversation",sourceMessageId:"original-user",executionTaskId:"original-execution",intent:"resume"});
+    expect(protocol.live.chat.messages.filter((message:any)=>message.role==="user")).toHaveLength(1);
+  });
   beforeEach(() => {
     prepare = vi.fn(async () => structuredClone(target));
   });
@@ -1089,6 +1198,59 @@ describe("T1308 真实SDK历史意图归属",()=>{
  async function evidence(name:string,empty:any,extra:Record<string,unknown>={}){if(screen.queryByLabelText("我能帮你做什么"))await reflectActual();const live=protocol.live;const value={name,messagesReferenceChanged:live.chat.messages!==empty,messages:live.chat.messages,conversationId:live.conversationId,pointer:localStorage.getItem(pointerKey()),prompt:(screen.queryByLabelText("我能帮你做什么") as HTMLTextAreaElement|null)?.value,reads:protocol.listMessages.mock.calls,listReads:protocol.listConversations.mock.calls,dom:document.body.innerHTML,...extra};const dir=process.env.T1308_EVIDENCE_DIR;if(dir){const allowed=path.resolve(process.cwd(),"../docs/verification/t1308/runtime");if(!path.resolve(dir).startsWith(allowed+path.sep))throw Error("T1308_EVIDENCE_PATH_REQUIRED");mkdirSync(dir,{recursive:true});writeFileSync(path.join(dir,name+".json"),JSON.stringify(value,null,2)+"\n");writeFileSync(path.join(dir,name+".html"),document.body.innerHTML);}return value;}
  async function expectSelected(id:string,empty:any,name:string){const state=await evidence(name,empty);expect.soft(state.messagesReferenceChanged).toBe(true);expect.soft(state.messages.map((x:any)=>x.id)).toEqual(rows(id).map(x=>x.id));expect.soft(state.conversationId).toBe("history-"+id);expect.soft(state.pointer).toBe("history-"+id);expect.soft(screen.queryByText("会话"+id+"的真实原话",{exact:true})).not.toBeNull();await userEvent.setup().click(screen.getByRole("button",{name:"历史记录"}));expect.soft(document.querySelector('[data-slot="copilot-history-item"][data-active="true"]')?.getAttribute("data-conversation-id")).toBe("history-"+id);await userEvent.setup().click(screen.getByRole("button",{name:"历史记录"}));}
  beforeEach(()=>actual());
+ it("T-1408 真实SDK新对话不接纳旧流收尾时的迟到内容",async()=>{
+  let finishAbort!:()=>void,lateChunk!:()=>void;
+  protocol.fetch.mockImplementation(()=>Promise.resolve(new Response(new ReadableStream({start(controller){
+   const encoder=new TextEncoder();
+   controller.enqueue(encoder.encode('data: {"type":"start","messageId":"old-assistant"}\n\ndata: {"type":"text-start","id":"text-old"}\n\ndata: {"type":"text-delta","id":"text-old","delta":"旧回复"}\n\n'));
+   lateChunk=()=>controller.enqueue(encoder.encode('data: {"type":"text-delta","id":"text-old","delta":"迟到收尾"}\n\n'));
+   finishAbort=()=>controller.error(new DOMException("旧观察结束","AbortError"));
+  }}),{headers:{"content-type":"text/event-stream","x-vercel-ai-ui-message-stream":"v1","x-conversation-id":"history-A","x-source-message-id":"history-A-user","x-execution-task-id":"execution-A"}})));
+  render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"旧请求");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+  await waitFor(()=>expect(protocol.live.chat.status).toBe("streaming"));
+  await user.click(screen.getByRole("button",{name:"新对话"}));
+  await settle(lateChunk);await settle(finishAbort);
+  await waitFor(()=>expect(protocol.live.chat.status).toBe("ready"));
+  expect(protocol.live.chat.messages).toEqual([]);expect(protocol.live.conversationId).toBeNull();
+  expect(screen.queryByText(/迟到收尾/)).toBeNull();expect(protocol.fetch).toHaveBeenCalledOnce();
+ });
+ it.each(["submitted","streaming"])("T-1408 真实SDK在%s点击历史等待原观察退出后进入选择会话",async phase=>{
+  let finishAbort!:()=>void;let aborted=false;
+  protocol.fetch.mockImplementation((_input,init)=>{
+   init.signal.addEventListener("abort",()=>{aborted=true;},{once:true});
+   if(phase==="submitted")return new Promise<Response>((_resolve,reject)=>{finishAbort=()=>reject(new DOMException("旧观察结束","AbortError"));});
+   const encoder=new TextEncoder();
+   return Promise.resolve(new Response(new ReadableStream({start(controller){
+    controller.enqueue(encoder.encode('data: {"type":"start","messageId":"old-assistant"}\n\ndata: {"type":"text-start","id":"text-old"}\n\ndata: {"type":"text-delta","id":"text-old","delta":"旧任务部分回复"}\n\n'));
+    finishAbort=()=>controller.error(new DOMException("旧观察结束","AbortError"));
+   }}),{headers:{"content-type":"text/event-stream","x-vercel-ai-ui-message-stream":"v1","x-conversation-id":"history-A","x-source-message-id":"history-A-user","x-execution-task-id":"execution-A"}}));
+  });
+  protocol.listMessages.mockImplementation(async({params}:any)=>rows(params.conversationId.endsWith("B")?"B":"A"));
+  render(<Composer/>);const user=userEvent.setup();
+  await user.type(screen.getByLabelText("我能帮你做什么"),"原任务尚在进行");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+  await waitFor(()=>expect(protocol.live.chat.status).toBe(phase));
+  const session=protocol.live;session.control.release=vi.fn();session.control.cancel=vi.fn();
+  await user.click(screen.getByRole("button",{name:"历史记录"}));await user.click(await screen.findByRole("menuitem",{name:/历史会话B/}));
+  expect(aborted).toBe(true);expect(protocol.listMessages).not.toHaveBeenCalled();
+  await settle(finishAbort);await screen.findByText("会话B的真实原话");
+  expect(session.conversationId).toBe("history-B");expect(session.chat.error).toBeUndefined();
+  expect(session.control.cancel).not.toHaveBeenCalled();expect(protocol.fetch).toHaveBeenCalledOnce();
+  expect(session.chat.messages.map((row:any)=>row.id)).toEqual(rows("B").map(row=>row.id));
+ });
+ it.each(["CHAT_MODEL_RESPONSE_INTERRUPTED","event connection interrupted"])("T-1407 真实SDK历史切换清除%s并停止原轮恢复",async failure=>{
+  protocol.fetch.mockResolvedValue(new Response(failure,{status:503,headers:{"x-conversation-id":"history-A","x-source-message-id":"history-A-user","x-execution-task-id":"execution-A"}}));
+  protocol.listMessages.mockImplementation(async({params}:any)=>rows(params.conversationId.endsWith("B")?"B":"A"));
+  render(<Composer/>);const user=userEvent.setup();
+  await user.type(screen.getByLabelText("我能帮你做什么"),"原定位输入");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+  await waitFor(()=>expect(protocol.live.chat.error).toBeInstanceOf(Error));
+  const session=protocol.live,epoch=session.epoch;session.control.release=vi.fn();
+  await pick("B");await screen.findByText("会话B的真实原话");
+  expect(session.control.release).toHaveBeenCalledOnce();expect(session.epoch).toBeGreaterThan(epoch);
+  expect(session.chat.error).toBeUndefined();expect(session.conversationId).toBe("history-B");
+  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,1100));});
+  expect(protocol.fetch).toHaveBeenCalledOnce();expect(screen.queryByText("正在恢复本轮生成")).toBeNull();
+  expect(session.chat.messages.map((row:any)=>row.id)).toEqual(rows("B").map(row=>row.id));
+ });
  it("核心RED 默认A先回后B：真实messages引用、DOM、菜单与指针最终必须B",async()=>{
   const a=deferred(),b=deferred();localStorage.setItem(pointerKey(),"history-A");protocol.listMessages.mockImplementation(({params}:any)=>params.conversationId==="history-A"?a.promise:b.promise);
   render(<Composer/>);await waitFor(()=>expect(protocol.listMessages).toHaveBeenCalledOnce(),{timeout:120000});const empty=protocol.live.chat.messages;await pick("B");await settle(()=>a.resolve(rows("A")));await evidence("core1-after-A",empty);await settle(()=>b.resolve(rows("B")));await expectSelected("B",empty,"core1-final");
@@ -1146,6 +1308,7 @@ describe("T1308 真实SDK历史意图归属",()=>{
  });
  it("明确历史读取失败保原A和未发送输入，不触发模型",async()=>{
   localStorage.setItem(pointerKey(),"history-A");protocol.listMessages.mockImplementation(({params}:any)=>params.conversationId==="history-A"?Promise.resolve(rows("A")):Promise.reject(Error("B读取拒绝")));render(<Composer/>);await screen.findByText("会话A的真实原话");fireEvent.change(screen.getByLabelText("我能帮你做什么"),{target:{value:"历史失败仍保留我的输入"}});await pick("B");await reflectActual();expect(protocol.live.conversationId).toBe("history-A");expect(localStorage.getItem(pointerKey())).toBe("history-A");expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("历史失败仍保留我的输入");expect(protocol.fetch).not.toHaveBeenCalled();
+  expect(await screen.findByText("历史记录未切换")).toBeInTheDocument();expect(screen.queryByText("自动恢复中")).toBeNull();
  });
  it.each(["manual","auto"])("实际公共submit %s在prepare await之前使旧历史失效",async mode=>{
   const a=deferred(),prepared=deferred();localStorage.setItem(pointerKey(),"history-A");protocol.listMessages.mockReturnValue(a.promise);

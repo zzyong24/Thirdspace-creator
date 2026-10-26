@@ -34,7 +34,17 @@ describe('T-964 引导真实数据与持久进度',()=>{
   client.getOnboarding.mockResolvedValue({...record(),completedSteps:['first-project'],updatedAt:'2026-09-13'});client.listProjects.mockRejectedValue(Error('offline'));expect((await loadState()).completedSteps).toContain('first-project');
  });
  it('保存失败可识别且不假称落库',async()=>{
-  client.patchOnboarding.mockRejectedValue(Error('offline'));expect((await loadState()).persistenceError).toContain('暂未保存');
+  client.getPositioningCenter.mockResolvedValue({profile:{id:'positioning-ready'}});
+  client.patchOnboarding.mockRejectedValue(Error('offline'));
+  const state=await loadState();
+  expect(client.patchOnboarding).toHaveBeenCalledTimes(1);
+  expect(client.patchOnboarding).toHaveBeenCalledWith({params:{accountId:'a'},query:undefined,body:{completedSteps:['positioning-profile'],origin:null}});
+  expect(state.hasPositioningProfile).toBe(true);expect(state.persistenceError).toContain('暂未保存');
+  expect(state.completedSteps).toEqual([]);expect(state.preferences?.completedSteps).toEqual([]);expect(state.preferences?.updatedAt).toBeNull();
+ });
+ it('只有已绑定账号但无新增必做完成信号时不写入进度',async()=>{
+  const state=await loadState();expect(state.douyinLoggedIn).toBe(true);expect(state.hasPositioningProfile).toBe(false);
+  expect(client.patchOnboarding).not.toHaveBeenCalled();expect(state.completedSteps).toEqual([]);expect(state.persistenceError).toBeUndefined();
  });
  it('旧全局偏好仅迁入第一个当前账号',async()=>{
   window.localStorage.setItem('creatoros:onboarding:hidden','1');expect((await loadState()).preferences?.hidden).toBe(true);expect(window.localStorage.getItem('creatoros:onboarding:legacy-migrated-account')).toBe('a');current.mockReturnValue('b');client.getOnboarding.mockResolvedValue({...record(),accountId:'b'});client.getAccount.mockResolvedValue({id:'b'});client.patchOnboarding.mockImplementation(async({body})=>({...record(),accountId:'b',...body}));expect((await loadState()).preferences?.hidden).toBe(false);

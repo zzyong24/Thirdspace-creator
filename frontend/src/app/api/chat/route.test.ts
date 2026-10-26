@@ -15,6 +15,7 @@ const durableSubmit = vi.fn();
 const durableSubscribe = vi.fn();
 const durableGet = vi.fn();
 const durableCommand = vi.fn();
+const getTask = vi.fn();
 const prepareChatReply = vi.fn();
 const dispatchDouyinShare = vi.fn();
 const readChatAttachment = vi.fn();
@@ -38,6 +39,7 @@ vi.mock("@/server/persistence-client", () => ({
       createMessage,
       getConversation,
       listMessages,
+      getTask,
     },
     resolveEffectiveSkillSnapshot,
     resolveModelSpec: vi.fn(),
@@ -105,6 +107,41 @@ function userMessage(text: string) {
   return { id: "u-1", role: "user", parts: [{ type: "text", text }] };
 }
 
+describe("T-1407 原定位任务恢复",()=>{
+  const originalTask={executionTaskId:"execution-original",conversationId:"conv-existing",sourceMessageId:"server-user",intent:"observe"};
+  function original(status:string,errorCode:string|null=null){
+    durableGet.mockResolvedValue({id:originalTask.executionTaskId,kind:"ai_task",ownerType:"ai_task",ownerId:"ai-original",runtimeStatus:status,status,errorCode});
+    getTask.mockResolvedValue({id:"ai-original",taskType:"copilot.assist",executionTaskId:originalTask.executionTaskId,inputData:{kind:"chat.run",conversationId:originalTask.conversationId,sourceMessageId:originalTask.sourceMessageId}});
+    listMessages.mockResolvedValue([{id:"server-user",role:"user",content:"原请求",modelMetadata:{chatTaskId:"ai-original"}}]);
+    durableSubscribe.mockImplementation(async function*(){yield {events:[],hasMore:false,status};});
+  }
+  it.each(["running","unknown_result","cancelled"])("观察%s原任务不提交、不恢复、不另建会话",async status=>{
+    original(status,status==="unknown_result"?"MODEL_RESULT_UNKNOWN":null);
+    const response=await POST(chatReq({originalTask}));expect(response.status).toBe(200);await response.text();
+    expect(durableSubscribe).toHaveBeenCalledWith(expect.anything(),"execution-original",expect.anything());
+    expect(durableSubmit).not.toHaveBeenCalled();expect(durableCommand).not.toHaveBeenCalled();expect(createMessage).not.toHaveBeenCalled();expect(createConversation).not.toHaveBeenCalled();
+  });
+  it("仅明确恢复原模型暂停调用现有安全resume，再订阅同一任务",async()=>{
+    original("unknown_result","MODEL_RESULT_UNKNOWN");durableCommand.mockResolvedValue({id:"execution-original",runtimeStatus:"queued"});
+    const response=await POST(chatReq({originalTask:{...originalTask,intent:"resume"}}));expect(response.status).toBe(200);await response.text();
+    expect(durableCommand).toHaveBeenCalledWith(expect.anything(),"execution-original","resume");expect(durableSubmit).not.toHaveBeenCalled();
+  });
+  it.each(["CHAT_TOOL_RESULT_UNKNOWN","CHAT_RESULT_UNCONFIRMED"])("未知工具%s拒绝恢复",async code=>{
+    original("unknown_result",code);
+    const response=await POST(chatReq({originalTask:{...originalTask,intent:"resume"}}));expect(response.status).toBe(409);
+    expect(durableCommand).not.toHaveBeenCalled();expect(durableSubscribe).not.toHaveBeenCalled();expect(durableSubmit).not.toHaveBeenCalled();
+  });
+  it("错误码为模型未知但后端账本拒绝混合工具时保持暂停，不回退提交",async()=>{
+    original("unknown_result","MODEL_RESULT_UNKNOWN");durableCommand.mockRejectedValue(new Error("账本存在未确认工具"));
+    const response=await POST(chatReq({originalTask:{...originalTask,intent:"resume"}}));expect(response.status).toBe(409);
+    expect(durableCommand).toHaveBeenCalledTimes(1);expect(durableSubscribe).not.toHaveBeenCalled();expect(durableSubmit).not.toHaveBeenCalled();expect(createMessage).not.toHaveBeenCalled();
+  });
+  it("三元身份不匹配拒绝观察，无新任务",async()=>{
+    original("running");getTask.mockResolvedValue({id:"ai-original",taskType:"copilot.assist",executionTaskId:"execution-original",inputData:{kind:"chat.run",conversationId:"other",sourceMessageId:"server-user"}});
+    const response=await POST(chatReq({originalTask}));expect(response.status).toBe(409);expect(durableSubscribe).not.toHaveBeenCalled();expect(durableSubmit).not.toHaveBeenCalled();
+  });
+});
+
 function minimalTextPdf(text: string): Uint8Array {
   const escaped = text.replace(/([\\()])/g, "\\$1");
   const stream = `BT\n/F1 18 Tf\n72 720 Td\n(${escaped}) Tj\nET`;
@@ -135,6 +172,7 @@ const MINIMAL_DOCX_BASE64 =
   "UEsDBAoAAAAIAAwKB115bjPX6AAAAK0BAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbH1QyU7DMBD9FWuuKHHggBCK0wPLETiUDxjZk8SqN3nc0v49Tlt6QIXjzFv1+tXeO7GjzDYGBbdtB4KCjsaGScHn+rV5AMEFg0EXAyk4EMNq6NeHRCyqNrCCuZT0KCXrmTxyGxOFiowxeyz1zJNMqDc4kbzrunupYygUSlMWDxj6Zxpx64p42df3qUcmxyCeTsQlSwGm5KzGUnG5C+ZXSnNOaKvyyOHZJr6pBJBXExbk74Cz7r0Ok60h8YG5vKGvLPkVs5Em6q2vyvZ/mys94zhaTRf94pZy1MRcF/euvSAebfjpL49zD99QSwMECgAAAAAADAoHXQAAAAAAAAAAAAAAAAYAAABfcmVscy9QSwMECgAAAAgADAoHXZv9N+qtAAAAKQEAAAsAAABfcmVscy8ucmVsc43POw7CMAwG4KtE3mlaBoRQ0y4IqSsqB7ASN61oHkrCo7cnAwNFDIy2f3+W6/ZpZnanECdnBVRFCYysdGqyWsClP232wGJCq3B2lgQsFKFt6jPNmPJKHCcfWTZsFDCm5A+cRzmSwVg4TzZPBhcMplwGzT3KK2ri27Lc8fBpwNpknRIQOlUB6xdP/9huGCZJRydvhmz6ceIrkWUMmpKAhwuKq3e7yCzwpuarF5sXUEsDBAoAAAAAAAwKB10AAAAAAAAAAAAAAAAFAAAAd29yZC9QSwMECgAAAAgADAoHXXQLjfvZAAAA/wAAABEAAAB3b3JkL2RvY3VtZW50LnhtbEWOsU7DMBCGXyXyTh06IBQl6cbMAGI2tmkjxXeRzxC6IQRsqExIwErXdmOJ+jTEUvMW2GHo8p3uP/2fLp/dmzq505YqhIIdT1KWaJCoKpgX7PLi7OiUJeQEKFEj6IItNbFZmbeZQnlrNLgkCICytmAL55qMc5ILbQRNsNEQbjdojXBhtXPeolWNRamJgt/UfJqmJ9yIClhUXqNaxtlE2AhXXoXK8PHUdz9+te279X7b+dW7/9r5l+fh+21Yb/zms9+9/j485jwWIu3IUUNaunPLx+Dfzw+/l39QSwECFAAKAAAACAAMCgddeW4z1+gAAACtAQAAEwAAAAAAAAAAAAAAAAAAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAAoAAAAAAAwKB10AAAAAAAAAAAAAAAAGAAAAAAAAAAAAEAAAABkBAABfcmVscy9QSwECFAAKAAAACAAMCgddm/036q0AAAApAQAACwAAAAAAAAAAAAAAAAA9AQAAX3JlbHMvLnJlbHNQSwECFAAKAAAAAAAMCgddAAAAAAAAAAAAAAAABQAAAAAAAAAAABAAAAATAgAAd29yZC9QSwECFAAKAAAACAAMCgdddAuN+9kAAAD/AAAAEQAAAAAAAAAAAAAAAAA2AgAAd29yZC9kb2N1bWVudC54bWxQSwUGAAAAAAUABQAgAQAAPgMAAAAA";
 
 beforeEach(() => {
+  getTask.mockReset();
   resolveContextFromToken.mockReset();
   resolveContextFromToken.mockResolvedValue({ userId: "u-1" });
   resolveLocalContext.mockReset();

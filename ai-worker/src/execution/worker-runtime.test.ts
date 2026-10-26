@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { GenerationFailure } from "./generation-error";
 import { createExecutionWorker, type WorkerDependencies } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
+import {observeModelStreamFailure} from '../runtime/model-stream-observation';
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
 function intelligenceTextContext(){
  return {kind:"model.structured",intelligenceText:"rewrite_only",operationKey:"intelligence:original",capability:"topic.generate",skillId:"intelligence.topic-adapted-draft",maxOutputTokens:8192,timeoutMs:600000,
@@ -20,6 +21,43 @@ it("专用正文标签先映射能力与依赖，不被视频/素材/每日选�
  expect(f.messages.find(message=>message.type==="ready")).toMatchObject({capabilities:["intelligence.rewrite-text"]});
  expect(f.generateIntelligenceText).toHaveBeenCalledOnce();expect(f.generateStructured).not.toHaveBeenCalled();expect(f.runVideo).not.toHaveBeenCalled();expect(f.runAssetProcessing).not.toHaveBeenCalled();
  expect(f.messages.find(message=>message.type==="call"&&message.port==="commitResult")).toMatchObject({data:{outcome:"succeeded",callId:"original-model-call",text:"正文"}});
+});
+it('T1407 正式执行入口关联模型诊断，仍按原未知结果提交且不重放',async()=>{
+ const observeException=vi.fn(),generateIntelligenceText=vi.fn(async()=>{
+  observeModelStreamFailure({message:'connection reset with private-token',statusCode:200,output:true});
+  throw new GenerationFailure('unknown_result','MODEL_RESULT_UNKNOWN');
+ });
+ const f=await intelligenceRuntime({observeException,generateIntelligenceText});
+ expect(generateIntelligenceText).toHaveBeenCalledOnce();
+ expect(observeException).toHaveBeenCalledWith(expect.objectContaining({referenceId:execution.executionTaskId,code:'WORKER_MODEL_STREAM_INTERRUPTED',message:'status=200 output=true hint=transport',stack:''}));
+ expect(JSON.stringify(observeException.mock.calls)).not.toContain('private-token');
+ expect(f.messages.find(message=>message.type==='call' && message.port==='commitResult')).toMatchObject({data:{outcome:'unknown_result',errorCode:'MODEL_RESULT_UNKNOWN'}});
+});
+it.each(['cancel','close'] as const)('T1407 %s 后迟到的模型诊断不再发送，也不提交结果',async action=>{
+ const messages:WorkerMessage[]=[],observeException=vi.fn();
+ let release:()=>void=()=>{},lateObservationAttempted=false;
+ const generateIntelligenceText=vi.fn(async()=>{
+  await new Promise<void>(resolve=>{release=resolve;});
+  observeModelStreamFailure({message:'connection reset private-late-token',statusCode:200,output:true});
+  lateObservationAttempted=true;
+  throw new GenerationFailure('unknown_result','MODEL_RESULT_UNKNOWN');
+ });
+ const worker=createExecutionWorker({generate:vi.fn(),generateIntelligenceText,observeException,send(message){
+  messages.push(message);
+  if(message.type==='call')queueMicrotask(()=>worker.receive({version:1,type:'reply',requestId:message.requestId,ok:true,data:message.port==='readTaskContext'?intelligenceTextContext():message.port==='resolveModelCredential'?{apiFormat:'openai_chat',baseUrl:null,model:'local',token:'secret'}:{}}));
+ }});
+ try{
+  worker.receive({version:1,type:'run',requestId:`late-${action}`,execution,deadlineAt:Date.now()+600000});
+  await vi.waitFor(()=>expect(generateIntelligenceText).toHaveBeenCalledOnce(),{timeout:120000});
+  if(action==='cancel')worker.receive({version:1,type:'cancel',requestId:'cancel-owned-observation',execution});
+  else worker.close();
+  release();
+  await vi.waitFor(()=>expect(lateObservationAttempted).toBe(true),{timeout:120000});
+  if(action==='cancel')await vi.waitFor(()=>expect(messages.find(message=>message.type==='stopped')).toMatchObject({reason:'cancelled'}),{timeout:120000});
+  expect(observeException).not.toHaveBeenCalled();
+  expect(messages.filter(message=>message.type==='call' && message.port==='commitResult')).toHaveLength(0);
+  expect(generateIntelligenceText).toHaveBeenCalledOnce();
+ }finally{release();worker.close();}
 });
 it.each(["generic", "capability-only", "dependency-excluded"])("%s 不获得正文执行权，拒绝发生在凭据/预留前",async mode=>{
  const overrides:Partial<WorkerDependencies>=mode==="generic"?{generateIntelligenceText:undefined}:mode==="capability-only"?{generateIntelligenceText:undefined,capabilities:["intelligence.rewrite-text"]}:{capabilities:["model.structured"]};

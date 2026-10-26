@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createAiService, type AiArtifactsPort } from "./ai.service";
@@ -59,8 +59,24 @@ function makeWiredService(db: Db) {
 
 describe("positioning.generate 采纳真落库 (integration, OQ2)", () => {
   let db: Db;
+  let close: () => Promise<void>;
   beforeEach(async () => {
-    ({ db } = await createDb());
+    const store = await createDb();
+    db = store.db;
+    close = () => store.client.close();
+  });
+  afterEach(async () => { await close?.(); });
+
+  it.each([undefined, { contentScope: "", avoid: "  ", corePain: "", coreValue: "", tone: "\n" }])("T1408 legacy 采纳缺省/空白 facets 不抹掉旧定位，手动明确清空仍有效 (%j)", async (facets) => {
+    const { ai, positioningService } = makeWiredService(db);
+    const original = { persona: "本人", field: "经营", audience: "店主", differentiation: "实践", capabilities: ["演示"], facets: { contentScope: "旧范围", avoid: "旧排除", corePain: "旧痛点", coreValue: "旧价值", tone: "旧语气" } };
+    await positioningService.upsertProfile(ctx, original);
+    const task = await ai.createTask(ctx, { taskType: "positioning.generate", inputData: {} });
+    await ai.recordCandidate(ctx, task.id, { resultType: "positioning_profile", resultData: { suggestion: { ...original, oneLiner: "本人经验", keywords: ["一", "二", "三"], facets } } });
+    await ai.confirmTask(ctx, task.id);
+    expect((await positioningService.getProfile(ctx))?.facets).toMatchObject(original.facets);
+    await positioningService.upsertProfile(ctx, { ...original, facets: { tone: "" } });
+    expect((await positioningService.getProfile(ctx))?.facets.tone).toBe("");
   });
 
   it("confirmTask on a positioning_profile writes a CreatorProfile + an AI PositioningStatement (created_by_type:'ai', ai_task_id) into the real positioning store", async () => {
@@ -81,6 +97,7 @@ describe("positioning.generate 采纳真落库 (integration, OQ2)", () => {
           capabilities: ["拆解", "演示", "复盘"],
           oneLiner: "把最新 AI 论文翻译成你今晚就能跑的代码",
           keywords: ["论文", "代码", "工程化"],
+          facets:{contentScope:"工程案例",avoid:"不做传闻",corePain:"落地困难",coreValue:"可验证步骤",tone:"直接",statusNote:"不应采纳的动态值"},
         },
       },
     });
@@ -94,6 +111,7 @@ describe("positioning.generate 采纳真落库 (integration, OQ2)", () => {
     expect(profile!.persona).toBe("硬核 AI 科普人");
     expect(profile!.field).toBe("AI 工程");
     expect(profile!.capabilities).toEqual(["拆解", "演示", "复盘"]);
+    expect(profile!.facets).toMatchObject({contentScope:"工程案例",avoid:"不做传闻",corePain:"落地困难",coreValue:"可验证步骤",tone:"直接",statusNote:""});
 
     // 2) a NEW statement version is really persisted, tagged created_by_type:'ai' +
     //    ai_task_id = this task — read it back from the 定位中心 page DTO.

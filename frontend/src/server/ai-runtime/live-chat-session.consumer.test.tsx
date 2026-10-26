@@ -22,7 +22,7 @@ function getLiveChatSession(key: string) {
 }
 
 const query='copilot=open&selKind=project&selId=revisit';
-vi.mock('next/navigation',()=>({useSearchParams:()=>new URLSearchParams(query),useRouter:()=>({push:vi.fn(),replace:vi.fn(),refresh:vi.fn()})}));
+vi.mock('next/navigation',()=>({usePathname:()=>'/projects/revisit',useSearchParams:()=>new URLSearchParams(query),useRouter:()=>({push:vi.fn(),replace:vi.fn(),refresh:vi.fn()})}));
 const api=vi.hoisted(()=>({listAITasks:vi.fn(async()=>[]),listConversations:vi.fn(async()=>[]),listMessages:vi.fn(),getPreferences:vi.fn(),getModelRouting:vi.fn(),patchPreferences:vi.fn()}));
 vi.mock('@/lib/contract-client',()=>({client:api}));
 beforeEach(async()=>{
@@ -63,8 +63,8 @@ function frames(status:string,metadataId='original-execution'){
  const prefix=[{type:'start',messageId:'original-assistant'},{type:'text-start',id:'answer'},{type:'text-delta',id:'answer',delta:'等待前已完成的回复'},{type:'text-end',id:'answer'}];
  return [...prefix,{type:'message-metadata',messageMetadata:{execution:{executionTaskId:metadataId,status}}},status==='succeeded'?{type:'finish'}:status==='cancelled'?{type:'abort'}:{type:'error',errorText:'合成错误回执'}];
 }
-function sseResponse(status:string,headerId:string|undefined='original-execution',metadataId='original-execution'){
- return new Response(frames(status,metadataId).map(frame=>`data: ${JSON.stringify(frame)}\n\n`).join('')+'data: [DONE]\n\n',{headers:{'content-type':'text/event-stream','x-vercel-ai-ui-message-stream':'v1','x-conversation-id':'original-conversation',...(headerId?{'x-execution-task-id':headerId}:{})}});
+function sseResponse(status:string,headerId:string|undefined='original-execution',metadataId='original-execution',sourceMessageId?:string){
+ return new Response(frames(status,metadataId).map(frame=>`data: ${JSON.stringify(frame)}\n\n`).join('')+'data: [DONE]\n\n',{headers:{'content-type':'text/event-stream','x-vercel-ai-ui-message-stream':'v1','x-conversation-id':'original-conversation',...(headerId?{'x-execution-task-id':headerId}:{}),...(sourceMessageId?{'x-source-message-id':sourceMessageId}:{})}});
 }
 async function startConsumer(group:string){
  localStorage.setItem(CURRENT_GROUP_KEY,group);
@@ -127,15 +127,18 @@ it('卸载/切scope后迟到waiting metadata只保护原会话，不改新scope'
  expect(getLiveChatSession(key)).toBe(original);
  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{executionTaskId:'original-execution',status:'waiting_user'}});
 });
-it('同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务',async()=>{
+it('完整生产回执下沿原任务observe waiting→succeeded后解除保护，不重新提交或冒充resume',async()=>{
  let submissions=0;
- const request=vi.fn(async(_url:RequestInfo|URL,_init?:RequestInit)=>sseResponse(++submissions===5?'succeeded':'waiting_user'));
+ const request=vi.fn(async(_url:RequestInfo|URL,init?:RequestInit)=>{
+  const body=JSON.parse(init?.body as string) as {messages:UIMessage[]};
+  return sseResponse(++submissions===5?'succeeded':'waiting_user','original-execution','original-execution',body.messages.findLast(message=>message.role==='user')?.id);
+ });
  vi.stubGlobal('fetch',request);
  const {mounted,key,original}=await startConsumer('resume-metadata');
  await waitFor(()=>expect(original.chat.status).toBe('error'));
  expect(request).toHaveBeenCalledTimes(1);
  expect(screen.getByText('自动恢复中')).toBeInTheDocument();
- // main 原流程自动恢复至三次上限，再由用户沿同消息/任务明确继续。
+ // 三次自动重连与明确继续均只观察原任务，不触发模型resume或新submit。
  const continueButton=await screen.findByRole('button',{name:'继续恢复'},{timeout:120000});
  expect(request).toHaveBeenCalledTimes(4);
  expect(original.chat.status).toBe('error');
@@ -147,10 +150,12 @@ it('同消息原ID显式resume waiting→succeeded后解除保护，不自动重
  const sourceId=initial.messages.findLast(message=>message.role==='user')?.id;
  expect(sourceId).toBeTruthy();
  for(const [,init] of request.mock.calls.slice(1)){
-  const body=JSON.parse(init?.body as string) as {trigger:string;conversationId:string;messages:UIMessage[]};
+  const body=JSON.parse(init?.body as string) as {trigger:string;conversationId:string;messages:UIMessage[];originalTask:unknown};
   expect(body.trigger).toBe('regenerate-message');expect(body.conversationId).toBe('original-conversation');
   expect(body.messages.findLast(message=>message.role==='user')?.id).toBe(sourceId);
+  expect(body.originalTask).toEqual({executionTaskId:'original-execution',conversationId:'original-conversation',sourceMessageId:sourceId,intent:'observe'});
  }
+ expect(request.mock.calls.filter(([,init])=>JSON.parse(init?.body as string).trigger==='submit-message')).toHaveLength(1);
  expect(original.control.currentTaskId()).toBe('original-execution');
  expect(original.chat.messages.at(-1)?.id).toBe('original-assistant');
  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{executionTaskId:'original-execution',status:'succeeded'}});
@@ -184,7 +189,11 @@ it('实际停止按钮接受cancel_requested只放弃本地观察，退出后可
  await waitFor(()=>expect(original.chat.status).toBe('ready'));
  expect(running.aborted).toBe(true);
  expect(commands).toHaveLength(1);expect(commands[0]).toMatchObject({id:ENDPOINTS.commandExecutionTasks.id,input:{body:{taskIds:['original-execution'],command:'cancel'}}});
- expect(original.control.executionTaskId).toBeUndefined();expect(original.control.currentTaskId()).toBe('original-execution');
+ expect(original.control.executionTaskId).toBeUndefined();expect(original.control.currentTaskId()).toBeNull();expect(original.control.originalTask).toBeNull();
+ // 确认取消后释放控制引用；旧自动恢复不得创建新请求，原metadata仍保留事实而不伪写终态。
+ const requestCount=vi.mocked(fetch).mock.calls.length;
+ await expect(original.control.fetch('/api/chat',{body:JSON.stringify({trigger:'regenerate-message'})})).rejects.toMatchObject({name:'AbortError'});
+ expect(fetch).toHaveBeenCalledTimes(requestCount);
  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{executionTaskId:'original-execution',status:'running'}});
  mounted.unmount();await act(async()=>{await Promise.resolve();});pressure('explicit-stop');
  expect(getLiveChatSession(key)).not.toBe(original);expect(original.transport).toBeUndefined();

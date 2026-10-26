@@ -19854,6 +19854,94 @@
           "pnpm --dir frontend exec playwright test --config=playwright.t1371.config.ts --workers=1 --retries=0"
         ]
       }
+    },
+    "T-1408": {
+      "task_id": "T-1408",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "write_set": [
+        "frontend/src/features/positioning/**",
+        "frontend/src/features/copilot/positioning-conversation*",
+        "frontend/src/features/copilot/ai-copilot-content*",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/copilot/chat-task-control*",
+        "frontend/src/server/chat-execution-recovery.ts",
+        "frontend/src/server/chat-observation-recovery.integration.test.ts",
+        "frontend/src/app/api/chat/route*",
+        "backend/src/modules/ai-runtime/positioning-runner*",
+        "backend/src/modules/ai-runtime/positioning-without-platform.integration.test.ts",
+        "backend/src/modules/ai/calibration-positioning-adoption.service.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/integration/calibration-positioning-adoption.test.ts",
+        "ai-worker/src/prompt/templates/chatbox-surfaces*",
+        "ai-worker/src/prompt/templates/positioning-generate*",
+        "ai-worker/src/runtime/model-stream-observation*",
+        "ai-worker/src/runtime/pi-provider*",
+        "ai-worker/src/execution/worker-runtime*",
+        "docs/features/t1408-positioning-without-douyin-login.md",
+        "docs/features/t1408-positioning-without-douyin-login.review.md",
+        "docs/verification/t1408/**",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1408.md",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "backend/src/modules/ai/ai.positioning-confirm.integration.test.ts",
+        "frontend/src/features/onboarding/onboarding-card*",
+        "frontend/src/features/onboarding/onboarding-steps*",
+        "frontend/src/features/onboarding/group-onboarding-card.test.tsx",
+        "frontend/src/features/platform-account/account-group-manager*",
+        "frontend/src/components/shell/zero-account-guidance*",
+        "frontend/src/server/chat-execution-stream.test.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "PROJECT.md",
+        "orchestrator/.lessons-stats.json",
+        "frontend/src/features/platform-account/account-manager-interactions.test.tsx",
+        "frontend/src/features/onboarding/onboarding-data.test.ts"
+      ],
+      "read_set": [
+        "docs/features/t1408-positioning-without-douyin-login.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/engineering/agent-rules.md",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "backend/src/modules/ai-runtime/chat-structured-tool-nodes.ts",
+        "backend/src/modules/ai-runtime/creative-context.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/modules/positioning/positioning.service.ts",
+        "frontend/playwright.config.ts",
+        "frontend/src/server/verdict-token-gate.ts",
+        "frontend/scripts/desktop/package.mjs",
+        "frontend/src-tauri/build.rs"
+      ],
+      "exclusive_resources": [
+        "t1408-isolated-local-worktree-disjoint-product-writes",
+        "t1408-central-process-files-parent-authorized-serial-integration",
+        "preserve-original-installers-business-data-and-browser-profiles",
+        "user-authorized-feature-source-push-and-main-merge-after-required-checks-no-new-keys-or-integrity-bypass",
+        "real-provider-only-in-new-isolated-workspace-after-configured-no-old-secret-access"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/onboarding/onboarding-card.test.tsx src/features/onboarding/onboarding-steps.test.ts src/features/onboarding/group-onboarding-card.test.tsx src/features/platform-account/account-group-manager.test.tsx src/components/shell/zero-account-guidance.test.tsx src/features/positioning src/features/copilot/positioning-conversation.test.ts src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-task-control.test.ts src/server/chat-observation-recovery.integration.test.ts src/server/chat-execution-stream.test.ts src/app/api/chat/route.test.ts src/server/ai-runtime/live-chat-session.consumer.test.tsx src/features/platform-account/account-manager-interactions.test.tsx src/features/onboarding/onboarding-data.test.ts --retry=0",
+          "pnpm --dir backend exec vitest run src/modules/ai-runtime/positioning-without-platform.integration.test.ts src/modules/ai-runtime/positioning-runner.test.ts src/modules/ai/ai.positioning-confirm.integration.test.ts src/integration/calibration-positioning-adoption.test.ts --maxWorkers=1 --retry=0",
+          "pnpm --dir ai-worker exec vitest run src/prompt/templates/chatbox-surfaces.test.ts src/prompt/templates/positioning-generate.test.ts src/runtime/pi-provider-diagnostic.test.ts src/runtime/model-stream-observation.test.ts src/execution/worker-runtime.test.ts --retry=0",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "pnpm --dir backend exec tsc --noEmit",
+          "pnpm --dir ai-worker exec tsc --noEmit",
+          "pnpm --dir ai-worker run build",
+          "pnpm --dir frontend run build",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }
