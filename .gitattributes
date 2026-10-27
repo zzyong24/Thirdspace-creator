@@ -1,2 +1,7 @@
 /backend/drizzle/**/*.sql text eol=lf
 /backend/drizzle/**/_journal.json text eol=lf
+# 超时门审计的冻结字节与pnpm补丁哈希必须跨平台保持Git对象的LF。
+/frontend/public/reference-editors/kuaitu/js/index.770609ce.js text eol=lf
+/frontend/public/reference-editors/kuaitu/native/native.js text eol=lf
+/patches/hyperframes@0.7.54.patch text eol=lf
+/docs/**/*.md text eol=lf

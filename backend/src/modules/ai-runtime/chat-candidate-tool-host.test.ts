@@ -1,18 +1,19 @@
 import {it,expect,vi} from "vitest";
+import {z} from "zod";
 import {buildChatTools,type ChatToolDeps} from "./chat-tools";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {createChatTaskToolHost} from "./chat-task-tool-host";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
 import type {ContextReaders} from "./chat-assembly-types";
 type Restored=Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>["read"]>>;
-async function fixture(projectId:string|null=null){
+async function fixture(projectId:string|null=null,receiptVersion?:1){
  const context={userId:"u",accountId:"a",requestId:"r",source:"user" as const};
  const execution={executionTaskId:"task",attempt:1,fenceToken:"fence"},signal=new AbortController().signal;
  const tools=buildChatTools(["learning.capture","brief.fill"],{} as ChatToolDeps);
  const definitions=(await prepareChatToolDefinitions(tools)).definitions;
  const snapshot={snapshotVersion:1,userId:"u",accountId:"a",resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:[]};
  // 这里只隔离工厂边界；真实宿主 reader 和领域回读另由集成覆盖。
- const restored={context:structuredClone(context),modelInput:{tools:definitions},hostContext:{chatContext:{surface:"review",projectId},skillSnapshot:snapshot}} as unknown as Restored;
+ const restored={...(receiptVersion===1?{toolFailureReceiptVersion:1 as const}:{}),context:structuredClone(context),modelInput:{tools:definitions},hostContext:{chatContext:{surface:"review",projectId},skillSnapshot:snapshot}} as unknown as Restored;
  const read=vi.fn(async()=>structuredClone(restored));
  const getProjectBrief=vi.fn(async()=>({targetAudience:"原观众"}));
  const resolve=createChatTaskToolHost({read},{getProjectBrief} as unknown as ContextReaders);
@@ -64,4 +65,16 @@ it("策划读取期间取消，不返回可采纳的成功候选",async()=>{
  f.getProjectBrief.mockImplementation(async()=>{controller.abort();return {targetAudience:"原观众"};});
  expect(await brief.execute!(f.context,{targetAudience:"建议"},{...f.scope,signal:controller.signal})).toMatchObject({status:"error",sideEffect:"none",error:{code:"cancelled",retryable:false}});
  expect(f.getProjectBrief).toHaveBeenCalledTimes(1);
+});
+
+
+it.each([{}, {targetAudience:'  ',coreMessage:'\n'}])('T1406 正式组合宿主消费新任务冻结版本，空brief为invalid_input %j',async input=>{
+ const f=await fixture('project-a',1),brief=(await f.resolve(f.context,f.restored.modelInput,f.execution,f.signal))['brief.fill']!;
+ expect(await brief.execute!(f.context,z.json().parse(input),f.scope)).toMatchObject({status:'error',sideEffect:'none',error:{code:'invalid_input',retryable:false},data:{kind:'brief.fill'}});
+ expect(f.getProjectBrief).not.toHaveBeenCalled();
+});
+it('T1406 旧候选任务缺回执版本不升级信任，空brief保留通用no_evidence',async()=>{
+ const f=await fixture('project-a'),brief=(await f.resolve(f.context,f.restored.modelInput,f.execution,f.signal))['brief.fill']!;
+ expect(await brief.execute!(f.context,{},f.scope)).toMatchObject({status:'error',sideEffect:'none',error:{code:'no_evidence',retryable:false},data:{kind:'brief.fill'}});
+ expect(f.getProjectBrief).not.toHaveBeenCalled();
 });

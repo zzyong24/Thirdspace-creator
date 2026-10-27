@@ -20,6 +20,26 @@ afterEach(()=>{cleanup();localStorage.clear();vi.unstubAllGlobals();});
 beforeEach(()=>{vi.resetAllMocks();localStorage.clear();localStorage.setItem('creatoros:current-group','group-original');localStorage.setItem('creatoros:current-account','filtered-account');requests.length=0;
  vi.stubGlobal('fetch',vi.fn(async(_url:unknown,init:RequestInit)=>{const packet=JSON.parse(init.body as string);requests.push({input:packet,init});const method=packet.id===ENDPOINTS.readPredictionLockSource.id?mocks.read:packet.id===ENDPOINTS.startPredictionLock.id?mocks.start:packet.id===ENDPOINTS.confirmTask.id?mocks.confirm:packet.id===ENDPOINTS.commandExecutionTasks.id?mocks.command:null;if(!method)throw Error('UNEXPECTED_ENDPOINT_'+packet.id);const value=await method(packet.input);return Response.json({data:value,meta:{requestId:'controlled-test'}});}));mocks.read.mockResolvedValue(state('available'));mocks.start.mockResolvedValue(state('running',{diagnoseTaskId:'task-original',task:task('running') as any}));mocks.confirm.mockResolvedValue(task('succeeded'));});
 describe('原消息盲预测卡的只读恢复与用户确认',()=>{
+ it('复盘导航携带原回执项目与预测定位，不跳旧设置页或页面VM项目',async()=>{
+  mocks.read.mockResolvedValue(state('locked',{predictionId:'prediction-original'}));render(<ChatDiagnosisCard {...props}/>);
+  const link=await screen.findByText('看复盘 →');expect(link).toHaveAttribute('href','/projects/original-project/review?predictionId=prediction-original#prediction-prediction-original');oldWritesNever();
+ });
+ it('锁定后按具体预测及不可变rubric显示正式六维，复盘链接来自原回执',async()=>{
+  const dimensions=Array.from({length:6},(_,i)=>({key:'formal-'+i,label:'正式维度'+i,weight:1/6}));
+  const prediction:NonNullable<PredictionLockState['formalPrediction']>['prediction']={id:'prediction-original',userId:'user-1',subjectType:'content_output',subjectId:'original-output',rubricVersionId:'rubric-frozen',predictedMetrics:{diagnosis:{verdict:'正式结论',priorityFixes:[]}},predictedConversion:{dimensions:dimensions.map(d=>({key:d.key,score:3,reason:'已保存理由',suggestion:''}))},predictedScore:3,confidence:'med',status:'locked',lockedAt:'2026-10-17T00:00:00.000Z',createdAt:'2026-10-17T00:00:00.000Z'};
+  mocks.read.mockResolvedValue(state('locked',{predictionId:prediction.id,formalPrediction:{prediction,rubric:{id:'rubric-frozen',dimensions}}}));
+  render(<ChatDiagnosisCard {...props} diagnosis={{...diagnosis,dimensions:Array.from({length:5},(_,i)=>({key:'旧维'+i,score:5,reason:'旧理由',suggestion:''}))}}/>);
+  await screen.findByText('已锁定 · 不可改');
+  expect(document.querySelectorAll('[data-slot="chat-diagnosis-dim"]')).toHaveLength(6);
+  expect(screen.queryByText('旧维0')).toBeNull();expect(screen.getByText('正式维度5')).toBeTruthy();
+  expect(screen.getByText(/加权分：3/)).toBeTruthy();expect(screen.getByText(/rubric-frozen/)).toBeTruthy();
+  expect(screen.getByText('看复盘 →')).toHaveAttribute('href','/projects/original-project/review?predictionId=prediction-original#prediction-prediction-original');
+  oldWritesNever();
+ });
+ it('旧locked响应无正式投影时诚实显示不可读，不用初始分数替代',async()=>{
+  mocks.read.mockResolvedValue(state('locked',{predictionId:'original-locked'}));render(<ChatDiagnosisCard {...props}/>);
+  await screen.findByText('已锁定 · 不可改');expect(screen.getByText(/已锁定评分暂未读取/)).toBeTruthy();expect(screen.queryByText('4 / 5')).toBeNull();oldWritesNever();
+ });
  it('非盲预测只读；无来源的旧卡不猜VM output',async()=>{
   const view=render(<ChatDiagnosisCard diagnosis={diagnosis}/>);expect(screen.getByText('4 / 5')).toBeTruthy();expect(mocks.read).not.toHaveBeenCalled();view.rerender(<ChatDiagnosisCard diagnosis={diagnosis} blindPredict={{...blind,source:null}}/>);expect(screen.getByText(/原卡片来源未记录/)).toBeTruthy();expect((screen.getByText('锁定为盲预测') as HTMLButtonElement).disabled).toBe(true);expect(mocks.start).not.toHaveBeenCalled();oldWritesNever();
  });

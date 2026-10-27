@@ -103,3 +103,4 @@ export {createChatProposalSourceService,sealChatProposal} from './chat-proposal-
 export {createPredictionLockService,type PredictionLockBinding,type PredictionLockPorts} from "./prediction-lock.service";
 
 export {submitProjectPreparationTranscription} from "./project-transcription-submission";
+export {createKnowledgeDistillSourceService} from './knowledge-distill-source.service';

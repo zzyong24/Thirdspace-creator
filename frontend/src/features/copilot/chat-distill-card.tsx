@@ -3,8 +3,8 @@
 /**
  * [T-094] 对话内知识蒸馏结果卡 —— knowledge.distill 工具产的一批知识原子候选,渲成
  * **蒸馏批量确认门**(共享组件 KnowledgeAtomGate,与倾倒场旧确认门同语义):每条可勾选/
- * 改 type/改 title/改出处,人点「采纳选中 N 条」才逐条 knowledge.create 物化(铁律②),
- * 「原文同时存档」默认勾选(多存一条 reference)。
+ * 改 type/改 title/改出处；人点采纳后，服务端验证真实任务/工具来源并在同一事务写原子、
+ * 可选原文存档和持久回执。同一来源刷新或重试恢复第一次采纳结果。
  *
  * 错误态(实录根因):MiniMax 内容安全审核拦截输入(new_sensitive/1026)等平台错误,
  * 服务端已转**人话**随结果带回(result.error)—— 这里渲错误卡而非裸机器码;
@@ -13,6 +13,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import type {KnowledgeDistillSource} from '@creatoros/contract';
 
 import {
   KnowledgeAtomGate,
@@ -27,7 +28,7 @@ export interface ChatDistillResult {
   suggestSwitchModel: boolean;
 }
 
-export function ChatDistillCard({ result }: { result: ChatDistillResult }) {
+export function ChatDistillCard({ result,source }: { result: ChatDistillResult;source?:KnowledgeDistillSource|null }) {
   if (result.error) {
     return (
       <div
@@ -79,6 +80,7 @@ export function ChatDistillCard({ result }: { result: ChatDistillResult }) {
         知识蒸馏 · {result.atoms.length} 个原子候选 · 采纳后进知识库
       </span>
       <KnowledgeAtomGate
+        source={source}
         atoms={result.atoms}
         suggestedTags={result.suggestedTags}
         originalText={result.originalText}

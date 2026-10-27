@@ -27,4 +27,9 @@ describe('原卡盲预测来源合同',()=>{
   expect(WORKSPACE_OPERATION_SCOPES['ai.predictionLocks.source']).toBe('group');
   expect(WORKSPACE_OPERATION_SCOPES['ai.predictionLocks.start']).toBe('group');
  });
+ it('锁定响应兼容可选正式预测与不可变rubric投影',()=>{
+  const prediction={id:'pred',userId:'user',subjectType:'content_output',subjectId:'output',rubricVersionId:'rv',predictedMetrics:{},predictedConversion:{dimensions:[]},predictedScore:3,confidence:'med',status:'locked',lockedAt:'2026-10-25T00:00:00.000Z',createdAt:'2026-10-25T00:00:00.000Z'};
+  const formalPrediction={prediction,rubric:{id:'rv',dimensions:[{key:'one',label:'一维',weight:1}]}};
+  expect(predictionLockState.safeParse({policyVersion:1,source,status:'locked',subjectId:'output',projectId:'project',baselineDigest:null,baseline:null,diagnoseTaskId:'task',resultId:'result',predictionId:'pred',task:null,formalPrediction}).success).toBe(true);
+ });
 });

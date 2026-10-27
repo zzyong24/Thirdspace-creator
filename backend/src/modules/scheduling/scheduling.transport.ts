@@ -2,6 +2,7 @@ import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
   UnsupportedOperationError,
+  ValidationError,
 } from "./scheduling.errors";
 import type { SchedulingService } from "./scheduling.service";
 
@@ -52,6 +53,7 @@ export function createSchedulingTransport(
             target?: Record<string, unknown>;
             schedule: string;
             toolGrants?: unknown[];
+            enabled?: boolean;
           };
           const created = await service.createJob(ctx, {
             name: b.name,
@@ -60,7 +62,13 @@ export function createSchedulingTransport(
             target: b.target ?? {},
             schedule: b.schedule,
             toolGrants: b.toolGrants ?? [],
+            enabled: b.enabled,
           });
+          // 内部bootstrap的“只开不关”去重仍保留；公开停用新建不能把既有启用任务
+          // 误报成新停用草稿，也不反向关闭用户原计划。
+          if (b.enabled === false && created.enabled) {
+            throw new ValidationError("已有同类任务已启用，未新建停用任务；请在列表查看并管理原任务。");
+          }
           return { data: created, meta: { requestId } };
         }
         case "scheduledJobs.list": {

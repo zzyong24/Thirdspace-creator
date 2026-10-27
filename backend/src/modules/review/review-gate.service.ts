@@ -1,5 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
+import {lockWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {
   createReviewGateRepository,
   type ReviewGateRepository,
@@ -88,11 +89,13 @@ export interface ReviewGateService {
       replacement?: string | null;
       note?: string;
       category?: string;
+      confirmSharedImpact?: boolean;
     },
   ): Promise<ReviewRuleResource>;
   deleteRule(
     ctx: RequestContext,
     ruleId: string,
+    options?: {confirmSharedImpact?: boolean},
   ): Promise<{ id: string; deleted: true }>;
 
   // ── lint 词表(供 frontend script-review-runner 拉 active 规则跑 L1)──
@@ -115,9 +118,17 @@ export interface ReviewGateService {
 export function createReviewGateService(deps: ServiceDeps): ReviewGateService {
   const { db, now, nextId, ai, script } = deps;
 
-  function repoFor(ctx: RequestContext): ReviewGateRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
-    return createReviewGateRepository(db, repoDeps);
+  function repoFor(ctx: RequestContext, store:Db=db): ReviewGateRepository {
+    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId, groupId:ctx.groupId };
+    return createReviewGateRepository(store, repoDeps);
+  }
+  async function writeRule<T>(ctx:RequestContext,run:(repo:ReviewGateRepository)=>Promise<T>):Promise<T>{
+    if(!ctx.groupId)throw new ValidationError("请选择真实账号组后编辑审稿规则");
+    return db.transaction(async tx=>{await lockWorkspaceMembership(tx,ctx);return run(repoFor(ctx,tx as unknown as Db));});
+  }
+  async function assertSharedConfirmed(repo:ReviewGateRepository,id:string,confirmed?:boolean){
+    const row=(await repo.listRules()).find(rule=>rule.id===id);
+    if(row&&!row.groupId&&!confirmed)throw new ValidationError("这是系统/历史共享规则，修改或删除会影响所有账号组；请明确确认共享影响");
   }
 
   // regex 规则的 pattern 必须可编译(建/改时守卫,坏 regex → 400 而非运行时静默跳过)。
@@ -146,7 +157,7 @@ export function createReviewGateService(deps: ServiceDeps): ReviewGateService {
       // status(缺省 active)。
       const status =
         source === "retro" ? "candidate" : (body.status ?? "active");
-      const row = await repoFor(ctx).createRule({
+      return writeRule(ctx,async repo=>{const row = await repo.createRule({
         tier: body.tier,
         category: body.category,
         matchType: body.matchType,
@@ -157,22 +168,29 @@ export function createReviewGateService(deps: ServiceDeps): ReviewGateService {
         status,
       });
       return toReviewRuleDto(row);
+      });
     },
 
     async patchRule(ctx, ruleId, body) {
+      return writeRule(ctx,async repo=>{
+      await assertSharedConfirmed(repo,ruleId,body.confirmSharedImpact);
       if (body.pattern !== undefined) {
         // 改 pattern 时若该规则是 regex,校验可编译(取旧行判 matchType)。
-        const rows = await repoFor(ctx).listRules();
+        const rows = await repo.listRules();
         const target = rows.find((r) => r.id === ruleId);
         if (target) assertRegexCompiles(target.matchType, body.pattern);
       }
-      const row = await repoFor(ctx).patchRule(ruleId, body);
+      const row = await repo.patchRule(ruleId, body);
       return toReviewRuleDto(row);
+      });
     },
 
-    async deleteRule(ctx, ruleId) {
-      await repoFor(ctx).deleteRule(ruleId);
+    async deleteRule(ctx, ruleId, options) {
+      return writeRule(ctx,async repo=>{
+      await assertSharedConfirmed(repo,ruleId,options?.confirmSharedImpact);
+      await repo.deleteRule(ruleId);
       return { id: ruleId, deleted: true as const };
+      });
     },
 
     async listActiveLintRules(ctx) {

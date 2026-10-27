@@ -3,6 +3,7 @@ import {isDeepStrictEqual} from 'node:util';
 import {and,eq,aiTasks,executionTasks,executionCalls,OwnershipError,type Db} from '@creatoros/backend';
 import {executionTaskSpec,type RequestContext} from '@creatoros/contract';
 import {executionTimeoutMs} from '@creatoros/contract/timeout-policy';
+import {redactProviderErrorDetail} from '@creatoros/contract/provider-error-detail';
 import {inheritExecutionRoute,readFrozenModelRoute,frozenExecutionEngine,codexExecutionSpec,modelGenerationInputSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import {workspaceFilter} from '../../workspace-scope';
 import {createPersistentTaskService,observeCommittedTaskAttempt,observeCommittedTaskSettlement} from './persistent-task.service';
@@ -121,7 +122,13 @@ export function createExecutionVideoVisualReviewService(db:Db,deps:VideoVisualRe
      throw Error('成片审核端口不可用');
     },
    }});
-   if(result===undefined)throw Error(`成片审核未取得完整结果，请核对执行 ${bound.id}`);return result;
+   if(result===undefined){
+    // Worker已将明确拒绝/等待用户/未知结果写入原任务；不要用通用未完成提示抹掉诊断。
+    // 只投影持久短错误，禁止附带图片、配置或供应商原始响应。
+    const stopped=await tasks.get(ctx,bound.id);
+    const detail=redactProviderErrorDetail([stopped.errorCode,stopped.errorMessage].filter(Boolean).join(': ')).slice(0,160);
+    throw Error(`成片审核未取得完整结果${detail?`（${detail}）`:''}，请核对执行 ${bound.id}`);
+   }return result;
   }catch(error){
    // 中断只终止当前原执行，已提交或未知call保留；绝不另建子任务/重新发送。
    const state=await ledger.inspect(ref),pending=state.calls.some(call=>['started','unknown'].includes(call.status));

@@ -722,6 +722,28 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
 
 
 describe("选题操作步骤布局",()=>{
+  it("零搜索结果清除详情和立项动作，清空搜索后恢复合法选择",()=>{
+    render(<TopicsWorkspace candidates={[candidate({id:"first",title:"第一条",card:filledCard()}),candidate({id:"second",title:"第二条",card:{...filledCard(),oneLiner:"第二条正文"}})]} sources={overview().sources} sort="predictedScore"/>);
+    fireEvent.click(screen.getByRole("button",{name:"查看选题：第二条"}));
+    fireEvent.change(screen.getByRole("textbox",{name:"搜索候选"}),{target:{value:"不存在的检索词"}});
+    expect(screen.getByTestId("candidate-empty-state")).toHaveTextContent("没有匹配");
+    expect(screen.getByTestId("detail-no-selection")).toBeVisible();
+    expect(within(screen.getByRole("region",{name:"升级为项目"})).queryByRole("button")).toBeNull();
+    expect(mockClient.ensureProject).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByRole("textbox",{name:"搜索候选"}),{target:{value:""}});
+    expect(within(screen.getByTestId("topics-detail")).getByText("第二条正文")).toBeVisible();
+  });
+  it("搜索仅匹配其他候选时，详情和立项使用可见ID，来源刷新不能保留隐藏项",async()=>{
+    const first=candidate({id:"first",title:"第一条",card:filledCard()}),second=candidate({id:"second",title:"第二条",card:{...filledCard(),oneLiner:"第二条正文"}});
+    const view=render(<TopicsWorkspace candidates={[first,second]} sources={overview().sources} sort="predictedScore"/>);
+    fireEvent.click(screen.getByRole("button",{name:"查看选题：第二条"}));
+    fireEvent.change(screen.getByRole("textbox",{name:"搜索候选"}),{target:{value:"第一条"}});
+    expect(screen.getByRole("button",{name:"查看选题：第一条"})).toHaveAttribute("aria-pressed","true");
+    fireEvent.click(within(screen.getByRole("region",{name:"升级为项目"})).getByRole("button"));
+    await waitFor(()=>expect(mockClient.ensureProject).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({candidateId:"first"})})));
+    view.rerender(<TopicsWorkspace candidates={[second]} sources={overview().sources} sort="predictedScore" sourceFilter="idea"/>);
+    expect(screen.getByTestId("detail-no-selection")).toBeVisible();
+  });
   it("新增入口集中在第一步，挑选、核对和立项保留独立目标",()=>{
     render(<TopicsView viewModel={{candidates:[candidate({card:filledCard()})],overview:overview(),sort:"predictedScore",pendingReview:null}}/>);
     const nav=screen.getByRole("navigation",{name:"选题操作步骤"});

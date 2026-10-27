@@ -52,6 +52,7 @@ export const reviewGateOperations = {
     params: ruleParams,
     body: z.object({
       // 采纳(candidate→active)/停用(→disabled)/重新启用,及词表编辑。
+      confirmSharedImpact: z.boolean().optional().describe('仅人明确确认后传true：未归组历史/种子共享规则的修改会影响该用户所有账号组；不传或false时拒绝。'),
       status: reviewRuleStatus.optional(),
       pattern: z.string().min(1).optional(),
       replacement: z.string().nullable().optional(),
@@ -66,6 +67,7 @@ export const reviewGateOperations = {
     method: "DELETE",
     path: "/review-rules/:ruleId",
     params: ruleParams,
+    body: z.object({confirmSharedImpact:z.boolean().optional().describe('仅人明确确认后传true：删除未归组历史/种子共享规则会影响该用户所有账号组。')}).strict().optional(),
     response: z.object({ id, deleted: z.literal(true) }),
     fr: ["FR-REVIEW-RULES-DELETE"],
   }),

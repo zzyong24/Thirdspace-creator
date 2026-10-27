@@ -195,6 +195,15 @@ describe("ExecutionTaskCard", () => {
     expect(screen.getByText("人物只露半张脸。")).toBeInTheDocument();
   });
 
+  it.each(["unavailable", "skipped"])("视觉审核%s必须显示未完成提示，不能隐藏或显示通过", async (status) => {
+    getExecutionTask.mockResolvedValue(makeTask({execType:"video.render",manifest:{...makeTask().manifest,meta:{visualReview:{status,summary:"成片已生成，但没有完整视觉审核结果。",issues:[]}}}}));
+    render(<ExecutionTaskCard taskId="task-1" />);
+    expect(await screen.findByText("视觉审核未完成")).toBeInTheDocument();
+    expect(screen.getByText("成片已生成，但没有完整视觉审核结果。")).toBeInTheDocument();
+    expect(screen.queryByText("视觉审核通过")).not.toBeInTheDocument();
+    expect(screen.getByText("先预览，再决定是否采纳；预览不会把文件写入素材库。")).toBeInTheDocument();
+  });
+
   it("丢弃 → discardExecutionTask → 已丢弃态", async () => {
     discardExecutionTask.mockResolvedValue(makeTask({ status: "cancelled" }));
     render(<ExecutionTaskCard taskId="task-1" />);

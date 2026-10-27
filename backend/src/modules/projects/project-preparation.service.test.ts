@@ -270,8 +270,15 @@ it.each(['tool','external_tool'] as const)('fb %s 部分不同brief保留真实�
  expect((await f.projects.getProject(f.ctx,f.project.id)).briefDetail).toMatchObject({targetAudience:'当前观众',coreMessage:'新的信息',targetPlatforms:['douyin']});
  expect(await f.preparation.acceptCandidate(f.ctx,f.project.id,candidate.id,input)).toEqual(receipt);
  expect((await f.preparation.get(f.ctx,f.project.id)).candidates[0]).toMatchObject({status:'accepted',acceptanceReceipt:receipt});
+ expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'done',availableActions:[],completedAt:receipt.acceptedAt});
+ // 兼容真实旧checkpoint：已有采纳回执，但旧版本遗漏step状态；只读投影不能再写项目或制造模型调用。
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId)),legacy=structuredClone(parent!.checkpoint) as any;
+ legacy.steps.find((s:any)=>s.name==='brief').status='candidate_ready';legacy.steps.find((s:any)=>s.name==='brief').availableActions=['accept_candidate'];
+ await db.update(executionTasks).set({checkpoint:legacy}).where(eq(executionTasks.id,f.parentId));
+ expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'done',availableActions:[],completedAt:receipt.acceptedAt});
+ const [unmodified]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));expect((unmodified!.checkpoint as any).steps.find((s:any)=>s.name==='brief').status).toBe('candidate_ready');
 });
-it.each((['tool','external_tool'] as const).flatMap(kind=>[undefined,null,{},[],{targetAudience:7},{madeUp:'不存在字段'}].map(suggestion=>({kind,suggestion}))))('fb $kind 无提案或非法brief不能冒成功 $suggestion',async ({kind,suggestion})=>{
+it.each((['tool','external_tool'] as const).flatMap(kind=>[undefined,null,[],{targetAudience:7},{madeUp:'不存在字段'}].map(suggestion=>({kind,suggestion}))))('fb $kind 无提案或非法brief不能冒成功 $suggestion',async ({kind,suggestion})=>{
  const f=await briefReceiptFixture(kind,suggestion);await f.preparation.tick({shouldStop:()=>false});
  expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'failed',lastError:{message:expect.stringContaining('未返回可采纳')}});
  expect(await f.projects.getProject(f.ctx,f.project.id)).toEqual(f.before);
@@ -287,7 +294,11 @@ async function briefReceiptFixture(kind:'tool'|'external_tool',suggestion:unknow
  await f.projects.patchProject(f.ctx,f.project.id,{briefDetail:{targetAudience:'当前观众',coreMessage:'当前信息',targetPlatforms:['douyin']}});
  const before=await f.projects.getProject(f.ctx,f.project.id),chat=createProjectPreparationChat(db,{now,nextId,assemble:async()=>{throw Error('测试禁止模型装配');}});
  const child=await f.tasks.enqueue(f.ctx,{kind:'ai_task',ownerType:'project',ownerId:f.project.id,idempotencyKey:nextId('brief-child'),payload:{hostContext:{chatContext:{projectId:f.project.id}}}});
- const {preparation}=createProjectPreparationApplication(db,{now,nextId,tasks:f.tasks,intelligence:{} as never,submitBrief:async()=>({childTaskId:child.id,businessTaskId:child.id}),submitProjectTranscript:async()=>{throw Error('测试禁止转写');},readBrief:chat.read});
+ const submitBrief=vi.fn(async()=>{
+  const submitted=submitBrief.mock.calls.length===1?child:await f.tasks.enqueue(f.ctx,{kind:'ai_task',ownerType:'project',ownerId:f.project.id,idempotencyKey:nextId('brief-followup'),payload:{hostContext:{chatContext:{projectId:f.project.id}}}});
+  return {childTaskId:submitted.id,businessTaskId:submitted.id};
+ });
+ const {preparation}=createProjectPreparationApplication(db,{now,nextId,tasks:f.tasks,intelligence:{} as never,submitBrief,submitProjectTranscript:async()=>{throw Error('测试禁止转写');},readBrief:chat.read});
  const started=await preparation.start(f.ctx,f.project.id,{idempotencyKey:nextId('brief-start'),requestedSteps:['brief']});await preparation.tick({shouldStop:()=>false});
  const callId=nextId('brief-call'),turnId=nextId('turn');
  const outcome={status:'ok',summary:'模型给出的资料候选',evidence:[],data:{kind:'brief.fill',suggestion},error:null,continuation:null,sideEffect:'proposal'};
@@ -296,8 +307,38 @@ async function briefReceiptFixture(kind:'tool'|'external_tool',suggestion:unknow
   await db.insert(executionCalls).values({id:callId,executionTaskId:child.id,sequence:2,operationKey:callId,kind,parentCallId:kind==='external_tool'?turnId:null,inputDigest:'original-brief',status:'settled',reservedTokens:0,providerResult:kind==='external_tool'?{schemaVersion:1,kind,turnCallId:turnId,toolCallId:'brief-tool',toolName:'brief.fill',toolVersion:'1'}:null,resultText:JSON.stringify(kind==='tool'?{schemaVersion:1,kind:'tool',toolCallId:'brief-tool',toolName:'brief_fill',output:outcome}:outcome),createdAt:now(),updatedAt:now()});
  }
  await db.update(executionTasks).set({status:'succeeded'}).where(eq(executionTasks.id,child.id));clock.value='2026-10-21T01:00:05.000Z';
- return {...f,preparation,before,parentId:started.preparationTaskId!,callId};
+ return {...f,preparation,before,parentId:started.preparationTaskId!,callId,submitBrief};
 }
+
+it.each(['tool','external_tool'] as const)('T1406 %s 空资料候选保留原父子身份并等待补充，不冒完成或自动热重发',async kind=>{
+ const f=await briefReceiptFixture(kind,{});await f.preparation.tick({shouldStop:()=>false});
+ const state=await f.preparation.get(f.ctx,f.project.id),step=state.steps.find(s=>s.name==='brief')!;
+ expect(step).toMatchObject({status:'waiting_user',reasonCode:'BRIEF_INPUT_REQUIRED',availableActions:['resume']});
+ expect(state).toMatchObject({preparationTaskId:f.parentId,lastError:{code:'EXECUTION_FAILED'}});
+ expect(await f.tasks.get(f.ctx,f.parentId)).toMatchObject({status:'blocked',runtimeStatus:'waiting_user'});
+ expect(await f.projects.getProject(f.ctx,f.project.id)).toEqual(f.before);
+ for(let i=0;i<3;i++){clock.value=new Date(Date.parse(clock.value)+3000).toISOString();await f.preparation.tick({shouldStop:()=>false});}
+ expect(f.submitBrief).toHaveBeenCalledTimes(1);expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')!.childTaskId).toBe(step.childTaskId);
+});
+
+it('T1406 空资料补充后显式继续一次新子任务，保原父期限、旧回执和完成步骤',async()=>{
+ const f=await briefReceiptFixture('tool',{});await f.preparation.tick({shouldStop:()=>false});
+ const initial=await f.preparation.get(f.ctx,f.project.id),old=initial.steps.find(s=>s.name==='brief')!;
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));
+ await f.tasks.command(f.ctx,{taskIds:[f.parentId],command:'resume',idempotencyKey:'brief-no-new-input'});await f.preparation.tick({shouldStop:()=>false});
+ expect(f.submitBrief).toHaveBeenCalledTimes(1);expect(await f.tasks.get(f.ctx,f.parentId)).toMatchObject({status:'blocked',runtimeStatus:'waiting_user'});
+ const [afterNoInput]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));expect(afterNoInput!.deadlineAt).toBe(parent!.deadlineAt);
+ await f.projects.patchProject(f.ctx,f.project.id,{briefDetail:{targetAudience:'补充的真实项目资料'}});
+ const command={taskIds:[f.parentId],command:'resume' as const,idempotencyKey:'brief-after-new-input'};
+ await f.tasks.command(f.ctx,command);await f.preparation.tick({shouldStop:()=>false});
+ const resumed=await f.preparation.get(f.ctx,f.project.id),next=resumed.steps.find(s=>s.name==='brief')!;
+ expect(f.submitBrief).toHaveBeenCalledTimes(2);expect(next.childTaskId).not.toBe(old.childTaskId);expect(resumed.preparationTaskId).toBe(f.parentId);
+ const [afterResume]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));expect(afterResume!.deadlineAt).toBe(parent!.deadlineAt);expect(afterResume!.executionBudget).toEqual(parent!.executionBudget);
+ expect(resumed.steps.filter(s=>s.name!=='brief')).toEqual(initial.steps.filter(s=>s.name!=='brief'));
+ const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));
+ expect((stored!.payload as {inputRevision?:number}).inputRevision).toBe(1);expect((stored!.checkpoint as import('./project-preparation.service').PreparationCheckpoint).sourceRevisions).toEqual(expect.arrayContaining([expect.objectContaining({steps:expect.arrayContaining([expect.objectContaining({name:'brief',childTaskId:old.childTaskId})])})]));
+ await f.tasks.command(f.ctx,command);await f.preparation.tick({shouldStop:()=>false});expect(f.submitBrief).toHaveBeenCalledTimes(2);
+});
 
 it('fb 历史逐字稿已就绪checkpoint读为done，继续准备不重转写或编造历史完成时间',async()=>{
  const f=await fixture(),started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'legacy-transcript',requestedSteps:['transcript','brief']});
@@ -381,3 +422,33 @@ it('C2d 转写子任务抖音未登录时等待用户并可继续跑brief',async
  expect(JSON.stringify(resource)).not.toContain('DouyinNotLoggedInError');
 });
 
+
+it.each(['tool','external_tool'] as const)('T1406 %s 真实host空输入错误回执也等待补充，不误判缺失回执',async kind=>{
+ const f=await briefReceiptFixture(kind,{}),{buildChatTools}=await import('../ai-runtime/chat-tools'),{createChatHostToolAdapter}=await import('../ai-runtime/chat-host-tool-adapter');
+ const tools=buildChatTools(['brief.fill'],{getProjectBrief:async()=>null,humanizeError:()=>null} as unknown as import('../ai-runtime/chat-tools').ChatToolDeps),ports=await createChatHostToolAdapter(tools,async()=>tools,{'brief.fill':'proposal'},{toolFailureReceiptVersion:1});
+ const outcome=await ports['brief.fill']!.execute!(f.ctx,{}, {aiTaskId:'isolated-host-business',callId:'isolated-host-call',toolCallId:'isolated-host-tool',execution:{executionTaskId:'isolated-host-tool',attempt:1,fenceToken:'fixture-fence'},signal:new AbortController().signal});
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.callId));const raw=JSON.parse(call!.resultText!);
+ await db.update(executionCalls).set({resultText:JSON.stringify(kind==='tool'?{...raw,output:outcome}:outcome)}).where(eq(executionCalls.id,f.callId));
+ await f.preparation.tick({shouldStop:()=>false});
+ expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'waiting_user',reasonCode:'BRIEF_INPUT_REQUIRED',availableActions:['resume']});
+ expect(f.submitBrief).toHaveBeenCalledTimes(1);expect(await f.projects.getProject(f.ctx,f.project.id)).toEqual(f.before);
+});
+
+it('T1406 只有updatedAt变化不是补充资料，显式继续仍不新建子任务',async()=>{
+ const f=await briefReceiptFixture('tool',{});await f.preparation.tick({shouldStop:()=>false});
+ const before=await f.preparation.readBaseline(f.ctx,f.project.id),{projects}=await import('@creatoros/backend');
+ clock.value='2026-10-21T01:00:10.000Z';await db.update(projects).set({updatedAt:clock.value}).where(eq(projects.id,f.project.id));
+ const after=await f.preparation.readBaseline(f.ctx,f.project.id);expect(after.digest).not.toBe(before.digest);
+ await f.tasks.command(f.ctx,{taskIds:[f.parentId],command:'resume',idempotencyKey:'timestamp-is-not-new-content'});await f.preparation.tick({shouldStop:()=>false});
+ expect(f.submitBrief).toHaveBeenCalledTimes(1);expect((await f.preparation.get(f.ctx,f.project.id)).steps.find(s=>s.name==='brief')).toMatchObject({status:'waiting_user',reasonCode:'BRIEF_INPUT_REQUIRED'});
+});
+
+it('T1406 旧checkpoint没有inputDigest：首次真实空回执等待时补输入锚，补资料后可显式继续',async()=>{
+ const f=await briefReceiptFixture('tool',{});const [original]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));
+ const cp=structuredClone(original!.checkpoint) as import('./project-preparation.service').PreparationCheckpoint,oldBaseline=structuredClone(cp.stepBaselines!.brief!);delete cp.stepBaselines!.brief!.inputDigest;
+ await db.update(executionTasks).set({checkpoint:cp}).where(eq(executionTasks.id,f.parentId));await f.preparation.tick({shouldStop:()=>false});
+ const [waiting]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId)),anchored=(waiting!.checkpoint as import('./project-preparation.service').PreparationCheckpoint).stepBaselines!.brief!;
+ expect(waiting!.status).toBe('waiting_user');expect(anchored.inputDigest).toBeTruthy();expect(anchored.digest).toBe(oldBaseline.digest);expect(waiting!.deadlineAt).toBe(original!.deadlineAt);expect(f.submitBrief).toHaveBeenCalledTimes(1);
+ await f.projects.patchProject(f.ctx,f.project.id,{briefDetail:{coreMessage:'升级后用户明确补充'}});await f.preparation.start(f.ctx,f.project.id,{idempotencyKey:'legacy-input-resume',requestedSteps:['brief']});await f.preparation.tick({shouldStop:()=>false});
+ expect(f.submitBrief).toHaveBeenCalledTimes(2);const [after]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));expect(after!.deadlineAt).toBe(original!.deadlineAt);expect((after!.payload as {inputRevision?:number}).inputRevision).toBe(1);
+});

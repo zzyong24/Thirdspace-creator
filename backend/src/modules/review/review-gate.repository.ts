@@ -1,4 +1,5 @@
 import { and, desc, eq, type Db } from "@creatoros/backend";
+import {or,isNull} from "drizzle-orm";
 import { reviewRules, scriptReviewReports } from "./review-gate.db-schema";
 import { OwnershipError } from "./review-gate.errors";
 
@@ -15,6 +16,7 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 时钟(注入,测试确定性)
   nextId: (prefix: string) => string; // id 生成器(测试确定性)
   userId: string; // 归属边界,构造期烘入
+  groupId?: string | null;
 }
 
 export interface CreateRuleInput {
@@ -69,6 +71,7 @@ export function createReviewGateRepository(
   db: Db,
   deps: RepoDeps,
 ): ReviewGateRepository {
+  const visible = () => and(eq(reviewRules.userId,deps.userId),deps.groupId ? or(isNull(reviewRules.groupId),eq(reviewRules.groupId,deps.groupId)) : isNull(reviewRules.groupId));
   // 私有归属门:某规则的 scoped select。空 ⇒ OwnershipError(→404,跨用户/未知 id
   // 绝不泄露存在性)。
   async function getRuleRow(ruleId: string): Promise<ReviewRuleRow> {
@@ -76,7 +79,7 @@ export function createReviewGateRepository(
       .select()
       .from(reviewRules)
       .where(
-        and(eq(reviewRules.userId, deps.userId), eq(reviewRules.id, ruleId)),
+        and(visible(), eq(reviewRules.id, ruleId)),
       );
     const row = rows[0];
     if (!row) {
@@ -97,7 +100,7 @@ export function createReviewGateRepository(
       return db
         .select()
         .from(reviewRules)
-        .where(eq(reviewRules.userId, deps.userId))
+        .where(visible())
         .orderBy(desc(reviewRules.createdAt));
     },
 
@@ -107,7 +110,7 @@ export function createReviewGateRepository(
         .from(reviewRules)
         .where(
           and(
-            eq(reviewRules.userId, deps.userId),
+            visible(),
             eq(reviewRules.status, "active"),
           ),
         );
@@ -120,6 +123,7 @@ export function createReviewGateRepository(
         .values({
           id: deps.nextId("rrule"),
           userId: deps.userId,
+          groupId: deps.groupId ?? null,
           tier: input.tier,
           category: input.category,
           matchType: input.matchType,
@@ -147,7 +151,7 @@ export function createReviewGateRepository(
         .update(reviewRules)
         .set(patch)
         .where(
-          and(eq(reviewRules.userId, deps.userId), eq(reviewRules.id, ruleId)),
+          and(visible(), eq(reviewRules.id, ruleId)),
         )
         .returning();
       return updated[0]!;
@@ -158,7 +162,7 @@ export function createReviewGateRepository(
       await db
         .delete(reviewRules)
         .where(
-          and(eq(reviewRules.userId, deps.userId), eq(reviewRules.id, ruleId)),
+          and(visible(), eq(reviewRules.id, ruleId)),
         );
     },
 

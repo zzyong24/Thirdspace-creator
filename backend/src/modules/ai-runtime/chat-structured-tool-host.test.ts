@@ -83,6 +83,28 @@ it("绑定项目时不依赖模型复述正文，真实当前稿和版本进入�
  expect(result.node.facets.script).toBe("真实完整正文\n第二段");
  expect(JSON.parse(result.node.facets.__diagnosisSource!)).toMatchObject({projectId:"project-a",currentVersionId:"v2",contentHash:"hash"});
 });
+it("T-1403 绑定项目时模型显式复述的旧稿不能覆盖已保存的新稿",async()=>{
+ const current=vi.fn(async()=>({projectId:"project-a",artifactId:"artifact-a",currentVersionId:"v3",contentHash:"new-hash",fullText:"当前v3完整正文\n保留新增钩子与行动引导"}));
+ const f=await fixture(current);Object.assign(f.restored.hostContext.chatContext,{projectId:"project-a"});
+ const result=await f.tools["calibration.diagnose"]!.prepareGeneration!(f.ctx,{title:"标题",script:"旧v2短稿",extraBrief:"旧对话称当前稿为v2"},f.scope);
+ expect(current).toHaveBeenCalledWith(f.ctx,"project-a",f.controller.signal);
+ expect(result.node.facets.script).toBe("当前v3完整正文\n保留新增钩子与行动引导");
+ expect(JSON.parse(result.node.facets.__diagnosisSource!)).toMatchObject({projectId:"project-a",currentVersionId:"v3",contentHash:"new-hash"});
+});
+it("T-1403 绑定项目没有当前稿时不将模型旧正文冒充为确认稿",async()=>{
+ const current=vi.fn(async()=>null),f=await fixture(current);
+ Object.assign(f.restored.hostContext.chatContext,{projectId:"empty-project"});
+ const result=await f.tools["calibration.diagnose"]!.prepareGeneration!(f.ctx,{title:"标题",script:"模型缓存旧稿"},f.scope);
+ expect(current).toHaveBeenCalled();expect(result.node.facets.script).not.toContain("模型缓存旧稿");
+ expect(result.node.facets.__diagnosisSource).toBeUndefined();
+});
+it("T-1403 显式旧正文不能绕过选中稿版本校验或读取权限",async()=>{
+ const current=vi.fn(async()=>({projectId:"project-a",artifactId:"artifact-a",currentVersionId:"v3",contentHash:"hash",fullText:"当前稿"})),f=await fixture(current);
+ Object.assign(f.restored.hostContext.chatContext,{projectId:"project-a",selection:{kind:"script_section",ids:["s1"],artifactId:"artifact-a",versionId:"v2"}});
+ await expect(f.tools["calibration.diagnose"]!.prepareGeneration!(f.ctx,{title:"标题",script:"选中的旧正文"},f.scope)).rejects.toThrow("版本");
+ current.mockRejectedValue(new Error("无权读取项目"));
+ await expect(f.tools["calibration.diagnose"]!.prepareGeneration!(f.ctx,{title:"标题",script:"伪造正文"},f.scope)).rejects.toThrow("无权");
+});
 it("明确选中项目优先于页面项目，真实无稿保持受限诊断",async()=>{
  const current=vi.fn(async()=>null),f=await fixture(current);
  Object.assign(f.restored.hostContext.chatContext,{projectId:"page-project",selection:{kind:"project",ids:["selected-project"],label:"选中项目"}});
