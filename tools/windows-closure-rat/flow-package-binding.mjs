@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 
 export const FLOW_REPOSITORY = 'zzyong24/Thirdspace-creator';
-export const FLOW_BRANCH = 'codex/build-windows-flow-repair-20261025';
+export const FLOW_BRANCH = 'codex/build-main-windows-20261027';
 export const FLOW_WORKFLOW_PATH = '.github/workflows/desktop-release.yml';
 export const FLOW_ARTIFACT_NAME = 't1404-unsigned-windows-capsule';
 export const FLOW_ROOT_ID = 'creatoros-update-root-20260805-01';

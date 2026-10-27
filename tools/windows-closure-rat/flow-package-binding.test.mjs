@@ -26,7 +26,7 @@ function fixture() {
 
 test('固定常量属于本次仓库、分支和准备产物，不能借历史任务', () => {
   assert.equal(FLOW_REPOSITORY, 'zzyong24/Thirdspace-creator');
-  assert.equal(FLOW_BRANCH, 'codex/build-windows-flow-repair-20261025');
+  assert.equal(FLOW_BRANCH, 'codex/build-main-windows-20261027');
   assert.equal(FLOW_WORKFLOW_PATH, '.github/workflows/desktop-release.yml');
   assert.equal(FLOW_ARTIFACT_NAME, 't1404-unsigned-windows-capsule');
   assert.equal(FLOW_ROOT_ID, 'creatoros-update-root-20260805-01');
@@ -56,7 +56,7 @@ test('准确本仓成功prepare与artifact接受，元数据保持不变', () =>
 });
 
 test('拒绝失败或在途run、不同source/workflow/分支/事件', () => {
-  for (const [key, value] of [['id', 999], ['id', '12345'], ['head_sha', 'c'.repeat(40)], ['head_branch', 'main'], ['head_branch', 'codex/t247-windows-e315-build-20261017'], ['event', 'push'], ['path', '.github/workflows/other.yml'], ['status', 'in_progress'], ['conclusion', 'failure'], ['conclusion', null]]) {
+  for (const [key, value] of [['id', 999], ['id', '12345'], ['head_sha', 'c'.repeat(40)], ['head_branch', 'main'], ['head_branch', 'codex/build-windows-flow-repair-20261025'], ['head_branch', 'codex/t247-windows-e315-build-20261017'], ['event', 'push'], ['path', '.github/workflows/other.yml'], ['status', 'in_progress'], ['conclusion', 'failure'], ['conclusion', null]]) {
     const { input, run, artifact } = fixture();
     assert.throws(() => validateFlowArtifactBinding(input, { ...run, [key]: value }, artifact), key);
   }
