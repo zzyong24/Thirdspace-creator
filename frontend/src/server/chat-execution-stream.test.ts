@@ -184,8 +184,13 @@ it('实际持久事件→响应流→SDK→缓存：无审批等待跨页受保�
  const runtime={get:(ctx:typeof context,id:string)=>tasks.get(ctx,id),subscribe:(ctx:typeof context,id:string,signal:AbortSignal)=>subscribeExecutionStream(service,ctx,id,{signal})} as Parameters<typeof chatExecutionResponse>[0];
  vi.stubGlobal('window',{});
  const key='integrated-waiting-scope',session=getLiveChatSession(key),release=acquireLiveChatSession(key,session);
- let requests=0;
- vi.stubGlobal('fetch',vi.fn(async(_url:unknown,init:RequestInit)=>{requests++;return chatExecutionResponse(runtime,context,{...input,executionTaskId:task.id},init.signal!);}));
+ let requests=0;const requestBodies:Array<{trigger:string;originalTask?:unknown}>=[];
+ vi.stubGlobal('fetch',vi.fn(async(_url:unknown,init:RequestInit)=>{
+  requests++;requestBodies.push(JSON.parse(init.body as string));
+  const response=chatExecutionResponse(runtime,context,{...input,executionTaskId:task.id},init.signal!);
+  // 与生产 /api/chat 的包装一致：完整三元回执才允许观察原轮。
+  response.headers.set('x-source-message-id',input.sourceMessageId);return response;
+ }));
  session.transport=new DefaultChatTransport({fetch:(url,init)=>session.control.fetch(url as RequestInfo,init)});
  try{
   // 持久终态为隔离回执夹具；事件仍由实际 append/read/subscribe 消费。
@@ -197,7 +202,9 @@ it('实际持久事件→响应流→SDK→缓存：无审批等待跨页受保�
   expect(getLiveChatSession(key)).toBe(session);expect(session.transport).toBeDefined();expect(requests).toBe(1);
   const other=getLiveChatSession('integrated-other-group');expect(other.chat.messages).toEqual([]);
   await connection.db.update(executionTasks).set({status:'succeeded'}).where(eq(executionTasks.id,task.id));
-  await session.chat.regenerate();expect(requests).toBe(2);expect(session.chat.status).toBe('ready');
+  await session.chat.regenerate({body:{conversationId:input.conversationId}});expect(requests).toBe(2);expect(session.chat.status).toBe('ready');
+  expect(requestBodies[1]?.originalTask).toEqual({...input,executionTaskId:task.id,intent:'observe'});
+  expect(requestBodies.filter(request=>request.trigger==='submit-message')).toHaveLength(1);
   expect(session.chat.messages.at(-1)?.metadata).toMatchObject({execution:{executionTaskId:task.id,status:'succeeded'}});
   for(let i=0;i<100;i++)getLiveChatSession(`integrated-completed-pressure-${i}`);
   expect(getLiveChatSession(key)).not.toBe(session);expect(session.transport).toBeUndefined();

@@ -40,6 +40,7 @@ vi.mock("@tauri-apps/plugin-opener", () => ({
 // 个别用例改 mockSearch 注入 fn 断言预调。
 let mockSearch = "copilot=open";
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
   useRouter: () => ({
     push: routerPush,
     replace: vi.fn(),
@@ -207,6 +208,28 @@ beforeEach(async () => {
 });
 
 describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
+  it("T-1408 空账号组直接描述定位，无抖音登录或自动发送前提",async()=>{
+    mockSearch="copilot=open&surface=positioning";
+    render(<AICopilotContent viewModel={VM}/>);
+    expect(localStorage.getItem("creatoros:current-account")).toBeNull();
+    expect(screen.getByText("无需先登录抖音，可直接描述经历、优势和目标。")).toBeInTheDocument();
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(screen.getByText("添加文件或图片")).toBeInTheDocument();
+    const user=userEvent.setup();await user.type(screen.getByLabelText("定位对话内容"),"我从事家装设计，希望服务首次装修的家庭。");
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    expect(sendMessage).toHaveBeenCalledOnce();
+    expect(sendMessage.mock.calls[0][0]).toMatchObject({text:"我从事家装设计，希望服务首次装修的家庭。"});
+    const body=await (initialChatTransport?.body as (()=>Record<string,unknown>))();
+    expect(body).toMatchObject({chatContext:{surface:"positioning"}});
+  });
+  it("T-1407 模型结果未知明确暂停，不以regenerate伪装恢复执行",async()=>{
+    vi.useFakeTimers();mockError=Error("CHAT_MODEL_RESPONSE_INTERRUPTED");mockCurrentTaskId="execution-original";
+    mockMessages=[{id:"u-original",role:"user",parts:[{type:"text",text:"定位"}]}];
+    try{render(<AICopilotContent viewModel={VM}/>);
+      expect(screen.getByText("本轮生成已暂停")).toBeInTheDocument();expect(screen.queryByText("自动恢复中")).toBeNull();
+      await act(async()=>{await vi.advanceTimersByTimeAsync(60000);});expect(regenerate).not.toHaveBeenCalled();
+    }finally{vi.useRealTimers();}
+  });
   it("[T-1055] 编导输入区不显示引擎选择和重查控件", () => {
     render(<AICopilotContent viewModel={VM} />);
     expect(screen.queryByRole("combobox", {name: "编导引擎"})).toBeNull();
@@ -1315,16 +1338,16 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     vi.useRealTimers();
   });
 
-  it("[T-1022] 模型断流沿原任务自动恢复", async () => {
+  it("[T-1407 replaces T-1022] 模型结果未知暂停，无完整原回执不提供盲目重放", async () => {
     vi.useFakeTimers();
     mockError = new Error("CHAT_MODEL_RESPONSE_INTERRUPTED");
     mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", text: "继续生成" }] }];
     render(<AICopilotContent viewModel={VM} />);
-    expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
-    expect(screen.getByText(/系统正在沿原任务自动恢复/)).toBeInTheDocument();
+    expect(screen.getByText("本轮生成已暂停")).toBeInTheDocument();
+    expect(screen.queryByText(/系统正在沿原任务自动恢复/)).toBeNull();
     expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
-    expect(regenerate).toHaveBeenCalledTimes(1);
+    expect(regenerate).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
 

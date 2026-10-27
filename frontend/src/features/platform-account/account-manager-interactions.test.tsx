@@ -254,8 +254,13 @@ describe("account-manager 组管理视图", () => {
  it("没有组时先允许创建工作区，未绑定不阻止创作", async () => {
   mockClient.listAccountGroups.mockResolvedValue([]);mockClient.listAccounts.mockResolvedValue([]);
   render(<AccountManagerView viewModel={{accounts:[],groups:[]}}/>);
-  expect(await screen.findByRole("button",{name:"创建账号组"})).toBeVisible();
-  expect(screen.getByText(/支持连续添加多个账号/)).toBeVisible();
+  const create=await screen.findByRole("button",{name:"创建账号组"});expect(create).toBeVisible();
+  expect(screen.getByText("2 开始定位，无需抖音登录")).toBeVisible();
+  expect(screen.getByText(/平台账号可按需要稍后绑定/)).toBeVisible();
+  expect(create).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("新账号组名称"),{target:{value:"免登录定位工作区"}});
+  expect(create).toBeEnabled();
+  expect(mockClient.loginDouyin).not.toHaveBeenCalled();expect(mockClient.beginBind).not.toHaveBeenCalled();
   expect(screen.queryByTestId("bind-douyin-scan")).not.toBeInTheDocument();
  });
 });

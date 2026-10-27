@@ -21,11 +21,11 @@ export function PositioningConversationGuide() {
       <div className={styles.guideIntro}>
         <span className={styles.eyebrow}><Compass size={16} aria-hidden="true" /> 账号定位</span>
         <h3>一步步聊清楚</h3>
-        <p>不必准备完整答案。</p>
+        <p>无需登录抖音，也不必备齐资料。</p>
       </div>
       <ol className={styles.guideSteps} aria-label="定位对话的三个步骤">
         <li><span aria-hidden="true">01</span><div><strong>说现状</strong><p>聊聊经历、优势和目标。</p></div></li>
-        <li><span aria-hidden="true">02</span><div><strong>补关键点</strong><p>每次只补一个关键信息。</p></div></li>
+        <li><span aria-hidden="true">02</span><div><strong>补关键点</strong><p>每次只补一个关键信息，资料可稍后补。</p></div></li>
         <li><span aria-hidden="true">03</span><div><strong>看候选</strong><p>随时说“先给我一版”。</p></div></li>
       </ol>
       <p className={styles.assurance}><ShieldCheck size={16} aria-hidden="true" /><span>调整方向或从零开始时，未采纳前不会修改当前定位母版；继续深入当前账号会自动采纳，可在历史版本中恢复。</span></p>
@@ -43,7 +43,7 @@ export function PositioningConversationStart({ onPick, disabled, hasMaster = fal
     <section className={styles.start} aria-labelledby="positioning-start-title" data-slot="positioning-conversation-start">
       <span className={styles.eyebrow}>从这里开始</span>
       <h3 id="positioning-start-title">这次，你想从哪里出发？</h3>
-      <p>选起点或直接输入，确认后再发送。</p>
+      <p>无需登录抖音。选起点或直接说说自己，确认后再发送。</p>
       <div className={styles.starters}>
         {STARTERS.map((item) => (
           <button key={item.title} type="button" data-mode={item.mode} disabled={disabled} onClick={() => onPick(item.prompt, item.mode)}>

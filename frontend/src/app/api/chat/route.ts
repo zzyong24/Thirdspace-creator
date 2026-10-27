@@ -6,6 +6,7 @@ import { chatSubmissionDiagnostic } from "@/server/chat-submission-diagnostic";
 import { randomUUID } from "node:crypto";
 import type { UIMessage } from "ai";
 import {chatExecutionResponse} from "@/server/chat-execution-stream";
+import {recoverChatExecution} from "@/server/chat-execution-recovery";
 import type { RequestContext } from "@creatoros/contract";
 import {workEditorTarget,workCreationTarget} from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
@@ -46,6 +47,8 @@ export const dynamic = "force-dynamic";
 //   scope 比对,不一致按 OwnershipError 语义 4xx 拒绝 —— 隔离锁在服务端,前端 bug/手工
 //   请求都穿不透(SPEC 2026-07-03 §1.3-3)。
 interface ChatRequestBody {
+  /** 真实响应头绑定的原轮观察/明确恢复，不能降级成新提交。 */
+  originalTask?: unknown;
   executionEngine?:"pi"|"codex";
   messages?: UIMessage[];
   chatContext?: Partial<ChatContext> & { scope?: string };
@@ -173,6 +176,8 @@ export async function POST(req: Request): Promise<Response> {
     }
     throw err;
   }
+
+  if(body.originalTask!==undefined)return recoverChatExecution(await getChatRuntime(),ctx,body.originalTask,req.signal);
 
   const messages = Array.isArray(body.messages) ? body.messages : [];
   const attachmentIds = attachmentIdsOf(body.attachmentIds);
