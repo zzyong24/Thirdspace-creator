@@ -1,0 +1,48 @@
+{
+  "observedAt": "2026-10-28T09:55:09.503987+00:00",
+  "exitCode": 0,
+  "response": {
+    "ok": true,
+    "operation": "creativeResults.get",
+    "requestId": "req-2ddab0cc-3973",
+    "groupId": "grp-8fdb2e06-22",
+    "accountId": null,
+    "data": {
+      "resultId": "fa129225-9baa-478c-8a3f-58f1b5002033",
+      "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+      "outputId": "output-2ddab0cc-3252",
+      "outputType": "image",
+      "targetPlatform": "xiaohongshu",
+      "targetSectionId": "card-desk-clear-01",
+      "kind": "image_card",
+      "status": "awaiting_confirmation",
+      "typedCandidateRef": {
+        "owner": "graphic_post",
+        "id": "ai-task-2ddab0cc-3807"
+      },
+      "taskId": "ai-task-2ddab0cc-3807",
+      "baseVersionId": "artifactversion-2ddab0cc-3688",
+      "ruleSnapshotRef": null,
+      "appliedRules": "not_applied",
+      "sourceRefs": [],
+      "value": [
+        {
+          "assetId": "asset-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa",
+          "assetFileId": "afile-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa",
+          "order": 0,
+          "role": "card",
+          "cardId": "card-desk-clear-01"
+        }
+      ],
+      "retryRequestId": null,
+      "errorCode": null,
+      "retryOf": null,
+      "createdAt": "2026-10-28T09:53:30.166Z",
+      "updatedAt": "2026-10-28T09:53:30.260Z"
+    },
+    "meta": {
+      "requestId": "req-2ddab0cc-3973"
+    },
+    "error": null
+  }
+}

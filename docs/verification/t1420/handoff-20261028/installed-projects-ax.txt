@@ -1,0 +1,97 @@
+Window: "CreatorOS", App: CreatorOS.
+0 standard window CreatorOS, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: CreatorOS, URL: 127.0.0.1:64542/projects
+			3 container
+				4 link 跳到页面内容, Value: 127.0.0.1:64542/projects#creatoros-main-content
+				5 container 主侧栏
+					6 toggle button 收起侧栏, Value: off
+					7 pop up button 当前账号组：1, Help: 1
+					8 container 主要导航
+						9 link 首页, Value: 127.0.0.1:64542/
+						10 link 创作者总览, Value: 127.0.0.1:64542/overview
+						11 text 创作
+						12 link 定位中心, Value: 127.0.0.1:64542/positioning
+						13 link 内容雷达, Value: 127.0.0.1:64542/intelligence
+						14 link 选题, Value: 127.0.0.1:64542/topics
+						15 link 项目, Value: 127.0.0.1:64542/projects
+						16 text 资料
+						17 link 知识库, Value: 127.0.0.1:64542/knowledge
+						18 link 素材中心, Value: 127.0.0.1:64542/assets
+						19 link 创作画布, Value: 127.0.0.1:64542/canvases
+						20 text 运营
+						21 link 发布中心, Value: 127.0.0.1:64542/publishing
+						22 link 运营分析, Value: 127.0.0.1:64542/daily-report
+						23 link 自动化, Value: 127.0.0.1:64542/automations
+						24 text 工作区
+						25 link 设置, Value: 127.0.0.1:64542/settings
+					26 container AI 助手
+						27 link 打开 AI 助手, Value: 127.0.0.1:64542/projects?copilot=open&scope=global
+					28 pop up button 帮助与反馈
+					29 text ? 创作者 个人版
+				30 link 搜索项目, Value: 127.0.0.1:64542/search
+				31 link ＋ 新建项目, Value: 127.0.0.1:64542/projects/new
+				32 button 充值
+				33 container
+					34 heading 项目, Value: 1
+						35 text 项目
+					36 link 已采集作品, Value: 127.0.0.1:64542/accounts/works
+					37 container 项目状态概览
+						38 heading 按创作阶段查看, Value: 2
+							39 text 按创作阶段查看
+						40 container 按阶段筛选项目
+							41 link 全部项目 2, Value: 127.0.0.1:64542/projects
+							42 link 进行中 0, Value: 127.0.0.1:64542/projects?status=active
+							43 link 写稿中 0, Value: 127.0.0.1:64542/projects?status=drafting
+							44 link 制作中 0, Value: 127.0.0.1:64542/projects?status=production
+							45 link 已发布 2, Value: 127.0.0.1:64542/projects?status=published
+							46 link 复盘中 0, Value: 127.0.0.1:64542/projects?status=review
+							47 link 已归档 0, Value: 127.0.0.1:64542/projects?status=archived
+					48 heading 项目稿件, Value: 2
+						49 text 项目稿件
+					50 text 共 2 个项目
+					51 container 项目排序
+						52 pop up button 排序 最近更新
+					53 container 项目列表
+						54 content list
+							55 container 遛狗回家别直接抱！先花30秒干这件事。每天遛弯回家第一件事不是抱它
+								56 container 遛狗回家别直接抱！先花30秒干这件事。每天遛弯回家第一件事不是抱它
+									57 heading 遛狗回家别直接抱！先花30秒干这件事。每天遛弯回家第一件事不是抱它, Value: 3
+										58 text 遛狗回家别直接抱！先花30秒干这件事。每天遛弯回家第一件事不是抱它
+									59 text 遛狗回家别直接抱！先花30秒干这件事。每天遛弯回家第一件事不是抱它 是擦爪子🐾 草地、泥地、小区路面 四只爪子一天下来什么都有 直接进屋，沙发地板全遭殃 我现在门口放一包这个湿巾 进门先擦，30秒四只爪子全干净 无纺布很厚实，泥爪子一张搞定 水分足，擦完爪缝都清爽 擦完它甩甩脚就去玩了 无酒精配方，擦完舔爪我也不拦 猫狗通用，家里有猫的也能一起用 遛宠家庭门口常备一包 #遛弯回家第一件事 #遛狗日常 #狗狗用品 #宠物清洁 #铲屎官日常 我 当前阶段 已发布 历史作品 进度 100%
+									60 progress indicator (settable, float) 进度, Value: 100, Details: 100%
+									61 container 目标平台
+										62 text 目标平台 未设置
+									63 text 最近更新 4 天前 发布排期 历史作品
+									64 link 打开, Value: 127.0.0.1:64542/projects/project-intake-3e2a2b38bf42f55e0fba89f56275e85a/review
+									65 pop up button 遛狗回家别直接抱！先花30秒干这件事。每天遛弯回家第一件事不是抱它 的更多操作
+							66 container 铲屎官们听我说，这包湿巾我家一直在回购。🐾 清洁净味，擦完很清爽
+								67 container 铲屎官们听我说，这包湿巾我家一直在回购。🐾 清洁净味，擦完很清爽
+									68 heading 铲屎官们听我说，这包湿巾我家一直在回购。🐾 清洁净味，擦完很清爽, Value: 3
+										69 text 铲屎官们听我说，这包湿巾我家一直在回购。🐾 清洁净味，擦完很清爽
+									70 text 铲屎官们听我说，这包湿巾我家一直在回购。🐾 清洁净味，擦完很清爽 遛狗回来爪子又脏又臭 一张擦完异味少了很多 擦完放心让它上沙发踩 🐾 温和配方，可以擦泪痕 成分温和，猫咪眼周也能用 我家布偶每天擦泪痕，擦完不躲不反抗 我家猫皮肤偏敏感，用下来没出过问题 🐾 猫狗通用，一包顶两包 不用猫一包狗一包分开买 无纺布很厚实，一张擦两只爪子不破 水分足，抽出来不会干巴巴的 🐾 80抽一大包，性价比很能打 官方旗舰店4.9分，已售2300+ 评论区不少回头客夸厚实耐用 7天无理由+包邮，试错成本很低 擦脚、擦泪痕、擦嘴、擦屁屁一包全包 养宠家庭的日常消耗品，家里备着准没错👇 点下方小黄车，多包装更划算🛒 #宠物湿巾 #宠物精细化养护 #这也能开播 我 当前阶段 已发布 历史作品 进度 100%
+									71 progress indicator (settable, float) 进度, Value: 100, Details: 100%
+									72 container 目标平台
+										73 text 目标平台 未设置
+									74 text 最近更新 4 天前 发布排期 历史作品
+									75 link 打开, Value: 127.0.0.1:64542/projects/project-intake-adb11a93138cfea3542994cfecbc19b7/review
+									76 pop up button 铲屎官们听我说，这包湿巾我家一直在回购。🐾 清洁净味，擦完很清爽 的更多操作
+					77 text 共 2 个项目
+					78 container 项目分页
+						79 button (disabled) 上一页
+						80 link 第 1 页, Value: 127.0.0.1:64542/projects
+						81 button (disabled) 下一页
+					82 text 每页显示 10 条
+	83 close button
+	84 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	85 minimize button
+	86 text CreatorOS
+87 menu bar
+	88 CreatorOS
+	89 File
+	90 Edit
+	91 View
+	92 Window
+	93 Help
+
+The focused UI element is 2 HTML content Description: CreatorOS, URL: 127.0.0.1:64542/projects

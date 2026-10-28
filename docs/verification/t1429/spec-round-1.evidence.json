@@ -1,0 +1,188 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1429",
+  "review_round": 1,
+  "review_kind": "initial",
+  "review_mode": "homogeneous",
+  "reviewer_session": "/root/review_recovery_spec",
+  "reviewer_identity": "Codex独立子会话；继承父会话模型，宿主未向本会话提供可独立核实的精确模型型号。不得登记为cross-family或cross-model-same-family。",
+  "independence": "本会话未参与规格编写或实现；未采用作者自评结论；对父会话提供的来源数量和轮次线索进行了独立只读校验。",
+  "reviewed_at": "2026-10-28T10:48:27.893Z",
+  "head": "6033bdd51e6996cfe80eb041661a2b1a4f15a5b0",
+  "inputs": {
+    "spec": {
+      "path": "docs/features/t1429-review-ledger-recovery.md",
+      "sha256": "a8a382a4f1df1082153ae3c7a52bd30857689c68473d40df6c257193b9818d68"
+    },
+    "constitution": {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    "prompt": {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    "schema": {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    }
+  },
+  "checks": {
+    "git_merge_parents": [
+      "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+      "24d5f323296f4b763d308e895b78a4b747596009"
+    ],
+    "chains": [
+      {
+        "ref": "24d5f3232",
+        "commit": "24d5f323296f4b763d308e895b78a4b747596009",
+        "sha256": "2da2126a1035504101af789feaff0e990877c43bd74bbe9e1fe311aa74abd913",
+        "count": 385,
+        "errors": []
+      },
+      {
+        "ref": "3a0d8ac63",
+        "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+        "sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d",
+        "count": 446,
+        "errors": []
+      },
+      {
+        "ref": "38ba88d05",
+        "commit": "38ba88d051f0fd431083e0315c41641744f56fb8",
+        "sha256": "a98efdb72cbe075ede8eddc553685fd2db634d41f3cbd1c69f508f16acf33b17",
+        "count": 447,
+        "errors": [
+          {
+            "line": 385,
+            "kind": "event_hash"
+          },
+          {
+            "line": 386,
+            "kind": "event_hash"
+          },
+          {
+            "line": 387,
+            "kind": "event_hash"
+          },
+          {
+            "line": 388,
+            "kind": "event_hash"
+          },
+          {
+            "line": 389,
+            "kind": "event_hash"
+          },
+          {
+            "line": 390,
+            "kind": "event_hash"
+          },
+          {
+            "line": 391,
+            "kind": "event_hash"
+          },
+          {
+            "line": 392,
+            "kind": "event_hash"
+          },
+          {
+            "line": 393,
+            "kind": "event_hash"
+          },
+          {
+            "line": 394,
+            "kind": "event_hash"
+          },
+          {
+            "line": 396,
+            "kind": "event_hash"
+          },
+          {
+            "line": 397,
+            "kind": "event_hash"
+          },
+          {
+            "line": 421,
+            "kind": "event_hash"
+          },
+          {
+            "line": 422,
+            "kind": "event_hash"
+          },
+          {
+            "line": 423,
+            "kind": "event_hash"
+          },
+          {
+            "line": 424,
+            "kind": "event_hash"
+          },
+          {
+            "line": 425,
+            "kind": "event_hash"
+          },
+          {
+            "line": 429,
+            "kind": "event_hash"
+          },
+          {
+            "line": 432,
+            "kind": "event_hash"
+          },
+          {
+            "line": 433,
+            "kind": "event_hash"
+          },
+          {
+            "line": 434,
+            "kind": "event_hash"
+          },
+          {
+            "line": 435,
+            "kind": "event_hash"
+          },
+          {
+            "line": 436,
+            "kind": "event_hash"
+          },
+          {
+            "line": 447,
+            "kind": "previous_event_hash"
+          }
+        ]
+      }
+    ],
+    "common_prefix": 384,
+    "union_count": 447,
+    "import_tail_count": 62,
+    "allowed_mapping_source": "orchestrator/DECISION_LOG.md#DEC-142801",
+    "source_authorization_count_in_import_tail": 23,
+    "reviewctl_read_only_references": [
+      "verifyEventChain",
+      "validateCycleCapability",
+      "stateFromEvent",
+      "verifyReviewReceipt",
+      "validatePacket",
+      "auditReviewReceipts"
+    ]
+  },
+  "implementation_notes": [
+    {
+      "subject": "既有周期限制",
+      "detail": "导入须原值保全cycle_authorization（含nonce、原task_id及原previous_event_hash），通过来源元数据解释重编号；不能因外层任务改名而令旧nonce再次可消费。T-1428与T-1410来源最新事件均为round 3，当前SPEC不同，后续登记按既有new-cycle typed capability协议执行；本评审不签发额外周期或伪造用户授权。"
+    },
+    {
+      "subject": "基础链的过期规格",
+      "detail": "T-1406来自完整385条基础链，其BACKLOG当前为🔨并带PASS receipt；来源SPEC SHA256为f453397a3bcc7b108dd636f13e62fb94a81828d91ffee8e10e742f90aca43d71，当前为ad98242f5a1c05a7a4b881d80e02dab36b729e02c512425f0a966f391a5b6276。按既有audit仍会报过期。主会话已获告知在实施前补齐对应current review的精确写集绑定，并按FR-142905/AC-142904处理；不得仅审62条导入尾巴。"
+    },
+    {
+      "subject": "自举边界",
+      "detail": "仅依据SPEC及DEC-142901允许隔离树内开发并先保存独立包。有效链恢复后由主会话通过reviewctl/taskctl登记。本次未写BACKLOG回执、review snapshot、状态、ledger、代码、DEC，未运行迁移或更改Git index。"
+    }
+  ],
+  "verification_limits": [
+    "本轮是规格初审，不证明迁移实现正确或真实迁移已经成功。",
+    "未操作用户业务数据、原工作区或正在进行的cherry-pick。"
+  ],
+  "packet_sha256": "da318b94a1f3867693553f3fa1524a75c1d3e421235f101c879b139aa22abc6a"
+}

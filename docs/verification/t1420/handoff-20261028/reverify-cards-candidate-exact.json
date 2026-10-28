@@ -1,0 +1,73 @@
+{
+  "observedAt": "2026-10-28T09:49:39.583926+00:00",
+  "exitCode": 0,
+  "response": {
+    "ok": true,
+    "operation": "creativeResults.get",
+    "requestId": "req-2ddab0cc-3683",
+    "groupId": "grp-8fdb2e06-22",
+    "accountId": null,
+    "data": {
+      "resultId": "36ac8ea9-a43b-4cde-b28c-240105ec8a10",
+      "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+      "outputId": "output-2ddab0cc-3252",
+      "outputType": "image",
+      "targetPlatform": "xiaohongshu",
+      "targetSectionId": null,
+      "kind": "cardBriefs",
+      "status": "succeeded",
+      "typedCandidateRef": {
+        "owner": "graphic_post",
+        "id": "ai-task-2ddab0cc-3563"
+      },
+      "taskId": "ai-task-2ddab0cc-3563",
+      "baseVersionId": "artifactversion-2ddab0cc-3428",
+      "ruleSnapshotRef": null,
+      "appliedRules": "not_applied",
+      "sourceRefs": [
+        {
+          "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+          "kind": "project",
+          "versionId": "2026-10-28T09:33:55.112Z"
+        }
+      ],
+      "value": [
+        {
+          "cardId": "card-desk-clear-01",
+          "title": "第一步：先给桌面留空",
+          "body": "把散落的纸张、充电线和杯子暂时移到一旁，擦净桌面，只留下正在使用的笔记本。先减少桌面上的干扰，再开始整理。",
+          "visualBrief": "竖版生活纪实画面，同一处日常书桌的俯拍视角。桌面中央只保留一本笔记本，一只手将纸张、充电线和杯子移向桌边，清晰表现清空桌面的动作。采用暖色自然光、浅木色桌面与简洁家居环境，画面整洁真实，不出现品牌、商品标识或额外文字。与第二页保持同一书桌、同一光线和相近色调，形成“先清空、再归位”的连续关系；信息密度适中，以笔记本、移动中的物品和整洁桌面为视觉重点。",
+          "sourceRefs": [
+            {
+              "kind": "project",
+              "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+              "versionId": "2026-10-28T09:33:55.112Z"
+            }
+          ]
+        },
+        {
+          "cardId": "card-desk-organize-02",
+          "title": "第二步：让常用物品各有位置",
+          "body": "笔放进笔筒，线材放进收纳盒，杯子放在桌角。给常用物品安排固定位置，桌面也更容易保持清爽。",
+          "visualBrief": "竖版生活纪实画面，延续第一页同一书桌、同一暖色自然光和浅木色桌面，镜头采用相同的俯拍视角。整理后的桌面保持开阔：笔记本放在中央，笔收入简洁笔筒，充电线收进小型收纳盒，杯子固定放在桌角，通过物品位置关系直观表现分类归位。整体色调温和、材质朴素、构图留白充足，不出现品牌、商品标识或额外文字。与第一页使用同一组主要物品，通过从散放到固定归位的视觉变化形成前后对照，画面重点落在笔、线材、杯子和笔记本的明确位置上。",
+          "sourceRefs": [
+            {
+              "kind": "project",
+              "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+              "versionId": "2026-10-28T09:33:55.112Z"
+            }
+          ]
+        }
+      ],
+      "retryRequestId": null,
+      "errorCode": null,
+      "retryOf": null,
+      "createdAt": "2026-10-28T09:46:07.151Z",
+      "updatedAt": "2026-10-28T09:48:47.479Z"
+    },
+    "meta": {
+      "requestId": "req-2ddab0cc-3683"
+    },
+    "error": null
+  }
+}

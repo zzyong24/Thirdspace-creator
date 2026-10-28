@@ -1,0 +1,12 @@
+{
+  "label": "timeout-policy-authorized",
+  "command": [
+    "node",
+    "tools/timeout-policy/verify.mjs"
+  ],
+  "cwd": "/Users/masx/Projects/Thirdspace-creator",
+  "exit_code": 0,
+  "duration_seconds": 18.84,
+  "ended_at": "2026-10-28T09:11:27.566499+00:00",
+  "log": "timeout-policy-authorized.log.gz"
+}

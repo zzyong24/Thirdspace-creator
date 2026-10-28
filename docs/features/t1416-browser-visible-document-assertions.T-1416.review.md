@@ -2,9 +2,9 @@
 
 - Task: T-1416
 - Verdict: PASS
-- Round: 1/3 (initial)
-- Spec receipt: 25cd3f02f0fb
-- Review receipt: 47d4fbfd6861
+- Round: 2/3 (recheck)
+- Spec receipt: fc8f8189e32b
+- Review receipt: 7a69820a7fb6
 
 ## 当前有效问题
 
@@ -17,23 +17,23 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1416",
   "cycle": 1,
-  "round": 1,
+  "round": 2,
   "max_rounds": 3,
-  "review_kind": "initial",
+  "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "T-1416 正式独立初审：未发现当前规格范围内的确认缺陷，findings 为空。绑定 SPEC docs/features/t1416-browser-visible-document-assertions.md，SHA-256=25cd3f02f0fb7fcf6e28ef6d1b29b9370a358dc98d4d4c433a7d20ba834d87a9；宪法 docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读任务包 §1–5、§7–9，写前核对 §6；本任务当前无历史 review event，使用 initial。审核者未编写本 SPEC 或其拟议测试实现，仅写此审核证据；未核实精确模型身份，不作异构模型声明。\n\n已核原测试源码 frontend/src/server/workbench-browser-host.test.ts（SHA-256=71ca29aefa7535d48b8d627e462587fa2fae92e974b6588cc29a75a0051be879）中的两处断言：509 行用于真实 Node/DB→PID-bound Rust socket→Chromium 的 navigate/extract/close 链；639 行用于两个账号独立 primary profile、第一账号取消后第二账号仍能 navigate/extract。两处原断言均只要求返回消息包含 Example Domain。实际 nomi-browser-engine/src/actions.rs:2561–2573、2991–3065（SHA-256=2cf672a85069ba8bcd2988efb7387e234a3f0e797db8e4a8367d54b97e38d9ed）读取当前作用帧的 document.body.innerText，经过容量限制、脱敏与带当前 URL 的不可信 data 包裹，和 accessibility snapshot 一并返回；它不承诺包含标签页 title。schema 回显、可见正文、ARIA 快照是不同区块。\n\n留存公开 HTML docs/verification/t1416/example-com-public-20261025.html 的 SHA-256=25ddf2c883e0d1958ea971d279a7e4f0fd446724ee3db7db19dadabd4a62e484。只读解析确认 title 是 Example Domain、没有 h1、body 没有该词，body 确实包含 SPEC 要求的完整英文段落。原 full 日志中的第二例 Received 同时含 [visible text]、精确 origin=https://example.com/ 和完整段落，而旧标题断言失败。由此可证明此处是期望与当前可见文档不符，不能据此认定生产提取失效或要求削弱脱敏。full 尾部的第一例详细输出被截断，不能把未读到的第一例详细 RED 写成已独立核验；合同已要求保留原两文件详细回归 RED，仍须在实施验收时审阅。\n\n拟议替换保持原功能覆盖：仅在真实提取结果的 [visible text] 区块校验精确来源 https://example.com/ 和当前完整英文正文，验证浏览器实际读到目标页的可见内容。禁止靠错误说明、schema、title 或其他区块凑命中，空正文、仅标题、错来源、缺段落均应失败；禁止把已下载 HTML 注入结果或 mock navigate/extract。相较于原消息任意位置标题子串，这保留了内容提取的实际用途并收紧来源约束，不是任意非空即通过。公开页面以后变化或网络失败仍可导致原真实测试失败，合同明确保留此依赖，不宣称提供稳定本地夹具，也不要求为本项引入夹具。\n\n已核 realTest 条件仍为 darwin 且有 CREATOROS_TEST_CFT_ROOT，原文件共五个真实用例。合同保留所有用例、两个原文件、真实 Rust/Chromium/Node/隔离 DB、profile/account/task 隔离、租约、取消后另一账号继续运行、私有状态不串号、最终 stop/lease 清理及进程退出；保留 90 秒 ready、45 秒调用、180 秒用例等既有等待和 retry=0。它只授权两处正文断言及必要测试内提取，不授权改生产 URL/端口/HTTPS 策略、信任证书、CDP 注入、脱敏、守卫配置或执行预算，符合产品宪法 P-02、NFR-SECURITY、NFR-PRIVACY 与 NFR-RELIABILITY。\n\n已只读核对原 reconcile-full.receipt.json：自然退出 1、signal=null、elapsedMs=2187525、budgetExhausted=false、outerAbort=false、processClosed=true、无剩余归属进程；日志为 54 个 hold、仅 LED-054 一个 fire/error。当前 LED-054 check 是原 frontend 两文件→ai-worker 协议→backend 四文件的串行 && 命令，retry=0、timeout_ms=2700000。合同要求修复后重跑整条命令，五个 realTest 0 skip、每段真实退出和清理，而非只重跑两条断言；原 full 在前端失败导致后续分段不能由旧结果推断通过。公共 _GATE_EVIDENCE.md 允许相同环境未变部分复用，并要求组合变化补整合验证、保留失败并关联修复结果。因本项只改两处测试期望且整条 LED-054 复验仍在，按该规则引用未变 54 项是有边界的证据复用；必须称原 full 失败后单项修复复验，不能改写为新候选一次 full PASS。\n\n验收还要求独立最终 diff、git diff --check、frontend typecheck；这些均尚待真实完成，本初审不代签实施或测试通过。安装继续绑定 f9e5e5ece，不因仅测试/控制面改动重标二进制。本次未运行重型测试、浏览器、网络、构建或控制面命令，未修改任何源文件；也不代表官方 Pi、图片幂等资格、安装态 UI 或 T-1427 推送条件已全部满足。",
+  "summary": "T-1416 当前规格独立增量复审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 fc8f8189e32b2f93c02914a91524773c1a564e595dc3143cb30429effae125ab；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 1；旧SHA与父提交字节相同。当前仅末段T-1408→T-1427，正文匹配、精确来源、真实Chromium/Rust/Node/DB与五个realTest、重试/等待及清理要求均未变。 静态读取留存公开HTML，Example Domain仅在title，完整英文正文与SPEC一致。当前测试helper从visible text区块检查精确origin和完整正文，不使用title、schema或任意非空文字；五个realTest声明仍存在。未重新访问example.com，不把历史HTML当现网保证，也未执行浏览器或full。 上层任务T1427明确保留官方未通过与用户停止无关剪辑范围；此处仍只能称原full失败后的单项复验，不能代签全新full、图片幂等或安装UI。原空findings完整保留；引用迁移未降低验收。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1416.evidence.json。",
   "spec_path": "docs/features/t1416-browser-visible-document-assertions.md",
-  "spec_sha256": "25cd3f02f0fb7fcf6e28ef6d1b29b9370a358dc98d4d4c433a7d20ba834d87a9",
+  "spec_sha256": "fc8f8189e32b2f93c02914a91524773c1a564e595dc3143cb30429effae125ab",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1416-browser-visible-document-assertions.T-1416.review.md",
   "review_mode": "homogeneous",
-  "model": "inherited-session-model",
+  "model": "inherited-independent-agent",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "0dc72d4ac966636ef8aef11a275d9ea44c1240171dca3b427433a589aa858b1c",
+  "latest_event_hash": "f38eeeca785a35d2bf25a2cbf44515635e9e8001b353a1edcc5a4405488d2988",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "47d4fbfd6861"
+  "receipt": "7a69820a7fb6"
 }
 ```

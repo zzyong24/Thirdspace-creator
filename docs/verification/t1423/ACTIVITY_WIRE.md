@@ -1,10 +1,10 @@
-# T-1423-AM 原授权安全绑定恢复合同
+# T-1402-AM 原授权安全绑定恢复合同
 
 2026-10-23。版本 `license-restore-current-v1`。状态：**完整合同待独立评审，产品代码和本任务测试均未实施**。
 
 ## 1. 权威、授权与范围
 
-本任务 ID 为 `T-1423-AM`，映射 Creator `T-1423`；基线 `a3f92b0001c062c079daeb101a550c26c6680395`，独立候选 `/Volumes/T7-MacData/CodexBuilds/Activity-T1423-20261023/source`，不混入 T250 试用候选。该 ID 在基线 BACKLOG/ID_REGISTRY 未占用；不修改 ID_REGISTRY，标识只在本合同命名空间使用。
+本任务 ID 为 `T-1402-AM`，映射 Creator `T-1402`；基线 `a3f92b0001c062c079daeb101a550c26c6680395`，独立候选 `/Volumes/T7-MacData/CodexBuilds/Activity-T1402-20261023/source`，不混入 T250 试用候选。该 ID 在基线 BACKLOG/ID_REGISTRY 未占用；不修改 ID_REGISTRY，标识只在本合同命名空间使用。
 
 用户已阅读 `/Users/zyongzhu/terminals/growth-credit-20261023/ACTIVITY_LEGACY_UPGRADE_SCOPE.md` 并明确答复“允许上述本地实现与测试”。只准该文精确六文件及列明控制面；不提交、推送、部署、重启、真实激活/换绑、实赠、批量迁移或解锁。Activity 仍是许可/设备事实权威；Growth 管钱包/模型履约；Creator 管本机可信许可与交互。本接口不接收金额、服务名、钱包、模型/Key、Growth ownerProof、任意待释放码列表。
 
@@ -195,7 +195,7 @@ SHA-256=<最终UTF-8响应体sha256的标准base64>
 以下所有code、machine、hash、时间、nonce均为公开合成fixture；实际header签名需本任务测试fixture Ed25519 key生成，不能把这里的placeholder当真签名。
 
 ```json
-{"contractVersion":"license-restore-current-v1","action":"inspect","projectKey":"creatoros","code":"SYNTHETIC-T1423-ONLY","machineId":"fixture-machine-alpha","nonce":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}
+{"contractVersion":"license-restore-current-v1","action":"inspect","projectKey":"creatoros","code":"SYNTHETIC-T1402-ONLY","machineId":"fixture-machine-alpha","nonce":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}
 ```
 
 ```json
@@ -203,7 +203,7 @@ SHA-256=<最终UTF-8响应体sha256的标准base64>
 ```
 
 ```json
-{"contractVersion":"license-restore-current-v1","action":"restore","projectKey":"creatoros","code":"SYNTHETIC-T1423-ONLY","machineId":"fixture-machine-alpha","nonce":"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE","expectedStateDigest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+{"contractVersion":"license-restore-current-v1","action":"restore","projectKey":"creatoros","code":"SYNTHETIC-T1402-ONLY","machineId":"fixture-machine-alpha","nonce":"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE","expectedStateDigest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
 ```
 
 ```json
@@ -220,7 +220,7 @@ SHA-256=<最终UTF-8响应体sha256的标准base64>
 
 ## 11. TDD、真实PG与交付验收
 
-独评PASS后才写产品。先新增原断言RED，再最小实现，保留原失败。准确6文件：route、`src/lib/license-restore-current-contract.ts`、`src/lib/license-restore-current-service.ts`、`tests/license-restore-current-contract.test.ts`、`tests/license-restore-current-service.test.ts`、`tests/t1423-license-restore-current-local-pg.test.ts`。schema/迁移/旧activate不在写集；安全helper不够用时先报新增准确路径，不扩写。
+独评PASS后才写产品。先新增原断言RED，再最小实现，保留原失败。准确6文件：route、`src/lib/license-restore-current-contract.ts`、`src/lib/license-restore-current-service.ts`、`tests/license-restore-current-contract.test.ts`、`tests/license-restore-current-service.test.ts`、`tests/t1402-license-restore-current-local-pg.test.ts`。schema/迁移/旧activate不在写集；安全helper不够用时先报新增准确路径，不扩写。
 
 必须的fixture和真实PG矩阵：
 

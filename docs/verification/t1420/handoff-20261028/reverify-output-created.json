@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "operation": "graphicPosts.outputs.create",
+  "requestId": "req-2ddab0cc-3250",
+  "groupId": "grp-8fdb2e06-22",
+  "accountId": null,
+  "data": {
+    "id": "output-2ddab0cc-3252",
+    "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+    "title": "T-1420 验收：书桌整理的两个小动作",
+    "contentType": "image",
+    "targetPlatform": "xiaohongshu",
+    "format": "",
+    "aspectRatio": "",
+    "targetDurationSeconds": 0,
+    "status": "drafting",
+    "contentRole": null,
+    "primaryAssetId": null,
+    "createdAt": "2026-10-28T09:37:18.295Z",
+    "updatedAt": "2026-10-28T09:37:18.295Z"
+  },
+  "meta": {
+    "requestId": "req-2ddab0cc-3250"
+  },
+  "error": null
+}

@@ -1,0 +1,260 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1417",
+  "review_kind": "recheck",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "本会话未编写修订；独立读取正式ledger/context、当前SPEC、精确Git差异及原件/实际路径，按冻结规则复核。",
+  "reviewed_at": "2026-10-28T11:02:44.970Z",
+  "previous_cycle": 1,
+  "previous_round": 2,
+  "expected_next_round": 3,
+  "spec_path": "docs/features/t1417-text-probe-output-budget.md",
+  "spec_sha256": "673b3f37346a4418b35088ee1e56dbf96858f0bae58202d63dcd523ca08dcd6b",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger_path": "orchestrator/review-events.ndjson",
+  "source_ledger_sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c",
+  "previous_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1417",
+    "cycle": 1,
+    "round": 2,
+    "review_kind": "recheck",
+    "verdict": "PASS",
+    "spec_path": "docs/features/t1417-text-probe-output-budget.md",
+    "spec_sha256": "7dcf2e7822b1ec12065d8c24147e27d9dbb96d6c5a59e45cec7bfe003ff47c6b",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1417-text-probe-output-budget.T-1417.review.md",
+    "review_mode": "homogeneous",
+    "model": "inherited-independent-agent",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "reviewctl_sha256": "8deeb807861c594a23abc85272e1462c1cda008679fc9fb0e326830d52fecabf",
+    "recorded_at": "2026-10-28T10:59:03.174Z",
+    "previous_event_hash": "f38eeeca785a35d2bf25a2cbf44515635e9e8001b353a1edcc5a4405488d2988",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "recheck",
+      "summary": "T-1417 当前规格独立增量复审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 7dcf2e7822b1ec12065d8c24147e27d9dbb96d6c5a59e45cec7bfe003ff47c6b；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 1；旧SHA与父提交相同。当前修改三处T1408→T1427与首段证据目录，不改变128/8192两值、四个文本capability白名单、非文本副作用前拒绝、固定prompt/零重试、原并发预算和CAS恢复。 静态核contract严格text IPC两值及image不含该字段、backend投影、worker消费maxOutputTokens与maxRetries=0、frontend对非文本选项的前置拒绝和8192成功限定文案；现真实IPC测试源码包含两档max_tokens及鉴权、单次请求。没有运行产品、模型或测试，不推断现场402根因。 新目录docs/verification/t1427/credential-refresh-20261025在隔离树和原工作区均不存在，旧t1408同目录也不可得；DEC142801记载被ignore日志可能留旧目录而非迁移。故无法将该新路径称为已核验的历史原始回执，作为changed-lines minor记录；不要求重打失败模型请求补证。其余原空findings保持，新增项不阻断已明确的可执行合同。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1417.evidence.json。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "minor",
+          "category": "operability",
+          "requirement_anchor": {
+            "id": "历史诊断证据",
+            "quote": "原始回执在 docs/verification/t1427/credential-refresh-20261025/。"
+          },
+          "acceptance_anchor": {
+            "id": "验收",
+            "quote": "记录时间/结果/凭据元数据与 CAS 恢复"
+          },
+          "where": "docs/features/t1417-text-probe-output-budget.md:3",
+          "failure_mode": "改写后的历史原始回执目录在隔离树和原工作区均不存在；旧目录本机亦不可得，当前审查者不能依该引用核实既有128成功/正式402的原始时间和凭据元数据。不能把引用重命名本身当作原件已迁移或本轮已验证。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "docs/verification/t1429/reviews/T-1417.evidence.json#path_checks",
+          "risk_class": "low-risk",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "changed-lines",
+          "origin_ref": "SPEC-LINE:3:720081e4fb9f64ac",
+          "suggestion": "注明原回执当前不可得及其原始来源，或提供已保全的可读取归档路径与hash；无需重跑真实付费/失败模型请求补证。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "event_hash": "c41e39939b27231fc23124bff6153290db640a4efcb4e25cc54c2cf257c09899"
+  },
+  "previous_spec_git": {
+    "commit": "6033bdd51e6996cfe80eb041661a2b1a4f15a5b0",
+    "path": "docs/features/t1417-text-probe-output-budget.md",
+    "sha256": "7dcf2e7822b1ec12065d8c24147e27d9dbb96d6c5a59e45cec7bfe003ff47c6b"
+  },
+  "context_command": "node orchestrator/process/reviewctl.mjs context T-1417",
+  "actual_context": {
+    "schema": "spec-review-recheck-context/v1",
+    "task_id": "T-1417",
+    "previous_round": 2,
+    "previous_verdict": "PASS",
+    "previous_spec_sha256": "7dcf2e7822b1ec12065d8c24147e27d9dbb96d6c5a59e45cec7bfe003ff47c6b",
+    "previous_packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "recheck",
+      "summary": "T-1417 当前规格独立增量复审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 7dcf2e7822b1ec12065d8c24147e27d9dbb96d6c5a59e45cec7bfe003ff47c6b；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 1；旧SHA与父提交相同。当前修改三处T1408→T1427与首段证据目录，不改变128/8192两值、四个文本capability白名单、非文本副作用前拒绝、固定prompt/零重试、原并发预算和CAS恢复。 静态核contract严格text IPC两值及image不含该字段、backend投影、worker消费maxOutputTokens与maxRetries=0、frontend对非文本选项的前置拒绝和8192成功限定文案；现真实IPC测试源码包含两档max_tokens及鉴权、单次请求。没有运行产品、模型或测试，不推断现场402根因。 新目录docs/verification/t1427/credential-refresh-20261025在隔离树和原工作区均不存在，旧t1408同目录也不可得；DEC142801记载被ignore日志可能留旧目录而非迁移。故无法将该新路径称为已核验的历史原始回执，作为changed-lines minor记录；不要求重打失败模型请求补证。其余原空findings保持，新增项不阻断已明确的可执行合同。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1417.evidence.json。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "minor",
+          "category": "operability",
+          "requirement_anchor": {
+            "id": "历史诊断证据",
+            "quote": "原始回执在 docs/verification/t1427/credential-refresh-20261025/。"
+          },
+          "acceptance_anchor": {
+            "id": "验收",
+            "quote": "记录时间/结果/凭据元数据与 CAS 恢复"
+          },
+          "where": "docs/features/t1417-text-probe-output-budget.md:3",
+          "failure_mode": "改写后的历史原始回执目录在隔离树和原工作区均不存在；旧目录本机亦不可得，当前审查者不能依该引用核实既有128成功/正式402的原始时间和凭据元数据。不能把引用重命名本身当作原件已迁移或本轮已验证。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "docs/verification/t1429/reviews/T-1417.evidence.json#path_checks",
+          "risk_class": "low-risk",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "changed-lines",
+          "origin_ref": "SPEC-LINE:3:720081e4fb9f64ac",
+          "suggestion": "注明原回执当前不可得及其原始来源，或提供已保全的可读取归档路径与hash；无需重跑真实付费/失败模型请求补证。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "changed_line_refs": [
+      {
+        "origin_ref": "SPEC-LINE:3:f961ce90fdfe8bc1",
+        "text": "2026-10-25，承接用户“那急需解决 不要偷懒”及 T-1427 的修复、CLI 实测、本地安装授权。新官方凭据更新时间为 11:40:06.250Z；随后新对话 execution-task-c34e9921-4086 首轮仍为 HTTP 402，原任务最后一次恢复没有使用。同一时段 default 最小探针有真实回复。历史记录原先引用 docs/verification/t1408/credential-refresh-20261025/；重编号后写成 t1427 并不证明原件已搬迁。2026-10-28 本机核查两个目录均不可得，因此本段是历史背景，原始回执尚未在本机复核，不作为本轮真实模型或费用验收；无需重打付费或失败请求补证。"
+      }
+    ],
+    "origin_ref_formats": {
+      "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+      "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+      "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+    }
+  },
+  "exact_spec_diff": "--- 6033bdd51e6996cfe80eb041661a2b1a4f15a5b0:docs/features/t1417-text-probe-output-budget.md\n+++ docs/features/t1417-text-probe-output-budget.md\n@@ -1,6 +1,6 @@\n # T-1417 文本连接测试支持正式聊天输出预算的区分性诊断\n \n-2026-10-25，承接用户“那急需解决 不要偷懒”及 T-1427 的修复、CLI 实测、本地安装授权。新官方凭据更新时间为 11:40:06.250Z；随后新对话 execution-task-c34e9921-4086 首轮仍为 HTTP 402，原任务最后一次恢复没有使用。同一时段 default 最小探针有真实回复。原始回执在 docs/verification/t1427/credential-refresh-20261025/。\n+2026-10-25，承接用户“那急需解决 不要偷懒”及 T-1427 的修复、CLI 实测、本地安装授权。新官方凭据更新时间为 11:40:06.250Z；随后新对话 execution-task-c34e9921-4086 首轮仍为 HTTP 402，原任务最后一次恢复没有使用。同一时段 default 最小探针有真实回复。历史记录原先引用 docs/verification/t1408/credential-refresh-20261025/；重编号后写成 t1427 并不证明原件已搬迁。2026-10-28 本机核查两个目录均不可得，因此本段是历史背景，原始回执尚未在本机复核，不作为本轮真实模型或费用验收；无需重打付费或失败请求补证。\n \n ## 原因与最小改动\n \n",
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "85f86303066d79f40659be9453466c9e2cc21ea624ebe920a0c3af423afe6199"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "dddd4a0c4e9f1e106e46a8f37b6ebd6fac4f12fda42e26c9d1e3e05fe978d862"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "64bc35c16d47bb77d1c9f4e4e43c978d9c4adaae6c1af9c7295a616bff33f803"
+    },
+    {
+      "path": "BACKLOG.md",
+      "sha256": "789af06d380e09bde1c61639d3d482cf43fea4ded8d4d054f8846f0df7889358"
+    },
+    {
+      "path": "orchestrator/review-events.ndjson",
+      "sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c"
+    },
+    {
+      "path": "docs/verification/t1429/provenance-restorations.json",
+      "sha256": "0f2e8fc04a7a3fccc726db59c658aefd86e690455822b18ecaac2fad48824a3e"
+    },
+    {
+      "path": "docs/verification/t1423/CLIENT_WIRE.md",
+      "sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d"
+    },
+    {
+      "path": "docs/verification/t1423/ACTIVITY_WIRE.md",
+      "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a"
+    },
+    {
+      "path": "docs/verification/t1423/activity-final-independent-review.json",
+      "sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-CLIENT_WIRE.md",
+      "sha256": "78d8acc1cd5581195f0bd90d2f28f905a1cd55b820b01df4f6219d4b55c30797"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-ACTIVITY_WIRE.md",
+      "sha256": "7de76c64f35568d26f2cefae23e552b855dd715ffcd92d335d6d427c8a3f9317"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-activity-final-independent-review.json",
+      "sha256": "92430ff303060b3e1874c910073a686880691d602b9330bb445e23f094dc356b"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1423.evidence.json",
+      "sha256": "433801cc70d2efd2f1ce9eb831ccb58612cf643e11c6a54e2eca537dd7070d23"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1407.evidence.json",
+      "sha256": "dfc535b2ab4a9be3675568d6e3b492d134ce58f4ed017e088bec051ec23615ee"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1410.evidence.json",
+      "sha256": "13b41144034e5fd8ea3f6a1373bcb27881e22bb219341d3d88d7078049ef0ba0"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1417.evidence.json",
+      "sha256": "5a72fe6805557743fc90101ba02aab51b90dffa5e4e5b7094f56d32235d94c5a"
+    }
+  ],
+  "restoration_checks": [],
+  "actual_path_checks": [
+    {
+      "root": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/review-chain-recovery/repo",
+      "path": "docs/verification/t1408/credential-refresh-20261025",
+      "exists": false
+    },
+    {
+      "root": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/review-chain-recovery/repo",
+      "path": "docs/verification/t1427/credential-refresh-20261025",
+      "exists": false
+    },
+    {
+      "root": "/Users/masx/Projects/Thirdspace-creator",
+      "path": "docs/verification/t1408/credential-refresh-20261025",
+      "exists": false
+    },
+    {
+      "root": "/Users/masx/Projects/Thirdspace-creator",
+      "path": "docs/verification/t1427/credential-refresh-20261025",
+      "exists": false
+    }
+  ],
+  "finding_recheck": [
+    {
+      "id": "REV-001",
+      "previous_status": "open",
+      "previous_severity": "minor",
+      "conclusion": "resolved",
+      "allowed_changes": [
+        "status",
+        "resolution_evidence"
+      ],
+      "frozen_fields_preserved": true
+    }
+  ],
+  "analysis": [
+    "直接读取正式ledger cycle1 round2及agentB的minor REV-001，按原建议核对来源澄清，不要求重跑付费/失败模型请求。",
+    "当前SPEC首段恢复历史t1408/credential-refresh-20261025引用，明确重编号t1427不证明迁移、两个目录本机不可得、原回执未在本机复核且只作历史背景，不作为本轮模型/费用验收。",
+    "本会话亲自检查隔离树及/Users/masx/Projects/Thirdspace-creator两根的t1408/t1427目录，四项均不存在。此实际结果支持澄清，不能推断当年的运行没发生。原failure_mode要求避免将改名当作原件迁移/本轮验证，现已满足，REV-001可resolved。",
+    "精确diff只有首段来源说明；128/8192、四capability、非文本副作用前拒绝、原任务不可恢复、串行两次限定实验与CAS恢复条款未改，未发现增量新问题。"
+  ],
+  "limitations": [
+    "本轮仅冻结finding销账及修订增量检查；未运行产品/模型/钱包/安装/远程CI/平台验收，不能据此关闭原业务失败。",
+    "仅写本次8个新review/evidence JSON；不覆盖上一轮材料，不改SPEC/业务/控制面，不record或提交。"
+  ]
+}

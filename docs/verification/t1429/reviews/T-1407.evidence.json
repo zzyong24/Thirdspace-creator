@@ -1,0 +1,161 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1407",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "独立子会话亲自读取原事件、当前SPEC、产品宪法、规则及精确Git差异；不声称跨模型或新运行验收。",
+  "reviewed_at": "2026-10-28T10:59:00.316Z",
+  "review_kind": "recheck",
+  "previous_cycle": 1,
+  "previous_round": 1,
+  "expected_next_round": 2,
+  "spec_path": "docs/features/t1407-local-integration-install-merge-preparation.md",
+  "spec_sha256": "311939ad1deba343c9c54511a50e7d9e7635e15c33a4b343125e238921554157",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger": {
+    "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "path": "docs/verification/t1429/originals/incoming-review-events.ndjson",
+    "sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d",
+    "actual_sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d"
+  },
+  "source_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1407",
+    "cycle": 1,
+    "round": 1,
+    "review_kind": "initial",
+    "verdict": "PASS",
+    "spec_path": "docs/features/t1407-local-integration-install-merge-preparation.md",
+    "spec_sha256": "d270e5b0e159bbd4922cb627a7e4e07d7fb294ecb438430a47db5c970acce2b1",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1407-local-integration-install-merge-preparation.T-1407.review.md",
+    "review_mode": "homogeneous",
+    "model": "inherited-host-model",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "reviewctl_sha256": "d04f9a3a80439059fafa327c7f9a0ae1468ca926197e3f57a694a2bc31e9a4b9",
+    "recorded_at": "2026-10-25T04:11:22.065Z",
+    "previous_event_hash": "34411a1d9c253dc2cb3b523dfe8d46b1e9edb8425fe0742bc5c70e06b6b716a3",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "initial",
+      "summary": "T-1407首轮同构独立规格审核：用户新授权覆盖现安装72项与本任务13项的整理提交、普通主干整合及本地安装CLI复验；不push、不公开发布、不修改钱包，保原改动、公众号绑定与旧FAIL，采用干净已提交候选打包。规格SHA256=d270e5b0e159bbd4922cb627a7e4e07d7fb294ecb438430a47db5c970acce2b1。独立代理/root/t1405_spec_review只读确认，无finding，运行验收未开始。",
+      "findings": []
+    },
+    "event_hash": "db9449e5bb0f04bce756e4a39e753dbd0db84194c207fd353603c34e135365ef"
+  },
+  "historical_spec": {
+    "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "path": "docs/features/t1407-local-integration-install-merge-preparation.md",
+    "sha256": "d270e5b0e159bbd4922cb627a7e4e07d7fb294ecb438430a47db5c970acce2b1",
+    "blob": "044e95188e548fd600a09c81dd54a286810f60bc",
+    "fingerprints_match": true
+  },
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "10d73f0e337034bb3717ca50a7841b41e115c0d8aa43409baee3d4209060d1ca"
+    },
+    {
+      "path": "docs/features/t1429-review-ledger-recovery.md",
+      "sha256": "a8a382a4f1df1082153ae3c7a52bd30857689c68473d40df6c257193b9818d68"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "8deeb807861c594a23abc85272e1462c1cda008679fc9fb0e326830d52fecabf"
+    },
+    {
+      "path": "docs/verification/t1429/migration-manifest.json",
+      "sha256": "0f233820062e6f9a02bbdc4b66b93d626304fe3e48cbdfae1be82271d6590d28"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "29bc1ba781c3c4a09dbcbdc180900e67639e74439731805dcaed8fe7646b7171"
+    },
+    {
+      "path": "BACKLOG.md",
+      "sha256": "f2decba657ec8f09169fd49ccfffa83f0c8eb9555a64084991343ee79d1ce8d1"
+    },
+    {
+      "path": "docs/verification/t1407/combined-candidate-manifest.json",
+      "sha256": "da19eeea92cbee236de22552334f8c1db4fbc947647c6a61ee11ac4bccac7c03"
+    }
+  ],
+  "context_method": "reviewctl context T-1406只读尝试时恢复模块尚未落盘，ERR_MODULE_NOT_FOUND。按T1429自举协议使用未损坏原ledger的完整packet及精确Git历史SPEC；不使用坏链伪造context。",
+  "exact_spec_diff": "--- 3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d:docs/features/t1407-local-integration-install-merge-preparation.md\n+++ docs/features/t1407-local-integration-install-merge-preparation.md\n@@ -4,15 +4,15 @@\n \n ## 来源与真实限制\n \n-- 主目录 `main` 基线 `cfd165baa`，包含已提交 T-1404 Tab 性能修复；另有本次 13 项 T-1405 产品变更及规则、规格、控制面工件。\n+- 主目录 `main` 基线 `cfd165baa`，包含已提交 T-1425 Tab 性能修复；另有本次 13 项 T-1426 产品变更及规则、规格、控制面工件。\n - 本任务自己的独立修复提交 `93a972b9cda4e72e385d098105ce6c797fc8d32d` 已保留，不能重写为未发生的红测或真机通过。\n - 现安装版 sidecar 为 `9db6e42887db0c469cea36e51351a9782baa1e26f874344c6ee2e6637290c3c8`，来源 `codex/cos-ux-closure` 的 `f7147fd71` 加 72 项冻结文件。公众号绑定已在公开 CLI 真实回读成功；旧来源整单仍保留视频号报表、自动恢复、剪辑耗时和部分筛选性能失败。\n-- 另一工作树的旧任务编号 T-1403 与本目录 CLI 测试 T-1403 重号；不覆盖同号看板或篡改其历史事件。本任务用来源路径、原 HEAD、hash 与报告追溯导入范围，保留未完成项，不替来源任务签绿。\n+- 另一工作树的旧任务编号 T-1424 与本目录 CLI 测试 T-1424 重号；不覆盖同号看板或篡改其历史事件。本任务用来源路径、原 HEAD、hash 与报告追溯导入范围，保留未完成项，不替来源任务签绿。\n - 本轮“代码都处理”允许把相关现安装修复整理为本地提交；这不将其他工作树的未完成验收变为完成，也不推定公开发布授权。\n \n ## 整合合同\n \n-1. 保全主目录及来源工作树原始改动。隔离目录只导入现安装冻结的 72 项和 T-1405 的 13 项，结合已提交 main/来源分支/可获取的 origin/main；普通 merge 处理冲突。记录每个导入文件、来源 hash、冲突处理和提交归属，禁止 reset --hard、rebase、force、跳过 hooks。源码未在冻结内的额外改动先核归属，不整体拷贝他任务脏树。\n+1. 保全主目录及来源工作树原始改动。隔离目录只导入现安装冻结的 72 项和 T-1426 的 13 项，结合已提交 main/来源分支/可获取的 origin/main；普通 merge 处理冲突。记录每个导入文件、来源 hash、冲突处理和提交归属，禁止 reset --hard、rebase、force、跳过 hooks。源码未在冻结内的额外改动先核归属，不整体拷贝他任务脏树。\n 2. 文档与控制面只合并能追溯到已确认任务的改动；不照搬重号任务状态，不复制无证据的 PASS。需要保留的既有失败在集成报告中明确归属，不以本次局部测试代签全产品可发布。\n 3. 先独立审查本合同和候选清单，后整合；进入打包时使用干净、已提交且通过相关回归的候选，四版本一致，安全扫描和四项固定打包测试通过，运行原 `pnpm -C frontend desktop:package-local`。不使用上一轮源码 hash 冻结例外，也不在打包中修改产品或测试洗绿。\n 4. 安装前后校验源码、产物和当前 App 指纹；现安装若又发生更新，先纳入其已确认来源再构建。保留恢复能力和用户数据，公开 CLI 读回项目 ID 与模型选择，不访问用户库或密钥。\n@@ -30,6 +30,6 @@\n \n ## 范围与验收\n \n-允许写集：原 72 项冻结的产品/测试/内置编辑器来源工件，T-1405 的 13 项产品/测试，相关已确认任务的规格与规则修订、任务控制面和新增本 SPEC、`docs/verification/t1407/**`、本任务评审、任务绑定/任务包。精确清单在任务绑定中列出，未批准范围不借“全部整理”扩成新产品功能。不要改 Growth/Activity、许可经济政策、钱包、登录或密钥。\n+允许写集：原 72 项冻结的产品/测试/内置编辑器来源工件，T-1426 的 13 项产品/测试，相关已确认任务的规格与规则修订、任务控制面和新增本 SPEC、`docs/verification/t1407/**`、本任务评审、任务绑定/任务包。精确清单在任务绑定中列出，未批准范围不借“全部整理”扩成新产品功能。不要改 Growth/Activity、许可经济政策、钱包、登录或密钥。\n \n 复用未变化的有效证据，新集成或冲突影响部分重跑相关 backend/worker/frontend 回归、串行 6144MiB 全 workspace typecheck、LED-047/LED-053、boundary、quality、diff check、独立候选审查和新安装版 CLI 复验。真实 RED/旧 FAIL 保留，无新增产品行为则不补造 TDD 红测。收尾 pmem sync、quick read-only reconcile 如实归类，再用 taskctl 管理状态；不绕过要求的 UI journey、既有质量门或完整发布条件。\n",
+  "changed_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:7:3c3e7b326dbbd90c",
+      "text": "- 主目录 `main` 基线 `cfd165baa`，包含已提交 T-1425 Tab 性能修复；另有本次 13 项 T-1426 产品变更及规则、规格、控制面工件。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:10:138b396829becabb",
+      "text": "- 另一工作树的旧任务编号 T-1424 与本目录 CLI 测试 T-1424 重号；不覆盖同号看板或篡改其历史事件。本任务用来源路径、原 HEAD、hash 与报告追溯导入范围，保留未完成项，不替来源任务签绿。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:15:0f573b6e96b86c7b",
+      "text": "1. 保全主目录及来源工作树原始改动。隔离目录只导入现安装冻结的 72 项和 T-1426 的 13 项，结合已提交 main/来源分支/可获取的 origin/main；普通 merge 处理冲突。记录每个导入文件、来源 hash、冲突处理和提交归属，禁止 reset --hard、rebase、force、跳过 hooks。源码未在冻结内的额外改动先核归属，不整体拷贝他任务脏树。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:33:ee2978e221815448",
+      "text": "允许写集：原 72 项冻结的产品/测试/内置编辑器来源工件，T-1426 的 13 项产品/测试，相关已确认任务的规格与规则修订、任务控制面和新增本 SPEC、`docs/verification/t1407/**`、本任务评审、任务绑定/任务包。精确清单在任务绑定中列出，未批准范围不借“全部整理”扩成新产品功能。不要改 Growth/Activity、许可经济政策、钱包、登录或密钥。"
+    }
+  ],
+  "existing_findings_recheck": {
+    "count": 0,
+    "findings": [],
+    "result": "原findings为空，无销账、改写或重开。"
+  },
+  "difference_analysis": [
+    "除本地T1404→1425、T1405→1426引用外，当前把另一工作树旧任务编号T1403也改为T1424。72项/13项整合范围、禁止推送、保留失败、适用UI/安装义务都未减。",
+    "分别读取base/incoming父提交BACKLOG：base T1403=修复Windows全流程实测失败与可本机解除的阻塞，incoming T1403=沿用已确认账号并实测CLI对话组合。DEC-142801明确远端T1403保持不变，仅本地CLI T1403→T1424；当前BACKLOG也保留两个不同任务及SPEC。",
+    "因此另一工作树旧T1424的叙述改变了来源身份，按当前SPEC定位导入源会指向本地CLI而非Windows源任务，违背原HEAD/hash/报告追溯和旧失败准确归属要求，形成REV-001。",
+    "combined-candidate-manifest原worktree绝对路径含t1405，当前被改为t1426；此附属观察只说明来源引用需保留历史身份，不据此推断产品字节或新安装结果。"
+  ],
+  "provenance_evidence": [
+    {
+      "commit": "24d5f323296f4b763d308e895b78a4b747596009",
+      "path": "BACKLOG.md",
+      "task_id": "T-1403",
+      "title": "修复 Windows 全流程实测失败与可本机解除的阻塞",
+      "spec": "docs/features/t1403-windows-flow-repair.md"
+    },
+    {
+      "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+      "path": "BACKLOG.md",
+      "task_id": "T-1403",
+      "title": "沿用已确认账号并实测CLI对话组合",
+      "spec": "docs/features/t1403-cli-chat-combination-acceptance.md"
+    },
+    {
+      "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+      "path": "docs/verification/t1407/combined-candidate-manifest.json",
+      "sha256": "dee7f4c1e42ea873ddd622c2a08afc9fe169ee97e0c61339ec702665cd6da28c"
+    }
+  ],
+  "limitations": [
+    "本轮只做规格增量复审，未执行产品测试、外部服务、钱包、远程CI、安装或平台操作。",
+    "仅写授权的10个review/evidence JSON，未改SPEC/业务/控制面，未登记审核或提交。"
+  ]
+}

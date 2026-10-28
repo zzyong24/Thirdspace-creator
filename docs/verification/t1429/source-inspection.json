@@ -1,0 +1,353 @@
+[
+  {
+    "sourceTask": "T-1404",
+    "task": "T-1425",
+    "spec": "docs/features/t1425-tab-navigation-performance-fixes.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1405",
+    "task": "T-1426",
+    "spec": "docs/features/t1426-chat-model-combination-fixes.md",
+    "round": 2,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1407",
+    "task": "T-1407",
+    "spec": "docs/features/t1407-local-integration-install-merge-preparation.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1402",
+    "task": "T-1423",
+    "spec": "docs/features/t1423-legacy-license-one-click-upgrade.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1408",
+    "task": "T-1427",
+    "spec": "docs/features/t1427-official-pi-acceptance-and-push.md",
+    "round": 2,
+    "cycle": 2,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1409",
+    "task": "T-1428",
+    "spec": "docs/features/t1428-managed-pi-payment-diagnostics.md",
+    "round": 3,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1410",
+    "task": "T-1410",
+    "spec": "docs/features/t1410-review-evidence-reconciliation.md",
+    "round": 3,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-652",
+    "task": "T-652",
+    "spec": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1369",
+    "task": "T-1369",
+    "spec": "docs/features/t1369-dashboard-filter-sidebar-navigation.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1255",
+    "task": "T-1255",
+    "spec": "docs/features/t1255-reporting-full-delivery.md",
+    "round": 1,
+    "cycle": 4,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1072-owned-devices",
+    "task": "T-1072-owned-devices",
+    "spec": "docs/features/t1072-owned-devices.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1021",
+    "task": "T-1021",
+    "spec": "docs/features/t1021-cover-template-library.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-915",
+    "task": "T-915",
+    "spec": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+    "round": 1,
+    "cycle": 3,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-859",
+    "task": "T-859",
+    "spec": "docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md",
+    "round": 1,
+    "cycle": 3,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-858",
+    "task": "T-858",
+    "spec": "docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md",
+    "round": 2,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-824",
+    "task": "T-824",
+    "spec": "docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-819",
+    "task": "T-819",
+    "spec": "docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-816",
+    "task": "T-816",
+    "spec": "docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-768",
+    "task": "T-768",
+    "spec": "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-726",
+    "task": "T-726",
+    "spec": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-707",
+    "task": "T-707",
+    "spec": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-703",
+    "task": "T-703",
+    "spec": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md",
+    "round": 2,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-691",
+    "task": "T-691",
+    "spec": "docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-694",
+    "task": "T-694",
+    "spec": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-656",
+    "task": "T-656",
+    "spec": "docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-645",
+    "task": "T-645",
+    "spec": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-642",
+    "task": "T-642",
+    "spec": "docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-635",
+    "task": "T-635",
+    "spec": "docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md",
+    "round": 1,
+    "cycle": 2,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1411",
+    "task": "T-1411",
+    "spec": "docs/features/t1411-model-probe-auth-parity.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1412",
+    "task": "T-1412",
+    "spec": "docs/features/t1412-full-reconcile-isolation.md",
+    "round": 2,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1413",
+    "task": "T-1413",
+    "spec": "docs/features/t1413-lesson-semantic-coverage.md",
+    "round": 3,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1414",
+    "task": "T-1414",
+    "spec": "docs/features/t1414-critical-path-rule-summary.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1415",
+    "task": "T-1415",
+    "spec": "docs/features/t1415-resumed-verification-control.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1416",
+    "task": "T-1416",
+    "spec": "docs/features/t1416-browser-visible-document-assertions.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1417",
+    "task": "T-1417",
+    "spec": "docs/features/t1417-text-probe-output-budget.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": false,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1419",
+    "task": "T-1419",
+    "spec": "docs/features/t1419-article-workbench-style-restoration.md",
+    "round": 3,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1420",
+    "task": "T-1420",
+    "spec": "docs/features/t1420-graphic-post-content-structure.md",
+    "round": 3,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1421",
+    "task": "T-1421",
+    "spec": "docs/features/t1421-transcript-editing-clarity.md",
+    "round": 1,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  },
+  {
+    "sourceTask": "T-1418",
+    "task": "T-1418",
+    "spec": "docs/features/t1418-creator-overview-read-performance.md",
+    "round": 3,
+    "cycle": 1,
+    "specHashMatches": true,
+    "constitutionHashMatches": true
+  }
+]

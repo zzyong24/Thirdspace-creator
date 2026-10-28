@@ -1,0 +1,19 @@
+ M BACKLOG.md
+ M ai-worker/src/execution/transcribe-worker-source.ts
+ M backend/src/modules/intelligence/intelligence.service.test.ts
+ M backend/src/modules/intelligence/intelligence.service.ts
+ M contract/src/operations/intelligence.ts
+ M contract/src/resources/intelligence.ts
+ M docs/engineering-notes/pitfalls.md
+ M frontend/src/features/intelligence/intelligence-workbench-api.ts
+ M frontend/src/features/intelligence/intelligence-workbench-types.ts
+ M frontend/src/features/intelligence/intelligence-workbench.test.tsx
+ M frontend/src/features/intelligence/intelligence-workbench.tsx
+ M frontend/src/features/intelligence/source-setup-dialog.tsx
+ M frontend/src/server/ingestion/douyin-auth-staging.ts
+ M frontend/src/server/intelligence/source-adapter.ts
+?? ai-worker/src/runtime/douyin-transcribe-anonymous.test.ts
+?? ai-worker/src/runtime/douyin-transcribe-anonymous.ts
+?? docs/features/t1409-douyin-login-free-and-windows-staging.md
+?? frontend/src/features/intelligence/attach-collector-dialog.tsx
+?? frontend/src/server/ingestion/douyin-auth-staging.windows-lock.test.ts

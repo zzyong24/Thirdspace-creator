@@ -1,0 +1,106 @@
+{
+  "schema": "t1429-independent-spec-review-evidence/v1",
+  "task_id": "T-1411",
+  "review_kind": "recheck",
+  "reviewer": {
+    "session": "/root/recovery_stale_specs_b",
+    "review_mode": "homogeneous",
+    "model": "继承宿主模型；精确型号未核实",
+    "independent_of_spec_authoring_and_implementation": true
+  },
+  "reviewed_at": "2026-10-28T10:56:29.831361+00:00",
+  "source_root": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/review-chain-recovery/repo",
+  "spec_path": "docs/features/t1411-model-probe-auth-parity.md",
+  "spec_sha256": "9e00238492043e56d82c6daf444d9f0a6e3231bf767b025434d7efabb09f2092",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_event_path": "docs/verification/t1429/originals/incoming-review-events.ndjson",
+  "source_event_sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d",
+  "source_task_id": "T-1411",
+  "source_event_hash": "db35324359eeb79166268432f906b0252c198a020455dcc92127fb155b0ad1f8",
+  "previous_cycle": 1,
+  "previous_round": 1,
+  "previous_spec_sha256": "9f96d971292778c094418199950aaa289ba9e403c381768458618f188b04dc44",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "独立正式初审 T-1411；审核者为未参与该 SPEC 编写的 /root/t1408_contract_review 子代理，实际模型精确 ID 未核实，不作异构模型声明。绑定当前 SPEC docs/features/t1411-model-probe-auth-parity.md，SHA-256 9f96d971292778c094418199950aaa289ba9e403c381768458618f188b04dc44；适用产品宪法 docs/产品定位.md，SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读任务包 §1–5、§7–9，并在写评审证据前核对 §6；核对产品宪法全文、当前 AGENTS 约束、SYSTEM_ARCHITECTURE 和相关真实源码/测试配置。\n\n未发现阻碍实施的实质规格缺口。静态源码证据确认两处既有缺陷：contract/src/internal/model-probe-io.ts 的文本 strict schema 未声明 authStyle；backend/src/modules/ai-runtime/model-probe-io.service.ts 的 probeText 解构及请求投影未转发 authStyle。frontend 已解析该字段，ai-worker/src/io/model-probe-worker-entry.ts 将已解析 spec 直接交给 modelFor，provider-factory.ts 的 ApiModelSpec 已含可选 authStyle，pi-provider.ts 已在 Anthropic bearer 时关闭 apiKey 并提供 Authorization；当前已安装 Pi Anthropic createClient 支持此 header-owned auth。因此指定三处产品写集足以保留解析鉴权方式并修正文案，无需新增 worker 生产路径或修改公开 operation/schema。可选字段与既有 provider 缺省相容；非法枚举由内部 strict schema 拒绝；图片路径保持原契约。\n\n已实际阅读 request-io.service.ts 的输入解析、fork/IPC、错误重建、取消与 stop，以及 settings-model-test-wrap.test.ts 的真实 worker-entry 临时打包、Pi 初始化插件、loopback HTTP 和支付诊断测试。backend 的 src/**/*.test.ts 与 frontend 的 src/**/*.{test,spec}.{ts,tsx} 收集规则覆盖指定测试写集；既有 backend 集成测试已有从 ai-worker 加载 esbuild 与 Pi bundling 插件的方式，故无需扩 package 写集。合同要求原代码先执行真实 worker/IPC/HTTP 红测，再同组转绿，并验证 bearer 无 x-api-key、显式 x-api-key、缺省、一次请求、128 上限、非法值和 secret 不外泄，能覆盖该确定字段丢失缺陷；保留现有真实 IPC 支付诊断覆盖也防止本次修复吞掉此前安全提示。\n\n成功提示明确只证明最小请求收到流式回复，与产品宪法 P-03、R-SETTINGS、NFR-PRIVACY、R-COPILOT 的真实结果和 secret 边界相容。合同禁止配置、钱包、聊天预算与 fallback 改动，不扩大出网权限，也未把轻量探针冒充完整对话。此评审仅确认规格及可执行测试入口，未运行红绿测试、未验证实现或安装产物、未调用真实业务；官方 402 根因、完整官方聊天、记忆、工具和原任务恢复仍须在 T1408 单独形成真实证据，本轮不关闭这些验收。",
+    "findings": []
+  },
+  "history_binding": {
+    "source_ledger_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "matching_spec_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "historical_file_sha256": "9f96d971292778c094418199950aaa289ba9e403c381768458618f188b04dc44",
+    "matches_event_spec_sha256": true,
+    "current_constitution_matches_event": true
+  },
+  "current_review_kind_reason": "旧cycle 1 round 1；旧SHA与incoming父提交文件逐字相同。当前仅两处T1408→T1427引用，authStyle可选枚举、provider缺省、图片契约、128缺省与零重试、凭据脱敏以及真实IPC/HTTP红绿验收未改。",
+  "exact_spec_diff": "--- 3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d:docs/features/t1411-model-probe-auth-parity.md\n+++ docs/features/t1411-model-probe-auth-parity.md\n@@ -1,12 +1,12 @@\n # T-1411 文本连接测试鉴权与结果说明一致性\n \n-用户已要求继续修复官方 Pi 与未通过的验收。T1408 的真实诊断发现文本 probe 丢失 `authStyle`，不能以与正式请求不同的鉴权结果证明连通；本项只修该已证实缺陷，不把它称为现场 402 的已证实根因。\n+用户已要求继续修复官方 Pi 与未通过的验收。T1427 的真实诊断发现文本 probe 丢失 `authStyle`，不能以与正式请求不同的鉴权结果证明连通；本项只修该已证实缺陷，不把它称为现场 402 的已证实根因。\n \n ## 行为与边界\n \n - 文本 probe 的内部严格 IPC schema 增加可选 `authStyle: bearer | x-api-key`；backend 投影无损传递解析所得方式，worker 继续复用现有 modelFor/Pi，不改变 endpoint、模型、credential、128 输出上限或零重试。\n - 老调用未提供 authStyle 时保留原 provider 默认；图片 probe 与公开 operation schema 不变。非法值被 schema 拒绝。\n-- 成功文案改为“已收到最小测试请求的流式回复，连通。”，明确它只证明最小请求。完整官方对话、记忆、工具与原任务恢复仍属 T1408，不因 probe 通过销账。\n+- 成功文案改为“已收到最小测试请求的流式回复，连通。”，明确它只证明最小请求。完整官方对话、记忆、工具与原任务恢复仍属 T1427，不因 probe 通过销账。\n - 凭据仍只在内存/已有 IPC 内；错误回执不包含 token，不新增原始请求、headers 或上游正文日志。不得改用户模型配置、钱包、真实聊天预算或 fallback。\n \n ## 实施与验收\n",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:3:fcaaec323fd0ff43",
+      "line": "用户已要求继续修复官方 Pi 与未通过的验收。T1427 的真实诊断发现文本 probe 丢失 `authStyle`，不能以与正式请求不同的鉴权结果证明连通；本项只修该已证实缺陷，不把它称为现场 402 的已证实根因。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:9:32210139698ccadf",
+      "line": "- 成功文案改为“已收到最小测试请求的流式回复，连通。”，明确它只证明最小请求。完整官方对话、记忆、工具与原任务恢复仍属 T1427，不因 probe 通过销账。"
+    }
+  ],
+  "observations": [
+    "旧cycle 1 round 1；旧SHA与incoming父提交文件逐字相同。当前仅两处T1408→T1427引用，authStyle可选枚举、provider缺省、图片契约、128缺省与零重试、凭据脱敏以及真实IPC/HTTP红绿验收未改。",
+    "静态确认contract text严格schema包含可选authStyle，backend.probeText投影该字段，worker仍modelFor+streamText；frontend成功提示只表示最小流式请求。测试源码覆盖bearer/x-api-key/缺省、一请求和128输出上限。此为既有路径存在性核查，不作为本轮测试已跑或正式官方对话成功证据。",
+    "映射后的T1427仍保留真实官方三轮和未恢复条件，职责转交未丢失；保留原空findings，无新增问题。"
+  ],
+  "read_files": [
+    {
+      "path": "contract/src/internal/model-probe-io.ts",
+      "sha256": "b90c1f3b705cda720a33acdeaf381d96be97966bca34ed1c369bcc9a80958508"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/model-probe-io.service.ts",
+      "sha256": "69bd6a089412c6454cb89e23eeb1f7da42e093c0349743dc093047222a6b3922"
+    },
+    {
+      "path": "ai-worker/src/io/model-probe-worker-entry.ts",
+      "sha256": "6560b91ea7f0492e43f33c66895bb1d1fcef4dd38d83d10509315489727b1b06"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.ts",
+      "sha256": "68452a8fe90ebf66b6a2415080fde61b9c4e2ae168ed793545b7583d69e369c0"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.test.ts",
+      "sha256": "8408cac0639c8dbb5387c253b1a439e020662b311d7b2a2e3bfdf27c3ab39bf4"
+    }
+  ],
+  "review_constraints": [
+    "只写本任务审核JSON与evidence JSON",
+    "不修改SPEC/产品/控制面，不运行reviewctl record，不提交",
+    "静态规格审核，不代签运行、安装、业务验收或历史审计通过"
+  ],
+  "registration_requires_new_cycle": false,
+  "no_product_acceptance_claim": true,
+  "local_validation": {
+    "schema_file": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+    "schema_sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7",
+    "schema_keywords_checked": [
+      "type",
+      "required",
+      "additionalProperties",
+      "const",
+      "enum",
+      "minLength",
+      "pattern",
+      "$ref",
+      "allOf/if/then",
+      "minItems",
+      "minimum",
+      "maximum"
+    ],
+    "packet_schema_valid": true,
+    "current_spec_hash_still_matches": true,
+    "recheck_previous_findings_frozen": true,
+    "changed_line_refs_checked": true,
+    "formal_reviewctl_record_executed": false
+  }
+}

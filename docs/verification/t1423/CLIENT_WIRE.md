@@ -1,10 +1,10 @@
-# T-1423 Creator 完整消费合同
+# T-1402 Creator 完整消费合同
 
 2026-10-23；历史一键合同已实施。新增§11为当前无感入口合同，待独立复审；其触发和继续语义优先于§1、§6–10内手动交互描述，既有闭合wire和安全校验保持。本文不是新增实现/测试通过收据。
 
-工作树：`/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator`，起点 `9c585dd4db5f263d228bb71bb832700dfd81f64e`。已读主仓最新 SPEC（含本地范围授权及 unknown 六行表）、本树 Packet §1–5/7–9，写前核 §6。本轮只允许写本文档，未修改产品源、主控制面或 T-1422 候选。
+工作树：`/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator`，起点 `9c585dd4db5f263d228bb71bb832700dfd81f64e`。已读主仓最新 SPEC（含本地范围授权及 unknown 六行表）、本树 Packet §1–5/7–9，写前核 §6。本轮只允许写本文档，未修改产品源、主控制面或 T-1401 候选。
 
-上游权威：`docs/features/t1423-legacy-license-one-click-upgrade.md`；Activity 专用 `POST /api/license/restore-current`。Activity 完整候选合同：`/Volumes/T7-MacData/CodexBuilds/Activity-T1423-20261023/source/docs/contracts/T-1423-license-restore-current-contract.md`，本轮最终读取 SHA256 `b586757b7cae06f2f606c99465d94eab98a6b6f3c4dcc866a115485eab50806d`；与本文共同独审。最终稿明确当前目标已合法绑定优先返回零写no-op、activatedAt取原usedAt及目标期限必须严格晚于当前now。以下具体值不是既有服务器上线能力的声明。
+上游权威：`docs/features/t1402-legacy-license-one-click-upgrade.md`；Activity 专用 `POST /api/license/restore-current`。Activity 完整候选合同：`/Volumes/T7-MacData/CodexBuilds/Activity-T1402-20261023/source/docs/contracts/T-1402-license-restore-current-contract.md`，本轮最终读取 SHA256 `b586757b7cae06f2f606c99465d94eab98a6b6f3c4dcc866a115485eab50806d`；与本文共同独审。最终稿明确当前目标已合法绑定优先返回零写no-op、activatedAt取原usedAt及目标期限必须严格晚于当前now。以下具体值不是既有服务器上线能力的声明。
 
 ## 1. 一次点击及状态迁移
 
@@ -242,7 +242,7 @@ Growth 的真实协议只允许请求 `{contractVersion:"growth-model-benefit-re
 
 可消费 Growth 工件：`/Users/zyongzhu/Workbase/Thirdspace-growth/docs/build/T-249-validation/FORMAL_V1_ECONOMIC_PROTOCOL.md`、`formal-v1-economy-r1/CONSUMER_VECTORS.json`（SHA256 `a7c9ae53ce13c955e8bfcc219085edc04e483ef6da9cc10e5863f3bccf3d069d`）。其真实 Growth router/service + SQLite 内存/fake provider 的4场景本地通过，production/真实provider/外网调用0；OUTPUT_CHECK 明示 CreatorActualConsumerRun=false。这是未来消费输入，不是本文或 Creator 已通过验收。
 
-模型目录/credential/proof v1 fields、policy、scope 摘要不变。T-1423 主树不包含 T-1422 v2 产品差异，不在这里复制试用 v2；未来集成要重新绑定源码回归。正式 probe 不把弱本地 TIME fallback 当新资格。
+模型目录/credential/proof v1 fields、policy、scope 摘要不变。T-1402 主树不包含 T-1401 v2 产品差异，不在这里复制试用 v2；未来集成要重新绑定源码回归。正式 probe 不把弱本地 TIME fallback 当新资格。
 
 HTTP：合法动作已得到可信 typed 业务结果返回 200（可含 blocked/pending/unknown）；422 非法调用，401/403 保原上下文守卫；无法构造可信投影返回 503 安全错误。UI 不依赖 !response.ok 覆盖已知阶段状态，仍必须校验 exact schema 和 action 一致。
 
@@ -333,7 +333,7 @@ Root 已明确原生独立模块路径为 `license_restore.rs`；`lib.rs` 增加
 | 原经济5元/30元/充值/unknown | 同权益/service复用，唯一首赠不重发、不补差；已有unknown预约只recover且新providerPOST=0；无预约的合法首次履约与历史未知不混称 |
 | 配置失败与fresh store旧GET延迟 | 保经济ready；新观察确认才完整成功；偏好PUT=0 |
 | no-wallet cold start / null渠道 / 原自配 | 正式统一资格；不依赖已有账户按钮隐藏、不强切来源 |
-| T1422边界 | 不混入冻结候选；以后真实集成另做正式v1与试用v2全回归 |
+| T1401边界 | 不混入冻结候选；以后真实集成另做正式v1与试用v2全回归 |
 
 native 测试完全注入 HTTP/clock/store，不读取真实密钥/许可或 invoke/relaunch。TS 每轮独立 PGLITE_DATA_DIR、空真实数据库连接；不调用真实模型、Key、激活钱包。Activity 真实隔离发行/签名和 Growth 原服务输出向量到位后才称跨仓消费 PASS，不手填冒通过。
 
@@ -399,7 +399,7 @@ Node automatic 索引键由真实 actor/当前启动hash/当前稳定许可hash�
 
 coordinator 由已登录workspace ready的desktop启动组件激活，等待最近licensed且未撤销的原生判定及后续事件；同步订阅状态供设置显示。一次工作共享promise与原截止，解绑显示观察者不解除原生互斥。切scope停旧观察，任何async回调先核scope/generation；不能用router.refresh引发全页闪白。未知后在同token内经济unknown只读probe、已证原凭据ready后可sync；原生unknown仅probe并停止sync/整体ready，不以fresh proof替代本机保存回执。网络退避有界且不延长原预算；下一正常冷启动按当前事实新观察，不要求用户确认。
 
-准确新增产品写集：`frontend/src/components/shell/channel-config-bootstrap.tsx`及其test、`frontend/src/app/(creator)/layout.tsx`、`frontend/src/lib/automatic-license-upgrade.ts`及其test。原T1423范围内settings两测试、client-config route及test、model-benefit server及test、共享DTO及test允许为本修订调整。预期不改Rust、Activity或Growth产品源码。既有完整原生与跨scope测试不可为了UI调整删除安全断言，应在公共coordinator/service中保留相应验证。
+准确新增产品写集：`frontend/src/components/shell/channel-config-bootstrap.tsx`及其test、`frontend/src/app/(creator)/layout.tsx`、`frontend/src/lib/automatic-license-upgrade.ts`及其test。原T1402范围内settings两测试、client-config route及test、model-benefit server及test、共享DTO及test允许为本修订调整。预期不改Rust、Activity或Growth产品源码。既有完整原生与跨scope测试不可为了UI调整删除安全断言，应在公共coordinator/service中保留相应验证。
 
 
 §11独评收紧：正常重挂复用同realm模块flight；reload/第二窗口拿不到原token故不会丢native-unknown后进入sync。首response丢失也保守pending，本宿主不新占用；下次正常冷启动fresh当前事实开始。原owner的客户端预算从ensure最初入场固定730000ms（早于Node issuedAt），Node每个stage和下游fetch同时clamp原entry剩余时间，无新增到期header。automatic inFlight期间，普通model-benefit access在++observationGeneration前返回既有MODEL_BENEFIT_REFRESH_PENDING；自动先开始时ordinary不得使其失效，ordinary先开始时原generation/commit防旧回写继续生效。自动stage之间允许普通读取，自动自身下一阶段fresh access；不改许可/金额/个人路由权限。

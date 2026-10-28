@@ -1,0 +1,127 @@
+[
+  {
+    "label": "typecheck",
+    "command": [
+      "pnpm",
+      "--workspace-concurrency=1",
+      "--filter",
+      "@creatoros/contract",
+      "--filter",
+      "@creatoros/ai-worker",
+      "--filter",
+      "@creatoros/backend",
+      "--filter",
+      "creatoros-frontend",
+      "-r",
+      "typecheck"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator",
+    "exit_code": 0,
+    "duration_seconds": 62.13,
+    "ended_at": "2026-10-28T09:09:11.667187+00:00",
+    "log": "typecheck.log.gz"
+  },
+  {
+    "label": "frontend-target",
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "src/features/projects/graphic-image-pages.test.tsx",
+      "src/features/projects/graphic-post-results.test.tsx",
+      "src/features/projects/graphic-post-workbench.test.tsx"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator/frontend",
+    "exit_code": 0,
+    "duration_seconds": 1.87,
+    "ended_at": "2026-10-28T09:09:02.387818+00:00",
+    "log": "frontend-target.log.gz"
+  },
+  {
+    "label": "backend-target",
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "src/modules/creative-results/creative-results.integration.test.ts",
+      "src/modules/creative-results/graphic-post-media.adapter.test.ts"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator/backend",
+    "exit_code": 0,
+    "duration_seconds": 32.29,
+    "ended_at": "2026-10-28T09:08:46.164943+00:00",
+    "log": "backend-target.log.gz"
+  },
+  {
+    "label": "worker-target",
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "src/prompt/templates/graphic-post-text.test.ts",
+      "src/prompt/templates/chatbox-turn.test.ts"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator/ai-worker",
+    "exit_code": 0,
+    "duration_seconds": 0.8,
+    "ended_at": "2026-10-28T09:08:13.453584+00:00",
+    "log": "worker-target.log.gz"
+  },
+  {
+    "label": "boundaries",
+    "command": [
+      "node",
+      "orchestrator/process/boundary-scan.mjs"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator",
+    "exit_code": 0,
+    "duration_seconds": 0.11,
+    "ended_at": "2026-10-28T09:09:42.921109+00:00",
+    "log": "boundaries.log.gz"
+  },
+  {
+    "label": "timeout-policy",
+    "command": [
+      "node",
+      "tools/timeout-policy/verify.mjs"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator",
+    "exit_code": 1,
+    "duration_seconds": 11.74,
+    "ended_at": "2026-10-28T09:09:54.545577+00:00",
+    "log": "timeout-policy.log.gz"
+  },
+  {
+    "label": "timeout-policy-authorized",
+    "command": [
+      "node",
+      "tools/timeout-policy/verify.mjs"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator",
+    "exit_code": 0,
+    "duration_seconds": 18.84,
+    "ended_at": "2026-10-28T09:11:27.566499+00:00",
+    "log": "timeout-policy-authorized.log.gz"
+  },
+  {
+    "label": "frontend-compatibility",
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "src/features/projects/script-first-content.test.ts",
+      "src/features/reference-editors/noterelay/projection.test.ts",
+      "src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+      "src/features/reference-editors/noterelay/native-bundle.test.ts"
+    ],
+    "cwd": "/Users/masx/Projects/Thirdspace-creator/frontend",
+    "exit_code": 1,
+    "duration_seconds": 1.99,
+    "ended_at": "2026-10-28T09:18:46.310738+00:00",
+    "log": "frontend-compatibility.log.gz"
+  }
+]

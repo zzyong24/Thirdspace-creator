@@ -1,0 +1,292 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1423",
+  "review_kind": "recheck",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "本会话未编写修订；独立读取正式ledger/context、当前SPEC、精确Git差异及原件/实际路径，按冻结规则复核。",
+  "reviewed_at": "2026-10-28T11:02:44.970Z",
+  "previous_cycle": 1,
+  "previous_round": 2,
+  "expected_next_round": 3,
+  "spec_path": "docs/features/t1423-legacy-license-one-click-upgrade.md",
+  "spec_sha256": "a2db64e1984b8e031a797a88d6155f835401e250ec8f3141f81ee6eba8a094f9",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger_path": "orchestrator/review-events.ndjson",
+  "source_ledger_sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c",
+  "previous_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1423",
+    "cycle": 1,
+    "round": 2,
+    "review_kind": "recheck",
+    "verdict": "CONCERNS",
+    "spec_path": "docs/features/t1423-legacy-license-one-click-upgrade.md",
+    "spec_sha256": "d3a170839bfb80dcf6ef189bfcbd733adb2b1a6ee573a4ee315a67a6bb0064c9",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1423-legacy-license-one-click-upgrade.T-1423.review.md",
+    "review_mode": "homogeneous",
+    "model": "inherited-independent-agent",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "reviewctl_sha256": "dddd4a0c4e9f1e106e46a8f37b6ebd6fac4f12fda42e26c9d1e3e05fe978d862",
+    "recorded_at": "2026-10-28T11:00:31.266Z",
+    "previous_event_hash": "80e7a42490c2509ca42034115ec5bc4539d04ad495f6ddd98c3d3f0da209b60b",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "recheck",
+      "summary": "同构独立会话复核旧T1402 cycle1 round1至当前T1423精确差异。产品合同不变，但改名同时改写Activity外仓合同与原始日志路径而沿用旧SHA和审核时间，无法闭合现要求的精确来源追溯。新增REV-001为major；未修改SPEC或登记审核。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "major",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "完整消费合同与实施落点",
+            "quote": "独立复审绑定二者实际 SHA，不能用此前范围审查代替。"
+          },
+          "acceptance_anchor": {
+            "id": "验收-证据分层",
+            "quote": "隔离测试、源码读审、安装版验证、其他用户分发和生产部署分别报告；未发生证据不能标通过。"
+          },
+          "where": "docs/features/t1423-legacy-license-one-click-upgrade.md#完整消费合同与实施落点；无感升级修订的原始证据路径",
+          "failure_mode": "本仓重编号将Activity外仓合同、工作树及原始日志的T1402身份也改成T1423，而历史SHA和审核时间未变；CLIENT_WIRE及Activity审核清单因而声称新路径已由原轮核验。DEC-142801只规定本仓映射且明确ignored日志留在旧目录，当前引用无法闭合本SPEC要求的双合同SHA与原运行证据对应，后续会把改写后的来源当作既有独审/验收依据。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "EVIDENCE-SHA256:433801cc70d2efd2f1ce9eb831ccb58612cf643e11c6a54e2eca537dd7070d23:docs/verification/t1429/reviews/T-1423.evidence.json",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "changed-lines",
+          "origin_ref": "SPEC-LINE:83:9019f32c6d66f062",
+          "suggestion": "保留Activity外仓及原始日志的真实历史身份，另行明确Creator旧T1402到当前T1423映射；如确已搬迁，给出目标路径及实际字节SHA的迁移证据。不得只改历史审核路径/任务名而继续沿用原匹配声明。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "event_hash": "49a19eb2b90fc8509e91b4c05bd19b35b0d3f5f7fac983096aab4e1f655af6e1"
+  },
+  "previous_spec_git": {
+    "commit": "6033bdd51e6996cfe80eb041661a2b1a4f15a5b0",
+    "path": "docs/features/t1423-legacy-license-one-click-upgrade.md",
+    "sha256": "d3a170839bfb80dcf6ef189bfcbd733adb2b1a6ee573a4ee315a67a6bb0064c9"
+  },
+  "context_command": "node orchestrator/process/reviewctl.mjs context T-1423",
+  "actual_context": {
+    "schema": "spec-review-recheck-context/v1",
+    "task_id": "T-1423",
+    "previous_round": 2,
+    "previous_verdict": "CONCERNS",
+    "previous_spec_sha256": "d3a170839bfb80dcf6ef189bfcbd733adb2b1a6ee573a4ee315a67a6bb0064c9",
+    "previous_packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "recheck",
+      "summary": "同构独立会话复核旧T1402 cycle1 round1至当前T1423精确差异。产品合同不变，但改名同时改写Activity外仓合同与原始日志路径而沿用旧SHA和审核时间，无法闭合现要求的精确来源追溯。新增REV-001为major；未修改SPEC或登记审核。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "major",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "完整消费合同与实施落点",
+            "quote": "独立复审绑定二者实际 SHA，不能用此前范围审查代替。"
+          },
+          "acceptance_anchor": {
+            "id": "验收-证据分层",
+            "quote": "隔离测试、源码读审、安装版验证、其他用户分发和生产部署分别报告；未发生证据不能标通过。"
+          },
+          "where": "docs/features/t1423-legacy-license-one-click-upgrade.md#完整消费合同与实施落点；无感升级修订的原始证据路径",
+          "failure_mode": "本仓重编号将Activity外仓合同、工作树及原始日志的T1402身份也改成T1423，而历史SHA和审核时间未变；CLIENT_WIRE及Activity审核清单因而声称新路径已由原轮核验。DEC-142801只规定本仓映射且明确ignored日志留在旧目录，当前引用无法闭合本SPEC要求的双合同SHA与原运行证据对应，后续会把改写后的来源当作既有独审/验收依据。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "EVIDENCE-SHA256:433801cc70d2efd2f1ce9eb831ccb58612cf643e11c6a54e2eca537dd7070d23:docs/verification/t1429/reviews/T-1423.evidence.json",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "changed-lines",
+          "origin_ref": "SPEC-LINE:83:9019f32c6d66f062",
+          "suggestion": "保留Activity外仓及原始日志的真实历史身份，另行明确Creator旧T1402到当前T1423映射；如确已搬迁，给出目标路径及实际字节SHA的迁移证据。不得只改历史审核路径/任务名而继续沿用原匹配声明。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "changed_line_refs": [
+      {
+        "origin_ref": "SPEC-LINE:83:3e29c4ced96e1f99",
+        "text": "客户端闭合合同见 `docs/verification/t1423/CLIENT_WIRE.md`；Activity 合同为其独立候选 `docs/contracts/T-1402-license-restore-current-contract.md`。独立复审绑定二者实际 SHA，不能用此前范围审查代替。原生新增独立 `license_restore.rs`，旧 `license.rs` 仅公开已有双冗余时间点 helper 给同 crate 复用。TS 新增无秘密的闭合升级 DTO，沿本地 client-config 白名单 action 对接；不改业务库或金额规则。准确写集见本任务 Packet。"
+      },
+      {
+        "origin_ref": "SPEC-LINE:100:3a5051e1d01e3396",
+        "text": "事实：本机18:56的旧按钮链已恢复绑定并完成配置，18:58独立定时刷新也成功；服务端只读后检22项通过，原永久授权、Key、250000额度与唯一首赠未改变。用户看到的“无反应”不能归因为请求没执行；旧额度错误独立存储未随成功同步清除是已确认代码缺口。证据在 `/Users/zyongzhu/terminals/growth-credit-20261023/t1402/automatic-upgrade/` 及 Growth T-249 只读后检。本机不再二次恢复或补发。"
+      },
+      {
+        "origin_ref": "SPEC-LINE:126:a6df03f8d81cdc40",
+        "text": "## 2026-10-28 来源恢复说明"
+      },
+      {
+        "origin_ref": "SPEC-LINE:128:f63b16654e071f43",
+        "text": "本仓旧 T-1402 映射为 T-1423；Activity 外仓、原绝对工作树和原始日志仍沿用历史 T1402 身份。当前目录中的 CLIENT_WIRE.md、ACTIVITY_WIRE.md、activity-final-independent-review.json 已从父提交 3a0d8ac63 逐字恢复，内部旧编号及历史路径不再重写。原件字节、损坏副本与 SHA 对照见 `docs/verification/t1429/provenance-restorations.json`；当前文件别名不代表外部资料已搬迁或本机重新验收。其它历史证据仍须按原 commit/字节核实，不能仅凭重编号后的路径复用旧验收声明。"
+      }
+    ],
+    "origin_ref_formats": {
+      "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+      "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+      "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+    }
+  },
+  "exact_spec_diff": "--- 6033bdd51e6996cfe80eb041661a2b1a4f15a5b0:docs/features/t1423-legacy-license-one-click-upgrade.md\n+++ docs/features/t1423-legacy-license-one-click-upgrade.md\n@@ -80,7 +80,7 @@\n \n ## 完整消费合同与实施落点\n \n-客户端闭合合同见 `docs/verification/t1423/CLIENT_WIRE.md`；Activity 合同为其独立候选 `docs/contracts/T-1423-license-restore-current-contract.md`。独立复审绑定二者实际 SHA，不能用此前范围审查代替。原生新增独立 `license_restore.rs`，旧 `license.rs` 仅公开已有双冗余时间点 helper 给同 crate 复用。TS 新增无秘密的闭合升级 DTO，沿本地 client-config 白名单 action 对接；不改业务库或金额规则。准确写集见本任务 Packet。\n+客户端闭合合同见 `docs/verification/t1423/CLIENT_WIRE.md`；Activity 合同为其独立候选 `docs/contracts/T-1402-license-restore-current-contract.md`。独立复审绑定二者实际 SHA，不能用此前范围审查代替。原生新增独立 `license_restore.rs`，旧 `license.rs` 仅公开已有双冗余时间点 helper 给同 crate 复用。TS 新增无秘密的闭合升级 DTO，沿本地 client-config 白名单 action 对接；不改业务库或金额规则。准确写集见本任务 Packet。\n \n 原生绝对执行预算 370000 ms 从命令入场起包含锁等待，UI 保持最初点击起的 730000 ms 观察截止。UI 停止等待不撤销已提交原生操作，原生互斥持到实际收尾。已绑定当前机器且目标合法时，只读 no-op 不释放其他授权；只有确实缺绑定时才核对其他有效冲突与精确失效集合。\n \n@@ -97,7 +97,7 @@\n \n 用户明确：“点了没反应而且我不希望点，我希望用户是无感的，不可能让用户还去点一下吧？”因此正常打开桌面 App 后，后台自动核对并完成历史合法原授权的模型权益升级；设置页不再以升级/继续按钮作为前提，也不弹逐阶段确认。此决定替代前文手动点击、明确继续才新观察的交互要求，不扩大服务端权限或经济政策。\n \n-事实：本机18:56的旧按钮链已恢复绑定并完成配置，18:58独立定时刷新也成功；服务端只读后检22项通过，原永久授权、Key、250000额度与唯一首赠未改变。用户看到的“无反应”不能归因为请求没执行；旧额度错误独立存储未随成功同步清除是已确认代码缺口。证据在 `/Users/zyongzhu/terminals/growth-credit-20261023/t1423/automatic-upgrade/` 及 Growth T-249 只读后检。本机不再二次恢复或补发。\n+事实：本机18:56的旧按钮链已恢复绑定并完成配置，18:58独立定时刷新也成功；服务端只读后检22项通过，原永久授权、Key、250000额度与唯一首赠未改变。用户看到的“无反应”不能归因为请求没执行；旧额度错误独立存储未随成功同步清除是已确认代码缺口。证据在 `/Users/zyongzhu/terminals/growth-credit-20261023/t1402/automatic-upgrade/` 及 Growth T-249 只读后检。本机不再二次恢复或补发。\n \n ### 自动入口与生命周期\n \n@@ -122,3 +122,7 @@\n \n \n 独评收紧：automatic唯一owner之外的无token请求保守pending至下一正常冷启动；此取舍避免重载丢失native持久化未知事实后误报成功，不要求用户操作升级按钮，不阻止既有普通只读配置刷新和业务页面。原owner持有token时继续原730000ms截止，Node每一stage将下游AbortSignal收紧到原entry剩余时间；不会因观察者加入另加120秒。automatic stage持有inFlight期间，普通model-benefit access在递增generation前用既有retryable MODEL_BENEFIT_REFRESH_PENDING延期；旧已开始普通读取仍遵守原generation/commit fence，不删除安全fence、不在事务中等待网络。自动阶段之间普通读取仍可运行。实现必须以受控交错测试证明普通startup/scheduled不能把唯一自动观察耗死。\n+\n+## 2026-10-28 来源恢复说明\n+\n+本仓旧 T-1402 映射为 T-1423；Activity 外仓、原绝对工作树和原始日志仍沿用历史 T1402 身份。当前目录中的 CLIENT_WIRE.md、ACTIVITY_WIRE.md、activity-final-independent-review.json 已从父提交 3a0d8ac63 逐字恢复，内部旧编号及历史路径不再重写。原件字节、损坏副本与 SHA 对照见 `docs/verification/t1429/provenance-restorations.json`；当前文件别名不代表外部资料已搬迁或本机重新验收。其它历史证据仍须按原 commit/字节核实，不能仅凭重编号后的路径复用旧验收声明。\n",
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "85f86303066d79f40659be9453466c9e2cc21ea624ebe920a0c3af423afe6199"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "dddd4a0c4e9f1e106e46a8f37b6ebd6fac4f12fda42e26c9d1e3e05fe978d862"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "64bc35c16d47bb77d1c9f4e4e43c978d9c4adaae6c1af9c7295a616bff33f803"
+    },
+    {
+      "path": "BACKLOG.md",
+      "sha256": "789af06d380e09bde1c61639d3d482cf43fea4ded8d4d054f8846f0df7889358"
+    },
+    {
+      "path": "orchestrator/review-events.ndjson",
+      "sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c"
+    },
+    {
+      "path": "docs/verification/t1429/provenance-restorations.json",
+      "sha256": "0f2e8fc04a7a3fccc726db59c658aefd86e690455822b18ecaac2fad48824a3e"
+    },
+    {
+      "path": "docs/verification/t1423/CLIENT_WIRE.md",
+      "sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d"
+    },
+    {
+      "path": "docs/verification/t1423/ACTIVITY_WIRE.md",
+      "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a"
+    },
+    {
+      "path": "docs/verification/t1423/activity-final-independent-review.json",
+      "sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-CLIENT_WIRE.md",
+      "sha256": "78d8acc1cd5581195f0bd90d2f28f905a1cd55b820b01df4f6219d4b55c30797"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-ACTIVITY_WIRE.md",
+      "sha256": "7de76c64f35568d26f2cefae23e552b855dd715ffcd92d335d6d427c8a3f9317"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-activity-final-independent-review.json",
+      "sha256": "92430ff303060b3e1874c910073a686880691d602b9330bb445e23f094dc356b"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1423.evidence.json",
+      "sha256": "433801cc70d2efd2f1ce9eb831ccb58612cf643e11c6a54e2eca537dd7070d23"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1407.evidence.json",
+      "sha256": "dfc535b2ab4a9be3675568d6e3b492d134ce58f4ed017e088bec051ec23615ee"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1410.evidence.json",
+      "sha256": "13b41144034e5fd8ea3f6a1373bcb27881e22bb219341d3d88d7078049ef0ba0"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1417.evidence.json",
+      "sha256": "5a72fe6805557743fc90101ba02aab51b90dffa5e4e5b7094f56d32235d94c5a"
+    }
+  ],
+  "restoration_checks": [
+    {
+      "source_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+      "source_path": "docs/verification/t1402/CLIENT_WIRE.md",
+      "current_path": "docs/verification/t1423/CLIENT_WIRE.md",
+      "sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d",
+      "damaged_copy": "docs/verification/t1429/originals/renumbered-CLIENT_WIRE.md",
+      "damaged_sha256": "78d8acc1cd5581195f0bd90d2f28f905a1cd55b820b01df4f6219d4b55c30797",
+      "actual_source_sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d",
+      "actual_current_sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d",
+      "actual_damaged_sha256": "78d8acc1cd5581195f0bd90d2f28f905a1cd55b820b01df4f6219d4b55c30797",
+      "current_equals_source": true,
+      "damaged_hash_matches": true
+    },
+    {
+      "source_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+      "source_path": "docs/verification/t1402/ACTIVITY_WIRE.md",
+      "current_path": "docs/verification/t1423/ACTIVITY_WIRE.md",
+      "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a",
+      "damaged_copy": "docs/verification/t1429/originals/renumbered-ACTIVITY_WIRE.md",
+      "damaged_sha256": "7de76c64f35568d26f2cefae23e552b855dd715ffcd92d335d6d427c8a3f9317",
+      "actual_source_sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a",
+      "actual_current_sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a",
+      "actual_damaged_sha256": "7de76c64f35568d26f2cefae23e552b855dd715ffcd92d335d6d427c8a3f9317",
+      "current_equals_source": true,
+      "damaged_hash_matches": true
+    },
+    {
+      "source_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+      "source_path": "docs/verification/t1402/activity-final-independent-review.json",
+      "current_path": "docs/verification/t1423/activity-final-independent-review.json",
+      "sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a",
+      "damaged_copy": "docs/verification/t1429/originals/renumbered-activity-final-independent-review.json",
+      "damaged_sha256": "92430ff303060b3e1874c910073a686880691d602b9330bb445e23f094dc356b",
+      "actual_source_sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a",
+      "actual_current_sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a",
+      "actual_damaged_sha256": "92430ff303060b3e1874c910073a686880691d602b9330bb445e23f094dc356b",
+      "current_equals_source": true,
+      "damaged_hash_matches": true
+    }
+  ],
+  "actual_path_checks": [],
+  "finding_recheck": [
+    {
+      "id": "REV-001",
+      "previous_status": "open",
+      "previous_severity": "major",
+      "conclusion": "resolved",
+      "allowed_changes": [
+        "status",
+        "resolution_evidence"
+      ],
+      "frozen_fields_preserved": true
+    }
+  ],
+  "analysis": [
+    "仅复核cycle1 round2 REV-001；直接读取正式ledger最新packet，旧major的requirement/acceptance、failure_mode、origin/evidence等冻结字段全部保留。",
+    "当前SPEC的Activity合同恢复为T-1402-license-restore-current-contract.md，automatic-upgrade原日志恢复t1402；末尾新增来源说明明确本仓旧T1402→当前T1423，外仓、原工作树与日志仍保持历史T1402，不声称原件搬迁或本轮重新验收。",
+    "对provenance-restorations.json的三项逐一执行git show指定完整source_commit:path，实际源bytes与当前CLIENT_WIRE、ACTIVITY_WIRE、activity-final-independent-review逐字相等；源/当前SHA均等于manifest，损坏副本SHA也全部匹配且保留。",
+    "已亲读三原件的来源段：旧task/外仓路径/历史SHA与时间恢复原值，SPEC明确这些内部旧链接只是历史来源；其他历史材料不能凭重编号后的路径复用。该明确限制与原件恢复消除了本finding中的来源伪对应，REV-001可resolved。",
+    "修订精确diff仅两处引用和来源解释，无自动升级流程、许可/经济身份、安全或验收门变更；未发现增量新问题。"
+  ],
+  "limitations": [
+    "本轮仅冻结finding销账及修订增量检查；未运行产品/模型/钱包/安装/远程CI/平台验收，不能据此关闭原业务失败。",
+    "仅写本次8个新review/evidence JSON；不覆盖上一轮材料，不改SPEC/业务/控制面，不record或提交。"
+  ]
+}

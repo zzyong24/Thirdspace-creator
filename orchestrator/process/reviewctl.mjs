@@ -11,7 +11,11 @@
 
 import {
   existsSync,
+  closeSync,
+  fsyncSync,
+  lstatSync,
   mkdirSync,
+  openSync,
   readFileSync,
   realpathSync,
   renameSync,
@@ -23,6 +27,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireStateLock } from "./state-lock.mjs";
+import { buildLedgerMigration, verifyMigrationProvenance } from "./review-ledger-migration.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SELF = fileURLToPath(import.meta.url);
@@ -646,8 +651,12 @@ function readEvents(file) {
   return events;
 }
 
-function verifyEventChain(events) {
+function verifyEventChain(events, root) {
   const errors = [];
+  if (root) {
+    errors.push(...verifyMigrationProvenance({ root, events, ledgerText: readOptional(path.join(root, "orchestrator/review-events.ndjson")) ?? undefined }));
+    if (pendingMigration(root)) errors.push("审核链迁移事务未完成；必须先显式 recover-ledger");
+  }
   let previous = "";
   for (const [index, event] of events.entries()) {
     if ((event.previous_event_hash ?? "") !== previous) {
@@ -801,7 +810,7 @@ export function verifyReviewReceipt({
 
   const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
   const events = readEvents(eventsFile);
-  const chainErrors = verifyEventChain(events);
+  const chainErrors = verifyEventChain(events, root);
   if (chainErrors.length) throw new Error(chainErrors.join("\n"));
   const event = [...events].reverse().find((item) => item.task_id === taskId);
   if (!event) throw new Error(`review receipt 缺少任务 ${taskId} 的 hash-chained event`);
@@ -907,7 +916,7 @@ function record(args) {
   });
   const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
   const events = readEvents(eventsFile);
-  const chainErrors = verifyEventChain(events);
+  const chainErrors = verifyEventChain(events, root);
   if (chainErrors.length) throw new Error(chainErrors.join("\n"));
   const previousEvent = [...events].reverse().find((event) => event.task_id === taskId) ?? null;
   const backlogTask = readBacklog(backlogFile).tasks.filter((task) => task.id === taskId);
@@ -1091,7 +1100,7 @@ export function auditReviewReceipts({ root, backlogFile }) {
         }
       }
     }
-    errors.push(...verifyEventChain(events));
+    errors.push(...verifyEventChain(events, root));
   } catch (error) {
     errors.push(error.message);
   }
@@ -1151,7 +1160,7 @@ function migrateSharedReview(args) {
   const root = realpathSync(path.dirname(backlogFile));
   const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
   const events = readEvents(eventsFile);
-  const chainErrors = verifyEventChain(events);
+  const chainErrors = verifyEventChain(events, root);
   if (chainErrors.length) throw new Error(chainErrors.join("\n"));
   const previousEvent = [...events].reverse().find((event) => event.task_id === taskId);
   if (!previousEvent) throw new Error(`任务 ${taskId} 尚无 v2 review history`);
@@ -1269,6 +1278,197 @@ function migrateSharedReview(args) {
   );
 }
 
+// Durable, compare-and-swap transaction for an explicitly approved migration.
+// The journal is runtime state; it must outlive an interrupted CLI process.
+const MIGRATION_JOURNAL = 'orchestrator/.review-ledger-migration.json';
+function pendingMigration(root) {
+  const file = path.join(root, MIGRATION_JOURNAL);
+  if (!existsSync(file)) return false;
+  try { return JSON.parse(readFileSync(file, 'utf8')).status === 'pending'; }
+  catch { return true; }
+}
+function readOptional(file) { return existsSync(file) ? readFileSync(file, 'utf8') : null; }
+function durableWrite(file, text) {
+  mkdirSync(path.dirname(file), {recursive:true});
+  const temporary = `${file}.migration-${process.pid}.tmp`;
+  const fd = openSync(temporary, 'w');
+  try { writeFileSync(fd, text); fsyncSync(fd); } finally { closeSync(fd); }
+  renameSync(temporary, file);
+  const directory = openSync(path.dirname(file), 'r');
+  try { fsyncSync(directory); } finally { closeSync(directory); }
+}
+function transactionPath(root, value) {
+  if (typeof value !== 'string' || path.isAbsolute(value) || value.includes('\\') || value.split('/').some(p => p === '..' || p === '.' || !p)) throw new Error(`迁移路径越界: ${value}`);
+  const file = path.resolve(root, value);
+  let cursor = root;
+  for (const part of value.split('/')) {
+    cursor = path.join(cursor,part);
+    try { if (lstatSync(cursor).isSymbolicLink()) throw new Error(`迁移路径禁止符号链接: ${value}`); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
+  return file;
+}
+function validateTransaction(root, plan, expectedPlanHash) {
+  const {plan_hash: claimed, ...body} = plan;
+  if (plan.schema !== 'review-ledger-transaction/v1' || !expectedPlanHash || claimed !== expectedPlanHash || hashObject(body) !== claimed) throw new Error('迁移 plan hash 不匹配；请重新预演');
+  const paths = new Set();
+  for (const op of plan.operations) {
+    transactionPath(root, op.path);
+    if (paths.has(op.path) || !(op.path === 'BACKLOG.md' || op.path === 'orchestrator/review-events.ndjson' || /^(?:docs\/.+|[^/]+)\.review\.md$/.test(op.path))) throw new Error(`迁移写路径不允许或重复: ${op.path}`);
+    if ((op.before !== null && typeof op.before !== 'string') || typeof op.after !== 'string') throw new Error('迁移内容类型错误');
+    paths.add(op.path);
+  }
+  for (const guard of plan.guards) transactionPath(root, guard.path);
+}
+function writeJournal(root, journal) {
+  durableWrite(path.join(root, MIGRATION_JOURNAL), `${JSON.stringify(journal)}\n`);
+}
+function restoreTransaction(root, journal) {
+  // Validate every file before changing any: never partially overwrite an
+  // unrelated writer's edits during rollback or explicit recovery.
+  for (const op of journal.plan.operations) {
+    const current = readOptional(transactionPath(root, op.path));
+    if (current !== op.before && current !== op.after) throw new Error(`第三方修改 ${op.path}；保留 journal，拒绝回滚覆盖`);
+  }
+  for (const op of [...journal.plan.operations].reverse()) {
+    const file = transactionPath(root, op.path);
+    const current = readOptional(file);
+    if (current !== op.before && current !== op.after) throw new Error(`第三方修改 ${op.path}；保留 journal，拒绝回滚覆盖`);
+    if (current === op.before) continue;
+    if (op.before === null) { if (existsSync(file)) unlinkSync(file); }
+    else durableWrite(file, op.before);
+  }
+  writeJournal(root, {...journal, status:'rolled-back'});
+}
+export function recoverLedgerTransaction({root,expectedPlanHash}) {
+  root = realpathSync(root);
+  const release = acquireStateLock(root, {operation:'reviewctl:recover-ledger'});
+  try {
+    const file = path.join(root, MIGRATION_JOURNAL);
+    if (!existsSync(file)) throw new Error('没有迁移 journal');
+    const journal = JSON.parse(readFileSync(file, 'utf8'));
+    validateTransaction(root, journal.plan, expectedPlanHash);
+    if (journal.status !== 'pending') return {status:journal.status};
+    restoreTransaction(root, journal);
+    return {status:'rolled-back'};
+  } finally { release(); }
+}
+export function runLedgerTransaction({root,plan,expectedPlanHash,afterWrite}) {
+  root = realpathSync(root);
+  validateTransaction(root, plan, expectedPlanHash);
+  const release = acquireStateLock(root, {operation:'reviewctl:migrate-ledger'});
+  try {
+    if (pendingMigration(root)) throw new Error('已有未完成迁移；先 recover-ledger');
+    const current = plan.operations.map(op => readOptional(transactionPath(root, op.path)));
+    if (current.every((text,i) => text === plan.operations[i].after)) return {status:'already-applied'};
+    for (const [i,op] of plan.operations.entries()) if (current[i] !== op.before) throw new Error(`CAS 拒绝：${op.path} 在预演后变化`);
+    for (const guard of plan.guards) {
+      const value = readOptional(transactionPath(root,guard.path));
+      if ((value === null ? null : sha(value)) !== guard.sha256) throw new Error(`CAS 拒绝：${guard.path} 输入已变化`);
+    }
+    const journal = {schema:'review-ledger-journal/v1', status:'pending', plan};
+    writeJournal(root, journal);
+    try {
+      for (const [i,op] of plan.operations.entries()) {
+        // Recheck immediately before each write, even under the shared lock.
+        if (readOptional(transactionPath(root,op.path)) !== op.before) throw new Error(`CAS 拒绝：${op.path} 在写入前变化`);
+        durableWrite(transactionPath(root,op.path), op.after);
+        afterWrite?.(i, op);
+      }
+      for (const op of plan.operations) if (readOptional(transactionPath(root,op.path)) !== op.after) throw new Error(`第三方修改 ${op.path}`);
+      for (const guard of plan.guards) {
+        const value = readOptional(transactionPath(root,guard.path));
+        if ((value === null ? null : sha(value)) !== guard.sha256) throw new Error(`CAS 拒绝：${guard.path} 在事务中变化`);
+      }
+      writeJournal(root, {...journal,status:'committed'});
+    } catch (error) {
+      try { restoreTransaction(root,journal); }
+      catch (rollback) { throw new Error(`${error.message}；${rollback.message}`); }
+      throw new Error(`迁移事务已回滚：${error.message}`);
+    }
+    return {status:'applied'};
+  } finally { release(); }
+}
+export function prepareLedgerTransaction({root,manifestPath,verifyGitSources=false}) {
+  root = realpathSync(root);
+  if (pendingMigration(root)) throw new Error('已有未完成迁移；先 recover-ledger');
+  const decisionText = readOptional(transactionPath(root,'orchestrator/DECISION_LOG.md'));
+  const migration = buildLedgerMigration({root,manifestPath,verifyGitSources});
+  const ledgerPath = 'orchestrator/review-events.ndjson';
+  const beforeLedger = readOptional(path.join(root,ledgerPath));
+  const currentEvents = readEvents(path.join(root,ledgerPath));
+  if (currentEvents.length >= migration.events.length && migration.events.every((event,i) => stable(event) === stable(currentEvents[i]))) {
+    const errors = verifyEventChain(currentEvents,root);
+    if (errors.length) throw new Error(errors.join('\n'));
+    return {status:'already-applied',summary:migration.summary};
+  }
+  if (sha(beforeLedger ?? '') !== migration.manifest.expected_ledger_sha256) throw new Error('CAS 拒绝：当前审核链不是 manifest 冻结的损坏链');
+  const parsed = readBacklog(path.join(root,'BACKLOG.md'));
+  const beforeBacklog = parsed.lines.join('\n');
+  const latest = new Map();
+  for (const event of migration.events) latest.set(event.task_id,event);
+  // Only rebuild touched/imported tasks and the divergent base tail. Common
+  // historical shared snapshots stay untouched unless they are current here.
+  const touched = new Set(migration.events.filter(e => e.migration).map(e => e.task_id));
+  const baseTail = migration.events.filter(e => !e.migration).at(-1);
+  if (baseTail) touched.add(baseTail.task_id);
+  const operations = [];
+  const guards = new Map([[migration.manifestPath,migration.manifestSha256],['orchestrator/DECISION_LOG.md',decisionText === null ? null : sha(decisionText)]]);
+  for (const name of ['base','incoming','damaged']) guards.set(migration.manifest[name].path,migration.manifest[name].sha256);
+  const snapshots = new Map();
+  const frozenInputs = new Map();
+  const readFrozen = file => {
+    if (!frozenInputs.has(file)) {
+      const value = readOptional(transactionPath(root,file));
+      frozenInputs.set(file,value);
+      guards.set(file,value === null ? null : sha(value));
+    }
+    return frozenInputs.get(file);
+  };
+  const stale = [];
+  for (const taskId of touched) {
+    const event = latest.get(taskId);
+    const matches = parsed.tasks.filter(t => t.id === taskId);
+    // Archived task snapshots can share a path: only the last actual writer
+    // owns that current file. An active task with a collision is rejected.
+    const pathOwner = [...migration.events].reverse().find(e => e.review_path === event.review_path);
+    if (pathOwner.task_id !== taskId) {
+      if (matches.length) throw new Error(`current snapshot 冲突: ${event.review_path}`);
+      continue;
+    }
+    const state = stateFromEvent(event);
+    snapshots.set(event.review_path,renderSnapshot(state));
+    for (const task of matches) {
+      if (task.columns.review < 0) throw new Error(`BACKLOG ${taskId} 缺审核列`);
+      if (!markdownTargets(task.document).includes(event.spec_path)) throw new Error(`BACKLOG ${taskId} 未链接迁移SPEC ${event.spec_path}`);
+      const idx = task.row.indexes[task.columns.review];
+      const old = task.row.segments[idx];
+      task.row.segments[idx] = `${old.match(/^\s*/)?.[0] ?? ''}${event.verdict}[REV:${state.receipt}]${old.match(/\s*$/)?.[0] ?? ''}`;
+      parsed.lines[task.lineIndex] = task.row.segments.join('|');
+      const specText = readFrozen(event.spec_path);
+      const constitutionText = readFrozen(event.constitution_path);
+      if (specText === null || sha(specText) !== event.spec_sha256 || constitutionText === null || sha(constitutionText) !== event.constitution_sha256) stale.push(taskId);
+    }
+  }
+  for (const [file,content] of snapshots) operations.push({path:file,before:readOptional(transactionPath(root,file)),after:content});
+  operations.push({path:'BACKLOG.md',before:beforeBacklog,after:parsed.lines.join('\n')});
+  operations.push({path:ledgerPath,before:beforeLedger,after:migration.ledgerText});
+  const body = {schema:'review-ledger-transaction/v1',manifest_path:migration.manifestPath,manifest_sha256:migration.manifestSha256,summary:migration.summary,stale_tasks:stale,operations,guards:[...guards].sort(([a],[b])=>a.localeCompare(b)).map(([file,digest])=>({path:file,sha256:digest}))};
+  return {...body,plan_hash:hashObject(body)};
+}
+function migrateLedger(args) {
+  const root = realpathSync(path.dirname(path.resolve(process.cwd(),args.flags.backlog ?? 'BACKLOG.md')));
+  if (!args.flags.manifest) throw new Error('migrate-ledger 需要 --manifest；默认只读预演');
+  const plan = prepareLedgerTransaction({root,manifestPath:args.flags.manifest,verifyGitSources:args.boolean.has('apply')});
+  if (plan.status === 'already-applied') { console.log(JSON.stringify(plan)); return; }
+  if (!args.boolean.has('apply')) {console.log(JSON.stringify({status:'dry-run',plan_hash:plan.plan_hash,summary:plan.summary,stale_tasks:plan.stale_tasks,files:plan.operations.map(op=>op.path)},null,2));return;}
+  console.log(JSON.stringify(runLedgerTransaction({root,plan,expectedPlanHash:args.flags['expect-plan']})));
+}
+function recoverLedger(args) {
+  const root = realpathSync(path.dirname(path.resolve(process.cwd(),args.flags.backlog ?? 'BACKLOG.md')));
+  console.log(JSON.stringify(recoverLedgerTransaction({root,expectedPlanHash:args.flags['expect-plan']})));
+}
+
 function audit(args) {
   const backlogFile = path.resolve(process.cwd(), args.flags.backlog ?? "BACKLOG.md");
   if (!existsSync(backlogFile)) throw new Error(`BACKLOG 不存在: ${backlogFile}`);
@@ -1284,7 +1484,7 @@ function context(args) {
   const backlogFile = path.resolve(process.cwd(), args.flags.backlog ?? "BACKLOG.md");
   const root = realpathSync(path.dirname(backlogFile));
   const events = readEvents(path.join(root, "orchestrator", "review-events.ndjson"));
-  const chainErrors = verifyEventChain(events);
+  const chainErrors = verifyEventChain(events, root);
   if (chainErrors.length) throw new Error(chainErrors.join("\n"));
   const event = [...events].reverse().find((item) => item.task_id === taskId);
   if (!event) throw new Error(`任务 ${taskId} 尚无 v2 review history`);
@@ -1343,8 +1543,10 @@ function main() {
     if (args.command === "record") record(args);
     else if (args.command === "audit") audit(args);
     else if (args.command === "context") context(args);
+    else if (args.command === "migrate-ledger") migrateLedger(args);
+    else if (args.command === "recover-ledger") recoverLedger(args);
     else if (args.command === "migrate-shared-review") migrateSharedReview(args);
-    else throw new Error("用法: reviewctl.mjs <record|audit|context|migrate-shared-review> ...");
+    else throw new Error("用法: reviewctl.mjs <record|audit|context|migrate-shared-review|migrate-ledger|recover-ledger> ...");
   } catch (error) {
     console.error(`✗ ${error.message}`);
     process.exit(1);

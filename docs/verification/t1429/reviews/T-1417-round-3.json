@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "同构独立第三轮复审：原回执t1408路径与重编号边界已说明，亲核隔离树和原工作区新旧目录四项均不可得，SPEC明确历史背景未在本机复核且不作本轮模型或费用验收。原minor REV-001从open改为resolved，全部冻结字段保留；无需且未重打付费或失败请求。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "历史诊断证据",
+        "quote": "原始回执在 docs/verification/t1427/credential-refresh-20261025/。"
+      },
+      "acceptance_anchor": {
+        "id": "验收",
+        "quote": "记录时间/结果/凭据元数据与 CAS 恢复"
+      },
+      "where": "docs/features/t1417-text-probe-output-budget.md:3",
+      "failure_mode": "改写后的历史原始回执目录在隔离树和原工作区均不存在；旧目录本机亦不可得，当前审查者不能依该引用核实既有128成功/正式402的原始时间和凭据元数据。不能把引用重命名本身当作原件已迁移或本轮已验证。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/verification/t1429/reviews/T-1417.evidence.json#path_checks",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:3:720081e4fb9f64ac",
+      "suggestion": "注明原回执当前不可得及其原始来源，或提供已保全的可读取归档路径与hash；无需重跑真实付费/失败模型请求补证。",
+      "resolution_evidence": "EVIDENCE-SHA256:2de7803b7af99147ffa7216b16a3b4afb3ff5eb02bbe051ac9e0350f4d8102c4:docs/verification/t1429/reviews/T-1417-round-3.evidence.json；SPEC SHA256=673b3f37346a4418b35088ee1e56dbf96858f0bae58202d63dcd523ca08dcd6b。当前SPEC首段明确原回执t1408来源及新旧目录不可得，不把改名当原件搬迁或本轮模型或费用验收；本会话实际检查两根目录下新旧路径四项均不存在。只销账来源说明歧义，不声称补齐原运行证据。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

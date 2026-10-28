@@ -1,0 +1,148 @@
+{
+  "schema": "t1429-independent-spec-review-evidence/v1",
+  "task_id": "T-1428",
+  "review_kind": "initial",
+  "reviewer": {
+    "session": "/root/recovery_stale_specs_b",
+    "review_mode": "homogeneous",
+    "model": "继承宿主模型；精确型号未核实",
+    "independent_of_spec_authoring_and_implementation": true
+  },
+  "reviewed_at": "2026-10-28T10:56:29.815768+00:00",
+  "source_root": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/review-chain-recovery/repo",
+  "spec_path": "docs/features/t1428-managed-pi-payment-diagnostics.md",
+  "spec_sha256": "f2ef417356ad636c71b6022251754194f1d50c336d0bc699677a492a7f385d66",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_event_path": "docs/verification/t1429/originals/incoming-review-events.ndjson",
+  "source_event_sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d",
+  "source_task_id": "T-1409",
+  "source_event_hash": "161cbb1edb3085d059e85613c7d16ee90ff5d7f8ce3c67ac6fbca4dcc85bb5e3",
+  "previous_cycle": 1,
+  "previous_round": 3,
+  "previous_spec_sha256": "e1b986306ebc2364bdee7396eb5c4bdb1a30e6552a3d59462e46a878a49bac97",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "recheck",
+    "summary": "独立代理/root/t1408_contract_review第三轮最终增量复核，SPEC SHA256 e1b986306ebc2364bdee7396eb5c4bdb1a30e6552a3d59462e46a878a49bac97。两次只读反馈先发现IPC丢code，再核最小精确固定消息白名单恢复方案；新增定向修订解决finding，原反馈保留probe-review-feedback-open.json。未执行实现/真实业务，不宣称402恢复。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "resolved",
+        "severity": "major",
+        "category": "completeness",
+        "requirement_anchor": {
+          "id": "FR-140903",
+          "quote": "将AI_CREDIT_EXHAUSTED与CHANNEL_MODEL_PAYMENT_REQUIRED固定诊断原样给CLI/UI"
+        },
+        "acceptance_anchor": {
+          "id": "AC-140904",
+          "quote": "允许用公开settings.models.test最小官方探针核因"
+        },
+        "where": "docs/features/t1409-managed-pi-payment-diagnostics.md:42",
+        "failure_mode": "公开探针并不把 worker 原错误对象直接传给 textModelProbe。model-probe-worker-entry 仅发送状态码和消息字符串，IPC schema 不含领域码，request-io.service 重建普通 Error；因此 CHANNEL_MODEL_PAYMENT_REQUIRED 的 code 在进入 frontend 前已经丢失。safeModelFailureMessage 按 err.code 查白名单，直接调用会再次降为通用提示。当前增量没有定义该丢码边界的安全恢复方式，直接 mock 带领域码异常的测试可以通过而真实公开探针仍失败。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "ai-worker/src/io/model-probe-worker-entry.ts:35-39；contract/src/internal/model-probe-io.ts:8-12；backend/src/modules/ai-runtime/request-io.service.ts:22-27；frontend/src/server/persistence-client.ts:6783；ai-worker/src/runtime/error-diagnostics.ts:87-90,115-121",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "changed-lines",
+        "origin_ref": "SPEC-LINE:42:701643285256f718",
+        "suggestion": "明确领域分类如何安全跨过探针 IPC：可保留严格白名单领域码，或仅从已知固定消息的精确白名单恢复，不允许把任意 provider 文案当安全诊断。同步对应精确写集，并要求回归经过真实 IPC 投影和普通 Error 重建，验证泛 402、明确额度、自配错误及未知正文；探针不得增加调用次数或消耗原任务 attempt。",
+        "resolution_evidence": "SPEC44–48行明确contract统一两条固定提示、仅channel-managed完整匹配、只剥离原worker单个规范HTTP前缀（支付仅402）、命中返回常量，未知安全降级；真实原worker打包经createModelProbeIoService/IPC/Error重建/runModelConnectionTest测试单次HTTP与清理，现有写集充分，不扩IPC生产路径。仅规格销账。",
+        "parent_id": "",
+        "threat_model_id": ""
+      }
+    ]
+  },
+  "history_binding": {
+    "source_ledger_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "matching_spec_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "historical_file_sha256": "e1b986306ebc2364bdee7396eb5c4bdb1a30e6552a3d59462e46a878a49bac97",
+    "matches_event_spec_sha256": true,
+    "current_constitution_matches_event": true
+  },
+  "current_review_kind_reason": "旧cycle 1已round 3，本轮按主会话传达的用户恢复授权对当前版本作全量initial；登记须由主会话完成新的精确typed cycle授权，不以改名重置轮数。",
+  "exact_spec_diff": "--- 3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d:docs/features/t1409-managed-pi-payment-diagnostics.md\n+++ docs/features/t1428-managed-pi-payment-diagnostics.md\n@@ -1,6 +1,6 @@\n-# T-1409 官方 Pi 支付拒绝的安全诊断\n+# T-1428 官方 Pi 支付拒绝的安全诊断\n \n-用户2026-10-25要求继续修复官方Pi402，验收通过后再推送；本任务从T1408已授权闭环拆出确定性产品缺陷，不新增钱包调整/付款/换源授权。\n+用户2026-10-25要求继续修复官方Pi402，验收通过后再推送；本任务从T1427已授权闭环拆出确定性产品缺陷，不新增钱包调整/付款/换源授权。\n \n ## 事实与边界\n \n@@ -34,7 +34,7 @@\n \n 1. 使用本地HTTP真实Pi适配器到受管modelFor与durable链红测：字符串error、对象code/type、JSON混入token/URL/模型名、未知402、部分输出断流；旧代码准确失败后实现。只明确余额证据为AI_CREDIT_EXHAUSTED；泛402为独立支付拒绝。\n 2. 检查安全错误对象、原rejected回执及后端task读取无原body、token/model/provider/URL，领域消息不是假余额。无备用源、无自动重发。现有权限与恢复回归通过。\n-3. 相关contract/worker/backend聚焦测试、各工作区串行typecheck、LED053/047适用回归、boundary与独立代码审查。真实CLI与安装/界面验收由T1408总任务执行；本任务局部通过不能标原402恢复。\n+3. 相关contract/worker/backend聚焦测试、各工作区串行typecheck、LED053/047适用回归、boundary与独立代码审查。真实CLI与安装/界面验收由T1427总任务执行；本任务局部通过不能标原402恢复。\n 4. 原任务最后一次尝试留待新包安全诊断及权威原因核对后再用；允许用公开settings.models.test最小官方探针核因，按当前路由CAS保存恢复，不建替代对话冒充原任务。\n \n ## FR-140903 公开最小连接探针保留安全领域诊断\n",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:1:8640fd1936ccfa62",
+      "line": "# T-1428 官方 Pi 支付拒绝的安全诊断"
+    },
+    {
+      "origin_ref": "SPEC-LINE:3:aaf3f97fba38b7da",
+      "line": "用户2026-10-25要求继续修复官方Pi402，验收通过后再推送；本任务从T1427已授权闭环拆出确定性产品缺陷，不新增钱包调整/付款/换源授权。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:37:fe108216cae3b973",
+      "line": "3. 相关contract/worker/backend聚焦测试、各工作区串行typecheck、LED053/047适用回归、boundary与独立代码审查。真实CLI与安装/界面验收由T1427总任务执行；本任务局部通过不能标原402恢复。"
+    }
+  ],
+  "observations": [
+    "旧cycle 1已round 3，本轮按主会话传达的用户恢复授权对当前版本作全量initial；登记须由主会话完成新的精确typed cycle授权，不以改名重置轮数。",
+    "全文保留明确额度信号与泛HTTP402分离、无输出waiting_user/不自动重试、有输出unknown_result、固定安全消息和原任务恢复预算边界；不能以错误文案修复宣称官方服务恢复。",
+    "静态读取contract固定消息/错误提取，worker受管错误与generationFailure，backend固定领域消息及frontend探针完整消息匹配。现代码确有单HTTP前缀处理、仅channel-managed分支和未知正文安全降级；真实IPC+loopback HTTP测试源码覆盖未知402/明确额度/私密混入/自配402。存在性与可测试性得到支持，未运行测试或真实供应商。",
+    "旧REV-001已resolved，完整原finding与原resolution_evidence保存在本证据previous_packet。当前FR-140903 IPC定向修订仍明确普通Error重建、两固定常量、精确匹配及真实IPC链回归，故原失效模式在当前合同中已被排除；无未解决旧finding需要重开。本initial不复制历史PASS。"
+  ],
+  "read_files": [
+    {
+      "path": "contract/src/provider-error-detail.ts",
+      "sha256": "41f50a2e2521c194f8a3bacf9fd38cdb5391f6eda9a07685063450948cf7284a"
+    },
+    {
+      "path": "ai-worker/src/runtime/provider-factory.ts",
+      "sha256": "8813e3b05109408ca6e463f0a17546badd9c5b569eb66d471d30f86f48dd09f9"
+    },
+    {
+      "path": "ai-worker/src/runtime/error-diagnostics.ts",
+      "sha256": "b3c2a9577b6ae5b76305de359c3853cf4ea45603ac49b66167288a618b059b4d"
+    },
+    {
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "sha256": "113c497021b72580750fe918fee6a88c80324ee81bcd064c355f0e31624778af"
+    },
+    {
+      "path": "backend/src/modules/execution/model-engine-error.ts",
+      "sha256": "f0043946f89e61a01dfcddcbb3ce2d5cf96c5d917b835ff1c851b4e4df634521"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.ts",
+      "sha256": "68452a8fe90ebf66b6a2415080fde61b9c4e2ae168ed793545b7583d69e369c0"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.test.ts",
+      "sha256": "8408cac0639c8dbb5387c253b1a439e020662b311d7b2a2e3bfdf27c3ab39bf4"
+    }
+  ],
+  "review_constraints": [
+    "只写本任务审核JSON与evidence JSON",
+    "不修改SPEC/产品/控制面，不运行reviewctl record，不提交",
+    "静态规格审核，不代签运行、安装、业务验收或历史审计通过"
+  ],
+  "registration_requires_new_cycle": true,
+  "no_product_acceptance_claim": true,
+  "local_validation": {
+    "schema_file": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+    "schema_sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7",
+    "schema_keywords_checked": [
+      "type",
+      "required",
+      "additionalProperties",
+      "const",
+      "enum",
+      "minLength",
+      "pattern",
+      "$ref",
+      "allOf/if/then",
+      "minItems",
+      "minimum",
+      "maximum"
+    ],
+    "packet_schema_valid": true,
+    "current_spec_hash_still_matches": true,
+    "recheck_previous_findings_frozen": null,
+    "changed_line_refs_checked": true,
+    "formal_reviewctl_record_executed": false
+  }
+}

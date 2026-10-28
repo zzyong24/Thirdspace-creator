@@ -1,0 +1,17 @@
+{
+  "label": "frontend-target",
+  "command": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/projects/graphic-image-pages.test.tsx",
+    "src/features/projects/graphic-post-results.test.tsx",
+    "src/features/projects/graphic-post-workbench.test.tsx"
+  ],
+  "cwd": "/Users/masx/Projects/Thirdspace-creator/frontend",
+  "exit_code": 0,
+  "duration_seconds": 1.87,
+  "ended_at": "2026-10-28T09:09:02.387818+00:00",
+  "log": "frontend-target.log.gz"
+}

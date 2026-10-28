@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "4-build"               # 3.9.0 v3 五阶段映射；具体切片仍由 BACKLOG 唯一排序
   frontier: "4-build"                    # 既有产品持续 BUILD，SHIP 仍受真实安装版/生产 E2E 门约束
-  updated_at: "2026-10-25"
+  updated_at: "2026-10-28"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -109,7 +109,7 @@ stages:
       - existing: "orchestrator/GATE-T767-BUILD.md (同版本重审同步与改稿后重新盲预测证据)"
       - existing: "docs/superpowers/specs/2026-08-11-creatoros-meta-skill.md (T-770 PASS[REV:74f673ffb555])"
       - existing: "orchestrator/GATE-T770-BUILD.md (低误触发元 Skill、真实模型 15/15 与聚焦门禁证据)"
-    notes: "当前真实阶段；任务状态与顺序以 BACKLOG.md 为唯一真相。本批T1354/1355/1356/1361/1362五项721严格门真实执行完成，T1357后台/契约及T1363受控公共链完成；产品eb19124ed；T1359已将同产品树e676本机安装/连续120.399秒观察与14项清旧完成，视频号唯一新281失败由T1364继续诊断。最终全局44ERROR按32+7+2+3分证，旧T1353和本批T1360保留，不冒全局通过；旧3b五任务与40ERROR原证据保。T-916 已修复历史 SPEC review receipt 漂移并通过 reviewctl 审计，但更广泛的工程对账任务仍在进行；BUILD 保持 draft，不把回执修复冒充发布完成。 2026-10-25实际对账：T1427纯组CLI诊断已安装复验；T1428安全402诊断211项回归及独审通过，不代表官方聊天恢复；T1411鉴权传递/准确最小探针文案83项回归与全工作区类型检查通过，独审通过，安装复验待执行。T1410已完成21处历史审核修复并通过reviewctl audit；看板由98,343压缩至58,866字节时守恒核对通过（之后新增T1412），backlog-health仍因超过30KiB为exit1并保留162状态矛盾/历史撞号，未称健康全绿。详见docs/verification/t1410与t1411。"
+    notes: "当前真实阶段；任务状态与顺序以 BACKLOG.md 为唯一真相。本批T1354/1355/1356/1361/1362五项721严格门真实执行完成，T1357后台/契约及T1363受控公共链完成；产品eb19124ed；T1359已将同产品树e676本机安装/连续120.399秒观察与14项清旧完成，视频号唯一新281失败由T1364继续诊断。最终全局44ERROR按32+7+2+3分证，旧T1353和本批T1360保留，不冒全局通过；旧3b五任务与40ERROR原证据保。T-916 已修复历史 SPEC review receipt 漂移并通过 reviewctl 审计，但更广泛的工程对账任务仍在进行；BUILD 保持 draft，不把回执修复冒充发布完成。 2026-10-25实际对账：T1427纯组CLI诊断已安装复验；T1428安全402诊断211项回归及独审通过，不代表官方聊天恢复；T1411鉴权传递/准确最小探针文案83项回归与全工作区类型检查通过，独审通过，安装复验待执行。T1410已完成21处历史审核修复并通过reviewctl audit；看板由98,343压缩至58,866字节时守恒核对通过（之后新增T1412），backlog-health仍因超过30KiB为exit1并保留162状态矛盾/历史撞号，未称健康全绿。详见docs/verification/t1410与t1411。 2026-10-28 T1429：385条基础原链与62条来源导入已校验，过期规格真实复审、来源误改已纠正，独立代码审查与51项审核/事务回归通过。仅审核链与本地接手恢复；全局看板重复和超长欠账保留，BUILD/SHIP及验收不升级。T1420真实两张图可采纳；正文候选、旧安装界面和ZIP仍未验收，不以本次治理修复代签。"
 
   "5-ship":
     status: "draft"
@@ -121,7 +121,7 @@ stages:
       - existing: "docs/verification/t1359/REPORT.md (七产品任务与五frontend strict原件保；e676固定入口构建426.822秒/正式安装/连续120.399秒观察/14项精确清旧完成；真实视频281失败分证，T1364未完成，未冒全平台恢复)"
       - existing: "docs/features/t1352-current-candidate-local-package-install.md (T-1352用户既有本机安装授权/Root确认，五产品strict后已start；唯一受验产品3b，固定入口产包/正式App安装及128.875秒同源启动通过，13旧缓存+旧App备份已精确清理；docs/verification/t1352/REPORT.md)"
       - existing: "orchestrator/GATE-T575-BUILD.md"
-    notes: "前批本机macOS 3b安装与精确清旧保原；本批T1359承接已有本机安装授权，e676独立构建/安装/精确清旧已完成，不复用旧3b结果；原生像素/dirty/采集close仍UNKNOWN，真实视频号281失败由T1364继续诊断，全局44ERROR保留。Windows真机和跨系统生产E2E未全部闭环，SHIP全局保持draft，禁止宣称全平台发布完成。 2026-10-25新证据：778ea455已固定入口本地打包安装及CLI连通；官方最小探针成功，但正式copilot.assist仍CHANNEL_MODEL_PAYMENT_REQUIRED，原任务最后一次恢复保留，真实权益核验待登录。隔离源码空编辑器1440×900/1024×680路径2527/2416ms通过，所有旧FAIL保留，只证明源码限定路径，不是安装原生UI。T1411安装复验、其它标准旅程及适用full检查仍未闭环；T1412处理已发现的执行预算与隔离问题。未推送、未发布，SHIP继续draft。"
+    notes: "前批本机macOS 3b安装与精确清旧保原；本批T1359承接已有本机安装授权，e676独立构建/安装/精确清旧已完成，不复用旧3b结果；原生像素/dirty/采集close仍UNKNOWN，真实视频号281失败由T1364继续诊断，全局44ERROR保留。Windows真机和跨系统生产E2E未全部闭环，SHIP全局保持draft，禁止宣称全平台发布完成。 2026-10-25新证据：778ea455已固定入口本地打包安装及CLI连通；官方最小探针成功，但正式copilot.assist仍CHANNEL_MODEL_PAYMENT_REQUIRED，原任务最后一次恢复保留，真实权益核验待登录。隔离源码空编辑器1440×900/1024×680路径2527/2416ms通过，所有旧FAIL保留，只证明源码限定路径，不是安装原生UI。T1411安装复验、其它标准旅程及适用full检查仍未闭环；T1412处理已发现的执行预算与隔离问题。未推送、未发布，SHIP继续draft。 2026-10-28 T1429：385条基础原链与62条来源导入已校验，过期规格真实复审、来源误改已纠正，独立代码审查与51项审核/事务回归通过。仅审核链与本地接手恢复；全局看板重复和超长欠账保留，BUILD/SHIP及验收不升级。T1420真实两张图可采纳；正文候选、旧安装界面和ZIP仍未验收，不以本次治理修复代签。"
 
   "00-intake":
     status: "passed"

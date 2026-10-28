@@ -1,0 +1,7 @@
+{
+  "ok": false,
+  "error": {
+    "code": "HTTP_400",
+    "message": "dispatch creativeResults.bundles.create failed (400): [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"requestId\"\n    ],\n    \"path\": [\n      \"data\",\n      \"items\",\n      0\n    ],\n    \"message\": \"Unrecognized key: \\\"requestId\\\"\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"requestId\"\n    ],\n    \"path\": [\n      \"data\",\n      \"items\",\n      1\n    ],\n    \"message\": \"Unrecognized key: \\\"requestId\\\"\"\n  }\n]"
+  }
+}

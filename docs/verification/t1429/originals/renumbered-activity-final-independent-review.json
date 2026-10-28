@@ -1,0 +1,290 @@
+{
+  "reviewedAt": "2026-10-23T04:28:52.625Z",
+  "task": "T-1423-AM",
+  "reviewer": "ci_contract",
+  "verdict": "PASS_CURRENT_SOURCE_AND_CONTROLLED_LOCAL_EVIDENCE",
+  "boundary": "只读源码、原始日志与公开合成签名向量重算；未连接PG、真实API、安装桌面或执行经济动作。",
+  "manifest": {
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/FINAL_SOURCE_MANIFEST.json",
+    "sha256": "1354b889202cc0e46b63ec459b3fd6f685197752e42b0c97de0d099ae25858ba",
+    "fileCount": 13,
+    "allCurrentHashesMatch": true,
+    "files": [
+      {
+        "path": "src/lib/license-restore-current-contract.ts",
+        "sha256": "2e111589e626f688d17df54a1a4161bf294dd5af0e96bf0ce19eaa48e7b77466",
+        "bytes": 4309,
+        "mtimeNs": 1792727437326725400,
+        "actualSha256": "2e111589e626f688d17df54a1a4161bf294dd5af0e96bf0ce19eaa48e7b77466",
+        "matches": true
+      },
+      {
+        "path": "src/lib/license-restore-current-service.ts",
+        "sha256": "7d5de9ad614cd4f5e49bb108646596fc7b106582862ad2792a132e8ed3ff7134",
+        "bytes": 22464,
+        "mtimeNs": 1792729259819978000,
+        "actualSha256": "7d5de9ad614cd4f5e49bb108646596fc7b106582862ad2792a132e8ed3ff7134",
+        "matches": true
+      },
+      {
+        "path": "src/app/api/license/restore-current/route.ts",
+        "sha256": "7a1fd3801bfa2b09b9e0296a2c21f93c543ebc31891f675b04ad91cf6f73e8db",
+        "bytes": 469,
+        "mtimeNs": 1792728939783579600,
+        "actualSha256": "7a1fd3801bfa2b09b9e0296a2c21f93c543ebc31891f675b04ad91cf6f73e8db",
+        "matches": true
+      },
+      {
+        "path": "tests/license-restore-current-contract.test.ts",
+        "sha256": "5cccfc861b78610fa99fe64ec2e00ad86c65e279a73798434d7b0d6ff8303d01",
+        "bytes": 5526,
+        "mtimeNs": 1792728915721522700,
+        "actualSha256": "5cccfc861b78610fa99fe64ec2e00ad86c65e279a73798434d7b0d6ff8303d01",
+        "matches": true
+      },
+      {
+        "path": "tests/license-restore-current-service.test.ts",
+        "sha256": "6e2d9c417779ec5e386a74c2fd655e1e2f09a160d9ef345d3ef44de42406561d",
+        "bytes": 14437,
+        "mtimeNs": 1792728669888989200,
+        "actualSha256": "6e2d9c417779ec5e386a74c2fd655e1e2f09a160d9ef345d3ef44de42406561d",
+        "matches": true
+      },
+      {
+        "path": "tests/t1423-license-restore-current-local-pg.test.ts",
+        "sha256": "b0686f871d72d544fa2d3d457f41d8586213ed978c9d89c62c6edd98d20ef7e2",
+        "bytes": 28718,
+        "mtimeNs": 1792729210461205500,
+        "actualSha256": "b0686f871d72d544fa2d3d457f41d8586213ed978c9d89c62c6edd98d20ef7e2",
+        "matches": true
+      },
+      {
+        "path": "docs/contracts/T-1423-license-restore-current-contract.md",
+        "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a",
+        "bytes": 28718,
+        "mtimeNs": 1792729259822977000,
+        "actualSha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a",
+        "matches": true
+      },
+      {
+        "path": "BACKLOG.md",
+        "sha256": "287f048975ee72c1162c5ba0b5c115faf4a1d3b5679981a8ad98201760c4998f",
+        "bytes": 7098,
+        "mtimeNs": 1792729552727085300,
+        "actualSha256": "287f048975ee72c1162c5ba0b5c115faf4a1d3b5679981a8ad98201760c4998f",
+        "matches": true
+      },
+      {
+        "path": "PRODUCT_SPEC.md",
+        "sha256": "3233754b96a1d60ffe4eac04669cc2db4ac9634a86a0da02845422ec7b5a66dc",
+        "bytes": 42063,
+        "mtimeNs": 1792729552729167000,
+        "actualSha256": "3233754b96a1d60ffe4eac04669cc2db4ac9634a86a0da02845422ec7b5a66dc",
+        "matches": true
+      },
+      {
+        "path": "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "sha256": "0b525f00103ac1b0d36bb611e04939ef0ea5efff447534bb2cdd2027d6b57b80",
+        "bytes": 8454,
+        "mtimeNs": 1792729552732505000,
+        "actualSha256": "0b525f00103ac1b0d36bb611e04939ef0ea5efff447534bb2cdd2027d6b57b80",
+        "matches": true
+      },
+      {
+        "path": "orchestrator/DECISION_LOG.md",
+        "sha256": "765f583263a6dc584057d8da98a30bd7500bbce85401418072e925a118689ac3",
+        "bytes": 31419,
+        "mtimeNs": 1792729552735882800,
+        "actualSha256": "765f583263a6dc584057d8da98a30bd7500bbce85401418072e925a118689ac3",
+        "matches": true
+      },
+      {
+        "path": "orchestrator/TRACEABILITY_MATRIX.md",
+        "sha256": "d37b278b5b80e26860368adfae35d823109f913880b022f33291689983b123d9",
+        "bytes": 5752,
+        "mtimeNs": 1792729552735133400,
+        "actualSha256": "d37b278b5b80e26860368adfae35d823109f913880b022f33291689983b123d9",
+        "matches": true
+      },
+      {
+        "path": "orchestrator/events.ndjson",
+        "sha256": "8e6e774c05d2ecba5c97e6f57d51d23d1bfc32b0723b0cbd50e752421ab67707",
+        "bytes": 2648,
+        "mtimeNs": 1792725573093174300,
+        "actualSha256": "8e6e774c05d2ecba5c97e6f57d51d23d1bfc32b0723b0cbd50e752421ab67707",
+        "matches": true
+      }
+    ]
+  },
+  "qualityStartProductAndTestsMatch": [
+    {
+      "path": "src/lib/license-restore-current-contract.ts",
+      "matches": true
+    },
+    {
+      "path": "src/lib/license-restore-current-service.ts",
+      "matches": true
+    },
+    {
+      "path": "src/app/api/license/restore-current/route.ts",
+      "matches": true
+    },
+    {
+      "path": "tests/license-restore-current-contract.test.ts",
+      "matches": true
+    },
+    {
+      "path": "tests/license-restore-current-service.test.ts",
+      "matches": true
+    },
+    {
+      "path": "tests/t1423-license-restore-current-local-pg.test.ts",
+      "matches": true
+    },
+    {
+      "path": "docs/contracts/T-1423-license-restore-current-contract.md",
+      "matches": true
+    }
+  ],
+  "gates": {
+    "focused": {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/focused-pre-final.tap",
+      "sha256": "3d302d7180b6d2e67e6c16a7558f8b28a9244ccc8f492f8a505ce05f63df7854",
+      "tests": 36,
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "rawSummaryVerified": true
+    },
+    "quality": {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/quality-final.log",
+      "sha256": "70a1cdecacabd4a541dc109fe06a8f668b0db46a1d88f4ae15d0370f045f8e7e",
+      "exit": 0,
+      "tests": 592,
+      "passed": 585,
+      "failed": 0,
+      "skipped": 7,
+      "rawSummaryVerified": true,
+      "buildPassed": true,
+      "lintNoWarnings": true
+    },
+    "typecheck": {
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/typecheck-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit": 0
+    }
+  },
+  "resolvedFindings": [
+    {
+      "id": "ACTIVITY-001",
+      "status": "resolved",
+      "description": "全码移出历史人工/force墓碑不能通过更换请求machine绕过；原RED及unit/真实私有PG 0写Green均保留。"
+    },
+    {
+      "id": "ACTIVITY-002",
+      "status": "resolved",
+      "description": "非POST使用同物理handler拒绝并签真实method；HEAD空body不作为native合法POST响应，不改变POST wire。"
+    },
+    {
+      "id": "ACTIVITY-003",
+      "status": "resolved",
+      "description": "非secure SQLite COUNT有key时仍写原plaintext/kid=null供旧v1 proof；secure PG COUNT仍摘要持久化，实际私有SQLite RED→Green已含完整聚焦。"
+    }
+  ],
+  "acceptedSourceProperties": [
+    "项目锁→排序码锁→全量重读并拒新增集合；digest为乐观fence而非授权",
+    "当前合法target优先纯no-op，缺绑定才释放精确失效集合，其他有效绑定拒绝",
+    "目标原usedAt/expiry/COUNT/经济身份保持，签名/审计/写失败事务回滚",
+    "签名前后按当前时钟重核，目标expiry等值拒绝，其他等值仍保守保护",
+    "inspect零写，手工墓碑/未知kid/目标别机绑定/损坏历史failclosed，无activate回退"
+  ],
+  "finalIssuedFixtures": {
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1423/ACTIVITY_RESTORE_V1_FIXTURES_FINAL.json",
+    "sha256": "8fdbab49a052ae3f5b63e447ceb20a6dba1af5146e13c318aefc6f7bf2759716",
+    "fixtureOnly": true,
+    "privateKeyIncluded": false,
+    "sourceBind": [
+      {
+        "path": "src/lib/license-restore-current-contract.ts",
+        "sha256": "2e111589e626f688d17df54a1a4161bf294dd5af0e96bf0ce19eaa48e7b77466",
+        "currentMatches": true,
+        "qualityStartMatches": true
+      },
+      {
+        "path": "src/lib/license-restore-current-service.ts",
+        "sha256": "7d5de9ad614cd4f5e49bb108646596fc7b106582862ad2792a132e8ed3ff7134",
+        "currentMatches": true,
+        "qualityStartMatches": true
+      },
+      {
+        "path": "src/app/api/license/restore-current/route.ts",
+        "sha256": "7a1fd3801bfa2b09b9e0296a2c21f93c543ebc31891f675b04ad91cf6f73e8db",
+        "currentMatches": true,
+        "qualityStartMatches": true
+      }
+    ],
+    "vectors": [
+      {
+        "outcome": "ready_missing",
+        "bodyDigestVerified": true,
+        "signatureVerified": true,
+        "fixedHostVerified": true
+      },
+      {
+        "outcome": "restored",
+        "bodyDigestVerified": true,
+        "signatureVerified": true,
+        "fixedHostVerified": true
+      },
+      {
+        "outcome": "already_bound",
+        "bodyDigestVerified": true,
+        "signatureVerified": true,
+        "fixedHostVerified": true
+      },
+      {
+        "outcome": "denied",
+        "bodyDigestVerified": true,
+        "signatureVerified": true,
+        "fixedHostVerified": true
+      }
+    ],
+    "allVerified": true
+  },
+  "nativeConsumer": {
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1423/native-final-activity-consumer.log",
+    "sha256": "69f01f93c8c5fa692e442f53808199cad732ca91c60fda85d0bfcef607e414de",
+    "passed": true,
+    "testCount": 1,
+    "vectorCount": 4,
+    "nativeSourceSha256": "a4f99f136e62f548a4ea3d01b97ccf226e63503c9226dba1aade4f9b6c53d96d"
+  },
+  "ownedPgStop": {
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/pg/STOP_RECEIPT.json",
+    "sha256": "154d6146d9169245418d4bd309e059a55062ef7eefde8898146fd594ccf2c018",
+    "record": {
+      "ownedPid": 12244,
+      "verifiedCommand": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/postgres -D /Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/pg/data -h 127.0.0.1 -p 49402 -k /tmp",
+      "verifiedRuntime": {
+        "database": "activity_t1423_fixture",
+        "role": "activity_t1423_fixture",
+        "data_directory": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/pg/data",
+        "port": "49402",
+        "server_version": "16.13 (Homebrew)",
+        "activation_codes": 233,
+        "device_bindings": 84,
+        "binding_histories": 111
+      },
+      "stopExit": 0,
+      "statusExit": 3,
+      "dataRetained": true,
+      "serverLogRetained": true
+    }
+  },
+  "unresolvedFindings": [],
+  "notClaimed": [
+    "每个合同矩阵项都分别进行了真实公共API并发测试；以原36条完整身份为准",
+    "浏览器/desktop按钮/安装/真实本机恢复UAT",
+    "生产部署、真实用户数据或真实钱包经济履约"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "appVersion": "1.2.0",
+  "cliVersion": "0.1.0",
+  "contractVersion": "0.4.0",
+  "connected": true,
+  "access": "full",
+  "groupId": "grp-8fdb2e06-22",
+  "groupName": "1",
+  "accountId": "acct-8fdb2e06-123",
+  "accountHandle": "我是谁",
+  "platform": "douyin",
+  "scopeNote": "规划要求使用本机已安装账号；与仓库历史指定的月明水清深不同，本轮仅只读核对，未向任何作品写入。",
+  "projectListRequestId": "req-2ddab0cc-2468",
+  "projectCount": 2,
+  "projectStatuses": [
+    "imported",
+    "imported"
+  ],
+  "modelRoutingRequestId": "req-2ddab0cc-2464",
+  "effectiveChoices": {
+    "text": "official",
+    "vision": "official",
+    "image": "official",
+    "video": "official",
+    "audio": "official",
+    "embed": "official"
+  },
+  "imageCapabilities": [
+    {
+      "capability": "image.generate",
+      "mode": "image",
+      "source": "official",
+      "status": "ready",
+      "reasonCode": null
+    },
+    {
+      "capability": "image.edit",
+      "mode": "image",
+      "source": "official",
+      "status": "ready",
+      "reasonCode": null
+    }
+  ],
+  "generationTriggered": false,
+  "businessWrites": false,
+  "uiJourney": "仅查看首页与项目列表；未验证T-1420图文工作台、图片预览采纳或导出。"
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-1417 当前规格独立增量复审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 7dcf2e7822b1ec12065d8c24147e27d9dbb96d6c5a59e45cec7bfe003ff47c6b；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 1；旧SHA与父提交相同。当前修改三处T1408→T1427与首段证据目录，不改变128/8192两值、四个文本capability白名单、非文本副作用前拒绝、固定prompt/零重试、原并发预算和CAS恢复。 静态核contract严格text IPC两值及image不含该字段、backend投影、worker消费maxOutputTokens与maxRetries=0、frontend对非文本选项的前置拒绝和8192成功限定文案；现真实IPC测试源码包含两档max_tokens及鉴权、单次请求。没有运行产品、模型或测试，不推断现场402根因。 新目录docs/verification/t1427/credential-refresh-20261025在隔离树和原工作区均不存在，旧t1408同目录也不可得；DEC142801记载被ignore日志可能留旧目录而非迁移。故无法将该新路径称为已核验的历史原始回执，作为changed-lines minor记录；不要求重打失败模型请求补证。其余原空findings保持，新增项不阻断已明确的可执行合同。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1417.evidence.json。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "minor",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "历史诊断证据",
+        "quote": "原始回执在 docs/verification/t1427/credential-refresh-20261025/。"
+      },
+      "acceptance_anchor": {
+        "id": "验收",
+        "quote": "记录时间/结果/凭据元数据与 CAS 恢复"
+      },
+      "where": "docs/features/t1417-text-probe-output-budget.md:3",
+      "failure_mode": "改写后的历史原始回执目录在隔离树和原工作区均不存在；旧目录本机亦不可得，当前审查者不能依该引用核实既有128成功/正式402的原始时间和凭据元数据。不能把引用重命名本身当作原件已迁移或本轮已验证。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/verification/t1429/reviews/T-1417.evidence.json#path_checks",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:3:720081e4fb9f64ac",
+      "suggestion": "注明原回执当前不可得及其原始来源，或提供已保全的可读取归档路径与hash；无需重跑真实付费/失败模型请求补证。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

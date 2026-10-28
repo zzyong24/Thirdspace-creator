@@ -1,0 +1,569 @@
+{
+  "recovery_commit": "6edf36a75",
+  "original_head_before": "6033bdd51",
+  "original_cherry_pick": "b1f027241",
+  "preserved_file_count": 111,
+  "all_unchanged": true,
+  "files": [
+    {
+      "path": "ai-worker/src/prompt/templates/chatbox-turn.ts",
+      "sha256": "04a8b1553459560da110dbd3c448cb816b6e4aa0b64bbf5417d1c508f7403c89",
+      "unchanged": true
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/graphic-post-text.ts",
+      "sha256": "3078f4b4190493e2e186598a8a231780828db1b87d25d720df2f004d87376fb1",
+      "unchanged": true
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.integration.test.ts",
+      "sha256": "90215161b237699b4a3b351473df82c36475955317adfd5b9b22f05f91e27f3f",
+      "unchanged": true
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.service.ts",
+      "sha256": "08f9cf284e32d349d79713db51e7dc2d079befc788af0c534acfbe3b83499124",
+      "unchanged": true
+    },
+    {
+      "path": "backend/src/modules/creative-results/graphic-post-media.adapter.test.ts",
+      "sha256": "75d4e1d113de53cb6e8c69c12dd5ff9b6507dcbe0f885dfe1bf16c794531c046",
+      "unchanged": true
+    },
+    {
+      "path": "backend/src/modules/creative-results/graphic-post-media.adapter.ts",
+      "sha256": "f6a4e1cb7f951908da181c4755e9d80779601689b31d789f64352bf50af2dd02",
+      "unchanged": true
+    },
+    {
+      "path": "docs/features/t1420-graphic-post-content-structure.md",
+      "sha256": "d3786b24a04815963e2f27138ba4c825dc29007c5b898d01ba642255c2c771f2",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1302/acceptance/runs/final-t1304-t1305/a/creation-article-actual-source.json",
+      "sha256": "53fb7b916ee59511390f5bb50385a6e7496d5ce4c86023fd633dbab6d4b2677f",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1302/acceptance/runs/final-t1304-t1305/a/editor-article-actual-source.json",
+      "sha256": "799ce815b7f57f8269381ab4c0a61a22ac6b3188e271cc4ca58a68af20f109ed",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/README.md",
+      "sha256": "bf928c3412b4d02d4d6a56be257bdad40d655a25718aad351d247b9fab948040",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/audit-baseline.mjs",
+      "sha256": "da0da32b3ad61833fa3aaa6efae79f2d247fc2c5d145fdb577d81190c895727c",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/backend-target.json",
+      "sha256": "f96733d57d699ceb1062dbd7d5c8330e75327dbe136643276e62c3aed515f71a",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/backend-target.log.gz",
+      "sha256": "4fbf210818be7407d499f32be75aedd2c90740af35424f1e9b85b9205cc7fe21",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/baseline-review-audit.json",
+      "sha256": "4334b7f23365157315f6963b160132e9fcc5cba72e02a766be06bc9d49b65cfa",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/before-head.txt",
+      "sha256": "c0f7da0575bb824ea1f726545a6212aa5cba939f595b74d7c2d94278c0b50009",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/before-status.txt",
+      "sha256": "956e401376094d635e778a0e44ea76cf38f9d0262ccced3c86956b9a17af3141",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/boundaries.json",
+      "sha256": "f62dddc20fba4ef5335b93ac1588094a8c88dda09e3111bc0274e20e0065b422",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/boundaries.log.gz",
+      "sha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/checks.json",
+      "sha256": "3949a1b9a13c6e2110926aca2cb7c548a7e2d0803a9cb02776ff25b2fbda91f7",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/diff-check.json",
+      "sha256": "251d2404bb04e12571bffdb2eb79ffde2ae2d252c2a54da2d041b90bb39a9359",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/fetch-acceptance-image.py",
+      "sha256": "597d05e63986d0e42b47debf69d52acf584404a5354f7d4dc2bbef770c9e8598",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/fixture-restoration.json",
+      "sha256": "2635e5e5da44ed54ed4b37f822f7545b9c0acf1d8c7fe76afdbb015a95408e97",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/frontend-compatibility-restored.json",
+      "sha256": "633bec3feff994d23d864bcb2c821a83645342c41375904651ddd4c13da6d6ac",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/frontend-compatibility-restored.log.gz",
+      "sha256": "f9383e3637646ed69a55e2e9141a182f1586e5d8a163547b9065f28ae099c0b9",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/frontend-compatibility.json",
+      "sha256": "c3b379eaa97e016a0961c74516723e235e80215f0f989ada1a9faf0c1239d86a",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/frontend-compatibility.log.gz",
+      "sha256": "e5fe8f1116b60a411905cdec3838f6f2d5142f554e2a6e593d7dd0806a9578e0",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/frontend-target.json",
+      "sha256": "1e1ab729e509ee935d1b220cf9c3d54ccfe40e4cc4f6aa0d0819c6c919b1a467",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/frontend-target.log.gz",
+      "sha256": "32f1ef868c4399d3a2a839d75c0ddfb4d6f3255448088fa4ec5bb9600fd4e892",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/import-review-packet.json",
+      "sha256": "bfe0e8a373718e190ee46e8d8a9d8bd0e6a5d3af496f57353549a1661063fc2d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/installed-preflight.json",
+      "sha256": "b3a1fd3f31839ca093638d994efe81dcafbcd59ea05473ad686438eea30c2f37",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/installed-projects-ax.txt",
+      "sha256": "1a940b9c28f221cd85ccbafb754927fd49b2cce06136e2976dff08f045dc39c8",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/installed-projects.png",
+      "sha256": "584e4f2435a1906ee33680a5352af089112b2caf58cd10441c0f396a02d3815f",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/observe-cli.py",
+      "sha256": "cc8a6ae41ac279921ff1b507b3deda4116429885a30db761f7856cf5bf60af74",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/preserved-branches.txt",
+      "sha256": "f66563347b6959f75ad32afb1cf5aa11e88f7ac98f20a1c9c1ad6d14c1a7defd",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-adopt-cards-input.json",
+      "sha256": "3b23fba265be0b455470658e3acac4f207f8781f437b44a97c186e8335650685",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-before-adopt.json",
+      "sha256": "29237c25b1a9a09e34472f403a3569b440e1f7ebbf5eeb49998f9f476d6fe81a",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-before-image-adopt.json",
+      "sha256": "1607b9aba6ad506c6dc6c7dcbdcf1576b00a36feb0357b5bf41cd118307e56df",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-body-candidate-exact.json",
+      "sha256": "233343967740e7151bb3a4e65f2aa7e37ce2ed58a479e55bfcc9d38f702e5777",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-capabilities.json",
+      "sha256": "3a8a80a16a3b00a589ef78bf6bbb0bfc262ec164cc7d23de156c7fb1bab966d0",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-cards-adopted.json",
+      "sha256": "5da83ef37a161378031c119320f3c2403d54c9c1f11580a736f6af1bceebee30",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-cards-candidate-exact.json",
+      "sha256": "8e3a3f872204e6e8505b93a46bcb46e392b3bd8b2129d1aad88b4084912ca19e",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-cards-readback.json",
+      "sha256": "5bfff64ca54eaa486aa54da4acce7d6c057e30b4349c91fecfadab1bd2bb6d2e",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-evidence-manifest.json",
+      "sha256": "cfce7fc430bc531a52b677c6af2580b132fb1a652d2827a187e390558317838d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-exact-file-check.json",
+      "sha256": "0920ac800a29a4fc8c94918193b7bcff58c475d8f7f3fad2e5ecd84a62ee07b1",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-export-check.json",
+      "sha256": "909865590220a239f914ca805bfd44b0f52bd7a884e8d85498a5c1b5ab232d66",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-export-page-03.png",
+      "sha256": "1680bafdb9ef6a2b29e4c86fa0ce7da1bdd1fcfc84eb2f32119e15ee6b3dcc26",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-export-page-preview.png",
+      "sha256": "972c88ec3098319eb6a53e431a95c909e8a4ace9bc6af013f2ffa05151f1d401",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-final-exact.json",
+      "sha256": "88071dcb756fce1e8b8be362e7d0350e486c3a0ed559c50fea60bcb4ccd2b33a",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-final-latest.json",
+      "sha256": "14386357baf0d335ce7ec7046a5da9b67b50392d9948075091368543a8852cda",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-graphic-initial.json",
+      "sha256": "1f4043133110b9a7022b01d9c0756773c5e72d3428bf5217088e4c31c19d3cfa",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-adopt-input.json",
+      "sha256": "90fff8e5a58c2d88ca126dea57af6dfb024d3bcc06d32aa3485205b8d30c3e33",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-adopted.json",
+      "sha256": "f3c3ff2168355a4b401ac1bcf23f57304bfa9418ebcbc6ee767c8b93a1b52ba2",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-asset-input.json",
+      "sha256": "5fe5e6fa5206e088b172f2f2f9d6a8b0da2cf2671da6e2d30688bbfcb3265d08",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-candidate.json",
+      "sha256": "c030f62b5c5789346572327ab9a9422d8e23436515ad6d616d92a2be6846a50b",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-file-input.json",
+      "sha256": "1fddf9b41af4c2b46f0e30ce678a5efde1ff3160be39c7d9661b640c697e468c",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-file-proof.json",
+      "sha256": "7491342ac84b30ec69db3f68cf625b4c9295685515fc5748b8e096473c0f376c",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-input.json",
+      "sha256": "1eb27cb62c81cd7090d282fa1288ea332f77069288708f0e5346c38870264fa9",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-readback.json",
+      "sha256": "3066b7ff186411904af53a1e9a0a9649999abf7d803e8c8782c731c77b3a2f3f",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-submitted.json",
+      "sha256": "760b1d6955b9d30882b7c8705abfab7efad29bc846c6ce8846ed5d5e5cf45337",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01-task.json",
+      "sha256": "f1759a7053bb6f0f0d55e76639b52d838d2a711e7f2eba285ef8468252f66f2d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-01.png",
+      "sha256": "10bbb5c54724bdbe9235acff9dbe1bbdc9bdcb03f8be6a5ed128d28264d9215e",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-adopt-input.json",
+      "sha256": "5ed2e4fcb50c9c01b01a8a9e881eaccc5c1edb28bcfa675319cddeab04532972",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-adopted.json",
+      "sha256": "8d20baa1ce6ff89d3427c71b6bd42d26d747f03ae069e49a803820cdac64d33c",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-asset-input.json",
+      "sha256": "652f0711109fa1703dc80906e52d659d77becfc91f7f674420cfb8421ee11df6",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-candidate.json",
+      "sha256": "87a2005d4eb29c4e31cc7b9fe8fa5e11fc5a18cb9eb65620c951ddcbc5938ca6",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-file-input.json",
+      "sha256": "43c72fd2526bb7abc115ac4b87135f58a7e764b7a2ded4e0eaed24baa1aeaa27",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-file-proof.json",
+      "sha256": "109afcf57806423ab0258174d62762944ea3e3b19fd3466973e486de5002dbe4",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-input.json",
+      "sha256": "59182ae8357d90e137292706e9404fef737b83c9636f0750d0fd25db62a8af00",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-submitted.json",
+      "sha256": "be316808d96303cfce9136827c8bef69a20ea48edf8a1de82e7d9fba323b6882",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02-task.json",
+      "sha256": "cc7edbb1985bdc2336bf40852cfea1e142d7001d32bbf2586bf90fc975387810",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-image-02.png",
+      "sha256": "71e4dc404c58f8c8c4e61cc8a0e5871bbb356e1c896f216312384a36021de61c",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-installed-export.zip",
+      "sha256": "32d565abc741caf0ff034584572f0ea6baf0547bc4826cd451a7e652a0cba9f7",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-installed-final-ax.txt",
+      "sha256": "403d9b91f047c9daa545d7e30b4c56f9d40438babee81877714351a80321a101",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-installed-final.png",
+      "sha256": "40e494846c6ee7923432e9556e5d869bed02c3370dd886cdaa350dec9875acb2",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-installed-workbench-ax.txt",
+      "sha256": "974609bc68897609cb211e0255ad3538b48a0f1d06217362c8b766487af5fb33",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-installed-workbench.png",
+      "sha256": "71e5b0be3771c436ab8f488e261f0fecbe4b9e9e201ea43de5c1286b16d4e84b",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-output-created.json",
+      "sha256": "cfc7b6108927193f95f873bd698858329761ddf0390cceaebb48bbf906dcd0b7",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-output-input.json",
+      "sha256": "e5c34ad00d54742f437adb4103eac59689605b11af487d79ed3748d004444941",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-project-created.json",
+      "sha256": "17f1b4acb1658c71339cfab344f480a782e129a0dfe439d3edecc690cb720400",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-project-input.json",
+      "sha256": "ec93c77363ee4d7840f3aaeeb7d3794793d3a8563f9a0a2379242b9bfe654444",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-project-readback.json",
+      "sha256": "14293c7ea07ff55b637f9f45d88ddb7322196569bf8bca7a2f6009267cd78a2c",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-report.md",
+      "sha256": "b819560ee6503c25a07aa253ec8936a4d315666363e3467f70fe5df503eb79bb",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-source-exact.json",
+      "sha256": "e33e274a32b434b8b5b6e9fbffe039a198a4bf7c26778c40dbb6c63d0d65f2ce",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-source-input.json",
+      "sha256": "8030b5dc655a60d8ad5bb6705697d29e8f0e3312b6e0500b28be1e63266c5e85",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-source-latest.json",
+      "sha256": "54847f37e495a398ab5cc60cc9007e75e5f53b0c0ba983429d4d60201a096419",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-source-saved.json",
+      "sha256": "982a52c9856c525bb9ea2a9022349bb9125cfe5580d2f32d076da85412d1ab8e",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-text-bundle-created.json",
+      "sha256": "84331a0ff0b4f611df525c324ff16e2c7caf38cb875c547a7482a8dafc85d079",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-text-bundle-input.json",
+      "sha256": "2657541b80452081ed447557f9d02543b6515f74ac7bf4ccff5c9eb666c80ee2",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-text-bundle-submitted.json",
+      "sha256": "49f3bae498837dcc07139482b2f62f94c585860872aa6dcdf15788bce34a9930",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-text-candidates.json",
+      "sha256": "0ae4038c45db8e66c979a0fa0fcd2973f8adad54b62dbbba2a69bbd5a4a15cdb",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-text-results-recovery.json",
+      "sha256": "680d800fdb640fd922597afe1720e6094905ba268cc14f119b2edc396f833481",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-text-task-0.json",
+      "sha256": "1c417e749823befbe46fd8af4edafe0b491b4bb2a39451916cc2d65bf6a00601",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-text-task-1.json",
+      "sha256": "f2b18bb18ffdaeb7527e3ed9af98c890f11e9fc2989a2cc153282a3132499cf9",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/source-review-event.json",
+      "sha256": "dc088b42679eb841316624e543703924779d6d088fd8ae47a3e9dbfd8269bf64",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/source-review-snapshot.md",
+      "sha256": "270912e0700541a6ecd230740aaef569eddc8a530cff459e809f4f9c790f9b6c",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/timeout-policy-authorized.json",
+      "sha256": "cb95521b19715ce9df057255489e9238039d40d933482b28d8675db1f1401a85",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/timeout-policy-authorized.log.gz",
+      "sha256": "2a30d48a95310841f28a979f3db2107fd74f15575fe88153361f1eddfcb60c6b",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/timeout-policy.json",
+      "sha256": "b244d4ed640b3c467a394031bdaa01068744c0a0f3aae7e70f18f2c919049d32",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/timeout-policy.log.gz",
+      "sha256": "924e53f95246cd70ddf639804c17334907f4e6629601d650f0dc1e16a526bce7",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/typecheck.json",
+      "sha256": "2ee5ecb25f62601c5334993a7cef1db75a9cbd489a9ef2e6d1b3ff22ef00ca48",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/typecheck.log.gz",
+      "sha256": "20162d3567703f1f0a9697c09b53d7c1654220337122b0ad879faa8f75229fed",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/worker-target.json",
+      "sha256": "1d9be48810e09c49006503b07f2063c1562692d34e7c5f037cf27db70859b2bc",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/worker-target.log.gz",
+      "sha256": "d8d3dee48ea470b544d00f8341de0b695e766ae3010a1e31eb0ce943a9249038",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/working-status.txt",
+      "sha256": "42f8c2d4f12fe3efcde997885d84719b02c300e3f667c4a2378597ab44aa7f7c",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-image-pages.test.tsx",
+      "sha256": "c2b033b8bc9913a8381d5c0d40efde459757680ab04aac48df4ae488cb057a52",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-image-pages.tsx",
+      "sha256": "22ff2e07542cb0303a8db45416fbfa8fca17a8c8a79cdb6f22a1cfecf988ec03",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-results.test.tsx",
+      "sha256": "8c52f9983962f66709e6fe950628229f72cb0a5bf0ea22fe1419cd44f3f82cc4",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-results.tsx",
+      "sha256": "a7851fbd7361ae08af4a63b6dd3a3e9212c796b6df9fc2d48cb6afcec4460522",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+      "sha256": "a6f9c8305d3afac4be4519105aa7c4c2f38fb71d8611000790626e8320d5539c",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.tsx",
+      "sha256": "63626d7de1abf28600d085630b6653e182ac40bfb3586d9d5d7b4ecc752e062a",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/features/projects/script-first-content.ts",
+      "sha256": "0a9d049310fde244308a756a6dbe23e58011462455a34150ce2f74df8f3d478c",
+      "unchanged": true
+    }
+  ],
+  "regenerated_control_paths": [
+    "orchestrator/context/T-1420.md",
+    "orchestrator/context/T-1429.md",
+    "PROJECT.md"
+  ]
+}

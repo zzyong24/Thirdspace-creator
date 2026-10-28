@@ -1,0 +1,32 @@
+{
+  "zipBytes": 415525,
+  "zipSha256": "32d565abc741caf0ff034584572f0ea6baf0547bc4826cd451a7e652a0cba9f7",
+  "entries": [
+    {
+      "name": "验收输入：书桌整理的两个小动作-01.png",
+      "bytes": 269804,
+      "sha256": "19753b04ab20f5f3043c30c94bfaba8d0f481a9c350dd9604798cd55a5920e6b",
+      "matchesAdoptedOriginal": false,
+      "width": 1242,
+      "height": 1658
+    },
+    {
+      "name": "验收输入：书桌整理的两个小动作-02.png",
+      "bytes": 126974,
+      "sha256": "972c88ec3098319eb6a53e431a95c909e8a4ace9bc6af013f2ffa05151f1d401",
+      "matchesAdoptedOriginal": false,
+      "width": 1242,
+      "height": 1658
+    },
+    {
+      "name": "验收输入：书桌整理的两个小动作-03.png",
+      "bytes": 125112,
+      "sha256": "1680bafdb9ef6a2b29e4c86fa0ce7da1bdd1fcfc84eb2f32119e15ee6b3dcc26",
+      "matchesAdoptedOriginal": false,
+      "width": 1242,
+      "height": 1658
+    }
+  ],
+  "bothOriginalImagesPreserved": false,
+  "containsIndependentCaption": false
+}

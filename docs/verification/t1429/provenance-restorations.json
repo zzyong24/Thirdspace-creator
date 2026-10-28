@@ -1,0 +1,26 @@
+[
+  {
+    "source_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "source_path": "docs/verification/t1402/CLIENT_WIRE.md",
+    "current_path": "docs/verification/t1423/CLIENT_WIRE.md",
+    "sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d",
+    "damaged_copy": "docs/verification/t1429/originals/renumbered-CLIENT_WIRE.md",
+    "damaged_sha256": "78d8acc1cd5581195f0bd90d2f28f905a1cd55b820b01df4f6219d4b55c30797"
+  },
+  {
+    "source_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "source_path": "docs/verification/t1402/ACTIVITY_WIRE.md",
+    "current_path": "docs/verification/t1423/ACTIVITY_WIRE.md",
+    "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a",
+    "damaged_copy": "docs/verification/t1429/originals/renumbered-ACTIVITY_WIRE.md",
+    "damaged_sha256": "7de76c64f35568d26f2cefae23e552b855dd715ffcd92d335d6d427c8a3f9317"
+  },
+  {
+    "source_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "source_path": "docs/verification/t1402/activity-final-independent-review.json",
+    "current_path": "docs/verification/t1423/activity-final-independent-review.json",
+    "sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a",
+    "damaged_copy": "docs/verification/t1429/originals/renumbered-activity-final-independent-review.json",
+    "damaged_sha256": "92430ff303060b3e1874c910073a686880691d602b9330bb445e23f094dc356b"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "label": "backend-target",
+  "command": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/creative-results/creative-results.integration.test.ts",
+    "src/modules/creative-results/graphic-post-media.adapter.test.ts"
+  ],
+  "cwd": "/Users/masx/Projects/Thirdspace-creator/backend",
+  "exit_code": 0,
+  "duration_seconds": 32.29,
+  "ended_at": "2026-10-28T09:08:46.164943+00:00",
+  "log": "backend-target.log.gz"
+}

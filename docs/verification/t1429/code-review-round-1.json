@@ -1,0 +1,176 @@
+{
+  "schema": "t1429-code-review/v1",
+  "reviewer": {
+    "session": "/root/recovery_stale_specs_b",
+    "mode": "homogeneous",
+    "model": "继承宿主模型，精确型号未核实",
+    "independent_of_implementation": true
+  },
+  "reviewed_at": "2026-10-28T11:03:55.354951+00:00",
+  "scope": [
+    "orchestrator/process/reviewctl.mjs",
+    "orchestrator/process/review-ledger-migration.mjs",
+    "orchestrator/process/reviewctl.test.mjs",
+    "orchestrator/process/review-ledger-migration.test.mjs",
+    "orchestrator/process/state-lock.mjs"
+  ],
+  "result": "PASS：当前实现独立代码复核未留下可触发实质缺陷。本轮发现的输入冻结与回滚竞争已修复，定向负测及最终三组41项测试全部通过；不代表真实迁移已应用或原工作区已集成。",
+  "findings": [
+    {
+      "id": "CR-001",
+      "status": "resolved",
+      "severity": "P1",
+      "file": "orchestrator/process/reviewctl.mjs",
+      "line": 1333,
+      "end_line": 1336,
+      "title": "回滚逆序写入前缺少再次CAS，会删除预查后出现的外来修改",
+      "trigger": "pending journal含新建review snapshot（before=null）、BACKLOG和ledger。restoreTransaction首次整批预查读取snapshot后、开始逆序回滚前，另一编辑器改写该snapshot；其他文件仍为before/after。",
+      "actual": "整批预查已缓存此前值，逆序循环直接unlinkSync新建snapshot，或durableWrite覆盖已有文件；recover返回rolled-back并持久标记journal=rolled-back，第三方更新永久丢失。",
+      "expected": "回滚逐个写/删前复查该目标仍为before或after；遇第三方内容停止并保留pending journal，不删除或覆盖其内容。保留开始时整批预查，以拒绝恢复开始前已存在的冲突。",
+      "requirement": "FR-142904 / AC-142903：恢复遇第三方新修改拒绝覆盖；持久journal支持中断恢复。",
+      "reproduction": {
+        "method": "仅在临时fixture里构造pending journal。使用fs.readFileSync+syncBuiltinESMExports，在snapshot第一次预查返回原after后写入FOREIGN-EDITOR-UPDATE，再调用实际recoverLedgerTransaction。未改实际仓库控制面。",
+        "reviewctl_sha256": "4cde1aae4e42469dd62ff07f5fe850782500eaf24560d449fab493ca59018bb8",
+        "external_edit_injected_after_snapshot_precheck": true,
+        "recovery_result": {
+          "status": "rolled-back"
+        },
+        "snapshot_still_exists": false,
+        "external_edit_preserved": false,
+        "journal_status": "rolled-back"
+      },
+      "minimal_fix": "在逆序回滚每项mutation前使用同一before/after约束再读并比较，不以已完成的整批预查替代临写校验。",
+      "necessary_test": "新增before=null与before为原文两例：在整批预查之后、轮到该项回滚之前注入外部修改，要求拒绝、外部字节保留、journal仍pending；其余无冲突路径仍可恢复。",
+      "resolution": {
+        "reviewctl_sha256": "3f7d77a573a4ccec0a9d0e4cfd14c707bfbe318df2724a112db979f595a6ac3f",
+        "file": "orchestrator/process/reviewctl.mjs",
+        "lines": [
+          1333,
+          1339
+        ],
+        "change": "逆序回滚在每项写/删前再次读取；第三方值立即拒绝，当前已等于before则跳过重复写。",
+        "independent_retest": [
+          {
+            "before": null,
+            "injection": "snapshot首次整批预查读返回后写入FOREIGN-EDITOR-UPDATE",
+            "error": "第三方修改 docs/test.review.md；保留 journal，拒绝回滚覆盖",
+            "foreign_preserved": true,
+            "journal_status": "pending"
+          },
+          {
+            "before": "original snapshot",
+            "injection": "snapshot首次整批预查读返回后写入FOREIGN-EDITOR-UPDATE",
+            "error": "第三方修改 docs/test.review.md；保留 journal，拒绝回滚覆盖",
+            "foreign_preserved": true,
+            "journal_status": "pending"
+          }
+        ]
+      }
+    }
+  ],
+  "resolved_during_review": [
+    {
+      "id": "CR-002",
+      "severity": "P1",
+      "title": "预演双读BACKLOG及末尾重读guard可把并发新值当before",
+      "status": "resolved-in-current-code",
+      "evidence": "首次静态读取确认旧实现readBacklog之后末尾再取BACKLOG.before；主会话修正早于独立回归执行，未虚构旧版红测。当前SHA dddd4a0c4e9f1e106e46a8f37b6ebd6fac4f12fda42e26c9d1e3e05fe978d862实际注入首次读后外来更新，BACKLOG只读1次，run返回CAS拒绝且外来更新保留。manifest/archive使用已验证SHA，DEC提前冻结。"
+    },
+    {
+      "id": "CR-003",
+      "severity": "P2",
+      "title": "共享SPEC或宪法多次读取覆盖初始guard",
+      "status": "resolved-in-current-code",
+      "evidence": "当前SHA 4cde1aae4e42469dd62ff07f5fe850782500eaf24560d449fab493ca59018bb8使用readFrozen缓存。两个任务共享constitution，在首次read之后修改文件，constitution只读1次，guard保持旧hash，run返回CAS拒绝：docs/constitution.md 输入已变化。未将重复读阶段旧缺口冒称实际旧版红测。"
+    }
+  ],
+  "validation": [
+    {
+      "command": "node --test orchestrator/process/review-ledger-migration.test.mjs orchestrator/process/reviewctl.test.mjs orchestrator/process/state-lock.test.mjs",
+      "result": "40 passed, 0 failed, 0 skipped",
+      "scope": "包含基础原始字节、来源篡改、mapping碰撞/越界、packet/nonce篡改、单项/整批删失、重复错序、Git blob、普通record/audit以及事务CAS/锁/异常回滚/退出恢复。运行发生在主会话新增永久并发回归前，不声称覆盖后续新增测试。"
+    },
+    {
+      "test": "真实SIGKILL的持久journal恢复，临时fixture三项事务",
+      "result": [
+        {
+          "kill_after_index": 0,
+          "signal": "SIGKILL",
+          "journal": "pending",
+          "stale_lock_rejected": true,
+          "explicit_dead_owner_lock_removal_in_fixture": true,
+          "recovery": "rolled-back",
+          "all_originals_restored": true
+        },
+        {
+          "kill_after_index": 1,
+          "signal": "SIGKILL",
+          "journal": "pending",
+          "stale_lock_rejected": true,
+          "explicit_dead_owner_lock_removal_in_fixture": true,
+          "recovery": "rolled-back",
+          "all_originals_restored": true
+        },
+        {
+          "kill_after_index": 2,
+          "signal": "SIGKILL",
+          "journal": "pending",
+          "stale_lock_rejected": true,
+          "explicit_dead_owner_lock_removal_in_fixture": true,
+          "recovery": "rolled-back",
+          "all_originals_restored": true
+        }
+      ],
+      "scope": "在每项写后杀进程；实际恢复先拒绝遗留锁，确认原pid不存在后只清理fixture锁，再显式recover；没有自动偷锁或操作真实项目锁。"
+    },
+    {
+      "test": "恢复时第三方修改竞争",
+      "result": "CR-001 actual RED，外来snapshot被删除；必须修复。"
+    },
+    {
+      "command": "node --test orchestrator/process/review-ledger-migration.test.mjs orchestrator/process/reviewctl.test.mjs orchestrator/process/state-lock.test.mjs",
+      "result": "39 passed / 41；新增两例注入路径比较失败",
+      "diagnosis": "macOS fixture /var 与迁移root经realpath后/private/var不相等，fs.readFileSync hook未触发；主会话已获告知。独立临时fixture使用canonical root，两个before回滚修复均GREEN。",
+      "not_a_product_regression": true
+    },
+    {
+      "test": "CR-001修复后同触发复核",
+      "result": "before=null及before=原文均GREEN；外来内容保留、恢复拒绝、journal继续pending",
+      "reviewctl_sha256": "3f7d77a573a4ccec0a9d0e4cfd14c707bfbe318df2724a112db979f595a6ac3f"
+    },
+    {
+      "command": "node --test orchestrator/process/review-ledger-migration.test.mjs orchestrator/process/reviewctl.test.mjs orchestrator/process/state-lock.test.mjs",
+      "result": "41 passed, 0 failed, 0 skipped; exit 0",
+      "duration_ms": 2628.545334,
+      "scope": "独立重跑已修正canonical fixture路径的最终版本，包含永久BACKLOG预演竞争与回滚预查后第三方修改回归。"
+    }
+  ],
+  "coverage_notes": [
+    "dry-run路径只读，apply必须匹配重建plan hash；事务运行与恢复共享状态锁；基础ledger原字节已接入provenance。",
+    "verifyEventChain由record/audit/context/verifyReviewReceipt和shared snapshot migration调用；当前源码的provenance重建可验证导入来源、全部原字段、nonce和批次完整性。",
+    "already-applied依据整条迁移前缀与当前chain校验返回，不重建后续真实评审快照；本轮静态核对该路径，不冒称真实工作区已有后续新评审。",
+    "没有运行真实migrate-ledger --apply，没有修改SPEC、业务、控制面或提交。"
+  ],
+  "suggested_additional_tests": [
+    "把CR-001两种before状态竞争加入永久回归。",
+    "保留当前BACKLOG和共享constitution首次读后变化的定向负测。",
+    "在正式迁移fixture后追加一个正常record，再次prepare必须already-applied且新事件/快照/BACKLOG逐字不变。",
+    "CLI层对来源归档篡改、导入整批删失分别验证record、audit、context均拒绝，防止只测纯模块而遗漏入口。"
+  ],
+  "files_at_report_write": {
+    "orchestrator/process/reviewctl.mjs": "3f7d77a573a4ccec0a9d0e4cfd14c707bfbe318df2724a112db979f595a6ac3f",
+    "orchestrator/process/review-ledger-migration.mjs": "9280e094c4d3380b8d7700e3d42d46546a82beae56ac812e8c6fa3b7575939c1",
+    "orchestrator/process/reviewctl.test.mjs": "a55a6657338f6a2b24df38cc16588abbe913843b8598678937ab6525f6ed2f5d",
+    "orchestrator/process/review-ledger-migration.test.mjs": "c5ea027c14608e18d5fb4d44788b24aae822837d685a9230b058b7de2cf50eb8"
+  },
+  "outstanding_code_findings": [],
+  "updated_at": "2026-10-28T11:06:03.312077+00:00",
+  "final_code_review": "PASS",
+  "evidence_history_clarification": "主会话rollback-race-red.log的最初永久测试失败实际因/var与/private/var路径导致注入未触发，不作为漏洞RED证明。CR-001的RED来自本独立会话已确认注入=true、外文被删除的临时fixture；修复后null及已有原文两例均保留外文并保持pending。CR-002为静态发现加修后实际GREEN，未声称独立旧版RED。",
+  "final_files_sha256": {
+    "orchestrator/process/reviewctl.mjs": "3f7d77a573a4ccec0a9d0e4cfd14c707bfbe318df2724a112db979f595a6ac3f",
+    "orchestrator/process/review-ledger-migration.mjs": "9280e094c4d3380b8d7700e3d42d46546a82beae56ac812e8c6fa3b7575939c1",
+    "orchestrator/process/reviewctl.test.mjs": "23b0907605d85c3add0cee02cc2ed21ee4925252f336ea413be95b60503261f2",
+    "orchestrator/process/review-ledger-migration.test.mjs": "c5ea027c14608e18d5fb4d44788b24aae822837d685a9230b058b7de2cf50eb8"
+  }
+}

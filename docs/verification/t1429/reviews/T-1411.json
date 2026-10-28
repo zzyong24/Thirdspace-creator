@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-1411 当前规格独立增量复审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 9e00238492043e56d82c6daf444d9f0a6e3231bf767b025434d7efabb09f2092；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 1；旧SHA与incoming父提交文件逐字相同。当前仅两处T1408→T1427引用，authStyle可选枚举、provider缺省、图片契约、128缺省与零重试、凭据脱敏以及真实IPC/HTTP红绿验收未改。 静态确认contract text严格schema包含可选authStyle，backend.probeText投影该字段，worker仍modelFor+streamText；frontend成功提示只表示最小流式请求。测试源码覆盖bearer/x-api-key/缺省、一请求和128输出上限。此为既有路径存在性核查，不作为本轮测试已跑或正式官方对话成功证据。 映射后的T1427仍保留真实官方三轮和未恢复条件，职责转交未丢失；保留原空findings，无新增问题。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1411.evidence.json。",
+  "findings": []
+}

@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 1/3 (initial)
 - Spec receipt: 3612083819e9
-- Review receipt: d891fda60145
+- Review receipt: d5a896468191
 
 ## 当前有效问题
 
@@ -31,9 +31,9 @@
   "model": "gpt-6.1-sol",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "3587bf9e9a8422ee4862bd85191a81a8e0d9b3814ada213f6a2c98e19352fef6",
+  "latest_event_hash": "8cd8b9085b3c9e47c7b016db890bb7a371eecec04cb83489d4f28be1e1e6921f",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "d891fda60145"
+  "receipt": "d5a896468191"
 }
 ```

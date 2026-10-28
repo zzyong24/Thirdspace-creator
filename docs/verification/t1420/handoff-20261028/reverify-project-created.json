@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "operation": "projects.create",
+  "requestId": "req-2ddab0cc-3133",
+  "groupId": "grp-8fdb2e06-22",
+  "accountId": null,
+  "data": {
+    "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+    "userId": "user-8fdb2e06-1",
+    "title": "T-1420 本机账号1图文验收 20261028",
+    "brief": "独立验收作品：将书桌整理前后的小经验制作成小红书图文，验证独立配文、内容分页与真实AI配图。仅供验收，不发布。",
+    "briefDetail": {
+      "targetPlatforms": [
+        "xiaohongshu"
+      ]
+    },
+    "contentCategory": "",
+    "source": "manual",
+    "platformRef": {
+      "platform": "",
+      "externalId": ""
+    },
+    "creationMode": "freeform",
+    "status": "active",
+    "currentStage": "brief",
+    "progressPct": 0,
+    "starred": false,
+    "startedAt": "2026-10-28T09:33:55.112Z",
+    "targetCompletedAt": null,
+    "completedAt": null,
+    "archivedAt": null,
+    "createdAt": "2026-10-28T09:33:55.112Z",
+    "updatedAt": "2026-10-28T09:33:55.112Z"
+  },
+  "meta": {
+    "requestId": "req-2ddab0cc-3133"
+  },
+  "error": null
+}

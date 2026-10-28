@@ -1,0 +1,64 @@
+{
+  "schema": "review-ledger-migration/v1",
+  "id": "t1429-38ba88d05-recovery",
+  "authorized_by": "DEC-142901",
+  "created_at": "2026-10-28T10:46:07.935987+00:00",
+  "expected_ledger_sha256": "a98efdb72cbe075ede8eddc553685fd2db634d41f3cbd1c69f508f16acf33b17",
+  "task_mappings": [
+    {
+      "source_task_id": "T-1402",
+      "target_task_id": "T-1423",
+      "source_spec_path": "docs/features/t1402-legacy-license-one-click-upgrade.md",
+      "spec_path": "docs/features/t1423-legacy-license-one-click-upgrade.md",
+      "source_review_path": "docs/features/t1402-legacy-license-one-click-upgrade.T-1402.review.md",
+      "review_path": "docs/features/t1423-legacy-license-one-click-upgrade.T-1423.review.md"
+    },
+    {
+      "source_task_id": "T-1404",
+      "target_task_id": "T-1425",
+      "source_spec_path": "docs/features/t1404-tab-navigation-performance-fixes.md",
+      "spec_path": "docs/features/t1425-tab-navigation-performance-fixes.md",
+      "source_review_path": "docs/features/t1404-tab-navigation-performance-fixes.T-1404.review.md",
+      "review_path": "docs/features/t1425-tab-navigation-performance-fixes.T-1425.review.md"
+    },
+    {
+      "source_task_id": "T-1405",
+      "target_task_id": "T-1426",
+      "source_spec_path": "docs/features/t1405-chat-model-combination-fixes.md",
+      "spec_path": "docs/features/t1426-chat-model-combination-fixes.md",
+      "source_review_path": "docs/features/t1405-chat-model-combination-fixes.T-1405.review.md",
+      "review_path": "docs/features/t1426-chat-model-combination-fixes.T-1426.review.md"
+    },
+    {
+      "source_task_id": "T-1408",
+      "target_task_id": "T-1427",
+      "source_spec_path": "docs/features/t1408-official-pi-acceptance-and-push.md",
+      "spec_path": "docs/features/t1427-official-pi-acceptance-and-push.md",
+      "source_review_path": "docs/features/t1408-official-pi-acceptance-and-push.T-1408.review.md",
+      "review_path": "docs/features/t1427-official-pi-acceptance-and-push.T-1427.review.md"
+    },
+    {
+      "source_task_id": "T-1409",
+      "target_task_id": "T-1428",
+      "source_spec_path": "docs/features/t1409-managed-pi-payment-diagnostics.md",
+      "spec_path": "docs/features/t1428-managed-pi-payment-diagnostics.md",
+      "source_review_path": "docs/features/t1409-managed-pi-payment-diagnostics.T-1409.review.md",
+      "review_path": "docs/features/t1428-managed-pi-payment-diagnostics.T-1428.review.md"
+    }
+  ],
+  "base": {
+    "commit": "24d5f323296f4b763d308e895b78a4b747596009",
+    "path": "docs/verification/t1429/originals/base-review-events.ndjson",
+    "sha256": "2da2126a1035504101af789feaff0e990877c43bd74bbe9e1fe311aa74abd913"
+  },
+  "incoming": {
+    "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "path": "docs/verification/t1429/originals/incoming-review-events.ndjson",
+    "sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d"
+  },
+  "damaged": {
+    "commit": "38ba88d051f0fd431083e0315c41641744f56fb8",
+    "path": "docs/verification/t1429/originals/damaged-review-events.ndjson",
+    "sha256": "a98efdb72cbe075ede8eddc553685fd2db634d41f3cbd1c69f508f16acf33b17"
+  }
+}

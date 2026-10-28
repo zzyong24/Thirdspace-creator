@@ -1,0 +1,238 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1407",
+  "review_kind": "recheck",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "本会话未编写修订；独立读取正式ledger/context、当前SPEC、精确Git差异及原件/实际路径，按冻结规则复核。",
+  "reviewed_at": "2026-10-28T11:02:44.970Z",
+  "previous_cycle": 1,
+  "previous_round": 2,
+  "expected_next_round": 3,
+  "spec_path": "docs/features/t1407-local-integration-install-merge-preparation.md",
+  "spec_sha256": "2b9932a70919f25ecbec449be16b3aac5f0a1763df22ab64af382a682ff99e8b",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger_path": "orchestrator/review-events.ndjson",
+  "source_ledger_sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c",
+  "previous_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1407",
+    "cycle": 1,
+    "round": 2,
+    "review_kind": "recheck",
+    "verdict": "CONCERNS",
+    "spec_path": "docs/features/t1407-local-integration-install-merge-preparation.md",
+    "spec_sha256": "311939ad1deba343c9c54511a50e7d9e7635e15c33a4b343125e238921554157",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1407-local-integration-install-merge-preparation.T-1407.review.md",
+    "review_mode": "homogeneous",
+    "model": "inherited-independent-agent",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "reviewctl_sha256": "dddd4a0c4e9f1e106e46a8f37b6ebd6fac4f12fda42e26c9d1e3e05fe978d862",
+    "recorded_at": "2026-10-28T11:00:31.527Z",
+    "previous_event_hash": "49a19eb2b90fc8509e91b4c05bd19b35b0d3f5f7fac983096aab4e1f655af6e1",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "recheck",
+      "summary": "同构独立会话复核cycle1 round1后的重编号差异。新增REV-001：另一工作树Windows来源旧T1403被误写为T1424，与两个父提交BACKLOG及DEC-142801矛盾，来源失败归属将指向本地CLI任务。其余整合范围、旧失败、UI/安装验收义务不变。未修改SPEC或登记审核。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "major",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "整合合同-1",
+            "quote": "记录每个导入文件、来源 hash、冲突处理和提交归属"
+          },
+          "acceptance_anchor": {
+            "id": "整合合同-2",
+            "quote": "需要保留的既有失败在集成报告中明确归属，不以本次局部测试代签全产品可发布。"
+          },
+          "where": "docs/features/t1407-local-integration-install-merge-preparation.md#来源与真实限制 第4条",
+          "failure_mode": "当前把另一工作树Windows来源的旧任务写成T-1424；两个父提交BACKLOG和DEC-142801证明该来源仍为T-1403，只有本地CLI T-1403映射到T-1424。按当前SPEC定位导入源的未完成项会指向CLI任务而非Windows来源任务，破坏既有失败及提交归属的准确追溯。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "EVIDENCE-SHA256:dfc535b2ab4a9be3675568d6e3b492d134ce58f4ed017e088bec051ec23615ee:docs/verification/t1429/reviews/T-1407.evidence.json",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "changed-lines",
+          "origin_ref": "SPEC-LINE:10:138b396829becabb",
+          "suggestion": "把来源历史身份保持为另一工作树T-1403，并将本地CLI的旧T-1403到现T-1424单独列为映射；继续用原HEAD/hash/报告绑定导入源与未完成项，不把两个来源一起替换成T-1424。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "event_hash": "43007a9ec08dd3caf91feda0ea410c8f24e63d671f067456dd322c9396dbe68d"
+  },
+  "previous_spec_git": {
+    "commit": "6033bdd51e6996cfe80eb041661a2b1a4f15a5b0",
+    "path": "docs/features/t1407-local-integration-install-merge-preparation.md",
+    "sha256": "311939ad1deba343c9c54511a50e7d9e7635e15c33a4b343125e238921554157"
+  },
+  "context_command": "node orchestrator/process/reviewctl.mjs context T-1407",
+  "actual_context": {
+    "schema": "spec-review-recheck-context/v1",
+    "task_id": "T-1407",
+    "previous_round": 2,
+    "previous_verdict": "CONCERNS",
+    "previous_spec_sha256": "311939ad1deba343c9c54511a50e7d9e7635e15c33a4b343125e238921554157",
+    "previous_packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "recheck",
+      "summary": "同构独立会话复核cycle1 round1后的重编号差异。新增REV-001：另一工作树Windows来源旧T1403被误写为T1424，与两个父提交BACKLOG及DEC-142801矛盾，来源失败归属将指向本地CLI任务。其余整合范围、旧失败、UI/安装验收义务不变。未修改SPEC或登记审核。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "major",
+          "category": "consistency",
+          "requirement_anchor": {
+            "id": "整合合同-1",
+            "quote": "记录每个导入文件、来源 hash、冲突处理和提交归属"
+          },
+          "acceptance_anchor": {
+            "id": "整合合同-2",
+            "quote": "需要保留的既有失败在集成报告中明确归属，不以本次局部测试代签全产品可发布。"
+          },
+          "where": "docs/features/t1407-local-integration-install-merge-preparation.md#来源与真实限制 第4条",
+          "failure_mode": "当前把另一工作树Windows来源的旧任务写成T-1424；两个父提交BACKLOG和DEC-142801证明该来源仍为T-1403，只有本地CLI T-1403映射到T-1424。按当前SPEC定位导入源的未完成项会指向CLI任务而非Windows来源任务，破坏既有失败及提交归属的准确追溯。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "EVIDENCE-SHA256:dfc535b2ab4a9be3675568d6e3b492d134ce58f4ed017e088bec051ec23615ee:docs/verification/t1429/reviews/T-1407.evidence.json",
+          "risk_class": "confirmed-requirement",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "changed-lines",
+          "origin_ref": "SPEC-LINE:10:138b396829becabb",
+          "suggestion": "把来源历史身份保持为另一工作树T-1403，并将本地CLI的旧T-1403到现T-1424单独列为映射；继续用原HEAD/hash/报告绑定导入源与未完成项，不把两个来源一起替换成T-1424。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "changed_line_refs": [
+      {
+        "origin_ref": "SPEC-LINE:10:5b268a78357a97ed",
+        "text": "- 另一工作树的 Windows 来源保持 T-1403；本目录 CLI 测试原为 T-1403，现依 DEC-142801 映射为 T-1424。两者历史上重号；不覆盖同号看板或篡改其历史事件。本任务用来源路径、原 HEAD、hash 与报告追溯导入范围，保留未完成项，不替来源任务签绿。"
+      }
+    ],
+    "origin_ref_formats": {
+      "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+      "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+      "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+    }
+  },
+  "exact_spec_diff": "--- 6033bdd51e6996cfe80eb041661a2b1a4f15a5b0:docs/features/t1407-local-integration-install-merge-preparation.md\n+++ docs/features/t1407-local-integration-install-merge-preparation.md\n@@ -7,7 +7,7 @@\n - 主目录 `main` 基线 `cfd165baa`，包含已提交 T-1425 Tab 性能修复；另有本次 13 项 T-1426 产品变更及规则、规格、控制面工件。\n - 本任务自己的独立修复提交 `93a972b9cda4e72e385d098105ce6c797fc8d32d` 已保留，不能重写为未发生的红测或真机通过。\n - 现安装版 sidecar 为 `9db6e42887db0c469cea36e51351a9782baa1e26f874344c6ee2e6637290c3c8`，来源 `codex/cos-ux-closure` 的 `f7147fd71` 加 72 项冻结文件。公众号绑定已在公开 CLI 真实回读成功；旧来源整单仍保留视频号报表、自动恢复、剪辑耗时和部分筛选性能失败。\n-- 另一工作树的旧任务编号 T-1424 与本目录 CLI 测试 T-1424 重号；不覆盖同号看板或篡改其历史事件。本任务用来源路径、原 HEAD、hash 与报告追溯导入范围，保留未完成项，不替来源任务签绿。\n+- 另一工作树的 Windows 来源保持 T-1403；本目录 CLI 测试原为 T-1403，现依 DEC-142801 映射为 T-1424。两者历史上重号；不覆盖同号看板或篡改其历史事件。本任务用来源路径、原 HEAD、hash 与报告追溯导入范围，保留未完成项，不替来源任务签绿。\n - 本轮“代码都处理”允许把相关现安装修复整理为本地提交；这不将其他工作树的未完成验收变为完成，也不推定公开发布授权。\n \n ## 整合合同\n",
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "85f86303066d79f40659be9453466c9e2cc21ea624ebe920a0c3af423afe6199"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "dddd4a0c4e9f1e106e46a8f37b6ebd6fac4f12fda42e26c9d1e3e05fe978d862"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "64bc35c16d47bb77d1c9f4e4e43c978d9c4adaae6c1af9c7295a616bff33f803"
+    },
+    {
+      "path": "BACKLOG.md",
+      "sha256": "789af06d380e09bde1c61639d3d482cf43fea4ded8d4d054f8846f0df7889358"
+    },
+    {
+      "path": "orchestrator/review-events.ndjson",
+      "sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c"
+    },
+    {
+      "path": "docs/verification/t1429/provenance-restorations.json",
+      "sha256": "0f2e8fc04a7a3fccc726db59c658aefd86e690455822b18ecaac2fad48824a3e"
+    },
+    {
+      "path": "docs/verification/t1423/CLIENT_WIRE.md",
+      "sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d"
+    },
+    {
+      "path": "docs/verification/t1423/ACTIVITY_WIRE.md",
+      "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a"
+    },
+    {
+      "path": "docs/verification/t1423/activity-final-independent-review.json",
+      "sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-CLIENT_WIRE.md",
+      "sha256": "78d8acc1cd5581195f0bd90d2f28f905a1cd55b820b01df4f6219d4b55c30797"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-ACTIVITY_WIRE.md",
+      "sha256": "7de76c64f35568d26f2cefae23e552b855dd715ffcd92d335d6d427c8a3f9317"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-activity-final-independent-review.json",
+      "sha256": "92430ff303060b3e1874c910073a686880691d602b9330bb445e23f094dc356b"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1423.evidence.json",
+      "sha256": "433801cc70d2efd2f1ce9eb831ccb58612cf643e11c6a54e2eca537dd7070d23"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1407.evidence.json",
+      "sha256": "dfc535b2ab4a9be3675568d6e3b492d134ce58f4ed017e088bec051ec23615ee"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1410.evidence.json",
+      "sha256": "13b41144034e5fd8ea3f6a1373bcb27881e22bb219341d3d88d7078049ef0ba0"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1417.evidence.json",
+      "sha256": "5a72fe6805557743fc90101ba02aab51b90dffa5e4e5b7094f56d32235d94c5a"
+    }
+  ],
+  "restoration_checks": [],
+  "actual_path_checks": [],
+  "finding_recheck": [
+    {
+      "id": "REV-001",
+      "previous_status": "open",
+      "previous_severity": "major",
+      "conclusion": "resolved",
+      "allowed_changes": [
+        "status",
+        "resolution_evidence"
+      ],
+      "frozen_fields_preserved": true
+    }
+  ],
+  "analysis": [
+    "仅复核cycle1 round2 REV-001；当前来源段明确另一工作树Windows来源保持T1403，本地CLI原T1403依DEC142801映射T1424，历史重号作为历史保留。",
+    "亲读当前BACKLOG：T1403仍为Windows全流程修复、T1424为CLI组合；DEC142801对应映射一致。精确diff只改变该来源句，72项/13项范围、原HEAD/hash/报告、未完成项与失败保留、UI/安装要求均不变。",
+    "原finding所述把Windows源失败指向CLI的歧义已消除，REV-001可resolved；不把此前未完成产品验收或附属历史路径问题升级为本轮新增门槛。"
+  ],
+  "limitations": [
+    "本轮仅冻结finding销账及修订增量检查；未运行产品/模型/钱包/安装/远程CI/平台验收，不能据此关闭原业务失败。",
+    "仅写本次8个新review/evidence JSON；不覆盖上一轮材料，不改SPEC/业务/控制面，不record或提交。"
+  ]
+}

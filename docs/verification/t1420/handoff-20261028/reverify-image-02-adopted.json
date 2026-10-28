@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-10-28T09:57:22.903165+00:00",
+  "exitCode": 0,
+  "response": {
+    "ok": true,
+    "operation": "creativeResults.adopt",
+    "requestId": "req-2ddab0cc-4062",
+    "groupId": "grp-8fdb2e06-22",
+    "accountId": null,
+    "data": {
+      "owner": "graphic_post",
+      "resultId": "d4cc2053-7e85-44e1-97b3-c69c0921bb8b",
+      "versionId": "artifactversion-2ddab0cc-4065",
+      "status": "adopted"
+    },
+    "meta": {
+      "requestId": "req-2ddab0cc-4062"
+    },
+    "error": null
+  }
+}

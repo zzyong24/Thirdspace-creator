@@ -1,0 +1,11 @@
+{
+  "base_commit": "6033bdd51e6996cfe80eb041661a2b1a4f15a5b0",
+  "backlog_bytes": 122427,
+  "backlog_sha256": "5276bff0299c44e41aa164ca58df4f4bd337cb7b051fffa81bd584446751987c",
+  "research_task_row_counts": {
+    "T-1135": 2,
+    "T-1155": 2,
+    "T-1181": 2
+  },
+  "conclusion": "四项剩余quick错误在基线已存在：看板大于60KiB，三项research任务重复；不删除或提升这些任务状态。"
+}

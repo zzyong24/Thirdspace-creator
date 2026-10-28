@@ -1,0 +1,30 @@
+{
+  "versionId": "artifactversion-2ddab0cc-4065",
+  "latestExactMatch": true,
+  "originalTestBodyPreserved": true,
+  "cardBriefsPreserved": true,
+  "imageUses": [
+    {
+      "assetId": "asset-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa",
+      "assetFileId": "afile-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa",
+      "order": 0,
+      "role": "card",
+      "cardId": "card-desk-clear-01",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1611954,
+      "sha256": "10bbb5c54724bdbe9235acff9dbe1bbdc9bdcb03f8be6a5ed128d28264d9215e"
+    },
+    {
+      "assetId": "asset-generated-c03d51abd94a3c010273ca059f59b8619e15ed09fece5aa07b73e72b654a509a",
+      "assetFileId": "afile-generated-c03d51abd94a3c010273ca059f59b8619e15ed09fece5aa07b73e72b654a509a",
+      "order": 1,
+      "role": "card",
+      "cardId": "card-desk-organize-02",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1504443,
+      "sha256": "71e4dc404c58f8c8c4e61cc8a0e5871bbb356e1c896f216312384a36021de61c"
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "schema": "t1429-independent-spec-review-evidence/v1",
+  "task_id": "T-1420",
+  "review_kind": "initial",
+  "reviewer": {
+    "session": "/root/recovery_stale_specs_b",
+    "review_mode": "homogeneous",
+    "model": "继承宿主模型；精确型号未核实",
+    "independent_of_spec_authoring_and_implementation": true
+  },
+  "reviewed_at": "2026-10-28T10:56:29.854122+00:00",
+  "source_root": "/Users/masx/Projects/Thirdspace-creator",
+  "spec_path": "docs/features/t1420-graphic-post-content-structure.md",
+  "spec_sha256": "d3786b24a04815963e2f27138ba4c825dc29007c5b898d01ba642255c2c771f2",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_event_path": "docs/verification/t1420/handoff-20261028/source-review-event.json",
+  "source_event_sha256": "dc088b42679eb841316624e543703924779d6d088fd8ae47a3e9dbfd8269bf64",
+  "source_task_id": "T-1420",
+  "source_event_hash": "29b1ea6aaaa1ccba24e28d78c1d222c9e187e345409b7e82e44b774e3c3f63a9",
+  "previous_cycle": 2,
+  "previous_round": 1,
+  "previous_spec_sha256": "c6eebdbfafdfbde2bf67b5885c3112cc54daf22741e6916aa59b504d06d33977",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "T-1420 用户实质需求纠正后的授权新周期首轮独立全文审查（initial），不是延续第三轮后更名绕过轮次。同构会话homogeneous，未核实具体型号，未参与本轮规格编写或产品实施。HEAD 3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d；当前SPEC SHA256 c6eebdbfafdfbde2bf67b5885c3112cc54daf22741e6916aa59b504d06d33977；宪法SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读任务包§1–5/7–9并写前核§6、现SPEC全文尤其FR-142001与用户纠正后的验收目标、适用宪法及正式spec-reviewer规则。实际读取reviewctl context确认旧周期round3/PASS，Previous-Spec-SHA256=1f943c20fa7de82ff33ad9610538f9a2e54ae2f5222a228fc286864be2bb0759，与DEC-142002的旧SPEC/宪法hash及Allowed-Change-IDs FR-142001一致；该typed决定只授权一次本次明确文生图方向的新周期，主线程负责实际登记，旧审核和失败不被覆盖。本轮按当前已确认需求完整审查：AI从已保存内容语义规划页及visualBrief，用户采纳规划后选择页走既有图像模型/资产任务，图片候选精确assetId/assetFileId预览后明确采用到cardId，主工作台显示真实画面及尚未生成，导出采用原图片文件+独立配文；旧NoteRelay仅折叠兼容，不作为AI出图证据。只读核GraphicPostResults现有generatePages调用公开client.createBundle生成image_card/targetSectionId，未知队列保原目标与幂等键、分批成功候选保留；adoptPage要求真实精确图片、已预览、未脏稿、当前版本与原采用请求恢复。resultsOnly当前确实隐藏普通生成所选页入口，故规格要求恢复入口是必要接线。现有graphic-post-media.adapter冻结baseVersionId、seriesSnapshot及精确referenceProof；graphicSeriesDocument保持页序/精确图片，GraphicImagePreview按两个精确资产ID读取；现有公共测试已有部分失败、重试及旧图片保全断言。这些是仓内存在性证据，不是本轮真实模型执行证明。合同明确复用原后端/可用image路由，不新增图像后端或自动覆盖，语义归AI，保存/精确回读/组归属/未保存修改/版本冲突/未知请求仍沿原保护；部分失败不能清空成功候选，重试仅针对明确失败页；原先文字排版为主要图片的方向由FR-142001明确覆盖，并保留历史可用导出。验收明确实际Provider+工作台调用公开组图端口的红绿及已有后台输入/资产/采纳边界回归，最终在月明水清深独立作品真实生成至少两页、预览采用、CLI回读精确图片与cardId、安装主工作台真实画面、ZIP字节和采用资产一致且配文独立；不发布、不重试受保护官方402、不覆盖原作品。不存在把Canvas/HTML截图或模型自述计为文生图的可接受路径。未发现已确认用户目标的规格矛盾、不可验收性或安全/数据丢失阻断，findings=[]。只读代码/旧测试及写这两审核证据，没有调用模型/CLI/业务、执行测试或改控制面，不代签实现、图像质量或安装验收；正式裁决和新周期登记由主线程完成。",
+    "findings": []
+  },
+  "history_binding": {
+    "source_ledger_commit": null,
+    "matching_spec_commit": "b1f0272412bd44612ba370b10127418a3ce77d6e",
+    "historical_file_sha256": "c6eebdbfafdfbde2bf67b5885c3112cc54daf22741e6916aa59b504d06d33977",
+    "matches_event_spec_sha256": true,
+    "current_constitution_matches_event": true
+  },
+  "current_review_kind_reason": "独立全文initial针对原工作区当前SPEC，而非隔离树中旧方向文档。读handoff/source-review-event.json的cycle 2 round 1完整包；原SHA在Git commit b1f0272精确匹配。当前唯一增量为本机账号澄清；主会话处理历史孤立新周期来源与正式登记，本包不复制原PASS，不消费DEC142002的旧nonce。",
+  "exact_spec_diff": "--- b1f0272412bd44612ba370b10127418a3ce77d6e:docs/features/t1420-graphic-post-content-structure.md\n+++ docs/features/t1420-graphic-post-content-structure.md\n@@ -34,3 +34,7 @@\n 实现路径：frontend/src/features/projects/graphic-post-workbench.tsx、graphic-post-results.tsx 及测试；复用 graphic-series-document.ts 和 GraphicImagePreview，只新增必要的逐页选择/预览接线；script-first-content.ts 及 chatbox-turn.ts 的重组提示明确 visualBrief 与真实生图阶段，复用 graphic-card-brief.ts/baoyu 现有生成方法，不改变后台契约/数据所有权。精确写集在任务包补齐后实现。\n \n 验收：实际挂载 Provider + 工作台的 RED→GREEN 验证无图片时不展示假成图、选择页可触发既有组图公开端口、目标ID/顺序/精确版本/准备保存与未知恢复正确；沿现有后台 series 公共调用测试验证真实模型输入/资产/采用边界，保留已存在终态重试、部分失败与换稿测试。最终在月明水清深的独立验收作品真实生成至少两页 AI 图片，预览后采用，公开 CLI 回读精确图像文件及 cardId，安装版主工作台显示真实画面，ZIP 图片字节与采用资产一致、配文独立。生成来源按当前可用 image 路由，不重试受保护官方402任务，不发布，不覆盖用户原作品。未经真实文生图/文件回读通过，不关闭T-1420。\n+\n+## 本机验收账号澄清（用户 2026-10-28）\n+\n+前述“月明水清深”是朱志勇电脑的验收账号。本次 Mac 的正确账号组为「1」（公开核实 groupId: grp-8fdb2e06-22），用户明确要求据此重新验证；本机测试不沿用另一台电脑的账号名。用户已授权以现有官方 AI 额度完成配文、分页、两张图及必要画面提示的最小验收，不充值、不自动重试。此澄清不降低真实图片、精确文件、独立配文及安装态界面的验收标准。实际通过与失败见 [2026-10-28 重新验收](../verification/t1420/handoff-20261028/reverify-report.md)，T-1420 尚未完成。\n",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:38:8afab6fe45f4859d",
+      "line": "## 本机验收账号澄清（用户 2026-10-28）"
+    },
+    {
+      "origin_ref": "SPEC-LINE:40:edfe145821cd2bed",
+      "line": "前述“月明水清深”是朱志勇电脑的验收账号。本次 Mac 的正确账号组为「1」（公开核实 groupId: grp-8fdb2e06-22），用户明确要求据此重新验证；本机测试不沿用另一台电脑的账号名。用户已授权以现有官方 AI 额度完成配文、分页、两张图及必要画面提示的最小验收，不充值、不自动重试。此澄清不降低真实图片、精确文件、独立配文及安装态界面的验收标准。实际通过与失败见 [2026-10-28 重新验收](../verification/t1420/handoff-20261028/reverify-report.md)，T-1420 尚未完成。"
+    }
+  ],
+  "observations": [
+    "独立全文initial针对原工作区当前SPEC，而非隔离树中旧方向文档。读handoff/source-review-event.json的cycle 2 round 1完整包；原SHA在Git commit b1f0272精确匹配。当前唯一增量为本机账号澄清；主会话处理历史孤立新周期来源与正式登记，本包不复制原PASS，不消费DEC142002的旧nonce。",
+    "按已确认用户要求完整核对：独立小红书配文、AI语义规划cardBriefs/visualBrief、真实逐页生图、精确assetId+assetFileId预览后采纳、固定cardId/页序与版本、部分失败保留及未知结果原请求恢复、原图文件ZIP与配文、无卡旧稿兼容。当前合同明示AI产候选、人采纳、backend持有领域写入，未授权代码切字或伪造AI图。用户明确确认的小红书方向是本任务范围，不借宪法主定位撤销该已确认结果。",
+    "只读核现有createBundle分配确定item requestId并保留manifest、逐页请求队列保存原目标与幂等键、adoptPage要求精确已预览图片/未脏稿/CAS、graphic-post-media.adapter冻结baseVersion/seriesSnapshot/referenceProof并校验归属。工作台导出读取精确资产原字节并独立写配文.txt，保存/版本不一致失败时保留作品。这些只证明路径存在及规格可落地，不替代测试或新包实测。",
+    "账号澄清明确当前Mac组1/groupId grp-8fdb2e06-22，另一机器月明水清深不再用于本机；现有官方额度只限配文/分页/两图和必要画面提示，不充值、不自动重试。该限定比旧通用AGENTS账号更加具体，未降低原精确文件、独立配文和安装态验收。",
+    "实际读取reverify-report及原始正文候选/最终exact/latest/文件和导出检查/安装AX：历史报告保留正文候选为...未采用、批次响应requestId校验失败但任务已创建、旧安装界面和ZIP不达标、新代码Mac运行验收未做。两图已生成采纳不等于完整T1420完成。当前SPEC明确T1420尚未完成并引用失败报告，因此这些已知实现/安装差异不被当作规格通过条件已达成；不能用本包关闭业务任务。",
+    "全文未发现当前已确认用户目标在规格层的具体矛盾或不可验收缺口；旧包无findings，无未解决旧finding被遗漏。本轮未调用模型、运行UI或更改用户数据，所有业务验收失败保持。"
+  ],
+  "read_files": [
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.tsx",
+      "sha256": "63626d7de1abf28600d085630b6653e182ac40bfb3586d9d5d7b4ecc752e062a"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-results.tsx",
+      "sha256": "a7851fbd7361ae08af4a63b6dd3a3e9212c796b6df9fc2d48cb6afcec4460522"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-series-document.ts",
+      "sha256": "beb2a6d276ed572465d5e4a62c4cedc1d73c3acc22ac8b1f899a8c4ab7635c10"
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.service.ts",
+      "sha256": "08f9cf284e32d349d79713db51e7dc2d079befc788af0c534acfbe3b83499124"
+    },
+    {
+      "path": "backend/src/modules/creative-results/graphic-post-media.adapter.ts",
+      "sha256": "f6a4e1cb7f951908da181c4755e9d80779601689b31d789f64352bf50af2dd02"
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-report.md",
+      "sha256": "b819560ee6503c25a07aa253ec8936a4d315666363e3467f70fe5df503eb79bb"
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-body-candidate-exact.json",
+      "sha256": "233343967740e7151bb3a4e65f2aa7e37ce2ed58a479e55bfcc9d38f702e5777"
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-final-exact.json",
+      "sha256": "88071dcb756fce1e8b8be362e7d0350e486c3a0ed559c50fea60bcb4ccd2b33a"
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-final-latest.json",
+      "sha256": "14386357baf0d335ce7ec7046a5da9b67b50392d9948075091368543a8852cda"
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-exact-file-check.json",
+      "sha256": "0920ac800a29a4fc8c94918193b7bcff58c475d8f7f3fad2e5ecd84a62ee07b1"
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-export-check.json",
+      "sha256": "909865590220a239f914ca805bfd44b0f52bd7a884e8d85498a5c1b5ab232d66"
+    },
+    {
+      "path": "docs/verification/t1420/handoff-20261028/reverify-installed-final-ax.txt",
+      "sha256": "403d9b91f047c9daa545d7e30b4c56f9d40438babee81877714351a80321a101"
+    }
+  ],
+  "review_constraints": [
+    "只写本任务审核JSON与evidence JSON",
+    "不修改SPEC/产品/控制面，不运行reviewctl record，不提交",
+    "静态规格审核，不代签运行、安装、业务验收或历史审计通过"
+  ],
+  "registration_requires_new_cycle": true,
+  "no_product_acceptance_claim": true,
+  "local_validation": {
+    "schema_file": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+    "schema_sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7",
+    "schema_keywords_checked": [
+      "type",
+      "required",
+      "additionalProperties",
+      "const",
+      "enum",
+      "minLength",
+      "pattern",
+      "$ref",
+      "allOf/if/then",
+      "minItems",
+      "minimum",
+      "maximum"
+    ],
+    "packet_schema_valid": true,
+    "current_spec_hash_still_matches": true,
+    "recheck_previous_findings_frozen": null,
+    "changed_line_refs_checked": true,
+    "formal_reviewctl_record_executed": false
+  }
+}

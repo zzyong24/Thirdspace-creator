@@ -1,0 +1,104 @@
+{
+  "observedAt": "2026-10-28T09:56:51.089542+00:00",
+  "exitCode": 0,
+  "response": {
+    "ok": true,
+    "operation": "graphicPosts.get",
+    "requestId": "req-2ddab0cc-4038",
+    "groupId": "grp-8fdb2e06-22",
+    "accountId": null,
+    "data": {
+      "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+      "outputId": "output-2ddab0cc-3252",
+      "targetPlatform": "xiaohongshu",
+      "artifactId": "artifact-2ddab0cc-3258",
+      "currentVersionId": "artifactversion-2ddab0cc-3688",
+      "current": {
+        "schemaVersion": 1,
+        "title": "验收输入：书桌整理的两个小动作",
+        "body": "【独立验收用测试输入，不是AI生成结果，不发布】\n书桌整理可以从两个小动作开始。第一步，把散落的纸张、充电线和杯子移到一旁，擦净桌面，只留下正在使用的笔记本。第二步，为常用物品安排固定位置：笔放进笔筒，线材放进收纳盒，杯子放在桌角。希望最终图文用两幅不同画面分别讲清这两个动作，配文独立表达经验，不把整段正文铺满图片。不添加品牌、商品效果或统计数据。",
+        "summary": "明确标记的本机图文验收输入：清空桌面、固定归位。",
+        "tags": [
+          "书桌整理",
+          "测试作品"
+        ],
+        "imageUses": [],
+        "cardBriefs": [
+          {
+            "cardId": "card-desk-clear-01",
+            "title": "第一步：先给桌面留空",
+            "body": "把散落的纸张、充电线和杯子暂时移到一旁，擦净桌面，只留下正在使用的笔记本。先减少桌面上的干扰，再开始整理。",
+            "visualBrief": "竖版生活纪实画面，同一处日常书桌的俯拍视角。桌面中央只保留一本笔记本，一只手将纸张、充电线和杯子移向桌边，清晰表现清空桌面的动作。采用暖色自然光、浅木色桌面与简洁家居环境，画面整洁真实，不出现品牌、商品标识或额外文字。与第二页保持同一书桌、同一光线和相近色调，形成“先清空、再归位”的连续关系；信息密度适中，以笔记本、移动中的物品和整洁桌面为视觉重点。",
+            "sourceRefs": [
+              {
+                "kind": "project",
+                "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+                "versionId": "2026-10-28T09:33:55.112Z"
+              }
+            ]
+          },
+          {
+            "cardId": "card-desk-organize-02",
+            "title": "第二步：让常用物品各有位置",
+            "body": "笔放进笔筒，线材放进收纳盒，杯子放在桌角。给常用物品安排固定位置，桌面也更容易保持清爽。",
+            "visualBrief": "竖版生活纪实画面，延续第一页同一书桌、同一暖色自然光和浅木色桌面，镜头采用相同的俯拍视角。整理后的桌面保持开阔：笔记本放在中央，笔收入简洁笔筒，充电线收进小型收纳盒，杯子固定放在桌角，通过物品位置关系直观表现分类归位。整体色调温和、材质朴素、构图留白充足，不出现品牌、商品标识或额外文字。与第一页使用同一组主要物品，通过从散放到固定归位的视觉变化形成前后对照，画面重点落在笔、线材、杯子和笔记本的明确位置上。",
+            "sourceRefs": [
+              {
+                "kind": "project",
+                "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+                "versionId": "2026-10-28T09:33:55.112Z"
+              }
+            ]
+          }
+        ],
+        "sourceRefs": [
+          {
+            "kind": "project",
+            "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+            "versionId": "2026-10-28T09:33:55.112Z"
+          }
+        ],
+        "ruleSnapshotRef": null
+      },
+      "scriptContext": {
+        "state": "empty",
+        "scriptRef": null,
+        "scriptText": "",
+        "metadata": {
+          "title": "T-1420 本机账号1图文验收 20261028",
+          "summary": "独立验收作品：将书桌整理前后的小经验制作成小红书图文，验证独立配文、内容分页与真实AI配图。仅供验收，不发布。",
+          "tags": []
+        },
+        "metadataSource": {
+          "kind": "project",
+          "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+          "updatedAt": "2026-10-28T09:33:55.112Z"
+        }
+      },
+      "versions": [
+        {
+          "id": "artifactversion-2ddab0cc-3259",
+          "versionNumber": 1,
+          "createdAt": "2026-10-28T09:37:18.306Z",
+          "changeSummary": "初稿"
+        },
+        {
+          "id": "artifactversion-2ddab0cc-3428",
+          "versionNumber": 2,
+          "createdAt": "2026-10-28T09:42:43.575Z",
+          "changeSummary": "编辑图文稿"
+        },
+        {
+          "id": "artifactversion-2ddab0cc-3688",
+          "versionNumber": 3,
+          "createdAt": "2026-10-28T09:49:42.020Z",
+          "changeSummary": "采纳图文cardBriefs候选"
+        }
+      ]
+    },
+    "meta": {
+      "requestId": "req-2ddab0cc-4038"
+    },
+    "error": null
+  }
+}

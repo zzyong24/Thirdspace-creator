@@ -1,0 +1,16 @@
+{
+  "label": "worker-target",
+  "command": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "src/prompt/templates/graphic-post-text.test.ts",
+    "src/prompt/templates/chatbox-turn.test.ts"
+  ],
+  "cwd": "/Users/masx/Projects/Thirdspace-creator/ai-worker",
+  "exit_code": 0,
+  "duration_seconds": 0.8,
+  "ended_at": "2026-10-28T09:08:13.453584+00:00",
+  "log": "worker-target.log.gz"
+}

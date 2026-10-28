@@ -1,0 +1,103 @@
+{
+  "ok": true,
+  "operation": "creativeCapabilities.list",
+  "requestId": "req-2ddab0cc-3530",
+  "groupId": "grp-8fdb2e06-22",
+  "accountId": null,
+  "data": {
+    "items": [
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "title",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.656Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "body",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.823Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "summary",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.670Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "tags",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.684Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "cardBriefs",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.712Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "cover",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.837Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "image_card",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.809Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "publish_title",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.726Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "description",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.768Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "publish_tags",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.796Z"
+      },
+      {
+        "platform": "xiaohongshu",
+        "outputType": "image",
+        "kind": "publish_cover",
+        "state": "supported",
+        "reasonCode": null,
+        "lastVerifiedAt": "2026-10-28T09:45:15.754Z"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req-2ddab0cc-3530"
+  },
+  "error": null
+}

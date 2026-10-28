@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "同构独立会话复核旧T1402 cycle1 round1至当前T1423精确差异。产品合同不变，但改名同时改写Activity外仓合同与原始日志路径而沿用旧SHA和审核时间，无法闭合现要求的精确来源追溯。新增REV-001为major；未修改SPEC或登记审核。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "完整消费合同与实施落点",
+        "quote": "独立复审绑定二者实际 SHA，不能用此前范围审查代替。"
+      },
+      "acceptance_anchor": {
+        "id": "验收-证据分层",
+        "quote": "隔离测试、源码读审、安装版验证、其他用户分发和生产部署分别报告；未发生证据不能标通过。"
+      },
+      "where": "docs/features/t1423-legacy-license-one-click-upgrade.md#完整消费合同与实施落点；无感升级修订的原始证据路径",
+      "failure_mode": "本仓重编号将Activity外仓合同、工作树及原始日志的T1402身份也改成T1423，而历史SHA和审核时间未变；CLIENT_WIRE及Activity审核清单因而声称新路径已由原轮核验。DEC-142801只规定本仓映射且明确ignored日志留在旧目录，当前引用无法闭合本SPEC要求的双合同SHA与原运行证据对应，后续会把改写后的来源当作既有独审/验收依据。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:433801cc70d2efd2f1ce9eb831ccb58612cf643e11c6a54e2eca537dd7070d23:docs/verification/t1429/reviews/T-1423.evidence.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:83:9019f32c6d66f062",
+      "suggestion": "保留Activity外仓及原始日志的真实历史身份，另行明确Creator旧T1402到当前T1423映射；如确已搬迁，给出目标路径及实际字节SHA的迁移证据。不得只改历史审核路径/任务名而继续沿用原匹配声明。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

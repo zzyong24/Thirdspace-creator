@@ -1,0 +1,248 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1410",
+  "review_kind": "recheck",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "本会话未编写修订；独立读取正式ledger/context、当前SPEC、精确Git差异及原件/实际路径，按冻结规则复核。",
+  "reviewed_at": "2026-10-28T11:02:44.970Z",
+  "previous_cycle": 2,
+  "previous_round": 1,
+  "expected_next_round": 2,
+  "spec_path": "docs/features/t1410-review-evidence-reconciliation.md",
+  "spec_sha256": "3d72b628099d96201552b3f42e590aab74e9da44d60969ca1440e88be9fc9e8d",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger_path": "orchestrator/review-events.ndjson",
+  "source_ledger_sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c",
+  "previous_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1410",
+    "cycle": 2,
+    "round": 1,
+    "review_kind": "initial",
+    "verdict": "PASS",
+    "spec_path": "docs/features/t1410-review-evidence-reconciliation.md",
+    "spec_sha256": "85487bccff8b7333df5a6c00094a8b77686dfd7c5ba395bedd793273e4e19d9e",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1410-review-evidence-reconciliation.T-1410.review.md",
+    "review_mode": "homogeneous",
+    "model": "inherited-independent-agent",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": {
+      "schema": "review-cycle-capability-consumption/v1",
+      "decision_id": "DEC-142903",
+      "nonce": "3da6f4ad-f5f4-400c-867b-fee59f7e948a",
+      "task_id": "T-1410",
+      "previous_event_hash": "39d9da322ac19641afb6bd559e5340191d343fcc165de539c612473de735da65",
+      "allowed_change_ids": [
+        "MIGRATION-T1410-REFERENCES"
+      ],
+      "max_uses": 1
+    },
+    "reviewctl_sha256": "8deeb807861c594a23abc85272e1462c1cda008679fc9fb0e326830d52fecabf",
+    "recorded_at": "2026-10-28T10:59:02.385Z",
+    "previous_event_hash": "33611efc7cfa34af127a039cdc353ef4431d174044c8c35edbcd369938d0f4ea",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "initial",
+      "summary": "T-1410 当前规格独立全文初审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 85487bccff8b7333df5a6c00094a8b77686dfd7c5ba395bedd793273e4e19d9e；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 3，无旧findings；当前文本任务引用变化，须独立全文initial和主会话精确新cycle授权，不能继续round 4或重写旧event。 FR141001要求归档被占用原件、Git commit与canonical event/receipt各字段和自hash一致后恢复；FR141002明确旧授权nonce不可复用、旧finding不可改写，PROJECT宪法迁移不能逃避约束；FR141003机械整理不得删除开放任务或提高阈值。当前合同未授权改reviewctl/reconcile/taskctl或产品行为，适用T1429迁移完成后的当前链仍须CAS核对，不可重放过期元数据。 canonical-repair-plan.json可解析，包含21项历史审计目标和逐项源commit/event/旧finding；其中T642原REV-002仍为open major，SPEC明确要求真实独审及未解决则保持open，本次不替T642销账。历史计划不是本轮已执行的恢复或当前健康结果。 manifest仅日期与4-build/5-ship备注追加、保留原备注及全部stage/gate/confirmation状态；quick不冒full，未完成的产品、安装与UI仍由上层任务负责。发现一处非阻断的当前任务引用歧义：notes列表残留1409，此ID现在属于另一Windows任务，支付诊断现为T1428；记录minor供明确溯源。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1410.evidence.json。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "minor",
+          "category": "operability",
+          "requirement_anchor": {
+            "id": "写集与验收",
+            "quote": "向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件"
+          },
+          "acceptance_anchor": {
+            "id": "写集与验收",
+            "quote": "不改变任何 stage/gate 状态、confirmation、风险接受或历史验收"
+          },
+          "where": "docs/features/t1410-review-evidence-reconciliation.md:27",
+          "failure_mode": "当前 notes 指定的1409仍使用旧本地编号；BACKLOG当前T-1409是Windows扫码目录/免登录任务，DEC-142801将支付诊断映射为T-1428。按当前编号执行会把无关任务的证据写入官方模型治理备注，或需要执行者自行猜旧编号。此处是非阻断的溯源歧义，不证明既有历史备注错误。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "BACKLOG.md:197；orchestrator/DECISION_LOG.md#DEC-142801；docs/features/t1410-review-evidence-reconciliation.md:27",
+          "risk_class": "low-risk",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "suggestion": "把本段当前支付诊断任务明确为T-1428，或明确写旧T-1409→T-1428来源映射；封存历史原文保持不变。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "event_hash": "a69a29e58fe08c6119463ee23c6edc6ab7876d93cdd52ff0a4995391639dc099"
+  },
+  "previous_spec_git": {
+    "commit": "6033bdd51e6996cfe80eb041661a2b1a4f15a5b0",
+    "path": "docs/features/t1410-review-evidence-reconciliation.md",
+    "sha256": "85487bccff8b7333df5a6c00094a8b77686dfd7c5ba395bedd793273e4e19d9e"
+  },
+  "context_command": "node orchestrator/process/reviewctl.mjs context T-1410",
+  "actual_context": {
+    "schema": "spec-review-recheck-context/v1",
+    "task_id": "T-1410",
+    "previous_round": 1,
+    "previous_verdict": "PASS",
+    "previous_spec_sha256": "85487bccff8b7333df5a6c00094a8b77686dfd7c5ba395bedd793273e4e19d9e",
+    "previous_packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "initial",
+      "summary": "T-1410 当前规格独立全文初审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 85487bccff8b7333df5a6c00094a8b77686dfd7c5ba395bedd793273e4e19d9e；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 3，无旧findings；当前文本任务引用变化，须独立全文initial和主会话精确新cycle授权，不能继续round 4或重写旧event。 FR141001要求归档被占用原件、Git commit与canonical event/receipt各字段和自hash一致后恢复；FR141002明确旧授权nonce不可复用、旧finding不可改写，PROJECT宪法迁移不能逃避约束；FR141003机械整理不得删除开放任务或提高阈值。当前合同未授权改reviewctl/reconcile/taskctl或产品行为，适用T1429迁移完成后的当前链仍须CAS核对，不可重放过期元数据。 canonical-repair-plan.json可解析，包含21项历史审计目标和逐项源commit/event/旧finding；其中T642原REV-002仍为open major，SPEC明确要求真实独审及未解决则保持open，本次不替T642销账。历史计划不是本轮已执行的恢复或当前健康结果。 manifest仅日期与4-build/5-ship备注追加、保留原备注及全部stage/gate/confirmation状态；quick不冒full，未完成的产品、安装与UI仍由上层任务负责。发现一处非阻断的当前任务引用歧义：notes列表残留1409，此ID现在属于另一Windows任务，支付诊断现为T1428；记录minor供明确溯源。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1410.evidence.json。",
+      "findings": [
+        {
+          "id": "REV-001",
+          "status": "open",
+          "severity": "minor",
+          "category": "operability",
+          "requirement_anchor": {
+            "id": "写集与验收",
+            "quote": "向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件"
+          },
+          "acceptance_anchor": {
+            "id": "写集与验收",
+            "quote": "不改变任何 stage/gate 状态、confirmation、风险接受或历史验收"
+          },
+          "where": "docs/features/t1410-review-evidence-reconciliation.md:27",
+          "failure_mode": "当前 notes 指定的1409仍使用旧本地编号；BACKLOG当前T-1409是Windows扫码目录/免登录任务，DEC-142801将支付诊断映射为T-1428。按当前编号执行会把无关任务的证据写入官方模型治理备注，或需要执行者自行猜旧编号。此处是非阻断的溯源歧义，不证明既有历史备注错误。",
+          "evidence_kind": "deterministic-check",
+          "evidence_ref": "BACKLOG.md:197；orchestrator/DECISION_LOG.md#DEC-142801；docs/features/t1410-review-evidence-reconciliation.md:27",
+          "risk_class": "low-risk",
+          "disposition": "mitigate",
+          "remedy_type": "clarify",
+          "scope_effect": "none",
+          "origin": "baseline",
+          "origin_ref": "round-1 full review",
+          "suggestion": "把本段当前支付诊断任务明确为T-1428，或明确写旧T-1409→T-1428来源映射；封存历史原文保持不变。",
+          "resolution_evidence": "",
+          "parent_id": "",
+          "threat_model_id": ""
+        }
+      ]
+    },
+    "changed_line_refs": [
+      {
+        "origin_ref": "SPEC-LINE:27:085a0f9c3edd3ddd",
+        "text": "补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1427/1428/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。"
+      }
+    ],
+    "origin_ref_formats": {
+      "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+      "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+      "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+    }
+  },
+  "exact_spec_diff": "--- 6033bdd51e6996cfe80eb041661a2b1a4f15a5b0:docs/features/t1410-review-evidence-reconciliation.md\n+++ docs/features/t1410-review-evidence-reconciliation.md\n@@ -24,7 +24,7 @@\n \n 产品代码与reviewctl/reconcile/taskctl程序不在写集。写集为元数据列出的各review snapshot与所需task-scoped目标、BACKLOG/归档/details、审计证据、正常DEC/review-events/任务事件/progress/module/context；加下列已独评发现的两处规格引用纠偏，修订前后均正式独评，原finding完整保留，不改产品行为或验收门槛：\n \n-补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。\n+补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1427/1428/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。\n \n - `docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md`：仅标识原竖屏人物隐藏/禁PiP/硬切及对应验收断言已由用户既定DEC-VIDEO-056与T902取代，当前竖屏遵循T902；保原文作为历史及其余方向/字幕约束，不发明新产品决定。\n - `docs/superpowers/specs/2026-08-05-video-production-editing-loop.md`：仅把§3数据表旧outputs.production.put引用对齐同节已确认的唯一productions.editing-plan.confirm窄写入口，保原读回和AC/幂等/并发约束。其它SPEC发现不借本条扩写。\n",
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "85f86303066d79f40659be9453466c9e2cc21ea624ebe920a0c3af423afe6199"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "dddd4a0c4e9f1e106e46a8f37b6ebd6fac4f12fda42e26c9d1e3e05fe978d862"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "64bc35c16d47bb77d1c9f4e4e43c978d9c4adaae6c1af9c7295a616bff33f803"
+    },
+    {
+      "path": "BACKLOG.md",
+      "sha256": "789af06d380e09bde1c61639d3d482cf43fea4ded8d4d054f8846f0df7889358"
+    },
+    {
+      "path": "orchestrator/review-events.ndjson",
+      "sha256": "3520795dd6eb4612658dbb841c524e6e48b8b6c830398b9eaa944bd7f56c8e6c"
+    },
+    {
+      "path": "docs/verification/t1429/provenance-restorations.json",
+      "sha256": "0f2e8fc04a7a3fccc726db59c658aefd86e690455822b18ecaac2fad48824a3e"
+    },
+    {
+      "path": "docs/verification/t1423/CLIENT_WIRE.md",
+      "sha256": "c25a6f66e07fb6839e05bbf47d20b4c8a106f7767ed31d5e2faf9d2aa0eb4e6d"
+    },
+    {
+      "path": "docs/verification/t1423/ACTIVITY_WIRE.md",
+      "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a"
+    },
+    {
+      "path": "docs/verification/t1423/activity-final-independent-review.json",
+      "sha256": "38b8e306e40064c40dba0536f2aabaf434077010a1a63880b33d807b86d4e85a"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-CLIENT_WIRE.md",
+      "sha256": "78d8acc1cd5581195f0bd90d2f28f905a1cd55b820b01df4f6219d4b55c30797"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-ACTIVITY_WIRE.md",
+      "sha256": "7de76c64f35568d26f2cefae23e552b855dd715ffcd92d335d6d427c8a3f9317"
+    },
+    {
+      "path": "docs/verification/t1429/originals/renumbered-activity-final-independent-review.json",
+      "sha256": "92430ff303060b3e1874c910073a686880691d602b9330bb445e23f094dc356b"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1423.evidence.json",
+      "sha256": "433801cc70d2efd2f1ce9eb831ccb58612cf643e11c6a54e2eca537dd7070d23"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1407.evidence.json",
+      "sha256": "dfc535b2ab4a9be3675568d6e3b492d134ce58f4ed017e088bec051ec23615ee"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1410.evidence.json",
+      "sha256": "13b41144034e5fd8ea3f6a1373bcb27881e22bb219341d3d88d7078049ef0ba0"
+    },
+    {
+      "path": "docs/verification/t1429/reviews/T-1417.evidence.json",
+      "sha256": "5a72fe6805557743fc90101ba02aab51b90dffa5e4e5b7094f56d32235d94c5a"
+    }
+  ],
+  "restoration_checks": [],
+  "actual_path_checks": [],
+  "finding_recheck": [
+    {
+      "id": "REV-001",
+      "previous_status": "open",
+      "previous_severity": "minor",
+      "conclusion": "resolved",
+      "allowed_changes": [
+        "status",
+        "resolution_evidence"
+      ],
+      "frozen_fields_preserved": true
+    }
+  ],
+  "analysis": [
+    "直接读取正式ledger cycle2 round1及agentB原minor REV-001；未沿旧cycle1 round3继续，也不改新cycle授权消费记录。",
+    "当前SPEC notes任务列表精确改为T1427/1428/1410/1411。亲读DEC142801及BACKLOG，T1428确为官方Pi支付拒绝安全诊断，T1409是另一Windows扫码目录/免登录任务；修订消除原minor中的当前执行归属歧义。",
+    "唯一差异为1409→1428；只更新日期、追加notes、保留原备注、禁止改变任何stage/gate状态/confirmation/风险接受/历史验收等约束原样保留，REV-001可resolved。未实际执行阶段对账或声明治理任务完成。"
+  ],
+  "limitations": [
+    "本轮仅冻结finding销账及修订增量检查；未运行产品/模型/钱包/安装/远程CI/平台验收，不能据此关闭原业务失败。",
+    "仅写本次8个新review/evidence JSON；不覆盖上一轮材料，不改SPEC/业务/控制面，不record或提交。"
+  ]
+}

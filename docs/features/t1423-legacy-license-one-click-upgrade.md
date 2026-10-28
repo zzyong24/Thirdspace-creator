@@ -80,7 +80,7 @@ Creator 负责用户入口、可信原生本地操作与结果展示；Activity 
 
 ## 完整消费合同与实施落点
 
-客户端闭合合同见 `docs/verification/t1423/CLIENT_WIRE.md`；Activity 合同为其独立候选 `docs/contracts/T-1423-license-restore-current-contract.md`。独立复审绑定二者实际 SHA，不能用此前范围审查代替。原生新增独立 `license_restore.rs`，旧 `license.rs` 仅公开已有双冗余时间点 helper 给同 crate 复用。TS 新增无秘密的闭合升级 DTO，沿本地 client-config 白名单 action 对接；不改业务库或金额规则。准确写集见本任务 Packet。
+客户端闭合合同见 `docs/verification/t1423/CLIENT_WIRE.md`；Activity 合同为其独立候选 `docs/contracts/T-1402-license-restore-current-contract.md`。独立复审绑定二者实际 SHA，不能用此前范围审查代替。原生新增独立 `license_restore.rs`，旧 `license.rs` 仅公开已有双冗余时间点 helper 给同 crate 复用。TS 新增无秘密的闭合升级 DTO，沿本地 client-config 白名单 action 对接；不改业务库或金额规则。准确写集见本任务 Packet。
 
 原生绝对执行预算 370000 ms 从命令入场起包含锁等待，UI 保持最初点击起的 730000 ms 观察截止。UI 停止等待不撤销已提交原生操作，原生互斥持到实际收尾。已绑定当前机器且目标合法时，只读 no-op 不释放其他授权；只有确实缺绑定时才核对其他有效冲突与精确失效集合。
 
@@ -97,7 +97,7 @@ Creator 负责用户入口、可信原生本地操作与结果展示；Activity 
 
 用户明确：“点了没反应而且我不希望点，我希望用户是无感的，不可能让用户还去点一下吧？”因此正常打开桌面 App 后，后台自动核对并完成历史合法原授权的模型权益升级；设置页不再以升级/继续按钮作为前提，也不弹逐阶段确认。此决定替代前文手动点击、明确继续才新观察的交互要求，不扩大服务端权限或经济政策。
 
-事实：本机18:56的旧按钮链已恢复绑定并完成配置，18:58独立定时刷新也成功；服务端只读后检22项通过，原永久授权、Key、250000额度与唯一首赠未改变。用户看到的“无反应”不能归因为请求没执行；旧额度错误独立存储未随成功同步清除是已确认代码缺口。证据在 `/Users/zyongzhu/terminals/growth-credit-20261023/t1423/automatic-upgrade/` 及 Growth T-249 只读后检。本机不再二次恢复或补发。
+事实：本机18:56的旧按钮链已恢复绑定并完成配置，18:58独立定时刷新也成功；服务端只读后检22项通过，原永久授权、Key、250000额度与唯一首赠未改变。用户看到的“无反应”不能归因为请求没执行；旧额度错误独立存储未随成功同步清除是已确认代码缺口。证据在 `/Users/zyongzhu/terminals/growth-credit-20261023/t1402/automatic-upgrade/` 及 Growth T-249 只读后检。本机不再二次恢复或补发。
 
 ### 自动入口与生命周期
 
@@ -122,3 +122,7 @@ TDD 必须实际覆盖：无需打开设置/点击即完成、已有钱包零重
 
 
 独评收紧：automatic唯一owner之外的无token请求保守pending至下一正常冷启动；此取舍避免重载丢失native持久化未知事实后误报成功，不要求用户操作升级按钮，不阻止既有普通只读配置刷新和业务页面。原owner持有token时继续原730000ms截止，Node每一stage将下游AbortSignal收紧到原entry剩余时间；不会因观察者加入另加120秒。automatic stage持有inFlight期间，普通model-benefit access在递增generation前用既有retryable MODEL_BENEFIT_REFRESH_PENDING延期；旧已开始普通读取仍遵守原generation/commit fence，不删除安全fence、不在事务中等待网络。自动阶段之间普通读取仍可运行。实现必须以受控交错测试证明普通startup/scheduled不能把唯一自动观察耗死。
+
+## 2026-10-28 来源恢复说明
+
+本仓旧 T-1402 映射为 T-1423；Activity 外仓、原绝对工作树和原始日志仍沿用历史 T1402 身份。当前目录中的 CLIENT_WIRE.md、ACTIVITY_WIRE.md、activity-final-independent-review.json 已从父提交 3a0d8ac63 逐字恢复，内部旧编号及历史路径不再重写。原件字节、损坏副本与 SHA 对照见 `docs/verification/t1429/provenance-restorations.json`；当前文件别名不代表外部资料已搬迁或本机重新验收。其它历史证据仍须按原 commit/字节核实，不能仅凭重编号后的路径复用旧验收声明。

@@ -2,38 +2,43 @@
 
 - Task: T-1417
 - Verdict: PASS
-- Round: 1/3 (initial)
-- Spec receipt: b7a279008262
-- Review receipt: c3f3e604a908
+- Round: 3/3 (recheck)
+- Spec receipt: 673b3f37346a
+- Review receipt: 24c6d87cadcd
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：—
+已销账：REV-001 (EVIDENCE-SHA256:2de7803b7af99147ffa7216b16a3b4afb3ff5eb02bbe051ac9e0350f4d8102c4:docs/verification/t1429/reviews/T-1417-round-3.evidence.json；SPEC SHA256=673b3f37346a4418b35088ee1e56dbf96858f0bae58202d63dcd523ca08dcd6b。当前SPEC首段明确原回执t1408来源及新旧目录不可得，不把改名当原件搬迁或本轮模型或费用验收；本会话实际检查两根目录下新旧路径四项均不存在。只销账来源说明歧义，不声称补齐原运行证据。)
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-1417",
   "cycle": 1,
-  "round": 1,
+  "round": 3,
   "max_rounds": 3,
-  "review_kind": "initial",
+  "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "T-1417 正式独立初审：未发现当前合同范围内的确认缺陷，findings 为空。绑定 SPEC docs/features/t1417-text-probe-output-budget.md，SHA-256=b7a2790082624238fccc86fcb344d861f68e646d48217fe1df0d4a66e74995e3；宪法 docs/产品定位.md，SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已读任务包 §1–5、§7–9，写前核对 §6；核对当前 canonical event 中无 T-1417 历史，使用 initial。审核者 /root/t1427_contract_review 未编写该 SPEC、产品或测试实现，仅写本审核 JSON；沿用当前同构模型，不虚称异构或未经核实的精确模型身份。\n\n源码确认诊断缺口：contract/src/operations/settings.ts:148 起的 settings.models.test 只有 capability params 和原结果 envelope，没有预算 body；settings-model-test-wrap.ts:385–421 文本分支仅 default/script.review 与专配 chat.fallback，copilot.assist 落到未支持分支。ai-worker/src/io/model-probe-worker-entry.ts:20 固定 maxOutputTokens=128；prepare-chat-reply.ts:72 的普通聊天为 8192，creationTarget 为 32768，本项明确只比较普通聊天预算，不改变两类正式聊天行为。上述差异足以支持新增有界诊断，但不能证明当前 402 由预算、余额或上下文导致。原始真实供应商结果由既有回执负责，本次未再次访问用户配置、凭据、数据库或供应商。\n\n权限与架构边界可执行：该操作在 workspace-operation-scope.ts:333 仍为 user scope；createSettingsWithModelTest 要求 ctx，request-io.service.ts 在派发前要求 userId/requestId。合同不新增操作权限或凭据所有者，frontend 只在已有 composition 调用现有解析器，backend 持有原 worker service port，AI SDK/modelFor/streamText 继续只在 ai-worker。persistence-client.ts:6728–6745 已把 ctx 绑定到现有 resolveLlmConfig、渠道来源选择与凭据解析，复用 resolveLlm(ctx, copilot.assist) 能保持同 capability 路由，不需 frontend 直连供应商或另造客户端。合同与 SYSTEM_ARCHITECTURE.md 的合同层、service port、worker SDK 边界及产品宪法的授权、数据归属、保密要求一致。\n\n输入收敛充分：公开 body.textOutputLimit 只能为数值 128 或 8192，缺省 128；适用能力恰为 default、script.review、copilot.assist、chat.fallback，其他能力只要显式携带即须在 resolver、worker 与网络前拒绝，不能因 asset.classify 内部恰好复用文本 helper 就获得此选项。未知数值、字符串、负值、0 和超大值需被契约拒绝；不得接收任意 prompt/tools/URL/headers/凭据或自由预算。内部 model-probe-io.ts 现为严格判别联合，只有 text 可新增有限字段，image 继续严格拒绝；backend 现有同步 parseInput 发生在 fork/entryPath 前，可用原 entryPath spy 负测证明非法输入不启动 worker。此拒绝顺序是明确验收义务，不能以类型声明代替运行验证。\n\n兼容与费用边界明确：model-connection-test.tsx:113–117 的现有 UI 发送 body=undefined，合同要求保持调用兼容、默认 128 和原成功文案；chat.fallback 仍只能走 resolveDedicatedLlm 专配分支，缺配置不得回退主模型。原固定 OK 提示、首个非空正文或 reasoning 停止、maxRetries=0、两条实际在途限制、deadline、取消与 worker 清理均保留。8192 是显式请求的输出上限，并非要求实际生成 8192 token；公开成功提示必须同时限定最小文本请求、8192 上限以及不证明正式上下文和工具可用，避免将连通误报为完整对话恢复。公开 provider/model 的 channel-managed 隐藏及固定支付诊断白名单也未获修改授权。\n\n真实回归入口已存在且写集足够：settings-model-test-wrap.test.ts:267 起临时打包原 model-probe-worker-entry，使用 createModelProbeIoService、真实 child process/IPC 与只监听 127.0.0.1 的 HTTP server；原用例捕获 Anthropic 请求 max_tokens=128、三种鉴权缺省/显式行为、单次请求、无 tools，并通过真实普通 Error 重建核查 401/500/402 和脱敏。可在同文件扩展公开契约及 composition 参数断言，并把 128/8192 送过真实 service→IPC→worker→HTTP，不能只 mock streamText 或只检查变量。backend model-probe-io.service.test.ts 已有严格 IPC、非法输入在启动前拒绝和 image 不接受文本字段的模式，适合补有限预算验证。原 request-io.service.test.ts 保留执行以验证冷启动/排队预算、用户取消与非法零超时，不需要修改其实现或断言。产品与测试路径涵盖参数的声明、解析、投射及最终 SDK 消费，未出现无消费者策略字段或缺失必要写集。\n\n合同要求先真实 RED 再 GREEN，覆盖可选 body 的旧调用、两档数值、非法输入、所有非文本能力的副作用前拒绝、copilot.assist 解析与备用模型隔离、默认 128、真实 HTTP 两档 max token、鉴权、一次请求/无工具、正文/思考、错误/空流、失败和取消清理；另有串行类型检查、timeout-policy、boundary、diff 和最终独审。这些是后续实施验收要求，本次只读源码审查不代表已有新增测试通过，也不把 mock 负测替代真实网络边界验证。\n\n安装后的两次实验沿用用户已明确的修复与 CLI 授权：月明水清深、同一次官方来源选择窗口、同 copilot.assist、128/8192 各一次、串行记录时间与非秘密凭据元数据、按 CAS 恢复来源。它不授权付款、调钱包、换源、读取秘密或使用原任务最后一次恢复；不会因多组选择再次打断用户。两次结果最多提供当前条件下预算相关性的区分证据，必须结合时间和路由/凭据元数据判断可比性；两者都成功仍不能证明正式上下文和工具，只有大预算失败也不能直接称余额不足。T-1427 的官方来源真实三轮成功标准继续保留。\n\n本轮仅完成前置规格评审，没有实施、测试、构建、安装、业务调用、reviewctl record 或任务状态操作；不代签官方 Pi 恢复、产品验收、完整 full 或推送条件。",
+  "summary": "同构独立第三轮复审：原回执t1408路径与重编号边界已说明，亲核隔离树和原工作区新旧目录四项均不可得，SPEC明确历史背景未在本机复核且不作本轮模型或费用验收。原minor REV-001从open改为resolved，全部冻结字段保留；无需且未重打付费或失败请求。",
   "spec_path": "docs/features/t1417-text-probe-output-budget.md",
-  "spec_sha256": "b7a2790082624238fccc86fcb344d861f68e646d48217fe1df0d4a66e74995e3",
+  "spec_sha256": "673b3f37346a4418b35088ee1e56dbf96858f0bae58202d63dcd523ca08dcd6b",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1417-text-probe-output-budget.T-1417.review.md",
   "review_mode": "homogeneous",
-  "model": "同构独立代理 /root/t1427_contract_review，具体模型ID未核实",
+  "model": "inherited-independent-agent",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "30acddb6e0c3595ac274bc1b704766a807cfe493364879bd6641cdb95769f611",
+  "latest_event_hash": "cd5012b429ba3e3f6d12d56aa65d9f8b2b9ad7ce05f406f185afd63105ce8021",
   "open_findings": [],
-  "resolved_findings": [],
-  "receipt": "c3f3e604a908"
+  "resolved_findings": [
+    {
+      "id": "REV-001",
+      "resolution_evidence": "EVIDENCE-SHA256:2de7803b7af99147ffa7216b16a3b4afb3ff5eb02bbe051ac9e0350f4d8102c4:docs/verification/t1429/reviews/T-1417-round-3.evidence.json；SPEC SHA256=673b3f37346a4418b35088ee1e56dbf96858f0bae58202d63dcd523ca08dcd6b。当前SPEC首段明确原回执t1408来源及新旧目录不可得，不把改名当原件搬迁或本轮模型或费用验收；本会话实际检查两根目录下新旧路径四项均不存在。只销账来源说明歧义，不声称补齐原运行证据。"
+    }
+  ],
+  "receipt": "24c6d87cadcd"
 }
 ```

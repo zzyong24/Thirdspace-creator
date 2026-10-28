@@ -1,0 +1,12 @@
+{
+  "label": "boundaries",
+  "command": [
+    "node",
+    "orchestrator/process/boundary-scan.mjs"
+  ],
+  "cwd": "/Users/masx/Projects/Thirdspace-creator",
+  "exit_code": 0,
+  "duration_seconds": 0.11,
+  "ended_at": "2026-10-28T09:09:42.921109+00:00",
+  "log": "boundaries.log.gz"
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "同构独立会话复核旧T1404 cycle1 round1至当前T1425。仅标题及本仓证据写集改名，DEC映射与现仓目录一致，实现约束、产品写集和全部验收逐字保留。旧findings为空，未发现增量问题。本包仅作独立审查材料，不创建缺失看板行或代签实现/安装验收。",
+  "findings": []
+}

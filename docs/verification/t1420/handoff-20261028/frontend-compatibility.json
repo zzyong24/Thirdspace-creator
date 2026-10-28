@@ -1,0 +1,18 @@
+{
+  "label": "frontend-compatibility",
+  "command": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/projects/script-first-content.test.ts",
+    "src/features/reference-editors/noterelay/projection.test.ts",
+    "src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+    "src/features/reference-editors/noterelay/native-bundle.test.ts"
+  ],
+  "cwd": "/Users/masx/Projects/Thirdspace-creator/frontend",
+  "exit_code": 1,
+  "duration_seconds": 1.99,
+  "ended_at": "2026-10-28T09:18:46.310738+00:00",
+  "log": "frontend-compatibility.log.gz"
+}

@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-10-28T09:56:16.178908+00:00",
+  "operation": "assets.fileDownloadUrl",
+  "groupId": "grp-8fdb2e06-22",
+  "requestId": "req-2ddab0cc-4017",
+  "fileName": "committed-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa.png",
+  "file": "reverify-image-01.png",
+  "contentType": "image/png",
+  "bytes": 1611954,
+  "sha256": "10bbb5c54724bdbe9235acff9dbe1bbdc9bdcb03f8be6a5ed128d28264d9215e",
+  "urlSaved": false,
+  "assetId": "asset-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa",
+  "assetFileId": "afile-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa"
+}

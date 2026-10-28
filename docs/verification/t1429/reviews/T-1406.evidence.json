@@ -1,0 +1,203 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1406",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "独立子会话亲自读取原事件、当前SPEC、产品宪法、规则及精确Git差异；不声称跨模型或新运行验收。",
+  "reviewed_at": "2026-10-28T10:59:00.308Z",
+  "review_kind": "recheck",
+  "previous_cycle": 1,
+  "previous_round": 1,
+  "expected_next_round": 2,
+  "spec_path": "docs/features/t1406-installed-eight-defects.md",
+  "spec_sha256": "ad98242f5a1c05a7a4b881d80e02dab36b729e02c512425f0a966f391a5b6276",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger": {
+    "commit": "24d5f323296f4b763d308e895b78a4b747596009",
+    "path": "docs/verification/t1429/originals/base-review-events.ndjson",
+    "sha256": "2da2126a1035504101af789feaff0e990877c43bd74bbe9e1fe311aa74abd913",
+    "actual_sha256": "2da2126a1035504101af789feaff0e990877c43bd74bbe9e1fe311aa74abd913"
+  },
+  "source_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1406",
+    "cycle": 1,
+    "round": 1,
+    "review_kind": "initial",
+    "verdict": "PASS",
+    "spec_path": "docs/features/t1406-installed-eight-defects.md",
+    "spec_sha256": "f453397a3bcc7b108dd636f13e62fb94a81828d91ffee8e10e742f90aca43d71",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1406-installed-eight-defects.review.md",
+    "review_mode": "independent-agent-same-family",
+    "model": "inherited-codex-subagent",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "reviewctl_sha256": "df231acb90ef0d131dcb3afb3ab7d82e97fad96e1e10b10db29558ed2375ce64",
+    "recorded_at": "2026-10-25T13:24:44.994Z",
+    "previous_event_hash": "ef9f1f821dde487234b71b3b9744cb022017686a1f0e994fabe4557eb84e76c6",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "initial",
+      "summary": "独立子代理实际审阅 T-1406 SPEC、BACKLOG 及选题、审稿规则、锁分来源现有代码后结论为 PASS，当前没有需要先修改 SPEC 的未解决 finding。首次 receipt 尚未记录前已实际复核最终 SPEC 的三处补充，仍为同次 initial 评审：必要 schema/drizzle 与 CLI policy/workspace scope 写边界明确；旧共享规则修改删除须明示共享影响并显式确认；空资料恢复禁止热循环或自动重发，明确新尝试保原父任务 deadline、已完成步骤和旧 child，一次操作最多一次。历史无组规则作为同用户系统/历史共享兼容层原样保留，新组私有规则贯穿列表、CRUD 与 active 执行；蒸馏校验真实来源，以稳定候选身份及数据库事务/并发回执防重；锁分只读投影来自已核验的具体 predictionId 与不可变 rubric，缺失正式分不回退旧诊断，复盘保留真实项目和预测上下文。实施和测试约束详见 docs/verification/t1406/SPEC_REVIEW.md。本结论仅为本次独立 SPEC 审查，未运行 reviewctl，未声称跨模型评审、实现或安装版验收通过。",
+      "findings": []
+    },
+    "event_hash": "6e19c6445322a1eb644c88ea278fc8d2afcea67c469d5dd9a93e36aa309ac2d8"
+  },
+  "historical_spec": {
+    "commit": "6c7f7dc05701265bc88a961901a509bba7061e83",
+    "path": "docs/features/t1406-installed-eight-defects.md",
+    "sha256": "f453397a3bcc7b108dd636f13e62fb94a81828d91ffee8e10e742f90aca43d71",
+    "blob": "5530052740fc5bd5a92a81be8f466d39a3bb229d",
+    "fingerprints_match": true
+  },
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "10d73f0e337034bb3717ca50a7841b41e115c0d8aa43409baee3d4209060d1ca"
+    },
+    {
+      "path": "docs/features/t1429-review-ledger-recovery.md",
+      "sha256": "a8a382a4f1df1082153ae3c7a52bd30857689c68473d40df6c257193b9818d68"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "8deeb807861c594a23abc85272e1462c1cda008679fc9fb0e326830d52fecabf"
+    },
+    {
+      "path": "docs/verification/t1429/migration-manifest.json",
+      "sha256": "0f233820062e6f9a02bbdc4b66b93d626304fe3e48cbdfae1be82271d6590d28"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "29bc1ba781c3c4a09dbcbdc180900e67639e74439731805dcaed8fe7646b7171"
+    },
+    {
+      "path": "docs/verification/t1406/MAIN_MERGE.md",
+      "sha256": "986dc60d8f60ba519b3b18adc89d70a5fa8a44e05c3a73e1c0b1558e3de63bf5"
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "sha256": "0d99e426b306c8108ce275cfb4df005877059a4e51b21494d4acd38dae313eb6"
+    },
+    {
+      "path": "backend/drizzle/0141_review_rule_group_scope.sql",
+      "sha256": "369bab227e661865bd2b855ce3d67c788c1a80531eea144e1df93b5458807416"
+    },
+    {
+      "path": "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+      "sha256": "fb8500cc4e22a9f9bcaf035e5e9bf86d3bcb44fbcb958ebee6bb70fa8b532e22"
+    },
+    {
+      "path": "backend/src/legacy-source-migration.test.ts",
+      "sha256": "8019eef8ed5c56d0e6a0741220ea482d3cbac1b16cc2e0089cc3e571227c2db2"
+    },
+    {
+      "path": "backend/src/migration-convergence.test.ts",
+      "sha256": "5e7dafabf325967234150ce5b7529dca20effdb3dc51e09c4a3bc68f5443afe9"
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "sha256": "11923f637c1b30413bd4b50c06cba39653505e5f438d44f2fa073e8360737828"
+    },
+    {
+      "path": "backend/src/unified-project-intake-migration.test.ts",
+      "sha256": "6f50f25a67cf9476c59fbdc3b4bfd0502c0cfd0878f82793ced400ff45df378f"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts",
+      "sha256": "18f0685100a44db67ee923e47680c12ef5601aa94a0ff715d329a495bb097370"
+    },
+    {
+      "path": "frontend/src/server/script-review-worker-entry.integration.test.ts",
+      "sha256": "8a9a2db477c312e7f7bf6f15c80750bc38b1f37407d92d8960bba67ded09c8ac"
+    },
+    {
+      "path": ".github/workflows/desktop-release.yml",
+      "sha256": "53b44c36b33314f488d8365b3565ec35b5d41b1d2e08837299039bf8c440f576"
+    }
+  ],
+  "context_method": "reviewctl context T-1406只读尝试时恢复模块尚未落盘，ERR_MODULE_NOT_FOUND。按T1429自举协议使用未损坏原ledger的完整packet及精确Git历史SPEC；不使用坏链伪造context。",
+  "exact_spec_diff": "--- 6c7f7dc05701265bc88a961901a509bba7061e83:docs/features/t1406-installed-eight-defects.md\n+++ docs/features/t1406-installed-eight-defects.md\n@@ -54,3 +54,23 @@\n 报告区分源码修复、受控回归、构建、Windows安装版UI和真实供应商。源码改好不等于当前运行EXE已更新。普通签名构建需要既有Actions资源；先备好可评审提交、差异和测试结果，若仍需要新的远端推送/构建授权再明确提出，不以旧提交的推送授权冒充本次任意发布授权。禁止未验签热改现有安装包或替换信任链。\n \n 未发生的原生复验、模型输出、安装或签名不得写为PASS。正常启动/退出、断电恢复、真实平台与外部服务分别记录。收尾按真实证据更新问题状态，无法完成的门和安装边界明确保留。\n+\n+## 2026-10-26 合并 main 授权与发布编排保全\n+\n+用户在实时核对远端后明确要求“合并到main”。本次从已安装修复来源 `3ff74c16` / 公开签名传输 `ba2e74c1` 创建专用合并分支，保留先前流程修复；PR #10 后续 `c28cc1a8` 与本分支 `9cbb1487` 的 stable patch-id 及八个文件 blob 一致，不重复应用或遗漏修正。\n+\n+T-1404 的候选构建分支曾临时替换 `.github/workflows/desktop-release.yml`，仅允许该构建分支运行，不能直接覆盖 main 原有 macOS / Windows 正式发布流程。本次额外写入边界仅为将该文件恢复到本次新获取 `origin/main` 的原始 blob，以及本 SPEC、BACKLOG 说明和 `docs/verification/t1406/MAIN_MERGE.md`。保全原 Verify 质量门、既有根和保护设置，不放宽候选构建守卫；历史 run、公开回执和制品仍只对应它们的精确源码，不宣称适用于新合并 SHA。\n+\n+合并前独立核对该保全差异、产品源字节未变及新增 PR 当场 CI / 评审状态；真实受阻或范围外既有欠账如实记录，不自动将 T-1406 改为全量验收完成。此前整体 Windows 验收 PARTIAL、严格数据快照 FAIL、凭据内容未验和两项目 updatedAt 原因未明的结论保留。\n+\n+PR #11 首轮实际 CI 又暴露本任务新增 0141 迁移后的一处测试库存遗漏：`frontend/src/server/legacy-frozen-source-read.integration.test.ts` 仍锁定止于 0140 的 114 条库存，三个历史升级 family 在 journal SHA 处失败。允许只补正此回归的明确 115 条库存及 0141 journal/SQL 身份，同时增加/保留旧 114 条与旧 111 条精确前缀锚，保留全部旧数据深等、冻结输入、真实 Worker、结算和同 source 重放断言。禁止动态接受最新库存、修改生产迁移 SQL、删除守卫或扩大 known-failures。复验采用合成旧 producer、独立 HOME/DB 与本地受控 HTTP，不使用用户原库或真实模型。\n+\n+同一库存审查另发现 `backend/src/legacy-source-migration.test.ts` 仍按 114 条/old104+10 验证，以及 `backend/src/migration-convergence.test.ts` 的 115 条 raw hash 误取 Windows CRLF 工作文件而非 Git/CI LF 字节。允许限定补正这两个测试：显式固定 0141 / 新总数 / Git LF hash，保留所有旧 SQL 身份、旧库存前缀及领域保全断言；本机先将原 Git LF blob 原字节物化后复验，不扩大为兼容任意 hash，不修改生产 journal/SQL 或分类基线。\n+\n+首轮 backend14/16 实际日志另显示 `backend/src/legacy-scheduled-job-migration.test.ts` 的当前库时间清单止于 0013，新增 0141 后实际多出 0014；允许只在这个测试的“当前库存”明确追加 0141/1791043200014 并保留旧前缀、冻结历史和锁并发测试。外部 PostgreSQL 前置未满足的用例继续如实列出，不以放宽前置制造通过。\n+\n+同类当前全库升级回归 `backend/src/unified-project-intake-migration.test.ts` 的 old112→当前和 old113→当前尾项也需明确包含 0141；只补正追加计数与精确迁移时间清单，保留原项目/准备时钟深等、重启幂等及旧 SQL 守卫。首轮 frontend5/8 又实际发现 `frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts` 的知识操作登记仍期待 13 个，本任务 I06 明确新增 `knowledge.distill.adopt` 与 `knowledge.distill.receipt` 后应为 15 个；只扩完整显式操作表并继续验证每个均为持久化实现，不使用动态长度或删掉真实实现断言。\n+\n+Windows 本机历史测试另遇真实夹具前置差异：系统 tar 默认磁带设备、Git tar 不接受 Windows `-C` 路径、pnpm 缩短虚拟目录名，以及 Git 归档换行转换。实际仅在隔离运行环境设置 `TAPE=-`、建立已核同版本实物的忽略目录 alias、使用进程级 Git `core.autocrlf=false`；旧 104 个 SQL 与原 Git blob 逐一精确相等后，原测试命令和全部守卫不变，最终真实 4/4 通过。此前四轮失败/未执行日志原样保留，不以更换历史源或模型 mock 绕过前置。\n+\n+首轮 frontend2/8 实际在 `frontend/src/server/script-review-worker-entry.integration.test.ts` 的 `reviewRules.create` 前置失败：旧测试仅有虚拟 accountId、没有 groupId。允许只补正此测试，以真实公共账号创建及其合法账号组构建隔离 RequestContext，再沿同组创建规则、触发实际 Worker、保存版本报告；保留全部原语义模型 HTTP 夹具、重试次数、冻结原文、lint/LLM 报告及无采纳候选断言。生产 group 守卫、模型调用及规则边界一律不改，不以假组 ID 或直接写数据库代替合法归属。\n",
+  "changed_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:58:0ef04d7cf433ba7e",
+      "text": "## 2026-10-26 合并 main 授权与发布编排保全"
+    },
+    {
+      "origin_ref": "SPEC-LINE:60:3b930eb0be53dd1a",
+      "text": "用户在实时核对远端后明确要求“合并到main”。本次从已安装修复来源 `3ff74c16` / 公开签名传输 `ba2e74c1` 创建专用合并分支，保留先前流程修复；PR #10 后续 `c28cc1a8` 与本分支 `9cbb1487` 的 stable patch-id 及八个文件 blob 一致，不重复应用或遗漏修正。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:62:4e5659ee640ff113",
+      "text": "T-1404 的候选构建分支曾临时替换 `.github/workflows/desktop-release.yml`，仅允许该构建分支运行，不能直接覆盖 main 原有 macOS / Windows 正式发布流程。本次额外写入边界仅为将该文件恢复到本次新获取 `origin/main` 的原始 blob，以及本 SPEC、BACKLOG 说明和 `docs/verification/t1406/MAIN_MERGE.md`。保全原 Verify 质量门、既有根和保护设置，不放宽候选构建守卫；历史 run、公开回执和制品仍只对应它们的精确源码，不宣称适用于新合并 SHA。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:64:08fe65a9679c6c4b",
+      "text": "合并前独立核对该保全差异、产品源字节未变及新增 PR 当场 CI / 评审状态；真实受阻或范围外既有欠账如实记录，不自动将 T-1406 改为全量验收完成。此前整体 Windows 验收 PARTIAL、严格数据快照 FAIL、凭据内容未验和两项目 updatedAt 原因未明的结论保留。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:66:9fdd3eeec447c299",
+      "text": "PR #11 首轮实际 CI 又暴露本任务新增 0141 迁移后的一处测试库存遗漏：`frontend/src/server/legacy-frozen-source-read.integration.test.ts` 仍锁定止于 0140 的 114 条库存，三个历史升级 family 在 journal SHA 处失败。允许只补正此回归的明确 115 条库存及 0141 journal/SQL 身份，同时增加/保留旧 114 条与旧 111 条精确前缀锚，保留全部旧数据深等、冻结输入、真实 Worker、结算和同 source 重放断言。禁止动态接受最新库存、修改生产迁移 SQL、删除守卫或扩大 known-failures。复验采用合成旧 producer、独立 HOME/DB 与本地受控 HTTP，不使用用户原库或真实模型。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:68:b470c576c1135701",
+      "text": "同一库存审查另发现 `backend/src/legacy-source-migration.test.ts` 仍按 114 条/old104+10 验证，以及 `backend/src/migration-convergence.test.ts` 的 115 条 raw hash 误取 Windows CRLF 工作文件而非 Git/CI LF 字节。允许限定补正这两个测试：显式固定 0141 / 新总数 / Git LF hash，保留所有旧 SQL 身份、旧库存前缀及领域保全断言；本机先将原 Git LF blob 原字节物化后复验，不扩大为兼容任意 hash，不修改生产 journal/SQL 或分类基线。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:70:5134e5352185538e",
+      "text": "首轮 backend14/16 实际日志另显示 `backend/src/legacy-scheduled-job-migration.test.ts` 的当前库时间清单止于 0013，新增 0141 后实际多出 0014；允许只在这个测试的“当前库存”明确追加 0141/1791043200014 并保留旧前缀、冻结历史和锁并发测试。外部 PostgreSQL 前置未满足的用例继续如实列出，不以放宽前置制造通过。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:72:c9cbc7a8dddea5f7",
+      "text": "同类当前全库升级回归 `backend/src/unified-project-intake-migration.test.ts` 的 old112→当前和 old113→当前尾项也需明确包含 0141；只补正追加计数与精确迁移时间清单，保留原项目/准备时钟深等、重启幂等及旧 SQL 守卫。首轮 frontend5/8 又实际发现 `frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts` 的知识操作登记仍期待 13 个，本任务 I06 明确新增 `knowledge.distill.adopt` 与 `knowledge.distill.receipt` 后应为 15 个；只扩完整显式操作表并继续验证每个均为持久化实现，不使用动态长度或删掉真实实现断言。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:74:9e22e3743914408a",
+      "text": "Windows 本机历史测试另遇真实夹具前置差异：系统 tar 默认磁带设备、Git tar 不接受 Windows `-C` 路径、pnpm 缩短虚拟目录名，以及 Git 归档换行转换。实际仅在隔离运行环境设置 `TAPE=-`、建立已核同版本实物的忽略目录 alias、使用进程级 Git `core.autocrlf=false`；旧 104 个 SQL 与原 Git blob 逐一精确相等后，原测试命令和全部守卫不变，最终真实 4/4 通过。此前四轮失败/未执行日志原样保留，不以更换历史源或模型 mock 绕过前置。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:76:c75cca4415fd5b49",
+      "text": "首轮 frontend2/8 实际在 `frontend/src/server/script-review-worker-entry.integration.test.ts` 的 `reviewRules.create` 前置失败：旧测试仅有虚拟 accountId、没有 groupId。允许只补正此测试，以真实公共账号创建及其合法账号组构建隔离 RequestContext，再沿同组创建规则、触发实际 Worker、保存版本报告；保留全部原语义模型 HTTP 夹具、重试次数、冻结原文、lint/LLM 报告及无采纳候选断言。生产 group 守卫、模型调用及规则边界一律不改，不以假组 ID 或直接写数据库代替合法归属。"
+    }
+  ],
+  "existing_findings_recheck": {
+    "count": 0,
+    "findings": [],
+    "result": "原findings为空，无销账、改写或重开。"
+  },
+  "difference_analysis": [
+    "base父提交当前SPEC并非原审核版本；沿该父提交文件历史找到6c7f7dc05701265bc88a961901a509bba7061e83，字节SHA与event.spec_sha256精确匹配，全部semantic-line指纹也匹配。",
+    "新增10个非空语义行涉及合并main授权、正式发布workflow保全及测试库存/真实组夹具修正。原I01–I08、组隔离、确认、事务幂等、正式锁分和验收规则未改。",
+    "当前desktop-release.yml与文中fresh main 3a110457ac4c9cb0c2d1289bb427a95f652c38eb及base提交的blob均为c120595338a17266dbd96f99ea204fd8ad367dea，发布编排保全可本机核验。",
+    "journal确为115项，末项idx114/0141_review_rule_group_scope/1791043200014；journal SHA为0d99e426b306c8108ce275cfb4df005877059a4e51b21494d4acd38dae313eb6，0141 SQL SHA为369bab227e661865bd2b855ce3d67c788c1a80531eea144e1df93b5458807416。所读测试明确保留111/114旧前缀和旧SQL身份，不动态接受最新库存。",
+    "知识操作表包含knowledge.distill.adopt及receipt；Worker夹具经accounts.create与accountGroups.list取得真实成员组，不用虚拟group或直接写库。新增约束禁止改生产SQL、守卫、known-failures、超时并保留旧失败，未发现增量规格问题。"
+  ],
+  "provenance_evidence": [],
+  "limitations": [
+    "本轮只做规格增量复审，未执行产品测试、外部服务、钱包、远程CI、安装或平台操作。",
+    "仅写授权的10个review/evidence JSON，未改SPEC/业务/控制面，未登记审核或提交。",
+    "c28cc1a8对象本地不存在；MAIN_MERGE记载的patch-id/八文件匹配、历史CI和Windows4/4仅作历史材料，不声称本次重算或重跑。"
+  ]
+}

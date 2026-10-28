@@ -1840,3 +1840,5 @@
 {"ts":"2026-10-25T11:30:00.489Z","actor":"taskctl","action":"start","task":"T-1405","sha_before":"0fd333173dd1","sha_after":"25a31d05c3e9"}
 {"ts":"2026-10-25T13:24:55.087Z","actor":"taskctl","action":"start","task":"T-1406","sha_before":"ed9280c211a1","sha_after":"08a0303feb0d"}
 {"ts":"2026-10-26T15:30:41.020Z","actor":"taskctl","action":"block","task":"T-1408","reason":"用户已授权独立差量推送并在检查通过后合main；旧基线完整门420用例失败及21文件/套件记录未全部归因，正式UI与reconcile未通过。发布候选定向复验和远端CI按实际结果追加，不标全绿。","sha_before":"bfb459cf7bcf","sha_after":"81435b60c21d"}
+{"ts":"2026-10-28T09:20:17.523Z","actor":"taskctl","action":"block","task":"T-1420","reason":"2026-10-28接手：main 6033bdd51 审核链有23条event_hash不匹配和1处断链，reviewctl拒绝登记WIP审核，cherry-pick仍待解决审核记录；规划定向79测及四项typecheck通过；兼容回归50通过/2因缺T1302原始样本失败；安装态真实生图及新版UI验收未完成。证据见docs/verification/t1420/handoff-20261028/README.md。","sha_before":"c64117d0dcd0","sha_after":"ff698ed78c7a"}
+{"ts":"2026-10-28T10:58:27.909Z","actor":"taskctl","action":"start","task":"T-1429","sha_before":"470cd8e5acae","sha_after":"3551370fef6f"}

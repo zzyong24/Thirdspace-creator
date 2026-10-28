@@ -198,7 +198,9 @@ export function createCreativeResultsService(db: Db, deps: CreativeResultsDeps) 
     const selected = row.items as Array<{kind: CreativeKind; targetPlatform: Platform | null; targetSectionId?: string; resultId: string}>;
     const items = await Promise.all(selected.map(async (item) => {
       const result = await readResult(ctx, await scopedResult(ctx, item.resultId));
-      return {...item, status: result.status, errorCode: result.errorCode};
+      // Stored items also contain recovery keys; only public contract fields leave the service.
+      return {kind:item.kind,targetPlatform:item.targetPlatform,resultId:item.resultId,
+        ...(item.targetSectionId?{targetSectionId:item.targetSectionId}:{}),status:result.status,errorCode:result.errorCode};
     }));
     return {bundleId: row.id, outputId: row.outputId, status: bundleStatus(items), items, createdAt: row.createdAt};
   }

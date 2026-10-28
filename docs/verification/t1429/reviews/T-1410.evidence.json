@@ -1,0 +1,103 @@
+{
+  "schema": "t1429-independent-spec-review-evidence/v1",
+  "task_id": "T-1410",
+  "review_kind": "initial",
+  "reviewer": {
+    "session": "/root/recovery_stale_specs_b",
+    "review_mode": "homogeneous",
+    "model": "继承宿主模型；精确型号未核实",
+    "independent_of_spec_authoring_and_implementation": true
+  },
+  "reviewed_at": "2026-10-28T10:56:29.823709+00:00",
+  "source_root": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/review-chain-recovery/repo",
+  "spec_path": "docs/features/t1410-review-evidence-reconciliation.md",
+  "spec_sha256": "85487bccff8b7333df5a6c00094a8b77686dfd7c5ba395bedd793273e4e19d9e",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_event_path": "docs/verification/t1429/originals/incoming-review-events.ndjson",
+  "source_event_sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d",
+  "source_task_id": "T-1410",
+  "source_event_hash": "4e4685a437208a4e2d1bb6134ebdf80a14642e8ba5e69e70a02445ce53e49e8f",
+  "previous_cycle": 1,
+  "previous_round": 3,
+  "previous_spec_sha256": "3974e24a2b44bfef0c13c87cb780c85aba445611ac081dafa6c3aeb9c7d9a28f",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "recheck",
+    "summary": "独立代理 /root/t1408_pi_diagnosis 对 T-1410 当前周期 round 2 后的 manifest 增量做正式只读复审；未编写该 SPEC 修订，未修改控制面或产品。当前 SPEC SHA-256=3974e24a2b44bfef0c13c87cb780c85aba445611ac081dafa6c3aeb9c7d9a28f，宪法 docs/产品定位.md SHA-256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已真实运行 reviewctl context T-1410，读取 previous_round=2、previous_verdict=PASS、完整原空 findings 与唯一 changed_line_ref SPEC-LINE:27:f68765f60b9a83e2；移除该新增段后逐字恢复原 SPEC SHA-256=1c4648100566b258456675893a2854be513e1676d82e6430ff68de0bfc44327d，无其它隐藏增量。原范围枚举未显式包含 manifest，本轮补段现精确限定 project.updated_at 和 4-build/5-ship 两处 notes，module 与已刷新 context 同时加入唯一 manifest 路径。该补充符合用户修复失败验收与真实对账的既有授权，不改变产品、契约、验收阈值或风险接受；无需重开 cycle。已逐项读取 manifest 全 43 个 stage 的 status/gate/gate_status/confirmation，核对 canonical 五阶段、历史阻塞、consistency_gate 和 open_items；这是阶段记录核对，不是重新执行全部旧产品验收。当前 4-build/5-ship 为 draft/not-run，consistency_gate=fail 仍阻塞 5-ship 与 17-integration-release，T517-2-contract 的 invalidated/fail、T537 两项 blocked/fail 与旧 OPEN/历史失败均须原样保留。独立运行 reconcile --profile quick --read-only 返回 exit1、1 ERROR/13 WARN，唯一 ERROR 为 manifest.updated_at=2026-10-19 早于最新 DEC Date=2026-10-25；reconcile 源码 755–767 验证此日期规则，621–639 证明 backlog-health exit1 被投影为 WARN。当前 review audit 已 PASS，看板真实压缩为 58866 bytes，但 backlog-health-applied.json 仍 errors1/exit1、12WARN、162 状态文字矛盾；这些不是已解决事实，新增 notes 必须如实记录，不能以 quick 日期修复后0ERROR冒独立health、full或发布全绿。已核 T1408 安装版报告：778ea455默认最小探针及组诊断成功，完整官方Pi首轮仍CHANNEL_MODEL_PAYMENT_REQUIRED，无正常回复；T1409仅安全诊断修复，T1411本地83项与静态门/独立代码审查通过但尚未安装验收。新段要求真实核对日期、保原备注、追加当前证据与未完成条件且禁止更改任何stage/gate状态、confirmation及历史，足以防止将日期维护用于伪签整体通过，符合产品宪法§0、P03与§13以及阶段状态规则18–29。未发现该增量的新规格缺陷，保留原findings为空；本结论仅允许主线程按本段执行有限控制面对账，不表示manifest已修改、T1410所有健康问题消失、官方402恢复、完整安装/UI验收通过或可直接推送。详细证据与具体 notes 建议见 docs/verification/t1410/manifest-reconciliation-review.md。",
+    "findings": []
+  },
+  "history_binding": {
+    "source_ledger_commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "matching_spec_commit": "398b63905d6208aca89b6359af15720fa96de8f6",
+    "historical_file_sha256": "3974e24a2b44bfef0c13c87cb780c85aba445611ac081dafa6c3aeb9c7d9a28f",
+    "matches_event_spec_sha256": true,
+    "current_constitution_matches_event": true
+  },
+  "current_review_kind_reason": "旧cycle 1 round 3，无旧findings；当前文本任务引用变化，须独立全文initial和主会话精确新cycle授权，不能继续round 4或重写旧event。",
+  "exact_spec_diff": "--- 398b63905d6208aca89b6359af15720fa96de8f6:docs/features/t1410-review-evidence-reconciliation.md\n+++ docs/features/t1410-review-evidence-reconciliation.md\n@@ -1,6 +1,6 @@\n # T-1410 真实审核证据对账\n \n-用户明确要求“把官方Pi的402和没通过的验收都处理好，复验通过后再推送”。本任务只修T1408审计定位的控制面不一致，21项review错误加看板体积；不借治理修复签旧产品验收，不改产品/审核引擎，不合并含敏感历史的整条旧分支。\n+用户明确要求“把官方Pi的402和没通过的验收都处理好，复验通过后再推送”。本任务只修T1427审计定位的控制面不一致，21项review错误加看板体积；不借治理修复签旧产品验收，不改产品/审核引擎，不合并含敏感历史的整条旧分支。\n \n ## FR-141001 原件恢复\n \n@@ -24,7 +24,7 @@\n \n 产品代码与reviewctl/reconcile/taskctl程序不在写集。写集为元数据列出的各review snapshot与所需task-scoped目标、BACKLOG/归档/details、审计证据、正常DEC/review-events/任务事件/progress/module/context；加下列已独评发现的两处规格引用纠偏，修订前后均正式独评，原finding完整保留，不改产品行为或验收门槛：\n \n-补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1408/1409/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。\n+补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。\n \n - `docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md`：仅标识原竖屏人物隐藏/禁PiP/硬切及对应验收断言已由用户既定DEC-VIDEO-056与T902取代，当前竖屏遵循T902；保原文作为历史及其余方向/字幕约束，不发明新产品决定。\n - `docs/superpowers/specs/2026-08-05-video-production-editing-loop.md`：仅把§3数据表旧outputs.production.put引用对齐同节已确认的唯一productions.editing-plan.confirm窄写入口，保原读回和AC/幂等/并发约束。其它SPEC发现不借本条扩写。\n@@ -32,4 +32,4 @@\n - 每项恢复前验证canonical元数据未被并发改写；错误停止该项，其余独立项可继续。\n - 每份当前PASS必须来自真实独立审核输出，绑定当前SPEC、宪法、旧finding、元数据及工具receipt；不把迁移当新审核。\n - reviewer只读任务彼此独立，主线程串行写控制面；复核所有旧错误逐项去向。\n-- node --test orchestrator/process/reviewctl.test.mjs、reviewctl audit、backlog-health、reconcile --profile quick --read-only真实运行；quick不冒full，真实产品/安装/UI验收由T1408继续。\n+- node --test orchestrator/process/reviewctl.test.mjs、reviewctl audit、backlog-health、reconcile --profile quick --read-only真实运行；quick不冒full，真实产品/安装/UI验收由T1427继续。\n",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:3:a1290691d204d27f",
+      "line": "用户明确要求“把官方Pi的402和没通过的验收都处理好，复验通过后再推送”。本任务只修T1427审计定位的控制面不一致，21项review错误加看板体积；不借治理修复签旧产品验收，不改产品/审核引擎，不合并含敏感历史的整条旧分支。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:27:1e4c3b9311b25ed3",
+      "line": "补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:35:2c03a4ba22cdf1d3",
+      "line": "- node --test orchestrator/process/reviewctl.test.mjs、reviewctl audit、backlog-health、reconcile --profile quick --read-only真实运行；quick不冒full，真实产品/安装/UI验收由T1427继续。"
+    }
+  ],
+  "observations": [
+    "旧cycle 1 round 3，无旧findings；当前文本任务引用变化，须独立全文initial和主会话精确新cycle授权，不能继续round 4或重写旧event。",
+    "FR141001要求归档被占用原件、Git commit与canonical event/receipt各字段和自hash一致后恢复；FR141002明确旧授权nonce不可复用、旧finding不可改写，PROJECT宪法迁移不能逃避约束；FR141003机械整理不得删除开放任务或提高阈值。当前合同未授权改reviewctl/reconcile/taskctl或产品行为，适用T1429迁移完成后的当前链仍须CAS核对，不可重放过期元数据。",
+    "canonical-repair-plan.json可解析，包含21项历史审计目标和逐项源commit/event/旧finding；其中T642原REV-002仍为open major，SPEC明确要求真实独审及未解决则保持open，本次不替T642销账。历史计划不是本轮已执行的恢复或当前健康结果。",
+    "manifest仅日期与4-build/5-ship备注追加、保留原备注及全部stage/gate/confirmation状态；quick不冒full，未完成的产品、安装与UI仍由上层任务负责。发现一处非阻断的当前任务引用歧义：notes列表残留1409，此ID现在属于另一Windows任务，支付诊断现为T1428；记录minor供明确溯源。"
+  ],
+  "read_files": [
+    {
+      "path": "docs/verification/t1410/canonical-repair-plan.json",
+      "sha256": "9755aee5ecca1e4baf3214a7ada8ed243a7978bebbbb3401685396ded7a5522f"
+    },
+    {
+      "path": "BACKLOG.md",
+      "sha256": "f2decba657ec8f09169fd49ccfffa83f0c8eb9555a64084991343ee79d1ce8d1"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "29bc1ba781c3c4a09dbcbdc180900e67639e74439731805dcaed8fe7646b7171"
+    }
+  ],
+  "review_constraints": [
+    "只写本任务审核JSON与evidence JSON",
+    "不修改SPEC/产品/控制面，不运行reviewctl record，不提交",
+    "静态规格审核，不代签运行、安装、业务验收或历史审计通过"
+  ],
+  "registration_requires_new_cycle": true,
+  "no_product_acceptance_claim": true,
+  "local_validation": {
+    "schema_file": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+    "schema_sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7",
+    "schema_keywords_checked": [
+      "type",
+      "required",
+      "additionalProperties",
+      "const",
+      "enum",
+      "minLength",
+      "pattern",
+      "$ref",
+      "allOf/if/then",
+      "minItems",
+      "minimum",
+      "maximum"
+    ],
+    "packet_schema_valid": true,
+    "current_spec_hash_still_matches": true,
+    "recheck_previous_findings_frozen": null,
+    "changed_line_refs_checked": true,
+    "formal_reviewctl_record_executed": false
+  }
+}

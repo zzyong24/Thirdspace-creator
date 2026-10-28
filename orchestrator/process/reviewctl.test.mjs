@@ -1334,3 +1334,130 @@ test("backlog hook 对 legacy 的直接开工或完成编辑也 fail-closed", ()
   assert.equal(result.status, 2);
   assert.match(result.stderr, /legacy|迁移|required/i);
 });
+
+// T-1429: real transaction failures, including process death, must preserve a
+// recoverable journal and refuse to overwrite a third-party edit.
+import { runLedgerTransaction, recoverLedgerTransaction } from './reviewctl.mjs';
+function transactionFixture() {
+  const root = tempProject();
+  const operations = [
+    { path: 'BACKLOG.md', before: fs.readFileSync(path.join(root, 'BACKLOG.md'), 'utf8'), after: 'new backlog\n' },
+    { path: 'orchestrator/review-events.ndjson', before: null, after: 'new ledger\n' },
+  ];
+  const body = { schema: 'review-ledger-transaction/v1', operations, guards: [] };
+  return { root, plan: { ...body, plan_hash: objectHash(body) } };
+}
+test('迁移事务CAS、锁冲突均拒绝写入', () => {
+  const {root, plan} = transactionFixture();
+  fs.appendFileSync(path.join(root, 'BACKLOG.md'), 'concurrent\n');
+  assert.throws(() => runLedgerTransaction({root, plan, expectedPlanHash: plan.plan_hash}), /CAS/);
+  assert.equal(fs.existsSync(path.join(root, 'orchestrator/review-events.ndjson')), false);
+  const second = transactionFixture();
+  fs.mkdirSync(path.join(second.root, 'orchestrator/.state-write.lock'));
+  assert.throws(() => runLedgerTransaction({ ...second, expectedPlanHash: second.plan.plan_hash }), /状态写锁/);
+});
+test('迁移事务写失败完整回滚，第三方修改不被覆盖', () => {
+  for (const foreign of [false, true]) {
+    const {root, plan} = transactionFixture();
+    assert.throws(() => runLedgerTransaction({root, plan, expectedPlanHash: plan.plan_hash, afterWrite() {
+      if (foreign) fs.writeFileSync(path.join(root, 'BACKLOG.md'), 'foreign');
+      throw new Error('injected failure');
+    }}), /injected failure|第三方/);
+    assert.equal(fs.readFileSync(path.join(root, 'BACKLOG.md'), 'utf8'), foreign ? 'foreign' : plan.operations[0].before);
+    assert.equal(fs.existsSync(path.join(root, 'orchestrator/review-events.ndjson')), false);
+    if (foreign) assert.throws(() => recoverLedgerTransaction({root, expectedPlanHash:plan.plan_hash}), /第三方/);
+  }
+});
+test('迁移进程中断留下journal，可显式回滚并重新执行且幂等', () => {
+  const {root,plan} = transactionFixture();
+  const source = `import {runLedgerTransaction} from ${JSON.stringify(new URL('./reviewctl.mjs', import.meta.url).href)}; runLedgerTransaction({root:${JSON.stringify(root)},plan:${JSON.stringify(plan)},expectedPlanHash:${JSON.stringify(plan.plan_hash)},afterWrite(){process.exit(73)}});`;
+  const child = spawnSync(process.execPath, ['--input-type=module', '-e', source], {encoding:'utf8'});
+  assert.equal(child.status, 73, child.stderr);
+  assert.equal(fs.readFileSync(path.join(root, 'BACKLOG.md'), 'utf8'), plan.operations[0].after);
+  assert.throws(() => runLedgerTransaction({root,plan,expectedPlanHash:plan.plan_hash}), /未完成/);
+  recoverLedgerTransaction({root,expectedPlanHash:plan.plan_hash});
+  assert.equal(fs.readFileSync(path.join(root, 'BACKLOG.md'), 'utf8'), plan.operations[0].before);
+  runLedgerTransaction({root,plan,expectedPlanHash:plan.plan_hash});
+  assert.equal(runLedgerTransaction({root,plan,expectedPlanHash:plan.plan_hash}).status, 'already-applied');
+});
+
+import { prepareLedgerTransaction } from './reviewctl.mjs';
+import { syncBuiltinESMExports } from 'node:module';
+test('迁移CLI预演只读，正式事务保留状态，过期SPEC不能开工', () => {
+  const root = tempProject();
+  const args = input => ['record','T-101','--spec','SPEC.md','--constitution','CONSTITUTION.md','--input',input,'--review','SPEC.review.md','--backlog','BACKLOG.md','--review-mode','homogeneous','--model','fixture'];
+  const first = writePacket(root,'first.json',{schema:'spec-review-round/v2',review_kind:'initial',summary:'initial',findings:[]});
+  assert.equal(run(REVIEWCTL,args(first),root).status,0);
+  const ledger = path.join(root,'orchestrator/review-events.ndjson');
+  const base = fs.readFileSync(ledger,'utf8');
+  const second = writePacket(root,'second.json',{schema:'spec-review-round/v2',review_kind:'recheck',summary:'recheck',findings:[]});
+  assert.equal(run(REVIEWCTL,args(second),root).status,0);
+  const incoming = fs.readFileSync(ledger,'utf8');
+  const damaged = incoming.replace('"summary":"initial"','"summary":"damaged"');
+  fs.writeFileSync(ledger,damaged);
+  fs.mkdirSync(path.join(root,'docs/archive'),{recursive:true});
+  // Use an adjacent snapshot under docs, as production does, while preserving
+  // the source event's original fields in this fixture.
+  const manifest = {schema:'review-ledger-migration/v1',id:'cli-test',authorized_by:'DEC-999',created_at:'2026-10-28T00:00:00Z',expected_ledger_sha256:sha256(damaged),task_mappings:[]};
+  for (const [i,[name,value]] of Object.entries({base,incoming,damaged}).entries()) {
+    manifest[name] = {path:`docs/archive/${name}.ndjson`,sha256:sha256(value),commit:String(i+1).repeat(40)};
+    fs.writeFileSync(path.join(root,manifest[name].path),value);
+  }
+  const raw = JSON.stringify(manifest);
+  fs.writeFileSync(path.join(root,'docs/migration.json'),raw);
+  fs.writeFileSync(path.join(root,'orchestrator/DECISION_LOG.md'),`\x60\x60\x60text\nID: DEC-999\nAuthorization-Kind: review-ledger-migration\nManifest-Path: docs/migration.json\nManifest-SHA256: ${sha256(raw)}\nOwner: user\nStatus: active\n\x60\x60\x60\n`);
+  fs.appendFileSync(path.join(root,'SPEC.md'),'\nFR-102: changed spec\n');
+  const before = ['BACKLOG.md','SPEC.review.md','orchestrator/review-events.ndjson'].map(file=>fs.readFileSync(path.join(root,file),'utf8'));
+  const dry = run(REVIEWCTL,['migrate-ledger','--manifest','docs/migration.json'],root);
+  assert.equal(dry.status,0,dry.stderr);
+  assert.deepEqual(JSON.parse(dry.stdout).stale_tasks,['T-101']);
+  assert.deepEqual(['BACKLOG.md','SPEC.review.md','orchestrator/review-events.ndjson'].map(file=>fs.readFileSync(path.join(root,file),'utf8')),before);
+  assert.equal(fs.existsSync(path.join(root,'orchestrator/.review-ledger-migration.json')),false);
+  const originalRead = fs.readFileSync;
+  let injected = false;
+  let racingPlan;
+  fs.readFileSync = function(file, ...args) {
+    const value = originalRead(file, ...args);
+    if (!injected && file === path.join(fs.realpathSync(root),'BACKLOG.md')) {
+      injected = true;
+      fs.appendFileSync(file,'FOREIGN-CONCURRENT-UPDATE\n');
+    }
+    return value;
+  };
+  syncBuiltinESMExports();
+  try { racingPlan = prepareLedgerTransaction({root,manifestPath:'docs/migration.json'}); }
+  finally { fs.readFileSync = originalRead; syncBuiltinESMExports(); }
+  assert.equal(injected,true);
+  assert.throws(()=>runLedgerTransaction({root,plan:racingPlan,expectedPlanHash:racingPlan.plan_hash}),/CAS/);
+  assert.match(fs.readFileSync(path.join(root,'BACKLOG.md'),'utf8'),/FOREIGN-CONCURRENT-UPDATE/);
+  fs.writeFileSync(path.join(root,'BACKLOG.md'),before[0]);
+  const plan = prepareLedgerTransaction({root,manifestPath:'docs/migration.json'});
+  // The source's adjacent root-level snapshot is a valid reviewctl target.
+  runLedgerTransaction({root,plan,expectedPlanHash:plan.plan_hash});
+  const audit = run(REVIEWCTL,['audit'],root);
+  assert.equal(audit.status,1);
+  assert.match(audit.stderr,/SPEC hash/);
+  assert.equal(prepareLedgerTransaction({root,manifestPath:'docs/migration.json'}).status,'already-applied');
+  assert.equal(fs.readFileSync(path.join(root,'BACKLOG.md'),'utf8').replace(/REV:[a-f0-9]+/g,'REV:x'),before[0].replace(/REV:[a-f0-9]+/g,'REV:x'));
+});
+
+test('回滚预查之后出现第三方修改也不得覆盖', () => {
+  const {root,plan} = transactionFixture();
+  const source = `import {runLedgerTransaction} from ${JSON.stringify(new URL('./reviewctl.mjs', import.meta.url).href)}; runLedgerTransaction({root:${JSON.stringify(root)},plan:${JSON.stringify(plan)},expectedPlanHash:${JSON.stringify(plan.plan_hash)},afterWrite(){process.exit(73)}});`;
+  assert.equal(spawnSync(process.execPath,['--input-type=module','-e',source]).status,73);
+  const originalRead = fs.readFileSync;
+  let injected = false;
+  fs.readFileSync = function(file,...args) {
+    const value = originalRead(file,...args);
+    if (!injected && file === path.join(fs.realpathSync(root),'BACKLOG.md')) {
+      injected = true;
+      fs.writeFileSync(file,'FOREIGN-EDITOR-UPDATE');
+    }
+    return value;
+  };
+  syncBuiltinESMExports();
+  try { assert.throws(()=>recoverLedgerTransaction({root,expectedPlanHash:plan.plan_hash}),/第三方/); }
+  finally { fs.readFileSync = originalRead; syncBuiltinESMExports(); }
+  assert.equal(fs.readFileSync(path.join(root,'BACKLOG.md'),'utf8'),'FOREIGN-EDITOR-UPDATE');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root,'orchestrator/.review-ledger-migration.json'),'utf8')).status,'pending');
+});

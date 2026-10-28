@@ -17,7 +17,7 @@ import {accountGroups} from "../../schema/account-groups";
 import {aiTasks} from "../../schema/ai";
 import type { CreativeResultAdapter } from "./creative-results.service";
 
-type Task = {id: string; taskType: string; status: string; projectId: string | null; contentOutputId: string | null; inputData: Record<string, unknown>};
+type Task = {runtimeStatus?:string|null; id: string; taskType: string; status: string; projectId: string | null; contentOutputId: string | null; inputData: Record<string, unknown>};
 type Result = {resultType: string; assetId: string | null; resultData: Record<string, unknown>};
 // SEMANTIC_BOUNDARY_ALLOW: This hash is only an idempotency identity; it makes no creative choice.
 function digest(value: unknown) { return `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`; }
@@ -102,7 +102,7 @@ export function createGraphicPostMediaAdapter(ports: GraphicPostMediaPorts): Cre
     const bound = await binding(ctx, taskId);
     const status = bound.task.status;
     if (status === "queued" || status === "running" || status === "failed" || status === "cancelled") {
-      return {bound, status, value: null, errorCode: status === "failed" ? "GENERATION_FAILED" : null};
+      return {bound, status, value: null, errorCode: bound.task.runtimeStatus === "unknown_result" ? "MEDIA_RESULT_UNKNOWN" : status === "failed" ? "GENERATION_FAILED" : null};
     }
     if (status !== "awaiting_confirmation" && status !== "succeeded") return error("CANDIDATE_NOT_READY", "封面任务状态无效");
     const results = (await ports.listResults(bound.originalContext, taskId)).filter((item) => item.resultType === "generated_asset");

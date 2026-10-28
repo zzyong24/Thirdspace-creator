@@ -1,0 +1,11 @@
+{
+  "body": {
+    "title": "T-1420 本机账号1图文验收 20261028",
+    "brief": "独立验收作品：将书桌整理前后的小经验制作成小红书图文，验证独立配文、内容分页与真实AI配图。仅供验收，不发布。",
+    "contentType": "image",
+    "creationMode": "freeform",
+    "targetPlatforms": ["xiaohongshu"],
+    "source": "manual",
+    "idempotencyKey": "t1420-mac-group1-reverify-project-20261028"
+  }
+}

@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 2/3 (recheck)
 - Spec receipt: a60c5d93b36d
-- Review receipt: 2798870c87f4
+- Review receipt: 248be748b943
 
 ## 当前有效问题
 
@@ -31,7 +31,7 @@
   "model": "inherited-session-model",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "b67bedcd356d7f5fd99985f7665c84cf119ff34bccb89355046ced832c64b005",
+  "latest_event_hash": "c707aafe13f9d6cc6b781682fb83538556b81803f39a96e3700407f0e21a2857",
   "open_findings": [],
   "resolved_findings": [
     {
@@ -39,6 +39,6 @@
       "resolution_evidence": "当前 SPEC SHA-256=a60c5d93b36d99da560a96870f558ede22e7d92bf1d63f0dfd00beef9d7c6a7a 的顶部第 8–17 行“当前适用性”段（reviewctl changed_line_refs 从 SPEC-LINE:8:4f74d2d1d9e79611 至 SPEC-LINE:17:f12cc9724368f346）明确旧流程图、FR-858-3、§3.1/§3.3、§5、AC-858-2 内人物隐藏/禁止 PiP/硬切及通过失败断言由 T-902 §2/§4 和 DEC-VIDEO-056 取代，不再用作当前竖屏验收。段落逐项保持真实口播全幅基底、card/非 overlay B-roll 固定左下持续可见与平滑回位、安全区不得通过隐藏人物达成，并限定横屏原策略、visualOnly 不伪造真人、损坏输入原结构失败。核对 T-902:16–25、:38–44 与 DEC-VIDEO-056 原用户决定相符，原文保留且其余合同继续适用；因此不再有遵循后继人物可见规则却被旧 T858 断言判失败的当前规格冲突。未执行成片验收。"
     }
   ],
-  "receipt": "2798870c87f4"
+  "receipt": "248be748b943"
 }
 ```

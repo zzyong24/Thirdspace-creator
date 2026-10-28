@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "同构独立会话复核cycle1 round1后的重编号差异。新增REV-001：另一工作树Windows来源旧T1403被误写为T1424，与两个父提交BACKLOG及DEC-142801矛盾，来源失败归属将指向本地CLI任务。其余整合范围、旧失败、UI/安装验收义务不变。未修改SPEC或登记审核。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "整合合同-1",
+        "quote": "记录每个导入文件、来源 hash、冲突处理和提交归属"
+      },
+      "acceptance_anchor": {
+        "id": "整合合同-2",
+        "quote": "需要保留的既有失败在集成报告中明确归属，不以本次局部测试代签全产品可发布。"
+      },
+      "where": "docs/features/t1407-local-integration-install-merge-preparation.md#来源与真实限制 第4条",
+      "failure_mode": "当前把另一工作树Windows来源的旧任务写成T-1424；两个父提交BACKLOG和DEC-142801证明该来源仍为T-1403，只有本地CLI T-1403映射到T-1424。按当前SPEC定位导入源的未完成项会指向CLI任务而非Windows来源任务，破坏既有失败及提交归属的准确追溯。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:dfc535b2ab4a9be3675568d6e3b492d134ce58f4ed017e088bec051ec23615ee:docs/verification/t1429/reviews/T-1407.evidence.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:10:138b396829becabb",
+      "suggestion": "把来源历史身份保持为另一工作树T-1403，并将本地CLI的旧T-1403到现T-1424单独列为映射；继续用原HEAD/hash/报告绑定导入源与未完成项，不把两个来源一起替换成T-1424。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "observedAt": "2026-10-28T09:47:06.047327+00:00",
+  "exitCode": 0,
+  "response": {
+    "ok": true,
+    "operation": "tasks.wait",
+    "sourceOperation": "ai.tasks.get",
+    "requestId": "req-2ddab0cc-3597",
+    "groupId": "grp-8fdb2e06-22",
+    "accountId": null,
+    "data": {
+      "id": "ai-task-2ddab0cc-3563",
+      "userId": "user-8fdb2e06-1",
+      "groupId": "grp-8fdb2e06-22",
+      "groupVersion": 1,
+      "membershipVersion": null,
+      "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+      "contentOutputId": null,
+      "taskType": "graphic.post-text",
+      "status": "awaiting_confirmation",
+      "executionTaskId": "exec_7acd8d13-b7b7-48a6-89aa-aeee4e8c9dd0",
+      "runtimeStatus": "succeeded",
+      "errorCode": null,
+      "inputData": {
+        "kind": "cardBriefs",
+        "brief": "独立验收作品：将书桌整理前后的小经验制作成小红书图文，验证独立配文、内容分页与真实AI配图。仅供验收，不发布。",
+        "current": {
+          "body": "【独立验收用测试输入，不是AI生成结果，不发布】\n书桌整理可以从两个小动作开始。第一步，把散落的纸张、充电线和杯子移到一旁，擦净桌面，只留下正在使用的笔记本。第二步，为常用物品安排固定位置：笔放进笔筒，线材放进收纳盒，杯子放在桌角。希望最终图文用两幅不同画面分别讲清这两个动作，配文独立表达经验，不把整段正文铺满图片。不添加品牌、商品效果或统计数据。",
+          "tags": [
+            "书桌整理",
+            "测试作品"
+          ],
+          "title": "验收输入：书桌整理的两个小动作",
+          "summary": "明确标记的本机图文验收输入：清空桌面、固定归位。",
+          "imageUses": [],
+          "sourceRefs": [],
+          "schemaVersion": 1,
+          "ruleSnapshotRef": null
+        },
+        "outputId": "output-2ddab0cc-3252",
+        "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+        "artifactId": "artifact-2ddab0cc-3258",
+        "sourceRefs": [
+          {
+            "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+            "kind": "project",
+            "versionId": "2026-10-28T09:33:55.112Z"
+          }
+        ],
+        "imageLibrary": [],
+        "ruleGuidance": "",
+        "baseVersionId": "artifactversion-2ddab0cc-3428",
+        "ruleOverrides": {},
+        "targetPlatform": "xiaohongshu",
+        "ruleSnapshotRef": null,
+        "sourceMaterials": [
+          {
+            "ref": {
+              "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+              "kind": "project",
+              "versionId": "2026-10-28T09:33:55.112Z"
+            },
+            "text": "T-1420 本机账号1图文验收 20261028\n独立验收作品：将书桌整理前后的小经验制作成小红书图文，验证独立配文、内容分页与真实AI配图。仅供验收，不发布。\n{\"targetPlatforms\":[\"xiaohongshu\"]}",
+            "label": "当前项目"
+          }
+        ],
+        "generationIntent": {
+          "kind": "cardBriefs",
+          "outputId": "output-2ddab0cc-3252",
+          "sourceItemId": null,
+          "ruleOverrides": {},
+          "targetPlatform": "xiaohongshu"
+        },
+        "editingInstruction": "依据项目简介及所选资料生成指定图文字段候选。"
+      },
+      "modelKey": "",
+      "idempotencyKey": "group:grp-8fdb2e06-22:graphic.post-text:t1420-mac-group1-reverify-text-20261028:1",
+      "attemptId": "t1420-mac-group1-reverify-text-20261028:1",
+      "requestFingerprint": "sha256:30a6443a335dd5a7aa370e877efa7f7ac649f82b367aa19cbfdf29d8858bbdcb",
+      "retryOfTaskId": null,
+      "requestedAt": "2026-10-28T09:46:07.333Z",
+      "startedAt": null,
+      "completedAt": null,
+      "errorMessage": null
+    },
+    "error": null
+  }
+}

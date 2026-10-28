@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-1410 当前规格独立全文初审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 85487bccff8b7333df5a6c00094a8b77686dfd7c5ba395bedd793273e4e19d9e；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧cycle 1 round 3，无旧findings；当前文本任务引用变化，须独立全文initial和主会话精确新cycle授权，不能继续round 4或重写旧event。 FR141001要求归档被占用原件、Git commit与canonical event/receipt各字段和自hash一致后恢复；FR141002明确旧授权nonce不可复用、旧finding不可改写，PROJECT宪法迁移不能逃避约束；FR141003机械整理不得删除开放任务或提高阈值。当前合同未授权改reviewctl/reconcile/taskctl或产品行为，适用T1429迁移完成后的当前链仍须CAS核对，不可重放过期元数据。 canonical-repair-plan.json可解析，包含21项历史审计目标和逐项源commit/event/旧finding；其中T642原REV-002仍为open major，SPEC明确要求真实独审及未解决则保持open，本次不替T642销账。历史计划不是本轮已执行的恢复或当前健康结果。 manifest仅日期与4-build/5-ship备注追加、保留原备注及全部stage/gate/confirmation状态；quick不冒full，未完成的产品、安装与UI仍由上层任务负责。发现一处非阻断的当前任务引用歧义：notes列表残留1409，此ID现在属于另一Windows任务，支付诊断现为T1428；记录minor供明确溯源。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1410.evidence.json。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "minor",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "写集与验收",
+        "quote": "向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件"
+      },
+      "acceptance_anchor": {
+        "id": "写集与验收",
+        "quote": "不改变任何 stage/gate 状态、confirmation、风险接受或历史验收"
+      },
+      "where": "docs/features/t1410-review-evidence-reconciliation.md:27",
+      "failure_mode": "当前 notes 指定的1409仍使用旧本地编号；BACKLOG当前T-1409是Windows扫码目录/免登录任务，DEC-142801将支付诊断映射为T-1428。按当前编号执行会把无关任务的证据写入官方模型治理备注，或需要执行者自行猜旧编号。此处是非阻断的溯源歧义，不证明既有历史备注错误。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "BACKLOG.md:197；orchestrator/DECISION_LOG.md#DEC-142801；docs/features/t1410-review-evidence-reconciliation.md:27",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把本段当前支付诊断任务明确为T-1428，或明确写旧T-1409→T-1428来源映射；封存历史原文保持不变。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

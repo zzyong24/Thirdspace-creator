@@ -24,7 +24,7 @@ T652先归档占用的外链task-scoped snapshot，确保T707共享原件恢复�
 
 产品代码与reviewctl/reconcile/taskctl程序不在写集。写集为元数据列出的各review snapshot与所需task-scoped目标、BACKLOG/归档/details、审计证据、正常DEC/review-events/任务事件/progress/module/context；加下列已独评发现的两处规格引用纠偏，修订前后均正式独评，原finding完整保留，不改产品行为或验收门槛：
 
-补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。
+补充阶段对账写集 `orchestrator/ARTIFACT_MANIFEST.yaml`：真实核对全部阶段与旧阻塞后，只更新 `project.updated_at` 为本次核对日期，并向 `4-build`、`5-ship` 的 notes 追加 T-1427/1428/1410/1411 当前证据与未完成条件；保留原备注，不改变任何 stage/gate 状态、confirmation、风险接受或历史验收。先同步 module/context 精确写集并完成本条独立复审，不能仅为消除日期漂移而签全局通过。
 
 - `docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md`：仅标识原竖屏人物隐藏/禁PiP/硬切及对应验收断言已由用户既定DEC-VIDEO-056与T902取代，当前竖屏遵循T902；保原文作为历史及其余方向/字幕约束，不发明新产品决定。
 - `docs/superpowers/specs/2026-08-05-video-production-editing-loop.md`：仅把§3数据表旧outputs.production.put引用对齐同节已确认的唯一productions.editing-plan.confirm窄写入口，保原读回和AC/幂等/并发约束。其它SPEC发现不借本条扩写。

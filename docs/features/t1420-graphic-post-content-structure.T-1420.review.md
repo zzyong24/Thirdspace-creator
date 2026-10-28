@@ -2,9 +2,9 @@
 
 - Task: T-1420
 - Verdict: PASS
-- Round: 3/3 (recheck)
-- Spec receipt: 1f943c20fa7d
-- Review receipt: d078ce896db1
+- Round: 1/3 (initial)
+- Spec receipt: d3786b24a048
+- Review receipt: a66a51f4d977
 
 ## 当前有效问题
 
@@ -16,24 +16,35 @@
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-1420",
-  "cycle": 1,
-  "round": 3,
+  "cycle": 2,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "T-1420 第三轮增量复核；同构独立会话（homogeneous），未核实具体型号，未参与本轮规格/产品实施。已实际读取 reviewctl context，previous_round=2、previous_verdict=PASS、原 findings=[]，上一 SPEC SHA256 8a0073ade7365dccd4c8e0e5823d59baec166740b23bb00642e370ff744c1567。当前 HEAD 839d7f280282a0ae93bee79bcc9cdddb4dfff2ac；当前 SPEC SHA256 1f943c20fa7de82ff33ad9610538f9a2e54ae2f5222a228fc286864be2bb0759；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。仅复核 context 新增 SPEC-LINE:21:9ccf8041f9bf8e5f：真实 Provider 必传 requireScript=true 的安装失败补漏，graphic_post 依据当次最新已保存正文/卡片或可读脚本确定重组资格，同时保留 latest/exact/版本/digest 冻结与显式候选采纳。此为既有用户“基于当前内容”和第二轮已审无脚本旧稿兼容结果的必要实施澄清，未变更公众号、来源归属、写权限或付费/发布边界。真实 Provider 两族红绿与最新稿清空负向可验收该结果；原红测筛选17skip、retry x2的事实不隐藏，组件准备链通过不等于新版安装/模型/采纳/UI验收。未发现增量规格阻断，findings仍空；正式裁决由主线程 reviewctl 完成。",
+  "summary": "T-1420 当前规格独立全文初审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 d3786b24a04815963e2f27138ba4c825dc29007c5b898d01ba642255c2c771f2；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。独立全文initial针对原工作区当前SPEC，而非隔离树中旧方向文档。读handoff/source-review-event.json的cycle 2 round 1完整包；原SHA在Git commit b1f0272精确匹配。当前唯一增量为本机账号澄清；主会话处理历史孤立新周期来源与正式登记，本包不复制原PASS，不消费DEC142002的旧nonce。 按已确认用户要求完整核对：独立小红书配文、AI语义规划cardBriefs/visualBrief、真实逐页生图、精确assetId+assetFileId预览后采纳、固定cardId/页序与版本、部分失败保留及未知结果原请求恢复、原图文件ZIP与配文、无卡旧稿兼容。当前合同明示AI产候选、人采纳、backend持有领域写入，未授权代码切字或伪造AI图。用户明确确认的小红书方向是本任务范围，不借宪法主定位撤销该已确认结果。 只读核现有createBundle分配确定item requestId并保留manifest、逐页请求队列保存原目标与幂等键、adoptPage要求精确已预览图片/未脏稿/CAS、graphic-post-media.adapter冻结baseVersion/seriesSnapshot/referenceProof并校验归属。工作台导出读取精确资产原字节并独立写配文.txt，保存/版本不一致失败时保留作品。这些只证明路径存在及规格可落地，不替代测试或新包实测。 账号澄清明确当前Mac组1/groupId grp-8fdb2e06-22，另一机器月明水清深不再用于本机；现有官方额度只限配文/分页/两图和必要画面提示，不充值、不自动重试。该限定比旧通用AGENTS账号更加具体，未降低原精确文件、独立配文和安装态验收。 实际读取reverify-report及原始正文候选/最终exact/latest/文件和导出检查/安装AX：历史报告保留正文候选为...未采用、批次响应requestId校验失败但任务已创建、旧安装界面和ZIP不达标、新代码Mac运行验收未做。两图已生成采纳不等于完整T1420完成。当前SPEC明确T1420尚未完成并引用失败报告，因此这些已知实现/安装差异不被当作规格通过条件已达成；不能用本包关闭业务任务。 全文未发现当前已确认用户目标在规格层的具体矛盾或不可验收缺口；旧包无findings，无未解决旧finding被遗漏。本轮未调用模型、运行UI或更改用户数据，所有业务验收失败保持。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1420.evidence.json。",
   "spec_path": "docs/features/t1420-graphic-post-content-structure.md",
-  "spec_sha256": "1f943c20fa7de82ff33ad9610538f9a2e54ae2f5222a228fc286864be2bb0759",
+  "spec_sha256": "d3786b24a04815963e2f27138ba4c825dc29007c5b898d01ba642255c2c771f2",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1420-graphic-post-content-structure.T-1420.review.md",
-  "review_mode": "independent-agent",
-  "model": "inherited",
+  "review_mode": "homogeneous",
+  "model": "inherited-independent-agent",
   "policy": "convergent-review/v2",
-  "cycle_authorization": null,
-  "latest_event_hash": "af7684b688522ca2630b8d4adedd038fa6bf21f029de71ba15957643efaa20c5",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-142004",
+    "nonce": "7d837e2b-847f-466a-a809-af37845b8080",
+    "task_id": "T-1420",
+    "previous_event_hash": "7a94b243ee98b53511a03918655bf0a0335730b9672d49ea346e5aba95f2ac68",
+    "allowed_change_ids": [
+      "FR-142001",
+      "LOCAL-ACCOUNT-CLARIFICATION-20261028"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "175b7666f6f15fb59d42e9e78c402d825f8340839592f6c424a56f9d78d4e5ab",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "d078ce896db1"
+  "receipt": "a66a51f4d977"
 }
 ```

@@ -1,0 +1,124 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1425",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "独立子会话亲自读取原事件、当前SPEC、产品宪法、规则及精确Git差异；不声称跨模型或新运行验收。",
+  "reviewed_at": "2026-10-28T10:59:00.316Z",
+  "review_kind": "recheck",
+  "previous_cycle": 1,
+  "previous_round": 1,
+  "expected_next_round": 2,
+  "spec_path": "docs/features/t1425-tab-navigation-performance-fixes.md",
+  "spec_sha256": "bf5dceea1f841905ddb13be8e2d25664c1669ccb7d0a1ee719c2ab515670ee9f",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger": {
+    "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "path": "docs/verification/t1429/originals/incoming-review-events.ndjson",
+    "sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d",
+    "actual_sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d"
+  },
+  "source_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1404",
+    "cycle": 1,
+    "round": 1,
+    "review_kind": "initial",
+    "verdict": "PASS",
+    "spec_path": "docs/features/t1404-tab-navigation-performance-fixes.md",
+    "spec_sha256": "3612083819e9fb62f9fef99a14b266d4b6c363039510aea701c8d5be877e4356",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1404-tab-navigation-performance-fixes.T-1404.review.md",
+    "review_mode": "homogeneous",
+    "model": "gpt-6.1-sol",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "reviewctl_sha256": "d04f9a3a80439059fafa327c7f9a0ae1468ca926197e3f57a694a2bc31e9a4b9",
+    "recorded_at": "2026-10-24T13:16:49.776Z",
+    "previous_event_hash": "ef9f1f821dde487234b71b3b9744cb022017686a1f0e994fabe4557eb84e76c6",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "initial",
+      "summary": "同构模型独立会话首轮规格审核（homogeneous）；未接收作者自评。已核对产品宪法、当前 SPEC、评审规则与 schema，并只读核查文章重复读取、NoteRelay 串行图片读取、隐藏 Doocs 导出实例及文章/视频路由读取链。SPEC 覆盖用户已确认的性能问题，明确正文与附属区域分离、精确归属与草稿保护、一次点击完成原导出、旧链接兼容和失败重试；其验收可以通过受控计数、迟到结果/取消测试和隔离库浏览器操作验证。未发现需要修改规格才能实现的阻断或非阻断问题。后台争用仍按未证实候选保留恢复语义，未扩大成后台机制改造；安装发布及安装版体感也明确不冒充源码验收。本轮为规格审核，不代表实现测试或真实浏览器验收已经完成。",
+      "findings": []
+    },
+    "event_hash": "3587bf9e9a8422ee4862bd85191a81a8e0d9b3814ada213f6a2c98e19352fef6"
+  },
+  "historical_spec": {
+    "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "path": "docs/features/t1404-tab-navigation-performance-fixes.md",
+    "sha256": "3612083819e9fb62f9fef99a14b266d4b6c363039510aea701c8d5be877e4356",
+    "blob": "8dc9a50fa6cb207bc0723331d821e3feb742a216",
+    "fingerprints_match": true
+  },
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "10d73f0e337034bb3717ca50a7841b41e115c0d8aa43409baee3d4209060d1ca"
+    },
+    {
+      "path": "docs/features/t1429-review-ledger-recovery.md",
+      "sha256": "a8a382a4f1df1082153ae3c7a52bd30857689c68473d40df6c257193b9818d68"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "8deeb807861c594a23abc85272e1462c1cda008679fc9fb0e326830d52fecabf"
+    },
+    {
+      "path": "docs/verification/t1429/migration-manifest.json",
+      "sha256": "0f233820062e6f9a02bbdc4b66b93d626304fe3e48cbdfae1be82271d6590d28"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "29bc1ba781c3c4a09dbcbdc180900e67639e74439731805dcaed8fe7646b7171"
+    }
+  ],
+  "context_method": "reviewctl context T-1406只读尝试时恢复模块尚未落盘，ERR_MODULE_NOT_FOUND。按T1429自举协议使用未损坏原ledger的完整packet及精确Git历史SPEC；不使用坏链伪造context。",
+  "exact_spec_diff": "--- 3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d:docs/features/t1404-tab-navigation-performance-fixes.md\n+++ docs/features/t1425-tab-navigation-performance-fixes.md\n@@ -1,4 +1,4 @@\n-# T-1404 修复Tab切换读取和编辑器初始化开销\n+# T-1425 修复Tab切换读取和编辑器初始化开销\n \n ## 用户结果与授权\n \n@@ -33,7 +33,7 @@\n - `frontend/src/features/projects/project-route-data.ts`及其测试（请求内项目解析，不持久缓存）。\n - `frontend/src/features/draft-workbench/draft-workbench-data.ts`、`draft-workbench-page.tsx`及对应测试；可新增`draft-workbench-deferred.tsx`及测试，承接分区读取。\n - `frontend/src/features/script/script-structure-view.tsx`及对应测试，仅为延迟素材标签更新保持编辑器身份。\n-- 本SPEC、BACKLOG、DEC、任务配置/任务包/审核和`docs/verification/t1404/**`证据。除上述文件外不改产品；发现必须扩张时先更新本SPEC和独立复核。\n+- 本SPEC、BACKLOG、DEC、任务配置/任务包/审核和`docs/verification/t1425/**`证据。除上述文件外不改产品；发现必须扩张时先更新本SPEC和独立复核。\n \n ## 验收\n \n",
+  "changed_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:1:285a744f42d0605a",
+      "text": "# T-1425 修复Tab切换读取和编辑器初始化开销"
+    },
+    {
+      "origin_ref": "SPEC-LINE:36:138869b8792a5919",
+      "text": "- 本SPEC、BACKLOG、DEC、任务配置/任务包/审核和`docs/verification/t1425/**`证据。除上述文件外不改产品；发现必须扩张时先更新本SPEC和独立复核。"
+    }
+  ],
+  "existing_findings_recheck": {
+    "count": 0,
+    "findings": [],
+    "result": "原findings为空，无销账、改写或重开。"
+  },
+  "difference_analysis": [
+    "本轮精确差异只有标题T1404→T1425和本仓证据写集t1404/**→t1425/**。七条实现约束、产品文件范围、所有验收、草稿/归属保护、一次点击导出与迟到结果要求逐字不变。",
+    "DEC-142801明确本地Tab性能任务映射，当前证据目录存在且含15个文件。目录改名不把源码浏览器结果升级为安装体感；原SPEC已区分两者，未见增量缺陷。",
+    "父会话另说明当前BACKLOG无T1425行；本包仅输出独立审查材料，不创建任务/状态，不要求登记当前receipt。"
+  ],
+  "provenance_evidence": [],
+  "limitations": [
+    "本轮只做规格增量复审，未执行产品测试、外部服务、钱包、远程CI、安装或平台操作。",
+    "仅写授权的10个review/evidence JSON，未改SPEC/业务/控制面，未登记审核或提交。"
+  ]
+}

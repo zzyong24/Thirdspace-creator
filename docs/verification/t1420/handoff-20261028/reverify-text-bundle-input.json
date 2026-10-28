@@ -1,0 +1,10 @@
+{
+  "params": {"outputId": "output-2ddab0cc-3252"},
+  "body": {
+    "items": [
+      {"kind": "body", "targetPlatform": "xiaohongshu"},
+      {"kind": "cardBriefs", "targetPlatform": "xiaohongshu"}
+    ],
+    "clientRequestId": "t1420-mac-group1-reverify-text-20261028"
+  }
+}

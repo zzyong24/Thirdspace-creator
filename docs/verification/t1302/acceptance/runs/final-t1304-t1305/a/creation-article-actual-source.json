@@ -1,0 +1,234 @@
+{
+  "assistantSource": {
+    "taskId": "ai-task-19fa77e3-eaba-4402-9644-82200208a40a",
+    "callId": "call_58ac93e8-5970-4150-a581-dc932496a5a8",
+    "toolCallId": "call_8cc441edb313490d904df0e3a28d38f3",
+    "candidateDigest": "sha256:9a087181f5e0ec45d53a0da6e6b27aa227b9dad6ee6a2f15c47419b0ba10a7b8"
+  },
+  "toolName": "work.creation.propose",
+  "candidate": {
+    "kind": "work.creation.propose",
+    "schemaVersion": 1,
+    "target": {
+      "schemaVersion": 1,
+      "clientRequestId": "b96f795e-698a-45fb-b7c5-c09817782d55",
+      "projectId": "project-d99d5a06-22",
+      "writingContext": {
+        "schemaVersion": 1,
+        "brandProfileVersionId": null,
+        "sourceAssets": []
+      },
+      "compositionId": "work-d99d5a06-71",
+      "compositionRevision": 4,
+      "scriptSourceRef": {
+        "kind": "project_script",
+        "id": "artifact-d99d5a06-35",
+        "versionId": "artifactversion-d99d5a06-62"
+      },
+      "scriptConfirmation": {
+        "confirmedBy": "user",
+        "source": "current-click"
+      },
+      "articleMember": {
+        "kind": "article",
+        "outputId": "output-d99d5a06-76",
+        "artifactId": "artifact-d99d5a06-82",
+        "baseVersionId": "artifactversion-d99d5a06-83"
+      },
+      "graphicMember": {
+        "kind": "image",
+        "outputId": "output-d99d5a06-88",
+        "artifactId": "artifact-d99d5a06-94",
+        "baseVersionId": "artifactversion-d99d5a06-95"
+      }
+    },
+    "targetDigest": "d2d853f7b67611bdfbabcebe34ae7db39b55cf7545d83fe85e4abfc2ef1eb339",
+    "article": {
+      "schemaVersion": 1,
+      "title": "先写问题，再记录方法",
+      "titleSourceRefs": [
+        {
+          "kind": "project_script",
+          "id": "artifact-d99d5a06-35",
+          "versionId": "artifactversion-d99d5a06-62"
+        }
+      ],
+      "summary": "整理笔记时，先说明要解决什么问题，再记录实际做过的步骤，检查哪些疑问得到回应，哪些仍然没有想明白。最后，为下一次工作留一个值得继续追问的问题。",
+      "summarySourceRefs": [
+        {
+          "kind": "project_script",
+          "id": "artifact-d99d5a06-35",
+          "versionId": "artifactversion-d99d5a06-62"
+        }
+      ],
+      "sections": [
+        {
+          "sectionId": "article-question-first",
+          "order": 0,
+          "heading": "先说明，这份笔记要回答什么",
+          "headingLevel": 2,
+          "body": "我整理笔记时，会先写清楚要解决的问题，再记下实际做过的步骤，最后检查结果。\n\n以阅读笔记为例，动笔整理时，我会先问：这次阅读解决了什么疑问？带着这个问题回看，才知道接下来要记录的方法，是为了回应哪一件事。\n\n问题可以写得很具体：我原来有什么地方没理解？读完之后，哪一点有了新的认识？如果仍然说不清楚，就先把这个疑问留下来，不急着替它写一个结论。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "sectionId": "article-actual-steps",
+          "order": 1,
+          "heading": "把实际做过的步骤记下来",
+          "headingLevel": 2,
+          "body": "问题写清楚之后，再记录自己试过的方法。\n\n这一部分可以顺着实际过程写：先做了什么，接着尝试了什么，做到哪里时仍然没有想明白。记录时，尽量让每一步都能对应前面的问题。\n\n如果只是读到了一个方法，还没有亲自尝试，就写明“尚未尝试”。已经做过的步骤，则写下实际过程。这样，回看笔记时，也能分清哪些是读到的内容，哪些是自己的实践记录。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "sectionId": "article-check-result",
+          "order": 2,
+          "heading": "回到原来的问题，检查结果",
+          "headingLevel": 2,
+          "body": "步骤记完之后，还要回到最开始的问题：它得到回应了吗？\n\n整理阅读笔记时，可以把已经理解的部分写下来，再把仍然困惑的地方单独留下。一个问题只想明白了一部分，就照实记录这一部分；还没有答案的地方，也不必为了让笔记完整而补上确定的说法。\n\n这里的检查，可以只是几句具体的描述：我现在能解释什么，还有哪一步说不清楚，下一次需要继续弄明白什么。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "sectionId": "article-open-question",
+          "order": 3,
+          "heading": "结束时，留一个值得追问的问题",
+          "headingLevel": 2,
+          "body": "我想保留一个习惯：每次结束工作，记下一个仍然值得追问的问题。\n\n阅读笔记也可以这样收尾。沿着前面没有想明白的地方，写下下一次想继续弄清楚的事。比如，把“这里还不太懂”进一步写成“我还不能解释这一步为什么这样做”。这只是一个提问示例，具体的问题仍要来自当次阅读。\n\n留下的问题不必当场回答。先把它写清楚，下一步做什么，就有了一条可以继续考虑的线索。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "sectionId": "article-note-template",
+          "order": 4,
+          "heading": "下次整理时，可以从这几行开始",
+          "headingLevel": 2,
+          "body": "可以给一份笔记留下四行：\n\n这次要解决的问题：______\n实际试过的方法和步骤：______\n目前想明白的部分，以及还没有想明白的地方：______\n下次仍然值得追问的一个问题：______\n\n这里没有统计数据，也不承诺这样记录，效率就一定提高。我想保留的，是每次结束工作时，把问题、做法和当前结果交代清楚，再留下一个值得继续追问的问题。\n\n先把问题写清楚，再决定下一步。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        }
+      ],
+      "factItems": [],
+      "visualBriefs": [],
+      "imageUses": [],
+      "coverImageUse": null
+    },
+    "graphic": {
+      "schemaVersion": 1,
+      "title": "先写问题，再记录方法",
+      "body": "我整理笔记时，会先写清楚要解决的问题，再记下实际做过的步骤，最后检查结果。\n\n比如整理阅读笔记，我会先问：这次阅读解决了什么疑问？然后写下试过的方法，以及还没有想明白的地方。\n\n下次整理时，可以试着留这四行：\n① 这次要解决的问题。\n② 实际做过的方法和步骤。\n③ 已经想明白的部分，以及仍然困惑的地方。\n④ 下次值得继续追问的一个问题。\n\n只读到、还没试过的方法，可以注明“尚未尝试”；暂时没有答案的问题，也可以先留下。\n\n这里没有统计数据，也不承诺效率一定提高。我想保留的习惯是：每次结束工作，记下一个仍然值得追问的问题。\n\n先把问题写清楚，再决定下一步。",
+      "summary": "从一个具体问题开始，记录实际做过的步骤，检查结果，再留一个值得继续追问的问题。附四行笔记模板。",
+      "tags": [
+        "笔记方法",
+        "阅读笔记",
+        "问题意识",
+        "工作记录",
+        "学习方法"
+      ],
+      "imageUses": [],
+      "cardBriefs": [
+        {
+          "cardId": "graphic-question-start",
+          "title": "先写问题，再记录方法",
+          "body": "整理笔记时，先写清楚这次要解决什么问题。\n\n再记录实际做过的步骤，最后检查结果。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "cardId": "graphic-reading-question",
+          "title": "从阅读笔记开始",
+          "body": "先问一句：\n这次阅读解决了什么疑问？\n\n写下已经理解的部分，也留下还没有想明白的地方。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "cardId": "graphic-record-steps",
+          "title": "记下实际试过的步骤",
+          "body": "先做了什么？\n接着尝试了什么？\n做到哪里仍有疑问？\n\n只读到、还没试过的方法，可以注明“尚未尝试”。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "cardId": "graphic-check-and-ask",
+          "title": "检查结果，再留一个问题",
+          "body": "回到最初的问题：\n现在想明白了什么？\n还有什么没想明白？\n\n结束时，记下一个仍然值得追问的问题。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        },
+        {
+          "cardId": "graphic-four-line-template",
+          "title": "下次，试着留下这四行",
+          "body": "这次要解决的问题：______\n实际做过的方法和步骤：______\n已想明白与仍困惑的地方：______\n下次值得追问的问题：______\n\n不承诺效率一定提高。\n先把问题写清楚，再决定下一步。",
+          "sourceRefs": [
+            {
+              "kind": "project_script",
+              "id": "artifact-d99d5a06-35",
+              "versionId": "artifactversion-d99d5a06-62"
+            }
+          ]
+        }
+      ],
+      "sourceRefs": [
+        {
+          "kind": "project_script",
+          "id": "artifact-d99d5a06-35",
+          "versionId": "artifactversion-d99d5a06-62"
+        }
+      ],
+      "ruleSnapshotRef": null
+    },
+    "articleDigest": "a2206abf5acbf209bd12797c70159ee1fd4f4c3d1ca94d3ab334d9e9f3ee3c78",
+    "graphicDigest": "71907c9278caa5f62d7b4e4a50bcf8b15473e8bebaaebfe1f64c6a861f86af30",
+    "scriptSourceRef": {
+      "kind": "project_script",
+      "id": "artifact-d99d5a06-35",
+      "versionId": "artifactversion-d99d5a06-62"
+    },
+    "error": null
+  }
+}

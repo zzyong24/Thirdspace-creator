@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 303,
+    "verticals": 304,
     "tasks_done": 89,
-    "tasks_total": 430,
-    "tasks_pending": 341,
+    "tasks_total": 431,
+    "tasks_pending": 342,
     "verticals_complete": 28
   },
   "verticals": [
@@ -22131,6 +22131,21 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1429",
+      "task_id": "T-1429",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "commits": {},
+      "e2e_verified": false
     }
   ],
   "leases": {

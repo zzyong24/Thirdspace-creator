@@ -1,0 +1,17 @@
+{
+  "params": {"outputId": "output-2ddab0cc-3252"},
+  "body": {
+    "expectedCurrentVersionId": "artifactversion-2ddab0cc-3259",
+    "document": {
+      "schemaVersion": 1,
+      "title": "验收输入：书桌整理的两个小动作",
+      "body": "【独立验收用测试输入，不是AI生成结果，不发布】\n书桌整理可以从两个小动作开始。第一步，把散落的纸张、充电线和杯子移到一旁，擦净桌面，只留下正在使用的笔记本。第二步，为常用物品安排固定位置：笔放进笔筒，线材放进收纳盒，杯子放在桌角。希望最终图文用两幅不同画面分别讲清这两个动作，配文独立表达经验，不把整段正文铺满图片。不添加品牌、商品效果或统计数据。",
+      "summary": "明确标记的本机图文验收输入：清空桌面、固定归位。",
+      "tags": ["书桌整理", "测试作品"],
+      "imageUses": [],
+      "sourceRefs": [],
+      "ruleSnapshotRef": null
+    },
+    "clientRequestId": "t1420-mac-group1-reverify-source-20261028"
+  }
+}

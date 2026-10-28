@@ -1,0 +1,78 @@
+{
+  "ok": true,
+  "operation": "creativeResults.list",
+  "requestId": "req-2ddab0cc-3572",
+  "groupId": "grp-8fdb2e06-22",
+  "accountId": null,
+  "data": {
+    "items": [
+      {
+        "resultId": "7fdee620-7cdc-41c3-8076-9680bbc4036a",
+        "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+        "outputId": "output-2ddab0cc-3252",
+        "outputType": "image",
+        "targetPlatform": "xiaohongshu",
+        "targetSectionId": null,
+        "kind": "body",
+        "status": "running",
+        "typedCandidateRef": {
+          "owner": "graphic_post",
+          "id": "ai-task-2ddab0cc-3561"
+        },
+        "taskId": "ai-task-2ddab0cc-3561",
+        "baseVersionId": "artifactversion-2ddab0cc-3428",
+        "ruleSnapshotRef": null,
+        "appliedRules": "not_applied",
+        "sourceRefs": [
+          {
+            "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+            "kind": "project",
+            "versionId": "2026-10-28T09:33:55.112Z"
+          }
+        ],
+        "value": null,
+        "retryRequestId": null,
+        "errorCode": null,
+        "retryOf": null,
+        "createdAt": "2026-10-28T09:46:07.151Z",
+        "updatedAt": "2026-10-28T09:46:07.246Z"
+      },
+      {
+        "resultId": "36ac8ea9-a43b-4cde-b28c-240105ec8a10",
+        "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+        "outputId": "output-2ddab0cc-3252",
+        "outputType": "image",
+        "targetPlatform": "xiaohongshu",
+        "targetSectionId": null,
+        "kind": "cardBriefs",
+        "status": "running",
+        "typedCandidateRef": {
+          "owner": "graphic_post",
+          "id": "ai-task-2ddab0cc-3563"
+        },
+        "taskId": "ai-task-2ddab0cc-3563",
+        "baseVersionId": "artifactversion-2ddab0cc-3428",
+        "ruleSnapshotRef": null,
+        "appliedRules": "not_applied",
+        "sourceRefs": [
+          {
+            "id": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+            "kind": "project",
+            "versionId": "2026-10-28T09:33:55.112Z"
+          }
+        ],
+        "value": null,
+        "retryRequestId": null,
+        "errorCode": null,
+        "retryOf": null,
+        "createdAt": "2026-10-28T09:46:07.151Z",
+        "updatedAt": "2026-10-28T09:46:07.350Z"
+      }
+    ],
+    "nextCursor": null
+  },
+  "meta": {
+    "requestId": "req-2ddab0cc-3572"
+  },
+  "error": null
+}

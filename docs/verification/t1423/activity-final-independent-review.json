@@ -1,11 +1,11 @@
 {
   "reviewedAt": "2026-10-23T04:28:52.625Z",
-  "task": "T-1423-AM",
+  "task": "T-1402-AM",
   "reviewer": "ci_contract",
   "verdict": "PASS_CURRENT_SOURCE_AND_CONTROLLED_LOCAL_EVIDENCE",
   "boundary": "只读源码、原始日志与公开合成签名向量重算；未连接PG、真实API、安装桌面或执行经济动作。",
   "manifest": {
-    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/FINAL_SOURCE_MANIFEST.json",
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/FINAL_SOURCE_MANIFEST.json",
     "sha256": "1354b889202cc0e46b63ec459b3fd6f685197752e42b0c97de0d099ae25858ba",
     "fileCount": 13,
     "allCurrentHashesMatch": true,
@@ -51,7 +51,7 @@
         "matches": true
       },
       {
-        "path": "tests/t1423-license-restore-current-local-pg.test.ts",
+        "path": "tests/t1402-license-restore-current-local-pg.test.ts",
         "sha256": "b0686f871d72d544fa2d3d457f41d8586213ed978c9d89c62c6edd98d20ef7e2",
         "bytes": 28718,
         "mtimeNs": 1792729210461205500,
@@ -59,7 +59,7 @@
         "matches": true
       },
       {
-        "path": "docs/contracts/T-1423-license-restore-current-contract.md",
+        "path": "docs/contracts/T-1402-license-restore-current-contract.md",
         "sha256": "7b382249d4b75013ad00d8f47ee19e0a41786ee1567aba8b0c2bd315c91caf9a",
         "bytes": 28718,
         "mtimeNs": 1792729259822977000,
@@ -138,17 +138,17 @@
       "matches": true
     },
     {
-      "path": "tests/t1423-license-restore-current-local-pg.test.ts",
+      "path": "tests/t1402-license-restore-current-local-pg.test.ts",
       "matches": true
     },
     {
-      "path": "docs/contracts/T-1423-license-restore-current-contract.md",
+      "path": "docs/contracts/T-1402-license-restore-current-contract.md",
       "matches": true
     }
   ],
   "gates": {
     "focused": {
-      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/focused-pre-final.tap",
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/focused-pre-final.tap",
       "sha256": "3d302d7180b6d2e67e6c16a7558f8b28a9244ccc8f492f8a505ce05f63df7854",
       "tests": 36,
       "passed": 36,
@@ -157,7 +157,7 @@
       "rawSummaryVerified": true
     },
     "quality": {
-      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/quality-final.log",
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/quality-final.log",
       "sha256": "70a1cdecacabd4a541dc109fe06a8f668b0db46a1d88f4ae15d0370f045f8e7e",
       "exit": 0,
       "tests": 592,
@@ -169,7 +169,7 @@
       "lintNoWarnings": true
     },
     "typecheck": {
-      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/typecheck-final.log",
+      "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/typecheck-final.log",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "exit": 0
     }
@@ -199,7 +199,7 @@
     "inspect零写，手工墓碑/未知kid/目标别机绑定/损坏历史failclosed，无activate回退"
   ],
   "finalIssuedFixtures": {
-    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1423/ACTIVITY_RESTORE_V1_FIXTURES_FINAL.json",
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1402/ACTIVITY_RESTORE_V1_FIXTURES_FINAL.json",
     "sha256": "8fdbab49a052ae3f5b63e447ceb20a6dba1af5146e13c318aefc6f7bf2759716",
     "fixtureOnly": true,
     "privateKeyIncluded": false,
@@ -252,7 +252,7 @@
     "allVerified": true
   },
   "nativeConsumer": {
-    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1423/native-final-activity-consumer.log",
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/t1402/native-final-activity-consumer.log",
     "sha256": "69f01f93c8c5fa692e442f53808199cad732ca91c60fda85d0bfcef607e414de",
     "passed": true,
     "testCount": 1,
@@ -260,15 +260,15 @@
     "nativeSourceSha256": "a4f99f136e62f548a4ea3d01b97ccf226e63503c9226dba1aade4f9b6c53d96d"
   },
   "ownedPgStop": {
-    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/pg/STOP_RECEIPT.json",
+    "path": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/pg/STOP_RECEIPT.json",
     "sha256": "154d6146d9169245418d4bd309e059a55062ef7eefde8898146fd594ccf2c018",
     "record": {
       "ownedPid": 12244,
-      "verifiedCommand": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/postgres -D /Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/pg/data -h 127.0.0.1 -p 49402 -k /tmp",
+      "verifiedCommand": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/postgres -D /Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/pg/data -h 127.0.0.1 -p 49402 -k /tmp",
       "verifiedRuntime": {
-        "database": "activity_t1423_fixture",
-        "role": "activity_t1423_fixture",
-        "data_directory": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1423/pg/data",
+        "database": "activity_t1402_fixture",
+        "role": "activity_t1402_fixture",
+        "data_directory": "/Users/zyongzhu/terminals/growth-credit-20261023/activity-t1402/pg/data",
         "port": "49402",
         "server_version": "16.13 (Homebrew)",
         "activation_codes": 233,

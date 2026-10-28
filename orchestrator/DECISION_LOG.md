@@ -3184,3 +3184,87 @@ Status: active
 | T-1405 | T-1426 | 修复CLI真实对话的组上下文、模型错误与开销 |
 | T-1408 | T-1427 | 修复官方Pi与未通过验收并在通过后推送 |
 | T-1409 | T-1428 | 修复官方Pi支付拒绝的安全诊断 |
+
+## DEC-142901 · 审核链来源恢复授权（2026-10-28）
+
+用户在阅读五步恢复方案后明确“按方案执行”。授权保全原件，隔离开发审核链迁移工具，独立审核、真实验证后应用到当前本地工作区并接回T-1420；保留DEC-142801编号映射。坏链使现有reviewctl无法登记：本任务先保存独立审查包并限定隔离树开发，正式链恢复后立即使用reviewctl登记、taskctl管理状态。此处不授权跳过链校验、伪造PASS或新评审时间、不自动放行过期规格，不推送/合main/发布。
+
+```text
+ID: DEC-142901
+Authorization-Kind: review-ledger-migration
+Manifest-Path: docs/verification/t1429/migration-manifest.json
+Manifest-SHA256: 0f233820062e6f9a02bbdc4b66b93d626304fe3e48cbdfae1be82271d6590d28
+Mapping-Decision: DEC-142801
+Owner: user
+Status: active
+```
+
+## DEC-142902 · 当前版本真实复审
+
+根据用户“按方案执行”所批准的旧规格真实复审，仅为重编号实际改变的当前版本开启一次新周期；不复用任何已消费nonce，不改变旧事件或自动继承PASS。
+
+```text
+ID: DEC-142902
+Owner: user
+Status: active
+Authorization-Kind: process-review-cycle
+Task-ID: T-1428
+Previous-Spec-SHA256: e1b986306ebc2364bdee7396eb5c4bdb1a30e6552a3d59462e46a878a49bac97
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: MIGRATION-T1409-T1428
+Max-Cycles: 1
+Nonce: c7c4762c-9d04-45cb-8278-dfdcb5adef53
+```
+
+## DEC-142903 · 当前版本真实复审
+
+根据用户“按方案执行”所批准的旧规格真实复审，仅为重编号实际改变的当前版本开启一次新周期；不复用任何已消费nonce，不改变旧事件或自动继承PASS。
+
+```text
+ID: DEC-142903
+Owner: user
+Status: active
+Authorization-Kind: process-review-cycle
+Task-ID: T-1410
+Previous-Spec-SHA256: 3974e24a2b44bfef0c13c87cb780c85aba445611ac081dafa6c3aeb9c7d9a28f
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: MIGRATION-T1410-REFERENCES
+Max-Cycles: 1
+Nonce: 3da6f4ad-f5f4-400c-867b-fee59f7e948a
+```
+
+T-1429范围内复审发现：仅纠正T1423/T1407/T1410/T1417由本次重编号造成的历史来源引用；T1423三份合同/独审原件从父提交逐字恢复到现目录并记录来源SHA，不重写历史结论或声称外部路径已在本机验收。不改产品、任务状态、生产或付费能力。
+
+
+```text
+ID: DEC-142002
+Owner: user
+Status: consumed
+Authorization-Kind: process-review-cycle
+Task-ID: T-1420
+Previous-Spec-SHA256: 1f943c20fa7de82ff33ad9610538f9a2e54ae2f5222a228fc286864be2bb0759
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: FR-142001
+Max-Cycles: 1
+Nonce: t1420-user-real-text-to-image-20261026
+Decision: 用户本轮明确“小红书的这个图文的图，你应该用文生图，AI来生成图”。批准T-1420从文字排版卡片纠正为真实逐页文生图；沿已有授权实现、真实生成与本地验收。仅为该实质需求变更开启一次新独审周期，保留第一周期和旧验收失败证据；不扩展为发布或模型配置修改。
+```
+
+T-1429集成说明：DEC-142002已由分叉原事件29b1ea6a消费，原事件及原快照保存在docs/verification/t1420/handoff-20261028；本次保全原件且禁止重用nonce。当前规格另由独立会话审查和新typed capability登记，不改写该旧PASS或历史时间。
+
+## DEC-142004 · T1429恢复后的T1420当前规格独审
+
+用户已确认本机账号组1并允许最小真实生图验收，随后批准审核链恢复方案。原分叉事件29b1ea6a及其已消费DEC142002保留归档，未作为当前规格通过证据。依据本次独立initial，限定为真实逐页文生图方向及本机账号澄清后的当前版本，新nonce仅一次；不追加业务生成调用、费用或发布权限。
+
+```text
+ID: DEC-142004
+Owner: user
+Status: active
+Authorization-Kind: process-review-cycle
+Task-ID: T-1420
+Previous-Spec-SHA256: 1f943c20fa7de82ff33ad9610538f9a2e54ae2f5222a228fc286864be2bb0759
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: FR-142001,LOCAL-ACCOUNT-CLARIFICATION-20261028
+Max-Cycles: 1
+Nonce: 7d837e2b-847f-466a-a809-af37845b8080
+```

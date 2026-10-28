@@ -1,0 +1,145 @@
+{
+  "schema": "spec-review-evidence/v1",
+  "task_id": "T-1426",
+  "reviewer_mode": "homogeneous",
+  "reviewer_session": "/root/recovery_stale_specs_a",
+  "reviewer_model": "inherited-session-model",
+  "independence": "独立子会话亲自读取原事件、当前SPEC、产品宪法、规则及精确Git差异；不声称跨模型或新运行验收。",
+  "reviewed_at": "2026-10-28T10:59:00.316Z",
+  "review_kind": "recheck",
+  "previous_cycle": 1,
+  "previous_round": 2,
+  "expected_next_round": 3,
+  "spec_path": "docs/features/t1426-chat-model-combination-fixes.md",
+  "spec_sha256": "fd0fe5f2e9502a7f905602a208ec4345c1c38ae344d283eb03c39de4eac952ed",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "source_ledger": {
+    "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "path": "docs/verification/t1429/originals/incoming-review-events.ndjson",
+    "sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d",
+    "actual_sha256": "e9c8e632532a6ebefe9eafa5f07c9db9bd45f7255de712adf848c1d60d4b2e6d"
+  },
+  "source_event": {
+    "schema": "spec-review-event/v2",
+    "task_id": "T-1405",
+    "cycle": 1,
+    "round": 2,
+    "review_kind": "recheck",
+    "verdict": "PASS",
+    "spec_path": "docs/features/t1405-chat-model-combination-fixes.md",
+    "spec_sha256": "09eddab7e46643bcc561c76fa1690c7713068e1860b53b3cfa537c68b672d692",
+    "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1405-chat-model-combination-fixes.T-1405.review.md",
+    "review_mode": "homogeneous",
+    "model": "inherited-session-model",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "reviewctl_sha256": "d04f9a3a80439059fafa327c7f9a0ae1468ca926197e3f57a694a2bc31e9a4b9",
+    "recorded_at": "2026-10-25T06:16:45.798Z",
+    "previous_event_hash": "e7fb9f7b45d1b33e5a010e2649f6e149c492971f48cd5ce5d692b75a6cbbefc5",
+    "packet": {
+      "schema": "spec-review-round/v2",
+      "review_kind": "recheck",
+      "summary": "独立代理 /root/t1408_contract_review 对 T1405 cycle 1 round 1（PASS[REV:da492135f519]、无 finding）后的唯一适用性新增段作定向复核。当前 SPEC SHA-256 09eddab7e46643bcc561c76fa1690c7713068e1860b53b3cfa537c68b672d692；宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已核实际 93a972b9 的 13 文件均为 backend/worker/frontend server composition，没有 UI 组件或交互改动；新增段、DEC-140502 与 module scope_note 一致，按条件门公共约定将本任务 UI journey 判为不适用，原 AC、真实组合根和安装版 CLI 验收逐字保留。T1407 导入的 UI 验收仍须完成，官方 Pi 402 准确诊断及原任务恢复并未获免除。本轮只评价该规格增量，不声称实现、安装复验、402 恢复或推送条件已通过；未修改 SPEC、控制面或产品。",
+      "findings": []
+    },
+    "event_hash": "4e4ec902ea6ad837daf2e5f58070135e1ed777cab86433d0b6f395635b1144e7"
+  },
+  "historical_spec": {
+    "commit": "3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d",
+    "path": "docs/features/t1405-chat-model-combination-fixes.md",
+    "sha256": "09eddab7e46643bcc561c76fa1690c7713068e1860b53b3cfa537c68b672d692",
+    "blob": "a3fec86ee20a9efbc38f0b082bb47f5e4b6ff906",
+    "fingerprints_match": true
+  },
+  "read_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9"
+    },
+    {
+      "path": "orchestrator/context/T-1429.md",
+      "sha256": "10d73f0e337034bb3717ca50a7841b41e115c0d8aa43409baee3d4209060d1ca"
+    },
+    {
+      "path": "docs/features/t1429-review-ledger-recovery.md",
+      "sha256": "a8a382a4f1df1082153ae3c7a52bd30857689c68473d40df6c257193b9818d68"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.md",
+      "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+    },
+    {
+      "path": "orchestrator/process/rule-bundle/prompts/spec-reviewer.schema.json",
+      "sha256": "981542167c77d6118a4acf5dc1b4f9d8a5cb36c140a2fd5cfaa586240906e3a7"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "8deeb807861c594a23abc85272e1462c1cda008679fc9fb0e326830d52fecabf"
+    },
+    {
+      "path": "docs/verification/t1429/migration-manifest.json",
+      "sha256": "0f233820062e6f9a02bbdc4b66b93d626304fe3e48cbdfae1be82271d6590d28"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "29bc1ba781c3c4a09dbcbdc180900e67639e74439731805dcaed8fe7646b7171"
+    },
+    {
+      "path": "docs/research/2026-10-25-t1426-t1407-frontend-gate-applicability.md",
+      "sha256": "f9897d6367cc15cd74351d9e60e7ed338fc648a5953ee790b9571f73c3347aa8"
+    }
+  ],
+  "context_method": "reviewctl context T-1406只读尝试时恢复模块尚未落盘，ERR_MODULE_NOT_FOUND。按T1429自举协议使用未损坏原ledger的完整packet及精确Git历史SPEC；不使用坏链伪造context。",
+  "exact_spec_diff": "--- 3a0d8ac63d2408fb17fde74a9ce470fdffde4e6d:docs/features/t1405-chat-model-combination-fixes.md\n+++ docs/features/t1426-chat-model-combination-fixes.md\n@@ -1,6 +1,6 @@\n-# T-1405 修复真实 CLI 对话组合暴露的问题\n+# T-1426 修复真实 CLI 对话组合暴露的问题\n \n-2026-10-24，用户阅读 T-1403 六组合实测后明确要求“有问题的那就修复”。沿用月明水清深账号组及本会话真实模型测试授权，不重复询问可恢复测试细节。\n+2026-10-24，用户阅读 T-1424 六组合实测后明确要求“有问题的那就修复”。沿用月明水清深账号组及本会话真实模型测试授权，不重复询问可恢复测试细节。\n \n ## 用户结果\n \n@@ -8,9 +8,9 @@\n \n ## 当前实施边界\n \n-先读取当前源码、T-1278 原路由合同和 T-1403 公开回执，公开 CLI 只读核实余额及原任务；不读用户库、密钥、内部连接文件，不重发旧未知模型任务，不修改钱包/首赠或生产服务。\n+先读取当前源码、T-1278 原路由合同和 T-1424 公开回执，公开 CLI 只读核实余额及原任务；不读用户库、密钥、内部连接文件，不重发旧未知模型任务，不修改钱包/首赠或生产服务。\n \n-当前写集仅本 SPEC、`docs/verification/t1405/**`、`BACKLOG.md` 和任务工具正常维护的控制面。确定最小产品写集、预期红测和验收后，在本 SPEC 补齐并完成项目要求的独立评审，再改产品实现。与 T-1401/T-1402 当前授权恢复范围保持独立，保留共享目录未提交改动。\n+当前写集仅本 SPEC、`docs/verification/t1426/**`、`BACKLOG.md` 和任务工具正常维护的控制面。确定最小产品写集、预期红测和验收后，在本 SPEC 补齐并完成项目要求的独立评审，再改产品实现。与 T-1422/T-1423 当前授权恢复范围保持独立，保留共享目录未提交改动。\n \n ## 已确认根因与修复合同\n \n@@ -35,11 +35,11 @@\n - `backend/src/modules/ai-runtime/capability-model-routing.ts` 及其测试：引擎冲突可操作文案，保冻结身份、禁止越源及配置 revision 冲突语义。\n - `backend/src/modules/execution/model-engine-error.ts`、`execution-worker-outcome.service.test.ts`：额度安全提示及真实原任务等待状态。\n - `ai-worker/src/runtime/provider-factory.ts`、`provider-factory.test.ts`、`error-diagnostics.ts` 及新增 `error-diagnostics.test.ts`：402非余额反例、明确余额正例和脱敏回归。\n-- 本 SPEC、`docs/verification/t1405/**`、BACKLOG、DEC、任务配置/任务包/正式评审记录；不扩大为公共 API、数据库迁移或许可/资金/原任务状态篡改。客户端真实安装按打包技能与已有授权另行核对，不以源码测试代签当前 App。\n+- 本 SPEC、`docs/verification/t1426/**`、BACKLOG、DEC、任务配置/任务包/正式评审记录；不扩大为公共 API、数据库迁移或许可/资金/原任务状态篡改。客户端真实安装按打包技能与已有授权另行核对，不以源码测试代签当前 App。\n \n ## 验收要求\n \n-2026-10-25 按真实改动与用户明确的 CLI 入口裁定：本任务没有 UI 组件或交互改动，`93a972b9cda4e72e385d098105ce6c797fc8d32d` 的 13 个实现文件均为 backend、worker 或 frontend server composition，因此 UI journey 不适用。原“CLI/页面冻结”是共享组归属不变量，继续以真实组合根与已安装 CLI 验收，不减少下列 AC。独立适用性证据见 [复核报告](../research/2026-10-25-t1405-t1407-frontend-gate-applicability.md)，DEC-140502；仅纠正本任务验收列误标的“待验”，不免除 T-1407 导入 UI 的真实验收，也不提前声称官方 Pi 恢复。\n+2026-10-25 按真实改动与用户明确的 CLI 入口裁定：本任务没有 UI 组件或交互改动，`93a972b9cda4e72e385d098105ce6c797fc8d32d` 的 13 个实现文件均为 backend、worker 或 frontend server composition，因此 UI journey 不适用。原“CLI/页面冻结”是共享组归属不变量，继续以真实组合根与已安装 CLI 验收，不减少下列 AC。独立适用性证据见 [复核报告](../research/2026-10-25-t1426-t1407-frontend-gate-applicability.md)，DEC-140502；仅纠正本任务验收列误标的“待验”，不免除 T-1407 导入 UI 的真实验收，也不提前声称官方 Pi 恢复。\n \n - CLI/页面冻结的真实对话组显式提供给模型，工具读取同组；多可见组时不按成员数推断、不泄漏其他组私有数据，不使用界面当前选择代替对话归属。\n - 复用既有工具和上下文机制降低重复 token/无关读取，保留真实工具能力与已有候选/采纳边界；模型仍负责语义判断。\n",
+  "changed_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:1:d418e17eac8d23f6",
+      "text": "# T-1426 修复真实 CLI 对话组合暴露的问题"
+    },
+    {
+      "origin_ref": "SPEC-LINE:3:ee823185a4e21cbd",
+      "text": "2026-10-24，用户阅读 T-1424 六组合实测后明确要求“有问题的那就修复”。沿用月明水清深账号组及本会话真实模型测试授权，不重复询问可恢复测试细节。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:11:359f5a2bb69c5782",
+      "text": "先读取当前源码、T-1278 原路由合同和 T-1424 公开回执，公开 CLI 只读核实余额及原任务；不读用户库、密钥、内部连接文件，不重发旧未知模型任务，不修改钱包/首赠或生产服务。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:13:7fb9c712697cb28b",
+      "text": "当前写集仅本 SPEC、`docs/verification/t1426/**`、`BACKLOG.md` 和任务工具正常维护的控制面。确定最小产品写集、预期红测和验收后，在本 SPEC 补齐并完成项目要求的独立评审，再改产品实现。与 T-1422/T-1423 当前授权恢复范围保持独立，保留共享目录未提交改动。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:38:b23a90a1ab1d9e52",
+      "text": "- 本 SPEC、`docs/verification/t1426/**`、BACKLOG、DEC、任务配置/任务包/正式评审记录；不扩大为公共 API、数据库迁移或许可/资金/原任务状态篡改。客户端真实安装按打包技能与已有授权另行核对，不以源码测试代签当前 App。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:42:ea57f298b1da75d8",
+      "text": "2026-10-25 按真实改动与用户明确的 CLI 入口裁定：本任务没有 UI 组件或交互改动，`93a972b9cda4e72e385d098105ce6c797fc8d32d` 的 13 个实现文件均为 backend、worker 或 frontend server composition，因此 UI journey 不适用。原“CLI/页面冻结”是共享组归属不变量，继续以真实组合根与已安装 CLI 验收，不减少下列 AC。独立适用性证据见 [复核报告](../research/2026-10-25-t1426-t1407-frontend-gate-applicability.md)，DEC-140502；仅纠正本任务验收列误标的“待验”，不免除 T-1407 导入 UI 的真实验收，也不提前声称官方 Pi 恢复。"
+    }
+  ],
+  "existing_findings_recheck": {
+    "count": 0,
+    "findings": [],
+    "result": "原findings为空，无销账、改写或重开。"
+  },
+  "difference_analysis": [
+    "原T1405为cycle1 round2，旧findings为空；本次只能为第三轮recheck。当前六个变化行均为本地任务号、证据目录或适用性报告路径；FR-1405-1..4与AC-1405-1..4逐字未改。",
+    "重编号后的报告存在；实际git show 93a972b9cda4e72e385d098105ce6c797fc8d32d --stat为13个backend/worker/frontend server composition文件，没有UI组件。现有适用性理由可复核，不以名称替换本身当通过依据。",
+    "报告保留T1407的UI/安装义务与未通过源流程；真实CLI、402准确诊断、原任务恢复仍要求真实证据。DEC-142801任务映射一致，没有新增免验或权限扩张，未见增量问题。",
+    "报告中的历史HEAD/SPEC SHA仅解释为原轮绑定，不冒称当前SPEC哈希、当前模型或本次新发生的测试。"
+  ],
+  "provenance_evidence": [],
+  "limitations": [
+    "本轮只做规格增量复审，未执行产品测试、外部服务、钱包、远程CI、安装或平台操作。",
+    "仅写授权的10个review/evidence JSON，未改SPEC/业务/控制面，未登记审核或提交。"
+  ]
+}

@@ -9,24 +9,25 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1418|修复创作者总览筛选读取慢与等待路径|🔨|PASS[REV:3031950757b1]|待验|[SPEC](docs/features/t1418-creator-overview-read-performance.md)|按真实月明水清深数据定位重复/串行读取，保留账号隔离与正确筛选结果。|
-|T-1419|简化文章工作台并恢复公众号排版风格切换|🔨|PASS[REV:69c2b9d10266]|待验|[SPEC](docs/features/t1419-article-workbench-style-restoration.md)|移除创作流程里的来源许可说明，从历史恢复可保存、预览、导出的多风格切换。|
-|T-1420|按小红书图文重组正文与多页图片|🔨|PASS[REV:d078ce896db1]|待验|[SPEC](docs/features/t1420-graphic-post-content-structure.md)|正文符合平台表达、图片按内容语义拆页，清除多余来源许可和发布交付入口。|
-|T-1421|理清剪辑转写与按文字剪辑入口|🔨|PASS[REV:1afd62137d5a]|待验|[SPEC](docs/features/t1421-transcript-editing-clarity.md)|明确导入视频、转成文字、按文字剪辑的用途和先后关系，保留真实能力。|
-|T-1417|补齐官方Pi同能力输出预算诊断|✅|PASS[REV:c3f3e604a908]|—|[SPEC](docs/features/t1417-text-probe-output-budget.md)|受限128/8192文本探针，先区分402原因，不改正式聊天预算。|
-|T-1416|修复真实浏览器验收的过时页面断言|✅|PASS[REV:47d4fbfd6861]|—|[SPEC](docs/features/t1416-browser-visible-document-assertions.md)|核对可见正文及来源，保留真实浏览器、账号隔离与全部原断言。|
-|T-1415|收口恢复验收后的只读Stop与两份宪法审核|✅|PASS[REV:abe1e1aaf662]|—|[SPEC](docs/features/t1415-resumed-verification-control.md)|保留日常只读Stop，真实重审规则恢复导致过期的T915/T859，完整验收不降级。|
-|T-1414|恢复关键链路可用性规则摘要|✅|PASS[REV:19fcdb3c4a1f]|—|[SPEC](docs/features/t1414-critical-path-rule-summary.md)|恢复规则摘要漏掉的既有安全降级与完整回归要求，保留原LED043测试。|
-|T-1413|恢复重构后六项lesson正式链语义覆盖|⏸️|PASS[REV:2a5f6be66c40]|—|[SPEC](docs/features/t1413-lesson-semantic-coverage.md)|修复3个已删除测试文件的6处守卫引用；补齐当前链语义与严格封面参考约束，官方图片恢复须先证明幂等资格。|
-|T-1412|修复完整对账的执行预算与测试隔离|✅|PASS[REV:61ef55ddadbf]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
-|T-1411|修复文本连接测试鉴权丢失与结果说明|✅|PASS[REV:40d357fc2e44]|—|[SPEC](docs/features/t1411-model-probe-auth-parity.md)|[D]|
-|T-1410|修复历史审核证据与看板对账|✅|PASS[REV:568fd798a094]|—|[SPEC](docs/features/t1410-review-evidence-reconciliation.md)|[D]|
-|T-1428|修复官方Pi支付拒绝的安全诊断|✅|PASS[REV:04839f8bcbce]|—|[SPEC](docs/features/t1428-managed-pi-payment-diagnostics.md)|[D]|
-|T-1427|修复官方Pi与未通过验收并在通过后推送|⏸️|PASS[REV:e9724b83fcdb]|待验|[SPEC](docs/features/t1427-official-pi-acceptance-and-push.md)|[D]|
-|T-1407|整理现有修复、安装复验并准备合并推送|⏸️|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|[D]|
-|T-1426|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:2537258f8796]|—|[SPEC](docs/features/t1426-chat-model-combination-fixes.md)|[D]|
+|T-1429|恢复重编号合并后的审核链与来源追溯|🔨|PASS[REV:72f8b5eb5b91]|—|[SPEC](docs/features/t1429-review-ledger-recovery.md)|用户已批准方案；独立修复与验证，不推送；坏链自举先独立评审，修复后补正式登记。|
+|T-1418|修复创作者总览筛选读取慢与等待路径|🔨|PASS[REV:8fc500f6763a]|待验|[SPEC](docs/features/t1418-creator-overview-read-performance.md)|按真实月明水清深数据定位重复/串行读取，保留账号隔离与正确筛选结果。|
+|T-1419|简化文章工作台并恢复公众号排版风格切换|🔨|PASS[REV:66d05b52db53]|待验|[SPEC](docs/features/t1419-article-workbench-style-restoration.md)|移除创作流程里的来源许可说明，从历史恢复可保存、预览、导出的多风格切换。|
+|T-1420|以文生图生成小红书逐页配图与独立配文|⏸️|PASS[REV:a66a51f4d977]|待验|[SPEC](docs/features/t1420-graphic-post-content-structure.md)|用户2026-10-26再次明确：逐页图片必须调用AI文生图，不能用文字排版卡片冒充；复用已有组图生成、预览采纳与真实图片导出链。 接手检查与阻塞：[2026-10-28证据](docs/verification/t1420/handoff-20261028/README.md)。 本机账号组1经用户确认正确；独立验收两张真实图已生成采纳并精确回读，正文、旧安装界面与ZIP未通过，详见[重新验收](docs/verification/t1420/handoff-20261028/reverify-report.md)。 两个旧稿兼容原始样本已按用户提供的下载文件原样补回，兼容回归52/52通过。 测试文件仅去掉末尾多余空行以通过diff检查，断言未变。|
+|T-1421|理清剪辑转写与按文字剪辑入口|🔨|PASS[REV:ea60d1b6c009]|待验|[SPEC](docs/features/t1421-transcript-editing-clarity.md)|明确导入视频、转成文字、按文字剪辑的用途和先后关系，保留真实能力。|
+|T-1417|补齐官方Pi同能力输出预算诊断|✅|PASS[REV:24c6d87cadcd]|—|[SPEC](docs/features/t1417-text-probe-output-budget.md)|受限128/8192文本探针，先区分402原因，不改正式聊天预算。|
+|T-1416|修复真实浏览器验收的过时页面断言|✅|PASS[REV:7a69820a7fb6]|—|[SPEC](docs/features/t1416-browser-visible-document-assertions.md)|核对可见正文及来源，保留真实浏览器、账号隔离与全部原断言。|
+|T-1415|收口恢复验收后的只读Stop与两份宪法审核|✅|PASS[REV:3df0d8ecd265]|—|[SPEC](docs/features/t1415-resumed-verification-control.md)|保留日常只读Stop，真实重审规则恢复导致过期的T915/T859，完整验收不降级。|
+|T-1414|恢复关键链路可用性规则摘要|✅|PASS[REV:6c464d6d1677]|—|[SPEC](docs/features/t1414-critical-path-rule-summary.md)|恢复规则摘要漏掉的既有安全降级与完整回归要求，保留原LED043测试。|
+|T-1413|恢复重构后六项lesson正式链语义覆盖|⏸️|PASS[REV:c1d93ff9d0e3]|—|[SPEC](docs/features/t1413-lesson-semantic-coverage.md)|修复3个已删除测试文件的6处守卫引用；补齐当前链语义与严格封面参考约束，官方图片恢复须先证明幂等资格。|
+|T-1412|修复完整对账的执行预算与测试隔离|✅|PASS[REV:ba6008df0ad0]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
+|T-1411|修复文本连接测试鉴权丢失与结果说明|✅|PASS[REV:88bda848765a]|—|[SPEC](docs/features/t1411-model-probe-auth-parity.md)|[D]|
+|T-1410|修复历史审核证据与看板对账|✅|PASS[REV:49ac44e3641b]|—|[SPEC](docs/features/t1410-review-evidence-reconciliation.md)|[D]|
+|T-1428|修复官方Pi支付拒绝的安全诊断|✅|PASS[REV:fb6e2fc25569]|—|[SPEC](docs/features/t1428-managed-pi-payment-diagnostics.md)|[D]|
+|T-1427|修复官方Pi与未通过验收并在通过后推送|⏸️|PASS[REV:d56ad5c3ab9f]|待验|[SPEC](docs/features/t1427-official-pi-acceptance-and-push.md)|[D]|
+|T-1407|整理现有修复、安装复验并准备合并推送|⏸️|PASS[REV:9e869f1d693f]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|[D]|
+|T-1426|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:53f6deaf29e5]|—|[SPEC](docs/features/t1426-chat-model-combination-fixes.md)|[D]|
 |T-1424|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1424-cli-chat-combination-acceptance.md)|[D]|
-|T-1423|历史激活码无感升级模型权益与原授权恢复|🔨|PASS[REV:523d1050324a]|待验|[SPEC](docs/features/t1423-legacy-license-one-click-upgrade.md)|[D]|
+|T-1423|历史激活码无感升级模型权益与原授权恢复|🔨|PASS[REV:d36ef51c3a72]|待验|[SPEC](docs/features/t1423-legacy-license-one-click-upgrade.md)|[D]|
 |T-1422|接入试用设备一次模型权益与明确恢复|🔨|—|待验|[SPEC](docs/features/t1422-trial-device-model-benefits.md)|[D]|
 |T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|[D]|
 |T-1399|固定侧栏 AI 助手页脚与收拢入口|⏸️|—|待验|[SPEC](docs/features/t1399-sidebar-assistant-footer.md)|[D]|
@@ -43,7 +44,7 @@
 |T-1390|移除雷达作品卡片重复的升级为项目按钮|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1381.md)|[D]|
 |T-1391|容错雷达作品未知转写状态避免整页崩溃|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1382.md)|[D]|
 |T-1374|查明并恢复所有已绑定媒体的既有数据展示|⏸️|PASS[REV:16648a3ea984]|待验|[SPEC](docs/features/t1374-all-bound-platform-data-recovery.md)|[D]|
-|T-1369|修复首页平台筛选后的连续侧栏导航卡死|🔨|PASS[REV:01444fedd32f]|待验|[SPEC](docs/features/t1369-dashboard-filter-sidebar-navigation.md)|[D]|
+|T-1369|修复首页平台筛选后的连续侧栏导航卡死|🔨|PASS[REV:bcb32fe90d8b]|待验|[SPEC](docs/features/t1369-dashboard-filter-sidebar-navigation.md)|[D]|
 |T-1373|核对完整对账中真实CLI的用户目录与联网副作用|📋|待审|待验|[SPEC](docs/features/t1373-reconcile-cli-side-effect-isolation.md)|[D]|
 |T-1367|恢复视频号折叠导航下的报表入口|⏸️|PASS[REV:c7a98f074848]|待验|[SPEC](docs/features/t1367-wechat-video-collapsed-navigation-entry.md)|[D]|
 |T-1366|核对导航诊断新增的旧宽路径收据失配|📋|待审|待验|[SPEC](docs/features/t1366-navigation-diagnosis-wide-receipt-drift.md)|[D]|
@@ -86,7 +87,7 @@
 |T-1259|排查用户1.12版扫码绑定与配置同步异常并修复确认缺陷|✅ 待办|—|—|[SPEC](docs/features/t1259-user-binding-config-repair.md)|[D]|
 |T-1258|分析用户2026-10-12四份加密运行日志异常|✅ 待办|—|—|[SPEC](docs/features/t1258-user-log-diagnosis.md)|[D]|
 |T-1257|将当前已安装版本制作本地签名安装包|✅ 待办|—|—|[SPEC](docs/features/t1257-installed-local-signed-installer.md)|[D]|
-|T-1255|加密日志直传Growth、异常采集与运行指标观测|🔨 待办|PASS[REV:ec21be841d64]|待验|[SPEC](docs/features/t1255-reporting-full-delivery.md) · [SPEC](docs/features/t1255-observability-research.md)|[D]|
+|T-1255|加密日志直传Growth、异常采集与运行指标观测|🔨 待办|PASS[REV:9700ff342ac4]|待验|[SPEC](docs/features/t1255-reporting-full-delivery.md) · [SPEC](docs/features/t1255-observability-research.md)|[D]|
 |T-1256|修复Doocs静态原适配三处无用绑定编译失败|🔨 待办|PASS[REV:b3d116e19a48]|待验|[SPEC](docs/features/t1256-doocs-static-unused-bindings-build-closure.md)|[D]|
 |T-1254|闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性|🔨 待办|PASS[REV:1ebe2f90de0b]|待验|[SPEC](docs/features/t1254-doocs-request-budget-and-source-closure.md)|[D]|
 |T-1253|闭合原Worker夹具可信回执与未知恢复验收|🔨 待办|PASS[REV:e890e7d4ffac]|待验|[SPEC](docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md)|[D]|
@@ -167,7 +168,7 @@
 |T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|[D]|
 |T-1091|补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收|🔨|PASS[REV:dcd0b932fca7]|—|[SPEC](docs/features/t1091-public-director-context.md) [SPEC](BACKLOG-details.md#t-1091)|[D]|
 |T-1092|核对联合创作旧集成测试未解包可信回执的契约漂移|📋|—|—|[SPEC](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)|[D]|
-|T-1072-owned-devices|配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口|🔨 待办|PASS[REV:eb02b3e28c7b]|待验|[SPEC](docs/features/t1072-owned-devices.md)|[D]|
+|T-1072-owned-devices|配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口|🔨 待办|PASS[REV:351f7db55691]|待验|[SPEC](docs/features/t1072-owned-devices.md)|[D]|
 |T-1066-timeout-policy|全系统统一两分钟超时下限、嵌套预算与Skill防复发|⏸️ 待办|PASS[REV:13310516269c]|待验|[SPEC](docs/features/t1066-timeout-policy.md) [SPEC](BACKLOG-details.md#t-1066-timeout-policy)|[D]|
 |T-1067-skill-verification|清理通用产品流程Skill既有公开分发校验债务|📋 待办|—|待验|[SPEC](docs/verification/t1066/SKILL_VERIFICATION.md) [SPEC](BACKLOG-details.md#t-1067-skill-verification)|[D]|
 |T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[SPEC](docs/verification/t1017-rewrite-first.md) [SPEC](BACKLOG-details.md#t-1018) [SPEC](BACKLOG-details.md#t1173-t1018-global-debt-history)|[D]|
@@ -189,13 +190,13 @@
 |T-1024|紧急排查充值50元后Growth受管Omni模型仍报余额不足|🔨 待办|—|待验|[SPEC](docs/verification/t1024-managed-credit-diagnosis.md)|[D]|
 |T-1022|按账号组统一多平台工作区、绑定管理、首页与复盘|⏸️ 待办|PASS[REV:2f179f8d9380]|待验|[SPEC](docs/features/t1022-account-group-workspace.md) [SPEC](BACKLOG-details.md#t-1022)|[D]|
 |T-1023|修正既有任务绑定glob导致的progress生成阻断|📋 待办|—|—|[SPEC](docs/features/t1022-account-group-workspace/VERIFICATION.md)|[D]|
-|T-1021|CreatorOS封面与小红书图文双模板库、行业分类及私人收藏|🔨 待办|PASS[REV:475a70aef2e0]|待验|[SPEC](docs/features/t1021-cover-template-library.md)|[D]|
+|T-1021|CreatorOS封面与小红书图文双模板库、行业分类及私人收藏|🔨 待办|PASS[REV:a6345304472d]|待验|[SPEC](docs/features/t1021-cover-template-library.md)|[D]|
 |T-1019|按观众具体任务与双九宫格持续生成可实测选题|⏸️ 待办|PASS[REV:3a0362412b23]|待验|[SPEC](docs/features/audience-task-topics/README.md)|[D]|
 |T-1020|统一可视化推荐、作品承接与科学运营观测|📋 待办|待审|待验|[SPEC](docs/features/creator-operations/README.md)|[D]|
 |T-1017|简化内容雷达：按账号定位一键生成可编辑改写稿|🔨 待办|PASS[REV:d2fb4541c82d]|待验|[SPEC](docs/features/t1017-content-radar-rewrite-first.md)|[D]|
 |T-1409|Windows扫码目录归位与免登录主页、转写|📋|—|待验|[SPEC](docs/features/t1409-douyin-login-free-and-windows-staging.md)|登录目录rename遇Windows占用重试并复制回退；未登录可先存博主主页、登录后关联同步；转写先走游客作品页详情再回落登录。源码测试通过，Windows真机待验。|
 |T-1408|默认无需抖音登录即可定位|⏸️|—|待验|[SPEC](docs/features/t1408-positioning-without-douyin-login.md)|本地账号组生成候选、手动采纳及创建项目；用户已授权独立差量推送合main，整体验收未通过，不混入PR11。|
-|T-1406|修复新版安装验收发现的八项缺陷|🔨|PASS[REV:b3a0d1e8ff5d]|待验|[SPEC](docs/features/t1406-installed-eight-defects.md)|八项限定实机复验通过；整体PARTIAL及数据快照差异保留。2026-10-26用户授权合main，保全main正式发布workflow，合并与全量验收分开留证。|
+|T-1406|修复新版安装验收发现的八项缺陷|🔨|PASS[REV:dfe6653bd98e]|待验|[SPEC](docs/features/t1406-installed-eight-defects.md)|八项限定实机复验通过；整体PARTIAL及数据快照差异保留。2026-10-26用户授权合main，保全main正式发布workflow，合并与全量验收分开留证。|
 |T-1405|新版安装后全功能实测|🔨|—|待验|[SPEC](docs/features/t1405-installed-functional-validation.md)|当前Windows修复包逐模块真实验证；独立验收组、原资料保全，源码/UI/API/真实模型证据分开，不把外部受阻或已知欠债标通过。|
 |T-1404|使用既有更新根与 Actions 构建新版 Windows 包|🔨|—|待验|[SPEC](docs/features/t1404-windows-local-root-ci-package.md)|用户已提供既有更新根并确认 CI verdict 密钥；本机根签名、CI 原密钥编壳，仅构建分支 artifact，不合并/发版，原安装数据保全。|
 |T-1403|修复 Windows 全流程实测失败与可本机解除的阻塞|⏸️|—|待验|[SPEC](docs/features/t1403-windows-flow-repair.md)|四条失败流程与本机缺口源码修复、限定回归和构建已过；Windows合法包/真机复验待既有持钥环境；quick对账未全绿，不伪造发布和外部验收。|
@@ -221,7 +222,7 @@
 |T-1390|移除雷达作品卡片重复的升级为项目按钮|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1381.md)|用户2026-10-21明确：只移除ItemCard入口，保留作品详情04选定方案入口；补vitest并独立中文commit。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|
 |T-1391|容错雷达作品未知转写状态避免整页崩溃|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1382.md)|用户授权未知transcript.status显示“状态未知”，避免整页ZodError；五项frontend typecheck/vitest，保留T767失败与既有lint，授权/激活/verdict/签名不变。技能缺失处理、完整原文与实测边界见原SPEC、RESULT及编号映射。|
 |T-1374|查明并恢复所有已绑定媒体的既有数据展示|⏸️|PASS[REV:16648a3ea984]|待验|[逐平台完整恢复范围](docs/features/t1374-all-bound-platform-data-recovery.md)|本轮仅补三测试/seed，52+3+双窗2通过、prod0改；安装仍旧2d未交付，视频号原EXPORT_FAILED/0页且native0/site-safety受阻，已block不冒全部恢复；full未跑/T1373保。|
-|T-1369|修复首页平台筛选后的连续侧栏导航卡死|🔨|PASS[REV:e8916b9b3f96]|待验|[连续导航范围](docs/features/t1369-dashboard-filter-sidebar-navigation.md)|旧R3收据仅绑定6f8114；用户已明确允许本次新夹具单次cycle，真实DEC136909保，正式新cycle尚未记录；production01–03均前置FAIL、03残PG已后清理，04未执行/未证修复，本轮先整合代码。|
+|T-1369|修复首页平台筛选后的连续侧栏导航卡死|🔨|PASS[REV:bcb32fe90d8b]|待验|[连续导航范围](docs/features/t1369-dashboard-filter-sidebar-navigation.md)|旧R3收据仅绑定6f8114；用户已明确允许本次新夹具单次cycle，真实DEC136909保，正式新cycle尚未记录；production01–03均前置FAIL、03残PG已后清理，04未执行/未证修复，本轮先整合代码。|
 |T-1373|核对完整对账中真实CLI的用户目录与联网副作用|📋|待审|待验|[当前安全阻断](docs/features/t1373-reconcile-cli-side-effect-isolation.md)|102完整对账预检发现LED053原CLI未隔离，存在HOME配置写/更新安装可达；先只读登记，不冒新full、改旧门或补旧receipt。|
 |T-1367|恢复视频号折叠导航下的报表入口|⏸️|PASS[REV:c7a98f074848]|待验|[事实与候选范围](docs/features/t1367-wechat-video-collapsed-navigation-entry.md)|665受控实现与验证已整合，真实owner/采集恢复UNKNOWN且site-safety受阻已block；T1368后验不代恢复，原full58与旧失败保，不绕行/新collect/打包安装。|
 |T-1366|核对导航诊断新增的旧宽路径收据失配|📋|待审|待验|[收据根因边界](docs/features/t1366-navigation-diagnosis-wide-receipt-drift.md)|2d完整56ERROR含本次T1354/source与T1356/persistence新宽收据漂移，T1294既有身份亦有新增交叉；与旧44、clean候选缺旧产物及两新LED后验环境失败分证，不洗旧PASS。|
@@ -264,7 +265,7 @@
 |T-1259|排查用户1.12版扫码绑定与配置同步异常并修复确认缺陷|✅ 待办|—|—|[排查与修复范围](docs/features/t1259-user-binding-config-repair.md)|用户确认1.12为当前、1.11为旧版；核版本与实际失败链，缺陷先RED再修，保原账号登录态与校验，不重发真实任务或发布。|
 |T-1258|分析用户2026-10-12四份加密运行日志异常|✅ 待办|—|—|[诊断范围](docs/features/t1258-user-log-diagnosis.md)|仅本地只读解密四份附件，按时间与影响分析失败、恢复及证据缺口，不改产品、不重发用户任务。|
 |T-1257|将当前已安装版本制作本地签名安装包|✅ 待办|—|—|[范围与验收](docs/features/t1257-installed-local-signed-installer.md)|用户明确只做本地签名、不提交Apple；冻结当前安装1.2.0 arm64副本，保运行时字节，签名封DMG与挂载核验，不重建未提交源码。|
-|T-1255|加密日志直传Growth、异常采集与运行指标观测|🔨 待办|PASS[REV:7e54d5d28829]|待验|[原直传合同](docs/features/t1255-reporting-full-delivery.md) · [观测方案候选](docs/features/t1255-observability-research.md)|10/21公开get原观察超600秒未取回执、仅停自有CLI，今日上传状态未知；保10/18真回执、10/20所见422及T1378/Growth T248本地39PASS候选，owner/完整解密/指标待核，不催传或签完成，见desktop-agent-live/RESULT.md。 |
+|T-1255|加密日志直传Growth、异常采集与运行指标观测|🔨 待办|PASS[REV:9700ff342ac4]|待验|[原直传合同](docs/features/t1255-reporting-full-delivery.md) · [观测方案候选](docs/features/t1255-observability-research.md)|10/21公开get原观察超600秒未取回执、仅停自有CLI，今日上传状态未知；保10/18真回执、10/20所见422及T1378/Growth T248本地39PASS候选，owner/完整解密/指标待核，不催传或签完成，见desktop-agent-live/RESULT.md。 |
 |T-1256|修复Doocs静态原适配三处无用绑定编译失败|🔨 待办|PASS[REV:b3d116e19a48]|待验|[真实类型红与精确范围](docs/features/t1256-doocs-static-unused-bindings-build-closure.md)|T1254 V13两根24/slow/types及nativebuild已过，static完整原build三TS6133真失败；仅核并删三无用声明，保模板/原命令/旧FAIL，独评后续原余步骤。|
 |T-1254|闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性|🔨 待办|PASS[REV:1ebe2f90de0b]|待验|[当场两红与待评边界](docs/features/t1254-doocs-request-budget-and-source-closure.md)|完整Gate剩两真实网络abort；先核共享fetch原源/两包/使用路径与重建来源，独评后修，不扩动画豁免或只改产物洗绿。|
 |T-1253|闭合原Worker夹具可信回执与未知恢复验收|🔨 待办|PASS[REV:e890e7d4ffac]|待验|[真实8红与精确范围](docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md)|原9文件46例38PASS8FAIL；仅ports/hooks/draft三原测试，核429 superseded、partial与缺usage unknown，先独评不改生产/洗期望。|
@@ -345,7 +346,7 @@
 |T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-3158c3fcebbd)。|
 |T-1091|补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收|🔨|PASS[REV:dcd0b932fca7]|—|[SPEC](docs/features/t1091-public-director-context.md) [详情](BACKLOG-details.md#t-1091)|见详情。|
 |T-1092|核对联合创作旧集成测试未解包可信回执的契约漂移|📋|—|—|[当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-024c8af10ce0)。|
-|T-1072-owned-devices|配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口|🔨 待办|PASS[REV:eb8de221287b]|待验|[SPEC](docs/features/t1072-owned-devices.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。|
+|T-1072-owned-devices|配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口|🔨 待办|PASS[REV:351f7db55691]|待验|[SPEC](docs/features/t1072-owned-devices.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。|
 |T-1066-timeout-policy|全系统统一两分钟超时下限、嵌套预算与Skill防复发|⏸️ 待办|PASS[REV:13310516269c]|待验|[SPEC](docs/features/t1066-timeout-policy.md) [详情](BACKLOG-details.md#t-1066-timeout-policy)|见详情。|
 |T-1067-skill-verification|清理通用产品流程Skill既有公开分发校验债务|📋 待办|—|待验|[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md) [详情](BACKLOG-details.md#t-1067-skill-verification)|见详情。|
 |T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)|见详情。|
@@ -367,7 +368,7 @@
 |T-1024|紧急排查充值50元后Growth受管Omni模型仍报余额不足|🔨 待办|—|待验|[排查范围](docs/verification/t1024-managed-credit-diagnosis.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-c9ebcc41ffd59f36)。|
 |T-1022|按账号组统一多平台工作区、绑定管理、首页与复盘|⏸️ 待办|PASS[REV:2f179f8d9380]|待验|[SPEC](docs/features/t1022-account-group-workspace.md) [详情](BACKLOG-details.md#t-1022)|见详情。|
 |T-1023|修正既有任务绑定glob导致的progress生成阻断|📋 待办|—|—|[证据](docs/features/t1022-account-group-workspace/VERIFICATION.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-3eba29be37ce0174)。|
-|T-1021|CreatorOS封面与小红书图文双模板库、行业分类及私人收藏|🔨 待办|PASS[REV:f0f3fa0ff91b]|待验|[SPEC](docs/features/t1021-cover-template-library.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d0c6d059440fcd70)。|
+|T-1021|CreatorOS封面与小红书图文双模板库、行业分类及私人收藏|🔨 待办|PASS[REV:a6345304472d]|待验|[SPEC](docs/features/t1021-cover-template-library.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d0c6d059440fcd70)。|
 |T-1019|按观众具体任务与双九宫格持续生成可实测选题|⏸️ 待办|PASS[REV:3a0362412b23]|待验|[SPEC](docs/features/audience-task-topics/README.md)|用户委派；复用定位/雷达/候选/反馈，观众入口与作者实测分流，保留 T-1017 首稿；不发布或 push。|
 |T-1020|统一可视化推荐、作品承接与科学运营观测|📋 待办|待审|待验|[SPEC](docs/features/creator-operations/README.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e6765fb61ec296f6)。|
 |T-1017|简化内容雷达：按账号定位一键生成可编辑改写稿|🔨 待办|PASS[REV:d2fb4541c82d]|待验|[SPEC](docs/features/t1017-content-radar-rewrite-first.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-00c1555a12c0e894)。|
@@ -406,7 +407,7 @@
 |T-934|统一 CLI 与页面的持久聊天工具入口|🔨 待办|—|—|[SPEC](docs/verification/t934-cli-chat-unification.md)|[D]|
 |T-933|安装并验收本轮Agent Runtime桌面版|🔨 待办|—|—|[SPEC](docs/verification/t932-runtime-alignment.md)|[D]|
 |T-919|定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞|🔨 待办|—|—|复用 T-912/T-909 导航契约与 [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|[D]|
-|T-915|根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力|🔨 待办|PASS[REV:8d309f0236d1]|—|[SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|[D]|
+|T-915|根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力|🔨 待办|PASS[REV:6048196960a2]|—|[SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|[D]|
 |T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[SPEC](docs/research/2026-09-04-architecture-agent-audit.md) [SPEC](BACKLOG-details.md#t-916) [SPEC](BACKLOG-details.md#t1173-t-916-same-identity-history)|[D]|
 |T-917|记录 T-915 媒体测试事故并防止测试再次访问真实媒体根|📋 待办|—|—|[SPEC](docs/research/evidence/t915/2026-09-06-media-test-incident.md)|[D]|
 |T-908|真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复|📋 待办|—|—|—|[D]|
@@ -417,8 +418,8 @@
 |T-878|让生图模型连接测试正确识别并提示 401/403 鉴权失败|📋 待办|—|—|[SPEC](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md)|[D]|
 |T-867|恢复 AI 对项目素材与分镜场景的自动语义匹配|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-867)|[D]|
 |T-860|修复竖屏素材底边与左下人物框边界重合|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-860)|[D]|
-|T-859|竖屏素材段人物收进左下角，并消除切换白闪|🔨 待办|PASS[REV:44a0172c0850]|待验|[SPEC](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md)|[D]|
-|T-858|把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT|🔨 待办|PASS[REV:2798870c87f4]|待验|[SPEC](BACKLOG-details.md#t-858)  [SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md)|[D]|
+|T-859|竖屏素材段人物收进左下角，并消除切换白闪|🔨 待办|PASS[REV:eea836a09361]|待验|[SPEC](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md)|[D]|
+|T-858|把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT|🔨 待办|PASS[REV:248be748b943]|待验|[SPEC](BACKLOG-details.md#t-858)  [SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md)|[D]|
 |T-857|构建当前已提交候选的 CreatorOS 1.1.0 Windows 安装包|⏸️ 待办|—|待验|[SPEC](BACKLOG-details.md#t-857)|[D]|
 |T-856|重做竖屏成片的统一舞台、字幕可读性与重点词强调|⏸️ 待办|—|待验|[SPEC](BACKLOG-details.md#t-856)|[D]|
 |T-855|构建包含 T-854 与当前已提交修复的 CreatorOS macOS 本地安装包|⏸️ 待办|—|—|[SPEC](BACKLOG-details.md#t-855)|[D]|
@@ -435,16 +436,16 @@
 |T-828|诊断行业热点出题不可用、Windows 滚动条异常与 DeepMind/Max 模型报错|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-828)|[D]|
 |T-827|根治选题中心来源筛选失效与候选操作按钮无法点击|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-827)|[D]|
 |T-826|根治 CreatorOS v1.1 Windows 新安装包安装后无法启动|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-826)|[D]|
-|T-824|根治昨日文稿 Skill 与内容动效卡片迭代在标准版成品中无明显效果|🔨 待办|PASS[REV:853ab9b0f7ea]|待验|[SPEC](BACKLOG-details.md#t-824)  [SPEC](docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md)|[D]|
+|T-824|根治昨日文稿 Skill 与内容动效卡片迭代在标准版成品中无明显效果|🔨 待办|PASS[REV:75ad91fe7654]|待验|[SPEC](BACKLOG-details.md#t-824)  [SPEC](docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md)|[D]|
 |T-823|根治架构图等主视觉被信息卡遮挡并修正跨段画面切换滞后|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-823)|[D]|
 |T-821|网站内容因未登录或权限不足读取失败时引导用户前往登录保管库|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-821)|[D]|
-|T-819|让编导在普通对话中按自然语言定位并改写当前稿单段|🔨 待办|PASS[REV:20281a3415d4]|待验|[SPEC](BACKLOG-details.md#t-819)  [SPEC](docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md)|[D]|
+|T-819|让编导在普通对话中按自然语言定位并改写当前稿单段|🔨 待办|PASS[REV:e6f5293361af]|待验|[SPEC](BACKLOG-details.md#t-819)  [SPEC](docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md)|[D]|
 |T-820|修复选题补卡到项目与文案的数据丢失并保存生成消费血缘|📋 待办|—|—|[SPEC](BACKLOG-details.md#t-820)|[D]|
-|T-816|让当前确认稿成为配图与封面生成的第一内容真相|🔨 待办|PASS[REV:de532b22b58b]|待验|[SPEC](BACKLOG-details.md#t-816)  [SPEC](docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md)|[D]|
+|T-816|让当前确认稿成为配图与封面生成的第一内容真相|🔨 待办|PASS[REV:ae495e3cb84f]|待验|[SPEC](BACKLOG-details.md#t-816)  [SPEC](docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md)|[D]|
 |T-814|统一 CreatorOS 多页面 AI 对话体验并保留场景上下文与自由讨论能力|📋 待办|—|—|[SPEC](BACKLOG-details.md#t-814)|[D]|
 |T-779|根治参考历史作品生成封面时误探本机工具并中断生图|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-779)|[D]|
 |T-773|更新 CreatorOS 1.0 最新使用教程、匿名化截图并新建成交型测试版教程|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-773)|[D]|
-|T-768|任何云端 ASR 故障都必须自动回退本地 Whisper|🔨 待办|PASS[REV:3a5532adc550]|待验|[SPEC](BACKLOG-details.md#t-768)  [SPEC](docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md)|[D]|
+|T-768|任何云端 ASR 故障都必须自动回退本地 Whisper|🔨 待办|PASS[REV:62cbba60bcd7]|待验|[SPEC](BACKLOG-details.md#t-768)  [SPEC](docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md)|[D]|
 |T-762|根因复盘并设计渠道 ASR 密钥的短时租约闭环|🔨 待办|—|—|[SPEC](BACKLOG-details.md#t-762)|[D]|
 |T-759|根治已绑定 B-roll 因 inventory 失配显示空白|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-759)|[D]|
 |T-754|根治 CreatorOS v1.0 官方包启动无限转圈|🔨 待办|—|—|[SPEC](BACKLOG-details.md#t-754)|[D]|
@@ -459,7 +460,7 @@
 |T-730|恢复可选“立论点”UI并增加适用场景引导，不重新变成写稿门槛|🔨 待办|PASS[REV:aeda30778cf2]|待验|[SPEC](BACKLOG-details.md#t-730)  [SPEC](docs/superpowers/specs/2026-08-09-optional-thesis-guidance.md)|[D]|
 |T-731|支持按电商等创作场景生成并自定义创作框架|📋 待办|—|待验|[SPEC](BACKLOG-details.md#t-731)|[D]|
 |T-729|根治渠道专属包仍跳官方入口并拆分官网、下载、人工反馈与反馈 API|📋 待办|—|待验|[SPEC](BACKLOG-details.md#t-729)|[D]|
-|T-726|退役项目“论点骨架”并让写稿直接消费 Brief 与素材|🔨 待办|PASS[REV:a9cb8ebdc520]|待验|[SPEC](BACKLOG-details.md#t-726)  [SPEC](docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md)|[D]|
+|T-726|退役项目“论点骨架”并让写稿直接消费 Brief 与素材|🔨 待办|PASS[REV:6c2611e23cf5]|待验|[SPEC](BACKLOG-details.md#t-726)  [SPEC](docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md)|[D]|
 |T-721|根治素材包导出回流造成递归嵌套并恢复大素材库完整可见性|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-721)|[D]|
 |T-720|根治特定 Windows 设备抖音内置浏览器页面崩溃导致内容雷达主页验证失败|📋 待办|—|待验|[SPEC](BACKLOG-details.md#t-720)|[D]|
 |T-719|根治桌面端启动后二次白屏闪烁与首页排期提醒不可用|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-719)|[D]|
@@ -471,13 +472,13 @@
 |T-712|优先采用用户上传素材进入 B-roll 时间线、恢复成片预览并收回渠道同步常驻提示|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-712)|[D]|
 |T-709|将 macOS Developer ID 签名与 Apple 公证凭据接入 GitHub 正式发布流水线|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-709)|[D]|
 |T-708|全局审计并软化 AI 工具中不合理的创作完整度门禁|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-708)|[D]|
-|T-707|将定位前采收敛为 Copilot 主导的自适应编导访谈并直接闭环定位中心|🔨 待办|PASS[REV:3a3d3862a60b]|待验|[SPEC](BACKLOG-details.md#t-707)  [SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md)|[D]|
+|T-707|将定位前采收敛为 Copilot 主导的自适应编导访谈并直接闭环定位中心|🔨 待办|PASS[REV:ad527fa6490f]|待验|[SPEC](BACKLOG-details.md#t-707)  [SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md)|[D]|
 |T-705|根治 macOS 本地包启动后落入 Page Not Found|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-705)|[D]|
-|T-703|根治视频制作从分镜到预览、对话调剪、采纳与再制作的多处断裂并重打本地包|🔨 待办|PASS[REV:7146b662ddb2]|待验|[SPEC](BACKLOG-details.md#t-703)  [SPEC](docs/superpowers/specs/2026-08-05-video-production-editing-loop.md)|[D]|
+|T-703|根治视频制作从分镜到预览、对话调剪、采纳与再制作的多处断裂并重打本地包|🔨 待办|PASS[REV:66d1b5828813]|待验|[SPEC](BACKLOG-details.md#t-703)  [SPEC](docs/superpowers/specs/2026-08-05-video-production-editing-loop.md)|[D]|
 |T-702|根治审核“应用改写”后分镜稿格式坍缩为 Markdown 表格源码|📋 待办|—|待验|[SPEC](BACKLOG-details.md#t-702)|[D]|
 |T-695|清理应用内硬编码品牌并让白标用户表面保持中性|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-695)|[D]|
-|T-691|补齐 Copilot 单项目全生命周期、跨项目历史与审核改稿工具闭环|🔨 待办|PASS[REV:702e78ce0ae0]|待验|[SPEC](BACKLOG-details.md#t-691)  [SPEC](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md)|[D]|
-|T-694|建立多渠道专属包工厂、项目级出包 Skill 与安全增量更新闭环|🔨 待办|PASS[REV:96e12f85f1b3]|待验|[SPEC](BACKLOG-details.md#t-694)  [SPEC](docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md)|[D]|
+|T-691|补齐 Copilot 单项目全生命周期、跨项目历史与审核改稿工具闭环|🔨 待办|PASS[REV:08fce87b6b59]|待验|[SPEC](BACKLOG-details.md#t-691)  [SPEC](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md)|[D]|
+|T-694|建立多渠道专属包工厂、项目级出包 Skill 与安全增量更新闭环|🔨 待办|PASS[REV:e589af9ef3ce]|待验|[SPEC](BACKLOG-details.md#t-694)  [SPEC](docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md)|[D]|
 |T-686|根治定位前采联网补充直接报错并恢复国内中文公开检索|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-686)|[D]|
 |T-687|建立口播联想画面 Skill 并打通图序号引用、项目 B-roll 与成片渲染|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-687)|[D]|
 |T-685|排查并根治全流程写稿长度失控及审核不识别已采纳文案卡|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-685)|[D]|
@@ -494,22 +495,22 @@
 |T-662|根治成片把内部结构标签当正文并优化卡片文字重合|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-662)|[D]|
 |T-661|根治项目素材未进入制作、采纳后仍转圈及素材包图片无扩展名|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-661)|[D]|
 |T-660|根治雷达预填逐字稿未解锁下一步及已采纳封面仍被判缺失|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-660)|[D]|
-|T-656|收紧桌面授权本地信任链，移除生产冒烟旁路并消除 verdict 私钥明文靶点|🔨 待办|PASS[REV:0ee97952c9a3]|待验|[SPEC](BACKLOG-details.md#t-656)  [SPEC](docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md)|[D]|
+|T-656|收紧桌面授权本地信任链，移除生产冒烟旁路并消除 verdict 私钥明文靶点|🔨 待办|PASS[REV:12cb549493b0]|待验|[SPEC](BACKLOG-details.md#t-656)  [SPEC](docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md)|[D]|
 |T-655|接通 Seedance 文生视频适配器并修复 `seeddance` 配置报未知 provider|🔨 待办|—|—|[SPEC](BACKLOG-details.md#t-655)|[D]|
 |T-654|新增 Qwen 方言 ASR 适配器并接入设置预设|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-654)|[D]|
 |T-653|支持本地自配与渠道子 Key 托管双模式模型供给|📋 待办|待审|待验|[SPEC](BACKLOG-details.md#t-653)|[D]|
-|T-652|重构定位前采为必经的编导式访谈与证据辅助工作流|🔨 待办|PASS[REV:6a06cf4f57d9]|待验|[SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md) · [SPEC](BACKLOG-details.md#t-652)|[D]|
+|T-652|重构定位前采为必经的编导式访谈与证据辅助工作流|🔨 待办|PASS[REV:01c2e5babfb4]|待验|[SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md) · [SPEC](BACKLOG-details.md#t-652)|[D]|
 |T-650|知识倾倒输入框支持拖拽文件直接导入|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-650)|[D]|
 |T-651|内容雷达默认按作品真实发布时间倒序|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-651)|[D]|
 |T-649|调研并设计激活后渠道白标：品牌名、应用内 Logo 与系统级图标边界|📋 待办|—|待验|[SPEC](BACKLOG-details.md#t-649)|[D]|
 |T-646|统一优化结构化 AI 工具为结果优先、分段生成与局部修复|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-646)|[D]|
-|T-645|收敛模型配置项并同步精简 Growth 渠道模板|🔨 待办|PASS[REV:21e54e5382a4]|待验|[SPEC](BACKLOG-details.md#t-645)  [SPEC](docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md)|[D]|
+|T-645|收敛模型配置项并同步精简 Growth 渠道模板|🔨 待办|PASS[REV:3367f027528e]|待验|[SPEC](BACKLOG-details.md#t-645)  [SPEC](docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md)|[D]|
 |T-644|根治 CreatorOS macOS 客户端持续闪屏|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-644)|[D]|
 |T-643|收口 CreatorOS 为输入 Activity 激活码后直接授权，隐藏当前权益领取入口|📋 待办|—|待验|[SPEC](BACKLOG-details.md#t-643)|[D]|
-|T-642|打通内容雷达对标文案→改写策略→选题卡→项目写稿的编导证据链|🔨 待办|PASS[REV:ded8361cdf11]|待验|[SPEC](docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md) · [SPEC](BACKLOG-details.md#t-642)|[D]|
+|T-642|打通内容雷达对标文案→改写策略→选题卡→项目写稿的编导证据链|🔨 待办|PASS[REV:4ccb2dd450a1]|待验|[SPEC](docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md) · [SPEC](BACKLOG-details.md#t-642)|[D]|
 |T-641|根治发布中心“登录多日仍只有一个采集日、发布趋势不出曲线”|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-641)|[D]|
 |T-640|配置 Apple Developer ID 签名与公证，并在前序修复全部闭环后统一产出本地安装包|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-640)|[D]|
-|T-635|把 CreatorOS 正式构建绑定到 Growth 商品的统一 `projectKey`，禁止运行时覆盖产品身份或关闭严格验签|🔨 本地实现待验|PASS[REV:263c231fa57c]|待验|[SPEC](BACKLOG-details.md#t-635)  [SPEC](docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md)|[D]|
+|T-635|把 CreatorOS 正式构建绑定到 Growth 商品的统一 `projectKey`，禁止运行时覆盖产品身份或关闭严格验签|🔨 本地实现待验|PASS[REV:80491a56d447]|待验|[SPEC](BACKLOG-details.md#t-635)  [SPEC](docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md)|[D]|
 |T-633|恢复创作者中心自动扫码登录|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-633)|[D]|
 |T-632|根治“新建定位母版”无效、历史母版无法恢复与逐字稿提取长时间无结果|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-632)|[D]|
 |T-631|根治大视频上传被 10MB 截断并误报 ffmpeg 缺失|🔨 待办|—|待验|[SPEC](BACKLOG-details.md#t-631)|[D]|

@@ -1,0 +1,21 @@
+{
+  "params": {
+    "resultId": "fa129225-9baa-478c-8a3f-58f1b5002033"
+  },
+  "body": {
+    "expected": {
+      "owner": "graphic_post",
+      "versionId": "artifactversion-2ddab0cc-3688"
+    },
+    "editedValue": [
+      {
+        "assetId": "asset-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa",
+        "assetFileId": "afile-generated-f5e03424739314a07ff90ce500ae4ebbc658e321056a77aa72aec6e8572309fa",
+        "order": 0,
+        "role": "card",
+        "cardId": "card-desk-clear-01"
+      }
+    ],
+    "clientRequestId": "t1420-mac-group1-adopt-image-01-20261028"
+  }
+}

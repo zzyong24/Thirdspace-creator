@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 1/3 (initial)
 - Spec receipt: 192b82d1165b
-- Review receipt: 853ab9b0f7ea
+- Review receipt: 75ad91fe7654
 
 ## 当前有效问题
 
@@ -41,9 +41,9 @@
     ],
     "max_uses": 1
   },
-  "latest_event_hash": "231bba7b3cbde3f8670e11000694b8db4d04c4e5b2fa893d6179400a2ad6f1e9",
+  "latest_event_hash": "88c64b17046c366f705a9a29194452c6c0e5a414d6c108400d01073d00395cf7",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "853ab9b0f7ea"
+  "receipt": "75ad91fe7654"
 }
 ```

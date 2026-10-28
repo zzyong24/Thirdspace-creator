@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "同构独立复核cycle2第二轮：以正式ledger而非旧cycle为基准，亲核notes列表1409改1428与当前支付诊断归属，stage、gate、confirmation、历史验收约束未减。原minor REV-001从open改为resolved，其余冻结字段保留；未执行阶段对账或代签任务完成。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "写集与验收",
+        "quote": "向 `4-build`、`5-ship` 的 notes 追加 T-1427/1409/1410/1411 当前证据与未完成条件"
+      },
+      "acceptance_anchor": {
+        "id": "写集与验收",
+        "quote": "不改变任何 stage/gate 状态、confirmation、风险接受或历史验收"
+      },
+      "where": "docs/features/t1410-review-evidence-reconciliation.md:27",
+      "failure_mode": "当前 notes 指定的1409仍使用旧本地编号；BACKLOG当前T-1409是Windows扫码目录/免登录任务，DEC-142801将支付诊断映射为T-1428。按当前编号执行会把无关任务的证据写入官方模型治理备注，或需要执行者自行猜旧编号。此处是非阻断的溯源歧义，不证明既有历史备注错误。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "BACKLOG.md:197；orchestrator/DECISION_LOG.md#DEC-142801；docs/features/t1410-review-evidence-reconciliation.md:27",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把本段当前支付诊断任务明确为T-1428，或明确写旧T-1409→T-1428来源映射；封存历史原文保持不变。",
+      "resolution_evidence": "EVIDENCE-SHA256:254784b3625b146c7f8d4d43da3001b655b113b8f5079e4cfbbfb639965f19d6:docs/verification/t1429/reviews/T-1410-round-2.evidence.json；SPEC SHA256=3d72b628099d96201552b3f42e590aab74e9da44d60969ca1440e88be9fc9e8d。当前SPEC第27行notes列表已改为T-1427/1428/1410/1411，亲读BACKLOG与DEC-142801确认T-1428是支付诊断；禁止修改stage/gate/confirmation/历史验收等原约束未变。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

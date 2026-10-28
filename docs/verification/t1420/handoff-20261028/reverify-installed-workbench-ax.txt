@@ -1,0 +1,107 @@
+Window: "CreatorOS", App: CreatorOS.
+0 standard window CreatorOS, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: CreatorOS, URL: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51/outputs/output-2ddab0cc-3252/image
+			3 container
+				4 link 跳到页面内容, Value: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51/outputs/output-2ddab0cc-3252/image#creatoros-main-content
+				5 container 主侧栏
+					6 toggle button 收起侧栏, Value: off
+					7 pop up button 当前账号组：1, Help: 1
+					8 container 主要导航
+						9 link 首页, Value: 127.0.0.1:64542/
+						10 link 创作者总览, Value: 127.0.0.1:64542/overview
+						11 text 创作
+						12 link 定位中心, Value: 127.0.0.1:64542/positioning
+						13 link 内容雷达, Value: 127.0.0.1:64542/intelligence
+						14 link 选题, Value: 127.0.0.1:64542/topics
+						15 link 项目, Value: 127.0.0.1:64542/projects
+						16 text 资料
+						17 link 知识库, Value: 127.0.0.1:64542/knowledge
+						18 link 素材中心, Value: 127.0.0.1:64542/assets
+						19 link 创作画布, Value: 127.0.0.1:64542/canvases
+						20 text 运营
+						21 link 发布中心, Value: 127.0.0.1:64542/publishing
+						22 link 运营分析, Value: 127.0.0.1:64542/daily-report
+						23 link 自动化, Value: 127.0.0.1:64542/automations
+						24 text 工作区
+						25 link 设置, Value: 127.0.0.1:64542/settings
+					26 container 当前项目
+						27 heading 当前项目, Value: 2
+							28 text 当前项目
+						29 link T-1420 本机账号1图文验收 20261028, Value: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51
+					30 container AI 助手
+						31 link 打开 AI 助手, Value: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51/outputs/output-2ddab0cc-3252/image?copilot=open&scope=global
+					32 pop up button 帮助与反馈
+					33 text ? 创作者 个人版
+				34 text T-1420 本机账号1图文验收 20261028
+				35 content list 项目工作面
+					36 link 脚本, Value: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51
+					37 link 图文, Value: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51/outputs/output-2ddab0cc-3252/image
+					38 link 复盘, Value: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51/review
+				39 link 搜索, Value: 127.0.0.1:64542/search
+				40 button 充值
+				41 container
+					42 heading 图文成稿, Value: 1
+						43 text 图文成稿
+					44 button (disabled) 重新组织内容
+					45 text 当前成稿已保存
+					46 link 前往脚本撰写原稿, Value: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51
+					47 container NoteRelay 排版预览
+						48 heading 成稿预览, Value: 2
+							49 text 成稿预览
+						50 button 导出分页 ZIP
+						51 summary 更多导出, Value: off
+							52 text 更多导出
+						53 container 公众号排版编辑器
+							54 container 成稿排版预览，可使用方向键滚动
+								55 container 验收输入：书桌整理的两个小动作
+									56 container
+										57 text 📷 ✓ 2026/10/28
+									58 container
+										59 heading 验收输入：书桌整理的两个小动作, Value: 1
+											60 text 验收输入：书桌整理的两个小动作
+										61 text 【独立验收用测试输入，不是AI生成结果，不发布】 书桌整理可以从两个小动作开始。第一步，把散落的纸张、充电线和杯子移到一旁，擦净桌面，只留下正在使用的笔记本。第二步，为常用物品安排固定位置：笔放进笔筒，线材放进收纳盒，杯子放在桌角。希望最终图文用两幅不同画面分别讲清这两个动作，配文独立表达经验，不把整段正文铺满图片。不添加品牌、商品效果或统计数据。
+									62 text |
+						63 button (disabled) 上一页
+						64 text 1 / 1
+						65 button (disabled) 下一页
+						66 summary 开源来源与许可, Value: off
+							67 text 开源来源与许可
+					68 summary 发布与交付, Value: off
+						69 text 发布与交付
+					70 summary 历史版本, Value: off
+						71 text 历史版本
+				72 splitter 调整编导栏宽度, Value: 426
+				73 container 编导对话
+					74 button 收起编导栏
+					75 container 项目准备候选
+					76 heading 编导对话, Value: 2
+						77 text 编导对话
+					78 text 候选预览后采纳
+					79 button 新对话
+					80 pop up button 历史记录
+					81 container 当前项目：T-1420 本机账号1图文验收 20261028, Help: 项目 · T-1420 本机账号1图文验收 20261028
+						82 text 项目 T-1420 本机账号1图文验收 20261028
+					83 text 告诉我这份成稿需要怎么调整
+					84 text 审阅候选后采纳。
+					85 container
+						86 text entry area (settable) 我能帮你做什么, Value: [text entry area: 我能帮你做什么], Placeholder: 告诉我这份图文需要怎么调整
+							87 text 告诉我这份图文需要怎么调整
+						88 file upload button 选择文件或图片
+						89 button 添加文件或图片
+						90 text 也可拖到这里；图片识别效果取决于当前模型 ⌘/Ctrl ↩ 发送 · Enter 换行
+						91 button (disabled) 清空输入
+						92 button (disabled) 提交提示给 Copilot
+	93 close button
+	94 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	95 minimize button
+	96 text CreatorOS
+97 menu bar
+	98 CreatorOS
+	99 File
+	100 Edit
+	101 View
+	102 Window
+	103 Help
+
+The focused UI element is 2 HTML content Description: CreatorOS, URL: 127.0.0.1:64542/projects/project-intake-2c85a17456fc3c78d1ddb370f32e8a51/outputs/output-2ddab0cc-3252/image

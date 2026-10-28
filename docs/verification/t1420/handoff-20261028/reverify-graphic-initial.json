@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "operation": "graphicPosts.get",
+  "requestId": "req-2ddab0cc-3408",
+  "groupId": "grp-8fdb2e06-22",
+  "accountId": null,
+  "data": {
+    "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+    "outputId": "output-2ddab0cc-3252",
+    "targetPlatform": "xiaohongshu",
+    "artifactId": "artifact-2ddab0cc-3258",
+    "currentVersionId": "artifactversion-2ddab0cc-3259",
+    "current": {
+      "schemaVersion": 1,
+      "title": "",
+      "body": "",
+      "summary": "",
+      "tags": [],
+      "imageUses": [],
+      "sourceRefs": [],
+      "ruleSnapshotRef": null
+    },
+    "scriptContext": {
+      "state": "empty",
+      "scriptRef": null,
+      "scriptText": "",
+      "metadata": {
+        "title": "T-1420 本机账号1图文验收 20261028",
+        "summary": "独立验收作品：将书桌整理前后的小经验制作成小红书图文，验证独立配文、内容分页与真实AI配图。仅供验收，不发布。",
+        "tags": []
+      },
+      "metadataSource": {
+        "kind": "project",
+        "projectId": "project-intake-2c85a17456fc3c78d1ddb370f32e8a51",
+        "updatedAt": "2026-10-28T09:33:55.112Z"
+      }
+    },
+    "versions": [
+      {
+        "id": "artifactversion-2ddab0cc-3259",
+        "versionNumber": 1,
+        "createdAt": "2026-10-28T09:37:18.306Z",
+        "changeSummary": "初稿"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req-2ddab0cc-3408"
+  },
+  "error": null
+}

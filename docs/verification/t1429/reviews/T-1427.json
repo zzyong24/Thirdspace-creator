@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-1427 当前规格独立增量复审；同构独立会话 /root/recovery_stale_specs_b，未核实精确模型型号。SPEC SHA256 b52a11ea21351990dbd198bbffeb43313e97fef55e7f3902e7e2ee359d094e25；宪法 SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。旧事件为cycle 2 round 2；incoming父提交的同名SPEC已含未登记的2026-10-26增量，不能把父提交文件误当旧event版本。沿Git历史找到98008e5的完整字节匹配旧spec_sha256，再比较当前全文。 新增仅准备推送段保全未提交内容与原HEAD/远端SHA，要求逐项冲突兼容合同及针对性验证，禁止reset/rebase/强推/跳hooks/无关脏工作树并入；只允许真实fetch、常规本地整理和合并。末段明确当前不push/PR/tag/Release/部署，官方失败仍保留，未将“准备”改为全部验收完成。 编号与写入证据目录依据DEC-142801对应到T1427，T1405引用对应T1426；没有改变既有402分类、付款边界、最后一次恢复保护、来源CAS、诊断组权限或正式三轮成功条件。新增证据复用约束与_GATE_EVIDENCE.md一致：未变部分可引用，组合变化需整合验证。 原packet findings为空；本轮没有发现增量使已确认验收不成立的具体缺口。不复执行Growth生产诊断、不回读真实账号、不代签三轮或推送许可。 精确历史来源、diff、旧packet与静态证据见 docs/verification/t1429/reviews/T-1427.evidence.json。",
+  "findings": []
+}

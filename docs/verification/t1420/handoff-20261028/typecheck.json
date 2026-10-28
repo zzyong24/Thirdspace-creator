@@ -1,0 +1,22 @@
+{
+  "label": "typecheck",
+  "command": [
+    "pnpm",
+    "--workspace-concurrency=1",
+    "--filter",
+    "@creatoros/contract",
+    "--filter",
+    "@creatoros/ai-worker",
+    "--filter",
+    "@creatoros/backend",
+    "--filter",
+    "creatoros-frontend",
+    "-r",
+    "typecheck"
+  ],
+  "cwd": "/Users/masx/Projects/Thirdspace-creator",
+  "exit_code": 0,
+  "duration_seconds": 62.13,
+  "ended_at": "2026-10-28T09:09:11.667187+00:00",
+  "log": "typecheck.log.gz"
+}

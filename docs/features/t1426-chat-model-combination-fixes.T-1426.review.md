@@ -2,9 +2,9 @@
 
 - Task: T-1426
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: 09eddab7e466
-- Review receipt: 2537258f8796
+- Round: 3/3 (recheck)
+- Spec receipt: fd0fe5f2e950
+- Review receipt: 53f6deaf29e5
 
 ## 当前有效问题
 
@@ -17,23 +17,23 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1426",
   "cycle": 1,
-  "round": 2,
+  "round": 3,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "独立代理 /root/t1427_contract_review 对 T1426 cycle 1 round 1（PASS[REV:da492135f519]、无 finding）后的唯一适用性新增段作定向复核。当前 SPEC SHA-256 09eddab7e46643bcc561c76fa1690c7713068e1860b53b3cfa537c68b672d692；宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已核实际 93a972b9 的 13 文件均为 backend/worker/frontend server composition，没有 UI 组件或交互改动；新增段、DEC-140502 与 module scope_note 一致，按条件门公共约定将本任务 UI journey 判为不适用，原 AC、真实组合根和安装版 CLI 验收逐字保留。T1407 导入的 UI 验收仍须完成，官方 Pi 402 准确诊断及原任务恢复并未获免除。本轮只评价该规格增量，不声称实现、安装复验、402 恢复或推送条件已通过；未修改 SPEC、控制面或产品。",
+  "summary": "同构独立会话复核旧T1405 cycle1 round2至当前T1426，保留第三轮上限。任务与证据引用映射符合DEC，FR/AC未改；实际93a972b9提交为13个backend/worker/server组合文件，CLI适用性不免除T1407 UI义务或官方Pi真实问题。旧findings为空，未发现增量问题，不代签运行验收。",
   "spec_path": "docs/features/t1426-chat-model-combination-fixes.md",
-  "spec_sha256": "09eddab7e46643bcc561c76fa1690c7713068e1860b53b3cfa537c68b672d692",
+  "spec_sha256": "fd0fe5f2e9502a7f905602a208ec4345c1c38ae344d283eb03c39de4eac952ed",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1426-chat-model-combination-fixes.T-1426.review.md",
   "review_mode": "homogeneous",
-  "model": "inherited-session-model",
+  "model": "inherited-independent-agent",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "4e4ec902ea6ad837daf2e5f58070135e1ed777cab86433d0b6f395635b1144e7",
+  "latest_event_hash": "80e7a42490c2509ca42034115ec5bc4539d04ad495f6ddd98c3d3f0da209b60b",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "2537258f8796"
+  "receipt": "53f6deaf29e5"
 }
 ```
