@@ -373,10 +373,12 @@ export function createIntelligenceSourceAdapter(
       const capturedAt = now();
       switch (input.config.type) {
         case "creator_profile": {
+          const collectorAccountId = input.config.collectorAccountId;
+          if (!collectorAccountId) throw new Error("博主主页尚未关联抖音采集账号，不能同步作品");
           const rows = await deps.fetchProfileWorks({
             ctx,
             signal: input.signal,
-            collectorAccountId: input.config.collectorAccountId,
+            collectorAccountId,
             externalAccountId: input.config.externalAccountId,
           });
           return success(

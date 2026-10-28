@@ -343,8 +343,10 @@ export interface RadarApi {
   }): Promise<CreateSourceResult>;
   updateSource(input: {
     sourceId: string;
-    monitorEnabled: boolean;
-    syncPolicy: Record<string, unknown>;
+    monitorEnabled?: boolean;
+    syncPolicy?: Record<string, unknown>;
+    /** 给未关联采集账号的博主主页补关联。 */
+    collectorAccountId?: string;
     expectedVersion: number;
   }): Promise<RadarSource>;
   deleteSource(input: {

@@ -8,6 +8,19 @@ import * as React from "react";
 import { sourceVerificationErrorMessage,structuredErrorSignal } from "./intelligence-errors";
 import type { CreateSourceResult,RadarApi,RadarCollection,RadarSource } from "./intelligence-workbench-types";
 import { operationKey } from "./radar-operation-key";
+
+/** 从完整主页链接取 sec_uid；短链需要登录后经预览解析，这里不猜。 */
+export function douyinProfileFromUrl(raw: string): { secUid: string; canonicalUrl: string } | null {
+  try {
+    const url = new URL(raw.trim());
+    const secUid = decodeURIComponent(url.pathname.match(/^\/user\/([^/?#]+)/)?.[1] ?? "");
+    if (!/(^|\.)douyin\.com$/i.test(url.hostname) || !secUid || secUid === "self") return null;
+    return { secUid, canonicalUrl: `https://www.douyin.com/user/${encodeURIComponent(secUid)}` };
+  } catch {
+    return null;
+  }
+}
+
 export function AddSourceDialog({
   groupId,
   accountId,
@@ -231,6 +244,40 @@ export function AddSourceDialog({
     });
   }, [api, collectorAccountId, pending, type]);
 
+  const directProfile =
+    type === "creator_profile" && !profilePreview ? douyinProfileFromUrl(value) : null;
+  const saveProfileWithoutLogin = React.useCallback(() => {
+    if (!directProfile) return;
+    startTransition(async () => {
+      setError(null);
+      try {
+        const result = await api.createSource({
+          groupId,accountId,
+          collectionId: collectionId || null,
+          type: "creator_profile",
+          config: {
+            type: "creator_profile",
+            ...(collectorAccountId ? { collectorAccountId } : {}),
+            canonicalUrl: directProfile.canonicalUrl,
+            externalAccountId: directProfile.secUid,
+          },
+          displayName: name.trim() || `抖音博主 ${directProfile.secUid.slice(-6)}`,
+          monitorEnabled: monitor,
+          // 已选账号时首次同步会如实给出登录状态；未关联账号时只保存，不发起同步。
+          runInitial: Boolean(collectorAccountId),
+          idempotencyKey: operationKey("source"),
+        });
+        setValue("");
+        setName("");
+        resetVerification();
+        setOpen(false);
+        onDone(result);
+      } catch (caught) {
+        setError(sourceVerificationErrorMessage(type, caught));
+      }
+    });
+  }, [groupId, accountId, api, collectionId, collectorAccountId, directProfile, monitor, name, onDone, resetVerification, type]);
+
   const create = React.useCallback(() => {
     startTransition(async () => {
       setError(null);
@@ -340,7 +387,7 @@ export function AddSourceDialog({
         <DialogHeader>
           <DialogTitle>添加真实来源</DialogTitle>
           <DialogDescription>
-            主页、网页和收藏夹先真实验证再保存。逐字稿不会自动生成。
+            主页、网页和收藏夹先真实验证再保存；博主主页也可在未登录时先保存，登录后再同步。逐字稿不会自动生成。
           </DialogDescription>
         </DialogHeader>
         <div
@@ -396,10 +443,16 @@ export function AddSourceDialog({
               }}
               className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground"
             >
-              {groupId && collectors.length > 0 ? <option value="">请选择当前组采集账号</option> : null}
-              {collectors.length === 0 ? (
-                <option value="">暂无可用抖音账号</option>
-              ) : null}
+              {type === "creator_profile" ? (
+                <option value="">
+                  {collectors.length === 0 ? "暂无可用抖音账号（可先保存主页）" : "暂不关联（登录后再同步）"}
+                </option>
+              ) : (
+                <>
+                  {groupId && collectors.length > 0 ? <option value="">请选择当前组采集账号</option> : null}
+                  {collectors.length === 0 ? <option value="">暂无可用抖音账号</option> : null}
+                </>
+              )}
               {collectors.map((collector) => (
                 <option
                   key={collector.accountId}
@@ -411,7 +464,9 @@ export function AddSourceDialog({
               ))}
             </select>
             <span>
-              用当前组所选真实账号的登录态采集，内容归当前组。未绑定账号仍可添加公开网页或 RSS。
+              {type === "creator_profile"
+                ? "用所选账号的登录态读取作品。未登录抖音也可以先保存主页，登录并关联账号后再同步作品。"
+                : "用当前组所选真实账号的登录态采集，内容归当前组。未绑定账号仍可添加公开网页或 RSS。"}
             </span>
           </label>
         ) : null}
@@ -533,9 +588,13 @@ export function AddSourceDialog({
           每日自动同步
         </label>
         <p className="-mt-2 text-xs leading-5 text-muted-foreground">
-          {monitor
-            ? "保存后立即同步一次；此后 APP 运行时每天同步，错过会在下次打开后补跑。"
-            : "保存后仍会立即同步一次；此后只在你点击“同步”时更新。"}
+          {type === "creator_profile" && !collectorAccountId
+            ? monitor
+              ? "先保存主页，不会立刻同步。关联抖音账号后才会按每天同步，错过会在下次打开后补跑。"
+              : "先保存主页，不会立刻同步。关联抖音账号后，只在你点击“同步”时更新。"
+            : monitor
+              ? "保存后立即同步一次；此后 APP 运行时每天同步，错过会在下次打开后补跑。"
+              : "保存后仍会立即同步一次；此后只在你点击“同步”时更新。"}
         </p>
         {type === "darkhorse_query" ? (
           <p className="rounded-xl bg-warning-soft px-3 py-2 text-xs leading-5 text-warning">
@@ -585,6 +644,17 @@ export function AddSourceDialog({
           </Button>
         ) : null}
         <DialogFooter>
+          {type === "creator_profile" && !profilePreview ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending || !directProfile}
+              title={directProfile ? undefined : "请粘贴 www.douyin.com/user/... 完整主页链接"}
+              onClick={saveProfileWithoutLogin}
+            >
+              {collectorAccountId ? "跳过测试直接保存" : "直接保存主页（登录后再同步）"}
+            </Button>
+          ) : null}
           <Button
             type="button"
             disabled={

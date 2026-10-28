@@ -392,6 +392,34 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeDisabled();
   });
 
+  it("[T-1409] 没有抖音账号也能保存博主主页，只保存不发起同步", async () => {
+    const stub = { ...api(), listCollectors: vi.fn().mockResolvedValue([]), createSource: vi.fn().mockResolvedValue({ source: {}, run: null, task: null }) };
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]} initialDetail={null} api={stub} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    expect(await screen.findByRole("option", { name: "暂无可用抖音账号（可先保存主页）" })).toBeInTheDocument();
+    expect(screen.getByText(/先保存主页，不会立刻同步/)).toBeInTheDocument();
+    const direct = screen.getByRole("button", { name: "直接保存主页（登录后再同步）" });
+    expect(direct).toBeDisabled();
+    await userEvent.type(screen.getByRole("textbox", { name: "来源地址或关键词" }), "https://v.douyin.com/abc/");
+    expect(direct).toBeDisabled();
+    await userEvent.clear(screen.getByRole("textbox", { name: "来源地址或关键词" }));
+    await userEvent.type(screen.getByRole("textbox", { name: "来源地址或关键词" }), "https://www.douyin.com/user/MS4wLjABAAAAxyz?from_tab_name=main");
+    await userEvent.click(direct);
+
+    expect(stub.previewProfile).not.toHaveBeenCalled();
+    expect(stub.createSource).toHaveBeenCalledWith(expect.objectContaining({
+      type: "creator_profile",
+      config: {
+        type: "creator_profile",
+        canonicalUrl: "https://www.douyin.com/user/MS4wLjABAAAAxyz",
+        externalAccountId: "MS4wLjABAAAAxyz",
+      },
+      displayName: "抖音博主 AAAxyz",
+      runInitial: false,
+    }));
+  });
+
   it("[T-613] 黑马来源必须先验证热点宝授权，不能把普通抖音登录误当成可同步", async () => {
     const stub = api();
     stub.createSource = vi.fn().mockResolvedValue({
@@ -1502,7 +1530,7 @@ describe("T-482 内容雷达工作区", () => {
           type: "creator_profile",
           displayName: "示例博主",
           canonicalUrl: "https://www.douyin.com/user/sec-example",
-          collector: null,
+          collector: { accountId: "account-1", accountHandle: "@创作号", platform: "douyin", availability: "active" },
           monitorEnabled: false,
           syncPolicy: { mode: "manual" },
           status: "active",
@@ -1532,6 +1560,59 @@ describe("T-482 内容雷达工作区", () => {
       await screen.findByText(/同步完成：扫描 13 条/),
     ).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it("[T-1409] 未登录保存的博主主页显示待登录，关联账号后才同步", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-unbound",
+          collectionId: null,
+          type: "creator_profile",
+          displayName: "未登录博主",
+          canonicalUrl: "https://www.douyin.com/user/sec-unbound",
+          collector: null,
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 3,
+        },
+      ],
+      health: [],
+    };
+    render(
+      <IntelligenceWorkbench accountId="account-1" workspace={sourceWorkspace} items={[]} initialDetail={null} api={stub} />,
+    );
+    expect(screen.getByText(/未关联抖音账号，登录后可同步/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "同步 未登录博主" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "为 未登录博主 关联抖音账号" }));
+    const select = await screen.findByRole("combobox", { name: "关联采集账号" });
+    await userEvent.selectOptions(select, "account-2");
+    await userEvent.click(screen.getByRole("button", { name: "关联并同步" }));
+    expect(stub.updateSource).toHaveBeenCalledWith({ sourceId: "source-unbound", collectorAccountId: "account-2", expectedVersion: 3 });
+    expect(stub.startRun).toHaveBeenCalledWith(expect.objectContaining({ sourceId: "source-unbound" }));
+  });
+
+  it("[T-1409] 没有抖音账号时关联对话框指向账号管理，不提供假关联按钮", async () => {
+    const stub = { ...api(), listCollectors: vi.fn().mockResolvedValue([]) };
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [{
+        id: "source-unbound", collectionId: null, type: "creator_profile", displayName: "未登录博主",
+        canonicalUrl: "https://www.douyin.com/user/sec-unbound", collector: null, monitorEnabled: false,
+        syncPolicy: { mode: "manual" }, status: "active", lastRunAt: null, nextRunAt: null, version: 1,
+      }],
+      health: [],
+    };
+    render(<IntelligenceWorkbench accountId="account-1" workspace={sourceWorkspace} items={[]} initialDetail={null} api={stub} />);
+    await userEvent.click(screen.getByRole("button", { name: "为 未登录博主 关联抖音账号" }));
+    expect(await screen.findByRole("link", { name: "账号管理" })).toHaveAttribute("href", "/accounts");
+    expect(screen.getByRole("button", { name: "关联并同步" })).toBeDisabled();
+    expect(stub.updateSource).not.toHaveBeenCalled();
   });
 
   it("[T-546] 页面恢复时重新监听已有 active run，终态后停止转圈并恢复同步按钮", async () => {

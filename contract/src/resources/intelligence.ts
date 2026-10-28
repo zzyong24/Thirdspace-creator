@@ -142,7 +142,8 @@ export const intelligenceSourceConfig = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("creator_profile"),
-      collectorAccountId: id,
+      // 未登录抖音时可先保存主页；同步作品前必须关联可用采集账号。
+      collectorAccountId: id.optional(),
       canonicalUrl: z.string().url(),
       externalAccountId: z.string().min(1),
     })

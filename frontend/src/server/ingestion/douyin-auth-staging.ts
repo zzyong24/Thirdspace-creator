@@ -17,8 +17,52 @@
 import { randomBytes } from "node:crypto";
 import { cp, mkdir, rename, rm, stat,readFile,writeFile } from "node:fs/promises";
 import nodePath from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 
 const STAGING_PREFIX = "_staging-";
+// Windows 上刚退出的 Chromium 子进程、杀毒或索引服务会短暂持有 profile 内文件句柄，
+// 此时目录 rename 报 EPERM/EACCES/EBUSY；同一卷上稍后重试通常即可成功。
+const LOCKED_RENAME_CODES = new Set(["EPERM", "EACCES", "EBUSY", "ENOTEMPTY"]);
+const RENAME_RETRY_DELAYS_MS = [100, 250, 500, 1_000, 2_000, 3_000, 3_000];
+const RM_OPTIONS = { recursive: true, force: true, maxRetries: 5, retryDelay: 200 } as const;
+// Chromium 运行期独占的锁文件，残留进程持有时无法读取；新进程启动会重建，复制时跳过。
+const CHROMIUM_RUNTIME_LOCKS = new Set(["lockfile", "SingletonLock", "SingletonCookie", "SingletonSocket"]);
+
+/**
+ * 目录搬移：首选 rename；句柄占用类错误按退避重试，仍失败或跨卷(EXDEV)时复制后删源。
+ * 目标路径必须不存在(调用方先删除或先移走)，复制不与旧目录合并。
+ */
+async function moveDirectory(source: string, target: string): Promise<void> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await rename(source, target);
+      return;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException)?.code ?? "";
+      if (code === "EXDEV") break;
+      if (!LOCKED_RENAME_CODES.has(code)) throw err;
+      const wait = RENAME_RETRY_DELAYS_MS[attempt];
+      if (wait === undefined) break;
+      await delay(wait);
+    }
+  }
+  try {
+    await cp(source, target, {
+      recursive: true,
+      errorOnExist: true,
+      force: false,
+      filter: (from) => !CHROMIUM_RUNTIME_LOCKS.has(nodePath.basename(from)),
+    });
+  } catch (err) {
+    // 半份复制品会被回滚逻辑误认作完整目录，必须删掉，源目录保持原样。
+    await rm(target, RM_OPTIONS).catch(() => undefined);
+    throw err;
+  }
+  await rm(source, RM_OPTIONS).catch((err: NodeJS.ErrnoException) => {
+    // 复制品已完整；源里只剩被残留进程锁住的文件时不让整个登录失败。
+    if (!LOCKED_RENAME_CODES.has(err?.code ?? "")) throw err;
+  });
+}
 // token = randomBytes(8).hex → 恒 16 位小写 hex。白名单严校验(不满足直接抛,防注入)。
 const TOKEN_RE = /^[0-9a-f]{16}$/;
 
@@ -50,7 +94,8 @@ function assertStagingDir(dir: string): void {
  * 把 staging 登录态**搬**到该号正式目录(身份已确认后调用):
  * - staging 不存在/不是目录 → 抛错(诚实:没有可归位的登录态,绝不假装成功);
  * - 目标已存在 → 先整树删除再搬(同号重扫 = 登录态更新,旧 profile 被替换);
- * - 首选 fs.rename(原子、同设备快),EXDEV(跨设备/跨卷)回退 cp -r + rm。
+ * - 首选 fs.rename(原子、同设备快);Windows 句柄占用(EPERM/EBUSY 等)退避重试,
+ *   仍失败或跨卷(EXDEV)时回退 cp -r + rm。
  * 成功后 staging 目录不复存在(rename 移走 / copy 后删除)。
  */
 export async function adoptDouyinStagingDir(
@@ -62,22 +107,15 @@ export async function adoptDouyinStagingDir(
   if (!st?.isDirectory()) {
     throw new Error(`staging 登录态目录不存在,无法归位:${stagingDir}`);
   }
-  await rm(targetDir, { recursive: true, force: true });
+  await rm(targetDir, RM_OPTIONS);
   await mkdir(nodePath.dirname(targetDir), { recursive: true });
-  try {
-    await rename(stagingDir, targetDir);
-  } catch (err) {
-    // 跨设备(EXDEV)rename 不支持 → copy+rm 回退;其余错误原样抛(诚实失败)。
-    if ((err as NodeJS.ErrnoException)?.code !== "EXDEV") throw err;
-    await cp(stagingDir, targetDir, { recursive: true });
-    await rm(stagingDir, { recursive: true, force: true });
-  }
+  await moveDirectory(stagingDir, targetDir);
 }
 
 /** 丢弃 staging 登录态(失败路径清理)。幂等:目录不存在也安静通过(force)。 */
 export async function discardDouyinStagingDir(stagingDir: string): Promise<void> {
   assertStagingDir(stagingDir);
-  await rm(stagingDir, { recursive: true, force: true });
+  await rm(stagingDir, RM_OPTIONS);
 }
 
 interface BindingAdoptionRecord {version:1;stagingDir:string;targetDir:string;backupDir:string;hadTarget:boolean;userId?:string;runId?:string;}
@@ -94,9 +132,9 @@ export async function rollbackDouyinBindingAdoption(stagingDir:string):Promise<v
  const row=await readDouyinBindingAdoption(stagingDir);if(!row)return;
  const backup=await stat(row.backupDir).catch(()=>null),target=await stat(row.targetDir).catch(()=>null),stage=await stat(stagingDir).catch(()=>null);
  if(backup){
-  if(target){if(!stage)await rename(row.targetDir,stagingDir);else await rm(row.targetDir,{recursive:true,force:true});}
-  await rename(row.backupDir,row.targetDir);
- }else if(!row.hadTarget&&target){if(!stage)await rename(row.targetDir,stagingDir);else await rm(row.targetDir,{recursive:true,force:true});}
+  if(target){if(!stage)await moveDirectory(row.targetDir,stagingDir);else await rm(row.targetDir,RM_OPTIONS);}
+  await moveDirectory(row.backupDir,row.targetDir);
+ }else if(!row.hadTarget&&target){if(!stage)await moveDirectory(row.targetDir,stagingDir);else await rm(row.targetDir,RM_OPTIONS);}
  else if(row.hadTarget&&!stage&&target)throw new Error('原登录态备份缺失，无法证明安全恢复，请保留目录核对');
  await rm(stagingDir+'.adoption.json',{force:true});
 }
@@ -110,7 +148,7 @@ export async function prepareDouyinStagingAdoption(stagingDir:string,targetDir:s
  const row:BindingAdoptionRecord={version:1,stagingDir,targetDir,backupDir,hadTarget:!!(await stat(targetDir).catch(()=>null)),...owner};
  await writeFile(stagingDir+'.adoption.json',JSON.stringify(row),{mode:0o600});let finished=false;
  const rollbackProfile=async()=>{if(finished)return;await rollbackDouyinBindingAdoption(stagingDir);finished=true;};
- try{if(row.hadTarget)await rename(targetDir,backupDir);await adoptDouyinStagingDir(stagingDir,targetDir);}
+ try{if(row.hadTarget)await moveDirectory(targetDir,backupDir);await adoptDouyinStagingDir(stagingDir,targetDir);}
  catch(error){await rollbackProfile();throw error;}
- return {rollbackProfile,finalizeProfile:async()=>{if(finished)return;if(row.hadTarget)await rm(backupDir,{recursive:true,force:true});await rm(stagingDir+'.adoption.json',{force:true});finished=true;}};
+ return {rollbackProfile,finalizeProfile:async()=>{if(finished)return;if(row.hadTarget)await rm(backupDir,RM_OPTIONS);await rm(stagingDir+'.adoption.json',{force:true});finished=true;}};
 }
