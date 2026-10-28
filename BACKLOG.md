@@ -9,7 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1429|恢复重编号合并后的审核链与来源追溯|🔨|PASS[REV:72f8b5eb5b91]|—|[SPEC](docs/features/t1429-review-ledger-recovery.md)|用户已批准方案；独立修复与验证，不推送；坏链自举先独立评审，修复后补正式登记。|
+|T-1429|恢复重编号合并后的审核链与来源追溯|✅|PASS[REV:72f8b5eb5b91]|—|[SPEC](docs/features/t1429-review-ledger-recovery.md)|用户已批准方案；独立修复与验证，不推送；坏链自举先独立评审，修复后补正式登记。|
 |T-1418|修复创作者总览筛选读取慢与等待路径|🔨|PASS[REV:8fc500f6763a]|待验|[SPEC](docs/features/t1418-creator-overview-read-performance.md)|按真实月明水清深数据定位重复/串行读取，保留账号隔离与正确筛选结果。|
 |T-1419|简化文章工作台并恢复公众号排版风格切换|🔨|PASS[REV:66d05b52db53]|待验|[SPEC](docs/features/t1419-article-workbench-style-restoration.md)|移除创作流程里的来源许可说明，从历史恢复可保存、预览、导出的多风格切换。|
 |T-1420|以文生图生成小红书逐页配图与独立配文|⏸️|PASS[REV:a66a51f4d977]|待验|[SPEC](docs/features/t1420-graphic-post-content-structure.md)|用户2026-10-26再次明确：逐页图片必须调用AI文生图，不能用文字排版卡片冒充；复用已有组图生成、预览采纳与真实图片导出链。 接手检查与阻塞：[2026-10-28证据](docs/verification/t1420/handoff-20261028/README.md)。 本机账号组1经用户确认正确；独立验收两张真实图已生成采纳并精确回读，正文、旧安装界面与ZIP未通过，详见[重新验收](docs/verification/t1420/handoff-20261028/reverify-report.md)。 两个旧稿兼容原始样本已按用户提供的下载文件原样补回，兼容回归52/52通过。 测试文件仅去掉末尾多余空行以通过diff检查，断言未变。|

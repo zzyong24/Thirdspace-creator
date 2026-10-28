@@ -1,0 +1,29 @@
+{
+  "schema": "t1429-completion/v1",
+  "recovery_commit": "6edf36a75",
+  "integration_commit": "45a0ff04d",
+  "ledger_events": 463,
+  "original_union_events": 447,
+  "imported_source_events": 62,
+  "new_real_reviews": 16,
+  "review_audit": "PASS",
+  "tests": {
+    "review_state_migration_passed": 51,
+    "compatibility_passed": 52
+  },
+  "timeout_policy": "PASS",
+  "boundary_new_violations": 0,
+  "boundary_existing_violations": 5,
+  "quick_reconcile_remaining_errors": 4,
+  "quick_reconcile_remaining": "基线看板超长与T1135/T1155/T1181重复；未机械删除任务",
+  "T1429": "complete",
+  "T1420": "paused, business acceptance incomplete",
+  "original_sources_and_evidence_preserved": 111,
+  "old_t1420_cycle_authorization": "DEC-142002 consumed; original event archived",
+  "new_t1420_review_authorization": "DEC-142004",
+  "pushed": false,
+  "merged_main": false,
+  "installed_package_changed": false,
+  "new_model_calls": 0,
+  "backups": "local workspace work/review-chain-recovery/before and integration-before; T1409 stash470bda512 preserved"
+}
