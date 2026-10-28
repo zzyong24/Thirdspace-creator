@@ -1263,37 +1263,31 @@ export function createProjectsService(
       // [T-321] 幂等跃迁到「已发布/复盘」态,复用 createProject 的 imported 阶段布局
       //   (前置阶段 completed、review in_progress、全阶段进度 100 → recomputeProgress=100)。
       //   不改 source:manual 项目登记发布后仍 manual(不被 reconstruct/transcribe auto-fill 吃到)。
-      const project = await repo.get(ctx, projectId);
-      if (project.status === "archived") return project; // 归档只读:不复活
-      const ts = deps.now();
-      const stages = await repo.listStages(ctx, projectId);
-      const reviewIdx = PROJECT_STAGES.indexOf("review");
-      for (const row of stages) {
-        const idx = PROJECT_STAGES.indexOf(row.stage as ProjectStageName);
-        const desiredStatus: StageStatus =
-          row.stage === "review"
-            ? "in_progress"
-            : idx < reviewIdx
-              ? "completed"
-              : "pending";
-        // 已是目标态 + 满进度 → 跳过写(幂等,少写)。
-        if (row.status === desiredStatus && row.progressPct === 100) continue;
-        await repo.updateStage(ctx, row.id, {
-          status: desiredStatus,
-          progressPct: 100,
-          startedAt:
-            row.startedAt ??
-            (desiredStatus === "pending" ? null : ts),
-          completedAt:
-            desiredStatus === "completed" ? (row.completedAt ?? ts) : row.completedAt,
-          updatedAt: ts,
+      const existing = await repo.get(ctx, projectId);
+      if (existing.status === "archived") return existing; // 保留归档项目的原只读入口。
+      return repo.updateProjectWithStages(ctx, projectId, (project, stages) => {
+        if (project.status === "archived") return { project: null, stages: [] };
+        const ts = deps.now();
+        const reviewIdx = PROJECT_STAGES.indexOf("review");
+        const stageChanges: Array<{ id: string; set: Partial<StageRow> }> = [];
+        const refreshed = stages.map(row => {
+          const idx = PROJECT_STAGES.indexOf(row.stage as ProjectStageName);
+          const desiredStatus: StageStatus = row.stage === "review" ? "in_progress" : idx < reviewIdx ? "completed" : "pending";
+          if (row.status === desiredStatus && row.progressPct === 100) return row;
+          const set: Partial<StageRow> = {
+            status: desiredStatus,
+            progressPct: 100,
+            startedAt: row.startedAt ?? (desiredStatus === "pending" ? null : ts),
+            completedAt: desiredStatus === "completed" ? (row.completedAt ?? ts) : row.completedAt,
+            updatedAt: ts,
+          };
+          stageChanges.push({ id: row.id, set });
+          return { ...row, ...set };
         });
-      }
-      const refreshed = await repo.listStages(ctx, projectId);
-      return repo.updateProjectRow(ctx, projectId, {
-        currentStage: "review",
-        progressPct: recomputeProgress(refreshed),
-        updatedAt: ts,
+        const progressPct = recomputeProgress(refreshed);
+        // SEMANTIC_BOUNDARY_ALLOW: 只比较当前持久状态，重复同步不制造新版本。
+        const changed = stageChanges.length > 0 || project.currentStage !== "review" || project.progressPct !== progressPct;
+        return { project: changed ? { currentStage: "review", progressPct, updatedAt: ts } : null, stages: stageChanges };
       });
     },
 

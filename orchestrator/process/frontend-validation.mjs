@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readBacklogTaskMetadata } from "./backlog-task-metadata.mjs";
 
 const SELF = fileURLToPath(import.meta.url);
 const REAL_SURFACES = new Set([
@@ -558,59 +559,16 @@ export function validateFrontendReport({ root, reportPath, taskId }) {
   };
 }
 
-function parseTableRow(line) {
-  const segments = line.split("|");
-  let start = segments[0]?.trim() === "" ? 1 : 0;
-  let end = segments.at(-1)?.trim() === "" ? segments.length - 1 : segments.length;
-  const indexes = [];
-  for (let index = start; index < end; index += 1) indexes.push(index);
-  return { cells: indexes.map((index) => segments[index].trim()) };
-}
-
 function readAcceptanceRows(backlogFile) {
-  const lines = readFileSync(backlogFile, "utf8").split("\n");
-  const rows = [];
-  let columns = null;
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    if (!line.trimStart().startsWith("|")) continue;
-    if (/^[|\s:\-]+$/.test(line.trim()) && line.includes("-")) continue;
-    const next = lines[index + 1]?.trim() ?? "";
-    const row = parseTableRow(line);
-    if (/^[|\s:\-]+$/.test(next) && next.includes("-")) {
-      columns = {
-        id: row.cells.findIndex((cell) => cell.toUpperCase() === "ID"),
-        status: row.cells.findIndex((cell) => cell.includes("状态")),
-        acceptance: row.cells.findIndex((cell) => cell.includes("验收")),
-        document: row.cells.findIndex((cell) => cell.includes("文档")),
-      };
-      continue;
-    }
-    if (!columns || columns.id < 0 || !row.cells[columns.id]) continue;
-    rows.push({
-      id: row.cells[columns.id],
-      status: row.cells[columns.status] ?? "",
-      acceptance: columns.acceptance >= 0 ? row.cells[columns.acceptance] ?? "" : null,
-      document: columns.document >= 0 ? row.cells[columns.document] ?? "" : "",
-      hasAcceptanceColumn: columns.acceptance >= 0,
-    });
-  }
-  return rows;
+  return readBacklogTaskMetadata({root:path.dirname(path.resolve(backlogFile)),backlogFile}).tasks
+    .map(task=>({...task,hasAcceptanceColumn:task.columns.acceptance>=0}));
 }
 
-function documentHasJourneyContract(root, documentCell) {
-  const targets = [...clean(documentCell).matchAll(/\]\(([^)]+)\)/g)]
-    .map((match) => match[1].trim().replace(/^<|>$/g, "").split("#", 1)[0])
-    .filter((target) => target && !/^[a-z][a-z0-9+.-]*:/i.test(target));
-  for (const target of targets) {
-    try {
-      const file = resolveInside(root, target, "task document");
-      if (existsSync(file) && readFileSync(file, "utf8").includes("```frontend-journey-contract")) {
-        return true;
-      }
-    } catch {
-      // Broken/out-of-root links are handled by their own document checks; they are not evidence of a UI contract.
-    }
+function documentHasJourneyContract(root, documents) {
+  root=realpathSync(root);
+  for(const target of documents) {
+    const file=resolveInside(root,target,"task document");
+    if(readFileSync(file,"utf8").includes("```frontend-journey-contract"))return true;
   }
   return false;
 }
@@ -745,7 +703,7 @@ export function auditFrontendReceipts({ root, backlogFile }) {
     }
     const value = clean(row.acceptance);
     if (value === "—") {
-      if (documentHasJourneyContract(root, row.document)) {
+      if (documentHasJourneyContract(root, row.documents)) {
         errors.push(`${row.id}: linked frontend journey contract 不能以 验收=— 绕过`);
       }
       continue;

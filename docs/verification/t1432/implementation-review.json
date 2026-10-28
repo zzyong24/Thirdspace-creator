@@ -1,0 +1,291 @@
+{
+  "schema": "implementation-review/v1",
+  "task_id": "T-1432",
+  "review_kind": "implementation-and-migration",
+  "reviewer": {
+    "agent": "/root/t1431_spec_review",
+    "review_mode": "homogeneous-independent",
+    "exact_model": "unknown",
+    "independence": "独立子会话；未实施所审工具代码、迁移或控制面状态修改。此前本人编制历史来源事实索引，本轮再次对照原文件逐行及哈希核验；不把本人编制该索引的行为称为异构或独立双人审核。"
+  },
+  "conclusion": "no_unresolved_actionable_findings",
+  "summary": "独立复核实际源码、临时目录中的真实CLI边界、迁移快照与原始日志。发现的问题均经实现方修复并复核；历史记录、当前状态与审核链保全。保留看板软限和T-1420完整长行两项警告，不替代任何产品、安装包、真机或付费模型验收。",
+  "findings": [],
+  "resolved_during_review": [
+    {
+      "id": "T1432-IR-01",
+      "title": "跨目录来源的相对文档链接在迁移后失去基准目录",
+      "evidence": "T-497/T-502 从 docs/tasks/T484.md 迁入仓根元数据时，../superpowers 链接原样复制会触发越界保护。",
+      "resolution": "运行元数据按已核实 repository_reference 规范化，原始相对路径及完整源行在事实索引和原文件保全；已逐项读取正确 SPEC/review 文档。"
+    },
+    {
+      "id": "T1432-IR-02",
+      "title": "来源表头外侧空列及无表头来源造成叙事遗漏",
+      "evidence": "早期 restore 使用带外侧竖线的表头索引，T-451 等真实叙事成为 —；T-497/T-502 无显式表头。",
+      "resolution": "去除表头外侧空列；无表头只对已核实五列来源使用第五列。实际叙事恢复且状态/票据未复制历史值；T-352 的非空当前叙事保留。"
+    },
+    {
+      "id": "T1432-IR-03",
+      "title": "taskctl 旅程检测漏裸路径并混入其他详情区段合同",
+      "evidence": "临时目录真实 complete 命令曾允许裸 SPEC 路径的 journey 任务使用验收 — 完成；另一无 journey 任务因链接详情中别的任务合同而被误阻。",
+      "resolution": "只扫描共享读取器的本任务 resolved.documents；已读取包含两个实际CLI分支的红绿回归，并复核源码。"
+    },
+    {
+      "id": "T1432-IR-04",
+      "title": "七列任务的错误缺失 Markdown SPEC 被过滤后绕过 receipt 绑定",
+      "evidence": "以真实 T-1433 receipt 做只读内存探针，错误声明路径被过滤成 [] 后曾接受 PASS；未改真实看板或票据。",
+      "resolution": "保留原文档声明的绑定语义；错误 Markdown 路径、删除 receipt 自身 SPEC 均明确拒绝，历史缺失非绑定文档仅输出诊断。"
+    },
+    {
+      "id": "T1432-IR-05",
+      "title": "裸文件路径声明仍可利用过滤空数组绕过绑定",
+      "evidence": "同一只读探针使用 docs/features/does-not-exist-t1432-probe.md 曾仍接受 PASS。",
+      "resolution": "共享 taskDocumentReferences 同时解析 Markdown 和裸路径；错误两种路径均拒绝，正确裸路径 PASS，直接 verify 未提供 documentPaths 的有效对照也有回归。"
+    },
+    {
+      "id": "T1432-IR-06",
+      "title": "87个旧活动任务仍保存短标题而未恢复已核实完整标题",
+      "evidence": "全量来源比较发现87项标题缺原行末尾范围/日期标签，例如 T-867 与 T-536。",
+      "resolution": "来源哈希验证后取完整标题，原短标题仍在原看板快照保全；最终全部407项标题/文档映射比较差异为空。"
+    },
+    {
+      "id": "T1432-IR-07",
+      "title": "显式保留的 T-1420 被 squeeze 缩为见详情，七列消费者读不到原叙事",
+      "evidence": "T-1420 原841 bytes行被压到224 bytes，解析后的 narrative 为见详情。",
+      "resolution": "--index 的显式保留行保留完整表；T-1420 原行逐字恢复。冗余前言另存 original-backlog-preface.md 后将看板保持在30KiB硬限内，不缩短业务原文。"
+    },
+    {
+      "id": "T1432-IR-08",
+      "title": "暂停区显式保留任务及已有索引的 retain 请求会产生错列表头",
+      "evidence": "临时目录真实 --index --retain 暂停七列任务命令曾 exit0，但写成五列表头加七列数据行；既有索引被新加入retain也有同类风险。",
+      "resolution": "保留任务优先选择完整表，旧五列完整任务按实际表头规范为七列；无标题的已有索引保留请求在任何写入前明确拒绝。"
+    },
+    {
+      "id": "T1432-IR-09",
+      "title": "索引后再运行原 --squeeze 入口破坏活动索引表头",
+      "evidence": "临时目录真实 --index 后 --squeeze 两次命令均 exit0，但第二次写成七列表头加五列索引行。",
+      "resolution": "已索引无标题行始终使用索引表头，保留现有元数据引用；修复后两次实际CLI输出可解析，并有幂等回归。"
+    }
+  ],
+  "scope": {
+    "included": "T1432过程工具、共享元数据消费者、模块绑定、迁移脚本、迁移后看板/详情/归档、progress与11 leases、审核事件链和相关测试证据。",
+    "excluded": "T1433产品源码另有本人独立审核原件；本报告不替代其测试，不为其他产品任务、密钥、新Mac包、安装、真实模型或业务作品作通过结论。",
+    "state_boundary": "迁移比较是在T1432/T1433正式收尾之前的观察点；其后由主会话运行taskctl完成的有证据状态转换不应伪装成迁移过程中的不变。"
+  },
+  "verification_notes": [
+    "原592行/427唯一ID变为407行/407唯一ID；去除165重复行与5个已归档相同副本，另外15个已完成任务正式归档。所有移出完整原行均在详情或归档逐字保全。",
+    "全部407保留ID的规范化状态、审核票据和验收与迁移前首次当前执行行一致；标题及文档与已核实来源映射比较差异为空。",
+    "原BACKLOG-details、BACKLOG-archive、events、review-events内容前缀保全；5组历史撞号的10条原行与来源行号/哈希保持一致。",
+    "T1408的14个前缀分别与git ls-files结果比较，恰为38个精确跟踪文件，无扩张。",
+    "308个既有模块的任务步骤、commits、e2e与阻塞语义保全，11 leases深相等。T1418/1419/1420 write_set刷新；T1429既有配置字段物化，未定义blocked_reason规范为null。",
+    "本审核者实际执行reviewctl audit，exit0；实际执行backlog-health --json，exit0、0 errors、2 warnings，30602 bytes，小于30720 bytes硬限。",
+    "前期生成中遇到历史缺失JSON与外仓引用属实际历史证据限制；共享读取保留documentDiagnostics，未伪造文件或历史SPEC，也未新增审核票据。",
+    "git diff --check曾发现新增EOF空行；最终修净后再次通过。",
+    "完整产品验证、完整reconcile执行和真机验收未由本报告执行；quick只读对账日志不得称为全量产品通过。",
+    "最终保存时看板30599 bytes；与迁移观察点相比仅T1433验收分类从待验纠正为—，最终状态/票据比较中唯一差异为此项，详见独立说明。"
+  ],
+  "created_at_utc": "2026-10-28T12:50:48.989Z",
+  "reviewed_head": "840af5eca4d3bd294ca9cd5fe63ceb2764431969",
+  "spec": {
+    "path": "docs/features/t1432-handoff-control-repair.md",
+    "sha256": "0ac228bea1e4661120d8fc1e2797cb293380cd440cfe90c69cf7751edcc1a401"
+  },
+  "source_sha256": {
+    "docs/features/t1432-handoff-control-repair.md": "0ac228bea1e4661120d8fc1e2797cb293380cd440cfe90c69cf7751edcc1a401",
+    "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "AGENTS.md": "cfc103d1f2772a3c373005e48191ce1990c73d237e52464f5f16084da51571e9",
+    "orchestrator/process/backlog-task-metadata.mjs": "778378187517dd39ff6b5f09b0fd1dc842f651c0faea7d9aa1a7b5e844ea97e5",
+    "orchestrator/process/backlog-task-metadata.test.mjs": "1d59bfda4490b0960f9bb8e3dc658487f622e13e51b0623239cf3ac6ff0972e1",
+    "orchestrator/process/task-status-label.mjs": "fabfbb45f3a79749a615d1adda5eef5c31eb262594e612f1abe99f7068bde609",
+    "orchestrator/process/taskctl.mjs": "922713572a5ff1b75e1f558baa169482c5f82d87053c949086c679b4ab52482c",
+    "orchestrator/process/taskctl-extension.test.mjs": "da630aa4050eb95e5963146ad7aab83b62f1af679adc27a6897f06808bf5c2de",
+    "orchestrator/process/research-gate.mjs": "00935cb918dc5da89f1b7d25852727c40d683cd8b2988ea3bf56a9372b4e10e4",
+    "orchestrator/process/research-gate.test.mjs": "ee8348b18b3d43343af6c45edfb98715a952f7aa331563898c43dfd100dbb651",
+    "orchestrator/process/backlog-compact.mjs": "4a67e3b3d2ca3338353186f324a6d57e8ffaf3f68b7de8fee16d3162fa628680",
+    "orchestrator/process/backlog-compact.test.mjs": "6c1c7be66fe68874ceb6b286bede64fded08efb65c3a211ad25b5ad8cd5339a4",
+    "orchestrator/process/backlog-health.mjs": "09508dd2ec0c3e90ef14acc2864b3da84050146ace49fe9c4e7ef656e4177960",
+    "orchestrator/process/backlog-health.test.mjs": "d51d274e1eaf5cae3bf9231d3fcea83e6c848bcca560d33fe1257b76e9a99472",
+    "orchestrator/process/context-compile.mjs": "1172cbf448600eed6ddad4bf75221141d0fb4d8dbfe0ff23b3d1b0a2b0497ab2",
+    "orchestrator/process/context-compile.test.mjs": "536cc71f6689c6a700cec4a0ce66073209243463e79132da9904fdb89a5abedd",
+    "orchestrator/process/pmem.mjs": "9326c3cec5ca86a2137fa9c5dee3dbbbcf113c6d0656d8a8c21ea94a7b3e69b0",
+    "orchestrator/process/pmem.test.mjs": "4c06840c866fdc606c5e82c3442ee17a19df946f3a7309fc91f457f11978ad1e",
+    "orchestrator/process/frontend-validation.mjs": "79f0a112d9f72b44a75ca897e112e8b710df1bd6dbcffa375eb40040e36d34c0",
+    "orchestrator/process/frontend-validation.test.mjs": "f8286c92b8e98fe2b6c73119c3be651d41464babf1cd57612f62043812ddb8d1",
+    "orchestrator/process/reviewctl.mjs": "79564faa67263d1c9ac67587267096d5f1f61ae704baf4b915c1d5ee6b253239",
+    "orchestrator/process/reviewctl.test.mjs": "d382e27791406666238f0465d66668b9d9fb3a145ea205b710d12278fdc0ea80",
+    "orchestrator/process/modules.config.json": "2aaa660462697ce48cb64ce7f3aea51a0fed1ee467d39c070a2a0e52d3bf90c4",
+    "docs/verification/t1432/prepare-backlog.mjs": "091e3102e845dffd20b391f5c46242bf03582a1c4eedce175696d8e4593ed57e",
+    "docs/verification/t1432/restore-metadata.mjs": "f33b017283a627b51f71ee2db358736d161cb8123deb150bed4ac68a1647b096",
+    "docs/verification/t1432/historical-id-provenance.json": "13aff33538ba31b83c146bcbb050a1258922a2984489b1172d1b5565ef09bc02",
+    "docs/verification/t1432/metadata-restoration.json": "ab86815f79eb3a2ae9bae2871e7771cbb3dbd8b306f28509e8a4bcc762176910",
+    "docs/verification/t1432/deduplication.json": "eb25a30ab3c3fd01a8c4f42ea1cc927a66b91487576834b49dc7fcf3b2a9b950",
+    "docs/verification/t1432/progress-preservation.json": "979e2ad09a5f01a2a64def1fbb6d78bc77b735d2885e7c37817e4f3ca37ff0ae",
+    "docs/verification/t1432/t1408-prefix-expansion.json": "77155ba68df9749eb647934bc56171b907fa448f348ae5b6dbce9bf85ab81a98",
+    "docs/verification/t1432/original-backlog-preface.md": "c7eaa0877e9dd064e04e586cd4589b85189230b8c3fba1349474f289950791d0",
+    "BACKLOG.md": "1c085890be42d990f66cca47155d45687bf3b97746cb794b6cf9e8bc6bf42621",
+    "BACKLOG-details.md": "1fce6437be0df94dd7092cf25810836e4cd88c7df685341abf8c408f0ea66604",
+    "BACKLOG-archive.md": "ea8b2ed7257cfdf6e83c3b85a602d720d9d735fa6ab499b4d4a152edd3b7e429",
+    "orchestrator/progress.json": "b1a4cf1e15014b5e8a562fd5302073b3457b8e9e9c8a1ea3315a14f9ea662624",
+    "orchestrator/events.ndjson": "0fa33d3b293d2bb80fbd2e6262050727c97aa3a36e254656286c2d7115c061e5",
+    "orchestrator/review-events.ndjson": "1bfebb8bfb3ee22f79f9d82ff80687d258b9d6f1b62a69e74e42b5ca54941561"
+  },
+  "migration_audit_before_acceptance_classification": {
+    "snapshot_hash": "cac0e57dc8b08b3bde9f3b302b1b20443136e97119b38d01cc642728841464dd",
+    "before_rows": 592,
+    "before_unique": 427,
+    "after_rows": 407,
+    "after_unique": 407,
+    "status_receipt_diffs": [],
+    "title_document_diffs": [],
+    "raw_preservation_failures": [],
+    "provenance_errors": [],
+    "original_details_prefix_preserved": true,
+    "original_archive_prefix_preserved": true,
+    "original_events_prefix_preserved": true,
+    "original_review_events_prefix_preserved": true,
+    "progress_top_keys": [
+      "meta",
+      "summary",
+      "verticals",
+      "leases"
+    ],
+    "leases_equal": true,
+    "expansion": {
+      "patterns": 14,
+      "exact_count": 38,
+      "errors": []
+    }
+  },
+  "migration_audit_at_save": {
+    "snapshot_hash": "cac0e57dc8b08b3bde9f3b302b1b20443136e97119b38d01cc642728841464dd",
+    "before_rows": 592,
+    "before_unique": 427,
+    "after_rows": 407,
+    "after_unique": 407,
+    "status_receipt_diffs": [
+      {
+        "id": "T-1433"
+      }
+    ],
+    "title_document_diffs": [],
+    "raw_preservation_failures": [],
+    "provenance_errors": [],
+    "original_details_prefix_preserved": true,
+    "original_archive_prefix_preserved": true,
+    "original_events_prefix_preserved": true,
+    "original_review_events_prefix_preserved": true,
+    "progress_top_keys": [
+      "meta",
+      "summary",
+      "verticals",
+      "leases"
+    ],
+    "leases_equal": true,
+    "expansion": {
+      "patterns": 14,
+      "exact_count": 38,
+      "errors": []
+    }
+  },
+  "accepted_separate_task_change": {
+    "task_id": "T-1433",
+    "field": "acceptance",
+    "before": "待验",
+    "after": "—",
+    "evidence": "docs/verification/t1433/acceptance-classification.md",
+    "explanation": "纯后端任务无 frontend-journey-contract，录入分类纠正；未撤除既有PASS。本人的T1433独立实现审核原件及151回归证据保留。"
+  },
+  "final_test_evidence": {
+    "test_files": 9,
+    "tests": 131,
+    "passed": 131,
+    "failed": 0,
+    "skipped": 0,
+    "source": "实现方真实日志，审核者已读取原始记录；未声称本人重复执行全部131测试",
+    "log": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-all-tools-final.log",
+    "sha256": "a22349e76a2c8b1cb56b4573e1a940d09a010952e103fa862d0b41f321e8bde0",
+    "quick_reconcile": {
+      "errors": 0,
+      "warnings": 2,
+      "full_verification_performed": false,
+      "log": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-reconcile-final.log",
+      "sha256": "10e5363327d6225dcf37872fede0f743e1b872f9b9e2f4357e25c1d82b379a22"
+    }
+  },
+  "independent_reproduction_results": [
+    {
+      "case": "paused seven-column retain",
+      "exit_code": 0,
+      "parsed_columns": 7
+    },
+    {
+      "case": "index then squeeze",
+      "exit_codes": [
+        0,
+        0
+      ],
+      "parsed_columns": 5,
+      "byte_identical": true
+    },
+    {
+      "case": "retain already indexed task",
+      "exit_code": 1,
+      "backlog_unchanged": true
+    },
+    {
+      "case": "wrong missing Markdown and bare SPEC with real T1433 receipt",
+      "rejected": true,
+      "real_control_plane_mutated": false
+    },
+    {
+      "case": "correct bare SPEC with real T1433 receipt",
+      "verdict": "PASS",
+      "real_control_plane_mutated": false
+    }
+  ],
+  "raw_logs": [
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-all-tools-final.log",
+      "sha256": "a22349e76a2c8b1cb56b4573e1a940d09a010952e103fa862d0b41f321e8bde0"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-reconcile-final.log",
+      "sha256": "10e5363327d6225dcf37872fede0f743e1b872f9b9e2f4357e25c1d82b379a22"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-index-squeeze-red.log",
+      "sha256": "67800e65d7fa00f3c3908257f17a8e4f502a303102a3f5b68a7fd8d0bc9c08b1"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-paused-retain-red.log",
+      "sha256": "0b80bb76037de0f74635cba34e4c5754bced9514ffc864ab9a71fc3d7e36b120"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-retain-row-red.log",
+      "sha256": "1b83110f7215334a80e832ba978e368e2049043eedc3a5c02a51c9952f7b95f3"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-taskctl-journey-red.log",
+      "sha256": "a183ad7bd1a1074ec1262a700be4b538382ec08b8ba728883dc10f60582b5845"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-review-boundary-red.log",
+      "sha256": "61ab7c84c86f0a23c3cc1a78c43d2e9c63b5ab4c95904076f8abbeb69ed297e0"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-bare-spec-red.log",
+      "sha256": "8b7195214f807efacf8bbad91e5ac0fdb12c951a6179dc6eadb25795faa86199"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-bare-valid-control-red.log",
+      "sha256": "ecb996a5c593adf544bd9b08d27dac4afc8ff5c3b7cac43ea9704a6e4569c5fe"
+    }
+  ],
+  "archive_observation": {
+    "note": "保存审查时最终测试和quick压缩件仍为较早版本，index-squeeze-red压缩件尚未存在。已告知主会话按原计划补充；本报告明确绑定上述当前work原始日志SHA，不把旧压缩件冒称为最终原件。"
+  },
+  "pending_administrative_steps": [
+    "主会话补齐最终原始日志归档与任务包刷新。",
+    "主会话按正式工具进行T1432/T1433状态收尾及本地提交。"
+  ]
+}

@@ -1461,3 +1461,69 @@ test('回滚预查之后出现第三方修改也不得覆盖', () => {
   assert.equal(fs.readFileSync(path.join(root,'BACKLOG.md'),'utf8'),'FOREIGN-EDITOR-UPDATE');
   assert.equal(JSON.parse(fs.readFileSync(path.join(root,'orchestrator/.review-ledger-migration.json'),'utf8')).status,'pending');
 });
+
+
+test("索引审核保全历史外链，仍拒绝错误或清空的本任务SPEC绑定",async()=>{
+  const root=tempProject();
+  const {parseBacklogTaskRows,createTaskMetadata}=await import("./backlog-task-metadata.mjs");
+  const {readBacklog}=await import("./reviewctl.mjs");
+  try {
+    const raw=fs.readFileSync(path.join(root,"BACKLOG.md"),"utf8").replace("[SPEC](SPEC.md)","[SPEC](SPEC.md) [外机](/Users/other/Growth/SPEC.md)");
+    const source=parseBacklogTaskRows(raw).tasks[0];
+    function index(task,review="待审") {
+      const created=createTaskMetadata(task);
+      fs.writeFileSync(path.join(root,"BACKLOG-details.md"),created.block);
+      fs.writeFileSync(path.join(root,"BACKLOG.md"),`|ID|状态|审核|验收|文档|\n|---|---|---|---|---|\n|T-101|📋|${review}|—|${created.link}|\n`);
+    }
+    index(source);
+    const input=writePacket(root,"indexed-round.json",{schema:"spec-review-round/v2",review_kind:"initial",summary:"索引兼容测试",findings:[]});
+    const recorded=run(REVIEWCTL,["record","T-101","--spec","SPEC.md","--constitution","CONSTITUTION.md","--input",input,"--review","SPEC.review.md","--backlog","BACKLOG.md","--review-mode","cross-family","--model","test-reviewer"],root);
+    assert.equal(recorded.status,0,recorded.stderr||recorded.stdout);
+    const current=readBacklog(path.join(root,"BACKLOG.md")).tasks[0];assert.match(current.review,/^PASS\[REV:/);
+    assert.equal(run(REVIEWCTL,["audit","--backlog","BACKLOG.md"],root).status,0);
+    fs.writeFileSync(path.join(root,"WRONG.md"),"# 另一个真实SPEC\n");
+    for(const document of ["[SPEC](WRONG.md)","—"]) {
+      const changed=source.line.replace(source.document,document);
+      const task=parseBacklogTaskRows(`|${source.header.join("|")}|\n|${source.header.map(()=>"---").join("|")}|\n${changed}`).tasks[0];
+      index(task,current.review);
+      const audited=run(REVIEWCTL,["audit","--backlog","BACKLOG.md"],root);
+      assert.notEqual(audited.status,0);assert.match(audited.stderr+audited.stdout,/未链接 receipt 绑定的 SPEC/);
+    }
+  } finally { fs.rmSync(root,{recursive:true,force:true}); }
+});
+
+
+test("七列已有receipt不能因错误SPEC缺失被过滤为空而绕过绑定",async t=>{
+  const {readBacklog,verifyReviewReceipt}=await import("./reviewctl.mjs");
+  for(const document of ["[SPEC](MISSING.md)","docs/features/does-not-exist-t1432-probe.md"])for(const mode of ["audit","verify"])await t.test(`${mode}: ${document}`,()=>{
+    const root=tempProject();
+    try {
+      const input=writePacket(root,"full-round.json",{schema:"spec-review-round/v2",review_kind:"initial",summary:"七列绑定测试",findings:[]});
+      const recorded=run(REVIEWCTL,["record","T-101","--spec","SPEC.md","--constitution","CONSTITUTION.md","--input",input,"--review","SPEC.review.md","--backlog","BACKLOG.md","--review-mode","cross-family","--model","test-reviewer"],root);
+      assert.equal(recorded.status,0,recorded.stderr||recorded.stdout);
+      const file=path.join(root,"BACKLOG.md");
+      const valid=fs.readFileSync(file,"utf8");
+      fs.writeFileSync(file,valid.replace("[SPEC](SPEC.md)",document));
+      const task=readBacklog(file).tasks[0];
+      assert.equal(task.metadataReference,undefined);assert.deepEqual(task.documents,[]);
+      assert.deepEqual(task.documentDiagnostics,[{target:document.startsWith("[SPEC]")?"MISSING.md":document,reason:"missing-document-not-read"}]);
+      if(mode==="audit"){
+        const audited=run(REVIEWCTL,["audit","--backlog","BACKLOG.md"],root);
+        assert.notEqual(audited.status,0);assert.match(audited.stderr+audited.stdout,/未链接 receipt 绑定的 SPEC/);
+      } else assert.throws(()=>verifyReviewReceipt({root:fs.realpathSync(root),taskId:task.id,reviewCell:task.review,documentCell:task.document,documentPaths:task.documents,requireDocumentLink:false}),/未链接 receipt 绑定的 SPEC/);
+      if(mode==="verify")assert.doesNotThrow(()=>verifyReviewReceipt({root:fs.realpathSync(root),taskId:task.id,reviewCell:task.review,documentCell:"SPEC.md"}));
+    } finally {fs.rmSync(root,{recursive:true,force:true});}
+  });
+});
+
+test("receipt自身SPEC被删除仍失败，不能降级成历史缺失诊断放行",async()=>{
+  const root=tempProject();
+  try {
+    const input=writePacket(root,"missing-bound-round.json",{schema:"spec-review-round/v2",review_kind:"initial",summary:"绑定文件删除测试",findings:[]});
+    const recorded=run(REVIEWCTL,["record","T-101","--spec","SPEC.md","--constitution","CONSTITUTION.md","--input",input,"--review","SPEC.review.md","--backlog","BACKLOG.md","--review-mode","cross-family","--model","test-reviewer"],root);
+    assert.equal(recorded.status,0,recorded.stderr||recorded.stdout);
+    fs.unlinkSync(path.join(root,"SPEC.md"));
+    const audited=run(REVIEWCTL,["audit","--backlog","BACKLOG.md"],root);
+    assert.notEqual(audited.status,0);assert.match(audited.stderr+audited.stdout,/SPEC 不存在|未链接 receipt 绑定的 SPEC/);
+  } finally {fs.rmSync(root,{recursive:true,force:true});}
+});

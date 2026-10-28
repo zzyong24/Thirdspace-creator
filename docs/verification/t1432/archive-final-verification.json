@@ -1,0 +1,23 @@
+{
+  "note": "独立审查保存时观察到较早归档；正式收尾前复核最终压缩归档与其所引用的当前原始日志逐字相同。保留原独审观察，不改写独审原件。",
+  "entries": [
+    {
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-all-tools-final.log",
+      "archive": "docs/verification/t1432/parent-t1432-all-tools-final.log.gz",
+      "sha256": "a22349e76a2c8b1cb56b4573e1a940d09a010952e103fa862d0b41f321e8bde0",
+      "byte_identical": true
+    },
+    {
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-reconcile-final.log",
+      "archive": "docs/verification/t1432/parent-t1432-reconcile-final.log.gz",
+      "sha256": "10e5363327d6225dcf37872fede0f743e1b872f9b9e2f4357e25c1d82b379a22",
+      "byte_identical": true
+    },
+    {
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-index-squeeze-red.log",
+      "archive": "docs/verification/t1432/parent-t1432-index-squeeze-red.log.gz",
+      "sha256": "67800e65d7fa00f3c3908257f17a8e4f502a303102a3f5b68a7fd8d0bc9c08b1",
+      "byte_identical": true
+    }
+  ]
+}

@@ -25,6 +25,8 @@ import {
   aiTasks,
   audienceSignals,
   sql,
+  eq,
+  projects,
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -941,5 +943,62 @@ describe("ProjectRepository — T-595 手工项目只清平台发布子树", () 
     expect(await db.select().from(metricSnapshots)).toHaveLength(1);
     expect(await db.select().from(topicAttributions)).toHaveLength(1);
     expect(await db.select().from(searchDocuments)).toHaveLength(1);
+  });
+});
+
+
+describe("T1433 公开状态归一的无变化写入", () => {
+  async function visibleFixture(hidden: boolean | undefined, publicationHidden: boolean, matches = true) {
+    await repo.insertProject(ctxA, projectRow({ id: "T1433_PROJECT", userId: ctxA.userId, platformRef: {
+      platform: "douyin", externalId: matches ? "t1433-visible" : "another-work", ...(hidden === undefined ? {} : { hidden }),
+    }}));
+    await repo.insertOutput(ctxA, { id: "T1433_OUTPUT", projectId: "T1433_PROJECT", title: "公开作品", contentType: "video", format: "", aspectRatio: "", targetDurationSeconds: 0, status: "published", contentRole: "traffic", primaryAssetId: null, createdAt: NOW, updatedAt: NOW });
+    await db.insert(publications).values({ id: "T1433_PUBLICATION", userId: ctxA.userId, accountId: "acct-a", contentOutputId: "T1433_OUTPUT", platform: "douyin", accountReference: "acct-a", status: "published", externalId: "t1433-visible", hiddenAt: publicationHidden ? NOW : null, platformStatus: publicationHidden ? "自见" : "已通过", createdAt: NOW, updatedAt: NOW });
+    return { platform: "douyin", externalId: "t1433-visible" };
+  }
+  async function snapshot() {
+    return { project: await repo.get(ctxA, "T1433_PROJECT"), publication: (await db.select().from(publications).where(eq(publications.id, "T1433_PUBLICATION")))[0]! };
+  }
+  it("首次隐藏转公开会更新，第二次不变，再次真实隐藏仍可恢复", async () => {
+    const ref = await visibleFixture(true, true), firstAt = "2026-10-28T04:00:00.000Z";
+    await repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt: firstAt });
+    const first = await snapshot();
+    expect(first.project).toMatchObject({ platformRef: { hidden: false }, updatedAt: firstAt });
+    expect(first.publication).toMatchObject({ hiddenAt: null, platformStatus: "已通过", updatedAt: firstAt });
+    await repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt: "2026-10-28T04:01:00.000Z" });
+    expect(await snapshot()).toEqual(first);
+    await db.update(projects).set({ platformRef: { ...ref, hidden: true } }).where(eq(projects.id, "T1433_PROJECT"));
+    await db.update(publications).set({ hiddenAt: firstAt, platformStatus: "自见" }).where(eq(publications.id, "T1433_PUBLICATION"));
+    const changedAt = "2026-10-28T04:02:00.000Z";
+    await repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt: changedAt });
+    expect(await snapshot()).toMatchObject({ project: { platformRef: { hidden: false }, updatedAt: changedAt }, publication: { hiddenAt: null, platformStatus: "已通过", updatedAt: changedAt } });
+  });
+  it.each([undefined, false])("已公开且hidden=%s保留原始字段和时间，并发对账也不写", async hidden => {
+    const ref = await visibleFixture(hidden, false), before = await snapshot();
+    await Promise.all([repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt: "2026-10-28T05:00:00.000Z" }), repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt: "2026-10-28T05:01:00.000Z" })]);
+    expect(await snapshot()).toEqual(before);
+  });
+  it.each([{ hidden: true, publicationHidden: false }, { hidden: false, publicationHidden: true }])("只更新实际改变的行：$hidden/$publicationHidden", async ({ hidden, publicationHidden }) => {
+    const ref = await visibleFixture(hidden, publicationHidden), before = await snapshot(), updatedAt = "2026-10-28T06:00:00.000Z";
+    await repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt });
+    const after = await snapshot();
+    if (hidden) { expect(after.project.updatedAt).toBe(updatedAt); expect(after.publication).toEqual(before.publication); }
+    else { expect(after.project).toEqual(before.project); expect(after.publication.updatedAt).toBe(updatedAt); }
+  });
+  it("项目归一失败时发布记录也回滚", async () => {
+    const ref = await visibleFixture(true, true), before = await snapshot();
+    await db.execute(sql`CREATE FUNCTION fail_t1433_visible_update() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'forced t1433 visible update rollback'; END; $$ LANGUAGE plpgsql`);
+    await db.execute(sql`CREATE TRIGGER fail_t1433_visible_update BEFORE UPDATE ON projects FOR EACH ROW EXECUTE FUNCTION fail_t1433_visible_update()`);
+    await expect(repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt: "2026-10-28T06:03:00.000Z" })).rejects.toThrow("forced t1433 visible update rollback");
+    expect(await snapshot()).toEqual(before);
+  });
+  it("其它账号与不匹配作品引用不修改项目", async () => {
+    const ref = await visibleFixture(true, true, false), before = await snapshot(), updatedAt = "2026-10-28T07:00:00.000Z";
+    expect(await repo.normalizeVisiblePlatformWork(ctxB, { ...ref, updatedAt })).toBeNull();
+    expect(await repo.normalizeVisiblePlatformWork({ ...ctxA, accountId: "other-account" }, { ...ref, updatedAt })).toBeNull();
+    expect(await snapshot()).toEqual(before);
+    await repo.normalizeVisiblePlatformWork(ctxA, { ...ref, updatedAt });
+    const after = await snapshot(); expect(after.project).toEqual(before.project);
+    expect(after.publication).toMatchObject({ hiddenAt: null, platformStatus: "已通过", updatedAt });
   });
 });

@@ -21,7 +21,8 @@
 // exit 0 = 干净或仅 WARN;exit 1 = 有 ERROR;exit 2 = 体积失控(RUNAWAY)。找不到 BACKLOG.md → 友好提示 exit 0(不阻塞)。
 // 零依赖(纯 node:fs)。压缩规范见 rules/task-ledger-rules.md(长过程迁 docs/tasks/T-xxx.md 或 commit message)。
 
-import { readFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync, existsSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -103,7 +104,38 @@ const reusedArchived = [...activeCounts.keys()].filter((id) => archiveCounts.has
 const archiveDuplicates = [...archiveCounts].filter(([, count]) => count > 1).map(([id]) => id);
 if (activeDuplicates.length) err(`执行看板存在重复 ID:${activeDuplicates.join(",")}`);
 if (reusedArchived.length) err(`执行看板复用了归档 ID:${reusedArchived.join(",")}`);
-if (archiveDuplicates.length) warn(`归档内部保留 ${archiveDuplicates.length} 个历史撞号:${archiveDuplicates.join(",")}`);
+const registered = new Set();
+const detailsFile = path.join(path.dirname(BACKLOG), "BACKLOG-details.md");
+if (existsSync(detailsFile)) {
+  const markers = [...readFileSync(detailsFile, "utf8").matchAll(/<!-- backlog-archive-provenance: ([^\r\n]+?) -->/g)];
+  if (markers.length > 1) err("历史来源索引声明不唯一");
+  else if (markers.length === 1) {
+    try {
+      const root = realpathSync(path.dirname(BACKLOG));
+      const candidate = path.resolve(root, markers[0][1]);
+      const indexFile = realpathSync(candidate);
+      const relative = path.relative(root, indexFile);
+      if (path.isAbsolute(relative) || relative === ".." || relative.startsWith(`..${path.sep}`)) throw new Error("来源索引路径越界");
+      const index = JSON.parse(readFileSync(indexFile,"utf8"));
+      if (index.schema !== "historical-id-provenance/v1" || !Array.isArray(index.collisions)) throw new Error("来源索引格式不匹配");
+      const archivedLines = readFileSync(ARCHIVE,"utf8").split("\n");
+      const sha = value => createHash("sha256").update(value,"utf8").digest("hex");
+      for (const collision of index.collisions) {
+        if (registered.has(collision.id) || !Array.isArray(collision.occurrences) || collision.occurrences.length < 2) throw new Error("来源索引 ID/条数不匹配");
+        const observed = archivedLines.filter(line => taskIds(line)[0] === collision.id).map(sha).sort();
+        const expected = collision.occurrences.map(item => {
+          if (item.source_file !== "BACKLOG-archive.md" || !Number.isInteger(item.source_line) || archivedLines[item.source_line-1] !== item.raw_row || taskIds(item.raw_row)[0] !== collision.id || sha(item.raw_row) !== item.row_sha256) throw new Error(`来源索引 ${collision.id} 原行/哈希不匹配`);
+          return item.row_sha256;
+        }).sort();
+        if (JSON.stringify(observed) !== JSON.stringify(expected)) throw new Error(`来源索引 ${collision.id} 完整行集合不匹配`);
+        registered.add(collision.id);
+      }
+      if (registered.size) ok(`历史来源索引已核实 ${registered.size} 组不同需求原文；活动 ID 守卫照常执行。`);
+    } catch (error) { err(`历史来源索引损坏：${error.message}`); }
+  }
+}
+const unresolvedArchiveDuplicates = archiveDuplicates.filter(id => !registered.has(id));
+if (unresolvedArchiveDuplicates.length) warn(`归档内部保留 ${unresolvedArchiveDuplicates.length} 个历史撞号:${unresolvedArchiveDuplicates.join(",")}`);
 if (!activeDuplicates.length && !reusedArchived.length) ok("执行任务 ID 唯一且未复用归档 ID。");
 
 // ① 文件体积
@@ -144,15 +176,15 @@ if (!lineFails && !lineWarns) ok(`无超长行(软限 ${LINE_WARN} 字 / 硬限 
 if (doneStart >= 0 && !doneWarns) ok(`已完成区(L${doneStart + 1} 起):无超长行。`);
 
 // ④ 状态列一致性(铁律 2/4):状态 cell 只放状态 emoji(+日期),塞过程叙事 = WARN
-const STATUS_RE = /^(📋|🔨|✅|⏸️|⛔)/;
-const stateNames = { "📋": "todo", "🔨": "in_progress", "✅": "done", "⏸️": "paused", "⛔": "blocked" };
+const STATUS_RE = /^(📋|⬜|🔨|✅|⏸️|⛔)/;
+const stateNames = { "⬜": "todo", "📋": "todo", "🔨": "in_progress", "✅": "done", "⏸️": "paused", "⛔": "blocked" };
 let statusWarns = 0;
 for (let i = 0; i < lines.length; i++) {
   const L = lines[i];
   if (!L.startsWith("|")) continue;
   const cells = L.split("|").map((c) => c.trim());
   const sc = cells.find((c) => STATUS_RE.test(c));
-  const task = cells.find((c) => /^T-[A-Za-z0-9._-]+$/.test(c));
+  const task = cells.find((c) => /^T-[A-Za-z0-9._ -]+$/.test(c));
   if (task && sc) {
     const symbol = sc.match(STATUS_RE)[1];
     summary.task_states[stateNames[symbol]]++;

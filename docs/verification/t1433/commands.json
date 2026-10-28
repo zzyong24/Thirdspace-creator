@@ -1,0 +1,45 @@
+{
+  "cwd": "/Users/masx/Projects/Thirdspace-creator",
+  "runtime": {
+    "node": "v25.9.0",
+    "pnpm": "10.32.1"
+  },
+  "red": {
+    "command": "pnpm --dir backend exec vitest run src/modules/projects/projects.service.test.ts src/modules/projects/projects.repository.integration.test.ts --testNamePattern T1433 --retry=0 --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000",
+    "log": "red.log",
+    "exitCode": 1,
+    "result": "8 failed / 1 passed / 76 skipped"
+  },
+  "green_targeted": {
+    "command": "pnpm --dir backend exec vitest run src/modules/projects/projects.service.test.ts src/modules/projects/projects.repository.integration.test.ts --testNamePattern T1433 --retry=0 --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000",
+    "log": "green-targeted.log",
+    "exitCode": 0,
+    "result": "9 passed / 76 skipped; before 2 additional rollback tests"
+  },
+  "green_related": {
+    "command": "pnpm --dir backend exec vitest run src/modules/projects/projects.service.test.ts src/modules/projects/projects.repository.integration.test.ts src/modules/ingestion/ingestion.merge-bound-project.integration.test.ts src/modules/projects/project-preparation.service.test.ts src/integration/project-preparation-brief-terminal.integration.test.ts --retry=0 --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000",
+    "log": "green-related.log",
+    "exitCode": 0,
+    "result": "5 files / 151 passed / 0 failed / 155.72s"
+  },
+  "backend_typecheck": {
+    "command": "NODE_OPTIONS=--max-old-space-size=6144 pnpm --dir backend typecheck",
+    "log": "backend-typecheck.log",
+    "exitCode": 0
+  },
+  "timeout_policy": {
+    "command": "node tools/timeout-policy/verify.mjs",
+    "log": "timeout-policy.log",
+    "exitCode": 0
+  },
+  "boundary": {
+    "command": "node orchestrator/process/boundary-scan.mjs",
+    "log": "boundary.log",
+    "exitCode": 0,
+    "result": "5 baseline violations; 0 new"
+  },
+  "diff_check": {
+    "command": "git diff --check -- backend/src/modules/projects/projects.service.ts backend/src/modules/projects/projects.service.test.ts backend/src/modules/projects/projects.repository.ts backend/src/modules/projects/projects.repository.integration.test.ts",
+    "exitCode": 0
+  }
+}

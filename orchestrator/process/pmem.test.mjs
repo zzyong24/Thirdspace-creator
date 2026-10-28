@@ -34,6 +34,7 @@ async function makeFixture() {
   const processDir = join(root, "orchestrator", "process");
   await mkdir(processDir, { recursive: true });
   await copyFile(sourceScript, join(processDir, "pmem.mjs"));
+  await copyFile(join(here, "backlog-task-metadata.mjs"), join(processDir, "backlog-task-metadata.mjs"));
   await writeFile(join(root, "BACKLOG.md"), backlog, "utf8");
   await writeFile(
     join(root, "orchestrator", "TASK_LEDGER.jsonl"),

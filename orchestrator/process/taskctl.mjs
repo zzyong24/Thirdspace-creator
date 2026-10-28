@@ -40,6 +40,8 @@ import {
   executeFrontendVerification,
   validateFrontendReport,
 } from "./frontend-validation.mjs";
+import { parseBacklogTaskRows, resolveTaskMetadata } from "./backlog-task-metadata.mjs";
+import { normalizeStatusLabel } from "./task-status-label.mjs";
 import { auditResearchGates } from "./research-gate.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -70,8 +72,8 @@ const flag = (name) => {
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
 };
 
-if (!["start", "resume", "complete", "block"].includes(action ?? ""))
-  die(`用法:taskctl.mjs <start|resume|complete|block> <task-id> [选项] —— 收到 action「${action ?? ""}」不认识。`);
+if (!["start", "resume", "complete", "block", "normalize-labels"].includes(action ?? ""))
+  die(`用法:taskctl.mjs <start|resume|complete|block|normalize-labels> <task-id> [选项] —— 收到 action「${action ?? ""}」不认识。`);
 if (!taskId || taskId.startsWith("--")) die(`缺 <task-id>(第二个位置参数)。`);
 
 const evidence = flag("--evidence");
@@ -99,17 +101,11 @@ const src = readFileSync(BACKLOG, "utf8");
 const sha256 = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const shaBefore = sha256(src);
 
-function hasJourneyContract(documentCell) {
-  const targets = [...(documentCell ?? "").matchAll(/\]\(([^)]+)\)/g)]
-    .map((match) => match[1].trim().replace(/^<|>$/g, "").split("#", 1)[0])
-    .filter((target) => target && !/^[a-z][a-z0-9+.-]*:/i.test(target));
-  for (const target of targets) {
-    const file = path.resolve(PROJ_ROOT, target);
-    const relative = path.relative(PROJ_ROOT, file);
-    if (relative === ".." || relative.startsWith(`..${path.sep}`) || !existsSync(file)) continue;
-    if (readFileSync(file, "utf8").includes("```frontend-journey-contract")) return true;
-  }
-  return false;
+function hasJourneyContract() {
+  const parsedTask = parseBacklogTaskRows(src).tasks.find(task => task.id === taskId);
+  if (!parsedTask) throw new Error(`任务 ${taskId} 元数据不可解析`);
+  const resolved = resolveTaskMetadata({ root: PROJ_ROOT, task: parsedTask });
+  return resolved.documents.some(target => readFileSync(path.resolve(PROJ_ROOT, target), "utf8").includes("```frontend-journey-contract"));
 }
 
 // ── 并发守卫:--expect-sha 前缀不匹配即拒绝 ─────────────────────────────────
@@ -178,7 +174,7 @@ const from = canon(fromRaw);
 
 // ── 转换规则(fail-closed)────────────────────────────────────────────────────
 let config;
-if (action === "block") {
+if (action === "block" || action === "normalize-labels") {
   // 风险收缩动作必须在 legacy、缺配置或配置损坏时仍可用；它不能制造“开工/完成”假象。
   config = { receipt_policy: null };
 } else {
@@ -189,14 +185,14 @@ if (action === "block") {
   }
 }
 const strictReceipts = config.receipt_policy === "required";
-if (!strictReceipts && action !== "block") {
+if (!strictReceipts && action !== "block" && action !== "normalize-labels") {
   die(
     `项目 receipt_policy=${JSON.stringify(config.receipt_policy ?? "(missing)")}，` +
       `legacy/未配置项目禁止 ${action}；请先运行 strict-receipts-migrate.mjs apply 迁移为 required`,
   );
 }
 if (
-  action !== "block" &&
+  action !== "block" && action !== "normalize-labels" &&
   strictReceipts &&
   (!taskColumns || taskColumns.review < 0 || taskColumns.acceptance < 0)
 ) {
@@ -218,7 +214,9 @@ if (
 let to;
 let frontendEvidence = null;
 let frontendExecution = null;
-if (action === "start" || action === "resume") {
+if (action === "normalize-labels") {
+  to = from;
+} else if (action === "start" || action === "resume") {
   const expectedFrom = action === "start" ? "📋" : "⏸️";
   if (from !== expectedFrom) die(`${action} 只接受 ${expectedFrom}→🔨:任务 ${taskId} 当前状态是 ${from}。`);
   try {
@@ -231,11 +229,16 @@ if (action === "start" || action === "resume") {
   }
   if (taskColumns?.review >= 0) {
     try {
+      const parsedTask = parseBacklogTaskRows(src).tasks.find(task => task.id === taskId);
+      if (!parsedTask) throw new Error(`任务 ${taskId} 元数据不可解析`);
+      const resolved = resolveTaskMetadata({root: PROJ_ROOT, task: parsedTask});
       verifyReviewReceipt({
         root: PROJ_ROOT,
         taskId,
         reviewCell: row.cells[taskColumns.review],
-        documentCell: taskColumns.document >= 0 ? row.cells[taskColumns.document] : "",
+        documentCell: resolved.document,
+        documentPaths: resolved.documents,
+        requireDocumentLink: Boolean(resolved.metadataReference),
       });
     } catch (error) {
       die(`任务 ${taskId}: ${error.message}`);
@@ -271,7 +274,7 @@ if (action === "start" || action === "resume") {
     } else if (
       acceptance === "—" &&
       taskColumns.document >= 0 &&
-      hasJourneyContract(row.cells[taskColumns.document])
+      hasJourneyContract()
     ) {
       die(`任务 ${taskId} 链接了 frontend journey contract，验收不得标 —；请改为待验并提交真实报告`);
     } else if (acceptance !== "—") {
@@ -285,9 +288,15 @@ if (action === "start" || action === "resume") {
   to = "⏸️";
 }
 
-// ── 只改状态 cell 里的 emoji,行内其余一个字不动 ────────────────────────────
+// ── 状态 cell 同步规范词，其余列保全 ────────────────────────────
 const segIdx = row.idx[sCol];
-row.segs[segIdx] = row.segs[segIdx].replace(fromRaw, to);
+const statusBefore = row.segs[segIdx].trim();
+row.segs[segIdx] = normalizeStatusLabel(row.segs[segIdx], to);
+const statusAfter = row.segs[segIdx].trim();
+if (action === "normalize-labels" && statusBefore === statusAfter) {
+  console.log(`✓ ${taskId} 状态标签已规范，无变更`);
+  process.exit(0);
+}
 if (frontendEvidence) {
   const acceptanceSegment = row.idx[taskColumns.acceptance];
   const original = row.segs[acceptanceSegment];
@@ -332,6 +341,7 @@ if (latestBacklog !== src) {
 const ev = { ts: new Date().toISOString(), actor: "taskctl", action, task: taskId };
 if (evidence) ev.evidence = evidence;
 if (reason) ev.reason = reason;
+if (statusBefore !== statusAfter) { ev.status_before = statusBefore; ev.status_after = statusAfter; }
 if (invalidatedAcceptance) ev.invalidated_acceptance = invalidatedAcceptance;
 if (frontendEvidence) {
   ev.report = path.relative(PROJ_ROOT, frontendEvidence.reportFile).split(path.sep).join("/");

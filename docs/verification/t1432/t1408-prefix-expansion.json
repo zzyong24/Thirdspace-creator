@@ -1,0 +1,68 @@
+{
+  "frontend/src/features/copilot/positioning-conversation*": [
+    "frontend/src/features/copilot/positioning-conversation.module.css",
+    "frontend/src/features/copilot/positioning-conversation.test.tsx",
+    "frontend/src/features/copilot/positioning-conversation.tsx"
+  ],
+  "frontend/src/features/copilot/ai-copilot-content*": [
+    "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+    "frontend/src/features/copilot/ai-copilot-content.tsx"
+  ],
+  "frontend/src/features/copilot/chat-task-control*": [
+    "frontend/src/features/copilot/chat-task-control.test.ts",
+    "frontend/src/features/copilot/chat-task-control.ts"
+  ],
+  "frontend/src/app/api/chat/route*": [
+    "frontend/src/app/api/chat/route.test.ts",
+    "frontend/src/app/api/chat/route.ts"
+  ],
+  "backend/src/modules/ai-runtime/positioning-runner*": [
+    "backend/src/modules/ai-runtime/positioning-runner.test.ts",
+    "backend/src/modules/ai-runtime/positioning-runner.ts"
+  ],
+  "ai-worker/src/prompt/templates/chatbox-surfaces*": [
+    "ai-worker/src/prompt/templates/chatbox-surfaces.test.ts",
+    "ai-worker/src/prompt/templates/chatbox-surfaces.ts"
+  ],
+  "ai-worker/src/prompt/templates/positioning-generate*": [
+    "ai-worker/src/prompt/templates/positioning-generate.test.ts",
+    "ai-worker/src/prompt/templates/positioning-generate.ts"
+  ],
+  "ai-worker/src/runtime/model-stream-observation*": [
+    "ai-worker/src/runtime/model-stream-observation.test.ts",
+    "ai-worker/src/runtime/model-stream-observation.ts"
+  ],
+  "ai-worker/src/runtime/pi-provider*": [
+    "ai-worker/src/runtime/pi-provider-codec.ts",
+    "ai-worker/src/runtime/pi-provider-deepseek.test.ts",
+    "ai-worker/src/runtime/pi-provider-diagnostic.test.ts",
+    "ai-worker/src/runtime/pi-provider-diagnostic.ts",
+    "ai-worker/src/runtime/pi-provider-embedding.ts",
+    "ai-worker/src/runtime/pi-provider-http.test.ts",
+    "ai-worker/src/runtime/pi-provider-json-compat.test.ts",
+    "ai-worker/src/runtime/pi-provider-reasoning-history.test.ts",
+    "ai-worker/src/runtime/pi-provider-wire.test.ts",
+    "ai-worker/src/runtime/pi-provider.ts"
+  ],
+  "ai-worker/src/execution/worker-runtime*": [
+    "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+    "ai-worker/src/execution/worker-runtime.test.ts",
+    "ai-worker/src/execution/worker-runtime.ts"
+  ],
+  "frontend/src/features/onboarding/onboarding-card*": [
+    "frontend/src/features/onboarding/onboarding-card.test.tsx",
+    "frontend/src/features/onboarding/onboarding-card.tsx"
+  ],
+  "frontend/src/features/onboarding/onboarding-steps*": [
+    "frontend/src/features/onboarding/onboarding-steps.test.ts",
+    "frontend/src/features/onboarding/onboarding-steps.ts"
+  ],
+  "frontend/src/features/platform-account/account-group-manager*": [
+    "frontend/src/features/platform-account/account-group-manager.test.tsx",
+    "frontend/src/features/platform-account/account-group-manager.tsx"
+  ],
+  "frontend/src/components/shell/zero-account-guidance*": [
+    "frontend/src/components/shell/zero-account-guidance.test.tsx",
+    "frontend/src/components/shell/zero-account-guidance.tsx"
+  ]
+}

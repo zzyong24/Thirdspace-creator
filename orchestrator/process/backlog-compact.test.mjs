@@ -76,3 +76,67 @@ test("--squeeze 把长详情和暂停恢复条件外置，主看板仍保留任�
   assert.equal(fs.readFileSync(path.join(root, "BACKLOG.md"), "utf8"), once);
   assert.equal(fs.readFileSync(path.join(root, "BACKLOG-details.md"), "utf8"), detailsOnce);
 });
+
+test('已存在锚点的新版长叙事必须追加保全而非静默丢弃', () => {
+  const {root,backlog} = fixture();
+  let result=run(root,'--all','--squeeze');
+  assert.equal(result.status,0,result.stderr);
+  const previous=fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8');
+  let src=fs.readFileSync(backlog,'utf8');
+  src=src.replace('见详情。','第二次新增要求。'.repeat(60));
+  fs.writeFileSync(backlog,src);
+  result=run(root,'--squeeze');
+  assert.equal(result.status,0,result.stderr);
+  const next=fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8');
+  assert.ok(next.startsWith(previous.trimEnd()));
+  assert.match(next,/第二次新增要求/);
+  const stable=fs.readFileSync(backlog,'utf8');
+  result=run(root,'--squeeze');
+  assert.equal(result.status,0,result.stderr);
+  assert.equal(fs.readFileSync(backlog,'utf8'),stable);
+  assert.equal(fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8'),next);
+});
+
+test('暂停区七列表按表头保留审核与验收，不按旧五列错位', () => {
+  const {root,backlog}=fixture();
+  fs.writeFileSync(backlog,'## ⏸️ 暂停池\n| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |\n|---|---|---|---|---|---|---|\n| T-901 | 暂停任务 | ⏸️ | PASS[REV:abcdef123456] | 待验 | [SPEC](PAUSED.md) | 等真实材料 |\n');
+  const result=run(root,'--squeeze');
+  assert.equal(result.status,0,result.stderr);
+  const next=fs.readFileSync(backlog,'utf8');
+  assert.match(next,/T-901\|⏸️\|PASS\[REV:abcdef123456\]\|待验\|/);
+  assert.match(fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8'),/PAUSED.md/);
+});
+
+test('--index显式保留行维持完整七列叙事，不再被squeeze缩写', () => {
+  const {root,backlog}=fixture();
+  const original=fs.readFileSync(backlog,'utf8').split('\n').find(line=>line.startsWith('| T-003 |'));
+  const result=run(root,'--all','--index','--retain','T-003');
+  assert.equal(result.status,0,result.stderr);
+  assert.ok(fs.readFileSync(backlog,'utf8').split('\n').includes(original));
+});
+
+test('--index在暂停区保留完整行时保持列一致，已索引保留请求不得写坏', () => {
+  for(const legacy of [true,false]){
+    const {root,backlog}=fixture();
+    fs.writeFileSync(backlog,legacy?'## ⏸️ 暂停\n|ID|任务|搁置|文档|恢复条件|\n|---|---|---|---|---|\n|T-901|暂停任务|⏸️|—|等资料|\n':'## ⏸️ 暂停\n|ID|任务|状态|审核|验收|文档|一句话|\n|---|---|---|---|---|---|---|\n|T-901|暂停任务|⏸️|—|待验|—|等资料|\n');
+    const result=run(root,'--index','--retain','T-901');assert.equal(result.status,0,result.stderr);
+    const lines=fs.readFileSync(backlog,'utf8').split('\n'),index=lines.findIndex(l=>l.includes('|T-901|')||l.includes('| T-901 |'));
+    const head=lines.slice(0,index).findLast(l=>/^\|\s*ID\s*\|/.test(l));
+    assert.equal(lines[index].split('|').length,head.split('|').length);
+    assert.match(head,/任务/);assert.match(lines[index],/等资料/);
+  }
+  const {root,backlog}=fixture();
+  assert.equal(run(root,'--all','--index').status,0);
+  const original=fs.readFileSync(backlog,'utf8'),details=fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8');
+  const result=run(root,'--index','--retain','T-001');assert.equal(result.status,1);
+  assert.equal(fs.readFileSync(backlog,'utf8'),original);assert.equal(fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8'),details);
+});
+
+test('新索引再次使用既有--squeeze入口保持幂等和五列表头', () => {
+  const {root,backlog}=fixture();
+  assert.equal(run(root,'--all','--index').status,0);
+  const once=fs.readFileSync(backlog,'utf8'),details=fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8');
+  const result=run(root,'--squeeze');assert.equal(result.status,0,result.stderr);
+  assert.equal(fs.readFileSync(backlog,'utf8'),once);
+  assert.equal(fs.readFileSync(path.join(root,'BACKLOG-details.md'),'utf8'),details);
+});

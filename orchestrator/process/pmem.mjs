@@ -16,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
+import { readBacklogTaskMetadata } from "./backlog-task-metadata.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
@@ -33,50 +34,12 @@ const BACKLOG_STATUS = {
   "⛔": "blocked",
 };
 
-function parseTableRow(line) {
-  const cells = line
-    .split("|")
-    .slice(1, -1)
-    .map((cell) => cell.trim());
-  return cells;
-}
-
 function readBacklogTasks() {
   if (!fs.existsSync(BACKLOG)) return [];
-  const lines = fs.readFileSync(BACKLOG, "utf8").split("\n");
-  const rows = [];
-  let columns = null;
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    if (!line.trimStart().startsWith("|")) continue;
-    const cells = parseTableRow(line);
-    const next = lines[index + 1] ?? "";
-    if (
-      next.trimStart().startsWith("|") &&
-      /^[|\s:\-]+$/.test(next.trim())
-    ) {
-      columns = {
-        id: cells.findIndex((cell) => cell.toUpperCase() === "ID"),
-        title: cells.findIndex((cell) => cell === "任务"),
-        status: cells.findIndex((cell) => cell.includes("状态")),
-      };
-      continue;
-    }
-    if (!columns || columns.id < 0 || columns.title < 0 || columns.status < 0) {
-      continue;
-    }
-    const id = cells[columns.id];
-    const marker = Object.keys(BACKLOG_STATUS).find((emoji) =>
-      cells[columns.status]?.includes(emoji),
-    );
-    if (!id?.startsWith("T-") || !marker) continue;
-    rows.push({
-      id,
-      title: cells[columns.title],
-      status: BACKLOG_STATUS[marker],
-    });
-  }
-  return rows;
+  return readBacklogTaskMetadata({root:REPO,backlogFile:BACKLOG}).tasks.flatMap(task => {
+    const marker=Object.keys(BACKLOG_STATUS).find(emoji=>task.status.includes(emoji));
+    return marker ? [{id:task.id,title:task.title,status:BACKLOG_STATUS[marker]}] : [];
+  });
 }
 function sh(cmd, opts = {}) {
   return execSync(cmd, { cwd: REPO, encoding: "utf8", ...opts });

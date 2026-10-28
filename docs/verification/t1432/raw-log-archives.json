@@ -1,0 +1,248 @@
+[
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-all-tools-final.log",
+    "archive": "parent-t1432-all-tools-final.log.gz",
+    "original_bytes": 11747,
+    "original_sha256": "a22349e76a2c8b1cb56b4573e1a940d09a010952e103fa862d0b41f321e8bde0"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-bare-spec-green.log",
+    "archive": "parent-t1432-bare-spec-green.log.gz",
+    "original_bytes": 8798,
+    "original_sha256": "8f4a390ce4a0fd302ade4dabbc2e5196e4396dcad3ed42de815684d8cca18755"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-bare-spec-implementation.json",
+    "archive": "parent-t1432-bare-spec-implementation.json.gz",
+    "original_bytes": 2399,
+    "original_sha256": "c7d2ead4367845293c74a863038440d7efdad080d9019e45680641c03bc60139"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-bare-spec-red.log",
+    "archive": "parent-t1432-bare-spec-red.log.gz",
+    "original_bytes": 2646,
+    "original_sha256": "8b7195214f807efacf8bbad91e5ac0fdb12c951a6179dc6eadb25795faa86199"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-bare-valid-control-red.log",
+    "archive": "parent-t1432-bare-valid-control-red.log.gz",
+    "original_bytes": 4548,
+    "original_sha256": "ecb996a5c593adf544bd9b08d27dac4afc8ff5c3b7cac43ea9704a6e4569c5fe"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-compact-red.log",
+    "archive": "parent-t1432-compact-red.log.gz",
+    "original_bytes": 5705,
+    "original_sha256": "bffceb262653a4622eaf968792d2d5f83911f1c46ed93a5e5cac2b3a4e2af103"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-consumers-regression-current.log",
+    "archive": "parent-t1432-consumers-regression-current.log.gz",
+    "original_bytes": 4262,
+    "original_sha256": "0de12e279b889c43d768eb06b8d020415373d315315eb68f8786a0887847ebfd"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-context-generation.log",
+    "archive": "parent-t1432-context-generation.log.gz",
+    "original_bytes": 732,
+    "original_sha256": "9e203da6a8c2af68f512127a48c26b4e68a5ad9a8d4041e6f8d429f92b6457cb"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-context-last.log",
+    "archive": "parent-t1432-context-last.log.gz",
+    "original_bytes": 61,
+    "original_sha256": "2e118495b2395aba137a80cacd73afc17ca9ec95acba99e89972280bf2c07af5"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-health-count-green.log",
+    "archive": "parent-t1432-health-count-green.log.gz",
+    "original_bytes": 531,
+    "original_sha256": "51ae442d2ce20f68b42a04ffddd393d98088fb665c30a58195cf477d3bffbe76"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-health-count-red.log",
+    "archive": "parent-t1432-health-count-red.log.gz",
+    "original_bytes": 1439,
+    "original_sha256": "f738aac944892bba43c9eabe98e6f0a74322f1ca9d89dfd03b867943cfeafcc4"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-health-final.json",
+    "archive": "parent-t1432-health-final.json.gz",
+    "original_bytes": 1287,
+    "original_sha256": "4bafa2851ec0f97ae6a4d34d492e5151a07ae1c8b11f1cccf5cbd615474bbdba"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-index-spec-red.log",
+    "archive": "parent-t1432-index-spec-red.log.gz",
+    "original_bytes": 2276,
+    "original_sha256": "d909de901fb4d8297d523fcc655296b8529d01d79d3ff8a0c41821ae0a47ec0c"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-index-squeeze-red.log",
+    "archive": "parent-t1432-index-squeeze-red.log.gz",
+    "original_bytes": 3182,
+    "original_sha256": "67800e65d7fa00f3c3908257f17a8e4f502a303102a3f5b68a7fd8d0bc9c08b1"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-label-green.log",
+    "archive": "parent-t1432-label-green.log.gz",
+    "original_bytes": 1869,
+    "original_sha256": "c9fdb7910e8c47584c2933cb7034e4218675e28ffb0be73077d0924c774620d2"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-label-red.log",
+    "archive": "parent-t1432-label-red.log.gz",
+    "original_bytes": 2868,
+    "original_sha256": "840d516ba96f72f558a4e6529a3ad94ad3d82d907b187c739680812c61dedca2"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-metadata-consumers-final.log",
+    "archive": "parent-t1432-metadata-consumers-final.log.gz",
+    "original_bytes": 8098,
+    "original_sha256": "7eaba4427d8135bf756a2ead722dfc61bcb6f7251f6dcb75dc732b28c7d4862e"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-metadata-green-current.log",
+    "archive": "parent-t1432-metadata-green-current.log.gz",
+    "original_bytes": 3514,
+    "original_sha256": "51add4ade6097fbaf43de126d57ca191103890f5d257d5fb691e9872baa472c4"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-metadata-implementation.json",
+    "archive": "parent-t1432-metadata-implementation.json.gz",
+    "original_bytes": 4606,
+    "original_sha256": "e773ecbef82be0c6b8fc57ec82aeff503ebac61bc1c4c4e2183860722d2cfe45"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-metadata-red-current.log",
+    "archive": "parent-t1432-metadata-red-current.log.gz",
+    "original_bytes": 20358,
+    "original_sha256": "0abadc332366081310ffed632c406644c724a02818a16018e9c26880aa1cf861"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-metadata-red.log",
+    "archive": "parent-t1432-metadata-red.log.gz",
+    "original_bytes": 12999,
+    "original_sha256": "dcc503adca6a0b6842284163b39b42b0e88c0e61cf37aba01bab3f11c511f762"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-mixed-paths-red.log",
+    "archive": "parent-t1432-mixed-paths-red.log.gz",
+    "original_bytes": 1048,
+    "original_sha256": "fede118441886e1f54972efcdcd71c2aa020ac86fa51e8742c27bc7a7f3a4e7b"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-normalize-labels.log",
+    "archive": "parent-t1432-normalize-labels.log.gz",
+    "original_bytes": 6671,
+    "original_sha256": "41fe95fb8c32a5111aa4bb81560c593a6f2f5e54560b6d75fba98d9ffcf18e60"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-paused-header-red.log",
+    "archive": "parent-t1432-paused-header-red.log.gz",
+    "original_bytes": 949,
+    "original_sha256": "a562d10e5e06bb840fefe8701807bf6bd7a23623ad2b7b7e2df5ff19a5274efc"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-paused-retain-red.log",
+    "archive": "parent-t1432-paused-retain-red.log.gz",
+    "original_bytes": 1747,
+    "original_sha256": "0b80bb76037de0f74635cba34e4c5754bced9514ffc864ab9a71fc3d7e36b120"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-primary-tools-final.log",
+    "archive": "parent-t1432-primary-tools-final.log.gz",
+    "original_bytes": 2723,
+    "original_sha256": "f3336d07654776767b9f12141344b43f258cc39bcc0f341050244ead0629bb95"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-primary-tools-green.log",
+    "archive": "parent-t1432-primary-tools-green.log.gz",
+    "original_bytes": 2275,
+    "original_sha256": "3a355fb10f802b138b73341892c6a7622aae17c795d12fece8000a7f832afae9"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-progress-generate.log",
+    "archive": "parent-t1432-progress-generate.log.gz",
+    "original_bytes": 125,
+    "original_sha256": "b240f50f6845d4154143e8493cb52bf3434a486c5466868321d2c40387290e92"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-provenance-green.log",
+    "archive": "parent-t1432-provenance-green.log.gz",
+    "original_bytes": 458,
+    "original_sha256": "ed59f0ef7caeb10a71ca2ea33ff5d7cf26b8b80b3a8c0385c6f60739bf317498"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-provenance-red.log",
+    "archive": "parent-t1432-provenance-red.log.gz",
+    "original_bytes": 2967,
+    "original_sha256": "190ad5b979afd711035ae041d759ab8681c2ce07b2482af7d7743d5d65079cb9"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-reconcile-current.log",
+    "archive": "parent-t1432-reconcile-current.log.gz",
+    "original_bytes": 34,
+    "original_sha256": "cae4f29ffdec1696ea420bc0d76f4f160aaf379ca044df5981fa0d0bda948ebd"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-reconcile-final.log",
+    "archive": "parent-t1432-reconcile-final.log.gz",
+    "original_bytes": 2541,
+    "original_sha256": "10e5363327d6225dcf37872fede0f743e1b872f9b9e2f4357e25c1d82b379a22"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-retain-row-green.log",
+    "archive": "parent-t1432-retain-row-green.log.gz",
+    "original_bytes": 604,
+    "original_sha256": "5c79c2517b8d4a286d64119425a60a29ee6376bd142346d0442eaa99dbe32e58"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-retain-row-red.log",
+    "archive": "parent-t1432-retain-row-red.log.gz",
+    "original_bytes": 1607,
+    "original_sha256": "1b83110f7215334a80e832ba978e368e2049043eedc3a5c02a51c9952f7b95f3"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-review-boundary-green.log",
+    "archive": "parent-t1432-review-boundary-green.log.gz",
+    "original_bytes": 8605,
+    "original_sha256": "4286dbed45f808a35f561d028f173911c88ffd0cc08adb2edbe56b302695dd5d"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-review-boundary-implementation.json",
+    "archive": "parent-t1432-review-boundary-implementation.json.gz",
+    "original_bytes": 2603,
+    "original_sha256": "a0adb1d997e5bb219eaa93f7dd10162c0024f5bde7857e19bac62a69c278a937"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-review-boundary-red.log",
+    "archive": "parent-t1432-review-boundary-red.log.gz",
+    "original_bytes": 5060,
+    "original_sha256": "61ab7c84c86f0a23c3cc1a78c43d2e9c63b5ab4c95904076f8abbeb69ed297e0"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-table-continuation-red.log",
+    "archive": "parent-t1432-table-continuation-red.log.gz",
+    "original_bytes": 1032,
+    "original_sha256": "e50d2d45750e5825f5dc85e93f62b04eb7503096974dad404ff2e73d10ec303b"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-taskctl-journey-green.log",
+    "archive": "parent-t1432-taskctl-journey-green.log.gz",
+    "original_bytes": 660,
+    "original_sha256": "2ce04f662201bfbbcd5e29e9210c6d4fb57d8465d979ae6c57e829247433c9bc"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-taskctl-journey-red.log",
+    "archive": "parent-t1432-taskctl-journey-red.log.gz",
+    "original_bytes": 1443,
+    "original_sha256": "a183ad7bd1a1074ec1262a700be4b538382ec08b8ba728883dc10f60582b5845"
+  },
+  {
+    "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-taskctl-metadata-green.log",
+    "archive": "parent-t1432-taskctl-metadata-green.log.gz",
+    "original_bytes": 657,
+    "original_sha256": "c2426265d024c34930ce98d695875f5c79036a5542adfbeb887c883e7c6f4316"
+  }
+]

@@ -3,6 +3,7 @@ import {
   createDb,
   type Db,
   eq,
+  sql,
   // T-102 级联删除锁测:跨模块子表(断言删后一并清理)。
   artifacts,
   artifactVersions,
@@ -1436,5 +1437,63 @@ describe("projects.service — per-account strict (T-332 S2)", () => {
     await expect(service.patchProject(ctx2, p2.id, { title: "改" })).resolves.toMatchObject({
       title: "改",
     });
+  });
+});
+
+
+describe("T1433 发布同步的真实版本变化", () => {
+  it("首次发布更新、重复发布保持原行，真实阶段变化仍更新时间", async () => {
+    const clock = { value: "2026-10-28T01:00:00.000Z" };
+    const timed = createProjectsService(repo, { ...deterministicDeps(), now: () => clock.value });
+    const created = await timed.createProject(ctx, { title: "发布同步" });
+    clock.value = "2026-10-28T01:01:00.000Z";
+    const first = await timed.markPublished(ctx, created.id);
+    expect(first).toMatchObject({ currentStage: "review", progressPct: 100, updatedAt: clock.value });
+    const firstStages = await repo.listStages(ctx, created.id);
+    clock.value = "2026-10-28T01:02:00.000Z";
+    expect(await timed.markPublished(ctx, created.id)).toEqual(first);
+    expect(await repo.listStages(ctx, created.id)).toEqual(firstStages);
+    const script = firstStages.find(row => row.stage === "script")!;
+    await repo.updateStage(ctx, script.id, { status: "in_progress", progressPct: 50, updatedAt: clock.value });
+    clock.value = "2026-10-28T01:03:00.000Z";
+    expect(await timed.markPublished(ctx, created.id)).toMatchObject({ updatedAt: clock.value });
+    expect(await repo.getStage(ctx, created.id, "script")).toMatchObject({ status: "completed", progressPct: 100, updatedAt: clock.value });
+  });
+
+  it("同值发布资料合并不漂移版本，真实文案变化仍保存", async () => {
+    const clock = { value: "2026-10-28T02:00:00.000Z" };
+    const timed = createProjectsService(repo, { ...deterministicDeps(), now: () => clock.value });
+    const created = await timed.createProject(ctx, { title: "发布资料", brief: "原简介" });
+    const input = { title: "发布资料", brief: "原简介", platform: "douyin", externalId: "t1433-published" };
+    const first = await timed.mergePublishedWork(ctx, created.id, input);
+    clock.value = "2026-10-28T02:01:00.000Z";
+    expect(await timed.mergePublishedWork(ctx, created.id, input)).toEqual(first);
+    clock.value = "2026-10-28T02:02:00.000Z";
+    expect(await timed.mergePublishedWork(ctx, created.id, { ...input, brief: "实际更新简介" })).toMatchObject({ brief: "实际更新简介", updatedAt: clock.value, source: "manual" });
+  });
+
+  it("项目写入失败时阶段变化同事务回滚", async () => {
+    const created = await service.createProject(ctx, { title: "发布事务" });
+    const beforeStages = await repo.listStages(ctx, created.id);
+    await db.execute(sql`CREATE FUNCTION fail_t1433_project_update() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'forced t1433 project update rollback'; END; $$ LANGUAGE plpgsql`);
+    await db.execute(sql`CREATE TRIGGER fail_t1433_project_update BEFORE UPDATE ON projects FOR EACH ROW EXECUTE FUNCTION fail_t1433_project_update()`);
+    await expect(service.markPublished(ctx, created.id)).rejects.toThrow("forced t1433 project update rollback");
+    expect(await repo.get(ctx, created.id)).toEqual(created);
+    expect(await repo.listStages(ctx, created.id)).toEqual(beforeStages);
+  });
+
+  it("并发重复发布保持版本，归档和其它账号不能被同步改动", async () => {
+    const clock = { value: "2026-10-28T03:00:00.000Z" };
+    const timed = createProjectsService(repo, { ...deterministicDeps(), now: () => clock.value });
+    const created = await timed.createProject(ctx, { title: "并发同步" });
+    const first = await timed.markPublished(ctx, created.id);
+    clock.value = "2026-10-28T03:01:00.000Z";
+    expect(await Promise.all([timed.markPublished(ctx, created.id), timed.markPublished(ctx, created.id)])).toEqual([first, first]);
+    await expect(timed.markPublished({ ...ctx, accountId: "other-account" }, created.id)).rejects.toThrow();
+    await expect(timed.markPublished({ ...ctx, userId: "other-user" }, created.id)).rejects.toThrow();
+    const archived = await timed.archiveProject(ctx, created.id);
+    clock.value = "2026-10-28T03:02:00.000Z";
+    expect(await timed.markPublished(ctx, created.id)).toEqual(archived);
+    expect(await repo.get(ctx, created.id)).toEqual(archived);
   });
 });

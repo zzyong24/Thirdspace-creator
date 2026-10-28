@@ -153,6 +153,16 @@ export interface ProjectRepository {
     options?: {targetPlatforms?: TargetPlatformRow[]},
   ): Promise<ProjectRow>;
 
+  /** 在同一父锁内读取并提交项目/阶段变化；业务决定仍由 service 回调承担。 */
+  updateProjectWithStages(
+    ctx: RequestContext,
+    projectId: string,
+    changes: (project: ProjectRow, stages: StageRow[]) => {
+      project: Partial<ProjectRow> | null;
+      stages: Array<{ id: string; set: Partial<StageRow> }>;
+    },
+  ): Promise<ProjectRow>;
+
   // T-102 物理删除:级联清除该项目全部关联行 + 项目本身,一个事务包裹(全成或全不成)。
   // ownership 由调用方(service)在删前 get() 校验;这里再按 project_id / 派生子键收敛
   // 删除,顺序自底向上(先删孙表再删子表),避免留孤儿。返回删除前的 project 快照,
@@ -519,6 +529,23 @@ export function createProjectRepository(db: Db): ProjectRepository {
         }
         const [updated]=await tx.update(projects).set(set).where(and(eq(projects.id,projectId),eq(projects.userId,ctx.userId),accountGate(ctx))).returning();
         if(!updated)throw new OwnershipError('项目已归组，请重新选择');return updated;
+      });
+    },
+
+    async updateProjectWithStages(ctx, projectId, changes) {
+      return withWorkspaceParentWrite(db, ctx, { ...projectParent, lock: "update" }, [projectId], async tx => {
+        const [project] = await tx.select().from(projects).where(eq(projects.id, projectId));
+        const stages = await tx.select().from(projectStages).where(eq(projectStages.projectId, projectId));
+        const update = changes(project!, stages);
+        const ownedStages = new Set(stages.map(row => row.id));
+        for (const stage of update.stages) {
+          if (!ownedStages.has(stage.id)) throw new OwnershipError("阶段不属于当前项目");
+          await tx.update(projectStages).set(stage.set).where(and(eq(projectStages.id, stage.id), eq(projectStages.projectId, projectId)));
+        }
+        if (!update.project) return project!;
+        const [updated] = await tx.update(projects).set(update.project).where(and(eq(projects.id, projectId), eq(projects.userId, ctx.userId), accountGate(ctx))).returning();
+        if (!updated) throw new OwnershipError("项目已归组，请重新选择");
+        return updated;
       });
     },
 
@@ -1090,46 +1117,27 @@ export function createProjectRepository(db: Db): ProjectRepository {
         );
       const target = found[0];
       if (!target) return null;
-      const output = await getOutput(ctx, target.contentOutputId);
-      const project = await get(ctx, output.projectId);
-
-      await withWorkspaceParentWrite(db,ctx,{...outputParent,lock:"update",via:[...outputParent.via!,{table:publications,id:publications.id,parentId:publications.contentOutputId,userId:publications.userId,scope:{groupId:publications.groupId,accountId:publications.accountId}}]},[target.publicationId],async (tx) => {
-        const [lockedProject]=await tx.select().from(projects).where(eq(projects.id,project.id));
-        const platformRef=(lockedProject!.platformRef??{}) as Record<string,unknown>;
-        await tx
-          .update(publications)
-          .set({
-            hiddenAt: null,
-            platformStatus: "已通过",
-            updatedAt: ref.updatedAt,
-          })
-          .where(
-            and(
-              eq(publications.id, target.publicationId),
-              eq(publications.userId, ctx.userId),
-              eq(publications.accountId, accountId),
-            ),
-          );
-        if (
-          platformRef.platform === ref.platform &&
-          platformRef.externalId === ref.externalId
-        ) {
-          await tx
-            .update(projects)
-            .set({
-              platformRef: { ...platformRef, hidden: false },
-              updatedAt: ref.updatedAt,
-            })
-            .where(
-              and(
-                eq(projects.id, project.id),
-                eq(projects.userId, ctx.userId),
-                accountGate(ctx),
-              ),
-            );
+      return withWorkspaceParentWrite(db,ctx,{...outputParent,lock:"update",via:[...outputParent.via!,{table:publications,id:publications.id,parentId:publications.contentOutputId,userId:publications.userId,scope:{groupId:publications.groupId,accountId:publications.accountId}}]},[target.publicationId],async (tx) => {
+        const [publication] = await tx.select().from(publications).where(eq(publications.id, target.publicationId));
+        if (!publication || publication.platform !== ref.platform || publication.externalId !== ref.externalId) return null;
+        // 锁定后重读真实父链，避免使用等待锁之前的旧发布归属。
+        const lockedRepo = createProjectRepository(tx as unknown as Db);
+        const output = await lockedRepo.getOutput(ctx, publication!.contentOutputId);
+        const project = await lockedRepo.get(ctx, output.projectId);
+        const platformRef = (project.platformRef ?? {}) as Record<string, unknown>;
+        // SEMANTIC_BOUNDARY_ALLOW: 仅比较持久字段是否实际变化，不判断作品内容。
+        if (publication!.hiddenAt !== null || publication!.platformStatus !== "已通过") {
+          await tx.update(publications).set({ hiddenAt: null, platformStatus: "已通过", updatedAt: ref.updatedAt }).where(and(
+            eq(publications.id, target.publicationId), eq(publications.userId, ctx.userId), eq(publications.accountId, accountId),
+          ));
         }
+        if (platformRef.platform === ref.platform && platformRef.externalId === ref.externalId && platformRef.hidden === true) {
+          await tx.update(projects).set({ platformRef: { ...platformRef, hidden: false }, updatedAt: ref.updatedAt }).where(and(
+            eq(projects.id, project.id), eq(projects.userId, ctx.userId), accountGate(ctx),
+          ));
+        }
+        return { publicationId: target.publicationId, projectId: project.id };
       });
-      return { publicationId: target.publicationId, projectId: project.id };
     },
 
     async listActivity(ctx, projectId) {

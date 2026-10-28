@@ -3,6 +3,7 @@
 // State remains in the canonical BACKLOG plus append-only orchestrator/events.ndjson.
 // Research cards are evidence, not a second task/decision authority.
 
+import { normalizeStatusLabel } from "./task-status-label.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -125,7 +126,7 @@ function setTaskStatus(backlogFile, taskId, fromAllowed, to) {
   }
   const segments = state.lines[row.lineNo].split("|");
   const segmentIndex = row.columns.status + 1;
-  segments[segmentIndex] = segments[segmentIndex].replace(/📋|🔨|✅|⏸️?|⛔/, to);
+  segments[segmentIndex] = normalizeStatusLabel(segments[segmentIndex], to);
   state.lines[row.lineNo] = segments.join("|");
   const tmp = `${backlogFile}.tmp-${process.pid}`;
   fs.writeFileSync(tmp, state.lines.join("\n"));

@@ -1,0 +1,53 @@
+{
+  "schema": "backlog-health/v1",
+  "file": "/Users/masx/Projects/Thirdspace-creator/BACKLOG.md",
+  "summary": {
+    "bytes": 30599,
+    "task_states": {
+      "todo": 78,
+      "in_progress": 203,
+      "done": 0,
+      "paused": 126,
+      "blocked": 0
+    },
+    "inconsistent_status_rows": 0
+  },
+  "thresholds_bytes": {
+    "warning": 15360,
+    "error": 30720,
+    "runaway": 61440
+  },
+  "errors": 0,
+  "warnings": 2,
+  "findings": [
+    {
+      "level": "OK",
+      "m": "历史来源索引已核实 5 组不同需求原文；活动 ID 守卫照常执行。"
+    },
+    {
+      "level": "OK",
+      "m": "执行任务 ID 唯一且未复用归档 ID。"
+    },
+    {
+      "level": "WARN",
+      "m": "BACKLOG.md 29.9KB 超软上限 15.0KB — 该压缩了。"
+    },
+    {
+      "level": "WARN",
+      "m": "L19 长 449 字(>300 软限):「|T-1420|以文生图生成小红书逐页配图与独立配文|⏸️|PASS[REV:a…」"
+    },
+    {
+      "level": "OK",
+      "m": "已完成区(L457 起):无超长行。"
+    },
+    {
+      "level": "OK",
+      "m": "状态列干净(无塞叙事,上限 60 字)。"
+    },
+    {
+      "level": "OK",
+      "m": "看板状态计数:{\"todo\":78,\"in_progress\":203,\"done\":0,\"paused\":126,\"blocked\":0}；仅按行内符号统计，不代表实际并发或当前领取数。"
+    }
+  ],
+  "exit_code": 0
+}

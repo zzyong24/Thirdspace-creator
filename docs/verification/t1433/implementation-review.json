@@ -1,0 +1,82 @@
+{
+  "schema": "implementation-review/v1",
+  "task_id": "T-1433",
+  "review_mode": "homogeneous",
+  "model": "unknown",
+  "reviewer_context": "同构独立审查会话；精确模型未知；本会话未实现本缺陷。",
+  "spec_path": "docs/features/t1433-project-noop-timestamps.md",
+  "spec_sha256": "be5cdacdbdabba8532cf1a088214a693f42297e817884f28519c833e5b0f9cb7",
+  "summary": "独立核对冻结的四个文件实际 diff、现有父锁及工作区守卫、调用路径与原始红绿日志，未发现需要修复的实现问题。重复发布和公开归一在无实际变化时保持原行；真实阶段、文案或隐藏状态变化仍写入。原始相关回归日志为 5 个文件、151 个测试通过；结论限于当前源码与隔离测试证据，不证明历史 Windows 业务时间变化的根因，也不构成新 Mac 包或真实账号验收。",
+  "conclusion": "no_actionable_findings",
+  "findings": [],
+  "inspected_sources": {
+    "backend/src/modules/projects/projects.service.ts": "ca8f96523e9e93346447ebfc33be99645e5a3b66fe8320932e14977092c7e7b5",
+    "backend/src/modules/projects/projects.repository.ts": "8b53797074cc9527b8baa5218c2ce0fe7dadd91f5a42884e25e90707fe261558",
+    "backend/src/modules/projects/projects.service.test.ts": "55c1cd83ab599ab05672b51841af5bf91260d47ca1c7b5d320540bcdf686f7f1",
+    "backend/src/modules/projects/projects.repository.integration.test.ts": "9a9ebf389cbf6eec2ac9e2447c0c55410e1b7bbcc0f9b9bc73263eb84cd695ee"
+  },
+  "checks": [
+    {
+      "scope": "markPublished 幂等与并发",
+      "evidence": "projects.service.ts:1261；projects.repository.ts:535；backend/src/workspace-write.ts；projects.service.test.ts:1444",
+      "result": "服务回调在项目父锁内接收当前项目和阶段行，只有阶段集合、目标阶段或进度变化才提交项目 updatedAt。现有 updateStage 同样取得项目父锁；不以锁前阶段快照覆盖锁内结果。项目和阶段变更属于同一事务。"
+    },
+    {
+      "scope": "公开归一与逐行条件写入",
+      "evidence": "projects.repository.ts:1099；projects.repository.integration.test.ts:951",
+      "result": "沿用父链锁，在锁内重读 publication、output、project，并重新核对作品引用。仅 publication.hiddenAt/platformStatus 变化时更新发布行；只有匹配引用且 hidden===true 时更新项目，hidden 缺省或 false 不新增字段。"
+    },
+    {
+      "scope": "真实变化与原有边界",
+      "evidence": "projects.service.test.ts:1444–1472；projects.repository.integration.test.ts:962–986；projects.service.ts:1296",
+      "result": "测试覆盖首次转换、二次同值、再出现真实阶段/文案/隐藏变化；保留 source:manual。markPublished 入口和锁内回调均处理归档只读；所有权由父锁工作区守卫继续验证，跨用户/账号与引用不匹配断言保留。"
+    },
+    {
+      "scope": "数据库故障回滚",
+      "evidence": "projects.service.test.ts:1475；projects.repository.integration.test.ts:988",
+      "result": "真实 PGlite 的 BEFORE UPDATE 触发器抛 SQL 异常，分别验证阶段写入与项目失败、发布行写入与项目失败时的整体回滚；没有用 mock 事务替代。"
+    },
+    {
+      "scope": "测试数据隔离与证据真实性",
+      "evidence": "两份 projects 测试的 beforeEach；backend/src/db.ts:239；docs/verification/t1433/red.log、green-targeted.log、green-related.log",
+      "result": "测试使用无 dataDir 的内存 PGlite。红日志实际包含 8 项失败并显示 updatedAt/hidden 字段差异；首次绿日志为 9 项通过，后续含两项回滚测试的相关回归为 151 项通过。原有断言未删改；没有把定向筛选产生的 76 skipped 计为通过。"
+    }
+  ],
+  "validation_evidence": [
+    {
+      "path": "docs/verification/t1433/red.log",
+      "sha256": "9dc1409652e2d40dd91e23ddd6194b509c8f403403a89e38dd179e56f585aa79",
+      "observed_result": "8 failed / 1 passed / 76 skipped；原始时间戳/隐藏字段差异"
+    },
+    {
+      "path": "docs/verification/t1433/green-targeted.log",
+      "sha256": "b92a385973207694a75408ed1c1f7d76fd5536e6f8f1e6656a4fe4cad01e7b9a",
+      "observed_result": "9 passed / 76 skipped；两项后补回滚测试加入前"
+    },
+    {
+      "path": "docs/verification/t1433/green-related.log",
+      "sha256": "0a5dfd314545ff0e991b5feb1398553e11a8331a5c6604bca7d73a94ea5789a9",
+      "observed_result": "5 files / 151 passed / 155.72s"
+    },
+    {
+      "path": "docs/verification/t1433/backend-typecheck.log",
+      "sha256": "8582183a31114047a49d2356c1d9db4f82f5edad95469ac7c64cbfd2151fbe04",
+      "observed_result": "原始日志未见类型错误；commands.json 记录退出码 0"
+    },
+    {
+      "path": "docs/verification/t1433/timeout-policy.log",
+      "sha256": "2df37cbcdbed75ab459cf56b3e64617e6e66152d48637592f2379ac44d2ea2a9",
+      "observed_result": "静态检查及相关回归通过；其中 Windows 固定入口实机测试 1 项 SKIP，未当作本机已验"
+    },
+    {
+      "path": "docs/verification/t1433/boundary.log",
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "observed_result": "0 条新增违规，5 条既有基线违规仍在"
+    }
+  ],
+  "limitations": [
+    "本独立审查读取实际源码与原始日志，未自行再次运行这些测试；不把作者摘要单独当作测试证据。",
+    "并发重复调用由内存 PGlite 回归覆盖，父锁兼容性同时按现有共享实现核查；不声称已完成独立生产 PostgreSQL 压力测试。",
+    "没有触碰密钥、真实业务数据库、新 Mac 包、安装或付费调用；未修改任务状态或登记审核票据。"
+  ]
+}

@@ -23,6 +23,8 @@
 // 零依赖(纯 node:fs)。日期取 git log 最后提交日,取不到再用系统时钟(尽量确定性)。
 
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from "node:fs";
+import { parseBacklogTaskRows, createTaskMetadata } from "./backlog-task-metadata.mjs";
+import { acquireStateLock } from "./state-lock.mjs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,10 +35,13 @@ const REPO = path.resolve(HERE, "..", "..");
 const argv = process.argv.slice(2);
 const DRY = argv.includes("--dry-run");
 const ALL = argv.includes("--all");
-const SQUEEZE = argv.includes("--squeeze");
+const INDEX = argv.includes("--index");
+const SQUEEZE = argv.includes("--squeeze") || INDEX;
+const retainIdx = argv.indexOf("--retain");
+const RETAIN = new Set(retainIdx >= 0 ? argv[retainIdx + 1].split(",") : []);
 const keepIdx = argv.indexOf("--keep");
-const KEEP = keepIdx >= 0 ? Math.max(0, parseInt(argv[keepIdx + 1], 10) || 5) : 5;
-const explicit = argv.find((a, i) => !a.startsWith("-") && (keepIdx < 0 || i !== keepIdx + 1));
+const KEEP = keepIdx >= 0 ? Math.max(0, Number.isFinite(Number(argv[keepIdx + 1])) ? Number(argv[keepIdx + 1]) : 5) : 5;
+const explicit = argv.find((a, i) => !a.startsWith("-") && (keepIdx < 0 || i !== keepIdx + 1) && (retainIdx < 0 || i !== retainIdx + 1));
 const BACKLOG = explicit ? path.resolve(process.cwd(), explicit) : path.resolve(REPO, "BACKLOG.md");
 const ARCHIVE = path.join(path.dirname(BACKLOG), "BACKLOG-archive.md");
 const DETAILS = path.join(path.dirname(BACKLOG), "BACKLOG-details.md");
@@ -104,65 +109,84 @@ if (DRY) {
   process.exit(0);
 }
 
-// 写归档(只进不改,按日期分节;新文件补头)
-if (toArchive.length) {
-  let head = "";
-  if (!existsSync(ARCHIVE)) {
-    head = `# BACKLOG 归档(只进不改)\n\n> 由 \`backlog-compact.mjs\` 从 BACKLOG.md 迁入的 ✅ 完成行。考古用;不进 SessionStart 注入。\n`;
-  }
-  const block = `${head}\n## 归档于 ${today}\n\n| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |\n|---|---|---|---|---|---|---|\n${toArchive.map((r) => r.line).join("\n")}\n`;
-  appendFileSync(ARCHIVE, block);
-}
-
-// 重写主文件(删除已归档行)
+// 先计算所有变更；任何元数据错误发生时仍不写入原文件。
 const gone = new Set(toArchive.map((r) => r.idx));
 let outLines = lines.filter((_, i) => !gone.has(i));
 let squeezed = 0;
-let detailText = existsSync(DETAILS) ? readFileSync(DETAILS, "utf8") : "# BACKLOG 任务详情\n";
+const detailsBefore = existsSync(DETAILS) ? readFileSync(DETAILS, "utf8") : "";
+let detailText = detailsBefore || "# BACKLOG 任务详情\n";
 const detailBlocks = [];
-
 if (SQUEEZE) {
+  const { tasks } = parseBacklogTaskRows(outLines.join("\n"));
+  const byLine = new Map(tasks.map(t => [t.lineIndex, t]));
   let pausedTable = false;
-  outLines = outLines.map((line) => {
-    if (/^##\s+/.test(line)) pausedTable = line.includes("⏸️");
-    if (pausedTable && /^\|\s*ID\s*\|/.test(line)) return "|ID|状态|审核|验收|文档|";
-    if (pausedTable && /^\|(?:\s*:?-+:?\s*\|)+\s*$/.test(line)) return "|---|---|---|---|---|";
-    if (!/^\|\s*T-/.test(line)) return line;
-    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
-    const id = cells[0];
-    const anchor = id.toLowerCase().replace(/\s+/g, "-");
-    const detailLink = `[详情](BACKLOG-details.md#${anchor})`;
-
-    if (pausedTable) {
-      if (cells.length === 5 && cells.at(-1)?.includes(`BACKLOG-details.md#${anchor}`)) return line;
-      const [task = "", status = "⏸️", document = "—", recovery = "—"] = cells.slice(1);
-      if (!detailText.includes(`<a id="${anchor}"></a>`)) {
-        detailBlocks.push(`\n<a id="${anchor}"></a>\n### ${id} · ${task}\n\n- 原文档：${document}\n- 暂停原因/恢复条件：${recovery}\n`);
-      }
-      squeezed++;
-      return `|${id}|${status.startsWith("⏸️") ? "⏸️" : status}|—|—|${detailLink}|`;
+  let indexedTable = false;
+  const output = [];
+  const header = "| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |";
+  const indexHeader = "|ID|状态|审核|验收|文档|";
+  for (let n = 0; n < outLines.length; n++) {
+    const line = outLines[n];
+    if (/^##\s+/.test(line)) { pausedTable = line.includes("⏸️"); indexedTable = false; }
+    const task = byLine.get(n);
+    if (!task) {
+      if (pausedTable && /^\|\s*ID\s*\|/.test(line)) { output.push(indexHeader); indexedTable = true; }
+      else if (pausedTable && /^\|(?:\s*:?-+:?\s*\|)+\s*$/.test(line)) output.push("|---|---|---|---|---|");
+      else { output.push(line); if (/^\|\s*ID\s*\|/.test(line)) indexedTable = !line.includes("任务"); }
+      continue;
     }
-
-    if (cells.length !== 7 || (line.length <= 300 && (cells[6] ?? "").length <= 150)) return line;
-    if (!detailText.includes(`<a id="${anchor}"></a>`)) {
-      detailBlocks.push(`\n<a id="${anchor}"></a>\n### ${id} · ${cells[1]}\n\n- 原文档：${cells[5]}\n- 任务详情：${cells[6]}\n`);
+    const retain = INDEX && RETAIN.has(task.id);
+    if (retain && !task.title) throw new Error(`保留 ${task.id} 前需先恢复完整元数据，拒绝写入错列表头`);
+    const indexRow = !task.title || (!retain && (pausedTable || INDEX));
+    if (indexRow !== indexedTable) {
+      output.push("", indexRow ? indexHeader : header, indexRow ? "|---|---|---|---|---|" : "|---|---|---|---|---|---|---|");
+      indexedTable = indexRow;
     }
-    cells[5] = cells[5] === "—" ? detailLink : `${cells[5]} ${detailLink}`;
-    cells[6] = "见详情。";
+    if (retain) {
+      const canonicalHeader = ["ID","任务","状态","审核","验收","文档","一句话"];
+      output.push(JSON.stringify(task.header) === JSON.stringify(canonicalHeader) ? line : `| ${[task.id, task.title, task.status, task.review || "—", task.acceptance ?? "—", task.document || "—", task.narrative || "—"].join(" | ")} |`);
+      continue;
+    }
+    if (!task.title) { // 已索引行由读取器/迁移校验；压缩不猜标题或覆盖它。
+      output.push(line); continue;
+    }
+    if (!indexRow && (task.narrative === "见详情。" || (line.length <= 300 && task.narrative.length <= 150))) {
+      output.push(line); continue;
+    }
+    let entry;
+    for (const anchorHashLength of [8, 12, 16, 64]) {
+      entry = createTaskMetadata(task, { anchorHashLength });
+      const combined = detailText + detailBlocks.join("");
+      if (!combined.includes(`<a id="${entry.anchor}"></a>`) || combined.includes(entry.block.trim())) break;
+      if (anchorHashLength === 64) throw new Error("元数据锚点冲突，拒绝覆盖");
+    }
+    const combined = detailText + detailBlocks.join("");
+    if (!combined.includes(entry.block.trim())) {
+      const legacyAnchor = task.id.toLowerCase().replace(/\s+/g, "-");
+      if (!combined.includes(`<a id="${legacyAnchor}"></a>`)) detailBlocks.push(`\n<a id="${legacyAnchor}"></a>\n`);
+      detailBlocks.push(`\n${entry.block.trim()}\n`);
+    }
+    const link = INDEX ? entry.link.replace("[详情]", "[D]") : entry.link;
+    if (indexRow) output.push(`|${task.id}|${task.status}|${task.review || "—"}|${task.acceptance || "—"}|${link}|`);
+    else output.push(`| ${[task.id, task.title, task.status, task.review || "—", task.acceptance || "—", task.document === "—" ? link : `${task.document} ${link}`, "见详情。"].join(" | ")} |`);
     squeezed++;
-    return `| ${cells.join(" | ")} |`;
-  });
+  }
+  outLines = output;
 }
-
 const out = outLines.join("\n");
-writeFileSync(BACKLOG, out);
-if (detailBlocks.length) {
-  detailText = `${detailText.trimEnd()}\n${detailBlocks.join("")}\n`;
-  writeFileSync(DETAILS, detailText);
-}
-
-const newKB = (Buffer.byteLength(out) / 1024).toFixed(1);
-if (toArchive.length) console.log(`✓ 归档 ${toArchive.length} 行 → ${path.relative(process.cwd(), ARCHIVE)}`);
-if (SQUEEZE) console.log(`✓ 外置 ${squeezed} 条长详情/暂停恢复条件 → ${path.relative(process.cwd(), DETAILS)}`);
-console.log(`✓ 主文件 ${(Buffer.byteLength(src) / 1024).toFixed(1)}KB → ${newKB}KB。git diff 复核后连同归档文件一起提交。`);
-console.log(`  剩余超长 📋/🔨 行属语义压缩(agent 的活):node orchestrator/process/backlog-health.mjs 查看清单。`);
+const release = acquireStateLock(path.dirname(BACKLOG), { operation: "backlog-compact" });
+try {
+  if (readFileSync(BACKLOG, "utf8") !== src || (existsSync(DETAILS) ? readFileSync(DETAILS, "utf8") : "") !== detailsBefore) throw new Error("并发变更，拒绝覆盖看板或详情");
+  // 详情和归档先写；即便中断也只有可恢复的副本，主看板不会先丢原行。
+  if (detailBlocks.length) writeFileSync(DETAILS, `${detailText.trimEnd()}\n${detailBlocks.join("")}`.trimEnd()+"\n");
+  if (toArchive.length) {
+    const head = existsSync(ARCHIVE) ? "" : "# BACKLOG 归档(只进不改)\n";
+    const originalTasks = parseBacklogTaskRows(src).tasks;
+    const archived = toArchive.map(r => {
+      const t = originalTasks.find(t => t.lineIndex === r.idx);
+      return t ? `| ${t.header.join(" | ")} |\n|${t.header.map(() => "---").join("|")}|\n${r.line}` : r.line;
+    });
+    appendFileSync(ARCHIVE, `${head}\n## 归档于 ${today}\n\n${archived.join("\n\n")}\n`);
+  }
+  writeFileSync(BACKLOG, out);
+} finally { release(); }
+console.log(`✓ 归档 ${toArchive.length} 行，外置 ${squeezed} 行；主文件 ${(Buffer.byteLength(src) / 1024).toFixed(1)}KB → ${(Buffer.byteLength(out) / 1024).toFixed(1)}KB。`);

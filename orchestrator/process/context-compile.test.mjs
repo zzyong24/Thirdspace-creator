@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SKILL = path.resolve(HERE, "..");
+const SKILL = path.join(HERE, "rule-bundle");
 
 function fixture(t, {
   modules,
@@ -21,6 +21,8 @@ function fixture(t, {
   fs.mkdirSync(processDir, { recursive: true });
   fs.copyFileSync(path.join(HERE, "context-compile.mjs"), path.join(processDir, "context-compile.mjs"));
   fs.copyFileSync(path.join(HERE, "context-plan.mjs"), path.join(processDir, "context-plan.mjs"));
+  fs.copyFileSync(path.join(HERE, "rule-bundle.mjs"), path.join(processDir, "rule-bundle.mjs"));
+  fs.copyFileSync(path.join(HERE, "backlog-task-metadata.mjs"), path.join(processDir, "backlog-task-metadata.mjs"));
   fs.writeFileSync(
     path.join(root, "orchestrator", "ARTIFACT_MANIFEST.yaml"),
     'project:\n  current_stage: "4-build"\nscale_class: "S"\n',
@@ -418,4 +420,20 @@ test("legacy interactive compatibility never turns a missing verify into a Packe
   const result = run(root, "T-LEGACY");
   assert.notEqual(result.status, 0);
   assert.match(result.stderr + result.stdout, /verify|\u9a8c\u8bc1/i);
+});
+
+
+test("五列索引 Task Packet 读取本任务完整元数据，不把状态与详情链接充作标题和SPEC",async t=>{
+  const root=fixture(t,{modules:strictModules(),progress:strictProgress()});
+  const {createHash}=await import("node:crypto");
+  const hash=value=>createHash("sha256").update(value).digest("hex");
+  const source_line="| T-A | 完整索引标题 | 📋 | 待审 | 待验 | [Spec](T-A.md) | 本任务完整叙事 |";
+  const metadata={schema:"backlog-task-metadata/v1",id:"T-A",title:"完整索引标题",narrative:"本任务完整叙事",documents:"[Spec](T-A.md)",source_line,source_sha256:hash(source_line),source_columns:["ID","任务","状态","审核","验收","文档","一句话"]};
+  const anchor=`m-${hash(JSON.stringify(metadata)).slice(0,8)}`;
+  fs.writeFileSync(path.join(root,"BACKLOG-details.md"),`<a id="${anchor}"></a>\n\`\`\`backlog-task-metadata\n${JSON.stringify(metadata)}\n\`\`\`\n`);
+  fs.writeFileSync(path.join(root,"BACKLOG.md"),`|ID|状态|审核|验收|文档|\n|---|---|---|---|---|\n|T-A|🔨|—|待验|[D](BACKLOG-details.md#${anchor})|\n`);
+  const result=run(root,"T-A");assert.equal(result.status,0,result.stderr||result.stdout);
+  const packet=packetAt(root,"T-A");assert.match(packet,/任务\*\*:完整索引标题/);assert.match(packet,/本任务完整叙事/);
+  const references=packet.split("## 3.")[1].split("## 4.")[0];
+  assert.match(references,/T-A\.md/);assert.doesNotMatch(references,/BACKLOG-details\.md/);
 });

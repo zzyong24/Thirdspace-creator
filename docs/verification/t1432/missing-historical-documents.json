@@ -1,0 +1,27 @@
+[
+  {
+    "id": "T-1083",
+    "review": "—",
+    "message": "BACKLOG 元数据：SPEC 文档不存在：docs/verification/t1080/post-package-progress-block-failure.json"
+  },
+  {
+    "id": "T-1081",
+    "review": "—",
+    "message": "BACKLOG 元数据：SPEC 文档不存在：docs/verification/t1080/timeout-static-dispositions-corrected.json"
+  },
+  {
+    "id": "T-715",
+    "review": "—",
+    "message": "BACKLOG 元数据：文档相对路径不安全：../Thirdspace-growth/docs/contracts/T-137-ai-credit-recharge.md"
+  },
+  {
+    "id": "T-502",
+    "review": "—",
+    "message": "BACKLOG 元数据：文档相对路径不安全：../superpowers/specs/2026-07-24-favorites-collector-account-selector-design.md"
+  },
+  {
+    "id": "T-497",
+    "review": "—",
+    "message": "BACKLOG 元数据：文档相对路径不安全：../superpowers/specs/2026-07-24-controlled-knowledge-retrieval-design.md"
+  }
+]

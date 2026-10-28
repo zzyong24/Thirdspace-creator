@@ -77,3 +77,47 @@ test("resume 不能绕过仍开放的 Research-First Gate", () => {
   assert.match(result.stderr + result.stdout, /Research-First Gate|未关闭/i);
   assert.match(fs.readFileSync(path.join(root, "BACKLOG.md"), "utf8"), /⏸️/);
 });
+
+test('start同步清理旧状态词，不误删后续限制说明', () => {
+  const root = rootWith('📋 待办（等待实机）', '—', '—');
+  fs.writeFileSync(path.join(root, 'orchestrator/process/reconcile.config.json'), JSON.stringify({receipt_policy:'required',delivery_phase:'buildout',research_verify_commands:{}}));
+  const result = run(root, 'start', 'T-101');
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(fs.readFileSync(path.join(root, 'BACKLOG.md'),'utf8'), /🔨（等待实机）/);
+  assert.doesNotMatch(fs.readFileSync(path.join(root, 'BACKLOG.md'),'utf8'), /🔨\s*待办/);
+});
+
+test('normalize-labels保留状态和票据，记录原文，幂等且守并发', () => {
+  const root = rootWith('⏸️ 进行中 · 缺材料', 'PASS:abcdef123456');
+  let result = run(root, 'normalize-labels', 'T-101', '--expect-sha', '000000');
+  assert.equal(result.status, 1);
+  assert.equal(fs.existsSync(path.join(root,'orchestrator/events.ndjson')),false);
+  result = run(root, 'normalize-labels', 'T-101');
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const once = fs.readFileSync(path.join(root,'BACKLOG.md'),'utf8');
+  assert.match(once,/⏸️ · 缺材料.*PASS:abcdef123456/);
+  const events = fs.readFileSync(path.join(root,'orchestrator/events.ndjson'),'utf8');
+  const event = JSON.parse(events);
+  assert.equal(event.status_before, '⏸️ 进行中 · 缺材料');
+  assert.equal(event.status_after, '⏸️ · 缺材料');
+  result = run(root, 'normalize-labels', 'T-101');
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(fs.readFileSync(path.join(root,'BACKLOG.md'),'utf8'), once);
+  assert.equal(fs.readFileSync(path.join(root,'orchestrator/events.ndjson'),'utf8'),events);
+});
+
+test('索引任务complete只扫描本任务真实文档，不能漏旅程或混入他项合同', async () => {
+  const {parseBacklogTaskRows,createTaskMetadata}=await import('./backlog-task-metadata.mjs');
+  for(const journey of [true,false]) for(const document of ['[SPEC](own.md) [D](BACKLOG-details.md#unrelated)', 'own.md']) {
+    const root=rootWith('🔨','—','—');
+    fs.writeFileSync(path.join(root,'orchestrator/process/reconcile.config.json'),JSON.stringify({receipt_policy:'required',delivery_phase:'buildout'}));
+    const original=fs.readFileSync(path.join(root,'BACKLOG.md'),'utf8').replace('| — | — | — |','| '+document+' | — | — |');
+    fs.writeFileSync(path.join(root,'own.md'),journey?'```frontend-journey-contract\n{}\n```\n':'# 普通后端任务\n');
+    const task=parseBacklogTaskRows(original).tasks[0],entry=createTaskMetadata(task);
+    fs.writeFileSync(path.join(root,'BACKLOG-details.md'),entry.block+'\n<a id="unrelated"></a>\n```frontend-journey-contract\n{}\n```\n');
+    fs.writeFileSync(path.join(root,'BACKLOG.md'),'|ID|状态|审核|验收|文档|\n|---|---|---|---|---|\n|T-101|🔨|—|—|'+entry.link+'|\n');
+    const result=run(root,'complete','T-101','--evidence','真实后端测试通过');
+    assert.equal(result.status,journey?1:0,result.stderr||result.stdout);
+    if(journey)assert.match(result.stderr,/frontend journey contract/);
+  }
+});

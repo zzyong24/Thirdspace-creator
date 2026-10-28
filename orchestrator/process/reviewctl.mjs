@@ -27,6 +27,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireStateLock } from "./state-lock.mjs";
+import { readBacklogTaskMetadata, taskDocumentReferences } from "./backlog-task-metadata.mjs";
 import { buildLedgerMigration, verifyMigrationProvenance } from "./review-ledger-migration.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -216,61 +217,14 @@ export function readReviewConfig(root) {
   }
 }
 
-function parseRow(line) {
-  const segments = line.split("|");
-  let start = segments[0]?.trim() === "" ? 1 : 0;
-  let end = segments.at(-1)?.trim() === "" ? segments.length - 1 : segments.length;
-  const indexes = [];
-  for (let index = start; index < end; index += 1) indexes.push(index);
-  return { segments, indexes, cells: indexes.map((index) => segments[index].trim()) };
-}
-
-function isTableRow(line) {
-  return line.trimStart().startsWith("|");
-}
-
-function isSeparator(line) {
-  const value = line.trim();
-  return isTableRow(line) && value.includes("-") && /^[|\s:\-]+$/.test(value);
-}
-
 export function readBacklog(backlogFile) {
-  const lines = readFileSync(backlogFile, "utf8").split("\n");
-  const tasks = [];
-  let columns = null;
-  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
-    if (!isTableRow(lines[lineIndex]) || isSeparator(lines[lineIndex])) continue;
-    const row = parseRow(lines[lineIndex]);
-    if (isSeparator(lines[lineIndex + 1] ?? "")) {
-      columns = {
-        id: row.cells.findIndex((cell) => cell.toUpperCase() === "ID"),
-        status: row.cells.findIndex((cell) => cell.includes("状态")),
-        document: row.cells.findIndex((cell) => cell.includes("文档")),
-        review: row.cells.findIndex((cell) => cell.includes("审核")),
-        acceptance: row.cells.findIndex((cell) => cell.includes("验收")),
-      };
-      continue;
-    }
-    if (!columns || columns.id < 0 || !row.cells[columns.id]) continue;
-    tasks.push({
-      id: row.cells[columns.id],
-      status: columns.status >= 0 ? row.cells[columns.status] : "",
-      document: columns.document >= 0 ? row.cells[columns.document] : "",
-      review: columns.review >= 0 ? row.cells[columns.review] : "",
-      acceptance: columns.acceptance >= 0 ? row.cells[columns.acceptance] : null,
-      lineIndex,
-      row,
-      columns,
-    });
-  }
-  return { lines, tasks };
+  return readBacklogTaskMetadata({root:path.dirname(path.resolve(backlogFile)),backlogFile});
 }
 
-function markdownTargets(cell) {
-  return [...cleanText(cell).matchAll(/\]\(([^)]+)\)/g)].map((match) =>
-    match[1].trim().replace(/^<|>$/g, ""),
-  ).filter((target) => target && !/^[a-z][a-z0-9+.-]*:/i.test(target) && !target.startsWith("#"))
-    .map((target) => target.split("#", 1)[0].split("?", 1)[0]);
+function documentTargets(cell) {
+  return taskDocumentReferences(cleanText(cell)).map(reference=>reference.target)
+    .filter(target=>target&&!/^[a-z][a-z0-9+.-]*:/i.test(target)&&!target.startsWith("#"))
+    .map(target=>target.split("#",1)[0].split("?",1)[0]);
 }
 
 function adjacentReviewPath(specFile) {
@@ -787,6 +741,8 @@ export function verifyReviewReceipt({
   taskId,
   reviewCell,
   documentCell = "",
+  documentPaths,
+  requireDocumentLink = false,
   requirePass = true,
   allowSpecChange = false,
   allowConstitutionChange = false,
@@ -849,11 +805,15 @@ export function verifyReviewReceipt({
     throw new Error("review snapshot findings 与 latest event packet 不一致");
   }
 
-  const documentFiles = markdownTargets(documentCell).map((target) =>
+  if(documentPaths!==undefined&&(!Array.isArray(documentPaths)||documentPaths.some(target=>typeof target!=="string")))throw new Error("任务文档路径必须是字符串数组");
+  const documentFiles = (documentPaths??documentTargets(documentCell)).map((target) =>
     resolveInside(root, target, "任务文档链接"),
   );
   const specFile = resolveInside(root, event.spec_path, "SPEC");
-  if (documentFiles.length && !documentFiles.includes(specFile)) {
+  // Filtering historical missing/external references must not erase an existing
+  // document binding, including full seven-column rows.
+  const hasDocumentDeclaration = taskDocumentReferences(documentCell).length > 0;
+  if ((requireDocumentLink || hasDocumentDeclaration || documentFiles.length) && !documentFiles.includes(specFile)) {
     throw new Error(`任务 ${taskId} 文档列未链接 receipt 绑定的 SPEC: ${event.spec_path}`);
   }
   if (!existsSync(specFile)) throw new Error(`SPEC 不存在: ${event.spec_path}`);
@@ -923,7 +883,7 @@ function record(args) {
   if (backlogTask.length !== 1) {
     throw new Error(`BACKLOG 中任务 ${taskId} 必须且只能出现一次（实际 ${backlogTask.length} 次）`);
   }
-  const linkedSpecs = markdownTargets(backlogTask[0].document).map((target) =>
+  const linkedSpecs = backlogTask[0].documents.map((target) =>
     resolveInside(root, target, "任务文档链接"),
   );
   if (!linkedSpecs.includes(specFile)) {
@@ -947,12 +907,14 @@ function record(args) {
         taskId,
         reviewCell: backlogTask[0].review,
         documentCell: backlogTask[0].document,
+        documentPaths: backlogTask[0].documents,
+        requireDocumentLink: Boolean(backlogTask[0].metadataReference),
         requirePass: false,
         allowSpecChange: true,
         allowConstitutionChange: true,
       });
     } else {
-      verifyReviewReceipt({ root, taskId, reviewCell: backlogTask[0].review, documentCell: backlogTask[0].document, requirePass: false, allowSpecChange: true });
+      verifyReviewReceipt({ root, taskId, reviewCell: backlogTask[0].review, documentCell: backlogTask[0].document, documentPaths:backlogTask[0].documents, requireDocumentLink:Boolean(backlogTask[0].metadataReference), requirePass: false, allowSpecChange: true });
     }
     if (previousEvent.spec_path !== relativePortable(root, specFile)) {
       throw new Error(
@@ -1127,6 +1089,8 @@ export function auditReviewReceipts({ root, backlogFile }) {
         taskId: task.id,
         reviewCell: value,
         documentCell: task.document,
+        documentPaths: task.documents,
+        requireDocumentLink: Boolean(task.metadataReference),
         requirePass: false,
       });
       if (/🔨|✅/.test(task.status) && verified.kind === "receipt" && verified.verdict !== "PASS") {
@@ -1223,7 +1187,7 @@ function migrateSharedReview(args) {
   if (backlogMatches.length !== 1) {
     throw new Error(`BACKLOG 中任务 ${taskId} 必须且只能出现一次（实际 ${backlogMatches.length} 次）`);
   }
-  const linkedSpecs = markdownTargets(backlogMatches[0].document).map((target) =>
+  const linkedSpecs = backlogMatches[0].documents.map((target) =>
     resolveInside(root, target, "任务文档链接"),
   );
   if (!linkedSpecs.includes(specFile)) {
@@ -1440,7 +1404,7 @@ export function prepareLedgerTransaction({root,manifestPath,verifyGitSources=fal
     snapshots.set(event.review_path,renderSnapshot(state));
     for (const task of matches) {
       if (task.columns.review < 0) throw new Error(`BACKLOG ${taskId} 缺审核列`);
-      if (!markdownTargets(task.document).includes(event.spec_path)) throw new Error(`BACKLOG ${taskId} 未链接迁移SPEC ${event.spec_path}`);
+      if (!task.documents.includes(event.spec_path)) throw new Error(`BACKLOG ${taskId} 未链接迁移SPEC ${event.spec_path}`);
       const idx = task.row.indexes[task.columns.review];
       const old = task.row.segments[idx];
       task.row.segments[idx] = `${old.match(/^\s*/)?.[0] ?? ''}${event.verdict}[REV:${state.receipt}]${old.match(/\s*$/)?.[0] ?? ''}`;

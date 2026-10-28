@@ -1,0 +1,6 @@
+{
+  "backend/src/modules/projects/projects.service.ts": "ca8f96523e9e93346447ebfc33be99645e5a3b66fe8320932e14977092c7e7b5",
+  "backend/src/modules/projects/projects.repository.ts": "8b53797074cc9527b8baa5218c2ce0fe7dadd91f5a42884e25e90707fe261558",
+  "backend/src/modules/projects/projects.service.test.ts": "55c1cd83ab599ab05672b51841af5bf91260d47ca1c7b5d320540bcdf686f7f1",
+  "backend/src/modules/projects/projects.repository.integration.test.ts": "9a9ebf389cbf6eec2ac9e2447c0c55410e1b7bbcc0f9b9bc73263eb84cd695ee"
+}

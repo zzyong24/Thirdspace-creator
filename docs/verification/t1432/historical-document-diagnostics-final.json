@@ -1,0 +1,301 @@
+{
+  "task_count": 407,
+  "diagnostics": [
+    {
+      "task": "T-1103",
+      "target": "BACKLOG-details.md#t-1103",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1102",
+      "target": "BACKLOG-details.md#t-1102",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1094",
+      "target": "BACKLOG-details.md#t-1094",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1099",
+      "target": "BACKLOG-details.md#t-1099",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1095",
+      "target": "BACKLOG-details.md#t-1095",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1091",
+      "target": "BACKLOG-details.md#t-1091",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1066-timeout-policy",
+      "target": "BACKLOG-details.md#t-1066-timeout-policy",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1067-skill-verification",
+      "target": "BACKLOG-details.md#t-1067-skill-verification",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1018",
+      "target": "BACKLOG-details.md#t-1018",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1018",
+      "target": "BACKLOG-details.md#t1173-t1018-global-debt-history",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1083",
+      "target": "docs/verification/t1080/post-package-progress-block-failure.json",
+      "reason": "missing-document-not-read"
+    },
+    {
+      "task": "T-1081",
+      "target": "docs/verification/t1080/timeout-static-dispositions-corrected.json",
+      "reason": "missing-document-not-read"
+    },
+    {
+      "task": "T-1077",
+      "target": "BACKLOG-details.md#t-1077",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1075",
+      "target": "BACKLOG-details.md#t-1075",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1074",
+      "target": "BACKLOG-details.md#t-1074",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1071",
+      "target": "BACKLOG-details.md#t-1071",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1070",
+      "target": "BACKLOG-details.md#t-1070",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1062",
+      "target": "BACKLOG-details.md#t-1062",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1022",
+      "target": "BACKLOG-details.md#t-1022",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1015",
+      "target": "BACKLOG-details.md#t-1015",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1015",
+      "target": "BACKLOG-details.md#t1173-t-1015-same-identity-history",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1004",
+      "target": "BACKLOG-details.md#t1173-t-1004-same-identity-history",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1006",
+      "target": "BACKLOG-details.md#t1173-t-1006-same-identity-history",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-1009",
+      "target": "BACKLOG-details.md#t1173-t-1009-same-identity-history",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-916",
+      "target": "BACKLOG-details.md#t-916",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-916",
+      "target": "BACKLOG-details.md#t1173-t-916-same-identity-history",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-883",
+      "target": "BACKLOG-details.md#t-883",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-859",
+      "target": "BACKLOG-details.md#t-859",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-858",
+      "target": "BACKLOG-details.md#t-858",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-857",
+      "target": "desktop-release.yml",
+      "reason": "missing-document-not-read"
+    },
+    {
+      "task": "T-843",
+      "target": "BACKLOG-details.md#t-843",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-824",
+      "target": "BACKLOG-details.md#t-824",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-819",
+      "target": "BACKLOG-details.md#t-819",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-816",
+      "target": "BACKLOG-details.md#t-816",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-773",
+      "target": "https://my.feishu.cn/wiki/GaHrwmGHHiU8MQkovQZcNjxMnpe",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-768",
+      "target": "BACKLOG-details.md#t-768",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-735",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-133-activation-managed-model-subkey.md",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-730",
+      "target": "BACKLOG-details.md#t-730",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-726",
+      "target": "BACKLOG-details.md#t-726",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-720",
+      "target": "https://my.feishu.cn/base/S1BRb4i6kaD0bnsViJSco0jxnRg?table=tblIPu0er91yGTwL&view=vewb4HsOUz",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-715",
+      "target": "/Users/masx/Projects/Thirdspace-growth/docs/contracts/T-137-ai-credit-recharge.md",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-714",
+      "target": "orchestrator/gates/lessons-injection-gate.md",
+      "reason": "missing-document-not-read"
+    },
+    {
+      "task": "T-707",
+      "target": "BACKLOG-details.md#t-707",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-703",
+      "target": "BACKLOG-details.md#t-703",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-695",
+      "target": "docs/superpowers/specs/2026-08-03-built-in-ip-course-architecture.md",
+      "reason": "missing-document-not-read"
+    },
+    {
+      "task": "T-691",
+      "target": "BACKLOG-details.md#t-691",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-694",
+      "target": "BACKLOG-details.md#t-694",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-679",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-133-activation-managed-model-subkey.md",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-679",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-135-qwen-asr-direct-client.md",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-656",
+      "target": "BACKLOG-details.md#t-656",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-652",
+      "target": "BACKLOG-details.md#t-652",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-645",
+      "target": "BACKLOG-details.md#t-645",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-643",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-129-activation-code-single-flow.md",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-642",
+      "target": "BACKLOG-details.md#t-642",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-635",
+      "target": "BACKLOG-details.md#t-635",
+      "reason": "detail-reference-not-followed"
+    },
+    {
+      "task": "T-576",
+      "target": "https://my.feishu.cn/base/S1BRb4i6kaD0bnsViJSco0jxnRg?table=tblIPu0er91yGTwL&view=vewb4HsOUz",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-538",
+      "target": "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/channel-bound-product-feedback-v1.md",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-577",
+      "target": "https://my.feishu.cn/base/S1BRb4i6kaD0bnsViJSco0jxnRg?table=tblIPu0er91yGTwL&view=vewb4HsOUz",
+      "reason": "external-reference-not-read"
+    },
+    {
+      "task": "T-409",
+      "target": "~/Workbase/Thirdspace-article/docs/specs/2026-07-18-creation-packet-contract-v0.2.md",
+      "reason": "missing-document-not-read"
+    }
+  ],
+  "note": "历史缺引用/外仓及旧详情回链均未被读取；不是新增SPEC或验收通过。"
+}

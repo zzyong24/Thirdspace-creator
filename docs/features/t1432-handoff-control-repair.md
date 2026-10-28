@@ -10,9 +10,11 @@
 4. T1408的14个非法文件名前缀glob按当前跟踪文件展开为38个精确文件，保留其他写集，不放宽安全路径守卫。补齐T1424、T1403、T1406基于当前SPEC的准确绑定，禁止非终端glob与外仓路径。更新维护任务绑定，再通过正式progress generate和context-compile生成。既有步骤状态、commit、阻塞原因、e2e事实和11个leases保全，不借生成操作推进其他任务。
 5. 归档撞号来源索引只解释实际核实的历史记录；如工具识别索引，必须校验每条完整行哈希及来源，仍报告未经登记的新撞号、活动重复与索引损坏，不降低活动ID唯一性。若剩余告警未安全处理，按真实结果保留，不为归零删历史。
 
+6. 旧任务可使用五列索引（ID/状态/审核/验收/文档），当前九项产品任务与本任务保留完整表。必须配套共享的任务元数据读取器：索引精确指向 BACKLOG-details.md 的唯一锚点，结构化元数据包含 ID、完整标题、叙事、原文档、原行及其 SHA256；读取时验证唯一锚点、任务 ID、原行哈希及仓内文档路径。状态、审核、验收永远从当前看板行读取，详情不得覆盖；不递归跟随历史链接。旧七列和已有五列暂停表继续可读。pmem、context-compile、reviewctl、taskctl、frontend-validation 都须使用解析后的本任务元数据，禁止对整份详情文件猜测标题或扫描 journey。缺锚点、重复锚点、串任务、损坏来源和错误 SPEC 必须显式失败，不能静默丢任务或降级审核。转换前后比对全部未完成任务 ID、状态、票据、标题、SPEC；15KiB软限若仍超出则如实保留，不调整阈值。
+
 ## 范围与写集
 
-BACKLOG.md、BACKLOG-details.md、BACKLOG-archive.md、PROJECT.md；orchestrator/process/taskctl.mjs及其测试、research-gate.mjs及其测试、backlog-compact.mjs及其测试、backlog-health.mjs及其测试，以及需要共享的局部状态标签工具与测试；orchestrator/process/modules.config.json；orchestrator/progress.json、context/T-1420.md、T-1421.md、T-1422.md、T-1423.md、T-1424.md、T-1426.md、T-1427.md、T-1403.md、T-1406.md、T-1408.md、T-1432.md；本SPEC及相邻审核、docs/verification/t1432/**、docs/research/2026-10-28-handoff-control-repair-research.md；本任务所需DEC和events/review-events只经正式工具新增。其他产品文件不属于本任务。
+BACKLOG.md、BACKLOG-details.md、BACKLOG-archive.md、PROJECT.md；orchestrator/process/taskctl.mjs及其测试、research-gate.mjs及其测试、backlog-compact.mjs及其测试、backlog-health.mjs及其测试，以及需要共享的局部状态标签工具与测试、backlog-task-metadata.mjs及其测试；pmem.mjs、context-compile.mjs、reviewctl.mjs、frontend-validation.mjs及各自已有/新增针对性测试（仅索引兼容与原安全守卫）；orchestrator/process/modules.config.json；orchestrator/progress.json、context/T-1420.md、T-1421.md、T-1422.md、T-1423.md、T-1424.md、T-1426.md、T-1427.md、T-1403.md、T-1406.md、T-1408.md、T-1432.md；本SPEC及相邻审核、docs/verification/t1432/**、docs/research/2026-10-28-handoff-control-repair-research.md；本任务所需DEC和events/review-events只经正式工具新增。其他产品文件不属于本任务。
 
 用户已授权修复这些工程记录；不改变构建配置、依赖版本、环境变量或密钥。本任务不迁入阶段2的旧分支记录，不修改独立T1430工作树。
 

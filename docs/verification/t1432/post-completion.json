@@ -1,0 +1,75 @@
+{
+  "status": "T-1432 and T-1433 completed via taskctl; stop requested by user",
+  "verified_at": "2026-10-28T12:55:14.022879+00:00",
+  "reviewed_logs_preserved": true,
+  "commands": [
+    {
+      "command": [
+        "node",
+        "orchestrator/process/context-compile.mjs",
+        "T-1432"
+      ],
+      "exit_code": 0,
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-post-completion-packet.log",
+      "sha256": "63cbd553247e7719449dc0efe2d1af2e90a6b783f56d9abf1f49cbe2fcfac470",
+      "archive": "docs/verification/t1432/t1432-post-completion-packet.log.gz"
+    },
+    {
+      "command": [
+        "node",
+        "orchestrator/process/context-compile.mjs",
+        "T-1433"
+      ],
+      "exit_code": 0,
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1433-post-completion-packet.log",
+      "sha256": "fa4ebf5523cef6bbe739bcee393570ad5161dec56e0340b3df49c179ad1976c9",
+      "archive": "docs/verification/t1432/t1433-post-completion-packet.log.gz"
+    },
+    {
+      "command": [
+        "node",
+        "orchestrator/process/pmem.mjs",
+        "sync"
+      ],
+      "exit_code": 0,
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-post-completion-pmem.log",
+      "sha256": "002929656d5152b0fb36f6d7d6b6570a5deb2773e3140097db8ac698e7ea5a5b",
+      "archive": "docs/verification/t1432/t1432-post-completion-pmem.log.gz"
+    },
+    {
+      "command": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "audit"
+      ],
+      "exit_code": 0,
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-post-completion-review-audit.log",
+      "sha256": "9dc6b818e26977f3935350ec73cd674c171fa0f811d14ff7089a808a15a386af",
+      "archive": "docs/verification/t1432/t1432-post-completion-review-audit.log.gz"
+    },
+    {
+      "command": [
+        "node",
+        "orchestrator/process/reconcile.mjs",
+        "--profile",
+        "quick",
+        "--read-only"
+      ],
+      "exit_code": 0,
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-post-completion-reconcile.log",
+      "sha256": "10e5363327d6225dcf37872fede0f743e1b872f9b9e2f4357e25c1d82b379a22",
+      "archive": "docs/verification/t1432/t1432-post-completion-reconcile.log.gz"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "source": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1432-post-completion-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive": "docs/verification/t1432/t1432-post-completion-diff.log.gz"
+    }
+  ]
+}

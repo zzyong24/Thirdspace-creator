@@ -1,0 +1,62 @@
+{
+  "existing_vertical_state_unchanged": 308,
+  "leases_unchanged": 11,
+  "configuration_refreshed_from_existing_module_definitions": [
+    {
+      "id": "T-1418",
+      "configuration_fields_refreshed": [
+        "write_set"
+      ]
+    },
+    {
+      "id": "T-1419",
+      "configuration_fields_refreshed": [
+        "write_set"
+      ]
+    },
+    {
+      "id": "T-1420",
+      "configuration_fields_refreshed": [
+        "write_set"
+      ]
+    },
+    {
+      "id": "T-1429",
+      "configuration_fields_refreshed": [
+        "depends_on",
+        "exclusive_resources",
+        "read_set",
+        "step_depends_on",
+        "step_exclusive_resources",
+        "step_read_set",
+        "step_write_set",
+        "write_set"
+      ]
+    }
+  ],
+  "added_ids": [
+    "T-1408",
+    "T-1424",
+    "T-1403",
+    "T-1406",
+    "T-1432",
+    "T-1433"
+  ],
+  "context_packets_generated": [
+    "T-1420",
+    "T-1421",
+    "T-1422",
+    "T-1423",
+    "T-1424",
+    "T-1426",
+    "T-1427",
+    "T-1403",
+    "T-1406",
+    "T-1408",
+    "T-1432",
+    "T-1433"
+  ],
+  "normalizations": [
+    "T-1429: missing blocked_reason materialized as null; no previously blocked task unblocked"
+  ]
+}

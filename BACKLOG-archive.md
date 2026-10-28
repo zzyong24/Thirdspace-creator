@@ -1263,3 +1263,65 @@
 |T-1394|排查本机CreatorOS启动失败并核定恢复路径|✅|—|—|[诊断范围与验收](docs/features/t1394-local-startup-diagnosis.md)|已定位T1382实测把原库升0139，旧App仅0137/0138；冷快照保全，当前源码副本只读兼容PASS；失败App已退出，未重打包安装/恢复启动，需匹配新包；quick仍既有22/17。|
 |T-1386|提交质量门并合并远端main后普通推送|✅|—|—|[授权与验收](docs/features/t1386-quality-main-integration.md)|2026-10-22续授权：保留双方任务与stash，审查剩余改动，排除私密/临时文件，分组提交并普通push；gitleaks零发现，quality/boundary及quick对账不劣于原基线。|
 |T-1379|核对协作者Mac本地完整包的条件与正确操作|✅|—|—|[只读操作说明](docs/features/t1379-collaborator-local-mac-package-guidance.md)|只读核本地ad-hoc/可选updater与必需root/verdict，保T1378在途；无本机再构建/安装或共享私钥。|
+
+## 归档于 2026-10-28
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1431|补注接手验证材料并盘点八项未结任务|✅|PASS[REV:971f1e47e75b]|—|[SPEC](docs/features/t1431-handoff-evidence-and-inventory.md)|用户确认阶段1保持待验，先完成阶段3/4；只改文档与本任务控制面，不启动盘点中的任务。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1429|恢复重编号合并后的审核链与来源追溯|✅|PASS[REV:72f8b5eb5b91]|—|[SPEC](docs/features/t1429-review-ledger-recovery.md)|用户已批准方案；独立修复与验证，不推送；坏链自举先独立评审，修复后补正式登记。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1417|补齐官方Pi同能力输出预算诊断|✅|PASS[REV:24c6d87cadcd]|—|[SPEC](docs/features/t1417-text-probe-output-budget.md)|受限128/8192文本探针，先区分402原因，不改正式聊天预算。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1416|修复真实浏览器验收的过时页面断言|✅|PASS[REV:7a69820a7fb6]|—|[SPEC](docs/features/t1416-browser-visible-document-assertions.md)|核对可见正文及来源，保留真实浏览器、账号隔离与全部原断言。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1415|收口恢复验收后的只读Stop与两份宪法审核|✅|PASS[REV:3df0d8ecd265]|—|[SPEC](docs/features/t1415-resumed-verification-control.md)|保留日常只读Stop，真实重审规则恢复导致过期的T915/T859，完整验收不降级。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1414|恢复关键链路可用性规则摘要|✅|PASS[REV:6c464d6d1677]|—|[SPEC](docs/features/t1414-critical-path-rule-summary.md)|恢复规则摘要漏掉的既有安全降级与完整回归要求，保留原LED043测试。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1412|修复完整对账的执行预算与测试隔离|✅|PASS[REV:ba6008df0ad0]|—|[SPEC](docs/features/t1412-full-reconcile-isolation.md)|处理已查明的 lesson 执行配置缺失、旧固定端口守卫与 CLI 测试副作用；保持原验收强度。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1411|修复文本连接测试鉴权丢失与结果说明|✅|PASS[REV:88bda848765a]|—|[SPEC](docs/features/t1411-model-probe-auth-parity.md)|[D]|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1410|修复历史审核证据与看板对账|✅|PASS[REV:49ac44e3641b]|—|[SPEC](docs/features/t1410-review-evidence-reconciliation.md)|[D]|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1428|修复官方Pi支付拒绝的安全诊断|✅|PASS[REV:fb6e2fc25569]|—|[SPEC](docs/features/t1428-managed-pi-payment-diagnostics.md)|[D]|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1259|排查用户1.12版扫码绑定与配置同步异常并修复确认缺陷|✅ 待办|—|—|[SPEC](docs/features/t1259-user-binding-config-repair.md)|[D]|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1258|分析用户2026-10-12四份加密运行日志异常|✅ 待办|—|—|[SPEC](docs/features/t1258-user-log-diagnosis.md)|[D]|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1257|将当前已安装版本制作本地签名安装包|✅ 待办|—|—|[SPEC](docs/features/t1257-installed-local-signed-installer.md)|[D]|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1402|修复 Windows 定位对话缺少 Pi 核心依赖|✅|—|—|[SPEC](docs/features/t1402-windows-positioning-pi-core.md)|Windows1.2.0真实故障复现及本机依赖补全后定位成功；源码静态打包Agent，已验收补丁经用户明确授权推送并合入main，正式安装包另验。|
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1401|修复 AI 额度连接错误被通用不可用提示掩盖|✅|—|—|[SPEC](docs/features/t1401-ai-credit-link-errors.md)|保留配置错误分类与重试语义，验证开发接口，删除临时诊断；仅本地提交，不push。|

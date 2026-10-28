@@ -1,0 +1,1369 @@
+{
+  "before_sha256": "cac0e57dc8b08b3bde9f3b302b1b20443136e97119b38d01cc642728841464dd",
+  "after_sha256": "ab7827c3a980758612303ce9f44930e4613dca8dc6f8aad4a3881f76f036242d",
+  "before_rows": 592,
+  "after_rows": 422,
+  "removed": [
+    {
+      "id": "T-1400",
+      "line": 208,
+      "source_sha256": "a933983fbe98771153857d46004919a2b7ec3708807442ea9839343d541bbfd8",
+      "raw_row": "|T-1400|修复选题 Copilot 长候选采纳区裁切|⏸️|—|待验|[SPEC](docs/features/t1400-topic-adoption-scroll.md)|四来源 mock 回归、补齐弹窗 flex 高度链；不真实调用、不push，补丁交付。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1399",
+      "line": 209,
+      "source_sha256": "c32fc685bd106aa369ef9a14bc0a100874db76d4d926adcb56715d4deebc5298",
+      "raw_row": "|T-1399|固定侧栏 AI 助手页脚与收拢入口|⏸️|—|待验|[SPEC](docs/features/t1399-sidebar-assistant-footer.md)|仅调整助手卡片与测试，保留全部导航、折叠及原 Copilot 参数；指定回归、补丁交付，不push。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1398",
+      "line": 210,
+      "source_sha256": "6692603f9b384410b7e5fe06a2e4c97a1f7897303e203cf94c439340c7fa45c7",
+      "raw_row": "|T-1398|修复 Copilot DeepSeek 强制工具请求、失败重试与错误诊断丢失|🔨 待办|—|待验|[SPEC](docs/features/t1398-copilot-deepseek-failure.md)|用户授权最小修复、相关测试与补丁交付；不真实调用、不读密钥、不修改许可激活签名、不push。 第四轮补 DeepSeek 推理历史回传与缺失历史关闭思考；第三轮补发送前明确失败结算与日志；当前源码 mocked DeepSeek 定位成功，历史 exact exception 未复现，任务保持未完成。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1397",
+      "line": 211,
+      "source_sha256": "f931cc3bbeff05dc9dabacb06b6602a9d4421559c40cf7d8a4a5ba0c620e4590",
+      "raw_row": "|T-1397|修复main Verify并核实已知失败|🔨|—|—|[授权与验收](docs/features/t1397-verify-main-green.md)|用户授权契约漏登记、后端CI终止根因、完整本地测试与逐项known清单；6144串行类型检查及各包质量门，HTTPS普通推送并最多2轮追加修复，报告至terminals/ci-green。|",
+      "kind": "duplicate",
+      "already_preserved": false
+    },
+    {
+      "id": "T-1396",
+      "line": 212,
+      "source_sha256": "e24309ef204bd90799fb746b0126007d404bf47e654057eb85ec56c9165a1c67",
+      "raw_row": "|T-1396|清理启动恢复留下的旧版及数据副本|✅|—|—|[授权与范围](docs/features/t1396-local-recovery-backup-cleanup.md)|已按授权删10处旧App/旧DMG及数据副本，逻辑12.14GiB；当前App、正式数据、新DMG均保留，原进程与首页200通过；轻量证据保留。|",
+      "kind": "exact-archived-copy",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1395",
+      "line": 213,
+      "source_sha256": "c6e6b9d68f6e6738851aaa019495d9026908c60190a35001fce834f7b6aebc89",
+      "raw_row": "|T-1395|用当前源码重打本地包并保留数据恢复启动|✅|—|—|[授权与验收](docs/features/t1395-local-package-startup-recovery.md)|源码7252d30d5本地包已安装，58测试及DMG/签名通过；副本迁移与实际库核心内容保留通过，原生首页正常且保持运行；旧App/原库已备份，不发布；quick仍既有22/17。|",
+      "kind": "exact-archived-copy",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1394",
+      "line": 214,
+      "source_sha256": "6929d472866dc9ea8ee95341e7321500a713f36f80313088098fc726751d0c88",
+      "raw_row": "|T-1394|排查本机CreatorOS启动失败并核定恢复路径|✅|—|—|[诊断范围与验收](docs/features/t1394-local-startup-diagnosis.md)|已定位T1382实测把原库升0139，旧App仅0137/0138；冷快照保全，当前源码副本只读兼容PASS；失败App已退出，未重打包安装/恢复启动，需匹配新包；quick仍既有22/17。|",
+      "kind": "exact-archived-copy",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1386",
+      "line": 215,
+      "source_sha256": "af4f5f6d7fa110f6192527a6e4f12ec83aa3cfc859682111b2ecbfa1bedd2311",
+      "raw_row": "|T-1386|提交质量门并合并远端main后普通推送|✅|—|—|[授权与验收](docs/features/t1386-quality-main-integration.md)|2026-10-22续授权：保留双方任务与stash，审查剩余改动，排除私密/临时文件，分组提交并普通push；gitleaks零发现，quality/boundary及quick对账不劣于原基线。|",
+      "kind": "exact-archived-copy",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1380",
+      "line": 216,
+      "source_sha256": "bfc9f2234a797ca7aaa5124472532d28fec9ebb5c7fe43e46a73150686a051c1",
+      "raw_row": "|T-1380|解除协作者本地Mac完整构建对作者私钥的依赖|⏸️|PASS[REV:fade0e6a2c0c]|—|[独立本地构建范围](docs/features/t1380-independent-local-mac-build.md)|用户已明确取消Local方案并要求回退；本任务产品/脚本改动已私有保全后撤回，未产包/安装；原R1仅历史，不冒完成。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1379",
+      "line": 217,
+      "source_sha256": "893540b22387d6d7fe378c3cb7362d93f14232358aca22b4c624c6e882da5e10",
+      "raw_row": "|T-1379|核对协作者Mac本地完整包的条件与正确操作|✅|—|—|[只读操作说明](docs/features/t1379-collaborator-local-mac-package-guidance.md)|只读核本地ad-hoc/可选updater与必需root/verdict，保T1378在途；无本机再构建/安装或共享私钥。|",
+      "kind": "exact-archived-copy",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1378",
+      "line": 218,
+      "source_sha256": "c28ff2ce652dedb5f80f0f4bb38798c2d0cb0a4afd3045142ccdc5bb3a233f73",
+      "raw_row": "|T-1378|诊断每日观测HTTP422与接收端固定清单兼容|🔨|PASS[REV:48c6e24fa806]|—|[原拒收与隔离范围](docs/features/t1378-observability-http-422-registry-diagnosis.md)|10/20原422/待发1563保；合成跨端RED确认两已登记ID不兼容，Growth T248三文件本地39PASS/非作者及补丁实用独审PASS；原stage/body、发布及owner待核，不催传/追签首因，见t1378/RESULT。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1385",
+      "line": 219,
+      "source_sha256": "04aaeac4719d0effe302daf83b2ed0f58717aa8e3051f49b876a53689503e520",
+      "raw_row": "|T-1385|修复 Verify 的 Node 堆内存耗尽|🔨|—|—|[SPEC](docs/features/t1385-verify-ci-memory.md)|用户授权最小 CI 修复：两个 job 6144 MiB 堆、串行 typecheck；本地全检查及内存测量，不改许可/激活/verdict/签名，不push，交付补丁与本地提交脚本。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1393",
+      "line": 220,
+      "source_sha256": "fe12ba296c75372160d9b31721e4c2a2dae9a9b8a585867d8264a1c08c172624",
+      "raw_row": "|T-1393|按真实密度重排内容雷达三栏|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1384.md)|用户授权沿ui-ux-pro-max与MASTER重排11来源/5分类/40作品；1440与1280保留三栏、缩略图、紧凑状态与筛选，保功能及详情唯一升级入口。当前分支本地提交或补丁脚本，不push。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1392",
+      "line": 221,
+      "source_sha256": "38c1716e290a88519c40077be1f58e740d0edb56565588b1b150cc0b5e163f20",
+      "raw_row": "|T-1392|重新规划内容雷达三栏与来源操作布局|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1383.md)|用户授权使用ui-ux-pro-max，1440px来源完整、三栏重排与窄窗降级；保留全部功能、详情04唯一升级入口、分组卡片与未知状态。补vitest/typecheck，当前分支本地中文提交或补丁脚本，不push。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1387",
+      "line": 222,
+      "source_sha256": "0c728288b19e1391a0be811e2563ddd1c482f9a33a0fe38e126e96f66f9fe022",
+      "raw_row": "|T-1387|统一主导航宽度并恢复选题页1440px完整布局|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1378.md)|用户2026-10-21明确：intelligence/topics侧栏统一约224px，选题右侧03/04完整显示；遵守MASTER，补vitest，独立中文commit至当前ui-fixes分支、不push。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1388",
+      "line": 223,
+      "source_sha256": "907722c4855fe44443f6f8223adf456f9d2b446f879abb4d1ccc7ba8dbb0692b",
+      "raw_row": "|T-1388|修复项目页首开自动滚动到口播脚本|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1379.md)|用户2026-10-21明确：定位autofocus/scrollIntoView/hash根因，首开停顶部项目准备，保留主动去写稿#script；补vitest并独立中文commit。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1389",
+      "line": 224,
+      "source_sha256": "b9a1220be3adf28f5b0c9b254b2cd48de0a853307151f693ad78add70d68dcfd",
+      "raw_row": "|T-1389|补全选题来源中文标签与未知值兜底|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1380.md)|用户2026-10-21明确：candidateSource的trend/benchmark/demand/idea/favorites全部中文，未知值兜底；补vitest并独立中文commit。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1390",
+      "line": 225,
+      "source_sha256": "59176ff6bc909a6d83b93510c53288c7641b2a8dc58a9fc1242baf6e390f31c9",
+      "raw_row": "|T-1390|移除雷达作品卡片重复的升级为项目按钮|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1381.md)|用户2026-10-21明确：只移除ItemCard入口，保留作品详情04选定方案入口；补vitest并独立中文commit。用户已允许跳过缺失技能；按本项SPEC执行并如实记录验证边界。 实际结果 / RESULT.md [RESULT](docs/features/ui-fixes-2026-10-21/RESULT.md)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1391",
+      "line": 226,
+      "source_sha256": "f2caca91e18d5dfdbe54ba5c008a440211cbf6027f3b044aa6763e93ae74c0e6",
+      "raw_row": "|T-1391|容错雷达作品未知转写状态避免整页崩溃|⏸️|—|—|[SPEC](docs/features/ui-fixes-2026-10-21/T-1382.md)|用户授权未知transcript.status显示“状态未知”，避免整页ZodError；五项frontend typecheck/vitest，保留T767失败与既有lint，授权/激活/verdict/签名不变。技能缺失处理、完整原文与实测边界见原SPEC、RESULT及编号映射。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1374",
+      "line": 227,
+      "source_sha256": "09c4345954bd30f2ff6012f076fa26f322621a8653653c7118811c9d9f426663",
+      "raw_row": "|T-1374|查明并恢复所有已绑定媒体的既有数据展示|⏸️|PASS[REV:16648a3ea984]|待验|[逐平台完整恢复范围](docs/features/t1374-all-bound-platform-data-recovery.md)|本轮仅补三测试/seed，52+3+双窗2通过、prod0改；安装仍旧2d未交付，视频号原EXPORT_FAILED/0页且native0/site-safety受阻，已block不冒全部恢复；full未跑/T1373保。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1369",
+      "line": 228,
+      "source_sha256": "05c328bb05e870c24de1b0591918e6a140c5ca5047c79cbb7e88cc7e3c12fc93",
+      "raw_row": "|T-1369|修复首页平台筛选后的连续侧栏导航卡死|🔨|PASS[REV:bcb32fe90d8b]|待验|[连续导航范围](docs/features/t1369-dashboard-filter-sidebar-navigation.md)|旧R3收据仅绑定6f8114；用户已明确允许本次新夹具单次cycle，真实DEC136909保，正式新cycle尚未记录；production01–03均前置FAIL、03残PG已后清理，04未执行/未证修复，本轮先整合代码。|",
+      "kind": "duplicate",
+      "already_preserved": false
+    },
+    {
+      "id": "T-1373",
+      "line": 229,
+      "source_sha256": "67ecb21adf24d5961a92816a482af8323486b458ba698c37bd6efdd1a0ee594f",
+      "raw_row": "|T-1373|核对完整对账中真实CLI的用户目录与联网副作用|📋|待审|待验|[当前安全阻断](docs/features/t1373-reconcile-cli-side-effect-isolation.md)|102完整对账预检发现LED053原CLI未隔离，存在HOME配置写/更新安装可达；先只读登记，不冒新full、改旧门或补旧receipt。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1367",
+      "line": 230,
+      "source_sha256": "bb963bddc9b790414484a23559ab200a8637d73ebf73911a002fe95159cb7ddf",
+      "raw_row": "|T-1367|恢复视频号折叠导航下的报表入口|⏸️|PASS[REV:c7a98f074848]|待验|[事实与候选范围](docs/features/t1367-wechat-video-collapsed-navigation-entry.md)|665受控实现与验证已整合，真实owner/采集恢复UNKNOWN且site-safety受阻已block；T1368后验不代恢复，原full58与旧失败保，不绕行/新collect/打包安装。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1366",
+      "line": 231,
+      "source_sha256": "2372b13fe07fad136faa81852d29e3adf123c453804db17af000044e20f79320",
+      "raw_row": "|T-1366|核对导航诊断新增的旧宽路径收据失配|📋|待审|待验|[收据根因边界](docs/features/t1366-navigation-diagnosis-wide-receipt-drift.md)|2d完整56ERROR含本次T1354/source与T1356/persistence新宽收据漂移，T1294既有身份亦有新增交叉；与旧44、clean候选缺旧产物及两新LED后验环境失败分证，不洗旧PASS。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1360",
+      "line": 232,
+      "source_sha256": "c556e741d821b993725fbe4affa0a0d0065b848342934f25066b97882b9e5c39",
+      "raw_row": "|T-1360|核对本批绑定首页与切组变更导致的旧宽路径收据失配|📋|待审|待验|[根因边界](docs/features/t1360-current-binding-dashboard-receipt-drift.md)|最终44ERROR含新增1345/1347及1348/1346/1350宽收据失配，按实际消费者分证；不归旧32项、不洗旧PASS或全量模型重跑。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1358",
+      "line": 233,
+      "source_sha256": "c017b66f386f86998707f553a7a838e4a9d1a57495df965dcab60bbea28e3884",
+      "raw_row": "|T-1358|核对隔离首页首次装配与组读取长耗时|📋|待审|待验|[观察边界](docs/features/t1358-unselected-home-readiness-latency.md)|19d无group首页9.2分钟、1db带group首次导航120秒失败后200约2.5分钟；组query日志139秒与装配分证，首因未证，不冒真实空新用户或旧App回归。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1353",
+      "line": 234,
+      "source_sha256": "35746e30772e3060b9ccd50cd82d43afc7696bac720523ab5337fd2f308a0b54",
+      "raw_row": "|T-1353|核对本轮工作区与日报接线导致的旧宽路径验收收据失配|📋|待审|待验|[新失配根因](docs/features/t1353-current-batch-legacy-receipt-drift.md)|843审计确认1343/1342/1341/1338/1330/1328/1324旧全文件收据失配由本轮新字节触发；与1298/1296等开工旧债分列，按真实消费者影响处理，不冒旧功能全程重验。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1351",
+      "line": 235,
+      "source_sha256": "268268d284235cf8a0f4dd7be8fc7c04c740c46cfb25d9a6ec64dd3ebd44c5f0",
+      "raw_row": "|T-1351|核对账号管理进入组与驻留视频宿主的离开保护边界|📋|待审|待验|[源码风险登记](docs/features/t1351-manager-video-leave-guard-risk.md)|只读审计发现manager进入组不显式requestVideoLeave；宿主保旧scope，不冒丢稿/越权。先隔离公共证明实际用户风险，再定是否需要窄修。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1349",
+      "line": 236,
+      "source_sha256": "18c4ebee7831f42a01104e719de96b077c787b2667c97a8403a219727e10f287",
+      "raw_row": "|T-1349|修复项目列表窄桌面首列标题归零与右侧动作裁切|📋|待审|待验|[公共失败与基线](docs/features/t1349-project-list-responsive-columns.md)|本轮冻结候选两视口标题可见断言120秒失败；原项目页全文件与88945相同，固定列宽挤掉标题，单独登记不冒本轮已修。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1336",
+      "line": 237,
+      "source_sha256": "c4b2aa18d10f2bd3604ad4f6eb19856dcf0447f022ca56e57f7093501172f0df",
+      "raw_row": "|T-1336|核对校准结果到经验置信度的既有反馈预留|📋|待审|待验|[当前no-op与旧OQ3事实](docs/features/t1336-calibration-learning-confidence-bridge-observation.md)|自动调整经验置信度仍未接入，现有预留非本轮回归；仅登记调查，不START/不改7f1，手动Learning回流另验。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1333",
+      "line": 238,
+      "source_sha256": "3eb7d9f952b85c9200bfd918e2e5a570bdd98d728bbeb38bd6281bd9d9630c29",
+      "raw_row": "|T-1333|明确结构表脚本历史来源读取兼容|📋|待审|待验|[结构表历史来源既有缺口](docs/features/t1333-structured-script-history-source-compatibility.md)|确认稿reader读得到结构表正文，旧workSource schema1历史正文为空且digest原样；无旧成功证据，单列未支持族不扩本轮产品。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1321",
+      "line": 239,
+      "source_sha256": "01d5c300d38399cd11090406bbfa9afa527542877a5133bab8459ff9958441ae",
+      "raw_row": "|T-1321|诊断图文重新组织与手动校正未形成可采纳候选|⏸️|PASS[REV:271af53ebf46]|待验|[原U14真实失败待核](docs/features/t1321-graphic-reorganization-candidate-diagnosis.md)|两原终态无结构化可采纳候选，安全日志仅知executeExternalTaskTool冲突；先只读及受控诊断，具体tool/input/断言未知，不猜测修复或重发原任务。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1300",
+      "line": 240,
+      "source_sha256": "e39f510780665caaeb6f50f2e805a52cf89d8305f02163cab19aa0370ddb6085",
+      "raw_row": "|T-1300|恢复Codex各能力可用性并落实已定位性能优化|⏸️|PASS[REV:6094ba8d7ed5]|待验|[本轮实现及分模块验收](docs/features/t1300-codex-functionality-and-performance.md)|用户授权实施T1299建议并重点复验选Codex后的对话/功能；先核真实配置路由与各能力，再窄修及优化，专用隔离数据，不批量销旧账、不安装发布。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1297",
+      "line": 241,
+      "source_sha256": "ddbeb409b4978ac0c30c4561046395986c49bc36e297902922bc0cd90596df44",
+      "raw_row": "|T-1297|修复原生时间轴缩放滑块被全局方向键拦截|📋|待审|待验|[T1296追加键盘复验](docs/verification/t1296/REPORT.md)|既有capture热键未避让role=slider，ArrowRight未改缩放；真实鼠标拖动持久化正常。保留失败，单独核修键盘边界。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1292",
+      "line": 242,
+      "source_sha256": "4a5137b93f9af700d7d7bd4f80ff8f5cb5df6d9b2848fa6092a9992e0c2918d0",
+      "raw_row": "|T-1292|核对合并后的全局对账失败并逐项归因|📋|待审|待验|[原32项现场失败](docs/features/t1292-post-integration-global-reconcile-findings.md)|原历史失败保留；T1300本轮32ERROR=原29身份+T1294/1296/1298 frontend收据路径漂移，精确原输出与归因引用见SPEC新增段；不重绑旧PASS、不冒全功能通过，身份相同不代根因相同。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1291",
+      "line": 243,
+      "source_sha256": "0a4c12fc8dc14fadc871e6b91b5de7257e18e545470635748415262da3a9eb2e",
+      "raw_row": "|T-1291|核对旧原生编辑器验证器与当前715源码库存|📋|待审|待验|[原额外验证真实失败](docs/features/t1291-legacy-native-verifier-source-inventory.md)|旧manifest及710模块/合同复制哨兵与715漂移，隔离组合仍FAIL；不补假模块/洗validator，不在固定本地包调用链，保独立欠债。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1289",
+      "line": 244,
+      "source_sha256": "08e47bd0af85d19cb8d832aa823092d8ae6dfe50675fd982464e28cc55bc3efa",
+      "raw_row": "|T-1289|修复原生构建清单随解包目录深度变化|🔨|PASS[REV:92eba9d78497]|待验|[归档重建真实差异](docs/features/t1289-native-build-graph-virtual-module.md)|715源/F0一致，六runtime产物一致，第七清单虚拟module路径随目录深度变化；原FAIL保留，只核机械ID与归档元数据，不只补生成JSON。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1288",
+      "line": 245,
+      "source_sha256": "cefc4a60a2771ff158eca4df87e7a7154d6bf70b76ccf4f1ac73dbf93f1d56ad",
+      "raw_row": "|T-1288|校准合并剪辑后的两个契约测试库存|🔨|PASS[REV:cf5a6070b2b5]|待验|[当场43项库存失败](docs/features/t1288-integrated-editing-contract-inventory.md)|R全契约43FAIL/475PASS保留；只核两个原测试427→429与已审script read/propose两路径，不改产品或放松穷尽。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1287",
+      "line": 246,
+      "source_sha256": "957f4e6df109316067fabefe2c0974773034c0d2970bce884dbc8489be55df67",
+      "raw_row": "|T-1287|闭合Growth全量回归的旧夹具与隔离缺项|📋|待审|待验|[真实全量失败与边界](docs/features/t1287-growth-full-regression-fixtures.md)|原Python9FAIL/1189PASS、Node10FAIL/270PASS与对账10ERROR保留；0076启动head已窄修28PASS，余5测试/3hooks和Node实际清单先独审，不改经营安全来洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1286",
+      "line": 247,
+      "source_sha256": "1b5765bbfb30771e6f6f53970897cf8d22588ad48498dcb99510e2631f17b731",
+      "raw_row": "|T-1286|校准模型来源接线后的旧前端集成夹具|🔨|PASS[REV:be715ef3b46d]|待验|[当场30项测试接线失败](docs/features/t1286-model-routing-frontend-fixtures.md)|全frontend31FAIL保留；仅三原测试30项，忠实legacy GET与固定110库存；旧write真实同步缺陷交T1278，不改产品或吞范围外radar1。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1283",
+      "line": 248,
+      "source_sha256": "990e1c3d352a0a9fe0f2b587638612ecf145ded68d7de0d00db036c69dc15678",
+      "raw_row": "|T-1283|核对Codex账号工作区路由预检拒绝并恢复粗剪|📋|待审|—|[真实预检与失败边界](docs/features/t1283-codex-account-routing-preflight.md)|新安全完整预检5RPC成功且两个host退出0；新独立作品真模型粗剪/试听门/采纳刷新PASS，仅删停顿0.96秒。原unknown保留，拒绝根因未复现，不改配置或自动重发。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1279",
+      "line": 249,
+      "source_sha256": "d095198b5ccb5568965cce52fd5954659587f6789941ce6f42d6b03bf395f59f",
+      "raw_row": "|T-1279|接入模型来源新迁移的真实数据库谱系护栏|🔨|PASS[REV:3056f3673e0a]|待验|[当场初始化失败与窄范围](docs/features/t1279-model-routing-migration-lineage.md)|原6FAIL保留；0135固定谱系窄修独评3056通过，W e81f80cf7完整PG/PGlite三组73PASS、退出清理闭合；主任务全功能与全局收尾未完成。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1278",
+      "line": 250,
+      "source_sha256": "0ae2c1428cd607e239d2c8ea80525629a48e1f5e15d341d052c533c6cb3a8ce8",
+      "raw_row": "|T-1278|统一激活授权并允许官方、自配和本地Codex按能力组合|🔨|PASS[REV:c23accf0a926]|待验|[用户需求与验收](docs/features/t1278-unified-license-capability-routing.md)|cycle2独评583a通过；W03d60d39/Gbbf225eb已提交，Creator145/91/76、Growth122/销售23通过；设置浏览器15项retry0留图；全frontend原31与新4FAIL保留，新4串行14绿；R四包类型通过、合并回归在验；收尾两项用户已确认，cycle3新审在途；整包/App未验。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1276",
+      "line": 251,
+      "source_sha256": "54c561feb01de17a38b354d1ec9b206375d683a793870de17f8a1ddfdb9cd4ad",
+      "raw_row": "|T-1276|修复原片准备事务内根设置连接自等待|⏸️|PASS[REV:f677c9cdf3ed]|待验|[当场超时与窄范围](docs/features/t1276-production-source-transaction-runtime.md)|cbe8ec195同tx修复、原请求probe/采纳及完整媒体旅程、真实偏好冻结已验；最新build/类型/timeout通过，全局仍原29ERROR；严格回执关联3个共享dirty路径，已登记阻断。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1275",
+      "line": 252,
+      "source_sha256": "3120ebf346d60f902f68b7386193948d9e78b9247066390bfcfa2402d9a1f31a",
+      "raw_row": "|T-1275|排查剪辑验收隔离服务冷编译与数据库初始化超时|⏸️|—|待验|[实际阻断与范围](docs/features/t1275-editing-verification-runtime-timeouts.md)|原两轮超时保留；隔离服务/真实公共媒体旅程已恢复，最新build/类型/timeout通过，全局仍原29ERROR；严格frontend回执关联5个共享dirty路径，已登记阻断，不代签纯HEAD。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1274",
+      "line": 253,
+      "source_sha256": "176244d443d734cb8347964f1a94c0fb57babfc97ddf6f6851562584f997ff77",
+      "raw_row": "|T-1274|参考ChatCut可复用模块重设计CreatorOS剪辑工作区与自然语言剪辑链路|⏸️|PASS[REV:55a3f14a70a5]|待验|[SPEC](docs/features/t1274-chatcut-editing-redesign.md)|真实模型删除/重排复制、ASR词删、粗剪试听采纳、CLI/MCP/MP4、200%/dirty及T1285原CAS恢复均有证据；最新build通过，严格收尾仍有19个共享dirty路径，未代签纯HEAD或安装App。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1277",
+      "line": 254,
+      "source_sha256": "6b4d51a4ed9e608ef5870de2a51e2e6a8f267c39d4ce3722b6e21421daaf0c8b",
+      "raw_row": "|T-1277|核对原生AAC首尾有效样本与音画对齐|📋|—|待验|[当场旧内核对照](docs/features/t1277-native-aac-valid-samples.md)|旧83b与新候选AAC真实PCM逐字节相同，48@24画面2秒而AAC2.0898秒；保留原FAIL，先核priming/padding，不裁原音或冒全范围PASS。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1273",
+      "line": 255,
+      "source_sha256": "d6021bc665a556c6cb5f54b86f61751d0e76f240ad816949821e5151228d8cd6",
+      "raw_row": "|T-1273|CreatorOS反逆向加固严格零性能损耗|🔨|PASS[REV:f993e9496349]|待验|[SPEC](docs/features/t1273-release-anti-reverse-hardening.md)|仅7基线源码已落地，隔离9c70afc00+c98e7a958；既有Node10/Rust7/打包45通过，末笔新回归未跑；tar减37,607,996B/既有根104B签名；用户10/14暂缓验证，构建中断留缓存，App/200μs/总包未验；见t1273/RESUME。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1271",
+      "line": 256,
+      "source_sha256": "b68fb0fc8ff6700bce44cc238b5f43597b328e9ae5a51f0023c61e9f17f7a4cb",
+      "raw_row": "|T-1271|CreatorOS Codex调用不保存个人历史会话|🔨 待办|PASS[REV:b5247eee4711]|—|[用户确认与会话边界](docs/features/t1271-codex-ephemeral-sessions.md)| 两源临时会话已应用；共享100/100、owned31/31与类型/build/timeout/边界通过，提交2ab097673；全局对账在途，当前App未换包，原失败与限度见t1271/RESULT。 |",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1265",
+      "line": 257,
+      "source_sha256": "163cedf5ce03cce0673d56a0db8bcd99ed549e1e2431c2532b989a6fcb7500c2",
+      "raw_row": "|T-1265|修复本地Codex结构化输出Schema适配导致真实400|🔨 待办|PASS[REV:54a830e5bcfc]|待验|[实际故障与范围](docs/features/t1265-codex-structured-output-schema-compatibility.md)|T1246当前新故障，原证据与失败保留；窄审后集中修复及完整公共链复验，原模型配置/归属与App未验不变。 新R f966公共provider19/Worker114实际PASS，但完整worker typecheck TS5097及异构schema泛型TS2345红已记；只在已审同域回归写集校正导入/泛型，原19断言及生产保持。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1264",
+      "line": 258,
+      "source_sha256": "eec65b57989b845d2915e1a7bc967dd366bd425d9ae5bc35ab84fd6d13dca7cb",
+      "raw_row": "|T-1264|修复协议账本读取前Next元数据恢复顺序|🔨 待办|PASS[REV:363fd9378c93]|待验|[实际故障与范围](docs/features/t1264-protocol-ledger-next-closure-order.md)|T1246当前新故障，原证据与失败保留；窄审后集中修复及完整公共链复验，原模型配置/归属与App未验不变。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1263",
+      "line": 259,
+      "source_sha256": "b448997cd984e078735df5901801b266f0cf5ac0d73eefb1845bc624522c5f6f",
+      "raw_row": "|T-1263|修复协议验收替身与隔离临时根的归属校验冲突|🔨 待办|PASS[REV:b4fda4422df6]|待验|[实际冲突与范围](docs/features/t1263-protocol-fixture-owned-temp-root.md)|db4669协议组提交disabled且无task；fixture os.tmpdir与launcher owned tmp前缀冲突，保原七项FAIL/栈缺失，独评后窄修归属守卫并公共链完整重验，不代签真实模型或App。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1272",
+      "line": 260,
+      "source_sha256": "d9d3b550a8be060be0d6d9118b879175f1ed16d3c82093fd63758ac1d4a7ff8d",
+      "raw_row": "|T-1272|校准新增观测后的前端回归夹具与迁移库存|🔨|PASS[REV:57f7140fcca6]|待验|[当场六项夹具红](docs/features/t1272-current-observability-frontend-test-fixtures.md)|当前0134末条及新共享getter使旧frontend6红；只审两原测试，保81设置/4完整冻结Worker回归，Main109与R108分开，不改产品或删错误。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1270",
+      "line": 261,
+      "source_sha256": "bacd9261e4f607b306efa9a0a4d4d01ea6b152abf9d2ce005a480a9482d25e20",
+      "raw_row": "|T-1270|校准当前观测迁移后的原回归库存|🔨|PASS[REV:ed99956c0313]|待验|[当场三项库存红](docs/features/t1270-current-observability-migration-test-inventory.md)|当前合法0134使journal109，原三尾库存断言仍108；只审两原测试并保旧迁移/归属/前缀，不删foreign生产，Main与108打包树分开绑定。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1268",
+      "line": 262,
+      "source_sha256": "0c38a3ee9e196a6f5ac02104965e6f7fe4398c11fbbdd2818fe29ba87eba3bff",
+      "raw_row": "|T-1268|闭合集成契约测试库存与手工保存类型|🔨|PASS[REV:b9d6a2958cc7]|待验|[当场43失败与类型红](docs/features/t1268-integrated-contract-inventory-and-manual-save-test.md)|只补三原测试：已有日志三operation穷尽登记、428库存与原manual strict parse；不删功能/断言，保当场FAIL，全量正常复验后续新包。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1267",
+      "line": 263,
+      "source_sha256": "cb9d8a12c49a90bb66e30bc64a6e86b9767b80abd039702af4208ed9a6e326be",
+      "raw_row": "|T-1267|校准Pi公共聊天验收能力键与HTTP最终审计|🔨|PASS[REV:cc01d69f8185]|待验|[真实夹具失配与范围](docs/features/t1267-pi-public-fixture-capability-and-http-audit.md)|原Pi任务waiting_user/HTTP数UNKNOWN保；项目主能力topic.generate而夹具配copilot.assist，独评后只修夹具与finally审计，不改产品resolver或旧任务，新公共红绿及新包复验。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1266",
+      "line": 264,
+      "source_sha256": "e938b711ba37b18a529916fe0d873a14a61f4c42a5a77fd0fd456938065d7acc",
+      "raw_row": "|T-1266|核对并修复设置偏好首载时ASR菜单不可达|🔨 待办|PASS[REV:bda5b2a67bbd]|待验|[真实失败与窄范围](docs/features/t1266-asr-menu-preference-layout-race.md)|原93普通Qwen点击120秒失败，异步模型区插入后菜单出屏；保原FAIL，oil局部公共对照复现、独评后最小修复，不猜全局浮层或增加模型配置。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1269",
+      "line": 265,
+      "source_sha256": "7af4945671de190eb704c654bb6aae6a9cdf8853fa211f769a2a365e5cd36fff",
+      "raw_row": "|T-1269|补齐原持久分场失败的可读诊断与原任务重试验收|🔨|PASS[REV:03376b43b303]|待验|[原14失败与精确范围](docs/features/t1269-managed-video-failure-diagnostic.md)|持久failed在onRuntime后停轮询，只有legacy诊断卡；保原FAIL及旧恢复断言，独评后窄补同ID脱敏错误与公开retry复验，不造新任务或放宽状态。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1261",
+      "line": 266,
+      "source_sha256": "fbb4a8aa9e14b5804aeb11449722a19cb3b67cdfcae01f79842511cbe39a4bc9",
+      "raw_row": "|T-1261|修复开发包验收暴露的运行时缺陷与用例合同|🔨 待办|PASS[REV:cd5f6ec85eda]|待验|[实际故障闭包](docs/features/t1261-runtime-acceptance-defect-closure.md)|T1246后续轮确认native结果/状态ACK/选题确认/Copilot/Doocs缺陷及旧聊天fixture失配；原回执保，独立初评后9源集中修、便携回归、新包全量复验，App未验。 Pi新隔离公共提交前双输入严格定位冲突（0任务/本轮HTTP0）已记，helper按唯一AI助手dialog窄审；不冒目标能力RED。 新Pi同四ID公共聊天实际提交后执行准备failed/CHAT_WORKER_INPUT_UNAVAILABLE、calls0/HTTP0且完整关闭；底层cause未记录，目标能力RED未证，保本轮失败待私有诊断；R整合34源及1测试类型修正clean64ca6ad；开发包45基础/8全绑定/只读挂载实通过，完整浏览器复验待完成。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1260",
+      "line": 267,
+      "source_sha256": "8fd20f43e13fb8ea2651bb854e8df5d2e3d5ea4a8398de5e10d494be41bb37cc",
+      "raw_row": "|T-1260|核对T1255审核绑定生成PROJECT造成收据漂移|📋|—|—|[实际对账失败](docs/features/t1260-generated-project-review-binding.md)|T1259完整对账26ERROR，25与旧回执逐字一致；另T1255绑定动态PROJECT已过期，保旧审核和事实，不重哈希洗绿，核稳定宪法与真实重新评审。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1259",
+      "line": 268,
+      "source_sha256": "c569feaaa2c45e363cea533420453168139545fe22657bbc9779b96a1a0179a0",
+      "raw_row": "|T-1259|排查用户1.12版扫码绑定与配置同步异常并修复确认缺陷|✅ 待办|—|—|[排查与修复范围](docs/features/t1259-user-binding-config-repair.md)|用户确认1.12为当前、1.11为旧版；核版本与实际失败链，缺陷先RED再修，保原账号登录态与校验，不重发真实任务或发布。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1258",
+      "line": 269,
+      "source_sha256": "3dd1e6183781800daf31df405d84f5132c68d35d4cf0812a5c5005b636a28a06",
+      "raw_row": "|T-1258|分析用户2026-10-12四份加密运行日志异常|✅ 待办|—|—|[诊断范围](docs/features/t1258-user-log-diagnosis.md)|仅本地只读解密四份附件，按时间与影响分析失败、恢复及证据缺口，不改产品、不重发用户任务。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1257",
+      "line": 270,
+      "source_sha256": "fa86224da592a76f7f6188d2539d66981f2f0da321a663e4f19bf980a4789dd2",
+      "raw_row": "|T-1257|将当前已安装版本制作本地签名安装包|✅ 待办|—|—|[范围与验收](docs/features/t1257-installed-local-signed-installer.md)|用户明确只做本地签名、不提交Apple；冻结当前安装1.2.0 arm64副本，保运行时字节，签名封DMG与挂载核验，不重建未提交源码。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1255",
+      "line": 271,
+      "source_sha256": "5952855faab522c9cf819f6ca423219cc7d037ec59d15d497dd32a5242b9575b",
+      "raw_row": "|T-1255|加密日志直传Growth、异常采集与运行指标观测|🔨 待办|PASS[REV:9700ff342ac4]|待验|[原直传合同](docs/features/t1255-reporting-full-delivery.md) · [观测方案候选](docs/features/t1255-observability-research.md)|10/21公开get原观察超600秒未取回执、仅停自有CLI，今日上传状态未知；保10/18真回执、10/20所见422及T1378/Growth T248本地39PASS候选，owner/完整解密/指标待核，不催传或签完成，见desktop-agent-live/RESULT.md。 |",
+      "kind": "duplicate",
+      "already_preserved": false
+    },
+    {
+      "id": "T-1256",
+      "line": 272,
+      "source_sha256": "48aa36c9f07e4ae507ccdcd859779da8b448aa85f6fa1b0cc7ee8ce8287e86f0",
+      "raw_row": "|T-1256|修复Doocs静态原适配三处无用绑定编译失败|🔨 待办|PASS[REV:b3d116e19a48]|待验|[真实类型红与精确范围](docs/features/t1256-doocs-static-unused-bindings-build-closure.md)|T1254 V13两根24/slow/types及nativebuild已过，static完整原build三TS6133真失败；仅核并删三无用声明，保模板/原命令/旧FAIL，独评后续原余步骤。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1254",
+      "line": 273,
+      "source_sha256": "3351818a3fa5cbca0de15534bf52e72eb1615fc9a7fe38b55589dbe9d7a32f04",
+      "raw_row": "|T-1254|闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性|🔨 待办|PASS[REV:1ebe2f90de0b]|待验|[当场两红与待评边界](docs/features/t1254-doocs-request-budget-and-source-closure.md)|完整Gate剩两真实网络abort；先核共享fetch原源/两包/使用路径与重建来源，独评后修，不扩动画豁免或只改产物洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1253",
+      "line": 274,
+      "source_sha256": "c11637a88ea3a9a9c3b82bbe39a87c6597b53c17bc5349fc2032b42a1201ba61",
+      "raw_row": "|T-1253|闭合原Worker夹具可信回执与未知恢复验收|🔨 待办|PASS[REV:e890e7d4ffac]|待验|[真实8红与精确范围](docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md)|原9文件46例38PASS8FAIL；仅ports/hooks/draft三原测试，核429 superseded、partial与缺usage unknown，先独评不改生产/洗期望。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1246",
+      "line": 275,
+      "source_sha256": "be0665f51525f3bdc7cd5d86ad313e91ef0f4b06dbda6faef99a883c0db54ec2",
+      "raw_row": "|T-1246|整合完成会话并打开发包及浏览器和App逐项验收|🔨 待办|PASS[REV:883f7fe733ba]|待验|[需求与验收标准](docs/features/t1246-integrated-dev-package-acceptance.md)|64ca开发包保留；原浏览器77/170快照71PASS6FAIL，余93UNKNOWN；旧临时根/PID已不存在，不能冒正常关闭，须新隔离复验。缺原素材六项按用户跳过，App未验，不签全绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1252",
+      "line": 276,
+      "source_sha256": "410aff08473845461d0a5477e2947d9c0c0f8403f20296ffc94f91c483684f22",
+      "raw_row": "|T-1252|闭合CLI/MCP HTTP默认300秒早于合法原生RPC的消费者预算|🔨 待办|PASS[REV:5ceaed23e00c]|待验|[真实缺口与待补合同](docs/features/t1252-cli-http-consumer-budget-closure.md)|真实Node25.9/Undici默认300s而Native完整RPC420s；先盘点专用非全局transport、完整串行与取消/unknown，再独评和实际慢公共链，不用父测试预算代签。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1250",
+      "line": 277,
+      "source_sha256": "aca6c77d3d02a52d3352926b78be24e2e51a1a4d8b1bd23920b090265010123d",
+      "raw_row": "|T-1250|闭合真实短执行预算与静态消费者误判|🔨 待办|PASS[REV:73326e8df3e3]|待验|[精确范围与验收](docs/features/t1250-positive-timeout-consumer-closure.md)|两次完整门真实22FAIL：11正执行/观察、1idle与10vendor误报；先独评，保原deadline/取消/归属/未知与完整库存，再公共链复验。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1251",
+      "line": 278,
+      "source_sha256": "7ab2b2acff3bf560062f266e417ffb31d9b5041a91e3d95431ca17b7355e56fe",
+      "raw_row": "|T-1251|保留结构化生成可信失败状态并校准原受控崩溃验收|🔨 待办|PASS[REV:41b45f1c67d4]|待验|[实际9红与精确范围](docs/features/t1251-chat-generation-failure-and-fixture-closure.md)|真实原21中9红；429可信retry_wait丢失为unknown生产缺陷，另串行屏障/跨case污染与continuous入口待窄校准，先独评不洗期望。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1249",
+      "line": 279,
+      "source_sha256": "40897db92e175bfed0db95537cab0ce4a411d8601e1d4444cdbf0ac99fd8a33f",
+      "raw_row": "|T-1249|校准持久聊天原八例的当前受控回执合同|🔨 待办|PASS[REV:19cbaf3743b6]|—|[精确合同](docs/features/t1249-durable-chat-current-receipts.md)|真实原8例3PASS5FAIL；只校准五族新读/重放、末失败partial与账本UI投影，不改生产或删除原安全断言。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1247",
+      "line": 280,
+      "source_sha256": "c93d3a1f9aeb12c736319ac19954f41d4938472192aaeba40416e00bb7982cd2",
+      "raw_row": "|T-1247|修复超时门完整Git库存读取缓冲区溢出|🔨 待办|PASS[REV:b75c6d75921d]|—|[精确范围](docs/features/t1247-timeout-git-inventory-buffer.md)|T1246真实Gate在git ls-files的默认1MiB缓冲ENOBUFS；独評只增有界缓冲与120秒命令预算，保原规则/完整扫描/非零失败。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1248",
+      "line": 281,
+      "source_sha256": "a390fbeeb7ae959d9ec308fed0c9434bed12e8a10f991510403064b018070874",
+      "raw_row": "|T-1248|恢复已知旧冻结系统候选工具的严格合同兼容|🔨 待办|PASS[REV:2d9887301cb3]|—|[真实失败与精确合同](docs/features/t1248-frozen-system-action-compatibility.md)|真实旧104→当前133原4例1PASS3FAIL，旧preferences action新增引擎字段哈希漂移；只内置可信固定旧schema，完整工具定义/归属/回执保护不降级，先独評。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1238",
+      "line": 282,
+      "source_sha256": "0a47a576e24a8903b5dcb9d278ef92fc9c302b1a3fb28a0e25d6ff2aec1a8dd9",
+      "raw_row": "|T-1238|本地Codex统一执行文本与生图并免独立模型配置|🔨 待办|PASS[REV:6b70a2a85595]|待验|[用户确认与合同](docs/features/t1238-codex-unified-text-image-engine.md)|用户明确继续实现：Codex承担文本与生图，页面/子任务/后台统一路由，无供应商回退；先独评合同，保旧任务与原失败。 已整合本地源码；独立工作树taskctl严格完成77b939320ddf，共享43项/真实10项通过。他人未提交改动保留，不代签共享HEAD；见GATES。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1245",
+      "line": 283,
+      "source_sha256": "1a9b0cd5bc6a52768e57a2fb7307a48e7fa4178f19cf697a24e3a5700fa39a29",
+      "raw_row": "|T-1245|修复自动化窄窗口筛选挤出与任务查看不便|🔨 待办|—|待验|[原图与范围](docs/features/t1245-automations-narrow-layout.md)|3938操作PASS但390原图账号下拉挤出、快捷标题逐字；保原结果，oil最小响应式独评后修，不删功能或代签窄屏可达。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1244",
+      "line": 284,
+      "source_sha256": "59b0aa432565c76075e77edca7a3ea1b2be5a814f3935c89bd1aaee2051c0a6d",
+      "raw_row": "|T-1244|验收自动化立即运行的准入与授权等待|🔨 待办|—|待验|[公开链与验收](docs/features/t1244-automation-run-now-login-wait.md)|现四浏览器case仅禁用列表，runNow UI尚未验；fresh无绑定账号一次真点，核同run/AI/execution和授权等待，先独评，不把缺凭据签成采集成功。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1243",
+      "line": 285,
+      "source_sha256": "319afc8be488b16bfce8de49a78e11265017a305eb5bf5a18220fe115c97a802",
+      "raw_row": "|T-1243|复验项目稿面视频素材的真实预览|🔨 待办|—|待验|[原失败与精确范围](docs/features/t1243-draft-video-preview-recheck.md)|原视频卡显示点击阅读，旧双击提示断言先失败；先核已确认单击/预览合同和预算，保URL惰性、真实解码、键盘/刷新/视口及原FAIL，不洗产品。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1239",
+      "line": 286,
+      "source_sha256": "bdbb508a0d6ac9e0d0e3ef7754664c5f942103cf58a2e375f98710d8599e9d12",
+      "raw_row": "|T-1239|验证复盘经验采纳与知识库回流并核候选裁决可见性|🔨 待办|—|待验|[范围与验收](docs/features/t1239-review-learning-public-acceptance.md)|旧experience独立页断言已退役；聊天采纳与持久candidate路径不同，先准确候选及独评，再实际UI/公开同ID/知识库只读，保原FAIL，不伪造评论或指标。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1241",
+      "line": 287,
+      "source_sha256": "14d0d9c2e498217792ad13f9722852590ea36b42282f7f107c1ff3151a577975",
+      "raw_row": "|T-1241|排查复盘页浏览器验收时开发编译器崩溃|🔨 待办|—|待验|[真实日志与处置边界](docs/features/t1241-review-dev-compiler-panic.md)|3931公开创建四次200后review冷编译Turbopack Rust panic；保自然失败，先核锁定版本、缓存及进程归属，独评可逆处置后同源码另验，不改断言或猜业务坏。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1242",
+      "line": 288,
+      "source_sha256": "488949b1da6f820e4b6dbfb9ce8fcd4c3ea38cfaa2432768275bddb6b7f7dcf5",
+      "raw_row": "|T-1242|核对复盘刷新后纯组账号镜像的测试断言|🔨 待办|—|待验|[原失败与精确范围](docs/features/t1242-review-pure-group-cookie-assertion.md)|3933已到四张桌面/窄图，刷新后空账号cookie实际被清除，原断言要求空字符串；保FAIL，核真实消费者后独评空或不存在但严格拒绝非空账号，其余断言全留。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1240",
+      "line": 289,
+      "source_sha256": "ba682fe974c43373eb0294e796faf57403647a6ceb759edcdb636a425fb657ee",
+      "raw_row": "|T-1240|复验素材选择器全库分页与真实照片操作|🔨 待办|—|待验|[原失败与范围](docs/features/t1240-asset-picker-public-recheck.md)|原140图上传PUT失败未到选择器；先准确诊断和预算独评，保140分页/错组/预览/取消/焦点/原FAIL，不改断言造绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1227",
+      "line": 290,
+      "source_sha256": "cf0551f30f6e7632635f4845e34575f2c1c4512f0bfc4597b05438c9f12c55c4",
+      "raw_row": "|T-1227|实际核验本地执行引擎全功能及免模型配置落地情况|⏸️ 待办|—|—|[验收范围](docs/features/t1227-local-engine-full-capability-verification.md)|用户已明确本地Codex；无文本配置仍有34条文本能力不可用，统一路由和全链实测未完成，保真实失败，不代签可用。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1228",
+      "line": 291,
+      "source_sha256": "ca96488875522a6fd3d28d95f1beb0f29d282524758925a9f0a1e4fb10863a1e",
+      "raw_row": "|T-1228|核对审核和发布物料子任务的父执行partial结果|📋 待办|—|—|[当场失败](docs/features/t1228-chat-child-partial-verification.md)|T1227前端127PASS2FAIL；按索引定位为审核/发布物料empty空稿拒绝族，正常与准备恢复均PASS；核partial合同与旧父成功断言，不猜Codex或洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1229",
+      "line": 292,
+      "source_sha256": "32f94252c793b5c9b8673fb20869e1df0124ddc4c12726809912491a9775888d",
+      "raw_row": "|T-1229|核对内容雷达选题生成持续无效输出及检查点恢复|🔨 待办|—|—|[当场失败](docs/features/t1229-radar-topic-output-recovery-diagnosis.md)|3914原采集25条成功，选题仍OUTPUT_INVALID；保原任务/失败，先核真实账本、恢复与模型替身，未到项目升级。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1231",
+      "line": 293,
+      "source_sha256": "5145b8509b21e0ce766c1cccaa2c211d19e2143c806431329f95d99d3a13e7a0",
+      "raw_row": "|T-1231|核对雷达升级项目后原账号读取404的范围分歧|🔨 待办|—|待验|[当场失败](docs/features/t1231-radar-promoted-project-scope.md)|3918正文生成后已导航新项目，原account header的projects.get却404；保原FAIL/图/trace，先核UI创建与读取真实组，不放宽归属或洗断言。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1233",
+      "line": 294,
+      "source_sha256": "c239d37752ce92fff496a0c9398140f712cdf16735a83ea240323278d286aaab",
+      "raw_row": "|T-1233|校准雷达正文模型替身并验证正文真实贯通|🔨 待办|—|待验|[当场截图](docs/features/t1233-radar-body-fixture-protocol.md)|3919组内立项全程PASS，但实图正文是旧mock分析JSON；保原PASS/图，先核协议与公开正文/种子，再独评窄校准，不代签真实模型或洗产品。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1232",
+      "line": 295,
+      "source_sha256": "12dc28aea955d41e6d6c0530858a4ecc58e54643af316fe719972583ef347413",
+      "raw_row": "|T-1232|验证设置对话框分类交互与公开读回持久性|🔨 待办|—|待验|[原失败与范围](docs/features/t1232-settings-dialog-public-verification.md)|原设置整页/八横向tab断言与已确认Dialog冲突；先核获批分类操作、独评窄校准，保T606/原FAIL，不把七项现状当授权或mock当真实上游。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1235",
+      "line": 296,
+      "source_sha256": "fb9509eab801cc1fc08a10025f81ffc7b26d268f92dd3d10d8f2781e681a409f",
+      "raw_row": "|T-1235|修复外观密度关闭设置后刷新未恢复|🔨 待办|—|待验|[真实失败与修复](docs/features/t1235-density-reload-persistence.md)|3921外观例自然FAIL：紧凑已保存，accounts刷新html丢data-density；保原图/trace/120秒等待，修全局首帧与挂载恢复，不改原用例洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1236",
+      "line": 297,
+      "source_sha256": "736c161d14eb9fc29ab893d8eefe98bd2dceaf5c9a79db7326db661585df6603",
+      "raw_row": "|T-1236|修复模型保存并测试成功后界面结果丢失|🔨 待办|—|待验|[真实失败与诊断](docs/features/t1236-model-probe-visible-result.md)|3921模型put/probe和单次SSE均成功，界面测试结果却消失；先核保存刷新/组件实例与回执生命周期，不重发探针或改原断言洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1237",
+      "line": 298,
+      "source_sha256": "b8b2d2f0863e4083566877d3756e9662439ff5827465481e1b5f6acbbe94b892",
+      "raw_row": "|T-1237|修复设置窄窗口分类栏挤压内容与裁切|🔨 待办|—|待验|[真实截图与范围](docs/features/t1237-settings-narrow-layout.md)|root实际看3921的390px昵称及RedFox图，分类固定宽度挤内容成窄列且裁切；保原操作PASS与原图，沿oil重新适配窄窗口，不用只操作成功代签视觉。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1234",
+      "line": 299,
+      "source_sha256": "99867fa801e34ff0b25422ba8501caeeb22acad4d09285affdc7c459aa504037",
+      "raw_row": "|T-1234|验证账号组下Skill定制按钮的真实可用性|🔨 待办|—|待验|[静态疑点与验收](docs/features/t1234-group-skill-customize-availability.md)|服务组ctx投影accountId=null/groupId，UI仍按accountId非空允许定制；先核official/用户组覆盖合同并实际UI，不改owner/status或走后台造绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1230",
+      "line": 300,
+      "source_sha256": "d1e0c9c129787aa42209225e28c1df0a8a490cdeec4307dcde3e3e67b973981f",
+      "raw_row": "|T-1230|修正素材空态仍宣称按抖音号隔离的旧文案|🔨 待办|—|待验|[实际截图与窄范围](docs/features/t1230-assets-empty-workspace-copy.md)|3915纯组B真实0素材，空态却写抖音号；保原图，窄改账号组文案，等待素材旅程结束后实施。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1226",
+      "line": 301,
+      "source_sha256": "d17c2b20f68aff937b7e29af9257f437ad00d045f1489fdf6d6dbc22b80cb050",
+      "raw_row": "|T-1226|补齐浏览器上传验收媒体目录隔离|🔨 待办|—|—|[诊断与范围](docs/features/t1226-playwright-media-root-isolation.md)|现仅隔离DB/auth，缺配置媒体根仍在用户目录；先独评默认env及测试根，不动HOME/迁移/真实库。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1225",
+      "line": 302,
+      "source_sha256": "5726b468afe575aa78ed677ee16afc8f4a24202eb7f183bd0d396fa137a7e9f3",
+      "raw_row": "|T-1225|补齐素材中心有数据画廊与选择详情的真实上传夹具|🔨 待办|—|—|[范围与验收](docs/features/t1225-assets-gallery-real-fixtures.md)|原两例空库无夹具；独评后公开上传四PNG，保原断言/失败，验选取详情、刷新、空态及错组。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1224",
+      "line": 303,
+      "source_sha256": "88af3486ee49dba8567c7d1782cbca915ade17461d4c9189ef4aa09da64e73dd",
+      "raw_row": "|T-1224|校准内容雷达公共旅程的短测试预算与证据输出|🔨 待办|—|—|[范围与验收](docs/features/t1224-radar-e2e-budget-evidence.md)|独评后仅校准测试预算及证据目录，再跑原公共旅程。 [原记录](BACKLOG-details.md#b-331e63446d8d)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1223",
+      "line": 304,
+      "source_sha256": "a3a1ee5c7e06f114e2a16982078e35938340710fa1074bee241c65de38011b47",
+      "raw_row": "|T-1223|修复截图总览把历史运行记录当用例数及重复锚点|🔨 待办|—|—|[范围与验收](docs/features/t1223-verification-gallery-record-identity.md)|真实历史记录误计及重复锚点已独评，报告生成器正在RED/GREEN验证；保全部旧图/结果。 [原记录](BACKLOG-details.md#b-43efc28c7f95)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1222",
+      "line": 305,
+      "source_sha256": "fb22e5f17b3ebe3cc91ce95abdcfbe85f7078161396ff417295cd450f77757c6",
+      "raw_row": "|T-1222|核对文章图文编导的空态与功能指引脱离当前稿件|📋 待办|—|待验|[截图与范围](docs/features/t1222-director-context-guidance.md)|文章图文编导固定全局指引；真实editorTarget会在发送前准备。待核功能目录、独评和候选链。 [原记录](BACKLOG-details.md#b-7cb36965e02b)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1221",
+      "line": 306,
+      "source_sha256": "9b723c0f41415d06ea0fd76bf04bb1ecc182e24151df800cb4cf1c7fa270cc0c",
+      "raw_row": "|T-1221|校准双工作区切换端到端旧账号选择器|🔨 待办|—|—|[范围与验收](docs/features/t1221-group-switch-e2e.md)|原两账号与项目、A-B-A刷新/镜像、双错组404实际3913通过；独评PASS，全局收尾待复核。 [原记录](BACKLOG-details.md#b-5c5bdde4c800)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1217",
+      "line": 307,
+      "source_sha256": "b26cbbc5c5bd6ead0525c1bb0b6455514fd0d621cfcfee3a4b326a1bff608846",
+      "raw_row": "|T-1217|修复内容雷达来源任务在旧账号和冻结组范围间卡住|🔨 待办|—|—|[诊断与验收](docs/features/t1217-source-sync-workspace.md)|旧回归76及新增41通过；终审发现拒绝分类和删除绑定，负族修复中。 [原记录](BACKLOG-details.md#b-f2fe4887cb75)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1207",
+      "line": 308,
+      "source_sha256": "3017c397085a15eafecb7fd690f412233b309aa61b36d3ba6663d7f8e391e6ac",
+      "raw_row": "|T-1207|用 Playwright/App 自动化对全功能建立逐项验收并留图|🔨 待办|—|待验|[验收范围与路径](docs/features/t1207-full-feature-acceptance.md)|原全量120例73通过39失败8超时；继续逐功能隔离E2E留图，真人平台/模型及原生App另验。 [原记录](BACKLOG-details.md#b-50cf413f8280)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1208",
+      "line": 309,
+      "source_sha256": "4f0d781683b084cfd31452b12e947f8f03afb229cfaffc91c7c49886a2536410",
+      "raw_row": "|T-1208|复核T-1207暴露的浏览器功能失败并修复确认缺陷|🔨 待办|—|待验|[复核范围与验收标准](docs/features/t1208-t1207-e2e-failure-triage.md)|复现原39失败8超时；剪辑恢复/素材Tab等已有窄回归通过，其余逐例定因，历史失败全部保留。 [原记录](BACKLOG-details.md#b-ba8271fca89d)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1199",
+      "line": 310,
+      "source_sha256": "9ef1ed7c20b501af12ac008cf6de4d0c9019f97682facb5720bbfb850db66427",
+      "raw_row": "|T-1199|查明并修复账号组内其他已绑定媒体定时任务不可见|🔨 待办|—|待验|[SPEC](docs/features/t1199-bound-platform-scheduled-visibility.md)|用户本轮安装验收：其他已绑定媒体定时任务未显示。先公开只读核真实绑定、任务及页面筛选，再限定修复；保账号归属、原任务ID/排期/历史，不重开暂停研究或自动重复采集。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1200",
+      "line": 311,
+      "source_sha256": "57bbc6121988ee69285a93155e578b16458e571d3dc26c00fc93d6adaca75580",
+      "raw_row": "|T-1200|整体重设计知识库工作区并统一新旧操作入口|🔨 待办|—|待验|[SPEC](docs/features/t1200-knowledge-workspace-redesign.md)|用户明确拒绝新旧UI拼接、未铺满与当前排版，要求整体重新设计。沿已认可原版品牌及oil-ui-pro，统一资料浏览、检索、阅读、录入、引用与经验入口，真实视觉/操作验证，不迁移或删除现有知识数据。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1201",
+      "line": 312,
+      "source_sha256": "26c05c336c502f8eb0cdfa78ef74f29084660e13ac83d67812ed07fb5a6d2702",
+      "raw_row": "|T-1201|核对知识图谱错误提示回归的旧原始异常断言|🔨 待办|—|—|[实际诊断](docs/features/t1201-knowledge-graph-error-contract.md)|T1200实际知识回归19文件148例中147PASS、1FAIL；原图谱测试期望原始无LLM凭据字符串，当前组件显示人话错误。保失败，先核真实错误合同，不削弱断言或改产品洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1202",
+      "line": 313,
+      "source_sha256": "fc98023893226aed7bc6380378d86e796c0668ad82d346797b6b0f972843cc19",
+      "raw_row": "|T-1202|核对自动化复杂排期编辑的旧术语断言|🔨 待办|—|—|[实际诊断](docs/features/t1202-automation-cadence-error-contract.md)|T1199自动化原回归113PASS6FAIL，五例为本任务多平台文案已授权变化，另复杂cron旧期待无法反解而实际已有用户友好说明。保失败，先核合同，不改时间或删除保存保护。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1203",
+      "line": 314,
+      "source_sha256": "60a3db6190b3b365c2f75a29f0389cec0ea62ed08bcbe2ccdf922931eefa0d8f",
+      "raw_row": "|T-1203|消除自动化既有React编译与effect静态检查欠债|📋 待办|—|待验|[实际诊断](docs/features/t1203-automation-react-lint-debt.md)|T1199实lint触发旧effects/ref等错误，HEAD stdin基线也失败。保真实结果，新增依赖/声明先修，既有静态债单列；不得关闭规则或删切组/轮询保护洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1204",
+      "line": 315,
+      "source_sha256": "492aa9fc047449773ed1a211aae664add376dadef57217beb7ad2ece428d213f",
+      "raw_row": "|T-1204|核对本轮全局对账29项失败及新增触发项|🔨 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|多次全局对账失败原日志保留；已机械归档完成行，稳定树仍需完整非concise逐根因核对。 [原记录](BACKLOG-details.md#b-577cb0da68f4) T-1238收尾实测保留22条范围外静态短超时、T-1026 write_set进度生成失败；完整全量对账原回执见docs/verification/t1238/reconcile-final.txt，禁止把本任务通过扩写为全局全绿。 本轮完整非concise55检查实完成29ERROR/自然1且资源全闭，25逐字旧债；新报LED046/048/054/061四门、innercause UNKNOWN，LED053实持守，见docs/verification/t1204/current-20261013-actual-full-29。 独占原四门诊断780通过/5失败/5原skip，4短预算及1握手前置；完整关闭/1694源不变，原全局29仍保，见current-four-original-diagnostic。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1197",
+      "line": 316,
+      "source_sha256": "981e6e25bafa477b3a02d00ab2b9e13f6c9d9456232656cbfbf455fa3622eed1",
+      "raw_row": "|T-1197|核对旧外部MCP窄权限配对来源与当前账号组兼容|📋 待办|—|待验|[SPEC](docs/features/t1197-external-agent-pairing-source-convergence.md)|T1080独立分支审计实发现71d2cc77未投用配对源码缺口；原来源与27文件保留，先核授权/账号组/凭据及0101同号迁移，不恢复已淘汰ACP、不假称全CLI等价窄grant。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1196",
+      "line": 317,
+      "source_sha256": "24dc3b708752bc0c30320c06ad33fd191b3389cb2ac98febfec1c2bcdba2d838",
+      "raw_row": "|T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-bc11f0a7b5b2)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1193",
+      "line": 318,
+      "source_sha256": "54ecf2a7db67ad9fcb26b39474dabb29d78c81046d892be8a1b49e9f2ae582d6",
+      "raw_row": "|T-1193|核对结果待确认时的重复发送暗示与恢复状态可读性|📋 待办|—|—|[实际诊断](docs/features/t1193-copilot-unknown-request-presentation.md)|fresh视觉及独立receipt确认等待回执时同原话预填、生成disabled=false；POST仍1，未签重复请求。另核真实字号与短高分段阅读，先精确独评，不清新草稿或阻断合法创作。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1192",
+      "line": 319,
+      "source_sha256": "fa4d6b750e19502a7634e69076bd61a1bd274cd043e67a62f6f84a1769839143",
+      "raw_row": "|T-1192|核对作品精调公共链的消息结果断言|📋 待办|—|—|[实际诊断](docs/features/t1192-work-editor-message-outcome-diagnosis.md)|当场公共链11PASS4FAIL；联合两例归T1092，另Pi/Codex精调完整output相等失败。先核可信回执投影与长候选正文，不删除回执/schema/完整性保护洗绿。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1191",
+      "line": 320,
+      "source_sha256": "1bf87b49a7e9db398868c4d6af6c8313a182f8a270d99eace1436187a4ebce0c",
+      "raw_row": "|T-1191|核对编导发送前准备失败与恢复入口|🔨 待办|PASS[REV:ad518ff0cf03]|—|[实际诊断](docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md)|T1187接口校准后原20例14PASS6FAIL；首条消息未发时准备错误提示自动恢复，effect却要求已有消息。核可信准备/提交状态及原任务恢复，不改名宽松化断言。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1189",
+      "line": 321,
+      "source_sha256": "398f2c5a01d78b81d0817b87f2614e36e05cb79df036d0f9622b955cfd86516e",
+      "raw_row": "|T-1189|核对聊天子进程状态与取消的七项当前失败|📋 待办|—|—|[实际诊断](docs/features/t1189-chat-worker-entry-current-state-diagnosis.md)|原LED054前25PASS5条件跳过、Worker30PASS、后66PASS7FAIL；核denied/unknown/revoked/login/pause真实状态和调用次数，不猜单一根因或放宽终态/取消。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1188",
+      "line": 322,
+      "source_sha256": "78c886b4274b03741deb0bf637a34a263b6f0fd544e4c66302e3e628f6de09ec",
+      "raw_row": "|T-1188|核对雷达活动任务期间的采纳保护断言|📋 待办|—|—|[实际诊断](docs/features/t1188-radar-active-task-adoption-test-diagnosis.md)|原LED042合同3/后端4PASS、雷达58PASS3FAIL；旧用例要隐藏采纳按钮，DOM实际disabled。先核已确认呈现与真实活动保护，不宽松断言、不改产品或guard。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1182",
+      "line": 323,
+      "source_sha256": "a5b23c1d93d64d08ffe55b0133602794478fc07c8b3b02c3929d93165d661a00",
+      "raw_row": "|T-1182|区分隐藏文件注入与真实上传按钮的刷新等待|🔨 待办|PASS[REV:456a0d53bb41]|—|[实验SPEC](docs/features/t1182-real-upload-button-control.md) · [研究卡](docs/research/t1182-upload-ui-refresh.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-4b6be3609803)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1181",
+      "line": 324,
+      "source_sha256": "222790f8011bfe0d9ab0435553dcc6e3a9349853e8ae8373bb4ef2ffba67b63b",
+      "raw_row": "|T-1181|核对真实素材上传成功后视频列表不可见|⏸️ 待办|PASS[REV:f8b0038f725b]|—|[实际诊断](docs/features/t1181-uploaded-video-list-visibility.md)|T1180新隔离随包浏览器当场139.349秒exit1；MP4已显示上传完成，精确文件名在素材列表等待120秒仍不可见。保原日志/驱动，先核真实页面、公开列表与刷新，不猜丢失或删除可见性保护。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1180",
+      "line": 325,
+      "source_sha256": "cec9ee9d8eb14a7933988975458f19ea6d4b17d24307620c968c70535b69c16c",
+      "raw_row": "|T-1180|核对真实上传探针的File请求体字节测量失败|🔨 待办|PASS[REV:36946ee35804]|—|[实际诊断](docs/features/t1180-upload-probe-file-bytes.md)|T1179真实随包浏览器首轮21.852秒exit1；PNG创建/PUT/完成均200后请求体SHA断言失败，未写最终结果。保原驱动/日志，核SDK是否拿到body与公开下载SHA，不猜文件损坏或删保护。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1179",
+      "line": 326,
+      "source_sha256": "1db8bc98b39938023e86dae78c1c00e417ed16e4a18d7bb7b6aac9ca47a892ef",
+      "raw_row": "|T-1179|核对素材上传回归未触发完成接口的实际原因|🔨 待办|PASS[REV:13d0145a7fcd]|—|[实际诊断](docs/features/t1179-asset-upload-regression-diagnosis.md)|原LED022当场18PASS/1FAIL；旧E2完成接口0调用，当前上传已走workspace.capture而旧mock只拦全局client；先核真实scope/HTTP/上传与取消，不猜产品缺陷或绕过组权限。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1171",
+      "line": 327,
+      "source_sha256": "9a5bb9ec810b641d769c5ad2717546440a87ef01f4802ae611fce9c6a010a778",
+      "raw_row": "|T-1171|无损压缩当前超限任务看板|🔨 待办|—|—|[实际失败](docs/features/t1171-current-backlog-compaction.md)|当前健康门RUNAWAY；只用原受支持归档/详情外置，任务状态、原文和失败责任保留，原健康复验，不凭归档销审核债。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1159",
+      "line": 328,
+      "source_sha256": "c570b7bdbb5a5d10953ec78cd21c7d5121ed263c1c64ae404903b7b0aa1b57ef",
+      "raw_row": "|T-1159|在当前main整合微信原生报表、绑定归属与调度闭包|🔨 待办|PASS[REV:914cad514a19]|待验|[SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md)|T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1155",
+      "line": 329,
+      "source_sha256": "7f3b58ed28125fcd4bd49ba27d4fcc2b9ccb0f73223f3fe24c68960b0621bc17",
+      "raw_row": "|T-1155|核对浏览器导航时本地服务连接中断日志|⏸️ 待办|—|—|[实际诊断](docs/features/t1155-browser-navigation-connection-abort.md)|当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1149",
+      "line": 330,
+      "source_sha256": "2c42e6ff5737376986af6816ea4c043557cd9af7b12f33712dcf5583a87bfbf4",
+      "raw_row": "|T-1149|在当前main整合封面用途与图片页组统一画幅|🔨 待办|PASS[REV:0a91f954eb8f]|待验|[SPEC](docs/features/t1149-current-cover-group-aspect.md)|T1124独评确认来源四路径仍缺；保T1141旧任务/有效比例及T1117引用保存，逐段移植用途、用户统一选择和能力交集；单页不支持不阻断其它合法生成，当前独评后RED/GREEN与公开回读。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1144",
+      "line": 331,
+      "source_sha256": "e6f0493f65d89355b4ad4278f91fd7429b43f223e2884c29dae1fda320c111fa",
+      "raw_row": "|T-1144|核对素材旅程完成后测试进程未退出|🔨 待办|—|—|[实际诊断](docs/features/t1144-picker-worker-cleanup.md)|T1140两例PASS但worker停后300秒不退出，整轮371.938秒exit1；保原失败和归属快照，定位实际清理等待，不缩超时/force退出/忽略全局错误。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1135",
+      "line": 332,
+      "source_sha256": "d09c3fdbc659b801dcd0bb5a0cc6d5fe4d6eac258b50e23f161d1bf7020891b4",
+      "raw_row": "|T-1135|核对安装版粗剪成片解码画面比原素材偏暗|⏸️ 待办|—|—|[实际诊断](docs/features/t1135-installed-render-color-fidelity.md)|已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1118",
+      "line": 333,
+      "source_sha256": "584d9faf5fb77d81f0475a4c8d707129fa2393fa8e323496fcce5843dd34d2ea",
+      "raw_row": "|T-1118|核对本机验收原始日志目录消失|📋 待办|—|—|[实际诊断](docs/features/t1118-verification-directory-disappearance.md)|T1117实际RED/GREEN后，原验收父目录突然不存在；七次包装命令exit2未执行内层验证。保工具实际结果与已提交工件，原因UNKNOWN；新隔离目录继续验证，不重造旧日志或触用户数据。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1116",
+      "line": 334,
+      "source_sha256": "1515f6892fecd14eed57df88e2ffb6a273f65a64b6c2fc543d1685bb54913f66",
+      "raw_row": "|T-1116|核对稿件并发保存回归在本轮完整对账中的再次失败|🔨 待办|—|—|[实际诊断](docs/features/t1116-artifact-cas-global-regression.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-26577d4c923f)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1101",
+      "line": 335,
+      "source_sha256": "0753804d020f550dd7b09759c37fe1ad1fa9df19faead5ef83a5ae4e30d78638",
+      "raw_row": "|T-1101|修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集|🔨|PASS[REV:146ff2046c2c]|待验|[SPEC](docs/features/t1101-canvas-binding-collection.md)|来源改动已在main；当前组合验收待完成，原PASS不代签。不发布、不改真实Cookie。 [原记录](BACKLOG-details.md#b-2a871e9f9f38)|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1101-global-gates",
+      "line": 336,
+      "source_sha256": "51caee812a522d66394c24bddff82abd996ea0d941a2a70c07eabc4eea2400dc",
+      "raw_row": "|T-1101-global-gates|核对独立main工作树全局对账失败及历史收据漂移|📋 待办|—|—|[根因记录](docs/verification/t1101/global-gates.md)|前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1109",
+      "line": 337,
+      "source_sha256": "7b13e8026e0140136d8085449e0f76718ad8590c887b6eb513b7603a2e5ca74c",
+      "raw_row": "|T-1109|修复超时验证入口默认10秒初始化导致原测试未执行|🔨|PASS[REV:a85dda74b249]|待验|[SPEC](docs/features/t1109-timeout-verification-default-budget.md)|实际timeout-policy额外backend beforeAll10秒超时，25例skip；原静态27保留。仅明确真实Vitest test/hook至少120秒，保原断言/退出码/更长局部预算，不删除Gate或改构建。先独评再修公共入口。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1110",
+      "line": 338,
+      "source_sha256": "361594a6add69b2247b95d7f517bee7695178bd150b5fbb85af989305d3a1d75",
+      "raw_row": "|T-1110|核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态|📋 待办|—|—|[实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-da2102ce12ea)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1107",
+      "line": 339,
+      "source_sha256": "3d19a88544bead50eac50a104d428cec2aab23f302848410e94763ba0c3650c1",
+      "raw_row": "|T-1107|核对平台公共接口新增操作与发布归属回归失败|🔨|PASS[REV:9c9181db2c1c]|待验|[实际缺陷](docs/features/t1107-platform-public-regression.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-bc5cecd384c8)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1105",
+      "line": 340,
+      "source_sha256": "94138be0e8bd39ab5bb7ea03d61f4012b5186d6c74b235082710a8d58df4a0c8",
+      "raw_row": "|T-1105|修复共享资源面板失效读取后持续加载|🔨|PASS[REV:675552d2d02f]|待验|[SPEC](docs/features/t1105-shared-resource-loading.md) · [实际缺陷](docs/features/t1105-shared-resource-loading-diagnosis.md)|T1101额外Chrome走查展开共享资源停在加载，console出现组上下文拒绝；原失败保留。先在main复现epoch/单在途/重开，再独评修，不放宽跨组权限或把扫码PASS代签该面板。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1103",
+      "line": 341,
+      "source_sha256": "10275973d78dc91d6f5bee0dc93717dcb0efbf1f786ff8d8c6001bcd6975700d",
+      "raw_row": "|T-1103|排查Pi联合提案反复遗漏完整图文参数|🔨|—|—|[实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md) [详情](BACKLOG-details.md#t-1103)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1102",
+      "line": 342,
+      "source_sha256": "488a81293f8b3c9da8dc145a8494552239014be9224ed05a6b93f998d81012ee",
+      "raw_row": "|T-1102|排查并恢复本地安装首次运行时展开失败|🔨|—|—|[诊断与边界](docs/features/t1102-installed-runtime-extraction.md) [详情](BACKLOG-details.md#t-1102)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1094",
+      "line": 343,
+      "source_sha256": "c8f94acd5fa64ae73e99b40b4406ebf7e0627d9e3df0e3be3d2edf9ce17f1eb1",
+      "raw_row": "|T-1094|修复部分完成AI任务公开查询状态合同缺口|🔨|PASS[REV:5d2c91b81b45]|—|[SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1094)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1096",
+      "line": 344,
+      "source_sha256": "c0a03663cf767568cc1bbe69b63f0e845be3cffcf7f98e0b484821834ccf356c",
+      "raw_row": "|T-1096|核对文章工作流与任务父归属旧回归断言的实际漂移|📋|—|—|[当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-19048143f3aa)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1099",
+      "line": 345,
+      "source_sha256": "dc3105d066b5f62ff4e14c109d080686506ef65a4683134d51fa2fc838334db5",
+      "raw_row": "|T-1099|修复工具明确业务拒绝回执缺失与末次失败被算成功|⏸️|PASS[REV:b5aa667d8485]|—|[SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md) [详情](BACKLOG-details.md#t-1099)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1098",
+      "line": 346,
+      "source_sha256": "836fbe28671af0f8669a21323d9d9aec338cdc02c79422b870941c4223d7e041",
+      "raw_row": "|T-1098|核对安装重启后的定期同步失败与采集未启动|📋|—|—|[缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-32f22df52b82)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1097",
+      "line": 347,
+      "source_sha256": "9dc55326942b03cecb6ef1cb95ad1b4feecc5398a109a7012a3770e8910abccd",
+      "raw_row": "|T-1097|修复文章编导参考资料与候选审读保护缺口|🔨|PASS[REV:3f5ea43b69f5]|—|[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-e634c6a1c42a)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1095",
+      "line": 348,
+      "source_sha256": "3e92d32d50fb486368ff1d5e85bfe7c2c54283a31fe3e28c50a4c20ce60668bc",
+      "raw_row": "|T-1095|验证Pi联合创作必填nullable字段遵循与原任务恢复方法|⏸️|PASS[REV:b3b9dda4753e]|—|[SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1095)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1093",
+      "line": 349,
+      "source_sha256": "cde9e9596e73982da91444b9ce7ea5cefb04c0455592e3e38dd35dc5531e5e82",
+      "raw_row": "|T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-3158c3fcebbd)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1091",
+      "line": 350,
+      "source_sha256": "0ec0edebe6006cfff3f5218e8b388eafc3e561e036a61db3e3df58b3c4167434",
+      "raw_row": "|T-1091|补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收|🔨|PASS[REV:dcd0b932fca7]|—|[SPEC](docs/features/t1091-public-director-context.md) [详情](BACKLOG-details.md#t-1091)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1092",
+      "line": 351,
+      "source_sha256": "11b9e3e9d2e8db13f019115f4c0faa5cb2fef9f35a34f7bb316240c7a55e7169",
+      "raw_row": "|T-1092|核对联合创作旧集成测试未解包可信回执的契约漂移|📋|—|—|[当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-024c8af10ce0)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1072-owned-devices",
+      "line": 352,
+      "source_sha256": "2bfb71eb56ee60ff5e3fc4b61de0b2b2c3de219f4c82ca39223579571a78c115",
+      "raw_row": "|T-1072-owned-devices|配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口|🔨 待办|PASS[REV:351f7db55691]|待验|[SPEC](docs/features/t1072-owned-devices.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。|",
+      "kind": "duplicate",
+      "already_preserved": false
+    },
+    {
+      "id": "T-1066-timeout-policy",
+      "line": 353,
+      "source_sha256": "c39211e7191bce2c9143746b5d25ab10ecde71f2323634a02442a38c363e7bbd",
+      "raw_row": "|T-1066-timeout-policy|全系统统一两分钟超时下限、嵌套预算与Skill防复发|⏸️ 待办|PASS[REV:13310516269c]|待验|[SPEC](docs/features/t1066-timeout-policy.md) [详情](BACKLOG-details.md#t-1066-timeout-policy)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1067-skill-verification",
+      "line": 354,
+      "source_sha256": "ef957da3c57d33d85f3493baa6b8b2ab64677c7fac56f769ab112699179c8c25",
+      "raw_row": "|T-1067-skill-verification|清理通用产品流程Skill既有公开分发校验债务|📋 待办|—|待验|[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md) [详情](BACKLOG-details.md#t-1067-skill-verification)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1018",
+      "line": 355,
+      "source_sha256": "39b06fa6e82116127115bec371d63f53d0d0936e43bb401ff3d8f5a8b962ed97",
+      "raw_row": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1083",
+      "line": 356,
+      "source_sha256": "cc9c8a6605f3327ab2e7a1b06b70f61b792d7c1fd5dc2fe01e821763d10a3d72",
+      "raw_row": "|T-1083|复核流程升级后的旧任务写集通配符兼容缺口|📋 待办|—|—|[根因证据](docs/verification/t1080/post-package-progress-block-failure.json)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-609973ed4950)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1082",
+      "line": 357,
+      "source_sha256": "cf052d3de33ba679cb2f10880cb428a75e29c70d79bb8a4125f21438154c7936",
+      "raw_row": "|T-1082|复核合并来源任务的当前评审与UI验收记录归属|📋 待办|—|—|[SPEC](docs/features/t1082-source-receipt-revalidation.md)|本地main真实出包后对账新增7项：5个source/alias缺当前review链event、2个agent-recovery alias缺completion；原来源链/报告保留不代签当前验收，按真实独立审核和UI旅程闭环，不重哈希旧链、不复制PASS。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1081",
+      "line": 358,
+      "source_sha256": "53425b3963701e6940ffecec802824f9d2150e05cbb63f66f9fd5edf1a788241",
+      "raw_row": "|T-1081|核对整合后原主线的14处短执行预算与超时扫描误报|📋 待办|—|待验|[根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-2d26eed11574)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1026",
+      "line": 359,
+      "source_sha256": "fa19616a44f8246644975426ede8643259e3de5c45de1df062ffa1faf6027cdd",
+      "raw_row": "|T-1026|补齐新增 Agent 功能的公开 CLI 并逐项验收安装版|🔨|—|—|[SPEC](docs/features/t1026-agent-cli-acceptance.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-67204c9b2c9efc87)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1027",
+      "line": 360,
+      "source_sha256": "f14004bf671706d899145468b892d78a957ad2f81ee4fa4a3421defaf149fab6",
+      "raw_row": "|T-1027|修复评论采集完成统计与失败诊断|🔨|—|—|[SPEC](docs/features/t1027-comment-collection-evidence.md)|T1026真实评论回归failed却提示全量完成；统一完成统计并补公开未完成原因，不把零新增冒充成功。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1025",
+      "line": 361,
+      "source_sha256": "d29b71e5af03b59f6b930d83e7027ff0382bdabf7c1f5cdaa117124484c19c44",
+      "raw_row": "|T-1025|重新核验 constitution 变更后的历史评审与前端验收回执|📋|—|—|[SPEC](docs/features/t1025-receipt-drift-revalidation.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-fbe6a3f4e58bcafa)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1077",
+      "line": 362,
+      "source_sha256": "c1b5a6c4cefd887d979eadaf9cd8eb97fd78e4a96742acc754c293fa209ecf7e",
+      "raw_row": "|T-1077|修复采纳与作品素材读取的项目返回值|🔨 待办|PASS[REV:a36209c19783]|待验|[SPEC](docs/features/t1077-material-parent-port.md) [详情](BACKLOG-details.md#t-1077)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1075",
+      "line": 363,
+      "source_sha256": "68ede01dde90ae377754eeaaac0447d96f4ae8d696cdd76530c70e2046b757fe",
+      "raw_row": "|T-1075|修复安装验收发现的素材标签观察与纯组生图证明|🔨 待办|PASS[REV:73a6052db08f]|—|[SPEC](docs/features/t1075-installed-ai-observation-gaps.md) [详情](BACKLOG-details.md#t-1075)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1074",
+      "line": 364,
+      "source_sha256": "422f7f174e4e843d21bf6a243dbca7df0bca10ee51cdb1e97eefe101da160b3b",
+      "raw_row": "|T-1074|全面验收与补齐AI助手系统操作、工具开放性和功能提示词|🔨 待办|PASS[REV:b19144c34cab]|待验|[SPEC](docs/features/t1074-ai-system-operations.md) [详情](BACKLOG-details.md#t-1074)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1071",
+      "line": 365,
+      "source_sha256": "950b8fdc976f8a0883e833e3a1eecc00b99cbcf664b0730db99d1b0bfb6a9b67",
+      "raw_row": "|T-1071|修复账号绑定和页面Tab切换卡顿|🔨 待办|PASS[REV:a53e25bf48df]|待验|[SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": false
+    },
+    {
+      "id": "T-1070",
+      "line": 366,
+      "source_sha256": "76e980f385b6b0b3705c63db52eb693a91001d2a8bf798d0c1ae3434ef147af9",
+      "raw_row": "|T-1070|打通Codex执行与编导精调，脚本一键生成文章和图文|🔨 待办|PASS[REV:b195ac203ec0]|待验|[SPEC](docs/features/t1070-director-script-workflow.md) [详情](BACKLOG-details.md#t-1070)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1069",
+      "line": 367,
+      "source_sha256": "5fd9bd5fa2fabccedf8cb6a0b0ff466a7d980d7057d53d009f25bdabd9018ae4",
+      "raw_row": "|T-1069|修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口|🔨 待办|PASS[REV:19bad8ef6f93]|待验|[SPEC](docs/features/t1069-installed-media-and-binding.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e350e6053e05749b)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1066",
+      "line": 368,
+      "source_sha256": "767f17a17e1c95d0f79ac047749544af29574b832aa78f9397d57158cd0c0314",
+      "raw_row": "|T-1066|落实本地客户端优先出包并移除人为构建超时|⏸️ 待办|PASS[REV:0d40d8466937]|—|[SPEC](docs/features/t1066-local-package-build-only.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d6ce9166621c4243)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1062",
+      "line": 369,
+      "source_sha256": "75410be2f5e84bbdba1da80467615fc1f14bd228299e2ca91f572f7529d5b98d",
+      "raw_row": "| T-1062 | 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪 | 🔨 待办 | PASS[REV:5912ba60da16] | 待验 | [SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [完整范围](BACKLOG-details.md#t-1062) | 见详情。 |",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1063",
+      "line": 370,
+      "source_sha256": "ef7e176c4633cd7619d1443b9aa4c5f733b6061e3ceaeecf8459cbb6e94b85c6",
+      "raw_row": "|T-1063|修正流程工具误拒合法字面方括号文件路径|🔨 待办|PASS[REV:4d99824da112]|待验|[SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-ef8386b2a0a060cc)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1024",
+      "line": 371,
+      "source_sha256": "9c43fc674ee65ba5fa7c5c41d37a924717f0343f797ee3b0f8011a97ff97f200",
+      "raw_row": "|T-1024|紧急排查充值50元后Growth受管Omni模型仍报余额不足|🔨 待办|—|待验|[排查范围](docs/verification/t1024-managed-credit-diagnosis.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-c9ebcc41ffd59f36)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1022",
+      "line": 372,
+      "source_sha256": "ec9be494801c143c6868bf07f42391f06cfdce630255d67bc8a004c8cd6fd9c0",
+      "raw_row": "|T-1022|按账号组统一多平台工作区、绑定管理、首页与复盘|⏸️ 待办|PASS[REV:2f179f8d9380]|待验|[SPEC](docs/features/t1022-account-group-workspace.md) [详情](BACKLOG-details.md#t-1022)|见详情。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1023",
+      "line": 373,
+      "source_sha256": "52e6425edd57cf5316a8f4b41540c96cb00471785706ea1b9367d0116936f28c",
+      "raw_row": "|T-1023|修正既有任务绑定glob导致的progress生成阻断|📋 待办|—|—|[证据](docs/features/t1022-account-group-workspace/VERIFICATION.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-3eba29be37ce0174)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1021",
+      "line": 374,
+      "source_sha256": "d0c63987467f6c904126d7f31876488b38d536b8b7b90761b180a4afecdfc460",
+      "raw_row": "|T-1021|CreatorOS封面与小红书图文双模板库、行业分类及私人收藏|🔨 待办|PASS[REV:a6345304472d]|待验|[SPEC](docs/features/t1021-cover-template-library.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d0c6d059440fcd70)。|",
+      "kind": "duplicate",
+      "already_preserved": false
+    },
+    {
+      "id": "T-1019",
+      "line": 375,
+      "source_sha256": "2c37a76586d9495dca1f244b389d70d87b62e1fdd4543fbadaf9718bb3dc4b24",
+      "raw_row": "|T-1019|按观众具体任务与双九宫格持续生成可实测选题|⏸️ 待办|PASS[REV:3a0362412b23]|待验|[SPEC](docs/features/audience-task-topics/README.md)|用户委派；复用定位/雷达/候选/反馈，观众入口与作者实测分流，保留 T-1017 首稿；不发布或 push。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1020",
+      "line": 376,
+      "source_sha256": "afe3fe587d0a85fdcabb9bba630f7a4aaf78b530fa346fa6c3e9884fc609365d",
+      "raw_row": "|T-1020|统一可视化推荐、作品承接与科学运营观测|📋 待办|待审|待验|[SPEC](docs/features/creator-operations/README.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e6765fb61ec296f6)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    },
+    {
+      "id": "T-1017",
+      "line": 377,
+      "source_sha256": "5d76c62ceb95ef7915857c3bd76f057ef4559718cf3519e9814b29ab3d6a2430",
+      "raw_row": "|T-1017|简化内容雷达：按账号定位一键生成可编辑改写稿|🔨 待办|PASS[REV:d2fb4541c82d]|待验|[SPEC](docs/features/t1017-content-radar-rewrite-first.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-00c1555a12c0e894)。|",
+      "kind": "duplicate",
+      "already_preserved": true
+    }
+  ],
+  "added_original_rows": 6
+}

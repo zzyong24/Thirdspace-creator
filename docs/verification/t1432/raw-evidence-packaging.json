@@ -1,0 +1,54 @@
+{
+  "note": "原日志和原前言含真实结尾空行，暂存diff检查因此报告格式告警；不改写原证据，改为逐字节gzip归档。独立审核原件及哈希保持原样，表中映射用于恢复其原始路径内容。测试日志原件仍保留本地，前言原件另存本任务work。",
+  "entries": [
+    {
+      "reviewed_original": "docs/verification/t1432/original-backlog-preface.md",
+      "committed_archive": "docs/verification/t1432/original-backlog-preface.md.gz",
+      "raw_sha256": "c7eaa0877e9dd064e04e586cd4589b85189230b8c3fba1349474f289950791d0",
+      "raw_bytes": 550,
+      "byte_identical": true
+    },
+    {
+      "reviewed_original": "docs/verification/t1433/red.log",
+      "committed_archive": "docs/verification/t1433/red.log.gz",
+      "raw_sha256": "9dc1409652e2d40dd91e23ddd6194b509c8f403403a89e38dd179e56f585aa79",
+      "raw_bytes": 11583,
+      "byte_identical": true
+    },
+    {
+      "reviewed_original": "docs/verification/t1433/green-targeted.log",
+      "committed_archive": "docs/verification/t1433/green-targeted.log.gz",
+      "raw_sha256": "b92a385973207694a75408ed1c1f7d76fd5536e6f8f1e6656a4fe4cad01e7b9a",
+      "raw_bytes": 247,
+      "byte_identical": true
+    },
+    {
+      "reviewed_original": "docs/verification/t1433/green-related.log",
+      "committed_archive": "docs/verification/t1433/green-related.log.gz",
+      "raw_sha256": "0a5dfd314545ff0e991b5feb1398553e11a8331a5c6604bca7d73a94ea5789a9",
+      "raw_bytes": 239,
+      "byte_identical": true
+    },
+    {
+      "reviewed_original": "docs/verification/t1433/backend-typecheck.log",
+      "committed_archive": "docs/verification/t1433/backend-typecheck.log.gz",
+      "raw_sha256": "8582183a31114047a49d2356c1d9db4f82f5edad95469ac7c64cbfd2151fbe04",
+      "raw_bytes": 102,
+      "byte_identical": true
+    },
+    {
+      "reviewed_original": "docs/verification/t1433/timeout-policy.log",
+      "committed_archive": "docs/verification/t1433/timeout-policy.log.gz",
+      "raw_sha256": "2df37cbcdbed75ab459cf56b3e64617e6e66152d48637592f2379ac44d2ea2a9",
+      "raw_bytes": 9894,
+      "byte_identical": true
+    },
+    {
+      "reviewed_original": "docs/verification/t1433/boundary.log",
+      "committed_archive": "docs/verification/t1433/boundary.log.gz",
+      "raw_sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "raw_bytes": 779,
+      "byte_identical": true
+    }
+  ]
+}

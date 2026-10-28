@@ -20,6 +20,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { execSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { parseBacklogTaskRows, resolveTaskMetadata } from "./backlog-task-metadata.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", ".."); // orchestrator/process/ → 项目根
@@ -48,96 +49,26 @@ if (!fs.existsSync(BACKLOG)) {
   process.exit(1);
 }
 const backlogRaw = fs.readFileSync(BACKLOG, "utf8");
-const lines = backlogRaw.split("\n");
 
 function rel(abs) {
   return path.relative(REPO, abs).split(path.sep).join("/");
 }
 
-// Markdown 表格行 → 去掉首尾空 cell 的单元格数组。
-function cellsOf(line) {
-  const t = line.trim();
-  if (!t.startsWith("|")) return null;
-  const parts = t.split("|").map((c) => c.trim());
-  // "| a | b |".split("|") → ["","a","b",""],掐头去尾
-  if (parts.length && parts[0] === "") parts.shift();
-  if (parts.length && parts[parts.length - 1] === "") parts.pop();
-  return parts;
-}
-
-// 是否表格分隔行(|---|:--:|...)
-function isSeparatorRow(cells) {
-  return cells.length > 0 && cells.every((c) => /^:?-{2,}:?$/.test(c) || c === "");
-}
-
-// ---------- 定位任务行(首个 cell 精确等于 task-id,防止误中「一句话」里提到的 ID) ----------
-let rowIdx = -1;
-let rowCells = null;
-for (let i = 0; i < lines.length; i++) {
-  const cells = cellsOf(lines[i]);
-  if (!cells || isSeparatorRow(cells)) continue;
-  if (cells[0] === taskId) {
-    rowIdx = i;
-    rowCells = cells;
-    break;
-  }
-}
-if (rowIdx === -1) {
-  console.error(`✗ BACKLOG.md 中找不到 ID 为「${taskId}」的看板行(要求首列精确匹配)。`);
+// Table headers determine the shape. Index details cannot replace current state.
+let task;
+try {
+  const matches=parseBacklogTaskRows(backlogRaw).tasks.filter(row=>row.id===taskId);
+  if(matches.length!==1)throw new Error(`BACKLOG.md 中 ID 为「${taskId}」的看板行必须唯一（实际 ${matches.length}）`);
+  task=resolveTaskMetadata({root:REPO,task:matches[0]});
+} catch(error) {
+  console.error(`✗ ${error.message}`);
   process.exit(1);
 }
-const rowLine = lines[rowIdx];
-
-// ---------- 解析列名(向上找最近的表头行,其下一行是分隔行) ----------
-function findHeader(fromIdx) {
-  for (let i = fromIdx - 1; i >= 0; i--) {
-    const cells = cellsOf(lines[i]);
-    if (!cells) continue;
-    if (isSeparatorRow(cells)) continue;
-    const next = cellsOf(lines[i + 1] ?? "");
-    if (next && isSeparatorRow(next)) return cells;
-  }
-  return null;
-}
-const header = findHeader(rowIdx);
-
-// 按列名取 cell;找不到列名时退回位置约定(ID/任务/状态/文档/一句话)。
-function cellByName(names, fallbackIdx) {
-  if (header) {
-    for (let i = 0; i < header.length; i++) {
-      if (names.some((n) => header[i].includes(n))) return rowCells[i] ?? "";
-    }
-  }
-  return rowCells[fallbackIdx] ?? "";
-}
-const taskName = cellByName(["任务"], 1);
-const oneLiner = cellByName(["一句话", "描述", "说明"], rowCells.length - 1);
-const docCell = cellByName(["文档", "SPEC", "引用"], 3);
-
-// 任务全文(用于知识上下文命中)
-const taskText = rowLine;
-
-// ---------- 第 3 节:引用文档(行内「文档」列里存在于仓库的路径) ----------
-// 抽两类:markdown 链接 [x](path) 与裸路径 token(含 / 且以常见文档后缀结尾)。
-function extractDocPaths(cell) {
-  const found = [];
-  const seen = new Set();
-  const push = (p) => {
-    const clean = p.split("#")[0].trim(); // 去锚点再验存在性
-    if (!clean || seen.has(clean)) return;
-    seen.add(clean);
-    found.push(clean);
-  };
-  let m;
-  const linkRe = /\[[^\]]*\]\(([^)\s]+)\)/g;
-  while ((m = linkRe.exec(cell))) push(m[1]);
-  const bareRe = /(?:^|[\s`(,;、:])([\w./-]+\/[\w./-]+\.(?:md|txt|json|yaml|yml))/g;
-  while ((m = bareRe.exec(cell))) push(m[1]);
-  return found;
-}
-const docPaths = extractDocPaths(docCell).filter((p) =>
-  fs.existsSync(path.join(REPO, p)),
-);
+const rowLine=task.line;
+const taskName=task.title;
+const oneLiner=task.narrative;
+const docPaths=task.documents;
+const taskText=[task.id,task.title,task.narrative,task.document].join(" ");
 
 // ---------- 第 4 节:知识上下文(knowledge.config.json 的 feature_map 命中) ----------
 // config 形状约定:{ "feature_map": [ { "id": "...", "title": "...", "docs": [路径…] 或 {名:路径} } ] }
