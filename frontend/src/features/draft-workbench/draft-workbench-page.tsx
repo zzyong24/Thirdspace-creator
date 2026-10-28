@@ -25,7 +25,7 @@ import { DraftChatRail } from "./draft-chat-rail";
 import { DraftChatRequestProvider } from "./draft-chat-request";
 import {ProjectPreparationProvider} from "./project-preparation-context";
 import { DraftResizableLayout } from "./draft-resizable-layout";
-import { CreationFlowCtas } from "./creation-flow-ctas";
+import { CreationFlowCtas, WorkCreationCta } from "./creation-flow-ctas";
 import { ThesisSkeletonPanel } from "./thesis-skeleton-panel";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
@@ -85,7 +85,7 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
             briefDetail={project.briefDetail}
           />
 
-          {/* [T-726] 创作流引导 CTA:选题 → 准备素材 → 直接写稿。
+          {/* [T-726] 写稿前的准备入口:上传素材 / 联网找资料 / 可选梳理观点。
               [T-146] 传 projectId:「＋上传素材」把资料上传进「当前项目」弹药库。 */}
           <CreationFlowCtas projectId={project.id} />
 
@@ -165,6 +165,9 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
               initialReport={scriptReview}
             />}
           </section>
+
+          {/* [T-1070] 脚本保存确认、审阅之后才由脚本一键生成文章和图文，再进入发布。 */}
+          <WorkCreationCta projectId={project.id} />
 
           {/* ── 发布包区 ── */}
           {deferred ? <React.Suspense fallback={<DeferredSectionLoading label="发布信息"/>}>

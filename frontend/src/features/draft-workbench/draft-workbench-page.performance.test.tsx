@@ -15,7 +15,7 @@ vi.mock('./draft-chat-rail',()=>({DraftChatRail:()=>null}));
 vi.mock('./draft-chat-request',()=>({DraftChatRequestProvider:({children}:any)=><>{children}</>}));
 vi.mock('./project-preparation-context',()=>({ProjectPreparationProvider:({children}:any)=><>{children}</>}));
 vi.mock('./draft-resizable-layout',()=>({DraftResizableLayout:({left,right}:any)=><div>{left}{right}</div>}));
-vi.mock('./creation-flow-ctas',()=>({CreationFlowCtas:()=>null}));
+vi.mock('./creation-flow-ctas',()=>({CreationFlowCtas:()=>null,WorkCreationCta:()=>null}));
 vi.mock('./thesis-skeleton-panel',()=>({ThesisSkeletonPanel:()=>null}));
 vi.mock('./ammo-note-form',()=>({AmmoNoteForm:()=>null}));
 vi.mock('./ammo-dump-zone',()=>({AmmoDumpZone:()=>null}));

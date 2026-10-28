@@ -39,10 +39,13 @@ export function DraftChatRail({
   const { request,readEditorState } = useDraftChatRequest();
   const editorState=readEditorState();
   const preparation=useProjectPreparation();
+  const candidates=preparation?.projectId===projectId?preparation.preparation?.candidates.filter(candidate=>candidate.status!=="rejected")??[]:[];
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
-      <div aria-label="项目准备候选">{preparation?.projectId===projectId?preparation.preparation?.candidates.filter(candidate=>candidate.status!=="rejected").map(candidate=>candidate.kind==="brief"?<ChatBriefCard key={candidate.id} suggestion={null} current={null} projectId={projectId} preparation={{candidate,projectId,current:currentBrief}}/>:<ChatScriptDraftCard key={candidate.id} taskId={null} projectId={projectId} error={null} preparation={{candidate,projectId}}/>):null}</div>
-      {editorState?.target?<p role="status" className="mb-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm">当前{editorState.target.contentType==="article"?"文章":editorState.target.contentType==="image"?"图文":"视频"} · {editorState.dirty?"发送前将保存当前修改":"已保存稿与选区"}</p>:null}
+      {/* 候选卡有上限并自身滚动，编导对话始终保有主要高度。 */}
+      {candidates.length>0?<div aria-label="项目准备候选" className="mb-3 flex max-h-[35%] min-h-0 shrink-0 flex-col gap-2 overflow-y-auto">{candidates.map(candidate=>candidate.kind==="brief"?<ChatBriefCard key={candidate.id} suggestion={null} current={null} projectId={projectId} preparation={{candidate,projectId,current:currentBrief}}/>:<ChatScriptDraftCard key={candidate.id} taskId={null} projectId={projectId} error={null} preparation={{candidate,projectId}}/>)}</div>:null}
+      {editorState?.target?<p role="status" className="mb-2 shrink-0 rounded-lg bg-surface-subtle px-3 py-2 text-sm">当前{editorState.target.contentType==="article"?"文章":editorState.target.contentType==="image"?"图文":"视频"} · {editorState.dirty?"发送前将保存当前修改":"已保存稿与选区"}</p>:null}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <React.Suspense fallback={null}>
         <AICopilotContent
           embed={{
@@ -63,6 +66,7 @@ export function DraftChatRail({
           }}
         />
       </React.Suspense>
+      </div>
     </div>
   );
 }

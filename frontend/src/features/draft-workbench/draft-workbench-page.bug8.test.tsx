@@ -30,6 +30,7 @@ vi.mock("./topic-card", () => ({
 }));
 vi.mock("./creation-flow-ctas", () => ({
   CreationFlowCtas: () => <div data-slot="mock-flow-ctas" />,
+  WorkCreationCta: () => <div data-slot="mock-work-creation" />,
 }));
 vi.mock("./thesis-skeleton-panel", () => ({
   ThesisSkeletonPanel: () => <div data-slot="mock-thesis-skeleton" />,
@@ -499,4 +500,17 @@ it("普通项目首屏按项目准备、脚本顺序展示且没有负排序", (
   expect(pipeline.compareDocumentPosition(script) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(Number(getComputedStyle(script).order || 0)).toBeGreaterThanOrEqual(Number(getComputedStyle(pipeline).order || 0));
   expect(script.id).toBe("script");
+});
+
+// T-1070：一键生成读取已确认脚本，按操作顺序位于脚本区之后、发布之前；写稿前只留准备入口。
+it("一键生成文章和图文在脚本区之后、发布区之前，准备入口在脚本区之前", () => {
+  const { container } = render(<DraftWorkbenchPage vm={baseVm()} />);
+  const prepare = container.querySelector('[data-slot="mock-flow-ctas"]')!;
+  const script = container.querySelector('[data-slot="draft-script-section"]')!;
+  const generate = container.querySelector('[data-slot="mock-work-creation"]')!;
+  const publish = container.querySelector('[data-slot="draft-publish-pack"]')!;
+  expect(prepare.compareDocumentPosition(script) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(script.contains(generate)).toBe(false);
+  expect(script.compareDocumentPosition(generate) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(generate.compareDocumentPosition(publish) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });

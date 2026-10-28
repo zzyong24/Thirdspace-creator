@@ -36,7 +36,7 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
   const transcript=preparation?.steps.find(step=>step.name==="transcript");
   const selected=references.find(ref=>ref.id===referenceId)??(references.length===1?references[0]:null);
   const doneCount=preparation?.steps.filter(step=>["done","not_required"].includes(step.status)).length??0;
-  return <section id="pipeline" data-slot="project-pipeline" aria-labelledby="project-pipeline-title" className="scroll-mt-20 rounded-card border border-border bg-surface p-5">
+  return <section id="pipeline" data-slot="project-pipeline" aria-labelledby="project-pipeline-title" className="@container scroll-mt-20 rounded-card border border-border bg-surface p-5">
     <h2 id="project-pipeline-title" className="text-base font-semibold text-foreground">项目准备</h2>
     <p className="mt-1 text-sm text-muted-foreground">{ORIGIN_LABEL[preparation?.origin??origin]}{preparation?.registration==="registered"?` · 已完成 ${doneCount}/${preparation.steps.length} 步`:""}</p>
     {state?.error?<p role="alert" className="mt-3 text-sm text-destructive">状态暂时无法读取：{state.error}</p>:null}
@@ -45,7 +45,8 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
     {preparation?.lastError&&preparation.steps.some(step=>showsCurrentError(step.status))?<p className="mt-3 text-sm text-warning">{humanizePreparationError(preparation.lastError.message)}</p>:null}
     {state?<Button type="button" size="sm" variant="ghost" disabled={state.busy} onClick={()=>void run(state.reload)}>重新读取状态</Button>:null}
     {preparation?.registration==="registered"&&preparation.preparationTaskId?<div aria-label="项目准备控制" className="mt-2 flex flex-wrap gap-2">{(["pause","resume","cancel"] as const).filter(command=>preparation.availableActions.includes(command)).map(command=><Button key={command} type="button" size="sm" variant="outline" disabled={state?.busy||Boolean(state?.error)} onClick={()=>void run(()=>state!.control(command))}>{CONTROL_LABEL[command]}</Button>)}</div>:null}
-    <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(200px,0.8fr)_minmax(0,2fr)]">
+    {/* 稿面在可拖拽分栏里，宽度和窗口无关；按面板自身宽度排，窄时来源在上、步骤在下。 */}
+    <div className="mt-4 grid gap-4 @4xl:grid-cols-[minmax(200px,0.8fr)_minmax(0,2fr)]">
       <div data-slot="pipeline-source" className="min-w-0 rounded-xl bg-surface-subtle p-4">
         <h3 className="text-sm font-semibold">来源素材</h3>
         {references.length?<ul className="mt-2 space-y-2">{references.map(ref=><li key={ref.id} className="min-w-0 text-sm">
@@ -55,12 +56,12 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
       </div>
       <div className="min-w-0">
         {preparation?.registration==="not_registered"?<div className="rounded-xl border border-border p-4"><p className="text-sm">未登记准备流程</p><p className="mt-2 text-sm text-muted-foreground">按需启动准备；已有资料和稿件仍可继续编辑。</p>{preparation.availableActions.includes("start")?<Button className="mt-3" size="sm" disabled={state?.busy} onClick={()=>void run(()=>state!.start(null))}>启动项目准备</Button>:null}</div>:null}
-        <ol aria-label="项目自动处理步骤" className="grid min-w-0 gap-3 md:grid-cols-3">{preparation?.steps.map(step=>{
+        <ol aria-label="项目自动处理步骤" className="grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">{preparation?.steps.map(step=>{
           const candidates=preparation.candidates.filter(candidate=>candidate.kind===(step.name==="brief"?"brief":"draft")&&candidate.status!=="rejected");
           const accepted=step.status==="candidate_ready"&&candidates.length>0&&candidates.every(candidate=>candidate.acceptanceReceipt!==null);
           const Icon=step.status==="done"?CheckCircle2:step.status==="not_required"?MinusCircle:step.status==="running"?Loader2:Circle;
           return <li key={step.name} data-step={step.name} data-state={step.status} className="flex min-w-0 flex-col gap-2 rounded-xl border border-border p-4">
-            <h3 className="text-sm font-semibold">{STEP_LABEL[step.name]}</h3>
+            <h3 className="break-keep text-sm font-semibold">{STEP_LABEL[step.name]}</h3>
             <p className="flex items-center gap-1.5 text-xs"><Icon className={`size-3.5 ${step.status==="running"?"animate-spin motion-reduce:animate-none":""}`} aria-hidden="true"/>{accepted?"候选已采纳":STATE_LABEL[step.status]}</p>
             {step.lastError&&showsCurrentError(step.status)?<p className="text-sm text-warning">{humanizePreparationError(step.lastError.message)}</p>:null}
             {step.status==="unknown_result"?<p className="text-sm text-muted-foreground">请核对原任务回执；不会重新发送供应商请求。</p>:null}
