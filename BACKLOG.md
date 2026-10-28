@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1409|Windows扫码目录归位与免登录主页、转写|📋|—|待验|[SPEC](docs/features/t1409-douyin-login-free-and-windows-staging.md)|登录目录rename遇Windows占用重试并复制回退；未登录可先存博主主页、登录后关联同步；转写先走游客作品页详情再回落登录。源码测试通过，Windows真机待验。|
 |T-1408|默认无需抖音登录即可定位|⏸️|—|待验|[SPEC](docs/features/t1408-positioning-without-douyin-login.md)|本地账号组生成候选、手动采纳及创建项目；用户已授权独立差量推送合main，整体验收未通过，不混入PR11。|
 |T-1406|修复新版安装验收发现的八项缺陷|🔨|PASS[REV:b3a0d1e8ff5d]|待验|[SPEC](docs/features/t1406-installed-eight-defects.md)|八项限定实机复验通过；整体PARTIAL及数据快照差异保留。2026-10-26用户授权合main，保全main正式发布workflow，合并与全量验收分开留证。|
 |T-1405|新版安装后全功能实测|🔨|—|待验|[SPEC](docs/features/t1405-installed-functional-validation.md)|当前Windows修复包逐模块真实验证；独立验收组、原资料保全，源码/UI/API/真实模型证据分开，不把外部受阻或已知欠债标通过。|

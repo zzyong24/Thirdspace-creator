@@ -30,6 +30,7 @@ import {readRadarView,saveRadarView} from "./radar-view-preferences";
 import * as React from "react";
 import { AddCollectionDialog,ImportDouyinShareDialog } from "./collection-import-dialogs";
 import { AddSourceDialog } from "./source-setup-dialog";
+import { AttachCollectorDialog } from "./attach-collector-dialog";
 import { useSourceRuns } from "./use-source-runs";
 import { useTopicPreview } from "./use-topic-preview";
 import { useTranscriptRefresh } from "./use-transcript-refresh";
@@ -154,6 +155,7 @@ function IntelligenceWorkbenchScope({
   const [reconnectError, setReconnectError] = React.useState<string | null>(
     null,
   );
+  const [attachSource, setAttachSource] = React.useState<RadarSource | null>(null);
   const [removalSource, setRemovalSource] =
     React.useState<RadarSource | null>(null);
   const [removalBusy, setRemovalBusy] = React.useState(false);
@@ -909,6 +911,19 @@ function IntelligenceWorkbenchScope({
         </DialogContent>
       </Dialog>
 
+      <AttachCollectorDialog
+        source={attachSource}
+        scope={scope}
+        api={api}
+        onClose={() => setAttachSource(null)}
+        onAttached={async (updated) => {
+          setAttachSource(null);
+          setNotice(`已为「${updated.displayName}」关联采集账号，正在同步…`);
+          router.refresh();
+          await runSource(updated.id);
+        }}
+      />
+
       <Dialog
         open={removalSource !== null}
         onOpenChange={(open) => {
@@ -1062,6 +1077,7 @@ function IntelligenceWorkbenchScope({
                         void selectItemScope(collection.id, source.id)
                       }
                       onRun={() => runSource(source.id)}
+                      onAttach={() => setAttachSource(source)}
                       onToggleMonitor={() => void toggleSourceMonitor(source)}
                       onReconnect={() => {
                         setReconnectError(null);
@@ -1099,6 +1115,7 @@ function IntelligenceWorkbenchScope({
                   monitorUpdating={updatingMonitorSourceIds.has(source.id)}
                   onSelect={() => void selectItemScope(null, source.id)}
                   onRun={() => runSource(source.id)}
+                  onAttach={() => setAttachSource(source)}
                   onToggleMonitor={() => void toggleSourceMonitor(source)}
                   onReconnect={() => {
                     setReconnectError(null);
@@ -1446,6 +1463,7 @@ function SourceRow({
   monitorUpdating,
   onSelect,
   onRun,
+  onAttach,
   onToggleMonitor,
   onReconnect,
   onRemove,
@@ -1458,6 +1476,7 @@ function SourceRow({
   monitorUpdating: boolean;
   onSelect: () => void;
   onRun: () => void;
+  onAttach: () => void;
   onToggleMonitor: () => void;
   onReconnect: () => void;
   onRemove: () => void;
@@ -1469,12 +1488,13 @@ function SourceRow({
     : syncing
       ? "running"
       : (health?.lastRunStatus ?? null);
-  const loginExpired = health?.lastErrorCode === "LOGIN_REQUIRED";
-  const statusLabel = loginExpired ? "需登录" : runStatusLabel(currentStatus);
+  const needsCollector = source.type === "creator_profile" && !source.collector;
+  const loginExpired = !needsCollector && health?.lastErrorCode === "LOGIN_REQUIRED";
+  const statusLabel = needsCollector ? "待登录" : loginExpired ? "需登录" : runStatusLabel(currentStatus);
   const collectorUnavailable=source.collector && source.collector.availability!=="active";
   const collectorLabel = collectorUnavailable ? "采集账号需重新选择" : source.collector
     ? `用 ${source.collector.accountHandle ?? source.collector.accountId} 采集`
-    : "无需登录账号";
+    : needsCollector ? "未关联抖音账号，登录后可同步" : "无需登录账号";
   return (
     <div
       data-testid={`radar-source-row-${source.id}`}
@@ -1519,7 +1539,7 @@ function SourceRow({
           </span>
         </button>
         <span
-          className={cn("block min-w-0 truncate text-xs leading-4 text-muted-foreground", collectorUnavailable && "text-warning")}
+          className={cn("block min-w-0 truncate text-xs leading-4 text-muted-foreground", (collectorUnavailable || needsCollector) && "text-warning")}
           title={collectorUnavailable?"采集账号已不可用，请添加使用当前组账号的来源。原内容仍保留。":`${collectorLabel} → 归当前工作区`}
         >
           {collectorLabel} · {source.monitorEnabled ? "自动" : "手动"}
@@ -1531,25 +1551,27 @@ function SourceRow({
         <Button
           type="button"
           aria-label={
-            loginExpired
-              ? `重新登录 ${source.displayName} 的采集账号`
-              : `${queued ? "等待同步" : syncing ? "正在同步" : "同步"} ${source.displayName}`
+            needsCollector
+              ? `为 ${source.displayName} 关联抖音账号`
+              : loginExpired
+                ? `重新登录 ${source.displayName} 的采集账号`
+                : `${queued ? "等待同步" : syncing ? "正在同步" : "同步"} ${source.displayName}`
           }
           variant="outline"
           size="sm"
           disabled={syncing || source.status !== "active" || !!collectorUnavailable}
-          onClick={loginExpired ? onReconnect : onRun}
+          onClick={needsCollector ? onAttach : loginExpired ? onReconnect : onRun}
           className={cn(
             "h-8 shrink-0 gap-1 whitespace-nowrap border-border bg-surface px-2 text-xs text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
-            loginExpired && "border-warning/40 text-warning",
+            (loginExpired || needsCollector) && "border-warning/40 text-warning",
           )}
         >
-          {loginExpired ? (
+          {loginExpired || needsCollector ? (
             <ShieldCheck className="size-3" />
           ) : (
             <RefreshCw className={cn("size-3", syncing && "animate-spin")} />
           )}
-          {loginExpired ? "登录" : queued ? "排队中" : syncing ? "同步中" : "同步"}
+          {needsCollector ? "关联账号" : loginExpired ? "登录" : queued ? "排队中" : syncing ? "同步中" : "同步"}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
