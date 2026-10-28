@@ -61,6 +61,28 @@ describe('组图逐页候选',()=>{
   api.listResults.mockResolvedValue({items:[]});api.listBundles.mockResolvedValue({items:[]});
   api.getAssetFileDownloadUrl.mockResolvedValue({url:'http://example.test/exact.png'});
  });
+ it('简洁工作台如实显示原生图待核对，保留刷新而不开放重复生成或重试',async()=>{
+  api.listResults.mockResolvedValue({items:[{...card,targetSectionId:'page-b',status:'running',value:null,errorCode:'MEDIA_RESULT_UNKNOWN'}]});
+  render(<GraphicPostResults {...props} resultsOnly series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
+  expect(await screen.findByText('原生图任务结果待核对，已完成的图片保留。请刷新原结果。')).toBeVisible();
+  expect(screen.getByRole('button',{name:'生成所选 1 页'})).toBeDisabled();
+  expect(screen.queryByRole('button',{name:'重试原任务'})).toBeNull();
+  fireEvent.click(screen.getByRole('button',{name:'刷新图片结果'}));await waitFor(()=>expect(api.listResults).toHaveBeenCalledTimes(2));
+  expect(api.createBundle).not.toHaveBeenCalled();
+ });
+ it('简洁工作台在没有候选时也能按所选页提交真实生图，未知恢复保持原目标',async()=>{
+  api.createBundle.mockRejectedValueOnce(Error('response unknown')).mockResolvedValueOnce({bundleId:'original',items:[],status:'queued'});
+  const view=render(<GraphicPostResults {...props} resultsOnly series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
+  fireEvent.click(await screen.findByRole('button',{name:'生成所选 1 页'}));
+  await screen.findByRole('alert');
+  const original=api.createBundle.mock.calls[0][0];
+  expect(original.body.items).toEqual([{kind:'image_card',targetSectionId:'page-b'}]);
+  expect(props.prepareGeneration).toHaveBeenCalledOnce();
+  view.rerender(<GraphicPostResults {...props} resultsOnly series={{cards:pages,selectedCardId:'page-a',selectedCardIds:['page-a']}}/>);
+  fireEvent.click(screen.getByRole('button',{name:'恢复原组图请求'}));
+  await waitFor(()=>expect(api.createBundle).toHaveBeenCalledTimes(2));
+  expect(api.createBundle.mock.calls[1][0]).toEqual(original);
+ });
  it('编导图片要求走原page generator；未知后新要求不覆盖原body/key',async()=>{
   api.generateResult.mockRejectedValueOnce(Error('original response unknown')).mockResolvedValueOnce({...card,status:'awaiting_confirmation',targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]});
   const series={cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']};

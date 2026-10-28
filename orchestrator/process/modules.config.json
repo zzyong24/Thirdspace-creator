@@ -20919,7 +20919,9 @@
         "contract/tests/group-workspace-read.test.ts",
         "backend/src/modules/platform-collection/platform-collection.service.ts",
         "backend/src/modules/execution/persistent-task.service.ts",
-        "backend/src/modules/execution/persistent-task.service.test.ts"
+        "backend/src/modules/execution/persistent-task.service.test.ts",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/ARTIFACT_MANIFEST.yaml"
       ],
       "verify_commands": {
         "implementation": [
@@ -21015,7 +21017,15 @@
         "PROJECT.md",
         "ai-worker/src/prompt/templates/chatbox-turn.ts",
         "ai-worker/src/prompt/templates/chatbox-turn.test.ts",
-        "frontend/src/features/reference-editors/noterelay/native-bundle.test.ts"
+        "frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+        "frontend/src/features/projects/graphic-post-results.tsx",
+        "frontend/src/features/projects/graphic-post-results.test.tsx",
+        "frontend/src/features/projects/graphic-image-pages.tsx",
+        "frontend/src/features/projects/graphic-image-pages.test.tsx",
+        "backend/src/modules/creative-results/creative-results.service.ts",
+        "backend/src/modules/creative-results/creative-results.integration.test.ts",
+        "backend/src/modules/creative-results/graphic-post-media.adapter.ts",
+        "backend/src/modules/creative-results/graphic-post-media.adapter.test.ts"
       ],
       "verify_commands": {
         "implementation": [

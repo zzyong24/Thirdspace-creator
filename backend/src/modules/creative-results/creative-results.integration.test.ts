@@ -175,6 +175,15 @@ describe("T-1029 result ownership and partial delivery", () => {
       const bundle = await service.createBundle(context("a"), {outputId: articleOutput.id,
         items: [{kind: "image_card", targetSectionId: "section-two"}], clientRequestId: "section-bundle-one"});
       expect(bundle.items[0]?.targetSectionId).toBe("section-two");
+      const transport=createCreativeResultsTransport(()=>service);
+      const created=await transport.request(ENDPOINTS.createBundle,{params:{outputId:articleOutput.id},body:{items:[{kind:"image_card",targetSectionId:"section-two"}],clientRequestId:"section-bundle-one"},query:undefined},context("a"));
+      const read=await transport.request(ENDPOINTS.getBundle,{params:{bundleId:bundle.bundleId},body:undefined,query:undefined},context("a"));
+      const list=await transport.request(ENDPOINTS.listBundles,{params:{outputId:articleOutput.id},body:undefined,query:{pageSize:20}},context("a"));
+      expect(ENDPOINTS.createBundle.response.safeParse((created as {data:unknown}).data).success).toBe(true);
+      expect(ENDPOINTS.getBundle.response.safeParse((read as {data:unknown}).data).success).toBe(true);
+      expect(ENDPOINTS.listBundles.response.safeParse((list as {data:unknown}).data).success).toBe(true);
+      expect(bundle.items[0]).not.toHaveProperty("requestId");
+
       expect(seen).toEqual(["section-one", "section-two"]);
       await expect(service.generate(context("a"), {outputId: articleOutput.id, kind: "image_card",
         targetSectionId: "section-other", clientRequestId: "section-request-one"})).rejects.toThrow();

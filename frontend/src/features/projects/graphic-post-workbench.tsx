@@ -16,6 +16,8 @@ import {writePreparedClipboard} from "@/features/reference-editors/write-prepare
 import {inheritGraphicScript,reorganizePrompt} from "./script-first-content";
 import { GraphicPostResults } from "./graphic-post-results";
 import {NoteRelayEditor} from "@/features/reference-editors/noterelay/noterelay-editor";
+import {GraphicImagePages} from "./graphic-image-pages";
+import {LazyDisclosure} from "@/features/reference-editors/noterelay/lazy-disclosure";
 import {graphicDeliveryImages} from "./graphic-series-document";
 import {zipSync,strToU8} from "fflate";
 import {saveEditorFile,editorFileMessage} from "../reference-editors/save-editor-file";
@@ -220,10 +222,10 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
       {draft.title&&<h3 className="font-medium">{draft.title}</h3>}<p className="whitespace-pre-wrap break-words">{draft.body||"尚未填写发布正文，可让编导根据当前内容整理。"}</p>
       {draft.tags.length>0&&<p className="text-sm text-muted-foreground">{draft.tags.map(tag=>`#${tag}`).join(' ')}</p>}
     </section>
-    {!draft.cardBriefs?.length&&<p role="status" className="text-sm text-muted-foreground">这份稿件还未按内容拆成图片页。点击“重新组织内容”，预览编导整理的小红书配文和逐页内容后采纳；当前稿件仍可导出。</p>}
-    <NoteRelayEditor simplified prepareDelivery={save} projectId={projectId} accountId={accountId} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="rednote" value={draft} disabled={busy} onLayoutChange={layout=>setDraft(current=>({...current,nativeLayout:layout}))}
-      extraDelivery={<Button variant="ghost" disabled={busy||exportBusy} onClick={()=>void exportGroup()}>{exportBusy?"导出中…":"导出原图与配文"}</Button>}/>
+    <GraphicImagePages document={draft} selectedCardIds={activeCardIds} onSelectionChange={ids=>{setSelectedCardIds(ids);setSelectedCardId(ids[0]??null);}} onChange={setDraft} disabled={busy}/>
+    <div className="flex flex-wrap items-center gap-3"><Button disabled={busy||exportBusy} onClick={()=>void exportGroup()}>{exportBusy?"导出中…":graphicDeliveryImages(draft).length?"导出原图与配文":"导出配文"}</Button><p className="text-xs text-muted-foreground">{graphicDeliveryImages(draft).length?"按页序导出已采用的图片原文件和配文。":"生成并采用图片后，可一并导出原图。"}</p></div>
     <GraphicPostResults resultsOnly key={`${accountId}:${state.outputId}`} accountId={accountId} outputId={state.outputId} targetPlatform={state.targetPlatform} currentVersionId={state.currentVersionId} manualDraftDirty={dirty} prepareGeneration={save} onAdopt={()=>refreshPost()} onResultListResolved={onResultListResolved} scriptDerived imageRequest={directorImageRequest} series={{cards:draft.cardBriefs??[],selectedCardId:activeCardId,selectedCardIds:activeCardIds}}/>
+    <LazyDisclosure label="文字排版与旧稿导出">{()=> <NoteRelayEditor simplified prepareDelivery={save} projectId={projectId} accountId={accountId} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="rednote" value={draft} disabled={busy} onLayoutChange={layout=>setDraft(current=>({...current,nativeLayout:layout}))}/>}</LazyDisclosure>
     <details id="graphic-history" className="rounded-xl border border-border bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">历史版本</summary><ol className="mt-3 space-y-2 text-sm">{state.versions.map(version=><li key={version.id}><button type="button" onClick={()=>void openVersion(version.id)} className="text-left text-primary hover:underline">v{version.versionNumber} · {version.createdAt.slice(0,16).replace("T"," ")}</button></li>)}</ol></details>
     <Dialog open={Boolean(preview)} onOpenChange={(open) => { if (!open) setPreview(null); }}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">

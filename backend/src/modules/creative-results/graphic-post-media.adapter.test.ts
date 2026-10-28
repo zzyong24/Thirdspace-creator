@@ -170,3 +170,12 @@ describe("不同图文结果依次采用", () => {
     expect(f.confirmTask).not.toHaveBeenCalled();
   });
 });
+
+it('原生图任务结果未知时向工作台如实返回待核对，不伪装成正常运行或可重试失败',async()=>{
+ const f=await fixture('running','version-1','image_card');
+ f.readTask.mockResolvedValue({...task('task-old','running','image_card'),runtimeStatus:'unknown_result',errorCode:'CODEX_RPC_REJECTED'} as never);
+ f.selectRows.push([row('task-old','image_card')]);
+ const value=await f.adapter.read(ctx,'task-old');
+ expect(value).toMatchObject({status:'running',value:null,errorCode:'MEDIA_RESULT_UNKNOWN'});
+ expect(f.submitCard).not.toHaveBeenCalled();expect(f.confirmTask).not.toHaveBeenCalled();
+});

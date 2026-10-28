@@ -3170,3 +3170,18 @@ Status: active
 用户2026-10-26要求修复文章/图文工作台并保留真实使用能力，沿用本地修复与安装授权。T-1419已审核合同采用现有 export_workbench_artifact 命令和系统保存面板。1a7ca9426实机导出返回失败，原生成字节与窗口均保留；静态核对发现该命令已在Rust invoke_handler注册，但未像 export_daily_report_csv 一样在 remote-sidecar capability 声明权限，完整调用链不通。
 
 此为已审核实现的接线补漏：仅添加 allow-export-workbench-artifact 权限，绑定原 main 窗口及既有 localhost/127.0.0.1 origin；只准调用原有保存命令，仍需系统保存面板选址，保留现有MIME/扩展名/100MiB边界和取消不写盘。不增加shell、通用文件系统、任意路径或系统隐私权限，也不改变原SPEC验收标准。追加精确权限文件/现有capability写集，独立复核此连接及拒绝回执；仍需真机保存ZIP/HTML/PNG才能完成。
+
+
+```text
+ID: DEC-142002
+Owner: user
+Status: active
+Authorization-Kind: process-review-cycle
+Task-ID: T-1420
+Previous-Spec-SHA256: 1f943c20fa7de82ff33ad9610538f9a2e54ae2f5222a228fc286864be2bb0759
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: FR-142001
+Max-Cycles: 1
+Nonce: t1420-user-real-text-to-image-20261026
+Decision: 用户本轮明确“小红书的这个图文的图，你应该用文生图，AI来生成图”。批准T-1420从文字排版卡片纠正为真实逐页文生图；沿已有授权实现、真实生成与本地验收。仅为该实质需求变更开启一次新独审周期，保留第一周期和旧验收失败证据；不扩展为发布或模型配置修改。
+```
