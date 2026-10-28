@@ -8,13 +8,14 @@
     "frontend/src/features/projects/graphic-post-workbench.test.tsx": "146d7db01c86ca2488edf730c486a0d06ee6c3ad05f221d37fb3a8e888ff55b2"
   },
   "evidenceSha256": {
-    "browser/browser-current-images.log": "e31b43e11dddb16cbedb7a465aebddeb106d1d03ebae7257b4e38ee3096e9348",
-    "browser/browser-final.log": "3c6972bfad5ffff2f11589a1d1475cd713a461c6166439377a772b62b0768720",
-    "browser/browser-first-envelope-error.log": "8c188839f96d3cabbaf7969d14bcadba979ef1bf495ab2ace64aa1ddc34db753",
+    "README.md": "3020deeab4a8d0da1e8ccbdeaa5995b28b8d3827482467da4e66796fd5451405",
+    "browser/browser-current-images.log.gz": "cdf9a1f3bb68692fd465e7d8019846444877dbf9f9588fbf08b94d3c36a4a078",
+    "browser/browser-final.log.gz": "0023a4df3db0038321aafcef65fea9340eda6768e566b129f8c6a69fa8b7ef8f",
+    "browser/browser-first-envelope-error.log.gz": "4d5bf1d5d4c6c043429a356dee63c066153b4dd4ac6a528fd387ded27999770c",
     "browser/browser-prior-images-result.json": "76c51f162b61aba45bc6be580bce6577728c0bd012521ac31f9cc7664bf6a79d",
     "browser/browser-result.json": "ade6ed668418d949169bfe2e677198a7777d8d16996f071b7787d06950487b72",
     "browser/browser.cjs": "8b506532ee6781e644484a5bfc9f066678e32537f873c2ad7d9f5821b42bfc0b",
-    "browser/second-relative-url-browser.log": "6f234a21e9220f8318c4811f63dda3ec69403b0f294c6407ba69deb1747d754b",
+    "browser/second-relative-url-browser.log.gz": "372f7b49aaed2e6075fb073deb336690438030ec10b941a05a82088064bb09b1",
     "browser/ui-1024.png": "2f635da24c5a5e4ddfd410f93082724fd1c5ed7c3e7848e06b91be76383d90a8",
     "browser/ui-1440.png": "dd78377806d31003930c26f6161210210aea7cbc24bb0a9258501ad59609bff4",
     "browser/ui-settings.png": "6240d8efc858615718e4ac16e54aa18482d5e27bad0e3b08b95f9cc6de54f1c9",
