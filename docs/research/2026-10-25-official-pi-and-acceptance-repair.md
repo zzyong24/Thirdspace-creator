@@ -1,5 +1,8 @@
 ## 审核验收审计
 
+> 接手说明：本轮只追加证据可得性备注；原结论和哈希仍指原验收时版本，不代表本机重跑。原文保留于提交 c8589fe7f。原件所在电脑依用户接手规划说明，本轮只核对本仓库。
+
+
 审计日期：2026-10-25。只读审计锚点：`8f0245a5a7bd4c9829c2be43c90880444477c2c2`；原错误清单：`docs/verification/t1407/reconcile-quick-final-state.txt`。本节归档的是独立的控制面与验收证据审计，不是21项旧产品的新验收结果。仅本节获准写入；未修改产品、审核事件、BACKLOG或收据，未调用真实模型业务，未推送。
 
 ### 结论与最小闭环路线
@@ -103,7 +106,7 @@ node orchestrator/process/frontend-validation.mjs validate --execute --report <T
 
 ### 原UX失败与本次证据边界
 
-来源SPEC在独立旧工作树 `/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/features/t1424-cos-ux-closure.md`；原任务授权和最终报告在 `/Users/zyongzhu/terminals/cos-ux-closure/prompt.md`、`REPORT.md`。这些FAIL不能被T-1407整合提交或本轮审核收据恢复洗成PASS：
+来源SPEC在独立旧工作树 `/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/features/t1424-cos-ux-closure.md`；原任务授权和最终报告在 `/Users/zyongzhu/terminals/cos-ux-closure/prompt.md`、`REPORT.md`。这些FAIL不能被T-1407整合提交或本轮审核收据恢复洗成PASS： 【2026-10-28 接手补注：此处为旧 cos-ux-closure 分支 T-1403 的 UX 验收来源，不是当前 T-1424 CLI 任务；重编号文字不证明文件搬迁。原始日志和截图在朱志勇机器上，未入库。】
 
 | 原结果 | 实际证据与本轮要求 |
 | --- | --- |
@@ -113,7 +116,7 @@ node orchestrator/process/frontend-validation.mjs validate --execute --report <T
 | 平台切换性能失败 | 12次里7次超过2秒、最慢9.661秒；慢状态可见性通过不能证明延迟通过。 |
 | 原导航3秒路径 | 原证据已通过，只保留其原有效范围。 |
 
-T-1426/T-1407原范围保留这些独立旧FAIL，并未承诺整份来源任务全绿；用户最新要求处理没通过验收，可由主线程按当前明确关联范围继续修复、复验，但不能将21项历史收据的控制修复解释成无边界重做所有旧功能。若要处理上述旧UX失败，应在精确关联SPEC/任务中保留原FR、3/2/10秒阈值、1440与1024视口和原任务恢复身份，真实重跑来源旅程；现有入口 `docs/verification/t1424/control/verify-journey.mjs` 位于旧工作树。未复验的项继续写FAIL或未验，不假通过。
+T-1426/T-1407原范围保留这些独立旧FAIL，并未承诺整份来源任务全绿；用户最新要求处理没通过验收，可由主线程按当前明确关联范围继续修复、复验，但不能将21项历史收据的控制修复解释成无边界重做所有旧功能。若要处理上述旧UX失败，应在精确关联SPEC/任务中保留原FR、3/2/10秒阈值、1440与1024视口和原任务恢复身份，真实重跑来源旅程；现有入口 `docs/verification/t1424/control/verify-journey.mjs` 位于旧工作树。未复验的项继续写FAIL或未验，不假通过。 【2026-10-28 接手补注：该 runner 为旧 UX 验收来源，当前仓库无对应文件；不将其作为当前 T-1424 CLI 任务证据。原始日志和截图在朱志勇机器上，未入库。】
 
 官方Pi的HTTP402只证明原官方任务返回该HTTP状态并进入等待，不能直接命名“余额不足”；最近resume结果由主线程另行取证。本节不调用模型、不新增重试、不改变原任务ID。全局22ERROR/17WARN是此锚点的真实旧结果；最终应重新运行所需Gate并报告新结果，不覆盖该旧回执。
 

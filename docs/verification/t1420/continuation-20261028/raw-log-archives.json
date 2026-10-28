@@ -1,0 +1,29 @@
+{
+  "description": "Original command logs archived unchanged because *.log is ignored. No check outcome has been altered.",
+  "archives": [
+    {
+      "original": "t1420-bundle-red.log",
+      "archive": "t1420-bundle-red.log.gz",
+      "originalBytes": 1752,
+      "originalSha256": "76bdf38431874935bfed2881585d0e2a2d04bd7a0317e69421d3bef47d702214",
+      "archiveSha256": "05bd841f6d50bf29c856ef097e832ecc965c791a8f989e02d888796c69b7b18e",
+      "verifiedDecompressedBytesEqual": true
+    },
+    {
+      "original": "t1420-next-build-20261028.log",
+      "archive": "t1420-next-build-20261028.log.gz",
+      "originalBytes": 97018,
+      "originalSha256": "bc94b461b330d8a37dc9cfb62152aed734b4826c1f53cc139974c164cf3a8d51",
+      "archiveSha256": "72517e279c23afbabba21054bc0e9b115f0b50568740d64a71d8dee0f3a4c263",
+      "verifiedDecompressedBytesEqual": true
+    },
+    {
+      "original": "t1420-preview-red.log",
+      "archive": "t1420-preview-red.log.gz",
+      "originalBytes": 4123,
+      "originalSha256": "f51bb0b24105810385a242b35ba85b4c0f0921a0a52b3689a7301fd84d409b9d",
+      "archiveSha256": "4fab61cf6bdc2aaf7619e34bc020c0aada2d055ad8bce61e1edd29fa02ba7efe",
+      "verifiedDecompressedBytesEqual": true
+    }
+  ]
+}

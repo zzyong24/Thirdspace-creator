@@ -1,5 +1,8 @@
 # f9e5e5ece 安装版 CLI 矩阵独立只读复核
 
+> 接手说明：本轮只追加证据可得性备注；原结论和哈希仍指原验收时版本，不代表本机重跑。原文保留于提交 c8589fe7f。原件所在电脑依用户接手规划说明，本轮只核对本仓库。
+
+
 2026-10-25，审核者 `/root/t1426_spec_review`。已读 T-1427 任务包 §1–5、7–9及写入前的§6、当前SPEC，重新读取 RESULT、functional-results、matrix、每轮 submit/messages/task/events 原始回执、路由及新旧官方任务回执。未执行 CLI、模型、UI、测试或用户数据读写；唯一写入为本报告。安装身份引用相邻 independent-install-review.md 对 `f9e5e5ece06d7d86dbb5bd38db76d18cc2437d84` 的独立产物核验，本次未再计算安装包哈希，不把后续控制面提交视为新构建。
 
 结论：四组支持的设置/引擎组合各三轮共12次功能通过；一组正确拒绝；官方Pi仍失败，六组合不能记全绿。摘要与原始消息、任务和事件能对应，未见以成功状态冒充空回复的情况。evidence-index.json 登记的229份文件逐项重算字节数和SHA-256，全部吻合；本报告是索引生成后的新审核文件，不要求倒填进原索引。
@@ -15,7 +18,7 @@
 
 四组三轮均按 submission 的 sourceMessageId 与 chatTaskId 找到且仅找到一份对应assistant回复，任务的status/runtimeStatus均为succeeded，completeness=completed，actualEngine分别为codex或pi。首轮确实输出中文正文及“月光731”；第二轮严格为“月光731｜323”，而不是只看任务状态。前两轮没有工具parts或工具输入事件。第三轮均只有一次 `system.read` / Pi规范名 `system_read`，消息parts和完整events相互吻合；request严格为 `accountGroups.get`，params只取当前对话组 `grp_legacy_acct-ae1a8346-9`，未全量列组或猜组。Codex输入附带既有默认limit=20/offset=0，Pi未显式携带这两个默认字段；没有其它输入。结果真实id和name分别对应该组与“月明水清深”，`__creatorosOutcome.status=ok`、sideEffect=none、error=null；每轮事件页hasMore=false。未见模型重问用户选择测试组或执行创建、采纳、发布工具。
 
-主要原始回执位于 cli-retest/receipts/：codex+codex的messages编号0017/0030/0043、events0021/0034/0047；official+codex的messages0087/0100/0113、events0091/0104/0117；self+Pi的messages0134/0147/0160、events0138/0151/0164；self+codex的messages0177/0190/0203、events0181/0194/0207。逐轮ai.tasks.get原件均与matrix.task一致，原始messages及events数组也与matrix逐项一致，不只采信functionalAssertionsPassed标记。
+主要原始回执位于 cli-retest/receipts/：codex+codex的messages编号0017/0030/0043、events0021/0034/0047；official+codex的messages0087/0100/0113、events0091/0104/0117；self+Pi的messages0134/0147/0160、events0138/0151/0164；self+codex的messages0177/0190/0203、events0181/0194/0207。逐轮ai.tasks.get原件均与matrix.task一致，原始messages及events数组也与matrix逐项一致，不只采信functionalAssertionsPassed标记。 【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】
 
 Codex+Pi的0053提交回执是CLI exit4、HTTP_409，明确提示当前来源Codex不能由Pi执行；matrix.taskId=null。这证明合同边界拒绝有效，不能归为成功支持，也不能由测试对话已创建推断存在模型任务。
 
@@ -29,7 +32,7 @@ Codex+Pi的0053提交回执是CLI exit4、HTTP_409，明确提示当前来源Cod
 
 没有新安装版UI旅程操作或frontend-validation证据，不能用本CLI记录代签；安装独审也只核安装身份与其数据摘要。额度页仅按用户明确跳过，不扩为官方聊天通过。T-1412 full在本轮审核时仍由主线程运行，本报告不预测其终态；T-1427完整验收、推送和发布均不由本报告批准。
 
-证据绑定（均相对本报告目录）：
+证据绑定（均相对本报告目录）： 【2026-10-28 接手补注：下表 functional-results.json、cli-retest/ 下的文件、protected-original-task.json、new-official-task.json、evidence-index.json、driver.log 未入库；RESULT.md 与 independent-install-review.md 已入库。原始日志和截图在朱志勇机器上，未入库。】
 
 | 文件 | SHA-256 |
 |---|---|

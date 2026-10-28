@@ -1,0 +1,396 @@
+{
+  "basis": "c8589fe7f325be1ccc667c93b85c39df506db64c",
+  "annotatedDocuments": 11,
+  "annotationCount": 38,
+  "originalNonMarkdownEvidenceFiles": 57,
+  "originalEvidenceUnchanged": true,
+  "missingReferenceChecks": [
+    {
+      "path": "docs/verification/t1424/RESULT.md",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-entities.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-article-export.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-article-export.zip",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-script-saved-editor.png",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-graphic-png-check.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-graphic-export.zip",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-click-switches.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-runtime.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-round-05.log",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-seed.log",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1425/browser-cleanup.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/installed-candidate-proof.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/rollback-after-user-deferral.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/data-after-deferral-summary.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/backend-green-final.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/workspace-green-final.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/worker-green.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/frontend-green.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/led047.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/typecheck-final.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/timeout-policy.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/boundary.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/quality.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/spec-review-initial.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/code-review.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/frontend-red-actual.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/backend-green.txt",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/product-fix.patch",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/candidate-manifest.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1426/combined-candidate-manifest.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/official-probe",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/official-chat-retest",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/official-copilot-probe",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/official-chat-retest-398b63905",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/projects-before-auth-fix.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/projects-after-auth-fix.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/group-before-auth-fix.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/local-package/group-after-auth-fix.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/resumed-f9e5e5ece/cli-retest",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/resumed-f9e5e5ece/functional-results.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/resumed-f9e5e5ece/protected-original-task.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/resumed-f9e5e5ece/new-official-task.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/resumed-f9e5e5ece/evidence-index.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/resumed-f9e5e5ece/driver.log",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/model-combinations-b4e174a84/cli-retest",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/model-combinations-b4e174a84/status.json",
+      "exists": false
+    },
+    {
+      "path": "docs/verification/t1427/model-combinations-b4e174a84/models.json",
+      "exists": false
+    }
+  ],
+  "compressedArchives": [
+    {
+      "original": "docs/verification/t1425/backend-red.log",
+      "archive": "docs/verification/t1425/backend-red.log.gz",
+      "rawHashMatches": true
+    },
+    {
+      "original": "docs/verification/t1425/browser-final-verify.log",
+      "archive": "docs/verification/t1425/browser-final-verify.log.gz",
+      "rawHashMatches": true
+    },
+    {
+      "original": "docs/verification/t1425/editor-red.log",
+      "archive": "docs/verification/t1425/editor-red.log.gz",
+      "rawHashMatches": true
+    },
+    {
+      "original": "docs/verification/t1425/integration-focused.log",
+      "archive": "docs/verification/t1425/integration-focused.log.gz",
+      "rawHashMatches": true
+    },
+    {
+      "original": "docs/verification/t1425/root-red.log",
+      "archive": "docs/verification/t1425/root-red.log.gz",
+      "rawHashMatches": true
+    },
+    {
+      "original": "docs/verification/t1427/model-combinations-b4e174a84/pmem-sync.log",
+      "archive": "docs/verification/t1427/model-combinations-b4e174a84/pmem-sync.log.gz",
+      "rawHashMatches": true
+    },
+    {
+      "original": "docs/verification/t1427/model-combinations-b4e174a84/reconcile-quick.log",
+      "archive": "docs/verification/t1427/model-combinations-b4e174a84/reconcile-quick.log.gz",
+      "rawHashMatches": true
+    },
+    {
+      "archive": "docs/verification/t1427/model-combinations-b4e174a84/run.log.gz",
+      "decompressedSha256": "9103ea9427a41db7e7accda38ef94553a4372ab6a4ac0e63816dabe3d1b3d024"
+    }
+  ],
+  "annotatedDocumentChecks": [
+    {
+      "file": "docs/research/2026-10-25-official-pi-and-acceptance-repair.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "f4bf010c46e275d5c3a4d62703dd8038b231384f12a533b1a71b7d565bbf9170",
+      "afterSha256": "646b794ce167f09f96603bb31b53e3848503441415833ed36de81fc73c134bf5"
+    },
+    {
+      "file": "docs/research/2026-10-25-t1426-t1407-frontend-gate-applicability.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "f9897d6367cc15cd74351d9e60e7ed338fc648a5953ee790b9571f73c3347aa8",
+      "afterSha256": "7ebe831fa4b3f3f77d0d0b1590c1b88db4c0634dd00ea46f76febb2f66d0d5a5"
+    },
+    {
+      "file": "docs/verification/t1425/browser-verification.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "40801f4ad2f3f38c813d5d66fcf79cd3b88cc515155aac26c02f31216a73eda6",
+      "afterSha256": "6bc8cd8c5e33dc568d551a005e1927dec9090ea2cee384cc55023354e77ce720"
+    },
+    {
+      "file": "docs/verification/t1426/RESULT.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "ad5f35edb041f48f9355024865020802b3030faaba6c512731b4a522588df5f8",
+      "afterSha256": "f88463b95a90f8e419565a166ac072b856996e387c6f4ff47deac9b92aa7b9c3"
+    },
+    {
+      "file": "docs/verification/t1427/installed-398b63905-independent-review.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "0f1f51e927a325c743775ae4095d458fd66b2dc6256bcea6b6635a5c7df0113c",
+      "afterSha256": "828447f6f722fe0a248a277a426b18cfa6dc0f8aa9b1935af4b4e4729114031a"
+    },
+    {
+      "file": "docs/verification/t1427/local-package/installed-retest-report.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "e4b03de3c845d7f42228cab7d3239c8fe113b61fc966f5949c9914c4744ce6aa",
+      "afterSha256": "e0195d6e07a1d777478d277a72a8ebbe822bc262185a0c0325db37d0821a1b67"
+    },
+    {
+      "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "3b0de4c89108bef337978e21aebca1315f873877e73cd955f14fdde1ce31b3b3",
+      "afterSha256": "f6245c155a13cf1e866a22bf12eb554fcb7abf90e8e6b01ba268067bc958509a"
+    },
+    {
+      "file": "docs/verification/t1427/official-pi-request-diagnosis.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "21fa49131823d2589d1f55d5d8db1f63a8fba0f6364fb3690b3a7d5270491072",
+      "afterSha256": "48d74baab81b117bee5e5a231208bbe566f4fe97736a9075b6cfe0d906e1cf07"
+    },
+    {
+      "file": "docs/verification/t1427/resumed-f9e5e5ece/RESULT.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "d3e5de8b16b332aeb049a80896974061ce82cda6f034ae550694d679bdfd9922",
+      "afterSha256": "2b2dd9cf2a535acb872834bd6bdd2da39a3051fc0e7231da26eeabd99c88cef2"
+    },
+    {
+      "file": "docs/verification/t1427/resumed-f9e5e5ece/independent-cli-review.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "c87ef4f87f3d4e2128baf09e482f03ea9ce2ea94c7cf6b711d781b4fe446db09",
+      "afterSha256": "875f8e5741f07c3382daf744d3307b55d9312807f1179b534738d27ee0cd25b2"
+    },
+    {
+      "file": "docs/verification/t1427/resumed-f9e5e5ece/independent-install-review.md",
+      "originalLinksUnchanged": true,
+      "beforeSha256": "7043208a38bed1bb64d5921dfaccfc0a191c1ebe0ba17b43b914727c213273bd",
+      "afterSha256": "075d798d96aa188d1430f13a12f316d351f53d69fc5577c2678e65764fdc00ea"
+    }
+  ],
+  "inventoryLinks": [
+    {
+      "link": "../verification/t1431/annotation-manifest.json",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1425/raw-log-archives.json",
+      "exists": true
+    },
+    {
+      "link": "../../BACKLOG.md",
+      "exists": true
+    },
+    {
+      "link": "../features/t1421-transcript-editing-clarity.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1421/add-video-fix.md",
+      "exists": true
+    },
+    {
+      "link": "../features/t1422-trial-device-model-benefits.md",
+      "exists": true
+    },
+    {
+      "link": "../features/t1423-legacy-license-one-click-upgrade.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1423/AUTOMATIC_LOCAL_VALIDATION.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1423/AUTOMATIC_IMPLEMENTATION_REVIEW.md",
+      "exists": true
+    },
+    {
+      "link": "../features/t1426-chat-model-combination-fixes.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1426/RESULT.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1426/ui-applicability-review.json",
+      "exists": true
+    },
+    {
+      "link": "../features/t1424-cli-chat-combination-acceptance.md",
+      "exists": true
+    },
+    {
+      "link": "../features/t1427-official-pi-acceptance-and-push.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1427/model-combinations-b4e174a84/RESULT.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1427/growth-diagnosis/RESULT.md",
+      "exists": true
+    },
+    {
+      "link": "../features/t1406-installed-eight-defects.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1406/MAIN_MERGE.md",
+      "exists": true
+    },
+    {
+      "link": "../features/t1403-windows-flow-repair.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1403/GATES.md",
+      "exists": true
+    },
+    {
+      "link": "../verification/t1420/continuation-20261028/README.md",
+      "exists": true
+    }
+  ]
+}

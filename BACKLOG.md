@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1431|补注接手验证材料并盘点八项未结任务|✅|PASS[REV:971f1e47e75b]|—|[SPEC](docs/features/t1431-handoff-evidence-and-inventory.md)|用户确认阶段1保持待验，先完成阶段3/4；只改文档与本任务控制面，不启动盘点中的任务。|
 |T-1429|恢复重编号合并后的审核链与来源追溯|✅|PASS[REV:72f8b5eb5b91]|—|[SPEC](docs/features/t1429-review-ledger-recovery.md)|用户已批准方案；独立修复与验证，不推送；坏链自举先独立评审，修复后补正式登记。|
 |T-1418|修复创作者总览筛选读取慢与等待路径|🔨|PASS[REV:8fc500f6763a]|待验|[SPEC](docs/features/t1418-creator-overview-read-performance.md)|按真实月明水清深数据定位重复/串行读取，保留账号隔离与正确筛选结果。|
 |T-1419|简化文章工作台并恢复公众号排版风格切换|🔨|PASS[REV:66d05b52db53]|待验|[SPEC](docs/features/t1419-article-workbench-style-restoration.md)|移除创作流程里的来源许可说明，从历史恢复可保存、预览、导出的多风格切换。|

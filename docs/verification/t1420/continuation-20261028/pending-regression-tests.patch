@@ -1,0 +1,66 @@
+diff --git a/backend/src/modules/creative-results/creative-results.integration.test.ts b/backend/src/modules/creative-results/creative-results.integration.test.ts
+index 89ac46536..d6a3e7b95 100644
+--- a/backend/src/modules/creative-results/creative-results.integration.test.ts
++++ b/backend/src/modules/creative-results/creative-results.integration.test.ts
+@@ -366,3 +366,32 @@ it("纯空组通过正式创作能力 transport，账号筛选不充当 owner，
+  await expect(request({...ctx,groupId:"foreign-group"},{})).rejects.toThrow();
+  }finally{await opened.client.close();}
+ });
++
++
++it("T1420 组图提交丢回执保留原预约与恢复入口，已成功页不重复提交",async()=>{
++ const opened=await createDb();await seedOwnedParents(opened.db);let seq=0;
++ const calls:Array<{page:string;key:string}>=[];
++ const adapter:CreativeResultAdapter={owner:"graphic_post",probe:async()=>({state:"supported",reasonCode:null,lastVerifiedAt:null}),
++  enqueue:async(_ctx,input)=>{
++   const page=input.targetSectionId!;calls.push({page,key:input.clientRequestId});
++   if(page==="page-a"&&calls.filter(call=>call.page===page).length===1)throw Error("owner submitted, ack lost");
++   return {candidateId:`original-${page}`,taskId:`task-${page}`,baseVersionId:"v1",ruleSnapshotRef:null,appliedRules:"not_applied",sourceRefs:[],status:"succeeded"};
++  },
++  read:async()=>({status:"succeeded",value:null,errorCode:null}),adopt:async()=>({versionId:"v2"})};
++ const service=createCreativeResultsService(opened.db,{projects:{getOutput:async()=>output as never,getProject:async()=>({id:output.projectId}) as never},adapters:{graphic_post:adapter},nextId:()=>`t1420-result-${++seq}`});
++ const transport=createCreativeResultsTransport(()=>service);
++ const request={params:{outputId:output.id},query:undefined,body:{items:[{kind:"image_card",targetSectionId:"page-a"},{kind:"image_card",targetSectionId:"page-b"}],clientRequestId:"t1420-original-page-bundle"}};
++ try{
++  await expect(transport.request(ENDPOINTS.createBundle,request,context("a"))).rejects.toThrow("owner submitted, ack lost");
++  const before=await service.list(context("a"),{outputId:output.id});
++  expect(before.items).toHaveLength(2);
++  const pending=before.items.find(item=>item.targetSectionId==="page-a")!;
++  expect(pending).toMatchObject({status:"queued",taskId:null,errorCode:"GENERATION_SUBMISSION_UNKNOWN"});
++  expect(before.items.find(item=>item.targetSectionId==="page-b")).toMatchObject({status:"succeeded",taskId:"task-page-b"});
++  const recovered=ENDPOINTS.createBundle.response.parse((await transport.request(ENDPOINTS.createBundle,request,context("a")) as {data:unknown}).data);
++  expect(recovered.items.find(item=>item.targetSectionId==="page-a")).toMatchObject({resultId:pending.resultId,status:"succeeded",errorCode:null});
++  expect(await service.get(context("a"),pending.resultId)).toMatchObject({taskId:"task-page-a",typedCandidateRef:{id:"original-page-a"}});
++  expect(calls).toEqual([{page:"page-a",key:"t1420-original-page-bundle:0"},{page:"page-b",key:"t1420-original-page-bundle:1"},{page:"page-a",key:"t1420-original-page-bundle:0"}]);
++  await transport.request(ENDPOINTS.createBundle,request,context("a"));expect(calls).toHaveLength(3);
++ }finally{await opened.client.close();}
++},120000);
+diff --git a/frontend/src/features/projects/graphic-post-results.test.tsx b/frontend/src/features/projects/graphic-post-results.test.tsx
+index 5a11a3ff5..8426a5252 100644
+--- a/frontend/src/features/projects/graphic-post-results.test.tsx
++++ b/frontend/src/features/projects/graphic-post-results.test.tsx
+@@ -61,6 +61,24 @@ describe('组图逐页候选',()=>{
+   api.listResults.mockResolvedValue({items:[]});api.listBundles.mockResolvedValue({items:[]});
+   api.getAssetFileDownloadUrl.mockResolvedValue({url:'http://example.test/exact.png'});
+  });
++ it.each([false,true])('T1420 图片真正加载前不开放采用，失败后只重载预览：简洁=%s',async resultsOnly=>{
++  const bound={...card,targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]};
++  api.listResults.mockResolvedValue({items:[bound]});
++  render(<GraphicPostResults {...props} resultsOnly={resultsOnly} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
++  const preview=await screen.findByRole('img',{name:'待审阅的生成图卡'});
++  const adopt=screen.getByRole('button',{name:'采用到这一页'});
++  expect(adopt).toBeDisabled();
++  fireEvent.error(preview);
++  expect(await screen.findByText('图片暂时无法预览，请重新加载后再采纳。')).toBeVisible();
++  expect(adopt).toBeDisabled();
++  fireEvent.click(screen.getByRole('button',{name:'重新加载预览'}));
++  const retried=await screen.findByRole('img',{name:'待审阅的生成图卡'});
++  Object.defineProperty(retried,'decode',{value:()=>Promise.resolve(),configurable:true});
++  fireEvent.load(retried);
++  await waitFor(()=>expect(adopt).toBeEnabled());
++  expect(api.getAssetFileDownloadUrl).toHaveBeenCalledTimes(2);
++  expect(api.createBundle).not.toHaveBeenCalled();expect(api.generateResult).not.toHaveBeenCalled();expect(api.adoptResult).not.toHaveBeenCalled();
++ });
+  it('简洁工作台如实显示原生图待核对，保留刷新而不开放重复生成或重试',async()=>{
+   api.listResults.mockResolvedValue({items:[{...card,targetSectionId:'page-b',status:'running',value:null,errorCode:'MEDIA_RESULT_UNKNOWN'}]});
+   render(<GraphicPostResults {...props} resultsOnly series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);

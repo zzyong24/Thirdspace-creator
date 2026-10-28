@@ -1,0 +1,13 @@
+{
+  "description": "Original command logs archived unchanged because *.log is ignored. No check outcome has been altered.",
+  "archives": [
+    {
+      "original": "reconcile-quick.log",
+      "archive": "reconcile-quick.log.gz",
+      "originalBytes": 6698,
+      "originalSha256": "4d8129e83854cb10a9fdc568669e0f40cea4ab4c97388bbc11c9b6f2f04ab85d",
+      "archiveSha256": "ee8c9192bd25203dc72a433d02ac37bb677927f6cf2e50a7ea7d0c1c2cf4b814",
+      "verifiedDecompressedBytesEqual": true
+    }
+  ]
+}

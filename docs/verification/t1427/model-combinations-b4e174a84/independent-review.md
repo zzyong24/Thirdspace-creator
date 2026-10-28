@@ -1,5 +1,8 @@
 # T-1427 安装版模型组合独立验收复核
 
+> 接手说明：本轮只追加证据可得性备注；原结论和哈希仍指原验收时版本，不代表本机重跑。原文保留于提交 c8589fe7f。原件所在电脑依用户接手规划说明，本轮只核对本仓库。
+
+
 复核时间：2026-10-25T13:10:03.538184+00:00。独立复核者：`/root/t1427_contract_review`。安装构建候选：`b4e174a8433e21f75bbc6b2f69b2e065855b7698`。
 
 结论：本轮 4 个支持组合的 12 轮真实对话均满足约定的回复、跨轮记忆/计算和同组只读工具判据；`codex/pi` 按既定合同拒绝。原模型来源配置已真实恢复。没有发现 matrix、原始公开回执和 summary 之间的矛盾。**官方 Pi 仍未通过，不能把本报告解释为所有组合可用、T-1427 完成或允许推送。**
@@ -25,7 +28,7 @@
 
 每组第三轮都只有一个工具输入和一个对应输出，使用 `system.read` 或 Pi 序列化名 `system_read`，输入请求精确为 `accountGroups.get` 且 groupId 与绑定组一致。工具输出 `complete=true`，标准 outcome 为 `status=ok`、`sideEffect=none`；最终回复的组名称与该真实结果一致。未发现业务创建、修改、采纳、发布或外部采集工具事件。本报告不复述组成员、账号标识或原始工具结果正文。
 
-独立解析了全部 198 份 CLI 回执，完成 12 轮 matrix 与原始 submit/task/messages/modelCalls/events 的逐项比对。各轮事件页从 afterSequence=0 开始、序号连续、末页 hasMore=false；事件 text-delta 拼接结果与持久回复逐字相同，finish 元数据也一致。总事件中有 12 个 finish、4 对工具输入/输出，其余为文本事件。Pi 的 modelCalls 回执均 valid 且无截断；Codex 的 modelCalls 汇总为空，不能用其空数组证明未执行工具，本结论依据实际消息 parts 和完整事件流。
+独立解析了全部 198 份 CLI 回执，完成 12 轮 matrix 与原始 submit/task/messages/modelCalls/events 的逐项比对。各轮事件页从 afterSequence=0 开始、序号连续、末页 hasMore=false；事件 text-delta 拼接结果与持久回复逐字相同，finish 元数据也一致。总事件中有 12 个 finish、4 对工具输入/输出，其余为文本事件。Pi 的 modelCalls 回执均 valid 且无截断；Codex 的 modelCalls 汇总为空，不能用其空数组证明未执行工具，本结论依据实际消息 parts 和完整事件流。 【2026-10-28 接手补注：所述198份原始CLI回执目录当前未入库；原始日志和截图在朱志勇机器上，未入库。】
 
 `codex/pi` 只有一次消息提交，原回执 exitCode=4、`ok=false`、`HTTP_409`，明确报告当前 Codex 来源不能由 Pi 执行，未返回 taskId；驱动没有继续第二、第三轮。其结果是预期拒绝，不是成功对话。其他 CLI 回执正常，未见未解释的非零退出。
 
@@ -41,7 +44,7 @@
 | `0104-set-route-self.json` | 78 | 79 | self |
 | `0194-set-route-codex.json` | 79 | 80 | codex |
 
-最后 restored-route 的原始成功响应与 route-restoration.final 精确相同；初始 choices、originalChoices、最终 choices 及 routing-state.original/choices 全部一致，最终 revision=80。vision/image/video/audio/embed 在整个三次写入中均保留原值。驱动先核当前 revision/choices，再作 CAS；本轮没有发生覆盖他人配置的可见冲突。
+最后 restored-route 的原始成功响应与 route-restoration.final 精确相同；初始 choices、originalChoices、最终 choices 及 routing-state.original/choices 全部一致，最终 revision=80。vision/image/video/audio/embed 在整个三次写入中均保留原值。驱动先核当前 revision/choices，再作 CAS；本轮没有发生覆盖他人配置的可见冲突。 【2026-10-28 接手补注：本段原始路由回执未入库；原始日志和截图在朱志勇机器上，未入库。】
 
 本轮直接业务调用只有路由读写、一次账号组核实、五个专用测试对话创建、13 次消息提交（12 次成功及一次预期拒绝），以及任务/消息/模型调用摘要/事件读取。没有 `settings.models.test`、恢复/重试原任务、支付、剪辑或采集调用。专用测试对话和消息的创建是本次授权的测试记录，不能因此声称整个用户持久层零写入。原任务最后一次恢复未在这条执行链中使用。
 
@@ -63,7 +66,7 @@
 
 ## 字节绑定
 
-201 项 receipt-hashes 条目（198 份原始回执及 matrix / route-restoration / routing-state）均逐文件重新计算 SHA-256，与清单一致。下表绑定本次结论所用摘要、脚本和相关历史证据；完整逐回执哈希在已核清单中，未复制成员正文。
+201 项 receipt-hashes 条目（198 份原始回执及 matrix / route-restoration / routing-state）均逐文件重新计算 SHA-256，与清单一致。下表绑定本次结论所用摘要、脚本和相关历史证据；完整逐回执哈希在已核清单中，未复制成员正文。 【2026-10-28 接手补注：receipt-hashes.json 清单已入库，清单所指 cli-retest/ 原件未入库。以下历史哈希保持原值，不代表本轮逐项重算。原始日志和截图在朱志勇机器上，未入库。】
 
 | 项目相对路径 | SHA-256 |
 |---|---|
@@ -71,17 +74,17 @@
 | `docs/verification/t1427/model-combinations-b4e174a84/verify-results.py` | `33148a7728355c313e145d59f057ec777cb45cc31b000d5c64893d2b167f3f1f` |
 | `docs/verification/t1427/model-combinations-b4e174a84/driver-exit.json` | `1194b296944694da43e31de8db8b2f943834abe556cda19d14df7b08b68c8bb7` |
 | `docs/verification/t1427/model-combinations-b4e174a84/run.log` | `9103ea9427a41db7e7accda38ef94553a4372ab6a4ac0e63816dabe3d1b3d024` |
-| `docs/verification/t1427/model-combinations-b4e174a84/status.json` | `563fc6ba91bf46f694a1412a92d2fcfe0ea0eba537719cb3fba2190e23cfb2ca` |
+| `docs/verification/t1427/model-combinations-b4e174a84/status.json` | `563fc6ba91bf46f694a1412a92d2fcfe0ea0eba537719cb3fba2190e23cfb2ca`  【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】 |
 | `docs/verification/t1427/model-combinations-b4e174a84/summary.json` | `5df2ddeae366d26689d888dc6d0480d21b1d181ba07552714f2b03cec1030604` |
 | `docs/verification/t1427/model-combinations-b4e174a84/receipt-hashes.json` | `8a5dd5164831a548bd31b20b583b31463c0c4e852c6b08df3a31882f0c057ba6` |
-| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/matrix.json` | `8cda43adce7ef49e1fb541b7e3408d65e9bb84162a6eeece8dfdea9043dfb0d0` |
-| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/route-restoration.json` | `37996e0e07abb66bc6460b4ec017ddd652dac306561f12b7e4d32a1cdf22b05a` |
-| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/routing-state.json` | `dc26f4285ff66172606ca235e6166c1c209440825af3c2183588e3f477137c70` |
+| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/matrix.json` | `8cda43adce7ef49e1fb541b7e3408d65e9bb84162a6eeece8dfdea9043dfb0d0`  【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】 |
+| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/route-restoration.json` | `37996e0e07abb66bc6460b4ec017ddd652dac306561f12b7e4d32a1cdf22b05a`  【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】 |
+| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/routing-state.json` | `dc26f4285ff66172606ca235e6166c1c209440825af3c2183588e3f477137c70`  【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】 |
 | `docs/verification/t1417/installed-review.md` | `a6dee58760d3d8778bbf7dfff5e66ddcfec6d69ca77ce616b1592d7ce4aa8106` |
 | `docs/verification/t1417/installation-proof.json` | `b9c2f661d1697e2339b32c7c477dc22a7068382b40eed15794e8973bf43148c9` |
 | `docs/verification/t1417/installed-cli/020-probe-128.json` | `e1baeda7a31ea156cb2e2e0a8e074955001da95d9369d6c5b1d6718df1ba5925` |
 | `docs/verification/t1417/installed-cli/022-probe-8192.json` | `746a263887c531490e44a8f94ab78fd2997900660913fd2b019978e5d93f6357` |
-| `docs/verification/t1427/resumed-f9e5e5ece/new-official-task.json` | `c8f6f8b0e0c530f3b745f9b075d968a4c2e702b78ff5a7b9481efafb46b7d48d` |
+| `docs/verification/t1427/resumed-f9e5e5ece/new-official-task.json` | `c8f6f8b0e0c530f3b745f9b075d968a4c2e702b78ff5a7b9481efafb46b7d48d`  【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】 |
 | `docs/verification/t1427/model-combinations-b4e174a84/RESULT.md` | `63eb16133ba4ea84e899e0ec2e3ab59bd50cf8342b6a850bb2517bbd7cd0d591` |
-| `docs/verification/t1427/model-combinations-b4e174a84/models.json` | `48bd1cd86fadbb39432a81caeb9eb49736fd919adfd16a812dae9aef5b9c0067` |
+| `docs/verification/t1427/model-combinations-b4e174a84/models.json` | `48bd1cd86fadbb39432a81caeb9eb49736fd919adfd16a812dae9aef5b9c0067`  【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】 |
 | `docs/verification/t1427/model-combinations-b4e174a84/provider-public-docs.json` | `f101bd942bdfaa90861ffd2119fc6f08804eaed7f85bee45bba1f2de3e8382ae` |

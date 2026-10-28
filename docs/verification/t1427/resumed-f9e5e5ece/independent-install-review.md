@@ -1,5 +1,8 @@
 # f9e5e5ece 本地安装独立复核
 
+> 接手说明：本轮只追加证据可得性备注；原结论和哈希仍指原验收时版本，不代表本机重跑。原文保留于提交 c8589fe7f。原件所在电脑依用户接手规划说明，本轮只核对本仓库。
+
+
 审核时间：2026-10-25；实际安装文件哈希核对时间为 10:08:00 UTC（18:08:00 北京时间）。审核者 `/root/t1427_contract_review`，未实施本轮构建或安装。本次只读核对现有收据与非秘密产物，唯一写入为本报告。已读 T-1427 任务包 §1–5、§7–9，写前核对 §6，并读取当前 SPEC。任务包中的旧版本锚与 SPEC 的早期状态描述是历史上下文，本轮安装身份以下列实际冻结收据和文件为准，未改写这些历史记录。
 
 结论：本轮证据足以支持“从固定入口构建的 f9e5e5ece 本地候选已安装到 /Applications/CreatorOS.app，安装文件与冻结产物一致；安装当时 CLI 已连通；现有数据保全摘要未见项目或组成员丢失”。未发现安装身份或摘要之间的矛盾。这不构成完整产品、模型矩阵、UI 或 full 验收通过。
@@ -46,4 +49,4 @@
 | `docs/verification/t1412/resumed-validation/installation-before.json` | `9dff15af1d46fe83db6eb663de57e6d7dc7a46ccef22d24d1fda819442785fb3` |
 | `docs/verification/t1412/resumed-validation/data-preservation.json` | `8f4911a728f165d7380241bd380f0266b3ab32084956e89fe02d8f07a5fe961e` |
 | `docs/verification/t1412/resumed-validation/control-only-candidate-update.json` | `c4fb0797e69a229fa9f9120fe7593f2c553fffce147cade2808f919db5498318` |
-| `docs/verification/t1427/resumed-f9e5e5ece/cli-retest/receipts/0068-official-pi-turn1-get-1.json` | `f320529d1b2c9d66501f21df41430c3d93caefb42c8f3d1999eb4033dc056006` |
+| `docs/verification/t1427/resumed-f9e5e5ece/cli-retest/receipts/0068-official-pi-turn1-get-1.json` | `f320529d1b2c9d66501f21df41430c3d93caefb42c8f3d1999eb4033dc056006`  【2026-10-28 接手补注：原始日志和截图在朱志勇机器上，未入库。】 |

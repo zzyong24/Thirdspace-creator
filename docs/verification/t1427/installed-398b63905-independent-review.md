@@ -1,5 +1,8 @@
 # 398b63905 本地安装与最小官方探针独立复核
 
+> 接手说明：本轮只追加证据可得性备注；原结论和哈希仍指原验收时版本，不代表本机重跑。原文保留于提交 c8589fe7f。原件所在电脑依用户接手规划说明，本轮只核对本仓库。
+
+
 日期：2026-10-25。审核角色：独立只读审核 `/root/t1427_contract_review`。本报告只记录已归档证据的核对结果，不执行安装、业务 CLI、模型请求或恢复操作，不读取实时数据库、凭据或用户工作目录，不修改原始回执、产品代码、SPEC 或控制面。
 
 ## 结论
@@ -50,7 +53,7 @@ flowchart LR
 
 ## 补充正式聊天回执：仍失败
 
-收到根会话补充授权后，读取 `docs/verification/t1427/installed-398b63905-result.md`，并对照 `local-package/official-chat-retest-398b63905/` 的 `matrix.json`、`live-inspect.json`、`live-ai-task.json`、`route-restoration.json` 及必要的路由、等待回执。摘要对正式聊天失败的表述与这些原始回执一致：
+收到根会话补充授权后，读取 `docs/verification/t1427/installed-398b63905-result.md`，并对照 `local-package/official-chat-retest-398b63905/` 的 `matrix.json`、`live-inspect.json`、`live-ai-task.json`、`route-restoration.json` 及必要的路由、等待回执。摘要对正式聊天失败的表述与这些原始回执一致： 【2026-10-28 接手补注：该正式对话原始回执目录未入库；原始日志和截图在朱志勇机器上，未入库。】
 
 - 新对话 `ai-conv-4ba04d39-417`，AI 任务 `ai-task-4ba04d39-421`，执行任务 `execution-task-4ba04d39-422`；矩阵仅记录一次提交、一个 turn。首轮错误为 `CHANNEL_MODEL_PAYMENT_REQUIRED`，固定领域说明明确 HTTP 402。
 - 执行任务回读为 `blocked`、`runtimeStatus: waiting_user`、`attempt: 1`、`maxAttempts: 3`。AI 任务外层 `status: running` 同时存在，不能据此声称仍在正常生成或忽略执行层失败。
@@ -62,7 +65,7 @@ flowchart LR
 
 ## 数据保全摘要核对
 
-复核 `docs/verification/t1427/local-package/auth-fix-data-preservation-proof.json`，并仅在既有 `projects-before-auth-fix.json` / `projects-after-auth-fix.json` 归档中比较项目 ID 集合，在 `group-before-auth-fix.json` / `group-after-auth-fix.json` 中比较成员列表；没有发起实时查询，未在报告复制项目内容或成员资料。
+复核 `docs/verification/t1427/local-package/auth-fix-data-preservation-proof.json`，并仅在既有 `projects-before-auth-fix.json` / `projects-after-auth-fix.json` 归档中比较项目 ID 集合，在 `group-before-auth-fix.json` / `group-after-auth-fix.json` 中比较成员列表；没有发起实时查询，未在报告复制项目内容或成员资料。 【2026-10-28 接手补注：auth-fix-data-preservation-proof.json 摘要已入库，四份 before/after 原回执未入库。原始日志和截图在朱志勇机器上，未入库。】
 
 独立重算与摘要完全一致：此前 `65` 个项目 ID 全部存在，之后 `66` 个，删除 `0`、新增 `1`；前后 `5` 个组成员列表完全一致。两份项目回执中的 total 也分别为 `65` 与 `66`，实际归档列表覆盖这两个数量。新增项目归档创建时间为 `2026-10-25T07:28:51.462Z`，晚于安装回执完成时间 `2026-10-25T07:21:36.241778+00:00`；这支持“安装完成后创建”，不能进一步归因于安装。新增一项不违反保全要求，不能把“总数不严格相等”判成数据丢失。
 
@@ -82,6 +85,6 @@ flowchart LR
 | `official-probe/probe-result.json` | `b7c8a78db1f88191a01637e21da7ff903da39ab75d1e2c89da864952439843f2` |
 | `auth-fix-data-preservation-proof.json` | `7cdb13442726be9a157f73dd6e0b0a5909d5ae8218d8ac444349a24252311a3a` |
 
-补充摘要 `docs/verification/t1427/installed-398b63905-result.md` 的 SHA-256 为 `9e605a97c6f46e4743ec20886237e433dafe3fa208dc40b43a171a21c5271628`。正式聊天原件 `matrix.json` 为 `9960287857da1669a9392b4c7a9c0a69dde1948d9d19366ee11a6de1c5af6970`，`live-inspect.json` 为 `9d6182a99c72837a1463b8a507c7bf7e7b7b01334173ae8c3dbea29efab5b611`，`route-restoration.json` 为 `b8cadfa83d2b0378d5f69e736ede3d9466a7f647fc5ac90ea8a03359d706b89b`。
+补充摘要 `docs/verification/t1427/installed-398b63905-result.md` 的 SHA-256 为 `9e605a97c6f46e4743ec20886237e433dafe3fa208dc40b43a171a21c5271628`。正式聊天原件 `matrix.json` 为 `9960287857da1669a9392b4c7a9c0a69dde1948d9d19366ee11a6de1c5af6970`，`live-inspect.json` 为 `9d6182a99c72837a1463b8a507c7bf7e7b7b01334173ae8c3dbea29efab5b611`，`route-restoration.json` 为 `b8cadfa83d2b0378d5f69e736ede3d9466a7f647fc5ac90ea8a03359d706b89b`。 【2026-10-28 接手补注：本段聊天原件未入库，保留历史哈希，不视为本轮重算；原始日志和截图在朱志勇机器上，未入库。】
 
 本审核没有重新运行安装或模型测试，没有重新散列当前 `/Applications` 实物；依据是上述归档运行证据、驱动代码和候选 Git 对象的交叉核对。没有宣称合并、推送、全套 Gate 或正式聊天验收完成；后续 T1412 实现仍须独立审核。

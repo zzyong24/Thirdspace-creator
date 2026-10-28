@@ -1,0 +1,230 @@
+[
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 9,
+    "original": "- 只通过正式 `/api/v1/dispatch` 创建中性组、项目、主脚本 artifact、文章版本、图文版本和视频 output。精确 ID 与创建调用结果保存在 [browser-entities.json](browser-entities.json)。未使用 fixture 模式或 mock HTTP 响应。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 24,
+    "original": "3. 默认文章点击前隐藏 Doocs 实例为 0；只点一次“导出 HTML + 图片 ZIP”，自动下载完成，`download.failure=null`。`manifest.json` 的作品/版本精确匹配正式稿，`index.html` 含真实标题和两段正文。见 [browser-article-export.json](browser-article-export.json) 与 [browser-article-export.zip](browser-article-export.zip)。",
+    "note": "上述回读与导出原件未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 25,
+    "original": "4. 脚本通过真实界面编辑与“保存”，生成 `artifactversion-d544fcdd-566`；正式版本 API 回读 200，切到文章再返回，新增正文完整保留。见 [browser-script-save.json](browser-script-save.json) 与 [browser-script-saved-editor.png](browser-script-saved-editor.png)。",
+    "note": "仅该 PNG 截图未入库，browser-script-save.json 已入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 26,
+    "original": "5. 图文点击“导出分页 ZIP”真实下载成功，包含 3 张有效 PNG，未发生浏览器运行错误。尺寸、字节数见 [browser-graphic-png-check.json](browser-graphic-png-check.json)，产物见 [browser-graphic-export.zip](browser-graphic-export.zip)。",
+    "note": "上述检查与导出原件未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 32,
+    "original": "暖态使用 DOM 真实 click 捕获起点，并由文档及 Shadow DOM 的 `MutationObserver` 分别标记工作台可见和正文/控件 ready，剔除 Ego 指针移动时间。一次八段测量见 [browser-click-switches.json](browser-click-switches.json)：",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 47,
+    "original": "输入为 `browser-runtime.json`、`browser-entities.json` 和仍活动的唯一 TaskSpace 54。每次实跑两个视口的 8 个 Tab 与 2 次单击文章 ZIP 下载，检查隐藏 Doocs 按需创建及正式版本内容；不重建实体或调用模型。写入新 `browser-gate-result.json`，包含当前 HEAD、12 个产品文件 SHA 及聚合 SHA、逐段 ready 证据、下载哈希；各视口/Tab 的 `browser-gate-*.txt` 包含页面与 Shadow 内文案，供文案守卫读取。命令失败会写 fail 和真实错误，不能重放旧 PASS。",
+    "note": "browser-runtime.json、browser-entities.json 与 browser-gate-*.txt 原件未入库；browser-gate-result.json 已入库。原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 53,
+    "original": "- 第一版 ready 探针选中了同名视频外层 wrapper，120 秒超时；真实 Native 宿主已经存在且可操作。保留 [browser-round-05.log](browser-round-05.log)，修正宿主 selector 后完整通过。该超时未计作产品耗时或成功证据。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 54,
+    "original": "- 早期脚本从 Node Fetch 错用 `response.ok()`，在创建首个隔离组后失败；修正为 `response.ok` 后正式创建数据成功。只影响本次临时库，原始 [browser-seed.log](browser-seed.log) 保留。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1425/browser-verification.md",
+    "originalLine": 57,
+    "original": "- 正式 Gate 完成并获主会话收尾授权后，已于北京时间 **2026-10-24 21:49:47** 对唯一 TaskSpace 54 执行一次 `finish({keep:[]})` 并等待成功；**21:50:12** 核验本次隔离 Next 进程组全部退出（PID `15868`、`15875`、`15886`、`15889`），端口 `60919` 已关闭。未触碰用户安装应用或其他进程；隔离数据目录与全部证据保留。真实收尾记录见 [browser-cleanup.json](browser-cleanup.json)。当前服务与 TaskSpace 已关闭，不能再直接运行上述 runner；后续验收须另行准备并记录新的隔离运行环境，不得重放本次 PASS。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1426/RESULT.md",
+    "originalLine": 11,
+    "original": "用户回复送达前，曾完成本任务组合包安装并证明 CLI 连通；这是发生过的事实，原 `installed-candidate-proof.json` 与日志保留。确认仍待回复时继续安装是本次执行错误，已告知用户并恢复原版，没有将旧记录改成“从未安装”。用户要求后立即停止新包复验，未提交新的模型测试请求。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1426/RESULT.md",
+    "originalLine": 13,
+    "original": "恢复后程序 SHA-256 为 `44f6e648e2affd38366fcc8346834ca70f9fbde0e406a814c9f8659514181afc`，sidecar 为 `9db6e42887db0c469cea36e51351a9782baa1e26f874344c6ee2e6637290c3c8`，均与替换前最新 T-1406 安装一致；程序已启动，CLI full 连通。Downloads 的规范 DMG 也已恢复原 SHA `59cfbc6d75ec60fae294e49718f0d22deb57bb8e769da30756cceff7c15a2e4a`。恢复收据为 `rollback-after-user-deferral.json`。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1426/RESULT.md",
+    "originalLine": 17,
+    "original": "公开 CLI 恢复后读回：此前观察的 65 个项目 ID 无缺失，模型来源选择保持原值，revision 仍为 51，见 `data-after-deferral-summary.json`。未读取用户库、未恢复或覆盖用户数据库，没有执行充值、补赠、采纳或发布。",
+    "note": "本段为朱志勇电脑上的历史回读，原摘要未入库，不是本机账号组1的数据结论。原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1426/RESULT.md",
+    "originalLine": 29,
+    "original": "",
+    "note": "下表所列原始验证日志及规格/代码评审 JSON 未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1426/RESULT.md",
+    "originalLine": 44,
+    "original": "359 项不同的聚焦／UI 测试通过；5 项子集复验不重复计数。原始 backend RED 7 个预期失败，worker RED 2 个预期失败保留。frontend 初次有导入／清理／幂等键 fixture 错误，不能算业务红测；修正后的 frontend-red-actual.txt 才是缺真实组读端口的预期红测。实现过程也发现并修复了旧无组 ctx 的空值回归，失败记录 backend-green.txt 保留，不改成历史全绿。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1426/RESULT.md",
+    "originalLine": 50,
+    "original": "产品修复补丁：[product-fix.patch](product-fix.patch)，13 个产品／测试文件，基线与 SHA-256 见 [candidate-manifest.json](candidate-manifest.json)。现有共享目录改动保留，没有混入产品补丁。",
+    "note": "上述补丁和候选清单未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/local-package/installed-retest-report.md",
+    "originalLine": 6,
+    "original": "- `settings.models.test(default)`：按官方文本路由完成真实 128 token 上限的流式连接探测，返回成功。原件见 `official-probe/`。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/local-package/installed-retest-report.md",
+    "originalLine": 7,
+    "original": "- 完整官方 Pi 对话：`ai-conv-4be54f78-256` / `ai-task-4be54f78-261` / `execution-task-4be54f78-262`，首轮进入 `waiting_user`，错误码 `CHANNEL_MODEL_PAYMENT_REQUIRED`；没有正常回复，后续记忆和工具轮未提交。原件见 `official-chat-retest/matrix.json` 与同目录 receipts。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/local-package/installed-retest-report.md",
+    "originalLine": 8,
+    "original": "- `settings.models.test(copilot.assist)`：外层调用成功但业务 `ok=false`，明确“不支持该能力连接测试”；未调用模型，不计通过。原件见 `official-copilot-probe/`。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/official-pi-request-diagnosis.md",
+    "originalLine": 16,
+    "original": "",
+    "note": "下表引用的三组探针/正式对话原始回执目录未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/installed-398b63905-independent-review.md",
+    "originalLine": 53,
+    "original": "收到根会话补充授权后，读取 `docs/verification/t1427/installed-398b63905-result.md`，并对照 `local-package/official-chat-retest-398b63905/` 的 `matrix.json`、`live-inspect.json`、`live-ai-task.json`、`route-restoration.json` 及必要的路由、等待回执。摘要对正式聊天失败的表述与这些原始回执一致：",
+    "note": "该正式对话原始回执目录未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/installed-398b63905-independent-review.md",
+    "originalLine": 65,
+    "original": "复核 `docs/verification/t1427/local-package/auth-fix-data-preservation-proof.json`，并仅在既有 `projects-before-auth-fix.json` / `projects-after-auth-fix.json` 归档中比较项目 ID 集合，在 `group-before-auth-fix.json` / `group-after-auth-fix.json` 中比较成员列表；没有发起实时查询，未在报告复制项目内容或成员资料。",
+    "note": "auth-fix-data-preservation-proof.json 摘要已入库，四份 before/after 原回执未入库。原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/installed-398b63905-independent-review.md",
+    "originalLine": 85,
+    "original": "补充摘要 `docs/verification/t1427/installed-398b63905-result.md` 的 SHA-256 为 `9e605a97c6f46e4743ec20886237e433dafe3fa208dc40b43a171a21c5271628`。正式聊天原件 `matrix.json` 为 `9960287857da1669a9392b4c7a9c0a69dde1948d9d19366ee11a6de1c5af6970`，`live-inspect.json` 为 `9d6182a99c72837a1463b8a507c7bf7e7b7b01334173ae8c3dbea29efab5b611`，`route-restoration.json` 为 `b8cadfa83d2b0378d5f69e736ede3d9466a7f647fc5ac90ea8a03359d706b89b`。",
+    "note": "本段聊天原件未入库，保留历史哈希，不视为本轮重算；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/resumed-f9e5e5ece/RESULT.md",
+    "originalLine": 3,
+    "original": "2026-10-25，实际安装版本构建自 `f9e5e5ece`。本次仅通过公开已安装 creatoros CLI，在已指定“月明水清深”测试；未采纳、修改或发布业务内容。原始回执保留于相邻 cli-retest/；不把源码单测或旧版本结果当本次结果。",
+    "note": "“相邻 cli-retest/”指原验收电脑，当前仓库没有该目录；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/resumed-f9e5e5ece/independent-install-review.md",
+    "originalLine": 49,
+    "original": "| `docs/verification/t1427/resumed-f9e5e5ece/cli-retest/receipts/0068-official-pi-turn1-get-1.json` | `f320529d1b2c9d66501f21df41430c3d93caefb42c8f3d1999eb4033dc056006` |",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/resumed-f9e5e5ece/independent-cli-review.md",
+    "originalLine": 18,
+    "original": "主要原始回执位于 cli-retest/receipts/：codex+codex的messages编号0017/0030/0043、events0021/0034/0047；official+codex的messages0087/0100/0113、events0091/0104/0117；self+Pi的messages0134/0147/0160、events0138/0151/0164；self+codex的messages0177/0190/0203、events0181/0194/0207。逐轮ai.tasks.get原件均与matrix.task一致，原始messages及events数组也与matrix逐项一致，不只采信functionalAssertionsPassed标记。",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/resumed-f9e5e5ece/independent-cli-review.md",
+    "originalLine": 32,
+    "original": "证据绑定（均相对本报告目录）：",
+    "note": "下表 functional-results.json、cli-retest/ 下的文件、protected-original-task.json、new-official-task.json、evidence-index.json、driver.log 未入库；RESULT.md 与 independent-install-review.md 已入库。原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 28,
+    "original": "独立解析了全部 198 份 CLI 回执，完成 12 轮 matrix 与原始 submit/task/messages/modelCalls/events 的逐项比对。各轮事件页从 afterSequence=0 开始、序号连续、末页 hasMore=false；事件 text-delta 拼接结果与持久回复逐字相同，finish 元数据也一致。总事件中有 12 个 finish、4 对工具输入/输出，其余为文本事件。Pi 的 modelCalls 回执均 valid 且无截断；Codex 的 modelCalls 汇总为空，不能用其空数组证明未执行工具，本结论依据实际消息 parts 和完整事件流。",
+    "note": "所述198份原始CLI回执目录当前未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 44,
+    "original": "最后 restored-route 的原始成功响应与 route-restoration.final 精确相同；初始 choices、originalChoices、最终 choices 及 routing-state.original/choices 全部一致，最终 revision=80。vision/image/video/audio/embed 在整个三次写入中均保留原值。驱动先核当前 revision/choices，再作 CAS；本轮没有发生覆盖他人配置的可见冲突。",
+    "note": "本段原始路由回执未入库；原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 66,
+    "original": "201 项 receipt-hashes 条目（198 份原始回执及 matrix / route-restoration / routing-state）均逐文件重新计算 SHA-256，与清单一致。下表绑定本次结论所用摘要、脚本和相关历史证据；完整逐回执哈希在已核清单中，未复制成员正文。",
+    "note": "receipt-hashes.json 清单已入库，清单所指 cli-retest/ 原件未入库。以下历史哈希保持原值，不代表本轮逐项重算。原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 74,
+    "original": "| `docs/verification/t1427/model-combinations-b4e174a84/status.json` | `563fc6ba91bf46f694a1412a92d2fcfe0ea0eba537719cb3fba2190e23cfb2ca` |",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 77,
+    "original": "| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/matrix.json` | `8cda43adce7ef49e1fb541b7e3408d65e9bb84162a6eeece8dfdea9043dfb0d0` |",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 78,
+    "original": "| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/route-restoration.json` | `37996e0e07abb66bc6460b4ec017ddd652dac306561f12b7e4d32a1cdf22b05a` |",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 79,
+    "original": "| `docs/verification/t1427/model-combinations-b4e174a84/cli-retest/routing-state.json` | `dc26f4285ff66172606ca235e6166c1c209440825af3c2183588e3f477137c70` |",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 84,
+    "original": "| `docs/verification/t1427/resumed-f9e5e5ece/new-official-task.json` | `c8f6f8b0e0c530f3b745f9b075d968a4c2e702b78ff5a7b9481efafb46b7d48d` |",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/verification/t1427/model-combinations-b4e174a84/independent-review.md",
+    "originalLine": 86,
+    "original": "| `docs/verification/t1427/model-combinations-b4e174a84/models.json` | `48bd1cd86fadbb39432a81caeb9eb49736fd919adfd16a812dae9aef5b9c0067` |",
+    "note": "原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/research/2026-10-25-t1426-t1407-frontend-gate-applicability.md",
+    "originalLine": 44,
+    "original": "`docs/verification/t1424/runs/2026-10-24T14-06-17.096Z-41003c7d-774f-46f3-9d8a-4f794f867762/`",
+    "note": "此处及下表为旧 cos-ux-closure 分支 T-1403 的 UX 验收来源，不是当前 T-1424 CLI 任务；重编号文字不证明文件搬迁。原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/research/2026-10-25-official-pi-and-acceptance-repair.md",
+    "originalLine": 106,
+    "original": "来源SPEC在独立旧工作树 `/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/features/t1424-cos-ux-closure.md`；原任务授权和最终报告在 `/Users/zyongzhu/terminals/cos-ux-closure/prompt.md`、`REPORT.md`。这些FAIL不能被T-1407整合提交或本轮审核收据恢复洗成PASS：",
+    "note": "此处为旧 cos-ux-closure 分支 T-1403 的 UX 验收来源，不是当前 T-1424 CLI 任务；重编号文字不证明文件搬迁。原始日志和截图在朱志勇机器上，未入库。"
+  },
+  {
+    "file": "docs/research/2026-10-25-official-pi-and-acceptance-repair.md",
+    "originalLine": 116,
+    "original": "T-1426/T-1407原范围保留这些独立旧FAIL，并未承诺整份来源任务全绿；用户最新要求处理没通过验收，可由主线程按当前明确关联范围继续修复、复验，但不能将21项历史收据的控制修复解释成无边界重做所有旧功能。若要处理上述旧UX失败，应在精确关联SPEC/任务中保留原FR、3/2/10秒阈值、1440与1024视口和原任务恢复身份，真实重跑来源旅程；现有入口 `docs/verification/t1424/control/verify-journey.mjs` 位于旧工作树。未复验的项继续写FAIL或未验，不假通过。",
+    "note": "该 runner 为旧 UX 验收来源，当前仓库无对应文件；不将其作为当前 T-1424 CLI 任务证据。原始日志和截图在朱志勇机器上，未入库。"
+  }
+]
