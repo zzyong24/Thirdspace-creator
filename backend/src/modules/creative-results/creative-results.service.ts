@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { and, desc, eq, lt, or,isNull } from "drizzle-orm";
+import { and, desc, eq, lt, or,isNull,ne } from "drizzle-orm";
 import type { Db } from "@creatoros/backend";
 import { projects, contentOutputs } from "../../schema/projects";
 import { withWorkspaceParentWrite, type WorkspaceWriteTx } from "../../workspace-write";
@@ -127,6 +127,7 @@ export function createCreativeResultsService(db: Db, deps: CreativeResultsDeps) 
     const scope = owner(ctx);await assertWritableWorkspace(db,ctx);
     const unbound=(id:string)=>and(eq(creativeResults.id,id),eq(creativeResults.userId,scope.userId),workspaceFilter(creativeResults,ctx),
       isNull(creativeResults.candidateId),isNull(creativeResults.taskId),isNull(creativeResults.adoptionReceipt),or(eq(creativeResults.status,"queued"),eq(creativeResults.status,"failed")));
+    const knownSubmission = () => or(isNull(creativeResults.errorCode), ne(creativeResults.errorCode, "GENERATION_SUBMISSION_UNKNOWN"));
     const conversion=input.conversion===undefined?undefined:outputConversionContext.parse(input.conversion);
     if(conversion && (input.sourceItemId || input.ruleOverrides))return fail("SOURCE_SELECTION_INVALID","转换不能混用其他生成来源或当前规则");
     const output = await getOutput(ctx, input.outputId);
@@ -151,12 +152,12 @@ export function createCreativeResultsService(db: Db, deps: CreativeResultsDeps) 
     }
     const adapter = deps.adapters[cell.owner];
     if (!adapter || adapter.owner !== cell.owner) {
-      if (existing) await db.update(creativeResults).set({status: "failed", errorCode: "ADAPTER_NOT_READY", updatedAt: now()}).where(unbound(existing.id));
+      if (existing && existing.errorCode !== "GENERATION_SUBMISSION_UNKNOWN") await db.update(creativeResults).set({status: "failed", errorCode: "ADAPTER_NOT_READY", updatedAt: now()}).where(and(unbound(existing.id), knownSubmission()));
       return fail("CAPABILITY_UNAVAILABLE", "ADAPTER_NOT_READY");
     }
     const ability = await adapter.probe(ctx, cell);
     if (ability.state !== "supported") {
-      if (existing) await db.update(creativeResults).set({status: "failed", errorCode: ability.reasonCode ?? "NOT_VERIFIED", updatedAt: now()}).where(unbound(existing.id));
+      if (existing && existing.errorCode !== "GENERATION_SUBMISSION_UNKNOWN") await db.update(creativeResults).set({status: "failed", errorCode: ability.reasonCode ?? "NOT_VERIFIED", updatedAt: now()}).where(and(unbound(existing.id), knownSubmission()));
       return fail("CAPABILITY_UNAVAILABLE", ability.reasonCode ?? "NOT_VERIFIED");
     }
     let resultId = existing?.id ?? input.reservedId ?? nextId();
@@ -181,7 +182,7 @@ export function createCreativeResultsService(db: Db, deps: CreativeResultsDeps) 
       const code=(error as {code?:string})?.code;
       const durable=Boolean(conversion || (output.contentType==="image" && input.kind==="image_card" && input.targetSectionId));
       const rejected=durable&&code!==undefined&&conversionInputRejectionCodes.has(code);
-      const changed=await db.update(creativeResults).set({status: durable&&!rejected?"queued":"failed", errorCode: rejected?code:durable?"GENERATION_SUBMISSION_UNKNOWN":"GENERATION_SUBMISSION_FAILED", updatedAt: now()}).where(unbound(resultId)).returning({id:creativeResults.id});
+      const changed=await db.update(creativeResults).set({status: durable&&!rejected?"queued":"failed", errorCode: rejected?code:durable?"GENERATION_SUBMISSION_UNKNOWN":"GENERATION_SUBMISSION_FAILED", updatedAt: now()}).where(and(unbound(resultId), rejected ? knownSubmission() : undefined)).returning({id:creativeResults.id});
       if(!changed.length&&!rejected){const winner=await scopedResult(ctx,resultId);if(winner.taskId||winner.adoptionReceipt)return readResult(ctx,winner);}
       throw error;
     }
@@ -417,14 +418,28 @@ export function createCreativeResultsService(db: Db, deps: CreativeResultsDeps) 
           bundleId, createdAt: now(), updatedAt: now(),
         })));
       });
+      let unknownSubmission: {error: unknown} | undefined;
       for (const item of selected) {
         try { await generate(ctx, {outputId: input.outputId, kind: item.kind, targetPlatform: item.targetPlatform,
           targetSectionId: item.targetSectionId, clientRequestId: item.requestId, bundleId, reservedId: item.resultId}); }
         catch (error) {
-          await db.update(creativeResults).set({status: "failed", errorCode: (error as {code?: string}).code ?? "GENERATION_SUBMISSION_FAILED",
-            updatedAt: now()}).where(and(eq(creativeResults.id, item.resultId), eq(creativeResults.status, "queued")));
+          const current = await scopedResult(ctx, item.resultId);
+          // The owner may already have accepted this page. Keep its reservation and
+          // original key; finish the other pages before returning an unknown receipt.
+          if (current.errorCode !== "GENERATION_SUBMISSION_UNKNOWN" && !current.candidateId && !current.taskId) {
+            await db.update(creativeResults).set({status: "failed", errorCode: (error as {code?: string})?.code ?? "GENERATION_SUBMISSION_FAILED",
+              updatedAt: now()}).where(and(eq(creativeResults.id, item.resultId), eq(creativeResults.status, "queued"),
+                isNull(creativeResults.candidateId), isNull(creativeResults.taskId),
+                or(isNull(creativeResults.errorCode), ne(creativeResults.errorCode, "GENERATION_SUBMISSION_UNKNOWN"))));
+          }
+          // Re-read after the guarded write: another request may have reached the
+          // owner while this call was waiting for its capability probe.
+          const retained = await scopedResult(ctx, item.resultId);
+          if (retained.status === "queued" && retained.errorCode === "GENERATION_SUBMISSION_UNKNOWN") unknownSubmission ??= {error};
         }
       }
+      // A success response would discard the client's original recovery request.
+      if (unknownSubmission) throw unknownSubmission.error;
       return getBundle(ctx, bundleId);
     },
     getBundle,

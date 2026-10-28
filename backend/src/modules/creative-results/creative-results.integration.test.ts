@@ -366,3 +366,72 @@ it("纯空组通过正式创作能力 transport，账号筛选不充当 owner，
  await expect(request({...ctx,groupId:"foreign-group"},{})).rejects.toThrow();
  }finally{await opened.client.close();}
 });
+
+
+it.each(["supported","known_unavailable","unknown","missing","owner_rejected"] as const)("T1420 组图丢回执与恢复能力%s仍保留原键和成功页",async recoveryAbility=>{
+ const opened=await createDb();await seedOwnedParents(opened.db);let seq=0;
+ const calls:Array<{page:string;key:string}>=[];
+ let ability: "supported"|"known_unavailable"|"unknown" = "supported";
+ let ownerRejected=false;
+ const adapter:CreativeResultAdapter={owner:"graphic_post",probe:async()=>({state:ability,reasonCode:null,lastVerifiedAt:null}),
+  enqueue:async(_ctx,input)=>{
+   const page=input.targetSectionId!;calls.push({page,key:input.clientRequestId});
+   if(ownerRejected)throw Object.assign(Error("current source temporarily rejected"),{code:"SOURCE_VERSION_CONFLICT"});
+   if(page==="page-a"&&calls.filter(call=>call.page===page).length===1)throw Error("owner submitted, ack lost");
+   return {candidateId:`original-${page}`,taskId:`task-${page}`,baseVersionId:"v1",ruleSnapshotRef:null,appliedRules:"not_applied",sourceRefs:[],status:"succeeded"};
+  },
+  read:async()=>({status:"succeeded",value:null,errorCode:null}),adopt:async()=>({versionId:"v2"})};
+ const adapters:{graphic_post?:CreativeResultAdapter}={graphic_post:adapter};
+ const service=createCreativeResultsService(opened.db,{projects:{getOutput:async()=>output as never,getProject:async()=>({id:output.projectId}) as never},adapters,nextId:()=>`t1420-result-${++seq}`});
+ const transport=createCreativeResultsTransport(()=>service);
+ const request={params:{outputId:output.id},query:undefined,body:{items:[{kind:"image_card" as const,targetSectionId:"page-a"},{kind:"image_card" as const,targetSectionId:"page-b"}],clientRequestId:"t1420-original-page-bundle"}};
+ try{
+  await expect(transport.request(ENDPOINTS.createBundle,request,context("a"))).rejects.toThrow("owner submitted, ack lost");
+  const before=await service.list(context("a"),{outputId:output.id});
+  expect(before.items).toHaveLength(2);
+  const pending=before.items.find(item=>item.targetSectionId==="page-a")!;
+  expect(pending).toMatchObject({status:"queued",taskId:null,errorCode:"GENERATION_SUBMISSION_UNKNOWN"});
+  expect(before.items.find(item=>item.targetSectionId==="page-b")).toMatchObject({status:"succeeded",taskId:"task-page-b"});
+  if(recoveryAbility!=="supported"){
+   if(recoveryAbility==="missing")delete adapters.graphic_post;
+   else if(recoveryAbility==="owner_rejected")ownerRejected=true;
+   else ability=recoveryAbility;
+   await expect(transport.request(ENDPOINTS.createBundle,request,context("a"))).rejects.toMatchObject({code:ownerRejected?"SOURCE_VERSION_CONFLICT":"CAPABILITY_UNAVAILABLE"});
+   expect(await service.get(context("a"),pending.resultId)).toMatchObject({status:"queued",taskId:null,errorCode:"GENERATION_SUBMISSION_UNKNOWN"});
+   expect(calls).toHaveLength(ownerRejected?3:2);
+   ability="supported";adapters.graphic_post=adapter;ownerRejected=false;
+  }
+  const recovered=ENDPOINTS.createBundle.response.parse((await transport.request(ENDPOINTS.createBundle,request,context("a")) as {data:unknown}).data);
+  expect(recovered.items.find(item=>item.targetSectionId==="page-a")).toMatchObject({resultId:pending.resultId,status:"succeeded",errorCode:null});
+  expect(await service.get(context("a"),pending.resultId)).toMatchObject({taskId:"task-page-a",typedCandidateRef:{id:"original-page-a"}});
+  expect(calls).toEqual([{page:"page-a",key:"t1420-original-page-bundle:0"},{page:"page-b",key:"t1420-original-page-bundle:1"},
+   ...(recoveryAbility==="owner_rejected"?[{page:"page-a",key:"t1420-original-page-bundle:0"}]:[]),{page:"page-a",key:"t1420-original-page-bundle:0"}]);
+  const callCount=calls.length;await transport.request(ENDPOINTS.createBundle,request,context("a"));expect(calls).toHaveLength(callCount);
+ }finally{await opened.client.close();}
+},120000);
+
+it("T1420 并发迟到的能力拒绝不能覆盖另一次原请求的未知提交", async()=>{
+ const opened=await createDb();await seedOwnedParents(opened.db);let seq=0,probes=0,enqueues=0;
+ let entered!:()=>void,release!:()=>void;
+ const started=new Promise<void>(resolve=>{entered=resolve;});
+ const gate=new Promise<void>(resolve=>{release=resolve;});
+ const adapter:CreativeResultAdapter={owner:"graphic_post",
+  probe:async()=>{if(++probes===1){entered();await gate;return {state:"known_unavailable",reasonCode:"TEMPORARY",lastVerifiedAt:null};}return {state:"supported",reasonCode:null,lastVerifiedAt:null};},
+  enqueue:async()=>{if(++enqueues===1)throw Error("owner accepted, ack lost");return {candidateId:"original-page",taskId:"original-task",baseVersionId:"v1",ruleSnapshotRef:null,appliedRules:"not_applied",sourceRefs:[],status:"succeeded"};},
+  read:async()=>({status:"succeeded",value:null,errorCode:null}),adopt:async()=>({versionId:"v2"})};
+ const service=createCreativeResultsService(opened.db,{projects:{getOutput:async()=>output as never,getProject:async()=>({id:output.projectId}) as never},adapters:{graphic_post:adapter},nextId:()=>`t1420-concurrent-${++seq}`});
+ const transport=createCreativeResultsTransport(()=>service);
+ const request={params:{outputId:output.id},query:undefined,body:{items:[{kind:"image_card" as const,targetSectionId:"page-a"}],clientRequestId:"t1420-concurrent-original"}};
+ try{
+  const late=transport.request(ENDPOINTS.createBundle,request,context("a"));
+  const lateRejected=expect(late).rejects.toMatchObject({code:"CAPABILITY_UNAVAILABLE"});
+  await started;
+  await expect(transport.request(ENDPOINTS.createBundle,request,context("a"))).rejects.toThrow("owner accepted, ack lost");
+  release();await lateRejected;
+  const pending=(await service.list(context("a"),{outputId:output.id})).items[0]!;
+  expect(pending).toMatchObject({status:"queued",errorCode:"GENERATION_SUBMISSION_UNKNOWN"});
+  await transport.request(ENDPOINTS.createBundle,request,context("a"));
+  expect(await service.get(context("a"),pending.resultId)).toMatchObject({taskId:"original-task",status:"succeeded"});
+  expect(enqueues).toBe(2);
+ }finally{release();await opened.client.close();}
+},120000);

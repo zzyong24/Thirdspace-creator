@@ -53,22 +53,29 @@ function mediaValue(value: unknown, role: MediaValue["role"], cardId?:string): M
   return [{ assetId: item.assetId, assetFileId: item.assetFileId, order: 0, role, ...(typeof item.cardId==="string"?{cardId:item.cardId}:{}) }];
 }
 
-type MediaPreviewProps={ image: MediaValue; resultId: string; onPreviewReady: (resultId: string) => void; label?:string };
+type MediaPreviewProps={ image: MediaValue; resultId: string; onPreviewReady: (resultId: string, ready: boolean) => void; label?:string };
 function MediaPreview(props:MediaPreviewProps){return <MediaPreviewSession key={`${props.resultId}:${props.image.assetId}:${props.image.assetFileId}`} {...props}/>;}
 function MediaPreviewSession({ image, resultId, onPreviewReady, label }:MediaPreviewProps) {
- const client=useCreationClient(),workspaceSelection=useCreationScope();
-
+  const client = useCreationClient();
   const [url, setUrl] = React.useState<string | null>(null);
   const [error, setError] = React.useState(false);
+  const [attempt, setAttempt] = React.useState(0);
+  React.useLayoutEffect(() => { onPreviewReady(resultId, false); }, [onPreviewReady, resultId, attempt]);
   React.useEffect(() => {
     let active = true;
     void client.getAssetFileDownloadUrl({ params: { assetId: image.assetId, assetFileId: image.assetFileId }, query: undefined, body: undefined })
-      .then((result) => { if (active) { setUrl(result.url); onPreviewReady(resultId); } })
+      .then((result) => { if (active) setUrl(result.url); })
       .catch(() => { if (active) setError(true); });
     return () => { active = false; };
-  }, [image.assetId, image.assetFileId, onPreviewReady, resultId]);
-  return url ? <Image src={url} alt={label ?? (image.role === "cover" ? "待审阅的生成封面" : "待审阅的生成图卡")} width={480} height={320} unoptimized className="max-h-72 w-full rounded-md bg-surface-subtle object-contain" />
-    : <p className="text-xs text-muted-foreground">{error ? "图片暂时无法预览，请刷新候选后再采纳。" : "正在读取图片预览…"}</p>;
+  }, [client, image.assetId, image.assetFileId, attempt]);
+  function previewFailed() { setError(true); onPreviewReady(resultId, false); }
+  if (error) return <div className="space-y-2">
+    <p role="alert" className="text-xs text-muted-foreground">图片暂时无法预览，请重新加载后再采纳。</p>
+    <Button variant="outline" onClick={() => { setUrl(null); setError(false); setAttempt(value => value + 1); }}>重新加载预览</Button>
+  </div>;
+  return url ? <Image key={attempt} src={url} alt={label ?? (image.role === "cover" ? "待审阅的生成封面" : "待审阅的生成图卡")} width={480} height={320} unoptimized className="max-h-72 w-full rounded-md bg-surface-subtle object-contain"
+    onLoad={() => onPreviewReady(resultId, true)} onError={previewFailed} />
+    : <p role="status" className="text-xs text-muted-foreground">正在读取图片预览…</p>;
 }
 
 function capabilityExplanation(capability: CreativeCapability | undefined): string {
@@ -83,6 +90,7 @@ function capabilityExplanation(capability: CreativeCapability | undefined): stri
 
 function resultError(code: string | null): string | null {
   if (!code) return null;
+  if (code === "GENERATION_SUBMISSION_UNKNOWN") return "生成提交结果待核对，请恢复原组图请求；其他已完成的图片仍保留。";
   if (code === "MEDIA_RESULT_UNKNOWN") return "原生图任务结果待核对，已完成的图片保留。请刷新原结果。";
   if (code === "SOURCE_UNAVAILABLE") return "来源暂不可读取";
   if (code === "CAPABILITY_UNAVAILABLE") return "当前生成能力不可用";
@@ -539,7 +547,9 @@ function GraphicPostResultsSession({resultsOnly=false,accountId,outputId,targetP
       setError(errorText(reason));
     }}finally{if(epoch===scope.current.epoch)setSeriesBusy(false);}
   }
-  const markPagePreviewed=React.useCallback((resultId:string)=>setPreviewedPages(current=>({...current,[resultId]:true})),[]);
+  const markPagePreviewed=React.useCallback((resultId:string,ready:boolean)=>setPreviewedPages(current=>({...current,[resultId]:ready})),[]);
+  const markCoverPreviewed=React.useCallback((resultId:string,ready:boolean)=>setPreviewedCoverId(current=>ready?resultId:current===resultId?null:current),[]);
+  const markCardPreviewed=React.useCallback((resultId:string,ready:boolean)=>setPreviewedCardId(current=>ready?resultId:current===resultId?null:current),[]);
   const visiblePages=Object.values(pageResults).filter(result=>result.targetSectionId===series?.selectedCardId).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
   const selectedPagePending=Object.values(pageResults).some(result=>series?.selectedCardIds.includes(result.targetSectionId??'')&&['queued','running'].includes(result.status));
   const supportedKinds = TEXT_KINDS.filter((kind) => pickCapability(capabilities ?? [], kind, targetPlatform)?.state === "supported");
@@ -594,8 +604,8 @@ function GraphicPostResultsSession({resultsOnly=false,accountId,outputId,targetP
       {unknownSeries&&<Button variant="outline" disabled={seriesBusy} onClick={()=>void generatePages(true)}>恢复原组图请求</Button>}
       {textResults.map(kind=>{const result=results[kind]!;return <article key={result.resultId} className="space-y-2"><h3 className="text-sm font-medium">{LABEL[kind]} · {STATUS[result.status]}</h3>{kind==='cardBriefs'?<div className="space-y-3">{(graphicPostCardBriefs.safeParse(result.value).success?graphicPostCardBriefs.parse(result.value):[]).map((card,index)=><section key={card.cardId}><h4>{card.title||`第 ${index+1} 页`}</h4><p className="whitespace-pre-wrap">{card.body}</p>{card.proposedImage&&<MediaPreview image={{...card.proposedImage,order:0,role:"card",cardId:card.cardId}} resultId={result.resultId} onPreviewReady={matchedPreviewReady} label={`第 ${index+1} 页匹配图片`}/>}</section>)}</div>:<p className="whitespace-pre-wrap text-sm">{candidateText(result)}</p>}{result.status==='succeeded'&&<Button variant="outline" disabled={manualDraftDirty||Boolean(busyKind)} onClick={()=>void adopt(kind)}>采纳{LABEL[kind]}</Button>}{['failed','cancelled'].includes(result.status)&&<Button variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(result.resultId)}>重试原任务</Button>}</article>;})}
       {pages.map(result=>{const images=mediaValue(result.value,'card',result.targetSectionId??undefined);return <article key={result.resultId} className="space-y-2"><h3 className="text-sm font-medium">{series?.cards.find(card=>card.cardId===result.targetSectionId)?.title||'原目标页'} · {result.errorCode==='MEDIA_RESULT_UNKNOWN'?'待核对':STATUS[result.status]}</h3>{resultError(result.errorCode)&&<p className="text-sm text-destructive">{resultError(result.errorCode)}</p>}{images&&<MediaPreview image={images[0]!} resultId={result.resultId} onPreviewReady={markPagePreviewed}/>} {result.status==='awaiting_confirmation'&&images&&<Button variant="outline" disabled={manualDraftDirty||seriesBusy||!previewedPages[result.resultId]} onClick={()=>void adoptPage(result)}>采用到这一页</Button>}{result.retryOf&&!result.taskId&&result.retryRequestId&&<Button variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(result.retryOf!,result.retryRequestId!)}>恢复原重试请求</Button>}{['failed','cancelled'].includes(result.status)&&<Button variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(result.resultId)}>重试原任务</Button>}</article>;})}
-      {coverResult&&<article className="space-y-2"><p className="text-sm">封面 · {STATUS[coverResult.status]}</p>{selectedCover&&<MediaPreview image={selectedCover[0]!} resultId={coverResult.resultId} onPreviewReady={setPreviewedCoverId}/>}{coverResult.status==='awaiting_confirmation'&&<Button variant="outline" disabled={manualDraftDirty||Boolean(coverBusy)||previewedCoverId!==coverResult.resultId} onClick={()=>void adoptCover()}>采纳这张封面</Button>}{["failed","cancelled"].includes(coverResult.status)&&<Button variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(coverResult.resultId)}>重试原封面任务</Button>}</article>}
-      {cardResult&&<article className="space-y-2"><p className="text-sm">图卡 · {STATUS[cardResult.status]}</p>{selectedCard&&<MediaPreview image={selectedCard[0]!} resultId={cardResult.resultId} onPreviewReady={setPreviewedCardId}/>}{cardResult.status==='awaiting_confirmation'&&<Button variant="outline" disabled={manualDraftDirty||Boolean(cardBusy)||previewedCardId!==cardResult.resultId} onClick={()=>void adoptCard()}>采纳这张图卡</Button>}{["failed","cancelled"].includes(cardResult.status)&&<Button variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(cardResult.resultId)}>重试原图卡任务</Button>}</article>}
+      {coverResult&&<article className="space-y-2"><p className="text-sm">封面 · {STATUS[coverResult.status]}</p>{selectedCover&&<MediaPreview image={selectedCover[0]!} resultId={coverResult.resultId} onPreviewReady={markCoverPreviewed}/>}{coverResult.status==='awaiting_confirmation'&&<Button variant="outline" disabled={manualDraftDirty||Boolean(coverBusy)||previewedCoverId!==coverResult.resultId} onClick={()=>void adoptCover()}>采纳这张封面</Button>}{["failed","cancelled"].includes(coverResult.status)&&<Button variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(coverResult.resultId)}>重试原封面任务</Button>}</article>}
+      {cardResult&&<article className="space-y-2"><p className="text-sm">图卡 · {STATUS[cardResult.status]}</p>{selectedCard&&<MediaPreview image={selectedCard[0]!} resultId={cardResult.resultId} onPreviewReady={markCardPreviewed}/>}{cardResult.status==='awaiting_confirmation'&&<Button variant="outline" disabled={manualDraftDirty||Boolean(cardBusy)||previewedCardId!==cardResult.resultId} onClick={()=>void adoptCard()}>采纳这张图卡</Button>}{["failed","cancelled"].includes(cardResult.status)&&<Button variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(cardResult.resultId)}>重试原图卡任务</Button>}</article>}
     </section>;
   }
   return <section aria-label="按结果生成" className="space-y-4 rounded-xl border border-border bg-surface p-5">
@@ -635,13 +645,13 @@ function GraphicPostResultsSession({resultsOnly=false,accountId,outputId,targetP
     {(!series||coverResult||cardResult) && <div className="rounded-lg border border-dashed border-border p-3 text-sm">{series&&<h3 className="mb-3 font-medium">先前未绑定页的图片候选</h3>}<div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-medium">封面</h3><p className="mt-1 text-xs text-muted-foreground">{capabilityExplanation(coverCapability)}</p></div>
       {!series && coverCapability?.state === "supported" && <Button variant="outline" disabled={Boolean(coverBusy) || Boolean(cardBusy) || Boolean(busyKind) || busyBundle || Boolean(coverResult && ["queued", "running"].includes(coverResult.status))} onClick={() => void generateCover()}>{coverBusy === "generate" || (coverResult && ["queued", "running"].includes(coverResult.status)) ? "生成中…" : coverResult ? "重新生成封面" : "生成封面"}</Button>}</div>
       {coverResult && <div className="mt-3 space-y-2"><p className="text-xs text-muted-foreground">{coverResult.status === "awaiting_confirmation" ? "待审阅" : coverResult.status === "adopted" ? "已采纳" : coverResult.status === "failed" ? "生成未完成" : coverResult.status === "cancelled" ? "已取消" : "生成中"}{resultError(coverResult.errorCode) ? ` · ${resultError(coverResult.errorCode)}` : ""}</p>
-        {selectedCover && ["awaiting_confirmation", "adopted"].includes(coverResult.status) && <><MediaPreview image={selectedCover[0]!} resultId={coverResult.resultId} onPreviewReady={setPreviewedCoverId} />{coverResult.status === "awaiting_confirmation" && <Button disabled={manualDraftDirty || Boolean(coverBusy) || Boolean(cardBusy) || previewedCoverId !== coverResult.resultId} onClick={() => void adoptCover()}>{coverBusy === "adopt" ? "采纳中…" : "采纳这张封面"}</Button>}</>}
+        {selectedCover && ["awaiting_confirmation", "adopted"].includes(coverResult.status) && <><MediaPreview image={selectedCover[0]!} resultId={coverResult.resultId} onPreviewReady={markCoverPreviewed} />{coverResult.status === "awaiting_confirmation" && <Button disabled={manualDraftDirty || Boolean(coverBusy) || Boolean(cardBusy) || previewedCoverId !== coverResult.resultId} onClick={() => void adoptCover()}>{coverBusy === "adopt" ? "采纳中…" : "采纳这张封面"}</Button>}</>}
         {coverResult.status === "awaiting_confirmation" && !selectedCover && <p className="text-xs text-muted-foreground">图片结果尚未读到，请刷新候选。正式稿未改变。</p>}
       </div>}
       <div className="mt-4 border-t border-border pt-3"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-medium">图卡</h3><p className="mt-1 text-xs text-muted-foreground">{series?"先前生成的图片可继续采用，保持原未绑定页的用途。":`${capabilityExplanation(cardCapability)}。每次生成一张；采纳后追加到作品，下方也可从素材库选图并排序。`}</p></div>
         {!series && cardCapability?.state === "supported" && <Button variant="outline" disabled={Boolean(cardBusy) || Boolean(coverBusy) || Boolean(busyKind) || busyBundle || Boolean(cardResult && ["queued", "running"].includes(cardResult.status))} onClick={() => void generateCard()}>{cardBusy === "generate" || (cardResult && ["queued", "running"].includes(cardResult.status)) ? "生成中…" : cardResult?.status === "adopted" ? "生成下一张图卡" : cardResult ? "重新生成图卡" : "生成图卡"}</Button>}</div>
         {cardResult && <div className="mt-3 space-y-2"><p className="text-xs text-muted-foreground">{cardResult.status === "awaiting_confirmation" ? "待审阅" : cardResult.status === "adopted" ? "已采纳" : cardResult.status === "failed" ? "生成未完成" : cardResult.status === "cancelled" ? "已取消" : "生成中"}{resultError(cardResult.errorCode) ? ` · ${resultError(cardResult.errorCode)}` : ""}</p>
-          {selectedCard && ["awaiting_confirmation", "adopted"].includes(cardResult.status) && <><MediaPreview image={selectedCard[0]!} resultId={cardResult.resultId} onPreviewReady={setPreviewedCardId} />{cardResult.status === "awaiting_confirmation" && <Button disabled={manualDraftDirty || Boolean(cardBusy) || Boolean(coverBusy) || previewedCardId !== cardResult.resultId} onClick={() => void adoptCard()}>{cardBusy === "adopt" ? "采纳中…" : "采纳这张图卡"}</Button>}</>}
+          {selectedCard && ["awaiting_confirmation", "adopted"].includes(cardResult.status) && <><MediaPreview image={selectedCard[0]!} resultId={cardResult.resultId} onPreviewReady={markCardPreviewed} />{cardResult.status === "awaiting_confirmation" && <Button disabled={manualDraftDirty || Boolean(cardBusy) || Boolean(coverBusy) || previewedCardId !== cardResult.resultId} onClick={() => void adoptCard()}>{cardBusy === "adopt" ? "采纳中…" : "采纳这张图卡"}</Button>}</>}
           {cardResult.status === "awaiting_confirmation" && !selectedCard && <p className="text-xs text-muted-foreground">图片结果尚未读到，请刷新候选。正式稿未改变。</p>}
           {(cardResult.status === "failed" || cardResult.status === "cancelled") && <Button variant="outline" disabled={Boolean(retrying)} onClick={() => void retry(cardResult.resultId)}>{retrying === cardResult.resultId ? "重试中…" : "重试图卡"}</Button>}
         </div>}

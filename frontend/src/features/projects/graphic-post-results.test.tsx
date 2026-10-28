@@ -31,6 +31,7 @@ describe("图文图卡结果", () => {
     render(<GraphicPostResults {...props} />);
     await waitFor(() => expect(api.getAssetFileDownloadUrl).toHaveBeenCalledWith({ params: {
       assetId: "asset-card", assetFileId: "file-card" }, query: undefined, body: undefined }));
+    fireEvent.load(await screen.findByRole("img", { name: "待审阅的生成图卡" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "采纳这张图卡" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "采纳这张图卡" }));
     await waitFor(() => expect(api.adoptResult).toHaveBeenCalledWith({ params: { resultId: "result-card" }, query: undefined,
@@ -60,6 +61,40 @@ describe('组图逐页候选',()=>{
   api.listCreativeCapabilities.mockResolvedValue({items:[{outputType:'image',platform:'xiaohongshu',kind:'image_card',state:'supported'}]});
   api.listResults.mockResolvedValue({items:[]});api.listBundles.mockResolvedValue({items:[]});
   api.getAssetFileDownloadUrl.mockResolvedValue({url:'http://example.test/exact.png'});
+ });
+ it.each([false,true])('T1420 图片真正加载前不开放采用，失败后只重载预览：简洁=%s',async resultsOnly=>{
+  const bound={...card,targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]};
+  api.listResults.mockResolvedValue({items:[bound]});
+  render(<GraphicPostResults {...props} resultsOnly={resultsOnly} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
+  const preview=await screen.findByRole('img',{name:'待审阅的生成图卡'});
+  const adopt=screen.getByRole('button',{name:'采用到这一页'});
+  expect(adopt).toBeDisabled();
+  fireEvent.error(preview);
+  expect(await screen.findByText('图片暂时无法预览，请重新加载后再采纳。')).toBeVisible();
+  expect(adopt).toBeDisabled();
+  fireEvent.click(screen.getByRole('button',{name:'重新加载预览'}));
+  const retried=await screen.findByRole('img',{name:'待审阅的生成图卡'});
+  Object.defineProperty(retried,'decode',{value:()=>Promise.resolve(),configurable:true});
+  fireEvent.load(retried);
+  await waitFor(()=>expect(adopt).toBeEnabled());
+  expect(api.getAssetFileDownloadUrl).toHaveBeenCalledTimes(2);
+  expect(api.createBundle).not.toHaveBeenCalled();expect(api.generateResult).not.toHaveBeenCalled();expect(api.adoptResult).not.toHaveBeenCalled();
+ });
+ it('已预览图片失效或精确文件更换后重新等待加载，不沿用旧采用许可',async()=>{
+  const bound={...card,targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]};
+  api.listResults.mockResolvedValue({items:[bound]});
+  render(<GraphicPostResults {...props} resultsOnly series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
+  const preview=await screen.findByRole('img',{name:'待审阅的生成图卡'});
+  const adopt=screen.getByRole('button',{name:'采用到这一页'});
+  fireEvent.load(preview);await waitFor(()=>expect(adopt).toBeEnabled());
+  fireEvent.error(preview);expect(adopt).toBeDisabled();
+  api.listResults.mockResolvedValue({items:[{...bound,value:[{...image,cardId:'page-b',assetFileId:'replacement-file'}]}]});
+  fireEvent.click(screen.getByRole('button',{name:'刷新图片结果'}));
+  await waitFor(()=>expect(api.getAssetFileDownloadUrl).toHaveBeenCalledWith(expect.objectContaining({params:expect.objectContaining({assetFileId:'replacement-file'})})));
+  expect(adopt).toBeDisabled();
+  fireEvent.load(await screen.findByRole('img',{name:'待审阅的生成图卡'}));
+  await waitFor(()=>expect(adopt).toBeEnabled());
+  expect(api.generateResult).not.toHaveBeenCalled();
  });
  it('简洁工作台如实显示原生图待核对，保留刷新而不开放重复生成或重试',async()=>{
   api.listResults.mockResolvedValue({items:[{...card,targetSectionId:'page-b',status:'running',value:null,errorCode:'MEDIA_RESULT_UNKNOWN'}]});
@@ -107,7 +142,7 @@ describe('组图逐页候选',()=>{
   api.getResult.mockResolvedValue({...bound,status:'adopted'});api.adoptResult.mockResolvedValue({status:'adopted'});
   render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
   const adopt=await screen.findByRole('button',{name:'采用到这一页'});
-  await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
+  fireEvent.load(await screen.findByRole('img',{name:'待审阅的生成图卡'}));await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
   await waitFor(()=>expect(api.adoptResult).toHaveBeenCalledWith({params:{resultId:'result-card'},query:undefined,body:{expected:{owner:'graphic_post',versionId:'fresh-v2'},editedValue:[{...image,cardId:'page-b'}],clientRequestId:expect.any(String)}}));
   expect(api.getAssetFileDownloadUrl).not.toHaveBeenCalledWith(expect.objectContaining({params:expect.objectContaining({assetFileId:'other-file'})}));
  });
@@ -119,10 +154,10 @@ describe('组图逐页候选',()=>{
   api.getResult.mockResolvedValue({...bound,status:'adopted'});
   const series={cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']};
   const first=render(<GraphicPostResults {...props} series={series}/>);
-  const adopt=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
+  const adopt=await screen.findByRole('button',{name:'采用到这一页'});fireEvent.load(await screen.findByRole('img',{name:'待审阅的生成图卡'}));await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
   await screen.findByRole('alert');const original=api.adoptResult.mock.calls[0][0];first.unmount();
   render(<GraphicPostResults {...props} currentVersionId="owner-already-v2" series={series}/>);
-  const recover=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(recover).toBeEnabled());fireEvent.click(recover);
+  const recover=await screen.findByRole('button',{name:'采用到这一页'});fireEvent.load(await screen.findByRole('img',{name:'待审阅的生成图卡'}));await waitFor(()=>expect(recover).toBeEnabled());fireEvent.click(recover);
   await waitFor(()=>expect(api.adoptResult).toHaveBeenCalledTimes(2));
   expect(api.adoptResult.mock.calls[1][0]).toEqual(original);
   expect(api.getGraphicPost).toHaveBeenCalledTimes(1);
@@ -133,9 +168,9 @@ describe('组图逐页候选',()=>{
   api.listResults.mockResolvedValue({items:[bound]});api.getGraphicPost.mockResolvedValueOnce({currentVersionId:'old-v1'}).mockResolvedValue({currentVersionId:'fresh-v2'});
   api.adoptResult.mockRejectedValueOnce(Object.assign(new Error('conflict'),{status:409})).mockResolvedValueOnce({status:'adopted'});api.getResult.mockResolvedValue({...bound,status:'adopted'});
   const series={cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']};
-  const first=render(<GraphicPostResults {...props} series={series}/>);const adopt=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);await screen.findByRole('alert');
+  const first=render(<GraphicPostResults {...props} series={series}/>);const adopt=await screen.findByRole('button',{name:'采用到这一页'});fireEvent.load(await screen.findByRole('img',{name:'待审阅的生成图卡'}));await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);await screen.findByRole('alert');
   const original=api.adoptResult.mock.calls[0][0];first.unmount();
-  render(<GraphicPostResults {...props} series={series}/>);const again=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(again).toBeEnabled());fireEvent.click(again);
+  render(<GraphicPostResults {...props} series={series}/>);const again=await screen.findByRole('button',{name:'采用到这一页'});fireEvent.load(await screen.findByRole('img',{name:'待审阅的生成图卡'}));await waitFor(()=>expect(again).toBeEnabled());fireEvent.click(again);
   await waitFor(()=>expect(api.adoptResult).toHaveBeenCalledTimes(2));
   expect(api.adoptResult.mock.calls[1][0].body.expected.versionId).toBe('fresh-v2');
   expect(api.adoptResult.mock.calls[1][0].body.clientRequestId).not.toBe(original.body.clientRequestId);

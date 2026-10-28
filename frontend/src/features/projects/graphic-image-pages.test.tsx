@@ -22,7 +22,7 @@ it('真实Provider与完整工作台先保存画面修改，再通过结果组�
  fireEvent.click(screen.getByRole('checkbox',{name:'选择第 1 页生成'}));
  const field=screen.getByLabelText('第 2 页画面想法');const details=field.closest('details')!;details.open=true;fireEvent(details,new Event('toggle'));fireEvent.change(field,{target:{value:'机器人连接工具的插画'}});
  const generate=await screen.findByRole('button',{name:'生成所选 1 页'});await waitFor(()=>expect(generate).toBeEnabled());fireEvent.click(generate);
- const adopt=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
+ const adopt=await screen.findByRole('button',{name:'采用到这一页'});fireEvent.load(await screen.findByRole('img',{name:'待审阅的生成图卡'}));await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
  expect(await screen.findByRole('img',{name:'作品中的精确图片版本'})).toHaveAttribute('src','http://example.test/exact-file.png');
  expect(api.createBundle).toHaveBeenCalledOnce();expect(api.adoptResult).toHaveBeenCalledOnce();expect(latest.current.body).toBe('小红书独立配文');expect(latest.current.cardBriefs?.map(card=>card.cardId)).toEqual(['first','second']);
  expect(screen.getByRole('button',{name:'导出原图与配文'})).toBeVisible();expect(screen.getByText('文字排版与旧稿导出').closest('details')).not.toHaveAttribute('open');

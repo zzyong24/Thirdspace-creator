@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "task_id": "T-1420",
+  "reviewer": {
+    "agent_id": "/root/handoff_stage4_inventory",
+    "independent_from_implementation": true,
+    "artifact_authorship": "独立审查代理直接生成本原件，未由主会话转录",
+    "model_identity": "继承主任务模型；未独立核验具体型号"
+  },
+  "reviewed_at_utc": "2026-10-28T12:06:59.965762+00:00",
+  "repository": "/Users/masx/Projects/Thirdspace-creator",
+  "baseline_commit": "d590ebd00becfe55e3c0d3dd7b6a48f0a8dd2508",
+  "review_type": "本轮未提交修复的独立源码审查与既有原始测试日志核查",
+  "verdict": "PASS_LOCAL_SOURCE_REVIEW",
+  "overall_task_acceptance": false,
+  "summary": "本次修复范围内未发现尚未解决的阻塞缺陷。未知组图提交保留原预约与原键，恢复期间能力失败、迟到能力失败和明确拒绝均不能覆盖既有未知态；其他成功页保留且原请求恢复不重复提交成功页。采用权限等待图片实际 load，失败、重载与精确文件更换均撤销旧许可。此结论不是 T-1420 整体验收通过。",
+  "reviewed_source_sha256": {
+    "backend/src/modules/creative-results/creative-results.service.ts": "2958e13d70e7ff8018363fb407c21420a86ddcb08402c0f9604009cbb6f31e6c",
+    "backend/src/modules/creative-results/creative-results.integration.test.ts": "b83cee73a7b858c2b9a57da5d19a7cf5d5dc6330121f6e25e11720b71ca3f480",
+    "frontend/src/features/projects/graphic-post-results.tsx": "eb011553d4919c907ab0d2db88d555617addfb63b47ecf9a651ad97d1c13c079",
+    "frontend/src/features/projects/graphic-post-results.test.tsx": "853bfe5321df4fa628bf09a949f556fcccb663c5f3bfa78b8a2dda89292f0eb9",
+    "frontend/src/features/projects/graphic-image-pages.test.tsx": "12d4de4b377e10d83b07e863ce507cb12ea99cb6b03c6b88291fde359de35be9"
+  },
+  "reference_sha256": {
+    "docs/features/t1420-graphic-post-content-structure.md": "d3786b24a04815963e2f27138ba4c825dc29007c5b898d01ba642255c2c771f2",
+    "docs/verification/t1420/continuation-20261028/README.md": "245b59a36fd771600c5e54bc008095ea3d256c441878758aad84c6bee99786e5",
+    "frontend/src/lib/creation-workspace-scope.ts": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+    "frontend/node_modules/next/dist/client/image-component.js": "7dcd5a10f44f1b52100554e2a2537dfe3d04083e310858d9a92c61a7db302753"
+  },
+  "findings": [],
+  "closed_findings": [
+    {
+      "id": "T1420-BUNDLE-UNKNOWN-RECEIPT",
+      "status": "closed",
+      "evidence": [
+        "backend/src/modules/creative-results/creative-results.service.ts:421-443",
+        "backend/src/modules/creative-results/creative-results.integration.test.ts:371-411",
+        "frontend/src/features/projects/graphic-post-results.tsx:493-518"
+      ],
+      "reason": "createBundle 保留 queued/GENERATION_SUBMISSION_UNKNOWN，处理完其余页后拒绝未确认回执；前端仅在成功响应时移除原队列，异常分支保留原请求。恢复测试验证原 resultId、candidate/task 和原键，成功页仅提交一次。"
+    },
+    {
+      "id": "T1420-REVIEW-UNKNOWN-PROBE",
+      "status": "closed",
+      "evidence": [
+        "backend/src/modules/creative-results/creative-results.service.ts:128-160",
+        "backend/src/modules/creative-results/creative-results.integration.test.ts:371-411"
+      ],
+      "reason": "适配器缺失、能力未知或已知不可用均不得把先前未知提交改成失败；JS 检查和数据库 errorCode 谓词同时保护，四类恢复能力有真实数据库与公开 transport 回归。"
+    },
+    {
+      "id": "T1420-REVIEW-UNKNOWN-CAS",
+      "status": "closed",
+      "evidence": [
+        "backend/src/modules/creative-results/creative-results.service.ts:130-160",
+        "backend/src/modules/creative-results/creative-results.service.ts:425-438",
+        "backend/src/modules/creative-results/creative-results.integration.test.ts:413-437"
+      ],
+      "reason": "失败更新在数据库条件中排除 UNKNOWN，outer catch 更新后复读当前态，因此不会因异步 probe 前读取的旧状态覆盖并发未知提交或误返回成功。闩锁回归有真实 RED 和最终 GREEN。"
+    },
+    {
+      "id": "T1420-REVIEW-UNKNOWN-OWNER-REJECTION",
+      "status": "closed",
+      "evidence": [
+        "backend/src/modules/creative-results/creative-results.service.ts:181-187",
+        "backend/src/modules/creative-results/creative-results.integration.test.ts:371-411"
+      ],
+      "reason": "内部 enqueue catch 的明确拒绝写入也使用 knownSubmission 条件；之前未知的原任务仍可恢复。owner_rejected 序列先实测失败，再在最终后端套件通过。既有首次冻结输入拒绝仍为 failed 的测试未删除。"
+    },
+    {
+      "id": "T1420-PREVIEW-LOAD-GATE",
+      "status": "closed",
+      "evidence": [
+        "frontend/src/features/projects/graphic-post-results.tsx:56-78",
+        "frontend/src/features/projects/graphic-post-results.test.tsx:65-97",
+        "frontend/src/features/projects/graphic-image-pages.test.tsx:25"
+      ],
+      "reason": "取得 URL 不再开放采用，只有 Image onLoad 设置 ready；onError 立即撤销，重载仅重新取得预览 URL，不生成或采用；精确文件组成 key，换图时 layout effect 在绘制前清除旧许可。完整与简洁模式及实际 Provider 工作台回归通过。"
+    }
+  ],
+  "regression_review": [
+    {
+      "topic": "绑定结果与采用回执",
+      "conclusion": "原 unbound 条件保留 candidateId/taskId/adoptionReceipt 为空限制；成功绑定可清除未知态，迟到失败不能覆盖已绑定候选或已采用回执。既有相关后端断言保留。"
+    },
+    {
+      "topic": "明确拒绝和未知结果",
+      "conclusion": "仅抑制覆盖已知的 UNKNOWN，不把首次明确输入拒绝一律改成未知。相同请求摘要、组归属和原键校验未放宽。"
+    },
+    {
+      "topic": "前端迟到回调",
+      "conclusion": "URL 请求已有 active 清理；精确文件或作用域切换会卸载旧预览。实际安装的 Next Image 在 decode 结束后检查 DOM 连接，卸载后的迟到 load 回调不会重新开放采用。此项为源码检查，未新增专门动态卸载测试。",
+      "dependency_reference": "frontend/node_modules/next/dist/client/image-component.js:33-47"
+    },
+    {
+      "topic": "测试断言完整性",
+      "conclusion": "既有采用测试新增显式 fireEvent.load 以符合真实浏览器事件；未删除原幂等、精确文件、保存、采用及旧稿断言。新增 RED 不是把测试期望改成当前错误行为。"
+    }
+  ],
+  "observed_test_evidence": [
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1420-probe-red-current.log",
+      "sha256": "9cb036f88a4bdc8f933a0f47510290e38d2c44cd5fd830b4df89aaba499f38a7",
+      "phase": "RED",
+      "observed_result": "3 failed | 1 passed | 19 skipped",
+      "description": "恢复能力 known_unavailable、unknown、missing 的原实现覆盖未知提交；supported 对照通过。",
+      "provenance": "主会话执行生成的原始日志；审查代理直接读取，未独立重跑"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1420-probe-race-red.log",
+      "sha256": "ba8e4876f71f3b732a6b526074a0a8ac16154e79f616f7f717cab55d87a855bc",
+      "phase": "RED",
+      "observed_result": "1 failed | 23 skipped",
+      "description": "闩锁交错真实复现迟到的能力失败把已提交未知态改成 failed 并返回成功响应。",
+      "provenance": "主会话执行生成的原始日志；审查代理直接读取，未独立重跑"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1420-owner-rejection-red.log",
+      "sha256": "95e89281e706f93340466630c6ddbbb8e7006bd2bba3c8cdd3b0994807ab7336",
+      "phase": "RED",
+      "observed_result": "1 failed | 24 skipped",
+      "description": "原未知提交后的 SOURCE_VERSION_CONFLICT 被误写为 failed 并返回 partial_completed。",
+      "provenance": "主会话执行生成的原始日志；审查代理直接读取，未独立重跑"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1420-backend-final-current.log",
+      "sha256": "aa95264849fac55af3237ae413e754cbf4d1b0b4b22197a8a4b661c240fdc6ae",
+      "phase": "GREEN",
+      "observed_result": "35 passed (35)",
+      "description": "最终后端两个测试文件全部通过。",
+      "provenance": "主会话执行生成的原始日志；审查代理直接读取，未独立重跑"
+    },
+    {
+      "path": "/Users/masx/Documents/Codex/2026-10-28/dui-x20/work/t1420-frontend-full-current.log",
+      "sha256": "2845594fe05235b369312f8302f774341d3022fd234fb43e96f116a126a4a3fc",
+      "phase": "GREEN",
+      "observed_result": "51 passed (51)",
+      "description": "最终前端三个测试文件全部通过。",
+      "provenance": "主会话执行生成的原始日志；审查代理直接读取，未独立重跑"
+    }
+  ],
+  "original_defect_evidence": [
+    {
+      "path": "docs/verification/t1420/continuation-20261028/t1420-bundle-red.log.gz",
+      "sha256": "05bd841f6d50bf29c856ef097e832ecc965c791a8f989e02d888796c69b7b18e",
+      "provenance": "本代理已读取压缩日志原文；分别为未知套装回执缺陷 1 项失败和图片未加载即采用缺陷 2 项失败"
+    },
+    {
+      "path": "docs/verification/t1420/continuation-20261028/t1420-preview-red.log.gz",
+      "sha256": "4fab61cf6bdc2aaf7619e34bc020c0aada2d055ad8bce61e1edd29fa02ba7efe",
+      "provenance": "本代理已读取压缩日志原文；分别为未知套装回执缺陷 1 项失败和图片未加载即采用缺陷 2 项失败"
+    }
+  ],
+  "independent_commands": [
+    {
+      "command": "git diff --check",
+      "result": "通过，退出码 0",
+      "scope": "当前工作树；仅只读校验"
+    }
+  ],
+  "limits": [
+    "此代理审查源代码、测试代码和主会话生成的原始日志；未自行重跑产品测试，不将原始日志核查表述为独立执行。",
+    "没有调用真实模型、登录、充值或读写业务数据库；测试里的 owner adapter 为模拟，数据库为测试数据库。",
+    "没有构建或运行包含本次修复的新 Mac 包，也未验证真实正文、原生工作台和 ZIP 与采用资产的一致性。",
+    "没有读取或变更签名密钥、替换已安装版、修改任务控制面，未签署发布或任务完成。",
+    "完整项目 Gate、全局 reconcile 和后续真实安装态验收由主会话另行记录；此 JSON 不替代它们。"
+  ]
+}

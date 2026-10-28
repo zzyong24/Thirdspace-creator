@@ -1,0 +1,52 @@
+[
+  {
+    "file": "t1420-probe-red-current.log.gz",
+    "originalBytes": 5811,
+    "originalSha256": "9cb036f88a4bdc8f933a0f47510290e38d2c44cd5fd830b4df89aaba499f38a7"
+  },
+  {
+    "file": "t1420-probe-race-red.log.gz",
+    "originalBytes": 2043,
+    "originalSha256": "ba8e4876f71f3b732a6b526074a0a8ac16154e79f616f7f717cab55d87a855bc"
+  },
+  {
+    "file": "t1420-owner-rejection-red.log.gz",
+    "originalBytes": 2395,
+    "originalSha256": "95e89281e706f93340466630c6ddbbb8e7006bd2bba3c8cdd3b0994807ab7336"
+  },
+  {
+    "file": "t1420-backend-final-current.log.gz",
+    "originalBytes": 235,
+    "originalSha256": "aa95264849fac55af3237ae413e754cbf4d1b0b4b22197a8a4b661c240fdc6ae"
+  },
+  {
+    "file": "t1420-frontend-full-current.log.gz",
+    "originalBytes": 688,
+    "originalSha256": "2845594fe05235b369312f8302f774341d3022fd234fb43e96f116a126a4a3fc"
+  },
+  {
+    "file": "t1420-typechecks-current.log.gz",
+    "originalBytes": 5528,
+    "originalSha256": "0da230273523cf14379ed6ad1255f6247752fd01a6c094894538a9bd0d9cdcb0"
+  },
+  {
+    "file": "t1420-backend-typecheck-current.log.gz",
+    "originalBytes": 102,
+    "originalSha256": "8582183a31114047a49d2356c1d9db4f82f5edad95469ac7c64cbfd2151fbe04"
+  },
+  {
+    "file": "t1420-frontend-typecheck-current.log.gz",
+    "originalBytes": 178,
+    "originalSha256": "97d6ddfd7e62eb1b76b52fe07c75d451a5f1f394cb168dda17578acc2e6077e1"
+  },
+  {
+    "file": "t1420-timeout-current.log.gz",
+    "originalBytes": 9892,
+    "originalSha256": "fd8ba0f017ee0ba93432b6d194a293b37e831740cd93b3ee4322bb94a67507d7"
+  },
+  {
+    "file": "t1420-boundary-current.log.gz",
+    "originalBytes": 779,
+    "originalSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+  }
+]

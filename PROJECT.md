@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1420-graphic-post @ c8589fe7f
+LAST_SYNCED: codex/t1420-graphic-post @ d590ebd00
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [open] T-1432 修复接手看板重复与任务包生成阻塞
 - [wip] T-1418 修复创作者总览筛选读取慢与等待路径
 - [wip] T-1419 简化文章工作台并恢复公众号排版风格切换
 - [wip] T-1421 理清剪辑转写与按文字剪辑入口
