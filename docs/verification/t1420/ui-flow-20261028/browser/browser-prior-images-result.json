@@ -1,0 +1,39 @@
+{
+  "scope": "当前源码的隔离Mac浏览器运行；沿公开API导入此前真实生图，不代表本轮真实模型生成或Mac安装态验收",
+  "startedAt": "2026-10-28T14:04:27.071Z",
+  "checks": [
+    "当前源码新界面、无脚本但有正文时重组入口可用、两张真实图片已加载",
+    "配文编辑、画幅、统一方向、精确参考经公开保存与精确版本回读一致；旧图未变",
+    "刷新后仍显示新配文；ZIP包含两张原图且SHA逐字相同；配文与剪贴板一致；图片顺序与精确文件ID一致"
+  ],
+  "imageHashes": [
+    {
+      "file": "reverify-image-01.png",
+      "sha256": "10bbb5c54724bdbe9235acff9dbe1bbdc9bdcb03f8be6a5ed128d28264d9215e"
+    },
+    {
+      "file": "reverify-image-02.png",
+      "sha256": "71e4dc404c58f8c8c4e61cc8a0e5871bbb356e1c896f216312384a36021de61c"
+    }
+  ],
+  "groupId": "grp-0f1a3da4-666",
+  "projectId": "project-intake-35db699d1c92302d6a1e38f8a9db808a",
+  "outputId": "output-0f1a3da4-680",
+  "path": "/projects/project-intake-35db699d1c92302d6a1e38f8a9db808a/outputs/output-0f1a3da4-680/image",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000,
+      "scroll": 1440,
+      "viewport": 1440
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scroll": 1024,
+      "viewport": 1024
+    }
+  ],
+  "status": "passed",
+  "endedAt": "2026-10-28T14:04:30.044Z"
+}

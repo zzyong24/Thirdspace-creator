@@ -15,10 +15,12 @@ it('真实Provider与完整工作台先保存画面修改，再通过结果组�
  api.listCreativeCapabilities.mockResolvedValue({items:[{outputType:'image',platform:'xiaohongshu',kind:'image_card',state:'supported'}]});api.listResults.mockResolvedValue({items:[]});api.listBundles.mockResolvedValue({items:[]});
  api.getGraphicPost.mockImplementation(async()=>structuredClone(latest));api.getGraphicPostVersion.mockImplementation(async()=>({versionId:latest.currentVersionId,document:structuredClone(latest.current)}));
  api.createGraphicPostVersion.mockImplementation(async({body})=>{expect(body.expectedCurrentVersionId).toBe('v1');latest={...latest,currentVersionId:'v2',current:structuredClone(body.document)};return {versionId:'v2'};});
- api.createBundle.mockImplementation(async({body})=>{expect(latest.currentVersionId).toBe('v2');expect(latest.current.cardBriefs?.[1]?.visualBrief).toBe('机器人连接工具的插画');expect(body.items).toEqual([{kind:'image_card',targetSectionId:'second'}]);return {bundleId:'bundle',status:'complete',items:[{resultId:result.resultId,kind:'image_card',targetSectionId:'second',status:'awaiting_confirmation'}]};});
+ api.createBundle.mockImplementation(async({body})=>{expect(latest.currentVersionId).toBe('v2');expect(latest.current.seriesProfile).toMatchObject({aspectRatio:'3:4',visualDirection:'统一暖色插画'});expect(latest.current.cardBriefs?.[1]?.visualBrief).toBe('机器人连接工具的插画');expect(body.items).toEqual([{kind:'image_card',targetSectionId:'second'}]);return {bundleId:'bundle',status:'complete',items:[{resultId:result.resultId,kind:'image_card',targetSectionId:'second',status:'awaiting_confirmation'}]};});
  api.getResult.mockImplementation(async()=>result);api.getAssetFileDownloadUrl.mockResolvedValue({url:'http://example.test/exact-file.png'});
  api.adoptResult.mockImplementation(async({body})=>{expect(body.expected).toEqual({owner:'graphic_post',versionId:'v2'});expect(body.editedValue).toEqual([exactImage]);latest={...latest,currentVersionId:'v3',current:{...latest.current,imageUses:[exactImage]}};result={...result,status:'adopted'};return {status:'adopted'};});
  render(<DraftChatRequestProvider><GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={latest}/></DraftChatRequestProvider>);
+ const settings=screen.getByText('整组画面设置').closest('details')!;settings.open=true;fireEvent(settings,new Event('toggle'));
+ fireEvent.change(await screen.findByLabelText('统一视觉方向'),{target:{value:'统一暖色插画'}});fireEvent.change(screen.getByLabelText('组图画幅比例'),{target:{value:'3:4'}});
  fireEvent.click(screen.getByRole('checkbox',{name:'选择第 1 页生成'}));
  const field=screen.getByLabelText('第 2 页画面想法');const details=field.closest('details')!;details.open=true;fireEvent(details,new Event('toggle'));fireEvent.change(field,{target:{value:'机器人连接工具的插画'}});
  const generate=await screen.findByRole('button',{name:'生成所选 1 页'});await waitFor(()=>expect(generate).toBeEnabled());fireEvent.click(generate);
@@ -83,3 +85,21 @@ vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
 import {beforeEach as scopeBefore,afterEach as scopeAfter} from "vitest";
 scopeBefore(()=>{localStorage.removeItem("creatoros:current-group");localStorage.setItem("creatoros:current-account","a");});
 scopeAfter(()=>{localStorage.removeItem("creatoros:current-group");localStorage.removeItem("creatoros:current-account");});
+
+
+it('当前图片页可以保存统一方向、画幅和精确参考，不替换已采用图片',async()=>{
+ const {GraphicImagePages}=await import('./graphic-image-pages');
+ const original:GraphicPostResource['current']={schemaVersion:1,title:'图文',body:'配文',summary:'',tags:[],sourceRefs:[],ruleSnapshotRef:null,cardBriefs:[{cardId:'first',title:'第一步',body:'关电源',sourceRefs:[]}],imageUses:[{role:'card',cardId:'first',order:0,assetId:'original',assetFileId:'original-file'}]};
+ let saved=structuredClone(original);
+ function Editor(){const [doc,setDoc]=React.useState(original);return <GraphicImagePages document={doc} selectedCardIds={['first']} onSelectionChange={()=>{}} onChange={next=>{saved=next;setDoc(next);}}/>;}
+ api.getAssetFileDownloadUrl.mockResolvedValue({url:'http://example.test/original-file.png'});
+ render(<Editor/>);
+ const settings=screen.getByText('整组画面设置').closest('details')!;settings.open=true;fireEvent(settings,new Event('toggle'));
+ fireEvent.change(await screen.findByLabelText('统一视觉方向'),{target:{value:'同一厨房、暖色自然光和相同人物'}});
+ fireEvent.change(screen.getByLabelText('组图画幅比例'),{target:{value:'3:4'}});
+ fireEvent.click(screen.getByRole('button',{name:'以第 1 页作为统一参考'}));
+ expect(saved.seriesProfile).toEqual({visualDirection:'同一厨房、暖色自然光和相同人物',aspectRatio:'3:4',referenceImage:{assetId:'original',assetFileId:'original-file'}});
+ expect(saved.imageUses).toEqual(original.imageUses);expect(saved.cardBriefs).toEqual(original.cardBriefs);
+ fireEvent.click(screen.getByRole('button',{name:'取消统一参考'}));
+ expect(saved.seriesProfile).toEqual({visualDirection:'同一厨房、暖色自然光和相同人物',aspectRatio:'3:4'});
+});

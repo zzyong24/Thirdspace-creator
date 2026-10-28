@@ -171,7 +171,7 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
         const blob=await response.blob(),extension=blob.type==='image/jpeg'?'jpg':blob.type==='image/webp'?'webp':blob.type==='image/gif'?'gif':'png';
         const name=`${String(index+1).padStart(2,'0')}.${extension}`;files[name]=new Uint8Array(await blob.arrayBuffer());manifest.push({order:index+1,assetId:image.assetId,assetFileId:image.assetFileId,file:name});
       }
-      files['配文.txt']=new Uint8Array(strToU8([latest.current.title,latest.current.body,latest.current.summary,latest.current.tags.map(tag=>`#${tag}`).join(' ')].filter(Boolean).join('\n\n')));
+      files['配文.txt']=new Uint8Array(strToU8([latest.current.title,latest.current.body,latest.current.tags.map(tag=>`#${tag}`).join(' ')].filter(Boolean).join('\n\n')));
       files['图片顺序.json']=new Uint8Array(strToU8(JSON.stringify(manifest,null,2)));
       if(!mounted.current)return;
       const blob=new Blob([zipSync(files) as BlobPart],{type:'application/zip'});
@@ -210,7 +210,7 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
       <div><h1 className="text-lg font-semibold">图文成稿</h1></div>
       <Button className="min-h-11 px-5" disabled={busy||reorganizing||!(draft.body.trim()||draft.cardBriefs?.some(card=>card.title.trim()||card.body.trim())||state.scriptContext?.state==="ready"&&state.scriptContext.scriptRef&&state.scriptContext.scriptText.trim())} onClick={()=>void reorganize()}>{reorganizing?"正在准备…":"重新组织内容"}</Button>
     </header>
-    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span>{dirty?"已承接脚本，开始对话或导出时保存":"当前成稿已保存"}</span><Link className="underline underline-offset-4" href={`/projects/${projectId}`}>{state.scriptContext?.state==="ready"?"查看脚本原稿":"前往脚本撰写原稿"}</Link></div>
+    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span>{dirty?"有未保存的修改，生成或导出前会先保存":"当前成稿已保存"}</span><Link className="underline underline-offset-4" href={`/projects/${projectId}`}>{state.scriptContext?.state==="ready"?"查看脚本原稿":"前往脚本撰写原稿"}</Link></div>
     {error&&<div role="alert" className="rounded-md bg-destructive/10 p-3 text-destructive">{error}<Button variant="outline" className="ml-3" disabled={busy} onClick={()=>void save()}>恢复保存并核对</Button></div>}
     {message&&<p role="status" className="text-sm text-success">{message}</p>}
     {state.scriptContext?.message&&<p role="status" className="text-sm text-muted-foreground">{state.scriptContext.message}</p>}
@@ -221,6 +221,11 @@ function GraphicPostWorkbenchSession({projectId,accountId,initial,initialStartSt
       <p className="text-xs text-muted-foreground">随图片一起发布到小红书的标题和正文。</p>
       {draft.title&&<h3 className="font-medium">{draft.title}</h3>}<p className="whitespace-pre-wrap break-words">{draft.body||"尚未填写发布正文，可让编导根据当前内容整理。"}</p>
       {draft.tags.length>0&&<p className="text-sm text-muted-foreground">{draft.tags.map(tag=>`#${tag}`).join(' ')}</p>}
+      <LazyDisclosure label="编辑配文">{()=> <fieldset disabled={busy||exportBusy} className="mt-3 space-y-3">
+       <label className="block text-sm">发布标题<input aria-label="发布标题" value={draft.title} className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3" onChange={event=>setDraft(current=>({...current,title:event.target.value}))}/></label>
+       <label className="block text-sm">发布正文<textarea aria-label="发布正文" value={draft.body} rows={6} className="mt-1 w-full rounded-md border border-border bg-background p-3" onChange={event=>setDraft(current=>({...current,body:event.target.value}))}/></label>
+       <Button variant="outline" onClick={()=>void save()}>保存配文</Button>
+      </fieldset>}</LazyDisclosure>
     </section>
     <GraphicImagePages document={draft} selectedCardIds={activeCardIds} onSelectionChange={ids=>{setSelectedCardIds(ids);setSelectedCardId(ids[0]??null);}} onChange={setDraft} disabled={busy}/>
     <div className="flex flex-wrap items-center gap-3"><Button disabled={busy||exportBusy} onClick={()=>void exportGroup()}>{exportBusy?"导出中…":graphicDeliveryImages(draft).length?"导出原图与配文":"导出配文"}</Button><p className="text-xs text-muted-foreground">{graphicDeliveryImages(draft).length?"按页序导出已采用的图片原文件和配文。":"生成并采用图片后，可一并导出原图。"}</p></div>

@@ -56,7 +56,7 @@ it('导出读取精确文件，封面重复文件只导出一次，真实页序�
   expect(read.mock.calls.map(call=>call[0])).toEqual(['http://example.test/file-a.png','http://example.test/file-b.png']);
   const buffer=await new Promise<ArrayBuffer>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as ArrayBuffer);reader.onerror=reject;reader.readAsArrayBuffer(archive!);});
   const files=unzipSync(new Uint8Array(buffer));expect(Object.keys(files)).toEqual(['01.png','02.png','配文.txt','图片顺序.json']);
-  expect(strFromU8(files['配文.txt']!)).toBe('作品标题\n\n作品正文\n\n摘要\n\n#标签');
+  expect(strFromU8(files['配文.txt']!)).toBe('作品标题\n\n作品正文\n\n#标签');
   expect(JSON.parse(strFromU8(files['图片顺序.json']!)).map((row:{assetFileId:string})=>row.assetFileId)).toEqual(['file-a','file-b']);
   expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
  }finally{URL.createObjectURL=create;URL.revokeObjectURL=revoke;}
@@ -196,4 +196,31 @@ it('主工作区展示逐页真实图片和缺图状态，文字排版初始不�
  fireEvent.click(screen.getByRole('checkbox',{name:'选择第 1 页生成'}));
  expect(api.result.series.selectedCardIds).toEqual(['b']);
  expect(screen.getByRole('button',{name:'导出原图与配文'})).toBeVisible();
+});
+
+
+it('ZIP配文与复制配文逐字一致，不混入内部摘要',async()=>{
+ latest.current={...latest.current,title:'小红书标题',body:'分开发布的正文',summary:'内部资料摘要',tags:['生活'],imageUses:[]};
+ const clipboard=vi.fn().mockResolvedValue(undefined);vi.stubGlobal('ClipboardItem',undefined);Object.defineProperty(navigator,'clipboard',{value:{writeText:clipboard},configurable:true});
+ let archive:Blob|undefined;const create=URL.createObjectURL,revoke=URL.revokeObjectURL;
+ URL.createObjectURL=vi.fn(blob=>{archive=blob;return 'blob:caption';});URL.revokeObjectURL=vi.fn();vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ try{
+  render(<GraphicPostWorkbench {...props} initial={latest}/>);
+  fireEvent.click(screen.getByRole('button',{name:'复制配文'}));await waitFor(()=>expect(clipboard).toHaveBeenCalledOnce());
+  fireEvent.click(screen.getByRole('button',{name:'导出配文'}));await screen.findByText('已开始下载。');
+  const buffer=await new Promise<ArrayBuffer>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as ArrayBuffer);reader.onerror=reject;reader.readAsArrayBuffer(archive!);});
+  const files=unzipSync(new Uint8Array(buffer));expect(strFromU8(files['配文.txt']!)).toBe(clipboard.mock.calls[0]![0]);
+  expect(latest.current.summary).toBe('内部资料摘要');
+ }finally{URL.createObjectURL=create;URL.revokeObjectURL=revoke;}
+});
+it('发布配文可编辑并经原保存入口精确回读，原图片和摘要不变',async()=>{
+ latest.current={...latest.current,title:'原标题',body:'原正文',summary:'保留摘要',tags:['保留标签'],imageUses:[{role:'card',order:0,assetId:'asset',assetFileId:'file'}]};
+ const images=structuredClone(latest.current.imageUses);
+ render(<GraphicPostWorkbench {...props} initial={latest}/>);
+ const edit=screen.getByText('编辑配文').closest('details')!;edit.open=true;fireEvent(edit,new Event('toggle'));
+ fireEvent.change(await screen.findByLabelText('发布标题'),{target:{value:'确认后的标题'}});
+ fireEvent.change(screen.getByLabelText('发布正文'),{target:{value:'用户确认后的完整配文'}});
+ fireEvent.click(screen.getByRole('button',{name:'保存配文'}));await screen.findByText('作品已保存。');
+ expect(latest.current).toMatchObject({title:'确认后的标题',body:'用户确认后的完整配文',summary:'保留摘要',tags:['保留标签'],imageUses:images});
+ expect(api.getGraphicPostVersion).toHaveBeenCalled();
 });

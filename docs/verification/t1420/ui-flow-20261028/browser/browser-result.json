@@ -1,0 +1,39 @@
+{
+  "scope": "当前源码的隔离Mac浏览器运行；沿公开API导入本轮已安装版真实生图，不代表开发界面调用模型或Mac安装态验收",
+  "startedAt": "2026-10-28T14:06:25.651Z",
+  "checks": [
+    "当前源码新界面、无脚本但有正文时重组入口可用、两张真实图片已加载",
+    "配文编辑、画幅、统一方向、精确参考经公开保存与精确版本回读一致；旧图未变",
+    "刷新后仍显示新配文；ZIP包含两张原图且SHA逐字相同；配文与剪贴板一致；图片顺序与精确文件ID一致"
+  ],
+  "imageHashes": [
+    {
+      "file": "image-1.png",
+      "sha256": "848bafaaeb109838d33df14fa5d870703a2607cadd1dece96172f71f17d54c8b"
+    },
+    {
+      "file": "image-2.png",
+      "sha256": "356a2efc89a9d7f2bfe45fa32692cd85034f7dd39d7b79777617f043f3f4bcae"
+    }
+  ],
+  "groupId": "grp-0f1a3da4-816",
+  "projectId": "project-intake-f95fe7e367e8bd472377ac2338eaae45",
+  "outputId": "output-0f1a3da4-830",
+  "path": "/projects/project-intake-f95fe7e367e8bd472377ac2338eaae45/outputs/output-0f1a3da4-830/image",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000,
+      "scroll": 1440,
+      "viewport": 1440
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scroll": 1024,
+      "viewport": 1024
+    }
+  ],
+  "status": "passed",
+  "endedAt": "2026-10-28T14:06:27.875Z"
+}
